@@ -98,7 +98,7 @@ disallow_untyped_defs = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["llama_index.*", "google.generativeai.*"]
+module = ["llama_index.*", "google.generativeai.*", "tenacity.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
