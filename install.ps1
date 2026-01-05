@@ -16,10 +16,11 @@ Write-Host "Found $PythonVersion"
 # 2. Check for UV (Recommended)
 if (Get-Command uv -ErrorAction SilentlyContinue) {
     Write-Host "Detected 'uv' - Using fast installation method..." -ForegroundColor Green
-    uv venv
+    uv venv --allow-existing
     & .\.venv\Scripts\Activate.ps1
     uv pip install -e ".[dev,llm]"
-} else {
+}
+else {
     Write-Host "'uv' not found. Falling back to standard pip..." -ForegroundColor Yellow
     python -m venv .venv
     & .\.venv\Scripts\Activate.ps1
@@ -27,11 +28,29 @@ if (Get-Command uv -ErrorAction SilentlyContinue) {
     pip install -e ".[dev,llm]"
 }
 
-# 3. Create .env template if not exists
-if (!(Test-Path .env)) {
-    Write-Host "Creating .env template..."
-    "# MarkDownConvertor Configuration`nMDCONVERT_ANTIGRAVITY_PROXY=http://127.0.0.1:8045`nMDCONVERT_GEMINI_API_KEY=`nMDCONVERT_LLAMA_CLOUD_API_KEY=" | Out-File -FilePath .env
-    Write-Host "Done! Please edit .env to add your API keys." -ForegroundColor Yellow
+# 3. Interactive Configuration
+Write-Host "`n⚙️  Configuration Setup" -ForegroundColor Cyan
+
+if (Test-Path .env) {
+    Write-Host ".env file already exists. Skipping configuration." -ForegroundColor Yellow
+}
+else {
+    $ProxyUrl = Read-Host "Enter Antigravity Proxy URL [Default: http://127.0.0.1:8045]"
+    if ([string]::IsNullOrWhiteSpace($ProxyUrl)) { $ProxyUrl = "http://127.0.0.1:8045" }
+
+    $ProxyToken = Read-Host "Enter Antigravity Proxy Access Token (Leave empty if Auth disabled)"
+    $LlamaKey = Read-Host "Enter LlamaCloud API Key (Optional, for scanned PDFs)"
+
+    $EnvContent = @"
+# MarkDownConvertor Configuration
+MDCONVERT_ANTIGRAVITY_PROXY=$ProxyUrl
+MDCONVERT_ANTIGRAVITY_ACCESS_TOKEN=$ProxyToken
+MDCONVERT_GEMINI_API_KEY=
+MDCONVERT_LLAMA_CLOUD_API_KEY=$LlamaKey
+"@
+    
+    $EnvContent | Out-File -FilePath .env -Encoding utf8
+    Write-Host "Created .env with your settings!" -ForegroundColor Green
 }
 
 Write-Host "`n✅ Installation Complete!" -ForegroundColor Green

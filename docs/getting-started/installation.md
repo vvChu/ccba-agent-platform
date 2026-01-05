@@ -5,17 +5,32 @@
 - Python 3.10 or higher
 - Pandoc (for DOCX/HTML conversion)
 
-## Install from PyPI
+## Step 1: Get the Code
+
+```bash
+git clone https://github.com/vvChu/mdconverter.git
+cd mdconverter
+```
+
+## Step 2: Install
+
+### Option A: Automatic (Windows Recommended)
+
+Use the provided PowerShell script to automatically setup Python virtual environment and dependencies:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+### Option B: Install from PyPI
 
 ```bash
 pip install mdconvert-cli
 ```
 
-## Install from Source
+### Option C: Manual Install from Source
 
 ```bash
-git clone https://github.com/vvChu/mdconverter.git
-cd mdconverter
 pip install -e ".[dev]"
 ```
 

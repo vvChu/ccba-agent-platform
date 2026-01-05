@@ -25,6 +25,10 @@ class Settings(BaseSettings):
         default="http://127.0.0.1:8045",
         description="Antigravity proxy URL for Gemini API access",
     )
+    antigravity_access_token: str | None = Field(
+        default=None,
+        description="Access token for Antigravity Proxy (if auth enabled)",
+    )
     llama_cloud_api_key: str | None = Field(
         default=None,
         description="LlamaCloud API key for LlamaParse",

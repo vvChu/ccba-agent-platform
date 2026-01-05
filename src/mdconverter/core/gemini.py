@@ -128,7 +128,12 @@ class GeminiConverter(BaseConverter):
         }
 
         url = f"{self.proxy_url}/v1beta/models/{model}:generateContent"
-        response = self.client.post(url, json=payload)
+        
+        headers = {}
+        if settings.antigravity_access_token:
+            headers["Authorization"] = f"Bearer {settings.antigravity_access_token}"
+
+        response = self.client.post(url, json=payload, headers=headers)
         response.raise_for_status()
 
         data = response.json()
