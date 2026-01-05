@@ -29,15 +29,17 @@ git branch --merged main | grep -v "main" | xargs -r git branch -d
 
 ## Bước 3: Hỏi thông tin feature
 
-3. Hỏi user các câu hỏi sau:
-   - "Đây là loại công việc gì? (feature/fix/docs/refactor)"
+1. Hỏi user các câu hỏi sau:
+   - "Đây là loại công việc gì? (feature/fix/docs/refactor/experiment)"
    - "Mô tả ngắn gọn feature này?"
 
 2. Dựa trên câu trả lời, đề xuất tên branch theo format:
    - `feature/ten-feature` - Tính năng mới
    - `fix/ten-bug` - Sửa bug
    - `docs/ten-doc` - Cập nhật docs
+   - `docs/ten-doc` - Cập nhật docs
    - `refactor/ten-module` - Refactor code
+   - `experiment/ten-thu-nghiem` - Thử nghiệm tính năng mới
 
    Quy tắc naming:
    - Lowercase
@@ -66,7 +68,7 @@ git push -u origin [tên-branch-đã-chọn]
 
 ## Bước 6: Xác nhận hoàn thành
 
-8. Thông báo cho user:
+1. Thông báo cho user:
    - ✅ Branch `[tên]` đã tạo và push
    - ✅ Đã xóa N branch cũ (nếu có)
    - 🚀 Sẵn sàng bắt đầu code!
