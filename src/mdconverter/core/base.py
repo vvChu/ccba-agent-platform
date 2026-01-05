@@ -73,7 +73,7 @@ class BaseConverter(ABC):
             self.output_dir.mkdir(parents=True, exist_ok=True)
 
     @abstractmethod
-    def convert(self, source_path: Path) -> ConversionResult:
+    async def convert(self, source_path: Path) -> ConversionResult:
         """
         Convert a document to Markdown.
 

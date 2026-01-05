@@ -1,18 +1,17 @@
 """
-Gemini API converter using Antigravity Proxy.
+Universal LLM Converter.
 
-Supports PDF, DOCX, images, and other document formats.
+Uses Provider pattern to support Gemini, DeepSeek, and Groq.
 """
 
-import base64
 import time
 from pathlib import Path
-from typing import Any
-
-import httpx
 
 from mdconverter.config import settings
 from mdconverter.core.base import BaseConverter, ConversionResult, ConversionStatus
+from mdconverter.core.llm import GenerationConfig, LLMProvider
+from mdconverter.providers.gemini import GeminiProvider
+from mdconverter.providers.openai import OpenAIProvider
 
 # Supported MIME types
 MIME_TYPES: dict[str, str] = {
@@ -30,9 +29,13 @@ MIME_TYPES: dict[str, str] = {
     ".htm": "text/html",
 }
 
-
 class GeminiConverter(BaseConverter):
-    """Document converter using Google Gemini API via Antigravity Proxy."""
+    """
+    Universal Document Converter.
+    
+    Legacy name 'GeminiConverter' kept for backward compatibility,
+    but now supports multiple backends via Providers.
+    """
 
     SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".pptx", ".xlsx", ".png", ".jpg", ".jpeg"}
 
@@ -42,18 +45,46 @@ class GeminiConverter(BaseConverter):
         proxy_url: str | None = None,
         models: list[str] | None = None,
     ) -> None:
-        """Initialize Gemini converter."""
+        """Initialize converter."""
         super().__init__(output_dir)
-        self.proxy_url = proxy_url or settings.antigravity_proxy
         self.models = models or settings.models
-        self.client = httpx.Client(timeout=settings.timeout_seconds)
+        
+        # Initialize Providers
+        self.gemini_provider = GeminiProvider(proxy_url=proxy_url)
+        
+        # DeepSeek (OpenAI Compatible)
+        self.deepseek_provider = None
+        if settings.deepseek_api_key:
+            self.deepseek_provider = OpenAIProvider(
+                base_url="https://api.deepseek.com", 
+                api_key=settings.deepseek_api_key
+            )
+            
+        # Groq (OpenAI Compatible)
+        self.groq_provider = None
+        if settings.groq_api_key:
+            self.groq_provider = OpenAIProvider(
+                base_url="https://api.groq.com/openai/v1", 
+                api_key=settings.groq_api_key
+            )
+
+    def _get_provider_for_model(self, model: str) -> tuple[LLMProvider | None, str]:
+        """Return (provider, model_name) based on model string."""
+        if "deepseek" in model:
+            return self.deepseek_provider, model
+        elif "llama" in model or "mixtral" in model or "gemma" in model:
+             # Groq models usually like 'llama-3.3-70b-versatile'
+            return self.groq_provider, model
+        else:
+            # Default to Gemini
+            return self.gemini_provider, model
 
     def supports(self, file_extension: str) -> bool:
         """Check if extension is supported."""
         return file_extension.lower() in self.SUPPORTED_EXTENSIONS
 
-    def convert(self, source_path: Path) -> ConversionResult:
-        """Convert document using Gemini API."""
+    async def convert(self, source_path: Path) -> ConversionResult:
+        """Convert document using LLM Providers."""
         start_time = time.time()
 
         if not source_path.exists():
@@ -69,75 +100,62 @@ class GeminiConverter(BaseConverter):
                 status=ConversionStatus.SKIPPED,
                 error_message=f"Unsupported extension: {source_path.suffix}",
             )
+            
+        # Read file once
+        try:
+            file_bytes = source_path.read_bytes()
+            mime_type = MIME_TYPES.get(source_path.suffix.lower(), "application/octet-stream")
+        except Exception as e:
+             return ConversionResult(
+                source_path=source_path,
+                status=ConversionStatus.FAILED,
+                error_message=f"Read error: {e}",
+            )
+
+        prompt = self._get_conversion_prompt()
+        gen_config = GenerationConfig(
+            temperature=settings.temperature,
+            max_output_tokens=settings.max_output_tokens, 
+            timeout_seconds=settings.timeout_seconds
+        )
 
         # Try each model in fallback chain
+        last_error = ""
         for model in self.models:
+            provider, model_name = self._get_provider_for_model(model)
+            if not provider:
+                # Skip if provider not configured (no key)
+                continue
+                
             try:
-                content = self._convert_with_model(source_path, model)
+                content = await provider.generate(prompt, file_bytes, mime_type, model_name, gen_config)
+                
                 if content and len(content) > settings.min_content_length:
                     output_path = self.get_output_path(source_path)
-                    final_content = self.add_frontmatter(content, source_path, f"gemini/{model}")
+                    tool_name = f"llm/{model}"
+                    final_content = self.add_frontmatter(content, source_path, tool_name)
                     output_path.write_text(final_content, encoding="utf-8")
 
                     return ConversionResult(
                         source_path=source_path,
                         output_path=output_path,
                         status=ConversionStatus.SUCCESS,
-                        tool_used=f"gemini/{model}",
+                        tool_used=tool_name,
                         content=final_content,
                         quality_score=self._calculate_quality(final_content),
                         duration_seconds=time.time() - start_time,
                     )
-            except Exception:
+            except Exception as e:
+                last_error = str(e)
                 continue  # Try next model
 
         return ConversionResult(
             source_path=source_path,
             status=ConversionStatus.FAILED,
-            tool_used="gemini",
+            tool_used="llm-fallback",
             duration_seconds=time.time() - start_time,
-            error_message="All models failed",
+            error_message=f"All models failed. Last error: {last_error}",
         )
-
-    def _convert_with_model(self, source_path: Path, model: str) -> str:
-        """Convert using specific model."""
-        file_bytes = source_path.read_bytes()
-        file_b64 = base64.b64encode(file_bytes).decode("utf-8")
-        mime_type = MIME_TYPES.get(source_path.suffix.lower(), "application/octet-stream")
-
-        prompt = self._get_conversion_prompt()
-
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {"text": prompt},
-                        {
-                            "inline_data": {
-                                "mime_type": mime_type,
-                                "data": file_b64,
-                            }
-                        },
-                    ]
-                }
-            ],
-            "generationConfig": {
-                "temperature": settings.temperature,
-                "maxOutputTokens": settings.max_output_tokens,
-            },
-        }
-
-        url = f"{self.proxy_url}/v1beta/models/{model}:generateContent"
-        
-        headers = {}
-        if settings.antigravity_access_token:
-            headers["Authorization"] = f"Bearer {settings.antigravity_access_token}"
-
-        response = self.client.post(url, json=payload, headers=headers)
-        response.raise_for_status()
-
-        data = response.json()
-        return self._extract_content(data)
 
     def _get_conversion_prompt(self) -> str:
         """Get the conversion prompt."""
@@ -152,18 +170,6 @@ RULES:
 6. Output ONLY Markdown, no explanations or code blocks wrapping
 
 START CONVERSION NOW:"""
-
-    def _extract_content(self, response_data: dict[str, Any]) -> str:
-        """Extract text content from Gemini response."""
-        try:
-            candidates = response_data.get("candidates", [])
-            if candidates:
-                parts = candidates[0].get("content", {}).get("parts", [])
-                if parts:
-                    return str(parts[0].get("text", ""))
-        except (KeyError, IndexError):
-            pass
-        return ""
 
     def _calculate_quality(self, content: str) -> int:
         """Calculate quality score (0-100)."""

@@ -33,6 +33,14 @@ class Settings(BaseSettings):
         default=None,
         description="LlamaCloud API key for LlamaParse",
     )
+    deepseek_api_key: str | None = Field(
+        default=None,
+        description="DeepSeek API key",
+    )
+    groq_api_key: str | None = Field(
+        default=None,
+        description="Groq API key",
+    )
     gemini_api_key: str | None = Field(
         default=None,
         description="Gemini API key (if not using proxy)",
@@ -41,10 +49,11 @@ class Settings(BaseSettings):
     # Model Configuration
     models: list[str] = Field(
         default=[
-            "gemini-3-flash",
-            "gemini-2.5-flash",
-            "gemini-2.5-pro",
             "gemini-2.0-flash-exp",
+            "deepseek-coder",
+            "deepseek-chat",
+            "llama-3.3-70b-versatile", # Groq
+            "gemini-1.5-flash",
         ],
         description="Ordered list of models to try (fallback chain)",
     )

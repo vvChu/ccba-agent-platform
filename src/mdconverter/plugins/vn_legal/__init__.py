@@ -1,7 +1,14 @@
-"""Vietnamese Legal Document plugins."""
+"""
+Vietnamese Legal Document Plugin.
+"""
 
-from mdconverter.plugins.vn_legal.detector import is_legal_document
-from mdconverter.plugins.vn_legal.linter import VNLegalLinter
-from mdconverter.plugins.vn_legal.processor import VNLegalProcessor
+from .detector import is_legal_document
+from .processor import VNLegalProcessor
 
-__all__ = ["is_legal_document", "VNLegalLinter", "VNLegalProcessor"]
+def register() -> None:
+    """Register this plugin."""
+    # In a real system, we might register hooks or processors to a central registry.
+    # For now, just ensuring it's importable is enough, or we could print a debug log.
+    pass
+
+__all__ = ["is_legal_document", "VNLegalProcessor", "register"]

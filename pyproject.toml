@@ -58,6 +58,9 @@ Homepage = "https://github.com/ibst-bim/mdconverter"
 Documentation = "https://github.com/ibst-bim/mdconverter#readme"
 Repository = "https://github.com/ibst-bim/mdconverter"
 
+[project.entry-points."mdconverter.plugins"]
+vn_legal = "mdconverter.plugins.vn_legal"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/mdconverter"]
 

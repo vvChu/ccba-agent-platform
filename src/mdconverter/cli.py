@@ -4,6 +4,7 @@ CLI interface using Typer.
 Provides commands for converting, validating, and fixing Markdown documents.
 """
 
+import asyncio
 from pathlib import Path
 
 import typer
@@ -122,41 +123,52 @@ def convert(
     from mdconverter.core.gemini import GeminiConverter
     from mdconverter.core.pandoc import PandocConverter
 
-    def convert_file(file: Path) -> ConversionResult:
-        """Convert a single file."""
-        converter: BaseConverter
-        if tool == "pandoc" or (
-            tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
-        ):
-            converter = PandocConverter(output_dir)
-        else:
-            converter = GeminiConverter(output_dir)
-        return converter.convert(file)
+    # Limit concurrency
+    sem = asyncio.Semaphore(10)
 
-    results: list[ConversionResult] = []
-
-    # Initial conversion
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,
-    ) as progress:
-        task = progress.add_task("Converting...", total=len(files))
-
-        for file in files:
-            progress.update(task, description=f"Converting {file.name}...")
-
-            result = convert_file(file)
-            results.append(result)
-
-            if result.is_success:
-                console.print(
-                    f"  [green]✓[/green] {file.name} → {result.output_path.name if result.output_path else 'done'}"
-                )
+    async def convert_file_safe(file: Path) -> ConversionResult:
+        """Convert a single file with concurrency limit."""
+        async with sem:
+            converter: BaseConverter
+            if tool == "pandoc" or (
+                tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
+            ):
+                 # Pandoc is still sync, run in thread pool
+                converter = PandocConverter(output_dir)
+                return await asyncio.to_thread(converter.convert, file)
             else:
-                console.print(f"  [red]✗[/red] {file.name}: {result.error_message}")
+                # LLM based (async)
+                converter = GeminiConverter(output_dir)
+                return await converter.convert(file)
 
-            progress.advance(task)
+    async def process_files():
+        results = []
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Converting...", total=len(files))
+            
+            tasks = []
+            for file in files:
+                tasks.append(convert_file_safe(file))
+                
+            for future in asyncio.as_completed(tasks):
+                result = await future
+                results.append(result)
+                
+                if result.is_success:
+                    console.print(
+                        f"  [green]✓[/green] {result.source_path.name} → {result.output_path.name if result.output_path else 'done'}"
+                    )
+                else:
+                    console.print(f"  [red]✗[/red] {result.source_path.name}: {result.error_message}")
+                
+                progress.advance(task)
+        return results
+
+    results = asyncio.run(process_files())
 
     # Summary
     success = sum(1 for r in results if r.status == ConversionStatus.SUCCESS)
@@ -209,8 +221,13 @@ def validate(
     ),
 ) -> None:
     """Validate Markdown files for quality and structure."""
+    from mdconverter.plugins.manager import PluginManager
     from mdconverter.plugins.vn_legal.detector import is_legal_document
     from mdconverter.plugins.vn_legal.processor import VNLegalProcessor
+    
+    # Load plugins (demo)
+    pm = PluginManager()
+    pm.load_plugins()
 
     files: list[Path] = []
     if target.is_file():
@@ -365,6 +382,8 @@ def config_set(
         "antigravity_access_token": "MDCONVERT_ANTIGRAVITY_ACCESS_TOKEN",
         "gemini_api_key": "MDCONVERT_GEMINI_API_KEY",
         "llama_cloud_api_key": "MDCONVERT_LLAMA_CLOUD_API_KEY",
+        "deepseek_api_key": "MDCONVERT_DEEPSEEK_API_KEY",
+        "groq_api_key": "MDCONVERT_GROQ_API_KEY",
     }
 
     if key not in valid_keys:
