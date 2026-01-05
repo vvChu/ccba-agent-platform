@@ -101,6 +101,10 @@ plugins = ["pydantic.mypy"]
 module = ["llama_index.*", "google.generativeai.*", "tenacity.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["mdconverter.providers.gemini"]
+disallow_untyped_decorators = false
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
