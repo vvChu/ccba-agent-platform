@@ -22,7 +22,7 @@ class TestSettings:
         """Test models list contains expected models."""
         settings = Settings()
 
-        assert "gemini-3-flash" in settings.models
+        assert "gemini-2.0-flash-exp" in settings.models
         assert len(settings.models) >= 3
 
     def test_quality_thresholds(self) -> None:

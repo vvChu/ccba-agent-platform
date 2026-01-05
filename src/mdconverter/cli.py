@@ -133,13 +133,12 @@ def convert(
             if tool == "pandoc" or (
                 tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
             ):
-                 # Pandoc is still sync, run in thread pool
                 converter = PandocConverter(output_dir)
-                return await asyncio.to_thread(converter.convert, file)
             else:
                 # LLM based (async)
                 converter = GeminiConverter(output_dir)
-                return await converter.convert(file)
+            
+            return await converter.convert(file)
 
     async def process_files():
         results = []
