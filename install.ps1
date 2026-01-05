@@ -30,7 +30,7 @@ if (Get-Command uv -ErrorAction SilentlyContinue) {
 # 3. Create .env template if not exists
 if (!(Test-Path .env)) {
     Write-Host "Creating .env template..."
-    "# MarkDownConvertor Configuration`nMDCONVERT_GEMINI_API_KEY=`nMDCONVERT_LLAMA_CLOUD_API_KEY=" | Out-File -FilePath .env
+    "# MarkDownConvertor Configuration`nMDCONVERT_ANTIGRAVITY_PROXY=http://127.0.0.1:8045`nMDCONVERT_GEMINI_API_KEY=`nMDCONVERT_LLAMA_CLOUD_API_KEY=" | Out-File -FilePath .env
     Write-Host "Done! Please edit .env to add your API keys." -ForegroundColor Yellow
 }
 

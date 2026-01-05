@@ -27,6 +27,15 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 
 Chúng tôi khuyến khích sử dụng [**uv**](https://github.com/astral-sh/uv) để cài đặt cực nhanh:
 
+### Bước 1: Clone dự án về máy
+
+```bash
+git clone https://github.com/vvChu/mdconverter.git
+cd mdconverter
+```
+
+### Bước 2: Cài đặt thư viện
+
 ```bash
 # Cài đặt với uv (Khuyên dùng)
 uv pip install -e ".[dev,llm]"
@@ -56,11 +65,17 @@ mdconvert config
 
 ## Configuration
 
-Create a `.env` file:
+Create a `.env` file in the root directory:
 
 ```bash
+# Ưu tiên sử dụng Antigravity Proxy (khuyên dùng)
 MDCONVERT_ANTIGRAVITY_PROXY=http://127.0.0.1:8045
-MDCONVERT_LLAMA_CLOUD_API_KEY=your_key_here
+
+# Hoặc cấu hình API Key trực tiếp nếu không dùng proxy
+MDCONVERT_GEMINI_API_KEY=your_gemini_key_here
+MDCONVERT_LLAMA_CLOUD_API_KEY=your_llamaparse_key_here
+
+# Tùy chọn khác
 MDCONVERT_MAX_OUTPUT_TOKENS=65536
 ```
 
