@@ -96,15 +96,22 @@ def convert(
         "--dry-run",
         help="Show what would be converted without actually converting.",
     ),
+    watch: bool = typer.Option(
+        False,
+        "--watch",
+        "-w",
+        help="Watch for file changes and auto-convert.",
+    ),
 ) -> None:
     """Convert documents to Markdown."""
     files = get_files_to_convert(input_path, recursive)
 
-    if not files:
+    if not files and not watch:
         console.print("[yellow]No convertible files found.[/yellow]")
         raise typer.Exit(1)
 
-    console.print(f"[bold]Found {len(files)} file(s) to convert[/bold]")
+    if files:
+        console.print(f"[bold]Found {len(files)} file(s) to convert[/bold]")
 
     if dry_run:
         for f in files:
@@ -115,8 +122,20 @@ def convert(
     from mdconverter.core.gemini import GeminiConverter
     from mdconverter.core.pandoc import PandocConverter
 
+    def convert_file(file: Path) -> ConversionResult:
+        """Convert a single file."""
+        converter: BaseConverter
+        if tool == "pandoc" or (
+            tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
+        ):
+            converter = PandocConverter(output_dir)
+        else:
+            converter = GeminiConverter(output_dir)
+        return converter.convert(file)
+
     results: list[ConversionResult] = []
 
+    # Initial conversion
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -127,16 +146,7 @@ def convert(
         for file in files:
             progress.update(task, description=f"Converting {file.name}...")
 
-            # Auto-select converter based on file type and tool preference
-            converter: BaseConverter
-            if tool == "pandoc" or (
-                tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
-            ):
-                converter = PandocConverter(output_dir)
-            else:
-                converter = GeminiConverter(output_dir)
-
-            result = converter.convert(file)
+            result = convert_file(file)
             results.append(result)
 
             if result.is_success:
@@ -154,6 +164,34 @@ def convert(
 
     console.print()
     console.print(f"[bold]Summary:[/bold] {success} success, {failed} failed")
+
+    # Watch mode
+    if watch:
+        from mdconverter.core.watcher import FileWatcher
+
+        watch_path = input_path if input_path.is_dir() else input_path.parent
+
+        def on_file_change(file: Path) -> None:
+            console.print(f"\n[cyan]File changed:[/cyan] {file.name}")
+            result = convert_file(file)
+            if result.is_success:
+                console.print(
+                    f"  [green]✓[/green] {file.name} → {result.output_path.name if result.output_path else 'done'}"
+                )
+            else:
+                console.print(f"  [red]✗[/red] {file.name}: {result.error_message}")
+
+        console.print()
+        console.print(f"[bold cyan]👁 Watching for changes...[/bold cyan] {watch_path}")
+        console.print("[dim]Press Ctrl+C to stop[/dim]")
+
+        watcher = FileWatcher(watch_path, on_file_change, recursive=recursive)
+        watcher.start()
+        try:
+            watcher.wait()
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Watch mode stopped.[/yellow]")
+            watcher.stop()
 
 
 @app.command()
