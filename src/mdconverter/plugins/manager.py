@@ -6,7 +6,7 @@ Handles discovery and loading of plugins via entry points.
 
 import importlib.metadata
 import logging
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 logger = logging.getLogger(__name__)
 
@@ -30,14 +30,15 @@ class PluginManager:
 
     def load_plugins(self) -> None:
         """Load all registered plugins."""
-        entry_points = importlib.metadata.entry_points()
+        entry_points_all = importlib.metadata.entry_points()
 
-        # Python 3.10+ syntax for entry_points selection
-        if hasattr(entry_points, "select"):
-            eps = entry_points.select(group=self.group)
+        # Python 3.10+ has select method on EntryPoints
+        eps: Any
+        if hasattr(entry_points_all, "select"):
+            eps = entry_points_all.select(group=self.group)
         else:
-            # Fallback for older python
-            eps = entry_points.get(self.group, [])
+            # Fallback for older python (pre 3.9 dict-like return)
+            eps = entry_points_all.get(self.group, ())
 
         for ep in eps:
             try:
@@ -45,7 +46,7 @@ class PluginManager:
                 # Check if module follows protocol or has register function
                 if hasattr(plugin_module, "register"):
                     plugin_module.register()
-                    self.plugins[ep.name] = plugin_module  # type: ignore
+                    self.plugins[ep.name] = plugin_module
                     logger.debug(f"Loaded plugin: {ep.name}")
                 else:
                     logger.warning(f"Plugin {ep.name} has no register() function.")

@@ -140,7 +140,7 @@ def convert(
 
             return await converter.convert(file)
 
-    async def process_files():
+    async def process_files() -> list[ConversionResult]:
         results = []
         with Progress(
             SpinnerColumn(),
@@ -187,7 +187,7 @@ def convert(
         def on_file_change(file: Path) -> None:
             console.print(f"\n[cyan]File changed:[/cyan] {file.name}")
 
-            async def convert_single():
+            async def convert_single() -> ConversionResult:
                 converter: BaseConverter
                 if tool == "pandoc" or (
                     tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
