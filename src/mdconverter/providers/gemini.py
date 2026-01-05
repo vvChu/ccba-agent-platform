@@ -63,15 +63,17 @@ class GeminiProvider(LLMProvider):
         # Headers
         headers = {}
         if self.proxy_token:
-             headers["Authorization"] = f"Bearer {self.proxy_token}"
+            headers["Authorization"] = f"Bearer {self.proxy_token}"
         elif self.api_key:
-             # If using direct Google API or Proxy requires key in param?
-             # Standard Gemini uses ?key=... query param usually, but let's stick to what worked or header.
-             # If not proxy, we might need query param.
-             # But for now assuming Proxy or existing logic.
-                 url += f"?key={self.api_key}"
+            # If using direct Google API or Proxy requires key in param?
+            # Standard Gemini uses ?key=... query param usually, but let's stick to what worked or header.
+            # If not proxy, we might need query param.
+            # But for now assuming Proxy or existing logic.
+            url += f"?key={self.api_key}"
 
-        response = await self.client.post(url, json=payload, headers=headers, timeout=config.timeout_seconds)
+        response = await self.client.post(
+            url, json=payload, headers=headers, timeout=config.timeout_seconds
+        )
         response.raise_for_status()
 
         data = response.json()

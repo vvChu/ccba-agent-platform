@@ -29,6 +29,7 @@ MIME_TYPES: dict[str, str] = {
     ".htm": "text/html",
 }
 
+
 class GeminiConverter(BaseConverter):
     """
     Universal Document Converter.
@@ -56,16 +57,14 @@ class GeminiConverter(BaseConverter):
         self.deepseek_provider = None
         if settings.deepseek_api_key:
             self.deepseek_provider = OpenAIProvider(
-                base_url="https://api.deepseek.com",
-                api_key=settings.deepseek_api_key
+                base_url="https://api.deepseek.com", api_key=settings.deepseek_api_key
             )
 
         # Groq (OpenAI Compatible)
         self.groq_provider = None
         if settings.groq_api_key:
             self.groq_provider = OpenAIProvider(
-                base_url="https://api.groq.com/openai/v1",
-                api_key=settings.groq_api_key
+                base_url="https://api.groq.com/openai/v1", api_key=settings.groq_api_key
             )
 
     def _get_provider_for_model(self, model: str) -> tuple[LLMProvider | None, str]:
@@ -73,7 +72,7 @@ class GeminiConverter(BaseConverter):
         if "deepseek" in model:
             return self.deepseek_provider, model
         elif "llama" in model or "mixtral" in model or "gemma" in model:
-             # Groq models usually like 'llama-3.3-70b-versatile'
+            # Groq models usually like 'llama-3.3-70b-versatile'
             return self.groq_provider, model
         else:
             # Default to Gemini
@@ -106,7 +105,7 @@ class GeminiConverter(BaseConverter):
             file_bytes = source_path.read_bytes()
             mime_type = MIME_TYPES.get(source_path.suffix.lower(), "application/octet-stream")
         except Exception as e:
-             return ConversionResult(
+            return ConversionResult(
                 source_path=source_path,
                 status=ConversionStatus.FAILED,
                 error_message=f"Read error: {e}",
@@ -116,7 +115,7 @@ class GeminiConverter(BaseConverter):
         gen_config = GenerationConfig(
             temperature=settings.temperature,
             max_output_tokens=settings.max_output_tokens,
-            timeout_seconds=settings.timeout_seconds
+            timeout_seconds=settings.timeout_seconds,
         )
 
         # Try each model in fallback chain
@@ -128,7 +127,9 @@ class GeminiConverter(BaseConverter):
                 continue
 
             try:
-                content = await provider.generate(prompt, file_bytes, mime_type, model_name, gen_config)
+                content = await provider.generate(
+                    prompt, file_bytes, mime_type, model_name, gen_config
+                )
 
                 if content and len(content) > settings.min_content_length:
                     output_path = self.get_output_path(source_path)

@@ -52,7 +52,7 @@ class Settings(BaseSettings):
             "gemini-2.0-flash-exp",
             "deepseek-coder",
             "deepseek-chat",
-            "llama-3.3-70b-versatile", # Groq
+            "llama-3.3-70b-versatile",  # Groq
             "gemini-1.5-flash",
         ],
         description="Ordered list of models to try (fallback chain)",

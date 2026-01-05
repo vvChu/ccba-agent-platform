@@ -162,7 +162,9 @@ def convert(
                         f"  [green]✓[/green] {result.source_path.name} → {result.output_path.name if result.output_path else 'done'}"
                     )
                 else:
-                    console.print(f"  [red]✗[/red] {result.source_path.name}: {result.error_message}")
+                    console.print(
+                        f"  [red]✗[/red] {result.source_path.name}: {result.error_message}"
+                    )
 
                 progress.advance(task)
         return results

@@ -10,6 +10,7 @@ from typing import Protocol, runtime_checkable
 
 logger = logging.getLogger(__name__)
 
+
 @runtime_checkable
 class Plugin(Protocol):
     """Protocol that all plugins must implement."""
@@ -17,6 +18,7 @@ class Plugin(Protocol):
     def register(self) -> None:
         """Register the plugin components."""
         ...
+
 
 class PluginManager:
     """Manages plugin discovery and loading."""

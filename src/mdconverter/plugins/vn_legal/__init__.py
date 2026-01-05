@@ -12,4 +12,5 @@ def register() -> None:
     # For now, just ensuring it's importable is enough, or we could print a debug log.
     pass
 
+
 __all__ = ["is_legal_document", "VNLegalProcessor", "register"]

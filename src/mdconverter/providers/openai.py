@@ -33,7 +33,9 @@ class OpenAIProvider(LLMProvider):
         # For images, we need vision support (like GPT-4o).
 
         is_text = mime_type.startswith("text") or mime_type in [
-            "application/json", "application/xml", "application/javascript"
+            "application/json",
+            "application/xml",
+            "application/javascript",
         ]
 
         messages: list[dict[str, Any]] = []
@@ -44,7 +46,7 @@ class OpenAIProvider(LLMProvider):
                 user_content = f"{prompt}\n\nDOCUMENT CONTENT:\n{text_content}"
                 messages = [{"role": "user", "content": user_content}]
             except UnicodeDecodeError:
-                 return "Error: Cannot decode text file content."
+                return "Error: Cannot decode text file content."
         else:
             # Assume vision capable or fail
             base64_image = base64.b64encode(file_content).decode("utf-8")
@@ -55,11 +57,9 @@ class OpenAIProvider(LLMProvider):
                         {"type": "text", "text": prompt},
                         {
                             "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{mime_type};base64,{base64_image}"
-                            }
-                        }
-                    ]
+                            "image_url": {"url": f"data:{mime_type};base64,{base64_image}"},
+                        },
+                    ],
                 }
             ]
 
@@ -68,19 +68,16 @@ class OpenAIProvider(LLMProvider):
             "messages": messages,
             "temperature": config.temperature,
             "max_tokens": config.max_output_tokens,
-            "stream": False
+            "stream": False,
         }
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
 
         response = await self.client.post(
             f"{self.base_url}/chat/completions",
             json=payload,
             headers=headers,
-            timeout=config.timeout_seconds
+            timeout=config.timeout_seconds,
         )
         response.raise_for_status()
 
