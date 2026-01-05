@@ -34,7 +34,7 @@ class GeminiProvider(LLMProvider):
     ) -> str:
         """Generate content using Gemini API."""
         file_b64 = base64.b64encode(file_content).decode("utf-8")
-        
+
         payload = {
             "contents": [
                 {
@@ -59,18 +59,18 @@ class GeminiProvider(LLMProvider):
         # If proxy_url is antigravity local, format: {url}/v1beta/models/{model}:generateContent
         base = self.proxy_url.rstrip("/")
         url = f"{base}/v1beta/models/{model}:generateContent"
-        
+
         # Headers
         headers = {}
         if self.proxy_token:
              headers["Authorization"] = f"Bearer {self.proxy_token}"
         elif self.api_key:
-             # If using direct Google API or Proxy requires key in param? 
+             # If using direct Google API or Proxy requires key in param?
              # Standard Gemini uses ?key=... query param usually, but let's stick to what worked or header.
-             # If not proxy, we might need query param. 
+             # If not proxy, we might need query param.
              # But for now assuming Proxy or existing logic.
                  url += f"?key={self.api_key}"
-        
+
         response = await self.client.post(url, json=payload, headers=headers, timeout=config.timeout_seconds)
         response.raise_for_status()
 

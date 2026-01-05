@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 @runtime_checkable
 class Plugin(Protocol):
     """Protocol that all plugins must implement."""
-    
+
     def register(self) -> None:
         """Register the plugin components."""
         ...
@@ -29,7 +29,7 @@ class PluginManager:
     def load_plugins(self) -> None:
         """Load all registered plugins."""
         entry_points = importlib.metadata.entry_points()
-        
+
         # Python 3.10+ syntax for entry_points selection
         if hasattr(entry_points, "select"):
             eps = entry_points.select(group=self.group)

@@ -31,11 +31,11 @@ class OpenAIProvider(LLMProvider):
         # Note: Most OpenAI-compat APIs don't natively support file upload in the same way Gemini does (inline data).
         # However, for text-based files, we can include content in the prompt.
         # For images, we need vision support (like GPT-4o).
-        
+
         is_text = mime_type.startswith("text") or mime_type in [
             "application/json", "application/xml", "application/javascript"
         ]
-        
+
         messages: list[dict[str, Any]] = []
 
         if is_text:
@@ -50,7 +50,7 @@ class OpenAIProvider(LLMProvider):
             base64_image = base64.b64encode(file_content).decode("utf-8")
             messages = [
                 {
-                    "role": "user", 
+                    "role": "user",
                     "content": [
                         {"type": "text", "text": prompt},
                         {
@@ -83,6 +83,6 @@ class OpenAIProvider(LLMProvider):
             timeout=config.timeout_seconds
         )
         response.raise_for_status()
-        
+
         data = response.json()
         return str(data["choices"][0]["message"]["content"])

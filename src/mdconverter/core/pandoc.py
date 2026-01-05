@@ -74,12 +74,12 @@ class PandocConverter(BaseConverter):
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            
+
             try:
                 stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
-            except asyncio.TimeoutError:
+            except asyncio.TimeoutError as e:
                 process.kill()
-                raise asyncio.TimeoutError("Pandoc conversion timed out")
+                raise asyncio.TimeoutError("Pandoc conversion timed out") from e
 
             if process.returncode != 0:
                 error_msg = stderr.decode() if stderr else "Pandoc conversion failed"
@@ -92,7 +92,7 @@ class PandocConverter(BaseConverter):
                 )
 
             # Read and optionally add frontmatter
-            # File I/O is blocking, but fast for text files. 
+            # File I/O is blocking, but fast for text files.
             # Ideally use aiofiles, but standard io is acceptable for small/medium files in this context.
             content = output_path.read_text(encoding="utf-8")
             final_content = self.add_frontmatter(content, source_path, "pandoc")

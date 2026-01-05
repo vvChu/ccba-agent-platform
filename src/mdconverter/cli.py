@@ -137,7 +137,7 @@ def convert(
             else:
                 # LLM based (async)
                 converter = GeminiConverter(output_dir)
-            
+
             return await converter.convert(file)
 
     async def process_files():
@@ -148,22 +148,22 @@ def convert(
             console=console,
         ) as progress:
             task = progress.add_task("Converting...", total=len(files))
-            
+
             tasks = []
             for file in files:
                 tasks.append(convert_file_safe(file))
-                
+
             for future in asyncio.as_completed(tasks):
                 result = await future
                 results.append(result)
-                
+
                 if result.is_success:
                     console.print(
                         f"  [green]✓[/green] {result.source_path.name} → {result.output_path.name if result.output_path else 'done'}"
                     )
                 else:
                     console.print(f"  [red]✗[/red] {result.source_path.name}: {result.error_message}")
-                
+
                 progress.advance(task)
         return results
 
@@ -184,7 +184,18 @@ def convert(
 
         def on_file_change(file: Path) -> None:
             console.print(f"\n[cyan]File changed:[/cyan] {file.name}")
-            result = convert_file(file)
+
+            async def convert_single():
+                converter: BaseConverter
+                if tool == "pandoc" or (
+                    tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
+                ):
+                    converter = PandocConverter(output_dir)
+                else:
+                    converter = GeminiConverter(output_dir)
+                return await converter.convert(file)
+
+            result = asyncio.run(convert_single())
             if result.is_success:
                 console.print(
                     f"  [green]✓[/green] {file.name} → {result.output_path.name if result.output_path else 'done'}"
@@ -223,7 +234,7 @@ def validate(
     from mdconverter.plugins.manager import PluginManager
     from mdconverter.plugins.vn_legal.detector import is_legal_document
     from mdconverter.plugins.vn_legal.processor import VNLegalProcessor
-    
+
     # Load plugins (demo)
     pm = PluginManager()
     pm.load_plugins()
@@ -392,7 +403,7 @@ def config_set(
 
     env_var = valid_keys[key]
     env_path = Path(".env")
-    
+
     # Read existing content
     lines = []
     if env_path.exists():
@@ -407,7 +418,7 @@ def config_set(
             found = True
         else:
             new_lines.append(line)
-    
+
     if not found:
         if new_lines and new_lines[-1] != "":
             new_lines.append("")

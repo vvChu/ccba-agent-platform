@@ -5,6 +5,7 @@ Vietnamese Legal Document Plugin.
 from .detector import is_legal_document
 from .processor import VNLegalProcessor
 
+
 def register() -> None:
     """Register this plugin."""
     # In a real system, we might register hooks or processors to a central registry.

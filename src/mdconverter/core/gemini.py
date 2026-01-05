@@ -32,7 +32,7 @@ MIME_TYPES: dict[str, str] = {
 class GeminiConverter(BaseConverter):
     """
     Universal Document Converter.
-    
+
     Legacy name 'GeminiConverter' kept for backward compatibility,
     but now supports multiple backends via Providers.
     """
@@ -48,23 +48,23 @@ class GeminiConverter(BaseConverter):
         """Initialize converter."""
         super().__init__(output_dir)
         self.models = models or settings.models
-        
+
         # Initialize Providers
         self.gemini_provider = GeminiProvider(proxy_url=proxy_url)
-        
+
         # DeepSeek (OpenAI Compatible)
         self.deepseek_provider = None
         if settings.deepseek_api_key:
             self.deepseek_provider = OpenAIProvider(
-                base_url="https://api.deepseek.com", 
+                base_url="https://api.deepseek.com",
                 api_key=settings.deepseek_api_key
             )
-            
+
         # Groq (OpenAI Compatible)
         self.groq_provider = None
         if settings.groq_api_key:
             self.groq_provider = OpenAIProvider(
-                base_url="https://api.groq.com/openai/v1", 
+                base_url="https://api.groq.com/openai/v1",
                 api_key=settings.groq_api_key
             )
 
@@ -100,7 +100,7 @@ class GeminiConverter(BaseConverter):
                 status=ConversionStatus.SKIPPED,
                 error_message=f"Unsupported extension: {source_path.suffix}",
             )
-            
+
         # Read file once
         try:
             file_bytes = source_path.read_bytes()
@@ -115,7 +115,7 @@ class GeminiConverter(BaseConverter):
         prompt = self._get_conversion_prompt()
         gen_config = GenerationConfig(
             temperature=settings.temperature,
-            max_output_tokens=settings.max_output_tokens, 
+            max_output_tokens=settings.max_output_tokens,
             timeout_seconds=settings.timeout_seconds
         )
 
@@ -126,10 +126,10 @@ class GeminiConverter(BaseConverter):
             if not provider:
                 # Skip if provider not configured (no key)
                 continue
-                
+
             try:
                 content = await provider.generate(prompt, file_bytes, mime_type, model_name, gen_config)
-                
+
                 if content and len(content) > settings.min_content_length:
                     output_path = self.get_output_path(source_path)
                     tool_name = f"llm/{model}"

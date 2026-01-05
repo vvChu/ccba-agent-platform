@@ -4,10 +4,10 @@ LlamaParse converter for scanned PDFs and complex documents.
 Uses LlamaCloud API for high-quality parsing of scanned documents.
 """
 
+import asyncio
 import time
 from pathlib import Path
 
-import asyncio
 import httpx
 
 from mdconverter.config import settings
