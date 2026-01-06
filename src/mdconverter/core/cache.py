@@ -33,7 +33,10 @@ class ConversionCache:
         """Load cache index from disk."""
         if self.index_path.exists():
             try:
-                return json.loads(self.index_path.read_text(encoding="utf-8"))
+                data: dict[str, dict[str, Any]] = json.loads(
+                    self.index_path.read_text(encoding="utf-8")
+                )
+                return data
             except (json.JSONDecodeError, OSError):
                 return {}
         return {}

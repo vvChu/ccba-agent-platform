@@ -123,7 +123,7 @@ class ConverterRegistry:
         Returns:
             List of converter info dictionaries.
         """
-        result = []
+        result: list[dict[str, Any]] = []
         for name, converter_class in cls._converters.items():
             result.append(
                 {
