@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mdconvert-cli"
-version = "2.0.0-alpha"
+version = "2.0.0-beta"
 description = "Modern document to Markdown converter with Vietnamese legal document support"
 readme = "README.md"
 license = "MIT"
