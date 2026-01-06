@@ -146,11 +146,13 @@ def convert(
                     # Compute expected output path
                     output_name = file.stem.lower().replace(" ", "_") + ".md"
                     expected_output = (output_dir or file.parent) / output_name
-                    # Write cached content to disk (critical fix)
-                    await loop.run_in_executor(
-                        None,
-                        lambda: expected_output.write_text(cached_content, encoding="utf-8"),
-                    )
+
+                    # Ensure parent directory exists before writing
+                    def write_cached_output() -> None:
+                        expected_output.parent.mkdir(parents=True, exist_ok=True)
+                        expected_output.write_text(cached_content, encoding="utf-8")
+
+                    await loop.run_in_executor(None, write_cached_output)
                     return ConversionResult(
                         source_path=file,
                         output_path=expected_output,

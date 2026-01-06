@@ -101,7 +101,10 @@ class ConverterRegistry:
         Raises:
             ValueError: If no converter supports the extension.
         """
+        # Normalize extension: ensure it starts with a dot
         extension = extension.lower()
+        if not extension.startswith("."):
+            extension = f".{extension}"
 
         # Find all converters that support this extension
         # Use class-level SUPPORTED_EXTENSIONS for efficiency (avoid temp instances)

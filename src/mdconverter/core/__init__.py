@@ -14,16 +14,16 @@ from mdconverter.core.llamaparse import LlamaParseConverter
 from mdconverter.core.pandoc import PandocConverter
 from mdconverter.core.registry import ConverterRegistry
 
-# Register built-in converters with priorities
-# Lower priority = preferred for overlapping extensions
-ConverterRegistry._converters["pandoc"] = PandocConverter
-ConverterRegistry._priority["pandoc"] = 10  # Fast, local
 
-ConverterRegistry._converters["llm"] = LLMConverter
-ConverterRegistry._priority["llm"] = 50  # Versatile, needs API
+def _register_builtin_converters() -> None:
+    """Register built-in converters using the public API."""
+    # Use programmatic registration (equivalent to decorator)
+    ConverterRegistry.register("pandoc", priority=10)(PandocConverter)  # Fast, local
+    ConverterRegistry.register("llamaparse", priority=30)(LlamaParseConverter)  # Scanned PDFs
+    ConverterRegistry.register("llm", priority=50)(LLMConverter)  # Versatile, needs API
 
-ConverterRegistry._converters["llamaparse"] = LlamaParseConverter
-ConverterRegistry._priority["llamaparse"] = 30  # Good for scanned PDFs
+
+_register_builtin_converters()
 
 __all__ = [
     "BaseConverter",
