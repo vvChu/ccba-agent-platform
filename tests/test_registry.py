@@ -40,10 +40,12 @@ class TestConverterRegistry:
         assert isinstance(converter, PandocConverter)
 
     def test_auto_select_for_pdf(self, tmp_path: Path) -> None:
-        """Test auto_select picks converter for pdf."""
+        """Test auto_select picks LlamaParseConverter for pdf (priority 30)."""
+        from mdconverter.core.llamaparse import LlamaParseConverter
+
         converter = ConverterRegistry.auto_select(".pdf", output_dir=tmp_path)
-        # LLM has priority 50 but supports PDF, LlamaParse has 30
-        assert converter is not None
+        # LlamaParse has priority 30, LLM has priority 50, so LlamaParse wins
+        assert isinstance(converter, LlamaParseConverter)
 
     def test_auto_select_raises_for_unsupported(self) -> None:
         """Test auto_select raises for unsupported extension."""

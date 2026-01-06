@@ -43,7 +43,7 @@ class ConversionCache:
 
     def _save_index(self) -> None:
         """Save cache index to disk."""
-        # No indent for production efficiency (Copilot suggestion)
+        # No indent for smaller file size
         self.index_path.write_text(
             json.dumps(self._index, ensure_ascii=False),
             encoding="utf-8",
@@ -70,7 +70,7 @@ class ConversionCache:
         Returns:
             Cached markdown content if exists and source unchanged, None otherwise.
         """
-        # Use try-except instead of exists() to avoid TOCTOU race (Copilot suggestion)
+        # Use try-except instead of exists() to avoid TOCTOU race
         try:
             file_hash = self.get_file_hash(source_path)
         except FileNotFoundError:
@@ -160,11 +160,13 @@ class ConversionCache:
         Returns:
             Dictionary with cache stats.
         """
-        total_size = sum(
-            (self.cache_dir / f"{e['hash']}.md").stat().st_size
-            for e in self._index.values()
-            if (self.cache_dir / f"{e['hash']}.md").exists()
-        )
+        total_size = 0
+        for e in self._index.values():
+            cache_file = self.cache_dir / f"{e['hash']}.md"
+            try:
+                total_size += cache_file.stat().st_size
+            except FileNotFoundError:
+                pass  # File may have been deleted
 
         return {
             "entries": len(self._index),

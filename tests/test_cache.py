@@ -107,7 +107,7 @@ class TestConversionCache:
         hash2 = cache.get_file_hash(test_file)
 
         assert hash1 == hash2
-        assert len(hash1) == 32  # First 32 chars of SHA256 for better collision resistance
+        assert len(hash1) == 32  # 32 chars (128 bits) is sufficient for this use case
 
     def test_get_returns_none_for_nonexistent_file(self, tmp_path: Path) -> None:
         """Test get returns None for file that doesn't exist."""

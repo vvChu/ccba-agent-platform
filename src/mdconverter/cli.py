@@ -134,18 +134,23 @@ def convert(
 
     # Limit concurrency
     sem = asyncio.Semaphore(10)
-    loop = asyncio.get_event_loop()
 
     async def convert_file_safe(file: Path) -> ConversionResult:
         """Convert a single file with concurrency limit."""
+        loop = asyncio.get_running_loop()  # Get loop inside async func (Python 3.12+)
         async with sem:
             # Check cache first (run sync I/O in thread pool to avoid blocking)
             if cache:
                 cached_content = await loop.run_in_executor(None, cache.get, file)
                 if cached_content:
-                    # Compute expected output path for consistency
+                    # Compute expected output path
                     output_name = file.stem.lower().replace(" ", "_") + ".md"
                     expected_output = (output_dir or file.parent) / output_name
+                    # Write cached content to disk (critical fix)
+                    await loop.run_in_executor(
+                        None,
+                        lambda: expected_output.write_text(cached_content, encoding="utf-8"),
+                    )
                     return ConversionResult(
                         source_path=file,
                         output_path=expected_output,
