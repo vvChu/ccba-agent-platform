@@ -83,11 +83,13 @@ mdconvert lint ./legal-docs/ --vn-only
 mdconvert config
 ```
 
-Output:\r\n\r\n```text
+Output:
+
+```text
 ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Setting              ┃ Value                        ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ Proxy URL            │ <http://127.0.0.1:8045>        │
+│ Proxy URL            │ http://127.0.0.1:8045        │
 │ Models               │ gemini-3-flash, ...          │
 │ Max Tokens           │ 65536                        │
 └──────────────────────┴──────────────────────────────┘

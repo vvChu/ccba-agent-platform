@@ -7,6 +7,7 @@ Provides consistent logging format with support for:
 - Verbose/quiet modes for CLI
 """
 
+import json
 import logging
 import sys
 import time
@@ -14,8 +15,9 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
-# Module-level logger cache
+# Module-level state
 _loggers: dict[str, logging.Logger] = {}
+_configured: bool = False
 
 # Default format
 DEFAULT_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
@@ -36,8 +38,6 @@ class StructuredFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         if self.use_json:
-            import json
-
             data = {
                 "timestamp": self.formatTime(record, self.datefmt),
                 "level": record.levelname,
@@ -63,21 +63,25 @@ def configure_logging(
         use_json: If True, output logs as JSON.
         quiet: If True, only show WARNING and above.
     """
+    global _configured
     if quiet:
         level = logging.WARNING
 
     root = logging.getLogger("mdconverter")
     root.setLevel(level)
 
-    # Remove existing handlers
-    for handler in root.handlers[:]:
-        root.removeHandler(handler)
-
-    # Create console handler
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setLevel(level)
-    handler.setFormatter(StructuredFormatter(use_json=use_json))
-    root.addHandler(handler)
+    # Only add handler if not already configured (prevent duplication)
+    if not _configured:
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setLevel(level)
+        handler.setFormatter(StructuredFormatter(use_json=use_json))
+        root.addHandler(handler)
+        _configured = True
+    else:
+        # Update existing handler's level and formatter
+        for h in root.handlers:
+            h.setLevel(level)
+            h.setFormatter(StructuredFormatter(use_json=use_json))
 
 
 def get_logger(name: str) -> logging.Logger:

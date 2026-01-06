@@ -123,6 +123,11 @@ def convert(
     ),
 ) -> None:
     """Convert documents to Markdown."""
+    # Check mutually exclusive flags
+    if verbose and quiet:
+        console.print("[red]Error: --verbose and --quiet cannot be used together.[/red]")
+        raise typer.Exit(1)
+
     # Configure logging based on flags
     log_level = logging.DEBUG if verbose else logging.INFO
     configure_logging(level=log_level, quiet=quiet)

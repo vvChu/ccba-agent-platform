@@ -4,7 +4,8 @@ Custom exception hierarchy for mdconverter error handling.
 
 ## Exception Hierarchy
 
-```text\r\nMDConvertError (base)
+```text
+MDConvertError (base)
 ├── ConverterNotAvailableError
 ├── ConversionTimeoutError
 ├── InvalidInputError
