@@ -1,5 +1,7 @@
 # Core API Reference
 
+## Converters
+
 ::: mdconverter.core.base
     options:
       show_root_heading: true
@@ -15,6 +17,7 @@
     options:
       show_root_heading: true
       members:
+        - LLMConverter
         - GeminiConverter
 
 ---
@@ -32,3 +35,36 @@
       show_root_heading: true
       members:
         - LlamaParseConverter
+
+---
+
+## Cache
+
+::: mdconverter.core.cache
+    options:
+      show_root_heading: true
+      members:
+        - ConversionCache
+
+---
+
+## Registry
+
+::: mdconverter.core.registry
+    options:
+      show_root_heading: true
+      members:
+        - ConverterRegistry
+
+---
+
+## Logging
+
+::: mdconverter.core.logging
+    options:
+      show_root_heading: true
+      members:
+        - configure_logging
+        - get_logger
+        - log_operation
+        - StructuredFormatter

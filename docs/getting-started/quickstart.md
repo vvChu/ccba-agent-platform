@@ -37,6 +37,26 @@ mdconvert convert document.pdf --tool gemini
 mdconvert convert scanned.pdf --tool llamaparse
 ```
 
+## Performance Options (v2.0)
+
+### Enable Caching
+
+Skip unchanged files on re-runs:
+
+```bash
+mdconvert convert ./documents/ --cache
+```
+
+### Verbose / Quiet Output
+
+```bash
+# Debug output
+mdconvert convert document.pdf --verbose
+
+# Minimal output (warnings and errors only)
+mdconvert convert document.pdf --quiet
+```
+
 ## Validate & Lint
 
 ### Validate Markdown Quality
@@ -63,14 +83,13 @@ mdconvert lint ./legal-docs/ --vn-only
 mdconvert config
 ```
 
-Output:
-
-```
+Output:\r\n\r\n```text
 ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Setting              ┃ Value                        ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ Proxy URL            │ http://127.0.0.1:8045        │
+│ Proxy URL            │ <http://127.0.0.1:8045>        │
 │ Models               │ gemini-3-flash, ...          │
 │ Max Tokens           │ 65536                        │
 └──────────────────────┴──────────────────────────────┘
+
 ```
