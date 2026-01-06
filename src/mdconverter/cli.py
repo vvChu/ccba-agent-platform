@@ -103,6 +103,11 @@ def convert(
         "-w",
         help="Watch for file changes and auto-convert.",
     ),
+    use_cache: bool = typer.Option(
+        False,
+        "--cache",
+        help="Enable caching to skip unchanged files.",
+    ),
 ) -> None:
     """Convert documents to Markdown."""
     files = get_files_to_convert(input_path, recursive)
@@ -120,8 +125,12 @@ def convert(
         raise typer.Exit(0)
 
     # Import converters
+    from mdconverter.core.cache import ConversionCache
     from mdconverter.core.gemini import LLMConverter
     from mdconverter.core.pandoc import PandocConverter
+
+    # Initialize cache if enabled
+    cache = ConversionCache() if use_cache else None
 
     # Limit concurrency
     sem = asyncio.Semaphore(10)
@@ -129,6 +138,17 @@ def convert(
     async def convert_file_safe(file: Path) -> ConversionResult:
         """Convert a single file with concurrency limit."""
         async with sem:
+            # Check cache first
+            if cache:
+                cached_content = cache.get(file)
+                if cached_content:
+                    return ConversionResult(
+                        source_path=file,
+                        status=ConversionStatus.SUCCESS,
+                        tool_used="cache",
+                        content=cached_content,
+                    )
+
             converter: BaseConverter
             if tool == "pandoc" or (
                 tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
@@ -138,7 +158,13 @@ def convert(
                 # LLM based (async)
                 converter = LLMConverter(output_dir)
 
-            return await converter.convert(file)
+            result = await converter.convert(file)
+
+            # Save to cache if successful
+            if cache and result.is_success and result.content:
+                cache.set(file, result.content, result.tool_used)
+
+            return result
 
     async def process_files() -> list[ConversionResult]:
         results = []
@@ -174,9 +200,13 @@ def convert(
     # Summary
     success = sum(1 for r in results if r.status == ConversionStatus.SUCCESS)
     failed = sum(1 for r in results if r.status == ConversionStatus.FAILED)
+    from_cache = sum(1 for r in results if r.tool_used == "cache")
 
     console.print()
-    console.print(f"[bold]Summary:[/bold] {success} success, {failed} failed")
+    summary_parts = [f"{success} success", f"{failed} failed"]
+    if from_cache > 0:
+        summary_parts.append(f"{from_cache} from cache")
+    console.print(f"[bold]Summary:[/bold] {', '.join(summary_parts)}")
 
     # Watch mode
     if watch:

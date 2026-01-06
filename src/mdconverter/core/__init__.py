@@ -1,6 +1,7 @@
 """Core converters package - Generic document conversion logic."""
 
 from mdconverter.core.base import BaseConverter, ConversionResult
+from mdconverter.core.cache import ConversionCache
 from mdconverter.core.exceptions import (
     ConversionTimeoutError,
     ConverterNotAvailableError,
@@ -14,6 +15,7 @@ from mdconverter.core.pandoc import PandocConverter
 
 __all__ = [
     "BaseConverter",
+    "ConversionCache",
     "ConversionResult",
     "LLMConverter",
     "GeminiConverter",  # Backward compat alias
