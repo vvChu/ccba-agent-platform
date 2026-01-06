@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from mdconverter.core.base import ConversionResult, ConversionStatus
-from mdconverter.core.gemini import GeminiConverter
+from mdconverter.core.gemini import GeminiConverter, LLMConverter
 from mdconverter.core.llamaparse import LlamaParseConverter
 from mdconverter.core.pandoc import PandocConverter
 
@@ -39,28 +39,32 @@ class TestConversionResult:
         assert result.is_success is False
 
 
-class TestGeminiConverter:
-    """Test GeminiConverter class."""
+class TestLLMConverter:
+    """Test LLMConverter class (formerly GeminiConverter)."""
+
+    def test_backward_compat_alias(self) -> None:
+        """Test GeminiConverter alias works for backward compatibility."""
+        assert GeminiConverter is LLMConverter
 
     def test_supports_pdf(self) -> None:
         """Test PDF is supported."""
-        converter = GeminiConverter()
+        converter = LLMConverter()
         assert converter.supports(".pdf") is True
 
     def test_supports_docx(self) -> None:
         """Test DOCX is supported."""
-        converter = GeminiConverter()
+        converter = LLMConverter()
         assert converter.supports(".docx") is True
 
     def test_does_not_support_txt(self) -> None:
         """Test TXT is not supported."""
-        converter = GeminiConverter()
+        converter = LLMConverter()
         assert converter.supports(".txt") is False
 
     @pytest.mark.asyncio
     async def test_convert_nonexistent_file(self, tmp_path: Path) -> None:
         """Test conversion of non-existent file fails."""
-        converter = GeminiConverter(output_dir=tmp_path)
+        converter = LLMConverter(output_dir=tmp_path)
         result = await converter.convert(Path("nonexistent.pdf"))
 
         assert result.status == ConversionStatus.FAILED
@@ -73,7 +77,7 @@ class TestGeminiConverter:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        converter = GeminiConverter(output_dir=tmp_path)
+        converter = LLMConverter(output_dir=tmp_path)
         result = await converter.convert(test_file)
 
         assert result.status == ConversionStatus.SKIPPED
@@ -86,7 +90,7 @@ class TestGeminiConverter:
         test_file.write_bytes(b"%PDF-1.4 test content")
 
         # With no valid API endpoint, conversion should fail gracefully
-        converter = GeminiConverter(output_dir=tmp_path, proxy_url="http://invalid:9999")
+        converter = LLMConverter(output_dir=tmp_path, proxy_url="http://invalid:9999")
         result = await converter.convert(test_file)
 
         # Should fail but not crash
@@ -173,7 +177,7 @@ class TestBaseConverter:
 
     def test_get_output_path(self, tmp_path: Path) -> None:
         """Test output path generation."""
-        converter = GeminiConverter(output_dir=tmp_path)
+        converter = LLMConverter(output_dir=tmp_path)
         source = Path("/some/path/document.pdf")
         output = converter.get_output_path(source)
 
@@ -183,7 +187,7 @@ class TestBaseConverter:
 
     def test_add_frontmatter(self, tmp_path: Path) -> None:
         """Test frontmatter is added to content."""
-        converter = GeminiConverter(output_dir=tmp_path)
+        converter = LLMConverter(output_dir=tmp_path)
         source = Path("test.pdf")
         content = "# Test Content"
 

@@ -120,7 +120,7 @@ def convert(
         raise typer.Exit(0)
 
     # Import converters
-    from mdconverter.core.gemini import GeminiConverter
+    from mdconverter.core.gemini import LLMConverter
     from mdconverter.core.pandoc import PandocConverter
 
     # Limit concurrency
@@ -136,7 +136,7 @@ def convert(
                 converter = PandocConverter(output_dir)
             else:
                 # LLM based (async)
-                converter = GeminiConverter(output_dir)
+                converter = LLMConverter(output_dir)
 
             return await converter.convert(file)
 
@@ -194,7 +194,7 @@ def convert(
                 ):
                     converter = PandocConverter(output_dir)
                 else:
-                    converter = GeminiConverter(output_dir)
+                    converter = LLMConverter(output_dir)
                 return await converter.convert(file)
 
             result = asyncio.run(convert_single())

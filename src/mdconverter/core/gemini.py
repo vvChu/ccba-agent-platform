@@ -30,12 +30,12 @@ MIME_TYPES: dict[str, str] = {
 }
 
 
-class GeminiConverter(BaseConverter):
+class LLMConverter(BaseConverter):
     """
-    Universal Document Converter.
+    Universal LLM-based Document Converter.
 
-    Legacy name 'GeminiConverter' kept for backward compatibility,
-    but now supports multiple backends via Providers.
+    Supports multiple LLM providers: Gemini, DeepSeek, Groq.
+    Uses fallback chain for reliability.
     """
 
     SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".pptx", ".xlsx", ".png", ".jpg", ".jpeg"}
@@ -198,3 +198,7 @@ START CONVERSION NOW:"""
             score += 5
 
         return min(score, 100)
+
+
+# Backward compatibility alias
+GeminiConverter = LLMConverter
