@@ -43,8 +43,9 @@ class ConversionCache:
 
     def _save_index(self) -> None:
         """Save cache index to disk."""
+        # No indent for production efficiency (Copilot suggestion)
         self.index_path.write_text(
-            json.dumps(self._index, indent=2, ensure_ascii=False),
+            json.dumps(self._index, ensure_ascii=False),
             encoding="utf-8",
         )
 
@@ -55,10 +56,10 @@ class ConversionCache:
             file_path: Path to file to hash.
 
         Returns:
-            First 16 characters of SHA256 hex digest.
+            First 32 characters of SHA256 hex digest for better collision resistance.
         """
         content = file_path.read_bytes()
-        return hashlib.sha256(content).hexdigest()[:16]
+        return hashlib.sha256(content).hexdigest()[:32]
 
     def get(self, source_path: Path) -> str | None:
         """Get cached conversion result if valid.
@@ -69,18 +70,22 @@ class ConversionCache:
         Returns:
             Cached markdown content if exists and source unchanged, None otherwise.
         """
-        if not source_path.exists():
+        # Use try-except instead of exists() to avoid TOCTOU race (Copilot suggestion)
+        try:
+            file_hash = self.get_file_hash(source_path)
+        except FileNotFoundError:
             return None
 
-        file_hash = self.get_file_hash(source_path)
         key = str(source_path.resolve())
 
         if key in self._index:
             entry = self._index[key]
             if entry.get("hash") == file_hash:
                 cache_file = self.cache_dir / f"{file_hash}.md"
-                if cache_file.exists():
+                try:
                     return cache_file.read_text(encoding="utf-8")
+                except FileNotFoundError:
+                    pass
 
         return None
 

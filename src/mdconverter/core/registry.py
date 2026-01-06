@@ -1,9 +1,10 @@
 """Converter registry for automatic discovery and selection.
 
 Provides a centralized registry for document converters with
-automatic selection based on file extension and availability.
+automatic selection based on file extension and priority.
 """
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -25,7 +26,7 @@ class ConverterRegistry:
         cls,
         name: str,
         priority: int = 100,
-    ) -> Any:
+    ) -> Callable[[type[BaseConverter]], type[BaseConverter]]:
         """Decorator to register a converter class.
 
         Args:
@@ -33,7 +34,7 @@ class ConverterRegistry:
             priority: Selection priority (lower = preferred). Default 100.
 
         Returns:
-            Decorator function.
+            Decorator function that registers and returns the converter class.
         """
 
         def decorator(converter_class: type[BaseConverter]) -> type[BaseConverter]:
@@ -84,7 +85,10 @@ class ConverterRegistry:
         output_dir: Path | None = None,
         **kwargs: Any,
     ) -> BaseConverter:
-        """Automatically select best converter for file extension.
+        """Select best converter for file extension based on priority.
+
+        Finds all converters that support the given extension, then
+        selects the one with the lowest priority number (highest preference).
 
         Args:
             extension: File extension (e.g., '.pdf', '.docx').
@@ -92,7 +96,7 @@ class ConverterRegistry:
             **kwargs: Additional arguments for converter.
 
         Returns:
-            Best available converter instance.
+            Converter instance with best priority for this extension.
 
         Raises:
             ValueError: If no converter supports the extension.
