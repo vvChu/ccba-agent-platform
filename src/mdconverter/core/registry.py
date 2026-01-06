@@ -107,7 +107,7 @@ class ConverterRegistry:
         # Use class-level SUPPORTED_EXTENSIONS for efficiency (avoid temp instances)
         candidates: list[tuple[str, int]] = []
         for name, converter_class in cls._converters.items():
-            supported = getattr(converter_class, "SUPPORTED_EXTENSIONS", set())
+            supported: set[str] = getattr(converter_class, "SUPPORTED_EXTENSIONS", set())
             if extension in supported:
                 candidates.append((name, cls._priority.get(name, 100)))
 
