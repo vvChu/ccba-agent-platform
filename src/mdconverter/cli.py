@@ -4,6 +4,7 @@ CLI interface using Typer.
 Provides commands for converting, validating, and fixing Markdown documents.
 """
 
+import asyncio
 from pathlib import Path
 
 import typer
@@ -122,41 +123,53 @@ def convert(
     from mdconverter.core.gemini import GeminiConverter
     from mdconverter.core.pandoc import PandocConverter
 
-    def convert_file(file: Path) -> ConversionResult:
-        """Convert a single file."""
-        converter: BaseConverter
-        if tool == "pandoc" or (
-            tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
-        ):
-            converter = PandocConverter(output_dir)
-        else:
-            converter = GeminiConverter(output_dir)
-        return converter.convert(file)
+    # Limit concurrency
+    sem = asyncio.Semaphore(10)
 
-    results: list[ConversionResult] = []
-
-    # Initial conversion
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,
-    ) as progress:
-        task = progress.add_task("Converting...", total=len(files))
-
-        for file in files:
-            progress.update(task, description=f"Converting {file.name}...")
-
-            result = convert_file(file)
-            results.append(result)
-
-            if result.is_success:
-                console.print(
-                    f"  [green]✓[/green] {file.name} → {result.output_path.name if result.output_path else 'done'}"
-                )
+    async def convert_file_safe(file: Path) -> ConversionResult:
+        """Convert a single file with concurrency limit."""
+        async with sem:
+            converter: BaseConverter
+            if tool == "pandoc" or (
+                tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
+            ):
+                converter = PandocConverter(output_dir)
             else:
-                console.print(f"  [red]✗[/red] {file.name}: {result.error_message}")
+                # LLM based (async)
+                converter = GeminiConverter(output_dir)
 
-            progress.advance(task)
+            return await converter.convert(file)
+
+    async def process_files() -> list[ConversionResult]:
+        results = []
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Converting...", total=len(files))
+
+            tasks = []
+            for file in files:
+                tasks.append(convert_file_safe(file))
+
+            for future in asyncio.as_completed(tasks):
+                result = await future
+                results.append(result)
+
+                if result.is_success:
+                    console.print(
+                        f"  [green]✓[/green] {result.source_path.name} → {result.output_path.name if result.output_path else 'done'}"
+                    )
+                else:
+                    console.print(
+                        f"  [red]✗[/red] {result.source_path.name}: {result.error_message}"
+                    )
+
+                progress.advance(task)
+        return results
+
+    results = asyncio.run(process_files())
 
     # Summary
     success = sum(1 for r in results if r.status == ConversionStatus.SUCCESS)
@@ -173,7 +186,18 @@ def convert(
 
         def on_file_change(file: Path) -> None:
             console.print(f"\n[cyan]File changed:[/cyan] {file.name}")
-            result = convert_file(file)
+
+            async def convert_single() -> ConversionResult:
+                converter: BaseConverter
+                if tool == "pandoc" or (
+                    tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
+                ):
+                    converter = PandocConverter(output_dir)
+                else:
+                    converter = GeminiConverter(output_dir)
+                return await converter.convert(file)
+
+            result = asyncio.run(convert_single())
             if result.is_success:
                 console.print(
                     f"  [green]✓[/green] {file.name} → {result.output_path.name if result.output_path else 'done'}"
@@ -209,8 +233,13 @@ def validate(
     ),
 ) -> None:
     """Validate Markdown files for quality and structure."""
+    from mdconverter.plugins.manager import PluginManager
     from mdconverter.plugins.vn_legal.detector import is_legal_document
     from mdconverter.plugins.vn_legal.processor import VNLegalProcessor
+
+    # Load plugins (demo)
+    pm = PluginManager()
+    pm.load_plugins()
 
     files: list[Path] = []
     if target.is_file():
@@ -333,29 +362,73 @@ def lint(
         console.print("[green]✓[/green] No issues found!")
 
 
-@app.command()
-def config(
-    show: bool = typer.Option(
-        True,
-        "--show",
-        "-s",
-        help="Show current configuration.",
-    ),
-) -> None:
-    """Show or modify configuration."""
+app_config = typer.Typer(help="Manage configuration.", name="config")
+app.add_typer(app_config, name="config")
+
+
+@app_config.command(name="show")
+def config_show() -> None:
+    """Show current configuration."""
     table = Table(title="Current Configuration")
     table.add_column("Setting", style="cyan")
     table.add_column("Value", style="green")
 
     table.add_row("Proxy URL", settings.antigravity_proxy)
+    table.add_row("Proxy Token", settings.antigravity_access_token or "[dim]None[/dim]")
     table.add_row("Models", ", ".join(settings.models))
     table.add_row("Max Tokens", str(settings.max_output_tokens))
     table.add_row("Timeout", f"{settings.timeout_seconds}s")
     table.add_row("Temperature", str(settings.temperature))
-    table.add_row("Min Content Length", str(settings.min_content_length))
-    table.add_row("Quality Threshold", str(settings.high_quality_threshold))
 
     console.print(table)
+
+
+@app_config.command(name="set")
+def config_set(
+    key: str = typer.Option(..., "--key", "-k", help="Setting key to update."),
+    value: str = typer.Option(..., "--value", "-v", help="New value for the setting."),
+) -> None:
+    """Update a configuration setting in .env file."""
+    valid_keys = {
+        "antigravity_proxy": "MDCONVERT_ANTIGRAVITY_PROXY",
+        "antigravity_access_token": "MDCONVERT_ANTIGRAVITY_ACCESS_TOKEN",
+        "gemini_api_key": "MDCONVERT_GEMINI_API_KEY",
+        "llama_cloud_api_key": "MDCONVERT_LLAMA_CLOUD_API_KEY",
+        "deepseek_api_key": "MDCONVERT_DEEPSEEK_API_KEY",
+        "groq_api_key": "MDCONVERT_GROQ_API_KEY",
+    }
+
+    if key not in valid_keys:
+        console.print(f"[red]Invalid key: {key}[/red]")
+        console.print(f"Valid keys: {', '.join(valid_keys.keys())}")
+        raise typer.Exit(1)
+
+    env_var = valid_keys[key]
+    env_path = Path(".env")
+
+    # Read existing content
+    lines = []
+    if env_path.exists():
+        lines = env_path.read_text(encoding="utf-8").splitlines()
+
+    # Update or append
+    found = False
+    new_lines = []
+    for line in lines:
+        if line.strip().startswith(f"{env_var}="):
+            new_lines.append(f"{env_var}={value}")
+            found = True
+        else:
+            new_lines.append(line)
+
+    if not found:
+        if new_lines and new_lines[-1] != "":
+            new_lines.append("")
+        new_lines.append(f"{env_var}={value}")
+
+    # Write back
+    env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+    console.print(f"[green]Updated {key} ({env_var}) successfully![/green]")
 
 
 if __name__ == "__main__":

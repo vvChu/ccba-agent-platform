@@ -4,7 +4,8 @@ Pandoc-based converter for DOCX, HTML, and other formats.
 Uses Pandoc as a subprocess for reliable conversion.
 """
 
-import subprocess
+import asyncio
+import shutil
 import time
 from pathlib import Path
 
@@ -28,19 +29,10 @@ class PandocConverter(BaseConverter):
     def is_pandoc_available(self) -> bool:
         """Check if Pandoc is installed."""
         if self._pandoc_available is None:
-            try:
-                result = subprocess.run(
-                    ["pandoc", "--version"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                )
-                self._pandoc_available = result.returncode == 0
-            except (subprocess.SubprocessError, FileNotFoundError):
-                self._pandoc_available = False
+            self._pandoc_available = shutil.which("pandoc") is not None
         return self._pandoc_available
 
-    def convert(self, source_path: Path) -> ConversionResult:
+    async def convert(self, source_path: Path) -> ConversionResult:
         """Convert document using Pandoc."""
         start_time = time.time()
 
@@ -68,34 +60,40 @@ class PandocConverter(BaseConverter):
         try:
             output_path = self.get_output_path(source_path)
 
-            # Run Pandoc conversion
-            result = subprocess.run(
-                [
-                    "pandoc",
-                    str(source_path),
-                    "-o",
-                    str(output_path),
-                    "-t",
-                    "gfm",
-                    "--wrap=none",
-                    "--extract-media",
-                    str(output_path.parent / "media"),
-                ],
-                capture_output=True,
-                text=True,
-                timeout=300,
+            # Run Pandoc conversion async
+            process = await asyncio.create_subprocess_exec(
+                "pandoc",
+                str(source_path),
+                "-o",
+                str(output_path),
+                "-t",
+                "gfm",
+                "--wrap=none",
+                "--extract-media",
+                str(output_path.parent / "media"),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
 
-            if result.returncode != 0:
+            try:
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
+            except asyncio.TimeoutError as e:
+                process.kill()
+                raise asyncio.TimeoutError("Pandoc conversion timed out") from e
+
+            if process.returncode != 0:
+                error_msg = stderr.decode() if stderr else "Pandoc conversion failed"
                 return ConversionResult(
                     source_path=source_path,
                     status=ConversionStatus.FAILED,
                     tool_used="pandoc",
                     duration_seconds=time.time() - start_time,
-                    error_message=result.stderr or "Pandoc conversion failed",
+                    error_message=error_msg,
                 )
 
             # Read and optionally add frontmatter
+            # File I/O is blocking, but fast for text files.
+            # Ideally use aiofiles, but standard io is acceptable for small/medium files in this context.
             content = output_path.read_text(encoding="utf-8")
             final_content = self.add_frontmatter(content, source_path, "pandoc")
             output_path.write_text(final_content, encoding="utf-8")
@@ -110,7 +108,7 @@ class PandocConverter(BaseConverter):
                 duration_seconds=time.time() - start_time,
             )
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return ConversionResult(
                 source_path=source_path,
                 status=ConversionStatus.FAILED,

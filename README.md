@@ -15,26 +15,30 @@ Modern Document to Markdown Converter with Vietnamese legal document support.
 - ✅ **Quality validation**: Automatic quality scoring
 - 🧹 **Linting**: Custom VN Legal lint rules (VN001-VN004)
 
-## Quick Start (Automatic)
+## Installation
 
-Nếu bạn dùng **Windows**, hãy chạy lệnh sau để tự động cài đặt mọi thứ (venv, dependencies) chỉ trong 1 giây:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1
-```
-
-## Installation (Manual)
-
-Chúng tôi khuyến khích sử dụng [**uv**](https://github.com/astral-sh/uv) để cài đặt cực nhanh:
-
-### Bước 1: Clone dự án về máy
+### Bước 1: Clone dự án về máy (Bắt buộc)
 
 ```bash
 git clone https://github.com/vvChu/mdconverter.git
 cd mdconverter
 ```
 
-### Bước 2: Cài đặt thư viện
+### Bước 2: Cài đặt
+
+Bạn có thể chọn 1 trong 2 cách sau:
+
+#### Cách 1: Tự động (Khuyên dùng cho Windows)
+
+Chạy lệnh sau để tự động cài đặt mọi thứ (venv, dependencies) chỉ trong 1 giây:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+#### Cách 2: Thủ công (Manual)
+
+Chúng tôi khuyến khích sử dụng [**uv**](https://github.com/astral-sh/uv) để cài đặt cực nhanh:
 
 ```bash
 # Cài đặt với uv (Khuyên dùng)

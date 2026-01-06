@@ -4,6 +4,7 @@ LlamaParse converter for scanned PDFs and complex documents.
 Uses LlamaCloud API for high-quality parsing of scanned documents.
 """
 
+import asyncio
 import time
 from pathlib import Path
 
@@ -27,7 +28,7 @@ class LlamaParseConverter(BaseConverter):
         super().__init__(output_dir)
         self.api_key = api_key or settings.llama_cloud_api_key
         self.base_url = "https://api.cloud.llamaindex.ai/api/parsing"
-        self.client = httpx.Client(timeout=300)
+        self.client = httpx.AsyncClient(timeout=300)
 
     def supports(self, file_extension: str) -> bool:
         """Check if extension is supported."""
@@ -37,7 +38,7 @@ class LlamaParseConverter(BaseConverter):
         """Check if LlamaParse API is available (API key configured)."""
         return bool(self.api_key)
 
-    def convert(self, source_path: Path) -> ConversionResult:
+    async def convert(self, source_path: Path) -> ConversionResult:
         """Convert document using LlamaParse API."""
         start_time = time.time()
 
@@ -64,7 +65,7 @@ class LlamaParseConverter(BaseConverter):
 
         try:
             # Upload file
-            job_id = self._upload_file(source_path)
+            job_id = await self._upload_file(source_path)
             if not job_id:
                 return ConversionResult(
                     source_path=source_path,
@@ -75,7 +76,7 @@ class LlamaParseConverter(BaseConverter):
                 )
 
             # Wait for processing
-            content = self._wait_for_result(job_id)
+            content = await self._wait_for_result(job_id)
             if not content:
                 return ConversionResult(
                     source_path=source_path,
@@ -109,7 +110,7 @@ class LlamaParseConverter(BaseConverter):
                 error_message=str(e),
             )
 
-    def _upload_file(self, file_path: Path) -> str | None:
+    async def _upload_file(self, file_path: Path) -> str | None:
         """Upload file to LlamaParse API and return job ID."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -122,7 +123,7 @@ class LlamaParseConverter(BaseConverter):
                 "parsing_instruction": "Extract all content as markdown. Preserve tables and structure.",
             }
 
-            response = self.client.post(
+            response = await self.client.post(
                 f"{self.base_url}/upload",
                 headers=headers,
                 files=files,
@@ -136,15 +137,16 @@ class LlamaParseConverter(BaseConverter):
         job_id: str | None = result.get("id")
         return job_id
 
-    def _wait_for_result(self, job_id: str, max_wait: int = 300) -> str | None:
+    async def _wait_for_result(self, job_id: str, max_wait: int = 300) -> str | None:
         """Wait for processing to complete and return markdown content."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
         }
 
         start = time.time()
+        start = time.time()
         while time.time() - start < max_wait:
-            response = self.client.get(
+            response = await self.client.get(
                 f"{self.base_url}/job/{job_id}",
                 headers=headers,
             )
@@ -157,7 +159,7 @@ class LlamaParseConverter(BaseConverter):
 
             if status == "SUCCESS":
                 # Get the markdown result
-                result_response = self.client.get(
+                result_response = await self.client.get(
                     f"{self.base_url}/job/{job_id}/result/markdown",
                     headers=headers,
                 )
@@ -170,7 +172,7 @@ class LlamaParseConverter(BaseConverter):
                 return None
 
             # Still processing, wait and retry
-            time.sleep(2)
+            await asyncio.sleep(2)
 
         return None  # Timeout
 

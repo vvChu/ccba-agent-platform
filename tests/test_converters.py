@@ -3,6 +3,8 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from mdconverter.core.base import ConversionResult, ConversionStatus
 from mdconverter.core.gemini import GeminiConverter
 from mdconverter.core.llamaparse import LlamaParseConverter
@@ -55,34 +57,37 @@ class TestGeminiConverter:
         converter = GeminiConverter()
         assert converter.supports(".txt") is False
 
-    def test_convert_nonexistent_file(self, tmp_path: Path) -> None:
+    @pytest.mark.asyncio
+    async def test_convert_nonexistent_file(self, tmp_path: Path) -> None:
         """Test conversion of non-existent file fails."""
         converter = GeminiConverter(output_dir=tmp_path)
-        result = converter.convert(Path("nonexistent.pdf"))
+        result = await converter.convert(Path("nonexistent.pdf"))
 
         assert result.status == ConversionStatus.FAILED
         assert "not found" in result.error_message.lower()
 
-    def test_convert_unsupported_extension(self, tmp_path: Path) -> None:
+    @pytest.mark.asyncio
+    async def test_convert_unsupported_extension(self, tmp_path: Path) -> None:
         """Test conversion of unsupported file type is skipped."""
         # Create a test file
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
         converter = GeminiConverter(output_dir=tmp_path)
-        result = converter.convert(test_file)
+        result = await converter.convert(test_file)
 
         assert result.status == ConversionStatus.SKIPPED
         assert "unsupported" in result.error_message.lower()
 
-    def test_convert_api_error_handled(self, tmp_path: Path) -> None:
+    @pytest.mark.asyncio
+    async def test_convert_api_error_handled(self, tmp_path: Path) -> None:
         """Test that API errors are handled gracefully."""
         test_file = tmp_path / "test.pdf"
         test_file.write_bytes(b"%PDF-1.4 test content")
 
         # With no valid API endpoint, conversion should fail gracefully
         converter = GeminiConverter(output_dir=tmp_path, proxy_url="http://invalid:9999")
-        result = converter.convert(test_file)
+        result = await converter.convert(test_file)
 
         # Should fail but not crash
         assert result.status == ConversionStatus.FAILED
@@ -107,15 +112,17 @@ class TestPandocConverter:
         converter = PandocConverter()
         assert converter.supports(".pdf") is False
 
-    def test_convert_nonexistent_file(self, tmp_path: Path) -> None:
+    @pytest.mark.asyncio
+    async def test_convert_nonexistent_file(self, tmp_path: Path) -> None:
         """Test conversion of non-existent file fails."""
         converter = PandocConverter(output_dir=tmp_path)
-        result = converter.convert(Path("nonexistent.docx"))
+        result = await converter.convert(Path("nonexistent.docx"))
 
         assert result.status == ConversionStatus.FAILED
         assert "not found" in result.error_message.lower()
 
-    def test_pandoc_not_installed(self, tmp_path: Path) -> None:
+    @pytest.mark.asyncio
+    async def test_pandoc_not_installed(self, tmp_path: Path) -> None:
         """Test error when Pandoc is not installed."""
         test_file = tmp_path / "test.docx"
         test_file.write_bytes(b"test content")
@@ -123,7 +130,7 @@ class TestPandocConverter:
         converter = PandocConverter(output_dir=tmp_path)
         # Mock the is_pandoc_available method to return False
         with patch.object(converter, "is_pandoc_available", return_value=False):
-            result = converter.convert(test_file)
+            result = await converter.convert(test_file)
             assert result.status == ConversionStatus.FAILED
             assert "pandoc" in result.error_message.lower()
 
@@ -147,7 +154,8 @@ class TestLlamaParseConverter:
         # Depends on environment, but we test the method exists
         assert hasattr(converter, "is_available")
 
-    def test_convert_without_api_key(self, tmp_path: Path) -> None:
+    @pytest.mark.asyncio
+    async def test_convert_without_api_key(self, tmp_path: Path) -> None:
         """Test conversion fails without API key."""
         test_file = tmp_path / "test.pdf"
         test_file.write_bytes(b"%PDF-1.4 test")
@@ -156,7 +164,7 @@ class TestLlamaParseConverter:
         # Clear any env var that might provide a key
         with patch.object(converter, "api_key", None):
             with patch.object(converter, "is_available", return_value=False):
-                result = converter.convert(test_file)
+                result = await converter.convert(test_file)
                 assert result.status == ConversionStatus.FAILED
 
 

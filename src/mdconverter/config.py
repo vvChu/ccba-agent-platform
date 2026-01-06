@@ -25,9 +25,21 @@ class Settings(BaseSettings):
         default="http://127.0.0.1:8045",
         description="Antigravity proxy URL for Gemini API access",
     )
+    antigravity_access_token: str | None = Field(
+        default=None,
+        description="Access token for Antigravity Proxy (if auth enabled)",
+    )
     llama_cloud_api_key: str | None = Field(
         default=None,
         description="LlamaCloud API key for LlamaParse",
+    )
+    deepseek_api_key: str | None = Field(
+        default=None,
+        description="DeepSeek API key",
+    )
+    groq_api_key: str | None = Field(
+        default=None,
+        description="Groq API key",
     )
     gemini_api_key: str | None = Field(
         default=None,
@@ -37,10 +49,11 @@ class Settings(BaseSettings):
     # Model Configuration
     models: list[str] = Field(
         default=[
-            "gemini-3-flash",
-            "gemini-2.5-flash",
-            "gemini-2.5-pro",
             "gemini-2.0-flash-exp",
+            "deepseek-coder",
+            "deepseek-chat",
+            "llama-3.3-70b-versatile",  # Groq
+            "gemini-1.5-flash",
         ],
         description="Ordered list of models to try (fallback chain)",
     )
