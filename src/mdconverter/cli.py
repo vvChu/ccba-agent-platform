@@ -103,6 +103,11 @@ def convert(
         "-w",
         help="Watch for file changes and auto-convert.",
     ),
+    use_cache: bool = typer.Option(
+        False,
+        "--cache",
+        help="Enable caching to skip unchanged files.",
+    ),
 ) -> None:
     """Convert documents to Markdown."""
     files = get_files_to_convert(input_path, recursive)
@@ -120,15 +125,42 @@ def convert(
         raise typer.Exit(0)
 
     # Import converters
+    from mdconverter.core.cache import ConversionCache
     from mdconverter.core.gemini import LLMConverter
     from mdconverter.core.pandoc import PandocConverter
+
+    # Initialize cache if enabled
+    cache = ConversionCache() if use_cache else None
 
     # Limit concurrency
     sem = asyncio.Semaphore(10)
 
     async def convert_file_safe(file: Path) -> ConversionResult:
         """Convert a single file with concurrency limit."""
+        loop = asyncio.get_running_loop()  # Get loop inside async func (Python 3.12+)
         async with sem:
+            # Check cache first (run sync I/O in thread pool to avoid blocking)
+            if cache:
+                cached_content = await loop.run_in_executor(None, cache.get, file)
+                if cached_content:
+                    # Compute expected output path
+                    output_name = file.stem.lower().replace(" ", "_") + ".md"
+                    expected_output = (output_dir or file.parent) / output_name
+
+                    # Ensure parent directory exists before writing
+                    def write_cached_output() -> None:
+                        expected_output.parent.mkdir(parents=True, exist_ok=True)
+                        expected_output.write_text(cached_content, encoding="utf-8")
+
+                    await loop.run_in_executor(None, write_cached_output)
+                    return ConversionResult(
+                        source_path=file,
+                        output_path=expected_output,
+                        status=ConversionStatus.SUCCESS,
+                        tool_used="cache",
+                        content=cached_content,
+                    )
+
             converter: BaseConverter
             if tool == "pandoc" or (
                 tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
@@ -138,7 +170,13 @@ def convert(
                 # LLM based (async)
                 converter = LLMConverter(output_dir)
 
-            return await converter.convert(file)
+            result = await converter.convert(file)
+
+            # Save to cache if successful (run sync I/O in thread pool)
+            if cache and result.is_success and result.content:
+                await loop.run_in_executor(None, cache.set, file, result.content, result.tool_used)
+
+            return result
 
     async def process_files() -> list[ConversionResult]:
         results = []
@@ -174,9 +212,13 @@ def convert(
     # Summary
     success = sum(1 for r in results if r.status == ConversionStatus.SUCCESS)
     failed = sum(1 for r in results if r.status == ConversionStatus.FAILED)
+    from_cache = sum(1 for r in results if r.tool_used == "cache")
 
     console.print()
-    console.print(f"[bold]Summary:[/bold] {success} success, {failed} failed")
+    summary_parts = [f"{success} success", f"{failed} failed"]
+    if from_cache > 0:
+        summary_parts.append(f"{from_cache} from cache")
+    console.print(f"[bold]Summary:[/bold] {', '.join(summary_parts)}")
 
     # Watch mode
     if watch:
