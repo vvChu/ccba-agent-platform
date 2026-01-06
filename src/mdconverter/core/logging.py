@@ -10,6 +10,7 @@ Provides consistent logging format with support for:
 import logging
 import sys
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
@@ -101,7 +102,9 @@ def get_logger(name: str) -> logging.Logger:
 
 
 @contextmanager
-def log_operation(logger: logging.Logger, operation: str, **context: Any):
+def log_operation(
+    logger: logging.Logger, operation: str, **context: Any
+) -> Generator[None, None, None]:
     """Context manager for timing and logging operations.
 
     Args:
