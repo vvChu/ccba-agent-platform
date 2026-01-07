@@ -5,6 +5,7 @@ Provides commands for converting, validating, and fixing Markdown documents.
 """
 
 import asyncio
+import logging
 from pathlib import Path
 
 import typer
@@ -15,6 +16,7 @@ from rich.table import Table
 from mdconverter import __version__
 from mdconverter.config import settings
 from mdconverter.core.base import BaseConverter, ConversionResult, ConversionStatus
+from mdconverter.core.logging import configure_logging, get_logger
 
 app = typer.Typer(
     name="mdconvert",
@@ -108,9 +110,31 @@ def convert(
         "--cache",
         help="Enable caching to skip unchanged files.",
     ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose",
+        help="Enable debug logging output.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Only show warnings and errors.",
+    ),
 ) -> None:
     """Convert documents to Markdown."""
+    # Check mutually exclusive flags
+    if verbose and quiet:
+        console.print("[red]Error: --verbose and --quiet cannot be used together.[/red]")
+        raise typer.Exit(1)
+
+    # Configure logging based on flags
+    log_level = logging.DEBUG if verbose else logging.INFO
+    configure_logging(level=log_level, quiet=quiet)
+    logger = get_logger(__name__)
+
     files = get_files_to_convert(input_path, recursive)
+    logger.debug(f"Found {len(files)} files to process")
 
     if not files and not watch:
         console.print("[yellow]No convertible files found.[/yellow]")
