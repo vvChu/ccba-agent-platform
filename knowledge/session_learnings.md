@@ -59,6 +59,18 @@
 
 ## Anti-patterns (Cách tránh)
 
+### Blindly Following Copilot Suggestions
+
+- **Vấn đề**: Copilot áp dụng generic best practices mà không hiểu context cụ thể của project (CLI vs server, internal tool vs public library).
+- **Ví dụ**: Thread safety suggestions cho CLI tool chạy single-threaded, handler verification cho internal logging module.
+- **Thay thế bằng**: Đánh giá mỗi suggestion dựa trên:
+  1. **Use case thực tế** - CLI tool hay web server?
+  2. **Scope của project** - Internal tool hay public library?
+  3. **Trade-off** - Complexity thêm vào có worth it không?
+- **Khi nào nên fix**: Critical bugs, security vulnerabilities, code correctness issues
+- **Khi nào defer**: Style preferences, edge case optimizations, over-engineering suggestions
+- **Nguồn**: Session [PR #10 Copilot Review]
+
 ### Cache Hit Without Disk Write
 
 - **Vấn đề**: Khi cache hit, chỉ trả về nội dung trong memory mà không đảm bảo file output tồn tại trên đĩa. Điều này gây lỗi nếu user mong đợi file output.
