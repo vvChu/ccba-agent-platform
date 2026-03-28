@@ -90,7 +90,7 @@ class TestLLMConverter:
         test_file.write_bytes(b"%PDF-1.4 test content")
 
         # With no valid API endpoint, conversion should fail gracefully
-        converter = LLMConverter(output_dir=tmp_path, proxy_url="http://invalid:9999")
+        converter = LLMConverter(output_dir=tmp_path, gateway_url="http://invalid:9999")
         result = await converter.convert(test_file)
 
         # Should fail but not crash

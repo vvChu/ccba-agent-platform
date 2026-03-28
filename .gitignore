@@ -63,5 +63,20 @@ Thumbs.db
 .md/*.txt
 .md/extracted_docs/
 
+# Build artifacts
+dist/
+*.whl
+*.tar.gz
+
+# Logs
+*.log
+
+# Temp/debug files in root
+*.docx
+
 # Gemini Agent
 .gemini/
+
+# Ruff cache
+.ruff_cache/
+

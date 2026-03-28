@@ -1,7 +1,8 @@
 """
-Universal LLM Converter.
+Universal LLM Converter — via AI Gateway.
 
-Uses Provider pattern to support Gemini, DeepSeek, and Groq.
+All models accessed through a single AI Gateway endpoint (LiteLLM on Server Spark).
+No need for separate provider routing — the gateway handles it.
 """
 
 import time
@@ -9,9 +10,8 @@ from pathlib import Path
 
 from mdconverter.config import settings
 from mdconverter.core.base import BaseConverter, ConversionResult, ConversionStatus
-from mdconverter.core.llm import GenerationConfig, LLMProvider
+from mdconverter.core.llm import GenerationConfig
 from mdconverter.providers.gemini import GeminiProvider
-from mdconverter.providers.openai import OpenAIProvider
 
 # Supported MIME types
 MIME_TYPES: dict[str, str] = {
@@ -34,7 +34,7 @@ class LLMConverter(BaseConverter):
     """
     Universal LLM-based Document Converter.
 
-    Supports multiple LLM providers: Gemini, DeepSeek, Groq.
+    All models are accessed through the unified AI Gateway.
     Uses fallback chain for reliability.
     """
 
@@ -43,47 +43,22 @@ class LLMConverter(BaseConverter):
     def __init__(
         self,
         output_dir: Path | None = None,
-        proxy_url: str | None = None,
+        gateway_url: str | None = None,
         models: list[str] | None = None,
     ) -> None:
         """Initialize converter."""
         super().__init__(output_dir)
         self.models = models or settings.models
 
-        # Initialize Providers
-        self.gemini_provider = GeminiProvider(proxy_url=proxy_url)
-
-        # DeepSeek (OpenAI Compatible)
-        self.deepseek_provider = None
-        if settings.deepseek_api_key:
-            self.deepseek_provider = OpenAIProvider(
-                base_url="https://api.deepseek.com", api_key=settings.deepseek_api_key
-            )
-
-        # Groq (OpenAI Compatible)
-        self.groq_provider = None
-        if settings.groq_api_key:
-            self.groq_provider = OpenAIProvider(
-                base_url="https://api.groq.com/openai/v1", api_key=settings.groq_api_key
-            )
-
-    def _get_provider_for_model(self, model: str) -> tuple[LLMProvider | None, str]:
-        """Return (provider, model_name) based on model string."""
-        if "deepseek" in model:
-            return self.deepseek_provider, model
-        elif "llama" in model or "mixtral" in model or "gemma" in model:
-            # Groq models usually like 'llama-3.3-70b-versatile'
-            return self.groq_provider, model
-        else:
-            # Default to Gemini
-            return self.gemini_provider, model
+        # Single provider — AI Gateway handles all model routing
+        self.provider = GeminiProvider(gateway_url=gateway_url)
 
     def supports(self, file_extension: str) -> bool:
         """Check if extension is supported."""
         return file_extension.lower() in self.SUPPORTED_EXTENSIONS
 
     async def convert(self, source_path: Path) -> ConversionResult:
-        """Convert document using LLM Providers."""
+        """Convert document using AI Gateway."""
         start_time = time.time()
 
         if not source_path.exists():
@@ -118,17 +93,12 @@ class LLMConverter(BaseConverter):
             timeout_seconds=settings.timeout_seconds,
         )
 
-        # Try each model in fallback chain
+        # Try each model in fallback chain (all via same gateway)
         last_error = ""
         for model in self.models:
-            provider, model_name = self._get_provider_for_model(model)
-            if not provider:
-                # Skip if provider not configured (no key)
-                continue
-
             try:
-                content = await provider.generate(
-                    prompt, file_bytes, mime_type, model_name, gen_config
+                content = await self.provider.generate(
+                    prompt, file_bytes, mime_type, model, gen_config
                 )
 
                 if content and len(content) > settings.min_content_length:

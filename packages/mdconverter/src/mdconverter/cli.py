@@ -454,8 +454,8 @@ def config_show() -> None:
     table.add_column("Setting", style="cyan")
     table.add_column("Value", style="green")
 
-    table.add_row("Proxy URL", settings.antigravity_proxy)
-    table.add_row("Proxy Token", settings.antigravity_access_token or "[dim]None[/dim]")
+    table.add_row("Gateway URL", settings.ai_gateway_url)
+    table.add_row("Gateway Key", (settings.ai_gateway_key[:10] + "...") if settings.ai_gateway_key else "[dim]None[/dim]")
     table.add_row("Models", ", ".join(settings.models))
     table.add_row("Max Tokens", str(settings.max_output_tokens))
     table.add_row("Timeout", f"{settings.timeout_seconds}s")
@@ -471,12 +471,9 @@ def config_set(
 ) -> None:
     """Update a configuration setting in .env file."""
     valid_keys = {
-        "antigravity_proxy": "MDCONVERT_ANTIGRAVITY_PROXY",
-        "antigravity_access_token": "MDCONVERT_ANTIGRAVITY_ACCESS_TOKEN",
-        "gemini_api_key": "MDCONVERT_GEMINI_API_KEY",
+        "ai_gateway_url": "AI_GATEWAY_URL",
+        "ai_gateway_key": "AI_GATEWAY_KEY",
         "llama_cloud_api_key": "MDCONVERT_LLAMA_CLOUD_API_KEY",
-        "deepseek_api_key": "MDCONVERT_DEEPSEEK_API_KEY",
-        "groq_api_key": "MDCONVERT_GROQ_API_KEY",
     }
 
     if key not in valid_keys:
