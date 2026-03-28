@@ -1,4 +1,4 @@
-# Pre-commit configuration for mdconverter
+# Pre-commit configuration for CCBA Agent Platform
 
 repos:
   # Ruff - Fast Python linter and formatter

@@ -1,4 +1,4 @@
-# CI/CD Pipeline for mdconverter
+# CI/CD Pipeline for CCBA Agent Platform
 
 name: CI
 
@@ -28,20 +28,22 @@ jobs:
       - name: Install uv
         run: pip install uv
 
-      - name: Install dependencies
-        run: uv pip install -e ".[dev]" --system
+      - name: Install packages
+        run: |
+          uv pip install -e "packages/ccba-ai" --system
+          uv pip install -e "packages/mdconverter[dev]" --system
 
       - name: Run Ruff linter
-        run: ruff check src/ tests/
+        run: ruff check packages/
 
       - name: Run Ruff formatter check
-        run: ruff format --check src/ tests/
+        run: ruff format --check packages/
 
       - name: Run MyPy
-        run: mypy src/ --ignore-missing-imports
+        run: mypy packages/mdconverter/src/ --ignore-missing-imports
 
       - name: Run tests
-        run: pytest tests/ -v --cov=src/mdconverter --cov-report=xml
+        run: pytest packages/mdconverter/tests/ -v --cov=packages/mdconverter/src/mdconverter --cov-report=xml
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -66,5 +68,5 @@ jobs:
         run: pip install pymarkdownlnt
 
       - name: Lint Markdown files
-        run: python -m pymarkdown scan README.md
+        run: python -m pymarkdown scan README.md PLATFORM.md
         continue-on-error: true
