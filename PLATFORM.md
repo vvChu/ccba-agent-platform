@@ -14,7 +14,8 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   │   ├── completion-checklist/      ←   HSHT công trình
 │   │   ├── seminar-builder/           ←   Chuẩn bị seminar
 │   │   ├── long-form-writer/          ←   Viết tài liệu dài
-│   │   └── ai-gateway-sdk/           ←   Kết nối AI Gateway (22 models)
+│   │   ├── ai-gateway-sdk/           ←   Kết nối AI Gateway (22 models)
+│   │   └── platform-loader/          ←   Bootstrap + service routing
 │   └── workflows/                     ← Automated workflows
 │       ├── prepare-seminar.md
 │       ├── update-legal-registry.md
@@ -30,15 +31,27 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 ├── knowledge/                         ← Accumulated knowledge
 │   └── session_learnings.md           ←   Patterns, anti-patterns
 │
-├── scripts/                           ← Deterministic scripts
+├── packages/                          ← Internal service modules
+│   ├── ccba-ai/                       ←   AI Gateway client (pip install)
+│   └── mdconverter/                   ←   Document converter service
+│       ├── src/mdconverter/           ←     Core library
+│       ├── tests/                     ←     Unit tests
+│       └── pyproject.toml             ←     Service config
+│
+├── scripts/                           ← Utility scripts
 ├── templates/                         ← Shared templates
 ├── tools/                             ← CLI tools, MCP servers
 │
-├── packages/                          ← Internal Python packages
-│   └── ccba-ai/                      ←   AI Gateway client (pip install -e)
 ├── .md/                               ← Processing workspace (gitignored)
-└── src/                               ← Core library code
+└── pyproject.toml                     ← Root workspace config (uv)
 ```
+
+## Service Modules
+
+| Package | Mô tả | Install |
+|---------|--------|---------|
+| `ccba-ai` | AI Gateway client — 22 models, 1 endpoint | `pip install -e packages/ccba-ai` |
+| `mdconverter` | Document to Markdown converter | `pip install -e packages/mdconverter` |
 
 ## Cách sử dụng
 
@@ -55,7 +68,14 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 1. Tạo folder trong `.agent/skills/{tên-skill}/`
 2. Viết `SKILL.md` theo format chuẩn (YAML frontmatter + instructions)
 3. Thêm data/, templates/ nếu cần
-4. Skill tự động available cho mọi project
+4. Đăng ký trong `catalog.yaml`
+
+### Khi thêm service module mới
+
+1. Tạo folder trong `packages/{tên-service}/`
+2. Thêm `pyproject.toml` với dependencies riêng
+3. Tạo `src/{package_name}/` + `tests/`
+4. Install: `pip install -e packages/{tên-service}`
 
 ### Khi mở project mới (Spoke)
 
@@ -65,11 +85,12 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 
 ## Principles
 
-1. **Hub chứa tools** — Skills, workflows, knowledge, rules
+1. **Hub chứa tools** — Skills, workflows, knowledge, rules, packages
 2. **Spoke chứa context** — Chỉ local config đặc thù
 3. **Output về đích** — Kết quả cuối cùng lưu tại project folder
 4. **Git-backed** — Mọi thay đổi tracked, có thể rollback
-5. **Rules enforce identity** — Đảm bảo output mang bản sắc CCBA
+5. **Modular services** — Mỗi package là 1 service độc lập, pip-installable
+6. **Rules enforce identity** — Đảm bảo output mang bản sắc CCBA
 
 ## Repository
 
