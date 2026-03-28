@@ -1,0 +1,237 @@
+---
+name: AI Gateway SDK
+description: Kết nối AI Gateway trên Server Spark — 22 models (local GPU + cloud), 1 endpoint. Bao gồm Python package ccba-ai.
+---
+
+# AI Gateway SDK
+
+Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoint duy nhất cung cấp 22 models — từ Qwen 35B chạy local GPU đến Claude 4.6, Gemini 3.1 Pro trên cloud.
+
+## Kiến trúc
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  MÁY CLIENT (PC/Laptop/Server khác)                         │
+│                                                              │
+│  from ccba_ai import ai                                      │
+│  ai.chat("...")  ──► http://<SERVER_IP>:8090/v1              │
+│                         ▲                                    │
+│                    .env (API_KEY)                             │
+└────────────────────┬─────────────────────────────────────────┘
+                     │ Tailscale VPN / LAN / SSH Tunnel
+┌────────────────────▼─────────────────────────────────────────┐
+│  SERVER DGX SPARK                                            │
+│                                                              │
+│  :8090 ─► AI Gateway (LiteLLM)                               │
+│              ├── Qwen 3.5 35B (:8004)  ← vLLM, local GPU    │
+│              ├── Qwen 3.5 4B  (:8003)  ← vLLM, fallback     │
+│              ├── Claude 4.6 Sonnet/Opus    ← Anthropic API   │
+│              ├── Gemini 3/3.1 Flash/Pro    ← Google API      │
+│              ├── GPT-4o / GPT-4 Turbo      ← OpenAI API     │
+│              └── Auto-fallback + Redis cache                 │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Kết nối
+
+| Phương thức | Server IP | Ghi chú |
+|---|---|---|
+| **Tailscale VPN** ⭐ | `100.83.192.30` | Khuyến nghị — an toàn, xuyên NAT |
+| LAN (cùng mạng) | `<LAN_IP>` | Hỏi admin |
+| SSH Tunnel | `localhost` | `ssh -N -L 8090:localhost:8090 vvc@<IP>` |
+
+- **Gateway URL**: `http://<SERVER_IP>:8090/v1`
+- **API Key**: `sk-spark-secure-key-2026`
+
+---
+
+## Model Catalog (22 models)
+
+### 🖥️ Local GPU (private, offline)
+
+| Model | Mô tả |
+|-------|--------|
+| `qwen3.5-35b` | ⭐ **Default** — Qwen 35B, nhanh, private |
+| `rag-core` | Alias qwen3.5-35b (dùng trong RAG) |
+| `rag-light` | Qwen 4B — nhẹ hơn, fallback |
+
+### ☁️ Cloud — Speed Tier (< 1.5s)
+
+| Model | Best For |
+|-------|----------|
+| `gemini-3-flash` | Nhanh, multimodal |
+| `gemini-3.1-flash-lite` | Rẻ nhất, nhanh nhất |
+| `gpt-4o` | Vision + general purpose |
+| `gpt-4o-mini` | Cost-efficient |
+
+### ☁️ Cloud — Smart Tier (1–3s)
+
+| Model | Best For |
+|-------|----------|
+| `claude-sonnet-4-6` ⭐ | Best coding/agentic |
+| `claude-sonnet-4-6-thinking` | Chain-of-Thought reasoning |
+| `claude-opus-4-6` | Mạnh nhất (legal, financial) |
+| `claude-opus-4-5-thinking` | Deep reasoning |
+
+### ☁️ Cloud — Deep Reasoning (7–13s, 1M context)
+
+| Model | Best For |
+|-------|----------|
+| `gemini-3.1-pro` | Full codebase analysis |
+| `gemini-3.1-pro-high` | Scientific reasoning |
+| `gemma-3-27b` | Free tier, metadata tasks |
+
+### ☁️ Fallbacks
+
+| Model | Backend |
+|-------|---------|
+| `groq-llama3` | Groq LPU API |
+| `gpt-oss-120b-medium` | OpenAI OSS |
+
+---
+
+## Cách dùng
+
+### Option A — `ccba-ai` Package (Recommended)
+
+```bash
+pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-ai"
+```
+
+```python
+from ccba_ai import ai
+
+# Chat đơn giản (Qwen 35B local — mặc định)
+reply = ai.chat("Xin chào!")
+
+# Chọn model
+reply = ai.chat("Review code", model="claude-sonnet-4-6")
+
+# System prompt
+reply = ai.chat("Tóm tắt...", system="Bạn là chuyên gia pháp luật", model="qwen3.5-35b")
+
+# Streaming
+for chunk in ai.stream("Viết quicksort"):
+    print(chunk, end="")
+
+# Multi-turn
+reply = ai.chat_multi([
+    {"role": "system", "content": "Expert Python dev"},
+    {"role": "user", "content": "Review this code..."},
+])
+
+# List models
+print(ai.models())
+```
+
+### Option B — OpenAI SDK trực tiếp
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://100.83.192.30:8090/v1",
+    api_key="sk-spark-secure-key-2026"
+)
+
+response = client.chat.completions.create(
+    model="claude-sonnet-4-6",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+print(response.choices[0].message.content)
+```
+
+### Option C — TypeScript/Node.js
+
+```typescript
+import OpenAI from 'openai';
+import 'dotenv/config';
+
+const client = new OpenAI({
+    baseURL: process.env.AI_GATEWAY_URL || 'http://100.83.192.30:8090/v1',
+    apiKey: process.env.AI_GATEWAY_KEY,
+});
+
+const response = await client.chat.completions.create({
+    model: 'qwen3.5-35b',
+    messages: [{ role: 'user', content: 'Hello!' }],
+});
+```
+
+### Option D — cURL
+
+```bash
+curl http://100.83.192.30:8090/v1/chat/completions \
+  -H "Authorization: Bearer sk-spark-secure-key-2026" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"qwen3.5-35b","messages":[{"role":"user","content":"Hello!"}]}'
+```
+
+---
+
+## Cấu hình (.env)
+
+Copy file `.env.ai-gateway` (cùng folder) vào project, đổi tên `.env`:
+
+```env
+AI_GATEWAY_URL=http://100.83.192.30:8090/v1
+AI_GATEWAY_KEY=sk-spark-secure-key-2026
+AI_MODEL=qwen3.5-35b
+```
+
+---
+
+## Model Routing Logic
+
+```python
+def choose_model(task_type: str) -> str:
+    routing = {
+        "coding":     "claude-sonnet-4-6",      # Best coding
+        "reasoning":  "claude-sonnet-4-6-thinking",
+        "research":   "gemini-3.1-pro",          # 1M context
+        "fast":       "gemini-3-flash",          # Speed
+        "private":    "qwen3.5-35b",             # Offline/private
+        "cheap":      "gemini-3.1-flash-lite",   # Lowest cost
+        "vietnamese": "qwen3.5-35b",             # Vietnamese text
+    }
+    return routing.get(task_type, "qwen3.5-35b")
+```
+
+---
+
+## Quick Test
+
+```bash
+# Verify gateway reachable
+curl http://100.83.192.30:8090/v1/models \
+  -H "Authorization: Bearer sk-spark-secure-key-2026"
+
+# Health check
+curl http://100.83.192.30:8090/health
+```
+
+---
+
+## Xử lý sự cố
+
+| Vấn đề | Giải pháp |
+|--------|-----------|
+| `Connection refused` | Kiểm tra Tailscale/VPN, hoặc dùng SSH tunnel |
+| `401 Unauthorized` | Sai API key — kiểm tra `AI_GATEWAY_KEY` |
+| `Model not found` | Kiểm tra tên model bằng `/v1/models` |
+| `504 Gateway Timeout` | Model đang load, chờ 2-3 phút rồi thử lại |
+| Qwen 35B chậm | Giảm `max_tokens`, hoặc dùng `rag-light` (4B) |
+
+## Bảo mật
+
+1. **KHÔNG commit API key** vào git — thêm `.env` vào `.gitignore`
+2. **Dùng Tailscale** thay vì expose port ra public internet
+3. **Mỗi project** có `.env` riêng, không hardcode IP/key trong code
+
+## Files liên quan
+
+- **Package**: `packages/ccba-ai/` — pip install để dùng `from ccba_ai import ai`
+- **Env template**: `.agent/skills/ai-gateway-sdk/.env.ai-gateway`
+- **Server docs**: Xem thêm tại `AI_Gateway/playbooks/` (archived)
