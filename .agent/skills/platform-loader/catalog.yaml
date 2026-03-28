@@ -56,6 +56,23 @@ skills:
       - regulations
     skill_path: .agent/skills/long-form-writer/SKILL.md
 
+  - name: ai-gateway-sdk
+    description: "Kết nối AI Gateway — 22 models (local GPU + cloud), 1 endpoint"
+    triggers:
+      - ai
+      - llm
+      - model
+      - gateway
+      - chat
+      - inference
+      - DGX
+      - vLLM
+      - Qwen
+      - Claude
+      - Gemini
+    skill_path: .agent/skills/ai-gateway-sdk/SKILL.md
+    package_path: packages/ccba-ai
+
 workflows:
   - name: prepare-seminar
     command: /prepare-seminar
