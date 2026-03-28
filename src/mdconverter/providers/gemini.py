@@ -41,13 +41,13 @@ class GeminiProvider(LLMProvider):
             "X-Goog-Upload-Header-Content-Type": mime_type,
             "Content-Type": "application/json",
         }
-        
+
         # Metadata
         metadata = {"file": {"display_name": "uploaded_file"}}
-        
+
         resp = await self.client.post(upload_url, headers=headers, json=metadata)
         resp.raise_for_status()
-        
+
         upload_url = resp.headers["X-Goog-Upload-URL"]
 
         # 2. Upload Actual Bytes
@@ -56,15 +56,15 @@ class GeminiProvider(LLMProvider):
             "X-Goog-Upload-Offset": "0",
             "X-Goog-Upload-Command": "upload, finalize",
         }
-        
+
         resp = await self.client.post(upload_url, headers=headers, content=file_content, timeout=120)
         resp.raise_for_status()
-        
+
         file_info = resp.json()
         file_uri = file_info.get("file", {}).get("uri")
         if not file_uri:
              raise ValueError("Failed to get file URI from upload response")
-             
+
         return str(file_uri)
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
@@ -79,7 +79,7 @@ class GeminiProvider(LLMProvider):
         """Generate content using Gemini API via OpenAI-compatible proxy."""
         file_b64 = base64.b64encode(file_content).decode("utf-8")
         data_uri = f"data:{mime_type};base64,{file_b64}"
-        
+
         # Use OpenAI-compatible format for proxy
         payload = {
             "model": model,
