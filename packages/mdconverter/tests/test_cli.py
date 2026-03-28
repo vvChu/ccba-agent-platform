@@ -27,7 +27,7 @@ class TestConfigCommand:
         """Test config command shows current settings."""
         result = runner.invoke(app, ["config", "show"])
         assert result.exit_code == 0
-        assert "Proxy URL" in result.stdout or "proxy" in result.stdout.lower()
+        assert "Gateway URL" in result.stdout or "gateway" in result.stdout.lower()
 
     def test_config_shows_models(self) -> None:
         """Test config command shows models."""

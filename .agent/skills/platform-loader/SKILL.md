@@ -28,6 +28,7 @@ Tất cả path bên dưới là **relative** so với Hub root.
 | `completion-checklist` | HSHT, hồ sơ hoàn thành, nghiệm thu | Danh mục hồ sơ hoàn thành công trình |
 | `seminar-builder` | seminar, đào tạo, training, recap | Chuẩn bị nội dung seminar |
 | `long-form-writer` | tài liệu dài, whitepaper, quy chế | Viết tài liệu 2000+ words |
+| `ai-gateway-sdk` | ai, llm, model, gateway, DGX | Kết nối AI Gateway (22 models) |
 
 ### Workflows
 

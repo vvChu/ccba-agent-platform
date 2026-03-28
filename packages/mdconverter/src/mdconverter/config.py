@@ -18,42 +18,34 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         env_prefix="MDCONVERT_",
         case_sensitive=False,
+        extra="ignore",
     )
 
-    # API Configuration
-    antigravity_proxy: str = Field(
-        default="http://127.0.0.1:8045",
-        description="Antigravity proxy URL for Gemini API access",
+    # AI Gateway Configuration (replaces legacy Antigravity Proxy)
+    ai_gateway_url: str = Field(
+        default="http://100.83.192.30:8090/v1",
+        description="AI Gateway URL (LiteLLM on Server Spark)",
+        alias="AI_GATEWAY_URL",
     )
-    antigravity_access_token: str | None = Field(
-        default=None,
-        description="Access token for Antigravity Proxy (if auth enabled)",
+    ai_gateway_key: str = Field(
+        default="",
+        description="AI Gateway API key",
+        alias="AI_GATEWAY_KEY",
     )
+
+    # LlamaCloud (optional)
     llama_cloud_api_key: str | None = Field(
         default=None,
         description="LlamaCloud API key for LlamaParse",
     )
-    deepseek_api_key: str | None = Field(
-        default=None,
-        description="DeepSeek API key",
-    )
-    groq_api_key: str | None = Field(
-        default=None,
-        description="Groq API key",
-    )
-    gemini_api_key: str | None = Field(
-        default=None,
-        description="Gemini API key (if not using proxy)",
-    )
 
-    # Model Configuration
+    # Model Configuration — AI Gateway models
     models: list[str] = Field(
         default=[
-            "gemini-2.0-flash-exp",
-            "deepseek-coder",
-            "deepseek-chat",
-            "llama-3.3-70b-versatile",  # Groq
-            "gemini-1.5-flash",
+            "qwen3.5-35b",          # Local GPU — private, fast
+            "gemini-3-flash",       # Cloud — fast, multimodal
+            "claude-sonnet-4-6",    # Cloud — best coding
+            "gemini-3.1-pro",       # Cloud — 1M context, research
         ],
         description="Ordered list of models to try (fallback chain)",
     )

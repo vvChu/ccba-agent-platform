@@ -1,19 +1,9 @@
-# Scripts — Reusable Python/PowerShell scripts
+# Scripts
 
-Thư mục chứa các scripts deterministic chạy bởi Agent hoặc user trực tiếp.
+> Utility scripts for ad-hoc tasks.
 
-## Quy tắc
+## Notes
 
-- Scripts phải có docstring mô tả mục đích
-- Input/Output rõ ràng qua arguments hoặc stdin/stdout
-- Không hardcode paths — dùng config hoặc arguments
-- Dependencies liệt kê trong `requirements.txt` (nếu Python)
-
-## Phân biệt Scripts vs Skills
-
-| | Scripts | Skills |
-|---|---------|--------|
-| **Bản chất** | Code deterministic | Instructions cho Agent |
-| **Chạy bởi** | Python/PowerShell interpreter | AI Agent (LLM) |
-| **Output** | Kết quả cố định | Kết quả sáng tạo/phân tích |
-| **Ví dụ** | Export YAML→DOCX, validate data | Tạo impact report, soạn công văn |
+- Legacy conversion scripts (`long_form_generator.py`, `batch_convert.py`, etc.) đã được tích hợp vào `packages/mdconverter/` hoặc thay thế bởi skills.
+- CLI: `mdconvert convert document.pdf`
+- AI Gateway: `from ccba_ai import ai`
