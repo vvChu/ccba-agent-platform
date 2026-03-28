@@ -160,17 +160,27 @@ class LLMConverter(BaseConverter):
 
     def _get_conversion_prompt(self) -> str:
         """Get the conversion prompt."""
-        return """Convert this document to clean, well-structured Markdown.
+        return """Convert this ENTIRE document to clean, well-structured Markdown.
 
-RULES:
-1. Preserve all content accurately - do NOT summarize or omit
-2. Use proper heading hierarchy (# for main title, ## for sections, etc.)
-3. Format tables using Markdown table syntax
-4. Keep original numbering and bullet points
-5. For Vietnamese text: maintain diacritics and special characters
-6. Output ONLY Markdown, no explanations or code blocks wrapping
+CRITICAL RULES:
+1. **CONVERT ALL CONTENT** - Do NOT stop early, do NOT summarize, do NOT skip ANY pages
+2. Use proper heading hierarchy (# for main title, ## for Chương, ### for Điều, #### for Mục)
+3. Format ALL tables using Markdown table syntax with proper alignment
+4. Keep ALL original numbering, bullet points, and list formatting
+5. For Vietnamese text: maintain ALL diacritics and special characters
+6. Output ONLY raw Markdown - no code blocks, no explanations
 
-START CONVERSION NOW:"""
+VIETNAMESE LEGAL DOCUMENT STRUCTURE:
+- Keep "Chương I, II, III..." as ## headings
+- Keep "Điều 1, 2, 3..." as ### headings  
+- Keep "Mục I, II, III..." as #### headings
+- Keep numbered lists (1., 2., 3. or a), b), c)) as proper lists
+- Preserve all Phụ lục (Appendix) content at the end
+
+IMPORTANT: This document may have 20-50+ pages. You MUST convert EVERY page from start to finish.
+Continue until you reach the very end of the document including all Phụ lục (Appendices).
+
+START CONVERSION - CONVERT EVERYTHING:"""
 
     def _calculate_quality(self, content: str) -> int:
         """Calculate quality score (0-100)."""

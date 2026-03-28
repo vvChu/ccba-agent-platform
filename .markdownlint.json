@@ -1,0 +1,11 @@
+{
+    "default": true,
+    "MD049": {
+        "style": "asterisk"
+    },
+    "MD013": false,
+    "MD012": {
+        "maximum": 1
+    },
+    "MD041": true
+}
