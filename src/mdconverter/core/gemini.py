@@ -172,7 +172,7 @@ CRITICAL RULES:
 
 VIETNAMESE LEGAL DOCUMENT STRUCTURE:
 - Keep "Chương I, II, III..." as ## headings
-- Keep "Điều 1, 2, 3..." as ### headings  
+- Keep "Điều 1, 2, 3..." as ### headings
 - Keep "Mục I, II, III..." as #### headings
 - Keep numbered lists (1., 2., 3. or a), b), c)) as proper lists
 - Preserve all Phụ lục (Appendix) content at the end
