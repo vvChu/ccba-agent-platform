@@ -55,11 +55,11 @@ class VNLegalProcessor:
                 # and is surrounded by content (not part of a numbered list)
                 if 1 <= page_num <= 200:
                     # Check context: previous and next lines should have content
-                    prev_line = lines[i-1].strip() if i > 0 else ""
-                    _next_line = lines[i+1].strip() if i < len(lines)-1 else ""  # noqa: F841
+                    prev_line = lines[i - 1].strip() if i > 0 else ""
+                    _next_line = lines[i + 1].strip() if i < len(lines) - 1 else ""  # noqa: F841
 
                     # If previous line ends with punctuation or is blank, likely page number
-                    if not prev_line or prev_line.endswith(('.', ':', ';', '…', ',')):
+                    if not prev_line or prev_line.endswith((".", ":", ";", "…", ",")):
                         removed_count += 1
                         continue  # Skip this line
 
