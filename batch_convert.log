@@ -1,0 +1,103 @@
+2026-02-03 15:33:43,660 - INFO - Found 19 PDF files in G:\My Drive\00 BIM Plus AI\ISO Standards
+2026-02-03 15:33:43,660 - INFO - [1/19] Processing ISO-12911-2023_Organization and digitization of information about buildings and civil engineering works, including building information modelling (BIM) — Framework for specification of BIM implementation.pdf...
+2026-02-03 15:34:22,628 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:34:22,684 - INFO - [1/19] Successfully converted ISO-12911-2023_Organization and digitization of information about buildings and civil engineering works, including building information modelling (BIM) — Framework for specification of BIM implementation.pdf
+2026-02-03 15:34:22,694 - INFO - [2/19] Processing ISO 12006-2-2015_Building construction - Organization of information about construction works_Part 2 Framework for classification.pdf...
+2026-02-03 15:35:12,891 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:36:17,003 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:36:41,631 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:36:41,660 - ERROR - [2/19] Failed to convert ISO 12006-2-2015_Building construction - Organization of information about construction works_Part 2 Framework for classification.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_o4x0wj55'
+2026-02-03 15:36:41,664 - INFO - [3/19] Processing ISO 21511_2018 -Work breakdown structures for project and programme management.pdf...
+2026-02-03 15:37:55,041 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:38:21,426 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:38:21,448 - ERROR - [3/19] Failed to convert ISO 21511_2018 -Work breakdown structures for project and programme management.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_y2faebxc'
+2026-02-03 15:38:21,452 - INFO - [4/19] Processing ISO 12006-3_2015_Building construction. Organization of information about construction works. Framework for object-oriented information.pdf...
+2026-02-03 15:38:59,746 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:40:43,059 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:41:12,098 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:41:12,227 - ERROR - [4/19] Failed to convert ISO 12006-3_2015_Building construction. Organization of information about construction works. Framework for object-oriented information.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_q4raonci'
+2026-02-03 15:41:12,231 - INFO - [5/19] Processing ISO 21504_2015_Project, programme and portfolio management - Guidance on portfolio management.pdf...
+2026-02-03 15:41:46,482 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:42:47,882 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:42:47,903 - ERROR - [5/19] Failed to convert ISO 21504_2015_Project, programme and portfolio management - Guidance on portfolio management.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_rsgi3c5v'
+2026-02-03 15:42:47,907 - INFO - [6/19] Processing ISO 22274_2013_Systems to manage terminology, knowledge and content-related aspects for developing and internationalizing classification systems.pdf...
+2026-02-03 15:43:55,870 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:44:45,769 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:46:50,292 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:48:05,817 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:48:48,334 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:48:48,355 - ERROR - [6/19] Failed to convert ISO 22274_2013_Systems to manage terminology, knowledge and content-related aspects for developing and internationalizing classification systems.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_rbry57kz'
+2026-02-03 15:48:48,362 - INFO - [7/19] Processing ISO 21500_2021_ Project, programme and portfolio management - Context and concepts.pdf...
+2026-02-03 15:50:16,562 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:50:41,022 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:50:41,038 - ERROR - [7/19] Failed to convert ISO 21500_2021_ Project, programme and portfolio management - Context and concepts.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_rwafruu0'
+2026-02-03 15:50:41,043 - INFO - [8/19] Processing ISO 9001_2015 (VE).pdf...
+2026-02-03 15:51:40,746 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:53:19,609 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:54:31,711 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:56:06,774 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:56:06,793 - ERROR - [8/19] Failed to convert ISO 9001_2015 (VE).pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks__t8jyahz'
+2026-02-03 15:56:06,797 - INFO - [9/19] Processing ISO 9001_2015 Implementation Handbook.pdf...
+2026-02-03 15:56:30,127 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:57:28,684 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:57:52,526 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:58:39,515 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 15:59:26,687 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:00:16,410 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:06:22,093 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:07:06,294 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:08:05,524 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:08:05,545 - ERROR - [9/19] Failed to convert ISO 9001_2015 Implementation Handbook.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_bh9j6bv3'
+2026-02-03 16:08:05,551 - INFO - [10/19] Processing ISO 19650 - Part 3.pdf...
+2026-02-03 16:13:18,092 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:14:49,849 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:15:26,089 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:15:26,113 - ERROR - [10/19] Failed to convert ISO 19650 - Part 3.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_a_mbta48'
+2026-02-03 16:15:26,118 - INFO - [11/19] Processing ISO 19650 - Part 1.pdf...
+2026-02-03 16:16:11,980 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:17:33,701 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:18:31,052 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:18:50,988 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:18:51,016 - ERROR - [11/19] Failed to convert ISO 19650 - Part 1.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_dfqxe3tg'
+2026-02-03 16:18:51,020 - INFO - [12/19] Processing ISO 19650 - Part 5.pdf...
+2026-02-03 16:19:40,991 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:20:43,602 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:21:24,446 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:21:24,471 - ERROR - [12/19] Failed to convert ISO 19650 - Part 5.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_tuveagfu'
+2026-02-03 16:21:24,474 - INFO - [13/19] Processing ISO 19650 - Part 4.pdf...
+2026-02-03 16:23:06,772 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:23:24,387 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:23:24,416 - ERROR - [13/19] Failed to convert ISO 19650 - Part 4.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_qf4bdihg'
+2026-02-03 16:23:24,421 - INFO - [14/19] Processing ISO 19650 - Part 2.pdf...
+2026-02-03 16:24:12,154 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:25:02,683 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:26:11,027 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:26:37,935 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:26:37,966 - ERROR - [14/19] Failed to convert ISO 19650 - Part 2.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks__43nrcel'
+2026-02-03 16:26:37,970 - INFO - [15/19] Processing 3-AP01-ISO-19650-3-Vietnames-Version.pdf...
+2026-02-03 16:27:57,403 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:29:13,005 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:30:09,794 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:30:42,967 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:30:42,986 - ERROR - [15/19] Failed to convert 3-AP01-ISO-19650-3-Vietnames-Version.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_2mt_8d0b'
+2026-02-03 16:30:42,989 - INFO - [16/19] Processing 5-AP01-ISO-19650-5-Vietnames-Version.pdf...
+2026-02-03 16:31:32,514 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:32:32,875 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:33:35,563 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:34:14,184 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:34:14,216 - ERROR - [16/19] Failed to convert 5-AP01-ISO-19650-5-Vietnames-Version.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_5vnhq44r'
+2026-02-03 16:34:14,219 - INFO - [17/19] Processing 2-AP01-ISO-19650-2-Vietnames-Version.pdf...
+2026-02-03 16:35:33,425 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:36:26,410 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:37:37,087 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:37:37,114 - ERROR - [17/19] Failed to convert 2-AP01-ISO-19650-2-Vietnames-Version.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_3bivio3u'
+2026-02-03 16:37:37,118 - INFO - [18/19] Processing 4-AP01-ISO-19650-4-Vietnames-Version.pdf...
+2026-02-03 16:38:57,546 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:40:32,078 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:40:32,107 - ERROR - [18/19] Failed to convert 4-AP01-ISO-19650-4-Vietnames-Version.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_an7_bht8'
+2026-02-03 16:40:32,113 - INFO - [19/19] Processing 1-AP01-ISO-19650-1-Vietnames-Version.pdf...
+2026-02-03 16:42:37,037 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:43:43,291 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:45:06,522 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:45:59,906 - INFO - HTTP Request: POST http://100.79.241.120:8045/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-03 16:45:59,935 - ERROR - [19/19] Failed to convert 1-AP01-ISO-19650-1-Vietnames-Version.pdf: [WinError 145] The directory is not empty: 'C:\\Users\\chuvu\\AppData\\Local\\Temp\\pdf_chunks_rgdwyg1h'
