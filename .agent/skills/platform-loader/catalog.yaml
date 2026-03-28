@@ -1,0 +1,145 @@
+# CCBA Agent Services Platform — Service Catalog
+# Auto-discovery manifest for cross-workspace skill loading
+# Last updated: 2026-03-28
+
+hub_path: "D:\\GitHubProjects\\ccba-agent-platform"
+hub_repo: "https://github.com/vvChu/ccba-agent-platform"
+
+skills:
+  - name: legal-document-tracker
+    description: "Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam"
+    triggers:
+      - VBPL
+      - pháp luật
+      - legal
+      - registry
+      - nghị định
+      - thông tư
+      - văn bản pháp luật
+      - luật xây dựng
+    skill_path: .agent/skills/legal-document-tracker/SKILL.md
+    data_files:
+      - .agent/skills/legal-document-tracker/registry/legal_registry.yaml
+
+  - name: completion-checklist
+    description: "Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện hành"
+    triggers:
+      - hồ sơ hoàn thành
+      - HSHT
+      - completion
+      - checklist
+      - danh mục hồ sơ
+      - nghiệm thu
+      - hoàn công
+    skill_path: .agent/skills/completion-checklist/SKILL.md
+    data_files:
+      - .agent/skills/completion-checklist/data/checklist_master.yaml
+
+  - name: seminar-builder
+    description: "Chuẩn bị nội dung seminar/training nội bộ CCBA"
+    triggers:
+      - seminar
+      - đào tạo
+      - training
+      - recap
+      - agenda
+      - buổi thảo luận
+    skill_path: .agent/skills/seminar-builder/SKILL.md
+
+  - name: long-form-writer
+    description: "Tạo tài liệu dài (2000+ words) bằng cách quản lý context LLM"
+    triggers:
+      - tài liệu dài
+      - long-form
+      - whitepaper
+      - quy chế
+      - regulations
+    skill_path: .agent/skills/long-form-writer/SKILL.md
+
+workflows:
+  - name: prepare-seminar
+    command: /prepare-seminar
+    description: "Chuẩn bị nội dung cho buổi seminar/thảo luận nội bộ CCBA"
+    triggers:
+      - chuẩn bị seminar
+      - buổi thảo luận
+      - prepare seminar
+    workflow_path: .agent/workflows/prepare-seminar.md
+
+  - name: update-legal-registry
+    command: /update-legal-registry
+    description: "Cập nhật registry VBPL và kiểm tra tác động lên danh mục hồ sơ hoàn thành"
+    triggers:
+      - cập nhật VBPL
+      - legal update
+      - update registry
+      - văn bản mới
+    workflow_path: .agent/workflows/update-legal-registry.md
+
+  - name: session-retrospective
+    command: /session-retrospective
+    description: "Tổng hợp kiến thức cuối phiên làm việc"
+    triggers:
+      - retrospective
+      - cuối phiên
+      - tổng kết
+      - session learnings
+    workflow_path: .agent/workflows/session-retrospective.md
+
+  - name: create-pr
+    command: /create-pr
+    description: "Push code và tạo Pull Request tự động"
+    triggers:
+      - create PR
+      - pull request
+    workflow_path: .agent/workflows/create-pr.md
+
+  - name: release-feature
+    command: /release-feature
+    description: "Merge PR, cleanup branch và cập nhật walkthrough"
+    triggers:
+      - release
+      - merge PR
+    workflow_path: .agent/workflows/release-feature.md
+
+  - name: new-feature
+    command: /new-feature
+    description: "Tạo feature branch mới với cleanup tự động"
+    triggers:
+      - new feature
+      - feature mới
+    workflow_path: .agent/workflows/new-feature.md
+
+  - name: discard-feature
+    command: /discard-feature
+    description: "Hủy bỏ branch hiện tại, xóa cả local và remote"
+    triggers:
+      - discard
+      - hủy branch
+    workflow_path: .agent/workflows/discard-feature.md
+
+rules:
+  - name: ccba_identity
+    description: "Brand, voice, phong cách giao tiếp CCBA"
+    when: "Mọi output mang danh CCBA"
+    rule_path: rules/ccba_identity.md
+
+  - name: quality_standards
+    description: "Tiêu chuẩn chất lượng QC"
+    when: "Tạo output QC/testing"
+    rule_path: rules/quality_standards.md
+
+  - name: naming_conventions
+    description: "Quy ước đặt tên file và folder"
+    when: "Tạo file/folder mới"
+    rule_path: rules/naming_conventions.md
+
+  - name: compliance
+    description: "Tuân thủ pháp luật xây dựng Việt Nam"
+    when: "Output liên quan pháp luật/VBPL"
+    rule_path: rules/compliance.md
+
+knowledge:
+  - name: session_learnings
+    description: "Patterns, anti-patterns, solutions tích lũy qua các phiên"
+    knowledge_path: knowledge/session_learnings.md
