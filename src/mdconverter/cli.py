@@ -196,6 +196,21 @@ def convert(
 
             result = await converter.convert(file)
 
+            # Apply VN Legal post-processing if applicable
+            if result.is_success and result.content:
+                from mdconverter.plugins.vn_legal.detector import is_legal_document
+                from mdconverter.plugins.vn_legal.processor import VNLegalProcessor
+
+                if is_legal_document(result.content):
+                    processor = VNLegalProcessor()
+                    processed_content = processor.process(result.content)
+                    if processed_content != result.content:
+                        result.content = processed_content
+                        # Update the output file with processed content
+                        if result.output_path and result.output_path.exists():
+                            result.output_path.write_text(processed_content, encoding="utf-8")
+                        logger.debug(f"Applied VN Legal rules: {processor.get_fix_summary()}")
+
             # Save to cache if successful (run sync I/O in thread pool)
             if cache and result.is_success and result.content:
                 await loop.run_in_executor(None, cache.set, file, result.content, result.tool_used)

@@ -53,3 +53,15 @@ Thumbs.db
 # Build
 *.manifest
 *.spec
+
+# Processing Workspace (.md/)
+# Temp files during processing are ignored, but structure is tracked
+.md/*.pdf
+.md/*.docx
+.md/*.xlsx
+.md/*.pptx
+.md/*.txt
+.md/extracted_docs/
+
+# Gemini Agent
+.gemini/

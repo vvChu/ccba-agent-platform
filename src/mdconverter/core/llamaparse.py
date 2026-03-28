@@ -144,7 +144,8 @@ class LlamaParseConverter(BaseConverter):
         }
 
         start = time.time()
-        start = time.time()
+        poll_interval = 2.0  # Start with 2 seconds
+        max_poll_interval = 10.0  # Cap at 10 seconds
         while time.time() - start < max_wait:
             response = await self.client.get(
                 f"{self.base_url}/job/{job_id}",
@@ -171,8 +172,9 @@ class LlamaParseConverter(BaseConverter):
             elif status == "ERROR":
                 return None
 
-            # Still processing, wait and retry
-            await asyncio.sleep(2)
+            # Still processing, wait with exponential backoff
+            await asyncio.sleep(poll_interval)
+            poll_interval = min(poll_interval * 1.5, max_poll_interval)
 
         return None  # Timeout
 
