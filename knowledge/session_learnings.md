@@ -4,7 +4,7 @@
 > File này được cập nhật tự động thông qua workflow `/session-retrospective`.
 > Chứa các kiến thức có giá trị nhất được phát hiện qua các phiên làm việc.
 
-## Cập nhật gần nhất: 2026-03-28
+## Cập nhật gần nhất: 2026-03-28 (Session 227a7981)
 
 ---
 
@@ -544,6 +544,7 @@ LLAMAPARSE_API_KEY = "llx-..."
 
 | Date | Session ID | Topic | Patterns Added |
 | ---- | ---------- | ----- | -------------- |
+| 2026-03-28 | 227a7981 | **Platform Finalization & Phase 2 Discovery** | 3 patterns, 2 anti-patterns, 1 solution |
 | 2026-03-28 | f21c8edb | **VBPL Skills/Workflows & Seminar Preparation** | 4 patterns, 2 anti-patterns, 1 solution |
 | 2026-01-04 | a7a841ef | **Markdownlint Compliance & Full System Consolidation** | 2 patterns, 1 config, 3 solutions |
 | 2026-01-04 | a7a841ef | Self-Learning & Auto-Format Best Practices | 4 patterns, 2 anti-patterns, 2 solutions |
@@ -706,3 +707,76 @@ LLAMAPARSE_API_KEY = "llx-..."
 #### Avoid list_dir for Vietnamese OneDrive Paths
 - **Vấn đề**: NFC/NFD encoding mismatch → "directory does not exist"
 - **Thay thế**: PowerShell Get-ChildItem hoặc .NET API
+
+---
+
+## Cập nhật: 2026-03-28 (Platform Finalization & Phase 2 Discovery)
+
+### Patterns Added
+
+#### Platform-Loader Active Discovery Pattern
+- **Ngữ cảnh**: Khi Agent cần truy cập Hub skills/workflows từ bất kỳ workspace nào
+- **Vấn đề giải quyết**: Agent chỉ scan `.agent/skills/` trong workspace active → không thấy Hub skills khi ở Spoke
+- **Giải pháp**:
+  1. Tạo `platform-loader` skill trong Hub — manifest chứa catalog tất cả services
+  2. `catalog.yaml` liệt kê skills/workflows/rules kèm **trigger keywords**
+  3. Agent đọc SKILL.md → match trigger keywords → route đến đúng skill
+  4. Cross-workspace: dùng absolute Hub path để `view_file()` skill từ xa
+  5. `GEMINI.md` (user_global) Section 4 bootstrap Agent biết Hub location
+  6. `workspace_context.yaml` trong Spoke chứa `discovery.bootstrap_skill`
+- **Điểm**: Importance 5, Reusability 5, Reliability 4 = **14/15**
+- **Files**:
+  - `.agent/skills/platform-loader/SKILL.md`
+  - `.agent/skills/platform-loader/catalog.yaml`
+  - `C:\Users\chuvu\.gemini\GEMINI.md` (Section 4)
+- **Nguồn**: Session 227a7981, 2026-03-28
+
+#### Spoke Workspace Cleanup Pattern
+- **Ngữ cảnh**: Khi Spoke workspace chứa legacy code/dev artifacts sau khi migrate sang Hub
+- **Vấn đề giải quyết**: Cluttered workspace với 168 files hỗn loạn, .venv sync qua OneDrive
+- **Giải pháp**:
+  1. Xóa dev artifacts: `.venv/`, `.env`, `.github/`, `.pre-commit-config.yaml`, linter configs
+  2. Xóa migrated code: `scripts/`, `.agent/workflows/` (đã ở Hub)
+  3. Tổ chức lại: `source-docs/` (PDF gốc) + `converted/` (markdown) + subfolders theo nhóm
+  4. Giữ lại: `.md/workspace_context.yaml`, `.vscode/`, `README.md`
+- **Kết quả**: 168 → 100 files, root items 40 → 8
+- **Điểm**: Importance 4, Reusability 5, Reliability 4 = **13/15**
+- **Nguồn**: Session 227a7981, 2026-03-28
+
+#### GitHub Ruleset Toggle for Batch Operations
+- **Ngữ cảnh**: Khi cần batch delete branches nhưng bị block bởi GitHub Rulesets
+- **Vấn đề giải quyết**: `git push --delete` thất bại do "Automatic Review with Copilot" ruleset
+- **Giải pháp**:
+  1. Vào Settings → Rules → Rulesets
+  2. Tạm set enforcement "Disabled"
+  3. Thực hiện batch operations (delete branches qua browser UI)
+  4. **BẮT BUỘC re-enable** ruleset sau khi xong
+- **Điểm**: Importance 3, Reusability 4, Reliability 5 = **12/15**
+- **Nguồn**: Session 227a7981, 2026-03-28
+
+### Anti-patterns Identified
+
+#### Avoid .venv in OneDrive-Synced Folders
+- **Vấn đề**: `.venv/` chứa hàng nghìn files nhỏ (50-200 MB), OneDrive sync cực chậm và tốn bandwidth
+- **Thay thế**:
+  - Đặt `.venv` ngoài OneDrive folder
+  - Hoặc thêm `.venv` vào OneDrive exclusion list
+  - Hoặc dùng global `.gitignore`-style exclusion
+- **Nguồn**: Session 227a7981, 2026-03-28
+
+#### Avoid Keeping Dev Artifacts in Document Workspaces
+- **Vấn đề**: Sau khi migrate code sang Hub, Spoke workspace vẫn giữ `.env`, `.github/`, `.pre-commit-config.yaml`, linter configs → clutter + security risk (API keys)
+- **Thay thế**: Xóa toàn bộ dev artifacts khi workspace chuyển thành document-only Spoke
+- **Nguồn**: Session 227a7981, 2026-03-28
+
+### Solutions Added
+
+#### Branch Deletion Blocked by GitHub Rulesets
+- **Vấn đề**: `git push origin --delete <branch>` fail với `GH013: Repository rule violations`
+- **Nguyên nhân**: GitHub Ruleset "Automatic Review with Copilot" áp dụng lên ALL branches, block cả delete operations
+- **Giải pháp**:
+  1. Dùng GitHub browser UI (Branches page) thay vì git CLI
+  2. Nếu vẫn bị block → tạm disable ruleset → delete → re-enable
+  3. `git remote prune origin` để cleanup local tracking refs
+- **Nguồn**: Session 227a7981, 2026-03-28
+
