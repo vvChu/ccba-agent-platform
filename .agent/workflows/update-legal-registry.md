@@ -7,6 +7,10 @@ description: Cập nhật registry VBPL và kiểm tra tác động lên danh m�
 Quy trình cập nhật danh mục VBPL và đánh giá tác động lên quy trình CCBA.
 Chạy **hàng tuần** hoặc **khi phát hiện VBPL mới**.
 
+> **Cross-workspace note**: Tất cả paths trong workflow này relative to Hub root
+> (`D:\GitHubProjects\ccba-agent-platform`). Khi chạy từ workspace khác,
+> resolve bằng cách prepend Hub path. Output lưu về workspace hiện tại.
+
 ## Bước 1: Đọc Registry hiện tại
 
 // turbo
