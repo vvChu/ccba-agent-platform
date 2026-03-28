@@ -13,7 +13,8 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   │   ├── legal-document-tracker/    ←   Theo dõi VBPL
 │   │   ├── completion-checklist/      ←   HSHT công trình
 │   │   ├── seminar-builder/           ←   Chuẩn bị seminar
-│   │   └── long-form-writer/          ←   Viết tài liệu dài
+│   │   ├── long-form-writer/          ←   Viết tài liệu dài
+│   │   └── ai-gateway-sdk/           ←   Kết nối AI Gateway (22 models)
 │   └── workflows/                     ← Automated workflows
 │       ├── prepare-seminar.md
 │       ├── update-legal-registry.md
@@ -33,6 +34,8 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 ├── templates/                         ← Shared templates
 ├── tools/                             ← CLI tools, MCP servers
 │
+├── packages/                          ← Internal Python packages
+│   └── ccba-ai/                      ←   AI Gateway client (pip install -e)
 ├── .md/                               ← Processing workspace (gitignored)
 └── src/                               ← Core library code
 ```
