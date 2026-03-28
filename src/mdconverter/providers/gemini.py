@@ -28,7 +28,7 @@ class GeminiProvider(LLMProvider):
         # Use direct Google API for upload if key is available
         # Proxies often only map the inference endpoints.
         if not self.api_key:
-             raise ValueError("API Key required for file upload (Direct Google API)")
+            raise ValueError("API Key required for file upload (Direct Google API)")
 
         base_url = "https://generativelanguage.googleapis.com"
         upload_url = f"{base_url}/upload/v1beta/files?key={self.api_key}"
@@ -57,13 +57,15 @@ class GeminiProvider(LLMProvider):
             "X-Goog-Upload-Command": "upload, finalize",
         }
 
-        resp = await self.client.post(upload_url, headers=headers, content=file_content, timeout=120)
+        resp = await self.client.post(
+            upload_url, headers=headers, content=file_content, timeout=120
+        )
         resp.raise_for_status()
 
         file_info = resp.json()
         file_uri = file_info.get("file", {}).get("uri")
         if not file_uri:
-             raise ValueError("Failed to get file URI from upload response")
+            raise ValueError("Failed to get file URI from upload response")
 
         return str(file_uri)
 
@@ -88,11 +90,8 @@ class GeminiProvider(LLMProvider):
                     "role": "user",
                     "content": [
                         {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": data_uri}
-                        }
-                    ]
+                        {"type": "image_url", "image_url": {"url": data_uri}},
+                    ],
                 }
             ],
             "max_tokens": config.max_output_tokens,
@@ -128,7 +127,6 @@ class GeminiProvider(LLMProvider):
         except (KeyError, IndexError):
             pass
         return ""
-
 
     def _extract_content(self, response_data: dict[str, Any]) -> str:
         """Extract text content from Gemini response."""
