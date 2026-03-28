@@ -118,15 +118,15 @@ class BaseConverter(ABC):
         metadata = self._extract_vn_legal_metadata(content, source_path)
 
         frontmatter = f'''---
-title: "{metadata.get('title', source_path.stem)}"
-short_title: "{metadata.get('short_title', '')}"
-type: "{metadata.get('type', 'Document')}"
-decision_number: "{metadata.get('decision_number', '')}"
-issue_date: "{metadata.get('issue_date', '')}"
-effective_date: "{metadata.get('effective_date', '')}"
-issuer: "{metadata.get('issuer', '')}"
-signer: "{metadata.get('signer', '')}"
-status: "{metadata.get('status', 'converted')}"
+title: "{metadata.get("title", source_path.stem)}"
+short_title: "{metadata.get("short_title", "")}"
+type: "{metadata.get("type", "Document")}"
+decision_number: "{metadata.get("decision_number", "")}"
+issue_date: "{metadata.get("issue_date", "")}"
+effective_date: "{metadata.get("effective_date", "")}"
+issuer: "{metadata.get("issuer", "")}"
+signer: "{metadata.get("signer", "")}"
+status: "{metadata.get("status", "converted")}"
 source_file: "{source_path.name}"
 conversion_tool: "{tool}"
 conversion_date: "{datetime.now().isoformat()}"
@@ -155,18 +155,26 @@ conversion_date: "{datetime.now().isoformat()}"
         header = content[:3000]
 
         # Extract decision number (Quyết định số XXX/QĐ-XXX)
-        qd_match = re.search(r'(?:Quyết định\s+)?[Ss]ố[:\s]*(\d+/Q[ĐD][-–]?\w+)', header, re.IGNORECASE)
+        qd_match = re.search(
+            r"(?:Quyết định\s+)?[Ss]ố[:\s]*(\d+/Q[ĐD][-–]?\w+)", header, re.IGNORECASE
+        )
         if qd_match:
             metadata["decision_number"] = qd_match.group(1)
 
         # Extract issue date (ngày DD tháng MM năm YYYY)
-        date_match = re.search(r'ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})\s+năm\s+(\d{4})', header, re.IGNORECASE)
+        date_match = re.search(
+            r"ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})\s+năm\s+(\d{4})", header, re.IGNORECASE
+        )
         if date_match:
             day, month, year = date_match.groups()
             metadata["issue_date"] = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
 
         # Extract effective date (có hiệu lực từ ngày DD/MM/YYYY)
-        eff_match = re.search(r'hiệu lực\s+(?:từ\s+)?(?:ngày\s+)?(\d{1,2}[/\-]\d{1,2}[/\-]\d{4})', header, re.IGNORECASE)
+        eff_match = re.search(
+            r"hiệu lực\s+(?:từ\s+)?(?:ngày\s+)?(\d{1,2}[/\-]\d{1,2}[/\-]\d{4})",
+            header,
+            re.IGNORECASE,
+        )
         if eff_match:
             date_str = eff_match.group(1).replace("/", "-")
             parts = date_str.split("-")
@@ -175,9 +183,9 @@ conversion_date: "{datetime.now().isoformat()}"
 
         # Extract issuer (Viện KHCN Xây dựng, Bộ Xây dựng, etc.)
         issuer_patterns = [
-            r'(Viện\s+KH(?:CN)?\s+[^,\n]+)',
-            r'(Bộ\s+[^,\n]+)',
-            r'(VIỆN\s+[A-ZĐÀÁẢÃẠ\s]+)',
+            r"(Viện\s+KH(?:CN)?\s+[^,\n]+)",
+            r"(Bộ\s+[^,\n]+)",
+            r"(VIỆN\s+[A-ZĐÀÁẢÃẠ\s]+)",
         ]
         for pattern in issuer_patterns:
             issuer_match = re.search(pattern, header)
@@ -186,7 +194,9 @@ conversion_date: "{datetime.now().isoformat()}"
                 break
 
         # Extract signer
-        signer_match = re.search(r'(?:VIỆN TRƯỞNG|Viện trưởng)[^\n]*\n[^\n]*\n\*\*([^*]+)\*\*', header)
+        signer_match = re.search(
+            r"(?:VIỆN TRƯỞNG|Viện trưởng)[^\n]*\n[^\n]*\n\*\*([^*]+)\*\*", header
+        )
         if signer_match:
             metadata["signer"] = signer_match.group(1).strip()
 
@@ -206,7 +216,7 @@ conversion_date: "{datetime.now().isoformat()}"
                 break
 
         # Extract title from first H1 or bold line
-        title_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+        title_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
         if title_match:
             metadata["title"] = title_match.group(1).strip()[:100]
 
@@ -218,4 +228,3 @@ conversion_date: "{datetime.now().isoformat()}"
         metadata["status"] = "final"
 
         return metadata
-
