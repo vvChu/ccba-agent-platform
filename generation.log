@@ -1,7 +1,0 @@
-Starting generation for: g:\My Drive\00 QC BIM\CCBA_2026_QuyChe_HoatDong.docx
-Target Cycles: 4
---- Initializing content generation with gemini-3-pro ---
---- Proxy: http://100.79.241.120:8045/v1 ---
-
-Error in Cycle 1: 'charmap' codec can't encode character '\u0111' in position 37: character maps to <undefined>
-Generation failed or produced no output.
