@@ -6,6 +6,7 @@ import base64
 from typing import Any
 
 import httpx
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from mdconverter.core.llm import GenerationConfig, LLMProvider
 
@@ -19,6 +20,7 @@ class OpenAIProvider(LLMProvider):
         self.api_key = api_key
         self.client = httpx.AsyncClient(timeout=60)
 
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
     async def generate(
         self,
         prompt: str,
