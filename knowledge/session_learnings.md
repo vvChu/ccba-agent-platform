@@ -4,7 +4,7 @@
 > File này được cập nhật tự động thông qua workflow `/session-retrospective`.
 > Chứa các kiến thức có giá trị nhất được phát hiện qua các phiên làm việc.
 
-## Cập nhật gần nhất: 2026-03-28 (Session 227a7981)
+## Cập nhật gần nhất: 2026-03-28 (Session abaca450)
 
 ---
 
@@ -779,4 +779,81 @@ LLAMAPARSE_API_KEY = "llx-..."
   2. Nếu vẫn bị block → tạm disable ruleset → delete → re-enable
   3. `git remote prune origin` để cleanup local tracking refs
 - **Nguồn**: Session 227a7981, 2026-03-28
+
+---
+
+## Session abaca450 — AI Gateway Integration & Platform Refactor (2026-03-28)
+
+### Patterns Added
+
+#### Modular Services Architecture in Python Monorepo
+
+- **Ngữ cảnh**: Khi cần tổ chức nhiều internal tools/libraries trong 1 repo
+- **Vấn đề giải quyết**: Code monolith với single pyproject.toml, khó maintain
+- **Giải pháp**:
+  1. Tạo `packages/` directory, mỗi service = 1 sub-package
+  2. Mỗi package có riêng `pyproject.toml`, `src/`, `tests/`
+  3. Root `pyproject.toml` chứa `[tool.uv.workspace]` config
+  4. Shared tooling (ruff, mypy) vẫn ở root
+  5. Install editable: `pip install -e packages/[name]`
+- **Files**: `packages/ccba-ai/`, `packages/mdconverter/`
+- **Nguồn**: Session abaca450, 2026-03-28
+
+#### Unified AI Gateway via pip Package
+
+- **Ngữ cảnh**: Khi có self-hosted LLM gateway và cần standardize access
+- **Vấn đề giải quyết**: Mỗi project tự viết client code, hardcode URLs/keys
+- **Giải pháp**:
+  1. Tạo lightweight pip package (`ccba-ai`): `from ccba_ai import ai`
+  2. Package dùng OpenAI SDK underneath, pointing to gateway
+  3. Config via env vars (`AI_GATEWAY_URL`, `AI_GATEWAY_KEY`)
+  4. Set env vars ở User level → mọi project tự nhận
+  5. SKILL.md document cho AI Agent biết cách dùng
+- **Nguồn**: Session abaca450, 2026-03-28
+
+#### Identity-First Repo Management
+
+- **Ngữ cảnh**: Khi repo evolve qua nhiều phase, identity bị lẫn lộn
+- **Vấn đề giải quyết**: README nói "tool A", PLATFORM.md nói "platform B"
+- **Giải pháp**:
+  1. Periodic "identity audit": README, pyproject name, URLs phải nhất quán
+  2. Khi chuyển đổi, update TOÀN BỘ identity cùng lúc (1 commit)
+  3. Checklist: README, pyproject.toml, CI, .pre-commit, docs/
+- **Nguồn**: Session abaca450, 2026-03-28
+
+#### Lazy dotenv Loading Pattern
+
+- **Ngữ cảnh**: Khi dùng `python-dotenv` trong packages
+- **Vấn đề giải quyết**: `load_dotenv()` không tham số → search recursive → hang 30s+
+- **Giải pháp**: Chỉ load khi `.env` exists tại CWD, truyền explicit path
+- **Nguồn**: Session abaca450, 2026-03-28
+
+### Anti-patterns Added
+
+#### Hardcoded API Keys in Scripts
+
+- **Vấn đề**: Scripts chứa keys dưới dạng fallback: `os.getenv("KEY", "AIzaSy...")` → keys vào Git history VĨNH VIỄN
+- **Thay thế bằng**: Luôn dùng env vars hoặc pip package. KHÔNG BAO GIỜ có fallback value là real key
+- **Nguồn**: Session abaca450, 2026-03-28
+
+#### Multi-Provider Direct API Calls
+
+- **Vấn đề**: Mỗi LLM provider có riêng provider class + API key → quản lý 5+ keys, 3+ URLs
+- **Thay thế bằng**: Single AI Gateway (LiteLLM) → 1 URL, 1 key, gateway handles routing
+- **Nguồn**: Session abaca450, 2026-03-28
+
+### Solutions Added
+
+#### Pydantic Settings extra="ignore" for Legacy Env Vars
+
+- **Vấn đề**: Sau khi remove fields từ Settings class, old env vars gây `extra_forbidden` error
+- **Giải pháp**: Thêm `extra="ignore"` vào `SettingsConfigDict`
+- **Nguồn**: Session abaca450, 2026-03-28
+
+#### System Environment Variables for Cross-Project Config
+
+- **Vấn đề**: Mỗi project cần `.env` file riêng cho cùng 1 config (AI Gateway)
+- **Giải pháp**: `[System.Environment]::SetEnvironmentVariable("KEY", "value", "User")` — set 1 lần, mọi process mới đều nhận
+- **Nguồn**: Session abaca450, 2026-03-28
+
 
