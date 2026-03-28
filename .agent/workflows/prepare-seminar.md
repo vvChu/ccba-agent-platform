@@ -7,6 +7,10 @@ description: Chuẩn bị nội dung cho buổi seminar/thảo luận nội bộ
 Quy trình end-to-end chuẩn bị nội dung trước mỗi buổi seminar/thảo luận nội bộ CCBA.
 Thường chạy **1-2 ngày trước** buổi seminar.
 
+> **Cross-workspace note**: Tất cả paths trong workflow này relative to Hub root
+> (`D:\GitHubProjects\ccba-agent-platform`). Khi chạy từ workspace khác,
+> resolve bằng cách prepend Hub path. Output lưu về workspace hiện tại.
+
 ## Bước 1: Thu thập thông tin
 
 Hỏi user các thông tin sau:
