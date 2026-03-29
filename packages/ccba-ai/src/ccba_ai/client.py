@@ -97,7 +97,7 @@ class AIClient:
     def models(self) -> list[str]:
         """List all available models on the gateway."""
         result = self._client.models.list()
-        return sorted(set(m.id for m in result.data))
+        return sorted({m.id for m in result.data})
 
     def __repr__(self) -> str:
         return f"AIClient(url={self._client.base_url}, model={self.default_model})"
