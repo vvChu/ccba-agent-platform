@@ -135,6 +135,15 @@ workflows:
       - hủy branch
     workflow_path: .agent/workflows/discard-feature.md
 
+  - name: convert-markdown
+    command: /convert-markdown
+    description: "Chuyển đổi tài liệu sang Markdown bằng mdconverter"
+    triggers:
+      - convert
+      - mdconverter
+      - chuyển đổi tài liệu
+    workflow_path: .agent/workflows/convert-markdown.md
+
 rules:
   - name: ccba_identity
     description: "Brand, voice, phong cách giao tiếp CCBA"
