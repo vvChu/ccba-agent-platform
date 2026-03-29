@@ -4,7 +4,7 @@
 > File này được cập nhật tự động thông qua workflow `/session-retrospective`.
 > Chứa các kiến thức có giá trị nhất được phát hiện qua các phiên làm việc.
 
-## Cập nhật gần nhất: 2026-03-28 (Session abaca450)
+## Cập nhật gần nhất: 2026-03-29 (Session a12830d4)
 
 ---
 
@@ -856,4 +856,27 @@ LLAMAPARSE_API_KEY = "llx-..."
 - **Giải pháp**: `[System.Environment]::SetEnvironmentVariable("KEY", "value", "User")` — set 1 lần, mọi process mới đều nhận
 - **Nguồn**: Session abaca450, 2026-03-28
 
+---
 
+## Session a12830d4 — CLI to Slash Command Workflow Conversion (2026-03-29)
+
+### Patterns Added
+
+#### Wrapping Python Module CLIs in Platform Workflows
+
+- **Ngữ cảnh**: Khi một CLI tool cài qua pip editable (`python -m mdconverter.cli`) cần được user sử dụng dễ dàng trong chat.
+- **Vấn đề giải quyết**: User không quen hoặc terminal lỗi khi gọi trực tiếp lệnh CLI toàn cục.
+- **Giải pháp**:
+  1. Tạo file `.agent/workflows/[command].md`
+  2. Dùng block `// turbo` bao lấy lệnh `python -m [module] [args]`
+  3. Cập nhật `catalog.yaml` để nhận diện command bằng slash (ví dụ: `/convert-markdown`)
+  4. Cập nhật `SKILL.md` và `README.md`
+- **Nguồn**: Session a12830d4, 2026-03-29
+
+### Solutions Added
+
+#### Executing CLI without PATH Updates
+
+- **Vấn đề**: Package đã install (`pip show` xác nhận) nhưng gọi tên executable script bị lỗi CommandNotFoundException.
+- **Giải pháp**: Gọi trực tiếp qua module entrypoint: `python -m mdconverter.cli` thay vì `mdconvert`.
+- **Nguồn**: Session a12830d4, 2026-03-29
