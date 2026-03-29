@@ -1,9 +1,5 @@
 """Tests for configuration module."""
 
-import os
-
-import pytest
-
 from mdconverter.config import Settings
 
 

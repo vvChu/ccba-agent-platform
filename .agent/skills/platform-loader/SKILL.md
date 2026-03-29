@@ -41,6 +41,7 @@ Tất cả path bên dưới là **relative** so với Hub root.
 | `/release-feature` | release, merge PR | Merge PR + cleanup |
 | `/new-feature` | new feature | Tạo feature branch |
 | `/discard-feature` | discard, hủy branch | Xóa branch |
+| `/convert-markdown` | convert, mdconverter | Chuyển đổi tài liệu sang Markdown bằng mdconverter |
 
 ### Rules (tự động áp dụng)
 

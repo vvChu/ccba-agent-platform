@@ -72,6 +72,7 @@ mdconvert convert document.pdf
 | `/new-feature` | Tạo feature branch |
 | `/create-pr` | Push + tạo PR |
 | `/release-feature` | Merge PR + cleanup |
+| `/convert-markdown` | Chuyển đổi tài liệu sang Markdown bằng mdconverter |
 
 ## Development
 
