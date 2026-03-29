@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+
 from openai import OpenAI
 
 # Only load .env if it exists in CWD (avoid slow recursive search)
