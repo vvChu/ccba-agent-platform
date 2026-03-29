@@ -880,3 +880,20 @@ LLAMAPARSE_API_KEY = "llx-..."
 - **Vấn đề**: Package đã install (`pip show` xác nhận) nhưng gọi tên executable script bị lỗi CommandNotFoundException.
 - **Giải pháp**: Gọi trực tiếp qua module entrypoint: `python -m mdconverter.cli` thay vì `mdconvert`.
 - **Nguồn**: Session a12830d4, 2026-03-29
+
+#### Fixing Fast-Failing GitHub Actions CI
+
+- **Vấn đề**: CI fails in <15 seconds mà không chạy test payload (như pytest).
+- **Giải pháp**:
+  1. Dùng lệnh CLI `gh run view <run_id> --log-failed` để check lỗi ngay trên terminal.
+  2. Các lỗi fail nhanh thường đến từ Cấu hình môi trường hoặc bộ Linter (như Ruff, MyPy).
+  3. Xử lý local bằng lệnh: `python -m ruff format packages/` và `python -m ruff check packages/ --fix` để đảm bảo code đồng nhất trước khi push lại.
+- **Nguồn**: Session a12830d4, 2026-03-29
+
+### Anti-patterns Identified
+
+#### Committing Without Local Lint/Format Check
+
+- **Vấn đề**: Đẩy thẳng thay đổi lên GitHub mà bỏ qua check linter ở local environment, dẫn đến việc fail CI làm chậm tiến trình Merge (do phải commit rác nhiều lần trên PR).
+- **Thay thế bằng**: Nếu có sự thay đổi dù nhỏ nhất trong source code, hãy chạy Local Linter (`ruff check` và `ruff format`) trước khi Push để tiết kiệm thời gian chờ đợi Runner.
+- **Nguồn**: Session a12830d4, 2026-03-29
