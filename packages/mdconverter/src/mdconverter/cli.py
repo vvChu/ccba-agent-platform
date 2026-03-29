@@ -455,7 +455,10 @@ def config_show() -> None:
     table.add_column("Value", style="green")
 
     table.add_row("Gateway URL", settings.ai_gateway_url)
-    table.add_row("Gateway Key", (settings.ai_gateway_key[:10] + "...") if settings.ai_gateway_key else "[dim]None[/dim]")
+    table.add_row(
+        "Gateway Key",
+        (settings.ai_gateway_key[:10] + "...") if settings.ai_gateway_key else "[dim]None[/dim]",
+    )
     table.add_row("Models", ", ".join(settings.models))
     table.add_row("Max Tokens", str(settings.max_output_tokens))
     table.add_row("Timeout", f"{settings.timeout_seconds}s")
