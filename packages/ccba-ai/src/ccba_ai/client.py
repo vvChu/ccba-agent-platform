@@ -8,6 +8,7 @@ _env_file = Path.cwd() / ".env"
 if _env_file.exists():
     try:
         from dotenv import load_dotenv
+
         load_dotenv(_env_file)
     except ImportError:
         pass
@@ -24,7 +25,8 @@ class AIClient:
     ):
         self._client = OpenAI(
             base_url=base_url or os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1"),
-            api_key=api_key or os.environ.get("AI_GATEWAY_KEY", os.environ.get("OPENAI_API_KEY", "")),
+            api_key=api_key
+            or os.environ.get("AI_GATEWAY_KEY", os.environ.get("OPENAI_API_KEY", "")),
         )
         self.default_model = default_model or os.environ.get("AI_MODEL", "qwen3.5-35b")
 
