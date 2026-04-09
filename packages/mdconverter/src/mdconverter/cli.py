@@ -99,6 +99,11 @@ def convert(
         "--dry-run",
         help="Show what would be converted without actually converting.",
     ),
+    ocr: bool = typer.Option(
+        False,
+        "--ocr",
+        help="Force OCR mode (ocr-primary) for poor quality scanned PDFs.",
+    ),
     watch: bool = typer.Option(
         False,
         "--watch",
@@ -192,7 +197,10 @@ def convert(
                 converter = PandocConverter(output_dir)
             else:
                 # LLM based (async)
-                converter = LLMConverter(output_dir)
+                if ocr:
+                    converter = LLMConverter(output_dir, models=["ocr-primary", "gemini-3.1-pro"])
+                else:
+                    converter = LLMConverter(output_dir)
 
             result = await converter.convert(file)
 
@@ -275,7 +283,10 @@ def convert(
                 ):
                     converter = PandocConverter(output_dir)
                 else:
-                    converter = LLMConverter(output_dir)
+                    if ocr:
+                        converter = LLMConverter(output_dir, models=["ocr-primary", "gemini-3.1-pro"])
+                    else:
+                        converter = LLMConverter(output_dir)
                 return await converter.convert(file)
 
             result = asyncio.run(convert_single())

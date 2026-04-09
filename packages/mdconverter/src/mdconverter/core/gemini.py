@@ -77,8 +77,35 @@ class LLMConverter(BaseConverter):
 
         # Read file once
         try:
-            file_bytes = source_path.read_bytes()
             mime_type = MIME_TYPES.get(source_path.suffix.lower(), "application/octet-stream")
+            
+            # PDF Chunking Logic
+            if source_path.suffix.lower() == ".pdf":
+                try:
+                    from pypdf import PdfReader, PdfWriter
+                    import io
+                    
+                    reader = PdfReader(source_path)
+                    total_pages = len(reader.pages)
+                    chunk_size = settings.pdf_max_pages_single_pass
+                    file_chunks = []
+                    
+                    if total_pages > chunk_size:
+                        for i in range(0, total_pages, chunk_size):
+                            writer = PdfWriter()
+                            for j in range(i, min(i + chunk_size, total_pages)):
+                                writer.add_page(reader.pages[j])
+                            chunk_io = io.BytesIO()
+                            writer.write(chunk_io)
+                            file_chunks.append(chunk_io.getvalue())
+                    else:
+                        file_chunks.append(source_path.read_bytes())
+                except ImportError:
+                    # Fallback if pypdf is not installed
+                    file_chunks = [source_path.read_bytes()]
+            else:
+                file_chunks = [source_path.read_bytes()]
+                
         except Exception as e:
             return ConversionResult(
                 source_path=source_path,
@@ -96,26 +123,36 @@ class LLMConverter(BaseConverter):
         # Try each model in fallback chain (all via same gateway)
         last_error = ""
         for model in self.models:
+            all_content = []
+            success = True
             try:
-                content = await self.provider.generate(
-                    prompt, file_bytes, mime_type, model, gen_config
-                )
-
-                if content and len(content) > settings.min_content_length:
-                    output_path = self.get_output_path(source_path)
-                    tool_name = f"llm/{model}"
-                    final_content = self.add_frontmatter(content, source_path, tool_name)
-                    output_path.write_text(final_content, encoding="utf-8")
-
-                    return ConversionResult(
-                        source_path=source_path,
-                        output_path=output_path,
-                        status=ConversionStatus.SUCCESS,
-                        tool_used=tool_name,
-                        content=final_content,
-                        quality_score=self._calculate_quality(final_content),
-                        duration_seconds=time.time() - start_time,
+                for chunk_bytes in file_chunks:
+                    content = await self.provider.generate(
+                        prompt, chunk_bytes, mime_type, model, gen_config
                     )
+                    if not content:
+                        success = False
+                        last_error = "Model returned empty content."
+                        break
+                    all_content.append(content)
+                
+                if success:
+                    merged_content = "\n\n".join(all_content)
+                    if len(merged_content) > settings.min_content_length:
+                        output_path = self.get_output_path(source_path)
+                        tool_name = f"llm/{model}"
+                        final_content = self.add_frontmatter(merged_content, source_path, tool_name)
+                        output_path.write_text(final_content, encoding="utf-8")
+
+                        return ConversionResult(
+                            source_path=source_path,
+                            output_path=output_path,
+                            status=ConversionStatus.SUCCESS,
+                            tool_used=tool_name,
+                            content=final_content,
+                            quality_score=self._calculate_quality(final_content),
+                            duration_seconds=time.time() - start_time,
+                        )
             except Exception as e:
                 last_error = str(e)
                 continue  # Try next model
