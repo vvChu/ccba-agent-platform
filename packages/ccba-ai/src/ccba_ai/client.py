@@ -1,4 +1,5 @@
 import os
+from collections.abc import Generator
 from pathlib import Path
 
 from openai import OpenAI
@@ -51,7 +52,7 @@ class AIClient:
             max_tokens=max_tokens,
             temperature=temperature,
         )
-        return response.choices[0].message.content
+        return response.choices[0].message.content or ""
 
     def stream(
         self,
@@ -61,7 +62,7 @@ class AIClient:
         system: str | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
-    ):
+    ) -> Generator[str, None, None]:
         """Stream a chat response. Yields text chunks."""
         messages = []
         if system:
@@ -88,14 +89,24 @@ class AIClient:
         max_tokens: int = 2048,
         temperature: float = 0.7,
     ) -> str:
-        """Send a full conversation (multiple messages) and get a response."""
+        """Send a multi-turn conversation and get a response.
+
+        Args:
+            messages: List of message dicts with 'role' and 'content' keys.
+            model: Model name override. Uses default_model if None.
+            max_tokens: Maximum tokens in the response.
+            temperature: Sampling temperature (0.0–2.0).
+
+        Returns:
+            The assistant's response text, or empty string if model refused.
+        """
         response = self._client.chat.completions.create(
             model=model or self.default_model,
             messages=messages,
             max_tokens=max_tokens,
             temperature=temperature,
         )
-        return response.choices[0].message.content
+        return response.choices[0].message.content or ""
 
     def models(self) -> list[str]:
         """List all available models on the gateway."""
