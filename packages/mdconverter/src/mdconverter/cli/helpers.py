@@ -35,7 +35,12 @@ def create_converter(
     registry's create() method directly.
 
     Args:
-        tool: Conversion tool name ('auto', 'pandoc', 'llm', 'llamaparse').
+        tool: Conversion tool name. Supported values:
+            - 'auto': Use registry priority to select best converter.
+            - 'pandoc': Use Pandoc converter.
+            - 'llm': Use LLM-based converter.
+            - 'gemini': Legacy alias for 'llm' (all models go via AI Gateway).
+            - 'llamaparse': Use LlamaParse converter.
         file_extension: File extension including the dot (e.g., '.pdf').
         output_dir: Optional output directory.
 
