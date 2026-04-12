@@ -5,13 +5,16 @@ All models accessed through a single AI Gateway endpoint (LiteLLM on Server Spar
 No need for separate provider routing — the gateway handles it.
 """
 
+import logging
 import time
 from pathlib import Path
 
 from mdconverter.config import settings
 from mdconverter.core.base import BaseConverter, ConversionResult, ConversionStatus
 from mdconverter.core.llm import GenerationConfig
-from mdconverter.providers.gemini import GeminiProvider
+from mdconverter.providers.gemini import GatewayProvider
+
+logger = logging.getLogger(__name__)
 
 # Supported MIME types
 MIME_TYPES: dict[str, str] = {
@@ -51,7 +54,7 @@ class LLMConverter(BaseConverter):
         self.models = models or settings.models
 
         # Single provider — AI Gateway handles all model routing
-        self.provider = GeminiProvider(gateway_url=gateway_url)
+        self.provider = GatewayProvider(gateway_url=gateway_url)
 
     def supports(self, file_extension: str) -> bool:
         """Check if extension is supported."""
@@ -94,8 +97,10 @@ class LLMConverter(BaseConverter):
         )
 
         # Try each model in fallback chain (all via same gateway)
-        last_error = ""
+        models_tried: list[str] = []
+        errors_per_model: dict[str, str] = {}
         for model in self.models:
+            models_tried.append(model)
             try:
                 content = await self.provider.generate(
                     prompt, file_bytes, mime_type, model, gen_config
@@ -115,17 +120,29 @@ class LLMConverter(BaseConverter):
                         content=final_content,
                         quality_score=self._calculate_quality(final_content),
                         duration_seconds=time.time() - start_time,
+                        metadata={
+                            "models_tried": models_tried,
+                            "errors_per_model": errors_per_model,
+                        },
                     )
             except Exception as e:
-                last_error = str(e)
+                error_msg = str(e)
+                errors_per_model[model] = error_msg
+                logger.warning("Model %s failed for %s: %s", model, source_path.name, error_msg)
                 continue  # Try next model
 
+        # Build a summary of all errors for the failure message
+        error_summary = "; ".join(f"{m}: {e}" for m, e in errors_per_model.items())
         return ConversionResult(
             source_path=source_path,
             status=ConversionStatus.FAILED,
             tool_used="llm-fallback",
             duration_seconds=time.time() - start_time,
-            error_message=f"All models failed. Last error: {last_error}",
+            error_message=f"All models failed. {error_summary}",
+            metadata={
+                "models_tried": models_tried,
+                "errors_per_model": errors_per_model,
+            },
         )
 
     def _get_conversion_prompt(self) -> str:

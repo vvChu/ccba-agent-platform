@@ -473,6 +473,11 @@ def config_set(
     value: str = typer.Option(..., "--value", "-v", help="New value for the setting."),
 ) -> None:
     """Update a configuration setting in .env file."""
+    # Reject values containing newlines to prevent env injection
+    if "\n" in value or "\r" in value:
+        console.print("[red]Error: Value must not contain newline characters.[/red]")
+        raise typer.Exit(1)
+
     valid_keys = {
         "ai_gateway_url": "AI_GATEWAY_URL",
         "ai_gateway_key": "AI_GATEWAY_KEY",
