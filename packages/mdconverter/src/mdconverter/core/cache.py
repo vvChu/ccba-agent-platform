@@ -32,6 +32,8 @@ class ConversionCache:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.index_path = self.cache_dir / "index.json"
         self._index: dict[str, dict[str, Any]] = self._load_index()
+        self._hits: int = 0
+        self._misses: int = 0
 
     def _load_index(self) -> dict[str, dict[str, Any]]:
         """Load cache index from disk."""
@@ -99,6 +101,7 @@ class ConversionCache:
         try:
             file_hash = self.get_file_hash(source_path)
         except OSError:
+            self._misses += 1
             return None
 
         key = str(source_path.resolve())
@@ -110,10 +113,13 @@ class ConversionCache:
                 cache_key = self._get_cache_key(source_path)
                 cache_file = self.cache_dir / f"{cache_key}.md"
                 try:
-                    return cache_file.read_text(encoding="utf-8")
+                    content = cache_file.read_text(encoding="utf-8")
+                    self._hits += 1
+                    return content
                 except OSError:
                     pass  # Cache file missing or unreadable
 
+        self._misses += 1
         return None
 
     def set(self, source_path: Path, content: str, tool_used: str = "unknown") -> None:
@@ -201,7 +207,7 @@ class ConversionCache:
         """Get cache statistics.
 
         Returns:
-            Dictionary with cache stats.
+            Dictionary with cache stats including hit/miss ratio.
         """
         total_size = 0
         for e in self._index.values():
@@ -212,8 +218,14 @@ class ConversionCache:
             except OSError:
                 pass  # File may have been deleted
 
+        total_lookups = self._hits + self._misses
+        hit_ratio = self._hits / total_lookups if total_lookups > 0 else 0.0
+
         return {
             "entries": len(self._index),
             "total_size_bytes": total_size,
             "cache_dir": str(self.cache_dir),
+            "hits": self._hits,
+            "misses": self._misses,
+            "hit_ratio": round(hit_ratio, 3),
         }

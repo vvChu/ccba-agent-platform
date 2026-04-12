@@ -30,20 +30,29 @@ def create_converter(
 ) -> BaseConverter:
     """Create the appropriate converter based on tool choice and file extension.
 
+    When tool is 'auto', delegates to ConverterRegistry.auto_select() for
+    priority-based converter selection. For explicit tool names, uses the
+    registry's create() method directly.
+
     Args:
-        tool: Conversion tool name ('auto', 'pandoc', 'gemini', 'llamaparse').
+        tool: Conversion tool name ('auto', 'pandoc', 'llm', 'llamaparse').
         file_extension: File extension including the dot (e.g., '.pdf').
         output_dir: Optional output directory.
 
     Returns:
         A BaseConverter instance.
     """
-    from mdconverter.core.gemini import LLMConverter
-    from mdconverter.core.pandoc import PandocConverter
+    from mdconverter.core.registry import ConverterRegistry
 
-    if tool == "pandoc" or (
-        tool == "auto" and file_extension.lower() in {".docx", ".html", ".htm"}
-    ):
-        return PandocConverter(output_dir)
-    else:
-        return LLMConverter(output_dir)
+    if tool == "auto":
+        return ConverterRegistry.auto_select(file_extension, output_dir=output_dir)
+
+    # Map legacy CLI tool names to registry names
+    tool_map = {
+        "gemini": "llm",
+        "pandoc": "pandoc",
+        "llamaparse": "llamaparse",
+        "llm": "llm",
+    }
+    registry_name = tool_map.get(tool, tool)
+    return ConverterRegistry.create(registry_name, output_dir=output_dir)
