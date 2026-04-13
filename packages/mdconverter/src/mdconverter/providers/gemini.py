@@ -1,20 +1,39 @@
 """
-Gemini Provider Implementation — via AI Gateway.
+AI Gateway Provider Implementation.
 
 All requests go through the unified AI Gateway (LiteLLM on Server Spark).
 """
 
 import base64
+import logging
 from typing import Any
 
 import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import (
+    retry,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from mdconverter.config import settings
 from mdconverter.core.llm import GenerationConfig, LLMProvider
 
+logger = logging.getLogger(__name__)
 
-class GeminiProvider(LLMProvider):
+
+def _is_retryable(exc: BaseException) -> bool:
+    """Return True for errors worth retrying (5xx, timeouts, connection errors)."""
+    if isinstance(exc, httpx.TimeoutException):
+        return True
+    if isinstance(exc, httpx.ConnectError):
+        return True
+    if isinstance(exc, httpx.HTTPStatusError):
+        return exc.response.status_code >= 500
+    return False
+
+
+class GatewayProvider(LLMProvider):
     """Provider for AI Gateway (LiteLLM) — supports all models."""
 
     def __init__(self, gateway_url: str | None = None, api_key: str | None = None) -> None:
@@ -23,7 +42,19 @@ class GeminiProvider(LLMProvider):
         self.api_key = api_key or settings.ai_gateway_key
         self.client = httpx.AsyncClient(timeout=60)
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
+    async def __aenter__(self) -> "GatewayProvider":
+        """Enter async context."""
+        return self
+
+    async def __aexit__(self, *exc: object) -> None:
+        """Close the underlying HTTP client."""
+        await self.client.aclose()
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception(_is_retryable),
+    )
     async def generate(
         self,
         prompt: str,
@@ -75,3 +106,7 @@ class GeminiProvider(LLMProvider):
         except (KeyError, IndexError):
             pass
         return ""
+
+
+# Backward compatibility alias
+GeminiProvider = GatewayProvider
