@@ -112,7 +112,18 @@ Nếu phát hiện quy trình làm việc mới có giá trị:
 - Tạo workflow mới trong `.agent/workflows/`
 - Cập nhật workflow hiện có nếu có cải tiến
 
-### 7. Tạo báo cáo tóm tắt
+### 7. Skill Discovery & Evolution (Phát hiện Kỹ năng & Tiến hóa)
+
+Đây là bước quan trọng nhất để làm giàu Platform. Agent phải chủ động rà soát toàn bộ phiên làm việc để tìm kiếm các cơ hội tạo Skill mới.
+
+**Tiêu chí đánh giá:**
+- **Modularity (Tính độc lập):** Logic có thể đóng gói thành script riêng không?
+- **Reusability (Tính tái sử dụng):** Có thể áp dụng cho các dự án CCBA khác không?
+- **Complexity (Độ phức tạp):** Việc thực hiện thủ công có tốn nhiều thời gian/công sức không?
+
+Nếu đạt cả 3 tiêu chí, Agent phải đề xuất cấu trúc Skill mới trong báo cáo tóm tắt.
+
+### 8. Tạo báo cáo tóm tắt
 
 Kết thúc bằng báo cáo ngắn gọn:
 
@@ -136,6 +147,9 @@ Kết thúc bằng báo cáo ngắn gọn:
 - [ ] Cập nhật user_global: [Có/Không] - [Nội dung]
 - [ ] Tạo workflow mới: [Có/Không] - [Tên workflow]
 - [ ] Cập nhật workflow: [Có/Không] - [Tên workflow]
+
+### 🚀 Đề xuất Skills mới cho Platform
+- [ ] **[Tên Skill đề xuất]**: [Lý do/Lợi ích/Logic lõi]
 
 ### Ghi chú cho phiên tiếp theo
 
