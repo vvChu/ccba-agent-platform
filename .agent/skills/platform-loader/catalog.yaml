@@ -73,6 +73,35 @@ skills:
     skill_path: .agent/skills/ai-gateway-sdk/SKILL.md
     package_path: packages/ccba-ai
 
+  - name: ccba-ai-qc-discovery
+    description: "Khai phá hồ sơ PDF, nhận diện cấu trúc bản vẽ và lập Coordination Matrix"
+    triggers:
+      - discovery
+      - backbone
+      - matrix
+      - mapping
+      - khai phá hồ sơ
+    skill_path: .agent/skills/ccba-ai-qc-discovery/SKILL.md
+
+  - name: ccba-ai-qc-integrated-audit
+    description: "Đối soát xung đột đa bộ môn (Arch-KC-MEP-PCCC) bằng AI Vision"
+    triggers:
+      - clash audit
+      - integrated qc
+      - đối soát 4 chiều
+      - audit đa bộ môn
+      - N-Way clash
+    skill_path: .agent/skills/ccba-ai-qc-integrated-audit/SKILL.md
+
+  - name: ccba-ai-qc-reporter
+    description: "Tổng hợp và đóng gói báo cáo Đường găng Kỹ thuật chính quy"
+    triggers:
+      - technical report
+      - đóng gói báo cáo
+      - kết luận kỹ thuật
+      - báo cáo đường găng
+    skill_path: .agent/skills/ccba-ai-qc-reporter/SKILL.md
+
 workflows:
   - name: prepare-seminar
     command: /prepare-seminar
