@@ -8,7 +8,10 @@ Khi user gọi lệnh `/convert-markdown [đường_dẫn_file_hoặc_thư_mục
 
 ## Bước 1: Xác định tham số
 1. Lấy `[đường_dẫn_file_hoặc_thư_mục]` do user cung cấp. Nếu không có, yêu cầu user cung cấp.
-2. Kiểm tra xem user có truyền thêm tùy chọn nào không (ví dụ: engine `-t gemini` hoặc đệ quy `-r`). 
+2. Kiểm tra xem user có truyền thêm tùy chọn nào không (ví dụ: cờ `--ocr` cho PDF scan mờ, engine `-t gemini` hoặc đệ quy `-r`). 
+
+> **Lưu ý (Quan trọng về OCR)**: Khi gặp tài liệu PDF bản scan bị mờ, lóa sáng, cong vênh, hoặc có dấu mộc đỏ đè lên chữ, Agent **cần** chèn cờ `--ocr` để sử dụng model AI thị giác chuyên nghiệp (ocr-primary) nhằm tránh lỗi trích xuất.
+
 
 ## Bước 2: Thực thi chuyển đổi
 Thực thi lệnh Python để gọi module mdconverter:
