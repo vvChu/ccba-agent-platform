@@ -5,13 +5,16 @@ All models accessed through a single AI Gateway endpoint (LiteLLM on Server Spar
 No need for separate provider routing — the gateway handles it.
 """
 
+import logging
 import time
 from pathlib import Path
 
 from mdconverter.config import settings
 from mdconverter.core.base import BaseConverter, ConversionResult, ConversionStatus
 from mdconverter.core.llm import GenerationConfig
-from mdconverter.providers.gemini import GeminiProvider
+from mdconverter.providers.gemini import GatewayProvider
+
+logger = logging.getLogger(__name__)
 
 # Supported MIME types
 MIME_TYPES: dict[str, str] = {
@@ -51,7 +54,7 @@ class LLMConverter(BaseConverter):
         self.models = models or settings.models
 
         # Single provider — AI Gateway handles all model routing
-        self.provider = GeminiProvider(gateway_url=gateway_url)
+        self.provider = GatewayProvider(gateway_url=gateway_url)
 
     def supports(self, file_extension: str) -> bool:
         """Check if extension is supported."""
@@ -77,35 +80,8 @@ class LLMConverter(BaseConverter):
 
         # Read file once
         try:
+            file_bytes = source_path.read_bytes()
             mime_type = MIME_TYPES.get(source_path.suffix.lower(), "application/octet-stream")
-            
-            # PDF Chunking Logic
-            if source_path.suffix.lower() == ".pdf":
-                try:
-                    from pypdf import PdfReader, PdfWriter
-                    import io
-                    
-                    reader = PdfReader(source_path)
-                    total_pages = len(reader.pages)
-                    chunk_size = settings.pdf_max_pages_single_pass
-                    file_chunks = []
-                    
-                    if total_pages > chunk_size:
-                        for i in range(0, total_pages, chunk_size):
-                            writer = PdfWriter()
-                            for j in range(i, min(i + chunk_size, total_pages)):
-                                writer.add_page(reader.pages[j])
-                            chunk_io = io.BytesIO()
-                            writer.write(chunk_io)
-                            file_chunks.append(chunk_io.getvalue())
-                    else:
-                        file_chunks.append(source_path.read_bytes())
-                except ImportError:
-                    # Fallback if pypdf is not installed
-                    file_chunks = [source_path.read_bytes()]
-            else:
-                file_chunks = [source_path.read_bytes()]
-                
         except Exception as e:
             return ConversionResult(
                 source_path=source_path,
@@ -121,48 +97,52 @@ class LLMConverter(BaseConverter):
         )
 
         # Try each model in fallback chain (all via same gateway)
-        last_error = ""
+        models_tried: list[str] = []
+        errors_per_model: dict[str, str] = {}
         for model in self.models:
-            all_content = []
-            success = True
+            models_tried.append(model)
             try:
-                for chunk_bytes in file_chunks:
-                    content = await self.provider.generate(
-                        prompt, chunk_bytes, mime_type, model, gen_config
-                    )
-                    if not content:
-                        success = False
-                        last_error = "Model returned empty content."
-                        break
-                    all_content.append(content)
-                
-                if success:
-                    merged_content = "\n\n".join(all_content)
-                    if len(merged_content) > settings.min_content_length:
-                        output_path = self.get_output_path(source_path)
-                        tool_name = f"llm/{model}"
-                        final_content = self.add_frontmatter(merged_content, source_path, tool_name)
-                        output_path.write_text(final_content, encoding="utf-8")
+                content = await self.provider.generate(
+                    prompt, file_bytes, mime_type, model, gen_config
+                )
 
-                        return ConversionResult(
-                            source_path=source_path,
-                            output_path=output_path,
-                            status=ConversionStatus.SUCCESS,
-                            tool_used=tool_name,
-                            content=final_content,
-                            quality_score=self._calculate_quality(final_content),
-                            duration_seconds=time.time() - start_time,
-                        )
+                if content and len(content) > settings.min_content_length:
+                    output_path = self.get_output_path(source_path)
+                    tool_name = f"llm/{model}"
+                    final_content = self.add_frontmatter(content, source_path, tool_name)
+                    output_path.write_text(final_content, encoding="utf-8")
+
+                    return ConversionResult(
+                        source_path=source_path,
+                        output_path=output_path,
+                        status=ConversionStatus.SUCCESS,
+                        tool_used=tool_name,
+                        content=final_content,
+                        quality_score=self._calculate_quality(final_content),
+                        duration_seconds=time.time() - start_time,
+                        metadata={
+                            "models_tried": models_tried,
+                            "errors_per_model": errors_per_model,
+                        },
+                    )
             except Exception as e:
-                last_error = str(e)
+                error_msg = str(e)
+                errors_per_model[model] = error_msg
+                logger.warning("Model %s failed for %s: %s", model, source_path.name, error_msg)
                 continue  # Try next model
 
+        # Build a summary of all errors for the failure message
+        error_summary = "; ".join(f"{m}: {e}" for m, e in errors_per_model.items())
         return ConversionResult(
             source_path=source_path,
             status=ConversionStatus.FAILED,
             tool_used="llm-fallback",
             duration_seconds=time.time() - start_time,
-            error_message=f"All models failed. Last error: {last_error}",
+            error_message=f"All models failed. {error_summary}",
+            metadata={
+                "models_tried": models_tried,
+                "errors_per_model": errors_per_model,
+            },
         )
 
     def _get_conversion_prompt(self) -> str:

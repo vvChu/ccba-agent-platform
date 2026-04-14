@@ -30,7 +30,7 @@ jobs:
 
       - name: Install packages
         run: |
-          uv pip install -e "packages/ccba-ai" --system
+          uv pip install -e "packages/ccba-ai[dev]" --system
           uv pip install -e "packages/mdconverter[dev]" --system
 
       - name: Run Ruff linter
@@ -42,8 +42,11 @@ jobs:
       - name: Run MyPy
         run: mypy packages/mdconverter/src/ --ignore-missing-imports
 
-      - name: Run tests
+      - name: Run mdconverter tests
         run: pytest packages/mdconverter/tests/ -v --cov=packages/mdconverter/src/mdconverter --cov-report=xml
+
+      - name: Run ccba-ai tests
+        run: pytest packages/ccba-ai/tests/ -v
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4

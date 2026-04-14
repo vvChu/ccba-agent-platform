@@ -115,3 +115,34 @@ class TestConversionCache:
 
         result = cache.get(tmp_path / "nonexistent.pdf")
         assert result is None
+
+    def test_hit_miss_counters(self, tmp_path: Path) -> None:
+        """Test cache hit/miss counters are tracked correctly."""
+        cache = ConversionCache(cache_dir=tmp_path / ".cache")
+        test_file = tmp_path / "test.pdf"
+        test_file.write_bytes(b"%PDF-1.4 test content")
+
+        # First get: miss (not cached yet)
+        cache.get(test_file)
+        assert cache._misses == 1
+        assert cache._hits == 0
+
+        # Set content
+        cache.set(test_file, "# Cached Content", "test-tool")
+
+        # Second get: hit
+        cache.get(test_file)
+        assert cache._hits == 1
+        assert cache._misses == 1
+
+        # Third get with different file: miss
+        other_file = tmp_path / "other.pdf"
+        other_file.write_bytes(b"%PDF-1.4 other")
+        cache.get(other_file)
+        assert cache._misses == 2
+
+        # Check stats include hit/miss info
+        stats = cache.stats()
+        assert stats["hits"] == 1
+        assert stats["misses"] == 2
+        assert stats["hit_ratio"] == round(1 / 3, 3)
