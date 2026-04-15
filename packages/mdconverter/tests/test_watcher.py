@@ -13,10 +13,10 @@ class TestConversionEventHandler:
     def test_supported_extensions(self) -> None:
         """Test supported file extensions."""
         handler = ConversionEventHandler(MagicMock())
-        assert ".pdf" in handler.SUPPORTED_EXTENSIONS
-        assert ".docx" in handler.SUPPORTED_EXTENSIONS
-        assert ".html" in handler.SUPPORTED_EXTENSIONS
-        assert ".txt" not in handler.SUPPORTED_EXTENSIONS
+        assert ".pdf" in handler._supported_extensions
+        assert ".docx" in handler._supported_extensions
+        assert ".html" in handler._supported_extensions
+        assert ".exe" not in handler._supported_extensions
 
     def test_should_process_valid_extension(self) -> None:
         """Test _should_process returns True for valid files."""
@@ -47,6 +47,41 @@ class TestConversionEventHandler:
 
         assert handler._should_process(Path("test1.pdf")) is True
         assert handler._should_process(Path("test2.pdf")) is True
+
+    def test_cleanup_stale_entries(self) -> None:
+        """Test stale entries are cleaned up (L2 fix)."""
+        handler = ConversionEventHandler(MagicMock())
+
+        # Simulate old entries
+        now = time.time()
+        for i in range(10):
+            handler._last_triggered[Path(f"old_{i}.pdf")] = now - 120  # 2 min ago
+
+        # Add a recent entry
+        handler._last_triggered[Path("recent.pdf")] = now
+
+        handler._cleanup_stale_entries(now)
+
+        # Old entries should be removed, recent should remain
+        assert len(handler._last_triggered) == 1
+        assert Path("recent.pdf") in handler._last_triggered
+
+    def test_max_debounce_entries_triggers_cleanup(self) -> None:
+        """Test cleanup is triggered when MAX_DEBOUNCE_ENTRIES exceeded."""
+        handler = ConversionEventHandler(MagicMock())
+        handler.MAX_DEBOUNCE_ENTRIES = 5  # Low threshold for testing
+
+        now = time.time()
+        # Fill with old entries
+        for i in range(6):
+            handler._last_triggered[Path(f"file_{i}.pdf")] = now - 120
+
+        # Process a new file — should trigger cleanup
+        new_file = Path("new.pdf")
+        handler._should_process(new_file)
+
+        # Old stale entries should have been cleaned
+        assert len(handler._last_triggered) <= 2  # new file + maybe 1 recent
 
 
 class TestFileWatcher:

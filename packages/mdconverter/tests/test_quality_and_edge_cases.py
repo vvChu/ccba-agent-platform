@@ -11,7 +11,7 @@ from mdconverter.core.pandoc import PandocConverter
 
 
 class TestLLMConverterQualityScore:
-    """Test _calculate_quality for LLMConverter."""
+    """Test _calculate_quality for LLMConverter (M4 — tiered scoring)."""
 
     def test_base_score_short_content(self) -> None:
         """Test base score for short content with no structure."""
@@ -20,32 +20,35 @@ class TestLLMConverterQualityScore:
         assert score == 50
 
     def test_length_bonus_medium(self) -> None:
-        """Test length bonus for medium content."""
+        """Test length bonus for medium content (>500 chars)."""
         converter = LLMConverter()
-        content = "x" * 1500  # > 1000 chars
+        content = "x" * 1500  # > 500 chars
         score = converter._calculate_quality(content)
-        assert score >= 60
+        assert score >= 55  # base 50 + length tier 1
 
     def test_length_bonus_long(self) -> None:
-        """Test length bonus for long content."""
+        """Test length bonus for long content (>5000 chars)."""
         converter = LLMConverter()
         content = "x" * 6000  # > 5000 chars
         score = converter._calculate_quality(content)
-        assert score >= 70
+        assert score >= 65  # base 50 + length tiers
 
-    def test_structure_bonus_heading(self) -> None:
-        """Test bonus for heading structure."""
+    def test_structure_density_bonus(self) -> None:
+        """Test bonus scales with heading count (not just presence)."""
         converter = LLMConverter()
-        content = "x" * 6000 + "\n## Section\n### Subsection"
+        # 6 headings — should hit tier 2 (>=5)
+        headings = "\n## H\n" * 6
+        content = "x" * 6000 + headings
         score = converter._calculate_quality(content)
         assert score >= 75
 
     def test_table_bonus(self) -> None:
         """Test bonus for table content."""
         converter = LLMConverter()
-        content = "x" * 6000 + "\n| Col1 | Col2 |\n-|-\n| A | B |"
+        table_rows = "\n| Col1 | Col2 |\n" * 12
+        content = "x" * 6000 + table_rows
         score = converter._calculate_quality(content)
-        assert score >= 80
+        assert score >= 75
 
     def test_vietnamese_content_bonus(self) -> None:
         """Test bonus for Vietnamese content."""
@@ -59,9 +62,9 @@ class TestLLMConverterQualityScore:
         """Test score is capped at 100."""
         converter = LLMConverter()
         # Content that would exceed 100 if not capped
-        content = (
-            "## Chương I\n### Điều 1\n" + "Nội dung " * 1000 + "\n| Col | Col |\n-|-\n| A | B |"
-        )
+        headings = "\n## H\n### Sub\n" * 20
+        table = "\n| C | C |\n" * 20
+        content = headings + "Nội dung " * 2000 + table
         score = converter._calculate_quality(content)
         assert score <= 100
 
@@ -72,22 +75,24 @@ class TestPandocConverterQualityScore:
     def test_base_score(self) -> None:
         """Test base score is 60 for Pandoc."""
         converter = PandocConverter()
-        score = converter._calculate_quality("Short")
+        score = converter._calculate_quality("Short", base_score=60)
         assert score == 60
 
     def test_length_bonus(self) -> None:
         """Test length bonuses."""
         converter = PandocConverter()
-        content = "x" * 3000
-        score = converter._calculate_quality(content)
-        assert score >= 80
+        content = "x" * 6000  # length > 500, > 2000, > 5000
+        score = converter._calculate_quality(content, base_score=60)
+        assert score >= 75  # 60 + 5 + 5 + 5
 
     def test_structure_and_table_bonus(self) -> None:
         """Test structure and table bonuses."""
         converter = PandocConverter()
-        content = "x" * 3000 + "\n## Heading\n| Col |"
-        score = converter._calculate_quality(content)
-        assert score >= 100
+        headings = "\n## Heading\n### Sub\n" * 6
+        table = "\n| Col |\n" * 12
+        content = "x" * 12000 + headings + table
+        score = converter._calculate_quality(content, base_score=60)
+        assert score >= 95
 
 
 class TestLLMConverterFallbackChain:
@@ -111,7 +116,7 @@ class TestLLMConverterFallbackChain:
                 raise ConnectionError("Model A down")
             return "# Converted\n\n" + "Content " * 50  # > 100 chars
 
-        with patch.object(converter.provider, "generate", side_effect=mock_generate):
+        with patch("mdconverter.core.gemini.GatewayProvider.generate", side_effect=mock_generate):
             test_file = tmp_path / "test.pdf"
             test_file.write_bytes(b"%PDF-1.4 test content")
 
@@ -132,7 +137,7 @@ class TestLLMConverterFallbackChain:
         async def mock_generate(prompt, file_content, mime_type, model, config):
             raise ConnectionError(f"{model} is down")
 
-        with patch.object(converter.provider, "generate", side_effect=mock_generate):
+        with patch("mdconverter.core.gemini.GatewayProvider.generate", side_effect=mock_generate):
             test_file = tmp_path / "test.pdf"
             test_file.write_bytes(b"%PDF-1.4 test content")
 
@@ -155,7 +160,7 @@ class TestLLMConverterFallbackChain:
                 raise ConnectionError("timeout")
             return "# Result\n\n" + "Content " * 50
 
-        with patch.object(converter.provider, "generate", side_effect=mock_generate):
+        with patch("mdconverter.core.gemini.GatewayProvider.generate", side_effect=mock_generate):
             test_file = tmp_path / "test.pdf"
             test_file.write_bytes(b"%PDF-1.4 test")
 
@@ -179,7 +184,7 @@ class TestConverterEdgeCases:
         async def mock_generate(prompt, file_content, mime_type, model, config):
             return ""  # Empty response for empty file
 
-        with patch.object(converter.provider, "generate", side_effect=mock_generate):
+        with patch("mdconverter.core.gemini.GatewayProvider.generate", side_effect=mock_generate):
             result = await converter.convert(test_file)
             # Should fail because output is too short (< min_content_length)
             assert result.status == ConversionStatus.FAILED
