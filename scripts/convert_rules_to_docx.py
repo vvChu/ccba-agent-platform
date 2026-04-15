@@ -1,11 +1,12 @@
 import re
+from pathlib import Path
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt
 
 
-def convert_md_to_docx(md_path, docx_path):
+def convert_md_to_docx(md_path: str | Path, docx_path: str | Path) -> None:
     document = Document()
 
     # Set default font (optional, but good for "Standard" look)
@@ -98,11 +99,31 @@ def convert_md_to_docx(md_path, docx_path):
     print(f"Successfully created {docx_path}")
 
 
-if __name__ == "__main__":
-    md_file = "g:/My Drive/00 QC BIM/Ban QC IBST 2025/CCBA_2026_QuyChe_ToChuc_HoatDong.md"
-    docx_file = "g:/My Drive/00 QC BIM/Ban QC IBST 2025/CCBA_2026_QuyChe_ToChuc_HoatDong.docx"
+def main() -> None:
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(description="Convert Markdown to Docx with standard styling.")
+    parser.add_argument("input_path", type=Path, help="Path to the input Markdown file.")
+    parser.add_argument(
+        "-o", "--output", type=Path, help="Optional path to output Docx file. Defines from input by default."
+    )
+    
+    args = parser.parse_args()
+    input_path: Path = args.input_path
+    
+    if not input_path.exists() or not input_path.is_file():
+        print(f"Error: Input file '{input_path}' does not exist.")
+        sys.exit(1)
+
+    output_path: Path = args.output if args.output else input_path.with_suffix(".docx")
 
     try:
-        convert_md_to_docx(md_file, docx_file)
+        convert_md_to_docx(input_path, output_path)
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error converting document: {e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

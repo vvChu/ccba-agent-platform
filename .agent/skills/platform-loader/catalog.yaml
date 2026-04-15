@@ -173,6 +173,25 @@ workflows:
       - chuyển đổi tài liệu
     workflow_path: .agent/workflows/convert-markdown.md
 
+  - name: init-ccba-spoke
+    command: /init-ccba-spoke
+    description: "Khởi tạo dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform"
+    triggers:
+      - init spoke
+      - setup project
+      - khởi tạo dự án
+    workflow_path: .agent/workflows/init-ccba-spoke.md
+
+  - name: update-ccba-spoke
+    command: /update-ccba-spoke
+    description: "Cập nhật thủ công danh sách lệnh từ Hub về dự án cục bộ"
+    triggers:
+      - update spoke
+      - đồng bộ hub
+      - lấy lệnh mới
+      - cập nhật dự án
+    workflow_path: .agent/workflows/update-ccba-spoke.md
+
 rules:
   - name: ccba_identity
     description: "Brand, voice, phong cách giao tiếp CCBA"
