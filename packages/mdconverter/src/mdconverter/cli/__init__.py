@@ -8,6 +8,7 @@ import typer
 from rich.console import Console
 
 from mdconverter import __version__
+from mdconverter.cli.analyze_cmd import analyze
 from mdconverter.cli.config_cmd import app_config
 from mdconverter.cli.convert_cmd import convert
 from mdconverter.cli.lint_cmd import lint
@@ -52,4 +53,5 @@ def main(
 app.command()(convert)
 app.command()(validate)
 app.command()(lint)
+app.command()(analyze)
 app.add_typer(app_config, name="config")

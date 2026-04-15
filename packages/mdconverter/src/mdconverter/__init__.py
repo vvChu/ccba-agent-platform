@@ -5,9 +5,9 @@ A powerful Python library for converting documents (PDF, DOCX, HTML) to clean,
 standardized Markdown with special support for Vietnamese legal documents.
 """
 
-__version__ = "2.0.0"
+__version__ = "2.2.0"
 __author__ = "IBST BIM Team"
 
-from mdconverter.config import Settings
+from mdconverter.config import Settings, get_settings
 
-__all__ = ["Settings", "__version__"]
+__all__ = ["Settings", "get_settings", "__version__"]
