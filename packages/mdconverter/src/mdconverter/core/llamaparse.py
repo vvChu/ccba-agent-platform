@@ -10,7 +10,7 @@ from pathlib import Path
 
 import httpx
 
-from mdconverter.config import settings
+from mdconverter.config import get_settings
 from mdconverter.core.base import BaseConverter, ConversionResult, ConversionStatus
 
 
@@ -26,9 +26,8 @@ class LlamaParseConverter(BaseConverter):
     ) -> None:
         """Initialize LlamaParse converter."""
         super().__init__(output_dir)
-        self.api_key = api_key or settings.llama_cloud_api_key
+        self.api_key = api_key or get_settings().llama_cloud_api_key
         self.base_url = "https://api.cloud.llamaindex.ai/api/parsing"
-        self.client = httpx.AsyncClient(timeout=300)
 
     def supports(self, file_extension: str) -> bool:
         """Check if extension is supported."""
@@ -64,19 +63,20 @@ class LlamaParseConverter(BaseConverter):
             )
 
         try:
-            # Upload file
-            job_id = await self._upload_file(source_path)
-            if not job_id:
-                return ConversionResult(
-                    source_path=source_path,
-                    status=ConversionStatus.FAILED,
-                    tool_used="llamaparse",
-                    duration_seconds=time.time() - start_time,
-                    error_message="Failed to upload file",
-                )
+            async with httpx.AsyncClient(timeout=300) as client:
+                # Upload file
+                job_id = await self._upload_file(client, source_path)
+                if not job_id:
+                    return ConversionResult(
+                        source_path=source_path,
+                        status=ConversionStatus.FAILED,
+                        tool_used="llamaparse",
+                        duration_seconds=time.time() - start_time,
+                        error_message="Failed to upload file",
+                    )
 
-            # Wait for processing
-            content = await self._wait_for_result(job_id)
+                # Wait for processing
+                content = await self._wait_for_result(client, job_id)
             if not content:
                 return ConversionResult(
                     source_path=source_path,
@@ -86,10 +86,15 @@ class LlamaParseConverter(BaseConverter):
                     error_message="Processing failed or timed out",
                 )
 
+            # H1: Extract VN Legal metadata if applicable
+            metadata = self._extract_metadata(content, source_path)
+
             # Save result
             output_path = self.get_output_path(source_path)
-            final_content = self.add_frontmatter(content, source_path, "llamaparse")
-            output_path.write_text(final_content, encoding="utf-8")
+            final_content = self.add_frontmatter(
+                content, source_path, "llamaparse", metadata=metadata
+            )
+            await asyncio.to_thread(output_path.write_text, final_content, "utf-8")
 
             return ConversionResult(
                 source_path=source_path,
@@ -97,7 +102,7 @@ class LlamaParseConverter(BaseConverter):
                 status=ConversionStatus.SUCCESS,
                 tool_used="llamaparse",
                 content=final_content,
-                quality_score=self._calculate_quality(final_content),
+                quality_score=self._calculate_quality(final_content, base_score=70),
                 duration_seconds=time.time() - start_time,
             )
 
@@ -110,7 +115,7 @@ class LlamaParseConverter(BaseConverter):
                 error_message=str(e),
             )
 
-    async def _upload_file(self, file_path: Path) -> str | None:
+    async def _upload_file(self, client: httpx.AsyncClient, file_path: Path) -> str | None:
         """Upload file to LlamaParse API and return job ID."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -123,7 +128,7 @@ class LlamaParseConverter(BaseConverter):
                 "parsing_instruction": "Extract all content as markdown. Preserve tables and structure.",
             }
 
-            response = await self.client.post(
+            response = await client.post(
                 f"{self.base_url}/upload",
                 headers=headers,
                 files=files,
@@ -137,7 +142,7 @@ class LlamaParseConverter(BaseConverter):
         job_id: str | None = result.get("id")
         return job_id
 
-    async def _wait_for_result(self, job_id: str, max_wait: int = 300) -> str | None:
+    async def _wait_for_result(self, client: httpx.AsyncClient, job_id: str, max_wait: int = 300) -> str | None:
         """Wait for processing to complete and return markdown content."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -147,7 +152,7 @@ class LlamaParseConverter(BaseConverter):
         poll_interval = 2.0  # Start with 2 seconds
         max_poll_interval = 10.0  # Cap at 10 seconds
         while time.time() - start < max_wait:
-            response = await self.client.get(
+            response = await client.get(
                 f"{self.base_url}/job/{job_id}",
                 headers=headers,
             )
@@ -160,7 +165,7 @@ class LlamaParseConverter(BaseConverter):
 
             if status == "SUCCESS":
                 # Get the markdown result
-                result_response = await self.client.get(
+                result_response = await client.get(
                     f"{self.base_url}/job/{job_id}/result/markdown",
                     headers=headers,
                 )
@@ -178,29 +183,12 @@ class LlamaParseConverter(BaseConverter):
 
         return None  # Timeout
 
-    def _calculate_quality(self, content: str) -> int:
-        """Calculate quality score (0-100)."""
-        score = 70  # LlamaParse base score is higher
+    @staticmethod
+    def _extract_metadata(content: str, source_path: Path) -> dict[str, str] | None:
+        """Extract VN Legal metadata if applicable, else return None."""
+        from mdconverter.plugins.vn_legal.detector import is_legal_document
+        from mdconverter.plugins.vn_legal.metadata import extract_vn_legal_metadata
 
-        # Length bonus
-        if len(content) > 1000:
-            score += 5
-        if len(content) > 5000:
-            score += 5
-
-        # Structure bonus
-        if "##" in content:
-            score += 5
-        if "###" in content:
-            score += 5
-
-        # Table bonus
-        if "|" in content and "-|-" in content:
-            score += 5
-
-        # Clean content bonus (no weird characters)
-        weird_chars = sum(1 for c in content if ord(c) > 65535)
-        if weird_chars == 0:
-            score += 5
-
-        return min(score, 100)
+        if is_legal_document(content):
+            return extract_vn_legal_metadata(content, source_path)
+        return None
