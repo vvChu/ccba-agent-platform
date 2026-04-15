@@ -1,0 +1,2082 @@
+[
+  {
+    "file": "7382-Phe duyet FS ngay 14-8-2024.signed.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\0. TKCS_B-D NTP_16.05.24_NOP BS SXD L3\\7382-Phe duyet FS ngay 14-8-2024.signed.pdf",
+    "size_mb": 4.75,
+    "pages": 10,
+    "text_pages": 1,
+    "image_pages": 9,
+    "drawing_pages": 0,
+    "total_text_chars": 59,
+    "total_images": 10,
+    "avg_text_density": 5.9,
+    "has_text_layer": false,
+    "page_sizes": [
+      "210.3x297.0mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "363.2024VKH - VB lien quan dien trien khai du an den ngay 20-03-2026.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\2026-03_tkDieuChinh_GSTG\\363.2024VKH - VB lien quan dien trien khai du an den ngay 20-03-2026.pdf",
+    "size_mb": 10.76,
+    "pages": 15,
+    "text_pages": 0,
+    "image_pages": 15,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 15,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "209.9x297.0mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "cong van giai trinh-Ban ĐHDA 1.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\2026-03_tkDieuChinh_GSTG\\BBXLTK_2026-03-20\\cong van giai trinh-Ban ĐHDA 1.pdf",
+    "size_mb": 4.42,
+    "pages": 47,
+    "text_pages": 45,
+    "image_pages": 2,
+    "drawing_pages": 0,
+    "total_text_chars": 29382,
+    "total_images": 202,
+    "avg_text_density": 625.1,
+    "has_text_layer": true,
+    "page_sizes": [
+      "209.9x297.0mm"
+    ],
+    "is_oversized": false,
+    "category": "text_rich",
+    "recommended_tool": "llm/qwen3.5-35b",
+    "error": null
+  },
+  {
+    "file": "BaoCaoKiemDinh_Khoi Nha B.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HS hien trang du an\\Bao cao kiem dinh\\BaoCaoKiemDinh_Khoi Nha B.pdf",
+    "size_mb": 121.08,
+    "pages": 141,
+    "text_pages": 0,
+    "image_pages": 141,
+    "drawing_pages": 32,
+    "total_text_chars": 0,
+    "total_images": 141,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "209.9x297.0mm"
+    ],
+    "is_oversized": true,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "BaoCaoKiemDinh_Khoi Nha D.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HS hien trang du an\\Bao cao kiem dinh\\BaoCaoKiemDinh_Khoi Nha D.pdf",
+    "size_mb": 90.03,
+    "pages": 105,
+    "text_pages": 0,
+    "image_pages": 105,
+    "drawing_pages": 24,
+    "total_text_chars": 0,
+    "total_images": 105,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "209.9x297.0mm"
+    ],
+    "is_oversized": true,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "230919.91.NQ.HĐND.dieu chinh CTDT. NTP.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HS hien trang du an\\Mr Vy gui\\230919.91.NQ.HĐND.dieu chinh CTDT. NTP.pdf",
+    "size_mb": 0.43,
+    "pages": 4,
+    "text_pages": 0,
+    "image_pages": 4,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 4,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "209.5x296.0mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "231227.5975.giao ke hoach von.BD NgTrP 500 trieu.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HS hien trang du an\\Mr Vy gui\\231227.5975.giao ke hoach von.BD NgTrP 500 trieu.pdf",
+    "size_mb": 1.4,
+    "pages": 2,
+    "text_pages": 1,
+    "image_pages": 1,
+    "drawing_pages": 0,
+    "total_text_chars": 73,
+    "total_images": 2,
+    "avg_text_density": 36.5,
+    "has_text_layer": false,
+    "page_sizes": [
+      "210.5x286.8mm"
+    ],
+    "is_oversized": false,
+    "category": "hybrid",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "PCCC 287 Giay chung nhan Khối C D - CD 09.5.2023.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HS hien trang du an\\Mr Vy gui\\PCCC 287 Giay chung nhan Khối C D - CD 09.5.2023.pdf",
+    "size_mb": 1.24,
+    "pages": 2,
+    "text_pages": 0,
+    "image_pages": 2,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 2,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "210.0x297.0mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "PCCC 812 Giay tham duyet PCCC dieu chinh Khu B BV NTP - 28.10.2022.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HS hien trang du an\\Mr Vy gui\\PCCC 812 Giay tham duyet PCCC dieu chinh Khu B BV NTP - 28.10.2022.pdf",
+    "size_mb": 0.38,
+    "pages": 2,
+    "text_pages": 0,
+    "image_pages": 2,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 2,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "209.9x296.9mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "QD 513_STNMT phe duyet DTM - 12.4.2013 - Copy.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HS hien trang du an\\Mr Vy gui\\QD 513_STNMT phe duyet DTM - 12.4.2013 - Copy.pdf",
+    "size_mb": 1.96,
+    "pages": 3,
+    "text_pages": 0,
+    "image_pages": 3,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 3,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "212.0x292.8mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "QD 513_STNMT phe duyet DTM - 12.4.2013.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HS hien trang du an\\Mr Vy gui\\QD 513_STNMT phe duyet DTM - 12.4.2013.pdf",
+    "size_mb": 1.96,
+    "pages": 3,
+    "text_pages": 0,
+    "image_pages": 3,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 3,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "212.0x292.8mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "QD 5301_SYT Giao chi tieu giuong benh nam 2018 - 08.10.2018.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HS hien trang du an\\Mr Vy gui\\QD 5301_SYT Giao chi tieu giuong benh nam 2018 - 08.10.2018.pdf",
+    "size_mb": 1.94,
+    "pages": 4,
+    "text_pages": 0,
+    "image_pages": 4,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 4,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "211.3x289.3mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "VB 4181_SQHKT-KV1chitieuQH-KT BvNTP - 31.12.2021.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HS hien trang du an\\Mr Vy gui\\VB 4181_SQHKT-KV1chitieuQH-KT BvNTP - 31.12.2021.pdf",
+    "size_mb": 0.43,
+    "pages": 4,
+    "text_pages": 1,
+    "image_pages": 3,
+    "drawing_pages": 0,
+    "total_text_chars": 101,
+    "total_images": 37,
+    "avg_text_density": 25.2,
+    "has_text_layer": true,
+    "page_sizes": [
+      "209.9x296.7mm"
+    ],
+    "is_oversized": false,
+    "category": "hybrid",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "01_TKKT_KhoiBD_v3 Model (1).pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HS hien trang du an\\Tai lieu lien quan ra soat TC2737\\01_TKKT_KhoiBD_v3 Model (1).pdf",
+    "size_mb": 6.59,
+    "pages": 33,
+    "text_pages": 0,
+    "image_pages": 0,
+    "drawing_pages": 33,
+    "total_text_chars": 0,
+    "total_images": 0,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "420.2x297.0mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "20240620 - BV NGUYEN TRI PHUONG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HS hien trang du an\\Tai lieu lien quan ra soat TC2737\\20240620 - BV NGUYEN TRI PHUONG.pdf",
+    "size_mb": 11.78,
+    "pages": 48,
+    "text_pages": 48,
+    "image_pages": 0,
+    "drawing_pages": 48,
+    "total_text_chars": 109478,
+    "total_images": 48,
+    "avg_text_density": 2280.8,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "BV NGUYEN TRI PHUONG - SHEETS SET_Kien Truc.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\BV NGUYEN TRI PHUONG - SHEETS SET_Kien Truc.pdf",
+    "size_mb": 39.14,
+    "pages": 61,
+    "text_pages": 61,
+    "image_pages": 0,
+    "drawing_pages": 61,
+    "total_text_chars": 150602,
+    "total_images": 114,
+    "avg_text_density": 2468.9,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "KIEN TRUC-PDF.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\KIẾN TRÚC\\KIEN TRUC-PDF\\KIEN TRUC-PDF.pdf",
+    "size_mb": 46.9,
+    "pages": 87,
+    "text_pages": 87,
+    "image_pages": 0,
+    "drawing_pages": 87,
+    "total_text_chars": 339116,
+    "total_images": 208,
+    "avg_text_density": 3897.9,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "00.XuatHS.CaiTaoKhoiBD.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\KẾT CẤU & THUYẾT MINH\\PDF\\00.XuatHS.CaiTaoKhoiBD.pdf",
+    "size_mb": 82.85,
+    "pages": 81,
+    "text_pages": 0,
+    "image_pages": 0,
+    "drawing_pages": 81,
+    "total_text_chars": 0,
+    "total_images": 0,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "ACMV-PDF.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ACMV-PDF\\ACMV-PDF.pdf",
+    "size_mb": 4.53,
+    "pages": 9,
+    "text_pages": 9,
+    "image_pages": 0,
+    "drawing_pages": 9,
+    "total_text_chars": 57040,
+    "total_images": 0,
+    "avg_text_density": 6337.8,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "BẢN VẼ MEP-PDF.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\BẢN VẼ MEP-PDF.pdf",
+    "size_mb": 32.6,
+    "pages": 102,
+    "text_pages": 102,
+    "image_pages": 0,
+    "drawing_pages": 102,
+    "total_text_chars": 416102,
+    "total_images": 37,
+    "avg_text_density": 4079.4,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "DANH MUC BAN VE----MEP-002.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\DANH MUC BAN VE----MEP-002.pdf",
+    "size_mb": 1.89,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 1411,
+    "total_images": 5,
+    "avg_text_density": 1411.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "02.E.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\E..-PDF\\02.E.pdf",
+    "size_mb": 12.66,
+    "pages": 24,
+    "text_pages": 24,
+    "image_pages": 0,
+    "drawing_pages": 24,
+    "total_text_chars": 125583,
+    "total_images": 0,
+    "avg_text_density": 5232.6,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "5. HS TKTC - KYT - BV_NG TRI PHUONG- DIEU CHINH BO SUNG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\5. HS TKTC - KYT - BV_NG TRI PHUONG- DIEU CHINH BO SUNG.pdf",
+    "size_mb": 5.18,
+    "pages": 12,
+    "text_pages": 12,
+    "image_pages": 0,
+    "drawing_pages": 12,
+    "total_text_chars": 43322,
+    "total_images": 6,
+    "avg_text_density": 3610.2,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "DANH MUC BAN VE-----MEP-002.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\DANH MUC BAN VE-----MEP-002.pdf",
+    "size_mb": 1.78,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 1324,
+    "total_images": 5,
+    "avg_text_density": 1324.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "E-101-SO DO NGUYEN LY TU DIEN TONG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\E-101-SO DO NGUYEN LY TU DIEN TONG.pdf",
+    "size_mb": 0.44,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 6132,
+    "total_images": 0,
+    "avg_text_density": 6132.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "101.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\KYT-PDF-TAM\\101.pdf",
+    "size_mb": 0.34,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3057,
+    "total_images": 0,
+    "avg_text_density": 3057.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "102.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\KYT-PDF-TAM\\102.pdf",
+    "size_mb": 0.63,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 6250,
+    "total_images": 0,
+    "avg_text_density": 6250.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "103.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\KYT-PDF-TAM\\103.pdf",
+    "size_mb": 0.91,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 4442,
+    "total_images": 12,
+    "avg_text_density": 4442.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "105.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\KYT-PDF-TAM\\105.pdf",
+    "size_mb": 0.69,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 4732,
+    "total_images": 0,
+    "avg_text_density": 4732.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "201.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\KYT-PDF-TAM\\201.pdf",
+    "size_mb": 0.54,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3142,
+    "total_images": 0,
+    "avg_text_density": 3142.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "202.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\KYT-PDF-TAM\\202.pdf",
+    "size_mb": 0.5,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3103,
+    "total_images": 0,
+    "avg_text_density": 3103.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "203.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\KYT-PDF-TAM\\203.pdf",
+    "size_mb": 0.51,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3033,
+    "total_images": 0,
+    "avg_text_density": 3033.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "204.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\KYT-PDF-TAM\\204.pdf",
+    "size_mb": 0.48,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 2776,
+    "total_images": 0,
+    "avg_text_density": 2776.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "205.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\KYT-PDF-TAM\\205.pdf",
+    "size_mb": 0.48,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 2611,
+    "total_images": 0,
+    "avg_text_density": 2611.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "301.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\KYT-PDF-TAM\\301.pdf",
+    "size_mb": 0.46,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3287,
+    "total_images": 0,
+    "avg_text_density": 3287.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "302.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\KYT-PDF-TAM\\302.pdf",
+    "size_mb": 0.43,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 2944,
+    "total_images": 0,
+    "avg_text_density": 2944.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "303.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV, E-DIEU CHINH BO SUNG -THEO SXD-PDF-20250320\\KYT-PDF-TAM\\303.pdf",
+    "size_mb": 0.36,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3945,
+    "total_images": 0,
+    "avg_text_density": 3945.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "3.HS TKTC - DIEN NHE - BV_NG TRI PHUONG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\3.HS TKTC - DIEN NHE - BV_NG TRI PHUONG.pdf",
+    "size_mb": 7.48,
+    "pages": 10,
+    "text_pages": 10,
+    "image_pages": 0,
+    "drawing_pages": 10,
+    "total_text_chars": 30748,
+    "total_images": 15,
+    "avg_text_density": 3074.8,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "4. HS TKTC - BGYT - BV_NG TRI PHUONG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\4. HS TKTC - BGYT - BV_NG TRI PHUONG.pdf",
+    "size_mb": 7.1,
+    "pages": 9,
+    "text_pages": 9,
+    "image_pages": 0,
+    "drawing_pages": 9,
+    "total_text_chars": 36216,
+    "total_images": 0,
+    "avg_text_density": 4024.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "5. HS TKTC - KYT - BV_NG TRI PHUONG- DIEU CHINH BO SUNG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\5. HS TKTC - KYT - BV_NG TRI PHUONG- DIEU CHINH BO SUNG.pdf",
+    "size_mb": 5.18,
+    "pages": 12,
+    "text_pages": 12,
+    "image_pages": 0,
+    "drawing_pages": 12,
+    "total_text_chars": 43322,
+    "total_images": 6,
+    "avg_text_density": 3610.2,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "5. HS TKTC - KYT - BV_NG TRI PHUONG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\5. HS TKTC - KYT - BV_NG TRI PHUONG.pdf",
+    "size_mb": 3.37,
+    "pages": 9,
+    "text_pages": 9,
+    "image_pages": 0,
+    "drawing_pages": 9,
+    "total_text_chars": 30446,
+    "total_images": 0,
+    "avg_text_density": 3382.9,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "6. HS TKTC - CMTD - BV_NG TRI PHUONG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\6. HS TKTC - CMTD - BV_NG TRI PHUONG.pdf",
+    "size_mb": 4.66,
+    "pages": 6,
+    "text_pages": 6,
+    "image_pages": 0,
+    "drawing_pages": 6,
+    "total_text_chars": 17813,
+    "total_images": 0,
+    "avg_text_density": 2968.8,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "101.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\101.pdf",
+    "size_mb": 0.34,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3057,
+    "total_images": 0,
+    "avg_text_density": 3057.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "102.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\102.pdf",
+    "size_mb": 0.63,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 6250,
+    "total_images": 0,
+    "avg_text_density": 6250.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "103.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\103.pdf",
+    "size_mb": 0.91,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 4442,
+    "total_images": 12,
+    "avg_text_density": 4442.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "105.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\105.pdf",
+    "size_mb": 0.69,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 4732,
+    "total_images": 0,
+    "avg_text_density": 4732.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "201.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\201.pdf",
+    "size_mb": 0.54,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3142,
+    "total_images": 0,
+    "avg_text_density": 3142.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "202.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\202.pdf",
+    "size_mb": 0.5,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3103,
+    "total_images": 0,
+    "avg_text_density": 3103.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "203.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\203.pdf",
+    "size_mb": 0.51,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3033,
+    "total_images": 0,
+    "avg_text_density": 3033.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "204.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\204.pdf",
+    "size_mb": 0.48,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 2776,
+    "total_images": 0,
+    "avg_text_density": 2776.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "205.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\205.pdf",
+    "size_mb": 0.48,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 2611,
+    "total_images": 0,
+    "avg_text_density": 2611.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "301.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\301.pdf",
+    "size_mb": 0.46,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3287,
+    "total_images": 0,
+    "avg_text_density": 3287.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "302.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\302.pdf",
+    "size_mb": 0.43,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 2944,
+    "total_images": 0,
+    "avg_text_density": 2944.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "303.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\303.pdf",
+    "size_mb": 0.36,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3945,
+    "total_images": 0,
+    "avg_text_density": 3945.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "5. HS TKTC - KYT - BV_NG TRI PHUONG- DIEU CHINH BO SUNG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\5. HS TKTC - KYT - BV_NG TRI PHUONG- DIEU CHINH BO SUNG.pdf",
+    "size_mb": 5.18,
+    "pages": 12,
+    "text_pages": 12,
+    "image_pages": 0,
+    "drawing_pages": 12,
+    "total_text_chars": 43322,
+    "total_images": 6,
+    "avg_text_density": 3610.2,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "E-101.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\ELV-1-PDF\\KYT-TAM\\E-101.pdf",
+    "size_mb": 0.44,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 6132,
+    "total_images": 0,
+    "avg_text_density": 6132.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "PS.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\PS-PDF\\PS.pdf",
+    "size_mb": 15.86,
+    "pages": 31,
+    "text_pages": 31,
+    "image_pages": 0,
+    "drawing_pages": 31,
+    "total_text_chars": 103291,
+    "total_images": 12,
+    "avg_text_density": 3332.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "SOLA -PDF.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\HSTK BVTC FINAL\\MEP\\SOLAR-PDF\\SOLA -PDF.pdf",
+    "size_mb": 2.82,
+    "pages": 4,
+    "text_pages": 4,
+    "image_pages": 0,
+    "drawing_pages": 4,
+    "total_text_chars": 14965,
+    "total_images": 10,
+    "avg_text_density": 3741.2,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "02_TKKT_KhoiB_KeoMai_v1 Model (1).pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\K CAU\\02_TKKT_KhoiB_KeoMai_v1 Model (1).pdf",
+    "size_mb": 2.39,
+    "pages": 4,
+    "text_pages": 0,
+    "image_pages": 0,
+    "drawing_pages": 4,
+    "total_text_chars": 0,
+    "total_images": 0,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "02_TKKT_KhoiD_KeoMai+ThangSat_v1 Model (1).pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\K CAU\\02_TKKT_KhoiD_KeoMai+ThangSat_v1 Model (1).pdf",
+    "size_mb": 2.47,
+    "pages": 5,
+    "text_pages": 0,
+    "image_pages": 0,
+    "drawing_pages": 5,
+    "total_text_chars": 0,
+    "total_images": 0,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "03_TKKT_KhoiB_LTBT_v1 Model (1).pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\K CAU\\03_TKKT_KhoiB_LTBT_v1 Model (1).pdf",
+    "size_mb": 0.94,
+    "pages": 3,
+    "text_pages": 0,
+    "image_pages": 0,
+    "drawing_pages": 3,
+    "total_text_chars": 0,
+    "total_images": 0,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "03_TKKT_KhoiD_LTBT_v1 Model (1).pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\K CAU\\03_TKKT_KhoiD_LTBT_v1 Model (1).pdf",
+    "size_mb": 0.51,
+    "pages": 2,
+    "text_pages": 0,
+    "image_pages": 0,
+    "drawing_pages": 2,
+    "total_text_chars": 0,
+    "total_images": 0,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "01.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\01.pdf",
+    "size_mb": 0.4,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 1012,
+    "total_images": 0,
+    "avg_text_density": 1012.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "02.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\02.pdf",
+    "size_mb": 0.51,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 940,
+    "total_images": 0,
+    "avg_text_density": 940.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "03.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\03.pdf",
+    "size_mb": 0.32,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 703,
+    "total_images": 0,
+    "avg_text_density": 703.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "04.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\04.pdf",
+    "size_mb": 0.43,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 1123,
+    "total_images": 0,
+    "avg_text_density": 1123.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "05.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\05.pdf",
+    "size_mb": 0.6,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 950,
+    "total_images": 0,
+    "avg_text_density": 950.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "06.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\06.pdf",
+    "size_mb": 0.64,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 868,
+    "total_images": 0,
+    "avg_text_density": 868.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "07.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\07.pdf",
+    "size_mb": 0.4,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 1239,
+    "total_images": 0,
+    "avg_text_density": 1239.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "3.HS TKCS - DIEN NHE - BV_NG TRI PHUONG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\3.HS TKCS - DIEN NHE - BV_NG TRI PHUONG.pdf",
+    "size_mb": 3.49,
+    "pages": 5,
+    "text_pages": 5,
+    "image_pages": 0,
+    "drawing_pages": 5,
+    "total_text_chars": 18119,
+    "total_images": 13,
+    "avg_text_density": 3623.8,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "4. HS TKCS - BGYT - BV_NG TRI PHUONG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\4. HS TKCS - BGYT - BV_NG TRI PHUONG.pdf",
+    "size_mb": 3.85,
+    "pages": 6,
+    "text_pages": 6,
+    "image_pages": 0,
+    "drawing_pages": 6,
+    "total_text_chars": 26843,
+    "total_images": 12,
+    "avg_text_density": 4473.8,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "6. HS TKCS - CMTD - BV_NG TRI PHUONG.V3.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\6. HS TKCS - CMTD - BV_NG TRI PHUONG.V3.pdf",
+    "size_mb": 3.34,
+    "pages": 6,
+    "text_pages": 6,
+    "image_pages": 0,
+    "drawing_pages": 6,
+    "total_text_chars": 16622,
+    "total_images": 12,
+    "avg_text_density": 2770.3,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "ACMV-M-001.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\ACMV-M-001.pdf",
+    "size_mb": 0.21,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 4178,
+    "total_images": 0,
+    "avg_text_density": 4178.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "594.1x420.2mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "ACMV-M-101.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\ACMV-M-101.pdf",
+    "size_mb": 0.22,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 4222,
+    "total_images": 0,
+    "avg_text_density": 4222.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "594.1x420.2mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "ACMV-M-201.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\ACMV-M-201.pdf",
+    "size_mb": 0.41,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3752,
+    "total_images": 0,
+    "avg_text_density": 3752.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "594.1x420.2mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "ACMV-M-202.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\ACMV-M-202.pdf",
+    "size_mb": 0.39,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 1194,
+    "total_images": 12,
+    "avg_text_density": 1194.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "594.1x420.2mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "ACMV-M-203.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\ACMV-M-203.pdf",
+    "size_mb": 0.38,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 5962,
+    "total_images": 0,
+    "avg_text_density": 5962.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "594.1x420.2mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "ACMV-M-204.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\ACMV-M-204.pdf",
+    "size_mb": 0.43,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 3131,
+    "total_images": 0,
+    "avg_text_density": 3131.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "594.1x420.2mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "ACMV-M-205.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\ACMV-M-205.pdf",
+    "size_mb": 0.41,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 4093,
+    "total_images": 0,
+    "avg_text_density": 4093.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "594.1x420.2mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "CTN.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\M&E\\CTN.pdf",
+    "size_mb": 2.4,
+    "pages": 8,
+    "text_pages": 8,
+    "image_pages": 0,
+    "drawing_pages": 8,
+    "total_text_chars": 22388,
+    "total_images": 0,
+    "avg_text_density": 2798.5,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "00-TỜ BÌA-Model.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\241008_TANG 4 BV NTP_KIEN TRUC\\00-TỜ BÌA-Model.pdf",
+    "size_mb": 0.16,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 248,
+    "total_images": 0,
+    "avg_text_density": 248.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "241008_TANG 4 BV NTP-KT 00.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\241008_TANG 4 BV NTP_KIEN TRUC\\241008_TANG 4 BV NTP-KT 00.pdf",
+    "size_mb": 0.17,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 420,
+    "total_images": 0,
+    "avg_text_density": 420.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "241008_TANG 4 BV NTP-KT 01.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\241008_TANG 4 BV NTP_KIEN TRUC\\241008_TANG 4 BV NTP-KT 01.pdf",
+    "size_mb": 0.49,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 2311,
+    "total_images": 0,
+    "avg_text_density": 2311.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "241008_TANG 4 BV NTP-KT 02.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\241008_TANG 4 BV NTP_KIEN TRUC\\241008_TANG 4 BV NTP-KT 02.pdf",
+    "size_mb": 0.62,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 5401,
+    "total_images": 0,
+    "avg_text_density": 5401.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "241008_TANG 4 BV NTP-KT 03.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\241008_TANG 4 BV NTP_KIEN TRUC\\241008_TANG 4 BV NTP-KT 03.pdf",
+    "size_mb": 0.45,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 4029,
+    "total_images": 0,
+    "avg_text_density": 4029.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "241008_TANG 4 BV NTP-KT 04.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\241008_TANG 4 BV NTP_KIEN TRUC\\241008_TANG 4 BV NTP-KT 04.pdf",
+    "size_mb": 0.63,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 1,
+    "total_text_chars": 4966,
+    "total_images": 0,
+    "avg_text_density": 4966.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "3659_PC07_Đ2_GopY_PCCC_Tang4_KhuB_BVNTP2023.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\3659_PC07_Đ2_GopY_PCCC_Tang4_KhuB_BVNTP2023.pdf",
+    "size_mb": 0.85,
+    "pages": 2,
+    "text_pages": 0,
+    "image_pages": 2,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 2,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "210.0x297.0mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "BVScan_A1_pccc_tang4_khuB.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\BVScan_A1_pccc_tang4_khuB.pdf",
+    "size_mb": 17.44,
+    "pages": 10,
+    "text_pages": 0,
+    "image_pages": 10,
+    "drawing_pages": 10,
+    "total_text_chars": 0,
+    "total_images": 10,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "863.6x601.9mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "0-TM TTPCCC - TẦNG 4 KHOI B - BV NTP-DC 20.11.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\FILE KY DIEN TU- PCCC KHOI B- LAN 3\\0-TM TTPCCC - TẦNG 4 KHOI B - BV NTP-DC 20.11.pdf",
+    "size_mb": 0.62,
+    "pages": 28,
+    "text_pages": 28,
+    "image_pages": 0,
+    "drawing_pages": 0,
+    "total_text_chars": 45096,
+    "total_images": 2,
+    "avg_text_density": 1610.6,
+    "has_text_layer": true,
+    "page_sizes": [
+      "215.9x279.4mm"
+    ],
+    "is_oversized": false,
+    "category": "text_rich",
+    "recommended_tool": "llm/qwen3.5-35b",
+    "error": null
+  },
+  {
+    "file": "1- KHAI TOAN_B-D BV NTP_14.8.24.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\FILE KY DIEN TU- PCCC KHOI B- LAN 3\\1- KHAI TOAN_B-D BV NTP_14.8.24.pdf",
+    "size_mb": 0.48,
+    "pages": 10,
+    "text_pages": 10,
+    "image_pages": 0,
+    "drawing_pages": 0,
+    "total_text_chars": 15745,
+    "total_images": 0,
+    "avg_text_density": 1574.5,
+    "has_text_layer": true,
+    "page_sizes": [
+      "279.4x215.9mm"
+    ],
+    "is_oversized": false,
+    "category": "text_rich",
+    "recommended_tool": "llm/qwen3.5-35b",
+    "error": null
+  },
+  {
+    "file": "2- 241118_TANG 4 BV NTP_KIEN TRUC PCCC.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\FILE KY DIEN TU- PCCC KHOI B- LAN 3\\2- 241118_TANG 4 BV NTP_KIEN TRUC PCCC.pdf",
+    "size_mb": 2.89,
+    "pages": 5,
+    "text_pages": 5,
+    "image_pages": 0,
+    "drawing_pages": 5,
+    "total_text_chars": 18494,
+    "total_images": 3,
+    "avg_text_density": 3698.8,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "3- 241119 - BV NTP - PCCC MEP final.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\FILE KY DIEN TU- PCCC KHOI B- LAN 3\\3- 241119 - BV NTP - PCCC MEP final.pdf",
+    "size_mb": 7.62,
+    "pages": 23,
+    "text_pages": 23,
+    "image_pages": 0,
+    "drawing_pages": 23,
+    "total_text_chars": 86263,
+    "total_images": 356,
+    "avg_text_density": 3750.6,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "PCCC KHOI B.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\HSTK BVTC\\PCCC\\PCCC KHOI B.pdf",
+    "size_mb": 4.45,
+    "pages": 20,
+    "text_pages": 20,
+    "image_pages": 0,
+    "drawing_pages": 20,
+    "total_text_chars": 72775,
+    "total_images": 25,
+    "avg_text_density": 3638.8,
+    "has_text_layer": true,
+    "page_sizes": [
+      "841.0x594.1mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "CCHN KIEN TRUC DAO QUANG HUY.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\NS HCM\\CCHN KIEN TRUC DAO QUANG HUY.pdf",
+    "size_mb": 0.35,
+    "pages": 2,
+    "text_pages": 0,
+    "image_pages": 2,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 2,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "210.1x297.1mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "Co dien_CHUNG CHI THIET KE CO DIEN DANG HUNG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\NS HCM\\Co dien_CHUNG CHI THIET KE CO DIEN DANG HUNG.pdf",
+    "size_mb": 0.37,
+    "pages": 2,
+    "text_pages": 0,
+    "image_pages": 2,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 2,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "279.4x215.9mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "Co khi-nang luong_DAI HOC LE THANH NHAN.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\NS HCM\\Co khi-nang luong_DAI HOC LE THANH NHAN.pdf",
+    "size_mb": 0.25,
+    "pages": 1,
+    "text_pages": 0,
+    "image_pages": 1,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 2,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "297.0x209.9mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "CTN_CHUNG CHI NGUYEN TUAN HIEN.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\NS HCM\\CTN_CHUNG CHI NGUYEN TUAN HIEN.pdf",
+    "size_mb": 0.39,
+    "pages": 2,
+    "text_pages": 0,
+    "image_pages": 2,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 2,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "279.4x215.9mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "Dien_BANG DAI HOC DAO TRUNG HIEN.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\NS HCM\\Dien_BANG DAI HOC DAO TRUNG HIEN.pdf",
+    "size_mb": 0.66,
+    "pages": 1,
+    "text_pages": 1,
+    "image_pages": 0,
+    "drawing_pages": 0,
+    "total_text_chars": 561,
+    "total_images": 1,
+    "avg_text_density": 561.0,
+    "has_text_layer": true,
+    "page_sizes": [
+      "297.0x159.9mm"
+    ],
+    "is_oversized": false,
+    "category": "text_rich",
+    "recommended_tool": "llm/qwen3.5-35b",
+    "error": null
+  },
+  {
+    "file": "Ket cau_BangTN-Huynh Tan Dai.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\NS HCM\\Ket cau_BangTN-Huynh Tan Dai.pdf",
+    "size_mb": 0.86,
+    "pages": 1,
+    "text_pages": 0,
+    "image_pages": 1,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 1,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "297.1x215.6mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "Ket cau_CCHN Huynh Tan Dai_2024.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\NS HCM\\Ket cau_CCHN Huynh Tan Dai_2024.pdf",
+    "size_mb": 0.98,
+    "pages": 2,
+    "text_pages": 0,
+    "image_pages": 2,
+    "drawing_pages": 2,
+    "total_text_chars": 0,
+    "total_images": 2,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "428.8x299.7mm"
+    ],
+    "is_oversized": true,
+    "category": "drawing",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "Kien Truc_BANG DAI HOC - TRAN QUOC CUONG.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\NS HCM\\Kien Truc_BANG DAI HOC - TRAN QUOC CUONG.pdf",
+    "size_mb": 0.36,
+    "pages": 2,
+    "text_pages": 0,
+    "image_pages": 2,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 4,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "297.0x209.9mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "Kien truc_Tran Quoc Cuong.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\NS HCM\\Kien truc_Tran Quoc Cuong.pdf",
+    "size_mb": 0.65,
+    "pages": 2,
+    "text_pages": 0,
+    "image_pages": 2,
+    "drawing_pages": 0,
+    "total_text_chars": 26,
+    "total_images": 4,
+    "avg_text_density": 13.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "297.0x209.9mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "THIET KE DHKK HANG 1 LE THANH NHAN MOI.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\NS HCM\\THIET KE DHKK HANG 1 LE THANH NHAN MOI.pdf",
+    "size_mb": 0.65,
+    "pages": 2,
+    "text_pages": 0,
+    "image_pages": 2,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 5,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "279.4x215.9mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  },
+  {
+    "file": "THIET KE PCCC DAO TRUNG HIEN.pdf",
+    "path": "D:\\OneDrive - IBST BIM\\00 CCBA\\Thiet ke\\2024-04 Ban DD HCM - BV NTP\\NS HCM\\THIET KE PCCC DAO TRUNG HIEN.pdf",
+    "size_mb": 0.13,
+    "pages": 1,
+    "text_pages": 0,
+    "image_pages": 1,
+    "drawing_pages": 0,
+    "total_text_chars": 0,
+    "total_images": 2,
+    "avg_text_density": 0.0,
+    "has_text_layer": false,
+    "page_sizes": [
+      "215.9x279.4mm"
+    ],
+    "is_oversized": false,
+    "category": "scanned",
+    "recommended_tool": "llm/ocr-primary",
+    "error": null
+  }
+]
