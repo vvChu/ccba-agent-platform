@@ -1,6 +1,6 @@
 """Tests for configuration module."""
 
-from mdconverter.config import Settings
+from mdconverter.config import Settings, get_settings, reset_settings
 
 
 class TestSettings:
@@ -33,3 +33,28 @@ class TestSettings:
         assert settings.ai_gateway_url == "http://custom:9999/v1"
         assert settings.ai_gateway_key == "test-key-123"
         assert settings.max_output_tokens == 32000
+
+
+class TestGetSettings:
+    """Test lazy settings initialization (C2 fix)."""
+
+    def test_get_settings_returns_settings(self):
+        """Test get_settings returns a Settings instance."""
+        reset_settings()
+        s = get_settings()
+        assert isinstance(s, Settings)
+
+    def test_get_settings_is_singleton(self):
+        """Test get_settings returns the same instance on multiple calls."""
+        reset_settings()
+        s1 = get_settings()
+        s2 = get_settings()
+        assert s1 is s2
+
+    def test_reset_settings_clears_singleton(self):
+        """Test reset_settings allows creating a new instance."""
+        reset_settings()
+        s1 = get_settings()
+        reset_settings()
+        s2 = get_settings()
+        assert s1 is not s2
