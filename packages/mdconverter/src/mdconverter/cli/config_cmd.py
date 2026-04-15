@@ -8,7 +8,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from mdconverter.config import settings
+from mdconverter.config import get_settings
 
 app_config = typer.Typer(help="Manage configuration.", name="config")
 console = Console()
@@ -17,6 +17,7 @@ console = Console()
 @app_config.command(name="show")
 def config_show() -> None:
     """Show current configuration."""
+    settings = get_settings()
     table = Table(title="Current Configuration")
     table.add_column("Setting", style="cyan")
     table.add_column("Value", style="green")

@@ -2,9 +2,11 @@
 Configuration management using Pydantic Settings.
 
 Supports loading from environment variables and .env files.
+Settings are lazily initialized on first access via get_settings().
 """
 
 from pathlib import Path
+from typing import Any
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -71,5 +73,43 @@ class Settings(BaseSettings):
     output_dir: Path | None = Field(default=None, description="Default output directory")
 
 
-# Global settings instance
-settings = Settings()
+# ---------------------------------------------------------------------------
+# Lazy initialization (C2 fix)
+# ---------------------------------------------------------------------------
+_settings: Settings | None = None
+
+
+def get_settings() -> Settings:
+    """Get the global Settings instance, creating it lazily on first call.
+
+    Returns:
+        The singleton Settings instance.
+    """
+    global _settings
+    if _settings is None:
+        _settings = Settings()
+    return _settings
+
+
+def reset_settings() -> None:
+    """Reset the settings singleton. Intended for testing only."""
+    global _settings
+    _settings = None
+
+
+class _SettingsProxy:
+    """Lazy proxy so `from mdconverter.config import settings` still works.
+
+    All attribute access is forwarded to the lazily-created Settings instance.
+    Prefer ``get_settings()`` in new code for explicit control.
+    """
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(get_settings(), name)
+
+    def __repr__(self) -> str:
+        return repr(get_settings())
+
+
+# Backward-compatible module-level name.  No .env is read until first use.
+settings: Any = _SettingsProxy()
