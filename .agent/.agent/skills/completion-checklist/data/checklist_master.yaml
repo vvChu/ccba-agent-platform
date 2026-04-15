@@ -1,0 +1,432 @@
+# Danh Mục Hồ Sơ Hoàn Thành Công Trình - Master Checklist
+# Căn cứ: NĐ 06/2021/NĐ-CP (Phụ lục VIb), NĐ 35/2023/NĐ-CP
+# Cập nhật: 2026-03-28
+# Quản lý: CCBA - BIM RD
+
+metadata:
+  version: "1.0"
+  legal_basis:
+    primary: "Nghị định 06/2021/NĐ-CP - Phụ lục VIb"
+    amendments:
+      - "Nghị định 35/2023/NĐ-CP"
+    pending:
+      - "Dự thảo NĐ QLCL 2026 (chưa áp dụng)"
+  last_updated: "2026-03-28"
+  maintained_by: "CCBA"
+  applies_to:
+    - "Công trình dân dụng"
+    - "Công trình công nghiệp"
+    - "Công trình hạ tầng kỹ thuật"
+    - "Công trình giao thông"
+
+# ==============================================================================
+# I. HỒ SƠ CHUẨN BỊ ĐẦU TƯ XÂY DỰNG VÀ HỢP ĐỒNG
+# ==============================================================================
+categories:
+  - id: I
+    title: "Hồ sơ chuẩn bị đầu tư xây dựng và hợp đồng"
+    title_en: "Investment Preparation & Contract Documents"
+    responsible: "Chủ đầu tư (CĐT)"
+    items:
+      - id: I.1
+        document: "Quyết định chủ trương đầu tư"
+        document_en: "Investment Policy Decision"
+        legal_ref: "Luật Đầu tư công 2019, Điều 18-20"
+        required: true
+        applies_to: [all]
+        responsible: "CĐT"
+        copies: 1
+        notes: ""
+
+      - id: I.2
+        document: "Báo cáo nghiên cứu khả thi / Báo cáo kinh tế kỹ thuật"
+        document_en: "Feasibility Study / Technical-Economic Report"
+        legal_ref: "Luật XD, Điều 54-57"
+        required: true
+        applies_to: [all]
+        responsible: "CĐT"
+        copies: 1
+        notes: "BCKTKT cho công trình sử dụng thiết kế mẫu, thiết kế điển hình"
+
+      - id: I.3
+        document: "Các văn bản thẩm định, tham gia ý kiến của cơ quan liên quan"
+        document_en: "Appraisal Documents & Stakeholder Comments"
+        legal_ref: "Luật XD, Điều 58"
+        required: true
+        applies_to: [all]
+        responsible: "CĐT"
+        copies: 1
+
+      - id: I.4
+        document: "Phương án đền bù, giải phóng mặt bằng"
+        document_en: "Compensation & Site Clearance Plan"
+        legal_ref: "Luật Đất đai"
+        required: conditional
+        condition: "Khi có giải phóng mặt bằng"
+        applies_to: [all]
+        responsible: "CĐT"
+
+      - id: I.5
+        document: "Văn bản thỏa thuận/chấp thuận về quy hoạch, đấu nối hạ tầng"
+        document_en: "Planning Approval & Infrastructure Connection"
+        legal_ref: "Luật Quy hoạch; Luật XD"
+        required: true
+        applies_to: [all]
+        responsible: "CĐT"
+
+      - id: I.6
+        document: "Văn bản về môi trường (ĐTM, cam kết BVMT)"
+        document_en: "Environmental Impact Assessment"
+        legal_ref: "Luật BVMT 2020"
+        required: conditional
+        condition: "Theo quy mô dự án"
+        applies_to: [all]
+        responsible: "CĐT"
+
+      - id: I.7
+        document: "Văn bản về PCCC (thẩm duyệt, nghiệm thu PCCC)"
+        document_en: "Fire Safety Approval"
+        legal_ref: "Luật PCCC; NĐ 136/2020"
+        required: conditional
+        condition: "Công trình thuộc diện thẩm duyệt PCCC"
+        applies_to: [residential, commercial, industrial]
+        responsible: "CĐT"
+
+      - id: I.8
+        document: "Quyết định cấp đất hoặc hợp đồng thuê đất"
+        document_en: "Land Allocation Decision / Land Lease Contract"
+        legal_ref: "Luật Đất đai"
+        required: true
+        applies_to: [all]
+        responsible: "CĐT"
+
+      - id: I.9
+        document: "Giấy phép xây dựng"
+        document_en: "Construction Permit"
+        legal_ref: "Luật XD, Điều 89-91"
+        required: conditional
+        condition: "Trừ công trình được miễn GPXD"
+        applies_to: [all]
+        responsible: "CĐT"
+
+      - id: I.10
+        document: "Quyết định chỉ định thầu / Kết quả lựa chọn nhà thầu"
+        document_en: "Contractor Selection Results"
+        legal_ref: "Luật Đấu thầu 2023"
+        required: true
+        applies_to: [all]
+        responsible: "CĐT"
+
+      - id: I.11
+        document: "Hợp đồng xây dựng (thi công, tư vấn giám sát, thiết kế, v.v.)"
+        document_en: "Construction Contracts"
+        legal_ref: "Luật XD, Chương VII"
+        required: true
+        applies_to: [all]
+        responsible: "CĐT"
+        copies: 1
+        notes: "Bao gồm phụ lục hợp đồng"
+
+      - id: I.12
+        document: "Tài liệu chứng minh năng lực nhà thầu"
+        document_en: "Contractor Qualification Documents"
+        legal_ref: "NĐ 15/2021; NĐ 06/2021"
+        required: true
+        applies_to: [all]
+        responsible: "Nhà thầu"
+        notes: "CCHN cá nhân, năng lực tổ chức"
+
+  # ============================================================================
+  # II. HỒ SƠ KHẢO SÁT XÂY DỰNG, THIẾT KẾ XÂY DỰNG
+  # ============================================================================
+  - id: II
+    title: "Hồ sơ khảo sát xây dựng, thiết kế xây dựng"
+    title_en: "Survey & Design Documents"
+    responsible: "CĐT / Tư vấn thiết kế"
+    items:
+      - id: II.1
+        document: "Nhiệm vụ khảo sát xây dựng"
+        document_en: "Survey Terms of Reference"
+        legal_ref: "NĐ 06/2021, Điều 5"
+        required: true
+        applies_to: [all]
+        responsible: "CĐT"
+
+      - id: II.2
+        document: "Phương án kỹ thuật khảo sát xây dựng"
+        document_en: "Survey Technical Methodology"
+        legal_ref: "NĐ 06/2021, Điều 6"
+        required: true
+        applies_to: [all]
+        responsible: "TV Khảo sát"
+
+      - id: II.3
+        document: "Báo cáo kết quả khảo sát xây dựng"
+        document_en: "Survey Results Report"
+        legal_ref: "NĐ 06/2021, Điều 7-8"
+        required: true
+        applies_to: [all]
+        responsible: "TV Khảo sát"
+        notes: "Bao gồm địa chất, địa hình, thủy văn, v.v."
+
+      - id: II.4
+        document: "Văn bản nghiệm thu kết quả khảo sát"
+        document_en: "Survey Acceptance Certificate"
+        legal_ref: "NĐ 06/2021, Điều 9"
+        required: true
+        applies_to: [all]
+        responsible: "CĐT"
+
+      - id: II.5
+        document: "Hồ sơ thiết kế xây dựng (BVTK + Thuyết minh)"
+        document_en: "Design Documents (Drawings + Description)"
+        legal_ref: "Luật XD; NĐ 15/2021"
+        required: true
+        applies_to: [all]
+        responsible: "TV Thiết kế"
+        notes: "Kèm danh mục bản vẽ được phê duyệt"
+
+      - id: II.6
+        document: "Kết quả thẩm tra, thẩm định thiết kế"
+        document_en: "Design Review & Appraisal Results"
+        legal_ref: "Luật XD, Điều 82-83"
+        required: true
+        applies_to: [all]
+        responsible: "CĐT / Cơ quan thẩm định"
+
+      - id: II.7
+        document: "Quyết định phê duyệt thiết kế"
+        document_en: "Design Approval Decision"
+        legal_ref: "Luật XD"
+        required: true
+        applies_to: [all]
+        responsible: "CĐT"
+
+      - id: II.8
+        document: "Chỉ dẫn kỹ thuật"
+        document_en: "Technical Specifications"
+        legal_ref: "NĐ 06/2021"
+        required: true
+        applies_to: [all]
+        responsible: "TV Thiết kế"
+
+  # ============================================================================
+  # III. HỒ SƠ QUẢN LÝ CHẤT LƯỢNG THI CÔNG XÂY DỰNG
+  # ============================================================================
+  - id: III
+    title: "Hồ sơ quản lý chất lượng thi công xây dựng"
+    title_en: "Construction Quality Management Documents"
+    responsible: "Nhà thầu TC / CĐT / TVGS"
+    items:
+      - id: III.1
+        document: "Bản vẽ hoàn công (kèm danh mục)"
+        document_en: "As-built Drawings (with index)"
+        legal_ref: "NĐ 06/2021, Điều 27"
+        required: true
+        applies_to: [all]
+        responsible: "Nhà thầu TC"
+        notes: "Phản ánh thực tế thi công, có xác nhận của TVGS"
+
+      - id: III.2
+        document: "Biên bản nghiệm thu công việc xây dựng"
+        document_en: "Work Item Acceptance Records"
+        legal_ref: "NĐ 06/2021, Điều 21"
+        required: true
+        applies_to: [all]
+        responsible: "Nhà thầu TC + TVGS"
+
+      - id: III.3
+        document: "Biên bản nghiệm thu bộ phận / giai đoạn thi công"
+        document_en: "Phase/Section Acceptance Records"
+        legal_ref: "NĐ 06/2021, Điều 22"
+        required: true
+        applies_to: [all]
+        responsible: "Nhà thầu TC + CĐT"
+
+      - id: III.4
+        document: "Kết quả thí nghiệm, kiểm tra vật liệu đầu vào"
+        document_en: "Material Testing Results"
+        legal_ref: "NĐ 06/2021, Điều 12"
+        required: true
+        applies_to: [all]
+        responsible: "Nhà thầu TC"
+        notes: "Từ phòng thí nghiệm hợp chuẩn (LAS/VILAS)"
+
+      - id: III.5
+        document: "Kết quả thí nghiệm, quan trắc trong thi công"
+        document_en: "In-construction Testing & Monitoring Results"
+        legal_ref: "NĐ 06/2021, Điều 13"
+        required: true
+        applies_to: [all]
+        responsible: "Nhà thầu TC"
+
+      - id: III.6
+        document: "Kết quả thí nghiệm đối chứng (nếu có)"
+        document_en: "Witness Testing Results"
+        legal_ref: "NĐ 06/2021, Điều 14"
+        required: conditional
+        condition: "Theo yêu cầu của CĐT hoặc cơ quan QLNN"
+        applies_to: [all]
+        responsible: "CĐT"
+
+      - id: III.7
+        document: "Kết quả kiểm định chất lượng (nếu có)"
+        document_en: "Quality Inspection Results"
+        legal_ref: "NĐ 06/2021, Điều 15"
+        required: conditional
+        condition: "Theo yêu cầu"
+        applies_to: [all]
+        responsible: "CĐT"
+
+      - id: III.8
+        document: "Kết quả thí nghiệm khả năng chịu lực (nếu có)"
+        document_en: "Load Testing Results"
+        legal_ref: "NĐ 06/2021"
+        required: conditional
+        condition: "Đối với kết cấu đặc biệt"
+        applies_to: [bridge, special_structure]
+        responsible: "CĐT"
+
+      - id: III.9
+        document: "Hồ sơ quản lý chất lượng thiết bị"
+        document_en: "Equipment Quality Management Documents"
+        legal_ref: "NĐ 06/2021"
+        required: conditional
+        condition: "Công trình có lắp đặt thiết bị"
+        applies_to: [all]
+        responsible: "Nhà thầu TC"
+        notes: >
+          Bao gồm: CO/CQ, chứng nhận hợp quy/hợp chuẩn, 
+          catalog, hướng dẫn vận hành
+
+      - id: III.10
+        document: "Nhật ký thi công xây dựng"
+        document_en: "Construction Daily Log"
+        legal_ref: "NĐ 06/2021, Điều 16"
+        required: true
+        applies_to: [all]
+        responsible: "Nhà thầu TC"
+
+      - id: III.11
+        document: "Nhật ký giám sát"
+        document_en: "Supervision Daily Log"
+        legal_ref: "NĐ 06/2021"
+        required: true
+        applies_to: [all]
+        responsible: "TVGS"
+
+      - id: III.12
+        document: "Danh mục thay đổi thiết kế trong quá trình thi công"
+        document_en: "Design Change Register"
+        legal_ref: "NĐ 06/2021"
+        required: conditional
+        condition: "Khi có thay đổi thiết kế"
+        applies_to: [all]
+        responsible: "TV Thiết kế + CĐT"
+        notes: "Kèm văn bản thẩm định, phê duyệt thay đổi"
+
+      - id: III.13
+        document: "Kế hoạch và biện pháp kiểm soát chất lượng thi công"
+        document_en: "Quality Control Plan"
+        legal_ref: "NĐ 06/2021, Điều 11"
+        required: true
+        applies_to: [all]
+        responsible: "Nhà thầu TC"
+
+      - id: III.14
+        document: "Biện pháp thi công"
+        document_en: "Construction Method Statement"
+        legal_ref: "NĐ 06/2021"
+        required: true
+        applies_to: [all]
+        responsible: "Nhà thầu TC"
+
+  # ============================================================================
+  # IV. HỒ SƠ NGHIỆM THU VÀ CÁC VĂN BẢN KHÁC
+  # ============================================================================
+  - id: IV
+    title: "Hồ sơ nghiệm thu và các văn bản khác"
+    title_en: "Acceptance & Other Documents"
+    responsible: "CĐT"
+    items:
+      - id: IV.1
+        document: "Biên bản nghiệm thu hoàn thành hạng mục/công trình"
+        document_en: "Project/Item Completion Acceptance Record"
+        legal_ref: "NĐ 06/2021, Điều 23"
+        required: true
+        applies_to: [all]
+        responsible: "CĐT"
+        notes: "Thành phần: CĐT, NT thi công, TV thiết kế, TVGS"
+
+      - id: IV.2
+        document: "Thông báo kết quả kiểm tra của cơ quan QLNN"
+        document_en: "State Authority Inspection Report"
+        legal_ref: "NĐ 06/2021, Điều 24-25"
+        required: conditional
+        condition: "Công trình thuộc diện kiểm tra nghiệm thu"
+        applies_to: [grade_I, grade_special]
+        responsible: "Cơ quan QLNN (Sở XD, Cục GĐ)"
+        notes: "Bắt buộc cho CT cấp I, cấp đặc biệt và CT có ảnh hưởng lớn"
+
+      - id: IV.3
+        document: "Quy trình vận hành, khai thác công trình"
+        document_en: "Operation & Maintenance Manual"
+        legal_ref: "NĐ 06/2021"
+        required: conditional
+        condition: "Công trình có yêu cầu vận hành"
+        applies_to: [all]
+        responsible: "Nhà thầu TC / TV Thiết kế"
+
+      - id: IV.4
+        document: "Quy trình bảo trì công trình"
+        document_en: "Maintenance Procedure"
+        legal_ref: "NĐ 06/2021, Chương V"
+        required: true
+        applies_to: [all]
+        responsible: "TV Thiết kế / CĐT"
+
+      - id: IV.5
+        document: "Hồ sơ giải quyết sự cố (nếu có)"
+        document_en: "Incident Resolution Records"
+        legal_ref: "NĐ 06/2021, Chương IV"
+        required: conditional
+        condition: "Khi xảy ra sự cố trong thi công"
+        applies_to: [all]
+        responsible: "CĐT + Nhà thầu TC"
+
+      - id: IV.6
+        document: "Văn bản chấp thuận kết quả nghiệm thu PCCC"
+        document_en: "Fire Safety Acceptance Approval"
+        legal_ref: "Luật PCCC; NĐ 136/2020"
+        required: conditional
+        condition: "Công trình thuộc diện thẩm duyệt PCCC"
+        applies_to: [residential, commercial, industrial]
+        responsible: "Cơ quan Cảnh sát PCCC"
+
+      - id: IV.7
+        document: "Văn bản chấp thuận vận hành thang máy"
+        document_en: "Elevator Operation Approval"
+        legal_ref: "Quy chuẩn QCVN; NĐ 06/2021"
+        required: conditional
+        condition: "Công trình có thang máy"
+        applies_to: [all]
+        responsible: "Cơ quan kiểm định"
+
+      - id: IV.8
+        document: "Giấy chứng nhận thẩm duyệt/nghiệm thu về ATVSLĐ"
+        document_en: "Occupational Safety Approval"
+        legal_ref: "Luật ATVSLĐ 2015"
+        required: conditional
+        condition: "Theo quy định"
+        applies_to: [industrial]
+        responsible: "Cơ quan QLNN"
+
+# ==============================================================================
+# CHANGELOG
+# ==============================================================================
+changelog:
+  - date: "2026-03-28"
+    version: "1.0"
+    changes: "Tạo master checklist dựa trên NĐ 06/2021 Phụ lục VIb"
+    author: "AI Agent"
+    review_status: "Cần review bởi chuyên gia"
