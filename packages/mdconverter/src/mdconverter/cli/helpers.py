@@ -4,12 +4,26 @@ Shared utilities for CLI commands.
 
 from pathlib import Path
 
-from mdconverter.core.base import BaseConverter
+from mdconverter.core.base import BaseConverter, ConversionTool
+
+
+def get_supported_extensions() -> set[str]:
+    """Get all supported extensions from registry."""
+    from mdconverter.core.registry import ConverterRegistry
+
+    exts = set()
+    for info in ConverterRegistry.list_all():
+        exts.update(info.get("supported_extensions", set()))
+
+    # Fallback default if registry not fully loaded yet
+    if not exts:
+        exts = {".pdf", ".docx", ".doc", ".html", ".htm", ".pptx", ".xlsx", ".txt"}
+    return exts
 
 
 def get_files_to_convert(path: Path, recursive: bool) -> list[Path]:
     """Get list of convertible files from path."""
-    extensions = {".pdf", ".docx", ".doc", ".html", ".htm", ".pptx", ".xlsx"}
+    extensions = get_supported_extensions()
     files: list[Path] = []
 
     if path.is_file():
@@ -24,7 +38,7 @@ def get_files_to_convert(path: Path, recursive: bool) -> list[Path]:
 
 
 def create_converter(
-    tool: str,
+    tool: ConversionTool | str,
     file_extension: str,
     output_dir: Path | None = None,
 ) -> BaseConverter:
@@ -38,8 +52,7 @@ def create_converter(
         tool: Conversion tool name. Supported values:
             - 'auto': Use registry priority to select best converter.
             - 'pandoc': Use Pandoc converter.
-            - 'llm': Use LLM-based converter.
-            - 'gemini': Legacy alias for 'llm' (all models go via AI Gateway).
+            - 'llm': Use LLM-based converter (via AI Gateway).
             - 'llamaparse': Use LlamaParse converter.
         file_extension: File extension including the dot (e.g., '.pdf').
         output_dir: Optional output directory.
@@ -49,7 +62,12 @@ def create_converter(
     """
     from mdconverter.core.registry import ConverterRegistry
 
-    if tool == "auto":
+    if isinstance(tool, ConversionTool):
+        tool_name = tool.value
+    else:
+        tool_name = tool
+
+    if tool_name == ConversionTool.AUTO.value:
         return ConverterRegistry.auto_select(file_extension, output_dir=output_dir)
 
     # Map legacy CLI tool names to registry names
@@ -59,5 +77,5 @@ def create_converter(
         "llamaparse": "llamaparse",
         "llm": "llm",
     }
-    registry_name = tool_map.get(tool, tool)
+    registry_name = tool_map.get(tool_name, tool_name)
     return ConverterRegistry.create(registry_name, output_dir=output_dir)

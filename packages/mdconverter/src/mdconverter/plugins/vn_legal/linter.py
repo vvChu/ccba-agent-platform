@@ -5,10 +5,13 @@ Custom lint rules for Vietnamese legal documents (VN001-VN004).
 """
 
 import re
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
 from mdconverter.plugins.vn_legal.detector import is_legal_document
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -37,7 +40,8 @@ class VNLegalLinter:
         """
         try:
             content = file_path.read_text(encoding="utf-8")
-        except Exception:
+        except Exception as e:
+            logger.warning("Failed to read file %s: %s", file_path, e)
             return []
 
         if not is_legal_document(content):
