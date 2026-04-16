@@ -103,14 +103,14 @@ class LLMConverter(BaseConverter):
 
         # Check if chunking is needed (only for PDFs)
         if source_path.suffix.lower() == ".pdf":
-            page_count = self._get_pdf_page_count(file_bytes)
+            page_count = await asyncio.to_thread(self._get_pdf_page_count, source_path)
             if page_count and page_count > self.CHUNK_MIN_PAGES:
                 logger.info(
                     "PDF has %d pages (>%d), using chunked conversion",
                     page_count, self.CHUNK_MIN_PAGES
                 )
                 return await self._convert_chunked(
-                    source_path, file_bytes, page_count, start_time
+                    source_path, page_count, start_time
                 )
 
         # Standard single-shot conversion
@@ -193,107 +193,110 @@ class LLMConverter(BaseConverter):
     async def _convert_chunked(
         self,
         source_path: Path,
-        full_bytes: bytes,
         total_pages: int,
         start_time: float,
     ) -> ConversionResult:
-        """Split a large PDF into chunks, convert each, and merge."""
-        chunks = self._split_pdf(full_bytes, total_pages)
-        logger.info("Split %s into %d chunks of ~%d pages", source_path.name, len(chunks), self.CHUNK_SIZE_PAGES)
+        """Split a large PDF into chunks, convert each, and merge.
 
-        merged_parts: list[str] = []
-        all_models_tried: list[str] = []
-        all_errors: dict[str, str] = {}
-        tool_used = "llm-chunked"
+        Delegates splitting to ``ccba_pdf_prep.split_pdf`` which writes
+        chunk files to a temp directory.  Each chunk is then read back
+        as bytes for the existing ``_convert_single`` flow.
+        """
+        import shutil
+        import tempfile
 
-        for i, chunk_bytes in enumerate(chunks):
-            logger.info("Converting chunk %d/%d of %s", i + 1, len(chunks), source_path.name)
-            result = await self._convert_single(
-                source_path, chunk_bytes, "application/pdf", start_time
+        from ccba_pdf_prep import get_blind_chunks, split_pdf
+
+        ranges = get_blind_chunks(total_pages, chunk_size=self.CHUNK_SIZE_PAGES)
+        temp_dir = Path(tempfile.mkdtemp(prefix="llmconv_"))
+
+        try:
+            chunk_paths = await asyncio.to_thread(split_pdf, source_path, ranges, temp_dir)
+            logger.info(
+                "Split %s into %d chunks of ~%d pages",
+                source_path.name, len(chunk_paths), self.CHUNK_SIZE_PAGES,
             )
 
-            if result.is_success and result.content:
-                # Strip frontmatter from chunks (only add to final)
-                content = self._strip_frontmatter(result.content)
-                merged_parts.append(f"<!-- chunk {i+1}/{len(chunks)} -->\n{content}")
-                if result.tool_used:
-                    tool_used = result.tool_used  # Use last successful model
-            else:
-                # Record chunk failure but continue
-                all_errors[f"chunk_{i+1}"] = result.error_message or "unknown error"
-                merged_parts.append(f"\n<!-- chunk {i+1}/{len(chunks)}: CONVERSION FAILED -->\n")
+            merged_parts: list[str] = []
+            all_models_tried: list[str] = []
+            all_errors: dict[str, str] = {}
+            tool_used = "llm-chunked"
 
-            all_models_tried.extend(result.metadata.get("models_tried", []))
-            all_errors.update(result.metadata.get("errors_per_model", {}))
+            for i, chunk_path in enumerate(chunk_paths):
+                logger.info("Converting chunk %d/%d of %s", i + 1, len(chunk_paths), source_path.name)
+                chunk_bytes = await asyncio.to_thread(chunk_path.read_bytes)
+                result = await self._convert_single(
+                    source_path, chunk_bytes, "application/pdf", start_time
+                )
 
-        # Merge results
-        merged_content = "\n\n".join(merged_parts)
+                if result.is_success and result.content:
+                    # Strip frontmatter from chunks (only add to final)
+                    content = self._strip_frontmatter(result.content)
+                    merged_parts.append(f"<!-- chunk {i+1}/{len(chunk_paths)} -->\n{content}")
+                    if result.tool_used:
+                        tool_used = result.tool_used  # Use last successful model
+                else:
+                    # Record chunk failure but continue
+                    all_errors[f"chunk_{i+1}"] = result.error_message or "unknown error"
+                    merged_parts.append(f"\n<!-- chunk {i+1}/{len(chunk_paths)}: CONVERSION FAILED -->\n")
 
-        if not merged_content.strip():
+                all_models_tried.extend(result.metadata.get("models_tried", []))
+                all_errors.update(result.metadata.get("errors_per_model", {}))
+
+            # Merge results
+            merged_content = "\n\n".join(merged_parts)
+
+            if not merged_content.strip():
+                return ConversionResult(
+                    source_path=source_path,
+                    status=ConversionStatus.FAILED,
+                    tool_used=tool_used,
+                    duration_seconds=time.time() - start_time,
+                    error_message="All chunks failed",
+                    metadata={"models_tried": all_models_tried, "errors_per_model": all_errors},
+                )
+
+            # Add frontmatter to merged result
+            metadata = self._extract_metadata(merged_content, source_path)
+            final_content = self.add_frontmatter(
+                merged_content, source_path, f"{tool_used}/chunked", metadata=metadata
+            )
+            output_path = self.get_output_path(source_path)
+            await asyncio.to_thread(output_path.write_text, final_content, "utf-8")
+
             return ConversionResult(
                 source_path=source_path,
-                status=ConversionStatus.FAILED,
-                tool_used=tool_used,
+                output_path=output_path,
+                status=ConversionStatus.SUCCESS,
+                tool_used=f"{tool_used}/chunked",
+                content=final_content,
+                quality_score=self._calculate_quality(final_content, base_score=50),
                 duration_seconds=time.time() - start_time,
-                error_message="All chunks failed",
-                metadata={"models_tried": all_models_tried, "errors_per_model": all_errors},
+                metadata={
+                    "models_tried": list(set(all_models_tried)),
+                    "errors_per_model": all_errors,
+                    "chunks": len(chunk_paths),
+                    "total_pages": total_pages,
+                },
             )
-
-        # Add frontmatter to merged result
-        metadata = self._extract_metadata(merged_content, source_path)
-        final_content = self.add_frontmatter(
-            merged_content, source_path, f"{tool_used}/chunked", metadata=metadata
-        )
-        output_path = self.get_output_path(source_path)
-        await asyncio.to_thread(output_path.write_text, final_content, "utf-8")
-
-        return ConversionResult(
-            source_path=source_path,
-            output_path=output_path,
-            status=ConversionStatus.SUCCESS,
-            tool_used=f"{tool_used}/chunked",
-            content=final_content,
-            quality_score=self._calculate_quality(final_content, base_score=50),
-            duration_seconds=time.time() - start_time,
-            metadata={
-                "models_tried": list(set(all_models_tried)),
-                "errors_per_model": all_errors,
-                "chunks": len(chunks),
-                "total_pages": total_pages,
-            },
-        )
+        finally:
+            await asyncio.to_thread(shutil.rmtree, temp_dir, True)
 
     # ------------------------------------------------------------------
-    # PDF splitting helpers
+    # PDF helpers
     # ------------------------------------------------------------------
     @staticmethod
-    def _get_pdf_page_count(pdf_bytes: bytes) -> int | None:
-        """Get page count from PDF bytes without full parsing."""
+    def _get_pdf_page_count(source_path: Path) -> int | None:
+        """Get page count from a PDF file path."""
         try:
             import fitz
-            doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+
+            doc = fitz.open(str(source_path))
             count = len(doc)
             doc.close()
             return count
         except Exception:
             return None
-
-    def _split_pdf(self, pdf_bytes: bytes, total_pages: int) -> list[bytes]:
-        """Split PDF bytes into chunks of CHUNK_SIZE_PAGES."""
-        import fitz
-
-        chunks: list[bytes] = []
-        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-
-        for start in range(0, total_pages, self.CHUNK_SIZE_PAGES):
-            end = min(start + self.CHUNK_SIZE_PAGES, total_pages)
-            chunk_doc = fitz.open()  # Empty document
-            chunk_doc.insert_pdf(doc, from_page=start, to_page=end - 1)
-            chunks.append(chunk_doc.tobytes())
-            chunk_doc.close()
-
-        doc.close()
-        return chunks
 
     @staticmethod
     def _strip_frontmatter(content: str) -> str:

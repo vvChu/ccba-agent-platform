@@ -11,6 +11,8 @@ Khi user gọi lệnh `/convert-markdown [đường_dẫn_file_hoặc_thư_mục
 2. Kiểm tra xem user có truyền thêm tùy chọn nào không (ví dụ: cờ `--ocr` cho PDF scan mờ, engine `-t gemini` hoặc đệ quy `-r`). 
 
 > **Lưu ý (Quan trọng về OCR)**: Khi gặp tài liệu PDF bản scan bị mờ, lóa sáng, cong vênh, hoặc có dấu mộc đỏ đè lên chữ, Agent **cần** chèn cờ `--ocr` để sử dụng model AI thị giác chuyên nghiệp (ocr-primary) nhằm tránh lỗi trích xuất.
+> 
+> **Lưu ý (Về bản vẽ)**: Đối với các bản vẽ kỹ thuật (A3+), sử dụng cờ `--extract-drawing` để kích hoạt chế độ bóc tách ghi chú và bảng thông số thay vì skipped.
 
 
 ## Bước 2: Thực thi chuyển đổi
