@@ -137,8 +137,8 @@ class IDOPReporter:
         lines = [
             "## 1. Tom Tat Ho So",
             "",
-            f"| Chi so | Gia tri |",
-            f"|---|---|",
+            "| Chi so | Gia tri |",
+            "|---|---|",
             f"| Tong so file PDF | {total_files} |",
             f"| Tong so trang ban ve | {total_sheets} |",
         ]
@@ -148,7 +148,7 @@ class IDOPReporter:
             lines.append(f"| Trang muc luc phat hien | {n_idx} |")
 
         lines += ["", "**Phan bo theo Bo mon:**", ""]
-        lines += [f"| Bo mon | So ban ve |", "|---|---|"]
+        lines += ["| Bo mon | So ban ve |", "|---|---|"]
         for disc, count in sorted(disc_counts.items(), key=lambda x: -x[1]):
             lines.append(f"| {disc} | {count} |")
 
@@ -201,8 +201,8 @@ class IDOPReporter:
         lines = [
             "## 3. Tong Quan Ket Qua Doi Soat",
             "",
-            f"| Chi so | Gia tri |",
-            f"|---|---|",
+            "| Chi so | Gia tri |",
+            "|---|---|",
             f"| So tang duoc kiem tra | {total} |",
             f"| Tong xung dot phat hien | {total_clashes} |",
             f"| Xung dot nghiem trong (HIGH) | {high_clashes} |",

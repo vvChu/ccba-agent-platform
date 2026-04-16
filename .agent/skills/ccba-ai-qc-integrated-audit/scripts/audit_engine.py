@@ -22,7 +22,7 @@ import json
 import logging
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -191,7 +191,7 @@ class IDOPAuditEngine:
         self,
         images: list[Path],
         level_label: str,
-        labels: Optional[list[str]] = None,
+        labels: list[str] | None = None,
         target_size: int = 2048,
     ) -> Path:
         """Ghep 4 anh ban ve thanh collage 2x2.

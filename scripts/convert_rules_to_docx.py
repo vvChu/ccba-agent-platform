@@ -108,10 +108,10 @@ def main() -> None:
     parser.add_argument(
         "-o", "--output", type=Path, help="Optional path to output Docx file. Defines from input by default."
     )
-    
+
     args = parser.parse_args()
     input_path: Path = args.input_path
-    
+
     if not input_path.exists() or not input_path.is_file():
         print(f"Error: Input file '{input_path}' does not exist.")
         sys.exit(1)

@@ -8,7 +8,11 @@ Defines a ``PostProcessor`` Protocol for extensible post-processing (H3 fix).
 import asyncio
 import logging
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    from ccba_pdf_prep.core import Segment
+    from mdconverter.core.analyzer import PDFReport
 
 from mdconverter.core.base import BaseConverter, ConversionResult, ConversionStatus, ConversionTool
 from mdconverter.core.cache import ConversionCache
@@ -146,7 +150,7 @@ class ConversionPipeline:
                 # Determine if we should use segmented processing
                 is_hybrid = pdf_report.category == "hybrid"
                 is_very_large = pdf_report.pages > 30
-                
+
                 if (is_hybrid or is_very_large) and self.tool in (ConversionTool.AUTO, "auto"):
                     return await self._process_segmented(file, pdf_report)
 
@@ -191,12 +195,13 @@ class ConversionPipeline:
         For Hybrid docs, routes segments to optimal models.
         For large docs, routes chunks to parallel processing.
         """
-        import tempfile
         import shutil
+        import tempfile
+
         from mdconverter.core.analyzer import Segment
 
         loop = asyncio.get_running_loop()
-        
+
         # 1. Determine ranges
         if report.category == "hybrid":
             segments = report.get_segments()
@@ -222,13 +227,13 @@ class ConversionPipeline:
             for i, chunk_path in enumerate(chunk_paths):
                 seg = segments[i]
                 tasks.append(self._convert_segment_with_limit(i, len(segments), chunk_path, seg))
-            
+
             # Execute concurrently
             results = await asyncio.gather(*tasks)
-            
+
             segment_results: list[str] = []
             tool_used = "segmented"
-            
+
             for i, res in enumerate(results):
                 seg = segments[i]
                 if res.is_success and res.content:
@@ -237,7 +242,7 @@ class ConversionPipeline:
                         parts = content.split("---", 2)
                         if len(parts) >= 3:
                             content = parts[2].strip()
-                    
+
                     marker = f"\n\n<!-- PAGE SEGMENT: {seg.start_page+1}-{seg.end_page+1} ({seg.page_type}) -->\n"
                     segment_results.append(marker + content)
                 else:
@@ -245,7 +250,7 @@ class ConversionPipeline:
 
             # 4. Merge results
             final_content = merge_markdown(segment_results)
-            
+
             # Add unified frontmatter
             # Use LLMConverter as a concrete proxy to access shared BaseConverter logic
             from mdconverter.core.gemini import LLMConverter
@@ -263,7 +268,7 @@ class ConversionPipeline:
                 content=final_content,
                 metadata={"pdf_analysis": report.to_dict(), "segments": len(segments)}
             )
-            
+
             # Post-process the final merged doc
             return await self._apply_post_processors(result)
 
@@ -275,9 +280,9 @@ class ConversionPipeline:
         self, index: int, total: int, chunk_path: Path, segment: "Segment"
     ) -> ConversionResult:
         """Internal helper to convert a segment with semaphore protection."""
-        logger.debug("Processing segment %d/%d: pages %d-%d (%s)", 
+        logger.debug("Processing segment %d/%d: pages %d-%d (%s)",
                      index+1, total, segment.start_page+1, segment.end_page+1, segment.page_type)
-        
+
         converter = self._create_converter_for_segment(chunk_path, segment)
         async with self._sem:
             return await converter.convert(chunk_path)
@@ -361,12 +366,12 @@ class ConversionPipeline:
 
         settings = get_settings()
         recommended = segment.model_hint
-        
+
         # Prioritize the recommended model for this segment type
         models = [recommended] + [m for m in settings.models if m != recommended]
-        
+
         converter = LLMConverter(output_dir=None, models=models)  # No individual output dir
-        
+
         # If it's a drawing segment, we might want to inject a custom prompt
         if segment.page_type == "drawing":
             converter.system_prompt = (
@@ -374,7 +379,7 @@ class ConversionPipeline:
                 "axes, grid labels, dimensions, and technical tables from this drawing. "
                 "Output as clean Markdown."
             )
-            
+
         return converter
 
     def _create_drawing_converter(self, file: Path) -> "BaseConverter":
@@ -386,7 +391,7 @@ class ConversionPipeline:
         # Drawing always uses qwen-35b if available as it's the best for this
         preferred = "qwen3.5-35b"
         models = [preferred] + [m for m in settings.models if m != preferred]
-        
+
         converter = LLMConverter(output_dir=self.output_dir, models=models)
         converter.system_prompt = (
             "You are an engineering drawing assistant. Extract all structural notes, "

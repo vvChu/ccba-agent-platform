@@ -6,13 +6,18 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
 
 from ccba_pdf_prep import (
-    PDFAnalyzer as BaseAnalyzer,
-    PDFCategory,
-    PDFReport as BaseReport,
     PageDetail,
+    PDFCategory,
+)
+from ccba_pdf_prep import (
+    PDFAnalyzer as BaseAnalyzer,
+)
+from ccba_pdf_prep import (
+    PDFReport as BaseReport,
+)
+from ccba_pdf_prep import (
     Segment as BaseSegment,
 )
 
@@ -27,7 +32,7 @@ class Segment(BaseSegment):
 
 class PDFReport(BaseReport):
     """Report with mdconverter specific logic."""
-    
+
     def get_segments(self) -> list[Segment]:
         """Group contiguous pages of the same type into segments with mdconverter defaults."""
         hints = {
@@ -58,7 +63,7 @@ class PDFReport(BaseReport):
 
 class PDFAnalyzer(BaseAnalyzer):
     """Analyzer subclass for mdconverter."""
-    
+
     def analyze(self, pdf_path: Path) -> PDFReport:
         """Analyze and return mdconverter-specialized report."""
         base_report = super().analyze(pdf_path)

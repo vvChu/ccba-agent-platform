@@ -4,10 +4,9 @@ Refactored to use ccba_pdf_prep.
 """
 
 import logging
-from pathlib import Path
-from typing import Sequence
+from collections.abc import Sequence
 
-from ccba_pdf_prep import split_pdf, get_blind_chunks
+from ccba_pdf_prep import get_blind_chunks, split_pdf
 
 logger = logging.getLogger(__name__)
 

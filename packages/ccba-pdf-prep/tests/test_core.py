@@ -7,8 +7,6 @@ import pytest
 from ccba_pdf_prep import (
     PDFAnalyzer,
     PDFCategory,
-    PDFReport,
-    PageDetail,
     Segment,
     get_blind_chunks,
     split_pdf,
