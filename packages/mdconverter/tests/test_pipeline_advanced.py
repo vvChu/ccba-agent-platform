@@ -32,7 +32,7 @@ def mock_analyzer_report():
     # Mock get_segments
     report.get_segments.return_value = [
         Segment(0, 4, "text", "qwen3.5-35b"),
-        Segment(5, 9, "scan", "ocr-primary")
+        Segment(5, 9, "scan", "ocr-primary"),
     ]
     report.to_dict.return_value = {"category": "hybrid", "pages": 10}
     return report
@@ -50,18 +50,23 @@ async def test_process_segmented_hybrid(tmp_path: Path, mock_analyzer_report):
     chunk2.touch()
 
     # Mock converter results
-    res1 = ConversionResult(chunk1, status=ConversionStatus.SUCCESS, content="Text part content", tool_used="llm")
-    res2 = ConversionResult(chunk2, status=ConversionStatus.SUCCESS, content="Scan part content", tool_used="llm")
+    res1 = ConversionResult(
+        chunk1, status=ConversionStatus.SUCCESS, content="Text part content", tool_used="llm"
+    )
+    res2 = ConversionResult(
+        chunk2, status=ConversionStatus.SUCCESS, content="Scan part content", tool_used="llm"
+    )
 
     mock_conv1 = AsyncMock()
     mock_conv1.convert.return_value = res1
     mock_conv2 = AsyncMock()
     mock_conv2.convert.return_value = res2
 
-    with patch("mdconverter.core.pipeline.split_pdf", return_value=[chunk1, chunk2]), \
-         patch.object(pipeline, "_create_converter_for_segment") as mock_create_conv, \
-         patch("shutil.rmtree"):
-
+    with (
+        patch("mdconverter.core.pipeline.split_pdf", return_value=[chunk1, chunk2]),
+        patch.object(pipeline, "_create_converter_for_segment") as mock_create_conv,
+        patch("shutil.rmtree"),
+    ):
         mock_create_conv.side_effect = [mock_conv1, mock_conv2]
 
         result = await pipeline._process_segmented(Path("hybrid.pdf"), mock_analyzer_report)
@@ -80,16 +85,17 @@ async def test_drawing_extraction_enabled(tmp_path: Path):
 
     report = MagicMock(spec=PDFReport)
     report.category = "drawing"
-    report.should_skip = True # Standard check still returns True
+    report.should_skip = True  # Standard check still returns True
     report.skip_reason = "Oversized"
     report.pages = 1
     report.recommended_model = "qwen3.5-35b"  # Fixed: Add missing attribute
     report.to_dict.return_value = {"category": "drawing"}
 
     # Mock analyzer and converter
-    with patch.object(pipeline, "_analyze_pdf", return_value=report), \
-         patch.object(pipeline, "_create_drawing_converter") as mock_create_conv:
-
+    with (
+        patch.object(pipeline, "_analyze_pdf", return_value=report),
+        patch.object(pipeline, "_create_drawing_converter") as mock_create_conv,
+    ):
         mock_conv = AsyncMock()
         mock_conv.convert.return_value = ConversionResult(
             Path("dwg.pdf"), status=ConversionStatus.SUCCESS, content="Extracted from drawing"
@@ -116,16 +122,19 @@ async def test_large_pdf_chunking(tmp_path: Path):
     report.to_dict.return_value = {"category": "text_rich"}
 
     # Mock split_pdf and converters
-    with patch.object(pipeline, "_analyze_pdf", return_value=report), \
-         patch("mdconverter.core.pipeline.split_pdf") as mock_split, \
-         patch.object(pipeline, "_create_converter_for_segment") as mock_create_conv, \
-         patch("shutil.rmtree"):
-
+    with (
+        patch.object(pipeline, "_analyze_pdf", return_value=report),
+        patch("mdconverter.core.pipeline.split_pdf") as mock_split,
+        patch.object(pipeline, "_create_converter_for_segment") as mock_create_conv,
+        patch("shutil.rmtree"),
+    ):
         # Should have 3 chunks (20, 20, 10)
         mock_split.return_value = [Path("c1.pdf"), Path("c2.pdf"), Path("c3.pdf")]
 
         mock_conv = AsyncMock()
-        mock_conv.convert.return_value = ConversionResult(Path("c.pdf"), status=ConversionStatus.SUCCESS, content="Chunk")
+        mock_conv.convert.return_value = ConversionResult(
+            Path("c.pdf"), status=ConversionStatus.SUCCESS, content="Chunk"
+        )
         mock_create_conv.return_value = mock_conv
 
         result = await pipeline.process_file(Path("large.pdf"))

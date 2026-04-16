@@ -60,10 +60,7 @@ class ConversionEventHandler(FileSystemEventHandler):
         with many temporary files.
         """
         now = now or time.time()
-        stale = [
-            p for p, t in self._last_triggered.items()
-            if now - t > self.CLEANUP_THRESHOLD
-        ]
+        stale = [p for p, t in self._last_triggered.items() if now - t > self.CLEANUP_THRESHOLD]
         for p in stale:
             del self._last_triggered[p]
 

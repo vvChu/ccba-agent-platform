@@ -127,7 +127,7 @@ def _print_table(reports: list, show_detail: bool = False) -> None:
                     size = f"{p.width_mm:.0f}×{p.height_mm:.0f}mm"
                     oversized = " [red]OVERSIZED[/red]" if p.is_oversized else ""
                     console.print(
-                        f"  p{p.page_num+1:>3}: {p.page_type:<8} "
+                        f"  p{p.page_num + 1:>3}: {p.page_type:<8} "
                         f"chars={p.text_chars:>5}  imgs={p.image_count}  "
                         f"{size}{oversized}"
                     )
@@ -153,12 +153,15 @@ def _print_summary(reports: list) -> None:
 
     skip_count = sum(1 for r in reports if r.should_skip)
     convert_count = total - skip_count
-    console.print(f"\n  → [green]{convert_count}[/green] convertible, "
-                  f"[dim]{skip_count} skipped (drawings)[/dim]")
+    console.print(
+        f"\n  → [green]{convert_count}[/green] convertible, "
+        f"[dim]{skip_count} skipped (drawings)[/dim]"
+    )
 
 
 def _print_json(reports: list) -> None:
     """Print reports as JSON."""
     import json
+
     data = [r.to_dict() for r in reports]
     console.print_json(json.dumps(data, ensure_ascii=False, indent=2))

@@ -153,30 +153,37 @@ class TestPDFAnalyzer:
         """Test custom threshold parameters."""
         analyzer = PDFAnalyzer(
             drawing_size_threshold=500,  # Very large
-            text_char_threshold=100,     # Stricter
-            drawing_page_ratio=0.9,      # Stricter
-            text_page_ratio=0.5,         # More lenient
+            text_char_threshold=100,  # Stricter
+            drawing_page_ratio=0.9,  # Stricter
+            text_page_ratio=0.5,  # More lenient
         )
         # With lenient text_page_ratio, 6/10 text pages = text_rich
-        category, _ = analyzer._classify(
-            total=10, text_pages=6, image_pages=4, drawing_pages=0
-        )
+        category, _ = analyzer._classify(total=10, text_pages=6, image_pages=4, drawing_pages=0)
         assert category == PDFCategory.TEXT_RICH
 
     def test_model_recommendations(self) -> None:
         """Test model recommendations per category via PDFReport."""
+
         def _make_report(cat: PDFCategory) -> PDFReport:
             return PDFReport(
-                file_path=Path("test.pdf"), category=cat,
-                recommended_model="", confidence=0.9, pages=1,
-                text_pages=0, image_pages=0, drawing_pages=0,
-                total_text_chars=0, avg_text_density=0,
-                size_mb=1.0, is_oversized=False,
+                file_path=Path("test.pdf"),
+                category=cat,
+                recommended_model="",
+                confidence=0.9,
+                pages=1,
+                text_pages=0,
+                image_pages=0,
+                drawing_pages=0,
+                total_text_chars=0,
+                avg_text_density=0,
+                size_mb=1.0,
+                is_oversized=False,
             )
 
         # Verify via ccba_pdf_prep's internal model map (tested through analyze)
         # These are the expected defaults from ccba_pdf_prep.core
         from ccba_pdf_prep.core import PDFAnalyzer as BaseAnalyzer
+
         _ = BaseAnalyzer()
         # Model hints are embedded in _make_report, verify known categories
         assert _make_report(PDFCategory.TEXT_RICH).category == PDFCategory.TEXT_RICH
@@ -210,7 +217,11 @@ class TestPDFAnalyzerWithRealPDF:
         doc = fitz.open()
         for i in range(pages):
             page = doc.new_page(width=595, height=842)  # A4
-            page.insert_text((72, 72), f"Page {i+1}\nThis is test content with enough characters to pass threshold. " * 5)
+            page.insert_text(
+                (72, 72),
+                f"Page {i + 1}\nThis is test content with enough characters to pass threshold. "
+                * 5,
+            )
         doc.save(str(path))
         doc.close()
 

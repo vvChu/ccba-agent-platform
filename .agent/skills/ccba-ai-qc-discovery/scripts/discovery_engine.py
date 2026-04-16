@@ -30,16 +30,17 @@ logger = logging.getLogger(__name__)
 # Data models
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class SheetEntry:
     """A single drawing sheet extracted from the PDF."""
 
-    file: str          # Source PDF filename
-    page_num: int      # 0-indexed page number
-    sheet_no: str = "" # e.g. "ACMV-M-201"
-    title: str = ""    # Drawing title
-    level: str = ""    # Building level / floor
-    zone: str = ""     # Zone / block
+    file: str  # Source PDF filename
+    page_num: int  # 0-indexed page number
+    sheet_no: str = ""  # e.g. "ACMV-M-201"
+    title: str = ""  # Drawing title
+    level: str = ""  # Building level / floor
+    zone: str = ""  # Zone / block
     discipline: str = ""  # Arch / KC / ME / PCCC
     titleblock_path: str = ""  # Path to extracted title block image
 
@@ -65,6 +66,7 @@ class ProjectBackbone:
 # ---------------------------------------------------------------------------
 # Discovery Engine
 # ---------------------------------------------------------------------------
+
 
 class IDOPDiscovery:
     """Khai pha cau truc ho so thiet ke PDF.
@@ -170,7 +172,7 @@ class IDOPDiscovery:
         results: list[tuple[int, Path]] = []
 
         for page_num in pages:
-            out = self.output_dir / f"{pdf_path.stem}_p{page_num+1}_titleblock.png"
+            out = self.output_dir / f"{pdf_path.stem}_p{page_num + 1}_titleblock.png"
             extracted = TitleBlockDetector.extract(
                 pdf_path=pdf_path,
                 page_num=page_num,
@@ -182,7 +184,6 @@ class IDOPDiscovery:
                 results.append((page_num, extracted))
             else:
                 logger.debug("No title block on page %d of %s", page_num + 1, pdf_path.name)
-
 
         return results
 
@@ -226,22 +227,27 @@ class IDOPDiscovery:
                 model=self.ai_model,
                 max_tokens=512,
                 temperature=0.1,
-                messages=[{
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": {
-                            "url": f"data:image/png;base64,{b64}"
-                        }},
-                    ],
-                }],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/png;base64,{b64}"},
+                            },
+                        ],
+                    }
+                ],
             )
             raw = response.choices[0].message.content or ""
             data = _safe_parse_json(raw)
             logger.info(
                 "AI extracted %s p%d: sheet_no=%s disc=%s",
-                pdf_name, page_num + 1,
-                data.get("sheet_no", "?"), data.get("discipline", "?"),
+                pdf_name,
+                page_num + 1,
+                data.get("sheet_no", "?"),
+                data.get("discipline", "?"),
             )
             return SheetEntry(
                 file=pdf_name,
@@ -250,9 +256,7 @@ class IDOPDiscovery:
                 **data,
             )
         except Exception as e:
-            logger.warning(
-                "AI extraction failed for %s p%d: %s", pdf_name, page_num + 1, e
-            )
+            logger.warning("AI extraction failed for %s p%d: %s", pdf_name, page_num + 1, e)
             return SheetEntry(
                 file=pdf_name,
                 page_num=page_num,
@@ -302,7 +306,6 @@ class IDOPDiscovery:
             if report.category in (PDFCategory.DRAWING, PDFCategory.HYBRID):
                 pass  # drawing_pages not used yet
 
-
                 if extract_titleblocks:
                     tb_results = self.extract_titleblocks(pdf_path, range(len(report.page_details)))
                 else:
@@ -318,11 +321,13 @@ class IDOPDiscovery:
                 else:
                     # No AI — create stub entries
                     for pnum, tb_path in tb_results:
-                        all_sheets.append(SheetEntry(
-                            file=pdf_path.name,
-                            page_num=pnum,
-                            titleblock_path=str(tb_path),
-                        ))
+                        all_sheets.append(
+                            SheetEntry(
+                                file=pdf_path.name,
+                                page_num=pnum,
+                                titleblock_path=str(tb_path),
+                            )
+                        )
 
         return ProjectBackbone(
             project=self.project_name,
@@ -346,6 +351,7 @@ class IDOPDiscovery:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_vision_client():
     """Return an OpenAI-compatible client configured for the AI Gateway.
 
@@ -359,6 +365,7 @@ def _get_vision_client():
     # Try to load .env from the project root
     try:
         from dotenv import load_dotenv
+
         load_dotenv()
     except ImportError:
         pass
@@ -367,13 +374,22 @@ def _get_vision_client():
     key = os.getenv("AI_GATEWAY_KEY", "sk-spark-secure-key-2026")
     return OpenAI(base_url=url, api_key=key)
 
+
 def _normalize_vn(text: str) -> str:
     """Strip common Vietnamese diacritics for keyword matching."""
     replacements = {
-        "a\u0300": "a", "a\u0301": "a", "a\u0302": "a", "a\u0303": "a",
-        "u\u0300": "u", "u\u0301": "u", "u\u01b0": "u",
-        "d\u0111": "d", "\u0110": "D",
-        "e\u0323": "e", "\u1ec7": "e", "\u1eb9": "e",
+        "a\u0300": "a",
+        "a\u0301": "a",
+        "a\u0302": "a",
+        "a\u0303": "a",
+        "u\u0300": "u",
+        "u\u0301": "u",
+        "u\u01b0": "u",
+        "d\u0111": "d",
+        "\u0110": "D",
+        "e\u0323": "e",
+        "\u1ec7": "e",
+        "\u1eb9": "e",
         "\u1ee5": "u",
     }
     result = text
@@ -395,8 +411,7 @@ def _safe_parse_json(text: str) -> dict:
     try:
         data = json.loads(text)
         return {
-            k: str(data.get(k, ""))
-            for k in ("sheet_no", "title", "level", "zone", "discipline")
+            k: str(data.get(k, "")) for k in ("sheet_no", "title", "level", "zone", "discipline")
         }
     except json.JSONDecodeError:
         return {"sheet_no": "", "title": "", "level": "", "zone": "", "discipline": ""}
@@ -418,8 +433,9 @@ if __name__ == "__main__":
     parser.add_argument("--recursive", action="store_true", help="Scan subfolders")
     parser.add_argument("--no-ai", action="store_true", help="Skip AI metadata extraction")
     parser.add_argument(
-        "--titleblocks-dir", default="titleblocks",
-        help="Directory for extracted title block images"
+        "--titleblocks-dir",
+        default="titleblocks",
+        help="Directory for extracted title block images",
     )
     args = parser.parse_args()
 
@@ -439,8 +455,8 @@ if __name__ == "__main__":
         output_dir=Path(args.titleblocks_dir),
     )
 
-    backbone = asyncio.run(
-        engine.discover(pdfs, run_ai=not args.no_ai)
-    )
+    backbone = asyncio.run(engine.discover(pdfs, run_ai=not args.no_ai))
     engine.export(backbone, Path(args.output))
-    print(f"Done: {backbone.total_sheets} sheets from {backbone.total_files} files -> {args.output}")
+    print(
+        f"Done: {backbone.total_sheets} sheets from {backbone.total_files} files -> {args.output}"
+    )
