@@ -5,12 +5,16 @@ Convert command for mdconverter CLI.
 import asyncio
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from mdconverter.core.pipeline import ConversionPipeline
 
 import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from mdconverter.cli.helpers import create_converter, get_files_to_convert
+from mdconverter.cli.helpers import get_files_to_convert
 from mdconverter.core.base import ConversionResult, ConversionStatus, ConversionTool
 from mdconverter.core.logging import configure_logging, get_logger
 

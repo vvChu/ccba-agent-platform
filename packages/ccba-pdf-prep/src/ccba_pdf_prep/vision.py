@@ -5,7 +5,7 @@ Used to process oversized drawings for AI Vision models.
 
 import logging
 from pathlib import Path
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 import fitz  # PyMuPDF
 
@@ -84,7 +84,7 @@ class VisionOptimizer:
         dpi: int = 300,
         tile_size_px: int = 1024,
         overlap_px: int = 0,
-    ) -> List[Path]:
+    ) -> list[Path]:
         """Render a PDF page at high DPI and slice it into tiles.
 
         Uses the 'clip' parameter for memory efficiency.
@@ -120,7 +120,7 @@ class VisionOptimizer:
         tile_size_px: int = 1024,
         overlap_px: int = 0,
         min_ink_ratio: float = 0.02,
-    ) -> tuple[List[Path], List[TileResult]]:
+    ) -> tuple[list[Path], list[TileResult]]:
         """Tile a page, skipping blank (white-space) tiles.
 
         Engineering drawings often have large white margins. Filtering tiles
@@ -166,7 +166,7 @@ class VisionOptimizer:
         tile_size_px: int,
         overlap_px: int,
         min_ink_ratio: float | None,
-    ) -> List[TileResult]:
+    ) -> list[TileResult]:
         """Internal tiling engine shared by tile_page and tile_page_smart."""
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF not found: {pdf_path}")
@@ -186,7 +186,7 @@ class VisionOptimizer:
         )
 
         matrix = fitz.Matrix(dpi / 72, dpi / 72)
-        results: List[TileResult] = []
+        results: list[TileResult] = []
         stride = tile_size_px - overlap_px
 
         for row, y in enumerate(range(0, height_px, stride)):

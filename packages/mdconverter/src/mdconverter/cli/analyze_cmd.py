@@ -26,7 +26,7 @@ def analyze(
     Inspects text layers, page dimensions, and image content to classify
     PDFs as text_rich, scanned, hybrid, or drawing.
     """
-    from mdconverter.core.analyzer import PDFAnalyzer, PDFCategory
+    from mdconverter.core.analyzer import PDFAnalyzer
 
     analyzer = PDFAnalyzer()
 

@@ -74,7 +74,6 @@ class LLMConverter(BaseConverter):
         then merges the results.
         """
         start_time = time.time()
-        settings = get_settings()
 
         if not source_path.exists():
             return ConversionResult(

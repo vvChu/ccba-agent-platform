@@ -8,14 +8,12 @@ Commands:
 """
 
 import json
+import os
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
 from rich.table import Table
-
-import os
 
 app = typer.Typer(
     name="ccba-pdf",
@@ -86,7 +84,7 @@ def analyze(
 def tile(
     pdf_path: Path = typer.Argument(..., help="PDF file to tile.", exists=True),
     page: int = typer.Option(0, "--page", "-p", help="Page number (0-indexed)."),
-    output_dir: Optional[Path] = typer.Option(None, "--output", "-o", help="Output directory for tiles."),
+    output_dir: Path | None = typer.Option(None, "--output", "-o", help="Output directory for tiles."),
     dpi: int = typer.Option(300, "--dpi", help="Rendering DPI."),
     tile_size: int = typer.Option(1024, "--tile-size", help="Tile size in pixels."),
     overlap: int = typer.Option(0, "--overlap", help="Overlap between tiles in pixels."),
@@ -118,12 +116,12 @@ def tile(
 def split(
     pdf_path: Path = typer.Argument(..., help="PDF file to split.", exists=True),
     chunk_size: int = typer.Option(20, "--chunk-size", "-c", help="Pages per chunk."),
-    output_dir: Optional[Path] = typer.Option(None, "--output", "-o", help="Output directory for chunks."),
+    output_dir: Path | None = typer.Option(None, "--output", "-o", help="Output directory for chunks."),
 ) -> None:
     """Split a large PDF into smaller chunks."""
-    from ccba_pdf_prep import get_blind_chunks, split_pdf
-
     import fitz
+
+    from ccba_pdf_prep import get_blind_chunks, split_pdf
 
     doc = fitz.open(str(pdf_path))
     total_pages = len(doc)
