@@ -57,6 +57,7 @@ class LLMConverter(BaseConverter):
         settings = get_settings()
         self.models = models or settings.models
         self.gateway_url = gateway_url
+        self.system_prompt: str | None = None
 
     def supports(self, file_extension: str) -> bool:
         """Check if extension is supported."""
