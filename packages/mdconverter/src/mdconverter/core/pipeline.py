@@ -210,7 +210,12 @@ class ConversionPipeline:
             # Blind chunking for large unified docs
             ranges = get_blind_chunks(report.pages, chunk_size=20)
             segments = [
-                Segment(start, end, "text" if report.category == "text_rich" else "scan", report.recommended_model)
+                Segment(
+                    start,
+                    end,
+                    "text" if report.category == "text_rich" else "scan",
+                    report.recommended_model,
+                )
                 for start, end in ranges
             ]
             logger.info("Large document detected: %d chunks of 20 pages", len(segments))
@@ -243,10 +248,12 @@ class ConversionPipeline:
                         if len(parts) >= 3:
                             content = parts[2].strip()
 
-                    marker = f"\n\n<!-- PAGE SEGMENT: {seg.start_page+1}-{seg.end_page+1} ({seg.page_type}) -->\n"
+                    marker = f"\n\n<!-- PAGE SEGMENT: {seg.start_page + 1}-{seg.end_page + 1} ({seg.page_type}) -->\n"
                     segment_results.append(marker + content)
                 else:
-                    segment_results.append(f"\n\n> [!ERROR] Failed to convert pages {seg.start_page+1}-{seg.end_page+1}\n")
+                    segment_results.append(
+                        f"\n\n> [!ERROR] Failed to convert pages {seg.start_page + 1}-{seg.end_page + 1}\n"
+                    )
 
             # 4. Merge results
             final_content = merge_markdown(segment_results)
@@ -254,6 +261,7 @@ class ConversionPipeline:
             # Add unified frontmatter
             # Use LLMConverter as a concrete proxy to access shared BaseConverter logic
             from mdconverter.core.gemini import LLMConverter
+
             dummy = LLMConverter(output_dir=self.output_dir)
             final_content = dummy.add_frontmatter(final_content, file, tool_used)
 
@@ -266,7 +274,7 @@ class ConversionPipeline:
                 status=ConversionStatus.SUCCESS,
                 tool_used=tool_used,
                 content=final_content,
-                metadata={"pdf_analysis": report.to_dict(), "segments": len(segments)}
+                metadata={"pdf_analysis": report.to_dict(), "segments": len(segments)},
             )
 
             # Post-process the final merged doc
@@ -280,8 +288,14 @@ class ConversionPipeline:
         self, index: int, total: int, chunk_path: Path, segment: "Segment"
     ) -> ConversionResult:
         """Internal helper to convert a segment with semaphore protection."""
-        logger.debug("Processing segment %d/%d: pages %d-%d (%s)",
-                     index+1, total, segment.start_page+1, segment.end_page+1, segment.page_type)
+        logger.debug(
+            "Processing segment %d/%d: pages %d-%d (%s)",
+            index + 1,
+            total,
+            segment.start_page + 1,
+            segment.end_page + 1,
+            segment.page_type,
+        )
 
         converter = self._create_converter_for_segment(chunk_path, segment)
         async with self._sem:
@@ -305,9 +319,7 @@ class ConversionPipeline:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
-    async def _analyze_pdf(
-        self, file: Path, loop: asyncio.AbstractEventLoop
-    ) -> "PDFReport | None":
+    async def _analyze_pdf(self, file: Path, loop: asyncio.AbstractEventLoop) -> "PDFReport | None":
         """Run PDF analysis in a thread to avoid blocking the event loop."""
         from mdconverter.core.analyzer import PDFAnalyzer, PDFReport
 
@@ -357,9 +369,12 @@ class ConversionPipeline:
 
         # Default: use standard tool selection
         from mdconverter.cli.helpers import create_converter
+
         return create_converter(self.tool, file.suffix, self.output_dir)
 
-    def _create_converter_for_segment(self, chunk_path: Path, segment: "Segment") -> "BaseConverter":
+    def _create_converter_for_segment(
+        self, chunk_path: Path, segment: "Segment"
+    ) -> "BaseConverter":
         """Create a converter specialized for a segment's page type."""
         from mdconverter.config import get_settings
         from mdconverter.core.gemini import LLMConverter
@@ -409,9 +424,7 @@ class ConversionPipeline:
                     result.content = processed
                     # Persist processed content
                     if result.output_path and result.output_path.exists():
-                        await asyncio.to_thread(
-                            result.output_path.write_text, processed, "utf-8"
-                        )
+                        await asyncio.to_thread(result.output_path.write_text, processed, "utf-8")
                     summary = pp.get_summary()
                     logger.debug("Post-processor applied: %s", summary)
 

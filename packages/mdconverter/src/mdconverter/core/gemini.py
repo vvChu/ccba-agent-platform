@@ -106,16 +106,13 @@ class LLMConverter(BaseConverter):
             if page_count and page_count > self.CHUNK_MIN_PAGES:
                 logger.info(
                     "PDF has %d pages (>%d), using chunked conversion",
-                    page_count, self.CHUNK_MIN_PAGES
+                    page_count,
+                    self.CHUNK_MIN_PAGES,
                 )
-                return await self._convert_chunked(
-                    source_path, page_count, start_time
-                )
+                return await self._convert_chunked(source_path, page_count, start_time)
 
         # Standard single-shot conversion
-        return await self._convert_single(
-            source_path, file_bytes, mime_type, start_time
-        )
+        return await self._convert_single(source_path, file_bytes, mime_type, start_time)
 
     async def _convert_single(
         self,
@@ -153,9 +150,7 @@ class LLMConverter(BaseConverter):
                         final_content = self.add_frontmatter(
                             content, source_path, tool_name, metadata=metadata
                         )
-                        await asyncio.to_thread(
-                            output_path.write_text, final_content, "utf-8"
-                        )
+                        await asyncio.to_thread(output_path.write_text, final_content, "utf-8")
 
                         return ConversionResult(
                             source_path=source_path,
@@ -213,7 +208,9 @@ class LLMConverter(BaseConverter):
             chunk_paths = await asyncio.to_thread(split_pdf, source_path, ranges, temp_dir)
             logger.info(
                 "Split %s into %d chunks of ~%d pages",
-                source_path.name, len(chunk_paths), self.CHUNK_SIZE_PAGES,
+                source_path.name,
+                len(chunk_paths),
+                self.CHUNK_SIZE_PAGES,
             )
 
             merged_parts: list[str] = []
@@ -222,7 +219,9 @@ class LLMConverter(BaseConverter):
             tool_used = "llm-chunked"
 
             for i, chunk_path in enumerate(chunk_paths):
-                logger.info("Converting chunk %d/%d of %s", i + 1, len(chunk_paths), source_path.name)
+                logger.info(
+                    "Converting chunk %d/%d of %s", i + 1, len(chunk_paths), source_path.name
+                )
                 chunk_bytes = await asyncio.to_thread(chunk_path.read_bytes)
                 result = await self._convert_single(
                     source_path, chunk_bytes, "application/pdf", start_time
@@ -231,13 +230,15 @@ class LLMConverter(BaseConverter):
                 if result.is_success and result.content:
                     # Strip frontmatter from chunks (only add to final)
                     content = self._strip_frontmatter(result.content)
-                    merged_parts.append(f"<!-- chunk {i+1}/{len(chunk_paths)} -->\n{content}")
+                    merged_parts.append(f"<!-- chunk {i + 1}/{len(chunk_paths)} -->\n{content}")
                     if result.tool_used:
                         tool_used = result.tool_used  # Use last successful model
                 else:
                     # Record chunk failure but continue
-                    all_errors[f"chunk_{i+1}"] = result.error_message or "unknown error"
-                    merged_parts.append(f"\n<!-- chunk {i+1}/{len(chunk_paths)}: CONVERSION FAILED -->\n")
+                    all_errors[f"chunk_{i + 1}"] = result.error_message or "unknown error"
+                    merged_parts.append(
+                        f"\n<!-- chunk {i + 1}/{len(chunk_paths)}: CONVERSION FAILED -->\n"
+                    )
 
                 all_models_tried.extend(result.metadata.get("models_tried", []))
                 all_errors.update(result.metadata.get("errors_per_model", {}))

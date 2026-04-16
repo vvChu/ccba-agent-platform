@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 # Re-export
 __all__ = ["split_pdf", "get_blind_chunks", "merge_markdown"]
 
+
 def merge_markdown(parts: Sequence[str], separator: str = "\n\n---\n\n") -> str:
     """Merge multiple markdown strings into one."""
     # Filter out empty parts

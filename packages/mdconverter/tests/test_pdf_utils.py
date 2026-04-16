@@ -18,6 +18,7 @@ def test_get_blind_chunks():
     ranges = get_blind_chunks(0, chunk_size=20)
     assert ranges == []
 
+
 def test_merge_markdown():
     """Test merging markdown parts."""
     parts = ["# Part 1", "  ", "## Part 2", ""]
@@ -26,6 +27,7 @@ def test_merge_markdown():
 
     merged = merge_markdown(parts, separator="***")
     assert merged == "# Part 1***## Part 2"
+
 
 @pytest.mark.asyncio
 async def test_split_pdf(tmp_path: Path):
@@ -41,7 +43,7 @@ async def test_split_pdf(tmp_path: Path):
         writer.write(f)
 
     temp_dir = tmp_path / "chunks"
-    ranges = [(0, 1), (2, 4)] # 2 chunks: pages 1-2 and 3-5
+    ranges = [(0, 1), (2, 4)]  # 2 chunks: pages 1-2 and 3-5
 
     chunk_paths = split_pdf(source_pdf, ranges, temp_dir)
 
@@ -51,5 +53,6 @@ async def test_split_pdf(tmp_path: Path):
 
     # Verify page counts in chunks
     from pypdf import PdfReader
+
     assert len(PdfReader(chunk_paths[0]).pages) == 2
     assert len(PdfReader(chunk_paths[1]).pages) == 3

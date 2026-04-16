@@ -84,7 +84,9 @@ def analyze(
 def tile(
     pdf_path: Path = typer.Argument(..., help="PDF file to tile.", exists=True),
     page: int = typer.Option(0, "--page", "-p", help="Page number (0-indexed)."),
-    output_dir: Path | None = typer.Option(None, "--output", "-o", help="Output directory for tiles."),
+    output_dir: Path | None = typer.Option(
+        None, "--output", "-o", help="Output directory for tiles."
+    ),
     dpi: int = typer.Option(300, "--dpi", help="Rendering DPI."),
     tile_size: int = typer.Option(1024, "--tile-size", help="Tile size in pixels."),
     overlap: int = typer.Option(0, "--overlap", help="Overlap between tiles in pixels."),
@@ -116,7 +118,9 @@ def tile(
 def split(
     pdf_path: Path = typer.Argument(..., help="PDF file to split.", exists=True),
     chunk_size: int = typer.Option(20, "--chunk-size", "-c", help="Pages per chunk."),
-    output_dir: Path | None = typer.Option(None, "--output", "-o", help="Output directory for chunks."),
+    output_dir: Path | None = typer.Option(
+        None, "--output", "-o", help="Output directory for chunks."
+    ),
 ) -> None:
     """Split a large PDF into smaller chunks."""
     import fitz
@@ -203,7 +207,7 @@ def _print_analysis_table(reports: list, show_detail: bool = False) -> None:
                     size = f"{p.width_mm:.0f}x{p.height_mm:.0f}mm"
                     oversized = " [red]OVERSIZED[/red]" if p.is_oversized else ""
                     console.print(
-                        f"  p{p.page_num+1:>3}: {p.page_type:<8} "
+                        f"  p{p.page_num + 1:>3}: {p.page_type:<8} "
                         f"chars={p.text_chars:>5}  imgs={p.image_count}  "
                         f"{size}{oversized}"
                     )

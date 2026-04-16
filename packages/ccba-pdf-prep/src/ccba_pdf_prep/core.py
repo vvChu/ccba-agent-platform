@@ -17,17 +17,21 @@ logger = logging.getLogger(__name__)
 
 # --- Data Models ---
 
+
 class PDFCategory(str, Enum):
     """Classification of a PDF document."""
+
     TEXT_RICH = "text_rich"
     SCANNED = "scanned"
     HYBRID = "hybrid"
     DRAWING = "drawing"
     UNKNOWN = "unknown"
 
+
 @dataclass
 class PageDetail:
     """Analysis result for a single page."""
+
     page_num: int
     text_chars: int
     image_count: int
@@ -36,9 +40,11 @@ class PageDetail:
     is_oversized: bool
     page_type: str  # "text", "scan", "drawing"
 
+
 @dataclass
 class Segment:
     """A contiguous range of pages of the same type."""
+
     start_page: int  # 0-indexed
     end_page: int  # 0-indexed, inclusive
     page_type: str  # "text", "scan", "drawing"
@@ -48,9 +54,11 @@ class Segment:
     def page_count(self) -> int:
         return self.end_page - self.start_page + 1
 
+
 @dataclass
 class PDFReport:
     """Complete analysis report for a PDF file."""
+
     file_path: Path
     category: PDFCategory
     recommended_model: str
@@ -118,7 +126,9 @@ class PDFReport:
         )
         return segments
 
+
 # --- Analyzer ---
+
 
 class PDFAnalyzer:
     """Analyze PDF files to determine optimal processing strategy."""
@@ -169,7 +179,9 @@ class PDFAnalyzer:
         num_pages = len(page_details)
         category, confidence = self._classify(num_pages, text_pages, image_pages, drawing_pages)
 
-        return self._make_report(pdf_path, size_mb, category, confidence, page_details, total_text_chars)
+        return self._make_report(
+            pdf_path, size_mb, category, confidence, page_details, total_text_chars
+        )
 
     def _analyze_page(self, page: fitz.Page, page_num: int) -> PageDetail:
         rect = page.rect
@@ -198,7 +210,9 @@ class PDFAnalyzer:
             page_type=page_type,
         )
 
-    def _classify(self, total: int, text_pages: int, image_pages: int, drawing_pages: int) -> tuple[PDFCategory, float]:
+    def _classify(
+        self, total: int, text_pages: int, image_pages: int, drawing_pages: int
+    ) -> tuple[PDFCategory, float]:
         if total == 0:
             return PDFCategory.UNKNOWN, 0.0
         drawing_ratio = drawing_pages / total
@@ -215,7 +229,15 @@ class PDFAnalyzer:
             return PDFCategory.HYBRID, 0.7
         return PDFCategory.UNKNOWN, 0.3
 
-    def _make_report(self, pdf_path: Path, size_mb: float, category: PDFCategory, confidence: float, page_details: list[PageDetail], total_text_chars: int) -> PDFReport:
+    def _make_report(
+        self,
+        pdf_path: Path,
+        size_mb: float,
+        category: PDFCategory,
+        confidence: float,
+        page_details: list[PageDetail],
+        total_text_chars: int,
+    ) -> PDFReport:
         num_pages = len(page_details)
         text_pages = sum(1 for p in page_details if p.page_type == "text")
         image_pages = sum(1 for p in page_details if p.page_type == "scan")
@@ -247,9 +269,13 @@ class PDFAnalyzer:
             page_details=page_details,
         )
 
+
 # --- Utilities ---
 
-def split_pdf(source: Path, page_ranges: Sequence[tuple[int, int]], output_temp_dir: Path) -> list[Path]:
+
+def split_pdf(
+    source: Path, page_ranges: Sequence[tuple[int, int]], output_temp_dir: Path
+) -> list[Path]:
     """Split PDF into chunks."""
     if not source.exists():
         raise FileNotFoundError(f"Source PDF not found: {source}")
@@ -267,12 +293,15 @@ def split_pdf(source: Path, page_ranges: Sequence[tuple[int, int]], output_temp_
         for page_num in range(start, end + 1):
             writer.add_page(reader.pages[page_num])
 
-        chunk_path = output_temp_dir / f"{source.stem}_part{i+1}.pdf"
+        chunk_path = output_temp_dir / f"{source.stem}_part{i + 1}.pdf"
         with open(chunk_path, "wb") as f:
             writer.write(f)
         chunk_paths.append(chunk_path)
     return chunk_paths
 
+
 def get_blind_chunks(total_pages: int, chunk_size: int = 20) -> list[tuple[int, int]]:
     """Generate equitable page ranges."""
-    return [(s, min(s + chunk_size - 1, total_pages - 1)) for s in range(0, total_pages, chunk_size)]
+    return [
+        (s, min(s + chunk_size - 1, total_pages - 1)) for s in range(0, total_pages, chunk_size)
+    ]

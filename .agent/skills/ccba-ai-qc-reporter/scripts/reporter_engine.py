@@ -193,7 +193,8 @@ class IDOPReporter:
             for r in audit_results
         )
         high_clashes = sum(
-            r.high_severity_count if hasattr(r, "high_severity_count")
+            r.high_severity_count
+            if hasattr(r, "high_severity_count")
             else sum(1 for c in r.get("clashes", []) if c.get("severity") == "high")
             for r in audit_results
         )
@@ -225,7 +226,9 @@ class IDOPReporter:
 
             counts = {"high": 0, "medium": 0, "low": 0}
             for c in clashes:
-                sev = (c.severity if hasattr(c, "severity") else c.get("severity", "medium")).lower()
+                sev = (
+                    c.severity if hasattr(c, "severity") else c.get("severity", "medium")
+                ).lower()
                 counts[sev] = counts.get(sev, 0) + 1
 
             lines.append(
@@ -258,8 +261,11 @@ class IDOPReporter:
             for i, c in enumerate(clashes, 1):
                 if hasattr(c, "severity"):
                     sev, loc, discs, desc, rec = (
-                        c.severity, c.location,
-                        "/".join(c.disciplines), c.description, c.recommendation,
+                        c.severity,
+                        c.location,
+                        "/".join(c.disciplines),
+                        c.description,
+                        c.recommendation,
                     )
                 else:
                     sev = c.get("severity", "?")
@@ -270,8 +276,7 @@ class IDOPReporter:
 
                 sev_label = {"high": "**HIGH**", "medium": "MEDIUM", "low": "low"}.get(sev, sev)
                 lines.append(
-                    f"| {i} | {sev_label} | {loc[:50]} | {discs} | "
-                    f"{desc[:80]} | {rec[:60]} |"
+                    f"| {i} | {sev_label} | {loc[:50]} | {discs} | {desc[:80]} | {rec[:60]} |"
                 )
 
         return "\n".join(lines)
@@ -288,11 +293,13 @@ class IDOPReporter:
             level = r.level if hasattr(r, "level") else r.get("level", "?")
             clashes = r.clashes if hasattr(r, "clashes") else r.get("clashes", [])
             high = sum(
-                1 for c in clashes
+                1
+                for c in clashes
                 if (c.severity if hasattr(c, "severity") else c.get("severity", "")) == "high"
             )
             med = sum(
-                1 for c in clashes
+                1
+                for c in clashes
                 if (c.severity if hasattr(c, "severity") else c.get("severity", "")) == "medium"
             )
             low = len(clashes) - high - med
@@ -329,10 +336,7 @@ class IDOPReporter:
             "project": self.project_name,
             "generated_at": datetime.now().isoformat(),
             "backbone": backbone.to_dict() if backbone and hasattr(backbone, "to_dict") else None,
-            "audit_results": [
-                r.to_dict() if hasattr(r, "to_dict") else r
-                for r in audit_results
-            ],
+            "audit_results": [r.to_dict() if hasattr(r, "to_dict") else r for r in audit_results],
         }
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)

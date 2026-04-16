@@ -26,9 +26,12 @@ logger = logging.getLogger(__name__)
 # Re-export Enums and simple dataclasses
 __all__ = ["PDFCategory", "PageDetail", "Segment", "PDFReport", "PDFAnalyzer"]
 
+
 class Segment(BaseSegment):
     """Segment with mdconverter specific defaults."""
+
     pass
+
 
 class PDFReport(BaseReport):
     """Report with mdconverter specific logic."""
@@ -60,6 +63,7 @@ class PDFReport(BaseReport):
                 f"Use specialised QC tools instead."
             )
         return ""
+
 
 class PDFAnalyzer(BaseAnalyzer):
     """Analyzer subclass for mdconverter."""

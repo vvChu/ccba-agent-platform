@@ -31,12 +31,13 @@ logger = logging.getLogger(__name__)
 # Data models
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ClashItem:
     """A single detected clash / coordination issue."""
 
     severity: str = "medium"  # high / medium / low
-    location: str = ""        # Description of location in the drawing
+    location: str = ""  # Description of location in the drawing
     disciplines: list[str] = field(default_factory=list)  # e.g. ["MEP", "KC"]
     description: str = ""
     recommendation: str = ""
@@ -159,9 +160,7 @@ class IDOPAuditEngine:
         # Check if oversized
         analyzer = PDFAnalyzer()
         report = analyzer.analyze(pdf_path)
-        is_oversized = any(
-            p.is_oversized for p in report.page_details if p.page_num == page_num
-        )
+        is_oversized = any(p.is_oversized for p in report.page_details if p.page_num == page_num)
 
         if is_oversized and use_smart_tile:
             kept, all_results = VisionOptimizer.tile_page_smart(
@@ -182,7 +181,7 @@ class IDOPAuditEngine:
         page = doc[page_num]
         matrix = fitz.Matrix(self.tile_dpi / 72, self.tile_dpi / 72)
         pix = page.get_pixmap(matrix=matrix)
-        out_path = out_dir / f"{pdf_path.stem}_p{page_num+1}.png"
+        out_path = out_dir / f"{pdf_path.stem}_p{page_num + 1}.png"
         pix.save(str(out_path))
         doc.close()
         return out_path
@@ -264,21 +263,26 @@ class IDOPAuditEngine:
                 model=self.ai_model,
                 max_tokens=2048,
                 temperature=0.2,
-                messages=[{
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": {
-                            "url": f"data:image/png;base64,{b64}"
-                        }},
-                    ],
-                }],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/png;base64,{b64}"},
+                            },
+                        ],
+                    }
+                ],
             )
             response = raw_response.choices[0].message.content or ""
             clashes, summary = _parse_audit_response(response)
             logger.info(
                 "Audit %s: %d clashes detected (model=%s)",
-                level_label, len(clashes), self.ai_model,
+                level_label,
+                len(clashes),
+                self.ai_model,
             )
         except Exception as e:
             logger.error("AI audit call failed: %s", e)
@@ -309,8 +313,7 @@ class IDOPAuditEngine:
             List of AuditResult, one per level.
         """
         tasks = [
-            self.run_audit(imgs, level, discipline_order)
-            for level, imgs in level_images.items()
+            self.run_audit(imgs, level, discipline_order) for level, imgs in level_images.items()
         ]
         return list(await asyncio.gather(*tasks))
 
@@ -318,6 +321,7 @@ class IDOPAuditEngine:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _get_vision_client():
     """Return an OpenAI-compatible client for the AI Gateway (vision capable)."""
@@ -327,6 +331,7 @@ def _get_vision_client():
 
     try:
         from dotenv import load_dotenv
+
         load_dotenv()
     except ImportError:
         pass
@@ -355,13 +360,15 @@ def _parse_audit_response(text: str) -> tuple[list[ClashItem], str]:
     clashes: list[ClashItem] = []
 
     for item in raw_clashes:
-        clashes.append(ClashItem(
-            severity=str(item.get("severity", "medium")).lower(),
-            location=str(item.get("location", "")),
-            disciplines=list(item.get("disciplines", [])),
-            description=str(item.get("description", "")),
-            recommendation=str(item.get("recommendation", "")),
-        ))
+        clashes.append(
+            ClashItem(
+                severity=str(item.get("severity", "medium")).lower(),
+                location=str(item.get("location", "")),
+                disciplines=list(item.get("disciplines", [])),
+                description=str(item.get("description", "")),
+                recommendation=str(item.get("recommendation", "")),
+            )
+        )
 
     return clashes, summary
 
@@ -392,9 +399,7 @@ if __name__ == "__main__":
         output_dir=Path(args.output_dir),
         ai_model=args.model,
     )
-    result = asyncio.run(
-        engine.run_audit(images, args.level, disciplines)
-    )
+    result = asyncio.run(engine.run_audit(images, args.level, disciplines))
 
     print(f"\nAudit: {result.level}")
     print(f"Clashes: {result.clash_count} ({result.high_severity_count} HIGH)")
