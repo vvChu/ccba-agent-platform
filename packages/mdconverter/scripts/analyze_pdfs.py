@@ -167,7 +167,7 @@ def main(directory: str) -> None:
     # Size stats
     sizes = [r["size_mb"] for r in results if not r["error"]]
     if sizes:
-        print(f"\n📦 SIZE STATS:")
+        print("\n📦 SIZE STATS:")
         print(f"  Total:   {sum(sizes):.1f} MB")
         print(f"  Min:     {min(sizes):.2f} MB")
         print(f"  Max:     {max(sizes):.2f} MB")
@@ -176,7 +176,7 @@ def main(directory: str) -> None:
     # Page stats
     pages = [r["pages"] for r in results if not r["error"]]
     if pages:
-        print(f"\n📄 PAGE STATS:")
+        print("\n📄 PAGE STATS:")
         print(f"  Total:   {sum(pages)} pages")
         print(f"  Min:     {min(pages)} pages")
         print(f"  Max:     {max(pages)} pages")
