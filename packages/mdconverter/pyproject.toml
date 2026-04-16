@@ -46,6 +46,8 @@ llm = [
 mdconvert = "mdconverter.cli:app"
 
 
+[tool.uv.sources]
+ccba-pdf-prep = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mdconverter"]
