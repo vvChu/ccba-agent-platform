@@ -11,6 +11,9 @@ from pathlib import Path
 import typer
 from rich.console import Console
 from rich.table import Table
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from mdconverter.core.analyzer import PDFReport
 
 console = Console()
 
@@ -86,7 +89,7 @@ _CATEGORY_ICON = {
 }
 
 
-def _print_table(reports: list, show_detail: bool = False) -> None:
+def _print_table(reports: list["PDFReport"], show_detail: bool = False) -> None:
     """Print analysis results as a rich table."""
     table = Table(show_header=True, header_style="bold cyan")
     table.add_column("", width=2)
@@ -135,7 +138,7 @@ def _print_table(reports: list, show_detail: bool = False) -> None:
                     console.print(f"  ... and {len(r.page_details) - 20} more pages")
 
 
-def _print_summary(reports: list) -> None:
+def _print_summary(reports: list["PDFReport"]) -> None:
     """Print category summary."""
     from collections import Counter
 
@@ -159,7 +162,7 @@ def _print_summary(reports: list) -> None:
     )
 
 
-def _print_json(reports: list) -> None:
+def _print_json(reports: list["PDFReport"]) -> None:
     """Print reports as JSON."""
     import json
 

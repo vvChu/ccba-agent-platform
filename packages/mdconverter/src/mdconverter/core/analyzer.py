@@ -36,13 +36,15 @@ class Segment(BaseSegment):
 class PDFReport(BaseReport):
     """Report with mdconverter specific logic."""
 
-    def get_segments(self) -> list[Segment]:
+    def get_segments(self, model_hints: dict[str, str] | None = None) -> list[BaseSegment]:
         """Group contiguous pages of the same type into segments with mdconverter defaults."""
         hints = {
             "text": "qwen3.5-35b",
             "scan": "ocr-primary",
             "drawing": "qwen3.5-35b",
         }
+        if model_hints:
+            hints.update(model_hints)
         # In mdconverter, we use specific hints
         base_segments = super().get_segments(model_hints=hints)
         # Convert back to mdconverter Segment if needed, though they are compatible

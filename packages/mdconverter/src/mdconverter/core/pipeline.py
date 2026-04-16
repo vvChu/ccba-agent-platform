@@ -78,7 +78,7 @@ def get_default_post_processors() -> list[PostProcessor]:
     Returns:
         List of PostProcessor instances.
     """
-    return [VNLegalPostProcessor()]  # type: ignore[list-item]
+    return [VNLegalPostProcessor()]
 
 
 # ---------------------------------------------------------------------------
