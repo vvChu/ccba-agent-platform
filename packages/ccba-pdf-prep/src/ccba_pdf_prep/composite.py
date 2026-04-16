@@ -13,8 +13,8 @@ from PIL import Image, ImageDraw, ImageFont
 logger = logging.getLogger(__name__)
 
 # Default label style
-_LABEL_BG = (30, 30, 30)        # Dark background
-_LABEL_FG = (255, 255, 255)     # White text
+_LABEL_BG = (30, 30, 30)  # Dark background
+_LABEL_FG = (255, 255, 255)  # White text
 _LABEL_HEIGHT_PX = 32
 
 
@@ -52,9 +52,7 @@ class CompositeBuilder:
             ValueError: If fewer than 4 images are provided.
         """
         if len(images) < 4:
-            raise ValueError(
-                f"quad_view requires exactly 4 images, got {len(images)}"
-            )
+            raise ValueError(f"quad_view requires exactly 4 images, got {len(images)}")
         return CompositeBuilder.n_way_composite(
             images=images[:4],
             output_path=output_path,
@@ -123,9 +121,7 @@ class CompositeBuilder:
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         canvas.save(str(output_path), format="PNG")
-        logger.info(
-            "Composite %dx%d saved to %s", canvas_w, canvas_h, output_path
-        )
+        logger.info("Composite %dx%d saved to %s", canvas_w, canvas_h, output_path)
         return output_path
 
     # ------------------------------------------------------------------

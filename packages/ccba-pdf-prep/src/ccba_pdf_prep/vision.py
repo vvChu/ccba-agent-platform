@@ -16,8 +16,10 @@ logger = logging.getLogger(__name__)
 # Data types
 # ---------------------------------------------------------------------------
 
+
 class TileResult(NamedTuple):
     """Metadata for a single tile."""
+
     path: Path
     row: int
     col: int
@@ -27,6 +29,7 @@ class TileResult(NamedTuple):
 
 class TitleBlockRegion(NamedTuple):
     """Bounding box of a detected title block (in page points)."""
+
     x0: float
     y0: float
     x1: float
@@ -49,6 +52,7 @@ class TitleBlockRegion(NamedTuple):
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _compute_ink_ratio(pixmap: fitz.Pixmap) -> float:
     """Return fraction of non-white pixels (0.0-1.0) in a pixmap.
 
@@ -56,7 +60,7 @@ def _compute_ink_ratio(pixmap: fitz.Pixmap) -> float:
     for this specific check.
     """
     samples = pixmap.samples  # raw bytes, n channels per pixel
-    n = pixmap.n              # channels (3=RGB, 4=RGBA)
+    n = pixmap.n  # channels (3=RGB, 4=RGBA)
     total = pixmap.width * pixmap.height
     if total == 0:
         return 0.0
@@ -72,6 +76,7 @@ def _compute_ink_ratio(pixmap: fitz.Pixmap) -> float:
 # ---------------------------------------------------------------------------
 # VisionOptimizer
 # ---------------------------------------------------------------------------
+
 
 class VisionOptimizer:
     """Utilities for optimizing PDF pages for AI Vision models."""
@@ -153,7 +158,9 @@ class VisionOptimizer:
         skipped = sum(1 for r in results if r.skipped)
         logger.info(
             "Smart tiling: kept %d / %d tiles (skipped %d blanks)",
-            len(kept), len(results), skipped,
+            len(kept),
+            len(results),
+            skipped,
         )
         return kept, results
 
@@ -182,7 +189,10 @@ class VisionOptimizer:
 
         logger.info(
             "Tiling page %d at %d DPI. Total size: %dx%d px",
-            page_num + 1, dpi, width_px, height_px,
+            page_num + 1,
+            dpi,
+            width_px,
+            height_px,
         )
 
         matrix = fitz.Matrix(dpi / 72, dpi / 72)
@@ -202,7 +212,7 @@ class VisionOptimizer:
                 ink = _compute_ink_ratio(tile_pix)
                 skipped = (min_ink_ratio is not None) and (ink < min_ink_ratio)
 
-                tile_name = f"{pdf_path.stem}_p{page_num+1}_tile_{row}_{col}.png"
+                tile_name = f"{pdf_path.stem}_p{page_num + 1}_tile_{row}_{col}.png"
                 tile_path = output_dir / tile_name
 
                 if not skipped:
@@ -211,10 +221,15 @@ class VisionOptimizer:
                 else:
                     logger.debug("Tile [%d,%d] ink=%.1f%% SKIPPED", row, col, ink * 100)
 
-                results.append(TileResult(
-                    path=tile_path, row=row, col=col,
-                    ink_ratio=ink, skipped=skipped,
-                ))
+                results.append(
+                    TileResult(
+                        path=tile_path,
+                        row=row,
+                        col=col,
+                        ink_ratio=ink,
+                        skipped=skipped,
+                    )
+                )
 
         doc.close()
         logger.info("Generated %d tiles in %s", len(results), output_dir)
@@ -224,6 +239,7 @@ class VisionOptimizer:
 # ---------------------------------------------------------------------------
 # TitleBlockDetector
 # ---------------------------------------------------------------------------
+
 
 class TitleBlockDetector:
     """Auto-detect and extract the title block from engineering drawings.
@@ -239,9 +255,9 @@ class TitleBlockDetector:
     2. Heuristic bounding box fallback (bottom-right fraction).
     """
 
-    _SEARCH_RIGHT_FRAC = 0.30   # Rightmost 30% of page width
+    _SEARCH_RIGHT_FRAC = 0.30  # Rightmost 30% of page width
     _SEARCH_BOTTOM_FRAC = 0.25  # Bottom 25% of page height
-    _MIN_CONTENT_RATIO = 0.02   # Minimum ink ratio to accept heuristic region
+    _MIN_CONTENT_RATIO = 0.02  # Minimum ink ratio to accept heuristic region
 
     @classmethod
     def detect(
@@ -307,15 +323,11 @@ class TitleBlockDetector:
         """
         region = cls.detect(pdf_path, page_num, force=force)
         if region is None:
-            logger.warning(
-                "No title block detected in %s page %d", pdf_path.name, page_num
-            )
+            logger.warning("No title block detected in %s page %d", pdf_path.name, page_num)
             return None
 
         if output_path is None:
-            output_path = pdf_path.parent / (
-                f"{pdf_path.stem}_p{page_num+1}_titleblock.png"
-            )
+            output_path = pdf_path.parent / (f"{pdf_path.stem}_p{page_num + 1}_titleblock.png")
 
         doc = fitz.open(str(pdf_path))
         page = doc[page_num]
@@ -355,7 +367,7 @@ class TitleBlockDetector:
                 xs.extend([rect.x0, rect.x1])
                 ys.extend([rect.y0, rect.y1])
 
-        if len(xs) < 4:   # Relaxed: 4 points = 2 bounding boxes minimum
+        if len(xs) < 4:  # Relaxed: 4 points = 2 bounding boxes minimum
             return None
 
         x0 = max(min(xs), search_rect.x0)
@@ -366,9 +378,7 @@ class TitleBlockDetector:
         if (x1 - x0) < 20 or (y1 - y0) < 20:
             return None
 
-        logger.debug(
-            "Path-based title block: (%.0f, %.0f)-(%.0f, %.0f)", x0, y0, x1, y1
-        )
+        logger.debug("Path-based title block: (%.0f, %.0f)-(%.0f, %.0f)", x0, y0, x1, y1)
         return TitleBlockRegion(x0=x0, y0=y0, x1=x1, y1=y1)
 
     @classmethod
@@ -392,7 +402,10 @@ class TitleBlockDetector:
         if force:
             logger.debug(
                 "Heuristic title block (forced): (%.0f, %.0f)-(%.0f, %.0f)",
-                x0, y0, w, h,
+                x0,
+                y0,
+                w,
+                h,
             )
             return region
 
@@ -407,6 +420,10 @@ class TitleBlockDetector:
 
         logger.debug(
             "Heuristic title block: (%.0f, %.0f)-(%.0f, %.0f), ink=%.1f%%",
-            x0, y0, w, h, ink * 100,
+            x0,
+            y0,
+            w,
+            h,
+            ink * 100,
         )
         return region

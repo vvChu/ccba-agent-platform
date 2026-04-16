@@ -2,6 +2,7 @@
 CCBA AI QC Batch Orchestrator
 Platform SDK for generalized Multi-Level QC Audit via Coordination Matrix.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -13,13 +14,18 @@ import fitz
 import pandas as pd
 
 # Ensure Platform Skills are imported
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "ccba-ai-qc-integrated-audit" / "scripts"))
+sys.path.insert(
+    0, str(Path(__file__).parent.parent.parent / "ccba-ai-qc-integrated-audit" / "scripts")
+)
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "ccba-ai-qc-reporter" / "scripts"))
 try:
     from audit_engine import IDOPAuditEngine
     from reporter_engine import IDOPReporter
 except ImportError:
-    print("Warning: Could not import audit_engine or reporter_engine. Ensure you run this inside the CCBA Hub context.")
+    print(
+        "Warning: Could not import audit_engine or reporter_engine. Ensure you run this inside the CCBA Hub context."
+    )
+
 
 class QCBatchOrchestrator:
     def __init__(self, project_dir: str | Path, matrix_csv: str | Path, out_dir: str | Path):
@@ -37,6 +43,7 @@ class QCBatchOrchestrator:
 
     def _generate_blank_image(self):
         from PIL import Image
+
         if not self.blank_img.exists():
             img = Image.new("RGB", (1000, 1000), "white")
             img.save(str(self.blank_img))
@@ -84,7 +91,9 @@ class QCBatchOrchestrator:
         pix.save(str(out_path))
         return out_path
 
-    async def _prepare_level(self, engine: IDOPAuditEngine, row: dict, hstk_dir: Path) -> tuple[str, list[Path]]:
+    async def _prepare_level(
+        self, engine: IDOPAuditEngine, row: dict, hstk_dir: Path
+    ) -> tuple[str, list[Path]]:
         level = row.get("NormalizedLevel", "Unknown")
         print(f"\n[{level}] Gathering images...")
         images = []
@@ -94,7 +103,7 @@ class QCBatchOrchestrator:
             ("Arch", hstk_dir / "Kien Truc", row.get("Arch_Sheet", "")),
             ("Struct", hstk_dir / "K Cau", row.get("Struct_Sheet", "")),
             ("MEP", hstk_dir / "M&E", row.get("MEP_Sheet", "")),
-            ("PCCC", hstk_dir / "PCCC", row.get("PCCC_Sheet", ""))
+            ("PCCC", hstk_dir / "PCCC", row.get("PCCC_Sheet", "")),
         ]
 
         for disc_name, disc_dir, sheet_code in disciplines:
@@ -116,6 +125,7 @@ class QCBatchOrchestrator:
         print("=" * 60)
 
         import pandas as pd
+
         if not self.matrix_csv.exists():
             print(f"Error: Matrix file not found: {self.matrix_csv}")
             return
@@ -135,7 +145,9 @@ class QCBatchOrchestrator:
         results = await engine.run_multi_level_audit(level_images)
 
         print(f"\nProcessed {len(results)} levels. Generating Combined Report...")
-        reporter = IDOPReporter(project_name=self.project_dir.name, author="CCBA Batch Orchestrator")
+        reporter = IDOPReporter(
+            project_name=self.project_dir.name, author="CCBA Batch Orchestrator"
+        )
         report_path = self.out_dir / "BATCH_QC_Report_Auto.md"
         reporter.synthesize(backbone=None, audit_results=results, output_path=report_path)
 
@@ -145,11 +157,14 @@ class QCBatchOrchestrator:
         for doc in self.pdf_cache.values():
             doc.close()
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Batch QC Audit")
     parser.add_argument("--project-dir", type=str, required=True, help="Path to project directory")
     parser.add_argument("--matrix", type=str, required=True, help="Path to Coordination Matrix CSV")
-    parser.add_argument("--out-dir", type=str, required=True, help="Output directory for reports and renders")
+    parser.add_argument(
+        "--out-dir", type=str, required=True, help="Output directory for reports and renders"
+    )
     parser.add_argument("--model", type=str, default="gemini-3.1-pro-low", help="AI Model to use")
     args = parser.parse_args()
 

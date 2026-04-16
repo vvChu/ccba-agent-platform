@@ -106,7 +106,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Convert Markdown to Docx with standard styling.")
     parser.add_argument("input_path", type=Path, help="Path to the input Markdown file.")
     parser.add_argument(
-        "-o", "--output", type=Path, help="Optional path to output Docx file. Defines from input by default."
+        "-o",
+        "--output",
+        type=Path,
+        help="Optional path to output Docx file. Defines from input by default.",
     )
 
     args = parser.parse_args()

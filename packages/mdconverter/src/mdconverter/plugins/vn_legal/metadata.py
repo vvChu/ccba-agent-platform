@@ -37,9 +37,7 @@ def extract_vn_legal_metadata(content: str, source_path: Path) -> dict[str, str]
     header = content[:3000]
 
     # Extract decision number (Quyết định số XXX/QĐ-XXX)
-    qd_match = re.search(
-        r"(?:Quyết định\s+)?[Ss]ố[:\s]*(\d+/Q[ĐD][-–]?\w+)", header, re.IGNORECASE
-    )
+    qd_match = re.search(r"(?:Quyết định\s+)?[Ss]ố[:\s]*(\d+/Q[ĐD][-–]?\w+)", header, re.IGNORECASE)
     if qd_match:
         metadata["decision_number"] = qd_match.group(1)
 
@@ -76,9 +74,7 @@ def extract_vn_legal_metadata(content: str, source_path: Path) -> dict[str, str]
             break
 
     # Extract signer
-    signer_match = re.search(
-        r"(?:VIỆN TRƯỞNG|Viện trưởng)[^\n]*\n[^\n]*\n\*\*([^*]+)\*\*", header
-    )
+    signer_match = re.search(r"(?:VIỆN TRƯỞNG|Viện trưởng)[^\n]*\n[^\n]*\n\*\*([^*]+)\*\*", header)
     if signer_match:
         metadata["signer"] = signer_match.group(1).strip()
 

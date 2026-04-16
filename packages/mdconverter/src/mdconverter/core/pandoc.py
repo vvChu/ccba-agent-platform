@@ -96,9 +96,7 @@ class PandocConverter(BaseConverter):
 
             # H1: Extract VN Legal metadata if applicable
             metadata = self._extract_metadata(content, source_path)
-            final_content = self.add_frontmatter(
-                content, source_path, "pandoc", metadata=metadata
-            )
+            final_content = self.add_frontmatter(content, source_path, "pandoc", metadata=metadata)
             await asyncio.to_thread(output_path.write_text, final_content, "utf-8")
 
             return ConversionResult(
