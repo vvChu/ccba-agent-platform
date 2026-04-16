@@ -165,9 +165,36 @@ decrees:
       trước khi NĐ QLCL 2026 chính thức có hiệu lực.
 
 # ==============================================================================
-# TIÊU CHUẨN (Standards)
+# TIÊU CHUẨN & QUY CHUẨN (Standards & Technical Regulations)
 # ==============================================================================
 standards:
+  - id: QCVN-06-2022
+    title: "QCVN 06:2022/BXD Quy chuẩn kỹ thuật quốc gia về An toàn cháy cho nhà và công trình"
+    short_name: "QCVN 06:2022"
+    issued_date: "2022-11-30"
+    effective_date: "2023-01-16"
+    status: current
+    topics: [fire_safety, design_requirements, architecture, mep]
+    amendments:
+      - "Sửa đổi 1:2023 QCVN 06:2022/BXD (Ban hành kèm Thông tư 09/2023/TT-BXD)"
+    source_url: "https://moc.gov.vn/vn/pages/ChiTietVanBan.aspx?vID=3701"
+    notes: >
+      Quy chuẩn then chốt về an toàn cháy. Các yêu cầu về:
+      1. Bậc chịu lửa, giới hạn chịu lửa kết cấu (REI)
+      2. Đường thoát nạn, lối thoát hiểm, buồng thang N1, N2, N3
+      3. Giải pháp cấp nước chữa cháy, chống tụ khói
+      4. Phân chia khoang cháy
+
+  - id: SD1-2023-QCVN-06
+    title: "Sửa đổi 1:2023 QCVN 06:2022/BXD"
+    short_name: "SĐ 1:2023 QCVN 06"
+    issued_date: "2023-10-16"
+    effective_date: "2023-12-01"
+    status: current
+    amends: QCVN-06-2022
+    topics: [fire_safety, design_requirements]
+    notes: "Nới lỏng và làm rõ một số quy định của QCVN 06:2022 để tháo gỡ khó khăn."
+
   - id: TCVN-14177-2-2024
     title: "TCVN 14177-2:2024"
     status: current

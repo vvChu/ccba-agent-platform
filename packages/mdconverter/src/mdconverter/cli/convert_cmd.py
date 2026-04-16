@@ -68,6 +68,11 @@ def convert(
         "-q",
         help="Only show warnings and errors.",
     ),
+    extract_drawing: bool = typer.Option(
+        False,
+        "--extract-drawing",
+        help="Enable extraction of text/tables from engineering drawings (skips bypass logic).",
+    ),
 ) -> None:
     """Convert documents to Markdown."""
     # Check mutually exclusive flags
@@ -105,6 +110,7 @@ def convert(
         tool=tool,
         output_dir=output_dir,
         cache=cache,
+        extract_drawing=extract_drawing,
     )
 
     async def process_files() -> list[ConversionResult]:
@@ -142,7 +148,7 @@ def convert(
 
     # Watch mode — H4 fix: use a dedicated event loop, not nested asyncio.run()
     if watch:
-        _run_watch_mode(input_path, tool, output_dir, recursive)
+        _run_watch_mode(input_path, recursive, pipeline)
 
 
 def _print_result(result: ConversionResult) -> None:
@@ -164,9 +170,8 @@ def _print_result(result: ConversionResult) -> None:
 
 def _run_watch_mode(
     input_path: Path,
-    tool: ConversionTool,
-    output_dir: Path | None,
     recursive: bool,
+    pipeline: "ConversionPipeline",
 ) -> None:
     """Run watch mode with event-loop-safe callbacks.
 
@@ -196,8 +201,7 @@ def _run_watch_mode(
         console.print(f"\n[cyan]File changed:[/cyan] {file.name}")
 
         async def _convert_single() -> None:
-            converter = create_converter(tool, file.suffix, output_dir)
-            result = await converter.convert(file)
+            result = await pipeline.process_file(file)
             _print_result(result)
 
         asyncio.run_coroutine_threadsafe(_convert_single(), loop)

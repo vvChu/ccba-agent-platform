@@ -12,6 +12,7 @@ from typing import Protocol, runtime_checkable
 
 from mdconverter.core.base import BaseConverter, ConversionResult, ConversionStatus, ConversionTool
 from mdconverter.core.cache import ConversionCache
+from mdconverter.core.utils import get_blind_chunks, merge_markdown, split_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,7 @@ class ConversionPipeline:
         cache: ConversionCache | None = None,
         post_processors: list[PostProcessor] | None = None,
         max_concurrency: int = 10,
+        extract_drawing: bool = False,
     ) -> None:
         self.tool = tool
         self.output_dir = output_dir
@@ -105,6 +107,7 @@ class ConversionPipeline:
         self.post_processors = (
             post_processors if post_processors is not None else get_default_post_processors()
         )
+        self.extract_drawing = extract_drawing
         self._sem = asyncio.Semaphore(max_concurrency)
 
     async def process_file(self, file: Path) -> ConversionResult:
@@ -120,14 +123,19 @@ class ConversionPipeline:
         Returns:
             ConversionResult with status, content, and metadata.
         """
-        async with self._sem:
-            loop = asyncio.get_running_loop()
+        # No longer wrap entire process_file in semaphore to allow parallel segmenting
+        # async with self._sem:  <-- REFACTORED
+        loop = asyncio.get_running_loop()
 
-            # 0. PDF analysis — classify and auto-select tool
-            pdf_report = None
-            if file.suffix.lower() == ".pdf":
-                pdf_report = await self._analyze_pdf(file, loop)
-                if pdf_report and pdf_report.should_skip:
+        # 0. PDF analysis — classify and auto-select tool
+        pdf_report = None
+        if file.suffix.lower() == ".pdf":
+            pdf_report = await self._analyze_pdf(file, loop)
+            if pdf_report:
+                # Drawing handling
+                if pdf_report.category == "drawing" and self.extract_drawing:
+                    logger.info("Drawing extraction enabled for %s", file.name)
+                elif pdf_report.should_skip:
                     return ConversionResult(
                         source_path=file,
                         status=ConversionStatus.SKIPPED,
@@ -135,22 +143,30 @@ class ConversionPipeline:
                         metadata={"pdf_analysis": pdf_report.to_dict()},
                     )
 
-            # 1. Check cache
-            if self.cache:
-                cached_content = await loop.run_in_executor(None, self.cache.get, file)
-                if cached_content:
-                    output_path = self._expected_output_path(file)
-                    await loop.run_in_executor(None, self._write_cached, output_path, cached_content)
-                    return ConversionResult(
-                        source_path=file,
-                        output_path=output_path,
-                        status=ConversionStatus.SUCCESS,
-                        tool_used="cache",
-                        content=cached_content,
-                    )
+                # Determine if we should use segmented processing
+                is_hybrid = pdf_report.category == "hybrid"
+                is_very_large = pdf_report.pages > 30
+                
+                if (is_hybrid or is_very_large) and self.tool in (ConversionTool.AUTO, "auto"):
+                    return await self._process_segmented(file, pdf_report)
 
-            # 2. Create converter — use analyzer recommendation if available
-            converter = self._create_converter_for_file(file, pdf_report)
+        # 1. Check cache
+        if self.cache:
+            cached_content = await loop.run_in_executor(None, self.cache.get, file)
+            if cached_content:
+                output_path = self._expected_output_path(file)
+                await loop.run_in_executor(None, self._write_cached, output_path, cached_content)
+                return ConversionResult(
+                    source_path=file,
+                    output_path=output_path,
+                    status=ConversionStatus.SUCCESS,
+                    tool_used="cache",
+                    content=cached_content,
+                )
+
+        # 2. Convert with semaphore protection
+        converter = self._create_converter_for_file(file, pdf_report)
+        async with self._sem:
             result = await converter.convert(file)
 
             # Attach analysis metadata
@@ -168,6 +184,103 @@ class ConversionPipeline:
                 )
 
             return result
+
+    async def _process_segmented(self, file: Path, report: "PDFReport") -> ConversionResult:
+        """Handle conversion by splitting PDF into segments or chunks.
+
+        For Hybrid docs, routes segments to optimal models.
+        For large docs, routes chunks to parallel processing.
+        """
+        import tempfile
+        import shutil
+        from mdconverter.core.analyzer import Segment
+
+        loop = asyncio.get_running_loop()
+        
+        # 1. Determine ranges
+        if report.category == "hybrid":
+            segments = report.get_segments()
+            logger.info("Hybrid document detected: %d segments", len(segments))
+        else:
+            # Blind chunking for large unified docs
+            ranges = get_blind_chunks(report.pages, chunk_size=20)
+            segments = [
+                Segment(start, end, "text" if report.category == "text_rich" else "scan", report.recommended_model)
+                for start, end in ranges
+            ]
+            logger.info("Large document detected: %d chunks of 20 pages", len(segments))
+
+        temp_dir = Path(tempfile.mkdtemp(prefix="mdconv_"))
+        try:
+            # 2. Split PDF
+            ranges = [(s.start_page, s.end_page) for s in segments]
+            chunk_paths = await loop.run_in_executor(None, split_pdf, file, ranges, temp_dir)
+
+            # 3. Convert each chunk concurrently
+            # Use semaphore-protected wrapper
+            tasks = []
+            for i, chunk_path in enumerate(chunk_paths):
+                seg = segments[i]
+                tasks.append(self._convert_segment_with_limit(i, len(segments), chunk_path, seg))
+            
+            # Execute concurrently
+            results = await asyncio.gather(*tasks)
+            
+            segment_results: list[str] = []
+            tool_used = "segmented"
+            
+            for i, res in enumerate(results):
+                seg = segments[i]
+                if res.is_success and res.content:
+                    content = res.content
+                    if "---" in content:
+                        parts = content.split("---", 2)
+                        if len(parts) >= 3:
+                            content = parts[2].strip()
+                    
+                    marker = f"\n\n<!-- PAGE SEGMENT: {seg.start_page+1}-{seg.end_page+1} ({seg.page_type}) -->\n"
+                    segment_results.append(marker + content)
+                else:
+                    segment_results.append(f"\n\n> [!ERROR] Failed to convert pages {seg.start_page+1}-{seg.end_page+1}\n")
+
+            # 4. Merge results
+            final_content = merge_markdown(segment_results)
+            
+            # Add unified frontmatter
+            # Use LLMConverter as a concrete proxy to access shared BaseConverter logic
+            from mdconverter.core.gemini import LLMConverter
+            dummy = LLMConverter(output_dir=self.output_dir)
+            final_content = dummy.add_frontmatter(final_content, file, tool_used)
+
+            output_path = self._expected_output_path(file)
+            await asyncio.to_thread(output_path.write_text, final_content, "utf-8")
+
+            result = ConversionResult(
+                source_path=file,
+                output_path=output_path,
+                status=ConversionStatus.SUCCESS,
+                tool_used=tool_used,
+                content=final_content,
+                metadata={"pdf_analysis": report.to_dict(), "segments": len(segments)}
+            )
+            
+            # Post-process the final merged doc
+            return await self._apply_post_processors(result)
+
+        finally:
+            # Cleanup temp files
+            await loop.run_in_executor(None, shutil.rmtree, temp_dir)
+
+    async def _convert_segment_with_limit(
+        self, index: int, total: int, chunk_path: Path, segment: "Segment"
+    ) -> ConversionResult:
+        """Internal helper to convert a segment with semaphore protection."""
+        logger.debug("Processing segment %d/%d: pages %d-%d (%s)", 
+                     index+1, total, segment.start_page+1, segment.end_page+1, segment.page_type)
+        
+        converter = self._create_converter_for_segment(chunk_path, segment)
+        async with self._sem:
+            return await converter.convert(chunk_path)
 
     async def process_batch(self, files: list[Path]) -> list[ConversionResult]:
         """Convert multiple files concurrently.
@@ -211,38 +324,76 @@ class ConversionPipeline:
     def _create_converter_for_file(
         self, file: Path, pdf_report: "PDFReport | None" = None
     ) -> "BaseConverter":
-        """Create the appropriate converter, optionally guided by PDF analysis.
-
-        When ``pdf_report`` suggests a specific model (e.g. ``ocr-primary``),
-        creates an LLMConverter with that model prioritised at the top of
-        the fallback chain.
-        """
+        """Create the appropriate converter, optionally guided by PDF analysis."""
         from mdconverter.core.analyzer import PDFCategory
 
         # If we have a PDF report and tool is AUTO, use the recommendation
         if (
             pdf_report
             and pdf_report.recommended_model
-            and self.tool in (ConversionTool.AUTO, ConversionTool.AUTO.value, "auto")
+            and self.tool in (ConversionTool.AUTO, "auto")
             and file.suffix.lower() == ".pdf"
         ):
             recommended = pdf_report.recommended_model
             category = pdf_report.category
 
-            # For scanned/hybrid PDFs, create LLMConverter with OCR model first
+            # Special case for Drawings if extraction is enabled
+            if category == PDFCategory.DRAWING and self.extract_drawing:
+                return self._create_drawing_converter(file)
+
+            # For scanned/hybrid PDFs, create LLMConverter with recommended model first
             if category in (PDFCategory.SCANNED, PDFCategory.HYBRID):
                 from mdconverter.config import get_settings
                 from mdconverter.core.gemini import LLMConverter
 
                 settings = get_settings()
-                # Put recommended model first, keep others as fallback
                 models = [recommended] + [m for m in settings.models if m != recommended]
                 return LLMConverter(output_dir=self.output_dir, models=models)
 
         # Default: use standard tool selection
         from mdconverter.cli.helpers import create_converter
-
         return create_converter(self.tool, file.suffix, self.output_dir)
+
+    def _create_converter_for_segment(self, chunk_path: Path, segment: "Segment") -> "BaseConverter":
+        """Create a converter specialized for a segment's page type."""
+        from mdconverter.config import get_settings
+        from mdconverter.core.gemini import LLMConverter
+
+        settings = get_settings()
+        recommended = segment.model_hint
+        
+        # Prioritize the recommended model for this segment type
+        models = [recommended] + [m for m in settings.models if m != recommended]
+        
+        converter = LLMConverter(output_dir=None, models=models)  # No individual output dir
+        
+        # If it's a drawing segment, we might want to inject a custom prompt
+        if segment.page_type == "drawing":
+            converter.system_prompt = (
+                "You are an engineering drawing assistant. Extract all structural notes, "
+                "axes, grid labels, dimensions, and technical tables from this drawing. "
+                "Output as clean Markdown."
+            )
+            
+        return converter
+
+    def _create_drawing_converter(self, file: Path) -> "BaseConverter":
+        """Create an LLMConverter specifically for drawing extraction."""
+        from mdconverter.config import get_settings
+        from mdconverter.core.gemini import LLMConverter
+
+        settings = get_settings()
+        # Drawing always uses qwen-35b if available as it's the best for this
+        preferred = "qwen3.5-35b"
+        models = [preferred] + [m for m in settings.models if m != preferred]
+        
+        converter = LLMConverter(output_dir=self.output_dir, models=models)
+        converter.system_prompt = (
+            "You are an engineering drawing assistant. Extract all structural notes, "
+            "axes, grid labels, dimensions, and technical tables from this drawing. "
+            "Output as clean Markdown."
+        )
+        return converter
 
     async def _apply_post_processors(self, result: ConversionResult) -> ConversionResult:
         """Run all applicable post-processors on conversion result."""
