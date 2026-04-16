@@ -1,11 +1,10 @@
 """Tests for PDFAnalyzer module."""
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
-from mdconverter.core.analyzer import PDFAnalyzer, PDFCategory, PDFReport, PageDetail
+from mdconverter.core.analyzer import PageDetail, PDFAnalyzer, PDFCategory, PDFReport
 
 
 class TestPDFCategory:
@@ -178,7 +177,7 @@ class TestPDFAnalyzer:
         # Verify via ccba_pdf_prep's internal model map (tested through analyze)
         # These are the expected defaults from ccba_pdf_prep.core
         from ccba_pdf_prep.core import PDFAnalyzer as BaseAnalyzer
-        analyzer = BaseAnalyzer()
+        _ = BaseAnalyzer()
         # Model hints are embedded in _make_report, verify known categories
         assert _make_report(PDFCategory.TEXT_RICH).category == PDFCategory.TEXT_RICH
         assert _make_report(PDFCategory.SCANNED).category == PDFCategory.SCANNED
@@ -247,7 +246,7 @@ class TestPDFAnalyzerWithRealPDF:
         doc = fitz.open()
         for _ in range(pages):
             # A1 size in points: 1684 x 2384
-            page = doc.new_page(width=2384, height=1684)
+            doc.new_page(width=2384, height=1684)
         doc.save(str(path))
         doc.close()
 

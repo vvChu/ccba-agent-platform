@@ -7,7 +7,6 @@ a single composite (e.g. quad-view for multi-disciplinary clash detection).
 
 import logging
 from pathlib import Path
-from typing import List, Optional
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -29,9 +28,9 @@ class CompositeBuilder:
 
     @staticmethod
     def quad_view(
-        images: List[Path],
+        images: list[Path],
         output_path: Path,
-        labels: Optional[List[str]] = None,
+        labels: list[str] | None = None,
         target_size: int = 2048,
     ) -> Path:
         """Create a 2×2 composite from exactly 4 images.
@@ -66,11 +65,11 @@ class CompositeBuilder:
 
     @staticmethod
     def n_way_composite(
-        images: List[Path],
+        images: list[Path],
         output_path: Path,
         cols: int = 2,
-        labels: Optional[List[str]] = None,
-        cell_size: Optional[int] = None,
+        labels: list[str] | None = None,
+        cell_size: int | None = None,
     ) -> Path:
         """Create an N×M composite grid from a list of images.
 
@@ -145,7 +144,7 @@ class CompositeBuilder:
         # Try to use a basic font, fall back to default
         try:
             font = ImageFont.truetype("arial.ttf", size=18)
-        except (IOError, OSError):
+        except OSError:
             font = ImageFont.load_default()
 
         draw.text((8, 6), text, fill=_LABEL_FG, font=font)

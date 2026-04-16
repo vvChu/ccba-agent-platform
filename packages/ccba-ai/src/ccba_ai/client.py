@@ -5,8 +5,6 @@ from pathlib import Path
 from openai import OpenAI
 
 
-
-
 class AIClient:
     """Lightweight AI Gateway client — wraps OpenAI SDK for unified access."""
 

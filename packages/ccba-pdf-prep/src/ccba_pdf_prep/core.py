@@ -4,10 +4,11 @@ Migrated and generalized from mdconverter.
 """
 
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import fitz  # PyMuPDF
 from pypdf import PdfReader, PdfWriter
@@ -137,7 +138,7 @@ class PDFAnalyzer:
     def analyze(self, pdf_path: Path) -> PDFReport:
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF not found: {pdf_path}")
-        
+
         size_mb = round(pdf_path.stat().st_size / (1024 * 1024), 2)
         try:
             doc = fitz.open(str(pdf_path))
@@ -198,7 +199,8 @@ class PDFAnalyzer:
         )
 
     def _classify(self, total: int, text_pages: int, image_pages: int, drawing_pages: int) -> tuple[PDFCategory, float]:
-        if total == 0: return PDFCategory.UNKNOWN, 0.0
+        if total == 0:
+            return PDFCategory.UNKNOWN, 0.0
         drawing_ratio = drawing_pages / total
         text_ratio = text_pages / total
         image_ratio = image_pages / total
@@ -220,12 +222,12 @@ class PDFAnalyzer:
         drawing_pages = sum(1 for p in page_details if p.page_type == "drawing")
         avg_density = round(total_text_chars / max(num_pages, 1), 1)
         is_oversized = any(p.is_oversized for p in page_details)
-        
+
         model_map = {
             PDFCategory.TEXT_RICH: "qwen3.5-35b",
             PDFCategory.SCANNED: "ocr-primary",
             PDFCategory.HYBRID: "ocr-primary",
-            PDFCategory.DRAWING: "", 
+            PDFCategory.DRAWING: "",
             PDFCategory.UNKNOWN: "gemini-3-flash",
         }
 
@@ -258,7 +260,8 @@ def split_pdf(source: Path, page_ranges: Sequence[tuple[int, int]], output_temp_
     for i, (start, end) in enumerate(page_ranges):
         start = max(0, start)
         end = min(len(reader.pages) - 1, end)
-        if start > end: continue
+        if start > end:
+            continue
 
         writer = PdfWriter()
         for page_num in range(start, end + 1):

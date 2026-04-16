@@ -21,7 +21,7 @@ import json
 import logging
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +145,7 @@ class IDOPDiscovery:
     def extract_titleblocks(
         self,
         pdf_path: Path,
-        page_range: Optional[range] = None,
+        page_range: range | None = None,
         dpi: int = 200,
     ) -> list[tuple[int, Path]]:
         """Extract title block images from drawing pages.
@@ -300,10 +300,8 @@ class IDOPDiscovery:
 
             # Extract title blocks from drawing pages
             if report.category in (PDFCategory.DRAWING, PDFCategory.HYBRID):
-                drawing_pages = [
-                    p.page_num for p in report.page_details
-                    if p.page_type == "drawing"
-                ]
+                pass  # drawing_pages not used yet
+
 
                 if extract_titleblocks:
                     tb_results = self.extract_titleblocks(pdf_path, range(len(report.page_details)))

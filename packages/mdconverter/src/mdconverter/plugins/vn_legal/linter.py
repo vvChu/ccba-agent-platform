@@ -4,8 +4,8 @@ Vietnamese Legal Document Linter.
 Custom lint rules for Vietnamese legal documents (VN001-VN004).
 """
 
-import re
 import logging
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
