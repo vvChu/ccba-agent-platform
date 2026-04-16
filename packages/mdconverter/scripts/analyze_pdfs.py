@@ -88,9 +88,7 @@ def analyze_pdf(pdf_path: Path) -> dict:
 
         # Compute averages
         if result["pages"] > 0:
-            result["avg_text_density"] = round(
-                result["total_text_chars"] / result["pages"], 1
-            )
+            result["avg_text_density"] = round(result["total_text_chars"] / result["pages"], 1)
 
         result["has_text_layer"] = result["total_text_chars"] > 100
 
@@ -134,7 +132,15 @@ def main(directory: str) -> None:
     print("=" * 120)
 
     results = []
-    categories = {"text_rich": 0, "scanned": 0, "hybrid": 0, "drawing": 0, "minimal_content": 0, "empty": 0, "error": 0}
+    categories = {
+        "text_rich": 0,
+        "scanned": 0,
+        "hybrid": 0,
+        "drawing": 0,
+        "minimal_content": 0,
+        "empty": 0,
+        "error": 0,
+    }
 
     for pdf in pdf_files:
         r = analyze_pdf(pdf)
@@ -142,12 +148,16 @@ def main(directory: str) -> None:
         categories[r["category"]] = categories.get(r["category"], 0) + 1
 
     # Print detailed results
-    print(f"{'File':<45} {'Size':>7} {'Pages':>5} {'Txt/Img/Drw':>12} {'TextDen':>8} {'Category':<15} {'Tool'}")
+    print(
+        f"{'File':<45} {'Size':>7} {'Pages':>5} {'Txt/Img/Drw':>12} {'TextDen':>8} {'Category':<15} {'Tool'}"
+    )
     print("-" * 120)
 
     for r in results:
         if r["error"]:
-            print(f"{r['file'][:44]:<45} {r['size_mb']:>6}M {'ERR':>5} {'':>12} {'':>8} {'ERROR':<15} -")
+            print(
+                f"{r['file'][:44]:<45} {r['size_mb']:>6}M {'ERR':>5} {'':>12} {'':>8} {'ERROR':<15} -"
+            )
             continue
         tip = f"{r['text_pages']}/{r['image_pages']}/{r['drawing_pages']}"
         print(
@@ -171,7 +181,7 @@ def main(directory: str) -> None:
         print(f"  Total:   {sum(sizes):.1f} MB")
         print(f"  Min:     {min(sizes):.2f} MB")
         print(f"  Max:     {max(sizes):.2f} MB")
-        print(f"  Average: {sum(sizes)/len(sizes):.2f} MB")
+        print(f"  Average: {sum(sizes) / len(sizes):.2f} MB")
 
     # Page stats
     pages = [r["pages"] for r in results if not r["error"]]
@@ -180,7 +190,7 @@ def main(directory: str) -> None:
         print(f"  Total:   {sum(pages)} pages")
         print(f"  Min:     {min(pages)} pages")
         print(f"  Max:     {max(pages)} pages")
-        print(f"  Average: {sum(pages)/len(pages):.1f} pages")
+        print(f"  Average: {sum(pages) / len(pages):.1f} pages")
 
     # Export JSON
     output_path = Path(__file__).parent / "pdf_analysis_results.json"
@@ -190,5 +200,9 @@ def main(directory: str) -> None:
 
 
 if __name__ == "__main__":
-    target = sys.argv[1] if len(sys.argv) > 1 else r"D:\OneDrive - IBST BIM\00 CCBA\Thiet ke\2024-04 Ban DD HCM - BV NTP"
+    target = (
+        sys.argv[1]
+        if len(sys.argv) > 1
+        else r"D:\OneDrive - IBST BIM\00 CCBA\Thiet ke\2024-04 Ban DD HCM - BV NTP"
+    )
     main(target)

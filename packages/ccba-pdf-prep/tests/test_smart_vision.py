@@ -36,9 +36,7 @@ class TestTilePageSmart:
         # Total result count equals plain count
         assert len(all_results) == len(plain_tiles)
 
-    def test_smart_tile_results_have_ink_ratio(
-        self, tmp_pdf_drawing: Path, tmp_path: Path
-    ) -> None:
+    def test_smart_tile_results_have_ink_ratio(self, tmp_pdf_drawing: Path, tmp_path: Path) -> None:
         """Every TileResult should have a valid ink_ratio."""
         _, all_results = VisionOptimizer.tile_page_smart(
             pdf_path=tmp_pdf_drawing,
@@ -70,9 +68,7 @@ class TestTilePageSmart:
         assert kept == []
         assert all(r.skipped for r in all_results)
 
-    def test_smart_skipped_tiles_not_written(
-        self, tmp_pdf_text: Path, tmp_path: Path
-    ) -> None:
+    def test_smart_skipped_tiles_not_written(self, tmp_pdf_text: Path, tmp_path: Path) -> None:
         """Tiles marked as skipped must not be written to disk."""
         out = tmp_path / "skip_check"
         kept, all_results = VisionOptimizer.tile_page_smart(
@@ -143,17 +139,13 @@ def tmp_pdf_with_titleblock(tmp_path: Path) -> Path:
 class TestTitleBlockDetector:
     """Tests for TitleBlockDetector."""
 
-    def test_detect_returns_region_for_drawing(
-        self, tmp_pdf_with_titleblock: Path
-    ) -> None:
+    def test_detect_returns_region_for_drawing(self, tmp_pdf_with_titleblock: Path) -> None:
         """Should detect a non-None region from a drawing with a proper title block."""
         region = TitleBlockDetector.detect(tmp_pdf_with_titleblock, page_num=0)
         assert region is not None
         assert isinstance(region, TitleBlockRegion)
 
-    def test_detect_region_within_page_bounds(
-        self, tmp_pdf_with_titleblock: Path
-    ) -> None:
+    def test_detect_region_within_page_bounds(self, tmp_pdf_with_titleblock: Path) -> None:
         """Detected region coordinates must be within the page."""
         import fitz
 
@@ -176,9 +168,7 @@ class TestTitleBlockDetector:
         with pytest.raises(FileNotFoundError):
             TitleBlockDetector.detect(tmp_path / "nonexistent.pdf")
 
-    def test_detect_force_returns_region_for_blank_text_pdf(
-        self, tmp_pdf_text: Path
-    ) -> None:
+    def test_detect_force_returns_region_for_blank_text_pdf(self, tmp_pdf_text: Path) -> None:
         """With force=True, detect() must always return a region even on blank pages."""
         # tmp_pdf_text has mostly white content — normally None without force
         region = TitleBlockDetector.detect(tmp_pdf_text, page_num=0, force=True)
@@ -186,9 +176,7 @@ class TestTitleBlockDetector:
         assert region.width > 0
         assert region.height > 0
 
-    def test_extract_force_always_saves_image(
-        self, tmp_pdf_text: Path, tmp_path: Path
-    ) -> None:
+    def test_extract_force_always_saves_image(self, tmp_pdf_text: Path, tmp_path: Path) -> None:
         """With force=True, extract() must save a PNG even for sparse drawings."""
         out = tmp_path / "forced_titleblock.png"
         result = TitleBlockDetector.extract(
@@ -202,11 +190,7 @@ class TestTitleBlockDetector:
         assert result.exists()
         assert result.stat().st_size > 0
 
-
-
-    def test_extract_creates_image(
-        self, tmp_pdf_with_titleblock: Path, tmp_path: Path
-    ) -> None:
+    def test_extract_creates_image(self, tmp_pdf_with_titleblock: Path, tmp_path: Path) -> None:
         """extract() should save a PNG file when a title block is found."""
         out = tmp_path / "titleblock.png"
         result = TitleBlockDetector.extract(
@@ -220,9 +204,7 @@ class TestTitleBlockDetector:
         assert result.exists()
         assert result.suffix == ".png"
 
-    def test_extract_default_path(
-        self, tmp_pdf_with_titleblock: Path
-    ) -> None:
+    def test_extract_default_path(self, tmp_pdf_with_titleblock: Path) -> None:
         """extract() with no output_path should save next to the PDF."""
         result = TitleBlockDetector.extract(
             pdf_path=tmp_pdf_with_titleblock,

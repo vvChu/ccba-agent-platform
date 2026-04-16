@@ -142,7 +142,9 @@ class LlamaParseConverter(BaseConverter):
         job_id: str | None = result.get("id")
         return job_id
 
-    async def _wait_for_result(self, client: httpx.AsyncClient, job_id: str, max_wait: int = 300) -> str | None:
+    async def _wait_for_result(
+        self, client: httpx.AsyncClient, job_id: str, max_wait: int = 300
+    ) -> str | None:
         """Wait for processing to complete and return markdown content."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
