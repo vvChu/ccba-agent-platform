@@ -21,6 +21,18 @@
 - **Giải pháp**: Xây dựng hàm `async` tạo array mapping và gọi `asyncio.gather(*tasks)` để đẩy 5 request lên LiteLLM Gateway đồng thời.
 - **Nguồn**: Chạy Batch Audit cho Tầng 1, 2, 3, Mái Khối B.
 
+### Context-Aware Workflow Commands
+- **Ngữ cảnh**: Xây dựng Slash Command Workflow (như `/run-qc-pipeline`) yêu cầu truyền đường dẫn project hiện tại.
+- **Vấn đề giải quyết**: User phải gõ thủ công đường dẫn rất dài, dễ sai sót.
+- **Giải pháp**: Hướng dẫn Agent phân tích `<ADDITIONAL_METADATA>` để trích xuất `TARGET_PROJECT` tự động dựa trên file/cửa sổ đang mở, tự động chèn vào chuỗi lệnh bọc `// turbo`.
+- **Nguồn**: Thiết kế workflow `/run-qc-pipeline`.
+
+### Data Hand-off Automation (Zero-Touch UX)
+- **Ngữ cảnh**: Chuyển giao dữ liệu từ bước Discovery (OCR Text) sang bước Batch Orchestrator (Render API).
+- **Vấn đề giải quyết**: Tránh để con người chạm vào file map dữ liệu như CSV, sinh ra Human Error (gõ nhầm mã bản vẽ).
+- **Giải pháp**: Buộc Output chuẩn của Skill 1 (e.g. `Coordination_Matrix.csv`) phải là Input chuẩn của Skill 2. Xóa bỏ hoàn toàn Hardcode mapping.
+- **Nguồn**: SDK `ccba-ai-qc-batch-orchestrator`.
+
 ---
 
 ## Solutions (Giải pháp tham chiếu)
@@ -48,25 +60,21 @@ messages=[{
 | Render DPI | 150 | Giảm thời gian load Quad-View nhưng vẫn đủ nét text nhỏ | AI OCR / Vision |
 | Concurrency | 4-5 reqs | AI Gateway local DGX Server chịu tải tốt | Xử lý đa tầng |
 
-## 📋 Session Retrospective Summary
+## 📋 Session Retrospective Summary (Updated)
 
 ### Phiên làm việc
 - **Ngày**: 2026-04-16
-- **Mục tiêu**: Tích hợp AI-powered Engineering QC Pipeline vào tài liệu thiết kế phức tạp (BV NTP)
-- **Kết quả**: ✅ Thành công. Batch Multi-Level QC Quad-View hoàn thành trong ~60s.
+- **Mục tiêu**: Tích hợp AI-powered Engineering QC Pipeline vào Hub Platform và cấu trúc hóa dưới dạng tự động hóa khép kín (Workflow Command).
+- **Kết quả**: ✅ Thành công. Batch Multi-Level QC hoàn thành trong ~60s; ra mắt SDK Orchestrator và `/run-qc-pipeline`.
 
 ### Kiến thức mới
-- [x] 2 patterns mới (Quad-View, Concurrent UI)
+- [x] 4 patterns mới (Quad-View, Concurrent UI, Context-Aware Workflow, Data Hand-off)
 - [x] 1 solutions mới (OpenAI Vision proxy)
 
-### Đề xuất cập nhật
-- [x] Cập nhật user_global: Có - Thêm quy định luôn check legal-registry cho mảng PCCC (QCVN 06).
-- [ ] Tạo workflow mới: Không
-- [ ] Cập nhật workflow: Không
-
-### 🚀 Đề xuất Skills mới cho Platform
-- [x] **ccba-ai-qc-batch-orchestrator**: Có thể tách luồng batch processing của `run_batch_audit_khoib.py` đưa vào SDK gốc để hỗ trợ vòng lặp Automation Pipeline một cách native, giúp các Spoke/Dự án khác gọi lệnh dễ dàng không cần build file script dài.
+### Đề xuất cập nhật đã hoàn thành
+- [x] Cập nhật user_global: Có - Thêm quy định luật PCCC (QCVN 06).
+- [x] Tạo workflow mới: **Có** - Đã tạo `run-qc-pipeline.md`.
+- [x] Đề xuất/Tạo Skills mới: **Có** - Đã tạo `ccba-ai-qc-batch-orchestrator`.
 
 ### Ghi chú cho phiên tiếp theo
-Dùng báo cáo QCVN 06 để trao đổi với PCCC và chờ bản vẽ PCCC Update để Audit lại Tầng 1-Tầng Nội Trú.
-
+Dùng báo cáo tự động QCVN 06 để trao đổi với PCCC và chạy lại `/run-qc-pipeline` ngay khi file thiết kế mới cập bến mà không cần chỉnh sửa code.
