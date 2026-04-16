@@ -148,6 +148,19 @@ class ConverterRegistry:
         cls._converters.clear()
         cls._priority.clear()
 
+    @classmethod
+    def reset(cls) -> None:
+        """Reset registry to default state with builtin converters.
+
+        Clears all registrations then re-registers the built-in converters.
+        Use this in tests to get a clean, predictable starting state.
+        """
+        cls.clear()
+        # Re-register builtins (avoids circular import by deferring)
+        from mdconverter.core import _register_builtin_converters
+
+        _register_builtin_converters()
+
 
 # Convenience function for registration
 def register_converter(name: str, priority: int = 100) -> Any:
