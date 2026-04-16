@@ -11,12 +11,15 @@ from pathlib import Path
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
+from mdconverter.cli.helpers import get_supported_extensions
+
 
 class ConversionEventHandler(FileSystemEventHandler):
     """Event handler that triggers conversion on file changes."""
 
-    SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".doc", ".html", ".htm", ".pptx", ".xlsx"}
     DEBOUNCE_SECONDS = 1.0  # Avoid multiple triggers for same file
+    MAX_DEBOUNCE_ENTRIES = 1000  # L2 fix: cap memory usage
+    CLEANUP_THRESHOLD = 60.0  # L2 fix: seconds before entry is stale
 
     def __init__(
         self,
@@ -27,12 +30,13 @@ class ConversionEventHandler(FileSystemEventHandler):
         super().__init__()
         self.on_file_change = on_file_change
         self.recursive = recursive
+        self._supported_extensions = get_supported_extensions()
         self._last_triggered: dict[Path, float] = {}
 
     def _should_process(self, path: Path) -> bool:
         """Check if file should be processed."""
         # Check extension
-        if path.suffix.lower() not in self.SUPPORTED_EXTENSIONS:
+        if path.suffix.lower() not in self._supported_extensions:
             return False
 
         # Check debounce
@@ -42,7 +46,23 @@ class ConversionEventHandler(FileSystemEventHandler):
             return False
 
         self._last_triggered[path] = now
+
+        # L2 fix: Periodic cleanup of stale entries
+        if len(self._last_triggered) > self.MAX_DEBOUNCE_ENTRIES:
+            self._cleanup_stale_entries(now)
+
         return True
+
+    def _cleanup_stale_entries(self, now: float | None = None) -> None:
+        """Remove debounce entries older than CLEANUP_THRESHOLD.
+
+        Prevents unbounded memory growth when watching directories
+        with many temporary files.
+        """
+        now = now or time.time()
+        stale = [p for p, t in self._last_triggered.items() if now - t > self.CLEANUP_THRESHOLD]
+        for p in stale:
+            del self._last_triggered[p]
 
     def on_modified(self, event: FileSystemEvent) -> None:
         """Handle file modification events."""

@@ -5,13 +5,17 @@ Convert command for mdconverter CLI.
 import asyncio
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from mdconverter.core.pipeline import ConversionPipeline
 
 import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from mdconverter.cli.helpers import create_converter, get_files_to_convert
-from mdconverter.core.base import ConversionResult, ConversionStatus
+from mdconverter.cli.helpers import get_files_to_convert
+from mdconverter.core.base import ConversionResult, ConversionStatus, ConversionTool
 from mdconverter.core.logging import configure_logging, get_logger
 
 console = Console()
@@ -35,11 +39,11 @@ def convert(
         "-r",
         help="Recursively process directories.",
     ),
-    tool: str = typer.Option(
-        "auto",
+    tool: ConversionTool = typer.Option(
+        ConversionTool.AUTO,
         "--tool",
         "-t",
-        help="Conversion tool: auto, gemini, pandoc, llamaparse.",
+        help="Conversion tool (auto, llm, pandoc, llamaparse).",
     ),
     dry_run: bool = typer.Option(
         False,
@@ -68,6 +72,11 @@ def convert(
         "-q",
         help="Only show warnings and errors.",
     ),
+    extract_drawing: bool = typer.Option(
+        False,
+        "--extract-drawing",
+        help="Enable extraction of text/tables from engineering drawings (skips bypass logic).",
+    ),
 ) -> None:
     """Convert documents to Markdown."""
     # Check mutually exclusive flags
@@ -95,67 +104,21 @@ def convert(
             console.print(f"  [dim]Would convert:[/dim] {f}")
         raise typer.Exit(0)
 
-    # Import converters
+    # Import pipeline (deferred to avoid heavy imports for --help/--version)
     from mdconverter.core.cache import ConversionCache
+    from mdconverter.core.pipeline import ConversionPipeline
 
-    # Initialize cache if enabled
+    # Initialize pipeline
     cache = ConversionCache() if use_cache else None
-
-    # Limit concurrency
-    sem = asyncio.Semaphore(10)
-
-    async def convert_file_safe(file: Path) -> ConversionResult:
-        """Convert a single file with concurrency limit."""
-        loop = asyncio.get_running_loop()
-        async with sem:
-            # Check cache first (run sync I/O in thread pool to avoid blocking)
-            if cache:
-                cached_content = await loop.run_in_executor(None, cache.get, file)
-                if cached_content:
-                    # Compute expected output path
-                    output_name = file.stem.lower().replace(" ", "_") + ".md"
-                    expected_output = (output_dir or file.parent) / output_name
-
-                    # Ensure parent directory exists before writing
-                    def write_cached_output() -> None:
-                        expected_output.parent.mkdir(parents=True, exist_ok=True)
-                        expected_output.write_text(cached_content, encoding="utf-8")
-
-                    await loop.run_in_executor(None, write_cached_output)
-                    return ConversionResult(
-                        source_path=file,
-                        output_path=expected_output,
-                        status=ConversionStatus.SUCCESS,
-                        tool_used="cache",
-                        content=cached_content,
-                    )
-
-            converter = create_converter(tool, file.suffix, output_dir)
-            result = await converter.convert(file)
-
-            # Apply VN Legal post-processing if applicable
-            if result.is_success and result.content:
-                from mdconverter.plugins.vn_legal.detector import is_legal_document
-                from mdconverter.plugins.vn_legal.processor import VNLegalProcessor
-
-                if is_legal_document(result.content):
-                    processor = VNLegalProcessor()
-                    processed_content = processor.process(result.content)
-                    if processed_content != result.content:
-                        result.content = processed_content
-                        # Update the output file with processed content
-                        if result.output_path and result.output_path.exists():
-                            result.output_path.write_text(processed_content, encoding="utf-8")
-                        logger.debug("Applied VN Legal rules: %s", processor.get_fix_summary())
-
-            # Save to cache if successful (run sync I/O in thread pool)
-            if cache and result.is_success and result.content:
-                await loop.run_in_executor(None, cache.set, file, result.content, result.tool_used)
-
-            return result
+    pipeline = ConversionPipeline(
+        tool=tool,
+        output_dir=output_dir,
+        cache=cache,
+        extract_drawing=extract_drawing,
+    )
 
     async def process_files() -> list[ConversionResult]:
-        results = []
+        results: list[ConversionResult] = []
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -163,23 +126,11 @@ def convert(
         ) as progress:
             task = progress.add_task("Converting...", total=len(files))
 
-            tasks = []
-            for file in files:
-                tasks.append(convert_file_safe(file))
-
+            tasks = [pipeline.process_file(f) for f in files]
             for future in asyncio.as_completed(tasks):
                 result = await future
                 results.append(result)
-
-                if result.is_success:
-                    console.print(
-                        f"  [green]✓[/green] {result.source_path.name} → {result.output_path.name if result.output_path else 'done'}"
-                    )
-                else:
-                    console.print(
-                        f"  [red]✗[/red] {result.source_path.name}: {result.error_message}"
-                    )
-
+                _print_result(result)
                 progress.advance(task)
         return results
 
@@ -188,43 +139,87 @@ def convert(
     # Summary
     success = sum(1 for r in results if r.status == ConversionStatus.SUCCESS)
     failed = sum(1 for r in results if r.status == ConversionStatus.FAILED)
+    skipped = sum(1 for r in results if r.status == ConversionStatus.SKIPPED)
     from_cache = sum(1 for r in results if r.tool_used == "cache")
 
     console.print()
     summary_parts = [f"{success} success", f"{failed} failed"]
+    if skipped > 0:
+        summary_parts.append(f"{skipped} skipped")
     if from_cache > 0:
         summary_parts.append(f"{from_cache} from cache")
     console.print(f"[bold]Summary:[/bold] {', '.join(summary_parts)}")
 
-    # Watch mode
+    # Watch mode — H4 fix: use a dedicated event loop, not nested asyncio.run()
     if watch:
-        from mdconverter.core.watcher import FileWatcher
+        _run_watch_mode(input_path, recursive, pipeline)
 
-        watch_path = input_path if input_path.is_dir() else input_path.parent
 
-        def on_file_change(file: Path) -> None:
-            console.print(f"\n[cyan]File changed:[/cyan] {file.name}")
+def _print_result(result: ConversionResult) -> None:
+    """Print a single conversion result to console."""
+    if result.status == ConversionStatus.SKIPPED:
+        # Show analysis-based skip reason (e.g. drawings)
+        reason = result.error_message or "skipped"
+        console.print(f"  [dim]⊘[/dim] {result.source_path.name}: {reason}")
+    elif result.is_success:
+        out_name = result.output_path.name if result.output_path else "done"
+        # Show PDF category if available
+        analysis = result.metadata.get("pdf_analysis", {})
+        category = analysis.get("category", "")
+        suffix = f" [dim]({category})[/dim]" if category else ""
+        console.print(f"  [green]✓[/green] {result.source_path.name} → {out_name}{suffix}")
+    else:
+        console.print(f"  [red]✗[/red] {result.source_path.name}: {result.error_message}")
 
-            async def convert_single() -> ConversionResult:
-                converter = create_converter(tool, file.suffix, output_dir)
-                return await converter.convert(file)
 
-            result = asyncio.run(convert_single())
-            if result.is_success:
-                console.print(
-                    f"  [green]✓[/green] {file.name} → {result.output_path.name if result.output_path else 'done'}"
-                )
-            else:
-                console.print(f"  [red]✗[/red] {file.name}: {result.error_message}")
+def _run_watch_mode(
+    input_path: Path,
+    recursive: bool,
+    pipeline: "ConversionPipeline",
+) -> None:
+    """Run watch mode with event-loop-safe callbacks.
 
-        console.print()
-        console.print(f"[bold cyan]👁 Watching for changes...[/bold cyan] {watch_path}")
-        console.print("[dim]Press Ctrl+C to stop[/dim]")
+    H4 fix: Uses a single persistent event loop running in a background
+    thread.  The watchdog callback schedules coroutines onto that loop
+    via ``loop.call_soon_threadsafe`` instead of calling ``asyncio.run()``
+    which would create conflicting event loops.
+    """
+    import threading
 
-        watcher = FileWatcher(watch_path, on_file_change, recursive=recursive)
-        watcher.start()
-        try:
-            watcher.wait()
-        except KeyboardInterrupt:
-            console.print("\n[yellow]Watch mode stopped.[/yellow]")
-            watcher.stop()
+    from mdconverter.core.watcher import FileWatcher
+
+    watch_path = input_path if input_path.is_dir() else input_path.parent
+
+    # Create a dedicated event loop for async conversions
+    loop = asyncio.new_event_loop()
+
+    def _run_loop() -> None:
+        asyncio.set_event_loop(loop)
+        loop.run_forever()
+
+    loop_thread = threading.Thread(target=_run_loop, daemon=True)
+    loop_thread.start()
+
+    def on_file_change(file: Path) -> None:
+        """Handle file change by scheduling conversion on the background loop."""
+        console.print(f"\n[cyan]File changed:[/cyan] {file.name}")
+
+        async def _convert_single() -> None:
+            result = await pipeline.process_file(file)
+            _print_result(result)
+
+        asyncio.run_coroutine_threadsafe(_convert_single(), loop)
+
+    console.print()
+    console.print(f"[bold cyan]👁 Watching for changes...[/bold cyan] {watch_path}")
+    console.print("[dim]Press Ctrl+C to stop[/dim]")
+
+    watcher = FileWatcher(watch_path, on_file_change, recursive=recursive)
+    watcher.start()
+    try:
+        watcher.wait()
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Watch mode stopped.[/yellow]")
+        watcher.stop()
+        loop.call_soon_threadsafe(loop.stop)
+        loop_thread.join(timeout=2)

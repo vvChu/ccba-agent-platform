@@ -67,3 +67,17 @@ class TestConverterRegistry:
         """Test LLMConverter is registered as 'llm'."""
         converter_class = ConverterRegistry.get("llm")
         assert converter_class is LLMConverter
+
+    def test_reset_restores_defaults(self) -> None:
+        """Test reset() restores builtin converters after clear() (C1 fix)."""
+        # Clear everything
+        ConverterRegistry.clear()
+        assert len(ConverterRegistry.list_all()) == 0
+
+        # Reset should restore builtins
+        ConverterRegistry.reset()
+        result = ConverterRegistry.list_all()
+        names = [r["name"] for r in result]
+        assert "pandoc" in names
+        assert "llm" in names
+        assert "llamaparse" in names

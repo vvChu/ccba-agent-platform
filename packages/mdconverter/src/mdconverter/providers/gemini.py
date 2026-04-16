@@ -6,6 +6,7 @@ All requests go through the unified AI Gateway (LiteLLM on Server Spark).
 
 import base64
 import logging
+import warnings
 from typing import Any
 
 import httpx
@@ -16,7 +17,7 @@ from tenacity import (
     wait_exponential,
 )
 
-from mdconverter.config import settings
+from mdconverter.config import get_settings
 from mdconverter.core.llm import GenerationConfig, LLMProvider
 
 logger = logging.getLogger(__name__)
@@ -38,9 +39,14 @@ class GatewayProvider(LLMProvider):
 
     def __init__(self, gateway_url: str | None = None, api_key: str | None = None) -> None:
         """Initialize provider."""
+        settings = get_settings()
         self.gateway_url = (gateway_url or settings.ai_gateway_url).rstrip("/")
         self.api_key = api_key or settings.ai_gateway_key
-        self.client = httpx.AsyncClient(timeout=60)
+        # M1 fix: Use explicit timeout config instead of flat 60s.
+        # read timeout must accommodate large document conversion (up to 600s).
+        self.client = httpx.AsyncClient(
+            timeout=httpx.Timeout(connect=10, read=settings.timeout_seconds, write=30, pool=30)
+        )
 
     async def __aenter__(self) -> "GatewayProvider":
         """Enter async context."""
@@ -108,5 +114,14 @@ class GatewayProvider(LLMProvider):
         return ""
 
 
-# Backward compatibility alias
-GeminiProvider = GatewayProvider
+# L1 fix: Backward compatibility alias with deprecation warning
+class GeminiProvider(GatewayProvider):
+    """Deprecated: Use ``GatewayProvider`` instead."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            "GeminiProvider is deprecated, use GatewayProvider instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)

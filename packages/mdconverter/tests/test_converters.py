@@ -1,5 +1,6 @@
 """Tests for core converters."""
 
+import warnings
 from pathlib import Path
 from unittest.mock import patch
 
@@ -42,9 +43,14 @@ class TestConversionResult:
 class TestLLMConverter:
     """Test LLMConverter class (formerly GeminiConverter)."""
 
-    def test_backward_compat_alias(self) -> None:
-        """Test GeminiConverter alias works for backward compatibility."""
-        assert GeminiConverter is LLMConverter
+    def test_backward_compat_alias_emits_warning(self) -> None:
+        """Test GeminiConverter alias emits DeprecationWarning (L1 fix)."""
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            _ = GeminiConverter()
+            assert len(w) == 1
+            assert issubclass(w[0].category, DeprecationWarning)
+            assert "deprecated" in str(w[0].message).lower()
 
     def test_supports_pdf(self) -> None:
         """Test PDF is supported."""
@@ -185,16 +191,55 @@ class TestBaseConverter:
         assert output.stem == "document"
         assert output.parent == tmp_path
 
-    def test_add_frontmatter(self, tmp_path: Path) -> None:
-        """Test frontmatter is added to content."""
+    def test_add_frontmatter_basic(self, tmp_path: Path) -> None:
+        """Test basic frontmatter is added to content."""
         converter = LLMConverter(output_dir=tmp_path)
         source = Path("test.pdf")
         content = "# Test Content"
 
-        result = converter.add_frontmatter(content, source, "gemini")
+        result = converter.add_frontmatter(content, source, "llm")
 
         assert "---" in result
         assert "source_file:" in result
         assert "test.pdf" in result
         assert "conversion_tool:" in result
-        assert "gemini" in result
+        assert "llm" in result
+
+    def test_add_frontmatter_with_metadata(self, tmp_path: Path) -> None:
+        """Test frontmatter includes VN Legal metadata when provided."""
+        converter = LLMConverter(output_dir=tmp_path)
+        source = Path("test.pdf")
+        content = "# Test Content"
+        metadata = {
+            "title": "Test Title",
+            "type": "Quyết định",
+            "decision_number": "123/QĐ-VKHCN",
+            "issuer": "Viện KHCN",
+        }
+
+        result = converter.add_frontmatter(content, source, "llm", metadata=metadata)
+
+        assert 'title: "Test Title"' in result
+        assert 'type: "Quyết định"' in result
+        assert 'decision_number: "123/QĐ-VKHCN"' in result
+
+    def test_add_frontmatter_skips_existing(self, tmp_path: Path) -> None:
+        """Test frontmatter is not added when content already has it."""
+        converter = LLMConverter(output_dir=tmp_path)
+        source = Path("test.pdf")
+        content = "---\ntitle: existing\n---\n# Content"
+
+        result = converter.add_frontmatter(content, source, "llm")
+        assert result == content  # Unchanged
+
+    def test_docling_removed_from_enum(self) -> None:
+        """Test DOCLING is no longer in ConversionTool enum (M2 fix)."""
+        from mdconverter.core.base import ConversionTool
+
+        assert not hasattr(ConversionTool, "DOCLING")
+        assert set(ConversionTool) == {
+            ConversionTool.LLM,
+            ConversionTool.PANDOC,
+            ConversionTool.LLAMAPARSE,
+            ConversionTool.AUTO,
+        }
