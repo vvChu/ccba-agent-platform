@@ -12,6 +12,7 @@ from mdconverter.core.exceptions import (
 from mdconverter.core.gemini import GeminiConverter, LLMConverter
 from mdconverter.core.llamaparse import LlamaParseConverter
 from mdconverter.core.pandoc import PandocConverter
+from mdconverter.core.pipeline import ConversionPipeline, PostProcessor
 from mdconverter.core.registry import ConverterRegistry
 
 
@@ -28,12 +29,14 @@ _register_builtin_converters()
 __all__ = [
     "BaseConverter",
     "ConversionCache",
+    "ConversionPipeline",
     "ConversionResult",
     "ConverterRegistry",
     "LLMConverter",
-    "GeminiConverter",  # Backward compat alias
+    "GeminiConverter",  # Backward compat alias (deprecated)
     "LlamaParseConverter",
     "PandocConverter",
+    "PostProcessor",
     "MDConvertError",
     "ConverterNotAvailableError",
     "ConversionTimeoutError",

@@ -13,6 +13,7 @@
 | 3 | **Timeliness** | Thông tin VBPL phải là phiên bản mới nhất (kiểm tra registry) |
 | 4 | **Traceability** | Mọi claim phải có nguồn: VBPL, TCVN, hoặc session reference |
 | 5 | **Validation** | YAML files phải pass `yaml.safe_load()` sau mỗi chỉnh sửa |
+| 6 | **Efficiency** | Ưu tiên Segment-based Processing cho tài liệu hỗ hợp hoặc >30 trang |
 
 ### Output KHÔNG được
 
