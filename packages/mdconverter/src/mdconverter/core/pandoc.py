@@ -91,12 +91,13 @@ class PandocConverter(BaseConverter):
                     error_message=error_msg,
                 )
 
-            # Read and optionally add frontmatter
-            # File I/O is blocking, but fast for text files.
-            # Ideally use aiofiles, but standard io is acceptable for small/medium files in this context.
-            content = output_path.read_text(encoding="utf-8")
-            final_content = self.add_frontmatter(content, source_path, "pandoc")
-            output_path.write_text(final_content, encoding="utf-8")
+            # M3 fix: Non-blocking file I/O
+            content = await asyncio.to_thread(output_path.read_text, "utf-8")
+
+            # H1: Extract VN Legal metadata if applicable
+            metadata = self._extract_metadata(content, source_path)
+            final_content = self.add_frontmatter(content, source_path, "pandoc", metadata=metadata)
+            await asyncio.to_thread(output_path.write_text, final_content, "utf-8")
 
             return ConversionResult(
                 source_path=source_path,
@@ -104,7 +105,7 @@ class PandocConverter(BaseConverter):
                 status=ConversionStatus.SUCCESS,
                 tool_used="pandoc",
                 content=final_content,
-                quality_score=self._calculate_quality(final_content),
+                quality_score=self._calculate_quality(final_content, base_score=60),
                 duration_seconds=time.time() - start_time,
             )
 
@@ -125,20 +126,12 @@ class PandocConverter(BaseConverter):
                 error_message=str(e),
             )
 
-    def _calculate_quality(self, content: str) -> int:
-        """Calculate quality score (0-100)."""
-        score = 60  # Pandoc is reliable
+    @staticmethod
+    def _extract_metadata(content: str, source_path: Path) -> dict[str, str] | None:
+        """Extract VN Legal metadata if applicable, else return None."""
+        from mdconverter.plugins.vn_legal.detector import is_legal_document
+        from mdconverter.plugins.vn_legal.metadata import extract_vn_legal_metadata
 
-        # Length check
-        if len(content) > 500:
-            score += 10
-        if len(content) > 2000:
-            score += 10
-
-        # Structure check
-        if "##" in content:
-            score += 10
-        if "|" in content:
-            score += 10
-
-        return min(score, 100)
+        if is_legal_document(content):
+            return extract_vn_legal_metadata(content, source_path)
+        return None

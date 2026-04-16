@@ -7,7 +7,7 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from mdconverter.config import settings
+from mdconverter.config import get_settings
 
 console = Console()
 
@@ -26,13 +26,10 @@ def validate(
     ),
 ) -> None:
     """Validate Markdown files for quality and structure."""
-    from mdconverter.plugins.manager import PluginManager
     from mdconverter.plugins.vn_legal.detector import is_legal_document
     from mdconverter.plugins.vn_legal.processor import VNLegalProcessor
 
-    # Load plugins (demo)
-    pm = PluginManager()
-    pm.load_plugins()
+    settings = get_settings()
 
     files: list[Path] = []
     if target.is_file():

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mdconvert-cli"
-version = "2.0.0"
+version = "2.3.0"
 description = "Document to Markdown converter with Vietnamese legal document support"
 readme = "../../README.md"
 license = "MIT"
@@ -25,6 +25,8 @@ dependencies = [
     "watchdog>=4.0.0",
     "tenacity>=8.0.0",
     "pypdf>=4.0.0",
+    "PyMuPDF>=1.24.0",
+    "ccba-pdf-prep",
 ]
 
 [project.optional-dependencies]
@@ -43,8 +45,9 @@ llm = [
 [project.scripts]
 mdconvert = "mdconverter.cli:app"
 
-[project.entry-points."mdconverter.plugins"]
-vn_legal = "mdconverter.plugins.vn_legal"
+
+[tool.uv.sources]
+ccba-pdf-prep = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mdconverter"]

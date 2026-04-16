@@ -4,16 +4,6 @@ from pathlib import Path
 
 from openai import OpenAI
 
-# Only load .env if it exists in CWD (avoid slow recursive search)
-_env_file = Path.cwd() / ".env"
-if _env_file.exists():
-    try:
-        from dotenv import load_dotenv
-
-        load_dotenv(_env_file)
-    except ImportError:
-        pass
-
 
 class AIClient:
     """Lightweight AI Gateway client — wraps OpenAI SDK for unified access."""
@@ -24,6 +14,16 @@ class AIClient:
         api_key: str | None = None,
         default_model: str | None = None,
     ):
+        # Only load .env if it exists in CWD (avoid slow recursive search)
+        _env_file = Path.cwd() / ".env"
+        if _env_file.exists():
+            try:
+                from dotenv import load_dotenv
+
+                load_dotenv(_env_file)
+            except ImportError:
+                pass
+
         self._client = OpenAI(
             base_url=base_url or os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1"),
             api_key=api_key
