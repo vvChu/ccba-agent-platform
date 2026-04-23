@@ -53,48 +53,41 @@ Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoin
 
 ---
 
-## Model Catalog (22 models)
+## Model Catalog (Trích xuất từ API)
 
-### 🖥️ Local GPU (private, offline)
+### 🖥️ Local GPU (Private, Offline, RAG)
 
 | Model | Mô tả |
 |-------|--------|
-| `qwen3.5-35b` | ⭐ **Default** — Qwen 35B, nhanh, private |
-| `rag-core` | Alias qwen3.5-35b (dùng trong RAG) |
-| `rag-light` | Qwen 4B — nhẹ hơn, fallback |
+| `qwen-local-primary` | ⭐ **Default** — Qwen reasoning model, mạnh mẽ cho audit |
+| `Qwen-3.6-35B-NVFP4` | Qwen 3.6 35B (NVFP4), cực nhanh trên GPU |
+| `rag-core` / `rag-light` | Alias chuyên dụng cho hệ thống RAG nội bộ |
+| `reasoning-gemma` | Gemma có khả năng suy luận logic |
+| `text-gemma` / `12b` / `4b` | Các bản Gemma phục vụ sinh text tiêu chuẩn |
 
-### ☁️ Cloud — Speed Tier (< 1.5s)
+### 🔍 Chuyên biệt cho OCR (Vision)
 
-| Model | Best For |
-|-------|----------|
-| `gemini-3-flash` | Nhanh, multimodal |
-| `gemini-3.1-flash-lite` | Rẻ nhất, nhanh nhất |
-| `gpt-4o` | Vision + general purpose |
-| `gpt-4o-mini` | Cost-efficient |
+| Model | Mô tả |
+|-------|--------|
+| `ocr-primary` | Tối ưu hóa bóc tách PDF, biên dịch CAD/bản vẽ |
+| `ocr-tier3` / `tier4` | Phân cấp OCR tùy theo độ khó và kích thước ảnh |
 
-### ☁️ Cloud — Smart Tier (1–3s)
-
-| Model | Best For |
-|-------|----------|
-| `claude-sonnet-4-6` ⭐ | Best coding/agentic |
-| `claude-sonnet-4-6-thinking` | Chain-of-Thought reasoning |
-| `claude-opus-4-6` | Mạnh nhất (legal, financial) |
-| `claude-opus-4-5-thinking` | Deep reasoning |
-
-### ☁️ Cloud — Deep Reasoning (7–13s, 1M context)
+### ☁️ Cloud — Speed & Standard
 
 | Model | Best For |
 |-------|----------|
-| `gemini-3.1-pro` | Full codebase analysis |
-| `gemini-3.1-pro-high` | Scientific reasoning |
-| `gemma-3-27b` | Free tier, metadata tasks |
+| `claude-haiku-4-5` | Nhanh nhất, chi phí cực rẻ, phân tích metadata |
+| `claude-sonnet-4-6` ⭐ | Cân bằng nhất cho coding & agentic tasks |
+| `gemini-3.1-pro-low` | Tốc độ cao với Google API |
 
-### ☁️ Fallbacks
+### ☁️ Cloud — Deep Reasoning (Thinking)
 
-| Model | Backend |
-|-------|---------|
-| `groq-llama3` | Groq LPU API |
-| `gpt-oss-120b-medium` | OpenAI OSS |
+| Model | Best For |
+|-------|----------|
+| `claude-sonnet-4-6-thinking` | Suy luận đa bước, lập kế hoạch phức tạp |
+| `claude-opus-4-6-thinking` | Phân tích tài chính, pháp lý rủi ro cao (Opus tier) |
+| `gemini-3.1-pro-high` | Ngữ cảnh 1M - 2M tokens, phân tích toàn bộ Codebase |
+| `gpt-oss-120b-medium` | Giải pháp thay thế cỡ lớn mã nguồn mở |
 
 ---
 
@@ -116,7 +109,7 @@ reply = ai.chat("Xin chào!")
 reply = ai.chat("Review code", model="claude-sonnet-4-6")
 
 # System prompt
-reply = ai.chat("Tóm tắt...", system="Bạn là chuyên gia pháp luật", model="qwen3.5-35b")
+reply = ai.chat("Tóm tắt...", system="Bạn là chuyên gia pháp luật", model="qwen-local-primary")
 
 # Streaming
 for chunk in ai.stream("Viết quicksort"):
@@ -161,7 +154,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-    model: 'qwen3.5-35b',
+    model: 'qwen-local-primary',
     messages: [{ role: 'user', content: 'Hello!' }],
 });
 ```
@@ -172,7 +165,7 @@ const response = await client.chat.completions.create({
 curl http://100.83.192.30:8090/v1/chat/completions \
   -H "Authorization: Bearer sk-spark-secure-key-2026" \
   -H "Content-Type: application/json" \
-  -d '{"model":"qwen3.5-35b","messages":[{"role":"user","content":"Hello!"}]}'
+  -d '{"model":"qwen-local-primary","messages":[{"role":"user","content":"Hello!"}]}'
 ```
 
 ---
@@ -220,7 +213,7 @@ Copy file `.env.ai-gateway` (cùng folder) vào project, đổi tên `.env`:
 ```env
 AI_GATEWAY_URL=http://100.83.192.30:8090/v1
 AI_GATEWAY_KEY=sk-spark-secure-key-2026
-AI_MODEL=qwen3.5-35b
+AI_MODEL=qwen-local-primary
 ```
 
 ---
@@ -230,15 +223,15 @@ AI_MODEL=qwen3.5-35b
 ```python
 def choose_model(task_type: str) -> str:
     routing = {
-        "coding":     "claude-sonnet-4-6",      # Best coding
-        "reasoning":  "claude-sonnet-4-6-thinking",
-        "research":   "gemini-3.1-pro",          # 1M context
-        "fast":       "gemini-3-flash",          # Speed
-        "private":    "qwen3.5-35b",             # Offline/private
-        "cheap":      "gemini-3.1-flash-lite",   # Lowest cost
-        "vietnamese": "qwen3.5-35b",             # Vietnamese text
+        "coding":     "claude-sonnet-4-6",          # Best coding
+        "reasoning":  "claude-sonnet-4-6-thinking", # Cloud logic
+        "research":   "gemini-3.1-pro-high",        # Large context
+        "fast":       "claude-haiku-4-5",           # Speed
+        "private":    "qwen-local-primary",         # Offline/private logic
+        "ocr":        "ocr-primary",                # For parsing PDFs/Images
+        "vietnamese": "qwen-local-primary",         # Vietnamese text
     }
-    return routing.get(task_type, "qwen3.5-35b")
+    return routing.get(task_type, "qwen-local-primary")
 ```
 
 ---
