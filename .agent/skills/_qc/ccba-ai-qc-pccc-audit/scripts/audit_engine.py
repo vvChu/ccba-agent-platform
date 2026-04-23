@@ -67,8 +67,10 @@ THUYẾT MINH: {thuyet_minh}
 GÓP Ý PC07 (Nếu có): {gop_y}
 
 YÊU CẦU:
-1. Đánh giá tính tuân thủ của Thuyết minh đối với QCVN 06:2022/BXD và TCVN 3890:2023 (bậc chịu lửa, khoảng cách an toàn, trang bị ban đầu).
-2. Kiểm tra xem Thuyết minh đã cập nhật các góp ý của PC07 chưa.
+1. Đánh giá tính tuân thủ của Thuyết minh đối với QCVN 06:2022/BXD và TCVN 3890:2023.
+2. Kiểm tra xem Thuyết minh có liệt kê các Phụ lục tính toán (Âm thanh, Ắc quy, Thủy lực bơm 150%, Bình dự trữ 10%) hay không. Nếu không, báo lỗi.
+3. Bắt buộc kiểm tra nội dung kết nối mạng truyền tin báo cháy GTEL (QĐ 8390/QĐ-BCA) và PCCC cho lán trại tạm thời giai đoạn thi công.
+4. Kiểm tra xem Thuyết minh đã cập nhật đầy đủ các góp ý của PC07 chưa.
 Trích xuất lỗi vào JSON:
 {{
     "findings": [
@@ -84,7 +86,8 @@ THUYẾT MINH (Tóm tắt): {thuyet_minh}
 BẢN VẼ MEP PCCC (Nước/Bơm/Bể): {mep_pccc}
 
 YÊU CẦU:
-So sánh thông số thiết bị (Dung tích bể, Lưu lượng bơm, Cột áp, Đầu phun Sprinkler) giữa Bản vẽ và Thuyết minh.
+1. So sánh thông số thiết bị (Dung tích bể, Lưu lượng bơm, Cột áp, Đầu phun Sprinkler) giữa Bản vẽ và Thuyết minh.
+2. Kiểm tra điểm làm việc của bơm: Đối chiếu thông số Bơm phải thỏa mãn QCVN 02:2020 (Ở 150% Lưu lượng thiết kế thì Cột áp không nhỏ hơn 65%).
 Trích xuất lỗi vào JSON:
 {{
     "findings": [
@@ -101,7 +104,8 @@ BẢN VẼ MEP PCCC (Báo cháy/Thoát nạn): {mep_pccc}
 
 YÊU CẦU:
 1. Kiểm tra vị trí đầu báo, nút ấn, đèn Exit trên bản vẽ Kiến trúc có đồng bộ với sơ đồ Báo cháy MEP không?
-2. Tuân thủ TCVN 5738:2021 về khoảng cách đầu báo và vị trí báo cháy.
+2. Quét các ghi chú (Note/Text) trên bản vẽ Kiến trúc để tìm kiếm các quy định của CQXD: biển báo 'LỐI VÀO TỪ TRÊN CAO', 'GIAN LÁNH NẠN', và sơn kẻ vạch phản quang bãi đỗ xe chữa cháy. Báo lỗi nếu thiếu.
+3. Tuân thủ TCVN 5738:2021 về khoảng cách đầu báo và vị trí báo cháy.
 Trích xuất lỗi vào JSON:
 {{
     "findings": [
