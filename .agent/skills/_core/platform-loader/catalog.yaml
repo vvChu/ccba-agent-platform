@@ -1,0 +1,204 @@
+# CCBA Agent Services Platform — Service Catalog
+# Auto-discovery manifest for cross-workspace skill loading
+# Last updated: 2026-04-18
+# Structure: skills/workflows now organized in bundles: _core, _software, _qc, _consulting
+
+hub_path: "D:\\GitHubProjects\\ccba-agent-platform"
+hub_repo: "https://github.com/vvChu/ccba-agent-platform"
+
+# Bundle definitions
+bundles:
+  Phần mềm:          [_core, _software]
+  Thẩm tra thiết kế: [_core, _qc, _consulting]
+  Thiết kế:          [_core, _qc, _consulting]
+  Kiểm định:         [_core, _qc, _consulting]
+
+skills:
+  # === _core ===
+  - name: platform-loader
+    bundle: _core
+    description: "Bootstrap skill — điểm khởi đầu duy nhất của CCBA Platform"
+    triggers: [platform, bootstrap, load skills, danh sách lệnh]
+    skill_path: .agent/skills/_core/platform-loader/SKILL.md
+
+  - name: ai-gateway-sdk
+    bundle: _core
+    description: "Kết nối AI Gateway — 22 models (local GPU + cloud), 1 endpoint"
+    triggers: [ai, llm, model, gateway, chat, inference, DGX, vLLM, Qwen, Claude, Gemini]
+    skill_path: .agent/skills/_core/ai-gateway-sdk/SKILL.md
+    package_path: packages/ccba-ai
+
+  - name: long-form-writer
+    bundle: _core
+    description: "Tạo tài liệu dài (2000+ words) bằng cách quản lý context LLM"
+    triggers: [tài liệu dài, long-form, whitepaper, quy chế, regulations]
+    skill_path: .agent/skills/_core/long-form-writer/SKILL.md
+
+  # === _qc ===
+  - name: ccba-ai-pdf-preprocessor
+    bundle: _qc
+    description: "Tối ưu hóa PDF cho LLM: Segmenting, Chunking, và Tiling"
+    triggers: [pdf, preprocessor, chunk, tiling, bản vẽ, scan]
+    skill_path: .agent/skills/_qc/ccba-ai-pdf-preprocessor/SKILL.md
+
+  - name: ccba-ai-qc-discovery
+    bundle: _qc
+    description: "Khai phá hồ sơ PDF, nhận diện cấu trúc bản vẽ và lập Coordination Matrix"
+    triggers: [discovery, backbone, matrix, mapping, khai phá hồ sơ]
+    skill_path: .agent/skills/_qc/ccba-ai-qc-discovery/SKILL.md
+
+  - name: ccba-ai-qc-integrated-audit
+    bundle: _qc
+    description: "Đối soát xung đột đa bộ môn (Arch-KC-MEP-PCCC) bằng AI Vision"
+    triggers: [clash audit, integrated qc, đối soát 4 chiều, audit đa bộ môn, N-Way clash]
+    skill_path: .agent/skills/_qc/ccba-ai-qc-integrated-audit/SKILL.md
+
+  - name: ccba-ai-qc-batch-orchestrator
+    bundle: _qc
+    description: "Điều phối Audit hàng loạt qua Coordination Matrix"
+    triggers: [batch, orchestrator, hàng loạt, tự động hóa QC]
+    skill_path: .agent/skills/_qc/ccba-ai-qc-batch-orchestrator/SKILL.md
+
+  - name: ccba-ai-qc-reporter
+    bundle: _qc
+    description: "Tổng hợp và đóng gói báo cáo Đường găng Kỹ thuật chính quy"
+    triggers: [technical report, đóng gói báo cáo, kết luận kỹ thuật, báo cáo đường găng]
+    skill_path: .agent/skills/_qc/ccba-ai-qc-reporter/SKILL.md
+
+  # === _consulting ===
+  - name: legal-document-tracker
+    bundle: _consulting
+    description: "Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam"
+    triggers: [VBPL, pháp luật, legal, registry, nghị định, thông tư, văn bản pháp luật, luật xây dựng]
+    skill_path: .agent/skills/_consulting/legal-document-tracker/SKILL.md
+    data_files:
+      - .agent/skills/_consulting/legal-document-tracker/registry/legal_registry.yaml
+
+  - name: completion-checklist
+    bundle: _consulting
+    description: "Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện hành"
+    triggers: [hồ sơ hoàn thành, HSHT, completion, checklist, danh mục hồ sơ, nghiệm thu, hoàn công]
+    skill_path: .agent/skills/_consulting/completion-checklist/SKILL.md
+    data_files:
+      - .agent/skills/_consulting/completion-checklist/data/checklist_master.yaml
+
+  - name: seminar-builder
+    bundle: _consulting
+    description: "Chuẩn bị nội dung seminar/training nội bộ CCBA"
+    triggers: [seminar, đào tạo, training, recap, agenda, buổi thảo luận]
+    skill_path: .agent/skills/_consulting/seminar-builder/SKILL.md
+
+workflows:
+  # === _core ===
+  - name: init-ccba-spoke
+    bundle: _core
+    command: /init-ccba-spoke
+    description: "Khởi tạo dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform"
+    triggers: [init spoke, setup project, khởi tạo dự án]
+    workflow_path: .agent/workflows/_core/init-ccba-spoke.md
+
+  - name: update-ccba-spoke
+    bundle: _core
+    command: /update-ccba-spoke
+    description: "Sync bundle phù hợp từ Hub về dự án Spoke hiện tại"
+    triggers: [update spoke, đồng bộ hub, lấy lệnh mới, cập nhật dự án]
+    workflow_path: .agent/workflows/_core/update-ccba-spoke.md
+
+  - name: session-retrospective
+    bundle: _core
+    command: /session-retrospective
+    description: "Tổng hợp kiến thức cuối phiên làm việc"
+    triggers: [retrospective, cuối phiên, tổng kết, session learnings]
+    workflow_path: .agent/workflows/_core/session-retrospective.md
+
+  - name: propose-to-hub
+    bundle: _core
+    command: /propose-to-hub
+    description: "Đóng góp skill/workflow mới từ Spoke lên Hub"
+    triggers: [đề xuất, tích hợp Hub, contribution, propose, skill mới]
+    workflow_path: .agent/workflows/_core/propose-to-hub.md
+
+  - name: convert-markdown
+    bundle: _core
+    command: /convert-markdown
+    description: "Chuyển đổi tài liệu sang Markdown bằng mdconverter"
+    triggers: [convert, mdconverter, chuyển đổi tài liệu, pdf to markdown]
+    workflow_path: .agent/workflows/_core/convert-markdown.md
+
+  # === _software ===
+  - name: new-feature
+    bundle: _software
+    command: /new-feature
+    description: "Tạo feature branch mới với cleanup tự động"
+    triggers: [new feature, feature mới, tạo branch]
+    workflow_path: .agent/workflows/_software/new-feature.md
+
+  - name: create-pr
+    bundle: _software
+    command: /create-pr
+    description: "Push code và tạo Pull Request tự động"
+    triggers: [create PR, pull request, tạo PR]
+    workflow_path: .agent/workflows/_software/create-pr.md
+
+  - name: release-feature
+    bundle: _software
+    command: /release-feature
+    description: "Merge PR, cleanup branch và cập nhật walkthrough"
+    triggers: [release, merge PR, phát hành]
+    workflow_path: .agent/workflows/_software/release-feature.md
+
+  - name: discard-feature
+    bundle: _software
+    command: /discard-feature
+    description: "Hủy bỏ branch hiện tại, xóa cả local và remote"
+    triggers: [discard, hủy branch, xóa branch]
+    workflow_path: .agent/workflows/_software/discard-feature.md
+
+  # === _qc ===
+  - name: run-qc-pipeline
+    bundle: _qc
+    command: /run-qc-pipeline
+    description: "Tự động chạy toàn trình QC đa bộ môn (Discovery → Orchestrator)"
+    triggers: [qc pipeline, run QC, audit tự động, kiểm tra hồ sơ]
+    workflow_path: .agent/workflows/_qc/run-qc-pipeline.md
+
+  # === _consulting ===
+  - name: prepare-seminar
+    bundle: _consulting
+    command: /prepare-seminar
+    description: "Chuẩn bị nội dung cho buổi seminar/thảo luận nội bộ CCBA"
+    triggers: [chuẩn bị seminar, buổi thảo luận, prepare seminar]
+    workflow_path: .agent/workflows/_consulting/prepare-seminar.md
+
+  - name: update-legal-registry
+    bundle: _consulting
+    command: /update-legal-registry
+    description: "Cập nhật registry VBPL và kiểm tra tác động lên danh mục hồ sơ hoàn thành"
+    triggers: [cập nhật VBPL, legal update, update registry, văn bản mới]
+    workflow_path: .agent/workflows/_consulting/update-legal-registry.md
+
+rules:
+  - name: ccba_identity
+    description: "Brand, voice, phong cách giao tiếp CCBA"
+    when: "Mọi output mang danh CCBA"
+    rule_path: rules/ccba_identity.md
+
+  - name: quality_standards
+    description: "Tiêu chuẩn chất lượng QC"
+    when: "Tạo output QC/testing"
+    rule_path: rules/quality_standards.md
+
+  - name: naming_conventions
+    description: "Quy ước đặt tên file và folder"
+    when: "Tạo file/folder mới"
+    rule_path: rules/naming_conventions.md
+
+  - name: compliance
+    description: "Tuân thủ pháp luật xây dựng Việt Nam"
+    when: "Output liên quan pháp luật/VBPL"
+    rule_path: rules/compliance.md
+
+knowledge:
+  - name: session_learnings
+    description: "Patterns, anti-patterns, solutions tích lũy qua các phiên"
+    knowledge_path: knowledge/session_learnings.md

@@ -1,0 +1,19193 @@
+# Dữ liệu bóc tách: KIEN TRUC-PDF.pdf
+Số trang: 87
+
+## Trang 0
+- hå s¬ thiÕt kÕ B¶N VÏ THI C¤NG
+- NHÀ THẦU THIẾT KẾ : VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- ĐỊA ĐIỂM XÂY DỰNG CHỦ ĐẦU TƯ
+- DỰ ÁN
+- : BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- : 468 NGUYỄN TRÃI, PHƯỜNG 8, QUẬN 5, TP.HỒ CHÍ MINH
+- : SỬA CHỮA, CẢI TẠO NÂNG CẤP KHỐI NHÀ B VÀ D BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- ViÖn KHCN x©y dùng VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG  vietnam Institute for Building Science and Technology
+- BỘ XÂY DỰNG
+
+
+## Trang 1
+- BAN QLDA ĐTXD CÁC CÔNG TRÌNH VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- hå s¬ thiÕt kÕ B¶N VÏ THI C¤NG
+- NHÀ THẦU THIẾT KẾ : VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- ĐỊA ĐIỂM XÂY DỰNG CHỦ ĐẦU TƯ
+- DỰ ÁN
+- TƯ VẤN THIẾT KẾ CHỦ ĐẦU TƯ
+- : BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- : 468 NGUYỄN TRÃI, PHƯỜNG 8, QUẬN 5, TP.HỒ CHÍ MINH
+- : SỬA CHỮA, CẢI TẠO NÂNG CẤP KHỐI NHÀ B VÀ D BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- ViÖn KHCN x©y dùng VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG  vietnam Institute for Building Science and Technology
+- BỘ XÂY DỰNG
+- DÂN DỤNG VÀ CÔNG NGHIỆP
+
+
+## Trang 2
+- STT TÊN BẢN VẼ KÝ HIỆU KHỔ GIẤY
+- 43
+- 42
+- 41
+- 40
+- 39
+- 38
+- 37
+- 36
+- 35
+- 34
+- 33
+- 32
+- 31
+- 30
+- 29
+- 28
+- 27
+- 26
+- 25
+- 24
+- 23
+- 22
+- 21
+- 20
+- MẶT BẰNG CẢI TẠO TẦNG 1 19
+- 18
+- 17
+- 16
+- 15
+- 14
+- 13
+- 12
+- 11
+- 10
+- 1
+- 7
+- 9
+- 8
+- 6
+- 5
+- 3
+- 2
+- 4 A.TT.01
+- KHỐI B - CẢI TẠO
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 4
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 3
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 2
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 1
+- MẶT BẰNG TRẦN TẦNG 4
+- MẶT BẰNG TRẦN TẦNG 3
+- A.B5.01 MẶT BẰNG TRẦN TẦNG 1
+- MẶT BẰNG LÁT GẠCH TẦNG 4
+- MẶT BẰNG LÁT GẠCH TẦNG 3
+- MẶT BẰNG LÁT GẠCH TẦNG 1
+- MẶT CẮT CẢI TẠO B2-B2 - CHI TIẾT SN - LC
+- MĐ HIỆN TRẠNG - CẢI TẠO TRỤC H-A - MẶT CẮT HIỆN TRẠNG B1-B1 A.B2.02
+- MẶT ĐỨNG HIỆN TRẠNG - CẢI TẠO TRỤC 1-16 A.B2.01
+- MẶT BẰNG CẢI TẠO MÁI
+- MẶT BẰNG CẢI TẠO TẦNG 4
+- MẶT BẰNG CẢI TẠO TẦNG 3
+- MẶT BẰNG CẢI TẠO TẦNG 2
+- MẶT BẰNG THÁO DỠ MÁI
+- MẶT BẰNG THÁO DỠ TẦNG 4
+- MẶT BẰNG THÁO DỠ TẦNG 3
+- MẶT BẰNG THÁO DỠ TẦNG 2
+- MẶT BẰNG THÁO DỠ TẦNG 1 A.BTD.01
+- MẶT BẰNG HIỆN TRẠNG MÁI
+- MẶT BẰNG HIỆN TRẠNG TẦNG 4
+- MẶT BẰNG HIỆN TRẠNG TẦNG 3
+- MẶT BẰNG HIỆN TRẠNG TẦNG 2
+- MẶT BẰNG HIỆN TRẠNG TẦNG 1 A.BHT.01
+- MẶT BẰNG TÁI LẬP MẶT ĐƯỜNG - CHI TIẾT BỂ NƯỚC NGẦM
+- MẶT BẰNG CẢI TẠO TỔNG THỂ MÁI
+- MẶT BẰNG CẢI TẠO TỔNG THỂ TẦNG 1
+- MẶT BẰNG HIỆN TRẠNG TỔNG THỂ MÁI A.TT.02
+- MẶT BẰNG HIỆN TRẠNG TỔNG THỂ TẦNG 1
+- DANH MỤC BẢN VẼ A.TQ.01
+- BÌA 2
+- BÌA 1
+- CHI TIẾT VỆ SINH TẦNG 4 (SV4.1,..VS4.3)
+- CHI TIẾT VỆ SINH TẦNG 1, 3, 4 (SV1.4,..VS4.2a)
+- CHI TIẾT VỆ SINH TẦNG 1 (SV1.1,..VS1.4)
+- CHI TIẾT CẦU THANG TRỤC E-F;9-10
+- CHI TIẾT CẦU THANG TRỤC E-F;6-7
+- CHI TIẾT CỬA
+- CHI TIẾT CỬA
+- A.TT - TỔNG THỂ
+- A.TQ - TỔNG QUAN
+- A.B7.05
+- A.B7.04
+- A.B7.03
+- A.B7.02
+- A.B7.01
+- A.B6.06
+- A.B6.05
+- A.B6.04
+- A.B6.03
+- A.B6.02
+- A.B6.01
+- A.B5.03
+- A.B5.02
+- A.B4.03
+- A.B4.02
+- A.B4.01
+- A.B3.01
+- A.B1.05
+- A.B1.04
+- A.B1.03
+- A.B1.02
+- A.B1.01
+- A.BTD.05
+- A.BTD.04
+- A.BTD.03
+- A.BTD.02
+- A.BHT.05
+- A.BHT.04
+- A.BHT.03
+- A.BHT.02
+- A.TT.05
+- A.TT.04
+- A.TT.03
+- @
+- @
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- 82 A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- DANH MỤC BẢN VẼ
+- GHI CHÚ
+- STT TÊN BẢN VẼ KÝ HIỆU KHỔ GIẤY GHI CHÚ
+- 81
+- 80
+- 79
+- 78
+- 77
+- 76
+- 75
+- 74
+- 73
+- 72
+- 71
+- 70
+- 69
+- 68
+- 67
+- 66
+- 65
+- 64
+- 63
+- 62
+- 61
+- 60
+- 59
+- 58
+- 57
+- 56
+- 55
+- 54
+- 53
+- 52
+- 51
+- 50
+- 49
+- 48
+- 47
+- 46
+- 45
+- 44
+- KHỐI D - CẢI TẠO
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 2, 3
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 1; CHI TIẾT TAY VỊN
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 2, 3
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 1, CHI TIẾT CỬA - VÁCH
+- MẶT BẰNG TRẦN TẦNG 2, 3
+- MẶT BẰNG TRẦN TẦNG 1
+- MẶT BẰNG LÁT GẠCH TẦNG 2, 3
+- MẶT BẰNG LÁT GẠCH TẦNG 1
+- MẶT CẮT CẢI TẠO D3-D3
+- MẶT CẮT CẢI TẠO D2-D2 - CHI TIẾT SN1 - SN2 - LC
+- A.D2.03 MẶT ĐỨNG HIỆN TRẠNG TRỤC A-F - MẶT CẮT HIỆN TRẠNG D1-D1
+- MẶT ĐỨNG HIỆN TRẠNG - CẢI TẠO TRỤC 16-1
+- A.D2.01 MẶT ĐỨNG HIỆN TRẠNG - CẢI TẠO TRỤC 1-16
+- MẶT BẰNG CẢI TẠO MÁI
+- MẶT BẰNG CẢI TẠO TẦNG 3
+- MẶT BẰNG CẢI TẠO TẦNG 2
+- MẶT BẰNG CẢI TẠO TẦNG 1 A.D1.01
+- MẶT BẰNG THÁO DỠ MÁI
+- MẶT BẰNG THÁO DỠ TẦNG 3
+- MẶT BẰNG THÁO DỠ TẦNG 2
+- MẶT BẰNG THÁO DỠ TẦNG 1 A.DTD.01
+- MẶT BẰNG HIỆN TRẠNG MÁI
+- MẶT BẰNG HIỆN TRẠNG TẦNG 3
+- MẶT BẰNG HIỆN TRẠNG TẦNG 2
+- MẶT BẰNG HIỆN TRẠNG TẦNG 1 A.DHT.01
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 4
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 3
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 1; CHI TIẾT TAY VỊN
+- CHI TIẾT VỆ SINH TẦNG 3 (SV3.1b,..VS3.6)
+- CHI TIẾT VỆ SINH TẦNG 2, 3 (SV2.5,..VS3.1a)
+- CHI TIẾT VỆ SINH TẦNG 2, 3 (SV1.7a,..VS2.4)
+- CHI TIẾT VỆ SINH TẦNG 1 (SV1.4c,..VS1.6)
+- CHI TIẾT VỆ SINH TẦNG 1 (SV1.1,..VS1.4b)
+- CHI TIẾT THANG MÁY
+- CHI TIẾT THANG TRỤC A;11-12
+- CHI TIẾT THANG TRỤC A;5-6
+- CHI TIẾT THANG SẮT TRỤC 16
+- CHI TIẾT THANG SẮT TRỤC 1
+- CHI TIẾT CỬA
+- A.D8.02
+- A.D8.01
+- A.D7.10
+- A.D7.09
+- A.D7.08
+- A.D7.07
+- A.D7.06
+- A.D7.05
+- A.D7.04
+- A.D7.03
+- A.D7.02
+- A.D7.01
+- A.D6.03
+- A.D6.02
+- A.D6.01
+- A.D5.02
+- A.D5.01
+- A.D4.02
+- A.D4.01
+- A.D3.02
+- A.D3.01
+- A.D2.02
+- A.D1.04
+- A.D1.03
+- A.D1.02
+- A.DTD.04
+- A.DTD.03
+- A.DTD.02
+- A.DHT.04
+- A.DHT.03
+- A.DHT.02
+- A.B8.03
+- A.B8.02
+- A.B8.01
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- A1
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- @ Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- DANH MỤC BẢN VẼ
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.TQ-01
+- ../2024
+
+
+## Trang 3
+- Boàn hoa
+- GHI CHÚ:
+- Ñöôøng An Döông Vöông
+- Leà ñöôøng
+- HIỆN TRẠNG KHỐI NHÀ B-D CẦN CẢI TẠO
+- CÁC KHỐI NHÀ LÂN CẬN (BỆNH VIỆN 7A)
+- Thoå cö
+- Loä giôùi
+- NS : 149
+- Thoå cö
+- 9000
+- 17650
+- 3250
+- KHU E
+- 11930
+- Heûm xi maêng
+- 10610
+- B2
+- A16
+- 19150
+- B1
+- TRẠM ĐIỆN
+- A15
+- 32560
+- 32560
+- 5244
+- NHÀ XE
+- Thoå cö
+- 30M
+- 15M 15M
+- 703
+- 900
+- 30811
+- P. NHÂN VIÊN KHOA
+- CĐHA
+- Leà ñöôøng
+- 12000
+- VT2
+- VT2
+- 2486
+- 14089
+- 2550
+- 29400
+- SÂN
+- 4970
+- KHỐI B
+- Heûm
+- 29327
+- VT1
+- VT1
+- VT1
+- 24200
+- SÂN
+- BỆNH VIỆN 7A
+- BỒN HOA BỒN HOA HỒ NƯỚC
+- A12
+- Thoå cö
+- 119896
+- CỔNG VÀO
+- SÂN
+- SÂN
+- TRỆT ĐÚC
+- 3700
+- A13
+- 177500
+- 6000
+- KHỐI A
+- Heûm
+- 106642 2798
+- KHỐI C
+- Ñöôøng Nguyeãn Tri Phöông
+- SÂN
+- Leà ñöôøng
+- Leà ñöôøng
+- BỒN HOA
+- MẶT BẰNG HIỆN TRẠNG TỔNG THỂ TẦNG 1
+- Thoå cö
+- SÂN
+- KHỐI NHÀ MÁI TÔN HIỆN HỮU
+- KHỐI NHÀ VỆ SINH
+- 4500
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- Heûm
+- VC2: L= 2000 MM,
+- TỶ LỆ :1/350 Tỷ lệ:
+- VC1: L= 3800 MM, H=
+- H=
+- * VC:
+- LAM THÔNG GIÓ V
+- VT1:
+- L= 3800 MM,
+- CHÚ THÍCH: *
+- V
+- T
+- :
+- H=
+- LAM THÔNG
+- G
+- I
+- Ó
+- T
+- VC1 VC1 VC1 VC1
+- 32500
+- VC2 VC2 VC2 VC2
+- VC1
+- SÂN
+- VT1 VT1
+- VC1 VC1 VC1
+- KHỐI D
+- Loä giôùi
+- VT1
+- VT1 VT1
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- 62198 9207 9400 7940
+- CỔNG VÀO
+- 7640
+- NHÀ XE CẤP CỨU
+- 4768
+- Thoå cö
+- NHÀ BẢO VỆ
+- TRẠM ĐIỆN
+- NHÀ XE CẤP CỨU
+- Ñöôøng Nguyeãn Traõi
+- Leà ñöôøng
+- Coâng Vieân An Bình
+- CỔNG VÀO
+- Loä giôùi
+- 6840
+- 25210
+- 10M 10M
+- A22
+- Leà ñöôøng Leà ñöôøng
+- 20M
+- Ñöôøng An Bình
+- Leà ñöôøng
+- Thoå cö
+- Töôøng toân
+- A17
+- Thoå cö
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG HIỆN TRẠNG TỔNG THỂ TẦNG 1
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.TT.01
+- ../2024
+- 1/350
+
+
+## Trang 4
+- Boàn hoa
+- GHI CHÚ:
+- Ñöôøng An Döông Vöông
+- Leà ñöôøng
+- HIỆN TRẠNG KHỐI NHÀ B-D CẦN CẢI TẠO
+- CÁC KHỐI NHÀ LÂN CẬN (BỆNH VIỆN 7A)
+- Thoå cö
+- Loä giôùi
+- NS : 149
+- Thoå cö
+- 9000
+- 17650
+- 3250
+- KHU E
+- 11930
+- Heûm xi maêng
+- 10610
+- B2
+- A16
+- 19150
+- B1
+- TRẠM ĐIỆN
+- A15
+- 32560
+- 32560
+- 5244
+- NHÀ XE
+- Thoå cö
+- 30M
+- 15M 15M
+- 703
+- 900
+- 30811
+- Leà ñöôøng
+- 12000
+- 2486
+- 14089
+- 2550
+- 29400
+- SÂN
+- 4970
+- KHỐI B
+- Heûm
+- 29327
+- 24200
+- SÂN
+- BỆNH VIỆN 7A
+- BỒN HOA BỒN HOA HỒ NƯỚC
+- A12
+- Thoå cö
+- 119896
+- CỔNG VÀO
+- SÂN
+- SÂN
+- TRỆT ĐÚC
+- 3700
+- A13
+- 177500
+- 6000
+- KHỐI A
+- Heûm
+- 106642 2798
+- KHỐI C
+- Ñöôøng Nguyeãn Tri Phöông
+- SÂN
+- Leà ñöôøng
+- Leà ñöôøng
+- BỒN HOA
+- MẶT BẰNG HIỆN TRẠNG TỔNG THỂ MÁI
+- Thoå cö
+- SÂN
+- KHỐI NHÀ MÁI TÔN HIỆN HỮU
+- KHỐI NHÀ VỆ SINH
+- 4500
+- Heûm
+- TỶ LỆ :1/350
+- 32500
+- SÂN
+- KHỐI D
+- Loä giôùi
+- 62198 9207 9400 7940
+- CỔNG VÀO
+- 7640
+- NHÀ XE CẤP CỨU
+- 4768
+- Thoå cö
+- NHÀ BẢO VỆ
+- TRẠM ĐIỆN
+- NHÀ XE CẤP CỨU
+- Ñöôøng Nguyeãn Traõi
+- Leà ñöôøng
+- Coâng Vieân An Bình
+- CỔNG VÀO
+- Loä giôùi
+- 6840
+- 25210
+- 10M 10M
+- A22
+- Leà ñöôøng Leà ñöôøng
+- 20M
+- Ñöôøng An Bình
+- Leà ñöôøng
+- Thoå cö
+- Töôøng toân
+- A17
+- Thoå cö
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/350 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG HIỆN TRẠNG TỔNG THỂ MÁI
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.TT.02
+- ../2024
+
+
+## Trang 5
+- Boàn hoa
+- GHI CHÚ:
+- Ñöôøng An Döông Vöông
+- Leà ñöôøng
+- HIỆN TRẠNG KHỐI NHÀ B-D CẦN CẢI TẠO
+- CÁC KHỐI NHÀ LÂN CẬN (BỆNH VIỆN 7A)
+- Thoå cö
+- Loä giôùi
+- NS : 149
+- Thoå cö
+- 9000
+- 17650
+- 3250
+- KHU E
+- 11930
+- Heûm xi maêng
+- 10610
+- B2
+- A16
+- 19150
+- B1
+- TRẠM ĐIỆN
+- A15
+- 32560
+- 32560
+- 5244
+- NHÀ XE
+- Thoå cö
+- 30M
+- 15M 15M
+- 703
+- 900
+- 30811
+- Leà ñöôøng
+- 12000
+- 2486
+- 14089
+- 2550
+- 29400
+- SÂN
+- GC GC GC GC GC GC GC GC GC GC GC GC
+- 4970
+- SÂN SÂN
+- GC GC GC
+- KHỐI B
+- GC GC
+- Heûm
+- GC GC
+- 29327
+- GC GC GC GC
+- GC
+- GC GC
+- GC GC GC GC GC GC GC GC GC
+- GC GC GC
+- GC GC GC GC GC
+- 24200
+- W.C W.C
+- W.C
+- GC GC GC GC
+- GC GC GC GC
+- SÂN
+- BỆNH VIỆN 7A
+- BỒN HOA BỒN HOA HỒ NƯỚC
+- A12
+- Thoå cö
+- 119896
+- CỔNG VÀO
+- SÂN
+- SÂN
+- TRỆT ĐÚC
+- 3700
+- A13
+- 177500
+- 6000
+- KHỐI A
+- Heûm
+- 106642 2798
+- KHỐI C
+- Ñöôøng Nguyeãn Tri Phöông
+- SÂN
+- Leà ñöôøng
+- Leà ñöôøng
+- BỒN HOA
+- MẶT BẰNG CẢI TẠO TỔNG THỂ TẦNG 1
+- Thoå cö
+- SÂN
+- KHỐI NHÀ MÁI TÔN HIỆN HỮU
+- KHỐI NHÀ VỆ SINH
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- 4500
+- E 30
+- DC-tm
+- BỔ SUNG THANG SẮT
+- Heûm
+- TỶ LỆ :1/350
+- 32500
+- THANG SẮT THANG SẮT
+- SÂN
+- BỔ SUNG THANG SẮT
+- KHỐI D
+- Loä giôùi
+- 62198 9207 9400 7940
+- CỔNG VÀO
+- 7640
+- NHÀ XE CẤP CỨU
+- 4768
+- Thoå cö
+- NHÀ BẢO VỆ
+- TRẠM ĐIỆN
+- NHÀ XE CẤP CỨU
+- Ñöôøng Nguyeãn Traõi
+- Leà ñöôøng
+- Coâng Vieân An Bình
+- CỔNG VÀO
+- Loä giôùi
+- 6840
+- 25210
+- 10M 10M
+- A22
+- Leà ñöôøng Leà ñöôøng
+- 20M
+- Ñöôøng An Bình
+- Leà ñöôøng
+- Thoå cö
+- Töôøng toân
+- A17
+- Thoå cö
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/350 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- MẶT BẰNG CẢI TẠO TỔNG THỂ TẦNG 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.TT.03
+- ../2024
+
+
+## Trang 6
+- Boàn hoa
+- GHI CHÚ:
+- Ñöôøng An Döông Vöông
+- Leà ñöôøng
+- HIỆN TRẠNG KHỐI NHÀ B-D CẦN CẢI TẠO
+- CÁC KHỐI NHÀ LÂN CẬN (BỆNH VIỆN 7A)
+- Thoå cö
+- Loä giôùi
+- NS : 149
+- Thoå cö
+- 9000
+- 17650
+- 3250
+- KHU E
+- 11930
+- Heûm xi maêng
+- 10610
+- B2
+- A16
+- 19150
+- B1
+- TRẠM ĐIỆN
+- A15
+- 32560
+- 32560
+- 5244
+- NHÀ XE
+- Thoå cö
+- 30M
+- 15M 15M
+- 703
+- 900
+- 30811
+- Leà ñöôøng
+- 12000
+- 2486
+- 14089
+- 2550
+- 29400
+- SÂN
+- 4970
+- KHỐI B
+- Heûm
+- 29327
+- 24200
+- SÂN
+- BỆNH VIỆN 7A
+- BỒN HOA BỒN HOA HỒ NƯỚC
+- A12
+- Thoå cö
+- 119896
+- CỔNG VÀO
+- SÂN
+- SÂN
+- TRỆT ĐÚC
+- 3700
+- A13
+- 177500
+- 6000
+- KHỐI A
+- Heûm
+- 106642 2798
+- KHỐI C
+- Ñöôøng Nguyeãn Tri Phöông
+- SÂN
+- Leà ñöôøng
+- Leà ñöôøng
+- BỒN HOA
+- MẶT BẰNG CẢI TẠO TỔNG THỂ MÁI
+- Thoå cö
+- SÂN
+- KHỐI NHÀ MÁI TÔN HIỆN HỮU
+- KHỐI NHÀ VỆ SINH
+- 4500
+- Heûm
+- TỶ LỆ :1/350
+- 32500
+- SÂN
+- KHỐI D
+- Loä giôùi
+- 62198 9207 9400 7940
+- CỔNG VÀO
+- 7640
+- NHÀ XE CẤP CỨU
+- 4768
+- Thoå cö
+- NHÀ BẢO VỆ
+- TRẠM ĐIỆN
+- NHÀ XE CẤP CỨU
+- Ñöôøng Nguyeãn Traõi
+- Leà ñöôøng
+- Coâng Vieân An Bình
+- CỔNG VÀO
+- Loä giôùi
+- 6840
+- 25210
+- 10M 10M
+- A22
+- Leà ñöôøng Leà ñöôøng
+- 20M
+- Ñöôøng An Bình
+- Leà ñöôøng
+- Thoå cö
+- Töôøng toân
+- A17
+- Thoå cö
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/350 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- MẶT BẰNG CẢI TẠO TỔNG THỂ MÁI
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.TT.04
+- ../2024
+
+
+## Trang 7
+- ±0.000
+- Mặt Sân
+- -4.300
+- Đáy Bể
+- A  --- A  ---
+- 1  --- 1  ---
+- MẶT BẰNG BỂ NƯỚC NGẦM HIỆN HỮU
+- A
+- B
+- A
+- B
+- 4300
+- 4300
+- 6800
+- 400
+- 6000
+- 400
+- 5400 300 300 100
+- 300 300 100
+- 1 2
+- 300 100 300 100
+- 1
+- 200 4500 200
+- 400 400
+- 1 2
+- MẶT BẰNG BỂ NƯỚC NGẦM XÂY MỚI
+- 300
+- 150 100 100 800
+- 300 8300 300
+- MẶT CẮT 1-1
+- - ỐP GẠCH CERAMIC 600X600MM - CHỐNG THẤM THÀNH BỂ - VỆ SINH THÀNH BỂ - TƯỜNG BÊ TÔNG CỐT THÉP HIỆN HỮU
+- 150 400
+- TỶ LỆ :1/50
+- NẮP BỂ NẮP BỂ
+- 1150
+- BỂ NƯỚC NGẦM HIỆN TRẠNG (61M³)
+- - ỐP GẠCH CERAMIC 600X600MM - CHỐNG THẤM THÀNH BỂ - VỆ SINH THÀNH BỂ - TƯỜNG BÊ TÔNG CỐT THÉP HIỆN HỮU
+- 1200
+- BỂ NƯỚC NGẦM HIỆN TRẠNG (61M³)
+- TỶ LỆ :1/50
+- THANG INOX
+- -50
+- 4900
+- 1200
+- 120
+- 4900
+- 150 100 800 100
+- 1150
+- RỐN BỂ
+- F1
+- TỶ LỆ :1/50
+- BỂ NƯỚC NGẦM (118M³)
+- 2
+- 10300
+- 9500
+- 200 3800 300
+- - TƯỜNG BÊ TÔNG CỐT THÉP - CHỐNG THẤM THÀNH BỂ - ỐP GẠCH CERAMIC 600X600MM
+- A15
+- 32560
+- 32560
+- 5244
+- NHÀ XE
+- 1150
+- 100 800 100
+- 150
+- 150 100 100 800
+- 15M
+- 703
+- 900
+- 30811
+- 1150
+- Leà ñöôøng
+- 12000
+- 7640 2486
+- 14089
+- 300
+- 2550
+- 29400
+- SÂN
+- GC GC GC GC GC GC GC GC GC GC GC GC
+- +0.100
+- 4970
+- SÂN SÂN
+- GC GC GC
+- KHỐI B
+- GC GC
+- GC GC
+- 29327
+- GC GC GC GC
+- GC
+- GC GC
+- GC GC GC GC GC GC GC GC GC
+- GC GC GC
+- GC GC GC GC GC
+- MẶT BẰNG TÁI LẬP MẶT ĐƯỜNG
+- 24200
+- W.C W.C
+- Mặt Đường
+- W.C
+- ±0.000
+- -3.700
+- -0.300 Mặt Bể
+- Đáy Bể
+- GC GC GC GC
+- 3700
+- 200
+- GC GC GC GC
+- +0.100
+- 300 2850 250
+- 300
+- 250 300 300 300 300 300 300 750
+- 300 300
+- 100
+- 100
+- SÂN
+- BỆNH VIỆN 7A
+- 100 300
+- 400
+- BỒN HOA BỒN HOA HỒ NƯỚC
+- 1
+- 300
+- 300 8900 300
+- TỶ LỆ :1/350
+- A12
+- 300 300
+- 150 400
+- CỔNG VÀO
+- SÂN
+- VỊ TRÍ TÁI LẬP MẶT ĐƯỜNG S = 824,4 M² BỂ NƯỚC NGẦM
+- SÂ
+- TRỆT ĐÚC
+- 3700
+- XÂY MỚI
+- NẮP BỂ NẮP BỂ
+- BÁT INOX 50X100X2MM
+- INOX Ø20MM
+- INOX Ø30MM
+- 3700 9500 3700
+- 177500
+- 3000 6000
+- MẶT CẮT A-A
+- BỒN HOA
+- 6000
+- KHỐI A
+- TỶ LỆ :1/50
+- BỂ NƯỚC NGẦM (118M³)
+- F1
+- F2
+- 106642 2798
+- 9500
+- 400 8900
+- 8300
+- 9500
+- KHỐI C
+- SÂN
+- Leà ñöôøng
+- - TƯỜNG BÊ TÔNG CỐT THÉP - CHỐNG THẤM THÀNH BỂ - ỐP GẠCH CERAMIC 600X600MM
+- BỒN HOA
+- VỊ TRÍ TÁI LẬP MẶT ĐƯỜNG S = 256 M²
+- KHỐI NHÀ MÁI TÔN HIỆN HỮU
+- 300
+- KHỐI NHÀ VỆ SINH
+- 300
+- BỂ NƯỚC NGẦM
+- 2
+- HIỆN HỮU
+- 100
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- 4500
+- E 30
+- DC-tm
+- BỔ SUNG THANG SẮT
+- -0.050 KHOA TIM MAÏCH CAN THIEÄP
+- -0.100
+- 32500
+- THANG SẮT THANG SẮT
+- SÂN
+- BỔ SUNG THANG SẮT
+- KHỐI D
+- Loä giôùi Leà ñöôøng
+- MD
+- F2
+- F1
+- 62198 9207 9400 7940
+- CẤU TẠO SÀN TRỒNG CÂY (PHÍA TRÊN BỂ NƯỚC NGẦM): - ĐẤT TRỒNG CÂY - VỮA XI MĂNG M.100 DÀY 30MM TRỘN VỚI AM LATEX 302 - MÀNG CHỐNG THẤM VISCOGUM DÀY 3MM - LỚP HÓA CHẤT KẾT DÍNH NOVERZPRIMER 2100WB - SÀN BÊ TÔNG CỐT THÉP (XEM BẢN VẼ KẾT CẤU)
+- CẤU TẠO SÀN BỂ NƯỚC NGẦM: - ỐP GẠCH CERAMIC 600X600MM - VỮA XI MĂNG M.100 DỐC 1% VỀ RỐN BỂ, CHỖ MỎNG NHẤT DÀY 30MM - CHỐNG THẤM GỐC XM AM FLEXROOF 501 (2 LỚP, 3KG/M2) - VỮA XI MĂNG M.100 DÀY 20MM - SÀN BÊ TÔNG CỐT THÉP (XEM BẢN VẼ KẾT CẤU) - BÊ TÔNG LÓT ĐÁ 4X6MM, DÀY 100MM
+- CẤU TẠO MẶT ĐƯỜNG: - LÀM MỚI LỚP BÊ TÔNG NHỰA ĐƯỜNG DÀY 60MM - LÀM MỚI LỚP BÊ TÔNG LÓT ĐÁ 0X4MM, DÀY 100MM - CẠO BỎ LỚP BÊ TÔNG HIỆN HỮU
+- CỔNG VÀO
+- NHÀ XE CẤP CỨU
+- 4768
+- NHÀ BẢO VỆ
+- TRẠM ĐIỆN
+- NHÀ XE CẤP CỨU
+- Ñöôøng Nguyeãn Traõi
+- CỔNG VÀO
+- Loä giôùi
+- 6840
+- 25210
+- 10M 10M
+- Leà ñöôøng Leà ñöôøng
+- 20M
+- Töôøng toân
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG TÁI LẬP MẶT ĐƯỜNG CHI TIẾT BỂ NƯỚC NGẦM
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.TT.05
+- ../2024
+- 1/350
+
+
+## Trang 8
+- MÔ TẢ HIỆN TRẠNG: - TRẦN BÊ TÔNG HÀNH LANG TRỤC 6-A/D THẤM Ố 20%; TRẦN BÊ TÔNG CÁC PHÒNG TRỤC E/H-12/14 THẤM Ố 70%; - VÁCH LẮP TẤM ALU TRỤC H-8/14 BỊ MƯA TẠT VÀO PHÒNG KHO BÊN TRONG; - LỚP GẠCH ỐP TƯỜNG (KÝ HIỆU T2) BỀ MẶT ĐÃ SỜN CŨ, MỘT VÀI VỊ TRÍ BỊ HƯ BỂ; - LỚP SƠN NƯỚC TƯỜNG CỘT DẦM BÊN TRONG NHÀ ĐÃ CŨ, MỘT VÀI VỊ TRÍ BỊ BONG TRÓC; LỚP SƠN NƯỚC TƯỜNG BÊN NGOÀI NHÀ BỊ RÊU MỐC, NHIỀU CHỖ ĐÃ BONG TRÓC; - VỆ SINH BỊ THẤM TƯỜNG, SƠN NƯỚC BỊ RÊU MỐC; THIẾT BỊ VỆ SINH HƯ HỎNG XUỐNG CẤP - CÁC CỬA ĐI CONG VÊNH XUỐNG CẤP; - BÊN TRÊN TƯỜNG HÀNH LANG TRỤC D-E/9-15 VÀ A-H/ 14-14, CÁC TẤM VÁN/ THẠCH CAO CHE CÁC LỔ/ LAM THÔNG GIÓ BỊ BUNG VÀ BONG TRÓC LỚP SƠN. - GẠCH LÁT NỀN NHIỀU NƠI BỊ BỂ VÀ THAY NHIỀU CHỦNG LOẠI GẠCH. - 2 CẦU THANG TRỤC (6-10,E-F) LÁT GẠCH BỀ MẶT ĐÃ BỊ MÒN, MỘT VÀI CHỖ BỊ SỨT BỂ. - CẦU THANG TRỤC 11-15/ H-Ha, BẬC THANG RÊU MỐC, TƯỜNG LAN CAN BONG SƠN.
+- LỐI ĐI
+- P. kỹ thuật
+- 4 3 2 1 14 15 16
+- W.C
+- DB-HSTC
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- Lối vào P. XỬ LÝ DỤNG CỤ
+- P. XỬ LÝ CHẤT THẢI
+- SÂN
+- SÂN
+- P. CÁCH LY 01 (2G)
+- W.C
+- BUỒNG ĐỆM
+- P. HỒI SỨC CẤP CỨU 1 ( 4 G)
+- P. HỒI SỨC CẤP CỨU 1 ( 09 G)
+- PHÒNG VỆ SINH NHÂN VIÊN HÀNH LANG KHU CHẦN ĐOÁN HÌNH ẢNH HÀNH LANG LỐI VÀO KHO PHÒNG NGHỈ NHÂN VIÊN PHÒNG X QUANG HÀNH LANG KHU NHÂN VIÊN
+- W.C
+- P. CÁCH LY 02(2G)
+- P. CÁCH LY 03(2G)
+- 6 7 8 9 10 11 12 13 5
+- P. THỦ THUẬT
+- P. HC KHOA
+- P. BỆNH(3G)
+- NHÀ CHỜ
+- P. NGHỈ BS NỮ W.C
+- T1 TR T1 TR
+- P. HC KHOA
+- W.C
+- KHO
+- KHO DỤNG CỤ/ MÁY MÓC
+- W.C
+- P. NGHỈ ĐIỀU DƯỠNG NỮ
+- P. NGHỈ BS NAM
+- KHO
+- TR1
+- W.C
+- MẶT BẰNG HIỆN TRẠNG TẦNG 1
+- +0.100
+- -0.100
+- P. SINH HOẠT KHOA
+- P. ĂN
+- W.C
+- P. TIẾP NGƯỜI THÂN
+- KHO HS
+- T1 TR
+- T1 TR1 T1 TR1
+- KHOA XÉT NGHIỆM
+- TỶ LỆ :1/100
+- T1 TR
+- 56900 4500
+- F2
+- D7
+- WC
+- P. LƯU MẪU
+- D3
+- T2 TR1
+- P.ĐÔNG MÁU-HUYẾT HỌC-NGÂN HÀNG MÁU
+- L3
+- D6 D6
+- T2 TR1 T2 TR1 T1 TR1
+- P. ĐẶT MÁY NƯỚC TIỂU TỰ ĐỘNG
+- P. NGHỈ NV NAM XÉT NGHIỆM
+- KHO
+- +0.250
+- T1 TR1
+- T2 TR1 T2 TR1 T2 TR1
+- T1 TR T1 TR
+- T2 TR1
+- Dv
+- F3
+- D6
+- P. TRƯỞNG KHOA
+- KHOA CHAÅN ÑOAÙN HÌNH AÛNH
+- D6
+- KHO KHO
+- P. NHẬN MẪU
+- P.CHỤP X QUANG P.RỬA PHIM
+- D1
+- KHOA XEÙT NGHIEÄM
+- D1
+- T2
+- S1 S1
+- S1 S1
+- T2 TR
+- VK1
+- D6
+- P.SINH HÓA MIỄN DỊCH
+- D6 D6
+- T2 TR
+- D2
+- P.XỬ KÝ KẾT QUẢ
+- H=2,6M
+- B1 A.B2.02
+- D8
+- D7
+- VK3
+- VK2
+- S1
+- S1 S1
+- H=2,6M
+- VT1
+- T2 TR
+- QUẦY NHẬN HỒ SƠ
+- T2 TR
+- D2
+- LỐI VÀO KHO VẬT TƯ
+- D6
+- D6
+- D6
+- ĐK. CHỤP MSCT
+- THANG BTCT
+- D6
+- D6
+- P.HÀNH CHÍNH
+- T2 TR
+- D4
+- S1
+- D6
+- T2 TR
+- VT1
+- D6
+- D6
+- KHO HÓA CHẤT VẬT TƯ
+- P.MÁY CHỤP MSCT
+- P.TRƯỞNG KHOA
+- T2 TR1
+- D6
+- T1 TR1
+- S1
+- T2 TR
+- +0.250
+- PH. NGHỈ NV
+- T2 TR1
+- +0.100
+- D1
+- T1 TR
+- Dv Dv
+- VT1
+- D6
+- D6
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- F2
+- T1 TR
+- KHO
+- T1 TR
+- F2
+- F2
+- VT2
+- VT2
+- F2
+- S3
+- S3
+- S3
+- F4
+- S3
+- S2
+- S3
+- P. NHÂN VIÊN KHOA CĐHA
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG XỬ LÝ HÌNH ẢNH MSCT VÀ GIAO BAN KHOA CĐHA
+- PHÒNG TRƯỞNG KHOA TIM MẠCH
+- TR1
+- C1-03
+- TR1 TR1
+- TR1
+- TR1
+- TR1
+- C1-02
+- TR1
+- TR1
+- GHI CHUÙ HIEÄN TRAÏNG:
+- TR1
+- TR1
+- TR1
+- TR1
+- CHÚ THÍCH: VT: LỔ THÔNG GIÓ TRÊN CAO. VT1: L= 3100 MM, H=950MM; SỐ LƯỢNG: 3 VT2: L= 1200 MM, H=950MM; SỐ LƯỢNG: 2
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG HIỆN TRẠNG TẦNG 1
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.BHT.01
+- ../2024
+
+
+## Trang 9
+- MÔ TẢ HIỆN TRẠNG: - 2 CẦU THANG TRỤC (6-10,E-F) GẠCH  LÁT BỀ MẶT ĐÃ BỊ MÒN, MỘT VÀI CHỖ BỊ SỨT BỂ, TƯỜNG SƠN NƯỚC Ố MÀU.
+- 4 3 2 1 14 15 16
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- WC
+- WC
+- P. Hành chính k. GMHS
+- p.B2-01
+- P. Trưởng khoa GMHS
+- Phòng hành chánh
+- p.B2-17 p.B2-18
+- WC
+- p.B2-11
+- Phòng nhân viên
+- Phòng nhân viên Kho y cụ
+- Phòng cách ly đặc biệt
+- Hồi sức sản
+- Phòng thay đồ
+- 6 7 8 9 10 11 12 13 5
+- Phòng mổ     số 10
+- D5 D5
+- +4.150
+- Phòng mổ số 5 Phòng mổ số 6 Phòng hồi tỉnh sau mổ Phòng mổ số 7 Phòng mổ số 8
+- MẶT BẰNG HIỆN TRẠNG TẦNG 2
+- Phòng tiền mê
+- MÁI TOLE
+- Hành lang sạch Hành lang vô khuẩn
+- Hành lang sạch
+- MÁI BTCT
+- WC
+- TỶ LỆ :1/100
+- 56900 4500
+- Khu vực nhận bệnh và chờ mổ
+- Phòng mổ số 9
+- Hành lang sạch
+- Phòng mổ số 1
+- Phòng mổ số 2
+- Phòng đệm
+- B1 A.B2.02
+- 1FL+4000
+- Phòngmổ số 3 Phòng mổ số 4
+- Khu xử lý dụng cụ
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- P. ĐỆM
+- MÁI TOLE
+- GHI CHUÙ HIEÄN TRAÏNG:
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG HIỆN TRẠNG TẦNG 2
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.BHT.02
+- ../2024
+
+
+## Trang 10
+- MÔ TẢ HIỆN TRẠNG: - TRẦN BÊ TÔNG THẤM Ố 30% Ở CÁC TRỤC F/G-4/5; F/G-9/10; F/G-2/3; H/15 - LỚP GẠCH ỐP TƯỜNG (KÝ HIỆU T2) BỀ MẶT ĐÃ SỜN CŨ, MỘT VÀI VỊ TRÍ BỊ HƯ BỂ; - LỚP SƠN NƯỚC TƯỜNG CỘT DẦM BÊN TRONG NHÀ ĐÃ CŨ, MỘT VÀI VỊ TRÍ BỊ BONG TRÓC; - LỚP SƠN NƯỚC TƯỜNG BÊN NGOÀI NHÀ BỊ RÊU MỐC, NHIỀU CHỖ ĐÃ BONG TRÓC; + TƯỜNG LỬNG CÁC PHÒNG VỆ SINH CAO 2400, MỘT SỐ VÁCH KÍNH HOẶC VÀN ÉP. - CÁC KHU VỰC VỆ SINH RẤT NHIỀU VỊ TRÍ BỊ THẤM SÀN; NGẠCH CỬA HƯ BỂ THIẾT BỊ VỆ SINH HƯ HỎNG XUỐNG CẤP. - CÁC CỬA ĐI CỬA SỔ CONG VÊNH XUỐNG CẤP; - LAN CAN SẮT HÀNH LANG TẦNG BONG TRÓC LỚP SƠN DẦU - CÁC HỆ THỐNG KỸ THUẬT & HỆ THỐNG CHUYÊN NGÀNH CỦA CÁC KHỐI NHÀ CÓ DẤU HIỆU XUỐNG CẤP. +
+- 4 3 2 1 14 15 16
+- T1 TR
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- T2 TR
+- T2 TR
+- T2 TR
+- T2 TR
+- DS
+- VT2
+- VT2
+- VT2
+- S2A
+- S2A
+- S2A
+- VT1
+- VT1
+- VT1 VT1 VT1 VT1 VT1 VT2 VT1 VT1 VT1 VT1 VT1
+- F1
+- p.B3-23
+- p.B3-23
+- P. Trưởng k. CTCH P. Thuốc P. nghỉ nữ P. Hành chánh k. CTCH
+- P. Trưởng k. CTCH
+- VS
+- VS
+- p.B3-09 p.B3-11 p.B3-10
+- p.B3-09 p.B3-11 p.B3-10
+- VS VS
+- VS VS
+- Phòng tiểu phẩu VS
+- VS VS
+- VS VS
+- P. Bệnh
+- VC1
+- P. Bệnh P. Bệnh P. Bệnh
+- P. Bệnh P. Bệnh P. Bệnh
+- VC1
+- VC1
+- S2A S2A S2A S2A S2A S2A S2A S2A S2A
+- S2A
+- S2A
+- VC1
+- T2 TR
+- T2 TR
+- Dv
+- Dv Dv
+- Dv
+- S3A S3A
+- Dv
+- VT1 VT1 VT1 VT1
+- VT1
+- TÖÔØNG CAO 2400 TÖÔØNG CAO 2400
+- F3
+- F4 F4 F4 F4
+- F3 F3 F3 F3 F4 F4 F4 F4
+- T2 TR
+- F3
+- T1 TR T1 TR T1 TR
+- P. Thuốc P. nghỉ nữ P. Hành chánh k. CTCH
+- p.B3-25 p.B3-24 p.B3-26
+- p.B3-24 p.B3-26
+- p.B3-17
+- p.B3-17
+- T2 TR
+- T2 TR T2 TR
+- Dv Dv
+- VC1 VC1
+- S2A
+- S2A
+- +8.300
+- p. nhân viên
+- p. nhân viên
+- T2 TR T2 TR
+- T3 TR
+- VT1
+- VT1 VT1
+- T2 TR
+- T2 TR
+- p.B3-18 p.B3-19
+- p.B3-18 p.B3-19
+- VS
+- VS
+- VS
+- VS
+- T1 TR
+- P. Bệnh P. Bệnh
+- P. Bệnh P. Bệnh
+- T1 TR T1 TR
+- S2A
+- S2A
+- T2 TR
+- VC1
+- Dv
+- VC1
+- F2
+- F3 F3 F3
+- 6 7 8 9 10 11 12 13 5
+- F4
+- TÖÔØNG CAO 2400
+- P. Bệnh
+- P. Bệnh
+- Dv
+- Dv
+- T2 TR
+- VC1
+- VC1 VC1
+- T2 TR
+- S2A S1A S1A
+- S2A
+- T2 TR
+- T2 TR
+- VS
+- VS
+- VS
+- VS
+- F2
+- VS
+- VS
+- VS
+- T2 TR T2 TR
+- Dv
+- Dv
+- VC2
+- VC1
+- T2 TR
+- F3 S1A S1A S2A S2A S2A S2A
+- p.B3-27
+- p.B3-27
+- VT1
+- TÖÔØNG CAO 2400
+- P. BS Nam
+- P. BS Nam
+- P. Bệnh nặng
+- P. Bệnh nặng
+- T2 TR T2 TR
+- MẶT BẰNG HIỆN TRẠNG TẦNG 3
+- F3
+- F4 F4 F4
+- KHO
+- KHO
+- DS1
+- +8.200
+- T1 TR T1 TR T1 TR
+- 1
+- TỶ LỆ :1/100
+- 56900 4500
+- F3
+- P. Hậu phẫu Nam
+- P. Hậu phẫu Nam
+- F3 F3 F3 F3 F3
+- P. Băng bột
+- P. Băng bột P. Điều dưỡng nữ
+- p.B3-28
+- p.B3-28
+- T2 TR1
+- TÖÔØNG CAO 2400
+- p.B3-16 p.B3-15 p.B3-14 p.B3-13 p.B3-13B
+- p.B3-15 p.B3-14 p.B3-13 p.B3-13B
+- T2 TR
+- VC2 VC1
+- VT1 VT1 VT1 VT1 VT1
+- VT1
+- VS
+- VS
+- Dv
+- Dv
+- Dv
+- VS
+- VS
+- VS
+- VS
+- T2 TR
+- T2 TR
+- P. Bệnh P. Bệnh
+- P. Bệnh P. Bệnh
+- VS
+- VS
+- VS
+- VS
+- S2A
+- S2A
+- VT1 VT1 VT1 VT1
+- VC1 VC1
+- VT1
+- P. Bệnh DV P. Bệnh DV
+- P. Bệnh DV P. Bệnh DV
+- +8.350
+- VC1
+- T2 TR
+- T2 TR
+- T2 TR
+- Dv
+- Dv
+- TÖÔØNG CAO 2400
+- T2 TR T2 TR
+- P. Bệnh nặng
+- P. Bệnh nặng
+- F3 F3
+- P. Bệnh hậu phẫu
+- T2 TR
+- T2 TR
+- B1 A.B2.02
+- p.B3-29
+- p.B3-21 p.B3-20
+- p.B3-22 p.B3-21 p.B3-20
+- p.B3-06
+- p.B3-06
+- Dv
+- Dv
+- VC1
+- VC1
+- T2 TR
+- S2A
+- S2A
+- VS
+- VS
+- VS
+- VS
+- T2 TR
+- T2 TR T2 TR
+- VT1 VT1 VT1
+- F4
+- F4
+- p.B3-07
+- p.B3-07
+- P. HC
+- P. HC
+- Phòng tiểu phẩu
+- S2A
+- S2A
+- MÁI POLY
+- T3 TR1
+- VK4
+- F3 F3
+- P. Bệnh nặng
+- P. Bệnh nặng
+- TÖÔØNG CAO 2400
+- P. Bệnh DV
+- P. Bệnh DV
+- TÖÔØNG CAO 2400
+- p.B3-08
+- p.B3-08
+- p.B3-16 P. Bệnh DV
+- T2 TR
+- p.B3-30
+- T2 TR
+- Dv
+- T2 TR
+- Dv
+- Dv
+- Dv
+- T2 TR
+- HÀNH LANG NỐI QUA KHU C
+- VC1
+- VS
+- VS
+- VS
+- VS
+- S2A
+- S2A
+- VC1
+- VS
+- VS
+- VS
+- VS
+- VC1
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- VT1
+- VT2
+- VT2
+- VT2
+- VT2
+- VT1
+- VT2
+- S2A
+- S2A
+- S2A
+- S2A
+- VT2
+- T2 TR
+- T2 TR
+- T2 TR
+- T2 TR
+- GHI CHUÙ HIEÄN TRAÏNG:
+- CHÚ THÍCH: * VT: LỔ THÔNG GIÓ TRÊN CAO. VT1: L= 3100 MM; H=950MM; SỐ LƯỢNG: 37 VT2: L= 1200 MM; H=950MM; SỐ LƯỢNG: 10 * VC: TƯỜNG LỬNG VỆ SINH. VC1: L= 3600 MM; H=1250MM; SỐ LƯỢNG: 21 VC2: L= 5000 MM; H=1250MM; SỐ LƯỢNG: 2
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG HIỆN TRẠNG TẦNG 3
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.BHT.03
+- ../2024
+
+
+## Trang 11
+- MÔ TẢ HIỆN TRẠNG: - MÁI LỢP TÔN RỈ SÉT CONG VÊNH THẤM DỘT, XÀ GỒ  THÉP, KÈO THÉP BONG TRÓC RỈ SÉT; - TRẦN THẠCH CAO HƯ HỎNG NẶNG - GẠCH BẬC CẦU THANG BỊ MÀI MÒN, XUỐNG CẤP. - GẠCH HÀNH LANG KHÔNG ĐỒNG BỘ VÀ CHÊNH COTE. - LAN CAN SẮT SÂN THƯỢNG ĐÃ RỈ SÉT, MỘT VÀI VỊ TRÍ BỊ HƯ MỤC
+- 4 3 2 1 14 15
+- VAÙCH NHOÂM KÍNH CAO 1800
+- LỐI SANG KHỐI A
+- F9
+- N1 TR1
+- TR1
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- TÖÔØNG CAO 1200+
+- KHO DỤNG CỤ
+- KHU VỰC RỬA
+- VAÙCH NHOÂM KÍNH CAO 1800
+- F2
+- N1 TR1
+- +12.100
+- TÖÔØNG CAO 1200+
+- TR1
+- VAÙCH NHOÂM KÍNH CAO 1800
+- TÖÔØNG CAO 1200+
+- F8
+- F8
+- VAÙCH NHOÂM KÍNH CAO 1800
+- TÖÔØNG CAO 1200+
+- CAÊN - TIN
+- N1 TR1 N1 TR1 N1 TR1
+- +12.100
+- KHU VỰC CHIA SUẤT KHU VỰC NẤU
+- N1 TR1
+- +12.100
+- F3 F3
+- VAÙCH NHOÂM KÍNH CAO 1800
+- TÖÔØNG CAO 1200+
+- F7
+- N1 TR1
+- N1 TR1
+- +12.100
+- TR1
+- VAÙCH NHOÂM KÍNH CAO 1800
+- VAÙCH NHOÂM KÍNH CAO 1800
+- F7
+- TÖÔØNG CAO 1200+
+- TÖÔØNG CAO 1200+
+- F7
+- 6 7 8 9 10 11 12 13 5
+- F8
+- F8
+- PHÒNG ĂN CNV.
+- VAÙCH NHOÂM KÍNH CAO 1800
+- KHU VỰC SƠ CHẾ THỰC PHẨM
+- VP. CHỦ NHIỆM
+- TÖÔØNG CAO 1200+
+- N1 TR1
+- N1 TR1
+- +12.100
+- VAÙCH NHOÂM KÍNH CAO 1800
+- TÖÔØNG CAO 1200+
+- F2
+- HỘP GEN THOÁT HƠI 600x800x CAO 2000 NƠI NGHỈ TẠM CỦA THÂN NHÂN NUÔI BỆNH
+- F6
+- F2
+- F2
+- MẶT BẰNG HIỆN TRẠNG TẦNG 4
+- VAÙCH SẮT KÍNH CAO 1300
+- TÖÔØNG CAO 900+
+- KHO THỰC PHẨM
+- TR1
+- F5
+- TR1 TR1
+- N1 TR1
+- S3A
+- F2
+- S4A S4A
+- VÁCH KHUNG SẮT ỐP TẤM ALU
+- N1 TR1
+- N1
+- N1 TR1
+- S3A
+- N1 TR1
+- TỶ LỆ :1/100
+- 52400
+- KHO
+- D1
+- F7
+- F7
+- Dv Dv
+- +12.450
+- SAÂN THÖÔÏNG
+- N3 +12.100
+- F5
+- N3
+- Dv Dv
+- +12.300
+- VAÙCH SẮT KÍNH CAO 1300
+- TÖÔØNG CAO 900+
+- VÁCH CHE BẰNG TÔN
+- D1 D1 D1 D1
+- B1 A.B2.02
+- N3 +12.100
+- KHO
+- S3A
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- KHO HOÀ SÔ CUÛA PHOØNG KHTH
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- N3 +12.100
+- GHI CHUÙ HIEÄN TRAÏNG:
+- 24200 2100 4000 4000 4000 4000 4000 2100
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG HIỆN TRẠNG TẦNG 4
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.BHT.04
+- ../2024
+
+
+## Trang 12
+- KÝ HIỆU LOẠI CỬA KÍCH THƯỚC (RxC) SỐ LƯỢNG
+- DV 28
+- 02 D5 1700 x 2200   CỬA ĐI 2 CÁNH MỞ NHÔM KÍNH
+- D4 01 1600 x 2400   CỬA ĐI 2 CÁNH MỞ (BẢN LỀ SÀN)
+- D6 18
+- D7 1300 x 2400   CỬA ĐI 2 CÁNH MỞ NHÔM KÍNH
+- D3 01 1000 x 2200
+- D2 02
+- F4 15 800 x 2400
+- F5 1500 x 2400   CỬA ĐI 1 CÁNH MỞ SẮT KÍNH
+- F3 25
+- L3
+- S1A 04 2400 x 1400 F2 12 1200 x 2400
+- D1 09
+- D8   CỬA ĐI 1 CÁNH MỞ NHÔM KÍNH 800 x 2200
+- F1 01 1600 x 2400
+- CỬA ĐI 1 CÁNH MỞ SẮT KÍNH
+- CỬA ĐI 2 CÁNH MỞ SẮT KÍNH
+- CỬA ĐI 2 CÁNH MỞ SẮT KÍNH
+- CỬA ĐI 2 CÁNH MỞ SẮT KÍNH
+- 700 x 2200   CỬA ĐI 1 CÁNH MỞ NHÔM KÍNH
+- CỬA ĐI 1 CÁNH MỞ NHÔM KÍNH
+- CỬA ĐI 1 CÁNH MỞ NHÔM KÍNH
+- CỬA ĐI 2 CÁNH MỞ NHÔM KÍNH
+- CỬA ĐI 2 CÁNH MỞ NHÔM KÍNH
+- 01   CỬA ĐI 1 CÁNH LÙA NHÔM KÍNH
+- BẢNG THỐNG KÊ CỬA ĐI
+- 4 3 2 1 14 15
+- 900 x 2400
+- 1400 x 2400
+- 1200 x 2400
+- 1600 x 2400
+- 800 x 2400
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- 02
+- 01
+- 06
+- KÝ HIỆU LOẠI CỬA KÍCH THƯỚC (RxC) SỐ LƯỢNG
+- VK4   VÁCH NHÔM KÍN + CỬA LÙA 3800 x 2500 01 S4A 02 2400 x 1400   CỬA SỔ 3 CÁNH LÙA SẮT KÍNH
+- S3A 04
+- S2A 36
+- DS1 01 1800 x 2000   CỬA ĐI 2 CÁNH MỞ PANO SẮT
+- DS 01 1800 x 2400   CỬA ĐI 2 CÁNH MỞ SONG SẮT
+- DL 01 2300 x 2400   CỬA ĐI 2 CÁNH LÙA NHÔM KÍNH
+- S3 05
+- S2 01
+- F7 900 x 2400   CỬA ĐI 1 CÁNH MỞ SẮT KÍNH
+- S1   CỬA SỔ 4 CÁNH LÙA NHÔM KÍNH 2400 x 1400 05
+- F8 2000X2500   CỬA ĐI SẮT KÉO
+- F8 900 x 2400+(800)   CỬA ĐI 1 CÁNH MỞ NHÔM KÍNH
+- F6 01 2000 x 2400   CỬA ĐI 1 CÁNH MỞ NHÔM KÍNH
+- CỬA SỔ 2 CÁNH LÙA SẮT KÍNH
+- CỬA SỔ 3 CÁNH LÙA SẮT KÍNH
+- CỬA SỔ 4 CÁNH LÙA SẮT KÍNH
+- CỬA SỔ 2 CÁNH LÙA NHÔM KÍNH
+- CỬA SỔ 3 CÁNH LÙA NHÔM KÍNH
+- BẢNG THỐNG KÊ CỬA SỔ
+- 6 7 8 9 10 11 12 13 5
+- 1800 x 1400
+- 1200 x 1400
+- 1800 x 1400
+- 1200 x1400
+- 05
+- 04
+- 1
+- MẶT BẰNG HIỆN TRẠNG MÁI
+- KÝ HIỆU LOẠI CỬA KÍCH THƯỚC (RxC) SỐ LƯỢNG
+- MÔ TẢ HIỆN TRẠNG: - MÁI LỢP TÔN RỈ SÉT CONG VÊNH THẤM DỘT, XÀ GỒ  THÉP, KÈO THÉP BONG TRÓC RỈ SÉT;
+- - CÁC CẤU KIỆN SẮT THÉP BONG TRÓC RỈ SÉT.
+- VK3   VÁCH NHÔM KÍNH 2200 x 1350 01
+- VK2   VÁCH NHÔM KÍNH 3950 x 2650 01
+- VK1   VÁCH NHÔM KÍNH 2400 x 2600 01
+- M2
+- BẢNG THỐNG KÊ VÁCH KÍNH
+- TỶ LỆ :1/100
+- 52400
+- B1 A.B2.02
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- GHI CHUÙ HIEÄN TRAÏNG:
+- 24200 2100 4000 4000 4000 4000 4000 2100
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT BẰNG HIỆN TRẠNG MÁI
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.BHT.05
+- ../2024
+- 1/100
+
+
+## Trang 13
+- PHÒNG NHÂN VIÊN HÀNH LANG KHU CHẦN ĐOÁN HÌNH ẢNH HÀNH LANG LỐI VÀO KHO PHÒNG ĐK CHỤP MSCT
+- MÔ TẢ THÁO DỠ: - THÁO CÁC VÁCH NHẸ LẮP TẠM BÍT LỔ THÔNG GIÓ TRÊN CAO HÀNH LANG VÀ CÁC PHÒNG. THÁO DỠ VÁCH ALU TRỤC H. - TƯỜNG: CÁC PHÒNG CÓ ỐP GẠCH, BÓC DỠ GẠCH CŨ, ĐỤC BỎ LỚP VỮA TÔ TƯỜNG. - TRẦN: THÁO DỠ TOÀN BỘ TRẦN THẠCH CAO HIỆN HỮU. - NỀN: THÁO DỠ GẠCH NỀN TOÀN BỘ CÁC PHÒNG, ĐỤC BỎ LỚP VỮA LÓT NỀN. - CỬA: THÁO DỠ TOÀN BỘ CỬA ĐI, CỬA SỔ, VÁCH KÍNH. - CẦU THANG: BÓC BỎ LỚP GẠCH ỐP BẬC THANG HIỆN HỮU (GIỮ LẠI GRANITO CHÂN TƯỜNG). - VỆ SINH: BÓC BỎ TOÀN BỘ GẠCH ỐP TƯỜNG, LỚP VỮA TÔ. BÓC BỎ GẠCH NỀN VÀ VỮA NÂNG NỀN HIỆN HỮU ĐẾN SÀN BTCT. - MÁI BTCT (MÁI ĐÓN TRỤC (A, 7-9): ĐỤC BỎ VỮA MỤC NÁT, VỆ SINH SẠCH BỀ MẶT TRƯỚC KHI CHỐNG THẤM. - THÁO DỠ HỆ THỐNG CẤP THOÁT NƯỚC, THIẾT BỊ VỆ SINH, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC.
+- LỐI ĐI
+- P. kỹ thuật
+- 4 3 2 1 14 15 16
+- W.C
+- DB-HSTC
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- Lối vào P. XỬ LÝ DỤNG CỤ
+- P. XỬ LÝ CHẤT THẢI
+- SÂN
+- SÂN
+- P. CÁCH LY 01 (2G)
+- W.C
+- BUỒNG ĐỆM
+- P. HỒI SỨC CẤP CỨU 1 ( 4 G)
+- P. HỒI SỨC CẤP CỨU 1 ( 09 G)
+- W.C
+- P. CÁCH LY 02(2G)
+- P. CÁCH LY 03(2G)
+- 6 7 8 9 10 11 12 13 5
+- P. THỦ THUẬT
+- P. HC KHOA
+- P. BỆNH(3G)
+- 2 VT1
+- NHÀ CHỜ
+- P. NGHỈ BS NỮ W.C
+- T1 TR T1 TR
+- P. HC KHOA
+- W.C
+- KHO
+- KHO DỤNG CỤ/ MÁY MÓC
+- W.C
+- P. NGHỈ ĐIỀU DƯỠNG NỮ
+- P. NGHỈ BS NAM
+- KHO
+- TR1
+- W.C
+- MẶT BẰNG THÁO DỠ TẦNG 1
+- +0.100
+- -0.100
+- P. SINH HOẠT KHOA
+- P. ĂN
+- W.C
+- P. TIẾP NGƯỜI THÂN
+- KHO HS
+- T1 TR
+- T1 TR1 T1 TR1
+- KHOA XÉT NGHIỆM
+- TỶ LỆ :1/100
+- T1 TR
+- 56900 4500
+- F2
+- D7
+- WC
+- P. LƯU MẪU
+- D3
+- T2 TR1
+- P.ĐÔNG MÁU-HUYẾT HỌC-NGÂN HÀNG MÁU
+- L3
+- D6 D6
+- T2 TR1 T2 TR1 T1 TR1
+- P. ĐẶT MÁY NƯỚC TIỂU TỰ ĐỘNG
+- P. NGHỈ NV NAM XÉT NGHIỆM
+- KHO
+- +0.250
+- 1
+- T1 TR1
+- T2 TR1 T2 TR1 T2 TR1
+- T1 TR T1 TR
+- T2 TR1
+- Dv
+- F3
+- D6
+- P. TRƯỞNG KHOA
+- KHOA CHAÅN ÑOAÙN HÌNH AÛNH
+- D6
+- KHO KHO
+- P. NHẬN MẪU
+- P.CHỤP X QUANG P.RỬA PHIM
+- D1
+- KHOA XEÙT NGHIEÄM
+- D1
+- T2
+- S1 S1
+- S1 S1
+- T2 TR
+- VK1
+- D6
+- P.SINH HÓA MIỄN DỊCH
+- D6 D6
+- T2 TR
+- D2
+- P.XỬ KÝ KẾT QUẢ
+- H=2,6M
+- B1 A.B2.02
+- D8
+- D7
+- VK3
+- VK2
+- S1
+- S1 S1
+- H=2,6M
+- VT1
+- T2 TR
+- QUẦY NHẬN HỒ SƠ
+- T2 TR
+- D2
+- LỐI VÀO KHO VẬT TƯ
+- D6
+- D6
+- D6
+- ĐK. CHỤP MSCT
+- THANG BTCT
+- D6
+- D6
+- P.HÀNH CHÍNH
+- T2 TR
+- D4
+- S1
+- D6
+- T2 TR
+- VT1
+- VT1
+- D6
+- D6
+- KHO HÓA CHẤT VẬT TƯ
+- P.MÁY CHỤP MSCT
+- P.TRƯỞNG KHOA
+- T2 TR1
+- D6
+- T1 TR1
+- S1
+- T2 TR
+- +0.250
+- PH. NGHỈ NV
+- T2 TR1
+- +0.100
+- D1
+- T1 TR
+- Dv Dv
+- VT1
+- VT1
+- D6
+- D6
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- F2
+- T1 TR
+- KHO
+- T1 TR
+- F2
+- F2
+- VT1
+- VT2
+- VT2
+- VT1
+- F2
+- S3
+- S3
+- S3
+- F4
+- S3
+- S2
+- S3
+- P. NHÂN VIÊN KHOA CĐHA
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG XỬ LÝ HÌNH ẢNH MSCT VÀ GIAO BAN KHOA CĐHA
+- PHÒNG TRƯỞNG KHOA TIM MẠCH
+- TR1
+- C1-03
+- TR1 TR1
+- TR1
+- TR1
+- TR1
+- C1-02
+- TR1
+- TR1
+- GHI CHUÙ THAÙO DÔÕ :
+- TR1
+- TR1
+- TR1
+- TR1
+- CHÚ THÍCH: VT: LỔ THÔNG GIÓ TRÊN CAO. VT1: L= 3100 MM, H=950MM; SỐ LƯỢNG: 3 VT2: L= 1200 MM, H=950MM; SỐ LƯỢNG: 2
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- 3
+- 2
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO, XÂY LẮP MỚI
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TƯỜNG XÂY CŨ ĐẬP BỎ, THÁO DỠ; THAY THẾ MỚI
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG THÁO DỠ TẦNG 1
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.BTD.01
+- ../2024
+
+
+## Trang 14
+- MÔ TẢ THÁO DỠ: - CẦU THANG TRỤC (6-10, E-F): + BÓC BỎ LỚP GẠCH ỐP BẬC THANG HIỆN HỮU (GIỮ LẠI LỚP GRANITO LEN CHÂN TƯỜNG). - MÁI BTCT (MÁI ĐÓN TRỤC (A, 7-9): ĐỤC BỎ VỮA MỤC NÁT, VỆ SINH SẠCH BỀ MẶT TRƯỚC KHI CHỐNG THẤM.
+- 4 3 2 1 14 15 16
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- WC
+- WC
+- P. Hành chính k. GMHS
+- p.B2-01
+- P. Trưởng khoa GMHS
+- Phòng hành chánh
+- p.B2-17 p.B2-18
+- WC
+- p.B2-11
+- Phòng nhân viên
+- Phòng nhân viên Kho y cụ
+- Phòng cách ly đặc biệt
+- Hồi sức sản
+- CẦU THANG TRỤC (E-F,6-10) CẦU THANG TRỤC (E-F,6-10) CẦU THANG TRỤC (E-F,6-10)  MÁI ĐÓN TRỤC (A, 7-9)
+- Phòng thay đồ
+- 6 7 8 9 10 11 12 13 5
+- Phòng mổ     số 10
+- D5 D5
+- +4.150
+- Phòng mổ số 5 Phòng mổ số 6 Phòng hồi tỉnh sau mổ Phòng mổ số 7 Phòng mổ số 8
+- 1 1 2
+- Phòng tiền mê
+- MẶT BẰNG THÁO DỠ TẦNG 2
+- MÁI TOLE
+- Hành lang sạch Hành lang vô khuẩn
+- Hành lang sạch
+- MÁI BTCT
+- WC
+- TỶ LỆ :1/100
+- 56900 4500
+- Khu vực nhận bệnh và chờ mổ
+- Phòng mổ số 9
+- Hành lang sạch
+- Phòng mổ số 1
+- Phòng mổ số 2
+- Phòng đệm
+- B1 A.B2.02
+- 1FL+4000
+- Phòngmổ số 3 Phòng mổ số 4
+- Khu xử lý dụng cụ
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- P. ĐỆM
+- MÁI TOLE
+- GHI CHUÙ THAÙO DÔÕ :
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- 3
+- 2
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO, XÂY LẮP MỚI
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TƯỜNG XÂY CŨ ĐẬP BỎ, THÁO DỠ; THAY THẾ MỚI
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG THÁO DỠ TẦNG 2
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.BTD.02
+- ../2024
+
+
+## Trang 15
+- MÔ TẢ THÁO DỠ: - THÁO CÁC VÁCH NHẸ LẮP TẠM BÍT LỔ THÔNG GIÓ TRÊN CAO HÀNH LANG VÀ GIỮA CÁC PHÒNG. - TƯỜNG: CÁC PHÒNG CÓ ỐP GẠCH, BÓC DỠ GẠCH CŨ, ĐỤC BỎ LỚP VỮA TÔ TƯỜNG. - TRẦN: THÁO DỠ TOÀN BỘ TRẦN THẠCH CAO HIỆN HỮU. - NỀN: THÁO DỠ GẠCH NỀN TOÀN BỘ CÁC PHÒNG, ĐỤC BỎ LỚP VỮA LÓT NỀN. - CỬA: THÁO DỠ TOÀN BỘ CỬA ĐI, CỬA SỔ, VÁCH KÍNH. - CẦU THANG: BÓC BỎ LỚP GẠCH ỐP BẬC THANG HIỆN HỮU (GIỮ LẠI GRANITO LEN CHÂN TƯỜNG HIỆN HỮU). - VỆ SINH: BÓC BỎ TOÀN BỘ GẠCH ỐP TƯỜNG, LỚP VỮA TÔ. BÓC BỎ GẠCH NỀN VÀ VỮA NÂNG NỀN HIỆN HỮU ĐẾN SÀN BTCT. - THÁO DỠ HỆ THỐNG CẤP THOÁT NƯỚC, THIẾT BỊ VỆ SINH, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC.
+- BÊN TRONG PHÒNG BỆNH PHÒNG BÁC SỸ VỆ SINH PHÒNG BỆNH HÀNH LÀNG GIỮA- TRỤC (8,B-D) HÀNH LÀNG GIỮA
+- 4 3 2 1 14 15 16
+- T1 TR
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- T2 TR
+- T2 TR
+- T2 TR
+- T2 TR
+- DS
+- VT2
+- VT2
+- VT2
+- S2A
+- S2A
+- S2A
+- VT1
+- VT1
+- VT1 VT1 VT1 VT1 VT1 VT2 VT1 VT1 VT1 VT1 VT1
+- F1
+- p.B3-23
+- p.B3-23
+- P. Trưởng k. CTCH P. Thuốc P. nghỉ nữ P. Hành chánh k. CTCH
+- P. Trưởng k. CTCH
+- VS
+- VS
+- p.B3-09 p.B3-11 p.B3-10
+- p.B3-09 p.B3-11 p.B3-10
+- VS VS
+- VS VS
+- Phòng tiểu phẩu VS
+- VS VS
+- VS VS
+- P. Bệnh
+- VC1
+- P. Bệnh P. Bệnh P. Bệnh
+- P. Bệnh P. Bệnh P. Bệnh
+- VC1
+- VC1
+- S2A S2A S2A S2A S2A S2A S2A S2A S2A
+- S2A
+- S2A
+- VC1
+- T2 TR
+- T2 TR
+- Dv
+- Dv Dv
+- Dv
+- S3A S3A
+- Dv
+- VT1 VT1 VT1 VT1
+- VT1
+- TÖÔØNG CAO 2400 TÖÔØNG CAO 2400
+- F3
+- F4 F4 F4 F4
+- F3 F3 F3 F3 F4 F4 F4 F4
+- T2 TR
+- F3
+- T1 TR T1 TR T1 TR
+- P. Thuốc P. nghỉ nữ P. Hành chánh k. CTCH
+- p.B3-25 p.B3-24 p.B3-26
+- p.B3-24 p.B3-26
+- p.B3-17
+- p.B3-17
+- T2 TR
+- T2 TR T2 TR
+- Dv Dv
+- VC1 VC1
+- S2A
+- S2A
+- +8.300
+- p. nhân viên
+- p. nhân viên
+- T2 TR T2 TR
+- T3 TR
+- VT1
+- VT1 VT1
+- T2 TR
+- T2 TR
+- p.B3-18 p.B3-19
+- p.B3-18 p.B3-19
+- VS
+- VS
+- VS
+- VS
+- T1 TR
+- P. Bệnh P. Bệnh
+- P. Bệnh P. Bệnh
+- T1 TR T1 TR
+- S2A
+- S2A
+- T2 TR
+- VC1
+- Dv
+- VC1
+- F2
+- F3 F3 F3
+- 6 7 8 9 10 11 12 13 5
+- F4
+- TÖÔØNG CAO 2400
+- P. Bệnh
+- P. Bệnh
+- Dv
+- Dv
+- T2 TR
+- VC1
+- VC1 VC1
+- T2 TR
+- S2A S1A S1A
+- S2A
+- T2 TR
+- T2 TR
+- VS
+- VS
+- VS
+- VS
+- F2
+- VS
+- VS
+- VS
+- T2 TR T2 TR
+- Dv
+- Dv
+- VC2
+- VC1
+- T2 TR
+- F3 S1A S1A S2A S2A S2A S2A
+- p.B3-27
+- p.B3-27
+- VT1
+- TÖÔØNG CAO 2400
+- P. BS Nam
+- P. BS Nam
+- P. Bệnh nặng
+- P. Bệnh nặng
+- T2 TR T2 TR
+- MẶT BẰNG THÁO DỠ TẦNG 3
+- F3
+- F4 F4 F4
+- KHO
+- KHO
+- DS1
+- +8.200
+- T1 TR T1 TR T1 TR
+- 1
+- 1
+- TỶ LỆ :1/100
+- 56900 4500
+- F3
+- P. Hậu phẫu Nam
+- P. Hậu phẫu Nam
+- F3 F3 F3 F3 F3
+- P. Băng bột
+- P. Băng bột P. Điều dưỡng nữ
+- p.B3-28
+- p.B3-28
+- T2 TR1
+- TÖÔØNG CAO 2400
+- p.B3-16 p.B3-15 p.B3-14 p.B3-13 p.B3-13B
+- p.B3-15 p.B3-14 p.B3-13 p.B3-13B
+- T2 TR
+- VC2 VC1
+- VT1 VT1 VT1 VT1 VT1
+- VT1
+- VS
+- VS
+- Dv
+- Dv
+- Dv
+- VS
+- VS
+- VS
+- VS
+- T2 TR
+- T2 TR
+- P. Bệnh P. Bệnh
+- P. Bệnh P. Bệnh
+- VS
+- VS
+- VS
+- VS
+- S2A
+- S2A
+- VT1 VT1 VT1 VT1
+- VC1 VC1
+- VT1
+- P. Bệnh DV P. Bệnh DV
+- P. Bệnh DV P. Bệnh DV
+- +8.350
+- VC1
+- T2 TR
+- T2 TR
+- T2 TR
+- Dv
+- Dv
+- TÖÔØNG CAO 2400
+- T2 TR T2 TR
+- P. Bệnh nặng
+- P. Bệnh nặng
+- F3 F3
+- P. Bệnh hậu phẫu
+- T2 TR
+- T2 TR
+- B1 A.B2.02
+- p.B3-29
+- p.B3-21 p.B3-20
+- p.B3-22 p.B3-21 p.B3-20
+- p.B3-06
+- p.B3-06
+- Dv
+- Dv
+- VC1
+- VC1
+- T2 TR
+- S2A
+- S2A
+- VS
+- VS
+- VS
+- VS
+- T2 TR
+- T2 TR T2 TR
+- VT1 VT1 VT1
+- F4
+- F4
+- p.B3-07
+- p.B3-07
+- P. HC
+- P. HC
+- Phòng tiểu phẩu
+- S2A
+- S2A
+- MÁI POLY
+- T3 TR1
+- VK4
+- F3 F3
+- P. Bệnh nặng
+- P. Bệnh nặng
+- TÖÔØNG CAO 2400
+- P. Bệnh DV
+- P. Bệnh DV
+- TÖÔØNG CAO 2400
+- p.B3-08
+- p.B3-08
+- p.B3-16 P. Bệnh DV
+- T2 TR
+- p.B3-30
+- T2 TR
+- Dv
+- T2 TR
+- Dv
+- Dv
+- Dv
+- T2 TR
+- HÀNH LANG NỐI QUA KHU C
+- VC1
+- VS
+- VS
+- VS
+- VS
+- S2A
+- S2A
+- VC1
+- VS
+- VS
+- VS
+- VS
+- VC1
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- VT1
+- VT2
+- VT2
+- VT2
+- VT2
+- VT1
+- VT2
+- S2A
+- S2A
+- S2A
+- S2A
+- VT2
+- T2 TR
+- T2 TR
+- T2 TR
+- T2 TR
+- GHI CHUÙ THAÙO DÔÕ :
+- CHÚ THÍCH: * VT: LỔ THÔNG GIÓ TRÊN CAO. VT1: L= 3100 MM; H=950MM; SỐ LƯỢNG: 37 VT2: L= 1200 MM; H=950MM; SỐ LƯỢNG: 10 * VC: TƯỜNG LỬNG VỆ SINH. VC1: L= 3600 MM; H=1250MM; SỐ LƯỢNG: 21 VC2: L= 5000 MM; H=1250MM; SỐ LƯỢNG: 2
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- 3
+- 2
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO, XÂY LẮP MỚI
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TƯỜNG XÂY CŨ ĐẬP BỎ, THÁO DỠ; THAY THẾ MỚI
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG THÁO DỠ TẦNG 3
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.BTD.03
+- ../2024
+
+
+## Trang 16
+- MÔ TẢ THÁO DỠ: - THÁO DỠ TƯỜNG CỘT, VÁCH THEO VỊ TRÍ TRÊN BẢN VẼ. THÁO DỠ MÁI & KHUNG MÁI HIỆN HỮU. - NỀN: BÓC DỠ CÁC LỚP HOÀN THIỆN CŨ CHO ĐẾN SÀN BTCT. - TRẦN: THÁO DỠ TOÀN BỘ TRẦN THẠCH CAO HIỆN HỮU. - CỬA: THÁO DỠ TOÀN BỘ CỬA ĐI, CỬA SỔ, VÁCH KÍNH. - CẦU THANG: BÓC BỎ LỚP GẠCH ỐP BẬC THANG HIỆN HỮU (GIỮ LẠI GRANITO LEN CHÂN TƯỜNG). - MÁI, SÊ NÔ BTCT: ĐỤC BỎ VỮA MỤC NÁT, VỆ SINH SẠCH BỀ MẶT TRƯỚC KHI CHỐNG THẤM. - THÁO DỠ HỆ THỐNG CẤP THOÁT NƯỚC, THIẾT BỊ VỆ SINH, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC.
+- CĂNG TIN VÀ KHU VỰC RỬA HÀNH LANG SAU CĂNG TIN TRẦN THẠCH CAO HÀNH LANG SAU. CỘT, KÈO MÁI KHU SÂN THƯỢNG (KHO TẠM)  KHU SÂN THƯỢNG (KHO TẠM)
+- 4 3 2 1 14 15
+- VAÙCH NHOÂM KÍNH CAO 1800
+- LỐI SANG KHỐI A
+- F9
+- N1 TR1
+- TR1
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- TÖÔØNG CAO 1200+
+- KHO DỤNG CỤ
+- KHU VỰC RỬA
+- VAÙCH NHOÂM KÍNH CAO 1800
+- F2
+- N1 TR1
+- +12.100
+- TÖÔØNG CAO 1200+
+- TR1
+- VAÙCH NHOÂM KÍNH CAO 1800
+- TÖÔØNG CAO 1200+
+- F8
+- F8
+- VAÙCH NHOÂM KÍNH CAO 1800
+- TÖÔØNG CAO 1200+
+- CAÊN - TIN
+- N1 TR1 N1 TR1 N1 TR1
+- +12.100
+- KHU VỰC CHIA SUẤT KHU VỰC NẤU
+- N1 TR1
+- +12.100
+- F3 F3
+- VAÙCH NHOÂM KÍNH CAO 1800
+- TÖÔØNG CAO 1200+
+- F7
+- N1 TR1
+- N1 TR1
+- +12.100
+- TR1
+- VAÙCH NHOÂM KÍNH CAO 1800
+- VAÙCH NHOÂM KÍNH CAO 1800
+- F7
+- TÖÔØNG CAO 1200+
+- TÖÔØNG CAO 1200+
+- F7
+- 6 7 8 9 10 11 12 13 5
+- F8
+- F8
+- PHÒNG ĂN CNV.
+- VAÙCH NHOÂM KÍNH CAO 1800
+- KHU VỰC SƠ CHẾ THỰC PHẨM
+- VP. CHỦ NHIỆM
+- TÖÔØNG CAO 1200+
+- N1 TR1
+- N1 TR1
+- +12.100
+- VAÙCH NHOÂM KÍNH CAO 1800
+- TÖÔØNG CAO 1200+
+- F2
+- HỘP GEN THOÁT HƠI 600x800x CAO 2000 NƠI NGHỈ TẠM CỦA THÂN NHÂN NUÔI BỆNH
+- F6
+- F2
+- F2
+- VAÙCH SẮT KÍNH CAO 1300
+- TÖÔØNG CAO 900+
+- MẶT BẰNG THÁO DỠ TẦNG 4
+- KHO THỰC PHẨM
+- TR1
+- F5
+- TR1 TR1
+- N1 TR1
+- S3A
+- F2
+- S4A S4A
+- VÁCH KHUNG SẮT ỐP TẤM ALU
+- N1 TR1
+- N1
+- N1 TR1
+- S3A
+- N1 TR1
+- TỶ LỆ :1/100
+- 52400
+- KHO
+- D1
+- F7
+- F7
+- 3
+- Dv Dv
+- +12.450
+- SAÂN THÖÔÏNG
+- N3 +12.100
+- F5
+- N3
+- Dv Dv
+- +12.300
+- VAÙCH SẮT KÍNH CAO 1300
+- TÖÔØNG CAO 900+
+- VÁCH CHE BẰNG TÔN
+- D1 D1 D1 D1
+- B1 A.B2.02
+- N3 +12.100
+- KHO
+- S3A
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- KHO HOÀ SÔ CUÛA PHOØNG KHTH
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- N3 +12.100
+- GHI CHUÙ THAÙO DÔÕ :
+- 24200 2100 4000 4000 4000 4000 4000 2100
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- 3
+- 2
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO, XÂY LẮP MỚI
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TƯỜNG XÂY CŨ ĐẬP BỎ, THÁO DỠ; THAY THẾ MỚI
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG THÁO DỠ TẦNG 4
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.BTD.04
+- ../2024
+
+
+## Trang 17
+- MÁI NHÌN TỪ BÊN NGOÀI PHÍA SAU HÀNH LANG SAU CĂNG TIN CỘT, KÈO THÉP HÀNH LANG SAU. CỘT, KÈO MÁI KHU SÂN THƯỢNG (KHO TẠM) CỘT, KÈO MÁI KHU SÂN THƯỢNG (KHO TẠM) CỘT, KÈO THÉP HÀNH LANG SAU.
+- MÔ TẢ THÁO DỠ: - THÁO DỠ CỘT THÉP, MÁI & KHUNG MÁI HIỆN HỮU. - THÁO DỠ MÁNG XỐI. - THÁO DỠ HỆ THỐNG CẤP THOÁT NƯỚC, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC.
+- 4 3 2 1 14 15
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- 6 7 8 9 10 11 12 13 5
+- MẶT BẰNG THÁO DỠ MÁI
+- M2
+- 3
+- TỶ LỆ :1/100
+- 52400
+- B1 A.B2.02
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- GHI CHUÙ THAÙO DÔÕ :
+- 24200 2100 4000 4000 4000 4000 4000 2100
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- 3
+- 2
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO, XÂY LẮP MỚI
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TƯỜNG XÂY CŨ ĐẬP BỎ, THÁO DỠ; THAY THẾ MỚI
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG THÁO DỠ MÁI
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.BTD.05
+- ../2024
+- 1/100
+
+
+## Trang 18
+- HIỆN TRẠNG: TRẦN BÊ TÔNG HÀNH LANG TRỤC 6-A/D THẤM Ố 20%; TRẦN BÊ TÔNG CÁC PHÒNG TRỤC E/H-12/14 THẤM Ố 70%; TRẦN THẠCH CAO NHIỀU NƠI BỊ BONG TRÓC, THẤM NƯỚC. - VÁCH LẮP TẤM ALU TRỤC H-8/14 BỊ MƯA TẠT VÀO PHÒNG KHO BÊN TRONG; - LỚP GẠCH ỐP TƯỜNG (KÝ HIỆU T2) BỀ MẶT ĐÃ SỜN CŨ, MỘT VÀI VỊ TRÍ BỊ HƯ BỂ; - LỚP SƠN NƯỚC TƯỜNG CỘT DẦM BÊN TRONG NHÀ ĐÃ CŨ, MỘT VÀI VỊ TRÍ BỊ BONG TRÓC; LỚP SƠN NƯỚC TƯỜNG BÊN NGOÀI NHÀ BỊ RÊU MỐC, NHIỀU CHỖ ĐÃ BONG TRÓC; - VỆ SINH BỊ THẤM TƯỜNG, SƠN NƯỚC BỊ RÊU MỐC; THIẾT BỊ VỆ SINH HƯ HỎNG XUỐNG CẤP - CÁC CỬA ĐI CONG VÊNH XUỐNG CẤP; - CẦU THANG LÁT GẠCH BỀ MẶT ĐÃ BỊ MÒN, MỘT VÀI CHỖ BỊ SỨT BỂ. - BÊN TRÊN TƯỜNG HÀNH LANG TRỤC D-E/9-15 VÀ A-H/ 14-14, CÁC TẤM VÁN/ THẠCH CAO CHE CÁC LỔ/ LAM THÔNG GIÓ BỊ BUNG VÀ BONG TRÓC LỚP SƠN. - GẠCH LÁT NỀN NHIỀU NƠI BỊ BỂ VÀ THAY NHIỀU CHỦNG LOẠI GẠCH.
+- LỐI ĐI
+- P.KỸ THUẬT
+- 4 3 2 1 14 15 16
+- DB-HSTC
+- W.C
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- LỐI VÀO P. XỬ LÝ DỤNG CỤ
+- GC GC GC GC GC GC GC GC GC GC GC GC
+- GC GC GC GC
+- P. XỬ LÝ CHẤT THẢI
+- P. CÁCH LY 01 (2G)
+- SÂN
+- SÂN SÂN
+- 250
+- 500
+- 100 550 100
+- 250 100
+- W.C
+- 750
+- GC GC GC GC GC GC GC GC
+- GC GC GC GC GC GC GC GC
+- GC GC GC GC GC GC GC GC GC
+- 450
+- P. HỒI SỨC CẤP CỨU 1 ( 09 G)
+- BUỒNG ĐỆM
+- 100
+- 250
+- P. HỒI SỨC CẤP CỨU 1 (4G)
+- W.C
+- P. CÁCH LY 02(2G)
+- * DIỆN TÍCH CẢI TẠO: 681,8 M² MÔ TẢ CẢI TẠO: - GIA CỐ MỘT SỐ CỘT, DẦM. - TƯỜNG: + XÂY CHÈN TƯỜNG LỬNG CÁC PHÒNG VỆ SINH CAO TỚI DẦM/ SÀN BTCT. + XÂY MỚI PHÒNG VỆ SINH TRỤC (16,B-E). + XÂY MỚI TƯỜNG TRỤC (8-14,H). + XÂY MỚI TƯỜNG HỘP GEN THOÁT NƯỚC MÁI TRỤC A VÀ TRỤC H. + XÂY TƯỜNG DÀY200 BUỒNG THANG TRỤC (8-9,E-F). + XÂY CHÈN TƯỜNG SAU KHI LẮP ĐẶT CỬA, VÁCH KÍNH. + TÔ TƯỜNG XÂY MỚI VÀ CÁC MẢNG TƯỜNG CHẮP VÁ HIỆN HỮU CHƯA TÔ. +ỐP GẠCH CERAMIC 300x600 CAO 2,1M ĐỐI VỚI CÁC PHÒNG CHỨC NĂNG CÓ ỐP GẠCH. ỐP GẠCH LEN CHÂN TƯỜNG 100x600 ĐỐI VỚI CÁC PHÒNG KHÔNG ỐP GẠCH. + TƯỜNG CÒN LẠI BÊN TRÊN PHẦN ỐP GẠCH BẢ MATIC, SƠN NƯỚC CAO TỚI TRẦN SAU KHI ĐÃ CẠO SỦI LỚP SƠN CŨ. - NỀN: +CÁN VỮA NỀN TOÀN BỘ SÀN SAU KHI ĐÃ ĐỤC BỎ LỚP VỮA NỀN CŨ. (KHÔNG THAY ĐỔI CAO ĐỘ HOÀN THIỆN SO VỚI HIỆN TRẠNG). +LÁT MỚI GẠCH GRANITE 600x600 TOÀN BỘ NỀN PHÒNG VÀ HÀNH LANG (TRỪ VỆ SINH). LÁT GACH GRANITE 600x600 CHỐNG TRƯỢT KHU VỰC SÂN TRỤC (10-14,H-Ha). +LÁT ĐÁ GRANITE CÁC NGẠCH CỬA - TRẦN: ĐÓNG MỚI TOÀN BỘ TRẦN THẠCH CAO KHUNG NỔI 600x600 CHO TẤT CẢ CÁC PHÒNG VÀ HÀNH LANG (TRỪ VỆ SINH) SAU KHI LẮP ĐẶT CÁC HỆ THỐNG KỸ THUẬT.
+- N1 TR1
+- P. CÁCH LY 03(2G)
+- 250
+- 500
+- 100 550 100
+- 250 100
+- 750
+- 450
+- 6 7 8 9 10 11 12 13 5
+- P. THỦ THUẬT
+- 100
+- 250
+- P. HC KHOA
+- P. BỆNH(3G)
+- W.C
+- W.C
+- KHO KHO
+- KHO DỤNG CỤ/ MÁY MÓC
+- P. NGHỈ ĐIỀU DƯỠNG NỮ
+- P. NGHỈ BS NAM
+- P. HC KHOA
+- NHÀ CHỜ
+- N1 TR1 T1 N1 TR1 T2
+- W.C
+- +0.100
+- 250
+- 500
+- W.C
+- 100 250 100
+- 750 450 750 100 3900 750
+- 450
+- TH TH
+- P. NGHỈ BS NỮ
+- 250
+- MẶT BẰNG CẢI TẠO TẦNG 1 TỶ LỆ :1/100
+- KHO KHO KHO HS
+- - CỬA, VÁCH KÍNH: +LẮP DỰNG THAY MỚI TOÀN BỘ CỬA ĐI CỬA SỔ BẰNG CỮA NHÔM KÍNH .+ VÁCH KÍNH THAY MỚI BẰNG KHUNG NHÔM KÍNH  +LẮP MỚI 2 CỬA CHỐNG CHÁY EI60 CHO 2 CẦU BUỒNG TRỤC (6-10,E-F). - LẮP MỚI VÁCH THẠCH CAO 2 MẶT BÍT CÁC LỔ THÔNG GIÓ TRÊN CAO TẠI TƯỜNG HÀNH LANG VÀ TƯỜNG CÁC PHÒNG. - CẦU THANG TRỤC (6-10,E-F): +ỐP LÁT MỚI BẬC THANG BẰNG GẠCH GRANITE (LOẠI DÙNG CHO CẦU THANG) SAU KHI THÁO DỠ GẠCH CŨ. + ĐÁNH BÓNG TAY VỊN GRANITO HIỆN HỮU. TƯỜNG CÒN LẠI BẢ MATIC SƠN NƯỚC MỚI SAU KHI CẠO SỦI LỚP SƠN CŨ. - CẦU THANG TRỤC (Ha,11-14): +BẬC THANG: CẠO SỦI, LÀM SẠCH BỀ MẶT, SƠN DẦU HOÀN THIỆN. + TƯỜNG LAN CAN: CẠO SỦI, BẢ MATIC SƠN NƯỚC HOÀN THIỆN. - VỆ SINH: +NỀN LÁT GẠCH GRANITE 300x300 CHỐNG TRƯỢT. + TƯỜNG ỐP GẠCH CERAMIC 300x600 CAO 2,1M, PHẦN CÒN LẠI BÊN TRÊN BẢ MATIC SƠN NƯỚC CAO TỚI TRẦN. + ĐÓNG TRẦN THẠCH CAO CHỐNG ẨM 600x600. + TẤT CẢ CÁC CÔNG TÁC TRÊN THỰC HIỆN SAU KHI LẮP ĐẶT CÁC ĐƯỜNG ỐNG KỸ THUẬT. - LẮP CÁC THANH TAY VỊN CHỐNG VA VÀ THANH KẸP GÓC. - MÁI ĐÓN BTCT TRỤC (7-9, A): CHỐNG THẤM SAU KHI ĐÃ LÀM SẠCH BỀ MẶT (THEO QUI TRÌNH NHÀ SẢN XUẤT). - LẮP ĐẶT MỚI HỆ THỐNG CẤP THOÁT NƯỚC, THIẾT BỊ VỆ SINH, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC.
+- P. SINH HOẠT KHOA
+- P. TIẾP NGƯỜI THÂN
+- +0.100
+- -0.100
+- W.C
+- P. ĂN
+- 7-3 level of slab,finishing
+- HÀNH LANG
+- VS1.1 .
+- 2400 200 2425 2875 200 3800 200 3800 200 1455 100 6245 200 1900 200
+- 2100 1000 700 3350 1650 1500 750 999 1500 850 3900 100
+- 2400 1700 4100 2500 1300 4500 3400 2000
+- 300
+- 56900 4500
+- N1 TR1 T1
+- KHOA XÉT NGHIỆM
+- N1 TR1 T1
+- KHO WC
+- GC GC
+- 500
+- 200 1500 100 3200 200 3800 200 2600 3150 100 5950 200
+- P. ĐỆM
+- N1 TR1 T2
+- 100 250 100
+- 450
+- P. HUYẾT HỌC
+- P. THỬ MẪU
+- N1 TR1 T2 N1 TR1 T2 N1 TR1 T1
+- 250
+- 250
+- NƯỚC TIỂU
+- P. ĐONG MÁU
+- P. NGHỈ NV
+- 1700 2700
+- 1350 1850 100
+- N1 TR1 T1
+- C1-02 KHO
+- N1 TR T1
+- N1 TR1 T1 N1 TR1 T1
+- 600
+- VS1.2 .
+- 1500
+- 1400 200 3900 1600 100 2200
+- GC GC GC GC GC
+- P. TRƯỞNG KHOA
+- N2 TR2 T2
+- P. NHẬN MẪU    P. HÀNH CHÍNH
+- P. CHỤP X QUANG
+- N1 TR1 T2 N1 TR1 T2
+- P. SINH HÓA MIỄN DỊCH    PHÒNG GIAO BAN
+- N1 TR1 T1 N1 TR1 T1
+- N1 TR1 T2
+- 500
+- 100 250 100
+- 450
+- N1 TR1 T2
+- KHOA X QUANG
+- 1500 1100 3150 100 5950 200
+- 250
+- B2 A.B3.01
+- 250
+- N1 TR1 T2
+- CHÚ THÍCH: * VT: VÁCH THẠCH CAO 2 MẶT BÍT CÁC LỔ THÔNG GIÓ. VT1: L= 3100 MM, H=950MM; SỐ LƯỢNG: 3 VT2: L= 1200 MM, H=950MM; SỐ LƯỢNG: 2
+- N1 TR1 T1
+- VT1
+- P. TRẢ HỒ SƠ   P. CHỤP CT
+- N1 TR1 T1 TH
+- LỐI VÀO KHO VẬT TƯ
+- N1 TR1 T2
+- THANG BTCT
+- GC GC GC
+- P. THAY ĐỒ
+- HÀNH LANG
+- N3 TR1 T1
+- HÀNH LANG
+- P.RỬA PHIM
+- 950
+- VS1.5 .
+- N1 TR1 T2
+- N1 TR1 T2
+- +0.100
+- 2345 3900
+- 500
+- 250
+- VT1
+- 1000
+- 100 250 100
+- KHO HÓA CHẤT
+- 450
+- N1 TR1 T1
+- N1 TR1 T2
+- WC
+- P. TRƯỞNG KHOA
+- PHÒNG NGHỈ
+- 250
+- N1 TR1 T2
+- 1500 1751 200 1600 200
+- N2 TR2 T2
+- 200
+- 1900 100
+- N1 TR1 T1
+- N1 TR1 T1
+- VT1
+- 1150
+- N3
+- N2 NỀN LÁT GẠCH CERAMIC 300x300MM, CHỐNG TRƯỢT
+- N1 NỀN LÁT GẠCH GRANITE 600x600MM
+- TH GẠCH GRANITE CẦU THANG CÓ MŨI CHỐNG TRƯỢT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 2100MM, PHAÀN COØN LAÏI SÔN NÖÔÙC
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG NỔI CHỐNG ẨM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- M1 MÁI BTCT
+- HÀNH LANG
+- NỀN LÁT GẠCH GRANITE 600x600MM, CHỐNG TRƯỢT
+- 1900 200
+- 3800 200 3900 1200 200 2500 2400 100 1000 100 1600 100 2700
+- VT2
+- VT2
+- 200
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG XỬ LÝ HÌNH ẢNH MSCT VÀ GIAO BAN KHOA CĐHA
+- P. NHÂN VIÊN KHOA CĐHA
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG TRƯỞNG KHOA TIM MẠCH
+- N1 TR1 T1
+- N1 TR1 T1
+- N1 TR1 T1
+- N1 TR1 T1
+- N1 TR1 T1
+- C1-03
+- VS1.4 .
+- GHI CHUÙ CAÛI TAÏO:
+- 700 300
+- 700 300
+- 700 300
+- 1100
+- 100
+- 100
+- 100
+- VS1.6 .
+- VS1.6 .
+- VS1.6 .
+- VS1.3 .
+- N2 TR2 T2
+- N2 TR2 T2
+- N2 TR2 T2
+- N2 TR2 T2
+- N2 TR2 T2
+- N1 TR1 T1
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- GC CỘT HIỆN TRẠNG GIA CƯỜNG
+- 2 KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- PHẦN GIA CƯỜNG CỘT HIỆN TRẠNG
+- 2100 2100
+- 2100
+- VÁCH CEMBOARD CÁCH ÂM LẮP ĐẶT MỚI
+- TƯỜNG XÂY MỚI
+- TƯỜNG HIỆN HỮU
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- MẶT BẰNG CẢI TẠO TẦNG 1
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B1.01
+- ../2024
+- 1/100
+
+
+## Trang 19
+- HIỆN TRẠNG: - CẦU THANG LÁT GẠCH BỀ MẶT ĐÃ BỊ MÒN, MỘT VÀI CHỖ BỊ SỨT BỂ. TƯỜNG SƠN NƯỚC HOEN Ố ĐỔI MÀU.
+- HÀNH LANG KẾT NỐI KHỐI A
+- 4 3 2 1 14 15 16
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- WC
+- WC
+- P. Hành chính k. GMHS
+- P. Trưởng khoa GMHS
+- Phòng hành chánh
+- 250
+- 400
+- 100 550 100
+- WC
+- 100 250 100
+- 750
+- GC GC GC GC
+- 450
+- Phòng nhân viên
+- 300
+- 250
+- Phòng nhân viên Kho y cụ
+- * DIỆN TÍCH CẢI TẠO:  43 M² MÔ TẢ CẢI TẠO: - CẦU THANG TRỤC (6-10,E-F): +LẮP MỚI 2 CỬA CHỐNG CHÁY EI60 CHO 2 BUỒNG THANG. XÂY CHÈN TƯỜNG. +ỐP LÁT MỚI BẬC THANG BẰNG GẠCH GRANITE (LOẠI DÙNG CHO CẦU THANG) SAU KHI THÁO DỠ GẠCH CŨ. + ĐÁNH BÓNG TAY VỊN GRANITO HIỆN HỮU. TƯỜNG CÒN LẠI BẢ MATIC SƠN NƯỚC MỚI SAU KHI CẠO SỦI LỚP SƠN CŨ. - MÁI ĐÓN BTCT TRỤC (7-9, A): CHỐNG THẤM SAU KHI ĐÃ LÀM SẠCH BỀ MẶT (THEO QUI TRÌNH NHÀ SẢN XUẤT). - XÂY MỚI TƯỜNG HỘP GEN THOÁT NƯỚC MÁI TRỤC A VÀ TRỤC H.
+- GC GC GC GC GC
+- GC GC GC GC GC GC
+- Phòng cách ly đặc biệt
+- Hồi sức sản
+- Phòng thay đồ
+- 250
+- 400
+- 100 550 100
+- 100 250 100
+- 750
+- 450
+- 6 7 8 9 10 11 12 13 5
+- 300
+- 250
+- Phòng mổ     số 10
+- 1500 2700 1698
+- GC GC
+- 100 1700 3000
+- MẶT BẰNG CẢI TẠO TẦNG 2 TỶ LỆ :1/100
+- 15,6 M²
+- 1640 1525 1635
+- MÁI TOLE
+- Phòng mổ số 5 Phòng mổ số 6 Phòng hồi tỉnh sau mổ Phòng mổ số 7 Phòng mổ số 8
+- +4.150
+- 250
+- N1 TR T1 N1 TR T1
+- 400
+- 1 1
+- 7,7 M²
+- 100 550 100
+- 100 250 100
+- 750
+- TH TH
+- Phòng tiền mê
+- 450
+- GC
+- 300
+- 250
+- Mái BTCT
+- GC
+- Hành lang sạch Hành lang vô khuẩn
+- 2
+- Hành lang sạch
+- GC
+- 26,0 M²
+- WC
+- GC
+- 1500 2700 1700
+- GC
+- Khu vực nhận bệnh và chờ mổ
+- 56900 4500
+- GC GC
+- 400
+- 250
+- Phòng mổ số 9
+- 100 250 100
+- 100 550 100
+- 15,6 M²
+- 1635 1525 1640
+- 450
+- 750
+- 100 1700 3000
+- 7,7 M²
+- 250
+- 300
+- Hành lang sạch
+- GC GC GC
+- Phòng mổ số 2 Phòng mổ số 1
+- 400
+- 250
+- 100 250 100
+- 100 550 100
+- 450
+- 750
+- 250
+- Phòng đệm
+- B2 A.B3.01
+- 300
+- 1FL+4000
+- Phòngmổ số 3 Phòng mổ số 4
+- 400
+- 250
+- 100 250 100
+- 100 550 100
+- 450
+- 750
+- 250
+- 300
+- Khu xử lý dụng cụ
+- GC
+- N3
+- N2 NỀN LÁT GẠCH CERAMIC 300x300MM, CHỐNG TRƯỢT
+- N1 NỀN LÁT GẠCH GRANITE 600x600MM
+- TH GẠCH GRANITE CẦU THANG CÓ MŨI CHỐNG TRƯỢT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 2100MM, PHAÀN COØN LAÏI SÔN NÖÔÙC
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG NỔI CHỐNG ẨM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- M1 MÁI BTCT
+- P. ĐỆM
+- NỀN LÁT GẠCH GRANITE 600x600MM, CHỐNG TRƯỢT
+- MÁI TOLE
+- GHI CHUÙ CAÛI TAÏO:
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- GC CỘT HIỆN TRẠNG GIA CƯỜNG
+- 2 KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- PHẦN GIA CƯỜNG CỘT HIỆN TRẠNG
+- VÁCH CEMBOARD CÁCH ÂM LẮP ĐẶT MỚI
+- TƯỜNG XÂY MỚI
+- TƯỜNG HIỆN HỮU
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT BẰNG CẢI TẠO TẦNG 2
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B1.02
+- ../2024
+- 1/100
+
+
+## Trang 20
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- HIỆN TRẠNG: - TRẦN BÊ TÔNG THẤM Ố 30% Ở CÁC TRỤC F/G-4/5; F/G-9/10; F/G-2/3; H/15 - LỚP GẠCH ỐP TƯỜNG (KÝ HIỆU T2) BỀ MẶT ĐÃ SỜN CŨ, MỘT VÀI VỊ TRÍ BỊ HƯ BỂ; - LỚP SƠN NƯỚC TƯỜNG CỘT DẦM BÊN TRONG NHÀ ĐÃ CŨ, MỘT VÀI VỊ TRÍ BỊ BONG TRÓC; - LỚP SƠN NƯỚC TƯỜNG BÊN NGOÀI NHÀ BỊ RÊU MỐC, NHIỀU CHỖ ĐÃ BONG TRÓC; - TƯỜNG LỬNG CÁC PHÒNG VỆ SINH CAO 2400, BÊN TRÊN MỘT SỐ TƯỜNG LẮP VÁCH KÍNH HOẶC VÁN ÉP. - RẤT NHIỀU VỊ TRÍ VỆ SINH BỊ THẤM SÀN; NGẠCH CỬA HƯ BỂ, THIẾT BỊ VỆ SINH HƯ HỎNG XUỐNG CẤP. - CÁC CỬA ĐI CỬA SỔ CONG VÊNH XUỐNG CẤP; - LAN CAN SẮT HÀNH LANG TẦNG BONG TRÓC LỚP SƠN DẦU - CÁC HỆ THỐNG KỸ THUẬT & HỆ THỐNG CHUYÊN NGÀNH CỦA CÁC KHỐI NHÀ CÓ DẤU HIỆU XUỐNG CẤP. - GẠCH LÁT NỀN NHIỀU NƠI BỊ BỂ VÀ THAY NHIỀU CHỦNG LOẠI GẠCH.
+- HÀNH LANG KẾT NỐI KHỐI A
+- 4 3 2 1 14 15 16
+- N2 TR2 T2 N2 TR2 T2 N2 TR2 T2
+- 26,6M²
+- 19,1M²
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- 1900 200 3800 200 3800 200 3800 200 3800 200 4800 200 2700 200 2900 200 4800 200 7800 200 3800 200 3800 200
+- 200 2600 100 1100 200 1100 100 3900 200
+- VT1
+- VT2
+- VT1
+- VT2
+- VT2
+- P. TRƯỞNG K. CTCH
+- P. BỆNH P. BỆNH P. BỆNH P. BỆNH
+- 11,6M² 11,6M² 11,6M² 11,6M²
+- 2,5M²
+- 2,5M²
+- N1 TR1 T2
+- 2,5M² 2,5M²
+- 2,5M²
+- VC1
+- 2300 100 1500 1500 100 2300 200 2300 100 1400 200 1400 100 2300
+- VC1
+- 2400 1400
+- VS VS
+- VS VS
+- P. TIỂU PHẪU VS
+- VS
+- VC1
+- VC1
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- VT1 VT1 VT1 VT1
+- VT1 VT1 VT1 VT1 VT1
+- 400
+- 500
+- VS3.1a .
+- VS3.1a .
+- VS3.1b .
+- 11,6M²
+- VS3.1b .
+- 100 550 100
+- 250 100
+- 750
+- 450
+- P. BỆNH
+- 100
+- 36,9M² 16,5M² 16,5M²
+- VS3.1a .
+- 250
+- 250
+- P. NHÂN VIÊN
+- P. THUỐC P. NGHỈ NỮ P. BỆNH NẶNG
+- N1 TR1 T2
+- N1 TR1 T2
+- N1 TR1 T2
+- N1 TR1 T2
+- 14,5M²
+- 120,6M² 53,0M²
+- N1 TR1 T2
+- 42,0M²
+- 2,5M² 2,5M²
+- VC1 VC1
+- 1200
+- * DIỆN TÍCH CẢI TẠO: 1268,1 M² MÔ TẢ CẢI TẠO: - GIA CỐ MỘT SỐ CỘT, DẦM. - TƯỜNG: + XÂY CHÈN TƯỜNG LỬNG CÁC PHÒNG VỆ SINH CAO TỚI DẦM/ SÀN BTCT. +  XÂY MỚI TƯỜNG HỘP GEN TRỤC A VÀ TRỤC H. + XÂY TƯỜNG 2 BUỒNG THANG TRỤC (6-10,E-F), DÀY 200MM. + XÂY CHÈN TƯỜNG SAU KHI LẮP ĐẶT CỬA, VÁCH KÍNH. + TÔ TƯỜNG XÂY MỚI VÀ CÁC MẢNG TƯỜNG CHẮP VÁ HIỆN HỮU CHƯA TÔ. +ỐP GẠCH CERAMIC 300x600 CAO 2,1M ĐỐI VỚI CÁC PHÒNG CHỨC NĂNG CÓ ỐP GẠCH. ỐP GẠCH LEN CHÂN TƯỜNG 100x600 ĐỐI VỚI CÁC PHÒNG KHÔNG ỐP GẠCH. + TƯỜNG CÒN LẠI BÊN TRÊN PHẦN ỐP GẠCH BẢ MATIC, SƠN NƯỚC CAO TỚI TRẦN SAU KHI ĐÃ CẠO SỦI LỚP SƠN CŨ. - NỀN: +CÁN VỮA NỀN TOÀN BỘ SÀN SAU KHI ĐÃ ĐỤC BỎ LỚP VỮA NỀN CŨ. (KHÔNG THAY ĐỔI CAO ĐỘ HOÀN THIỆN SO VỚI HIỆN TRẠNG). +LÁT MỚI GẠCH GRANITE 600x600 TOÀN BỘ NỀN PHÒNG VÀ HÀNH LANG (TRỪ VỆ SINH). +CHỐNG THẤM NỀN (THEO QUI TRÌNH NHÀ SẢN XUẤT) CÁC HÀNH LANG TIẾP GIÁP NGOÀI TRỜI TRƯỚC KHI LÁT GẠCH. +LÁT ĐÁ GRANITE CÁC NGẠCH CỬA - TRẦN: ĐÓNG MỚI TOÀN BỘ TRẦN THẠCH CAO KHUNG NỔI 600x600 CHO TẤT CẢ CÁC PHÒNG VÀ HÀNH LANG (TRỪ VỆ SINH) SAU KHI LẮP ĐẶT CÁC HỆ THỐNG KỸ THUẬT. - CỬA, VÁCH KÍNH: +LẮP DỰNG THAY MỚI TOÀN BỘ CỬA ĐI CỬA SỔ BẰNG CỬA NHÔM KINH .+ VÁCH KÍNH THAY MỚI BẰNG KHUNG NHÔM KÍNH
+- GC GC GC
+- GC
+- N2 TR2 T2
+- P. BỆNH P. BỆNH
+- 2,5M²
+- 2400 1400
+- VS
+- VS VS
+- N1 TR1 T2
+- VC1
+- VC1
+- 400
+- VS3.1b .
+- 500
+- VS3.1a .
+- VS3.1b .
+- 11,6M²
+- 100 550 100
+- 100 250 100
+- 750
+- 450
+- GC
+- 6 7 8 9 10 11 12 13 5
+- VS3.1a .
+- 100 1100 1100 100
+- VS3.1b .
+- P. HÀNH CHÁNH K. CTCH
+- 250
+- 250
+- N1 TR1 T2 N1 TR1 T2
+- 29,7M² 44,5M²
+- 2,5M²
+- VC1
+- 2,5M²
+- VS
+- VC1 VC1
+- 2,5M² 2,1M²
+- 2,1M²
+- VS
+- 15,6 M²
+- 1500 1800 1500
+- VS3.3a .
+- 2100 2700
+- N1 TR T1
+- VS3.3b .
+- VT1 VT2
+- VC1
+- VC2
+- MẶT BẰNG CẢI TẠO TẦNG 3 TỶ LỆ :1/100
+- 7,7 M²
+- 100 1900 100 1200 1501 2700
+- 100 1900 100 1800
+- 400
+- P. BS NAM
+- 500
+- N1 TR1 T2 N1 TR1 T1
+- 10,5 M² 13 M²
+- 100 550 100
+- 100 250 100
+- 750
+- TH TH
+- 450
+- 1800 200 4000 200 1800
+- 250
+- 250
+- GC
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO
+- +LẮP MỚI 2 CỬA CHỐNG CHÁY CHO 2 BUỒNG THANG  TRỤC (6-10,E-F). - LẮP MỚI VÁCH THẠCH CAO 2 MẶT BÍT CÁC LỔ THÔNG GIÓ TRÊN CAO TẠI TƯỜNG HÀNH LANG VÀ TƯỜNG CÁC PHÒNG. - CẦU THANG TRỤC (6-10,E-F): +ỐP LÁT MỚI BẬC THANG BẰNG GẠCH GRANITE (LOẠI DÙNG CHO CẦU THANG) SAU KHI THÁO DỠ GẠCH CŨ. + ĐÁNH BÓNG TAY VỊN GRANITO HIỆN HỮU. TƯỜNG CÒN LẠI BẢ MATIC SƠN NƯỚC MỚI SAU KHI CẠO SỦI LỚP SƠN CŨ. - VỆ SINH: +CHỐNG THẤM (THEO QUI TRÌNH NHÀ SẢN XUẤT) NỀN CÁC VỆ SINH TRƯỚC KHI LÁT GẠCH. +NỀN LÁT GẠCH GRANITE 300x300 CHỐNG TRƯỢT. + TƯỜNG ỐP GẠCH CERAMIC 300x600 CAO 2,1M, PHẦN CÒN LẠI BÊN TRÊN BẢ MATIC SƠN NƯỚC CAO TỚI TRẦN. + ĐÓNG TRẦN THẠCH CAO CHỐNG ẨM 600x600. + TẤT CẢ CÁC CÔNG TÁC TRÊN THỰC HIỆN SAU KHI LẮP ĐẶT CÁC ĐƯỜNG ỐNG KỸ THUẬT. - GẮN CÁC THANH TAY VỊN CHỐNG VA VÀ THANH KẸP GÓC. - GẮN THANH LAM NHÔM CHỮ Z. - SƠN DẦU CÁC LAN CAN HÀNH LANG HIỆN HỮU SAU KHI ĐÃ CẠO SỦI LỚP SƠN CŨ. - LẮP ĐẶT MỚI HỆ THỐNG CẤP THOÁT NƯỚC, THIẾT BỊ VỆ SINH, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC. -
+- KHU VỰC XÂY GẠCH BÔNG GIÓ HIỆN HỮU (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 30,7M²
+- N1 TR1 T2
+- 11,6M² 32,8M²
+- P. BỆNH +8.200
+- 89,0M²
+- 4000 200 3800 1200
+- 89,0M²
+- 3199 100
+- 56900 4500
+- 500
+- 400
+- P. HẬU PHẪU NAM
+- N1 TR1 T2
+- 100 250 100
+- 100 550 100
+- 15,6 M²
+- 1635 1525 1638
+- 450
+- 7,7 M²
+- 750
+- 2700 2100
+- P. BĂNG BỘT
+- VS3.2 .
+- N1 TR1 T2 N1 TR1 T2
+- 41,4M²
+- VT1 VT1 VT1 VT1 VT1
+- 250
+- 1500 2700 1600
+- 250
+- 1300 100 2400 100
+- VT1 VT1 VT1 VT1 VT1
+- VT1
+- N1 TR T1
+- VC2 VC1
+- 15,4 M²
+- 2,6M²
+- 1200
+- VS
+- 11,6M² 11,6M²
+- 2,5M²
+- 2,5M²
+- N2 TR2 T2
+- 1100 100
+- VS
+- VS
+- P. BỆNH
+- P. BỆNH P. BỆNH
+- N1 TR1 T2 N1 TR1 T2
+- N1 TR1 T2 N1 TR1 T2 N1 TR1 T2
+- 2,5M²
+- VS3.1a .
+- 2300 100 1400 200 1400 100 2300
+- VS
+- VS
+- VC1
+- VS3.1b .
+- VC1 VC1
+- VT1
+- 1400 100 2300 200 2300 100
+- VS3.1a .
+- 11,6M²
+- P. ĐIỀU DƯỠNG NỮ
+- VS3.1b .
+- 500
+- 400
+- P. BỆNH NẶNG
+- N1 TR1 T2
+- 100 1100 200 1100 100
+- 100 250 100
+- 100 550 100
+- 450
+- 750
+- 36,9 M²
+- VS3.1b .
+- 26,8 M²
+- VS3.1a .
+- 250
+- B2 A.B3.01
+- 250
+- CHÚ THÍCH: * VT: VÁCH THẠCH CAO 2 MẶT BÍT CÁC LỔ THÔNG GIÓ TRÊN CAO. VT1: L= 3100 MM, H=950MM; SỐ LƯỢNG: 37 VT2: L= 1200 MM, H=950MM; SỐ LƯỢNG: 10 * VC: XÂY CHÈN TƯỜNG LỬNG VỆ SINH CAO TỚI DẦM/ SÀN BTCT: VC1: L= 3600 MM, H=1250MM; SỐ LƯỢNG: 21 VC2: L= 5000 MM, H=1250MM; SỐ LƯỢNG: 2
+- P. BỆNH
+- VT1 VT1
+- VC1
+- 2,5M²
+- VC1
+- 2,5M²
+- VS
+- VS
+- N2 TR2 T2
+- N1 TR1 T2
+- N1 TR1 T2
+- N1 TR1 T2
+- 34,6 M²
+- N1 TR1 T2
+- P. HC
+- 29,6M²
+- N1 TR1 T2
+- MÁI POLY
+- 500
+- 400
+- 100 250 100
+- 100 550 100
+- 450
+- 750
+- VS3.1b .
+- VS3.1b .
+- VS3.1a .
+- VS3.1a .
+- 1400 100 2300
+- 1400 100 2300
+- 11,6M²
+- 11,6M²
+- 250
+- 250
+- N1 TR1 T2
+- N1 TR1 T2
+- P. Bệnh
+- 16,5M²
+- P. Bệnh
+- VS
+- VS
+- VT1
+- VC1
+- P. BỆNH
+- 11,6M²
+- N1 TR1 T2
+- 2,5M²
+- 2,5M²
+- VC1
+- 2,5M²
+- 2,5M²
+- VS
+- VS
+- VC1
+- N3
+- N2 NỀN LÁT GẠCH CERAMIC 300x300MM, CHỐNG TRƯỢT
+- N1 NỀN LÁT GẠCH GRANITE 600x600MM
+- TH GẠCH GRANITE CẦU THANG CÓ MŨI CHỐNG TRƯỢT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 2100MM, PHAÀN COØN LAÏI SÔN NÖÔÙC
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG NỔI CHỐNG ẨM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- M1 MÁI BTCT
+- VT1
+- VT2
+- VT2
+- VT1
+- VT2
+- VT2
+- VT2
+- VT2
+- NỀN LÁT GẠCH GRANITE 600x600MM, CHỐNG TRƯỢT
+- 45,2M²
+- 2600 100 1100 200 1100 100 3900 200 2500 200 2600 100 1100 200 1100 100 2600 200
+- N2 TR2 T2
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- GHI CHUÙ CAÛI TAÏO:
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- GC CỘT HIỆN TRẠNG GIA CƯỜNG
+- 2 KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- PHẦN GIA CƯỜNG CỘT HIỆN TRẠNG
+- VÁCH CEMBOARD CÁCH ÂM LẮP ĐẶT MỚI
+- TƯỜNG XÂY MỚI
+- TƯỜNG HIỆN HỮU
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT BẰNG CẢI TẠO TẦNG 3
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B1.03
+- ../2024
+- 1/100
+
+
+## Trang 21
+- HIỆN TRẠNG: - MÁI LỢP TÔN RỈ SÉT CONG VÊNH THẤM DỘT, XÀ GỒ  THÉP, KÈO THÉP BONG TRÓC RỈ SÉT; - TRẦN THẠCH CAO HƯ HỎNG NẶNG. - GẠCH BẬC CẦU THANG BỊ MÀI MÒN, XUỐNG CẤP. - GẠCH LÁT NỀN CŨ, BỂ NHIỀU NƠI ,CHÊNH COTE VÀ NHIỀU CHỦNG LOẠI. - LAN CAN SẮT SÂN THƯỢNG ĐÃ RỈ SÉT, MỘT VÀI VỊ TRÍ BỊ HƯ MỤC.
+- SÊ NÔ
+- 4 3 2 1 14 15
+- HÀNH LANG KẾT NỐI KHỐI A +12.100
+- HÀNH LANG KẾT NỐI KHỐI A
+- 11,1 M²
+- 1150 100 2850 2350 1650
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 100 3300 150 900100 3800 3000 900100 2300 1300 400
+- 950 900 1550 1200
+- KHO DỤNG CỤ
+- N3 TR1 T1
+- KHU VỰC RỬA
+- 3650 900100 1250 1500 1200 1250 1600 5100
+- N3 TR2 T2 N3 TR2 T2 N3 TR2 T2
+- 28,1 M² 24,4 M² 24,1 M²
+- 450
+- 450
+- 100 550 100
+- 100 250 100
+- 750
+- 450
+- 3800 2150 100
+- 200
+- * DIỆN TÍCH CẢI TẠO: 1268,1 M² MÔ TẢ CẢI TẠO: - TƯỜNG, VÁCH: + XÂY MỚI TƯỜNG HỘP GEN THOÁT NƯỚC MÁI TRỤC A VÀ TRỤC H. + XÂY MỚI TƯỜNG NGĂN CHIA KHÔNG GIAN CÁC PHÒNG VÀ KHU VỆ SINH (XEM BẢN VẼ). + XÂY TƯỜNG NGĂN 2 BUỒNG THANG TRỤC (6-10,E-F), DÀY 200MM. +ỐP GẠCH CERAMIC 300x600 CAO 2,1M ĐỐI VỚI CÁC PHÒNG CHỨC NĂNG CÓ ỐP GẠCH. ỐP GẠCH LEN CHÂN TƯỜNG 100x600 ĐỐI VỚI CÁC PHÒNG KHÔNG ỐP GẠCH. + TƯỜNG CÒN LẠI BÊN TRÊN PHẦN ỐP GẠCH BẢ MATIC, SƠN NƯỚC CAO TỚI TRẦN. +LẮP DỰNG VÁCH NGĂN BẰNG TẤM CEMBOARD KHUNG THÉP (CÓ LỚP CÁCH ÂM). - NỀN: +CÁN VỮA NỀN TOÀN BỘ SÀN SAU KHI ĐÃ ĐỤC BỎ LỚP VỮA NỀN CŨ. (KHÔNG THAY ĐỔI CAO ĐỘ HOÀN THIỆN SO VỚI HIỆN TRẠNG). +LÁT MỚI GẠCH GRANITE 600x600 TOÀN BỘ NỀN PHÒNG VÀ HÀNH LANG (TRỪ VỆ SINH). +CHỐNG THẤM NỀN (THEO QUI TRÌNH NHÀ SẢN XUẤT) CÁC HÀNH LANG TIẾP GIÁP NGOÀI TRỜI TRƯỚC KHI LÁT GẠCH. +LÁT ĐÁ GRANITE CÁC NGẠCH CỬA - TRẦN: ĐÓNG MỚI TOÀN BỘ TRẦN THẠCH CAO KHUNG NỔI 600x600 CHO TẤT CẢ CÁC PHÒNG VÀ HÀNH LANG (TRỪ VỆ SINH) SAU KHI LẮP ĐẶT CÁC HỆ THỐNG KỸ THUẬT. - CỬA, VÁCH KÍNH: + THAY VÀ LẮP MỚI TOÀN BỘ CỬA ĐI CỬA SỔ BẰNG CỬA NHÔM KÍNHI  + VÁCH KÍNH LẮP DỰNG MỚI BẰNG KHUNG NHÔM KÍNH .
+- P. TRƯỞNG KHOA P. TƯ VẤN DD KHU PHA CHẾ CĂN TIN
+- 250
+- 250
+- 210,6 M²
+- +12.100
+- SOẠN CHIA NẤU KHU VỰC  SƠ CHẾ
+- N1 TR1
+- 900
+- KHOA NỘI HÔ HẤP KHOA DINH DƯỠNG
+- SÊ NÔ SÊ NÔ
+- SÊ NÔ
+- 450
+- 450
+- 900
+- 100 550 100
+- 100 250 100
+- 750
+- 450
+- 6 7 8 9 10 11 12 13 5
+- 250
+- N1 TR1 T1
+- 250
+- 33,7 M²
+- THỰC PHẨM
+- P. ĂN NV
+- N3 TR2 T2
+- 4000 1200 1800 100 900 900 600 1800 600
+- N1 TR1 T2 N1 TR1 T2
+- 20,3 M²
+- 100 3450 100 5100 100
+- 1850 3052
+- 300
+- 650 2900 1650 1800 1100 2600 1000 800 1800 700 900
+- 1500 1500 1200 1000
+- 900 800 2000 1000 200 2800 1400 1000 2000 1000 1600 900 400 900 700 1800 800 1800 700 900 400
+- 15,6 M²
+- N1 TR T1 N1 TR T1
+- 7,7 M²
+- N1 TR1 T1 N1 TR1 T1 N1 TR1 T1
+- KHO THỰC PHẨM
+- 13,5 M² 13,8 M²
+- MẶT BẰNG CẢI TẠO TẦNG 4
+- N1 TR1 T1
+- N1 TR1 T1 N1 TR1 T1 N1 TR1 T1
+- 450
+- 450
+- 15,9 M² 9,9 M² 16,2 M²
+- 100 550 100
+- P. HC KHOA DINH DƯỠNG KHO
+- 100 250 100
+- 750
+- TH TH
+- +LẮP MỚI 2 CỬA CHỐNG CHÁY EI60 CHO 2 BUỒNG THANG TRỤC (6-10,E-F). - CẦU THANG TRỤC (6-10,E-F): +ỐP LÁT MỚI BẬC THANG BẰNG GẠCH GRANITE (LOẠI DÙNG CHO CẦU THANG) SAU KHI THÁO DỠ GẠCH CŨ. + ĐÁNH BÓNG TAY VỊN GRANITO HIỆN HỮU. TƯỜNG CÒN LẠI BẢ MATIC SƠN NƯỚC MỚI SAU KHI CẠO SỦI LỚP SƠN CŨ. - VỆ SINH: +CHỐNG THẤM NỀN (THEO QUI TRÌNH NHÀ SẢN XUẤT) CÁC VỆ SINH TRƯỚC KHI LÁT GẠCH. +NỀN LÁT GẠCH GRANITE 300x300 CHỐNG TRƯỢT. + TƯỜNG ỐP GẠCH CERAMIC 300x600 CAO 2,1M, PHẦN CÒN LẠI BÊN TRÊN BẢ MATIC SƠN NƯỚC CAO TỚI TRẦN. + ĐÓNG TRẦN THẠCH CAO CHỐNG ẨM 600x600. + TẤT CẢ CÁC CÔNG TÁC TRÊN THỰC HIỆN SAU KHI LẮP ĐẶT CÁC ĐƯỜNG ỐNG KỸ THUẬT. - LẮP CÁC THANH TAY VỊN CHỐNG VA VÀ THANH KẸP GÓC. - GẮN THANH LAM NHÔM CHỮ Z. - LẮP MỚI LAN CAN INOX CAO 1,4 M CÁC HÀNH LANG (XEM BẢN VẼ). - CÁC SÊ NÔ BTCT: CHỐNG THẤM SAU KHI ĐÃ LÀM SẠCH BỀ MẶT (THEO QUI TRÌNH NHÀ SẢN XUẤT). - XÂY DỰNG MỚI CÁC CỘT BÊ TÔNG CỐT THÉP. - LẮP ĐẶT MỚI HỆ THỐNG CẤP THOÁT NƯỚC, THIẾT BỊ VỆ SINH, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC.
+- 450
+- 300
+- 40,8 M²
+- 250
+- 250
+- VS4.3 .
+- 26,6 M²
+- 2800 2900
+- +12.100
+- 87,8 M²
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 100 2300 900 700 1000 500 800 700 1000 500 900 100 650 1000 100 2100 100 900
+- 100
+- 700
+- TỶ LỆ :1/100
+- 200
+- 100 3000 100 900 4000 100
+- 52400
+- 100
+- N2 TR2 T2
+- 1000 900 2000
+- 900 600 1800 3100 1200 400 1200 5200 1200 400 1200 5200 1200 300
+- 90,6 M²
+- 8,4 M²
+- 8,1 M²
+- 3,4 M²
+- 1900 100 1900
+- N2 TR2 T2 N2 TR2 T2
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO
+- VS4.1 .
+- 15,2 M²
+- N1 TR1 T1
+- 3300
+- 11,8 M²
+- 450
+- 450
+- 700 1500 1500 1100
+- 100 250 100
+- 450
+- 7,7 M²
+- 15,6 M²
+- 750
+- 100
+- 100 2000 100 2000 100 1800 1850 100 1800 100 2000 100 2000 100 1800 1850 100 2000 100 100
+- P. NHÂN VIÊN
+- N2 TR2 T2 N2 TR2 T2 N2 TR2 T2 N2 TR2 T2 N2 TR2 T2
+- 3 M²
+- N1 TR1 T2 N1 TR1 T2
+- 250
+- 250
+- N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2
+- P. BỆNH
+- 27,8 M²
+- VS4.2a . VS4.2b . VS4.2a . VS4.2b . VS4.2a .
+- 80,5 M²
+- 1600
+- VC VC VC
+- VC VC
+- 100 2000 100 2000 100 1750 100 1750 200
+- 400 900 700 1800 800 1800 700 900 400 900 700 1800 800 1800 300 1200 400
+- 7800
+- 3200
+- 700 700 200
+- 27,8 M²
+- N1 TR1 T2 N1 TR1 T2
+- P. BỆNH P. BỆNH P. BỆNH P. BỆNH
+- P. BỆNH P. BỆNH
+- 2500
+- 32,1 M²
+- VS4.2b . VS4.2a .
+- N2 TR2 T2 N2 TR2 T2
+- 450
+- 2500
+- 3 M² 3 M²
+- 3 M²
+- 450
+- VC
+- 100 250 100
+- 100 550 100
+- 450
+- 750
+- 6300
+- 3800 3600
+- 3 M²
+- 250
+- B2 A.B3.01
+- 250
+- 27,8 M² 27,8 M²
+- 32,1 M²
+- N1 TR1 T2
+- SÊ NÔ
+- 700 700 200
+- 1600
+- 100 1850 100 2000 100 2000 100 1850 100
+- 7800
+- 1850
+- VC
+- VC
+- VC
+- 1200 1450 1000 300 1000 1425 1200 325
+- 3800 3800 1200
+- 700 700 200
+- 27,8 M²
+- N1 TR1 T2 N1 TR1 T2
+- N1 TR1 T2 N1 TR1 T2
+- P. BỆNH P. BỆNH
+- P. BỆNH P. BỆNH
+- 15,4 M²
+- 14,2 M²
+- 100 2000
+- N2 TR2 T2 N2 TR2 T2
+- N2 TR2 T2 N2 TR2 T2
+- 450
+- 3 M² 3 M²
+- 3 M² 3 M²
+- 450
+- 3 M² 3 M²
+- VC
+- 3150 100 2850 100
+- 100 250 100
+- 100 550 100
+- 450
+- 750
+- 100
+- 6300
+- VC
+- VC
+- 250
+- 2000 100 1850
+- 250
+- 15,4 M²
+- 14,2 M²
+- N3
+- N2 NỀN LÁT GẠCH CERAMIC 300x300MM, CHỐNG TRƯỢT
+- N1 NỀN LÁT GẠCH GRANITE 600x600MM
+- TH GẠCH GRANITE CẦU THANG CÓ MŨI CHỐNG TRƯỢT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 2100MM, PHAÀN COØN LAÏI SÔN NÖÔÙC
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG NỔI CHỐNG ẨM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- M1 MÁI BTCT
+- NỀN LÁT GẠCH GRANITE 600x600MM, CHỐNG TRƯỢT
+- 1600
+- 100 700 700 200
+- 700 700 200
+- N1 TR1 T2
+- N1 TR1 T2
+- +12.100
+- 45,2 M²
+- 1950 100
+- GHI CHUÙ CAÛI TAÏO:
+- 24200 2100 4000 4000 4000 4000 4000 2100
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- GC CỘT HIỆN TRẠNG GIA CƯỜNG
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- 2 KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- PHẦN GIA CƯỜNG CỘT HIỆN TRẠNG
+- VÁCH CEMBOARD CÁCH ÂM LẮP ĐẶT MỚI
+- TƯỜNG XÂY MỚI
+- TƯỜNG HIỆN HỮU
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT BẰNG CẢI TẠO TẦNG 4 CHI TIẾT VÁCH CEMBOARD
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B1.04
+- ../2024
+- 1/100
+
+
+## Trang 22
+- MÔ TẢ CẢI TẠO: - LẮP CÁC KÈO THÉP & XÀ GỒ THÉP. - LỢP MÁI TÔN (CÓ LỚP CÁCH ÂM, CÁCH NHIỆT). - LẮP MỚI MÁNG XỐI INOX.
+- 4 3 2 1 14 15
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- 6 7 8 9 10 11 12 13 5
+- Doác 15% Doác 15%
+- MẶT BẰNG CẢI TẠO MÁI TỶ LỆ :1/100
+- MÁNG THU NƯỚC INOX
+- MÁNG THU NƯỚC INOX
+- 52400
+- MAÙI TOÂN
+- MAÙI TOÂN
+- M2
+- B2 A.B3.01
+- Doác 15% Doác 15%
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- GHI CHUÙ THAÙO DÔÕ :
+- 24200 2100 4000 4000 4000 4000 4000 2100
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- 3
+- 2
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO, XÂY LẮP MỚI
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TƯỜNG XÂY CŨ ĐẬP BỎ, THÁO DỠ; THAY THẾ MỚI
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG CẢI TẠO MÁI
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B1.05
+- ../2024
+- 1/100
+
+
+## Trang 23
+- MÔ TẢ CẢI TẠO: + XÂY MỚI TƯỜNG HỘP GEN THOÁT NƯỚC MÁI TRỤC A VÀ TRỤC H (XEM BẢN VẼ). + TƯỜNG CỘT DẦM CÁC MẶT ĐỨNG SƠN NƯỚC HIỆN HỮU: CẠO SỦI, BẢ MASTIC SƠN NƯỚC LẠI TOÀN BỘ; +CÁC CẤU KIỆN SẮT THÉP HIỆN HỮU SƠN DẦU: CẠO RỈ SƠN DẦU LẠI TOÀN BỘ; TẦNG 4: CÁC CỘT BÊ TÔNG CỐT THÉP XÂY MỚI. CÁC MÁNG XỐI THU NƯỚC MÁI XUNG QUANH KHỐI NHÀ BẰNG TẤM INOX DÀY 1MM, KHUNG THÉP, BÊN NGOÀI ỐP CÁC TẤM NHÔM NHỰA HỖN HỢP HOÀN THIỆN. LẮP ĐẶT LAN CAN TAY VỊN DỌC CÁC KHU HÀNH LANG, PHÍA DƯỚI LÀ TƯỜNG XÂY, PHÍA TRÊN BẰNG INOX (CAO 1400); +GẮN LAM NHÔM CHỮ Z HÀNH LANG TẦNG 3, 4. +MÀU SẮC SƠN NƯỚC HOẶC CÁC VẬT LIỆU HOÀN THIỆN CHO KHỐI NHÀ TƯƠNG ĐỒNG PHÙ HỢP VỚI TỔNG THỂ XUNG QUANH KHỐI NHÀ.
+- -0.100 SÂN ĐƯỜNG
+- -0.100 SÂN ĐƯỜNG
+- 2000 3300 1400
+- 500
+- 1100 1200
+- 300 750 1050
+- 850 750
+- 1 2 3 4 5 6 7 8 9 10 11 12 13 14
+- 1 2 3 4 5 6 7 8 9 10 11 12 13 14
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000
+- MAÙNG XỐI INOX KHUNG THEÙP ỐP TẤM NHOÂM NHỰA HỖN HỢP
+- MẶT ĐỨNG HIỆN TRẠNG TRỤC 1-16
+- MẶT ĐỨNG CẢI TẠO TRỤC 1-16
+- 4000 4000
+- 4000 4000
+- 52399
+- 52399
+- TỶ LỆ :1/100
+- TỶ LỆ :1/100
+- GẮN LAM NHOÂM CHỮ Z
+- HÀNH LANG
+- HÀNH LANG
+- HÀNH LANG
+- 2200 @4500
+- 2200 @4500
+- 15 16
+- 15 16
+- 1200 3000 4050 4050 4100 200
+- 2050 3750 4050 4050 4100 200
+- 16600
+- 18200
+- TẦNG 1
+- TẦNG 2
+- TẦNG 3
+- TẦNG 4
+- TẦNG 1
+- TẦNG 2
+- TẦNG 3
+- TẦNG 4
+- ĐỈNH MÁI +16.500
+- ĐỈNH MÁI
+- MÁI
+- +0.100
+- +4.150
+- +8.200
+- +12.300
+- +0.100
+- +4.150
+- +8.200
+- +12.300
+- +16.050
+- +18.100
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- MẶT ĐỨNG HIỆN TRẠNG - CẢI TẠO TRỤC 1-16
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B2.01
+- ../2024
+
+
+## Trang 24
+- -0.100 SÂN ĐƯỜNG
+- -0.100 SÂN ĐƯỜNG
+- Ha
+- H
+- 3300 500 2000
+- 1200 1100 750 1050 1400 850 750
+- 5230
+- 5230
+- 300
+- A B C D E F G H
+- A B C D E F G H
+- 2100 4000 4000 4000 4000 4000 2100 24200
+- 2100 4000 4000 4000 4000 4000 2100 24200
+- MẶT ĐỨNG HIỆN TRẠNG TRỤC H-A
+- MAÙNG XỐI INOX KHUNG THEÙP ỐP TẤM NHOÂM NHỰA HỖN HỢP
+- MẶT ĐỨNG CẢI TẠO TRỤC H-A
+- MÁI TOLE
+- TỶ LỆ :1/100
+- TỶ LỆ :1/100
+- GẮN LAM NHOÂM CHỮ Z
+- 1200 3000 4050 4050 4100 200
+- 2050 3750 4050 4050 4100 200
+- 16600
+- 18200
+- TẦNG 1
+- TẦNG 2
+- TẦNG 3
+- TẦNG 4
+- TẦNG 1
+- TẦNG 2
+- TẦNG 3
+- TẦNG 4
+- ĐỈNH MÁI +16.500
+- ĐỈNH MÁI
+- MÁI
+- +0.100
+- +4.150
+- +8.200
+- +12.300
+- +0.100
+- +4.150
+- +8.200
+- +12.300
+- +16.050
+- +18.100
+- -0.100 SÂN ĐƯỜNG
+- MÔ TẢ CẢI TẠO: + XÂY MỚI TƯỜNG HỘP GEN THOÁT NƯỚC MÁI TRỤC A VÀ TRỤC H (XEM BẢN VẼ). + TƯỜNG CỘT DẦM CÁC MẶT ĐỨNG SƠN NƯỚC HIỆN HỮU: CẠO SỦI, BẢ MASTIC SƠN NƯỚC LẠI TOÀN BỘ; +CÁC CẤU KIỆN SẮT THÉP HIỆN HỮU SƠN DẦU: CẠO RỈ SƠN DẦU LẠI TOÀN BỘ; TẦNG 4: CÁC CỘT BÊ TÔNG CỐT THÉP XÂY MỚI. CÁC MÁNG XỐI THU NƯỚC MÁI XUNG QUANH KHỐI NHÀ BẰNG TẤM INOX DÀY 1MM, KHUNG THÉP, BÊN NGOÀI ỐP CÁC TẤM NHÔM NHỰA HỖN HỢP HOÀN THIỆN. LẮP ĐẶT LAN CAN TAY VỊN DỌC CÁC KHU HÀNH LANG, PHÍA DƯỚI LÀ TƯỜNG XÂY, PHÍA TRÊN BẰNG INOX (CAO 1400); +GẮN LAM NHÔM CHỮ Z HÀNH LANG TẦNG 3, 4. +MÀU SẮC SƠN NƯỚC HOẶC CÁC VẬT LIỆU HOÀN THIỆN CHO KHỐI NHÀ TƯƠNG ĐỒNG PHÙ HỢP VỚI TỔNG THỂ XUNG QUANH KHỐI NHÀ.
+- A B C D E F G H
+- P. MỔ 03 P. MỔ 06 HÀNH LANG
+- 2100 4000 4000 4000 4000 4000 2100 24200
+- LAM BÊ TÔNG LAM BÊ TÔNG CÓ ỐP VÁCH NHẸ CÓ ỐP VÁCH THẠCH CAO
+- SẮT HỘP 40x40, SƠN DẦU SẮT HỘP 20x20, SƠN DẦU
+- N3
+- N2
+- N2
+- N2
+- MẶT CẮT HIỆN TRẠNG B1-B1
+- TỶ LỆ :1/100
+- MÁI TOLE
+- HÀNH LANG
+- 1200 3000 4050 4050 4100 200
+- 16600
+- TẦNG 1
+- TẦNG 2
+- TẦNG 3
+- TẦNG 4
+- ĐỈNH MÁI +16.500
+- +0.100
+- +4.150
+- +8.200
+- +12.300
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT ĐỨNG HIỆN TRẠNG - CẢI TẠO TRỤC H-A MẶT CẮT HIỆN TRẠNG B1-B1
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B2.02
+- ../2024
+
+
+## Trang 25
+- HỆ DẦM SÀN BTCT HIỆN HỮU
+- SẮT HỘP 20x20 HIỆN TRẠNG, @100. SƠN DẦU LÀM MỚI
+- SẮT HỘP 40x40 HIỆN TRẠNG, SƠN DẦU LÀM MỚI
+- TƯỜNG HIỆN HỮU
+- F1C
+- F3B
+- F3A
+- F1B
+- F1A
+- HỆ LAM CHỮ Z, @150mm
+- HỆ DẦM SÀN BTCT HIỆN HỮU
+- HỆ LAM CHỮ Z, @150mm
+- CỘT BTCT XÂY MỚI
+- TRẦN THẠCH CAO
+- TƯỜNG XÂY CHÈN
+- TRẦN THẠCH CAO
+- TƯỜNG XÂY CHÈN
+- - LÁT GẠCH CERAMIC CHỐNG TRƯỢT MỚI - VỮA XI MĂNG LÓT M75, TẠO DỐC 2% VỀ PHỄU THU SÀN (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - NỀN/SÀN HIỆN HỮU
+- - LÁT GẠCH GRANITE/CERAMIC MỚI - XỬ LÝ CHỐNG THẤM (THEO QUI TRÌNH NHÀ SẢN XUẤT) - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - SÀN BTCT HIỆN HỮU - GIA CỐ (XEM BẢN VẼ KẾT CẤU)
+- - LÁT GẠCH GRANITE/CERAMIC MỚI - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - SÀN BTCT HIỆN HỮU - GIA CỐ (XEM BẢN VẼ KẾT CẤU)
+- - LÁT GẠCH GRANITE/CERAMIC MỚI - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - NỀN/SÀN HIỆN HỮU
+- - LÁT GẠCH GRANITE/CERAMIC MỚI - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - NỀN/SÀN HIỆN HỮU
+- GHI CHÚ:
+- 3200
+- 2000 3300 500
+- 150
+- 1100 2000 950 450 200 400 3000 50
+- 1400 1200 450 450 300
+- 850 1100 750 750 300
+- 50 400
+- 200
+- SN - SN -
+- 250 350 250350
+- LC -
+- 600
+- A B C D E F G H Ha
+- 200 1800 100
+- 50
+- 3100
+- LỐI VÀO KHO VẬT TƯ P.CHỤP X-QUANG KHOA X-QUANG HÀNH LANG P.SINH HÓA MIỄN DỊCH P.HÀNH CHÍNH HÀNH LANG
+- HÀNH LANG SẠCH P.ĐỆM P.MỔ 2 HÀNH LANG VÔ KHUẨN P.MỔ 7 HÀNH LANG
+- 2100 4000 4000 4000 4000 4000 2100 4000~5230 24200
+- HÀNH LANG HÀNH LANG P.BỆNH
+- HÀNH LANG
+- F1A F1A F1A F1A F1B
+- F3A F3B F3B F3A
+- F3A F3B F3B F3A
+- 3100
+- 3000
+- FR1
+- F3C
+- FS1
+- FR2 - VỆ SINH, CHỐNG THẤM - SÀN BTCT HIỆN HỮU
+- GHI CHÚ: CẢI TẠO CÁC PHÒNG, HÀNH LANG CÓ CAO ĐỘ HOÀN THIỆN KHÔNG THAY ĐỔI SO VỚI HIỆN TRẠNG (TRỪ PHÒNG VỆ SINH).
+- - LỢP TÔN DÀY 0,6MM - LỚP CHỐNG NÓNG PU - XÀ GỒ SẮT C150 (XEM BẢN VẼ KẾT CẤU) - HỆ KÈO THÉP (XEM BẢN VẼ KẾT CẤU)
+- - THAY MỚI MẶT BẬC ĐỐI BẬC BẰNG GẠCH GRANITE (LOẠI DÙNG CHO CẦU THANG) - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - SÀN BTCT HIỆN HỮU VỆ SINH SƠN NƯỚC
+- - LÁT GẠCH CERAMIC CHỐNG TRƯỢT MỚI - VỮA XI MĂNG LÓT M75 TẠO DỐC 2% VỀ PHỄU THU - XỬ LÝ CHỐNG THẤM (THEO QUI TRÌNH NHÀ SẢN XUẤT) SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ - SÀN BTCT HIỆN HỮU - GIA CỐ (XEM BẢN VẼ KẾT CẤU)
+- 950
+- TRẦN THẠCH CAO
+- THÁO ĐỠ VÁCH NHẸ CŨ. LẮP DỰNG VÁCH CEMBOARD MỚI XEM BẢN VẼ A.B6.06
+- P.BỆNH P.BỆNH P.BỆNH NẶNG P.ĐIỀU DƯỠNG NỮ
+- Doác 15%
+- 12100 12100
+- MẶT CẮT B2-B2
+- THÁO ĐỠ VÁCH NHẸ CŨ. LẮP DỰNG VÁCH THẠCH CAO MỚI XEM BẢN VẼ A.B6.06
+- 3000
+- 3000
+- TỶ LỆ :1/50
+- 2800
+- P.BỆNH VS. VS.
+- F3C F3C
+- CHI TIẾT SN
+- 950
+- HÀNH LANG
+- TỶ LỆ :1/20
+- HÀNH LANG
+- DẦM THÉP i - XEM BẢN VẼ KẾT CẤU
+- MÁI LỢP TÔN
+- CỘT BTCT
+- TRẦN THẠCH CAO
+- 3100
+- 3000
+- 750
+- 500 300
+- 100 150 150 150 150 50
+- 50 400 50
+- 950
+- 2800
+- 608060
+- 200
+- THÁO ĐỠ VÁCH NHẸ CŨ. LẮP DỰNG VÁCH THẠCH CAO MỚI XEM BẢN VẼ A.B6.06
+- 50 550 50
+- H
+- 200 350
+- 250 350
+- 429 5071503
+- 100 500
+- 650
+- 600
+- TƯỜNG XÂY MỚI
+- ĐÀ GIẰNG BTCT 100X200MM
+- 3000
+- TẤM NHÔM ALUCOMAT DÀY 3MM
+- 71
+- INOX TẤM DÀY 1MM
+- ỐNG THOÁT NƯỚC
+- SẮT HỘP 40X80MM
+- HỘP GEN XÂY MỚI
+- SẮT HỘP 50x50MM
+- 3
+- 50 50 3 50 279
+- DẦM THÉP i - XEM BẢN VẼ KẾT CẤU
+- FR1
+- HỆ LAM CHỮ Z, @150mm
+- 100 400
+- MÁI +16.050
+- CHI TIẾT LC
+- Doác 15%
+- TỶ LỆ :1/20
+- 950
+- THÁO ĐỠ VÁCH NHẸ CŨ. LẮP DỰNG VÁCH CEMBOARD MỚI XEM BẢN VẼ A.B6.06
+- +12.300
+- 1400
+- 450 1000 400
+- 200
+- 350
+- 30 20
+- 200 775
+- 60 340
+- 10
+- 15
+- 100 600
+- 3000
+- 3000
+- SÊ-NÔ HIỆN HỮU
+- 700 200
+- 50
+- 270
+- 600 200 1800 100
+- 20
+- HÀNH LANG
+- 10 25
+- 50 50
+- H
+- 950
+- 5010050 0
+- 100
+- 40
+- KHO
+- 3000
+- 3100
+- 200
+- INOX 20X40MM, @100MM
+- INOX Ø60MM
+- HỆ DẦM BTCT HIỆN HỮU
+- HỆ DẦM SÀN BTCT HIỆN HỮU
+- HỘP GEN XÂY MỚI
+- MƯƠNG THU NƯỚC
+- GẠCH LÁT NỀN
+- ỐNG PVC Ø20MM THOÁT NƯỚC
+- CỘT BTCT MỚI
+- GIẰNG TƯỜNG BTCT
+- GẠCH ỐP TƯỜNG
+- TƯỜNG XÂY CHÈN
+- TƯỜNG XÂY MỚI
+- 30
+- LC -
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- MĐ LAN CAN ĐIỂN HÌNH
+- +12.300
+- CỘT BTCT XÂY MỚI
+- TƯỜNG XÂY CHÈN
+- HỆ DẦM SÀN BTCT HIỆN HỮU
+- HỆ DẦM SÀN BTCT HIỆN HỮU
+- TƯỜNG HIỆN HỮU
+- TRẦN THẠCH CAO
+- TRẦN THẠCH CAO
+- TRẦN THẠCH CAO
+- TƯỜNG XÂY MỚI
+- GẠCH BÔNG GIÓ HIỆN HỮU
+- 1400
+- MÁI LỢP TÔN
+- 450 1000 400
+- 990 10
+- 20 270
+- 60
+- 50
+- 100100100100100100100100100100
+- TỶ LỆ :1/20
+- 900
+- 20
+- 300 1000 2050 1050 450
+- 1400 1600
+- 50
+- 200
+- 2050 3750 4050 4050 4100 18200
+- TẦNG 1
+- TẦNG 2
+- TẦNG 3
+- TẦNG 4
+- ĐỈNH MÁI
+- INOX 20X40MM, @100MM
+- INOX Ø60MM
+- GẠCH ỐP ĐẦU TƯỜNG
+- TƯỜNG XÂY MỚI SƠN NƯỚC
+- MÁI
+- +0.100
+- +4.150
+- +8.200
+- +12.300
+- +16.050
+- +18.100
+- -0.100 SÂN ĐƯỜNG
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT CẮT CẢI TẠO B2-B2 CHI TIẾT SN - LC
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B3.01
+- ../2024
+- 1/50
+
+
+## Trang 26
+- LỐI ĐI
+- P.KỸ THUẬT
+- 4 3 2 1 14 15 16
+- DB-HSTC
+- W.C
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- LỐI VÀO P. XỬ LÝ DỤNG CỤ
+- GC GC GC GC GC GC GC GC GC GC GC GC
+- GC GC GC GC
+- P. XỬ LÝ CHẤT THẢI
+- P. CÁCH LY 01 (2G)
+- SÂN
+- SÂN SÂN
+- W.C
+- GC GC GC GC
+- GC GC GC GC GC GC GC GC
+- GC GC GC GC GC GC GC GC GC
+- P. HỒI SỨC CẤP CỨU 1 ( 09 G)
+- BUỒNG ĐỆM
+- P. HỒI SỨC CẤP CỨU 1 (4G)
+- W.C
+- P. CÁCH LY 02(2G)
+- P. CÁCH LY 03(2G)
+- 6 7 8 9 10 11 12 13 5
+- P. THỦ THUẬT
+- P. HC KHOA
+- P. BỆNH(3G)
+- W.C
+- W.C
+- KHO KHO
+- KHO DỤNG CỤ/ MÁY MÓC
+- P. NGHỈ ĐIỀU DƯỠNG NỮ
+- P. NGHỈ BS NAM
+- P. HC KHOA
+- NHÀ CHỜ
+- W.C
+- +0.100
+- W.C
+- MẶT BẰNG LÁT GẠCH TẦNG 1 TỶ LỆ :1/100
+- P. NGHỈ BS NỮ
+- KHO KHO KHO HS
+- P. SINH HOẠT KHOA
+- P. TIẾP NGƯỜI THÂN
+- +0.100
+- -0.100
+- W.C
+- P. ĂN
+- HÀNH LANG
+- 200
+- 56900 4500
+- KHOA XÉT NGHIỆM
+- KHO WC
+- GC GC GC GC
+- GC GC
+- 200
+- P. ĐỆM
+- P. HUYẾT HỌC
+- P. THỬ MẪU
+- 350 1800 350
+- NƯỚC TIỂU
+- P. ĐONG MÁU
+- P. NGHỈ NV
+- C1-02 KHO
+- GC GC GC GC GC
+- P. TRƯỞNG KHOA
+- P. NHẬN MẪU    P. HÀNH CHÍNH
+- P. CHỤP X QUANG
+- P. SINH HÓA MIỄN DỊCH    PHÒNG GIAO BAN
+- KHOA X QUANG
+- B2 A.B3.01
+- P. TRẢ HỒ SƠ   P. CHỤP CT
+- LỐI VÀO KHO VẬT TƯ
+- THANG BTCT
+- GC GC GC
+- P. THAY ĐỒ
+- HÀNH LANG
+- HÀNH LANG
+- P.RỬA PHIM
+- KÝ HIỆU VẬT LIỆU HOÀN THIỆN:
+- GC
+- NC
+- T4
+- T3
+- T2
+- SÀN LÁT GẠCH GRANITE 600X600MM, MÀU NHẠT T1
+- KHO HÓA CHẤT
+- WC
+- P. TRƯỞNG KHOA
+- PHÒNG NGHỈ
+- NGẠCH CỬA ỐP ĐÁ GRANITE
+- GẠCH GRANITE CẦU THANG MŨI CHỐNG TRƯỢT
+- SÀN LÁT GẠCH CERAMIC 300X300MM, CHỐNG TRƯỢT
+- SÀN LÁT GẠCH GRANITE 600X600MM, CHỐNG TRƯỢT
+- SÀN LÁT GẠCH GRANITE 600X600MM, MÀU ĐẬM
+- ĐIỂM SÉT GẠCH
+- 350 1800 350
+- 200
+- HÀNH LANG
+- 200
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG XỬ LÝ HÌNH ẢNH MSCT VÀ GIAO BAN KHOA CĐHA
+- P. NHÂN VIÊN KHOA CĐHA
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG TRƯỞNG KHOA TIM MẠCH
+- C1-03
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG LÁT GẠCH TẦNG 1
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B4.01
+- ../2024
+- 1/100
+
+
+## Trang 27
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- HÀNH LANG KẾT NỐI KHỐI A
+- 200 200
+- 4 3 2 1 14 15 16
+- 200
+- 200
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- 400 1950
+- 200
+- P. TRƯỞNG K. CTCH
+- P. BỆNH P. BỆNH P. BỆNH P. BỆNH
+- VS VS
+- VS VS
+- P. TIỂU PHẪU VS
+- 350 1800 350
+- VS
+- P. BỆNH
+- P. NHÂN VIÊN
+- P. THUỐC P. NGHỈ NỮ P. BỆNH NẶNG
+- GC GC GC
+- GC
+- P. BỆNH P. BỆNH
+- VS
+- VS VS
+- GC
+- 6 7 8 9 10 11 12 13 5
+- P. HÀNH CHÁNH K. CTCH
+- VS
+- VS
+- P. BS NAM
+- MẶT BẰNG LÁT GẠCH TẦNG 3 TỶ LỆ :1/100
+- 200 200
+- GC
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO
+- KHU VỰC XÂY GẠCH BÔNG GIÓ HIỆN HỮU (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- P. BỆNH +8.200
+- 350 1800 350 400 1850
+- 200 1850
+- 56900 4500
+- P. HẬU PHẪU NAM
+- P. BĂNG BỘT
+- VS
+- VS
+- VS
+- P. BỆNH
+- P. BỆNH P. BỆNH
+- VS
+- VS
+- P. ĐIỀU DƯỠNG NỮ
+- P. BỆNH NẶNG
+- KÝ HIỆU VẬT LIỆU HOÀN THIỆN:
+- GC
+- NC
+- T4
+- T3
+- T2
+- SÀN LÁT GẠCH GRANITE 600X600MM, MÀU NHẠT T1
+- B2 A.B3.01
+- NGẠCH CỬA ỐP ĐÁ GRANITE
+- GẠCH GRANITE CẦU THANG MŨI CHỐNG TRƯỢT
+- SÀN LÁT GẠCH CERAMIC 300X300MM, CHỐNG TRƯỢT
+- SÀN LÁT GẠCH GRANITE 600X600MM, CHỐNG TRƯỢT
+- SÀN LÁT GẠCH GRANITE 600X600MM, MÀU ĐẬM
+- ĐIỂM SÉT GẠCH
+- P. BỆNH
+- VS
+- VS
+- P. HC
+- MÁI POLY
+- P. Bệnh
+- P. Bệnh
+- VS
+- VS
+- P. BỆNH
+- VS
+- VS
+- 350 1800 350
+- 400 1950
+- 200
+- 200
+- 200
+- 200
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG LÁT GẠCH TẦNG 3
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B4.02
+- ../2024
+- 1/100
+
+
+## Trang 28
+- SÊ NÔ
+- 4 3 2 1 14 15
+- HÀNH LANG KẾT NỐI KHỐI A +12.100
+- HÀNH LANG KẾT NỐI KHỐI A
+- 200
+- 11,1 M²
+- 200
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 200
+- 200
+- 200
+- 650
+- KHO DỤNG CỤ
+- KHU VỰC RỬA
+- 28,1 M² 24,4 M² 24,1 M²
+- P. TRƯỞNG KHOA P. TƯ VẤN DD KHU PHA CHẾ CĂN TIN
+- 210,6 M²
+- +12.100
+- SOẠN CHIA NẤU
+- 200
+- KHOA NỘI HÔ HẤP KHOA DINH DƯỠNG
+- SÊ NÔ SÊ NÔ
+- SÊ NÔ
+- 6 7 8 9 10 11 12 13 5
+- 33,7 M²
+- THỰC PHẨM
+- P. ĂN NV
+- KHU VỰC  SƠ CHẾ
+- 20,3 M²
+- 300
+- 15,6 M²
+- 7,7 M²
+- MẶT BẰNG LÁT GẠCH TẦNG 4 TỶ LỆ :1/100
+- KHO THỰC PHẨM
+- 13,5 M² 13,8 M²
+- 15,9 M² 9,9 M² 16,2 M²
+- P. HC KHOA DINH DƯỠNG KHO
+- 40,8 M²
+- 200 2400 200
+- 26,6 M²
+- +12.100
+- 87,8 M²
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 350 1200 300
+- 250
+- 1900 200
+- 52400
+- 90,6 M²
+- 8,4 M²
+- 8,1 M²
+- 3,4 M²
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO
+- 15,2 M²
+- 11,8 M²
+- 7,7 M²
+- 15,6 M²
+- P. NHÂN VIÊN
+- 3 M²
+- P. BỆNH
+- 27,8 M²
+- 80,5 M²
+- 27,8 M²
+- P. BỆNH P. BỆNH P. BỆNH P. BỆNH
+- P. BỆNH P. BỆNH
+- 32,1 M²
+- 2500
+- 3 M² 3 M²
+- 3 M²
+- KÝ HIỆU VẬT LIỆU HOÀN THIỆN:
+- GC
+- NC
+- T4
+- T3
+- T2
+- SÀN LÁT GẠCH GRANITE 600X600MM, MÀU NHẠT T1
+- 3 M²
+- B2 A.B3.01
+- 27,8 M² 27,8 M²
+- 32,1 M²
+- NGẠCH CỬA ỐP ĐÁ GRANITE
+- GẠCH GRANITE CẦU THANG MŨI CHỐNG TRƯỢT
+- SÀN LÁT GẠCH CERAMIC 300X300MM, CHỐNG TRƯỢT
+- SÀN LÁT GẠCH GRANITE 600X600MM, CHỐNG TRƯỢT
+- SÀN LÁT GẠCH GRANITE 600X600MM, MÀU ĐẬM
+- ĐIỂM SÉT GẠCH
+- SÊ NÔ
+- 27,8 M²
+- P. BỆNH P. BỆNH
+- P. BỆNH P. BỆNH
+- 15,4 M²
+- 14,2 M²
+- 3 M² 3 M²
+- 3 M² 3 M²
+- 3 M² 3 M²
+- 15,4 M²
+- 14,2 M²
+- 350 1800 350
+- 400
+- 200
+- 200
+- +12.100
+- 45,2 M²
+- 200
+- 200
+- 24200 2100 4000 4000 4000 4000 4000 2100
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG LÁT GẠCH TẦNG 4
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B4.03
+- ../2024
+- 1/100
+
+
+## Trang 29
+- LỐI ĐI
+- P.KỸ THUẬT
+- 4 3 2 1 14 15 16
+- DB-HSTC
+- W.C
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- LỐI VÀO P. XỬ LÝ DỤNG CỤ
+- GC GC GC GC GC GC GC GC GC GC GC GC
+- GC GC GC GC
+- P. XỬ LÝ CHẤT THẢI
+- P. CÁCH LY 01 (2G)
+- SÂN
+- SÂN SÂN
+- W.C
+- GC GC GC GC
+- GC GC GC GC GC GC GC GC
+- GC GC GC GC GC GC GC GC GC
+- P. HỒI SỨC CẤP CỨU 1 ( 09 G)
+- BUỒNG ĐỆM
+- P. HỒI SỨC CẤP CỨU 1 (4G)
+- W.C
+- +3.100
+- P. CÁCH LY 02(2G)
+- P. CÁCH LY 03(2G)
+- 6 7 8 9 10 11 12 13 5
+- P. THỦ THUẬT
+- P. HC KHOA
+- P. BỆNH(3G)
+- W.C
+- W.C
+- KHO KHO
+- KHO DỤNG CỤ/ MÁY MÓC
+- P. NGHỈ ĐIỀU DƯỠNG NỮ
+- P. NGHỈ BS NAM
+- P. HC KHOA
+- NHÀ CHỜ
+- W.C
+- +0.100
+- W.C
+- P. NGHỈ BS NỮ
+- MẶT BẰNG TRẦN TẦNG 1 TỶ LỆ :1/100
+- +3.000 +3.000
+- KHO KHO KHO HS
+- P. SINH HOẠT KHOA
+- P. TIẾP NGƯỜI THÂN
+- +0.100
+- -0.100
+- W.C
+- P. ĂN
+- HÀNH LANG
+- +2.800
+- +3.100
+- 56900 4500
+- KHOA XÉT NGHIỆM
+- KHO WC
+- GC GC GC GC
+- GC GC
+- +3.000 +3.000 +3.000
+- P. ĐỆM
+- P. HUYẾT HỌC
+- P. THỬ MẪU
+- +3.000 +3.000 +3.000
+- +2.800
+- NƯỚC TIỂU
+- P. ĐONG MÁU
+- P. NGHỈ NV
+- +3.000
+- +3.000
+- C1-02 KHO
+- +3.000 +3.000
+- +3.000
+- GC GC GC GC GC
+- P. TRƯỞNG KHOA
+- P. NHẬN MẪU    P. HÀNH CHÍNH
+- P. CHỤP X QUANG
+- +3.000
+- P. SINH HÓA MIỄN DỊCH    PHÒNG GIAO BAN
+- +3.100
+- +3.000
+- +3.000
+- +3.000
+- KHOA X QUANG
+- B2 A.B3.01
+- +3.000
+- +3.100 +3.100
+- +3.000
+- KÝ HIỆU VẬT LIỆU HOÀN THIỆN:
+- TC2
+- TRẦN THẠCH CAO KHUNG NỔI, 600X600MM TC1
+- BT
+- P. TRẢ HỒ SƠ   P. CHỤP CT
+- LỐI VÀO KHO VẬT TƯ
+- XXX CAO ĐỘ TRẦN SO VỚI SÀN HOÀN THIỆN
+- THANG BTCT
+- GC GC GC
+- P. THAY ĐỒ
+- HÀNH LANG
+- +3.000
+- +3.000
+- TRẦN THẠCH CAO KHUNG NỔI, CHỐNG ẨM 600X600MM
+- TRẦN BÊ TÔNG CỐT THÉP
+- +3.000
+- ĐIỂM SÉT TRẦN
+- HÀNH LANG
+- +3.000
+- P.RỬA PHIM
+- +3.000
+- +3.000
+- KHO HÓA CHẤT
+- WC
+- P. TRƯỞNG KHOA
+- +3.000
+- PHÒNG NGHỈ
+- +2.800
+- +3.000
+- HÀNH LANG
+- +3.000 +3.000
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG XỬ LÝ HÌNH ẢNH MSCT VÀ GIAO BAN KHOA CĐHA
+- P. NHÂN VIÊN KHOA CĐHA
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG TRƯỞNG KHOA TIM MẠCH
+- +2.800
+- C1-03
+- +3.000
+- +3.000
+- +3.000
+- +3.000
+- +3.000
+- +2.800
+- +2.800
+- +2.800
+- +2.800
+- +2.800
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG TRẦN TẦNG 1
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B5.01
+- ../2024
+- 1/100
+
+
+## Trang 30
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- HÀNH LANG KẾT NỐI KHỐI A
+- 4 3 2 1 14 15 16
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- +3.100
+- +3.100
+- P. TRƯỞNG K. CTCH
+- P. BỆNH P. BỆNH P. BỆNH P. BỆNH
+- VS VS
+- VS VS
+- P. TIỂU PHẪU VS
+- VS
+- +3.000 +3.000 +3.000
+- +2.800
+- +2.800
+- +2.800
+- +2.800
+- P. BỆNH
+- +3.000 +3.000 +3.000
+- +2.800 +2.800
+- P. NHÂN VIÊN
+- P. THUỐC P. NGHỈ NỮ P. BỆNH NẶNG
+- +3.000
+- GC GC GC
+- GC
+- P. BỆNH P. BỆNH
+- VS
+- VS VS
+- +2.800
+- +2.800
+- +2.800
+- GC
+- 6 7 8 9 10 11 12 13 5
+- +2.800
+- +2.800
+- P. HÀNH CHÁNH K. CTCH
+- +3.000 +3.000
+- +3.000 +3.000
+- VS
+- VS
+- +2.800
+- +2.800
+- P. BS NAM
+- MẶT BẰNG TRẦN TẦNG 3 TỶ LỆ :1/100
+- GC
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO
+- +3.000 +3.000
+- KHU VỰC XÂY GẠCH BÔNG GIÓ HIỆN HỮU (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- P. BỆNH +8.200
+- +3.100
+- +3.100
+- +3.100
+- 56900 4500
+- P. HẬU PHẪU NAM
+- P. BĂNG BỘT
+- +3.000
+- +2.800
+- VS
+- VS
+- VS
+- P. BỆNH
+- P. BỆNH P. BỆNH
+- VS
+- VS
+- +3.000 +3.000 +3.000
+- +3.000 +3.000
+- +2.800
+- P. ĐIỀU DƯỠNG NỮ
+- +2.800
+- +2.800
+- P. BỆNH NẶNG
+- +3.000
+- KÝ HIỆU VẬT LIỆU HOÀN THIỆN:
+- TC2
+- TRẦN THẠCH CAO KHUNG NỔI, 600X600MM TC1
+- BT
+- +3.000
+- B2 A.B3.01
+- XXX CAO ĐỘ TRẦN SO VỚI SÀN HOÀN THIỆN
+- P. BỆNH
+- TRẦN THẠCH CAO KHUNG NỔI, CHỐNG ẨM 600X600MM
+- TRẦN BÊ TÔNG CỐT THÉP
+- ĐIỂM SÉT TRẦN
+- VS
+- VS
+- +2.800
+- +2.800
+- +3.000
+- P. HC
+- MÁI POLY
+- +3.000
+- +3.000
+- P. Bệnh
+- P. Bệnh
+- VS
+- VS
+- +3.000
+- P. BỆNH
+- +3.000
+- VS
+- VS
+- +2.800
+- +2.800
+- +2.800
+- +2.800
+- +3.100
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG TRẦN TẦNG 3
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B5.02
+- ../2024
+- 1/100
+
+
+## Trang 31
+- SÊ NÔ
+- 4 3 2 1 14 15
+- HÀNH LANG KẾT NỐI KHỐI A +12.100
+- HÀNH LANG KẾT NỐI KHỐI A
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO DỤNG CỤ
+- KHU VỰC RỬA
+- P. TRƯỞNG KHOA P. TƯ VẤN DD KHU PHA CHẾ CĂN TIN
+- +12.100
+- SOẠN CHIA NẤU
+- +3.000
+- KHOA NỘI HÔ HẤP KHOA DINH DƯỠNG
+- SÊ NÔ SÊ NÔ
+- SÊ NÔ
+- 6 7 8 9 10 11 12 13 5
+- THỰC PHẨM
+- P. ĂN NV
+- +3.000
+- KHU VỰC  SƠ CHẾ
+- KHO THỰC PHẨM
+- +3.000 +3.000 +3.000
+- +3.000 +3.000
+- MẶT BẰNG TRẦN TẦNG 4 TỶ LỆ :1/100
+- P. HC KHOA DINH DƯỠNG KHO
+- +12.100
+- +3.000 +3.000
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- +3.000
+- 52400
+- +2.800
+- +2.800
+- +2.800
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO
+- +3.000
+- +3.000 +3.000 +3.000 +3.000 +3.000 +3.000
+- P. NHÂN VIÊN
+- +2.800 +2.800 +2.800 +2.800 +2.800
+- P. BỆNH
+- +3.000 +3.000 +3.000 +3.000
+- P. BỆNH P. BỆNH P. BỆNH P. BỆNH
+- P. BỆNH P. BỆNH
+- +2.800 +2.800
+- 2500
+- KÝ HIỆU VẬT LIỆU HOÀN THIỆN:
+- TC2
+- TRẦN THẠCH CAO KHUNG NỔI, 600X600MM TC1
+- BT
+- B2 A.B3.01
+- XXX CAO ĐỘ TRẦN SO VỚI SÀN HOÀN THIỆN
+- TRẦN THẠCH CAO KHUNG NỔI, CHỐNG ẨM 600X600MM
+- TRẦN BÊ TÔNG CỐT THÉP
+- ĐIỂM SÉT TRẦN
+- SÊ NÔ
+- P. BỆNH P. BỆNH
+- P. BỆNH P. BỆNH
+- +3.000 +3.000
+- +3.000
+- +2.800 +2.800
+- +2.800 +2.800
+- +12.100
+- 24200 2100 4000 4000 4000 4000 4000 2100
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG TRẦN TẦNG 4
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B5.03
+- ../2024
+- 1/100
+
+
+## Trang 32
+- LỐI ĐI
+- P.KỸ THUẬT
+- 4 3 2 1 14 15 16
+- DB-HSTC
+- W.C
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- LỐI VÀO P. XỬ LÝ DỤNG CỤ
+- GC GC GC GC GC GC GC GC GC GC GC GC
+- GC GC GC GC
+- P. XỬ LÝ CHẤT THẢI
+- P. CÁCH LY 01 (2G)
+- SÂN
+- SÂN SÂN
+- W.C
+- GC GC GC GC
+- GC GC GC GC GC GC GC GC
+- GC GC GC GC GC GC GC GC GC
+- P. HỒI SỨC CẤP CỨU 1 ( 09 G)
+- BUỒNG ĐỆM
+- P. HỒI SỨC CẤP CỨU 1 (4G)
+- W.C
+- P. CÁCH LY 02(2G)
+- P. CÁCH LY 03(2G)
+- 6 7 8 9 10 11 12 13 5
+- P. THỦ THUẬT
+- P. HC KHOA
+- P. BỆNH(3G)
+- W.C
+- W.C
+- KHO KHO
+- KHO DỤNG CỤ/ MÁY MÓC
+- P. NGHỈ ĐIỀU DƯỠNG NỮ
+- P. NGHỈ BS NAM
+- P. HC KHOA
+- NHÀ CHỜ
+- W.C
+- +0.100
+- DC1
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 1 TỶ LỆ :1/100
+- W.C
+- 1500
+- P. NGHỈ BS NỮ
+- KHO KHO KHO HS
+- P. SINH HOẠT KHOA
+- P. TIẾP NGƯỜI THÂN
+- +0.100
+- -0.100
+- W.C
+- P. ĂN
+- HÀNH LANG
+- 1200
+- 56900 4500
+- 1300
+- D2-2
+- KHOA XÉT NGHIỆM
+- KHO WC
+- 1000
+- D1-3
+- D2-1
+- GC GC GC GC
+- GC GC
+- P. ĐỆM
+- 1000
+- DW2
+- DS-1
+- 1500
+- D2-5 DC1
+- D1-2
+- 800
+- P. HUYẾT HỌC
+- 1100
+- P. THỬ MẪU
+- 700
+- NƯỚC TIỂU
+- P. ĐONG MÁU
+- P. NGHỈ NV
+- 2400
+- W3
+- C1-02 KHO
+- 1200
+- D2-7
+- 1360
+- DW1
+- 1500
+- GC GC GC GC GC
+- D1-2 D1-2
+- D1-1
+- 800 2200
+- D2-7
+- P. TRƯỞNG KHOA
+- P. NHẬN MẪU    P. HÀNH CHÍNH
+- DS-2
+- 800
+- P. CHỤP X QUANG
+- P. SINH HÓA MIỄN DỊCH    PHÒNG GIAO BAN
+- 1600
+- 1600
+- D2-3
+- D2-3 D2-2
+- 1200
+- 1500
+- 2200
+- W1 W1
+- W4
+- 1200 800
+- Di-1
+- VK1
+- 2200
+- 800
+- 2400
+- KHOA X QUANG
+- 800
+- Di-2
+- 1300
+- VK3
+- B2 A.B3.01
+- 800 800 2400 2200
+- Di-1
+- 1000
+- W1
+- VK2
+- 1500
+- VT1
+- W4
+- 800 800
+- 800 800
+- 2950
+- 1200
+- D2-7
+- 800
+- P. TRẢ HỒ SƠ   P. CHỤP CT
+- D1-2
+- D1-2
+- D1-2 D1-2
+- LỐI VÀO KHO VẬT TƯ
+- D1-1
+- THANG BTCT
+- GC GC GC
+- P. THAY ĐỒ
+- D1-1 D1-1
+- HÀNH LANG
+- HÀNH LANG
+- DS-3
+- DW1
+- S1
+- P.RỬA PHIM
+- VT1
+- W3
+- 700
+- Di-1
+- 800
+- 1500
+- 1280
+- 1600
+- D2-4
+- 800
+- KHO HÓA CHẤT
+- D1-2
+- D1-2
+- WC
+- P. TRƯỞNG KHOA
+- 800
+- 1500
+- DS-4
+- PHÒNG NGHỈ
+- 800
+- 1500
+- 2200
+- W4
+- W1
+- DW1 DW1
+- 1600
+- 700 700
+- D2-3
+- D2-2
+- VT1
+- D1-1
+- 800
+- HÀNH LANG
+- D1-1
+- 1300
+- D2-1
+- D2-1
+- D2-1
+- 800
+- D1-1
+- D1-1
+- D1-1
+- 700
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG XỬ LÝ HÌNH ẢNH MSCT VÀ GIAO BAN KHOA CĐHA
+- 1200 1200 1200
+- P. NHÂN VIÊN KHOA CĐHA
+- DW1
+- 800
+- 800
+- 800
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG TRƯỞNG KHOA TIM MẠCH
+- C1-03
+- DW1 700
+- DW1 700
+- DW1 700
+- DW1
+- 700
+- DW1
+- 700
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 1
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B6.01
+- ../2024
+- 1/100
+
+
+## Trang 33
+- HÀNH LANG KẾT NỐI KHỐI A
+- 4 3 2 1 14 15 16
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- WC
+- WC
+- P. Hành chính k. GMHS
+- P. Trưởng khoa GMHS
+- Phòng hành chánh
+- WC
+- GC GC GC GC
+- Phòng nhân viên
+- Phòng nhân viên
+- GC GC GC GC GC
+- GC GC GC GC GC GC
+- Phòng cách ly đặc biệt
+- Hồi sức sản
+- Phòng thay đồ
+- 6 7 8 9 10 11 12 13 5
+- Phòng mổ     số 10
+- GC GC
+- 1700
+- DC2
+- MÁI TOLE
+- Phòng mổ số 5 Phòng mổ số 6 Phòng hồi tỉnh sau mổ Phòng mổ số 7 Phòng mổ số 8
+- +4.150
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 2 TỶ LỆ :1/100
+- Phòng tiền mê
+- GC
+- Mái BTCT
+- GC
+- Hành lang sạch Hành lang vô khuẩn
+- Hành lang sạch
+- GC
+- WC
+- GC
+- GC
+- Khu vực nhận bệnh và chờ mổ
+- 56900 4500
+- GC GC
+- Phòng mổ số 9
+- Kho y cụ
+- 1700
+- Hành lang sạch
+- DC2
+- GC GC GC
+- Phòng mổ số 2 Phòng mổ số 1
+- Phòng đệm
+- B2 A.B3.01
+- 1FL+4000
+- Phòngmổ số 3
+- Phòng mổ số 4
+- Khu xử lý dụng cụ
+- GC
+- P. ĐỆM
+- MÁI TOLE
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 2
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B6.02
+- ../2024
+- 1/100
+
+
+## Trang 34
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B) DC3
+- 3800
+- 3800
+- 3800
+- 3800
+- 3800
+- HÀNH LANG KẾT NỐI KHỐI A
+- L4
+- L4
+- L4
+- L4
+- L4
+- 4 3 2 1 14 15 16
+- 1600
+- 1500
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- 1850
+- DHL
+- W4
+- VT2
+- VT1
+- VT2
+- VT2
+- VT1
+- D2-3
+- P. TRƯỞNG K. CTCH
+- P. BỆNH P. BỆNH P. BỆNH P. BỆNH
+- VS VS
+- VS VS
+- P. TIỂU PHẪU VS
+- VS
+- 1500
+- W4 1500
+- 1500
+- W4
+- W4
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- VT1 VT1 VT1 VT1 VT1 VT2 VT1 VT1 VT1 VT1 VT1
+- 3550
+- DW1
+- DW1
+- DW1
+- DW1
+- VC1
+- 1200 1200
+- VC1
+- L7
+- VC1
+- W5
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- VC1
+- 1200
+- D2-6
+- D1-1
+- 800
+- 700 700
+- 700 700
+- P. BỆNH
+- D1-1
+- 700
+- 800
+- D2-6 1200
+- 1200
+- D2-6
+- P. NHÂN VIÊN
+- P. THUỐC P. NGHỈ NỮ P. BỆNH NẶNG
+- VC1 VC1
+- 3550 3800
+- DW1 DW1
+- W5
+- L4
+- 1500
+- 1500
+- W4 1500
+- W4
+- W4
+- GC GC GC
+- GC
+- P. BỆNH P. BỆNH
+- 700
+- VS
+- VS VS
+- 1500
+- 1500
+- W4 1500
+- W4
+- W4
+- DW1
+- DW1
+- L7 L7 L7 L7
+- VC1
+- VC1
+- 1200
+- 1200
+- D2-6 1200
+- D2-6
+- D1-1
+- 800
+- D2-7
+- 700 700
+- GC
+- 6 7 8 9 10 11 12 13 5
+- D1-2
+- D1-1
+- 700 700
+- 800
+- 1200
+- D2-6 1200
+- D2-6
+- P. HÀNH CHÁNH K. CTCH
+- 800
+- 3550 3800
+- DW1
+- DW1
+- VC1
+- VC1 VC1
+- L4
+- 1500
+- W4 1500
+- 1500
+- W4
+- W4
+- VS
+- 1200
+- D2-1
+- DW1
+- DW1
+- 700
+- 700 700
+- VS
+- VC2
+- VC1
+- 2400
+- 2400
+- W3
+- D2-6 W3 W2 W4 W4 W4 W4
+- 1500
+- W4
+- P. BS NAM
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 3 TỶ LỆ :1/100
+- 2700
+- 1200
+- D2-6
+- 1200
+- D2-6
+- D1-1 800
+- GC
+- 3800
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO
+- L4
+- KHU VỰC XÂY GẠCH BÔNG GIÓ HIỆN HỮU (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 1800
+- D2-8
+- P. BỆNH +8.200
+- 3550 3800
+- 1200
+- 56900 4500
+- L4
+- D2-6
+- D1-1 800
+- 1200
+- D2-6
+- P. HẬU PHẪU NAM
+- 2700
+- DC3
+- P. BĂNG BỘT
+- 1500
+- W4
+- 2250
+- 2250 1500 1500 1200 1200 1500 800 1200 1500
+- VT1 VT1 VT1 VT1 VT1
+- VC2
+- W2
+- 700
+- VS
+- DW1
+- DW1
+- DW1
+- 700
+- VS
+- VS
+- P. BỆNH
+- P. BỆNH P. BỆNH
+- VS
+- VS
+- 1500
+- 1500
+- W4 1500
+- W4
+- W4
+- VC1
+- VC1 VC1
+- DW1
+- 3550 3800
+- DW1
+- L4
+- VC1
+- P. ĐIỀU DƯỠNG NỮ
+- D2-6 1200
+- 1200
+- D2-6
+- P. BỆNH NẶNG
+- D2-6 D2-6
+- D1-1
+- 800
+- 700 700
+- D1-1
+- 700 700
+- 800
+- 1200
+- D2-6
+- B2 A.B3.01
+- DW1
+- DW1
+- VC1
+- VC1
+- P. BỆNH
+- 1500
+- W4 1500
+- 1500
+- W4
+- W4
+- VS
+- VS
+- 800
+- D1-2
+- D1-2
+- 800
+- 1500
+- W4 1500
+- W4
+- P. HC
+- MÁI POLY
+- VK4
+- 3800
+- 3800
+- L4
+- D2-6 1200
+- 1200
+- D2-6
+- D1-1
+- D1-1
+- 800
+- D1-1
+- 700 700
+- 700 700
+- 800
+- 1200
+- 1200
+- D2-6
+- D2-6
+- 850
+- L1
+- VC1
+- VC1
+- DW1
+- DW1
+- DW1
+- DW1
+- P. Bệnh
+- P. Bệnh
+- VS
+- VS
+- VC1
+- P. BỆNH
+- 1500
+- W4 1500
+- 1500
+- W4
+- W4
+- VS
+- VS
+- VT2
+- VT2
+- VT2
+- VT1
+- VT1
+- VT2
+- VT2
+- VT2
+- W4
+- W4
+- W4
+- W4
+- 1500 1500 1500
+- 1500
+- L5
+- L4
+- L4
+- L4
+- L4
+- 3800
+- 3800
+- 3800
+- 4800 3800
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 3
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B6.03
+- ../2024
+- 1/100
+
+
+## Trang 35
+- 1800
+- 7800 3800
+- 7800
+- 1800
+- L2
+- SÊ NÔ
+- 4 3 2 1 14 15
+- HÀNH LANG KẾT NỐI KHỐI A +12.100
+- HÀNH LANG KẾT NỐI KHỐI A
+- L2
+- 5200
+- L4
+- L6
+- L6
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- 1900
+- 1900
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- L3
+- L3
+- KHO DỤNG CỤ
+- VK10
+- D1-5
+- KHU VỰC RỬA
+- 900
+- 3900 4700
+- 3250
+- 3550
+- L8 L8 L8 L8 L8 L8
+- L7 L7 L7 L7 L7
+- D1-4
+- VK11
+- 900
+- VK12
+- 2150
+- 3800
+- P. TRƯỞNG KHOA P. TƯ VẤN DD KHU PHA CHẾ CĂN TIN
+- +12.100
+- SOẠN CHIA NẤU
+- 3800
+- 3800
+- 3800
+- VK13
+- VK9
+- L4
+- L4
+- 900
+- D1*-5
+- KHOA NỘI HÔ HẤP KHOA DINH DƯỠNG
+- SÊ NÔ SÊ NÔ
+- SÊ NÔ
+- 3250
+- 3550
+- D2*-3
+- 1600
+- 650 7800
+- D1*-4
+- D1*-5
+- 900
+- VK7
+- 6 7 8 9 10 11 12 13 5
+- 900
+- THỰC PHẨM
+- P. ĂN NV
+- 4000
+- VK8
+- KHU VỰC  SƠ CHẾ
+- 3800
+- 2900 3800
+- 3800
+- VK5 VK6
+- L4
+- L4
+- 1300
+- D2-2
+- D1-4
+- 900
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 4 TỶ LỆ :1/100
+- 3250
+- KHO THỰC PHẨM
+- 3550
+- 1800
+- W6
+- 2000
+- W8
+- DC1 1500
+- P. HC KHOA DINH DƯỠNG KHO
+- D1-4
+- D1-5
+- 900
+- 900 900
+- D1-5
+- 900 D1-4
+- 900
+- 1800
+- 3800
+- 3800
+- W6
+- +12.100
+- L4
+- L4
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 1800
+- W6
+- 800
+- 1000 1000
+- 800
+- 900
+- 900
+- 700
+- D1-2
+- D1-2
+- D1-4
+- W9
+- W9
+- D1-5 D1-5
+- 52400
+- D1-4
+- 700
+- 700
+- 700
+- 700
+- DW1
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- DW1
+- DW1
+- DW1
+- DW1
+- KHO
+- 900
+- 1000 1000
+- W7 W7
+- 3800
+- 3800
+- L4
+- L4
+- 1800
+- W6
+- 1000
+- W7
+- DC1 1500
+- P. NHÂN VIÊN
+- DW1
+- 1800
+- W6
+- P. BỆNH
+- 3550
+- 3250
+- 700
+- 1200
+- D2-6
+- D1-4
+- D1-4
+- 900
+- 900
+- D1-4
+- D1-4
+- 900
+- 900
+- 1200
+- 1200
+- D2-6
+- D2-6
+- 700
+- 700
+- P. BỆNH P. BỆNH P. BỆNH P. BỆNH
+- P. BỆNH P. BỆNH
+- 3800
+- 3800
+- L4
+- L4
+- 1800
+- 1800
+- W6
+- W6
+- DW1
+- DW1 DW1
+- 2500
+- DW1
+- 1800
+- 1800
+- B2 A.B3.01
+- W6
+- W6
+- 3550
+- 3250
+- SÊ NÔ
+- 700
+- 700
+- 1200
+- 1200
+- D2-6
+- D2-6
+- D1-4
+- D1-4
+- 900
+- 900
+- D1-4
+- 900
+- 1200
+- 1200
+- 1200
+- D2-6
+- D2-6 1200
+- D2-6
+- 700
+- 700
+- 700
+- P. BỆNH P. BỆNH
+- P. BỆNH P. BỆNH
+- 3800
+- 3800
+- L4
+- L4
+- 1800
+- W6
+- DW1
+- DW1 DW1
+- DW1
+- 1000 1000
+- W9 W9
+- 850
+- L1
+- DW1
+- DW1
+- 1800
+- W6
+- 3250
+- 700
+- 700
+- 700
+- 1200
+- D2-6
+- 1200
+- 1200
+- D2-6
+- D2-6
+- D2-6
+- +12.100
+- 1900
+- L3
+- 24200 2100 4000 4000 4000 4000 4000 2100
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 4
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B6.04
+- ../2024
+- 1/100
+
+
+## Trang 36
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- 410 D2-5 D2-1
+- 800 D1-1
+- DC1
+- W9
+- W1
+- 05
+- 04
+- 04 02 04
+- 04
+- 20
+- NHÔM, KÍNH DÁN AN TOÀN 6.38MM
+- KHUNG NHÔM HỆ 76
+- NHÔM, KÍNH DÁN AN TOÀN 6.38MM NHÔM, KÍNH DÁN AN TOÀN 6.38MM NHÔM, KÍNH DÁN AN TOÀN 6.38MM NHÔM, KÍNH DÁN AN TOÀN 6.38MM
+- KHUNG NHÔM HỆ 76
+- PA NÔ THÉP, SƠN TĨNH ĐIỆN
+- MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- MỞ 1 CHIỀU MỞ 1 CHIỀU MỞ 1 CHIỀU MỞ 1 CHIỀU MỞ 1 CHIỀU MỞ 1 CHIỀU MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- CÁNH LẬT
+- CÁNH TRƯỢT
+- THÉP CHỐNG CHÁY EI60
+- 1400 1000
+- 2200
+- 2400
+- 600 1800
+- 2400
+- 1000
+- 1200
+- 1500
+- 2200
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- D2-2
+- D1-2
+- DC2
+- Di-1
+- W2
+- 14
+- 03
+- 02
+- 04
+- MỞ 1 CHIỀU MỞ 1 CHIỀU
+- PANEL INOX CÓ LỚP CHÌ
+- KHUNG INOX CÓ LỚP CHÌ
+- NHÔM, KÍNH DÁN AN TOÀN 6.38MM
+- KHUNG NHÔM HỆ 76
+- PA NÔ THÉP, SƠN TĨNH ĐIỆN
+- MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- CÁNH TRƯỢT
+- THÉP CHỐNG CHÁY EI60
+- 1400 1000
+- 2200
+- 2400
+- 2200
+- 2200
+- 1700
+- 1300
+- 800
+- 800
+- 2250
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- D2-3
+- 1000 D1-3
+- DC3
+- 1200 Di-2
+- W3
+- 05
+- 02
+- 01
+- 01
+- 2400
+- 1400 1000
+- PANEL INOX CÓ LỚP CHÌ
+- NHÔM, KÍNH DÁN AN TOÀN 6.38MM
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG INOX CÓ LỚP CHÌ
+- KHUNG NHÔM HỆ 76
+- MỞ 1 CHIỀU
+- KHUNG NHÔM HỆ 100
+- MỞ 1 CHIỀU
+- KHUNG NHÔM HỆ 100
+- KHUNG NHÔM HỆ 100
+- CÁNH TRƯỢT
+- 2400
+- 2200
+- 2400
+- 600 1500 600
+- 1600
+- 2700
+- 2400
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- DS-1
+- D2-4
+- D1-4
+- W4
+- 14
+- L LAM NHÔM CHỮ Z
+- 37
+- 01
+- 01
+- KHUNG SẮT HỘP 40X80MM, SƠN TĨNH ĐIỆN
+- KHUNG NHÔM HỆ 76
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 76
+- MỞ 2 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- CÁNH TRƯỢT
+- CỬA LÙA
+- SẮT, LAM NHÔM CHỮ Z
+- 2400
+- 2400
+- 1400 1000
+- 2400
+- 1150
+- 1500
+- 1600
+- 900
+- 750
+- L1 = 850 SỐ LƯỢNG = 02 L2 = 1800 SỐ LƯỢNG = 02 L3 = 1900 SỐ LƯỢNG = 03 L4 = 3800 SỐ LƯỢNG = 28
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- DS-2
+- D1-5
+- W5
+- 02
+- 07
+- 01
+- 01
+- L
+- L 80
+- NHÔM, KÍNH DÁN AN TOÀN 6.38MM
+- KHUNG NHÔM HỆ 76
+- RAY TRƯỢT
+- PANEL INOX, KÍNH DÁN AN TOÀN 6.38MM
+- KHUNG INOX
+- MỞ 1 CHIỀU MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- CÁNH TRƯỢT
+- 2400
+- 1400 1000
+- 2200
+- L5 = 4800 SỐ LƯỢNG = 01 L6 = 7800 SỐ LƯỢNG = 02 L7 = 3550  SỐ LƯỢNG = 10 L8 = 3250  SỐ LƯỢNG = 06
+- SẮT HỘP 40X80MM
+- 1500
+- 950
+- 1360
+- 1200
+- 900
+- 1550
+- 2100 200
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- D1*-4
+- DS-3
+- 350 D2-6
+- DHL
+- W6
+- 33
+- 11
+- 01
+- 01
+- 01
+- PA NÔ THÉP, SƠN TĨNH ĐIỆN
+- NHÔM, KÍNH DÁN AN TOÀN 6.38MM
+- KHUNG NHÔM HỆ 76
+- RAY TRƯỢT
+- PANEL INOX CÓ LỚP CHÌ, KÍNH CÓ LỚP CHÌ DÀY 10MM
+- KHUNG INOX CÓ LỚP CHÌ
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- MỞ 1 CHIỀU
+- KHUNG SẮT
+- CÁNH TRƯỢT
+- SẮT SƠN TĨNH ĐIỆN
+- THÉP CHỐNG CHÁY EI30
+- 1400 1000
+- 2400
+- 2400
+- 2400
+- 1500
+- 850
+- 1200
+- 900 D1*-5
+- 1800
+- 1850
+- 1550
+- 2100 200
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- DS-4
+- DW1
+- D2-7
+- W7
+- 03
+- 02
+- 04
+- 49
+- 01
+- PA NÔ THÉP, SƠN TĨNH ĐIỆN
+- RAY TRƯỢT
+- PANEL INOX CÓ LỚP CHÌ, KÍNH CÓ LỚP CHÌ DÀY 10MM
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM, MỜ
+- KHUNG NHÔM HỆ 76
+- KHUNG INOX CÓ LỚP CHÌ
+- MỞ 1 CHIỀU
+- KHUNG NHÔM HỆ 100
+- KHUNG NHÔM HỆ 100
+- CÁNH TRƯỢT
+- THÉP CHỐNG CHÁY EI30
+- 2200
+- 1400 1000
+- 2400
+- 2200
+- 800
+- 1000
+- 1500
+- 1200
+- 700
+- 900 D2*-3
+- 800
+- 2100 200
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- DW2
+- D2-8
+- W8
+- S1
+- 01
+- 01
+- 01
+- 01
+- 01
+- 1400 1000
+- PA NÔ THÉP, SƠN TĨNH ĐIỆN
+- KHUNG NHÔM HỆ 76
+- KÍNH CÓ LỚP CHÌ DÀY 10MM
+- KHUNG INOX CÓ LỚP CHÌ
+- MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM, MỜ
+- KHUNG NHÔM HỆ 100
+- CÁNH TRƯỢT
+- THÉP CHỐNG CHÁY EI30
+- 2400
+- 2400
+- 1200 1000
+- 2200
+- 1600
+- 1280
+- 2000
+- 1800
+- 1000
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- CHI TIẾT CỬA
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B6.05
+- ../2024
+
+
+## Trang 37
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- CHI TIẾT VÁCH THẠCH CAO BÍT LỔ THÔNG GIÓ HÀNH LANG KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- VK10
+- VK6
+- VK1
+- 01 01
+- 01
+- 01
+- MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- BÍT CÁC LỔ THÔNG GIÓ GIỮA CÁC PHÒNG/ HÀNH LANG
+- KHUNG SẮT HỘP, LIÊN KẾT HÀN
+- TẤM THẠCH CAO DÀY 9MM, ỐP 2 MẶT
+- VT2:  L = 1200,   SỐ LƯỢNG: 12
+- VT1:  L = 3100,   SỐ LƯỢNG: 40
+- 3000
+- 600 2400
+- 2600
+- 400 2200
+- 1275 1275 1275 1275 100 100
+- 1250 1300 1250
+- 1200
+- 2400
+- 3800
+- 1200
+- 5200
+- 950
+- 600 600 600
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- VK7
+- VK2
+- 01 01 01
+- 01
+- MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- 2650
+- 1755 100
+- 450 2200
+- 1  ---
+- 990 980 980 01
+- 3000
+- 4700
+- 600 2400
+- MẶT DỰNG VÁCH VT1 MẶT CẮT 1 MẶT DỰNG VÁCH VT2
+- 900 1755
+- 3100
+- 2950
+- 900 1725 1725
+- 700 600
+- VK9
+- 1000
+- 1200
+- 600 1200
+- 3000
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- 1725 1725
+- VK11
+- VK3
+- 7800
+- KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM.
+- TƯỜNG ỐP GẠCH MEN 300x600MM (ĐỐI VỚI VỊ TRÍ CÓ ỐP GẠCH)
+- TƯỜNG SƠN NƯỚC
+- TỚI DẦM/ SÀN BTCT
+- TẤM THẠCH CAO DÀY 9MM, SƠN NƯỚC.
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- 3000
+- 1000
+- 1350
+- 1200
+- 1200
+- 600
+- 1100
+- 1075 1075
+- 2150
+- 2200
+- 1100
+- VK9 / VK10
+- 950
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- 600 600
+- KÝ HIỆU
+- KÝ HIỆU
+- 1  ---
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- KÝ HIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- BẢN LỀ
+- KHUNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- CHẤT LIỆU
+- VỊ TRÍ
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- VK12
+- VK8
+- VK4
+- 01
+- 01
+- 1200
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100, CỬA TRƯỢT HỆ 76
+- CỬA TRƯỢT
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- CỬA SỔ TRƯỢT
+- KHUNG NHÔM HỆ 100
+- 2600
+- 400 2200
+- 3000
+- 600 2400
+- 1200
+- 600 1200
+- KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM.
+- TƯỜNG ỐP GẠCH MEN 300x600MM (ĐỐI VỚI VỊ TRÍ CÓ ỐP GẠCH)
+- TƯỜNG SƠN NƯỚC
+- TỚI DẦM/ SÀN BTCT
+- TẤM THẠCH CAO DÀY 9MM, SƠN NƯỚC.
+- 1350 1350 1300
+- 3000
+- 1250 1300 1250
+- 2800
+- 3800
+- 4000
+- 3800
+- 1000
+- 650 KÝ HIỆU
+- 600
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- VK13
+- VK9
+- VK5
+- 01
+- 01
+- 950
+- 30 890 30
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- 30 30
+- 3000
+- 3000
+- 200
+- 1200
+- 600 1200
+- 600 2400
+- 3000
+- 1200
+- 600 1200
+- VK10
+- 700 1500 700
+- - LỚP SƠN NƯỚC HOÀN THIỆN. - TẤM CEMBOARD KHÁNG NƯỚC DÀY 6MM. - KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM. - KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM. - TẤM CEMBOARD KHÁNG NƯỚC DÀY 6MM. - LỚP SƠN NƯỚC HOÀN THIỆN.
+- LANH TÔ BTCT CỬA ĐI
+- BU LÔNG NỞ
+- BAT THÉP V DÀY 3MM KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM.
+- 1250 1300 1250
+- TỚI DẦM/ SÀN BTCT
+- 1200 1500 1200
+- 2900
+- 3800
+- 3900
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- CHI TIET CUA
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B6.06
+- ../2024
+
+
+## Trang 38
+- 5800
+- 5900
+- 1200
+- 4000 600
+- 100 100
+- 1300 4000 600
+- 200
+- 1600 9*300=2700 100 1500
+- MB CẦU THANG TẦNG 1 TỶ LỆ :1/50
+- MB CẦU THANG TẦNG 3 TỶ LỆ :1/50
+- GC
+- GC GC
+- 100
+- 200 200
+- 1650 5* 300=1500 1650 200
+- 200 3850
+- 7 6
+- 900 3900 100
+- 100 1000 650 1000 450 100 1500 200
+- 900 3900 100
+- 200 1600 100 1500
+- KHO KHO
+- KHO KHO
+- 1500 1800 1500 1500 1800 1500
+- TƯỜNG XÂY MỚI
+- 1550 100 2700 100 1500 100
+- 2100 600 1500 600
+- 17
+- 26
+- 25
+- 19
+- 21
+- 23
+- CỬA LẮP MỚI TƯỜNG XÂY MỚI
+- 11 13 15
+- 1500 300 300 300 300
+- 4800
+- 4800
+- 4800
+- 100
+- 11
+- 1
+- 1
+- 7
+- 7
+- 5
+- 5
+- 9
+- 3
+- 3
+- 9
+- 100 1400 100
+- B  --- B  ---
+- B  --- 7 6
+- A  ---
+- 200
+- 200
+- 1700 100
+- 9*300=2700 100 1500
+- 1700 100
+- 9*300=2700 100 1500
+- 5900
+- E
+- F
+- F
+- E
+- 5800
+- 5900
+- 1200
+- 4000 600
+- 1300
+- 4000 600
+- 200
+- 1600 9*300=2700 100 1500
+- 100
+- 1700 9*300=2700 100 1500
+- MB CẦU THANG TẦNG 4 TỶ LỆ :1/50
+- MB CẦU THANG TẦNG 2 TỶ LỆ :1/50
+- GC
+- GC GC
+- 3000 1700 100 200 200
+- 200 200
+- 1650 5* 300=1500 1650 200
+- 1650 5* 300=1500 1650 200
+- 7 6
+- 900 3900 100
+- 900 3900 100
+- 1600 1100
+- 1500 1800 1500
+- 17
+- 26
+- 25
+- 19
+- 21
+- 23
+- 17
+- 26
+- 25
+- 19
+- 21
+- 23
+- CỬA LẮP MỚI
+- 11 13 15
+- 11 13 15
+- 4800
+- 4800
+- 4800
+- 4700
+- 1500 600
+- 1
+- 7
+- 5
+- 3
+- 9
+- 1
+- 7
+- 5
+- 3
+- 9
+- GC
+- B  ---
+- 200
+- 200
+- 1600 200
+- 9*300=2700 100 1500
+- 1700 100
+- 9*300=2700 100 1500
+- 5900
+- E
+- F
+- E
+- F
+- +12.300
+- MÁI +16.050
+- TẦNG 4
+- TẦNG 3
+- TẦNG 2
+- +0.100
+- +4.150
+- +8.200
+- TẦNG 1
+- 15950
+- 26x 144=3750 26x 156=4050 26x 156=4050 26x 158=4100
+- S2 ----
+- 1200 600
+- 900 900 900 900 1000
+- E F
+- MẶT CẮT B TỶ LỆ :1/50
+- S1 ----
+- TAY VỊN INOX Ø 60
+- 4000
+- TƯỜNG KHO
+- 900
+- h h
+- 20 20
+- CHI TIẾT S1 TỶ LỆ :1/10
+- 900 40
+- 200
+- 40
+- 50 50 50
+- 10
+- 20 20 20 20
+- CHI TIẾT S2 TỶ LỆ :1/10
+- 300
+- 15 100 15
+- 50 50
+- 50 50
+- BẢN SÀN BTCT
+- BẬC XÂY GẠCH
+- BÓC BỎ GẠCH CŨ, THAY MỚI GẠCH GRANITE (LOẠI ỐP BẬC THANG)
+- BÊ TÔNG ĐÁ MÀI (HIỆN HỮU)
+- BÊ TÔNG ĐÁ MÀI (HIỆN HỮU)
+- TƯỜNG XÂY GẠCH, CẠO SỦI LỚP SƠN CŨ, SƠN NƯỚC MỚI.
+- BÊ TÔNG ĐÁ MÀI (HIỆN HỮU)
+- TƯỜNG XÂY GẠCH, CẠO SỦI LỚP SƠN CŨ, SƠN NƯỚC MỚI.
+- BẢN SÀN BTCT
+- GẠCH THẠCH ANH HÀNH LANG
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- CHI TIẾT CẦU THANG TRỤC E-F - 6-7
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B7.01
+- ../2024
+
+
+## Trang 39
+- 5900
+- 1700 100
+- 9*300=2700 100 1500
+- 1700 100
+- 9*300=2700 100 1500
+- MB CẦU THANG TẦNG 3 TỶ LỆ :1/50
+- GC GC
+- GC GC
+- MB CẦU THANG TẦNG 1 TỶ LỆ :1/50
+- 200 200
+- 200
+- 200
+- A  ---
+- A  ---
+- 2100 600 1500 600
+- 900 3900 100
+- 900 3900 100
+- 1500 1800 1500
+- 1500 100 1650 1350 200200
+- 1500 300 300 300 300
+- 1650 5* 300=1500 1650 200
+- 9 10
+- 9 10
+- 1
+- 3
+- 5
+- 7
+- 9
+- 1
+- 3
+- 5
+- 7
+- 9
+- 100 3200 200
+- 11
+- 11 13 15
+- P. NGHỈ NV
+- 4800
+- 4800
+- 4800
+- 4800
+- PHÒNG NGHỈ NHÂN VIÊN
+- CỬA LẮP MỚI
+- TƯỜNG XÂY MỚI
+- 19
+- 23
+- 21
+- 17
+- 25
+- 26
+- 100 5900 100
+- 200
+- 1700 9*300=2700 100 1500
+- 1200
+- 4000 600
+- 100 100
+- 1300 4000 600
+- 5800
+- 5900
+- F
+- F
+- E
+- E
+- 5900
+- 1600 200
+- 9*300=2700 100 1500
+- 1700 100
+- 9*300=2700 100 1500
+- GC GC
+- GC GC
+- MB CẦU THANG TẦNG 4 TỶ LỆ :1/50
+- MB CẦU THANG TẦNG 2 TỶ LỆ :1/50
+- 200 200
+- 200
+- 3000 1700 100 200 200
+- 200
+- A  ---
+- A  ---
+- 1600 1500 600
+- 900 3900 100
+- 900 3900 100
+- 1500 1800 1500
+- 1500 1800 1500
+- 1650 5* 300=1500 1650 200
+- 1650 5* 300=1500 1650 200
+- 9 10
+- 9 10
+- 1
+- 3
+- 5
+- 7
+- 9
+- 1
+- 3
+- 5
+- 7
+- 9
+- 11 13 15
+- 11 13 15
+- 4800
+- 4800
+- 4800
+- 4800
+- CỬA LẮP MỚI
+- TƯỜNG XÂY MỚI
+- 19
+- 19
+- 23
+- 23
+- 21
+- 21
+- 17
+- 17
+- 25
+- 25
+- 26
+- 26
+- 1100
+- 200
+- 1600 9*300=2700 100 1500
+- 100
+- 1700 9*300=2700 100 1500
+- 1200
+- 4000 600
+- 1300
+- 4000 600
+- 5800
+- 5900
+- F
+- F
+- E
+- E
+- +12.300
+- MÁI +16.050
+- TẦNG 4
+- TẦNG 3
+- TẦNG 2
+- +0.100
+- +4.150
+- +8.200
+- TẦNG 1
+- 15950
+- 26x 144=3750 26x 156=4050 26x 156=4050 26x 158=4100
+- 1200 600
+- E F
+- MẶT CẮT A TỶ LỆ :1/50
+- TƯỜNG PHÒNG NGHỈ NHÂN VIÊN
+- 4000
+- TAY VỊN INOX Ø 60
+- S1 ----
+- 900
+- 900 900 1000
+- S2 ----
+- BÓC BỎ GẠCH CŨ, THAY MỚI GẠCH GRANITE (LOẠI ỐP BẬC THANG)
+- TƯỜNG XÂY GẠCH, CẠO SỦI LỚP SƠN CŨ, SƠN NƯỚC MỚI.
+- BÊ TÔNG ĐÁ MÀI (HIỆN HỮU)
+- BÊ TÔNG ĐÁ MÀI (HIỆN HỮU)
+- BẬC XÂY GẠCH
+- BẢN SÀN BTCT
+- TƯỜNG XÂY GẠCH, CẠO SỦI LỚP SƠN CŨ, SƠN NƯỚC MỚI.
+- GẠCH THẠCH ANH HÀNH LANG
+- BÊ TÔNG ĐÁ MÀI (HIỆN HỮU)
+- BẢN SÀN BTCT
+- CHI TIẾT S1 TỶ LỆ :1/10
+- CHI TIẾT S2 TỶ LỆ :1/10
+- 20 20 20 20
+- 50 50
+- 50 50
+- 300
+- 15 100 15
+- 200
+- 50 50 50
+- 10
+- 40
+- 20 20
+- 900 40
+- h h
+- 900
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- CHI TIẾT CẦU THANG TRỤC E-F - 9-10
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B7.02
+- ../2024
+
+
+## Trang 40
+- VỆ SINH VS1.5
+- VỆ SINH VS1.1 VỆ SINH VS1.2
+- 2100 700 2800
+- 602 598 100 1200 200
+- MẶT BẰNG VS1.1
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 2100 700 2800
+- NC
+- TỶ LỆ :1/50 TỶ LỆ :1/50 TỶ LỆ :1/50
+- 867 1000 100 100 1967 100
+- 100 1945 100
+- TC2
+- NC
+- 598 598 1196 200 100
+- P1
+- BẢNG VẬT LIỆU HOÀN THIỆN
+- T4
+- T2
+- T1
+- 300 1800
+- F1C
+- NGẠCH CỬA LÁT ĐÁ GRANITE
+- NGẠCH CỬA LÁT ĐÁ GRANITE
+- GẠCH CERAMIC 300X300MM CHỐNG TRƯỢT
+- GẠCH CERAMIC 300X600MM MÀU ĐẬM
+- GẠCH CERAMIC 300X600MM MÀU NHẠT
+- SƠN NƯỚC MÀU NHẠT
+- TRẦN THẠCH CAO KHUNG NỔI 600X600MM, CHỐNG ẨM, CAO 2800MM
+- 1145 800
+- i=2%
+- TC2
+- T2
+- T1
+- P1
+- 100 2700 100
+- MẶT CẮT 2 TỶ LỆ :1/50
+- TC2
+- T2
+- T1
+- P1
+- 9
+- 300
+- 1800
+- 700 2800
+- F1C F1C F1C F1C F1C F1C
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- MB. LÁT GẠCH VS1.1 TỶ LỆ :1/50
+- 100 1200 200
+- 100 1200 200
+- MB. TRẦN VS1.1 TỶ LỆ :1/50
+- 2800 2100
+- 867 1000 100 100 1967 100
+- 100 1967 100
+- 100 1945 100
+- 100 1945 100
+- MẶT SÀN
+- TC2
+- T4
+- NC T4
+- 2100 700 2800
+- 1800
+- 300
+- 100 100 2700 100
+- 600 1200 800
+- 9
+- 9
+- 100
+- 200 200
+- GC GC
+- 100 1200 200
+- 100 1200 200
+- 13 14
+- 200
+- 200 3800 200
+- 14 13
+- MẶT BẰNG VS1.4 MẶT BẰNG VS1.5
+- TC2
+- T2
+- T1
+- P1
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 1300 100 1150 100 1150 200
+- 1300 100
+- i=2%
+- 500 700 50 100 1250 200
+- 2100 700 2800
+- MẶT BẰNG VS1.2 MẶT BẰNG VS1.3
+- TỶ LỆ :1/50
+- 3800
+- 350 700 100 100
+- 10 MẶT CẮT 1 TỶ LỆ :1/50
+- 574 574 574 575
+- 3800
+- 4000
+- NC
+- i=2%
+- 200 100
+- 100 1300 200
+- 550 750 1300 200 100
+- 550 750
+- 350 700 100
+- 1300
+- i=2%
+- TC2
+- i=2%
+- F1C F1C
+- P1
+- T2
+- T1
+- 10
+- GC
+- 2100
+- 350 550 350
+- 1800
+- 700 2800
+- 300
+- 2800
+- 100 1250 100
+- 1100 500
+- 1600 100 1000 100 100
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 2700
+- G
+- MB. LÁT GẠCH VS1.2 TỶ LỆ :1/50
+- C
+- 500 700 50 100 1250 200
+- MB. TRẦN VS1.2 TỶ LỆ :1/50
+- 100 1250 200
+- 100 100 2700 100
+- NC
+- 1800 800
+- 100 2700 100
+- 100
+- 200 100
+- 100 1300 200
+- 200 100
+- 100 1300 200
+- TC2
+- MB. LÁT GẠCH VS1.5 TỶ LỆ :1/50
+- GC GC
+- NC NC NC
+- T4
+- 1300
+- 1300
+- 200
+- 200 3800 200
+- 200
+- 200 3800 200
+- MB. TRẦN VS1.5
+- 14 13
+- 14 13
+- 10
+- 10
+- 1300 100 1150 100 1150 200
+- 1300 100
+- 1300 100 1150 100 1150 200
+- TC2 TC2
+- GC
+- TỶ LỆ :1/50
+- 100 1250 100
+- 100 1250 100
+- 350 700 100 100
+- T4 T4
+- 3800
+- 3800
+- 4000
+- 4000
+- TC2
+- 350 700 100
+- VỆ SINH VS1.3
+- 2100 700 2800
+- 100 1100 100
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 2700 200 100
+- 100 2700 200
+- 100
+- 450 600 600 1050 2700 200
+- 450 600 600 1050
+- 1100 500
+- 1600 100 1000 100 100 2700
+- 1600 100 1000 100 100
+- 2700
+- 1800 700 200
+- i=2%
+- i=2%
+- VỆ SINH VS1.4
+- TC2
+- T2
+- T1
+- P1
+- 2100 700 2800
+- 16
+- 100 1500 100
+- 100
+- 16
+- 400
+- 1000 500
+- 300 1800
+- 1800
+- 700 2800
+- 300
+- 1100 100 100
+- 200 2200 100 2200 200
+- 2000 200 2200 200
+- 1100 700 200 2000 200 2200 200
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 1400 700 100
+- 15 16
+- 15 16
+- 550 600 600 450
+- 550 600 600 450 100
+- i=2%
+- MẶT CẮT 1 TỶ LỆ :1/50
+- MB. LÁT GẠCH VS1.3 TỶ LỆ :1/50
+- TỶ LỆ :1/50
+- 100 1100 100
+- 100 1100 100
+- i=2%
+- MB. TRẦN VS1.3 TỶ LỆ :1/50
+- 4500
+- 4500
+- 100 1100 700 200
+- 350 600 600 450
+- i=2%
+- 100 2700 200
+- 100 2700 200
+- 100 2700 200
+- 100 2700 200
+- TC2
+- T2
+- T1
+- P1
+- i=2%
+- TC2
+- 1800 700 200
+- T4 NC
+- 2100
+- 700
+- 500 1000 1400 200
+- 16
+- 16
+- 500
+- 2800
+- 100
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- G
+- 1100 100 100
+- 1100 100 100
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- CHI TIẾT VỆ SINH TẦNG 1 (VS1.1,...VS1.4)
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B7.03
+- ../2024
+
+
+## Trang 41
+- VỆ SINH VS3.1b
+- VỆ SINH VS1.4 VỆ SINH VS1.6
+- 2800
+- 200 1100 100
+- 2100 700
+- 300 700 100
+- 100 1500 100
+- 100
+- 100 1500 100
+- 100
+- 1800
+- 300
+- 400
+- 400
+- MẶT BẰNG VS3.1b MẶT BẰNG VS3.2
+- 1000 500
+- 1000 500
+- 450 700 1150 100 2300 200 100 2500
+- 100 2300 200
+- 2300 100 100
+- MB. LÁT GẠCH VS1.4 TỶ LỆ :1/50
+- ...
+- 200 2200 100 2200 200
+- 2000 200 2200 200
+- 200 2200 100 2200 200
+- 100 2000 200 2200 200
+- TỶ LỆ :1/50
+- 1400 700 100
+- 15 16
+- 15 16
+- 1150
+- MB. TRẦN VS1.4 TỶ LỆ :1/50
+- P1
+- T1
+- T2
+- MẶT CẮT 1 TỶ LỆ :1/50
+- i=2%
+- TC2
+- T4 NC
+- F3C F3C F3C
+- TC2
+- 700 450
+- ...
+- 4500
+- 4500
+- 100 1100 700 200
+- NC NC NC
+- T4 NC
+- 550 550 1100 200
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- TC2
+- 2100
+- 100
+- 100 1300
+- ...
+- 200 1100 100
+- MB. LÁT GẠCH VS3.1b TỶ LỆ :1/50
+- 300 700 100
+- 200 1100 100
+- MB. TRẦN VS3.1b TỶ LỆ :1/50
+- NC
+- 1000 1400 200
+- 100 2300 200 100 2500
+- 100 2300 200
+- 100 2300 200 100 2500
+- 100 2300 200
+- 500
+- 500
+- 1400 200
+- 100
+- 100
+- G
+- G
+- T4
+- TC2
+- 100
+- 200 2000
+- 2100
+- 700
+- 500 1500
+- MẶT CẮT 1 TỶ LỆ :1/50
+- ...
+- ...
+- MẶT BẰNG VS1.6
+- NC
+- 100
+- 100 1100 200
+- 100 1100 200
+- 100
+- 100
+- 500 1500 200 2000
+- 200 700 100 200
+- TỶ LỆ :1/50
+- 100 1300
+- 100 1300
+- 500 500
+- i=2%
+- i=2%
+- 200 1000
+- 1000 1000
+- ...
+- ...
+- F1C
+- TC2
+- T2
+- T1
+- P1
+- VỆ SINH VS3.2 VỆ SINH VS4.2a
+- 2800
+- 16
+- 2100 700
+- 1800
+- 300
+- 100 2400 100 1150 700 550
+- 16
+- 1000 1000 2000 100
+- 100
+- TỶ LỆ :1/50
+- 2400 100 100
+- ...
+- ...
+- 300 1800
+- 2100 700 2800
+- 550 550 100 1100 200
+- 100 1100 200
+- 1150
+- 300 700 100
+- TC2
+- MẶT CẮT 1 TỶ LỆ :1/50
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- P1
+- T1
+- T2
+- i=2%
+- 700 550
+- ...
+- MB. LÁT GẠCH VS1.6 TỶ LỆ :1/50
+- MB. TRẦN VS1.6 TỶ LỆ :1/50
+- 100
+- 200 2000
+- 100
+- 200 2000
+- 1100 100 1200 100 2400 100
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- TC2
+- T4
+- 2100
+- ...
+- MB. LÁT GẠCH VS3.2 TỶ LỆ :1/50
+- 100
+- 100
+- 100
+- 100
+- NC
+- 200 700 100 200
+- 200 1000
+- 200 1000
+- 1000
+- MB. TRẦN VS3.2 TỶ LỆ :1/50
+- 100 2400 100
+- 100 2400 100
+- 200
+- 16
+- 16
+- T4
+- 100 1100 200
+- 100 1100 200
+- 100 1100 200
+- 100 1100 200
+- NC
+- 300 700 100
+- 100
+- 2000 100
+- 100
+- 2000 100
+- TC2
+- ...
+- ...
+- ...
+- ...
+- VỆ SINH VS3.1a
+- 100 2400 100
+- 100 2400 100
+- ...
+- ...
+- 300 700 100 200 1100 100
+- 2100
+- MẶT BẰNG VS3.1a
+- F3C NC
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 700 700 100 100 1500 100
+- 2800
+- 2300 100 100
+- 100 2300 200
+- 100 2300 200
+- 2100 700
+- 700 450
+- MẶT BẰNG VS4.2a
+- 1800
+- 300
+- 450 700 1150
+- TỶ LỆ :1/50
+- 500 1000 500 100 2000 100
+- 100 2000 100
+- TC2
+- 100 2500
+- 100
+- ...
+- 1150
+- 1000 1000
+- TỶ LỆ :1/50
+- T2
+- T1
+- P1
+- i=2%
+- 500 1000 500 100 2000
+- MẶT CẮT 1 TỶ LỆ :1/50
+- P1
+- T1
+- T2
+- TC2
+- ...
+- i=2%
+- ...
+- ...
+- 1800
+- 300
+- 100 550 550
+- 2100 700
+- 1100 200 100 1300
+- 2800
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 300 1400
+- 1700
+- ...
+- MẶT SÀN
+- VỆ SINH HOÀN THIỆN
+- ...
+- 300 700 100 200 1100 100
+- MB. LÁT GẠCH VS3.1a TỶ LỆ :1/50
+- 200 1100 100
+- MB. LÁT GẠCH VS4.2a TỶ LỆ :1/50
+- 700 700 100 100 1500 100
+- MB. TRẦN VS3.1a TỶ LỆ :1/50
+- 100 1500 100
+- NC
+- MB. TRẦN VS4.2a TỶ LỆ :1/50
+- 100 2300 200
+- 100 2300 200
+- 100 2300 200
+- 100 2300 200
+- TC2
+- NC
+- T4
+- 100 2000 100
+- 100 2000 100
+- 100 2000 100
+- 100 2000 100
+- 100 2500
+- 100 2500
+- T4
+- TC2
+- ...
+- ...
+- ...
+- ...
+- 100 1100 200 100 1300
+- 300 1400
+- 300 1400
+- 100 1100 200 100 1300
+- 1700
+- 1700
+- ...
+- ...
+- ...
+- ...
+- CHI TIẾT VỆ SINH TẦNG 1, 3, 4 (VS1.4,...VS4.2a)
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B7.04
+- ../2024
+
+
+## Trang 42
+- VỆ SINH VS4.2b
+- VỆ SINH VS4.1
+- 3000 100 3000
+- 200 2800 2900 100
+- 100 800 500 1000 500 100 800 500 1000 400
+- 400 900 600 500 900 600
+- MẶT BẰNG VS4.1
+- 200 100
+- 100 200
+- 8
+- 2800
+- 2100 700
+- 900 650
+- 900 650
+- 100 1500 100
+- 1800
+- 300
+- 1550 100 1250
+- 1550 100 1250
+- i=2%
+- i=2%
+- 100
+- 100
+- TỶ LỆ :1/50
+- MẶT BẰNG VS4.2b
+- 700 600
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 100
+- 600 700
+- 550 700
+- 100 550 700 100
+- 100
+- 100
+- 2900
+- 2900
+- NC
+- 500 1000 500 100 2000 100
+- 100 2000 100
+- ...
+- 100
+- 500 1000 500 100 2000
+- 1000 1000
+- i=2%
+- i=2%
+- i=2%
+- i=2%
+- i=2%
+- TỶ LỆ :1/50
+- F3C
+- TC2
+- P1
+- T2
+- T1
+- ...
+- 750 650 900 500 600 750 600 750 1400 100 1400 100 1350 100 1350 200
+- 100
+- 1400 4000 700
+- 100 100 100
+- 700 700
+- 300 1400
+- E
+- F
+- MẶT SÀN
+- VỆ SINH HOÀN THIỆN
+- 1700
+- ...
+- 2800
+- 1800
+- 300
+- 400
+- 300
+- 2800
+- 2100 700
+- 2800 100 200
+- 200 5700 100
+- 1800
+- 300
+- 100
+- MB. LÁT GẠCH VS4.2b TỶ LỆ :1/50
+- 700 750 700 550 100 700 700 300 700 400 2800 100 700 4000 1300
+- 100 1500 100
+- 100 1500 100
+- T1
+- MB. TRẦN VS4.2b TỶ LỆ :1/50
+- F E
+- NC
+- TC2
+- 2900 100 200
+- 8
+- MẶT CẮT 2 TỶ LỆ :1/50
+- 100 2000 100
+- 100 2000 100
+- 100 2000 100
+- 100 2000 100
+- T2
+- P1
+- TC2
+- TC2
+- P1
+- T1
+- T2
+- 1550 100 1250
+- MẶT CẮT 1 TỶ LỆ :1/50
+- F3C F3C
+- 2400
+- T2
+- P1
+- TC2
+- NC
+- T4
+- T1
+- 100 100 100
+- 700 700
+- 300 1400
+- 300 1400
+- 1700
+- 1700
+- ...
+- 2100
+- ...
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 2400 400
+- MẶT SÀN
+- VỆ SINH HOÀN THIỆN
+- VỆ SINH VS4.3
+- 3000 100 3000
+- 200 2800 2900 100
+- 100 800 2000 100 800 1900
+- MB. LÁT GẠCH VS4.1 TỶ LỆ :1/50
+- NC
+- NC
+- T4
+- T4
+- 200 100
+- 100 200
+- B
+- 8
+- 2000
+- 100 1800 100
+- 1550 100 1250
+- 1550 100 1250
+- 100 100 700 900
+- NC
+- NC
+- NC
+- T4 NC
+- MẶT BẰNG VS4.3
+- 2900
+- 2900
+- 2800
+- 2100 700
+- 100 1900 100
+- 100 1900 100
+- 8
+- 1800
+- 300
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 500 900 500
+- 1350 550
+- TỶ LỆ :1/50
+- i=2%
+- 2100
+- NC
+- 100
+- T4
+- T4
+- T4
+- 500 900 500 100 1900
+- 100
+- 1404 4000 700 1399 100 1405 100 1350 100 1350 200
+- F3C
+- TC2
+- P1
+- T2
+- T1
+- E
+- F
+- 100 1800 100
+- ...
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 3000 100 3000
+- 200 2800 2900 100
+- MB. TRẦN VS4.1 TỶ LỆ :1/50
+- B
+- TC2
+- TC2
+- MB. LÁT GẠCH VS4.3 TỶ LỆ :1/50
+- B
+- 2000
+- 200 100
+- 100 200
+- 100 1800 100
+- 2000
+- 8
+- 100 1800 100
+- 100 100 700 900
+- MB. TRẦN VS4.3 TỶ LỆ :1/50
+- NC
+- T4
+- 2900
+- 2900
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 8
+- 8
+- 2100
+- 2100
+- TC2
+- 1404 4000 700
+- 100 1800 100
+- 100 1800 100
+- E
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- CHI TIẾT VỆ SINH TẦNG 4 (VS4.1,...VS4.3)
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B7.05
+- ../2024
+
+
+## Trang 43
+- LỐI ĐI
+- P.KỸ THUẬT
+- 4 3 2 1 14 15 16
+- DB-HSTC
+- W.C
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- LỐI VÀO P. XỬ LÝ DỤNG CỤ
+- GC GC GC GC GC GC GC GC GC GC GC GC
+- GC GC GC GC
+- P. XỬ LÝ CHẤT THẢI
+- P. CÁCH LY 01 (2G)
+- SÂN
+- SÂN SÂN
+- C  C
+- C
+- W.C
+- GC GC GC GC
+- GC GC GC GC GC GC GC GC
+- GC GC GC GC GC GC GC GC GC
+- P. HỒI SỨC CẤP CỨU 1 ( 09 G)
+- C
+- BUỒNG ĐỆM
+- P. HỒI SỨC CẤP CỨU 1 (4G)
+- W.C
+- P. CÁCH LY 02(2G)
+- CHI TIẾT TAY VỊN
+- TƯỜNG HOÀN THIỆN
+- TAY VỊN
+- CỘT ĐÃ CÓ NỆP CHỐNG VA ĐẬP HIỆN HỮU
+- FFL
+- TỶ LỆ :1/10
+- P. CÁCH LY 03(2G)
+- 1 --
+- 900
+- C  C
+- C  C
+- 76
+- 6 7 8 9 10 11 12 13 5
+- P. THỦ THUẬT
+- P. HC KHOA
+- P. BỆNH(3G)
+- W.C
+- CỘT ĐÃ CÓ NỆP CHỐNG VA ĐẬP HIỆN HỮU
+- W.C
+- KHO KHO
+- KHO DỤNG CỤ/ MÁY MÓC
+- P. NGHỈ ĐIỀU DƯỠNG NỮ
+- P. NGHỈ BS NAM
+- P. HC KHOA
+- NHÀ CHỜ
+- W.C
+- +0.100
+- KHUNG ĐỊNH HÌNH
+- BẢN MÃ LIÊN KẾT
+- LỚP HOÀN THIỆN
+- HỆ TAY VỊN 140
+- NÚT ĐỊNH HÌNH
+- W.C
+- CHI TIẾT 1
+- C  C
+- C  C
+- BU LÔNG
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 1 TỶ LỆ :1/100
+- TỶ LỆ :1/5
+- P. NGHỈ BS NỮ
+- KHO KHO KHO HS
+- P. SINH HOẠT KHOA
+- P. TIẾP NGƯỜI THÂN
+- +0.100
+- -0.100
+- W.C
+- 76
+- P. ĂN
+- C  C
+- HÀNH LANG
+- L=8300 L=2000
+- L=1600
+- 140
+- C
+- L=1500 L=4300 L=2700
+- 56900 4500
+- C
+- C
+- KHOA XÉT NGHIỆM
+- KHO WC
+- C
+- C  C  C  C  C  C  C
+- GC GC GC GC
+- GC GC
+- P. ĐỆM
+- C  C  C
+- C  C  C  C  C  C  C  C  C  C  C
+- C  C  C  C  C  C  C  C  C  C  C  C
+- P. HUYẾT HỌC
+- CHI TIẾT KẸP GÓC
+- P. THỬ MẪU
+- NƯỚC TIỂU
+- P. ĐONG MÁU
+- P. NGHỈ NV
+- L=5000 L=15100
+- L=6000 L=4500 L=6100
+- C1-02 KHO
+- 30
+- TỶ LỆ :1/1
+- GC GC GC GC GC
+- P. TRƯỞNG KHOA
+- P. NHẬN MẪU    P. HÀNH CHÍNH
+- P. CHỤP X QUANG
+- P. SINH HÓA MIỄN DỊCH    PHÒNG GIAO BAN
+- 30
+- TƯỜNG HOÀN THIỆN
+- INOX V 30X30X2MM, CAO 1500MM, CÁCH SÀN 100MM
+- VÍT LIÊN KẾT
+- KHOA X QUANG
+- B2 A.B3.01
+- P. TRẢ HỒ SƠ   P. CHỤP CT
+- LỐI VÀO KHO VẬT TƯ
+- THANG BTCT
+- GC GC GC
+- P. THAY ĐỒ
+- HÀNH LANG
+- HÀNH LANG
+- P.RỬA PHIM
+- L=4400 L=2000
+- KHO HÓA CHẤT
+- WC
+- P. TRƯỞNG KHOA
+- PHÒNG NGHỈ
+- : THANH KẸP GÓC  C
+- : TAY VỊN CHỐNG VA 77,6 m
+- CHÚ THÍCH
+- C
+- C
+- C
+- HÀNH LANG
+- L=1500 L=5400
+- L=3600 L=1800 L=1800
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG XỬ LÝ HÌNH ẢNH MSCT VÀ GIAO BAN KHOA CĐHA
+- P. NHÂN VIÊN KHOA CĐHA
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG TRƯỞNG KHOA TIM MẠCH
+- C1-03
+- TỔNG  SỐ LƯỢNG/ CHIỀU DÀI
+- 54 THANH
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 1; CHI TIẾT TAY VỊN
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B8.01
+- ../2024
+- 1/100
+
+
+## Trang 44
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- L=5000
+- L=2800
+- HÀNH LANG KẾT NỐI KHỐI A
+- 4 3 2 1 14 15 16
+- C
+- C
+- C
+- C
+- C
+- C
+- C
+- C
+- C
+- C
+- L=2000
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- L=2100 L=2100
+- L=5200 L=1200 L=9500
+- C  C  C  C
+- C  C  C  C
+- C  C  C  C
+- C  C
+- C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C
+- C  C  C  C  C  C  C  C  C  C  C  C  C  C C  C  C  C  C  C  C  C  C  C
+- P. TRƯỞNG K. CTCH
+- L=3760 L=750 L=3100 L=8100 L=3200 L=6200 L=5200 L=2700
+- P. BỆNH P. BỆNH P. BỆNH P. BỆNH
+- VS VS
+- VS VS
+- P. TIỂU PHẪU VS
+- VS
+- L=2700 L=5200 L=7100 L=7500 L=6000 L=3100
+- L=4300 L=5200 L=4800 L=4800 L=6800 L=2700
+- C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C
+- C  C  C  C  C  C  C  C  C  C
+- P. BỆNH
+- C  C  C  C  C  C  C  C  C
+- P. NHÂN VIÊN
+- P. THUỐC P. NGHỈ NỮ P. BỆNH NẶNG
+- L=14100 L=4500 L=7500 L=5600 L=2700
+- GC GC GC
+- GC
+- P. BỆNH P. BỆNH
+- VS
+- VS VS
+- GC
+- 6 7 8 9 10 11 12 13 5
+- P. HÀNH CHÁNH K. CTCH
+- VS
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 3
+- VS
+- P. BS NAM
+- L=5300
+- GC
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO
+- KHU VỰC XÂY GẠCH BÔNG GIÓ HIỆN HỮU (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- L=8200
+- P. BỆNH +8.200
+- C
+- L=4200
+- TỶ LỆ :1/100
+- L=8200
+- 56900 4500
+- C
+- L=6600 L=1700
+- C
+- C  C
+- P. HẬU PHẪU NAM
+- P. BĂNG BỘT
+- VS
+- VS
+- VS
+- P. BỆNH
+- P. BỆNH P. BỆNH
+- VS
+- VS
+- P. ĐIỀU DƯỠNG NỮ
+- P. BỆNH NẶNG
+- B2 A.B3.01
+- P. BỆNH
+- VS
+- VS
+- : THANH KẸP GÓC  C
+- : TAY VỊN CHỐNG VA 206,8 m
+- CHÚ THÍCH
+- P. HC
+- MÁI POLY
+- C  C
+- C  C
+- C
+- C  C
+- P. Bệnh
+- P. Bệnh
+- VS
+- VS
+- P. BỆNH
+- VS
+- VS
+- TỔNG  SỐ LƯƠNG/ CHIỀU DÀI
+- L=2100
+- L=8200
+- L=9500
+- 130 THANH
+- L=2000
+- C
+- C
+- C
+- C
+- C
+- C
+- C
+- C
+- C
+- C
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 3
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B8.02
+- ../2024
+- 1/100
+
+
+## Trang 45
+- SÊ NÔ
+- 4 3 2 1 14 15
+- HÀNH LANG KẾT NỐI KHỐI A +12.100
+- HÀNH LANG KẾT NỐI KHỐI A
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- L=1700
+- C
+- C  C  C
+- KHO DỤNG CỤ
+- KHU VỰC RỬA
+- L=5100 L=2500 L=1300 L=3600
+- L=5800 L=7000 L=4000 L=7100 L=3500
+- P. TRƯỞNG KHOA P. TƯ VẤN DD KHU PHA CHẾ CĂN TIN
+- +12.100
+- SOẠN CHIA NẤU
+- KHOA NỘI HÔ HẤP KHOA DINH DƯỠNG
+- SÊ NÔ SÊ NÔ
+- SÊ NÔ
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 4 TỶ LỆ :1/100
+- C
+- C  C
+- 6 7 8 9 10 11 12 13 5
+- C L=1700
+- THỰC PHẨM
+- P. ĂN NV
+- KHU VỰC  SƠ CHẾ
+- L=5300
+- L=7100 L=3000
+- C
+- L=2600
+- L=800 L=2900
+- KHO THỰC PHẨM
+- P. HC KHOA DINH DƯỠNG KHO
+- L=9500
+- C  C  C
+- +12.100
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- L=6200 L=2400
+- 52400
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO
+- L=7000 L=5800 L=12200
+- L=3800
+- L=5500 L=5200 L=5200
+- P. NHÂN VIÊN
+- P. BỆNH
+- L=3000 L=5200
+- P. BỆNH P. BỆNH P. BỆNH P. BỆNH
+- P. BỆNH P. BỆNH
+- 2500
+- B2 A.B3.01
+- SÊ NÔ
+- : THANH KẸP GÓC  C
+- : TAY VỊN CHỐNG VA 190,8 m
+- CHÚ THÍCH
+- P. BỆNH P. BỆNH
+- P. BỆNH P. BỆNH
+- L=5200
+- L=5200
+- C  C
+- TỔNG  SỐ LƯỢNG/ CHIỀU DÀI
+- C
+- C
+- L=2100
+- L=8200
+- L=9500
+- +12.100
+- 16 THANH
+- L=23800
+- L=1000
+- 24200 2100 4000 4000 4000 4000 4000 2100
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 4
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B8.03
+- ../2024
+- 1/100
+
+
+## Trang 46
+- LỐI ĐI
+- P.KỸ THUẬT
+- 4 3 2 1 14 15 16
+- DB-HSTC
+- W.C
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- LỐI VÀO P. XỬ LÝ DỤNG CỤ
+- GC GC GC GC GC GC GC GC GC GC GC GC
+- GC GC GC GC
+- P. XỬ LÝ CHẤT THẢI
+- P. CÁCH LY 01 (2G)
+- SÂN
+- SÂN SÂN
+- W.C
+- GC GC GC GC
+- GC GC GC GC GC GC GC GC
+- GC GC GC GC GC GC GC GC GC
+- P. HỒI SỨC CẤP CỨU 1 ( 09 G)
+- BUỒNG ĐỆM
+- P. HỒI SỨC CẤP CỨU 1 (4G)
+- W.C
+- P. CÁCH LY 02(2G)
+- P. CÁCH LY 03(2G)
+- 6 7 8 9 10 11 12 13 5
+- P. THỦ THUẬT
+- P. HC KHOA
+- P. BỆNH(3G)
+- W.C
+- W.C
+- KHO KHO
+- KHO DỤNG CỤ/ MÁY MÓC
+- P. NGHỈ ĐIỀU DƯỠNG NỮ
+- P. NGHỈ BS NAM
+- P. HC KHOA
+- NHÀ CHỜ
+- W.C
+- +0.100
+- W.C
+- MẶT BẰNG VẬT DỤNG TẦNG 1 TỶ LỆ :1/100
+- P. NGHỈ BS NỮ
+- KHO KHO KHO HS
+- P. SINH HOẠT KHOA
+- P. TIẾP NGƯỜI THÂN
+- +0.100
+- -0.100
+- W.C
+- P. ĂN
+- HÀNH LANG
+- 56900 4500
+- KHOA XÉT NGHIỆM
+- KHO WC
+- GC GC GC GC
+- GC GC
+- P. ĐỆM
+- P. HUYẾT HỌC
+- P. THỬ MẪU
+- NƯỚC TIỂU
+- P. ĐONG MÁU
+- P. NGHỈ NV
+- C1-02 KHO
+- GC GC GC GC GC
+- P. TRƯỞNG KHOA
+- P. NHẬN MẪU    P. HÀNH CHÍNH
+- P. CHỤP X QUANG
+- P. SINH HÓA MIỄN DỊCH    PHÒNG GIAO BAN
+- KHOA X QUANG
+- B2 A.B3.01
+- P. TRẢ HỒ SƠ   P. CHỤP CT
+- LỐI VÀO KHO VẬT TƯ
+- THANG BTCT
+- GC GC GC
+- P. THAY ĐỒ
+- HÀNH LANG
+- HÀNH LANG
+- P.RỬA PHIM
+- KHO HÓA CHẤT
+- WC
+- P. TRƯỞNG KHOA
+- PHÒNG NGHỈ
+- HÀNH LANG
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG XỬ LÝ HÌNH ẢNH MSCT VÀ GIAO BAN KHOA CĐHA
+- P. NHÂN VIÊN KHOA CĐHA
+- PHÒNG NHÂN VIÊN KHOA TIM MẠCH
+- PHÒNG TRƯỞNG KHOA TIM MẠCH
+- C1-03
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- MẶT BẰNG VẬT DỤNG TẦNG 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B9.01
+- ../2024
+- 1/100
+
+
+## Trang 47
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- HÀNH LANG KẾT NỐI KHỐI A
+- 4 3 2 1 14 15 16
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- P. TRƯỞNG K. CTCH
+- P. BỆNH P. BỆNH P. BỆNH P. BỆNH
+- VS VS
+- VS VS
+- P. TIỂU PHẪU VS
+- VS
+- P. BỆNH
+- P. NHÂN VIÊN
+- P. THUỐC P. NGHỈ NỮ P. BỆNH NẶNG
+- GC GC GC
+- GC
+- P. BỆNH P. BỆNH
+- VS
+- VS VS
+- GC
+- 6 7 8 9 10 11 12 13 5
+- P. HÀNH CHÁNH K. CTCH
+- VS
+- VS
+- P. BS NAM
+- MẶT BẰNG VẬT DỤNG TẦNG 3 TỶ LỆ :1/100
+- GC
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO
+- KHU VỰC XÂY GẠCH BÔNG GIÓ HIỆN HỮU (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- P. BỆNH +8.200
+- 56900 4500
+- P. HẬU PHẪU NAM
+- P. BĂNG BỘT
+- VS
+- VS
+- VS
+- P. BỆNH
+- P. BỆNH P. BỆNH
+- VS
+- VS
+- P. ĐIỀU DƯỠNG NỮ
+- P. BỆNH NẶNG
+- B2 A.B3.01
+- P. BỆNH
+- VS
+- VS
+- P. HC
+- MÁI POLY
+- P. Bệnh
+- P. Bệnh
+- VS
+- VS
+- P. BỆNH
+- VS
+- VS
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 29430 2100 4000 4000 4000 4000 4000 2100 5230
+- Ha
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- MẶT BẰNG VẬT DỤNG TẦNG 3
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B9.02
+- ../2024
+- 1/100
+
+
+## Trang 48
+- SÊ NÔ
+- 4 3 2 1 14 15
+- HÀNH LANG KẾT NỐI KHỐI A +12.100
+- HÀNH LANG KẾT NỐI KHỐI A
+- 2200 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 2200
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO DỤNG CỤ
+- KHU VỰC RỬA
+- P. TRƯỞNG KHOA P. TƯ VẤN DD KHU PHA CHẾ CĂN TIN
+- +12.100
+- SOẠN CHIA NẤU
+- KHOA NỘI HÔ HẤP KHOA DINH DƯỠNG
+- SÊ NÔ SÊ NÔ
+- SÊ NÔ
+- 6 7 8 9 10 11 12 13 5
+- THỰC PHẨM
+- P. ĂN NV
+- KHU VỰC  SƠ CHẾ
+- MẶT BẰNG VẬT DỤNG TẦNG 4 TỶ LỆ :1/100
+- KHO THỰC PHẨM
+- P. HC KHOA DINH DƯỠNG KHO
+- +12.100
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- 52400
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI B)
+- KHO
+- P. NHÂN VIÊN
+- P. BỆNH
+- P. BỆNH P. BỆNH P. BỆNH P. BỆNH
+- P. BỆNH P. BỆNH
+- 2500
+- B2 A.B3.01
+- SÊ NÔ
+- P. BỆNH P. BỆNH
+- P. BỆNH P. BỆNH
+- +12.100
+- 24200 2100 4000 4000 4000 4000 4000 2100
+- G
+- C
+- D
+- A
+- E
+- H
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- MẶT BẰNG VẬT DỤNG TẦNG 4
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.B9.03
+- ../2024
+- 1/100
+
+
+## Trang 49
+- PHÒNG HÀNH CHÁNH PHÒNG BỆNH CẦU THANG: BẬC GRANITO, MỦI BẬC INOX, LAN CAN SẮT, TAY VỊN GỖ HÀNH LANG TRỤC (A-B, 8-12) HÀNH LANG TRỤC (A-B, 1-5)
+- S1
+- 4 3 2 1 14 15 16
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- Do Do
+- Dk1
+- P.XN VI SINH
+- D1 D1 D1 D1 D1 D1 D2
+- S2 S2 S2 S2
+- T2 TR
+- VT1 VT1
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- T1 TR T1 TR T1 TR
+- T1 TR N1 T1 TR T1 TR T1 TR T2 TR1
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- S2 S2 S2 S2 S2 S2
+- D1 D1 D1 D1 D1 D1 D8
+- P.XN VI SINH
+- +0.050
+- T2 TR
+- D6
+- THANG MÁY
+- T2 TR
+- VC1
+- P.BỆNH
+- KHỐI NHÀ MÁI TÔN 2 TẦNG KHỐI NHÀ MÁI TÔN 1 TẦNG
+- VC2 VC2 VC2 VC2
+- T2 TR
+- T2 TR
+- VC1 VC1 VC1 VC1
+- D6
+- T2 TR
+- PHÒNG TRỰC P.BỆNH NẶNG P.BỆNH NẶNG
+- S2 S3 S3 S3 S3 S3 Sw
+- +0.050 T2 TR T2 TR T2 TR T2 TR T2 TR
+- VT1 VT1
+- D6 D6 D6
+- TÖÔØNG LỬNG CAO 2600
+- D6 D7 D7
+- S7
+- S8
+- T2 TR T2 TR T2 TR T2 TR
+- Sw Sw
+- S7
+- S8
+- 6 7 8 9 10 11 12 13 5
+- VT1
+- VÁCH NHÔM KHOA TIM MAÏCH CAN THIEÄP
+- Tc TR1 T1 TR1
+- D15
+- TÖÔØNG LỬNG CAO 2600
+- D6
+- VC1 VC1 VC1
+- TÖÔØNG LỬNG CAO 2600
+- P.BỆNH
+- P.BỆNH P.BỆNH
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- T2 TR
+- MẶT BẰNG HIỆN TRẠNG TẦNG 1
+- D6
+- T2 TR
+- BỒN HOA CAO 500
+- D6
+- HỒ NƯỚC
+- P.TRƯỞNG KHOA
+- T2 TR
+- T2 TR
+- D6
+- Dk2
+- KHỐI NHÀ TRỆT MÁI TÔN
+- TỶ LỆ :1/100
+- D4
+- D4
+- Dc D5 D5
+- Dc
+- 62200
+- -0.100
+- -0.050
+- T1 TR1
+- VK1
+- VK2
+- VK3
+- D5 D5 D5 D5 D5 D5
+- PHÒNG TCKT
+- S3 S3 S2 S3
+- HỒ NƯỚC
+- T1 TR1
+- D32
+- D31
+- MÔ TẢ HIỆN TRẠNG: - CẦU THANG: LAN CAN SẮT BONG TRÓC LỚP SƠN DẦU, TAY VỊN GỖ BỊ HƯ CÁC VỊ TRÍ MỐI NỐI. BẬC THANG TÔ ĐÁ MÀI (GRANITO) BỀ MẶT ĐÃ BỊ MÒN, NHIỀU MỦI BẬC BỊ SỨT BỂ. NẸP KIM LOẠI CHỐNG TRƯỢT MŨI BẬC NHIỀU CHỖ HƯ HỎNG, CONG VÊNH. - NỀN GẠCH NHIỀU NƠI BỊ BỂ, BAY MÀU VÀ THAY NHIỀU CHỦNG LOẠI. - PHÒNG VỆ SINH, TƯỜNG LỬNG CAO 2600, LAM THÔNG GIÓ BÊN TRÊN BÍT BẰNG VÁCH THẠCH CAO HOẶC KÍNH ĐÃ BỊ HƯ HỎNG 75%, GẠCH ỐP TƯỜNG ĐÃ SỜN CŨ, MỘT VÀI VỊ TRÍ BỊ HƯ BỂ. THIẾT BỊ VỆ SINH ĐÃ CŨ. - LỚP SƠN NƯỚC TƯỜNG TRẦN BÊN TRONG CÁC PHÒNG VỆ SINH ĐÃ CŨ, NHIỀU VỊ TRÍ BỊ THẤM Ố, BONG TRÓC; - CÁC PHÒNG VỆ SINH BỊ THẤM TƯỜNG. - CÁC CỬA ĐI CỦA SỔ CONG VÊNH XUỐNG CẤP; - CÁC CẤU KIỆN SẮT THÉP BONG TRÓC RỈ SÉT. - TƯỜNG GIỮA CÁC PHÒNG VÀ HÀNH LANG CÓ LAM THÔNG GIÓ TRÊN CAO ĐÃ BÍT BẰNG CÁC VÁCH THẠCH CAO HOẶC VÁCH KÍNH.
+- T2 TR
+- D6
+- D5
+- KHO HỒ SƠ
+- T1 TR
+- S4
+- D1 A.D2.03
+- D5 D3 D5
+- PHÒNG KHTH
+- BỒN HOA CAO 500
+- +0.050
+- T1 TR
+- D6
+- +0.050
+- T2 TR
+- TÖÔØNG LỬNG CAO 2600
+- P.TRƯỞNG KHOA
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- T2 TR
+- D6
+- T2 TR T2 TR1 T1 TR1
+- BỒN HOA CAO 500
+- PHÒNG GPTM
+- T2 TR1
+- T2 TR1
+- D9
+- D9
+- VK4
+- GHI CHUÙ HIEÄN TRAÏNG:
+- D10
+- D6 D9
+- D10
+- D9
+- D9
+- S6
+- PHÒNG GPTM
+- T1 TR1
+- T2 TR1
+- CHÚ THÍCH: * VT: LAM THÔNG GIÓ TRÊN CAO. VT1: L= 3800 MM, H=600MM; SỐ LƯỢNG: 24 * VC: LAM THÔNG GIÓ VỆ SINH. VC1: L= 3800 MM, H=820MM; SỐ LƯỢNG: 8 VC2: L= 2000 MM, H=820MM; SỐ LƯỢNG: 4
+- T1 TR1
+- CAO ÑOÄ NEÀN SAØN
+- D9
+- D6
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- PHÒNG GPTM
+- T2 TR1
+- N1 TR T1 ±0.000
+- D8
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- BỒN HOA CAO 500
+- -0.200
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG HIỆN TRẠNG TẦNG 1
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.DHT.01
+- ../2024
+
+
+## Trang 50
+- HÀNH LANG NỐI QUA KHỐI C CẦU THANG: BẬC GRANITO, MỦI BẬC INOX, LAN CAN SẮT, TAY VỊN GỖ
+- HÀNH LANG NỐI QUA KHU C
+- S11
+- S11
+- S1
+- 4 3 2 1 14 15 16
+- D6
+- T2 TR T2 TR
+- S2 S3 S3 S2 S3 S2
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- S10 S10 S10 S3 S3
+- P.BỆNH P.BỆNH P.BỆNH P.BỆNH
+- P.BỆNH P.BỆNH P.BỆNH P.NHAÂN VIEÂN
+- T2 TR T2 TR
+- VC1
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- T2 TR T2 TR T2 TR T2 TR
+- VC1
+- VT1 VT1 VT1 VT1
+- VC2
+- D13 D3 D5 D5
+- D13 D13 D13
+- D6 D6
+- TÖÔØNG LỬNG CAO 2600 + VAÙCH VAÙN EÙP
+- D3 S3 D13
+- T2 TR T2 TR T2 TR T2 TR
+- N1 T1 TR N1 T1 TR
+- THANG MÁY
+- VC1
+- VC1
+- VC2
+- +3.900
+- KHỐI NHÀ MÁI TÔN 2 TẦNG
+- D6 D6
+- VC1
+- VC1
+- P.BỆNH
+- T2 TR
+- VC2
+- D6
+- P.HÀNH CHÁNH
+- T2 TR
+- BÊN TRONG PHÒNG BỆNH VỆ SINH PHÒNG BỆNH HÀNH LANG TRỤC E-F HÀNH LANG TRỤC E-F
+- D14
+- D5 D5
+- 6 7 8 9 10 11 12 13 5
+- D14
+- VK6 VK6 VK6
+- D6
+- T2 TR T2 TR
+- VC3
+- P.BỆNH NẶNG
+- VC1
+- T2 TR T2 TR T2 TR
+- VT1 VT1
+- D6
+- D15
+- PHÒNG TRỰC
+- VT1
+- VIỆN TRƯỞNG MẶT BẰNG HIỆN TRẠNG TẦNG 2
+- D13
+- VK5
+- D6 D6
+- D11
+- D13 D13 D13 D13 D13
+- T2 TR
+- VC3
+- P.BỆNH NẶNG
+- VC1
+- T2 TR
+- KHOA NGOAÏI THAÀN KINH
+- S12 S1
+- S5
+- S5
+- MÁI BTCT
+- TỶ LỆ :1/100
+- MÁI BTCT MÁI BTCT
+- N1 T1 TR
+- +3.750
+- 62200
+- CẦU BỘ HÀNH QUA KHU G
+- +4.350
+- Dk3
+- S1
+- D5 D5
+- D6
+- T2 TR T2 TR
+- S15 S15 S10 S10
+- VC2 VC2 VC2
+- P.BỆNH P.BỆNH P.BS NAM
+- P.BỆNH
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- VC1
+- VC1
+- T2 TR T2 TR T2 TR T2 TR T2 TR T2 TR
+- T2 TR
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- +3.900 +3.900
+- S3 S3 S3 S3 S3 S3a S3a
+- D6
+- D6
+- T2 TR T2 TR
+- P.BỆNH
+- VC1
+- VC1
+- T2 TR
+- D6
+- MÔ TẢ HIỆN TRẠNG: - CẦU THANG: LAN CAN SẮT BONG TRÓC LỚP SƠN DẦU, TAY VỊN GỖ BỊ HƯ CÁC VỊ TRÍ MỐI NỐI. BẬC TÔ ĐÁ MÀI (GRANITO) BỀ MẶT ĐÃ BỊ MÒN, NHIỀU MỦI BẬC BỊ SỨT BỂ. NẸP KIM LOẠI CHỐNG TRƯỢT MŨI BẬC NHIỀU CHỖ HƯ HỎNG, CONG VÊNH. - NỀN GẠCH NHIỀU NƠI BỊ BỂ, BAY MÀU VÀ THAY NHIỀU CHỦNG LOẠI. - PHÒNG VỆ SINH, TƯỜNG LỬNG CAO 2600 BÊN TRÊN LÀ LAM THÔNG GIÓ LẮP  VÁCH THẠCH CAO HOẶC KÍNH ĐÃ BỊ HƯ HỎNG 75%, GẠCH ỐP TƯỜNG ĐÃ SỜN CŨ, MỘT VÀI VỊ TRÍ BỊ HƯ BỂ. - LỚP SƠN NƯỚC TƯỜNG TRẦN BÊN TRONG CÁC PHÒNG VỆ SINH ĐÃ CŨ, NHIỀU VỊ TRÍ BỊ THẤM Ố, BONG TRÓC; - CÁC PHÒNG VỆ SINH BỊ THẤM TƯỜNG. - TƯỜNG GIỮA CÁC PHÒNG VÀ HÀNH LANG CÓ LAM THÔNG GIÓ TRÊN CAO BÍT BẰNG CÁC VÁCH THẠCH CAO HOẶC VÁCH KÍNH.
+- D16
+- D6
+- D5
+- T2 TR T2 TR
+- T2 TR T2 TR T2 TR
+- VC1
+- VC1
+- D1 A.D2.03
+- D6
+- TÖÔØNG LỬNG CAO 2600 + VAÙCH VAÙN EÙP
+- D6
+- D5 D5 D5 D5
+- T2 TR T2 TR
+- PHÒNG T. KHOA
+- MÁI BTCT
+- VC2
+- VC1
+- VC1
+- D6
+- D6
+- T2 TR
+- S3a S3a S3a
+- P.BỆNH
+- VC2
+- P.BS NỮ P.ĐIỀU DƯỠNG
+- VC1
+- VC1
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- T2 TR
+- D5 D5 D5
+- D6
+- D12
+- VC4
+- P.ĐIỀU DƯỠNG
+- GHI CHUÙ HIEÄN TRAÏNG:
+- TÖÔØNG LỬNG CAO 2600 + VAÙCH VAÙN EÙP
+- VC2 VC2
+- D6
+- T2 TR
+- T2 TR
+- CHÚ THÍCH: * VT: LAM THÔNG GIÓ TRÊN CAO. VT1: L= 3800 MM, H=600MM; SỐ LƯỢNG: 28 *VC: LAM THÔNG GIÓ VỆ SINH. VC1: L= 3800 MM, H=820MM; SỐ LƯỢNG: 20 VC2: L= 2000 MM, H=820MM; SỐ LƯỢNG: 10 VC3: L= 1500 MM, H=820MM; SỐ LƯỢNG: 2 VC4: L= 3900 MM, H=820MM; SỐ LƯỢNG: 1
+- VC1
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- VC1
+- T2 TR
+- N1 TR T1 ±0.000
+- D6
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- S11
+- S11
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG HIỆN TRẠNG TẦNG 2
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- ViÖn KHCN x©y dùng
+- A.DHT.02
+- ../2024
+
+
+## Trang 51
+- HÀNH LANG NỐI QUA KHU C
+- MÔ TẢ HIỆN TRẠNG: - CẦU THANG: LAN CAN SẮT BONG TRÓC LỚP SƠN DẦU, TAY VỊN GỖ BỊ HƯ CÁC VỊ TRÍ MỐI NỐI, LỚP VỮA BÊ TÔNG CHÂN LAN CAN BỊ BONG RA. - CÁC CỬA ĐI CỦA SỔ CONG VÊNH XUỐNG CẤP; GẠCH NỀN NHIỀU CHỦNG LOẠI. - CÁC CẤU KIỆN SẮT THÉP BONG TRÓC RỈ SÉT; - LAN CAN SẮT SÂN THƯỢNG ĐÃ RỈ SÉT, MỘT VÀI VỊ TRÍ BỊ HƯ MỤC; - LAN CAN SẮT HÀNH LANG TẦNG BONG TRÓC LỚP SƠN DẦU; - TRẦN HÀNH LANG TRỤC A-5/11 THẤM Ố 30% - SÊ NÔ THOÁT NƯỚC : LỚP VỮA BỀ MẶT BỊ BONG TRÓC. MỘT VÀI VỊ TRÍ BỊ THẤM. - CÁC VỊ TRÍ LỖ THOÁT NƯỚC MÁI BỊ THẤM. - HỒ NƯỚC MÁI ĐÃ XUỐNG CẤP, GÂY THẤM Ố TRẦN VÀ TƯỜNG CẦU THANG. - LỚP SƠN NƯỚC TƯỜNG BÊN NGOÀI NHÀ BỊ RÊU MỐC, NHIỀU CHỖ ĐÃ BONG TRÓC;
+- KÝ HIỆU LOẠI CỬA KÍCH THƯỚC (RxC) SỐ LƯỢNG
+- D4   CỬA ĐI 4 CÁNH SẮT KÍNH 3600 x 2800 2
+- D6   CỬA ĐI 1 CÁNH NHÔM KÍNH 800 x 2000 37
+- D5   CỬA ĐI 1 CÁNH SẮT KÍNH 900 x 2400 25
+- D7   CỬA ĐI 1 CÁNH LÙA NHÔM KÍNH 1000 x 2450 2
+- D3   CỬA ĐI 2 CÁNH SẮT KÍNH 1200 x 2400 3
+- D2   CỬA ĐI 4 CÁNH SẮT KÍNH 2000 x 2800 1
+- D1   CỬA ĐI 2 CÁNH NHÔM KÍNH 1400 x 2400 12
+- D33
+- 4 3 2 1 14 15 16
+- I. THỐNG KÊ CỬA ĐI D8   CỬA ĐI 2 CÁNH NHÔM KÍNH 1400 x 2400 2
+- S13
+- D17 D17 D17 D17 S13 S13 S13
+- P.BỆNH P.BỆNH P.BỆNH
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- S13 S14 S14 S14 S14 S14 S14
+- PHÒNG KT THANG MÁY
+- S13 S13 S13 S13 S13
+- ĐÁY SÊ NÔ BÊN TRÊN
+- CẦU THANG BỘ LÊN TẦNG 3 HÀNH LANG TRỤC (A-B, 6-10) PHÒNG HÀNH CHÁNH HÀNH LANG TRỤC (A-C,1-5); CỬA PHÒNG KỸ THUẬT THANG MÁY.
+- +7.700
+- D14   CỬA ĐI 1 CÁNH PA NÔ GỖ 750 x 2100 2
+- D16   VÁCH NHÔM KÍNH + CỬA ĐI 1800 x 2100 1
+- D15   CỬA ĐI 1 CÁNH NHÔM KÍNH 1200 x 2400 2
+- D13   CỬA ĐI 2 CÁNH NHÔM KÍNH 1200 x 2400 10
+- D10   CỬA ĐI 1 CÁNH LÙA NHÔM KÍNH 1100 x 2250 2
+- D12   CỬA ĐI 1 CÁNH NHÔM KÍNH 850 x 2200 1
+- D11   CỬA ĐI 1 CÁNH SẮT KÍNH 800 x 2400 1
+- KHUNG SẮT BẢO VỆ, NẰM TRÊN LAN CAN, CAO ĐẾN ĐÁY DẦM
+- D9   CỬA ĐI 1 CÁNH NHÔM KÍNH 800 x 2150 5
+- PHÒNG HÀNH CHÁNH KHOA TIÊU HÓA
+- S13
+- 6 7 8 9 10 11 12 13 5
+- D20
+- S13
+- D18
+- D22
+- D22
+- D22
+- D21
+- D20 D20
+- PHÒNG NHÂN VIÊN
+- D23 D23 D23
+- D22
+- D23 D23
+- MẶT BẰNG HIỆN TRẠNG TẦNG 3
+- D24   CỬA ĐI 2 CÁNH LÙA NHÔM KÍNH 2000 x 2200 1
+- D23   CỬA ĐI 1 CÁNH NHÔM KÍNH 750 x 2000 5
+- D22   CỬA ĐI 1 CÁNH NHÔM KÍNH 850 x 2000 4
+- D20   CỬA ĐI 2 CÁNH SẮT KÍNH 1200 x 2400 3
+- D19   CỬA ĐI 2 CÁNH SẮT PA NÔ 1800 x 2300 1
+- D18   CỬA ĐI 2 CÁNH SẮT KÍNH 1800 x 2300 1
+- D17   CỬA ĐI 2 CÁNH NHÔM KÍNH 1200 x 2200 4
+- D21   CỬA ĐI 1 CÁNH LÙA NHÔM KÍNH 1000 x 2000 1
+- D26   CỬA ĐI 4 CÁNH SẮT KÍNH 3200 x 2300 1
+- P.MÁY CHỦ
+- D24
+- TỶ LỆ :1/100
+- PHÒNG CÔNG NGHỆ THÔNG TIN
+- TRẦN +2.5m
+- D26
+- 62200
+- Dk4
+- D27
+- VÁCH NHÔM KÍNH (1.3 + 1.0)x2.2
+- VK7
+- D29
+- TP. HCQT
+- TR- PHÓ PHÒNG
+- +7.800
+- S3
+- D30
+- D33   CỬA ĐI 2 CÁNH SONG SẮT 1800 x 1900 1
+- D29   CỬA ĐI 1 CÁNH NHÔM KÍNH 800 x 2000 2
+- D27   CỬA ĐI 2 CÁNH SẮT KÍNH 1400 x 2600 1
+- D32   CỬA KHUNG SẮT BỊT LƯỚI RUỒI 1350 x 2200 1
+- D30   CỬA ĐI 1 CÁNH NHÔM KÍNH 1000 x 2200 1
+- Dk1   CỬA SẮT KÉO 1800 x 2600 1
+- D31   CỬA KHUNG SẮT BỊT LƯỚI RUỒI 2000 x 2200 1
+- DC   CỬA CUỐN 3600 x 2800 2
+- Dk2   CỬA SẮT KÉO + KHUNG SONG SẮT 1800 x 2600 + 1800 x 800 1
+- D29
+- LỔ CỬA 1.0x2.2
+- S3
+- S3
+- PHÒNG HÀNH CHÁNH QUẢN TRỊ
+- TƯỜNG LỬNG H=1,2M TREÂN VAÙCH NHEÏ
+- D19
+- D1 A.D2.03
+- VAÙCH NHEÏ H=3,2M
+- SÂN THƯỢNG
+- Dk4   CỬA SẮT KÉO 3300 x 2300 1
+- Dk3   CỬA SẮT KÉO 1050 x 2300 1
+- Do   CỬA ĐI 2 CÁNH SONG SẮT 1800 x 2600 2
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- CỘT THÉP 100-100 ĐỠ KHUNG KÈO+ MÁI TÔN
+- SAØN LAÙT GAÏCH TAØU 300x300
+- GHI CHUÙ HIEÄN TRAÏNG:
+- M1
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG HIỆN TRẠNG TẦNG 3
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.DHT.03
+- ../2024
+
+
+## Trang 52
+- MÔ TẢ HIỆN TRẠNG:
+- - MÁI LỢP TÔN RỈ SÉT CONG VÊNH THẤM DỘT, XÀ GỒ THÉP, KÈO THÉP BONG TRÓC RỈ SÉT; - MÁI BTCT : LỚP VỮA BỀ MẶT BỊ BONG TRÓC. MỘT VÀI VỊ TRÍ BỊ THẤM SÀN. - HỒ NƯỚC MÁI ĐÃ XUỐNG CẤP, GÂY THẤM Ố TRẦN VÀ TƯỜNG CẦU THANG. - SÊ NÔ THOÁT NƯỚC : LỚP VỮA BỀ MẶT BỊ BONG TRÓC. MỘT VÀI VỊ TRÍ BỊ THẤM. - CÁC VỊ TRÍ LỖ THOÁT NƯỚC MÁI BỊ THẤM.
+- KÝ HIỆU LOẠI CỬA KÍCH THƯỚC (RxC) SỐ LƯỢNG KÝ HIỆU LOẠI CỬA KÍCH THƯỚC (RxC) SỐ LƯỢNG
+- S3a   CỬA SỔ SẮT KÍNH  + KHUNG SẮT BẢO VỆ 2000 x 1400 5
+- S4   CỬA SỔ SẮT KÍNH 1300 x 1400 1
+- S5   CỬA SỔ NHÔM KÍNH  + KHUNG SẮT BẢO VỆ 2000 x 1400 2
+- S3   CỬA SỔ SẮT KÍNH 2000 x 1400 19
+- S2   CỬA SỔ NHÔM KÍNH  + KHUNG SẮT BẢO VỆ 2000 x 1400 15
+- S1   CỬA SỔ SẮT KÍNH 800 x 800 4
+- MÁI BTCT HÀNH LANG NỐI QUA KHU C
+- 4 3 2 1 14 15 16
+- II. THỐNG KÊ CỬA SỔ
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- MÁI BTCT
+- +10.650
+- CƠI NỚI NHÀ KHO TRÊN MÁI SÊ NÔ BTCT VÀ SÀN MÁI LÁT GẠCH TÀU SÀN MÁI BTCT LÁT GẠCH TÀU VÀ MÁI TÔN MÁY TỜI ĐỒ LÊN NHÀ KHO CƠI NỚI TRÊN MÁI
+- SAØN LAÙT  GAÏCH TAØU 300x300
+- S14   CỬA SỔ SẮT KÍNH  + KHUNG SẮT BẢO VỆ 800 x 1400 6
+- S15   CỬA SỔ NHÔM KÍNH  + KHUNG SẮT BẢO VỆ 1800 x 1400 2
+- S13   CỬA SỔ NHÔM KÍNH  + KHUNG SẮT BẢO VỆ 1500 x 1200 12
+- S10   CỬA SỔ NHÔM KÍNH  + KHUNG SẮT BẢO VỆ 1650 x 1400 5
+- S12   CỬA SỔ NHÔM KÍNH  + KHUNG SẮT BẢO VỆ 600 x 1400 1
+- S11   CỬA SỔ SẮT KÍNH  + KHUNG SẮT BẢO VỆ 2400 x 1400 2
+- S8   CỬA SỔ NHÔM KÍNH 800 x 1400 2
+- S7   CỬA SỔ NHÔM KÍNH 1600 x 1400 2
+- MÁI TÔN
+- MÁI TÔN
+- M2
+- M2
+- 6 7 8 9 10 11 12 13 5
+- BỒN NƯỚC INOX 2M3
+- NẮP THĂM HỒ NƯỚC
+- MÁI BTCT MÁI BTCT
+- +11.350 +11.350
+- VK5   VÁCH NHÔM KÍNH CỐ ĐỊNH 1900 x 1400 1
+- VK4   VÁCH NHÔM KÍNH CỐ ĐỊNH 2500 x 1800 1
+- VK6   VÁCH NHÔM KÍNH CỐ ĐỊNH 2700 x 1400 3
+- VK7   VÁCH NHÔM KÍNH + CỬA ĐI 2800 x 2300 1
+- VK3   VÁCH NHÔM KÍNH CỐ ĐỊNH 3600 x 3150 1
+- VK2   VÁCH NHÔM KÍNH CỐ ĐỊNH 1600 x 3150 1
+- VK1   VÁCH NHÔM KÍNH CỐ ĐỊNH 4000 x 3150 1
+- MẶT BẰNG HIỆN TRẠNG MÁI
+- SAØN LAÙT  GAÏCH TAØU 300x300
+- SAØN LAÙT  GAÏCH TAØU 300x300
+- MÁI BTCT MÁI BTCT
+- SÊ NÔ
+- III. THỐNG KÊ VÁCH KÍNH
+- SAØN LAÙT  GAÏCH TAØU 300x300
+- TỶ LỆ :1/100
+- MÁI BTCT
+- M1 +10.300
+- SÊ NÔ
+- 11.450
+- 62200
+- THANG SẮT LÊN MÁI + TỜI NÂNG HÀNG CÓ MÁI TÔN CHE BÊN TRÊN
+- SÊ NÔ
+- SÊ NÔ
+- MÁI BTCT
+- MÁI TÔN
+- NẮP THĂM HỒ NƯỚC
+- D1 A.D2.03
+- M2
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- GHI CHUÙ HIEÄN TRAÏNG:
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT BẰNG HIỆN TRẠNG MÁI
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.DHT.04
+- ../2024
+- 1/100
+
+
+## Trang 53
+- MÔ TẢ THÁO DỠ: - THÁO CÁC VÁCH NHẸ LẮP TẠM BÍT LAM THÔNG GIÓ TRÊN CAO HÀNH LANG VÀ GIỮA CÁC PHÒNG. - TƯỜNG: CÁC PHÒNG CÓ ỐP GẠCH, BÓC DỠ GẠCH CŨ, ĐỤC BỎ LỚP VỮA TÔ TƯỜNG. THÁO DỠ GẠCH ỐP BỒN HOA. - TRẦN: THÁO DỠ TOÀN BỘ TRẦN THẠCH CAO HIỆN HỮU. - NỀN: THÁO DỠ GẠCH NỀN TOÀN BỘ CÁC PHÒNG, ĐỤC BỎ LỚP VỮA LÓT NỀN. - CỬA: THÁO DỠ TOÀN BỘ CỬA ĐI, CỬA SỔ, VÁCH KÍNH. - CẦU THANG: BÓC BỎ LỚP GRANITO HIỆN HỮU, THÁO DỠ LAN CAN TAY VỊN. - VỆ SINH: BÓC BỎ TOÀN BỘ GẠCH ỐP TƯỜNG, LỚP VỮA TÔ. BÓC BỎ GẠCH NỀN VÀ VỮA NÂNG NỀN HIỆN HỮU. THÁO CÁC VÁCH NHẸ LẮP TẠM BÍT LAM THÔNG GIÓ. - THÁO DỠ HỆ THỐNG CẤP THOÁT NƯỚC, THIẾT BỊ VỆ SINH, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC.
+- HÀNH LANG TRỤC (A-B, 12-14) PHÒNG BỆNH CẦU THANG: BẬC GRANITO, MỦI BẬC INOX, LAN CAN SẮT, TAY VỊN GỖ
+- S1
+- 4 3 2 1 14 15 16
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- Do Do
+- Dk1
+- P.XN VI SINH
+- D1 D1 D1 D1 D1 D1 D2
+- S2 S2 S2 S2
+- T2 TR
+- VT1 VT1
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- T1 TR T1 TR T1 TR
+- T1 TR N1 T1 TR T1 TR T1 TR T2 TR1
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- S2 S2 S2 S2 S2 S2
+- D1 D1 D1 D1 D1 D1 D8
+- P.XN VI SINH
+- +0.050
+- T2 TR
+- D6
+- THANG MÁY
+- T2 TR
+- VC1
+- P.BỆNH
+- KHỐI NHÀ MÁI TÔN 2 TẦNG
+- VC2 VC2 VC2 VC2
+- T2 TR
+- T2 TR
+- VC1 VC1 VC1 VC1
+- D6
+- T2 TR
+- PHÒNG TRỰC P.BỆNH NẶNG P.BỆNH NẶNG
+- S2 S3 S3 S3 S3 S3 Sw
+- +0.050 T2 TR T2 TR T2 TR T2 TR T2 TR
+- VT1 VT1
+- D6 D6 D6
+- TÖÔØNG LỬNG
+- CAO 2600
+- D6 D7 D7
+- S7
+- S8
+- T2 TR T2 TR T2 TR T2 TR
+- Sw Sw
+- S7
+- S8
+- 6 7 8 9 10 11 12 13 5
+- VT1
+- VÁCH NHÔM KHOA TIM MAÏCH CAN THIEÄP
+- KHỐI NHÀ MÁI TÔN 1 TẦNG
+- Tc TR1 T1 TR1
+- D15
+- TÖÔØNG LỬNG
+- CAO 2600
+- HÀNH LANG TRỤC (A-B, 8-12) HÀNH LANG TRỤC (A-B, 1-5)
+- D6
+- VC1 VC1 VC1
+- TÖÔØNG LỬNG CAO 2600
+- P.BỆNH
+- P.BỆNH P.BỆNH
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- T2 TR
+- D6
+- T2 TR
+- BỒN HOA CAO 500
+- D6
+- HỒ NƯỚC
+- P.TRƯỞNG KHOA
+- T2 TR
+- VIỆN TRƯỞNG MẶT BẰNG THÁO DỠ TẦNG 1
+- T2 TR
+- D6
+- Dk2
+- KHỐI NHÀ TRỆT MÁI TÔN
+- D4
+- D4
+- Dc D5 D5
+- Dc
+- 62200
+- -0.100
+- -0.050
+- 1
+- TỶ LỆ :1/100
+- T1 TR1
+- VK1
+- VK2
+- VK3
+- D5 D5 D5 D5 D5 D5
+- PHÒNG TCKT
+- S3 S3 S2 S3
+- HỒ NƯỚC
+- T1 TR1
+- D32
+- D31
+- T2 TR
+- D6
+- D5
+- KHO HỒ SƠ
+- T1 TR
+- S4
+- D1 A.D2.03
+- D5 D3 D5
+- PHÒNG KHTH
+- BỒN HOA CAO 500
+- +0.050
+- T1 TR
+- D6
+- +0.050
+- T2 TR
+- TÖÔØNG LỬNG CAO 2600
+- P.TRƯỞNG KHOA
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- T2 TR
+- D6
+- T2 TR T2 TR1 T1 TR1
+- BỒN HOA CAO 500
+- PHÒNG GPTM
+- T2 TR1
+- T2 TR1
+- D9
+- D9
+- VK4
+- D10
+- GHI CHUÙ THAÙO DÔÕ :
+- D6 D9
+- D10
+- D9
+- D9
+- S6
+- PHÒNG GPTM
+- T1 TR1
+- T2 TR1
+- CHÚ THÍCH: * VT: LAM THÔNG GIÓ TRÊN CAO. VT1: L= 3800 MM, H=600MM; SỐ LƯỢNG: 24 * VC: LAM THÔNG GIÓ VỆ SINH. VC1: L= 3800 MM, H=820MM; SỐ LƯỢNG: 8 VC2: L= 2000 MM, H=820MM; SỐ LƯỢNG: 4
+- T1 TR1
+- CAO ÑOÄ NEÀN SAØN
+- D9
+- D6
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- PHÒNG GPTM
+- 3
+- 2
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- T2 TR1
+- N1 TR T1 ±0.000
+- D8
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO, XÂY LẮP MỚI
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TƯỜNG XÂY CŨ ĐẬP BỎ, THÁO DỠ; THAY THẾ MỚI
+- BỒN HOA CAO 500
+- -0.200
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG THÁO DỠ TẦNG 1
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- ViÖn KHCN x©y dùng
+- A.DTD.01
+- ../2024
+
+
+## Trang 54
+- MÔ TẢ THÁO DỠ: - THÁO CÁC VÁCH NHẸ LẮP TẠM BÍT LỔ THÔNG GIÓ TRÊN CAO HÀNH LANG VÀ GIỮA CÁC PHÒNG. - TƯỜNG: CÁC PHÒNG CÓ ỐP GẠCH, BÓC DỠ GẠCH CŨ, ĐỤC BỎ LỚP VỮA TÔ TƯỜNG. - TRẦN: THÁO DỠ TOÀN BỘ TRẦN THẠCH CAO HIỆN HỮU. - NỀN: THÁO DỠ GẠCH NỀN TOÀN BỘ CÁC PHÒNG, ĐỤC BỎ LỚP VỮA LÓT NỀN. - CỬA: THÁO DỠ TOÀN BỘ CỬA ĐI, CỬA SỔ, VÁCH KÍNH. - CẦU THANG: BÓC BỎ LỚP GRANITO HIỆN HỮU, THÁO DỠ LAN CAN TAY VỊN. - VỆ SINH: BÓC BỎ TOÀN BỘ GẠCH ỐP TƯỜNG, LỚP VỮA TÔ. BÓC BỎ GẠCH NỀN VÀ VỮA NÂNG NỀN HIỆN HỮU ĐẾN SÀN BTCT. - SÊ NÔ, MÁI BTCT: ĐỤC BỎ VỮA MỤC NÁT, VỆ SINH SẠCH BỀ MẶT TRƯỚC KHI CHỐNG THẤM. - THÁO DỠ HỆ THỐNG CẤP THOÁT NƯỚC, THIẾT BỊ VỆ SINH, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC.
+- BÊN TRONG PHÒNG BỆNH VỆ SINH PHÒNG BỆNH HÀNH LANG TRỤC E-F HÀNH LANG TRỤC E-F
+- HÀNH LANG NỐI QUA KHU C
+- S11
+- S11
+- S1
+- 4 3 2 1 14 15 16
+- D6
+- T2 TR T2 TR
+- S2 S3 S3 S2 S3 S2
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- S10 S10 S10 S3 S3
+- P.BỆNH P.BỆNH P.BỆNH P.BỆNH
+- P.BỆNH P.BỆNH P.BỆNH P.NHAÂN VIEÂN
+- T2 TR T2 TR
+- VC1
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- T2 TR T2 TR T2 TR T2 TR
+- VC1
+- VT1 VT1 VT1 VT1
+- VC2
+- D13 D3 D5 D5
+- D13 D13 D13
+- D6 D6
+- TÖÔØNG LỬNG CAO 2600 + VAÙCH VAÙN EÙP
+- D3 S3 D13
+- T2 TR T2 TR T2 TR T2 TR
+- N1 T1 TR N1 T1 TR
+- THANG MÁY
+- VC1
+- VC1
+- VC2
+- +3.900
+- KHỐI NHÀ MÁI TÔN 2 TẦNG
+- D6 D6
+- VC1
+- VC1
+- P.BỆNH
+- T2 TR
+- VC2
+- D6
+- P.HÀNH CHÁNH
+- T2 TR
+- HÀNH LANG NỐI QUA KHỐI C CẦU THANG: BẬC GRANITO, MỦI BẬC INOX, LAN CAN SẮT, TAY VỊN GỖ
+- D14
+- D5 D5
+- 6 7 8 9 10 11 12 13 5
+- D14
+- VK6 VK6 VK6
+- D6
+- T2 TR T2 TR
+- VC3
+- P.BỆNH NẶNG
+- VC1
+- T2 TR T2 TR T2 TR
+- VT1 VT1
+- D6
+- D15
+- PHÒNG TRỰC
+- VT1
+- D13
+- VIỆN TRƯỞNG MẶT BẰNG THÁO DỠ TẦNG 2
+- VK5
+- D6 D6
+- D11
+- D13 D13 D13 D13 D13
+- T2 TR
+- VC3
+- P.BỆNH NẶNG
+- VC1
+- T2 TR
+- KHOA NGOAÏI THAÀN KINH
+- S12 S1
+- S5
+- S5
+- MÁI BTCT
+- TỶ LỆ :1/100
+- MÁI BTCT MÁI BTCT
+- N1 T1 TR
+- +3.750
+- 62200
+- 1
+- CẦU BỘ HÀNH QUA KHU G
+- +4.350
+- Dk3
+- S1
+- D5 D5
+- D6
+- T2 TR T2 TR
+- S15 S15 S10 S10
+- VC2 VC2 VC2
+- P.BỆNH P.BỆNH P.BS NAM
+- P.BỆNH
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- VC1
+- VC1
+- T2 TR T2 TR T2 TR T2 TR T2 TR T2 TR
+- T2 TR
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- +3.900 +3.900
+- S3 S3 S3 S3 S3 S3a S3a
+- D6
+- D6
+- T2 TR T2 TR
+- P.BỆNH
+- VC1
+- VC1
+- T2 TR
+- D6
+- D16
+- D6
+- D5
+- T2 TR T2 TR
+- T2 TR T2 TR T2 TR
+- VC1
+- VC1
+- D1 A.D2.03
+- D6
+- TÖÔØNG LỬNG CAO 2600 + VAÙCH VAÙN EÙP
+- D6
+- D5 D5 D5 D5
+- T2 TR T2 TR
+- PHÒNG T. KHOA
+- MÁI BTCT
+- VC2
+- VC1
+- VC1
+- D6
+- D6
+- T2 TR
+- S3a S3a S3a
+- P.BỆNH
+- VC2
+- P.BS NỮ P.ĐIỀU DƯỠNG
+- VC1
+- VC1
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- T2 TR
+- D5 D5 D5
+- D6
+- D12
+- VC4
+- P.ĐIỀU DƯỠNG
+- GHI CHUÙ THAÙO DÔÕ :
+- TÖÔØNG LỬNG CAO 2600 + VAÙCH VAÙN EÙP
+- VC2 VC2
+- D6
+- T2 TR
+- T2 TR
+- CHÚ THÍCH: * VT: LAM THÔNG GIÓ TRÊN CAO. VT1: L= 3800 MM, H=600MM; SỐ LƯỢNG: 28 *VC: LAM THÔNG GIÓ VỆ SINH. VC1: L= 3800 MM, H=820MM; SỐ LƯỢNG: 20 VC2: L= 2000 MM, H=820MM; SỐ LƯỢNG: 10 VC3: L= 1500 MM, H=820MM; SỐ LƯỢNG: 2 VC4: L= 3900 MM, H=820MM; SỐ LƯỢNG: 1
+- VC1
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- VC1
+- T2 TR
+- 3
+- 2
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- D6
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO, XÂY LẮP MỚI
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TƯỜNG XÂY CŨ ĐẬP BỎ, THÁO DỠ; THAY THẾ MỚI
+- S11
+- S11
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG THÁO DỠ TẦNG 2
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- ViÖn KHCN x©y dùng
+- A.DTD.02
+- ../2024
+
+
+## Trang 55
+- HÀNH LANG NỐI QUA KHU C
+- MÔ TẢ THÁO DỠ: - ĐẬP PHÁ THÁO DỠ MỘT PHẦN TƯỜNG, MÁI & KHUNG MÁI HIỆN HỮU (XEM BẢN VẼ). - NỀN BÓC DỠ CÁC LỚP HOÀN THIỆN CŨ CHO ĐẾN SÀN BTCT - CỬA: THÁO DỠ TOÀN BỘ CỬA ĐI, CỬA SỔ, VÁCH KÍNH. - CẦU THANG: BÓC BỎ LỚP GRANITO HIỆN HỮU, THÁO DỠ LAN CAN TAY VỊN. - THÁO DỠ SÀN, MÁI, TƯỜNG PHÒNG KỸ THUẬT THANG MÁY. - THÁO DỠ TỜI, CẦU THANG SẮT LÊN MÁI. -  MÁI, SÊ NÔ BTCT: ĐỤC BỎ VỮA MỤC NÁT, VỆ SINH SẠCH BỀ MẶT TRƯỚC KHI CHỐNG THẤM. - VỆ SINH: BÓC BỎ TOÀN BỘ GẠCH ỐP TƯỜNG, LỚP VỮA TÔ. BÓC BỎ GẠCH NỀN VÀ VỮA NÂNG NỀN HIỆN HỮU ĐẾN SÀN BTCT. - THÁO DỠ HỆ THỐNG CẤP THOÁT NƯỚC, THIẾT BỊ VỆ SINH, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC.
+- CẦU THANG BỘ LÊN TẦNG 3 HÀNH LANG TRỤC (A-B, 6-10) PHÒNG HÀNH CHÁNH HÀNH LANG TRỤC (A-C,1-5); CỬA PHÒNG KỸ THUẬT THANG MÁY. SÂN THƯỢNG TRỤC (A-C, 12-16)
+- D33
+- 4 3 2 1 14 15 16
+- S13
+- D17 D17 D17 D17 S13 S13 S13
+- P.BỆNH P.BỆNH P.BỆNH
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- S13 S14 S14 S14 S14 S14 S14
+- PHÒNG KT THANG MÁY
+- S13 S13 S13 S13 S13
+- ĐÁY SÊ NÔ BÊN TRÊN
+- +7.700
+- KHUNG SẮT BẢO VỆ, NẰM TRÊN LAN CAN, CAO ĐẾN ĐÁY DẦM
+- THÁO DỠ SÀN BTCT XEM CHI TIẾT THANG MÁY
+- PHÒNG HÀNH CHÁNH KHOA TIÊU HÓA
+- S13
+- 6 7 8 9 10 11 12 13 5
+- D20
+- S13
+- D18
+- D22
+- D22
+- D22
+- D21
+- D20 D20
+- PHÒNG NHÂN VIÊN
+- D23 D23 D23
+- D22
+- D23 D23
+- MẶT BẰNG THÁO DỠ TẦNG 3
+- P.MÁY CHỦ
+- D24
+- TỶ LỆ :1/100
+- PHÒNG CÔNG NGHỆ THÔNG TIN
+- 3
+- TRẦN +2.5m
+- D26
+- 62200
+- Dk4
+- D27
+- VÁCH NHÔM KÍNH (1.3 + 1.0)x2.2
+- VK7
+- D29
+- TP. HCQT
+- TR- PHÓ PHÒNG
+- +7.800
+- S3
+- D30
+- D29
+- LỔ CỬA 1.0x2.2
+- S3
+- S3
+- PHÒNG HÀNH CHÁNH QUẢN TRỊ
+- TƯỜNG LỬNG H=1,2M TREÂN VAÙCH NHEÏ
+- D19
+- D1 A.D2.03
+- VAÙCH NHEÏ H=3,2M
+- SÂN THƯỢNG
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- CỘT THÉP 100-100 ĐỠ KHUNG KÈO+ MÁI TÔN
+- SAØN LAÙT GAÏCH TAØU 300x300
+- M1
+- GHI CHUÙ THAÙO DÔÕ :
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- 3
+- 2
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO, XÂY LẮP MỚI
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TƯỜNG XÂY CŨ ĐẬP BỎ, THÁO DỠ; THAY THẾ MỚI
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG THÁO DỠ TẦNG 3
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.DTD.03
+- ../2024
+
+
+## Trang 56
+- MÔ TẢ THÁO DỠ: - ĐẬP PHÁ THÁO DỠ TƯỜNG, VÁCH, CỘT, MÁI & KHUNG MÁI TÔN HIỆN HỮU. - THÁO DỠ CẦU THANG SẮT LÊN MÁI VÀ MÁY TỜI. - THÁO DỠ MỘT PHẦN SÊ NÔ, MÁI BTCT (XEM BẢN VẼ) - PHẦN SÊ NÔ BTCT GIỮ NGUYÊN:  ĐỤC BỎ VỮA MỤC NÁT, VỆ SINH SẠCH BỀ MẶT TRƯỚC KHI CHỐNG THẤM. - THÁO DỠ SÀN, MÁI, TƯỜNG PHÒNG KỸ THUẬT THANG MÁY.
+- MÁI BTCT HÀNH LANG NỐI QUA KHU C
+- MÁY TỜI ĐỒ LÊN NHÀ KHO CƠI NỚI TRÊN MÁI CƠI NỚI NHÀ KHO TRÊN MÁI SÊ NÔ BTCT VÀ SÀN MÁI LÁT GẠCH TÀU SÀN MÁI BTCT LÁT GẠCH TÀU VÀ MÁI TÔN CẦU THANG SẮT LÊN MÁI
+- 4 3 2 1 14 15 16
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- MÁI BTCT
+- +10.650
+- SAØN LAÙT  GAÏCH TAØU 300x300
+- THÁO DỠ SÀN BTCT XEM CHI TIẾT THANG MÁY
+- THÁO DỠ MÁI TÔN THÁO DỠ MÁI TÔN
+- MÁI TÔN
+- MÁI TÔN
+- M2
+- M2
+- 6 7 8 9 10 11 12 13 5
+- BỒN NƯỚC INOX 2M3
+- NẮP THĂM HỒ NƯỚC
+- MÁI BTCT MÁI BTCT
+- +11.350 +11.350
+- SAØN LAÙT  GAÏCH TAØU 300x300
+- SAØN LAÙT  GAÏCH TAØU 300x300
+- MẶT BẰNG THÁO DỠ MÁI
+- MÁI BTCT MÁI BTCT
+- SÊ NÔ
+- SAØN LAÙT  GAÏCH TAØU 300x300
+- TỶ LỆ :1/100
+- MÁI BTCT
+- M1 +10.300
+- SÊ NÔ
+- 11.450
+- 62200
+- THÁO DỠ BẬC CẤP, SÊ NÔ
+- THANG SẮT LÊN MÁI + TỜI NÂNG HÀNG CÓ MÁI TÔN CHE BÊN TRÊN
+- 1
+- SÊ NÔ
+- SÊ NÔ
+- MÁI BTCT
+- MÁI TÔN
+- NẮP THĂM HỒ NƯỚC
+- D1 A.D2.03
+- M2
+- N3 NỀN LÁT GẠCH TÀU 300x300
+- N2 NỀN LÁT GẠCH XI MĂNG 200x200
+- N1 NỀN LÁT GẠCH CERAMIC 300x300
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG CHÌM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 1500
+- Tc VÁCH THẠCH CAO
+- T3 TƯỜNG ỐP GẠCH CERAMIC CAO TỚI TRẦN
+- GHI CHUÙ THAÙO DÔÕ :
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- M1 MÁI BTCT
+- 3
+- 2
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO, XÂY LẮP MỚI
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TƯỜNG XÂY CŨ ĐẬP BỎ, THÁO DỠ; THAY THẾ MỚI
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG THÁO DỠ MÁI
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.DTD.04
+- ../2024
+- 1/100
+
+
+## Trang 57
+- HIỆN TRẠNG: - CẦU THANG: LAN CAN SẮT CẦU THANG BONG TRÓC LỚP SƠN DẦU, TAY VỊN GỖ BỊ HƯ CÁC VỊ TRÍ MỐI NỐI. BẬC THANG TÔ ĐÁ MÀI (GRANITO) BỀ MẶT ĐÃ BỊ MÒN, NHIỀU MỦI BẬC BỊ SỨT BỂ. NẸP KIM LOẠI CHỐNG TRƯỢT MŨI BẬC THANG NHIỀU CHỖ HƯ HỎNG, CONG VÊNH. - NỀN GẠCH NHIỀU NƠI BỊ BỂ, BAY MÀU VÀ THAY NHIỀU CHỦNG LOẠI. - PHÒNG VỆ SINH, TƯỜNG LỬNG CAO 2600, LAM THÔNG GIÓ BÊN TRÊN BÍT BẰNG VÁCH THẠCH CAO HOẶC KÍNH ĐÃ BỊ HƯ HỎNG 75%, GẠCH ỐP TƯỜNG ĐÃ SỜN CŨ, MỘT VÀI VỊ TRÍ BỊ HƯ BỂ. - LỚP SƠN NƯỚC TƯỜNG TRẦN BÊN TRONG CÁC PHÒNG VỆ SINH ĐÃ CŨ, NHIỀU VỊ TRÍ BỊ THẤM Ố, BONG TRÓC; - CÁC PHÒNG VỆ SINH BỊ THẤM TƯỜNG. - CÁC CỬA ĐI CỦA SỔ CONG VÊNH XUỐNG CẤP; - CÁC CẤU KIỆN SẮT THÉP BONG TRÓC RỈ SÉT. - TƯỜNG GIỮA CÁC PHÒNG VÀ HÀNH LANG CÓ LAM THÔNG GIÓ TRÊN CAO ĐÃ BÍT BẰNG CÁC VÁCH THẠCH CAO HOẶC VÁCH KÍNH.
+- 6,4 M²
+- SÂN SÂN
+- THANG SẮT THANG SẮT
+- 62200 2900 2900
+- TS1 A.D7.01
+- 200 1800 200
+- 10,3 M²
+- 450
+- 250100 100
+- 4 3 2 1 14 15 16
+- 250100
+- 450
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- 250
+- KHU XN  VI SINH
+- N1 TR1 T1
+- N1 TR1 T1 N1 TR1 T1
+- 37,7 M²
+- VT1 VT1
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- 150
+- 250
+- 3,8 M² 3,6 M²
+- 100
+- VS1.3 .
+- 1900 100 1900 100 1950 100 1800 200 1800 100 1900 200 1900 100 1850 100 1900 100 1900 100 1900 100 1850 200
+- 250
+- THANG MÁY
+- VC1
+- 14,8 M²
+- N2 TR2 T2 N2 TR2 T2 N2 TR2 T2 N2 TR2 T2
+- P.BỆNH P.BỆNH P.BỆNH
+- KHU XN  VI SINH
+- N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2
+- N1 TR1 T2 N1 TR1 T2 N1 TR1 T2
+- 14,8 M²
+- E 30 DC-tm
+- VC2 VC2 VC2 VC2
+- VS1.4a .
+- VC1 VC1 VC1 VC1
+- 300
+- N2 TR2 T2 N2 TR2 T2
+- 2,9 M²
+- 700 100
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- -0.050 KHOA TIM MAÏCH CAN THIEÄP
+- 100
+- P.BỆNH NẶNG P.BỆNH NẶNG
+- 34,5 M²
+- VT1 VT1
+- VS1.1 .
+- 200
+- 450
+- * DIỆN TÍCH CẢI TẠO: 972 M² MÔ TẢ CẢI TẠO: - GIA CƯỜNG CỘT BTCT 2 CẦU THANG TRỤC (5-6,A), (11-12,A). - TƯỜNG: + XÂY MỚI TƯỜNG HỘP GEN THOÁT NƯỚC MÁI TRỤC F, TRỤC A. + XÂY CHÈN TƯỜNG BÍT LỔ CỬA TRỤC 1, TRỤC 16. + XÂY TƯỜNG HỘP GEN TRỤC D. + XÂY CHÈN TƯỜNG LỬNG CÁC PHÒNG VỆ SINH CAO TỚI DẦM/ SÀN BTCT. + XÂY CHÈN TƯỜNG SAU KHI LẮP ĐẶT CỬA, VÁCH KÍNH. + TÔ TƯỜNG XÂY MỚI VÀ CÁC MẢNG TƯỜNG CHẮP VÁ HIỆN HỮU CHƯA TÔ. +ỐP GẠCH CERAMIC 300x600 CAO 2,1M ĐỐI VỚI CÁC PHÒNG CHỨC NĂNG CÓ ỐP GẠCH. ỐP GẠCH LEN CHÂN TƯỜNG 100x600 ĐỐI VỚI CÁC PHÒNG KHÔNG ỐP GẠCH. + TƯỜNG CÒN LẠI BÊN TRÊN PHẦN ỐP GẠCH BẢ MATIC, SƠN NƯỚC CAO TỚI TRẦN SAU KHI ĐÃ CẠO SỦI LỚP SƠN CŨ. - NỀN: +CÁN VỮA NỀN TOÀN BỘ SÀN SAU KHI ĐÃ ĐỤC BỎ LỚP VỮA NỀN CŨ. (KHÔNG THAY ĐỔI CAO ĐỘ HOÀN THIỆN SO VỚI HIỆN TRẠNG). +LÁT MỚI GẠCH GRANITE 600x600 TOÀN BỘ NỀN PHÒNG VÀ HÀNH LANG (TRỪ VỆ SINH). - TRẦN: ĐÓNG MỚI TOÀN BỘ TRẦN THẠCH CAO KHUNG NỔI 600x600 CHO TẤT CẢ CÁC PHÒNG VÀ HÀNH LANG (TRỪ VỆ SINH) SAU KHI LẮP ĐẶT CÁC HỆ THỐNG KỸ THUẬT. - CỬA, VÁCH KÍNH: +LẮP DỰNG THAY MỚI TOÀN BỘ CỬA ĐI CỬA SỔ BẰNG CỬA NHÔM KÍNH. + VÁCH KÍNH THAY MỚI BẰNG KHUNG NHÔM KÍNH . - LẮP MỚI VÁCH THẠCH CAO 2 MẶT BÍT CÁC LỔ THÔNG GIÓ TRÊN CAO TẠI TƯỜNG HÀNH LANG VÀ TƯỜNG CÁC PHÒNG.
+- 250100 100
+- 100 250 100
+- 450
+- 450
+- 100
+- VS1.1 . VS1.2 .
+- PHÒNG TRỰC
+- 250
+- 250
+- 34,5 M²
+- 2,9 M²
+- GC GC
+- 6 7 8 9 10 11 12 13 5
+- 2,9 M²
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- KHỐI NHÀ TRỆT MÁI TÔN
+- 21,2 M² 21,2 M²
+- VT1
+- 34,5 M²
+- N1 TR T1 N1 TR T1
+- 200
+- 250 100
+- TH TH 150 100
+- 450
+- VS1.4b . VS1.4c . VS1.4c .
+- 3,8 M² 3,6 M² 3,8 M² 3,6 M² 3,8 M² 3,8 M²
+- 250
+- VC1 VC1 VC1
+- P.BÁC SỸ
+- 14,8 M² 14,8 M²
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- 14,8 M²
+- SÂN
+- D2 A.D3.02
+- MẶT BẰNG CẢI TẠO TẦNG 1 TỶ LỆ :1/100
+- VS1.4d . VS1.4f . VS1.4e .
+- P.TRƯỞNG KHOA
+- 14,8 M²
+- - VỆ SINH: +NỀN LÁT GẠCH GRANITE 300x300 CHỐNG TRƯỢT. + TƯỜNG ỐP GẠCH CERAMIC 300x600 CAO 2,1M, PHẦN CÒN LẠI BÊN TRÊN BẢ MATIC SƠN NƯỚC CAO TỚI TRẦN. + ĐÓNG TRẦN THẠCH CAO CHỐNG ẨM 600x600. + TẤT CẢ CÁC CÔNG TÁC TRÊN THỰC HIỆN SAU KHI LẮP ĐẶT CÁC ĐƯỜNG ỐNG KỸ THUẬT. - CẦU THANG TRỤC (5-6,A); (11-12,A): +ỐP LÁT MỚI BẬC THANG BẰNG GẠCH GRANITE (LOẠI DÙNG CHO CẦU THANG) SAU KHI THÁO DỠ LỚP GRANITO CŨ. ỐP MỚI GẠCH CHÂN TƯỜNG CAO 100. +LẮP MỚI LAN CAN TAY VỊN INOX. + TƯỜNG BẢ MATIC SƠN NƯỚC MỚI SAU KHI CẠO SỦI LỚP SƠN CŨ. - LẮP DỰNG MỚI 2 CẦU THANG SẮT, SƠN CHỐNG RỈ VÀ SƠN DẦU HOÀN THIỆN. -  THANG MÁY: LẮP THANG MÁY, ỐP MẶT DỰNG. - LẮP CÁC THANH TAY VỊN CHỐNG VA VÀ THANH KẸP GÓC. - BỒN HOA: THAY MỚI GẠCH ỐP BỒN HOA - LẮP ĐẶT MỚI HỆ THỐNG CẤP THOÁT NƯỚC, THIẾT BỊ VỆ SINH, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC.
+- 250
+- 100
+- 250
+- 150
+- 200 1800 200 3800 100 2000 100 3800 200 2000
+- N1 TR1 T1
+- 108,2 M²
+- -0.100
+- 112 M²
+- SÂN
+- 150
+- 250
+- 100
+- PHÒNG TÀI CHÍNH KẾ TOÁN KHO HỒ SƠ
+- BỒN HOA CAO 500
+- 250
+- N1 TR1 T1
+- N1 TR1 T1
+- N1 TR1 T1
+- HỒ NƯỚC
+- 135,3 M² 7,2 M²
+- 600
+- 250
+- 100 100
+- 800
+- 200
+- GC
+- 250 100
+- 250
+- 450
+- 100
+- CHÚ THÍCH: * VT: VÁCH THẠCH CAO 2 MẶT BÍT CÁC LỔ THÔNG GIÓ TRÊN CAO. VT1: L= 3800 MM, H=600MM; SỐ LƯỢNG: 24 * VC: XÂY CHÈN LAM THÔNG GIÓ VỆ SINH CAO TỚI DẦM/ SÀN BTCT. VC1: L= 3800 MM, H=820MM; SỐ LƯỢNG: 8 VC2: L= 2000 MM, H=820MM; SỐ LƯỢNG: 4
+- N2 TR2 T2
+- VS1.5 .
+- 3,3 M²
+- N1 TR1
+- T1
+- 200
+- 1900
+- D3 A.D3.03
+- 100 4000 100 1800
+- GC
+- PHÒNG KHTH
+- BỒN HOA CAO 500
+- N1 TR1 T1
+- 80,7 M² 14,8 M²
+- 400
+- SÂN
+- 250
+- 450
+- 100 2000 100
+- 100
+- 250 100
+- 450
+- 450
+- 50 1950 100 1900 100
+- 100
+- P.TRƯỞNG KHOA
+- 250
+- 200
+- KHỐI NHÀ TRỆT MÁI TÔN
+- N1 TR1 T2
+- N1 TR1 T1
+- N3
+- N2 NỀN LÁT GẠCH CERAMIC 300x300MM, CHỐNG TRƯỢT
+- N1 NỀN LÁT GẠCH GRANITE 600x600MM
+- TH GẠCH GRANITE CẦU THANG CÓ MŨI CHỐNG TRƯỢT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 2100MM, PHAÀN COØN LAÏI SÔN NÖÔÙC
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG NỔI CHỐNG ẨM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- M1 MÁI BTCT
+- NỀN LÁT GẠCH GRANITE 600x600MM, CHỐNG TRƯỢT
+- 100 2700 100
+- N1 TR1
+- BỒN HOA CAO 500
+- T2
+- 6,6 M²
+- 800
+- 1650 100 2150
+- N1 TR1 T2
+- N1 TR1 T2 N1 TR1 T2
+- PHÒNG GPTM
+- 5,1 M²
+- 14,8 M² 6,9 M²
+- N1 TR1 T2 N1 TR1 T1
+- 14,8 M² 13,3 M²
+- KHU VỰC NHAÂN VIEÂN
+- 900
+- 800 1500
+- 250
+- 450
+- 13,0 M²
+- VS1.6 .
+- GHI CHUÙ CAÛI TAÏO:
+- 1000
+- 150 100
+- N1 TR1
+- T2
+- 250
+- 250
+- 100 1100 100 1250 100 1300
+- VS1.7a .
+- 1150 100 2650 200
+- 250
+- PHÒNG GPTM
+- PHÒNG GPTM
+- 1,9 M² 2,0 M²
+- CAO ÑOÄ NEÀN SAØN
+- N2 TR2 T2
+- N1 TR1 T2
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- GC CỘT HIỆN TRẠNG GIA CƯỜNG
+- 7,7 M²
+- 2 KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- PHẦN GIA CƯỜNG CỘT HIỆN TRẠNG
+- VÁCH CEMBOARD CÁCH ÂM LẮP ĐẶT MỚI
+- TƯỜNG XÂY MỚI
+- TƯỜNG HIỆN HỮU
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TS2 A.D7.02
+- 1900 100 2900 1001050
+- -0.200
+- 6,4 M²
+- VS1.7b .
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- MẶT BẰNG CẢI TẠO TẦNG 1
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D1.01
+- ../2024
+- 1/100
+
+
+## Trang 58
+- HÀNH LANG NỐI QUA KHU C
+- HIỆN TRẠNG: - CẦU THANG: LAN CAN SẮT CẦU THANG BONG TRÓC LỚP SƠN DẦU, TAY VỊN GỖ BỊ HƯ CÁC VỊ TRÍ MỐI NỐI. BẬC THANG TÔ ĐÁ MÀI (GRANITO) BỀ MẶT ĐÃ BỊ MÒN, NHIỀU MỦI BẬC BỊ SỨT BỂ. NẸP KIM LOẠI CHỐNG TRƯỢT MŨI BẬC THANG NHIỀU CHỖ HƯ HỎNG, CONG VÊNH. - NỀN GẠCH NHIỀU NƠI BỊ BỂ, BAY MÀU VÀ THAY NHIỀU CHỦNG LOẠI. - PHÒNG VỆ SINH, TƯỜNG LỬNG CAO 2600 BÊN TRÊN LÀ LAM THÔNG GIÓ LẮP  VÁCH THẠCH CAO HOẶC KÍNH ĐÃ BỊ HƯ HỎNG 75%, GẠCH ỐP TƯỜNG ĐÃ SỜN CŨ, MỘT VÀI VỊ TRÍ BỊ HƯ BỂ. - LỚP SƠN NƯỚC TƯỜNG TRẦN BÊN TRONG CÁC PHÒNG VỆ SINH ĐÃ CŨ, NHIỀU VỊ TRÍ BỊ THẤM Ố, BONG TRÓC; - CÁC PHÒNG VỆ SINH BỊ THẤM TƯỜNG. - TƯỜNG GIỮA CÁC PHÒNG VÀ HÀNH LANG CÓ LAM THÔNG GIÓ TRÊN CAO, LẮP CÁC VÁCH THẠCH CAO HOẶC VÁCH KÍNH.
+- THANG SẮT THANG SẮT
+- TS1 A.D7.01
+- 62200 2900 2900
+- 450
+- 250100 100
+- 4 3 2 1 14 15 16
+- 250100
+- 450
+- VS2.1 . VS2.2 . VS2.3 .
+- VC1
+- 1850 100 1900 1850 100 1900 1900 100 1900 1900 100 1900
+- 250
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T1
+- P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH
+- N1 TR1 T1 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2
+- P.BỆNH P.BỆNH P.BỆNH
+- N2 TR2 T2 N2 TR2 T2 N2 TR2 T2 N2 TR2 T2 N2 TR2 T2 N2 TR2 T2 N2 TR2 T2 N2 TR2 T2
+- VT1 VT1 VT1 VT1 VT1
+- VC1
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- VC2
+- 250
+- 150
+- 250
+- 100
+- THANG MÁY
+- 450
+- E 30 DC-tm
+- VC1
+- VC2
+- VS2.4 .
+- VC1
+- VS2.5 .
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- VC1
+- N1 TR1 T2
+- N1 TR1 T2
+- VC2
+- VC1
+- VS2.6 .
+- 250
+- 450
+- * DIỆN TÍCH CẢI TẠO: 972 M² MÔ TẢ CẢI TẠO: - GIA CƯỜNG CỘT BTCT 2 CẦU THANG BỘ - TƯỜNG: + XÂY MỚI TƯỜNG HỘP GEN THOÁT NƯỚC MƯA TRỤC F, TRỤC A. + XÂY CHÈN TƯỜNG BÍT LỔ CỬA TRỤC 1, TRỤC 16. + XÂY MỚI TƯỜNG HỘP GEN TRỤC D. + XÂY CHÈN TƯỜNG LỬNG CÁC PHÒNG VỆ SINH CAO TỚI DẦM/ SÀN BTCT. + XÂY CHÈN TƯỜNG SAU KHI LẮP ĐẶT CỬA, VÁCH KÍNH. + TÔ TƯỜNG XÂY MỚI VÀ CÁC MẢNG TƯỜNG CHẮP VÁ HIỆN HỮU CHƯA TÔ. +ỐP GẠCH CERAMIC 300x600 CAO 2,1M ĐỐI VỚI CÁC PHÒNG CHỨC NĂNG CÓ ỐP GẠCH. ỐP GẠCH LEN CHÂN TƯỜNG 100x600 ĐỐI VỚI CÁC PHÒNG KHÔNG ỐP GẠCH. + TƯỜNG CÒN LẠI BÊN TRÊN PHẦN ỐP GẠCH BẢ MATIC, SƠN NƯỚC CAO TỚI TRẦN SAU KHI ĐÃ CẠO SỦI LỚP SƠN CŨ. - NỀN: +CÁN VỮA NỀN TOÀN BỘ SÀN SAU KHI ĐÃ ĐỤC BỎ LỚP VỮA NỀN CŨ. (KHÔNG THAY ĐỔI CAO ĐỘ HOÀN THIỆN SO VỚI HIỆN TRẠNG). +LÁT MỚI GẠCH GRANITE 600x600 TOÀN BỘ NỀN PHÒNG VÀ HÀNH LANG (TRỪ VỆ SINH). +CHỐNG THẤM NỀN (THEO QUI TRÌNH NHÀ SẢN XUẤT) CÁC HÀNH LANG TIẾP GIÁP NGOÀI TRỜI TRƯỚC KHI LÁT GẠCH. +LÁT ĐÁ GRANITE CÁC NGẠCH CỬA - TRẦN: ĐÓNG MỚI TOÀN BỘ TRẦN THẠCH CAO KHUNG NỔI 600x600 CHO TẤT CẢ CÁC PHÒNG VÀ HÀNH LANG (TRỪ VỆ SINH) SAU KHI LẮP ĐẶT CÁC HỆ THỐNG KỸ THUẬT. - CỬA, VÁCH KÍNH:
+- 250 100 100
+- 250 100
+- 450
+- 450
+- 100
+- P.HÀNH CHÁNH
+- 250
+- P.NHÂN VIÊN P.NHÂN VIÊN
+- 450
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG GC GC GC GC
+- 6 7 8 9 10 11 12 13 5
+- 1900 100 1900
+- P.BỆNH NẶNG
+- VC1
+- N2 TR2 T2 N2 TR2 T2
+- VC3 VC3
+- TH TH
+- VS2.8 . VS2.7 .
+- 250
+- VT1 VT1
+- 250 100
+- 450
+- 100
+- 1500
+- PHÒNG TRỰC
+- 450
+- D2 A.D3.02
+- 1875 100 1875
+- P.BỆNH NẶNG
+- MẶT BẰNG CẢI TẠO TẦNG 2 TỶ LỆ :1/100
+- VC1
+- 250
+- + VÁCH KÍNH THAY MỚI BẰNG KHUNG NHÔM KÍNH  - LẮP MỚI VÁCH THẠCH CAO 2 MẶT BÍT CÁC LỔ THÔNG GIÓ TRÊN CAO TẠI TƯỜNG HÀNH LANG VÀ TƯỜNG CÁC PHÒNG. - VỆ SINH: +CHỐNG THẤM NỀN (THEO QUI TRÌNH NHÀ SẢN XUẤT) CÁC VỆ SINH TRƯỚC KHI LÁT GẠCH. +NỀN LÁT GẠCH GRANITE 300x300 CHỐNG TRƯỢT. + TƯỜNG ỐP GẠCH CERAMIC 300x600 CAO 2,1M, PHẦN CÒN LẠI BÊN TRÊN BẢ MATIC SƠN NƯỚC CAO TỚI TRẦN. + ĐÓNG TRẦN THẠCH CAO CHỐNG ẨM 600x600. + TẤT CẢ CÁC CÔNG TÁC TRÊN THỰC HIỆN SAU KHI LẮP ĐẶT CÁC ĐƯỜNG ỐNG KỸ THUẬT. - CẦU THANG TRỤC (5-6,A); (11-12,A): +ỐP LÁT MỚI BẬC THANG BẰNG GẠCH GRANITE (LOẠI DÙNG CHO CẦU THANG) SAU KHI THÁO DỠ LỚP GRANITO CŨ. ỐP MỚI GẠCH CHÂN TƯỜNG CAO 100. +LẮP MỚI LAN CAN TAY VỊN INOX. + TƯỜNG BẢ MATIC SƠN NƯỚC MỚI SAU KHI CẠO SỦI LỚP SƠN CŨ. - LẮP DỰNG MỚI 2 CẦU THANG SẮT, SƠN CHỐNG RỈ VÀ SƠN DẦU HOÀN THIỆN. - THANG MÁY: LẮP THANG MÁY; ỐP MẶT DỰNG. - LẮP CÁC THANH TAY VỊN CHỐNG VA VÀ THANH KẸP GÓC. - LẮP MỚI LAN CAN INOX HÀNH LANG (XEM BẢN VẼ CHI TIẾT). - CÁC SÊ NÔ, MÁI BTCT: CHỐNG THẤM SAU KHI ĐÃ LÀM SẠCH BỀ MẶT (THEO QUI TRÌNH NHÀ SẢN XUẤT). - LẮP ĐẶT MỚI HỆ THỐNG CẤP THOÁT NƯỚC, THIẾT BỊ VỆ SINH, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC.
+- 450
+- +LẮP DỰNG THAY MỚI TOÀN BỘ CỬA ĐI CỬA SỔ BẰNG CỬA NHÔM KÍNH
+- 150
+- 250
+- 150100
+- 100
+- 250
+- 450
+- 1500
+- 250
+- KHOA NGOAÏI THAÀN KINH
+- N1 TR1 T2
+- +3.750
+- CẦU BỘ HÀNH QUA KHU G
+- +4.350
+- 450
+- 250
+- 100
+- 250
+- 150
+- 150
+- 250
+- VS2.3 . VS2.3 . VS2.3 .
+- VC1
+- 100
+- 250
+- 1900 100 1900 1900 100 1900 1900 100 1900 1900 100 1900 1900 100 1900 1900 100 1900
+- 450
+- N2 TR2 T2
+- N1 TR1 T1 N1 TR1 T1 N1 TR1 T1 N1 TR1 T1 N1 TR1 T2 N1 TR1 T2
+- VC2 VC2 VC2
+- P.BỆNH P.BỆNH P.BS NAM PHÒNG T. KHOA
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- VC1
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- VS2.3 . VS2.3 . VS2.3 . VS2.3 .
+- VC1
+- VC1
+- 250
+- VS2.4 . VS2.3 .
+- 250 100
+- 450
+- 100
+- CHÚ THÍCH: * VT: VÁCH THẠCH CAO 2 MẶT BÍT CÁC LAM THÔNG GIÓ TRÊN CAO. VT1: L= 3800 MM, H=600MM; SỐ LƯỢNG: 28 * VC: XÂY CHÈN LAM THÔNG GIÓ TƯỜNG VỆ SINH CAO TỚI DẦM/ SÀN BTCT. VC1: L= 3800 MM, H=820MM; SỐ LƯỢNG: 20 VC2: L= 2000 MM, H=820MM; SỐ LƯỢNG: 10 VC3: L= 1500 MM, H=820MM; SỐ LƯỢNG: 2 VC4: L= 3900 MM, H=820MM; SỐ LƯỢNG: 1
+- VC1
+- 450
+- VC1
+- D3 A.D3.03
+- VC1
+- VC1
+- VC2
+- 250
+- VS2.3 . VS2.4 .
+- 450
+- 250 100
+- 100
+- 450
+- 450
+- 100
+- VC1
+- 250
+- 450
+- VC2
+- P.BS NỮ
+- VC1
+- N3
+- N2 NỀN LÁT GẠCH CERAMIC 300x300MM, CHỐNG TRƯỢT
+- N1 NỀN LÁT GẠCH GRANITE 600x600MM
+- TH GẠCH GRANITE CẦU THANG CÓ MŨI CHỐNG TRƯỢT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 2100MM, PHAÀN COØN LAÏI SÔN NÖÔÙC
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG NỔI CHỐNG ẨM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- M1 MÁI BTCT
+- NỀN LÁT GẠCH GRANITE 600x600MM, CHỐNG TRƯỢT
+- N1 TR1 T2
+- N1 TR1 T2
+- VC4
+- 250
+- 450
+- P.NHÂN VIÊN
+- GHI CHUÙ CAÛI TAÏO:
+- 100
+- 100
+- 250
+- 250
+- 150
+- 150
+- VC2
+- VC1
+- VS2.3 .
+- 250
+- 450
+- VC2
+- CAO ÑOÄ NEÀN SAØN
+- VC1
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- GC CỘT HIỆN TRẠNG GIA CƯỜNG
+- 2 KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- PHẦN GIA CƯỜNG CỘT HIỆN TRẠNG
+- VÁCH CEMBOARD CÁCH ÂM LẮP ĐẶT MỚI
+- TƯỜNG XÂY MỚI
+- TƯỜNG HIỆN HỮU
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TS2 A.D7.02
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT BẰNG CẢI TẠO TẦNG 2
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D1.02
+- ../2024
+- 1/100
+
+
+## Trang 59
+- HÀNH LANG NỐI QUA KHU C
+- HIỆN TRẠNG: - CẦU THANG: LAN CAN SẮT CẦU THANG BONG TRÓC LỚP SƠN DẦU, TAY VỊN GỖ BỊ HƯ CÁC VỊ TRÍ MỐI NỐI, LỚP VỮA BÊ TÔNG CHÂN LAN CAN BỊ BONG RA. - CÁC CỬA ĐI CỦA SỔ CONG VÊNH XUỐNG CẤP; GẠCH NỀN NHIỀU CHỦNG LOẠI. - CÁC CẤU KIỆN SẮT THÉP BONG TRÓC RỈ SÉT; - LAN CAN SẮT SÂN THƯỢNG ĐÃ RỈ SÉT, MỘT VÀI VỊ TRÍ BỊ HƯ MỤC; - LAN CAN SẮT HÀNH LANG TẦNG BONG TRÓC LỚP SƠN DẦU; - TRẦN HÀNH LANG TRỤC A-5/11 THẤM Ố 30% - SÊ NÔ THOÁT NƯỚC : LỚP VỮA BỀ MẶT BỊ BONG TRÓC. MỘT VÀI VỊ TRÍ BỊ THẤM. - CÁC VỊ TRÍ LỖ THOÁT NƯỚC MÁI BỊ THẤM. - HỒ NƯỚC MÁI ĐÃ XUỐNG CẤP, GÂY THẤM Ố TRẦN VÀ TƯỜNG CẦU THANG. - LỚP SƠN NƯỚC TƯỜNG BÊN NGOÀI NHÀ BỊ RÊU MỐC, NHIỀU CHỖ ĐÃ BONG TRÓC;
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- THANG SẮT TƯỜNG XÂY H=1200
+- TS1 A.D7.01
+- 10,4M²
+- 17,6 M²
+- 62200 2900 2900
+- 450
+- 23,0 M² 72,0 M² 8,0 M²
+- SÊ NÔ
+- 3900 100 2000 100 100
+- 250100 100
+- 4 3 2 1 14 15 16
+- 1200 300 1800 300 200 3800 200 1050 1800 950 200
+- 250100
+- 450
+- 100
+- 1000 1000 200
+- 700 3000
+- VS3.3 .
+- 3,8M²
+- P. ĐIỀU DƯỠNG KHO
+- 2200
+- 250
+- N1 TR1 T1 N1 TR1 T1
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- 400 900 500100
+- 200 1900 100
+- SÂN THƯỢNG
+- +7.530
+- N1 TR T1
+- 1000 900 200 1800
+- 38,6 M²
+- 2100
+- THANG MÁY
+- E 30 DC-tm
+- 19,4 M²
+- 1900
+- 200 1900 200 1200 700
+- 2100 2100
+- 450 1000 550
+- 650 1000 550 1800 650 1000 550 1800 650 1000 550 1800 450 1750 1800 100 650 1000 550 1800 450 1550 550 1000 550 550 1000 550 1800 650 1000 550 1800 100
+- VS3.1a . VS3.1a . VS3.1a . VS3.1b . VS3.1b . VS3.1b . VS3.1b .
+- VS3.1c .
+- N2 TR2 T2 N2 TR2 T2 N2 TR2 T2
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- 2000 1200 600 100 3900 100 3900 100 3900
+- 2000 1200 600
+- SÊ NÔ
+- 3,8M² 3,8M² 3,8M² 3,8M² 3,8M² 3,8M² 3,8M²
+- 3,8M²
+- N2 TR2 T2
+- P. BỆNH
+- N1 TR1 T2 N1 TR1 T2
+- N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T2 N1 TR1 T1
+- N1 TR1 T2
+- 18,3 M²
+- P. BỆNH
+- 3,9 M² 12,3 M² 8,1 M²
+- 18,3 M²
+- 300700 900
+- 300700 900
+- 450
+- * DIỆN TÍCH CẢI TẠO: 812,5 M² MÔ TẢ CẢI TẠO: - GIA CƯỜNG CỘT BTCT 2 CẦU THANG BỘ TRỤC (5-6,A); (11-12,A). - TƯỜNG, VÁCH: + XÂY MỚI TƯỜNG NGĂN KHÔNG GIAN CÁC PHÒNG, TƯỜNG GEN THOÁT NƯỚC MƯA TRỤC A, TRỤC F, TƯỜNG GEN TRỤC D, TƯỜNG VỆ SINH (XEM BẢN VẼ). +ỐP GẠCH CERAMIC 300x600 CAO 2,1M ĐỐI VỚI CÁC PHÒNG CHỨC NĂNG CÓ ỐP GẠCH. ỐP GẠCH LEN CHÂN TƯỜNG 100x600 ĐỐI VỚI CÁC PHÒNG KHÔNG ỐP GẠCH. + TƯỜNG CÒN LẠI BÊN TRÊN PHẦN ỐP GẠCH BẢ MATIC, SƠN NƯỚC CAO TỚI TRẦN. +LẮP DỰNG MỘT SỐ VÁCH NGĂN BẰNG TẤM CEMBOARD, KHUNG THÉP (CÓ LỚP CÁCH ÂM) - NỀN: +CÁN VỮA NỀN TOÀN BỘ SÀN SAU KHI ĐÃ ĐỤC BỎ LỚP VỮA NỀN CŨ. +LÁT MỚI GẠCH GRANITE 600x600 TOÀN BỘ NỀN PHÒNG VÀ HÀNH LANG (TRỪ VỆ SINH). SÂN THƯỢNG LÁT GẠCH GRANITE CHỐNG TRƯỢT 600x600. +CHỐNG THẤM NỀN (THEO QUI TRÌNH NHÀ SẢN XUẤT) SÂN THƯỢNG, CÁC HÀNH LANG TIẾP GIÁP NGOÀI TRỜI TRƯỚC KHI LÁT GẠCH. +LÁT ĐÁ GRANITE CÁC NGẠCH CỬA - TRẦN: ĐÓNG MỚI TOÀN BỘ TRẦN THẠCH CAO KHUNG NỔI 600x600 CHO TẤT CẢ CÁC PHÒNG VÀ HÀNH LANG (TRỪ VỆ SINH) SAU KHI LẮP ĐẶT CÁC HỆ THỐNG KỸ THUẬT. - CỬA, VÁCH KÍNH: +LẮP DỰNG THAY MỚI TOÀN BỘ CỬA ĐI CỬA SỔ BẰNG CỬA NHÔM KÍNH. + VÁCH KÍNH THAY MỚI BẰNG KHUNG NHÔM KÍNH
+- VC
+- VC VC VC
+- 250 100 100
+- 100 250 100 100
+- 200
+- 100
+- 200
+- 450
+- 200 300 1800 300 1200 200
+- 700 1200 2000 100 2100 1200 600 100 2100 1200 600
+- 200 1900 3900 3900
+- 300700 900
+- 250
+- 250
+- P. BỆNH P. BỆNH P. BỆNH
+- 42,0 M² 42,0 M² 42,0 M² 42,0 M² 42,0 M²
+- B1 A7.06
+- GC GC GC GC
+- 6 7 8 9 10 11 12 13 5
+- 600 300 1200 300 1800 300
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- 3800 5800
+- SÊ NÔ
+- 15,3 M² 15,3 M²
+- TH TH
+- 300700 900
+- 14,8 M² 14,8 M²
+- 250 100
+- 450
+- 200 200 1200 500 1200 200
+- 3800 5800
+- 250
+- D2 A.D3.02
+- 300700 900
+- 200 300 1800 300 1200 200 200 200 200 1200 300 1800 300
+- B1 A7.06
+- 2,4M² 2,5M² 2,4M²
+- N2 TR2 T2
+- P. TRƯỞNG KHOA
+- P. MÁY CHỦ
+- MẶT BẰNG CẢI TẠO TẦNG 3 TỶ LỆ :1/100
+- N1 TR1 T1
+- 15,0 M²
+- 22,6 M²
+- 3900
+- 3900
+- - VỆ SINH: +CHỐNG THẤM NỀN (THEO QUI TRÌNH NHÀ SẢN XUẤT) CÁC VỆ SINH TRƯỚC KHI LÁT GẠCH. +NỀN LÁT GẠCH GRANITE 300x300 CHỐNG TRƯỢT. + TƯỜNG ỐP GẠCH CERAMIC 300x600 CAO 2,1M, PHẦN CÒN LẠI BÊN TRÊN BẢ MATIC SƠN NƯỚC CAO TỚI TRẦN. + ĐÓNG TRẦN THẠCH CAO CHỐNG ẨM 600x600. + TẤT CẢ CÁC CÔNG TÁC TRÊN THỰC HIỆN SAU KHI LẮP ĐẶT CÁC ĐƯỜNG ỐNG KỸ THUẬT. - CẦU THANG TRỤC (5-6,A) VÀ (11-12,A): +ỐP LÁT MỚI BẬC THANG BẰNG GẠCH GRANITE (LOẠI DÙNG CHO CẦU THANG) SAU KHI THÁO DỠ LỚP GRANITO CŨ. ỐP MỚI GẠCH CHÂN TƯỜNG CAO 100. +LẮP MỚI LAN CAN TAY VỊN INOX. + TƯỜNG BẢ MATIC SƠN NƯỚC MỚI SAU KHI CẠO SỦI LỚP SƠN CŨ. - LẮP DỰNG MỚI 2 CẦU THANG SẮT, SƠN CHỐNG RỈ VÀ SƠN DẦU HOÀN THIỆN. - THANG MÁY: + ĐỔ BTCT CỘT, DẦM, SÀN SẢNH THANG. + XÂY TƯỜNG CHÈN 2 BÊN MẶT DỰNG THANG. +LẮP THANG MÁY. +ỐP MẶT DỰNG. - LẮP CÁC THANH TAY VỊN CHỐNG VA VÀ THANH KẸP GÓC. - GẮN THANH LAM NHÔM CHỮ Z. - LẮP MỚI LAN CAN INOX HÀNH LANG (XEM BẢN VẼ CHI TIẾT). - CÁC SÊ NÔ, MÁI BTCT: CHỐNG THẤM SAU KHI ĐÃ LÀM SẠCH BỀ MẶT (THEO QUI TRÌNH NHÀ SẢN XUẤT). - LẮP ĐẶT MỚI HỆ THỐNG CẤP THOÁT NƯỚC, THIẾT BỊ VỆ SINH, HỆ THỐNG ĐIỆN VÀ HỆ THỐNG KỸ THUẬT KHÁC.
+- 250
+- 100 900 900 100
+- 450
+- 100
+- 100
+- 250
+- 150
+- 250 100
+- 450
+- 250 1500 350 2700 900100
+- 2000 3800
+- 2150 900 1050 1900
+- 250
+- SÊ NÔ
+- SÊ NÔ SÊ NÔ
+- VS3.4 .
+- P. HÀNH CHÍNH
+- +7.550
+- 7,5 M²
+- 99,9 M²
+- 100 3200
+- 700
+- N1 TR1 T1
+- 56,8 M²
+- P. KHÁM QUẦY TRỰC
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- 20,6 M²
+- 4,7 M²
+- 450
+- 100
+- 250 100
+- 450
+- 100 150
+- 250
+- 900 900 300 900 900
+- 3,6M²
+- 1350
+- 100
+- 250
+- VS3.5 .
+- P. THỦ THUẬT
+- 200 700 525 100 700 1200 2000 100 800 1200 2000 100 700 1200 2000 200 100
+- 250
+- N1 TR1 T2 N1 TR1 T2
+- N2 TR2 T2
+- 14,8M² 14,8M²
+- VS3.2 .
+- 3,6M²
+- VS3.6 . VS3.1c .
+- 2,5M²
+- N2 TR2 T2
+- 1900 100 1800 2000
+- 200
+- 6450
+- 200 300 1800 300 1200 200 900 1200 500 1200
+- P. BÁC SĨ
+- P. BÁC SĨ
+- N1 TR1 T1
+- N1 TR1 T1
+- 20,2M²
+- 21,7M²
+- 3800
+- VC
+- VC
+- 250
+- VC VC VC
+- 100 250 100
+- 3800 5800
+- 300700 900
+- N1 TR1 T2 N1 TR1 T2 N1 TR1 T2
+- P. BỆNH P. BỆNH
+- N2 TR2 T2 N2 TR2 T2 N2 TR2 T2
+- D3 A.D3.03
+- 200
+- SÊ NÔ
+- 200 300 1800 300 1200
+- B1 A7.06
+- 3800 5800
+- 300700 900
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- 250
+- 450
+- 2000 3900
+- 250 100
+- 100
+- 450
+- 450
+- 200
+- VC
+- 200 300 1800 300 1200
+- 250
+- 300700 900 300700 900
+- 3800
+- P. BỆNH
+- N1 TR1 T2
+- P. BỆNH
+- 18,6M²
+- 18,6M²
+- N3
+- N2 NỀN LÁT GẠCH CERAMIC 300x300MM, CHỐNG TRƯỢT
+- N1 NỀN LÁT GẠCH GRANITE 600x600MM
+- TH GẠCH GRANITE CẦU THANG CÓ MŨI CHỐNG TRƯỢT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 2100MM, PHAÀN COØN LAÏI SÔN NÖÔÙC
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG NỔI CHỐNG ẨM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- M1 MÁI BTCT
+- N2 TR2 T2
+- 3,8M²
+- NỀN LÁT GẠCH GRANITE 600x600MM, CHỐNG TRƯỢT
+- N1 TR1 T2
+- +7.530 +7.550
+- 27,6 M² 82,8 M²
+- 2300 1200 450 2600 1000 550 100 1900
+- GHI CHUÙ CAÛI TAÏO:
+- SÂN THƯỢNG
+- TƯỜNG XÂY H=1200
+- N3 T1
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- GC CỘT HIỆN TRẠNG GIA CƯỜNG
+- 2 KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- N1 TR T1 ±0.000
+- PHẦN GIA CƯỜNG CỘT HIỆN TRẠNG
+- VÁCH CEMBOARD CÁCH ÂM LẮP ĐẶT MỚI
+- TƯỜNG XÂY MỚI
+- TƯỜNG HIỆN HỮU
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- 9,9 M²
+- SÊ NÔ
+- THANG SẮT
+- TS2 A.D7.02
+- 17,6 M²
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT BẰNG CẢI TẠO TẦNG 3
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D1.03
+- ../2024
+
+
+## Trang 60
+- HIỆN TRẠNG:
+- - MÁI LỢP TÔN RỈ SÉT CONG VÊNH THẤM DỘT, XÀ GỒ  THÉP, KÈO THÉP BONG TRÓC RỈ SÉT; - MÁI BTCT : LỚP VỮA BỀ MẶT BỊ BONG TRÓC. MỘT VÀI VỊ TRÍ BỊ THẤM SÀN. - HỒ NƯỚC MÁI ĐÃ XUỐNG CẤP, GÂY THẤM Ố TRẦN VÀ TƯỜNG CẦU THANG. - SÊ NÔ THOÁT NƯỚC : LỚP VỮA BỀ MẶT BỊ BONG TRÓC. MỘT VÀI VỊ TRÍ BỊ THẤM. - CÁC VỊ TRÍ LỖ THOÁT NƯỚC MÁI BỊ THẤM.
+- THANG SẮT THANG SẮT
+- TS1 A.D7.01
+- 62200 2900 2900
+- CHIỀU CAO TƯỜNG = 3100
+- 50
+- 20 CHIỀU CAO TRẦN = 3000 100
+- MẶT CẮT 1 MẶT ĐỨNG CHI TIẾT VÁCH CEMBOARD VC ĐIỂN HÌNH
+- CHIỀU CAO ỐP TƯỜNG = 2100
+- 900
+- 4 3 2 1 14 15 16
+- VC1 .
+- VC2 .
+- 100
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- 30
+- 1070
+- 1070 980
+- Dốc 15% Dốc 15%
+- TẤM CEMBOARD DÀY 10MM, MATIC SƠN NƯỚC
+- LỚP CÁCH ÂM ROCKWOOL DÀY 80MM
+- SÀN BTCT HIỆN HỮU
+- LEN CHÂN TƯỜNG PVC GIẢ GỖ
+- TRẦN THẠCH CAO
+- TẤM PVC VÂN ĐÁ DÀY 4MM
+- NẸP INOX U10 NẸP INOX H
+- (MÁI BTCT: 11 M²)
+- ĐỈNH THANG MÁY
+- SẮT HỘP 40X80X2MM
+- MÁNG THU NƯỚC INOX MÁNG THU NƯỚC INOX
+- TỶ LỆ :1/50
+- MÁNG THU NƯỚC INOX
+- 30
+- 1070
+- 1070 980
+- MAÙI TOÂN
+- MAÙI TOÂN
+- 40 960 40 960 40 960 40
+- 1000 1000 1000
+- 1  ---
+- 6 7 8 9 10 11 12 13 5
+- (DIỆN TÍCH SÊ NÔ VÀ MÁI BTCT:47,8 M²)
+- MÁI BTCT MÁI BTCT
+- M1
+- 40
+- 40 940 40 1010 40 1010 40
+- CHIỀU CAO TƯỜNG = 3100
+- 20
+- Tường Hoàn Thiện
+- Trần Hoàn Thiện
+- Sàn Hoàn Thiện
+- D2 A.D3.02
+- MÔ TẢ CẢI TẠO: - LẮP CÁC KÈO THÉP & XÀ GỒ THÉP. - LỢP MÁI TÔN (CÓ LỚP CÁCH ÂM, CÁCH NHIỆT). - LẮP MỚI MÁNG XỐI INOX. - CÁC SÊ NÔ, MÁI BTCT HIỆN HỮU: CHỐNG THẤM SAU KHI ĐÃ LÀM SẠCH BỀ MẶT (THEO QUI TRÌNH NHÀ SẢN XUẤT). - THANG MÁY: + ĐỔ BTCT CỘT, DẦM, SÀN TẦNG KỸ THUẬT (XEM BẢN VẼ CHI TIẾT THANG MÁY). + ĐỔ BTCT MÁI, CHỐNG THẤM MÁI. + LẮP DỰNG THANG MÁY.
+- MẶT BẰNG CẢI TẠO MÁI TỶ LỆ :1/100
+- (DIỆN TÍCH SÊ NÔ VÀ MÁI BTCT: 134,9 M²
+- MÁNG THU NƯỚC INOX MÁNG THU NƯỚC INOX
+- Dốc 15%
+- MÁI BTCT
+- M1 11.450
+- M2
+- LEN CHÂN TƯỜNG PVC GIẢ GỖ
+- LỚP CÁCH ÂM ROCKWOOL DÀY 80MM
+- SẮT HỘP 40X80X2MM
+- (DIỆN TÍCH SÊ NÔ VÀ MÁI BTCT:47,8 M²)
+- MAÙI TOÂN
+- MAÙI TOÂN
+- MẶT KHÔNG ỐP TƯỜNG
+- CHI TIẾT V1
+- M1
+- 50
+- 95
+- TỶ LỆ :1/10
+- D3 A.D3.03
+- 10 80 10
+- 100
+- 4
+- TẤM CEMBOARD DÀY 10MM, MATIC SƠN NƯỚC
+- MẶT CÓ ỐP TƯỜNG
+- 40
+- 10
+- Sàn Hoàn Thiện
+- SÀN BTCT HIỆN HỮU
+- TẤM PVC VÂN ĐÁ DÀY 4MM
+- GẠCH LÁT NỀN
+- VỮA SAN NỀN
+- N3
+- N2 NỀN LÁT GẠCH CERAMIC 300x300MM, CHỐNG TRƯỢT
+- N1 NỀN LÁT GẠCH GRANITE 600x600MM
+- TH GẠCH GRANITE CẦU THANG CÓ MŨI CHỐNG TRƯỢT
+- T2 TƯỜNG ỐP GẠCH CERAMIC CAO 2100MM, PHAÀN COØN LAÏI SÔN NÖÔÙC
+- T1 TƯỜNG SƠN NƯỚC
+- TR2 TRẦN THẠCH CAO KHUNG NỔI CHỐNG ẨM
+- TR1 TRẦN THẠCH CAO KHUNG NỔI
+- TR TRẦN BTCT
+- M1 MÁI BTCT
+- NỀN LÁT GẠCH GRANITE 600x600MM, CHỐNG TRƯỢT
+- MAÙI TOÂN
+- SẮT HỘP 40X80X2MM
+- TRẦN THẠCH CAO
+- CHI TIẾT V2
+- GHI CHUÙ CAÛI TAÏO:
+- 40 60
+- TỶ LỆ :1/10
+- SÂN THƯỢNG
+- 10 80 10
+- +7.530
+- 100
+- CAO ÑOÄ NEÀN SAØN
+- M2 MÁI TÔN TRÊN HỆ KHUNG THÉP
+- GC CỘT HIỆN TRẠNG GIA CƯỜNG
+- 2 KHU VỰC GIỮ NGUYÊN HIỆN TRẠNG
+- KHU VỰC HIỆN HỮU CẢI TẠO 1
+- TẤM CEMBOARD DÀY 10MM, MATIC SƠN NƯỚC
+- LỚP CÁCH ÂM ROCKWOOL DÀY 80MM
+- N1 TR T1 ±0.000
+- 100
+- PHẦN GIA CƯỜNG CỘT HIỆN TRẠNG
+- Tường Hoàn Thiện
+- Trần Hoàn Thiện
+- VÁCH CEMBOARD CÁCH ÂM LẮP ĐẶT MỚI
+- TƯỜNG XÂY MỚI
+- TƯỜNG HIỆN HỮU
+- CÁC KHỐI NHÀ HIỆN TRẠNG TIẾP GIÁP
+- TS2 A.D7.02
+- KYÙ HIEÄU TÖÔØNG KYÙ HIEÄU TRAÀN KYÙ HIEÄU NEÀN SAØN
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- MẶT BẰNG CẢI TẠO MÁI CHI TIẾT VÁCH CEMBOARD
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D1.04
+- ../2024
+- 1/100
+
+
+## Trang 61
+- MÔ TẢ CẢI TẠO: + TƯỜNG CỘT DẦM HIỆN HỮU CÁC MẶT ĐỨNG CÔNG TRÌNH SƠN NƯỚC: CẠO SỦI, BẢ MASTIC SƠN NƯỚC LẠI TOÀN BỘ; +CÁC CẤU KIỆN SẮT THÉP HIỆN HỮU SƠN DẦU: CẠO RỈ SƠN DẦU LẠI TOÀN BỘ; + TẦNG 3 CÁC CỘT BÊ TÔNG CỐT THÉP XÂY MỚI. CÁC MÁNG XỐI THU NƯỚC MÁI XUNG QUANH KHỐI NHÀ BẰNG TẤM INOX DÀY 1MM KHUNG THÉP, BÊN NGOÀI ỐP CÁC TẤM NHÔM NHỰA HỖN HỢP  HOÀN THIỆN. LẮP ĐẶT LAN CAN TAY VỊN DỌC CÁC KHU HÀNH LANG TẦNG 2, 3 ,PHÍA DƯỚI TƯỜNG XÂY, PHÍA TRÊN BẰNG INOX (CAO 1400); +GẮN LAM NHÔM CHỮ Z HÀNH LANG TẦNG 3. +MÀU SẮC SƠN NƯỚC HOẶC CÁC VẬT LIỆU HOÀN THIỆN CHO KHỐI NHÀ TƯƠNG ĐỒNG PHÙ HỢP VỚI TỔNG THỂ XUNG QUANH KHỐI NHÀ.
+- GẮN LAM NHOÂM CHỮ Z
+- 1000 1000
+- 1000 1000
+- 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+- 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100 62200
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100 62200
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- 1400
+- MÁI LỢP TÔN
+- GẮN LAM NHOÂM CHỮ Z MAÙNG XỐI INOX KHUNG THEÙP ỐP TẤM NHOÂM NHỰA HỖN HỢP
+- MẶT ĐỨNG HIỆN TRẠNG TRỤC 1-16
+- MẶT ĐỨNG CẢI TẠO TRỤC 1-16
+- TỶ LỆ :1/100
+- TỶ LỆ :1/100
+- 300 800 100 350 550
+- GẠCH BÔNG GIÓ
+- LAN CAN SẮT
+- 2600
+- LAN CAN SẮT
+- SÂN ĐƯỜNG TẦNG 1
+- SÂN ĐƯỜNG TẦNG 1
+- LAM BTCT
+- LAM BTCT
+- -0.100
+- -0.100
+- 1100 3900 3800 3800 50
+- 1300 3900 3800 3800 50
+- 12600
+- 12800
+- ĐỈNH MÁI
+- ĐỈNH MÁI
+- TẦNG 3
+- TẦNG 3
+- TẦNG 2
+- TẦNG 2
+- -0.050
+- -0.050
+- +3.750
+- +7.550
+- +11.450
+- +12.550
+- +3.750
+- +7.550
+- +11.450
+- +12.750
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- MẶT ĐỨNG HIỆN TRẠNG - CẢI TẠO TRỤC 1-16
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D2.01
+- ../2024
+
+
+## Trang 62
+- MÔ TẢ CẢI TẠO: + TƯỜNG CỘT DẦM HIỆN HỮU CÁC MẶT ĐỨNG CÔNG TRÌNH SƠN NƯỚC: CẠO SỦI, BẢ MASTIC SƠN NƯỚC LẠI TOÀN BỘ; +CÁC CẤU KIỆN SẮT THÉP HIỆN HỮU SƠN DẦU: CẠO RỈ SƠN DẦU LẠI TOÀN BỘ; + TẦNG 3 CÁC CỘT BÊ TÔNG CỐT THÉP XÂY MỚI. CÁC MÁNG XỐI THU NƯỚC MÁI XUNG QUANH KHỐI NHÀ BẰNG TẤM INOX DÀY 1MM KHUNG THÉP, BÊN NGOÀI ỐP CÁC TẤM NHÔM NHỰA HỖN HỢP  HOÀN THIỆN. LẮP ĐẶT LAN CAN TAY VỊN DỌC CÁC KHU HÀNH LANG TẦNG 2, 3 ,PHÍA DƯỚI TƯỜNG XÂY, PHÍA TRÊN BẰNG INOX (CAO 1400); +GẮN LAM NHÔM CHỮ Z HÀNH LANG TẦNG 3. +MÀU SẮC SƠN NƯỚC HOẶC CÁC VẬT LIỆU HOÀN THIỆN CHO KHỐI NHÀ TƯƠNG ĐỒNG PHÙ HỢP VỚI TỔNG THỂ XUNG QUANH KHỐI NHÀ.
+- 2900 2900
+- 2900 2900
+- 1 2 3 4 5 6 7 8 10 11 12 13 14 15 16 9
+- 1 2 3 4 5 6 7 8 10 11 12 13 14 15 16 9
+- LAM BTCT
+- BỔ SUNG THANG SẮT
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100 62200
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100 62200
+- LAN CAN SẮT
+- LAN CAN SẮT
+- THANG SẮT LÊN MÁI
+- KHỐI NHÀ TRỆT MÁI TÔN KHỐI NHÀ TRỆT MÁI TÔN
+- KHỐI NHÀ TRỆT MÁI TÔN KHỐI NHÀ TRỆT MÁI TÔN
+- MẶT ĐỨNG HIỆN TRẠNG TRỤC 16-1
+- MẶT ĐỨNG CẢI TẠO TRỤC 16-1
+- CẦU BỘ HÀNH QUA KHU G
+- CẦU BỘ HÀNH QUA KHU G
+- TỶ LỆ :1/100
+- TỶ LỆ :1/100
+- LAN CAN SẮT
+- LAN CAN SẮT MÁI LỢP TÔN
+- MÁNG XỐI INOX KHUNG THÉP ỐP TẤM NHÔM NHỰA HỖN HỢP
+- BỔ SUNG THANG SẮT
+- SÂN ĐƯỜNG TẦNG 1
+- SÂN ĐƯỜNG TẦNG 1
+- -0.100
+- -0.100
+- 800450 1950 1200
+- 1100 3900 3800 3800 50
+- 1300 3900 3800 3800 50
+- 12600
+- 12800
+- ĐỈNH MÁI
+- ĐỈNH MÁI
+- TẦNG 3
+- TẦNG 3
+- TẦNG 2
+- TẦNG 2
+- -0.050
+- -0.050
+- +3.750
+- +7.550
+- +11.450
+- +12.550
+- +3.750
+- +7.550
+- +11.450
+- +12.750
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- MẶT ĐỨNG HIỆN TRẠNG - CẢI TẠO TRỤC 16-1
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D2.02
+- ../2024
+
+
+## Trang 63
+- 500
+- NẮP THĂM HỒ NƯỚC
+- HỒ NƯỚC MÁI
+- MẶT ĐỨNG HIỆN TRẠNG TRỤC A-F
+- 4900 2100 4000 2000 4000 2100 600 14200
+- 4900 2100 4000 2000 4000 2100 600 14200
+- T1 T1 T1 T1
+- T1
+- TR
+- MẶT CẮT HIỆN TRẠNG D1-D1
+- A B C D E F
+- A B C D E F
+- M1
+- TỶ LỆ :1/100
+- TR
+- TR
+- TỶ LỆ :1/100
+- TR2
+- T1
+- T2
+- T1
+- Tc
+- KHỐI NHÀ TRỆT MÁI TÔN
+- KHỐI NHÀ TRỆT MÁI TÔN
+- -0.250
+- LAM BTCT
+- LAN CAN TAY VỊN SẮT
+- +7.700
+- 1100 3900 3800 3800 50
+- 1100 3900 3800 3800 50
+- 12600
+- 12600
+- ĐỈNH MÁI
+- ĐỈNH MÁI
+- TẦNG 3
+- TẦNG 3
+- SÂN ĐƯỜNG TẦNG 1
+- SÂN ĐƯỜNG TẦNG 1
+- TẦNG 2
+- TẦNG 2
+- -0.050
+- -0.050
+- +3.750
+- +7.550
+- +11.450
+- +12.550
+- +3.750
+- +7.550
+- +11.450
+- +12.550
+- -0.100
+- -0.100
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/100 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT ĐỨNG HIỆN TRẠNG TRỤC A-F MẶT CẮT HIỆN TRẠNG D1-D1
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D2.03
+- ../2024
+
+
+## Trang 64
+- INOX TẤM DÀY 1MM
+- SẮT HỘP 50x50MM
+- TẤM NHÔM ALUCOMAT DÀY 3MM
+- HỘP GEN XÂY MỚI
+- ỐNG THOÁT NƯỚC
+- 600
+- 750
+- 100 400
+- 100
+- 150 150 150 100 50
+- 150
+- 50 50
+- 3 50 279
+- 3
+- 71
+- CHI TIẾT SN1
+- 429 50 71 50 3
+- 50 550 50
+- 100 500
+- 300 300
+- TỶ LỆ :1/20
+- 200 350
+- 200 600
+- 650
+- A
+- 60 80 60
+- 150
+- MÁI LỢP TÔN
+- DẦM THÉP i - XEM BẢN VẼ KẾT CẤU
+- CỘT BTCT
+- HỆ LAM CHỮ Z, @150mm
+- DẦM THÉP i - XEM BẢN VẼ KẾT CẤU
+- SẮT HỘP 40X80MM
+- TRẦN THẠCH CAO
+- 50 400 50
+- 500 300
+- +11.450
+- TƯỜNG XÂY MỚI
+- DẦM BTCT
+- DẦM THÉP i - XEM BẢN VẼ KẾT CẤU
+- MÁI LỢP TÔN
+- 500
+- 50 400 50
+- CHI TIẾT SN2
+- TƯỜNG HIỆN HỮU
+- TỶ LỆ :1/20
+- 150
+- 200
+- 50 550 50
+- H
+- 4900 2100 4000 2000 4000 2100 600 14200
+- 200 350
+- 429 5071503
+- 100 500
+- 650
+- 1400
+- 1500 800 100 400 3400
+- 100 500 1400 60 340 200 800
+- 750 850 300
+- SN1 -
+- 71
+- INOX TẤM DÀY 1MM
+- SẮT HỘP 50x50MM
+- TẤM NHÔM ALUCOMAT DÀY 3MM
+- 3
+- 50 50 3 50 279
+- LC -
+- 7100 7100 600 200 1800 200
+- 100 400
+- 100
+- 200 200 1000
+- 100
+- 600
+- A B C D E F
+- A B C D E F
+- 50
+- +11.450
+- 3200 3400
+- HÀNH LANG
+- HÀNH LANG HÀNH LANG
+- HÀNH LANG
+- F1A F1B F1C F1A
+- F3A F3B F3B
+- F3A F3B
+- +7.550
+- 1400
+- 1000 1400 400 600
+- 50 350 1000 400
+- 300
+- 30 20
+- 200 775
+- 340
+- 60
+- 10
+- 15
+- CHI TIẾT SN1
+- THÁO ĐỠ VÁCH NHẸ CŨ. LẮP DỰNG VÁCH THẠCH CAO MỚI XEM BẢN VẼ A.D6.04
+- 600 400 2400
+- 1050 2400
+- 100 500
+- TỶ LỆ :1/20
+- SÊ-NÔ HIỆN HỮU
+- THÁO ĐỠ VÁCH NHẸ CŨ. LẮP DỰNG VÁCH THẠCH CAO MỚI XEM BẢN VẼ A.D6.04
+- i=15%
+- MẶT CẮT CẢI TẠO D2-D2
+- 600 200
+- P. BÁC SỸ P. BỆNH VS.
+- TRẦN THẠCH CAO
+- 50
+- 270
+- TƯỜNG XÂY MỚI
+- CỬA ĐI LẮP MỚI
+- 20
+- 10 25
+- A
+- 50 50
+- 100100
+- 100
+- 40
+- INOX 20X40MM, @100MM
+- INOX Ø60MM
+- HỆ DẦM SÀN BTCT HIỆN HỮU
+- MƯƠNG THU NƯỚC
+- GẠCH LÁT NỀN
+- GIẰNG TƯỜNG BTCT
+- GẠCH ỐP TƯỜNG
+- ỐNG PVC Ø20MM THOÁT NƯỚC
+- CỘT BTCT MỚI
+- TRẦN THẠCH CAO
+- TƯỜNG XÂY MỚI
+- TỶ LỆ :1/50
+- 3000
+- 30
+- MẶT ĐỨNG LAN CAN ĐIỂN HÌNH
+- 2580
+- 820
+- 3000
+- 2800
+- +7.550
+- 3000
+- 1400
+- 400 1000 400
+- 300
+- 100
+- 60 990 10
+- 20 270
+- 60
+- THÁO ĐỠ VÁCH NHẸ CŨ. LẮP DỰNG VÁCH THẠCH CAO MỚI XEM BẢN VẼ A.D6.04
+- 50
+- P. BỆNH
+- P.TRỰC
+- 2580 820
+- 100100100100100100100100100
+- TỶ LỆ :1/20
+- THÁO DỠ VÁCH NHẸ CŨ. XÂY MỚI TƯỜNG GẠCH, SƠN NƯỚC
+- 900
+- i=15%
+- 20
+- 600 400 2400
+- 100
+- 3000
+- INOX 20X40MM, @100MM
+- INOX Ø60MM
+- GẠCH ỐP ĐẦU TƯỜNG
+- TƯỜNG XÂY MỚI SƠN NƯỚC
+- 600 400 2400
+- HÀNH LANG
+- 3200
+- 3200
+- 600 200
+- F1C
+- F3B
+- F3A
+- F1B
+- F1A
+- THÁO ĐỠ VÁCH NHẸ CŨ. LẮP DỰNG VÁCH THẠCH CAO MỚI. XEM BẢN VẼ A.D6.04
+- - LÁT GẠCH CERAMIC CHỐNG TRƯỢT MỚI - VỮA XI MĂNG LÓT M75, TẠO DỐC 2% VỀ PHỄU THU SÀN (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - NỀN/SÀN HIỆN HỮU
+- - LÁT GẠCH GRANITE/CERAMIC MỚI - XỬ LÝ CHỐNG THẤM (THEO QUI TRÌNH NHÀ SẢN XUẤT) - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - SÀN BTCT HIỆN HỮU - GIA CỐ (XEM BẢN VẼ KẾT CẤU)
+- - LÁT GẠCH GRANITE/CERAMIC MỚI - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - SÀN BTCT HIỆN HỮU - GIA CỐ (XEM BẢN VẼ KẾT CẤU)
+- - LÁT GẠCH GRANITE/CERAMIC MỚI - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - NỀN/SÀN HIỆN HỮU
+- - LÁT GẠCH GRANITE/CERAMIC MỚI - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - NỀN/SÀN HIỆN HỮU
+- GHI CHÚ:
+- 60 240 1100
+- TRẦN THẠCH CAO
+- KHỐI NHÀ TRỆT MÁI TÔN
+- SẮT HỘP 20X40MM, @100MM, SƠN TĨNH ĐIỆN
+- HỆ DẦM SÀN BTCT HIỆN HỮU
+- SẮT TRÒN Ø60MM, SƠN TĨNH ĐIỆN
+- TƯỜNG HIỆN HỮU
+- TRẦN THẠCH CAO
+- DẦM THÉP i - XEM BẢN VẼ KẾT CẤU
+- CỬA SỔ LẮP MỚI
+- SN2 -
+- TƯỜNG XÂY MỚI
+- MÁI LỢP TÔN
+- 100 500 300 600 1400 1000 400 500 1500 1400 400 3400
+- 1300 3900 3800 3800 50
+- 12800
+- ĐỈNH MÁI
+- TẦNG 3
+- SÂN ĐƯỜNG TẦNG 1
+- TẦNG 2
+- -0.050
+- +3.750
+- +7.550
+- +11.450
+- +12.750
+- FR1
+- F3C
+- FS1
+- FR2 - VỆ SINH, CHỐNG THẤM - SÀN BTCT HIỆN HỮU
+- GHI CHÚ: CẢI TẠO CÁC PHÒNG, HÀNH LANG CÓ CAO ĐỘ HOÀN THIỆN KHÔNG THAY ĐỔI SO VỚI HIỆN TRẠNG (TRỪ PHÒNG VỆ SINH).
+- - LỢP TÔN DÀY 0,6MM - LỚP CHỐNG NÓNG PU - XÀ GỒ SẮT C150 (XEM BẢN VẼ KẾT CẤU) - HỆ KÈO THÉP (XEM BẢN VẼ KẾT CẤU)
+- - THAY MỚI MẶT BẬC ĐỐI BẬC BẰNG GẠCH GRANITE (LOẠI DÙNG CHO CẦU THANG) - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - SÀN BTCT HIỆN HỮU VỆ SINH SƠN NƯỚC
+- - LÁT GẠCH CERAMIC CHỐNG TRƯỢT MỚI - VỮA XI MĂNG LÓT M75 TẠO DỐC 2% VỀ PHỄU THU - XỬ LÝ CHỐNG THẤM (THEO QUI TRÌNH NHÀ SẢN XUẤT) SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ - SÀN BTCT HIỆN HỮU - GIA CỐ (XEM BẢN VẼ KẾT CẤU)
+- -0.100
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT CẮT CẢI TẠO D2-D2 CHI TIẾT SN1 - SN2 - LC
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D3.01
+- ../2024
+- 1/50
+
+
+## Trang 65
+- 1300
+- 200
+- GIẰNG TƯỜNG BTCT 100X200MM
+- TƯỜNG XÂY MỚI
+- 4900 2100 4000 2000 4000 2100 600 14200
+- HỒ NƯỚC MÁI
+- FS1
+- FR2
+- A B C D E F
+- A B C D E F
+- 7100 5100 100 100 1800 200
+- 3400 3400 3000
+- F1B
+- HÀNH LANG
+- P. BỆNH HÀNH LANG
+- HÀNH LANG
+- F3A F3B F3B
+- F3A F3B
+- 600 400 2400
+- THÁO ĐỠ VÁCH NHẸ CŨ. LẮP DỰNG VÁCH THẠCH CAO MỚI XEM BẢN VẼ A.D6.04 THÁO DỠ VÁCH NHẸ CŨ. XÂY MỚI TƯỜNG GẠCH, SƠN NƯỚC
+- 1000 1400 1050
+- 600 400 2400
+- MẶT CẮT CẢI TẠO D3-D3
+- i=15%
+- THÁO ĐỠ VÁCH NHẸ CŨ. LẮP DỰNG VÁCH THẠCH CAO MỚI XEM BẢN VẼ A.D6.04
+- TRẦN THẠCH CAO
+- CỬA SỔ LẮP MỚI
+- TƯỜNG XÂY MỚI
+- VS. P. BÁC SỸ P. BỆNH
+- TỶ LỆ :1/50
+- 3000
+- PHÒNG KHTH
+- 820 2580
+- 3000
+- F1A
+- 2800
+- 820
+- 3000
+- F3C F3A
+- THÁO ĐỠ VÁCH NHẸ CŨ. LẮP DỰNG VÁCH THẠCH CAO MỚI XEM BẢN VẼ A.D6.04
+- 3000
+- FR1
+- i=15%
+- 1000 1400 600
+- 600 200 1800 100
+- 1000
+- 600 400 1400
+- 600 400 2400
+- VS.
+- HÀNH LANG
+- F1A
+- HÀNH LANG
+- F3C
+- 3200
+- 2800
+- F1C
+- F3B
+- F3A
+- F1B
+- F1A
+- - LÁT GẠCH CERAMIC CHỐNG TRƯỢT MỚI - VỮA XI MĂNG LÓT M75, TẠO DỐC 2% VỀ PHỄU THU SÀN (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - NỀN/SÀN HIỆN HỮU
+- - LÁT GẠCH GRANITE/CERAMIC MỚI - XỬ LÝ CHỐNG THẤM (THEO QUI TRÌNH NHÀ SẢN XUẤT) - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - SÀN BTCT HIỆN HỮU - GIA CỐ (XEM BẢN VẼ KẾT CẤU)
+- - LÁT GẠCH GRANITE/CERAMIC MỚI - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - SÀN BTCT HIỆN HỮU - GIA CỐ (XEM BẢN VẼ KẾT CẤU)
+- - LÁT GẠCH GRANITE/CERAMIC MỚI - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - NỀN/SÀN HIỆN HỮU
+- - LÁT GẠCH GRANITE/CERAMIC MỚI - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - NỀN/SÀN HIỆN HỮU
+- GHI CHÚ:
+- KHỐI NHÀ TRỆT MÁI TÔN
+- LAN CAN HIỆN HỮU
+- HỆ DẦM SÀN BTCT HIỆN HỮU
+- TƯỜNG HIỆN HỮU
+- TRẦN THẠCH CAO
+- TRẦN THẠCH CAO
+- DẦM THÉP i - XEM BẢN VẼ KẾT CẤU
+- THÁO ĐỠ VÁCH NHẸ CŨ. LẮP DỰNG VÁCH THẠCH CAO MỚI XEM BẢN VẼ A.D6.04
+- CỬA SỔ LẮP MỚI
+- TƯỜNG XÂY MỚI
+- SN2 A.D3.01
+- MÁI LỢP TÔN
+- 100 500 900 700 1700 400 500 1500 1400 3200 600
+- 1300 3900 3800 3800 50
+- 12800
+- ĐỈNH MÁI
+- TẦNG 3
+- SÂN ĐƯỜNG TẦNG 1
+- TẦNG 2
+- -0.050
+- +3.750
+- +7.550
+- +11.450
+- +12.750
+- FR1
+- F3C
+- FS1
+- FR2 - VỆ SINH, CHỐNG THẤM - SÀN BTCT HIỆN HỮU
+- GHI CHÚ: CẢI TẠO CÁC PHÒNG, HÀNH LANG CÓ CAO ĐỘ HOÀN THIỆN KHÔNG THAY ĐỔI SO VỚI HIỆN TRẠNG (TRỪ PHÒNG VỆ SINH).
+- - LỢP TÔN DÀY 0,6MM - LỚP CHỐNG NÓNG PU - XÀ GỒ SẮT C150 (XEM BẢN VẼ KẾT CẤU) - HỆ KÈO THÉP (XEM BẢN VẼ KẾT CẤU)
+- - THAY MỚI MẶT BẬC ĐỐI BẬC BẰNG GẠCH GRANITE (LOẠI DÙNG CHO CẦU THANG) - VỮA XI MĂNG LÓT M75 (SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ) - SÀN BTCT HIỆN HỮU VỆ SINH SƠN NƯỚC
+- - LÁT GẠCH CERAMIC CHỐNG TRƯỢT MỚI - VỮA XI MĂNG LÓT M75 TẠO DỐC 2% VỀ PHỄU THU - XỬ LÝ CHỐNG THẤM (THEO QUI TRÌNH NHÀ SẢN XUẤT) SAU KHI BÓC DỠ LỚP VỮA, GẠCH CŨ - SÀN BTCT HIỆN HỮU - GIA CỐ (XEM BẢN VẼ KẾT CẤU)
+- -0.100
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT CẮT CẢI TẠO D3-D3
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D3.02
+- ../2024
+- 1/50
+
+
+## Trang 66
+- SÂN SÂN
+- THANG SẮT THANG SẮT
+- 62200 2900 2900
+- 4 3 2 1 14 15 16
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- KHU XN  VI SINH
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- THANG MÁY
+- P.BỆNH P.BỆNH P.BỆNH
+- KHU XN  VI SINH
+- DC-tm
+- E 30
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- -0.050 KHOA TIM MAÏCH CAN THIEÄP
+- P.BỆNH NẶNG P.BỆNH NẶNG
+- PHÒNG TRỰC
+- GC GC
+- 6 7 8 9 10 11 12 13 5
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- KHỐI NHÀ TRỆT MÁI TÔN
+- P.BÁC SỸ
+- SÂN
+- D2 A.D3.02
+- MẶT BẰNG LÁT GẠCH TẦNG 1 TỶ LỆ :1/100
+- P.TRƯỞNG KHOA
+- -0.100
+- SÂN
+- PHÒNG TÀI CHÍNH KẾ TOÁN KHO HỒ SƠ
+- BỒN HOA CAO 500
+- HỒ NƯỚC
+- GC
+- D3 A.D3.03
+- GC
+- PHÒNG KHTH
+- BỒN HOA CAO 500
+- SÂN
+- P.TRƯỞNG KHOA
+- KHỐI NHÀ TRỆT MÁI TÔN
+- KÝ HIỆU VẬT LIỆU HOÀN THIỆN:
+- BỒN HOA CAO 500
+- GC
+- NC
+- T4
+- T3
+- T2
+- SÀN LÁT GẠCH GRANITE 600X600MM, MÀU NHẠT T1
+- PHÒNG GPTM
+- KHU VỰC NHAÂN VIEÂN
+- NGẠCH CỬA ỐP ĐÁ GRANITE
+- GẠCH GRANITE CẦU THANG MŨI CHỐNG TRƯỢT
+- SÀN LÁT GẠCH CERAMIC 300X300MM, CHỐNG TRƯỢT
+- SÀN LÁT GẠCH GRANITE 600X600MM, CHỐNG TRƯỢT
+- SÀN LÁT GẠCH GRANITE 600X600MM, MÀU ĐẬM
+- ĐIỂM SÉT GẠCH
+- PHÒNG GPTM
+- PHÒNG GPTM
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG LÁT GẠCH TẦNG 1
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D4.01
+- ../2024
+- 1/100
+
+
+## Trang 67
+- HÀNH LANG NỐI QUA KHU C
+- HÀNH LANG NỐI QUA KHU C
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- THANG SẮT TƯỜNG XÂY H=1200
+- THANG SẮT THANG SẮT
+- 62200 2900 2900
+- 62200 2900 2900
+- SÊ NÔ
+- 4 3 2 1 14 15 16
+- 4 3 2 1 14 15 16
+- P. ĐIỀU DƯỠNG KHO
+- P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH
+- P.BỆNH P.BỆNH P.BỆNH
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- SÂN THƯỢNG
+- +7.530
+- THANG MÁY
+- THANG MÁY
+- DC-tm
+- DC-tm
+- E 30
+- E 30
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- SÊ NÔ
+- P. BỆNH
+- P. BỆNH
+- P.HÀNH CHÁNH
+- P.NHÂN VIÊN P.NHÂN VIÊN
+- P. BỆNH P. BỆNH P. BỆNH
+- GC GC GC GC
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG GC GC GC GC
+- 6 7 8 9 10 11 12 13 5
+- 6 7 8 9 10 11 12 13 5
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- SÊ NÔ
+- P.BỆNH NẶNG
+- PHÒNG TRỰC
+- D2 A.D3.02
+- D2 A.D3.02
+- MẶT BẰNG LÁT GẠCH TẦNG 3 TỶ LỆ :1/100
+- MẶT BẰNG LÁT GẠCH TẦNG 2 TỶ LỆ :1/100
+- P. TRƯỞNG KHOA
+- P.BỆNH NẶNG
+- P. MÁY CHỦ
+- KHOA NGOAÏI THAÀN KINH
+- SÊ NÔ
+- SÊ NÔ SÊ NÔ
+- P. HÀNH CHÍNH
+- +7.550
+- +3.750
+- P. KHÁM QUẦY TRỰC
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- CẦU BỘ HÀNH QUA KHU G
+- +4.350
+- P. THỦ THUẬT
+- P.BỆNH P.BỆNH P.BS NAM PHÒNG T. KHOA
+- P. BÁC SĨ
+- P. BÁC SĨ
+- P. BỆNH P. BỆNH
+- D3 A.D3.03
+- D3 A.D3.03
+- SÊ NÔ
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- P. BỆNH
+- P. BỆNH
+- P.BS NỮ
+- +7.530 +7.550
+- P.NHÂN VIÊN
+- SÂN THƯỢNG
+- TƯỜNG XÂY H=1200
+- SÊ NÔ
+- THANG SẮT
+- 2100 4000 2000 4000 2100
+- 2100 4000 2000 4000 2100
+- 14200
+- 14200
+- C
+- C
+- D
+- D
+- A
+- A
+- E
+- E
+- B
+- B
+- F
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG LÁT GẠCH TẦNG 2-3
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D4.02
+- ../2024
+- 1/100
+
+
+## Trang 68
+- SÂN SÂN
+- THANG SẮT THANG SẮT
+- 62200 2900 2900
+- +3.000
+- 4 3 2 1 14 15 16
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- KHU XN  VI SINH
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- +3.000 +3.000 +3.000 +3.000 +3.000 +3.000 +3.000
+- +2.800 +2.800 +2.800
+- THANG MÁY
+- P.BỆNH P.BỆNH P.BỆNH
+- KHU XN  VI SINH
+- +3.400 +3.400
+- DC-tm
+- +3.400 +3.400
+- +3.000 +3.000 +3.000
+- E 30
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- -0.050 KHOA TIM MAÏCH CAN THIEÄP
+- +2.800 +2.800 +2.800
+- P.BỆNH NẶNG P.BỆNH NẶNG
+- PHÒNG TRỰC
+- GC GC
+- 6 7 8 9 10 11 12 13 5
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- KHỐI NHÀ TRỆT MÁI TÔN
+- +2.800 +2.800 +2.800 +2.800
+- P.BÁC SỸ
+- SÂN
+- D2 A.D3.02
+- MẶT BẰNG TRẦN TẦNG 1 TỶ LỆ :1/100
+- P.TRƯỞNG KHOA
+- -0.100
+- SÂN
+- PHÒNG TÀI CHÍNH KẾ TOÁN KHO HỒ SƠ
+- BỒN HOA CAO 500
+- HỒ NƯỚC
+- +3.000 +3.000 +3.000
+- GC
+- +2.800
+- +3.000
+- D3 A.D3.03
+- GC
+- PHÒNG KHTH
+- BỒN HOA CAO 500
+- SÂN
+- P.TRƯỞNG KHOA
+- KHỐI NHÀ TRỆT MÁI TÔN
+- +3.000
+- +2.800
+- KÝ HIỆU VẬT LIỆU HOÀN THIỆN:
+- TC2
+- TRẦN THẠCH CAO KHUNG NỔI, 600X600MM TC1
+- BT
+- +3.000 +3.000
+- BỒN HOA CAO 500
+- PHÒNG GPTM
+- +3.000
+- XXX CAO ĐỘ TRẦN SO VỚI SÀN HOÀN THIỆN
+- +3.000
+- KHU VỰC NHAÂN VIEÂN
+- TRẦN THẠCH CAO KHUNG NỔI, CHỐNG ẨM 600X600MM
+- TRẦN BÊ TÔNG CỐT THÉP
+- ĐIỂM SÉT TRẦN
+- +2.800 +2.800
+- PHÒNG GPTM
+- PHÒNG GPTM
+- +2.800
+- +3.000
+- +3.000
+- +3.000
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG TRẦN TẦNG 1
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D5.01
+- ../2024
+- 1/100
+
+
+## Trang 69
+- HÀNH LANG NỐI QUA KHU C
+- HÀNH LANG NỐI QUA KHU C
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- THANG SẮT TƯỜNG XÂY H=1200
+- THANG SẮT THANG SẮT
+- 62200 2900 2900
+- 62200 2900 2900
+- SÊ NÔ
+- 4 3 2 1 14 15 16
+- 4 3 2 1 14 15 16
+- +2.800 +2.800 +2.800 +2.800 +2.800 +2.800
+- P. ĐIỀU DƯỠNG KHO
+- P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH
+- P.BỆNH P.BỆNH P.BỆNH
+- +3.000 +3.000 +3.000 +3.000 +3.000 +3.000 +3.000 +3.000 +3.000
+- +3.000
+- +3.000 +3.000 +3.000 +3.000
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- SÂN THƯỢNG
+- +7.530
+- +3.000
+- THANG MÁY
+- THANG MÁY
+- DC-tm
+- DC-tm
+- +3.400 +3.400
+- +3.400 +3.400
+- E 30
+- +3.000 +3.000
+- E 30
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- SÊ NÔ
+- P. BỆNH
+- P. BỆNH
+- +3.000 +3.000 +3.000 +3.000 +3.000
+- +3.000
+- P.HÀNH CHÁNH
+- P.NHÂN VIÊN P.NHÂN VIÊN
+- P. BỆNH P. BỆNH P. BỆNH
+- GC GC GC GC
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG GC GC GC GC
+- 6 7 8 9 10 11 12 13 5
+- 6 7 8 9 10 11 12 13 5
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- +2.800 +2.800 +2.800
+- SÊ NÔ
+- P.BỆNH NẶNG
+- +3.000 +3.000 +3.000 +3.000 +3.000 +3.000 +3.000 +3.000 +3.000
+- PHÒNG TRỰC
+- D2 A.D3.02
+- D2 A.D3.02
+- P. TRƯỞNG KHOA
+- MẶT BẰNG TRẦN TẦNG 3 TỶ LỆ :1/100
+- MẶT BẰNG TRẦN TẦNG 2 TỶ LỆ :1/100
+- P.BỆNH NẶNG
+- P. MÁY CHỦ
+- +3.000
+- +3.000
+- KHOA NGOAÏI THAÀN KINH
+- SÊ NÔ
+- SÊ NÔ SÊ NÔ
+- P. HÀNH CHÍNH
+- +7.550
+- +3.400
+- +3.750
+- +3.000 +3.000
+- P. KHÁM QUẦY TRỰC
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- CẦU BỘ HÀNH QUA KHU G
+- +4.350
+- +2.800 +2.800 +2.800 +2.800 +2.800 +2.800 +2.800 +2.800 +2.800 +2.800 +2.800 +2.800
+- P. THỦ THUẬT
+- P.BỆNH P.BỆNH P.BS NAM PHÒNG T. KHOA
+- +3.000 +3.000 +3.000
+- +3.000
+- P. BÁC SĨ
+- P. BÁC SĨ
+- +3.000
+- P. BỆNH P. BỆNH
+- D3 A.D3.03
+- D3 A.D3.03
+- SÊ NÔ
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- P. BỆNH
+- P. BỆNH
+- +3.000
+- P.BS NỮ
+- +3.000
+- KÝ HIỆU VẬT LIỆU HOÀN THIỆN:
+- TC2
+- TRẦN THẠCH CAO KHUNG NỔI, 600X600MM TC1
+- BT
+- +3.000
+- +7.530 +7.550
+- XXX CAO ĐỘ TRẦN SO VỚI SÀN HOÀN THIỆN
+- +3.000
+- TRẦN THẠCH CAO KHUNG NỔI, CHỐNG ẨM 600X600MM
+- TRẦN BÊ TÔNG CỐT THÉP
+- ĐIỂM SÉT TRẦN
+- P.NHÂN VIÊN
+- SÂN THƯỢNG
+- TƯỜNG XÂY H=1200
+- SÊ NÔ
+- THANG SẮT
+- 2100 4000 2000 4000 2100
+- 2100 4000 2000 4000 2100
+- 14200
+- 14200
+- C
+- C
+- D
+- D
+- A
+- A
+- E
+- E
+- B
+- B
+- F
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- MẶT BẰNG TRẦN TẦNG 2-3
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D5.02
+- ../2024
+- 1/100
+
+
+## Trang 70
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- VỊ TRÍ
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- 900
+- SÂN SÂN
+- D1-5 DS-1
+- THANG SẮT THANG SẮT
+- BÊN TRÊN CÁC PHÒNG VỆ SINH, CAO ĐẾN DẦM/ SÀN BÊ TÔNG
+- KHUNG SẮT HỘP, LIÊN KẾT HÀN
+- TẤM CEMBOARD DÀY 6MM, ỐP 2 MẶT
+- 62200 2900 2900
+- VC1:  L = 3900,   SỐ LƯỢNG: 28 VC2:  L = 2000,   SỐ LƯỢNG: 14 VC3:  L = 1500,   SỐ LƯỢNG: 2 VC4:  L = 3900,   SỐ LƯỢNG: 1
+- 820
+- CHI TIẾT VÁCH CEMBOARD BÊN TRÊN PHÒNG VỆ SINH
+- 4 3 2 1 14 15 16
+- D2-2
+- 1400 2000
+- 600 600 600 l
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- 2000 1400 2000 1400 1400 2000 1400 2000 1400 1400 3600 900 2000 900 2000 900 2000 900 2000 900 2000 900 900 2000 800 800 1400 800
+- W1 W1 W1 W1
+- KHU XN  VI SINH
+- VT1 VT1
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- W1
+- D2-2 D2-2 D2-2 D2-2 D2-2 D2-2
+- 2  ---
+- 800
+- DW2 DW2
+- D2-2 W1
+- 1400 2000
+- THANG MÁY
+- P.BỆNH P.BỆNH P.BỆNH
+- KHU XN  VI SINH
+- VC2 VC2 VC2 VC2
+- DC-tm
+- VC1 VC1 VC1 VC1
+- VC1
+- E 30
+- MẶT DỰNG VÁCH VC1, VC2 MẶT CẮT 2
+- 800
+- L
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- -0.050 KHOA TIM MAÏCH CAN THIEÄP
+- 800
+- W1 W1 W1 W1 W1 W1 W2
+- 2000 1400 2000 1400 2000
+- P.BỆNH NẶNG P.BỆNH NẶNG
+- D2-2 W1
+- VT1 VT1
+- DW2 DW2 DW2
+- 1650
+- W5
+- DS-2 DS-2
+- W4
+- 800
+- D2-5 D4-2
+- 900
+- PHÒNG TRỰC
+- 600
+- D4-1
+- 900
+- W2 W2
+- 800
+- W4
+- W5
+- GC GC
+- TƯỜNG ỐP GẠCH CERAMIC 300x600MM, CAO 2,1M (ĐỐI VỚI VỊ TRÍ CÓ ỐP GẠCH)
+- KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM.
+- TƯỜNG SƠN NƯỚC (TƯỜNG PHÒNG VỆ SINH)
+- TẤM CEMBOARD KHÁNG NƯỚC DÀY 6MM, SƠN NƯỚC.
+- 6 7 8 9 10 11 12 13 5
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- 800 1650
+- CAO TỚI DẦM/ SÀN
+- D2-2 W1
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- 800
+- KHỐI NHÀ TRỆT MÁI TÔN
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- 800
+- D2-2 W1
+- 1400 2000
+- DW2 DW2 DW2
+- 100
+- 820
+- P.BÁC SỸ
+- VC1 VC1 VC1
+- 30 760 30
+- SÂN
+- 30
+- D2 A.D3.02
+- 100 CAO TỚI DẦM/ SÀN
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 1
+- 800
+- 30
+- 800
+- D2-2 W1
+- 1400 2000
+- - LỚP SƠN NƯỚC HOÀN THIỆN. - TẤM CEMBOARD KHÁNG NƯỚC, DÀY 6MM. - KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM. - KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM. - TẤM CEMBOARD KHÁNG NƯỚC, DÀY 6MM. - LỚP SƠN NƯỚC HOÀN THIỆN.
+- BTCT GIẰNG ĐẦU TƯỜNG VỆ SINH
+- BU LÔNG NỞ
+- BAT THÉP V DÀY 3MM
+- KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM.
+- ỐP GẠCH CAO 2,1M (VỚI VỊ TRÍ CÓ ỐP GẠCH).
+- ỐP GẠCH CAO 2,1M MẶT TRONG VỆ SINH
+- P.TRƯỞNG KHOA
+- CHI TIẾT CỬA - VÁCH
+- DW2
+- 800
+- Dk2
+- TỶ LỆ :1/100
+- D4-2
+- 3600 2000 900 900 900 900 2000 2000 2000 1200
+- Dc D1-5 D1-5
+- Dc
+- -0.100
+- SÂN
+- 4000
+- CHI TIẾT VÁCH THẠCH CAO BÍT LỔ THÔNG GIÓ HÀNH LANG KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- VK1
+- CHẤT LIỆU
+- VỊ TRÍ
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- 1600 3600
+- VK3
+- VK2
+- BÍT CÁC LỔ THÔNG GIÓ GIỮA CÁC PHÒNG, HÀNH LANG
+- KHUNG SẮT HỘP, LIÊN KẾT HÀN
+- TẤM THẠCH CAO DÀY 9MM, ỐP 2 MẶT
+- VT1:  L = 3800,   SỐ LƯỢNG: 38
+- 600
+- D1-5 D1-5 D1-5 D1-5 D1-5 D1-5
+- PHÒNG TÀI CHÍNH KẾ TOÁN KHO HỒ SƠ
+- BỒN HOA CAO 500
+- W1 W1 W1 W1 W3
+- HỒ NƯỚC
+- 600 600 600
+- 2000 1350
+- DT-2
+- DT-1
+- 1  ---
+- GC
+- MẶT DỰNG VÁCH VT1 MẶT CẮT 1
+- DW2
+- D1-5
+- 800
+- 1300
+- DW2
+- L
+- 800
+- D3 A.D3.03
+- D1-5 D2-3 D1-5
+- l 600
+- GC
+- PHÒNG KHTH
+- BỒN HOA CAO 500
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- VỊ TRÍ
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- W10
+- 02
+- SÂN
+- NHÔM, KÍNH DÁN AN TOÀN 6.38MM
+- KHUNG NHÔM HỆ 76
+- CÁNH TRƯỢT CÁNH TRƯỢT
+- 1400 1000
+- 800
+- P.TRƯỞNG KHOA
+- DW2 DW2
+- KHỐI NHÀ TRỆT MÁI TÔN
+- 1200
+- TƯỜNG ỐP GẠCH CERAMIC 300x600MM CAO 2,1M (ĐỐI VỚI VỊ TRÍ CÓ ỐP GẠCH)
+- KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM.
+- CAO TỚI DẦM/ SÀN
+- TƯỜNG SƠN NƯỚC
+- TẤM THẠCH CAO DÀY 9MM, SƠN NƯỚC.
+- 800
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- VỊ TRÍ
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- W11
+- 01
+- BỒN HOA CAO 500
+- 800
+- PHÒNG GPTM
+- D1-2
+- NHÔM, KÍNH DÁN AN TOÀN 6.38MM
+- KHUNG NHÔM HỆ 76
+- 1400 1000
+- D1-2
+- KHU VỰC NHAÂN VIEÂN
+- 800
+- 600
+- 2250 1000
+- VK4
+- TỚI DẦM/ SÀN BTCT
+- D1-2
+- 30 540 30
+- 1000
+- 1000
+- DS-1
+- 800
+- 1000
+- - LỚP SƠN NƯỚC HOÀN THIỆN. - TẤM CEMBOARD KHÁNG NƯỚC DÀY 6MM. - KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM. - KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM. - TẤM CEMBOARD KHÁNG NƯỚC DÀY 6MM. - LỚP SƠN NƯỚC HOÀN THIỆN. 30 30
+- 200
+- D1-2
+- D1-2
+- 800 800
+- 800
+- W11
+- PHÒNG GPTM
+- PHÒNG GPTM
+- DW2
+- D1-2
+- 800
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- VỊ TRÍ
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- L LAM NHÔM CHỮ Z
+- BU LÔNG NỞ
+- BAT THÉP V DÀY 3MM KHUNG SẮT HỘP TRÁNG KẼM 30x30x1,2MM.
+- ỐP GẠCH CAO 2,1M (ĐỐI VỚI VỊ TRÍ CÓ ỐP GẠCH.
+- TƯỜNG SƠN NƯỚC
+- 800
+- DW2
+- D2-5
+- KHUNG SẮT HỘP 40X80MM, SƠN TĨNH ĐIỆN
+- SẮT, LAM NHÔM CHỮ Z
+- 750
+- L1 = 2800 SỐ LƯỢNG = 01 L2 = 2900 SỐ LƯỢNG = 01 L3 = 3800 SỐ LƯỢNG = 05 L4 = 3550 SỐ LƯỢNG = 03 L5 = 5300 SỐ LƯỢNG = 01
+- 1400
+- L
+- L 80
+- SẮT HỘP 40X80MM
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 1 CHI TIẾT CỬA - VÁCH
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D6.01
+- ../2024
+- 1/100
+
+
+## Trang 71
+- HÀNH LANG NỐI QUA KHU C
+- HÀNH LANG NỐI QUA KHU C
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- THANG SẮT TƯỜNG XÂY H=1200
+- THANG SẮT THANG SẮT
+- 62200 2900 2900
+- 62200 2900 2900
+- 2400
+- SÊ NÔ
+- W6
+- 4 3 2 1 14 15 16
+- 4 3 2 1 14 15 16
+- 700
+- 800 800 800
+- P. ĐIỀU DƯỠNG KHO
+- DW2
+- 2000 1200 2000 1200
+- 1200 1650 1200 1650 1200 1650 2000 900 800 2000 900 800 2000 900 2000 900 2000 900 2000 900 2000 900 2000 900 2000
+- W1 W1 W1 W1 W1 W1
+- DW1
+- VT1 VT1 VT1 VT1 VT1 VT1 VT1
+- P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH
+- VC2
+- W4 W4 W4 W1 W1
+- P.BỆNH P.BỆNH P.BỆNH
+- VT1 VT1 VT1 VT1 VT1
+- VC1
+- VC1
+- 1800 W8 W8 W8 W8 W8 W8 W8
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- W8
+- 3550 3800 3550 2800 5300 3800 3800 2900
+- L4
+- 900
+- D2-3 D2-3 D1-5 D1-5
+- DW2 DW2 DW2 DW2 DW2
+- D2-3 D2-3 D2-3
+- SÂN THƯỢNG
+- +7.530
+- 800 800 800 800
+- D1-5
+- D2-3 W1 D2-3
+- D1-5
+- 2100
+- THANG MÁY
+- THANG MÁY
+- 900
+- VC2
+- DC-tm
+- DC-tm
+- VC1
+- VC1
+- E 30
+- E 30
+- VK7
+- 1900
+- 1000
+- 1200
+- W9 W9
+- 2000 900 2000 900 1200 2000 1200 2000 1200 2000 1200 1800
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- 1000 1800 1000 1550 1000 1800 1000 1800 800 800 800
+- DW1
+- DW1
+- D2-1
+- SÊ NÔ
+- W9 W9 W9 W9 W9 W9 W9
+- 1800 1200 1800 1200 1800 1200 1200 1200 1800 1200 1800 1200 1200 1200 1800 1200 1800 1200 1800 1200
+- P. BỆNH
+- P. BỆNH
+- VC1
+- VC1
+- L1 L2 L5 L3 L3
+- VC2
+- 700
+- 700
+- D2-1 D2-1 D2-1 D2-1 D2-1 D2-1 D2-1 D2-1 D2-1
+- W8 W8a W8 W8 W8 W8 W8 W8
+- P.HÀNH CHÁNH
+- 700
+- P.NHÂN VIÊN P.NHÂN VIÊN
+- P. BỆNH P. BỆNH P. BỆNH
+- L4 L4 L3 L3
+- D1-1 D2-3
+- 750
+- DW1 DW1 DW1 DW1 DW1 DW1 DW1
+- D1-5 D1-5
+- 750
+- GC GC GC GC
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG GC GC GC GC
+- 6 7 8 9 10 11 12 13 5
+- 6 7 8 9 10 11 12 13 5
+- D1-1
+- VK6 VK6 VK6
+- DW2
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- SÊ NÔ
+- VC3
+- P.BỆNH NẶNG
+- 2700
+- VC1
+- VT1 VT1
+- DW2
+- 700
+- 900
+- 2700
+- D1-5
+- PHÒNG TRỰC
+- W10 W10
+- 700
+- D2 A.D3.02
+- D2 A.D3.02
+- 2000
+- 2700 1200
+- VK5
+- DW1 DW1 DW1
+- 700
+- 800 800
+- D1-4
+- D2-3 D2-3 D2-3
+- P. TRƯỞNG KHOA
+- W5 W5 W5 W5 W5 W5
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 3 TỶ LỆ :1/100
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 2 TỶ LỆ :1/100
+- P.BỆNH NẶNG
+- DW2 DW2
+- VC3
+- P. MÁY CHỦ
+- VC1
+- 700
+- 2000
+- W1
+- W7
+- W1
+- D1-5
+- D1-5
+- 2000 600
+- 1500
+- 900 700
+- 900
+- D2-5
+- 1800 1400 1800
+- KHOA NGOAÏI THAÀN KINH
+- W8 W8
+- SÊ NÔ
+- SÊ NÔ SÊ NÔ
+- P. HÀNH CHÍNH
+- +7.550
+- +3.750
+- D2-4
+- P. KHÁM QUẦY TRỰC
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- CẦU BỘ HÀNH QUA KHU G
+- +4.350
+- 3700
+- D1-5
+- 800
+- 800
+- Dk3
+- W2
+- 900 900
+- D1-5 D1-5
+- 800 800 800 800 800 800
+- 800 800 800 1800 1800 1000 1800 1000 1800 1000
+- DW2 DW2
+- D1-5
+- D1-5
+- P. THỦ THUẬT
+- DW2
+- 1200 1800 1650 1200
+- W8 D2-3
+- VC2 VC2 VC2
+- P.BỆNH P.BỆNH P.BS NAM PHÒNG T. KHOA
+- VC1
+- VC1
+- 700
+- DW2 DW2
+- W1 W1 W1 W1 W1 W1 W1
+- 800 800 800 800 800 800
+- 800
+- W8 W4
+- P. BÁC SĨ
+- P. BÁC SĨ
+- VC1
+- VC1
+- DW2 DW2
+- D1-6
+- 900
+- 700
+- 1800
+- D1-5
+- P. BỆNH P. BỆNH
+- VC1
+- VC1
+- D3 A.D3.03
+- D3 A.D3.03
+- DW2 DW2
+- SÊ NÔ
+- D1-5 D1-5 D1-5 D1-5
+- 1650 1200 2000 900
+- 700
+- W4 D2-3
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- VC2
+- 3550 3800
+- VC1
+- VC1
+- DW2 DW2
+- D2-1 W8
+- 700 700
+- W1
+- P. BỆNH
+- P. BỆNH
+- VC2
+- P.BS NỮ
+- VC1
+- VC1
+- D2-1
+- DW2
+- DW1
+- D1-5
+- 850
+- 1200 1000
+- +7.530 +7.550
+- 2000 900
+- D1-3
+- W1 D1-5
+- VC4
+- P.NHÂN VIÊN
+- VC2 VC2
+- SÂN THƯỢNG
+- TƯỜNG XÂY H=1200
+- DW2
+- 2000 900
+- W1 D1-5
+- VC1
+- VC1
+- DW2
+- W6
+- SÊ NÔ
+- THANG SẮT
+- 2400
+- 2100 4000 2000 4000 2100
+- 2100 4000 2000 4000 2100
+- 14200
+- 14200
+- C
+- C
+- D
+- D
+- A
+- A
+- E
+- E
+- B
+- B
+- F
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- MẶT BẰNG CHI TIẾT CỬA TẦNG 2-3
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D6.02
+- ../2024
+- 1/100
+
+
+## Trang 72
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- 2100 KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- D2-1 D2-3 D2-4 D2-5
+- 750 D1-1
+- VK7
+- VK1
+- Dk2
+- 12
+- 02
+- 02 01
+- 01
+- 01
+- CÁNH LẬT CÁNH LẬT MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- MỞ 1 CHIỀU MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- CỬA XẾP
+- SẮT, SƠN TĨNH ĐIỆN
+- SẮT + KHUNG SONG SẮT
+- 2600
+- 800
+- 3300
+- 3150
+- 2400
+- 900 2400
+- 950 2200
+- 2000
+- 850
+- 1200
+- 1800
+- 1800
+- EQ EQ
+- 350
+- 4000
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- D2-2
+- D1-2
+- Dk3
+- 12
+- 06
+- 01
+- 1500 300
+- 1800
+- EQ 01
+- MỞ 1 CHIỀU MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- CỬA XẾP
+- SẮT, SƠN TĨNH ĐIỆN NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- SẮT
+- 2400
+- 2300
+- 2150
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- 1600 KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- 950
+- VK2
+- W1
+- 1050
+- 1400
+- 800
+- 41
+- 450
+- 1400 1000
+- NHÔM, KÍNH DÁN AN TOÀN 6.38MM NHÔM, KÍNH DÁN AN TOÀN 6.38MM NHÔM, KÍNH DÁN AN TOÀN 6.38MM NHÔM, KÍNH DÁN AN TOÀN 6.38MM NHÔM, KÍNH DÁN AN TOÀN 6.38MM NHÔM, KÍNH DÁN AN TOÀN 6.38MM NHÔM, KÍNH DÁN AN TOÀN 6.38MM
+- KHUNG NHÔM HỆ 76 KHUNG NHÔM HỆ 76 KHUNG NHÔM HỆ 76 KHUNG NHÔM HỆ 76 KHUNG NHÔM HỆ 76 KHUNG NHÔM HỆ 76
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- CÁNH TRƯỢT CÁNH TRƯỢT CÁNH TRƯỢT CÁNH TRƯỢT CÁNH MỞ 1 CHIỀU
+- 3150
+- 950 2200
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- 2000 KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- DT-1
+- 800 D1-3
+- 2000
+- 14
+- 01
+- 01
+- 2200
+- PA NÔ THÉP, SƠN TĨNH ĐIỆN
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- MỞ 1 CHIỀU MỞ 1 CHIỀU
+- KHUNG NHÔM HỆ 100
+- MỞ 1 CHIỀU MỞ 1 CHIỀU
+- KHUNG NHÔM HỆ 100
+- THÉP
+- 2400
+- 2200
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- VỊ TRÍ
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- W2
+- 04
+- Sàn Hoàn Thiện
+- 3600 KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- VỊ TRÍ
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- VK3
+- 1200
+- 2000 DT-2
+- 850 D1-6 900 900
+- 01
+- 600 1800
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- 3150
+- 950 2200
+- 800
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- D1-4
+- 1200 1200 1200 01
+- 01
+- 01
+- 01
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- VỊ TRÍ
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- W3
+- PA NÔ THÉP, SƠN TĨNH ĐIỆN
+- MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- THÉP
+- 01
+- 2600
+- 2200
+- 2400
+- 600 1800
+- 1350
+- 1400
+- 1300
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- DS-1
+- D1-5
+- VK4
+- W4 W5
+- 07
+- 03
+- 34
+- 01
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM NHÔM, KÍNH DÁN AN TOÀN 8.38MM NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100 KHUNG NHÔM HỆ 100 KHUNG NHÔM HỆ 100
+- KHUNG NHÔM HỆ 76
+- MỞ 1 CHIỀU MỞ 1 CHIỀU MỞ 1 CHIỀU MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- MỞ 1 CHIỀU MỞ 1 CHIỀU MỞ 1 CHIỀU MỞ 1 CHIỀU
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- CỬA LÙA
+- 1400 1000
+- 2250
+- 2400
+- 2400
+- 1125
+- 1100
+- 1100
+- 1800
+- 1650
+- 1500
+- 2250
+- 900
+- 1125
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- DS-2
+- D4-1
+- VK5
+- 08
+- 01
+- 01
+- 01
+- 01
+- 1000
+- 1400
+- 2800
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 76
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- KHUNG NHÔM HỆ 100
+- CỬA LÙA
+- 2150
+- 2450
+- 1400 1000
+- 1000
+- 1000
+- 1800
+- 2000
+- 800
+- 1000
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- DW1
+- D4-2
+- VK6
+- W6
+- DC
+- 14
+- 03
+- 02
+- 02
+- 2800
+- 2800
+- 1400 1000
+- NHÔM, LAM NHÔM
+- NHÔM SƠN TĨNH ĐIỆN
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM, MỜ
+- KHUNG NHÔM HỆ 100
+- KHUNG NHÔM HỆ 100
+- CỬA CUỐN
+- 2000
+- 1350
+- 1000
+- 1400
+- 2700
+- 700
+- 2400
+- 3600
+- 1350
+- 3600
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- DW2
+- W7
+- W8
+- 39
+- 01
+- 01
+- KHUNG NHÔM HỆ 76
+- NHÔM, KÍNH DÁN AN TOÀN 6.38MM
+- KHUNG NHÔM HỆ 76
+- NHÔM, KÍNH DÁN AN TOÀN 8.38MM, MỜ
+- KHUNG NHÔM HỆ 100
+- CÁNH TRƯỢT
+- Sàn Hoàn Thiện
+- Sàn Hoàn Thiện
+- KÝ HIỆU
+- KÝ HIỆU
+- BẢN LỀ
+- KHUNG
+- BẢN LỀ
+- KHUNG
+- CHẤT LIỆU
+- CHẤT LIỆU
+- VỊ TRÍ
+- VỊ TRÍ
+- HÌNH DÁNG
+- HÌNH DÁNG
+- SỐ LƯỢNG
+- SỐ LƯỢNG
+- 1100 DKT1
+- 1400 1000
+- W9
+- 09
+- 1
+- 2000
+- 1400 1000
+- W8 = 1800 SỐ LƯỢNG = 20 W8a = 1550 SỐ LƯỢNG = 01
+- 2200
+- NHÔM, KÍNH DÁN AN TOÀN 6.38MM
+- KHUNG NHÔM HỆ 76
+- NHÔM, LÁ SÁCH NHÔM
+- KHUNG NHÔM HỆ 100
+- CÁNH LẬT
+- 600 1800
+- 600
+- 800
+- 1800
+- 1000
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- CHI TIẾT CỬA
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D6.03
+- ../2024
+
+
+## Trang 73
+- MẶT BẰNG THANG SẮT TẦNG 1 TỶ LỆ :1/50
+- 50 1350 250 x 10 = 2500 200 1400 2500 2200 1800 200
+- 150 2400 150 200
+- 1350 1350 200 2700
+- CỘT THÉP i 200x150x6x9MM
+- SÂN
+- 1 - 1
+- 09
+- 05
+- 03
+- 07
+- 11
+- 01
+- 2900
+- 15
+- 19
+- 13
+- 17
+- 22 01
+- 21
+- 250 250 250 250 250
+- 200 1800 200 1150 200 50
+- 2100 4000
+- 6100
+- D
+- E
+- F
+- 50 3800 3800 1400 9000
+- 173 x 22 = 3800 173 x 22 = 3800 50 1350
+- MẶT BẰNG THANG SẮT TẦNG 2 TỶ LỆ :1/50
+- 50
+- D E F
+- 50 200 3650 200 1800 200
+- 150 1800 150 50
+- 50 1350 250 x 10 = 2500 200 1400 2500 2200 1800 200
+- 1250 20 80
+- 50
+- CỘT THÉP i 200x150x6x9MM
+- DẦM THÉP C 200x75x8.5MM
+- SẮT HỘP 20x20x1.5MM, @100MM
+- DẦM THÉP L 50x50x5MM, @430MM
+- SẮT HỘP 20x40x2MM
+- SẮT HỘP 50x50x2MM
+- 1400
+- 2100 4000
+- 2200
+- 900
+- 900
+- 150 2400 200
+- 1350 1350 200 2700
+- MẶT CẮT 1 TỶ LỆ :1/50
+- SẮT HỘP 50x50x2MM
+- 1 - 1
+- 09
+- 05
+- 03
+- 11
+- 07
+- 250 x 10 = 2500 1300
+- 6100
+- 2900
+- 19
+- 15
+- 13
+- 17
+- 22 01
+- 21
+- 150
+- CỘT THÉP i 200x150x6x9MM
+- DẦM THÉP C 200x75x8.5MM
+- 900 900
+- 50 1350 50
+- 200 250 250 250 250 250
+- 200 1800 1150 200 50
+- 2100 4000
+- 6100
+- D
+- E
+- F
+- 50 1350 200 1700 50 1350 200 1700
+- 200 200
+- 1900 1400 500 1900 1400 500
+- SÂN ĐƯỜNG TẦNG 1
+- TẦNG 2
+- TẦNG 3
+- -0.050
+- +3.750
+- +7.550
+- -0.100
+- MẶT BẰNG THANG SẮT TẦNG 3 TỶ LỆ :1/50
+- 50 1350 250 x 10 = 2500 200 1400 2500 2200 1800 200
+- 50 2850
+- 1350 1350 200 2700
+- SẮT HỘP 50x50x2MM
+- 1 - 1
+- 09
+- 05
+- 03
+- 07
+- 11
+- 2900
+- 15
+- 19
+- 13
+- 17
+- 21
+- 50
+- 50 2050 3950
+- 2100 4000
+- 6100
+- D
+- E
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- CHI TIẾT THANG SẮT TRỤC 1
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D7.01
+- ../2024
+- 1/50
+
+
+## Trang 74
+- MẶT BẰNG THANG SẮT TẦNG 1 TỶ LỆ :1/50
+- 50 1350 250 x 10 = 2500 200 1400 2500 2200 1800 200
+- 1 - 16
+- 1350 1350 200 2700
+- 150 2400 150 200
+- 15
+- 19
+- 13
+- 2900
+- 17
+- 22 01
+- 21
+- CỘT THÉP i 200x150x6x9MM
+- 09
+- 05
+- 07
+- 03
+- 11
+- 01
+- SÂN
+- 200 1800 200 1150 200 50
+- 250 250 250 250 250
+- 2100 4000
+- 6100
+- D
+- E
+- F
+- 1900 1400 500 1900 1400 500
+- 50 1350 200 1700 50 1350 200 1700
+- 200 200
+- MẶT BẰNG THANG SẮT TẦNG 2 TỶ LỆ :1/50
+- D E F
+- 50200 3650 200 1800 200
+- 50 1350 50
+- 50 1350 250 x 10 = 2500 200 1400 2500 2200 1800 200
+- CỘT THÉP i 200x150x6x9MM
+- 250 x 10 = 2500 1300
+- DẦM THÉP C 200x75x8.5MM
+- 900 900
+- 1 - 16
+- 2100 4000
+- 1350 1350 200 2700
+- 150 2400 150 200
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 6100
+- 15
+- 19
+- 13
+- 2900
+- 17
+- 22 01
+- 21
+- SẮT HỘP 50x50x2MM
+- 09
+- 05
+- 03
+- 07
+- 11
+- 150 1800 150 50
+- 900
+- 900
+- CỘT THÉP i 200x150x6x9MM
+- DẦM THÉP C 200x75x8.5MM
+- SẮT HỘP 20x20x1.5MM, @100MM
+- DẦM THÉP L 50x50x5MM, @430MM
+- SẮT HỘP 50x50x2MM
+- SẮT HỘP 20x40x2MM
+- 2200
+- 1400
+- 1250 20 80
+- 50
+- 200 1800 200 1150 200 50
+- 250 250 250 250 250
+- 2100 4000
+- 50
+- 6100
+- D
+- E
+- F
+- 173 x 22 = 3800 173 x 22 = 3800 50 1350
+- 50 3800 3800 1400 9000
+- TẦNG 2
+- SÂ TẦNG 1
+- TẦNG 3
+- -0.050
+- +3.750
+- +7.550
+- MẶT BẰNG THANG SẮT TẦNG 3 TỶ LỆ :1/50
+- 50 1350 250 x 10 = 2500 200 1400 2500 2200 1800 200
+- 1 - 16
+- 1350 1350 200 2700
+- 50 2850
+- 19
+- 15
+- 13
+- 2900
+- 17
+- 21
+- SẮT HỘP 50x50x2MM
+- 09
+- 05
+- 03
+- 07
+- 11
+- 50
+- 50 2050 3950
+- 2100 4000
+- 6100
+- D
+- E
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- CHI TIẾT THANG SẮT TRỤC 16
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D7.02
+- ../2024
+- 1/50
+
+
+## Trang 75
+- LAM BÊ TÔNG HIỆN HỮU
+- GẠCH KÍNH HIỆN HỮU
+- 600 200 100 4500
+- VỊ TRÍ CỘT GIA CƯỜNG C G VỊ TRÍ CỘT GIA CƯỜNG C G
+- 200
+- MB CẦU THANG TẦNG 1 TỶ LỆ :1/50
+- 100
+- 4500 100
+- 5
+- 100 3900
+- 1350
+- 900 900
+- 200 1350 3150
+- 4000
+- 4900
+- 11x300=3300
+- S2 ----
+- 6
+- 7
+- 5
+- 3
+- 1 1
+- 600
+- S1 ----
+- 200
+- 50
+- A
+- 1200 1200
+- 300 300 300 300 300 300
+- 300
+- 50
+- 4700
+- MẶT CẮT 1 TỶ LỆ :1/50
+- A
+- 24x 158= 3800 24x 158= 3800 50
+- 7600
+- TẦNG 3
+- SÂN ĐƯỜNG TẦNG 1
+- TẦNG 2
+- -0.050
+- +3.750
+- +7.550
+- -0.100
+- 1350 11*300=3300 50 200
+- MB CẦU THANG TẦNG 2
+- 600 200 100 4500
+- 100
+- 4500 100
+- 5
+- 100 3900
+- 1250 2000 1250
+- 11 13
+- 15
+- 17
+- 19
+- 21
+- 23
+- 24
+- 4000
+- BÓC BỎ LỚP ĐÁ MÀI HIỆN HỮU, LÁT MỚI GẠCH GRANITE (LOẠI ỐP BẬC THANG)
+- INOX TRÒN Ø60MM
+- INOX HỘP 20x 20 x 1.2 MM
+- BẬC XÂY GẠCH HIỆN HỮU
+- BẢN SÀN BTCT HIỆN HỮU
+- CHI TIẾT S1 TỶ LỆ :1/10
+- 6
+- 9
+- 7
+- 3
+- 5
+- 600
+- 60
+- 100
+- 200
+- 100
+- 300
+- 100
+- 200
+- 1350 11*300=3300
+- 50
+- 4700
+- 100
+- A
+- 158 158
+- 900
+- BÓC BỎ LỚP ĐÁ MÀI HIỆN HỮU, LÁT MỚI GẠCH GRANITE (LOẠI ỐP BẬC THANG)
+- INOX HỘP 20x 20 x 1.2 MM
+- INOX TRÒN Ø21MM
+- DẦM SÀN BTCT HIỆN HỮU
+- CHI TIẾT S2 TỶ LỆ :1/10
+- 50 1350 200
+- 11*300=3300
+- 60
+- 600 200 100 4500
+- VỊ TRÍ CỘT GIA CƯỜNG C G
+- MB CẦU THANG TẦNG 3 TỶ LỆ :1/50
+- 100
+- 4500 100
+- 5
+- 100 3900
+- 1250 2000 1250
+- 105 945
+- 150
+- 11 13
+- 15
+- 17
+- 19
+- 21
+- 23
+- 24
+- 1200
+- 4000
+- - BẬC THANG VÀ MẶT DỰNG BẬC THANG: BÓC BỎ BỀ MẶT ĐÁ MÀI HIỆN TRẠNG, THAY MỚI BẰNG GẠCH GRANITE, LOẠI DÙNG CHO ỐP LÁT CẦU THANG. - LAN CAN TAY VỊN: THÁO BỎ LAN CAN SẮT HIỆN TRẠNG, THAY MỚI BẰNG LAN CAN INOX VÀTAY VỊN INOX Ø60. - TƯỜNG VÀ BÀN THANG: CẠO SỦI LỚP SƠN NƯỚC HIỆN TRẠNG, SƠN NƯỚC MỚI.
+- NỘI DUNG CẢI TẠO:
+- 6
+- 9
+- 7
+- 3
+- 1
+- 5
+- 600
+- 200
+- 1350 200
+- 11*300=3300
+- 50
+- 4700
+- A
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- CHI TIẾT CẦU THANG A/5-6
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D7.03
+- ../2024
+
+
+## Trang 76
+- 4700
+- 50 4650 200 200
+- 300 300 300 300 300 300 300
+- GC
+- MB CẦU THANG TẦNG 1 TỶ LỆ :1/50
+- 200 200 4500
+- 100 200
+- 1400
+- 500
+- 900
+- 600 4500
+- 4500 600
+- VỊ TRÍ CỘT GIA CƯỜNG
+- 11
+- 7
+- 5
+- 3
+- 1
+- A
+- 50
+- S1 ----
+- 900
+- S2 ----
+- 3900
+- 3300
+- 4900
+- 200
+- 12
+- 900
+- 900 900
+- GC
+- 1350
+- 200
+- 4650 200 200
+- 50
+- 4700
+- A
+- MẶT CẮT 1 TỶ LỆ :1/50
+- LAM BÊ TÔNG HIỆN HỮU
+- GẠCH KÍNH HIỆN HỮU
+- 24x 158= 3800 24x 158= 3800 50
+- 7600
+- TẦNG 3
+- SÂN ĐƯỜNG TẦNG 1
+- TẦNG 2
+- -0.050
+- +3.750
+- +7.550
+- -0.100
+- 4700
+- 50 4650 200 200
+- 11*300=3300 1350
+- MB CẦU THANG TẦNG 2 TỶ LỆ :1/50
+- VỊ TRÍ CỘT GIA CƯỜNG GC GC
+- 200 200 4500
+- 100 200
+- 600 4500
+- 4500 600
+- 11 13
+- 1250 2000 1250
+- 1250 2000 1250
+- 5
+- 1
+- 7
+- 9
+- 3
+- 11
+- 900
+- ĐOẠN LAN CAN AN TOÀN ĐOẠN LAN CAN AN TOÀN
+- 158 158
+- CHI TIẾT S1 TỶ LỆ :1/10 CHI TIẾT S2 TỶ LỆ :1/10
+- 3900
+- 100
+- 100
+- 17
+- 19
+- 15
+- 24
+- 23
+- 300
+- 21
+- 100
+- 100
+- 60
+- 200
+- 12
+- 11*300=3300 1350
+- BẢN SÀN BTCT HIỆN HỮU
+- BẬC XÂY GẠCH HIỆN HỮU
+- BÓC BỎ LỚP ĐÁ MÀI HIỆN HỮU, LÁT MỚI GẠCH GRANITE (LOẠI ỐP BẬC THANG)
+- INOX TRÒN Ø60MM
+- INOX HỘP 20x 20 x 1.2 MM
+- 4650 200 200
+- 50
+- 4700
+- A
+- 1200
+- 105 945
+- 150
+- 4700
+- 50 4650 200 200
+- 11*300=3300 1350
+- 60
+- MB CẦU THANG TẦNG 3 TỶ LỆ :1/50
+- VỊ TRÍ CỘT GIA CƯỜNG GC GC
+- DẦM SÀN BTCT HIỆN HỮU
+- INOX TRÒN Ø21MM
+- BÓC BỎ LỚP ĐÁ MÀI HIỆN HỮU, LÁT MỚI GẠCH GRANITE (LOẠI ỐP BẬC THANG)
+- 200 200 4500
+- 100 200
+- INOX HỘP 20x 20 x 1.2 MM
+- 600 4500
+- 4500 600
+- 11 13
+- 1250 2000 1250
+- 1250 2000 1250
+- 5
+- 1
+- 7
+- 9
+- 3
+- 11
+- 3900
+- - BẬC THANG VÀ MẶT DỰNG BẬC THANG: BÓC BỎ BỀ MẶT ĐÁ MÀI HIỆN TRẠNG, THAY MỚI BẰNG GẠCH GRANITE, LOẠI DÙNG CHO ỐP LÁT CẦU THANG. - LAN CAN TAY VỊN: THÁO BỎ LAN CAN SẮT HIỆN TRẠNG, THAY MỚI BẰNG LAN CAN INOX VÀTAY VỊN INOX Ø60. - TƯỜNG VÀ BÀN THANG: CẠO SỦI LỚP SƠN NƯỚC HIỆN TRẠNG, SƠN NƯỚC MỚI.
+- 100
+- NỘI DUNG CẢI TẠO:
+- 17
+- 19
+- 15
+- 24
+- 23
+- 21
+- 200
+- 12
+- 11*300=3300 1350
+- 4650 200 200
+- 50
+- 4700
+- A
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- CHI TIẾT CẦU THANG A/11-12
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D7.04
+- ../2024
+
+
+## Trang 77
+- MB HIỆN TRẠNG THANG MÁY TẦNG 1
+- MB HIỆN TRẠNG THANG MÁY TẦNG 3
+- MB HIỆN TRẠNG THANG MÁY TẦNG 2
+- 400 3650 400 3650 400 3650
+- TƯỜNG
+- LỬNG
+- 100 500 200 2600 200
+- 100 500 200 2600 200
+- 100 500 200 2600 200
+- 1800 1200 800 200 200
+- 1400 1050 200 200
+- 1350 1400 1050 200 200
+- 2
+- 2
+- 2
+- 100 500
+- 100 500
+- 100 500
+- 1350
+- NHÀ 2 TẦNG HIỆN TRẠNG
+- NHÀ 2 TẦNG HIỆN TRẠNG
+- TỶ LỆ :1/50
+- TỶ LỆ :1/50
+- TỶ LỆ :1/50
+- +7.550
+- +7.850
+- P.KỸ THUẬT THANG MÁY
+- +3.750
+- MÁI TÔN MỚI -0.050
+- 4000
+- 4000
+- 4000
+- CỬA PANEL SẮT
+- TƯỜNG HIỆN TRẠNG
+- TƯỜNG HIỆN TRẠNG
+- TƯỜNG HIỆN TRẠNG
+- 3
+- 3
+- 3
+- 3250 200 200 400 200
+- 3250 200
+- 3250 200
+- 200 400 200
+- 400
+- 4050
+- 4050
+- 4050
+- A
+- A
+- A
+- MB CẢI TẠO THANG MÁY TẦNG 1
+- MB CẢI TẠO THANG MÁY TẦNG 2
+- 400 3650
+- 400 3650 400 3650
+- MB CẢI TẠO THANG MÁY TẦNG 3
+- 100 500 200 2600 200
+- 100 500 200 2600 200
+- 100 500 200 2600 200
+- 1350 1400 1050 200 200
+- 1400 1050 200 200 1350
+- 1350 1400 1050 200 200
+- 2
+- 2
+- 2
+- 100 500
+- 100 500
+- 100 500
+- NHÀ 2 TẦNG HIỆN TRẠNG
+- NHÀ 2 TẦNG HIỆN TRẠNG
+- TỶ LỆ :1/50
+- TỶ LỆ :1/50
+- +3.750
+- TỶ LỆ :1/50
+- +7.550
+- -0.050
+- 4000
+- 4000
+- 4000
+- TƯỜNG MỚI
+- XÂY CHÈN
+- SÀN BTCT HIỆN TRẠNG
+- TƯỜNG HIỆN TRẠNG
+- TƯỜNG HIỆN TRẠNG
+- THÁO DỠ
+- 3
+- 3
+- 3
+- MẶT DỰNG LÀM MỚI
+- MẶT DỰNG LÀM MỚI
+- MẶT DỰNG LÀM MỚI
+- 3250 200
+- 200 400 200
+- 3250 200
+- 3250 200
+- 200 400 200
+- 400
+- 4050
+- 4050
+- 4050
+- A
+- A
+- A
+- ĐỈNH MÁI
+- +11.450
+- +12.050
+- +14.550
+- +14.650
+- +3.750
+- +7.550
+- TẦNG 2
+- TẦNG 3
+- TẦNG 1
+- -0.050
+- XEM BẢN VẼ CHI TIẾT CỬA A.D6.04
+- 14700
+- 3800 3800 3900
+- 3200
+- MẶT DỰNG CẢI TẠO TRỤC 3-2 TỶ LỆ :1/50
+- 3400 400 3410 390 3000 900
+- 600
+- 2600
+- 1500 2200 300 100
+- 2100 300 1000 400 2100 300 1000 400 2100 300 600
+- 400 3650
+- MB CẢI TẠO PHÒNG MÁY
+- 100 500 200 2600 200
+- 2
+- 200 200
+- 3 2
+- 100 500
+- TỶ LỆ :1/50 TỶ LỆ :1/50
+- 850 300 1200 300 1150
+- 1300 1100 200
+- DKT1
+- P.KỸ THUẬT THANG MÁY MÁI BÊ TÔNG CT
+- +12.050 +14.050
+- 4000
+- 3800
+- 4000
+- 3
+- 3250 200
+- 600
+- GẠCH GRANITE 600x600, MÀU SÁNG
+- GẠCH GRANITE 600x600, MÀU SÁNG
+- GẠCH GRANITE 600x100, MÀU ĐẬM
+- GẠCH GRANITE 600x100, MÀU ĐẬM
+- MÁI TÔN
+- TRẦN THẠCH CAO
+- ĐÁ GRANITE DÀY 20MM
+- 4050
+- TƯỜNG XÂY MỚI
+- CỘT MỚI (NỐI DÀI CỘT
+- A
+- CỘT MỚI (NỐI DÀI CỘT
+- MÁNG XỐI MỚI
+- HIỆN HỮU)
+- HIỆN HỮU)
+- MẶT CẮT 1 TỶ LỆ :1/50
+- ĐỈNH MÁI
+- +11.450
+- +12.050
+- +14.550
+- +14.650
+- +3.750
+- +7.550
+- TẦNG 2
+- TẦNG 3
+- CẢI TẠO MẶT DỰNG
+- CẢI TẠO MẶT DỰNG
+- CẢI TẠO MẶT DỰNG
+- TẦNG 1
+- -0.050
+- 400 3650
+- 2400
+- 3900 3800 3800
+- 600 2600
+- MB CẢI TẠO MÁI THANG
+- ỐNG THOÁT NƯỚC PVC Ø60MM
+- MÁNG XỐI
+- MÁI TÔN
+- 2100 2100 2100
+- 100 500 200 2600 200
+- 2
+- 100 500
+- A
+- 400
+- 600
+- ỐNG THOÁT NƯỚC PVC Ø60MM XUỐNG MÁNG XỐI
+- 200 3250 200
+- HỐ PÍT
+- 2200
+- MÁI TÔN MỚI
+- SÀN HIỆN TRẠNG THÁO DỠ
+- SÀN HIỆN TRẠNG THÁO DỠ
+- 4000
+- P.KỸ THUẬT THANG MÁY
+- 3450
+- i=1%
+- -1.850
+- 3
+- 3250 200
+- 200
+- 400
+- 4050
+- 1849 1950 1850 1950 2250 2250
+- TƯỜNG HIỆN TRẠNG
+- 3800 3800 4500 2500 100 1800 600
+- A
+- TƯỜNG XÂY MỚI
+- DẦM XÂY MỚI
+- 14700 2400
+- NHÀ 2 TẦNG HIỆN TRẠNG
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- CHI TIẾT THANG MÁY TRỤC A;2-3
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D7.05
+- ../2024
+
+
+## Trang 78
+- VỆ SINH VS1.3
+- TƯỜNG XÂY CHÈN
+- 300 2100
+- 700
+- 1000 500 1500 200 100
+- 1800
+- 480 220
+- 100 2000 100
+- MẶT BẰNG VS1.3
+- MẶT BẰNG VS1.1
+- TC2
+- NC
+- P1
+- BẢNG VẬT LIỆU HOÀN THIỆN
+- T4
+- T2
+- T1
+- NC NC NC
+- NGẠCH CỬA LÁT ĐÁ GRANITE
+- NGẠCH CỬA LÁT ĐÁ GRANITE
+- GẠCH CERAMIC 300X300MM CHỐNG TRƯỢT
+- GẠCH CERAMIC 300X600MM MÀU ĐẬM
+- GẠCH CERAMIC 300X600MM MÀU NHẠT
+- TRẦN THẠCH CAO KHUNG NỔI 600X600MM, CHỐNG ẨM, CAO 2800MM
+- SƠN NƯỚC MÀU NHẠT
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 1500 400 2000 100 100
+- 100
+- 100 1900 100
+- D C
+- 2
+- 975 975 100 1950 100
+- 100
+- 150 800 950 100 1900
+- 50
+- ...
+- P1 P1 P1
+- T1
+- T2
+- 550 850 500
+- TC2
+- 1950 100 550 800 600
+- TỶ LỆ :1/50
+- TỶ LỆ :1/50
+- i=2%
+- F1C F1C F1C
+- i=2%
+- 2100 700 2800
+- 500 1500 100 2000 100
+- 100 800 600 100 1500 200
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- C
+- D
+- ...
+- VỆ SINH VS1.1
+- MB. LÁT GẠCH VS1.1 TỶ LỆ :1/50
+- MB. LÁT GẠCH VS1.3 TỶ LỆ :1/50
+- 1500 200 100
+- 1500 200 100
+- MB. TRẦN VS1.3 TỶ LỆ :1/50
+- MB. TRẦN VS1.1 TỶ LỆ :1/50
+- 100 2000 100
+- 100 2000 100
+- 100 1950 100
+- 100 1950 100
+- 1950 100 50
+- 1950 100 50
+- ...
+- ...
+- 100
+- 100 1900 100
+- 100 100 1900
+- 100 1900 100
+- 2
+- 2
+- 150 800 950 100 1900
+- TC2
+- T4
+- NC T4
+- TC2
+- NC
+- 100 800 600 100 1500 200
+- 100 1500 200
+- 100 2000 100
+- 100 2000 100
+- ...
+- C
+- D
+- C
+- D
+- ...
+- TƯỜNG XÂY CHÈN
+- 300 2100
+- 700
+- TƯỜNG XÂY CHÈN
+- 300 2100
+- 700
+- 1800
+- 480 220
+- MẶT CẮT 2 TỶ LỆ :1/50
+- 1800
+- VỆ SINH VS1.4a
+- TƯỜNG XÂY CHÈN
+- 500 1000 500 2000 100 100
+- 300 2100
+- 700
+- MẶT BẰNG VS1.4a
+- 1800
+- 480 220
+- 1450 1950 100
+- 3
+- 1000 500 1500 200 100
+- 550 800 600 600 800 500
+- TC2
+- P1
+- T2
+- T1
+- TC2
+- MẶT CẮT 1 TỶ LỆ :1/50
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 1250 650 100 1900 100
+- 100 700 800 100
+- 1000 500 2000 100 100
+- P1
+- T1
+- T2
+- C D
+- TỶ LỆ :1/50
+- F1C F1C
+- 500 1000 500
+- 500 100
+- i=2%
+- 1900 100
+- F
+- TC2
+- T1
+- T2
+- 100
+- 200
+- 1800
+- 600 400 2800
+- 3
+- 1800
+- 600 400 2800
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- MẶT SÀN
+- VỆ SINH HOÀN THIỆN
+- 1300 100 600 100 2000 100
+- 2100
+- 700 2800
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- C
+- D
+- VỆ SINH VS1.2
+- TƯỜNG XÂY CHÈN
+- 800 600 100 1500 200
+- 2100
+- 700
+- MB. LÁT GẠCH VS1.4a TỶ LỆ :1/50
+- 100
+- 1800 300 480 220
+- MẶT BẰNG VS1.2
+- MB. TRẦN VS1.4a TỶ LỆ :1/50
+- 2000 100 100
+- 2000 100 100
+- NC
+- 975 925 100 1900 200
+- 100
+- 800 1100 1900 200 100
+- 50
+- 3
+- TỶ LỆ :1/50
+- P1
+- T2
+- TC2
+- 1900 200 600 800 500
+- 100 1900 100
+- 100 700 800 100
+- 100 1900 100
+- 100 1900 100
+- MẶT CẮT 1 TỶ LỆ :1/50
+- NC T4
+- i=2%
+- TC2
+- T1
+- 1600
+- 1900 100
+- i=2%
+- 100
+- 100
+- 200
+- 200
+- 3
+- 3
+- 1000 500 1500 200 100
+- 1800 600 400 2800
+- 1300 100 600 100 2000 100
+- 1300 100 600 100 2000 100
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- F
+- C
+- D
+- C
+- D
+- 800 600 100 1500 200
+- 100 1500 200
+- MB. LÁT GẠCH VS1.2 TỶ LỆ :1/50
+- 100
+- VỆ SINH VS1.4b
+- MB. TRẦN VS1.2 TỶ LỆ :1/50
+- TƯỜNG XÂY CHÈN
+- MẶT BẰNG VS1.4b
+- 300 2100
+- 700
+- 2000 100 100
+- NC
+- 1800
+- 480 220
+- 100 1200 100 600
+- 100 1900 200
+- 100
+- 100 1900 200
+- 100 1900 200
+- MẶT CẮT 1 TỶ LỆ :1/50
+- TỶ LỆ :1/50
+- 500 2000 100 100
+- 50 100 800 950
+- 100 1900 100
+- 100 200
+- 1900 200
+- C D
+- T4
+- TC2
+- 100
+- 450 1150
+- TC2
+- T2
+- T1
+- 1900 100
+- i=2%
+- 3
+- 1500 200 100
+- 1500 200 100
+- F
+- F
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 500 1000 500
+- 2100
+- 700 2800
+- 100 2000 100
+- CHI TIẾT BỒN RỬA B1
+- (TẦNG 3)
+- C
+- D
+- MẶT BẰNG BỒN RỬA
+- MẶT SÀN
+- MB. LÁT GẠCH VS1.4b TỶ LỆ :1/50
+- ỐP ĐÁ GRANITE, DÀY 20MM
+- 1  ---
+- 2000 100 100
+- 2000 100 100
+- 100 1200 100 600
+- 100 1100 100 700
+- 1200
+- MB. TRẦN VS1.4b TỶ LỆ :1/50
+- 800
+- 400
+- TỶ LỆ :1/25
+- 600
+- 200
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 50 100 800 950
+- 100 1900 100
+- 100 200
+- 100 1900 100
+- 100 200
+- 100
+- 100
+- 600
+- 1900 100
+- 1900 100
+- 1600
+- 1600
+- 600
+- NC T4
+- TC2
+- 600 1200
+- 3
+- 3
+- 100
+- 1800
+- MẶT ĐÁ GRANITE, DÀY 20MM
+- MẶT ĐÁ GRANITE, DÀY 20MM
+- MẶT ĐÁ GRANITE, DÀY 20MM
+- TƯỜNG ỐP GẠCH CERAMIC 300x600MM
+- THANH V INOX 50x50x3MM
+- THANH V INOX 50x50x3MM
+- 100 2000 100
+- 100 2000 100
+- C
+- D
+- C
+- D
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- CHI TIẾT VỆ SINH TẦNG 1 (VS1.1,...VS1.4b)
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D7.06
+- ../2024
+
+
+## Trang 79
+- TƯỜNG XÂY CHÈN
+- VỆ SINH VS1.4f
+- VỆ SINH VS1.4c VỆ SINH VS1.4d
+- TƯỜNG XÂY CHÈN
+- 500 1000 500 2000 100 100
+- 300 2100
+- 700
+- 300 2100
+- 700
+- 100 2000 100
+- MẶT BẰNG VS1.4f
+- MẶT BẰNG VS1.4c
+- 1800
+- 480 220
+- 500 1000 500
+- 1800
+- 480 220
+- MẶT CẮT 1 TỶ LỆ :1/50
+- MẶT CẮT 1 TỶ LỆ :1/50
+- TỶ LỆ :1/50
+- 1250 650 100 1900 100
+- 100 950 800
+- 1000 500 2000 100 100
+- 950 800 100 50 100 1900 100
+- 100 1900 100
+- 1000 500 2000 100 100
+- C D
+- C D
+- TỶ LỆ :1/50
+- 500
+- 500
+- 1150 450 100
+- i=2%
+- 1900 100 150
+- i=2%
+- i=2%
+- F1C F1C F1C
+- F1C F1C F1C
+- TC2
+- T2
+- T1
+- P1 P1 P1
+- TC2
+- 200
+- T2
+- P1
+- T1
+- 14
+- ...
+- NC NC NC
+- NC NC
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 100 2000 100
+- 600 100 1300 100 2000 100
+- 2100
+- 700 2800
+- 2100
+- 700 2800
+- ...
+- ...
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- C
+- D
+- MB. LÁT GẠCH VS1.4f TỶ LỆ :1/50
+- MB. LÁT GẠCH VS1.4c TỶ LỆ :1/50
+- 100 2000 100
+- 100 2000 100
+- 2000 100 100
+- 2000 100 100
+- MB. TRẦN VS1.4c TỶ LỆ :1/50
+- MB. TRẦN VS1.4f TỶ LỆ :1/50
+- 950 800 100 50 100 1900 100
+- 100 1900 100
+- 950 800 100 50 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 950 800
+- 100 1900 100
+- 100 1900 100
+- TC2
+- NC T4
+- T4
+- TC2 TC2 TC2
+- NC
+- 1900 100 150
+- 14
+- 14
+- ...
+- ...
+- 700 100 1200 100 2000 100
+- 700 100 1200 100 2000 100
+- 100 2000 100
+- 100 2000 100
+- ...
+- ...
+- ...
+- ...
+- C
+- D
+- C
+- D
+- TƯỜNG XÂY CHÈN
+- VỆ SINH VS1.5
+- 300 2100
+- 700
+- 300 2100
+- 700
+- 1800
+- 480 220
+- 1800 100 200
+- 2000 100 100
+- 1800
+- MẶT BẰNG VS1.4d MẶT BẰNG VS1.4e
+- MẶT BẰNG VS1.5
+- 300 700 800
+- MẶT CẮT 1 TỶ LỆ :1/50
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 500 2000 100 100
+- 50 100 800 950
+- 100 1900 100
+- 100 1900 100 550 1350
+- 500 1800 100 100
+- C D
+- 50 300 1300 250
+- 100 1900 100
+- 100 1900 100 600 1300
+- TỶ LỆ :1/50
+- 11
+- TỶ LỆ :1/50
+- TC2
+- T2
+- T1
+- P1 P1
+- T2
+- TC2
+- T1
+- 1000 500
+- 800 500
+- i=2%
+- i=2%
+- B
+- 3
+- 2100
+- 700 2800
+- 500 1000 500
+- 2100
+- 700 2800
+- 450 850 500
+- 100 2000 100
+- 200 1800 100
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- C
+- D
+- B
+- MB. LÁT GẠCH VS1.4d TỶ LỆ :1/50
+- MB. LÁT GẠCH VS1.5 TỶ LỆ :1/50
+- 1800 100 200
+- 2000 100 100
+- 2000 100 100
+- 300 700 800
+- 1800 100 200
+- MB. TRẦN VS1.5 TỶ LỆ :1/50
+- MB. TRẦN VS1.4d TỶ LỆ :1/50
+- NC
+- T4
+- 50 100 800 950
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 11
+- 11
+- i=2%
+- TC2
+- NC T4
+- 3
+- 3
+- 100 2000 100
+- 100 2000 100
+- 200 1800 100
+- 200 1800 100
+- C
+- D
+- C
+- D
+- B
+- B
+- TƯỜNG XÂY CHÈN
+- VỆ SINH VS1.6
+- VỆ SINH VS1.4e
+- 300 2100
+- 700
+- 2100 700 2800
+- 1800
+- 480 220
+- 2000 100 100
+- MẶT BẰNG VS1.6
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 100 100
+- 2000 700 800 500
+- 500 2000 100 100
+- TỶ LỆ :1/50
+- 50
+- 550 1350 100 1900 100
+- 100 1900 100
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 13
+- C D
+- 100 800 950
+- 1000 500 2000 100 100
+- C D
+- 500
+- TC2
+- TỶ LỆ :1/50
+- C
+- T2
+- T1
+- 1000 500
+- 50 100 100
+- 1100 100
+- 15
+- i=2%
+- 200 800 100 1100
+- i=2%
+- TC2
+- T2
+- T1
+- 100
+- 500 1000 500
+- 2100
+- 700 2800
+- 100 2000 100
+- 900 100 1000 700 2800
+- 1800
+- 300
+- 100 100
+- 2000
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- C
+- D
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- C
+- D
+- MB. LÁT GẠCH VS1.4e TỶ LỆ :1/50
+- MB. LÁT GẠCH VS1.6 TỶ LỆ :1/50
+- 2000 100 100
+- 2000 100 100
+- MB. TRẦN VS1.4e TỶ LỆ :1/50
+- MB. TRẦN VS1.6 TỶ LỆ :1/50
+- 100 100
+- 2000
+- 100 100
+- 2000
+- 50
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 13
+- 13
+- 100 800 950
+- C
+- TC2
+- T4
+- 50 100 100
+- 1100 100
+- 100 100
+- 1100 100
+- 15
+- 15
+- 200 800 100 1100
+- 1100
+- NC T4
+- NC
+- 100
+- 100
+- 100 100
+- 2000
+- 100
+- 2000
+- 100
+- 100 2000 100
+- 100 2000 100
+- C
+- D
+- C
+- D
+- C
+- D
+- C
+- D
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- CHI TIẾT VỆ SINH TẦNG 1 (VS1.4c,...VS1.6)
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D7.07
+- ../2024
+
+
+## Trang 80
+- VỆ SINH  VS2.2
+- VỆ SINH VS1.7a
+- TƯỜNG XÂY CHÈN
+- 300 2100
+- 700
+- 100 2000 100
+- 300 2100
+- 700
+- 100 1500 100
+- 1800
+- MẶT BẰNG VS2.2 MB. LÁT GẠCH VS2.3 TỶ LỆ :1/50
+- 1400 600
+- 1800
+- 480 220
+- MẶT BẰNG VS1.7a
+- 1000
+- 400
+- 100
+- MẶT CẮT 1 TỶ LỆ :1/50
+- NC NC NC
+- C D MẶT CẮT 1 TỶ LỆ :1/50
+- TỶ LỆ :1/50
+- 600 450 1500 100 100
+- 500 900 100 1900 100
+- 100 1900 100
+- 2000 100 100
+- 100 800 350 100 1250 100
+- 100 1250 100
+- 450
+- TỶ LỆ :1/50
+- T2
+- TC2
+- T1
+- i=2%
+- P1
+- D
+- 950 800 150
+- T2
+- TC2
+- T1
+- P1
+- F3C F3C F3C
+- F1C F1C F3C
+- i=2%
+- i=2%
+- 500
+- NC NC
+- ...
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 450 600 450 100 1500 100
+- 2100
+- 700 2800
+- 400 1600 100 2000 100
+- 2100 700 2800
+- D
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- C
+- D
+- MB. LÁT GẠCH VS1.7a TỶ LỆ :1/50
+- MB. LÁT GẠCH VS2.2 TỶ LỆ :1/50
+- MB. TRẦN VS1.7a TỶ LỆ :1/50
+- 100 2000 100
+- 100 2000 100
+- MB. TRẦN VS2.2 TỶ LỆ :1/50
+- 100 1500 100
+- 100 1500 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 800 350 100 1250 100
+- 100 1250 100
+- 100 1250 100
+- 100 1250 100
+- 950
+- TC2
+- TC2
+- T4
+- NC
+- 800 150
+- T4
+- NC
+- ...
+- ...
+- 100 1500 100
+- 100 1500 100
+- D
+- D
+- 100 2000 100
+- 100 2000 100
+- C
+- D
+- C
+- D
+- VỆ SINH VS2.3
+- VỆ SINH VS1.7b
+- TƯỜNG XÂY CHÈN
+- 100 2000 100
+- 300 2100
+- 700
+- 300 2100
+- 700
+- MẶT BẰNG VS2.3
+- 1800
+- 480 220
+- 100 1500 100
+- 1800
+- MẶT BẰNG VS1.7b MB. LÁT GẠCH VS1.7b TỶ LỆ :1/50
+- 450 600 450
+- MẶT CẮT 1 TỶ LỆ :1/50
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 500 900 100 1900 100
+- 100 1900 100
+- 2000 100 100
+- TỶ LỆ :1/50
+- 600 450 1500 100 100
+- 2
+- 150
+- C D
+- TỶ LỆ :1/50
+- 1500 500
+- 100 1300 100
+- 100 1250 100
+- 450
+- 100 850 350
+- 800
+- T2
+- TC2
+- T1
+- P1
+- D
+- i=2%
+- i=2%
+- TC2
+- i=2%
+- T2
+- 950
+- T1
+- P1
+- 500
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 1000 100 400 100 1500 100
+- 2100
+- 700 2800
+- 600 100 2000 100
+- 1400
+- 2100
+- 700 2800
+- D
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- C
+- D
+- MB. TRẦN VS1.7b TỶ LỆ :1/50
+- 100 1500 100
+- 100 2000 100
+- 100 2000 100
+- 450 600 450
+- 100 1500 100
+- MB. TRẦN VS2.3 TỶ LỆ :1/50
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1300 100
+- 100 1250 100
+- 100 1300 100
+- 100 1250 100
+- 2
+- 2
+- 150 950
+- 100 850 350
+- 0 800
+- TC2
+- TC2
+- T4
+- NC
+- NC T4
+- 1000 100 400 100 1500 100
+- 100 1500 100
+- D
+- 100 2000 100
+- 100 2000 100
+- D
+- C
+- D
+- C
+- D
+- TƯỜNG XÂY CHÈN
+- VỆ SINH VS2.4
+- VỆ SINH  VS2.1
+- 300 2100
+- 700
+- MẶT BẰNG VS2.1 MB. LÁT GẠCH VS2.1 TỶ LỆ :1/50
+- 2000 100 100
+- 2100 700 2800
+- 100 2000 100
+- 480 220 600 1400
+- 1800
+- MẶT BẰNG VS2.4 MB. LÁT GẠCH VS2.4 TỶ LỆ :1/50
+- MẶT CẮT 1 TỶ LỆ :1/50
+- MẶT CẮT 1 TỶ LỆ :1/50
+- TỶ LỆ :1/50
+- 2000 100 100
+- 100 800 950 200 1850 100
+- 200
+- 850 500 200 1850 100
+- 1
+- 1
+- C D
+- 950 100 1900 100
+- 100 1900 100
+- 1400 600
+- TỶ LỆ :1/50
+- 400
+- 500 850 500
+- 500
+- i=2%
+- i=2%
+- 800 400
+- 1850 100
+- TC2
+- T2
+- T1
+- i=2%
+- P1
+- i=2%
+- TC2
+- T2
+- 800 150
+- T1
+- P1
+- 100
+- 200
+- 3
+- TƯỜNG XÂY CHÈN
+- 600 1400
+- 1800 300
+- 480 2800
+- 220
+- 2100
+- 700 2800
+- 600 100 1300
+- 100 2000 100
+- 100 2000 100
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- C
+- D
+- C
+- D
+- 2000 100 100
+- 2000 100 100
+- 100 2000 100
+- 100 2000 100
+- MB. TRẦN VS2.4 TỶ LỆ :1/50
+- MB. TRẦN VS2.1 TỶ LỆ :1/50
+- 100 800 950 200 1850 100
+- 200
+- 100 800 950 200 1850 100
+- 200
+- 1
+- 1
+- 950 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- TC2
+- NC T4
+- 1850 100
+- 1850 100
+- TC2
+- NC T4
+- 800 150
+- 3
+- 3
+- 100 2000 100
+- 100 2000 100
+- 100 2000 100
+- 100 2000 100
+- C
+- D
+- C
+- D
+- C
+- D
+- C
+- D
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- CHI TIẾT VỆ SINH TẦNG 2, 3
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D7.08
+- ../2024
+
+
+## Trang 81
+- VỆ SINH VS2.8
+- VỆ SINH  VS2.5
+- TƯỜNG XÂY CHÈN
+- 100 1500 200
+- 300 2100
+- 700
+- TƯỜNG XÂY CHÈN
+- MẶT BẰNG VS2.5 MB. LÁT GẠCH VS2.5 TỶ LỆ :1/50
+- 1800
+- 480 220
+- 300 2100
+- 700
+- 100 2000 100
+- 1800
+- 480 220
+- MẶT BẰNG VS2.8 MB. LÁT GẠCH VS2.8 TỶ LỆ :1/50
+- MẶT CẮT 1 TỶ LỆ :1/50
+- MẶT CẮT 1
+- 200 1875 100
+- 100 1900 100
+- NC NC
+- 2000 100 100
+- ... ...
+- 1500 200 100
+- 950 100 1900 100
+- 100 1900 100
+- 500
+- 500 875 500
+- TỶ LỆ :1/50
+- ...
+- TỶ LỆ :1/50
+- 800 150
+- 600 700
+- TỶ LỆ :1/50
+- F3C F3C
+- 500
+- i=2%
+- 475
+- TC2
+- T2
+- T1
+- P1
+- i=2%
+- i=2%
+- 700
+- F3C F3C F3C
+- 900
+- TC2
+- 800 100
+- T2
+- T1
+- P1
+- i=2%
+- 500
+- E
+- 8
+- NC NC NC
+- 2100 2100
+- 700 2800
+- 700 2800
+- 600 1400
+- 100 1500 200
+- 100 2000 100
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- E
+- ...
+- ...
+- 100 1500 200
+- 100 1500 200
+- MB. TRẦN VS2.8 TỶ LỆ :1/50
+- 100 2000 100
+- 100 2000 100
+- MB. TRẦN VS2.5 TỶ LỆ :1/50
+- 200 1875 100
+- 100 1900 100
+- 200 1875 100
+- 100 1900 100
+- 950 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- ...
+- ...
+- 800 150
+- NC T4
+- TC2
+- 800 100 975
+- TC2
+- NC T4
+- 8
+- 8
+- 100 1500 200
+- 100 1500 200
+- 100 2000 100
+- 100 2000 100
+- E
+- E
+- ...
+- ...
+- ...
+- ...
+- TƯỜNG XÂY CHÈN
+- VỆ SINH VS3.1c VỆ SINH VS3.1a
+- VỆ SINH  VS2.6
+- 300 2100
+- 700
+- 200 1800 100
+- 200 1800 100
+- 100 2000 100
+- 1800
+- 480 220
+- 900 700 200
+- MB. TRẦN VS3.1c TỶ LỆ :1/50
+- MẶT BẰNGVS3.1c TỶ LỆ :1/50
+- 600 1400
+- MẶT BẰNG VS2.6 MB. LÁT GẠCH VS2.6 TỶ LỆ :1/50
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 1900 200 100
+- 100 1900 200
+- 2000 100 100
+- 1900 200 100
+- 100 1900 200
+- C D
+- 100 1900 100
+- 100 1900 100
+- TỶ LỆ :1/50
+- 500 750 400 100
+- TỶ LỆ :1/50
+- 500 900
+- 1400 600
+- 800 950
+- i=2%
+- TC2
+- TC2
+- T2
+- T1
+- P1
+- i=2%
+- i=2%
+- 500
+- 150
+- 14
+- 150
+- 14
+- 4
+- 100 1800 200
+- 2100
+- 700 2800
+- 100 900 100 250 100 1800 200
+- 450
+- 100 2000 100
+- C
+- D
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- C
+- D
+- C
+- D
+- MB. LÁT GẠCH VS3.1c
+- 200 1800 100
+- 2800
+- 900 700 200
+- 1800
+- 600 400
+- 100 2000 100
+- 100 2000 100
+- NC
+- T4
+- MB. TRẦN VS2.6 TỶ LỆ :1/50
+- 1900 200 100
+- 100 1900 200
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 200 1800
+- 14
+- 350 1000 450
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 150 800 950
+- NC
+- TC2
+- T1
+- TC2
+- F3C
+- P1
+- T2
+- 14
+- 100
+- 100 1800 200
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 100 2000 100
+- 100 2000 100
+- 1800
+- 300 2100
+- 700 2800
+- C
+- D
+- C
+- D
+- C
+- D
+- VỆ SINH  VS2.7
+- 1250 550 100 1800 200
+- TƯỜNG XÂY CHÈN
+- MẶT BẰNG VS2.7 MB. LÁT GẠCH VS2.7 TỶ LỆ :1/50
+- 100 1500 200
+- 100 1800 200
+- 300 2100
+- 700
+- MẶT BẰNGVS3.1a TỶ LỆ :1/50
+- 1800
+- 480 220
+- MB. TRẦN VS3.1a TỶ LỆ :1/50
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 100 1900 100
+- 100 1900 100
+- 1900 200 100
+- 200 1900 100
+- 1900 200 100
+- 200 1900 100
+- 450 1000 450 100
+- ...
+- ...
+- TỶ LỆ :1/50
+- 1500 200 100
+- 500
+- 500
+- 500 900 500
+- TỶ LỆ :1/50
+- i=2%
+- 500 800 100
+- i=2%
+- TC2
+- 900 500
+- TC2
+- T2
+- T1
+- P1
+- i=2%
+- i=2%
+- E
+- 6
+- 2100 700 2800
+- 100 1500 200
+- 200 900 700 200
+- 1800 100
+- 200 1800 100
+- E
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- ...
+- ...
+- ...
+- ...
+- MB. LÁT GẠCH VS3.1a
+- 2800
+- 1800
+- 600 400
+- 100 1800 200
+- 100 1500 200
+- 100 1500 200
+- MB. TRẦN VS2.7 TỶ LỆ :1/50
+- ...
+- 900 500 200 1900 100
+- 1900 200 100
+- 200 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- ...
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 450 1000 450
+- 500
+- i=2%
+- TC2
+- NC T4
+- i=2%
+- 1000
+- TC2
+- T1
+- P1
+- 800 100
+- T2
+- 6
+- 6
+- NC
+- T4
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 1800
+- 300 2100
+- 900 700 200
+- 100 1500 200
+- 100 1500 200
+- 700 2800
+- 200 1800 100
+- E
+- E
+- ...
+- ...
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- CHI TIẾT VỆ SINH TẦNG 2, 3 (VS2.5,...VS3.1a)
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D7.09
+- ../2024
+
+
+## Trang 82
+- 700 2800 2100
+- VỆ SINH   VS3.4
+- VỆ SINH  VS3.1b
+- 700 2800
+- 100 1950 100
+- 1800 100
+- 200 900 700 200
+- 300 2100
+- 1800
+- MẶT BẰNG VS3.1b MB. LÁT GẠCH VS3.1b TỶ LỆ :1/50
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 1200 1300 100 1200 200 3900 100
+- 3900 200 100
+- 1200 100 1200 200 3900 100
+- MẶT BẰNG VS3.4 MB. LÁT GẠCH  VS3.4 TỶ LỆ :1/50
+- 7 8
+- 7 8
+- 100 700 400 100 1300 100 1200
+- 100 700 400
+- 1900 200 100
+- 200 1900 100
+- 900 500 200 1900 100
+- T2
+- 450 1000 450 100
+- 450 1000 450
+- 500 900 500
+- NC NC
+- i=2%
+- TỶ LỆ :1/50
+- i=2%
+- MẶT CẮT 1 TỶ LỆ :1/50
+- i=2%
+- F3C F3C F3C
+- TỶ LỆ :1/50
+- F3C F3C
+- 100
+- 100 1300
+- i=2%
+- TC2
+- P1
+- T1
+- i=2%
+- i=2%
+- 500
+- 400 550 550 450
+- ...
+- ...
+- 600 600
+- 100 700
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 1250 550 100 1800 200
+- 1800
+- 600 400
+- 2800
+- ...
+- ...
+- 600 450 700 200
+- 1800 100
+- 200 900 700 200
+- 1800 300 700
+- 100 1950 100
+- 200 1800 100
+- MB. TRẦN VS3.1b TỶ LỆ :1/50
+- D
+- 100 1950 100
+- 100 1950 100
+- NC
+- T4
+- 1900 200 100
+- 200 1900 100
+- 1900 200 100
+- 200 1900 100
+- 1200 1300 100 1200 200 3900 100
+- 3900 200 100
+- 1200 1300 100 1200 200 3900 100
+- 3900 200 100
+- 7 8
+- 7 8
+- 100 700 400 100 1300 100 1200
+- MB. TRẦN  VS3.4 TỶ LỆ :1/50
+- TC2
+- 1200 100 1300 100 1200
+- TC2 TC2 TC2
+- 100
+- 100
+- ...
+- ...
+- 100 1800 200
+- 100 1800 200
+- ...
+- ...
+- ...
+- ...
+- 700
+- 100
+- VỆ SINH   VS3.2
+- 700 2800
+- 200 1900 100
+- 300 2100
+- 400 550 550 400
+- 1800
+- MẶT BẰNG VS3.2 MB. LÁT GẠCH  VS3.2 TỶ LỆ :1/50
+- 700 200
+- 1050
+- 100 1950 100
+- MẶT CẮT 1 TỶ LỆ :1/50
+- 100 1950 100
+- D
+- D
+- 525 700 100 100 1325 100
+- 100 1325 100
+- 550 400 200 1900 100
+- 175 800 350
+- TỶ LỆ :1/50
+- VỆ SINH   VS3.5
+- MẶT BẰNG VS3.5 MB. LÁT GẠCH  VS3.5 TỶ LỆ :1/50
+- 200 1900 100
+- 900 800 200
+- i=2%
+- i=2%
+- 550
+- NC
+- 500 100 1900 100
+- TC2
+- 9
+- P1
+- TỶ LỆ :1/50
+- T2
+- T1
+- 100 1900 100 100 1900 100
+- 100 1900 100
+- 400
+- 9
+- 500 1400
+- MẶT CẮT 1 TỶ LỆ :1/50
+- i=2%
+- ...
+- F3C F3C
+- 100 1900 200
+- 1400
+- TC2
+- i=2%
+- P1
+- T2
+- T1
+- E
+- F
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 2800
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- 1800
+- 300 2100
+- 600 1300
+- 700 2800
+- MB. TRẦN  VS3.2 TỶ LỆ :1/50
+- 200 1900 100
+- 200 1900 100
+- 200 1900 100
+- C
+- D
+- 525 700 100 100 1325 100
+- 100 1325 100
+- 100 1325 100
+- 100 1325 100
+- 200 1900 100
+- 200 1900 100
+- 900 800 200
+- NC
+- MB. TRẦN  VS3.5 TỶ LỆ :1/50
+- TC2
+- NC
+- T4
+- 100 1900 100
+- 100 1900 100
+- 100 1900 100
+- 9
+- 9
+- T4
+- 100 1900 200
+- 100 1900 200
+- E
+- E
+- F
+- F
+- VỆ SINH   VS3.3
+- 700 2800
+- 200 1900 100
+- 200 1900 100
+- 300 2100
+- 100 1900 200
+- 1800
+- C
+- D
+- C
+- D
+- MẶT BẰNG VS3.3 MB. LÁT GẠCH  VS3.3 TỶ LỆ :1/50
+- VỆ SINH   VS3.6
+- MẶT BẰNG VS3.6
+- 200 1900 100
+- 600 850 450
+- 200 700 1100 100 2000 100
+- 100 2000 100
+- 950 600 100 2000 100
+- 1
+- 1
+- MẶT CẮT 1 TỶ LỆ :1/50
+- TỶ LỆ :1/50
+- 600 950 450
+- 900 1000 100
+- 900
+- MẶT CẮT 1 TỶ LỆ :1/50
+- i=2%
+- TC2
+- P1
+- T2
+- 100 1900 200
+- 850 450 200 1900 100
+- F3C
+- TỶ LỆ :1/50
+- i=2%
+- 1000 100
+- 1350 550
+- T1
+- 450
+- i=2%
+- i=2%
+- T2
+- TC2
+- P1
+- T1
+- 600
+- 10
+- 600 1300 100 1900 200
+- 1800
+- 600 400
+- ...
+- 2800
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- MẶT SÀN VỆ SINH HOÀN THIỆN
+- D
+- 100 890 910
+- 1800
+- 300 2100
+- 200 1900 100
+- 700 2800
+- MB. LÁT GẠCH  VS3.6 TỶ LỆ :1/50
+- C
+- D
+- 100 1900 200
+- 100 1900 200
+- 200 1900 100
+- 200 1900 100
+- MB. TRẦN  VS3.3 TỶ LỆ :1/50
+- MB. TRẦN  VS3.6 TỶ LỆ :1/50
+- 200 700 1100 100 2000 100
+- 100 2000 100
+- 100 2000 100
+- 100 2000 100
+- 1
+- 1
+- 100 1900 200
+- 100 1900 200
+- 100 1900 200
+- NC T4
+- TC2
+- TC2
+- 10
+- 10
+- NC
+- T4
+- 100 1900 200
+- 100 1900 200
+- 100 890 910
+- 200 1900 100
+- 200 1900 100
+- D
+- D
+- C
+- D
+- C
+- D
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- 1/50 Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- CHI TIẾT VỆ SINH TẦNG 3 (VS3.1b,...VS3.6)
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D7.10
+- ../2024
+
+
+## Trang 83
+- SÂN SÂN
+- C L=2300
+- THANG SẮT THANG SẮT
+- 62200 2900 2900
+- 4 3 2 1 14 15 16
+- C  C  C  C  C  C  C  C  C  C  C  C
+- L=2500 L=2600 L=2600 L=3900 L=2600
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- KHU XN  VI SINH
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- L=2600 L=4800 L=1200 L=1200 L=2600 L=2600 L=2300
+- C  C  C  C  C  C  C  C
+- C  C  C  C
+- THANG MÁY
+- P.BỆNH P.BỆNH P.BỆNH
+- KHU XN  VI SINH
+- DC-tm
+- E 30
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- -0.050 KHOA TIM MAÏCH CAN THIEÄP
+- P.BỆNH NẶNG P.BỆNH NẶNG
+- L=22500
+- PHÒNG TRỰC
+- GC GC
+- 6 7 8 9 10 11 12 13 5
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- KHỐI NHÀ TRỆT MÁI TÔN
+- C  C
+- P.BÁC SỸ
+- SÂN
+- CHI TIẾT TAY VỊN
+- TƯỜNG HOÀN THIỆN
+- TAY VỊN
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 1 TỶ LỆ :1/100
+- FFL
+- P.TRƯỞNG KHOA
+- TỶ LỆ :1/10
+- 1 --
+- 900
+- 76
+- -0.100
+- SÂN
+- PHÒNG TÀI CHÍNH KẾ TOÁN KHO HỒ SƠ
+- KHUNG ĐỊNH HÌNH
+- BẢN MÃ LIÊN KẾT
+- BỒN HOA CAO 500
+- LỚP HOÀN THIỆN
+- HỆ TAY VỊN 140
+- NÚT ĐỊNH HÌNH
+- HỒ NƯỚC
+- CHI TIẾT 1
+- BU LÔNG
+- TỶ LỆ :1/5
+- 76
+- GC
+- 140
+- CHI TIẾT KẸP GÓC
+- GC
+- PHÒNG KHTH
+- BỒN HOA CAO 500
+- SÂN
+- 30
+- TỶ LỆ :1/1
+- P.TRƯỞNG KHOA
+- 30
+- KHỐI NHÀ TRỆT MÁI TÔN
+- TƯỜNG HOÀN THIỆN
+- INOX V 30X30X2MM, CAO 1500MM, CÁCH SÀN 100MM
+- VÍT LIÊN KẾT
+- : THANH KẸP GÓC  C
+- : TAY VỊN CHỐNG VA 56,3 m
+- CHÚ THÍCH
+- BỒN HOA CAO 500
+- PHÒNG GPTM
+- KHU VỰC NHAÂN VIEÂN
+- PHÒNG GPTM
+- PHÒNG GPTM
+- TỔNG  SỐ LƯỢNG/ CHIỀU DÀI
+- 27 THANH
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 1; CHI TIẾT TAY VỊN
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D8.01
+- ../2024
+- 1/100
+
+
+## Trang 84
+- HÀNH LANG NỐI QUA KHU C
+- HÀNH LANG NỐI QUA KHU C
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- THANG SẮT TƯỜNG XÂY H=1200
+- THANG SẮT THANG SẮT
+- 62200 2900 2900
+- 62200 2900 2900
+- SÊ NÔ
+- 4 3 2 1 14 15 16
+- 4 3 2 1 14 15 16
+- L=2700 L=2800 L=3100 L=3000 L=2800 L=2700 L=2800 L=2600 L=2800 L=2800 L=2800 L=3300 L=3100 L=3100
+- P. ĐIỀU DƯỠNG KHO
+- L=2700 L=2800 L=2800 L=3100 L=5900 L=3100 L=3100 L=2900
+- P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH
+- P.BỆNH P.BỆNH P.BỆNH
+- C  C  C  C L=3800
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- C  C  C  C  C  C  C  C  C  C
+- C  C  C  C  C  C  C  C
+- SÂN THƯỢNG
+- +7.530
+- C  C  C  C  C  C
+- C  C
+- L=1000
+- THANG MÁY
+- THANG MÁY
+- DC-tm
+- DC-tm
+- E 30
+- E 30
+- C
+- L=6200
+- L=600
+- L=6400
+- C
+- C
+- C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- L=2400 L=900 L=2400 L=2400 L=1700 L=900 L=2400
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- SÊ NÔ
+- P. BỆNH
+- P. BỆNH
+- P.HÀNH CHÁNH
+- P.NHÂN VIÊN P.NHÂN VIÊN
+- P. BỆNH P. BỆNH P. BỆNH
+- L=2400 L=2400 L=1700 L=2400 L=2400
+- C  C  C  C
+- GC GC GC GC
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG GC GC GC GC
+- 6 7 8 9 10 11 12 13 5
+- 6 7 8 9 10 11 12 13 5
+- C  C  C  C  C  C  C  C  C  C  C  C  C  C  C C
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- SÊ NÔ
+- P.BỆNH NẶNG
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 3
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 2 TỶ LỆ :1/100
+- PHÒNG TRỰC
+- P. TRƯỞNG KHOA
+- P.BỆNH NẶNG
+- P. MÁY CHỦ
+- C  C
+- C
+- C  C
+- TỶ LỆ :1/100
+- L=10200
+- KHOA NGOAÏI THAÀN KINH
+- SÊ NÔ
+- SÊ NÔ SÊ NÔ
+- P. HÀNH CHÍNH
+- +7.550
+- +3.750
+- P. KHÁM QUẦY TRỰC
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- CẦU BỘ HÀNH QUA KHU G
+- +4.350
+- L=10200
+- C
+- P. THỦ THUẬT
+- P.BỆNH P.BỆNH P.BS NAM PHÒNG T. KHOA
+- P. BÁC SĨ
+- P. BÁC SĨ
+- P. BỆNH P. BỆNH
+- SÊ NÔ
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- P. BỆNH
+- P. BỆNH
+- P.BS NỮ
+- : THANH KẸP GÓC  C
+- : THANH KẸP GÓC  C
+- C
+- C
+- : TAY VỊN CHỐNG VA
+- : TAY VỊN CHỐNG VA 87,2 m
+- L=8700 L=2200
+- +7.530 +7.550
+- CHÚ THÍCH
+- CHÚ THÍCH
+- P.NHÂN VIÊN
+- SÂN THƯỢNG
+- TƯỜNG XÂY H=1200
+- TỔNG  SỐ LƯỢNG/ CHIỀU DÀI
+- TỔNG  SỐ LƯỢNG/ CHIỀU DÀI
+- SÊ NÔ
+- 30 THANH
+- 50 THANH
+- THANG SẮT
+- 58,7 m
+- 2100 4000 2000 4000 2100
+- 2100 4000 2000 4000 2100
+- 14200
+- 14200
+- C
+- C
+- D
+- D
+- A
+- A
+- E
+- E
+- B
+- B
+- F
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- MẶT BẰNG BỐ TRÍ TAY VỊN - THIẾT BỊ TẦNG 2, 3
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D8.02
+- ../2024
+- 1/100
+
+
+## Trang 85
+- SÂN SÂN
+- THANG SẮT THANG SẮT
+- 62200 2900 2900
+- 4 3 2 1 14 15 16
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- KHU XN  VI SINH
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- THANG MÁY
+- P.BỆNH P.BỆNH P.BỆNH
+- KHU XN  VI SINH
+- DC-tm
+- E 30
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- -0.050 KHOA TIM MAÏCH CAN THIEÄP
+- P.BỆNH NẶNG P.BỆNH NẶNG
+- PHÒNG TRỰC
+- GC GC
+- 6 7 8 9 10 11 12 13 5
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- KHỐI NHÀ 1 TẦNG MÁI TÔN
+- KHỐI NHÀ TRỆT MÁI TÔN
+- P.BÁC SỸ
+- SÂN
+- D2 A.D3.02
+- MẶT BẰNG VẬT DỤNG TẦNG 1 TỶ LỆ :1/100
+- P.TRƯỞNG KHOA
+- -0.100
+- SÂN
+- PHÒNG TÀI CHÍNH KẾ TOÁN KHO HỒ SƠ
+- BỒN HOA CAO 500
+- HỒ NƯỚC
+- GC
+- D3 A.D3.03
+- GC
+- PHÒNG KHTH
+- BỒN HOA CAO 500
+- SÂN
+- P.TRƯỞNG KHOA
+- KHỐI NHÀ TRỆT MÁI TÔN
+- BỒN HOA CAO 500
+- PHÒNG GPTM
+- KHU VỰC NHAÂN VIEÂN
+- PHÒNG GPTM
+- PHÒNG GPTM
+- 2100 4000 2000 4000 2100
+- 14200
+- C
+- D
+- A
+- E
+- B
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG VẬT DỤNG TẦNG 1
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D9.01
+- ../2024
+- 1/100
+
+
+## Trang 86
+- HÀNH LANG NỐI QUA KHU C
+- HÀNH LANG NỐI QUA KHU C
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- THANG SẮT TƯỜNG XÂY H=1200
+- THANG SẮT THANG SẮT
+- 62200 2900 2900
+- 62200 2900 2900
+- SÊ NÔ
+- 4 3 2 1 14 15 16
+- 4 3 2 1 14 15 16
+- P. ĐIỀU DƯỠNG KHO
+- P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH P.BỆNH
+- P.BỆNH P.BỆNH P.BỆNH
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- 4100 4000 4000 4000 4000 4000 4000 6000 4000 4000 4000 4000 4000 4000 4100
+- SÂN THƯỢNG
+- +7.530
+- THANG MÁY
+- THANG MÁY
+- DC-tm
+- DC-tm
+- E 30
+- E 30
+- KHỐI NHÀ 2 TẦNG MÁI TÔN
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- SÊ NÔ
+- P. BỆNH
+- P. BỆNH
+- P.HÀNH CHÁNH
+- P.NHÂN VIÊN P.NHÂN VIÊN
+- P. BỆNH P. BỆNH P. BỆNH
+- GC GC GC GC
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG GC GC GC GC
+- 6 7 8 9 10 11 12 13 5
+- 6 7 8 9 10 11 12 13 5
+- VỊ TRÍ CỘT GIA CƯỜNG VỊ TRÍ CỘT GIA CƯỜNG
+- SÊ NÔ
+- P.BỆNH NẶNG
+- PHÒNG TRỰC
+- D2 A.D3.02
+- D2 A.D3.02
+- MẶT BẰNG VẬT DỤNG TẦNG 3 TỶ LỆ :1/100
+- MẶT BẰNG VẬT DỤNG TẦNG 2 TỶ LỆ :1/100
+- P. TRƯỞNG KHOA
+- P.BỆNH NẶNG
+- P. MÁY CHỦ
+- KHOA NGOAÏI THAÀN KINH
+- SÊ NÔ
+- SÊ NÔ SÊ NÔ
+- P. HÀNH CHÍNH
+- +7.550
+- +3.750
+- P. KHÁM QUẦY TRỰC
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- CẦU BỘ HÀNH QUA KHU G
+- +4.350
+- P. THỦ THUẬT
+- P.BỆNH P.BỆNH P.BS NAM PHÒNG T. KHOA
+- P. BÁC SĨ
+- P. BÁC SĨ
+- P. BỆNH P. BỆNH
+- D3 A.D3.03
+- D3 A.D3.03
+- SÊ NÔ
+- KHU VỰC GẮN LAM NHÔM CHỮ Z (XEM MẶT ĐỨNG & MẶT CẮT KHỐI D)
+- P. BỆNH
+- P. BỆNH
+- P.BS NỮ
+- +7.530 +7.550
+- P.NHÂN VIÊN
+- SÂN THƯỢNG
+- TƯỜNG XÂY H=1200
+- SÊ NÔ
+- THANG SẮT
+- 2100 4000 2000 4000 2100
+- 2100 4000 2000 4000 2100
+- 14200
+- 14200
+- C
+- C
+- D
+- D
+- A
+- A
+- E
+- E
+- B
+- B
+- F
+- F
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- MẶT BẰNG VẬT DỤNG TẦNG 2-3
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- NGUYỄN TRUNG THÀNH
+- ĐOÀN THỊ MIÊN
+- NGUYỄN TRUNG THÀNH
+- VŨ VĂN CHỦ
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- A.D9.02
+- ../2024
+- 1/100
+
