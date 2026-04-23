@@ -1,0 +1,64 @@
+# Dữ liệu bóc tách: DANH MUC BAN VE----MEP-002.pdf
+Số trang: 1
+
+## Trang 0
+- ĐỊA CHỈ:  ĐIỆN THOẠI: EMAIL:  WEBSITE:
+- TÊN BẢN VẼ    DWG . NAME
+- Checked by
+- KIỂM TRA
+- Designed by
+- THIẾT KẾ
+- Chief
+- CHỦ TRÌ
+- Prj. Manager
+- CN DỰ ÁN
+- Director
+- GIÁM ĐỐC
+- GHI CHÚ :
+- SỬA CHỮA, CẢI TẠO NÂNG CẤP  KHỐI NHÀ B VÀ D  BỆNH VIỆN NGUYỄN TRI PHƯƠNG
+- Dwg. Name:
+- Số bản vẽ:
+- Contact No:
+- Số H.đồng
+- Data:
+- Xuất bản:
+- Scale:
+- Tỷ lệ:
+- GIAI ĐOẠN THIẾT KẾ    PHASE
+- HẠNG MỤC: Work:
+- TƯ VẤN CONSULTANT
+- ĐIỆN THOẠI:
+- ĐỊA CHỈ:
+- CHỦ ĐẦU TƯ CLIENT
+- ĐỊA ĐIỂM: Location:
+- DỰ ÁN PROJECT
+- HIỆU CHỈNH REV
+- NHAØ THAÀU PHAÛI KIEÅM TRA LAÏI KÍCH THÖÔÙC THÖÏC TEÁ NGOAØI COÂNG TRÖÔØNG TRÖÔÙC KHI TIEÁN HAØNH COÂNG VIEÄC VAØ BAÙO CAÙO VÔÙI BEÂN A/TÖ VAÁN THIEÁT KEÁ NEÁU COÙ SÖÏ SAI KHAÙC. SÖÛ DUÏNG THOÂNG SOÁ KÍCH THÖÔÙC ÑÖÔÏC HIEÅN THÒ, KHOÂNG NHAÂN TYÛ LEÄ BAÛN VEÕ.
+- Xuất bản N.dung điều chỉnh Ngày Revision Rev Description Date
+- BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÁC CÔNG TRÌNH DÂN DỤNG VÀ CÔNG NGHIỆP
+- BỘ XÂY DỰNG VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG
+- THIẾT KẾ BẢN VẼ THI CÔNG
+- DANH MỤC BẢN VẼ
+- GIÁM ĐỐC BAN ĐIỀU HÀNH DỰ ÁN 1
+- 115 Trần Quang Khải, Phường Tân Định, Quận 1, Thành phố Hồ Chí Minh
+- 028.38247663
+- 81 Trần Cung, Nghĩa Tân, Cầu Giấy, Hà Nội (84-4) 3.754.4196;   FAX: (84-4) 3.836.1197 VKHCNXD@fpt.vn IBST.vn
+- .
+- NGUYỄN TRUNG THÀNH
+- .
+- ĐOÀN THỊ MIÊN
+- .
+- NGUYỄN TRUNG THÀNH
+- .
+- VŨ VĂN CHỦ
+- .
+- VŨ VĂN CHỦ
+- 468 Nguyễn Trãi, Phường 8, Quận 5, Thành phố Hồ Chí Minh
+- TS. NGUYỄN HỒNG HẢI
+- TRẦN MINH PHƯƠNG
+- TUQ. GIÁM ĐỐC
+- VIỆN TRƯỞNG
+- ViÖn KHCN x©y dùng
+- MEP-002
+- ../2024
+
