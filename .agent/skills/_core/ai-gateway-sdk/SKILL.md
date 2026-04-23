@@ -29,11 +29,11 @@ Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoin
 │  SERVER DGX SPARK                                            │
 │                                                              │
 │  :8090 ─► AI Gateway (LiteLLM)                               │
-│              ├── Qwen 3.5 35B (:8004)  ← vLLM, local GPU    │
-│              ├── Qwen 3.5 4B  (:8003)  ← vLLM, fallback     │
-│              ├── Claude 4.6 Sonnet/Opus    ← Anthropic API   │
-│              ├── Gemini 3/3.1 Flash/Pro    ← Google API      │
-│              ├── GPT-4o / GPT-4 Turbo      ← OpenAI API     │
+│              ├── Qwen-local-primary    ← vLLM, local GPU    │
+│              ├── reasoning-gemma       ← vLLM, fallback     │
+│              ├── Claude 4.5/4.6        ← Anthropic API      │
+│              ├── Gemini 3.1 Pro/Flash  ← Google API         │
+│              ├── ocr-primary / tier3   ← Vision APIs        │
 │              └── Auto-fallback + Redis cache                 │
 └──────────────────────────────────────────────────────────────┘
 ```
