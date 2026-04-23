@@ -177,6 +177,42 @@ curl http://100.83.192.30:8090/v1/chat/completions \
 
 ---
 
+## 🧠 Đặc tính & Cách Xử lý Reasoning Models (Thinking Models)
+
+Một số model trên Gateway (như `qwen-local-primary`, họ DeepSeek-R1, hoặc các model có hậu tố `-thinking` như `claude-sonnet-4-6-thinking`) sở hữu cơ chế tư duy nội suy. 
+
+**Bản chất:** Thay vì sinh ra ngay kết quả, model sẽ phân tích logic, lập kế hoạch và in ra quá trình này bên trong thẻ `<think>...</think>`, sau đó mới cung cấp đáp án thực sự.
+
+### Cấu hình bắt buộc khi gọi Reasoning Models
+
+Để Agent/Script làm việc hiệu quả với dòng model này (đặc biệt trong các Task trích xuất dữ liệu JSON), **bắt buộc tuân thủ 3 nguyên tắc sau:**
+
+1. **Cắt bỏ thẻ `<think>` bằng Regex:** 
+   Các API Client chuẩn sẽ trả về toàn bộ text (bao gồm cả tư duy). Nếu bạn yêu cầu model trả về JSON, bạn **không thể** gọi `json.loads(raw_text)` ngay, mà phải làm sạch văn bản trước.
+   ```python
+   import re
+   # Xóa toàn bộ nội dung trong thẻ <think>, bao gồm cả newline (DOTALL)
+   clean_text = re.sub(r"<think>.*?</think>", "", raw_text, flags=re.DOTALL).strip()
+   
+   # Sau đó mới tìm kiếm JSON block
+   match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", clean_text, flags=re.DOTALL)
+   # ...
+   ```
+
+2. **Tham số `max_tokens` cực lớn:**
+   Quá trình `<think>` có thể tiêu tốn từ `1000` đến `4000` tokens. Nếu bạn để `max_tokens` mặc định hoặc quá thấp, model sẽ bị đứt gãy (truncated) giữa chừng khi đang "suy nghĩ", dẫn đến không bao giờ trả ra JSON. 
+   👉 **Khuyến nghị:** Luôn set `max_tokens=8192` (hoặc tối đa) khi dùng reasoning model.
+
+3. **Tham số `temperature` cực thấp:**
+   Bản thân quá trình `<think>` đã tạo ra độ đa dạng và sáng tạo (Variance) trong cách giải quyết vấn đề.
+   👉 **Khuyến nghị:** Set `temperature=0.1` hoặc `0.0` để đảm bảo output cuối cùng (đặc biệt là schema JSON) luôn ổn định và đáng tin cậy.
+
+### Khi nào nên dùng Reasoning Models?
+- **NÊN DÙNG:** Các bài toán phức tạp, đòi hỏi phân tích chéo, toán học, đối chiếu luật (như Semantic PCCC Audit), hoặc xử lý code quy mô lớn.
+- **KHÔNG NÊN DÙNG:** Các bài toán trích xuất NER cơ bản (đọc Name, Phone từ CV), định dạng lại chuỗi, hoặc các task cần phản hồi tốc độ cực cao (< 2s) vì quá trình `<think>` rất tốn thời gian.
+
+---
+
 ## Cấu hình (.env)
 
 Copy file `.env.ai-gateway` (cùng folder) vào project, đổi tên `.env`:
