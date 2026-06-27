@@ -17,5 +17,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
 
+[project.scripts]
+ccba-mcp = "ccba_ai.mcp_server:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/ccba_ai"]
