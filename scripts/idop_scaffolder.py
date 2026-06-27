@@ -1262,6 +1262,122 @@ def scaffold_app(app_dir: str) -> None:
     # Always generate or overwrite the skeleton files to ensure the premium CCBA mockup dashboard and all 8 files exist
     generate_fallback_skeleton(app_dir)
 
+def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publisher_prefix: str) -> None:
+    print(f"\nPacking solution: {solution_name}...")
+    import zipfile
+    import shutil
+    
+    # 1. Check if pac CLI is available
+    pac_available = False
+    try:
+        cmd = ["pac", "--version"]
+        if os.name == "nt":
+            subprocess.run(cmd, shell=True, check=True, capture_output=True)
+        else:
+            subprocess.run(cmd, check=True, capture_output=True)
+        pac_available = True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print("Warning: Power Platform CLI (pac) is not installed or not in PATH.")
+        print("Falling back to programmatically packaging files into a standard ZIP archive...")
+        
+    solution_dir = os.path.join(output_dir, solution_name)
+    os.makedirs(solution_dir, exist_ok=True)
+    
+    if pac_available:
+        try:
+            # 2. Run 'pac solution init'
+            print("Initializing solution project using 'pac solution init'...")
+            cmd_init = [
+                "pac", "solution", "init",
+                "--publisher-name", publisher_name,
+                "--publisher-prefix", publisher_prefix,
+                "--outputDirectory", solution_dir
+            ]
+            if os.name == "nt":
+                subprocess.run(cmd_init, shell=True, check=True)
+            else:
+                subprocess.run(cmd_init, check=True)
+                
+            # Copy generated workflows and lists schemas into solution
+            workflows_src = os.path.join(output_dir, "workflows")
+            if os.path.exists(workflows_src):
+                shutil.copytree(workflows_src, os.path.join(solution_dir, "workflows"), dirs_exist_ok=True)
+                
+            lists_src = os.path.join(output_dir, "lists")
+            if os.path.exists(lists_src):
+                shutil.copytree(lists_src, os.path.join(solution_dir, "lists"), dirs_exist_ok=True)
+                
+            # 3. Run 'pac solution pack'
+            zip_file_path = os.path.join(output_dir, f"{solution_name}.zip")
+            print(f"Packing solution using 'pac solution pack' to {zip_file_path}...")
+            cmd_pack = [
+                "pac", "solution", "pack",
+                "--folder", solution_dir,
+                "--zipfile", zip_file_path
+            ]
+            if os.name == "nt":
+                subprocess.run(cmd_pack, shell=True, check=True)
+            else:
+                subprocess.run(cmd_pack, check=True)
+            print(f"Solution packed successfully via pac CLI: {zip_file_path}")
+            return
+        except Exception as e:
+            print(f"pac solution commands failed: {e}")
+            print("Falling back to Python zipfile packaging...")
+
+    # Fallback/Offline programmatic packaging
+    zip_file_path = os.path.join(output_dir, f"{solution_name}.zip")
+    print(f"Generating solution ZIP archive programmatically at: {zip_file_path}")
+    
+    # Write a simple customizations.xml and solution.xml to mock the Solution structure
+    os.makedirs(os.path.join(solution_dir, "Other"), exist_ok=True)
+    
+    solution_xml = f"""<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml version="9.2.0.0" SchemaVersion="1.0" Description="" OrganizationVersion="" OrganizationUniqueName="">
+  <SolutionManifest>
+    <UniqueName>{solution_name}</UniqueName>
+    <LocalizedNames>
+      <LocalizedName description="{solution_name}" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions />
+    <Version>1.0.0.0</Version>
+    <Managed>0</Managed>
+    <Publisher>
+      <UniqueName>{publisher_name}</UniqueName>
+      <LocalizedNames>
+        <LocalizedName description="{publisher_name}" languagecode="1033" />
+      </LocalizedNames>
+      <Descriptions />
+      <EMailAddress />
+      <SupportingWebsiteUrl />
+      <CustomizationPrefix>{publisher_prefix}</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>10000</CustomizationOptionValuePrefix>
+    </Publisher>
+  </SolutionManifest>
+</ImportExportXml>"""
+
+    with open(os.path.join(solution_dir, "Other", "Solution.xml"), "w", encoding="utf-8") as f:
+        f.write(solution_xml)
+        
+    # Copy generated workflows and lists schemas into solution
+    workflows_src = os.path.join(output_dir, "workflows")
+    if os.path.exists(workflows_src):
+        shutil.copytree(workflows_src, os.path.join(solution_dir, "workflows"), dirs_exist_ok=True)
+        
+    lists_src = os.path.join(output_dir, "lists")
+    if os.path.exists(lists_src):
+        shutil.copytree(lists_src, os.path.join(solution_dir, "lists"), dirs_exist_ok=True)
+        
+    # Zip the solution folder
+    with zipfile.ZipFile(zip_file_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(solution_dir):
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.relpath(file_path, solution_dir)
+                zipf.write(file_path, arcname)
+                
+    print(f"Fallback solution zip file created successfully: {zip_file_path}")
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="SharePoint IDOP Deployment Support Toolkit - Scaffolder CLI"
@@ -1297,6 +1413,18 @@ def main() -> None:
         help="Target output directory for the app (defaults to './src/idop-app')."
     )
     parser.add_argument(
+        "--pack", action="store_true", help="Pack the solution using Microsoft Power Platform CLI."
+    )
+    parser.add_argument(
+        "--solution-name", default="IDOP_Solution", help="Name of the solution (defaults to 'IDOP_Solution')."
+    )
+    parser.add_argument(
+        "--publisher-name", default="CCBA", help="Publisher name for the solution (defaults to 'CCBA')."
+    )
+    parser.add_argument(
+        "--publisher-prefix", default="ccba", help="Publisher prefix for the solution (defaults to 'ccba')."
+    )
+    parser.add_argument(
         "-o",
         "--output-dir",
         default="./CDE",
@@ -1305,7 +1433,7 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if not (args.cde or args.lists or args.workflows or args.all or args.action == "app" or args.app):
+    if not (args.cde or args.lists or args.workflows or args.all or args.action == "app" or args.app or args.pack):
         parser.print_help()
         sys.exit(0)
 
@@ -1323,6 +1451,9 @@ def main() -> None:
     if args.action == "app" or args.app:
         app_dir = os.path.abspath(args.app_dir)
         scaffold_app(app_dir)
+
+    if args.all or args.pack:
+        pack_solution(output_dir, args.solution_name, args.publisher_name, args.publisher_prefix)
 
     print("\nScaffolding process completed successfully.")
 

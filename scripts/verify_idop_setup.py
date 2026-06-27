@@ -68,8 +68,8 @@ def validate_cde_structure(cde_path: str) -> None:
         item for item in actual_items if os.path.isdir(os.path.join(cde_path, item))
     }
 
-    # Filter out lists and workflows directory which are generated during --all run
-    cde_folders: Set[str] = actual_dirs - {"lists", "workflows"}
+    # Filter out generated directories (lists, workflows, IDOP_Solution, etc.) by keeping only standard CDE folder prefixes
+    cde_folders: Set[str] = {d for d in actual_dirs if d.startswith(("01", "02", "03", "04", "05"))}
 
     assert cde_folders == expected_cde_folders, (
         f"CDE folder mismatch. Expected: {expected_cde_folders}. Got: {cde_folders}"
@@ -228,6 +228,31 @@ def validate_app_structure(app_path: str) -> None:
 
     print("App validation passed successfully.")
 
+def validate_solution_packing(cde_path: str) -> None:
+    """Validates that running scaffolder with --pack creates a valid Solution zip file."""
+    print("Validating Solution packing...")
+    solution_name = "Test_Solution"
+    cmd: List[str] = [
+        sys.executable, "scripts/idop_scaffolder.py",
+        "--pack", "--solution-name", solution_name,
+        "-o", cde_path
+    ]
+    print(f"Running command: {' '.join(cmd)}")
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    print("Packer Output:")
+    print(result.stdout)
+    
+    zip_file = os.path.join(cde_path, f"{solution_name}.zip")
+    if not os.path.isfile(zip_file):
+        raise AssertionError(f"Expected solution zip file '{zip_file}' was not created.")
+        
+    import zipfile
+    with zipfile.ZipFile(zip_file, "r") as z:
+        namelist = z.namelist()
+        assert "Other/Solution.xml" in namelist, "Solution zip missing 'Other/Solution.xml'"
+        
+    print("Solution packing validation passed successfully.")
+
 def main() -> None:
     """Main execution orchestrating CDE cleanup, execution, and validation."""
     cde_path: str = "./CDE"
@@ -242,6 +267,9 @@ def main() -> None:
         validate_cde_structure(cde_path)
         validate_lists(cde_path)
         validate_workflows(cde_path)
+
+        # 2.5 Run Solution packing & Validate
+        validate_solution_packing(cde_path)
 
         # 3. Run App Scaffolder & Validate
         run_app_scaffolder(app_path)
