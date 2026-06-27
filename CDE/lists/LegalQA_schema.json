@@ -1,0 +1,44 @@
+{
+  "listName": "LegalQA",
+  "displayName": "Legal QA & Audits",
+  "fields": [
+    {
+      "internal_name": "ContractRef",
+      "display_name": "Contract Reference",
+      "type": "Lookup",
+      "lookup_list": "Contracts",
+      "lookup_field": "Title"
+    },
+    {
+      "internal_name": "AssignedLegalExpert",
+      "display_name": "Assigned Legal Expert",
+      "type": "User"
+    },
+    {
+      "internal_name": "Severity",
+      "display_name": "Severity",
+      "type": "Choice",
+      "choices": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ]
+    },
+    {
+      "internal_name": "ResolutionDate",
+      "display_name": "Resolution Date",
+      "type": "DateTime"
+    },
+    {
+      "internal_name": "AuditStatus",
+      "display_name": "Audit Status",
+      "type": "Choice",
+      "choices": [
+        "Open",
+        "In Progress",
+        "Resolved"
+      ]
+    }
+  ]
+}

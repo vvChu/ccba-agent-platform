@@ -1,0 +1,49 @@
+{
+  "listName": "Finance",
+  "displayName": "Finance & Transactions",
+  "fields": [
+    {
+      "internal_name": "ContractReference",
+      "display_name": "Related Contract",
+      "type": "Lookup",
+      "lookup_list": "Contracts",
+      "lookup_field": "Title"
+    },
+    {
+      "internal_name": "Amount",
+      "display_name": "Amount",
+      "type": "Currency"
+    },
+    {
+      "internal_name": "PaymentDate",
+      "display_name": "Payment Date",
+      "type": "DateTime"
+    },
+    {
+      "internal_name": "PaymentType",
+      "display_name": "Payment Type",
+      "type": "Choice",
+      "choices": [
+        "Revenue",
+        "Expense"
+      ]
+    },
+    {
+      "internal_name": "Category",
+      "display_name": "Category",
+      "type": "Choice",
+      "choices": [
+        "Software License",
+        "Consulting Fee",
+        "Payroll",
+        "Office Expense",
+        "Tax"
+      ]
+    },
+    {
+      "internal_name": "ApprovedBy",
+      "display_name": "Approved By",
+      "type": "User"
+    }
+  ]
+}

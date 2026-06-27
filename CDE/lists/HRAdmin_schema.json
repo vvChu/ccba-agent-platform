@@ -1,0 +1,52 @@
+{
+  "listName": "HRAdmin",
+  "displayName": "HR Administration",
+  "fields": [
+    {
+      "internal_name": "EmployeeUser",
+      "display_name": "Employee User",
+      "type": "User"
+    },
+    {
+      "internal_name": "Department",
+      "display_name": "Department",
+      "type": "Choice",
+      "choices": [
+        "Engineering",
+        "Sales",
+        "HR",
+        "Finance",
+        "Legal"
+      ]
+    },
+    {
+      "internal_name": "JobTitle",
+      "display_name": "Job Title",
+      "type": "Text"
+    },
+    {
+      "internal_name": "HireDate",
+      "display_name": "Hire Date",
+      "type": "DateTime"
+    },
+    {
+      "internal_name": "Skills",
+      "display_name": "Skills",
+      "type": "MultiChoice",
+      "choices": [
+        "Python",
+        "SharePoint",
+        "PowerAutomate",
+        "Legal",
+        "Finance",
+        "React",
+        "AWS"
+      ]
+    },
+    {
+      "internal_name": "Salary",
+      "display_name": "Salary",
+      "type": "Currency"
+    }
+  ]
+}
