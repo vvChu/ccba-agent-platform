@@ -1,6 +1,6 @@
 ## Session Learnings - Kiến thức tích lũy
 
-## Cập nhật gần nhất: 2026-04-15
+## Cập nhật gần nhất: 2026-06-27
 
 ---
 
@@ -51,6 +51,21 @@ for i in range(0, len(reader.pages), 20):
     3. Gửi mảnh ảnh chất lượng gốc cho AI giúp tăng độ chính xác trích xuất.
 - **Nguồn**: Session 3cca2e64-49c0-4c49-aef3-684c8c1d80fd, 2026-04-15
 
+### 5. Đóng gói Giải pháp Fallback Ngoại tuyến (Offline ZIP Scaffolding)
+- **Ngữ cảnh**: Khi xây dựng các công cụ tích hợp các CLI bên thứ ba (như Microsoft Power Platform CLI `pac`) để đóng gói sản phẩm.
+- **Vấn đề giải quyết**: Trong môi trường CI/CD hoặc máy chạy offline thiếu các công cụ CLI này, bộ kiểm định tự động hoặc quá trình build sẽ bị lỗi.
+- **Giải pháp**: Viết luồng đóng gói fallback bằng module `zipfile` của Python để tự sinh cấu trúc thư mục giải pháp và file XML siêu dữ liệu (`Solution.xml`) giúp đảm bảo tệp `.zip` đầu ra luôn được tạo ra đồng bộ và hợp lệ cho việc import thủ công.
+- **Nguồn**: Session 86ca4b06-4329-478b-8c16-ca53827675de, 2026-06-27
+
+---
+
+## Anti-patterns (Cách tránh)
+
+### 1. Tự ý thay đổi Alias mặc định của AI Gateway
+- **Vấn đề**: Khi cập nhật tài liệu hoặc cấu hình, việc tự ý thay thế các định danh alias do Server quy định (như `qwen-local-primary`) bằng tên gốc thực tế của model (như `qwen3.5-35b`) sẽ phá vỡ hệ thống routing, load-balancing và các luồng fallback đã được setup ngầm định trên Gateway.
+- **Thay thế bằng**: Luôn tôn trọng và duy trì cấu trúc định danh alias chuẩn (như `qwen-local-primary`, `ocr-primary`, `rag-core`, v.v.) trong mọi file config (`.env`) và mã nguồn mẫu.
+- **Nguồn**: Session df3394e5-3891-4d1b-b234-ce3af1d47689, 2026-04-28
+
 ---
 
 ## Solutions (Giải pháp tham chiếu)
@@ -75,6 +90,16 @@ if sys.stdout.encoding.lower() != 'utf-8':
 - **Giải pháp**: Tránh tạo Pixmap trung gian, sử dụng trực tiếp `page.get_pixmap(matrix=matrix, clip=rect)`. Cách này an toàn, tối ưu bộ nhớ và tránh lỗi định dạng nội bộ của thư viện.
 - **Nguồn**: Session 3cca2e64-49c0-4c49-aef3-684c8c1d80fd, 2026-04-15
 
+### 4. Lọc Thư mục CDE dựa trên Tiền tố (Failsafe Prefix Filter)
+- **Vấn đề**: Bộ test tự động so sánh danh sách thư mục sinh ra bị lệch khi có thêm các thư mục trung gian (như `IDOP_Solution`).
+- **Giải pháp**: Thay vì dùng phép trừ tập hợp tĩnh (`actual_dirs - {"lists", "workflows"}`), hãy dùng bộ lọc tiền tố động (`d.startswith(("01", "02", "03", "04", "05"))`) giúp test-suite cô lập hoàn toàn các thư mục CDE chuẩn cần kiểm tra.
+- **Nguồn**: Session 86ca4b06-4329-478b-8c16-ca53827675de, 2026-06-27
+
+### 5. Độ dài Regex linh hoạt trong Bộ quét API Keys (Privacy Guard)
+- **Vấn đề**: Các mẫu API keys của các hãng có độ dài thực tế khác nhau (Gemini là 39 ký tự, OpenAI legacy là 51 ký tự, OpenAI project key là 53+ ký tự). Việc code cứng độ dài Regex (như `{35}` hay `{48}`) khiến test suite bị lỗi không bắt được dummy keys.
+- **Giải pháp**: Sử dụng độ dài khoảng (như `{30,40}` hoặc `{30,}`) trong Regex để đảm bảo độ bao phủ rộng và an toàn cho mọi loại key.
+- **Nguồn**: Session 86ca4b06-4329-478b-8c16-ca53827675de, 2026-06-27
+
 ---
 
 ## Conventions (Quy định kiến trúc)
@@ -82,3 +107,13 @@ if sys.stdout.encoding.lower() != 'utf-8':
 ### 1. Phân Tách OCR Engines Độc Lập
 - **Ngữ cảnh**: Các mô hình LLM chuyên lập trình hoặc text-reasoning (như Sonnet-4.6, Opus) thường rất yếu, chậm và ngốn quá nhiều token khi phân tích ảnh scan PDF nhị phân (đen trắng/chất lượng thấp).
 - **Quy ước**: Tích hợp cờ chuyên biệt `--ocr` vào workflow để gọi ngầm alias model `ocr-primary` giúp bảo hành nội dung thị giác máy tính thay vì phó thác cho fallback tree.
+
+---
+
+## Configurations (Cấu hình tối ưu)
+
+| Setting / Alias | Value / Backend | Lý do | Áp dụng khi |
+| --------- | ------- | ------- | ------------- |
+| `text-gemma` | Gemma 3 27B | Tận dụng Google Free Quota (144k req/ngày) | High-volume NLP, phân loại, summarize |
+| `ocr-primary` | Gemini 3.1 Flash Lite | Tận dụng Free Quota Vision (5k req/ngày) | OCR, bóc tách văn bản từ hình ảnh/bản vẽ |
+| `reasoning-gemma` | Gemma 4 31B | Logic nâng cao, Free Quota (15k req/ngày)| Các task JSON phức tạp, trích xuất cấu trúc |
