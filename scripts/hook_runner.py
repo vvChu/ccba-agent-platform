@@ -69,9 +69,8 @@ def main():
         exit_code_naming = run_hook_script(HOOKS_DIR / "naming_convention.py", args.event, payload)
         exit_code = max(exit_code_privacy, exit_code_naming)
     elif args.event == "post-tool":
-        # Any post-tool hooks can be run here
-        print(f"[Hook Runner] Post-tool hook executed for {args.tool}.")
-        exit_code = 0
+        # Run brand enforcement checks
+        exit_code = run_hook_script(HOOKS_DIR / "brand_enforcement.py", args.event, payload)
 
     sys.exit(exit_code)
 
