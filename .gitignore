@@ -80,3 +80,9 @@ dist/
 # Ruff cache
 .ruff_cache/
 
+# Temporary study files
+claudekit-engineer/
+.agents/
+scripts/verify_report.py
+.md/claudekit_last_sha.txt
+
