@@ -27,5 +27,14 @@ stream = ai.stream
 chat_multi = ai.chat_multi
 models = ai.models
 
-__all__ = ["ai", "AIClient", "chat", "stream", "chat_multi", "models"]
+def write_file(path, content: str, encoding: str = "utf-8") -> None:
+    """Safe file writer that runs pre-write privacy hooks to block API key leaks."""
+    from ccba_ai.hooks import PrivacyGuardHook
+    guard = PrivacyGuardHook()
+    guard.check_content(content)
+    
+    with open(path, "w", encoding=encoding) as f:
+        f.write(content)
+
+__all__ = ["ai", "AIClient", "chat", "stream", "chat_multi", "models", "write_file"]
 __version__ = "1.0.0"
