@@ -31,4 +31,5 @@ mdconvert config
 
 - [GitHub Repository](https://github.com/vvChu/mdconverter)
 - [Installation Guide](getting-started/installation.md)
+- [ClaudeKit Agent Tools Guide](getting-started/claudekit-tools.md)
 - [CLI Reference](user-guide/cli.md)
