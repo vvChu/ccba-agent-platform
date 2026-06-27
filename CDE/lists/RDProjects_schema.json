@@ -1,0 +1,37 @@
+{
+  "listName": "RDProjects",
+  "displayName": "R&D Projects",
+  "fields": [
+    {
+      "internal_name": "Manager",
+      "display_name": "Project Manager",
+      "type": "User"
+    },
+    {
+      "internal_name": "Budget",
+      "display_name": "Budget",
+      "type": "Currency"
+    },
+    {
+      "internal_name": "StartDate",
+      "display_name": "Start Date",
+      "type": "DateTime"
+    },
+    {
+      "internal_name": "TargetDate",
+      "display_name": "Target Date",
+      "type": "DateTime"
+    },
+    {
+      "internal_name": "Status",
+      "display_name": "Project Status",
+      "type": "Choice",
+      "choices": [
+        "Planned",
+        "In Progress",
+        "On Hold",
+        "Completed"
+      ]
+    }
+  ]
+}

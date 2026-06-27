@@ -1,0 +1,38 @@
+{
+  "listName": "Approvals",
+  "displayName": "Approval Tasks",
+  "fields": [
+    {
+      "internal_name": "RelatedContract",
+      "display_name": "Related Contract",
+      "type": "Lookup",
+      "lookup_list": "Contracts",
+      "lookup_field": "Title"
+    },
+    {
+      "internal_name": "Approver",
+      "display_name": "Approver",
+      "type": "User"
+    },
+    {
+      "internal_name": "Status",
+      "display_name": "Approval Status",
+      "type": "Choice",
+      "choices": [
+        "Pending",
+        "Approved",
+        "Rejected"
+      ]
+    },
+    {
+      "internal_name": "SubmissionDate",
+      "display_name": "Submission Date",
+      "type": "DateTime"
+    },
+    {
+      "internal_name": "Comments",
+      "display_name": "Comments",
+      "type": "Note"
+    }
+  ]
+}
