@@ -106,3 +106,77 @@ mdconvert config
 ### Output
 
 Displays a table with all current settings including proxy URL, models, tokens, and thresholds.
+
+---
+
+## CCBA Platform Utility CLIs
+
+Additional agent platform tools implemented in the `scripts/` directory:
+
+### hook_runner
+
+Unified Hook Runner for session lifecycle hooks (session-init, pre-tool, post-tool).
+
+```bash
+python scripts/hook_runner.py EVENT [OPTIONS]
+```
+- **EVENT**: `session-init`, `pre-tool`, `post-tool`
+- **Options**: `--tool <name>`, `--path <path>`, `--args <json_args>`
+
+---
+
+### plan_manager
+
+Managed Implementation Plan Builder and Status Checker.
+
+```bash
+python scripts/plan_manager.py [create|check|status] [OPTIONS]
+```
+- **create**: `--title "<title>" --phases "<phase1,phase2>"`
+- **check**: `--plan <path> --phase <id> --status <pending|in-progress|completed>`
+- **status**: `--plan <path>`
+
+---
+
+### team_coordinator
+
+Multi-Agent Task Sharing Coordinator.
+
+```bash
+python scripts/team_coordinator.py [list|add|claim|complete] [OPTIONS]
+```
+- **list**: Show all tasks and statuses
+- **add**: `--name "<name>" [--owner "<agent>"]`
+- **claim**: `--name "<name>" --owner "<agent>"`
+- **complete**: `--name "<name>"`
+
+---
+
+### find_skills
+
+Interactive Search CLI for ClaudeKit and Marketing skills.
+
+```bash
+python scripts/find_skills.py [query]
+```
+
+---
+
+### seo_audit
+
+Technical SEO Compliance Auditor for HTML and Markdown files.
+
+```bash
+python scripts/seo_audit.py FILE_PATH
+```
+
+---
+
+### ccba-mcp
+
+Custom Model Context Protocol JSON-RPC Server.
+
+```bash
+# Start the MCP server locally over stdin/stdout
+python -m ccba_ai.mcp_server
+```
