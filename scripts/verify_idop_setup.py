@@ -172,15 +172,85 @@ def validate_workflows(cde_path: str) -> None:
 
     print("Workflows validation passed successfully.")
 
+def run_app_scaffolder(app_path: str) -> None:
+    """Runs the app scaffolding command using positional CLI parameter."""
+    cmd: List[str] = [sys.executable, "scripts/idop_scaffolder.py", "app", "--app-dir", app_path]
+    print(f"Running command: {' '.join(cmd)}")
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    print("App Scaffolder Output:")
+    print(result.stdout)
+    if result.stderr:
+        print("App Scaffolder Errors/Warnings:", file=sys.stderr)
+        print(result.stderr, file=sys.stderr)
+
+def validate_app_structure(app_path: str) -> None:
+    """Validates that the app directory contains exactly the 8 standard files, and that package.json and App.tsx are valid."""
+    print("Validating App structure...")
+    if not os.path.isdir(app_path):
+        raise AssertionError(f"App path '{app_path}' does not exist or is not a directory.")
+
+    expected_files = [
+        "package.json",
+        "tsconfig.json",
+        "vite.config.ts",
+        "index.html",
+        "src/main.tsx",
+        "src/index.css",
+        "src/App.css",
+        "src/App.tsx"
+    ]
+
+    for f in expected_files:
+        path = os.path.join(app_path, f)
+        if not os.path.isfile(path):
+            raise AssertionError(f"Expected skeleton file '{path}' is missing.")
+
+    # Parse package.json inside the generated app to assert dependencies include react, react-dom and devDependencies include vite, typescript
+    pkg_path = os.path.join(app_path, "package.json")
+    with open(pkg_path, "r", encoding="utf-8") as f:
+        pkg = json.load(f)
+
+    deps = pkg.get("dependencies", {})
+    dev_deps = pkg.get("devDependencies", {})
+
+    assert "react" in deps, "package.json dependencies missing 'react'"
+    assert "react-dom" in deps, "package.json dependencies missing 'react-dom'"
+    assert "vite" in dev_deps, "package.json devDependencies missing 'vite'"
+    assert "typescript" in dev_deps, "package.json devDependencies missing 'typescript'"
+
+    # Read App.tsx to assert that it contains the CCBA dashboard premium mock elements
+    app_tsx_path = os.path.join(app_path, "src", "App.tsx")
+    with open(app_tsx_path, "r", encoding="utf-8") as f:
+        app_tsx_content = f.read()
+
+    assert ("CCBA IDOP Platform" in app_tsx_content or "CCBA IDOP Deployment Dashboard" in app_tsx_content), \
+        "App.tsx does not contain the CCBA dashboard premium mock elements."
+
+    print("App validation passed successfully.")
+
 def main() -> None:
     """Main execution orchestrating CDE cleanup, execution, and validation."""
     cde_path: str = "./CDE"
+    app_path: str = "./src/test-idop-app"
     try:
+        # 1. Clean slate
         clean_slate(cde_path)
+        clean_slate(app_path)
+
+        # 2. Run CDE Scaffolder & Validate
         run_scaffolder(cde_path)
         validate_cde_structure(cde_path)
         validate_lists(cde_path)
         validate_workflows(cde_path)
+
+        # 3. Run App Scaffolder & Validate
+        run_app_scaffolder(app_path)
+        validate_app_structure(app_path)
+
+        # 4. Clean up on success
+        clean_slate(cde_path)
+        clean_slate(app_path)
+
         print("\nAll verification checks passed successfully!")
         sys.exit(0)
     except Exception as err:

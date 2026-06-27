@@ -123,8 +123,8 @@ skills:
 
   - name: ccba-idop-scaffolder
     bundle: _core
-    description: "SharePoint IDOP deployment support toolkit"
-    triggers: [idop setup, idop scaffolder, idop, scaffolder]
+    description: "SharePoint IDOP deployment support toolkit & React/Vite/TS Code Apps scaffolding"
+    triggers: [idop setup, idop scaffolder, idop, scaffolder, app scaffolding]
     skill_path: .agent/skills/_core/idop-scaffolder/SKILL.md
 
   # === _qc ===
