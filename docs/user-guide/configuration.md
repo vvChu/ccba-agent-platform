@@ -52,3 +52,16 @@ The converter tries models in this order via AI Gateway:
 4. `gemini-3.1-pro` — Cloud (1M context)
 
 If one fails, it automatically falls back to the next.
+
+---
+
+## Antigravity IDE Custom Skills
+
+The platform integrates custom workspace skills under `.agents/skills/` to provide slash command shortcuts directly in the Antigravity chat interface:
+
+- `/ccba-plan` — Scaffolds and manages implementation plans using `plan_manager.py`.
+- `/ccba-cook` — Conducts code implementation and verification checks.
+- `/ccba-team` — Coordinates multi-agent tasks using `team_coordinator.py`.
+- `/ccba-kit` — Dynamically routes and executes any of the 87+ ClaudeKit or Marketing skills on-demand.
+  - *Example*: `/ccba-kit find auth` to search for authentication skills.
+  - *Example*: `/ccba-kit email` to generate marketing email templates.
