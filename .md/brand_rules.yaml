@@ -1,0 +1,13 @@
+brand_patterns:
+  - pattern: "\\bclaudekit\\b"
+    correct: "ClaudeKit"
+  - pattern: "\\blitellm\\b"
+    correct: "LiteLLM"
+  - pattern: "\\bantigravity\\b"
+    correct: "Antigravity"
+  - pattern: "\\bgemini\\b"
+    correct: "Gemini"
+
+prohibited_words:
+  - "\\blorem ipsum\\b"
+  - "\\bplaceholder\\b"
