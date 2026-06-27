@@ -59,7 +59,15 @@ def recalc_xlsx(filename: str, timeout: int = 30) -> dict:
     abs_path = str(file_path.absolute())
     
     # Try LibreOffice first
-    if setup_libreoffice_macro():
+    libreoffice_setup_ok = False
+    try:
+        libreoffice_setup_ok = setup_libreoffice_macro()
+        if not libreoffice_setup_ok:
+            print("[xlsx_recalc] Warning: LibreOffice macro setup returned False (possible AppData permission issue). Falling back to openpyxl.")
+    except Exception as e:
+        print(f"[xlsx_recalc] Warning: Failed to set up LibreOffice macro due to exception: {e}. Falling back to openpyxl.")
+
+    if libreoffice_setup_ok:
         soffice_cmd = "soffice"
         if platform.system() == "Windows":
             # Common paths for LibreOffice on Windows
