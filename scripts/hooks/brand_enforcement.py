@@ -9,18 +9,44 @@ import os
 import re
 from pathlib import Path
 
-# Brand patterns: (regex pattern, correct spelling)
-BRAND_PATTERNS = [
+import yaml
+
+# Fallback defaults if configuration file is missing or invalid
+DEFAULT_BRAND_PATTERNS = [
     (r"\bclaudekit\b", "ClaudeKit"),
     (r"\blitellm\b", "LiteLLM"),
     (r"\bantigravity\b", "Antigravity"),
     (r"\bgemini\b", "Gemini"),
 ]
 
-PROHIBITED_WORDS = [
+DEFAULT_PROHIBITED_WORDS = [
     r"\blorem ipsum\b",
     r"\bplaceholder\b",
 ]
+
+BRAND_RULES_FILE = Path(".md/brand_rules.yaml")
+
+def load_brand_rules():
+    """Load brand rules from configuration file, falling back to defaults."""
+    if not BRAND_RULES_FILE.exists():
+        return DEFAULT_BRAND_PATTERNS, DEFAULT_PROHIBITED_WORDS
+        
+    try:
+        with open(BRAND_RULES_FILE, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+            
+        patterns = []
+        for item in data.get("brand_patterns", []):
+            patterns.append((item["pattern"], item["correct"]))
+            
+        prohibited = data.get("prohibited_words", [])
+        
+        # If successfully parsed but empty, return defaults
+        return (patterns or DEFAULT_BRAND_PATTERNS), (prohibited or DEFAULT_PROHIBITED_WORDS)
+    except Exception:
+        return DEFAULT_BRAND_PATTERNS, DEFAULT_PROHIBITED_WORDS
+
+BRAND_PATTERNS, PROHIBITED_WORDS = load_brand_rules()
 
 
 def check_file(file_path: Path):
