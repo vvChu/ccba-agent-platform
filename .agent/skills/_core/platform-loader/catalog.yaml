@@ -69,7 +69,7 @@ skills:
     bundle: _core
     description: "Tự động gỡ lỗi và tự phục hồi mã nguồn Python (Self-Healing Debugger)"
     triggers: [debug, mock-debugger, sửa lỗi, self-healing, gỡ lỗi]
-    skill_path: .agents/skills/mock-debugger/SKILL.md
+    skill_path: .agent/skills/_core/mock-debugger/SKILL.md
 
   - name: bigbim-rase
     bundle: _core
