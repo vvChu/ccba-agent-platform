@@ -6,12 +6,28 @@ Exposes search_vietnamese_laws and get_gateway_status tools via JSON-RPC stdin/s
 import sys
 import json
 import traceback
+from pathlib import Path
+from datetime import datetime
 
 # Force UTF-8 on Windows
 if sys.platform == "win32":
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+
+LOG_DIR = Path(".md")
+LOG_FILE = LOG_DIR / "mcp_server.log"
+
+def log(msg: str):
+    """Write timestamped message to .md/mcp_server.log."""
+    try:
+        if not LOG_DIR.exists():
+            LOG_DIR.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(f"[{timestamp}] {msg}\n")
+    except Exception:
+        pass
 
 
 def search_vietnamese_laws(query: str) -> str:
@@ -149,21 +165,25 @@ def handle_request(req):
 
 def main():
     """Main input loop reading from stdin."""
-    sys.stderr.write("[ccba-mcp-server] Starting server loop...\n")
-    sys.stderr.flush()
+    log("[ccba-mcp-server] Starting server loop...")
     
     for line in sys.stdin:
         if not line.strip():
             continue
         try:
+            log(f"[ccba-mcp-server] Received request: {line.strip()}")
             req = json.loads(line)
             resp = handle_request(req)
+            log(f"[ccba-mcp-server] Sending response: {json.dumps(resp)}")
             sys.stdout.write(json.dumps(resp) + "\n")
             sys.stdout.flush()
         except Exception as e:
-            sys.stderr.write(f"[ccba-mcp-server] Error in request loop: {e}\n")
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.flush()
+            log(f"[ccba-mcp-server] Error in request loop: {e}")
+            try:
+                tb = traceback.format_exc()
+                log(f"[ccba-mcp-server] Traceback:\n{tb}")
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":
