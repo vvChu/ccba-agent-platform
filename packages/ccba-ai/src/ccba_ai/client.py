@@ -3,6 +3,7 @@ from collections.abc import Generator
 from pathlib import Path
 
 from openai import OpenAI
+from ccba_ai.hooks import PrivacyGuardHook
 
 
 class AIClient:
@@ -29,7 +30,8 @@ class AIClient:
             api_key=api_key
             or os.environ.get("AI_GATEWAY_KEY", os.environ.get("OPENAI_API_KEY", "")),
         )
-        self.default_model = default_model or os.environ.get("AI_MODEL", "qwen3.5-35b")
+        self.default_model = default_model or os.environ.get("AI_MODEL", "qwen-local-primary")
+        self.privacy_guard = PrivacyGuardHook()
 
     def chat(
         self,
@@ -41,6 +43,7 @@ class AIClient:
         temperature: float = 0.7,
     ) -> str:
         """Send a chat message and get a text response."""
+        self.privacy_guard.check_content(message)
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
@@ -52,7 +55,9 @@ class AIClient:
             max_tokens=max_tokens,
             temperature=temperature,
         )
-        return response.choices[0].message.content or ""
+        response_text = response.choices[0].message.content or ""
+        self.privacy_guard.check_content(response_text)
+        return response_text
 
     def stream(
         self,
@@ -64,6 +69,7 @@ class AIClient:
         temperature: float = 0.7,
     ) -> Generator[str, None, None]:
         """Stream a chat response. Yields text chunks."""
+        self.privacy_guard.check_content(message)
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
@@ -79,6 +85,7 @@ class AIClient:
         for chunk in response:
             content = chunk.choices[0].delta.content
             if content:
+                self.privacy_guard.check_content(content)
                 yield content
 
     def chat_multi(
@@ -100,13 +107,18 @@ class AIClient:
         Returns:
             The assistant's response text, or empty string if model refused.
         """
+        for msg in messages:
+            self.privacy_guard.check_content(msg.get("content", ""))
+            
         response = self._client.chat.completions.create(
             model=model or self.default_model,
             messages=messages,
             max_tokens=max_tokens,
             temperature=temperature,
         )
-        return response.choices[0].message.content or ""
+        response_text = response.choices[0].message.content or ""
+        self.privacy_guard.check_content(response_text)
+        return response_text
 
     def models(self) -> list[str]:
         """List all available models on the gateway."""
