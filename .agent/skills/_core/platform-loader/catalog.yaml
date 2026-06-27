@@ -1,6 +1,6 @@
 # CCBA Agent Services Platform — Service Catalog
 # Auto-discovery manifest for cross-workspace skill loading
-# Last updated: 2026-04-18
+# Last updated: 2026-05-26
 # Structure: skills/workflows now organized in bundles: _core, _software, _qc, _consulting
 
 hub_path: "D:\\GitHubProjects\\ccba-agent-platform"
@@ -12,6 +12,7 @@ bundles:
   Thẩm tra thiết kế: [_core, _qc, _consulting]
   Thiết kế:          [_core, _qc, _consulting]
   Kiểm định:         [_core, _qc, _consulting]
+  BIM:               [_core]
 
 skills:
   # === _core ===
@@ -28,11 +29,97 @@ skills:
     skill_path: .agent/skills/_core/ai-gateway-sdk/SKILL.md
     package_path: packages/ccba-ai
 
+  - name: llm-pipeline-patterns
+    bundle: _core
+    description: "Anti-patterns và best practices cho LLM processing pipelines (2-Pass, Ground Truth Scoping, Duplicate Detection, etc.)"
+    triggers: [llm pipeline, pipeline patterns, 2-pass, ground truth, rag pipeline, synthesis pipeline, self-correction]
+    skill_path: .agent/skills/_core/llm-pipeline-patterns/SKILL.md
+
+  - name: file-stability-guard
+    bundle: _core
+    description: "Phát hiện file đã sync xong trước khi xử lý — thay thế time.sleep() cho cloud sync pipelines"
+    triggers: [file stability, cloud sync, watchdog, race condition, google drive sync, onedrive sync, file incomplete]
+    skill_path: .agent/skills/_core/file-stability-guard/SKILL.md
+
+  - name: hybrid-rag-search
+    bundle: _core
+    description: "Tìm kiếm ngữ nghĩa kết hợp BM25 + Embedding + RRF Fusion — chính xác hơn pure BM25 20x"
+    triggers: [hybrid rag, bm25, embedding search, rrf, semantic search, retrieval, context search, document search]
+    skill_path: .agent/skills/_core/hybrid-rag-search/SKILL.md
+
+  - name: append-only-logger
+    bundle: _core
+    description: "Thread-safe, append-only logging pattern cho Python pipeline multi-daemon — tránh race condition và encoding corruption"
+    triggers: [logging, logger, log file, thread safe, daemon log, pipeline log, append log]
+    skill_path: .agent/skills/_core/append-only-logger/SKILL.md
+
+  - name: api-circuit-breaker
+    bundle: _core
+    description: "Rate limiter + Circuit Breaker 3-trạng-thái cho LLM API calls trong batch pipelines — tránh quota exhaustion và cascade failures"
+    triggers: [circuit breaker, rate limit, rpm, throttle, batch api, api protection, quota, retry]
+    skill_path: .agent/skills/_core/api-circuit-breaker/SKILL.md
+
   - name: long-form-writer
     bundle: _core
     description: "Tạo tài liệu dài (2000+ words) bằng cách quản lý context LLM"
     triggers: [tài liệu dài, long-form, whitepaper, quy chế, regulations]
     skill_path: .agent/skills/_core/long-form-writer/SKILL.md
+
+  - name: mock-debugger
+    bundle: _core
+    description: "Tự động gỡ lỗi và tự phục hồi mã nguồn Python (Self-Healing Debugger)"
+    triggers: [debug, mock-debugger, sửa lỗi, self-healing, gỡ lỗi]
+    skill_path: .agents/skills/mock-debugger/SKILL.md
+
+  - name: bigbim-rase
+    bundle: _core
+    description: "Phân tích RASE tự động cho dự án BIM và ánh xạ thuộc tính IFC4X3"
+    triggers: [rase, phân tích rase, ifc property, pset map, IFC4X3, Qto_SpaceBaseQuantities, Qto_WallBaseQuantities]
+    skill_path: .agent/skills/_core/bigbim-rase/SKILL.md
+    data_files:
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-rase/air-guide.md
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-rase/ifc-pset-map.md
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/INDEX.md
+
+  - name: bigbim-governance
+    bundle: _core
+    description: "Cưỡng chế các rào chắn kỹ thuật (Guardrails) quản trị thông tin BIGBIM"
+    triggers: [sợi chỉ vàng, sợi chỉ đỏ, unique id, governance-core, golden thread, red thread, eir matrix, air matrix, RK_50_40_35, RK_10_70_04, RK_50_40_45, RK_50_60_28]
+    skill_path: .agent/skills/_core/bigbim-governance/SKILL.md
+    data_files:
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-governance/bbp-lifecycle.md
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-governance/v-gates.md
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-governance/cde-workflow.md
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/INDEX.md
+
+  - name: bigbim-classification
+    bundle: _core
+    description: "Tự động hóa viết bảng thực thể (En) và phân loại không gian vật tư (PM) theo Uniclass 200"
+    triggers: [phân loại, naming convention, room naming, uniclass, ISO 22274, ISO 21511, ISO 12006-2, Trí Nhớ Số, Digital Memory, ifc alignment, gis, SL_table, En_table]
+    skill_path: .agent/skills/_core/bigbim-classification/SKILL.md
+    data_files:
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-classification/uniclass-ss.md
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-classification/ifc-entity-guide.md
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/INDEX.md
+
+  - name: bigbim-risk
+    bundle: _core
+    description: "Quét và phát hiện các mâu thuẫn thông tin (Information Conflict) phi hình học tại bước V2"
+    triggers: [mâu thuẫn thông tin, information conflict, rủi ro thông tin, V2 coordination, clash audit, gap detection, va chạm vật lý, không gian lắp đặt, không gian bảo trì]
+    skill_path: .agent/skills/_core/bigbim-risk/SKILL.md
+    data_files:
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-risk/risk-register.md
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-governance/v-gates.md
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/INDEX.md
+
+  - name: bigbim-vbpl-digest
+    bundle: _core
+    description: "Tra cứu văn bản pháp lý BIM Việt Nam — NĐ 175/2024 và ISO 19650 theo điều khoản cụ thể"
+    triggers: [NĐ 175, nghị định BIM, Nghị định 175, điều khoản BIM, ISO 19650, luật xây dựng BIM, pháp lý BIM, quy định nộp BIM, bắt buộc BIM]
+    skill_path: .agent/skills/_core/bigbim-vbpl-digest/SKILL.md
+    data_files:
+      - D:/GitHubProjects/BIGBIM_Method/.md/chunks/INDEX.md
+      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/vbpl-digest/nd-175-digest.md
 
   # === _qc ===
   - name: ccba-ai-pdf-preprocessor
@@ -202,3 +289,9 @@ knowledge:
   - name: session_learnings
     description: "Patterns, anti-patterns, solutions tích lũy qua các phiên"
     knowledge_path: knowledge/session_learnings.md
+
+  - name: bigbim_method_kb
+    description: "BIGBIM Method Knowledge Base v1.0 — 36 articles, 266 chunks, 3-layer architecture"
+    knowledge_path: D:/GitHubProjects/BIGBIM_Method/.md/knowledge/INDEX.md
+    chunks_index: D:/GitHubProjects/BIGBIM_Method/.md/chunks/INDEX.md
+    kb_root: D:/GitHubProjects/BIGBIM_Method/.md/
