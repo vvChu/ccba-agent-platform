@@ -121,6 +121,12 @@ skills:
       - D:/GitHubProjects/BIGBIM_Method/.md/chunks/INDEX.md
       - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/vbpl-digest/nd-175-digest.md
 
+  - name: ccba-idop-scaffolder
+    bundle: _core
+    description: "SharePoint IDOP deployment support toolkit"
+    triggers: [idop setup, idop scaffolder, idop, scaffolder]
+    skill_path: .agent/skills/_core/idop-scaffolder/SKILL.md
+
   # === _qc ===
   - name: ccba-ai-pdf-preprocessor
     bundle: _qc
