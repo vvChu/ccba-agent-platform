@@ -9,6 +9,8 @@ from .core import (
     split_pdf,
 )
 from .vision import TileResult, TitleBlockDetector, TitleBlockRegion, VisionOptimizer
+from .document_skills.pdf_forms import get_field_info, fill_pdf_fields
+from .document_skills.xlsx_recalc import recalc_xlsx
 
 __all__ = [
     # core
@@ -26,4 +28,8 @@ __all__ = [
     "TitleBlockDetector",
     # composite
     "CompositeBuilder",
+    # document_skills
+    "get_field_info",
+    "fill_pdf_fields",
+    "recalc_xlsx",
 ]
