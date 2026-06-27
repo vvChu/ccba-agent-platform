@@ -1,0 +1,43 @@
+{
+  "listName": "CRM",
+  "displayName": "CRM Leads",
+  "fields": [
+    {
+      "internal_name": "ContactPerson",
+      "display_name": "Contact Person",
+      "type": "Text"
+    },
+    {
+      "internal_name": "Email",
+      "display_name": "Email",
+      "type": "Text"
+    },
+    {
+      "internal_name": "Phone",
+      "display_name": "Phone",
+      "type": "Text"
+    },
+    {
+      "internal_name": "Status",
+      "display_name": "Lead Status",
+      "type": "Choice",
+      "choices": [
+        "Lead",
+        "Contacted",
+        "Proposal",
+        "Contracted",
+        "Lost"
+      ]
+    },
+    {
+      "internal_name": "EstimatedValue",
+      "display_name": "Estimated Value",
+      "type": "Currency"
+    },
+    {
+      "internal_name": "AssignedTo",
+      "display_name": "Assigned To",
+      "type": "User"
+    }
+  ]
+}

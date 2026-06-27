@@ -1,0 +1,56 @@
+{
+  "listName": "Contracts",
+  "displayName": "Contracts",
+  "fields": [
+    {
+      "internal_name": "CRMReference",
+      "display_name": "CRM Lead",
+      "type": "Lookup",
+      "lookup_list": "CRM",
+      "lookup_field": "Title"
+    },
+    {
+      "internal_name": "ContractType",
+      "display_name": "Contract Type",
+      "type": "Choice",
+      "choices": [
+        "NDA",
+        "Service Agreement",
+        "Procurement",
+        "Employment"
+      ]
+    },
+    {
+      "internal_name": "Value",
+      "display_name": "Contract Value",
+      "type": "Currency"
+    },
+    {
+      "internal_name": "StartDate",
+      "display_name": "Start Date",
+      "type": "DateTime"
+    },
+    {
+      "internal_name": "EndDate",
+      "display_name": "End Date",
+      "type": "DateTime"
+    },
+    {
+      "internal_name": "Signee",
+      "display_name": "Signee",
+      "type": "User"
+    },
+    {
+      "internal_name": "Status",
+      "display_name": "Contract Status",
+      "type": "Choice",
+      "choices": [
+        "Draft",
+        "Under Review",
+        "Active",
+        "Expired",
+        "Terminated"
+      ]
+    }
+  ]
+}
