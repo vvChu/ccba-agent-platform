@@ -98,7 +98,10 @@ if sys.stdout.encoding.lower() != 'utf-8':
 ### 5. Độ dài Regex linh hoạt trong Bộ quét API Keys (Privacy Guard)
 - **Vấn đề**: Các mẫu API keys của các hãng có độ dài thực tế khác nhau (Gemini là 39 ký tự, OpenAI legacy là 51 ký tự, OpenAI project key là 53+ ký tự). Việc code cứng độ dài Regex (như `{35}` hay `{48}`) khiến test suite bị lỗi không bắt được dummy keys.
 - **Giải pháp**: Sử dụng độ dài khoảng (như `{30,40}` hoặc `{30,}`) trong Regex để đảm bảo độ bao phủ rộng và an toàn cho mọi loại key.
-- **Nguồn**: Session 86ca4b06-4329-478b-8c16-ca53827675de, 2026-06-27
+### 6. Tự động xử lý Cảnh báo đăng nhập trùng phiên (Multi-session Login Warning Bypass)
+- **Vấn đề**: Khi cào dữ liệu từ Thư Viện Pháp Luật (TVPL) bằng Chrome DevTools Protocol, do quy tắc hạn chế một tài khoản chỉ được đăng nhập trên một thiết bị tại một thời điểm, script tự động điền form đăng nhập sẽ kích hoạt cảnh báo modal của website: *"Quý khách Đăng nhập vào thì sẽ có 1 người khác bị Đăng xuất."* làm ngắt tiến trình và gây lỗi Timeout.
+- **Giải pháp**: Bổ sung logic giám sát DOM ngay sau khi submit form đăng nhập để phát hiện sự xuất hiện của nút **"Đồng ý"** trong modal cảnh báo và tự động click xác nhận để giành quyền phiên làm việc, sau đó đợi trang tải lại để tiếp tục tải tệp tin gốc.
+- **Nguồn**: Session 628572ad-aa52-4ae6-ba74-68a61f8709d7, 2026-06-28
 
 ---
 
@@ -107,6 +110,11 @@ if sys.stdout.encoding.lower() != 'utf-8':
 ### 1. Phân Tách OCR Engines Độc Lập
 - **Ngữ cảnh**: Các mô hình LLM chuyên lập trình hoặc text-reasoning (như Sonnet-4.6, Opus) thường rất yếu, chậm và ngốn quá nhiều token khi phân tích ảnh scan PDF nhị phân (đen trắng/chất lượng thấp).
 - **Quy ước**: Tích hợp cờ chuyên biệt `--ocr` vào workflow để gọi ngầm alias model `ocr-primary` giúp bảo hành nội dung thị giác máy tính thay vì phó thác cho fallback tree.
+
+### 2. Phân Tách Dữ Liệu (Data Layer) và Dịch Vụ (Service Layer) trong Platform
+- **Ngữ cảnh**: Các kịch bản cào dữ liệu và đóng gói Bundle tri thức nằm rải rác trong `scripts/` làm Spoke project lộn xộn, khó tái sử dụng và khó bảo trì.
+- **Quy ước**: Tách dữ liệu tri thức tĩnh (Knowledge Base) vào một thư mục chuyên biệt (`.md/legal_docs/<slug>/` với các tệp phân tích Markdown `.md` và Word `.docx`) phục vụ RAG, đồng thời đóng gói toàn bộ logic nghiệp vụ điều phối thành một Python editable package cài đặt được (`packages/ccba-legal-intel`) để tái sử dụng toàn cục.
+- **Nguồn**: Session 628572ad-aa52-4ae6-ba74-68a61f8709d7, 2026-06-28
 
 ---
 
@@ -117,3 +125,4 @@ if sys.stdout.encoding.lower() != 'utf-8':
 | `text-gemma` | Gemma 3 27B | Tận dụng Google Free Quota (144k req/ngày) | High-volume NLP, phân loại, summarize |
 | `ocr-primary` | Gemini 3.1 Flash Lite | Tận dụng Free Quota Vision (5k req/ngày) | OCR, bóc tách văn bản từ hình ảnh/bản vẽ |
 | `reasoning-gemma` | Gemma 4 31B | Logic nâng cao, Free Quota (15k req/ngày)| Các task JSON phức tạp, trích xuất cấu trúc |
+
