@@ -10,6 +10,7 @@ import argparse
 import json
 import random
 import re
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -420,13 +421,14 @@ def get_crawled_doc_data(cdp: ChromeCDP, url: str) -> tuple[str, str, list[dict[
 
 
 def trigger_download(cdp: ChromeCDP, download_dir: Path) -> None:
-    """Set download behavior and click download button on the currently loaded page."""
-    print(f"[LegalIntel] Setting download path to: {download_dir.resolve()}")
-    cdp.send_command("Page.setDownloadBehavior", {
-        "behavior": "allow",
-        "downloadPath": str(download_dir.resolve())
-    })
-    existing_files = {f.name for f in download_dir.glob("*")}
+    """Trigger download click and move the downloaded file from the user's Downloads folder to the project folder."""
+    downloads_path = Path.home() / "Downloads"
+    if not downloads_path.exists():
+        downloads_path = Path("C:/Users/chuvu/Downloads")
+
+    print(f"[LegalIntel] Monitoring default Downloads folder: {downloads_path.resolve()}")
+    existing_downloads = {f.name for f in downloads_path.glob("*")}
+
     click_js = """
     (() => {
         let a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt (docx)'));
@@ -441,20 +443,33 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path) -> None:
     """
     res = cdp.evaluate_js(click_js)
     print(f"[LegalIntel] Trigger download action: {res}")
-    if "No download" not in str(res):
-        start_time = time.time()
-        while time.time() - start_time < 30:
-            current_files = list(download_dir.glob("*"))
-            new_files = [f for f in current_files if f.name not in existing_files]
-            if new_files:
-                if any(f.suffix == ".crdownload" for f in new_files):
-                    time.sleep(1)
-                    continue
-                if any(f.suffix in [".docx", ".pdf", ".doc"] for f in new_files):
-                    print(f"[LegalIntel] Download completed successfully: {[f.name for f in new_files]}")
-                    return
-            time.sleep(1)
-        print("[LegalIntel] Warning: Download timed out after 30 seconds.")
+    if "No download" in str(res):
+        return
+
+    # Wait for the download to complete in the Downloads folder
+    start_time = time.time()
+    while time.time() - start_time < 35:
+        current_downloads = list(downloads_path.glob("*"))
+        new_downloads = [f for f in current_downloads if f.name not in existing_downloads]
+        if new_downloads:
+            # Check for temporary download files
+            if any(f.suffix == ".crdownload" or f.name.endswith(".tmp") for f in new_downloads):
+                time.sleep(1)
+                continue
+
+            completed_files = [f for f in new_downloads if f.suffix in [".docx", ".pdf", ".doc"]]
+            if completed_files:
+                target_file = completed_files[0]
+                dest_file = download_dir / target_file.name
+                print(f"[LegalIntel] Moving downloaded file: {target_file.name} -> {dest_file.resolve()}")
+                try:
+                    shutil.move(str(target_file), str(dest_file))
+                    print(f"[LegalIntel] Download completed successfully: {target_file.name}")
+                except Exception as e:
+                    print(f"[LegalIntel] Error moving file: {e}")
+                return
+        time.sleep(1)
+    print("[LegalIntel] Warning: Download timed out after 35 seconds.")
 
 
 def main() -> None:
