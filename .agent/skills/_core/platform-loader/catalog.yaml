@@ -159,6 +159,12 @@ skills:
     skill_path: .agent/skills/_qc/ccba-ai-qc-reporter/SKILL.md
 
   # === _consulting ===
+  - name: ccba-legal-intel
+    bundle: _consulting
+    description: "Autonomous legal intelligence agent to crawl, diff, and generate compliance checklists from Vietnamese legal documents"
+    triggers: [ccba-legal-intel, crawl law, diff law, legal checklist, thuvienphapluat, TVPL]
+    skill_path: .agents/skills/ccba-legal-intel/SKILL.md
+
   - name: legal-document-tracker
     bundle: _consulting
     description: "Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam"

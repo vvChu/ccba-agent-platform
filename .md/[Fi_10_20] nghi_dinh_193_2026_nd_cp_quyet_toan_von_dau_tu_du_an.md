@@ -1,11 +1,14 @@
 ---
 type: Decree
-title: Nghị định quy định về quyết toán vốn đầu tư dự án
-description: Nghị định này quy định chi tiết về quyết toán vốn đầu tư đối với các dự án sử dụng vốn đầu tư công, chi thường xuyên từ ngân sách nhà nước và các nguồn vốn nhà nước khác sau khi hoàn thành hoặc dừng thực hiện. Văn bản hướng dẫn cụ thể về hồ sơ, trình tự lập báo cáo, yêu cầu kiểm toán độc lập, cũng như thẩm quyền thẩm tra và phê duyệt quyết toán. Đồng thời, Nghị định quy định rõ thời gian tối đa cho các khâu lập, thẩm tra, phê duyệt hồ sơ phân theo từng nhóm dự án (Quan trọng quốc gia, Nhóm A, B, C) và các biện pháp xử lý vi phạm.
-resource: https://thuvienphapluat.vn/van-ban/Dau-tu/Nghi-dinh-193-2026-ND-CP-quyet-toan-von-dau-tu-du-an-709388.aspx
-timestamp: 2026-06-28T04:07:27Z
+title: "Nghị định 193/2026/NĐ-CP quyết toán vốn đầu tư dự án"
+code: "CCBA_RD_VBPL_007"
+revision: "Rev00"
+document_number: "193/2026/NĐ-CP"
+issued_date: "2026-03-20"
+effective_date: "2026-07-01"
+issued_by: "Chính phủ"
+uniclass: "Fi_10_20"
 ---
-
 CHÍNH PHỦ
 -------
 
@@ -1450,5 +1453,3 @@ Nơi nhận:
 
 CHỦ ĐẦU TƯ
 (Ký, ghi rõ họ tên và đóng dấu)
-
- 

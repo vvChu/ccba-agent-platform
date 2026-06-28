@@ -1,11 +1,14 @@
 ---
 type: Decree
-title: Nghị định quy định chi tiết về quản lý chi phí đầu tư xây dựng
-description: Nghị định này quy định chi tiết về quản lý chi phí đầu tư xây dựng, bao gồm sơ bộ tổng mức đầu tư, dự toán, giá gói thầu, định mức và chỉ số giá xây dựng. Đối tượng áp dụng chủ yếu là các dự án đầu tư công, dự án PPP và dự án sử dụng vốn ngân sách nhà nước. Nghị định phân cấp, phân quyền mạnh mẽ và nâng cao trách nhiệm cho chủ đầu tư trong việc xác định, thẩm định, quản lý chi phí, đồng thời chính thức thay thế Nghị định số 10/2021/NĐ-CP.
-resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-206-2026-ND-CP-huong-dan-quan-ly-chi-phi-dau-tu-xay-dung-457659.aspx
-timestamp: 2026-06-28T04:06:47Z
+title: "Nghị định 206/2026/NĐ-CP hướng dẫn quản lý chi phí đầu tư xây dựng"
+code: "CCBA_RD_VBPL_006"
+revision: "Rev00"
+document_number: "206/2026/NĐ-CP"
+issued_date: "2026-03-25"
+effective_date: "2026-07-01"
+issued_by: "Chính phủ"
+uniclass: "Fi_10_20"
 ---
-
 CHÍNH PHỦ
 -------
 
@@ -747,7 +750,3 @@ PHÓ THỦ TƯỚNG
 
 
 Phạm Gia Túc
-
- 
-
- 
