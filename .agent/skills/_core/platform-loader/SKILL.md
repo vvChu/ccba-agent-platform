@@ -34,7 +34,13 @@ Tất cả path bên dưới là **relative** so với Hub root.
 | `completion-checklist` | HSHT, hồ sơ hoàn thành, nghiệm thu | Danh mục hồ sơ hoàn thành công trình |
 | `seminar-builder` | seminar, đào tạo, training, recap | Chuẩn bị nội dung seminar |
 | `long-form-writer` | tài liệu dài, whitepaper, quy chế | Viết tài liệu 2000+ words |
-| `ai-gateway-sdk` | ai, llm, model, gateway, DGX | Kết nối AI Gateway (22 models) |
+| `ai-gateway-sdk` | ai, llm, model, gateway, DGX | Kết nối AI Gateway (22 models) + Output Processing |
+| `excalidraw-diagram` | diagram, excalidraw, sơ đồ, flowchart, visualization, vẽ sơ đồ | Tạo Excalidraw diagram đẹp cho Obsidian hoặc excalidraw.com |
+| `llm-pipeline-patterns` | llm pipeline, 2-pass, ground truth, synthesis pipeline | Anti-patterns & best practices cho LLM pipelines |
+| `file-stability-guard` | file stability, cloud sync, watchdog, race condition | Phát hiện file sync xong trước khi xử lý |
+| `hybrid-rag-search` | hybrid rag, bm25, embedding, rrf, semantic search | BM25 + Embedding + RRF Fusion search |
+| `append-only-logger` | logging, logger, thread safe, daemon log | Thread-safe append-only logging cho multi-daemon |
+| `api-circuit-breaker` | circuit breaker, rate limit, rpm, throttle, batch api | Rate limiter + Circuit Breaker cho LLM batch calls |
 
 ### Workflows
 

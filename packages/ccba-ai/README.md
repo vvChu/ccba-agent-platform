@@ -17,7 +17,7 @@ set PYTHONPATH=D:\GitHubProjects\ccba-agent-platform\packages\ccba-ai\src;%PYTHO
 ```python
 from ccba_ai import ai
 
-# Chat đơn giản (Qwen 3.5 35B local — mặc định)
+# Chat đơn giản (Qwen local — mặc định)
 reply = ai.chat("Xin chào!")
 
 # Chọn model
@@ -53,16 +53,16 @@ Qua biến môi trường hoặc file `.env`:
 ```env
 AI_GATEWAY_URL=http://100.83.192.30:8090/v1
 AI_GATEWAY_KEY=sk-spark-secure-key-2026
-AI_MODEL=qwen3.5-35b
+AI_MODEL=qwen-local-primary
 ```
 
 ## Models
 
 | Tier | Model | Mô tả |
 |------|-------|-------|
-| 🖥️ Local | `qwen3.5-35b` | Private, offline, default |
+| 🖥️ Local | `qwen-local-primary` | Private, offline, default |
 | ☁️ Smart | `claude-sonnet-4-6` ⭐ | Best coding/agentic |
-| ☁️ Fast | `gemini-3-flash` | Nhanh, multimodal |
+| ☁️ Fast | `gemini-3.1-pro-low` | Nhanh, speed optimized |
 | ☁️ Deep | `gemini-3.1-pro` | 1M context, research |
 
 Xem đầy đủ 22 models trong SKILL.md.

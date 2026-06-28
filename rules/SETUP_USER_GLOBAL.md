@@ -14,6 +14,8 @@ Thêm section sau vào cuối `user_global` rules (Settings → Gemini → User 
 - **Rule**: Khi project hiện tại có `.md/workspace_context.yaml`, đọc file này để lấy local overrides
 - **Rule**: Output cuối cùng lưu về thư mục project, KHÔNG lưu rải rác ở Hub
 - **Rule**: Temp/processing files lưu ở `Hub/.md/`
+- **Rule**: Khi ở trong Planning Mode, mọi yêu cầu tạo hoặc cập nhật Implementation Plan (`implementation_plan.md`) bắt buộc phải dừng lại để người dùng phê duyệt thủ công (hoặc thông qua review policy) trước khi thực hiện bất kỳ thay đổi mã nguồn nào.
+
 ```
 
 ## Cách cập nhật
