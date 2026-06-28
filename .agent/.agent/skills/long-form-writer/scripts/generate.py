@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 import time
 
 from docx import Document
@@ -19,8 +20,17 @@ client = OpenAI(base_url=PROXY_URL, api_key=API_KEY)
 
 
 def save_to_docx(text, filename="Output_Gemini.docx"):
-    """Saves text to a .docx file with Vietnamese-friendly font settings."""
+    """Saves text to a .docx file with Vietnamese-friendly font settings, and also saves a raw .md copy."""
     try:
+        # Also save raw markdown
+        md_filename = filename.replace(".docx", ".md")
+        if not md_filename.endswith(".md"):
+            md_filename += ".md"
+            
+        with open(md_filename, 'w', encoding='utf-8') as f:
+            f.write(text)
+        print(f"\n--- Saved markdown successfully to: {md_filename} ---")
+        
         doc = Document()
         style = doc.styles["Normal"]
         style.font.name = "Times New Roman"
@@ -40,7 +50,7 @@ def save_to_docx(text, filename="Output_Gemini.docx"):
         os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
 
         doc.save(filename)
-        print(f"\n--- Saved successfully to: {filename} ---")
+        print(f"--- Saved docx successfully to: {filename} ---")
         return True
     except Exception as e:
         print(f"Error saving file: {e}")
@@ -132,12 +142,22 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Generate long-form governance docs using Gemini via Proxy."
     )
-    parser.add_argument("--prompt", type=str, required=True, help="The prompt for the document.")
+    parser.add_argument("--prompt", type=str, help="The prompt for the document.")
+    parser.add_argument("--prompt_file", type=str, help="Path to a text file containing the prompt.")
     parser.add_argument("--output", type=str, required=True, help="The output .docx filename.")
     parser.add_argument("--cycles", type=int, default=3, help="Number of continuation cycles.")
     parser.add_argument("--model", type=str, default="gemini-3-pro", help="Model name.")
 
     args = parser.parse_args()
+    
+    if args.prompt_file:
+        with open(args.prompt_file, 'r', encoding='utf-8') as f:
+            prompt = f.read()
+    elif args.prompt:
+        prompt = args.prompt
+    else:
+        print("Error: Must provide either --prompt or --prompt_file")
+        sys.exit(1)
 
     # Inject env vars if not present (for local testing flexibility)
     if not os.getenv("ANTIGRAVITY_PROXY"):
@@ -148,7 +168,7 @@ if __name__ == "__main__":
     print(f"Starting generation for: {args.output}")
     print(f"Target Cycles: {args.cycles}")
 
-    final_output = generate_ultra_long_content(args.prompt, args.cycles, args.model)
+    final_output = generate_ultra_long_content(prompt, args.cycles, args.model)
 
     if final_output:
         save_to_docx(final_output, args.output)

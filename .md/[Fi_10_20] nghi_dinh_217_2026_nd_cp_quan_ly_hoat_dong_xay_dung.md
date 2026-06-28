@@ -1,11 +1,14 @@
 ---
 type: Decree
-title: Nghị định quy định chi tiết một số điều của Luật Xây dựng về quản lý hoạt động xây dựng
-description: This Decree details the implementation of the 2025 Construction Law regarding the management of construction activities in Vietnam. It establishes comprehensive guidelines for construction investment sequences, project classification, and the mandatory application of Building Information Modeling (BIM) for specific projects. Furthermore, it outlines strict procedures and requirements for construction surveys, multi-step construction designs, and the formulation and appraisal of feasibility study reports by specialized agencies and appraisal councils.
-resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-217-2026-ND-CP-huong-dan-Luat-Xay-dung-quan-ly-hoat-dong-xay-dung-696494.aspx
-timestamp: 2026-06-28T04:05:21Z
+title: "Nghị định 217/2026/NĐ-CP hướng dẫn Luật Xây dựng về quản lý hoạt động xây dựng"
+code: "CCBA_RD_VBPL_002"
+revision: "Rev00"
+document_number: "217/2026/NĐ-CP"
+issued_date: "2026-04-15"
+effective_date: "2026-07-01"
+issued_by: "Chính phủ"
+uniclass: "Fi_10_20"
 ---
-
 CHÍNH PHỦ
 -------
 
@@ -5784,7 +5787,3 @@ Công trình nông nghiệp và môi trường khác
 	
 
 Cấp II trở lên
-
- 
-
- 

@@ -1,11 +1,14 @@
 ---
 type: Decree
-title: Nghị định quy định về điều kiện năng lực hoạt động xây dựng, Hệ thống thông tin, Cơ sở dữ liệu quốc gia về hoạt động xây dựng
-description: This Decree regulates the capacity conditions for construction activities and the management of the National Information System and Database on construction. It establishes a centralized digital framework requiring unique identification codes for urban planning, construction projects, and practitioners to ensure synchronized data management. Additionally, it details the criteria, procedures, and authority for issuing, revoking, and managing construction practice certificates for individuals, as well as operating licenses for foreign contractors in Vietnam.
-resource: https://thuvienphapluat.vn/van-ban/Cong-nghe-thong-tin/Nghi-dinh-212-2026-ND-CP-dieu-kien-nang-luc-hoat-dong-xay-dung-697287.aspx
-timestamp: 2026-06-28T03:59:36Z
+title: "Nghị định 212/2026/NĐ-CP về điều kiện năng lực hoạt động xây dựng"
+code: "CCBA_RD_VBPL_003"
+revision: "Rev00"
+document_number: "212/2026/NĐ-CP"
+issued_date: "2026-04-10"
+effective_date: "2026-07-01"
+issued_by: "Chính phủ"
+uniclass: "Fi_10_20"
 ---
-
 CHÍNH PHỦ
 -------
 
@@ -3789,7 +3792,3 @@ Vĩnh Long
 	
 
 VIL
-
- 
-
- 
