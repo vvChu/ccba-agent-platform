@@ -11,12 +11,16 @@ class LegalRegistryManager:
             self.registry_path = registry_path
         else:
             # Fallback path inside ccba-agent-platform project structure
-            self.registry_path = Path("d:/GitHubProjects/ccba-agent-platform/.agent/skills/_consulting/legal-document-tracker/registry/legal_registry.yaml")
+            self.registry_path = Path(
+                "d:/GitHubProjects/ccba-agent-platform/.agent/skills/_consulting/legal-document-tracker/registry/legal_registry.yaml"
+            )
 
     def load(self) -> dict:
         """Load the legal document registry from YAML."""
         if not self.registry_path.exists():
-            print(f"[Registry] Warning: Registry file {self.registry_path} not found. Starting with empty registry.")
+            print(
+                f"[Registry] Warning: Registry file {self.registry_path} not found. Starting with empty registry."
+            )
             return {"metadata": {}, "laws": [], "decrees": [], "circulars": []}
 
         with open(self.registry_path, encoding="utf-8") as f:

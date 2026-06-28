@@ -11,6 +11,7 @@ import websocket
 
 class ChromeCDPError(Exception):
     """Base exception for Chrome DevTools Protocol operations."""
+
     pass
 
 
@@ -42,11 +43,7 @@ class ChromeCDP:
         """Send a generic CDP command and return the response payload."""
         if not self.ws:
             raise ChromeCDPError("No active WebSocket connection.")
-        payload = {
-            "id": random.randint(1, 100000),
-            "method": method,
-            "params": params
-        }
+        payload = {"id": random.randint(1, 100000), "method": method, "params": params}
         try:
             self.ws.send(json.dumps(payload))
             resp = self.ws.recv()
@@ -61,10 +58,7 @@ class ChromeCDP:
         payload = {
             "id": random.randint(1, 100000),
             "method": "Runtime.evaluate",
-            "params": {
-                "expression": expression,
-                "returnByValue": True
-            }
+            "params": {"expression": expression, "returnByValue": True},
         }
         try:
             self.ws.send(json.dumps(payload))
@@ -74,7 +68,9 @@ class ChromeCDP:
             result_data = data.get("result", {})
             if "exceptionDetails" in result_data:
                 exc = result_data["exceptionDetails"]
-                raise ChromeCDPError(f"JS Exception: {exc.get('text')} - {exc.get('exception', {})}")
+                raise ChromeCDPError(
+                    f"JS Exception: {exc.get('text')} - {exc.get('exception', {})}"
+                )
 
             return result_data.get("result", {}).get("value")
         except Exception as e:
@@ -87,7 +83,7 @@ class ChromeCDP:
         payload = {
             "id": random.randint(1, 100000),
             "method": "Page.navigate",
-            "params": {"url": url}
+            "params": {"url": url},
         }
         try:
             self.ws.send(json.dumps(payload))
@@ -269,7 +265,7 @@ def get_crawled_doc_data(cdp: ChromeCDP, url: str) -> tuple[str, str, list[dict[
     seen = set()
     links = []
     for lnk in raw_links:
-        h = lnk['href'].split('?')[0].split('#')[0]
+        h = lnk["href"].split("?")[0].split("#")[0]
         if h not in seen and h != url:
             seen.add(h)
             links.append({"text": lnk["text"], "href": h, "relationship": lnk["relationship"]})
@@ -330,10 +326,14 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> bool
             if completed_files:
                 target_file = completed_files[0]
                 dest_file = download_dir / f"{slug_name}{target_file.suffix}"
-                print(f"[LegalIntel] Moving and standardizing file: {target_file.name} -> {dest_file.resolve()}")
+                print(
+                    f"[LegalIntel] Moving and standardizing file: {target_file.name} -> {dest_file.resolve()}"
+                )
                 try:
                     shutil.move(str(target_file), str(dest_file))
-                    print(f"[LegalIntel] Download completed successfully: {slug_name}{target_file.suffix}")
+                    print(
+                        f"[LegalIntel] Download completed successfully: {slug_name}{target_file.suffix}"
+                    )
                     return True
                 except Exception as e:
                     print(f"[LegalIntel] Error moving file: {e}")
