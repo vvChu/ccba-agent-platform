@@ -18,9 +18,11 @@ Luật Xây dựng 2025 quy định toàn diện về các hoạt động xây d
 
 ### Guiding Documents
 
-- [Nghị định quy định chi tiết một số điều của Luật Xây dựng về quản lý hoạt động xây dựng](nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.md) (type: `Decree`)
-- [Nghị định quy định chi tiết một số điều và biện pháp thi hành Luật Xây dựng về quản lý vật liệu xây dựng](nghi_dinh_209_2026_nd_cp_quan_ly_vat_lieu_xay_dung.md) (type: `Decree`)
-- [Nghị định quy định chi tiết một số điều của Luật Xây dựng về quản lý chất lượng, thi công xây dựng và bảo trì công trình xây dựng](nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.md) (type: `Decree`)
-- [Nghị định quy định chi tiết về quản lý chi phí đầu tư xây dựng](nghi_dinh_206_2026_nd_cp_quan_ly_chi_phi_dau_tu_xay_dung.md) (type: `Decree`)
-- [Nghị định quy định về quyết toán vốn đầu tư dự án](nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an.md) (type: `Decree`)
+- [Nghị định 217/2026/NĐ-CP (Quản lý hoạt động xây dựng)](nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.md) (type: `Decree`)
+- [Nghị định 212/2026/NĐ-CP (Điều kiện năng lực hoạt động xây dựng)](nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung.md) (type: `Decree`)
+- [Nghị định 209/2026/NĐ-CP (Quản lý vật liệu xây dựng)](nghi_dinh_209_2026_nd_cp_quan_ly_vat_lieu_xay_dung.md) (type: `Decree`)
+- [Nghị định 207/2026/NĐ-CP (Quản lý chất lượng thi công xây dựng)](nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.md) (type: `Decree`)
+- [Nghị định 206/2026/NĐ-CP (Quản lý chi phí đầu tư xây dựng)](nghi_dinh_206_2026_nd_cp_quan_ly_chi_phi_dau_tu_xay_dung.md) (type: `Decree`)
+- [Nghị định 193/2026/NĐ-CP (Quyết toán vốn đầu tư dự án)](nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an.md) (type: `Decree`)
+- [Thông tư 34/2026/TT-BXD (Cấp công trình xây dựng)](thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung.md) (type: `Circular`)
 
