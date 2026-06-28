@@ -361,55 +361,11 @@ def get_concept_type(url: str) -> str:
     return "Guiding Document"
 
 
-def get_crawled_doc_data(
-    cdp: ChromeCDP, url: str, download_dir: Path | None = None
-) -> tuple[str, str, list[dict[str, str]]]:
-    """Retrieve title, clean innerText, and list of links, and optionally download source."""
-    if download_dir:
-        print(f"[LegalIntel] Setting download path to: {download_dir.resolve()}")
-        cdp.send_command("Page.setDownloadBehavior", {
-            "behavior": "allow",
-            "downloadPath": str(download_dir.resolve())
-        })
-
+def get_crawled_doc_data(cdp: ChromeCDP, url: str) -> tuple[str, str, list[dict[str, str]]]:
+    """Retrieve title, clean innerText, and list of links from active browser tab."""
     cdp.navigate(url)
     cdp.wait_ready()
     cdp.handle_cloudflare()
-
-    # Trigger download immediately after navigation to respect browser gesture context
-    if download_dir:
-        existing_files = {f.name for f in download_dir.glob("*")}
-        click_js = """
-        (() => {
-            let a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt (docx)'));
-            if (!a) a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt'));
-            if (!a) a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Tải bản PDF'));
-            if (a) {
-                a.click();
-                return "Clicked: " + a.innerText;
-            }
-            return "No download link found";
-        })()
-        """
-        res = cdp.evaluate_js(click_js)
-        print(f"[LegalIntel] Trigger download action: {res}")
-        if "No download" not in str(res):
-            start_time = time.time()
-            downloaded = False
-            while time.time() - start_time < 30:
-                current_files = list(download_dir.glob("*"))
-                new_files = [f for f in current_files if f.name not in existing_files]
-                if new_files:
-                    if any(f.suffix == ".crdownload" for f in new_files):
-                        time.sleep(1)
-                        continue
-                    if any(f.suffix in [".docx", ".pdf", ".doc"] for f in new_files):
-                        print(f"[LegalIntel] Download completed successfully: {[f.name for f in new_files]}")
-                        downloaded = True
-                        break
-                time.sleep(1)
-            if not downloaded:
-                print("[LegalIntel] Warning: Download timed out after 30 seconds.")
 
     title = cdp.evaluate_js("document.title")
 
@@ -463,6 +419,44 @@ def get_crawled_doc_data(
     return title, body_text, links
 
 
+def trigger_download(cdp: ChromeCDP, download_dir: Path) -> None:
+    """Set download behavior and click download button on the currently loaded page."""
+    print(f"[LegalIntel] Setting download path to: {download_dir.resolve()}")
+    cdp.send_command("Page.setDownloadBehavior", {
+        "behavior": "allow",
+        "downloadPath": str(download_dir.resolve())
+    })
+    existing_files = {f.name for f in download_dir.glob("*")}
+    click_js = """
+    (() => {
+        let a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt (docx)'));
+        if (!a) a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt'));
+        if (!a) a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Tải bản PDF'));
+        if (a) {
+            a.click();
+            return "Clicked: " + a.innerText;
+        }
+        return "No download link found";
+    })()
+    """
+    res = cdp.evaluate_js(click_js)
+    print(f"[LegalIntel] Trigger download action: {res}")
+    if "No download" not in str(res):
+        start_time = time.time()
+        while time.time() - start_time < 30:
+            current_files = list(download_dir.glob("*"))
+            new_files = [f for f in current_files if f.name not in existing_files]
+            if new_files:
+                if any(f.suffix == ".crdownload" for f in new_files):
+                    time.sleep(1)
+                    continue
+                if any(f.suffix in [".docx", ".pdf", ".doc"] for f in new_files):
+                    print(f"[LegalIntel] Download completed successfully: {[f.name for f in new_files]}")
+                    return
+            time.sleep(1)
+        print("[LegalIntel] Warning: Download timed out after 30 seconds.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Legal Intelligence Pipeline CLI")
     parser.add_argument("--url", required=True, help="URL of the TVPL law page")
@@ -497,22 +491,14 @@ def main() -> None:
     try:
         # 2. Crawl Primary Law
         print(f"[LegalIntel] Crawling primary URL: {args.url}")
-        if args.download_source:
-            cdp.navigate(args.url)
-            cdp.wait_ready()
-            cdp.handle_cloudflare()
-            main_title = cdp.evaluate_js("document.title")
-            slug = OKFBundlePackager(Path()).sanitize_slug(main_title)
-            out_path = Path(args.output_dir or f".md/legal_docs/{slug}")
-            out_path.mkdir(parents=True, exist_ok=True)
-            main_title, main_text, main_links = get_crawled_doc_data(cdp, args.url, download_dir=out_path)
-        else:
-            main_title, main_text, main_links = get_crawled_doc_data(cdp, args.url)
-            slug = OKFBundlePackager(Path()).sanitize_slug(main_title)
-            out_path = Path(args.output_dir or f".md/legal_docs/{slug}")
-            out_path.mkdir(parents=True, exist_ok=True)
-
+        main_title, main_text, main_links = get_crawled_doc_data(cdp, args.url)
+        slug = OKFBundlePackager(Path()).sanitize_slug(main_title)
+        out_path = Path(args.output_dir or f".md/legal_docs/{slug}")
+        out_path.mkdir(parents=True, exist_ok=True)
         packager = OKFBundlePackager(out_path)
+
+        if args.download_source:
+            trigger_download(cdp, out_path)
 
         # 3. Analyze Primary Law
         print("[LegalIntel] Performing LLM analysis on primary document...")
@@ -583,8 +569,7 @@ def main() -> None:
                 print(f"[LegalIntel] Crawling (depth={depth}): {label} ({current_url})")
                 try:
                     time.sleep(2 + random.random() * 2)  # Smart delay
-                    download_dir = out_path / "guiding_docs" if args.download_source else None
-                    sub_title, sub_text, sub_links = get_crawled_doc_data(cdp, current_url, download_dir=download_dir)
+                    sub_title, sub_text, sub_links = get_crawled_doc_data(cdp, current_url)
                     sub_metadata = analyzer.analyze_document(sub_text)
                     sub_slug = packager.sanitize_slug(sub_title)
                     concept_type = get_concept_type(current_url)
@@ -597,6 +582,9 @@ def main() -> None:
                         sub_text,
                         resource_uri=current_url
                     )
+
+                    if args.download_source:
+                        trigger_download(cdp, out_path / "guiding_docs")
 
                     # Save raw text of related document
                     with open(extracted_docs_dir / f"{sub_slug}.txt", "w", encoding="utf-8") as f:
