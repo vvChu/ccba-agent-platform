@@ -418,22 +418,26 @@ def download_original_doc(cdp: ChromeCDP, download_dir: Path) -> None:
         return "No download link found";
     })()
     """
+    # Record existing files before trigger to only watch for new downloads
+    existing_files = {f.name for f in download_dir.glob("*")}
+
     res = cdp.evaluate_js(click_js)
     print(f"[LegalIntel] Trigger download action: {res}")
     if "No download" in str(res):
         return
 
-    # Wait for download to complete
+    # Wait for the new download to complete
     start_time = time.time()
     while time.time() - start_time < 30:
-        files = list(download_dir.glob("*"))
-        if files:
+        current_files = list(download_dir.glob("*"))
+        new_files = [f for f in current_files if f.name not in existing_files]
+        if new_files:
             # Check if there is a temp download file (.crdownload)
-            if any(f.suffix == ".crdownload" for f in files):
+            if any(f.suffix == ".crdownload" for f in new_files):
                 time.sleep(1)
                 continue
-            if any(f.suffix in [".docx", ".pdf", ".doc"] for f in files):
-                print(f"[LegalIntel] Download completed successfully: {[f.name for f in files]}")
+            if any(f.suffix in [".docx", ".pdf", ".doc"] for f in new_files):
+                print(f"[LegalIntel] Download completed successfully: {[f.name for f in new_files]}")
                 return
         time.sleep(1)
     print("[LegalIntel] Warning: Download timed out after 30 seconds.")
