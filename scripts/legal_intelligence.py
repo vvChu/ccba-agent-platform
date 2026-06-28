@@ -56,6 +56,22 @@ class ChromeCDP:
         except Exception as e:
             raise ChromeCDPError(f"Failed to connect to tab WebSocket: {e}") from e
 
+    def send_command(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
+        """Send a generic CDP command and return the response payload."""
+        if not self.ws:
+            raise ChromeCDPError("No active WebSocket connection.")
+        payload = {
+            "id": random.randint(1, 100000),
+            "method": method,
+            "params": params
+        }
+        try:
+            self.ws.send(json.dumps(payload))
+            resp = self.ws.recv()
+            return json.loads(resp)
+        except Exception as e:
+            raise ChromeCDPError(f"Failed to send CDP command {method}: {e}") from e
+
     def evaluate_js(self, expression: str) -> Any:
         """Evaluate a JavaScript expression in the connected tab."""
         if not self.ws:
@@ -382,6 +398,47 @@ def get_crawled_doc_data(cdp: ChromeCDP, url: str) -> tuple[str, str, list[dict[
     return title, body_text, links
 
 
+def download_original_doc(cdp: ChromeCDP, download_dir: Path) -> None:
+    """Configure download path, trigger download click in Chrome, and wait for completion."""
+    print(f"[LegalIntel] Setting download path to: {download_dir.resolve()}")
+    cdp.send_command("Page.setDownloadBehavior", {
+        "behavior": "allow",
+        "downloadPath": str(download_dir.resolve())
+    })
+
+    click_js = """
+    (() => {
+        let a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt (docx)'));
+        if (!a) a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt'));
+        if (!a) a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Tải bản PDF'));
+        if (a) {
+            a.click();
+            return "Clicked: " + a.innerText;
+        }
+        return "No download link found";
+    })()
+    """
+    res = cdp.evaluate_js(click_js)
+    print(f"[LegalIntel] Trigger download action: {res}")
+    if "No download" in str(res):
+        return
+
+    # Wait for download to complete
+    start_time = time.time()
+    while time.time() - start_time < 30:
+        files = list(download_dir.glob("*"))
+        if files:
+            # Check if there is a temp download file (.crdownload)
+            if any(f.suffix == ".crdownload" for f in files):
+                time.sleep(1)
+                continue
+            if any(f.suffix in [".docx", ".pdf", ".doc"] for f in files):
+                print(f"[LegalIntel] Download completed successfully: {[f.name for f in files]}")
+                return
+        time.sleep(1)
+    print("[LegalIntel] Warning: Download timed out after 30 seconds.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Legal Intelligence Pipeline CLI")
     parser.add_argument("--url", required=True, help="URL of the TVPL law page")
@@ -390,6 +447,7 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=3, help="Max guiding docs to crawl")
     parser.add_argument("--max-depth", type=int, default=2, help="Max recursion depth for related docs")
     parser.add_argument("--compare-with", help="URL of predecessor law to diff against")
+    parser.add_argument("--download-source", action="store_true", help="Download original Word/PDF files into the bundle")
     args = parser.parse_args()
 
     print("[LegalIntel] Initiating pipeline execution...")
@@ -438,6 +496,8 @@ def main() -> None:
             main_text,
             resource_uri=args.url
         )
+        if args.download_source:
+            download_original_doc(cdp, out_path)
 
         # Save raw text to .md/extracted_docs/<slug>.txt
         extracted_docs_dir = Path(".md/extracted_docs")
@@ -501,6 +561,8 @@ def main() -> None:
                         sub_text,
                         resource_uri=current_url
                     )
+                    if args.download_source:
+                        download_original_doc(cdp, out_path / "guiding_docs")
 
                     # Save raw text of related document
                     with open(extracted_docs_dir / f"{sub_slug}.txt", "w", encoding="utf-8") as f:
