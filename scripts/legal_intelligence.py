@@ -420,8 +420,8 @@ def get_crawled_doc_data(cdp: ChromeCDP, url: str) -> tuple[str, str, list[dict[
     return title, body_text, links
 
 
-def trigger_download(cdp: ChromeCDP, download_dir: Path) -> None:
-    """Trigger download click and move the downloaded file from the user's Downloads folder to the project folder."""
+def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> None:
+    """Trigger download click and move the downloaded file to the project folder, renaming it to match the concept slug."""
     downloads_path = Path.home() / "Downloads"
     if not downloads_path.exists():
         downloads_path = Path("C:/Users/chuvu/Downloads")
@@ -460,11 +460,11 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path) -> None:
             completed_files = [f for f in new_downloads if f.suffix in [".docx", ".pdf", ".doc"]]
             if completed_files:
                 target_file = completed_files[0]
-                dest_file = download_dir / target_file.name
-                print(f"[LegalIntel] Moving downloaded file: {target_file.name} -> {dest_file.resolve()}")
+                dest_file = download_dir / f"{slug_name}{target_file.suffix}"
+                print(f"[LegalIntel] Moving and standardizing file: {target_file.name} -> {dest_file.resolve()}")
                 try:
                     shutil.move(str(target_file), str(dest_file))
-                    print(f"[LegalIntel] Download completed successfully: {target_file.name}")
+                    print(f"[LegalIntel] Download completed successfully: {slug_name}{target_file.suffix}")
                 except Exception as e:
                     print(f"[LegalIntel] Error moving file: {e}")
                 return
@@ -513,7 +513,7 @@ def main() -> None:
         packager = OKFBundlePackager(out_path)
 
         if args.download_source:
-            trigger_download(cdp, out_path)
+            trigger_download(cdp, out_path, slug)
 
         # 3. Analyze Primary Law
         print("[LegalIntel] Performing LLM analysis on primary document...")
@@ -599,7 +599,7 @@ def main() -> None:
                     )
 
                     if args.download_source:
-                        trigger_download(cdp, out_path / "guiding_docs")
+                        trigger_download(cdp, out_path / "guiding_docs", sub_slug)
 
                     # Save raw text of related document
                     with open(extracted_docs_dir / f"{sub_slug}.txt", "w", encoding="utf-8") as f:
