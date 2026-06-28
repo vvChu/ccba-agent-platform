@@ -14,26 +14,33 @@ class OKFBundlePackager:
         """Create a clean directory slug from URL or title."""
         text = text.lower()
         # Replace slashes and dots with spaces
-        text = text.replace('/', ' ').replace('\\', ' ').replace('.', ' ')
+        text = text.replace("/", " ").replace("\\", " ").replace(".", " ")
         # Remove accents
         accents = {
-            'a': 'áàảãạăắằẳẵặâấầẩẫậ',
-            'd': 'đ',
-            'e': 'éèẻẽẹêếềểễệ',
-            'i': 'íìỉĩị',
-            'o': 'óòỏõọôốồổỗộơớờởỡợ',
-            'u': 'úùủũụưứừửữự',
-            'y': 'ýỳỷỹỵ'
+            "a": "áàảãạăắằẳẵặâấầẩẫậ",
+            "d": "đ",
+            "e": "éèẻẽẹêếềểễệ",
+            "i": "íìỉĩị",
+            "o": "óòỏõọôốồổỗộơớờởỡợ",
+            "u": "úùủũụưứừửữự",
+            "y": "ýỳỷỹỵ",
         }
         for char, group in accents.items():
             for g in group:
                 text = text.replace(g, char)
-        text = re.sub(r'[^a-z0-9\s_-]', '', text)
-        text = re.sub(r'[\s_-]+', '_', text).strip('_')
+        text = re.sub(r"[^a-z0-9\s_-]", "", text)
+        text = re.sub(r"[\s_-]+", "_", text).strip("_")
         return text
 
-    def write_concept(self, relative_path: str, concept_type: str, title: str,
-                      description: str, content: str, resource_uri: str = "") -> None:
+    def write_concept(
+        self,
+        relative_path: str,
+        concept_type: str,
+        title: str,
+        description: str,
+        content: str,
+        resource_uri: str = "",
+    ) -> None:
         """Write a concept file with valid OKF YAML frontmatter."""
         dest = self.root_dir / relative_path
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -43,7 +50,7 @@ type: {concept_type}
 title: "{title}"
 description: "{description}"
 resource: "{resource_uri}"
-timestamp: "{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}"
+timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
 ---
 
 {content}
@@ -67,7 +74,7 @@ timestamp: "{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}"
             "index.md": "index.md",
             "compliance_checklist.md": "compliance_checklist.md",
             "relationship_chart.md": "relationship_chart.md",
-            "diff_report.md": "diff_report.md"
+            "diff_report.md": "diff_report.md",
         }
 
         # 1. Move primary files and rewrite content links
@@ -93,7 +100,9 @@ timestamp: "{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}"
                         all_app_paths.append((new_name.replace(".md", ""), ap))
                 else:
                     shutil.move(old_path, new_path)
-                print(f"[OKF Packager] Moved primary file: {old_name} -> legal_docs/{bundle_slug}/{new_name}")
+                print(
+                    f"[OKF Packager] Moved primary file: {old_name} -> legal_docs/{bundle_slug}/{new_name}"
+                )
 
         # 2. Move guiding documents and rewrite content links
         for gf in guiding_files:
@@ -116,13 +125,17 @@ timestamp: "{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}"
                 apps = self.split_concept_appendices(new_md)
                 for ap in apps:
                     all_app_paths.append((gf, f"guiding_docs/{ap}"))
-                print(f"[OKF Packager] Moved guiding MD: {gf}.md -> legal_docs/{bundle_slug}/guiding_docs/{gf}.md")
+                print(
+                    f"[OKF Packager] Moved guiding MD: {gf}.md -> legal_docs/{bundle_slug}/guiding_docs/{gf}.md"
+                )
 
             old_docx = md_dir / f"{gf}.docx"
             new_docx = guiding_dir / f"{gf}.docx"
             if old_docx.exists():
                 shutil.move(old_docx, new_docx)
-                print(f"[OKF Packager] Moved guiding DOCX: {gf}.docx -> legal_docs/{bundle_slug}/guiding_docs/{gf}.docx")
+                print(
+                    f"[OKF Packager] Moved guiding DOCX: {gf}.docx -> legal_docs/{bundle_slug}/guiding_docs/{gf}.docx"
+                )
 
         # 3. Update index.md with appendices
         index_path = bundle_dir / "index.md"
@@ -134,10 +147,17 @@ timestamp: "{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}"
                     filename = rel_link.split("/")[-1]
                     label = filename.replace(".md", "").replace("_", " ").title()
                     # Make Roman numerals uppercase in the label
-                    label = re.sub(r'\bPhu Luc (\d+)\b', lambda m: f"Phụ lục {m.group(1)}", label, flags=re.IGNORECASE)
+                    label = re.sub(
+                        r"\bPhu Luc (\d+)\b",
+                        lambda m: f"Phụ lục {m.group(1)}",
+                        label,
+                        flags=re.IGNORECASE,
+                    )
                     appendix_section += f"- [{label}]({rel_link})\n"
 
-                index_path.write_text(index_content.strip() + "\n" + appendix_section, encoding="utf-8")
+                index_path.write_text(
+                    index_content.strip() + "\n" + appendix_section, encoding="utf-8"
+                )
                 print("[OKF Packager] Updated index.md with split appendices list.")
 
     def split_concept_appendices(self, file_path: Path) -> list[str]:
@@ -164,17 +184,17 @@ timestamp: "{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}"
         appendices_dir = parent_dir / "appendices"
         appendices_dir.mkdir(parents=True, exist_ok=True)
 
-        main_body_lines = lines[:matches[0][0]]
+        main_body_lines = lines[: matches[0][0]]
         while main_body_lines and not main_body_lines[-1].strip():
             main_body_lines.pop()
 
         def roman_to_decimal(r: str) -> int:
             r = r.upper()
-            roman_map = {'I': 1, 'V': 5, 'X': 10, 'L': 50}
+            roman_map = {"I": 1, "V": 5, "X": 10, "L": 50}
             val = 0
             for i in range(len(r)):
-                if i > 0 and roman_map[r[i]] > roman_map[r[i-1]]:
-                    val += roman_map[r[i]] - 2 * roman_map[r[i-1]]
+                if i > 0 and roman_map[r[i]] > roman_map[r[i - 1]]:
+                    val += roman_map[r[i]] - 2 * roman_map[r[i - 1]]
                 else:
                     val += roman_map[r[i]]
             return val
@@ -182,7 +202,7 @@ timestamp: "{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}"
         appendix_links = []
         for i, (idx, full_label, roman) in enumerate(matches):
             start_idx = idx
-            end_idx = matches[i+1][0] if i + 1 < len(matches) else len(lines)
+            end_idx = matches[i + 1][0] if i + 1 < len(matches) else len(lines)
 
             app_lines = lines[start_idx:end_idx]
             app_lines.pop(0)  # remove header line
@@ -205,7 +225,7 @@ timestamp: "{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}"
             frontmatter = f"""---
 type: Appendix
 title: "{full_label} - {title}"
-description: "Chi tiết {full_label} ban hành kèm theo {parent_slug.replace('_', ' ').title()}"
+description: "Chi tiết {full_label} ban hành kèm theo {parent_slug.replace("_", " ").title()}"
 parent_document: "../{file_path.name}"
 uniclass: "Fi_10_20"
 ---
@@ -223,7 +243,10 @@ uniclass: "Fi_10_20"
         new_parent_content += "\n".join(appendix_links) + "\n"
 
         file_path.write_text(new_parent_content, encoding="utf-8")
-        return [f"appendices/{parent_slug}-phu_luc_{f'{roman_to_decimal(m[2]):02d}'}.md" for m in matches]
+        return [
+            f"appendices/{parent_slug}-phu_luc_{f'{roman_to_decimal(m[2]):02d}'}.md"
+            for m in matches
+        ]
 
 
 def is_guiding_link(url: str) -> bool:

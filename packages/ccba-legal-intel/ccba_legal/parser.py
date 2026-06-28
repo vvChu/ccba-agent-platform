@@ -41,7 +41,7 @@ class Cleaners:
     @classmethod
     def remove_ocr_artifacts(cls, text: str) -> str:
         """Remove long uppercase lines commonly created by page headers/footers in OCR."""
-        return re.sub(r'^[A-ZÀ-Ỹ][A-ZÀ-Ỹ\s_]{14,}\.?\s*$', '', text, flags=re.MULTILINE).strip()
+        return re.sub(r"^[A-ZÀ-Ỹ][A-ZÀ-Ỹ\s_]{14,}\.?\s*$", "", text, flags=re.MULTILINE).strip()
 
 
 class LegalAnalysisEngine:
@@ -75,7 +75,7 @@ Law text:
                 "issuing_body": "Unknown",
                 "signing_date": "",
                 "effective_date": "",
-                "summary": "Could not parse summary from LLM."
+                "summary": "Could not parse summary from LLM.",
             }
         return res
 
@@ -123,8 +123,5 @@ New law sample:
         reply = ai.chat(prompt, model=self.model, temperature=0.1, max_tokens=8192)
         res = Cleaners.extract_json(reply)
         if not res:
-            res = {
-                "changes_summary": "Failed to extract diff summary.",
-                "comparison_table": []
-            }
+            res = {"changes_summary": "Failed to extract diff summary.", "comparison_table": []}
         return res
