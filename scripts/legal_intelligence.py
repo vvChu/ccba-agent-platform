@@ -349,13 +349,26 @@ def get_crawled_doc_data(cdp: ChromeCDP, url: str) -> tuple[str, str, list[dict[
     cdp.handle_cloudflare()
 
     title = cdp.evaluate_js("document.title")
-    body_text = cdp.evaluate_js("document.body.innerText")
 
-    # Extract related TVPL links
+    # Target only the actual law content container to avoid website headers/footers/sidebars
+    body_text_js = """
+    (() => {
+        let el = document.querySelector('#divContentDoc') ||
+                 document.querySelector('.content1') ||
+                 document.querySelector('.contentDoc') ||
+                 document.body;
+        return el.innerText;
+    })()
+    """
+    body_text = cdp.evaluate_js(body_text_js)
+
+    # Extract related TVPL links from document-wide anchors (highly robust across tabs)
     links_js = """
-    Array.from(document.querySelectorAll('a'))
-      .map(a => ({ text: a.innerText.trim(), href: a.href }))
-      .filter(a => a.href && a.href.includes('thuvienphapluat.vn/van-ban/'))
+    (() => {
+        return Array.from(document.querySelectorAll('a'))
+          .map(a => ({ text: a.innerText.trim(), href: a.href }))
+          .filter(a => a.href && a.href.includes('thuvienphapluat.vn/van-ban/'));
+    })()
     """
     raw_links = cdp.evaluate_js(links_js) or []
     seen = set()
