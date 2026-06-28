@@ -132,6 +132,7 @@ class ChromeCDP:
         """Check for Cloudflare bot challenge and pause for user completion if found."""
         check_expr = """
         !!(document.title.includes("Cloudflare") ||
+           document.title.includes("Just a moment") ||
            document.querySelector("div.cf-turnstile") ||
            document.querySelector("#challenge-running") ||
            document.querySelector("#challenge-stage"))
@@ -338,9 +339,9 @@ timestamp: {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}
 
 
 def is_guiding_link(url: str) -> bool:
-    """Check if the URL points to a guiding document (Decree, Circular, Decision, Official Letter)."""
+    """Check if the URL points to a guiding or related document (including VBHN)."""
     url_lower = url.lower()
-    keywords = ["nghi-dinh", "thong-tu", "quyet-dinh", "cong-van"]
+    keywords = ["nghi-dinh", "thong-tu", "quyet-dinh", "cong-van", "van-ban-hop-nhat", "vbhn"]
     return any(k in url_lower for k in keywords)
 
 
@@ -355,6 +356,8 @@ def get_concept_type(url: str) -> str:
         return "Decision"
     if "cong-van" in url_lower:
         return "Official Letter"
+    if "van-ban-hop-nhat" in url_lower or "vbhn" in url_lower:
+        return "Consolidated Document"
     return "Guiding Document"
 
 
@@ -426,7 +429,25 @@ def get_crawled_doc_data(
     links_js = """
     (() => {
         return Array.from(document.querySelectorAll('a'))
-          .map(a => ({ text: a.innerText.trim(), href: a.href }))
+          .map(a => {
+              let text = a.innerText.trim();
+              let href = a.href || "";
+              let lower_text = text.toLowerCase();
+              let lower_href = href.toLowerCase();
+              let rel = "Guides";
+
+              if (lower_href.includes('hop-nhat') || lower_href.includes('vbhn') || lower_text.includes('hợp nhất') || lower_text.includes('vbhn')) {
+                  rel = "Consolidation";
+              } else if (lower_text.includes('thay thế') || lower_text.includes('bị thay thế')) {
+                  rel = "Replacement";
+              } else if (lower_text.includes('đính chính')) {
+                  rel = "Rectification";
+              } else if (lower_text.includes('sửa đổi') || lower_text.includes('bổ sung')) {
+                  rel = "Amendment";
+              }
+
+              return { text: text, href: href, relationship: rel };
+          })
           .filter(a => a.href && a.href.includes('thuvienphapluat.vn/van-ban/'));
     })()
     """
@@ -437,7 +458,7 @@ def get_crawled_doc_data(
         h = lnk['href'].split('?')[0].split('#')[0]
         if h not in seen and h != url:
             seen.add(h)
-            links.append({"text": lnk["text"], "href": h})
+            links.append({"text": lnk["text"], "href": h, "relationship": lnk["relationship"]})
 
     return title, body_text, links
 
@@ -545,15 +566,19 @@ def main() -> None:
             for lnk in main_links:
                 h = lnk["href"].split('?')[0].split('#')[0]
                 if is_guiding_link(h) and h not in crawled_urls:
-                    queue.append((lnk["href"], lnk["text"], 1, slug))
+                    queue.append((lnk["href"], lnk["text"], 1, slug, lnk.get("relationship", "Guides")))
 
             count = 0
             while queue and count < args.limit:
-                current_url, label, depth, parent_slug = queue.pop(0)
+                current_url, label, depth, parent_slug, rel_type = queue.pop(0)
                 norm_url = current_url.split('?')[0].split('#')[0]
                 if norm_url in crawled_urls:
                     continue
                 crawled_urls.add(norm_url)
+
+                if rel_type == "Consolidation":
+                    print(f"\n[LegalIntel] NOTICE: Consolidated Document (VBHN) detected: {label} ({current_url})")
+                    print("[LegalIntel] It is highly recommended to review this VBHN file for merged amendments.\n")
 
                 print(f"[LegalIntel] Crawling (depth={depth}): {label} ({current_url})")
                 try:
@@ -583,7 +608,8 @@ def main() -> None:
                         "summary": sub_metadata.get("summary", ""),
                         "type": concept_type,
                         "parent_slug": parent_slug,
-                        "node_id": sub_slug
+                        "node_id": sub_slug,
+                        "relationship": rel_type
                     })
                     count += 1
 
@@ -592,7 +618,7 @@ def main() -> None:
                         for sl in sub_links:
                             sh = sl["href"].split('?')[0].split('#')[0]
                             if is_guiding_link(sh) and sh not in crawled_urls:
-                                queue.append((sl["href"], sl["text"], depth + 1, sub_slug))
+                                queue.append((sl["href"], sl["text"], depth + 1, sub_slug, sl.get("relationship", "Guides")))
 
                 except Exception as ex:
                     print(f"[LegalIntel] Error crawling {label}: {ex}")
@@ -623,7 +649,20 @@ def main() -> None:
         for rd in related_docs:
             p_node = "Main" if rd["parent_slug"] == slug else f'Sub_{rd["parent_slug"][:10]}'
             c_node = f'Sub_{rd["node_id"][:10]}'
-            chart_md += f'    {p_node} -->|guiding| {c_node}["{rd["title"]}"]\n'
+            rel = rd.get("relationship", "Guides")
+
+            if rel == "Consolidation":
+                line = "== Consolidated ==>"
+            elif rel == "Replacement":
+                line = "-. Replaces .->"
+            elif rel == "Rectification":
+                line = "-. Rectifies .->"
+            elif rel == "Amendment":
+                line = "-. Amends .->"
+            else:
+                line = "-->|guides|"
+
+            chart_md += f'    {p_node} {line} {c_node}["{rd["title"]}"]\n'
         chart_md += "```\n"
 
         packager.write_concept(
