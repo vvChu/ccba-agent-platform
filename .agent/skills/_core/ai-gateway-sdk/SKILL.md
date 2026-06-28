@@ -29,7 +29,7 @@ Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoin
 │  SERVER DGX SPARK                                            │
 │                                                              │
 │  :8090 ─► AI Gateway (LiteLLM)                               │
-│              ├── Qwen-local-primary    ← vLLM, local GPU    │
+│              ├── qwen-local-primary    ← vLLM, local GPU    │
 │              ├── reasoning-gemma       ← vLLM, fallback     │
 │              ├── Claude 4.5/4.6        ← Anthropic API      │
 │              ├── Gemini 3.1 Pro/Flash  ← Google API         │
@@ -56,38 +56,41 @@ Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoin
 ## Model Catalog (Trích xuất từ API)
 
 ### 🖥️ Local GPU (Private, Offline, RAG)
-
 | Model | Mô tả |
-|-------|--------|
+|-------|-------------|
 | `qwen-local-primary` | ⭐ **Default** — Qwen reasoning model, mạnh mẽ cho audit |
-| `Qwen-3.6-35B-NVFP4` | Qwen 3.6 35B (NVFP4), cực nhanh trên GPU |
-| `rag-core` / `rag-light` | Alias chuyên dụng cho hệ thống RAG nội bộ |
-| `reasoning-gemma` | Gemma có khả năng suy luận logic |
-| `text-gemma` / `12b` / `4b` | Các bản Gemma phục vụ sinh text tiêu chuẩn |
+| `rag-core` | Alias của qwen-local-primary (RAG pipeline) |
+| `rag-light` | Qwen 3.5 4B — lightweight fallback |
 
-### 🔍 Chuyên biệt cho OCR (Vision)
+### 🛠️ RAG Virtual Aliases (Free Tier Farm)
+Mô hình "ảo" (Alias) được Gateway tự động định tuyến để tận dụng Quota Free của Google.
+| Alias / Bí Danh | Model Thật (Backend) | Công Dụng (Best For) |
+|-------|----------|----------|
+| `text-gemma` | Gemma 3 27B | High-volume NLP (Sinh câu hỏi, Summarize) |
+| `text-light-gemma` | Gemma 3 12B | Bóc tách siêu dữ liệu (Metadata, Tagging) |
+| `reasoning-gemma` | Gemma 4 31B | Logical Graph (Neo4j), Structured JSON |
+| `ocr-primary` | Gemini 3.1 Flash Lite| Cloud OCR Vision (Trích xuất văn bản từ Ảnh) |
 
-| Model | Mô tả |
-|-------|--------|
-| `ocr-primary` | Tối ưu hóa bóc tách PDF, biên dịch CAD/bản vẽ |
-| `ocr-tier3` / `tier4` | Phân cấp OCR tùy theo độ khó và kích thước ảnh |
-
-### ☁️ Cloud — Speed & Standard
-
+### 🏎️ Cloud — Speed Tier (< 1.5s)
 | Model | Best For |
 |-------|----------|
-| `claude-haiku-4-5` | Nhanh nhất, chi phí cực rẻ, phân tích metadata |
-| `claude-sonnet-4-6` ⭐ | Cân bằng nhất cho coding & agentic tasks |
-| `gemini-3.1-pro-low` | Tốc độ cao với Google API |
+| `gemini-3-flash` / `gemini-3.1-flash-lite` | Nhanh, multimodal / rẻ nhất |
+| `gemma-3-27b` | Free tier, high-volume tasks |
+| `claude-haiku-4` / `claude-haiku-4-5` | Fast Claude, better quality |
 
-### ☁️ Cloud — Deep Reasoning (Thinking)
-
+### 🧠 Cloud — Balanced Tier (1–3s)
 | Model | Best For |
 |-------|----------|
-| `claude-sonnet-4-6-thinking` | Suy luận đa bước, lập kế hoạch phức tạp |
-| `claude-opus-4-6-thinking` | Phân tích tài chính, pháp lý rủi ro cao (Opus tier) |
-| `gemini-3.1-pro-high` | Ngữ cảnh 1M - 2M tokens, phân tích toàn bộ Codebase |
-| `gpt-oss-120b-medium` | Giải pháp thay thế cỡ lớn mã nguồn mở |
+| `claude-sonnet-4-6` ⭐ | Best coding, agentic pipelines |
+| `claude-sonnet-4-6-thinking` | Reasoning with CoT |
+| `claude-opus-4-6` / `claude-opus-4-6-thinking` | Deep analysis, legal/financial, Opus + CoT |
+| `gpt-oss-120b-medium` | Large OSS model via proxy |
+
+### 🔬 Cloud — Deep Reasoning (7–13s, 1M context)
+| Model | Best For |
+|-------|----------|
+| `gemini-3.1-pro` / `gemini-3.1-pro-high` / `gemini-3.1-pro-low`| Full codebase analysis, research, novel problems |
+| `gemini-3-pro-high` / `gemini-3-pro-low` | Scientific reasoning, budget deep reasoning |
 
 ---
 
@@ -258,6 +261,104 @@ curl http://100.83.192.30:8090/health
 | `Model not found` | Kiểm tra tên model bằng `/v1/models` |
 | `504 Gateway Timeout` | Model đang load, chờ 2-3 phút rồi thử lại |
 | Qwen 35B chậm | Giảm `max_tokens`, hoặc dùng `rag-light` (4B) |
+
+## 🧹 Output Processing — Làm Sạch LLM Output
+
+> Áp dụng **TRƯỚC** khi parse, lưu hoặc hiển thị bất kỳ output LLM nào.  
+> Kinh nghiệm từ VvC Pipeline (v7.4+): 100% output phải đi qua các bước này.
+
+### 1. Think-Tag Stripping (Bắt buộc với Reasoning Models)
+
+LLM reasoning models (Qwen, DeepSeek-R1, Claude -thinking) có thể rò rỉ `<think>` tags vào output. **Phải strip unconditionally** — không phụ thuộc vào prompt hay model config.
+
+```python
+import re
+
+# 3 patterns xử lý toàn bộ edge cases
+_THINK_PATTERN  = re.compile(r"<think>.*?</think>\n*", re.DOTALL | re.IGNORECASE)
+_THINK_UNCLOSED = re.compile(r"<think>.*", re.DOTALL | re.IGNORECASE)   # tag chưa đóng
+_ORPHAN_END     = re.compile(r"^.*?</think>\n*", re.DOTALL | re.IGNORECASE)  # chỉ có </think>
+
+def strip_think_tags(text: str) -> str:
+    """Strip toàn bộ <think>...</think> blocks khỏi LLM output."""
+    text = _THINK_PATTERN.sub("", text)
+    text = _THINK_UNCLOSED.sub("", text)
+    text = _ORPHAN_END.sub("", text)
+    return text.strip()
+```
+
+> [!CAUTION]
+> Nếu bỏ qua bước này, toàn bộ chain-of-thought của LLM (có thể 200+ dòng) sẽ rò rỉ vào output thực tế — đã xảy ra trong thực tế (`deliberate_practice.md` chứa 210 dòng think-tag).
+
+### 2. JSON Extraction từ Markdown Code Fence
+
+LLM thường bọc JSON trong ` ```json ... ``` `. Phải extract trước khi `json.loads()`.
+
+```python
+def extract_json(raw: str) -> dict | None:
+    """Extract JSON từ LLM output, xử lý cả raw JSON và markdown-wrapped."""
+    clean = strip_think_tags(raw)
+    # Thử markdown fence trước
+    match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", clean, flags=re.DOTALL)
+    if match:
+        return json.loads(match.group(1))
+    # Fallback: tìm raw JSON object
+    match = re.search(r"\{.*\}", clean, flags=re.DOTALL)
+    if match:
+        return json.loads(match.group(0))
+    return None
+```
+
+### 3. Timeout / Garbage Guard
+
+Luôn validate output trước khi dùng. Không có bước này → pipeline sẽ lưu error messages vào database.
+
+```python
+def is_valid_output(text: str, min_chars: int = 10) -> bool:
+    """Kiểm tra output LLM không phải timeout error hay rỗng."""
+    if not text or len(text.strip()) < min_chars:
+        return False
+    if text.strip().startswith("Error connecting"):
+        return False
+    return True
+```
+
+### 4. Web Fetch Garbage Detection
+
+Khi fetch URL để làm context, sites JS-heavy (Twitter, SPA) trả về error pages.
+
+```python
+_GARBAGE_PATTERNS = [
+    r"javascript is (?:disabled|not available)",
+    r"enable javascript",
+    r"something went wrong.*(?:try again|let.s give it another shot)",
+    r"we.ve detected that javascript",
+    r"please enable cookies",
+    r"access denied.*cloudflare",
+    r"noscript",
+    r"this browser is no longer supported",
+]
+
+def is_garbage_fetch(text: str, min_chars: int = 100) -> bool:
+    """True nếu fetched content là error page, không phải real content."""
+    if len(text.strip()) < min_chars:
+        return True
+    text_lower = text.lower()
+    return sum(1 for p in _GARBAGE_PATTERNS if re.search(p, text_lower)) >= 2
+```
+
+### 5. ALL-CAPS OCR Artifact Removal
+
+Khi OCR capture page headers/footers (thường in HOA), loại bỏ trước khi synthesis.
+
+```python
+def remove_ocr_artifacts(text: str) -> str:
+    """Loại bỏ các dòng ALL-CAPS dài (>15 chars) — thường là header/footer trang."""
+    return re.sub(r'^[A-ZÀ-Ỹ][A-ZÀ-Ỹ\s_]{14,}\.?\s*$', '', text,
+                  flags=re.MULTILINE).strip()
+```
+
+---
 
 ## Bảo mật
 

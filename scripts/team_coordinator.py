@@ -4,10 +4,9 @@ Team Task Coordinator CLI for ccba-agent-platform.
 Manages a shared, file-based JSON task database for multi-agent coordination.
 """
 
-import sys
-import os
-import json
 import argparse
+import json
+import sys
 from pathlib import Path
 
 # Enforce UTF-8 output
@@ -27,7 +26,7 @@ def load_tasks() -> list:
         save_tasks([])
         return []
     try:
-        with open(DB_FILE, "r", encoding="utf-8") as f:
+        with open(DB_FILE, encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
         print(f"[Coordinator] Warning: Could not parse {DB_FILE}: {e}")
@@ -49,7 +48,7 @@ def list_tasks():
     if not tasks:
         print("[Coordinator] No tasks found in the database.")
         return
-        
+
     print(f"\n[Coordinator] Shared Tasks from {DB_FILE}:\n")
     print(f"{'Name':<35} | {'Owner':<15} | {'Status':<12}")
     print("-" * 70)
@@ -65,7 +64,7 @@ def add_task(name: str, owner: str = None) -> int:
     if any(t["name"] == name for t in tasks):
         print(f"[Coordinator] Error: Task '{name}' already exists.")
         return 1
-        
+
     tasks.append({
         "name": name,
         "owner": owner or "None",
@@ -89,7 +88,7 @@ def claim_task(name: str, owner: str) -> int:
             save_tasks(tasks)
             print(f"[Coordinator] Owner '{owner}' claimed task '{name}'.")
             return 0
-            
+
     print(f"[Coordinator] Error: Task '{name}' not found.")
     return 1
 
@@ -103,7 +102,7 @@ def complete_task(name: str) -> int:
             save_tasks(tasks)
             print(f"[Coordinator] Task '{name}' completed successfully.")
             return 0
-            
+
     print(f"[Coordinator] Error: Task '{name}' not found.")
     return 1
 
@@ -111,26 +110,26 @@ def complete_task(name: str) -> int:
 def main():
     parser = argparse.ArgumentParser(description="CCBA Team Task Coordinator CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    
+
     # list command
     subparsers.add_parser("list", help="List all coordinator tasks")
-    
+
     # add command
     add_parser = subparsers.add_parser("add", help="Add a task")
     add_parser.add_argument("--name", required=True, help="Name of the task")
     add_parser.add_argument("--owner", help="Owner of the task")
-    
+
     # claim command
     claim_parser = subparsers.add_parser("claim", help="Claim a task")
     claim_parser.add_argument("--name", required=True, help="Name of the task")
     claim_parser.add_argument("--owner", required=True, help="Owner name claiming the task")
-    
+
     # complete command
     complete_parser = subparsers.add_parser("complete", help="Complete a task")
     complete_parser.add_argument("--name", required=True, help="Name of the task")
-    
+
     args = parser.parse_args()
-    
+
     if args.command == "list":
         list_tasks()
     elif args.command == "add":

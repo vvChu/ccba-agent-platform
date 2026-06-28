@@ -1,11 +1,14 @@
 ---
-type: Circular
-title: Thông tư quy định chi tiết về cấp công trình xây dựng phục vụ quản lý hoạt động xây dựng
-description: This Circular details the classification of construction projects to serve the management of construction activities in Vietnam. It establishes principles for determining project grades (Special, I, II, III, IV) based on criteria such as importance, capacity, and structural scale across various sectors including civil, industrial, infrastructure, and transport. Furthermore, it outlines how these classifications are applied in practical construction management, such as project appraisal, licensing, and determining professional requirements. The document includes detailed classification tables and replaces previous regulations on construction grading.
-resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-34-2026-TT-BXD-cap-cong-trinh-xay-dung-phuc-vu-quan-ly-hoat-dong-xay-dung-712306.aspx
-timestamp: 2026-06-28T03:58:17Z
+type: Decree
+title: "Thông tư 34/2026/TT-BXD cấp công trình xây dựng phục vụ quản lý hoạt động xây dựng"
+code: "CCBA_RD_VBPL_008"
+revision: "Rev00"
+document_number: "34/2026/TT-BXD"
+issued_date: "2026-05-02"
+effective_date: "2026-07-01"
+issued_by: "Bộ Xây dựng"
+uniclass: "Fi_10_20"
 ---
-
 BỘ XÂY DỰNG
 -------
 
@@ -8680,5 +8683,3 @@ a) Dự án Công trình khám và điều trị D có một công trình chính
 Như vậy cấp công trình của Công trình khám và điều trị D là cấp II (cấp cao nhất xác định được từ quy mô công suất và quy mô kết cấu).
 
 b) Áp dụng cấp công trình trong quản lý các hoạt động xây dựng: Cách xác định xem Ví dụ 6 của Phụ lục này./.
-
- 

@@ -1,11 +1,14 @@
 ---
 type: Decree
-title: Nghị định quy định chi tiết một số điều và biện pháp thi hành Luật Xây dựng về quản lý vật liệu xây dựng
-description: This Decree details the Construction Law regarding the management, development, and use of building materials, with a strong emphasis on encouraging new, green, recycled, and eco-friendly materials. It establishes the legal framework for a 10-year building materials development strategy and sets strict regulations on quality standards, mineral usage, and white asbestos. Furthermore, the decree clarifies state management responsibilities across different levels and officially replaces Decree No. 09/2021/NĐ-CP.
-resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-209-2026-ND-CP-huong-dan-Luat-Xay-dung-ve-quan-ly-vat-lieu-xay-dung-288496.aspx
-timestamp: 2026-06-28T04:06:01Z
+title: "Nghị định 209/2026/NĐ-CP hướng dẫn Luật Xây dựng về quản lý vật liệu xây dựng"
+code: "CCBA_RD_VBPL_004"
+revision: "Rev00"
+document_number: "209/2026/NĐ-CP"
+issued_date: "2026-04-05"
+effective_date: "2026-07-01"
+issued_by: "Chính phủ"
+uniclass: "Fi_10_20"
 ---
-
 CHÍNH PHỦ
 -------
 
@@ -289,5 +292,3 @@ PHÓ THỦ TƯỚNG
 
 
 Phạm Gia Túc
-
- 

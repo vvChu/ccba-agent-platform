@@ -1,11 +1,14 @@
 ---
 type: Decree
-title: Nghị định quy định chi tiết một số điều của Luật Xây dựng về quản lý chất lượng, thi công xây dựng và bảo trì công trình xây dựng
-description: This Decree details the 2025 Construction Law regarding quality management, construction execution, and maintenance of construction works in Vietnam. It clearly delineates the responsibilities of investors, contractors, and state agencies in ensuring construction safety, quality control, and proper project management. Additionally, it provides specific guidelines for construction commencement, site and material management, supervision, and the state inspection process for the acceptance of completed works.
-resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-207-2026-ND-CP-huong-dan-Luat-Xay-dung-quan-ly-chat-luong-thi-cong-xay-dung-701883.aspx
-timestamp: 2026-06-28T04:06:42Z
+title: "Nghị định 207/2026/NĐ-CP hướng dẫn Luật Xây dựng về quản lý chất lượng thi công xây dựng"
+code: "CCBA_RD_VBPL_005"
+revision: "Rev00"
+document_number: "207/2026/NĐ-CP"
+issued_date: "2026-04-02"
+effective_date: "2026-07-01"
+issued_by: "Chính phủ"
+uniclass: "Fi_10_20"
 ---
-
 CHÍNH PHỦ
 -------
 
