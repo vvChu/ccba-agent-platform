@@ -97,6 +97,12 @@ skills:
     triggers: [xia, xia, port from, copy from repo, clone feature, adapt from]
     skill_path: .agents/skills/xia/SKILL.md
 
+  - name: maskara-privacy
+    bundle: _core
+    description: "Phát hiện, che giấu (redact) thông tin nhạy cảm trong files/logs và cài đặt guardrails bảo mật"
+    triggers: [maskara, privacy, redact, scan secret, leak, che giấu key]
+    skill_path: .agents/skills/maskara/SKILL.md
+
   - name: sequential-thinking
     bundle: _core
     description: "Áp dụng phương pháp lập luận tuần tự từng bước với khả năng cập nhật và rẽ nhánh suy nghĩ"
@@ -121,6 +127,13 @@ skills:
     description: "Đánh giá chất lượng mã nguồn tự động, phát hiện bugs, bảo mật OWASP và kiểm soát hiệu năng code"
     triggers: [code-review, review, rà soát code, check code, review commit, review pr]
     skill_path: .agents/skills/code-review/SKILL.md
+
+
+  - name: docs-validator
+    bundle: _core
+    description: "Quét kiểm định tài liệu Markdown chống ảo ảnh (hallucinations), broken links và cấu hình thiếu"
+    triggers: [docs-validator, validate docs, kiểm định tài liệu, check docs, broken link, validate markdown]
+    skill_path: .agents/skills/docs-validator/SKILL.md
 
 
   - name: mock-debugger
