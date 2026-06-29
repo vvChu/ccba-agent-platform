@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+
 class TableReconstructor:
     """Core utility to reconstruct broken tables in markdown files using docx alignment."""
 
@@ -13,11 +14,11 @@ class TableReconstructor:
     def reconstruct_table(self, md_path: Path, docx_path: Path) -> bool:
         """
         Reconstruct the table in md_path using content from docx_path.
-        
+
         Args:
             md_path: Path to the target markdown file (usually a split appendix).
             docx_path: Path to the original parent docx file.
-            
+
         Returns:
             True if successful, False otherwise.
         """
@@ -26,17 +27,29 @@ class TableReconstructor:
 
         # 1. Read existing frontmatter
         frontmatter = self._get_frontmatter(md_path)
-        
+
         # 2. Convert docx to GFM temp file
-        with tempfile.NamedTemporaryFile(suffix=".md", delete=False, mode="w", encoding="utf-8") as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".md", delete=False, mode="w", encoding="utf-8"
+        ) as temp_file:
             temp_md_path = Path(temp_file.name)
-            
+
         try:
             # Run pandoc
-            cmd = ["pandoc", "-f", "docx", "-t", "gfm", "--wrap=none", "-o", str(temp_md_path), str(docx_path)]
+            cmd = [
+                "pandoc",
+                "-f",
+                "docx",
+                "-t",
+                "gfm",
+                "--wrap=none",
+                "-o",
+                str(temp_md_path),
+                str(docx_path),
+            ]
             subprocess.run(cmd, check=True)
-            
-            with open(temp_md_path, "r", encoding="utf-8") as f:
+
+            with open(temp_md_path, encoding="utf-8") as f:
                 temp_content = f.read()
         except Exception as e:
             print(f"Error converting docx with pandoc: {e}")
@@ -66,11 +79,11 @@ class TableReconstructor:
         new_content = frontmatter + extracted_body
         with open(md_path, "w", encoding="utf-8") as f:
             f.write(new_content)
-            
+
         return True
 
     def _get_frontmatter(self, md_path: Path) -> str:
-        with open(md_path, "r", encoding="utf-8") as f:
+        with open(md_path, encoding="utf-8") as f:
             content = f.read()
         match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
         if match:
@@ -90,9 +103,9 @@ class TableReconstructor:
     def _int_to_roman(self, num: int) -> str:
         val = [10, 9, 5, 4, 1]
         syb = ["X", "IX", "V", "IV", "I"]
-        roman_num = ''
+        roman_num = ""
         i = 0
-        while  num > 0:
+        while num > 0:
             for _ in range(num // val[i]):
                 roman_num += syb[i]
                 num -= val[i]
@@ -103,23 +116,28 @@ class TableReconstructor:
         lines = content.splitlines(keepends=True)
         start_idx = -1
         end_idx = len(lines)
-        
+
         # Search for pattern in lines
         # In GFM output, titles are often bolded: **PHỤ LỤC IV** or **PHỤ LỤC IV:**
         # Or they can be heading style: # PHỤ LỤC IV
         for i, line in enumerate(lines):
             clean_line = line.strip()
-            if f"**{title}**" in clean_line or f"**{title}:**" in clean_line or clean_line.startswith(f"# {title}") or clean_line.startswith(f"## {title}"):
+            if (
+                f"**{title}**" in clean_line
+                or f"**{title}:**" in clean_line
+                or clean_line.startswith(f"# {title}")
+                or clean_line.startswith(f"## {title}")
+            ):
                 start_idx = i
                 break
-                
+
         if start_idx == -1:
             # Fallback to plain substring
             for i, line in enumerate(lines):
                 if title in line:
                     start_idx = i
                     break
-                    
+
         if start_idx == -1:
             return ""
 
@@ -131,17 +149,22 @@ class TableReconstructor:
             num = self._roman_to_int(roman)
             next_roman = self._int_to_roman(num + 1)
             next_title = f"PHỤ LỤC {next_roman}"
-            
+
             for i in range(start_idx + 1, len(lines)):
                 clean_line = lines[i].strip()
-                if f"**{next_title}**" in clean_line or f"**{next_title}:**" in clean_line or clean_line.startswith(f"# {next_title}") or clean_line.startswith(f"## {next_title}"):
+                if (
+                    f"**{next_title}**" in clean_line
+                    or f"**{next_title}:**" in clean_line
+                    or clean_line.startswith(f"# {next_title}")
+                    or clean_line.startswith(f"## {next_title}")
+                ):
                     end_idx = i
                     break
-                    
+
         return "".join(lines[start_idx:end_idx])
 
     def _roman_to_int(self, roman: str) -> int:
-        roman_map = {'I': 1, 'V': 5, 'X': 10}
+        roman_map = {"I": 1, "V": 5, "X": 10}
         num = 0
         for i in range(len(roman)):
             if i > 0 and roman_map[roman[i]] > roman_map[roman[i - 1]]:

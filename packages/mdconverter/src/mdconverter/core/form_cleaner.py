@@ -1,6 +1,6 @@
 import re
-import sys
 from pathlib import Path
+
 
 class FormCleaner:
     """Core utility to clean form template placeholders and recover actual form titles using AI Gateway."""
@@ -11,13 +11,13 @@ class FormCleaner:
     def clean_form(self, file_path: Path) -> str:
         """
         Cleans placeholders in a markdown form file and recovers its official title.
-        
+
         Args:
             file_path: Path to the markdown file to clean.
-            
+
         Returns:
             The recovered title string if successful.
-            
+
         Raises:
             ImportError: If ccba-ai package is not available.
             ValueError: If the file does not exist, has no frontmatter, or title recovery fails.
@@ -25,7 +25,7 @@ class FormCleaner:
         if not file_path.exists():
             raise ValueError(f"File not found: {file_path}")
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         lines = content.splitlines()
@@ -40,7 +40,7 @@ class FormCleaner:
         has_placeholders = False
         context_lines = []
         # Take first 25 lines of body to inspect
-        body_sample_lines = lines[body_start:body_start+25]
+        body_sample_lines = lines[body_start : body_start + 25]
         for line in body_sample_lines:
             clean = line.strip()
             if re.search(r"\.{4,}", clean) or re.search(r"_{4,}", clean) or "(1)" in clean:
@@ -48,13 +48,15 @@ class FormCleaner:
             context_lines.append(line)
 
         if not has_placeholders:
-            return "" # Skip, no placeholders
+            return ""  # Skip, no placeholders
 
         # Call AI Gateway
         try:
             from ccba_ai import ai
         except ImportError as e:
-            raise ImportError("'ccba-ai' package is not installed. AI-assisted recovery is unavailable.") from e
+            raise ImportError(
+                "'ccba-ai' package is not installed. AI-assisted recovery is unavailable."
+            ) from e
 
         context_text = "\n".join(context_lines)
         prompt = f"""
@@ -66,23 +68,30 @@ Chỉ trả về duy nhất chuỗi tiêu đề chính thức được viết ho
 Nội dung 20 dòng đầu:
 {context_text}
 """
-        
+
         # Query AI Gateway with gemini-3.1-flash-lite (best for metadata extraction)
         raw_reply = ai.chat(prompt, model="gemini-3.1-flash-lite").strip()
-        
+
         # Clean response and extract only the uppercase Vietnamese title line
-        lines_reply = [l.strip() for l in raw_reply.splitlines() if l.strip()]
+        lines_reply = [line.strip() for line in raw_reply.splitlines() if line.strip()]
         filtered_lines = []
         for line in lines_reply:
-            if re.match(r"^(here's|thinking|process|note|sure|i've|analysis|based on|the title|official)", line.lower()):
+            if re.match(
+                r"^(here's|thinking|process|note|sure|i've|analysis|based on|the title|official)",
+                line.lower(),
+            ):
                 continue
             filtered_lines.append(line)
-            
+
         # Merge consecutive uppercase or title-like lines
         merged_lines = []
         current_upper = []
         for line in filtered_lines:
-            if line.isupper() or "PHỤ LỤC" in line or any(kwd in line for kwd in ["BÁO CÁO", "TỜ TRÌNH", "ĐƠN ĐỀ NGHỊ", "PHỤ LỤC"]):
+            if (
+                line.isupper()
+                or "PHỤ LỤC" in line
+                or any(kwd in line for kwd in ["BÁO CÁO", "TỜ TRÌNH", "ĐƠN ĐỀ NGHỊ", "PHỤ LỤC"])
+            ):
                 current_upper.append(line)
             else:
                 if current_upper:
@@ -94,7 +103,13 @@ Nội dung 20 dòng đầu:
 
         if merged_lines:
             # Prefer the longest merged uppercase/title line
-            upper_lines = [l for l in merged_lines if l.isupper() or "PHỤ LỤC" in l or any(kwd in l for kwd in ["BÁO CÁO", "TỜ TRÌNH", "ĐƠN ĐỀ NGHỊ"])]
+            upper_lines = [
+                line
+                for line in merged_lines
+                if line.isupper()
+                or "PHỤ LỤC" in line
+                or any(kwd in line for kwd in ["BÁO CÁO", "TỜ TRÌNH", "ĐƠN ĐỀ NGHỊ"])
+            ]
             if upper_lines:
                 recovered_title = max(upper_lines, key=len)
             else:
@@ -116,39 +131,41 @@ Nội dung 20 dòng đầu:
         if fm_match:
             fm_content = fm_match.group(1)
             new_title_line = f'title: "PHỤ LỤC - {recovered_title}"'
-            
+
             appendix_match = re.search(r"phu_luc_(\d+)", file_path.name.lower())
             if appendix_match:
                 from mdconverter.core.table_reconstructor import TableReconstructor
+
                 num = int(appendix_match.group(1))
                 roman = TableReconstructor()._int_to_roman(num)
                 new_title_line = f'title: "PHỤ LỤC {roman} - {recovered_title}"'
-                
+
             fm_content_new = re.sub(r'title:\s*".*?"', new_title_line, fm_content)
-            fm_content_new = re.sub(r'title:\s*.*?\n', new_title_line + "\n", fm_content_new)
-            
+            fm_content_new = re.sub(r"title:\s*.*?\n", new_title_line + "\n", fm_content_new)
+
             # 2. Update body heading
             heading_idx = -1
             for idx in range(body_start, len(lines)):
                 if lines[idx].strip():
                     heading_idx = idx
                     break
-                    
+
             if heading_idx != -1:
                 appendix_match = re.search(r"phu_luc_(\d+)", file_path.name.lower())
                 if appendix_match:
                     from mdconverter.core.table_reconstructor import TableReconstructor
+
                     num = int(appendix_match.group(1))
                     roman = TableReconstructor()._int_to_roman(num)
                     lines[heading_idx] = f"# PHỤ LỤC {roman}\n\n{recovered_title}"
                 else:
                     lines[heading_idx] = f"# {recovered_title}"
-                    
+
             # Reconstruct file
             new_content = f"---\n{fm_content_new}\n---\n\n" + "\n".join(lines[body_start:])
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(new_content)
-                
+
             return recovered_title
         else:
             raise ValueError("No frontmatter detected in the markdown file.")

@@ -3,6 +3,7 @@ from collections.abc import Generator
 from pathlib import Path
 
 from openai import OpenAI
+
 from ccba_ai.hooks import PrivacyGuardHook
 
 
@@ -109,7 +110,7 @@ class AIClient:
         """
         for msg in messages:
             self.privacy_guard.check_content(msg.get("content", ""))
-            
+
         response = self._client.chat.completions.create(
             model=model or self.default_model,
             messages=messages,
