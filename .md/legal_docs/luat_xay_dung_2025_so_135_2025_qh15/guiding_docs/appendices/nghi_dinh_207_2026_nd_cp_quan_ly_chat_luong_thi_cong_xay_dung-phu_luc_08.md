@@ -1,7 +1,7 @@
 ---
 type: Appendix
-title: "PHỤ LỤC VIII - ........(1)......"
-description: "Chi tiết PHỤ LỤC VIII ban hành kèm theo Nghi Dinh 207 2026 Nd Cp Quan Ly Chat Luong Thi Cong Xay Dung"
+title: "PHỤ LỤC VIII - Thông báo kết quả kiểm tra công tác nghiệm thu"
+description: "Chi tiết PHỤ LỤC VIII ban hành kèm theo Nghị định 207/2026/NĐ-CP"
 parent_document: "../nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.md"
 uniclass: "Fi_10_20"
 ---

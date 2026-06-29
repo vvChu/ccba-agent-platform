@@ -6,9 +6,9 @@ parent_document: "../nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_du
 uniclass: "Fi_10_20"
 ---
 
-# PHỤ LỤC XI
+**PHỤ LỤC XI**
 
-(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)
+*(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*
 
 Phụ lục XIa. Báo cáo về việc kéo dài thời hạn sử dụng của công trình
 
@@ -16,110 +16,121 @@ Phụ lục XIb. Thông báo ý kiến về việc kéo dài thời hạn sử d
 
  
 
-Phụ lục XIa
+**Phụ lục XIa**
 
-.............(1).....
--------
-
-	
-
-CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-Độc lập - Tự do - Hạnh phúc
----------------
-
-
-
-
-Số: ...............
-
-	
-
-............, ngày ......... tháng ...... năm.......
+<table style="width:92%;">
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 57%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: center;">.............(1).....<strong><br />
+</strong>-------</td>
+<td style="text-align: center;"><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM<br />
+Độc lập - Tự do - Hạnh phúc<br />
+---------------</strong></td>
+</tr>
+<tr>
+<td style="text-align: center;">Số: ...............</td>
+<td style="text-align: right;"><em>............, ngày ......... tháng ...... năm.......</em></td>
+</tr>
+</tbody>
+</table>
 
  
 
-BÁO CÁO VỀ VIỆC KÉO DÀI THỜI HẠN SỬ DỤNG CỦA CÔNG TRÌNH
+**BÁO CÁO VỀ VIỆC KÉO DÀI THỜI HẠN SỬ DỤNG CỦA CÔNG TRÌNH**
 
 Kính gửi: ............(2)....................
 
 ......(1).... báo cáo về việc kéo dài thời hạn sử dụng của công trình với các nội dung sau:
 
-1. Thông tin về công trình
+**1.** **Thông tin về công trình**
 
-- Tên và địa chỉ công trình;
+\- Tên và địa chỉ công trình;
 
-- Mã định danh công trình xây dựng..(3)..
+\- Mã định danh công trình xây dựng..(3)..
 
-- Tên chủ sở hữu hoặc chủ quản lý, sử dụng công trình;
+\- Tên chủ sở hữu hoặc chủ quản lý, sử dụng công trình;
 
-- Loại và cấp công trình;
+\- Loại và cấp công trình;
 
-- Quy mô công trình;
+\- Quy mô công trình;
 
-- Năm xây dựng và năm đưa vào sử dụng;
+\- Năm xây dựng và năm đưa vào sử dụng;
 
-- Thời hạn sử dụng theo thiết kế.
+\- Thời hạn sử dụng theo thiết kế.
 
-2. Kết quả thực hiện
+**2.** **Kết quả thực hiện**
 
 ......(1).... đã tổ chức thực hiện và báo cáo kết quả thực hiện các công việc:
 
-- Kết quả kiểm tra, kiểm định để đánh giá chất lượng hiện trạng của công trình và đề xuất phương án gia cố, cải tạo, sửa chữa hư hỏng công trình (nếu có), xác định thời gian được tiếp tục sử dụng công trình sau khi sửa chữa, gia cố;
+\- Kết quả kiểm tra, kiểm định để đánh giá chất lượng hiện trạng của công trình và đề xuất phương án gia cố, cải tạo, sửa chữa hư hỏng công trình (nếu có), xác định thời gian được tiếp tục sử dụng công trình sau khi sửa chữa, gia cố;
 
-- Công tác gia cố, cải tạo, sửa chữa hư hỏng công trình (nếu có) để bảo đảm công năng và an toàn sử dụng.
+\- Công tác gia cố, cải tạo, sửa chữa hư hỏng công trình (nếu có) để bảo đảm công năng và an toàn sử dụng.
 
 Đề nghị.... (2).... xem xét và cho ý kiến về việc kéo dài thời hạn sử dụng của công trình.
 
  
 
-Nơi nhận:
-- Như trên;
-- Lưu:...
+<table style="width:92%;">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 61%" />
+</colgroup>
+<tbody>
+<tr>
+<td><em><strong>Nơi nhận:</strong></em><br />
+- Như trên;<br />
+- Lưu:...</td>
+<td style="text-align: center;"><strong>NGƯỜI ĐẠI DIỆN THEO PHÁP LUẬT<br />
+CỦA CHỦ SỞ HỮU HOẶC CHỦ QUẢN LÝ,<br />
+SỬ DỤNG CÔNG TRÌNH<br />
+</strong><em>(Ký, ghi rõ họ tên, chức vụ và đóng dấu pháp nhân)</em></td>
+</tr>
+</tbody>
+</table>
 
-	
+<sup>\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_</sup>
 
-NGƯỜI ĐẠI DIỆN THEO PHÁP LUẬT
-CỦA CHỦ SỞ HỮU HOẶC CHỦ QUẢN LÝ,
-SỬ DỤNG CÔNG TRÌNH
-(Ký, ghi rõ họ tên, chức vụ và đóng dấu pháp nhân)
+***Ghi chú:***
 
-______________________________
+\(1\) Tên của chủ sở hữu hoặc chủ quản lý, sử dụng công trình.
 
-Ghi chú:
+\(2\) Cơ quan nhà nước có thẩm quyền theo quy định tại khoản 9 Điều 43 Nghị định này.
 
-(1) Tên của chủ sở hữu hoặc chủ quản lý, sử dụng công trình.
-
-(2) Cơ quan nhà nước có thẩm quyền theo quy định tại khoản 9 Điều 43 Nghị định này.
-
-(3) Mã định danh công trình xây dựng theo quy định của Chính phủ về điều kiện năng lực hoạt động xây dựng, Hệ thống thông tin, Cơ sở dữ liệu quốc gia về hoạt động xây dựng.
-
- 
-
-Phụ lục Xib
-
-.............(1)..........
--------
-
-	
-
-CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-Độc lập - Tự do - Hạnh phúc
----------------
-
-
-
-
-Số: ...............
-
-	
-
-............, ngày ......... tháng ...... năm.......
+\(3\) Mã định danh công trình xây dựng theo quy định của Chính phủ về điều kiện năng lực hoạt động xây dựng, Hệ thống thông tin, Cơ sở dữ liệu quốc gia về hoạt động xây dựng.
 
  
 
- THÔNG BÁO
+**Phụ lục Xib**
 
-Ý kiến về việc kéo dài thời hạn sử dụng của công trình
+<table style="width:92%;">
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 57%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="text-align: center;">.............(1)..........<strong><br />
+</strong>-------</td>
+<td style="text-align: center;"><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM<br />
+Độc lập - Tự do - Hạnh phúc<br />
+---------------</strong></td>
+</tr>
+<tr>
+<td style="text-align: center;">Số: ...............</td>
+<td style="text-align: right;"><em>............, ngày ......... tháng ...... năm.......</em></td>
+</tr>
+</tbody>
+</table>
+
+ 
+
+ **THÔNG BÁO**
+
+**Ý kiến về việc kéo dài thời hạn sử dụng của công trình**
 
 Kính gửi: ..............(2)......................
 
@@ -127,59 +138,63 @@ Căn cứ khoản 9 Điều 43 Nghị định số ..../2026/NĐ-CP ngày ..../.
 
 Căn cứ báo cáo số ... ngày ... của ...(2)... về việc ... (Mã hồ sơ TTHC số...);
 
-Căn cứ khác (nếu có);
+Căn cứ khác *(nếu có);*
 
 ....(1) .... thông báo ý kiến về việc kéo dài thời hạn sử dụng đối với công trình như sau:
 
-1. Thông tin về công trình
+**1.** **Thông tin về công trình**
 
-- Tên và địa chỉ công trình;
+\- Tên và địa chỉ công trình;
 
-- Mã định danh công trình xây dựng..(4)..
+\- Mã định danh công trình xây dựng..(4)..
 
-- Tên chủ sở hữu hoặc chủ quản lý, sử dụng công trình;
+\- Tên chủ sở hữu hoặc chủ quản lý, sử dụng công trình;
 
-- Loại và cấp công trình;
+\- Loại và cấp công trình;
 
-- Quy mô công trình;
+\- Quy mô công trình;
 
-- Năm xây dựng và năm đưa vào sử dụng;
+\- Năm xây dựng và năm đưa vào sử dụng;
 
-- Thời hạn sử dụng theo thiết kế.
+\- Thời hạn sử dụng theo thiết kế.
 
-2. Ý kiến về việc kéo dài thời hạn sử dụng công trình
+**2.** **Ý kiến về việc kéo dài thời hạn sử dụng công trình**
 
 ...................
 
  
 
-Nơi nhận:
-- Như trên;
-- .........(để b/c);
-- Bộ phận một cửa;
-- (3);
-- Lưu:...
+<table style="width:92%;">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 65%" />
+</colgroup>
+<tbody>
+<tr>
+<td><em><strong>Nơi nhận:</strong></em><br />
+- Như trên;<br />
+- .........(để b/c);<br />
+- Bộ phận một cửa;<br />
+- (3);<br />
+- Lưu:...</td>
+<td style="text-align: center;"><strong>LÃNH ĐẠO ĐƠN VỊ/NGƯỜI ĐƯỢC ỦY QUYỀN<br />
+</strong><em>(Ký, ghi rõ họ tên, chức vụ và đóng dấu pháp nhân)</em></td>
+</tr>
+</tbody>
+</table>
 
-	
+<sup>\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_</sup>
 
-LÃNH ĐẠO ĐƠN VỊ/NGƯỜI ĐƯỢC ỦY QUYỀN
-(Ký, ghi rõ họ tên, chức vụ và đóng dấu pháp nhân)
+***Ghi chú:***
 
-______________________________
+\(1\) Cơ quan nhà nước có thẩm quyền theo quy định tại khoản 9 Điều 43 Nghị định này.
 
-Ghi chú:
+\(2\) Tên của chủ sở hữu hoặc chủ quản lý, sử dụng công trình.
 
-(1) Cơ quan nhà nước có thẩm quyền theo quy định tại khoản 9 Điều 43 Nghị định này.
+\(3\) Các cơ quan có liên quan (nếu cần).
 
-(2) Tên của chủ sở hữu hoặc chủ quản lý, sử dụng công trình.
-
-(3) Các cơ quan có liên quan (nếu cần).
-
-(4) Mã định danh công trình xây dựng theo quy định của Chính phủ về điều kiện năng lực hoạt động xây dựng, Hệ thống thông tin, Cơ sở dữ liệu quốc gia về hoạt động xây dựng.
+\(4\) Mã định danh công trình xây dựng theo quy định của Chính phủ về điều kiện năng lực hoạt động xây dựng, Hệ thống thông tin, Cơ sở dữ liệu quốc gia về hoạt động xây dựng.
 
  
 
-
-
-
-[1] Trường hợp biện pháp thi công được lập cho từng hạng mục, bộ phận công trình hoặc từng giai đoạn thi công xây dựng công trình thì biện pháp bảo đảm an toàn trong thi công xây dựng công trình được lập cùng tương ứng, trừ trường hợp biện pháp bảo đảm an toàn được lập riêng theo quy định tại điểm b khoản 3 Điều 15 Nghị định này.
+<span id="_ftn1" class="anchor"></span>[<u>\[1\]</u>](#_ftnref1) Trường hợp biện pháp thi công được lập cho từng hạng mục, bộ phận công trình hoặc từng giai đoạn thi công xây dựng công trình thì biện pháp bảo đảm an toàn trong thi công xây dựng công trình được lập cùng tương ứng, trừ trường hợp biện pháp bảo đảm an toàn được lập riêng theo quy định tại điểm b khoản 3 Điều 15 Nghị định này.
