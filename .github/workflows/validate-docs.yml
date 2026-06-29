@@ -1,0 +1,31 @@
+name: Documentation Check
+
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+      - '**/*.py'
+      - '.github/workflows/validate-docs.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          # Install ccba-ai editable for type check validation references
+          pip install -e packages/ccba-ai
+
+      - name: Run Documentation Accuracy Validator
+        run: |
+          python scripts/validate_docs.py . --src scripts,packages

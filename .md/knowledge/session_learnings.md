@@ -1,6 +1,6 @@
 ## Session Learnings - Kiến thức tích lũy
 
-## Cập nhật gần nhất: 2026-06-27
+## Cập nhật gần nhất: 2026-06-29
 
 ---
 
@@ -63,6 +63,30 @@ for i in range(0, len(reader.pages), 20):
 - **Giai phap**: Su dung RSA 2048-bit. Spoke dung Khoa cong khai de ma hoa thong tin local thanh chuoi Base64 va push len GitHub. Chỉ Admin giu Khoa bi mat (luu ngoai codebase) moi giai ma doc duoc.
 - **Nguon**: Session 98bf7ffe-a23a-4fcd-a7cb-59ee0ed5dac2, 2026-06-29
 
+### 7. Giới hạn phạm vi (Scope) khi chạy quét an toàn thông tin nhạy cảm ngoại tuyến
+- **Ngữ cảnh**: Khi chạy các công cụ quét tĩnh như `maskara.py scan` để kiểm tra secrets hoặc credentials rò rỉ.
+- **Vấn đề giải quyết**: Chạy quét chế độ tự động mặc định (`auto`) có thể quét vào thư mục cấu hình toàn cục của các AI agent (như `.gemini`, `.claude` ở thư mục Home của user), nơi chứa hàng nghìn file logs và cache khổng lồ làm tiến trình bị treo hoặc chạy rất lâu.
+- **Giải pháp**: Luôn cấu hình hoặc truyền tham số giới hạn phạm vi quét rõ ràng (`--root .` hoặc chỉ định trực tiếp thư mục dự án) để tối ưu hóa thời gian xử lý và tránh lãng phí tài nguyên CPU/RAM.
+- **Nguồn**: Session 6bc722af-2748-44b7-8b54-4399e4df56df, 2026-06-29
+
+### 8. Exclusion of isolated references from scans (Chặn quét thư mục tham khảo)
+- **Ngữ cảnh**: Khi clone hoặc tải các repository mã nguồn bên ngoài về để nghiên cứu, thích ứng tính năng (porting).
+- **Vấn đề giải quyết**: Agent khi làm việc tự động sẽ quét toàn bộ workspace, dễ bị lag, tốn hàng chục ngàn tokens và load nhầm tệp cấu hình cũ (như `AGENTS.md` hoặc `GEMINI.md`) của repo đó làm "Hiến pháp".
+- **Giải pháp**: Di chuyển toàn bộ repo clone vào một thư mục cách ly đặc biệt `.md/extracted_docs/references/clones/` và cấu hình cho script hook `scout_block.py` chặn đứng (block) mọi công cụ đọc/ghi/tìm kiếm trỏ vào folder `clones/`. Chỉ cho phép bypass có kiểm soát bằng tiền tố `APPROVED:` khi chạy lệnh `/ccba-xia`.
+- **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-06-29
+
+### 9. Multi-tiered Documentation Verification (Kiểm định tài liệu đa tầng)
+- **Ngữ cảnh**: Cần đảm bảo tài liệu kỹ thuật (README, APIs) luôn chính xác, không bị lỗi thời sau khi refactor mã nguồn.
+- **Vấn đề giải quyết**: Lập trình viên hoặc Agent vô tình viết sai tên hàm, link hỏng hoặc thiếu config keys nhưng không phát hiện ra.
+- **Giải pháp**: Thiết lập 2 lớp kiểm định tự động: Chạy Git Hook (Pre-commit) ở local máy trạm để ngăn chặn sớm ngay khi gõ lệnh commit, và chạy GitHub Actions ở Server làm chốt chặn cuối cùng trước khi merge PR.
+- **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-06-29
+
+### 10. Granular Exit Codes in Validation (Exit code phân loại khi validate)
+- **Ngữ cảnh**: Khi tích hợp công cụ kiểm tra tài liệu (`validate_docs.py`) vào Git hooks và CI/CD.
+- **Vấn đề giải quyết**: Tránh tình trạng commit hoặc build bị chặn oan (false positives) do các cảnh báo không nghiêm trọng (ví dụ regex nhận diện nhầm Code References hoặc các biến môi trường nghi ngờ).
+- **Giải pháp**: Phân loại mức độ nghiêm trọng: Chặn cứng (exit code 1) đối với lỗi liên kết hỏng (Broken relative links), và chỉ cảnh báo mềm (exit code 0) đối với các cảnh báo Code Refs/Env Vars nghi vấn để cho phép commit đi qua bình thường.
+- **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-06-29
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -71,6 +95,11 @@ for i in range(0, len(reader.pages), 20):
 - **Vấn đề**: Khi cập nhật tài liệu hoặc cấu hình, việc tự ý thay thế các định danh alias do Server quy định (như `qwen-local-primary`) bằng tên gốc thực tế của model (như `qwen3.5-35b`) sẽ phá vỡ hệ thống routing, load-balancing và các luồng fallback đã được setup ngầm định trên Gateway.
 - **Thay thế bằng**: Luôn tôn trọng và duy trì cấu trúc định danh alias chuẩn (như `qwen-local-primary`, `ocr-primary`, `rag-core`, v.v.) trong mọi file config (`.env`) và mã nguồn mẫu.
 - **Nguồn**: Session df3394e5-3891-4d1b-b234-ce3af1d47689, 2026-04-28
+
+### 2. Raw clone directory placement without block configurations (Clone code thô thiếu cấu hình chặn)
+- **Vấn đề**: Để các thư mục clone chứa toàn bộ mã nguồn của dự án khác trực tiếp ở Project Root hoặc trong thư mục cấu hình `.agents/` mà không thiết lập block/exclude. AI Agent sẽ tự động quét, đọc nhầm cấu hình (như `GEMINI.md`, `AGENTS.md`) gây xung đột và tốn token hệ thống.
+- **Thay thế bằng**: Luôn di chuyển các thư mục clone tham khảo vào folder cách ly `.md/extracted_docs/references/clones/` và đưa folder `clones` vào danh sách chặn cứng của Scout Block hook.
+- **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-06-29
 
 ---
 
@@ -119,6 +148,16 @@ if sys.stdout.encoding.lower() != 'utf-8':
 - **Giai phap**: Tich hop co che tu dong vao script giai ma cua Admin. Khi Admin chay decrypt, script tu dong kiem tra su ton tai vat ly cua duong dan Spoke (`os.path.exists()`). Neu khong ton tai -> Tu dong go bo ban ghi va ghi de cap nhat lai file registry.
 - **Nguon**: Session 98bf7ffe-a23a-4fcd-a7cb-59ee0ed5dac2, 2026-06-29
 
+### 9. Cấy ghép (Port) an toàn cấu hình bị ignore trong Git
+- **Vấn đề**: Các file cấu hình hệ thống nằm trong thư mục bị ignore trong `.gitignore` (ví dụ thư mục `.agents/`) không thể stage thông thường bằng `git add`, làm Agent dễ bỏ sót khi chuyển dịch các cấu hình quan trọng.
+- **Giải pháp**: Sử dụng lệnh ép buộc stage của Git: `git add -f <file-path>` (ví dụ `git add -f .agents/skills/platform-loader/catalog.yaml`) để đưa các tệp cấu hình cần thiết vào hệ thống quản lý phiên bản mà không cần thay đổi quy tắc ignore của dự án.
+- **Nguồn**: Session 6bc722af-2748-44b7-8b54-4399e4df56df, 2026-06-29
+
+### 10. Fix wildcard spaces regex boundary (Rách so khớp khoảng trắng do ranh giới từ)
+- **Vấn đề**: Khi viết regex so khớp khoảng trắng đứng sau ranh giới từ `\bword\b\s+`, các ký tự đặc biệt đứng liền kề (như dấu đóng ngoặc đơn `)`) sẽ làm rách so khớp của khoảng trắng `\s+` vì dấu đóng ngoặc đơn không được tính là khoảng trắng.
+- **Giải pháp**: Thiết lập regex linh hoạt hơn hoặc thay đổi cấu trúc test case để tránh các cụm từ lồng ngoặc phức tạp (ví dụ đổi `"let's create a pull request (pr) now"` thành `"please pr this branch"`).
+- **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-06-29
+
 ---
 
 ## Conventions (Quy định kiến trúc)
@@ -131,6 +170,11 @@ if sys.stdout.encoding.lower() != 'utf-8':
 - **Ngữ cảnh**: Các kịch bản cào dữ liệu và đóng gói Bundle tri thức nằm rải rác trong `scripts/` làm Spoke project lộn xộn, khó tái sử dụng và khó bảo trì.
 - **Quy ước**: Tách dữ liệu tri thức tĩnh (Knowledge Base) vào một thư mục chuyên biệt (`.md/legal_docs/<slug>/` với các tệp phân tích Markdown `.md` và Word `.docx`) phục vụ RAG, đồng thời đóng gói toàn bộ logic nghiệp vụ điều phối thành một Python editable package cài đặt được (`packages/ccba-legal-intel`) để tái sử dụng toàn cục.
 - **Nguồn**: Session 628572ad-aa52-4ae6-ba74-68a61f8709d7, 2026-06-28
+
+### 3. Bắt buộc kiểm định tài liệu Markdown kỹ thuật chính quy trước khi hoàn tất
+- **Ngữ cảnh**: Viết hoặc cập nhật tài liệu kiến trúc hệ thống (`README.md`, `PLATFORM.md`, `AGENTS.md`) sau khi refactor.
+- **Quy ước**: Agent bắt buộc phải chạy công cụ `validate_docs.py` để đảm bảo tài liệu không chứa mã nguồn ảo ảnh (hallucinations), link tương đối hỏng hoặc thiếu cấu hình trong `.env.example`.
+- **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-06-29
 
 ---
 

@@ -129,6 +129,13 @@ skills:
     skill_path: .agents/skills/code-review/SKILL.md
 
 
+  - name: docs-validator
+    bundle: _core
+    description: "Quét kiểm định tài liệu Markdown chống ảo ảnh (hallucinations), broken links và cấu hình thiếu"
+    triggers: [docs-validator, validate docs, kiểm định tài liệu, check docs, broken link, validate markdown]
+    skill_path: .agents/skills/docs-validator/SKILL.md
+
+
   - name: mock-debugger
     bundle: _software
     description: "Tự động gỡ lỗi và tự phục hồi mã nguồn Python (Self-Healing Debugger)"
