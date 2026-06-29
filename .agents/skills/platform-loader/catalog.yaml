@@ -91,6 +91,12 @@ skills:
     skill_path: .agents/skills/markdown-processing/relative-link-patcher/SKILL.md
 
 
+  - name: ccba-xia
+    bundle: _core
+    description: "Trich xuat, so sanh, port hoac thich ung tinh nang tu GitHub hoac thu muc cuc bo (ky nang xia/xia code)"
+    triggers: [xia, xia, port from, copy from repo, clone feature, adapt from]
+    skill_path: .agents/skills/xia/SKILL.md
+
   - name: sequential-thinking
     bundle: _core
     description: "Áp dụng phương pháp lập luận tuần tự từng bước với khả năng cập nhật và rẽ nhánh suy nghĩ"
@@ -122,12 +128,6 @@ skills:
     description: "Tự động gỡ lỗi và tự phục hồi mã nguồn Python (Self-Healing Debugger)"
     triggers: [debug, mock-debugger, sửa lỗi, self-healing, gỡ lỗi]
     skill_path: .agents/skills/mock-debugger/SKILL.md
-    
-  - name: ccba-xia
-    bundle: _software
-    description: "Trich xuat, so sanh, port hoac thich ung tinh nang tu GitHub hoac thu muc cuc bo (ky nang xia/xia code)"
-    triggers: [xia, xia, port from, copy from repo, clone feature, adapt from]
-    skill_path: .agents/skills/xia/SKILL.md
 
   - name: web-testing
     bundle: _software
@@ -271,6 +271,13 @@ workflows:
     description: "Khởi tạo dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform"
     triggers: [init spoke, setup project, khởi tạo dự án]
     workflow_path: .agents/workflows/ccba-init-spoke.md
+
+  - name: ccba-xia
+    bundle: _core
+    command: /ccba-xia
+    description: "Trich xuat, so sanh, phan bien va chuan bi ke hoach chuyen dich (port) tinh nang tu repository ngoai"
+    triggers: [xia, xia, port from, copy from repo, clone feature, adapt from]
+    workflow_path: .agents/workflows/ccba-xia.md
 
   - name: update-ccba-spoke
     bundle: _core
