@@ -2,7 +2,7 @@
 ## Source: microsoft/power-platform-skills (https://github.com/microsoft/power-platform-skills)
 ## Local Project: ccba-agent-platform (IDOP Integration)
 
-Dưới đây là báo cáo phân tích, đối soát và đánh giá tính tương thích của kho lưu trữ mẫu **`microsoft/power-platform-skills`** đối với hệ sinh thái **SharePoint IDOP** của chúng ta dưới quy trình đối soát so sánh `assess_upstream_features.py`.
+Dưới đây là báo cáo phân tích, đối soát và đánh giá tính tương thích của kho lưu trữ mẫu **`microsoft/power-platform-skills`** đối với hệ sinh thái **SharePoint IDOP** của chúng ta dưới quy trình **`xia --compare`**.
 
 ---
 

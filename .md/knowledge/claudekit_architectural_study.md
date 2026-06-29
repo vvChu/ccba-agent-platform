@@ -690,7 +690,7 @@ This section provides an individual analysis of the 87 skill directories found i
 - **Dependencies/Scripts/Hooks**: JS CLI wrapper: `scripts/worktree.cjs` and tests.
 - **Value to `ccba-agent-platform`**: Prevents concurrent file lock conflicts on Windows.
 
-### 87. `port-evaluator` (formerly `xia`)
+### 87. `xia`
 - **Category**: `dev-tools`
 - **Core Purpose**: Code adaptation tool for porting features from external projects.
 - **Instruction Summary**: Analyzes code structures and port targets safely.
