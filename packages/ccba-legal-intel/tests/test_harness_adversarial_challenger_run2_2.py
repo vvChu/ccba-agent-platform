@@ -5,7 +5,6 @@ import sys
 import threading
 
 import pytest
-
 from ccba_legal.harness import HarnessGuard
 
 
@@ -285,4 +284,3 @@ def test_thread_local_state_manipulation_bypass(tmp_path, monkeypatch):
         else:
             if hasattr(_local, "active_guards"):
                 delattr(_local, "active_guards")
-
