@@ -2,7 +2,7 @@
 ## Source: claudekit-engineer (.md/claudekit_architectural_study.md)
 ## Local Project: ccba-agent-platform
 
-Dưới đây là báo cáo so sánh, đánh giá tính tương thích và đề xuất port chọn lọc các tính năng từ `claudekit-engineer` sang `ccba-agent-platform` theo quy trình đánh giá gác cổng của công cụ kiểm tra cập nhật `check_claudekit_updates.py`.
+Dưới đây là báo cáo so sánh, đánh giá tính tương thích và đề xuất port chọn lọc các tính năng từ `claudekit-engineer` sang `ccba-agent-platform` theo quy trình gác cổng của kỹ năng **`/ccba-kit xia`**.
 
 ---
 
