@@ -13,6 +13,9 @@ from mdconverter.cli.config_cmd import app_config
 from mdconverter.cli.convert_cmd import convert
 from mdconverter.cli.lint_cmd import lint
 from mdconverter.cli.validate_cmd import validate
+from mdconverter.cli.process_table_cmd import process_table
+from mdconverter.cli.clean_form_cmd import clean_form
+from mdconverter.cli.patch_links_cmd import patch_links
 
 app = typer.Typer(
     name="mdconvert",
@@ -54,4 +57,7 @@ app.command()(convert)
 app.command()(validate)
 app.command()(lint)
 app.command()(analyze)
+app.command(name="process-table")(process_table)
+app.command(name="clean-form")(clean_form)
+app.command(name="patch-links")(patch_links)
 app.add_typer(app_config, name="config")
