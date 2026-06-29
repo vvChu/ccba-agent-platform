@@ -28,22 +28,28 @@ Luật Xây dựng 2025 quy định toàn diện về các hoạt động xây d
 
 ### Phụ lục đính kèm (Decree Appendices)
 
+#### Phụ lục Nghị định 207/2026/NĐ-CP (Quản lý chất lượng & thi công)
 - [PHỤ LỤC I: PHÂN LOẠI CÔNG TRÌNH THEO CÔNG NĂNG SỬ DỤNG](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_01.md)
 - [PHỤ LỤC II: Phụ lục IIa. Nhật ký thi công xây dựng công trình](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_02.md)
 - [PHỤ LỤC III: BIỆN PHÁP BẢO ĐẢM AN TOÀN TRONG THI CÔNG XÂY DỰNG CÔNG TRÌNH](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_03.md)
 - [PHỤ LỤC IV: BÁO CÁO VỀ CÔNG TÁC GIÁM SÁT THI CÔNG XÂY DỰNG CÔNG TRÌNH](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_04.md)
-- [PHỤ LỤC V: ............(1)............](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_05.md)
+- [PHỤ LỤC V: THÔNG BÁO KHỞI CÔNG XÂY DỰNG HẠNG MỤC CÔNG TRÌNH, CÔNG TRÌNH XÂY DỰNG](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_05.md)
 - [PHỤ LỤC VI: BÁO CÁO HOÀN THÀNH THI CÔNG XÂY DỰNG HẠNG MỤC CÔNG TRÌNH, CÔNG TRÌNH XÂY DỰNG](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_06.md)
 - [PHỤ LỤC VII: DANH MỤC HỒ SƠ HOÀN THÀNH CÔNG TRÌNH](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_07.md)
-- [PHỤ LỤC VIII: ........(1)......](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_08.md)
+- [PHỤ LỤC VIII: THÔNG BÁO KẾT QUẢ KIỂM TRA CÔNG TÁC NGHIỆM THU HOÀN THÀNH HẠNG MỤC CÔNG TRÌNH, CÔNG TRÌNH XÂY DỰNG](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_08.md)
 - [PHỤ LỤC IX: DANH MỤC CÔNG TRÌNH QUY MÔ LỚN, KỸ THUẬT PHỨC TẠP](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_09.md)
 - [PHỤ LỤC X: DANH MỤC HỒ SƠ PHỤC VỤ QUẢN LÝ, SỬ DỤNG CÔNG TRÌNH XÂY DỰNG](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_10.md)
 - [PHỤ LỤC XI: Phụ lục XIa. Báo cáo về việc kéo dài thời hạn sử dụng của công trình](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_11.md)
+
+#### Phụ lục Nghị định 212/2026/NĐ-CP (Điều kiện năng lực hoạt động xây dựng)
 - [PHỤ LỤC I: CHUYÊN MÔN VÀ LĨNH VỰC CẤP CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG](guiding_docs/appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_01.md)
 - [PHỤ LỤC II: LĨNH VỰC VÀ PHẠM VI HOẠT ĐỘNG XÂY DỰNG CỦA CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG](guiding_docs/appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_02.md)
 - [PHỤ LỤC III: MẪU CÁC VĂN BẢN TRONG QUY TRÌNH CẤP CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG VÀ GIẤY PHÉP HOẠT ĐỘNG XÂY DỰNG](guiding_docs/appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_03.md)
 - [PHỤ LỤC IV: KÝ HIỆU NƠI CẤP CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG](guiding_docs/appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_04.md)
+
+#### Phụ lục Nghị định 217/2026/NĐ-CP (Quản lý hoạt động xây dựng)
 - [PHỤ LỤC I: MẪU TỜ TRÌNH VÀ CÁC VĂN BẢN TRONG QUY TRÌNH THỰC HIỆN THẨM ĐỊNH BÁO CÁO NGHIÊN CỨU KHẢ THI, THIẾT KẾ XÂY DỰNG TRIỂN KHAI SAU KHI DỰ ÁN ĐƯỢC PHÊ DUYỆT](guiding_docs/appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_01.md)
 - [PHỤ LỤC II: MẪU CÁC VĂN BẢN TRONG QUY TRÌNH CẤP GIẤY PHÉP XÂY DỰNG](guiding_docs/appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_02.md)
-- [PHỤ LỤC III: PHÂN LOẠI DỰ ÁN ĐẦU TƯ XÂY DỰNG THEO CÔNG NĂNG PHỤC VỤ VÀ TÍNH CHẤT CHUYÊN NGÀNH CỦA CÔNG TRÌNH](guiding_docs/appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_03.md)
+- [PHỤ LỤC III: PHÂN LOẠN DỰ ÁN ĐẦU TƯ XÂY DỰNG THEO CÔNG NĂNG PHỤC VỤ VÀ TÍNH CHẤT CHUYÊN NGÀNH CỦA CÔNG TRÌNH](guiding_docs/appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_03.md)
 - [PHỤ LỤC IV: DANH MỤC CÔNG TRÌNH ẢNH HƯỞNG LỚN ĐẾN AN TOÀN, LỢI ÍCH CỘNG ĐỒNG](guiding_docs/appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_04.md)
+

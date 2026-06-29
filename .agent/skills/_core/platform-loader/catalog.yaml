@@ -65,6 +65,31 @@ skills:
     triggers: [tài liệu dài, long-form, whitepaper, quy chế, regulations]
     skill_path: .agent/skills/_core/long-form-writer/SKILL.md
 
+  - name: markdown-document-processing
+    bundle: _core
+    description: "Master Skill quản lý và chuẩn hóa tài liệu Markdown từ file Word/PDF"
+    triggers: [markdown, xử lý markdown, chuẩn hóa markdown, document processing]
+    skill_path: .agent/skills/_core/markdown-processing/SKILL.md
+
+  - name: table-reconstructor
+    bundle: _core
+    description: "Sub-skill dựng lại các bảng biểu Markdown bị vỡ dọc hoặc lệch cột bằng file đối chiếu docx"
+    triggers: [process-table, vỡ bảng, lệch cột, reconstruct table]
+    skill_path: .agent/skills/_core/markdown-processing/table-reconstructor/SKILL.md
+
+  - name: form-template-cleaner
+    bundle: _core
+    description: "Sub-skill làm sạch biểu mẫu và tự động khôi phục tiêu đề biểu mẫu bị lỗi placeholder"
+    triggers: [clean-form, biểu mẫu, placeholder, lỗi tiêu đề]
+    skill_path: .agent/skills/_core/markdown-processing/form-template-cleaner/SKILL.md
+
+  - name: relative-link-patcher
+    bundle: _core
+    description: "Sub-skill tự động sửa và chuẩn hóa các liên kết tương đối của phụ lục"
+    triggers: [patch-links, liên kết tương đối, link patcher]
+    skill_path: .agent/skills/_core/markdown-processing/relative-link-patcher/SKILL.md
+
+
   - name: mock-debugger
     bundle: _software
     description: "Tự động gỡ lỗi và tự phục hồi mã nguồn Python (Self-Healing Debugger)"
