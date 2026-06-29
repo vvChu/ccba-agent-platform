@@ -89,3 +89,6 @@ scripts/verify_report.py
 # Spoke Registry Decrypted (Local-Only)
 .md/data/spoke_registry_decrypted.yaml
 
+# Node dependencies
+node_modules/
+
