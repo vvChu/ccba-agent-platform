@@ -57,6 +57,12 @@ for i in range(0, len(reader.pages), 20):
 - **Giải pháp**: Viết luồng đóng gói fallback bằng module `zipfile` của Python để tự sinh cấu trúc thư mục giải pháp và file XML siêu dữ liệu (`Solution.xml`) giúp đảm bảo tệp `.zip` đầu ra luôn được tạo ra đồng bộ và hợp lệ cho việc import thủ công.
 - **Nguồn**: Session 86ca4b06-4329-478b-8c16-ca53827675de, 2026-06-27
 
+### 6. Ma hoa bat doi xung RSA Spoke Registry (Local Encryption, GitHub Storage)
+- **Ngu canh**: Can thu thap thong tin cau hinh va duong dan vat ly cuc bo cua cac Spoke ve Hub de phan tich nhung phai dam bao an toan tuyet doi va tranh lo thong tin ca nhan tren GitHub.
+- **Van de giai quyet**: Tranh ro ri duong dan va Username, dong thoi tranh xung dot Git khi nhieu nguoi cung push file registry.
+- **Giai phap**: Su dung RSA 2048-bit. Spoke dung Khoa cong khai de ma hoa thong tin local thanh chuoi Base64 va push len GitHub. Chỉ Admin giu Khoa bi mat (luu ngoai codebase) moi giai ma doc duoc.
+- **Nguon**: Session 98bf7ffe-a23a-4fcd-a7cb-59ee0ed5dac2, 2026-06-29
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -102,6 +108,16 @@ if sys.stdout.encoding.lower() != 'utf-8':
 - **Vấn đề**: Khi cào dữ liệu từ Thư Viện Pháp Luật (TVPL) bằng Chrome DevTools Protocol, do quy tắc hạn chế một tài khoản chỉ được đăng nhập trên một thiết bị tại một thời điểm, script tự động điền form đăng nhập sẽ kích hoạt cảnh báo modal của website: *"Quý khách Đăng nhập vào thì sẽ có 1 người khác bị Đăng xuất."* làm ngắt tiến trình và gây lỗi Timeout.
 - **Giải pháp**: Bổ sung logic giám sát DOM ngay sau khi submit form đăng nhập để phát hiện sự xuất hiện của nút **"Đồng ý"** trong modal cảnh báo và tự động click xác nhận để giành quyền phiên làm việc, sau đó đợi trang tải lại để tiếp tục tải tệp tin gốc.
 - **Nguồn**: Session 628572ad-aa52-4ae6-ba74-68a61f8709d7, 2026-06-28
+
+### 7. Co che Hybrid Bypass & Fallback cho Slash Command Workflows
+- **Van de**: Nguoi dung muon di nhanh vao chu de cu the va nap nhanh skills/guidelines ma khong can di qua khau quet tu dong va menu chon, nhung van phai ho tro luong quet chuan cho nguoi dung moi.
+- **Giai phap**: Truyen tham so sau ky tu `--` (vi du `/ccba-brainstorm -- legal`). Neu khop voi chu de cau hinh -> Bypass quet tu dong. Neu sai hoac de trong -> Fallback ve luong quet chuan.
+- **Nguon**: Session 98bf7ffe-a23a-4fcd-a7cb-59ee0ed5dac2, 2026-06-29
+
+### 8. Auto-Prune cac ban ghi Spoke khong con hoat dong
+- **Van de**: Cac du an Spoke mock hoac da bi xoa vat ly van ton tai trong file registry ma hoa tren Hub gay rac du lieu.
+- **Giai phap**: Tich hop co che tu dong vao script giai ma cua Admin. Khi Admin chay decrypt, script tu dong kiem tra su ton tai vat ly cua duong dan Spoke (`os.path.exists()`). Neu khong ton tai -> Tu dong go bo ban ghi va ghi de cap nhat lai file registry.
+- **Nguon**: Session 98bf7ffe-a23a-4fcd-a7cb-59ee0ed5dac2, 2026-06-29
 
 ---
 
