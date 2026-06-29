@@ -3,6 +3,7 @@ from collections.abc import Generator
 from pathlib import Path
 
 from openai import OpenAI
+
 from ccba_ai.hooks import PrivacyGuardHook
 
 
@@ -28,7 +29,9 @@ class AIClient:
         self._client = OpenAI(
             base_url=base_url or os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1"),
             api_key=api_key
-            or os.environ.get("AI_GATEWAY_KEY", os.environ.get("OPENAI_API_KEY", "")),
+            or os.environ.get(
+                "AI_GATEWAY_KEY", os.environ.get("OPENAI_API_KEY", "mock-key-for-ci")
+            ),
         )
         self.default_model = default_model or os.environ.get("AI_MODEL", "qwen-local-primary")
         self.privacy_guard = PrivacyGuardHook()
@@ -109,7 +112,7 @@ class AIClient:
         """
         for msg in messages:
             self.privacy_guard.check_content(msg.get("content", ""))
-            
+
         response = self._client.chat.completions.create(
             model=model or self.default_model,
             messages=messages,
