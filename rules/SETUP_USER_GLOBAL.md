@@ -8,7 +8,7 @@ Thêm section sau vào cuối `user_global` rules (Settings → Gemini → User 
 ## 4. CCBA Agent Services Platform (Hub)
 - **Hub Path**: `D:\GitHubProjects\ccba-agent-platform`
 - **Rule**: Khi bắt đầu phiên làm việc ở BẤT KỲ workspace nào, Agent nên đọc Hub để nắm:
-  1. Danh sách skills available: `Hub/.agent/skills/` (đọc SKILL.md frontmatter)
+  1. Danh sách skills available: `Hub/.agents/skills/` (đọc SKILL.md frontmatter)
   2. CCBA rules: `Hub/rules/` (đọc khi tạo output mang danh CCBA)
   3. Knowledge base: `Hub/knowledge/session_learnings.md` (đọc patterns/anti-patterns)
 - **Rule**: Khi project hiện tại có `.md/workspace_context.yaml`, đọc file này để lấy local overrides

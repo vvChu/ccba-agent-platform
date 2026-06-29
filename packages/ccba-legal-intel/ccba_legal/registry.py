@@ -12,7 +12,7 @@ class LegalRegistryManager:
         else:
             # Fallback path inside ccba-agent-platform project structure
             self.registry_path = Path(
-                "d:/GitHubProjects/ccba-agent-platform/.agent/skills/_consulting/legal-document-tracker/registry/legal_registry.yaml"
+                "d:/GitHubProjects/ccba-agent-platform/.agents/skills/legal-document-tracker/resources/legal_registry.yaml"
             )
 
     def load(self) -> dict:

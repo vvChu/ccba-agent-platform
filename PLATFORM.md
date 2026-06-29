@@ -65,7 +65,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 
 ### Khi cần skill mới
 
-1. Tạo folder trong `.agent/skills/{tên-skill}/`
+1. Tạo folder trong `.agents/skills/{tên-skill}/`
 2. Viết `SKILL.md` theo format chuẩn (YAML frontmatter + instructions)
 3. Thêm data/, templates/ nếu cần
 4. Đăng ký trong `catalog.yaml`

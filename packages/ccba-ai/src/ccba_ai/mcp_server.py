@@ -1,11 +1,15 @@
 """
-Lightweight MCP Server for ccba-agent-platform.
-Exposes search_vietnamese_laws and get_gateway_status tools via JSON-RPC stdin/stdout.
+Model Context Protocol (MCP) Server for ccba-agent-platform.
+Exposes rich, JSON-first tools using the Anthropic MCP Python SDK (FastMCP).
+Integrates Privacy Guard middleware to block API key leaks.
 """
 
 import sys
+import os
 import json
-import traceback
+import asyncio
+import functools
+import inspect
 from pathlib import Path
 from datetime import datetime
 
@@ -15,8 +19,33 @@ if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
+# Attempt import of FastMCP
+try:
+    from mcp.server.fastmcp import FastMCP
+except ImportError:
+    print("[Error] Anthropic 'mcp' package is not installed. Run 'uv sync' first.", file=sys.stderr)
+    sys.exit(1)
+
+# Import services from ccba_ai
+from ccba_ai.hooks import PrivacyGuardHook
+from ccba_ai import services
+
+# Expose scripts folder for idop_scaffolder import
+cwd_scripts = Path.cwd() / "scripts"
+if cwd_scripts.exists() and str(cwd_scripts) not in sys.path:
+    sys.path.append(str(cwd_scripts))
+
+try:
+    import idop_scaffolder
+except ImportError:
+    idop_scaffolder = None
+
+# Initialize FastMCP Server
+mcp = FastMCP("ccba-mcp-server")
+
 LOG_DIR = Path(".md")
 LOG_FILE = LOG_DIR / "mcp_server.log"
+
 
 def log(msg: str):
     """Write timestamped message to .md/mcp_server.log."""
@@ -30,8 +59,56 @@ def log(msg: str):
         pass
 
 
+def _scan_output(result, guard):
+    """Recursively scan output content for API keys."""
+    if isinstance(result, str):
+        guard.check_content(result)
+    elif isinstance(result, (dict, list)):
+        try:
+            guard.check_content(json.dumps(result, ensure_ascii=False))
+        except Exception:
+            pass
+
+
+def privacy_protected(func):
+    """Decorator to scan all inputs and outputs for sensitive API keys."""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        guard = PrivacyGuardHook()
+        # Scan inputs
+        for arg in args:
+            if isinstance(arg, str):
+                guard.check_content(arg)
+        for k, v in kwargs.items():
+            if isinstance(v, str):
+                guard.check_content(v)
+
+        if inspect.iscoroutinefunction(func):
+            async def async_wrapper():
+                result = await func(*args, **kwargs)
+                _scan_output(result, guard)
+                return result
+            return async_wrapper()
+        else:
+            result = func(*args, **kwargs)
+            _scan_output(result, guard)
+            return result
+    return wrapper
+
+
+# ==========================================
+# 1. Nhóm Tra cứu & Hệ thống (System Tools)
+# ==========================================
+
+@mcp.tool()
+@privacy_protected
 def search_vietnamese_laws(query: str) -> str:
-    """Mock search for Vietnamese construction laws and regulations."""
+    """Tra cứu văn bản pháp luật xây dựng Việt Nam.
+
+    Args:
+        query: Từ khóa hoặc số hiệu văn bản (ví dụ: Nghị định 175, Luật Xây dựng)
+    """
+    log(f"Tool search_vietnamese_laws called with query='{query}'")
     query_lower = query.lower()
     if "175" in query_lower or "nghị định 175" in query_lower:
         return (
@@ -49,8 +126,11 @@ def search_vietnamese_laws(query: str) -> str:
         return f"Không tìm thấy văn bản cụ thể cho từ khóa '{query}'. Vui lòng tra cứu tại CSDL Luật Việt Nam hoặc Thư viện Pháp luật."
 
 
+@mcp.tool()
+@privacy_protected
 def get_gateway_status() -> str:
-    """Check AI Gateway (LiteLLM) health status and mock models list."""
+    """Kiểm tra trạng thái kết nối và danh sách model của AI Gateway."""
+    log("Tool get_gateway_status called")
     from ccba_ai.client import AIClient
     try:
         client = AIClient()
@@ -60,130 +140,253 @@ def get_gateway_status() -> str:
         return f"AI Gateway Status: OFFLINE. Error details: {e}"
 
 
-def handle_request(req):
-    req_id = req.get("id")
-    method = req.get("method")
+# ==========================================
+# 2. Nhóm Plan Manager (Quản lý Kế hoạch)
+# ==========================================
+
+@mcp.tool()
+@privacy_protected
+def create_plan(title: str, phases: list[str]) -> dict:
+    """Khởi tạo một kế hoạch triển khai (plan) mới với các phase cụ thể.
+
+    Args:
+        title: Tiêu đề của kế hoạch (ví dụ: 'Nâng cấp bảo mật hệ thống')
+        phases: Danh sách tên các phase (ví dụ: ['Khảo sát', 'Phát triển', 'Kiểm thử'])
+    """
+    log(f"Tool create_plan called with title='{title}'")
+    try:
+        return services.create_plan(title, phases)
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@mcp.tool()
+@privacy_protected
+def update_phase_status(plan_file: str, phase_id: str, status: str) -> dict:
+    """Cập nhật trạng thái của một phase trong kế hoạch triển khai.
+
+    Args:
+        plan_file: Đường dẫn tương đối hoặc tuyệt đối tới file plan.md
+        phase_id: Mã định danh của phase (ví dụ: '01', '02')
+        status: Trạng thái mới cần đặt ('pending', 'in-progress', 'completed')
+    """
+    log(f"Tool update_phase_status called for {plan_file} (Phase {phase_id} -> {status})")
+    try:
+        return services.update_phase_status(plan_file, phase_id, status)
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@mcp.tool()
+@privacy_protected
+def get_plan_status(plan_file: str) -> dict:
+    """Truy xuất thông tin chi tiết và tiến độ của kế hoạch triển khai.
+
+    Args:
+        plan_file: Đường dẫn tương đối hoặc tuyệt đối tới file plan.md
+    """
+    log(f"Tool get_plan_status called for {plan_file}")
+    try:
+        return services.get_plan_status(plan_file)
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+# ==========================================
+# 3. Nhóm Team Coordinator (Điều phối multi-agent)
+# ==========================================
+
+@mcp.tool()
+@privacy_protected
+def list_tasks() -> list[dict]:
+    """Lấy danh sách toàn bộ công việc (tasks) trong database điều phối multi-agent."""
+    log("Tool list_tasks called")
+    try:
+        return services.load_tasks()
+    except Exception as e:
+        return [{"status": "error", "message": str(e)}]
+
+
+@mcp.tool()
+@privacy_protected
+def add_task(name: str, owner: str | None = None) -> dict:
+    """Thêm một công việc mới vào cơ sở dữ liệu điều phối multi-agent.
+
+    Args:
+        name: Tên của công việc (phải là duy nhất)
+        owner: Tên Agent đảm nhận công việc (không bắt buộc)
+    """
+    log(f"Tool add_task called with name='{name}', owner='{owner}'")
+    try:
+        return services.add_task(name, owner)
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@mcp.tool()
+@privacy_protected
+def claim_task(name: str, owner: str) -> dict:
+    """Đăng ký nhận một công việc để thực thi.
+
+    Args:
+        name: Tên công việc muốn nhận
+        owner: Tên Agent thực thi nhận công việc
+    """
+    log(f"Tool claim_task called: {owner} claims '{name}'")
+    try:
+        return services.claim_task(name, owner)
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@mcp.tool()
+@privacy_protected
+def complete_task(name: str) -> dict:
+    """Đánh dấu hoàn thành một công việc trong database điều phối.
+
+    Args:
+        name: Tên công việc đã hoàn thành
+    """
+    log(f"Tool complete_task called for '{name}'")
+    try:
+        return services.complete_task(name)
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+# ==========================================
+# 4. Nhóm SEO Audit (Rà soát SEO)
+# ==========================================
+
+@mcp.tool()
+@privacy_protected
+def run_seo_audit(file_path: str) -> dict:
+    """Chạy phân tích kỹ thuật SEO cho tệp Markdown hoặc HTML.
+
+    Args:
+        file_path: Đường dẫn tương đối hoặc tuyệt đối tới file cần quét
+    """
+    log(f"Tool run_seo_audit called for {file_path}")
+    try:
+        return services.audit_file(file_path)
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+# ==========================================
+# 5. Nhóm IDOP Scaffolder (Khởi tạo dự án)
+# ==========================================
+
+@mcp.tool()
+@privacy_protected
+def scaffold_idop_project(
+    output_dir: str = "./CDE",
+    app_dir: str = "./src/idop-app",
+    scaffold_cde: bool = True,
+    scaffold_lists: bool = True,
+    scaffold_workflows: bool = True,
+    scaffold_react_app: bool = False,
+    pack_solution: bool = False,
+    solution_name: str = "IDOP_Solution"
+) -> str:
+    """Tạo nhanh bộ khung dự án CDE, SharePoint IDOP Lists, Power Automate, và React App.
+
+    Args:
+        output_dir: Đường dẫn thư mục đầu ra CDE (mặc định: './CDE')
+        app_dir: Thư mục đầu ra cho React App (mặc định: './src/idop-app')
+        scaffold_cde: Có tạo cấu trúc thư mục CDE không (mặc định: True)
+        scaffold_lists: Có tạo schema SharePoint Lists không (mặc định: True)
+        scaffold_workflows: Có tạo thiết kế Power Automate workflow không (mặc định: True)
+        scaffold_react_app: Có khởi tạo dự án React/Vite/TS Code App không (mặc định: False)
+        pack_solution: Có đóng gói SharePoint Solution zip không (mặc định: False)
+        solution_name: Tên gói Solution (mặc định: 'IDOP_Solution')
+    """
+    log(f"Tool scaffold_idop_project called (output_dir={output_dir}, react_app={scaffold_react_app})")
+    if not idop_scaffolder:
+        return "Error: idop_scaffolder module could not be imported. Ensure scripts/idop_scaffolder.py exists."
+        
+    out_abs = os.path.abspath(output_dir)
+    app_abs = os.path.abspath(app_dir)
     
-    if method == "initialize":
-        return {
-            "jsonrpc": "2.0",
-            "result": {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {
-                    "tools": {}
-                },
-                "serverInfo": {
-                    "name": "ccba-mcp-server",
-                    "version": "1.0.0"
-                }
-            },
-            "id": req_id
-        }
-        
-    elif method == "tools/list":
-        return {
-            "jsonrpc": "2.0",
-            "result": {
-                "tools": [
-                    {
-                        "name": "search_vietnamese_laws",
-                        "description": "Tra cứu văn bản pháp luật xây dựng Việt Nam",
-                        "inputSchema": {
-                            "type": "object",
-                            "properties": {
-                                "query": {
-                                    "type": "string",
-                                    "description": "Từ khóa tra cứu (ví dụ: Nghị định 175, Luật Xây dựng)"
-                                }
-                            },
-                            "required": ["query"]
-                        }
-                    },
-                    {
-                        "name": "get_gateway_status",
-                        "description": "Kiểm tra kết nối và danh sách model của AI Gateway",
-                        "inputSchema": {
-                            "type": "object",
-                            "properties": {}
-                        }
-                    }
-                ]
-            },
-            "id": req_id
-        }
-        
-    elif method == "tools/call":
-        params = req.get("params", {})
-        tool_name = params.get("name")
-        arguments = params.get("arguments", {})
-        
-        try:
-            if tool_name == "search_vietnamese_laws":
-                query = arguments.get("query", "")
-                result_text = search_vietnamese_laws(query)
-            elif tool_name == "get_gateway_status":
-                result_text = get_gateway_status()
-            else:
-                return {
-                    "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32601,
-                        "message": f"Tool '{tool_name}' not found."
-                    },
-                    "id": req_id
-                }
-                
-            return {
-                "jsonrpc": "2.0",
-                "result": {
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": result_text
-                        }
-                    ]
-                },
-                "id": req_id
-            }
-        except Exception as e:
-            return {
-                "jsonrpc": "2.0",
-                "error": {
-                    "code": -32603,
-                    "message": f"Internal error executing tool: {e}"
-                },
-                "id": req_id
-            }
+    reports = []
+    try:
+        if scaffold_cde:
+            idop_scaffolder.scaffold_cde(out_abs)
+            reports.append("- Cấu trúc thư mục CDE: Đã khởi tạo.")
             
-    # Default fallback for other protocol methods
-    return {
-        "jsonrpc": "2.0",
-        "result": {},
-        "id": req_id
-    }
+        if scaffold_lists:
+            idop_scaffolder.scaffold_lists(out_abs)
+            reports.append("- SharePoint Lists Schema & PnP Scripts: Đã khởi tạo.")
+            
+        if scaffold_workflows:
+            idop_scaffolder.scaffold_workflows(out_abs)
+            reports.append("- Power Automate flow definitions: Đã khởi tạo.")
+            
+        if scaffold_react_app:
+            idop_scaffolder.scaffold_app(app_abs)
+            reports.append(f"- React + Vite + TS Code App: Đã khởi tạo tại {app_dir}")
+            
+        if pack_solution:
+            idop_scaffolder.pack_solution(out_abs, solution_name, "CCBA", "ccba")
+            reports.append(f"- Đóng gói Solution zip '{solution_name}': Đã hoàn thành.")
+            
+        return "Scaffolding dự án IDOP thành công:\n" + "\n".join(reports)
+    except Exception as e:
+        return f"Error executing scaffolding: {e}"
+
+
+# ==========================================
+# 6. Nhóm MD Convert (Chuyển đổi tài liệu)
+# ==========================================
+
+@mcp.tool()
+@privacy_protected
+async def convert_document(file_path: str, output_dir: str | None = None) -> dict:
+    """Chuyển đổi tài liệu (PDF, DOCX) sang Markdown bằng bộ pipeline mdconverter.
+
+    Args:
+        file_path: Đường dẫn tệp tài liệu cần chuyển đổi (ví dụ: 'document.pdf')
+        output_dir: Thư mục lưu file markdown kết quả (mặc định: cùng thư mục file gốc)
+    """
+    log(f"Tool convert_document called for {file_path}")
+    try:
+        from mdconverter.core.pipeline import ConversionPipeline
+        from mdconverter.core.base import ConversionTool, ConversionStatus
+        
+        path = Path(file_path)
+        if not path.is_absolute():
+            path = Path.cwd() / path
+            
+        if not path.exists():
+            return {"status": "error", "message": f"File {file_path} not found."}
+            
+        out_path = Path(output_dir) if output_dir else None
+        if out_path and not out_path.is_absolute():
+            out_path = Path.cwd() / out_path
+
+        pipeline = ConversionPipeline(
+            tool=ConversionTool.AUTO,
+            output_dir=out_path
+        )
+        
+        result = await pipeline.process_file(path)
+        
+        return {
+            "status": "success" if result.is_success else "failed",
+            "source_file": str(result.source_path),
+            "output_file": str(result.output_path) if result.output_path else None,
+            "tool_used": result.tool_used,
+            "error_message": result.error_message,
+            "metadata": result.metadata
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 def main():
-    """Main input loop reading from stdin."""
-    log("[ccba-mcp-server] Starting server loop...")
-    
-    for line in sys.stdin:
-        if not line.strip():
-            continue
-        try:
-            log(f"[ccba-mcp-server] Received request: {line.strip()}")
-            req = json.loads(line)
-            resp = handle_request(req)
-            log(f"[ccba-mcp-server] Sending response: {json.dumps(resp)}")
-            sys.stdout.write(json.dumps(resp) + "\n")
-            sys.stdout.flush()
-        except Exception as e:
-            log(f"[ccba-mcp-server] Error in request loop: {e}")
-            try:
-                tb = traceback.format_exc()
-                log(f"[ccba-mcp-server] Traceback:\n{tb}")
-            except Exception:
-                pass
+    """Main Entry Point for launching the FastMCP Server."""
+    log("[ccba-mcp-server] Starting FastMCP Server...")
+    mcp.run()
 
 
 if __name__ == "__main__":

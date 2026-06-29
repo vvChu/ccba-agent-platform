@@ -25,6 +25,10 @@ Repository = "https://github.com/vvChu/ccba-agent-platform"
 [tool.uv.workspace]
 members = ["packages/*"]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/ccba_agent_platform"]
+
+
 # === Shared Tooling ===
 [tool.ruff]
 target-version = "py310"

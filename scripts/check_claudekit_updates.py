@@ -21,13 +21,13 @@ REPOS_CONFIG = [
         "type": "engineer",
         "local_path": Path("claudekit-engineer"),
         "remote_url": "https://github.com/claudekit/claudekit-engineer",
-        "sha_file": Path(".md/claudekit_last_sha.txt")
+        "sha_file": Path(".md/scratch/claudekit_last_sha.txt")
     },
     {
         "type": "marketing",
         "local_path": Path(".agents/claudekit-marketing"),
         "remote_url": "https://github.com/claudekit/claudekit-marketing",
-        "sha_file": Path(".md/claudekit_marketing_last_sha.txt")
+        "sha_file": Path(".md/scratch/claudekit_marketing_last_sha.txt")
     }
 ]
 
