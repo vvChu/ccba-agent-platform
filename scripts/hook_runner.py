@@ -64,10 +64,12 @@ def main():
     if args.event == "session-init":
         exit_code = run_hook_script(HOOKS_DIR / "session_init.py", args.event, payload)
     elif args.event == "pre-tool":
-        # Run privacy check and naming checks
+        # Run privacy check, naming checks, scout directory block checks, and simplify gate checks
         exit_code_privacy = run_hook_script(HOOKS_DIR / "privacy_block.py", args.event, payload)
         exit_code_naming = run_hook_script(HOOKS_DIR / "naming_convention.py", args.event, payload)
-        exit_code = max(exit_code_privacy, exit_code_naming)
+        exit_code_scout = run_hook_script(HOOKS_DIR / "scout_block.py", args.event, payload)
+        exit_code_simplify = run_hook_script(HOOKS_DIR / "simplify_gate.py", args.event, payload)
+        exit_code = max(exit_code_privacy, exit_code_naming, exit_code_scout, exit_code_simplify)
     elif args.event == "post-tool":
         # Run brand enforcement checks
         exit_code = run_hook_script(HOOKS_DIR / "brand_enforcement.py", args.event, payload)
