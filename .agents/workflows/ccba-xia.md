@@ -25,12 +25,12 @@ Triết lý cốt lõi: hiểu rõ trước khi sao chép | phản biện trư�
 Mục tiêu: Đóng gói và thu thập tri thức của repository đích.
 
 1. **Xác minh môi trường:** Đảm bảo máy tính có cài đặt Node.js/npm để chạy `npx`.
-2. **Đóng gói mã nguồn:** Chạy helper script [repomix_pack.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/repomix_pack.py) để đóng gói toàn bộ thư mục/repo đích thành một file context phẳng dạng XML đặt tại [.md/scratch/source_pack.txt](file:///d:/GitHubProjects/ccba-agent-platform/.md/scratch/source_pack.txt):
+2. **Đóng gói mã nguồn:** Chạy helper script `scripts/repomix_pack.py` để đóng gói toàn bộ thư mục/repo đích thành một file context phẳng dạng XML đặt tại `.md/scratch/source_pack.txt`:
    ```bash
    python scripts/repomix_pack.py --source <path-to-target-repo> --output .md/scratch/source_pack.txt
    ```
    *Lưu ý: Nếu nguồn là repository GitHub online, Agent cần hướng dẫn người dùng clone về một thư mục tạm thời trong workspace rồi trỏ đường dẫn tới đó.*
-3. **Đọc hiểu cấu trúc:** Đọc tệp [.md/scratch/source_pack.txt](file:///d:/GitHubProjects/ccba-agent-platform/.md/scratch/source_pack.txt) để hiểu tổng quan kiến trúc, dependencies và các files cốt lõi.
+3. **Đọc hiểu cấu trúc:** Đọc tệp `.md/scratch/source_pack.txt` để hiểu tổng quan kiến trúc, dependencies và các files cốt lõi.
 
 ### Pha 2: Map (Ánh xạ cấu trúc)
 
@@ -67,7 +67,7 @@ Mục tiêu: Phản biện thiết kế để loại bỏ các giả định sai
 
 Mục tiêu: Soạn thảo kế hoạch triển khai port mã nguồn.
 
-1. Tạo hoặc cập nhật tệp kế hoạch triển khai [implementation_plan.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/implementation_plan.md) (lưu tại thư mục artifacts hoặc [.md/knowledge/](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/)).
+1. Tạo hoặc cập nhật tệp kế hoạch triển khai `implementation_plan.md` (lưu tại thư mục artifacts hoặc `.md/knowledge/`).
 2. Kế hoạch phải chỉ rõ:
    * Các tệp tin cần tạo mới `[NEW]`, chỉnh sửa `[MODIFY]`.
    * Cách thức adapt code (ví dụ chuyển từ Javascript sang Python).
@@ -77,5 +77,5 @@ Mục tiêu: Soạn thảo kế hoạch triển khai port mã nguồn.
 
 Mục tiêu: Báo cáo kết quả phân tích và kế hoạch cho người dùng.
 
-*   In ra thông báo bàn giao kế hoạch triển khai kèm theo đường dẫn file [implementation_plan.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/implementation_plan.md).
+*   In ra thông báo bàn giao kế hoạch triển khai kèm theo đường dẫn file `implementation_plan.md`.
 *   *Lưu ý: Workflow này không tự động viết hay thay thế code dự án, việc thực thi sẽ do kỹ sư hoặc subagent đảm nhận sau khi kế hoạch được duyệt.*
