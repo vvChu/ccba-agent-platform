@@ -27,16 +27,16 @@ python scripts/validate_docs.py . --src scripts,packages
 ## Các nhóm lỗi cần kiểm tra và xử lý:
 
 ### 1. Broken Link Error (Lỗi liên kết hỏng) — [CHẶN CỨNG - EXIT 1]
-- **Vấn đề:** Các đường dẫn tương đối (vd: `[config](./setup.md)`) trỏ vào tệp tin không tồn tại.
+- **Vấn đề:** Các đường dẫn tương đối trỏ vào tệp tin không tồn tại.
 - **Hành động:** Bạn **phải** kiểm tra lại cấu trúc thư mục thực tế và sửa lại đường dẫn cho đúng. Đây là lỗi nghiêm trọng sẽ chặn đứng commit hoặc build CI.
 
 ### 2. Code Ref Warning (Cảnh báo ký hiệu code) — [CẢNH BÁO MỀM]
-- **Vấn đề:** Tài liệu nhắc đến các hàm `my_func()` hoặc class PascalCase `MyClass` không được định nghĩa trong codebase (thường do AI tự bịa ra).
+- **Vấn đề:** Tài liệu nhắc đến các hàm hoặc class không được định nghĩa trong codebase (thường do AI tự bịa ra).
 - **Hành động:** Xác nhận xem hàm/lớp đó có bị đổi tên hoặc xóa trong đợt refactor không. Sửa lại tên ký hiệu cho đúng với thực tế mã nguồn.
 
 ### 3. Env Var Warning (Cảnh báo biến cấu hình) — [CẢNH BÁO MỀM]
-- **Vấn đề:** Tài liệu nhắc tới các biến môi trường cấu hình (vd: `API_KEY`) nhưng tệp mẫu `.env.example` ở root dự án không khai báo.
-- **Hành động:** Bổ sung khai báo biến mẫu này vào `.env.example` kèm giá trị demo hoặc mô tả.
+- **Vấn đề:** Tài liệu nhắc tới các biến môi trường cấu hình nhưng tệp mẫu `.env.example` ở root dự án không khai báo.
+- **Hành động:** Bổ sung khai báo biến mẫu này vào `.env.example` kèm giá trị cấu hình giả định.
 
 ---
 
