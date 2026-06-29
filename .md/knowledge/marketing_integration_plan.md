@@ -1,3 +1,8 @@
+> [!WARNING]
+> Tài liệu này mang tính chất lịch sử/nghiên cứu cũ.
+> Cấu trúc thư mục và các sự kiện (lifecycle events) mô tả trong tài liệu có thể đã thay đổi hoặc khác biệt so với phiên bản Python của CAP hiện tại.
+
+---
 # Kế hoạch Tích hợp Chọn lọc Tính năng ClaudeKit Marketing
 
 Kế hoạch này phác thảo cách trích xuất và tích hợp chọn lọc các kỹ năng hữu ích từ `claudekit-marketing` vào dự án `ccba-agent-platform` theo chế độ `--compare`.

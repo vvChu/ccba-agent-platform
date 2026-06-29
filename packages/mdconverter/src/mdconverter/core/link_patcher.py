@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 class LinkPatcher:
     """Core utility to patch and standardize relative links to appendices inside markdown files."""
 
@@ -9,14 +10,14 @@ class LinkPatcher:
     def patch_links(self, target_path: Path) -> list[Path]:
         """
         Scans and standardizes relative links (e.g. from appendices/ to ./appendices/) in markdown files.
-        
+
         Args:
             target_path: Path to a markdown file or directory containing markdown files.
-            
+
         Returns:
             A list of Paths of files that were modified.
         """
-        files_to_patch = []
+        files_to_patch: list[Path] = []
         modified_files = []
 
         if not target_path.exists():
@@ -28,7 +29,7 @@ class LinkPatcher:
             files_to_patch.append(target_path)
 
         for fpath in files_to_patch:
-            with open(fpath, "r", encoding="utf-8") as f:
+            with open(fpath, encoding="utf-8") as f:
                 content = f.read()
 
             # Replace (appendices/ with (./appendices/

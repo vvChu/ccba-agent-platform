@@ -8,9 +8,9 @@ from .core import (
     get_blind_chunks,
     split_pdf,
 )
-from .vision import TileResult, TitleBlockDetector, TitleBlockRegion, VisionOptimizer
-from .document_skills.pdf_forms import get_field_info, fill_pdf_fields
+from .document_skills.pdf_forms import fill_pdf_fields, get_field_info
 from .document_skills.xlsx_recalc import recalc_xlsx
+from .vision import TileResult, TitleBlockDetector, TitleBlockRegion, VisionOptimizer
 
 __all__ = [
     # core

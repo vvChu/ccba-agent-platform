@@ -1,3 +1,8 @@
+> [!WARNING]
+> Tài liệu này mang tính chất lịch sử/nghiên cứu cũ.
+> Cấu trúc thư mục và các sự kiện (lifecycle events) mô tả trong tài liệu có thể đã thay đổi hoặc khác biệt so với phiên bản Python của CAP hiện tại.
+
+---
 # Feature Comparison: ClaudeKit-Engineer Porting & Adaptation
 ## Source: claudekit-engineer (.md/claudekit_architectural_study.md)
 ## Local Project: ccba-agent-platform

@@ -9,13 +9,13 @@ from rich.console import Console
 
 from mdconverter import __version__
 from mdconverter.cli.analyze_cmd import analyze
+from mdconverter.cli.clean_form_cmd import clean_form
 from mdconverter.cli.config_cmd import app_config
 from mdconverter.cli.convert_cmd import convert
 from mdconverter.cli.lint_cmd import lint
-from mdconverter.cli.validate_cmd import validate
-from mdconverter.cli.process_table_cmd import process_table
-from mdconverter.cli.clean_form_cmd import clean_form
 from mdconverter.cli.patch_links_cmd import patch_links
+from mdconverter.cli.process_table_cmd import process_table
+from mdconverter.cli.validate_cmd import validate
 
 app = typer.Typer(
     name="mdconvert",

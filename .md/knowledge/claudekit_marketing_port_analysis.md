@@ -1,3 +1,8 @@
+> [!WARNING]
+> Tài liệu này mang tính chất lịch sử/nghiên cứu cũ.
+> Cấu trúc thư mục và các sự kiện (lifecycle events) mô tả trong tài liệu có thể đã thay đổi hoặc khác biệt so với phiên bản Python của CAP hiện tại.
+
+---
 # Báo cáo Phân tích Tính năng ClaudeKit Marketing
 ## Đối tượng: `claudekit-marketing`
 ## Dự án đích: `ccba-agent-platform`

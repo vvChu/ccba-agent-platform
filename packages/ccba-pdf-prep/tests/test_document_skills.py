@@ -1,6 +1,4 @@
-import os
-from pathlib import Path
-from ccba_pdf_prep import get_field_info, fill_pdf_fields, recalc_xlsx
+from ccba_pdf_prep import fill_pdf_fields, get_field_info, recalc_xlsx
 
 
 def test_imports():

@@ -69,7 +69,7 @@ def add_task(name: str, owner: str | None = None, workspace_root: Path | None = 
     new_task = {
         "name": name,
         "owner": owner or "None",
-        "status": "pending" if not owner else "in-progress"
+        "status": "pending" if not owner else "in-progress",
     }
     tasks.append(new_task)
     save_tasks(tasks, workspace_root)

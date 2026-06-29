@@ -31,7 +31,7 @@ repos:
       - id: check-added-large-files
       - id: check-merge-conflict
 
-  # Markdown linting
+  # Markdown linting & validation
   - repo: local
     hooks:
       - id: pymarkdown
@@ -40,3 +40,9 @@ repos:
         language: system
         types: [markdown]
         pass_filenames: true
+      - id: validate-docs
+        name: Validate Documentation Accuracy
+        entry: python scripts/validate_docs.py . --src scripts,packages
+        language: system
+        types: [markdown]
+        pass_filenames: false

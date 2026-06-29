@@ -1,3 +1,8 @@
+> [!WARNING]
+> Tài liệu này mang tính chất lịch sử/nghiên cứu cũ.
+> Cấu trúc thư mục và các sự kiện (lifecycle events) mô tả trong tài liệu có thể đã thay đổi hoặc khác biệt so với phiên bản Python của CAP hiện tại.
+
+---
 # Feature Comparison: Microsoft Power Platform AI Skills
 ## Source: microsoft/power-platform-skills (https://github.com/microsoft/power-platform-skills)
 ## Local Project: ccba-agent-platform (IDOP Integration)
@@ -10,7 +15,7 @@ Dưới đây là báo cáo phân tích, đối soát và đánh giá tính tư�
 
 | Aspect | Microsoft Power Platform Skills | ccba-agent-platform (IDOP Scaffolder) | Gaps & Adaptation Strategy |
 | --- | --- | --- | --- |
-| **1. Target Runtime** | Cấu hình cho GitHub Copilot CLI và Claude Code (giao diện `/plugin`). | Cấu hình cho Antigravity IDE (giao diện Custom Slash Commands `/ccba-*`). | **Khác biệt nền tảng**: Cần chuyển đổi tệp đặc tả XML/JSON của họ thành định nghĩa [SKILL.md](file:///D:/GitHubProjects/ccba-agent-platform/.agent/skills/_core/idop-scaffolder/SKILL.md) chuẩn của Antigravity. |
+| **1. Target Runtime** | Cấu hình cho GitHub Copilot CLI và Claude Code (giao diện `/plugin`). | Cấu hình cho Antigravity IDE (giao diện Custom Slash Commands `/ccba-*`). | **Khác biệt nền tảng**: Cần chuyển đổi tệp đặc tả XML/JSON của họ thành định nghĩa [SKILL.md](file:///D:/GitHubProjects/ccba-agent-platform/.agents/skills/_core/idop-scaffolder/SKILL.md) chuẩn của Antigravity. |
 | **2. Data Layer** | Tập trung mạnh vào **Microsoft Dataverse** (Schemas, Plugins, Queries). | Tập trung vào **SharePoint Online** (SharePoint Lists & Libraries) làm Data Layer. | **Khác biệt nghiệp vụ**: IDOP của CCBA dùng SharePoint Lists (CRM, Contracts...) vì tính tối ưu chi phí. Chúng ta không cần port phần Dataverse mà tập trung vào phần cấu trúc CDE. |
 | **3. CLI Wrapper** | Sử dụng **Power Platform CLI (PAC CLI)** cho việc xác thực, quản lý môi trường, và push Code Apps. | Tương tác thông qua script [idop_scaffolder.py](file:///D:/GitHubProjects/ccba-agent-platform/scripts/idop_scaffolder.py) sinh cấu trúc và PnP PowerShell. | **Tích hợp tiềm năng**: Có thể học tập cách họ gọi lệnh `pac auth` và `pac package` để tích hợp việc đóng gói ứng dụng trực tiếp từ CLI. |
 | **4. Code Apps Support** | Hỗ trợ scaffold và build React/TypeScript Code Apps. | Khởi tạo cấu trúc React/Vite/TS Code Apps với giao diện CCBA Dashboard cao cấp. | **Đã song hành**: Chúng ta đã tích hợp thành công bộ sinh tương đương tại chỗ dựa trên template chuẩn của Microsoft. |
@@ -21,7 +26,7 @@ Dưới đây là báo cáo phân tích, đối soát và đánh giá tính tư�
 
 ### Q1: Có nên cài đặt trực tiếp bộ kỹ năng của Microsoft vào máy không?
 *   **Phản biện**: Không. Bộ kỹ năng của Microsoft thiết kế cho GitHub Copilot và Claude Code với các tệp tin cấu hình đóng kín. Cài đặt trực tiếp sẽ không tương thích với Antigravity và không kế thừa được tri thức nội bộ của CCBA (như chuẩn ISO 19650 hay các từ cấm thương hiệu).
-*   **Giải pháp**: Chỉ tham chiếu thiết kế và viết lại các chỉ dẫn tương đương dưới dạng Custom Skills trong thư mục `.agent/skills/`.
+*   **Giải pháp**: Chỉ tham chiếu thiết kế và viết lại các chỉ dẫn tương đương dưới dạng Custom Skills trong thư mục `.agents/skills/`.
 
 ### Q2: Dataverse vs SharePoint Lists - Đâu là lựa chọn tối ưu cho IDOP?
 *   **Phản biện**: Dataverse mạnh về bảo mật cấp hàng và quan hệ dữ liệu phức tạp nhưng chi phí bản quyền (Premium Licensing) cực kỳ đắt đỏ đối với quy mô doanh nghiệp Full Enterprise của CCBA. SharePoint Lists được tích hợp sẵn trong Microsoft 365, hoàn toàn miễn phí phụ trội.
