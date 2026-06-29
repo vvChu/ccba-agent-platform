@@ -11,7 +11,7 @@
 
 ```
 ccba-agent-platform/                    ← Hub (Git-backed)
-├── .agent/
+├── .agents/
 │   ├── skills/                        ← AI Agent skills (7 skills)
 │   │   ├── legal-document-tracker/    ←   Theo dõi VBPL
 │   │   ├── completion-checklist/      ←   HSHT công trình
@@ -20,7 +20,7 @@ ccba-agent-platform/                    ← Hub (Git-backed)
 │   │   ├── ai-gateway-sdk/           ←   Kết nối AI Gateway (22 models)
 │   │   ├── maskara-privacy/          ←   Bảo mật & Quét nhạy cảm (Regex scan)
 │   │   └── platform-loader/          ←   Bootstrap + routing
-│   └── workflows/                     ← Automated workflows (8 workflows)
+│   └── workflows/                     ← Automated workflows (17 workflows)
 ├── rules/                             ← CCBA organizational rules
 ├── .md/                               ← Accumulated knowledge (Project Knowledge Base)
 │   ├── knowledge/                     ←   Tài liệu nghiên cứu, roadmap, spec kỹ thuật
@@ -84,14 +84,20 @@ python scripts/validate_docs.py [docs-dir] --src scripts,packages
 
 | Command | Mô tả |
 |---------|--------|
-| `/prepare-seminar` | Chuẩn bị nội dung seminar |
-| `/update-legal-registry` | Cập nhật registry VBPL |
-| `/session-retrospective` | Tổng hợp kiến thức cuối phiên |
-| `/new-feature` | Tạo feature branch |
-| `/create-pr` | Push + tạo PR |
-| `/release-feature` | Merge PR + cleanup |
-| `/convert-markdown` | Chuyển đổi tài liệu sang Markdown bằng mdconverter |
+| `/ccba-prepare-seminar` | Chuẩn bị nội dung seminar |
+| `/ccba-update-legal-registry` | Cập nhật registry VBPL |
+| `/ccba-session-retrospective` | Tổng hợp kiến thức cuối phiên |
+| `/ccba-new-feature` | Tạo feature branch |
+| `/ccba-create-pr` | Push + tạo PR |
+| `/ccba-release-feature` | Merge PR + cleanup |
+| `/ccba-convert-markdown` | Chuyển đổi tài liệu sang Markdown bằng mdconverter |
 | `/ccba-xia` | Trích xuất, so sánh, thích ứng tính năng từ repository khác |
+| `/ccba-brainstorm` | Khởi động phiên thảo luận ý tưởng và chuẩn bị tài liệu đầu vào |
+| `/ccba-init-spoke` | Khởi tạo dự án con (Spoke) tuân thủ kiến trúc CAP |
+| `/ccba-run-qc-pipeline` | Chạy chuỗi kiểm soát chất lượng (QC) đa bộ môn |
+| `/ccba-propose-to-hub` | Đề xuất tích hợp skill/workflow mới từ Spoke lên Hub |
+| `/ccba-update-spoke` | Cập nhật thủ công các lệnh và kỹ năng mới từ Hub về Spoke |
+| `/ccba-discard-feature` | Hủy bỏ branch hiện tại cả local và remote |
 
 ## Development
 

@@ -300,6 +300,8 @@ def main():
     print("-" * 60)
     
     total_issues = 0
+    broken_links_count = 0
+    
     for filepath in md_files:
         relative_path = filepath.relative_to(project_root) if filepath.is_relative_to(project_root) else filepath
         issues = validate_markdown_file(filepath, resolved_src_paths, env_vars)
@@ -317,6 +319,7 @@ def main():
             for line, link, err in issues["links"]:
                 print(f"  [L{line}] \x1b[31mBroken Link Error:\x1b[0m ({link}) - {err}")
                 total_issues += 1
+                broken_links_count += 1
                 
             # Print Env Issues
             for line, var, err in issues["env_vars"]:
@@ -325,12 +328,16 @@ def main():
                 
     print("-" * 60)
     if total_issues > 0:
-        print(f"\x1b[31mCompleted with {total_issues} issue(s) detected.\x1b[0m")
+        print(f"Completed with {total_issues} issue(s) detected.")
+        if broken_links_count > 0:
+            print(f"\x1b[31m[ERROR] Detected {broken_links_count} broken relative link(s). Blocking commit/build.\x1b[0m")
+            sys.exit(1)  # Hard Block
+        else:
+            print("\x1b[33m[WARN] Warnings detected (Code Refs / Env Vars). Committing/building is allowed.\x1b[0m")
+            sys.exit(0)  # Soft Warn
     else:
         print("\x1b[32mDocumentation validation completed successfully! No issues detected.\x1b[0m")
-        
-    # Always exit 0 (warn-only mode by design)
-    sys.exit(0)
+        sys.exit(0)
 
 
 if __name__ == "__main__":
