@@ -1,10 +1,29 @@
 ## Session Learnings - Kiến thức tích lũy
 
-## Cập nhật gần nhất: 2026-04-16
+## Cập nhật gần nhất: 2026-06-28
+
+## Anti-patterns (Cách tránh)
+
+### CLI Monolith for Data Processing
+- **Vấn đề**: Viết toàn bộ logic gọi AI, regex lọc text trực tiếp trong file CLI command khiến code không thể tái sử dụng cho các pipeline chạy ngầm và khó unit test.
+- **Thay thế bằng**: Sử dụng kiến trúc Clean Architecture - di chuyển core logic xử lý vào `core/` (`FormCleaner`, `LinkPatcher`), CLI chỉ nhận tham số và gọi core.
+- **Nguồn**: Session b9348884-dab8-4515-934b-8a55e51d9e56, 2026-06-28
 
 ---
 
 ## Patterns (Mẫu tốt)
+
+### Align & Extract (Tái cấu trúc bảng Markdown)
+- **Ngữ cảnh**: Khi các bảng biểu phức tạp bị convert lỗi thành văn bản thô chạy dọc trong Markdown.
+- **Vấn đề giải quyết**: Chuyển đổi thủ công mất thời gian và dễ nhầm lẫn số liệu. Dùng regex thô ráp không xử lý được các ô merge cột/dòng phức tạp.
+- **Giải pháp**: Sử dụng `pandoc` với định dạng đầu ra `gfm` (tự động xuất bảng HTML `<table>` để bảo toàn merge cell), sau đó viết script đối chiếu trích xuất đúng bảng HTML đè lại vào vị trí lỗi trong file `.md` hiện tại, giữ nguyên frontmatter gốc.
+- **Nguồn**: Session b9348884-dab8-4515-934b-8a55e51d9e56, 2026-06-28
+
+### AI-assisted Title Recovery (Phục hồi tiêu đề biểu mẫu)
+- **Ngữ cảnh**: Biểu mẫu thô bị nhận nhầm các dòng placeholder chấm lửng ở đầu làm tiêu đề.
+- **Vấn đề giải quyết**: Xóa mù quáng bằng Regex dễ làm mất cấu trúc tiêu đề.
+- **Giải pháp**: Gửi 20 dòng đầu của file lên model non-reasoning chuyên bóc tách metadata (như `gemini-3.1-flash-lite`), yêu cầu suy luận ra tiêu đề chính thức của form, sau đó gộp các dòng viết hoa liên tiếp thành 1 dòng duy nhất để cập nhật frontmatter/heading.
+- **Nguồn**: Session b9348884-dab8-4515-934b-8a55e51d9e56, 2026-06-28
 
 ### Quad-View Generative Audit
 - **Ngữ cảnh**: Khi cần kiểm tra đụng độ giữa nhiều bản vẽ (Arch, KC, MEP, PCCC) với nhau mà không có mô hình 3D.
@@ -37,6 +56,12 @@
 
 ## Solutions (Giải pháp tham chiếu)
 
+### Unicode Encode Error on Windows Console
+- **Vấn đề**: Khi in chuỗi Unicode tiếng Việt ra Windows Console bằng `rich.console` bị crash lỗi `UnicodeEncodeError: 'charmap' codec can't encode character...` do terminal sử dụng encoding mặc định cp1252.
+- **Giải pháp**: Thiết lập `sys.stdout.reconfigure(encoding='utf-8')` ở đầu file và bọc các lệnh in console Unicode bằng khối `try...except` với fallback sang `print(text.encode('utf-8', errors='ignore').decode('utf-8'))`.
+- **Liên kết**: `clean_form_cmd.py`
+- **Nguồn**: Session b9348884-dab8-4515-934b-8a55e51d9e56, 2026-06-28
+
 ### Multimodal Call qua AI Gateway
 - **Vấn đề**: Hàm `ai.chat` (LiteLLM wrapper chung) bị lỗi kwargs `images` khi model endpoint chối từ.
 - **Giải pháp**: Sử dụng client wrapper của `openai.OpenAI` và đưa chuỗi base64 vào format của Vision API:
@@ -63,18 +88,19 @@ messages=[{
 ## 📋 Session Retrospective Summary (Updated)
 
 ### Phiên làm việc
-- **Ngày**: 2026-04-16
-- **Mục tiêu**: Tích hợp AI-powered Engineering QC Pipeline vào Hub Platform và cấu trúc hóa dưới dạng tự động hóa khép kín (Workflow Command).
-- **Kết quả**: ✅ Thành công. Batch Multi-Level QC hoàn thành trong ~60s; ra mắt SDK Orchestrator và `/run-qc-pipeline`.
+- **Ngày**: 2026-06-28
+- **Mục tiêu**: Giải quyết triệt để lỗi vỡ bảng biểu, placeholder biểu mẫu trong gói Luật Xây dựng 2025. Tái cấu trúc kỹ năng Markdown thành Master & Sub-skills.
+- **Kết quả**: ✅ Hoàn thành. Cập nhật thành công toàn bộ tài liệu pháp lý, nâng cấp `mdconverter` lên Clean Architecture và bổ sung 3 subcommand. Đăng ký catalog và cập nhật workflow 3 bước tự động.
 
 ### Kiến thức mới
-- [x] 4 patterns mới (Quad-View, Concurrent UI, Context-Aware Workflow, Data Hand-off)
-- [x] 1 solutions mới (OpenAI Vision proxy)
+- [x] 2 patterns mới (Align & Extract, AI-assisted Title Recovery)
+- [x] 1 anti-patterns mới (CLI Monolith for Data Processing)
+- [x] 1 solutions mới (Unicode Encode Error on Windows Console)
 
 ### Đề xuất cập nhật đã hoàn thành
-- [x] Cập nhật user_global: Có - Thêm quy định luật PCCC (QCVN 06).
-- [x] Tạo workflow mới: **Có** - Đã tạo `run-qc-pipeline.md`.
-- [x] Đề xuất/Tạo Skills mới: **Có** - Đã tạo `ccba-ai-qc-batch-orchestrator`.
+- [x] Cập nhật Workspace Rules (AGENTS.md): Cưỡng chế quy tắc kiểm tra tái sử dụng công cụ từ Hub (Reuse-First Gate) thông qua Kế hoạch triển khai.
+- [x] Tạo/Cập nhật workflow: Đã cập nhật `convert-markdown.md` thành quy trình 3 bước tự động.
+- [x] Đề xuất/Tạo Skills mới: Đã tạo Master Skill và 3 Sub-skills xử lý Markdown trong `.agent/skills/`.
 
 ### Ghi chú cho phiên tiếp theo
-Dùng báo cáo tự động QCVN 06 để trao đổi với PCCC và chạy lại `/run-qc-pipeline` ngay khi file thiết kế mới cập bến mà không cần chỉnh sửa code.
+Tự động áp dụng quy tắc Reuse-First Gate và gọi các subcommand `process-table`, `clean-form` và `patch-links` của `mdconvert` để làm sạch định dạng tài liệu mới ngay khi ingest.
