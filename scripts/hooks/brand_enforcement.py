@@ -24,7 +24,7 @@ DEFAULT_PROHIBITED_WORDS = [
     r"\bplaceholder\b",
 ]
 
-BRAND_RULES_FILE = Path(".md/brand_rules.yaml")
+BRAND_RULES_FILE = Path(".md/knowledge/brand_rules.yaml")
 
 def load_brand_rules():
     """Load brand rules from configuration file, falling back to defaults."""

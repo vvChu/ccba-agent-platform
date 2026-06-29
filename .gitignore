@@ -86,3 +86,6 @@ claudekit-engineer/
 scripts/verify_report.py
 .md/claudekit_last_sha.txt
 
+# Spoke Registry Decrypted (Local-Only)
+.md/data/spoke_registry_decrypted.yaml
+
