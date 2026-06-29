@@ -17,7 +17,7 @@ class LinkPatcher:
         Returns:
             A list of Paths of files that were modified.
         """
-        files_to_patch = []
+        files_to_patch: list[Path] = []
         modified_files = []
 
         if not target_path.exists():
