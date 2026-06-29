@@ -97,6 +97,12 @@ skills:
     triggers: [xia, xia, port from, copy from repo, clone feature, adapt from]
     skill_path: .agents/skills/xia/SKILL.md
 
+  - name: maskara-privacy
+    bundle: _core
+    description: "Phát hiện, che giấu (redact) thông tin nhạy cảm trong files/logs và cài đặt guardrails bảo mật"
+    triggers: [maskara, privacy, redact, scan secret, leak, che giấu key]
+    skill_path: .agents/skills/maskara/SKILL.md
+
   - name: sequential-thinking
     bundle: _core
     description: "Áp dụng phương pháp lập luận tuần tự từng bước với khả năng cập nhật và rẽ nhánh suy nghĩ"
