@@ -270,7 +270,7 @@ def main():
         sys.exit(1)
         
     # Find all md files recursively, excluding node_modules, .venv, git, and external sub-repos
-    EXCLUDE_DIRS = {".git", "node_modules", ".venv", "venv", "claudekit-engineer", "claudekit-marketing", ".pytest_cache", "extracted_docs"}
+    EXCLUDE_DIRS = {".git", "node_modules", ".venv", "venv", "claudekit-engineer", "claudekit-marketing", ".pytest_cache", "extracted_docs", ".md", "CDE"}
     md_files = []
     
     if docs_dir.is_file():
@@ -278,9 +278,10 @@ def main():
             md_files.append(docs_dir)
     else:
         for p in docs_dir.rglob("*.md"):
-            if any(ex in p.parts for ex in EXCLUDE_DIRS):
-                continue
-            md_files.append(p)
+            if p.is_file():
+                if any(ex in p.parts for ex in EXCLUDE_DIRS):
+                    continue
+                md_files.append(p)
             
     # Also check README.md, PLATFORM.md, CONTRIBUTING.md in root if they exist
     for root_file in ["README.md", "PLATFORM.md", "CONTRIBUTING.md", "SECURITY.md"]:
