@@ -73,8 +73,37 @@ _original_os_funcs = _Originals.os_funcs
 _original_thread_start_new_thread = _Originals.thread_start_new_thread
 _original_thread_start_new = _Originals.thread_start_new
 
+class HarnessLocal(threading.local):
+    def __setattr__(self, name, value):
+        if name == "in_hook" and value is _HOOK_TOKEN:
+            try:
+                frame = sys._getframe(1)
+                code_obj = frame.f_code
+                if code_obj in _caller_code_cache:
+                    if not _caller_code_cache[code_obj]:
+                        return
+                else:
+                    co_fn = code_obj.co_filename
+                    if "harness.py" not in co_fn:
+                        _caller_code_cache[code_obj] = False
+                        # Silently ignore to prevent tampering
+                        return
+                    fn = os.path.basename(co_fn).lower()
+                    if not (fn == "harness.py" or fn.startswith("harness.py")):
+                        _caller_code_cache[code_obj] = False
+                        # Silently ignore to prevent tampering
+                        return
+                    if not (frame.f_globals is globals() or frame.f_globals.get("__name__") == "ccba_legal.harness"):
+                        _caller_code_cache[code_obj] = False
+                        # Silently ignore to prevent tampering
+                        return
+                    _caller_code_cache[code_obj] = True
+            except Exception:
+                pass
+        super().__setattr__(name, value)
+
 # Thread-local state for tracking active guards and preventing recursion
-_local = threading.local()
+_local = HarnessLocal()
 _lock = threading.Lock()
 _active_count = 0
 _audit_hook_registered = False
@@ -88,6 +117,8 @@ _path_resolution_cache = {}
 _shared_temp_dir = None
 _shared_temp_dir_lock = threading.Lock()
 _sensitivity_cache = {}
+_abs_path_cache = {}
+_caller_code_cache = {}
 _active_guarded_threads = set()
 
 
@@ -116,10 +147,12 @@ def _check_in_hook() -> bool:
     try:
         frame = sys._getframe(1)
         while frame:
-            fn = os.path.basename(frame.f_code.co_filename)
-            if fn == "harness.py" or fn.startswith("harness.py"):
-                if frame.f_globals is globals() or frame.f_globals.get("__name__") == "ccba_legal.harness":
-                    return True
+            co_fn = frame.f_code.co_filename
+            if "harness.py" in co_fn:
+                fn = os.path.basename(co_fn)
+                if fn == "harness.py" or fn.startswith("harness.py"):
+                    if frame.f_globals is globals() or frame.f_globals.get("__name__") == "ccba_legal.harness":
+                        return True
             frame = frame.f_back
     except Exception:
         pass
@@ -127,13 +160,17 @@ def _check_in_hook() -> bool:
 
 
 def _get_active_guards() -> list["HarnessGuard"]:
-    global _active_count
     if not hasattr(_local, "active_guards"):
         _local.active_guards = []
     active_guards = _local.active_guards
     harness_guard_cls = globals().get("HarnessGuard")
-    if harness_guard_cls is not None and isinstance(active_guards, list) and all(isinstance(g, harness_guard_cls) for g in active_guards):
-        if active_guards:
+    if harness_guard_cls is not None and type(active_guards) is list:
+        valid = True
+        for g in active_guards:
+            if type(g) is not harness_guard_cls:
+                valid = False
+                break
+        if valid and active_guards:
             return active_guards
     with _lock:
         if _global_active_guards:
@@ -431,7 +468,7 @@ class _Wrappedsqlite3Connection(_Originals.sqlite3_Connection):
             super().__init__(database, *args, **kwargs)
             return
 
-        _local.in_hook = _HOOK_TOKEN
+        _local.__dict__['in_hook'] = _HOOK_TOKEN
         try:
             if database is not None:
                 db_str = (
@@ -446,7 +483,7 @@ class _Wrappedsqlite3Connection(_Originals.sqlite3_Connection):
                     _check_db_path(db_str)
             super().__init__(database, *args, **kwargs)
         finally:
-            _local.in_hook = None
+            _local.__dict__['in_hook'] = None
 
     def execute(self, sql: Any, *args: Any, **kwargs: Any) -> Any:
         _check_sql_query(sql)
@@ -1227,6 +1264,14 @@ def _reconstruct_shell_variables(cmd_str: str) -> str:
     m = re.match(pattern, stripped)
     if m:
         stripped = m.group(2)
+    
+    # Reconstruct PowerShell/CMD string concatenations: 'foo' + 'bar' -> 'foobar'
+    for _ in range(5):
+        new_stripped = re.sub(r"(['\"])(.*?)\1\s*\+\s*(['\"])(.*?)\3", r"\1\2\4\1", stripped)
+        if new_stripped == stripped:
+            break
+        stripped = new_stripped
+        
     print(f"DEBUG_RECONSTRUCT: cmd_str={cmd_str!r} stripped={stripped!r}")
 
     # 2. Split command strings into individual commands respecting quotes and escapes using a state-machine lexical scanner
@@ -1295,6 +1340,8 @@ def _reconstruct_shell_variables(cmd_str: str) -> str:
     # 3. Clean carets (if Windows) and extract variable assignments to vars_dict
     for cmd in commands:
         cmd_clean = cmd.strip()
+        if cmd_clean.startswith("$"):
+            cmd_clean = cmd_clean[1:]
         if not cmd_clean:
             continue
 
@@ -1922,12 +1969,14 @@ def _check_subprocess_call(name: str, args: tuple[Any, ...], kwargs: dict[str, A
 
 
 def _audit_hook(event: str, args: tuple[Any, ...]) -> None:
+    if event == "sys._getframe":
+        return
     if getattr(_local, "in_hook", None) is _HOOK_TOKEN:
         return
     guards = _get_active_guards()
     if not guards:
         return
-    _local.in_hook = _HOOK_TOKEN
+    _local.__dict__['in_hook'] = _HOOK_TOKEN
     try:
         if event == "open":
             if len(args) > 0:
@@ -2003,7 +2052,7 @@ def _audit_hook(event: str, args: tuple[Any, ...]) -> None:
                             f"Access to sensitive file blocked by audit hook: {dst_str}"
                         )
     finally:
-        _local.in_hook = None
+        _local.__dict__['in_hook'] = None
 
 
 def _wrapped_builtins_open(file: Any, *args: Any, **kwargs: Any) -> Any:
@@ -2014,13 +2063,13 @@ def _wrapped_builtins_open(file: Any, *args: Any, **kwargs: Any) -> Any:
     if not guards:
         return _original_builtins_open(file, *args, **kwargs)
 
-    _local.in_hook = _HOOK_TOKEN
+    _local.__dict__['in_hook'] = _HOOK_TOKEN
     try:
         for g in guards:
             g._check_file_access(file, args, kwargs)
         return _original_builtins_open(file, *args, **kwargs)
     finally:
-        _local.in_hook = None
+        _local.__dict__['in_hook'] = None
 
 
 def _wrapped_io_open(file: Any, *args: Any, **kwargs: Any) -> Any:
@@ -2031,13 +2080,13 @@ def _wrapped_io_open(file: Any, *args: Any, **kwargs: Any) -> Any:
     if not guards:
         return _original_io_open(file, *args, **kwargs)
 
-    _local.in_hook = _HOOK_TOKEN
+    _local.__dict__['in_hook'] = _HOOK_TOKEN
     try:
         for g in guards:
             g._check_file_access(file, args, kwargs)
         return _original_io_open(file, *args, **kwargs)
     finally:
-        _local.in_hook = None
+        _local.__dict__['in_hook'] = None
 
 
 def _wrapped__io_open(file: Any, *args: Any, **kwargs: Any) -> Any:
@@ -2048,13 +2097,13 @@ def _wrapped__io_open(file: Any, *args: Any, **kwargs: Any) -> Any:
     if not guards:
         return _original__io_open(file, *args, **kwargs)
 
-    _local.in_hook = _HOOK_TOKEN
+    _local.__dict__['in_hook'] = _HOOK_TOKEN
     try:
         for g in guards:
             g._check_file_access(file, args, kwargs)
         return _original__io_open(file, *args, **kwargs)
     finally:
-        _local.in_hook = None
+        _local.__dict__['in_hook'] = None
 
 
 def _extract_and_check_base64(text: str, active_guard) -> bool:
@@ -2338,11 +2387,11 @@ def _wrapped_popen(*args: Any, **kwargs: Any) -> Any:
                     kwargs["env"] = _inject_child_env(None, guards)
 
     old_in_hook = getattr(_local, "in_hook", None)
-    _local.in_hook = _HOOK_TOKEN
+    _local.__dict__['in_hook'] = _HOOK_TOKEN
     try:
         return _original_popen(*args_list, **kwargs)
     finally:
-        _local.in_hook = old_in_hook
+        _local.__dict__['in_hook'] = old_in_hook
 
 
 def _wrapped_thread_start(self: threading.Thread, *args: Any, **kwargs: Any) -> Any:
@@ -2433,7 +2482,7 @@ def _wrapped_os_open(path: Any, flags: int, *args: Any, **kwargs: Any) -> int:
     if not guards:
         return _original_os_open(path, flags, *args, **kwargs)
 
-    _local.in_hook = _HOOK_TOKEN
+    _local.__dict__['in_hook'] = _HOOK_TOKEN
     try:
         file_str = os.fspath(path)
         if isinstance(file_str, bytes):
@@ -2451,7 +2500,7 @@ def _wrapped_os_open(path: Any, flags: int, *args: Any, **kwargs: Any) -> int:
 
         return _original_os_open(path, flags, *args, **kwargs)
     finally:
-        _local.in_hook = None
+        _local.__dict__['in_hook'] = None
 
 
 def _wrapped_os_rename(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
@@ -2462,7 +2511,7 @@ def _wrapped_os_rename(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if not guards:
         return _original_os_rename(src, dst, *args, **kwargs)
 
-    _local.in_hook = _HOOK_TOKEN
+    _local.__dict__['in_hook'] = _HOOK_TOKEN
     try:
         dst_str = os.fspath(dst)
         if isinstance(dst_str, bytes):
@@ -2478,7 +2527,7 @@ def _wrapped_os_rename(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
 
         return _original_os_rename(src, dst, *args, **kwargs)
     finally:
-        _local.in_hook = None
+        _local.__dict__['in_hook'] = None
 
 
 def _wrapped_os_replace(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
@@ -2489,7 +2538,7 @@ def _wrapped_os_replace(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if not guards:
         return _original_os_replace(src, dst, *args, **kwargs)
 
-    _local.in_hook = _HOOK_TOKEN
+    _local.__dict__['in_hook'] = _HOOK_TOKEN
     try:
         dst_str = os.fspath(dst)
         if isinstance(dst_str, bytes):
@@ -2505,7 +2554,7 @@ def _wrapped_os_replace(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
 
         return _original_os_replace(src, dst, *args, **kwargs)
     finally:
-        _local.in_hook = None
+        _local.__dict__['in_hook'] = None
 
 
 class _WrappedFileIO(_original_io_FileIO):
@@ -2519,13 +2568,13 @@ class _WrappedFileIO(_original_io_FileIO):
             super().__init__(file, mode, *args, **kwargs)
             return
 
-        _local.in_hook = _HOOK_TOKEN
+        _local.__dict__['in_hook'] = _HOOK_TOKEN
         try:
             for g in guards:
                 g._check_file_access(file, (mode,), kwargs)
             super().__init__(file, mode, *args, **kwargs)
         finally:
-            _local.in_hook = None
+            _local.__dict__['in_hook'] = None
 
 
 class _Wrapped_io_FileIO(_original__io_FileIO):
@@ -2539,13 +2588,13 @@ class _Wrapped_io_FileIO(_original__io_FileIO):
             super().__init__(file, mode, *args, **kwargs)
             return
 
-        _local.in_hook = _HOOK_TOKEN
+        _local.__dict__['in_hook'] = _HOOK_TOKEN
         try:
             for g in guards:
                 g._check_file_access(file, (mode,), kwargs)
             super().__init__(file, mode, *args, **kwargs)
         finally:
-            _local.in_hook = None
+            _local.__dict__['in_hook'] = None
 
 
 def _wrapped_sqlite3_connect(*args: Any, **kwargs: Any) -> Any:
@@ -2556,7 +2605,7 @@ def _wrapped_sqlite3_connect(*args: Any, **kwargs: Any) -> Any:
     if not guards:
         return _original_sqlite3_connect(*args, **kwargs)
 
-    _local.in_hook = _HOOK_TOKEN
+    _local.__dict__['in_hook'] = _HOOK_TOKEN
     try:
         database = args[0] if len(args) > 0 else kwargs.get("database")
         if database is not None:
@@ -2570,7 +2619,7 @@ def _wrapped_sqlite3_connect(*args: Any, **kwargs: Any) -> Any:
         kwargs["factory"] = _Wrappedsqlite3Connection
         return _original_sqlite3_connect(*args, **kwargs)
     finally:
-        _local.in_hook = None
+        _local.__dict__['in_hook'] = None
 
 
 def _wrapped_os_link(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
@@ -2581,7 +2630,7 @@ def _wrapped_os_link(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if not guards:
         return _original_os_link(src, dst, *args, **kwargs)
 
-    _local.in_hook = _HOOK_TOKEN
+    _local.__dict__['in_hook'] = _HOOK_TOKEN
     try:
         src_str = os.fspath(src)
         if isinstance(src_str, bytes):
@@ -2601,7 +2650,7 @@ def _wrapped_os_link(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
 
         return _original_os_link(src, dst, *args, **kwargs)
     finally:
-        _local.in_hook = None
+        _local.__dict__['in_hook'] = None
 
 
 def _wrapped_os_symlink(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
@@ -2612,7 +2661,7 @@ def _wrapped_os_symlink(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if not guards:
         return _original_os_symlink(src, dst, *args, **kwargs)
 
-    _local.in_hook = _HOOK_TOKEN
+    _local.__dict__['in_hook'] = _HOOK_TOKEN
     try:
         src_str = os.fspath(src)
         if isinstance(src_str, bytes):
@@ -2632,7 +2681,7 @@ def _wrapped_os_symlink(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
 
         return _original_os_symlink(src, dst, *args, **kwargs)
     finally:
-        _local.in_hook = None
+        _local.__dict__['in_hook'] = None
 
 
 def _make_os_wrapper(name: str, original_func: Callable) -> Callable:
@@ -2642,7 +2691,7 @@ def _make_os_wrapper(name: str, original_func: Callable) -> Callable:
             return original_func(*args, **kwargs)
 
         args_list = list(args)
-        _local.in_hook = _HOOK_TOKEN
+        _local.__dict__['in_hook'] = _HOOK_TOKEN
         try:
             _check_subprocess_call(name, tuple(args_list), kwargs)
 
@@ -2723,7 +2772,7 @@ def _make_os_wrapper(name: str, original_func: Callable) -> Callable:
 
             return original_func(*args_list, **kwargs)
         finally:
-            _local.in_hook = None
+            _local.__dict__['in_hook'] = None
 
     return wrapper
 
@@ -2864,8 +2913,11 @@ if active == "1":
         self._temp_dir = _shared_temp_dir
 
         # Set environment variables for children to inherit/read
-        os.environ["HARNESS_ACTIVE"] = "1"
-        os.environ["HARNESS_APPROVED_PATHS"] = os.pathsep.join(self.approved_paths)
+        if os.environ.get("HARNESS_ACTIVE") != "1":
+            os.environ["HARNESS_ACTIVE"] = "1"
+        new_approved = os.pathsep.join(self.approved_paths)
+        if os.environ.get("HARNESS_APPROVED_PATHS") != new_approved:
+            os.environ["HARNESS_APPROVED_PATHS"] = new_approved
 
         # Add this guard to thread-local active guards list
         guards.append(self)
@@ -2899,8 +2951,10 @@ if active == "1":
         # Clean up env variables and shared sitecustomize.py temp dir if no more active guards
         remaining = _get_active_guards()
         if not remaining:
-            os.environ.pop("HARNESS_ACTIVE", None)
-            os.environ.pop("HARNESS_APPROVED_PATHS", None)
+            if "HARNESS_ACTIVE" in os.environ:
+                os.environ.pop("HARNESS_ACTIVE", None)
+            if "HARNESS_APPROVED_PATHS" in os.environ:
+                os.environ.pop("HARNESS_APPROVED_PATHS", None)
             global _shared_temp_dir
             with _shared_temp_dir_lock:
                 if _shared_temp_dir:
@@ -2916,7 +2970,9 @@ if active == "1":
             for g in remaining:
                 if g.approved_paths:
                     all_approved.extend(g.approved_paths)
-            os.environ["HARNESS_APPROVED_PATHS"] = os.pathsep.join(all_approved)
+            new_approved = os.pathsep.join(all_approved)
+            if os.environ.get("HARNESS_APPROVED_PATHS") != new_approved:
+                os.environ["HARNESS_APPROVED_PATHS"] = new_approved
 
         # Post-action hook: only run if no exception was raised inside the block
         with self._write_lock:
@@ -2959,9 +3015,13 @@ if active == "1":
         except Exception:
             abs_path = path
 
+        if abs_path in _sensitivity_cache:
+            return _sensitivity_cache[abs_path]
+
         try:
             st = os.stat(abs_path)
             if (st.st_dev, st.st_ino) in _sensitive_inodes:
+                _sensitivity_cache[abs_path] = True
                 return True
         except Exception:
             pass
@@ -2994,8 +3054,10 @@ if active == "1":
                 _sensitive_inodes.add((st.st_dev, st.st_ino))
             except Exception:
                 pass
+            _sensitivity_cache[abs_path] = True
             return True
 
+        _sensitivity_cache[abs_path] = False
         return False
 
     def _is_approved(self, path: str) -> bool:
@@ -3033,8 +3095,16 @@ if active == "1":
             if isinstance(file_str, bytes):
                 file_str = file_str.decode("utf-8", errors="replace")
 
+            # Check absolute path cache to avoid expensive os.path.abspath
+            cache_key = file_str
+            if cache_key in _abs_path_cache:
+                abs_file_path, abs_path = _abs_path_cache[cache_key]
+            else:
+                abs_file_path = os.path.normcase(os.path.abspath(file_str))
+                abs_path = os.path.abspath(file_str)
+                _abs_path_cache[cache_key] = (abs_file_path, abs_path)
+
             # Exclude sitecustomize.py or guard's own temporary directory files from tracking
-            abs_file_path = os.path.normcase(os.path.abspath(file_str))
             if "harness_guard_" in abs_file_path or "sitecustomize.py" in abs_file_path:
                 if self._is_sensitive(file_str):
                     if not self._is_approved(file_str):
@@ -3060,10 +3130,10 @@ if active == "1":
 
             if is_write:
                 with self._write_lock:
-                    self._written_files.add(os.path.normcase(os.path.abspath(file_str)))
+                    self._written_files.add(abs_file_path)
             if file_str.lower().endswith(".py") and is_write:
                 with self._write_lock:
-                    self._written_py_files.add(os.path.abspath(file_str))
+                    self._written_py_files.add(abs_path)
 
     def _run_post_action_checks(self) -> None:
         """Run ruff and pytest on the modified python files."""
