@@ -73,6 +73,7 @@ _original_os_funcs = _Originals.os_funcs
 _original_thread_start_new_thread = _Originals.thread_start_new_thread
 _original_thread_start_new = _Originals.thread_start_new
 
+
 class HarnessLocal(threading.local):
     def __setattr__(self, name, value):
         if name == "in_hook" and value is _HOOK_TOKEN:
@@ -93,7 +94,10 @@ class HarnessLocal(threading.local):
                         _caller_code_cache[code_obj] = False
                         # Silently ignore to prevent tampering
                         return
-                    if not (frame.f_globals is globals() or frame.f_globals.get("__name__") == "ccba_legal.harness"):
+                    if not (
+                        frame.f_globals is globals()
+                        or frame.f_globals.get("__name__") == "ccba_legal.harness"
+                    ):
                         _caller_code_cache[code_obj] = False
                         # Silently ignore to prevent tampering
                         return
@@ -101,6 +105,7 @@ class HarnessLocal(threading.local):
             except Exception:
                 pass
         super().__setattr__(name, value)
+
 
 # Thread-local state for tracking active guards and preventing recursion
 _local = HarnessLocal()
@@ -151,7 +156,10 @@ def _check_in_hook() -> bool:
             if "harness.py" in co_fn:
                 fn = os.path.basename(co_fn)
                 if fn == "harness.py" or fn.startswith("harness.py"):
-                    if frame.f_globals is globals() or frame.f_globals.get("__name__") == "ccba_legal.harness":
+                    if (
+                        frame.f_globals is globals()
+                        or frame.f_globals.get("__name__") == "ccba_legal.harness"
+                    ):
                         return True
             frame = frame.f_back
     except Exception:
@@ -468,7 +476,7 @@ class _Wrappedsqlite3Connection(_Originals.sqlite3_Connection):
             super().__init__(database, *args, **kwargs)
             return
 
-        _local.__dict__['in_hook'] = _HOOK_TOKEN
+        _local.__dict__["in_hook"] = _HOOK_TOKEN
         try:
             if database is not None:
                 db_str = (
@@ -483,7 +491,7 @@ class _Wrappedsqlite3Connection(_Originals.sqlite3_Connection):
                     _check_db_path(db_str)
             super().__init__(database, *args, **kwargs)
         finally:
-            _local.__dict__['in_hook'] = None
+            _local.__dict__["in_hook"] = None
 
     def execute(self, sql: Any, *args: Any, **kwargs: Any) -> Any:
         _check_sql_query(sql)
@@ -1264,14 +1272,14 @@ def _reconstruct_shell_variables(cmd_str: str) -> str:
     m = re.match(pattern, stripped)
     if m:
         stripped = m.group(2)
-    
+
     # Reconstruct PowerShell/CMD string concatenations: 'foo' + 'bar' -> 'foobar'
     for _ in range(5):
         new_stripped = re.sub(r"(['\"])(.*?)\1\s*\+\s*(['\"])(.*?)\3", r"\1\2\4\1", stripped)
         if new_stripped == stripped:
             break
         stripped = new_stripped
-        
+
     print(f"DEBUG_RECONSTRUCT: cmd_str={cmd_str!r} stripped={stripped!r}")
 
     # 2. Split command strings into individual commands respecting quotes and escapes using a state-machine lexical scanner
@@ -1402,7 +1410,7 @@ def _reconstruct_shell_variables(cmd_str: str) -> str:
                     target = str1[1:]
                     idx = val.lower().find(target.lower())
                     if idx != -1:
-                        return str2 + val[idx + len(target):]
+                        return str2 + val[idx + len(target) :]
                     else:
                         return val
                 else:
@@ -1446,7 +1454,7 @@ def _reconstruct_shell_variables(cmd_str: str) -> str:
                     target = str1[1:]
                     idx = val.lower().find(target.lower())
                     if idx != -1:
-                        return str2 + val[idx + len(target):]
+                        return str2 + val[idx + len(target) :]
                     else:
                         return val
                 else:
@@ -1976,7 +1984,7 @@ def _audit_hook(event: str, args: tuple[Any, ...]) -> None:
     guards = _get_active_guards()
     if not guards:
         return
-    _local.__dict__['in_hook'] = _HOOK_TOKEN
+    _local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         if event == "open":
             if len(args) > 0:
@@ -2052,7 +2060,7 @@ def _audit_hook(event: str, args: tuple[Any, ...]) -> None:
                             f"Access to sensitive file blocked by audit hook: {dst_str}"
                         )
     finally:
-        _local.__dict__['in_hook'] = None
+        _local.__dict__["in_hook"] = None
 
 
 def _wrapped_builtins_open(file: Any, *args: Any, **kwargs: Any) -> Any:
@@ -2063,13 +2071,13 @@ def _wrapped_builtins_open(file: Any, *args: Any, **kwargs: Any) -> Any:
     if not guards:
         return _original_builtins_open(file, *args, **kwargs)
 
-    _local.__dict__['in_hook'] = _HOOK_TOKEN
+    _local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         for g in guards:
             g._check_file_access(file, args, kwargs)
         return _original_builtins_open(file, *args, **kwargs)
     finally:
-        _local.__dict__['in_hook'] = None
+        _local.__dict__["in_hook"] = None
 
 
 def _wrapped_io_open(file: Any, *args: Any, **kwargs: Any) -> Any:
@@ -2080,13 +2088,13 @@ def _wrapped_io_open(file: Any, *args: Any, **kwargs: Any) -> Any:
     if not guards:
         return _original_io_open(file, *args, **kwargs)
 
-    _local.__dict__['in_hook'] = _HOOK_TOKEN
+    _local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         for g in guards:
             g._check_file_access(file, args, kwargs)
         return _original_io_open(file, *args, **kwargs)
     finally:
-        _local.__dict__['in_hook'] = None
+        _local.__dict__["in_hook"] = None
 
 
 def _wrapped__io_open(file: Any, *args: Any, **kwargs: Any) -> Any:
@@ -2097,13 +2105,13 @@ def _wrapped__io_open(file: Any, *args: Any, **kwargs: Any) -> Any:
     if not guards:
         return _original__io_open(file, *args, **kwargs)
 
-    _local.__dict__['in_hook'] = _HOOK_TOKEN
+    _local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         for g in guards:
             g._check_file_access(file, args, kwargs)
         return _original__io_open(file, *args, **kwargs)
     finally:
-        _local.__dict__['in_hook'] = None
+        _local.__dict__["in_hook"] = None
 
 
 def _extract_and_check_base64(text: str, active_guard) -> bool:
@@ -2387,11 +2395,11 @@ def _wrapped_popen(*args: Any, **kwargs: Any) -> Any:
                     kwargs["env"] = _inject_child_env(None, guards)
 
     old_in_hook = getattr(_local, "in_hook", None)
-    _local.__dict__['in_hook'] = _HOOK_TOKEN
+    _local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         return _original_popen(*args_list, **kwargs)
     finally:
-        _local.__dict__['in_hook'] = old_in_hook
+        _local.__dict__["in_hook"] = old_in_hook
 
 
 def _wrapped_thread_start(self: threading.Thread, *args: Any, **kwargs: Any) -> Any:
@@ -2482,7 +2490,7 @@ def _wrapped_os_open(path: Any, flags: int, *args: Any, **kwargs: Any) -> int:
     if not guards:
         return _original_os_open(path, flags, *args, **kwargs)
 
-    _local.__dict__['in_hook'] = _HOOK_TOKEN
+    _local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         file_str = os.fspath(path)
         if isinstance(file_str, bytes):
@@ -2500,7 +2508,7 @@ def _wrapped_os_open(path: Any, flags: int, *args: Any, **kwargs: Any) -> int:
 
         return _original_os_open(path, flags, *args, **kwargs)
     finally:
-        _local.__dict__['in_hook'] = None
+        _local.__dict__["in_hook"] = None
 
 
 def _wrapped_os_rename(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
@@ -2511,7 +2519,7 @@ def _wrapped_os_rename(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if not guards:
         return _original_os_rename(src, dst, *args, **kwargs)
 
-    _local.__dict__['in_hook'] = _HOOK_TOKEN
+    _local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         dst_str = os.fspath(dst)
         if isinstance(dst_str, bytes):
@@ -2527,7 +2535,7 @@ def _wrapped_os_rename(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
 
         return _original_os_rename(src, dst, *args, **kwargs)
     finally:
-        _local.__dict__['in_hook'] = None
+        _local.__dict__["in_hook"] = None
 
 
 def _wrapped_os_replace(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
@@ -2538,7 +2546,7 @@ def _wrapped_os_replace(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if not guards:
         return _original_os_replace(src, dst, *args, **kwargs)
 
-    _local.__dict__['in_hook'] = _HOOK_TOKEN
+    _local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         dst_str = os.fspath(dst)
         if isinstance(dst_str, bytes):
@@ -2554,7 +2562,7 @@ def _wrapped_os_replace(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
 
         return _original_os_replace(src, dst, *args, **kwargs)
     finally:
-        _local.__dict__['in_hook'] = None
+        _local.__dict__["in_hook"] = None
 
 
 class _WrappedFileIO(_original_io_FileIO):
@@ -2568,13 +2576,13 @@ class _WrappedFileIO(_original_io_FileIO):
             super().__init__(file, mode, *args, **kwargs)
             return
 
-        _local.__dict__['in_hook'] = _HOOK_TOKEN
+        _local.__dict__["in_hook"] = _HOOK_TOKEN
         try:
             for g in guards:
                 g._check_file_access(file, (mode,), kwargs)
             super().__init__(file, mode, *args, **kwargs)
         finally:
-            _local.__dict__['in_hook'] = None
+            _local.__dict__["in_hook"] = None
 
 
 class _Wrapped_io_FileIO(_original__io_FileIO):
@@ -2588,13 +2596,13 @@ class _Wrapped_io_FileIO(_original__io_FileIO):
             super().__init__(file, mode, *args, **kwargs)
             return
 
-        _local.__dict__['in_hook'] = _HOOK_TOKEN
+        _local.__dict__["in_hook"] = _HOOK_TOKEN
         try:
             for g in guards:
                 g._check_file_access(file, (mode,), kwargs)
             super().__init__(file, mode, *args, **kwargs)
         finally:
-            _local.__dict__['in_hook'] = None
+            _local.__dict__["in_hook"] = None
 
 
 def _wrapped_sqlite3_connect(*args: Any, **kwargs: Any) -> Any:
@@ -2605,7 +2613,7 @@ def _wrapped_sqlite3_connect(*args: Any, **kwargs: Any) -> Any:
     if not guards:
         return _original_sqlite3_connect(*args, **kwargs)
 
-    _local.__dict__['in_hook'] = _HOOK_TOKEN
+    _local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         database = args[0] if len(args) > 0 else kwargs.get("database")
         if database is not None:
@@ -2619,7 +2627,7 @@ def _wrapped_sqlite3_connect(*args: Any, **kwargs: Any) -> Any:
         kwargs["factory"] = _Wrappedsqlite3Connection
         return _original_sqlite3_connect(*args, **kwargs)
     finally:
-        _local.__dict__['in_hook'] = None
+        _local.__dict__["in_hook"] = None
 
 
 def _wrapped_os_link(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
@@ -2630,7 +2638,7 @@ def _wrapped_os_link(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if not guards:
         return _original_os_link(src, dst, *args, **kwargs)
 
-    _local.__dict__['in_hook'] = _HOOK_TOKEN
+    _local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         src_str = os.fspath(src)
         if isinstance(src_str, bytes):
@@ -2650,7 +2658,7 @@ def _wrapped_os_link(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
 
         return _original_os_link(src, dst, *args, **kwargs)
     finally:
-        _local.__dict__['in_hook'] = None
+        _local.__dict__["in_hook"] = None
 
 
 def _wrapped_os_symlink(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
@@ -2661,7 +2669,7 @@ def _wrapped_os_symlink(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if not guards:
         return _original_os_symlink(src, dst, *args, **kwargs)
 
-    _local.__dict__['in_hook'] = _HOOK_TOKEN
+    _local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         src_str = os.fspath(src)
         if isinstance(src_str, bytes):
@@ -2681,7 +2689,7 @@ def _wrapped_os_symlink(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
 
         return _original_os_symlink(src, dst, *args, **kwargs)
     finally:
-        _local.__dict__['in_hook'] = None
+        _local.__dict__["in_hook"] = None
 
 
 def _make_os_wrapper(name: str, original_func: Callable) -> Callable:
@@ -2691,7 +2699,7 @@ def _make_os_wrapper(name: str, original_func: Callable) -> Callable:
             return original_func(*args, **kwargs)
 
         args_list = list(args)
-        _local.__dict__['in_hook'] = _HOOK_TOKEN
+        _local.__dict__["in_hook"] = _HOOK_TOKEN
         try:
             _check_subprocess_call(name, tuple(args_list), kwargs)
 
@@ -2772,7 +2780,7 @@ def _make_os_wrapper(name: str, original_func: Callable) -> Callable:
 
             return original_func(*args_list, **kwargs)
         finally:
-            _local.__dict__['in_hook'] = None
+            _local.__dict__["in_hook"] = None
 
     return wrapper
 

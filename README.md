@@ -11,24 +11,34 @@
 
 ```
 ccba-agent-platform/                    ← Hub (Git-backed)
-├── .agent/
-│   ├── skills/                        ← AI Agent skills (6 skills)
+├── .agents/
+│   ├── skills/                        ← AI Agent skills (7 skills)
 │   │   ├── legal-document-tracker/    ←   Theo dõi VBPL
 │   │   ├── completion-checklist/      ←   HSHT công trình
 │   │   ├── seminar-builder/           ←   Chuẩn bị seminar
 │   │   ├── long-form-writer/          ←   Viết tài liệu dài
 │   │   ├── ai-gateway-sdk/           ←   Kết nối AI Gateway (22 models)
+│   │   ├── maskara-privacy/          ←   Bảo mật & Quét nhạy cảm (Regex scan)
 │   │   └── platform-loader/          ←   Bootstrap + routing
-│   └── workflows/                     ← Automated workflows (7 workflows)
+│   └── workflows/                     ← Automated workflows (17 workflows)
 ├── rules/                             ← CCBA organizational rules
-├── knowledge/                         ← Accumulated knowledge
+├── .md/                               ← Accumulated knowledge (Project Knowledge Base)
+│   ├── knowledge/                     ←   Tài liệu nghiên cứu, roadmap, spec kỹ thuật
+│   ├── seminars/                      ←   Agenda, báo cáo tóm tắt seminar
+│   └── extracted_docs/                ←   Văn bản pháp luật trích xuất thô
 ├── packages/                          ← Internal service modules
 │   ├── ccba-ai/                       ←   AI Gateway client
 │   └── mdconverter/                   ←   Document-to-Markdown converter
+├── scripts/                           ← CLI & Lifecycle Hooks
+│   ├── hooks/                         ←   Git hooks & guards (privacy, naming, scout, simplify)
+│   ├── tests/                         ←   Unit test suites
+│   ├── hook_runner.py                 ←   Unified Hook Runner CLI
+│   ├── maskara.py                     ←   Maskara Privacy Engine CLI
+│   └── validate_docs.py               ←   Documentation Accuracy Validator
 └── pyproject.toml                     ← Workspace config
 ```
 
-## Services
+## Services & Tools
 
 ### ccba-ai — AI Gateway Client
 
@@ -52,6 +62,13 @@ pip install -e "packages/mdconverter[dev,llm]"
 mdconvert convert document.pdf
 ```
 
+### validate_docs — Documentation Accuracy Validator
+Quét tài liệu Markdown đối soát với codebase để phát hiện link hỏng, sai tên hàm/lớp hoặc biến môi trường thiếu trong `.env.example`.
+
+```bash
+python scripts/validate_docs.py [docs-dir] --src scripts,packages
+```
+
 ## Skills
 
 | Skill | Mô tả |
@@ -61,18 +78,26 @@ mdconvert convert document.pdf
 | `seminar-builder` | Chuẩn bị nội dung seminar |
 | `long-form-writer` | Viết tài liệu dài (2000+ words) |
 | `ai-gateway-sdk` | Kết nối AI Gateway (22 models) |
+| `maskara-privacy` | Phát hiện, che giấu (redact) thông tin nhạy cảm và cài đặt guardrails bảo mật |
 
 ## Workflows
 
 | Command | Mô tả |
 |---------|--------|
-| `/prepare-seminar` | Chuẩn bị nội dung seminar |
-| `/update-legal-registry` | Cập nhật registry VBPL |
-| `/session-retrospective` | Tổng hợp kiến thức cuối phiên |
-| `/new-feature` | Tạo feature branch |
-| `/create-pr` | Push + tạo PR |
-| `/release-feature` | Merge PR + cleanup |
-| `/convert-markdown` | Chuyển đổi tài liệu sang Markdown bằng mdconverter |
+| `/ccba-prepare-seminar` | Chuẩn bị nội dung seminar |
+| `/ccba-update-legal-registry` | Cập nhật registry VBPL |
+| `/ccba-session-retrospective` | Tổng hợp kiến thức cuối phiên |
+| `/ccba-new-feature` | Tạo feature branch |
+| `/ccba-create-pr` | Push + tạo PR |
+| `/ccba-release-feature` | Merge PR + cleanup |
+| `/ccba-convert-markdown` | Chuyển đổi tài liệu sang Markdown bằng mdconverter |
+| `/ccba-xia` | Trích xuất, so sánh, thích ứng tính năng từ repository khác |
+| `/ccba-brainstorm` | Khởi động phiên thảo luận ý tưởng và chuẩn bị tài liệu đầu vào |
+| `/ccba-init-spoke` | Khởi tạo dự án con (Spoke) tuân thủ kiến trúc CAP |
+| `/ccba-run-qc-pipeline` | Chạy chuỗi kiểm soát chất lượng (QC) đa bộ môn |
+| `/ccba-propose-to-hub` | Đề xuất tích hợp skill/workflow mới từ Spoke lên Hub |
+| `/ccba-update-spoke` | Cập nhật thủ công các lệnh và kỹ năng mới từ Hub về Spoke |
+| `/ccba-discard-feature` | Hủy bỏ branch hiện tại cả local và remote |
 
 ## Development
 
@@ -85,8 +110,11 @@ cd ccba-agent-platform
 pip install -e "packages/ccba-ai"
 pip install -e "packages/mdconverter[dev,llm]"
 
-# Run tests
+# Run core tests
 python -m pytest packages/mdconverter/tests/
+
+# Run Lifecycle Hooks tests
+python -m unittest discover -s scripts/tests
 
 # Lint
 ruff check packages/

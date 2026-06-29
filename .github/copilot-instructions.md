@@ -69,8 +69,8 @@ This project processes Vietnamese legal texts. Critical rules:
 - **Document structure**: `## Chương I` → `### Điều 8` → `#### 8.1` → `a. Điểm a...` (blank line before list items)
 - **Status markers**: draft → "DỰ THẢO", superseded → "HẾT HIỆU LỰC"
 
-Full rules: [rules/compliance.md](../rules/compliance.md), [rules/quality_standards.md](../rules/quality_standards.md)  
-Formatting patterns: [knowledge/session_learnings.md](../knowledge/session_learnings.md)  
+Full rules: [.agents/AGENTS.md](../.agents/AGENTS.md)
+Formatting patterns: [.md/knowledge/session_learnings.md](../.md/knowledge/session_learnings.md)  
 VN legal plugin docs: [docs/user-guide/vn-legal.md](../docs/user-guide/vn-legal.md)
 
 ## CCBA Identity
@@ -79,7 +79,7 @@ VN legal plugin docs: [docs/user-guide/vn-legal.md](../docs/user-guide/vn-legal.
 - **Technical reports**: mixed Vietnamese-English (technical terms in English)
 - **Footer**: *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
-Full branding guide: [rules/ccba_identity.md](../rules/ccba_identity.md)
+Full branding guide: [.agents/AGENTS.md](../.agents/AGENTS.md#2-ccba-identity-voice-ban-sac-phong-cach-giao-tiep)
 
 ## Environment
 
