@@ -17,6 +17,8 @@ Quick Start:
 """
 
 from ccba_ai.client import AIClient
+from ccba_ai import services
+from ccba_ai.exceptions import CCBAErrorCode, CCBABaseException, format_error_json
 
 # Module-level singleton — Pythonic pattern (NOT builtins injection)
 ai = AIClient()
@@ -36,5 +38,17 @@ def write_file(path, content: str, encoding: str = "utf-8") -> None:
     with open(path, "w", encoding=encoding) as f:
         f.write(content)
 
-__all__ = ["ai", "AIClient", "chat", "stream", "chat_multi", "models", "write_file"]
+__all__ = [
+    "ai",
+    "AIClient",
+    "chat",
+    "stream",
+    "chat_multi",
+    "models",
+    "write_file",
+    "services",
+    "CCBAErrorCode",
+    "CCBABaseException",
+    "format_error_json",
+]
 __version__ = "1.0.0"
