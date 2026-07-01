@@ -1,6 +1,6 @@
 ## Session Learnings - Kiến thức tích lũy
 
-## Cập nhật gần nhất: 2026-06-29
+## Cập nhật gần nhất: 2026-07-01
 
 ---
 
@@ -87,6 +87,12 @@ for i in range(0, len(reader.pages), 20):
 - **Giải pháp**: Phân loại mức độ nghiêm trọng: Chặn cứng (exit code 1) đối với lỗi liên kết hỏng (Broken relative links), và chỉ cảnh báo mềm (exit code 0) đối với các cảnh báo Code Refs/Env Vars nghi vấn để cho phép commit đi qua bình thường.
 - **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-06-29
 
+### 11. Mock Credentials Fallback on Clean CI/CD (Khóa giả lập dự phòng trên CI/CD sạch)
+- **Ngữ cảnh**: Khi phát triển các gói thư viện/dịch vụ (như `ccba-ai` hoặc tích hợp các API bên thứ ba) khởi tạo Client ngay khi import module trong `__init__.py`.
+- **Vấn đề giải quyết**: Các biến môi trường API keys thật sẽ không tồn tại trên môi trường CI/CD sạch. Một số SDK (như OpenAI) sẽ lập tức crash khi truyền `api_key=""` hoặc khi thiếu key trong tiến trình import tĩnh, làm tê liệt toàn bộ pytest run/linter check.
+- **Giải pháp**: Đặt default fallback là một chuỗi khóa giả lập không rỗng (ví dụ: `"mock-key-for-ci"`) khi khởi tạo API client nếu không có key thật từ biến môi trường. Điều này cho phép client tạo object thành công mà không cản trở việc chạy thử nghiệm cục bộ hay CI/CD.
+- **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-07-01
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -100,6 +106,11 @@ for i in range(0, len(reader.pages), 20):
 - **Vấn đề**: Để các thư mục clone chứa toàn bộ mã nguồn của dự án khác trực tiếp ở Project Root hoặc trong thư mục cấu hình `.agents/` mà không thiết lập block/exclude. AI Agent sẽ tự động quét, đọc nhầm cấu hình (như `GEMINI.md`, `AGENTS.md`) gây xung đột và tốn token hệ thống.
 - **Thay thế bằng**: Luôn di chuyển các thư mục clone tham khảo vào folder cách ly `.md/extracted_docs/references/clones/` và đưa folder `clones` vào danh sách chặn cứng của Scout Block hook.
 - **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-06-29
+
+### 3. Empty API Key Defaults for LLM Client Constructors (Default api_key rỗng khi init LLM Client)
+- **Vấn đề**: Cấu hình mặc định `api_key=""` trong constructor của các SDK hiện đại làm SDK ném lỗi cứng `Missing credentials` ngay khi chạy import/setup package, phá hỏng build/test pipelines.
+- **Thay thế bằng**: Sử dụng dummy mock string (như `"mock-key-for-ci"`) để bypass kiểm tra cấu trúc của SDK, hoặc áp dụng cơ chế Lazy Instantiation cho SDK client.
+- **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-07-01
 
 ---
 
@@ -157,6 +168,11 @@ if sys.stdout.encoding.lower() != 'utf-8':
 - **Vấn đề**: Khi viết regex so khớp khoảng trắng đứng sau ranh giới từ `\bword\b\s+`, các ký tự đặc biệt đứng liền kề (như dấu đóng ngoặc đơn `)`) sẽ làm rách so khớp của khoảng trắng `\s+` vì dấu đóng ngoặc đơn không được tính là khoảng trắng.
 - **Giải pháp**: Thiết lập regex linh hoạt hơn hoặc thay đổi cấu trúc test case để tránh các cụm từ lồng ngoặc phức tạp (ví dụ đổi `"let's create a pull request (pr) now"` thành `"please pr this branch"`).
 - **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-06-29
+
+### 11. Package Missing Dependency Crashes in CI (Lỗi crash thiếu package dependency trên CI)
+- **Vấn đề**: CI chạy test suite bị crash với lỗi `ModuleNotFoundError` dù ở máy local nhà phát triển đã chạy ổn định (do dev cài đặt thủ công nhưng quên lưu cấu hình).
+- **Giải pháp**: Khai báo đầy đủ tất cả thư mục/thư viện import tĩnh (ví dụ `"pyyaml"`) vào phần `dependencies` trong tệp cấu hình package chính thức (như `pyproject.toml` hoặc `setup.py`), đảm bảo quy trình setup sạch tự động khôi phục toàn bộ môi trường.
+- **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-07-01
 
 ---
 
