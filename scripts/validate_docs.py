@@ -258,8 +258,12 @@ def validate_markdown_file(
                     issues["links"].append((line_num, href, f"File does not exist: {clean_path}"))
                 else:
                     # Suggest relative path
-                    rel_to_workspace = os.path.relpath(target_path, filepath.parent).replace(os.sep, "/")
-                    issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_to_workspace}'"))
+                    try:
+                        rel_to_workspace = os.path.relpath(target_path, filepath.parent).replace(os.sep, "/")
+                        issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_to_workspace}'"))
+                    except ValueError:
+                        # Cross-drive path on Windows (e.g. C: link from D: workspace)
+                        issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace on different drive: '{clean_path}'"))
             else:
                 # Outside workspace -> skip validation
                 continue
