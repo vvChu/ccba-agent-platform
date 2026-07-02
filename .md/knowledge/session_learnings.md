@@ -105,6 +105,14 @@ for i in range(0, len(reader.pages), 20):
 - **Giải pháp**: Kiểm tra xem đường dẫn tuyệt đối đó có nằm bên trong Workspace Root hay không (`is_relative_to(workspace_root)`). Nếu nằm trong -> kiểm tra sự tồn tại thực tế của tệp (chặn nếu không tồn tại). Nếu nằm ngoài -> bỏ qua không validate để đảm bảo build pass trên mọi máy.
 - **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797, 2026-07-02
 
+### 5. Quy chuẩn nâng cấp hạ tầng Kỹ năng (Skills Infra Evolution Standards) cho CCBA Platform
+- **Ngữ cảnh**: Định hình phương án thiết kế nâng cấp hệ thống kỹ năng Hub & Spoke nhằm đáp ứng nhu cầu mở rộng quy mô.
+- **Quy ước**:
+  1. Khai báo phụ thuộc giữa các kỹ năng tập trung trong tệp `catalog.yaml` ở thư mục gốc (để tối ưu hóa hiệu năng startup của platform-loader).
+  2. Triển khai cơ chế auto-tuning từ dẫn dắt (steering words) gián tiếp: Thu thập các feedback log cục bộ sau mỗi phiên và chạy script auto-tuning định kỳ để tạo Pull Request có con người duyệt, tuyệt đối không cho Agent tự ý chỉnh sửa file `SKILL.md` thời gian thực.
+  3. Script đồng bộ `/ccba-update-spoke` phải tự động parse `catalog.yaml` trung tâm, dựng đồ thị phụ thuộc và tự động kéo đầy đủ các kỹ năng phụ thuộc về Spoke khi cập nhật.
+- **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797 (Grill-Me), 2026-07-02
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -193,6 +201,14 @@ if sys.stdout.encoding.lower() != 'utf-8':
 - **Liên kết**: `scripts/validate_docs.py`
 - **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797, 2026-07-02
 
+### 5. Quy chuẩn nâng cấp hạ tầng Kỹ năng (Skills Infra Evolution Standards) cho CCBA Platform
+- **Ngữ cảnh**: Định hình phương án thiết kế nâng cấp hệ thống kỹ năng Hub & Spoke nhằm đáp ứng nhu cầu mở rộng quy mô.
+- **Quy ước**:
+  1. Khai báo phụ thuộc giữa các kỹ năng tập trung trong tệp `catalog.yaml` ở thư mục gốc (để tối ưu hóa hiệu năng startup của platform-loader).
+  2. Triển khai cơ chế auto-tuning từ dẫn dắt (steering words) gián tiếp: Thu thập các feedback log cục bộ sau mỗi phiên và chạy script auto-tuning định kỳ để tạo Pull Request có con người duyệt, tuyệt đối không cho Agent tự ý chỉnh sửa file `SKILL.md` thời gian thực.
+  3. Script đồng bộ `/ccba-update-spoke` phải tự động parse `catalog.yaml` trung tâm, dựng đồ thị phụ thuộc và tự động kéo đầy đủ các kỹ năng phụ thuộc về Spoke khi cập nhật.
+- **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797 (Grill-Me), 2026-07-02
+
 ---
 
 ## Conventions (Quy định kiến trúc)
@@ -218,6 +234,14 @@ if sys.stdout.encoding.lower() != 'utf-8':
   2. Chấp nhận sử dụng relative link trỏ cục bộ tới các tệp tin/thư mục bị ignore (`.agents/`), ưu tiên tối đa trải nghiệm local-first trên máy trạm dù link có thể báo 404 trên GitHub Web.
   3. Giữ nguyên relative link trong các kỹ năng/workflow khi phân phối từ Hub về Spoke, cưỡng chế dự án Spoke tuân thủ cấu trúc thư mục chuẩn đã được scaffold sẵn qua `/ccba-init-spoke`.
 - **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797, 2026-07-02
+
+### 5. Quy chuẩn nâng cấp hạ tầng Kỹ năng (Skills Infra Evolution Standards) cho CCBA Platform
+- **Ngữ cảnh**: Định hình phương án thiết kế nâng cấp hệ thống kỹ năng Hub & Spoke nhằm đáp ứng nhu cầu mở rộng quy mô.
+- **Quy ước**:
+  1. Khai báo phụ thuộc giữa các kỹ năng tập trung trong tệp `catalog.yaml` ở thư mục gốc (để tối ưu hóa hiệu năng startup của platform-loader).
+  2. Triển khai cơ chế auto-tuning từ dẫn dắt (steering words) gián tiếp: Thu thập các feedback log cục bộ sau mỗi phiên và chạy script auto-tuning định kỳ để tạo Pull Request có con người duyệt, tuyệt đối không cho Agent tự ý chỉnh sửa file `SKILL.md` thời gian thực.
+  3. Script đồng bộ `/ccba-update-spoke` phải tự động parse `catalog.yaml` trung tâm, dựng đồ thị phụ thuộc và tự động kéo đầy đủ các kỹ năng phụ thuộc về Spoke khi cập nhật.
+- **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797 (Grill-Me), 2026-07-02
 
 ---
 
