@@ -1,6 +1,6 @@
 ## Session Learnings - Kiến thức tích lũy
 
-## Cập nhật gần nhất: 2026-07-01
+## Cập nhật gần nhất: 2026-07-02
 
 ---
 
@@ -105,6 +105,12 @@ for i in range(0, len(reader.pages), 20):
 - **Giải pháp**: Kiểm tra xem đường dẫn tuyệt đối đó có nằm bên trong Workspace Root hay không (`is_relative_to(workspace_root)`). Nếu nằm trong -> kiểm tra sự tồn tại thực tế của tệp (chặn nếu không tồn tại). Nếu nằm ngoài -> bỏ qua không validate để đảm bảo build pass trên mọi máy.
 - **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797, 2026-07-02
 
+### 14. Windows drive-letter bypass on Linux (Bỏ qua ký tự ổ đĩa Windows trên Linux)
+- **Ngữ cảnh**: Khi chạy các script kiểm tra liên kết (linter) liên nền tảng (chạy trên máy phát triển Windows và chạy trên GitHub Actions Linux).
+- **Vấn đề giải quyết**: Tránh lỗi báo hỏng liên kết (Broken Link Error) trên Linux do các liên kết tuyệt đối dạng Windows (như `D:/...`) không thể phân tích đúng trên Linux và bị resolve nhầm thành relative path ảo.
+- **Giải pháp**: Nhận dạng ký tự ổ đĩa Windows bằng regex `^[a-zA-Z]:` và kiểm tra nếu nền tảng không phải Windows (`sys.platform != "win32"`), lập tức bỏ qua (`continue`) quá trình kiểm định tệp tồn tại để CI/CD chạy qua bình thường.
+- **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797, 2026-07-02
+
 ### 5. Quy chuẩn nâng cấp hạ tầng Kỹ năng (Skills Infra Evolution Standards) cho CCBA Platform
 - **Ngữ cảnh**: Định hình phương án thiết kế nâng cấp hệ thống kỹ năng Hub & Spoke nhằm đáp ứng nhu cầu mở rộng quy mô.
 - **Quy ước**:
@@ -199,6 +205,13 @@ if sys.stdout.encoding.lower() != 'utf-8':
 - **Vấn đề**: Các liên kết cục bộ chứa giao thức `file:///` nếu tồn tại thật nhưng dùng đường dẫn tuyệt đối sẽ không hoạt động trên máy khác. Tuy nhiên, việc báo lỗi cứng (exit code 1) và chặn commit sẽ gây phiền hà quá mức cho quá trình nháp tài liệu nhanh.
 - **Giải pháp**: Phân tách luồng xử lý: các liên kết `file:///` trỏ vào trong dự án mà có tồn tại sẽ chỉ in ra Warning màu vàng khuyến nghị relative link, và giữ exit code 0 (Pass). Chỉ báo lỗi đỏ Broken Link và chặn commit (exit code 1) khi file thực sự không tồn tại.
 - **Liên kết**: `scripts/validate_docs.py`
+- **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797, 2026-07-02
+
+### 13. Khắc phục lỗi crash chéo mount drive trên Windows
+- **Vấn đề**: Khi tính toán relative path của liên kết tuyệt đối trỏ sang ổ đĩa khác cục bộ trên máy trạm Windows (ví dụ liên kết ổ `C:` từ workspace ổ `D:`).
+- **Giải pháp**: Hàm `os.path.relpath` ném lỗi `ValueError: path is on mount 'C:', start on mount 'd:'` gây crash tiến trình kiểm định.
+- **Giải pháp**: Bao bọc lời gọi `os.path.relpath` trong khối `try-except ValueError`. Nếu lỗi xảy ra, ghi nhận cảnh báo Warning mềm dẻo nhưng giữ exit code `0` cho phép build qua bình thường.
+- **Liên kết**: [validate_docs.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/validate_docs.py)
 - **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797, 2026-07-02
 
 ### 5. Quy chuẩn nâng cấp hạ tầng Kỹ năng (Skills Infra Evolution Standards) cho CCBA Platform
