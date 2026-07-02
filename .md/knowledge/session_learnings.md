@@ -93,6 +93,18 @@ for i in range(0, len(reader.pages), 20):
 - **Giải pháp**: Đặt default fallback là một chuỗi khóa giả lập không rỗng (ví dụ: `"mock-key-for-ci"`) khi khởi tạo API client nếu không có key thật từ biến môi trường. Điều này cho phép client tạo object thành công mà không cản trở việc chạy thử nghiệm cục bộ hay CI/CD.
 - **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-07-01
 
+### 12. Tối ưu hóa Code Block Parsing cho Markdown Linter
+- **Ngữ cảnh**: Viết các công cụ phân tích tĩnh (linter/validator) để kiểm định cú pháp, danh sách hoặc tiêu đề trong file Markdown.
+- **Vấn đề giải quyết**: Tránh các lỗi báo oan (false positive) do script kiểm định hiểu nhầm các tiêu đề phụ (`#`) hoặc danh sách số mẫu nằm bên trong các block code mẫu (` ``` `).
+- **Giải pháp**: Duy trì biến trạng thái `in_code_block` khi quét qua từng dòng tài liệu. Bật cờ này khi gặp ` ``` ` và tắt cờ khi gặp dấu kết thúc block code tương ứng, bỏ qua mọi phân tích cú pháp hoặc validate cấu trúc khi cờ này đang bật.
+- **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797, 2026-07-02
+
+### 13. Selective Path-Boundary Verification (Kiểm định đường dẫn giới hạn chọn lọc)
+- **Ngữ cảnh**: Kiểm tra tính hợp lệ của các liên kết tuyệt đối (như `file:///`) trong tài liệu markdown dự án được chia sẻ qua nhiều thiết bị hoặc chạy trên server CI/CD.
+- **Vấn đề giải quyết**: Tránh lỗi chặn commit (hard block) do đường dẫn tuyệt đối trỏ tới các file cục bộ chỉ tồn tại trên máy của lập trình viên này nhưng không tồn tại trên máy khác hoặc server CI/CD.
+- **Giải pháp**: Kiểm tra xem đường dẫn tuyệt đối đó có nằm bên trong Workspace Root hay không (`is_relative_to(workspace_root)`). Nếu nằm trong -> kiểm tra sự tồn tại thực tế của tệp (chặn nếu không tồn tại). Nếu nằm ngoài -> bỏ qua không validate để đảm bảo build pass trên mọi máy.
+- **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797, 2026-07-02
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -169,10 +181,17 @@ if sys.stdout.encoding.lower() != 'utf-8':
 - **Giải pháp**: Thiết lập regex linh hoạt hơn hoặc thay đổi cấu trúc test case để tránh các cụm từ lồng ngoặc phức tạp (ví dụ đổi `"let's create a pull request (pr) now"` thành `"please pr this branch"`).
 - **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-06-29
 
+
 ### 11. Package Missing Dependency Crashes in CI (Lỗi crash thiếu package dependency trên CI)
 - **Vấn đề**: CI chạy test suite bị crash với lỗi `ModuleNotFoundError` dù ở máy local nhà phát triển đã chạy ổn định (do dev cài đặt thủ công nhưng quên lưu cấu hình).
 - **Giải pháp**: Khai báo đầy đủ tất cả thư mục/thư viện import tĩnh (ví dụ `"pyyaml"`) vào phần `dependencies` trong tệp cấu hình package chính thức (như `pyproject.toml` hoặc `setup.py`), đảm bảo quy trình setup sạch tự động khôi phục toàn bộ môi trường.
 - **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-07-01
+
+### 12. Phân loại Cảnh báo mềm so với Lỗi cứng (Granular Warnings vs Errors) cho Portability
+- **Vấn đề**: Các liên kết cục bộ chứa giao thức `file:///` nếu tồn tại thật nhưng dùng đường dẫn tuyệt đối sẽ không hoạt động trên máy khác. Tuy nhiên, việc báo lỗi cứng (exit code 1) và chặn commit sẽ gây phiền hà quá mức cho quá trình nháp tài liệu nhanh.
+- **Giải pháp**: Phân tách luồng xử lý: các liên kết `file:///` trỏ vào trong dự án mà có tồn tại sẽ chỉ in ra Warning màu vàng khuyến nghị relative link, và giữ exit code 0 (Pass). Chỉ báo lỗi đỏ Broken Link và chặn commit (exit code 1) khi file thực sự không tồn tại.
+- **Liên kết**: `scripts/validate_docs.py`
+- **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797, 2026-07-02
 
 ---
 
