@@ -229,7 +229,7 @@ def validate_markdown_file(
         if not base_href:
             continue
             
-        if base_href.startswith("file:"):
+        if base_href.startswith("file:") or bool(re.match(r"^[a-zA-Z]:", base_href)):
             # Clean file:/// or file:// to get absolute path
             clean_path = base_href.replace("file:///", "").replace("file://", "")
             
