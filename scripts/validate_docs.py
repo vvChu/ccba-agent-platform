@@ -222,15 +222,39 @@ def validate_markdown_file(
 
     # 2. Validate Relative Links
     links = extract_internal_links(content)
+    project_root = Path.cwd().resolve()
     for line_num, text, href in links:
         # Strip anchor if present (e.g. "./doc.md#section" -> "./doc.md")
         base_href = href.split("#")[0]
         if not base_href:
             continue
             
-        target_path = (filepath.parent / base_href).resolve()
-        if not target_path.exists():
-            issues["links"].append((line_num, href, f"File does not exist: {base_href}"))
+        if base_href.startswith("file:"):
+            # Clean file:/// or file:// to get absolute path
+            clean_path = base_href.replace("file:///", "").replace("file://", "")
+            target_path = Path(clean_path).resolve()
+            
+            # Check if target_path is under project_root
+            try:
+                is_internal = target_path.is_relative_to(project_root)
+            except ValueError:
+                is_internal = False
+                
+            if is_internal:
+                if not target_path.exists():
+                    issues["links"].append((line_num, href, f"File does not exist: {clean_path}"))
+                else:
+                    # Suggest relative path
+                    rel_to_workspace = os.path.relpath(target_path, filepath.parent).replace(os.sep, "/")
+                    issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_to_workspace}'"))
+            else:
+                # Outside workspace -> skip validation
+                continue
+        else:
+            # Normal relative link
+            target_path = (filepath.parent / base_href).resolve()
+            if not target_path.exists():
+                issues["links"].append((line_num, href, f"File does not exist: {base_href}"))
 
     # 3. Validate Environment Variables
     env_vars = extract_env_variables(content)
@@ -317,10 +341,14 @@ def main():
                 total_issues += 1
                 
             # Print Link Issues
-            for line, link, err in issues["links"]:
-                print(f"  [L{line}] \x1b[31mBroken Link Error:\x1b[0m ({link}) - {err}")
-                total_issues += 1
-                broken_links_count += 1
+            for line, link, err in sorted(issues["links"]):
+                if "[WARNING]" in err:
+                    print(f"  [L{line}] \x1b[33mLink Warning:\x1b[0m ({link}) - {err}")
+                    total_issues += 1
+                else:
+                    print(f"  [L{line}] \x1b[31mBroken Link Error:\x1b[0m ({link}) - {err}")
+                    total_issues += 1
+                    broken_links_count += 1
                 
             # Print Env Issues
             for line, var, err in issues["env_vars"]:
