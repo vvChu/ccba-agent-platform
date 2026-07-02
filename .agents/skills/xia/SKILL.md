@@ -1,6 +1,6 @@
 ---
 name: ccba-xia
-description: "Trích xuất, so sánh, port hoặc thích ứng một tính năng từ một repository GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại. Sử dụng khi người dùng muốn sao chép hành vi từ repo khác, nghiên cứu cách codebase khác triển khai, so sánh các phương án triển khai, hoặc viết lại một tính năng trong stack cục bộ. Triggers on: 'port from', 'copy from repo', 'like how X does it', 'clone feature from', 'adapt from', 'bring feature from', 'borrow from', 'take from repo', 'xia', 'xi a', 'xia feature', 'xỉa'."
+description: "Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại."
 user-invocable: true
 when_to_use: "Dùng khi cần port tính năng giữa các repository."
 category: dev-tools
