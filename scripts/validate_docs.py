@@ -189,7 +189,8 @@ def load_env_example(project_root: Path) -> Set[str]:
 def validate_markdown_file(
     filepath: Path,
     search_dirs: List[Path],
-    env_example_vars: Set[str]
+    env_example_vars: Set[str],
+    project_root: Path
 ) -> Dict[str, List[Tuple[int, str, str]]]:
     """Validate a single markdown file for inconsistencies and hallucinations.
 
@@ -228,9 +229,49 @@ def validate_markdown_file(
         if not base_href:
             continue
             
-        target_path = (filepath.parent / base_href).resolve()
-        if not target_path.exists():
-            issues["links"].append((line_num, href, f"File does not exist: {base_href}"))
+        if base_href.startswith("file:") or bool(re.match(r"^[a-zA-Z]:", base_href)):
+            # Clean file:/// or file:// to get absolute path
+            clean_path = base_href.replace("file:///", "").replace("file://", "")
+            
+            # Detect Windows drive letter (e.g. "D:/path" or "c:/path")
+            has_win_drive = bool(re.match(r"^[a-zA-Z]:", clean_path))
+            
+            # Resolve target path conditionally for cross-platform support
+            if has_win_drive and sys.platform != "win32":
+                workspace_name = project_root.name
+                if workspace_name in clean_path:
+                    parts = clean_path.split(workspace_name + "/", 1)
+                    rel_path_guess = f"../../{parts[1]}" if len(parts) > 1 else "relative path"
+                    issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_path_guess}'"))
+                continue
+                
+            target_path = Path(clean_path).resolve()
+            
+            # Check if target_path is under project_root
+            try:
+                is_internal = target_path.is_relative_to(project_root)
+            except ValueError:
+                is_internal = False
+                
+            if is_internal:
+                if not target_path.exists():
+                    issues["links"].append((line_num, href, f"File does not exist: {clean_path}"))
+                else:
+                    # Suggest relative path
+                    try:
+                        rel_to_workspace = os.path.relpath(target_path, filepath.parent).replace(os.sep, "/")
+                        issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_to_workspace}'"))
+                    except ValueError:
+                        # Cross-drive path on Windows (e.g. C: link from D: workspace)
+                        issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace on different drive: '{clean_path}'"))
+            else:
+                # Outside workspace -> skip validation
+                continue
+        else:
+            # Normal relative link
+            target_path = (filepath.parent / base_href).resolve()
+            if not target_path.exists():
+                issues["links"].append((line_num, href, f"File does not exist: {base_href}"))
 
     # 3. Validate Environment Variables
     env_vars = extract_env_variables(content)
@@ -305,7 +346,7 @@ def main():
     
     for filepath in md_files:
         relative_path = filepath.relative_to(project_root) if filepath.is_relative_to(project_root) else filepath
-        issues = validate_markdown_file(filepath, resolved_src_paths, env_vars)
+        issues = validate_markdown_file(filepath, resolved_src_paths, env_vars, project_root)
         
         file_has_issues = any(issues.values())
         if file_has_issues:
@@ -317,10 +358,14 @@ def main():
                 total_issues += 1
                 
             # Print Link Issues
-            for line, link, err in issues["links"]:
-                print(f"  [L{line}] \x1b[31mBroken Link Error:\x1b[0m ({link}) - {err}")
-                total_issues += 1
-                broken_links_count += 1
+            for line, link, err in sorted(issues["links"]):
+                if "[WARNING]" in err:
+                    print(f"  [L{line}] \x1b[33mLink Warning:\x1b[0m ({link}) - {err}")
+                    total_issues += 1
+                else:
+                    print(f"  [L{line}] \x1b[31mBroken Link Error:\x1b[0m ({link}) - {err}")
+                    total_issues += 1
+                    broken_links_count += 1
                 
             # Print Env Issues
             for line, var, err in issues["env_vars"]:

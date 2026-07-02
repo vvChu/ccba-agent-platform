@@ -46,3 +46,9 @@ repos:
         language: system
         types: [markdown]
         pass_filenames: false
+      - id: validate-skills
+        name: Validate Skills Quality
+        entry: python scripts/validate_skills.py
+        language: system
+        types: [markdown]
+        pass_filenames: true
