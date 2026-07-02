@@ -211,6 +211,14 @@ if sys.stdout.encoding.lower() != 'utf-8':
 - **Quy ước**: Agent bắt buộc phải chạy công cụ `validate_docs.py` để đảm bảo tài liệu không chứa mã nguồn ảo ảnh (hallucinations), link tương đối hỏng hoặc thiếu cấu hình trong `.env.example`.
 - **Nguồn**: Session fb742b4b-83a0-4744-b61e-cede7703bd86, 2026-06-29
 
+### 4. Quy chuẩn liên kết tương đối (Relative Links Standards) cho CCBA Platform
+- **Ngữ cảnh**: Tạo các liên kết tài liệu, kỹ năng hoặc quy trình trong hệ thống CCBA để đảm bảo khả năng click-through và tính di động của tài liệu.
+- **Quy ước**:
+  1. Thống nhất sử dụng đường dẫn tương đối chuẩn của Markdown/Git (ví dụ `../../scripts/file.py`) để tương thích tối đa với GitHub UI và Obsidian.
+  2. Chấp nhận sử dụng relative link trỏ cục bộ tới các tệp tin/thư mục bị ignore (`.agents/`), ưu tiên tối đa trải nghiệm local-first trên máy trạm dù link có thể báo 404 trên GitHub Web.
+  3. Giữ nguyên relative link trong các kỹ năng/workflow khi phân phối từ Hub về Spoke, cưỡng chế dự án Spoke tuân thủ cấu trúc thư mục chuẩn đã được scaffold sẵn qua `/ccba-init-spoke`.
+- **Nguồn**: Session ed795ffc-1485-4b91-93ee-969a7438f797, 2026-07-02
+
 ---
 
 ## Configurations (Cấu hình tối ưu)
