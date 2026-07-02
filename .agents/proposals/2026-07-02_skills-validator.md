@@ -18,11 +18,11 @@ Kỹ năng kiểm định chất lượng tệp `SKILL.md` của các Kỹ năng
 - Lỗi logic hành động của Agent: Đảm bảo các bước hành động tuần tự trong kỹ năng luôn đi kèm tiêu chí hoàn thành rõ ràng (`**Completion Criterion:**` hoặc `**Tiêu chí hoàn thành:**`) để AI Agent có thể đối chiếu và tự kiểm tra chất lượng kết quả đầu ra.
 
 ## Giải pháp / Cấu trúc đề xuất
-- Đóng gói kịch bản kiểm định [validate_skills.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/validate_skills.py) làm công cụ quét tĩnh.
-- Cấu hình tích hợp Git pre-commit hook trong `.pre-commit-config.yaml` để tự động kiểm định cục bộ trước khi cho phép commit.
+- Đóng gói kịch bản kiểm định [validate_skills.py](../../scripts/validate_skills.py) làm công cụ quét tĩnh.
+- Cấu hình tích hợp Git pre-commit hook trong [.pre-commit-config.yaml](../../.pre-commit-config.yaml) để tự động kiểm định cục bộ trước khi cho phép commit.
 
 ## Nội dung mẫu / Code mẫu
-Xem mã nguồn chi tiết tại [validate_skills.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/validate_skills.py).
+Xem mã nguồn chi tiết tại [validate_skills.py](../../scripts/validate_skills.py).
 
 Cấu hình hook pre-commit mẫu:
 ```yaml
