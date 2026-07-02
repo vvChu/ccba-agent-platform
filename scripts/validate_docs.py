@@ -190,7 +190,8 @@ def validate_markdown_file(
     filepath: Path,
     search_dirs: List[Path],
     env_example_vars: Set[str],
-    project_root: Path
+    project_root: Path,
+    fix: bool = False
 ) -> Dict[str, List[Tuple[int, str, str]]]:
     """Validate a single markdown file for inconsistencies and hallucinations.
 
@@ -223,9 +224,13 @@ def validate_markdown_file(
 
     # 2. Validate Relative Links
     links = extract_internal_links(content)
+    fixed_content = content
+    file_modified = False
+    
     for line_num, text, href in links:
         # Strip anchor if present (e.g. "./doc.md#section" -> "./doc.md")
         base_href = href.split("#")[0]
+        anchor = href.split("#", 1)[1] if "#" in href else ""
         if not base_href:
             continue
             
@@ -242,7 +247,21 @@ def validate_markdown_file(
                 if workspace_name in clean_path:
                     parts = clean_path.split(workspace_name + "/", 1)
                     rel_path_guess = f"../../{parts[1]}" if len(parts) > 1 else "relative path"
-                    issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_path_guess}'"))
+                    if len(parts) > 1:
+                        try:
+                            depth_to_root = os.path.relpath(project_root, filepath.parent).replace(os.sep, "/")
+                            rel_path_guess = f"{depth_to_root}/{parts[1]}"
+                            rel_path_guess = os.path.normpath(rel_path_guess).replace(os.sep, "/")
+                        except ValueError:
+                            pass
+                    
+                    if fix:
+                        fixed_href = f"{rel_path_guess}#{anchor}" if anchor else rel_path_guess
+                        fixed_content = fixed_content.replace(f"]({href})", f"]({fixed_href})")
+                        file_modified = True
+                        issues["links"].append((line_num, href, f"[AUTO-FIXED] Absolute file link inside workspace on Linux. Fixed to: '{fixed_href}'"))
+                    else:
+                        issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_path_guess}'"))
                 continue
                 
             target_path = Path(clean_path).resolve()
@@ -253,6 +272,12 @@ def validate_markdown_file(
             except ValueError:
                 is_internal = False
                 
+            # Check if target_path is under project_root's parent
+            try:
+                is_sibling = target_path.is_relative_to(project_root.parent)
+            except ValueError:
+                is_sibling = False
+                
             if is_internal:
                 if not target_path.exists():
                     issues["links"].append((line_num, href, f"File does not exist: {clean_path}"))
@@ -260,10 +285,29 @@ def validate_markdown_file(
                     # Suggest relative path
                     try:
                         rel_to_workspace = os.path.relpath(target_path, filepath.parent).replace(os.sep, "/")
-                        issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_to_workspace}'"))
+                        if fix:
+                            fixed_href = f"{rel_to_workspace}#{anchor}" if anchor else rel_to_workspace
+                            fixed_content = fixed_content.replace(f"]({href})", f"]({fixed_href})")
+                            file_modified = True
+                            issues["links"].append((line_num, href, f"[AUTO-FIXED] Absolute file link inside workspace. Fixed to: '{fixed_href}'"))
+                        else:
+                            issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_to_workspace}'"))
                     except ValueError:
                         # Cross-drive path on Windows (e.g. C: link from D: workspace)
                         issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace on different drive: '{clean_path}'"))
+            elif is_sibling:
+                if target_path.exists():
+                    try:
+                        rel_to_parent = os.path.relpath(target_path, filepath.parent).replace(os.sep, "/")
+                        if fix:
+                            fixed_href = f"{rel_to_parent}#{anchor}" if anchor else rel_to_parent
+                            fixed_content = fixed_content.replace(f"]({href})", f"]({fixed_href})")
+                            file_modified = True
+                            issues["links"].append((line_num, href, f"[AUTO-FIXED] Sibling repository link. Fixed to: '{fixed_href}'"))
+                        else:
+                            issues["links"].append((line_num, href, f"[WARNING] Sibling repository absolute link. Recommend relative link: '{rel_to_parent}'"))
+                    except ValueError:
+                        pass
             else:
                 # Outside workspace -> skip validation
                 continue
@@ -272,6 +316,13 @@ def validate_markdown_file(
             target_path = (filepath.parent / base_href).resolve()
             if not target_path.exists():
                 issues["links"].append((line_num, href, f"File does not exist: {base_href}"))
+                
+    if fix and file_modified:
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(fixed_content)
+        except Exception as e:
+            issues["links"].append((0, "Error writing fixed file", str(e)))
 
     # 3. Validate Environment Variables
     env_vars = extract_env_variables(content)
@@ -287,6 +338,7 @@ def main():
     parser.add_argument("docs_dir", nargs="?", default="docs", help="Directory containing markdown files (default: docs)")
     parser.add_argument("--src", default="scripts,packages", help="Comma-separated directories to search for code definitions")
     parser.add_argument("--root", default=".", help="Project workspace root directory")
+    parser.add_argument("--fix", action="store_true", help="Automatically convert absolute workspace links to relative links")
     
     args = parser.parse_args()
     
@@ -346,7 +398,7 @@ def main():
     
     for filepath in md_files:
         relative_path = filepath.relative_to(project_root) if filepath.is_relative_to(project_root) else filepath
-        issues = validate_markdown_file(filepath, resolved_src_paths, env_vars, project_root)
+        issues = validate_markdown_file(filepath, resolved_src_paths, env_vars, project_root, fix=args.fix)
         
         file_has_issues = any(issues.values())
         if file_has_issues:
@@ -359,7 +411,9 @@ def main():
                 
             # Print Link Issues
             for line, link, err in sorted(issues["links"]):
-                if "[WARNING]" in err:
+                if "[AUTO-FIXED]" in err:
+                    print(f"  [L{line}] \x1b[32mLink Fixed:\x1b[0m ({link}) - {err}")
+                elif "[WARNING]" in err:
                     print(f"  [L{line}] \x1b[33mLink Warning:\x1b[0m ({link}) - {err}")
                     total_issues += 1
                 else:
