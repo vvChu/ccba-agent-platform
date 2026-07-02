@@ -189,7 +189,8 @@ def load_env_example(project_root: Path) -> Set[str]:
 def validate_markdown_file(
     filepath: Path,
     search_dirs: List[Path],
-    env_example_vars: Set[str]
+    env_example_vars: Set[str],
+    project_root: Path
 ) -> Dict[str, List[Tuple[int, str, str]]]:
     """Validate a single markdown file for inconsistencies and hallucinations.
 
@@ -222,7 +223,6 @@ def validate_markdown_file(
 
     # 2. Validate Relative Links
     links = extract_internal_links(content)
-    project_root = Path.cwd().resolve()
     for line_num, text, href in links:
         # Strip anchor if present (e.g. "./doc.md#section" -> "./doc.md")
         base_href = href.split("#")[0]
@@ -232,6 +232,19 @@ def validate_markdown_file(
         if base_href.startswith("file:"):
             # Clean file:/// or file:// to get absolute path
             clean_path = base_href.replace("file:///", "").replace("file://", "")
+            
+            # Detect Windows drive letter (e.g. "D:/path" or "c:/path")
+            has_win_drive = bool(re.match(r"^[a-zA-Z]:", clean_path))
+            
+            # Resolve target path conditionally for cross-platform support
+            if has_win_drive and sys.platform != "win32":
+                workspace_name = project_root.name
+                if workspace_name in clean_path:
+                    parts = clean_path.split(workspace_name + "/", 1)
+                    rel_path_guess = f"../../{parts[1]}" if len(parts) > 1 else "relative path"
+                    issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_path_guess}'"))
+                continue
+                
             target_path = Path(clean_path).resolve()
             
             # Check if target_path is under project_root
@@ -329,7 +342,7 @@ def main():
     
     for filepath in md_files:
         relative_path = filepath.relative_to(project_root) if filepath.is_relative_to(project_root) else filepath
-        issues = validate_markdown_file(filepath, resolved_src_paths, env_vars)
+        issues = validate_markdown_file(filepath, resolved_src_paths, env_vars, project_root)
         
         file_has_issues = any(issues.values())
         if file_has_issues:

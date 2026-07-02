@@ -60,8 +60,8 @@ Phân tách rõ ràng giữa hai loại thông tin trong một skill:
 ## 3. Đối chiếu & Đánh giá Hiện trạng CCBA Agent Platform
 
 ### 3.1. Các điểm mạnh đã triển khai
-1.  **Sử dụng mô hình Router Skill xuất sắc:** File [platform-loader/SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/platform-loader/SKILL.md) và `catalog.yaml` là ví dụ điển hình cho Router Skill. Nó giúp Agent biết được tất cả 40+ skills đang có mà không cần nạp toàn bộ chúng vào context ngay từ đầu.
-2.  **Phân tách External Reference tốt:** Hệ thống CCBA đã chia thông tin thành các thư mục chuyên biệt như `.md/knowledge/` cho tài liệu nghiên cứu, `.md/legal_docs/` cho văn bản pháp lý thô và `.agents/rules/` cho các hiến pháp quy chuẩn. Agent liên kết đến chúng bằng context pointers dạng Markdown link `[tên](file:///...)`.
+1.  **Sử dụng mô hình Router Skill xuất sắc:** File [platform-loader/SKILL.md](../../.agents/skills/platform-loader/SKILL.md) và [catalog.yaml](../../.agents/skills/platform-loader/catalog.yaml) là ví dụ điển hình cho Router Skill. Nó giúp Agent biết được tất cả 40+ skills đang có mà không cần nạp toàn bộ chúng vào context ngay từ đầu.
+2.  **Phân tách External Reference tốt:** Hệ thống CCBA đã chia thông tin thành các thư mục chuyên biệt như `.md/knowledge/` cho tài liệu nghiên cứu, `.md/legal_docs/` cho văn bản pháp lý thô và `.agents/rules/` cho các hiến pháp quy chuẩn. Agent liên kết đến chúng bằng context pointers dạng Markdown link `[tên](../../.md/legal_docs/)`.
 3.  **Tách biệt Logic và Documentation:** Các kỹ năng phức tạp như `api-circuit-breaker` hay `append-only-logger` tách mã nguồn Python ra thư mục `resources/` hoặc `scripts/`, giữ cho file `SKILL.md` tập trung vào hướng dẫn sử dụng và nguyên lý vận hành.
 
 ### 3.2. Những điểm hạn chế cần cải tiến

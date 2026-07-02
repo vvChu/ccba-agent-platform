@@ -7,13 +7,12 @@ Enforces guidelines from "Writing Great Agent Skills":
 - Ensures all workflow/process steps contain a clear Completion Criterion.
 """
 
-import os
 import re
 import sys
 import argparse
 import yaml
 from pathlib import Path
-from typing import Dict, List, Tuple, Set
+from typing import List, Tuple
 
 # Enforce UTF-8 output on Windows
 if sys.platform == "win32":
@@ -22,7 +21,7 @@ if sys.platform == "win32":
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 # Patterns
-FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+FRONTMATTER_RE = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*\r?\n", re.DOTALL)
 STEP_LINE_RE = re.compile(r"^\s*([0-9]+)\.\s+(.*)$")
 
 # Header keywords that indicate a workflow/steps section
@@ -46,6 +45,11 @@ def parse_skill_file(file_path: Path) -> Tuple[dict, str]:
         meta = yaml.safe_load(yaml_block)
     except Exception as e:
         raise ValueError(f"Failed to parse frontmatter YAML: {e}")
+        
+    if meta is None:
+        meta = {}
+    elif not isinstance(meta, dict):
+        raise ValueError("Frontmatter YAML is not a valid mapping/dictionary")
         
     body = content[match.end():]
     return meta, body
