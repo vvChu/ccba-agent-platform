@@ -344,4 +344,3 @@ def render_page_to_image(
         doc.close()
 
     return output_path
-
