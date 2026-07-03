@@ -55,7 +55,7 @@ class Cleaners:
         except json.JSONDecodeError as e:
             if "Extra data" in str(e) and e.pos is not None:
                 try:
-                    return json.loads(text[:e.pos].strip())
+                    return json.loads(text[: e.pos].strip())
                 except json.JSONDecodeError:
                     pass
             return None

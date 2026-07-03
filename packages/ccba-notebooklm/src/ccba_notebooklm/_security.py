@@ -24,6 +24,7 @@ def run_maskara_gate(source_path: str) -> tuple[str, bool]:
 
     try:
         import importlib.util
+
         if not maskara_path:
             raise ImportError("maskara.py not found")
         spec = importlib.util.spec_from_file_location("maskara", maskara_path)
@@ -32,7 +33,10 @@ def run_maskara_gate(source_path: str) -> tuple[str, bool]:
         maskara = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(maskara)
     except Exception as e:
-        print(f"[Warn] Thư viện maskara.py không import được: {e}. Bỏ qua chốt chặn bảo mật.", file=sys.stderr)
+        print(
+            f"[Warn] Thư viện maskara.py không import được: {e}. Bỏ qua chốt chặn bảo mật.",
+            file=sys.stderr,
+        )
         return source_path, False
 
     file_p = Path(source_path)
@@ -56,13 +60,22 @@ def run_maskara_gate(source_path: str) -> tuple[str, bool]:
 
         if findings:
             critical_findings = [f for f in findings if f.get("severity") in ("critical", "high")]
-            if any(f.get("rule_id") in ("openai-api-key", "anthropic-api-key", "github-token", "google-api-key") for f in critical_findings):
-                print(f"\n[CRITICAL SECURITY ERROR] Phát hiện API Key nhạy cảm trong file '{source_path}'!", file=sys.stderr)
+            if any(
+                f.get("rule_id")
+                in ("openai-api-key", "anthropic-api-key", "github-token", "google-api-key")
+                for f in critical_findings
+            ):
+                print(
+                    f"\n[CRITICAL SECURITY ERROR] Phát hiện API Key nhạy cảm trong file '{source_path}'!",
+                    file=sys.stderr,
+                )
                 for finding in critical_findings:
                     print(f"  - {finding.get('name')}: Dòng {finding.get('line')}", file=sys.stderr)
                 raise ValueError("Tiến trình upload bị CHẶN vì lý do an toàn thông tin.")
 
-            print(f"[Warning] Phát hiện {len(findings)} thông tin nhạy cảm. Đang che giấu (redact)...")
+            print(
+                f"[Warning] Phát hiện {len(findings)} thông tin nhạy cảm. Đang che giấu (redact)..."
+            )
             rewritten_bytes, num_redacted = maskara.apply_raw_redactions(original_bytes, findings)
 
             scratch_dir = Path(".md/scratch/redacted")

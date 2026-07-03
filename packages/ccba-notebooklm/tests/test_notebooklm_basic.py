@@ -23,6 +23,7 @@ def test_public_interface_exists():
 def test_cli_enum_mappings():
     """Verify mapping functions map strings to correct types/objects."""
     from ccba_notebooklm import HAS_NOTEBOOKLM
+
     if HAS_NOTEBOOKLM:
         assert map_quiz_quantity("fewer") is not None
         assert map_quiz_difficulty("easy") is not None
@@ -38,4 +39,3 @@ def test_cli_enum_mappings():
         # Fallbacks when library is not available
         assert map_quiz_quantity("fewer") is None
         assert map_quiz_difficulty("easy") is None
-

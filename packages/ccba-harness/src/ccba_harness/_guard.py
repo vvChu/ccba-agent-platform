@@ -5,6 +5,7 @@ Step 5 of harness.py decomposition:
   - _apply_global_hooks / _restore_global_hooks_internal / _restore_global_hooks
   - class HarnessGuard
 """
+
 from __future__ import annotations
 
 import _io
@@ -73,6 +74,7 @@ from ._state import (  # noqa: E402
 # ---------------------------------------------------------------------------
 # Thread wrappers — propagate active guards to child threads
 # ---------------------------------------------------------------------------
+
 
 def _wrapped_thread_start(self: threading.Thread, *args: Any, **kwargs: Any) -> Any:
     parent_guards = list(_get_active_guards())
@@ -158,6 +160,7 @@ def _wrapped_thread_start_new(function: Callable, args: tuple, kwargs: dict | No
 # Global hook management
 # ---------------------------------------------------------------------------
 
+
 def _apply_global_hooks() -> None:
     global _active_count, _audit_hook_registered, _global_hooks_active
     with _lock:
@@ -236,6 +239,7 @@ def _restore_global_hooks() -> None:
 # ---------------------------------------------------------------------------
 # HarnessGuard
 # ---------------------------------------------------------------------------
+
 
 class HarnessGuard:
     """Context Manager and Decorator to secure file access and run linter/tests on modifications.
