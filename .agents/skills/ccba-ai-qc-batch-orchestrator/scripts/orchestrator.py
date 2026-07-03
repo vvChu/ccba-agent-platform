@@ -13,6 +13,9 @@ from pathlib import Path
 import fitz
 import pandas as pd
 
+from ccba_ai import QCAuditEngine, QCReporterEngine
+
+
 # ---------------------------------------------------------------------------
 # Cross-skill script loader (no sys.path pollution)
 # Scripts within .agents/skills/ are standalone — not installable packages.
@@ -119,7 +122,7 @@ class QCBatchOrchestrator:
 
 
     async def _prepare_level(
-        self, engine: IDOPAuditEngine, row: dict, hstk_dir: Path
+        self, engine: QCAuditEngine, row: dict, hstk_dir: Path
     ) -> tuple[str, list[Path]]:
         level = row.get("NormalizedLevel", "Unknown")
         print(f"\n[{level}] Gathering images...")
@@ -158,7 +161,11 @@ class QCBatchOrchestrator:
             return
 
         df = pd.read_csv(self.matrix_csv)
-        engine = IDOPAuditEngine(output_dir=self.out_dir, ai_model=ai_model, tile_dpi=150)
+        
+        if IDOPAuditEngine is None:
+            raise ImportError("IDOPAuditEngine not loaded. Check skill scripts.")
+            
+        engine: QCAuditEngine = IDOPAuditEngine(output_dir=self.out_dir, ai_model=ai_model, tile_dpi=150)
 
         hstk_dir = self.project_dir / "HSTK BVTC"
 
@@ -172,11 +179,16 @@ class QCBatchOrchestrator:
         results = await engine.run_multi_level_audit(level_images)
 
         print(f"\nProcessed {len(results)} levels. Generating Combined Report...")
-        reporter = IDOPReporter(
+        
+        if IDOPReporter is None:
+            raise ImportError("IDOPReporter not loaded. Check skill scripts.")
+            
+        reporter: QCReporterEngine = IDOPReporter(
             project_name=self.project_dir.name, author="CCBA Batch Orchestrator"
         )
         report_path = self.out_dir / "BATCH_QC_Report_Auto.md"
         reporter.synthesize(backbone=None, audit_results=results, output_path=report_path)
+
 
         print(f"\nDone! Batch Report saved to: {report_path}")
 
