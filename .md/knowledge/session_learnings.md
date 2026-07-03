@@ -219,3 +219,60 @@ applies_to:
   - "Phần mềm"
 bundle: "_core"
 ---
+
+## Architecture Deepening: Candidate 2, 3, 4, 5, 6 & 7 — Monolith Splitting and Interface Consolidation (2026-07-03 - Night)
+
+### Bối cảnh phiên
+
+Hoàn thành trọn vẹn tất cả 7 ứng cử viên tái cấu trúc kiến trúc (Candidates) từ báo cáo Architecture Review. Đã merge các PR: #42 (Gộp ccba-ooxml dùng chung), #43 (Narrow ccba-notebooklm), #44 (Tách monolith docx document.py), #45 (Tách PDF page-render dùng chung), #46 (QC Protocols seam), #47 (Sửa mdconverter decoy init), #48 (Gom vision.py vào pipeline.py). Bộ kiểm tra xanh 100% (388 passed, 2 skipped).
+
+---
+
+### Patterns
+
+**1. Tách Monolith bằng mô hình Ủy quyền (Delegation Pattern) giữ nguyên tương thích ngược**
+- **Ngữ cảnh**: Cần chia nhỏ một file lớn trộn lẫn nhiều domain nghiệp vụ độc lập (như quản lý comment và tracked changes trong `document.py`) nhưng các callers cũ vẫn mong muốn giao diện gọi của class chính không đổi.
+- **Giải pháp**:
+  1. Trích xuất logic domain A sang `comment_engine.py` (với class `CommentEngine`).
+  2. Trích xuất logic domain B sang `change_engine.py` (helpers).
+  3. Class chính `Document` đóng vai trò là Orchestrator mỏng, khởi tạo Engine và chuyển tiếp (delegates) các lời gọi hàm tương thích ngược (`add_comment`, `reply_to_comment`) trực tiếp tới `CommentEngine`.
+  4. Class editor chính `DocxXMLEditor` delegating các phương thức tracked changes tới helpers trong `change_engine.py`.
+- **Lợi ích**: Giảm dung lượng file chính từ 1,277 dòng xuống ~400 dòng mà không làm gãy giao diện công khai hiện có.
+
+**2. Thiết lập Seam bằng Python `typing.Protocol` (Structural Subtyping)**
+- **Ngữ cảnh**: Nhiều thành phần độc lập (Discovery, Audit, Reporter) có cấu trúc đầu vào và đầu ra khác biệt nhưng cùng phối hợp trong một pipeline chung (`orchestrator.py`), ta muốn thiết lập giao diện lỏng lẻo (loose coupling) để mock kiểm thử tĩnh.
+- **Giải pháp**:
+  1. Khai báo các class Protocol trong thư viện dùng chung `ccba-ai` như `QCAuditEngine`, `QCReporterEngine` sử dụng `@runtime_checkable` decorator.
+  2. Sử dụng type hints Protocol trong `orchestrator.py` thay vì import trực tiếp lớp cụ thể.
+  3. Viết mock classes (ví dụ `MockAuditEngine`) thỏa mãn signature của Protocol trong unit tests. Điều này cho phép chạy mock test suite độc lập cho orchestrator mà không cần đĩa thực hay AI Gateway.
+
+**3. Khắc phục Unicode escape sequence error trên PowerShell CLI**
+- **Vấn đề**: Khi gõ lệnh gọi CLI của GitHub (`gh pr create --body "..."`) bằng PowerShell, nếu nội dung body chứa đường dẫn file Windows dạng `\u` (ví dụ: `\utilities.py`), PowerShell sẽ parse nhầm thành ký tự unicode bị lỗi escape sequence (`The Unicode escape sequence is not valid`).
+- **Phòng tránh**: Luôn chuyển đổi ký tự dấu gạch chéo ngược Windows `\` thành gạch chéo xuôi `/` (ví dụ: `utilities.py` hoặc `packages/`) trong chuỗi tham số body truyền cho PowerShell để tránh parser crash.
+
+**4. Khai báo Xml Namespaces đầy đủ khi thiết lập Mock XML Templates**
+- **Vấn đề**: Khi tạo XML mock thô phục vụ unit test, nếu sử dụng namespace prefix (như `w14:paraId="1111"`) mà không định nghĩa namespace trên nút gốc (`xmlns:w14="..."`), trình parser `defusedxml` sẽ crash lập tức với lỗi `unbound prefix: line X, column Y`.
+- **Giải pháp**: Luôn khai báo đầy đủ các namespaces được sử dụng (`xmlns:w`, `xmlns:w14`) trên thẻ root của tài liệu XML mock.
+
+---
+
+### Anti-patterns
+
+- **Decoy Init Pattern (Namespace mờ mịt)**: Tệp tin `__init__.py` chỉ export cấu hình rỗng, ép caller phải import sâu từ module con bên trong (`from mdconverter.core.pipeline import ConversionPipeline`). Gây rò rỉ chi tiết cài đặt và làm cấu hình module bị nông. Cần export trực tiếp các core class sử dụng tại root `__init__.py`.
+- **Duplicate PyMuPDF (`fitz`) file openers**: Việc tự viết `fitz.open()` và lưu `get_pixmap()` thô ở nhiều nơi khác nhau không giải phóng file handle đúng cách trong khối `try-finally` gây rò rỉ bộ nhớ. Phải đưa về hàm utility tập trung của thư viện xử lý PDF (`render_page_to_image`).
+
+---
+
+### Configurations
+
+| Setting | Value | Lý do | Áp dụng khi |
+| --------- | ------- | ------- | ------------- |
+| `runtime_checkable` | `@runtime_checkable` | Cho phép sử dụng `isinstance(mock, Protocol)` | Kiểm tra sự tuân thủ Protocol trong test |
+
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+applies_to:
+  - "Phần mềm"
+bundle: "_core"
+
+---
