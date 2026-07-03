@@ -41,6 +41,9 @@ llm = [
     "google-generativeai>=0.8.0,<1.0.0",
     "llama-index>=0.11.0,<1.0.0",
 ]
+ai = [
+    "ccba-ai",
+]
 
 [project.scripts]
 mdconvert = "mdconverter.cli:app"
@@ -48,6 +51,7 @@ mdconvert = "mdconverter.cli:app"
 
 [tool.uv.sources]
 ccba-pdf-prep = { workspace = true }
+ccba-ai = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mdconverter"]
