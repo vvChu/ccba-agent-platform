@@ -3,7 +3,9 @@
 import sys
 import types
 from typing import Any
+
 from . import _engine
+
 
 class ShimModule(types.ModuleType):
     """Module shim that forwards all attribute operations (get, set, del) to _engine."""
@@ -16,6 +18,7 @@ class ShimModule(types.ModuleType):
 
     def __delattr__(self, name: str) -> None:
         delattr(_engine, name)
+
 
 # Retrieve current module globals to initialize the ModuleType object properly
 current_module = sys.modules[__name__]

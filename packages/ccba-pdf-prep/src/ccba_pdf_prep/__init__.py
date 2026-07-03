@@ -6,8 +6,8 @@ from .core import (
     PDFReport,
     Segment,
     get_blind_chunks,
-    split_pdf,
     render_page_to_image,
+    split_pdf,
 )
 from .document_skills.pdf_forms import fill_pdf_fields, get_field_info
 from .document_skills.xlsx_recalc import recalc_xlsx
@@ -20,7 +20,6 @@ from .pipeline import (
     TitleBlockRegion,
     VisionOptimizer,
 )
-
 
 __all__ = [
     # pipeline (primary entry point)
@@ -36,7 +35,6 @@ __all__ = [
     "split_pdf",
     "get_blind_chunks",
     "render_page_to_image",
-
     # vision
     "VisionOptimizer",
     "TileResult",
