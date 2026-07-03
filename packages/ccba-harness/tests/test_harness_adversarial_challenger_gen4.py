@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 import pytest
-from ccba_legal.harness._guard import HarnessGuard
+from ccba_harness._guard import HarnessGuard
 
 
 def test_json_unicode_escape_bypass(tmp_path):

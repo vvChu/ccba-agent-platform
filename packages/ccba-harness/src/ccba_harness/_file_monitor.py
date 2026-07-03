@@ -11,9 +11,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from ccba_legal.harness._guard import HarnessGuard
+    from ._guard import HarnessGuard
 
-from ccba_legal.harness._state import (
+from ._state import (
     _HOOK_TOKEN,
     _check_in_hook,
     _get_active_guards,
@@ -153,6 +153,7 @@ def _get_workspace_files() -> list[str]:
     except Exception:
         pass
     return files
+
 
 def _safe_escape_decode(b: bytes) -> bytes:
     res = bytearray()
@@ -303,7 +304,6 @@ def _check_value_for_sensitive(val: Any, guards: list[HarnessGuard]) -> None:
             raise PermissionError(f"Access to sensitive keyword blocked: {raw_str}")
 
     # 7. File system link resolve:
-
     try:
         if raw_str and isinstance(raw_str, str):
             try:
@@ -557,16 +557,13 @@ def _scan_ast_nodes(
                 return local_vars[n.id]
             if n.id == "os":
                 import os
-
                 return os
             if n.id == "sys":
                 import sys
-
                 return sys
             if n.id == "getattr":
                 return getattr
             import sys as _sys
-
             if n.id in _sys.modules:
                 return _sys.modules[n.id]
             try:
@@ -819,7 +816,6 @@ def _scan_ast_nodes(
                                     return res_list
                                 except Exception:
                                     pass
-
             pass
         elif isinstance(n, ast.List):
             elts_vals = [eval_node(elt, depth + 1) for elt in n.elts]
@@ -902,7 +898,6 @@ def _scan_ast_nodes(
     return strs, bytes_list
 
 
-
 def _wrapped_builtins_open(file: Any, *args: Any, **kwargs: Any) -> Any:
     if getattr(_local, "in_hook", None) is _HOOK_TOKEN:
         return _original_builtins_open(file, *args, **kwargs)
@@ -952,7 +947,6 @@ def _wrapped__io_open(file: Any, *args: Any, **kwargs: Any) -> Any:
         return _original__io_open(file, *args, **kwargs)
     finally:
         _local.__dict__["in_hook"] = None
-
 
 
 def _wrapped_os_open(path: Any, flags: int, *args: Any, **kwargs: Any) -> int:
@@ -1078,9 +1072,6 @@ class _Wrapped_io_FileIO(_original__io_FileIO):
             _local.__dict__["in_hook"] = None
 
 
-# _wrapped_sqlite3_connect is imported from _sql_monitor above.
-
-
 def _wrapped_os_link(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if _check_in_hook():
         return _original_os_link(src, dst, *args, **kwargs)
@@ -1141,5 +1132,3 @@ def _wrapped_os_symlink(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
         return _original_os_symlink(src, dst, *args, **kwargs)
     finally:
         _local.__dict__["in_hook"] = None
-
-

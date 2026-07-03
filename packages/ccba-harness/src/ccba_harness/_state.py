@@ -130,7 +130,7 @@ class HarnessLocal(threading.local):
                         return
                     is_own_globals = (
                         frame.f_globals is globals()
-                        or frame.f_globals.get("__name__", "").startswith("ccba_legal.harness")
+                        or frame.f_globals.get("__name__", "").startswith("ccba_harness")
                     )
                     if not is_own_globals:
                         _caller_code_cache[code_obj] = False
@@ -198,7 +198,7 @@ def _check_in_hook() -> bool:
             if is_harness:
                 is_own_globals = (
                     frame.f_globals is globals()
-                    or frame.f_globals.get("__name__", "").startswith("ccba_legal.harness")
+                    or frame.f_globals.get("__name__", "").startswith("ccba_harness")
                 )
                 if is_own_globals:
                     return True
@@ -234,7 +234,6 @@ def _get_active_guards() -> list[Any]:
         if _global_active_guards:
             return list(_global_active_guards)
     return []
-
 
 
 # ---------------------------------------------------------------------------

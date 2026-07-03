@@ -14,18 +14,18 @@ from functools import wraps
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from ccba_legal.harness._guard import HarnessGuard
+    from ._guard import HarnessGuard
 
-from ccba_legal.harness._file_monitor import (
+from ._file_monitor import (
     _check_value_for_sensitive,
     _get_workspace_files,
     _looks_like_path,
     _scan_ast_nodes,
 )
-from ccba_legal.harness._sql_monitor import (
+from ._sql_monitor import (
     _clean_and_decode_db_path,
 )
-from ccba_legal.harness._state import (
+from ._state import (
     _HOOK_TOKEN,
     _check_in_hook,
     _get_active_guards,
@@ -39,9 +39,6 @@ def _split_command_to_words(cmd_str: str) -> list[str]:
         return shlex.split(cmd_str, posix=(sys.platform != "win32"))
     except Exception:
         return cmd_str.split()
-
-
-
 
 
 def _reconstruct_shell_variables(cmd_str: str) -> str:
@@ -1136,7 +1133,6 @@ def _wrapped_popen(*args: Any, **kwargs: Any) -> Any:
         _local.__dict__["in_hook"] = old_in_hook
 
 
-
 def _make_os_wrapper(name: str, original_func: Callable) -> Callable:
     @wraps(original_func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -1228,5 +1224,3 @@ def _make_os_wrapper(name: str, original_func: Callable) -> Callable:
             _local.__dict__["in_hook"] = None
 
     return wrapper
-
-
