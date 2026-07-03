@@ -143,9 +143,28 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
 
     # Load spoke context
     context = load_yaml(context_file)
-    project_name = context.get("project_name", spoke_root.name).strip()
-    project_type = context.get("project_type", "").strip()
-    hub_path_str = context.get("hub_path", "").strip()
+    
+    # Support both flat and nested structure
+    project_name = context.get("project_name")
+    if not project_name and isinstance(context.get("project"), dict):
+        project_name = context.get("project").get("name")
+    if not project_name:
+        project_name = spoke_root.name
+    project_name = str(project_name).strip()
+    
+    project_type = context.get("project_type")
+    if not project_type and isinstance(context.get("project"), dict):
+        project_type = context.get("project").get("type")
+    if not project_type:
+        project_type = ""
+    project_type = str(project_type).strip()
+    
+    hub_path_str = context.get("hub_path")
+    if not hub_path_str and isinstance(context.get("project"), dict):
+        hub_path_str = context.get("project").get("hub_path")
+    if not hub_path_str:
+        hub_path_str = ""
+    hub_path_str = str(hub_path_str).strip()
 
     # 2. Locate Hub (Smart Discovery)
     hub_root = None

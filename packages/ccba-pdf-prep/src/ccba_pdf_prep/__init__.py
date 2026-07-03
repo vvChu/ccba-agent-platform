@@ -1,4 +1,5 @@
 from .composite import CompositeBuilder
+from .pipeline import PDFProcessingError, PDFProcessingPipeline, ProcessingResult
 from .core import (
     PageDetail,
     PDFAnalyzer,
@@ -13,6 +14,10 @@ from .document_skills.xlsx_recalc import recalc_xlsx
 from .vision import TileResult, TitleBlockDetector, TitleBlockRegion, VisionOptimizer
 
 __all__ = [
+    # pipeline (primary entry point)
+    "PDFProcessingPipeline",
+    "ProcessingResult",
+    "PDFProcessingError",
     # core
     "PDFAnalyzer",
     "PDFCategory",
