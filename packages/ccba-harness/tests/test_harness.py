@@ -4,6 +4,7 @@ import subprocess
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from ccba_harness._guard import HarnessGuard
 from ccba_harness._state import _original_builtins_open
 

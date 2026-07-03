@@ -5,6 +5,7 @@ import sys
 import zlib
 
 import pytest
+
 from ccba_harness._guard import HarnessGuard
 
 

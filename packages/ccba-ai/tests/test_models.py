@@ -1,5 +1,5 @@
-import pytest
 from ccba_ai import AuditFinding, AuditReport
+
 
 def test_audit_finding_initialization():
     finding = AuditFinding(
@@ -31,14 +31,14 @@ def test_audit_report_initialization():
         summary="Overall consistent but has 3 clashes.",
         raw_response="RAW"
     )
-    
+
     assert report.level == "L2"
     assert report.ai_model == "test-vision-model"
     assert report.quad_view_path == "/path/to/quad.png"
     assert len(report.findings) == 3
     assert report.summary == "Overall consistent but has 3 clashes."
     assert report.raw_response == "RAW"
-    
+
     # Test computed properties
     assert report.finding_count == 3
     assert report.clash_count == 3  # Backward compatibility alias
@@ -56,7 +56,7 @@ def test_audit_report_to_dict_serialization():
         findings=findings,
         summary="Test summary"
     )
-    
+
     d = report.to_dict()
     assert d["level"] == "L1"
     assert d["ai_model"] == "test-model"
@@ -65,7 +65,7 @@ def test_audit_report_to_dict_serialization():
     assert d["clash_count"] == 1
     assert d["high_severity_count"] == 1
     assert d["summary"] == "Test summary"
-    
+
     # Check clashes array serialization
     assert isinstance(d["clashes"], list)
     assert len(d["clashes"]) == 1

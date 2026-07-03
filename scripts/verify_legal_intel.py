@@ -10,7 +10,6 @@ import unittest
 from pathlib import Path
 
 # Add scripts directory to path to import legal_intelligence
-
 from legal_intelligence import Cleaners, OKFBundlePackager
 
 

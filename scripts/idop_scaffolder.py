@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 SharePoint IDOP Deployment Support Toolkit
 Provides automated scaffolding for CDE layout, lists configuration, and Power Automate specs.
 """
 
 import argparse
-import os
 import json
-import sys
+import os
 import re
 import subprocess
-from typing import Dict, List, Any
+import sys
 
 # Define List Schemas
 LIST_SCHEMAS = {
@@ -106,12 +104,12 @@ def sanitize_powershell_string(val: str) -> str:
     """
     if not isinstance(val, str):
         raise ValueError("Input must be a string")
-    
+
     # Check against a strict whitelist of safe characters
     # Allowing letters, numbers, spaces, underscores, hyphens, ampersands, and parentheses
     if not re.match(r"^[a-zA-Z0-9_ \-\&\(\)]*$", val):
         raise ValueError(f"Dangerous character detected in input: {val!r}")
-    
+
     # Escape PowerShell special characters within double quotes: $, `, "
     return val.replace("`", "``").replace("$", "`$").replace('"', '`"')
 
@@ -259,14 +257,14 @@ Ensure-SharePointList -Title "{safe_list_name}"
         internal_name_raw = field.get("internal_name")
         if not internal_name_raw:
             raise ValueError(f"Field is missing 'internal_name' in list '{list_name}'")
-        
+
         display_name_raw = field.get("display_name", internal_name_raw)
         ftype_raw = field.get("type", "Text")
-        
+
         internal_name = sanitize_powershell_string(internal_name_raw)
         display_name = sanitize_powershell_string(display_name_raw)
         ftype = sanitize_powershell_string(ftype_raw)
-        
+
         if ftype in ("Choice", "MultiChoice"):
             choices = field.get("choices")
             if choices is None:
@@ -288,12 +286,12 @@ Ensure-SharePointList -Title "{safe_list_name}"
 
 def generate_power_automate_spec() -> str:
     template_path = os.path.join(os.path.dirname(__file__), "templates", "idop", "PowerAutomate_spec.md")
-    with open(template_path, "r", encoding="utf-8") as f:
+    with open(template_path, encoding="utf-8") as f:
         return f.read()
 
 def generate_flow_definition() -> dict:
     template_path = os.path.join(os.path.dirname(__file__), "templates", "idop", "PowerAutomate_flow_definition.json")
-    with open(template_path, "r", encoding="utf-8") as f:
+    with open(template_path, encoding="utf-8") as f:
         return json.load(f)
 
 def scaffold_cde(output_dir: str) -> None:
@@ -386,7 +384,7 @@ def generate_fallback_skeleton(app_dir: str) -> None:
 def scaffold_app(app_dir: str) -> None:
     print(f"Scaffolding React app in: {app_dir}")
     degit_success = False
-    
+
     try:
         print("Attempting to clone via degit...")
         cmd = ["npx", "--yes", "degit", "microsoft/PowerAppsCodeApps/templates/starter", app_dir, "--force"]
@@ -399,15 +397,15 @@ def scaffold_app(app_dir: str) -> None:
     except Exception as e:
         print(f"degit failed or timed out: {e}")
         print("Falling back to local React + TS + Vite skeleton generation...")
-        
+
     # Always generate or overwrite the skeleton files to ensure the premium CCBA mockup dashboard and all 8 files exist
     generate_fallback_skeleton(app_dir)
 
 def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publisher_prefix: str) -> None:
     print(f"\nPacking solution: {solution_name}...")
-    import zipfile
     import shutil
-    
+    import zipfile
+
     # 1. Check if pac CLI is available
     pac_available = False
     try:
@@ -420,10 +418,10 @@ def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publ
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("Warning: Power Platform CLI (pac) is not installed or not in PATH.")
         print("Falling back to programmatically packaging files into a standard ZIP archive...")
-        
+
     solution_dir = os.path.join(output_dir, solution_name)
     os.makedirs(solution_dir, exist_ok=True)
-    
+
     if pac_available:
         try:
             # 2. Run 'pac solution init'
@@ -438,16 +436,16 @@ def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publ
                 subprocess.run(cmd_init, shell=True, check=True)
             else:
                 subprocess.run(cmd_init, check=True)
-                
+
             # Copy generated workflows and lists schemas into solution
             workflows_src = os.path.join(output_dir, "workflows")
             if os.path.exists(workflows_src):
                 shutil.copytree(workflows_src, os.path.join(solution_dir, "workflows"), dirs_exist_ok=True)
-                
+
             lists_src = os.path.join(output_dir, "lists")
             if os.path.exists(lists_src):
                 shutil.copytree(lists_src, os.path.join(solution_dir, "lists"), dirs_exist_ok=True)
-                
+
             # 3. Run 'pac solution pack'
             zip_file_path = os.path.join(output_dir, f"{solution_name}.zip")
             print(f"Packing solution using 'pac solution pack' to {zip_file_path}...")
@@ -469,10 +467,10 @@ def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publ
     # Fallback/Offline programmatic packaging
     zip_file_path = os.path.join(output_dir, f"{solution_name}.zip")
     print(f"Generating solution ZIP archive programmatically at: {zip_file_path}")
-    
+
     # Write a simple customizations.xml and solution.xml to mock the Solution structure
     os.makedirs(os.path.join(solution_dir, "Other"), exist_ok=True)
-    
+
     solution_xml = f"""<?xml version="1.0" encoding="utf-8"?>
 <ImportExportXml version="9.2.0.0" SchemaVersion="1.0" Description="" OrganizationVersion="" OrganizationUniqueName="">
   <SolutionManifest>
@@ -499,16 +497,16 @@ def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publ
 
     with open(os.path.join(solution_dir, "Other", "Solution.xml"), "w", encoding="utf-8") as f:
         f.write(solution_xml)
-        
+
     # Copy generated workflows and lists schemas into solution
     workflows_src = os.path.join(output_dir, "workflows")
     if os.path.exists(workflows_src):
         shutil.copytree(workflows_src, os.path.join(solution_dir, "workflows"), dirs_exist_ok=True)
-        
+
     lists_src = os.path.join(output_dir, "lists")
     if os.path.exists(lists_src):
         shutil.copytree(lists_src, os.path.join(solution_dir, "lists"), dirs_exist_ok=True)
-        
+
     # Zip the solution folder
     with zipfile.ZipFile(zip_file_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk(solution_dir):
@@ -516,7 +514,7 @@ def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publ
                 file_path = os.path.join(root, file)
                 arcname = os.path.relpath(file_path, solution_dir)
                 zipf.write(file_path, arcname)
-                
+
     print(f"Fallback solution zip file created successfully: {zip_file_path}")
 
 def main() -> None:

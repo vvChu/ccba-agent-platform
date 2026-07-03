@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Verification script for SharePoint IDOP toolkit setup.
 Validates CDE folders, list schemas, PnP scripts, and Power Automate workflows.
 """
 
-import os
-import sys
 import json
+import os
 import shutil
 import subprocess
-from typing import List, Set
+import sys
+
 
 def clean_slate(cde_path: str) -> None:
     """Deletes the CDE directory if it exists to ensure a clean slate.
@@ -33,7 +32,7 @@ def run_scaffolder(cde_path: str) -> None:
     Raises:
         subprocess.CalledProcessError: If the execution of the scaffolder fails.
     """
-    cmd: List[str] = [sys.executable, "scripts/idop_scaffolder.py", "--all", "-o", cde_path]
+    cmd: list[str] = [sys.executable, "scripts/idop_scaffolder.py", "--all", "-o", cde_path]
     print(f"Running command: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True, check=True)
     print("Scaffolder Output:")
@@ -55,7 +54,7 @@ def validate_cde_structure(cde_path: str) -> None:
     if not os.path.isdir(cde_path):
         raise AssertionError(f"CDE path '{cde_path}' does not exist or is not a directory.")
 
-    expected_cde_folders: Set[str] = {
+    expected_cde_folders: set[str] = {
         "01_WIP",
         "02_Shared",
         "03_Published",
@@ -63,13 +62,13 @@ def validate_cde_structure(cde_path: str) -> None:
         "05_Contract Reference"
     }
 
-    actual_items: List[str] = os.listdir(cde_path)
-    actual_dirs: Set[str] = {
+    actual_items: list[str] = os.listdir(cde_path)
+    actual_dirs: set[str] = {
         item for item in actual_items if os.path.isdir(os.path.join(cde_path, item))
     }
 
     # Filter out generated directories (lists, workflows, IDOP_Solution, etc.) by keeping only standard CDE folder prefixes
-    cde_folders: Set[str] = {d for d in actual_dirs if d.startswith(("01", "02", "03", "04", "05"))}
+    cde_folders: set[str] = {d for d in actual_dirs if d.startswith(("01", "02", "03", "04", "05"))}
 
     assert cde_folders == expected_cde_folders, (
         f"CDE folder mismatch. Expected: {expected_cde_folders}. Got: {cde_folders}"
@@ -91,7 +90,7 @@ def validate_lists(cde_path: str) -> None:
     if not os.path.isdir(lists_path):
         raise AssertionError(f"Lists path '{lists_path}' does not exist or is not a directory.")
 
-    list_names: List[str] = [
+    list_names: list[str] = [
         "CRM", "Contracts", "Finance", "Approvals", "HRAdmin", "LegalQA", "RDProjects"
     ]
 
@@ -102,7 +101,7 @@ def validate_lists(cde_path: str) -> None:
         # 1. Validate Schema File
         if not os.path.isfile(schema_file):
             raise AssertionError(f"Schema file '{schema_file}' is missing.")
-        with open(schema_file, "r", encoding="utf-8") as f:
+        with open(schema_file, encoding="utf-8") as f:
             schema_data = json.load(f)
         if not isinstance(schema_data, dict):
             raise AssertionError(f"Schema file '{schema_file}' is not a valid JSON object.")
@@ -116,7 +115,7 @@ def validate_lists(cde_path: str) -> None:
             raise AssertionError(f"PnP PowerShell script '{ps_file}' is missing.")
 
     # Validate that lists folder has exactly 14 files (7 schemas + 7 scripts)
-    all_files: List[str] = os.listdir(lists_path)
+    all_files: list[str] = os.listdir(lists_path)
     if len(all_files) != 14:
         raise AssertionError(f"Expected exactly 14 files in '{lists_path}', found {len(all_files)}: {all_files}")
 
@@ -143,7 +142,7 @@ def validate_workflows(cde_path: str) -> None:
     # 1. Validate PowerAutomate_spec.md
     if not os.path.isfile(spec_file):
         raise AssertionError(f"Specification file '{spec_file}' is missing.")
-    with open(spec_file, "r", encoding="utf-8") as f:
+    with open(spec_file, encoding="utf-8") as f:
         spec_content = f.read()
 
     # Check for mermaid block
@@ -160,13 +159,13 @@ def validate_workflows(cde_path: str) -> None:
     # 2. Validate PowerAutomate_flow_definition.json
     if not os.path.isfile(def_file):
         raise AssertionError(f"Flow definition file '{def_file}' is missing.")
-    with open(def_file, "r", encoding="utf-8") as f:
+    with open(def_file, encoding="utf-8") as f:
         def_data = json.load(f)
     if not isinstance(def_data, dict):
         raise AssertionError(f"Flow definition file '{def_file}' is not a valid JSON object.")
 
     # Validate that workflows folder has exactly 2 files
-    all_files: List[str] = os.listdir(workflows_path)
+    all_files: list[str] = os.listdir(workflows_path)
     if len(all_files) != 2:
         raise AssertionError(f"Expected exactly 2 files in '{workflows_path}', found {len(all_files)}: {all_files}")
 
@@ -174,7 +173,7 @@ def validate_workflows(cde_path: str) -> None:
 
 def run_app_scaffolder(app_path: str) -> None:
     """Runs the app scaffolding command using positional CLI parameter."""
-    cmd: List[str] = [sys.executable, "scripts/idop_scaffolder.py", "app", "--app-dir", app_path]
+    cmd: list[str] = [sys.executable, "scripts/idop_scaffolder.py", "app", "--app-dir", app_path]
     print(f"Running command: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True, check=True)
     print("App Scaffolder Output:")
@@ -207,7 +206,7 @@ def validate_app_structure(app_path: str) -> None:
 
     # Parse package.json inside the generated app to assert dependencies include react, react-dom and devDependencies include vite, typescript
     pkg_path = os.path.join(app_path, "package.json")
-    with open(pkg_path, "r", encoding="utf-8") as f:
+    with open(pkg_path, encoding="utf-8") as f:
         pkg = json.load(f)
 
     deps = pkg.get("dependencies", {})
@@ -220,7 +219,7 @@ def validate_app_structure(app_path: str) -> None:
 
     # Read App.tsx to assert that it contains the CCBA dashboard premium mock elements
     app_tsx_path = os.path.join(app_path, "src", "App.tsx")
-    with open(app_tsx_path, "r", encoding="utf-8") as f:
+    with open(app_tsx_path, encoding="utf-8") as f:
         app_tsx_content = f.read()
 
     assert ("CCBA IDOP Platform" in app_tsx_content or "CCBA IDOP Deployment Dashboard" in app_tsx_content), \
@@ -232,7 +231,7 @@ def validate_solution_packing(cde_path: str) -> None:
     """Validates that running scaffolder with --pack creates a valid Solution zip file."""
     print("Validating Solution packing...")
     solution_name = "Test_Solution"
-    cmd: List[str] = [
+    cmd: list[str] = [
         sys.executable, "scripts/idop_scaffolder.py",
         "--pack", "--solution-name", solution_name,
         "-o", cde_path
@@ -241,16 +240,16 @@ def validate_solution_packing(cde_path: str) -> None:
     result = subprocess.run(cmd, capture_output=True, text=True, check=True)
     print("Packer Output:")
     print(result.stdout)
-    
+
     zip_file = os.path.join(cde_path, f"{solution_name}.zip")
     if not os.path.isfile(zip_file):
         raise AssertionError(f"Expected solution zip file '{zip_file}' was not created.")
-        
+
     import zipfile
     with zipfile.ZipFile(zip_file, "r") as z:
         namelist = z.namelist()
         assert "Other/Solution.xml" in namelist, "Solution zip missing 'Other/Solution.xml'"
-        
+
     print("Solution packing validation passed successfully.")
 
 def main() -> None:

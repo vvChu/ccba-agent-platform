@@ -21,7 +21,7 @@ from pathlib import Path
 
 from .composite import CompositeBuilder
 from .core import PDFAnalyzer, PDFCategory, PDFReport, Segment, get_blind_chunks, split_pdf
-from .vision import TileResult, TitleBlockDetector, VisionOptimizer
+from .vision import TitleBlockDetector, VisionOptimizer
 
 logger = logging.getLogger(__name__)
 

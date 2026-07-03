@@ -1,7 +1,6 @@
 import argparse
 import asyncio
 import io
-import os
 import sys
 from pathlib import Path
 
@@ -12,7 +11,6 @@ if sys.stdout.encoding != 'utf-8':
 
 # Import dynamically from our own package
 from . import (
-    HAS_NOTEBOOKLM,
     check_auth,
     delete_notebook,
     delete_source,

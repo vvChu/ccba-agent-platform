@@ -10,9 +10,7 @@ from ccba_pdf_prep.core import (
     PageDetail,
     PDFCategory,
     PDFReport,
-    Segment,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers / Fakes

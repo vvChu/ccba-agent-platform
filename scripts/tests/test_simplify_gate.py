@@ -1,12 +1,7 @@
-import unittest
-import sys
 import os
-from pathlib import Path
+import unittest
 
-from scripts.hooks.simplify_gate import (
-    matched_severity,
-    main
-)
+from scripts.hooks.simplify_gate import main, matched_severity
 
 
 class TestSimplifyGate(unittest.TestCase):
@@ -16,11 +11,11 @@ class TestSimplifyGate(unittest.TestCase):
         sev, verb = matched_severity("please ship these changes")
         self.assertEqual(sev, "hard")
         self.assertEqual(verb.lower(), "ship")
-        
+
         sev, verb = matched_severity("time to deploy to production")
         self.assertEqual(sev, "hard")
         self.assertEqual(verb.lower(), "deploy")
-        
+
         sev, verb = matched_severity("please pr this branch")
         self.assertEqual(sev, "hard")
         self.assertEqual(verb.lower(), "pr")
@@ -29,7 +24,7 @@ class TestSimplifyGate(unittest.TestCase):
         sev, verb = matched_severity("commit the files now")
         self.assertEqual(sev, "soft")
         self.assertEqual(verb.lower(), "commit")
-        
+
         sev, verb = matched_severity("ready to release version 1.0")
         self.assertEqual(sev, "soft")
         self.assertEqual(verb.lower(), "release")
@@ -38,7 +33,7 @@ class TestSimplifyGate(unittest.TestCase):
         sev, verb = matched_severity("do not ship these files")
         self.assertEqual(sev, "")
         self.assertEqual(verb, "")
-        
+
         sev, verb = matched_severity("ship on wednesday")
         self.assertEqual(sev, "")
         self.assertEqual(verb, "")
@@ -51,7 +46,7 @@ class TestSimplifyGate(unittest.TestCase):
         # No match should bypass
         payload = {"args": "just run unit tests"}
         self.assertEqual(main("pre-tool", payload), 0)
-        
+
         # APPROVED prefix bypass
         payload = {"args": "APPROVED: ship changes immediately"}
         self.assertEqual(main("pre-tool", payload), 0)

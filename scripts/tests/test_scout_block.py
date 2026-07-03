@@ -1,13 +1,11 @@
-import unittest
-import sys
 import json
-from pathlib import Path
+import unittest
 
 from scripts.hooks.scout_block import (
-    is_path_blocked,
-    is_allowed_command,
     check_tool_arguments,
-    main
+    is_allowed_command,
+    is_path_blocked,
+    main,
 )
 
 
@@ -29,7 +27,7 @@ class TestScoutBlock(unittest.TestCase):
         self.assertTrue(is_allowed_command("uv venv"))
         self.assertTrue(is_allowed_command("pytest"))
         self.assertTrue(is_allowed_command("NODE_ENV=production npm run build"))
-        
+
         self.assertFalse(is_allowed_command("cd .venv"))
         self.assertFalse(is_allowed_command("cat .venv/pyvenv.cfg"))
         self.assertFalse(is_allowed_command("ls node_modules"))
@@ -40,12 +38,12 @@ class TestScoutBlock(unittest.TestCase):
         blocked, reason = check_tool_arguments(args, "view_file")
         self.assertTrue(blocked)
         self.assertIn("node_modules", reason)
-        
+
         # 2. Blocked command argument
         args = {"CommandLine": "ls node_modules"}
         blocked, reason = check_tool_arguments(args, "run_command")
         self.assertTrue(blocked)
-        
+
         # 3. Allowed command argument
         args = {"CommandLine": "npm run build"}
         blocked, reason = check_tool_arguments(args, "run_command")

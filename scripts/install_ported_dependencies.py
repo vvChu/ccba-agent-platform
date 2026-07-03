@@ -4,14 +4,13 @@ Cài đặt các Node.js packages (docx) và Python packages (python-docx, Pillo
 phù hợp với môi trường Windows và môi trường ảo .venv cục bộ.
 """
 
-import os
-import sys
-import subprocess
-import shutil
-from typing import List
-
 # Khắc phục lỗi mã hóa Unicode trên Windows Console
 import io
+import os
+import shutil
+import subprocess
+import sys
+
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
@@ -28,7 +27,7 @@ def check_command_exists(cmd: str) -> bool:
     return shutil.which(cmd) is not None
 
 
-def install_python_packages(packages: List[str]) -> bool:
+def install_python_packages(packages: list[str]) -> bool:
     """Cài đặt các gói Python vào môi trường ảo .venv hiện tại.
 
     Args:
@@ -38,7 +37,7 @@ def install_python_packages(packages: List[str]) -> bool:
         True nếu cài đặt thành công, ngược lại là False.
     """
     print(f"[Python] Đang cài đặt các gói: {', '.join(packages)}...")
-    
+
     # Xác định đường dẫn pip trong môi trường ảo
     venv_pip = os.path.join(".venv", "Scripts", "pip.exe")
     if not os.path.exists(venv_pip):
@@ -84,18 +83,18 @@ def install_nodejs_packages() -> bool:
 def install_playwright_browsers() -> bool:
     """Tải trình duyệt Chromium cho Playwright với cơ chế bọc lỗi an toàn."""
     print("[Playwright] Đang chuẩn bị tải trình duyệt Chromium...")
-    
+
     # Xác định executable của playwright
     playwright_exe = os.path.join(".venv", "Scripts", "playwright.exe")
     use_uv = check_command_exists("uv")
-    
+
     if use_uv:
         cmd = ["uv", "run", "playwright", "install", "chromium"]
     elif os.path.exists(playwright_exe):
         cmd = [playwright_exe, "install", "chromium"]
     else:
         cmd = ["playwright", "install", "chromium"]
-        
+
     try:
         print(f"[Playwright] Chạy lệnh: {' '.join(cmd)}")
         # Thiết lập timeout 120s tránh treo vô hạn nếu mạng chậm
@@ -119,22 +118,22 @@ def install_playwright_browsers() -> bool:
 def main() -> None:
     """Hàm chạy chính của script."""
     print("=== CCBA PORTED SKILLS DEPENDENCY INSTALLER ===")
-    
+
     python_success = install_python_packages([
-        "python-docx", "Pillow", "pypdf", "google-genai", 
+        "python-docx", "Pillow", "pypdf", "google-genai",
         "python-pptx", "playwright"
     ])
     node_success = install_nodejs_packages()
-    
+
     playwright_success = False
     if python_success:
         playwright_success = install_playwright_browsers()
-    
+
     print("\n=== KẾT QUẢ CÀI ĐẶT ===")
     print(f"- Python Packages: {'Thành công' if python_success else 'Thất bại hoặc Cảnh báo'}")
     print(f"- Node.js Packages: {'Thành công' if node_success else 'Bỏ qua hoặc Thất bại'}")
     print(f"- Playwright Browser: {'Thành công' if playwright_success else 'Bỏ qua hoặc Cảnh báo'}")
-    
+
     if python_success:
         print("\nHệ thống đã sẵn sàng chạy các kỹ năng được port!")
     else:

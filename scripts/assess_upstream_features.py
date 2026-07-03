@@ -5,14 +5,13 @@ Checks differences in claudekit-engineer and claudekit-marketing repositories,
 identifies new skills, and evaluates them using AI Gateway.
 """
 
-import sys
-import os
 import argparse
-import subprocess
-import re
 import json
-from pathlib import Path
+import re
+import subprocess
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Enforce UTF-8 output on Windows
 if sys.platform == "win32":
@@ -66,7 +65,7 @@ def call_ai_evaluation(repo_type: str, skill_name: str, content: str) -> dict:
 
     try:
         reply = ai.chat(user_prompt, system=system_prompt, model="gemini-3-flash")
-        
+
         # Strip potential markdown code fences from JSON response
         clean_reply = reply.strip()
         if clean_reply.startswith("```json"):
@@ -74,7 +73,7 @@ def call_ai_evaluation(repo_type: str, skill_name: str, content: str) -> dict:
         if clean_reply.endswith("```"):
             clean_reply = clean_reply[:-3]
         clean_reply = clean_reply.strip()
-        
+
         return json.loads(clean_reply)
     except Exception as e:
         return {
@@ -90,20 +89,20 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
     try:
         if not RECOMMENDATIONS_FILE.parent.exists():
             RECOMMENDATIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
-            
+
         header = f"# 📋 Upstream Porting Recommendations\n\nBáo cáo tự động đánh giá các tính năng mới từ thượng nguồn. Cập nhật ngày: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-        
+
         # Read existing file content or start new
         content = ""
         if RECOMMENDATIONS_FILE.exists():
             content = RECOMMENDATIONS_FILE.read_text(encoding="utf-8")
-            
+
         if not content.startswith("# 📋 Upstream"):
             content = header + content
-            
+
         status_text = "RECOMMEND PORT" if result["should_port"] else "IGNORE"
         color = "🟢" if result["should_port"] else "🔴"
-        
+
         item_md = f"""
 ---
 
@@ -114,7 +113,7 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
 """
         for step in result.get("actionable_steps", []):
             item_md += f"    *   {step}\n"
-            
+
         content += item_md
         RECOMMENDATIONS_FILE.write_text(content, encoding="utf-8")
         print(f"[Evaluator] Wrote suitability report for '{skill_name}' -> {status_text}")
@@ -125,27 +124,27 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
 def run_mock_mode():
     """Simulate finding and evaluating mock skills for testing."""
     print("[Evaluator] Running in TEST MOCK mode...")
-    
+
     mock_engineer_skill = (
         "name: ck:mock-debugger\n"
         "description: Automated breakpoint injector and step-by-step trace analyzer for debugging Python stack traces.\n"
         "category: debugging\n"
     )
-    
+
     mock_marketing_skill = (
         "name: ckm:mock-funnel-optimizer\n"
         "description: Generates micro-copy variations for A/B testing on e-commerce landing pages.\n"
         "category: conversion\n"
     )
-    
+
     print("[Evaluator] Simulating review for 'mock-debugger' (Engineer)...")
     res1 = call_ai_evaluation("engineer", "mock-debugger", mock_engineer_skill)
     append_recommendation("engineer", "mock-debugger", res1)
-    
+
     print("[Evaluator] Simulating review for 'mock-funnel-optimizer' (Marketing)...")
     res2 = call_ai_evaluation("marketing", "mock-funnel-optimizer", mock_marketing_skill)
     append_recommendation("marketing", "mock-funnel-optimizer", res2)
-    
+
     print(f"\n[Evaluator] Success! Please view results in {RECOMMENDATIONS_FILE}")
 
 
@@ -160,20 +159,20 @@ def check_git_diffs(repo_path: Path, base_sha: str, head_sha: str, repo_type: st
         cmd = ["git", "diff", "--name-only", base_sha, head_sha]
         res = subprocess.run(cmd, cwd=str(repo_path), capture_output=True, text=True, check=True)
         files = res.stdout.strip().splitlines()
-        
+
         skill_pattern = re.compile(r"claude/skills/([^/]+)/SKILL\.md$")
-        
+
         for f in files:
             match = skill_pattern.search(f)
             if match:
                 skill_name = match.group(1)
                 print(f"[Evaluator] Found modified/new skill: '{skill_name}' in upstream {repo_type}")
-                
+
                 # Retrieve the file contents from head SHA
                 show_cmd = ["git", "show", f"{head_sha}:{f}"]
                 show_res = subprocess.run(show_cmd, cwd=str(repo_path), capture_output=True, text=True, check=True)
                 skill_content = show_res.stdout
-                
+
                 result = call_ai_evaluation(repo_type, skill_name, skill_content)
                 append_recommendation(repo_type, skill_name, result)
     except subprocess.SubprocessError as e:
@@ -187,17 +186,17 @@ def main():
     parser.add_argument("--repo-type", choices=["engineer", "marketing"], help="Repository type to evaluate")
     parser.add_argument("--base", help="Base commit SHA for git diff")
     parser.add_argument("--head", help="Head commit SHA for git diff")
-    
+
     args = parser.parse_args()
-    
+
     if args.test_mock:
         run_mock_mode()
         sys.exit(0)
-        
+
     if not args.repo_path or not args.repo_type or not args.base or not args.head:
         print("[Evaluator] Error: Missing required git diff arguments (--repo-path, --repo-type, --base, --head).")
         sys.exit(1)
-        
+
     check_git_diffs(Path(args.repo_path), args.base, args.head, args.repo_type)
 
 

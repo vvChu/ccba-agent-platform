@@ -4,9 +4,10 @@ Team Task Coordinator CLI for ccba-agent-platform.
 CLI wrapper delegating core logic to ccba_ai.services.team.
 """
 
-import sys
 import argparse
+import sys
 from pathlib import Path
+
 from ccba_ai.services import team
 
 # Enforce UTF-8 output
@@ -71,7 +72,7 @@ def main():
             res = team.complete_task(args.name)
             print(f"[Coordinator] Task '{res['name']}' completed successfully.")
             sys.exit(0)
-            
+
     except Exception as e:
         print(f"[Coordinator] Error: {e}", file=sys.stderr)
         sys.exit(1)
