@@ -1,0 +1,103 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.PowerApps/apis/shared_logicflows/schemas/2016-06-01/workflowdefinition.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "$connections": {
+      "defaultValue": {},
+      "type": "Object"
+    }
+  },
+  "triggers": {
+    "When_a_new_lead_is_created_in_CRM": {
+      "type": "OpenApiConnection",
+      "inputs": {
+        "host": {
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+          "connectionName": "shared_sharepointonline",
+          "operationId": "GetOnNewItems"
+        },
+        "parameters": {
+          "dataset": "https://tenant.sharepoint.com/sites/site",
+          "table": "CRM"
+        }
+      }
+    }
+  },
+  "actions": {
+    "Initialize_LeadID": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "LeadID",
+            "type": "string",
+            "value": "@triggerOutputs()?['body/ID']"
+          }
+        ]
+      },
+      "runAfter": {}
+    },
+    "Calculate_Quotation": {
+      "type": "Compose",
+      "inputs": {
+        "EstimatedValue": "@mul(triggerOutputs()?['body/EstimatedValue'], 1.1)"
+      },
+      "runAfter": {
+        "Initialize_LeadID": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Start_and_wait_for_an_approval": {
+      "type": "OpenApiConnectionWebhook",
+      "inputs": {
+        "host": {
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+          "connectionName": "shared_approvals",
+          "operationId": "StartAndWaitForAnApproval"
+        },
+        "parameters": {
+          "approvalType": "Basic",
+          "title": "Approval for CRM Lead @{triggerOutputs()?['body/Title']}"
+        }
+      },
+      "runAfter": {
+        "Calculate_Quotation": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Condition_on_Approval": {
+      "type": "If",
+      "expression": {
+        "equals": [
+          "@outputs('Start_and_wait_for_an_approval')?['body/outcome']",
+          "Approved"
+        ]
+      },
+      "actions": {
+        "Create_CDE_Folders": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "CreateNewFolder"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/site",
+              "folderPath": "01_WIP/@{triggerOutputs()?['body/Title']}",
+              "listName": "CDE"
+            }
+          }
+        }
+      },
+      "runAfter": {
+        "Start_and_wait_for_an_approval": [
+          "Succeeded"
+        ]
+      }
+    }
+  },
+  "outputs": {}
+}
