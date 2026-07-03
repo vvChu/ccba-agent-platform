@@ -5,7 +5,7 @@ import sys
 import zlib
 
 import pytest
-from ccba_legal.harness._guard import HarnessGuard
+from ccba_harness._guard import HarnessGuard
 
 
 def test_bypass_hex_obfuscation_in_subprocess(tmp_path):

@@ -1,4 +1,4 @@
-"""CCBA Legal Harness package — public re-export surface.
+"""CCBA Harness package — public re-export surface.
 
 This file is intentionally a thin wrapper. All implementation lives in
 the private sub-modules:
@@ -15,7 +15,7 @@ All imports below are intentional backward-compatibility re-exports.
 from __future__ import annotations
 
 # NOTE: 'subprocess' is intentionally re-exported so that tests can mock
-# 'ccba_legal.harness.subprocess.run' (used in HarnessGuard._run_post_action_checks).
+# 'ccba_harness.subprocess.run' (used in HarnessGuard._run_post_action_checks).
 # Since Python modules are singletons, patching via this alias affects the
 # same module object referenced in _guard.py.
 import subprocess
@@ -23,7 +23,7 @@ import subprocess
 # ---------------------------------------------------------------------------
 # Step 3: file monitor
 # ---------------------------------------------------------------------------
-from ccba_legal.harness._file_monitor import (
+from ._file_monitor import (
     _check_value_for_sensitive,
     _get_workspace_files,
     _is_text_sensitive,
@@ -47,7 +47,7 @@ from ccba_legal.harness._file_monitor import (
 # ---------------------------------------------------------------------------
 # Step 5: guard class + hook management
 # ---------------------------------------------------------------------------
-from ccba_legal.harness._guard import (
+from ._guard import (
     HarnessGuard,
     _apply_global_hooks,
     _restore_global_hooks,
@@ -60,7 +60,7 @@ from ccba_legal.harness._guard import (
 # ---------------------------------------------------------------------------
 # Step 4: process monitor
 # ---------------------------------------------------------------------------
-from ccba_legal.harness._process_monitor import (
+from ._process_monitor import (
     _audit_hook,
     _check_subprocess_call,
     _check_subprocess_call_for_guards,
@@ -79,7 +79,7 @@ from ccba_legal.harness._process_monitor import (
 # ---------------------------------------------------------------------------
 # Step 2: SQL monitor
 # ---------------------------------------------------------------------------
-from ccba_legal.harness._sql_monitor import (
+from ._sql_monitor import (
     _check_db_path,
     _check_sql_query,
     _clean_and_decode_db_path,
@@ -93,7 +93,7 @@ from ccba_legal.harness._sql_monitor import (
 # ---------------------------------------------------------------------------
 # Step 1: shared state
 # ---------------------------------------------------------------------------
-from ccba_legal.harness._state import (
+from ._state import (
     _HOOK_TOKEN,
     HarnessLocal,
     _abs_path_cache,

@@ -22,7 +22,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
-from ccba_legal.harness._file_monitor import (
+from ._file_monitor import (
     _scan_for_sensitive_inodes,
     _wrapped__io_open,
     _wrapped_builtins_open,
@@ -35,12 +35,12 @@ from ccba_legal.harness._file_monitor import (
     _wrapped_os_symlink,
     _WrappedFileIO,
 )
-from ccba_legal.harness._process_monitor import (
+from ._process_monitor import (
     _audit_hook,
     _make_os_wrapper,
     _wrapped_popen,
 )
-from ccba_legal.harness._sql_monitor import (
+from ._sql_monitor import (
     _wrapped_sqlite3_connect,
     _Wrappedsqlite3Connection,
 )
@@ -49,7 +49,7 @@ from ccba_legal.harness._sql_monitor import (
 # Module-level counters / flags — modified exclusively via 'global' within
 # this module.  Imported initial values from _state for consistency.
 # ---------------------------------------------------------------------------
-from ccba_legal.harness._state import (  # noqa: E402
+from ._state import (  # noqa: E402
     _abs_path_cache,
     _active_count,
     _active_subthreads_count,
@@ -283,7 +283,7 @@ approved_paths_env = os.environ.get("HARNESS_APPROVED_PATHS")
 
 if active == "1":
     try:
-        from ccba_legal.harness import HarnessGuard
+        from ccba_harness import HarnessGuard
         approved_paths = []
         if approved_paths_env:
             approved_paths = approved_paths_env.split(os.pathsep)
@@ -537,7 +537,7 @@ if active == "1":
 
         # 2. Run pytest on the package directory
         current_file_dir = os.path.dirname(os.path.abspath(__file__))
-        package_dir = os.path.dirname(current_file_dir)
+        package_dir = os.path.dirname(os.path.dirname(current_file_dir))
 
         cmd_pytest = [sys.executable, "-m", "pytest", package_dir]
         res_pytest = subprocess.run(cmd_pytest, capture_output=True, text=True)

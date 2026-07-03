@@ -18,7 +18,7 @@ import re
 import urllib.parse
 from typing import Any
 
-from ccba_legal.harness._state import (
+from ._state import (
     _HOOK_TOKEN,
     _check_in_hook,
     _get_active_guards,
@@ -111,12 +111,9 @@ def _check_sql_query(sql: Any) -> None:
     if "ATTACH" in sql_upper:
         guards = _get_active_guards()
         if guards:
-            # Lazy import: _check_value_for_sensitive lives in __init__.py until
-            # the file-monitor migration step moves it.
+            # Lazy import to avoid circular dependency
             try:
-                import ccba_legal.harness as _harness  # noqa: PLC0415
-
-                _cvs = _harness._check_value_for_sensitive
+                from . import _check_value_for_sensitive as _cvs
             except (ImportError, AttributeError):
                 _cvs = None
 

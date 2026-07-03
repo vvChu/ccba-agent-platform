@@ -4,8 +4,8 @@ import subprocess
 from unittest.mock import MagicMock, patch
 
 import pytest
-from ccba_legal.harness._guard import HarnessGuard
-from ccba_legal.harness._state import _original_builtins_open
+from ccba_harness._guard import HarnessGuard
+from ccba_harness._state import _original_builtins_open
 
 
 def test_pre_action_hook_blocking_sensitive_files():
@@ -64,7 +64,7 @@ def test_pre_action_hook_allowing_approved_files(tmp_path):
         assert content == "{}"
 
 
-@patch("ccba_legal.harness.subprocess.run")
+@patch("ccba_harness.subprocess.run")
 def test_post_action_hook_success(mock_run, tmp_path):
     """Verify post-action quality check hook runs ruff and pytest on success."""
     mock_res = MagicMock()
@@ -84,7 +84,7 @@ def test_post_action_hook_success(mock_run, tmp_path):
     assert any("pytest" in cmd for cmd in calls)
 
 
-@patch("ccba_legal.harness.subprocess.run")
+@patch("ccba_harness.subprocess.run")
 def test_post_action_hook_ruff_failure(mock_run, tmp_path):
     """Verify that a ruff check failure raises a RuntimeError."""
     mock_res_fail = MagicMock()
@@ -104,7 +104,7 @@ def test_post_action_hook_ruff_failure(mock_run, tmp_path):
     assert "Style violation found" in str(exc_info.value)
 
 
-@patch("ccba_legal.harness.subprocess.run")
+@patch("ccba_harness.subprocess.run")
 def test_post_action_hook_pytest_failure(mock_run, tmp_path):
     """Verify that a pytest failure raises a RuntimeError."""
     mock_res_ok = MagicMock()
@@ -129,7 +129,7 @@ def test_post_action_hook_pytest_failure(mock_run, tmp_path):
     assert "1 test failed" in str(exc_info.value)
 
 
-@patch("ccba_legal.harness.subprocess.run")
+@patch("ccba_harness.subprocess.run")
 def test_post_action_hook_no_py_written(mock_run, tmp_path):
     """Verify that non-python writes or only python reads do not trigger checks."""
     test_txt = tmp_path / "test.txt"
@@ -146,7 +146,7 @@ def test_post_action_hook_no_py_written(mock_run, tmp_path):
     mock_run.assert_not_called()
 
 
-@patch("ccba_legal.harness.subprocess.run")
+@patch("ccba_harness.subprocess.run")
 def test_decorator_usage(mock_run, tmp_path):
     """Verify that HarnessGuard works when used as a decorator."""
     mock_res = MagicMock()
@@ -175,7 +175,7 @@ def test_original_hooks_restored_in_subprocess():
         def mock_popen_check(*args, **kwargs):
             nonlocal builtins_open_during_popen, in_hook_during_popen
             builtins_open_during_popen = builtins.open
-            from ccba_legal.harness import _local
+            from ccba_harness import _local
 
             in_hook_during_popen = getattr(_local, "in_hook", False)
             # Return a mock process that supports context manager and communicate
@@ -186,13 +186,13 @@ def test_original_hooks_restored_in_subprocess():
             mock_proc.returncode = 0
             return mock_proc
 
-        with patch("ccba_legal.harness._process_monitor._original_popen", side_effect=mock_popen_check):
+        with patch("ccba_harness._process_monitor._original_popen", side_effect=mock_popen_check):
             subprocess.run(["dummy_command"])
 
         # Check that during subprocess call, builtins.open remained wrapped (global hook intact)
         assert builtins_open_during_popen != _original_builtins_open
         # Check that in_hook was active to bypass the hook locally
-        from ccba_legal.harness import _HOOK_TOKEN
+        from ccba_harness import _HOOK_TOKEN
 
         assert in_hook_during_popen is _HOOK_TOKEN
         # Check that after subprocess call, the hook is still wrapped
@@ -216,7 +216,7 @@ def test_os_rename_and_replace_intercept(tmp_path):
             os.replace(src_file, sensitive_dst)
 
 
-@patch("ccba_legal.harness.subprocess.run")
+@patch("ccba_harness.subprocess.run")
 def test_nested_guard_py_tracking(mock_run, tmp_path):
     """Verify that writing a .py file tracks it in ALL active nested guards."""
     mock_res = MagicMock()
