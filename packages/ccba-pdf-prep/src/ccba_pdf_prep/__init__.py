@@ -7,6 +7,7 @@ from .core import (
     Segment,
     get_blind_chunks,
     split_pdf,
+    render_page_to_image,
 )
 from .document_skills.pdf_forms import fill_pdf_fields, get_field_info
 from .document_skills.xlsx_recalc import recalc_xlsx
@@ -26,6 +27,8 @@ __all__ = [
     "PageDetail",
     "split_pdf",
     "get_blind_chunks",
+    "render_page_to_image",
+
     # vision
     "VisionOptimizer",
     "TileResult",
