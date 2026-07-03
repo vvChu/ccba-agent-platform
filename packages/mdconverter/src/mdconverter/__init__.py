@@ -9,5 +9,34 @@ __version__ = "2.2.0"
 __author__ = "IBST BIM Team"
 
 from mdconverter.config import Settings, get_settings
+from mdconverter.core import (
+    BaseConverter,
+    ConversionCache,
+    ConversionPipeline,
+    ConversionResult,
+    ConverterRegistry,
+    PostProcessor,
+    MDConvertError,
+    ConverterNotAvailableError,
+    ConversionTimeoutError,
+    InvalidInputError,
+    ProviderError,
+)
 
-__all__ = ["Settings", "get_settings", "__version__"]
+__all__ = [
+    "Settings",
+    "get_settings",
+    "BaseConverter",
+    "ConversionCache",
+    "ConversionPipeline",
+    "ConversionResult",
+    "ConverterRegistry",
+    "PostProcessor",
+    "MDConvertError",
+    "ConverterNotAvailableError",
+    "ConversionTimeoutError",
+    "InvalidInputError",
+    "ProviderError",
+    "__version__",
+]
+
