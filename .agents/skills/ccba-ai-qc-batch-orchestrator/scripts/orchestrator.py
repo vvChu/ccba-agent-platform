@@ -103,15 +103,20 @@ class QCBatchOrchestrator:
         if not pdf_path.exists() or page_num < 0:
             return self.blank_img
 
-        doc = self._get_doc(pdf_path)
-        if not doc or page_num >= len(doc):
+        from ccba_pdf_prep import render_page_to_image
+
+        try:
+            render_page_to_image(
+                pdf_path=pdf_path,
+                page_num=page_num,
+                output_path=out_path,
+                dpi=dpi,
+            )
+            return out_path
+        except Exception as e:
+            print(f"Error rendering {pdf_path} page {page_num}: {e}")
             return self.blank_img
 
-        page = doc[page_num]
-        matrix = fitz.Matrix(dpi / 72, dpi / 72)
-        pix = page.get_pixmap(matrix=matrix)
-        pix.save(str(out_path))
-        return out_path
 
     async def _prepare_level(
         self, engine: IDOPAuditEngine, row: dict, hstk_dir: Path
