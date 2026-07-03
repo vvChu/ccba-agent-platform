@@ -1,6 +1,8 @@
 from ccba_notebooklm import (
     check_auth,
     get_client,
+)
+from ccba_notebooklm.__main__ import (
     map_info_detail,
     map_info_orientation,
     map_info_style,
@@ -12,6 +14,7 @@ from ccba_notebooklm import (
     map_video_format,
     map_video_style,
 )
+
 
 
 def test_public_interface_exists():
