@@ -5,7 +5,7 @@ import sys
 import threading
 
 import pytest
-from ccba_legal.harness import HarnessGuard
+from ccba_legal.harness._guard import HarnessGuard
 
 
 def test_unicode_normalization_bypass(tmp_path, monkeypatch):
