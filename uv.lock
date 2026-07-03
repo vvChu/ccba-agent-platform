@@ -18,6 +18,7 @@ members = [
     "ccba-ai",
     "ccba-harness",
     "ccba-legal-intel",
+    "ccba-notebooklm",
     "ccba-pdf-prep",
     "mdconvert-cli",
 ]
@@ -381,6 +382,17 @@ requires-dist = [
     { name = "requests" },
     { name = "websocket-client" },
 ]
+
+[[package]]
+name = "ccba-notebooklm"
+version = "0.1.0"
+source = { editable = "packages/ccba-notebooklm" }
+dependencies = [
+    { name = "pyyaml" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pyyaml" }]
 
 [[package]]
 name = "ccba-pdf-prep"
