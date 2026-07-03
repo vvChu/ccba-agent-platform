@@ -5,13 +5,13 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
-from ccba_legal.harness._guard import HarnessGuard
+from ccba_harness._guard import HarnessGuard
 
 
 def test_in_hook_flag_tampering_bypass(tmp_path):
     """Bypass 1: Tampering with the _local.in_hook flag.
 
-    By importing the internal thread-local object from ccba_legal.harness and
+    By importing the internal thread-local object from ccba_harness and
     setting _local.in_hook = True, we trick all check functions and hooks into
     thinking they are executing inside a hook call, which bypasses all security checks.
     """
@@ -20,11 +20,11 @@ def test_in_hook_flag_tampering_bypass(tmp_path):
 
     import os
 
-    import ccba_legal.harness
+    import ccba_harness
 
     with HarnessGuard():
         # Set the hook flag to True
-        ccba_legal.harness._local.in_hook = True
+        ccba_harness._local.in_hook = True
         with pytest.raises(PermissionError):
             fd = os.open(sensitive_file, os.O_RDONLY)
             os.close(fd)
@@ -200,18 +200,18 @@ def test_builtins_open_flag_tampering_bypass_vulnerability(tmp_path):
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("vulnerable-builtins-open-content")
 
-    import ccba_legal.harness
+    import ccba_harness
 
     with HarnessGuard():
         # Set the hook flag to True
-        ccba_legal.harness._local.in_hook = True
+        ccba_harness._local.in_hook = True
         try:
             # Now, with the bypass blocked, this must raise PermissionError
             with pytest.raises(PermissionError):
                 with open(sensitive_file) as f:
                     f.read()
         finally:
-            ccba_legal.harness._local.in_hook = None
+            ccba_harness._local.in_hook = None
 
 
 def test_compiled_frame_tampering_bypass(tmp_path):
@@ -224,11 +224,11 @@ def test_compiled_frame_tampering_bypass(tmp_path):
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("vulnerable-compiled-code-content")
 
-    import ccba_legal.harness
+    import ccba_harness
 
     with HarnessGuard():
         # Set the hook flag to the exact internal _HOOK_TOKEN object
-        ccba_legal.harness._local.in_hook = ccba_legal.harness._HOOK_TOKEN
+        ccba_harness._local.in_hook = ccba_harness._HOOK_TOKEN
         try:
             # Compile a payload with filename 'harness.py'
             py_code = f"import os; fd = os.open(r'{sensitive_file}', os.O_RDONLY); data = os.read(fd, 100); os.close(fd); print(data.decode('utf-8'))"
@@ -246,4 +246,4 @@ def test_compiled_frame_tampering_bypass(tmp_path):
             finally:
                 sys.stdout = old_stdout
         finally:
-            ccba_legal.harness._local.in_hook = None
+            ccba_harness._local.in_hook = None
