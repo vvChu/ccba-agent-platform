@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from ccba_pdf_prep.vision import TitleBlockDetector, TitleBlockRegion, VisionOptimizer
+from ccba_pdf_prep import TitleBlockDetector, TitleBlockRegion, VisionOptimizer
+
 
 
 class TestTilePageSmart:
