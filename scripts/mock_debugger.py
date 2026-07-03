@@ -5,12 +5,11 @@ Runs a Python script, captures any traceback, and uses AI Gateway
 to analyze the root cause and automatically suggest or apply a fix.
 """
 
-import sys
-import os
 import argparse
 import subprocess
-import traceback
+import sys
 from pathlib import Path
+
 from ccba_ai import ai
 
 # Enforce UTF-8 on Windows
@@ -66,7 +65,7 @@ def analyze_error(script_path: Path, stderr: str) -> str:
     5. 🧪 Gợi ý mối nối kiểm thử hồi quy (Regression Test Seam):
        - Đề xuất vị trí viết kiểm thử hồi quy (seam) để khóa lỗi này vĩnh viễn.
     """
-    
+
     try:
         print("[Mock Debugger] Requesting AI Gateway analysis...")
         reply = ai.chat(prompt, model="gemini-3-flash")
@@ -79,24 +78,24 @@ def main():
     parser = argparse.ArgumentParser(description="CCBA Self-Healing Mock Debugger")
     parser.add_argument("script", help="Path to the Python script to run and debug")
     parser.add_argument("args", nargs=argparse.REMAINDER, help="Arguments to pass to the script")
-    
+
     args = parser.parse_args()
     script_path = Path(args.script)
-    
+
     if not script_path.exists():
         print(f"[Mock Debugger] Error: Script '{args.script}' not found.")
         sys.exit(1)
-        
+
     print(f"[Mock Debugger] Running target script: \x1b[36m{script_path.name}\x1b[0m...")
     ret_code, stdout, stderr = run_target_script(script_path, args.args)
-    
+
     if ret_code == 0:
         print("\x1b[32m[Mock Debugger] Script executed successfully with exit code 0. No debugging needed.\x1b[0m")
         if stdout:
             print("\nStdout:")
             print(stdout)
         sys.exit(0)
-        
+
     print(f"\x1b[31m[Mock Debugger] Script crashed with exit code {ret_code}!\x1b[0m")
     if stdout:
         print("\nStdout:")
@@ -104,11 +103,11 @@ def main():
     if stderr:
         print("\nStderr/Traceback:")
         print(stderr)
-        
+
     print("\n" + "=" * 60)
     print("🧠 TỰ ĐỘNG PHÂN TÍCH LỖI VÀ ĐỀ XUẤT SỬA ĐỔI")
     print("=" * 60)
-    
+
     analysis = analyze_error(script_path, stderr)
     print(analysis)
     print("=" * 60 + "\n")

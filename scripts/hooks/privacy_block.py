@@ -4,13 +4,10 @@ Blocks access to sensitive files and scans tool arguments for secret patterns
 using the Maskara detection engine.
 """
 
-import sys
-import json
-from pathlib import Path
-from typing import Dict, Any
-
 # Ensure maskara is loaded dynamically without sys.path modification
 import importlib.util
+from pathlib import Path
+from typing import Any
 
 detect_secrets_in_text = None
 maskara_path = Path(__file__).parent.parent / "maskara.py"
@@ -30,7 +27,7 @@ if detect_secrets_in_text is None:
         return []
 
 
-def main(event: str, payload: Dict[str, Any]) -> int:
+def main(event: str, payload: dict[str, Any]) -> int:
     """Scan tool path and arguments for sensitive credentials.
 
     Args:
@@ -43,16 +40,16 @@ def main(event: str, payload: Dict[str, Any]) -> int:
     path_arg = payload.get("path")
     args_str = payload.get("args") or "{}"
     tool_name = payload.get("tool") or ""
-    
+
     # Check if user has explicitly approved this call
     is_approved = False
     if path_arg and path_arg.startswith("APPROVED:"):
         is_approved = True
         path_arg = path_arg.replace("APPROVED:", "")
-        
+
     if not is_approved and "APPROVED:" in args_str:
         is_approved = True
-        
+
     if is_approved:
         clean_path = path_arg or "arguments"
         print(f"\x1b[32m✓\x1b[0m Privacy: User-approved access allowed to {clean_path}")
