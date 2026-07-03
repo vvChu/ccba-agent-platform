@@ -5,6 +5,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
+
 from ccba_harness._guard import HarnessGuard
 
 

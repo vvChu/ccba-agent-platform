@@ -1,23 +1,3 @@
-from ._client import (
-    HAS_NOTEBOOKLM,
-    NotebookLMClient,
-    check_auth,
-    get_client,
-)
-from ._registry import (
-    get_file_sha256,
-    get_notebook_id_from_context,
-    save_notebook_id_to_context,
-    read_registry,
-    update_registry,
-)
-from ._gc import (
-    check_quota_and_warn,
-    run_garbage_collection,
-)
-from ._security import (
-    run_maskara_gate,
-)
 from ._artifacts import (
     delete_notebook,
     delete_source,
@@ -39,6 +19,26 @@ from ._artifacts import (
     map_video_style,
     query_rag,
     share_notebook,
+)
+from ._client import (
+    HAS_NOTEBOOKLM,
+    NotebookLMClient,
+    check_auth,
+    get_client,
+)
+from ._gc import (
+    check_quota_and_warn,
+    run_garbage_collection,
+)
+from ._registry import (
+    get_file_sha256,
+    get_notebook_id_from_context,
+    read_registry,
+    save_notebook_id_to_context,
+    update_registry,
+)
+from ._security import (
+    run_maskara_gate,
 )
 
 __all__ = [

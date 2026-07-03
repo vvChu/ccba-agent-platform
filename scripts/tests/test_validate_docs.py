@@ -1,14 +1,12 @@
-import unittest
-import sys
 import tempfile
+import unittest
 from pathlib import Path
 
 from scripts.validate_docs import (
     extract_code_references,
-    extract_internal_links,
     extract_env_variables,
-    search_codebase_for_symbol,
-    validate_markdown_file
+    extract_internal_links,
+    validate_markdown_file,
 )
 
 
@@ -56,21 +54,21 @@ class TestValidateDocs(unittest.TestCase):
         # Create a temporary environment to run verification
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
-            
+
             # Create a mock source code file
             src_file = tmppath / "my_code.py"
             with open(src_file, "w", encoding="utf-8") as f:
                 f.write("def my_func(): pass\nclass MyClass: pass\n")
-                
+
             # Create a mock env example
             env_file = tmppath / ".env.example"
             with open(env_file, "w", encoding="utf-8") as f:
                 f.write("API_KEY=12345\n")
-                
+
             # Create an existing target link file
             target_link = tmppath / "install.md"
             target_link.touch()
-            
+
             # Create the test markdown file to validate
             md_file = tmppath / "doc.md"
             with open(md_file, "w", encoding="utf-8") as f:
@@ -81,21 +79,21 @@ class TestValidateDocs(unittest.TestCase):
                 Link to broken [Setup](./setup.md).
                 Env key `API_KEY` (valid) and `SECRET_KEY` (invalid).
                 """)
-                
+
             env_vars = {"API_KEY"}
             issues = validate_markdown_file(md_file, [tmppath], env_vars, tmppath)
-            
+
             # Verify code ref issues
             code_issues = [x[1] for x in issues["code_refs"]]
             self.assertIn("non_existent_func()", code_issues)
             self.assertNotIn("my_func()", code_issues)
             self.assertNotIn("MyClass", code_issues)
-            
+
             # Verify link issues
             link_issues = [x[1] for x in issues["links"]]
             self.assertIn("./setup.md", link_issues)
             self.assertNotIn("./install.md", link_issues)
-            
+
             # Verify env issues
             env_issues = [x[1] for x in issues["env_vars"]]
             self.assertIn("SECRET_KEY", env_issues)

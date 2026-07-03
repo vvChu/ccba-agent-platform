@@ -27,11 +27,11 @@ except ImportError:
     sys.exit(1)
 
 # Import services from ccba_ai
-from ccba_ai import services
-from ccba_ai.hooks import PrivacyGuardHook
-
 # Expose scripts folder for idop_scaffolder import
 import importlib.util
+
+from ccba_ai import services
+from ccba_ai.hooks import PrivacyGuardHook
 
 idop_scaffolder = None
 cwd_scripts = Path.cwd() / "scripts" / "idop_scaffolder.py"

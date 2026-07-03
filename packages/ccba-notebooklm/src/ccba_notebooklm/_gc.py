@@ -1,5 +1,6 @@
 import sys
 from typing import Any
+
 from ._registry import read_registry
 
 

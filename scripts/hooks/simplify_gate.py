@@ -6,11 +6,9 @@ a large, unsimplified git diff.
 
 import os
 import re
-import sys
-import json
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, List, Tuple, Set
+from typing import Any
 
 # Configuration Thresholds
 LOC_DELTA_THRESHOLD = 400
@@ -22,7 +20,7 @@ HARD_VERBS = ["ship", "merge", "pr", "deploy", "publish"]
 SOFT_VERBS = ["commit", "finalize", "release"]
 
 
-def build_verb_pattern(verbs: List[str]) -> re.Pattern:
+def build_verb_pattern(verbs: list[str]) -> re.Pattern:
     """Build a regex pattern to match dynamic action verbs in user prompts."""
     verb_list = "|".join(re.escape(v) for v in verbs)
     action_prefix = "|".join([
@@ -38,7 +36,7 @@ def build_verb_pattern(verbs: List[str]) -> re.Pattern:
         r"changes?", r"branch", r"pr", r"pull\s+request", r"release",
         r"package", r"prod(?:uction)?", r"staging", r"now", r"please", r"to"
     ])
-    
+
     return re.compile(
         r"/(?:ck:)?(?P<v1>" + verb_list + r")\b|"
         r"\b(?:" + action_prefix + r")\s+(?P<v2>" + verb_list + r")\b|"
@@ -47,7 +45,7 @@ def build_verb_pattern(verbs: List[str]) -> re.Pattern:
     )
 
 
-def matched_severity(prompt: str) -> Tuple[str, str]:
+def matched_severity(prompt: str) -> tuple[str, str]:
     """Check user prompt for commit or ship intent and return severity level.
 
     Args:
@@ -63,14 +61,14 @@ def matched_severity(prompt: str) -> Tuple[str, str]:
 
     hard_re = build_verb_pattern(HARD_VERBS)
     soft_re = build_verb_pattern(SOFT_VERBS)
-    
+
     if match := hard_re.search(prompt):
         matched_v = match.group("v1") or match.group("v2") or match.group("v3") or ""
         return "hard", matched_v
     if match := soft_re.search(prompt):
         matched_v = match.group("v1") or match.group("v2") or match.group("v3") or ""
         return "soft", matched_v
-        
+
     return "", ""
 
 
@@ -84,13 +82,13 @@ def count_lines(filepath: Path) -> int:
         Number of lines in the file.
     """
     try:
-        with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+        with open(filepath, encoding="utf-8", errors="ignore") as f:
             return sum(1 for _ in f)
     except Exception:
         return 0
 
 
-def get_git_diff_signals(cwd: str) -> Dict[str, Any]:
+def get_git_diff_signals(cwd: str) -> dict[str, Any]:
     """Gather git diff metrics (LOC additions/deletions and untracked files).
 
     Args:
@@ -105,7 +103,7 @@ def get_git_diff_signals(cwd: str) -> Dict[str, Any]:
         "max_file_loc": 0,
         "files": []
     }
-    
+
     # 1. Run git diff HEAD --numstat
     try:
         diff_res = subprocess.run(
@@ -118,7 +116,7 @@ def get_git_diff_signals(cwd: str) -> Dict[str, Any]:
         )
     except Exception:
         return metrics
-        
+
     files = set()
     if diff_res.returncode == 0 and diff_res.stdout:
         for line in diff_res.stdout.splitlines():
@@ -130,12 +128,12 @@ def get_git_diff_signals(cwd: str) -> Dict[str, Any]:
                 added = int(parts[0]) if parts[0].isdigit() else 0
                 removed = int(parts[1]) if parts[1].isdigit() else 0
                 file_path = parts[2]
-                
+
                 metrics["total_loc"] += added + removed
                 if added > metrics["max_file_loc"]:
                     metrics["max_file_loc"] = added
                 files.add(file_path)
-                
+
     # 2. Add untracked new files
     try:
         ls_res = subprocess.run(
@@ -148,26 +146,26 @@ def get_git_diff_signals(cwd: str) -> Dict[str, Any]:
         )
     except Exception:
         ls_res = None
-        
+
     if ls_res and ls_res.returncode == 0 and ls_res.stdout:
         for file_path in ls_res.stdout.splitlines():
             file_path = file_path.strip()
             if not file_path:
                 continue
-            
+
             full_path = Path(cwd) / file_path
             loc = count_lines(full_path)
             metrics["total_loc"] += loc
             if loc > metrics["max_file_loc"]:
                 metrics["max_file_loc"] = loc
             files.add(file_path)
-            
+
     metrics["file_count"] = len(files)
     metrics["files"] = list(files)
     return metrics
 
 
-def main(event: str, payload: Dict[str, Any]) -> int:
+def main(event: str, payload: dict[str, Any]) -> int:
     """Evaluate if working tree has too complex diff before shipping/committing.
 
     Args:
@@ -180,23 +178,23 @@ def main(event: str, payload: Dict[str, Any]) -> int:
     # Bypass check
     if os.environ.get("CK_SIMPLIFY_DISABLED") == "1":
         return 0
-        
+
     prompt = payload.get("args") or payload.get("status") or ""
     if not prompt:
         return 0
-        
+
     # Check if prompt bypass is approved
     if "APPROVED:" in prompt:
         return 0
-        
+
     # Check matched verbs and severity
     severity, verb = matched_severity(prompt)
     if not severity:
         return 0
-        
+
     cwd = payload.get("cwd") or os.getcwd()
     metrics = get_git_diff_signals(cwd)
-    
+
     # Evaluate breaches
     breaches = []
     if metrics["total_loc"] > LOC_DELTA_THRESHOLD:
@@ -205,7 +203,7 @@ def main(event: str, payload: Dict[str, Any]) -> int:
         breaches.append(f"{metrics['file_count']} files")
     if metrics["max_file_loc"] > SINGLE_FILE_LOC_THRESHOLD:
         breaches.append(f"single file +{metrics['max_file_loc']} LOC")
-        
+
     if breaches:
         verb_noun = "shipping/PR" if severity == "hard" else "committing"
         error_msg = f"""
@@ -231,5 +229,5 @@ def main(event: str, payload: Dict[str, Any]) -> int:
             # Soft Warning
             print(error_msg.replace("[SIMPLIFY GATE]", "\x1b[33m[SIMPLIFY WARNING]\x1b[0m"))
             return 0  # Allow but warn
-            
+
     return 0

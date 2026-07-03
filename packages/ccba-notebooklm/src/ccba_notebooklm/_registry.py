@@ -3,6 +3,7 @@ import hashlib
 import sys
 from pathlib import Path
 from typing import Any
+
 import yaml  # type: ignore
 
 CONTEXT_FILE = Path(".md/workspace_context.yaml")

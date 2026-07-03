@@ -1,5 +1,4 @@
 from .composite import CompositeBuilder
-from .pipeline import PDFProcessingError, PDFProcessingPipeline, ProcessingResult
 from .core import (
     PageDetail,
     PDFAnalyzer,
@@ -11,6 +10,7 @@ from .core import (
 )
 from .document_skills.pdf_forms import fill_pdf_fields, get_field_info
 from .document_skills.xlsx_recalc import recalc_xlsx
+from .pipeline import PDFProcessingError, PDFProcessingPipeline, ProcessingResult
 from .vision import TileResult, TitleBlockDetector, TitleBlockRegion, VisionOptimizer
 
 __all__ = [
