@@ -5,7 +5,7 @@ import sys
 import threading
 
 import pytest
-from ccba_legal.harness._guard import HarnessGuard
+from ccba_harness._guard import HarnessGuard
 
 
 def test_unicode_normalization_bypass(tmp_path, monkeypatch):
@@ -251,7 +251,7 @@ def test_thread_local_state_manipulation_bypass(tmp_path, monkeypatch):
     with open(sensitive_file, "w") as f:
         f.write("thread-local-secret")
 
-    from ccba_legal.harness import _local
+    from ccba_harness import _local
 
     class FakeList:
         def __bool__(self):

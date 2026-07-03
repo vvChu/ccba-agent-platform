@@ -5,8 +5,8 @@ import threading
 import time
 
 import pytest
-from ccba_legal.harness._guard import HarnessGuard
-from ccba_legal.harness._state import _original_builtins_open
+from ccba_harness._guard import HarnessGuard
+from ccba_harness._state import _original_builtins_open
 
 
 def test_concurrent_guard_bypass_via_subprocess(tmp_path):
