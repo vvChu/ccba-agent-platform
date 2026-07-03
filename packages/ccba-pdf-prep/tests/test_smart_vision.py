@@ -7,7 +7,6 @@ import pytest
 from ccba_pdf_prep import TitleBlockDetector, TitleBlockRegion, VisionOptimizer
 
 
-
 class TestTilePageSmart:
     """Tests for ink-ratio based smart tiling."""
 

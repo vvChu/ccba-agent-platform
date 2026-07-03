@@ -1,19 +1,37 @@
+"""Registry manager for legal documents in CCBA.
+
+Manages loading, updating, and saving information in the YAML registry
+by dynamically resolving file paths relative to the project root.
+"""
+
 from pathlib import Path
 
 import yaml
+
+
+def resolve_project_root() -> Path:
+    """Traverse upwards from the current file to find the project root directory.
+
+    Looks for common project indicators such as a .git directory or a pyproject.toml file.
+    If none is found, falls back to Path.cwd().
+    """
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        if (parent / ".git").exists() or (parent / "pyproject.toml").exists():
+            return parent
+    return Path.cwd()
 
 
 class LegalRegistryManager:
     """Manages loading, updating, and saving of the CCBA Legal Document Registry (legal_registry.yaml)."""
 
     def __init__(self, registry_path: Path | None = None) -> None:
+        """Initialize the manager, resolving default registry paths relative to the project root."""
         if registry_path:
-            self.registry_path = registry_path
+            self.registry_path = Path(registry_path)
         else:
-            # Fallback path inside ccba-agent-platform project structure
-            self.registry_path = Path(
-                "d:/GitHubProjects/ccba-agent-platform/.agents/skills/legal-document-tracker/resources/legal_registry.yaml"
-            )
+            project_root = resolve_project_root()
+            self.registry_path = project_root / ".md" / "knowledge" / "legal_registry.yaml"
 
     def load(self) -> dict:
         """Load the legal document registry from YAML."""
