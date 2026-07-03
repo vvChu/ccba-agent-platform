@@ -364,7 +364,7 @@ class ConversionPipeline:
                 from mdconverter.core.gemini import LLMConverter
 
                 settings = get_settings()
-                models = [recommended] + [m for m in settings.models if m != recommended]
+                models = ([recommended] + [m for m in settings.models if m != recommended]) if recommended else settings.models
                 return LLMConverter(output_dir=self.output_dir, models=models)
 
         # Default: use standard tool selection
@@ -383,8 +383,7 @@ class ConversionPipeline:
         recommended = segment.model_hint
 
         # Prioritize the recommended model for this segment type
-        models = [recommended] + [m for m in settings.models if m != recommended]
-
+        models = ([recommended] + [m for m in settings.models if m != recommended]) if recommended else settings.models
         converter = LLMConverter(output_dir=None, models=models)  # No individual output dir
 
         # If it's a drawing segment, we might want to inject a custom prompt
