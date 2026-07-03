@@ -1,54 +1,23 @@
-import json
-import re
+"""Parser module for analyzing Vietnamese legal texts.
+
+Uses LLM capabilities from ccba_ai and cleaner utility to extract key
+information, RACI checklists, and perform semantic differences between texts.
+"""
+
 from typing import Any
 
 from ccba_ai import ai
 
-
-class Cleaners:
-    """Helper utilities to clean up text and extract JSON from LLM responses."""
-
-    _THINK_PATTERN = re.compile(r"<think>.*?</think>\n*", re.DOTALL | re.IGNORECASE)
-    _THINK_UNCLOSED = re.compile(r"<think>.*", re.DOTALL | re.IGNORECASE)
-    _ORPHAN_END = re.compile(r"^.*?</think>\n*", re.DOTALL | re.IGNORECASE)
-
-    @classmethod
-    def strip_think_tags(cls, text: str) -> str:
-        """Strip <think>...</think> tags and their contents from reasoning models."""
-        text = cls._THINK_PATTERN.sub("", text)
-        text = cls._THINK_UNCLOSED.sub("", text)
-        text = cls._ORPHAN_END.sub("", text)
-        return text.strip()
-
-    @classmethod
-    def extract_json(cls, raw: str) -> Any:
-        """Extract JSON dictionary or list from raw text containing Markdown fences."""
-        clean = cls.strip_think_tags(raw)
-        match = re.search(r"```(?:json)?\s*([\{\[].*?[\}\]])\s*```", clean, flags=re.DOTALL)
-        if match:
-            try:
-                return json.loads(match.group(1))
-            except json.JSONDecodeError:
-                pass
-        match = re.search(r"([\{\[].*[\}\]])", clean, flags=re.DOTALL)
-        if match:
-            try:
-                return json.loads(match.group(1))
-            except json.JSONDecodeError:
-                pass
-        return None
-
-    @classmethod
-    def remove_ocr_artifacts(cls, text: str) -> str:
-        """Remove long uppercase lines commonly created by page headers/footers in OCR."""
-        return re.sub(r"^[A-ZÀ-Ỹ][A-ZÀ-Ỹ\s_]{14,}\.?\s*$", "", text, flags=re.MULTILINE).strip()
+from .cleaners import Cleaners
 
 
 class LegalAnalysisEngine:
     """Module responsible for calling Spark LiteLLM to analyze law texts."""
 
-    def __init__(self, model: str = "gemini-3.1-pro-high") -> None:
+    def __init__(self, model: str = "gemini-3.1-pro-high", ai_client: Any = None) -> None:
+        """Initialize the engine with an LLM model and optional adapter client (seam)."""
         self.model = model
+        self.ai_client = ai_client or ai
 
     def analyze_document(self, text: str) -> dict[str, Any]:
         """Extract metadata and summarize key properties of the document."""
@@ -66,7 +35,7 @@ Return ONLY a JSON object (inside a markdown json code block) with the following
 Law text:
 {clean_text}
 """
-        reply = ai.chat(prompt, model=self.model, temperature=0.1, max_tokens=8192)
+        reply = self.ai_client.chat(prompt, model=self.model, temperature=0.1, max_tokens=8192)
         res = Cleaners.extract_json(reply)
         if not res:
             res = {
@@ -95,7 +64,7 @@ Return ONLY a JSON list of objects (inside a markdown json code block). Max 10 m
 Text:
 {clean_text}
 """
-        reply = ai.chat(prompt, model=self.model, temperature=0.1, max_tokens=8192)
+        reply = self.ai_client.chat(prompt, model=self.model, temperature=0.1, max_tokens=8192)
         res = Cleaners.extract_json(reply)
         if isinstance(res, list):
             return res
@@ -120,7 +89,7 @@ Old law sample:
 New law sample:
 {clean_new}
 """
-        reply = ai.chat(prompt, model=self.model, temperature=0.1, max_tokens=8192)
+        reply = self.ai_client.chat(prompt, model=self.model, temperature=0.1, max_tokens=8192)
         res = Cleaners.extract_json(reply)
         if not res:
             res = {"changes_summary": "Failed to extract diff summary.", "comparison_table": []}

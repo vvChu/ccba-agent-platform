@@ -6,7 +6,6 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-import pytest
 from ccba_ooxml import pack_document, unpack_document
 
 
@@ -18,8 +17,13 @@ def test_unpack_and_pack_cycle():
         # Create a mock zip file resembling a minimal docx (with XML)
         mock_docx = temp_path / "test.docx"
         with zipfile.ZipFile(mock_docx, "w") as zf:
-            zf.writestr("[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8"?><Types></Types>')
-            zf.writestr("word/document.xml", '<?xml version="1.0" encoding="UTF-8"?><document><body>Hello</body></document>')
+            zf.writestr(
+                "[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8"?><Types></Types>'
+            )
+            zf.writestr(
+                "word/document.xml",
+                '<?xml version="1.0" encoding="UTF-8"?><document><body>Hello</body></document>',
+            )
 
         # Unpack it
         unpack_dir = temp_path / "unpacked"
