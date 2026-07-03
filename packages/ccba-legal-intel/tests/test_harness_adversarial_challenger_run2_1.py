@@ -5,7 +5,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
-from ccba_legal.harness import HarnessGuard
+from ccba_legal.harness._guard import HarnessGuard
 
 
 def test_in_hook_flag_tampering_bypass(tmp_path):

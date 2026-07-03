@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 import pytest
-from ccba_legal.harness import HarnessGuard
+from ccba_legal.harness._guard import HarnessGuard
 
 
 def test_env_var_concat_bypass(tmp_path):
