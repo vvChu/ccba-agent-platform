@@ -6,7 +6,6 @@ Imports state and hook controllers from the private sub-module _engine.py.
 
 from __future__ import annotations
 
-import builtins
 import fnmatch
 import os
 import pathlib
@@ -17,10 +16,10 @@ from functools import wraps
 from typing import Any
 
 from ._engine import (
-    _scan_for_sensitive_inodes,
-    HarnessState,
     HarnessEngine,
+    HarnessState,
     _get_active_guards,
+    _scan_for_sensitive_inodes,
 )
 
 
@@ -270,7 +269,11 @@ if active == "1":
             if cache_key in HarnessState.abs_path_cache:
                 abs_file_path, abs_path = HarnessState.abs_path_cache[cache_key]
             else:
-                abs_file_path = os.normcase(os.path.abspath(file_str)) if hasattr(os, "normcase") else os.path.normcase(os.path.abspath(file_str))
+                abs_file_path = (
+                    os.normcase(os.path.abspath(file_str))
+                    if hasattr(os, "normcase")
+                    else os.path.normcase(os.path.abspath(file_str))
+                )
                 abs_path = os.path.abspath(file_str)
                 HarnessState.abs_path_cache[cache_key] = (abs_file_path, abs_path)
 

@@ -7,7 +7,6 @@ import pytest
 from ccba_pdf_prep import VisionOptimizer
 
 
-
 class TestVisionOptimizer:
     """Tests for VisionOptimizer tile_page."""
 

@@ -2,9 +2,10 @@
 """Unpack and format XML contents of Office files (.docx, .pptx, .xlsx)"""
 
 import sys
-import defusedxml.minidom
 import zipfile
 from pathlib import Path
+
+import defusedxml.minidom
 
 
 def unpack_document(input_file: str | Path, output_dir: str | Path) -> None:

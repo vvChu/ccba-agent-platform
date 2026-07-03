@@ -6,8 +6,9 @@ These protocols establish explicit boundaries (seams) for the QC components
 
 from __future__ import annotations
 
-from typing import Any, Protocol, runtime_checkable
 from pathlib import Path
+from typing import Any, Protocol, runtime_checkable
+
 from ccba_ai.models import AuditReport
 
 
