@@ -35,7 +35,7 @@ class PrivacyGuardHook:
 
     def check_content(self, content: any) -> None:
         """Scan content against blocked patterns. Raises ValueError if a match is found.
-        
+
         Supports string, list, and dict (recursively scanning string values).
         """
         if not self.enabled or not content:
