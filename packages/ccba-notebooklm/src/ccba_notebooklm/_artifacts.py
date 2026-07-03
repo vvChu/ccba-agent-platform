@@ -7,21 +7,24 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import yaml  # type: ignore
+
 from ._client import (
     HAS_NOTEBOOKLM,
+    InfographicDetail,
+    InfographicOrientation,
+    InfographicStyle,
     NetworkError,
     QuizDifficulty,
     QuizQuantity,
+    ReportFormat,
     SlideDeckFormat,
     SlideDeckLength,
-    InfographicOrientation,
-    InfographicDetail,
-    InfographicStyle,
-    ReportFormat,
     VideoFormat,
     VideoStyle,
     get_client,
 )
+from ._gc import check_quota_and_warn
 from ._registry import (
     REGISTRY_FILE,
     clear_task_state,
@@ -34,7 +37,6 @@ from ._registry import (
     update_registry,
 )
 from ._security import run_maskara_gate
-from ._gc import check_quota_and_warn
 
 
 def run_docs_validator(file_path: str) -> None:
