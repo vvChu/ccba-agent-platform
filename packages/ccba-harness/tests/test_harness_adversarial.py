@@ -6,6 +6,7 @@ import threading
 import time
 
 import pytest
+
 from ccba_harness._guard import HarnessGuard
 
 

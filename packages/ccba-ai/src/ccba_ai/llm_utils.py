@@ -27,7 +27,7 @@ class Cleaners:
             return None
 
         clean = cls.strip_think_tags(raw)
-        
+
         # Try markdown code blocks first
         match = re.search(r"```(?:json)?\s*([\{\[].*?[\}\]])\s*```", clean, flags=re.DOTALL)
         if match:

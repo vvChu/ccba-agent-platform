@@ -1,6 +1,6 @@
-import os
 import sys
 from pathlib import Path
+
 
 def run_maskara_gate(source_path: str) -> tuple[str, bool]:
     """

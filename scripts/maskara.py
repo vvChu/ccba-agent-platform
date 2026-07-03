@@ -15,10 +15,10 @@ import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Set
+from typing import Any
 
 # Standard agent profiles and paths configuration
-AGENT_SPECS: Dict[str, Dict[str, str]] = {
+AGENT_SPECS: dict[str, dict[str, str]] = {
     "claude": {"dot_dir": ".claude/projects", "app_name": "Claude", "xdg_name": "claude"},
     "codex": {"dot_dir": ".codex/sessions", "app_name": "Codex", "xdg_name": "codex"},
     "cursor": {"dot_dir": ".cursor", "app_name": "Cursor", "xdg_name": "cursor"},
@@ -38,7 +38,7 @@ AGENT_SPECS: Dict[str, Dict[str, str]] = {
     "trae": {"dot_dir": ".trae", "app_name": "Trae", "xdg_name": "trae"}
 }
 
-AGENT_ALIASES: Dict[str, str] = {
+AGENT_ALIASES: dict[str, str] = {
     "claude-code": "claude", "claudecode": "claude",
     "open-code": "opencode",
     "antigravity-cli": "antigravity", "antigravity-code": "antigravity",
@@ -52,7 +52,7 @@ AGENT_ALIASES: Dict[str, str] = {
 }
 
 # Secret patterns to scan for
-REGEX_PATTERNS: Dict[str, Dict[str, Any]] = {
+REGEX_PATTERNS: dict[str, dict[str, Any]] = {
     "openai-api-key": {
         "name": "OpenAI API key", "severity": "critical",
         "pattern": re.compile(r"\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b")
@@ -116,7 +116,7 @@ def normalize_agent_name(name: str) -> str:
     return AGENT_ALIASES.get(clean, clean)
 
 
-def get_default_roots(dot_dir: str, app_name: str, xdg_name: str) -> List[Path]:
+def get_default_roots(dot_dir: str, app_name: str, xdg_name: str) -> list[Path]:
     """Retrieve system-specific default configuration/log paths.
 
     Args:
@@ -129,7 +129,7 @@ def get_default_roots(dot_dir: str, app_name: str, xdg_name: str) -> List[Path]:
     """
     home = Path.home()
     roots = [home / dot_dir]
-    
+
     if sys.platform == "win32":
         for env_var in ["APPDATA", "LOCALAPPDATA"]:
             if val := os.getenv(env_var):
@@ -139,11 +139,11 @@ def get_default_roots(dot_dir: str, app_name: str, xdg_name: str) -> List[Path]:
     else:
         roots.append(home / ".config" / xdg_name)
         roots.append(home / ".local" / "share" / xdg_name)
-        
+
     return list(dict.fromkeys(roots))  # Deduplicate
 
 
-def resolve_targets(agent_name: str, custom_root: Optional[str] = None) -> List[Dict[str, Any]]:
+def resolve_targets(agent_name: str, custom_root: str | None = None) -> list[dict[str, Any]]:
     """Resolve which target directories/agents to scan.
 
     Args:
@@ -159,7 +159,7 @@ def resolve_targets(agent_name: str, custom_root: Optional[str] = None) -> List[
 
     home = Path.home()
     agents_list = list(AGENT_SPECS.keys())
-    
+
     if norm == "auto":
         # Scan only folder that actually exist on machine
         existing = []
@@ -169,7 +169,7 @@ def resolve_targets(agent_name: str, custom_root: Optional[str] = None) -> List[
                 if path.is_dir():
                     existing.append({"agent": agent, "root": path.resolve()})
         return existing if existing else [{"agent": "claude", "root": (home / ".claude" / "projects").resolve()}]
-        
+
     if norm == "all":
         all_targets = []
         for agent in agents_list:
@@ -177,12 +177,12 @@ def resolve_targets(agent_name: str, custom_root: Optional[str] = None) -> List[
             for path in get_default_roots(spec["dot_dir"], spec["app_name"], spec["xdg_name"]):
                 all_targets.append({"agent": agent, "root": path.resolve()})
         return all_targets
-        
+
     if norm not in AGENT_SPECS:
         raise ValueError(f"Unsupported agent: {agent_name}")
-        
+
     spec = AGENT_SPECS[norm]
-    return [{"agent": norm, "root": path.resolve()} 
+    return [{"agent": norm, "root": path.resolve()}
             for path in get_default_roots(spec["dot_dir"], spec["app_name"], spec["xdg_name"])]
 
 
@@ -197,12 +197,12 @@ def looks_like_session_text(path: Path) -> bool:
     """
     name = path.name.lower()
     ext = path.suffix.lower()
-    
+
     if ext in [".json", ".jsonl", ".md", ".txt", ".log", ".yaml", ".yml", ".toml", ".env"]:
         return True
     if name.startswith(".env"):
         return True
-        
+
     keywords = ["session", "conversation", "transcript", "history"]
     return any(kw in name for kw in keywords)
 
@@ -224,7 +224,7 @@ def is_binary(filepath: Path) -> bool:
         return True
 
 
-def line_and_column(content: str, offset: int) -> Tuple[int, int]:
+def line_and_column(content: str, offset: int) -> tuple[int, int]:
     """Calculate 1-indexed line and column numbers for character offset.
 
     Args:
@@ -253,7 +253,7 @@ def mask_value(val: str) -> str:
     return f"{clean[:4]}...{clean[-4:]}"
 
 
-def ask_llm_gateway(finding: Dict[str, Any], context: str) -> bool:
+def ask_llm_gateway(finding: dict[str, Any], context: str) -> bool:
     """Query AI Gateway to verify if finding is a true secret or false positive.
 
     Args:
@@ -268,7 +268,7 @@ def ask_llm_gateway(finding: Dict[str, Any], context: str) -> bool:
     except ImportError:
         # If ccba_ai is not installed, fail-securely by assuming it is true secret
         return True
-        
+
     prompt = f"""You are a security auditor.
 Analyze the following context from an agent session log and determine if the detected finding is an actual, live, active secret/credential/API key, OR if it is just a mock/sample/dummy value (e.g. 'your_key_here', 'sk-proj-XXXX', 'AIza_test').
 
@@ -306,7 +306,7 @@ def extract_context(content: str, start_offset: int, end_offset: int) -> str:
     return "\n".join(before + [middle] + after)
 
 
-def detect_secrets_in_text(content: str, filepath: str, agent: str, use_llm: bool = False) -> List[Dict[str, Any]]:
+def detect_secrets_in_text(content: str, filepath: str, agent: str, use_llm: bool = False) -> list[dict[str, Any]]:
     """Scan string content with regular expressions.
 
     Args:
@@ -318,8 +318,8 @@ def detect_secrets_in_text(content: str, filepath: str, agent: str, use_llm: boo
     Returns:
         List of finding dicts.
     """
-    findings: List[Dict[str, Any]] = []
-    
+    findings: list[dict[str, Any]] = []
+
     for rule_id, rule_spec in REGEX_PATTERNS.items():
         pattern = rule_spec["pattern"]
         for match in pattern.finditer(content):
@@ -330,10 +330,10 @@ def detect_secrets_in_text(content: str, filepath: str, agent: str, use_llm: boo
             else:
                 val = match.group(0)
                 start, end = match.start(), match.end()
-                
+
             if "MASKARA_REDACTED" in val:
                 continue
-                
+
             line, col = line_and_column(content, start)
             finding = {
                 "rule_id": rule_id,
@@ -349,17 +349,17 @@ def detect_secrets_in_text(content: str, filepath: str, agent: str, use_llm: boo
                 "sha256": hashlib.sha256(val.encode("utf-8")).hexdigest(),
                 "redaction": f"[MASKARA_REDACTED:{rule_id}]"
             }
-            
+
             if use_llm:
                 context_str = extract_context(content, start, end)
                 if not ask_llm_gateway(finding, context_str):
                     continue
-                    
+
             findings.append(finding)
-            
+
     # Resolve overlapping findings (keep first match or largest)
     findings.sort(key=lambda x: (x["file"], x["start"]))
-    filtered: List[Dict[str, Any]] = []
+    filtered: list[dict[str, Any]] = []
     for f in findings:
         overlap = False
         for k in filtered:
@@ -368,11 +368,11 @@ def detect_secrets_in_text(content: str, filepath: str, agent: str, use_llm: boo
                 break
         if not overlap:
             filtered.append(f)
-            
+
     return filtered
 
 
-def scan_file(agent: str, path: Path, use_llm: bool = False) -> Tuple[List[Dict[str, Any]], int, int]:
+def scan_file(agent: str, path: Path, use_llm: bool = False) -> tuple[list[dict[str, Any]], int, int]:
     """Perform scanning process on a single file.
 
     Args:
@@ -389,7 +389,7 @@ def scan_file(agent: str, path: Path, use_llm: bool = False) -> Tuple[List[Dict[
         return [], 0, 1
     if is_binary(path):
         return [], 0, 1
-        
+
     try:
         content = path.read_text(encoding="utf-8", errors="ignore")
         findings = detect_secrets_in_text(content, str(path), agent, use_llm)
@@ -398,7 +398,7 @@ def scan_file(agent: str, path: Path, use_llm: bool = False) -> Tuple[List[Dict[
         return [], 0, 1
 
 
-def perform_scan(targets: List[Dict[str, Any]], use_llm: bool = False) -> Dict[str, Any]:
+def perform_scan(targets: list[dict[str, Any]], use_llm: bool = False) -> dict[str, Any]:
     """Perform scanning across resolved targets.
 
     Args:
@@ -408,27 +408,27 @@ def perform_scan(targets: List[Dict[str, Any]], use_llm: bool = False) -> Dict[s
     Returns:
         Result summary dict.
     """
-    findings: List[Dict[str, Any]] = []
-    warnings: List[str] = []
+    findings: list[dict[str, Any]] = []
+    warnings: list[str] = []
     scanned_count = 0
     skipped_count = 0
-    
+
     ignore_dirs = {".git", "node_modules", ".venv", "venv", "target", "dist", "build", ".next", "__pycache__"}
-    
+
     for target in targets:
         root = Path(target["root"])
         agent = target["agent"]
         if not root.exists():
             warnings.append(f"missing root: {root}")
             continue
-            
+
         if root.is_file():
             f, sc, sk = scan_file(agent, root, use_llm)
             findings.extend(f)
             scanned_count += sc
             skipped_count += sk
             continue
-            
+
         for root_dir, dirs, files in os.walk(root):
             # Prune directory search path
             dirs[:] = [d for d in dirs if d.lower() not in ignore_dirs]
@@ -438,7 +438,7 @@ def perform_scan(targets: List[Dict[str, Any]], use_llm: bool = False) -> Dict[s
                 findings.extend(f)
                 scanned_count += sc
                 skipped_count += sk
-                
+
     findings.sort(key=lambda x: (x["file"], x["start"]))
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -524,7 +524,7 @@ def validate_structured(filepath: Path, before: bytes, after: bytes) -> bool:
     return True
 
 
-def redact_json_val(value: Any) -> Tuple[Any, int]:
+def redact_json_val(value: Any) -> tuple[Any, int]:
     """Recursively search and redact string values in JSON objects.
 
     Args:
@@ -560,7 +560,7 @@ def redact_json_val(value: Any) -> Tuple[Any, int]:
     return value, 0
 
 
-def redact_structured(filepath: Path, original: bytes) -> Tuple[bytes, int]:
+def redact_structured(filepath: Path, original: bytes) -> tuple[bytes, int]:
     """Fallback parser for JSON/JSONL.
 
     Args:
@@ -581,7 +581,7 @@ def redact_structured(filepath: Path, original: bytes) -> Tuple[bytes, int]:
             return out, replaced
         except (ValueError, TypeError):
             return original, 0
-            
+
     if ext == ".jsonl":
         lines = original.split(b"\n")
         rewritten = []
@@ -598,11 +598,11 @@ def redact_structured(filepath: Path, original: bytes) -> Tuple[bytes, int]:
             except (ValueError, TypeError):
                 rewritten.append(line)
         return b"\n".join(rewritten), replaced
-        
+
     return original, 0
 
 
-def apply_raw_redactions(original: bytes, findings: List[Dict[str, Any]]) -> Tuple[bytes, int]:
+def apply_raw_redactions(original: bytes, findings: list[dict[str, Any]]) -> tuple[bytes, int]:
     """Substitute secrets index ranges with redaction strings.
 
     Args:
@@ -617,19 +617,19 @@ def apply_raw_redactions(original: bytes, findings: List[Dict[str, Any]]) -> Tup
     findings_sorted = sorted(findings, key=lambda x: x["start"], reverse=True)
     last_start = len(original) + 1
     replaced = 0
-    
+
     for f in findings_sorted:
         start, end = f["start"], f["end"]
         if start < 0 or end > len(original) or start >= end:
             continue
         if end > last_start:
             continue
-            
+
         replacement = f["redaction"].encode("utf-8")
         rewritten[start:end] = replacement
         last_start = start
         replaced += 1
-        
+
     return bytes(rewritten), replaced
 
 
@@ -645,13 +645,13 @@ def backup_and_write(path: Path, original: bytes, rewritten: bytes) -> str:
         Backup file path.
     """
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
-    
+
     # Generate unique backup name using path hash
     abs_path_str = str(path.resolve())
     hash_id = hashlib.sha256(abs_path_str.encode("utf-8")).hexdigest()[:12]
     backup_filename = f"{path.name}.{hash_id}.bak"
     backup_path = BACKUP_DIR / backup_filename
-    
+
     # Save backup registry details
     registry_file = BACKUP_DIR / "registry.json"
     registry = {}
@@ -660,24 +660,24 @@ def backup_and_write(path: Path, original: bytes, rewritten: bytes) -> str:
             registry = json.loads(registry_file.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             pass
-            
+
     registry[backup_filename] = abs_path_str
     registry_file.write_text(json.dumps(registry, indent=2), encoding="utf-8")
-    
+
     # Write backup and replace file atomically
     backup_path.write_bytes(original)
-    
+
     # Atomic replace
     temp_path = path.with_name(f"{path.name}.maskara-temp")
     temp_path.write_bytes(rewritten)
     if sys.platform == "win32" and path.exists():
         path.unlink()
     temp_path.rename(path)
-    
+
     return str(backup_path)
 
 
-def redact_findings(scan_result: Dict[str, Any]) -> Dict[str, Any]:
+def redact_findings(scan_result: dict[str, Any]) -> dict[str, Any]:
     """Execute redaction on findings.
 
     Args:
@@ -686,35 +686,35 @@ def redact_findings(scan_result: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Summary dict of redactions.
     """
-    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    grouped: dict[str, list[dict[str, Any]]] = {}
     for f in scan_result["findings"]:
         grouped.setdefault(f["file"], []).append(f)
-        
+
     files_summary = []
     total_replaced = 0
     total_skipped = 0
-    
+
     for file_str, findings in grouped.items():
         path = Path(file_str)
         if not path.exists() or path.is_symlink():
             total_skipped += 1
             continue
-            
+
         try:
             original = path.read_bytes()
             rewritten, replaced = apply_raw_redactions(original, findings)
-            
+
             if replaced == 0 or original == rewritten:
                 total_skipped += 1
                 continue
-                
+
             if not validate_structured(path, original, rewritten):
                 # Fallback to structured parsing
                 rewritten, replaced = redact_structured(path, original)
                 if replaced == 0 or original == rewritten:
                     total_skipped += 1
                     continue
-                    
+
             backup_path = backup_and_write(path, original, rewritten)
             total_replaced += replaced
             files_summary.append({
@@ -725,7 +725,7 @@ def redact_findings(scan_result: Dict[str, Any]) -> Dict[str, Any]:
         except OSError as e:
             print(f"[Error] Failed to redact {path}: {e}", file=sys.stderr)
             total_skipped += 1
-            
+
     files_summary.sort(key=lambda x: x["path"])
     return {
         "files": files_summary,
@@ -734,7 +734,7 @@ def redact_findings(scan_result: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def generate_markdown(result: Dict[str, Any], redact_summary: Dict[str, Any]) -> str:
+def generate_markdown(result: dict[str, Any], redact_summary: dict[str, Any]) -> str:
     """Generate Markdown report contents.
 
     Args:
@@ -752,7 +752,7 @@ def generate_markdown(result: Dict[str, Any], redact_summary: Dict[str, Any]) ->
         f"- Findings: `{len(result['findings'])}`",
         f"- Redacted: `{redact_summary['replaced']}`\n"
     ]
-    
+
     if targets := result.get("targets"):
         lines.append("## Scan Targets\n")
         lines.append("| Agent | Root |")
@@ -761,30 +761,30 @@ def generate_markdown(result: Dict[str, Any], redact_summary: Dict[str, Any]) ->
             clean_root = t['root'].replace('|', '\\|')
             lines.append(f"| `{t['agent']}` | `{clean_root}` |")
         lines.append("")
-        
+
     if warnings := result.get("warnings"):
         lines.append("## Warnings\n")
         for w in warnings:
             lines.append(f"- {w}")
         lines.append("")
-        
+
     if not result["findings"]:
         lines.append("## Findings\n\nNo sensitive values detected.")
         return "\n".join(lines)
-        
+
     # Summarize by rules
-    rule_counts: Dict[str, int] = {}
+    rule_counts: dict[str, int] = {}
     for f in result["findings"]:
         rule_counts[f["rule_name"]] = rule_counts.get(f["rule_name"], 0) + 1
     sorted_rules = sorted(rule_counts.items(), key=lambda x: (-x[1], x[0]))
-    
+
     lines.append("## Summary By Rule\n")
     lines.append("| Rule | Count |")
     lines.append("|---|---:|")
     for name, cnt in sorted_rules:
         lines.append(f"| {name} | {cnt} |")
     lines.append("")
-    
+
     lines.append("## Findings\n")
     lines.append("| Agent | File | Line | Rule | Severity | Masked Preview | SHA-256 |")
     lines.append("|---|---|---:|---|---|---|---|")
@@ -799,12 +799,12 @@ def generate_markdown(result: Dict[str, Any], redact_summary: Dict[str, Any]) ->
     lines.append("## Rotation Guidance\n")
     lines.append("Rotate every credential listed above. Redaction removes local copies from agent logs, "
                  "but it cannot revoke credentials already shared with a provider or remote service.\n")
-                 
+
     if files := redact_summary.get("files"):
         lines.append("## Redaction Backups\n")
         for f in files:
             lines.append(f"- `{f['path']}` -> backup `{f['backup_path']}`")
-            
+
     return "\n".join(lines)
 
 
@@ -891,7 +891,7 @@ exit 0
 """
 
 
-def install_guardrails(agent_name: str, dry_run: bool = False) -> List[Dict[str, str]]:
+def install_guardrails(agent_name: str, dry_run: bool = False) -> list[dict[str, str]]:
     """Install guardrail instructions and hooks for target agent.
 
     Args:
@@ -901,8 +901,8 @@ def install_guardrails(agent_name: str, dry_run: bool = False) -> List[Dict[str,
     Returns:
         List of dict representing changes made.
     """
-    changes: List[Dict[str, str]] = []
-    
+    changes: list[dict[str, str]] = []
+
     # Resolve target agents
     norm = normalize_agent_name(agent_name)
     if norm in ["auto", "all"]:
@@ -919,14 +919,14 @@ def install_guardrails(agent_name: str, dry_run: bool = False) -> List[Dict[str,
         if norm not in AGENT_SPECS:
             raise ValueError(f"Unsupported guardrails agent: {agent_name}")
         target_agents = [norm]
-        
+
     for agent in target_agents:
         spec = AGENT_SPECS[agent]
         roots = get_default_roots(spec["dot_dir"], spec["app_name"], spec["xdg_name"])
         if not roots:
             continue
         primary_root = roots[0]
-        
+
         # Decide file paths based on agent type
         if agent == "claude":
             plans = [
@@ -945,12 +945,12 @@ def install_guardrails(agent_name: str, dry_run: bool = False) -> List[Dict[str,
                 {"path": primary_root / "maskara-guardrails.md", "action": "append", "content": get_guardrail_content()},
                 {"path": primary_root / "hooks" / "maskara-privacy-hook.ps1", "action": "write", "content": get_hook_content()}
             ]
-            
+
         for plan in plans:
             path = Path(plan["path"])
             action = plan["action"]
             content = plan["content"]
-            
+
             backup_path = ""
             if not dry_run:
                 path.parent.mkdir(parents=True, exist_ok=True)
@@ -961,7 +961,7 @@ def install_guardrails(agent_name: str, dry_run: bool = False) -> List[Dict[str,
                         bp = path.with_suffix(f"{path.suffix}.maskara.bak")
                         shutil.copy2(path, bp)
                         backup_path = str(bp)
-                        
+
                         # Append
                         with open(path, "a", encoding="utf-8") as f:
                             f.write(f"\n\n{content}")
@@ -971,13 +971,13 @@ def install_guardrails(agent_name: str, dry_run: bool = False) -> List[Dict[str,
                         shutil.copy2(path, bp)
                         backup_path = str(bp)
                     path.write_text(content, encoding="utf-8")
-                    
+
             changes.append({
                 "path": str(path),
                 "action": action,
                 "backup_path": backup_path
             })
-            
+
     return changes
 
 
@@ -985,15 +985,15 @@ def main() -> None:
     """Parse CLI arguments and run selected subcommand workflow."""
     parser = argparse.ArgumentParser(description="CCBA Maskara offline scanner and redactor")
     parser.add_argument("-v", "--version", action="store_true", help="Print version information")
-    
+
     subparsers = parser.add_subparsers(dest="subcommand", help="Available subcommands")
-    
+
     # Subcommand: scan
     scan_parser = subparsers.add_parser("scan", help="Scan folders for secrets")
     scan_parser.add_argument("-a", "--agent", default="auto", help="Target agent name (or all, auto)")
     scan_parser.add_argument("-r", "--root", help="Explicit root folder path to scan")
     scan_parser.add_argument("--llm", action="store_true", help="Use AI Gateway to double-verify findings")
-    
+
     # Subcommand: report
     report_parser = subparsers.add_parser("report", help="Scan and write Markdown or JSON report")
     report_parser.add_argument("-a", "--agent", default="auto", help="Target agent name")
@@ -1001,25 +1001,25 @@ def main() -> None:
     report_parser.add_argument("--json", action="store_true", help="Format output report as JSON")
     report_parser.add_argument("-o", "--output", help="Output file path (default: current directory)")
     report_parser.add_argument("--llm", action="store_true", help="Use AI Gateway to double-verify findings")
-    
+
     # Subcommand: redact
     redact_parser = subparsers.add_parser("redact", help="Scan and redact secrets (replace with masked tokens)")
     redact_parser.add_argument("-a", "--agent", default="auto", help="Target agent name")
     redact_parser.add_argument("-r", "--root", help="Explicit root path to scan and redact")
     redact_parser.add_argument("--llm", action="store_true", help="Use AI Gateway to double-verify findings")
-    
+
     # Subcommand: guardrails
     guard_parser = subparsers.add_parser("guardrails", help="Install safety guardrails and hooks")
     guard_parser.add_argument("-a", "--agent", default="auto", help="Target agent name")
     guard_parser.add_argument("--dry-run", action="store_true", help="Log planned actions without writing")
-    
+
     # Parse args
     args = parser.parse_args()
-    
+
     if args.version:
         print("Maskara v1.0.0 (Python Edition)")
         sys.exit(0)
-        
+
     cmd = args.subcommand
     if not cmd:
         # Default full workflow: scan -> redact -> report
@@ -1029,30 +1029,30 @@ def main() -> None:
             scan_result = perform_scan(targets)
             redact_sum = redact_findings(scan_result)
             report_md = generate_markdown(scan_result, redact_sum)
-            
+
             report_path = Path("maskara-report.md")
             report_path.write_text(report_md, encoding="utf-8")
             print(f"[Maskara] Redaction complete ({redact_sum['replaced']} replaced). Report written to {report_path}")
-            
+
             sys.exit(1 if len(scan_result["findings"]) > 0 else 0)
         except Exception as e:
             print(f"[Error] Runtime error: {e}", file=sys.stderr)
             sys.exit(2)
-            
+
     try:
         if cmd == "scan":
             targets = resolve_targets(args.agent, args.root)
             result = perform_scan(targets, args.llm)
-            
+
             if not result["findings"]:
                 print("[Maskara] No sensitive values detected.")
                 sys.exit(0)
-                
+
             print(f"[Maskara] Found {len(result['findings'])} sensitive value(s):")
             for f in result["findings"]:
                 print(f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}")
             sys.exit(1)
-            
+
         elif cmd == "redact":
             targets = resolve_targets(args.agent, args.root)
             result = perform_scan(targets, args.llm)
@@ -1063,28 +1063,28 @@ def main() -> None:
                 for f in redact_sum["files"]:
                     print(f"  - {f['path']} -> {f['backup_path']}")
             sys.exit(1 if len(result["findings"]) > 0 else 0)
-            
+
         elif cmd == "report":
             targets = resolve_targets(args.agent, args.root)
             result = perform_scan(targets, args.llm)
-            
+
             # Since report subcommand doesn't redact, we pass empty redaction summary
             empty_redact = {"files": [], "replaced": 0, "skipped": 0}
-            
+
             if args.json:
                 doc = {"result": result, "redaction": empty_redact}
                 report_str = json.dumps(doc, indent=2)
             else:
                 report_str = generate_markdown(result, empty_redact)
-                
+
             out_path = Path(args.output) if args.output else Path("maskara-report.json" if args.json else "maskara-report.md")
             if out_path.is_dir():
                 out_path = out_path / ("maskara-report.json" if args.json else "maskara-report.md")
-                
+
             out_path.write_text(report_str, encoding="utf-8")
             print(f"[Maskara] Report written to {out_path}")
             sys.exit(1 if len(result["findings"]) > 0 else 0)
-            
+
         elif cmd == "guardrails":
             changes = install_guardrails(args.agent, args.dry_run)
             state = "Dry-run planned" if args.dry_run else "Installed"
@@ -1092,7 +1092,7 @@ def main() -> None:
             for c in changes:
                 print(f"  - [{c['action'].upper()}] {c['path']} (Backup: {c['backup_path'] or 'none'})")
             sys.exit(0)
-            
+
     except Exception as e:
         print(f"[Error] Runtime error: {e}", file=sys.stderr)
         sys.exit(2)
