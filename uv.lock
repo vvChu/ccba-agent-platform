@@ -341,6 +341,7 @@ dependencies = [
 [package.optional-dependencies]
 dev = [
     { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "ruff" },
 ]
 
@@ -351,6 +352,7 @@ requires-dist = [
     { name = "openai", specifier = ">=2.31.0,<3.0.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pytest", marker = "extra == 'dev'" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "pyyaml", specifier = ">=6.0.0" },
     { name = "ruff", marker = "extra == 'dev'" },
@@ -367,6 +369,7 @@ name = "ccba-legal-intel"
 version = "0.1.0"
 source = { editable = "packages/ccba-legal-intel" }
 dependencies = [
+    { name = "ccba-ai" },
     { name = "ccba-harness" },
     { name = "python-docx" },
     { name = "pyyaml" },
@@ -376,6 +379,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ccba-ai", editable = "packages/ccba-ai" },
     { name = "ccba-harness", editable = "packages/ccba-harness" },
     { name = "python-docx" },
     { name = "pyyaml" },
@@ -2008,6 +2012,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+ai = [
+    { name = "ccba-ai" },
+]
 dev = [
     { name = "mypy" },
     { name = "pytest" },
@@ -2022,6 +2029,7 @@ llm = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ccba-ai", marker = "extra == 'ai'", editable = "packages/ccba-ai" },
     { name = "ccba-pdf-prep", editable = "packages/ccba-pdf-prep" },
     { name = "google-generativeai", marker = "extra == 'llm'", specifier = ">=0.8.0,<1.0.0" },
     { name = "httpx", specifier = ">=0.27.0" },
@@ -2042,7 +2050,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.24.1" },
     { name = "watchdog", specifier = ">=4.0.0" },
 ]
-provides-extras = ["dev", "llm"]
+provides-extras = ["dev", "llm", "ai"]
 
 [[package]]
 name = "mdurl"

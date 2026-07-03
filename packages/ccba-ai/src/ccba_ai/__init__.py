@@ -45,22 +45,29 @@ def write_file(path, content: str, encoding: str = "utf-8") -> None:
 
 
 __all__ = [
+    # Singletons
     "ai",
     "async_ai",
+    # Client classes
     "AIClient",
     "AsyncAIClient",
+    # Convenience shorthands (sync)
     "chat",
     "stream",
     "chat_multi",
     "models",
+    # Utilities
     "write_file",
+    "strip_think_tags",
+    "parse_llm_json",
+    # QC audit models
+    "AuditFinding",
+    "AuditReport",
+    # Services
     "services",
+    # Exceptions
     "CCBAErrorCode",
     "CCBABaseException",
     "format_error_json",
-    "strip_think_tags",
-    "parse_llm_json",
-    "AuditFinding",
-    "AuditReport",
 ]
 __version__ = "1.0.0"
