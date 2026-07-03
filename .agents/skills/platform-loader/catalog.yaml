@@ -294,6 +294,30 @@ skills:
     triggers: [diagnose bugs, chẩn đoán lỗi, fix bug, debug, regression]
     skill_path: .agents/skills/diagnosing-bugs/SKILL.md
 
+  - name: grilling
+    bundle: _core
+    description: "Vòng lặp phỏng vấn liên tục dồn dập (grilling loop) để stress-test các kế hoạch hoặc thiết kế kỹ thuật"
+    triggers: [grill, grilling, phỏng vấn, hỏi xoáy, stress test, kiểm chứng kế hoạch]
+    skill_path: .agents/skills/grilling/SKILL.md
+
+  - name: wayfinder
+    bundle: _core
+    description: "Kỹ năng vạch đường và phân tích giải quyết các bài toán mơ hồ, không rõ ràng (foggy problems)"
+    triggers: [wayfinder, vạch đường, bài toán mơ hồ, foggy, chia nhỏ bài toán]
+    skill_path: .agents/skills/wayfinder/SKILL.md
+
+  - name: wizard
+    bundle: _core
+    description: "Tự động hóa sinh script setup tương tác (bash script wizard) hướng dẫn kỹ sư cài đặt môi trường"
+    triggers: [wizard, setup wizard, sinh script, cài đặt tự động, script setup]
+    skill_path: .agents/skills/wizard/SKILL.md
+
+  - name: writing-great-skills
+    bundle: _core
+    description: "Tài liệu cẩm nang hướng dẫn kỹ sư thiết kế và viết các file SKILL.md đạt tiêu chuẩn chất lượng cao"
+    triggers: [writing-great-skills, viết skill, quy chuẩn skill, tạo skill mới]
+    skill_path: .agents/skills/writing-great-skills/SKILL.md
+
 workflows:
   # === _core ===
   - name: init-ccba-spoke
@@ -330,6 +354,27 @@ workflows:
     description: "Đóng gói phiên làm việc thành tài liệu handoff nhỏ gọn cho Agent tiếp theo"
     triggers: [handoff, đóng gói phiên, transfer context, bàn giao]
     workflow_path: .agents/workflows/ccba-handoff.md
+
+  - name: grilling
+    bundle: _core
+    command: /ccba-grilling
+    description: "Phỏng vấn dồn dập người dùng từng câu một để stress-test kế hoạch hoặc thiết kế"
+    triggers: [grill, grilling, phỏng vấn, stress test]
+    workflow_path: .agents/workflows/ccba-grilling.md
+
+  - name: wayfinder
+    bundle: _core
+    command: /ccba-wayfinder
+    description: "Vạch bản đồ giải quyết các bài toán mù mờ (foggy problems)"
+    triggers: [wayfinder, bài toán mơ hồ, foggy]
+    workflow_path: .agents/workflows/ccba-wayfinder.md
+
+  - name: wizard
+    bundle: _core
+    command: /ccba-wizard
+    description: "Tạo bash script wizard hướng dẫn quy trình cài đặt/thiết lập thủ công"
+    triggers: [wizard, setup wizard, tạo script]
+    workflow_path: .agents/workflows/ccba-wizard.md
 
   - name: propose-to-hub
     bundle: _core
