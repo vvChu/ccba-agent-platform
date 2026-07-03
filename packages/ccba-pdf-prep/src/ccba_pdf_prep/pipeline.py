@@ -18,7 +18,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import NamedTuple, Any
+from typing import NamedTuple
 
 import fitz  # PyMuPDF
 
@@ -93,11 +93,7 @@ def _normalize_vn(text: str) -> str:
     """Normalize Vietnamese diacritics for robust matching."""
     import unicodedata
 
-    return "".join(
-        c
-        for c in unicodedata.normalize("NFD", text)
-        if unicodedata.category(c) != "Mn"
-    )
+    return "".join(c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn")
 
 
 # ---------------------------------------------------------------------------

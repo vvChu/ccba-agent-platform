@@ -52,7 +52,6 @@ else:
     skill_generator = None
 
 
-
 def main() -> int:
     parser = argparse.ArgumentParser(description="CCBA Platform NotebookLM Helper Wrapper")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -538,7 +537,5 @@ def map_video_style(s: str) -> Any:
     return s_map.get(s.lower(), VideoStyle.MODERN)
 
 
-
 if __name__ == "__main__":
     sys.exit(main())
-
