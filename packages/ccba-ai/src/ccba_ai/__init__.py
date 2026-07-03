@@ -17,11 +17,14 @@ Quick Start:
 """
 
 from ccba_ai import services
-from ccba_ai.client import AIClient
+from ccba_ai.client import AIClient, AsyncAIClient
 from ccba_ai.exceptions import CCBABaseException, CCBAErrorCode, format_error_json
+from ccba_ai.llm_utils import parse_llm_json, strip_think_tags
+from ccba_ai.models import AuditFinding, AuditReport
 
-# Module-level singleton — Pythonic pattern (NOT builtins injection)
+# Module-level singletons — Pythonic pattern (NOT builtins injection)
 ai = AIClient()
+async_ai = AsyncAIClient()
 
 # Convenience function exports
 chat = ai.chat
@@ -43,7 +46,9 @@ def write_file(path, content: str, encoding: str = "utf-8") -> None:
 
 __all__ = [
     "ai",
+    "async_ai",
     "AIClient",
+    "AsyncAIClient",
     "chat",
     "stream",
     "chat_multi",
@@ -53,5 +58,9 @@ __all__ = [
     "CCBAErrorCode",
     "CCBABaseException",
     "format_error_json",
+    "strip_think_tags",
+    "parse_llm_json",
+    "AuditFinding",
+    "AuditReport",
 ]
 __version__ = "1.0.0"
