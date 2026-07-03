@@ -11,8 +11,16 @@ from .core import (
 )
 from .document_skills.pdf_forms import fill_pdf_fields, get_field_info
 from .document_skills.xlsx_recalc import recalc_xlsx
-from .pipeline import PDFProcessingError, PDFProcessingPipeline, ProcessingResult
-from .vision import TileResult, TitleBlockDetector, TitleBlockRegion, VisionOptimizer
+from .pipeline import (
+    PDFProcessingError,
+    PDFProcessingPipeline,
+    ProcessingResult,
+    TileResult,
+    TitleBlockDetector,
+    TitleBlockRegion,
+    VisionOptimizer,
+)
+
 
 __all__ = [
     # pipeline (primary entry point)

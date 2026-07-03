@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from ccba_pdf_prep.vision import VisionOptimizer
+from ccba_pdf_prep import VisionOptimizer
+
 
 
 class TestVisionOptimizer:
