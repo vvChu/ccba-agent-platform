@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ccba-ooxml"
+version = "1.0.0"
+description = "CCBA OOXML Utilities — Shared library for packaging and validating docx/pptx documents"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "lxml>=5.0.0",
+    "defusedxml>=0.7.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ccba_ooxml"]
