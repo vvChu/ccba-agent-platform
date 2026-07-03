@@ -1,4 +1,3 @@
-
 from ccba_ai import parse_llm_json, strip_think_tags
 
 
@@ -36,7 +35,7 @@ Have a nice day!
     assert parsed == {"key": "value", "num": 42}
 
     # 2. Outer brace parsing fallback
-    raw = "Random text prefix {\"hello\": \"world\"} random text suffix"
+    raw = 'Random text prefix {"hello": "world"} random text suffix'
     parsed = parse_llm_json(raw)
     assert parsed == {"hello": "world"}
 
