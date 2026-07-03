@@ -21,6 +21,8 @@ from ccba_ai.client import AIClient, AsyncAIClient
 from ccba_ai.exceptions import CCBABaseException, CCBAErrorCode, format_error_json
 from ccba_ai.llm_utils import parse_llm_json, strip_think_tags
 from ccba_ai.models import AuditFinding, AuditReport
+from ccba_ai.protocols import QCDiscoveryEngine, QCAuditEngine, QCReporterEngine
+
 
 # Module-level singletons — Pythonic pattern (NOT builtins injection)
 ai = AIClient()
@@ -63,6 +65,10 @@ __all__ = [
     # QC audit models
     "AuditFinding",
     "AuditReport",
+    "QCDiscoveryEngine",
+    "QCAuditEngine",
+    "QCReporterEngine",
+
     # Services
     "services",
     # Exceptions
