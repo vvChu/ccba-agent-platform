@@ -31,14 +31,19 @@ from ccba_ai import services
 from ccba_ai.hooks import PrivacyGuardHook
 
 # Expose scripts folder for idop_scaffolder import
-cwd_scripts = Path.cwd() / "scripts"
-if cwd_scripts.exists() and str(cwd_scripts) not in sys.path:
-    sys.path.append(str(cwd_scripts))
+import importlib.util
 
-try:
-    import idop_scaffolder
-except ImportError:
-    idop_scaffolder = None
+idop_scaffolder = None
+cwd_scripts = Path.cwd() / "scripts" / "idop_scaffolder.py"
+if cwd_scripts.exists():
+    try:
+        spec = importlib.util.spec_from_file_location("idop_scaffolder", cwd_scripts)
+        if spec and spec.loader:
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            idop_scaffolder = module
+    except Exception:
+        pass
 
 # Initialize FastMCP Server
 mcp = FastMCP("ccba-mcp-server")

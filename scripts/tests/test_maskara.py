@@ -5,10 +5,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-# Ensure scripts directory is in sys.path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from maskara import (
+from scripts.maskara import (
     normalize_agent_name,
     detect_secrets_in_text,
     apply_raw_redactions,

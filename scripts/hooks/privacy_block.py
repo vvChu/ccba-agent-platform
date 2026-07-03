@@ -9,14 +9,22 @@ import json
 from pathlib import Path
 from typing import Dict, Any
 
-# Ensure scripts directory is in path to import maskara
-scripts_dir = Path(__file__).parent.parent
-if str(scripts_dir) not in sys.path:
-    sys.path.insert(0, str(scripts_dir))
+# Ensure maskara is loaded dynamically without sys.path modification
+import importlib.util
 
-try:
-    from maskara import detect_secrets_in_text
-except ImportError:
+detect_secrets_in_text = None
+maskara_path = Path(__file__).parent.parent / "maskara.py"
+if maskara_path.exists():
+    try:
+        spec = importlib.util.spec_from_file_location("maskara", maskara_path)
+        if spec and spec.loader:
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            detect_secrets_in_text = getattr(module, "detect_secrets_in_text", None)
+    except Exception:
+        pass
+
+if detect_secrets_in_text is None:
     # Safe fallback if maskara script is not available
     def detect_secrets_in_text(content: str, filepath: str, agent: str, use_llm: bool = False) -> list:
         return []
