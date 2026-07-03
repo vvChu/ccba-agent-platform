@@ -4,11 +4,11 @@ Skill Finder for ClaudeKit skills.
 Searches and lists available skills in claudekit-engineer/claude/skills/.
 """
 
-import sys
-import os
 import re
-import yaml
+import sys
 from pathlib import Path
+
+import yaml
 
 # Enforce UTF-8 output
 if sys.platform == "win32":
@@ -39,11 +39,11 @@ def find_skills(query: str = ""):
     """Search for skills matching the query in name, description, or keywords."""
     query_lower = query.lower()
     matches = []
-    
+
     for skills_dir in SKILLS_DIRS:
         if not skills_dir.exists():
             continue
-            
+
         for p in skills_dir.iterdir():
             if p.is_dir() and not p.name.startswith("."):
                 skill_md = p / "SKILL.md"
@@ -52,16 +52,16 @@ def find_skills(query: str = ""):
                     name = meta.get("name", p.name)
                     desc = meta.get("description", "")
                     keywords = meta.get("keywords", [])
-                    
+
                     is_match = False
                     if not query:
                         is_match = True
                     else:
-                        if (query_lower in name.lower() or 
-                                query_lower in desc.lower() or 
+                        if (query_lower in name.lower() or
+                                query_lower in desc.lower() or
                                 any(query_lower in kw.lower() for kw in keywords)):
                             is_match = True
-                            
+
                     if is_match:
                         # Prevent duplicate names if both repos have the same skill
                         if not any(m["folder"] == p.name for m in matches):
@@ -72,11 +72,11 @@ def find_skills(query: str = ""):
                                 "keywords": keywords,
                                 "source": skills_dir.parent.parent.name
                             })
-                        
+
     if not matches:
         print(f"[Skill Finder] No skills found matching '{query}'.")
         return
-        
+
     print(f"\n[Skill Finder] Found {len(matches)} matching skills:\n")
     for idx, m in enumerate(matches, 1):
         print(f"{idx}. \x1b[32m/ccba-kit {m['folder']}\x1b[0m (Source: {m['source']})")
@@ -85,12 +85,12 @@ def find_skills(query: str = ""):
         if m['keywords']:
             print(f"   Keywords: {', '.join(m['keywords'])}")
         print()
-                    
+
     # Print results
     if not matches:
         print(f"[Skill Finder] No skills found matching '{query}'.")
         return
-        
+
     print(f"\n[Skill Finder] Found {len(matches)} matching skills:\n")
     for idx, m in enumerate(matches, 1):
         print(f"{idx}. \x1b[32m/ccba-kit {m['folder']}\x1b[0m (Skill name: {m['name']})")

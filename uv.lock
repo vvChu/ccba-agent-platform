@@ -16,7 +16,9 @@ resolution-markers = [
 members = [
     "ccba-agent-platform",
     "ccba-ai",
+    "ccba-harness",
     "ccba-legal-intel",
+    "ccba-notebooklm",
     "ccba-pdf-prep",
     "mdconvert-cli",
 ]
@@ -328,9 +330,12 @@ name = "ccba-ai"
 version = "1.0.0"
 source = { editable = "packages/ccba-ai" }
 dependencies = [
+    { name = "cryptography" },
     { name = "mcp" },
     { name = "openai" },
+    { name = "pydantic" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
 ]
 
 [package.optional-dependencies]
@@ -341,19 +346,28 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cryptography", specifier = ">=41.0.0" },
     { name = "mcp", specifier = ">=0.1.0" },
     { name = "openai", specifier = ">=2.31.0,<3.0.0" },
+    { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
+    { name = "pyyaml", specifier = ">=6.0.0" },
     { name = "ruff", marker = "extra == 'dev'" },
 ]
 provides-extras = ["dev"]
+
+[[package]]
+name = "ccba-harness"
+version = "0.1.0"
+source = { editable = "packages/ccba-harness" }
 
 [[package]]
 name = "ccba-legal-intel"
 version = "0.1.0"
 source = { editable = "packages/ccba-legal-intel" }
 dependencies = [
+    { name = "ccba-harness" },
     { name = "python-docx" },
     { name = "pyyaml" },
     { name = "requests" },
@@ -362,11 +376,23 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ccba-harness", editable = "packages/ccba-harness" },
     { name = "python-docx" },
     { name = "pyyaml" },
     { name = "requests" },
     { name = "websocket-client" },
 ]
+
+[[package]]
+name = "ccba-notebooklm"
+version = "0.1.0"
+source = { editable = "packages/ccba-notebooklm" }
+dependencies = [
+    { name = "pyyaml" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pyyaml" }]
 
 [[package]]
 name = "ccba-pdf-prep"

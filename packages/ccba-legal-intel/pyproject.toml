@@ -16,8 +16,13 @@ dependencies = [
     "websocket-client",
     "python-docx",
     "pyyaml",
+    "ccba-harness",
 ]
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["ccba_legal*"]
+
+[tool.uv.sources]
+ccba-harness = { workspace = true }
+

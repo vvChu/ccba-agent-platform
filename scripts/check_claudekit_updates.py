@@ -4,9 +4,8 @@ Update Checker for claudekit-engineer.
 Checks for new commits/skills in the claudekit-engineer repository.
 """
 
-import sys
-import os
 import subprocess
+import sys
 from pathlib import Path
 
 # Enforce UTF-8 output
@@ -37,7 +36,7 @@ def get_local_sha(config: dict) -> str:
     sha_file = config["sha_file"]
     if sha_file.exists():
         return sha_file.read_text(encoding="utf-8").strip()
-    
+
     local_path = config["local_path"]
     if local_path.exists() and (local_path / ".git").exists():
         try:
@@ -79,27 +78,27 @@ def check_and_evaluate(config: dict):
     local_path = config["local_path"]
     remote_url = config["remote_url"]
     sha_file = config["sha_file"]
-    
+
     print(f"[ClaudeKit Update Check] Checking remote claudekit-{repo_type} for new updates...")
-    
+
     local_sha = get_local_sha(config)
     remote_sha = get_remote_sha(remote_url)
-    
+
     if not remote_sha:
         print(f"[ClaudeKit Update Check] Warning: Could not connect to remote claudekit-{repo_type}.")
         return
-        
+
     if not local_sha:
         print(f"[ClaudeKit Update Check] Initializing tracker for {repo_type} with remote SHA: {remote_sha}")
         sha_file.write_text(remote_sha, encoding="utf-8")
         return
-        
+
     if local_sha != remote_sha:
         print(f"\n\x1b[33m[UPDATE AVAILABLE]\x1b[0m New updates found in claudekit-{repo_type}!")
         print(f"  - Local SHA:  {local_sha[:8]}")
         print(f"  - Remote SHA: {remote_sha[:8]}")
-        print(f"  - Triggering Automated Porting Evaluator...")
-        
+        print("  - Triggering Automated Porting Evaluator...")
+
         # Invoke assess_upstream_features.py
         try:
             eval_cmd = [
@@ -112,7 +111,7 @@ def check_and_evaluate(config: dict):
             ]
             # Run evaluator
             subprocess.run(eval_cmd, check=True)
-            
+
             # Save the new SHA
             sha_file.write_text(remote_sha, encoding="utf-8")
             print(f"[ClaudeKit Update Check] Successfully processed updates for claudekit-{repo_type}.\n")

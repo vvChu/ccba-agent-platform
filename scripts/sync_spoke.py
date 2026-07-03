@@ -6,17 +6,18 @@ based on the Spoke's business project type specified in workspace_context.yaml.
 """
 
 import argparse
+import base64
+import hashlib
 import os
 import shutil
 import sys
-import yaml
-import base64
-import hashlib
 from datetime import datetime
 from pathlib import Path
 
+import yaml
+
 try:
-    from cryptography.hazmat.primitives import serialization, hashes
+    from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import padding
     HAS_CRYPTOGRAPHY = True
 except ImportError:
@@ -82,7 +83,7 @@ def register_spoke_to_hub(spoke_root: Path, hub_root: Path, project_name: str, p
         registry_data = {"spokes": []}
         if registry_file.exists():
             try:
-                with open(registry_file, "r", encoding="utf-8") as f:
+                with open(registry_file, encoding="utf-8") as f:
                     registry_data = yaml.safe_load(f) or {"spokes": []}
             except Exception:
                 pass
@@ -107,7 +108,7 @@ def register_spoke_to_hub(spoke_root: Path, hub_root: Path, project_name: str, p
 
         with open(registry_file, "w", encoding="utf-8") as f:
             yaml.dump(registry_data, f, allow_unicode=True)
-            
+
         print(f"[Registry] Successfully registered Spoke '{project_name}' to Hub Spoke Registry (Encrypted).")
     except Exception as e:
         print(f"[Registry] Warning: Failed to register Spoke to Hub: {e}", file=sys.stderr)
@@ -124,7 +125,7 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
         Exit code (0 for success, 1 for error).
     """
     spoke_root = Path(spoke_path).resolve()
-    print(f"\n=== CCBA Spoke Synchronization ===")
+    print("\n=== CCBA Spoke Synchronization ===")
     print(f"Target Spoke: {spoke_root}")
 
     # 1. Locate workspace_context.yaml
@@ -143,13 +144,32 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
 
     # Load spoke context
     context = load_yaml(context_file)
-    project_name = context.get("project_name", spoke_root.name).strip()
-    project_type = context.get("project_type", "").strip()
-    hub_path_str = context.get("hub_path", "").strip()
+
+    # Support both flat and nested structure
+    project_name = context.get("project_name")
+    if not project_name and isinstance(context.get("project"), dict):
+        project_name = context.get("project").get("name")
+    if not project_name:
+        project_name = spoke_root.name
+    project_name = str(project_name).strip()
+
+    project_type = context.get("project_type")
+    if not project_type and isinstance(context.get("project"), dict):
+        project_type = context.get("project").get("type")
+    if not project_type:
+        project_type = ""
+    project_type = str(project_type).strip()
+
+    hub_path_str = context.get("hub_path")
+    if not hub_path_str and isinstance(context.get("project"), dict):
+        hub_path_str = context.get("project").get("hub_path")
+    if not hub_path_str:
+        hub_path_str = ""
+    hub_path_str = str(hub_path_str).strip()
 
     # 2. Locate Hub (Smart Discovery)
     hub_root = None
-    
+
     # Thử 1: Dùng đường dẫn trong context file
     if hub_path_str:
         candidate = Path(hub_path_str)
@@ -224,7 +244,7 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
         return 1
 
     catalog = load_yaml(catalog_file)
-    
+
     spoke_agents_dir = spoke_root / ".agents"
     spoke_skills_dir = spoke_agents_dir / "skills"
     spoke_workflows_dir = spoke_agents_dir / "workflows"
@@ -233,7 +253,7 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
     if sync_item:
         print(f"Mode: On-Demand Synchronization for '{sync_item}'")
         found = False
-        
+
         # Thử tìm trong danh sách Skills
         for skill_entry in catalog.get("skills", []):
             if skill_entry.get("name") == sync_item:
@@ -241,7 +261,7 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
                 src = hub_root / Path(skill_path_rel).parent
                 dest_name = Path(skill_path_rel).parent.name
                 dest = spoke_skills_dir / dest_name
-                
+
                 if src.exists():
                     print(f"[Sync] Copying skill [{sync_item}] -> {dest.relative_to(spoke_root)}")
                     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -253,7 +273,7 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
                 else:
                     print(f"[Sync] Error: Skill source path not found at {src}", file=sys.stderr)
                     return 1
-                    
+
         # Thử tìm trong danh sách Workflows nếu chưa tìm thấy trong Skills
         if not found:
             for wf_entry in catalog.get("workflows", []):
@@ -262,7 +282,7 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
                     src = hub_root / wf_path_rel
                     filename = Path(wf_path_rel).name
                     dest = spoke_workflows_dir / filename
-                    
+
                     if src.exists():
                         print(f"[Sync] Copying workflow [{sync_item}] -> {dest.relative_to(spoke_root)}")
                         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -274,17 +294,17 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
                     else:
                         print(f"[Sync] Error: Workflow source file not found at {src}", file=sys.stderr)
                         return 1
-                        
+
         if not found:
             print(f"[Sync] Error: Item '{sync_item}' not found in Hub catalog.yaml.", file=sys.stderr)
             return 1
-            
+
         # Copy hiến pháp
         hub_agents_md = hub_root / ".agents" / "AGENTS.md"
         spoke_agents_md = spoke_agents_dir / "AGENTS.md"
         if hub_agents_md.exists():
             shutil.copy2(hub_agents_md, spoke_agents_md)
-            
+
         print("\n=== Sync Completed Successfully ===")
         return 0
 
@@ -317,7 +337,7 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
         skill_name = skill_entry.get("name")
         skill_bundle = skill_entry.get("bundle")
         skill_path_rel = skill_entry.get("skill_path")
-        
+
         if skill_bundle in required_bundles or skill_bundle == "_core":
             skills_to_sync.append({
                 "name": skill_name,
@@ -330,7 +350,7 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
         wf_name = wf_entry.get("name")
         wf_bundle = wf_entry.get("bundle")
         wf_path_rel = wf_entry.get("workflow_path")
-        
+
         if wf_bundle in required_bundles or wf_bundle == "_core":
             wfs_to_sync.append({
                 "name": wf_name,
