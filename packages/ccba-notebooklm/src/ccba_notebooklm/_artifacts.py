@@ -30,6 +30,7 @@ from ._registry import (
     clear_task_state,
     get_file_sha256,
     get_notebook_id_from_context,
+    normalize_to_relative,
     read_registry,
     read_task_state,
     save_notebook_id_to_context,
@@ -60,19 +61,22 @@ def run_docs_validator(file_path: str) -> None:
         print("[Info] Đang chạy kiểm định chất lượng tài liệu qua Docs Validator...")
         file_dir = Path(file_path).parent
         result = subprocess.run(
-            [sys.executable, str(val_path), str(file_dir)],
-            capture_output=True,
-            text=True
+            [sys.executable, str(val_path), str(file_dir)], capture_output=True, text=True
         )
         if result.returncode == 0:
             print("SUCCESS: Kiểm định chất lượng tài liệu ĐẠT CHUẨN!")
         else:
-            print(f"[Warning] Docs Validator phát hiện vấn đề định dạng trong thư mục tài liệu:\n{result.stdout.strip()}", file=sys.stderr)
+            print(
+                f"[Warning] Docs Validator phát hiện vấn đề định dạng trong thư mục tài liệu:\n{result.stdout.strip()}",
+                file=sys.stderr,
+            )
     except Exception as e:
         print(f"[Warn] Không thể chạy validate_docs.py: {e}", file=sys.stderr)
 
 
-def post_process_summary(out_file: Path, source_path: str, notebook_id: str, source_id: str, sha256: str) -> None:
+def post_process_summary(
+    out_file: Path, source_path: str, notebook_id: str, source_id: str, sha256: str
+) -> None:
     """Thêm Frontmatter và Disclaimer/Attribution vào tài liệu tóm tắt Markdown đầu ra."""
     if not out_file.exists():
         return
@@ -108,7 +112,11 @@ sha256: "{sha256}"
         if "*Tạo bởi CCBA" not in content:
             new_content = frontmatter + content + disclaimer
         else:
-            clean_content = content.split("---", 1)[0].strip() if "*Nội dung này được tạo bởi" in content else content
+            clean_content = (
+                content.split("---", 1)[0].strip()
+                if "*Nội dung này được tạo bởi" in content
+                else content
+            )
             new_content = frontmatter + clean_content + disclaimer
 
         with open(out_file, "w", encoding="utf-8") as f:
@@ -117,14 +125,17 @@ sha256: "{sha256}"
         print(f"[Warn] Không thể hậu xử lý file tóm tắt: {e}", file=sys.stderr)
 
 
-async def get_source_id_by_path(client: Any, notebook_id: str, source_path: str, sha256: str) -> str:
+async def get_source_id_by_path(
+    client: Any, notebook_id: str, source_path: str, sha256: str
+) -> str:
     """Tìm hoặc nạp nguồn, trả về source_id và cập nhật registry."""
     sources = await client.sources.list(notebook_id)
     target_source = None
 
     registry = read_registry()
-    if source_path in registry:
-        registered_info = registry[source_path]
+    norm_path = normalize_to_relative(source_path)
+    if norm_path in registry:
+        registered_info = registry[norm_path]
         if registered_info.get("notebook_id") == notebook_id:
             target_source_id = registered_info.get("source_id")
             target_source = next((src for src in sources if src.id == target_source_id), None)
@@ -132,7 +143,9 @@ async def get_source_id_by_path(client: Any, notebook_id: str, source_path: str,
             # Kiểm tra nếu file đã bị thay đổi nội dung thì xóa nguồn cũ trên Cloud
             if target_source and registered_info.get("sha256") != sha256:
                 try:
-                    print(f"[Info] Phát hiện thay đổi nội dung (SHA-256 mismatch). Đang xóa nguồn cũ '{target_source_id}'...")
+                    print(
+                        f"[Info] Phát hiện thay đổi nội dung (SHA-256 mismatch). Đang xóa nguồn cũ '{target_source_id}'..."
+                    )
                     await client.sources.delete(notebook_id, target_source_id)
                     target_source = None
                 except Exception as ex:
@@ -188,7 +201,7 @@ async def handle_artifact_flow(
     output_filename_pattern: str,
     generate_fn: Any,
     download_fn: Any,
-    output_format: str = ""
+    output_format: str = "",
 ) -> int:
     """Hàm điều phối tổng quát cho việc sinh, polling và download mọi loại Structured Artifacts."""
     if not HAS_NOTEBOOKLM:
@@ -208,10 +221,17 @@ async def handle_artifact_flow(
             # Kiểm tra state chạy ngầm
             state = read_task_state()
             task_id = None
-            if state and state.get("notebook_id") == notebook_id and state.get("task_type") == task_type and state.get("source_id") == source_id:
+            if (
+                state
+                and state.get("notebook_id") == notebook_id
+                and state.get("task_type") == task_type
+                and state.get("source_id") == source_id
+            ):
                 created_at = datetime.datetime.fromisoformat(state["created_at"])
                 if (datetime.datetime.now() - created_at).total_seconds() < 900:  # 15 min
-                    print(f"[Info] Phát hiện Task ID sinh {task_type} cũ đang chạy: {state['task_id']}")
+                    print(
+                        f"[Info] Phát hiện Task ID sinh {task_type} cũ đang chạy: {state['task_id']}"
+                    )
                     print("[Info] Tiến hành khôi phục (resume) tiến trình polling...")
                     task_id = state["task_id"]
 
@@ -233,7 +253,9 @@ async def handle_artifact_flow(
 
                 task_id = status.task_id
                 save_task_state(notebook_id, task_id, source_id, task_type)
-                print(f"[Info] Google đang sinh {task_type} (Task ID: {task_id}). Quá trình có thể mất 1-5 phút...")
+                print(
+                    f"[Info] Google đang sinh {task_type} (Task ID: {task_id}). Quá trình có thể mất 1-5 phút..."
+                )
 
             # Polling kiểm tra hoàn thành
             retry_count = 0
@@ -246,8 +268,11 @@ async def handle_artifact_flow(
                     retry_count += 1
                     if retry_count > max_network_retries:
                         raise
-                    sleep_time = 2 ** retry_count
-                    print(f"[Warn] Lỗi mạng tạm thời: {net_err}. Thử lại sau {sleep_time} giây...", file=sys.stderr)
+                    sleep_time = 2**retry_count
+                    print(
+                        f"[Warn] Lỗi mạng tạm thời: {net_err}. Thử lại sau {sleep_time} giây...",
+                        file=sys.stderr,
+                    )
                     await asyncio.sleep(sleep_time)
 
             print(f"SUCCESS: Google đã tạo xong {task_type}!")
@@ -294,21 +319,31 @@ async def extract_and_summarize(source_path: str, output_path: str) -> int:
             await check_quota_and_warn(client, notebook_id)
 
             source_id = None
-            if source_path in registry:
-                registered_info = registry[source_path]
-                if registered_info.get("sha256") == sha256 and registered_info.get("notebook_id") == notebook_id:
-                    print(f"[Info] Phát hiện nội dung trùng khớp trên Cloud (SHA-256 match). Tái sử dụng Source ID: {registered_info['source_id']}")
+            norm_path = normalize_to_relative(source_path)
+            if norm_path in registry:
+                registered_info = registry[norm_path]
+                if (
+                    registered_info.get("sha256") == sha256
+                    and registered_info.get("notebook_id") == notebook_id
+                ):
+                    print(
+                        f"[Info] Phát hiện nội dung trùng khớp trên Cloud (SHA-256 match). Tái sử dụng Source ID: {registered_info['source_id']}"
+                    )
                     source_id = registered_info["source_id"]
                 else:
                     old_id = registered_info.get("source_id")
                     try:
-                        print(f"[Info] Nội dung thay đổi (SHA-256 mismatch). Đang xóa nguồn cũ '{old_id}'...")
+                        print(
+                            f"[Info] Nội dung thay đổi (SHA-256 mismatch). Đang xóa nguồn cũ '{old_id}'..."
+                        )
                         await client.sources.delete(notebook_id, old_id)
                     except Exception as ex:
                         print(f"[Warn] Lỗi xóa bản cũ: {ex}", file=sys.stderr)
 
             if not source_id:
-                print(f"[Info] Đang import nguồn dữ liệu: '{upload_path}' vào notebook '{notebook_id}'...")
+                print(
+                    f"[Info] Đang import nguồn dữ liệu: '{upload_path}' vào notebook '{notebook_id}'..."
+                )
                 if source_path.startswith(("http://", "https://")):
                     source = await client.sources.add_url(notebook_id, upload_path, wait=True)
                 else:
@@ -368,22 +403,29 @@ async def query_rag(source_path: str, prompt: str) -> int:
             target_source = None
 
             registry = read_registry()
-            if source_path in registry:
-                registered_info = registry[source_path]
+            norm_path = normalize_to_relative(source_path)
+            if norm_path in registry:
+                registered_info = registry[norm_path]
                 if registered_info.get("notebook_id") == notebook_id:
                     target_source_id = registered_info.get("source_id")
-                    target_source = next((src for src in sources if src.id == target_source_id), None)
+                    target_source = next(
+                        (src for src in sources if src.id == target_source_id), None
+                    )
 
             if not target_source:
                 for src in sources:
-                    if source_path in getattr(src, "url", "") or source_path in getattr(src, "title", ""):
+                    if source_path in getattr(src, "url", "") or source_path in getattr(
+                        src, "title", ""
+                    ):
                         target_source = src
                         break
 
             if not target_source:
                 print(f"[Info] Không tìm thấy nguồn có sẵn, đang nạp nguồn mới: '{source_path}'...")
                 if source_path.startswith(("http://", "https://")):
-                    target_source = await client.sources.add_url(notebook_id, upload_path, wait=True)
+                    target_source = await client.sources.add_url(
+                        notebook_id, upload_path, wait=True
+                    )
                 else:
                     target_source = await client.sources.add_file(notebook_id, upload_path)
                 update_registry(source_path, target_source.id, sha256, notebook_id)
@@ -392,9 +434,7 @@ async def query_rag(source_path: str, prompt: str) -> int:
             print(f"[Info] Đang gửi câu hỏi RAG cô lập tới nguồn ID '{target_id}'...")
 
             result = await client.chat.ask(
-                notebook_id=notebook_id,
-                question=prompt,
-                source_ids=[target_id]
+                notebook_id=notebook_id, question=prompt, source_ids=[target_id]
             )
 
             print("\n=== 📋 CÂU TRẢ LỜI CỦA NOTEBOOKLM ===")
@@ -416,7 +456,10 @@ async def query_rag(source_path: str, prompt: str) -> int:
 async def list_notebooks() -> int:
     """Liệt kê tất cả các notebook hiện có trên Cloud."""
     if not HAS_NOTEBOOKLM:
-        print("ERROR: Thư viện 'notebooklm-py' chưa được cài đặt. Vui lòng chạy: pip install notebooklm-py", file=sys.stderr)
+        print(
+            "ERROR: Thư viện 'notebooklm-py' chưa được cài đặt. Vui lòng chạy: pip install notebooklm-py",
+            file=sys.stderr,
+        )
         return 1
 
     try:
@@ -529,7 +572,9 @@ async def delete_source(source_id: str, notebook_id: str | None) -> int:
             if not notebook_id:
                 notebook_id = await get_or_create_project_notebook(client, project_name)
 
-            print(f"[Info] Đang yêu cầu xóa nguồn ID '{source_id}' khỏi notebook '{notebook_id}'...")
+            print(
+                f"[Info] Đang yêu cầu xóa nguồn ID '{source_id}' khỏi notebook '{notebook_id}'..."
+            )
             await client.sources.delete(notebook_id, source_id)
 
             # Cập nhật registry cục bộ
@@ -566,14 +611,21 @@ def map_quiz_quantity(q: str) -> Any:
 def map_quiz_difficulty(d: str) -> Any:
     if QuizDifficulty is None:
         return None
-    d_map = {"easy": QuizDifficulty.EASY, "medium": QuizDifficulty.MEDIUM, "hard": QuizDifficulty.HARD}
+    d_map = {
+        "easy": QuizDifficulty.EASY,
+        "medium": QuizDifficulty.MEDIUM,
+        "hard": QuizDifficulty.HARD,
+    }
     return d_map.get(d.lower(), QuizDifficulty.MEDIUM)
 
 
 def map_slide_format(f: str) -> Any:
     if SlideDeckFormat is None:
         return None
-    f_map = {"detailed": SlideDeckFormat.DETAILED_DECK, "presenter": SlideDeckFormat.PRESENTER_SLIDES}
+    f_map = {
+        "detailed": SlideDeckFormat.DETAILED_DECK,
+        "presenter": SlideDeckFormat.PRESENTER_SLIDES,
+    }
     return f_map.get(f.lower(), SlideDeckFormat.DETAILED_DECK)
 
 
@@ -587,35 +639,55 @@ def map_slide_length(slide_len: str) -> Any:
 def map_info_orientation(o: str) -> Any:
     if InfographicOrientation is None:
         return None
-    o_map = {"portrait": InfographicOrientation.PORTRAIT, "landscape": InfographicOrientation.LANDSCAPE}
+    o_map = {
+        "portrait": InfographicOrientation.PORTRAIT,
+        "landscape": InfographicOrientation.LANDSCAPE,
+    }
     return o_map.get(o.lower(), InfographicOrientation.PORTRAIT)
 
 
 def map_info_detail(d: str) -> Any:
     if InfographicDetail is None:
         return None
-    d_map = {"default": InfographicDetail.DEFAULT, "summary": InfographicDetail.SUMMARY, "detailed": InfographicDetail.DETAILED}
+    d_map = {
+        "default": InfographicDetail.DEFAULT,
+        "summary": InfographicDetail.SUMMARY,
+        "detailed": InfographicDetail.DETAILED,
+    }
     return d_map.get(d.lower(), InfographicDetail.DEFAULT)
 
 
 def map_info_style(s: str) -> Any:
     if InfographicStyle is None:
         return None
-    s_map = {"modern": InfographicStyle.MODERN, "minimal": InfographicStyle.MINIMAL, "colorful": InfographicStyle.COLORFUL}
+    s_map = {
+        "modern": InfographicStyle.MODERN,
+        "minimal": InfographicStyle.MINIMAL,
+        "colorful": InfographicStyle.COLORFUL,
+    }
     return s_map.get(s.lower(), InfographicStyle.MODERN)
 
 
 def map_report_format(f: str) -> Any:
     if ReportFormat is None:
         return None
-    f_map = {"briefing_doc": ReportFormat.BRIEFING_DOC, "study_guide": ReportFormat.STUDY_GUIDE, "blog_post": ReportFormat.BLOG_POST, "custom": ReportFormat.CUSTOM}
+    f_map = {
+        "briefing_doc": ReportFormat.BRIEFING_DOC,
+        "study_guide": ReportFormat.STUDY_GUIDE,
+        "blog_post": ReportFormat.BLOG_POST,
+        "custom": ReportFormat.CUSTOM,
+    }
     return f_map.get(f.lower(), ReportFormat.BRIEFING_DOC)
 
 
 def map_video_format(f: str) -> Any:
     if VideoFormat is None:
         return None
-    f_map = {"explainer": VideoFormat.EXPLAINER, "brief": VideoFormat.BRIEF, "cinematic": VideoFormat.CINEMATIC}
+    f_map = {
+        "explainer": VideoFormat.EXPLAINER,
+        "brief": VideoFormat.BRIEF,
+        "cinematic": VideoFormat.CINEMATIC,
+    }
     return f_map.get(f.lower(), VideoFormat.EXPLAINER)
 
 
@@ -624,4 +696,3 @@ def map_video_style(s: str) -> Any:
         return None
     s_map = {"modern": VideoStyle.MODERN, "classic": VideoStyle.CLASSIC}
     return s_map.get(s.lower(), VideoStyle.MODERN)
-

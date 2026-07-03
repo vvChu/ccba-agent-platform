@@ -11,6 +11,23 @@ REGISTRY_FILE = Path(".md/knowledge/sources_registry.yaml")
 TASK_STATE_FILE = Path(".md/scratch/notebooklm_task_state.yaml")
 
 
+def normalize_to_relative(filepath: str) -> str:
+    """Normalize file paths to repo-relative format for portability."""
+    if filepath.startswith(("http://", "https://")):
+        return filepath
+    try:
+        p = Path(filepath)
+        if p.is_absolute():
+            try:
+                # Try making it relative to Path.cwd()
+                return str(p.relative_to(Path.cwd())).replace("\\", "/")
+            except ValueError:
+                pass
+    except Exception:
+        pass
+    return filepath.replace("\\", "/")
+
+
 def get_file_sha256(filepath: str) -> str:
     """Tính mã SHA-256 của file cục bộ hoặc URL."""
     if filepath.startswith(("http://", "https://")):
@@ -30,7 +47,10 @@ def read_registry() -> dict[str, Any]:
     try:
         with open(REGISTRY_FILE, encoding="utf-8") as f:
             data = yaml.safe_load(f)
-            return dict(data) if data else {}
+            if not data:
+                return {}
+            # Normalize all keys to relative forward-slash paths
+            return {normalize_to_relative(k): v for k, v in data.items()}
     except Exception:
         return {}
 
@@ -39,11 +59,12 @@ def update_registry(file_path: str, source_id: str, sha256: str, notebook_id: st
     """Cập nhật thông tin file vào registry."""
     REGISTRY_FILE.parent.mkdir(parents=True, exist_ok=True)
     registry = read_registry()
-    registry[file_path] = {
+    norm_path = normalize_to_relative(file_path)
+    registry[norm_path] = {
         "source_id": source_id,
         "sha256": sha256,
         "notebook_id": notebook_id,
-        "updated_at": datetime.datetime.now().isoformat()
+        "updated_at": datetime.datetime.now().isoformat(),
     }
     try:
         with open(REGISTRY_FILE, "w", encoding="utf-8") as f:
@@ -111,7 +132,7 @@ def save_task_state(notebook_id: str, task_id: str, source_id: str, task_type: s
         "task_id": task_id,
         "source_id": source_id,
         "task_type": task_type,
-        "created_at": datetime.datetime.now().isoformat()
+        "created_at": datetime.datetime.now().isoformat(),
     }
     try:
         with open(TASK_STATE_FILE, "w", encoding="utf-8") as f:
