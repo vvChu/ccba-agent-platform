@@ -276,6 +276,24 @@ skills:
     triggers: [seminar, đào tạo, training, recap, agenda, buổi thảo luận]
     skill_path: .agents/skills/seminar-builder/SKILL.md
 
+  - name: handoff
+    bundle: _core
+    description: "Đóng gói ngữ cảnh phiên làm việc hiện tại thành tài liệu handoff nhỏ gọn cho Agent tiếp theo"
+    triggers: [handoff, đóng gói phiên, transfer context, chuyển tiếp]
+    skill_path: .agents/skills/handoff/SKILL.md
+
+  - name: codebase-design
+    bundle: _core
+    description: "Cẩm nang thiết kế module sâu (deep modules), seams, adapters theo Ousterhout"
+    triggers: [codebase design, deep module, module sâu, software design, seam]
+    skill_path: .agents/skills/codebase-design/SKILL.md
+
+  - name: diagnosing-bugs
+    bundle: _software
+    description: "Quy trình chẩn đoán lỗi sâu (repro loop, hypotheses ranking, instrumentation) cho các bug khó"
+    triggers: [diagnose bugs, chẩn đoán lỗi, fix bug, debug, regression]
+    skill_path: .agents/skills/diagnosing-bugs/SKILL.md
+
 workflows:
   # === _core ===
   - name: init-ccba-spoke
@@ -305,6 +323,13 @@ workflows:
     description: "Tổng hợp kiến thức cuối phiên làm việc"
     triggers: [retrospective, cuối phiên, tổng kết, session learnings]
     workflow_path: .agents/workflows/ccba-session-retrospective.md
+
+  - name: handoff
+    bundle: _core
+    command: /ccba-handoff
+    description: "Đóng gói phiên làm việc thành tài liệu handoff nhỏ gọn cho Agent tiếp theo"
+    triggers: [handoff, đóng gói phiên, transfer context, bàn giao]
+    workflow_path: .agents/workflows/ccba-handoff.md
 
   - name: propose-to-hub
     bundle: _core
