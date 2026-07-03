@@ -4,7 +4,8 @@ import subprocess
 from unittest.mock import MagicMock, patch
 
 import pytest
-from ccba_legal.harness import HarnessGuard, _original_builtins_open
+from ccba_legal.harness._guard import HarnessGuard
+from ccba_legal.harness._state import _original_builtins_open
 
 
 def test_pre_action_hook_blocking_sensitive_files():
@@ -185,7 +186,7 @@ def test_original_hooks_restored_in_subprocess():
             mock_proc.returncode = 0
             return mock_proc
 
-        with patch("ccba_legal.harness._original_popen", side_effect=mock_popen_check):
+        with patch("ccba_legal.harness._process_monitor._original_popen", side_effect=mock_popen_check):
             subprocess.run(["dummy_command"])
 
         # Check that during subprocess call, builtins.open remained wrapped (global hook intact)

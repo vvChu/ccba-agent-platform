@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 import pytest
-from ccba_legal.harness import HarnessGuard
+from ccba_legal.harness._guard import HarnessGuard
 
 
 def get_short_path_name(long_name):
