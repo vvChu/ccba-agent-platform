@@ -758,13 +758,16 @@ def _scan_ast_nodes(
                 return local_vars[n.id]
             if n.id == "os":
                 import os
+
                 return os
             if n.id == "sys":
                 import sys
+
                 return sys
             if n.id == "getattr":
                 return getattr
             import sys as _sys
+
             if n.id in _sys.modules:
                 return _sys.modules[n.id]
             try:
@@ -801,6 +804,7 @@ def _scan_ast_nodes(
             val = eval_node(n.value, depth + 1)
             import os
             import sys
+
             if val is os and n.attr == "environ":
                 return target_env
             elif val is sys and n.attr == "argv":

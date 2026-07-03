@@ -5,10 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from mdconverter import ConversionPipeline, ConversionResult
 from mdconverter.core.analyzer import PageDetail, PDFReport, Segment
 from mdconverter.core.base import ConversionStatus
-from mdconverter import ConversionResult, ConversionPipeline
-
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from ccba_legal.cleaners import Cleaners
 from ccba_legal.parser import LegalAnalysisEngine
@@ -18,11 +18,11 @@ def test_cleaners_strip_think_tags():
 
 
 def test_cleaners_extract_json():
-    raw = "Some text before.\n```json\n{\n  \"key\": \"value\"\n}\n```\nSome text after."
+    raw = 'Some text before.\n```json\n{\n  "key": "value"\n}\n```\nSome text after.'
     data = Cleaners.extract_json(raw)
     assert data == {"key": "value"}
 
-    raw_no_md = "{\n  \"numbers\": [1, 2, 3]\n}"
+    raw_no_md = '{\n  "numbers": [1, 2, 3]\n}'
     data_no_md = Cleaners.extract_json(raw_no_md)
     assert data_no_md == {"numbers": [1, 2, 3]}
 
@@ -51,10 +51,10 @@ def test_legal_analysis_engine_seam():
 ```
 """
     engine = LegalAnalysisEngine(ai_client=mock_ai)
-    
+
     text = "Nội dung văn bản luật xây dựng mới..."
     result = engine.analyze_document(text)
-    
+
     # Assert chat call
     mock_ai.chat.assert_called_once()
     assert result["title"] == "Luật Xây dựng 2025"
@@ -65,19 +65,16 @@ def test_legal_registry_manager_temp():
     with tempfile.TemporaryDirectory() as temp_dir:
         reg_file = Path(temp_dir) / "registry.yaml"
         manager = LegalRegistryManager(registry_path=reg_file)
-        
+
         # Test loading empty registry
         data = manager.load()
         assert "laws" in data
         assert len(data["laws"]) == 0
-        
+
         # Test adding document
-        doc_data = {
-            "title": "Nghị định 06/2021/NĐ-CP",
-            "effective_date": "2021-01-26"
-        }
+        doc_data = {"title": "Nghị định 06/2021/NĐ-CP", "effective_date": "2021-01-26"}
         manager.add_or_update_doc("decrees", "ND_06_2021", doc_data)
-        
+
         # Reload and verify
         new_data = manager.load()
         assert len(new_data["decrees"]) == 1

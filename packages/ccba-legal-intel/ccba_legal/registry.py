@@ -5,7 +5,7 @@ by dynamically resolving file paths relative to the project root.
 """
 
 from pathlib import Path
-import os
+
 import yaml
 
 
