@@ -3,11 +3,15 @@ import asyncio
 import io
 import sys
 from pathlib import Path
+from typing import Any
 
 # Cấu hình UTF-8 cho console đầu ra trên Windows để tránh lỗi mã hóa ký tự tiếng Việt
 if sys.stdout.encoding != "utf-8":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+
+
+import importlib.util
 
 # Import dynamically from our own package
 from . import (
@@ -18,30 +22,35 @@ from . import (
     handle_artifact_flow,
     list_notebooks,
     list_sources,
-    map_info_detail,
-    map_info_orientation,
-    map_info_style,
-    map_quiz_difficulty,
-    map_quiz_quantity,
-    map_report_format,
-    map_slide_format,
-    map_slide_length,
-    map_video_format,
-    map_video_style,
     query_rag,
     share_notebook,
 )
+from ._client import (
+    InfographicDetail,
+    InfographicOrientation,
+    InfographicStyle,
+    QuizDifficulty,
+    QuizQuantity,
+    ReportFormat,
+    SlideDeckFormat,
+    SlideDeckLength,
+    VideoFormat,
+    VideoStyle,
+)
 
-# Optional skill_generator import
-try:
-    import skill_generator
-except ImportError:
-    # Try adding scripts to sys.path to find skill_generator
-    sys.path.insert(0, str(Path(__file__).parents[4] / "scripts"))
+# Optional skill_generator import (no sys.path mutation)
+_SCRIPTS_DIR = Path(__file__).parents[4] / "scripts"
+_skill_gen_path = _SCRIPTS_DIR / "skill_generator.py"
+if _skill_gen_path.exists():
     try:
-        import skill_generator
-    except ImportError:
+        _spec = importlib.util.spec_from_file_location("skill_generator", _skill_gen_path)
+        skill_generator = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(skill_generator)
+    except Exception:
         skill_generator = None
+else:
+    skill_generator = None
+
 
 
 def main() -> int:
@@ -426,5 +435,110 @@ def main() -> int:
     return 1
 
 
+# ---------------------------------------------------------------------------
+# CLI Argument Mappers
+# Translates string inputs from argparse into typing-safe enums.
+# ---------------------------------------------------------------------------
+
+
+def map_quiz_quantity(q: str) -> Any:
+    if QuizQuantity is None:
+        return None
+    q_map = {"fewer": QuizQuantity.FEWER, "standard": QuizQuantity.STANDARD}
+    return q_map.get(q.lower(), QuizQuantity.STANDARD)
+
+
+def map_quiz_difficulty(d: str) -> Any:
+    if QuizDifficulty is None:
+        return None
+    d_map = {
+        "easy": QuizDifficulty.EASY,
+        "medium": QuizDifficulty.MEDIUM,
+        "hard": QuizDifficulty.HARD,
+    }
+    return d_map.get(d.lower(), QuizDifficulty.MEDIUM)
+
+
+def map_slide_format(f: str) -> Any:
+    if SlideDeckFormat is None:
+        return None
+    f_map = {
+        "detailed": SlideDeckFormat.DETAILED_DECK,
+        "presenter": SlideDeckFormat.PRESENTER_SLIDES,
+    }
+    return f_map.get(f.lower(), SlideDeckFormat.DETAILED_DECK)
+
+
+def map_slide_length(slide_len: str) -> Any:
+    if SlideDeckLength is None:
+        return None
+    l_map = {"default": SlideDeckLength.DEFAULT, "short": SlideDeckLength.SHORT}
+    return l_map.get(slide_len.lower(), SlideDeckLength.DEFAULT)
+
+
+def map_info_orientation(o: str) -> Any:
+    if InfographicOrientation is None:
+        return None
+    o_map = {
+        "portrait": InfographicOrientation.PORTRAIT,
+        "landscape": InfographicOrientation.LANDSCAPE,
+    }
+    return o_map.get(o.lower(), InfographicOrientation.PORTRAIT)
+
+
+def map_info_detail(d: str) -> Any:
+    if InfographicDetail is None:
+        return None
+    d_map = {
+        "default": InfographicDetail.DEFAULT,
+        "summary": InfographicDetail.SUMMARY,
+        "detailed": InfographicDetail.DETAILED,
+    }
+    return d_map.get(d.lower(), InfographicDetail.DEFAULT)
+
+
+def map_info_style(s: str) -> Any:
+    if InfographicStyle is None:
+        return None
+    s_map = {
+        "modern": InfographicStyle.MODERN,
+        "minimal": InfographicStyle.MINIMAL,
+        "colorful": InfographicStyle.COLORFUL,
+    }
+    return s_map.get(s.lower(), InfographicStyle.MODERN)
+
+
+def map_report_format(f: str) -> Any:
+    if ReportFormat is None:
+        return None
+    f_map = {
+        "briefing_doc": ReportFormat.BRIEFING_DOC,
+        "study_guide": ReportFormat.STUDY_GUIDE,
+        "blog_post": ReportFormat.BLOG_POST,
+        "custom": ReportFormat.CUSTOM,
+    }
+    return f_map.get(f.lower(), ReportFormat.BRIEFING_DOC)
+
+
+def map_video_format(f: str) -> Any:
+    if VideoFormat is None:
+        return None
+    f_map = {
+        "explainer": VideoFormat.EXPLAINER,
+        "brief": VideoFormat.BRIEF,
+        "cinematic": VideoFormat.CINEMATIC,
+    }
+    return f_map.get(f.lower(), VideoFormat.EXPLAINER)
+
+
+def map_video_style(s: str) -> Any:
+    if VideoStyle is None:
+        return None
+    s_map = {"modern": VideoStyle.MODERN, "classic": VideoStyle.CLASSIC}
+    return s_map.get(s.lower(), VideoStyle.MODERN)
+
+
+
 if __name__ == "__main__":
     sys.exit(main())
+
