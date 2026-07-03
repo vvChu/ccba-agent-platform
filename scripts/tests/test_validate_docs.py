@@ -3,10 +3,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-# Ensure scripts directory is in sys.path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from validate_docs import (
+from scripts.validate_docs import (
     extract_code_references,
     extract_internal_links,
     extract_env_variables,
@@ -86,7 +83,7 @@ class TestValidateDocs(unittest.TestCase):
                 """)
                 
             env_vars = {"API_KEY"}
-            issues = validate_markdown_file(md_file, [tmppath], env_vars)
+            issues = validate_markdown_file(md_file, [tmppath], env_vars, tmppath)
             
             # Verify code ref issues
             code_issues = [x[1] for x in issues["code_refs"]]

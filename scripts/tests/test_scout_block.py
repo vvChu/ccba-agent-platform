@@ -3,10 +3,7 @@ import sys
 import json
 from pathlib import Path
 
-# Ensure scripts directory is in sys.path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from hooks.scout_block import (
+from scripts.hooks.scout_block import (
     is_path_blocked,
     is_allowed_command,
     check_tool_arguments,
