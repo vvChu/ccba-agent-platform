@@ -16,7 +16,6 @@ from ccba_notebooklm.__main__ import (
 )
 
 
-
 def test_public_interface_exists():
     """Verify that all core interfaces are exported."""
     assert check_auth is not None

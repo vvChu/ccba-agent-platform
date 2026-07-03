@@ -11,17 +11,7 @@ import yaml  # type: ignore
 
 from ._client import (
     HAS_NOTEBOOKLM,
-    InfographicDetail,
-    InfographicOrientation,
-    InfographicStyle,
     NetworkError,
-    QuizDifficulty,
-    QuizQuantity,
-    ReportFormat,
-    SlideDeckFormat,
-    SlideDeckLength,
-    VideoFormat,
-    VideoStyle,
     get_client,
 )
 from ._gc import check_quota_and_warn
@@ -599,6 +589,3 @@ async def delete_source(source_id: str, notebook_id: str | None) -> int:
     except Exception as e:
         print(f"ERROR: Xóa nguồn tài liệu thất bại. Chi tiết: {e}", file=sys.stderr)
         return 3
-
-
-

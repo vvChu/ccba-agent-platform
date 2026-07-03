@@ -1,10 +1,11 @@
 from ccba_harness import HarnessGuard
 
 from .adr import ADRGenerator
+from .cleaners import Cleaners
 from .crawler import ChromeCDP, ChromeCDPError, get_crawled_doc_data, trigger_download
 from .monitor import TokenMonitor
 from .packager import OKFBundlePackager, get_concept_type, is_guiding_link
-from .parser import Cleaners, LegalAnalysisEngine
+from .parser import LegalAnalysisEngine
 from .registry import LegalRegistryManager
 
 __all__ = [

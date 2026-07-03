@@ -6,10 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ccba_ai import async_ai
-from ccba_ai import AsyncAIClient
+from ccba_ai import AsyncAIClient, async_ai
 from ccba_ai.hooks import PrivacyGuardHook
-
 
 # ---------------------------------------------------------------------------
 # Test: async_ai is properly exported
