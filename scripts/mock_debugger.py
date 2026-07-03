@@ -40,9 +40,8 @@ def analyze_error(script_path: Path, stderr: str) -> str:
         source_code = f"Could not read source code: {e}"
 
     prompt = f"""
-    Bạn là một kỹ sư Python chuyên nghiệp. Một kịch bản chạy thử nghiệm đã bị lỗi crash.
-    Hãy phân tích vết lỗi (traceback) bên dưới và mã nguồn để tìm ra nguyên nhân gốc rễ (Root Cause),
-    sau đó đề xuất đoạn mã sửa lỗi chính xác.
+    Bạn là một kỹ sư Python chuyên nghiệp, đang thực thi quy trình chẩn đoán lỗi sâu (diagnosing-bugs discipline).
+    Một kịch bản chạy thử nghiệm đã bị lỗi crash. Hãy phân tích vết lỗi (traceback) và mã nguồn.
     
     Đường dẫn tệp lỗi: {script_path}
     
@@ -56,10 +55,16 @@ def analyze_error(script_path: Path, stderr: str) -> str:
     {source_code}
     ```
     
-    Hãy phản hồi ngắn gọn bằng tiếng Việt theo các mục:
-    1. 🔍 Nguyên nhân gốc rễ (Root Cause Analysis).
-    2. 🛠️ Đề xuất sửa đổi (Proposed Patch/Diff).
-    3. 💡 Khuyên nghị phòng ngừa.
+    Hãy phản hồi ngắn gọn bằng tiếng Việt, cấu trúc theo quy chuẩn chẩn đoán lỗi chuyên sâu:
+    
+    1. 🔍 Phân tích Nguyên nhân gốc rễ (Root Cause Analysis).
+    2. 📊 Danh sách 3-5 giả định xếp hạng (Ranked Hypotheses) có tính chất kiểm chứng được (Falsifiable):
+       - Định dạng: "Nếu giả định <X> đúng, việc thay đổi <Y> sẽ làm lỗi biến mất / thay đổi <Z> sẽ làm lỗi nặng hơn."
+    3. 🎯 Đề xuất thiết lập vòng lặp phản hồi (Feedback Loop Recommendation):
+       - Đề xuất cách viết test case hoặc kịch bản chạy tối thiểu (nhanh, deterministic, agent-runnable) để tái hiện lỗi này.
+    4. 🛠️ Đề xuất sửa đổi (Proposed Patch/Diff) cho giả định khả thi nhất.
+    5. 🧪 Gợi ý mối nối kiểm thử hồi quy (Regression Test Seam):
+       - Đề xuất vị trí viết kiểm thử hồi quy (seam) để khóa lỗi này vĩnh viễn.
     """
     
     try:
