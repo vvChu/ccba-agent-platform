@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class AuditFinding(BaseModel):
     """A standard representation of a detected design clash / coordination issue."""
+
     severity: str = "medium"  # high / medium / low
     location: str = ""
     disciplines: list[str] = Field(default_factory=list)
@@ -12,8 +13,10 @@ class AuditFinding(BaseModel):
     recommendation: str = ""
     source: str = ""
 
+
 class AuditReport(BaseModel):
     """A standard report representation of an audit pass on a specific level."""
+
     level: str
     ai_model: str
     quad_view_path: str = ""

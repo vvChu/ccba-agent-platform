@@ -19,6 +19,7 @@ try:
         VideoFormat,
         VideoStyle,
     )
+
     HAS_NOTEBOOKLM = True
 except ImportError:
     NotebookLMClient = None
@@ -61,20 +62,19 @@ def inject_auth_cookies() -> str | None:
             for part in env_cookie.split(";"):
                 if "=" in part:
                     name, value = part.strip().split("=", 1)
-                    cookies.append({
-                        "name": name,
-                        "value": value,
-                        "domain": ".google.com",
-                        "path": "/",
-                        "expires": -1,
-                        "httpOnly": True,
-                        "secure": True,
-                        "sameSite": "Lax"
-                    })
-            storage_state = {
-                "cookies": cookies,
-                "origins": []
-            }
+                    cookies.append(
+                        {
+                            "name": name,
+                            "value": value,
+                            "domain": ".google.com",
+                            "path": "/",
+                            "expires": -1,
+                            "httpOnly": True,
+                            "secure": True,
+                            "sameSite": "Lax",
+                        }
+                    )
+            storage_state = {"cookies": cookies, "origins": []}
             with open(temp_path, "w", encoding="utf-8") as f:
                 json.dump(storage_state, f, ensure_ascii=False, indent=2)
             print("[Info] Đã chuyển đổi và nạp auth từ NOTEBOOKLM_SESSION_COOKIE.")
@@ -96,7 +96,10 @@ def get_client() -> Any:
 async def check_auth() -> int:
     """Kiểm tra trạng thái đăng nhập NotebookLM."""
     if not HAS_NOTEBOOKLM:
-        print("ERROR: Thư viện 'notebooklm-py' chưa được cài đặt. Vui lòng chạy: pip install notebooklm-py", file=sys.stderr)
+        print(
+            "ERROR: Thư viện 'notebooklm-py' chưa được cài đặt. Vui lòng chạy: pip install notebooklm-py",
+            file=sys.stderr,
+        )
         return 1
 
     try:
@@ -107,5 +110,8 @@ async def check_auth() -> int:
             print(f"[Info] Subscription Tier: {tier.tier} ({tier.plan_name or 'Standard Plan'})")
             return 0
     except Exception as e:
-        print(f"ERROR_AUTH: Session cookie đã hết hạn hoặc không tồn tại. Vui lòng chạy 'python -m notebooklm login' trên trình duyệt để đăng nhập lại. Chi tiết: {e}", file=sys.stderr)
+        print(
+            f"ERROR_AUTH: Session cookie đã hết hạn hoặc không tồn tại. Vui lòng chạy 'python -m notebooklm login' trên trình duyệt để đăng nhập lại. Chi tiết: {e}",
+            file=sys.stderr,
+        )
         return 2

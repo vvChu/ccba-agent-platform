@@ -29,24 +29,28 @@ def test_privacy_guard_detects_keys():
 
     # 5. Test dict scanning (OpenAI multimodal payload)
     with pytest.raises(ValueError) as excinfo:
-        guard.check_content({
-            "role": "user",
-            "content": [
-                {"type": "text", "text": f"API KEY {openai_key}"},
-                {"type": "image_url", "image_url": {"url": "data:image/png;base64,..."}}
-            ]
-        })
+        guard.check_content(
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": f"API KEY {openai_key}"},
+                    {"type": "image_url", "image_url": {"url": "data:image/png;base64,..."}},
+                ],
+            }
+        )
     assert "Security Violation: Detected sensitive API Key leak" in str(excinfo.value)
 
     # 6. Test clean list and dict pass
     guard.check_content(["safe text", "another safe text"])
-    guard.check_content({
-        "role": "user",
-        "content": [
-            {"type": "text", "text": "Describe this drawing"},
-            {"type": "image_url", "image_url": {"url": "data:image/png;base64,..."}}
-        ]
-    })
+    guard.check_content(
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Describe this drawing"},
+                {"type": "image_url", "image_url": {"url": "data:image/png;base64,..."}},
+            ],
+        }
+    )
 
 
 def test_safe_write_file_blocks_leak(tmp_path):
