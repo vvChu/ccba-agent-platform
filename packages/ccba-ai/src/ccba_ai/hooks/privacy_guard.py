@@ -33,20 +33,30 @@ class PrivacyGuardHook:
                 # Silent fail to avoid disrupting client
                 pass
 
-    def check_content(self, content: str) -> None:
-        """Scan content against blocked patterns. Raises ValueError if a match is found."""
+    def check_content(self, content: any) -> None:
+        """Scan content against blocked patterns. Raises ValueError if a match is found.
+        
+        Supports string, list, and dict (recursively scanning string values).
+        """
         if not self.enabled or not content:
             return
 
-        for pattern in self.block_patterns:
-            matches = re.findall(pattern, content)
-            if matches:
-                # Obfuscate key in error message for safety
-                key_sample = matches[0]
-                obfuscated = (
-                    key_sample[:6] + "..." + key_sample[-4:] if len(key_sample) > 10 else "..."
-                )
-                raise ValueError(
-                    f"[PrivacyGuard] Security Violation: Detected sensitive API Key leak ({obfuscated}). "
-                    "Writing or returning raw API keys is strictly blocked."
-                )
+        if isinstance(content, str):
+            for pattern in self.block_patterns:
+                matches = re.findall(pattern, content)
+                if matches:
+                    # Obfuscate key in error message for safety
+                    key_sample = matches[0]
+                    obfuscated = (
+                        key_sample[:6] + "..." + key_sample[-4:] if len(key_sample) > 10 else "..."
+                    )
+                    raise ValueError(
+                        f"[PrivacyGuard] Security Violation: Detected sensitive API Key leak ({obfuscated}). "
+                        "Writing or returning raw API keys is strictly blocked."
+                    )
+        elif isinstance(content, list):
+            for item in content:
+                self.check_content(item)
+        elif isinstance(content, dict):
+            for val in content.values():
+                self.check_content(val)
