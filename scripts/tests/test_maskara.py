@@ -1,16 +1,13 @@
-import unittest
-import sys
 import json
-import shutil
-import tempfile
+import unittest
 from pathlib import Path
 
 from scripts.maskara import (
-    normalize_agent_name,
-    detect_secrets_in_text,
     apply_raw_redactions,
+    detect_secrets_in_text,
+    normalize_agent_name,
+    redact_structured,
     validate_structured,
-    redact_structured
 )
 
 
@@ -28,21 +25,21 @@ class TestMaskara(unittest.TestCase):
         google_key = "AIzaSyAbCdEfGhIjKlMnOpQrStUvWxYz1234567"
         jwt_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
         db_url = "postgres://username:password@localhost:5432/mydb"
-        
+
         # Test detection of individual secrets
         findings = detect_secrets_in_text(f"My key is {openai_key}", "dummy.txt", "claude")
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0]["rule_id"], "openai-api-key")
         self.assertEqual(findings[0]["severity"], "critical")
-        
+
         findings = detect_secrets_in_text(f"Google key: {google_key}", "dummy.txt", "gemini")
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0]["rule_id"], "google-api-key")
-        
+
         findings = detect_secrets_in_text(f"JWT: {jwt_token}", "dummy.txt", "codex")
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0]["rule_id"], "jwt")
-        
+
         findings = detect_secrets_in_text(f"DB: {db_url}", "dummy.txt", "antigravity")
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0]["rule_id"], "database-url")
@@ -51,7 +48,7 @@ class TestMaskara(unittest.TestCase):
         text = "Hello sk-proj-12345678901234567890 World"
         findings = detect_secrets_in_text(text, "dummy.txt", "claude")
         self.assertEqual(len(findings), 1)
-        
+
         raw_bytes = text.encode("utf-8")
         redacted, count = apply_raw_redactions(raw_bytes, findings)
         self.assertEqual(count, 1)
@@ -61,7 +58,7 @@ class TestMaskara(unittest.TestCase):
     def test_validate_structured_json(self):
         valid_json = b'{"api_key": "sk-proj-12345678901234567890", "status": "ok"}'
         invalid_after_redact = b'{"api_key": [MASKARA_REDACTED:openai-api-key], "status": "ok"}' # Missing quotes, invalid JSON
-        
+
         # Validation should fail (return False) because json becomes invalid
         result = validate_structured(Path("test.json"), valid_json, invalid_after_redact)
         self.assertFalse(result)

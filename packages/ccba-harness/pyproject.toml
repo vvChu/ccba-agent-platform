@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ccba-harness"
+version = "0.1.0"
+description = "CCBA Security and Operation Harness (Monkey-patching Guard)"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ccba_harness"]
