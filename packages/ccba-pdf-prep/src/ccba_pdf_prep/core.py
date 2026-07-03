@@ -305,3 +305,43 @@ def get_blind_chunks(total_pages: int, chunk_size: int = 20) -> list[tuple[int, 
     return [
         (s, min(s + chunk_size - 1, total_pages - 1)) for s in range(0, total_pages, chunk_size)
     ]
+
+
+def render_page_to_image(
+    pdf_path: Path,
+    page_num: int,
+    output_path: Path,
+    dpi: int = 150,
+) -> Path:
+    """Render a single page of a PDF file to a PNG/JPEG image.
+
+    Args:
+        pdf_path: Path to the PDF file.
+        page_num: 0-indexed page number to render.
+        output_path: Target path for the output image.
+        dpi: Target DPI for rendering.
+
+    Returns:
+        Path to the saved image file.
+    """
+    import fitz
+
+    if not pdf_path.exists():
+        raise FileNotFoundError(f"PDF not found: {pdf_path}")
+
+    # Ensure parent directory exists
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    doc = fitz.open(str(pdf_path))
+    try:
+        if page_num < 0 or page_num >= len(doc):
+            raise IndexError(f"Page number {page_num} out of range for PDF with {len(doc)} pages")
+        page = doc[page_num]
+        matrix = fitz.Matrix(dpi / 72, dpi / 72)
+        pix = page.get_pixmap(matrix=matrix)
+        pix.save(str(output_path))
+    finally:
+        doc.close()
+
+    return output_path
+
