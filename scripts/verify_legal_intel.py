@@ -10,7 +10,6 @@ import unittest
 from pathlib import Path
 
 # Add scripts directory to path to import legal_intelligence
-sys.path.append(str(Path(__file__).parent))
 
 from legal_intelligence import Cleaners, OKFBundlePackager
 

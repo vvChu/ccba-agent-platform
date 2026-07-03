@@ -3,10 +3,7 @@ import sys
 import os
 from pathlib import Path
 
-# Ensure scripts directory is in sys.path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from hooks.simplify_gate import (
+from scripts.hooks.simplify_gate import (
     matched_severity,
     main
 )
