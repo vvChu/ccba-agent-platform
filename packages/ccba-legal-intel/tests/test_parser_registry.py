@@ -85,12 +85,5 @@ def test_legal_registry_manager_temp():
 def test_registry_manager_path_resolution():
     manager = LegalRegistryManager()
     project_root = resolve_project_root()
-    expected_path = (
-        project_root
-        / ".agents"
-        / "skills"
-        / "legal-document-tracker"
-        / "resources"
-        / "legal_registry.yaml"
-    )
+    expected_path = project_root / ".md" / "knowledge" / "legal_registry.yaml"
     assert manager.registry_path.resolve() == expected_path.resolve()
