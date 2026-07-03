@@ -1,0 +1,49 @@
+sources:
+  .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an.docx:
+    drive_file_id: 1oKzsYdg_WYwoeth3QmjjRfq0Cawmlmujq01Rs2CBO04
+    sha256: 7569e1af44c027cf78112eca3a9246078969b285fc4e6c1604d9cd93c5bb64ec
+    source_id: bf40c6c5-588f-459b-ba8a-b766c350e8e4
+    title: nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an
+  ? .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_206_2026_nd_cp_quan_ly_chi_phi_dau_tu_xay_dung.docx
+  : drive_file_id: 1n8Vq__SW17NnCyzhozUbA9rvylaJfYqw_A12T5HuQnc
+    sha256: 2babcfe1fca745824ce2cac47d657a74c16654b36009abbdae980fa3ad2630fc
+    source_id: 2e28ed88-87e7-4b07-8133-bb0f054cd941
+    title: nghi_dinh_206_2026_nd_cp_quan_ly_chi_phi_dau_tu_xay_dung
+  ? .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.docx
+  : drive_file_id: 1XP4By-6CcO7gYU1h8XOLuItSM2BgB-8qCQ9aZGQ0HYs
+    sha256: 7097d9a3991adcaea69b1ef1ce950b355ef854585b0f0ca89fec18fc101996b6
+    source_id: 420511c2-c1f7-49dc-811c-d006622a87d5
+    title: nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung
+  .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_209_2026_nd_cp_quan_ly_vat_lieu_xay_dung.docx:
+    drive_file_id: 1peOdE6zR8Nse7Ip4oeRjYDrQB6ndUNwqLMqxYHG-K2E
+    sha256: 796aa7b3dfbb2c5e3bd11dfeae1896c29714d3ca23d88a48123cd370d640abb2
+    source_id: 8dad8e64-0480-4bcb-b0fd-07bad8582a7b
+    title: nghi_dinh_209_2026_nd_cp_quan_ly_vat_lieu_xay_dung
+  ? .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung.docx
+  : drive_file_id: 1ULraTUdGX8xFiSXHiIjk3SK11mR7R9qSZMuvCjYPPwY
+    sha256: 399c73f9b99021b4187fe8a03e8e451b738daec6d43cde67144efad6b301aba3
+    source_id: 59b03450-a48c-42e2-bcb0-5395363fb3df
+    title: nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung
+  .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.docx:
+    drive_file_id: 1KbmKGrWkREeo7lHBq7NISxRz7kJuINMCOMaZYXKfLMg
+    sha256: d7ca69531f3a25e717b3b2515c5b09643eadcd404ccc9d541c506a335c3425ed
+    source_id: dcbc62ec-bd73-45c9-9908-6c16b75d1536
+    title: nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung
+  .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung.docx:
+    drive_file_id: 1bE9IeJotSwHgLdJr_pKgvKKTXY-1I61LKN8uRiju1KY
+    sha256: c4230de3460ec7e83d5881a95ff53d625b6d2a29ac8a26c6495a2a13cf054480
+    source_id: 4edaeac7-6822-4b4a-9afd-99367e425d9c
+    title: thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung
+  .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/luat_xay_dung_2025_so_135_2025_qh15.docx:
+    drive_file_id: 1XTzr2Bk5tcXaco4W656MnIIuoo94veMHAmdYsxY31zg
+    sha256: 9099fbb28eeafe04f59bfd10f08dcb07f533879cdf24a504f828ab8956a4cff1
+    source_id: e4c80974-3f5b-43db-b689-481a6976f7fd
+    title: luat_xay_dung_2025_so_135_2025_qh15
+  .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/luat_xay_dung_2025_so_135_2025_qh15.docx_pdf:
+    drive_file_id: 1j5bLyYlcRGPe0TVxaPBYmRLStp7Zqsh1
+    sha256: 7569e1af44c027cf78112eca3a9246078969b285fc4e6c1604d9cd93c5bb64ec
+    source_id: 933cee20-d280-4d31-b90a-d0b91bb23915
+  BIM_VBPL/2026/Dự thảo NĐQLCL2026 lấy ý kiến/01. NỘI DUNG TRUYỀN THÔNG ND QLCL.docx:
+    drive_file_id: 1J3GokR5KVaZzQi0EftrL4J_Sxl_UjDvc
+    sha256: e8e75d03d0829673a5abb81db6f3b35f236d49e4bac1d828287ab7b94f2e015b
+    source_id: 9ca8c811-0bfc-4aa2-b773-a77a3ff2491c

@@ -3,16 +3,15 @@ Hook script for session-init lifecycle event.
 Initializes session parameters and logs environment context.
 """
 
-import os
+import subprocess
 import sys
 from pathlib import Path
-import subprocess
 
 
 def main(event: str, payload: dict) -> int:
     print("[session-init] Initializing workspace context...")
     cwd = Path.cwd()
-    
+
     # 1. Detect Git Root
     git_root = None
     try:
@@ -20,7 +19,7 @@ def main(event: str, payload: dict) -> int:
         git_root = res.stdout.strip()
     except subprocess.SubprocessError:
         pass
-    
+
     # 2. Log workspace properties
     project_name = cwd.name
     print(f"[session-init] Current Directory: {cwd}")
@@ -44,7 +43,7 @@ def main(event: str, payload: dict) -> int:
             print(f"[session-init] Created central Knowledge Base folder: {kb_dir}")
         except Exception as e:
             print(f"[session-init] Error creating .md directory: {e}")
-            
+
     # 4. Trigger ClaudeKit update checker
     checker_script = Path(__file__).parent.parent / "check_claudekit_updates.py"
     if checker_script.exists():
@@ -52,5 +51,5 @@ def main(event: str, payload: dict) -> int:
             subprocess.Popen([sys.executable, str(checker_script)])
         except Exception:
             pass
-            
+
     return 0

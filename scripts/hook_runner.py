@@ -4,10 +4,9 @@ Unified Hook Runner CLI for ccba-agent-platform.
 Orchestrates lifecycle hooks: session-init, pre-tool, post-tool.
 """
 
-import sys
-import os
 import argparse
 import importlib.util
+import sys
 from pathlib import Path
 
 # Enforce UTF-8 output
@@ -24,13 +23,13 @@ def run_hook_script(script_path: Path, event: str, payload: dict) -> int:
     if not script_path.exists():
         print(f"[Hook Runner] Warning: Script {script_path.name} not found.")
         return 0  # Fail-open by default
-    
+
     try:
         spec = importlib.util.spec_from_file_location(script_path.stem, str(script_path))
         module = importlib.util.module_from_spec(spec)
         sys.modules[script_path.stem] = module
         spec.loader.exec_module(module)
-        
+
         if hasattr(module, "main"):
             # Execute main function and return exit code
             return module.main(event, payload)
