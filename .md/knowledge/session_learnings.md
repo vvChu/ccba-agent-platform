@@ -150,3 +150,72 @@ applies_to:
   - "Pháp lý xây dựng"
 bundle: "_core"
 ---
+
+## Architecture Refactor: Candidate 1 & 4 — QC LLM Integration (2026-07-03 - Evening)
+
+### Bối cảnh phiên
+
+Hoàn thành toàn bộ 6 Candidates từ Architecture Review 2026-07-03. PRs đã merge: #38 (ccba-harness), #39 (idop templates), #40 (ccba-notebooklm), #41 (QC LLM integration + cross-package deps). Test suite: 383 passed.
+
+---
+
+### Patterns
+
+**1. Double-Pass Adversarial Review — Code-First trước khi plan**
+- **Ngữ cảnh**: Nhận yêu cầu "lập kế hoạch triển khai Candidate X" từ Architecture Review.
+- **Vấn đề**: Báo cáo kiến trúc là snapshot tại thời điểm tạo; code có thể đã partial-migrate. Candidate 1 tưởng cần migration lớn, thực tế 4 engines đã dùng `ccba_ai` rồi.
+- **Giải pháp**: Luôn `grep` pattern trước: `grep -r "from ccba_ai" .agents/skills/*/scripts/`. Chỉ plan những gì grep xác nhận là *chưa* done.
+- **Impact**: Tiết kiệm ~2h tránh rewrite code đã đúng. Kế hoạch thu hẹn từ 5 tasks lớn xuống 4 gaps nhỏ.
+
+**2. `importlib.util` loader cho peer skill scripts (no sys.path pollution)**
+- **Ngữ cảnh**: Scripts trong `.agents/skills/*/scripts/` là standalone, không phải installable packages. Cần import từ sibling skill.
+- **Vấn đề**: `sys.path.insert(0, ...)` mutate global interpreter state cho toàn bộ process.
+- **Giải pháp**:
+  ```python
+  def _load_script_module(skill_name: str, script_name: str):
+      """Load sibling skill script without sys.path mutation."""
+      script_path = _SKILLS_ROOT / skill_name / "scripts" / f"{script_name}.py"
+      spec = importlib.util.spec_from_file_location(script_name, script_path)
+      module = importlib.util.module_from_spec(spec)
+      spec.loader.exec_module(module)
+      return module
+  ```
+- **Trade-off**: Module-level code bị re-execute mỗi lần load. Nếu có side effects nặng, cache result vào biến module-level.
+- **Nguồn**: PR #41, `orchestrator.py`
+
+**3. Hard vs Optional dependency cho `pyproject.toml`**
+- **Rule**: Nếu `import` là unconditional module-level → `dependencies = [...]` (hard). Nếu `import` nằm trong `try/except ImportError`, lazy trong function, hoặc `if TYPE_CHECKING` → `optional-dependencies.feature = [...]`.
+- **Ví dụ phiên này**:
+  - `ccba-legal-intel`: `from ccba_ai import ai` ở module level → hard dep
+  - `mdconverter`: `from ccba_ai import ai` trong `try` block → `optional-dependencies.ai`
+
+**4. `asyncio_mode = "auto"` cho pytest với async-heavy package**
+- Thêm vào `[tool.pytest.ini_options]` trong `pyproject.toml` để toàn bộ `async def test_*` được collect tự động, không cần `@pytest.mark.asyncio` từng function.
+
+---
+
+### Anti-patterns
+
+**1. Chuỗi `replace_file_content` liên tiếp trên cùng file → duplicate imports**
+- Hai lần replace độc lập trên `orchestrator.py` đã thêm `import importlib.util` hai lần.
+- **Phòng tránh**: Dùng `multi_replace_file_content` cho non-contiguous edits. View file sau mỗi edit quan trọng.
+
+**2. `__all__` không có nhóm comment → khó scan**
+- Khi `__all__` >10 items, thêm category comment: `# Singletons`, `# Client classes`, `# Utilities`, `# Models`.
+
+---
+
+### Configurations
+
+| Setting | Value | Lý do | Áp dụng khi |
+| --------- | ------- | ------- | ------------- |
+| `asyncio_mode` | `"auto"` | Không cần decorator mỗi test | Package có async interface |
+| dep type | `optional[ai]` | lazy import trong `try` block | mdconverter `form_cleaner` |
+| dep type | `hard` | unconditional module-level import | `ccba-legal-intel` parser |
+
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+applies_to:
+  - "Phần mềm"
+bundle: "_core"
+---
