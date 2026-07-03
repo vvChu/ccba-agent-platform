@@ -31,14 +31,7 @@ class LegalRegistryManager:
             self.registry_path = Path(registry_path)
         else:
             project_root = resolve_project_root()
-            self.registry_path = (
-                project_root
-                / ".agents"
-                / "skills"
-                / "legal-document-tracker"
-                / "resources"
-                / "legal_registry.yaml"
-            )
+            self.registry_path = project_root / ".md" / "knowledge" / "legal_registry.yaml"
 
     def load(self) -> dict:
         """Load the legal document registry from YAML."""
