@@ -113,3 +113,40 @@ applies_to:
   - "Pháp lý xây dựng"
 bundle: "_core"
 ---
+
+## PR Checks, Formatting & Portability (2026-07-03 - Evening)
+
+### Patterns
+
+**1. Sử dụng đường dẫn tương đối (repo-relative forward-slash paths) cho data registries**
+- **Vấn đề**: Việc sử dụng đường dẫn tuyệt đối (absolute path) như `D:\GitHubProjects\...` trong tệp cấu hình/đối soát (`sources_registry.yaml`) khiến dự án không thể di chuyển sang máy tính khác (non-portable) và gây lỗi CI.
+- **Giải pháp**: 
+  1. Chuẩn hóa toàn bộ khóa đường dẫn trong registry sang dạng tương đối bắt đầu bằng `.md/` với dấu gạch chéo `/` (OS-independent).
+  2. Bổ sung helper function trong `ccba-notebooklm` để tự động chuẩn hóa mọi đường dẫn tuyệt đối sang tương đối trước khi ghi/so khớp registry.
+  ```python
+  def normalize_to_relative(path_str: str, root_path: Path) -> str:
+      try:
+          p = Path(path_str).resolve()
+          if p.is_relative_to(root_path):
+              return p.relative_to(root_path).as_posix()
+      except Exception:
+          pass
+      return path_str.replace("\\", "/")
+  ```
+
+**2. Quản lý các file bị `.gitignore` chặn nhưng cần thiết cho CI**
+- **Vấn đề**: Thư mục `.agents/` bị bỏ qua trong `.gitignore` toàn cục của dự án. Khi tạo thêm tệp tham chiếu như `.agents/skills/xia/MODES.md`, tệp này không được đẩy lên GitHub, dẫn đến lỗi check link `Broken Link Error: (MODES.md) - File does not exist` khi chạy `validate_docs.py` trên CI.
+- **Giải pháp**: Sử dụng `git add -f [file_path]` để cưỡng chế theo dõi (force-track) các tệp tài liệu quan trọng trong thư mục bị ignore, đảm bảo CI checkout đầy đủ.
+
+### Anti-patterns
+
+- **Commit `notebook_id` thực tế lên Git**: Việc commit thông tin xác thực/ID cụ thể lên `workspace_context.yaml` có thể gây xung đột hoặc rò rỉ dữ liệu của nhà phát triển. Cần đưa về cấu hình trống mặc định (`notebook_id: ""`) trước khi đẩy lên PR.
+
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+applies_to:
+  - "Phần mềm"
+  - "Thẩm tra thiết kế"
+  - "Pháp lý xây dựng"
+bundle: "_core"
+---
