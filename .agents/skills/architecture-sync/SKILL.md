@@ -24,9 +24,9 @@ Cập nhật nội dung của tất cả các tệp cấu hình tìm thấy ở 
 3. **`README.md`**: Cập nhật sơ đồ Mermaid (nếu có) và hướng dẫn chạy các scripts/CLI mới.
 
 ### Bước 3: Kiểm định Gác cổng (Linter Gate)
-- Chạy linter tài liệu tĩnh để đảm bảo các tệp tin hiến pháp vừa cập nhật không bị hỏng liên kết hay chứa ký hiệu ảo giác:
+- Chạy linter tài liệu tĩnh trên các file có thay đổi để đảm bảo các tệp tin hiến pháp vừa cập nhật không bị hỏng liên kết hay chứa ký hiệu ảo giác:
   ```bash
-  python scripts/validate_docs.py .
+  python scripts/validate_docs.py . --changed
   ```
 - Nếu phát hiện lỗi, bắt buộc phải sửa đổi hoàn chỉnh trước khi lưu trữ.
 

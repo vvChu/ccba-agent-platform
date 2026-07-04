@@ -9,7 +9,11 @@ disable-model-invocation: true
 Sử dụng kỹ năng này để chạy linter tài liệu tĩnh và tự động sửa các lỗi liên kết, ký hiệu ảo giác so với codebase thực tế.
 
 ## 1. Thực thi kiểm định
-Chạy script kiểm định tài liệu trên toàn bộ workspace:
+Để kiểm tra cực nhanh (chỉ quét các file có thay đổi qua Git), khuyên dùng:
+```bash
+python scripts/validate_docs.py . --changed
+```
+Hoặc quét toàn bộ workspace:
 ```bash
 python scripts/validate_docs.py .
 ```
