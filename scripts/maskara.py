@@ -198,7 +198,7 @@ def looks_like_session_text(path: Path) -> bool:
     name = path.name.lower()
     ext = path.suffix.lower()
 
-    if ext in [".json", ".jsonl", ".md", ".txt", ".log", ".yaml", ".yml", ".toml", ".env"]:
+    if ext in [".json", ".jsonl", ".md", ".txt", ".log", ".yaml", ".yml", ".toml", ".env", ".xml"]:
         return True
     if name.startswith(".env"):
         return True
@@ -383,14 +383,14 @@ def scan_file(agent: str, path: Path, use_llm: bool = False) -> tuple[list[dict[
     Returns:
         Tuple of (findings_list, scanned_count, skipped_count).
     """
-    if path.is_symlink() or path.is_dir():
-        return [], 0, 1
-    if path.stat().st_size > MAX_FILE_SIZE or not looks_like_session_text(path):
-        return [], 0, 1
-    if is_binary(path):
-        return [], 0, 1
-
     try:
+        if path.is_symlink() or path.is_dir():
+            return [], 0, 1
+        if path.stat().st_size > MAX_FILE_SIZE or not looks_like_session_text(path):
+            return [], 0, 1
+        if is_binary(path):
+            return [], 0, 1
+
         content = path.read_text(encoding="utf-8", errors="ignore")
         findings = detect_secrets_in_text(content, str(path), agent, use_llm)
         return findings, 1, 0

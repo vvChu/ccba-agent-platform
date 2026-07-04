@@ -1,12 +1,12 @@
 ---
 type: Appendix
-title: "PHỤ LỤC XI - Phụ lục XIa. Báo cáo về việc kéo dài thời hạn sử dụng của công trình"
+title: "PHỤ LỤC XI - *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*"
 description: "Chi tiết PHỤ LỤC XI ban hành kèm theo Nghi Dinh 207 2026 Nd Cp Quan Ly Chat Luong Thi Cong Xay Dung"
 parent_document: "../nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.md"
 uniclass: "Fi_10_20"
 ---
 
-**PHỤ LỤC XI**
+# PHỤ LỤC XI
 
 *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*
 

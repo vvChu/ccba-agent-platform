@@ -3,7 +3,7 @@ decrees:
   effective_date: '2026-07-01'
   file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.docx
   id: ND-207-2026
-  issued_date: '2026-03-20'
+  issued_date: '2026-06-15'
   short_name: NĐ 207/2026
   status: current
   title: Nghị định 207/2026/NĐ-CP về quản lý chất lượng thi công xây dựng
@@ -11,6 +11,8 @@ decrees:
   - quality_management
   - construction
   - maintenance
+  document_number: 207/2026/NĐ-CP
+  issued_by: Chính phủ
 - amendments:
   - ref: ND-35-2023
     title: NĐ 35/2023/NĐ-CP sửa đổi NĐ 06/2021
@@ -172,6 +174,8 @@ laws:
   - quality_management
   - project_management
   - investment
+  document_number: 135/2025/QH15
+  issued_by: Quốc hội
 - effective_date: '2020-01-01'
   id: LDT-2019
   issued_date: '2019-06-13'

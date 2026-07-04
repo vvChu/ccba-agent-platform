@@ -5,6 +5,7 @@ Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng
 """
 import sys
 
+from ccba_notebooklm import get_client
 from ccba_notebooklm.__main__ import main
 
 if __name__ == "__main__":
