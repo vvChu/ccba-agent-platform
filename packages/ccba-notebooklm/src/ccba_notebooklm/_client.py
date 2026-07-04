@@ -64,6 +64,7 @@ class CCBANotebookLMClient:
         if use_mock:
             logger.info("Kích hoạt Mock NotebookLM Client (Không phát hiện AUTH cookie).")
             from ._mock_client import MockNotebookLMClientAdapter
+
             return cls(MockNotebookLMClientAdapter(), use_mock=True)
 
         if not HAS_NOTEBOOKLM or NotebookLMClient is None:
@@ -71,6 +72,7 @@ class CCBANotebookLMClient:
                 "Không tìm thấy thư viện notebooklm-py. Tự động chuyển sang Mock Client."
             )
             from ._mock_client import MockNotebookLMClientAdapter
+
             return cls(MockNotebookLMClientAdapter(), use_mock=True)
 
         try:
@@ -83,6 +85,7 @@ class CCBANotebookLMClient:
         except Exception as e:
             logger.warning("Khởi tạo Real Client lỗi (%s). Tự động chuyển sang Mock Client.", e)
             from ._mock_client import MockNotebookLMClientAdapter
+
             return cls(MockNotebookLMClientAdapter(), use_mock=True)
 
 

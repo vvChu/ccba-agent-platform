@@ -1,61 +1,39 @@
 from __future__ import annotations
 
-import _io
-import _thread
 import ast
 import base64
-import builtins
 import fnmatch
 import glob
-import io
 import os
 import re
 import shlex
-import sqlite3
 import subprocess
 import sys
 import threading
-import unicodedata
-import urllib.parse
-import zlib
 from collections.abc import Callable
 from functools import wraps
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from ._guard import HarnessGuard
 
-from ._state import (
-    HarnessState,
-    _Originals,
-    _check_in_hook,
-    _get_active_guards,
-    _safe_limit_iter,
-    _HOOK_TOKEN,
-    _lock,
-    _local,
-    _original_builtins_open,
-    _original_io_open,
-    _original_popen,
-    _original_thread_start,
-    _original_os_open,
-    _original_os_rename,
-    _original_os_replace,
-    _original_io_FileIO,
-    _original_sqlite3_connect,
-    _original_os_link,
-    _original_os_symlink,
-    _original__io_open,
-    _original__io_FileIO,
-    _original_sqlite3_Connection,
-    _original_os_funcs,
-    _original_thread_start_new_thread,
-    _original_thread_start_new,
-)
 from ._file_monitor import (
     _check_value_for_sensitive,
     _get_workspace_files,
+    _looks_like_path,
     _scan_ast_nodes,
 )
+from ._state import (
+    _HOOK_TOKEN,
+    HarnessState,
+    _check_in_hook,
+    _get_active_guards,
+    _original_popen,
+    _original_thread_start,
+    _original_thread_start_new,
+    _original_thread_start_new_thread,
+)
+
 
 # PROCESS MONITORING UTILITIES
 # ===========================================================================
@@ -748,9 +726,6 @@ def _check_subprocess_call(name: str, args: tuple[Any, ...], kwargs: dict[str, A
     _check_subprocess_call_internal(cmd_args, env, stdin, exec_path, guards)
 
 
-
-
-
 def _extract_and_check_base64(text: str, active_guard) -> bool:
     contains_b64_keywords = False
     text_lower = text.lower()
@@ -1125,7 +1100,6 @@ def _make_os_wrapper(name: str, original_func: Callable) -> Callable:
     return wrapper
 
 
-
 # ===========================================================================
 # MULTI-THREADING WRAPPERS
 # ===========================================================================
@@ -1147,6 +1121,7 @@ def _wrapped_thread_start(self: threading.Thread, *args: Any, **kwargs: Any) -> 
                     if HarnessState.active_subthreads_count == 0 and HarnessState.active_count == 0:
                         if HarnessState.global_hooks_active:
                             from ._engine import HarnessEngine
+
                             HarnessEngine._restore_global_hooks_internal()
 
     self.run = wrapped_run
@@ -1174,6 +1149,7 @@ def _wrapped_thread_start_new_thread(
                     if HarnessState.active_subthreads_count == 0 and HarnessState.active_count == 0:
                         if HarnessState.global_hooks_active:
                             from ._engine import HarnessEngine
+
                             HarnessEngine._restore_global_hooks_internal()
 
     return _original_thread_start_new_thread(thread_target_wrapper, args, kwargs)
@@ -1198,6 +1174,7 @@ def _wrapped_thread_start_new(function: Callable, args: tuple, kwargs: dict | No
                     if HarnessState.active_subthreads_count == 0 and HarnessState.active_count == 0:
                         if HarnessState.global_hooks_active:
                             from ._engine import HarnessEngine
+
                             HarnessEngine._restore_global_hooks_internal()
 
     if _original_thread_start_new is not None:

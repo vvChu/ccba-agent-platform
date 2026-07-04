@@ -1,3 +1,4 @@
+# ruff: noqa: F401
 from __future__ import annotations
 
 import _io
@@ -23,86 +24,84 @@ from functools import wraps
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from ._file_monitor import (
+    _check_value_for_sensitive,
+    _get_workspace_files,
+    _is_text_sensitive,
+    _looks_like_path,
+    _safe_escape_decode,
+    _safe_record_written_file,
+    _scan_ast_nodes,
+    _scan_for_sensitive_inodes,
+    _wrapped__io_open,
+    _wrapped_builtins_open,
+    _Wrapped_io_FileIO,
+    _wrapped_io_open,
+    _wrapped_os_link,
+    _wrapped_os_open,
+    _wrapped_os_rename,
+    _wrapped_os_replace,
+    _wrapped_os_symlink,
+    _WrappedFileIO,
+)
+from ._process_monitor import (
+    _check_subprocess_call,
+    _check_subprocess_call_for_guards,
+    _check_subprocess_call_internal,
+    _extract_and_check_base64,
+    _extract_exec_path,
+    _extract_subprocess_parts,
+    _inject_child_env,
+    _make_os_wrapper,
+    _normalize_cmd_args,
+    _reconstruct_shell_variables,
+    _split_command_to_words,
+    _wrapped_popen,
+    _wrapped_thread_start,
+    _wrapped_thread_start_new,
+    _wrapped_thread_start_new_thread,
+)
+from ._sql_monitor import (
+    _check_db_path,
+    _check_sql_query,
+    _clean_and_decode_db_path,
+    _extract_attached_db_paths,
+    _strip_comments_from_sql,
+    _wrapped_sqlite3_connect,
+    _WrappedCursor,
+    _Wrappedsqlite3Connection,
+)
 
 # Re-exports and orchestration logic for backward compatibility
 from ._state import (
     _HOOK_TOKEN,
     HarnessLocal,
     HarnessState,
+    _check_in_hook,
     _get_active_guards,
-    _safe_limit_iter,
-    _Originals,
+    _local,
+    _lock,
+    _original__io_FileIO,
+    _original__io_open,
     _original_builtins_open,
+    _original_io_FileIO,
     _original_io_open,
-    _original_popen,
-    _original_thread_start,
+    _original_os_funcs,
+    _original_os_link,
     _original_os_open,
     _original_os_rename,
     _original_os_replace,
-    _original_io_FileIO,
-    _original_sqlite3_connect,
-    _original_os_link,
     _original_os_symlink,
-    _original__io_open,
-    _original__io_FileIO,
+    _original_popen,
+    _original_sqlite3_connect,
     _original_sqlite3_Connection,
-    _original_os_funcs,
-    _original_thread_start_new_thread,
+    _original_thread_start,
     _original_thread_start_new,
-    _local,
-    _lock,
-    _check_in_hook,
+    _original_thread_start_new_thread,
+    _Originals,
+    _safe_limit_iter,
 )
 
-from ._file_monitor import (
-    _scan_for_sensitive_inodes,
-    _safe_record_written_file,
-    _looks_like_path,
-    _get_workspace_files,
-    _safe_escape_decode,
-    _check_value_for_sensitive,
-    _is_text_sensitive,
-    _scan_ast_nodes,
-    _wrapped_builtins_open,
-    _wrapped_io_open,
-    _wrapped__io_open,
-    _wrapped_os_open,
-    _wrapped_os_rename,
-    _wrapped_os_replace,
-    _wrapped_os_link,
-    _wrapped_os_symlink,
-    _WrappedFileIO,
-    _Wrapped_io_FileIO,
-)
-
-from ._process_monitor import (
-    _split_command_to_words,
-    _reconstruct_shell_variables,
-    _extract_exec_path,
-    _extract_subprocess_parts,
-    _normalize_cmd_args,
-    _inject_child_env,
-    _check_subprocess_call_internal,
-    _check_subprocess_call,
-    _check_subprocess_call_for_guards,
-    _make_os_wrapper,
-    _wrapped_popen,
-    _wrapped_thread_start,
-    _wrapped_thread_start_new_thread,
-    _wrapped_thread_start_new,
-    _extract_and_check_base64,
-)
-
-from ._sql_monitor import (
-    _strip_comments_from_sql,
-    _extract_attached_db_paths,
-    _clean_and_decode_db_path,
-    _check_db_path,
-    _check_sql_query,
-    _WrappedCursor,
-    _Wrappedsqlite3Connection,
-    _wrapped_sqlite3_connect,
-)
 
 def _audit_hook(event: str, args: tuple[Any, ...]) -> None:
     if event == "sys._getframe":
@@ -190,6 +189,7 @@ def _audit_hook(event: str, args: tuple[Any, ...]) -> None:
     finally:
         HarnessState.local.__dict__["in_hook"] = None
 
+
 class HarnessEngine:
     """Orchestrator for managing global system hooks and monkey patches."""
 
@@ -267,7 +267,6 @@ class HarnessEngine:
         for name, orig in _Originals.os_funcs.items():
             setattr(os, name, orig)
         HarnessState.global_hooks_active = False
-
 
 
 # Dynamic attribute resolution for backward compatibility with direct module imports
