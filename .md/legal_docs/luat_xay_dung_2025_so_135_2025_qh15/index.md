@@ -20,13 +20,18 @@ Luật Xây dựng 2025 quy định toàn diện về các hoạt động xây d
 
 - [Nghị định 217/2026/NĐ-CP (Quản lý hoạt động xây dựng)](guiding_docs/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.md) (type: `Decree`)
 - [Nghị định 212/2026/NĐ-CP (Điều kiện năng lực hoạt động xây dựng)](guiding_docs/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung.md) (type: `Decree`)
+- [Nghị định 210/2026/NĐ-CP (Hướng dẫn hợp đồng xây dựng)](guiding_docs/nghi_dinh_210_2026_nd_cp_huong_dan_luat_xay_dung_ve_hop_dong_xay_dung.md) (type: `Decree`)
 - [Nghị định 209/2026/NĐ-CP (Quản lý vật liệu xây dựng)](guiding_docs/nghi_dinh_209_2026_nd_cp_quan_ly_vat_lieu_xay_dung.md) (type: `Decree`)
 - [Nghị định 207/2026/NĐ-CP (Quản lý chất lượng thi công xây dựng)](guiding_docs/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.md) (type: `Decree`)
 - [Nghị định 206/2026/NĐ-CP (Quản lý chi phí đầu tư xây dựng)](guiding_docs/nghi_dinh_206_2026_nd_cp_quan_ly_chi_phi_dau_tu_xay_dung.md) (type: `Decree`)
 - [Nghị định 193/2026/NĐ-CP (Quyết toán vốn đầu tư dự án)](guiding_docs/nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an.md) (type: `Decree`)
+- [Quyết định 1040/QĐ-BXD (Công bộ mẫu hợp đồng xây dựng)](guiding_docs/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung.md) (type: `Decision`)
 - [Thông tư 34/2026/TT-BXD (Cấp công trình xây dựng)](guiding_docs/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung.md) (type: `Circular`)
 
 ### Phụ lục đính kèm (Decree Appendices)
+
+#### Phụ lục Nghị định 193/2026/NĐ-CP (Quyết toán vốn đầu tư)
+- [PHỤ LỤC I: Mẫu biểu phục vụ quyết toán vốn đầu tư dự án](guiding_docs/appendices/nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an-phu_luc_01.md)
 
 #### Phụ lục Nghị định 207/2026/NĐ-CP (Quản lý chất lượng & thi công)
 - [PHỤ LỤC I: PHÂN LOẠI CÔNG TRÌNH THEO CÔNG NĂNG SỬ DỤNG](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_01.md)
@@ -41,6 +46,9 @@ Luật Xây dựng 2025 quy định toàn diện về các hoạt động xây d
 - [PHỤ LỤC X: DANH MỤC HỒ SƠ PHỤC VỤ QUẢN LÝ, SỬ DỤNG CÔNG TRÌNH XÂY DỰNG](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_10.md)
 - [PHỤ LỤC XI: Phụ lục XIa. Báo cáo về việc kéo dài thời hạn sử dụng của công trình](guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_11.md)
 
+#### Phụ lục Nghị định 210/2026/NĐ-CP (Hợp đồng xây dựng)
+- [PHỤ LỤC I: Mẫu biểu liên quan đến hợp đồng xây dựng](guiding_docs/appendices/nghi_dinh_210_2026_nd_cp_huong_dan_luat_xay_dung_ve_hop_dong_xay_dung-phu_luc_01.md)
+
 #### Phụ lục Nghị định 212/2026/NĐ-CP (Điều kiện năng lực hoạt động xây dựng)
 - [PHỤ LỤC I: CHUYÊN MÔN VÀ LĨNH VỰC CẤP CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG](guiding_docs/appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_01.md)
 - [PHỤ LỤC II: LĨNH VỰC VÀ PHẠM VI HOẠT ĐỘNG XÂY DỰNG CỦA CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG](guiding_docs/appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_02.md)
@@ -52,4 +60,19 @@ Luật Xây dựng 2025 quy định toàn diện về các hoạt động xây d
 - [PHỤ LỤC II: MẪU CÁC VĂN BẢN TRONG QUY TRÌNH CẤP GIẤY PHÉP XÂY DỰNG](guiding_docs/appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_02.md)
 - [PHỤ LỤC III: PHÂN LOẠN DỰ ÁN ĐẦU TƯ XÂY DỰNG THEO CÔNG NĂNG PHỤC VỤ VÀ TÍNH CHẤT CHUYÊN NGÀNH CỦA CÔNG TRÌNH](guiding_docs/appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_03.md)
 - [PHỤ LỤC IV: DANH MỤC CÔNG TRÌNH ẢNH HƯỞNG LỚN ĐẾN AN TOÀN, LỢI ÍCH CỘNG ĐỒNG](guiding_docs/appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_04.md)
+
+#### Phụ lục Quyết định 1040/QĐ-BXD (Mẫu hợp đồng xây dựng)
+- [PHỤ LỤC I: Mẫu hợp đồng tư vấn khảo sát xây dựng](guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_01.md)
+- [PHỤ LỤC II: Mẫu hợp đồng tư vấn thiết kế xây dựng công trình](guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_02.md)
+- [PHỤ LỤC III: Mẫu hợp đồng thi công xây dựng công trình](guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_03.md)
+- [PHỤ LỤC IV: Mẫu hợp đồng mua sắm thiết bị công nghệ](guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_04.md)
+- [PHỤ LỤC V: Mẫu hợp đồng thiết kế và thi công xây dựng công trình (EC)](guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_05.md)
+- [PHỤ LỤC VI: Mẫu hợp đồng thiết kế và mua sắm thiết bị công nghệ (EP)](guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_06.md)
+- [PHỤ LỤC VII: Mẫu hợp đồng thiết kế - cung cấp thiết bị công nghệ và thi công xây dựng công trình (EPC)](guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_07.md)
+
+#### Phụ lục Thông tư 34/2026/TT-BXD (Cấp công trình xây dựng)
+- [PHỤ LỤC I: Tiêu chí xác định cấp công trình phục vụ quản lý hoạt động đầu tư xây dựng](guiding_docs/appendices/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung-phu_luc_01.md)
+- [PHỤ LỤC II: Phân cấp các loại công trình xây dựng](guiding_docs/appendices/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung-phu_luc_02.md)
+- [PHỤ LỤC III: Mẫu bản tự kê khai xác định cấp công trình](guiding_docs/appendices/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung-phu_luc_03.md)
+
 
