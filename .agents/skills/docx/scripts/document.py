@@ -35,8 +35,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from ccba_ooxml.pack import pack_document
-from ccba_ooxml.validation.docx import DOCXSchemaValidator
-from ccba_ooxml.validation.redlining import RedliningValidator
+from ccba_ooxml.validation import OOXMLValidator
 
 from .utilities import XMLEditor, _generate_hex_id, _generate_rsid
 from .comment_engine import CommentEngine
@@ -310,17 +309,11 @@ class Document:
 
     def validate(self) -> None:
         """Validate the document against XSD schema and redlining rules."""
-        schema_validator = DOCXSchemaValidator(
+        validator = OOXMLValidator(
             self.unpacked_path, self.original_docx, verbose=False
         )
-        redlining_validator = RedliningValidator(
-            self.unpacked_path, self.original_docx, verbose=False
-        )
-
-        if not schema_validator.validate():
-            raise ValueError("Schema validation failed")
-        if not redlining_validator.validate():
-            raise ValueError("Redlining validation failed")
+        if not validator.validate():
+            raise ValueError("Document validation failed")
 
     def save(self, destination: str | Path | None = None, validate: bool = True) -> None:
         """Save all modified XML files to disk and copy to destination directory."""

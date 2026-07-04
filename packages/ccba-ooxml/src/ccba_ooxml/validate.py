@@ -10,7 +10,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .validation import DOCXSchemaValidator, PPTXSchemaValidator, RedliningValidator
+from .validation import OOXMLValidator
 
 
 def main():
@@ -42,22 +42,9 @@ def main():
         f"Error: {original_file} must be a .docx, .pptx, or .xlsx file"
     )
 
-    # Run validations
-    match file_extension:
-        case ".docx":
-            validators = [DOCXSchemaValidator, RedliningValidator]
-        case ".pptx":
-            validators = [PPTXSchemaValidator]
-        case _:
-            print(f"Error: Validation not supported for file type {file_extension}")
-            sys.exit(1)
-
     # Run validators
-    success = True
-    for V in validators:
-        validator = V(unpacked_dir, original_file, verbose=args.verbose)
-        if not validator.validate():
-            success = False
+    validator = OOXMLValidator(unpacked_dir, original_file, verbose=args.verbose)
+    success = validator.validate()
 
     if success:
         print("All validations PASSED!")
