@@ -8,16 +8,17 @@ Về việc bổ nhiệm Giám đốc bộ phận BIM dự án
 
 Căn cứ quy chế hoạt động của Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng (CCBA).
 Căn cứ nhu cầu nhân sự của dự án Chung cư cao tầng X.
-Xét đề nghị của Trưởng phòng Nhân sự (liên hệ email: hr_ccba@gmail.com, số điện thoại: 0912345678).
+Xét đề nghị của Trưởng phòng Nhân sự (liên hệ email: hr@ccba.vn, số điện thoại: 0900000000).
 
 QUYẾT ĐỊNH:
 
-Điều 1. Bổ nhiệm ông Nguyễn Văn A, số CCCD: 012345678901, giữ chức vụ Giám đốc bộ phận BIM dự án Chung cư cao tầng X kể từ ngày 01/07/2025.
+Điều 1. Bổ nhiệm ông Nguyễn Văn A, số CCCD: 000000000000, giữ chức vụ Giám đốc bộ phận BIM dự án Chung cư cao tầng X kể từ ngày 01/07/2025.
 Điều 2. Ông Nguyễn Văn A được hưởng mức lương trách nhiệm là 35.000.000 VND/tháng.
 Điều 3. Quyết định có hiệu lực kể từ ngày ký. Các phòng ban và ông Nguyễn Văn A chịu trách nhiệm thi hành quyết định này.
 
 Bảng tiến độ bàn giao công việc giai đoạn đầu:
 | STT | Nội dung công việc | Ngày hoàn thành |
+|---|---|---|
 | 1 | Tiếp nhận tài liệu và mô hình BIM thô | 05/07/2025 |
 | 2 | Thiết lập Kế hoạch thực hiện BIM (BEP) | 10/07/2025 |
 | 3 | Họp khởi động phối hợp BIM với Chủ đầu tư | 15/07/2025 |
