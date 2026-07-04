@@ -64,7 +64,7 @@ def call_ai_evaluation(repo_type: str, skill_name: str, content: str) -> dict:
     """
 
     try:
-        reply = ai.chat(user_prompt, system=system_prompt, model="gemini-3-flash")
+        reply = ai.chat(user_prompt, system=system_prompt)
 
         # Strip potential markdown code fences from JSON response
         clean_reply = reply.strip()
