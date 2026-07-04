@@ -1,36 +1,39 @@
 ---
 name: architecture-sync
-description: "Đồng bộ hóa toàn bộ tài liệu kiến trúc (AGENTS.md, GEMINI.md, README.md) sau khi refactor codebase."
+description: Đồng bộ hóa toàn bộ tài liệu kiến trúc (AGENTS.md, GEMINI.md, README.md) sau khi refactor codebase.
+disable-model-invocation: true
 ---
 
-# Tên Workflow: Architecture Sync
+# Constitution Sync: Architecture Synchronizer
 
-**Workflow này được gọi khi User yêu cầu:** "Đồng bộ kiến trúc", "Cập nhật tài liệu kiến trúc", hoặc dùng trigger `@AI: /architecture-sync`.
+Đồng bộ hóa toàn bộ tài liệu kiến trúc và hướng dẫn vận hành của hệ thống sau khi refactor cấu trúc thư mục hoặc thay đổi thiết kế module.
 
-## Mục đích
-Khi một dự án vừa trải qua đợt refactor cấu trúc thư mục, module code, hoặc thay đổi thiết kế hệ thống, AI Agent cần tự động quét lại toàn bộ codebase và cập nhật các file "Hiến pháp" (Constitution) để tránh sinh ra code/rác không tương thích ở các phiên làm việc sau.
+## Quy trình thực hiện
 
-## Quy trình thực hiện (Dành cho AI Agent)
+### Bước 1: Khảo sát Codebase (Legwork)
+- Quét toàn bộ cây thư mục bằng công cụ `list_dir` hoặc lệnh tìm kiếm để phát hiện **tất cả** các tệp tin cấu hình kiến trúc:
+  - `AGENTS.md` (Hiến pháp rào chắn)
+  - `GEMINI.md` / `COPILOT.md` (Model routing và context)
+  - `README.md` (Tổng quan kiến trúc)
+- Ghi nhận chi tiết các module mới, dependencies mới và sơ đồ thư mục thực tế.
 
-Khi được gọi bằng Workflow này, AI Agent **BẮT BUỘC** phải thực hiện trình tự sau:
+### Bước 2: Đồng bộ hóa Tài liệu
+Cập nhật nội dung của tất cả các tệp cấu hình tìm thấy ở Bước 1 để phản ánh chính xác 100% codebase mới:
+1. **`AGENTS.md`**: Cập nhật sơ đồ cấu trúc thư mục và các quy tắc/schemas mới.
+2. **`GEMINI.md` / `COPILOT.md`**: Cập nhật Model Routing và hướng dẫn nạp context.
+3. **`README.md`**: Cập nhật sơ đồ Mermaid (nếu có) và hướng dẫn chạy các scripts/CLI mới.
 
-### Bước 1: Khảo sát Codebase Mới
-- Không sử dụng kiến thức cũ. Sử dụng công cụ `list_dir` hoặc lệnh Terminal (như `dir /s /b AGENTS.md GEMINI.md README.md` trên Windows) để quét **TOÀN BỘ CÂY THƯ MỤC** hiện hành.
-- **Lưu ý quan trọng**: Tuyệt đối không chỉ tìm ở thư mục gốc (Root). Rất nhiều dự án có các file context nằm ẩn bên trong các thư mục con (Ví dụ: `scripts/GEMINI.md` hoặc `scripts/README.md`). Bạn phải tìm ra **tất cả** các bản sao của chúng.
-- Phân tích ngắn gọn (trong suy nghĩ hoặc báo cáo cho User) về sự thay đổi của cấu trúc file, sự phân chia module mới, các dependency mới.
+### Bước 3: Kiểm định Gác cổng (Linter Gate)
+- Chạy linter tài liệu tĩnh để đảm bảo các tệp tin hiến pháp vừa cập nhật không bị hỏng liên kết hay chứa ký hiệu ảo giác:
+  ```bash
+  python scripts/validate_docs.py .
+  ```
+- Nếu phát hiện lỗi, bắt buộc phải sửa đổi hoàn chỉnh trước khi lưu trữ.
 
-### Bước 2: Cập nhật "Hiến pháp" & Context Files
-Bạn phải chỉnh sửa/ghi đè **TẤT CẢ** các file đã tìm thấy ở Bước 1 để chúng phản ánh đúng 100% codebase mới:
-1. **`AGENTS.md` (nếu có)**: Cập nhật sơ đồ thư mục (Directory Structure), quy tắc viết file (YAML schemas), và các mode hoạt động.
-2. **`GEMINI.md` / `COPILOT.md`**: Cập nhật Model Routing (model nào xử lý việc gì) và cấu trúc thư mục để Agent có context chuẩn khi mở bằng CLI. Lưu ý cập nhật cả file ở root và file ở các thư mục con (nếu có).
-3. **`README.md`**: Cập nhật Architecture Overview, Pipeline Flow (nếu có vẽ Mermaid), và cách chạy các script khởi động. Nhớ cập nhật tất cả README tìm thấy.
+### Bước 4: Lưu trữ Knowledge Item (KI)
+- Tạo một artifact tóm tắt (ví dụ: `walkthrough.md` hoặc `architecture_summary.md`) ghi nhận các thay đổi kiến trúc chính để chuyển tiếp tri thức sang phiên làm việc sau.
 
-### Bước 3: Lưu trữ Knowledge Item (KI)
-- Tạo một artifact (ví dụ: `walkthrough.md` hoặc `architecture_summary.md`) tóm tắt những gì vừa cập nhật.
-- File này sẽ được hệ thống biến thành **Persistent Knowledge Item**, giúp các phiên làm việc sau (New Sessions) nhớ được trạng thái kiến trúc hiện tại mà không bị ảo giác (hallucination).
-
-## Báo cáo kết quả
-Sau khi hoàn thành 3 bước trên, trả lời cho User biết:
-- File nào đã được cập nhật.
-- Những module/thành phần kiến trúc chính nào được ghi nhận vào hệ thống.
-- Xác nhận rằng các phiên làm việc sau đã an toàn.
+## Tiêu chí hoàn thành (Completion Criteria)
+- `[ ]` Tất cả các tệp tin hiến pháp tìm thấy được cập nhật khớp 100% cấu trúc codebase mới.
+- `[ ]` Lệnh kiểm định `validate_docs.py` chạy qua và không phát sinh lỗi liên kết hỏng.
+- `[ ]` Artifact tóm tắt kiến trúc được tạo thành công trong thư mục artifacts.
