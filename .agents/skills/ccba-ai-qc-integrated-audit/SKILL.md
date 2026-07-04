@@ -10,26 +10,26 @@ bundle: "_qc"
 
 # CCBA AI QC Integrated Audit Skill
 
-## Vai trò
-Skill này thực hiện "siêu năng lực" then chốt của IDOP: Kiểm tra xung đột đa bộ môn (Multi-disciplinary Clash Check) trong một lần quét duy nhất. Nó kết nối các bản vẽ khác nhau (Kiến trúc, Kết cấu, MEP, PCCC) và nhờ AI chỉ ra các điểm mâu thuẫn kỹ thuật.
+Skill này thực hiện kiểm tra xung đột đa bộ môn (Multi-disciplinary Clash Check) thông qua AI Vision đối với hình ảnh collage ghép từ 4 bản vẽ (Kiến trúc, Kết cấu, MEP, PCCC) trên cùng một cao độ/tầng.
 
-## Cách sử dụng
+---
 
-### Các Trigger
-- "Audit xung đột"
-- "Integrated QC"
-- "Đối soát 4 chiều"
-- "N-Way Clash Check"
+## Tiêu chí hoàn thành (Completion Criteria)
 
-## Quy trình
-1. Agent sử dụng tọa độ từ `ccba-ai-qc-discovery` để lấy 4 bản vẽ tương ứng.
-   **Tiêu chí hoàn thành:** Đã định vị và tải thành công 4 file ảnh bản vẽ tương ứng từ thư mục dự án.
-2. Skill này sẽ ghép chúng thành một ảnh collage **Quad-View**.
-   **Tiêu chí hoàn thành:** Ảnh ghép `quad_view.png` được tạo thành công với bố cục 2x2 rõ nét.
-3. Gửi ảnh collage và prompt kỹ thuật đến AI Gateway (model `ocr-primary`).
-   **Tiêu chí hoàn thành:** Nhận được phản hồi HTTP 200 từ AI Gateway với phân tích visual.
-4. Nhận kết quả rủi ro dưới dạng liệt kê hoặc JSON.
-   **Tiêu chí hoàn thành:** Kết quả audit được lưu lại thành file `.json` hoặc in ra log kỹ thuật đầy đủ.
+1. **Tìm kiếm & Trích xuất Bản vẽ:**
+   - **Xác nhận:** Đã định vị và trích xuất thành công 4 tệp tin ảnh bản vẽ tương ứng của tầng được chỉ định dựa trên dữ liệu ma trận.
+2. **Ghép ảnh Quad-View:**
+   - **Xác nhận:** Sinh thành công tệp ảnh collage `quad_view.png` với bố cục lưới 2x2 rõ nét.
+3. **Phân tích AI:**
+   - **Xác nhận:** Nhận được phản hồi HTTP 200 từ AI Gateway sử dụng model hỗ trợ vision để cào lỗi thiết kế.
+4. **Lưu trữ kết quả:**
+   - **Xác nhận:** Kết quả phân tích (findings) được lưu trữ thành công dưới dạng JSON hoặc Markdown vào thư mục `.md/extracts/audit_batch/`.
 
-## Danh mục Script
-- `scripts/audit_engine.py`: Logic ghép ảnh và điều phối AI Audit.
+---
+
+## Công cụ thực thi
+
+Quy trình ghép ảnh và điều phối AI Vision được xử lý qua script:
+```text
+.agents/skills/ccba-ai-qc-integrated-audit/scripts/semantic_audit_engine.py
+```
