@@ -13,6 +13,7 @@ class ADRGenerator:
             self.repo_dir = Path(repo_dir).resolve()
         else:
             import os
+
             hub_path = os.getenv("CCBA_HUB_PATH")
             if hub_path and Path(hub_path).exists():
                 self.repo_dir = Path(hub_path).resolve()
