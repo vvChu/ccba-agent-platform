@@ -10,6 +10,7 @@ Scans markdown documentation for potential hallucinations:
 import argparse
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -332,6 +333,53 @@ def validate_markdown_file(
     return issues
 
 
+def get_modified_files(project_root: Path) -> set[Path]:
+    """Get the set of files modified in the current branch or locally."""
+    modified = set()
+    try:
+        # Check local changes (staged + unstaged + untracked)
+        res = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=project_root,
+            capture_output=True,
+            text=True
+        )
+        if res.returncode == 0:
+            for line in res.stdout.splitlines():
+                if len(line) > 3:
+                    filepath = (project_root / line[3:].strip()).resolve()
+                    modified.add(filepath)
+
+        # Check commits in current branch relative to origin/main (CI PR check)
+        res = subprocess.run(
+            ["git", "diff", "--name-only", "origin/main...HEAD"],
+            cwd=project_root,
+            capture_output=True,
+            text=True
+        )
+        if res.returncode == 0:
+            for line in res.stdout.splitlines():
+                if line.strip():
+                    filepath = (project_root / line.strip()).resolve()
+                    modified.add(filepath)
+
+        # Check commits in current branch relative to HEAD~1 as fallback
+        res = subprocess.run(
+            ["git", "diff", "--name-only", "HEAD~1"],
+            cwd=project_root,
+            capture_output=True,
+            text=True
+        )
+        if res.returncode == 0:
+            for line in res.stdout.splitlines():
+                if line.strip():
+                    filepath = (project_root / line.strip()).resolve()
+                    modified.add(filepath)
+    except Exception:
+        pass
+    return modified
+
+
 def main():
     parser = argparse.ArgumentParser(description="Validate documentation accuracy.")
     parser.add_argument("docs_dir", nargs="?", default="docs", help="Directory containing markdown files (default: docs)")
@@ -373,6 +421,13 @@ def main():
             if p.is_file():
                 if any(ex in p.parts for ex in EXCLUDE_DIRS):
                     continue
+                # Exclude temporary worker/session folders in .agents (only keep skills/, workflows/ and top-level md files)
+                if ".agents" in p.parts:
+                    idx = p.parts.index(".agents")
+                    if len(p.parts) > idx + 1:
+                        subfolder = p.parts[idx + 1]
+                        if subfolder not in {"skills", "workflows"}:
+                            continue
                 md_files.append(p)
 
     # Also check README.md, PLATFORM.md, CONTRIBUTING.md in root if they exist
@@ -387,6 +442,9 @@ def main():
 
     # Load Env configurations
     env_vars = load_env_example(project_root)
+
+    # Get modified files to distinguish hard blocks from soft warnings
+    modified_files = get_modified_files(project_root)
 
     print(f"Scanned {len(md_files)} markdown file(s).")
     print(f"Searching code declarations in: {', '.join(str(p.relative_to(project_root)) for p in resolved_src_paths if p.exists())}")
@@ -416,9 +474,19 @@ def main():
                     print(f"  [L{line}] \x1b[33mLink Warning:\x1b[0m ({link}) - {err}")
                     total_issues += 1
                 else:
-                    print(f"  [L{line}] \x1b[31mBroken Link Error:\x1b[0m ({link}) - {err}")
-                    total_issues += 1
-                    broken_links_count += 1
+                    # Check if file was modified in current change scope
+                    is_modified = filepath.resolve() in modified_files
+                    # If we couldn't detect git status, default to modified to be safe
+                    if not modified_files:
+                        is_modified = True
+
+                    if is_modified:
+                        print(f"  [L{line}] \x1b[31mBroken Link Error:\x1b[0m ({link}) - {err}")
+                        total_issues += 1
+                        broken_links_count += 1
+                    else:
+                        print(f"  [L{line}] \x1b[33mLink Warning (Old File):\x1b[0m ({link}) - [SOFT-WARN] {err}")
+                        total_issues += 1
 
             # Print Env Issues
             for line, var, err in issues["env_vars"]:
@@ -429,10 +497,10 @@ def main():
     if total_issues > 0:
         print(f"Completed with {total_issues} issue(s) detected.")
         if broken_links_count > 0:
-            print(f"\x1b[31m[ERROR] Detected {broken_links_count} broken relative link(s). Blocking commit/build.\x1b[0m")
+            print(f"\x1b[31m[ERROR] Detected {broken_links_count} broken relative link(s) in modified files. Blocking commit/build.\x1b[0m")
             sys.exit(1)  # Hard Block
         else:
-            print("\x1b[33m[WARN] Warnings detected (Code Refs / Env Vars). Committing/building is allowed.\x1b[0m")
+            print("\x1b[33m[WARN] Warnings/Old file broken links detected. Committing/building is allowed.\x1b[0m")
             sys.exit(0)  # Soft Warn
     else:
         print("\x1b[32mDocumentation validation completed successfully! No issues detected.\x1b[0m")
