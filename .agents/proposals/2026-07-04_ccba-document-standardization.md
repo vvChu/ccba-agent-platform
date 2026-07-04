@@ -57,4 +57,4 @@ Giải pháp áp dụng mô hình phân tách vai trò khép kín **Producer-Con
   ├── ccba-copywriting.md
   └── ccba-extract-style.md
 ```
-Tri thức nền đi kèm: Báo cáo nghiên cứu quy định soạn thảo văn bản hành chính Việt Nam [CCBA_RD_VBPL_004_Rev00-ND_30_2020_CongTacVanThu.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/CCBA_RD_VBPL_004_Rev00-ND_30_2020_CongTacVanThu.md).
+Tri thức nền đi kèm: Báo cáo nghiên cứu quy định soạn thảo văn bản hành chính Việt Nam [CCBA_RD_VBPL_004_Rev00-ND_30_2020_CongTacVanThu.md](../../.md/knowledge/CCBA_RD_VBPL_004_Rev00-ND_30_2020_CongTacVanThu.md).
