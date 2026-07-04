@@ -1,6 +1,8 @@
 import re
 from pathlib import Path
 
+from .utils import int_to_roman
+
 
 class FormCleaner:
     """Core utility to clean form template placeholders and recover actual form titles using AI Gateway."""
@@ -134,10 +136,8 @@ Nội dung 20 dòng đầu:
 
             appendix_match = re.search(r"phu_luc_(\d+)", file_path.name.lower())
             if appendix_match:
-                from mdconverter.core.table_reconstructor import TableReconstructor
-
                 num = int(appendix_match.group(1))
-                roman = TableReconstructor()._int_to_roman(num)
+                roman = int_to_roman(num)
                 new_title_line = f'title: "PHỤ LỤC {roman} - {recovered_title}"'
 
             fm_content_new = re.sub(r'title:\s*".*?"', new_title_line, fm_content)
@@ -153,10 +153,8 @@ Nội dung 20 dòng đầu:
             if heading_idx != -1:
                 appendix_match = re.search(r"phu_luc_(\d+)", file_path.name.lower())
                 if appendix_match:
-                    from mdconverter.core.table_reconstructor import TableReconstructor
-
                     num = int(appendix_match.group(1))
-                    roman = TableReconstructor()._int_to_roman(num)
+                    roman = int_to_roman(num)
                     lines[heading_idx] = f"# PHỤ LỤC {roman}\n\n{recovered_title}"
                 else:
                     lines[heading_idx] = f"# {recovered_title}"
