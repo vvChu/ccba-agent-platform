@@ -15,11 +15,9 @@ from .pipeline import (
     PDFProcessingError,
     PDFProcessingPipeline,
     ProcessingResult,
-    TileResult,
-    TitleBlockDetector,
-    TitleBlockRegion,
-    VisionOptimizer,
 )
+from .vision import TileResult, VisionOptimizer
+from .detector import TitleBlockDetector, TitleBlockRegion
 
 __all__ = [
     # pipeline (primary entry point)
