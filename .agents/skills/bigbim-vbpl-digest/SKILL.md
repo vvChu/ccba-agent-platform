@@ -21,12 +21,12 @@ bundle: "_core"
 
 | Nguồn | Layer | Path |
 |:------|:------|:-----|
-| NĐ 175/2024 — 111 chunks | Layer 2 | `D:/GitHubProjects/BIGBIM_Method/.md/chunks/VBPL_BIM_VN/175_2024_ND-CP_*/` |
-| ISO 19650-1 — 15 chunks | Layer 2 | `D:/GitHubProjects/BIGBIM_Method/.md/chunks/ISO_19650_VN/1-AP01-*/` |
-| ISO 19650-2 — 12 chunks | Layer 2 | `D:/GitHubProjects/BIGBIM_Method/.md/chunks/ISO_19650_VN/2-AP01-*/` |
-| ISO 19650-3 — 12 chunks | Layer 2 | `D:/GitHubProjects/BIGBIM_Method/.md/chunks/ISO_19650_VN/3-AP01-*/` |
-| ISO 19650-5 — 15 chunks | Layer 2 | `D:/GitHubProjects/BIGBIM_Method/.md/chunks/ISO_19650_VN/5-AP01-*/` |
-| Chunk Master Index | Layer 2 | `D:/GitHubProjects/BIGBIM_Method/.md/chunks/INDEX.md` |
+| NĐ 175/2024 — 111 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/VBPL_BIM_VN/175_2024_ND-CP_*/` |
+| ISO 19650-1 — 15 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/1-AP01-*/` |
+| ISO 19650-2 — 12 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/2-AP01-*/` |
+| ISO 19650-3 — 12 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/3-AP01-*/` |
+| ISO 19650-5 — 15 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/5-AP01-*/` |
+| Chunk Master Index | Layer 2 | `[bigbim_method_path]/.md/chunks/INDEX.md` |
 
 **Workflow tra cứu:**
 1. Đọc `chunks/INDEX.md` để xác định nguồn phù hợp
