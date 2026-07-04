@@ -1,8 +1,7 @@
 ---
 name: docs-validator
-description: "Quét kiểm định tài liệu Markdown chống ảo ảnh (hallucinations), broken links và cấu hình thiếu."
-user-invocable: true
-when_to_use: "Dùng khi cần kiểm tra chất lượng tài liệu Markdown, trước khi commit hoặc tạo Pull Request, hoặc khi người dùng yêu cầu 'validate docs', 'kiểm tra tài liệu'."
+description: Quét kiểm định tài liệu Markdown chống ảo ảnh (hallucinations), broken links và cấu hình thiếu.
+disable-model-invocation: true
 category: quality-assurance
 keywords: [validate, docs, documentation, hallucination, links]
 metadata:
@@ -12,38 +11,30 @@ metadata:
 
 # Skill: Docs Validator (Kiểm định tài liệu chính quy)
 
-Skill này giúp AI Agent tự động chạy và phân tích báo cáo kiểm định chất lượng tài liệu Markdown để chống lỗi thời và ảo ảnh (hallucinations) so với codebase thực tế.
+Skill này giúp AI Agent tự động chạy và phân tích báo cáo kiểm định chất lượng tài liệu Markdown để chống lỗi thời và ảo ảnh (hallucinations) so với codebase thực tế. Do là kỹ năng chạy theo yêu cầu trực tiếp từ người dùng, nó được thiết lập ở trạng thái `disable-model-invocation: true` để tránh hao phí tokens trong context window mỗi lượt hội thoại.
 
 ---
 
 ## Cách Kích hoạt & Thực thi
 
-Khi người dùng yêu cầu hoặc trước khi hoàn tất (commit/PR) tài liệu kỹ thuật, bạn **bắt buộc** phải chạy lệnh kiểm định:
+Khi cần kiểm tra chất lượng tài liệu hoặc trước khi commit/PR tài liệu kỹ thuật, Agent thực thi lệnh kiểm định (xác định `hub_path` để gọi đúng vị trí script):
 
 ```bash
-python scripts/validate_docs.py . --src scripts,packages
+python [hub_path]/scripts/validate_docs.py . --src scripts,packages
 ```
-
-## Các nhóm lỗi cần kiểm tra và xử lý:
-
-### 1. Broken Link Error (Lỗi liên kết hỏng) — [CHẶN CỨNG - EXIT 1]
-- **Vấn đề:** Các đường dẫn tương đối trỏ vào tệp tin không tồn tại.
-- **Hành động:** Bạn **phải** kiểm tra lại cấu trúc thư mục thực tế và sửa lại đường dẫn cho đúng. Đây là lỗi nghiêm trọng sẽ chặn đứng commit hoặc build CI.
-
-### 2. Code Ref Warning (Cảnh báo ký hiệu code) — [CẢNH BÁO MỀM]
-- **Vấn đề:** Tài liệu nhắc đến các hàm hoặc class không được định nghĩa trong codebase (thường do AI tự bịa ra).
-- **Hành động:** Xác nhận xem hàm/lớp đó có bị đổi tên hoặc xóa trong đợt refactor không. Sửa lại tên ký hiệu cho đúng với thực tế mã nguồn.
-
-### 3. Env Var Warning (Cảnh báo biến cấu hình) — [CẢNH BÁO MỀM]
-- **Vấn đề:** Tài liệu nhắc tới các biến môi trường cấu hình nhưng tệp mẫu `.env.example` ở root dự án không khai báo.
-- **Hành động:** Bổ sung khai báo biến mẫu này vào `.env.example` kèm giá trị cấu hình giả định.
 
 ---
 
-## Nguyên tắc Vận hành (Guidelines)
-- **Docs-as-Code:** Coi tài liệu là một phần của code. Luôn giữ tài liệu ngắn gọn (dưới 500 dòng/file) để dễ bảo trì.
-- **Tự động hóa:** Tích hợp validator vào Git pre-commit hook (`.pre-commit-config.yaml`) và GitHub Actions CI/CD để tự động kiểm tra trên PR.
-- **Bypass:** Trong trường hợp khẩn cấp hoặc tài liệu nghiên cứu cũ có cảnh báo Code Ref nghi vấn (không phải link hỏng), validator sẽ trả về exit code 0 và cho phép bypass tự động.
+## Quy tắc xử lý lỗi phát hiện
 
-*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+### 1. Lỗi liên kết hỏng (Broken Link Error) — [CHẶN CỨNG - EXIT 1]
+- **Vấn đề:** Các liên kết tương đối trỏ vào tệp tin không tồn tại.
+- **Hành động:** Bắt buộc kiểm tra cấu trúc thư mục và sửa lại đường dẫn liên kết cho đúng. Đây là lỗi nghiêm trọng sẽ chặn build CI/CD.
+
+### 2. Cảnh báo ký hiệu code (Code Ref Warning) — [CẢNH BÁO MỀM]
+- **Vấn đề:** Tài liệu nhắc đến các hàm hoặc class không được định nghĩa trong codebase thực tế (do AI ảo tưởng hoặc ký hiệu đã bị xóa/đổi tên).
+- **Hành động:** Đối chiếu codebase, sửa lại ký hiệu cho đúng với thực tế mã nguồn.
+
+### 3. Cảnh báo biến cấu hình (Env Var Warning) — [CẢNH BÁO MỀM]
+- **Vấn đề:** Tài liệu nhắc tới các biến cấu hình môi trường nhưng `.env.example` ở root dự án chưa khai báo.
+- **Hành động:** Bổ sung ngay khai báo biến mẫu này vào `.env.example`.
