@@ -274,12 +274,27 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
         return None
 
     try:
+        ext = file_path.suffix.lower()
+        if ext == ".pdf":
+            local_mime = "application/pdf"
+            google_mime = "application/pdf"
+        elif ext in [".docx", ".doc"]:
+            local_mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            google_mime = "application/vnd.google-apps.document"
+        elif ext in [".xlsx", ".xls"]:
+            local_mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            google_mime = "application/vnd.google-apps.spreadsheet"
+        else:
+            local_mime = "application/octet-stream"
+            google_mime = None
+
         # Quét kiểm tra trùng lặp trên Drive
-        q = f"'{folder_id}' in parents and name = '{target_name}' and trashed = false"
+        # Nếu tệp được chuyển đổi định dạng, Google Drive sẽ tự động cắt phần mở rộng (.docx, .xlsx)
+        # Vì vậy, khi quét trùng lặp phải tìm kiếm cả tên gốc và tên sau khi cắt phần mở rộng.
+        name_without_ext = Path(target_name).stem if google_mime else target_name
+        q = f"'{folder_id}' in parents and (name = '{target_name}' or name = '{name_without_ext}') and trashed = false"
         results = service.files().list(q=q, fields="files(id, name, md5Checksum)").execute()
         files = results.get("files", [])
-
-        mime_type = "application/pdf" if file_path.suffix.lower() == ".pdf" else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
         if files:
             existing_file = files[0]
@@ -300,8 +315,11 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
 
             # Khác nội dung ➔ cập nhật đè lên tệp cũ
             print(f"[Drive Update] Tệp '{target_name}' đã thay đổi nội dung. Thực hiện ghi đè lên file_id: {existing_id}")
-            media = MediaFileUpload(str(file_path), mimetype=mime_type, resumable=True)
-            updated_file = service.files().update(fileId=existing_id, media_body=media).execute()
+            media = MediaFileUpload(str(file_path), mimetype=local_mime, resumable=True)
+            file_metadata = {}
+            if google_mime:
+                file_metadata["mimeType"] = google_mime
+            updated_file = service.files().update(fileId=existing_id, body=file_metadata, media_body=media).execute()
             file_id = updated_file.get("id")
             try:
                 service.permissions().create(
@@ -315,7 +333,9 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
         # Chưa có tệp ➔ upload mới
         print(f"[Drive Upload] Đang upload tệp '{target_name}' lên thư mục Drive: {folder_id}")
         file_metadata = {"name": target_name, "parents": [folder_id]}
-        media = MediaFileUpload(str(file_path), mimetype=mime_type, resumable=True)
+        if google_mime:
+            file_metadata["mimeType"] = google_mime
+        media = MediaFileUpload(str(file_path), mimetype=local_mime, resumable=True)
         file = service.files().create(body=file_metadata, media_body=media, fields="id").execute()
         file_id = file.get("id")
         try:
@@ -383,7 +403,11 @@ async def sync_registry_to_notebooklm(
         print("[Cloud State] Đang truy vấn danh sách nguồn thực tế trên NotebookLM Cloud...")
         try:
             cloud_sources = await client.sources.list(notebook_id)
-            cloud_source_map = {s.title: s.id for s in cloud_sources}
+            from collections import defaultdict
+            cloud_source_map = defaultdict(list)
+            for s in cloud_sources:
+                norm_title = s.title.lower().replace(".docx", "").replace(".pdf", "").replace(".xlsx", "")
+                cloud_source_map[norm_title].append(s.id)
             print(f"[Cloud State] Phát hiện {len(cloud_sources)} nguồn đang tồn tại trên Cloud.")
         except Exception as e:
             print(f"[Error] Không thể kết nối hoặc đọc danh sách nguồn từ NotebookLM: {e}")
@@ -561,8 +585,25 @@ async def sync_registry_to_notebooklm(
             cached_source_id = cache_info.get("source_id", "")
             cached_sha = cache_info.get("sha256", "")
 
-            # Kiểm tra xem source_id có thực sự tồn tại trên Cloud không
-            cloud_id_by_title = cloud_source_map.get(target_filename)
+            # Lấy danh sách ID trùng tên trên Cloud
+            norm_target = target_filename.lower().replace(".docx", "").replace(".pdf", "").replace(".xlsx", "")
+            cloud_ids = cloud_source_map.get(norm_target, [])
+            cloud_id_by_title = None
+            
+            # Ưu tiên khớp ID đã cache
+            if cached_source_id and cached_source_id in cloud_ids:
+                cloud_id_by_title = cached_source_id
+            elif cloud_ids:
+                cloud_id_by_title = cloud_ids[0]
+
+            # Xóa các bản trùng lặp thừa (nếu có)
+            for extra_id in cloud_ids:
+                if extra_id != cloud_id_by_title:
+                    print(f"[Cleanup Duplicate] Phát hiện nguồn trùng lặp thừa trên Cloud cho '{target_filename}'. Tiến hành xóa (ID: {extra_id})...")
+                    try:
+                        await client.sources.delete(notebook_id, extra_id)
+                    except Exception:
+                        pass
 
             need_upload = True
             source_id_to_use = ""
@@ -601,10 +642,8 @@ async def sync_registry_to_notebooklm(
                             if actual_file_path.exists():
                                 print(f"[Drive RAG Fallback] Thử fallback nạp trực tiếp file cục bộ: {actual_file_path.name}...")
                                 source = await client.sources.add_file(
-                                    notebook_id=notebook_id,
-                                    file_path=actual_file_path,
-                                    title=target_filename,
-                                    wait=True
+                                    notebook_id,
+                                    str(actual_file_path)
                                 )
                                 source_id_to_use = source.id
                                 print(f"[Upload Success] Đã nạp nguồn '{target_filename}' trực tiếp thành công ➔ ID: {source_id_to_use}")
@@ -613,10 +652,8 @@ async def sync_registry_to_notebooklm(
                     else:
                         # Nạp trực tiếp file local
                         source = await client.sources.add_file(
-                            notebook_id=notebook_id,
-                            file_path=actual_file_path,
-                            title=target_filename,
-                            wait=True
+                            notebook_id,
+                            str(actual_file_path)
                         )
                         source_id_to_use = source.id
                         print(f"[Upload Success] Đã nạp nguồn '{target_filename}' trực tiếp thành công ➔ ID: {source_id_to_use}")
@@ -634,30 +671,31 @@ async def sync_registry_to_notebooklm(
 
         # 5. Dọn dẹp các tệp superseded hoặc bị xóa khỏi registry trên Cloud
         print("[Cloud Cleanup] Đang kiểm tra dọn dẹp các nguồn hết hiệu lực trên Cloud...")
-        for s_title, s_id in cloud_source_map.items():
-            if s_id not in active_cloud_source_ids:
-                # Kiểm tra xem đây có phải là văn bản superseded trong registry không
-                # Hoặc tệp tin không còn được đăng ký
-                is_superseded_or_deleted = True
+        for s_title, s_ids in cloud_source_map.items():
+            for s_id in s_ids:
+                if s_id not in active_cloud_source_ids:
+                    # Kiểm tra xem đây có phải là văn bản superseded trong registry không
+                    # Hoặc tệp tin không còn được đăng ký
+                    is_superseded_or_deleted = True
 
-                # Quét đối chiếu ngược
-                for _doc_key, doc_meta in documents.items():
-                    status = doc_meta.get("status", "draft")
-                    file_path_str = doc_meta.get("file_path", "")
-                    if file_path_str:
-                        # So sánh phần thân tên tệp (stem) để hỗ trợ cả docx lẫn pdf
-                        std_name_stem = Path(file_path_str).stem
-                        s_title_stem = Path(s_title).stem
-                        if std_name_stem == s_title_stem and status != "superseded":
-                            is_superseded_or_deleted = False
-                            break
+                    # Quét đối chiếu ngược
+                    for _doc_key, doc_meta in documents.items():
+                        status = doc_meta.get("status", "draft")
+                        file_path_str = doc_meta.get("file_path", "")
+                        if file_path_str:
+                            # So sánh phần thân tên tệp (stem) để hỗ trợ cả docx lẫn pdf
+                            std_name_stem = Path(file_path_str).stem
+                            s_title_stem = Path(s_title).stem
+                            if std_name_stem == s_title_stem and status != "superseded":
+                                is_superseded_or_deleted = False
+                                break
 
-                if is_superseded_or_deleted:
-                    print(f"[Cleanup] Xóa nguồn hết hiệu lực khỏi Cloud: {s_title} (ID: {s_id})")
-                    try:
-                        await client.sources.delete(notebook_id, s_id)
-                    except Exception as e:
-                        print(f"[Cleanup Error] Không thể xóa source {s_id}: {e}")
+                    if is_superseded_or_deleted:
+                        print(f"[Cleanup] Xóa nguồn hết hiệu lực khỏi Cloud: {s_title} (ID: {s_id})")
+                        try:
+                            await client.sources.delete(notebook_id, s_id)
+                        except Exception as e:
+                            print(f"[Cleanup Error] Không thể xóa source {s_id}: {e}")
 
         # Ghi lại tệp registry sources
         with open(sources_reg_path, "w", encoding="utf-8") as f:

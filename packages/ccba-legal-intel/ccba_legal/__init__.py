@@ -2,7 +2,7 @@ from ccba_harness import HarnessGuard
 
 from .adr import ADRGenerator
 from .cleaners import Cleaners
-from .crawler import ChromeCDP, ChromeCDPError, get_crawled_doc_data, trigger_download
+from .crawler import ChromeCDP, ChromeCDPError, get_crawled_doc_data, trigger_download, get_tvpl_metadata
 from .monitor import TokenMonitor
 from .packager import OKFBundlePackager, get_concept_type, is_guiding_link
 from .parser import LegalAnalysisEngine
@@ -13,6 +13,7 @@ __all__ = [
     "ChromeCDPError",
     "get_crawled_doc_data",
     "trigger_download",
+    "get_tvpl_metadata",
     "LegalAnalysisEngine",
     "Cleaners",
     "OKFBundlePackager",

@@ -6,7 +6,7 @@ parent_document: "../nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.md"
 uniclass: "Fi_10_20"
 ---
 
-**PHỤ LỤC I**
+# PHỤ LỤC I
 
 MẪU TỜ TRÌNH VÀ CÁC VĂN BẢN TRONG QUY TRÌNH THỰC HIỆN THẨM ĐỊNH BÁO CÁO NGHIÊN CỨU KHẢ THI, THIẾT KẾ XÂY DỰNG TRIỂN KHAI SAU KHI DỰ ÁN ĐƯỢC PHÊ DUYỆT  
 *(Kèm theo Nghị định số 217/2026/NĐ-CP ngày 19 tháng 6 năm 2026 của Chính phủ)*
@@ -2183,6 +2183,3 @@ Trên đây là ý kiến của *(cơ quan chuyên môn về xây dựng),* đ�
 <sup>1</sup> Ghi thông tin về lô/ô đất,... trong trường hợp chỉ xây dựng đối với một hoặc một số công trình của dự án.
 
 <sup>2</sup> Đối với công trình xây dựng theo tuyến theo quy định tại khoản 3 Điều 3 Nghị định này.
-
- 
-
