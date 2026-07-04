@@ -7,25 +7,30 @@ keywords: [legal, sync, update, notebooklm, drive]
 
 # Lệnh Slash Command `/ccba-update-legal-registry`
 
-Kích hoạt luồng đồng bộ hóa tự động tri thức pháp luật xây dựng (VBPL) từ máy cục bộ lên Google NotebookLM Cloud RAG. Do là lệnh chạy theo yêu cầu trực tiếp, nó được thiết lập `disable-model-invocation: true` để tối ưu hóa context load.
-
-## Cách thức Sử dụng
-
-Agent thực thi lệnh đồng bộ hóa thông qua script của Platform:
-
-```bash
-python [hub_path]/scripts/legal_sync.py --notebook-id <notebook_id> [--use-drive] [--drive-folder <folder_id>] [--download-pdf]
-```
+Đồng bộ hóa tự động tri thức pháp luật xây dựng (VBPL) từ máy cục bộ lên Google NotebookLM Cloud RAG.
 
 ## Các Bước thực thi của Agent
 
-Khi lệnh này được kích hoạt, Agent tiếp nhận thực hiện theo các bước:
+Khi lệnh này được kích hoạt, Agent thực hiện theo quy trình sau:
 
-1. **Kiểm tra môi trường & Cấp quyền:**
-   - Kiểm tra xem các biến cookie `NOTEBOOKLM_SESSION_COOKIE` hoặc `NOTEBOOKLM_COOKIES_JSON` đã được khai báo chưa.
-   - Nếu sử dụng tùy chọn `--use-drive`, kiểm tra xác thực Google Drive qua ADC:
-     ```bash
-     gcloud auth application-default login --scopes="https://www.googleapis.com/auth/drive"
-     ```
-2. **Chạy Script:** Thực thi lệnh python đồng bộ.
-3. **Hậu xử lý:** Thống kê số nguồn nạp mới/dọn dẹp, in dòng Attribution và Disclaimer của CCBA ở cuối.
+### Bước 1: Tra cứu Notebook ID (Context Lookup)
+1. Đọc tệp cấu hình cục bộ tại `.md/workspace_context.yaml` để tìm giá trị `notebook_id`.
+2. Nếu không tìm thấy hoặc tệp không tồn tại, kiểm tra biến môi trường hệ thống `NOTEBOOKLM_ID`. Chỉ hỏi người dùng làm phương án dự phòng cuối cùng nếu cả hai nguồn đều trống.
+
+### Bước 2: Kiểm tra môi trường & Cấp quyền
+1. Xác nhận sự tồn tại của biến cookie `NOTEBOOKLM_SESSION_COOKIE` hoặc tệp cấu hình `NOTEBOOKLM_COOKIES_JSON` trong môi trường hệ thống.
+2. Nếu người dùng chỉ định đồng bộ qua Google Drive (`--use-drive`), kiểm tra xác thực Google Drive qua Application Default Credentials (ADC):
+   ```bash
+   gcloud auth application-default login --scopes="https://www.googleapis.com/auth/drive"
+   ```
+
+### Bước 3: Chạy Script Đồng bộ
+Thực thi lệnh Python đồng bộ với Notebook ID đã xác định:
+```bash
+python scripts/legal_sync.py --notebook-id <notebook_id> [--use-drive] [--drive-folder <folder_id>] [--download-pdf]
+```
+
+## Tiêu chí Hoàn thành (Completion Criteria)
+- **Kiểm chứng thành công**: Script chạy trả về mã thoát `Exit Code 0` (hoặc thông báo `Sync completed successfully` trên console output).
+- **Attribution & Disclaimer**: Kết quả đầu ra hiển thị bảng thống kê số lượng nguồn được nạp mới/xóa bỏ, đồng thời bắt buộc đính kèm dòng bản quyền CCBA và Disclaimer pháp lý ở cuối tệp/tin nhắn phản hồi.
+- **Xử lý lỗi**: Nếu gặp lỗi xác thực cookie (401/403) hoặc lỗi kết nối, in rõ thông báo lỗi chi tiết và hướng dẫn người dùng cập nhật lại Token môi trường thay vì im lặng kết thúc.

@@ -6,7 +6,7 @@ parent_document: "../nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_d
 uniclass: "Fi_10_20"
 ---
 
-**PHỤ LỤC II**
+# PHỤ LỤC II
 
 LĨNH VỰC VÀ PHẠM VI HOẠT ĐỘNG XÂY DỰNG CỦA CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG  
 *(Kèm theo Nghị định số 212/2026/NĐ-CP ngày 17 tháng 6 năm 2026 của Chính phủ)*
@@ -195,4 +195,3 @@ LĨNH VỰC VÀ PHẠM VI HOẠT ĐỘNG XÂY DỰNG CỦA CHỨNG CHỈ HÀNH N
 </tr>
 </tbody>
 </table>
-

@@ -382,6 +382,13 @@ workflows:
     triggers: [grill, grilling, phỏng vấn, stress test]
     workflow_path: .agents/workflows/ccba-grilling.md
 
+  - name: docs-manager
+    bundle: _core
+    command: /ccba-docs
+    description: "Tự động cập nhật, đồng bộ và kiểm định tài liệu kỹ thuật của codebase"
+    triggers: [docs, update docs, cập nhật tài liệu, validate docs]
+    workflow_path: .agents/workflows/ccba-docs.md
+
   - name: wayfinder
     bundle: _core
     command: /ccba-wayfinder
