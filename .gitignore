@@ -82,7 +82,20 @@ dist/
 
 # Temporary study files
 claudekit-engineer/
-.agents/
+# Ignore toàn bộ nội dung trong .agents mặc định để loại bỏ rác chạy subagents
+.agents/*
+
+# Nhưng cho phép theo dõi các tri thức và hiến pháp chính quy
+!.agents/workflows/
+!.agents/skills/
+!.agents/AGENTS.md
+
+# Loại trừ các dữ liệu động, log, credentials bên trong các thư mục chính quy này
+.agents/**/*.log
+.agents/**/*.json
+.agents/**/*.env
+.agents/**/__pycache__/
+.agents/**/*.pyc
 scripts/verify_report.py
 .md/claudekit_last_sha.txt
 
