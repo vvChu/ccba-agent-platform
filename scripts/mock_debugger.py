@@ -68,7 +68,7 @@ def analyze_error(script_path: Path, stderr: str) -> str:
 
     try:
         print("[Mock Debugger] Requesting AI Gateway analysis...")
-        reply = ai.chat(prompt, model="gemini-3-flash")
+        reply = ai.chat(prompt)
         return reply
     except Exception as e:
         return f"Error calling AI Gateway: {e}"
