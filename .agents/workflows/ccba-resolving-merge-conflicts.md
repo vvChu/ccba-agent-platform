@@ -7,4 +7,4 @@ bundle: "_core"
 
 # Workflow: Giải Quyết Xung Đột Git (/ccba-resolving-merge-conflicts)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `resolving-merge-conflicts` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/resolving-merge-conflicts/SKILL.md) để bắt đầu giải quyết xung đột Git cục bộ.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `resolving-merge-conflicts` tại [SKILL.md](../skills/resolving-merge-conflicts/SKILL.md) để bắt đầu giải quyết xung đột Git cục bộ.
