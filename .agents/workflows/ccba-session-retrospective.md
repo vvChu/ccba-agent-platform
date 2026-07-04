@@ -1,97 +1,99 @@
 ---
-description: Tổng hợp kiến thức cuối phiên làm việc - Session Knowledge Retrospective
-applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+name: ccba-session-retrospective
+description: Tổng hợp kiến thức cuối phiên làm việc (Retrospective) & Phân phối dọn dẹp tài liệu đầu vào thô.
+user-invocable: true
+keywords: [retrospective, cleanup, tổng hợp, dọn dẹp]
 ---
 
 # Session Knowledge Retrospective Workflow
 
-Workflow này được chạy trước khi kết thúc phiên làm việc để tổng hợp, đánh giá và lưu trữ các kiến thức có giá trị nhất đã được phát hiện trong quá trình làm việc.
+Workflow này được chạy trước khi kết thúc phiên làm việc để tự động tổng hợp, đánh giá và lưu trữ các kiến thức có giá trị nhất đã phát hiện trong quá trình làm việc, đồng thời dọn dẹp tài liệu thô.
 
-## Các bước thực hiện
+## Quy trình Thực hiện & Tiêu chí Hoàn thành
 
-### 1. Thu thập thông tin phiên làm việc
-Phân tích cuộc trò chuyện hiện tại để xác định:
-- **Vấn đề gốc**: Mục tiêu ban đầu của người dùng là gì?
-- **Các thử nghiệm đã thực hiện**: Những phương pháp nào đã được thử?
-- **Giải pháp thành công**: Giải pháp cuối cùng là gì và tại sao nó hoạt động?
-- **Thất bại/Backtracking**: Những gì không hoạt động và bài học rút ra là gì?
+### Bước 1: Thu thập & Phân loại Kiến thức
+Phân tích lịch sử hội thoại hiện tại để xác định:
+*   **Vấn đề gốc:** Mục tiêu ban đầu của người dùng.
+*   **Giải pháp thành công:** Giải pháp cuối cùng và tại sao nó hoạt động.
+*   **Thất bại/Bài học:** Những phương án không hoạt động và lý do.
+*   **Phân loại kiến thức:** Phân chia thành các nhóm: Patterns (Mẫu tốt), Anti-patterns (Cần tránh), Solutions (Giải pháp cụ thể), Configurations (Cấu hình tối ưu).
 
-### 2. Phân loại kiến thức theo danh mục
-Phân loại kiến thức đã phát hiện thành các danh mục:
-- **Patterns (Mẫu)**: Các kỹ thuật/cách tiếp cận tốt có thể tái sử dụng.
-- **Anti-patterns (Phản mẫu)**: Các cách tiếp cận cần tránh.
-- **Conventions (Quy ước)**: Quy tắc/tiêu chuẩn được thiết lập.
-- **Solutions (Giải pháp)**: Cách giải quyết vấn đề cụ thể.
-- **Configurations (Cấu hình)**: Thiết lập tối ưu.
-- **Integrations (Tích hợp)**: Cách kết nối các thành phần.
+*   **Completion Criterion:** Các kiến thức được lọc ra phải mang tính thực tế, có khả năng tái sử dụng cao và không trùng lặp với tri thức đã có trên Hub.
 
-### 3. Đánh giá và xếp hạng kiến thức
-Với mỗi kiến thức, đánh giá trên thang điểm từ 1-5:
-- Mức độ quan trọng (Ảnh hưởng đến toàn bộ hệ thống?)
-- Khả năng tái sử dụng (Có áp dụng được cho nhiều ngữ cảnh?)
-- Độ tin cậy (Đã được xác minh và test chưa?)
+---
 
-*Chỉ lưu lại kiến thức có tổng điểm >= 10/15.*
+### Bước 2: Cập nhật File Tri thức
+Ghi nhận các kiến thức đã lọc vào tệp `knowledge/session_learnings.md` (lưu tại `.md/knowledge/session_learnings.md` cục bộ của dự án).
 
-### 4. Tạo/Cập nhật file kiến thức
-Tạo hoặc cập nhật file `.md/knowledge/session_learnings.md` (hoặc vị trí tương tự) theo định dạng chuẩn:
+*   **Format Yêu cầu:**
+    ```markdown
+    ## Patterns (Mẫu tốt)
+    ### [Tên Pattern]
+    - **Ngữ cảnh:** Khi nào áp dụng
+    - **Giải pháp:** Các bước thực hiện
+    - **Nguồn:** Session [conversation-id], [date]
+
+    ## Anti-patterns (Cách tránh)
+    ### [Tên Anti-pattern]
+    - **Vấn đề:** Tại sao không nên làm
+    - **Thay thế bằng:** Pattern thay thế
+    ```
+*   **Completion Criterion:** File `session_learnings.md` được ghi nhận/cập nhật thành công, thông tin có cấu trúc và chứa đầy đủ ID phiên làm việc để truy nguyên.
+
+---
+
+### Bước 3: Đề xuất Memory & Workflow mới
+*   **Cập nhật `user_global`:** Nếu có kiến thức đặc biệt quan trọng ảnh hưởng toàn cục, đề xuất người dùng thêm dòng ghi nhớ ngắn gọn (dưới 100 ký tự) vào tệp cấu hình global.
+*   **Tiến hóa Kỹ năng (Skill Discovery):** Nếu phát hiện logic nghiệp vụ trong phiên có tính đóng gói cao, hỏi người dùng:
+    > *"Tôi phát hiện logic `[tên logic]` có thể đóng gói thành skill/workflow tái sử dụng.*
+    > *Bạn có muốn tôi ghi đề xuất này lên Hub ngay bây giờ không? Lệnh: `/ccba-propose-to-hub`"*
+
+*   **Completion Criterion:** Đề xuất được hiển thị rõ ràng trên màn hình chat cho người dùng lựa chọn (không tự ý ghi đè global memory khi chưa hỏi).
+
+---
+
+### Bước 4: Dọn dẹp & Phân phối Tài liệu đầu vào thô
+Agent thực hiện quét thư mục tạm `input_documents/` ở gốc dự án để phân phối tri thức đã sử dụng:
+1.  **Phân tích phân loại:** Đọc lướt nội dung các tệp tin trong `input_documents/` để tự động đề xuất phân loại:
+    *   Tài liệu pháp lý, quy định $\rightarrow$ `.md/legal_docs/` hoặc `.md/extracted_docs/`.
+    *   Báo cáo phân tích kỹ thuật, sơ đồ, hướng dẫn $\rightarrow$ `.md/knowledge/`.
+    *   Biên bản, ghi chú thảo luận họp $\rightarrow$ `.md/seminars/`.
+    *   Tệp log, test script tạm $\rightarrow$ `.md/scratch/`.
+2.  **In bảng đề xuất di chuyển:** Trình bày bảng đề xuất để người dùng xác nhận.
+3.  **Thực thi di chuyển & Làm sạch:** Sau khi người dùng xác nhận, Agent di chuyển vật lý các tệp đã chốt vào đúng vị trí và xóa sạch các file rác còn lại trong `input_documents/`.
+
+*   **Completion Criterion:** Thư mục `input_documents/` được làm sạch hoàn toàn (trống rỗng) sau khi các tệp có giá trị được di chuyển vào các thư mục con tương ứng của `.md/`.
+
+---
+
+### Bước 5: Xuất Báo cáo Tóm tắt
+Đóng gói phiên làm việc bằng một báo cáo ngắn gọn xuất ra màn hình chat:
 
 ```markdown
-## Session Learnings - Kiến thức tích lũy
+## 📋 Session Retrospective Summary
 
-## Cập nhật gần nhất: [YYYY-MM-DD]
+### Phiên làm việc
+- **Ngày:** [date]
+- **Mục tiêu:** [objective]
+- **Kết quả:** ✅ Thành công / ⚠️ Một phần / ❌ Chưa hoàn thành
 
----
+### Dọn dẹp & Phân loại tài liệu
+- [x] Đã phân loại và dọn dẹp N tài liệu từ `input_documents/` sang hệ thống tri thức `.md/`
 
-## Patterns (Mẫu tốt)
+### Kiến thức mới tích lũy
+- [x] N patterns / anti-patterns mới
+- [x] N solutions mới
 
-### [Tên Pattern]
-- **Ngữ cảnh**: Khi nào áp dụng
-- **Vấn đề giải quyết**: Mô tả vấn đề
-- **Giải pháp**: Các bước thực hiện
-- **Ví dụ code** (nếu có):
-  ```python
-  # Code ví dụ
-  ```
-- **Nguồn**: Session [conversation-id], [date]
+### Đề xuất Kỹ năng mới (Hub Proposal)
+- [ ] **[Tên Skill đề xuất]**: [Lý do/Lợi ích/Logic lõi]
 
----
-
-## Anti-patterns (Cách tránh)
-
-### [Tên Anti-pattern]
-- **Vấn đề**: Tại sao không nên làm
-- **Thay thế bằng**: Pattern thay thế
-- **Nguồn**: Session [conversation-id], [date]
+### Việc cần làm tiếp theo
+- [Các việc cần làm tiếp]
 ```
 
-### 5. Đề xuất cập nhật user_global memory
-Nếu kiến thức đặc biệt quan trọng (điểm >= 12/15), đề xuất thêm vào quy tắc toàn cục `user_global` dưới dạng các dòng tóm tắt ngắn gọn (tối đa 100 ký tự).
+*   **Completion Criterion:** Báo cáo được hiển thị đầy đủ, đính kèm các liên kết Markdown dẫn đến các tệp tri thức tương ứng vừa cập nhật.
 
-### 6. Đề xuất tiến hóa Kỹ năng (Skill Discovery & Evolution)
-Đây là bước quan trọng để làm giàu Platform. Agent chủ động rà soát toàn bộ phiên làm việc để tìm kiếm các cơ hội tạo Skill mới.
-- **Tiêu chí đánh giá (đạt cả 3):**
-  - *Modularity (Tính độc lập):* Logic có thể đóng gói thành script/workflow riêng.
-  - *Reusability (Tính tái sử dụng):* Có thể áp dụng cho các dự án CCBA khác.
-  - *Complexity (Độ phức tạp):* Việc thực hiện thủ công tốn nhiều thời gian/công sức.
-- **Hành động:**
-  Hỏi người dùng ngay để đề xuất đóng góp:
-  > *"Tôi phát hiện logic `[tên logic]` có thể đóng gói thành skill/workflow tái sử dụng. Bạn có muốn tôi ghi đề xuất này lên Hub ngay bây giờ không? Lệnh: `/ccba-propose-to-hub`"*
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
-### 7. Tự động Phân loại và Dọn dẹp tài liệu đầu vào (Retrospective & Cleanup)
-Trước khi đóng phiên làm việc, Agent quét thư mục đầu vào tạm thời `input_documents/` ở gốc dự án để phân phối tri thức đã sử dụng:
-1. **Phân tích phân loại:** Tự động đề xuất phân loại các tệp tin trong `input_documents/`:
-   - Tài liệu pháp lý, quy định $\rightarrow$ `.md/legal_docs/` hoặc `.md/extracted_docs/`.
-   - Báo cáo phân tích kỹ thuật, hướng dẫn $\rightarrow$ `.md/knowledge/`.
-   - Biên bản, ghi chú họp $\rightarrow$ `.md/seminars/`.
-   - Tệp log, test script tạm $\rightarrow$ `.md/scratch/`.
-2. **In bảng đề xuất di chuyển:** Trình bày bảng đề xuất để người dùng xác nhận.
-3. **Thực thi di chuyển & Làm sạch:** Sau khi người dùng xác nhận, Agent di chuyển vật lý các tệp đã chốt vào đúng vị trí và xóa sạch các file rác còn lại trong `input_documents/`.
-
-### 8. Tạo báo cáo tóm tắt
-Kết thúc phiên bằng báo cáo ngắn gọn bao gồm: ngày làm việc, mục tiêu, kết quả, danh sách tài liệu đã dọn dẹp, kiến thức mới được ghi nhận, đề xuất cập nhật workflows/skills mới, và các công việc cần làm tiếp theo cho phiên sau.
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
