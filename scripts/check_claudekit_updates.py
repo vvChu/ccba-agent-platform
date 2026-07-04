@@ -19,17 +19,76 @@ PLATFORM_ROOT = Path(__file__).resolve().parents[1]
 REPOS_CONFIG = [
     {
         "type": "engineer",
-        "local_path": PLATFORM_ROOT / "claudekit-engineer",
+        "local_path": PLATFORM_ROOT / ".md/scratch/repos/claudekit-engineer",
         "remote_url": "https://github.com/claudekit/claudekit-engineer",
         "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_last_sha.txt"
     },
     {
         "type": "marketing",
-        "local_path": PLATFORM_ROOT / ".agents/claudekit-marketing",
+        "local_path": PLATFORM_ROOT / ".md/scratch/repos/claudekit-marketing",
         "remote_url": "https://github.com/claudekit/claudekit-marketing",
         "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_marketing_last_sha.txt"
+    },
+    {
+        "type": "mattpocock-skills",
+        "local_path": PLATFORM_ROOT / ".md/scratch/repos/mattpocock-skills",
+        "remote_url": "https://github.com/mattpocock/skills",
+        "sha_file": PLATFORM_ROOT / ".md/scratch/mattpocock_skills_last_sha.txt"
     }
 ]
+
+
+def ensure_local_repo(config: dict) -> bool:
+    """Ensure the local repository is cloned and updated."""
+    local_path = config["local_path"]
+    remote_url = config["remote_url"]
+    repo_type = config["type"]
+    
+    if not local_path.exists():
+        print(f"[Repo Update] Cloning {repo_type} from {remote_url}...")
+        local_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            subprocess.run(
+                ["git", "clone", remote_url, str(local_path)],
+                check=True,
+                capture_output=True
+            )
+            print(f"[Repo Update] Successfully cloned {repo_type}.")
+            return True
+        except subprocess.SubprocessError as e:
+            print(f"[Repo Update] Error cloning {repo_type}: {e}")
+            return False
+    else:
+        try:
+            print(f"[Repo Update] Fetching updates for {repo_type}...")
+            subprocess.run(
+                ["git", "fetch", "origin"],
+                cwd=str(local_path),
+                check=True,
+                capture_output=True
+            )
+            # Detect default branch name (usually main or master)
+            res = subprocess.run(
+                ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
+                cwd=str(local_path),
+                capture_output=True,
+                text=True
+            )
+            default_branch = "main"
+            if res.returncode == 0:
+                default_branch = res.stdout.strip().split("/")[-1]
+            
+            subprocess.run(
+                ["git", "reset", "--hard", f"origin/{default_branch}"],
+                cwd=str(local_path),
+                check=True,
+                capture_output=True
+            )
+            print(f"[Repo Update] Successfully updated {repo_type}.")
+            return True
+        except subprocess.SubprocessError as e:
+            print(f"[Repo Update] Error updating {repo_type}: {e}")
+            return False
 
 
 def get_local_sha(config: dict) -> str:
@@ -70,6 +129,19 @@ def get_remote_sha(remote_url: str) -> str:
             return output.split()[0]
     except subprocess.SubprocessError:
         pass
+    # Fallback to check refs/heads/master if main is not found
+    try:
+        res = subprocess.run(
+            ["git", "ls-remote", remote_url, "refs/heads/master"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        output = res.stdout.strip()
+        if output:
+            return output.split()[0]
+    except subprocess.SubprocessError:
+        pass
     return ""
 
 
@@ -80,14 +152,20 @@ def check_and_evaluate(config: dict):
     remote_url = config["remote_url"]
     sha_file = config["sha_file"]
 
-    print(f"[ClaudeKit Update Check] Checking remote claudekit-{repo_type} for new updates...")
+    print(f"[ClaudeKit Update Check] Checking remote {repo_type} for new updates...")
+
+    remote_sha = get_remote_sha(remote_url)
+    if not remote_sha:
+        print(f"[ClaudeKit Update Check] Warning: Could not connect to remote {repo_type}.")
+        return
+
+    # Ensure local repo is synced
+    success = ensure_local_repo(config)
+    if not success:
+        print(f"[ClaudeKit Update Check] Warning: Failed to sync local repo for {repo_type}.")
+        return
 
     local_sha = get_local_sha(config)
-    remote_sha = get_remote_sha(remote_url)
-
-    if not remote_sha:
-        print(f"[ClaudeKit Update Check] Warning: Could not connect to remote claudekit-{repo_type}.")
-        return
 
     if not local_sha:
         print(f"[ClaudeKit Update Check] Initializing tracker for {repo_type} with remote SHA: {remote_sha}")
@@ -95,7 +173,7 @@ def check_and_evaluate(config: dict):
         return
 
     if local_sha != remote_sha:
-        print(f"\n\x1b[33m[UPDATE AVAILABLE]\x1b[0m New updates found in claudekit-{repo_type}!")
+        print(f"\n\x1b[33m[UPDATE AVAILABLE]\x1b[0m New updates found in {repo_type}!")
         print(f"  - Local SHA:  {local_sha[:8]}")
         print(f"  - Remote SHA: {remote_sha[:8]}")
         print("  - Triggering Automated Porting Evaluator...")
@@ -115,11 +193,11 @@ def check_and_evaluate(config: dict):
 
             # Save the new SHA
             sha_file.write_text(remote_sha, encoding="utf-8")
-            print(f"[ClaudeKit Update Check] Successfully processed updates for claudekit-{repo_type}.\n")
+            print(f"[ClaudeKit Update Check] Successfully processed updates for {repo_type}.\n")
         except Exception as e:
             print(f"[ClaudeKit Update Check] Error running evaluator: {e}\n")
     else:
-        print(f"[ClaudeKit Update Check] claudekit-{repo_type} is up-to-date.")
+        print(f"[ClaudeKit Update Check] {repo_type} is up-to-date.")
 
 
 def main():
