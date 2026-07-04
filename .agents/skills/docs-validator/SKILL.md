@@ -1,40 +1,29 @@
 ---
 name: docs-validator
-description: Quét kiểm định tài liệu Markdown chống ảo ảnh (hallucinations), broken links và cấu hình thiếu.
+description: Chạy kiểm định tài liệu Markdown chống ảo ảnh (hallucinations), broken links và cấu hình thiếu.
 disable-model-invocation: true
-category: quality-assurance
-keywords: [validate, docs, documentation, hallucination, links]
-metadata:
-  author: ccba-team
-  version: "1.0.0"
 ---
 
-# Skill: Docs Validator (Kiểm định tài liệu chính quy)
+# Linter Gate: Docs Validator
 
-Skill này giúp AI Agent tự động chạy và phân tích báo cáo kiểm định chất lượng tài liệu Markdown để chống lỗi thời và ảo ảnh (hallucinations) so với codebase thực tế. Do là kỹ năng chạy theo yêu cầu trực tiếp từ người dùng, nó được thiết lập ở trạng thái `disable-model-invocation: true` để tránh hao phí tokens trong context window mỗi lượt hội thoại.
+Sử dụng kỹ năng này để chạy linter tài liệu tĩnh và tự động sửa các lỗi liên kết, ký hiệu ảo giác so với codebase thực tế.
 
----
-
-## Cách Kích hoạt & Thực thi
-
-Khi cần kiểm tra chất lượng tài liệu hoặc trước khi commit/PR tài liệu kỹ thuật, Agent thực thi lệnh kiểm định (xác định `hub_path` để gọi đúng vị trí script):
-
+## 1. Thực thi kiểm định
+Chạy script kiểm định tài liệu trên toàn bộ workspace:
 ```bash
-python [hub_path]/scripts/validate_docs.py . --src scripts,packages
+python scripts/validate_docs.py .
 ```
 
----
+## 2. Quy trình xử lý lỗi (Legwork)
+Khi báo cáo kiểm định trả về cảnh báo, thực hiện sửa đổi theo thứ tự ưu tiên:
 
-## Quy tắc xử lý lỗi phát hiện
+1. **Broken Link Error (Exit 1 - Chặn cứng)**:
+   - *Hành động*: Định vị dòng bị lỗi liên kết tương đối, đối chiếu cấu trúc thư mục thực tế bằng `list_dir` và cập nhật lại đường dẫn chính xác.
+2. **Code Ref Warning (Cảnh báo mềm)**:
+   - *Hành động*: Dùng `grep_search` quét codebase để tìm ký hiệu (class, function, variable) chính xác. Nếu ký hiệu đã bị xóa hoặc đổi tên, cập nhật tài liệu khớp 100% codebase thực tế. Tuyệt đối không giữ các ký hiệu không tồn tại.
+3. **Env Var Warning (Cảnh báo mềm)**:
+   - *Hành động*: Nếu tài liệu nhắc tới biến môi trường chưa khai báo, bổ sung biến mẫu đó kèm mô tả ngắn gọn vào `.env.example` ở root dự án.
 
-### 1. Lỗi liên kết hỏng (Broken Link Error) — [CHẶN CỨNG - EXIT 1]
-- **Vấn đề:** Các liên kết tương đối trỏ vào tệp tin không tồn tại.
-- **Hành động:** Bắt buộc kiểm tra cấu trúc thư mục và sửa lại đường dẫn liên kết cho đúng. Đây là lỗi nghiêm trọng sẽ chặn build CI/CD.
-
-### 2. Cảnh báo ký hiệu code (Code Ref Warning) — [CẢNH BÁO MỀM]
-- **Vấn đề:** Tài liệu nhắc đến các hàm hoặc class không được định nghĩa trong codebase thực tế (do AI ảo tưởng hoặc ký hiệu đã bị xóa/đổi tên).
-- **Hành động:** Đối chiếu codebase, sửa lại ký hiệu cho đúng với thực tế mã nguồn.
-
-### 3. Cảnh báo biến cấu hình (Env Var Warning) — [CẢNH BÁO MỀM]
-- **Vấn đề:** Tài liệu nhắc tới các biến cấu hình môi trường nhưng `.env.example` ở root dự án chưa khai báo.
-- **Hành động:** Bổ sung ngay khai báo biến mẫu này vào `.env.example`.
+## 3. Tiêu chí hoàn thành (Completion Criteria)
+- `[ ]` Chạy lại `validate_docs.py` và đảm bảo không còn lỗi `Exit 1` (Broken Link).
+- `[ ]` Toàn bộ các cảnh báo `Code Ref` và `Env Var` mới phát sinh do thay đổi của phiên hiện tại được giải quyết triệt để.
