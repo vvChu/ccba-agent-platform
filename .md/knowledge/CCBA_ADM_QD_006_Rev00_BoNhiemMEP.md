@@ -8,11 +8,11 @@ Về việc bổ nhiệm Giám đốc bộ phận MEP dự án CCBA Platform
 
 Căn cứ quy chế hoạt động của Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng (CCBA).
 Căn cứ nhu cầu nhân sự phát triển Agent Services Spoke.
-Xét đề nghị của Trưởng phòng Hành chính Tổng hợp (liên hệ email: admin_office@ccba.org.vn, số điện thoại: 024.123456).
+Xét đề nghị của Trưởng phòng Hành chính Tổng hợp (liên hệ email: hr@ccba.vn, số điện thoại: 0900000000).
 
 QUYẾT ĐỊNH:
 
-Điều 1. Bổ nhiệm ông Trần Văn C, số CCCD: 001090123456, giữ chức vụ Giám đốc bộ phận MEP dự án CCBA Services Spoke 2026 kể từ ngày 10/07/2026.
+Điều 1. Bổ nhiệm ông Trần Văn C, số CCCD: 000000000000, giữ chức vụ Giám đốc bộ phận MEP dự án CCBA Services Spoke 2026 kể từ ngày 10/07/2026.
 Điều 2. Ông Trần Văn C được hưởng mức lương trách nhiệm là 40.000.000 VND/tháng.
 Điều 3. Quyết định có hiệu lực kể từ ngày ký. Các phòng ban và ông Trần Văn C chịu trách nhiệm thi hành quyết định này.
 
