@@ -34,11 +34,11 @@ except ImportError:
             })
     ai = MockAI()
 
+import yaml
+
 PLATFORM_ROOT = Path(__file__).resolve().parents[1]
 RECOMMENDATIONS_FILE = PLATFORM_ROOT / ".md" / "knowledge" / "port_recommendations.md"
 
-
-import yaml
 
 def get_existing_elements() -> tuple[list[str], list[str]]:
     """Load existing skills and workflows from catalog.yaml."""
@@ -145,8 +145,9 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
         if is_duplicate:
             status_text = "IGNORE (Đã tồn tại)"
             color = "🔴"
-        elif not result["should_port"]:
-            if "nâng cấp" in result["reason"].lower() or "tích hợp" in result["reason"].lower() or "cải tiến" in result["reason"].lower():
+        elif not result.get("should_port", True):
+            reason_lower = result.get("reason", "").lower()
+            if "nâng cấp" in reason_lower or "tích hợp" in reason_lower or "cải tiến" in reason_lower:
                 status_text = "UPGRADE/INTEGRATE"
                 color = "🟡"
             else:
@@ -159,9 +160,9 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
         item_md = f"""
 ---
 
-### {color} [{status_text}] Skill: `{skill_name}` (Score: {result['score']}/100)
+### {color} [{status_text}] Skill: `{skill_name}` (Score: {result.get('score', 0)}/100)
 *   **Kho chứa nguồn**: `{repo_type}`
-*   **Đánh giá**: {result['reason']}
+*   **Đánh giá**: {result.get('reason', 'Không có lý do chi tiết từ AI')}
 *   **Các bước triển khai**:
 """
         for step in result.get("actionable_steps", []):
@@ -254,7 +255,7 @@ def main():
     parser = argparse.ArgumentParser(description="CCBA Upstream Feature Porting Evaluator")
     parser.add_argument("--test-mock", action="store_true", help="Simulate a new skill check using mock data")
     parser.add_argument("--repo-path", help="Path to local upstream repo directory")
-    parser.add_argument("--repo-type", choices=["engineer", "marketing"], help="Repository type to evaluate")
+    parser.add_argument("--repo-type", choices=["engineer", "marketing", "mattpocock-skills"], help="Repository type to evaluate")
     parser.add_argument("--base", help="Base commit SHA for git diff")
     parser.add_argument("--head", help="Head commit SHA for git diff")
 
