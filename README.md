@@ -12,25 +12,29 @@
 ```
 ccba-agent-platform/                    ← Hub (Git-backed)
 ├── .agents/
-│   ├── skills/                        ← AI Agent skills (7 skills)
+│   ├── skills/                        ← AI Agent skills (55 skills)
 │   │   ├── legal-document-tracker/    ←   Theo dõi VBPL
 │   │   ├── completion-checklist/      ←   HSHT công trình
 │   │   ├── seminar-builder/           ←   Chuẩn bị seminar
-│   │   ├── long-form-writer/          ←   Viết tài liệu dài
-│   │   ├── ai-gateway-sdk/           ←   Kết nối AI Gateway (22 models)
-│   │   ├── maskara-privacy/          ←   Bảo mật & Quét nhạy cảm (Regex scan)
-│   │   └── platform-loader/          ←   Bootstrap + routing
-│   └── workflows/                     ← Automated workflows (17 workflows)
+│   │   ├── docs-validator/            ←   Linter tài liệu tĩnh (Patched)
+│   │   ├── architecture-sync/         ←   Đồng bộ hiến pháp kiến trúc (Patched)
+│   │   └── ...                        ←   Và 50+ kỹ năng chuyên dụng khác
+│   └── workflows/                     ← Automated workflows (27 workflows)
 ├── rules/                             ← CCBA organizational rules
 ├── .md/                               ← Accumulated knowledge (Project Knowledge Base)
 │   ├── knowledge/                     ←   Tài liệu nghiên cứu, roadmap, spec kỹ thuật
-│   ├── seminars/                      ←   Agenda, báo cáo tóm tắt seminar
+│   ├── seminars/                      ←   Agenda, tóm tắt seminar
 │   └── extracted_docs/                ←   Văn bản pháp luật trích xuất thô
 ├── packages/                          ← Internal service modules
-│   ├── ccba-ai/                       ←   AI Gateway client
+│   ├── ccba-ai/                       ←   AI Gateway client & SDK
+│   ├── ccba-harness/                  ←   Testing harness utilities
+│   ├── ccba-legal-intel/              ←   Legal intelligence connectors
+│   ├── ccba-notebooklm/               ←   Google NotebookLM wrapper & Mock client
+│   ├── ccba-ooxml/                    ←   OOXML validation and parsing engine
+│   ├── ccba-pdf-prep/                 ←   PDF processing (tiling, title-block, chunks)
 │   └── mdconverter/                   ←   Document-to-Markdown converter
 ├── scripts/                           ← CLI & Lifecycle Hooks
-│   ├── hooks/                         ←   Git hooks & guards (privacy, naming, scout, simplify)
+│   ├── hooks/                         ←   Git hooks & guards (privacy, naming, simplify)
 │   ├── tests/                         ←   Unit test suites
 │   ├── hook_runner.py                 ←   Unified Hook Runner CLI
 │   ├── maskara.py                     ←   Maskara Privacy Engine CLI
@@ -44,23 +48,28 @@ ccba-agent-platform/                    ← Hub (Git-backed)
 
 Kết nối AI Gateway trên Server Spark — 22 models, 1 endpoint.
 
-```bash
-pip install -e "packages/ccba-ai"
-```
-
 ```python
 from ccba_ai import ai
 reply = ai.chat("Xin chào!")
 ```
 
-### mdconverter — Document Converter
+### ccba-pdf-prep — PDF Preprocessor
+Phân mảnh thông minh (tiling) lọc pixel trắng, bóc tách khung tên (title block) và chia nhỏ PDF cho mô hình AI Vision.
 
-Modern Document to Markdown Converter with Vietnamese legal document support.
-
-```bash
-pip install -e "packages/mdconverter[dev,llm]"
-mdconvert convert document.pdf
+```python
+from ccba_pdf_prep import PDFProcessingPipeline
+pipeline = PDFProcessingPipeline()
+result = pipeline.process(pdf_path, output_dir)
 ```
+
+### ccba-notebooklm — NotebookLM Cloud Connector
+Tích hợp Google NotebookLM Cloud RAG, sinh podcast audio overview, quiz, slides... Hỗ trợ Mock Client giả lập chạy test/CI-CD không cần cookies.
+
+### ccba-ooxml — OOXML Validator
+Kiểm định tính toàn vẹn cấu trúc file Office XML (.docx, .pptx) và bóc tách tracked changes thông qua deep validator seam.
+
+### mdconverter — Document Converter
+Modern Document to Markdown Converter với hỗ trợ đặc thù cho cấu trúc văn bản pháp luật xây dựng Việt Nam.
 
 ### validate_docs — Documentation Accuracy Validator
 Quét tài liệu Markdown đối soát với codebase để phát hiện link hỏng, sai tên hàm/lớp hoặc biến môi trường thiếu trong `.env.example`.
@@ -68,17 +77,6 @@ Quét tài liệu Markdown đối soát với codebase để phát hiện link h
 ```bash
 python scripts/validate_docs.py [docs-dir] --src scripts,packages
 ```
-
-## Skills
-
-| Skill | Mô tả |
-|-------|--------|
-| `legal-document-tracker` | Theo dõi, so sánh VBPL xây dựng |
-| `completion-checklist` | Danh mục hồ sơ hoàn thành công trình |
-| `seminar-builder` | Chuẩn bị nội dung seminar |
-| `long-form-writer` | Viết tài liệu dài (2000+ words) |
-| `ai-gateway-sdk` | Kết nối AI Gateway (22 models) |
-| `maskara-privacy` | Phát hiện, che giấu (redact) thông tin nhạy cảm và cài đặt guardrails bảo mật |
 
 ## Workflows
 
@@ -98,6 +96,8 @@ python scripts/validate_docs.py [docs-dir] --src scripts,packages
 | `/ccba-propose-to-hub` | Đề xuất tích hợp skill/workflow mới từ Spoke lên Hub |
 | `/ccba-update-spoke` | Cập nhật thủ công các lệnh và kỹ năng mới từ Hub về Spoke |
 | `/ccba-discard-feature` | Hủy bỏ branch hiện tại cả local và remote |
+| `/ccba-sync-upstream` | Kiểm tra cập nhật và đồng bộ tri thức từ ClaudeKit và MattPocock |
+| `/ccba-improve-codebase-architecture` | Quét phát hiện module nông (shallow modules) và sinh sơ đồ Mermaid đề xuất refactor |
 
 ## Development
 
