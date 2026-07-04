@@ -28,7 +28,7 @@ This skill allows Antigravity to generate "super-long" content that exceeds stan
     Use `run_command` to execute the generation script.
 
     ```powershell
-    python .agents/skills/long-form-writer/scripts/generate.py --prompt "YOUR_DETAILED_PROMPT" --output "absolute/path/to/output.docx" --cycles 3
+    python [hub_path]/.agents/skills/long-form-writer/scripts/generate.py --prompt "YOUR_DETAILED_PROMPT" --output "absolute/path/to/output.docx" --cycles 3
     ```
 
     - `--prompt`: The detailed instructions for the content.
