@@ -8,24 +8,24 @@ applies_to:
 bundle: "_qc"
 ---
 
-# CCBA AI QC Reporter Skill
+# CCBA AI QC Reporter
 
-## Vai trò
-Skill này đóng vai trò "người thư ký chuyên nghiệp", giúp chuyển đổi các kết quả Audit thô từ AI (JSON/Markdown lẻ) thành một báo cáo Đường găng Kỹ thuật (Technical Critical Path Report) hoàn chỉnh, sẵn sàng cho công tác quản trị.
+Reporter chịu trách nhiệm tổng hợp các kết quả Audit thô từ AI (JSON/Markdown lẻ) thành một báo cáo Đường găng Kỹ thuật (Technical Critical Path Report) hoàn chỉnh phục vụ quản trị dự án.
 
-## Cách sử dụng
+---
 
-### Các Trigger
-- "Đóng gói báo cáo kỹ thuật"
-- "Tổng hợp kết quả QC"
-- "Tạo Technical Report"
-- "Báo cáo đường găng"
+## Tiêu chí hoàn thành (Completion Criteria)
 
-## Chức năng chính
-1. Tổng hợp Ma trận Backbone từ Discovery.
-2. Thống kê Heatmap rủi ro (High/Medium/Low) từ Audit.
-3. Liên kết hình ảnh minh chứng.
-4. Đề xuất kiến nghị chiến lược.
+Tác vụ sinh báo cáo được coi là hoàn thành thành công khi và chỉ khi:
+- [ ] Đã sinh tệp báo cáo tổng hợp Markdown tại:
+  `[target_project]/.md/extracts/audit_batch/BATCH_QC_Report_Auto.md`
+- [ ] Tệp báo cáo chứa đầy đủ các phân đoạn chính quy: bảng Heat Map rủi ro tổng hợp (High/Medium/Low), danh sách chi tiết lỗi đụng độ kỹ thuật có liên kết ảnh minh chứng, và các đề xuất/kiến nghị hành động.
 
-## Danh mục Script
-- `scripts/reporter_engine.py`: Logic tổng hợp dữ liệu thành báo cáo Markdown/Docx-ready.
+---
+
+## Công cụ thực thi
+
+Quy trình biên tập và tổng hợp báo cáo được xử lý qua script:
+```text
+.agents/skills/ccba-ai-qc-reporter/scripts/reporter_engine.py
+```
