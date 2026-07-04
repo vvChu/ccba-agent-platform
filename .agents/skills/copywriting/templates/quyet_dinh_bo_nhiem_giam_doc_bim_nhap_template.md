@@ -25,6 +25,7 @@ QUYẾT ĐỊNH:
 
 Bảng tiến độ bàn giao công việc giai đoạn đầu:
 | STT | Nội dung công việc | Ngày hoàn thành |
+|---|---|---|
 <!-- ROW_START -->
 | {{stt}} | {{task_description}} | {{due_date}} |
 <!-- ROW_END -->
