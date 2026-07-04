@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 CIP HTML Presentation Renderer
 
@@ -8,16 +7,14 @@ with detailed descriptions, concepts, and brand guidelines.
 """
 
 import argparse
-import json
-import os
-import sys
 import base64
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Add parent directory for imports
 sys.path.insert(0, str(Path(__file__).parent))
-from core import search, get_cip_brief
+from core import get_cip_brief
 
 # Deliverable descriptions for presentation
 DELIVERABLE_INFO = {
@@ -340,7 +337,7 @@ def generate_html(brand_name, industry, images_dir, output_path=None, style=None
 ''']
 
     # Add each deliverable
-    for i, image_path in enumerate(images):
+    for _i, image_path in enumerate(images):
         info = get_deliverable_info(image_path.stem)
         img_base64 = get_image_base64(image_path)
 

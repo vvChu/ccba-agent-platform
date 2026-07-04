@@ -13,11 +13,10 @@ Usage:
 
 import argparse
 import json
-import os
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any
 
 # Đảm bảo UTF-8 trên Windows
 if sys.platform == "win32":
@@ -43,7 +42,7 @@ except ImportError:
     ai = MockAI()
 
 
-def get_style_files() -> Dict[str, Any]:
+def get_style_files() -> dict[str, Any]:
     """Liệt kê các tệp văn phong mẫu hoặc thư mục trong assets/writing-styles/"""
     if not STYLES_DIR.exists():
         STYLES_DIR.mkdir(parents=True, exist_ok=True)
@@ -76,22 +75,22 @@ def redact_sensitive_info(text: str) -> str:
     # 1. Che giấu API Keys
     text = re.sub(r'\b(sk-[a-zA-Z0-9]{32,})\b', '[REDACTED_API_KEY]', text)
     text = re.sub(r'\b(AIzaSy[a-zA-Z0-9-_]{33})\b', '[REDACTED_API_KEY]', text)
-    
+
     # 2. Che giấu Email
     text = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '[REDACTED_EMAIL]', text)
-    
+
     # 3. Che giấu Số điện thoại VN (10 hoặc 11 số)
     text = re.sub(r'\b(0\d{9,10})\b', '[REDACTED_PHONE]', text)
     text = re.sub(r'\b(\+84\d{9,10})\b', '[REDACTED_PHONE]', text)
-    
+
     # 4. Che giấu Số định danh CCCD/CMND (9 hoặc 12 số liên tiếp)
     text = re.sub(r'\b\d{12}\b', '[REDACTED_CCCD]', text)
     text = re.sub(r'\b\d{9}\b', '[REDACTED_CMND]', text)
-    
+
     return text
 
 
-def call_ai_extract_api(content_text: str, target_name: str) -> Tuple[str, str, str, str]:
+def call_ai_extract_api(content_text: str, target_name: str) -> tuple[str, str, str, str]:
     """Gửi yêu cầu phân tích lên AI Gateway và trả về (Style Analysis, Template, Category, DocumentType)"""
     system_prompt = (
         "Bạn là kiến trúc sư tri thức và chuyên gia thương hiệu của CCBA.\n"
@@ -116,7 +115,7 @@ def call_ai_extract_api(content_text: str, target_name: str) -> Tuple[str, str, 
 
     user_prompt = f"""
     Hãy phân tích tài liệu mẫu sau đây để trích xuất văn phong và dựng biểu mẫu thô:
-    
+
     ```text
     {content_text}
     ```
@@ -124,7 +123,7 @@ def call_ai_extract_api(content_text: str, target_name: str) -> Tuple[str, str, 
 
     try:
         reply = ai.chat(user_prompt, system=system_prompt)
-        
+
         # Làm sạch JSON
         clean_reply = reply.strip()
         if clean_reply.startswith("```json"):
@@ -132,7 +131,7 @@ def call_ai_extract_api(content_text: str, target_name: str) -> Tuple[str, str, 
         if clean_reply.endswith("```"):
             clean_reply = clean_reply[:-3]
         clean_reply = clean_reply.strip()
-        
+
         data = json.loads(clean_reply)
         return (
             data.get("style_analysis", ""),
@@ -186,7 +185,7 @@ def process_extraction(target_path: Path, target_name: str):
         # Làm sạch tên file template để tránh các ký tự đặc biệt
         safe_name = re.sub(r'[^a-zA-Z0-9_]', '_', target_name).lower()
         template_output = TEMPLATES_DIR / f"{safe_name}_template.md"
-        
+
         # Thêm frontmatter cho template có chứa category và document_type phân loại
         final_template = f"""---
 name: {safe_name}_template

@@ -177,7 +177,7 @@ def get_placeholder_regions(pptx_path):
         slide_idx = int(slide_key.split("-")[1])
         regions = []
 
-        for shape_key, shape_data in shapes.items():
+        for _shape_key, shape_data in shapes.items():
             # The inventory only contains shapes with text, so all shapes should be highlighted
             regions.append(
                 {

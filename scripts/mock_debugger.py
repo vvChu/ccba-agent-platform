@@ -41,21 +41,21 @@ def analyze_error(script_path: Path, stderr: str) -> str:
     prompt = f"""
     Bạn là một kỹ sư Python chuyên nghiệp, đang thực thi quy trình chẩn đoán lỗi sâu (diagnosing-bugs discipline).
     Một kịch bản chạy thử nghiệm đã bị lỗi crash. Hãy phân tích vết lỗi (traceback) và mã nguồn.
-    
+
     Đường dẫn tệp lỗi: {script_path}
-    
+
     Vết lỗi (Traceback/Stderr):
     \"\"\"
     {stderr}
     \"\"\"
-    
+
     Mã nguồn hiện tại:
     ```python
     {source_code}
     ```
-    
+
     Hãy phản hồi ngắn gọn bằng tiếng Việt, cấu trúc theo quy chuẩn chẩn đoán lỗi chuyên sâu:
-    
+
     1. 🔍 Phân tích Nguyên nhân gốc rễ (Root Cause Analysis).
     2. 📊 Danh sách 3-5 giả định xếp hạng (Ranked Hypotheses) có tính chất kiểm chứng được (Falsifiable):
        - Định dạng: "Nếu giả định <X> đúng, việc thay đổi <Y> sẽ làm lỗi biến mất / thay đổi <Z> sẽ làm lỗi nặng hơn."

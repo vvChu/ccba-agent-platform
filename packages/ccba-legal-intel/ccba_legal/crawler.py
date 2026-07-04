@@ -400,7 +400,7 @@ def get_tvpl_metadata(cdp: ChromeCDP, url: str) -> dict[str, Any]:
                 }
             });
         }
-        
+
         // Extract all relationships from diagram page
         let relations = {};
         let relMap = {
@@ -434,14 +434,14 @@ def get_tvpl_metadata(cdp: ChromeCDP, url: str) -> dict[str, Any]:
                             };
                         })
                         .filter(l => l.title && l.title !== headerEl.innerText.trim() && l.url.includes('/van-ban/'));
-                    
+
                     if (links.length > 0) {
                         relations[relMap[key]] = links;
                     }
                 }
             }
         });
-        
+
         result['relations'] = relations;
         return result;
     })()

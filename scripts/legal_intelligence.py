@@ -21,10 +21,9 @@ from ccba_legal import (
     OKFBundlePackager,
     get_concept_type,
     get_crawled_doc_data,
+    get_tvpl_metadata,
     is_guiding_link,
     trigger_download,
-    get_tvpl_metadata,
-    Cleaners,
 )
 
 # Enforce UTF-8 output on Windows
