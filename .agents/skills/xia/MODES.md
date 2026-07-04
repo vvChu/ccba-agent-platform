@@ -5,7 +5,7 @@
 ## Cú pháp Lệnh
 
 ```text
-/ccba-kit xia <github-url|owner/repo|local-path> [feature-description] [--compare|--copy|--improve|--port] [--auto|--fast]
+/ccba-xia <github-url|owner/repo|local-path> [feature-description] [--compare|--copy|--improve|--port] [--auto|--fast]
 ```
 
 ## Các chế độ chạy (Modes)
