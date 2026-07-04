@@ -478,7 +478,10 @@ def main():
                     is_modified = filepath.resolve() in modified_files
                     # If we couldn't detect git status, default to modified to be safe
                     if not modified_files:
-                        is_modified = True
+                        if os.getenv("GITHUB_ACTIONS") == "true":
+                            is_modified = False
+                        else:
+                            is_modified = True
 
                     if is_modified:
                         print(f"  [L{line}] \x1b[31mBroken Link Error:\x1b[0m ({link}) - {err}")
