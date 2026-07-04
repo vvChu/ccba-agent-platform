@@ -9,6 +9,7 @@ from typing import Any
 # Provides in-memory implementation of the Google NotebookLM Cloud RPC endpoints.
 # ---------------------------------------------------------------------------
 
+
 class MockNotebook:
     def __init__(self, id: str, title: str) -> None:
         self.id = id
@@ -227,6 +228,7 @@ class MockSettingsService:
     async def get_account_limits(self) -> Any:
         class MockLimits:
             source_limit = 50
+
         return MockLimits()
 
 
@@ -241,9 +243,13 @@ class MockNotebookLMClientAdapter:
         self._sources = {
             "nb-mock-1": [
                 {"id": "src-mock-1", "title": "TCVN 2622-1995.pdf", "url": ""},
-                {"id": "src-mock-2", "title": "Nghi_dinh_06_2021.md", "url": "https://vbpl.vn/ND_06_2021"},
+                {
+                    "id": "src-mock-2",
+                    "title": "Nghi_dinh_06_2021.md",
+                    "url": "https://vbpl.vn/ND_06_2021",
+                },
             ],
-            "nb-mock-2": []
+            "nb-mock-2": [],
         }
         self.notebooks = MockNotebooksService(self)
         self.sources = MockSourcesService(self)
