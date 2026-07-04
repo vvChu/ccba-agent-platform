@@ -276,3 +276,68 @@ applies_to:
 bundle: "_core"
 
 ---
+
+## Architecture Deepening & Knowledge Quality Refactor (2026-07-04 - Morning)
+
+### Bối cảnh phiên
+Hoàn thành xuất sắc 100% 5 đợt rà soát chất lượng tri thức (skills & workflows). Thực hiện thành công cải tiến kiến trúc codebase vòng 2: động hóa model LLM (`mock_debugger.py`, `assess_upstream_features.py`) và định vị các đường dẫn cục bộ về Hub trung tâm. Nâng cấp toàn diện các kỹ năng cốt lõi `/ccba-xia` (sát nhập TDD, Socratic Grilling, Domain Alignment), `/ccba-grilling` (sát nhập Grill with Docs), và `/ccba-platform` (sửa broken paths, động hóa Hub, tích hợp tự động kiểm tra VPN và Interactive Setup cấu hình Spoke).
+
+---
+
+### Patterns
+
+**1. Phân giải đường dẫn tương đối động thông qua `Path(__file__)`**
+- **Ngữ cảnh:** Định vị thư mục clone, tệp tracking SHA, và file báo cáo của các scripts đồng bộ khi hệ thống được phân phối.
+- **Vấn đề:** Sử dụng relative paths từ CWD (`Path(".md/scratch/...")`) sẽ bị lệch hướng và sinh thư mục rác khi chạy từ Spoke con. Cứng hóa đường dẫn (`D:/GitHubProjects/...`) phá vỡ tính di động.
+- **Giải pháp:** Phân giải động bằng cách neo vào gốc file script đang chạy:
+  ```python
+  PLATFORM_ROOT = Path(__file__).resolve().parents[1]
+  REPOS_CONFIG = [
+      {
+          "type": "engineer",
+          "local_path": PLATFORM_ROOT / "claudekit-engineer",
+          "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_last_sha.txt"
+      }
+  ]
+  ```
+
+**2. Tích hợp Liveness Check & Interactive Setup vào Bootstrap Skill**
+- **Ngữ cảnh:** Khi khởi động global skill điều phối (`ccba-platform`) trên dự án Spoke mới.
+- **Vấn đề:** Chương trình crash do mất kết nối VPN đến Spark Server, thiếu cấu hình `.env`, hoặc thiếu file cấu hình dự án `workspace_context.yaml`.
+- **Giải pháp:**
+  - Tự động chạy lệnh ping/curl nhanh đến Spark LiteLLM URL (`http://100.83.192.30:8090/v1`) trước khi hiển thị menu, hiển thị cảnh báo hướng dẫn bật Tailscale VPN nếu lỗi.
+  - Phỏng vấn tương tác người dùng từng câu hỏi một (one-by-one) về các cấu hình thiếu (như chọn GitHub/local task manager, bộ môn QC) rồi tự ghi nhận vào `workspace_context.yaml` để tự động hóa setup.
+
+**3. Khóa hành vi port code bằng Test-Driven Porting (TDD)**
+- **Ngữ cảnh:** Chuyển dịch mã nguồn (porting) tính năng từ repository ngoài vào Platform.
+- **Vấn đề:** Rủi ro lệch logic nghiệp vụ hoặc cấy ghép code không hoạt động.
+- **Giải pháp:** Cưỡng chế quy trình viết/port test case của tính năng nguồn sang trước và chứng kiến nó chạy lỗi (Red), sau đó mới port logic code nghiệp vụ sang để test pass (Green) trước khi refactor.
+
+---
+
+### Anti-patterns
+
+**1. Tham chiếu ảo ảnh (Phantom Script Reference)**
+- Tham chiếu và yêu cầu Agent chạy một script không hề tồn tại thực tế trong codebase (`scripts/repomix_pack.py`). Luôn luôn grep xác minh sự tồn tại của script trước khi đưa vào tài liệu quy trình.
+
+**2. Hardcoded LLM Model Selection**
+- Ghi cứng tên model `model="gemini-3-flash"` trong code python. Gây crash API khi model bị bãi bỏ hoặc đổi tên trên cloud. Cần loại bỏ hoặc thay thế bằng default model của client để tự động nội suy từ biến môi trường `AI_MODEL`.
+
+**3. Inconsistent CLI vs Slash Command Syntax**
+- Khác biệt cú pháp gọi lệnh trong tài liệu hướng dẫn (`/ccba-kit xia` so với `/ccba-xia` thực tế đăng ký). Luôn thống nhất cú pháp public với workflow registration để tránh nhầm lẫn cho Agent và kỹ sư.
+
+---
+
+### Configurations
+
+| Setting | Value | Lý do | Áp dụng khi |
+| --------- | ------- | ------- | ------------- |
+| `CCBA_HUB_PATH` | Biến env hệ thống | Điểm neo tuyệt đối cho Platform Hub | Mọi dự án Spoke |
+| `workspace_context.yaml` | `issue_tracker: "local_json"` | Quản lý task cục bộ qua file JSON | SOLO / Offline Projects |
+
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+applies_to:
+  - "Phần mềm"
+bundle: "_core"
+---
