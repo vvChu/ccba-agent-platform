@@ -489,22 +489,22 @@ def map_info_detail(d: str) -> Any:
     if InfographicDetail is None:
         return None
     d_map = {
-        "default": InfographicDetail.DEFAULT,
-        "summary": InfographicDetail.SUMMARY,
+        "default": InfographicDetail.STANDARD,
+        "summary": InfographicDetail.CONCISE,
         "detailed": InfographicDetail.DETAILED,
     }
-    return d_map.get(d.lower(), InfographicDetail.DEFAULT)
+    return d_map.get(d.lower(), InfographicDetail.STANDARD)
 
 
 def map_info_style(s: str) -> Any:
     if InfographicStyle is None:
         return None
     s_map = {
-        "modern": InfographicStyle.MODERN,
-        "minimal": InfographicStyle.MINIMAL,
-        "colorful": InfographicStyle.COLORFUL,
+        "modern": InfographicStyle.PROFESSIONAL,
+        "minimal": InfographicStyle.EDITORIAL,
+        "colorful": InfographicStyle.INSTRUCTIONAL,
     }
-    return s_map.get(s.lower(), InfographicStyle.MODERN)
+    return s_map.get(s.lower(), InfographicStyle.AUTO_SELECT)
 
 
 def map_report_format(f: str) -> Any:
@@ -533,8 +533,8 @@ def map_video_format(f: str) -> Any:
 def map_video_style(s: str) -> Any:
     if VideoStyle is None:
         return None
-    s_map = {"modern": VideoStyle.MODERN, "classic": VideoStyle.CLASSIC}
-    return s_map.get(s.lower(), VideoStyle.MODERN)
+    s_map = {"modern": VideoStyle.AUTO_SELECT, "classic": VideoStyle.CLASSIC}
+    return s_map.get(s.lower(), VideoStyle.AUTO_SELECT)
 
 
 if __name__ == "__main__":
