@@ -21,14 +21,14 @@ bundle: "_core"
 
 | Article | Nội dung cốt lõi |
 |:--------|:----------------|
-| [uniclass-ss.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-classification/uniclass-ss.md) | Ss Systems — bảng phân loại, mapping BIM object types |
-| [uniclass-en.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-classification/uniclass-en.md) | En Entities — phân loại công trình theo loại hình |
-| [uniclass-pr.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-classification/uniclass-pr.md) | Pr Products — sản phẩm, catalog, NBS lookup guide |
-| [ifc-entity-guide.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-classification/ifc-entity-guide.md) | IFC4X3 entity hierarchy, spatial structure rules |
-| [naming-convention.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-classification/naming-convention.md) | File naming, discipline codes, revision codes |
+| [uniclass-ss.md]([bigbim_method_path]/.md/knowledge/bigbim-classification/uniclass-ss.md) | Ss Systems — bảng phân loại, mapping BIM object types |
+| [uniclass-en.md]([bigbim_method_path]/.md/knowledge/bigbim-classification/uniclass-en.md) | En Entities — phân loại công trình theo loại hình |
+| [uniclass-pr.md]([bigbim_method_path]/.md/knowledge/bigbim-classification/uniclass-pr.md) | Pr Products — sản phẩm, catalog, NBS lookup guide |
+| [ifc-entity-guide.md]([bigbim_method_path]/.md/knowledge/bigbim-classification/ifc-entity-guide.md) | IFC4X3 entity hierarchy, spatial structure rules |
+| [naming-convention.md]([bigbim_method_path]/.md/knowledge/bigbim-classification/naming-convention.md) | File naming, discipline codes, revision codes |
 
-**KB Root:** `D:\GitHubProjects\BIGBIM_Method\.md\`  
-**Master Index:** `D:\GitHubProjects\BIGBIM_Method\.md\knowledge\INDEX.md`
+**KB Root:** `[bigbim_method_path]/.md/`  
+**Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
 
 ---
 

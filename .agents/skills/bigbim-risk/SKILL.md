@@ -20,13 +20,13 @@ bundle: "_core"
 
 | Article | Nội dung cốt lõi |
 |:--------|:----------------|
-| [risk-register.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-risk/risk-register.md) | Risk Register format, scoring matrix, BIGBIM risk IDs |
-| [risk-categories.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-risk/risk-categories.md) | 5 risk categories — Information, Geometry, Process, Legal, Asset |
-| [v-gates.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-governance/v-gates.md) | V2 Coordination Gate — go/no-go criteria cho clash audit |
-| [ifc-pset-map.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-rase/ifc-pset-map.md) | IFC property mapping — context cho information conflict detection |
+| [risk-register.md]([bigbim_method_path]/.md/knowledge/bigbim-risk/risk-register.md) | Risk Register format, scoring matrix, BIGBIM risk IDs |
+| [risk-categories.md]([bigbim_method_path]/.md/knowledge/bigbim-risk/risk-categories.md) | 5 risk categories — Information, Geometry, Process, Legal, Asset |
+| [v-gates.md]([bigbim_method_path]/.md/knowledge/bigbim-governance/v-gates.md) | V2 Coordination Gate — go/no-go criteria cho clash audit |
+| [ifc-pset-map.md]([bigbim_method_path]/.md/knowledge/bigbim-rase/ifc-pset-map.md) | IFC property mapping — context cho information conflict detection |
 
-**KB Root:** `D:\GitHubProjects\BIGBIM_Method\.md\`  
-**Master Index:** `D:\GitHubProjects\BIGBIM_Method\.md\knowledge\INDEX.md`
+**KB Root:** `[bigbim_method_path]/.md/`  
+**Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
 
 ---
 

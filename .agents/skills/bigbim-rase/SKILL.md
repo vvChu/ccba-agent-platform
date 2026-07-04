@@ -21,14 +21,14 @@ bundle: "_core"
 
 | Article | Nội dung cốt lõi |
 |:--------|:----------------|
-| [air-guide.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-rase/air-guide.md) | AIR structure, 20 requirements, mapping AIR→IFC Psets |
-| [oir-guide.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-rase/oir-guide.md) | OIR framework, 12 objectives, OIR→AIR traceability |
-| [ifc-pset-map.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-rase/ifc-pset-map.md) | Bảng ánh xạ IFC4X3 Psets đầy đủ theo AIR categories |
-| [ids-validation.md](D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-rase/ids-validation.md) | IDS buildingSMART, validation workflow, template |
-| [chunks/ISO_19650_VN/](D:/GitHubProjects/BIGBIM_Method/.md/chunks/ISO_19650_VN/) | ISO 19650-1/2/3 chunks — tra điều khoản cụ thể |
+| [air-guide.md]([bigbim_method_path]/.md/knowledge/bigbim-rase/air-guide.md) | AIR structure, 20 requirements, mapping AIR→IFC Psets |
+| [oir-guide.md]([bigbim_method_path]/.md/knowledge/bigbim-rase/oir-guide.md) | OIR framework, 12 objectives, OIR→AIR traceability |
+| [ifc-pset-map.md]([bigbim_method_path]/.md/knowledge/bigbim-rase/ifc-pset-map.md) | Bảng ánh xạ IFC4X3 Psets đầy đủ theo AIR categories |
+| [ids-validation.md]([bigbim_method_path]/.md/knowledge/bigbim-rase/ids-validation.md) | IDS buildingSMART, validation workflow, template |
+| [chunks/ISO_19650_VN/]([bigbim_method_path]/.md/chunks/ISO_19650_VN/) | ISO 19650-1/2/3 chunks — tra điều khoản cụ thể |
 
-**KB Root:** `D:\GitHubProjects\BIGBIM_Method\.md\`  
-**Master Index:** `D:\GitHubProjects\BIGBIM_Method\.md\knowledge\INDEX.md`
+**KB Root:** `[bigbim_method_path]/.md/`  
+**Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
 
 ---
 

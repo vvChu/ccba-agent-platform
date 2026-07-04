@@ -154,9 +154,9 @@ skills:
     triggers: [rase, phân tích rase, ifc property, pset map, IFC4X3, Qto_SpaceBaseQuantities, Qto_WallBaseQuantities]
     skill_path: .agents/skills/bigbim-rase/SKILL.md
     data_files:
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-rase/air-guide.md
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-rase/ifc-pset-map.md
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/INDEX.md
+      - "[bigbim_method_path]/.md/knowledge/bigbim-rase/air-guide.md"
+      - "[bigbim_method_path]/.md/knowledge/bigbim-rase/ifc-pset-map.md"
+      - "[bigbim_method_path]/.md/knowledge/INDEX.md"
 
   - name: bigbim-governance
     bundle: _core
@@ -164,10 +164,10 @@ skills:
     triggers: [sợi chỉ vàng, sợi chỉ đỏ, unique id, governance-core, golden thread, red thread, eir matrix, air matrix, RK_50_40_35, RK_10_70_04, RK_50_40_45, RK_50_60_28]
     skill_path: .agents/skills/bigbim-governance/SKILL.md
     data_files:
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-governance/bbp-lifecycle.md
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-governance/v-gates.md
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-governance/cde-workflow.md
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/INDEX.md
+      - "[bigbim_method_path]/.md/knowledge/bigbim-governance/bbp-lifecycle.md"
+      - "[bigbim_method_path]/.md/knowledge/bigbim-governance/v-gates.md"
+      - "[bigbim_method_path]/.md/knowledge/bigbim-governance/cde-workflow.md"
+      - "[bigbim_method_path]/.md/knowledge/INDEX.md"
 
   - name: bigbim-classification
     bundle: _core
@@ -175,9 +175,9 @@ skills:
     triggers: [phân loại, naming convention, room naming, uniclass, ISO 22274, ISO 21511, ISO 12006-2, Trí Nhớ Số, Digital Memory, ifc alignment, gis, SL_table, En_table]
     skill_path: .agents/skills/bigbim-classification/SKILL.md
     data_files:
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-classification/uniclass-ss.md
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-classification/ifc-entity-guide.md
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/INDEX.md
+      - "[bigbim_method_path]/.md/knowledge/bigbim-classification/uniclass-ss.md"
+      - "[bigbim_method_path]/.md/knowledge/bigbim-classification/ifc-entity-guide.md"
+      - "[bigbim_method_path]/.md/knowledge/INDEX.md"
 
   - name: bigbim-risk
     bundle: _core
@@ -185,9 +185,9 @@ skills:
     triggers: [mâu thuẫn thông tin, information conflict, rủi ro thông tin, V2 coordination, clash audit, gap detection, va chạm vật lý, không gian lắp đặt, không gian bảo trì]
     skill_path: .agents/skills/bigbim-risk/SKILL.md
     data_files:
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-risk/risk-register.md
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/bigbim-governance/v-gates.md
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/INDEX.md
+      - "[bigbim_method_path]/.md/knowledge/bigbim-risk/risk-register.md"
+      - "[bigbim_method_path]/.md/knowledge/bigbim-governance/v-gates.md"
+      - "[bigbim_method_path]/.md/knowledge/INDEX.md"
 
   - name: bigbim-vbpl-digest
     bundle: _core
@@ -195,8 +195,8 @@ skills:
     triggers: [NĐ 175, nghị định BIM, Nghị định 175, điều khoản BIM, ISO 19650, luật xây dựng BIM, pháp lý BIM, quy định nộp BIM, bắt buộc BIM]
     skill_path: .agents/skills/bigbim-vbpl-digest/SKILL.md
     data_files:
-      - D:/GitHubProjects/BIGBIM_Method/.md/chunks/INDEX.md
-      - D:/GitHubProjects/BIGBIM_Method/.md/knowledge/vbpl-digest/nd-175-digest.md
+      - "[bigbim_method_path]/.md/chunks/INDEX.md"
+      - "[bigbim_method_path]/.md/knowledge/vbpl-digest/nd-175-digest.md"
 
   - name: ccba-idop-scaffolder
     bundle: _core
@@ -477,6 +477,6 @@ knowledge:
 
   - name: bigbim_method_kb
     description: "BIGBIM Method Knowledge Base v1.0 — 36 articles, 266 chunks, 3-layer architecture"
-    knowledge_path: D:/GitHubProjects/BIGBIM_Method/.md/knowledge/INDEX.md
-    chunks_index: D:/GitHubProjects/BIGBIM_Method/.md/chunks/INDEX.md
-    kb_root: D:/GitHubProjects/BIGBIM_Method/.md/
+    knowledge_path: "[bigbim_method_path]/.md/knowledge/INDEX.md"
+    chunks_index: "[bigbim_method_path]/.md/chunks/INDEX.md"
+    kb_root: "[bigbim_method_path]/.md/"
