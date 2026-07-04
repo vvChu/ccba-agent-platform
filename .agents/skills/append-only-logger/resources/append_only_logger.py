@@ -12,10 +12,7 @@ DEFAULT_LOG_FILE = Path("log.md")
 
 
 def update_log(
-    category: str,
-    message: str,
-    level: str = "info",
-    log_file: Path = DEFAULT_LOG_FILE
+    category: str, message: str, level: str = "info", log_file: Path = DEFAULT_LOG_FILE
 ) -> None:
     """Append một log entry vào shared log file — thread-safe.
     Tích hợp tự động in JSON lỗi chuẩn hóa nếu ghi log thất bại.
@@ -40,7 +37,7 @@ def update_log(
         error_json = format_error_json(
             CCBAErrorCode.LOGGER_WRITE_FAIL,
             f"Failed to write log entry to {log_file.name}: {str(e)}",
-            f"Check if log file '{log_file.name}' is read-only, locked by another process, or disk is full."
+            f"Check if log file '{log_file.name}' is read-only, locked by another process, or disk is full.",
         )
         print(error_json, file=sys.stderr)
 
@@ -90,6 +87,6 @@ def rotate_log(log_file: Path = DEFAULT_LOG_FILE, max_age_days: int = 30) -> Non
         error_json = format_error_json(
             CCBAErrorCode.LOGGER_WRITE_FAIL,
             f"Failed to rotate log file {log_file.name}: {str(e)}",
-            "Verify write permissions for both main log and archive log files. Check disk space."
+            "Verify write permissions for both main log and archive log files. Check disk space.",
         )
         print(error_json, file=sys.stderr)

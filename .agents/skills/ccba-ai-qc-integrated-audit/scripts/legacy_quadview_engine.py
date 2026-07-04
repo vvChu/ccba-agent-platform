@@ -141,7 +141,6 @@ class IDOPAuditEngine:
         )
         return out_path
 
-
     def generate_quad_view(
         self,
         images: list[Path],
@@ -204,6 +203,7 @@ class IDOPAuditEngine:
         logger.info("Quad-view generated: %s", quad_path)
 
         import time
+
         # 2. Prepare prompt with timestamp to bypass LiteLLM cache
         d = (discipline_order + ["", "", "", ""])[:4]
         prompt = _AUDIT_PROMPT.format(d0=d[0], d1=d[1], d2=d[2], d3=d[3])

@@ -20,69 +20,173 @@ LIST_SCHEMAS = {
             {"internal_name": "ContactPerson", "display_name": "Contact Person", "type": "Text"},
             {"internal_name": "Email", "display_name": "Email", "type": "Text"},
             {"internal_name": "Phone", "display_name": "Phone", "type": "Text"},
-            {"internal_name": "Status", "display_name": "Lead Status", "type": "Choice", "choices": ["Lead", "Contacted", "Proposal", "Contracted", "Lost"]},
-            {"internal_name": "EstimatedValue", "display_name": "Estimated Value", "type": "Currency"},
-            {"internal_name": "AssignedTo", "display_name": "Assigned To", "type": "User"}
-        ]
+            {
+                "internal_name": "Status",
+                "display_name": "Lead Status",
+                "type": "Choice",
+                "choices": ["Lead", "Contacted", "Proposal", "Contracted", "Lost"],
+            },
+            {
+                "internal_name": "EstimatedValue",
+                "display_name": "Estimated Value",
+                "type": "Currency",
+            },
+            {"internal_name": "AssignedTo", "display_name": "Assigned To", "type": "User"},
+        ],
     },
     "Contracts": {
         "listName": "Contracts",
         "displayName": "Contracts",
         "fields": [
-            {"internal_name": "CRMReference", "display_name": "CRM Lead", "type": "Lookup", "lookup_list": "CRM", "lookup_field": "Title"},
-            {"internal_name": "ContractType", "display_name": "Contract Type", "type": "Choice", "choices": ["NDA", "Service Agreement", "Procurement", "Employment"]},
+            {
+                "internal_name": "CRMReference",
+                "display_name": "CRM Lead",
+                "type": "Lookup",
+                "lookup_list": "CRM",
+                "lookup_field": "Title",
+            },
+            {
+                "internal_name": "ContractType",
+                "display_name": "Contract Type",
+                "type": "Choice",
+                "choices": ["NDA", "Service Agreement", "Procurement", "Employment"],
+            },
             {"internal_name": "Value", "display_name": "Contract Value", "type": "Currency"},
             {"internal_name": "StartDate", "display_name": "Start Date", "type": "DateTime"},
             {"internal_name": "EndDate", "display_name": "End Date", "type": "DateTime"},
             {"internal_name": "Signee", "display_name": "Signee", "type": "User"},
-            {"internal_name": "Status", "display_name": "Contract Status", "type": "Choice", "choices": ["Draft", "Under Review", "Active", "Expired", "Terminated"]}
-        ]
+            {
+                "internal_name": "Status",
+                "display_name": "Contract Status",
+                "type": "Choice",
+                "choices": ["Draft", "Under Review", "Active", "Expired", "Terminated"],
+            },
+        ],
     },
     "Finance": {
         "listName": "Finance",
         "displayName": "Finance & Transactions",
         "fields": [
-            {"internal_name": "ContractReference", "display_name": "Related Contract", "type": "Lookup", "lookup_list": "Contracts", "lookup_field": "Title"},
+            {
+                "internal_name": "ContractReference",
+                "display_name": "Related Contract",
+                "type": "Lookup",
+                "lookup_list": "Contracts",
+                "lookup_field": "Title",
+            },
             {"internal_name": "Amount", "display_name": "Amount", "type": "Currency"},
             {"internal_name": "PaymentDate", "display_name": "Payment Date", "type": "DateTime"},
-            {"internal_name": "PaymentType", "display_name": "Payment Type", "type": "Choice", "choices": ["Revenue", "Expense"]},
-            {"internal_name": "Category", "display_name": "Category", "type": "Choice", "choices": ["Software License", "Consulting Fee", "Payroll", "Office Expense", "Tax"]},
-            {"internal_name": "ApprovedBy", "display_name": "Approved By", "type": "User"}
-        ]
+            {
+                "internal_name": "PaymentType",
+                "display_name": "Payment Type",
+                "type": "Choice",
+                "choices": ["Revenue", "Expense"],
+            },
+            {
+                "internal_name": "Category",
+                "display_name": "Category",
+                "type": "Choice",
+                "choices": [
+                    "Software License",
+                    "Consulting Fee",
+                    "Payroll",
+                    "Office Expense",
+                    "Tax",
+                ],
+            },
+            {"internal_name": "ApprovedBy", "display_name": "Approved By", "type": "User"},
+        ],
     },
     "Approvals": {
         "listName": "Approvals",
         "displayName": "Approval Tasks",
         "fields": [
-            {"internal_name": "RelatedContract", "display_name": "Related Contract", "type": "Lookup", "lookup_list": "Contracts", "lookup_field": "Title"},
+            {
+                "internal_name": "RelatedContract",
+                "display_name": "Related Contract",
+                "type": "Lookup",
+                "lookup_list": "Contracts",
+                "lookup_field": "Title",
+            },
             {"internal_name": "Approver", "display_name": "Approver", "type": "User"},
-            {"internal_name": "Status", "display_name": "Approval Status", "type": "Choice", "choices": ["Pending", "Approved", "Rejected"]},
-            {"internal_name": "SubmissionDate", "display_name": "Submission Date", "type": "DateTime"},
-            {"internal_name": "Comments", "display_name": "Comments", "type": "Note"}
-        ]
+            {
+                "internal_name": "Status",
+                "display_name": "Approval Status",
+                "type": "Choice",
+                "choices": ["Pending", "Approved", "Rejected"],
+            },
+            {
+                "internal_name": "SubmissionDate",
+                "display_name": "Submission Date",
+                "type": "DateTime",
+            },
+            {"internal_name": "Comments", "display_name": "Comments", "type": "Note"},
+        ],
     },
     "HRAdmin": {
         "listName": "HRAdmin",
         "displayName": "HR Administration",
         "fields": [
             {"internal_name": "EmployeeUser", "display_name": "Employee User", "type": "User"},
-            {"internal_name": "Department", "display_name": "Department", "type": "Choice", "choices": ["Engineering", "Sales", "HR", "Finance", "Legal"]},
+            {
+                "internal_name": "Department",
+                "display_name": "Department",
+                "type": "Choice",
+                "choices": ["Engineering", "Sales", "HR", "Finance", "Legal"],
+            },
             {"internal_name": "JobTitle", "display_name": "Job Title", "type": "Text"},
             {"internal_name": "HireDate", "display_name": "Hire Date", "type": "DateTime"},
-            {"internal_name": "Skills", "display_name": "Skills", "type": "MultiChoice", "choices": ["Python", "SharePoint", "PowerAutomate", "Legal", "Finance", "React", "AWS"]},
-            {"internal_name": "Salary", "display_name": "Salary", "type": "Currency"}
-        ]
+            {
+                "internal_name": "Skills",
+                "display_name": "Skills",
+                "type": "MultiChoice",
+                "choices": [
+                    "Python",
+                    "SharePoint",
+                    "PowerAutomate",
+                    "Legal",
+                    "Finance",
+                    "React",
+                    "AWS",
+                ],
+            },
+            {"internal_name": "Salary", "display_name": "Salary", "type": "Currency"},
+        ],
     },
     "LegalQA": {
         "listName": "LegalQA",
         "displayName": "Legal QA & Audits",
         "fields": [
-            {"internal_name": "ContractRef", "display_name": "Contract Reference", "type": "Lookup", "lookup_list": "Contracts", "lookup_field": "Title"},
-            {"internal_name": "AssignedLegalExpert", "display_name": "Assigned Legal Expert", "type": "User"},
-            {"internal_name": "Severity", "display_name": "Severity", "type": "Choice", "choices": ["Low", "Medium", "High", "Critical"]},
-            {"internal_name": "ResolutionDate", "display_name": "Resolution Date", "type": "DateTime"},
-            {"internal_name": "AuditStatus", "display_name": "Audit Status", "type": "Choice", "choices": ["Open", "In Progress", "Resolved"]}
-        ]
+            {
+                "internal_name": "ContractRef",
+                "display_name": "Contract Reference",
+                "type": "Lookup",
+                "lookup_list": "Contracts",
+                "lookup_field": "Title",
+            },
+            {
+                "internal_name": "AssignedLegalExpert",
+                "display_name": "Assigned Legal Expert",
+                "type": "User",
+            },
+            {
+                "internal_name": "Severity",
+                "display_name": "Severity",
+                "type": "Choice",
+                "choices": ["Low", "Medium", "High", "Critical"],
+            },
+            {
+                "internal_name": "ResolutionDate",
+                "display_name": "Resolution Date",
+                "type": "DateTime",
+            },
+            {
+                "internal_name": "AuditStatus",
+                "display_name": "Audit Status",
+                "type": "Choice",
+                "choices": ["Open", "In Progress", "Resolved"],
+            },
+        ],
     },
     "RDProjects": {
         "listName": "RDProjects",
@@ -92,10 +196,16 @@ LIST_SCHEMAS = {
             {"internal_name": "Budget", "display_name": "Budget", "type": "Currency"},
             {"internal_name": "StartDate", "display_name": "Start Date", "type": "DateTime"},
             {"internal_name": "TargetDate", "display_name": "Target Date", "type": "DateTime"},
-            {"internal_name": "Status", "display_name": "Project Status", "type": "Choice", "choices": ["Planned", "In Progress", "On Hold", "Completed"]}
-        ]
-    }
+            {
+                "internal_name": "Status",
+                "display_name": "Project Status",
+                "type": "Choice",
+                "choices": ["Planned", "In Progress", "On Hold", "Completed"],
+            },
+        ],
+    },
 }
+
 
 def sanitize_powershell_string(val: str) -> str:
     """Sanitizes and escapes strings to be placed inside a double-quoted PowerShell string.
@@ -112,6 +222,7 @@ def sanitize_powershell_string(val: str) -> str:
 
     # Escape PowerShell special characters within double quotes: $, `, "
     return val.replace("`", "``").replace("$", "`$").replace('"', '`"')
+
 
 def generate_powershell_script(list_name: str, schema: dict) -> str:
     safe_list_name = sanitize_powershell_string(list_name)
@@ -271,38 +382,47 @@ Ensure-SharePointList -Title "{safe_list_name}"
                 choices = []
             choices_clean = [sanitize_powershell_string(str(c)) for c in choices]
             choices_str = ", ".join([f'"{c}"' for c in choices_clean])
-            lines.append(f'Add-SharePointField -ListTitle "{safe_list_name}" -DisplayName "{display_name}" -InternalName "{internal_name}" -Type "{ftype}" -Choices @({choices_str})')
+            lines.append(
+                f'Add-SharePointField -ListTitle "{safe_list_name}" -DisplayName "{display_name}" -InternalName "{internal_name}" -Type "{ftype}" -Choices @({choices_str})'
+            )
         elif ftype == "Lookup":
             lookup_list_raw = field.get("lookup_list", "")
             lookup_field_raw = field.get("lookup_field", "Title")
             lookup_list = sanitize_powershell_string(lookup_list_raw)
             lookup_field = sanitize_powershell_string(lookup_field_raw)
-            lines.append(f'Add-SharePointField -ListTitle "{safe_list_name}" -DisplayName "{display_name}" -InternalName "{internal_name}" -Type "{ftype}" -LookupList "{lookup_list}" -LookupField "{lookup_field}"')
+            lines.append(
+                f'Add-SharePointField -ListTitle "{safe_list_name}" -DisplayName "{display_name}" -InternalName "{internal_name}" -Type "{ftype}" -LookupList "{lookup_list}" -LookupField "{lookup_field}"'
+            )
         else:
-            lines.append(f'Add-SharePointField -ListTitle "{safe_list_name}" -DisplayName "{display_name}" -InternalName "{internal_name}" -Type "{ftype}"')
+            lines.append(
+                f'Add-SharePointField -ListTitle "{safe_list_name}" -DisplayName "{display_name}" -InternalName "{internal_name}" -Type "{ftype}"'
+            )
 
-    lines.append(f"\nWrite-Host \"Provisioning of list '{safe_list_name}' completed successfully!\" -ForegroundColor Green")
+    lines.append(
+        f"\nWrite-Host \"Provisioning of list '{safe_list_name}' completed successfully!\" -ForegroundColor Green"
+    )
     return "\n".join(lines)
 
+
 def generate_power_automate_spec() -> str:
-    template_path = os.path.join(os.path.dirname(__file__), "templates", "idop", "PowerAutomate_spec.md")
+    template_path = os.path.join(
+        os.path.dirname(__file__), "templates", "idop", "PowerAutomate_spec.md"
+    )
     with open(template_path, encoding="utf-8") as f:
         return f.read()
 
+
 def generate_flow_definition() -> dict:
-    template_path = os.path.join(os.path.dirname(__file__), "templates", "idop", "PowerAutomate_flow_definition.json")
+    template_path = os.path.join(
+        os.path.dirname(__file__), "templates", "idop", "PowerAutomate_flow_definition.json"
+    )
     with open(template_path, encoding="utf-8") as f:
         return json.load(f)
 
+
 def scaffold_cde(output_dir: str) -> None:
     print(f"Scaffolding CDE directory layout in: {output_dir}")
-    cde_folders = [
-        "01_WIP",
-        "02_Shared",
-        "03_Published",
-        "04_Archive",
-        "05_Contract Reference"
-    ]
+    cde_folders = ["01_WIP", "02_Shared", "03_Published", "04_Archive", "05_Contract Reference"]
     for folder in cde_folders:
         path = os.path.join(output_dir, folder)
         try:
@@ -311,6 +431,7 @@ def scaffold_cde(output_dir: str) -> None:
         except (PermissionError, FileNotFoundError, OSError) as e:
             print(f"Error: Failed to create CDE directory '{path}': {e}", file=sys.stderr)
             sys.exit(1)
+
 
 def scaffold_lists(output_dir: str) -> None:
     lists_dir = os.path.join(output_dir, "lists")
@@ -346,12 +467,15 @@ def scaffold_lists(output_dir: str) -> None:
             print(f"Error: Failed to write script file '{ps_path}': {e}", file=sys.stderr)
             sys.exit(1)
 
+
 def scaffold_workflows(output_dir: str) -> None:
     workflows_dir = os.path.join(output_dir, "workflows")
     try:
         os.makedirs(workflows_dir, exist_ok=True)
     except (PermissionError, FileNotFoundError, OSError) as e:
-        print(f"Error: Failed to create workflows directory '{workflows_dir}': {e}", file=sys.stderr)
+        print(
+            f"Error: Failed to create workflows directory '{workflows_dir}': {e}", file=sys.stderr
+        )
         sys.exit(1)
     print(f"Generating Power Automate workflows in: {workflows_dir}")
 
@@ -375,18 +499,28 @@ def scaffold_workflows(output_dir: str) -> None:
         print(f"Error: Failed to write flow definition '{def_path}': {e}", file=sys.stderr)
         sys.exit(1)
 
+
 def generate_fallback_skeleton(app_dir: str) -> None:
     import shutil
+
     templates_app_dir = os.path.join(os.path.dirname(__file__), "templates", "idop", "app")
     shutil.copytree(templates_app_dir, app_dir, dirs_exist_ok=True)
     print("Programmatic skeleton generation complete.")
+
 
 def scaffold_app(app_dir: str) -> None:
     print(f"Scaffolding React app in: {app_dir}")
 
     try:
         print("Attempting to clone via degit...")
-        cmd = ["npx", "--yes", "degit", "microsoft/PowerAppsCodeApps/templates/starter", app_dir, "--force"]
+        cmd = [
+            "npx",
+            "--yes",
+            "degit",
+            "microsoft/PowerAppsCodeApps/templates/starter",
+            app_dir,
+            "--force",
+        ]
         if os.name == "nt":
             subprocess.run(cmd, shell=True, timeout=15, check=True, capture_output=True, text=True)
         else:
@@ -399,7 +533,10 @@ def scaffold_app(app_dir: str) -> None:
     # Always generate or overwrite the skeleton files to ensure the premium CCBA mockup dashboard and all 8 files exist
     generate_fallback_skeleton(app_dir)
 
-def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publisher_prefix: str) -> None:
+
+def pack_solution(
+    output_dir: str, solution_name: str, publisher_name: str, publisher_prefix: str
+) -> None:
     print(f"\nPacking solution: {solution_name}...")
     import shutil
     import zipfile
@@ -425,10 +562,15 @@ def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publ
             # 2. Run 'pac solution init'
             print("Initializing solution project using 'pac solution init'...")
             cmd_init = [
-                "pac", "solution", "init",
-                "--publisher-name", publisher_name,
-                "--publisher-prefix", publisher_prefix,
-                "--outputDirectory", solution_dir
+                "pac",
+                "solution",
+                "init",
+                "--publisher-name",
+                publisher_name,
+                "--publisher-prefix",
+                publisher_prefix,
+                "--outputDirectory",
+                solution_dir,
             ]
             if os.name == "nt":
                 subprocess.run(cmd_init, shell=True, check=True)
@@ -438,7 +580,9 @@ def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publ
             # Copy generated workflows and lists schemas into solution
             workflows_src = os.path.join(output_dir, "workflows")
             if os.path.exists(workflows_src):
-                shutil.copytree(workflows_src, os.path.join(solution_dir, "workflows"), dirs_exist_ok=True)
+                shutil.copytree(
+                    workflows_src, os.path.join(solution_dir, "workflows"), dirs_exist_ok=True
+                )
 
             lists_src = os.path.join(output_dir, "lists")
             if os.path.exists(lists_src):
@@ -448,9 +592,13 @@ def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publ
             zip_file_path = os.path.join(output_dir, f"{solution_name}.zip")
             print(f"Packing solution using 'pac solution pack' to {zip_file_path}...")
             cmd_pack = [
-                "pac", "solution", "pack",
-                "--folder", solution_dir,
-                "--zipfile", zip_file_path
+                "pac",
+                "solution",
+                "pack",
+                "--folder",
+                solution_dir,
+                "--zipfile",
+                zip_file_path,
             ]
             if os.name == "nt":
                 subprocess.run(cmd_pack, shell=True, check=True)
@@ -515,6 +663,7 @@ def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publ
 
     print(f"Fallback solution zip file created successfully: {zip_file_path}")
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="SharePoint IDOP Deployment Support Toolkit - Scaffolder CLI"
@@ -523,11 +672,9 @@ def main() -> None:
         "action",
         nargs="?",
         choices=["app"],
-        help="Optional action to perform (e.g. 'app' to scaffold the Code App)."
+        help="Optional action to perform (e.g. 'app' to scaffold the Code App).",
     )
-    parser.add_argument(
-        "--cde", action="store_true", help="Scaffold CDE directory layout."
-    )
+    parser.add_argument("--cde", action="store_true", help="Scaffold CDE directory layout.")
     parser.add_argument(
         "--lists",
         action="store_true",
@@ -538,28 +685,30 @@ def main() -> None:
         action="store_true",
         help="Generate Power Automate markdown spec and mock JSON Flow Definition.",
     )
-    parser.add_argument(
-        "--all", action="store_true", help="Execute all three generation steps."
-    )
-    parser.add_argument(
-        "--app", action="store_true", help="Scaffold React + TS + Vite app."
-    )
+    parser.add_argument("--all", action="store_true", help="Execute all three generation steps.")
+    parser.add_argument("--app", action="store_true", help="Scaffold React + TS + Vite app.")
     parser.add_argument(
         "--app-dir",
         default="./src/idop-app",
-        help="Target output directory for the app (defaults to './src/idop-app')."
+        help="Target output directory for the app (defaults to './src/idop-app').",
     )
     parser.add_argument(
         "--pack", action="store_true", help="Pack the solution using Microsoft Power Platform CLI."
     )
     parser.add_argument(
-        "--solution-name", default="IDOP_Solution", help="Name of the solution (defaults to 'IDOP_Solution')."
+        "--solution-name",
+        default="IDOP_Solution",
+        help="Name of the solution (defaults to 'IDOP_Solution').",
     )
     parser.add_argument(
-        "--publisher-name", default="CCBA", help="Publisher name for the solution (defaults to 'CCBA')."
+        "--publisher-name",
+        default="CCBA",
+        help="Publisher name for the solution (defaults to 'CCBA').",
     )
     parser.add_argument(
-        "--publisher-prefix", default="ccba", help="Publisher prefix for the solution (defaults to 'ccba')."
+        "--publisher-prefix",
+        default="ccba",
+        help="Publisher prefix for the solution (defaults to 'ccba').",
     )
     parser.add_argument(
         "-o",
@@ -570,7 +719,15 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if not (args.cde or args.lists or args.workflows or args.all or args.action == "app" or args.app or args.pack):
+    if not (
+        args.cde
+        or args.lists
+        or args.workflows
+        or args.all
+        or args.action == "app"
+        or args.app
+        or args.pack
+    ):
         parser.print_help()
         sys.exit(0)
 
@@ -593,6 +750,7 @@ def main() -> None:
         pack_solution(output_dir, args.solution_name, args.publisher_name, args.publisher_prefix)
 
     print("\nScaffolding process completed successfully.")
+
 
 if __name__ == "__main__":
     main()

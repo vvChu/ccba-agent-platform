@@ -23,7 +23,9 @@ if maskara_path.exists():
 
 if detect_secrets_in_text is None:
     # Safe fallback if maskara script is not available
-    def detect_secrets_in_text(content: str, filepath: str, agent: str, use_llm: bool = False) -> list:
+    def detect_secrets_in_text(
+        content: str, filepath: str, agent: str, use_llm: bool = False
+    ) -> list:
         return []
 
 
@@ -57,7 +59,14 @@ def main(event: str, payload: dict[str, Any]) -> int:
 
     # 1. Block access to known sensitive file names/paths
     if path_arg:
-        sensitive_patterns = [".env", ".git-credentials", "id_rsa", "id_ecdsa", "id_ed25519", "google_creds"]
+        sensitive_patterns = [
+            ".env",
+            ".git-credentials",
+            "id_rsa",
+            "id_ecdsa",
+            "id_ed25519",
+            "google_creds",
+        ]
         path_lower = path_arg.lower()
         if any(pattern in path_lower for pattern in sensitive_patterns):
             print(f"""
@@ -78,9 +87,13 @@ def main(event: str, payload: dict[str, Any]) -> int:
     # 2. Scan tool arguments content for exposed secrets
     findings = detect_secrets_in_text(args_str, f"tool_args:{tool_name}", "agent")
     if findings:
-        print(f"\n\x1b[31m[PRIVACY BLOCK]\x1b[0m: Tool call blocked. Detected {len(findings)} potential secret(s) in arguments:")
+        print(
+            f"\n\x1b[31m[PRIVACY BLOCK]\x1b[0m: Tool call blocked. Detected {len(findings)} potential secret(s) in arguments:"
+        )
         for f in findings:
-            print(f"  - Pattern: {f['rule_name']} ({f['severity']}) | Masked Preview: {f['preview']}")
+            print(
+                f"  - Pattern: {f['rule_name']} ({f['severity']}) | Masked Preview: {f['preview']}"
+            )
         print("""
   Security policy prevents tools from executing with raw secrets.
 

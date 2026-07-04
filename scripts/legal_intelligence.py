@@ -29,6 +29,7 @@ from ccba_legal import (
 # Enforce UTF-8 output on Windows
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
@@ -48,7 +49,7 @@ def ensure_chrome_debug_port() -> bool:
     chrome_paths = [
         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-        os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe")
+        os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
     ]
 
     chrome_path = None
@@ -62,7 +63,9 @@ def ensure_chrome_debug_port() -> bool:
         return False
 
     try:
-        user_data_dir = os.path.join(os.path.expanduser("~"), ".gemini", "antigravity", "chrome-debug-profile")
+        user_data_dir = os.path.join(
+            os.path.expanduser("~"), ".gemini", "antigravity", "chrome-debug-profile"
+        )
         os.makedirs(user_data_dir, exist_ok=True)
 
         cmd = [
@@ -70,7 +73,7 @@ def ensure_chrome_debug_port() -> bool:
             "--remote-debugging-port=9222",
             f"--user-data-dir={user_data_dir}",
             "--no-first-run",
-            "--no-default-browser-check"
+            "--no-default-browser-check",
         ]
 
         subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -92,18 +95,28 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Legal Intelligence Pipeline CLI")
     parser.add_argument("--url", required=True, help="URL of the TVPL law page")
     parser.add_argument("--output-dir", help="Output directory for OKF bundle")
-    parser.add_argument("--extract-related", action="store_true", help="Crawler guiding docs recursively")
+    parser.add_argument(
+        "--extract-related", action="store_true", help="Crawler guiding docs recursively"
+    )
     parser.add_argument("--limit", type=int, default=3, help="Max guiding docs to crawl")
-    parser.add_argument("--max-depth", type=int, default=2, help="Max recursion depth for related docs")
+    parser.add_argument(
+        "--max-depth", type=int, default=2, help="Max recursion depth for related docs"
+    )
     parser.add_argument("--compare-with", help="URL of predecessor law to diff against")
-    parser.add_argument("--download-source", action="store_true", help="Download original Word/PDF files into the bundle")
+    parser.add_argument(
+        "--download-source",
+        action="store_true",
+        help="Download original Word/PDF files into the bundle",
+    )
     args = parser.parse_args()
 
     print("[LegalIntel] Initiating pipeline execution...")
 
     # 1. Connect to browser via CDP
     if not ensure_chrome_debug_port():
-        print("[LegalIntel] Error: Chrome debugging port 9222 could not be established. Please start Chrome with --remote-debugging-port=9222 manually.")
+        print(
+            "[LegalIntel] Error: Chrome debugging port 9222 could not be established. Please start Chrome with --remote-debugging-port=9222 manually."
+        )
         sys.exit(1)
 
     cdp = ChromeCDP()
@@ -131,17 +144,21 @@ def main() -> None:
         # Extract metadata from TVPL Lược đồ page
         print("[LegalIntel] Crawling structured metadata from 'Lược đồ' page...")
         tvpl_meta = get_tvpl_metadata(cdp, args.url)
-        print(f"[LegalIntel] TVPL Metadata extracted: {json.dumps(tvpl_meta, ensure_ascii=False, indent=2)}")
+        print(
+            f"[LegalIntel] TVPL Metadata extracted: {json.dumps(tvpl_meta, ensure_ascii=False, indent=2)}"
+        )
 
         if tvpl_meta:
-            suggested_id = tvpl_meta.get("document_number", slug).replace("/", "-").replace(" ", "-")
+            suggested_id = (
+                tvpl_meta.get("document_number", slug).replace("/", "-").replace(" ", "-")
+            )
             suggested_yaml = f"""
 ================================================================================
 [Registry Suggestion] Đề xuất bản ghi thêm vào legal_registry.yaml:
 - id: {suggested_id}
   title: {tvpl_meta.get("type", "Nghị định")} {tvpl_meta.get("document_number", "")} {main_title}
   short_name: {tvpl_meta.get("type", "NĐ")} {tvpl_meta.get("document_number", "")}
-  status: {'current' if 'còn hiệu lực' in tvpl_meta.get('status', '').lower() else 'superseded' if 'hết hiệu lực' in tvpl_meta.get('status', '').lower() else 'draft'}
+  status: {"current" if "còn hiệu lực" in tvpl_meta.get("status", "").lower() else "superseded" if "hết hiệu lực" in tvpl_meta.get("status", "").lower() else "draft"}
   effective_date: '{tvpl_meta.get("effective_date", "")}'
   issued_date: '{tvpl_meta.get("issued_date", "")}'
   file_path: .md/legal_docs/{slug}/{slug}.docx
@@ -173,7 +190,7 @@ def main() -> None:
             metadata.get("title", main_title),
             metadata.get("summary", ""),
             main_text,
-            resource_uri=args.url
+            resource_uri=args.url,
         )
 
         # Save raw text to .md/extracted_docs/<slug>.txt
@@ -197,7 +214,7 @@ def main() -> None:
             "Compliance Checklist",
             f"Compliance Checklist - {metadata.get('title')}",
             "Extracted legal compliance criteria and RACI matrices.",
-            checklist_md
+            checklist_md,
         )
 
         # 4. Crawl and link Guiding Documents
@@ -205,26 +222,32 @@ def main() -> None:
         guiding_slugs = []
         if args.extract_related:
             print("[LegalIntel] Crawling related guiding documents recursively...")
-            normalized_main_url = args.url.split('?')[0].split('#')[0]
+            normalized_main_url = args.url.split("?")[0].split("#")[0]
             crawled_urls = {normalized_main_url}
 
             queue = []
             for lnk in main_links:
-                h = lnk["href"].split('?')[0].split('#')[0]
+                h = lnk["href"].split("?")[0].split("#")[0]
                 if is_guiding_link(h) and h not in crawled_urls:
-                    queue.append((lnk["href"], lnk["text"], 1, slug, lnk.get("relationship", "Guides")))
+                    queue.append(
+                        (lnk["href"], lnk["text"], 1, slug, lnk.get("relationship", "Guides"))
+                    )
 
             count = 0
             while queue and count < args.limit:
                 current_url, label, depth, parent_slug, rel_type = queue.pop(0)
-                norm_url = current_url.split('?')[0].split('#')[0]
+                norm_url = current_url.split("?")[0].split("#")[0]
                 if norm_url in crawled_urls:
                     continue
                 crawled_urls.add(norm_url)
 
                 if rel_type == "Consolidation":
-                    print(f"\n[LegalIntel] NOTICE: Consolidated Document (VBHN) detected: {label} ({current_url})")
-                    print("[LegalIntel] It is highly recommended to review this VBHN file for merged amendments.\n")
+                    print(
+                        f"\n[LegalIntel] NOTICE: Consolidated Document (VBHN) detected: {label} ({current_url})"
+                    )
+                    print(
+                        "[LegalIntel] It is highly recommended to review this VBHN file for merged amendments.\n"
+                    )
 
                 print(f"[LegalIntel] Crawling (depth={depth}): {label} ({current_url})")
                 try:
@@ -240,7 +263,7 @@ def main() -> None:
                         sub_metadata.get("title", sub_title),
                         sub_metadata.get("summary", ""),
                         sub_text,
-                        resource_uri=current_url
+                        resource_uri=current_url,
                     )
 
                     if args.download_source:
@@ -250,23 +273,33 @@ def main() -> None:
                     with open(extracted_docs_dir / f"{sub_slug}.txt", "w", encoding="utf-8") as f:
                         f.write(sub_text)
 
-                    related_docs.append({
-                        "title": sub_metadata.get("title", sub_title),
-                        "slug": f"{sub_slug}.md",
-                        "summary": sub_metadata.get("summary", ""),
-                        "type": concept_type,
-                        "parent_slug": parent_slug,
-                        "node_id": sub_slug,
-                        "relationship": rel_type
-                    })
+                    related_docs.append(
+                        {
+                            "title": sub_metadata.get("title", sub_title),
+                            "slug": f"{sub_slug}.md",
+                            "summary": sub_metadata.get("summary", ""),
+                            "type": concept_type,
+                            "parent_slug": parent_slug,
+                            "node_id": sub_slug,
+                            "relationship": rel_type,
+                        }
+                    )
                     guiding_slugs.append(sub_slug)
                     count += 1
 
                     if depth < args.max_depth:
                         for sl in sub_links:
-                            sh = sl["href"].split('?')[0].split('#')[0]
+                            sh = sl["href"].split("?")[0].split("#")[0]
                             if is_guiding_link(sh) and sh not in crawled_urls:
-                                queue.append((sl["href"], sl["text"], depth + 1, sub_slug, sl.get("relationship", "Guides")))
+                                queue.append(
+                                    (
+                                        sl["href"],
+                                        sl["text"],
+                                        depth + 1,
+                                        sub_slug,
+                                        sl.get("relationship", "Guides"),
+                                    )
+                                )
 
                 except Exception as ex:
                     print(f"[LegalIntel] Error crawling {label}: {ex}")
@@ -288,15 +321,15 @@ def main() -> None:
                 f"Diff Report - {metadata.get('title')}",
                 "Semantic changes and side-by-side comparison tables against previous version.",
                 diff_md,
-                resource_uri=args.compare_with
+                resource_uri=args.compare_with,
             )
 
         # 6. Mermaid Relationship Chart
         chart_md = "## Relationship Diagram\n\n```mermaid\ngraph TD\n"
         chart_md += f'    Main["{metadata.get("title")}"]\n'
         for rd in related_docs:
-            p_node = "Main" if rd["parent_slug"] == slug else f'Sub_{rd["parent_slug"][:10]}'
-            c_node = f'Sub_{rd["node_id"][:10]}'
+            p_node = "Main" if rd["parent_slug"] == slug else f"Sub_{rd['parent_slug'][:10]}"
+            c_node = f"Sub_{rd['node_id'][:10]}"
             rel = rd.get("relationship", "Guides")
 
             if rel == "Consolidation":
@@ -318,7 +351,7 @@ def main() -> None:
             "Visual Diagram",
             f"Relationship Chart - {metadata.get('title')}",
             "Mermaid relationship visualization graph of law and guiding documents.",
-            chart_md
+            chart_md,
         )
 
         # 7. Write index.md (Bundle Index)
@@ -326,7 +359,9 @@ def main() -> None:
         index_md += f"{metadata.get('summary')}\n\n"
         index_md += "## Bundle Concepts\n\n"
         index_md += f"- [{metadata.get('title')}]({slug}.md) (type: `Law`)\n"
-        index_md += "- [Compliance Checklist](compliance_checklist.md) (type: `Compliance Checklist`)\n"
+        index_md += (
+            "- [Compliance Checklist](compliance_checklist.md) (type: `Compliance Checklist`)\n"
+        )
         index_md += "- [Relationship Chart](relationship_chart.md) (type: `Visual Diagram`)\n"
         if args.compare_with:
             index_md += "- [Comparative Analysis (Diff Report)](diff_report.md) (type: `Comparative Report`)\n"
@@ -340,7 +375,7 @@ def main() -> None:
             "Bundle Index",
             f"OKF Index - {metadata.get('title')}",
             "Directory listing of all legal intelligence concepts in this bundle.",
-            index_md
+            index_md,
         )
 
         # 8. Organize into proper OKF Bundle directory under legal_docs/

@@ -23,11 +23,19 @@ AGENT_SPECS: dict[str, dict[str, str]] = {
     "codex": {"dot_dir": ".codex/sessions", "app_name": "Codex", "xdg_name": "codex"},
     "cursor": {"dot_dir": ".cursor", "app_name": "Cursor", "xdg_name": "cursor"},
     "opencode": {"dot_dir": ".opencode", "app_name": "opencode", "xdg_name": "opencode"},
-    "antigravity": {"dot_dir": ".antigravity", "app_name": "Antigravity", "xdg_name": "antigravity"},
+    "antigravity": {
+        "dot_dir": ".antigravity",
+        "app_name": "Antigravity",
+        "xdg_name": "antigravity",
+    },
     "kimi": {"dot_dir": ".kimi", "app_name": "Kimi", "xdg_name": "kimi"},
     "droid": {"dot_dir": ".droid", "app_name": "Droid", "xdg_name": "droid"},
     "gemini": {"dot_dir": ".gemini", "app_name": "Gemini", "xdg_name": "gemini"},
-    "github-copilot": {"dot_dir": ".github-copilot", "app_name": "GitHub Copilot", "xdg_name": "github-copilot"},
+    "github-copilot": {
+        "dot_dir": ".github-copilot",
+        "app_name": "GitHub Copilot",
+        "xdg_name": "github-copilot",
+    },
     "hermes": {"dot_dir": ".hermes", "app_name": "Hermes Agent", "xdg_name": "hermes"},
     "openclaw": {"dot_dir": ".openclaw", "app_name": "OpenClaw", "xdg_name": "openclaw"},
     "kilo": {"dot_dir": ".kilo-code", "app_name": "Kilo Code", "xdg_name": "kilo-code"},
@@ -35,68 +43,95 @@ AGENT_SPECS: dict[str, dict[str, str]] = {
     "pi": {"dot_dir": ".pi", "app_name": "Pi", "xdg_name": "pi"},
     "qoder": {"dot_dir": ".qoder", "app_name": "Qoder", "xdg_name": "qoder"},
     "qwen": {"dot_dir": ".qwen", "app_name": "Qwen Code", "xdg_name": "qwen-code"},
-    "trae": {"dot_dir": ".trae", "app_name": "Trae", "xdg_name": "trae"}
+    "trae": {"dot_dir": ".trae", "app_name": "Trae", "xdg_name": "trae"},
 }
 
 AGENT_ALIASES: dict[str, str] = {
-    "claude-code": "claude", "claudecode": "claude",
+    "claude-code": "claude",
+    "claudecode": "claude",
     "open-code": "opencode",
-    "antigravity-cli": "antigravity", "antigravity-code": "antigravity",
-    "kimi-code": "kimi", "kimi-code-cli": "kimi", "kimi-cli": "kimi",
+    "antigravity-cli": "antigravity",
+    "antigravity-code": "antigravity",
+    "kimi-code": "kimi",
+    "kimi-code-cli": "kimi",
+    "kimi-cli": "kimi",
     "gemini-cli": "gemini",
-    "github-copilot-cli": "github-copilot", "copilot": "github-copilot",
+    "github-copilot-cli": "github-copilot",
+    "copilot": "github-copilot",
     "hermes-agent": "hermes",
-    "open-claw": "openclaw", "openclaw-cli": "openclaw",
-    "kilo-code": "kilo", "kiro-cli": "kiro", "pi-cli": "pi",
-    "qwen-code": "qwen", "qoder-cli": "qoder", "trae-cli": "trae"
+    "open-claw": "openclaw",
+    "openclaw-cli": "openclaw",
+    "kilo-code": "kilo",
+    "kiro-cli": "kiro",
+    "pi-cli": "pi",
+    "qwen-code": "qwen",
+    "qoder-cli": "qoder",
+    "trae-cli": "trae",
 }
 
 # Secret patterns to scan for
 REGEX_PATTERNS: dict[str, dict[str, Any]] = {
     "openai-api-key": {
-        "name": "OpenAI API key", "severity": "critical",
-        "pattern": re.compile(r"\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b")
+        "name": "OpenAI API key",
+        "severity": "critical",
+        "pattern": re.compile(r"\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b"),
     },
     "anthropic-api-key": {
-        "name": "Anthropic API key", "severity": "critical",
-        "pattern": re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b")
+        "name": "Anthropic API key",
+        "severity": "critical",
+        "pattern": re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b"),
     },
     "github-token": {
-        "name": "GitHub token", "severity": "critical",
-        "pattern": re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9_]{36,}|github_pat_[A-Za-z0-9_]{20,})\b")
+        "name": "GitHub token",
+        "severity": "critical",
+        "pattern": re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9_]{36,}|github_pat_[A-Za-z0-9_]{20,})\b"),
     },
     "aws-access-key": {
-        "name": "AWS access key ID", "severity": "high",
-        "pattern": re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b")
+        "name": "AWS access key ID",
+        "severity": "high",
+        "pattern": re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b"),
     },
     "google-api-key": {
-        "name": "Google API key", "severity": "high",
-        "pattern": re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b")
+        "name": "Google API key",
+        "severity": "high",
+        "pattern": re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b"),
     },
     "slack-token": {
-        "name": "Slack token", "severity": "high",
-        "pattern": re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{20,}\b")
+        "name": "Slack token",
+        "severity": "high",
+        "pattern": re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{20,}\b"),
     },
     "stripe-live-key": {
-        "name": "Stripe live key", "severity": "critical",
-        "pattern": re.compile(r"\b(?:sk|rk)_live_[A-Za-z0-9]{16,}\b")
+        "name": "Stripe live key",
+        "severity": "critical",
+        "pattern": re.compile(r"\b(?:sk|rk)_live_[A-Za-z0-9]{16,}\b"),
     },
     "jwt": {
-        "name": "JSON Web Token", "severity": "high",
-        "pattern": re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b")
+        "name": "JSON Web Token",
+        "severity": "high",
+        "pattern": re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b"),
     },
     "database-url": {
-        "name": "Database URL", "severity": "critical",
-        "pattern": re.compile(r"(?i)\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis)://[^\s\"'<>`]+")
+        "name": "Database URL",
+        "severity": "critical",
+        "pattern": re.compile(
+            r"(?i)\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis)://[^\s\"'<>`]+"
+        ),
     },
     "private-key": {
-        "name": "Private key block", "severity": "critical",
-        "pattern": re.compile(r"(?s)-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----")
+        "name": "Private key block",
+        "severity": "critical",
+        "pattern": re.compile(
+            r"(?s)-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----"
+        ),
     },
     "env-secret": {
-        "name": "Secret-like env assignment", "severity": "medium",
-        "pattern": re.compile(r"(?i)\b(?:api[_-]?key|secret|token|password|passwd|pwd|private[_-]?key|client[_-]?secret)\b\s*[:=]\s*[\"']?([^\s\"',`]{8,})")
-    }
+        "name": "Secret-like env assignment",
+        "severity": "medium",
+        "pattern": re.compile(
+            r"(?i)\b(?:api[_-]?key|secret|token|password|passwd|pwd|private[_-]?key|client[_-]?secret)\b\s*[:=]\s*[\"']?([^\s\"',`]{8,})"
+        ),
+    },
 }
 
 BACKUP_DIR = Path(".md/scratch/backups")
@@ -155,7 +190,9 @@ def resolve_targets(agent_name: str, custom_root: str | None = None) -> list[dic
     """
     norm = normalize_agent_name(agent_name)
     if custom_root:
-        return [{"agent": norm if norm != "auto" else "custom", "root": Path(custom_root).resolve()}]
+        return [
+            {"agent": norm if norm != "auto" else "custom", "root": Path(custom_root).resolve()}
+        ]
 
     home = Path.home()
     agents_list = list(AGENT_SPECS.keys())
@@ -168,7 +205,11 @@ def resolve_targets(agent_name: str, custom_root: str | None = None) -> list[dic
             for path in get_default_roots(spec["dot_dir"], spec["app_name"], spec["xdg_name"]):
                 if path.is_dir():
                     existing.append({"agent": agent, "root": path.resolve()})
-        return existing if existing else [{"agent": "claude", "root": (home / ".claude" / "projects").resolve()}]
+        return (
+            existing
+            if existing
+            else [{"agent": "claude", "root": (home / ".claude" / "projects").resolve()}]
+        )
 
     if norm == "all":
         all_targets = []
@@ -182,8 +223,10 @@ def resolve_targets(agent_name: str, custom_root: str | None = None) -> list[dic
         raise ValueError(f"Unsupported agent: {agent_name}")
 
     spec = AGENT_SPECS[norm]
-    return [{"agent": norm, "root": path.resolve()}
-            for path in get_default_roots(spec["dot_dir"], spec["app_name"], spec["xdg_name"])]
+    return [
+        {"agent": norm, "root": path.resolve()}
+        for path in get_default_roots(spec["dot_dir"], spec["app_name"], spec["xdg_name"])
+    ]
 
 
 def looks_like_session_text(path: Path) -> bool:
@@ -272,8 +315,8 @@ def ask_llm_gateway(finding: dict[str, Any], context: str) -> bool:
     prompt = f"""You are a security auditor.
 Analyze the following context from an agent session log and determine if the detected finding is an actual, live, active secret/credential/API key, OR if it is just a mock/sample/dummy value (e.g. 'your_key_here', 'sk-proj-XXXX', 'AIza_test').
 
-Detected Type: {finding['rule_name']}
-Detected Value (Masked): {finding['preview']}
+Detected Type: {finding["rule_name"]}
+Detected Value (Masked): {finding["preview"]}
 
 Context:
 ```
@@ -306,7 +349,9 @@ def extract_context(content: str, start_offset: int, end_offset: int) -> str:
     return "\n".join(before + [middle] + after)
 
 
-def detect_secrets_in_text(content: str, filepath: str, agent: str, use_llm: bool = False) -> list[dict[str, Any]]:
+def detect_secrets_in_text(
+    content: str, filepath: str, agent: str, use_llm: bool = False
+) -> list[dict[str, Any]]:
     """Scan string content with regular expressions.
 
     Args:
@@ -347,7 +392,7 @@ def detect_secrets_in_text(content: str, filepath: str, agent: str, use_llm: boo
                 "end": end,
                 "preview": mask_value(val),
                 "sha256": hashlib.sha256(val.encode("utf-8")).hexdigest(),
-                "redaction": f"[MASKARA_REDACTED:{rule_id}]"
+                "redaction": f"[MASKARA_REDACTED:{rule_id}]",
             }
 
             if use_llm:
@@ -372,7 +417,9 @@ def detect_secrets_in_text(content: str, filepath: str, agent: str, use_llm: boo
     return filtered
 
 
-def scan_file(agent: str, path: Path, use_llm: bool = False) -> tuple[list[dict[str, Any]], int, int]:
+def scan_file(
+    agent: str, path: Path, use_llm: bool = False
+) -> tuple[list[dict[str, Any]], int, int]:
     """Perform scanning process on a single file.
 
     Args:
@@ -413,7 +460,17 @@ def perform_scan(targets: list[dict[str, Any]], use_llm: bool = False) -> dict[s
     scanned_count = 0
     skipped_count = 0
 
-    ignore_dirs = {".git", "node_modules", ".venv", "venv", "target", "dist", "build", ".next", "__pycache__"}
+    ignore_dirs = {
+        ".git",
+        "node_modules",
+        ".venv",
+        "venv",
+        "target",
+        "dist",
+        "build",
+        ".next",
+        "__pycache__",
+    }
 
     for target in targets:
         root = Path(target["root"])
@@ -446,7 +503,7 @@ def perform_scan(targets: list[dict[str, Any]], use_llm: bool = False) -> dict[s
         "findings": findings,
         "warnings": warnings,
         "files_scanned": scanned_count,
-        "files_skipped": skipped_count
+        "files_skipped": skipped_count,
     }
 
 
@@ -717,21 +774,15 @@ def redact_findings(scan_result: dict[str, Any]) -> dict[str, Any]:
 
             backup_path = backup_and_write(path, original, rewritten)
             total_replaced += replaced
-            files_summary.append({
-                "path": str(path),
-                "backup_path": backup_path,
-                "replaced": replaced
-            })
+            files_summary.append(
+                {"path": str(path), "backup_path": backup_path, "replaced": replaced}
+            )
         except OSError as e:
             print(f"[Error] Failed to redact {path}: {e}", file=sys.stderr)
             total_skipped += 1
 
     files_summary.sort(key=lambda x: x["path"])
-    return {
-        "files": files_summary,
-        "replaced": total_replaced,
-        "skipped": total_skipped
-    }
+    return {"files": files_summary, "replaced": total_replaced, "skipped": total_skipped}
 
 
 def generate_markdown(result: dict[str, Any], redact_summary: dict[str, Any]) -> str:
@@ -750,7 +801,7 @@ def generate_markdown(result: dict[str, Any], redact_summary: dict[str, Any]) ->
         f"- Files scanned: `{result['files_scanned']}`",
         f"- Files skipped: `{result['files_skipped']}`",
         f"- Findings: `{len(result['findings'])}`",
-        f"- Redacted: `{redact_summary['replaced']}`\n"
+        f"- Redacted: `{redact_summary['replaced']}`\n",
     ]
 
     if targets := result.get("targets"):
@@ -758,7 +809,7 @@ def generate_markdown(result: dict[str, Any], redact_summary: dict[str, Any]) ->
         lines.append("| Agent | Root |")
         lines.append("|---|---|")
         for t in targets:
-            clean_root = t['root'].replace('|', '\\|')
+            clean_root = t["root"].replace("|", "\\|")
             lines.append(f"| `{t['agent']}` | `{clean_root}` |")
         lines.append("")
 
@@ -789,16 +840,18 @@ def generate_markdown(result: dict[str, Any], redact_summary: dict[str, Any]) ->
     lines.append("| Agent | File | Line | Rule | Severity | Masked Preview | SHA-256 |")
     lines.append("|---|---|---:|---|---|---|---|")
     for f in result["findings"]:
-        clean_file = f['file'].replace('|', '\\|')
-        clean_rule = f['rule_name'].replace('|', '\\|')
+        clean_file = f["file"].replace("|", "\\|")
+        clean_rule = f["rule_name"].replace("|", "\\|")
         lines.append(
             f"| `{f['agent']}` | `{clean_file}` | {f['line']} | "
             f"{clean_rule} | `{f['severity']}` | `{f['preview']}` | `{f['sha256'][:12]}` |"
         )
     lines.append("")
     lines.append("## Rotation Guidance\n")
-    lines.append("Rotate every credential listed above. Redaction removes local copies from agent logs, "
-                 "but it cannot revoke credentials already shared with a provider or remote service.\n")
+    lines.append(
+        "Rotate every credential listed above. Redaction removes local copies from agent logs, "
+        "but it cannot revoke credentials already shared with a provider or remote service.\n"
+    )
 
     if files := redact_summary.get("files"):
         lines.append("## Redaction Backups\n")
@@ -930,20 +983,52 @@ def install_guardrails(agent_name: str, dry_run: bool = False) -> list[dict[str,
         # Decide file paths based on agent type
         if agent == "claude":
             plans = [
-                {"path": primary_root / "CLAUDE.md", "action": "append", "content": get_guardrail_content()},
-                {"path": primary_root / "skills" / "maskara-privacy" / "SKILL.md", "action": "write", "content": get_skill_content()},
-                {"path": primary_root / "hooks" / "maskara-privacy-hook.ps1", "action": "write", "content": get_hook_content()}
+                {
+                    "path": primary_root / "CLAUDE.md",
+                    "action": "append",
+                    "content": get_guardrail_content(),
+                },
+                {
+                    "path": primary_root / "skills" / "maskara-privacy" / "SKILL.md",
+                    "action": "write",
+                    "content": get_skill_content(),
+                },
+                {
+                    "path": primary_root / "hooks" / "maskara-privacy-hook.ps1",
+                    "action": "write",
+                    "content": get_hook_content(),
+                },
             ]
         elif agent == "codex":
             plans = [
-                {"path": primary_root / "AGENTS.md", "action": "append", "content": get_guardrail_content()},
-                {"path": primary_root / "skills" / "maskara-privacy" / "SKILL.md", "action": "write", "content": get_skill_content()},
-                {"path": primary_root / "hooks" / "maskara-privacy-hook.ps1", "action": "write", "content": get_hook_content()}
+                {
+                    "path": primary_root / "AGENTS.md",
+                    "action": "append",
+                    "content": get_guardrail_content(),
+                },
+                {
+                    "path": primary_root / "skills" / "maskara-privacy" / "SKILL.md",
+                    "action": "write",
+                    "content": get_skill_content(),
+                },
+                {
+                    "path": primary_root / "hooks" / "maskara-privacy-hook.ps1",
+                    "action": "write",
+                    "content": get_hook_content(),
+                },
             ]
         else:
             plans = [
-                {"path": primary_root / "maskara-guardrails.md", "action": "append", "content": get_guardrail_content()},
-                {"path": primary_root / "hooks" / "maskara-privacy-hook.ps1", "action": "write", "content": get_hook_content()}
+                {
+                    "path": primary_root / "maskara-guardrails.md",
+                    "action": "append",
+                    "content": get_guardrail_content(),
+                },
+                {
+                    "path": primary_root / "hooks" / "maskara-privacy-hook.ps1",
+                    "action": "write",
+                    "content": get_hook_content(),
+                },
             ]
 
         for plan in plans:
@@ -972,11 +1057,7 @@ def install_guardrails(agent_name: str, dry_run: bool = False) -> list[dict[str,
                         backup_path = str(bp)
                     path.write_text(content, encoding="utf-8")
 
-            changes.append({
-                "path": str(path),
-                "action": action,
-                "backup_path": backup_path
-            })
+            changes.append({"path": str(path), "action": action, "backup_path": backup_path})
 
     return changes
 
@@ -990,28 +1071,42 @@ def main() -> None:
 
     # Subcommand: scan
     scan_parser = subparsers.add_parser("scan", help="Scan folders for secrets")
-    scan_parser.add_argument("-a", "--agent", default="auto", help="Target agent name (or all, auto)")
+    scan_parser.add_argument(
+        "-a", "--agent", default="auto", help="Target agent name (or all, auto)"
+    )
     scan_parser.add_argument("-r", "--root", help="Explicit root folder path to scan")
-    scan_parser.add_argument("--llm", action="store_true", help="Use AI Gateway to double-verify findings")
+    scan_parser.add_argument(
+        "--llm", action="store_true", help="Use AI Gateway to double-verify findings"
+    )
 
     # Subcommand: report
     report_parser = subparsers.add_parser("report", help="Scan and write Markdown or JSON report")
     report_parser.add_argument("-a", "--agent", default="auto", help="Target agent name")
     report_parser.add_argument("-r", "--root", help="Explicit root path to scan")
     report_parser.add_argument("--json", action="store_true", help="Format output report as JSON")
-    report_parser.add_argument("-o", "--output", help="Output file path (default: current directory)")
-    report_parser.add_argument("--llm", action="store_true", help="Use AI Gateway to double-verify findings")
+    report_parser.add_argument(
+        "-o", "--output", help="Output file path (default: current directory)"
+    )
+    report_parser.add_argument(
+        "--llm", action="store_true", help="Use AI Gateway to double-verify findings"
+    )
 
     # Subcommand: redact
-    redact_parser = subparsers.add_parser("redact", help="Scan and redact secrets (replace with masked tokens)")
+    redact_parser = subparsers.add_parser(
+        "redact", help="Scan and redact secrets (replace with masked tokens)"
+    )
     redact_parser.add_argument("-a", "--agent", default="auto", help="Target agent name")
     redact_parser.add_argument("-r", "--root", help="Explicit root path to scan and redact")
-    redact_parser.add_argument("--llm", action="store_true", help="Use AI Gateway to double-verify findings")
+    redact_parser.add_argument(
+        "--llm", action="store_true", help="Use AI Gateway to double-verify findings"
+    )
 
     # Subcommand: guardrails
     guard_parser = subparsers.add_parser("guardrails", help="Install safety guardrails and hooks")
     guard_parser.add_argument("-a", "--agent", default="auto", help="Target agent name")
-    guard_parser.add_argument("--dry-run", action="store_true", help="Log planned actions without writing")
+    guard_parser.add_argument(
+        "--dry-run", action="store_true", help="Log planned actions without writing"
+    )
 
     # Parse args
     args = parser.parse_args()
@@ -1032,7 +1127,9 @@ def main() -> None:
 
             report_path = Path("maskara-report.md")
             report_path.write_text(report_md, encoding="utf-8")
-            print(f"[Maskara] Redaction complete ({redact_sum['replaced']} replaced). Report written to {report_path}")
+            print(
+                f"[Maskara] Redaction complete ({redact_sum['replaced']} replaced). Report written to {report_path}"
+            )
 
             sys.exit(1 if len(scan_result["findings"]) > 0 else 0)
         except Exception as e:
@@ -1050,7 +1147,9 @@ def main() -> None:
 
             print(f"[Maskara] Found {len(result['findings'])} sensitive value(s):")
             for f in result["findings"]:
-                print(f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}")
+                print(
+                    f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}"
+                )
             sys.exit(1)
 
         elif cmd == "redact":
@@ -1077,7 +1176,11 @@ def main() -> None:
             else:
                 report_str = generate_markdown(result, empty_redact)
 
-            out_path = Path(args.output) if args.output else Path("maskara-report.json" if args.json else "maskara-report.md")
+            out_path = (
+                Path(args.output)
+                if args.output
+                else Path("maskara-report.json" if args.json else "maskara-report.md")
+            )
             if out_path.is_dir():
                 out_path = out_path / ("maskara-report.json" if args.json else "maskara-report.md")
 
@@ -1090,7 +1193,9 @@ def main() -> None:
             state = "Dry-run planned" if args.dry_run else "Installed"
             print(f"[Maskara] {state} guardrails changes:")
             for c in changes:
-                print(f"  - [{c['action'].upper()}] {c['path']} (Backup: {c['backup_path'] or 'none'})")
+                print(
+                    f"  - [{c['action'].upper()}] {c['path']} (Backup: {c['backup_path'] or 'none'})"
+                )
             sys.exit(0)
 
     except Exception as e:

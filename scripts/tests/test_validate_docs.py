@@ -11,7 +11,6 @@ from scripts.validate_docs import (
 
 
 class TestValidateDocs(unittest.TestCase):
-
     def test_extract_code_references(self):
         content = """
         This is a reference to `my_func()` in the code.

@@ -27,30 +27,35 @@ def mock_unpacked_docx():
         # Ensure people.xml template exists
         people_tpl = templates_dir / "people.xml"
         if not people_tpl.exists():
-            people_tpl.write_text('<?xml version="1.0" encoding="UTF-8"?><w15:people xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml"></w15:people>', encoding="utf-8")
+            people_tpl.write_text(
+                '<?xml version="1.0" encoding="UTF-8"?><w15:people xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml"></w15:people>',
+                encoding="utf-8",
+            )
 
         comments_tpl = templates_dir / "comments.xml"
         if not comments_tpl.exists():
-            comments_tpl.write_text('<?xml version="1.0" encoding="UTF-8"?><w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"></w:comments>', encoding="utf-8")
+            comments_tpl.write_text(
+                '<?xml version="1.0" encoding="UTF-8"?><w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"></w:comments>',
+                encoding="utf-8",
+            )
 
         # Create minimal required XMLs in the unpacked directory
         (temp_path / "[Content_Types].xml").write_text(
             '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" ContentType="application/xml"/></Types>',
-            encoding="utf-8"
+            encoding="utf-8",
         )
         (rels_dir / "document.xml.rels").write_text(
             '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>',
-            encoding="utf-8"
+            encoding="utf-8",
         )
         (word_dir / "settings.xml").write_text(
             '<?xml version="1.0" encoding="UTF-8"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"></w:settings>',
-            encoding="utf-8"
+            encoding="utf-8",
         )
         (word_dir / "document.xml").write_text(
             '<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"><body><w:p w14:paraId="11111111"><w:r><w:t>Hello World</w:t></w:r></w:p></body></w:document>',
-            encoding="utf-8"
+            encoding="utf-8",
         )
-
 
         yield temp_path
 

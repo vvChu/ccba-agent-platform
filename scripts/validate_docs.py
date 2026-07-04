@@ -21,17 +21,88 @@ ENV_VAR_RE = re.compile(r"`([A-Z][A-Z0-9_]{2,})`|\$([A-Z][A-Z0-9_]{2,})")
 
 # System/Common keywords to ignore (not actual project code references)
 IGNORE_CODE_REFS: set[str] = {
-    "true", "false", "null", "undefined", "string", "number", "boolean",
-    "object", "array", "function", "async", "await", "const", "let", "var",
-    "if", "else", "for", "while", "return", "import", "export", "default",
-    "npm", "npx", "node", "yarn", "pnpm", "git", "bash", "sh", "zsh",
-    "get", "post", "put", "delete", "patch", "head", "options",
-    "json", "xml", "html", "css", "sql", "api", "url", "uri", "http", "https",
-    "ok", "error", "warning", "info", "debug", "trace",
-    "readme", "license", "changelog", "todo", "fixme", "note", "hack",
-    "dev", "prod", "test", "staging", "production", "development",
-    "src", "lib", "dist", "build", "docs", "tests", "config",
-    "index", "main", "app", "server", "client", "utils", "helpers"
+    "true",
+    "false",
+    "null",
+    "undefined",
+    "string",
+    "number",
+    "boolean",
+    "object",
+    "array",
+    "function",
+    "async",
+    "await",
+    "const",
+    "let",
+    "var",
+    "if",
+    "else",
+    "for",
+    "while",
+    "return",
+    "import",
+    "export",
+    "default",
+    "npm",
+    "npx",
+    "node",
+    "yarn",
+    "pnpm",
+    "git",
+    "bash",
+    "sh",
+    "zsh",
+    "get",
+    "post",
+    "put",
+    "delete",
+    "patch",
+    "head",
+    "options",
+    "json",
+    "xml",
+    "html",
+    "css",
+    "sql",
+    "api",
+    "url",
+    "uri",
+    "http",
+    "https",
+    "ok",
+    "error",
+    "warning",
+    "info",
+    "debug",
+    "trace",
+    "readme",
+    "license",
+    "changelog",
+    "todo",
+    "fixme",
+    "note",
+    "hack",
+    "dev",
+    "prod",
+    "test",
+    "staging",
+    "production",
+    "development",
+    "src",
+    "lib",
+    "dist",
+    "build",
+    "docs",
+    "tests",
+    "config",
+    "index",
+    "main",
+    "app",
+    "server",
+    "client",
+    "utils",
+    "helpers",
 }
 
 IGNORE_ENV_PREFIXES: list[str] = ["NODE_", "PATH", "HOME", "USER", "SHELL", "TERM", "PWD", "CI"]
@@ -61,7 +132,9 @@ def extract_code_references(content: str) -> list[tuple[int, str]]:
                 continue
 
             # Match only function calls (ends with ()) or PascalCase classes
-            if ref.endswith("()") or (clean_ref and clean_ref[0].isupper() and any(c.islower() for c in clean_ref)):
+            if ref.endswith("()") or (
+                clean_ref and clean_ref[0].isupper() and any(c.islower() for c in clean_ref)
+            ):
                 references.append((idx + 1, ref))
 
     return references
@@ -145,7 +218,10 @@ def search_codebase_for_symbol(symbol: str, search_dirs: list[Path]) -> bool:
         for ext in ["*.py", "*.js", "*.cjs", "*.ts", "*.go", "*.sh"]:
             for filepath in sdir.rglob(ext):
                 # Ignore test folders or build target folders
-                if any(p in filepath.parts for p in ["tests", "venv", ".venv", "node_modules", "dist", "build"]):
+                if any(
+                    p in filepath.parts
+                    for p in ["tests", "venv", ".venv", "node_modules", "dist", "build"]
+                ):
                     continue
                 try:
                     with open(filepath, encoding="utf-8", errors="ignore") as f:
@@ -191,7 +267,7 @@ def validate_markdown_file(
     search_dirs: list[Path],
     env_example_vars: set[str],
     project_root: Path,
-    fix: bool = False
+    fix: bool = False,
 ) -> dict[str, list[tuple[int, str, str]]]:
     """Validate a single markdown file for inconsistencies and hallucinations.
 
@@ -203,11 +279,7 @@ def validate_markdown_file(
     Returns:
         Dict of found issues categorized.
     """
-    issues = {
-        "code_refs": [],
-        "links": [],
-        "env_vars": []
-    }
+    issues = {"code_refs": [], "links": [], "env_vars": []}
 
     try:
         with open(filepath, encoding="utf-8", errors="ignore") as f:
@@ -249,7 +321,9 @@ def validate_markdown_file(
                     rel_path_guess = f"../../{parts[1]}" if len(parts) > 1 else "relative path"
                     if len(parts) > 1:
                         try:
-                            depth_to_root = os.path.relpath(project_root, filepath.parent).replace(os.sep, "/")
+                            depth_to_root = os.path.relpath(project_root, filepath.parent).replace(
+                                os.sep, "/"
+                            )
                             rel_path_guess = f"{depth_to_root}/{parts[1]}"
                             rel_path_guess = os.path.normpath(rel_path_guess).replace(os.sep, "/")
                         except ValueError:
@@ -259,9 +333,21 @@ def validate_markdown_file(
                         fixed_href = f"{rel_path_guess}#{anchor}" if anchor else rel_path_guess
                         fixed_content = fixed_content.replace(f"]({href})", f"]({fixed_href})")
                         file_modified = True
-                        issues["links"].append((line_num, href, f"[AUTO-FIXED] Absolute file link inside workspace on Linux. Fixed to: '{fixed_href}'"))
+                        issues["links"].append(
+                            (
+                                line_num,
+                                href,
+                                f"[AUTO-FIXED] Absolute file link inside workspace on Linux. Fixed to: '{fixed_href}'",
+                            )
+                        )
                     else:
-                        issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_path_guess}'"))
+                        issues["links"].append(
+                            (
+                                line_num,
+                                href,
+                                f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_path_guess}'",
+                            )
+                        )
                 continue
 
             target_path = Path(clean_path).resolve()
@@ -284,28 +370,64 @@ def validate_markdown_file(
                 else:
                     # Suggest relative path
                     try:
-                        rel_to_workspace = os.path.relpath(target_path, filepath.parent).replace(os.sep, "/")
+                        rel_to_workspace = os.path.relpath(target_path, filepath.parent).replace(
+                            os.sep, "/"
+                        )
                         if fix:
-                            fixed_href = f"{rel_to_workspace}#{anchor}" if anchor else rel_to_workspace
+                            fixed_href = (
+                                f"{rel_to_workspace}#{anchor}" if anchor else rel_to_workspace
+                            )
                             fixed_content = fixed_content.replace(f"]({href})", f"]({fixed_href})")
                             file_modified = True
-                            issues["links"].append((line_num, href, f"[AUTO-FIXED] Absolute file link inside workspace. Fixed to: '{fixed_href}'"))
+                            issues["links"].append(
+                                (
+                                    line_num,
+                                    href,
+                                    f"[AUTO-FIXED] Absolute file link inside workspace. Fixed to: '{fixed_href}'",
+                                )
+                            )
                         else:
-                            issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_to_workspace}'"))
+                            issues["links"].append(
+                                (
+                                    line_num,
+                                    href,
+                                    f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_to_workspace}'",
+                                )
+                            )
                     except ValueError:
                         # Cross-drive path on Windows (e.g. C: link from D: workspace)
-                        issues["links"].append((line_num, href, f"[WARNING] Absolute file link inside workspace on different drive: '{clean_path}'"))
+                        issues["links"].append(
+                            (
+                                line_num,
+                                href,
+                                f"[WARNING] Absolute file link inside workspace on different drive: '{clean_path}'",
+                            )
+                        )
             elif is_sibling:
                 if target_path.exists():
                     try:
-                        rel_to_parent = os.path.relpath(target_path, filepath.parent).replace(os.sep, "/")
+                        rel_to_parent = os.path.relpath(target_path, filepath.parent).replace(
+                            os.sep, "/"
+                        )
                         if fix:
                             fixed_href = f"{rel_to_parent}#{anchor}" if anchor else rel_to_parent
                             fixed_content = fixed_content.replace(f"]({href})", f"]({fixed_href})")
                             file_modified = True
-                            issues["links"].append((line_num, href, f"[AUTO-FIXED] Sibling repository link. Fixed to: '{fixed_href}'"))
+                            issues["links"].append(
+                                (
+                                    line_num,
+                                    href,
+                                    f"[AUTO-FIXED] Sibling repository link. Fixed to: '{fixed_href}'",
+                                )
+                            )
                         else:
-                            issues["links"].append((line_num, href, f"[WARNING] Sibling repository absolute link. Recommend relative link: '{rel_to_parent}'"))
+                            issues["links"].append(
+                                (
+                                    line_num,
+                                    href,
+                                    f"[WARNING] Sibling repository absolute link. Recommend relative link: '{rel_to_parent}'",
+                                )
+                            )
                     except ValueError:
                         pass
             else:
@@ -339,10 +461,7 @@ def get_modified_files(project_root: Path) -> set[Path]:
     try:
         # Check local changes (staged + unstaged + untracked)
         res = subprocess.run(
-            ["git", "status", "--porcelain"],
-            cwd=project_root,
-            capture_output=True,
-            text=True
+            ["git", "status", "--porcelain"], cwd=project_root, capture_output=True, text=True
         )
         if res.returncode == 0:
             for line in res.stdout.splitlines():
@@ -355,7 +474,7 @@ def get_modified_files(project_root: Path) -> set[Path]:
             ["git", "diff", "--name-only", "origin/main...HEAD"],
             cwd=project_root,
             capture_output=True,
-            text=True
+            text=True,
         )
         if res.returncode == 0:
             for line in res.stdout.splitlines():
@@ -368,7 +487,7 @@ def get_modified_files(project_root: Path) -> set[Path]:
             ["git", "diff", "--name-only", "HEAD~1"],
             cwd=project_root,
             capture_output=True,
-            text=True
+            text=True,
         )
         if res.returncode == 0:
             for line in res.stdout.splitlines():
@@ -382,11 +501,26 @@ def get_modified_files(project_root: Path) -> set[Path]:
 
 def main():
     parser = argparse.ArgumentParser(description="Validate documentation accuracy.")
-    parser.add_argument("docs_dir", nargs="?", default="docs", help="Directory containing markdown files (default: docs)")
-    parser.add_argument("--src", default="scripts,packages", help="Comma-separated directories to search for code definitions")
+    parser.add_argument(
+        "docs_dir",
+        nargs="?",
+        default="docs",
+        help="Directory containing markdown files (default: docs)",
+    )
+    parser.add_argument(
+        "--src",
+        default="scripts,packages",
+        help="Comma-separated directories to search for code definitions",
+    )
     parser.add_argument("--root", default=".", help="Project workspace root directory")
-    parser.add_argument("--fix", action="store_true", help="Automatically convert absolute workspace links to relative links")
-    parser.add_argument("--changed", action="store_true", help="Only validate markdown files changed in git")
+    parser.add_argument(
+        "--fix",
+        action="store_true",
+        help="Automatically convert absolute workspace links to relative links",
+    )
+    parser.add_argument(
+        "--changed", action="store_true", help="Only validate markdown files changed in git"
+    )
 
     args = parser.parse_args()
 
@@ -411,7 +545,18 @@ def main():
         sys.exit(1)
 
     # Find all md files recursively, excluding node_modules, .venv, git, and external sub-repos
-    EXCLUDE_DIRS = {".git", "node_modules", ".venv", "venv", "claudekit-engineer", "claudekit-marketing", ".pytest_cache", "extracted_docs", ".md", "CDE"}
+    EXCLUDE_DIRS = {
+        ".git",
+        "node_modules",
+        ".venv",
+        "venv",
+        "claudekit-engineer",
+        "claudekit-marketing",
+        ".pytest_cache",
+        "extracted_docs",
+        ".md",
+        "CDE",
+    }
     md_files = []
 
     if docs_dir.is_file():
@@ -451,15 +596,23 @@ def main():
         md_files = [f for f in md_files if f.resolve() in modified_files]
 
     print(f"Scanned {len(md_files)} markdown file(s).")
-    print(f"Searching code declarations in: {', '.join(str(p.relative_to(project_root)) for p in resolved_src_paths if p.exists())}")
+    print(
+        f"Searching code declarations in: {', '.join(str(p.relative_to(project_root)) for p in resolved_src_paths if p.exists())}"
+    )
     print("-" * 60)
 
     total_issues = 0
     broken_links_count = 0
 
     for filepath in md_files:
-        relative_path = filepath.relative_to(project_root) if filepath.is_relative_to(project_root) else filepath
-        issues = validate_markdown_file(filepath, resolved_src_paths, env_vars, project_root, fix=args.fix)
+        relative_path = (
+            filepath.relative_to(project_root)
+            if filepath.is_relative_to(project_root)
+            else filepath
+        )
+        issues = validate_markdown_file(
+            filepath, resolved_src_paths, env_vars, project_root, fix=args.fix
+        )
 
         file_has_issues = any(issues.values())
         if file_has_issues:
@@ -492,7 +645,9 @@ def main():
                         total_issues += 1
                         broken_links_count += 1
                     else:
-                        print(f"  [L{line}] \x1b[33mLink Warning (Old File):\x1b[0m ({link}) - [SOFT-WARN] {err}")
+                        print(
+                            f"  [L{line}] \x1b[33mLink Warning (Old File):\x1b[0m ({link}) - [SOFT-WARN] {err}"
+                        )
                         total_issues += 1
 
             # Print Env Issues
@@ -504,10 +659,14 @@ def main():
     if total_issues > 0:
         print(f"Completed with {total_issues} issue(s) detected.")
         if broken_links_count > 0:
-            print(f"\x1b[31m[ERROR] Detected {broken_links_count} broken relative link(s) in modified files. Blocking commit/build.\x1b[0m")
+            print(
+                f"\x1b[31m[ERROR] Detected {broken_links_count} broken relative link(s) in modified files. Blocking commit/build.\x1b[0m"
+            )
             sys.exit(1)  # Hard Block
         else:
-            print("\x1b[33m[WARN] Warnings/Old file broken links detected. Committing/building is allowed.\x1b[0m")
+            print(
+                "\x1b[33m[WARN] Warnings/Old file broken links detected. Committing/building is allowed.\x1b[0m"
+            )
             sys.exit(0)  # Soft Warn
     else:
         print("\x1b[32mDocumentation validation completed successfully! No issues detected.\x1b[0m")

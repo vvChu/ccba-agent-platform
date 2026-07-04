@@ -21,20 +21,22 @@ BLOCKED_DIRS: list[str] = [
     "build",
     ".next",
     "target",
-    "clones"
+    "clones",
 ]
 
 # Build and tool command patterns to allow execution (compiled)
 BUILD_CMD_RE = re.compile(
     r"^(npm|pnpm|yarn|bun)\s+([^\s]+\s+)*(run\s+)?(build|test|lint|dev|start|install|ci|add|remove|update|publish|pack|init|create|exec)",
-    re.IGNORECASE
+    re.IGNORECASE,
 )
 TOOL_CMD_RE = re.compile(
     r"^(\./)?(npx|pnpx|bunx|tsc|esbuild|vite|webpack|rollup|turbo|nx|jest|vitest|pytest|mocha|eslint|prettier|go|cargo|make|mvn|mvnw|gradle|gradlew|dotnet|docker|podman|kubectl|helm|terraform|ansible|bazel|cmake|sbt|flutter|swift|ant|ninja|meson|python3?|pip|uv|deno|bundle|rake|gem|php|composer|ruby|mix|elixir)",
-    re.IGNORECASE
+    re.IGNORECASE,
 )
 VENV_EXEC_RE = re.compile(r"(^|[\/\\])\.?venv[\/\\](bin|Scripts)[\/\\]")
-VENV_CREATE_RE = re.compile(r"^(python3?|py)\s+(-[\w.]+\s+)*-m\s+venv\s+|^uv\s+venv(\s|$)|^virtualenv\s+", re.IGNORECASE)
+VENV_CREATE_RE = re.compile(
+    r"^(python3?|py)\s+(-[\w.]+\s+)*-m\s+venv\s+|^uv\s+venv(\s|$)|^virtualenv\s+", re.IGNORECASE
+)
 
 
 def is_allowed_command(cmd: str) -> bool:

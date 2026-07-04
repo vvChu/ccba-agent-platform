@@ -14,14 +14,16 @@ from typing import Any
 import yaml  # type: ignore
 
 # Đảm bảo UTF-8 cho stdout/stderr
-if sys.stdout.encoding != 'utf-8':
+if sys.stdout.encoding != "utf-8":
     import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 # Mock click if not installed to avoid import crashes
 try:
     import click
+
     HAS_CLICK = True
 except ImportError:
     click = None  # type: ignore
@@ -30,6 +32,7 @@ except ImportError:
 # ==========================================
 # 1. PARSING KỸ THUẬT: DYNAMIC INSPECTION
 # ==========================================
+
 
 def get_argparse_schema(parser: Any) -> dict[str, Any]:
     """Trích xuất JSON Schema từ đối tượng ArgumentParser của argparse."""
@@ -61,7 +64,7 @@ def get_argparse_schema(parser: Any) -> dict[str, Any]:
 
         param_schema: dict[str, Any] = {
             "type": json_type,
-            "description": action.help or f"Tham số {param_name}"
+            "description": action.help or f"Tham số {param_name}",
         }
 
         # Bổ sung các giá trị enum nếu có choices
@@ -80,14 +83,12 @@ def get_argparse_schema(parser: Any) -> dict[str, Any]:
         if action.required or not action.option_strings:
             required.append(param_name)
 
-    schema: dict[str, Any] = {
-        "type": "object",
-        "properties": properties
-    }
+    schema: dict[str, Any] = {"type": "object", "properties": properties}
     if required:
         schema["required"] = required
 
     return schema
+
 
 def get_click_schema(command: Any) -> dict[str, Any]:
     """Trích xuất JSON Schema từ đối tượng click.Command."""
@@ -110,7 +111,7 @@ def get_click_schema(command: Any) -> dict[str, Any]:
 
         param_schema: dict[str, Any] = {
             "type": json_type,
-            "description": getattr(param, "help", None) or f"Tham số {param_name}"
+            "description": getattr(param, "help", None) or f"Tham số {param_name}",
         }
 
         # Bổ sung enum nếu click type là Choice
@@ -125,14 +126,12 @@ def get_click_schema(command: Any) -> dict[str, Any]:
         if param.required:
             required.append(param_name)
 
-    schema: dict[str, Any] = {
-        "type": "object",
-        "properties": properties
-    }
+    schema: dict[str, Any] = {"type": "object", "properties": properties}
     if required:
         schema["required"] = required
 
     return schema
+
 
 def inspect_via_dynamic_import(script_path: Path) -> tuple[str, dict[str, Any], str]:
     """
@@ -160,13 +159,15 @@ def inspect_via_dynamic_import(script_path: Path) -> tuple[str, dict[str, Any], 
 
     if click_commands:
         # Nếu có click Group (chứa subcommands)
-        group_obj = next((obj for name, obj in click_commands if isinstance(obj, click.Group)), None)
+        group_obj = next(
+            (obj for name, obj in click_commands if isinstance(obj, click.Group)), None
+        )
         if group_obj:
             commands_map: dict[str, Any] = {}
             for sub_name, sub_cmd in group_obj.commands.items():
                 commands_map[sub_name] = {
                     "command_base": f"python scripts/{script_path.name} {sub_name}",
-                    "input_schema": get_click_schema(sub_cmd)
+                    "input_schema": get_click_schema(sub_cmd),
                 }
             return f"python scripts/{script_path.name}", commands_map, docstring
         else:
@@ -175,7 +176,7 @@ def inspect_via_dynamic_import(script_path: Path) -> tuple[str, dict[str, Any], 
             commands_map = {
                 "default": {
                     "command_base": f"python scripts/{script_path.name}",
-                    "input_schema": get_click_schema(cmd_obj)
+                    "input_schema": get_click_schema(cmd_obj),
                 }
             }
             return f"python scripts/{script_path.name}", commands_map, docstring
@@ -186,33 +187,45 @@ def inspect_via_dynamic_import(script_path: Path) -> tuple[str, dict[str, Any], 
         get_parser_fn = module.get_parser
         parser = get_parser_fn()
         # Kiểm tra xem có subparsers (các nhóm lệnh con) không
-        subparsers_action = next((action for action in parser._actions if action.__class__.__name__ == "_SubParsersAction"), None)
+        subparsers_action = next(
+            (
+                action
+                for action in parser._actions
+                if action.__class__.__name__ == "_SubParsersAction"
+            ),
+            None,
+        )
 
         if subparsers_action:
             commands_map = {}
             for sub_name, sub_parser in subparsers_action.choices.items():
                 commands_map[sub_name] = {
                     "command_base": f"python scripts/{script_path.name} {sub_name}",
-                    "input_schema": get_argparse_schema(sub_parser)
+                    "input_schema": get_argparse_schema(sub_parser),
                 }
             return f"python scripts/{script_path.name}", commands_map, docstring
         else:
             commands_map = {
                 "default": {
                     "command_base": f"python scripts/{script_path.name}",
-                    "input_schema": get_argparse_schema(parser)
+                    "input_schema": get_argparse_schema(parser),
                 }
             }
             return f"python scripts/{script_path.name}", commands_map, docstring
 
-    raise ValueError("Script không cung cấp click decorators hoặc hàm get_parser() để thực hiện dynamic inspection.")
+    raise ValueError(
+        "Script không cung cấp click decorators hoặc hàm get_parser() để thực hiện dynamic inspection."
+    )
+
 
 # ==========================================
 # 2. PARSING KỸ THUẬT: FALLBACK STATIC AST
 # ==========================================
 
+
 class ASTCLIParser(ast.NodeVisitor):
     """AST Visitor để phân tích cú pháp tĩnh các arguments của argparse/click."""
+
     def __init__(self) -> None:
         self.properties: dict[str, Any] = {}
         self.required: list[str] = []
@@ -239,10 +252,7 @@ class ASTCLIParser(ast.NodeVisitor):
         param_name = longest_opt.lstrip("-").replace("-", "_")
 
         # Phân tích keywords (default, choices, help, required, type)
-        param_schema: dict[str, Any] = {
-            "type": "string",
-            "description": f"Tham số {param_name}"
-        }
+        param_schema: dict[str, Any] = {"type": "string", "description": f"Tham số {param_name}"}
         is_required = not longest_opt.startswith("-")  # Positional mặc định là bắt buộc
 
         for kw in node.keywords:
@@ -267,6 +277,7 @@ class ASTCLIParser(ast.NodeVisitor):
         if is_required:
             self.required.append(param_name)
 
+
 def inspect_via_static_ast(script_path: Path) -> tuple[str, dict[str, Any], str]:
     """Fallback phân tích cú pháp tĩnh file Python bằng AST."""
     with open(script_path, encoding="utf-8") as f:
@@ -283,32 +294,39 @@ def inspect_via_static_ast(script_path: Path) -> tuple[str, dict[str, Any], str]
             "input_schema": {
                 "type": "object",
                 "properties": visitor.properties,
-                "required": visitor.required
-            }
+                "required": visitor.required,
+            },
         }
     }
     return f"python scripts/{script_path.name}", commands_map, docstring
+
 
 # ==========================================
 # 3. SINH FILE CẤU HÌNH VÀ WORKFLOW
 # ==========================================
 
+
 def write_cli_spec(output_path: Path, commands: dict[str, Any]) -> None:
     """Ghi cấu trúc CLI spec ra tệp yaml."""
-    data = {
-        "commands": commands
-    }
+    data = {"commands": commands}
     with open(output_path, "w", encoding="utf-8") as f:
         yaml.safe_dump(data, f, allow_unicode=True, default_flow_style=False)
     print(f"[Info] Đã ghi tệp đặc tả kỹ thuật: {output_path.absolute()}")
 
+
 def write_skill_markdown(output_path: Path, skill_name: str, docstring: str) -> None:
     """Ghi tệp tin SKILL.md mẫu nghiệp vụ ban đầu (chỉ ghi nếu chưa có)."""
     if output_path.exists():
-        print(f"[Info] File SKILL.md đã tồn tại. Bỏ qua ghi đè để bảo vệ nội dung viết tay: {output_path.absolute()}")
+        print(
+            f"[Info] File SKILL.md đã tồn tại. Bỏ qua ghi đè để bảo vệ nội dung viết tay: {output_path.absolute()}"
+        )
         return
 
-    desc = docstring.strip().split("\n")[0] if docstring else f"Tự động tương tác với công cụ {skill_name}."
+    desc = (
+        docstring.strip().split("\n")[0]
+        if docstring
+        else f"Tự động tương tác với công cụ {skill_name}."
+    )
 
     content = f"""---
 name: {skill_name}
@@ -354,6 +372,7 @@ disable-model-invocation: true
         f.write(content)
     print(f"[Info] Đã tạo file tri thức nghiệp vụ mẫu: {output_path.absolute()}")
 
+
 def write_workflow_router(output_path: Path, skill_name: str, commands: dict[str, Any]) -> None:
     """Ghi file workflow mỏng đăng ký Slash Command (chỉ ghi nếu chưa có)."""
     if output_path.exists():
@@ -390,9 +409,11 @@ Agent tiếp nhận lệnh bắt buộc phải thực hiện tác vụ sau:
         f.write(content)
     print(f"[Info] Đã đăng ký Slash Command workflow: {output_path.absolute()}")
 
+
 # ==========================================
 # 4. HÀM ĐIỀU PHỐI ĐẦU RA (API CHÍNH)
 # ==========================================
+
 
 def create_skill_from_script(script_path_str: str, skill_name: str | None = None) -> int:
     """Tạo mới cấu trúc Skill từ tệp Python script."""
@@ -411,12 +432,17 @@ def create_skill_from_script(script_path_str: str, skill_name: str | None = None
         _, commands, docstring = inspect_via_dynamic_import(script_p)
         print("[Info] Phân tích động (Dynamic Inspection) thành công.")
     except Exception as e:
-        print(f"[Warn] Phân tích động thất bại ({e}). Thử chuyển sang phân tích tĩnh (Static AST)...", file=sys.stderr)
+        print(
+            f"[Warn] Phân tích động thất bại ({e}). Thử chuyển sang phân tích tĩnh (Static AST)...",
+            file=sys.stderr,
+        )
         try:
             _, commands, docstring = inspect_via_static_ast(script_p)
             print("[Info] Fallback phân tích tĩnh (Static AST) thành công.")
         except Exception as ex:
-            print(f"ERROR: Cả hai phương pháp phân tích đều thất bại. Chi tiết: {ex}", file=sys.stderr)
+            print(
+                f"ERROR: Cả hai phương pháp phân tích đều thất bại. Chi tiết: {ex}", file=sys.stderr
+            )
             return 3
 
     # Ghi 3 file cấu thành Skill
@@ -430,6 +456,7 @@ def create_skill_from_script(script_path_str: str, skill_name: str | None = None
     print(f"👉 Thư mục skill: {skill_dir.absolute()}")
     print(f"👉 Lệnh Slash Command: /ccba-{name}\n")
     return 0
+
 
 def sync_all_skills() -> int:
     """Quét toàn bộ thư mục skills cục bộ và đồng bộ lại cli_spec.yaml nếu có file script tương ứng."""
@@ -455,7 +482,7 @@ def sync_all_skills() -> int:
         name_snake = folder.name.replace("-", "_")
         candidates = [
             Path("scripts") / f"{name_snake}.py",
-            Path("scripts") / f"{name_snake}_helper.py"
+            Path("scripts") / f"{name_snake}_helper.py",
         ]
 
         target_script = next((c for c in candidates if c.exists()), None)

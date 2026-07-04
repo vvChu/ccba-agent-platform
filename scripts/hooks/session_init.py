@@ -15,7 +15,9 @@ def main(event: str, payload: dict) -> int:
     # 1. Detect Git Root
     git_root = None
     try:
-        res = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
+        res = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True
+        )
         git_root = res.stdout.strip()
     except subprocess.SubprocessError:
         pass
@@ -26,7 +28,9 @@ def main(event: str, payload: dict) -> int:
         print(f"[session-init] Git Repository Root: {git_root}")
         # Detect Git branch
         try:
-            branch_res = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True, check=True)
+            branch_res = subprocess.run(
+                ["git", "branch", "--show-current"], capture_output=True, text=True, check=True
+            )
             print(f"[session-init] Active Git Branch: {branch_res.stdout.strip()}")
         except subprocess.SubprocessError:
             pass

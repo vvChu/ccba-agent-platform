@@ -3,7 +3,9 @@ import logging
 from ccba_ai import AuditFinding, AuditReport, async_ai, parse_llm_json
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("SemanticAudit")
 
 _SEMANTIC_AUDIT_PROMPT = """Bạn là một Chuyên gia BIM Coordinator (BIM Manager) dày dạn kinh nghiệm.
@@ -51,25 +53,20 @@ Trả về kết quả dưới dạng chuẩn JSON tuân thủ CHÍNH XÁC cấu
 }}
 """
 
+
 class SemanticAuditEngine:
     def __init__(self, ai_model: str = "qwen-local-primary", timeout: float = 300.0):
         self.ai_model = ai_model
 
     async def run_audit(
-        self,
-        level_label: str,
-        arch_text: str,
-        kc_text: str,
-        mep_text: str,
-        pccc_text: str
+        self, level_label: str, arch_text: str, kc_text: str, mep_text: str, pccc_text: str
     ) -> AuditReport:
-
         prompt = _SEMANTIC_AUDIT_PROMPT.format(
             level_label=level_label,
             d_arch=arch_text,
             d_kc=kc_text,
             d_mep=mep_text,
-            d_pccc=pccc_text
+            d_pccc=pccc_text,
         )
 
         logger.info(f"Đang gửi dữ liệu text (length: {len(prompt)}) tới {self.ai_model}...")
@@ -79,10 +76,10 @@ class SemanticAuditEngine:
                 model=self.ai_model,
                 messages=[
                     {"role": "system", "content": "Bạn là chuyên gia trả về JSON hợp lệ."},
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
                 max_tokens=8192,
-                temperature=0.1
+                temperature=0.1,
             )
 
             data = parse_llm_json(raw_text)
@@ -94,23 +91,29 @@ class SemanticAuditEngine:
             for item in data.get("conflicts", []):
                 sev = item.get("severity", "low").lower()
                 disciplines_str = item.get("disciplines", "Unknown")
-                disciplines = [d.strip() for d in disciplines_str.replace("vs", ",").replace("&", ",").split(",") if d.strip()]
+                disciplines = [
+                    d.strip()
+                    for d in disciplines_str.replace("vs", ",").replace("&", ",").split(",")
+                    if d.strip()
+                ]
 
-                findings.append(AuditFinding(
-                    severity=sev,
-                    location=item.get("location", "Unknown"),
-                    disciplines=disciplines,
-                    description=item.get("description", "No description"),
-                    recommendation=item.get("recommendation", "No recommendation"),
-                    source="semantic_audit_engine"
-                ))
+                findings.append(
+                    AuditFinding(
+                        severity=sev,
+                        location=item.get("location", "Unknown"),
+                        disciplines=disciplines,
+                        description=item.get("description", "No description"),
+                        recommendation=item.get("recommendation", "No recommendation"),
+                        source="semantic_audit_engine",
+                    )
+                )
 
             return AuditReport(
                 level=level_label,
                 ai_model=self.ai_model,
                 findings=findings,
                 summary=data.get("summary", ""),
-                raw_response=raw_text
+                raw_response=raw_text,
             )
 
         except Exception as e:

@@ -16,6 +16,7 @@ from pathlib import Path
 # Enforce UTF-8 output on Windows
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
@@ -26,12 +27,15 @@ except ImportError:
     # Fail-safe local mock class if package not found
     class MockAI:
         def chat(self, prompt, model=None, system=None, format=None):
-            return json.dumps({
-                "should_port": True,
-                "score": 85,
-                "reason": "AI Gateway SDK missing - simulated approval",
-                "actionable_steps": ["Verify manually", "Port via ccba-kit"]
-            })
+            return json.dumps(
+                {
+                    "should_port": True,
+                    "score": 85,
+                    "reason": "AI Gateway SDK missing - simulated approval",
+                    "actionable_steps": ["Verify manually", "Port via ccba-kit"],
+                }
+            )
+
     ai = MockAI()
 
 import yaml
@@ -69,10 +73,10 @@ def call_ai_evaluation(repo_type: str, skill_name: str, content: str) -> dict:
         "Nhiệm vụ của bạn là đánh giá xem có nên port một kỹ năng mới từ ClaudeKit hoặc MattPocock thượng nguồn (upstream) sang nền tảng của mình hay không.\n"
         "Hãy phản hồi bằng định dạng JSON sạch có cấu trúc sau:\n"
         "{\n"
-        "  \"should_port\": true/false,\n"
-        "  \"score\": 0-100,\n"
-        "  \"reason\": \"Tóm tắt lý do bằng tiếng Việt\",\n"
-        "  \"actionable_steps\": [\"Bước 1...\", \"Bước 2...\"]\n"
+        '  "should_port": true/false,\n'
+        '  "score": 0-100,\n'
+        '  "reason": "Tóm tắt lý do bằng tiếng Việt",\n'
+        '  "actionable_steps": ["Bước 1...", "Bước 2..."]\n'
         "}"
     )
 
@@ -118,7 +122,7 @@ def call_ai_evaluation(repo_type: str, skill_name: str, content: str) -> dict:
             "should_port": True,
             "score": 75,
             "reason": f"Lỗi gọi AI Gateway: {e}. Đề xuất rà soát thủ công.",
-            "actionable_steps": ["Rà soát thủ công tệp tin SKILL.md", "Port nếu cần thiết"]
+            "actionable_steps": ["Rà soát thủ công tệp tin SKILL.md", "Port nếu cần thiết"],
         }
 
 
@@ -147,7 +151,11 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
             color = "🔴"
         elif not result.get("should_port", True):
             reason_lower = result.get("reason", "").lower()
-            if "nâng cấp" in reason_lower or "tích hợp" in reason_lower or "cải tiến" in reason_lower:
+            if (
+                "nâng cấp" in reason_lower
+                or "tích hợp" in reason_lower
+                or "cải tiến" in reason_lower
+            ):
                 status_text = "UPGRADE/INTEGRATE"
                 color = "🟡"
             else:
@@ -160,9 +168,9 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
         item_md = f"""
 ---
 
-### {color} [{status_text}] Skill: `{skill_name}` (Score: {result.get('score', 0)}/100)
+### {color} [{status_text}] Skill: `{skill_name}` (Score: {result.get("score", 0)}/100)
 *   **Kho chứa nguồn**: `{repo_type}`
-*   **Đánh giá**: {result.get('reason', 'Không có lý do chi tiết từ AI')}
+*   **Đánh giá**: {result.get("reason", "Không có lý do chi tiết từ AI")}
 *   **Các bước triển khai**:
 """
         for step in result.get("actionable_steps", []):
@@ -238,11 +246,15 @@ def check_git_diffs(repo_path: Path, base_sha: str, head_sha: str, repo_type: st
                 else:
                     skill_name = match.group(1)
 
-                print(f"[Evaluator] Found modified/new skill: '{skill_name}' in upstream {repo_type}")
+                print(
+                    f"[Evaluator] Found modified/new skill: '{skill_name}' in upstream {repo_type}"
+                )
 
                 # Retrieve the file contents from head SHA
                 show_cmd = ["git", "show", f"{head_sha}:{f}"]
-                show_res = subprocess.run(show_cmd, cwd=str(repo_path), capture_output=True, text=True, check=True)
+                show_res = subprocess.run(
+                    show_cmd, cwd=str(repo_path), capture_output=True, text=True, check=True
+                )
                 skill_content = show_res.stdout
 
                 result = call_ai_evaluation(repo_type, skill_name, skill_content)
@@ -253,9 +265,15 @@ def check_git_diffs(repo_path: Path, base_sha: str, head_sha: str, repo_type: st
 
 def main():
     parser = argparse.ArgumentParser(description="CCBA Upstream Feature Porting Evaluator")
-    parser.add_argument("--test-mock", action="store_true", help="Simulate a new skill check using mock data")
+    parser.add_argument(
+        "--test-mock", action="store_true", help="Simulate a new skill check using mock data"
+    )
     parser.add_argument("--repo-path", help="Path to local upstream repo directory")
-    parser.add_argument("--repo-type", choices=["engineer", "marketing", "mattpocock-skills"], help="Repository type to evaluate")
+    parser.add_argument(
+        "--repo-type",
+        choices=["engineer", "marketing", "mattpocock-skills"],
+        help="Repository type to evaluate",
+    )
     parser.add_argument("--base", help="Base commit SHA for git diff")
     parser.add_argument("--head", help="Head commit SHA for git diff")
 
@@ -266,7 +284,9 @@ def main():
         sys.exit(0)
 
     if not args.repo_path or not args.repo_type or not args.base or not args.head:
-        print("[Evaluator] Error: Missing required git diff arguments (--repo-path, --repo-type, --base, --head).")
+        print(
+            "[Evaluator] Error: Missing required git diff arguments (--repo-path, --repo-type, --base, --head)."
+        )
         sys.exit(1)
 
     check_git_diffs(Path(args.repo_path), args.base, args.head, args.repo_type)
