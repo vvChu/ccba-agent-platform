@@ -50,17 +50,19 @@ Tìm hiểu repo nguồn và định vị tính năng mục tiêu.
 
 ---
 
-### Pha 2: Map (Ánh xạ)
+### Pha 2: Map (Ánh xạ & Domain Alignment)
 
-Phân tách tính năng thành các lớp để ánh xạ sang Platform hiện tại.
+Phân tách tính năng thành các lớp để ánh xạ sang Platform hiện tại, đồng thời đối sánh miền dữ liệu và thuật ngữ để đảm bảo tính nhất quán.
 
 **Các bước thực hiện:**
 1. Kiểm kê thành phần: logic cốt lõi, trạng thái (state), dữ liệu, API surface, config, types, tests.
 2. Xây dựng ma trận dependency từ thành phần nguồn sang thành phần cục bộ tương đương.
-3. Xác định các vấn đề cắt ngang (cross-cutting concerns) như middleware, interceptors, listeners nằm ngoài folder tính năng.
+3. **Domain Alignment:** Đối chiếu thuật ngữ nghiệp vụ (Domain Glossary) và kiểu dữ liệu (Data Schema / Type mapping) nguồn - đích.
+4. Xác định các vấn đề cắt ngang (cross-cutting concerns) như middleware, interceptors, listeners nằm ngoài folder tính năng.
 
 **Tiêu chí hoàn thành (Completion Criterion):**
-*   [x] Phải hoàn thành bảng ma trận dependency mapping phân loại rõ ràng từng thành phần nguồn sang một trong ba trạng thái: `EXISTS` (đã có), `NEW` (cần tạo mới), hoặc `CONFLICT` (xung đột cần thích ứng).
+*   [x] Phải hoàn thành bảng ma trận dependency mapping phân loại rõ ràng từng thành phần nguồn sang trạng thái: `EXISTS` (đã có), `NEW` (cần tạo mới), hoặc `CONFLICT` (xung đột).
+*   [x] Phải lập bảng đối chiếu ít nhất 3 kiểu dữ liệu cốt lõi hoặc thuật ngữ nghiệp vụ nguồn - Platform.
 
 ---
 
@@ -79,25 +81,23 @@ Hiểu rõ lý do tại sao mã nguồn chạy như vậy, chứ không chỉ l�
 
 ---
 
-### Pha 4: Challenge (Phản biện) - CỔNG KIỂM SOÁT CỨNG
+### Pha 4: Challenge (Phản biện & Socratic Grilling) - CỔNG KIỂM SOÁT CỨNG
 
 Sử dụng khung câu hỏi phản biện cốt lõi (Challenge Framework) để loại bỏ các giả định sai lầm.
 
 **Các bước thực hiện:**
-1. Đưa ra **ít nhất 5 câu hỏi phản biện**. Với mỗi câu hỏi, phải nêu rõ:
-   - Phương án của nguồn (source answer)
-   - Phương án cục bộ (local answer)
-   - Rủi ro nếu giả định ban đầu bị sai (risk assessment)
-2. Thảo luận chi tiết về các bài toán đánh đổi kỹ thuật (KISS vs Complexity, Windows compatibility, v.v.).
-3. Trình bày Ma trận quyết định (Decision Matrix).
+1. Đưa ra **ít nhất 5 câu hỏi phản biện**.
+2. **Socratic Grilling Loop:** Đối với các tính năng phức tạp (khi không dùng cờ `--fast` hoặc `--auto`), Agent bắt buộc phải thực thi cuộc phỏng vấn Socratic: đặt từng câu hỏi phản biện một, chờ người dùng trả lời và làm rõ điểm mù thiết kế rồi mới đi tiếp câu tiếp theo.
+3. Thảo luận chi tiết về các bài toán đánh đổi kỹ thuật (KISS vs Complexity, Windows compatibility, v.v.).
+4. Trình bày Ma trận quyết định (Decision Matrix).
 
 **Tiêu chí hoàn thành (Completion Criterion):**
-*   [x] Phải in ra đầy đủ 5 câu hỏi phản biện kèm Ma trận quyết định.
+*   [x] Phải in ra đầy đủ 5 câu hỏi phản biện và biên bản phỏng vấn Socratic kèm Ma trận quyết định.
 *   [x] Bắt buộc phải dừng lại và nhận được sự phê duyệt tường minh (bằng văn bản hoặc qua giao diện) từ người dùng trước khi chuyển sang Pha 5 (trừ khi chạy chế độ `--fast`).
 
 ---
 
-### Pha 5: Plan (Lập kế hoạch)
+### Pha 5: Plan (Lập kế hoạch & Test-Driven Porting)
 
 Soạn thảo kế hoạch triển khai chi tiết cho việc thích ứng và chuyển dịch code.
 
@@ -106,10 +106,11 @@ Soạn thảo kế hoạch triển khai chi tiết cho việc thích ứng và c
 2. Kế hoạch phải chỉ rõ:
    - Cấu trúc giải phẫu nguồn (source anatomy) và ma trận dependency đã được duyệt.
    - Các file cần tạo mới `[NEW]`, chỉnh sửa `[MODIFY]`.
+   - **Chiến lược Kiểm thử TDD (Red-Green-Refactor Plan):** Chỉ rõ test case nào sẽ được viết/port sang trước để chạy lỗi (Red), sau đó port code logic để test pass (Green).
    - Chiến lược khôi phục (Rollback Strategy) nếu gặp lỗi.
 
 **Tiêu chí hoàn thành (Completion Criterion):**
-*   [x] Phải tạo hoặc cập nhật thành công file `implementation_plan.md` có đầy đủ thông tin source manifest, ma trận quyết định và chiến lược khôi phục.
+*   [x] Phải tạo hoặc cập nhật thành công file `implementation_plan.md` có đầy đủ thông tin source manifest, ma trận quyết định, kế hoạch test TDD và chiến lược khôi phục.
 
 ---
 
