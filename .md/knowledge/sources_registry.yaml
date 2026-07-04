@@ -1,49 +1,41 @@
 sources:
-  .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an.docx:
-    drive_file_id: 1oKzsYdg_WYwoeth3QmjjRfq0Cawmlmujq01Rs2CBO04
+  ? D:\GitHubProjects\ccba-agent-platform\.md\legal_docs\luat_xay_dung_2025_so_135_2025_qh15\guiding_docs\nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an.docx
+  : drive_file_id: 1iejqZ0j1uHWkrdbO_BX6C5tVMlJ9v3VUJZQ8dhS2Ih4
     sha256: 7569e1af44c027cf78112eca3a9246078969b285fc4e6c1604d9cd93c5bb64ec
-    source_id: bf40c6c5-588f-459b-ba8a-b766c350e8e4
-    title: nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an
-  ? .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_206_2026_nd_cp_quan_ly_chi_phi_dau_tu_xay_dung.docx
-  : drive_file_id: 1n8Vq__SW17NnCyzhozUbA9rvylaJfYqw_A12T5HuQnc
+    source_id: a6cf0a0c-813a-481a-9a98-e442c1a5cf26
+  ? D:\GitHubProjects\ccba-agent-platform\.md\legal_docs\luat_xay_dung_2025_so_135_2025_qh15\guiding_docs\nghi_dinh_206_2026_nd_cp_quan_ly_chi_phi_dau_tu_xay_dung.docx
+  : drive_file_id: 1qTHUOExTmuWE2Y_xUEpn5CKk7den5qBpjC16J7ocSFg
     sha256: 2babcfe1fca745824ce2cac47d657a74c16654b36009abbdae980fa3ad2630fc
-    source_id: 2e28ed88-87e7-4b07-8133-bb0f054cd941
-    title: nghi_dinh_206_2026_nd_cp_quan_ly_chi_phi_dau_tu_xay_dung
-  ? .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.docx
-  : drive_file_id: 1XP4By-6CcO7gYU1h8XOLuItSM2BgB-8qCQ9aZGQ0HYs
+    source_id: df0acc8f-cd15-4d95-83a7-b019e521800d
+  ? D:\GitHubProjects\ccba-agent-platform\.md\legal_docs\luat_xay_dung_2025_so_135_2025_qh15\guiding_docs\nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.docx
+  : drive_file_id: 1ETfa5Hk_jzRUVNbgzt07jh1xUi_D6h67ZAwxC1uihBA
     sha256: 7097d9a3991adcaea69b1ef1ce950b355ef854585b0f0ca89fec18fc101996b6
-    source_id: 420511c2-c1f7-49dc-811c-d006622a87d5
-    title: nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung
-  .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_209_2026_nd_cp_quan_ly_vat_lieu_xay_dung.docx:
-    drive_file_id: 1peOdE6zR8Nse7Ip4oeRjYDrQB6ndUNwqLMqxYHG-K2E
+    source_id: 2e1c3f9d-41ad-4cd2-9010-a6db53f3f4aa
+  ? D:\GitHubProjects\ccba-agent-platform\.md\legal_docs\luat_xay_dung_2025_so_135_2025_qh15\guiding_docs\nghi_dinh_209_2026_nd_cp_quan_ly_vat_lieu_xay_dung.docx
+  : drive_file_id: 19S5J6ArFnfpKrA0m0MNGKGUSNw0O2YdnBlmPyDsYOv8
     sha256: 796aa7b3dfbb2c5e3bd11dfeae1896c29714d3ca23d88a48123cd370d640abb2
-    source_id: 8dad8e64-0480-4bcb-b0fd-07bad8582a7b
-    title: nghi_dinh_209_2026_nd_cp_quan_ly_vat_lieu_xay_dung
-  ? .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung.docx
-  : drive_file_id: 1ULraTUdGX8xFiSXHiIjk3SK11mR7R9qSZMuvCjYPPwY
+    source_id: 308a2ee9-672a-4432-8355-77decb3a14a7
+  ? D:\GitHubProjects\ccba-agent-platform\.md\legal_docs\luat_xay_dung_2025_so_135_2025_qh15\guiding_docs\nghi_dinh_210_2026_nd_cp_huong_dan_luat_xay_dung_ve_hop_dong_xay_dung.docx
+  : drive_file_id: 1tJY1a1yXLSH2bQEEaH3Fg8kZai1w8It72uYSseiJHps
+    sha256: 812b5c0723d3202cc5a89ddc4495bb8d81e361de386392c4b132740a2f5d1638
+    source_id: 652c5bec-82c1-4862-9dca-a77b5c34d030
+  ? D:\GitHubProjects\ccba-agent-platform\.md\legal_docs\luat_xay_dung_2025_so_135_2025_qh15\guiding_docs\nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung.docx
+  : drive_file_id: 1lFVdO6XtWpqTW1dI-OupPW2jF56rjm_3hUVY-MUjjBc
     sha256: 399c73f9b99021b4187fe8a03e8e451b738daec6d43cde67144efad6b301aba3
-    source_id: 59b03450-a48c-42e2-bcb0-5395363fb3df
-    title: nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung
-  .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.docx:
-    drive_file_id: 1KbmKGrWkREeo7lHBq7NISxRz7kJuINMCOMaZYXKfLMg
+    source_id: d4504e0a-2b57-4196-b31a-866b5ce6b12d
+  ? D:\GitHubProjects\ccba-agent-platform\.md\legal_docs\luat_xay_dung_2025_so_135_2025_qh15\guiding_docs\nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.docx
+  : drive_file_id: 1Dy6zkgExykYWhSGyt_Aj-Ms-8udjVXzCNWRnQK-s9yY
     sha256: d7ca69531f3a25e717b3b2515c5b09643eadcd404ccc9d541c506a335c3425ed
-    source_id: dcbc62ec-bd73-45c9-9908-6c16b75d1536
-    title: nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung
-  .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung.docx:
-    drive_file_id: 1bE9IeJotSwHgLdJr_pKgvKKTXY-1I61LKN8uRiju1KY
+    source_id: 3d9b0a22-ae45-4886-b021-45fa9094c15b
+  ? D:\GitHubProjects\ccba-agent-platform\.md\legal_docs\luat_xay_dung_2025_so_135_2025_qh15\guiding_docs\quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung.docx
+  : drive_file_id: 1Ne4NSz_uNtr98IrPYEwlAommSEDhvYl4FVZ7JwYM2Tw
+    sha256: 5a16860281a1c8529ebc3177e1f8e8afb2200def4973bd820f6851c4c55ceb67
+    source_id: caa70f58-0802-4b96-adfc-014bcc65f987
+  ? D:\GitHubProjects\ccba-agent-platform\.md\legal_docs\luat_xay_dung_2025_so_135_2025_qh15\guiding_docs\thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung.docx
+  : drive_file_id: 1d4N_56Q-W24Lypr-gbdEvTnSJ6l_cw05Q_uIkM_Ze64
     sha256: c4230de3460ec7e83d5881a95ff53d625b6d2a29ac8a26c6495a2a13cf054480
-    source_id: 4edaeac7-6822-4b4a-9afd-99367e425d9c
-    title: thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung
-  .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/luat_xay_dung_2025_so_135_2025_qh15.docx:
-    drive_file_id: 1XTzr2Bk5tcXaco4W656MnIIuoo94veMHAmdYsxY31zg
+    source_id: f4d4352a-7846-4d1e-81a8-1ba0665970e7
+  ? D:\GitHubProjects\ccba-agent-platform\.md\legal_docs\luat_xay_dung_2025_so_135_2025_qh15\luat_xay_dung_2025_so_135_2025_qh15.docx
+  : drive_file_id: 12LspHEDHPnp60gL7YiYsEMbBk1aN4iGAD6mY8KUgwJA
     sha256: 9099fbb28eeafe04f59bfd10f08dcb07f533879cdf24a504f828ab8956a4cff1
-    source_id: e4c80974-3f5b-43db-b689-481a6976f7fd
-    title: luat_xay_dung_2025_so_135_2025_qh15
-  .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/luat_xay_dung_2025_so_135_2025_qh15.docx_pdf:
-    drive_file_id: 1j5bLyYlcRGPe0TVxaPBYmRLStp7Zqsh1
-    sha256: 7569e1af44c027cf78112eca3a9246078969b285fc4e6c1604d9cd93c5bb64ec
-    source_id: 933cee20-d280-4d31-b90a-d0b91bb23915
-  BIM_VBPL/2026/Dự thảo NĐQLCL2026 lấy ý kiến/01. NỘI DUNG TRUYỀN THÔNG ND QLCL.docx:
-    drive_file_id: 1J3GokR5KVaZzQi0EftrL4J_Sxl_UjDvc
-    sha256: e8e75d03d0829673a5abb81db6f3b35f236d49e4bac1d828287ab7b94f2e015b
-    source_id: 9ca8c811-0bfc-4aa2-b773-a77a3ff2491c
+    source_id: e36638ad-80cf-48bf-b923-c5a9f55939da

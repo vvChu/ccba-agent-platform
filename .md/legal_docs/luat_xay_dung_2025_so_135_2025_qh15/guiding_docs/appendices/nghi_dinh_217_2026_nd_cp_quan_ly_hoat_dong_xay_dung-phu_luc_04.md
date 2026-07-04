@@ -6,7 +6,7 @@ parent_document: "../nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.md"
 uniclass: "Fi_10_20"
 ---
 
-**PHỤ LỤC IV**
+# PHỤ LỤC IV
 
 DANH MỤC CÔNG TRÌNH ẢNH HƯỞNG LỚN ĐẾN AN TOÀN, LỢI ÍCH CỘNG ĐỒNG  
 *(Kèm theo Nghị định số 217/2026/NĐ-CP ngày 19 tháng 6 năm 2026 của Chính phủ)*
@@ -300,7 +300,3 @@ Công trình ảnh hưởng lớn đến an toàn, lợi ích cộng đồng là
 </tr>
 </tbody>
 </table>
-
- 
-
- 

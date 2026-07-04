@@ -28,13 +28,10 @@ def main() -> None:
     appendices_dir = guiding_dir / "appendices"
     appendices_dir.mkdir(parents=True, exist_ok=True)
 
-    files = [
-        "nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.md",
-        "nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung.md",
-        "nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.md"
-    ]
+    # Automatically scan all markdown files in the guiding_docs directory
+    files = [f.name for f in guiding_dir.glob("*.md")]
 
-    pattern = re.compile(r"^#*\s*(PHỤ LỤC\s+([IVXLCDM]+))\s*$", re.IGNORECASE)
+    pattern = re.compile(r"^(?:#*|\**)\s*(PHỤ LỤC(?:\s+([IVXLCDM]+))?)\s*(?:\**)\s*$", re.IGNORECASE)
 
     all_appendices_links = []
 
@@ -94,8 +91,11 @@ def main() -> None:
                 title = f"{full_label}"
 
             # Clean and standard decimal suffix
-            dec_num = roman_to_decimal(roman)
-            dec_str = f"{dec_num:02d}"
+            if roman:
+                dec_num = roman_to_decimal(roman)
+                dec_str = f"{dec_num:02d}"
+            else:
+                dec_str = "01"
             app_filename = f"{parent_slug}-phu_luc_{dec_str}.md"
             app_path = appendices_dir / app_filename
 

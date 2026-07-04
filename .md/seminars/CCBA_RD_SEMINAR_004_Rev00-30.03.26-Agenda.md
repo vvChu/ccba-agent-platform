@@ -43,11 +43,11 @@ Sau buổi seminar, người tham dự sẽ:
 | # | Tài liệu | Đường dẫn | Yêu cầu |
 |---|---------|----------|---------|
 | 1 | Recap tháng 3/2026 | `./CCBA_RD_SEMINAR_004_Rev00-30.03.26-Recap_T3_VBPL_Update.md` | Đọc trước |
-| 2 | Seminar 003 — MOC DOC Inspections | `BIM_VBPL/2026/CCBA_RD_SEMINAR_003_*.pdf` | Tham khảo |
-| 3 | Bảng so sánh NĐ mới vs NĐ cũ | `BIM_VBPL/2026/Dự thảo NĐQLCL2026.../05. Bang so sanh ND moi va ND cu.pdf` | ⭐ Đọc trước |
-| 4 | Dự thảo NĐ QLCL 2026 | `BIM_VBPL/2026/Dự thảo NĐQLCL2026.../03.01.Du thao ND-QLCL 2026...pdf` | Tham khảo |
-| 5 | NotebookLM Prompt Templates | `.agent/skills/legal-document-tracker/templates/notebooklm_prompts.md` | Tham khảo |
-| 6 | Checklist HSHT (NĐ 06/2021) | `.agent/skills/completion-checklist/templates/checklist_by_project.md` | Tham khảo |
+| 2 | Seminar 003 — MOC DOC Inspections | `.md/legal_docs/BIM_VBPL/2026/CCBA_RD_SEMINAR_003_*.pdf` | Tham khảo |
+| 3 | Bảng so sánh NĐ mới vs NĐ cũ | `.md/legal_docs/BIM_VBPL/2026/Dự thảo NĐQLCL2026.../05. Bang so sanh ND moi va ND cu.pdf` | ⭐ Đọc trước |
+| 4 | Dự thảo NĐ QLCL 2026 | `.md/legal_docs/BIM_VBPL/2026/Dự thảo NĐQLCL2026.../03.01.Du thao ND-QLCL 2026...pdf` | Tham khảo |
+| 5 | NotebookLM Prompt Templates | `.agents/skills/legal-document-tracker/templates/notebooklm_prompts.md` | Tham khảo |
+| 6 | Checklist HSHT (NĐ 06/2021) | `.agents/skills/completion-checklist/templates/checklist_by_project.md` | Tham khảo |
 
 ---
 

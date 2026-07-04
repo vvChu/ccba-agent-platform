@@ -35,6 +35,16 @@ Tài liệu này lưu trữ các tri thức kỹ thuật, bài học thực tế
   ```
 - **Nguồn:** Session `b75d19fa-761a-42da-ace5-94839b021a9f`, 04/07/2026.
 
+### 5. Baseline Scouting song song sử dụng Subagents
+- **Ngữ cảnh:** Khi xây dựng tài liệu kỹ thuật ban đầu cho một codebase lớn hoặc chưa có tài liệu kỹ thuật chuẩn, việc nạp toàn bộ codebase vào một context duy nhất của Agent chính dễ gây quá tải và thiếu chi tiết.
+- **Giải pháp:** Chia codebase thành các phân vùng module/package chính thức, khởi chạy song song **tối đa 3-5 subagents** chuyên biệt để nghiên cứu sâu từng phân vùng, sau đó merge các báo cáo tóm tắt để xây dựng tài liệu baseline.
+- **Nguồn:** Session `4adb3c4a-3709-4d72-8346-ed0627775238`, 04/07/2026.
+
+### 6. Sao lưu & Rollback tự động khi Phân rã Tài liệu lớn (Size Limit Gate)
+- **Ngữ cảnh:** Khi phân rã tài liệu lớn (vượt quá 800 LOC) thành cấu trúc modular, các liên kết tương đối trỏ chéo rất dễ bị hỏng (Broken Links).
+- **Giải pháp:** Thực hiện sao lưu tự động tệp tin gốc vào thư mục tạm trước khi chỉnh sửa. Nếu kiểm định `validate_docs.py` báo lỗi liên kết hỏng (`Exit 1`) và Agent không thể sửa đổi sau 3 lần thử, bắt buộc thực hiện rollback khôi phục lại tệp gốc và dọn dẹp các tệp con bị lỗi.
+- **Nguồn:** Session `4adb3c4a-3709-4d72-8346-ed0627775238`, 04/07/2026.
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -46,6 +56,10 @@ Tài liệu này lưu trữ các tri thức kỹ thuật, bài học thực tế
 ### 2. Gửi tài liệu hiện trạng thô trực tiếp lên Cloud API
 - **Vấn đề:** Gửi các tài liệu hành chính (Quyết định nhân sự, Hợp đồng tài chính, API Keys) trực tiếp lên AI Gateway công cộng mà không qua làm sạch dẫn đến rủi ro rò rỉ dữ liệu mật.
 - **Thay thế bằng:** Bắt buộc chạy qua bộ lọc che giấu dữ liệu nhạy cảm (**`maskara-privacy`**) để redact trước khi gửi chuỗi văn bản lên mô hình AI.
+
+### 3. Không tự động dọn dẹp các Workspace tạm thời của Subagents
+- **Vấn đề:** Để các workspace tạm do subagents sinh ra khi chạy teamwork (`/teamwork-preview`) hoặc chạy song song đọng lại trong codebase làm loãng cấu trúc thư mục, tốn bộ nhớ và tăng thời gian quét linter.
+- **Thay thế bằng:** Tích hợp quy trình quét và tự động dọn dẹp các thư mục rác này trực tiếp vào cuối mỗi phiên hoạt động thông qua workflow tổng kết (`/ccba-session-retrospective`).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

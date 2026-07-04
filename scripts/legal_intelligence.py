@@ -6,7 +6,10 @@ Imports crawler, parser, and packager from `ccba_legal` and orchestrates them.
 
 import argparse
 import json
+import os
 import random
+import socket
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -20,6 +23,8 @@ from ccba_legal import (
     get_crawled_doc_data,
     is_guiding_link,
     trigger_download,
+    get_tvpl_metadata,
+    Cleaners,
 )
 
 # Enforce UTF-8 output on Windows
@@ -27,6 +32,61 @@ if sys.platform == "win32":
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+
+
+def is_port_open(port: int) -> bool:
+    """Check if the port is open and listening."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(("127.0.0.1", port)) == 0
+
+
+def ensure_chrome_debug_port() -> bool:
+    """Automatically detect and launch Google Chrome in debug port 9222 if not running."""
+    if is_port_open(9222):
+        return True
+
+    print("[Chrome Debug] Detecting port 9222 is closed. Attempting to start Google Chrome...")
+    chrome_paths = [
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe")
+    ]
+
+    chrome_path = None
+    for path in chrome_paths:
+        if os.path.exists(path):
+            chrome_path = path
+            break
+
+    if not chrome_path:
+        print("[Chrome Debug Warning] Google Chrome installation not found.")
+        return False
+
+    try:
+        user_data_dir = os.path.join(os.path.expanduser("~"), ".gemini", "antigravity", "chrome-debug-profile")
+        os.makedirs(user_data_dir, exist_ok=True)
+
+        cmd = [
+            chrome_path,
+            "--remote-debugging-port=9222",
+            f"--user-data-dir={user_data_dir}",
+            "--no-first-run",
+            "--no-default-browser-check"
+        ]
+
+        subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        for _ in range(10):
+            time.sleep(0.5)
+            if is_port_open(9222):
+                print("[Chrome Debug Success] Google Chrome launched successfully on port 9222!")
+                return True
+
+        print("[Chrome Debug Warning] Chrome started but port 9222 is not responding.")
+        return False
+    except Exception as e:
+        print(f"[Chrome Debug Error] Error launching Chrome: {e}")
+        return False
 
 
 def main() -> None:
@@ -43,6 +103,10 @@ def main() -> None:
     print("[LegalIntel] Initiating pipeline execution...")
 
     # 1. Connect to browser via CDP
+    if not ensure_chrome_debug_port():
+        print("[LegalIntel] Error: Chrome debugging port 9222 could not be established. Please start Chrome with --remote-debugging-port=9222 manually.")
+        sys.exit(1)
+
     cdp = ChromeCDP()
     pages = cdp.get_pages()
     if not pages:
@@ -64,6 +128,30 @@ def main() -> None:
         main_title, main_text, main_links = get_crawled_doc_data(cdp, args.url)
         temp_packager = OKFBundlePackager(Path())
         slug = temp_packager.sanitize_slug(main_title)
+
+        # Extract metadata from TVPL Lược đồ page
+        print("[LegalIntel] Crawling structured metadata from 'Lược đồ' page...")
+        tvpl_meta = get_tvpl_metadata(cdp, args.url)
+        print(f"[LegalIntel] TVPL Metadata extracted: {json.dumps(tvpl_meta, ensure_ascii=False, indent=2)}")
+
+        if tvpl_meta:
+            suggested_id = tvpl_meta.get("document_number", slug).replace("/", "-").replace(" ", "-")
+            suggested_yaml = f"""
+================================================================================
+[Registry Suggestion] Đề xuất bản ghi thêm vào legal_registry.yaml:
+- id: {suggested_id}
+  title: {tvpl_meta.get("type", "Nghị định")} {tvpl_meta.get("document_number", "")} {main_title}
+  short_name: {tvpl_meta.get("type", "NĐ")} {tvpl_meta.get("document_number", "")}
+  status: {'current' if 'còn hiệu lực' in tvpl_meta.get('status', '').lower() else 'superseded' if 'hết hiệu lực' in tvpl_meta.get('status', '').lower() else 'draft'}
+  effective_date: '{tvpl_meta.get("effective_date", "")}'
+  issued_date: '{tvpl_meta.get("issued_date", "")}'
+  file_path: .md/legal_docs/{slug}/{slug}.docx
+  topics:
+  - construction
+  markdown_path: .md/legal_docs/{slug}/{slug}.md
+================================================================================
+"""
+            print(suggested_yaml)
 
         # We write locally to .md/ first, then package into the proper OKF layout
         md_dir = Path(args.output_dir or ".md")

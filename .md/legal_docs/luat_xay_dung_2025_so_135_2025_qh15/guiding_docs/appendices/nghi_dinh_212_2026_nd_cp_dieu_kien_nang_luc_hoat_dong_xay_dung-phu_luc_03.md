@@ -6,7 +6,7 @@ parent_document: "../nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_d
 uniclass: "Fi_10_20"
 ---
 
-**PHỤ LỤC III**
+# PHỤ LỤC III
 
 MẪU CÁC VĂN BẢN TRONG QUY TRÌNH CẤP CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG VÀ GIẤY PHÉP HOẠT ĐỘNG XÂY DỰNG  
 *(Kèm theo Nghị định số 212/2026/NĐ-CP ngày 17 tháng 6 năm 2026 của Chính phủ)*
@@ -951,4 +951,3 @@ Tài chính, Công Thương;<br />
 <tbody>
 </tbody>
 </table>
-
