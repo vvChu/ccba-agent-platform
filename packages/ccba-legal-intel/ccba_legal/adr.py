@@ -12,7 +12,18 @@ class ADRGenerator:
         if repo_dir:
             self.repo_dir = Path(repo_dir).resolve()
         else:
-            self.repo_dir = Path("d:/GitHubProjects/ccba-agent-platform").resolve()
+            import os
+            hub_path = os.getenv("CCBA_HUB_PATH")
+            if hub_path and Path(hub_path).exists():
+                self.repo_dir = Path(hub_path).resolve()
+            else:
+                current = Path(__file__).resolve()
+                resolved = None
+                for parent in current.parents:
+                    if (parent / ".git").exists() or (parent / ".agents").exists():
+                        resolved = parent
+                        break
+                self.repo_dir = resolved if resolved else Path.cwd()
         self.adr_dir = self.repo_dir / ".md" / "adr"
 
     def get_git_diff_summary(self) -> str:

@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 def main():
-    workspace_dir = Path("d:/GitHubProjects/ccba-agent-platform")
+    workspace_dir = Path(__file__).resolve().parents[1]
     md_dir = workspace_dir / ".md"
     src_dir = md_dir / "legal_docs/luat_xay_dung_2025_so_135_2025_qh15_toan_van_moi_nhat_moi_nhat"
 
