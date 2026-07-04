@@ -12,6 +12,7 @@ from pathlib import Path
 # Enforce UTF-8 output
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
@@ -34,7 +35,9 @@ def run_hook_script(script_path: Path, event: str, payload: dict) -> int:
             # Execute main function and return exit code
             return module.main(event, payload)
         else:
-            print(f"[Hook Runner] Error: {script_path.name} does not define a 'main(event, payload)' function.")
+            print(
+                f"[Hook Runner] Error: {script_path.name} does not define a 'main(event, payload)' function."
+            )
             return 1
     except Exception as e:
         print(f"[Hook Runner] Error running hook {script_path.name}: {e}")
@@ -43,7 +46,11 @@ def run_hook_script(script_path: Path, event: str, payload: dict) -> int:
 
 def main():
     parser = argparse.ArgumentParser(description="CCBA Agent Lifecycle Hook Runner")
-    parser.add_argument("event", choices=["session-init", "pre-tool", "post-tool"], help="Lifecycle event to trigger")
+    parser.add_argument(
+        "event",
+        choices=["session-init", "pre-tool", "post-tool"],
+        help="Lifecycle event to trigger",
+    )
     parser.add_argument("--tool", help="Name of the tool being called (for pre/post tool use)")
     parser.add_argument("--path", help="Target path of the tool call (if applicable)")
     parser.add_argument("--args", help="JSON encoded arguments of the tool call")

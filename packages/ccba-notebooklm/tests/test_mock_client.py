@@ -1,12 +1,14 @@
-import pytest
-import os
 import shutil
 from pathlib import Path
+
+import pytest
+
 from ccba_notebooklm import (
     check_auth,
     get_client,
     handle_artifact_flow,
 )
+
 
 # Đảm bảo tắt môi trường auth thực tế trong test cases này
 @pytest.fixture(autouse=True)
@@ -34,11 +36,11 @@ async def test_mock_artifact_flow():
     """Xác minh handle_artifact_flow chạy thành công với Mock client."""
     test_src = "packages/ccba-notebooklm/tests/test_notebooklm_basic.py"
     out_dir = "packages/ccba-notebooklm/tests/test_out"
-    
+
     # Tạo fake source file để test
     src_path = Path(test_src)
     assert src_path.exists()
-    
+
     try:
         # Test quiz generation
         code = await handle_artifact_flow(
@@ -55,12 +57,12 @@ async def test_mock_artifact_flow():
             output_format="json",
         )
         assert code == 0
-        
+
         # Kiểm tra file sinh ra
         out_file = Path(out_dir) / "quiz_src-mock-file.json"
         assert out_file.exists()
         assert b"Mock Question" in out_file.read_bytes()
-        
+
     finally:
         # Cleanup
         if Path(out_dir).exists():

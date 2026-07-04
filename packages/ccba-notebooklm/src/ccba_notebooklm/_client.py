@@ -123,7 +123,9 @@ class MockArtifactsService:
     ) -> MockTask:
         return MockTask("task-quiz-1")
 
-    async def download_quiz(self, notebook_id: str, output_path: str, output_format: str = "json") -> str:
+    async def download_quiz(
+        self, notebook_id: str, output_path: str, output_format: str = "json"
+    ) -> str:
         p = Path(output_path)
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(
@@ -160,7 +162,12 @@ class MockArtifactsService:
         return str(p.absolute())
 
     async def generate_infographic(
-        self, notebook_id: str, source_ids: list[str], orientation: Any, detail_level: Any, style: Any
+        self,
+        notebook_id: str,
+        source_ids: list[str],
+        orientation: Any,
+        detail_level: Any,
+        style: Any,
     ) -> MockTask:
         return MockTask("task-info-1")
 
@@ -270,12 +277,16 @@ class CCBANotebookLMClient:
             return cls(MockNotebookLMClientAdapter(), use_mock=True)
 
         if not HAS_NOTEBOOKLM or NotebookLMClient is None:
-            logger.warning("Không tìm thấy thư viện notebooklm-py. Tự động chuyển sang Mock Client.")
+            logger.warning(
+                "Không tìm thấy thư viện notebooklm-py. Tự động chuyển sang Mock Client."
+            )
             return cls(MockNotebookLMClientAdapter(), use_mock=True)
 
         try:
             real_client = (
-                NotebookLMClient.from_storage(path=path) if path else NotebookLMClient.from_storage()
+                NotebookLMClient.from_storage(path=path)
+                if path
+                else NotebookLMClient.from_storage()
             )
             return cls(real_client, use_mock=False)
         except Exception as e:
@@ -348,7 +359,21 @@ def get_client() -> CCBANotebookLMClient:
     cookie_path = inject_auth_cookies()
     env_cookie = os.environ.get("NOTEBOOKLM_SESSION_COOKIE")
     env_json = os.environ.get("NOTEBOOKLM_COOKIES_JSON")
-    use_mock = not (env_cookie or env_json)
+
+    is_testing = bool(os.environ.get("PYTEST_CURRENT_TEST"))
+
+    # Nếu không có biến môi trường nhưng file cookie đã tồn tại sẵn trên đĩa
+    temp_path = get_temp_storage_path()
+    if not cookie_path and temp_path.exists() and not is_testing:
+        cookie_path = str(temp_path.absolute())
+
+    default_state_path = Path.home() / ".notebooklm" / "profiles" / "default" / "storage_state.json"
+    use_mock = not (
+        env_cookie
+        or env_json
+        or (cookie_path and Path(cookie_path).exists() and not is_testing)
+        or (default_state_path.exists() and not is_testing)
+    )
 
     return CCBANotebookLMClient.from_storage(path=cookie_path, use_mock=use_mock)
 

@@ -11,7 +11,6 @@ from scripts.validate_docs import (
 
 
 class TestValidateDocs(unittest.TestCase):
-
     def test_extract_code_references(self):
         content = """
         This is a reference to `my_func()` in the code.
@@ -32,7 +31,7 @@ class TestValidateDocs(unittest.TestCase):
         External link [Google](https://google.com) is ignored.
         """
         links = extract_internal_links(content)
-        hrefs = [l[2] for l in links]
+        hrefs = [item[2] for item in links]
         self.assertIn("./install.md", hrefs)
         self.assertNotIn("#some-header", hrefs)
         self.assertNotIn("https://google.com", hrefs)

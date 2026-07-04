@@ -34,6 +34,7 @@ try:
     from googleapiclient.discovery import build  # type: ignore
     from googleapiclient.errors import HttpError  # type: ignore
     from googleapiclient.http import MediaFileUpload  # type: ignore
+
     GOOGLE_API_AVAILABLE = True
 except ImportError:
     GOOGLE_API_AVAILABLE = False
@@ -72,11 +73,13 @@ def ensure_chrome_debug_port() -> bool:
     if is_port_open(9222):
         return True
 
-    print("[Chrome Debug] Phát hiện cổng 9222 chưa hoạt động. Đang tự động khởi chạy Google Chrome...")
+    print(
+        "[Chrome Debug] Phát hiện cổng 9222 chưa hoạt động. Đang tự động khởi chạy Google Chrome..."
+    )
     chrome_paths = [
         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-        os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe")
+        os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
     ]
 
     chrome_path = None
@@ -86,13 +89,17 @@ def ensure_chrome_debug_port() -> bool:
             break
 
     if not chrome_path:
-        print("[Chrome Debug Warning] Không tìm thấy đường dẫn cài đặt Google Chrome trên hệ thống.")
+        print(
+            "[Chrome Debug Warning] Không tìm thấy đường dẫn cài đặt Google Chrome trên hệ thống."
+        )
         return False
 
     try:
         # Khởi chạy Chrome ở chế độ debug
         # Chúng ta dùng user-data-dir riêng biệt để tránh xung đột với cửa sổ Chrome đang chạy bình thường của user
-        user_data_dir = os.path.join(os.path.expanduser("~"), ".gemini", "antigravity", "chrome-debug-profile")
+        user_data_dir = os.path.join(
+            os.path.expanduser("~"), ".gemini", "antigravity", "chrome-debug-profile"
+        )
         os.makedirs(user_data_dir, exist_ok=True)
 
         cmd = [
@@ -100,7 +107,7 @@ def ensure_chrome_debug_port() -> bool:
             "--remote-debugging-port=9222",
             f"--user-data-dir={user_data_dir}",
             "--no-first-run",
-            "--no-default-browser-check"
+            "--no-default-browser-check",
         ]
 
         # Chạy nền không chặn script
@@ -110,7 +117,9 @@ def ensure_chrome_debug_port() -> bool:
         for _ in range(10):
             time.sleep(0.5)
             if is_port_open(9222):
-                print("[Chrome Debug Success] Đã khởi chạy Google Chrome ở debug port 9222 thành công!")
+                print(
+                    "[Chrome Debug Success] Đã khởi chạy Google Chrome ở debug port 9222 thành công!"
+                )
                 return True
 
         print("[Chrome Debug Warning] Đã khởi chạy Chrome nhưng cổng 9222 vẫn không phản hồi.")
@@ -126,7 +135,9 @@ def search_thuvienphapluat_via_cdp(query: str) -> str | None:
         return None
 
     if not ensure_chrome_debug_port():
-        print("[Auto-Discovery Warning] Không thể kích hoạt hoặc kết nối tới cổng debug Chrome. Bỏ qua Auto-Discovery.")
+        print(
+            "[Auto-Discovery Warning] Không thể kích hoạt hoặc kết nối tới cổng debug Chrome. Bỏ qua Auto-Discovery."
+        )
         return None
 
     print(f"[Auto-Discovery] Đang tìm kiếm link Thư viện Pháp luật cho: {query}")
@@ -198,6 +209,7 @@ def download_via_cdp_or_client(url: str, dest_path: Path) -> bool:
     # 2. Tải bằng client urllib thông thường
     try:
         import urllib.request
+
         print(f"[Urllib] Tải trực tiếp từ URL: {url}")
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
@@ -221,8 +233,7 @@ def get_drive_service() -> Any:
     if token_path.exists():
         try:
             credentials = Credentials.from_authorized_user_file(  # type: ignore
-                str(token_path),
-                scopes=["https://www.googleapis.com/auth/drive"]
+                str(token_path), scopes=["https://www.googleapis.com/auth/drive"]
             )
             if credentials.expired and credentials.refresh_token:
                 credentials.refresh(Request())
@@ -235,9 +246,7 @@ def get_drive_service() -> Any:
             print("[Drive Info] Thử fallback sang kiểm tra ADC mặc định...")
 
     # 2. Fallback sang ADC
-    credentials, project = google.auth.default(
-        scopes=["https://www.googleapis.com/auth/drive"]
-    )
+    credentials, project = google.auth.default(scopes=["https://www.googleapis.com/auth/drive"])
     return build("drive", "v3", credentials=credentials)
 
 
@@ -245,7 +254,9 @@ def clean_google_drive_folder(folder_id: str) -> None:
     """Xóa sạch tất cả các tệp tin hiện tại trong thư mục Google Drive chung để làm sạch từ đầu."""
     try:
         service = get_drive_service()
-        print(f"[Drive Cleanup] Đang truy vấn danh sách tệp tin trong thư mục Drive: {folder_id}...")
+        print(
+            f"[Drive Cleanup] Đang truy vấn danh sách tệp tin trong thư mục Drive: {folder_id}..."
+        )
         q = f"'{folder_id}' in parents and trashed = false"
         results = service.files().list(q=q, fields="files(id, name)").execute()
         files = results.get("files", [])
@@ -255,9 +266,11 @@ def clean_google_drive_folder(folder_id: str) -> None:
 
         print(f"[Drive Cleanup Info] Phát hiện {len(files)} tệp tin. Tiến hành xóa sạch...")
         for f in files:
-            print(f"[Drive Cleanup Action] Đang xóa tệp trên Drive: '{f['name']}' (ID: {f['id']})...")
+            print(
+                f"[Drive Cleanup Action] Đang xóa tệp trên Drive: '{f['name']}' (ID: {f['id']})..."
+            )
             try:
-                service.files().delete(fileId=f['id']).execute()
+                service.files().delete(fileId=f["id"]).execute()
             except Exception as del_err:
                 print(f"[Drive Cleanup Warning] Không thể xóa tệp {f['id']}: {del_err}")
         print("[Drive Cleanup Success] Đã làm sạch thư mục Google Drive chung!")
@@ -270,16 +283,33 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
     try:
         service = get_drive_service()
     except Exception as e:
-        print(f"[Drive Warning] Không thể khởi tạo Google Drive Service: {e}. Fallback sang nạp cục bộ...")
+        print(
+            f"[Drive Warning] Không thể khởi tạo Google Drive Service: {e}. Fallback sang nạp cục bộ..."
+        )
         return None
 
     try:
+        ext = file_path.suffix.lower()
+        if ext == ".pdf":
+            local_mime = "application/pdf"
+            google_mime = "application/pdf"
+        elif ext in [".docx", ".doc"]:
+            local_mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            google_mime = "application/vnd.google-apps.document"
+        elif ext in [".xlsx", ".xls"]:
+            local_mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            google_mime = "application/vnd.google-apps.spreadsheet"
+        else:
+            local_mime = "application/octet-stream"
+            google_mime = None
+
         # Quét kiểm tra trùng lặp trên Drive
-        q = f"'{folder_id}' in parents and name = '{target_name}' and trashed = false"
+        # Nếu tệp được chuyển đổi định dạng, Google Drive sẽ tự động cắt phần mở rộng (.docx, .xlsx)
+        # Vì vậy, khi quét trùng lặp phải tìm kiếm cả tên gốc và tên sau khi cắt phần mở rộng.
+        name_without_ext = Path(target_name).stem if google_mime else target_name
+        q = f"'{folder_id}' in parents and (name = '{target_name}' or name = '{name_without_ext}') and trashed = false"
         results = service.files().list(q=q, fields="files(id, name, md5Checksum)").execute()
         files = results.get("files", [])
-
-        mime_type = "application/pdf" if file_path.suffix.lower() == ".pdf" else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
         if files:
             existing_file = files[0]
@@ -288,25 +318,34 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
             local_md5 = calculate_md5(file_path)
 
             if existing_md5 == local_md5:
-                print(f"[Drive Deduplicate] Tệp '{target_name}' đã tồn tại trên Drive với nội dung trùng khớp. Bỏ qua upload.")
+                print(
+                    f"[Drive Deduplicate] Tệp '{target_name}' đã tồn tại trên Drive với nội dung trùng khớp. Bỏ qua upload."
+                )
                 try:
                     service.permissions().create(
-                        fileId=existing_id,
-                        body={"type": "anyone", "role": "reader"}
+                        fileId=existing_id, body={"type": "anyone", "role": "reader"}
                     ).execute()
                 except Exception as share_err:
                     print(f"[Drive Share Warning] Không thể set public cho file: {share_err}")
                 return str(existing_id)
 
             # Khác nội dung ➔ cập nhật đè lên tệp cũ
-            print(f"[Drive Update] Tệp '{target_name}' đã thay đổi nội dung. Thực hiện ghi đè lên file_id: {existing_id}")
-            media = MediaFileUpload(str(file_path), mimetype=mime_type, resumable=True)
-            updated_file = service.files().update(fileId=existing_id, media_body=media).execute()
+            print(
+                f"[Drive Update] Tệp '{target_name}' đã thay đổi nội dung. Thực hiện ghi đè lên file_id: {existing_id}"
+            )
+            media = MediaFileUpload(str(file_path), mimetype=local_mime, resumable=True)
+            file_metadata = {}
+            if google_mime:
+                file_metadata["mimeType"] = google_mime
+            updated_file = (
+                service.files()
+                .update(fileId=existing_id, body=file_metadata, media_body=media)
+                .execute()
+            )
             file_id = updated_file.get("id")
             try:
                 service.permissions().create(
-                    fileId=file_id,
-                    body={"type": "anyone", "role": "reader"}
+                    fileId=file_id, body={"type": "anyone", "role": "reader"}
                 ).execute()
             except Exception as share_err:
                 print(f"[Drive Share Warning] Không thể set public cho file: {share_err}")
@@ -315,13 +354,14 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
         # Chưa có tệp ➔ upload mới
         print(f"[Drive Upload] Đang upload tệp '{target_name}' lên thư mục Drive: {folder_id}")
         file_metadata = {"name": target_name, "parents": [folder_id]}
-        media = MediaFileUpload(str(file_path), mimetype=mime_type, resumable=True)
+        if google_mime:
+            file_metadata["mimeType"] = google_mime
+        media = MediaFileUpload(str(file_path), mimetype=local_mime, resumable=True)
         file = service.files().create(body=file_metadata, media_body=media, fields="id").execute()
         file_id = file.get("id")
         try:
             service.permissions().create(
-                fileId=file_id,
-                body={"type": "anyone", "role": "reader"}
+                fileId=file_id, body={"type": "anyone", "role": "reader"}
             ).execute()
         except Exception as share_err:
             print(f"[Drive Share Warning] Không thể set public cho file: {share_err}")
@@ -332,6 +372,7 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
             print("\n[Drive Error 403] Lỗi Forbidden chi tiết từ Google:")
             try:
                 import json
+
                 err_data = json.loads(e.content.decode("utf-8"))
                 print(json.dumps(err_data, indent=2, ensure_ascii=False))
             except Exception:
@@ -352,7 +393,7 @@ async def sync_registry_to_notebooklm(
     use_drive: bool,
     drive_folder_id: str,
     download_pdf: bool = False,
-    clean_drive: bool = False
+    clean_drive: bool = False,
 ) -> None:
     """Thực hiện toàn trình luồng đồng bộ từ Registry cục bộ lên Cloud."""
     if not registry_path.exists():
@@ -383,7 +424,14 @@ async def sync_registry_to_notebooklm(
         print("[Cloud State] Đang truy vấn danh sách nguồn thực tế trên NotebookLM Cloud...")
         try:
             cloud_sources = await client.sources.list(notebook_id)
-            cloud_source_map = {s.title: s.id for s in cloud_sources}
+            from collections import defaultdict
+
+            cloud_source_map = defaultdict(list)
+            for s in cloud_sources:
+                norm_title = (
+                    s.title.lower().replace(".docx", "").replace(".pdf", "").replace(".xlsx", "")
+                )
+                cloud_source_map[norm_title].append(s.id)
             print(f"[Cloud State] Phát hiện {len(cloud_sources)} nguồn đang tồn tại trên Cloud.")
         except Exception as e:
             print(f"[Error] Không thể kết nối hoặc đọc danh sách nguồn từ NotebookLM: {e}")
@@ -416,7 +464,7 @@ async def sync_registry_to_notebooklm(
                         "title": item.get("title", doc_id),
                         "short_name": item.get("short_name", doc_id),
                         "file_path": item.get("file_path", extracted_file_path),
-                        "download_url": item.get("download_url", item.get("source_url", ""))
+                        "download_url": item.get("download_url", item.get("source_url", "")),
                     }
 
         for doc_key, doc_meta in documents.items():
@@ -454,7 +502,9 @@ async def sync_registry_to_notebooklm(
                     files = results.get("files", [])
                     if files:
                         drive_file_id = files[0]["id"]
-                        print(f"[Drive Info] Tệp PDF '{pdf_filename}' đã tồn tại trên Drive. Sử dụng file_id: {drive_file_id}")
+                        print(
+                            f"[Drive Info] Tệp PDF '{pdf_filename}' đã tồn tại trên Drive. Sử dụng file_id: {drive_file_id}"
+                        )
                 except Exception as e:
                     print(f"[Drive Warning] Không thể quét tìm PDF trên Drive: {e}")
 
@@ -462,7 +512,9 @@ async def sync_registry_to_notebooklm(
                     # Chưa có trên Drive ➔ Tiến hành tìm kiếm tự động nếu thiếu download_url
                     if not download_url:
                         search_term = doc_meta.get("title", short_name)
-                        print(f"[Auto-Discovery] Không có download_url. Đang tự động tìm kiếm link Thư viện Pháp luật cho: {search_term}")
+                        print(
+                            f"[Auto-Discovery] Không có download_url. Đang tự động tìm kiếm link Thư viện Pháp luật cho: {search_term}"
+                        )
                         download_url = search_thuvienphapluat_via_cdp(search_term)
                         if not download_url:
                             # Fallback search theo short_name
@@ -479,7 +531,9 @@ async def sync_registry_to_notebooklm(
                                             if not item.get("download_url"):
                                                 item["download_url"] = download_url
                                                 registry_changed = True
-                                                print(f"[Registry Auto-Save] Đăng ký download_url động cho {doc_key} trong registry cache.")
+                                                print(
+                                                    f"[Registry Auto-Save] Đăng ký download_url động cho {doc_key} trong registry cache."
+                                                )
 
                     # Tiến hành tải tạm và upload
                     if download_url:
@@ -494,17 +548,25 @@ async def sync_registry_to_notebooklm(
                         success = download_via_cdp_or_client(download_url, temp_pdf_path)
                         if success and temp_pdf_path.exists():
                             # Upload lên Drive
-                            print(f"[Drive Upload] Đang upload tệp PDF '{pdf_filename}' lên Drive...")
-                            drive_file_id = upload_to_google_drive(temp_pdf_path, drive_folder_id, pdf_filename)
+                            print(
+                                f"[Drive Upload] Đang upload tệp PDF '{pdf_filename}' lên Drive..."
+                            )
+                            drive_file_id = upload_to_google_drive(
+                                temp_pdf_path, drive_folder_id, pdf_filename
+                            )
                             # Xóa file tạm cục bộ ngay lập tức
                             try:
                                 os.remove(temp_pdf_path)
                             except Exception as e:
                                 print(f"[Warning] Không thể xóa tệp tạm PDF local: {e}")
                         else:
-                            print("[Warning] Tải tệp PDF thất bại. Tự động fallback sang nạp file docx cục bộ...")
+                            print(
+                                "[Warning] Tải tệp PDF thất bại. Tự động fallback sang nạp file docx cục bộ..."
+                            )
                     else:
-                        print("[Warning] Không tìm thấy URL tải bản PDF qua Auto-Discovery. Tự động fallback sang nạp file docx cục bộ...")
+                        print(
+                            "[Warning] Không tìm thấy URL tải bản PDF qua Auto-Discovery. Tự động fallback sang nạp file docx cục bộ..."
+                        )
 
                 if drive_file_id:
                     is_pdf_flow = True
@@ -514,10 +576,14 @@ async def sync_registry_to_notebooklm(
             if not is_pdf_flow:
                 # Kiểm tra file cục bộ
                 if not file_path.exists():
-                    print(f"[File Verification] Thiếu file cục bộ cho {doc_key}. Đường dẫn khai báo: {file_path}")
+                    print(
+                        f"[File Verification] Thiếu file cục bộ cho {doc_key}. Đường dẫn khai báo: {file_path}"
+                    )
                     if not download_url:
                         search_term = doc_meta.get("title", short_name)
-                        print(f"[Auto-Discovery] Thiếu file và không có download_url. Đang tự động tìm kiếm link Thư viện Pháp luật cho: {search_term}")
+                        print(
+                            f"[Auto-Discovery] Thiếu file và không có download_url. Đang tự động tìm kiếm link Thư viện Pháp luật cho: {search_term}"
+                        )
                         download_url = search_thuvienphapluat_via_cdp(search_term)
                         if not download_url:
                             # Fallback search theo short_name
@@ -534,23 +600,31 @@ async def sync_registry_to_notebooklm(
                                             if not item.get("download_url"):
                                                 item["download_url"] = download_url
                                                 registry_changed = True
-                                                print(f"[Registry Auto-Save] Đăng ký download_url động cho {doc_key} trong registry cache.")
+                                                print(
+                                                    f"[Registry Auto-Save] Đăng ký download_url động cho {doc_key} trong registry cache."
+                                                )
 
                     if download_url:
                         print(f"[Download] Đang tự động tải file từ URL: {download_url}")
                         success = download_via_cdp_or_client(download_url, file_path)
                         if not success:
-                            print(f"[Warning] Vui lòng tự tải tệp tin và lưu vào: {file_path.resolve()}")
+                            print(
+                                f"[Warning] Vui lòng tự tải tệp tin và lưu vào: {file_path.resolve()}"
+                            )
                             continue
                     else:
-                        print(f"[Warning] Không có URL tải. Vui lòng bổ sung tệp tin vào: {file_path.resolve()}")
+                        print(
+                            f"[Warning] Không có URL tải. Vui lòng bổ sung tệp tin vào: {file_path.resolve()}"
+                        )
                         continue
 
                 actual_file_path = file_path
                 target_filename = standard_filename
 
                 if use_drive:
-                    drive_file_id = upload_to_google_drive(actual_file_path, drive_folder_id, target_filename)
+                    drive_file_id = upload_to_google_drive(
+                        actual_file_path, drive_folder_id, target_filename
+                    )
 
             # Tính SHA-256 local
             local_sha = calculate_sha256(actual_file_path)
@@ -561,8 +635,32 @@ async def sync_registry_to_notebooklm(
             cached_source_id = cache_info.get("source_id", "")
             cached_sha = cache_info.get("sha256", "")
 
-            # Kiểm tra xem source_id có thực sự tồn tại trên Cloud không
-            cloud_id_by_title = cloud_source_map.get(target_filename)
+            # Lấy danh sách ID trùng tên trên Cloud
+            norm_target = (
+                target_filename.lower()
+                .replace(".docx", "")
+                .replace(".pdf", "")
+                .replace(".xlsx", "")
+            )
+            cloud_ids = cloud_source_map.get(norm_target, [])
+            cloud_id_by_title = None
+
+            # Ưu tiên khớp ID đã cache
+            if cached_source_id and cached_source_id in cloud_ids:
+                cloud_id_by_title = cached_source_id
+            elif cloud_ids:
+                cloud_id_by_title = cloud_ids[0]
+
+            # Xóa các bản trùng lặp thừa (nếu có)
+            for extra_id in cloud_ids:
+                if extra_id != cloud_id_by_title:
+                    print(
+                        f"[Cleanup Duplicate] Phát hiện nguồn trùng lặp thừa trên Cloud cho '{target_filename}'. Tiến hành xóa (ID: {extra_id})..."
+                    )
+                    try:
+                        await client.sources.delete(notebook_id, extra_id)
+                    except Exception:
+                        pass
 
             need_upload = True
             source_id_to_use = ""
@@ -571,10 +669,14 @@ async def sync_registry_to_notebooklm(
                 if cached_source_id == cloud_id_by_title and cached_sha == local_sha:
                     need_upload = False
                     source_id_to_use = cached_source_id
-                    print(f"[Sync Match] Nguồn '{target_filename}' đã đồng bộ khớp hoàn toàn. Bỏ qua.")
+                    print(
+                        f"[Sync Match] Nguồn '{target_filename}' đã đồng bộ khớp hoàn toàn. Bỏ qua."
+                    )
                 else:
                     # Trùng tên trên Cloud nhưng lệch hash hoặc cache ➔ Xóa nguồn cũ trên Cloud để nạp bản mới
-                    print(f"[Sync Mismatch] Phát hiện lệch hash/cache cho '{target_filename}'. Đang gỡ bản cũ trên Cloud...")
+                    print(
+                        f"[Sync Mismatch] Phát hiện lệch hash/cache cho '{target_filename}'. Đang gỡ bản cũ trên Cloud..."
+                    )
                     try:
                         await client.sources.delete(notebook_id, cloud_id_by_title)
                     except Exception:
@@ -586,40 +688,44 @@ async def sync_registry_to_notebooklm(
                     if drive_file_id:
                         try:
                             # Thử nạp qua Google Drive trước
-                            mime_type = "application/pdf" if is_pdf_flow else "application/vnd.google-apps.document"
+                            mime_type = (
+                                "application/pdf"
+                                if is_pdf_flow
+                                else "application/vnd.google-apps.document"
+                            )
                             source = await client.sources.add_drive(
                                 notebook_id=notebook_id,
                                 file_id=drive_file_id,
                                 title=target_filename,
                                 mime_type=mime_type,
-                                wait=True
+                                wait=True,
                             )
                             source_id_to_use = source.id
-                            print(f"[Upload Success] Đã nạp nguồn '{target_filename}' qua Google Drive ➔ ID: {source_id_to_use}")
+                            print(
+                                f"[Upload Success] Đã nạp nguồn '{target_filename}' qua Google Drive ➔ ID: {source_id_to_use}"
+                            )
                         except Exception as drive_err:
                             print(f"[Drive RAG Warning] Nạp nguồn qua Drive thất bại: {drive_err}")
                             if actual_file_path.exists():
-                                print(f"[Drive RAG Fallback] Thử fallback nạp trực tiếp file cục bộ: {actual_file_path.name}...")
+                                print(
+                                    f"[Drive RAG Fallback] Thử fallback nạp trực tiếp file cục bộ: {actual_file_path.name}..."
+                                )
                                 source = await client.sources.add_file(
-                                    notebook_id=notebook_id,
-                                    file_path=actual_file_path,
-                                    title=target_filename,
-                                    wait=True
+                                    notebook_id, str(actual_file_path)
                                 )
                                 source_id_to_use = source.id
-                                print(f"[Upload Success] Đã nạp nguồn '{target_filename}' trực tiếp thành công ➔ ID: {source_id_to_use}")
+                                print(
+                                    f"[Upload Success] Đã nạp nguồn '{target_filename}' trực tiếp thành công ➔ ID: {source_id_to_use}"
+                                )
                             else:
                                 raise drive_err
                     else:
                         # Nạp trực tiếp file local
-                        source = await client.sources.add_file(
-                            notebook_id=notebook_id,
-                            file_path=actual_file_path,
-                            title=target_filename,
-                            wait=True
-                        )
+                        source = await client.sources.add_file(notebook_id, str(actual_file_path))
                         source_id_to_use = source.id
-                        print(f"[Upload Success] Đã nạp nguồn '{target_filename}' trực tiếp thành công ➔ ID: {source_id_to_use}")
+                        print(
+                            f"[Upload Success] Đã nạp nguồn '{target_filename}' trực tiếp thành công ➔ ID: {source_id_to_use}"
+                        )
                 except Exception as e:
                     print(f"[Error] Nạp nguồn thất bại hoàn toàn '{target_filename}': {e}")
                     continue
@@ -628,36 +734,39 @@ async def sync_registry_to_notebooklm(
             sources_registry["sources"][cache_key] = {
                 "source_id": source_id_to_use,
                 "sha256": local_sha,
-                "drive_file_id": drive_file_id
+                "drive_file_id": drive_file_id,
             }
             active_cloud_source_ids.add(source_id_to_use)
 
         # 5. Dọn dẹp các tệp superseded hoặc bị xóa khỏi registry trên Cloud
         print("[Cloud Cleanup] Đang kiểm tra dọn dẹp các nguồn hết hiệu lực trên Cloud...")
-        for s_title, s_id in cloud_source_map.items():
-            if s_id not in active_cloud_source_ids:
-                # Kiểm tra xem đây có phải là văn bản superseded trong registry không
-                # Hoặc tệp tin không còn được đăng ký
-                is_superseded_or_deleted = True
+        for s_title, s_ids in cloud_source_map.items():
+            for s_id in s_ids:
+                if s_id not in active_cloud_source_ids:
+                    # Kiểm tra xem đây có phải là văn bản superseded trong registry không
+                    # Hoặc tệp tin không còn được đăng ký
+                    is_superseded_or_deleted = True
 
-                # Quét đối chiếu ngược
-                for _doc_key, doc_meta in documents.items():
-                    status = doc_meta.get("status", "draft")
-                    file_path_str = doc_meta.get("file_path", "")
-                    if file_path_str:
-                        # So sánh phần thân tên tệp (stem) để hỗ trợ cả docx lẫn pdf
-                        std_name_stem = Path(file_path_str).stem
-                        s_title_stem = Path(s_title).stem
-                        if std_name_stem == s_title_stem and status != "superseded":
-                            is_superseded_or_deleted = False
-                            break
+                    # Quét đối chiếu ngược
+                    for _doc_key, doc_meta in documents.items():
+                        status = doc_meta.get("status", "draft")
+                        file_path_str = doc_meta.get("file_path", "")
+                        if file_path_str:
+                            # So sánh phần thân tên tệp (stem) để hỗ trợ cả docx lẫn pdf
+                            std_name_stem = Path(file_path_str).stem
+                            s_title_stem = Path(s_title).stem
+                            if std_name_stem == s_title_stem and status != "superseded":
+                                is_superseded_or_deleted = False
+                                break
 
-                if is_superseded_or_deleted:
-                    print(f"[Cleanup] Xóa nguồn hết hiệu lực khỏi Cloud: {s_title} (ID: {s_id})")
-                    try:
-                        await client.sources.delete(notebook_id, s_id)
-                    except Exception as e:
-                        print(f"[Cleanup Error] Không thể xóa source {s_id}: {e}")
+                    if is_superseded_or_deleted:
+                        print(
+                            f"[Cleanup] Xóa nguồn hết hiệu lực khỏi Cloud: {s_title} (ID: {s_id})"
+                        )
+                        try:
+                            await client.sources.delete(notebook_id, s_id)
+                        except Exception as e:
+                            print(f"[Cleanup Error] Không thể xóa source {s_id}: {e}")
 
         # Ghi lại tệp registry sources
         with open(sources_reg_path, "w", encoding="utf-8") as f:
@@ -667,45 +776,45 @@ async def sync_registry_to_notebooklm(
         if registry_changed:
             with open(registry_path, "w", encoding="utf-8") as f:
                 yaml.safe_dump(registry_data, f, allow_unicode=True, sort_keys=False)
-            print(f"[Registry Auto-Save] Đã ghi đè cập nhật download_url mới vào file: {registry_path}")
+            print(
+                f"[Registry Auto-Save] Đã ghi đè cập nhật download_url mới vào file: {registry_path}"
+            )
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Tự động đồng bộ pháp lý (Legal Auto-Sync Pipeline) cho CCBA")
+    parser = argparse.ArgumentParser(
+        description="Tự động đồng bộ pháp lý (Legal Auto-Sync Pipeline) cho CCBA"
+    )
     parser.add_argument(
         "--registry",
         default=".md/knowledge/legal_registry.yaml",
-        help="Đường dẫn file registry pháp lý cục bộ"
+        help="Đường dẫn file registry pháp lý cục bộ",
     )
     parser.add_argument(
         "--sources-registry",
         default=".md/knowledge/sources_registry.yaml",
-        help="Đường dẫn file registry ánh xạ source NotebookLM"
+        help="Đường dẫn file registry ánh xạ source NotebookLM",
     )
     parser.add_argument(
-        "--notebook-id",
-        required=True,
-        help="ID của Google NotebookLM Notebook đích"
+        "--notebook-id", required=True, help="ID của Google NotebookLM Notebook đích"
     )
     parser.add_argument(
-        "--use-drive",
-        action="store_true",
-        help="Kích hoạt luồng nạp gián tiếp qua Google Drive"
+        "--use-drive", action="store_true", help="Kích hoạt luồng nạp gián tiếp qua Google Drive"
     )
     parser.add_argument(
         "--drive-folder",
         default=DEFAULT_DRIVE_FOLDER,
-        help="ID thư mục Google Drive chung mục tiêu"
+        help="ID thư mục Google Drive chung mục tiêu",
     )
     parser.add_argument(
         "--download-pdf",
         action="store_true",
-        help="Tải bản PDF gốc tạm thời và upload lên Google Drive chung"
+        help="Tải bản PDF gốc tạm thời và upload lên Google Drive chung",
     )
     parser.add_argument(
         "--clean-drive",
         action="store_true",
-        help="Làm sạch toàn bộ tệp tin trong thư mục Google Drive chung trước khi đồng bộ"
+        help="Làm sạch toàn bộ tệp tin trong thư mục Google Drive chung trước khi đồng bộ",
     )
 
     args = parser.parse_args()
@@ -713,7 +822,9 @@ def main() -> None:
     # Đọc cấu hình từ environment nếu có
     notebook_id = args.notebook_id or os.environ.get("NOTEBOOKLM_NOTEBOOK_ID")
     if not notebook_id:
-        print("[Error] Thiếu Notebook ID. Vui lòng cung cấp qua tham số --notebook-id hoặc biến môi trường NOTEBOOKLM_NOTEBOOK_ID.")
+        print(
+            "[Error] Thiếu Notebook ID. Vui lòng cung cấp qua tham số --notebook-id hoặc biến môi trường NOTEBOOKLM_NOTEBOOK_ID."
+        )
         sys.exit(1)
 
     registry_path = Path(args.registry)
@@ -727,7 +838,7 @@ def main() -> None:
             use_drive=args.use_drive,
             drive_folder_id=args.drive_folder,
             download_pdf=args.download_pdf,
-            clean_drive=args.clean_drive
+            clean_drive=args.clean_drive,
         )
     )
 

@@ -7,17 +7,16 @@ Hỗ trợ định tuyến gọi LLM động:
 4. Hỗ trợ thay đổi model linh hoạt qua biến môi trường CCBA_MODEL.
 """
 
-import os
-import sys
-import subprocess
-import shutil
-from typing import Optional, Any
-
 # Khắc phục lỗi Console Encoding trên Windows
 import io
+import os
+import shutil
+import subprocess
+import sys
+
 try:
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 except Exception:
     pass
 
@@ -50,28 +49,35 @@ def generate_text(prompt: str, default_model: str = "gemini-3.1-pro-preview") ->
     # 1. Thử gọi qua CCBA AI Gateway (LiteLLM)
     try:
         from ccba_ai import ai
+
         response = ai.chat(prompt, model=model)
         if response and isinstance(response, str):
             print("[LLM Adapter] Sinh văn bản thành công qua AI Gateway Spark.", file=sys.stderr)
             return response
     except Exception as e:
-        print(f"[LLM Adapter] Thử qua AI Gateway thất bại: {e}. Thử fallback 1 (SDK cục bộ)...", file=sys.stderr)
+        print(
+            f"[LLM Adapter] Thử qua AI Gateway thất bại: {e}. Thử fallback 1 (SDK cục bộ)...",
+            file=sys.stderr,
+        )
 
     # 2. Thử gọi qua Google GenAI API SDK trực tiếp
     gemini_key = os.environ.get("GEMINI_API_KEY")
     if gemini_key:
         try:
             from google import genai
+
             client = genai.Client(api_key=gemini_key)
-            response = client.models.generate_content(
-                model=model,
-                contents=prompt
-            )
+            response = client.models.generate_content(model=model, contents=prompt)
             if response and response.text:
-                print("[LLM Adapter] Sinh văn bản thành công qua Google GenAI SDK.", file=sys.stderr)
+                print(
+                    "[LLM Adapter] Sinh văn bản thành công qua Google GenAI SDK.", file=sys.stderr
+                )
                 return response.text
         except Exception as e:
-            print(f"[LLM Adapter] Thử qua Google GenAI SDK thất bại: {e}. Thử fallback 2 (gemini/copilot CLI)...", file=sys.stderr)
+            print(
+                f"[LLM Adapter] Thử qua Google GenAI SDK thất bại: {e}. Thử fallback 2 (gemini/copilot CLI)...",
+                file=sys.stderr,
+            )
     else:
         print("[LLM Adapter] Bỏ qua Google GenAI SDK do thiếu GEMINI_API_KEY.", file=sys.stderr)
 
@@ -84,7 +90,7 @@ def generate_text(prompt: str, default_model: str = "gemini-3.1-pro-preview") ->
                 capture_output=True,
                 text=True,
                 check=True,
-                encoding='utf-8'
+                encoding="utf-8",
             )
             if result.stdout.strip():
                 print("[LLM Adapter] Sinh văn bản thành công qua gemini CLI.", file=sys.stderr)
@@ -101,7 +107,7 @@ def generate_text(prompt: str, default_model: str = "gemini-3.1-pro-preview") ->
                 capture_output=True,
                 text=True,
                 check=True,
-                encoding='utf-8'
+                encoding="utf-8",
             )
             if result.stdout.strip():
                 print("[LLM Adapter] Sinh văn bản thành công qua copilot CLI.", file=sys.stderr)
@@ -116,7 +122,9 @@ def generate_text(prompt: str, default_model: str = "gemini-3.1-pro-preview") ->
     )
 
 
-def generate_image(prompt: str, default_model: str = "gemini-3.1-flash-image-preview", aspect_ratio: str = "1:1") -> bytes:
+def generate_image(
+    prompt: str, default_model: str = "gemini-3.1-flash-image-preview", aspect_ratio: str = "1:1"
+) -> bytes:
     """Sinh ảnh (Image Generation) sử dụng luồng gọi LLM mềm dẻo.
 
     Args:
@@ -136,55 +144,74 @@ def generate_image(prompt: str, default_model: str = "gemini-3.1-flash-image-pre
         try:
             from google import genai
             from google.genai import types
+
             client = genai.Client(api_key=gemini_key)
             response = client.models.generate_content(
                 model=model,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_modalities=["IMAGE"],
-                    image_config=types.ImageConfig(aspect_ratio=aspect_ratio)
-                )
+                    image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
+                ),
             )
             for part in response.candidates[0].content.parts:
                 if part.inline_data and part.inline_data.data:
-                    print("[LLM Adapter] Sinh ảnh thành công qua Google GenAI SDK.", file=sys.stderr)
+                    print(
+                        "[LLM Adapter] Sinh ảnh thành công qua Google GenAI SDK.", file=sys.stderr
+                    )
                     return part.inline_data.data
         except Exception as e:
-            print(f"[LLM Adapter] Thử qua Google GenAI SDK thất bại: {e}. Thử fallback 1 (AI Gateway Spark)...", file=sys.stderr)
+            print(
+                f"[LLM Adapter] Thử qua Google GenAI SDK thất bại: {e}. Thử fallback 1 (AI Gateway Spark)...",
+                file=sys.stderr,
+            )
     else:
-        print("[LLM Adapter] Bỏ qua Google GenAI SDK do thiếu GEMINI_API_KEY. Thử qua AI Gateway...", file=sys.stderr)
+        print(
+            "[LLM Adapter] Bỏ qua Google GenAI SDK do thiếu GEMINI_API_KEY. Thử qua AI Gateway...",
+            file=sys.stderr,
+        )
 
     # 2. Thử gọi qua CCBA AI Gateway (LiteLLM OpenAI-Compatible Image Generation API)
     try:
         import requests
+
         # Thử lấy config gateway từ package ccba-ai
         # LiteLLM endpoint mặc định trên Spark server là http://100.83.192.30:8090/v1/images/generations
         url = "http://100.83.192.30:8090/v1/images/generations"
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {os.environ.get('CCBA_API_KEY', 'none')}"
+            "Authorization": f"Bearer {os.environ.get('CCBA_API_KEY', 'none')}",
         }
         data = {
             "model": "dall-e-3" if "pro" in model else "stable-diffusion",
             "prompt": prompt,
             "n": 1,
-            "size": "1024x1024" if aspect_ratio == "1:1" else "1024x768"
+            "size": "1024x1024" if aspect_ratio == "1:1" else "1024x768",
         }
         response = requests.post(url, headers=headers, json=data, timeout=30)
         if response.status_code == 200:
             import base64
+
             img_data = response.json()["data"][0]
             if "b64_json" in img_data:
-                print("[LLM Adapter] Sinh ảnh thành công qua AI Gateway (b64_json).", file=sys.stderr)
+                print(
+                    "[LLM Adapter] Sinh ảnh thành công qua AI Gateway (b64_json).", file=sys.stderr
+                )
                 return base64.b64decode(img_data["b64_json"])
             elif "url" in img_data:
                 img_url = img_data["url"]
                 img_response = requests.get(img_url, timeout=15)
                 if img_response.status_code == 200:
-                    print("[LLM Adapter] Sinh ảnh thành công qua AI Gateway (url download).", file=sys.stderr)
+                    print(
+                        "[LLM Adapter] Sinh ảnh thành công qua AI Gateway (url download).",
+                        file=sys.stderr,
+                    )
                     return img_response.content
     except Exception as e:
-        print(f"[LLM Adapter] Thử qua AI Gateway thất bại: {e}. Thử fallback 2 (gemini CLI)...", file=sys.stderr)
+        print(
+            f"[LLM Adapter] Thử qua AI Gateway thất bại: {e}. Thử fallback 2 (gemini CLI)...",
+            file=sys.stderr,
+        )
 
     # 3. Thử gọi qua gemini CLI cục bộ
     if shutil.which("gemini"):
@@ -192,15 +219,14 @@ def generate_image(prompt: str, default_model: str = "gemini-3.1-flash-image-pre
             # Giả sử gemini CLI hỗ trợ xuất ảnh ra file bằng: gemini image "prompt" -o temp.png
             print("[LLM Adapter] Đang gọi qua gemini CLI để sinh ảnh...", file=sys.stderr)
             import tempfile
+
             with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
                 tmp_name = tmp.name
-            
+
             subprocess.run(
-                ["gemini", "image", prompt, "-o", tmp_name],
-                capture_output=True,
-                check=True
+                ["gemini", "image", prompt, "-o", tmp_name], capture_output=True, check=True
             )
-            
+
             if os.path.exists(tmp_name) and os.path.getsize(tmp_name) > 0:
                 with open(tmp_name, "rb") as f:
                     data = f.read()

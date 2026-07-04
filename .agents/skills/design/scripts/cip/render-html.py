@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 CIP HTML Presentation Renderer
 
@@ -8,16 +7,14 @@ with detailed descriptions, concepts, and brand guidelines.
 """
 
 import argparse
-import json
-import os
-import sys
 import base64
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Add parent directory for imports
 sys.path.insert(0, str(Path(__file__).parent))
-from core import search, get_cip_brief
+from core import get_cip_brief
 
 # Deliverable descriptions for presentation
 DELIVERABLE_INFO = {
@@ -25,74 +22,74 @@ DELIVERABLE_INFO = {
         "title": "Business Card",
         "concept": "First impression touchpoint for professional networking",
         "purpose": "Creates memorable brand recall during business exchanges",
-        "specs": "Standard 3.5 x 2 inches, premium paper stock"
+        "specs": "Standard 3.5 x 2 inches, premium paper stock",
     },
     "letterhead": {
         "title": "Letterhead",
         "concept": "Official correspondence identity",
         "purpose": "Establishes credibility and professionalism in written communications",
-        "specs": "A4/Letter size, digital and print versions"
+        "specs": "A4/Letter size, digital and print versions",
     },
     "document template": {
         "title": "Document Template",
         "concept": "Branded document system for internal and external use",
         "purpose": "Ensures consistent brand representation across all documents",
-        "specs": "Multiple formats: Word, PDF, Google Docs compatible"
+        "specs": "Multiple formats: Word, PDF, Google Docs compatible",
     },
     "reception signage": {
         "title": "Reception Signage",
         "concept": "Brand presence in physical office environment",
         "purpose": "Creates strong first impression for visitors and reinforces brand identity",
-        "specs": "3D dimensional letters, backlit LED options, premium materials"
+        "specs": "3D dimensional letters, backlit LED options, premium materials",
     },
     "office signage": {
         "title": "Office Signage",
         "concept": "Wayfinding and brand presence system",
         "purpose": "Guides visitors while maintaining consistent brand experience",
-        "specs": "Modular system with directional and informational signs"
+        "specs": "Modular system with directional and informational signs",
     },
     "polo shirt": {
         "title": "Polo Shirt",
         "concept": "Professional team apparel",
         "purpose": "Creates unified team identity and brand ambassadorship",
-        "specs": "Premium pique cotton, embroidered logo on left chest"
+        "specs": "Premium pique cotton, embroidered logo on left chest",
     },
     "t-shirt": {
         "title": "T-Shirt",
         "concept": "Casual brand apparel",
         "purpose": "Extends brand reach through everyday wear and promotional events",
-        "specs": "High-quality cotton, screen print or embroidery options"
+        "specs": "High-quality cotton, screen print or embroidery options",
     },
     "vehicle": {
         "title": "Vehicle Branding",
         "concept": "Mobile brand advertising",
         "purpose": "Transforms fleet into moving billboards for maximum visibility",
-        "specs": "Partial or full wrap, vinyl graphics, weather-resistant"
+        "specs": "Partial or full wrap, vinyl graphics, weather-resistant",
     },
     "van": {
         "title": "Van Branding",
         "concept": "Commercial vehicle identity",
         "purpose": "Professional fleet presence for service and delivery operations",
-        "specs": "Full wrap design, high-visibility contact information"
+        "specs": "Full wrap design, high-visibility contact information",
     },
     "car": {
         "title": "Car Branding",
         "concept": "Executive vehicle identity",
         "purpose": "Professional presence for corporate and sales teams",
-        "specs": "Subtle branding, door panels and rear window"
+        "specs": "Subtle branding, door panels and rear window",
     },
     "envelope": {
         "title": "Envelope",
         "concept": "Branded mail correspondence",
         "purpose": "Extends brand identity to all outgoing mail",
-        "specs": "DL, C4, C5 sizes with logo placement"
+        "specs": "DL, C4, C5 sizes with logo placement",
     },
     "folder": {
         "title": "Presentation Folder",
         "concept": "Document organization with brand identity",
         "purpose": "Professional presentation of proposals and materials",
-        "specs": "A4/Letter pocket folder with die-cut design"
-    }
+        "specs": "A4/Letter pocket folder with die-cut design",
+    },
 }
 
 
@@ -100,7 +97,7 @@ def get_image_base64(image_path):
     """Convert image to base64 for embedding in HTML"""
     try:
         with open(image_path, "rb") as f:
-            return base64.b64encode(f.read()).decode('utf-8')
+            return base64.b64encode(f.read()).decode("utf-8")
     except Exception as e:
         print(f"Warning: Could not load image {image_path}: {e}")
         return None
@@ -117,7 +114,7 @@ def get_deliverable_info(filename):
         "title": filename.replace("-", " ").replace("_", " ").title(),
         "concept": "Brand identity application",
         "purpose": "Extends brand presence across touchpoints",
-        "specs": "Custom specifications"
+        "specs": "Custom specifications",
     }
 
 
@@ -141,7 +138,8 @@ def generate_html(brand_name, industry, images_dir, output_path=None, style=None
     industry_info = brief.get("industry", {})
 
     # Build HTML
-    html_parts = [f'''<!DOCTYPE html>
+    html_parts = [
+        f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -337,10 +335,11 @@ def generate_html(brand_name, industry, images_dir, output_path=None, style=None
             Comprehensive identity system designed to maintain consistency
             across all brand touchpoints and communications.
         </p>
-''']
+"""
+    ]
 
     # Add each deliverable
-    for i, image_path in enumerate(images):
+    for _i, image_path in enumerate(images):
         info = get_deliverable_info(image_path.stem)
         img_base64 = get_image_base64(image_path)
 
@@ -352,19 +351,19 @@ def generate_html(brand_name, industry, images_dir, output_path=None, style=None
         html_parts.append(f'''
         <div class="deliverable">
             <div class="deliverable-image">
-                <img src="{img_src}" alt="{info['title']}" loading="lazy">
+                <img src="{img_src}" alt="{info["title"]}" loading="lazy">
             </div>
             <div class="deliverable-content">
-                <h3 class="deliverable-title">{info['title']}</h3>
-                <p class="deliverable-concept">{info['concept']}</p>
-                <p class="deliverable-purpose">{info['purpose']}</p>
-                <span class="deliverable-specs">{info['specs']}</span>
+                <h3 class="deliverable-title">{info["title"]}</h3>
+                <p class="deliverable-concept">{info["concept"]}</p>
+                <p class="deliverable-purpose">{info["purpose"]}</p>
+                <span class="deliverable-specs">{info["specs"]}</span>
             </div>
         </div>
 ''')
 
     # Close HTML
-    html_parts.append(f'''
+    html_parts.append(f"""
     </section>
 
     <footer class="footer">
@@ -374,12 +373,14 @@ def generate_html(brand_name, industry, images_dir, output_path=None, style=None
     </footer>
 </body>
 </html>
-''')
+""")
 
     html_content = "".join(html_parts)
 
     # Save HTML
-    output_path = output_path or images_dir / f"{brand_name.lower().replace(' ', '-')}-cip-presentation.html"
+    output_path = (
+        output_path or images_dir / f"{brand_name.lower().replace(' ', '-')}-cip-presentation.html"
+    )
     output_path = Path(output_path)
 
     with open(output_path, "w", encoding="utf-8") as f:
@@ -400,7 +401,7 @@ Examples:
 
   # Specify output path
   python render-html.py --brand "TopGroup" --industry "consulting" --images ./cip --output presentation.html
-        """
+        """,
     )
 
     parser.add_argument("--brand", "-b", required=True, help="Brand name")
@@ -416,7 +417,7 @@ Examples:
         industry=args.industry,
         images_dir=args.images,
         output_path=args.output,
-        style=args.style
+        style=args.style,
     )
 
 
