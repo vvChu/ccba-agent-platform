@@ -41,217 +41,6 @@ except ImportError:
 
 
 # ---------------------------------------------------------------------------
-# Mock Adapter Classes
-# Provides in-memory implementation of the Google NotebookLM Cloud RPC endpoints.
-# ---------------------------------------------------------------------------
-
-
-class MockNotebook:
-    def __init__(self, id: str, title: str) -> None:
-        self.id = id
-        self.title = title
-
-
-class MockSource:
-    def __init__(self, id: str, title: str, url: str = "") -> None:
-        self.id = id
-        self.title = title
-        self.url = url
-        self.content = "Mock Source Content"
-
-
-class MockTask:
-    def __init__(self, task_id: str) -> None:
-        self.task_id = task_id
-
-
-class MockMindmapResult:
-    def __init__(self, mind_map: dict[str, Any]) -> None:
-        self.mind_map = mind_map
-
-
-class MockAccountTier:
-    def __init__(self, tier: str = "standard", plan_name: str = "Standard Plan") -> None:
-        self.tier = tier
-        self.plan_name = plan_name
-
-
-class MockNotebooksService:
-    async def list(self) -> list[MockNotebook]:
-        return [
-            MockNotebook("nb-mock-1", "CAP_Spoke_Default"),
-            MockNotebook("nb-mock-2", "CAP_Spoke_Testing"),
-        ]
-
-    async def create(self, title: str) -> MockNotebook:
-        return MockNotebook("nb-mock-new", title)
-
-    async def delete(self, notebook_id: str) -> None:
-        pass
-
-
-class MockSourcesService:
-    async def list(self, notebook_id: str) -> list[MockSource]:
-        return [
-            MockSource("src-mock-1", "TCVN 2622-1995.pdf"),
-            MockSource("src-mock-2", "Nghi_dinh_06_2021.md", url="https://vbpl.vn/ND_06_2021"),
-        ]
-
-    async def add_file(self, notebook_id: str, path: str) -> MockSource:
-        p = Path(path)
-        return MockSource("src-mock-file", p.name)
-
-    async def add_url(self, notebook_id: str, url: str, wait: bool = True) -> MockSource:
-        return MockSource("src-mock-url", url, url=url)
-
-    async def delete(self, notebook_id: str, source_id: str) -> None:
-        pass
-
-
-class MockArtifactsService:
-    async def generate_audio(self, notebook_id: str) -> MockTask:
-        return MockTask("task-audio-1")
-
-    async def download_audio(self, notebook_id: str, output_path: str) -> str:
-        p = Path(output_path)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_bytes(b"mock_audio_content")
-        return str(p.absolute())
-
-    async def generate_quiz(
-        self, notebook_id: str, source_ids: list[str], quantity: Any, difficulty: Any
-    ) -> MockTask:
-        return MockTask("task-quiz-1")
-
-    async def download_quiz(
-        self, notebook_id: str, output_path: str, output_format: str = "json"
-    ) -> str:
-        p = Path(output_path)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(
-            json.dumps([{"question": "Mock Question", "options": ["A", "B"], "answer": "A"}]),
-            encoding="utf-8",
-        )
-        return str(p.absolute())
-
-    async def generate_slide_deck(
-        self,
-        notebook_id: str,
-        source_ids: list[str],
-        language: str,
-        slide_format: Any,
-        slide_length: Any,
-    ) -> MockTask:
-        return MockTask("task-slides-1")
-
-    async def download_slide_deck(
-        self, notebook_id: str, output_path: str, output_format: str = "pdf"
-    ) -> str:
-        p = Path(output_path)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_bytes(b"mock_pdf_slides_content")
-        return str(p.absolute())
-
-    async def generate_mind_map(self, notebook_id: str, source_ids: list[str]) -> MockMindmapResult:
-        return MockMindmapResult({"root": "Mock Mindmap"})
-
-    async def download_mind_map(self, notebook_id: str, output_path: str) -> str:
-        p = Path(output_path)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps({"root": "Mock Mindmap"}), encoding="utf-8")
-        return str(p.absolute())
-
-    async def generate_infographic(
-        self,
-        notebook_id: str,
-        source_ids: list[str],
-        orientation: Any,
-        detail_level: Any,
-        style: Any,
-    ) -> MockTask:
-        return MockTask("task-info-1")
-
-    async def download_infographic(self, notebook_id: str, output_path: str) -> str:
-        p = Path(output_path)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_bytes(b"mock_pdf_infographic_content")
-        return str(p.absolute())
-
-    async def generate_study_guide(self, notebook_id: str, source_ids: list[str]) -> MockTask:
-        return MockTask("task-guide-1")
-
-    async def download_report(self, notebook_id: str, output_path: str) -> str:
-        p = Path(output_path)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text("# Mock Study Guide\nContent here.", encoding="utf-8")
-        return str(p.absolute())
-
-    async def generate_data_table(
-        self, notebook_id: str, source_ids: list[str], instructions: str
-    ) -> MockTask:
-        return MockTask("task-table-1")
-
-    async def download_data_table(self, notebook_id: str, output_path: str) -> str:
-        p = Path(output_path)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text("Col1,Col2\nVal1,Val2", encoding="utf-8")
-        return str(p.absolute())
-
-    async def generate_flashcards(
-        self, notebook_id: str, source_ids: list[str], quantity: Any, difficulty: Any
-    ) -> MockTask:
-        return MockTask("task-flash-1")
-
-    async def download_flashcards(
-        self, notebook_id: str, output_path: str, output_format: str = "json"
-    ) -> str:
-        p = Path(output_path)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps([{"front": "Front", "back": "Back"}]), encoding="utf-8")
-        return str(p.absolute())
-
-    async def generate_report(
-        self, notebook_id: str, source_ids: list[str], report_format: Any, extra_instructions: str
-    ) -> MockTask:
-        return MockTask("task-report-1")
-
-    async def generate_video(
-        self, notebook_id: str, source_ids: list[str], video_format: Any, video_style: Any
-    ) -> MockTask:
-        return MockTask("task-video-1")
-
-    async def download_video(self, notebook_id: str, output_path: str) -> str:
-        p = Path(output_path)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_bytes(b"mock_video_mp4_content")
-        return str(p.absolute())
-
-    async def wait_for_completion(self, notebook_id: str, task_id: str) -> None:
-        pass
-
-
-class MockSettingsService:
-    async def get_account_tier(self) -> MockAccountTier:
-        return MockAccountTier()
-
-
-class MockNotebookLMClientAdapter:
-    """Mock adapter mimicking a real NotebookLMClient."""
-
-    def __init__(self) -> None:
-        self.notebooks = MockNotebooksService()
-        self.sources = MockSourcesService()
-        self.artifacts = MockArtifactsService()
-        self.settings = MockSettingsService()
-
-    async def __aenter__(self) -> MockNotebookLMClientAdapter:
-        return self
-
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        pass
-
-
-# ---------------------------------------------------------------------------
 # Deep Seam Wrapper
 # ---------------------------------------------------------------------------
 
@@ -274,12 +63,14 @@ class CCBANotebookLMClient:
         """Khởi tạo client từ storage. Chuyển đổi sang mock adapter nếu cần thiết."""
         if use_mock:
             logger.info("Kích hoạt Mock NotebookLM Client (Không phát hiện AUTH cookie).")
+            from ._mock_client import MockNotebookLMClientAdapter
             return cls(MockNotebookLMClientAdapter(), use_mock=True)
 
         if not HAS_NOTEBOOKLM or NotebookLMClient is None:
             logger.warning(
                 "Không tìm thấy thư viện notebooklm-py. Tự động chuyển sang Mock Client."
             )
+            from ._mock_client import MockNotebookLMClientAdapter
             return cls(MockNotebookLMClientAdapter(), use_mock=True)
 
         try:
@@ -291,6 +82,7 @@ class CCBANotebookLMClient:
             return cls(real_client, use_mock=False)
         except Exception as e:
             logger.warning("Khởi tạo Real Client lỗi (%s). Tự động chuyển sang Mock Client.", e)
+            from ._mock_client import MockNotebookLMClientAdapter
             return cls(MockNotebookLMClientAdapter(), use_mock=True)
 
 
