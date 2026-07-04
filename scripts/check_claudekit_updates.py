@@ -182,7 +182,7 @@ def check_and_evaluate(config: dict):
         try:
             eval_cmd = [
                 sys.executable,
-                "scripts/assess_upstream_features.py",
+                str(PLATFORM_ROOT / "scripts" / "assess_upstream_features.py"),
                 "--repo-path", str(local_path),
                 "--repo-type", repo_type,
                 "--base", local_sha,
