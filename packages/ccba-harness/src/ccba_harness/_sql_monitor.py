@@ -1,59 +1,22 @@
 from __future__ import annotations
 
-import _io
-import _thread
-import ast
-import base64
-import builtins
-import fnmatch
-import glob
-import io
 import os
 import re
-import shlex
-import sqlite3
-import subprocess
-import sys
-import threading
-import unicodedata
 import urllib.parse
-import zlib
-from collections.abc import Callable
-from functools import wraps
-from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-
-from ._state import (
-    HarnessState,
-    _Originals,
-    _check_in_hook,
-    _get_active_guards,
-    _safe_limit_iter,
-    _HOOK_TOKEN,
-    _lock,
-    _local,
-    _original_builtins_open,
-    _original_io_open,
-    _original_popen,
-    _original_thread_start,
-    _original_os_open,
-    _original_os_rename,
-    _original_os_replace,
-    _original_io_FileIO,
-    _original_sqlite3_connect,
-    _original_os_link,
-    _original_os_symlink,
-    _original__io_open,
-    _original__io_FileIO,
-    _original_sqlite3_Connection,
-    _original_os_funcs,
-    _original_thread_start_new_thread,
-    _original_thread_start_new,
-)
 from ._file_monitor import (
     _check_value_for_sensitive,
 )
+from ._state import (
+    _HOOK_TOKEN,
+    HarnessState,
+    _check_in_hook,
+    _get_active_guards,
+    _original_sqlite3_connect,
+    _Originals,
+)
+
 
 # ===========================================================================
 # SQL & SQLITE INTERCEPTION UTILITIES
@@ -258,5 +221,3 @@ def _wrapped_sqlite3_connect(*args: Any, **kwargs: Any) -> Any:
         return _original_sqlite3_connect(*args, **kwargs)
     finally:
         HarnessState.local.__dict__["in_hook"] = None
-
-
