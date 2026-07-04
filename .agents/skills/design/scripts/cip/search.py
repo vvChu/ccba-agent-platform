@@ -20,7 +20,7 @@ def format_results(results, domain):
 
     output = []
     for i, item in enumerate(results, 1):
-        output.append(f"\n{'='*60}")
+        output.append(f"\n{'=' * 60}")
         output.append(f"Result {i}:")
         for key, value in item.items():
             if value:
@@ -31,9 +31,9 @@ def format_results(results, domain):
 def format_brief(brief):
     """Format CIP brief for display"""
     output = []
-    output.append(f"\n{'='*60}")
+    output.append(f"\n{'=' * 60}")
     output.append(f"CIP DESIGN BRIEF: {brief['brand_name']}")
-    output.append(f"{'='*60}")
+    output.append(f"{'=' * 60}")
 
     if brief.get("industry"):
         output.append(f"\n📊 INDUSTRY: {brief['industry'].get('Industry', 'N/A')}")
@@ -81,12 +81,16 @@ Examples:
 
   # JSON output
   python search.py "vehicle branding" --json
-        """
+        """,
     )
 
     parser.add_argument("query", help="Search query")
-    parser.add_argument("--domain", "-d", choices=list(CSV_CONFIG.keys()),
-                        help="Search domain (auto-detected if not specified)")
+    parser.add_argument(
+        "--domain",
+        "-d",
+        choices=list(CSV_CONFIG.keys()),
+        help="Search domain (auto-detected if not specified)",
+    )
     parser.add_argument("--max", "-m", type=int, default=3, help="Max results (default: 3)")
     parser.add_argument("--all", "-a", action="store_true", help="Search all domains")
     parser.add_argument("--cip-brief", "-c", action="store_true", help="Generate CIP brief")
@@ -108,7 +112,7 @@ Examples:
             print(json.dumps(results, indent=2))
         else:
             for domain, items in results.items():
-                print(f"\n{'#'*60}")
+                print(f"\n{'#' * 60}")
                 print(f"# {domain.upper()}")
                 print(format_results(items, domain))
     else:

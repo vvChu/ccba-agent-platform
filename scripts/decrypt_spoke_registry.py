@@ -7,14 +7,15 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
 # Đảm bảo in ký tự tiếng Việt an toàn trên console Windows
-if hasattr(sys.stdout, 'reconfigure'):
-    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 # Cấu hình đường dẫn
 REGISTRY_PATH = ".md/data/spoke_registry.yaml"
 DECRYPTED_PATH = ".md/data/spoke_registry_decrypted.yaml"
 PRIVATE_KEY_DIR = os.path.expanduser(r"~\.gemini\antigravity\keys")
 PRIVATE_KEY_PATH = os.path.join(PRIVATE_KEY_DIR, "registry_private_key.pem")
+
 
 def decrypt_registry():
     print("🔓 Bắt đầu tiến trình giải mã Spoke Registry trung tâm...")
@@ -27,14 +28,13 @@ def decrypt_registry():
 
     # 2. Đọc khóa bí mật
     with open(PRIVATE_KEY_PATH, "rb") as f:
-        private_key = serialization.load_pem_private_key(
-            f.read(),
-            password=None
-        )
+        private_key = serialization.load_pem_private_key(f.read(), password=None)
 
     # 3. Kiểm tra tệp registry mã hóa
     if not os.path.exists(REGISTRY_PATH):
-        print(f"⚠️ Cảnh báo: Tệp registry {REGISTRY_PATH} chưa được tạo hoặc chưa có Spoke nào đăng ký.")
+        print(
+            f"⚠️ Cảnh báo: Tệp registry {REGISTRY_PATH} chưa được tạo hoặc chưa có Spoke nào đăng ký."
+        )
         return
 
     with open(REGISTRY_PATH, encoding="utf-8") as f:
@@ -46,7 +46,9 @@ def decrypt_registry():
         return
 
     decrypted_spokes = []
-    print(f"\n{'Tên Spoke':<20} | {'Loại Nghiệp vụ':<15} | {'Đồng bộ lúc':<20} | {'Đường dẫn Vật lý':<35}")
+    print(
+        f"\n{'Tên Spoke':<20} | {'Loại Nghiệp vụ':<15} | {'Đồng bộ lúc':<20} | {'Đường dẫn Vật lý':<35}"
+    )
     print("-" * 100)
 
     for spoke in spokes:
@@ -61,18 +63,17 @@ def decrypt_registry():
                 padding.OAEP(
                     mgf=padding.MGF1(algorithm=hashes.SHA256()),
                     algorithm=hashes.SHA256(),
-                    label=None
-                )
+                    label=None,
+                ),
             )
             # Parse YAML dữ liệu gốc của Spoke
-            spoke_info = yaml.safe_load(decrypted_bytes.decode('utf-8'))
+            spoke_info = yaml.safe_load(decrypted_bytes.decode("utf-8"))
 
-            print(f"{spoke_info['name']:<20} | {spoke_info['project_type']:<15} | {spoke_info['last_sync']:<20} | {spoke_info['path']:<35}")
+            print(
+                f"{spoke_info['name']:<20} | {spoke_info['project_type']:<15} | {spoke_info['last_sync']:<20} | {spoke_info['path']:<35}"
+            )
 
-            decrypted_spokes.append({
-                "spoke_id": spoke_id,
-                **spoke_info
-            })
+            decrypted_spokes.append({"spoke_id": spoke_id, **spoke_info})
         except Exception as e:
             print(f"❌ Lỗi giải mã Spoke ID {spoke_id[:8]}: {str(e)}")
 
@@ -105,7 +106,10 @@ def decrypt_registry():
         os.makedirs(os.path.dirname(DECRYPTED_PATH), exist_ok=True)
         with open(DECRYPTED_PATH, "w", encoding="utf-8") as f:
             yaml.dump({"spokes": active_spokes_yaml}, f, allow_unicode=True)
-        print(f"\n✅ Đã lưu kết quả giải mã các Spoke hoạt động tại: {DECRYPTED_PATH} (Được bỏ qua bởi Git)")
+        print(
+            f"\n✅ Đã lưu kết quả giải mã các Spoke hoạt động tại: {DECRYPTED_PATH} (Được bỏ qua bởi Git)"
+        )
+
 
 if __name__ == "__main__":
     decrypt_registry()

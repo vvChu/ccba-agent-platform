@@ -23,14 +23,14 @@ def test_ooxml_validator_docx():
                 '<?xml version="1.0" encoding="UTF-8"?><Types>'
                 '<Default Extension="xml" ContentType="application/xml"/>'
                 '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-                '</Types>'
+                "</Types>",
             )
             # Minimal wml file
             zf.writestr(
                 "word/document.xml",
                 '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
                 '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-                '<w:body><w:p><w:t>Hello</w:t></w:p></w:body></w:document>'
+                "<w:body><w:p><w:t>Hello</w:t></w:p></w:body></w:document>",
             )
 
         # Unpack it

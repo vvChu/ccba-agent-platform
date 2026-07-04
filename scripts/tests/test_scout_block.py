@@ -10,13 +10,14 @@ from scripts.hooks.scout_block import (
 
 
 class TestScoutBlock(unittest.TestCase):
-
     def test_is_path_blocked(self):
         self.assertTrue(is_path_blocked(".venv/bin/python"))
         self.assertTrue(is_path_blocked("node_modules/express/index.js"))
         self.assertTrue(is_path_blocked("packages/web/node_modules/react"))
         self.assertTrue(is_path_blocked(".git/config"))
-        self.assertTrue(is_path_blocked(".md/extracted_docs/references/clones/claudekit-engineer/README.md"))
+        self.assertTrue(
+            is_path_blocked(".md/extracted_docs/references/clones/claudekit-engineer/README.md")
+        )
         self.assertFalse(is_path_blocked("src/main.py"))
         self.assertFalse(is_path_blocked("docs/setup.md"))
 
@@ -54,7 +55,7 @@ class TestScoutBlock(unittest.TestCase):
         payload = {
             "tool": "view_file",
             "path": "d:/project/node_modules/react/index.js",
-            "args": json.dumps({"AbsolutePath": "d:/project/node_modules/react/index.js"})
+            "args": json.dumps({"AbsolutePath": "d:/project/node_modules/react/index.js"}),
         }
         exit_code = main("pre-tool", payload)
         self.assertEqual(exit_code, 2)

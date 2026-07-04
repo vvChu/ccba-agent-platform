@@ -6,11 +6,14 @@ from pathlib import Path
 
 from ccba_ai import async_ai, parse_llm_json
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("PcccMapReduce")
 
 # Limit characters per chunk (approx 10k-15k tokens)
 CHAR_LIMIT = 45000
+
 
 class MapReduceEngine:
     def __init__(self, ai_model: str = "qwen-local-primary", timeout: float = 600.0):
@@ -22,10 +25,10 @@ class MapReduceEngine:
             model=self.ai_model,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"role": "user", "content": user_prompt},
             ],
             max_tokens=8192,
-            temperature=0.1
+            temperature=0.1,
         )
 
         data = parse_llm_json(raw_text)
@@ -105,14 +108,34 @@ Tổng hợp lại, loại bỏ các lỗi trùng lặp, chấm điểm hồ sơ
 }}"""
         return await self._query_llm(system_prompt, prompt)
 
+
 async def main():
     parser = argparse.ArgumentParser(description="CCBA Semantic PCCC Audit Engine")
-    parser.add_argument("--tm", type=str, required=True, help="Đường dẫn đến file Markdown Thuyết minh PCCC")
-    parser.add_argument("--arch", type=str, required=True, help="Đường dẫn đến file Markdown Kiến trúc PCCC")
-    parser.add_argument("--mep", type=str, required=True, help="Đường dẫn đến file Markdown MEP PCCC")
-    parser.add_argument("--gopy", type=str, required=False, default="", help="Đường dẫn đến file Markdown Góp ý PC07 (tuỳ chọn)")
-    parser.add_argument("--model", type=str, default="qwen-local-primary", help="Tên model LLM (mặc định: qwen-local-primary)")
-    parser.add_argument("--out", type=str, default="PCCC_MapReduce_Report.md", help="Đường dẫn file báo cáo đầu ra")
+    parser.add_argument(
+        "--tm", type=str, required=True, help="Đường dẫn đến file Markdown Thuyết minh PCCC"
+    )
+    parser.add_argument(
+        "--arch", type=str, required=True, help="Đường dẫn đến file Markdown Kiến trúc PCCC"
+    )
+    parser.add_argument(
+        "--mep", type=str, required=True, help="Đường dẫn đến file Markdown MEP PCCC"
+    )
+    parser.add_argument(
+        "--gopy",
+        type=str,
+        required=False,
+        default="",
+        help="Đường dẫn đến file Markdown Góp ý PC07 (tuỳ chọn)",
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="qwen-local-primary",
+        help="Tên model LLM (mặc định: qwen-local-primary)",
+    )
+    parser.add_argument(
+        "--out", type=str, default="PCCC_MapReduce_Report.md", help="Đường dẫn file báo cáo đầu ra"
+    )
 
     args = parser.parse_args()
 
@@ -147,8 +170,10 @@ async def main():
 
     # PACKAGE 2
     logger.info("=== BẮT ĐẦU GÓI 2: MEP NƯỚC VS THUYẾT MINH ===")
-    mep_water_part = mep_pccc[:len(mep_pccc)//2] if mep_pccc else ""
-    res2 = await engine.run_package_2_mep_water(mep_water_part[:CHAR_LIMIT], thuyet_minh[:CHAR_LIMIT])
+    mep_water_part = mep_pccc[: len(mep_pccc) // 2] if mep_pccc else ""
+    res2 = await engine.run_package_2_mep_water(
+        mep_water_part[:CHAR_LIMIT], thuyet_minh[:CHAR_LIMIT]
+    )
     if "findings" in res2:
         for f in res2["findings"]:
             f["source"] = "Package 2: MEP Water vs Specs"
@@ -156,7 +181,7 @@ async def main():
 
     # PACKAGE 3
     logger.info("=== BẮT ĐẦU GÓI 3: MEP BÁO CHÁY VS KIẾN TRÚC ===")
-    mep_alarm_part = mep_pccc[len(mep_pccc)//2:] if mep_pccc else ""
+    mep_alarm_part = mep_pccc[len(mep_pccc) // 2 :] if mep_pccc else ""
     res3 = await engine.run_package_3_mep_alarm(mep_alarm_part[:CHAR_LIMIT], arch_pccc[:CHAR_LIMIT])
     if "findings" in res3:
         for f in res3["findings"]:
@@ -175,12 +200,14 @@ async def main():
         f"- **Điểm chất lượng:** {res4.get('overall_quality_score', 'N/A')}",
         f"- **Tình trạng tuân thủ QCVN:** {res4.get('qcvn_compliance_status', 'N/A')}",
         "## Tóm tắt",
-        res4.get('summary', ''),
-        "## Các Vấn đề Tồn tại (Final Findings)"
+        res4.get("summary", ""),
+        "## Các Vấn đề Tồn tại (Final Findings)",
     ]
 
-    for i, finding in enumerate(res4.get('final_findings', []), 1):
-        report_md.append(f"### {i}. [{finding.get('severity', '').upper()}] - {finding.get('category', 'General')}")
+    for i, finding in enumerate(res4.get("final_findings", []), 1):
+        report_md.append(
+            f"### {i}. [{finding.get('severity', '').upper()}] - {finding.get('category', 'General')}"
+        )
         report_md.append(f"**Vấn đề:** {finding.get('issue', '')}")
         report_md.append(f"**Đề xuất:** {finding.get('recommendation', '')}\n")
 
@@ -188,6 +215,7 @@ async def main():
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text("\n".join(report_md), encoding="utf-8")
     logger.info(f"✅ Đã hoàn thành toàn bộ Map-Reduce Audit và lưu vào {args.out}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

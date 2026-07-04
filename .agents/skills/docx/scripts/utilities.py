@@ -382,11 +382,12 @@ def _generate_hex_id() -> str:
     We use the stricter constraint (0x7FFFFFFF) for both.
     """
     import random
+
     return f"{random.randint(1, 0x7FFFFFFE):08X}"
 
 
 def _generate_rsid() -> str:
     """Generate random 8-character hex RSID."""
     import random
-    return "".join(random.choices("0123456789ABCDEF", k=8))
 
+    return "".join(random.choices("0123456789ABCDEF", k=8))

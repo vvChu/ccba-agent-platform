@@ -192,7 +192,9 @@ def suggest_deletion(editor: DocxXMLEditor, elem: Element) -> Element:
                 rPr = rPr_list[0]
 
             del_marker = editor.dom.createElement("w:del")
-            rPr.insertBefore(del_marker, rPr.firstChild) if rPr.firstChild else rPr.appendChild(del_marker)
+            rPr.insertBefore(del_marker, rPr.firstChild) if rPr.firstChild else rPr.appendChild(
+                del_marker
+            )
 
         for t_elem in list(elem.getElementsByTagName("w:t")):
             del_text = editor.dom.createElement("w:delText")
