@@ -76,11 +76,9 @@ Khi cần đánh giá tác động:
 
 ## Source Documents
 
-Tài liệu nguồn được lưu tại:
-```
-D:\OneDrive - IBST BIM\00 CCBA\03 PMO Documents\
-  06 BIM RD and International Coo\
-    04_ĐÀO_TẠO_NỘI_BỘ\04_Cập_nhật_kiến_thức\BIM_VBPL\
+Tài liệu nguồn được lưu trữ tại thư mục đồng bộ OneDrive chung của dự án (được định vị qua cấu hình môi trường hoặc trỏ cục bộ theo thư mục `BIM_VBPL`):
+```text
+[Mạng_OneDrive_CCBA]/04_Cập_nhật_kiến_thức/BIM_VBPL/
 ```
 
 Cấu trúc:

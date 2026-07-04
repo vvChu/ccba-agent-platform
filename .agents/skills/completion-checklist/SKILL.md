@@ -67,18 +67,8 @@ Checklist master hiện dựa trên:
 
 ## Output Formats
 
-- **Markdown** (.md) — Cho review, lưu trữ trong knowledge base
-- **Word** (.docx) — Cho in ấn, phát tay tại công trường/seminar
-
-Sử dụng `python-docx` để xuất Word. Ví dụ command:
-```python
-# Agent sẽ tự tạo script tạm để generate Word file khi cần
-from docx import Document
-doc = Document()
-doc.add_heading('Danh Mục Hồ Sơ Hoàn Thành Công Trình', level=0)
-# ... populate from checklist_master.yaml
-doc.save('output.docx')
-```
+- **Markdown** (.md) — Cho review và lưu trữ trong knowledge base.
+- **Word** (.docx) — Cho in ấn và phát hành chính thức, sử dụng thư viện `python-docx` để xuất bản tự động.
 
 ## Dependencies
 
