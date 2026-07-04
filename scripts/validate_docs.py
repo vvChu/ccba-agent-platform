@@ -386,6 +386,7 @@ def main():
     parser.add_argument("--src", default="scripts,packages", help="Comma-separated directories to search for code definitions")
     parser.add_argument("--root", default=".", help="Project workspace root directory")
     parser.add_argument("--fix", action="store_true", help="Automatically convert absolute workspace links to relative links")
+    parser.add_argument("--changed", action="store_true", help="Only validate markdown files changed in git")
 
     args = parser.parse_args()
 
@@ -445,6 +446,9 @@ def main():
 
     # Get modified files to distinguish hard blocks from soft warnings
     modified_files = get_modified_files(project_root)
+
+    if args.changed:
+        md_files = [f for f in md_files if f.resolve() in modified_files]
 
     print(f"Scanned {len(md_files)} markdown file(s).")
     print(f"Searching code declarations in: {', '.join(str(p.relative_to(project_root)) for p in resolved_src_paths if p.exists())}")
