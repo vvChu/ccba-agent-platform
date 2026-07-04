@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Logo Generation Script using Gemini Nano Banana API
 Uses Gemini 3.1 Flash Image Preview and Gemini 3 Pro Image Preview models
@@ -22,8 +21,9 @@ import argparse
 import os
 import sys
 import time
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 
 # Load environment variables
 def load_env():
@@ -31,7 +31,7 @@ def load_env():
     env_paths = [
         Path(__file__).parent.parent.parent / ".env",
         Path.home() / ".claude" / "skills" / ".env",
-        Path.home() / ".claude" / ".env"
+        Path.home() / ".claude" / ".env",
     ]
 
     for env_path in env_paths:
@@ -39,10 +39,11 @@ def load_env():
             with open(env_path) as f:
                 for line in f:
                     line = line.strip()
-                    if line and not line.startswith('#') and '=' in line:
-                        key, value = line.split('=', 1)
+                    if line and not line.startswith("#") and "=" in line:
+                        key, value = line.split("=", 1)
                         if key not in os.environ:
-                            os.environ[key] = value.strip('"\'')
+                            os.environ[key] = value.strip("\"'")
+
 
 load_env()
 
@@ -59,8 +60,12 @@ except ImportError:
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 # Gemini "Nano Banana" model configurations for image generation
-GEMINI_FLASH = "gemini-3.1-flash-image-preview"  # Nano Banana 2: fastest, 95% Pro quality, web grounding
-GEMINI_PRO = "gemini-3-pro-image-preview"  # Nano Banana Pro: professional quality, advanced reasoning
+GEMINI_FLASH = (
+    "gemini-3.1-flash-image-preview"  # Nano Banana 2: fastest, 95% Pro quality, web grounding
+)
+GEMINI_PRO = (
+    "gemini-3-pro-image-preview"  # Nano Banana Pro: professional quality, advanced reasoning
+)
 
 # Supported aspect ratios
 ASPECT_RATIOS = ["1:1", "16:9", "9:16", "4:3", "3:4"]
@@ -99,7 +104,7 @@ STYLE_MODIFIERS = {
     "mascot": "mascot, character, friendly face, personified, memorable figure",
     "gradient": "gradient, color transition, vibrant, modern digital feel, smooth color flow",
     "lineart": "line art, single stroke, continuous line, elegant simplicity, wire-frame style",
-    "negative-space": "negative space, clever use of white space, hidden meaning, dual imagery, optical illusion"
+    "negative-space": "negative space, clever use of white space, hidden meaning, dual imagery, optical illusion",
 }
 
 INDUSTRY_PROMPTS = {
@@ -112,7 +117,7 @@ INDUSTRY_PROMPTS = {
     "eco": "eco-friendly, sustainable, natural, green, leaf or earth elements",
     "education": "education, knowledge, growth, learning, book or cap symbol",
     "real-estate": "real estate, property, home, roof or building silhouette",
-    "creative": "creative agency, artistic, unique, expressive, colorful"
+    "creative": "creative agency, artistic, unique, expressive, colorful",
 }
 
 
@@ -133,8 +138,15 @@ def enhance_prompt(base_prompt, style=None, industry=None, brand_name=None):
     return LOGO_PROMPT_TEMPLATE.format(prompt=combined)
 
 
-def generate_logo(prompt, style=None, industry=None, brand_name=None,
-                  output_path=None, use_pro=False, aspect_ratio=None):
+def generate_logo(
+    prompt,
+    style=None,
+    industry=None,
+    brand_name=None,
+    output_path=None,
+    use_pro=False,
+    aspect_ratio=None,
+):
     """Generate a logo using Gemini models with image generation
 
     Args:
@@ -161,9 +173,7 @@ def generate_logo(prompt, style=None, industry=None, brand_name=None,
     try:
         # Gọi sinh ảnh qua adapter linh hoạt
         image_data = llm_adapter.generate_image(
-            prompt=full_prompt,
-            default_model=model,
-            aspect_ratio=ratio
+            prompt=full_prompt, default_model=model, aspect_ratio=ratio
         )
 
         if not image_data:
@@ -188,7 +198,9 @@ def generate_logo(prompt, style=None, industry=None, brand_name=None,
         return None
 
 
-def generate_batch(prompt, brand_name, count, output_dir, use_pro=False, brand_context=None, aspect_ratio=None):
+def generate_batch(
+    prompt, brand_name, count, output_dir, use_pro=False, brand_context=None, aspect_ratio=None
+):
     """Generate multiple logo variants with different styles"""
 
     # Select appropriate styles for batch generation
@@ -211,13 +223,13 @@ def generate_batch(prompt, brand_name, count, output_dir, use_pro=False, brand_c
     model_label = "Pro" if use_pro else "Flash"
     ratio = aspect_ratio if aspect_ratio in ASPECT_RATIOS else DEFAULT_ASPECT_RATIO
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  BATCH LOGO GENERATION: {brand_name}")
     print(f"  Model: Nano Banana {model_label}")
     print(f"  Aspect Ratio: {ratio}")
     print(f"  Variants: {count}")
     print(f"  Output: {output_dir}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     for i in range(min(count, len(batch_styles))):
         style_key, style_desc = batch_styles[i]
@@ -228,10 +240,10 @@ def generate_batch(prompt, brand_name, count, output_dir, use_pro=False, brand_c
             enhanced_prompt = f"{brand_context}, {enhanced_prompt}"
 
         # Generate filename
-        filename = f"{brand_name.lower().replace(' ', '_')}_{style_key}_{i+1:02d}.png"
+        filename = f"{brand_name.lower().replace(' ', '_')}_{style_key}_{i + 1:02d}.png"
         output_path = os.path.join(output_dir, filename)
 
-        print(f"[{i+1}/{count}] Generating {style_key} variant...")
+        print(f"[{i + 1}/{count}] Generating {style_key} variant...")
 
         result = generate_logo(
             prompt=enhanced_prompt,
@@ -240,7 +252,7 @@ def generate_batch(prompt, brand_name, count, output_dir, use_pro=False, brand_c
             brand_name=brand_name,
             output_path=output_path,
             use_pro=use_pro,
-            aspect_ratio=aspect_ratio
+            aspect_ratio=aspect_ratio,
         )
 
         if result:
@@ -253,9 +265,9 @@ def generate_batch(prompt, brand_name, count, output_dir, use_pro=False, brand_c
         if i < count - 1:
             time.sleep(2)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  BATCH COMPLETE: {len(results)}/{count} logos generated")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     return results
 
@@ -265,14 +277,27 @@ def main():
     parser.add_argument("--prompt", "-p", type=str, help="Logo description prompt")
     parser.add_argument("--brand", "-b", type=str, help="Brand name")
     parser.add_argument("--style", "-s", choices=list(STYLE_MODIFIERS.keys()), help="Logo style")
-    parser.add_argument("--industry", "-i", choices=list(INDUSTRY_PROMPTS.keys()), help="Industry type")
+    parser.add_argument(
+        "--industry", "-i", choices=list(INDUSTRY_PROMPTS.keys()), help="Industry type"
+    )
     parser.add_argument("--output", "-o", type=str, help="Output file path")
     parser.add_argument("--output-dir", type=str, help="Output directory for batch generation")
-    parser.add_argument("--batch", type=int, help="Number of logo variants to generate (batch mode)")
+    parser.add_argument(
+        "--batch", type=int, help="Number of logo variants to generate (batch mode)"
+    )
     parser.add_argument("--brand-context", type=str, help="Additional brand context for prompts")
-    parser.add_argument("--pro", action="store_true", help="Use Nano Banana Pro (gemini-3-pro-image-preview) for professional quality")
-    parser.add_argument("--aspect-ratio", "-r", choices=ASPECT_RATIOS, default=DEFAULT_ASPECT_RATIO,
-                        help=f"Image aspect ratio (default: {DEFAULT_ASPECT_RATIO} for logos)")
+    parser.add_argument(
+        "--pro",
+        action="store_true",
+        help="Use Nano Banana Pro (gemini-3-pro-image-preview) for professional quality",
+    )
+    parser.add_argument(
+        "--aspect-ratio",
+        "-r",
+        choices=ASPECT_RATIOS,
+        default=DEFAULT_ASPECT_RATIO,
+        help=f"Image aspect ratio (default: {DEFAULT_ASPECT_RATIO} for logos)",
+    )
     parser.add_argument("--list-styles", action="store_true", help="List available styles")
     parser.add_argument("--list-industries", action="store_true", help="List available industries")
 
@@ -305,7 +330,7 @@ def main():
             output_dir=output_dir,
             use_pro=args.pro,
             brand_context=args.brand_context,
-            aspect_ratio=args.aspect_ratio
+            aspect_ratio=args.aspect_ratio,
         )
     else:
         generate_logo(
@@ -315,7 +340,7 @@ def main():
             brand_name=args.brand,
             output_path=args.output,
             use_pro=args.pro,
-            aspect_ratio=args.aspect_ratio
+            aspect_ratio=args.aspect_ratio,
         )
 
 

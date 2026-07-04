@@ -19,6 +19,7 @@ import yaml
 try:
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import padding
+
     HAS_CRYPTOGRAPHY = True
 except ImportError:
     HAS_CRYPTOGRAPHY = False
@@ -26,6 +27,7 @@ except ImportError:
 # Enforce UTF-8 output
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
@@ -40,10 +42,15 @@ def load_yaml(file_path: Path) -> dict:
         return {}
 
 
-def register_spoke_to_hub(spoke_root: Path, hub_root: Path, project_name: str, project_type: str) -> None:
+def register_spoke_to_hub(
+    spoke_root: Path, hub_root: Path, project_name: str, project_type: str
+) -> None:
     """Register Spoke metadata to Hub using RSA public key encryption."""
     if not HAS_CRYPTOGRAPHY:
-        print("[Registry] Warning: cryptography package not installed. Skipping Spoke registration.", file=sys.stderr)
+        print(
+            "[Registry] Warning: cryptography package not installed. Skipping Spoke registration.",
+            file=sys.stderr,
+        )
         return
 
     public_key_path = hub_root / ".agents" / "workflows" / "resources" / "registry_public_key.pem"
@@ -61,20 +68,18 @@ def register_spoke_to_hub(spoke_root: Path, hub_root: Path, project_name: str, p
             "name": project_name,
             "path": str(spoke_root.resolve()),
             "project_type": project_type,
-            "last_sync": datetime.now().isoformat()
+            "last_sync": datetime.now().isoformat(),
         }
         spoke_yaml = yaml.dump(spoke_info, allow_unicode=True)
 
         # 3. Mã hóa RSA và chuyển sang Base64
         encrypted_bytes = public_key.encrypt(
-            spoke_yaml.encode('utf-8'),
+            spoke_yaml.encode("utf-8"),
             padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None
-            )
+                mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None
+            ),
         )
-        encrypted_b64 = base64.b64encode(encrypted_bytes).decode('utf-8')
+        encrypted_b64 = base64.b64encode(encrypted_bytes).decode("utf-8")
 
         # 4. Ghi nhận vào registry trên Hub
         registry_file = hub_root / ".md" / "data" / "spoke_registry.yaml"
@@ -89,7 +94,7 @@ def register_spoke_to_hub(spoke_root: Path, hub_root: Path, project_name: str, p
                 pass
 
         # Tạo Spoke ID duy nhất băm từ đường dẫn vật lý để tránh trùng lặp
-        spoke_id = hashlib.sha256(str(spoke_root.resolve()).encode('utf-8')).hexdigest()
+        spoke_id = hashlib.sha256(str(spoke_root.resolve()).encode("utf-8")).hexdigest()
 
         # Cập nhật hoặc thêm mới bản ghi
         spokes = registry_data.get("spokes", [])
@@ -100,16 +105,15 @@ def register_spoke_to_hub(spoke_root: Path, hub_root: Path, project_name: str, p
                 updated = True
                 break
         if not updated:
-            spokes.append({
-                "spoke_id": spoke_id,
-                "encrypted_data": encrypted_b64
-            })
+            spokes.append({"spoke_id": spoke_id, "encrypted_data": encrypted_b64})
         registry_data["spokes"] = spokes
 
         with open(registry_file, "w", encoding="utf-8") as f:
             yaml.dump(registry_data, f, allow_unicode=True)
 
-        print(f"[Registry] Successfully registered Spoke '{project_name}' to Hub Spoke Registry (Encrypted).")
+        print(
+            f"[Registry] Successfully registered Spoke '{project_name}' to Hub Spoke Registry (Encrypted)."
+        )
     except Exception as e:
         print(f"[Registry] Warning: Failed to register Spoke to Hub: {e}", file=sys.stderr)
 
@@ -137,7 +141,7 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
     if not context_file.exists():
         print(
             f"[Sync] Error: Could not find workspace_context.yaml in {spoke_root}/.agents/ or {spoke_root}/.md/",
-            file=sys.stderr
+            file=sys.stderr,
         )
         print("[Sync] Please run 'init spoke' first in the target project folder.", file=sys.stderr)
         return 1
@@ -197,7 +201,10 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
             hub_root = cwd_hub
 
     if not hub_root:
-        print("[Sync] Error: Could not locate Hub directory. Please set CCBA_HUB_PATH environment variable or specify hub_path in workspace_context.yaml.", file=sys.stderr)
+        print(
+            "[Sync] Error: Could not locate Hub directory. Please set CCBA_HUB_PATH environment variable or specify hub_path in workspace_context.yaml.",
+            file=sys.stderr,
+        )
         return 1
 
     # Lưu lại cấu hình định vị thông minh vào context nếu có thay đổi
@@ -217,19 +224,19 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
         print("[Sync] Hub is a Git repository. Attempting to pull latest changes from GitHub...")
         try:
             import subprocess
+
             result = subprocess.run(
-                ["git", "pull"],
-                cwd=str(hub_root),
-                capture_output=True,
-                text=True,
-                timeout=30
+                ["git", "pull"], cwd=str(hub_root), capture_output=True, text=True, timeout=30
             )
             if result.returncode == 0:
                 print("[Sync] Git pull completed successfully.")
                 if result.stdout.strip():
                     print(f"  {result.stdout.strip()}")
             else:
-                print(f"[Sync] Warning: Git pull failed with code {result.returncode}.", file=sys.stderr)
+                print(
+                    f"[Sync] Warning: Git pull failed with code {result.returncode}.",
+                    file=sys.stderr,
+                )
                 if result.stderr.strip():
                     print(f"  {result.stderr.strip()}", file=sys.stderr)
                 print("[Sync] Continuing with local offline cache...", file=sys.stderr)
@@ -284,7 +291,9 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
                     dest = spoke_workflows_dir / filename
 
                     if src.exists():
-                        print(f"[Sync] Copying workflow [{sync_item}] -> {dest.relative_to(spoke_root)}")
+                        print(
+                            f"[Sync] Copying workflow [{sync_item}] -> {dest.relative_to(spoke_root)}"
+                        )
                         dest.parent.mkdir(parents=True, exist_ok=True)
                         if dest.exists():
                             dest.unlink()
@@ -292,11 +301,16 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
                         found = True
                         break
                     else:
-                        print(f"[Sync] Error: Workflow source file not found at {src}", file=sys.stderr)
+                        print(
+                            f"[Sync] Error: Workflow source file not found at {src}",
+                            file=sys.stderr,
+                        )
                         return 1
 
         if not found:
-            print(f"[Sync] Error: Item '{sync_item}' not found in Hub catalog.yaml.", file=sys.stderr)
+            print(
+                f"[Sync] Error: Item '{sync_item}' not found in Hub catalog.yaml.", file=sys.stderr
+            )
             return 1
 
         # Copy hiến pháp
@@ -310,7 +324,10 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
 
     # CHẾ ĐỘ 2: Đồng bộ toàn bộ theo Project Type (mặc định)
     if not project_type:
-        print("[Sync] Error: 'project_type' is not defined in workspace_context.yaml.", file=sys.stderr)
+        print(
+            "[Sync] Error: 'project_type' is not defined in workspace_context.yaml.",
+            file=sys.stderr,
+        )
         return 1
 
     print(f"Project Type: {project_type}")
@@ -321,7 +338,7 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
         available_types = ", ".join(bundle_defs.keys())
         print(
             f"[Sync] Error: Project type '{project_type}' is not registered in catalog.yaml.",
-            file=sys.stderr
+            file=sys.stderr,
         )
         print(f"[Sync] Registered types: {available_types}", file=sys.stderr)
         return 1
@@ -339,11 +356,13 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
         skill_path_rel = skill_entry.get("skill_path")
 
         if skill_bundle in required_bundles or skill_bundle == "_core":
-            skills_to_sync.append({
-                "name": skill_name,
-                "src_dir": hub_root / Path(skill_path_rel).parent,
-                "dest_name": Path(skill_path_rel).parent.name
-            })
+            skills_to_sync.append(
+                {
+                    "name": skill_name,
+                    "src_dir": hub_root / Path(skill_path_rel).parent,
+                    "dest_name": Path(skill_path_rel).parent.name,
+                }
+            )
 
     # Filter Workflows
     for wf_entry in catalog.get("workflows", []):
@@ -352,11 +371,13 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
         wf_path_rel = wf_entry.get("workflow_path")
 
         if wf_bundle in required_bundles or wf_bundle == "_core":
-            wfs_to_sync.append({
-                "name": wf_name,
-                "src_file": hub_root / wf_path_rel,
-                "filename": Path(wf_path_rel).name
-            })
+            wfs_to_sync.append(
+                {
+                    "name": wf_name,
+                    "src_file": hub_root / wf_path_rel,
+                    "filename": Path(wf_path_rel).name,
+                }
+            )
 
     # Clean existing
     def safe_remove(path: Path):
@@ -419,7 +440,9 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
     hub_agents_md = hub_root / ".agents" / "AGENTS.md"
     spoke_agents_md = spoke_agents_dir / "AGENTS.md"
     if hub_agents_md.exists():
-        print(f"\n[Sync] Copying constitutional rules (AGENTS.md) -> {spoke_agents_md.relative_to(spoke_root)}")
+        print(
+            f"\n[Sync] Copying constitutional rules (AGENTS.md) -> {spoke_agents_md.relative_to(spoke_root)}"
+        )
         shutil.copy2(hub_agents_md, spoke_agents_md)
 
     # Đăng ký Spoke vào Hub Registry (Mã hóa RSA)
@@ -436,12 +459,12 @@ def main():
     parser.add_argument(
         "--spoke",
         default=".",
-        help="Path to the target spoke project folder (defaults to current directory)."
+        help="Path to the target spoke project folder (defaults to current directory).",
     )
     parser.add_argument(
         "--sync-item",
         default=None,
-        help="Name of a specific skill or workflow to synchronize on-demand."
+        help="Name of a specific skill or workflow to synchronize on-demand.",
     )
     args = parser.parse_args()
     sys.exit(sync_project(args.spoke, args.sync_item))

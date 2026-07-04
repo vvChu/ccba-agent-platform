@@ -206,8 +206,9 @@ class IDOPDiscovery:
             SheetEntry populated from AI response, with fallback empty fields.
         """
         import base64
-        from PIL import Image
         from io import BytesIO
+
+        from PIL import Image
 
         # Resize image to max 1024x1024 if needed
         img = Image.open(titleblock_path)
@@ -215,7 +216,7 @@ class IDOPDiscovery:
         max_dim = 1024
         if img.width > max_dim or img.height > max_dim:
             img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
-        
+
         buffer = BytesIO()
         img.save(buffer, format="PNG")
         img_bytes = buffer.getvalue()
@@ -255,7 +256,8 @@ class IDOPDiscovery:
             logger.info("Raw AI response: %s", raw)
             raw_data = parse_llm_json(raw) or {}
             data = {
-                k: str(raw_data.get(k, "")) for k in ("sheet_no", "title", "level", "zone", "discipline")
+                k: str(raw_data.get(k, ""))
+                for k in ("sheet_no", "title", "level", "zone", "discipline")
             }
             logger.info(
                 "AI extracted %s p%d: sheet_no=%s disc=%s",
@@ -405,7 +407,9 @@ if __name__ == "__main__":
     parser.add_argument("--project", default="CCBA Project", help="Project name")
     parser.add_argument("--recursive", action="store_true", help="Scan subfolders")
     parser.add_argument("--no-ai", action="store_true", help="Skip AI metadata extraction")
-    parser.add_argument("--ai-model", default="gemini-3.1-pro-low", help="AI model to use for extraction")
+    parser.add_argument(
+        "--ai-model", default="gemini-3.1-pro-low", help="AI model to use for extraction"
+    )
     parser.add_argument(
         "--titleblocks-dir",
         default="titleblocks",

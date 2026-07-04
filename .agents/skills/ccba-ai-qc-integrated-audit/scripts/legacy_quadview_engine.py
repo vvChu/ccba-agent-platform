@@ -18,13 +18,10 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import json
 import logging
-from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
 
-from ccba_ai import async_ai, parse_llm_json, AuditFinding, AuditReport
+from ccba_ai import AuditFinding, AuditReport, async_ai, parse_llm_json
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +141,6 @@ class IDOPAuditEngine:
         )
         return out_path
 
-
     def generate_quad_view(
         self,
         images: list[Path],
@@ -207,6 +203,7 @@ class IDOPAuditEngine:
         logger.info("Quad-view generated: %s", quad_path)
 
         import time
+
         # 2. Prepare prompt with timestamp to bypass LiteLLM cache
         d = (discipline_order + ["", "", "", ""])[:4]
         prompt = _AUDIT_PROMPT.format(d0=d[0], d1=d[1], d2=d[2], d3=d[3])

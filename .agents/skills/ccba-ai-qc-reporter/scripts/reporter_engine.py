@@ -69,7 +69,7 @@ class IDOPReporter:
         """
         # Standardize audit_results to List[AuditReport]
         standardized_results: list[AuditReport] = []
-        for r in (audit_results or []):
+        for r in audit_results or []:
             if isinstance(r, dict):
                 standardized_results.append(AuditReport.model_validate(r))
             else:

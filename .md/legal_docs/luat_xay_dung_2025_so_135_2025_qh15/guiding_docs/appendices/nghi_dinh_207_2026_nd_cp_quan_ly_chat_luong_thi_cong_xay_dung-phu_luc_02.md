@@ -1,12 +1,12 @@
 ---
 type: Appendix
-title: "PHỤ LỤC II - Phụ lục IIa. Nhật ký thi công xây dựng công trình"
+title: "PHỤ LỤC II - *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*"
 description: "Chi tiết PHỤ LỤC II ban hành kèm theo Nghi Dinh 207 2026 Nd Cp Quan Ly Chat Luong Thi Cong Xay Dung"
 parent_document: "../nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.md"
 uniclass: "Fi_10_20"
 ---
 
-**PHỤ LỤC II**
+# PHỤ LỤC II
 
 *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*
 
@@ -123,6 +123,3 @@ vụ, chữ ký )</em></td>
 </table>
 
 ***Ghi chú:*** áp dụng hình thức hợp đồng thầu chính, thầu phụ, hợp đồng EPC, hợp đồng chìa khóa trao tay. Kích thước dấu tùy thuộc kích cỡ chữ.
-
- 
-

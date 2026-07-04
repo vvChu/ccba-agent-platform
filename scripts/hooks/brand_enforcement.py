@@ -26,6 +26,7 @@ DEFAULT_PROHIBITED_WORDS = [
 
 BRAND_RULES_FILE = Path(".md/knowledge/brand_rules.yaml")
 
+
 def load_brand_rules():
     """Load brand rules from configuration file, falling back to defaults."""
     if not BRAND_RULES_FILE.exists():
@@ -46,6 +47,7 @@ def load_brand_rules():
     except Exception:
         return DEFAULT_BRAND_PATTERNS, DEFAULT_PROHIBITED_WORDS
 
+
 BRAND_PATTERNS, PROHIBITED_WORDS = load_brand_rules()
 
 
@@ -56,22 +58,22 @@ def check_file(file_path: Path):
     except Exception:
         return
 
-    has_issues = False
-
     # Check brand spellings
     for pattern, correct in BRAND_PATTERNS:
         matches = re.findall(pattern, content, re.IGNORECASE)
         for m in matches:
             if m != correct:
-                print(f"\x1b[33m[Brand Warning]\x1b[0m In file '{file_path}': Found '{m}', expected '{correct}'")
-                has_issues = True
+                print(
+                    f"\x1b[33m[Brand Warning]\x1b[0m In file '{file_path}': Found '{m}', expected '{correct}'"
+                )
 
     # Check prohibited words
     for pattern in PROHIBITED_WORDS:
         matches = re.findall(pattern, content, re.IGNORECASE)
         for m in matches:
-            print(f"\x1b[31m[Policy Alert]\x1b[0m In file '{file_path}': Found prohibited word '{m}'")
-            has_issues = True
+            print(
+                f"\x1b[31m[Policy Alert]\x1b[0m In file '{file_path}': Found prohibited word '{m}'"
+            )
 
 
 def main(event=None, payload=None):
@@ -108,6 +110,7 @@ def main(event=None, payload=None):
 if __name__ == "__main__":
     if sys.platform == "win32":
         import io
+
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
     main()

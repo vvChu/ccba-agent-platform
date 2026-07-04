@@ -76,13 +76,13 @@ Khi cần đánh giá tác động:
 
 ## Source Documents
 
-Tài liệu nguồn được lưu trữ tại thư mục đồng bộ OneDrive chung của dự án (được định vị qua cấu hình môi trường hoặc trỏ cục bộ theo thư mục `BIM_VBPL`):
+Tài liệu nguồn được lưu trữ tại thư mục đồng bộ OneDrive chung của dự án (được định vị qua cấu hình môi trường hoặc trỏ cục bộ theo thư mục `.md/legal_docs/BIM_VBPL`):
 ```text
 [Mạng_OneDrive_CCBA]/04_Cập_nhật_kiến_thức/BIM_VBPL/
 ```
 
 Cấu trúc:
-- `BIM_VBPL/2026/` — Tài liệu năm 2026
+- `.md/legal_docs/BIM_VBPL/2026/` — Tài liệu năm 2026
   - `Dự thảo NĐQLCL2026 lấy ý kiến/` — Dự thảo NĐ QLCL mới
   - `CCBA_RD_SEMINAR_003_*` — Tài liệu seminar
 

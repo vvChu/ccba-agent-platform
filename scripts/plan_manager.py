@@ -13,6 +13,7 @@ from ccba_ai.services import plan
 # Enforce UTF-8 output
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
@@ -24,13 +25,20 @@ def main():
     # create subcommand
     create_parser = subparsers.add_parser("create", help="Create a new plan")
     create_parser.add_argument("--title", required=True, help="Title of the plan")
-    create_parser.add_argument("--phases", required=True, help="Comma-separated list of phase names")
+    create_parser.add_argument(
+        "--phases", required=True, help="Comma-separated list of phase names"
+    )
 
     # check subcommand
     check_parser = subparsers.add_parser("check", help="Update a phase status")
     check_parser.add_argument("--plan", required=True, help="Path to plan.md")
     check_parser.add_argument("--phase", required=True, help="Phase ID (e.g. 01)")
-    check_parser.add_argument("--status", default="completed", choices=["pending", "in-progress", "completed"], help="Status target")
+    check_parser.add_argument(
+        "--status",
+        default="completed",
+        choices=["pending", "in-progress", "completed"],
+        help="Status target",
+    )
 
     # status subcommand
     status_parser = subparsers.add_parser("status", help="Show current plan status")
@@ -53,7 +61,9 @@ def main():
             res = plan.update_phase_status(args.plan, args.phase, args.status)
             print(f"[Plan Manager] Updated plan.md: Phase {res['phase_id']} -> {res['new_status']}")
             if res["phase_file_updated"]:
-                print(f"[Plan Manager] Updated phase file: {res['phase_file']} -> {res['new_status']}")
+                print(
+                    f"[Plan Manager] Updated phase file: {res['phase_file']} -> {res['new_status']}"
+                )
             sys.exit(0)
 
         elif args.command == "status":

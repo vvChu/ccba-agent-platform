@@ -32,13 +32,13 @@ import shutil
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ccba_ooxml.pack import pack_document
 from ccba_ooxml.validation import OOXMLValidator
 
-from .utilities import XMLEditor, _generate_hex_id, _generate_rsid
 from .comment_engine import CommentEngine
+from .utilities import XMLEditor, _generate_hex_id, _generate_rsid
 
 if TYPE_CHECKING:
     from xml.dom.minidom import Element
@@ -224,22 +224,26 @@ class DocxXMLEditor(XMLEditor):
     def revert_insertion(self, elem: Element) -> list[Element]:
         """Reject an insertion by wrapping its content in a deletion."""
         from .change_engine import revert_insertion
+
         return revert_insertion(self, elem)
 
     def revert_deletion(self, elem: Element) -> list[Element]:
         """Reject a deletion by re-inserting the deleted content."""
         from .change_engine import revert_deletion
+
         return revert_deletion(self, elem)
 
     @staticmethod
     def suggest_paragraph(xml_content: str) -> str:
         """Transform paragraph XML to add tracked change wrapping for insertion."""
         from .change_engine import suggest_paragraph
+
         return suggest_paragraph(xml_content)
 
     def suggest_deletion(self, elem: Element) -> Element:
         """Mark a w:r or w:p element as deleted with tracked changes."""
         from .change_engine import suggest_deletion
+
         return suggest_deletion(self, elem)
 
 
@@ -309,9 +313,7 @@ class Document:
 
     def validate(self) -> None:
         """Validate the document against XSD schema and redlining rules."""
-        validator = OOXMLValidator(
-            self.unpacked_path, self.original_docx, verbose=False
-        )
+        validator = OOXMLValidator(self.unpacked_path, self.original_docx, verbose=False)
         if not validator.validate():
             raise ValueError("Document validation failed")
 

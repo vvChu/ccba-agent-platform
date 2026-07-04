@@ -342,3 +342,133 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> bool
 
     print("[LegalIntel] Warning: Download timed out.")
     return False
+
+
+def get_tvpl_metadata(cdp: ChromeCDP, url: str) -> dict[str, Any]:
+    """Retrieve structured metadata from the TVPL 'Lược đồ' tab page."""
+    cdp.navigate(url)
+    cdp.wait_ready()
+    cdp.handle_cloudflare()
+
+    # Find the "Lược đồ" tab href
+    find_tab_js = """
+    (() => {
+        let tabs = Array.from(document.querySelectorAll('.tabDoc a, .menuTab a, a'));
+        let luoc_do = tabs.find(a => a.innerText && a.innerText.trim().includes('Lược đồ'));
+        return luoc_do ? luoc_do.href : null;
+    })()
+    """
+    luoc_do_url = cdp.evaluate_js(find_tab_js)
+    if not luoc_do_url:
+        print("[Crawler] Warning: 'Lược đồ' tab link not found directly on page.")
+        return {}
+
+    print(f"[Crawler] Navigating to 'Luoc do' page: {luoc_do_url}")
+    cdp.navigate(luoc_do_url)
+    cdp.wait_ready()
+    cdp.handle_cloudflare()
+    time.sleep(2.0)
+
+    metadata_js = """
+    (() => {
+        let result = {};
+        let tables = Array.from(document.querySelectorAll('table'));
+        let targetTable = tables.find(t => t.innerText.includes('Số hiệu') && t.innerText.includes('Ngày ban hành'));
+        if (targetTable) {
+            let rows = Array.from(targetTable.querySelectorAll('tr'));
+            rows.forEach(row => {
+                let cols = Array.from(row.querySelectorAll('td'));
+                if (cols.length >= 2) {
+                    let key = cols[0].innerText.trim().replace(':', '');
+                    let val = cols[1].innerText.trim();
+                    if (key && val) {
+                        result[key] = val;
+                    }
+                }
+            });
+        }
+        if (Object.keys(result).length === 0) {
+            let cells = Array.from(document.querySelectorAll('td, th, div'));
+            let keys = ['Số hiệu', 'Loại văn bản', 'Lĩnh vực', 'Nơi ban hành', 'Người ký', 'Ngày ban hành', 'Ngày hiệu lực', 'Ngày đăng', 'Tình trạng'];
+            keys.forEach(k => {
+                let matchingCell = cells.find(c => c.innerText && c.innerText.trim().startsWith(k + ':'));
+                if (matchingCell) {
+                    let parts = matchingCell.innerText.split(':');
+                    if (parts.length >= 2) {
+                        result[k] = parts.slice(1).join(':').trim();
+                    }
+                }
+            });
+        }
+
+        // Extract all relationships from diagram page
+        let relations = {};
+        let relMap = {
+            'Văn bản bị sửa đổi bổ sung': 'amends_docs',
+            'Văn bản bị thay thế': 'replaced_docs',
+            'Văn bản được dẫn chiếu': 'referenced_docs',
+            'Văn bản được căn cứ': 'basis_docs',
+            'Văn bản được hướng dẫn': 'guided_docs',
+            'Văn bản được hợp nhất': 'consolidated_docs',
+            'Văn bản hướng dẫn': 'guiding_docs',
+            'Văn bản hợp nhất': 'consolidations',
+            'Văn bản sửa đổi bổ sung': 'amended_by_docs',
+            'Văn bản thay thế': 'replaced_by_docs',
+            'Văn bản liên quan cùng nội dung': 'related_docs'
+        };
+
+        Object.keys(relMap).forEach(key => {
+            let els = Array.from(document.querySelectorAll('div, td, th, strong, b'));
+            let headerEl = els.find(el => {
+                let txt = el.innerText || "";
+                return txt.trim().startsWith(key);
+            });
+            if (headerEl) {
+                let container = headerEl.closest('td, tr, div, table');
+                if (container) {
+                    let links = Array.from(container.querySelectorAll('a'))
+                        .map(a => {
+                            return {
+                                title: a.innerText.trim(),
+                                url: a.href ? a.href.split('?')[0].split('#')[0] : ""
+                            };
+                        })
+                        .filter(l => l.title && l.title !== headerEl.innerText.trim() && l.url.includes('/van-ban/'));
+
+                    if (links.length > 0) {
+                        relations[relMap[key]] = links;
+                    }
+                }
+            }
+        });
+
+        result['relations'] = relations;
+        return result;
+    })()
+    """
+    raw_meta = cdp.evaluate_js(metadata_js) or {}
+
+    def parse_tvpl_date(date_str: str) -> str:
+        if not date_str:
+            return ""
+        try:
+            parts = date_str.split("/")
+            if len(parts) == 3:
+                d, m, y = parts
+                return f"{y.strip()}-{m.strip().zfill(2)}-{d.strip().zfill(2)}"
+        except Exception:
+            pass
+        return date_str
+
+    metadata = {
+        "document_number": raw_meta.get("Số hiệu", ""),
+        "type": raw_meta.get("Loại văn bản", ""),
+        "issued_by": raw_meta.get("Nơi ban hành", ""),
+        "signer": raw_meta.get("Người ký", ""),
+        "issued_date": parse_tvpl_date(raw_meta.get("Ngày ban hành", "")),
+        "effective_date": parse_tvpl_date(raw_meta.get("Ngày hiệu lực", "")),
+        "published_date": parse_tvpl_date(raw_meta.get("Ngày đăng", "")),
+        "status": raw_meta.get("Tình trạng", ""),
+        "relations": raw_meta.get("relations", {}),
+    }
+    return metadata
