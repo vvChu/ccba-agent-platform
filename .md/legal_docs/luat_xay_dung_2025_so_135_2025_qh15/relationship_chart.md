@@ -14,19 +14,24 @@ graph TD
     
     ND217["Nghị định 217/2026/NĐ-CP<br>(Quản lý hoạt động xây dựng)"]
     ND212["Nghị định 212/2026/NĐ-CP<br>(Năng lực hoạt động xây dựng)"]
+    ND210["Nghị định 210/2026/NĐ-CP<br>(Hợp đồng xây dựng)"]
     ND209["Nghị định 209/2026/NĐ-CP<br>(Quản lý vật liệu xây dựng)"]
     ND207["Nghị định 207/2026/NĐ-CP<br>(Quản lý chất lượng & thi công)"]
     ND206["Nghị định 206/2026/NĐ-CP<br>(Quản lý chi phí đầu tư xây dựng)"]
     ND193["Nghị định 193/2026/NĐ-CP<br>(Quyết toán vốn đầu tư dự án)"]
+    
+    QD1040["Quyết định 1040/QĐ-BXD<br>(Mẫu hợp đồng xây dựng)"]
     TT34["Thông tư 34/2026/TT-BXD<br>(Phân cấp công trình xây dựng)"]
 
     Main ==>|Guides| ND217
     Main ==>|Guides| ND212
+    Main ==>|Guides| ND210
     Main ==>|Guides| ND209
     Main ==>|Guides| ND207
     Main ==>|Guides| ND206
     Main ==>|Guides| ND193
     
+    ND210 ==>|Guides| QD1040
     ND217 -.->|References| TT34
     ND212 -.->|References| TT34
 ```
