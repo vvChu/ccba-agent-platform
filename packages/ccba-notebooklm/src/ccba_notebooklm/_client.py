@@ -349,17 +349,19 @@ def get_client() -> CCBANotebookLMClient:
     env_cookie = os.environ.get("NOTEBOOKLM_SESSION_COOKIE")
     env_json = os.environ.get("NOTEBOOKLM_COOKIES_JSON")
     
+    is_testing = bool(os.environ.get("PYTEST_CURRENT_TEST"))
+    
     # Nếu không có biến môi trường nhưng file cookie đã tồn tại sẵn trên đĩa
     temp_path = get_temp_storage_path()
-    if not cookie_path and temp_path.exists():
+    if not cookie_path and temp_path.exists() and not is_testing:
         cookie_path = str(temp_path.absolute())
         
     default_state_path = Path.home() / ".notebooklm" / "profiles" / "default" / "storage_state.json"
     use_mock = not (
         env_cookie 
         or env_json 
-        or (cookie_path and Path(cookie_path).exists())
-        or default_state_path.exists()
+        or (cookie_path and Path(cookie_path).exists() and not is_testing)
+        or (default_state_path.exists() and not is_testing)
     )
 
     return CCBANotebookLMClient.from_storage(path=cookie_path, use_mock=use_mock)
