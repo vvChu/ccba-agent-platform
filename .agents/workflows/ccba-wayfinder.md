@@ -1,0 +1,10 @@
+---
+description: Vạch bản đồ giải quyết các bài toán mù mờ (foggy problems).
+applies_to:
+  - "Phần mềm"
+bundle: "_core"
+---
+
+# Workflow: Wayfinder Vạch Đường (/ccba-wayfinder)
+
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `wayfinder` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/wayfinder/SKILL.md) để bắt đầu phân tích vấn đề và thiết lập bản đồ.

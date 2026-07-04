@@ -88,6 +88,7 @@ claudekit-engineer/
 # Nhưng cho phép theo dõi các tri thức và hiến pháp chính quy
 !.agents/workflows/
 !.agents/skills/
+!.agents/proposals/
 !.agents/AGENTS.md
 
 # Loại trừ các dữ liệu động, log, credentials bên trong các thư mục chính quy này

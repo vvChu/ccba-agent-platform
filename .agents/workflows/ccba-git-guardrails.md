@@ -1,0 +1,10 @@
+---
+description: Thiết lập và kích hoạt rào chắn lệnh Git nguy hiểm của Agent.
+applies_to:
+  - "Phần mềm"
+bundle: "_core"
+---
+
+# Workflow: Rào Chắn An Toàn Git (/ccba-git-guardrails)
+
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `git-guardrails` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/git-guardrails/SKILL.md) để bắt đầu kích hoạt chế độ chặn và xin quyền cho các lệnh Git nguy hiểm.
