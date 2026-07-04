@@ -6,4 +6,4 @@ applies_to:
 bundle: "_core"
 ---
 
-Khi người dùng gọi lệnh này, hãy nạp và thực thi kỹ năng copywriting tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/copywriting/SKILL.md) và chạy phần trích xuất/nghiên cứu văn phong thô để chuẩn hóa thành tệp template.
+Khi người dùng gọi lệnh này, hãy nạp và thực thi kỹ năng copywriting tại [SKILL.md](../skills/copywriting/SKILL.md) và chạy phần trích xuất/nghiên cứu văn phong thô để chuẩn hóa thành tệp template.

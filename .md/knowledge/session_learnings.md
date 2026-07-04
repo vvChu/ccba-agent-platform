@@ -20,7 +20,7 @@ Tài liệu này lưu trữ các tri thức kỹ thuật, bài học thực tế
 
 ### 3. Kiểm định liên kết cục bộ nhanh (Local Link Checking Script)
 - **Ngữ cảnh:** Trong các dự án lớn, chạy công cụ kiểm định toàn bộ tài liệu (`validate_docs.py`) rất chậm do phải quét đệ quy hàng ngàn tệp log hoặc tệp tạm của Agent, sinh ra nhiều cảnh báo không liên quan.
-- **Giải pháp:** Viết một script kiểm định nhanh ([check_our_links.py](file:///C:/Users/chuvu/.gemini/antigravity/brain/b75d19fa-761a-42da-ace5-94839b021a9f/scratch/check_our_links.py)) nhắm trực tiếp vào danh sách các file vừa tạo/chỉnh sửa để check link tuyệt đối (`file:///`) và tương đối.
+- **Giải pháp:** Viết một script kiểm định nhanh (`check_our_links.py`) nhắm trực tiếp vào danh sách các file vừa tạo/chỉnh sửa để check link tuyệt đối (`file:///`) và tương đối.
 - **Nguồn:** Session `b75d19fa-761a-42da-ace5-94839b021a9f`, 04/07/2026.
 
 ### 4. Ép kiểu UTF-8 cho Output Console trên Windows
