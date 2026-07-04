@@ -41,8 +41,8 @@
    - Thí nghiệm vật liệu không đủ tần suất
 
 **Tài liệu:**
-- `BIM_VBPL/2026/CCBA_RD_SEMINAR_003_Rev00-21.03.26-Lite-On-MOC_DOC_Inspections.pdf`
-- `BIM_VBPL/2026/CCBA_RD_SEMINAR_003_Rev00-21.03.26-Lite-On-MOC_DOC_Inspections.pptx`
+- `.md/legal_docs/BIM_VBPL/2026/CCBA_RD_SEMINAR_003_Rev00-21.03.26-Lite-On-MOC_DOC_Inspections.pdf`
+- `.md/legal_docs/BIM_VBPL/2026/CCBA_RD_SEMINAR_003_Rev00-21.03.26-Lite-On-MOC_DOC_Inspections.pptx`
 
 ---
 

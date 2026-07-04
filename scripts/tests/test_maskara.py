@@ -12,7 +12,6 @@ from scripts.maskara import (
 
 
 class TestMaskara(unittest.TestCase):
-
     def test_normalize_agent_name(self):
         self.assertEqual(normalize_agent_name("Claude-Code"), "claude")
         self.assertEqual(normalize_agent_name("gemini-cli"), "gemini")
@@ -57,7 +56,7 @@ class TestMaskara(unittest.TestCase):
 
     def test_validate_structured_json(self):
         valid_json = b'{"api_key": "sk-proj-12345678901234567890", "status": "ok"}'
-        invalid_after_redact = b'{"api_key": [MASKARA_REDACTED:openai-api-key], "status": "ok"}' # Missing quotes, invalid JSON
+        invalid_after_redact = b'{"api_key": [MASKARA_REDACTED:openai-api-key], "status": "ok"}'  # Missing quotes, invalid JSON
 
         # Validation should fail (return False) because json becomes invalid
         result = validate_structured(Path("test.json"), valid_json, invalid_after_redact)

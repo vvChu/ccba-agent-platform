@@ -52,17 +52,22 @@ Ghi nhận các kiến thức đã lọc vào tệp `knowledge/session_learnings
 
 ---
 
-### Bước 4: Dọn dẹp & Phân phối Tài liệu đầu vào thô
-Agent thực hiện quét thư mục tạm `input_documents/` ở gốc dự án để phân phối tri thức đã sử dụng:
-1.  **Phân tích phân loại:** Đọc lướt nội dung các tệp tin trong `input_documents/` để tự động đề xuất phân loại:
-    *   Tài liệu pháp lý, quy định $\rightarrow$ `.md/legal_docs/` hoặc `.md/extracted_docs/`.
-    *   Báo cáo phân tích kỹ thuật, sơ đồ, hướng dẫn $\rightarrow$ `.md/knowledge/`.
-    *   Biên bản, ghi chú thảo luận họp $\rightarrow$ `.md/seminars/`.
-    *   Tệp log, test script tạm $\rightarrow$ `.md/scratch/`.
-2.  **In bảng đề xuất di chuyển:** Trình bày bảng đề xuất để người dùng xác nhận.
-3.  **Thực thi di chuyển & Làm sạch:** Sau khi người dùng xác nhận, Agent di chuyển vật lý các tệp đã chốt vào đúng vị trí và xóa sạch các file rác còn lại trong `input_documents/`.
+### Bước 4: Dọn dẹp Workspace Tạm thời & Phân phối Tài liệu Đầu vào Thô
+Agent thực hiện dọn dẹp các thư mục rác và phân phối tri thức đã sử dụng:
 
-*   **Completion Criterion:** Thư mục `input_documents/` được làm sạch hoàn toàn (trống rỗng) sau khi các tệp có giá trị được di chuyển vào các thư mục con tương ứng của `.md/`.
+1.  **Dọn dẹp Workspace tạm của Subagents**:
+    - Quét thư mục gốc `.agents/` để tìm các thư mục con của subagents được tạo ra trong quá trình chạy teamwork hoặc song song (bắt đầu bằng: `auditor_`, `challenger_`, `explorer_`, `reviewer_`, `worker_`, `teamwork_preview_`, `sub_orch_`, `victory_auditor_`, `temp-marketing`).
+    - Thực hiện xóa vật lý toàn bộ các thư mục con tạm thời này (chỉ giữ lại các thư mục cấu hình cốt lõi như `skills/`, `workflows/`, `templates/` và tệp hiến pháp `AGENTS.md`).
+2.  **Phân phối tài liệu đầu vào thô**:
+    - Quét thư mục tạm `input_documents/` ở gốc dự án để phân phối tri thức đã sử dụng:
+      *   Tài liệu pháp lý, quy định $\rightarrow$ `.md/legal_docs/` hoặc `.md/extracted_docs/`.
+      *   Báo cáo phân tích kỹ thuật, sơ đồ, hướng dẫn $\rightarrow$ `.md/knowledge/`.
+      *   Biên bản, ghi chú thảo luận họp $\rightarrow$ `.md/seminars/`.
+      *   Tệp log, test script tạm $\rightarrow$ `.md/scratch/`.
+3.  **In bảng đề xuất di chuyển**: Trình bày bảng đề xuất để người dùng xác nhận.
+4.  **Thực thi di chuyển & Làm sạch**: Sau khi người dùng xác nhận, Agent di chuyển vật lý các tệp đã chốt vào đúng vị trí và xóa sạch các file rác còn lại trong `input_documents/`.
+
+*   **Completion Criterion**: Thư mục `input_documents/` được dọn sạch hoàn toàn và các thư mục tạm thời của subagents trong `.agents/` được xóa bỏ triệt để.
 
 ---
 

@@ -6,7 +6,7 @@ parent_document: "../nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.md"
 uniclass: "Fi_10_20"
 ---
 
-**PHỤ LỤC II**
+# PHỤ LỤC II
 
 MẪU CÁC VĂN BẢN TRONG QUY TRÌNH CẤP GIẤY PHÉP XÂY DỰNG  
 *(Kèm theo Nghị định số 217/2026/NĐ-CP ngày 19 tháng 6 năm 2026 của Chính phủ)*
@@ -854,6 +854,3 @@ Ký tên</td>
 </tr>
 </tbody>
 </table>
-
- 
-

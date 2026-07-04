@@ -11,6 +11,7 @@ from pathlib import Path
 # Enforce UTF-8 output
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
@@ -21,20 +22,20 @@ REPOS_CONFIG = [
         "type": "engineer",
         "local_path": PLATFORM_ROOT / ".md/scratch/repos/claudekit-engineer",
         "remote_url": "https://github.com/claudekit/claudekit-engineer",
-        "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_last_sha.txt"
+        "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_last_sha.txt",
     },
     {
         "type": "marketing",
         "local_path": PLATFORM_ROOT / ".md/scratch/repos/claudekit-marketing",
         "remote_url": "https://github.com/claudekit/claudekit-marketing",
-        "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_marketing_last_sha.txt"
+        "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_marketing_last_sha.txt",
     },
     {
         "type": "mattpocock-skills",
         "local_path": PLATFORM_ROOT / ".md/scratch/repos/mattpocock-skills",
         "remote_url": "https://github.com/mattpocock/skills",
-        "sha_file": PLATFORM_ROOT / ".md/scratch/mattpocock_skills_last_sha.txt"
-    }
+        "sha_file": PLATFORM_ROOT / ".md/scratch/mattpocock_skills_last_sha.txt",
+    },
 ]
 
 
@@ -43,15 +44,13 @@ def ensure_local_repo(config: dict) -> bool:
     local_path = config["local_path"]
     remote_url = config["remote_url"]
     repo_type = config["type"]
-    
+
     if not local_path.exists():
         print(f"[Repo Update] Cloning {repo_type} from {remote_url}...")
         local_path.parent.mkdir(parents=True, exist_ok=True)
         try:
             subprocess.run(
-                ["git", "clone", remote_url, str(local_path)],
-                check=True,
-                capture_output=True
+                ["git", "clone", remote_url, str(local_path)], check=True, capture_output=True
             )
             print(f"[Repo Update] Successfully cloned {repo_type}.")
             return True
@@ -62,27 +61,24 @@ def ensure_local_repo(config: dict) -> bool:
         try:
             print(f"[Repo Update] Fetching updates for {repo_type}...")
             subprocess.run(
-                ["git", "fetch", "origin"],
-                cwd=str(local_path),
-                check=True,
-                capture_output=True
+                ["git", "fetch", "origin"], cwd=str(local_path), check=True, capture_output=True
             )
             # Detect default branch name (usually main or master)
             res = subprocess.run(
                 ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
                 cwd=str(local_path),
                 capture_output=True,
-                text=True
+                text=True,
             )
             default_branch = "main"
             if res.returncode == 0:
                 default_branch = res.stdout.strip().split("/")[-1]
-            
+
             subprocess.run(
                 ["git", "reset", "--hard", f"origin/{default_branch}"],
                 cwd=str(local_path),
                 check=True,
-                capture_output=True
+                capture_output=True,
             )
             print(f"[Repo Update] Successfully updated {repo_type}.")
             return True
@@ -105,7 +101,7 @@ def get_local_sha(config: dict) -> str:
                 cwd=str(local_path),
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
             sha = res.stdout.strip()
             sha_file.write_text(sha, encoding="utf-8")
@@ -122,7 +118,7 @@ def get_remote_sha(remote_url: str) -> str:
             ["git", "ls-remote", remote_url, "refs/heads/main"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         output = res.stdout.strip()
         if output:
@@ -135,7 +131,7 @@ def get_remote_sha(remote_url: str) -> str:
             ["git", "ls-remote", remote_url, "refs/heads/master"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         output = res.stdout.strip()
         if output:
@@ -168,7 +164,9 @@ def check_and_evaluate(config: dict):
     local_sha = get_local_sha(config)
 
     if not local_sha:
-        print(f"[ClaudeKit Update Check] Initializing tracker for {repo_type} with remote SHA: {remote_sha}")
+        print(
+            f"[ClaudeKit Update Check] Initializing tracker for {repo_type} with remote SHA: {remote_sha}"
+        )
         sha_file.write_text(remote_sha, encoding="utf-8")
         return
 
@@ -183,10 +181,14 @@ def check_and_evaluate(config: dict):
             eval_cmd = [
                 sys.executable,
                 str(PLATFORM_ROOT / "scripts" / "assess_upstream_features.py"),
-                "--repo-path", str(local_path),
-                "--repo-type", repo_type,
-                "--base", local_sha,
-                "--head", remote_sha
+                "--repo-path",
+                str(local_path),
+                "--repo-type",
+                repo_type,
+                "--base",
+                local_sha,
+                "--head",
+                remote_sha,
             ]
             # Run evaluator
             subprocess.run(eval_cmd, check=True)

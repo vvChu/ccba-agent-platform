@@ -1,20 +1,22 @@
-import sys
-import time
 import json
+import sys
 import threading
-from enum import Enum
+import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
-from typing import Callable, TypeVar, Set
+from typing import TypeVar
 
 from ccba_ai import CCBAErrorCode, format_error_json
 
 T = TypeVar("T")
 
+
 class CircuitState(str, Enum):
-    CLOSED = "closed"       # Hoạt động bình thường
-    OPEN = "open"           # Đang block — đợi recovery timeout
-    HALF_OPEN = "half_open" # Thử lại 1 request để kiểm tra
+    CLOSED = "closed"  # Hoạt động bình thường
+    OPEN = "open"  # Đang block — đợi recovery timeout
+    HALF_OPEN = "half_open"  # Thử lại 1 request để kiểm tra
 
 
 @dataclass
@@ -28,16 +30,17 @@ class CircuitBreaker:
         failure_threshold:  Số lỗi liên tiếp để trip circuit (OPEN).
         recovery_timeout:   Thời gian OPEN trước khi chuyển sang HALF_OPEN (giây).
     """
-    rpm_limit:         int   = 20
-    backoff_seconds:   float = 3.0
-    failure_threshold: int   = 3
-    recovery_timeout:  float = 30.0
 
-    _state:             CircuitState = field(default=CircuitState.CLOSED, init=False)
-    _consecutive_fails: int          = field(default=0, init=False)
-    _last_failure_time: float        = field(default=0.0, init=False)
-    _request_times:     list         = field(default_factory=list, init=False)
-    _lock:              threading.Lock = field(default_factory=threading.Lock, init=False)
+    rpm_limit: int = 20
+    backoff_seconds: float = 3.0
+    failure_threshold: int = 3
+    recovery_timeout: float = 30.0
+
+    _state: CircuitState = field(default=CircuitState.CLOSED, init=False)
+    _consecutive_fails: int = field(default=0, init=False)
+    _last_failure_time: float = field(default=0.0, init=False)
+    _request_times: list = field(default_factory=list, init=False)
+    _lock: threading.Lock = field(default_factory=threading.Lock, init=False)
 
     @property
     def min_interval(self) -> float:
@@ -73,7 +76,7 @@ class CircuitBreaker:
                     error_json = format_error_json(
                         CCBAErrorCode.CIRCUIT_BREAKER_OPEN,
                         f"Circuit Breaker is OPEN due to {self._consecutive_fails} consecutive failures. Request blocked.",
-                        f"Wait for recovery timeout ({self.recovery_timeout}s) before trying again or check backend service status."
+                        f"Wait for recovery timeout ({self.recovery_timeout}s) before trying again or check backend service status.",
                     )
                     print(error_json, file=sys.stderr)
                     return None
@@ -102,7 +105,7 @@ class CircuitBreaker:
             error_json = format_error_json(
                 CCBAErrorCode.RATE_LIMIT_HIT,
                 f"LLM API call failed: {str(e)}",
-                f"Check if you hit API Rate Limit. Circuit state: {self._state.value.upper()}. Retrying in {self.backoff_seconds}s."
+                f"Check if you hit API Rate Limit. Circuit state: {self._state.value.upper()}. Retrying in {self.backoff_seconds}s.",
             )
             print(error_json, file=sys.stderr)
 
@@ -114,7 +117,8 @@ class CircuitBreaker:
 # Helper functions cho Rejected Items Caching
 REJECTED_CACHE = Path(".rejected_items.json")
 
-def load_rejected_cache() -> Set[str]:
+
+def load_rejected_cache() -> set[str]:
     """Tải danh sách các item bị reject."""
     if REJECTED_CACHE.exists():
         try:
@@ -122,6 +126,7 @@ def load_rejected_cache() -> Set[str]:
         except Exception:
             return set()
     return set()
+
 
 def cache_rejected(item_id: str) -> None:
     """Cache lại item_id bị reject để phòng tránh infinite retry loop."""
