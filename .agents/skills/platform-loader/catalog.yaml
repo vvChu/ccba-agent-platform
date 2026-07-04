@@ -248,6 +248,12 @@ skills:
     triggers: [docx, ooxml, unpack docx, pack docx, tracked changes, Word document, excel xml]
     skill_path: .agents/skills/docx/SKILL.md
 
+  - name: copywriting
+    bundle: _core
+    description: "Công thức viết thuyết phục (AIDA, PAS), trích xuất phong cách viết hành chính/thương mại để làm hồ sơ thầu, quy trình, form mẫu của khối Admin"
+    triggers: [copywriting, viết thầu, soạn thầu, hồ sơ đề xuất, văn phong thầu, viết thuyết phục, marketing admin]
+    skill_path: .agents/skills/copywriting/SKILL.md
+
   - name: design
     bundle: _core
     description: "Siêu kỹ năng thiết kế: tạo logo brief, slides, banners và CIP dùng Gemini với Flexible LLM Adapter"
@@ -355,6 +361,13 @@ workflows:
     triggers: [handoff, đóng gói phiên, transfer context, bàn giao]
     workflow_path: .agents/workflows/ccba-handoff.md
 
+  - name: sync-upstream
+    bundle: _core
+    command: /ccba-sync-upstream
+    description: "Kiểm tra cập nhật và đồng bộ tri thức từ ClaudeKit và MattPocock"
+    triggers: [sync upstream, đồng bộ tri thức, claudekit, mattpocock, check update]
+    workflow_path: .agents/workflows/ccba-sync-upstream.md
+
   - name: grilling
     bundle: _core
     command: /ccba-grilling
@@ -389,6 +402,20 @@ workflows:
     description: "Chuyển đổi tài liệu sang Markdown bằng mdconverter"
     triggers: [convert, mdconverter, chuyển đổi tài liệu, pdf to markdown]
     workflow_path: .agents/workflows/ccba-convert-markdown.md
+
+  - name: copywriting
+    bundle: _core
+    command: /ccba-copywriting
+    description: "Kích hoạt bộ công cụ viết thuyết phục (AIDA, PAS, BAB) để tối ưu hồ sơ thầu, marketing, quy trình, form mẫu của khối Admin"
+    triggers: [copywriting, viết thầu, soạn thầu, hồ sơ thầu, viết thuyết phục, marketing admin]
+    workflow_path: .agents/workflows/ccba-copywriting.md
+
+  - name: extract-style
+    bundle: _core
+    command: /ccba-extract-style
+    description: "Trích xuất và phân tích đặc trưng văn phong thầu/hành chính từ tài liệu mẫu của CCBA bằng AI Gateway"
+    triggers: [extract style, trích xuất văn phong, văn phong mẫu, style thầu, phong cách viết]
+    workflow_path: .agents/workflows/ccba-extract-style.md
 
   - name: brainstorm
     bundle: _core
