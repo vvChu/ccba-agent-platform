@@ -452,7 +452,7 @@ def get_tvpl_metadata(cdp: ChromeCDP, url: str) -> dict[str, Any]:
         if not date_str:
             return ""
         try:
-            parts = date_str.split('/')
+            parts = date_str.split("/")
             if len(parts) == 3:
                 d, m, y = parts
                 return f"{y.strip()}-{m.strip().zfill(2)}-{d.strip().zfill(2)}"
@@ -469,6 +469,6 @@ def get_tvpl_metadata(cdp: ChromeCDP, url: str) -> dict[str, Any]:
         "effective_date": parse_tvpl_date(raw_meta.get("Ngày hiệu lực", "")),
         "published_date": parse_tvpl_date(raw_meta.get("Ngày đăng", "")),
         "status": raw_meta.get("Tình trạng", ""),
-        "relations": raw_meta.get("relations", {})
+        "relations": raw_meta.get("relations", {}),
     }
     return metadata

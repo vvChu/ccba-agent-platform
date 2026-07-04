@@ -12,18 +12,23 @@ if sys.platform == "win32":
 def roman_to_decimal(r: str) -> int:
     """Convert Roman numeral string to decimal integer."""
     r = r.upper()
-    roman_map = {'I': 1, 'V': 5, 'X': 10, 'L': 50}
+    roman_map = {"I": 1, "V": 5, "X": 10, "L": 50}
     val = 0
     for i in range(len(r)):
-        if i > 0 and roman_map[r[i]] > roman_map[r[i-1]]:
-            val += roman_map[r[i]] - 2 * roman_map[r[i-1]]
+        if i > 0 and roman_map[r[i]] > roman_map[r[i - 1]]:
+            val += roman_map[r[i]] - 2 * roman_map[r[i - 1]]
         else:
             val += roman_map[r[i]]
     return val
 
 
 def main() -> None:
-    base_dir = Path(__file__).resolve().parents[1] / ".md" / "legal_docs" / "luat_xay_dung_2025_so_135_2025_qh15"
+    base_dir = (
+        Path(__file__).resolve().parents[1]
+        / ".md"
+        / "legal_docs"
+        / "luat_xay_dung_2025_so_135_2025_qh15"
+    )
     guiding_dir = base_dir / "guiding_docs"
     appendices_dir = guiding_dir / "appendices"
     appendices_dir.mkdir(parents=True, exist_ok=True)
@@ -31,7 +36,9 @@ def main() -> None:
     # Automatically scan all markdown files in the guiding_docs directory
     files = [f.name for f in guiding_dir.glob("*.md")]
 
-    pattern = re.compile(r"^(?:#*|\**)\s*(PHỤ LỤC(?:\s+([IVXLCDM]+))?)\s*(?:\**)\s*$", re.IGNORECASE)
+    pattern = re.compile(
+        r"^(?:#*|\**)\s*(PHỤ LỤC(?:\s+([IVXLCDM]+))?)\s*(?:\**)\s*$", re.IGNORECASE
+    )
 
     all_appendices_links = []
 
@@ -61,7 +68,7 @@ def main() -> None:
 
         # Step 2: Slice the files
         parent_slug = path.stem
-        main_body_lines = lines[:matches[0][0]]
+        main_body_lines = lines[: matches[0][0]]
 
         # Clean trailing empty lines/white spaces from main body
         while main_body_lines and not main_body_lines[-1].strip():
@@ -71,7 +78,7 @@ def main() -> None:
         appendix_links = []
         for i, (idx, full_label, roman) in enumerate(matches):
             start_idx = idx
-            end_idx = matches[i+1][0] if i + 1 < len(matches) else len(lines)
+            end_idx = matches[i + 1][0] if i + 1 < len(matches) else len(lines)
 
             app_lines = lines[start_idx:end_idx]
 
@@ -103,7 +110,7 @@ def main() -> None:
             frontmatter = f"""---
 type: Appendix
 title: "{full_label} - {title}"
-description: "Chi tiết {full_label} ban hành kèm theo {parent_slug.replace('_', ' ').title()}"
+description: "Chi tiết {full_label} ban hành kèm theo {parent_slug.replace("_", " ").title()}"
 parent_document: "../{fname}"
 uniclass: "Fi_10_20"
 ---

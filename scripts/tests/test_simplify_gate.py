@@ -5,7 +5,6 @@ from scripts.hooks.simplify_gate import main, matched_severity
 
 
 class TestSimplifyGate(unittest.TestCase):
-
     def test_matched_severity(self):
         # 1. Hard verbs matching
         sev, verb = matched_severity("please ship these changes")

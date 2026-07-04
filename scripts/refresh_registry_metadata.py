@@ -19,6 +19,7 @@ sys.path.append(str(Path(__file__).parent.parent / "packages" / "ccba-legal-inte
 # Enforce UTF-8 output on Windows
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
@@ -38,7 +39,7 @@ def ensure_chrome_debug_port() -> bool:
     chrome_paths = [
         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-        os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe")
+        os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
     ]
 
     chrome_path = None
@@ -52,7 +53,9 @@ def ensure_chrome_debug_port() -> bool:
         return False
 
     try:
-        user_data_dir = os.path.join(os.path.expanduser("~"), ".gemini", "antigravity", "chrome-debug-profile")
+        user_data_dir = os.path.join(
+            os.path.expanduser("~"), ".gemini", "antigravity", "chrome-debug-profile"
+        )
         os.makedirs(user_data_dir, exist_ok=True)
 
         cmd = [
@@ -60,7 +63,7 @@ def ensure_chrome_debug_port() -> bool:
             "--remote-debugging-port=9222",
             f"--user-data-dir={user_data_dir}",
             "--no-first-run",
-            "--no-default-browser-check"
+            "--no-default-browser-check",
         ]
 
         subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -126,7 +129,9 @@ def main():
                             year_part = id_parts[2]
                             actual_doc_num = tvpl_meta.get("document_number", "")
                             if num_part not in actual_doc_num or year_part not in actual_doc_num:
-                                print(f"  [Skip Update] Mismatch: expected ID containing {num_part} and {year_part}, got actual document number: '{actual_doc_num}' (likely a mock URL redirecting to a different page)")
+                                print(
+                                    f"  [Skip Update] Mismatch: expected ID containing {num_part} and {year_part}, got actual document number: '{actual_doc_num}' (likely a mock URL redirecting to a different page)"
+                                )
                                 continue
 
                         print(f"  -> Successfully extracted metadata for {doc_id}.")
@@ -146,10 +151,14 @@ def main():
                         if tvpl_meta.get("issued_by"):
                             item["issued_by"] = tvpl_meta["issued_by"]
                         if tvpl_meta.get("relations"):
-                            non_empty_relations = {k: v for k, v in tvpl_meta["relations"].items() if v}
+                            non_empty_relations = {
+                                k: v for k, v in tvpl_meta["relations"].items() if v
+                            }
                             if non_empty_relations:
                                 item["relations"] = non_empty_relations
-                                print(f"  [Update] relations: updated legal relations graph ({len(non_empty_relations)} links)")
+                                print(
+                                    f"  [Update] relations: updated legal relations graph ({len(non_empty_relations)} links)"
+                                )
 
                         # Map status
                         tvpl_status = tvpl_meta.get("status", "").lower()
@@ -171,11 +180,15 @@ def main():
             print("\n[Metadata Sync Success] legal_registry.yaml has been updated successfully!")
 
             # Copy to skill resources
-            skill_res_path = Path(".agents/skills/legal-document-tracker/resources/legal_registry.yaml")
+            skill_res_path = Path(
+                ".agents/skills/legal-document-tracker/resources/legal_registry.yaml"
+            )
             if skill_res_path.parent.exists():
                 try:
                     shutil.copy(str(registry_path), str(skill_res_path))
-                    print("[Metadata Sync Info] Successfully synced legal_registry.yaml to skill folder.")
+                    print(
+                        "[Metadata Sync Info] Successfully synced legal_registry.yaml to skill folder."
+                    )
                 except Exception as e:
                     print(f"[Metadata Sync Warning] Failed to copy to skill folder: {e}")
         else:

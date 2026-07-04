@@ -15,7 +15,6 @@ def main():
     mapping = {
         # Primary Law
         "luat_xay_dung_2025_so_135_2025_qh15_toan_van_moi_nhat_moi_nhat": "CCBA_RD_VBPL_001_Rev00-L_135_2025",
-
         # Guiding Documents
         "nghi_dinh_217_2026_nd_cp_huong_dan_luat_xay_dung_quan_ly_hoat_dong_xay_dung_moi_nhat": "CCBA_RD_VBPL_002_Rev00-ND_217_2026",
         "nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung_moi_nhat": "CCBA_RD_VBPL_003_Rev00-ND_212_2026",
@@ -23,14 +22,14 @@ def main():
         "nghi_dinh_207_2026_nd_cp_huong_dan_luat_xay_dung_quan_ly_chat_luong_thi_cong_xay_dung_moi_nhat": "CCBA_RD_VBPL_005_Rev00-ND_207_2026",
         "nghi_dinh_206_2026_nd_cp_huong_dan_quan_ly_chi_phi_dau_tu_xay_dung_moi_nhat": "CCBA_RD_VBPL_006_Rev00-ND_206_2026",
         "nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an_moi_nhat": "CCBA_RD_VBPL_007_Rev00-ND_193_2026",
-        "thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung_phuc_vu_quan_ly_hoat_dong_xay_dung_moi_nhat": "CCBA_RD_VBPL_008_Rev00-TT_34_2026"
+        "thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung_phuc_vu_quan_ly_hoat_dong_xay_dung_moi_nhat": "CCBA_RD_VBPL_008_Rev00-TT_34_2026",
     }
 
     # Helper mappings for checklist, index, and relationship
     other_mappings = {
         "compliance_checklist": "CCBA_RD_VBPL_001_Rev00-L_135_2025-Checklist",
         "index": "CCBA_RD_VBPL_001_Rev00-L_135_2025-Index",
-        "relationship_chart": "CCBA_RD_VBPL_001_Rev00-L_135_2025-Relationship"
+        "relationship_chart": "CCBA_RD_VBPL_001_Rev00-L_135_2025-Relationship",
     }
 
     print("--- Standardizing legal documents to ISO conventions ---")
@@ -40,11 +39,17 @@ def main():
 
     # Primary files
     primary_files = [
-        ("luat_xay_dung_2025_so_135_2025_qh15_toan_van_moi_nhat_moi_nhat.md", "CCBA_RD_VBPL_001_Rev00-L_135_2025.md"),
-        ("luat_xay_dung_2025_so_135_2025_qh15_toan_van_moi_nhat_moi_nhat.docx", "CCBA_RD_VBPL_001_Rev00-L_135_2025.docx"),
+        (
+            "luat_xay_dung_2025_so_135_2025_qh15_toan_van_moi_nhat_moi_nhat.md",
+            "CCBA_RD_VBPL_001_Rev00-L_135_2025.md",
+        ),
+        (
+            "luat_xay_dung_2025_so_135_2025_qh15_toan_van_moi_nhat_moi_nhat.docx",
+            "CCBA_RD_VBPL_001_Rev00-L_135_2025.docx",
+        ),
         ("compliance_checklist.md", "CCBA_RD_VBPL_001_Rev00-L_135_2025-Checklist.md"),
         ("index.md", "CCBA_RD_VBPL_001_Rev00-L_135_2025-Index.md"),
-        ("relationship_chart.md", "CCBA_RD_VBPL_001_Rev00-L_135_2025-Relationship.md")
+        ("relationship_chart.md", "CCBA_RD_VBPL_001_Rev00-L_135_2025-Relationship.md"),
     ]
 
     for old_name, new_name in primary_files:
@@ -106,6 +111,7 @@ def main():
         print(f"Error removing test directories: {e}")
 
     print("\nStandardization finished successfully!")
+
 
 if __name__ == "__main__":
     main()

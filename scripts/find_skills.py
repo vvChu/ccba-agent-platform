@@ -13,12 +13,13 @@ import yaml
 # Enforce UTF-8 output
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 SKILLS_DIRS = [
     Path("claudekit-engineer/claude/skills"),
-    Path(".agents/claudekit-marketing/claude/skills")
+    Path(".agents/claudekit-marketing/claude/skills"),
 ]
 
 
@@ -57,21 +58,25 @@ def find_skills(query: str = ""):
                     if not query:
                         is_match = True
                     else:
-                        if (query_lower in name.lower() or
-                                query_lower in desc.lower() or
-                                any(query_lower in kw.lower() for kw in keywords)):
+                        if (
+                            query_lower in name.lower()
+                            or query_lower in desc.lower()
+                            or any(query_lower in kw.lower() for kw in keywords)
+                        ):
                             is_match = True
 
                     if is_match:
                         # Prevent duplicate names if both repos have the same skill
                         if not any(m["folder"] == p.name for m in matches):
-                            matches.append({
-                                "name": name,
-                                "folder": p.name,
-                                "description": desc,
-                                "keywords": keywords,
-                                "source": skills_dir.parent.parent.name
-                            })
+                            matches.append(
+                                {
+                                    "name": name,
+                                    "folder": p.name,
+                                    "description": desc,
+                                    "keywords": keywords,
+                                    "source": skills_dir.parent.parent.name,
+                                }
+                            )
 
     if not matches:
         print(f"[Skill Finder] No skills found matching '{query}'.")
@@ -80,9 +85,11 @@ def find_skills(query: str = ""):
     print(f"\n[Skill Finder] Found {len(matches)} matching skills:\n")
     for idx, m in enumerate(matches, 1):
         print(f"{idx}. \x1b[32m/ccba-kit {m['folder']}\x1b[0m (Source: {m['source']})")
-        desc_preview = m['description'][:120] + "..." if len(m['description']) > 120 else m['description']
+        desc_preview = (
+            m["description"][:120] + "..." if len(m["description"]) > 120 else m["description"]
+        )
         print(f"   Description: {desc_preview}")
-        if m['keywords']:
+        if m["keywords"]:
             print(f"   Keywords: {', '.join(m['keywords'])}")
         print()
 
@@ -95,9 +102,11 @@ def find_skills(query: str = ""):
     for idx, m in enumerate(matches, 1):
         print(f"{idx}. \x1b[32m/ccba-kit {m['folder']}\x1b[0m (Skill name: {m['name']})")
         # Trim description if too long
-        desc_preview = m['description'][:120] + "..." if len(m['description']) > 120 else m['description']
+        desc_preview = (
+            m["description"][:120] + "..." if len(m["description"]) > 120 else m["description"]
+        )
         print(f"   Description: {desc_preview}")
-        if m['keywords']:
+        if m["keywords"]:
             print(f"   Keywords: {', '.join(m['keywords'])}")
         print()
 

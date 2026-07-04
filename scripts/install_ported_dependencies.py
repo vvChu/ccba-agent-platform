@@ -11,8 +11,8 @@ import shutil
 import subprocess
 import sys
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 
 def check_command_exists(cmd: str) -> bool:
@@ -63,14 +63,22 @@ def install_nodejs_packages() -> bool:
         True nếu cài đặt thành công hoặc đã có sẵn, ngược lại là False.
     """
     if not check_command_exists("npm"):
-        print("[Node.js] Cảnh báo: Không tìm thấy npm trên hệ thống. Bỏ qua cài đặt Node.js packages.")
+        print(
+            "[Node.js] Cảnh báo: Không tìm thấy npm trên hệ thống. Bỏ qua cài đặt Node.js packages."
+        )
         print("[Node.js] Vui lòng cài đặt Node.js thủ công nếu cần dùng các tính năng docx-js.")
         return False
 
     print("[Node.js] Đang cài đặt thư viện 'docx' cục bộ...")
     try:
         # Chạy npm install cục bộ tại thư mục gốc dự án
-        cmd = ["npm.cmd" if os.name == "nt" else "npm", "install", "docx", "--no-audit", "--no-fund"]
+        cmd = [
+            "npm.cmd" if os.name == "nt" else "npm",
+            "install",
+            "docx",
+            "--no-audit",
+            "--no-fund",
+        ]
         subprocess.run(cmd, capture_output=True, text=True, check=True)
         print("[Node.js] Cài đặt thành công thư viện 'docx'!")
         return True
@@ -102,7 +110,9 @@ def install_playwright_browsers() -> bool:
         print("[Playwright] Tải trình duyệt Chromium thành công!")
         return True
     except subprocess.TimeoutExpired:
-        print("[Playwright] Cảnh báo: Quá thời gian (Timeout 120s) khi tải Chromium do kết nối chậm.")
+        print(
+            "[Playwright] Cảnh báo: Quá thời gian (Timeout 120s) khi tải Chromium do kết nối chậm."
+        )
         return False
     except subprocess.CalledProcessError as e:
         print("[Playwright] Cảnh báo: Lỗi mạng hoặc lỗi hệ thống khi tải Chromium.")
@@ -119,10 +129,9 @@ def main() -> None:
     """Hàm chạy chính của script."""
     print("=== CCBA PORTED SKILLS DEPENDENCY INSTALLER ===")
 
-    python_success = install_python_packages([
-        "python-docx", "Pillow", "pypdf", "google-genai",
-        "python-pptx", "playwright"
-    ])
+    python_success = install_python_packages(
+        ["python-docx", "Pillow", "pypdf", "google-genai", "python-pptx", "playwright"]
+    )
     node_success = install_nodejs_packages()
 
     playwright_success = False

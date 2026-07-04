@@ -32,7 +32,9 @@ def fill_pdf_fields(input_pdf_path: str, fields_json_path: str, output_pdf_path:
             print(f"ERROR: `{field['field_id']}` is not a valid field ID")
         elif field["page"] != existing_field["page"]:
             has_error = True
-            print(f"ERROR: Incorrect page number for `{field['field_id']}` (got {field['page']}, expected {existing_field['page']})")
+            print(
+                f"ERROR: Incorrect page number for `{field['field_id']}` (got {field['page']}, expected {existing_field['page']})"
+            )
         else:
             if "value" in field:
                 err = validation_error_for_field_value(existing_field, field["value"])
@@ -44,7 +46,9 @@ def fill_pdf_fields(input_pdf_path: str, fields_json_path: str, output_pdf_path:
 
     writer = PdfWriter(clone_from=reader)
     for page, field_values in fields_by_page.items():
-        writer.update_page_form_field_values(writer.pages[page - 1], field_values, auto_regenerate=False)
+        writer.update_page_form_field_values(
+            writer.pages[page - 1], field_values, auto_regenerate=False
+        )
 
     # This seems to be necessary for many PDF viewers to format the form values correctly.
     # It may cause the viewer to show a "save changes" dialog even if the user doesn't make any changes.
@@ -91,10 +95,12 @@ def monkeypatch_pydpf_method():
 
     original_get_inherited = DictionaryObject.get_inherited
 
-    def patched_get_inherited(self, key: str, default = None):
+    def patched_get_inherited(self, key: str, default=None):
         result = original_get_inherited(self, key, default)
         if key == FieldDictionaryAttributes.Opt:
-            if isinstance(result, list) and all(isinstance(v, list) and len(v) == 2 for v in result):
+            if isinstance(result, list) and all(
+                isinstance(v, list) and len(v) == 2 for v in result
+            ):
                 result = [r[0] for r in result]
         return result
 

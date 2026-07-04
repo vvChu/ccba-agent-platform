@@ -15,6 +15,7 @@ from ccba_ai import ai
 # Enforce UTF-8 on Windows
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
@@ -90,7 +91,9 @@ def main():
     ret_code, stdout, stderr = run_target_script(script_path, args.args)
 
     if ret_code == 0:
-        print("\x1b[32m[Mock Debugger] Script executed successfully with exit code 0. No debugging needed.\x1b[0m")
+        print(
+            "\x1b[32m[Mock Debugger] Script executed successfully with exit code 0. No debugging needed.\x1b[0m"
+        )
         if stdout:
             print("\nStdout:")
             print(stdout)
