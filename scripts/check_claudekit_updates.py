@@ -43,7 +43,7 @@ def ensure_local_repo(config: dict) -> bool:
     local_path = config["local_path"]
     remote_url = config["remote_url"]
     repo_type = config["type"]
-    
+
     if not local_path.exists():
         print(f"[Repo Update] Cloning {repo_type} from {remote_url}...")
         local_path.parent.mkdir(parents=True, exist_ok=True)
@@ -77,7 +77,7 @@ def ensure_local_repo(config: dict) -> bool:
             default_branch = "main"
             if res.returncode == 0:
                 default_branch = res.stdout.strip().split("/")[-1]
-            
+
             subprocess.run(
                 ["git", "reset", "--hard", f"origin/{default_branch}"],
                 cwd=str(local_path),

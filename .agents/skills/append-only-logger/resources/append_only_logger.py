@@ -1,5 +1,5 @@
-import sys
 import re
+import sys
 import threading
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -62,7 +62,7 @@ def rotate_log(log_file: Path = DEFAULT_LOG_FILE, max_age_days: int = 30) -> Non
         archive_path = log_file.parent / archive_name
 
         with _log_lock:
-            with open(log_file, "r", encoding="utf-8") as f:
+            with open(log_file, encoding="utf-8") as f:
                 lines = f.readlines()
 
             recent, old = [], []

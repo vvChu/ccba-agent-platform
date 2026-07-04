@@ -589,7 +589,7 @@ async def sync_registry_to_notebooklm(
             norm_target = target_filename.lower().replace(".docx", "").replace(".pdf", "").replace(".xlsx", "")
             cloud_ids = cloud_source_map.get(norm_target, [])
             cloud_id_by_title = None
-            
+
             # Ưu tiên khớp ID đã cache
             if cached_source_id and cached_source_id in cloud_ids:
                 cloud_id_by_title = cached_source_id

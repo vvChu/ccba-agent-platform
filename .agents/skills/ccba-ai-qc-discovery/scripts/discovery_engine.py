@@ -206,8 +206,9 @@ class IDOPDiscovery:
             SheetEntry populated from AI response, with fallback empty fields.
         """
         import base64
-        from PIL import Image
         from io import BytesIO
+
+        from PIL import Image
 
         # Resize image to max 1024x1024 if needed
         img = Image.open(titleblock_path)
@@ -215,7 +216,7 @@ class IDOPDiscovery:
         max_dim = 1024
         if img.width > max_dim or img.height > max_dim:
             img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
-        
+
         buffer = BytesIO()
         img.save(buffer, format="PNG")
         img_bytes = buffer.getvalue()

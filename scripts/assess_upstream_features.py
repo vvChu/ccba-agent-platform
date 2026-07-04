@@ -46,7 +46,7 @@ def get_existing_elements() -> tuple[list[str], list[str]]:
     if not catalog_path.exists():
         return [], []
     try:
-        with open(catalog_path, "r", encoding="utf-8") as f:
+        with open(catalog_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
             skills = [s["name"] for s in data.get("skills", []) if "name" in s]
             workflows = [w["name"] for w in data.get("workflows", []) if "name" in w]
@@ -59,11 +59,11 @@ def get_existing_elements() -> tuple[list[str], list[str]]:
 def call_ai_evaluation(repo_type: str, skill_name: str, content: str) -> dict:
     """Send skill details to AI Gateway for suitability review."""
     existing_skills, existing_workflows = get_existing_elements()
-    
+
     # Check for direct duplicates first
     is_duplicate = skill_name in existing_skills or skill_name in existing_workflows
     similar_skills = [s for s in existing_skills if skill_name in s or s in skill_name]
-    
+
     system_prompt = (
         "Bạn là kiến trúc sư phần mềm trưởng của ccba-agent-platform.\n"
         "Nhiệm vụ của bạn là đánh giá xem có nên port một kỹ năng mới từ ClaudeKit hoặc MattPocock thượng nguồn (upstream) sang nền tảng của mình hay không.\n"
@@ -86,17 +86,17 @@ def call_ai_evaluation(repo_type: str, skill_name: str, content: str) -> dict:
     Nhánh thượng nguồn: {repo_type}
     Tên kỹ năng đề xuất: {skill_name}
     {duplicate_context}
-    
+
     Danh sách các kỹ năng hiện có trên local: {existing_skills}
     Danh sách các workflows hiện có trên local: {existing_workflows}
-    
+
     Nội dung tệp SKILL.md:
     ```markdown
     {content}
     ```
-    
+
     Hãy phân tích theo ma trận: Giá trị nghiệp vụ x Độ phức tạp x Rủi ro trùng lặp (Reuse-First Gate).
-    ĐẶC BIỆT LƯU Ý: 
+    ĐẶC BIỆT LƯU Ý:
     1. Nếu kỹ năng đã tồn tại trên local hoặc trùng lặp chức năng cốt lõi với kỹ năng sẵn có, bạn nên đặt should_port = false, score thấp (ví dụ < 35) và đề xuất IGNORE hoặc chỉ rõ phương án NÂNG CẤP/TÍCH HỢP thay vì đề xuất port mới hoàn toàn.
     2. Chỉ port (should_port = true) nếu nó thực sự mang lại giá trị mới và chưa hề có trên local.
     """
@@ -233,11 +233,11 @@ def check_git_diffs(repo_path: Path, base_sha: str, head_sha: str, repo_type: st
             match = skill_pattern.search(f)
             if match:
                 if repo_type == "mattpocock-skills":
-                    category = match.group(1)
+                    match.group(1)
                     skill_name = match.group(2)
                 else:
                     skill_name = match.group(1)
-                    
+
                 print(f"[Evaluator] Found modified/new skill: '{skill_name}' in upstream {repo_type}")
 
                 # Retrieve the file contents from head SHA

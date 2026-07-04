@@ -99,7 +99,7 @@ LIST_SCHEMAS = {
 
 def sanitize_powershell_string(val: str) -> str:
     """Sanitizes and escapes strings to be placed inside a double-quoted PowerShell string.
-    
+
     Rejects inputs containing characters outside the safe whitelist to prevent command injection.
     """
     if not isinstance(val, str):
@@ -167,7 +167,7 @@ function Add-SharePointField {{
         [string]$LookupField = "Title"
     )
     Write-Host "Adding field '$DisplayName' ($Type) to list '$ListTitle'..."
-    
+
     # Check if field already exists
     $field = Get-PnPField -List $ListTitle -Identity $InternalName -ErrorAction SilentlyContinue
     if ($null -ne $field) {{
@@ -383,7 +383,6 @@ def generate_fallback_skeleton(app_dir: str) -> None:
 
 def scaffold_app(app_dir: str) -> None:
     print(f"Scaffolding React app in: {app_dir}")
-    degit_success = False
 
     try:
         print("Attempting to clone via degit...")
@@ -392,7 +391,6 @@ def scaffold_app(app_dir: str) -> None:
             subprocess.run(cmd, shell=True, timeout=15, check=True, capture_output=True, text=True)
         else:
             subprocess.run(cmd, timeout=15, check=True, capture_output=True, text=True)
-        degit_success = True
         print("Successfully cloned template via degit.")
     except Exception as e:
         print(f"degit failed or timed out: {e}")
@@ -509,7 +507,7 @@ def pack_solution(output_dir: str, solution_name: str, publisher_name: str, publ
 
     # Zip the solution folder
     with zipfile.ZipFile(zip_file_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(solution_dir):
+        for root, _dirs, files in os.walk(solution_dir):
             for file in files:
                 file_path = os.path.join(root, file)
                 arcname = os.path.relpath(file_path, solution_dir)

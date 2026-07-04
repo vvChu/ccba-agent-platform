@@ -1,10 +1,8 @@
+import argparse
 import asyncio
 import json
 import logging
 from pathlib import Path
-from pydantic import BaseModel
-import os
-import argparse
 
 from ccba_ai import async_ai, parse_llm_json
 
@@ -29,7 +27,7 @@ class MapReduceEngine:
             max_tokens=8192,
             temperature=0.1
         )
-        
+
         data = parse_llm_json(raw_text)
         if data is not None:
             return data
@@ -122,53 +120,56 @@ async def main():
     arch_path = Path(args.arch)
     mep_path = Path(args.mep)
     pc07_path = Path(args.gopy) if args.gopy else None
-    
+
     thuyet_minh = tm_path.read_text(encoding="utf-8") if tm_path.exists() else ""
     arch_pccc = arch_path.read_text(encoding="utf-8") if arch_path.exists() else ""
     mep_pccc = mep_path.read_text(encoding="utf-8") if mep_path.exists() else ""
     gop_y = pc07_path.read_text(encoding="utf-8") if (pc07_path and pc07_path.exists()) else ""
-    
+
     if not thuyet_minh:
         logger.warning(f"Không tìm thấy file Thuyết minh hoặc file trống: {args.tm}")
     if not arch_pccc:
         logger.warning(f"Không tìm thấy file Kiến trúc hoặc file trống: {args.arch}")
     if not mep_pccc:
         logger.warning(f"Không tìm thấy file MEP hoặc file trống: {args.mep}")
-    
+
     engine = MapReduceEngine(ai_model=args.model)
-    
+
     all_findings = []
-    
+
     # PACKAGE 1
     logger.info("=== BẮT ĐẦU GÓI 1: PHÁP LÝ & THUYẾT MINH ===")
     res1 = await engine.run_package_1_legal(thuyet_minh[:CHAR_LIMIT], gop_y)
     if "findings" in res1:
-        for f in res1["findings"]: f["source"] = "Package 1: Legal & Specs"
+        for f in res1["findings"]:
+            f["source"] = "Package 1: Legal & Specs"
         all_findings.extend(res1["findings"])
-        
+
     # PACKAGE 2
     logger.info("=== BẮT ĐẦU GÓI 2: MEP NƯỚC VS THUYẾT MINH ===")
     mep_water_part = mep_pccc[:len(mep_pccc)//2] if mep_pccc else ""
     res2 = await engine.run_package_2_mep_water(mep_water_part[:CHAR_LIMIT], thuyet_minh[:CHAR_LIMIT])
     if "findings" in res2:
-        for f in res2["findings"]: f["source"] = "Package 2: MEP Water vs Specs"
+        for f in res2["findings"]:
+            f["source"] = "Package 2: MEP Water vs Specs"
         all_findings.extend(res2["findings"])
-        
+
     # PACKAGE 3
     logger.info("=== BẮT ĐẦU GÓI 3: MEP BÁO CHÁY VS KIẾN TRÚC ===")
     mep_alarm_part = mep_pccc[len(mep_pccc)//2:] if mep_pccc else ""
     res3 = await engine.run_package_3_mep_alarm(mep_alarm_part[:CHAR_LIMIT], arch_pccc[:CHAR_LIMIT])
     if "findings" in res3:
-        for f in res3["findings"]: f["source"] = "Package 3: MEP Alarm vs Arch"
+        for f in res3["findings"]:
+            f["source"] = "Package 3: MEP Alarm vs Arch"
         all_findings.extend(res3["findings"])
-        
+
     # PACKAGE 4
     logger.info("=== BẮT ĐẦU GÓI 4: REDUCER (TỔNG HỢP) ===")
     res4 = await engine.run_package_4_reducer(all_findings)
-    
+
     # OUTPUT REPORT
     report_md = [
-        f"# Báo cáo Đánh giá Chất lượng Hồ sơ PCCC",
+        "# Báo cáo Đánh giá Chất lượng Hồ sơ PCCC",
         f"> **Model sử dụng:** {args.model}",
         "",
         f"- **Điểm chất lượng:** {res4.get('overall_quality_score', 'N/A')}",
@@ -177,12 +178,12 @@ async def main():
         res4.get('summary', ''),
         "## Các Vấn đề Tồn tại (Final Findings)"
     ]
-    
+
     for i, finding in enumerate(res4.get('final_findings', []), 1):
         report_md.append(f"### {i}. [{finding.get('severity', '').upper()}] - {finding.get('category', 'General')}")
         report_md.append(f"**Vấn đề:** {finding.get('issue', '')}")
         report_md.append(f"**Đề xuất:** {finding.get('recommendation', '')}\n")
-        
+
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text("\n".join(report_md), encoding="utf-8")

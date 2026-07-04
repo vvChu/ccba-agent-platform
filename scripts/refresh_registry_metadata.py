@@ -2,14 +2,15 @@
 """Script to automatically refresh and update metadata of existing documents in legal_registry.yaml from TVPL."""
 
 import os
-import sys
-import time
+import shutil
 import socket
 import subprocess
+import sys
+import time
 from pathlib import Path
-import shutil
-import yaml
+
 import requests
+import yaml
 
 # Add packages and scripts to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -110,7 +111,7 @@ def main():
             for item in items:
                 doc_id = item.get("id")
                 url = item.get("download_url") or item.get("source_url")
-                
+
                 if not url or "thuvienphapluat.vn" not in url:
                     continue
 
@@ -129,7 +130,7 @@ def main():
                                 continue
 
                         print(f"  -> Successfully extracted metadata for {doc_id}.")
-                        
+
                         # Update fields
                         if tvpl_meta.get("effective_date"):
                             item["effective_date"] = tvpl_meta["effective_date"]
