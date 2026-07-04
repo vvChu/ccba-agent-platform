@@ -23,7 +23,7 @@ def roman_to_decimal(r: str) -> int:
 
 
 def main() -> None:
-    base_dir = Path("d:/GitHubProjects/ccba-agent-platform/.md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15")
+    base_dir = Path(__file__).resolve().parents[1] / ".md" / "legal_docs" / "luat_xay_dung_2025_so_135_2025_qh15"
     guiding_dir = base_dir / "guiding_docs"
     appendices_dir = guiding_dir / "appendices"
     appendices_dir.mkdir(parents=True, exist_ok=True)
