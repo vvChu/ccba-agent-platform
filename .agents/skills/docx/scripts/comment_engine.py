@@ -6,14 +6,13 @@ import html
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
-import yaml  # type: ignore
+from typing import TYPE_CHECKING
 
 from .utilities import _generate_hex_id
 
 if TYPE_CHECKING:
     from xml.dom.minidom import Element
+
     from .document import Document, DocxXMLEditor
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"

@@ -7,14 +7,13 @@ Hỗ trợ định tuyến gọi LLM động:
 4. Hỗ trợ thay đổi model linh hoạt qua biến môi trường CCBA_MODEL.
 """
 
-import os
-import sys
-import subprocess
-import shutil
-from typing import Optional, Any
-
 # Khắc phục lỗi Console Encoding trên Windows
 import io
+import os
+import shutil
+import subprocess
+import sys
+
 try:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
@@ -194,13 +193,13 @@ def generate_image(prompt: str, default_model: str = "gemini-3.1-flash-image-pre
             import tempfile
             with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
                 tmp_name = tmp.name
-            
+
             subprocess.run(
                 ["gemini", "image", prompt, "-o", tmp_name],
                 capture_output=True,
                 check=True
             )
-            
+
             if os.path.exists(tmp_name) and os.path.getsize(tmp_name) > 0:
                 with open(tmp_name, "rb") as f:
                     data = f.read()

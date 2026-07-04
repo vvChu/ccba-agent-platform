@@ -109,8 +109,7 @@ def get_git_diff_signals(cwd: str) -> dict[str, Any]:
         diff_res = subprocess.run(
             ["git", "diff", "HEAD", "--numstat", "--ignore-all-space"],
             cwd=cwd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
             timeout=5
         )
@@ -139,8 +138,7 @@ def get_git_diff_signals(cwd: str) -> dict[str, Any]:
         ls_res = subprocess.run(
             ["git", "ls-files", "--others", "--exclude-standard"],
             cwd=cwd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
             timeout=5
         )
@@ -208,16 +206,16 @@ def main(event: str, payload: dict[str, Any]) -> int:
         verb_noun = "shipping/PR" if severity == "hard" else "committing"
         error_msg = f"""
 \x1b[31m[SIMPLIFY GATE]\x1b[0m: Unsimplified git diff detected ({", ".join(breaches)})!
-  
+
   Matched Verb: \x1b[33m'{verb}'\x1b[0m ({verb_noun} intent detected)
-  
+
   The current changes are too large and complex.
   Please simplify your code or refactor before proceeding.
-  
+
   To fix this:
   - Run code simplifier subagent to reduce diff size.
   - Or manually clean up redundant/commented code.
-  
+
   To bypass:
   - Add "APPROVED:" prefix to your request.
   - Or set environment variable `CK_SIMPLIFY_DISABLED=1`.

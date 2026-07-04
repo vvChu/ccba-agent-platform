@@ -1,11 +1,12 @@
-import sys
-import time
 import json
+import sys
 import threading
-from enum import Enum
+import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
-from typing import Callable, TypeVar, Set
+from typing import TypeVar
 
 from ccba_ai import CCBAErrorCode, format_error_json
 
@@ -114,7 +115,7 @@ class CircuitBreaker:
 # Helper functions cho Rejected Items Caching
 REJECTED_CACHE = Path(".rejected_items.json")
 
-def load_rejected_cache() -> Set[str]:
+def load_rejected_cache() -> set[str]:
     """Tải danh sách các item bị reject."""
     if REJECTED_CACHE.exists():
         try:

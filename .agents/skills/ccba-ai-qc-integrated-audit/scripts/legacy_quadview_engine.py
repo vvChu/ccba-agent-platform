@@ -18,13 +18,10 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import json
 import logging
-from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
 
-from ccba_ai import async_ai, parse_llm_json, AuditFinding, AuditReport
+from ccba_ai import AuditFinding, AuditReport, async_ai, parse_llm_json
 
 logger = logging.getLogger(__name__)
 

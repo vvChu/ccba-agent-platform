@@ -6,8 +6,8 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from ccba_ooxml.validation import OOXMLValidator
 from ccba_ooxml import unpack_document
+from ccba_ooxml.validation import OOXMLValidator
 
 
 def test_ooxml_validator_docx():
@@ -39,7 +39,7 @@ def test_ooxml_validator_docx():
 
         # Instantiate validator
         validator = OOXMLValidator(unpack_dir, mock_docx, verbose=True)
-        
+
         # Test validation runs without exceptions
         result = validator.validate()
         assert isinstance(result, bool)

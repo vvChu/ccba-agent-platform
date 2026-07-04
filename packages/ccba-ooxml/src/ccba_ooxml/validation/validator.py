@@ -11,7 +11,7 @@ from .redlining import RedliningValidator
 
 class OOXMLValidator:
     """Unified deep validation interface for Office Open XML files.
-    
+
     This class wraps individual format-specific validators and exposes
     a single, clean entry point for client code.
     """
@@ -23,7 +23,7 @@ class OOXMLValidator:
 
     def validate(self) -> bool:
         """Run all applicable validators based on file extension.
-        
+
         Returns:
             bool: True if all validations passed, False otherwise.
         """

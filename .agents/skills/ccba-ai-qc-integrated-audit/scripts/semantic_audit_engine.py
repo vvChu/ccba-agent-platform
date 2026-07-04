@@ -1,11 +1,6 @@
-import asyncio
-import json
 import logging
-from typing import Dict, List, Optional
-from pathlib import Path
-import os
 
-from ccba_ai import async_ai, parse_llm_json, AuditFinding, AuditReport
+from ccba_ai import AuditFinding, AuditReport, async_ai, parse_llm_json
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -61,14 +56,14 @@ class SemanticAuditEngine:
         self.ai_model = ai_model
 
     async def run_audit(
-        self, 
-        level_label: str, 
-        arch_text: str, 
-        kc_text: str, 
-        mep_text: str, 
+        self,
+        level_label: str,
+        arch_text: str,
+        kc_text: str,
+        mep_text: str,
         pccc_text: str
     ) -> AuditReport:
-        
+
         prompt = _SEMANTIC_AUDIT_PROMPT.format(
             level_label=level_label,
             d_arch=arch_text,
@@ -89,18 +84,18 @@ class SemanticAuditEngine:
                 max_tokens=8192,
                 temperature=0.1
             )
-            
+
             data = parse_llm_json(raw_text)
             if not data:
                 logger.error(f"Failed to parse JSON. Raw response was:\n{raw_text}")
                 raise ValueError("Failed to extract valid JSON from AI response")
-            
+
             findings = []
             for item in data.get("conflicts", []):
                 sev = item.get("severity", "low").lower()
                 disciplines_str = item.get("disciplines", "Unknown")
                 disciplines = [d.strip() for d in disciplines_str.replace("vs", ",").replace("&", ",").split(",") if d.strip()]
-                
+
                 findings.append(AuditFinding(
                     severity=sev,
                     location=item.get("location", "Unknown"),

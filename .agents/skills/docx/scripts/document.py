@@ -32,13 +32,13 @@ import shutil
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ccba_ooxml.pack import pack_document
 from ccba_ooxml.validation import OOXMLValidator
 
-from .utilities import XMLEditor, _generate_hex_id, _generate_rsid
 from .comment_engine import CommentEngine
+from .utilities import XMLEditor, _generate_hex_id, _generate_rsid
 
 if TYPE_CHECKING:
     from xml.dom.minidom import Element

@@ -1,3 +1,8 @@
+packages/ccba-notebooklm/tests/test_notebooklm_basic.py:
+  notebook_id: nb-mock-new
+  sha256: b76b8c042138eff62f9f45802b88faaaa8e489c1da157b07a9f5c24942b44814
+  source_id: src-mock-file
+  updated_at: '2026-07-04T18:29:01.941283'
 sources:
   ? D:\GitHubProjects\ccba-agent-platform\.md\legal_docs\luat_xay_dung_2025_so_135_2025_qh15\guiding_docs\nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an.docx
   : drive_file_id: 1iejqZ0j1uHWkrdbO_BX6C5tVMlJ9v3VUJZQ8dhS2Ih4

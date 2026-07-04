@@ -21,7 +21,6 @@ def main(event: str, payload: dict) -> int:
         pass
 
     # 2. Log workspace properties
-    project_name = cwd.name
     print(f"[session-init] Current Directory: {cwd}")
     if git_root:
         print(f"[session-init] Git Repository Root: {git_root}")

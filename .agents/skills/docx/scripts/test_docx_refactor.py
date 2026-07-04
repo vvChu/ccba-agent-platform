@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import tempfile
-import zipfile
 from pathlib import Path
 
 import pytest
+
 from .document import Document
 
 
@@ -60,7 +60,7 @@ def test_document_commenting(mock_unpacked_docx):
     doc = Document(mock_unpacked_docx, rsid="00FF00FF", author="TestAuthor", initials="TA")
 
     # Get nodes
-    para = doc["word/document.xml"].get_node(tag="w:p")
+    doc["word/document.xml"].get_node(tag="w:p")
     run = doc["word/document.xml"].get_node(tag="w:r")
 
     # Add comment

@@ -16,10 +16,6 @@ from ._client import (
     check_auth,
     get_client,
 )
-
-# Alias for backward compatibility
-NotebookLMClient = CCBANotebookLMClient
-
 from ._gc import (
     check_quota_and_warn,
     run_garbage_collection,
@@ -34,6 +30,9 @@ from ._registry import (
 from ._security import (
     run_maskara_gate,
 )
+
+# Alias for backward compatibility
+NotebookLMClient = CCBANotebookLMClient
 
 __all__ = [
     "HAS_NOTEBOOKLM",

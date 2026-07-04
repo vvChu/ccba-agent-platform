@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import sys
-from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 from xml.dom import minidom
-from typing import TYPE_CHECKING, Any
-
-from .utilities import _generate_hex_id
 
 if TYPE_CHECKING:
     from xml.dom.minidom import Element
+
     from .document import DocxXMLEditor
 
 

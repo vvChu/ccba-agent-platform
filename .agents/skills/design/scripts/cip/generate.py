@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 CIP Design Generator - Generate corporate identity mockups using Gemini Nano Banana
 
@@ -18,12 +17,12 @@ import argparse
 import json
 import os
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Add parent directory for imports
 sys.path.insert(0, str(Path(__file__).parent))
-from core import search, get_cip_brief
+from core import get_cip_brief, search
 
 # Model options
 MODELS = {
@@ -121,7 +120,7 @@ def build_cip_prompt(deliverable, brand_name, style=None, industry=None, mockup=
     # Build prompt components
     deliverable_name = deliverable_data.get("Deliverable", deliverable)
     description = deliverable_data.get("Description", "")
-    dimensions = deliverable_data.get("Dimensions", "")
+    deliverable_data.get("Dimensions", "")
     logo_placement = deliverable_data.get("Logo Placement", "center")
 
     style_name = style_data.get("Style Name", style or "corporate")
@@ -137,13 +136,13 @@ def build_cip_prompt(deliverable, brand_name, style=None, industry=None, mockup=
         # Image editing prompt: instructs to USE the provided logo image
         prompt_parts = [
             f"Create a professional corporate identity mockup photograph of a {deliverable_name}",
-            f"Use the EXACT logo from the provided image - do NOT modify or recreate the logo",
-            f"The logo MUST appear exactly as shown in the input image",
+            "Use the EXACT logo from the provided image - do NOT modify or recreate the logo",
+            "The logo MUST appear exactly as shown in the input image",
             f"Place the logo on the {deliverable_name} at: {logo_placement}",
             f"Brand name: '{brand_name}'",
             f"{description}" if description else "",
             f"Design style: {style_name}",
-            f"Color scheme matching the logo colors",
+            "Color scheme matching the logo colors",
             f"Materials: {materials} with {finishes} finish",
             f"Setting: {mockup_context}",
             f"Mood: {mood}",
@@ -154,7 +153,7 @@ def build_cip_prompt(deliverable, brand_name, style=None, industry=None, mockup=
     else:
         # Pure text-to-image prompt
         prompt_parts = [
-            f"Professional corporate identity mockup photograph",
+            "Professional corporate identity mockup photograph",
             f"showing {deliverable_name} for brand '{brand_name}'",
             f"{description}" if description else "",
             f"{style_name} design style",
@@ -214,7 +213,7 @@ def generate_with_nano_banana(prompt_data, output_dir=None, model_key="flash", a
     # Determine mode
     mode = "image-editing" if logo_image else "text-to-image"
 
-    print(f"\n🎨 Generating CIP mockup...")
+    print("\n🎨 Generating CIP mockup...")
     print(f"   Mode: {mode}")
     print(f"   Deliverable: {prompt_data['deliverable']}")
     print(f"   Brand: {prompt_data['brand']}")

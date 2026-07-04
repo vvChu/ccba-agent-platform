@@ -44,7 +44,7 @@ def parse_skill_file(file_path: Path) -> tuple[dict, str]:
     try:
         meta = yaml.safe_load(yaml_block)
     except Exception as e:
-        raise ValueError(f"Failed to parse frontmatter YAML: {e}")
+        raise ValueError(f"Failed to parse frontmatter YAML: {e}") from e
 
     if meta is None:
         meta = {}
@@ -57,7 +57,7 @@ def parse_skill_file(file_path: Path) -> tuple[dict, str]:
 
 def analyze_steps_completion_criteria(body: str) -> list[tuple[int, str]]:
     """Scan body for workflow steps and check for Completion Criteria.
-    
+
     Returns:
         List of tuples: (line_number, error_message)
     """
@@ -139,7 +139,7 @@ def analyze_steps_completion_criteria(body: str) -> list[tuple[int, str]]:
 
 def validate_skill(file_path: Path) -> list[str]:
     """Validate a single SKILL.md file.
-    
+
     Returns a list of error messages. Empty list if valid.
     """
     errors = []

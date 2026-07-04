@@ -47,7 +47,7 @@ def install_python_packages(packages: list[str]) -> bool:
 
     try:
         cmd = [venv_pip, "install", "--upgrade"] + packages
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
         print("[Python] Cài đặt thành công!")
         return True
     except subprocess.CalledProcessError as e:
@@ -71,7 +71,7 @@ def install_nodejs_packages() -> bool:
     try:
         # Chạy npm install cục bộ tại thư mục gốc dự án
         cmd = ["npm.cmd" if os.name == "nt" else "npm", "install", "docx", "--no-audit", "--no-fund"]
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
         print("[Node.js] Cài đặt thành công thư viện 'docx'!")
         return True
     except subprocess.CalledProcessError as e:
@@ -98,7 +98,7 @@ def install_playwright_browsers() -> bool:
     try:
         print(f"[Playwright] Chạy lệnh: {' '.join(cmd)}")
         # Thiết lập timeout 120s tránh treo vô hạn nếu mạng chậm
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=120)
+        subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=120)
         print("[Playwright] Tải trình duyệt Chromium thành công!")
         return True
     except subprocess.TimeoutExpired:
