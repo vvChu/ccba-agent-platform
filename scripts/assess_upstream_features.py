@@ -34,7 +34,8 @@ except ImportError:
             })
     ai = MockAI()
 
-RECOMMENDATIONS_FILE = Path(".md/knowledge/port_recommendations.md")
+PLATFORM_ROOT = Path(__file__).resolve().parents[1]
+RECOMMENDATIONS_FILE = PLATFORM_ROOT / ".md" / "knowledge" / "port_recommendations.md"
 
 
 def call_ai_evaluation(repo_type: str, skill_name: str, content: str) -> dict:
