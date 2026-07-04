@@ -89,6 +89,9 @@ Agent thực hiện quét thư mục tạm `input_documents/` ở gốc dự án
 
 ### Việc cần làm tiếp theo
 - [Các việc cần làm tiếp]
+
+---
+💡 *Nếu bạn muốn đóng và bàn giao phiên làm việc này ngay bây giờ, hãy chạy lệnh:* `/ccba-handoff`
 ```
 
 *   **Completion Criterion:** Báo cáo được hiển thị đầy đủ, đính kèm các liên kết Markdown dẫn đến các tệp tri thức tương ứng vừa cập nhật.
