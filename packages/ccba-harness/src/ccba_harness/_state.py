@@ -2,30 +2,17 @@ from __future__ import annotations
 
 import _io
 import _thread
-import ast
-import base64
 import builtins
-import fnmatch
-import glob
 import io
 import os
-import re
-import shlex
 import sqlite3
 import subprocess
 import sys
 import threading
-import unicodedata
-import urllib.parse
-import zlib
-from collections.abc import Callable
-from functools import wraps
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-
 if TYPE_CHECKING:
-    from ._guard import HarnessGuard
+    pass
 
 
 # ---------------------------------------------------------------------------
