@@ -12,10 +12,14 @@ from ._artifacts import (
 )
 from ._client import (
     HAS_NOTEBOOKLM,
-    NotebookLMClient,
+    CCBANotebookLMClient,
     check_auth,
     get_client,
 )
+
+# Alias for backward compatibility
+NotebookLMClient = CCBANotebookLMClient
+
 from ._gc import (
     check_quota_and_warn,
     run_garbage_collection,
@@ -33,6 +37,7 @@ from ._security import (
 
 __all__ = [
     "HAS_NOTEBOOKLM",
+    "CCBANotebookLMClient",
     "NotebookLMClient",
     "check_auth",
     "get_client",
