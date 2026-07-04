@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Logo Generation Script using Gemini Nano Banana API
 Uses Gemini 3.1 Flash Image Preview and Gemini 3 Pro Image Preview models
@@ -22,8 +21,9 @@ import argparse
 import os
 import sys
 import time
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 
 # Load environment variables
 def load_env():

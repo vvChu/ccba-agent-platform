@@ -227,7 +227,7 @@ def validate_markdown_file(
     fixed_content = content
     file_modified = False
 
-    for line_num, text, href in links:
+    for line_num, _text, href in links:
         # Strip anchor if present (e.g. "./doc.md#section" -> "./doc.md")
         base_href = href.split("#")[0]
         anchor = href.split("#", 1)[1] if "#" in href else ""

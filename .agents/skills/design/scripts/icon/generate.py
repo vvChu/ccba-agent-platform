@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Icon Generation Script using Gemini 3.1 Pro Preview API
 Generates SVG icons via text generation (SVG is XML text format)
@@ -15,13 +14,12 @@ Usage:
 """
 
 import argparse
-import json
 import os
 import re
 import sys
 import time
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 
 def load_env():
@@ -302,7 +300,7 @@ def generate_batch(prompt, count, output_dir, style=None, color=None,
     )
 
     print(f"\n{'='*60}")
-    print(f"  BATCH ICON GENERATION")
+    print("  BATCH ICON GENERATION")
     print(f"  Model: {MODEL}")
     print(f"  Prompt: {prompt}")
     print(f"  Variants: {count}")

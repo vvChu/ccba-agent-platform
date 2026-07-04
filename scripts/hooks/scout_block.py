@@ -168,12 +168,12 @@ def main(event: str, payload: dict[str, Any]) -> int:
     if blocked:
         print(f"""
 \x1b[31m[SCOUT BLOCK]\x1b[0m: Access to heavy/garbage directory is blocked!
-  
+
   \x1b[33mReason:\x1b[0m {reason}
-  
+
   This directory (e.g. .venv, node_modules, .git) contains heavy files.
   Reading or searching it slows down the Agent and consumes excessive tokens.
-  
+
   To bypass this block:
   1. Ask the user for explicit approval.
   2. Prefix your path or arguments with "APPROVED:".

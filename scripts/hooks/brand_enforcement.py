@@ -56,7 +56,6 @@ def check_file(file_path: Path):
     except Exception:
         return
 
-    has_issues = False
 
     # Check brand spellings
     for pattern, correct in BRAND_PATTERNS:
@@ -64,14 +63,12 @@ def check_file(file_path: Path):
         for m in matches:
             if m != correct:
                 print(f"\x1b[33m[Brand Warning]\x1b[0m In file '{file_path}': Found '{m}', expected '{correct}'")
-                has_issues = True
 
     # Check prohibited words
     for pattern in PROHIBITED_WORDS:
         matches = re.findall(pattern, content, re.IGNORECASE)
         for m in matches:
             print(f"\x1b[31m[Policy Alert]\x1b[0m In file '{file_path}': Found prohibited word '{m}'")
-            has_issues = True
 
 
 def main(event=None, payload=None):

@@ -9,6 +9,7 @@ from .core import (
     render_page_to_image,
     split_pdf,
 )
+from .detector import TitleBlockDetector, TitleBlockRegion
 from .document_skills.pdf_forms import fill_pdf_fields, get_field_info
 from .document_skills.xlsx_recalc import recalc_xlsx
 from .pipeline import (
@@ -17,7 +18,6 @@ from .pipeline import (
     ProcessingResult,
 )
 from .vision import TileResult, VisionOptimizer
-from .detector import TitleBlockDetector, TitleBlockRegion
 
 __all__ = [
     # pipeline (primary entry point)

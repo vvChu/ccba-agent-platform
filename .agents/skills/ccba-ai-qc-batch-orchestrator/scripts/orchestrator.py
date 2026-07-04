@@ -15,7 +15,6 @@ import pandas as pd
 
 from ccba_ai import QCAuditEngine, QCReporterEngine
 
-
 # ---------------------------------------------------------------------------
 # Cross-skill script loader (no sys.path pollution)
 # Scripts within .agents/skills/ are standalone — not installable packages.
@@ -161,10 +160,10 @@ class QCBatchOrchestrator:
             return
 
         df = pd.read_csv(self.matrix_csv)
-        
+
         if IDOPAuditEngine is None:
             raise ImportError("IDOPAuditEngine not loaded. Check skill scripts.")
-            
+
         engine: QCAuditEngine = IDOPAuditEngine(output_dir=self.out_dir, ai_model=ai_model, tile_dpi=150)
 
         hstk_dir = self.project_dir / "HSTK BVTC"
@@ -179,10 +178,10 @@ class QCBatchOrchestrator:
         results = await engine.run_multi_level_audit(level_images)
 
         print(f"\nProcessed {len(results)} levels. Generating Combined Report...")
-        
+
         if IDOPReporter is None:
             raise ImportError("IDOPReporter not loaded. Check skill scripts.")
-            
+
         reporter: QCReporterEngine = IDOPReporter(
             project_name=self.project_dir.name, author="CCBA Batch Orchestrator"
         )
