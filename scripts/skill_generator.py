@@ -377,7 +377,7 @@ Khi người dùng kích hoạt lệnh này dưới dạng:
 
 Agent tiếp nhận lệnh bắt buộc phải thực hiện tác vụ sau:
 
-1.  **Nạp Kỹ năng**: Nạp trực tiếp file hướng dẫn nghiệp vụ tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/{skill_name}/SKILL.md) và file tham số tại [cli_spec.yaml](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/{skill_name}/cli_spec.yaml) vào ngữ cảnh.
+1.  **Nạp Kỹ năng**: Nạp trực tiếp file hướng dẫn nghiệp vụ tại [SKILL.md](file:///[hub_path]/.agents/skills/{skill_name}/SKILL.md) và file tham số tại [cli_spec.yaml](file:///[hub_path]/.agents/skills/{skill_name}/cli_spec.yaml) vào ngữ cảnh (phân giải [hub_path] thành đường dẫn Hub thực tế).
 2.  **Làm theo chỉ dẫn**: Thực thi đúng quy trình (Validate, Maskara, Terminal execution, QC) mô tả trong tệp tin `SKILL.md` đó để trả lời người dùng.
 
 ---
