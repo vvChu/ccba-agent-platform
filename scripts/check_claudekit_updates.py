@@ -15,18 +15,19 @@ if sys.platform == "win32":
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 # Tracking configuration for both upstream repositories
+PLATFORM_ROOT = Path(__file__).resolve().parents[1]
 REPOS_CONFIG = [
     {
         "type": "engineer",
-        "local_path": Path("claudekit-engineer"),
+        "local_path": PLATFORM_ROOT / "claudekit-engineer",
         "remote_url": "https://github.com/claudekit/claudekit-engineer",
-        "sha_file": Path(".md/scratch/claudekit_last_sha.txt")
+        "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_last_sha.txt"
     },
     {
         "type": "marketing",
-        "local_path": Path(".agents/claudekit-marketing"),
+        "local_path": PLATFORM_ROOT / ".agents/claudekit-marketing",
         "remote_url": "https://github.com/claudekit/claudekit-marketing",
-        "sha_file": Path(".md/scratch/claudekit_marketing_last_sha.txt")
+        "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_marketing_last_sha.txt"
     }
 ]
 
