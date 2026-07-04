@@ -62,7 +62,7 @@ Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/T
 
 Sau mỗi buổi seminar, lưu trữ tài liệu vào thư mục theo cấu trúc:
 ```
-BIM_VBPL/
+.md/legal_docs/BIM_VBPL/
   YYYY/
     CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.pdf
     CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.pptx

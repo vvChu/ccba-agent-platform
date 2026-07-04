@@ -6,7 +6,7 @@ parent_document: "../nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_du
 uniclass: "Fi_10_20"
 ---
 
-**PHỤ LỤC IV**
+# PHỤ LỤC IV
 
 BÁO CÁO VỀ CÔNG TÁC GIÁM SÁT THI CÔNG XÂY DỰNG CÔNG TRÌNH  
 *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*
@@ -201,6 +201,3 @@ THEO QUY ĐỊNH PHÁP LUẬT CỦA<br />
 \(2\) Tên chủ đầu tư.
 
 \(3\) Tên gói thầu/giai đoạn/hạng mục công trình/công trình xây dựng.
-
- 
-

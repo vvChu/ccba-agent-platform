@@ -8,14 +8,14 @@
 ```
 ccba-agent-platform/                   ← Hub (Git-backed)
 │
-├── .agent/                            ← AI Agent configurations
+├── .agents/                           ← AI Agent configurations
 │   ├── skills/                        ← Reusable AI skills
 │   │   ├── legal-document-tracker/    ←   Theo dõi VBPL
 │   │   ├── completion-checklist/      ←   HSHT công trình
 │   │   ├── seminar-builder/           ←   Chuẩn bị seminar
 │   │   ├── long-form-writer/          ←   Viết tài liệu dài
-│   │   ├── ai-gateway-sdk/           ←   Kết nối AI Gateway (22 models)
-│   │   └── platform-loader/          ←   Bootstrap + service routing
+│   │   ├── ai-gateway-sdk/            ←   Kết nối AI Gateway (22 models)
+│   │   └── platform-loader/           ←   Bootstrap + service routing
 │   └── workflows/                     ← Automated workflows
 │       ├── prepare-seminar.md
 │       ├── update-legal-registry.md
@@ -32,17 +32,19 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   └── session_learnings.md           ←   Patterns, anti-patterns
 │
 ├── packages/                          ← Internal service modules
-│   ├── ccba-ai/                       ←   AI Gateway client (pip install)
+│   ├── ccba-ai/                       ←   AI Gateway client & SDK
+│   ├── ccba-harness/                  ←   Testing harness utilities
+│   ├── ccba-legal-intel/              ←   Legal intelligence connectors
+│   ├── ccba-notebooklm/               ←   Google NotebookLM wrapper & Mock client
+│   ├── ccba-ooxml/                    ←   OOXML validation and parsing engine
+│   ├── ccba-pdf-prep/                 ←   PDF processing (tiling, title-block, chunks)
 │   └── mdconverter/                   ←   Document converter service
-│       ├── src/mdconverter/           ←     Core library
-│       ├── tests/                     ←     Unit tests
-│       └── pyproject.toml             ←     Service config
 │
 ├── scripts/                           ← Utility scripts
 ├── templates/                         ← Shared templates
 ├── tools/                             ← CLI tools, MCP servers
 │
-├── .md/                               ← Processing workspace (gitignored)
+├── .md/                               ← Central Knowledge Base (Layer 2 - structure tracked, temp files ignored)
 └── pyproject.toml                     ← Root workspace config (uv)
 ```
 
@@ -50,8 +52,13 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 
 | Package | Mô tả | Install |
 |---------|--------|---------|
-| `ccba-ai` | AI Gateway client — 22 models, 1 endpoint | `pip install -e packages/ccba-ai` |
-| `mdconverter` | Document to Markdown converter | `pip install -e packages/mdconverter` |
+| `ccba-ai` | AI Gateway client & SDK — 22 models, 1 endpoint | `pip install -e "packages/ccba-ai"` |
+| `ccba-harness` | Testing harness and mocking utilities | `pip install -e "packages/ccba-harness"` |
+| `ccba-legal-intel` | Legal intelligence services and connectors | `pip install -e "packages/ccba-legal-intel"` |
+| `ccba-notebooklm` | Google NotebookLM API wrapper & mock client | `pip install -e "packages/ccba-notebooklm"` |
+| `ccba-ooxml` | OOXML document structure integrity validator | `pip install -e "packages/ccba-ooxml"` |
+| `ccba-pdf-prep` | PDF Preprocessing pipeline (tiling, title-block, chunks) | `pip install -e "packages/ccba-pdf-prep"` |
+| `mdconverter` | Document-to-Markdown converter service | `pip install -e "packages/mdconverter"` |
 
 ## Cách sử dụng
 

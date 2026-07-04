@@ -17,6 +17,7 @@ import yaml
 # Enforce UTF-8 output on Windows
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
@@ -26,8 +27,14 @@ STEP_LINE_RE = re.compile(r"^\s*([0-9]+)\.\s+(.*)$")
 
 # Header keywords that indicate a workflow/steps section
 WORKFLOW_HEADERS = {
-    "workflow", "quy trình", "các bước", "steps",
-    "hành động", "chuyển đổi", "tiến hành", "thực hiện"
+    "workflow",
+    "quy trình",
+    "các bước",
+    "steps",
+    "hành động",
+    "chuyển đổi",
+    "tiến hành",
+    "thực hiện",
 }
 
 
@@ -44,20 +51,20 @@ def parse_skill_file(file_path: Path) -> tuple[dict, str]:
     try:
         meta = yaml.safe_load(yaml_block)
     except Exception as e:
-        raise ValueError(f"Failed to parse frontmatter YAML: {e}")
+        raise ValueError(f"Failed to parse frontmatter YAML: {e}") from e
 
     if meta is None:
         meta = {}
     elif not isinstance(meta, dict):
         raise ValueError("Frontmatter YAML is not a valid mapping/dictionary")
 
-    body = content[match.end():]
+    body = content[match.end() :]
     return meta, body
 
 
 def analyze_steps_completion_criteria(body: str) -> list[tuple[int, str]]:
     """Scan body for workflow steps and check for Completion Criteria.
-    
+
     Returns:
         List of tuples: (line_number, error_message)
     """
@@ -101,8 +108,16 @@ def analyze_steps_completion_criteria(body: str) -> list[tuple[int, str]]:
             # If we were tracking a step, evaluate it before exiting section
             if current_step_line is not None:
                 step_body = "\n".join(current_step_content)
-                if not ("**Completion Criterion:**" in step_body or "**Tiêu chí hoàn thành:**" in step_body):
-                    errors.append((current_step_line, f"Step {current_step_num} is missing a Completion Criterion ('**Completion Criterion:**' or '**Tiêu chí hoàn thành:**')"))
+                if not (
+                    "**Completion Criterion:**" in step_body
+                    or "**Tiêu chí hoàn thành:**" in step_body
+                ):
+                    errors.append(
+                        (
+                            current_step_line,
+                            f"Step {current_step_num} is missing a Completion Criterion ('**Completion Criterion:**' or '**Tiêu chí hoàn thành:**')",
+                        )
+                    )
                 current_step_line = None
                 current_step_num = None
                 current_step_content = []
@@ -117,11 +132,19 @@ def analyze_steps_completion_criteria(body: str) -> list[tuple[int, str]]:
             # If we already have a step in progress, validate it first
             if current_step_line is not None:
                 step_body = "\n".join(current_step_content)
-                if not ("**Completion Criterion:**" in step_body or "**Tiêu chí hoàn thành:**" in step_body):
-                    errors.append((current_step_line, f"Step {current_step_num} is missing a Completion Criterion ('**Completion Criterion:**' or '**Tiêu chí hoàn thành:**')"))
+                if not (
+                    "**Completion Criterion:**" in step_body
+                    or "**Tiêu chí hoàn thành:**" in step_body
+                ):
+                    errors.append(
+                        (
+                            current_step_line,
+                            f"Step {current_step_num} is missing a Completion Criterion ('**Completion Criterion:**' or '**Tiêu chí hoàn thành:**')",
+                        )
+                    )
 
             # Start new step
-            current_step_line = idx + 1 # 1-indexed (in body coordinates, we will offset later)
+            current_step_line = idx + 1  # 1-indexed (in body coordinates, we will offset later)
             current_step_num = step_match.group(1)
             current_step_content = [line]
         elif current_step_line is not None:
@@ -131,15 +154,22 @@ def analyze_steps_completion_criteria(body: str) -> list[tuple[int, str]]:
     # Check the last step of the file
     if current_step_line is not None:
         step_body = "\n".join(current_step_content)
-        if not ("**Completion Criterion:**" in step_body or "**Tiêu chí hoàn thành:**" in step_body):
-            errors.append((current_step_line, f"Step {current_step_num} is missing a Completion Criterion ('**Completion Criterion:**' or '**Tiêu chí hoàn thành:**')"))
+        if not (
+            "**Completion Criterion:**" in step_body or "**Tiêu chí hoàn thành:**" in step_body
+        ):
+            errors.append(
+                (
+                    current_step_line,
+                    f"Step {current_step_num} is missing a Completion Criterion ('**Completion Criterion:**' or '**Tiêu chí hoàn thành:**')",
+                )
+            )
 
     return errors
 
 
 def validate_skill(file_path: Path) -> list[str]:
     """Validate a single SKILL.md file.
-    
+
     Returns a list of error messages. Empty list if valid.
     """
     errors = []
@@ -189,7 +219,11 @@ def validate_skill(file_path: Path) -> list[str]:
 
 def main():
     parser = argparse.ArgumentParser(description="Validate CCBA Agent Skills.")
-    parser.add_argument("paths", nargs="*", help="Specific SKILL.md file paths or directories to scan. If omitted, scans .agents/skills/ recursively.")
+    parser.add_argument(
+        "paths",
+        nargs="*",
+        help="Specific SKILL.md file paths or directories to scan. If omitted, scans .agents/skills/ recursively.",
+    )
     parser.add_argument("--root", default=".", help="Workspace root directory")
     args = parser.parse_args()
 
@@ -241,8 +275,12 @@ def main():
 
     print("-" * 70)
     if total_errors > 0:
-        print(f"[Skills Validator] Validation FAILED. Found {total_errors} errors across {files_with_errors} file(s).")
-        print("\x1b[31m[ERROR] Skills quality guidelines violated. Please fix the errors above.\x1b[0m")
+        print(
+            f"[Skills Validator] Validation FAILED. Found {total_errors} errors across {files_with_errors} file(s)."
+        )
+        print(
+            "\x1b[31m[ERROR] Skills quality guidelines violated. Please fix the errors above.\x1b[0m"
+        )
         sys.exit(1)
     else:
         print("\x1b[32m[OK] All skills validated successfully! No issues detected.\x1b[0m")

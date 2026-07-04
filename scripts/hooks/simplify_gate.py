@@ -23,25 +23,37 @@ SOFT_VERBS = ["commit", "finalize", "release"]
 def build_verb_pattern(verbs: list[str]) -> re.Pattern:
     """Build a regex pattern to match dynamic action verbs in user prompts."""
     verb_list = "|".join(re.escape(v) for v in verbs)
-    action_prefix = "|".join([
-        r"please",
-        r"can\s+you",
-        r"go\s+ahead\s+and",
-        r"let'?s",
-        r"ready\s+to",
-        r"time\s+to"
-    ])
-    action_object = "|".join([
-        r"it", r"this", r"that", r"these", r"the", r"my", r"our",
-        r"changes?", r"branch", r"pr", r"pull\s+request", r"release",
-        r"package", r"prod(?:uction)?", r"staging", r"now", r"please", r"to"
-    ])
+    action_prefix = "|".join(
+        [r"please", r"can\s+you", r"go\s+ahead\s+and", r"let'?s", r"ready\s+to", r"time\s+to"]
+    )
+    action_object = "|".join(
+        [
+            r"it",
+            r"this",
+            r"that",
+            r"these",
+            r"the",
+            r"my",
+            r"our",
+            r"changes?",
+            r"branch",
+            r"pr",
+            r"pull\s+request",
+            r"release",
+            r"package",
+            r"prod(?:uction)?",
+            r"staging",
+            r"now",
+            r"please",
+            r"to",
+        ]
+    )
 
     return re.compile(
         r"/(?:ck:)?(?P<v1>" + verb_list + r")\b|"
         r"\b(?:" + action_prefix + r")\s+(?P<v2>" + verb_list + r")\b|"
         r"\b(?P<v3>" + verb_list + r")\b\s+(?:" + action_object + r")\b",
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
 
@@ -55,7 +67,11 @@ def matched_severity(prompt: str) -> tuple[str, str]:
         Tuple of (severity, matched_verb) where severity is "hard", "soft", or "".
     """
     # Reject false positives: negated phrases
-    negated_pattern = r"\b(?:don'?t|do not|never|not)\s+(?:\w+\s+){0,2}?(?:" + "|".join(HARD_VERBS + SOFT_VERBS) + r")\b"
+    negated_pattern = (
+        r"\b(?:don'?t|do not|never|not)\s+(?:\w+\s+){0,2}?(?:"
+        + "|".join(HARD_VERBS + SOFT_VERBS)
+        + r")\b"
+    )
     if re.search(negated_pattern, prompt, re.IGNORECASE) or "ship on" in prompt.lower():
         return "", ""
 
@@ -97,22 +113,16 @@ def get_git_diff_signals(cwd: str) -> dict[str, Any]:
     Returns:
         Dict of diff metrics (total_loc, file_count, max_file_loc).
     """
-    metrics = {
-        "total_loc": 0,
-        "file_count": 0,
-        "max_file_loc": 0,
-        "files": []
-    }
+    metrics = {"total_loc": 0, "file_count": 0, "max_file_loc": 0, "files": []}
 
     # 1. Run git diff HEAD --numstat
     try:
         diff_res = subprocess.run(
             ["git", "diff", "HEAD", "--numstat", "--ignore-all-space"],
             cwd=cwd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
-            timeout=5
+            timeout=5,
         )
     except Exception:
         return metrics
@@ -139,10 +149,9 @@ def get_git_diff_signals(cwd: str) -> dict[str, Any]:
         ls_res = subprocess.run(
             ["git", "ls-files", "--others", "--exclude-standard"],
             cwd=cwd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
-            timeout=5
+            timeout=5,
         )
     except Exception:
         ls_res = None
@@ -208,16 +217,16 @@ def main(event: str, payload: dict[str, Any]) -> int:
         verb_noun = "shipping/PR" if severity == "hard" else "committing"
         error_msg = f"""
 \x1b[31m[SIMPLIFY GATE]\x1b[0m: Unsimplified git diff detected ({", ".join(breaches)})!
-  
+
   Matched Verb: \x1b[33m'{verb}'\x1b[0m ({verb_noun} intent detected)
-  
+
   The current changes are too large and complex.
   Please simplify your code or refactor before proceeding.
-  
+
   To fix this:
   - Run code simplifier subagent to reduce diff size.
   - Or manually clean up redundant/commented code.
-  
+
   To bypass:
   - Add "APPROVED:" prefix to your request.
   - Or set environment variable `CK_SIMPLIFY_DISABLED=1`.

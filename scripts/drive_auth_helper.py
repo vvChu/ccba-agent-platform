@@ -8,15 +8,17 @@ import sys
 from pathlib import Path
 
 # Cấu hình UTF-8 cho console đầu ra trên Windows để tránh lỗi mã hóa
-if sys.stdout.encoding != 'utf-8':
+if sys.stdout.encoding != "utf-8":
     import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 # Thêm path để import các thư viện
 
 try:
     from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore
+
     LIBS_AVAILABLE = True
 except ImportError:
     LIBS_AVAILABLE = False
@@ -33,7 +35,9 @@ def print_setup_guide() -> None:
     print(" HƯỚNG DẪN THIẾT LẬP OAUTH CLIENT ID CÁ NHÂN (GOOGLE DRIVE)")
     print("=" * 80)
     print("Do chính sách bảo mật mới của Google, gcloud Client ID mặc định đã bị chặn.")
-    print("Để xác thực an toàn bằng tài khoản cá nhân, anh vui lòng làm theo 4 bước sau (chỉ mất 2 phút):")
+    print(
+        "Để xác thực an toàn bằng tài khoản cá nhân, anh vui lòng làm theo 4 bước sau (chỉ mất 2 phút):"
+    )
     print("\nBước 1: Tạo dự án & Bật Drive API")
     print("  1. Truy cập: https://console.cloud.google.com/")
     print("  2. Tạo một Dự án mới (Project) bất kỳ (ví dụ: 'CCBA-BIM-Drive').")
@@ -42,8 +46,12 @@ def print_setup_guide() -> None:
     print("  1. Tìm mục 'OAuth consent screen' ở thanh menu trái.")
     print("  2. Chọn User Type là 'External' -> Nhấn 'Create'.")
     print("  3. Điền thông tin bắt buộc (Tên ứng dụng: 'CCBA Link', Email liên hệ...).")
-    print("  4. Click tiếp tục đến phần 'Test users' -> Nhấn 'ADD USERS' -> Nhập email của anh (macvnboy@gmail.com).")
-    print("     (* BẮT BUỘC: Google chỉ cho phép Test Users đăng nhập khi App ở trạng thái Testing để tránh bị chặn).")
+    print(
+        "  4. Click tiếp tục đến phần 'Test users' -> Nhấn 'ADD USERS' -> Nhập email của anh (macvnboy@gmail.com)."
+    )
+    print(
+        "     (* BẮT BUỘC: Google chỉ cho phép Test Users đăng nhập khi App ở trạng thái Testing để tránh bị chặn)."
+    )
     print("  5. Lưu lại.")
     print("\nBước 3: Tạo thông tin xác thực (Credentials)")
     print("  1. Tìm mục 'Credentials' ở thanh menu trái.")
@@ -54,7 +62,9 @@ def print_setup_guide() -> None:
     print("  1. Đổi tên tệp tin vừa tải về thành: client_secrets.json")
     print("  2. Sao chép/Lưu tệp tin đó vào đúng thư mục:")
     print(f"     {CLIENT_SECRETS_PATH.resolve()}")
-    print("\nSau khi đã lưu file 'client_secrets.json', hãy chạy lại lệnh này để hoàn tất đăng nhập!")
+    print(
+        "\nSau khi đã lưu file 'client_secrets.json', hãy chạy lại lệnh này để hoàn tất đăng nhập!"
+    )
     print("=" * 80)
 
 
@@ -93,7 +103,9 @@ def login_drive() -> None:
 
     except Exception as e:
         print(f"\n[Error] Đăng nhập thất bại: {e}")
-        print("Hãy chắc chắn rằng anh đã thêm đúng email macvnboy@gmail.com vào danh sách 'Test users' của app.")
+        print(
+            "Hãy chắc chắn rằng anh đã thêm đúng email macvnboy@gmail.com vào danh sách 'Test users' của app."
+        )
 
 
 def main() -> None:

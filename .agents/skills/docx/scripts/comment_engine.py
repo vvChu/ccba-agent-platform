@@ -6,14 +6,13 @@ import html
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
-import yaml  # type: ignore
+from typing import TYPE_CHECKING
 
 from .utilities import _generate_hex_id
 
 if TYPE_CHECKING:
     from xml.dom.minidom import Element
+
     from .document import Document, DocxXMLEditor
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
@@ -95,23 +94,15 @@ class CommentEngine:
             tag="w:commentReference", attrs={"w:id": str(parent_comment_id)}
         )
 
-        self._document.insert_after(
-            parent_start_elem, self._comment_range_start_xml(comment_id)
-        )
+        self._document.insert_after(parent_start_elem, self._comment_range_start_xml(comment_id))
         parent_ref_run = parent_ref_elem.parentNode
-        self._document.insert_after(
-            parent_ref_run, f'<w:commentRangeEnd w:id="{comment_id}"/>'
-        )
-        self._document.insert_after(
-            parent_ref_run, self._comment_ref_run_xml(comment_id)
-        )
+        self._document.insert_after(parent_ref_run, f'<w:commentRangeEnd w:id="{comment_id}"/>')
+        self._document.insert_after(parent_ref_run, self._comment_ref_run_xml(comment_id))
 
         self._add_to_comments_xml(
             comment_id, para_id, text, self.doc.author, self.doc.initials, timestamp
         )
-        self._add_to_comments_extended_xml(
-            para_id, parent_para_id=parent_info["para_id"]
-        )
+        self._add_to_comments_extended_xml(para_id, parent_para_id=parent_info["para_id"])
         self._add_to_comments_ids_xml(para_id, durable_id)
         self._add_to_comments_extensible_xml(durable_id)
 
@@ -174,9 +165,7 @@ class CommentEngine:
         self._add_content_type_for_people()
         self._add_relationship_for_people()
 
-        self._update_settings(
-            self.word_path / "settings.xml", track_revisions=track_revisions
-        )
+        self._update_settings(self.word_path / "settings.xml", track_revisions=track_revisions)
 
     def _update_people_xml(self, path: Path) -> None:
         """Create people.xml if it doesn't exist."""
@@ -251,9 +240,7 @@ class CommentEngine:
                 inserted = True
 
             if not inserted:
-                clr_elements = editor.dom.getElementsByTagName(
-                    f"{prefix}:clrSchemeMapping"
-                )
+                clr_elements = editor.dom.getElementsByTagName(f"{prefix}:clrSchemeMapping")
                 if clr_elements:
                     editor.insert_before(clr_elements[0], rsids_xml)
                     inserted = True
@@ -283,9 +270,7 @@ class CommentEngine:
         editor = self.doc["word/comments.xml"]
         root = editor.get_node(tag="w:comments")
 
-        escaped_text = (
-            text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        )
+        escaped_text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         comment_xml = f'''<w:comment w:id="{comment_id}">
   <w:p w14:paraId="{para_id}" w14:textId="77777777">
     <w:r><w:rPr><w:rStyle w:val="CommentReference"/></w:rPr><w:annotationRef/></w:r>
@@ -297,9 +282,7 @@ class CommentEngine:
     def _add_to_comments_extended_xml(self, para_id: str, parent_para_id: str | None) -> None:
         """Add a single comment to commentsExtended.xml."""
         if not self.comments_extended_path.exists():
-            shutil.copy(
-                TEMPLATE_DIR / "commentsExtended.xml", self.comments_extended_path
-            )
+            shutil.copy(TEMPLATE_DIR / "commentsExtended.xml", self.comments_extended_path)
 
         editor = self.doc["word/commentsExtended.xml"]
         root = editor.get_node(tag="w15:commentsEx")
@@ -324,9 +307,7 @@ class CommentEngine:
     def _add_to_comments_extensible_xml(self, durable_id: str) -> None:
         """Add a single comment to commentsExtensible.xml."""
         if not self.comments_extensible_path.exists():
-            shutil.copy(
-                TEMPLATE_DIR / "commentsExtensible.xml", self.comments_extensible_path
-            )
+            shutil.copy(TEMPLATE_DIR / "commentsExtensible.xml", self.comments_extensible_path)
 
         editor = self.doc["word/commentsExtensible.xml"]
         root = editor.get_node(tag="w16cex:commentsExtensible")
