@@ -123,7 +123,9 @@ class MockArtifactsService:
     ) -> MockTask:
         return MockTask("task-quiz-1")
 
-    async def download_quiz(self, notebook_id: str, output_path: str, output_format: str = "json") -> str:
+    async def download_quiz(
+        self, notebook_id: str, output_path: str, output_format: str = "json"
+    ) -> str:
         p = Path(output_path)
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(
@@ -160,7 +162,12 @@ class MockArtifactsService:
         return str(p.absolute())
 
     async def generate_infographic(
-        self, notebook_id: str, source_ids: list[str], orientation: Any, detail_level: Any, style: Any
+        self,
+        notebook_id: str,
+        source_ids: list[str],
+        orientation: Any,
+        detail_level: Any,
+        style: Any,
     ) -> MockTask:
         return MockTask("task-info-1")
 
@@ -270,12 +277,16 @@ class CCBANotebookLMClient:
             return cls(MockNotebookLMClientAdapter(), use_mock=True)
 
         if not HAS_NOTEBOOKLM or NotebookLMClient is None:
-            logger.warning("Không tìm thấy thư viện notebooklm-py. Tự động chuyển sang Mock Client.")
+            logger.warning(
+                "Không tìm thấy thư viện notebooklm-py. Tự động chuyển sang Mock Client."
+            )
             return cls(MockNotebookLMClientAdapter(), use_mock=True)
 
         try:
             real_client = (
-                NotebookLMClient.from_storage(path=path) if path else NotebookLMClient.from_storage()
+                NotebookLMClient.from_storage(path=path)
+                if path
+                else NotebookLMClient.from_storage()
             )
             return cls(real_client, use_mock=False)
         except Exception as e:

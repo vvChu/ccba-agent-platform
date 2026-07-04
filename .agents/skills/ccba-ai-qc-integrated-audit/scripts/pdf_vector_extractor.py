@@ -19,11 +19,7 @@ class PDFVectorExtractor:
         Returns a dictionary containing extracted text blocks grouped by page.
         """
         doc = fitz.open(str(pdf_path))
-        data = {
-            "filename": Path(pdf_path).name,
-            "page_count": len(doc),
-            "pages": []
-        }
+        data = {"filename": Path(pdf_path).name, "page_count": len(doc), "pages": []}
 
         for page_num in range(len(doc)):
             page = doc[page_num]
@@ -37,15 +33,9 @@ class PDFVectorExtractor:
             for b in text_blocks:
                 text = b[4].strip()
                 if text and b[6] == 0:  # b[6] == 0 means text block (1 is image)
-                    cleaned_blocks.append({
-                        "bbox": [round(c, 2) for c in b[:4]],
-                        "text": text
-                    })
+                    cleaned_blocks.append({"bbox": [round(c, 2) for c in b[:4]], "text": text})
 
-            page_data = {
-                "page_num": page_num,
-                "text_blocks": cleaned_blocks
-            }
+            page_data = {"page_num": page_num, "text_blocks": cleaned_blocks}
             data["pages"].append(page_data)
 
         doc.close()

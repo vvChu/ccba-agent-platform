@@ -14,6 +14,7 @@ from pathlib import Path
 # Enforce UTF-8 output on Windows
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
@@ -28,7 +29,7 @@ def check_npx_available() -> bool:
             text=True,
             encoding="utf-8",
             check=True,
-            shell=True if sys.platform == "win32" else False
+            shell=True if sys.platform == "win32" else False,
         )
         return True
     except (subprocess.SubprocessError, FileNotFoundError):
@@ -53,7 +54,7 @@ def run_repomix(source_dir: Path, output_file: Path, exclude_patterns: list) -> 
         "uv.lock",
         "package-lock.json",
         ".chrome_profile",
-        "claudekit-engineer"
+        "claudekit-engineer",
     ]
 
     # Merge ignores
@@ -61,15 +62,8 @@ def run_repomix(source_dir: Path, output_file: Path, exclude_patterns: list) -> 
 
     # repomix config schema
     config_data = {
-        "output": {
-            "filePath": str(output_file.absolute()),
-            "style": "xml",
-            "parsable": True
-        },
-        "ignore": {
-            "useGitignore": True,
-            "customPatterns": final_excludes
-        }
+        "output": {"filePath": str(output_file.absolute()), "style": "xml", "parsable": True},
+        "ignore": {"useGitignore": True, "customPatterns": final_excludes},
     }
 
     print(f"[Repomix Pack] Creating temporary config at: {config_file.name}")
@@ -80,7 +74,14 @@ def run_repomix(source_dir: Path, output_file: Path, exclude_patterns: list) -> 
         print(f"[Repomix Pack] Running npx repomix on directory: {source_dir}")
 
         # Prepare command
-        cmd = ["npx", "--yes", "repomix", str(source_dir.absolute()), "--config", str(config_file.absolute())]
+        cmd = [
+            "npx",
+            "--yes",
+            "repomix",
+            str(source_dir.absolute()),
+            "--config",
+            str(config_file.absolute()),
+        ]
 
         # Run process
         result = subprocess.run(
@@ -88,7 +89,7 @@ def run_repomix(source_dir: Path, output_file: Path, exclude_patterns: list) -> 
             capture_output=True,
             text=True,
             encoding="utf-8",
-            shell=True if sys.platform == "win32" else False
+            shell=True if sys.platform == "win32" else False,
         )
 
         if result.returncode == 0:
@@ -111,14 +112,22 @@ def run_repomix(source_dir: Path, output_file: Path, exclude_patterns: list) -> 
                 os.remove(config_file)
                 print("[Repomix Pack] Cleaned up temporary config file.")
             except OSError as cleanup_err:
-                print(f"[Repomix Pack] Warning: Could not clean up {config_file.name}: {cleanup_err}")
+                print(
+                    f"[Repomix Pack] Warning: Could not clean up {config_file.name}: {cleanup_err}"
+                )
 
 
 def main():
     parser = argparse.ArgumentParser(description="CCBA Repomix Packaging Wrapper")
-    parser.add_argument("--source", default=".", help="Source directory to package (default: current)")
-    parser.add_argument("--output", default=".md/scratch/source_pack.txt", help="Output pack file path")
-    parser.add_argument("--exclude", nargs="*", default=[], help="Additional glob patterns to ignore")
+    parser.add_argument(
+        "--source", default=".", help="Source directory to package (default: current)"
+    )
+    parser.add_argument(
+        "--output", default=".md/scratch/source_pack.txt", help="Output pack file path"
+    )
+    parser.add_argument(
+        "--exclude", nargs="*", default=[], help="Additional glob patterns to ignore"
+    )
 
     args = parser.parse_args()
 
@@ -129,7 +138,10 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not check_npx_available():
-        print("[Repomix Pack] Error: 'npx' is not installed or not found on PATH. Node.js is required.", file=sys.stderr)
+        print(
+            "[Repomix Pack] Error: 'npx' is not installed or not found on PATH. Node.js is required.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     success = run_repomix(source_path, output_path, args.exclude)

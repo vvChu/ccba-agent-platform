@@ -56,9 +56,7 @@ def fill_pdf_form(input_pdf_path, fields_json_path, output_pdf_path):
         pdf_width, pdf_height = pdf_dimensions[page_num]
 
         transformed_entry_box = transform_coordinates(
-            field["entry_bounding_box"],
-            image_width, image_height,
-            pdf_width, pdf_height
+            field["entry_bounding_box"], image_width, image_height, pdf_width, pdf_height
         )
 
         # Skip empty fields
