@@ -4,6 +4,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from .utils import int_to_roman, roman_to_int
+
 
 class TableReconstructor:
     """Core utility to reconstruct broken tables in markdown files using docx alignment."""
@@ -97,20 +99,8 @@ class TableReconstructor:
         if match:
             num = int(match.group(1))
             # Convert numeric index to Roman numeral
-            return f"PHỤ LỤC {self._int_to_roman(num)}"
+            return f"PHỤ LỤC {int_to_roman(num)}"
         return None
-
-    def _int_to_roman(self, num: int) -> str:
-        val = [10, 9, 5, 4, 1]
-        syb = ["X", "IX", "V", "IV", "I"]
-        roman_num = ""
-        i = 0
-        while num > 0:
-            for _ in range(num // val[i]):
-                roman_num += syb[i]
-                num -= val[i]
-            i += 1
-        return roman_num
 
     def _extract_section(self, content: str, title: str) -> str:
         lines = content.splitlines(keepends=True)
@@ -146,8 +136,8 @@ class TableReconstructor:
         match = re.search(r"PH\u1ee4 L\u1ee4C\s+([I|V|X]+)", title)
         if match:
             roman = match.group(1)
-            num = self._roman_to_int(roman)
-            next_roman = self._int_to_roman(num + 1)
+            num = roman_to_int(roman)
+            next_roman = int_to_roman(num + 1)
             next_title = f"PHỤ LỤC {next_roman}"
 
             for i in range(start_idx + 1, len(lines)):
@@ -162,13 +152,3 @@ class TableReconstructor:
                     break
 
         return "".join(lines[start_idx:end_idx])
-
-    def _roman_to_int(self, roman: str) -> int:
-        roman_map = {"I": 1, "V": 5, "X": 10}
-        num = 0
-        for i in range(len(roman)):
-            if i > 0 and roman_map[roman[i]] > roman_map[roman[i - 1]]:
-                num += roman_map[roman[i]] - 2 * roman_map[roman[i - 1]]
-            else:
-                num += roman_map[roman[i]]
-        return num
