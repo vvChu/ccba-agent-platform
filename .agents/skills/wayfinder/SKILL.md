@@ -10,7 +10,7 @@ Kỹ năng này giúp thiết lập và vận hành Bản đồ định hướng
 
 ## Nguyên tắc Tham chiếu theo Tên (Refer by name)
 
-Mỗi bản đồ và ticket đều có tên gọi cụ thể. Trong mọi báo cáo hoặc nhật ký giao tiếp, **bắt buộc** phải gọi tên đầy đủ của ticket (nhúng liên kết tương ứng) thay vì chỉ dùng số hiệu hoặc mã định danh (Ví dụ: dùng `[Đóng gói Mutex Lock](link)` thay vì chỉ viết `#42`).
+Mỗi bản đồ và ticket đều có tên gọi cụ thể. Trong mọi báo cáo hoặc nhật ký giao tiếp, **bắt buộc** phải gọi tên đầy đủ của ticket (nhúng liên kết tương ứng) thay vì chỉ dùng số hiệu hoặc mã định danh (Ví dụ: dùng `[Đóng gói Mutex Lock](https://github.com)` thay vì chỉ viết `#42`).
 
 ---
 
