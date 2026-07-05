@@ -18,14 +18,14 @@ if (Get-Command uv -ErrorAction SilentlyContinue) {
     Write-Host "Detected 'uv' - Using fast installation method..." -ForegroundColor Green
     uv venv --allow-existing
     & .\.venv\Scripts\Activate.ps1
-    uv pip install -e ".[dev,llm]"
+    uv pip install -e "packages/mdconverter[dev,llm]"
 }
 else {
     Write-Host "'uv' not found. Falling back to standard pip..." -ForegroundColor Yellow
     python -m venv .venv
     & .\.venv\Scripts\Activate.ps1
     python -m pip install --upgrade pip
-    pip install -e ".[dev,llm]"
+    pip install -e "packages/mdconverter[dev,llm]"
 }
 
 # 3. Interactive Configuration

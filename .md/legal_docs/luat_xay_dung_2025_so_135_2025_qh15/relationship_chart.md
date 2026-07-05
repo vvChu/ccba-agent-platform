@@ -1,11 +1,11 @@
 ---
-type: Visual Diagram
-title: Relationship Chart - Luật Xây dựng 2025
 description: Mermaid relationship visualization graph of law and guiding documents.
-resource: 
-timestamp: 2026-06-28T04:07:29Z
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Luat-Xay-dung-2025-so-135-2025-QH15-675213.aspx
+status: current
+timestamp: '2026-06-28T04:07:29Z'
+title: Relationship Chart - Luật Xây dựng 2025
+type: Guiding Document
 ---
-
 ## Relationship Diagram
 
 ```mermaid

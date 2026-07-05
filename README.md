@@ -12,20 +12,20 @@
 ```
 ccba-agent-platform/                    ← Hub (Git-backed)
 ├── .agents/
-│   ├── skills/                        ← AI Agent skills (55 skills)
+│   ├── skills/                        ← AI Agent skills (57 skills)
 │   │   ├── legal-document-tracker/    ←   Theo dõi VBPL
 │   │   ├── completion-checklist/      ←   HSHT công trình
 │   │   ├── seminar-builder/           ←   Chuẩn bị seminar
 │   │   ├── docs-validator/            ←   Linter tài liệu tĩnh (Patched)
 │   │   ├── architecture-sync/         ←   Đồng bộ hiến pháp kiến trúc (Patched)
-│   │   └── ...                        ←   Và 50+ kỹ năng chuyên dụng khác
-│   └── workflows/                     ← Automated workflows (27 workflows)
-├── rules/                             ← CCBA organizational rules
-├── .md/                               ← Accumulated knowledge (Project Knowledge Base)
+│   │   └── ...                        ←   Và 52+ kỹ năng chuyên dụng khác
+│   ├── workflows/                     ← Automated workflows (33 workflows)
+│   └── templates/                     ← Shared templates
+├── .md/                               ← Central Knowledge Base (Project Knowledge Base)
 │   ├── knowledge/                     ←   Tài liệu nghiên cứu, roadmap, spec kỹ thuật
 │   ├── seminars/                      ←   Agenda, tóm tắt seminar
 │   └── extracted_docs/                ←   Văn bản pháp luật trích xuất thô
-├── packages/                          ← Internal service modules
+├── packages/                          ← Internal service modules (pip installable)
 │   ├── ccba-ai/                       ←   AI Gateway client & SDK
 │   ├── ccba-harness/                  ←   Testing harness utilities
 │   ├── ccba-legal-intel/              ←   Legal intelligence connectors
@@ -98,6 +98,22 @@ python scripts/validate_docs.py [docs-dir] --src scripts,packages
 | `/ccba-discard-feature` | Hủy bỏ branch hiện tại cả local và remote |
 | `/ccba-sync-upstream` | Kiểm tra cập nhật và đồng bộ tri thức từ ClaudeKit và MattPocock |
 | `/ccba-improve-codebase-architecture` | Quét phát hiện module nông (shallow modules) và sinh sơ đồ Mermaid đề xuất refactor |
+| `/ccba-build-skill` | Nghiên cứu tài liệu và đóng gói tạo Skill mới đạt chuẩn CCBA |
+| `/ccba-copywriting` | Soạn thảo tài liệu, biểu mẫu hành chính/thương mại |
+| `/ccba-docs` | Cập nhật, đồng bộ và kiểm định tài liệu tĩnh |
+| `/ccba-extract-style` | Trích xuất văn phong hành chính/thầu từ tài liệu mẫu |
+| `/ccba-git-guardrails` | Kích hoạt rào chắn ngăn lệnh Git nguy hiểm |
+| `/ccba-grilling` | Phỏng vấn dồn dập để kiểm chứng kế hoạch hoặc thiết kế |
+| `/ccba-handoff` | Đóng gói phiên làm việc chuyển giao context |
+| `/ccba-notebooklm` | RAG query, import tài liệu và tạo Audio Overview |
+| `/ccba-resolving-merge-conflicts` | Giải quyết xung đột merge/rebase an toàn |
+| `/ccba-review-skill` | Đánh giá chất lượng và tối ưu hóa file SKILL.md |
+| `/ccba-tdd` | Thiết kế và viết code theo quy trình TDD |
+| `/ccba-wayfinder` | Phân tích giải quyết bài toán mù mờ (foggy problems) |
+| `/ccba-wizard` | Tạo bash script setup môi trường dev tương tác |
+| `/workflow_pccc_cdt_tuthamdinh` | Quy trình hỗ trợ Chủ đầu tư Tự thẩm định thiết kế PCCC |
+| `/workflow_pccc_thamdinh_congan` | Quy trình Thẩm định thiết kế PCCC phần MEP nộp PC07 |
+| `/workflow_pccc_thamdinh_cqxd` | Quy trình Thẩm định PCCC phần Kiến trúc nộp Cơ quan xây dựng |
 
 ## Development
 

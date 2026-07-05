@@ -1,11 +1,15 @@
 ---
+description: Chi tiết PHỤ LỤC ban hành kèm theo Nghi Dinh 210 2026 Nd Cp Huong Dan
+  Luat Xay Dung Ve Hop Dong Xay Dung
+document_number: 210/2026/NĐ-CP
+parent_document: ../nghi_dinh_210_2026_nd_cp_huong_dan_luat_xay_dung_ve_hop_dong_xay_dung.md
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-210-2026-ND-CP-huong-dan-hop-dong-xay-dung.aspx
+status: current
+timestamp: '2026-06-18T00:00:00Z'
+title: PHỤ LỤC - PHƯƠNG PHÁP ĐIỀU CHỈNH ĐƠN GIÁ VÀ GIÁ HỢP ĐỒNG XÂY DỰNG
 type: Appendix
-title: "PHỤ LỤC - PHƯƠNG PHÁP ĐIỀU CHỈNH ĐƠN GIÁ VÀ GIÁ HỢP ĐỒNG XÂY DỰNG"
-description: "Chi tiết PHỤ LỤC ban hành kèm theo Nghi Dinh 210 2026 Nd Cp Huong Dan Luat Xay Dung Ve Hop Dong Xay Dung"
-parent_document: "../nghi_dinh_210_2026_nd_cp_huong_dan_luat_xay_dung_ve_hop_dong_xay_dung.md"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
-
 # PHỤ LỤC
 
 PHƯƠNG PHÁP ĐIỀU CHỈNH ĐƠN GIÁ VÀ GIÁ HỢP ĐỒNG XÂY DỰNG
