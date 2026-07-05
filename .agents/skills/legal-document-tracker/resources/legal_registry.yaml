@@ -13,6 +13,110 @@ decrees:
   - maintenance
   document_number: 207/2026/NĐ-CP
   issued_by: Chính phủ
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-193-2026-ND-CP-quyet-toan-von-dau-tu-du-an.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an.docx
+  id: ND-193-2026
+  issued_date: '2026-06-05'
+  short_name: NĐ 193/2026
+  status: current
+  title: Nghị định 193/2026/NĐ-CP về quyết toán vốn đầu tư dự án
+  topics:
+  - public_investment
+  - finance
+  document_number: 193/2026/NĐ-CP
+  issued_by: Chính phủ
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-206-2026-ND-CP-quan-ly-chi-phi-dau-tu-xay-dung.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_206_2026_nd_cp_quan_ly_chi_phi_dau_tu_xay_dung.docx
+  id: ND-206-2026
+  issued_date: '2026-06-15'
+  short_name: NĐ 206/2026
+  status: current
+  title: Nghị định 206/2026/NĐ-CP về quản lý chi phí đầu tư xây dựng
+  topics:
+  - cost_management
+  - construction
+  document_number: 206/2026/NĐ-CP
+  issued_by: Chính phủ
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-209-2026-ND-CP-quan-ly-vat-lieu-xay-dung.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_209_2026_nd_cp_quan_ly_vat_lieu_xay_dung.docx
+  id: ND-209-2026
+  issued_date: '2026-06-16'
+  short_name: NĐ 209/2026
+  status: current
+  title: Nghị định 209/2026/NĐ-CP về quản lý vật liệu xây dựng
+  topics:
+  - materials
+  - construction
+  document_number: 209/2026/NĐ-CP
+  issued_by: Chính phủ
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-210-2026-ND-CP-huong-dan-hop-dong-xay-dung.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_210_2026_nd_cp_huong_dan_luat_xay_dung_ve_hop_dong_xay_dung.docx
+  id: ND-210-2026
+  issued_date: '2026-06-18'
+  short_name: NĐ 210/2026
+  status: current
+  title: Nghị định 210/2026/NĐ-CP hướng dẫn Luật Xây dựng về hợp đồng xây dựng
+  topics:
+  - contract
+  - construction
+  document_number: 210/2026/NĐ-CP
+  issued_by: Chính phủ
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-212-2026-ND-CP-dieu-kien-nang-luc-hoat-dong-xay-dung.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung.docx
+  id: ND-212-2026
+  issued_date: '2026-06-20'
+  short_name: NĐ 212/2026
+  status: current
+  title: Nghị định 212/2026/NĐ-CP về điều kiện năng lực hoạt động xây dựng
+  topics:
+  - qualification
+  - licensing
+  document_number: 212/2026/NĐ-CP
+  issued_by: Chính phủ
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-217-2026-ND-CP-quan-ly-hoat-dong-xay-dung.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.docx
+  id: ND-217-2026
+  issued_date: '2026-06-25'
+  short_name: NĐ 217/2026
+  status: current
+  title: Nghị định 217/2026/NĐ-CP về quản lý hoạt động xây dựng
+  topics:
+  - project_management
+  - construction
+  document_number: 217/2026/NĐ-CP
+  issued_by: Chính phủ
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-34-2026-TT-BXD-cap-cong-trinh-xay-dung.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung.docx
+  id: TT-34-2026-BXD
+  issued_date: '2026-06-26'
+  short_name: TT 34/2026
+  status: current
+  title: Thông tư 34/2026/TT-BXD về cấp công trình xây dựng
+  topics:
+  - grading
+  - construction
+  document_number: 34/2026/TT-BXD
+  issued_by: Bộ Xây dựng
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Quyet-dinh-1040-QD-BXD-cong-bo-mau-hop-dong-xay-dung.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung.docx
+  id: QD-1040-2026-BXD
+  issued_date: '2026-06-28'
+  short_name: QĐ 1040/QĐ-BXD
+  status: current
+  title: Quyết định 1040/QĐ-BXD công bố mẫu hợp đồng xây dựng
+  topics:
+  - contract
+  - templates
+  document_number: 1040/QĐ-BXD
+  issued_by: Bộ Xây dựng
 - amendments:
   - ref: ND-35-2023
     title: NĐ 35/2023/NĐ-CP sửa đổi NĐ 06/2021
@@ -185,6 +289,37 @@ laws:
   topics:
   - public_investment
   - project_management
+circulars:
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-36-2026-TT-BXD-huong-dan-phuong-phap-xac-dinh-va-quan-ly-chi-phi-dau-tu-xay-dung-712408.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu.docx
+  id: TT-36-2026-BXD
+  issued_date: '2026-06-26'
+  short_name: TT 36/2026
+  status: current
+  title: Thông tư 36/2026/TT-BXD hướng dẫn phương pháp xác định và quản lý chi phí
+    đầu tư xây dựng
+  topics:
+  - construction
+  - cost_management
+  document_number: 36/2026/TT-BXD
+  issued_by: Bộ Xây dựng
+  markdown_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu.md
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-37-2026-TT-BXD-phuong-phap-xac-dinh-dinh-muc-du-toan-va-cac-chi-tieu-kinh-te-ky-thuat-712395.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa.docx
+  id: TT-37-2026-BXD
+  issued_date: '2026-06-26'
+  short_name: TT 37/2026
+  status: current
+  title: Thông tư 37/2026/TT-BXD phương pháp xác định định mức dự toán và các chỉ
+    tiêu kinh tế kỹ thuật
+  topics:
+  - construction
+  - cost_management
+  document_number: 37/2026/TT-BXD
+  issued_by: Bộ Xây dựng
+  markdown_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa.md
 metadata:
   focus_area: Quản lý chất lượng công trình xây dựng
   last_updated: '2026-03-28'

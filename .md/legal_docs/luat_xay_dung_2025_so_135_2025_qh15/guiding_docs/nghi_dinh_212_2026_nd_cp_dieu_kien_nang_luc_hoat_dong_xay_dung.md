@@ -1,15 +1,17 @@
 ---
+code: CCBA_RD_VBPL_003
+document_number: 212/2026/NĐ-CP
+effective_date: '2026-07-01'
+issued_by: Chính phủ
+issued_date: '2026-04-10'
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-212-2026-ND-CP-dieu-kien-nang-luc-hoat-dong-xay-dung.aspx
+revision: Rev00
+status: current
+timestamp: '2026-06-20T00:00:00Z'
+title: Nghị định 212/2026/NĐ-CP về điều kiện năng lực hoạt động xây dựng
 type: Decree
-title: "Nghị định 212/2026/NĐ-CP về điều kiện năng lực hoạt động xây dựng"
-code: "CCBA_RD_VBPL_003"
-revision: "Rev00"
-document_number: "212/2026/NĐ-CP"
-issued_date: "2026-04-10"
-effective_date: "2026-07-01"
-issued_by: "Chính phủ"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
-
 <table>
 <colgroup>
 <col style="width: 37%" />
@@ -1211,7 +1213,7 @@ PHÓ THỦ TƯỚNG</strong><br />
 
 ## DANH SÁCH PHỤ LỤC ĐÍNH KÈM
 
-- [PHỤ LỤC I: CHUYÊN MÔN VÀ LĨNH VỰC CẤP CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG](./appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_01.md)
-- [PHỤ LỤC II: LĨNH VỰC VÀ PHẠM VI HOẠT ĐỘNG XÂY DỰNG CỦA CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG](./appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_02.md)
-- [PHỤ LỤC III: MẪU CÁC VĂN BẢN TRONG QUY TRÌNH CẤP CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG VÀ GIẤY PHÉP HOẠT ĐỘNG XÂY DỰNG](./appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_03.md)
-- [PHỤ LỤC IV: KÝ HIỆU NƠI CẤP CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG](./appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_04.md)
+- [PHỤ LỤC I: CHUYÊN MÔN VÀ LĨNH VỰC CẤP CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG](/guiding_docs/appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_01.md)
+- [PHỤ LỤC II: LĨNH VỰC VÀ PHẠM VI HOẠT ĐỘNG XÂY DỰNG CỦA CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG](/guiding_docs/appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_02.md)
+- [PHỤ LỤC III: MẪU CÁC VĂN BẢN TRONG QUY TRÌNH CẤP CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG VÀ GIẤY PHÉP HOẠT ĐỘNG XÂY DỰNG](/guiding_docs/appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_03.md)
+- [PHỤ LỤC IV: KÝ HIỆU NƠI CẤP CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG](/guiding_docs/appendices/nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung-phu_luc_04.md)

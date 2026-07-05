@@ -1,15 +1,17 @@
 ---
+code: CCBA_RD_VBPL_007
+document_number: 193/2026/NĐ-CP
+effective_date: '2026-07-01'
+issued_by: Chính phủ
+issued_date: '2026-03-20'
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-193-2026-ND-CP-quyet-toan-von-dau-tu-du-an.aspx
+revision: Rev00
+status: current
+timestamp: '2026-06-05T00:00:00Z'
+title: Nghị định 193/2026/NĐ-CP quyết toán vốn đầu tư dự án
 type: Decree
-title: "Nghị định 193/2026/NĐ-CP quyết toán vốn đầu tư dự án"
-code: "CCBA_RD_VBPL_007"
-revision: "Rev00"
-document_number: "193/2026/NĐ-CP"
-issued_date: "2026-03-20"
-effective_date: "2026-07-01"
-issued_by: "Chính phủ"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
-
 <table>
 <colgroup>
 <col style="width: 37%" />
@@ -675,4 +677,4 @@ các Vụ, Cục, đơn vị trực thuộc, Công báo;<br />
 
 ## DANH SÁCH PHỤ LỤC ĐÍNH KÈM
 
-- [Phụ lục: *(Kèm theo Nghị định số 193/2026/NĐ-CP ngày 01 tháng 6 năm 2026 của Chính phủ)*](./appendices/nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an-phu_luc_01.md)
+- [Phụ lục: *(Kèm theo Nghị định số 193/2026/NĐ-CP ngày 01 tháng 6 năm 2026 của Chính phủ)*](/guiding_docs/appendices/nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an-phu_luc_01.md)
