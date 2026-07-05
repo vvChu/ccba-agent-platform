@@ -16,7 +16,7 @@ Mỗi bản đồ và ticket đều có tên gọi cụ thể. Trong mọi báo 
 
 ## Cấu trúc Bản đồ (The Map)
 
-Bản đồ có thể lưu dưới dạng file Markdown cục bộ (mặc định) hoặc dạng Issue trên Issue Tracker của kho lưu trữ (tham khảo `docs/agents/issue-tracker.md`). Cấu trúc bản đồ gồm 4 phần chính:
+Bản đồ có thể lưu dưới dạng file Markdown cục bộ (mặc định) hoặc dạng Issue trên Issue Tracker của kho lưu trữ (nếu kho chứa được cấu hình). Cấu trúc bản đồ gồm 4 phần chính:
 
 1. **Điểm đích (Destination):** Mô tả cụ thể trạng thái hoàn thành của toàn bộ bài toán (ví dụ: một bộ thông số spec, một quyết định kiến trúc cốt lõi đã chốt).
 2. **Ghi chú (Notes):** Các lưu ý đặc biệt, kỹ năng cần nạp cho phiên làm việc.
