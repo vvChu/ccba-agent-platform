@@ -138,8 +138,10 @@ def test_download_three_tier_shared_drive_exists(tmp_path):
     shared_file.write_text("dummy doc content", encoding="utf-8")
 
     cdp_mock = MagicMock()
-    with patch.dict(os.environ, {"SHARED_DRIVE_DIR": str(shared_dir)}), \
-         patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path):
+    with (
+        patch.dict(os.environ, {"SHARED_DRIVE_DIR": str(shared_dir)}),
+        patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
+    ):
         assert download_three_tier(cdp_mock, download_dir, "test_doc") is True
 
     expected_target = download_dir / "test_doc.doc"
@@ -162,12 +164,14 @@ def test_download_three_tier_google_drive(tmp_path):
     class MockDownloader:
         def __init__(self, fd, request):
             self.fd = fd
+
         def next_chunk(self):
             self.fd.write(b"drive docx content")
             return None, True
 
     # Inject mock scripts.legal_sync module into sys.modules
     import types
+
     mock_sync = types.ModuleType("scripts.legal_sync")
     mock_sync.GOOGLE_API_AVAILABLE = True
     mock_sync.get_drive_service = MagicMock(return_value=mock_service)
@@ -181,8 +185,10 @@ def test_download_three_tier_google_drive(tmp_path):
 
     cdp_mock = MagicMock()
     try:
-        with patch.dict(os.environ, {"DRIVE_FOLDER_ID": "mock_folder_id"}), \
-             patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path):
+        with (
+            patch.dict(os.environ, {"DRIVE_FOLDER_ID": "mock_folder_id"}),
+            patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
+        ):
             assert download_three_tier(cdp_mock, download_dir, "test_doc") is True
     finally:
         sys.modules.pop("scripts.legal_sync", None)
@@ -210,6 +216,7 @@ def test_download_three_tier_s3(tmp_path):
 
     # Inject mock boto3 and botocore into sys.modules
     import types
+
     mock_boto3 = types.ModuleType("boto3")
     mock_boto3.client = MagicMock(return_value=mock_s3_client)
     sys.modules["boto3"] = mock_boto3
@@ -217,15 +224,19 @@ def test_download_three_tier_s3(tmp_path):
     mock_botocore = types.ModuleType("botocore")
     sys.modules["botocore"] = mock_botocore
     mock_botocore_exc = types.ModuleType("botocore.exceptions")
+
     class MockClientError(Exception):
         pass
+
     mock_botocore_exc.ClientError = MockClientError
     sys.modules["botocore.exceptions"] = mock_botocore_exc
 
     cdp_mock = MagicMock()
     try:
-        with patch.dict(os.environ, {"AWS_BUCKET_NAME": "mock-bucket"}), \
-             patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path):
+        with (
+            patch.dict(os.environ, {"AWS_BUCKET_NAME": "mock-bucket"}),
+            patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
+        ):
             assert download_three_tier(cdp_mock, download_dir, "test_doc") is True
     finally:
         sys.modules.pop("boto3", None)
@@ -243,9 +254,11 @@ def test_download_three_tier_headless_guard(tmp_path):
 
     cdp_mock = MagicMock()
     # In headless, it should raise HeadlessEnvironmentError
-    with patch.dict(os.environ, {"CI": "true"}), \
-         patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path), \
-         pytest.raises(HeadlessEnvironmentError):
+    with (
+        patch.dict(os.environ, {"CI": "true"}),
+        patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
+        pytest.raises(HeadlessEnvironmentError),
+    ):
         download_three_tier(cdp_mock, download_dir, "test_doc")
 
 
@@ -260,8 +273,10 @@ def test_download_three_tier_direct_crawl(tmp_path):
         return True
 
     cdp_mock = MagicMock()
-    with patch("ccba_legal.crawler.trigger_download", side_effect=mock_trigger), \
-         patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path):
+    with (
+        patch("ccba_legal.crawler.trigger_download", side_effect=mock_trigger),
+        patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
+    ):
         assert download_three_tier(cdp_mock, download_dir, "test_doc") is True
 
     # Check that file exists in target dir

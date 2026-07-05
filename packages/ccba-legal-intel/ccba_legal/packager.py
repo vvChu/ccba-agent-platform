@@ -26,7 +26,6 @@ def extract_parent_metadata(content: str) -> dict[str, Any]:
     return inherited
 
 
-
 class OKFBundlePackager:
     """Manages creation, writing, and directory structure organization of Open Knowledge Format (OKF) Bundles."""
 
@@ -121,6 +120,7 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
                         processed_content = self.process_tables(content, bundle_dir)
                         try:
                             from ccba_legal.parser import LegalAnalysisEngine
+
                             engine = LegalAnalysisEngine()
                             processed_content = engine.standardize_formulas(processed_content)
                         except Exception as e:
@@ -210,6 +210,7 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
         # Automatically scan for clause-level amendments and update target documents / registry
         try:
             from ccba_legal.registry import LegalRegistryManager
+
             registry_mgr = LegalRegistryManager()
 
             # Scan primary document
@@ -221,9 +222,7 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
                 except ValueError:
                     rel_path = primary_md_path.as_posix()
                 registry_mgr.process_amendments_from_document(
-                    source_doc_id=bundle_slug,
-                    source_doc_content=content,
-                    source_doc_path=rel_path
+                    source_doc_id=bundle_slug, source_doc_content=content, source_doc_path=rel_path
                 )
 
             # Scan guiding documents
@@ -236,16 +235,13 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
                     except ValueError:
                         rel_path = guiding_md_path.as_posix()
                     registry_mgr.process_amendments_from_document(
-                        source_doc_id=gf,
-                        source_doc_content=content,
-                        source_doc_path=rel_path
+                        source_doc_id=gf, source_doc_content=content, source_doc_path=rel_path
                     )
         except Exception as e:
             print(f"[OKF Packager] Error during automatic amendment processing: {e}")
 
         # 4. Standardise all bundle links to be bundle-absolute
         self.standardize_bundle_links(bundle_dir)
-
 
     def split_concept_appendices(self, file_path: Path) -> list[str]:
         """Detect and split appendices from a markdown file, saving them in an appendices/ subdirectory."""
@@ -316,13 +312,13 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
                 f'title: "{full_label} - {title}"',
                 f'description: "Chi tiết {full_label} ban hành kèm theo {parent_slug.replace("_", " ").title()}"',
                 f'parent_document: "../{file_path.name}"',
-                'uniclass: "Fi_10_20"'
+                'uniclass: "Fi_10_20"',
             ]
             for key, val in inherited.items():
                 if isinstance(val, str):
                     fm_lines.append(f'{key}: "{val}"')
                 else:
-                    fm_lines.append(f'{key}: {val}')
+                    fm_lines.append(f"{key}: {val}")
             fm_lines.append("---")
             frontmatter = "\n".join(fm_lines) + f"\n\n# {full_label}\n\n"
             app_content = frontmatter + "\n".join(app_lines).strip() + "\n"
@@ -376,11 +372,19 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
             elif current_dieu and khoan_pattern.match(line):
                 m = khoan_pattern.match(line)
                 current_khoan = m.group(2)
-                line = m.group(1) + f'<a id="d{current_dieu}k{current_khoan}"></a>' + line[len(m.group(1)):]
+                line = (
+                    m.group(1)
+                    + f'<a id="d{current_dieu}k{current_khoan}"></a>'
+                    + line[len(m.group(1)) :]
+                )
             elif current_dieu and current_khoan and diem_pattern.match(line):
                 m = diem_pattern.match(line)
                 diem_char = m.group(2).lower()
-                line = m.group(1) + f'<a id="d{current_dieu}k{current_khoan}d{diem_char}"></a>' + line[len(m.group(1)):]
+                line = (
+                    m.group(1)
+                    + f'<a id="d{current_dieu}k{current_khoan}d{diem_char}"></a>'
+                    + line[len(m.group(1)) :]
+                )
 
             output_lines.append(line)
 
@@ -444,7 +448,7 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
         headers = [val.replace("|", "\\|") for val in grid[0]]
         lines = [
             "| " + " | ".join(headers) + " |",
-            "| " + " | ".join(["---"] * len(headers)) + " |"
+            "| " + " | ".join(["---"] * len(headers)) + " |",
         ]
         for row in grid[1:]:
             escaped_row = [val.replace("|", "\\|") for val in row]
@@ -455,6 +459,7 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
         """Convert a 2D grid into a CSV string."""
         import csv
         import io
+
         output = io.StringIO()
         writer = csv.writer(output, lineterminator="\n")
         writer.writerows(grid)
@@ -463,6 +468,7 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
     def grid_to_json(self, grid: list[list[str]]) -> str:
         """Convert a 2D grid into a JSON string (list of row dicts)."""
         import json
+
         if not grid:
             return "[]"
         headers = grid[0]
@@ -507,6 +513,7 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
     def process_tables(self, content: str, bundle_dir: Path) -> str:
         """Parse, flatten, and save tables, returning content with replaced markup."""
         from bs4 import BeautifulSoup
+
         tables_dir = bundle_dir / "tables"
         table_strings = self.find_top_level_tables(content)
         for idx, table_str in enumerate(table_strings, 1):
@@ -520,8 +527,12 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
                 (tables_dir / f"{base_name}.html").write_text(table_str, encoding="utf-8")
             if num_rows > 50:
                 tables_dir.mkdir(parents=True, exist_ok=True)
-                (tables_dir / f"{base_name}.csv").write_text(self.grid_to_csv(grid), encoding="utf-8")
-                (tables_dir / f"{base_name}.json").write_text(self.grid_to_json(grid), encoding="utf-8")
+                (tables_dir / f"{base_name}.csv").write_text(
+                    self.grid_to_csv(grid), encoding="utf-8"
+                )
+                (tables_dir / f"{base_name}.json").write_text(
+                    self.grid_to_json(grid), encoding="utf-8"
+                )
                 replacement = (
                     f"\n\n*Bảng {idx:02d} có {num_rows - 1} dòng (hơn 50 dòng). "
                     f"Chi tiết xem tại [tệp CSV](tables/{base_name}.csv) "
@@ -576,13 +587,13 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
                 "---",
                 "type: Section",
                 f'title: "{title}"',
-                'parent_document: "../full_text.md"'
+                'parent_document: "../full_text.md"',
             ]
             for key, val in inherited.items():
                 if isinstance(val, str):
                     fm_lines.append(f'{key}: "{val}"')
                 else:
-                    fm_lines.append(f'{key}: {val}')
+                    fm_lines.append(f"{key}: {val}")
             fm_lines.append("---")
             frontmatter = "\n".join(fm_lines) + "\n\n" + c_text + "\n"
             dest.write_text(frontmatter, encoding="utf-8")
@@ -593,6 +604,7 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
         import math
 
         from ccba_legal.monitor import TokenMonitor
+
         monitor = TokenMonitor()
         paragraphs = []
         curr_para = []
@@ -621,12 +633,20 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
 
         for p in paragraphs:
             p_words = len(p.split())
-            if curr_chunk and (curr_words >= 200) and (curr_words + p_words / 2 > target_size or curr_words + p_words > 400):
+            if (
+                curr_chunk
+                and (curr_words >= 200)
+                and (curr_words + p_words / 2 > target_size or curr_words + p_words > 400)
+            ):
                 c_text = "\n\n".join(curr_chunk)
-                chunks.append({
-                    "chunk_id": idx, "content": c_text,
-                    "word_count": curr_words, "token_count": monitor.get_context_token_count([c_text])
-                })
+                chunks.append(
+                    {
+                        "chunk_id": idx,
+                        "content": c_text,
+                        "word_count": curr_words,
+                        "token_count": monitor.get_context_token_count([c_text]),
+                    }
+                )
                 idx += 1
                 curr_chunk, curr_words = [p], p_words
             else:
@@ -640,16 +660,25 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
                 chunks[-1]["word_count"] += curr_words
                 chunks[-1]["token_count"] = monitor.get_context_token_count([chunks[-1]["content"]])
             else:
-                chunks.append({
-                    "chunk_id": idx, "content": c_text,
-                    "word_count": curr_words, "token_count": monitor.get_context_token_count([c_text])
-                })
+                chunks.append(
+                    {
+                        "chunk_id": idx,
+                        "content": c_text,
+                        "word_count": curr_words,
+                        "token_count": monitor.get_context_token_count([c_text]),
+                    }
+                )
 
-        (bundle_dir / "chunks.json").write_text(json.dumps(chunks, ensure_ascii=False, indent=2), encoding="utf-8")
+        (bundle_dir / "chunks.json").write_text(
+            json.dumps(chunks, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
-    def _write_logs_and_index(self, bundle_dir: Path, bundle_slug: str, guiding_files: list[str]) -> None:
+    def _write_logs_and_index(
+        self, bundle_dir: Path, bundle_slug: str, guiding_files: list[str]
+    ) -> None:
         """Create and update index.md, log.md, and dead_ends.md in the root of the OKF Bundle."""
         import time
+
         timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
         # Write log.md
@@ -680,7 +709,7 @@ No dead ends or crawler restrictions encountered.
             "- [Full Text (Processed)](/full_text.md) (type: `Processed Law`)\n",
             "- [Chunks JSON](/chunks.json) (type: `Data Chunks`)\n",
             "- [Processing Log](/log.md) (type: `Process Log`)\n",
-            "- [Dead Ends Log](/dead_ends.md) (type: `Dead Ends Log`)\n"
+            "- [Dead Ends Log](/dead_ends.md) (type: `Dead Ends Log`)\n",
         ]
 
         lines = content.splitlines()
@@ -839,7 +868,9 @@ def inject_warning_block(
     for offset in range(1, 4):
         if target_idx + offset < len(lines):
             check_line = lines[target_idx + offset]
-            if "[!WARNING]" in check_line and (source_doc_path in check_line or amendment_source in check_line):
+            if "[!WARNING]" in check_line and (
+                source_doc_path in check_line or amendment_source in check_line
+            ):
                 already_exists = True
                 break
 
@@ -847,4 +878,3 @@ def inject_warning_block(
         lines.insert(target_idx + 1, warning_text)
 
     return "\n".join(lines)
-

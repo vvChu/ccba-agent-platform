@@ -59,7 +59,9 @@ def test_load_relation_synonyms_malformed_yaml(tmp_path):
     yaml_file = resources_dir / "relation_synonyms.yaml"
 
     # Write malformed YAML (invalid indentation and list structure)
-    yaml_file.write_text("relation_synonyms:\n  amends_docs\n    - 'Văn bản bị sửa đổi'\n  -", encoding="utf-8")
+    yaml_file.write_text(
+        "relation_synonyms:\n  amends_docs\n    - 'Văn bản bị sửa đổi'\n  -", encoding="utf-8"
+    )
 
     with patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path):
         # Should print warning and return the DEFAULT_RELATION_SYNONYMS mapping
@@ -91,6 +93,7 @@ relation_synonyms:
 
     # Simulate JavaScript logic on the page elements with key normalization:
     import re
+
     def js_matches_fixed(element_text: str, key_from_yaml: str) -> bool:
         normalized_key = key_from_yaml.replace(",", "")
         normalized_key = re.sub(r"\s+", " ", normalized_key).strip()
@@ -117,9 +120,11 @@ def test_download_three_tier_empty_cache_file(tmp_path):
     cache_file.touch()
 
     cdp_mock = MagicMock()
-    with patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path), \
-         patch("ccba_legal.crawler._check_is_headless", return_value=False), \
-         patch("ccba_legal.crawler.trigger_download", return_value=False):
+    with (
+        patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
+        patch("ccba_legal.crawler._check_is_headless", return_value=False),
+        patch("ccba_legal.crawler.trigger_download", return_value=False),
+    ):
         # Bypasses 0-byte cache and falls back to Tier 3, which returns False
         assert download_three_tier(cdp_mock, download_dir, "test_doc") is False
 
@@ -136,6 +141,7 @@ def test_download_three_tier_s3_network_error(tmp_path):
 
     # Inject mock boto3 and botocore modules
     import types
+
     mock_boto3 = types.ModuleType("boto3")
     mock_boto3.client = MagicMock(return_value=mock_s3_client)
     sys.modules["boto3"] = mock_boto3
@@ -165,10 +171,12 @@ def test_download_three_tier_s3_network_error(tmp_path):
         return True
 
     try:
-        with patch.dict(os.environ, {"AWS_BUCKET_NAME": "mock-bucket"}), \
-             patch("ccba_legal.crawler.trigger_download", side_effect=mock_trigger), \
-             patch("ccba_legal.crawler._check_is_headless", return_value=False), \
-             patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path):
+        with (
+            patch.dict(os.environ, {"AWS_BUCKET_NAME": "mock-bucket"}),
+            patch("ccba_legal.crawler.trigger_download", side_effect=mock_trigger),
+            patch("ccba_legal.crawler._check_is_headless", return_value=False),
+            patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
+        ):
             # Bypasses S3 error and falls back to Tier 3 successfully
             assert download_three_tier(cdp_mock, download_dir, "test_doc") is True
     finally:

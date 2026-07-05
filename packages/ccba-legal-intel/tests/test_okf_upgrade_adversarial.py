@@ -180,6 +180,7 @@ Nội dung Điều 1.
 def test_validate_docs_linter_logic(tmp_path):
     # Import validation functions from scripts/validate_docs.py
     import sys
+
     sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
     import validate_docs
 
