@@ -21,7 +21,7 @@ Kỹ năng này giúp bẻ nhỏ một bản PRD hoặc tài liệu thiết kế
 
 3. **Xuất bản các ticket:**
    - Tạo các ticket trên Issue Tracker (theo thứ tự các ticket độc lập trước, ticket bị chặn sau để dễ gắn liên kết tham chiếu).
-   - Nếu không sử dụng tracker, xuất các ticket thành các tệp Markdown cục bộ tương ứng trong thư mục `.md/knowledge/issues/{slug}.md` và đồng bộ vào file index của dự án.
+   - Nếu không sử dụng tracker, đảm bảo tạo thư mục `.md/knowledge/issues/` nếu chưa tồn tại. Tiến hành xuất các ticket thành các tệp Markdown cục bộ tương ứng trong thư mục `.md/knowledge/issues/{slug}.md`, đồng thời cập nhật/đồng bộ danh sách ticket vào tệp tiến trình chung của dự án tại `.md/knowledge/index.md` (hoặc tệp bản đồ định hướng chính).
    - **Tiêu chí hoàn thành:** Toàn bộ các ticket đã duyệt được đăng tải thành công (cục bộ hoặc lên GitHub Issues) với đầy đủ thông tin mô tả và tiêu chuẩn nghiệm thu (Acceptance criteria).
 
 ---
