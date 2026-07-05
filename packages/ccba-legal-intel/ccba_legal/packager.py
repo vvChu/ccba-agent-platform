@@ -3,6 +3,7 @@ import shutil
 import time
 from pathlib import Path
 from typing import Any
+
 import yaml
 
 
@@ -16,7 +17,7 @@ def extract_parent_metadata(content: str) -> dict[str, Any]:
                 parent_fm = yaml.safe_load(parts[1]) or {}
             except Exception:
                 pass
-    
+
     # Extract only the specified target fields
     inherited = {}
     for key in ["resource", "status", "document_number", "timestamp"]:
@@ -570,7 +571,7 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
         for num, title, clines in chapters:
             c_text = "\n".join(clines).strip()
             dest = sections_dir / f"chuong_{num:02d}.md"
-            
+
             fm_lines = [
                 "---",
                 "type: Section",
@@ -715,7 +716,7 @@ No dead ends or crawler restrictions encountered.
             content = filepath.read_text(encoding="utf-8")
             link_pattern = re.compile(r"(\[([^\]]+)\]\(([^)]+)\))")
 
-            def replace_link(match):
+            def replace_link(match, filepath=filepath):
                 full_link = match.group(1)
                 text = match.group(2)
                 href = match.group(3)

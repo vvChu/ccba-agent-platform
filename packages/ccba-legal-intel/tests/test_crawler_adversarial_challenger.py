@@ -1,13 +1,10 @@
 import json
 import os
 import sys
-import time
 import threading
+import time
 import types
-from pathlib import Path
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from ccba_legal.crawler import (
     DEFAULT_RELATION_SYNONYMS,
