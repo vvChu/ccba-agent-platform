@@ -1,11 +1,20 @@
 ---
+description: This Decree details and guides the implementation of the Construction
+  Law regarding construction contracts. It specifies the classification, content,
+  and required documentation for various contract types, including EPC and turnkey
+  contracts. Furthermore, it establishes comprehensive rules for contract pricing,
+  advances, performance guarantees, dispute resolution, and procedures for contract
+  modification, suspension, and termination. Finally, it outlines the specific requirements
+  for payment dossiers and settlement processes, particularly focusing on public investment
+  and PPP projects.
+document_number: 210/2026/NĐ-CP
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-210-2026-ND-CP-huong-dan-hop-dong-xay-dung.aspx
+status: current
+timestamp: '2026-06-18T00:00:00Z'
+title: Nghị định quy định chi tiết và hướng dẫn thi hành một số điều của Luật Xây
+  dựng về hợp đồng xây dựng
 type: Law
-title: "Nghị định quy định chi tiết và hướng dẫn thi hành một số điều của Luật Xây dựng về hợp đồng xây dựng"
-description: "This Decree details and guides the implementation of the Construction Law regarding construction contracts. It specifies the classification, content, and required documentation for various contract types, including EPC and turnkey contracts. Furthermore, it establishes comprehensive rules for contract pricing, advances, performance guarantees, dispute resolution, and procedures for contract modification, suspension, and termination. Finally, it outlines the specific requirements for payment dossiers and settlement processes, particularly focusing on public investment and PPP projects."
-resource: "https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-210-2026-ND-CP-huong-dan-Luat-Xay-dung-ve-hop-dong-xay-dung-696691.aspx"
-timestamp: "2026-07-04T09:34:29Z"
 ---
-
 CHÍNH PHỦ
 -------
 
@@ -842,4 +851,4 @@ Phạm Gia Túc
 
 ## DANH SÁCH PHỤ LỤC ĐÍNH KÈM
 
-- [PHỤ LỤC: PHƯƠNG PHÁP ĐIỀU CHỈNH ĐƠN GIÁ VÀ GIÁ HỢP ĐỒNG XÂY DỰNG](./appendices/nghi_dinh_210_2026_nd_cp_huong_dan_luat_xay_dung_ve_hop_dong_xay_dung-phu_luc_01.md)
+- [PHỤ LỤC: PHƯƠNG PHÁP ĐIỀU CHỈNH ĐƠN GIÁ VÀ GIÁ HỢP ĐỒNG XÂY DỰNG](/guiding_docs/appendices/nghi_dinh_210_2026_nd_cp_huong_dan_luat_xay_dung_ve_hop_dong_xay_dung-phu_luc_01.md)
