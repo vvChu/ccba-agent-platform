@@ -94,3 +94,101 @@ New law sample:
         if not res:
             res = {"changes_summary": "Failed to extract diff summary.", "comparison_table": []}
         return res
+
+    def standardize_formulas(self, text: str) -> str:
+        """Detect construction cost formulas in the text and standardize them using the LLM.
+
+        Args:
+            text: The legal text containing possible formulas.
+
+        Returns:
+            The text with standardized LaTeX equations, explanation tables, and Python executable blocks.
+        """
+        keywords = ["công thức", "tính toán", "chi phí", "phương pháp tính"]
+        if not any(k in text.lower() for k in keywords):
+            return text
+
+        paragraphs = text.split("\n\n")
+        updated_paras = []
+        for para in paragraphs:
+            has_formula = False
+            lower_para = para.lower()
+            if "công thức" in lower_para or "tính theo" in lower_para or "tính bằng" in lower_para:
+                has_formula = True
+            elif "=" in lower_para and any(op in lower_para for op in ["+", "-", "*", "/", " x "]):
+                has_formula = True
+
+            if has_formula:
+                prompt = f"""
+Analyze this text paragraph. If it contains a formula for calculating construction costs, values or quantities:
+1. Convert the formula into a LaTeX equation block wrapped in double dollar signs ($$...$$).
+2. Generate a parameter explanation table (Markdown table with columns: Ký hiệu, Ý nghĩa).
+3. Append an executable Python code block (```python ... ```) with a function that calculates it.
+4. Keep the surrounding text in the paragraph unchanged.
+
+If there is no formula, return the paragraph exactly as is.
+
+Paragraph:
+{para}
+"""
+                reply = self.ai_client.chat(prompt, model=self.model, temperature=0.1)
+                reply = Cleaners.strip_think_tags(reply)
+                updated_paras.append(reply)
+            else:
+                updated_paras.append(para)
+
+        return "\n\n".join(updated_paras)
+
+    def extract_amendments(self, text: str, source_doc_path: str = "") -> list[dict[str, Any]]:
+        """Extract clause-level changes/amendments from the document text.
+
+        Args:
+            text: The text content of the amending document.
+            source_doc_path: Path of the source document making the amendment.
+
+        Returns:
+            A list of dicts with target_doc_id, target_anchor, amendment_source, source_doc_path.
+        """
+        # Try parsing as JSON first (useful for testing or relation schema)
+        try:
+            parsed = Cleaners.extract_json(text)
+            if isinstance(parsed, list):
+                for item in parsed:
+                    if "source_doc_path" not in item or not item["source_doc_path"]:
+                        item["source_doc_path"] = source_doc_path
+                return parsed
+        except Exception:
+            pass
+
+        # Call LLM to extract clause-level changes
+        clean_text = Cleaners.remove_ocr_artifacts(text)[:40000]
+        prompt = f"""
+Analyze the following Vietnamese legal text to extract clause-level amendments or modifications it makes to other documents.
+Identify:
+1. The target document ID that is being amended (e.g., "nd_06_2021" for Nghị định 06/2021/NĐ-CP).
+2. The specific clause/article being amended, converted to an anchor ID (e.g. "d15k2" for Clause 2 Article 15 - Điều 15 Khoản 2, or "d12" for Article 12 - Điều 12).
+3. The specific clause in this source document making the amendment (e.g., "Điều 1 Thông tư B" or similar).
+
+Return ONLY a JSON list of objects (inside a markdown json code block) with the following structure:
+[
+  {{
+    "target_doc_id": "target document ID (e.g., 'nd_06_2021')",
+    "target_anchor": "HTML anchor of target clause (e.g., 'd15k2')",
+    "amendment_source": "Source clause making the amendment (e.g., 'Điều 1 Thông tư B')",
+    "source_doc_path": "{source_doc_path}"
+  }}
+]
+
+If no amendments to other documents are found, return an empty list: [].
+
+Text:
+{clean_text}
+"""
+        reply = self.ai_client.chat(prompt, model=self.model, temperature=0.1, max_tokens=8192)
+        res = Cleaners.extract_json(reply)
+        if isinstance(res, list):
+            for item in res:
+                if "source_doc_path" not in item or not item["source_doc_path"]:
+                    item["source_doc_path"] = source_doc_path
+            return res
+        return []
