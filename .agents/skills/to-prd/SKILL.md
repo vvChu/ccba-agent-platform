@@ -15,8 +15,8 @@ Kỹ năng này giúp tổng hợp toàn bộ thông tin thảo luận và ngữ
    - **Tiêu chí hoàn thành:** Xác định được các module bị ảnh hưởng và đề xuất được ít nhất một seam kiểm thử rõ ràng để người dùng phản hồi.
 
 2. **Soạn thảo và phát hành PRD:**
-   - Biên soạn PRD theo cấu trúc chuẩn. Nếu kho lưu trữ hỗ trợ Issue Tracker và có cấu hình, đăng tải PRD lên đó với nhãn `ready-for-agent`.
-   - Nếu không dùng Tracker, tiến hành xuất tài liệu trực tiếp thành file Markdown cục bộ lưu tại `.md/knowledge/prd-{feature_name}.md`.
+   - Biên soạn PRD theo cấu trúc chuẩn. Nếu kho lưu trữ hỗ trợ Issue Tracker và có cấu hình, đăng tải PRD lên đó với nhãn `ready-for-agent`. Nếu nhãn `ready-for-agent` chưa tồn tại trên kho lưu trữ, hãy khởi tạo nó trước hoặc bỏ qua việc gắn nhãn để tránh gặp lỗi khi xuất bản.
+   - Nếu không dùng Tracker, tiến hành xuất tài liệu trực tiếp thành file Markdown cục bộ lưu tại `.md/knowledge/prd-{feature_slug}.md` (sử dụng `feature_slug` dạng kebab-case ASCII an toàn, loại bỏ ký tự đặc biệt, dấu `/` và khoảng trắng).
    - **Tiêu chí hoàn thành:** Tài liệu PRD được tạo thành công (cục bộ hoặc trên Issue Tracker) chứa đầy đủ các phân mục chuẩn (Problem Statement, Solution, User Stories, Implementation & Testing Decisions, Out of Scope).
 
 ---
