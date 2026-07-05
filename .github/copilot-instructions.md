@@ -71,7 +71,7 @@ This project processes Vietnamese legal texts. Critical rules:
 
 Full rules: [.agents/AGENTS.md](../.agents/AGENTS.md)
 Formatting patterns: [.md/knowledge/session_learnings.md](../.md/knowledge/session_learnings.md)  
-VN legal plugin docs: [docs/user-guide/vn-legal.md](../docs/user-guide/vn-legal.md)
+VN legal plugin docs: [docs/user-guide/vn-legal.md](../packages/mdconverter/docs/user-guide/vn-legal.md)
 
 ## CCBA Identity
 
