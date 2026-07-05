@@ -5,26 +5,35 @@ from .cleaners import Cleaners
 from .crawler import (
     ChromeCDP,
     ChromeCDPError,
+    HeadlessEnvironmentError,
+    TVPLSessionMutex,
+    download_three_tier,
     get_crawled_doc_data,
     get_tvpl_metadata,
+    load_relation_synonyms,
     trigger_download,
 )
 from .monitor import TokenMonitor
-from .packager import OKFBundlePackager, get_concept_type, is_guiding_link
+from .packager import OKFBundlePackager, get_concept_type, inject_warning_block, is_guiding_link
 from .parser import LegalAnalysisEngine
 from .registry import LegalRegistryManager
 
 __all__ = [
     "ChromeCDP",
     "ChromeCDPError",
+    "HeadlessEnvironmentError",
     "get_crawled_doc_data",
     "trigger_download",
+    "download_three_tier",
+    "TVPLSessionMutex",
+    "load_relation_synonyms",
     "get_tvpl_metadata",
     "LegalAnalysisEngine",
     "Cleaners",
     "OKFBundlePackager",
     "is_guiding_link",
     "get_concept_type",
+    "inject_warning_block",
     "LegalRegistryManager",
     "TokenMonitor",
     "HarnessGuard",

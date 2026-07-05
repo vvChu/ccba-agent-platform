@@ -1,4 +1,5 @@
 import json
+import os
 import random
 import shutil
 import time
@@ -8,9 +9,179 @@ from typing import Any
 import requests
 import websocket
 
+from ccba_legal.registry import resolve_project_root
+
+
+class TVPLSessionMutex:
+    """Context manager for TVPL VIP session mutex lock to prevent concurrent sessions."""
+
+    def __init__(
+        self, lock_path: Path | None = None, timeout: int = 180, retry_interval: float = 5.0
+    ) -> None:
+        """Initialize the mutex.
+
+        Args:
+            lock_path: Path to lock file. If None, resolves to project_root/.md/data/tvpl_vip_session.lock
+            timeout: Maximum seconds to wait for acquiring lock before raising TimeoutError.
+            retry_interval: Seconds to wait between check loops.
+        """
+        self.lock_path = lock_path or (
+            resolve_project_root() / ".md" / "data" / "tvpl_vip_session.lock"
+        )
+        self.timeout = timeout
+        self.retry_interval = retry_interval
+        self.pid = os.getpid()
+
+    def __enter__(self) -> "TVPLSessionMutex":
+        """Acquire the lock.
+
+        Raises:
+            TimeoutError: If the lock is held by another active process and timeout is reached.
+        """
+        start_time = time.time()
+        self.lock_path.parent.mkdir(parents=True, exist_ok=True)
+        while True:
+            try:
+                # Atomically try to create the lock file
+                lock_data = {"pid": self.pid, "timestamp": time.time()}
+                with open(self.lock_path, "x", encoding="utf-8") as f:
+                    f.write(json.dumps(lock_data))
+                print(f"[Mutex] Acquired lock with PID: {self.pid}")
+                break
+            except FileExistsError:
+                # Lock file already exists, read details to check active status/deadlock
+                try:
+                    content = self.lock_path.read_text(encoding="utf-8")
+                    data = json.loads(content)
+                    lock_pid = int(data.get("pid")) if data.get("pid") is not None else None
+                    lock_time = float(data.get("timestamp", 0))
+                except Exception:
+                    # Corrupted lock file, treat as expired/deadlock
+                    lock_time = 0.0
+                    lock_pid = None
+
+                pid_active = True
+                if lock_pid is not None:
+                    try:
+                        os.kill(lock_pid, 0)
+                    except OSError:
+                        pid_active = False
+                else:
+                    pid_active = False
+
+                if not pid_active:
+                    print(f"[Mutex] Lock owner PID {lock_pid} is dead. Overriding...")
+                    try:
+                        self.lock_path.unlink(missing_ok=True)
+                    except Exception:
+                        pass
+                    continue
+
+                age = time.time() - lock_time
+                if age >= 300:
+                    print(f"[Mutex] Lock expired (age: {age:.1f}s, PID: {lock_pid}). Overriding...")
+                    try:
+                        self.lock_path.unlink(missing_ok=True)
+                    except Exception:
+                        pass
+                    continue
+
+                # If lock is still active and process is alive, check timeout
+                if time.time() - start_time >= self.timeout:
+                    raise TimeoutError(
+                        f"Timeout waiting to acquire TVPL VIP session lock after {self.timeout} seconds."
+                    ) from None
+                time.sleep(self.retry_interval)
+            except Exception as e:
+                # If other writing / permission errors occur, retry
+                if time.time() - start_time >= self.timeout:
+                    raise TimeoutError(f"Failed to write lock file: {e}") from e
+                time.sleep(self.retry_interval)
+
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        """Release the lock if it belongs to this process."""
+        if self.lock_path.exists():
+            try:
+                content = self.lock_path.read_text(encoding="utf-8")
+                data = json.loads(content)
+                if data.get("pid") == self.pid:
+                    self.lock_path.unlink()
+                    print(f"[Mutex] Released lock for PID: {self.pid}")
+            except Exception as e:
+                print(f"[Mutex] Error releasing lock: {e}")
+
+
+DEFAULT_RELATION_SYNONYMS = {
+    "Văn bản bị sửa đổi bổ sung": "amends_docs",
+    "Văn bản bị sửa đổi, bổ sung": "amends_docs",
+    "Văn bản bị thay thế": "replaced_docs",
+    "Văn bản được dẫn chiếu": "referenced_docs",
+    "Văn bản được căn cứ": "basis_docs",
+    "Văn bản được hướng dẫn": "guided_docs",
+    "Văn bản được hợp nhất": "consolidated_docs",
+    "Văn bản hướng dẫn": "guiding_docs",
+    "Văn bản hợp nhất": "consolidations",
+    "Văn bản sửa đổi bổ sung": "amended_by_docs",
+    "Văn bản sửa đổi, bổ sung": "amended_by_docs",
+    "Văn bản thay thế": "replaced_by_docs",
+    "Văn bản liên quan cùng nội dung": "related_docs",
+}
+
+
+def load_relation_synonyms() -> dict[str, str]:
+    """Load relation synonyms configuration from YAML and return a synonym-to-key mapping.
+
+    If the configuration file is missing or invalid, falls back to a default mapping.
+
+    Returns:
+        dict[str, str]: A dictionary mapping Vietnamese synonym phrases to CCBA relation keys.
+    """
+    import yaml
+
+    project_root = resolve_project_root()
+    synonyms_path = (
+        project_root
+        / ".agents"
+        / "skills"
+        / "ccba-legal-intel"
+        / "resources"
+        / "relation_synonyms.yaml"
+    )
+
+    if not synonyms_path.exists():
+        print(f"[Crawler] Synonyms config not found at {synonyms_path}. Using default synonyms.")
+        return DEFAULT_RELATION_SYNONYMS.copy()
+
+    try:
+        with open(synonyms_path, encoding="utf-8") as f:
+            config = yaml.safe_load(f) or {}
+
+        synonyms_dict = config.get("relation_synonyms", {})
+        mapping = {}
+        for key, synonyms in synonyms_dict.items():
+            if isinstance(synonyms, list):
+                for syn in synonyms:
+                    mapping[syn] = key
+            elif isinstance(synonyms, str):
+                mapping[synonyms] = key
+        return mapping
+    except Exception as e:
+        print(
+            f"[Crawler] Error reading relation synonyms from {synonyms_path}: {e}. Using default synonyms."
+        )
+        return DEFAULT_RELATION_SYNONYMS.copy()
+
 
 class ChromeCDPError(Exception):
     """Base exception for Chrome DevTools Protocol operations."""
+
+    pass
+
+
+class HeadlessEnvironmentError(RuntimeError):
+    """Raised when running in a headless/CI environment where download is blocked."""
 
     pass
 
@@ -88,6 +259,9 @@ class ChromeCDP:
         try:
             self.ws.send(json.dumps(payload))
             self.ws.recv()
+            # Wait a brief moment to let the browser start loading the new page
+            # so that readyState of the old page isn't mistakenly read as complete.
+            time.sleep(1.5)
         except Exception as e:
             raise ChromeCDPError(f"Failed to trigger navigation: {e}") from e
 
@@ -128,6 +302,14 @@ class ChromeCDP:
 
     def handle_login(self) -> bool:
         """Detect login popup, fill in credentials, submit, handle multi-session warning, and return True if login was attempted."""
+        username = os.environ.get("TVPL_USERNAME")
+        password = os.environ.get("TVPL_PASSWORD")
+        if not username or not password:
+            print(
+                "  [Login] Missing TVPL_USERNAME or TVPL_PASSWORD env variable. Cannot perform auto-login."
+            )
+            return False
+
         js = """
         (() => {
             let tb = document.querySelector('#TB_window');
@@ -143,14 +325,14 @@ class ChromeCDP:
             let login_btn = buttons.find(b => (b.value && b.value.includes('Đăng nhập')) || (b.innerText && b.innerText.includes('Đăng nhập')));
 
             if (user && pass && login_btn) {
-                user.value = "vuvanchu119";
-                pass.value = "ccba@ibst";
+                user.value = "__USERNAME__";
+                pass.value = "__PASSWORD__";
                 login_btn.click();
                 return "Attempted login click";
             }
             return "Inputs not found";
         })()
-        """
+        """.replace("__USERNAME__", username).replace("__PASSWORD__", password)
         res = self.evaluate_js(js)
         if "Attempted login" in str(res):
             print("  [Login] Found login popup, autofilling credentials and submitting...")
@@ -223,6 +405,14 @@ def get_crawled_doc_data(cdp: ChromeCDP, url: str) -> tuple[str, str, list[dict[
     cdp.wait_ready()
     cdp.handle_cloudflare()
 
+    # Handle login/popup if present
+    if cdp.handle_login():
+        print("  [Login] Submitted credentials, waiting for reload...")
+        cdp.wait_ready()
+        cdp.handle_cloudflare()
+    elif cdp.close_popup():
+        print("  [Popup] Closed window, retrying...")
+
     title = cdp.evaluate_js("document.title")
 
     body_text_js = """
@@ -231,7 +421,26 @@ def get_crawled_doc_data(cdp: ChromeCDP, url: str) -> tuple[str, str, list[dict[
                  document.querySelector('.content1') ||
                  document.querySelector('.contentDoc') ||
                  document.body;
-        return el.innerText;
+        if (!el) return "";
+        let clone = el.cloneNode(true);
+        let tables = Array.from(clone.querySelectorAll('table')).filter(t => {
+            let parent = t.parentElement;
+            while (parent) {
+                if (parent.tagName === 'TABLE') return false;
+                parent = parent.parentElement;
+            }
+            return true;
+        });
+        let tableHTMLs = tables.map(t => t.outerHTML);
+        tables.forEach((table, index) => {
+            let placeholder = document.createTextNode("\\n\\n__TABLE_PLACEHOLDER_" + index + "__\\n\\n");
+            table.parentNode.replaceChild(placeholder, table);
+        });
+        let text = clone.innerText;
+        tableHTMLs.forEach((html, index) => {
+            text = text.replace("__TABLE_PLACEHOLDER_" + index + "__", html);
+        });
+        return text;
     })()
     """
     body_text = cdp.evaluate_js(body_text_js)
@@ -344,24 +553,331 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> bool
     return False
 
 
-def get_tvpl_metadata(cdp: ChromeCDP, url: str) -> dict[str, Any]:
-    """Retrieve structured metadata from the TVPL 'Lược đồ' tab page."""
-    cdp.navigate(url)
-    cdp.wait_ready()
-    cdp.handle_cloudflare()
+def _check_tier_1_local_and_cache(
+    download_dir: Path, slug_name: str, extensions: list[str]
+) -> bool:
+    """Check target folder and local cache folder for the file.
 
-    # Find the "Lược đồ" tab href
-    find_tab_js = """
-    (() => {
-        let tabs = Array.from(document.querySelectorAll('.tabDoc a, .menuTab a, a'));
-        let luoc_do = tabs.find(a => a.innerText && a.innerText.trim().includes('Lược đồ'));
-        return luoc_do ? luoc_do.href : null;
-    })()
+    Returns True if the file was restored/found, False otherwise.
     """
-    luoc_do_url = cdp.evaluate_js(find_tab_js)
-    if not luoc_do_url:
-        print("[Crawler] Warning: 'Lược đồ' tab link not found directly on page.")
-        return {}
+    # 1a. Check target folder
+    for ext in extensions:
+        target_path = download_dir / f"{slug_name}{ext}"
+        if target_path.exists() and target_path.stat().st_size > 0:
+            print(
+                f"[download_three_tier] [Tier 1] File already exists in target folder: {target_path}"
+            )
+            return True
+
+    # 1b. Check local cache folder
+    project_root = resolve_project_root()
+    cache_dir = project_root / ".md" / "data" / "cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    for ext in extensions:
+        cache_path = cache_dir / f"{slug_name}{ext}"
+        if cache_path.exists() and cache_path.stat().st_size > 0:
+            dest_path = download_dir / f"{slug_name}{ext}"
+            try:
+                shutil.copy2(cache_path, dest_path)
+                print(
+                    f"[download_three_tier] [Tier 1] Restored from cache folder: {cache_path} -> {dest_path}"
+                )
+                return True
+            except Exception as e:
+                print(f"[download_three_tier] [Tier 1] Error copying from cache folder: {e}")
+    return False
+
+
+def _check_shared_drive(download_dir: Path, slug_name: str, extensions: list[str]) -> bool:
+    """Check SHARED_DRIVE_DIR env path for the file."""
+    shared_drive_env = os.environ.get("SHARED_DRIVE_DIR")
+    if not shared_drive_env:
+        return False
+    shared_drive_path = Path(shared_drive_env)
+    if not shared_drive_path.exists():
+        return False
+
+    for ext in extensions:
+        src_file = shared_drive_path / f"{slug_name}{ext}"
+        if src_file.exists() and src_file.stat().st_size > 0:
+            dest_path = download_dir / f"{slug_name}{ext}"
+            try:
+                shutil.copy2(src_file, dest_path)
+                print(
+                    f"[download_three_tier] [Tier 2] Copied from SHARED_DRIVE_DIR: {src_file} -> {dest_path}"
+                )
+                return True
+            except Exception as e:
+                print(f"[download_three_tier] [Tier 2] Error copying from SHARED_DRIVE_DIR: {e}")
+    return False
+
+
+def _check_google_drive(download_dir: Path, slug_name: str, extensions: list[str]) -> bool:
+    """Check Google Drive for the file and download if found."""
+    try:
+        import sys
+
+        project_root = resolve_project_root()
+        if str(project_root) not in sys.path:
+            sys.path.append(str(project_root))
+        from scripts.legal_sync import GOOGLE_API_AVAILABLE, get_drive_service
+
+        if not GOOGLE_API_AVAILABLE:
+            return False
+
+        drive_service = get_drive_service()
+        drive_folder_id = os.environ.get("DRIVE_FOLDER_ID", "1b9vm_1KQ8Fg8Crr1Q-i2xmE62UIHy-_2")
+        for ext in extensions:
+            file_name = f"{slug_name}{ext}"
+            q = f"name = '{file_name}' and trashed = false"
+            if drive_folder_id:
+                q += f" and '{drive_folder_id}' in parents"
+
+            results = drive_service.files().list(q=q, fields="files(id, name)").execute()
+            files = results.get("files", [])
+            if not files:
+                continue
+
+            file_id = files[0]["id"]
+            dest_path = download_dir / file_name
+            print(
+                f"[download_three_tier] [Tier 2] Downloading {file_name} from Google Drive (ID: {file_id}) -> {dest_path}"
+            )
+
+            from googleapiclient.http import MediaIoBaseDownload
+
+            request = drive_service.files().get_media(fileId=file_id)
+            try:
+                with open(dest_path, "wb") as f:
+                    downloader = MediaIoBaseDownload(f, request)
+                    done = False
+                    while not done:
+                        status, done = downloader.next_chunk()
+                print(
+                    f"[download_three_tier] [Tier 2] Successfully downloaded {file_name} from Google Drive."
+                )
+                return True
+            except Exception as e:
+                if dest_path.exists():
+                    try:
+                        dest_path.unlink()
+                    except Exception:
+                        pass
+                raise e
+    except Exception as e:
+        print(f"[download_three_tier] [Tier 2] Google Drive API check failed: {e}")
+    return False
+
+
+def _check_aws_s3(download_dir: Path, slug_name: str, extensions: list[str]) -> bool:
+    """Check AWS S3 bucket for the file and download if found."""
+    try:
+        import boto3
+        from botocore.exceptions import ClientError
+
+        bucket_name = os.environ.get("AWS_BUCKET_NAME") or os.environ.get("S3_BUCKET")
+        if not bucket_name:
+            return False
+
+        s3_client = boto3.client("s3")
+        for ext in extensions:
+            file_name = f"{slug_name}{ext}"
+            dest_path = download_dir / file_name
+            try:
+                print(
+                    f"[download_three_tier] [Tier 2] Checking S3 bucket '{bucket_name}' for key '{file_name}'..."
+                )
+                s3_client.download_file(bucket_name, file_name, str(dest_path))
+                print(
+                    f"[download_three_tier] [Tier 2] Successfully downloaded {file_name} from S3."
+                )
+                return True
+            except ClientError as ce:
+                if ce.response["Error"]["Code"] in ["404", "NoSuchKey"]:
+                    continue
+                print(f"[download_three_tier] [Tier 2] S3 download error: {ce}")
+    except ImportError:
+        pass
+    except Exception as e:
+        print(f"[download_three_tier] [Tier 2] S3 check failed: {e}")
+    return False
+
+
+def _check_is_headless() -> bool:
+    """Check if running in a headless or CI/CD environment."""
+    for env_var in ["CI", "GITHUB_ACTIONS", "TVPL_HEADLESS", "HEADLESS"]:
+        val = os.environ.get(env_var)
+        if val is not None and val.strip().lower() not in ["false", "0", ""]:
+            return True
+    return False
+
+
+def _cache_downloaded_file(download_dir: Path, slug_name: str, extensions: list[str]) -> None:
+    """Save the downloaded file to local cache folder."""
+    project_root = resolve_project_root()
+    cache_dir = project_root / ".md" / "data" / "cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    for ext in extensions:
+        target_path = download_dir / f"{slug_name}{ext}"
+        if target_path.exists():
+            cache_path = cache_dir / f"{slug_name}{ext}"
+            try:
+                shutil.copy2(target_path, cache_path)
+                print(f"[download_three_tier] [Tier 3] Cached file: {target_path} -> {cache_path}")
+            except Exception as e:
+                print(f"[download_three_tier] [Tier 3] Error copying file to cache: {e}")
+            break
+
+
+def download_three_tier(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> bool:
+    """Download a file using a three-tier fallback logic.
+
+    Tier 1: Check if the file (with .docx, .pdf, or .doc extension) already exists
+            in the target `download_dir` or in the local cache directory (.md/data/cache/).
+    Tier 2: Check if the file is available in the shared drive directory (SHARED_DRIVE_DIR),
+            Google Drive (via Drive API), or AWS S3.
+    Tier 3: Fall back to performing a direct Chrome CDP crawl, unless a headless/CI
+            environment is detected (which will raise HeadlessEnvironmentError).
+
+    Args:
+        cdp: ChromeCDP instance.
+        download_dir: The directory where the file should be saved.
+        slug_name: The base name (slug) of the file to download.
+
+    Returns:
+        bool: True if the file was successfully downloaded or found in cache, False otherwise.
+    """
+    extensions = [".docx", ".pdf", ".doc"]
+
+    # --- Tier 1: Local & Cache Directory ---
+    if _check_tier_1_local_and_cache(download_dir, slug_name, extensions):
+        return True
+
+    # --- Tier 2: Shared Drive, Google Drive & AWS S3 ---
+    if _check_shared_drive(download_dir, slug_name, extensions):
+        return True
+    if _check_google_drive(download_dir, slug_name, extensions):
+        return True
+    if _check_aws_s3(download_dir, slug_name, extensions):
+        return True
+
+    # --- Tier 3: Direct Chrome CDP Crawl with Headless/CI-CD Exit Guard ---
+    if _check_is_headless():
+        raise HeadlessEnvironmentError(
+            f"Blocked: Headless/CI-CD environment detected. Cannot download '{slug_name}' from TVPL."
+        )
+
+    print(
+        f"[download_three_tier] [Tier 3] Fallback to direct Chrome CDP crawl for '{slug_name}'..."
+    )
+    success = trigger_download(cdp, download_dir, slug_name)
+    if success:
+        _cache_downloaded_file(download_dir, slug_name, extensions)
+    return success
+
+
+METADATA_EXTRACTION_JS_TEMPLATE = r"""
+(() => {
+    let result = {};
+    let tables = Array.from(document.querySelectorAll('table'));
+    let targetTable = tables.find(t => t.innerText.includes('Số hiệu') && t.innerText.includes('Ngày ban hành'));
+    if (targetTable) {
+        let rows = Array.from(targetTable.querySelectorAll('tr'));
+        rows.forEach(row => {
+            let cols = Array.from(row.querySelectorAll('td'));
+            if (cols.length >= 2) {
+                let key = cols[0].innerText.trim().replace(':', '');
+                let val = cols[1].innerText.trim();
+                if (key && val) {
+                    result[key] = val;
+                }
+            }
+        });
+    }
+    if (Object.keys(result).length === 0) {
+        let cells = Array.from(document.querySelectorAll('td, th, div'));
+        let keys = ['Số hiệu', 'Loại văn bản', 'Lĩnh vực', 'Nơi ban hành', 'Người ký', 'Ngày ban hành', 'Ngày hiệu lực', 'Ngày đăng', 'Tình trạng'];
+        keys.forEach(k => {
+            let matchingCell = cells.find(c => c.innerText && c.innerText.trim().startsWith(k + ':'));
+            if (matchingCell) {
+                let parts = matchingCell.innerText.split(':');
+                if (parts.length >= 2) {
+                    result[k] = parts.slice(1).join(':').trim();
+                }
+            }
+        });
+    }
+
+    // Extract all relationships from diagram page
+    let relations = {};
+    let relMap = __REL_MAP_JSON__;
+
+    Object.keys(relMap).forEach(key => {
+        let normalizedKey = key.replace(/,/g, '').replace(/\s+/g, ' ').trim();
+        let els = Array.from(document.querySelectorAll('div, td, th, strong, b'));
+        let headerEl = els.find(el => {
+            let txt = (el.innerText || "").replace(/,/g, '').replace(/\s+/g, ' ').trim();
+            return txt.startsWith(normalizedKey);
+        });
+        if (headerEl) {
+            let container = headerEl.closest('td, tr, div, table');
+            if (container) {
+                let links = Array.from(container.querySelectorAll('a'))
+                    .map(a => {
+                        return {
+                            title: a.innerText.trim(),
+                            url: a.href ? a.href.split('?')[0].split('#')[0] : ""
+                        };
+                    })
+                    .filter(l => l.title && l.title !== headerEl.innerText.trim() && l.url.includes('/van-ban/'));
+
+                if (links.length > 0) {
+                    let ccbaKey = relMap[key];
+                    if (!relations[ccbaKey]) {
+                        relations[ccbaKey] = [];
+                    }
+                    links.forEach(l => {
+                        if (!relations[ccbaKey].some(ex => ex.url === l.url)) {
+                            relations[ccbaKey].push(l);
+                        }
+                    });
+                }
+            }
+        }
+    });
+
+    result['relations'] = relations;
+    return result;
+})()
+"""
+
+
+def _parse_tvpl_date(date_str: str) -> str:
+    """Parse a TVPL date string of format DD/MM/YYYY to YYYY-MM-DD."""
+    if not date_str:
+        return ""
+    try:
+        parts = date_str.split("/")
+        if len(parts) == 3:
+            d, m, y = parts
+            return f"{y.strip()}-{m.strip().zfill(2)}-{d.strip().zfill(2)}"
+    except Exception:
+        pass
+    return date_str
+
+
+def get_tvpl_metadata(cdp: ChromeCDP, url: str) -> dict[str, Any]:
+    """Retrieve structured metadata from the TVPL 'Lược đồ' tab page.
+
+    Args:
+        cdp: ChromeCDP instance.
+        url: The document page URL.
+
+    Returns:
+        dict[str, Any]: Parsed metadata dictionary.
+    """
+    base_url = url.split("?")[0].split("#")[0]
+    luoc_do_url = f"{base_url}?Tab=LuocDo"
 
     print(f"[Crawler] Navigating to 'Luoc do' page: {luoc_do_url}")
     cdp.navigate(luoc_do_url)
@@ -369,105 +885,20 @@ def get_tvpl_metadata(cdp: ChromeCDP, url: str) -> dict[str, Any]:
     cdp.handle_cloudflare()
     time.sleep(2.0)
 
-    metadata_js = """
-    (() => {
-        let result = {};
-        let tables = Array.from(document.querySelectorAll('table'));
-        let targetTable = tables.find(t => t.innerText.includes('Số hiệu') && t.innerText.includes('Ngày ban hành'));
-        if (targetTable) {
-            let rows = Array.from(targetTable.querySelectorAll('tr'));
-            rows.forEach(row => {
-                let cols = Array.from(row.querySelectorAll('td'));
-                if (cols.length >= 2) {
-                    let key = cols[0].innerText.trim().replace(':', '');
-                    let val = cols[1].innerText.trim();
-                    if (key && val) {
-                        result[key] = val;
-                    }
-                }
-            });
-        }
-        if (Object.keys(result).length === 0) {
-            let cells = Array.from(document.querySelectorAll('td, th, div'));
-            let keys = ['Số hiệu', 'Loại văn bản', 'Lĩnh vực', 'Nơi ban hành', 'Người ký', 'Ngày ban hành', 'Ngày hiệu lực', 'Ngày đăng', 'Tình trạng'];
-            keys.forEach(k => {
-                let matchingCell = cells.find(c => c.innerText && c.innerText.trim().startsWith(k + ':'));
-                if (matchingCell) {
-                    let parts = matchingCell.innerText.split(':');
-                    if (parts.length >= 2) {
-                        result[k] = parts.slice(1).join(':').trim();
-                    }
-                }
-            });
-        }
+    mapping = load_relation_synonyms()
+    mapping_json = json.dumps(mapping, ensure_ascii=False)
+    metadata_js = METADATA_EXTRACTION_JS_TEMPLATE.replace("__REL_MAP_JSON__", mapping_json)
 
-        // Extract all relationships from diagram page
-        let relations = {};
-        let relMap = {
-            'Văn bản bị sửa đổi bổ sung': 'amends_docs',
-            'Văn bản bị thay thế': 'replaced_docs',
-            'Văn bản được dẫn chiếu': 'referenced_docs',
-            'Văn bản được căn cứ': 'basis_docs',
-            'Văn bản được hướng dẫn': 'guided_docs',
-            'Văn bản được hợp nhất': 'consolidated_docs',
-            'Văn bản hướng dẫn': 'guiding_docs',
-            'Văn bản hợp nhất': 'consolidations',
-            'Văn bản sửa đổi bổ sung': 'amended_by_docs',
-            'Văn bản thay thế': 'replaced_by_docs',
-            'Văn bản liên quan cùng nội dung': 'related_docs'
-        };
-
-        Object.keys(relMap).forEach(key => {
-            let els = Array.from(document.querySelectorAll('div, td, th, strong, b'));
-            let headerEl = els.find(el => {
-                let txt = el.innerText || "";
-                return txt.trim().startsWith(key);
-            });
-            if (headerEl) {
-                let container = headerEl.closest('td, tr, div, table');
-                if (container) {
-                    let links = Array.from(container.querySelectorAll('a'))
-                        .map(a => {
-                            return {
-                                title: a.innerText.trim(),
-                                url: a.href ? a.href.split('?')[0].split('#')[0] : ""
-                            };
-                        })
-                        .filter(l => l.title && l.title !== headerEl.innerText.trim() && l.url.includes('/van-ban/'));
-
-                    if (links.length > 0) {
-                        relations[relMap[key]] = links;
-                    }
-                }
-            }
-        });
-
-        result['relations'] = relations;
-        return result;
-    })()
-    """
     raw_meta = cdp.evaluate_js(metadata_js) or {}
-
-    def parse_tvpl_date(date_str: str) -> str:
-        if not date_str:
-            return ""
-        try:
-            parts = date_str.split("/")
-            if len(parts) == 3:
-                d, m, y = parts
-                return f"{y.strip()}-{m.strip().zfill(2)}-{d.strip().zfill(2)}"
-        except Exception:
-            pass
-        return date_str
 
     metadata = {
         "document_number": raw_meta.get("Số hiệu", ""),
         "type": raw_meta.get("Loại văn bản", ""),
         "issued_by": raw_meta.get("Nơi ban hành", ""),
         "signer": raw_meta.get("Người ký", ""),
-        "issued_date": parse_tvpl_date(raw_meta.get("Ngày ban hành", "")),
-        "effective_date": parse_tvpl_date(raw_meta.get("Ngày hiệu lực", "")),
-        "published_date": parse_tvpl_date(raw_meta.get("Ngày đăng", "")),
+        "issued_date": _parse_tvpl_date(raw_meta.get("Ngày ban hành", "")),
+        "effective_date": _parse_tvpl_date(raw_meta.get("Ngày hiệu lực", "")),
+        "published_date": _parse_tvpl_date(raw_meta.get("Ngày đăng", "")),
         "status": raw_meta.get("Tình trạng", ""),
         "relations": raw_meta.get("relations", {}),
     }

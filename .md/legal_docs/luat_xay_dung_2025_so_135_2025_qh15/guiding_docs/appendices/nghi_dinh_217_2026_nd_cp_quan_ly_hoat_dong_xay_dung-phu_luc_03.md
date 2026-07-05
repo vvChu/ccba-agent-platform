@@ -1,11 +1,16 @@
 ---
+description: Chi tiết PHỤ LỤC III ban hành kèm theo Nghi Dinh 217 2026 Nd Cp Quan
+  Ly Hoat Dong Xay Dung
+document_number: 217/2026/NĐ-CP
+parent_document: ../nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.md
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-217-2026-ND-CP-quan-ly-hoat-dong-xay-dung.aspx
+status: current
+timestamp: '2026-06-25T00:00:00Z'
+title: PHỤ LỤC III - PHÂN LOẠI DỰ ÁN ĐẦU TƯ XÂY DỰNG THEO CÔNG NĂNG PHỤC VỤ VÀ TÍNH
+  CHẤT CHUYÊN NGÀNH CỦA CÔNG TRÌNH
 type: Appendix
-title: "PHỤ LỤC III - PHÂN LOẠI DỰ ÁN ĐẦU TƯ XÂY DỰNG THEO CÔNG NĂNG PHỤC VỤ VÀ TÍNH CHẤT CHUYÊN NGÀNH CỦA CÔNG TRÌNH"
-description: "Chi tiết PHỤ LỤC III ban hành kèm theo Nghi Dinh 217 2026 Nd Cp Quan Ly Hoat Dong Xay Dung"
-parent_document: "../nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.md"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
-
 # PHỤ LỤC III
 
 PHÂN LOẠI DỰ ÁN ĐẦU TƯ XÂY DỰNG THEO CÔNG NĂNG PHỤC VỤ VÀ TÍNH CHẤT CHUYÊN NGÀNH CỦA CÔNG TRÌNH  

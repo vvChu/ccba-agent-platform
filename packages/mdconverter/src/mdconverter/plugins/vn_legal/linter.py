@@ -116,7 +116,7 @@ class VNLegalLinter:
     def _check_vn004_diem_format(self, file_path: Path, lines: list[str]) -> list[LintIssue]:
         """VN004: Check for incorrect 'Điểm' format."""
         issues: list[LintIssue] = []
-        pattern = re.compile(r"^-\s*[a-d]\)")
+        pattern = re.compile(r"^-\s*[a-zđĐ]\)")
 
         for i, line in enumerate(lines, 1):
             if pattern.search(line):

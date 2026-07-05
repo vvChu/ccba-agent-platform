@@ -289,6 +289,37 @@ laws:
   topics:
   - public_investment
   - project_management
+circulars:
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-36-2026-TT-BXD-huong-dan-phuong-phap-xac-dinh-va-quan-ly-chi-phi-dau-tu-xay-dung-712408.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu.docx
+  id: TT-36-2026-BXD
+  issued_date: '2026-06-26'
+  short_name: TT 36/2026
+  status: current
+  title: Thông tư 36/2026/TT-BXD hướng dẫn phương pháp xác định và quản lý chi phí
+    đầu tư xây dựng
+  topics:
+  - construction
+  - cost_management
+  document_number: 36/2026/TT-BXD
+  issued_by: Bộ Xây dựng
+  markdown_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu.md
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-37-2026-TT-BXD-phuong-phap-xac-dinh-dinh-muc-du-toan-va-cac-chi-tieu-kinh-te-ky-thuat-712395.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa.docx
+  id: TT-37-2026-BXD
+  issued_date: '2026-06-26'
+  short_name: TT 37/2026
+  status: current
+  title: Thông tư 37/2026/TT-BXD phương pháp xác định định mức dự toán và các chỉ
+    tiêu kinh tế kỹ thuật
+  topics:
+  - construction
+  - cost_management
+  document_number: 37/2026/TT-BXD
+  issued_by: Bộ Xây dựng
+  markdown_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa.md
 metadata:
   focus_area: Quản lý chất lượng công trình xây dựng
   last_updated: '2026-03-28'

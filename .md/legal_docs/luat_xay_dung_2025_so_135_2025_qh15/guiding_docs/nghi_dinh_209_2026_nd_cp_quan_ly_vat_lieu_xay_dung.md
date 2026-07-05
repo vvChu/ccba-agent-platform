@@ -1,13 +1,16 @@
 ---
+code: CCBA_RD_VBPL_004
+document_number: 209/2026/NĐ-CP
+effective_date: '2026-07-01'
+issued_by: Chính phủ
+issued_date: '2026-04-05'
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-209-2026-ND-CP-quan-ly-vat-lieu-xay-dung.aspx
+revision: Rev00
+status: current
+timestamp: '2026-06-16T00:00:00Z'
+title: Nghị định 209/2026/NĐ-CP hướng dẫn Luật Xây dựng về quản lý vật liệu xây dựng
 type: Decree
-title: "Nghị định 209/2026/NĐ-CP hướng dẫn Luật Xây dựng về quản lý vật liệu xây dựng"
-code: "CCBA_RD_VBPL_004"
-revision: "Rev00"
-document_number: "209/2026/NĐ-CP"
-issued_date: "2026-04-05"
-effective_date: "2026-07-01"
-issued_by: "Chính phủ"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
 CHÍNH PHỦ
 -------
