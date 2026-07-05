@@ -67,11 +67,15 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
 * `.md/extracted_docs/` và `.md/legal_docs/`: Lưu trữ văn bản pháp luật và văn bản trích xuất thô.
 Tuyệt đối **không** tạo hoặc để các tệp tin này trực tiếp ở thư mục gốc `.md/` để tránh làm loãng thư mục tri thức chính.
 
-### Quy ước Git (Git Conventions)
+### Quy ước Git (Git Conventions) & Quy trình phát hành (Release Gate)
 * **Đặt tên Branch:** `type/short-description` *(ví dụ: feature/add-auth, fix/query-timeout)*.
 * **Format Commit Message:** `type(scope): description` (bằng tiếng Anh).
   - Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`.
   - Commit theo từng logical unit độc lập, không commit tất cả file cùng lúc.
+* **Rào chắn đối soát PR (Release Gate Audit):**
+  - Trước khi thực hiện merge bất kỳ Pull Request nào (trừ các PR nâng cấp thư viện tự động dependabot/chore đã pass CI và không có phản biện ngoài), Agent **bắt buộc** phải chạy lệnh `gh pr view <PR> --comments` (hoặc công cụ tương đương) để kiểm tra, đánh giá và giải trình tất cả các bình luận, cảnh báo từ Copilot hoặc các reviewers khác.
+  - Phải tiến hành sửa lỗi hoặc giải trình lý do chính đáng và nhận được sự đồng thuận tường minh của người dùng trước khi merge.
+  - Ghi nhận chi tiết kết quả xử lý bình luận của Copilot vào tài liệu bàn giao `walkthrough.md`.
 
 ---
 
