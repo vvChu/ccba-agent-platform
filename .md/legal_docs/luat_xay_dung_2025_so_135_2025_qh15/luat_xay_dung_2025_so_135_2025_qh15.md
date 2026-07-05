@@ -1,13 +1,16 @@
 ---
+code: CCBA_RD_VBPL_001
+document_number: 135/2025/QH15
+effective_date: '2026-07-01'
+issued_by: Quốc hội khóa XV
+issued_date: '2025-12-10'
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Luat-Xay-dung-2025-so-135-2025-QH15-675213.aspx
+revision: Rev00
+status: enacted
+timestamp: '2025-12-10T00:00:00Z'
+title: Luật Xây dựng số 135/2025/QH15
 type: Law
-title: "Luật Xây dựng số 135/2025/QH15"
-code: "CCBA_RD_VBPL_001"
-revision: "Rev00"
-document_number: "135/2025/QH15"
-issued_date: "2025-12-10"
-effective_date: "2026-07-01"
-issued_by: "Quốc hội khóa XV"
-uniclass: "Fi_10_10"
+uniclass: Fi_10_10
 ---
 QUỐC HỘI
 -------

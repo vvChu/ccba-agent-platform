@@ -70,7 +70,7 @@ Dự án có sẵn các workflow tự động hóa (trong `.agents/workflows/`):
 ## 🛠️ Môi Trường Dev
 
 1. **Cài đặt nhanh (Windows)**: Chạy `./install.ps1`
-2. **Cài đặt thủ công**: `pip install -e ".[dev,llm]"`
+2. **Cài đặt thủ công**: `pip install -e "packages/mdconverter[dev,llm]"`
 3. **Chạy Test**: `pytest`
 4. **Lint Code**: `ruff check .`
 5. **Format Code**: `ruff format .`

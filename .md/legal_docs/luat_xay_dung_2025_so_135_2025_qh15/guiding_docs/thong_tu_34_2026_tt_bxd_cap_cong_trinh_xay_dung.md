@@ -1,15 +1,18 @@
 ---
+code: CCBA_RD_VBPL_008
+document_number: 34/2026/TT-BXD
+effective_date: '2026-07-01'
+issued_by: Bộ Xây dựng
+issued_date: '2026-05-02'
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-34-2026-TT-BXD-cap-cong-trinh-xay-dung.aspx
+revision: Rev00
+status: current
+timestamp: '2026-06-26T00:00:00Z'
+title: Thông tư 34/2026/TT-BXD cấp công trình xây dựng phục vụ quản lý hoạt động xây
+  dựng
 type: Decree
-title: "Thông tư 34/2026/TT-BXD cấp công trình xây dựng phục vụ quản lý hoạt động xây dựng"
-code: "CCBA_RD_VBPL_008"
-revision: "Rev00"
-document_number: "34/2026/TT-BXD"
-issued_date: "2026-05-02"
-effective_date: "2026-07-01"
-issued_by: "Bộ Xây dựng"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
-
 <table style="width:92%;">
 <colgroup>
 <col style="width: 31%" />
@@ -214,6 +217,6 @@ Phạm Minh Hà</strong></td>
 
 ## DANH SÁCH PHỤ LỤC ĐÍNH KÈM
 
-- [PHỤ LỤC I: PHÂN CẤP CÔNG TRÌNH XÂY DỰNG THEO MỨC ĐỘ QUAN TRỌNG HOẶC QUY MÔ CÔNG SUẤT](./appendices/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung-phu_luc_01.md)
-- [PHỤ LỤC II: PHÂN CẤP CÔNG TRÌNH XÂY DỰNG THEO QUY MÔ KẾT CẤU](./appendices/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung-phu_luc_02.md)
-- [PHỤ LỤC III: VÍ DỤ XÁC ĐỊNH CẤP CÔNG TRÌNH VÀ ÁP DỤNG CẤP CÔNG TRÌNH TRONG QUẢN LÝ HOẠT ĐỘNG XÂY DỰNG](./appendices/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung-phu_luc_03.md)
+- [PHỤ LỤC I: PHÂN CẤP CÔNG TRÌNH XÂY DỰNG THEO MỨC ĐỘ QUAN TRỌNG HOẶC QUY MÔ CÔNG SUẤT](/guiding_docs/appendices/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung-phu_luc_01.md)
+- [PHỤ LỤC II: PHÂN CẤP CÔNG TRÌNH XÂY DỰNG THEO QUY MÔ KẾT CẤU](/guiding_docs/appendices/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung-phu_luc_02.md)
+- [PHỤ LỤC III: VÍ DỤ XÁC ĐỊNH CẤP CÔNG TRÌNH VÀ ÁP DỤNG CẤP CÔNG TRÌNH TRONG QUẢN LÝ HOẠT ĐỘNG XÂY DỰNG](/guiding_docs/appendices/thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung-phu_luc_03.md)

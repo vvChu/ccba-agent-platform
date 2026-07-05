@@ -1,11 +1,15 @@
 ---
+description: Chi tiết PHỤ LỤC VII ban hành kèm theo Quyet Dinh 1040 Qd Bxd Cong Bo
+  Mau Hop Dong Xay Dung
+document_number: 1040/QĐ-BXD
+parent_document: ../quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung.md
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Quyet-dinh-1040-QD-BXD-cong-bo-mau-hop-dong-xay-dung.aspx
+status: current
+timestamp: '2026-06-28T00:00:00Z'
+title: PHỤ LỤC VII - MẪU HỢP ĐỒNG EPC
 type: Appendix
-title: "PHỤ LỤC VII - MẪU HỢP ĐỒNG EPC"
-description: "Chi tiết PHỤ LỤC VII ban hành kèm theo Quyet Dinh 1040 Qd Bxd Cong Bo Mau Hop Dong Xay Dung"
-parent_document: "../quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung.md"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
-
 # PHỤ LỤC VII
 
 MẪU HỢP ĐỒNG EPC  
