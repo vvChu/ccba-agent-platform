@@ -27,10 +27,21 @@ Ghi nhận các kiến thức đã lọc vào tệp `.md/knowledge/session_learn
 - Đề xuất tiến hóa kỹ năng (Skill Discovery) lên Hub thông qua lệnh `/ccba-propose-to-hub` nếu phát hiện logic đóng gói tốt.
 - **Tiêu chí hoàn thành:** Đề xuất được hiển thị rõ ràng trên màn hình chat cho người dùng lựa chọn (không tự ý ghi đè global memory khi chưa hỏi).
 
-### Bước 4: Dọn dẹp Workspace Tạm thời & Phân phối Tài liệu
-1. **Dọn dẹp Workspace của Subagents**: Xóa vật lý các thư mục tạm bắt đầu bằng `teamwork_preview_`, `sub_orch_`, `temp-` bên trong thư mục `.agents/`.
-2. **Phân phối tài liệu thô**: Di dời các tệp trong `input_documents/` về đúng thư mục chức năng thuộc `.md/` (pháp lý vào `legal_docs/`, scratch scripts vào `scratch/`...).
-3. **Tiêu chí hoàn thành:** Thư mục `input_documents/` và các thư mục tạm của subagents được dọn sạch hoàn toàn sau khi người dùng xác nhận bảng đề xuất di chuyển.
+### Bước 4: Dọn dẹp Workspace Tạm thời & Phân phối Tài liệu Đầu vào Thô
+Agent thực hiện dọn dẹp các thư mục rác và phân phối tri thức đã sử dụng:
+
+1. **Dọn dẹp Workspace tạm của Subagents**:
+   - Quét thư mục gốc `.agents/` để tìm các thư mục con của subagents được tạo ra trong quá trình chạy teamwork hoặc song song (bắt đầu bằng: `auditor_`, `challenger_`, `explorer_`, `reviewer_`, `worker_`, `teamwork_preview_`, `sub_orch_`, `victory_auditor_`, `temp-marketing`).
+   - Thực hiện xóa vật lý toàn bộ các thư mục con tạm thời này (chỉ giữ lại các thư mục cấu hình cốt lõi như `skills/`, `workflows/`, `templates/` và tệp hiến pháp `AGENTS.md`).
+2. **Phân phối tài liệu đầu vào thô**:
+   - Quét thư mục tạm `input_documents/` ở gốc dự án để phân phối tri thức đã sử dụng:
+     * Tài liệu pháp lý, quy định $\rightarrow$ `.md/legal_docs/` hoặc `.md/extracted_docs/`.
+     * Báo cáo phân tích kỹ thuật, sơ đồ, hướng dẫn $\rightarrow$ `.md/knowledge/`.
+     * Biên bản, ghi chú thảo luận họp $\rightarrow$ `.md/seminars/`.
+     * Tệp log, test script tạm $\rightarrow$ `.md/scratch/`.
+3. **In bảng đề xuất di chuyển**: Trình bày bảng đề xuất để người dùng xác nhận.
+4. **Thực thi di chuyển & Làm sạch**: Sau khi người dùng xác nhận, Agent di chuyển vật lý các tệp đã chốt vào đúng vị trí và xóa sạch các file rác còn lại trong `input_documents/`.
+- **Tiêu chí hoàn thành:** Thư mục `input_documents/` được dọn sạch hoàn toàn và các thư mục tạm thời của subagents trong `.agents/` được xóa bỏ triệt để sau khi người dùng xác nhận bảng đề xuất.
 
 ### Bước 5: Xuất Báo cáo Tóm tắt
 Xuất báo cáo tổng kết ngắn gọn (theo mẫu `## 📋 Session Retrospective Summary`) ra màn hình chat.
