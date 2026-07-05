@@ -9,8 +9,8 @@ import sys
 import unittest
 from pathlib import Path
 
-# Add scripts directory to path to import legal_intelligence
-from legal_intelligence import Cleaners, OKFBundlePackager
+# Import Cleaners and OKFBundlePackager from ccba_legal
+from ccba_legal import Cleaners, OKFBundlePackager
 
 
 class TestLegalIntelligence(unittest.TestCase):
