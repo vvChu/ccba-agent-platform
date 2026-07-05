@@ -74,6 +74,7 @@ Tuyệt đối **không** tạo hoặc để các tệp tin này trực tiếp �
   - Commit theo từng logical unit độc lập, không commit tất cả file cùng lúc.
 * **Rào chắn đối soát PR (Release Gate Audit):**
   - Trước khi thực hiện merge bất kỳ Pull Request nào (trừ các PR nâng cấp thư viện tự động dependabot/chore đã pass CI và không có phản biện ngoài), Agent **bắt buộc** phải chạy lệnh `gh pr view <PR> --comments` (hoặc công cụ tương đương) để kiểm tra, đánh giá và giải trình tất cả các bình luận, cảnh báo từ Copilot hoặc các reviewers khác.
+  - **Quy tắc dừng chờ Copilot**: Khi kiểm tra trạng thái PR qua `gh pr view <PR>`, nếu thấy người đánh giá `copilot-pull-request-reviewer` ở trạng thái `(Requested)` (chưa hoàn thành review), Agent **bắt buộc phải dừng lại và chờ** (sử dụng công cụ `schedule` để hẹn giờ kiểm tra lại sau mỗi 30s-60s). Thời gian chờ tối đa (timeout) là 3 phút; nếu quá thời gian này mà Copilot vẫn chưa chạy xong, Agent mới được báo cáo người dùng xin ý kiến bypass.
   - Phải tiến hành sửa lỗi hoặc giải trình lý do chính đáng và nhận được sự đồng thuận tường minh của người dùng trước khi merge.
   - Ghi nhận chi tiết kết quả xử lý bình luận của Copilot vào tài liệu bàn giao `walkthrough.md`.
 
