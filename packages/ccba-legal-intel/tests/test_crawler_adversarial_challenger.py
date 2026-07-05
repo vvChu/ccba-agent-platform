@@ -140,9 +140,11 @@ def test_download_three_tier_corrupted_cache(tmp_path):
     cache_file.write_bytes(b"")  # 0-byte file representing corruption
 
     cdp_mock = MagicMock()
-    with patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path), \
-         patch("ccba_legal.crawler._check_is_headless", return_value=False), \
-         patch("ccba_legal.crawler.trigger_download", return_value=False):
+    with (
+        patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
+        patch("ccba_legal.crawler._check_is_headless", return_value=False),
+        patch("ccba_legal.crawler.trigger_download", return_value=False),
+    ):
         result = download_three_tier(cdp_mock, download_dir, "test_corrupted")
         assert result is False
 
@@ -189,9 +191,10 @@ def test_download_three_tier_partial_download_bug(tmp_path):
 
     cdp_mock = MagicMock()
     try:
-        with patch.dict(os.environ, {"DRIVE_FOLDER_ID": "mock_folder_id"}), \
-             patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path):
-
+        with (
+            patch.dict(os.environ, {"DRIVE_FOLDER_ID": "mock_folder_id"}),
+            patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
+        ):
             # First run: Fails due to simulated ConnectionResetError
             result_1 = download_three_tier(cdp_mock, download_dir, "test_partial")
             assert result_1 is False

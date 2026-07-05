@@ -15,7 +15,9 @@ from ccba_legal.registry import resolve_project_root
 class TVPLSessionMutex:
     """Context manager for TVPL VIP session mutex lock to prevent concurrent sessions."""
 
-    def __init__(self, lock_path: Path | None = None, timeout: int = 180, retry_interval: float = 5.0) -> None:
+    def __init__(
+        self, lock_path: Path | None = None, timeout: int = 180, retry_interval: float = 5.0
+    ) -> None:
         """Initialize the mutex.
 
         Args:
@@ -23,7 +25,9 @@ class TVPLSessionMutex:
             timeout: Maximum seconds to wait for acquiring lock before raising TimeoutError.
             retry_interval: Seconds to wait between check loops.
         """
-        self.lock_path = lock_path or (resolve_project_root() / ".md" / "data" / "tvpl_vip_session.lock")
+        self.lock_path = lock_path or (
+            resolve_project_root() / ".md" / "data" / "tvpl_vip_session.lock"
+        )
         self.timeout = timeout
         self.retry_interval = retry_interval
         self.pid = os.getpid()
@@ -122,7 +126,7 @@ DEFAULT_RELATION_SYNONYMS = {
     "Văn bản sửa đổi bổ sung": "amended_by_docs",
     "Văn bản sửa đổi, bổ sung": "amended_by_docs",
     "Văn bản thay thế": "replaced_by_docs",
-    "Văn bản liên quan cùng nội dung": "related_docs"
+    "Văn bản liên quan cùng nội dung": "related_docs",
 }
 
 
@@ -135,8 +139,16 @@ def load_relation_synonyms() -> dict[str, str]:
         dict[str, str]: A dictionary mapping Vietnamese synonym phrases to CCBA relation keys.
     """
     import yaml
+
     project_root = resolve_project_root()
-    synonyms_path = project_root / ".agents" / "skills" / "ccba-legal-intel" / "resources" / "relation_synonyms.yaml"
+    synonyms_path = (
+        project_root
+        / ".agents"
+        / "skills"
+        / "ccba-legal-intel"
+        / "resources"
+        / "relation_synonyms.yaml"
+    )
 
     if not synonyms_path.exists():
         print(f"[Crawler] Synonyms config not found at {synonyms_path}. Using default synonyms.")
@@ -156,9 +168,10 @@ def load_relation_synonyms() -> dict[str, str]:
                 mapping[synonyms] = key
         return mapping
     except Exception as e:
-        print(f"[Crawler] Error reading relation synonyms from {synonyms_path}: {e}. Using default synonyms.")
+        print(
+            f"[Crawler] Error reading relation synonyms from {synonyms_path}: {e}. Using default synonyms."
+        )
         return DEFAULT_RELATION_SYNONYMS.copy()
-
 
 
 class ChromeCDPError(Exception):
@@ -292,7 +305,9 @@ class ChromeCDP:
         username = os.environ.get("TVPL_USERNAME")
         password = os.environ.get("TVPL_PASSWORD")
         if not username or not password:
-            print("  [Login] Missing TVPL_USERNAME or TVPL_PASSWORD env variable. Cannot perform auto-login.")
+            print(
+                "  [Login] Missing TVPL_USERNAME or TVPL_PASSWORD env variable. Cannot perform auto-login."
+            )
             return False
 
         js = """
@@ -538,7 +553,9 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> bool
     return False
 
 
-def _check_tier_1_local_and_cache(download_dir: Path, slug_name: str, extensions: list[str]) -> bool:
+def _check_tier_1_local_and_cache(
+    download_dir: Path, slug_name: str, extensions: list[str]
+) -> bool:
     """Check target folder and local cache folder for the file.
 
     Returns True if the file was restored/found, False otherwise.
@@ -547,7 +564,9 @@ def _check_tier_1_local_and_cache(download_dir: Path, slug_name: str, extensions
     for ext in extensions:
         target_path = download_dir / f"{slug_name}{ext}"
         if target_path.exists() and target_path.stat().st_size > 0:
-            print(f"[download_three_tier] [Tier 1] File already exists in target folder: {target_path}")
+            print(
+                f"[download_three_tier] [Tier 1] File already exists in target folder: {target_path}"
+            )
             return True
 
     # 1b. Check local cache folder
@@ -560,7 +579,9 @@ def _check_tier_1_local_and_cache(download_dir: Path, slug_name: str, extensions
             dest_path = download_dir / f"{slug_name}{ext}"
             try:
                 shutil.copy2(cache_path, dest_path)
-                print(f"[download_three_tier] [Tier 1] Restored from cache folder: {cache_path} -> {dest_path}")
+                print(
+                    f"[download_three_tier] [Tier 1] Restored from cache folder: {cache_path} -> {dest_path}"
+                )
                 return True
             except Exception as e:
                 print(f"[download_three_tier] [Tier 1] Error copying from cache folder: {e}")
@@ -582,7 +603,9 @@ def _check_shared_drive(download_dir: Path, slug_name: str, extensions: list[str
             dest_path = download_dir / f"{slug_name}{ext}"
             try:
                 shutil.copy2(src_file, dest_path)
-                print(f"[download_three_tier] [Tier 2] Copied from SHARED_DRIVE_DIR: {src_file} -> {dest_path}")
+                print(
+                    f"[download_three_tier] [Tier 2] Copied from SHARED_DRIVE_DIR: {src_file} -> {dest_path}"
+                )
                 return True
             except Exception as e:
                 print(f"[download_three_tier] [Tier 2] Error copying from SHARED_DRIVE_DIR: {e}")
@@ -593,6 +616,7 @@ def _check_google_drive(download_dir: Path, slug_name: str, extensions: list[str
     """Check Google Drive for the file and download if found."""
     try:
         import sys
+
         project_root = resolve_project_root()
         if str(project_root) not in sys.path:
             sys.path.append(str(project_root))
@@ -616,7 +640,9 @@ def _check_google_drive(download_dir: Path, slug_name: str, extensions: list[str
 
             file_id = files[0]["id"]
             dest_path = download_dir / file_name
-            print(f"[download_three_tier] [Tier 2] Downloading {file_name} from Google Drive (ID: {file_id}) -> {dest_path}")
+            print(
+                f"[download_three_tier] [Tier 2] Downloading {file_name} from Google Drive (ID: {file_id}) -> {dest_path}"
+            )
 
             from googleapiclient.http import MediaIoBaseDownload
 
@@ -627,7 +653,9 @@ def _check_google_drive(download_dir: Path, slug_name: str, extensions: list[str
                     done = False
                     while not done:
                         status, done = downloader.next_chunk()
-                print(f"[download_three_tier] [Tier 2] Successfully downloaded {file_name} from Google Drive.")
+                print(
+                    f"[download_three_tier] [Tier 2] Successfully downloaded {file_name} from Google Drive."
+                )
                 return True
             except Exception as e:
                 if dest_path.exists():
@@ -656,9 +684,13 @@ def _check_aws_s3(download_dir: Path, slug_name: str, extensions: list[str]) -> 
             file_name = f"{slug_name}{ext}"
             dest_path = download_dir / file_name
             try:
-                print(f"[download_three_tier] [Tier 2] Checking S3 bucket '{bucket_name}' for key '{file_name}'...")
+                print(
+                    f"[download_three_tier] [Tier 2] Checking S3 bucket '{bucket_name}' for key '{file_name}'..."
+                )
                 s3_client.download_file(bucket_name, file_name, str(dest_path))
-                print(f"[download_three_tier] [Tier 2] Successfully downloaded {file_name} from S3.")
+                print(
+                    f"[download_three_tier] [Tier 2] Successfully downloaded {file_name} from S3."
+                )
                 return True
             except ClientError as ce:
                 if ce.response["Error"]["Code"] in ["404", "NoSuchKey"]:
@@ -735,7 +767,9 @@ def download_three_tier(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> b
             f"Blocked: Headless/CI-CD environment detected. Cannot download '{slug_name}' from TVPL."
         )
 
-    print(f"[download_three_tier] [Tier 3] Fallback to direct Chrome CDP crawl for '{slug_name}'...")
+    print(
+        f"[download_three_tier] [Tier 3] Fallback to direct Chrome CDP crawl for '{slug_name}'..."
+    )
     success = trigger_download(cdp, download_dir, slug_name)
     if success:
         _cache_downloaded_file(download_dir, slug_name, extensions)
@@ -869,4 +903,3 @@ def get_tvpl_metadata(cdp: ChromeCDP, url: str) -> dict[str, Any]:
         "relations": raw_meta.get("relations", {}),
     }
     return metadata
-
