@@ -1,15 +1,18 @@
 ---
+code: CCBA_RD_VBPL_005
+document_number: 207/2026/NĐ-CP
+effective_date: '2026-07-01'
+issued_by: Chính phủ
+issued_date: '2026-04-02'
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-207-2026-ND-CP-huong-dan-Luat-Xay-dung-quan-ly-chat-luong-thi-cong-xay-dung-701883.aspx
+revision: Rev00
+status: current
+timestamp: '2026-06-15T00:00:00Z'
+title: Nghị định 207/2026/NĐ-CP hướng dẫn Luật Xây dựng về quản lý chất lượng thi
+  công xây dựng
 type: Decree
-title: "Nghị định 207/2026/NĐ-CP hướng dẫn Luật Xây dựng về quản lý chất lượng thi công xây dựng"
-code: "CCBA_RD_VBPL_005"
-revision: "Rev00"
-document_number: "207/2026/NĐ-CP"
-issued_date: "2026-04-02"
-effective_date: "2026-07-01"
-issued_by: "Chính phủ"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
-
 <table style="width:92%;">
 <colgroup>
 <col style="width: 31%" />
@@ -1594,14 +1597,14 @@ PHÓ THỦ TƯỚNG<br />
 
 ## DANH SÁCH PHỤ LỤC ĐÍNH KÈM
 
-- [PHỤ LỤC I: PHÂN LOẠI CÔNG TRÌNH THEO CÔNG NĂNG SỬ DỤNG](./appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_01.md)
-- [PHỤ LỤC II: *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*](./appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_02.md)
-- [PHỤ LỤC III: BIỆN PHÁP BẢO ĐẢM AN TOÀN TRONG THI CÔNG XÂY DỰNG CÔNG TRÌNH](./appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_03.md)
-- [PHỤ LỤC IV: BÁO CÁO VỀ CÔNG TÁC GIÁM SÁT THI CÔNG XÂY DỰNG CÔNG TRÌNH](./appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_04.md)
-- [PHỤ LỤC V: *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*](./appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_05.md)
-- [PHỤ LỤC VI: BÁO CÁO HOÀN THÀNH THI CÔNG XÂY DỰNG HẠNG MỤC CÔNG TRÌNH, CÔNG TRÌNH XÂY DỰNG](./appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_06.md)
-- [PHỤ LỤC VII: DANH MỤC HỒ SƠ HOÀN THÀNH CÔNG TRÌNH](./appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_07.md)
-- [PHỤ LỤC VIII: *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*](./appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_08.md)
-- [PHỤ LỤC IX: DANH MỤC CÔNG TRÌNH QUY MÔ LỚN, KỸ THUẬT PHỨC TẠP](./appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_09.md)
-- [PHỤ LỤC X: DANH MỤC HỒ SƠ PHỤC VỤ QUẢN LÝ, SỬ DỤNG CÔNG TRÌNH XÂY DỰNG](./appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_10.md)
-- [PHỤ LỤC XI: *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*](./appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_11.md)
+- [PHỤ LỤC I: PHÂN LOẠI CÔNG TRÌNH THEO CÔNG NĂNG SỬ DỤNG](/guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_01.md)
+- [PHỤ LỤC II: *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*](/guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_02.md)
+- [PHỤ LỤC III: BIỆN PHÁP BẢO ĐẢM AN TOÀN TRONG THI CÔNG XÂY DỰNG CÔNG TRÌNH](/guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_03.md)
+- [PHỤ LỤC IV: BÁO CÁO VỀ CÔNG TÁC GIÁM SÁT THI CÔNG XÂY DỰNG CÔNG TRÌNH](/guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_04.md)
+- [PHỤ LỤC V: *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*](/guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_05.md)
+- [PHỤ LỤC VI: BÁO CÁO HOÀN THÀNH THI CÔNG XÂY DỰNG HẠNG MỤC CÔNG TRÌNH, CÔNG TRÌNH XÂY DỰNG](/guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_06.md)
+- [PHỤ LỤC VII: DANH MỤC HỒ SƠ HOÀN THÀNH CÔNG TRÌNH](/guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_07.md)
+- [PHỤ LỤC VIII: *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*](/guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_08.md)
+- [PHỤ LỤC IX: DANH MỤC CÔNG TRÌNH QUY MÔ LỚN, KỸ THUẬT PHỨC TẠP](/guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_09.md)
+- [PHỤ LỤC X: DANH MỤC HỒ SƠ PHỤC VỤ QUẢN LÝ, SỬ DỤNG CÔNG TRÌNH XÂY DỰNG](/guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_10.md)
+- [PHỤ LỤC XI: *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*](/guiding_docs/appendices/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung-phu_luc_11.md)

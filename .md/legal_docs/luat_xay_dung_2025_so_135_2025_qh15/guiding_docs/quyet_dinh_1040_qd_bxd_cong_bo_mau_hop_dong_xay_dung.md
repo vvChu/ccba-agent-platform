@@ -1,18 +1,20 @@
 ---
-title: "quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung"
-source_file: "quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung.docx"
-conversion_tool: "pandoc"
-conversion_date: "2026-07-04T16:44:34.254868"
-short_title: "QĐ 1040"
-type: "Quy định nội bộ"
-decision_number: "1040/QĐ-BXD"
-issue_date: "2026-06-26"
-effective_date: ""
-issuer: "Bộ Xây dựng;*"
-signer: ""
-status: "final"
+conversion_date: '2026-07-04T16:44:34.254868'
+conversion_tool: pandoc
+decision_number: 1040/QĐ-BXD
+document_number: 1040/QĐ-BXD
+effective_date: ''
+issue_date: '2026-06-26'
+issuer: Bộ Xây dựng;*
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Quyet-dinh-1040-QD-BXD-cong-bo-mau-hop-dong-xay-dung.aspx
+short_title: QĐ 1040
+signer: ''
+source_file: quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung.docx
+status: current
+timestamp: '2026-06-28T00:00:00Z'
+title: quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung
+type: Guiding Document
 ---
-
 <table style="width:92%;">
 <colgroup>
 <col style="width: 31%" />
@@ -190,10 +192,10 @@ Nội dung trong các điều khoản được hướng dẫn trên cơ sở B�
 
 ## DANH SÁCH PHỤ LỤC ĐÍNH KÈM
 
-- [PHỤ LỤC I: MẪU HỢP ĐỒNG TƯ VẤN LẬP BÁO CÁO NGHIÊN CỨU KHẢ THI](./appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_01.md)
-- [PHỤ LỤC II: MẪU HỢP ĐỒNG TƯ VẤN THIẾT KẾ XÂY DỰNG](./appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_02.md)
-- [PHỤ LỤC III: MẪU HỢP ĐỒNG TƯ VẤN QUẢN LÝ DỰ ÁN](./appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_03.md)
-- [PHỤ LỤC IV: MẪU HỢP ĐỒNG TƯ VẤN GIÁM SÁT THI CÔNG XÂY DỰNG](./appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_04.md)
-- [PHỤ LỤC V: MẪU HỢP ĐỒNG TƯ VẤN KHẢO SÁT XÂY DỰNG](./appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_05.md)
-- [PHỤ LỤC VI: MẪU HỢP ĐỒNG THI CÔNG XÂY DỰNG CÔNG TRÌNH](./appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_06.md)
-- [PHỤ LỤC VII: MẪU HỢP ĐỒNG EPC](./appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_07.md)
+- [PHỤ LỤC I: MẪU HỢP ĐỒNG TƯ VẤN LẬP BÁO CÁO NGHIÊN CỨU KHẢ THI](/guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_01.md)
+- [PHỤ LỤC II: MẪU HỢP ĐỒNG TƯ VẤN THIẾT KẾ XÂY DỰNG](/guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_02.md)
+- [PHỤ LỤC III: MẪU HỢP ĐỒNG TƯ VẤN QUẢN LÝ DỰ ÁN](/guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_03.md)
+- [PHỤ LỤC IV: MẪU HỢP ĐỒNG TƯ VẤN GIÁM SÁT THI CÔNG XÂY DỰNG](/guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_04.md)
+- [PHỤ LỤC V: MẪU HỢP ĐỒNG TƯ VẤN KHẢO SÁT XÂY DỰNG](/guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_05.md)
+- [PHỤ LỤC VI: MẪU HỢP ĐỒNG THI CÔNG XÂY DỰNG CÔNG TRÌNH](/guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_06.md)
+- [PHỤ LỤC VII: MẪU HỢP ĐỒNG EPC](/guiding_docs/appendices/quyet_dinh_1040_qd_bxd_cong_bo_mau_hop_dong_xay_dung-phu_luc_07.md)
