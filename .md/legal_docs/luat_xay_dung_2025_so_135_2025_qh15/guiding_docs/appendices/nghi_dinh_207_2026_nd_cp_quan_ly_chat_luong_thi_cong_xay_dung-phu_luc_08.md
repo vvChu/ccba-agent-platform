@@ -1,11 +1,16 @@
 ---
+description: Chi tiết PHỤ LỤC VIII ban hành kèm theo Nghi Dinh 207 2026 Nd Cp Quan
+  Ly Chat Luong Thi Cong Xay Dung
+document_number: 207/2026/NĐ-CP
+parent_document: ../nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.md
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-207-2026-ND-CP-huong-dan-Luat-Xay-dung-quan-ly-chat-luong-thi-cong-xay-dung-701883.aspx
+status: current
+timestamp: '2026-06-15T00:00:00Z'
+title: PHỤ LỤC VIII - *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026
+  của Chính phủ)*
 type: Appendix
-title: "PHỤ LỤC VIII - *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*"
-description: "Chi tiết PHỤ LỤC VIII ban hành kèm theo Nghi Dinh 207 2026 Nd Cp Quan Ly Chat Luong Thi Cong Xay Dung"
-parent_document: "../nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.md"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
-
 # PHỤ LỤC VIII
 
 *(Kèm theo Nghị định số 207/2026/NĐ-CP ngày 15 tháng 6 năm 2026 của Chính phủ)*

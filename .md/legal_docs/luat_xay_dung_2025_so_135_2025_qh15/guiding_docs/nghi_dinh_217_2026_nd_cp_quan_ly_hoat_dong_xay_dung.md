@@ -1,15 +1,17 @@
 ---
+code: CCBA_RD_VBPL_002
+document_number: 217/2026/NĐ-CP
+effective_date: '2026-07-01'
+issued_by: Chính phủ
+issued_date: '2026-04-15'
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-217-2026-ND-CP-quan-ly-hoat-dong-xay-dung.aspx
+revision: Rev00
+status: current
+timestamp: '2026-06-25T00:00:00Z'
+title: Nghị định 217/2026/NĐ-CP hướng dẫn Luật Xây dựng về quản lý hoạt động xây dựng
 type: Decree
-title: "Nghị định 217/2026/NĐ-CP hướng dẫn Luật Xây dựng về quản lý hoạt động xây dựng"
-code: "CCBA_RD_VBPL_002"
-revision: "Rev00"
-document_number: "217/2026/NĐ-CP"
-issued_date: "2026-04-15"
-effective_date: "2026-07-01"
-issued_by: "Chính phủ"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
-
 <table style="width:92%;">
 <colgroup>
 <col style="width: 31%" />
@@ -1932,7 +1934,7 @@ các Vụ, Cục, Công báo;<br />
 
 ## DANH SÁCH PHỤ LỤC ĐÍNH KÈM
 
-- [PHỤ LỤC I: MẪU TỜ TRÌNH VÀ CÁC VĂN BẢN TRONG QUY TRÌNH THỰC HIỆN THẨM ĐỊNH BÁO CÁO NGHIÊN CỨU KHẢ THI, THIẾT KẾ XÂY DỰNG TRIỂN KHAI SAU KHI DỰ ÁN ĐƯỢC PHÊ DUYỆT](./appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_01.md)
-- [PHỤ LỤC II: MẪU CÁC VĂN BẢN TRONG QUY TRÌNH CẤP GIẤY PHÉP XÂY DỰNG](./appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_02.md)
-- [PHỤ LỤC III: PHÂN LOẠI DỰ ÁN ĐẦU TƯ XÂY DỰNG THEO CÔNG NĂNG PHỤC VỤ VÀ TÍNH CHẤT CHUYÊN NGÀNH CỦA CÔNG TRÌNH](./appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_03.md)
-- [PHỤ LỤC IV: DANH MỤC CÔNG TRÌNH ẢNH HƯỞNG LỚN ĐẾN AN TOÀN, LỢI ÍCH CỘNG ĐỒNG](./appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_04.md)
+- [PHỤ LỤC I: MẪU TỜ TRÌNH VÀ CÁC VĂN BẢN TRONG QUY TRÌNH THỰC HIỆN THẨM ĐỊNH BÁO CÁO NGHIÊN CỨU KHẢ THI, THIẾT KẾ XÂY DỰNG TRIỂN KHAI SAU KHI DỰ ÁN ĐƯỢC PHÊ DUYỆT](/guiding_docs/appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_01.md)
+- [PHỤ LỤC II: MẪU CÁC VĂN BẢN TRONG QUY TRÌNH CẤP GIẤY PHÉP XÂY DỰNG](/guiding_docs/appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_02.md)
+- [PHỤ LỤC III: PHÂN LOẠI DỰ ÁN ĐẦU TƯ XÂY DỰNG THEO CÔNG NĂNG PHỤC VỤ VÀ TÍNH CHẤT CHUYÊN NGÀNH CỦA CÔNG TRÌNH](/guiding_docs/appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_03.md)
+- [PHỤ LỤC IV: DANH MỤC CÔNG TRÌNH ẢNH HƯỞNG LỚN ĐẾN AN TOÀN, LỢI ÍCH CỘNG ĐỒNG](/guiding_docs/appendices/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung-phu_luc_04.md)

@@ -1,11 +1,16 @@
 ---
+description: Chi tiết PHỤ LỤC II ban hành kèm theo Nghi Dinh 212 2026 Nd Cp Dieu Kien
+  Nang Luc Hoat Dong Xay Dung
+document_number: 212/2026/NĐ-CP
+parent_document: ../nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung.md
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-212-2026-ND-CP-dieu-kien-nang-luc-hoat-dong-xay-dung.aspx
+status: current
+timestamp: '2026-06-20T00:00:00Z'
+title: PHỤ LỤC II - LĨNH VỰC VÀ PHẠM VI HOẠT ĐỘNG XÂY DỰNG CỦA CHỨNG CHỈ HÀNH NGHỀ
+  HOẠT ĐỘNG XÂY DỰNG
 type: Appendix
-title: "PHỤ LỤC II - LĨNH VỰC VÀ PHẠM VI HOẠT ĐỘNG XÂY DỰNG CỦA CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG"
-description: "Chi tiết PHỤ LỤC II ban hành kèm theo Nghi Dinh 212 2026 Nd Cp Dieu Kien Nang Luc Hoat Dong Xay Dung"
-parent_document: "../nghi_dinh_212_2026_nd_cp_dieu_kien_nang_luc_hoat_dong_xay_dung.md"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
-
 # PHỤ LỤC II
 
 LĨNH VỰC VÀ PHẠM VI HOẠT ĐỘNG XÂY DỰNG CỦA CHỨNG CHỈ HÀNH NGHỀ HOẠT ĐỘNG XÂY DỰNG  

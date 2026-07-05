@@ -1,11 +1,16 @@
 ---
+description: Chi tiết Phụ lục ban hành kèm theo Nghi Dinh 193 2026 Nd Cp Quyet Toan
+  Von Dau Tu Du An
+document_number: 193/2026/NĐ-CP
+parent_document: ../nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an.md
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-193-2026-ND-CP-quyet-toan-von-dau-tu-du-an.aspx
+status: current
+timestamp: '2026-06-05T00:00:00Z'
+title: Phụ lục - *(Kèm theo Nghị định số 193/2026/NĐ-CP ngày 01 tháng 6 năm 2026 của
+  Chính phủ)*
 type: Appendix
-title: "Phụ lục - *(Kèm theo Nghị định số 193/2026/NĐ-CP ngày 01 tháng 6 năm 2026 của Chính phủ)*"
-description: "Chi tiết Phụ lục ban hành kèm theo Nghi Dinh 193 2026 Nd Cp Quyet Toan Von Dau Tu Du An"
-parent_document: "../nghi_dinh_193_2026_nd_cp_quyet_toan_von_dau_tu_du_an.md"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
-
 # Phụ lục
 
 *(Kèm theo Nghị định số 193/2026/NĐ-CP ngày 01 tháng 6 năm 2026 của Chính phủ)*

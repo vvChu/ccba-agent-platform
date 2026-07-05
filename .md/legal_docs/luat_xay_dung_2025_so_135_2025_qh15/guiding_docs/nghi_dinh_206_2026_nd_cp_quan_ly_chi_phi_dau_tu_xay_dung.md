@@ -1,13 +1,16 @@
 ---
+code: CCBA_RD_VBPL_006
+document_number: 206/2026/NĐ-CP
+effective_date: '2026-07-01'
+issued_by: Chính phủ
+issued_date: '2026-03-25'
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-206-2026-ND-CP-quan-ly-chi-phi-dau-tu-xay-dung.aspx
+revision: Rev00
+status: current
+timestamp: '2026-06-15T00:00:00Z'
+title: Nghị định 206/2026/NĐ-CP hướng dẫn quản lý chi phí đầu tư xây dựng
 type: Decree
-title: "Nghị định 206/2026/NĐ-CP hướng dẫn quản lý chi phí đầu tư xây dựng"
-code: "CCBA_RD_VBPL_006"
-revision: "Rev00"
-document_number: "206/2026/NĐ-CP"
-issued_date: "2026-03-25"
-effective_date: "2026-07-01"
-issued_by: "Chính phủ"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
 CHÍNH PHỦ
 -------

@@ -1,11 +1,16 @@
 ---
+description: Chi tiết PHỤ LỤC I ban hành kèm theo Thong Tu 34 2026 Tt Bxd Cap Cong
+  Trinh Xay Dung
+document_number: 34/2026/TT-BXD
+parent_document: ../thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung.md
+resource: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-34-2026-TT-BXD-cap-cong-trinh-xay-dung.aspx
+status: current
+timestamp: '2026-06-26T00:00:00Z'
+title: PHỤ LỤC I - PHÂN CẤP CÔNG TRÌNH XÂY DỰNG THEO MỨC ĐỘ QUAN TRỌNG HOẶC QUY MÔ
+  CÔNG SUẤT
 type: Appendix
-title: "PHỤ LỤC I - PHÂN CẤP CÔNG TRÌNH XÂY DỰNG THEO MỨC ĐỘ QUAN TRỌNG HOẶC QUY MÔ CÔNG SUẤT"
-description: "Chi tiết PHỤ LỤC I ban hành kèm theo Thong Tu 34 2026 Tt Bxd Cap Cong Trinh Xay Dung"
-parent_document: "../thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung.md"
-uniclass: "Fi_10_20"
+uniclass: Fi_10_20
 ---
-
 # PHỤ LỤC I
 
 PHÂN CẤP CÔNG TRÌNH XÂY DỰNG THEO MỨC ĐỘ QUAN TRỌNG HOẶC QUY MÔ CÔNG SUẤT  
