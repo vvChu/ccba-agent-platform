@@ -101,10 +101,10 @@ Khi cào trang Lược đồ (`Tab=LuocDo` hoặc `#tab4`), so khớp các tiêu
 2. Gọi Kỹ năng `relative-link-patcher` để tự động dò tìm và chuẩn hóa liên kết phụ lục lỗi trong tệp Markdown chính trỏ về thư mục `appendices/`, đồng thời tự động cập nhật tệp mục lục `index.md`.
 
 ### Bước 4: Đăng ký cục bộ (Local Registry) & Dọn dẹp
-1.  Thêm bản ghi metadata (ID, tiêu đề, ngày ban hành/hiệu lực, trạng thái...) vào [legal_registry.yaml](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/legal_registry.yaml).
-2.  Đồng bộ hóa file `legal_registry.yaml` sang thư mục tài nguyên của kỹ năng [.agents/skills/legal-document-tracker/resources/](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/legal-document-tracker/resources/).
-3.  Tính toán SHA-256 của tệp gốc `.docx` và đăng ký đường dẫn vật lý vào [sources_registry.yaml](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/sources_registry.yaml).
-4.  **Dọn dẹp rác lồng nhau**: Xóa bỏ các thư mục rác tạm thời phát sinh do lỗi cào hoặc redirect lồng dưới `guiding_docs/` (ví dụ: `guiding_docs/extracted_docs` hoặc `guiding_docs/legal_docs`).
+-  Thêm bản ghi metadata (ID, tiêu đề, ngày ban hành/hiệu lực, trạng thái...) vào [legal_registry.yaml](../../../.md/knowledge/legal_registry.yaml).
+-  Đồng bộ hóa file `legal_registry.yaml` sang thư mục tài nguyên của kỹ năng [.agents/skills/legal-document-tracker/resources/](../legal-document-tracker/resources/).
+-  Tính toán SHA-256 của tệp gốc `.docx` và đăng ký đường dẫn vật lý vào [sources_registry.yaml](../../../.md/knowledge/sources_registry.yaml).
+-  **Dọn dẹp rác lồng nhau**: Xóa bỏ các thư mục rác tạm thời phát sinh do lỗi cào hoặc redirect lồng dưới `guiding_docs/` (ví dụ: `guiding_docs/extracted_docs` hoặc `guiding_docs/legal_docs`).
 
 ### Bước 5: Báo cáo kết quả
 In ra sơ đồ cấu trúc OKF Bundle đã được tích hợp phẳng và các registry được cập nhật.
