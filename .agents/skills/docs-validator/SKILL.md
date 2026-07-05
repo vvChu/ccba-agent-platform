@@ -21,12 +21,12 @@ python scripts/validate_docs.py .
 ## 2. Quy trình xử lý lỗi (Legwork)
 Khi báo cáo kiểm định trả về cảnh báo, thực hiện sửa đổi theo thứ tự ưu tiên:
 
-1. **Broken Link Error (Exit 1 - Chặn cứng)**:
-   - *Hành động*: Định vị dòng bị lỗi liên kết tương đối, đối chiếu cấu trúc thư mục thực tế bằng `list_dir` và cập nhật lại đường dẫn chính xác.
-2. **Code Ref Warning (Cảnh báo mềm)**:
-   - *Hành động*: Dùng `grep_search` quét codebase để tìm ký hiệu (class, function, variable) chính xác. Nếu ký hiệu đã bị xóa hoặc đổi tên, cập nhật tài liệu khớp 100% codebase thực tế. Tuyệt đối không giữ các ký hiệu không tồn tại.
-3. **Env Var Warning (Cảnh báo mềm)**:
-   - *Hành động*: Nếu tài liệu nhắc tới biến môi trường chưa khai báo, bổ sung biến mẫu đó kèm mô tả ngắn gọn vào `.env.example` ở root dự án.
+- **Broken Link Error (Exit 1 - Chặn cứng)**:
+  - *Hành động*: Định vị dòng bị lỗi liên kết tương đối, đối chiếu cấu trúc thư mục thực tế bằng `list_dir` và cập nhật lại đường dẫn chính xác.
+- **Code Ref Warning (Cảnh báo mềm)**:
+  - *Hành động*: Dùng `grep_search` quét codebase để tìm ký hiệu (class, function, variable) chính xác. Nếu ký hiệu đã bị xóa hoặc đổi tên, cập nhật tài liệu khớp 100% codebase thực tế. Tuyệt đối không giữ các ký hiệu không tồn tại.
+- **Env Var Warning (Cảnh báo mềm)**:
+  - *Hành động*: Nếu tài liệu nhắc tới biến môi trường chưa khai báo, bổ sung biến mẫu đó kèm mô tả ngắn gọn vào `.env.example` ở root dự án.
 
 ## 3. Tiêu chí hoàn thành (Completion Criteria)
 - `[ ]` Chạy lại `validate_docs.py` và đảm bảo không còn lỗi `Exit 1` (Broken Link).
