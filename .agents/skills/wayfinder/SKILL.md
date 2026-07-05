@@ -1,108 +1,61 @@
 ---
 name: wayfinder
-description: Chart a route through a foggy problem — turn a loose idea into a map of investigation tickets and resolve them one at a time until the way to the goal is clear.
+description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua danh sách các ticket công việc.
 disable-model-invocation: true
 ---
 
-A loose idea has arrived — too big for one agent session, and wrapped in fog: the route from here to a plan isn't visible yet. This skill charts it: stand up a map, then work its tickets one at a time until the way to the goal is clear. The map is domain-agnostic — engineering work, course content, whatever fits the shape.
+# Kỹ năng Định hướng Giải quyết Bài toán Mơ hồ (Wayfinder)
 
-## The Map
+Kỹ năng này giúp thiết lập và vận hành Bản đồ định hướng (Wayfinding Map) để chia nhỏ một ý tưởng lớn, mơ hồ thành các ticket điều tra cụ thể, giải quyết từng vấn đề một cho đến khi lộ trình đến đích hoàn toàn rõ ràng.
 
-The map is a single compact Markdown file, one per wayfinding effort, git-tracked alongside the project. It is the canonical artifact — the **whole map is loaded as context into every session**, so it must stay compact.
+## Nguyên tắc Tham chiếu theo Tên (Refer by name)
 
-Entries created during tickets should be linked to from the map, not duplicated within it.
+Mỗi bản đồ và ticket đều có tên gọi cụ thể. Trong mọi báo cáo hoặc nhật ký giao tiếp, **bắt buộc** phải gọi tên đầy đủ của ticket (nhúng liên kết tương ứng) thay vì chỉ dùng số hiệu hoặc mã định danh (Ví dụ: dùng `[Đóng gói Mutex Lock](link)` thay vì chỉ viết `#42`).
 
-### Structure
+---
 
-Entries ("tickets"), each its own section keyed by a short dash-case slug that
-reads as a mini-title (e.g. `relational-db`, `auth-strategy`, `cache-layer`) —
-terse enough to stay token-efficient, and unique within the map.
+## Cấu trúc Bản đồ (The Map)
 
-```markdown
-## relational-db: Relational Or Non-Relational Database?
+Bản đồ có thể lưu dưới dạng file Markdown cục bộ (mặc định) hoặc dạng Issue trên Issue Tracker của kho lưu trữ (tham khảo `docs/agents/issue-tracker.md`). Cấu trúc bản đồ gồm 4 phần chính:
 
-Blocked by: <slug>, <slug>
-Status: open | in-progress | resolved
-Type: Research | Prototype | Grilling | Task
+1. **Điểm đích (Destination):** Mô tả cụ thể trạng thái hoàn thành của toàn bộ bài toán (ví dụ: một bộ thông số spec, một quyết định kiến trúc cốt lõi đã chốt).
+2. **Ghi chú (Notes):** Các lưu ý đặc biệt, kỹ năng cần nạp cho phiên làm việc.
+3. **Quyết định đã chốt (Decisions so far):** Nhật ký lưu trữ kết quả của các ticket đã giải quyết (chứa tên ticket, link và tóm tắt 1 dòng).
+4. **Sương mù (Fog):** Danh sách các vấn đề dự kiến sẽ phát sinh nhưng chưa thể làm sắc nét thành ticket ở thời điểm hiện tại.
 
-### Question
+---
 
-<question-here>
+## Phân loại Ticket (Ticket Types)
 
-### Answer
+Mỗi ticket là một tác vụ có kích thước vừa đủ để giải quyết trong một phiên làm việc của Agent, thuộc một trong bốn loại:
+- **Research (Nghiên cứu):** Đọc tài liệu, API bên ngoài. Đầu ra là tệp Markdown tóm tắt.
+- **Prototype (Mẫu thử):** Tạo nhanh một mockup, outline, hoặc logic code thô để phản hồi trực quan.
+- **Grilling (Chất vấn):** Phỏng vấn chuyên sâu từng câu hỏi một với Kỹ sư sử dụng kỹ năng `/grilling` và `domain-modeling`.
+- **Task (Tác vụ):** Các công việc thủ công thực thi không cần thảo luận (cấu hình access, di chuyển thư mục...).
 
-<answer-here>
-```
+---
 
-The slug is the canonical id, used in every `Blocked by` edge and prose
-reference; the title after the colon is optional. A ticket
-is **unblocked** when every ticket in its `Blocked by` list is `resolved`. A
-session **claims** its ticket by setting `Status: in-progress` and saving the map
-before any work, so concurrent sessions skip it.
+## Chỉ dẫn thực hiện quy trình
 
-Each ticket must be sized to one 100K token agent session.
+### Bước 1: Khởi lập bản đồ (Chart the map)
+- Khi nhận yêu cầu mơ hồ, thực hiện phỏng vấn `/grilling` để xác định **Điểm đích (Destination)**.
+- Phác thảo bản đồ đầu tiên: Liệt kê các quyết định cần làm rõ, xác định các ticket unblocked ở biên giới tri thức (Frontier), đưa các phần chưa rõ ràng vào mục **Sương mù (Fog)**.
+- **Phân công (Claiming):** Đăng ký gán (assign) các ticket unblocked cho Agent thực hiện để tránh chạy trùng lặp.
+- **Tiêu chí hoàn thành:** Tệp bản đồ được khởi tạo thành công (cục bộ hoặc trên tracker) chứa ít nhất một ticket unblocked và danh sách sương mù ban đầu.
 
-## Ticket Types
+### Bước 2: Thực thi giải quyết Ticket (Work through the map)
+- Nạp toàn bộ nội dung Bản đồ vào ngữ cảnh làm việc.
+- Chọn ticket unblocked đầu tiên theo thứ tự hoặc theo chỉ định của người dùng. Cập nhật trạng thái ticket thành `in-progress` (hoặc tự assign trên tracker) để xác nhận quyền sở hữu.
+- Sử dụng các kỹ năng cần thiết để giải quyết ticket.
+- Ghi nhận câu trả lời vào mục **Quyết định đã chốt (Decisions so far)** trên bản đồ, chuyển trạng thái ticket thành `resolved` (hoặc `closed`), đồng thời cập nhật làm sắc nét các vùng Sương mù lân cận thành ticket mới nếu đã đủ thông tin.
+- **Tiêu chí hoàn thành:** Ticket mục tiêu được chuyển sang trạng thái hoàn thành, ghi nhận chi tiết kết quả xử lý và cập nhật bản đồ thành công.
 
-There are four types of tickets:
+### Bước 3: Bàn giao phiên (Handoff)
+- Kết thúc phiên làm việc bằng cách in ra khối thông tin **Bàn giao (Next steps)**.
+- Liệt kê cụ thể danh sách các ticket đã unblocked tiếp theo để Kỹ sư hoặc Agent của phiên kế tiếp có thể copy-paste chạy song song hoặc tuần tự.
+- **Tiêu chí hoàn thành:** Khối lệnh bàn giao "Next steps" được in rõ ràng ở cuối phiên hội thoại.
 
-- **Research**: Reading documentation, third-party API's, or local resources like knowledge bases. Creates a markdown summary as an asset. Use this when knowledge outside the current working directory is required.
-- **Prototype**: Raise the fidelity of the discussion by making a cheap, rough, concrete artifact to react to — an outline, a rough take, a stub, or UI/logic code via the /prototype skill. Creates the prototype as an asset. Use this when "how should it look" or "how should it behave" is the key question.
-- **Grilling**: Conversation with the agent. Uses the /grilling and /domain-modeling skills. Asks one question at a time. The default case.
-- **Task**: Literal manual work that must be done before the discussion can move forward — nothing to decide, prototype, or research. Moving data from one place to another, signing up for a third-party service, provisioning access. The agent automates it where it can; otherwise it hands the human a precise checklist to do by hand. Resolved when the work is done; the answer records what was done and any resulting facts (credentials location, new URLs, row counts) later tickets depend on.
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
-## Fog of war
-
-The map is _deliberately_ incomplete beyond the frontier — don't chart what you can't yet see. The frontier is the unblocked tickets at the edge of the known; resolve them to push it forward. Push back the fog of war one ticket at a time, until the way to the goal is clear and no tickets remain.
-
-## Invocation
-
-Two branches. Either way, **every session ends with a [Handoff](#handoff)** — never resolve more than one ticket per session.
-
-### Chart the map
-
-User invokes with a loose idea.
-
-1. Run a `/grilling` and `/domain-modeling` session to surface the open decisions.
-2. Write a new map — mostly fog, frontier identified, trivially-decidable entries resolved inline.
-3. Handoff. Charting the map is one session's work; do not also resolve tickets.
-
-### Work through the map
-
-User invokes with a path to an existing map. A ticket slug is **optional** — without one, you pick the next decision, not the user.
-
-1. Load the **whole map** as context.
-2. Choose the ticket. If the user named one, use it. Otherwise pick the first `open` ticket in document order that is [unblocked](#structure). [Claim it](#structure): set `Status: in-progress` and save before any work.
-3. Resolve it, invoking skills as needed — including any the `## Notes` block names. If in doubt, use `/grilling` and `/domain-modeling`.
-4. Record the answer in the ticket's body and set `Status: resolved`.
-5. Add newly-discovered tickets with correct `Blocked by` edges. If the decisions made invalidate other parts of the map, update or delete those tickets.
-6. Handoff.
-
-The user may run unblocked tickets in parallel, so expect other agents to be editing the map in their own sessions.
-
-## Handoff
-
-End every session by clearing the context and opening one or more fresh sessions. Close with a **Next steps** block the user can copy-paste. Two cases:
-
-**Open tickets remain.** List the currently-unblocked tickets, then give two copy-paste options: a bare command for one session (you pick the next ticket), and one pinned command per unblocked ticket for running them in parallel. Paste one line per fresh window — opening one, some, or all of them.
-
-> **Next steps** — 3 tickets unblocked: `auth-strategy`, `cache-layer`, `rate-limits`.
-> Clear the context, then open fresh sessions.
->
-> **One session** — resolves the next unblocked ticket:
-> ```
-> Invoke /wayfinder with the map at <path>.
-> ```
->
-> **Parallel** — paste one line per window, up to all 3:
-> ```
-> Invoke /wayfinder with the map at <path>, ticket auth-strategy.
-> Invoke /wayfinder with the map at <path>, ticket cache-layer.
-> Invoke /wayfinder with the map at <path>, ticket rate-limits.
-> ```
-
-**No open tickets remain.** The fog is pushed back far enough that the way to the goal is clear — the map is done. (The initial grilling may also surface no fog at all, in which case there was never a map to chart.) Recommend implementing directly, or using `/to-prd` to schedule a multi-session implementation.
-
-## Notes
-
-An optional block declaring the **domain**, any skills every session should `consult`, and freeform standing preferences for this effort.
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
