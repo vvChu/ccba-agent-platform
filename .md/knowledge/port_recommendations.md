@@ -179,3 +179,12 @@ timeline
     *   Cập nhật logic của 'grilling' để tích hợp khả năng đọc tài liệu (tận dụng 'markdown-document-processing' hoặc 'hybrid-rag-search' đã có).
     *   Cập nhật tài liệu hướng dẫn sử dụng cho 'grilling' để bao gồm ngữ cảnh 'grilling-with-docs'.
     *   Từ chối yêu cầu port 'grill-with-docs' từ thượng nguồn để giữ cho danh mục kỹ năng tinh gọn.
+
+---
+
+### 🔴 [IGNORE (Đã tồn tại)] Skill: `wayfinder` (Score: 75/100)
+*   **Kho chứa nguồn**: `mattpocock-skills`
+*   **Đánh giá**: Lỗi gọi AI Gateway: Request timed out.. Đề xuất rà soát thủ công.
+*   **Các bước triển khai**:
+    *   Rà soát thủ công tệp tin SKILL.md
+    *   Port nếu cần thiết
