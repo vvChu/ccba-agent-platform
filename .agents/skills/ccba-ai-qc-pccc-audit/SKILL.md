@@ -15,10 +15,10 @@ Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo
 
 ## Quy trình Map-Reduce
 
-1. **Map 1 (Legal & Specs):** Đánh giá thuyết minh PCCC dựa trên quy chuẩn QCVN 06:2022/BXD, TCVN 3890:2023 và phản hồi của PC07.
-2. **Map 2 (MEP Water):** So sánh chéo thông số thiết bị chữa cháy giữa bản vẽ MEP và thuyết minh.
-3. **Map 3 (MEP Alarm vs Arch):** So sánh sơ đồ báo cháy và bản vẽ kiến trúc (vị trí đầu báo, đèn sự cố, lối thoát nạn).
-4. **Reduce:** Tổng hợp các lỗi phát hiện được, loại bỏ trùng lặp và xuất thành báo cáo Markdown hoàn chỉnh theo mẫu PC13 (NĐ 105/2025/NĐ-CP).
+- **Map 1 (Legal & Specs):** Đánh giá thuyết minh PCCC dựa trên quy chuẩn QCVN 06:2022/BXD, TCVN 3890:2023 và phản hồi của PC07.
+- **Map 2 (MEP Water):** So sánh chéo thông số thiết bị chữa cháy giữa bản vẽ MEP và thuyết minh.
+- **Map 3 (MEP Alarm vs Arch):** So sánh sơ đồ báo cháy và bản vẽ kiến trúc (vị trí đầu báo, đèn sự cố, lối thoát nạn).
+- **Reduce:** Tổng hợp các lỗi phát hiện được, loại bỏ trùng lặp và xuất thành báo cáo Markdown hoàn chỉnh theo mẫu PC13 (NĐ 105/2025/NĐ-CP).
 
 ---
 
