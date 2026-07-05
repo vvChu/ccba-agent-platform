@@ -30,13 +30,13 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 
 2. **Điền thông tin và Viết nội dung**:
    - Phân tích và điền đầy đủ các placeholders `{{placeholder}}` bằng thông tin dự án mới.
-   - Áp dụng các công thức viết thuyết phục (xem tại [copy-formulas.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/copywriting/references/copy-formulas.md)) để phát triển nội dung chi tiết.
+   - Áp dụng các công thức viết thuyết phục (xem tại [copy-formulas.md](references/copy-formulas.md)) để phát triển nội dung chi tiết.
    - **Tiêu chí hoàn thành:** Tất cả các placeholders được thay thế bằng dữ liệu chính xác, giữ nguyên cấu trúc khung pháp lý/hành chính của biểu mẫu gốc.
 
 ## Tiêu chuẩn Thực thi (Best Practices)
 
 - **Tuân thủ khung mẫu:** Tuyệt đối giữ nguyên Quốc hiệu, tiêu ngữ, căn lề cấu trúc của template chuẩn.
-- **Kế thừa văn phong:** Sử dụng đặc tả văn phong tại [writing-styles.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/copywriting/references/writing-styles.md).
+- **Kế thừa văn phong:** Sử dụng đặc tả văn phong tại [writing-styles.md](references/writing-styles.md).
 - **Đa dạng biến thể:** Đề xuất tối thiểu 2 phương án viết cho các phân đoạn thuyết phục quan trọng để người dùng lựa chọn.
 
 ---
