@@ -193,7 +193,6 @@ def calculate_c_xd(V, G, G_dp):
 
 
 def test_frontmatter_inheritance_and_link_standardization():
-    import yaml
     with tempfile.TemporaryDirectory() as temp_dir:
         root_dir = Path(temp_dir)
         packager = OKFBundlePackager(root_dir)
@@ -261,7 +260,7 @@ Nội dung chi tiết phụ lục I.
         # Create a sibling file in the bundle
         bundle_dir = root_dir / "legal_docs" / primary_slug
         bundle_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Write some files with relative links inside the bundle_dir to test standardize_bundle_links
         doc_with_rel_links = bundle_dir / "doc.md"
         doc_with_rel_links.write_text(

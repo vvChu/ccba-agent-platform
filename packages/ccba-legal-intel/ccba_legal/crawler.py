@@ -86,7 +86,7 @@ class TVPLSessionMutex:
                 if time.time() - start_time >= self.timeout:
                     raise TimeoutError(
                         f"Timeout waiting to acquire TVPL VIP session lock after {self.timeout} seconds."
-                    )
+                    ) from None
                 time.sleep(self.retry_interval)
             except Exception as e:
                 # If other writing / permission errors occur, retry
