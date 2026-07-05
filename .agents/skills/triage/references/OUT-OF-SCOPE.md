@@ -1,6 +1,6 @@
 # Quản lý Cơ sở Tri thức Tính năng ngoài Phạm vi (.out-of-scope/)
 
-Thư mục `.out-of-scope/` (hoặc thư mục tri thức tương đương cục bộ của dự án) lưu trữ hồ sơ của các yêu cầu tính năng đã bị từ chối chính thức (nhãn `wontfix`). Mục tiêu là lưu trữ quyết định lịch sử và tự động phát hiện trùng lặp.
+Thư mục `.out-of-scope/` (hoặc thư mục tương đương cục bộ tại `.md/knowledge/out-of-scope/` khi chạy offline) lưu trữ hồ sơ của các yêu cầu tính năng đã bị từ chối chính thức (nhãn `wontfix`). **Lưu ý**: Đảm bảo tạo thư mục này nếu nó chưa tồn tại để quy trình có thể thực thi ngay lập tức.
 
 ## Cấu trúc thư mục (Directory Structure)
 
