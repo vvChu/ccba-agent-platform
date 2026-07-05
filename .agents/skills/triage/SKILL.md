@@ -33,12 +33,12 @@ Kỹ năng này giúp điều phối và sàng lọc các sự cố hoặc yêu 
 ## Quy trình thực hiện (Process)
 
 1. **Hiển thị danh sách cần chú ý:**
-   - Truy vấn danh sách sự cố từ Issue Tracker hoặc thư mục cục bộ `.md/knowledge/issues/` (nếu chạy offline). Hiển thị các sự cố chưa được phân loại, đang ở trạng thái `needs-triage` hoặc `needs-info` đã có phản hồi mới từ người báo cáo.
+   - Truy vấn danh sách sự cố từ Issue Tracker hoặc thư mục cục bộ `.md/knowledge/issues/` (nếu chạy offline, đảm bảo tự động tạo thư mục này nếu chưa tồn tại). Hiển thị các sự cố chưa được phân loại, đang ở trạng thái `needs-triage` hoặc `needs-info` đã có phản hồi mới từ người báo cáo.
    - **Tiêu chí hoàn thành:** In ra danh sách sự cố phân nhóm rõ ràng kèm tiêu đề và mã định danh tương ứng.
 
 2. **Khảo sát ngữ cảnh của Sự cố/PR cụ thể:**
    - Đọc chi tiết nội dung sự cố, lịch sử thảo luận và mã nguồn liên quan. 
-   - Đối chiếu với cơ sở tri thức `.out-of-scope/` để phát hiện trùng lặp với các yêu cầu đã bị từ chối trong quá trình lịch sử. Khảo sát codebase để đảm bảo tính năng chưa từng được triển khai.
+   - Đối chiếu với cơ sở tri thức `.out-of-scope/` (hoặc thư mục tri thức tương đương cục bộ của dự án tại `.md/knowledge/out-of-scope/` nếu chạy offline, đảm bảo tạo thư mục này nếu chưa có) để phát hiện trùng lặp với các yêu cầu đã bị từ chối trong quá trình lịch sử. Khảo sát codebase để đảm bảo tính năng chưa từng được triển khai.
    - **Tiêu chí hoàn thành:** Đưa ra khuyến nghị phân loại (category) và trạng thái (state) đề xuất kèm theo lý do kỹ thuật chi tiết.
 
 3. **Xác thực và Tái lập lỗi (Verification):**
@@ -48,7 +48,7 @@ Kỹ năng này giúp điều phối và sàng lọc các sự cố hoặc yêu 
 4. **Áp dụng kết quả điều phối:**
    - Cập nhật nhãn trạng thái tương ứng. 
    - Nếu chuyển sang `ready-for-agent`, bắt buộc đăng tải Agent Brief theo cấu trúc chuẩn tại [AGENT-BRIEF.md](./references/AGENT-BRIEF.md). 
-   - Nếu chuyển sang `wontfix` do bị từ chối, cập nhật lý do và lưu trữ khái niệm vào cơ mục `.out-of-scope/` theo tài liệu hướng dẫn [OUT-OF-SCOPE.md](./references/OUT-OF-SCOPE.md).
+   - Nếu chuyển sang `wontfix` do bị từ chối, cập nhật lý do và lưu trữ khái niệm vào thư mục `.out-of-scope/` (hoặc thư mục cục bộ `.md/knowledge/out-of-scope/`) theo tài liệu hướng dẫn [OUT-OF-SCOPE.md](./references/OUT-OF-SCOPE.md).
    - **Tiêu chí hoàn thành:** Trạng thái sự cố được cập nhật thành công, bổ sung Agent Brief hoặc tài liệu lưu trữ từ chối tương ứng.
 
 ---
