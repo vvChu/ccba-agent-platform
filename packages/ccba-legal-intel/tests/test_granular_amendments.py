@@ -23,7 +23,9 @@ def test_extract_amendments():
     ]
     ```
     """
-    amendments = engine.extract_amendments(schema_text, source_doc_path="../thong_tu_b/thong_tu_b.md")
+    amendments = engine.extract_amendments(
+        schema_text, source_doc_path="../thong_tu_b/thong_tu_b.md"
+    )
     assert len(amendments) == 1
     assert amendments[0]["target_doc_id"] == "nd_06_2021"
     assert amendments[0]["target_anchor"] == "d15k2"
@@ -45,7 +47,10 @@ def test_extract_amendments():
     ```
     """
     engine_llm = LegalAnalysisEngine(ai_client=mock_ai)
-    amendments_llm = engine_llm.extract_amendments("This is amending text that will trigger LLM.", source_doc_path="../thong_tu_b/thong_tu_b.md")
+    amendments_llm = engine_llm.extract_amendments(
+        "This is amending text that will trigger LLM.",
+        source_doc_path="../thong_tu_b/thong_tu_b.md",
+    )
     mock_ai.chat.assert_called_once()
     assert len(amendments_llm) == 1
     assert amendments_llm[0]["target_doc_id"] == "nd_06_2021"
@@ -61,21 +66,24 @@ def test_inject_warning_block():
         markdown_content=markdown_content,
         target_anchor="d15k2",
         amendment_source="Điều 1 Thông tư B",
-        source_doc_path="../thong_tu_b/thong_tu_b.md"
+        source_doc_path="../thong_tu_b/thong_tu_b.md",
     )
 
     # Verify warning block is injected right after the anchor line
     lines = updated.splitlines()
     assert lines[2] == '<a id="d15k2"></a>2. Khoản 2 quy định...'
-    assert lines[3] == '> [!WARNING] Khoản này đã bị sửa đổi/bổ sung bởi Điều 1 Thông tư B. Xem nội dung mới tại [Thông tư B](../thong_tu_b/thong_tu_b.md).'
-    assert lines[4] == '3. Khoản 3 quy định...'
+    assert (
+        lines[3]
+        == "> [!WARNING] Khoản này đã bị sửa đổi/bổ sung bởi Điều 1 Thông tư B. Xem nội dung mới tại [Thông tư B](../thong_tu_b/thong_tu_b.md)."
+    )
+    assert lines[4] == "3. Khoản 3 quy định..."
 
     # Verify duplicate warning block is not injected
     re_updated = inject_warning_block(
         markdown_content=updated,
         target_anchor="d15k2",
         amendment_source="Điều 1 Thông tư B",
-        source_doc_path="../thong_tu_b/thong_tu_b.md"
+        source_doc_path="../thong_tu_b/thong_tu_b.md",
     )
     assert re_updated == updated
 
@@ -86,11 +94,7 @@ def test_update_clause_status_in_registry():
         # Seed registry with a target document
         initial_data = {
             "decrees": [
-                {
-                    "id": "ND-06-2021",
-                    "title": "Nghị định 06/2021/NĐ-CP",
-                    "status": "current"
-                }
+                {"id": "ND-06-2021", "title": "Nghị định 06/2021/NĐ-CP", "status": "current"}
             ]
         }
         with open(reg_file, "w", encoding="utf-8") as f:
@@ -102,7 +106,7 @@ def test_update_clause_status_in_registry():
             clause_anchor="d15k2",
             status="amended",
             amended_by="Điều 1 Thông tư B",
-            source_doc_path="../thong_tu_b/thong_tu_b.md"
+            source_doc_path="../thong_tu_b/thong_tu_b.md",
         )
 
         # Reload and check
@@ -126,9 +130,12 @@ def test_process_amendments_integration():
         target_doc_dir.mkdir(parents=True, exist_ok=True)
         target_markdown_file = target_doc_dir / "full_text.md"
 
-        target_markdown_file.write_text("""# Nghị định 06/2021
+        target_markdown_file.write_text(
+            """# Nghị định 06/2021
 <a id="d15k2"></a>Khoản 2 Điều 15...
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         # Seed registry
         initial_data = {
@@ -136,7 +143,7 @@ def test_process_amendments_integration():
                 {
                     "id": "ND-06-2021",
                     "title": "Nghị định 06/2021/NĐ-CP",
-                    "file_path": ".md/legal_docs/nd_06_2021/full_text.md"
+                    "file_path": ".md/legal_docs/nd_06_2021/full_text.md",
                 }
             ]
         }
@@ -148,6 +155,7 @@ def test_process_amendments_integration():
 
         # Mock resolve_project_root to return our temp directory so it can find the target markdown file
         import ccba_legal.registry
+
         original_resolve = ccba_legal.registry.resolve_project_root
         ccba_legal.registry.resolve_project_root = lambda: temp_path
 
@@ -170,14 +178,17 @@ def test_process_amendments_integration():
             mods = manager.process_amendments_from_document(
                 source_doc_id="thong_tu_b",
                 source_doc_content=source_content,
-                source_doc_path="../thong_tu_b/thong_tu_b.md"
+                source_doc_path="../thong_tu_b/thong_tu_b.md",
             )
 
             assert len(mods) == 1
 
             # Verify warning was injected in the file
             updated_text = target_markdown_file.read_text(encoding="utf-8")
-            assert "> [!WARNING] Khoản này đã bị sửa đổi/bổ sung bởi Điều 1 Thông tư B. Xem nội dung mới tại [Thông tư B](../thong_tu_b/thong_tu_b.md)." in updated_text
+            assert (
+                "> [!WARNING] Khoản này đã bị sửa đổi/bổ sung bởi Điều 1 Thông tư B. Xem nội dung mới tại [Thông tư B](../thong_tu_b/thong_tu_b.md)."
+                in updated_text
+            )
 
             # Verify registry was updated
             registry_data = manager.load()

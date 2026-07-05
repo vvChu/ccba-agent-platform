@@ -136,7 +136,7 @@ Chương II
         assert ch2.exists()
 
         ch1_content = ch1.read_text(encoding="utf-8")
-        assert "parent_document: \"../full_text.md\"" in ch1_content
+        assert 'parent_document: "../full_text.md"' in ch1_content
         assert "Chương I" in ch1_content
         assert "QUY ĐỊNH CHUNG" in ch1_content
         assert "Chương II" not in ch1_content
@@ -150,7 +150,7 @@ def test_generate_chunks():
         # Construct content with enough words to trigger chunking
         content_parts = []
         for i in range(10):
-            content_parts.append(f"Paragraph {i} " + "word " * 50) # 50 words per paragraph
+            content_parts.append(f"Paragraph {i} " + "word " * 50)  # 50 words per paragraph
         content = "\n\n".join(content_parts)
 
         packager.generate_chunks(content, bundle_dir)
@@ -265,14 +265,14 @@ Nội dung chi tiết phụ lục I.
         doc_with_rel_links = bundle_dir / "doc.md"
         doc_with_rel_links.write_text(
             "Xem [Chương I](sections/chuong_01.md) và [Phụ lục I](appendices/test_law-phu_luc_01.md).",
-            encoding="utf-8"
+            encoding="utf-8",
         )
         # Sibling link
         doc_in_sections = bundle_dir / "sections" / "chuong_01.md"
         doc_in_sections.parent.mkdir(parents=True, exist_ok=True)
         doc_in_sections.write_text(
             "Xem [Trang chủ](../index.md) hoặc [Full text](../full_text.md) và [Phụ lục](../appendices/test_law-phu_luc_01.md).",
-            encoding="utf-8"
+            encoding="utf-8",
         )
 
         packager.standardize_bundle_links(bundle_dir)

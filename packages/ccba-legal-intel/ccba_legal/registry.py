@@ -106,7 +106,11 @@ class LegalRegistryManager:
         for _category, docs in data.items():
             if isinstance(docs, list):
                 for doc in docs:
-                    if isinstance(doc, dict) and doc.get("id") and doc["id"].lower().replace("-", "_") == norm_target:
+                    if (
+                        isinstance(doc, dict)
+                        and doc.get("id")
+                        and doc["id"].lower().replace("-", "_") == norm_target
+                    ):
                         # Initialize clauses section under document metadata if not exists
                         if "clauses" not in doc or not isinstance(doc["clauses"], dict):
                             doc["clauses"] = {}
@@ -116,14 +120,18 @@ class LegalRegistryManager:
                             "amended_by": amended_by,
                             "source_doc_path": source_doc_path,
                         }
-                        print(f"[Registry] Set status of {target_doc_id} clause {clause_anchor} to '{status}'")
+                        print(
+                            f"[Registry] Set status of {target_doc_id} clause {clause_anchor} to '{status}'"
+                        )
                         found = True
                         break
             if found:
                 break
 
         if not found:
-            print(f"[Registry] Warning: Target doc {target_doc_id} not found in registry. Clause status not updated.")
+            print(
+                f"[Registry] Warning: Target doc {target_doc_id} not found in registry. Clause status not updated."
+            )
         else:
             self.save(data)
 
@@ -134,7 +142,11 @@ class LegalRegistryManager:
         for _category, docs in data.items():
             if isinstance(docs, list):
                 for doc in docs:
-                    if isinstance(doc, dict) and doc.get("id") and doc["id"].lower().replace("-", "_") == norm_id:
+                    if (
+                        isinstance(doc, dict)
+                        and doc.get("id")
+                        and doc["id"].lower().replace("-", "_") == norm_id
+                    ):
                         return doc
         return None
 
@@ -179,6 +191,7 @@ class LegalRegistryManager:
     ) -> list[dict]:
         """Parse clause-level changes from the source document, update registry, and inject warnings in target documents."""
         from ccba_legal.parser import LegalAnalysisEngine
+
         engine = LegalAnalysisEngine()
 
         modifications = engine.extract_amendments(source_doc_content, source_doc_path)
@@ -207,6 +220,7 @@ class LegalRegistryManager:
                     try:
                         content = markdown_path.read_text(encoding="utf-8")
                         from ccba_legal.packager import inject_warning_block
+
                         updated_content = inject_warning_block(
                             markdown_content=content,
                             target_anchor=target_anchor,
@@ -214,9 +228,10 @@ class LegalRegistryManager:
                             source_doc_path=mod_source_doc_path,
                         )
                         markdown_path.write_text(updated_content, encoding="utf-8")
-                        print(f"[Registry] Injected warning in target {target_doc_id} at {target_anchor}")
+                        print(
+                            f"[Registry] Injected warning in target {target_doc_id} at {target_anchor}"
+                        )
                     except Exception as e:
                         print(f"[Registry] Error injecting warning into {markdown_path}: {e}")
 
         return modifications
-
