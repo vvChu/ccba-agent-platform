@@ -1,3 +1,9 @@
+---
+name: sync-upstream
+description: Kiểm tra cập nhật và đồng bộ tri thức từ các repository claudekit và mattpocock thượng nguồn.
+disable-model-invocation: true
+---
+
 # Kỹ năng: Đồng bộ hóa Thượng nguồn (Upstream Sync Skill)
 
 Kỹ năng này hỗ trợ kiểm tra các bản cập nhật mới từ các kho chứa `claudekit-engineer`, `claudekit-marketing`, và `mattpocock/skills` trên remote GitHub, tự động clone hoặc pull về thư mục tạm cục bộ và thực hiện đánh giá để đưa ra khuyến nghị nâng cấp.

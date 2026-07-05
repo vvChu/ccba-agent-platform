@@ -84,14 +84,14 @@ Khi cào trang Lược đồ (`Tab=LuocDo` hoặc `#tab4`), so khớp các tiêu
    ```
 
 ### Bước 2: Chạy Quy trình Cào dữ liệu chênh lệch (Delta-only)
-1.  **Tra cứu trước (Pre-crawl scoping)**: Đối chiếu URL hoặc số hiệu văn bản cần cào với `legal_registry.yaml`.
-2.  **Rẽ nhánh thực thi**:
+-  **Tra cứu trước (Pre-crawl scoping)**: Đối chiếu URL hoặc số hiệu văn bản cần cào với `legal_registry.yaml`.
+-  **Rẽ nhánh thực thi**:
     *   **Trường hợp đã tồn tại văn bản gốc**: Bỏ qua cào văn bản chính. Chỉ cào bổ sung các văn bản hướng dẫn/sửa đổi mới ban hành xuất hiện trên trang Lược đồ chưa có trong `guiding_docs/`.
     *   **Trường hợp cào mới hoàn toàn**: Chạy lệnh cào đầy đủ:
         ```bash
         python scripts/legal_intelligence.py --url "<TVPL_URL>" --extract-related --download-source
         ```
-3.  **Tải tệp Docx**: Chạy ngầm tiến trình giám sát thư mục `Downloads` để bắt file `.crdownload` và tự động di dời về đúng thư mục bundle đích.
+-  **Tải tệp Docx**: Chạy ngầm tiến trình giám sát thư mục `Downloads` để bắt file `.crdownload` và tự động di dời về đúng thư mục bundle đích.
 
 ### Bước 3: Phân rã phụ lục & Vá liên kết
 1. Chạy script phân rã các biểu mẫu đính kèm:
