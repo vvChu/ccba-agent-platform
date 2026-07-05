@@ -1,0 +1,25 @@
+relation_synonyms:
+  amends_docs:
+    - 'Văn bản bị sửa đổi bổ sung'
+    - 'Văn bản bị sửa đổi, bổ sung'
+  replaced_docs:
+    - 'Văn bản bị thay thế'
+  referenced_docs:
+    - 'Văn bản được dẫn chiếu'
+  basis_docs:
+    - 'Văn bản được căn cứ'
+  guided_docs:
+    - 'Văn bản được hướng dẫn'
+  consolidated_docs:
+    - 'Văn bản được hợp nhất'
+  guiding_docs:
+    - 'Văn bản hướng dẫn'
+  consolidations:
+    - 'Văn bản hợp nhất'
+  amended_by_docs:
+    - 'Văn bản sửa đổi bổ sung'
+    - 'Văn bản sửa đổi, bổ sung'
+  replaced_by_docs:
+    - 'Văn bản thay thế'
+  related_docs:
+    - 'Văn bản liên quan cùng nội dung'
