@@ -16,21 +16,21 @@ Kỹ năng này thực hiện việc kiểm tra, tải về các bản cập nh�
 ## Quy trình Thực hiện (Process)
 
 ### 1. Đồng bộ hóa mã nguồn Upstream
-- Chạy script Python để tự động clone hoặc pull các repository thượng nguồn về thư mục tạm cục bộ `.md/scratch/repos/`:
+- Chạy script Python để tự động clone/fetch các repository thượng nguồn về thư mục tạm cục bộ `.md/scratch/repos/` ở chế độ kiểm tra:
   ```powershell
-  python scripts/check_claudekit_updates.py
+  python scripts/check_claudekit_updates.py --check-only
   ```
-- **Tiêu chí hoàn thành:** Script chạy thành công với exit code 0. Toàn bộ mã nguồn các repo đích được tải về đầy đủ tại thư mục tạm.
+- **Tiêu chí hoàn thành:** Script chạy thành công với exit code 0. Toàn bộ mã nguồn các repo đích được cập nhật đầy đủ và in ra danh sách các cập nhật có sẵn kèm các SHA tương ứng.
 - **Cơ chế tự chữa lành (Self-Healing):** Nếu script thất bại do lỗi Git corruption (chỉ số index lỗi) hoặc lỗi đường truyền mạng ngắt quãng, Agent phải thực hiện xóa sạch thư mục tạm tương ứng `.md/scratch/repos/<repo-name>` và chạy lại lệnh để clone mới (Clean Clone). Nếu vẫn lỗi sau 2 lần thử, báo cáo lại người dùng.
 
 ### 2. Nghiên cứu và Phân tích Khuyến nghị
-- Liệt kê danh sách các tệp tin mới được phát hiện (git status/diff dạng oneline) và trình bày ngắn gọn cho người dùng.
+- Liệt kê danh sách các tệp tin mới/nâng cấp được phát hiện bằng cách so sánh hiệu số giữa Local SHA và Remote SHA (ví dụ chạy lệnh: `git diff --name-only <local-sha>..<remote-sha>` trên repository tương ứng) và trình bày ngắn gọn cho người dùng.
 - Hỏi ý kiến người dùng trước khi thực thi quét sâu: *"Tôi tìm thấy N file mới. Bạn có muốn phân tích chi tiết bằng AI Gateway để cập nhật báo cáo khuyến nghị không?"*
-- Nếu người dùng đồng ý, chạy script phân tích cấu trúc của các repository thượng nguồn bằng AI Gateway:
+- Nếu người dùng đồng ý, chạy script phân tích cấu trúc của các repository thượng nguồn bằng AI Gateway mà không kèm flag `--check-only`:
   ```powershell
-  python scripts/assess_upstream_features.py
+  python scripts/check_claudekit_updates.py
   ```
-- **Tiêu chí hoàn thành:** Script chạy hoàn tất, cập nhật dữ liệu mới vào vùng được chỉ định tại tệp báo cáo khuyến nghị.
+- **Tiêu chí hoàn thành:** Script chạy hoàn tất, tự động gọi trình đánh giá cập nhật dữ liệu mới vào vùng được chỉ định tại tệp báo cáo khuyến nghị.
 
 ### 3. Đối soát và Trình bày Kết quả (Parse-Protection)
 - Đọc nội dung tệp tin báo cáo khuyến nghị tại [port_recommendations.md](../../../.md/knowledge/port_recommendations.md).
