@@ -127,20 +127,40 @@ def call_ai_evaluation(repo_type: str, skill_name: str, content: str) -> dict:
 
 
 def append_recommendation(repo_type: str, skill_name: str, result: dict):
-    """Write recommendation item to .md/port_recommendations.md."""
+    """Write recommendation item to .md/port_recommendations.md using Parse-Protection markers."""
     try:
         if not RECOMMENDATIONS_FILE.parent.exists():
             RECOMMENDATIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
         header = f"# 📋 Upstream Porting Recommendations\n\nBáo cáo tự động đánh giá các tính năng mới từ thượng nguồn. Cập nhật ngày: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
 
-        # Read existing file content or start new
+        # Read existing file content
         content = ""
+        developer_notes = "\n\n<!-- DEVELOPER-NOTES-START -->\n## 📝 Ghi chú của Kỹ sư (Developer Notes)\n*Kỹ sư có thể tự do ghi chép các phân tích, đánh giá thủ công tại đây. Phần này sẽ được tự động bảo toàn khi đồng bộ thượng nguồn.*\n<!-- DEVELOPER-NOTES-END -->"
+        
         if RECOMMENDATIONS_FILE.exists():
             content = RECOMMENDATIONS_FILE.read_text(encoding="utf-8")
 
-        if not content.startswith("# 📋 Upstream"):
-            content = header + content
+        # Parse developer notes if they exist
+        notes_match = re.search(r"(<!-- DEVELOPER-NOTES-START -->.*?<!-- DEVELOPER-NOTES-END -->)", content, re.DOTALL)
+        if notes_match:
+            developer_notes = "\n\n" + notes_match.group(1)
+
+        # Parse auto-generated content if it exists
+        auto_gen_content = ""
+        auto_match = re.search(r"<!-- AUTO-GENERATED-START -->(.*?)<!-- AUTO-GENERATED-END -->", content, re.DOTALL)
+        if auto_match:
+            auto_gen_content = auto_match.group(1).strip()
+        else:
+            # If no markers exist, treat the whole existing content as auto-generated if it starts with the header
+            if content.strip().startswith("# 📋 Upstream"):
+                # Clean up developer notes from it if any
+                clean_content = content
+                if notes_match:
+                    clean_content = clean_content.replace(notes_match.group(1), "")
+                auto_gen_content = clean_content.strip()
+            else:
+                auto_gen_content = header.strip()
 
         # Check existing list for dynamic status override
         existing_skills, existing_workflows = get_existing_elements()
@@ -176,9 +196,15 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
         for step in result.get("actionable_steps", []):
             item_md += f"    *   {step}\n"
 
-        content += item_md
-        RECOMMENDATIONS_FILE.write_text(content, encoding="utf-8")
-        print(f"[Evaluator] Wrote suitability report for '{skill_name}' -> {status_text}")
+        # Append new item to the auto-generated section
+        if f"`{skill_name}`" not in auto_gen_content:
+            auto_gen_content += "\n" + item_md.strip()
+
+        # Construct final file content
+        final_content = f"<!-- AUTO-GENERATED-START -->\n{auto_gen_content.strip()}\n<!-- AUTO-GENERATED-END -->{developer_notes}"
+        
+        RECOMMENDATIONS_FILE.write_text(final_content, encoding="utf-8")
+        print(f"[Evaluator] Wrote suitability report for '{skill_name}' -> {status_text} (Parse-Protected)")
     except Exception as e:
         print(f"[Evaluator] Error writing recommendation: {e}")
 
