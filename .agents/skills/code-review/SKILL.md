@@ -1,208 +1,61 @@
 ---
 name: code-review
-description: "Review code quality with evidence-based rigor. Supports PR, commit, or pending changes. Focuses on bugs, regressions, reliability, and verification gaps."
+description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells) và Spec (PRD/Requirements).
 user-invocable: true
-when_to_use: "Invoke to review diffs, PRs, commits, or full codebases."
+when_to_use: "Dùng khi người dùng muốn đánh giá chất lượng của một PR, một commit, hoặc các thay đổi chưa commit (--pending)."
 category: utilities
 keywords: [review, quality, verification, reliability]
 argument-hint: "[#PR | COMMIT | --pending | codebase [parallel]]"
 metadata:
-  author: claudekit
+  author: CCBA
   version: "2.0.0"
 ---
 
-# Code Review
+# Quy trình Rà soát Chất lượng Code (Code Review)
 
-Production-readiness code review with technical rigor, evidence-based claims, and verification over performative responses. Reviews focus on production risks, regression paths, and whether the implementation matches the requested change.
+Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn đối chiếu giữa `HEAD` hiện tại và một điểm mốc (fixed point) được chỉ định trên hai trục độc lập: **Standards** (Quy chuẩn code) và **Spec** (Đặc tả nghiệp vụ). 
 
-## Input Modes
+Để tránh ô nhiễm ngữ cảnh (context pollution), hai trục này sẽ được thực thi song song bởi hai sub-agents độc lập trước khi tổng hợp kết quả.
 
-Auto-detect from arguments. If ambiguous or no arguments, prompt via `AskUserQuestion`.
+## Quy trình Thực hiện (Process)
 
-| Input | Mode | What Gets Reviewed |
-|-------|------|--------------------|
-| `#123` or PR URL | **PR** | Full PR diff fetched via `gh pr diff` |
-| `abc1234` (7+ hex chars) | **Commit** | Single commit diff via `git show` |
-| `--pending` | **Pending** | Staged + unstaged changes via `git diff` |
-| *(no args, recent changes)* | **Default** | Recent changes in context |
-| `codebase` | **Codebase** | Full codebase scan |
-| `codebase parallel` | **Codebase+** | Parallel multi-reviewer audit |
+### 1. Xác định điểm mốc đối chiếu (Pin the fixed point)
+- Xác định điểm mốc đối chiếu do người dùng chỉ định (Commit SHA, branch name, tag, `main`, v.v.). Nếu không chỉ định, yêu cầu người dùng cung cấp.
+- Xác nhận mốc đối chiếu tồn tại hợp lệ và truy xuất dữ liệu diff so với `HEAD`.
+- **Tiêu chí hoàn thành:** Điểm mốc đối chiếu được xác minh tồn tại và dữ liệu diff so sánh trả về khác rỗng. Nếu mốc đối chiếu không hợp lệ hoặc không có thay đổi nào (diff rỗng), dừng lại và báo lỗi.
 
-**Resolution details:** `references/input-mode-resolution.md`
+### 2. Xác định tài liệu đặc tả nghiệp vụ (Identify the spec source)
+- Tìm kiếm tài liệu PRD hoặc danh sách ticket tương ứng với tính năng tại thư mục `.md/knowledge/`.
+- Nếu không tìm thấy tệp tin đặc tả nghiệp vụ nào, yêu cầu người dùng cung cấp đường dẫn hoặc xác nhận bỏ qua trục Spec (chỉ review Standards).
+- **Tiêu chí hoàn thành:** Xác định chính xác tệp tin PRD (ví dụ: `prd-{feature-slug}.md`) làm nguồn chân lý để đối chiếu hoặc ghi nhận bỏ qua trục Spec.
 
-### No Arguments
+### 3. Xác định tài liệu quy chuẩn (Identify the standards sources)
+- Tìm kiếm các quy định chuẩn viết code của dự án (ví dụ: `.agents/AGENTS.md` hoặc `CODING_STANDARDS.md`).
+- Đồng thời, áp dụng 12 Fowler smells cơ bản (Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, Refused Bequest) làm quy chuẩn bổ trợ.
+- **Tiêu chí hoàn thành:** Xác định đầy đủ các tệp tài liệu tiêu chuẩn hiện hành của repo để nạp vào prompt cho sub-agent.
 
-If invoked WITHOUT arguments and no recent changes in context, use `AskUserQuestion` with header "Review Target", question "What would you like to review?":
+### 4. Gọi song song hai Sub-agents (Spawn sub-agents in parallel)
+- Spawn đồng thời 2 sub-agents (sử dụng subagent `self`):
+  - **Standards Sub-agent Prompt:** Nhận Git Diff + danh sách tiêu chuẩn + 12 smells. Yêu cầu chỉ ra các vi phạm quy chuẩn và smell kèm trích dẫn dòng code.
+  - **Spec Sub-agent Prompt:** Nhận Git Diff + nội dung PRD/Spec. Yêu cầu chỉ ra các điểm thiếu hụt tính năng so với yêu cầu hoặc scope creep dư thừa.
+- **Tiêu chí hoàn thành:** Khởi chạy thành công 2 sub-agents chạy song song và nhận lại đầy đủ 2 báo cáo phân tích độc lập (Standards Report và Spec Report).
 
-| Option | Description |
-|--------|-------------|
-| Pending changes | Review staged/unstaged git diff |
-| Enter PR number | Fetch and review a specific PR |
-| Enter commit hash | Review a specific commit |
-| Full codebase scan | Deep codebase analysis |
-| Parallel codebase audit | Multi-reviewer codebase scan |
+### 5. Tổng hợp báo cáo (Aggregate Findings)
+- Tổng hợp kết quả từ hai sub-agents dưới dạng báo cáo rõ ràng với hai tiêu đề `## Standards` and `## Spec`.
+- Tuyệt đối không tự ý gộp chung hoặc trộn lẫn phát hiện của hai trục để tránh che lấp lỗi của nhau.
+- **Tiêu chí hoàn thành:** Xuất báo cáo tổng hợp chi tiết trình lập trình viên đối soát, kèm tóm tắt 1 dòng về số lượng lỗi và lỗi nghiêm trọng nhất trên mỗi trục.
 
-## Core Principle
+## Tích hợp hệ thống (System Integration)
 
-**YAGNI**, **KISS**, **DRY** always. Technical correctness over social comfort.
-**Be honest, be brutal, straight to the point, and be concise.**
+- **Trước khi tạo PR:** Chạy `code-review --pending` sau khi hoàn thành code bằng `/ccba-tdd` để rà soát lại toàn bộ diff cục bộ.
+- **Trước khi Merge PR:** Chạy `code-review #PR_NUMBER` trong quá trình thực thi `/ccba-release-feature` để kiểm soát chất lượng và rà soát lỗi trước khi merge vào nhánh `main`.
 
-Default assumption: reviewed code may be AI-assisted. Do not trust polished shape, confident comments, or happy-path tests. Verify behavior, project-rule compliance, and scope discipline from evidence.
+## Vị trí trong Luồng công việc (Workflow Position)
 
-No rubber-stamp reviews. The reviewer is not trying to please the author or preserve momentum; the reviewer enforces the rulebook and blocks defects, regressions, hidden scope drift, and AI-slop patterns.
+- **Thường chạy sau:** `/ccba-tdd` (Rà soát sau khi code hướng kiểm thử).
+- **Thường chạy trước:** `/ccba-create-pr` (Push và tạo PR), `/ccba-release-feature` (Merge và đóng tính năng).
 
-Verify before implementing. Ask before assuming. Evidence before claims.
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
-## Practices
-
-| Practice | When | Reference |
-|----------|------|-----------|
-| **Spec compliance** | After implementing from plan/spec, BEFORE quality review | `references/spec-compliance-review.md` |
-| Receiving feedback | Unclear feedback, external reviewers, needs prioritization | `references/code-review-reception.md` |
-| Requesting review | After tasks, before merge, stuck on problem | `references/requesting-code-review.md` |
-| Verification gates | Before any completion claim, commit, PR | `references/verification-before-completion.md` |
-| Edge case scouting | After implementation, before review | `references/edge-case-scouting.md` |
-| **Checklist review** | Pre-landing, `/ck:ship` pipeline, security audit | `references/checklist-workflow.md` |
-| **Task-managed reviews** | Multi-file features (3+ files), parallel reviewers, fix cycles | `references/task-management-reviews.md` |
-
-## Quick Decision Tree
-
-```
-SITUATION?
-│
-├─ Input mode? → Resolve diff (references/input-mode-resolution.md)
-│   ├─ #PR / URL → fetch PR diff
-│   ├─ commit hash → git show
-│   ├─ --pending → git diff (staged + unstaged)
-│   ├─ codebase → full scan (references/codebase-scan-workflow.md)
-│   ├─ codebase parallel → parallel audit (references/parallel-review-workflow.md)
-│   └─ default → recent changes in context
-│
-├─ Received feedback → STOP if unclear, verify if external, implement if human partner
-├─ Completed work from plan/spec:
-│   ├─ Stage 1: Spec compliance review (references/spec-compliance-review.md)
-│   │   └─ PASS? → Stage 2 │ FAIL? → Fix → Re-review Stage 1
-│   ├─ Stage 2: Code quality review (code-reviewer subagent)
-│   │   └─ Scout edge cases → Review standards, performance
-│   └─ Verification gate → Run required tests/builds before claims
-├─ Completed work (no plan) → Scout → Code quality → Verification
-├─ Pre-landing / ship → Load checklists → Two-pass review → Verification
-├─ Multi-file feature (3+ files) → Create review pipeline tasks (scout→review→fix→verify)
-└─ About to claim status → RUN verification command FIRST
-```
-
-### Review Protocol
-
-**Stage 1 — Spec Compliance** (load `references/spec-compliance-review.md`)
-- Does code match what was requested?
-- Any missing requirements? Any unjustified extras?
-- MUST pass before Stage 2
-
-**Stage 2 — Code Quality** (code-reviewer subagent)
-- Only runs AFTER spec compliance passes
-- Standards, security, performance, edge cases
-
-**Final Verification**
-- Runs AFTER Stage 2 passes
-- Re-run the relevant tests, build, lint, or manual reproduction
-- Verify accepted findings are fixed and no new regression is introduced
-- Critical findings block merge until fixed and re-verified
-
-## Receiving Feedback
-
-**Pattern:** READ → UNDERSTAND → VERIFY → EVALUATE → RESPOND → IMPLEMENT
-No performative agreement. Verify before implementing. Push back if wrong.
-
-**Full protocol:** `references/code-review-reception.md`
-
-## Requesting Review
-
-**When:** After each task, major features, before merge
-
-**Process:**
-1. **Scout edge cases first** (see below)
-2. Get SHAs: `BASE_SHA=$(git rev-parse HEAD~1)` and `HEAD_SHA=$(git rev-parse HEAD)`
-3. Dispatch code-reviewer subagent with: WHAT, PLAN, BASE_SHA, HEAD_SHA, DESCRIPTION
-4. Fix Critical immediately, Important before proceeding
-
-**Full protocol:** `references/requesting-code-review.md`
-
-## Edge Case Scouting
-
-**When:** After implementation, before requesting code-reviewer
-
-**Process:**
-1. Invoke `/ck:scout` with edge-case-focused prompt
-2. Scout analyzes: affected files, data flows, error paths, boundary conditions
-3. Review scout findings for potential issues
-4. Address critical gaps before code review
-
-**Full protocol:** `references/edge-case-scouting.md`
-
-## Task-Managed Review Pipeline
-
-**When:** Multi-file features (3+ changed files), parallel code-reviewer scopes, review cycles with Critical fix iterations.
-
-**Fallback:** Task tools (`TaskCreate`/`TaskUpdate`/`TaskGet`/`TaskList`) are CLI-only — unavailable in VSCode extension. If they error, use `TodoWrite` for tracking and run pipeline sequentially. Review quality is identical.
-
-**Pipeline:** scout → review → fix → verify (each a Task with dependency chain)
-
-```
-TaskCreate: "Scout edge cases"         → pending
-TaskCreate: "Review implementation"    → pending, blockedBy: [scout]
-TaskCreate: "Fix critical issues"      → pending, blockedBy: [review]
-TaskCreate: "Verify fixes pass"        → pending, blockedBy: [fix]
-```
-
-**Parallel reviews:** Spawn scoped code-reviewer subagents for independent file groups (e.g., backend + frontend). Fix task blocks on all reviewers completing.
-
-**Re-review cycles:** If fixes introduce new issues, create cycle-2 review task. Limit 3 cycles, escalate to user after.
-
-**Full protocol:** `references/task-management-reviews.md`
-
-## Verification Gates
-
-**Iron Law:** NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
-
-**Gate:** IDENTIFY command → RUN full → READ output → VERIFY confirms → THEN claim
-
-**Requirements:**
-- Tests pass: Output shows 0 failures
-- Build succeeds: Exit 0
-- Bug fixed: Original symptom passes
-- Requirements met: Checklist verified
-
-**Red Flags:** "should"/"probably"/"seems to", satisfaction before verification, trusting agent reports
-
-**Full protocol:** `references/verification-before-completion.md`
-
-## Integration with Workflows
-
-- **Subagent-Driven:** Scout → Review → Verify before next task
-- **Pull Requests:** Scout → Code quality → Verify → Merge
-- **Task Pipeline:** Create review tasks with dependencies → auto-unblock through chain
-- **Cook Handoff:** Cook completes phase → review pipeline tasks → all complete → cook proceeds
-- **PR Review:** `/ck:code-review #123` → fetch diff → full review pipeline on PR changes
-- **Commit Review:** `/ck:code-review abc1234` → review specific commit with full pipeline
-
-## Codebase Analysis Subcommands
-
-| Subcommand | Reference | Purpose |
-|------------|-----------|---------|
-| `/ck:code-review codebase` | `references/codebase-scan-workflow.md` | Scan & analyze the codebase |
-| `/ck:code-review codebase parallel` | `references/parallel-review-workflow.md` | Ultrathink edge cases, then parallel verify |
-
-## Bottom Line
-
-1. Resolve input mode first — know WHAT you're reviewing
-2. Technical rigor over social performance
-3. Scout edge cases before review
-4. Evidence before claims
-
-Verify. Scout. Question. Then implement. Evidence. Then claim.
-
-## Workflow Position
-
-**Typically follows:** `/ck:cook` (review after implementation), `/ck:fix` (review after bug fix)
-**Typically precedes:** `/ck:ship` (ship after review passes)
-**Related:** `/ck:scout` (scout before reviewing), `/ck:test` (test before reviewing)
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
