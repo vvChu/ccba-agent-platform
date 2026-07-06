@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import shutil
 import tempfile
 import xml.etree.ElementTree as ET
@@ -13,8 +12,6 @@ import defusedxml.ElementTree as DET
 
 from .pack import pack_document
 from .unpack import unpack_document
-
-logger = logging.getLogger(__name__)
 
 
 class OOXMLWorkspace:
@@ -59,7 +56,9 @@ class OOXMLWorkspace:
         try:
             if exc_type is None and self.working_dir:
                 # If no exception occurred, pack and validate changes
-                temp_output = self.working_dir.parent / f"repacked_{self.file_path.name}"
+                # Place repacked file inside self.working_dir to ensure it gets cleaned up automatically,
+                # prefixing it with a dot to avoid collision with standard Office files.
+                temp_output = self.working_dir / f".repacked_{self.file_path.name}"
 
                 # Pack and validate to a temporary file first to avoid corrupting original
                 pack_success = pack_document(self.working_dir, temp_output, validate=self.validate)
@@ -95,7 +94,14 @@ class OOXMLWorkspace:
         """
         if not self.working_dir:
             raise RuntimeError("Workspace is not active.")
-        return (self.working_dir / rel_path).resolve()
+
+        resolved = (self.working_dir / rel_path).resolve()
+
+        # Prevent Path Traversal attacks by ensuring target path resides within working directory
+        if not resolved.is_relative_to(self.working_dir):
+            raise ValueError(f"Path traversal detected: {rel_path}")
+
+        return resolved
 
     def read_xml(self, rel_path: str | Path) -> ET.Element:
         """Read and parse an XML file inside the workspace using defusedxml.

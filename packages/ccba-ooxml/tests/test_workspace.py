@@ -78,3 +78,23 @@ def test_ooxml_workspace_aborted_on_exception():
             content = zf.read("word/document.xml").decode("utf-8")
             assert "Corrupted Text" not in content
             assert "Hello" in content
+
+
+def test_ooxml_workspace_path_traversal_prevention():
+    """Verify that OOXMLWorkspace prevents path traversal attempts."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Create a mock zip file
+        mock_docx = temp_path / "test.docx"
+        with zipfile.ZipFile(mock_docx, "w") as zf:
+            zf.writestr("[Content_Types].xml", "<Types></Types>")
+            zf.writestr("word/document.xml", "<document><body>Hello</body></document>")
+
+        with OOXMLWorkspace(mock_docx, validate=False) as ws:
+            # Traversal attempts should raise ValueError
+            with pytest.raises(ValueError, match="Path traversal detected"):
+                ws.get_file_path("../../etc/passwd")
+
+            with pytest.raises(ValueError, match="Path traversal detected"):
+                ws.read_xml("/absolute/path/outside")
