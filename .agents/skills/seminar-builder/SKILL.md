@@ -29,63 +29,42 @@ Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/T
 | `templates/agenda.md` | Template chương trình/agenda seminar |
 | `templates/notification.md` | Template thông báo lịch/thay đổi lịch |
 
-## How to Use
+## Quy trình Thực hiện (Process)
 
-### 1. Tạo Agenda Seminar
-
-1. Hỏi user:
-   - Ngày, giờ tổ chức
-   - Chủ đề chính (1-3 topics)
-   - Thời lượng dự kiến
-   - Người trình bày (nếu có)
-2. Đọc template `templates/agenda.md`
-3. Tạo agenda với timeline cụ thể
-4. Xuất Markdown + Word
+### 1. Tạo Agenda & Outline Seminar
+1. Hỏi user các thông tin cơ bản: Ngày giờ tổ chức, chủ đề chính, thời lượng dự kiến, người trình bày.
+2. Đọc tệp template `templates/agenda.md` để đảm bảo áp dụng đúng khung cấu trúc chuẩn của CCBA.
+3. Thiết lập cấu trúc tri thức theo nguyên tắc **Neo giữ Khái niệm (Concept Grounding)**:
+   - Xác định rõ phần **Khái niệm tiền đề (Prerequisites)**: Kiến thức/tiêu chuẩn người nghe cần biết trước.
+   - Sắp xếp Outline chương trình sao cho các **Khái niệm giới thiệu mới (Introduced Concepts)** được trình bày tuần tự từ cơ bản đến nâng cao. Chủ đề nâng cao chỉ được thảo luận sau khi các chủ đề nền móng đã được neo giữ.
+4. Áp dụng **Lựa chọn Định dạng (Format Selection)** để thiết lập cấu trúc Agenda:
+   - Dựng bảng biểu (Table) cho timeline thời gian cụ thể của buổi Seminar.
+   - Sử dụng văn xuôi lập luận (Prose) cho phần tóm tắt lý do lựa chọn chủ đề.
+   - Sử dụng các callouts (`> [!IMPORTANT]`) cho các lưu ý đặc thù về công tác chuẩn bị.
+5. **Tiêu chí hoàn thành:** Bản thảo Agenda hiển thị rõ ràng phần Prerequisites, Introduced Concepts và bảng timeline chi tiết trình người dùng duyệt trước khi xuất bản file chính thức.
 
 ### 2. Tạo Monthly Recap
-
-1. Hỏi user đường dẫn đến tài liệu các buổi seminar trong tháng
-2. Đọc các file seminar (PDF, PPTX → extract text nếu cần)
-3. Tổng hợp theo template `templates/monthly_recap.md`:
-   - Key takeaways từng buổi
-   - Action items còn pending
-   - Chủ đề cần follow-up
-4. Xuất Markdown + Word
+1. Hỏi user đường dẫn đến tài liệu các buổi seminar trong tháng.
+2. Đọc các file seminar (PDF, PPTX).
+3. Tổng hợp theo template `templates/monthly_recap.md` để ghi nhận các Key takeaways, Action items và các chủ đề cần follow-up.
+4. **Tiêu chí hoàn thành:** Hoàn thiện bản tóm tắt tháng lưu trữ dạng Markdown tại thư mục quy định.
 
 ### 3. Thông báo thay đổi lịch
-
-1. Đọc template `templates/notification.md`
-2. Điền thông tin thay đổi (lịch cũ → mới, lý do)
-3. Xuất format phù hợp để gửi qua Zalo/Email
+1. Đọc template `templates/notification.md`.
+2. Điền thông tin thay đổi (lịch cũ → mới, lý do).
+3. **Tiêu chí hoàn thành:** Xuất thông báo dạng văn bản hành chính hoàn chỉnh để gửi qua Zalo/Email.
 
 ### 4. Archive Seminar
-
-Sau mỗi buổi seminar, lưu trữ tài liệu vào thư mục theo cấu trúc:
-```
-.md/legal_docs/BIM_VBPL/
-  YYYY/
-    CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.pdf
-    CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.pptx
-```
-
-Naming convention:
-- `CCBA_RD_SEMINAR_` — prefix cố định
-- `NNN` — số thứ tự (001, 002, 003...)
-- `RevXX` — revision (Rev00, Rev01...)
-- `DD.MM.YY` — ngày seminar
-- `Title` — tên chủ đề (kebab-case)
+1. Sau mỗi buổi seminar, lưu trữ tài liệu vào thư mục theo cấu trúc:
+   ```
+   .md/seminars/
+     YYYY/
+       CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.pdf
+       CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.pptx
+   ```
+2. Đảm bảo naming convention: `CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.ext`.
+3. **Tiêu chí hoàn thành:** Tệp tài liệu được lưu trữ chính xác vào đúng thư mục phân loại và được cập nhật/đăng ký vào danh mục các buổi thảo luận (trường `seminars:`) tại tệp tin registry [.md/knowledge/legal_registry.yaml](../../../.md/knowledge/legal_registry.yaml).
 
 ## Source Documents
 
-Tài liệu seminar lưu tại:
-```
-D:\OneDrive - IBST BIM\00 CCBA\03 PMO Documents\
-  06 BIM RD and International Coo\
-    04_ĐÀO_TẠO_NỘI_BỘ\04_Cập_nhật_kiến_thức\BIM_VBPL\
-```
-
-## Dependencies
-
-- `python-docx` (cho xuất Word)
-- Skill `legal-document-tracker` (cho nội dung VBPL liên quan)
-- Skill `completion-checklist` (cho nội dung hồ sơ hoàn thành)
+Tài liệu seminar lưu tại: `.md/seminars/` (tuyệt đối không lưu rải rác ngoài Project Root).
