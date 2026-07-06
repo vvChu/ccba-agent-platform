@@ -1,7 +1,12 @@
 ---
-name: ccba_run_qc_pipeline
+name: ccba-ai-qc-pipeline-orch
 description: Tự động chạy toàn trình chuỗi kiểm soát chất lượng (QC) đa bộ môn (Discovery -> Orchestrator -> Báo cáo).
 disable-model-invocation: true
+category: utilities
+keywords: [qc, pipeline, orchestrator, automatic-audit]
+metadata:
+  author: CCBA
+  version: "1.1.0"
 ---
 
 # Quy trình Chạy QC Pipeline Tự động (Run QC Pipeline)

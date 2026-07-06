@@ -49,7 +49,7 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
 * **Tài liệu VBPL (do CCBA tổng hợp):** `CCBA_RD_VBPL_NNN_RevXX-ShortName.{ext}`
   *(ví dụ: CCBA_RD_VBPL_003_Rev00-ND_06_2021.docx)*
 * **Thư mục và file của AI Agent:** 
-  - Skills: `lowercase_with_underscores` (folders & file names).
+  - Skills: `lowercase_with_underscores` hoặc `kebab-case` (folders & file names).
   - Workflows: `kebab-case.md`.
   - YAML data: `lowercase_with_underscores.yaml`.
   - Templates: `lowercase_with_underscores.md`.
