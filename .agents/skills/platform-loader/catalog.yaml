@@ -331,6 +331,30 @@ skills:
     triggers: [writing-great-skills, viết skill, quy chuẩn skill, tạo skill mới]
     skill_path: .agents/skills/writing-great-skills/SKILL.md
 
+  - name: to-prd
+    bundle: _core
+    description: "Chuyển đổi ngữ cảnh thảo luận hiện tại thành tài liệu Yêu cầu Sản phẩm (PRD) chính quy"
+    triggers: [to-prd, prd, soạn prd, tạo prd, đặc tả sản phẩm]
+    skill_path: .agents/skills/to-prd/SKILL.md
+
+  - name: to-issues
+    bundle: _core
+    description: "Phân rã bản thiết kế/PRD thành các ticket phát triển độc lập dạng lát cắt dọc"
+    triggers: [to-issues, issues, bẻ ticket, tạo ticket, phân rã]
+    skill_path: .agents/skills/to-issues/SKILL.md
+
+  - name: triage
+    bundle: _core
+    description: "Sàng lọc sự cố và yêu cầu (Issues/PRs) qua các trạng thái phân loại và soạn thảo brief cho Agent"
+    triggers: [triage, sàng lọc, phân loại, incident, bug triage]
+    skill_path: .agents/skills/triage/SKILL.md
+
+  - name: ask
+    bundle: _core
+    description: "Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu cầu phát triển"
+    triggers: [ask, tư vấn, định hướng, luồng công việc, bản đồ kỹ năng]
+    skill_path: .agents/skills/ask/SKILL.md
+
 workflows:
   # === _core ===
   - name: init-ccba-spoke
@@ -437,6 +461,34 @@ workflows:
     description: "Khởi động phiên thảo luận ý tưởng và chuẩn bị tài liệu đầu vào tại input_documents/"
     triggers: [brainstorm, ý tưởng, nạp tài liệu, thảo luận, đầu vào]
     workflow_path: .agents/workflows/ccba-brainstorm.md
+
+  - name: to-prd
+    bundle: _core
+    command: /ccba-to-prd
+    description: "Soạn thảo tài liệu PRD từ ngữ cảnh hiện tại"
+    triggers: [prd, to-prd, soạn prd, tạo prd]
+    workflow_path: .agents/workflows/ccba-to-prd.md
+
+  - name: to-issues
+    bundle: _core
+    command: /ccba-to-issues
+    description: "Phân rã tài liệu thiết kế/PRD thành các ticket công việc độc lập"
+    triggers: [issues, to-issues, bẻ ticket, tạo ticket]
+    workflow_path: .agents/workflows/ccba-to-issues.md
+
+  - name: triage
+    bundle: _core
+    command: /ccba-triage
+    description: "Điều phối và sàng lọc Issues/PRs qua các trạng thái và viết brief"
+    triggers: [triage, sàng lọc, phân loại, incident, bug triage]
+    workflow_path: .agents/workflows/ccba-triage.md
+
+  - name: ask
+    bundle: _core
+    command: /ccba-ask
+    description: "Hướng dẫn định tuyến/tư vấn chọn kỹ năng hoặc workflow phù hợp"
+    triggers: [ask, tư vấn, định hướng, bản đồ kỹ năng]
+    workflow_path: .agents/workflows/ccba-ask.md
 
   # === _software ===
   - name: new-feature
