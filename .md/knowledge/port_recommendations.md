@@ -88,7 +88,7 @@ Tập trung tối ưu hóa giao tiếp Agent-User và quản lý trạng thái p
 ### Q3: Việc spawn parallel sub-agents để review code (`code-review`) có làm tăng chi phí API?
 *   **Cách của nguồn:** Gọi sub-agent song song để phân tích Standards và Spec riêng biệt nhằm tránh ô nhiễm context.
 *   **Cách của CCBA:** Hiện tại QC pipeline chạy tuần tự để tiết kiệm chi phí gọi mô hình qua AI Gateway (LiteLLM Spark).
-*   **Đánh giá:** Việc chạy song song chỉ nên áp dụng khi rà soát các pull request lớn hoặc phức tạp. Đối với công việc hằng ngày, quy trình QC tuần tự hiện tại của CCBA là tối ưu hơn về chi phí và tài nguyên.
+*   **Đánh giá:** Nhất trí chấp nhận việc tăng nhẹ chi phí API để áp dụng cơ chế chạy song song (Two-axis parallel review) cho kỹ năng `code-review` nhằm bảo toàn tính độc lập hoàn toàn giữa hai trục Standards và Spec, tránh ô nhiễm ngữ cảnh và nâng cao chất lượng rà soát lỗi của Agent.
 
 ### Q4: Việc áp dụng thuật ngữ `codebase-design` của Matt Pocock có làm xung đột thuật ngữ BIGBIM?
 *   **Đánh giá:** Không xung đột. Các thuật ngữ của Matt Pocock chỉ áp dụng cho mã nguồn phần mềm (như interfaces, seams, adapters), còn các thuật ngữ BIGBIM (Sợi Chỉ Vàng, Sợi Chỉ Đỏ, Unique ID) áp dụng cho luồng thông tin mô hình công trình và hồ sơ pháp lý. Việc phân tách rõ ràng giúp Agent duy trì tính nhất quán.
