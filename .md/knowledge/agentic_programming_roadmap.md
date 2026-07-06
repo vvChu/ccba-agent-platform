@@ -47,7 +47,7 @@ Tài liệu này vạch ra các bước kỹ thuật cụ thể để tích hợ
 * **Mục tiêu**: Tránh việc hệ thống trở thành "hộp đen" khi code phình to.
 * **Hiện thực hóa**:
   - Tích hợp một tác tử phân tích Git diff định kỳ.
-  - Khi phát hiện các thay đổi cấu trúc lớn (như thêm package mới, đổi database schema, sửa API Core), tự động tạo một file ADR (Architecture Decision Record) dưới dạng Markdown lưu tại `.md/adr/`.
+  - Khi phát hiện các thay đổi cấu trúc lớn (như thêm package mới, đổi database schema, sửa API Core), tự động tạo một file ADR (Architecture Decision Record) dưới dạng Markdown lưu tại `.md/knowledge/adr/`.
   - File ADR ghi nhận rõ: Bối cảnh, Đề xuất giải pháp, Lợi ích/Rủi ro đối chiếu (Trade-offs).
 
 ### 🚀 Rà Soát Mã Nguồn Định Kỳ (Automated Code Review Loop)
