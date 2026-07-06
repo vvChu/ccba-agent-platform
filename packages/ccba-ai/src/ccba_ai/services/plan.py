@@ -49,13 +49,13 @@ Brief objective of this phase.
 class FileLock:
     """A simple file-based lock context manager to prevent concurrent write conflicts."""
 
-    def __init__(self, lock_path: Path, timeout: float = 5.0, delay: float = 0.1):
+    def __init__(self, lock_path: Path, timeout: float = 5.0, delay: float = 0.1) -> None:
         self.lock_path = lock_path
         self.timeout = timeout
         self.delay = delay
         self.is_locked = False
 
-    def __enter__(self):
+    def __enter__(self) -> "FileLock":
         start_time = time.time()
         while time.time() - start_time < self.timeout:
             try:
@@ -63,18 +63,24 @@ class FileLock:
                 self.lock_path.touch(exist_ok=False)
                 self.is_locked = True
                 return self
-            except FileExistsError:
+            except (FileExistsError, PermissionError):
                 time.sleep(self.delay)
         raise TimeoutError(
             f"Could not acquire lock on {self.lock_path} within {self.timeout} seconds."
         )
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
+    ) -> bool | None:
         if self.is_locked and self.lock_path.exists():
             try:
                 self.lock_path.unlink()
             except Exception:
                 pass
+        return None
 
 
 class Phase:
@@ -87,8 +93,8 @@ class Phase:
         status: str,
         filename: str,
         content: str | None = None,
-        metadata: dict | None = None,
-    ):
+        metadata: dict[str, object] | None = None,
+    ) -> None:
         self.num = num
         self.name = name
         self.status = status
@@ -178,7 +184,7 @@ class Plan:
 
     def __init__(
         self, title: str, branch: str, date: str, status: str, phases: list[Phase], file_path: Path
-    ):
+    ) -> None:
         self.title = title
         self.branch = branch
         self.date = date
