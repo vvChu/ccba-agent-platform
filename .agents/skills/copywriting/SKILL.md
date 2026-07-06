@@ -21,7 +21,7 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 
 `[Mẫu hiện trạng thô] -> [/ccba-extract-style] -> [copywriting/templates/] -> [copywriting (điền thông tin)] -> [Tài liệu hoàn thiện]`
 
-## Quy trình Sinh tài liệu
+## Quy trình Sinh tài liệu (Process)
 
 1. **Nạp biểu mẫu chuẩn**:
    - Đọc thư mục `templates/` để tải tệp template tương ứng với yêu cầu soạn thảo.
@@ -32,6 +32,17 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
    - Phân tích và điền đầy đủ các placeholders `{{placeholder}}` bằng thông tin dự án mới.
    - Áp dụng các công thức viết thuyết phục (xem tại [copy-formulas.md](references/copy-formulas.md)) để phát triển nội dung chi tiết.
    - **Tiêu chí hoàn thành:** Tất cả các placeholders được thay thế bằng dữ liệu chính xác, giữ nguyên cấu trúc khung pháp lý/hành chính của biểu mẫu gốc.
+
+3. **Lựa chọn Định dạng tối ưu (Format Selection)**:
+   - Agent tự động phân tích tính chất thông tin và định dạng tối ưu nhất cho từng phần văn bản:
+     - *Văn xuôi lập luận (Prose):* Dùng cho các phần giải trình, diễn dịch lý do hoặc lập luận thầu.
+     - *Danh sách liệt kê (List):* Dùng cho các điều khoản song song có chung cấu trúc ngữ pháp.
+     - *Bảng biểu (Table):* Dùng khi có cấu trúc lặp lại từ 3 lần trở lên (như danh sách nhân sự, bảng giá thiết bị).
+   - **Tiêu chí hoàn thành:** Ghi nhận rõ ràng lý do lựa chọn định dạng trong log hoặc ghi chú thô của bản thảo trước khi xuất tài liệu chính thức.
+
+4. **Neo giữ Khái niệm (Concept Grounding)**:
+   - Đảm bảo các khái niệm kỹ thuật hoặc định nghĩa thầu phức tạp được giới thiệu rõ ràng (neo giữ) ở các điều khoản đầu trước khi được viện dẫn hoặc tham chiếu ở các điều khoản sau để người đọc không bị mất phương hướng.
+   - **Tiêu chí hoàn thành:** Rà soát bản thảo và xác nhận không có thuật ngữ/khái niệm cốt lõi nào được sử dụng mà chưa được định nghĩa hoặc làm rõ trước đó.
 
 ## Tiêu chuẩn Thực thi (Best Practices)
 
