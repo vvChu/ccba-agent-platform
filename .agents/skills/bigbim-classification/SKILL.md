@@ -19,23 +19,23 @@ bundle: "_core"
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
 
-| Article | Nội dung cốt lõi |
-|:--------|:----------------|
-| [uniclass-ss.md]([bigbim_method_path]/.md/knowledge/bigbim-classification/uniclass-ss.md) | Ss Systems — bảng phân loại, mapping BIM object types |
-| [uniclass-en.md]([bigbim_method_path]/.md/knowledge/bigbim-classification/uniclass-en.md) | En Entities — phân loại công trình theo loại hình |
-| [uniclass-pr.md]([bigbim_method_path]/.md/knowledge/bigbim-classification/uniclass-pr.md) | Pr Products — sản phẩm, catalog, NBS lookup guide |
-| [ifc-entity-guide.md]([bigbim_method_path]/.md/knowledge/bigbim-classification/ifc-entity-guide.md) | IFC4X3 entity hierarchy, spatial structure rules |
-| [naming-convention.md]([bigbim_method_path]/.md/knowledge/bigbim-classification/naming-convention.md) | File naming, discipline codes, revision codes |
+| Article | Đường dẫn tham chiếu (dưới `[bigbim_method_path]/.md/`) | Nội dung cốt lõi |
+|:--------|:---------------------------------------------------------|:----------------|
+| `uniclass-ss.md` | `knowledge/bigbim-classification/uniclass-ss.md` | Ss Systems — bảng phân loại, mapping BIM object types |
+| `uniclass-en.md` | `knowledge/bigbim-classification/uniclass-en.md` | En Entities — phân loại công trình theo loại hình |
+| `uniclass-pr.md` | `knowledge/bigbim-classification/uniclass-pr.md` | Pr Products — sản phẩm, catalog, NBS lookup guide |
+| `ifc-entity-guide.md` | `knowledge/bigbim-classification/ifc-entity-guide.md` | IFC4X3 entity hierarchy, spatial structure rules |
+| `naming-convention.md` | `knowledge/bigbim-classification/naming-convention.md` | File naming, discipline codes, revision codes |
 
 **KB Root:** `[bigbim_method_path]/.md/`  
-**Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
+**Master Index:** `knowledge/INDEX.md` (dưới KB Root)
 
 ---
 
 ## Hub & Execution Context
 
 *   **Skill Path**: `.agents/skills/bigbim-classification/SKILL.md`
-*   **Trigger Keywords**: `phân loại`, `naming convention`, `room naming`, `uniclass`, `ISO 22274`, `ISO 21511`, `ISO 12006-2`, `Trí Nhớ Số`, `Digital Memory`, `ifc alignment`, `gis`, `SL_table`, `En_table`, `PM_80`
+*   **Trigger Keywords**: `phân loại`, `naming convention`, `room naming`, `uniclass`, `ISO 22274`, `ISO 21511`, `ISO 12006-2`, `Trí Nhớ Số`, `Digital Memory`, `ifc alignment`, `gis`, SL_table, En_table, PM_80
 
 ---
 
@@ -63,7 +63,7 @@ $$\text{Co (Complexes)} \rightarrow \text{En (Entities)} \rightarrow \text{SL (S
 Khi nhận yêu cầu phân loại hoặc đặt tên từ người dùng, Agent thực hiện chính xác theo quy trình sau:
 
 ### Nhánh 1: Phân loại Không gian Dân dụng (Building - Phi tuyến tính)
-Áp dụng cho các công trình dân dụng, tòa nhà (`En_25_70_47`):
+Áp dụng cho các công trình dân dụng, tòa nhà (En_25_70_47):
 1.  **Phân cấp không gian:** Phân rã không gian theo mô hình 3 cấp:
     $$\text{Tầng (Floor)} \rightarrow \text{Vùng chức năng (Zone)} \rightarrow \text{Phòng độc lập (Room)}$$
 2.  **Chuẩn hóa đặt tên phòng (ISO 19650 Room Naming):**
@@ -81,6 +81,17 @@ Khi nhận yêu cầu phân loại hoặc đặt tên từ người dùng, Agent
     *   *Quy ước đặt tên:*
         $$\text{[Tên_Tuyến]}-\text{KM[Lý_Trình]}-\text{[Phân_Phân_Đoạn]}-\text{[Mã_EF_Uniclass]}$$
         *Ví dụ:* `Tuyen_NH1-KM012_500-NVD1-EF_20_10` (Hệ kết cấu móng tại lý trình km 12+500 của tuyến Quốc lộ 1).
+
+
+### Nhánh 3: Tự động hóa phân loại bằng AI (AI-based Semantic Auto-Classification)
+Áp dụng khi cần phân loại hàng loạt cấu kiện phi cấu trúc hoặc tên không chuẩn hóa:
+1.  **Trích xuất thuộc tính IFC (ifcopenshell):** Quét mô hình để trích xuất cả thông tin hình học và metadata thô (Family Name, Material, Description).
+2.  **Tiền xử lý & Sửa lỗi chính tả (Typo Normalization):**
+    *   Thực hiện làm sạch dữ liệu và sửa các lỗi chính tả thô tiếng Việt (ví dụ: mất dấu, sai diacritics) trước khi vector hóa để tránh làm lệch vector embedding.
+3.  **Xử lý ngữ nghĩa sâu (BERT/LLM Embeddings):** Chuyển đổi mô tả thô sang vector embedding để nắm bắt ngữ nghĩa thay vì so khớp từ khóa chính xác.
+4.  **Dự đoán mã Uniclass (ISO 12006-2 Alignment):**
+    *   Phân loại sang các bảng Uniclass tương ứng.
+    *   *Mục tiêu độ chính xác (F1-Score):* Đạt trên 90% đối với cấu kiện Kiến trúc (Architectural); trên 80% đối với các thiết bị MEP chuyên sâu (do MEP có độ viết tắt cao và ít từ ngữ cảnh).
 
 ---
 
