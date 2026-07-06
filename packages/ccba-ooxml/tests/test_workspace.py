@@ -56,9 +56,11 @@ def test_ooxml_workspace_aborted_on_exception():
 
         # Create a mock zip file
         mock_docx = temp_path / "test.docx"
-        original_xml = '<?xml version="1.0" encoding="UTF-8"?><document><body>Hello</body></document>'
+        original_xml = (
+            '<?xml version="1.0" encoding="UTF-8"?><document><body>Hello</body></document>'
+        )
         with zipfile.ZipFile(mock_docx, "w") as zf:
-            zf.writestr("[Content_Types].xml", '<Types></Types>')
+            zf.writestr("[Content_Types].xml", "<Types></Types>")
             zf.writestr("word/document.xml", original_xml)
 
         # Modify it but raise exception
