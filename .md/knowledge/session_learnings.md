@@ -57,6 +57,16 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Giải pháp**: Spawn hai sub-agents chạy độc lập và song song dưới cùng một context cha. Sub-agent A chỉ rà soát Standards; sub-agent B chỉ rà soát Spec. Sau đó gộp kết quả ở Agent chính.
 - **Nguồn**: Session `18073a94-bdd0-4310-84dd-8f4e3ba9387e`, 2026-07-06
 
+### 7. Safe Workspace Sandbox (Sandbox an toàn cho Workspace)
+- **Ngữ cảnh**: Thiết kế lớp quản lý tệp tin giải nén tạm thời (đặc biệt khi chạy song song nhiều tiến trình).
+- **Giải pháp**: Sử dụng `tempfile.TemporaryDirectory` kết hợp đặt tệp tin repacked trung gian ẩn (ví dụ: `.repacked_filename`) ở ngay bên trong thư mục con này thay vì thư mục cha dùng chung, giúp tự động thu hồi/xóa sạch khi thoát khối `with` mà không sợ va chạm dữ liệu.
+- **Nguồn**: Session `18073a94-bdd0-4310-84dd-8f4e3ba9387e`, 2026-07-06
+
+### 8. Path Traversal Guard (Rào chắn Path Traversal)
+- **Ngữ cảnh**: Cung cấp API cho phép người dùng hoặc Caller bên ngoài truy cập file trong một thư mục sandbox bằng đường dẫn tương đối (`rel_path`).
+- **Giải pháp**: Luôn gọi `.resolve()` và dùng `Path.is_relative_to(sandbox_root)` để chặn đứng mọi hành vi thoát sandbox (ví dụ: `../../etc/passwd`).
+- **Nguồn**: Session `18073a94-bdd0-4310-84dd-8f4e3ba9387e`, 2026-07-06
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -80,6 +90,14 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 ### 5. Automatic High-cost LLM API Invocation
 - **Vấn đề**: Tự động gọi phân tích sâu của LLM trên các tệp mới/cập nhật ngay khi phát hiện thay đổi SHA mà không hỏi ý kiến người dùng. Điều này gây lãng phí token và tài nguyên lớn.
 - **Thay thế bằng**: Bổ sung cờ kiểm tra nhanh (ví dụ: `--check-only`) để Agent liệt kê các tệp thay đổi và hỏi ý kiến kỹ sư trước khi thực thi AI Gateway phân tích sâu.
+
+### 6. Shared Directory Repack Path
+- **Vấn đề**: Lưu tệp tin repacked tạm thời ở thư mục cha dùng chung, dẫn đến rủi ro va chạm (collision) và race condition khi có nhiều tiến trình chạy song song xử lý cùng một file gốc.
+- **Thay thế bằng**: Lưu tệp tạm repacked ẩn trực tiếp trong thư mục con workspace tạm độc nhất.
+
+### 7. Unvalidated Relative Paths
+- **Vấn đề**: Tin tưởng hoàn toàn vào đường dẫn tương đối do Caller truyền vào, gây ra rò rỉ dữ liệu hoặc lỗi ghi đè file hệ thống qua lỗ hổng Path Traversal.
+- **Thay thế bằng**: Kiểm duyệt an toàn bằng `Path.is_relative_to`.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
