@@ -8,6 +8,10 @@ disable-model-invocation: true
 
 Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nhà phát triển để lựa chọn đúng Slash Command hoặc Kỹ năng (Skill) phù hợp nhất với trạng thái công việc hiện tại.
 
+> [!IMPORTANT]
+> **Nguồn tin cậy (Source of Truth):**
+> Tất cả các Slash Command trong tài liệu này đều được định tuyến dựa trên danh mục dịch vụ tại [catalog.yaml](../platform-loader/catalog.yaml). Vui lòng kiểm tra danh mục này trước khi thực thi để đảm bảo lệnh đã được đăng ký thành công trong phân vùng (spoke) hiện tại.
+
 ---
 
 ## Luồng công việc chính: Từ Ý tưởng đến Phát hành (Idea → Ship)
