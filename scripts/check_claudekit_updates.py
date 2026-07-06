@@ -141,7 +141,7 @@ def get_remote_sha(remote_url: str) -> str:
     return ""
 
 
-def check_and_evaluate(config: dict):
+def check_and_evaluate(config: dict, check_only: bool = False):
     """Check a single repository and trigger the evaluator if updates found."""
     repo_type = config["type"]
     local_path = config["local_path"]
@@ -167,15 +167,37 @@ def check_and_evaluate(config: dict):
         print(
             f"[ClaudeKit Update Check] Initializing tracker for {repo_type} with remote SHA: {remote_sha}"
         )
-        sha_file.write_text(remote_sha, encoding="utf-8")
+        if not check_only:
+            sha_file.write_text(remote_sha, encoding="utf-8")
         return
 
     if local_sha != remote_sha:
         print(f"\n\x1b[33m[UPDATE AVAILABLE]\x1b[0m New updates found in {repo_type}!")
         print(f"  - Local SHA:  {local_sha[:8]}")
         print(f"  - Remote SHA: {remote_sha[:8]}")
-        print("  - Triggering Automated Porting Evaluator...")
 
+        # Get list of changed files
+        try:
+            diff_res = subprocess.run(
+                ["git", "diff", "--name-only", local_sha, remote_sha],
+                cwd=str(local_path),
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            changed_files = diff_res.stdout.strip().splitlines()
+            if changed_files:
+                print("  - Changed files:")
+                for f in changed_files:
+                    print(f"    * {f}")
+        except Exception as e:
+            print(f"  - Error retrieving changed files list: {e}")
+
+        if check_only:
+            print("  - [Check-Only Mode] Skipping automated evaluator. Please run evaluate command manually.\n")
+            return
+
+        print("  - Triggering Automated Porting Evaluator...")
         # Invoke assess_upstream_features.py
         try:
             eval_cmd = [
@@ -203,9 +225,14 @@ def check_and_evaluate(config: dict):
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Check for ClaudeKit Upstream Updates")
+    parser.add_argument("--check-only", action="store_true", help="Only check for updates and list changed files, do not evaluate")
+    args = parser.parse_args()
+
     print("[ClaudeKit Update Check] Running update checks across repositories...\n")
     for config in REPOS_CONFIG:
-        check_and_evaluate(config)
+        check_and_evaluate(config, check_only=args.check_only)
     print("\n[ClaudeKit Update Check] All update checks completed.")
 
 
