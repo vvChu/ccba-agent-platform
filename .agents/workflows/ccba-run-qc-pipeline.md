@@ -6,4 +6,4 @@ applies_to:
 bundle: "_qc"
 ---
 
-Khi người dùng gọi lệnh này, hãy nạp và thực thi kỹ năng tại [SKILL.md](../skills/ccba_run_qc_pipeline/SKILL.md) để bắt đầu quy trình chạy toàn trình chuỗi kiểm soát chất lượng (QC Pipeline).
+Khi người dùng gọi lệnh này, hãy nạp và thực thi kỹ năng tại [SKILL.md](../skills/ccba-ai-qc-pipeline-orch/SKILL.md) để bắt đầu quy trình chạy toàn trình chuỗi kiểm soát chất lượng (QC Pipeline).
