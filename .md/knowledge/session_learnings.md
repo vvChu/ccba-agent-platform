@@ -44,6 +44,19 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Giải pháp**: Luôn sử dụng liên kết tương đối (relative paths) thay vì liên kết tuyệt đối dạng `file:///d:/...` để tránh bị hỏng link khi các nhà phát triển khác chạy trên máy cá nhân của họ.
 - **Nguồn**: Session `18073a94-bdd0-4310-84dd-8f4e3ba9387e`, 2026-07-05
 
+### 5. Parse-Protection (Bảo vệ phân tích thủ công)
+- **Ngữ cảnh**: Khi cần tự động cập nhật báo cáo hoặc tệp tri thức bằng AI/scripts nhưng muốn bảo toàn tuyệt đối phần ghi chú thủ công của con người viết trong cùng một tệp.
+- **Giải pháp**: Thiết kế tệp tin phân tầng và sử dụng cặp thẻ marker comment ẩn để cách ly hoàn toàn:
+  * Đọc tệp tin gốc và dùng regex để trích xuất nội dung giữa `<!-- DEVELOPER-NOTES-START -->` và `<!-- DEVELOPER-NOTES-END -->`.
+  * Tạo nội dung tự động mới và bọc trong cặp thẻ `<!-- AUTO-GENERATED-START -->` và `<!-- AUTO-GENERATED-END -->`.
+  * Nối hai phần lại và ghi đè lại file.
+- **Nguồn**: Session `18073a94-bdd0-4310-84dd-8f4e3ba9387e`, 2026-07-06
+
+### 6. Two-axis Parallel Review (Đánh giá song song hai trục)
+- **Ngữ cảnh**: Cần rà soát một đối tượng phức tạp dưới nhiều góc độ khác nhau (như code review theo Standards và Spec) để tránh ô nhiễm context.
+- **Giải pháp**: Spawn hai sub-agents chạy độc lập và song song dưới cùng một context cha. Sub-agent A chỉ rà soát Standards; sub-agent B chỉ rà soát Spec. Sau đó gộp kết quả ở Agent chính.
+- **Nguồn**: Session `18073a94-bdd0-4310-84dd-8f4e3ba9387e`, 2026-07-06
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -63,6 +76,10 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 ### 4. Redundant Agent Skills
 - **Vấn đề**: Tạo thêm một kỹ năng (Skill) thực thi độc lập cho Agent (ví dụ: `tvpl_vip_mutex_downloader`) khi logic đó đã được xử lý hoàn chỉnh và tự động trong code Python chạy ngầm. Việc này làm tăng Context Load mà không đem lại giá trị thực thi trực tiếp nào cho Agent.
 - **Thay thế bằng**: Tái sử dụng qua code hoặc chuyển đổi thành tài liệu kiến trúc (ADR) lưu trong thư mục tri thức.
+
+### 5. Automatic High-cost LLM API Invocation
+- **Vấn đề**: Tự động gọi phân tích sâu của LLM trên các tệp mới/cập nhật ngay khi phát hiện thay đổi SHA mà không hỏi ý kiến người dùng. Điều này gây lãng phí token và tài nguyên lớn.
+- **Thay thế bằng**: Bổ sung cờ kiểm tra nhanh (ví dụ: `--check-only`) để Agent liệt kê các tệp thay đổi và hỏi ý kiến kỹ sư trước khi thực thi AI Gateway phân tích sâu.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
