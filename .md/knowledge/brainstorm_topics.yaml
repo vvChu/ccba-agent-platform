@@ -1,0 +1,20 @@
+topics:
+  - topic_id: "academic_research"
+    display_name: "Nghiên cứu & Học thuật"
+    keywords:
+      - "nghiên cứu"
+      - "học thuật"
+      - "công bố"
+      - "bài báo"
+      - "bản thảo"
+      - "scholarly"
+      - "research"
+      - "manuscript"
+    required_skills:
+      - "docx"
+      - "pdf"
+      - "copywriting"
+    guidelines:
+      - "Phân tích cấu trúc bài báo nghiên cứu (Abstract, Introduction, Methodology, Results, Discussion, Conclusion)."
+      - "Xác định rõ đóng góp khoa học chính (Key contribution) và tính cấp thiết của nghiên cứu."
+      - "Đối chiếu phương pháp viết bản thảo đạt chuẩn quốc tế (IEEE, Elsevier, Springer)."
