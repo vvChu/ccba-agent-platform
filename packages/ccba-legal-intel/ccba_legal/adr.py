@@ -5,7 +5,7 @@ from pathlib import Path
 
 class ADRGenerator:
     """Automatic Architecture Decision Record (ADR) generator for ccba-agent-platform.
-    Scans git diff for significant architectural changes and records decisions in .md/adr/.
+    Scans git diff for significant architectural changes and records decisions in .md/knowledge/adr/.
     """
 
     def __init__(self, repo_dir: str | None = None) -> None:
@@ -25,7 +25,7 @@ class ADRGenerator:
                         resolved = parent
                         break
                 self.repo_dir = resolved if resolved else Path.cwd()
-        self.adr_dir = self.repo_dir / ".md" / "adr"
+        self.adr_dir = self.repo_dir / ".md" / "knowledge" / "adr"
 
     def get_git_diff_summary(self) -> str:
         """Get summary of git status and diff changes."""
@@ -71,7 +71,7 @@ class ADRGenerator:
     def generate_adr(
         self, title: str, context: str, decision: str, consequences: str
     ) -> Path | None:
-        """Create a new ADR markdown file in the .md/adr/ directory."""
+        """Create a new ADR markdown file in the .md/knowledge/adr/ directory."""
         if not self.adr_dir.exists():
             self.adr_dir.mkdir(parents=True, exist_ok=True)
 
