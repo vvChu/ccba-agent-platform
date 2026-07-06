@@ -1,40 +1,66 @@
 ---
 name: tdd
-description: Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions "red-green-refactor", or wants integration tests.
+description: Phát triển hướng kiểm thử (Red-Green-Refactor) giúp tạo mã nguồn ổn định, tin cậy thông qua các giao diện công khai (seams).
+user-invocable: true
+when_to_use: "Dùng khi người dùng yêu cầu phát triển tính năng mới hoặc sửa lỗi bằng phương pháp viết test trước (test-first)."
+category: utilities
+keywords: [tdd, test, refactor, quality]
+metadata:
+  author: CCBA
+  version: "1.1.0"
 ---
 
-# Test-Driven Development
+# Quy trình Phát triển Hướng Kiểm thử (Test-Driven Development)
 
-TDD is the red → green loop. This skill is the reference that makes that loop produce tests worth keeping: what a good test is, where tests go, the anti-patterns, and the rules of the loop. Every section applies on every cycle — consult them before and during the loop, not after.
+TDD là chu kỳ lặp Red → Green → Refactor. Kỹ năng này cung cấp quy trình và tiêu chuẩn để chu kỳ đó tạo ra những bộ test chất lượng cao, dễ bảo trì và bám sát ngôn ngữ nghiệp vụ của dự án.
 
-When exploring the codebase, read `CONTEXT.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching.
+Khi khám phá codebase, đọc `CONTEXT.md` (nếu có) để tên test và từ vựng giao diện đồng bộ với ngôn ngữ nghiệp vụ của dự án, và tuân thủ các ADRs trong khu vực bạn đang can thiệp.
 
-## What a good test is
+## Quy trình Thực hiện (Process)
 
-Tests verify behavior through public interfaces, not implementation details. Code can change entirely; tests shouldn't. A good test reads like a specification — "user can checkout with valid cart" tells you exactly what capability exists — and survives refactors because it doesn't care about internal structure.
+### 1. Xác định Seam và viết Test thất bại (Red Phase)
+- Xác định giao diện công khai (seam) cần kiểm thử và thống nhất với người dùng trước khi viết test. Chỉ test tại seams, không viết test cho private internals.
+- Viết một test case nhỏ nhất chứng minh tính năng mới chưa hoạt động (hoặc bug chưa được sửa).
+- Chạy lệnh test và xác nhận test thất bại (Red).
+- **Tiêu chí hoàn thành:** Lệnh test chạy thất bại và lý do thất bại đúng do logic mong muốn chưa được cài đặt (không phải do lỗi cú pháp hoặc lỗi môi trường).
 
-See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking guidelines.
+### 2. Viết mã nguồn tối giản để Pass test (Green Phase)
+- Viết lượng mã nguồn tối thiểu để test chuyển sang màu xanh (Green). Không cố đoán trước các tính năng tương lai hoặc viết code thừa ngoài spec.
+- Chạy lệnh test và xác nhận test thành công (Green).
+- **Tiêu chí hoàn thành:** Bộ test chạy thành công 100% với 0 lỗi thất bại.
 
-## Seams — where tests go
+### 3. Tái cấu trúc mã nguồn (Refactor Phase)
+- Tối ưu hóa cấu trúc code, loại bỏ trùng lặp và làm sạch mã nguồn mà không làm thay đổi hành vi bên ngoài của seam.
+- Chạy lại toàn bộ kiểm thử để đảm bảo refactor không làm vỡ các tính năng cũ.
+- **Tiêu chí hoàn thành:** Mã nguồn sau refactor sạch sẽ, tuân thủ các coding standards và bộ test vẫn pass 100%.
 
-A **seam** is the public boundary you test at: the interface where you observe behavior without reaching inside. Tests live at seams, never against internals.
+## Seams — Nơi đặt các Test
 
-**Test only at pre-agreed seams.** Before writing any test, write down the seams under test and confirm them with the user. No test is written at an unconfirmed seam. You can't test everything — agreeing the seams up front is how testing effort lands on the critical paths and complex logic instead of every edge case.
+Một **seam** (mối nối) là ranh giới công khai bạn thực hiện kiểm thử: giao diện nơi bạn quan sát hành vi của module mà không cần can thiệp sâu vào bên trong. Các test phải nằm ở seams, tuyệt đối không nằm ở phần internals.
 
 > [!IMPORTANT]
 > **Quy chuẩn Codebase Design khi viết test:**
 > Bắt buộc tuân thủ quy tắc thiết kế module sâu. Chỉ viết test tại các seam (giao diện module thực sự). Nghiêm cấm viết các unit test quá sâu vào cấu trúc hoặc implementation private của các module nông (shallow modules) để tránh tình trạng vỡ bộ test khi refactor code sau này.
 
-Ask: "What's the public interface, and which seams should we test?"
+Hỏi người dùng: *"Giao diện công khai là gì, và chúng ta nên kiểm thử ở những seam nào?"*
 
-## Anti-patterns
+## Các mẫu phản hoa tiêu (Anti-patterns) cần tránh
 
-- **Implementation-coupled** — mocks internal collaborators, tests private methods, or verifies through a side channel (querying the database instead of using the interface). The tell: the test breaks when you refactor but behavior hasn't changed.
-- **Tautological** — the assertion recomputes the expected value the way the code does (`expect(add(a, b)).toBe(a + b)`, a snapshot derived by hand the same way, a constant asserted equal to itself), so it passes by construction and can never disagree with the code. Expected values must come from an independent source of truth — a known-good literal, a worked example, the spec.
-- **Horizontal slicing** — writing all tests first, then all implementation. Bulk tests verify _imagined_ behavior: you test the _shape_ of things rather than user-facing behavior, the tests go insensitive to real changes, and you commit to test structure before understanding the implementation. Work in **vertical slices** instead — one test → one implementation → repeat, each test a **tracer bullet** that responds to what the last cycle taught you.
+- **Ràng buộc Implementation (Implementation-coupled):** Mock các cộng tác viên nội bộ, kiểm thử các hàm private, hoặc xác minh qua kênh phụ (truy vấn trực tiếp database thay vì dùng giao diện). Dấu hiệu nhận biết: bộ test bị vỡ khi refactor dù hành vi của module không thay đổi.
+- **Trùng lặp logic (Tautological):** Assert tính toán lại giá trị mong đợi theo đúng cách mà code thực thi. Giá trị mong đợi phải đến từ một nguồn chân lý độc lập (như literals, Spec, PRD).
+- **Lát cắt ngang (Horizontal slicing):** Viết tất cả test trước rồi mới viết code sau. Hãy làm theo **lát cắt dọc (vertical slices)**: một test → một implementation tối giản → lặp lại. Mỗi test đóng vai trò như một đường đạn dò tìm (tracer bullet) phản hồi lại những gì chu kỳ trước đã dạy bạn.
 
-## Rules of the loop
+## Nguyên tắc của Chu kỳ (Rules of the loop)
 
-- **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
-- **One slice at a time.** One seam, one test, one minimal implementation per cycle.
-- **Refactoring is not part of the loop.** It belongs to the review stage (see the `review` skill), not the red → green implementation cycle.
+- **Đỏ trước Xanh (Red before green):** Luôn viết test thất bại trước, sau đó chỉ viết đủ code để pass test đó.
+- **Một lát cắt tại một thời điểm:** Một seam, một test, một lượng code tối giản cho mỗi chu kỳ.
+- **Refactoring là một phần bắt buộc:** Phải được thực hiện ngay sau khi test pass (Green) để giữ cho codebase luôn sạch sẽ trước khi chuyển sang chu kỳ tiếp theo.
+
+## Tài liệu tham khảo
+- Xem [tests.md](tests.md) để biết các ví dụ thực tế.
+- Xem [mocking.md](mocking.md) để biết hướng dẫn mock chuẩn.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
