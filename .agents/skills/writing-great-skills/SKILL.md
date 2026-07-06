@@ -60,7 +60,7 @@ Nội dung của một kỹ năng được xây dựng từ hai thành phần: *
 ## 5. Quy chuẩn đặc thù của CCBA Platform
 
 Để vượt qua bộ kiểm định linter hệ thống (`validate_skills.py`), kỹ năng phải tuân thủ nghiêm ngặt:
-1.  **Độ dài mô tả frontmatter:** Trường `description` bắt buộc phải súc tích và có độ dài tối đa là **180 ký tự**.
+1.  **Độ dài mô tả frontmatter:** Trường `description` của các kỹ năng kích hoạt bởi mô hình (model-invoked, không cấu hình `disable-model-invocation: true`) bắt buộc phải súc tích và có độ dài tối đa là **180 ký tự**.
 2.  **Tiêu chí hoàn thành:** Mọi bước hướng dẫn quy trình (dưới các tiêu đề `Process` hoặc `Quy trình`) phải có một dòng bắt đầu bằng `Tiêu chí hoàn thành:` hoặc `Completion Criterion:` chỉ rõ trạng thái hoàn thành định lượng.
 3.  **Liên kết tương đối (Relative links):** Mọi dẫn chiếu sang tệp tin khác trong cùng kỹ năng hoặc workspace phải sử dụng relative link hoạt động được, không dùng link tuyệt đối (absolute link) trừ phi đó là tài liệu web ngoài.
 4.  **Đăng ký Slash Command:** Khi tạo skill mới có thuộc tính `user-invocable: true`, bắt buộc phải tạo workflow wrapper mỏng tương ứng tại thư mục `.agents/workflows/` bắt đầu bằng tiền tố `ccba-` và đăng ký vào [catalog.yaml](../platform-loader/catalog.yaml).

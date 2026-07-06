@@ -18,7 +18,7 @@ Kỹ năng này thực hiện quy trình đánh giá tĩnh (static) và ngữ ng
     - **Tiêu chí hoàn thành:** Nội dung của cả tệp tin đích và cẩm nang chuẩn được nạp đầy đủ vào ngữ cảnh Agent.
 
 2.  **Đánh giá linter và cấu trúc (Linter & Structure Check):**
-    - Kiểm tra độ dài mô tả `description` trong frontmatter (bắt buộc dưới **180 ký tự**).
+    - Kiểm tra độ dài mô tả `description` trong frontmatter (đối với kỹ năng model-invoked, bắt buộc dưới **180 ký tự**).
     - Kiểm tra xem mọi bước hướng dẫn trong các phần quy trình (dưới tiêu đề `Process` hoặc `Quy trình`) có chứa dòng `Tiêu chí hoàn thành:` hoặc `Completion Criterion:` hay chưa.
     - Kiểm tra tính hợp lệ của các liên kết tương đối (relative links), phát hiện các đường dẫn tuyệt đối hoặc link hỏng.
     - **Tiêu chí hoàn thành:** Lập danh sách cụ thể các điểm vi phạm quy chuẩn linter tĩnh kèm vị trí dòng.
@@ -31,8 +31,8 @@ Kỹ năng này thực hiện quy trình đánh giá tĩnh (static) và ngữ ng
     - **Tiêu chí hoàn thành:** Đưa ra đánh giá chi tiết cho từng lỗi ngữ nghĩa được phát hiện kèm theo lý do cụ thể.
 
 4.  **Đề xuất bản vá tối ưu hóa (Optimization Patch):**
-    - Tạo bản dự thảo chỉnh sửa (draft patch) tối ưu hóa tệp tin `SKILL.md` sau khi đã cắt tỉa (pruning) sạch sẽ các lỗi đã chỉ ra.
-    - **Tiêu chí hoàn thành:** Sinh ra nội dung file `SKILL.md` hoàn chỉnh mới sạch lỗi, sẵn sàng để ghi đè.
+    - Tạo bản dự thảo chỉnh sửa (draft patch hoặc file nháp đề xuất) tối ưu hóa tệp tin `SKILL.md` sau khi đã cắt tỉa (pruning) sạch sẽ các lỗi đã chỉ ra. Chỉ thực hiện ghi đè tệp tin thật khi có xác nhận hoặc phê duyệt tường minh từ người dùng.
+    - **Tiêu chí hoàn thành:** Sinh ra nội dung đề xuất tối ưu hóa hiển thị rõ ràng cho người dùng rà soát, không tự ý ghi đè trực tiếp.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
