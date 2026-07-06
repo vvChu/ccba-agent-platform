@@ -12,7 +12,9 @@ metadata:
 
 # Quy trình Phát triển Hướng Kiểm thử (Test-Driven Development)
 
-TDD là chu kỳ lặp Red &rarr; Green &rarr; Refactor. Kỹ năng này cung cấp quy trình và tiêu chuẩn để chu kỳ đó tạo ra những bộ test chất lượng cao, dễ bảo trì và bám sát ngôn ngữ nghiệp vụ của dự án.
+TDD là chu kỳ lặp Red → Green → Refactor. Kỹ năng này cung cấp quy trình và tiêu chuẩn để chu kỳ đó tạo ra những bộ test chất lượng cao, dễ bảo trì và bám sát ngôn ngữ nghiệp vụ của dự án.
+
+Khi khám phá codebase, đọc `CONTEXT.md` (nếu có) để tên test và từ vựng giao diện đồng bộ với ngôn ngữ nghiệp vụ của dự án, và tuân thủ các ADRs trong khu vực bạn đang can thiệp.
 
 ## Quy trình Thực hiện (Process)
 
@@ -32,15 +34,31 @@ TDD là chu kỳ lặp Red &rarr; Green &rarr; Refactor. Kỹ năng này cung c�
 - Chạy lại toàn bộ kiểm thử để đảm bảo refactor không làm vỡ các tính năng cũ.
 - **Tiêu chí hoàn thành:** Mã nguồn sau refactor sạch sẽ, tuân thủ các coding standards và bộ test vẫn pass 100%.
 
-## Quy chuẩn viết Test chất lượng
+## Seams — Nơi đặt các Test
 
-*   **Không móc nối implementation (Implementation-coupled):** Tránh mock các cộng tác viên nội bộ hoặc test các hàm private. Test chỉ nên quan tâm đến đầu vào và đầu ra của seam công khai.
-*   **Tránh Test trùng lặp logic (Tautological):** Giá trị mong đợi (expected value) trong assert phải độc lập (ví dụ: hardcoded literal hoặc worked example từ spec), không được tính toán lại bằng công thức giống hệt trong code.
-*   **Lát cắt dọc (Vertical slices):** Không viết hàng loạt test rồi mới viết code. Hãy đi theo từng lát cắt dọc: một test &rarr; một implementation tối giản &rarr; lặp lại.
+Một **seam** (mối nối) là ranh giới công khai bạn thực hiện kiểm thử: giao diện nơi bạn quan sát hành vi của module mà không cần can thiệp sâu vào bên trong. Các test phải nằm ở seams, tuyệt đối không nằm ở phần internals.
+
+> [!IMPORTANT]
+> **Quy chuẩn Codebase Design khi viết test:**
+> Bắt buộc tuân thủ quy tắc thiết kế module sâu. Chỉ viết test tại các seam (giao diện module thực sự). Nghiêm cấm viết các unit test quá sâu vào cấu trúc hoặc implementation private của các module nông (shallow modules) để tránh tình trạng vỡ bộ test khi refactor code sau này.
+
+Hỏi người dùng: *"Giao diện công khai là gì, và chúng ta nên kiểm thử ở những seam nào?"*
+
+## Các mẫu phản hoa tiêu (Anti-patterns) cần tránh
+
+- **Ràng buộc Implementation (Implementation-coupled):** Mock các cộng tác viên nội bộ, kiểm thử các hàm private, hoặc xác minh qua kênh phụ (truy vấn trực tiếp database thay vì dùng giao diện). Dấu hiệu nhận biết: bộ test bị vỡ khi refactor dù hành vi của module không thay đổi.
+- **Trùng lặp logic (Tautological):** Assert tính toán lại giá trị mong đợi theo đúng cách mà code thực thi. Giá trị mong đợi phải đến từ một nguồn chân lý độc lập (như literals, Spec, PRD).
+- **Lát cắt ngang (Horizontal slicing):** Viết tất cả test trước rồi mới viết code sau. Hãy làm theo **lát cắt dọc (vertical slices)**: một test → một implementation tối giản → lặp lại. Mỗi test đóng vai trò như một đường đạn dò tìm (tracer bullet) phản hồi lại những gì chu kỳ trước đã dạy bạn.
+
+## Nguyên tắc của Chu kỳ (Rules of the loop)
+
+- **Đỏ trước Xanh (Red before green):** Luôn viết test thất bại trước, sau đó chỉ viết đủ code để pass test đó.
+- **Một lát cắt tại một thời điểm:** Một seam, một test, một lượng code tối giản cho mỗi chu kỳ.
+- **Refactoring là một phần bắt buộc:** Phải được thực hiện ngay sau khi test pass (Green) để giữ cho codebase luôn sạch sẽ trước khi chuyển sang chu kỳ tiếp theo.
 
 ## Tài liệu tham khảo
-*   Xem [tests.md](tests.md) để biết các ví dụ thực tế.
-*   Xem [mocking.md](mocking.md) để biết hướng dẫn mock chuẩn.
+- Xem [tests.md](tests.md) để biết các ví dụ thực tế.
+- Xem [mocking.md](mocking.md) để biết hướng dẫn mock chuẩn.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
