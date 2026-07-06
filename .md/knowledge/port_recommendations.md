@@ -32,6 +32,7 @@ Tập trung vào phát triển, kiểm thử, rà soát và cấu trúc codebase
 | `to-issues` / `to-prd` | Chuyển đổi cuộc hội thoại thành Issue/PRD trên Issue Tracker. | **Thấp (P3).** Quy trình lập kế hoạch (`implementation_plan.md`) hiện tại của CCBA đã làm tốt việc này. | **PORTED** |
 | `triage` | Điều phối Issues/PRs qua bộ lọc phân loại và viết brief cho Agent. | **Thấp (P3).** Phù hợp với các dự án mã nguồn mở quy mô lớn, chưa cần cho CCBA. | **PORTED** |
 | `ask-matt` | Router điều hướng người dùng đến skill phù hợp trong repo. | **Không cần thiết.** CCBA đã có `platform-loader` tự động điều phối các workflow. | **PORTED** |
+| `code-review` | Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells) và Spec (PRD/Requirements). | **Cực kỳ hữu ích (P0).** Đảm bảo an toàn tích hợp và rà soát lỗi nghiêm ngặt trước khi merge. | **PORTED** |
 
 ---
 
