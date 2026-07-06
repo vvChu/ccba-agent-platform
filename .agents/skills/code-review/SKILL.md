@@ -7,7 +7,7 @@ category: utilities
 keywords: [review, quality, verification, reliability]
 argument-hint: "[#PR | COMMIT | --pending | codebase [parallel]]"
 metadata:
-  author: claudekit
+  author: CCBA
   version: "2.0.0"
 ---
 
@@ -21,13 +21,13 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
 
 ### 1. Xác định điểm mốc đối chiếu (Pin the fixed point)
 - Xác định điểm mốc đối chiếu do người dùng chỉ định (Commit SHA, branch name, tag, `main`, v.v.). Nếu không chỉ định, yêu cầu người dùng cung cấp.
-- Chạy lệnh kiểm tra tính hợp lệ của mốc đối chiếu (`git rev-parse <fixed-point>`) và kiểm tra diff có tồn tại hay không.
-- **Tiêu chí hoàn thành:** Xác nhận điểm mốc hợp lệ và lệnh `git diff <fixed-point>...HEAD` trả về dữ liệu diff khác rỗng. Nếu ref không tồn tại hoặc diff rỗng, dừng lại và thông báo lỗi.
+- Xác nhận mốc đối chiếu tồn tại hợp lệ và truy xuất dữ liệu diff so với `HEAD`.
+- **Tiêu chí hoàn thành:** Điểm mốc đối chiếu được xác minh tồn tại và dữ liệu diff so sánh trả về khác rỗng. Nếu mốc đối chiếu không hợp lệ hoặc không có thay đổi nào (diff rỗng), dừng lại và báo lỗi.
 
 ### 2. Xác định tài liệu đặc tả nghiệp vụ (Identify the spec source)
-- Tìm kiếm tài liệu PRD hoặc danh sách ticket tương ứng với tính năng tại thư mục `.md/knowledge/` hoặc `.md/knowledge/issues/`.
+- Tìm kiếm tài liệu PRD hoặc danh sách ticket tương ứng với tính năng tại thư mục `.md/knowledge/`.
 - Nếu không tìm thấy tệp tin đặc tả nghiệp vụ nào, yêu cầu người dùng cung cấp đường dẫn hoặc xác nhận bỏ qua trục Spec (chỉ review Standards).
-- **Tiêu chí hoàn thành:** Xác nhận điểm mốc hợp lệ và xác định chính xác tệp tin PRD (ví dụ: `prd-{feature-slug}.md`) làm nguồn chân lý để đối chiếu hoặc ghi nhận bỏ qua trục Spec.
+- **Tiêu chí hoàn thành:** Xác định chính xác tệp tin PRD (ví dụ: `prd-{feature-slug}.md`) làm nguồn chân lý để đối chiếu hoặc ghi nhận bỏ qua trục Spec.
 
 ### 3. Xác định tài liệu quy chuẩn (Identify the standards sources)
 - Tìm kiếm các quy định chuẩn viết code của dự án (ví dụ: `.agents/AGENTS.md` hoặc `CODING_STANDARDS.md`).
@@ -35,7 +35,7 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
 - **Tiêu chí hoàn thành:** Xác định đầy đủ các tệp tài liệu tiêu chuẩn hiện hành của repo để nạp vào prompt cho sub-agent.
 
 ### 4. Gọi song song hai Sub-agents (Spawn sub-agents in parallel)
-- Spawn đồng thời 2 sub-agents (sử dụng subagent `general-purpose` hoặc `self`):
+- Spawn đồng thời 2 sub-agents (sử dụng subagent `self`):
   - **Standards Sub-agent Prompt:** Nhận Git Diff + danh sách tiêu chuẩn + 12 smells. Yêu cầu chỉ ra các vi phạm quy chuẩn và smell kèm trích dẫn dòng code.
   - **Spec Sub-agent Prompt:** Nhận Git Diff + nội dung PRD/Spec. Yêu cầu chỉ ra các điểm thiếu hụt tính năng so với yêu cầu hoặc scope creep dư thừa.
 - **Tiêu chí hoàn thành:** Khởi chạy thành công 2 sub-agents chạy song song và nhận lại đầy đủ 2 báo cáo phân tích độc lập (Standards Report và Spec Report).
