@@ -37,6 +37,24 @@ WORKFLOW_HEADERS = {
     "thực hiện",
 }
 
+# Header keywords that temporarily suspend steps parsing
+EXCLUSION_HEADERS = {
+    "lưu ý",
+    "chú ý",
+    "notes",
+    "yêu cầu",
+    "rules",
+    "quy tắc",
+    "tham chiếu",
+    "reference",
+    "giới thiệu",
+    "introduction",
+    "tổng quan",
+    "overview",
+    "chuẩn bị",
+    "setup",
+}
+
 
 def parse_skill_file(file_path: Path) -> tuple[dict, str]:
     """Parse frontmatter and body of a SKILL.md file."""
@@ -72,6 +90,8 @@ def analyze_steps_completion_criteria(body: str) -> list[tuple[int, str]]:
     lines = body.splitlines()
 
     in_workflow_section = False
+    workflow_trigger_level = None
+    header_stack = []  # list of tuples: (level, text, is_workflow)
     in_code_block = False
     current_step_line = None
     current_step_num = None
@@ -98,14 +118,7 @@ def analyze_steps_completion_criteria(body: str) -> list[tuple[int, str]]:
 
         # Detect headers
         if line_strip.startswith("#"):
-            # Check if this header indicates a workflow section
-            header_text = line_strip.lstrip("#").strip().lower()
-            if any(kw in header_text for kw in WORKFLOW_HEADERS):
-                in_workflow_section = True
-            else:
-                in_workflow_section = False
-
-            # If we were tracking a step, evaluate it before exiting section
+            # If we were tracking a step, evaluate it before changing headers
             if current_step_line is not None:
                 step_body = "\n".join(current_step_content)
                 if not (
@@ -121,9 +134,44 @@ def analyze_steps_completion_criteria(body: str) -> list[tuple[int, str]]:
                 current_step_line = None
                 current_step_num = None
                 current_step_content = []
+
+            # Calculate header level and clean text
+            level = len(line_strip) - len(line_strip.lstrip("#"))
+            header_text = line_strip.lstrip("#").strip().lower()
+
+            # Pop from stack while level in stack >= new level
+            while header_stack and header_stack[-1][0] >= level:
+                header_stack.pop()
+
+            # Determine is_workflow status
+            is_exclusion = any(kw in header_text for kw in EXCLUSION_HEADERS)
+            is_workflow_keyword = any(kw in header_text for kw in WORKFLOW_HEADERS)
+
+            if is_workflow_keyword and not is_exclusion:
+                is_workflow = True
+            elif is_exclusion:
+                is_workflow = False
+            else:
+                # Inherit from parent in stack if present, else False
+                is_workflow = header_stack[-1][2] if header_stack else False
+
+            header_stack.append((level, header_text, is_workflow))
+            in_workflow_section = is_workflow
+
+            # Track workflow trigger level
+            if in_workflow_section:
+                if workflow_trigger_level is None:
+                    workflow_trigger_level = level
+            else:
+                workflow_trigger_level = None
             continue
 
         if not in_workflow_section:
+            continue
+
+        # ONLY validate steps if they are at the workflow trigger level
+        current_level = header_stack[-1][0] if header_stack else 0
+        if current_level != workflow_trigger_level:
             continue
 
         # Detect step starting line (e.g. "1. Do something")
