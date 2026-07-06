@@ -38,7 +38,7 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
      - *Văn xuôi lập luận (Prose):* Dùng cho các phần giải trình, diễn dịch lý do hoặc lập luận thầu.
      - *Danh sách liệt kê (List):* Dùng cho các điều khoản song song có chung cấu trúc ngữ pháp.
      - *Bảng biểu (Table):* Dùng khi có cấu trúc lặp lại từ 3 lần trở lên (như danh sách nhân sự, bảng giá thiết bị).
-   - **Tiêu chí hoàn thành:** Ghi nhận rõ ràng lý do lựa chọn định dạng trong log hoặc ghi chú thô của bản thảo trước khi xuất tài liệu chính thức.
+   - **Tiêu chí hoàn thành:** Ghi nhận rõ ràng lý do lựa chọn định dạng vào một khối "Ghi chú thiết kế" tạm thời ở cuối bản thảo. Khối ghi chú này bắt buộc phải được loại bỏ trước khi xuất bản bản chính thức cuối cùng.
 
 4. **Neo giữ Khái niệm (Concept Grounding)**:
    - Đảm bảo các khái niệm kỹ thuật hoặc định nghĩa thầu phức tạp được giới thiệu rõ ràng (neo giữ) ở các điều khoản đầu trước khi được viện dẫn hoặc tham chiếu ở các điều khoản sau để người đọc không bị mất phương hướng.
