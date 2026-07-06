@@ -552,7 +552,7 @@ workflows:
     triggers: [qc pipeline, run QC, audit tự động, kiểm tra hồ sơ]
     workflow_path: .agents/workflows/ccba-run-qc-pipeline.md
 
-  - name: ccba-ai-qc-pccc-audit
+  - name: ai-qc-pccc-audit
     bundle: _qc
     command: /ccba-ai-qc-pccc-audit
     description: "Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ chế Semantic Map-Reduce"
