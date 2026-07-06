@@ -67,6 +67,21 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Giải pháp**: Luôn gọi `.resolve()` và dùng `Path.is_relative_to(sandbox_root)` để chặn đứng mọi hành vi thoát sandbox (ví dụ: `../../etc/passwd`).
 - **Nguồn**: Session `18073a94-bdd0-4310-84dd-8f4e3ba9387e`, 2026-07-06
 
+### 9. Hierarchical Section Parser (Bộ phân tích phân tầng tiêu đề)
+- **Ngữ cảnh**: Cần linter phát hiện và kiểm duyệt chính xác các bước quy trình nằm sâu dưới tiêu đề phụ `###` mà không bị bỏ sót, đồng thời tự động kế thừa trạng thái loại trừ (Exclusion) hoặc quy trình (Workflow) từ cha xuống con.
+- **Giải pháp**: Sử dụng một stack chứa bộ ba `(heading_level, header_text, is_workflow)` để theo dõi độ sâu tiêu đề. Khi gặp tiêu đề mới, pop các tiêu đề cũ có cấp độ lớn hơn hoặc bằng ra khỏi stack để duy trì cấu trúc cây phân cấp chính xác.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-06
+
+### 10. Plan Concurrency Lock (Khóa kế hoạch đồng thời)
+- **Ngữ cảnh**: Tránh rủi ro ghi đè mất mát dữ liệu (Lost Update) khi nhiều Agents chạy song song cùng cập nhật tệp trạng thái kế hoạch chung (`plan.md`).
+- **Giải pháp**: Thiết kế context manager `FileLock` đơn giản bằng Python thuần tạo tệp khóa tạm thời `.plan.lock` ở chế độ ghi độc quyền (`exist_ok=False`). Nếu khóa đang bị giữ, luồng chạy sau sẽ đợi (delay 100ms) đến khi timeout (5 giây) hoặc thành công.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-06
+
+### 11. Target Line Override (Cập nhật ghi đè dòng mục tiêu)
+- **Ngữ cảnh**: Cần cập nhật tự động các trường giá trị trong YAML Frontmatter nhưng muốn bảo toàn nguyên vẹn 100% chú thích (comments) và trật tự dòng tùy biến do con người viết trước đó.
+- **Giải pháp**: Thay vì safe_load và safe_dump lại toàn bộ cấu trúc frontmatter, tiến hành đọc tệp thô và sử dụng regex thay thế chính xác dòng mục tiêu cần sửa (ví dụ: `status: ...`), giữ nguyên các dòng còn lại.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-06
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -98,6 +113,18 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 ### 7. Unvalidated Relative Paths
 - **Vấn đề**: Tin tưởng hoàn toàn vào đường dẫn tương đối do Caller truyền vào, gây ra rò rỉ dữ liệu hoặc lỗi ghi đè file hệ thống qua lỗ hổng Path Traversal.
 - **Thay thế bằng**: Kiểm duyệt an toàn bằng `Path.is_relative_to`.
+
+### 8. Flat Linter Section Bypasses
+- **Vấn đề**: Việc thiết kế linter kiểm tra quy trình phẳng dễ bị lách qua bằng cách đẩy các bước nghiệp vụ xuống tiêu đề phụ `###`. Việc này gây mất kiểm soát và tích lũy nợ kỹ thuật (thiếu tiêu chí hoàn thành ở các bước con quan trọng).
+- **Thay thế bằng**: Sử dụng stack phân cấp để bắt buộc kiểm duyệt ở các mức độ sâu chính xác của workflow.
+
+### 9. Lost Update on Multi-Daemon Plan Updates
+- **Vấn đề**: Đọc và ghi đè trực tiếp file kế hoạch chung mà không có cơ chế khóa đồng bộ, dẫn đến việc mất mát trạng thái khi nhiều Agents chạy song song ghi đè chéo nhau.
+- **Thay thế bằng**: Sử dụng cơ chế khóa tệp tạm `.plan.lock` khi ghi dữ liệu.
+
+### 10. Blank Slate YAML Safe-Dump
+- **Vấn đề**: Sử dụng safe_dump để cập nhật status trong YAML Frontmatter, làm sạch và xóa bỏ hoàn toàn các comments, ghi chú thủ công có giá trị của kỹ sư.
+- **Thay thế bằng**: Áp dụng Target Line Override để chỉ sửa đổi tối thiểu dòng trạng thái.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
