@@ -3,7 +3,7 @@ name: improve-codebase-architecture
 description: Quét codebase tìm kiếm cơ hội làm sâu module, xuất báo cáo trực quan dưới dạng HTML, và thực hiện grilling để chốt phương án cải tiến.
 disable-model-invocation: true
 category: engineering
-keywords: [architecture, design, deep-module, refactor, visual-report]
+keywords: [architecture, design, deep-module, refactor, visual-report, cải tiến kiến trúc, module sâu, báo cáo trực quan, refactor mã nguồn]
 metadata:
   author: CCBA
   version: "1.1.0"
@@ -33,7 +33,7 @@ Quy trình này được định hướng bởi domain model của dự án và 
 - **Tiêu chí hoàn thành:** Lập danh sách ghi nhận được ít nhất 2 vùng module bị nông hoặc coupling cao, kèm kết quả phép thử xóa bỏ (deletion test) cho mỗi vùng.
 
 ### 2. Trình bày Báo cáo dưới dạng HTML (Present candidates as an HTML report)
-- Viết một tệp tin HTML tự chứa (self-contained) vào thư mục tạm của dự án: `.md/scratch/architecture-review/architecture-review-<timestamp>.html` (tự động tạo thư mục nếu chưa tồn tại).
+- Viết một file HTML đơn lẻ (single-file) vào thư mục tạm của dự án: `.md/scratch/architecture-review/architecture-review-<timestamp>.html` (tự động tạo thư mục nếu chưa tồn tại).
 - Kích hoạt mở tệp tin báo cáo bằng trình duyệt mặc định trên hệ thống Windows của kỹ sư thông qua lệnh:
   ```powershell
   Start-Process "<absolute-path-to-file>"
