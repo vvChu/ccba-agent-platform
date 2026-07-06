@@ -62,15 +62,15 @@ class OOXMLWorkspace:
                 temp_output = self.working_dir.parent / f"repacked_{self.file_path.name}"
 
                 # Pack and validate to a temporary file first to avoid corrupting original
-                pack_success = pack_document(
-                    self.working_dir, temp_output, validate=self.validate
-                )
+                pack_success = pack_document(self.working_dir, temp_output, validate=self.validate)
 
                 if pack_success:
                     # Overwrite the original document only if packing & validation succeeded
                     shutil.copy2(temp_output, self.file_path)
                 else:
-                    raise ValueError(f"Failed to repack or validate the document: {self.file_path.name}")
+                    raise ValueError(
+                        f"Failed to repack or validate the document: {self.file_path.name}"
+                    )
 
                 # Cleanup temp output
                 if temp_output.exists():
