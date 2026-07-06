@@ -61,7 +61,8 @@ Thumbs.db
 .md/*.xlsx
 .md/*.pptx
 .md/*.txt
-.md/extracted_docs/
+.md/extracted_docs/*
+!.md/extracted_docs/.gitkeep
 
 # Build artifacts
 dist/
