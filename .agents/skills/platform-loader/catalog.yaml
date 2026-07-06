@@ -355,6 +355,12 @@ skills:
     triggers: [ask, tư vấn, định hướng, luồng công việc, bản đồ kỹ năng]
     skill_path: .agents/skills/ask/SKILL.md
 
+  - name: review_skill
+    bundle: _core
+    description: "Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn viết skill của CCBA"
+    triggers: [review-skill, audit-skill, review_skill, kiểm định skill]
+    skill_path: .agents/skills/review_skill/SKILL.md
+
 workflows:
   # === _core ===
   - name: init-ccba-spoke
@@ -489,6 +495,13 @@ workflows:
     description: "Hướng dẫn định tuyến/tư vấn chọn kỹ năng hoặc workflow phù hợp"
     triggers: [ask, tư vấn, định hướng, bản đồ kỹ năng]
     workflow_path: .agents/workflows/ccba-ask.md
+
+  - name: review-skill
+    bundle: _core
+    command: /ccba-review-skill
+    description: "Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn viết skill của CCBA"
+    triggers: [review-skill, audit-skill, review_skill, kiểm định skill]
+    workflow_path: .agents/workflows/ccba-review-skill.md
 
   # === _software ===
   - name: new-feature
