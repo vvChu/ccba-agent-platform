@@ -215,7 +215,6 @@ def analyze_steps_completion_criteria(body: str) -> list[tuple[int, str]]:
     return errors
 
 
-
 def validate_skill(file_path: Path) -> list[str]:
     """Validate a single SKILL.md file.
 

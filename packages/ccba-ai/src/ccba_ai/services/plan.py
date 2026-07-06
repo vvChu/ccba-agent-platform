@@ -8,6 +8,7 @@ import subprocess
 import time
 from datetime import datetime
 from pathlib import Path
+
 import yaml
 
 PLAN_TEMPLATE = """# Plan: {title}
@@ -47,6 +48,7 @@ Brief objective of this phase.
 
 class FileLock:
     """A simple file-based lock context manager to prevent concurrent write conflicts."""
+
     def __init__(self, lock_path: Path, timeout: float = 5.0, delay: float = 0.1):
         self.lock_path = lock_path
         self.timeout = timeout
@@ -63,7 +65,9 @@ class FileLock:
                 return self
             except FileExistsError:
                 time.sleep(self.delay)
-        raise TimeoutError(f"Could not acquire lock on {self.lock_path} within {self.timeout} seconds.")
+        raise TimeoutError(
+            f"Could not acquire lock on {self.lock_path} within {self.timeout} seconds."
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.is_locked and self.lock_path.exists():
@@ -75,7 +79,16 @@ class FileLock:
 
 class Phase:
     """Domain model representing a single phase in the plan."""
-    def __init__(self, num: str, name: str, status: str, filename: str, content: str | None = None, metadata: dict | None = None):
+
+    def __init__(
+        self,
+        num: str,
+        name: str,
+        status: str,
+        filename: str,
+        content: str | None = None,
+        metadata: dict | None = None,
+    ):
         self.num = num
         self.name = name
         self.status = status
@@ -90,7 +103,7 @@ class Phase:
             return cls(num, name, status, filename)
 
         full_content = path.read_text(encoding="utf-8")
-        
+
         meta = {}
         body = full_content
         if full_content.startswith("---"):
@@ -101,7 +114,7 @@ class Phase:
                     meta = yaml.safe_load(yaml_block) or {}
                 except Exception:
                     pass
-                body = full_content[fm_match.end():]
+                body = full_content[fm_match.end() :]
 
         # Use status from frontmatter as source of truth if available
         file_status = meta.get("status", status)
@@ -115,7 +128,7 @@ class Phase:
     def save(self, dir_path: Path) -> None:
         """Saves the Phase back to disk. Preserves file formatting if file already exists."""
         file_path = dir_path / self.filename
-        
+
         if file_path.exists():
             # Target Line Override: only update the status line in frontmatter
             content = file_path.read_text(encoding="utf-8")
@@ -124,8 +137,10 @@ class Phase:
             if fm_match:
                 frontmatter = fm_match.group(1)
                 # Replace only status line
-                new_fm = re.sub(r"^status:\s*\w+", f"status: {self.status}", frontmatter, flags=re.MULTILINE)
-                updated_content = content[:fm_match.start(1)] + new_fm + content[fm_match.end(1):]
+                new_fm = re.sub(
+                    r"^status:\s*\w+", f"status: {self.status}", frontmatter, flags=re.MULTILINE
+                )
+                updated_content = content[: fm_match.start(1)] + new_fm + content[fm_match.end(1) :]
                 file_path.write_text(updated_content, encoding="utf-8")
                 return
 
@@ -136,9 +151,11 @@ class Phase:
             "title": self.name,
             "status": self.status,
             "priority": self.metadata.get("priority", "P2"),
-            "dependencies": self.metadata.get("dependencies", "[]" if int(self.num) == 1 else f"[phase-{(int(self.num) - 1):02d}]")
+            "dependencies": self.metadata.get(
+                "dependencies", "[]" if int(self.num) == 1 else f"[phase-{(int(self.num) - 1):02d}]"
+            ),
         }
-        
+
         # Build frontmatter string cleanly
         fm_lines = ["---"]
         for k, v in meta.items():
@@ -148,7 +165,7 @@ class Phase:
                 fm_lines.append(f"{k}: {v}")
         fm_lines.append("---")
         frontmatter = "\n".join(fm_lines)
-        
+
         body = self.content
         if not body.strip():
             body = f"\n# Phase {int(self.num)}: {self.name}\n\n## Overview\nBrief objective of this phase.\n\n## Tasks\n- [ ] Task 1\n- [ ] Task 2\n\n## Success Criteria\n- [ ] Criteria 1\n"
@@ -158,7 +175,10 @@ class Phase:
 
 class Plan:
     """Domain model representing a multi-phase implementation plan."""
-    def __init__(self, title: str, branch: str, date: str, status: str, phases: list[Phase], file_path: Path):
+
+    def __init__(
+        self, title: str, branch: str, date: str, status: str, phases: list[Phase], file_path: Path
+    ):
         self.title = title
         self.branch = branch
         self.date = date
@@ -208,7 +228,7 @@ class Plan:
                     p_name = parts[1]
                     p_status = parts[2]
                     p_file = parts[3]
-                    
+
                     # Load Phase object
                     phase_path = file_path.parent / p_file
                     phase_obj = Phase.from_file(phase_path, p_id, p_name, p_status, p_file)
@@ -228,12 +248,9 @@ class Plan:
         phase_rows = []
         for p in self.phases:
             phase_rows.append(f"| {p.num} | {p.name} | {p.status} | {p.filename} |")
-        
+
         return PLAN_TEMPLATE.format(
-            title=self.title,
-            branch=self.branch,
-            date=self.date,
-            phases_rows="\n".join(phase_rows)
+            title=self.title, branch=self.branch, date=self.date, phases_rows="\n".join(phase_rows)
         )
 
     def save(self) -> None:
@@ -285,13 +302,8 @@ def create_plan(title: str, phases_list: list[str], workspace_root: Path | None 
         phase_num = f"{idx:02d}"
         phase_slug = slugify(phase_name)
         phase_filename = f"phase-{phase_num}-{phase_slug}.md"
-        
-        phase_obj = Phase(
-            num=phase_num,
-            name=phase_name,
-            status="pending",
-            filename=phase_filename
-        )
+
+        phase_obj = Phase(num=phase_num, name=phase_name, status="pending", filename=phase_filename)
         phase_obj.save(plan_folder)
         phases.append(phase_obj)
         created_files.append(str((plan_folder / phase_filename).relative_to(root)))
@@ -303,7 +315,7 @@ def create_plan(title: str, phases_list: list[str], workspace_root: Path | None 
         date=datetime.now().strftime("%Y-%m-%d"),
         status="in-progress",
         phases=phases,
-        file_path=plan_filepath
+        file_path=plan_filepath,
     )
     plan_obj.save()
     created_files.append(str(plan_filepath.relative_to(root)))
@@ -328,7 +340,7 @@ def update_phase_status(
 
     # Load using Plan OOP
     plan_obj = Plan.from_file(plan_path)
-    
+
     phase_obj = plan_obj.get_phase(phase_id)
     if not phase_obj:
         raise ValueError(f"Phase ID {phase_id} not found in plan table of {plan_path.name}.")
@@ -338,7 +350,7 @@ def update_phase_status(
 
     # Save both
     plan_obj.save()
-    
+
     phase_file_path = plan_path.parent / phase_obj.filename
     phase_file_updated = False
     if phase_file_path.exists():
@@ -377,12 +389,7 @@ def get_plan_status(plan_file: str | Path, workspace_root: Path | None = None) -
 
     phases_data = []
     for p in plan_obj.phases:
-        phases_data.append({
-            "id": p.num,
-            "name": p.name,
-            "status": p.status,
-            "file": p.filename
-        })
+        phases_data.append({"id": p.num, "name": p.name, "status": p.status, "file": p.filename})
 
     return {
         "title": plan_obj.title,
