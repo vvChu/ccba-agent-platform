@@ -30,4 +30,4 @@ jobs:
 
       - name: Run Documentation Accuracy Validator
         run: |
-          python scripts/validate_docs.py . --src scripts,packages
+          python scripts/validate_docs.py . --src scripts,packages --changed
