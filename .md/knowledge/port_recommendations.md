@@ -1,3 +1,4 @@
+<!-- AUTO-GENERATED-START -->
 # 📋 Upstream Porting Recommendations
 
 Báo cáo tự động đánh giá các tính năng mới từ thượng nguồn. Cập nhật ngày: 2026-07-04 09:03:48
@@ -189,3 +190,9 @@ timeline
 *   **Các bước triển khai**:
     *   Rà soát thủ công tệp tin SKILL.md
     *   Port nếu cần thiết
+<!-- AUTO-GENERATED-END -->
+
+<!-- DEVELOPER-NOTES-START -->
+## 📝 Ghi chú của Kỹ sư (Developer Notes)
+*Kỹ sư có thể tự do ghi chép các phân tích, đánh giá thủ công tại đây. Phần này sẽ được tự động bảo toàn khi đồng bộ thượng nguồn.*
+<!-- DEVELOPER-NOTES-END -->
