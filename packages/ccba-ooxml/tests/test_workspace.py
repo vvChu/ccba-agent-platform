@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import tempfile
 import zipfile
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
+
 from ccba_ooxml import OOXMLWorkspace
 
 
