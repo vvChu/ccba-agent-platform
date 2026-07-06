@@ -56,12 +56,11 @@ class OOXMLWorkspace:
         exc_tb: Any,
     ) -> bool:
         """Pack changes, validate, and clean up workspace on exit."""
-        success = False
         try:
             if exc_type is None and self.working_dir:
                 # If no exception occurred, pack and validate changes
                 temp_output = self.working_dir.parent / f"repacked_{self.file_path.name}"
-                
+
                 # Pack and validate to a temporary file first to avoid corrupting original
                 pack_success = pack_document(
                     self.working_dir, temp_output, validate=self.validate
@@ -70,10 +69,9 @@ class OOXMLWorkspace:
                 if pack_success:
                     # Overwrite the original document only if packing & validation succeeded
                     shutil.copy2(temp_output, self.file_path)
-                    success = True
                 else:
                     raise ValueError(f"Failed to repack or validate the document: {self.file_path.name}")
-                
+
                 # Cleanup temp output
                 if temp_output.exists():
                     temp_output.unlink()
@@ -123,7 +121,7 @@ class OOXMLWorkspace:
             root: The XML root element to serialize.
         """
         file_path = self.get_file_path(rel_path)
-        
+
         # Ensure parent directories exist
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
