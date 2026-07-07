@@ -3,9 +3,9 @@
 Main entry point script to fetch transcripts, extract slide frames, and synthesize notes.
 """
 
-import sys
-import os
 import logging
+import os
+import sys
 from pathlib import Path
 
 # Setup Console UTF-8 compatibility for Windows diacritics
@@ -29,8 +29,8 @@ logging.basicConfig(
 )
 _logger = logging.getLogger("ccba.youtube.orchestrator")
 
-from transcript import fetch_youtube_transcript
-from visual_extractor import extract_video_visuals, _find_ffmpeg_bin
+from transcript import fetch_youtube_transcript  # noqa: E402
+from visual_extractor import _find_ffmpeg_bin, extract_video_visuals  # noqa: E402
 
 
 def synthesize_concept_notes(transcript: str, filenames: list[str]) -> str:
@@ -107,7 +107,7 @@ def main():
         sys.exit(1)
 
     video_url = sys.argv[1]
-    
+
     # Resolve Output Directory Fallback
     if len(sys.argv) >= 3:
         output_dir = Path(sys.argv[2]).absolute()
@@ -131,16 +131,17 @@ def main():
     is_youtube = any(x in video_url for x in ["youtube.com", "youtu.be"])
     if not is_youtube:
         # Verify API Keys for Whisper STT
-        from ccba_ai import ai
         gateway_key = os.environ.get("AI_GATEWAY_KEY") or os.environ.get("OPENAI_API_KEY")
         if not gateway_key:
-            _logger.error("API Key (AI_GATEWAY_KEY / OPENAI_API_KEY) is missing for non-YouTube STT transcription. Aborting execution to save bandwidth.")
+            _logger.error(
+                "API Key (AI_GATEWAY_KEY / OPENAI_API_KEY) is missing for non-YouTube STT transcription. Aborting execution to save bandwidth."
+            )
             sys.exit(1)
 
     # 1. Fetch transcript
     _logger.info("Phase 2: Extracting/transcribing audio transcript...")
     transcript = fetch_youtube_transcript(video_url, output_dir)
-    
+
     if not transcript:
         _logger.error("Failed to extract transcript. Exiting.")
         sys.exit(1)
@@ -148,7 +149,11 @@ def main():
     # Save raw transcript
     transcript_file = output_dir / "raw_transcript.txt"
     transcript_file.write_text(transcript, encoding="utf-8")
-    _logger.info(f"Saved raw transcript to {transcript_file.relative_to(Path.cwd())}")
+    try:
+        rel_path = transcript_file.relative_to(Path.cwd())
+    except ValueError:
+        rel_path = transcript_file.absolute()
+    _logger.info(f"Saved raw transcript to {rel_path}")
 
     # 2. Extract images (if not in Text-Only Mode)
     saved_images = []
@@ -161,12 +166,13 @@ def main():
 
     # 3. Synthesize notes
     _logger.info("Phase 4: Generating knowledge synthesis documents...")
-    
+
     # Try to extract metadata for naming
     speaker_name = "Diễn giả"
     video_title = "Bài giảng"
     try:
         import yt_dlp
+
         with yt_dlp.YoutubeDL({"quiet": True, "no_warnings": True}) as ydl:
             info = ydl.extract_info(video_url, download=False)
             if info:
@@ -185,7 +191,7 @@ def main():
     (output_dir / "notes_speaker.md").write_text(speaker_notes, encoding="utf-8")
 
     _logger.info("All documents synthesized and saved successfully!")
-    print(f"\n🎉 CCBA Belief Archaeology completed successfully!")
+    print("\n🎉 CCBA Belief Archaeology completed successfully!")
     print(f"📁 Output files saved at: {output_dir.absolute()}")
 
 
