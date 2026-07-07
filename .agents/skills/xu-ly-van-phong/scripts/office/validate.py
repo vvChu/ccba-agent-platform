@@ -81,7 +81,10 @@ def main():
             file_extension = ".xlsx"
 
     if file_extension not in [".docx", ".pptx", ".xlsx"]:
-        print(f"Error: Cannot determine file type from {path}. Use --original or provide a .docx/.pptx/.xlsx file/directory.", file=sys.stderr)
+        print(
+            f"Error: Cannot determine file type from {path}. Use --original or provide a .docx/.pptx/.xlsx file/directory.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     temp_dir_obj = None
