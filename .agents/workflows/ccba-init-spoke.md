@@ -18,8 +18,25 @@ Workflow này tự động hóa việc thiết lập một không gian làm vi�
 ### 1. Khởi tạo cấu trúc Knowledge Base (Global Rule 1)
 Tạo kiến trúc thư mục `.md` chứa dữ liệu tri thức bằng PowerShell:
 ```powershell
-New-Item -ItemType Directory -Force -Path ".md\extracted_docs" | Out-Null
+$kbDirs = @(
+    ".md\seminars", 
+    ".md\legal_docs", 
+    ".md\extracted_docs", 
+    ".md\scratch", 
+    ".md\data", 
+    ".md\knowledge\configs", 
+    ".md\knowledge\guidelines", 
+    ".md\knowledge\related_papers", 
+    ".md\knowledge\reports", 
+    ".md\knowledge\specs_and_roadmaps"
+)
+foreach ($dir in $kbDirs) {
+    if (-not (Test-Path $dir)) {
+        New-Item -ItemType Directory -Path $dir -Force | Out-Null
+    }
+}
 ```
+
 
 ### 2. Ghi nhận tên dự án
 Lấy tên thư mục Root hiện hành để cấu hình:
@@ -123,60 +140,43 @@ foreach ($bundle in $bundles[$type]) {
 }
 ```
 
-### 6. Khởi tạo cấu trúc Mã nguồn Chuẩn (Dành cho Dự án Phần mềm)
+### 6. Khởi tạo cấu trúc .gitignore và Mã nguồn Chuẩn
+Tạo tệp `.gitignore` mẫu **bảo mật 2 lớp** cho dự án (loại bỏ whitelist cho `skills` để Kỹ năng không bị commit vào Spoke):
+```text
+# System / IDE
+.env
+.vscode/
+.idea/
+*.log
+
+# Python / Node.js build
+__pycache__/
+*.pyc
+node_modules/
+.venv/
+build/
+dist/
+*.egg-info/
+
+# CCBA Agent Platform - Whitelist selected configs (skills is local only and git-ignored)
+.agents/*
+!.agents/workflows/
+!.agents/proposals/
+!.agents/AGENTS.md
+.agents/**/*.log
+.agents/**/*.json
+.agents/**/*.env
+.agents/**/__pycache__/
+.agents/**/*.pyc
+```
+
 Nếu `type` là **"Phần mềm"**, đề xuất người dùng chọn ngôn ngữ lập trình mục tiêu (Python/Node.js) và dựng cấu trúc thư mục chuẩn:
 - Tạo các thư mục `src`, `tests`, `scripts`, `docs`
 - Khởi tạo `pyproject.toml` (cho Python) hoặc `package.json` (cho Node.js)
-- Tạo `.gitignore` mẫu **bảo mật 2 lớp** (whitelisting workflows/skills cục bộ):
-  ```text
-  # System / IDE
-  .env
-  .vscode/
-  .idea/
-  *.log
 
-  # Python / Node.js build
-  __pycache__/
-  *.pyc
-  node_modules/
-  .venv/
-  build/
-  dist/
-  *.egg-info/
-
-  # CCBA Agent Platform - Whitelist selected configs
-  .agents/*
-  !.agents/workflows/
-  !.agents/skills/
-  !.agents/proposals/
-  !.agents/AGENTS.md
-  .agents/**/*.log
-  .agents/**/*.json
-  .agents/**/*.env
-  .agents/**/__pycache__/
-  .agents/**/*.pyc
-  ```
-
-### 7. Khởi tạo cấu trúc Tri thức Mẫu (Dành cho Tác vụ Admin)
-Nếu `type` là **"Tác vụ Admin"**, sao chép các tệp tin templates từ Hub về Spoke:
+### 7. Khởi tạo cấu trúc Tri thức Mẫu (Dành cho các dự án nghiệp vụ)
+Nếu `type` không phải là **"Phần mềm"** (thuộc các nhóm có nghiệp vụ tư vấn/xây dựng), sao chép các tệp tin templates từ Hub về Spoke để kỹ sư bắt đầu ghi nhận tri thức:
 ```powershell
-$adminDirs = @(
-    ".md\seminars", 
-    ".md\legal_docs", 
-    ".md\extracted_docs", 
-    ".md\scratch", 
-    ".md\data\contracts", 
-    ".md\knowledge\configs", 
-    ".md\knowledge\guidelines", 
-    ".md\knowledge\related_papers", 
-    ".md\knowledge\reports", 
-    ".md\knowledge\specs_and_roadmaps"
-)
-foreach ($dir in $adminDirs) {
-    if (-not (Test-Path $dir)) {
-        New-Item -ItemType Directory -Path $dir | Out-Null
-    }
-}
 $hubTemplates = "[hub_path]\.agents\workflows\resources\templates"
 if (Test-Path $hubTemplates) {
     Copy-Item -Path "$hubTemplates\ccba_rd_seminar_template.md" -Destination ".md\seminars\CCBA_RD_SEMINAR_001_Rev00-Template.md" -Force
