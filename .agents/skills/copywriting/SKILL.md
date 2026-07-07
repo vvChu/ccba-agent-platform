@@ -10,7 +10,7 @@ metadata:
 
 # Kỹ năng Soạn thảo Văn bản theo Mẫu chuẩn (Copywriting)
 
-Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, quyết định, công văn, hợp đồng, tờ trình...) theo biểu mẫu chuẩn lưu tại `templates/` (được sinh tự động bởi quy trình [/ccba-extract-style](../../workflows/ccba-extract-style.md)).
+Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, quyết định, công văn, hợp đồng, tờ trình...) theo biểu mẫu chuẩn lưu tại kỹ năng `xu-ly-van-phong` (thư mục `.agents/skills/xu-ly-van-phong/templates/`).
 
 ## Khi nào sử dụng
 
@@ -19,14 +19,14 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 
 ## Luồng dữ liệu (Data Flow)
 
-`[Mẫu hiện trạng thô] -> [/ccba-extract-style] -> [copywriting/templates/] -> [copywriting (điền thông tin)] -> [Tài liệu hoàn thiện]`
+`[Mẫu hiện trạng thô] -> [/ccba-extract-style] -> [xu-ly-van-phong/templates/] -> [copywriting (điền thông tin)] -> [Tài liệu hoàn thiện]`
 
 ## Quy trình Sinh tài liệu (Process)
 
 1. **Nạp biểu mẫu chuẩn**:
-   - Đọc thư mục `templates/` để tải tệp template tương ứng với yêu cầu soạn thảo.
+   - Đọc thư mục `.agents/skills/xu-ly-van-phong/templates/` để tải tệp template tương ứng với yêu cầu soạn thảo.
    - Tuyệt đối không tự suy đoán cấu trúc hoặc tự tạo khung nếu chưa có tệp template tương ứng.
-   - **Tiêu chí hoàn thành:** Xác định đúng đường dẫn tệp template phù hợp trong thư mục `templates/`. Nếu không có tệp khớp, báo cáo lỗi và dừng lại.
+   - **Tiêu chí hoàn thành:** Xác định đúng đường dẫn tệp template phù hợp trong thư mục `xu-ly-van-phong/templates/`. Nếu không có tệp khớp, báo cáo lỗi và dừng lại.
 
 2. **Điền thông tin và Viết nội dung**:
    - Phân tích và điền đầy đủ các placeholders `{{placeholder}}` bằng thông tin dự án mới.
