@@ -136,6 +136,31 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Giải pháp**: Luôn sử dụng liên kết tương đối bắt đầu bằng các thư mục con trong dự án (ví dụ: `../skills/...` hoặc `../../.md/...`) thay vì liên kết tuyệt đối dạng `file:///d:/...` để đảm bảo tài liệu hoạt động đúng trên mọi môi trường và vượt qua được sự kiểm duyệt nghiêm ngặt của linter.
 - **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
 
+### 21. Dynamic Legal Registry Integration (Tích hợp Registry Pháp lý Động)
+- **Ngữ cảnh**: Tránh hardcode các số hiệu, ngày hiệu lực hoặc trạng thái chuyển tiếp luật tĩnh vào hiến pháp `AGENTS.md`.
+- **Giải pháp**: Cưỡng chế Agent luôn tra cứu động qua `legal_registry.yaml` để xác định trạng thái thực tế (`status: current`).
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
+### 22. Dual-Role Source Classification (Phân tách vai trò nguồn thông tin)
+- **Ngữ cảnh**: Quản lý nhiều nguồn thông tin pháp luật có độ chính thống và mức độ hỗ trợ tự động hóa khác nhau.
+- **Giải pháp**: Tách biệt vai trò "Xác minh pháp lý tối cao" (các cổng TTĐT Chính phủ/MOC) và "Moteur cào/lược đồ tự động" (Thư viện Pháp luật `thuvienphapluat.vn`).
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
+### 23. Local-first Git-ignored Skills (Git-ignore Kỹ năng cục bộ tại Spoke)
+- **Ngữ cảnh**: Tránh drift code và Git bloat tại Spoke khi đồng bộ các kỹ năng nặng từ Hub.
+- **Giải pháp**: Sao chép thư mục `skills/` về local của Spoke để IDE auto-discovery hoạt động mượt mà và không gặp lỗi phân quyền, nhưng đưa thư mục này vào `.gitignore` mẫu của Spoke để không bao giờ commit lên git. Chỉ commit các file workflow mỏng (wrapper) và `AGENTS.md`.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
+### 24. Functional Spoke Ownership Mapping (Phân cấp sở hữu Spoke Chuyên môn)
+- **Ngữ cảnh**: Phân định trách nhiệm chuẩn hóa tri thức và tài nguyên theo cơ cấu phòng ban CCBA.
+- **Giải pháp**: Phân loại Spoke thành Spoke Triển khai (Delivery Spoke - ngắn hạn theo dự án) và Spoke Chuyên môn (Functional/R&D Spoke - dài hạn thuộc quyền sở hữu của Trưởng phòng chuyên môn). Định vị Hub là nhân của Nền tảng số IDOP (được quản lý bởi bộ phận Nền tảng số & Công nghệ BIM).
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
+### 25. Replaced Document Auto-Supersede (Tự động cập nhật trạng thái văn bản bị thay thế)
+- **Ngữ cảnh**: Cập nhật trạng thái hiệu lực tự động cho các văn bản cũ khi cào/đăng ký văn bản thay thế mới.
+- **Giải pháp**: Khi cào và cập nhật một văn bản mới (ví dụ NĐ 207/2026), hệ thống phải tự động quét trường `replaced_docs` và đổi trạng thái của văn bản cũ thành `status: superseded` trong `legal_registry.yaml`.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -215,6 +240,14 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 ### 19. Hardcoded Absolute Local File Paths in Shared Docs (Hardcode đường dẫn tuyệt đối cục bộ trong tài liệu chia sẻ)
 - **Vấn đề**: Sử dụng đường dẫn tuyệt đối dạng `file:///d:/GitHubProjects/...` trong các tài liệu Markdown hoặc Workflow. Các đường dẫn này chỉ chạy được trên máy của một nhà phát triển cụ thể và sẽ báo lỗi khi chạy linter kiểm tra tài liệu trên các máy khác hoặc trên CI.
 - **Thay thế bằng**: Luôn sử dụng đường dẫn tương đối (relative paths) từ vị trí của tài liệu đến đích cần liên kết.
+
+### 20. Hardcoded Default Credentials in Markdown (Hardcode thông tin tài khoản mặc định trong Markdown)
+- **Vấn đề**: Lưu tài khoản và mật khẩu mặc định dạng văn bản thô (`vuvanchu119` / `ccba@ibst`) trong tệp `SKILL.md` công khai trên repo, gây nguy cơ rò rỉ thông tin xác thực.
+- **Thay thế bằng**: Bắt buộc cấu hình biến môi trường (`TVPL_USERNAME`, `TVPL_PASSWORD`) thông qua file cấu hình cục bộ `.env` và đưa tệp này vào `.gitignore`.
+
+### 21. Full Python Test Suite Run for Markdown-only Changes (Chạy toàn bộ ca thử nghiệm Python khi chỉ thay đổi Markdown)
+- **Vấn đề**: Chạy toàn bộ 457 test cases khi chỉ thay đổi các tệp cấu hình markdown là dư thừa và dễ gây gián đoạn do restart hệ thống.
+- **Thay thế bằng**: Chỉ chạy các bộ kiểm định nhanh chuyên biệt (`validate_skills.py` và `validate_docs.py`) để xác thực tính hợp lệ của tài liệu.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
