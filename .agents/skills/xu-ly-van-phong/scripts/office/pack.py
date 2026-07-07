@@ -38,14 +38,18 @@ def pack(
     if suffix not in {".docx", ".pptx", ".xlsx"}:
         return None, f"Error: {output_file} must be a .docx, .pptx, or .xlsx file"
 
-    if validate and original_file:
-        original_path = Path(original_file)
-        if original_path.exists():
-            success, output = _run_validation(input_dir, original_path, suffix, infer_author_func)
-            if output:
-                print(output)
-            if not success:
-                return None, f"Error: Validation failed for {input_dir}"
+    if validate:
+        original_path = None
+        if original_file:
+            original_path = Path(original_file)
+            if not original_path.exists():
+                return None, f"Error: Original file {original_file} does not exist"
+
+        success, output = _run_validation(input_dir, original_path, suffix, infer_author_func)
+        if output:
+            print(output)
+        if not success:
+            return None, f"Error: Validation failed for {input_dir}"
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_content_dir = Path(temp_dir) / "content"
@@ -66,7 +70,7 @@ def pack(
 
 def _run_validation(
     unpacked_dir: Path,
-    original_file: Path,
+    original_file: Path | None,
     suffix: str,
     infer_author_func=None,
 ) -> tuple[bool, str | None]:
@@ -74,17 +78,15 @@ def _run_validation(
     validators = []
 
     if suffix == ".docx":
-        author = "Claude"
-        if infer_author_func:
-            try:
-                author = infer_author_func(unpacked_dir, original_file)
-            except ValueError as e:
-                print(f"Warning: {e} Using default author 'Claude'.", file=sys.stderr)
-
-        validators = [
-            DOCXSchemaValidator(unpacked_dir, original_file),
-            RedliningValidator(unpacked_dir, original_file, author=author),
-        ]
+        validators.append(DOCXSchemaValidator(unpacked_dir, original_file))
+        if original_file:
+            author = "Claude"
+            if infer_author_func:
+                try:
+                    author = infer_author_func(unpacked_dir, original_file)
+                except ValueError as e:
+                    print(f"Warning: {e} Using default author 'Claude'.", file=sys.stderr)
+            validators.append(RedliningValidator(unpacked_dir, original_file, author=author))
     elif suffix == ".pptx":
         validators = [PPTXSchemaValidator(unpacked_dir, original_file)]
 
