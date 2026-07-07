@@ -158,6 +158,12 @@ _Failure mode._ Ending the current step before it is genuinely done, because the
 
 _Avoid_: premature closure, the rush, rushing, shortcutting
 
+### Negation (Phủ định)
+
+_Failure mode._ Điều hướng bằng cấm đoán — nói với Agent những gì *không* được làm — điều này vô tình kéo hành vi bị cấm vào ngữ cảnh và khiến nó dễ xảy ra *hơn* chứ không phải ít đi. Giống như việc yêu cầu *"Đừng nghĩ về một con voi"*, và con voi là tất cả những gì hiện ra; *"không bao giờ viết comment dài dòng"*, và sự dài dòng chính là khuôn mẫu mà Agent vừa đọc. Phủ định là một bổ từ yếu ớt dễ dàng bị vượt qua bởi khái niệm cốt lõi vốn đang được kích hoạt mạnh mẽ, do đó lệnh cấm một nửa sẽ được hiểu như một hướng dẫn để thực hiện hành vi đó. **Từ khóa dẫn đường (leading word)** của nó là *con voi*: bất kỳ điều gì mà lệnh cấm gọi tên vào khung ngữ cảnh. Cách khắc phục: gợi ý theo hướng **tích cực (positive)** — mô tả hành vi mục tiêu ("viết comment ngắn gọn trong 1 dòng") để hành vi bị cấm không bao giờ được nhắc đến. Một lệnh cấm chỉ có giá trị khi đóng vai trò là một rào chắn cứng (hard guardrail) cho một hành vi mà bạn không thể diễn đạt theo hướng tích cực; ngay cả khi đó, hãy ghép nó với mục tiêu tích cực tương ứng để sự chú ý tập trung vào những gì cần làm.
+
+_Avoid_: ironic rebound (phản tác dụng nghịch lý), don't-prompting (gợi ý phủ định), pink elephant (con voi hồng)
+
 ## Pruning
 
 Keeping a skill lean — each remedy paired with the failure it cures.
