@@ -2,7 +2,7 @@
 
 ## Nguồn gốc
 - **Speaker:** [tên]
-- **Video:** [title](url)
+- **Video:** [title](#)
 - **Ngày phân tích:** YYYY-MM-DD
 
 ## Phân tích

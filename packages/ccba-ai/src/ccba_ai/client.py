@@ -173,10 +173,12 @@ class AIClient:
     ) -> str:
         """Resize and base64-encode an image for vision APIs."""
         import base64
+
         path = Path(image_path)
         try:
-            from PIL import Image, ImageOps
             from io import BytesIO
+
+            from PIL import Image, ImageOps
 
             img = Image.open(path)
             img = ImageOps.exif_transpose(img)  # Auto-orient
