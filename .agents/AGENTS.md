@@ -92,7 +92,9 @@ Tuyệt đối **không** tạo hoặc để các tệp tin này trực tiếp �
   - `current` (Đang hiệu lực): Áp dụng bình thường.
   - `superseded` (Hết hiệu lực): Chỉ dùng tham chiếu lịch sử, phải ghi rõ "HẾT HIỆU LỰC".
 * **Nguồn tin cậy:** Ưu tiên tra cứu theo thứ tự: (1) Cổng TTĐT Bộ Xây dựng (`moc.gov.vn`), (2) Cổng TTĐT Chính phủ (`vanban.chinhphu.vn`), (3) Cơ sở dữ liệu quốc gia về VBPL (`vbpl.vn`), (4) Registry cục bộ.
-* **Giai đoạn chuyển tiếp (đến 01/07/2026):**
-  > [!WARNING]
-  > Trong giai đoạn chuyển đổi Luật Xây dựng 2014 → 2025 và Nghị định 06/2021 → Nghị định QLCL 2026, Agent **BẮT BUỘC** ghi rõ:
-  > *"Áp dụng theo VBPL hiện hành đến 30/06/2026"* hoặc *"Theo dự thảo NĐ QLCL 2026 (chưa ban hành chính thức)"*.
+* **Cơ chế cập nhật động & Quản lý hiệu lực văn bản:**
+  > [!IMPORTANT]
+  > Agent **BẮT BUỘC** phải tra cứu tệp Registry động tại [.md/data/legal_registry.yaml](../../.md/data/legal_registry.yaml) trước khi thực hiện bất kỳ phân tích pháp lý nào để xác định chính xác văn bản nào đang có hiệu lực (`status: current`) cho từng bộ môn/chủ đề ở thời điểm chạy tác vụ.
+  - Đối với các văn bản pháp luật, Nghị định hoặc Thông tư mới được bổ sung/cập nhật trong tương lai: Thông tin hiệu lực sẽ được cập nhật động vào `legal_registry.yaml` và lưu trữ tệp gốc vào `.md/legal_docs/` (thông qua workflow `/ccba-legal-intel`).
+  - Đối với các dự án xây dựng cụ thể: Đối chiếu ngày quyết định đầu tư của dự án với ngày hiệu lực của văn bản trong Registry để áp dụng điều khoản chuyển tiếp phù hợp (ví dụ: kế thừa quy định cũ theo Điều 53 Nghị định 207/2026/NĐ-CP nếu dự án được duyệt trước 01/07/2026).
+
