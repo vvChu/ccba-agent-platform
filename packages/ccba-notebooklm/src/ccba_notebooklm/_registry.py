@@ -7,7 +7,7 @@ from typing import Any
 import yaml  # type: ignore
 
 CONTEXT_FILE = Path(".md/workspace_context.yaml")
-REGISTRY_FILE = Path(".md/knowledge/sources_registry.yaml")
+REGISTRY_FILE = Path(".md/data/sources_registry.yaml")
 TASK_STATE_FILE = Path(".md/scratch/notebooklm_task_state.yaml")
 
 
