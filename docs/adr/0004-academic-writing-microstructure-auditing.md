@@ -1,0 +1,3 @@
+# 4. Academic Writing Microstructure Auditing and Compliance Checks
+
+We decided to implement dynamic section-based thresholds, a signal phrases matcher, and a custom Vietnamese typo dictionary in the `microstructure_audit.py` utility for the `academic_writing` skill. This ensures that passive-voice checks allow high occurrence (60%-80%) inside "Methods" sections while strictly restricting it (<30%) in "Discussion" sections, verifying that the Introduction contains all 3 Moves of the CARS model (Establish Territory, Find a Niche, Occupy Niche), and detecting non-standard abbreviations and spelling errors in Vietnamese BIM metadata before processing.
