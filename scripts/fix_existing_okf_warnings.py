@@ -14,7 +14,7 @@ import yaml
 # Paths
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 BUNDLE_ROOT = PROJECT_ROOT / ".md" / "legal_docs" / "luat_xay_dung_2025_so_135_2025_qh15"
-REGISTRY_PATH = PROJECT_ROOT / ".md" / "knowledge" / "legal_registry.yaml"
+REGISTRY_PATH = PROJECT_ROOT / ".md" / "data" / "legal_registry.yaml"
 
 
 def load_registry_map() -> dict[str, dict[str, Any]]:
