@@ -20,7 +20,7 @@ Kỹ năng này giúp bẻ nhỏ một bản PRD hoặc tài liệu thiết kế
    - **Tiêu chí hoàn thành:** Nhận được sự đồng ý và phê duyệt của người dùng đối với cấu trúc phân rã.
 
 3. **Xuất bản các ticket:**
-   - Tạo các ticket trên Issue Tracker (theo thứ tự các ticket độc lập trước, ticket bị chặn sau để dễ gắn liên kết tham chiếu).
+   - Tạo các ticket trên Issue Tracker theo thứ tự phụ thuộc (các ticket độc lập hoặc blocker được tạo trước) để có thể liên kết tham chiếu. Nếu tracker hỗ trợ, liên kết trực tiếp mỗi lát cắt dọc với ticket cha dưới dạng sub-issue native, và cấu hình blocker dưới dạng native blocking edge. Các phần ## Parent và ## Blocked by trong phần thân ticket chỉ dùng làm phương án dự phòng.
    - Nếu không sử dụng tracker, đảm bảo tạo thư mục `.md/knowledge/issues/` nếu chưa tồn tại. Tiến hành xuất các ticket thành các tệp Markdown cục bộ tương ứng trong thư mục `.md/knowledge/issues/{slug}.md`, đồng thời cập nhật/đồng bộ danh sách ticket vào tệp tiến trình chung của dự án tại `.md/knowledge/index.md` (hoặc tệp bản đồ định hướng chính).
    - **Tiêu chí hoàn thành:** Toàn bộ các ticket đã duyệt được đăng tải thành công (cục bộ hoặc lên GitHub Issues) với đầy đủ thông tin mô tả và tiêu chuẩn nghiệm thu (Acceptance criteria).
 
@@ -35,7 +35,7 @@ Kỹ năng này giúp bẻ nhỏ một bản PRD hoặc tài liệu thiết kế
 
 ## What to build (Mô tả yêu cầu triển khai)
 
-[Mô tả ngắn gọn và súc tích về hành vi end-to-end của lát cắt dọc này. Hạn chế ghi cụ thể file path hoặc code snippet để tránh bị lỗi thời nhanh, trừ khi là state machine hoặc type shape đặc biệt]
+[Mô tả ngắn gọn và súc tích về hành vi end-to-end của lát cắt dọc này. Hạn chế ghi cụ thể file path hoặc mã nguồn/code snippet để tránh bị lỗi thời nhanh. Ngoại lệ: nếu kỹ năng `/prototype` tạo ra code mô tả chính xác quyết định thiết kế hơn văn xuôi (như state machine, reducer, schema, type shape), hãy thêm đường dẫn/con trỏ ngữ cảnh đến nơi lưu trữ code prototype đó thay vì chèn trực tiếp mã nguồn vào đây.]
 
 ## Acceptance criteria (Tiêu chí nghiệm thu)
 
