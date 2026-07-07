@@ -15,6 +15,10 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
   * Trạng thái tra cứu Hub catalog (`platform-loader/catalog.yaml`): Chỉ rõ các tool/workflow trùng lặp hoặc liên quan đã tồn tại.
   * Đánh giá cost-benefit: Lý do chi tiết của việc đề xuất viết mới hoặc kế thừa (nêu rõ các yếu tố về dependencies, network, complexity).
 * Nếu thiếu mục đánh giá này, kế hoạch triển khai sẽ bị coi là vi phạm nghiêm trọng quy chế làm việc và không được phép tiến hành thực thi.
+* **Quy tắc phân biệt Hub và Spoke (Bắt buộc):**
+  Agent tự nhận diện môi trường làm việc thông qua việc chạy lệnh `git remote get-url origin`:
+  - Nếu kết quả chứa cụm từ `ccba-agent-platform` $\rightarrow$ Xác định dự án hiện tại là **Hub**. Bỏ qua các lệnh đề xuất đóng góp ngược (như `/ccba-propose-to-hub` hay đề xuất export/pull request lên Hub) do mã nguồn đã nằm trực tiếp tại trung tâm.
+  - Các trường hợp khác hoặc khi đọc cấu hình `.md/workspace_context.yaml` có trường `project.role: spoke` $\rightarrow$ Xác định là **Spoke**. Bắt buộc tuân thủ Reuse-First Gate và đề xuất đóng góp tính năng ngược lên Hub khi hoàn tất.
 
 ---
 
