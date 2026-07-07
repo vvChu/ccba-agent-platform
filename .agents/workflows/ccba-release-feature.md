@@ -11,16 +11,20 @@ Quy trình tự động hóa tích hợp mã nguồn (merge) và dọn dẹp mô
 
 ## Bước 1: Đối soát bình luận và Merge PR trên GitHub
 
-1. Kiểm tra xem GitHub CLI (`gh`) có hoạt động không:
+1. Lấy và ghi nhớ tên branch hiện hành (Feature Branch Name) trước khi thực hiện dọn dẹp:
+   ```bash
+   git branch --show-current
+   ```
+2. Kiểm tra xem GitHub CLI (`gh`) có hoạt động không:
    ```bash
    gh auth status
    ```
-2. Thực hiện đối soát tự động toàn bộ bình luận của Copilot:
+3. Thực hiện đối soát tự động toàn bộ bình luận của Copilot:
    ```bash
    uv run python scripts/audit_pr_comments.py
    ```
    *Lưu ý:* Nếu phát hiện các góp ý hợp lý (VALID) chưa sửa, hoặc các góp ý không hợp lý chưa được giải trình trong `walkthrough.md`, script sẽ báo lỗi chặn merge để Agent tiến hành sửa lỗi cục bộ và push cập nhật trước.
-3. Nếu `gh` đã đăng nhập và đối soát thành công:
+4. Nếu `gh` đã đăng nhập và đối soát thành công:
    - Kiểm tra trạng thái CI của PR hiện hành:
      ```bash
      gh pr checks
@@ -29,12 +33,20 @@ Quy trình tự động hóa tích hợp mã nguồn (merge) và dọn dẹp mô
      ```bash
      gh pr merge --merge --delete-branch
      ```
-3. Nếu `gh` chưa đăng nhập:
+5. Nếu `gh` chưa đăng nhập:
    - Sử dụng `browser_subagent` truy cập trang PR của branch hiện tại.
    - Chờ CI pass, click nút **Merge** -> **Confirm** -> **Delete branch**.
    - Báo lỗi cụ thể cho người dùng nếu CI thất bại hoặc có xung đột (conflict).
 
-## Bước 2: Sync Local Codebase & Dọn dẹp
+## Bước 2: Cập nhật Lịch sử Thay đổi (Walkthrough)
+
+1. Lấy danh sách các commit của feature branch hiện tại (so sánh với main/origin/main) **trước khi** chuyển nhánh:
+   ```bash
+   git log origin/main..[feature_branch_name] --oneline
+   ```
+2. Cập nhật nội dung tóm tắt thay đổi vào tệp tin `walkthrough.md`.
+
+## Bước 3: Sync Local Codebase & Dọn dẹp
 
 1. Quay về branch `main` và kéo code mới nhất:
    ```bash
@@ -44,14 +56,6 @@ Quy trình tự động hóa tích hợp mã nguồn (merge) và dọn dẹp mô
    ```bash
    git branch -d [feature_branch_name]
    ```
-
-## Bước 3: Cập nhật Lịch sử Thay đổi (Walkthrough)
-
-1. Lấy danh sách các commit của feature vừa merge:
-   ```bash
-   git log origin/main..HEAD --oneline
-   ```
-2. Cập nhật nội dung tóm tắt thay đổi vào tệp tin `walkthrough.md`.
 
 ## Bước 4: Thông báo hoàn tất
 
