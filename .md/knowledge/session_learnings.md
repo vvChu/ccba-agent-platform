@@ -114,6 +114,11 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Giải pháp**: Thay vì chạy lệnh cài đặt ngầm có thể gây crash hoặc rủi ro bảo mật, ném `ImportError` tiêu chuẩn để thông báo rõ ràng cho kỹ sư cài đặt hoặc để Agent chạy thông qua lệnh terminal được người dùng phê duyệt trực tiếp.
 - **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
 
+### 18. Release-Gate Post-Timeout Re-Audit (Đối soát lại sau timeout tại Release)
+- **Ngữ cảnh**: Khi PR CI và Copilot review bị timeout lúc chạy lệnh khởi tạo PR (`/ccba-create-pr`), có thể bình luận của Copilot sẽ được đẩy lên sau đó trước khi PR được merge.
+- **Giải pháp**: Cưỡng chế chạy lại đối soát comments (`audit_pr_comments.py`) ngay tại bước đầu tiên của quy trình Release (`/ccba-release-feature`) để chặn đứng việc merge mù nếu có ý kiến đóng góp muộn từ reviewer.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -181,6 +186,10 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 ### 16. Full-Workspace Linter Target
 - **Vấn đề**: Chạy linter quét toàn bộ workspace (`validate_skills.py .`) bao gồm cả thư mục ảo `.venv` và thư mục rác tạm thời, dẫn đến hàng trăm cảnh báo/lỗi không liên quan gây ô nhiễm báo cáo.
 - **Thay thế bằng**: Chỉ chạy linter nhắm mục tiêu chính xác thư mục chứa skills chính thức (`validate_skills.py` không tham số) hoặc tệp tin đã thay đổi.
+
+### 17. Single-Check Merge Authorization
+- **Vấn đề**: Chỉ kiểm tra bình luận của Copilot một lần lúc tạo PR. Nếu Copilot chạy chậm (post-timeout), Agent ở phiên release sẽ merge mà không hề hay biết, dẫn đến lọt các lỗi hoặc contradiction nghiêm trọng.
+- **Thay thế bằng**: Cấu hình kiểm tra hai lớp, bắt buộc re-audit comments ngay trước khi bấm nút merge chính thức.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
