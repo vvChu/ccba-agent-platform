@@ -99,6 +99,21 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Giải pháp**: Thay vì gọi API LLM phức tạp từ trong file bash/python script, hãy để script chỉ trích xuất dữ liệu thô (JSON comments), và sử dụng chính trí tuệ native cùng ngữ cảnh đầy đủ của Agent đang chạy để đánh giá, sửa code VALID hoặc giải trình code INVALID.
 - **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
 
+### 15. Secure Composable Zip Extraction (Giải nén Zip an toàn & giải phóng file)
+- **Ngữ cảnh**: Khi giải nén và nén tệp Office Open XML, cần đảm bảo an toàn sandbox và giải phóng tài nguyên.
+- **Giải pháp**: Kết hợp `Path.resolve()` và `is_relative_to` kiểm duyệt an toàn trước Path Traversal, đồng thời bọc zip extraction trong khối `with` context manager và sử dụng `shutil.copyfileobj` để giải phóng handle tập tin ngay lập tức, tránh PermissionError khóa file trên Windows.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
+### 16. Dynamic System Dependency Detection & Fallback (Tìm kiếm CLI động & dự phòng)
+- **Ngữ cảnh**: Khi thực thi các tiến trình CLI bên ngoài (như Pandoc, LibreOffice) trên máy tính Windows của người dùng.
+- **Giải pháp**: Sử dụng `shutil.which` kết hợp mảng fallback các đường dẫn cài đặt mặc định trên Windows (`C:\Program Files\...`) để định vị tự động tệp thực thi. Nếu không tìm thấy, ném lỗi `FileNotFoundError` thân thiện hướng dẫn người dùng cài đặt hoặc chuyển sang cơ chế dự phòng dùng thư viện Python thuần.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
+### 17. Forbidden Background Installer Execution (Cấm cài đặt thư viện ngầm)
+- **Ngữ cảnh**: Script chạy nghiệp vụ tự động gọi `pip install` hoặc cài đặt gói thư viện bên thứ ba ngầm trong code.
+- **Giải pháp**: Thay vì chạy lệnh cài đặt ngầm có thể gây crash hoặc rủi ro bảo mật, ném `ImportError` tiêu chuẩn để thông báo rõ ràng cho kỹ sư cài đặt hoặc để Agent chạy thông qua lệnh terminal được người dùng phê duyệt trực tiếp.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -158,6 +173,14 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 ### 14. Unverified Third-party API Recommendations
 - **Vấn đề**: Tin tưởng và sử dụng trực tiếp các đề xuất của Copilot/Reviewers về các phương thức thư viện mới (như `list_transcripts`) mà không kiểm tra độ tương thích với phiên bản thư viện hiện tại trong dự án, gây lỗi crash runtime.
 - **Thay thế bằng**: Chạy kiểm tra nhanh danh sách phương thức thực tế (qua `dir(Module)`) trong môi trường Python trước khi áp dụng code đề xuất.
+
+### 15. Silent Pip Installer in Python Runtime
+- **Vấn đề**: Tự động tải và cài đặt thư viện ngoài bằng `subprocess.check_call([sys.executable, "-m", "pip", "install", ...])` từ trong code Python mà không có sự đồng thuận của kỹ sư, gây lỗi treo tiến trình hoặc vi phạm chính sách bảo mật hệ thống.
+- **Thay thế bằng**: Báo lỗi `ImportError` thân thiện và cung cấp lệnh cài đặt rõ ràng ngoài shell.
+
+### 16. Full-Workspace Linter Target
+- **Vấn đề**: Chạy linter quét toàn bộ workspace (`validate_skills.py .`) bao gồm cả thư mục ảo `.venv` và thư mục rác tạm thời, dẫn đến hàng trăm cảnh báo/lỗi không liên quan gây ô nhiễm báo cáo.
+- **Thay thế bằng**: Chỉ chạy linter nhắm mục tiêu chính xác thư mục chứa skills chính thức (`validate_skills.py` không tham số) hoặc tệp tin đã thay đổi.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
