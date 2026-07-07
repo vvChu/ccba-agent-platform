@@ -5,6 +5,7 @@ Local PDF manipulation tool supporting merge, split, and text extraction.
 import argparse
 import sys
 from pathlib import Path
+
 from pypdf import PdfReader, PdfWriter
 
 

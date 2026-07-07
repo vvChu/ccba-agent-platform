@@ -44,7 +44,7 @@ def pack(
             original_path = Path(original_file)
             if not original_path.exists():
                 return None, f"Error: Original file {original_file} does not exist"
-        
+
         success, output = _run_validation(input_dir, original_path, suffix, infer_author_func)
         if output:
             print(output)
