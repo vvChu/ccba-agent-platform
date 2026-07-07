@@ -119,6 +119,23 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Giải pháp**: Cưỡng chế chạy lại đối soát comments (`audit_pr_comments.py`) ngay tại bước đầu tiên của quy trình Release (`/ccba-release-feature`) để chặn đứng việc merge mù nếu có ý kiến đóng góp muộn từ reviewer.
 - **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
 
+### 19. Structure-Based Knowledge Segregation (Phân tách cấu trúc tri thức)
+- **Ngữ cảnh**: Sắp xếp tài liệu trong thư mục `.md/` để tránh việc tất cả các tệp đều lưu ở thư mục gốc `.md/knowledge/`, gây lộn xộn và khó quản lý.
+- **Giải pháp**: Phân chia rõ ràng thành các thư mục con chuyên biệt:
+  * `.md/data/` cho các tệp dữ liệu động hoặc registry thay đổi liên tục (`legal_registry.yaml`, `sources_registry.yaml`, các kết quả evaluation).
+  * `.md/knowledge/configs/` cho các tệp cấu hình.
+  * `.md/knowledge/guidelines/` cho các tài liệu hướng dẫn nghiệp vụ.
+  * `.md/knowledge/related_papers/` cho các bài báo nghiên cứu, tài liệu tham khảo.
+  * `.md/knowledge/reports/` cho các báo cáo phân tích, đánh giá, session retrospective.
+  * `.md/knowledge/specs_and_roadmaps/` cho các đặc tả và lộ trình phát triển.
+  * `.md/seminars/` cho các tài liệu liên quan đến seminar.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
+### 20. Workspace-Relative Link Validation (Kiểm duyệt liên kết tương đối trong không gian làm việc)
+- **Ngữ cảnh**: Khi định nghĩa các liên kết (file links) trong tài liệu dự án (như workflows hay skills).
+- **Giải pháp**: Luôn sử dụng liên kết tương đối bắt đầu bằng các thư mục con trong dự án (ví dụ: `../skills/...` hoặc `../../.md/...`) thay vì liên kết tuyệt đối dạng `file:///d:/...` để đảm bảo tài liệu hoạt động đúng trên mọi môi trường và vượt qua được sự kiểm duyệt nghiêm ngặt của linter.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -190,6 +207,14 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 ### 17. Single-Check Merge Authorization
 - **Vấn đề**: Chỉ kiểm tra bình luận của Copilot một lần lúc tạo PR. Nếu Copilot chạy chậm (post-timeout), Agent ở phiên release sẽ merge mà không hề hay biết, dẫn đến lọt các lỗi hoặc contradiction nghiêm trọng.
 - **Thay thế bằng**: Cấu hình kiểm tra hai lớp, bắt buộc re-audit comments ngay trước khi bấm nút merge chính thức.
+
+### 18. Flat Knowledge Directory Pollution (Gây ô nhiễm thư mục tri thức phẳng)
+- **Vấn đề**: Lưu trữ tất cả các loại tệp (từ tệp cấu hình, báo cáo, tài liệu học thuật đến dữ liệu động thường xuyên cập nhật) trực tiếp tại thư mục gốc của `.md/knowledge/`. Điều này làm tăng độ nhiễu thông tin khi Agent tìm kiếm tri thức và phá vỡ cấu trúc tổ chức dự án.
+- **Thay thế bằng**: Áp dụng quy tắc phân tách cấu trúc tri thức (Structure-Based Knowledge Segregation) vào các thư mục con chuyên biệt.
+
+### 19. Hardcoded Absolute Local File Paths in Shared Docs (Hardcode đường dẫn tuyệt đối cục bộ trong tài liệu chia sẻ)
+- **Vấn đề**: Sử dụng đường dẫn tuyệt đối dạng `file:///d:/GitHubProjects/...` trong các tài liệu Markdown hoặc Workflow. Các đường dẫn này chỉ chạy được trên máy của một nhà phát triển cụ thể và sẽ báo lỗi khi chạy linter kiểm tra tài liệu trên các máy khác hoặc trên CI.
+- **Thay thế bằng**: Luôn sử dụng đường dẫn tương đối (relative paths) từ vị trí của tài liệu đến đích cần liên kết.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
