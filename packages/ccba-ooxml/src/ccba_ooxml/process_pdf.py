@@ -67,9 +67,7 @@ def main():
 
     split_parser = subparsers.add_parser("split", help="Split pages from a PDF")
     split_parser.add_argument("--input", required=True, help="Input PDF file")
-    split_parser.add_argument(
-        "--pages", required=True, help="Pages to extract (e.g. 1-3,5)"
-    )
+    split_parser.add_argument("--pages", required=True, help="Pages to extract (e.g. 1-3,5)")
     split_parser.add_argument("--output", required=True, help="Output PDF file")
 
     extract_parser = subparsers.add_parser("extract", help="Extract text from a PDF")
