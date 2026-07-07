@@ -160,7 +160,18 @@ Nếu `type` là **"Phần mềm"**, đề xuất người dùng chọn ngôn ng
 ### 7. Khởi tạo cấu trúc Tri thức Mẫu (Dành cho Tác vụ Admin)
 Nếu `type` là **"Tác vụ Admin"**, sao chép các tệp tin templates từ Hub về Spoke:
 ```powershell
-$adminDirs = @(".md\seminars", ".md\legal_docs", ".md\contracts", ".md\knowledge", ".md\data")
+$adminDirs = @(
+    ".md\seminars", 
+    ".md\legal_docs", 
+    ".md\extracted_docs", 
+    ".md\scratch", 
+    ".md\data\contracts", 
+    ".md\knowledge\configs", 
+    ".md\knowledge\guidelines", 
+    ".md\knowledge\related_papers", 
+    ".md\knowledge\reports", 
+    ".md\knowledge\specs_and_roadmaps"
+)
 foreach ($dir in $adminDirs) {
     if (-not (Test-Path $dir)) {
         New-Item -ItemType Directory -Path $dir | Out-Null
@@ -169,8 +180,8 @@ foreach ($dir in $adminDirs) {
 $hubTemplates = "[hub_path]\.agents\workflows\resources\templates"
 if (Test-Path $hubTemplates) {
     Copy-Item -Path "$hubTemplates\CCBA_RD_SEMINAR_001_Rev00-Template.md" -Destination ".md\seminars\" -Force
-    Copy-Item -Path "$hubTemplates\CONTRACT_TEMPLATE.md" -Destination ".md\contracts\" -Force
-    Copy-Item -Path "$hubTemplates\weekly_report_template.md" -Destination ".md\data\" -Force
+    Copy-Item -Path "$hubTemplates\CONTRACT_TEMPLATE.md" -Destination ".md\data\contracts\" -Force
+    Copy-Item -Path "$hubTemplates\weekly_report_template.md" -Destination ".md\knowledge\reports\" -Force
 }
 ```
 
