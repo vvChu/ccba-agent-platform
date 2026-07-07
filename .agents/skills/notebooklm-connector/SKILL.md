@@ -45,7 +45,7 @@ Trước khi tải tài liệu cục bộ lên đám mây của Google, Agent **
 
 ### Bước 3: Đối soát nội dung (SHA-256 Hash) & Quản lý Quota
 
-1.  **Unique Source Hashing:** Helper tự động tính mã SHA-256 của file tài liệu và đối chiếu với registry cục bộ tại `.md/knowledge/sources_registry.yaml`.
+1.  **Unique Source Hashing:** Helper tự động tính mã SHA-256 của file tài liệu và đối chiếu với registry cục bộ tại `.md/data/sources_registry.yaml`.
     *   Nếu phát hiện nội dung hoàn toàn trùng khớp, tái sử dụng `source_id` đã có để tiết kiệm quota và tài nguyên.
     *   Nếu phát hiện nội dung đã thay đổi, tự động xóa bản nguồn cũ trên Cloud trước rồi mới upload bản mới.
 2.  **Subscription Tier Quota Warn:** Tự động phát hiện dung lượng giới hạn dựa trên Subscription Tier của tài khoản (Free vs. Pro/Workspace). Nếu số nguồn trong Notebook vượt quá 90% quota, hệ thống sẽ tự động dọn dẹp các nguồn không còn liên kết cục bộ (Garbage Collection).
@@ -88,7 +88,7 @@ Tùy theo tham số chế độ người dùng yêu cầu, thực thi subcommand
 
 *   [x] **Bảo mật:** Mọi tệp tin trước khi tải lên phải pass qua chốt chặn Maskara Gate.
 *   [x] **Chất lượng:** Mọi tài liệu đầu ra dạng Markdown hoặc PDF phải được lưu vào đúng thư mục chức năng, được bổ sung Frontmatter truy vết và Disclaimer CCBA.
-*   [x] **Đồng bộ Registry:** Lệnh `delete-source` phải tự động gỡ bỏ bản ghi nguồn tương ứng trong registry cục bộ `.md/knowledge/sources_registry.yaml` để tránh dữ liệu bị lệch pha.
+*   [x] **Đồng bộ Registry:** Lệnh `delete-source` phải tự động gỡ bỏ bản ghi nguồn tương ứng trong registry cục bộ `.md/data/sources_registry.yaml` để tránh dữ liệu bị lệch pha.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
