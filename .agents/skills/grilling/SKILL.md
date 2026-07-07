@@ -18,6 +18,7 @@ Sử dụng khi người dùng muốn rà quét điểm mù logic thiết kế, 
     2. Đưa ra các câu hỏi stress-test xoay quanh: sự đánh đổi (trade-offs), độ phức tạp (complexity), khả năng mở rộng (scalability), và các giả định chưa được kiểm chứng.
     3. Đặt từng câu hỏi một (one-by-one), chờ người dùng trả lời xong mới chuyển sang câu tiếp theo. **Tuyệt đối không in ra danh sách nhiều câu hỏi cùng lúc.**
     4. Đối với mỗi câu hỏi, Agent phải đưa ra phương án đề xuất của mình trước (recommended answer) làm cơ sở tham chiếu.
+    5. **Nguyên tắc tra cứu:** Nếu một thông tin thực tế (fact) có thể tìm thấy bằng cách khám phá codebase, Agent phải tự tra cứu thay vì hỏi người dùng. Chỉ đưa ra các câu hỏi thảo luận về các quyết định thiết kế (decisions) và chờ phản hồi của người dùng.
 
 ### Nhánh B: Rule Compliance Stress-Test (Grill with Docs)
 Sử dụng khi người dùng cung cấp các tài liệu quy chuẩn (rules, specifications, standards, e.g., `AGENTS.md`, `legal_registry.yaml`, các spec nghiệp vụ trong `.md/knowledge/`) và yêu cầu đối soát.
@@ -26,6 +27,7 @@ Sử dụng khi người dùng cung cấp các tài liệu quy chuẩn (rules, s
     2. Đọc kỹ kế hoạch/thiết kế hiện tại của người dùng.
     3. Tìm kiếm các điểm sai lệch, mâu thuẫn hoặc chưa tuân thủ quy chuẩn trong tài liệu.
     4. Chạy Grilling loop: Chất vấn người dùng từng câu một (one-by-one) về các điểm chưa khớp, yêu cầu giải trình lý do và đưa ra giải pháp sửa đổi cụ thể để tuân thủ spec.
+    5. **Nguyên tắc tra cứu:** Tự tra cứu các thông tin thực tế từ codebase thay vì hỏi người dùng. Hãy dành câu hỏi cho các quyết định thiết kế hoặc lý do không tuân thủ quy chuẩn.
 
 ---
 
