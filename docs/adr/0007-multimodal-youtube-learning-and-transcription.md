@@ -1,0 +1,3 @@
+# 7. Multimodal Video Ingestion and Belief Archaeology Analysis
+
+We decided to adapt the YouTube-Learn multimodal extraction pipeline from Second Brain into the CCBA Platform. This includes using local workspace fallback paths (`.md/youtube-learn/`) for portability, employing two-stage frame extraction (coarse storyboard grids slicing from CDN, falling back to worst-quality video downloads if storyboards are unavailable), filtering out pure talking head frames while preserving all unique educational slides (no max cap of 10), and applying dual-format transcript processing (30-second timestamp blocks for API transcripts and 5-sentence paragraph structuring for Whisper Speech-to-Text).
