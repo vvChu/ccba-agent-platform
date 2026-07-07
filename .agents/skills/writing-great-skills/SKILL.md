@@ -54,6 +54,7 @@ Nội dung của một kỹ năng được xây dựng từ hai thành phần: *
 -  **Trôi dạt tri thức (Sediment):** Các tri thức cũ, lỗi thời không được cắt tỉa, dọn dẹp (pruning).
 -  **Dài dòng/Phình to (Sprawl):** Tệp tin quá dài làm loãng sự chú ý của Agent. Hãy áp dụng **Progressive Disclosure** để đẩy bớt nội dung tham chiếu ra ngoài.
 -  **Vô nghĩa (No-op):** Các câu chỉ dẫn thừa thãi mà Agent mặc định đã biết làm (ví dụ: "Agent hãy suy nghĩ kỹ trước khi viết code").
+-  **Phủ định (Negation):** Việc điều hướng bằng cấm đoán sẽ phản tác dụng: yêu cầu *đừng nghĩ về một con voi* chỉ làm cho hình ảnh con voi hiển thị rõ ràng hơn trong ngữ cảnh. Hãy luôn gợi ý theo hướng **tích cực (positive)** — nêu rõ hành vi mục tiêu để tránh gọi tên hành vi bị cấm; chỉ giữ lệnh cấm như một rào chắn cứng (hard guardrail) khi không thể diễn đạt tích cực, và ngay cả khi đó, hãy luôn ghép nó với hướng dẫn nên làm gì thay thế.
 
 ---
 
