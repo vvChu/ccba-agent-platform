@@ -171,10 +171,22 @@ class AIClient:
         max_pixels: int = 1024,
         quality: int = 85,
     ) -> str:
-        """Resize and base64-encode an image for vision APIs."""
+        """Resize and base64-encode an image for vision APIs.
+
+        Args:
+            image_path: Path to the image file.
+            max_pixels: The maximum side length (width or height) in pixels to resize the image to.
+            quality: Compression quality (1-95) for JPEG.
+
+        Returns:
+            The base64 encoded string of the compressed JPEG image.
+        """
         import base64
 
         path = Path(image_path)
+        if not path.exists():
+            raise FileNotFoundError(f"Image file '{image_path}' not found.")
+
         try:
             from io import BytesIO
 
