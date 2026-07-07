@@ -14,7 +14,7 @@ Sử dụng lệnh này để tự động cào, đóng gói và tích hợp vă
 
 ## Hành vi mặc định khi không có tham số (Default Behavior)
 Khi người dùng gọi lệnh `/ccba-legal-intel` không kèm tham số, Agent **bắt buộc** phải:
-1. Đọc tệp tin [legal_registry.yaml](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/legal_registry.yaml) để lấy danh sách các Luật gốc (Parent Laws) đang có trong hệ thống.
+1. Đọc tệp tin [legal_registry.yaml](../../.md/data/legal_registry.yaml) để lấy danh sách các Luật gốc (Parent Laws) đang có trong hệ thống.
 2. Sinh động danh sách các ví dụ mẫu (clickable/copyable commands) tương ứng với các Luật gốc đó để người dùng dễ dàng sao chép và thực thi ngay lập tức.
 
 ## Cách ra lệnh (Command Usage)
@@ -38,4 +38,4 @@ Người dùng có thể gọi lệnh theo 3 cách tương ứng với 3 kịch 
 
 ---
 
-Agent tiếp nhận bắt buộc phải nạp và thực thi kỹ năng `ccba-legal-intel` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-legal-intel/SKILL.md) để bắt đầu quy trình kiểm tra cổng Chrome CDP, thực thi cào dữ liệu, phân tách phụ lục, sửa liên kết tương đối và đăng ký văn bản mới vào Registry hệ thống.
+Agent tiếp nhận bắt buộc phải nạp và thực thi kỹ năng `ccba-legal-intel` tại [SKILL.md](../skills/ccba-legal-intel/SKILL.md) để bắt đầu quy trình kiểm tra cổng Chrome CDP, thực thi cào dữ liệu, phân tách phụ lục, sửa liên kết tương đối và đăng ký văn bản mới vào Registry hệ thống.

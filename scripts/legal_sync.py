@@ -787,12 +787,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--registry",
-        default=".md/knowledge/legal_registry.yaml",
+        default=".md/data/legal_registry.yaml",
         help="Đường dẫn file registry pháp lý cục bộ",
     )
     parser.add_argument(
         "--sources-registry",
-        default=".md/knowledge/sources_registry.yaml",
+        default=".md/data/sources_registry.yaml",
         help="Đường dẫn file registry ánh xạ source NotebookLM",
     )
     parser.add_argument(

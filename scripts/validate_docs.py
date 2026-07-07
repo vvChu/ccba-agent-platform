@@ -143,7 +143,7 @@ def load_legal_registry(project_root: Path) -> dict:
     Returns:
         Registry dict.
     """
-    registry_path = project_root / ".md" / "knowledge" / "legal_registry.yaml"
+    registry_path = project_root / ".md" / "data" / "legal_registry.yaml"
     if not registry_path.exists():
         return {}
     try:

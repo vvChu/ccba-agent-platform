@@ -82,10 +82,10 @@ def ensure_chrome_debug_port() -> bool:
 
 
 def main():
-    registry_path = Path(__file__).parent.parent / ".md" / "knowledge" / "legal_registry.yaml"
+    registry_path = Path(__file__).parent.parent / ".md" / "data" / "legal_registry.yaml"
     if not registry_path.exists():
         # Fallback to local cwd
-        registry_path = Path(".md/knowledge/legal_registry.yaml")
+        registry_path = Path(".md/data/legal_registry.yaml")
 
     with open(registry_path, encoding="utf-8") as f:
         registry_data = yaml.safe_load(f) or {}
