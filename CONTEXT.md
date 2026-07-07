@@ -45,3 +45,9 @@ Pattern matching algorithms used to verify structural components of academic tex
 **Bối cảnh Nghiên cứu (Research Territory)**:
 Thuật ngữ chuẩn hóa thay thế cho "Lãnh thổ nghiên cứu" (Move 1 trong mô hình CARS), biểu thị khu vực kiến thức, tầm quan trọng và bối cảnh tổng quan của đề tài nghiên cứu.
 _Avoid_: Lãnh thổ nghiên cứu, Vùng nghiên cứu.
+
+**Academic Title Page**:
+The automatically formatted cover section of a research paper containing title, author names, affiliations, and corresponding email, generated from Markdown YAML frontmatter.
+
+**Citation Consistency Audit**:
+The verification algorithm in `microstructure_audit.py` that cross-references in-text citations with the references section.
