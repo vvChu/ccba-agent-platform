@@ -1,0 +1,58 @@
+---
+name: youtube-learn
+description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề và hình ảnh slide học thuật từ các video YouTube/bài giảng.
+disable-model-invocation: true
+---
+
+# 🧠 Kỹ năng: youtube-learn (Belief Archaeology)
+
+Kỹ năng này chịu trách nhiệm phân tích sâu các video bài giảng, hội thảo (YouTube hoặc tệp video ngoài) để bóc tách toàn bộ phụ đề và các khung hình chứa slide tri thức học thuật độc nhất (không giới hạn số lượng), từ đó tổng hợp kiến thức bài học và "khảo cổ" thế giới quan, giả định ngầm của diễn giả.
+
+---
+
+## 📋 Tiêu chí hoàn thành (Completion Criteria)
+
+Kỹ năng chỉ được coi là thực hiện thành công khi tạo ra cấu trúc thư mục sau tại thư mục cục bộ của dự án:
+
+```
+[project_root]/.md/youtube-learn/
+├── raw_transcript.txt            # Phụ đề được chuẩn hóa định dạng (30s hoặc đoạn văn 5 câu)
+├── notes_concept.md              # Tổng hợp kiến thức, định nghĩa, sơ đồ và mã nguồn học được
+├── notes_worldview.md            # Khảo cổ thế giới quan, giả định ngầm của diễn giả
+├── notes_speaker.md              # Hồ sơ diễn giả (học vị, kinh nghiệm, phong cách)
+└── images/                       # Thư mục chứa các ảnh slide tĩnh độc nhất (.webp)
+    ├── yt_[video_id]_frame_001_ts60.webp
+    └── ...
+```
+
+---
+
+## 🛠️ Hướng dẫn thực thi các Phase
+
+### Phase 1: Chuẩn bị & Xác thực Đầu vào
+*   **Tham số yêu cầu:** Địa chỉ URL của video (hoặc đường dẫn tệp video nội bộ) và thư mục lưu trữ đầu ra (mặc định là `.md/youtube-learn/` nếu không truyền vào).
+*   **Tiền kiểm duyệt (Pre-checks):** 
+    *   Xác minh các thư viện Python: `yt_dlp`, `PIL` (Pillow). Nếu thiếu Pillow, in cảnh báo và bỏ qua bước khử trùng lặp ảnh bằng Hash.
+    *   Xác minh sự hiện diện của `ffmpeg` trong PATH hoặc các đường dẫn Windows WinGet mặc định. Nếu thiếu, tự động kích hoạt chế độ **Text-Only Fallback** (chỉ lấy transcript, bỏ qua bóc hình ảnh).
+    *   Đối với các URL không phải YouTube, kiểm tra xem đã cấu hình biến môi trường `AI_GATEWAY_KEY` (hoặc `OPENAI_API_KEY`) để gọi Whisper STT chưa. Nếu chưa có, dừng ngay lập tức để tránh tải video vô ích.
+
+### Phase 2: Ingest Phụ đề & Âm thanh
+*   **Phụ đề gốc:** Ưu tiên dùng `YouTubeTranscriptApi` để tải phụ đề chính thống từ YouTube (ngôn ngữ ưu tiên: `vi`, `en`). Gom nhóm phụ đề theo mốc thời gian **30 giây** dạng `[mm:ss] text`.
+*   **Whisper STT Fallback:** Nếu API phụ đề lỗi hoặc video không phải YouTube, tải luồng âm thanh chất lượng thấp (`worstaudio`), gửi file lên API Gateway bằng `ai.transcribe()` và hậu xử lý chia văn bản thô thành các **đoạn văn 5 câu** liền mạch.
+
+### Phase 3: Ingest Hình ảnh Đa phương thức (Visual Ingestion)
+*   **Chụp ảnh CDN (Stage 1 Storyboard):** Tìm kiếm và tải ảnh storyboard grid của Google từ YouTube CDN, thực hiện cắt crop theo các mốc thời gian chương học (Chapters) hoặc đỉnh tương tác nhiệt (Viewer Heatmap peaks).
+*   **Chụp ảnh video thô (Stage 2 Fallback):** Nếu không có storyboard CDN, tải video phân giải thấp (480p/720p) và dùng `ffmpeg` trích xuất ảnh tĩnh tại các mốc thời gian tương ứng.
+*   **Khử trùng lặp ảnh (Deduplication):** Sử dụng hàm băm hình ảnh Perceptual Hash để lọc bỏ các ảnh slide bị lặp lại.
+*   **Lọc Talking Head:** Sử dụng mô hình qua `ccba-ai` đóng vai trò LLM-as-Judge để phân tích danh sách ảnh và lọc bỏ triệt để các khung hình chỉ chụp mặt diễn giả đứng nói, giữ lại 100% các slide có biểu đồ, mã nguồn hoặc chữ (không khống chế giới hạn trần 10 ảnh).
+
+### Phase 4: Tổng hợp Kiến thức (Belief Archaeology Synthesis)
+Sử dụng LLM để phân tích toàn bộ Transcript và danh sách hình ảnh đã lọc, sau đó xuất ra:
+1.  **`notes_concept.md`**: Tóm tắt kiến thức, lưu trữ hình ảnh slide tương ứng dưới dạng markdown links `![Alt Text](images/filename.webp)` kèm mô tả alt-text sinh động.
+2.  **`notes_worldview.md`**: Bóc tách các giả định ẩn sâu bên dưới lập luận của người thuyết trình.
+3.  **`notes_speaker.md`**: Tổng hợp tiểu sử và phương pháp tiếp cận của diễn giả.
+
+---
+
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
