@@ -236,6 +236,68 @@ def main():
         if not found:
             print(f"- {move_name}: NOT detected. [Warning] Make sure to explicitly establish, niche, or occupy this move.")
             
+    # 5. Citation Consistency Audit
+    print("\n5. CITATION CONSISTENCY AUDIT")
+    print("-" * 60)
+    
+    body_lines = []
+    ref_lines = []
+    in_references = False
+    
+    for line in content.splitlines():
+        trimmed = line.strip()
+        if trimmed.startswith("#") and any(k in trimmed.lower() for k in ["reference", "tài liệu tham khảo"]):
+            in_references = True
+            continue
+        if in_references and trimmed.startswith("#") and not any(k in trimmed.lower() for k in ["reference", "tài liệu tham khảo"]):
+            in_references = False
+            
+        if in_references:
+            ref_lines.append(line)
+        else:
+            body_lines.append(line)
+            
+    body_text = " ".join(body_lines)
+    
+    # Parse in-text numerical citations [N]
+    citations_found = set()
+    for match in re.finditer(r'\[(\d+)\]', body_text):
+        citations_found.add(int(match.group(1)))
+        
+    # Parse declared references
+    references_declared = {}
+    for line in ref_lines:
+        trimmed_line = line.strip()
+        num_match = re.match(r'^\[(\d+)\]', trimmed_line)
+        if num_match:
+            ref_num = int(num_match.group(1))
+            references_declared[ref_num] = trimmed_line
+            continue
+        dot_match = re.match(r'^(\d+)\.', trimmed_line)
+        if dot_match:
+            ref_num = int(dot_match.group(1))
+            references_declared[ref_num] = trimmed_line
+            
+    citation_warnings = 0
+    
+    # Check if all cited items are declared
+    for cit in sorted(citations_found):
+        if cit not in references_declared:
+            print(f"- [Warning] In-text citation [{cit}] is missing in the References list.")
+            citation_warnings += 1
+            
+    # Check if all declared references are cited
+    for ref_num in sorted(references_declared.keys()):
+        if ref_num not in citations_found:
+            print(f"- [Warning] Declared reference [{ref_num}] is not cited anywhere in the text.")
+            citation_warnings += 1
+            
+    if citation_warnings == 0:
+        if not citations_found and not references_declared:
+            print("No citations or references found in the document.")
+        else:
+            print(f"All {len(citations_found)} citations and references are fully consistent! [PASS]")
+            
     print("=" * 60)
 
 
