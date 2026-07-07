@@ -25,7 +25,7 @@ Kỹ năng này được kích hoạt để tự động thu thập, phân loạ
 
 3. **Đề xuất Memory & Workflow mới:**
    - Đề xuất cập nhật `user_global` nếu có kiến thức quan trọng ảnh hưởng toàn cục.
-   - Đề xuất tiến hóa kỹ năng (Skill Discovery) lên Hub thông qua lệnh `/ccba-propose-to-hub` nếu phát hiện logic đóng gói tốt.
+   - Đề xuất tiến hóa kỹ năng (Skill Discovery) lên Hub thông qua lệnh `/ccba-propose-to-hub` nếu phát hiện logic đóng gói tốt (chỉ áp dụng khi đang làm việc tại dự án Spoke, bỏ qua nếu đang đứng tại Hub).
    - **Tiêu chí hoàn thành:** Đề xuất được hiển thị rõ ràng trên màn hình chat cho người dùng lựa chọn (không tự ý ghi đè global memory khi chưa hỏi).
 
 4. **Dọn dẹp Workspace Tạm thời & Phân phối Tài liệu Đầu vào Thô:**
