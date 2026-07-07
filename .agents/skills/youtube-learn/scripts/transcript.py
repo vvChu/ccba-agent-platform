@@ -81,7 +81,9 @@ def fetch_youtube_transcript(url: str, output_dir: Path) -> str:
                 video_id = parsed.path.split("/")[2]
 
         if not video_id:
-            _logger.info("URL is not a standard YouTube URL or video ID missing. Fallback to audio download.")
+            _logger.info(
+                "URL is not a standard YouTube URL or video ID missing. Fallback to audio download."
+            )
             raise ValueError("Not a standard YouTube video ID.")
 
         api = YouTubeTranscriptApi()
@@ -89,10 +91,10 @@ def fetch_youtube_transcript(url: str, output_dir: Path) -> str:
 
         try:
             transcript = transcript_list.find_transcript(["vi", "en"])
-        except Exception:
+        except Exception as e:
             codes = [t.language_code for t in transcript_list]
             if not codes:
-                raise ValueError("No transcript language codes found.")
+                raise ValueError("No transcript language codes found.") from e
             transcript = transcript_list.find_transcript(codes)
 
         data = transcript.fetch()
@@ -132,13 +134,17 @@ def fetch_youtube_transcript(url: str, output_dir: Path) -> str:
         return text
 
     except Exception as e:
-        _logger.info(f"YouTube Transcript API failed ({e}). Fallback to audio download + Whisper STT...")
+        _logger.info(
+            f"YouTube Transcript API failed ({e}). Fallback to audio download + Whisper STT..."
+        )
         audio_path = _download_audio_via_ytdlp(url, output_dir)
         if audio_path:
             try:
                 from ccba_ai import ai
 
-                _logger.info(f"Transcribing downloaded audio file: {audio_path.name} via ccba-ai SDK...")
+                _logger.info(
+                    f"Transcribing downloaded audio file: {audio_path.name} via ccba-ai SDK..."
+                )
                 raw_text = ai.transcribe(audio_path, model="audio-primary", language="vi")
                 formatted_text = format_whisper_transcript(raw_text)
 
