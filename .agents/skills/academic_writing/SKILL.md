@@ -1,6 +1,7 @@
 ---
 name: academic_writing
 description: Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa học theo chuẩn quốc tế (IMRAD, CARS model).
+disable-model-invocation: true
 user-invocable: true
 when_to_use: "Invoke when the user wants to brainstorm, draft, outline, or revise a scientific research paper, journal article, or seminar presentation."
 keywords: [academic writing, viết bài báo, nghiên cứu khoa học, IMRAD, CARS, Swales, Yale, thesis]
@@ -58,56 +59,27 @@ Khi người dùng kích hoạt kỹ năng, Agent thực hiện theo các bướ
 ### Bước 1: Khảo sát Hiện trạng & Thu thập Tài liệu
 *   Đọc và phân tích bản nháp hoặc ý tưởng sơ bộ của người dùng.
 *   Phân tích dữ liệu thực nghiệm (BIM/IFC models, thuật toán AI, thông số PCCC).
+*   **Tiêu chí hoàn thành:** Agent đã phân tích dữ liệu đầu vào và lập danh sách 3 đặc trưng cốt lõi của đề tài.
 
 ### Bước 2: Dựng Khung cấu trúc & Phác thảo Đề cương (Outlining)
 *   Tạo đề cương 2 cấp độ (Level 1: Câu hỏi cốt lõi & Hình ảnh; Level 2: Chi tiết các Move IMRAD).
 *   Thảo luận từng phần một với người dùng để định vị rõ **Khoảng trống Nghiên cứu (Niche)**.
+*   **Tiêu chí hoàn thành:** Một đề cương cấu trúc chi tiết (Abstract, Introduction, Methods, Results, Discussion) được tạo ra và người dùng xác nhận đồng ý.
 
 ### Bước 3: Kiểm duyệt Vi mô Tự động (Microstructure Audit)
 *   Chạy công cụ kiểm duyệt vi mô `microstructure_audit.py` trên bản nháp bài viết để đối soát chất lượng văn phong khoa học.
 *   In ra báo cáo chi tiết các lỗi cường điệu từ, danh từ hóa, lỗi viết tắt, chính tả tiếng Việt và tỷ lệ thể bị động theo từng phân vùng.
+*   **Tiêu chí hoàn thành:** Chạy script `microstructure_audit.py` trên bản nháp và in toàn bộ báo cáo vi mô ra console.
 
 ### Bước 4: Tinh chỉnh & Nhận phản hồi
 *   Hỗ trợ người dùng viết lại các đoạn văn lỗi sang tiếng Anh khoa học chuẩn mực.
 *   Nhận phản hồi và lặp lại tối thiểu 5-7 bản nháp trước khi xuất bản.
+*   **Tiêu chí hoàn thành:** Toàn bộ các cảnh báo vi mô và trích dẫn được sửa đổi, và tệp bản thảo cuối cùng được lưu trữ.
 
 ---
 
-## 📝 Định dạng đầu ra của Công cụ Kiểm duyệt (Audit Report Format)
-
-Kết quả kiểm duyệt vi mô của script phải hiển thị theo mẫu sau:
-
-```text
-============================================================
-ACADEMIC WRITING AUDIT REPORT
-Target File: CCBA_RD_SEMINAR_005_Rev00-BIM_AI_Draft.md
-============================================================
-
-1. PASSIVE VOICE ANALYSIS (Section-Based Thresholds)
-------------------------------------------------------------
-- Section: Introduction (Max: 40%) -> Actual: 25.0% [PASS]
-- Section: Methods (Range: 60%-80%) -> Actual: 72.5% [PASS]
-- Section: Discussion (Max: 30%) -> Actual: 45.2% [FAIL]
-  [Warning] Discussion section has excessive passive voice. Use active voice ('We found', 'Our results indicate') to convey authority.
-
-2. STYLISTIC CHECKS
-------------------------------------------------------------
-- [L120] Intensifier Alert: 'clearly' - Avoid emotional intensifiers.
-- [L142] Nominalization Alert: 'provide an argument' - Use active verb 'argue'.
-
-3. VIETNAMESE TYPO & ABBREVIATION DICTIONARY
-------------------------------------------------------------
-- [L85] Unmarked Vietnamese Typo: 'betong' -> Suggest: 'bê tông'
-- [L90] Non-standard Abbreviation: 'cb' -> Suggest: 'cảm biến'
-
-4. CARS MODEL CHECKS (Introduction)
-------------------------------------------------------------
-- Move 1 (Territory): Detected ('has been widely studied')
-- Move 2 (Niche): Detected ('however, few studies')
-- Move 3 (Occupy): Detected ('in this paper, we propose')
-- [STATUS] CARS compliance check passed.
-============================================================
-```
+## 📝 Tài liệu Tham chiếu (References)
+*   Xem ví dụ minh họa về định dạng báo cáo kiểm duyệt vi mô tại [Báo cáo mẫu](references/audit_report_format.md).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
