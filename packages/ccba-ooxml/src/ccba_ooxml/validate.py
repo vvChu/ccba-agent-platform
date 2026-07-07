@@ -36,11 +36,15 @@ def main():
     unpacked_dir = Path(args.unpacked_dir)
     original_file = Path(args.original)
     file_extension = original_file.suffix.lower()
-    assert unpacked_dir.is_dir(), f"Error: {unpacked_dir} is not a directory"
-    assert original_file.is_file(), f"Error: {original_file} is not a file"
-    assert file_extension in [".docx", ".pptx", ".xlsx"], (
-        f"Error: {original_file} must be a .docx, .pptx, or .xlsx file"
-    )
+    if not unpacked_dir.is_dir():
+        print(f"Error: {unpacked_dir} is not a directory", file=sys.stderr)
+        sys.exit(1)
+    if not original_file.is_file():
+        print(f"Error: {original_file} is not a file", file=sys.stderr)
+        sys.exit(1)
+    if file_extension not in [".docx", ".pptx", ".xlsx"]:
+        print(f"Error: {original_file} must be a .docx, .pptx, or .xlsx file", file=sys.stderr)
+        sys.exit(1)
 
     # Run validators
     validator = OOXMLValidator(unpacked_dir, original_file, verbose=args.verbose)
