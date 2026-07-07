@@ -91,7 +91,9 @@ Tuyệt đối **không** tạo hoặc để các tệp tin này trực tiếp �
   - `enacted` (Đã thông qua): Được phép phân tích, phải ghi rõ ngày hiệu lực.
   - `current` (Đang hiệu lực): Áp dụng bình thường.
   - `superseded` (Hết hiệu lực): Chỉ dùng tham chiếu lịch sử, phải ghi rõ "HẾT HIỆU LỰC".
-* **Nguồn tin cậy:** Ưu tiên tra cứu theo thứ tự: (1) Cổng TTĐT Bộ Xây dựng (`moc.gov.vn`), (2) Cổng TTĐT Chính phủ (`vanban.chinhphu.vn`), (3) Cơ sở dữ liệu quốc gia về VBPL (`vbpl.vn`), (4) Registry cục bộ.
+* **Nguồn tin cậy:** 
+  - **Về thẩm quyền pháp lý (Xác minh thông tin cuối cùng):** Ưu tiên theo thứ tự: (1) Cổng TTĐT Bộ Xây dựng (`moc.gov.vn`), (2) Cổng TTĐT Chính phủ (`vanban.chinhphu.vn`), (3) Cơ sở dữ liệu quốc gia về VBPL (`vbpl.vn`).
+  - **Về công cụ tự động hóa (Cào dữ liệu & Lược đồ quan hệ):** Sử dụng hệ thống **Thư viện Pháp luật (`thuvienphapluat.vn`)** làm engine cào đệ quy và phân tích quan hệ thay thế/hướng dẫn giữa các văn bản (qua workflow `/ccba-legal-intel`).
 * **Cơ chế cập nhật động & Quản lý hiệu lực văn bản:**
   > [!IMPORTANT]
   > Agent **BẮT BUỘC** phải tra cứu tệp Registry động tại [.md/data/legal_registry.yaml](../../.md/data/legal_registry.yaml) trước khi thực hiện bất kỳ phân tích pháp lý nào để xác định chính xác văn bản nào đang có hiệu lực (`status: current`) cho từng bộ môn/chủ đề ở thời điểm chạy tác vụ.
