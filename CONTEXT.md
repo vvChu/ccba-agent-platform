@@ -36,4 +36,12 @@ A file-based locking mechanism (`.plan.lock`) to prevent lost updates when multi
 **Target Line Override**:
 A formatting preservation technique where only specific key-value pairs (like status) in frontmatter are overwritten instead of full file re-serialization.
 
+**Section-Based Thresholds**:
+Dynamic constraints in microstructure auditing where different passive voice and stylistic rules are applied based on the parsed section header (e.g., Methods vs. Discussion).
 
+**Signal Phrases Matcher**:
+Pattern matching algorithms used to verify structural components of academic texts, such as identifying the 3-moves of the CARS model in an Introduction.
+
+**Bối cảnh Nghiên cứu (Research Territory)**:
+Thuật ngữ chuẩn hóa thay thế cho "Lãnh thổ nghiên cứu" (Move 1 trong mô hình CARS), biểu thị khu vực kiến thức, tầm quan trọng và bối cảnh tổng quan của đề tài nghiên cứu.
+_Avoid_: Lãnh thổ nghiên cứu, Vùng nghiên cứu.
