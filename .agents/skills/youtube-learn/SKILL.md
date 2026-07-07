@@ -32,12 +32,12 @@ Kỹ năng chỉ được coi là thực hiện thành công khi tạo ra cấu 
 ### Phase 1: Chuẩn bị & Xác thực Đầu vào
 *   **Tham số yêu cầu:** Địa chỉ URL của video (hoặc đường dẫn tệp video nội bộ) và thư mục lưu trữ đầu ra (mặc định là `.md/youtube-learn/` nếu không truyền vào).
 *   **Tiền kiểm duyệt (Pre-checks):** 
-    *   Xác minh các thư viện Python: `yt_dlp`, `PIL` (Pillow). Nếu thiếu Pillow, in cảnh báo và bỏ qua bước khử trùng lặp ảnh bằng Hash.
+    *   Xác minh các thư viện Python: yt_dlp, PIL (Pillow). Nếu thiếu Pillow, in cảnh báo và bỏ qua bước khử trùng lặp ảnh bằng Hash.
     *   Xác minh sự hiện diện của `ffmpeg` trong PATH hoặc các đường dẫn Windows WinGet mặc định. Nếu thiếu, tự động kích hoạt chế độ **Text-Only Fallback** (chỉ lấy transcript, bỏ qua bóc hình ảnh).
-    *   Đối với các URL không phải YouTube, kiểm tra xem đã cấu hình biến môi trường `AI_GATEWAY_KEY` (hoặc `OPENAI_API_KEY`) để gọi Whisper STT chưa. Nếu chưa có, dừng ngay lập tức để tránh tải video vô ích.
+    *   Đối với các URL không phải YouTube, kiểm tra xem đã cấu hình biến môi trường AI_GATEWAY_KEY (hoặc OPENAI_API_KEY) để gọi Whisper STT chưa. Nếu chưa có, dừng ngay lập tức để tránh tải video vô ích.
 
 ### Phase 2: Ingest Phụ đề & Âm thanh
-*   **Phụ đề gốc:** Ưu tiên dùng `YouTubeTranscriptApi` để tải phụ đề chính thống từ YouTube (ngôn ngữ ưu tiên: `vi`, `en`). Gom nhóm phụ đề theo mốc thời gian **30 giây** dạng `[mm:ss] text`.
+*   **Phụ đề gốc:** Ưu tiên dùng thư viện YouTubeTranscriptApi để tải phụ đề chính thống từ YouTube (ngôn ngữ ưu tiên: `vi`, `en`). Gom nhóm phụ đề theo mốc thời gian **30 giây** dạng `[mm:ss] text`.
 *   **Whisper STT Fallback:** Nếu API phụ đề lỗi hoặc video không phải YouTube, tải luồng âm thanh chất lượng thấp (`worstaudio`), gửi file lên API Gateway bằng `ai.transcribe()` và hậu xử lý chia văn bản thô thành các **đoạn văn 5 câu** liền mạch.
 
 ### Phase 3: Ingest Hình ảnh Đa phương thức (Visual Ingestion)
@@ -48,7 +48,7 @@ Kỹ năng chỉ được coi là thực hiện thành công khi tạo ra cấu 
 
 ### Phase 4: Tổng hợp Kiến thức (Belief Archaeology Synthesis)
 Sử dụng LLM để phân tích toàn bộ Transcript và danh sách hình ảnh đã lọc, sau đó xuất ra:
-1.  **`notes_concept.md`**: Tóm tắt kiến thức, lưu trữ hình ảnh slide tương ứng dưới dạng markdown links `![Alt Text](images/filename.webp)` kèm mô tả alt-text sinh động.
+1.  **`notes_concept.md`**: Tóm tắt kiến thức, lưu trữ hình ảnh slide tương ứng dưới dạng các liên kết markdown `![Alt Text]` `(./images/tên_file.webp)` kèm mô tả alt-text sinh động.
 2.  **`notes_worldview.md`**: Bóc tách các giả định ẩn sâu bên dưới lập luận của người thuyết trình.
 3.  **`notes_speaker.md`**: Tổng hợp tiểu sử và phương pháp tiếp cận của diễn giả.
 

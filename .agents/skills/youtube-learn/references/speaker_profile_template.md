@@ -19,4 +19,4 @@
 
 | Ngày | Video | Worldviews chính |
 |------|-------|-----------------|
-| YYYY-MM-DD | [title](url) | WV1, WV2 |
+| YYYY-MM-DD | [title](#) | WV1, WV2 |
