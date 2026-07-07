@@ -63,7 +63,7 @@ Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/T
        CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.pptx
    ```
 2. Đảm bảo naming convention: `CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.ext`.
-3. **Tiêu chí hoàn thành:** Tệp tài liệu được lưu trữ chính xác vào đúng thư mục phân loại và được cập nhật/đăng ký vào danh mục các buổi thảo luận (trường `seminars:`) tại tệp tin registry [.md/knowledge/legal_registry.yaml](../../../.md/knowledge/legal_registry.yaml).
+3. **Tiêu chí hoàn thành:** Tệp tài liệu được lưu trữ chính xác vào đúng thư mục phân loại và được cập nhật/đăng ký vào danh mục các buổi thảo luận (trường `seminars:`) tại tệp tin registry [.md/data/legal_registry.yaml](../../../.md/data/legal_registry.yaml).
 
 ## Source Documents
 
