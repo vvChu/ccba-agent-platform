@@ -60,3 +60,19 @@ The first-stage frame extraction method that downloads storyboard image grids fr
 
 **Talking Head Filter**:
 The image filtering logic that rejects frames consisting only of the speaker's face without educational slides, drawings, or code.
+
+**Delivery Spoke (Spoke Triển khai)**:
+A downstream project-specific workspace created for a service contract or project execution, which syncs workflows/skills from the Hub.
+
+**Functional Spoke / R&D Spoke (Spoke Chức năng)**:
+A permanent workspace owned by a specific department (e.g., BIM Design, BIM Project, Legal & QA) to research rules, develop skills/checklists, and propose updates to the Hub.
+
+**Nền tảng số IDOP**:
+The Integrated Digital Operations Platform of CCBA, serving as the physical runtime and repository environment of the Hub/Spoke platform.
+
+**Upstream Loop (Vòng đóng góp ngược)**:
+The process where Functional Spokes package and propose local skills or workflows back to the central Hub via Pull Requests and validation gates.
+
+**Downstream Sync (Vòng đồng bộ xuôi)**:
+The process where Project Spokes synchronize and update their local `.agents/workflows/` and git-ignored `.agents/skills/` from the Hub.
+
