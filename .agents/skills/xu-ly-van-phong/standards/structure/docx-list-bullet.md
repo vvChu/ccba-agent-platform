@@ -6,7 +6,7 @@ Quy chuẩn bullet, numbered list, indent cho văn bản Office.
 
 ## Bullet mặc định
 
-Bullet trong DOCX dùng **dấu gạch ngang** `-` (hyphen) — ký tự mặc định của built-in style `List Bullet` trong Word.
+Trong văn bản hành chính Việt Nam, bullet cấp 1 dùng **dấu gạch ngang** `-` (hyphen), bullet cấp 2 (sub-bullet) dùng **dấu cộng** `+`. Các ký hiệu này được cấu hình tự động thông qua Word list template / numbering styles, tránh nhập thủ công vào văn bản thô.
 
 ```
 - Triển khai nhanh, mỗi tác vụ hoàn thành trong 1 đến 2 tuần.
@@ -65,7 +65,7 @@ Sub-bullet dùng **dấu cộng** `+`:
 
 | Điều cấm | Lý do |
 |---|---|
-| Không gõ tay ký tự `•` (chấm đậm) vào nội dung văn bản | Có độ phụ thuộc font cao nếu gõ text thô; thay vào đó hãy dùng định dạng style List Bullet trong Word. |
+| Không gõ tay ký tự `-` hoặc `•` vào nội dung văn bản thô (content text) | Tránh làm sai lệch indent và phá vỡ cấu trúc danh sách tự động của Word. Hãy dùng numbering style. |
 | Không dùng em dash `—` làm bullet | Em dash là dấu câu, không phải ký tự danh sách |
 | Không dùng `*` hay `+` làm bullet cấp 1 | Ký tự markdown, render không ổn định trong Word |
 | Không trộn nhiều kiểu bullet cùng danh sách | Phá vỡ cấu trúc thị giác |
@@ -75,7 +75,7 @@ Sub-bullet dùng **dấu cộng** `+`:
 
 ## Lập trình: Bullet trong docx-js
 
-Dùng `LevelFormat.BULLET` + `numbering.reference` để cấu hình ký hiệu bullet, **không gõ tay ký tự `•` vào phần nội dung văn bản thô (content text)**:
+Dùng `LevelFormat.BULLET` + `numbering.reference` để cấu hình ký hiệu bullet. Tuyệt đối **không gõ trực tiếp ký tự `-` hay `•` vào đầu đoạn văn bản thô (text)**:
 
 ```javascript
 numbering: {
@@ -84,9 +84,15 @@ numbering: {
     levels: [{
       level: 0,
       format: LevelFormat.BULLET,
-      text: "•",
+      text: "-", // Dùng gạch ngang cho bullet cấp 1
       alignment: AlignmentType.LEFT,
       style: { paragraph: { indent: { left: 560, hanging: 280 } } },
+    }, {
+      level: 1,
+      format: LevelFormat.BULLET,
+      text: "+", // Dùng dấu cộng cho sub-bullet cấp 2
+      alignment: AlignmentType.LEFT,
+      style: { paragraph: { indent: { left: 1120, hanging: 280 } } },
     }],
   }],
 }
