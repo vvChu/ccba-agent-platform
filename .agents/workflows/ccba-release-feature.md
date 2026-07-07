@@ -9,13 +9,18 @@ bundle: "_software"
 
 Quy trình tự động hóa tích hợp mã nguồn (merge) và dọn dẹp môi trường.
 
-## Bước 1: Merge PR trên GitHub
+## Bước 1: Đối soát bình luận và Merge PR trên GitHub
 
 1. Kiểm tra xem GitHub CLI (`gh`) có hoạt động không:
    ```bash
    gh auth status
    ```
-2. Nếu `gh` đã đăng nhập:
+2. Thực hiện đối soát tự động toàn bộ bình luận của Copilot:
+   ```bash
+   uv run python scripts/audit_pr_comments.py
+   ```
+   *Lưu ý:* Nếu phát hiện các góp ý hợp lý (VALID) chưa sửa, hoặc các góp ý không hợp lý chưa được giải trình trong `walkthrough.md`, script sẽ báo lỗi chặn merge để Agent tiến hành sửa lỗi cục bộ và push cập nhật trước.
+3. Nếu `gh` đã đăng nhập và đối soát thành công:
    - Kiểm tra trạng thái CI của PR hiện hành:
      ```bash
      gh pr checks
