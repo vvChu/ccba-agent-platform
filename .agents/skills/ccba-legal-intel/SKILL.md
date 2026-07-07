@@ -18,7 +18,8 @@ Kỹ năng này hướng dẫn Agent tự động thực hiện quy trình kết
 *   **Cơ chế đọc cấu hình**: Đọc thông tin tài khoản TVPL thông qua biến môi trường hệ thống hoặc file `.env`:
     *   `TVPL_USERNAME`: Tài khoản đăng nhập TVPL.
     *   `TVPL_PASSWORD`: Mật khẩu đăng nhập TVPL.
-    *   *Fallback*: Chỉ sử dụng tài khoản mặc định hệ thống (`vuvanchu119` / `ccba@ibst`) khi các biến môi trường trên không được khai báo.
+    *   *Yêu cầu*: Báo lỗi và dừng quy trình nếu các biến môi trường này chưa được cấu hình (không sử dụng cơ chế fallback mặc định trong repo).
+
 
 ### 1.2. Rào cản Đường dẫn Hệ thống (Windows MAX_PATH Prevention)
 *   **Giới hạn độ dài Slug**: Để tránh lỗi `FileNotFoundError` khi ghi các tệp phụ lục nằm sâu trên hệ thống Windows (giới hạn 260 ký tự), hàm `sanitize_slug` của packager **bắt buộc** phải giới hạn độ dài slug tối đa là **60 ký tự**.
@@ -102,6 +103,7 @@ Khi cào trang Lược đồ (`Tab=LuocDo` hoặc `#tab4`), so khớp các tiêu
 
 ### Bước 4: Đăng ký cục bộ (Local Registry) & Dọn dẹp
 -  Thêm bản ghi metadata (ID, tiêu đề, ngày ban hành/hiệu lực, trạng thái...) vào [legal_registry.yaml](../../../.md/data/legal_registry.yaml).
+-  **Cập nhật quan hệ thay thế**: Đối chiếu quan hệ thay thế (ví dụ: khóa `replaced_docs` trong đồ thị quan hệ lược đồ) để tìm các văn bản bị thay thế bởi văn bản mới. Cập nhật trạng thái của các văn bản cũ này thành `status: superseded` trong `legal_registry.yaml` để duy trì tính chính xác của Registry.
 -  Đồng bộ hóa file `legal_registry.yaml` sang thư mục tài nguyên của kỹ năng [.agents/skills/legal-document-tracker/resources/](../legal-document-tracker/resources/).
 -  Tính toán SHA-256 của tệp gốc `.docx` và đăng ký đường dẫn vật lý vào [sources_registry.yaml](../../../.md/data/sources_registry.yaml).
 -  **Dọn dẹp rác lồng nhau**: Xóa bỏ các thư mục rác tạm thời phát sinh do lỗi cào hoặc redirect lồng dưới `guiding_docs/` (ví dụ: `guiding_docs/extracted_docs` hoặc `guiding_docs/legal_docs`).
