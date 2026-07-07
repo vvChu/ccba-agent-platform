@@ -48,18 +48,23 @@ Quy trình tự động hóa tích hợp mã nguồn (merge) và dọn dẹp mô
 
 ## Bước 3: Sync Local Codebase & Dọn dẹp
 
-1. Quay về branch `main` và kéo code mới nhất:
+1. Kiểm tra trạng thái làm việc (working tree) để đảm bảo không có file nào bị dơ (uncommitted changes):
+   ```bash
+   git status --porcelain
+   ```
+   *Lưu ý:* Nếu có thay đổi chưa commit (ví dụ tệp tạm hoặc hotfix), hãy commit hoặc stash trước khi chuyển nhánh.
+2. Quay về branch `main` và kéo code mới nhất:
    ```bash
    git checkout main && git pull origin main
    ```
-2. Xóa branch feature cục bộ:
+3. Xóa branch feature cục bộ. Vì GitHub thường sử dụng cơ chế Squash Merge hoặc Rebase Merge (khiến mã hash commit khác biệt), lệnh `git branch -d` có thể báo lỗi chưa merge. Hãy sử dụng lực lượng xóa để dọn dẹp sạch sẽ:
    ```bash
-   git branch -d [feature_branch_name]
+   git branch -D [feature_branch_name]
    ```
 
 ## Bước 4: Thông báo hoàn tất
 
 1. Báo cáo trạng thái hoàn tất:
    - ✅ Feature đã được tích hợp thành công.
-   - 🗑️ Branch cục bộ đã được dọn dẹp.
+   - 🗑️ Branch cục bộ đã được dọn dẹp (force-deleted).
    - 📝 Lịch sử thay đổi `walkthrough.md` đã cập nhật.
