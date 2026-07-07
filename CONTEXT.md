@@ -51,3 +51,12 @@ The automatically formatted cover section of a research paper containing title, 
 
 **Citation Consistency Audit**:
 The verification algorithm in `microstructure_audit.py` that cross-references in-text citations with the references section.
+
+**Belief Archaeology (Khảo cổ học Niềm tin)**:
+The analytical process of extracting a speaker's hidden assumptions and worldviews from video transcript and visual frames.
+
+**Storyboard Coarse Sampling**:
+The first-stage frame extraction method that downloads storyboard image grids from CDN and slices them at chapter/heatmap timestamps, avoiding raw video downloading.
+
+**Talking Head Filter**:
+The image filtering logic that rejects frames consisting only of the speaker's face without educational slides, drawings, or code.
