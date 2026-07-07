@@ -65,7 +65,7 @@ Sub-bullet dùng **dấu cộng** `+`:
 
 | Điều cấm | Lý do |
 |---|---|
-| Không dùng `•` (chấm đậm) trong DOCX | Font dependency cao, không phải ký tự mặc định Word |
+| Không gõ tay ký tự `•` (chấm đậm) vào nội dung văn bản | Có độ phụ thuộc font cao nếu gõ text thô; thay vào đó hãy dùng định dạng style List Bullet trong Word. |
 | Không dùng em dash `—` làm bullet | Em dash là dấu câu, không phải ký tự danh sách |
 | Không dùng `*` hay `+` làm bullet cấp 1 | Ký tự markdown, render không ổn định trong Word |
 | Không trộn nhiều kiểu bullet cùng danh sách | Phá vỡ cấu trúc thị giác |
@@ -75,7 +75,7 @@ Sub-bullet dùng **dấu cộng** `+`:
 
 ## Lập trình: Bullet trong docx-js
 
-Dùng `LevelFormat.BULLET` + `numbering.reference`, **không gõ tay ký tự `•`**:
+Dùng `LevelFormat.BULLET` + `numbering.reference` để cấu hình ký hiệu bullet, **không gõ tay ký tự `•` vào phần nội dung văn bản thô (content text)**:
 
 ```javascript
 numbering: {
