@@ -19,7 +19,7 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 
 ## Luồng dữ liệu (Data Flow)
 
-`[Mẫu hiện trạng thô] -> [/ccba-extract-style] -> [xu-ly-van-phong/templates/] -> [copywriting (điền thông tin)] -> [Tài liệu hoàn thiện]`
+`[Mẫu hiện trạng thô] -> [/ccba-extract-style] -> [.agents/skills/xu-ly-van-phong/templates/] -> [copywriting (điền thông tin)] -> [Tài liệu hoàn thiện]`
 
 ## Quy trình Sinh tài liệu (Process)
 
