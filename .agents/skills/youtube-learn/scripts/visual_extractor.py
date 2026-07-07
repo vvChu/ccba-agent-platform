@@ -28,9 +28,7 @@ def _compute_frame_hash(img_path: Path, size: int = 8) -> int:
     if PILImage is None:
         return 0
     try:
-        img = PILImage.open(img_path).convert("L").resize(
-            (size, size), PILImage.Resampling.LANCZOS
-        )
+        img = PILImage.open(img_path).convert("L").resize((size, size), PILImage.Resampling.LANCZOS)
         pixels = list(img.getdata())
         if not pixels:
             return 0
@@ -73,7 +71,9 @@ def _dedup_frames(frames: list[Path], threshold: int = 2) -> list[Path]:
     return unique
 
 
-def _get_heatmap_peaks(heatmap: list[dict], duration_sec: float, max_peaks: int = 10) -> list[float]:
+def _get_heatmap_peaks(
+    heatmap: list[dict], duration_sec: float, max_peaks: int = 10
+) -> list[float]:
     """Parse YouTube heatmap and find the top timestamps of highest user engagement."""
     if not heatmap:
         return []
@@ -93,7 +93,7 @@ def _get_heatmap_peaks(heatmap: list[dict], duration_sec: float, max_peaks: int 
 
     # Choose top peaks avoiding duplicates close to each other (within 15s)
     peaks = []
-    for val, ts in valid_entries:
+    for _val, ts in valid_entries:
         if not any(abs(ts - p) < 15.0 for p in peaks):
             peaks.append(ts)
             if len(peaks) >= max_peaks:
@@ -102,7 +102,9 @@ def _get_heatmap_peaks(heatmap: list[dict], duration_sec: float, max_peaks: int 
     return sorted(peaks)
 
 
-def _get_target_timestamps(duration_sec: float, chapters: list[dict], heatmap: list[dict] = None) -> list[float]:
+def _get_target_timestamps(
+    duration_sec: float, chapters: list[dict], heatmap: list[dict] = None
+) -> list[float]:
     """Calculate adaptive target timestamps for chapter-aware multi-sampling."""
     timestamps = []
     if chapters:
@@ -144,7 +146,7 @@ def _get_target_timestamps(duration_sec: float, chapters: list[dict], heatmap: l
         timestamps.extend(peaks)
 
     # Sort and remove close timestamps (less than 3 seconds)
-    timestamps = sorted(list(set(timestamps)))
+    timestamps = sorted(set(timestamps))
     filtered_ts = []
     for ts in timestamps:
         if not filtered_ts or ts - filtered_ts[-1] >= 3.0:
@@ -166,7 +168,9 @@ def _download_grid_with_retry(url: str, dest_path: Path) -> bool:
     return False
 
 
-def _get_storyboard_frames(sb0: dict, tmp_dir: Path, target_timestamps: list[float], duration_sec: float) -> list[Path]:
+def _get_storyboard_frames(
+    sb0: dict, tmp_dir: Path, target_timestamps: list[float], duration_sec: float
+) -> list[Path]:
     """Download storyboard grids and crop target timestamps into static frame files."""
     fragments = sb0.get("fragments") or []
     if not fragments or PILImage is None:
@@ -211,7 +215,8 @@ def _get_storyboard_frames(sb0: dict, tmp_dir: Path, target_timestamps: list[flo
             grid_path = tmp_dir / f"grid_{frag_idx}.jpg"
             if _download_grid_with_retry(grid_url, grid_path):
                 try:
-                    grid_cache[frag_idx] = PILImage.open(grid_path)
+                    with PILImage.open(grid_path) as img:
+                        grid_cache[frag_idx] = img.copy()
                 except Exception as e:
                     _logger.warning(f"Could not open grid image {frag_idx}: {e}")
                     continue
@@ -249,7 +254,13 @@ def _find_ffmpeg_bin() -> str | None:
         Path("C:\\ffmpeg\\bin\\ffmpeg.exe"),
         Path("C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe"),
     ]
-    pkg_dir = Path("C:\\Users\\chuvu\\AppData\\Local\\Microsoft\\WinGet\\Packages")
+
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        pkg_dir = Path(local_app_data) / "Microsoft" / "WinGet" / "Packages"
+    else:
+        pkg_dir = Path.home() / "AppData" / "Local" / "Microsoft" / "WinGet" / "Packages"
+
     if pkg_dir.exists():
         try:
             for fb in pkg_dir.glob("**/ffmpeg.exe"):
@@ -264,7 +275,9 @@ def _find_ffmpeg_bin() -> str | None:
     return None
 
 
-def extract_video_visuals(url: str, output_images_dir: Path, transcript_text: str = None) -> list[str]:
+def extract_video_visuals(
+    url: str, output_images_dir: Path, transcript_text: str = None
+) -> list[str]:
     """Extract slide & whiteboard frames from video. Returns list of saved filenames."""
     tmp_dir = output_images_dir.parent / "_video_tmp"
     tmp_dir.mkdir(parents=True, exist_ok=True)
@@ -319,7 +332,9 @@ def extract_video_visuals(url: str, output_images_dir: Path, transcript_text: st
                 break
         if not sb0:
             for fmt in info_dict.get("formats", []):
-                if "storyboard" in fmt.get("format_note", "") or fmt.get("format_id", "").startswith("sb"):
+                if "storyboard" in fmt.get("format_note", "") or fmt.get(
+                    "format_id", ""
+                ).startswith("sb"):
                     sb0 = fmt
                     break
 
@@ -339,7 +354,9 @@ def extract_video_visuals(url: str, output_images_dir: Path, transcript_text: st
         else:
             # Stage 2: Download raw video + FFmpeg
             if not ffmpeg_bin:
-                _logger.warning("FFmpeg not found in path! Cannot extract frames from video stream. Fallback to Text-Only.")
+                _logger.warning(
+                    "FFmpeg not found in path! Cannot extract frames from video stream. Fallback to Text-Only."
+                )
                 return []
 
             _logger.info("Storyboard CDN unavailable or PIL missing. Downloading video fallback...")
@@ -370,23 +387,27 @@ def extract_video_visuals(url: str, output_images_dir: Path, transcript_text: st
             if os.name == "nt":
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            run_kwargs = dict(
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                startupinfo=startupinfo,
-                text=True,
-                timeout=180,
-            )
+            run_kwargs = {
+                "stdout": subprocess.PIPE,
+                "stderr": subprocess.PIPE,
+                "startupinfo": startupinfo,
+                "text": True,
+                "timeout": 180,
+            }
 
             static_frames = []
             for i, ts in enumerate(target_timestamps):
                 out_path = tmp_dir / f"frame_static_{i:04d}.jpg"
                 cmd = [
-                    ffmpeg_bin, "-y",
-                    "-ss", str(round(ts, 2)),
-                    "-i", str(video_path),
-                    "-vframes", "1",
-                    str(out_path)
+                    ffmpeg_bin,
+                    "-y",
+                    "-ss",
+                    str(round(ts, 2)),
+                    "-i",
+                    str(video_path),
+                    "-vframes",
+                    "1",
+                    str(out_path),
                 ]
                 res = subprocess.run(cmd, **run_kwargs)
                 if res.returncode == 0 and out_path.exists():
@@ -409,7 +430,9 @@ def extract_video_visuals(url: str, output_images_dir: Path, transcript_text: st
         # 4. LLM-as-Judge filter (reject pure Talking Head and outro/intro)
         from ccba_ai import ai
 
-        _logger.info("Executing LLM-as-Judge to filter out Talking Heads and keep educational slides...")
+        _logger.info(
+            "Executing LLM-as-Judge to filter out Talking Heads and keep educational slides..."
+        )
 
         prompt = (
             "Bạn là một LLM-as-Judge chuyên nghiệp, chịu trách nhiệm phân tích các khung hình của một video bài giảng để lọc ra các khung hình có giá trị tri thức trực quan cao nhất.\n\n"
@@ -435,17 +458,14 @@ def extract_video_visuals(url: str, output_images_dir: Path, transcript_text: st
         for f_path in extracted_frames:
             # Encode image to base64 with maximum pixel size 768 for efficiency
             b64_data = ai.encode_image(f_path, max_pixels=768)
-            content.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{b64_data}"
-                }
-            })
+            content.append(
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64_data}"}}
+            )
 
         messages = [{"role": "user", "content": content}]
 
         judge_res = ai.chat_multi(messages, model="gemini-2.5-flash", temperature=0.2)
-        _logger.info(f"LLM-as-Judge response parsed successfully.")
+        _logger.info("LLM-as-Judge response parsed successfully.")
 
         key_frame_indices = []
         match = re.search(r"KEY_FRAMES:\s*(\[.*?\])", judge_res)
@@ -468,7 +488,9 @@ def extract_video_visuals(url: str, output_images_dir: Path, transcript_text: st
                 idx = int(idx)
                 if 0 <= idx < len(extracted_frames):
                     src_path = extracted_frames[idx]
-                    metadata = frame_metadata.get(src_path, {"timestamp": 0.0, "original_index": idx})
+                    metadata = frame_metadata.get(
+                        src_path, {"timestamp": 0.0, "original_index": idx}
+                    )
                     ts_int = int(metadata["timestamp"])
                     original_idx = metadata["original_index"]
 
@@ -481,7 +503,10 @@ def extract_video_visuals(url: str, output_images_dir: Path, transcript_text: st
                             img.save(dest_path, "WEBP", quality=80)
                     else:
                         # Direct copy if PIL is missing
-                        dest_path_jpg = output_images_dir / f"yt_{video_id}_frame_{original_idx:03d}_ts{ts_int}.jpg"
+                        dest_path_jpg = (
+                            output_images_dir
+                            / f"yt_{video_id}_frame_{original_idx:03d}_ts{ts_int}.jpg"
+                        )
                         shutil.copy(src_path, dest_path_jpg)
                         filename = dest_path_jpg.name
 
