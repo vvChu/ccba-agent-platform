@@ -26,7 +26,7 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 1. **Nạp biểu mẫu chuẩn**:
    - Đọc thư mục `.agents/skills/xu-ly-van-phong/templates/` để tải tệp template tương ứng với yêu cầu soạn thảo.
    - Tuyệt đối không tự suy đoán cấu trúc hoặc tự tạo khung nếu chưa có tệp template tương ứng.
-   - **Tiêu chí hoàn thành:** Xác định đúng đường dẫn tệp template phù hợp trong thư mục `xu-ly-van-phong/templates/`. Nếu không có tệp khớp, báo cáo lỗi và dừng lại.
+   - **Tiêu chí hoàn thành:** Xác định đúng đường dẫn tệp template phù hợp trong thư mục `.agents/skills/xu-ly-van-phong/templates/`. Nếu không có tệp khớp, báo cáo lỗi và dừng lại.
 
 2. **Điền thông tin và Viết nội dung**:
    - Phân tích và điền đầy đủ các placeholders `{{placeholder}}` bằng thông tin dự án mới.
