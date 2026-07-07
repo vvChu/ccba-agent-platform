@@ -179,9 +179,9 @@ foreach ($dir in $adminDirs) {
 }
 $hubTemplates = "[hub_path]\.agents\workflows\resources\templates"
 if (Test-Path $hubTemplates) {
-    Copy-Item -Path "$hubTemplates\CCBA_RD_SEMINAR_001_Rev00-Template.md" -Destination ".md\seminars\" -Force
-    Copy-Item -Path "$hubTemplates\CONTRACT_TEMPLATE.md" -Destination ".md\data\contracts\" -Force
-    Copy-Item -Path "$hubTemplates\weekly_report_template.md" -Destination ".md\knowledge\reports\" -Force
+    Copy-Item -Path "$hubTemplates\ccba_rd_seminar_template.md" -Destination ".md\seminars\CCBA_RD_SEMINAR_001_Rev00-Template.md" -Force
+    Copy-Item -Path "$hubTemplates\contract_template.md" -Destination ".md\data\contracts\contract_template.md" -Force
+    Copy-Item -Path "$hubTemplates\weekly_report_template.md" -Destination ".md\knowledge\reports\weekly_report_template.md" -Force
 }
 ```
 
