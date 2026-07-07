@@ -82,6 +82,23 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Giải pháp**: Thay vì safe_load và safe_dump lại toàn bộ cấu trúc frontmatter, tiến hành đọc tệp thô và sử dụng regex thay thế chính xác dòng mục tiêu cần sửa (ví dụ: `status: ...`), giữ nguyên các dòng còn lại.
 - **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-06
 
+### 12. Dual-source Multi-sampling Video Extraction (Trích xuất video đa nguồn đa mẫu)
+- **Ngữ cảnh**: Cần trích xuất bài giảng từ video trực tuyến một cách nhanh chóng, đầy đủ slide hình ảnh cùng phụ đề chất lượng cao.
+- **Giải pháp**: 
+  - Kết hợp phân đoạn sơ cấp qua storyboard grids thô của YouTube CDN (nhận diện slide qua LLM-as-Judge lọc Talking Heads) giúp tối đa tốc độ tải ảnh.
+  - Sử dụng cơ chế dự phòng (fallback) tự động tải audio và chạy Whisper STT qua SDK `ccba-ai` nếu API phụ đề YouTube bị lỗi hoặc thiếu.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
+### 13. Dynamic Local AppData Fallback (Định vị AppData Windows động)
+- **Ngữ cảnh**: Cần định vị các gói ứng dụng (như Winget, FFmpeg) trên Windows một cách tự động mà không bị bó buộc vào tên tài khoản người dùng cụ thể.
+- **Giải pháp**: Sử dụng biến môi trường `%LOCALAPPDATA%` hoặc fallback sang `Path.home() / "AppData" / "Local"` để xây dựng đường dẫn linh hoạt trên mọi máy trạm.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
+### 14. Local-First Agent Evaluation of PR Comments (Tự đối soát bình luận PR tại Agent)
+- **Ngữ cảnh**: Cần đối soát và phản biện toàn bộ ý kiến của Copilot/Reviewers trước khi merge PR.
+- **Giải pháp**: Thay vì gọi API LLM phức tạp từ trong file bash/python script, hãy để script chỉ trích xuất dữ liệu thô (JSON comments), và sử dụng chính trí tuệ native cùng ngữ cảnh đầy đủ của Agent đang chạy để đánh giá, sửa code VALID hoặc giải trình code INVALID.
+- **Nguồn**: Session `2e9d3d62-5a5e-4574-a0c7-9f9256a1b3e5`, 2026-07-07
+
 ---
 
 ## Anti-patterns (Cách tránh)
@@ -125,6 +142,22 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 ### 10. Blank Slate YAML Safe-Dump
 - **Vấn đề**: Sử dụng safe_dump để cập nhật status trong YAML Frontmatter, làm sạch và xóa bỏ hoàn toàn các comments, ghi chú thủ công có giá trị của kỹ sư.
 - **Thay thế bằng**: Áp dụng Target Line Override để chỉ sửa đổi tối thiểu dòng trạng thái.
+
+### 11. Out-of-order Git Log Walkthrough Audit
+- **Vấn đề**: Đối soát lịch sử thay đổi (`git log origin/main..HEAD`) sau khi đã checkout sang nhánh `main` và kéo code mới, dẫn đến việc hai nhánh trùng nhau và danh sách commit trả về rỗng (mất thông tin bàn giao).
+- **Thay thế bằng**: Lấy tên branch hiện tại và chạy truy vấn so sánh commit *trước khi* thực hiện lệnh checkout sang `main`.
+
+### 12. Soft Branch Deletion after Squash Merge
+- **Vấn đề**: Sử dụng lệnh xóa mềm `git branch -d` đối với các nhánh tính năng đã được Squash Merge trên GitHub, gây lỗi chặn lệnh do git local không tìm thấy commit trùng khớp hash.
+- **Thay thế bằng**: Sử dụng lệnh xóa lực lượng `git branch -D` để dọn dẹp sạch nhánh local sau khi PR đã merge thành công.
+
+### 13. Unclosed PIL Image Handles in Cache
+- **Vấn đề**: Lưu trữ hình ảnh grid trực tiếp vào bộ nhớ đệm mà không đóng file handle, dẫn đến khóa tài nguyên tập tin trên Windows và chặn đứng việc xóa dọn dẹp thư mục tạm thời.
+- **Thay thế bằng**: Sử dụng khối `with PILImage.open() as img:` kết hợp lưu `.copy()` của ảnh và tự động đóng handle lập tức.
+
+### 14. Unverified Third-party API Recommendations
+- **Vấn đề**: Tin tưởng và sử dụng trực tiếp các đề xuất của Copilot/Reviewers về các phương thức thư viện mới (như `list_transcripts`) mà không kiểm tra độ tương thích với phiên bản thư viện hiện tại trong dự án, gây lỗi crash runtime.
+- **Thay thế bằng**: Chạy kiểm tra nhanh danh sách phương thức thực tế (qua `dir(Module)`) trong môi trường Python trước khi áp dụng code đề xuất.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
