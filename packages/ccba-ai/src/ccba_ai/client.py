@@ -143,6 +143,69 @@ class AIClient:
         result = self._client.models.list()
         return sorted({m.id for m in result.data})
 
+    def transcribe(
+        self,
+        audio_path: str | Path,
+        *,
+        model: str = "audio-primary",
+        language: str = "vi",
+    ) -> str:
+        """Transcribe an audio file via the AI Gateway."""
+        path = Path(audio_path)
+        if not path.exists():
+            raise FileNotFoundError(f"Audio file '{audio_path}' not found.")
+
+        with open(path, "rb") as f:
+            response = self._client.audio.transcriptions.create(
+                model=model,
+                file=f,
+                language=language,
+                response_format="text",
+            )
+            return str(response).strip()
+
+    def encode_image(
+        self,
+        image_path: str | Path,
+        *,
+        max_pixels: int = 1024,
+        quality: int = 85,
+    ) -> str:
+        """Resize and base64-encode an image for vision APIs.
+
+        Args:
+            image_path: Path to the image file.
+            max_pixels: The maximum side length (width or height) in pixels to resize the image to.
+            quality: Compression quality (1-95) for JPEG.
+
+        Returns:
+            The base64 encoded string of the compressed JPEG image.
+        """
+        import base64
+
+        path = Path(image_path)
+        if not path.exists():
+            raise FileNotFoundError(f"Image file '{image_path}' not found.")
+
+        try:
+            from io import BytesIO
+
+            from PIL import Image, ImageOps
+
+            img = Image.open(path)
+            img = ImageOps.exif_transpose(img)  # Auto-orient
+            img.thumbnail((max_pixels, max_pixels), Image.Resampling.LANCZOS)
+
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+
+            buf = BytesIO()
+            img.save(buf, format="JPEG", quality=quality)
+            return base64.b64encode(buf.getvalue()).decode("utf-8")
+        except Exception:
+            # Fallback: raw base64 without resize
+            return base64.b64encode(path.read_bytes()).decode("utf-8")
+
     def __repr__(self) -> str:
         return f"AIClient(url={self._client.base_url}, model={self.default_model})"
 

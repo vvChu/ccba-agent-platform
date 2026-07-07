@@ -32,6 +32,8 @@ chat = ai.chat
 stream = ai.stream
 chat_multi = ai.chat_multi
 models = ai.models
+transcribe = ai.transcribe
+encode_image = ai.encode_image
 
 
 def write_file(path, content: str, encoding: str = "utf-8") -> None:
@@ -57,6 +59,8 @@ __all__ = [
     "stream",
     "chat_multi",
     "models",
+    "transcribe",
+    "encode_image",
     # Utilities
     "write_file",
     "strip_think_tags",
