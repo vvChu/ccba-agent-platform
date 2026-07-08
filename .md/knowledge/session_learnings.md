@@ -300,6 +300,33 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Vấn đề**: Lưu trữ tất cả tệp nháp, tệp Word xuất bản và báo cáo rà soát trực tiếp ở gốc thư mục `.md/knowledge/` hoặc `.md/knowledge/research_and_studies/` gây lộn xộn thư mục tri thức chính.
 - **Thay thế bằng**: Gom cụm vào thư mục con chuyên biệt của đề tài dưới phân vùng `.md/projects/[Ten_De_Tai]/` (Cohesive Topic Folder).
 
+### 30. "Git Core - Cloud Artifacts" Directory Partitioning (Phân hoạch thư mục Nhân Git - Vệ tinh Cloud)
+- **Ngữ cảnh**: Đồng bộ hóa tri thức và dữ liệu giữa Hub và Spoke mà không làm phình to dung lượng Git Repo.
+- **Giải pháp**: Phân chia rõ rệt: Git chỉ theo dõi mã nguồn, cấu hình nhẹ và bản thảo Markdown (`.md`). Còn các thư mục sản phẩm lớn chứa Word, PDF, ảnh thô dưới phân vùng `.md/projects/` sẽ bị Git-ignore đệ quy và chỉ đồng bộ qua SharePoint/OneDrive.
+- **Nguồn**: Session `5ad8a2ba-ad29-4bcb-ac3e-dab95c43c54d`, 2026-07-08
+
+### 31. Maskara Local Git pre-commit Hook Setup in Spoke (Thiết lập Git Hook Maskara cục bộ tại Spoke)
+- **Ngữ cảnh**: Chặn đứng rò rỉ API Keys và mật khẩu thô lên repository cục bộ của Spoke mà không bắt buộc cài đặt các thư viện Python cồng kềnh.
+- **Giải pháp**: Viết động script pre-commit cục bộ vào `.git/hooks/pre-commit` của Spoke trong tiến trình khởi tạo `/ccba-init-spoke` để gọi `python "$hub\scripts\maskara.py"` rà quét và chặn commit nếu phát hiện khóa API thô.
+- **Nguồn**: Session `5ad8a2ba-ad29-4bcb-ac3e-dab95c43c54d`, 2026-07-08
+
+### 32. Orchestrator-Only Cloud Write Sync Lock (Khóa ghi đám mây độc quyền cho Agent chính)
+- **Ngữ cảnh**: Tránh lỗi xung đột ghi tệp đồng thời trên OneDrive (tạo ra các tệp trùng lặp dạng `*-Copy.md`) khi chạy teamwork với nhiều Subagents hoạt động song song.
+- **Giải pháp**: Cưỡng chế các Subagents chỉ ghi tệp trong các sandbox local cô lập, và chỉ cho phép duy nhất Agent chính (Orchestrator) sau khi tổng hợp và kiểm định chất lượng được quyền ghi đè sản phẩm hoàn thiện vào thư mục đồng bộ Cloud `.md/projects/`.
+- **Nguồn**: Session `5ad8a2ba-ad29-4bcb-ac3e-dab95c43c54d`, 2026-07-08
+
+---
+
+## Anti-patterns (Cách tránh)
+
+### 26. Concurrent Cloud Sync Folder Writing by Subagents (Subagents ghi tệp đồng thời lên thư mục Cloud)
+- **Vấn đề**: Các subagents chạy song song cùng ghi đè trực tiếp lên thư mục OneDrive, gây ra tình trạng khóa tệp hoặc sinh bản sao xung đột làm loãng không gian làm việc.
+- **Thay thế bằng**: Chỉ để Agent chính tổng hợp và ghi đè một lần duy nhất tệp đã hoàn thiện.
+
+### 27. Committing Large Project Deliverables to Git (Commit tệp sản phẩm lớn lên Git)
+- **Vấn đề**: Commit trực tiếp các tệp nhị phân `.docx`, `.pdf` hoặc thư mục ảnh slide `.webp` lên Git của Hub hoặc Spoke, gây phình to vĩnh viễn kích thước lịch sử Git.
+- **Thay thế bằng**: Cấu hình Git-ignore đệ quy và đồng bộ chúng hoàn toàn qua SharePoint/OneDrive.
+
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
