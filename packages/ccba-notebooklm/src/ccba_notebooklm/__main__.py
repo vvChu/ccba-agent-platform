@@ -236,8 +236,6 @@ def main() -> int:
                         source_path=args.source,
                         output_dir=args.output,
                         output_filename_pattern="audio_overview_{source_id}.mp3",
-                        generate_fn=lambda c, nb, src: c.artifacts.generate_audio(nb),
-                        download_fn=lambda c, nb, out, tid: c.artifacts.download_audio(nb, out),
                     )
                 )
             )
@@ -251,13 +249,9 @@ def main() -> int:
                         source_path=args.source,
                         output_dir=args.output,
                         output_filename_pattern="quiz_{source_id}.json",
-                        generate_fn=lambda c, nb, src: c.artifacts.generate_quiz(
-                            nb, source_ids=[src], quantity=qty, difficulty=diff
-                        ),
-                        download_fn=lambda c, nb, out, tid, fmt: c.artifacts.download_quiz(
-                            nb, out, output_format=fmt
-                        ),
                         output_format="json",
+                        quantity=qty,
+                        difficulty=diff,
                     )
                 )
             )
@@ -271,17 +265,10 @@ def main() -> int:
                         source_path=args.source,
                         output_dir=args.output,
                         output_filename_pattern="slides_{source_id}.pdf",
-                        generate_fn=lambda c, nb, src: c.artifacts.generate_slide_deck(
-                            nb,
-                            source_ids=[src],
-                            language=args.language,
-                            slide_format=fmt,
-                            slide_length=length,
-                        ),
-                        download_fn=lambda c, nb, out, tid, fmt: c.artifacts.download_slide_deck(
-                            nb, out, output_format=fmt
-                        ),
                         output_format="pdf",
+                        language=args.language,
+                        slide_format=fmt,
+                        slide_length=length,
                     )
                 )
             )
@@ -293,10 +280,6 @@ def main() -> int:
                         source_path=args.source,
                         output_dir=args.output,
                         output_filename_pattern="mindmap_{source_id}.json",
-                        generate_fn=lambda c, nb, src: c.artifacts.generate_mind_map(
-                            nb, source_ids=[src]
-                        ),
-                        download_fn=lambda c, nb, out, tid: c.artifacts.download_mind_map(nb, out),
                     )
                 )
             )
@@ -311,12 +294,9 @@ def main() -> int:
                         source_path=args.source,
                         output_dir=args.output,
                         output_filename_pattern="infographic_{source_id}.pdf",
-                        generate_fn=lambda c, nb, src: c.artifacts.generate_infographic(
-                            nb, source_ids=[src], orientation=orient, detail_level=det, style=sty
-                        ),
-                        download_fn=lambda c, nb, out, tid: c.artifacts.download_infographic(
-                            nb, out
-                        ),
+                        orientation=orient,
+                        detail_level=det,
+                        style=sty,
                     )
                 )
             )
@@ -328,10 +308,6 @@ def main() -> int:
                         source_path=args.source,
                         output_dir=args.output,
                         output_filename_pattern="study_guide_{source_id}.md",
-                        generate_fn=lambda c, nb, src: c.artifacts.generate_study_guide(
-                            nb, source_ids=[src]
-                        ),
-                        download_fn=lambda c, nb, out, tid: c.artifacts.download_report(nb, out),
                     )
                 )
             )
@@ -343,12 +319,7 @@ def main() -> int:
                         source_path=args.source,
                         output_dir=args.output,
                         output_filename_pattern="data_table_{source_id}.csv",
-                        generate_fn=lambda c, nb, src: c.artifacts.generate_data_table(
-                            nb, source_ids=[src], instructions=args.instructions
-                        ),
-                        download_fn=lambda c, nb, out, tid: c.artifacts.download_data_table(
-                            nb, out
-                        ),
+                        instructions=args.instructions,
                     )
                 )
             )
@@ -362,13 +333,9 @@ def main() -> int:
                         source_path=args.source,
                         output_dir=args.output,
                         output_filename_pattern="flashcards_{source_id}.json",
-                        generate_fn=lambda c, nb, src: c.artifacts.generate_flashcards(
-                            nb, source_ids=[src], quantity=qty, difficulty=diff
-                        ),
-                        download_fn=lambda c, nb, out, tid, fmt: c.artifacts.download_flashcards(
-                            nb, out, output_format=fmt
-                        ),
                         output_format="json",
+                        quantity=qty,
+                        difficulty=diff,
                     )
                 )
             )
@@ -381,13 +348,8 @@ def main() -> int:
                         source_path=args.source,
                         output_dir=args.output,
                         output_filename_pattern="report_{source_id}.md",
-                        generate_fn=lambda c, nb, src: c.artifacts.generate_report(
-                            nb,
-                            source_ids=[src],
-                            report_format=fmt,
-                            extra_instructions=args.instructions,
-                        ),
-                        download_fn=lambda c, nb, out, tid: c.artifacts.download_report(nb, out),
+                        report_format=fmt,
+                        extra_instructions=args.instructions,
                     )
                 )
             )
@@ -401,13 +363,12 @@ def main() -> int:
                         source_path=args.source,
                         output_dir=args.output,
                         output_filename_pattern="video_{source_id}.mp4",
-                        generate_fn=lambda c, nb, src: c.artifacts.generate_video(
-                            nb, source_ids=[src], video_format=fmt, video_style=sty
-                        ),
-                        download_fn=lambda c, nb, out, tid: c.artifacts.download_video(nb, out),
+                        video_format=fmt,
+                        video_style=sty,
                     )
                 )
             )
+
         elif args.command == "list-notebooks":
             return int(loop.run_until_complete(list_notebooks()))
         elif args.command == "delete-notebook":
