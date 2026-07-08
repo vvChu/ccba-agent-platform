@@ -48,13 +48,9 @@ async def test_mock_artifact_flow():
             source_path=test_src,
             output_dir=out_dir,
             output_filename_pattern="quiz_{source_id}.json",
-            generate_fn=lambda c, nb, src: c.artifacts.generate_quiz(
-                nb, source_ids=[src], quantity="standard", difficulty="medium"
-            ),
-            download_fn=lambda c, nb, out, tid, fmt: c.artifacts.download_quiz(
-                nb, out, output_format=fmt
-            ),
             output_format="json",
+            quantity="standard",
+            difficulty="medium",
         )
         assert code == 0
 
@@ -67,3 +63,44 @@ async def test_mock_artifact_flow():
         # Cleanup
         if Path(out_dir).exists():
             shutil.rmtree(out_dir)
+
+
+@pytest.mark.asyncio
+async def test_flat_client_methods():
+    """Xác minh các phương thức phẳng mới của CCBANotebookLMClient."""
+    client = get_client()
+    async with client:
+        # Kiểm tra context manager trả về chính client
+        assert isinstance(client, get_client().__class__)
+
+        # Liệt kê notebook
+        notebooks = await client.list_notebooks()
+        assert len(notebooks) >= 2
+        nb_id = notebooks[0].id
+        assert nb_id == "nb-mock-1"
+
+        # Liệt kê source
+        sources = await client.list_sources(nb_id)
+        assert len(sources) >= 2
+        src_id = sources[0].id
+
+        # Tạo và xóa notebook
+        new_nb = await client.create_notebook("New Temp Notebook")
+        assert new_nb.id.startswith("nb-mock-")
+        await client.delete_notebook(new_nb.id)
+
+        # Đăng ký và xóa source
+        new_src = await client.add_file_source(nb_id, "packages/ccba-notebooklm/tests/test_mock_client.py")
+        assert new_src.id == "src-mock-file"
+        await client.delete_source(nb_id, new_src.id)
+
+        # Hỏi chat
+        chat_res = await client.ask_chat(nb_id, "Hello Test", [src_id])
+        assert chat_res.answer is not None
+
+        # Sinh và tải artifact
+        artifact = await client.generate_artifact(
+            "quiz", nb_id, [src_id], quantity="standard", difficulty="medium"
+        )
+        assert artifact.task_id == "task-quiz-1"
+

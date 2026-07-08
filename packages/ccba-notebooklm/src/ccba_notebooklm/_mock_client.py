@@ -232,6 +232,19 @@ class MockSettingsService:
         return MockLimits()
 
 
+class MockChatResult:
+    def __init__(self, answer: str) -> None:
+        self.answer = answer
+
+
+class MockChatService:
+    def __init__(self, client: MockNotebookLMClientAdapter) -> None:
+        self._client = client
+
+    async def ask(self, notebook_id: str, question: str, source_ids: list[str]) -> MockChatResult:
+        return MockChatResult(f"Mock Answer for: {question}")
+
+
 class MockNotebookLMClientAdapter:
     """Mock adapter mimicking a real NotebookLMClient with in-memory state."""
 
@@ -255,9 +268,11 @@ class MockNotebookLMClientAdapter:
         self.sources = MockSourcesService(self)
         self.artifacts = MockArtifactsService(self)
         self.settings = MockSettingsService(self)
+        self.chat = MockChatService(self)
 
     async def __aenter__(self) -> MockNotebookLMClientAdapter:
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         pass
+
