@@ -141,6 +141,8 @@ foreach ($bundle in $bundles[$type]) {
 ```
 
 ### 6. Khởi tạo cấu trúc .gitignore và Mã nguồn Chuẩn
+*Lưu ý:* Bước này và bước 6.1 chỉ áp dụng nếu dự án được khởi tạo dưới dạng Spoke Chức năng (Functional/R&D Spoke) có sẵn Git cục bộ. Đối với các Spoke Dự án/Triển khai (Delivery Spoke) đồng bộ thuần túy qua OneDrive/SharePoint và không có repo GitHub riêng, hãy bỏ qua các bước cấu hình Git này.
+
 Tạo tệp `.gitignore` mẫu **bảo mật 2 lớp** cho dự án (loại bỏ whitelist cho `skills` để Kỹ năng không bị commit vào Spoke, đồng thời loại trừ đệ quy các tệp nhị phân lớn để đồng bộ SharePoint):
 ```text
 # System / IDE
