@@ -69,9 +69,10 @@ async def test_mock_artifact_flow():
 async def test_flat_client_methods():
     """Xác minh các phương thức phẳng mới của CCBANotebookLMClient."""
     client = get_client()
-    async with client:
+    async with client as client_ctx:
         # Kiểm tra context manager trả về chính client
-        assert isinstance(client, get_client().__class__)
+        assert client_ctx is client
+
 
         # Liệt kê notebook
         notebooks = await client.list_notebooks()

@@ -30,6 +30,7 @@ jobs:
 
       - name: Install packages
         run: |
+          uv pip install -e packages/ccba-harness --system
           uv pip install -e "packages/ccba-ai[dev]" --system
           uv pip install -e "packages/mdconverter[dev]" --system
 

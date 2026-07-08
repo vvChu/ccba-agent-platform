@@ -5,6 +5,7 @@ Provides structured API for both CLI wrapper and MCP server.
 
 import json
 from pathlib import Path
+
 from ccba_harness import FileMutexLock
 
 
