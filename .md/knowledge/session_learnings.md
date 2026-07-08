@@ -250,6 +250,57 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Thay thế bằng**: Chỉ chạy các bộ kiểm định nhanh chuyên biệt (`validate_skills.py` và `validate_docs.py`) để xác thực tính hợp lệ của tài liệu.
 
 ---
+### 26. LaTeX Math-to-OMML Native Rendering in Word
+- **Ngữ cảnh**: Cần in các công thức toán học block (`$$...$$`) và toán học nội dòng (`$...$`) trong Markdown sang tệp Word (.docx) bản địa.
+- **Giải pháp**:
+  - Thiết lập bộ phân tích tách biệt văn bản thường và công thức toán học.
+  - Chuyển đổi các biểu thức LaTeX sang MathML (sử dụng mapping hoặc converter).
+  - Sử dụng stylesheet mặc định của Microsoft Office (`C:\Program Files\Microsoft Office\root\Office16\MML2OMML.XSL` và thư viện `lxml`) để **dịch chuyển MathML sang OMML XML bản địa của Word**.
+  - Append trực tiếp XML DOM vào phần tử paragraph trong Word (`p._element.append(omml.getroot())`). Công thức hiển thị sắc nét, đúng chỉ số dưới, ký tự Hy Lạp và hoàn toàn editable trực tiếp trên Word.
+- **Nguồn**: Session `5ad8a2ba-ad29-4bcb-ac3e-dab95c43c54d`, 2026-07-08
+
+### 27. Mermaid Flowchart Rendering via Base64 & Online CDN
+- **Ngữ cảnh**: Cần hiển thị sơ đồ quy trình Mermaid dạng đồ họa trực quan trong tài liệu Word thay vì chỉ in nhãn giữ chỗ text thô.
+- **Giải pháp**:
+  - Trích xuất mã sơ đồ Mermaid trong code block.
+  - Mã hóa mã thô sơ đồ thành chuỗi **URL-safe Base64** (sử dụng `base64.urlsafe_b64encode`).
+  - Gửi yêu cầu HTTP tải hình ảnh kết xuất PNG từ CDN `https://mermaid.ink/img/{base64_string}` về tệp cục bộ tạm thời.
+  - Chèn trực tiếp ảnh này vào Word thông qua `document.add_picture()` và thêm chú thích thích hợp dưới ảnh.
+- **Nguồn**: Session `5ad8a2ba-ad29-4bcb-ac3e-dab95c43c54d`, 2026-07-08
+
+### 28. Cell-Level Inline Formatting & Fixed Widths for Word Tables
+- **Ngữ cảnh**: Phân dịch bảng biểu Markdown sang Word mà các ô vẫn chứa định dạng chữ đậm/nghiêng (`**`, `*`) thô và cột bảng co giãn tự động làm tràn chữ.
+- **Giải pháp**:
+  - Chạy trình phân tích định dạng học thuật (`parse_academic_text`) bên trong từng ô dữ liệu để xử lý độc lập kiểu chữ và công thức toán học nội dòng.
+  - Áp dụng kích thước cột cố định cho bảng (sử dụng `cell.width = Inches(N)`) khớp khít vùng in khả dụng (ví dụ 6.5 inches cho khổ giấy dọc A4) giúp chống tràn chữ, thăng bằng cột.
+- **Nguồn**: Session `5ad8a2ba-ad29-4bcb-ac3e-dab95c43c54d`, 2026-07-08
+
+### 29. Cohesive Topic Folder Pattern (Mẫu thư mục đề tài chuyên biệt)
+- **Ngữ cảnh**: Sắp xếp tài liệu nghiên cứu, bản thảo và tệp Word xuất bản liên quan đến một đề tài cụ thể.
+- **Giải pháp**: Nhóm toàn bộ các tệp liên quan vào một thư mục con chuyên đề nằm dưới `.md/projects/[Ten_De_Tai]/` (ví dụ: `NC_Van_Hoa_Am_Tinh_Tu_Van_XD/`). Giúp gom cụm ngữ cảnh tốt, tăng tính kết hợp (High Cohesion), giảm phụ thuộc (Low Coupling) và dễ dàng đóng gói bàn giao thông qua kênh đồng bộ đám mây (OneDrive/SharePoint).
+- **Nguồn**: Session `5ad8a2ba-ad29-4bcb-ac3e-dab95c43c54d`, 2026-07-08
+
+---
+
+## Anti-patterns (Cách tránh)
+
+### 22. Raw LaTeX Math and Underscore Stripping in Word
+- **Vấn đề**: In trực tiếp công thức LaTeX ra tệp Word mà không qua bộ biên dịch. Trình phân dịch Markdown thông thường sẽ hiểu lầm ký tự gạch dưới `_` trong công thức là thẻ in nghiêng và xóa bỏ nó, đồng thời hiển thị raw backslash `\` làm hỏng hiển thị toán học.
+- **Thay thế bằng**: Sử dụng XML OMML và stylesheet chuyển đổi `MML2OMML.XSL` để chèn công thức toán học bản địa của Word.
+
+### 23. Raw Text/Code Mermaid Placeholders in Final Word Documents
+- **Vấn đề**: Để nguyên mã nguồn sơ đồ thô (`graph TD...`) hoặc các nhãn giữ chỗ text thô dạng "[Sơ đồ Mermaid...]" trong tài liệu Word báo cáo chính thức.
+- **Thay thế bằng**: Tải ảnh PNG kết xuất từ CDN trực tuyến của Mermaid và chèn trực tiếp ảnh đồ họa vào tài liệu.
+
+### 24. Flat Table Cell Rendering
+- **Vấn đề**: Chỉ gọi hàm `add_run()` thô cho giá trị của ô bảng Word mà không chạy bộ phân dịch định dạng văn bản học thuật, làm lộ các dấu `**` hoặc `*` thô trong bảng.
+- **Thay thế bằng**: Chạy phân dịch đệ quy `parse_academic_text` cho nội dung từng ô dữ liệu để làm sạch định dạng.
+
+### 25. Flat Knowledge Directory Pollution for Research Projects
+- **Vấn đề**: Lưu trữ tất cả tệp nháp, tệp Word xuất bản và báo cáo rà soát trực tiếp ở gốc thư mục `.md/knowledge/` hoặc `.md/knowledge/research_and_studies/` gây lộn xộn thư mục tri thức chính.
+- **Thay thế bằng**: Gom cụm vào thư mục con chuyên biệt của đề tài dưới phân vùng `.md/projects/[Ten_De_Tai]/` (Cohesive Topic Folder).
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*

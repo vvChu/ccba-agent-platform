@@ -56,13 +56,23 @@ Thumbs.db
 
 # Processing Workspace (.md/)
 # Temp files during processing are ignored, but structure is tracked
-.md/*.pdf
-.md/*.docx
-.md/*.xlsx
-.md/*.pptx
-.md/*.txt
+.md/**/*.pdf
+.md/**/*.docx
+.md/**/*.xlsx
+.md/**/*.pptx
+.md/**/*.txt
+# Except keep markdown and raw transcripts in general folders
+!.md/**/raw_transcript.txt
 .md/extracted_docs/*
 !.md/extracted_docs/.gitkeep
+# Ignore images of youtube-learn
+.md/**/images/*.webp
+.md/**/images/*.jpg
+.md/**/images/*.png
+
+# Ignore all specific project outputs (OneDrive/SharePoint synced)
+.md/projects/*
+!.md/projects/.gitkeep
 
 # Build artifacts
 dist/

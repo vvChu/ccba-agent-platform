@@ -464,7 +464,7 @@ def extract_video_visuals(
 
         messages = [{"role": "user", "content": content}]
 
-        judge_res = ai.chat_multi(messages, model="gemini-2.5-flash", temperature=0.2)
+        judge_res = ai.chat_multi(messages, model="gemini-3.1-flash-lite", temperature=0.2)
         _logger.info("LLM-as-Judge response parsed successfully.")
 
         key_frame_indices = []
