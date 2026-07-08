@@ -166,7 +166,6 @@ async def get_source_id_by_path(
     return str(target_source.id)
 
 
-
 async def get_or_create_project_notebook(client: Any, project_name: str) -> str:
     """Lấy notebook_id hiện có hoặc tự tạo mới notebook chung cho dự án."""
     notebook_id = get_notebook_id_from_context()
@@ -183,7 +182,6 @@ async def get_or_create_project_notebook(client: Any, project_name: str) -> str:
     new_nb = await client.create_notebook(title)
     save_notebook_id_to_context(new_nb.id)
     return str(new_nb.id)
-
 
 
 async def handle_artifact_flow(
@@ -374,7 +372,6 @@ async def extract_and_summarize(source_path: str, output_path: str) -> int:
             print(f"SUCCESS: Đã kết xuất tóm tắt cấu trúc sạch về tệp tin: {out_file.absolute()}")
             return 0
 
-
     except Exception as e:
         print(f"ERROR: Quá trình import hoặc trích xuất thất bại. Chi tiết: {e}", file=sys.stderr)
         return 3
@@ -425,9 +422,7 @@ async def query_rag(source_path: str, prompt: str) -> int:
             if not target_source:
                 print(f"[Info] Không tìm thấy nguồn có sẵn, đang nạp nguồn mới: '{source_path}'...")
                 if source_path.startswith(("http://", "https://")):
-                    target_source = await client.add_url_source(
-                        notebook_id, upload_path, wait=True
-                    )
+                    target_source = await client.add_url_source(notebook_id, upload_path, wait=True)
                 else:
                     target_source = await client.add_file_source(notebook_id, upload_path)
                 update_registry(source_path, target_source.id, sha256, notebook_id)
@@ -443,7 +438,6 @@ async def query_rag(source_path: str, prompt: str) -> int:
             print(result.answer)
             print("=====================================\n")
             return 0
-
 
     except Exception as e:
         print(f"ERROR: Truy vấn RAG thất bại. Chi tiết: {e}", file=sys.stderr)
@@ -602,4 +596,3 @@ async def delete_source(source_id: str, notebook_id: str | None) -> int:
     except Exception as e:
         print(f"ERROR: Xóa nguồn tài liệu thất bại. Chi tiết: {e}", file=sys.stderr)
         return 3
-

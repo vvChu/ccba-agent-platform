@@ -51,4 +51,3 @@ async def check_quota_and_warn(client: Any, notebook_id: str) -> None:
             await run_garbage_collection(client, notebook_id, sources)
     except Exception as e:
         print(f"[Warn] Không thể kiểm tra quota: {e}", file=sys.stderr)
-
