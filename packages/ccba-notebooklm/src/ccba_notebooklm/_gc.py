@@ -20,7 +20,7 @@ async def run_garbage_collection(client: Any, notebook_id: str, sources: list[An
                 print(
                     f"[Info] Đang xóa nguồn cũ không còn dùng trên Cloud: Title='{src.title}', ID='{src.id}'..."
                 )
-                await client.sources.delete(notebook_id, src.id)
+                await client.delete_source(notebook_id, src.id)
             except Exception as e:
                 print(f"[Warn] Không thể xóa nguồn '{src.id}': {e}", file=sys.stderr)
 
@@ -28,14 +28,14 @@ async def run_garbage_collection(client: Any, notebook_id: str, sources: list[An
 async def check_quota_and_warn(client: Any, notebook_id: str) -> None:
     """Kiểm tra Subscription Tier và cảnh báo sớm về Quota."""
     try:
-        tier = await client.settings.get_account_tier()
-        limits = await client.settings.get_account_limits()
+        tier = await client.get_account_tier()
+        limits = await client.get_account_limits()
         print(f"[Info] NotebookLM Account Tier: {tier.tier} ({tier.plan_name or 'Standard Plan'})")
 
         # Hạn mức mặc định nếu không có limit cụ thể
         source_limit = limits.source_limit if limits.source_limit is not None else 50
 
-        sources = await client.sources.list(notebook_id)
+        sources = await client.list_sources(notebook_id)
         current_sources_count = len(sources)
 
         print(f"[Info] Hạn mức nguồn tài liệu tối đa của tài khoản: {source_limit}")

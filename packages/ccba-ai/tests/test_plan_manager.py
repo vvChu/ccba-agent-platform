@@ -6,12 +6,12 @@ from tempfile import TemporaryDirectory
 import pytest
 
 from ccba_ai.services.plan import (
-    FileLock,
     Phase,
     create_plan,
     get_plan_status,
     update_phase_status,
 )
+from ccba_harness import FileMutexLock
 
 
 def test_file_lock_basic():
@@ -19,13 +19,13 @@ def test_file_lock_basic():
         lock_file = Path(tmpdir) / ".test.lock"
 
         # Lock acquisition
-        with FileLock(lock_file) as lock1:
+        with FileMutexLock(lock_file) as lock1:
             assert lock1.is_locked
             assert lock_file.exists()
 
             # Second acquisition should fail / timeout
             with pytest.raises(TimeoutError):
-                with FileLock(lock_file, timeout=0.2, delay=0.05):
+                with FileMutexLock(lock_file, timeout=0.2, retry_interval=0.05):
                     pass
 
         # Lock file should be cleaned up
@@ -40,7 +40,7 @@ def test_file_lock_concurrent():
 
         def worker(worker_id):
             try:
-                with FileLock(lock_file, timeout=2.0):
+                with FileMutexLock(lock_file, timeout=2.0):
                     # Simulate critical section
                     shared_resource.append(worker_id)
                     time.sleep(0.1)
@@ -48,6 +48,7 @@ def test_file_lock_concurrent():
                 errors.append(e)
 
         threads = [threading.Thread(target=worker, args=(i,)) for i in range(3)]
+
         for t in threads:
             t.start()
         for t in threads:

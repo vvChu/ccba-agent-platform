@@ -2,6 +2,7 @@ from ccba_harness import HarnessGuard
 
 from .adr import ADRGenerator
 from .cleaners import Cleaners
+from .coordinator import LegalProcessor
 from .crawler import (
     ChromeCDP,
     ChromeCDPError,
@@ -35,6 +36,7 @@ __all__ = [
     "get_concept_type",
     "inject_warning_block",
     "LegalRegistryManager",
+    "LegalProcessor",
     "TokenMonitor",
     "HarnessGuard",
     "ADRGenerator",

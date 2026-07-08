@@ -85,3 +85,5 @@ The hybrid synchronization strategy where lightweight, diffable text/code files 
 **Maskara Pre-commit Hook**:
 A local Git security hook written dynamically to `.git/hooks/pre-commit` in Spoke workspaces during initialization, which runs the Maskara privacy tool to scan and block commits containing hardcoded API keys or raw credentials.
 
+**Flat NotebookLM Client (Deep Seam)**:
+Lớp bọc seam sâu của NotebookLMClient nhằm cung cấp một giao diện phẳng duy nhất, tự động điều phối các loại tác vụ sinh/tải Structured Artifacts và ẩn đi cấu trúc RPC dịch vụ con phức tạp của thư viện Google thô. Giúp tăng tính leverage và đơn giản hóa việc viết unit tests.
