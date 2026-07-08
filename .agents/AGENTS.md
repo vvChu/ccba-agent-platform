@@ -100,3 +100,10 @@ Tuyệt đối **không** tạo hoặc để các tệp tin này trực tiếp �
   - Đối với các văn bản pháp luật, Nghị định hoặc Thông tư mới được bổ sung/cập nhật trong tương lai: Thông tin hiệu lực sẽ được cập nhật động vào `legal_registry.yaml` và lưu trữ tệp gốc vào `.md/legal_docs/` (thông qua workflow `/ccba-legal-intel`).
   - Đối với các dự án xây dựng cụ thể: Đối chiếu ngày quyết định đầu tư của dự án với ngày hiệu lực của văn bản trong Registry để áp dụng điều khoản chuyển tiếp phù hợp (ví dụ: kế thừa quy định cũ theo Điều 53 Nghị định 207/2026/NĐ-CP nếu dự án được duyệt trước 01/07/2026).
 
+---
+
+## 6. Runtime Debugging & Diagnostics (Chẩn đoán & Gỡ lỗi Runtime)
+
+* **Dev Server Logs (Log của máy chủ phát triển):** Toàn bộ đầu ra log của dev server đang chạy được ghi nhận tại tệp tin cục bộ `.md/scratch/logs/dev_server.log` (tệp tin này chỉ xuất hiện khi dev server được chạy và xuất log).
+* **Quy tắc đọc log:** Khi người dùng báo cáo lỗi runtime, crash ứng dụng, hoặc hành vi không mong muốn khi đang chạy thử nghiệm, Agent **bắt buộc** phải đọc tệp tin log này. Để tránh quá tải token ngữ cảnh, Agent chỉ được đọc tối đa 200 dòng cuối cùng của tệp tin này bằng cách chỉ định các tham số dòng thích hợp trong công cụ đọc file.
+
