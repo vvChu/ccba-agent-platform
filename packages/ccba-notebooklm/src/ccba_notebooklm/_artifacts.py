@@ -119,7 +119,7 @@ async def get_source_id_by_path(
     client: Any, notebook_id: str, source_path: str, sha256: str
 ) -> str:
     """Tìm hoặc nạp nguồn, trả về source_id và cập nhật registry."""
-    sources = await client.sources.list(notebook_id)
+    sources = await client.list_sources(notebook_id)
     target_source = None
 
     registry = read_registry()
@@ -136,7 +136,7 @@ async def get_source_id_by_path(
                     print(
                         f"[Info] Phát hiện thay đổi nội dung (SHA-256 mismatch). Đang xóa nguồn cũ '{target_source_id}'..."
                     )
-                    await client.sources.delete(notebook_id, target_source_id)
+                    await client.delete_source(notebook_id, target_source_id)
                     target_source = None
                 except Exception as ex:
                     print(f"[Warn] Lỗi xóa bản cũ: {ex}", file=sys.stderr)
@@ -152,9 +152,9 @@ async def get_source_id_by_path(
         try:
             print(f"[Info] Đang nạp nguồn dữ liệu mới: '{source_path}'...")
             if source_path.startswith(("http://", "https://")):
-                target_source = await client.sources.add_url(notebook_id, upload_path, wait=True)
+                target_source = await client.add_url_source(notebook_id, upload_path, wait=True)
             else:
-                target_source = await client.sources.add_file(notebook_id, upload_path)
+                target_source = await client.add_file_source(notebook_id, upload_path)
             update_registry(source_path, target_source.id, sha256, notebook_id)
         finally:
             if is_temp and Path(upload_path).exists():
@@ -166,12 +166,13 @@ async def get_source_id_by_path(
     return str(target_source.id)
 
 
+
 async def get_or_create_project_notebook(client: Any, project_name: str) -> str:
     """Lấy notebook_id hiện có hoặc tự tạo mới notebook chung cho dự án."""
     notebook_id = get_notebook_id_from_context()
     if notebook_id:
         try:
-            notebooks = await client.notebooks.list()
+            notebooks = await client.list_notebooks()
             if any(nb.id == notebook_id for nb in notebooks):
                 return notebook_id
         except Exception:
@@ -179,9 +180,10 @@ async def get_or_create_project_notebook(client: Any, project_name: str) -> str:
 
     title = f"CAP_Spoke_{project_name}"
     print(f"[Info] Đang tạo Notebook chung mới trên NotebookLM Cloud: '{title}'...")
-    new_nb = await client.notebooks.create(title)
+    new_nb = await client.create_notebook(title)
     save_notebook_id_to_context(new_nb.id)
     return str(new_nb.id)
+
 
 
 async def handle_artifact_flow(
@@ -189,9 +191,8 @@ async def handle_artifact_flow(
     source_path: str,
     output_dir: str,
     output_filename_pattern: str,
-    generate_fn: Any,
-    download_fn: Any,
     output_format: str = "",
+    **kwargs: Any,
 ) -> int:
     """Hàm điều phối tổng quát cho việc sinh, polling và download mọi loại Structured Artifacts."""
     if not HAS_NOTEBOOKLM:
@@ -227,7 +228,12 @@ async def handle_artifact_flow(
 
             if not task_id:
                 print(f"[Info] Đang yêu cầu sinh {task_type} cho nguồn ID '{source_id}'...")
-                status = await generate_fn(client, notebook_id, source_id)
+                status = await client.generate_artifact(
+                    task_type=task_type,
+                    notebook_id=notebook_id,
+                    source_ids=[source_id],
+                    **kwargs,
+                )
 
                 # Hỗ trợ trường hợp đặc biệt MindMapResult trả về kết quả trực tiếp không qua task_id
                 if hasattr(status, "mind_map"):
@@ -252,7 +258,7 @@ async def handle_artifact_flow(
             max_network_retries = 5
             while True:
                 try:
-                    await client.artifacts.wait_for_completion(notebook_id, task_id)
+                    await client.wait_for_task(notebook_id, task_id)
                     break
                 except NetworkError as net_err:
                     retry_count += 1
@@ -275,10 +281,14 @@ async def handle_artifact_flow(
             out_file = out_path / filename
 
             print(f"[Info] Đang tải {task_type} về: {out_file.absolute()}...")
-            if output_format:
-                await download_fn(client, notebook_id, str(out_file), task_id, output_format)
-            else:
-                await download_fn(client, notebook_id, str(out_file), task_id)
+            await client.download_artifact(
+                task_type=task_type,
+                notebook_id=notebook_id,
+                output_path=str(out_file),
+                task_id=task_id,
+                output_format=output_format,
+                **kwargs,
+            )
 
             # QC nếu là Markdown
             if filename.endswith(".md"):
@@ -287,6 +297,7 @@ async def handle_artifact_flow(
 
             print(f"SUCCESS: Tải {task_type} thành công về: {out_file.absolute()}")
             return 0
+
     except Exception as e:
         print(f"ERROR: Tác vụ {task_type} thất bại. Chi tiết: {e}", file=sys.stderr)
         return 3
@@ -326,7 +337,7 @@ async def extract_and_summarize(source_path: str, output_path: str) -> int:
                         print(
                             f"[Info] Nội dung thay đổi (SHA-256 mismatch). Đang xóa nguồn cũ '{old_id}'..."
                         )
-                        await client.sources.delete(notebook_id, old_id)
+                        await client.delete_source(notebook_id, old_id)
                     except Exception as ex:
                         print(f"[Warn] Lỗi xóa bản cũ: {ex}", file=sys.stderr)
 
@@ -335,9 +346,9 @@ async def extract_and_summarize(source_path: str, output_path: str) -> int:
                     f"[Info] Đang import nguồn dữ liệu: '{upload_path}' vào notebook '{notebook_id}'..."
                 )
                 if source_path.startswith(("http://", "https://")):
-                    source = await client.sources.add_url(notebook_id, upload_path, wait=True)
+                    source = await client.add_url_source(notebook_id, upload_path, wait=True)
                 else:
-                    source = await client.sources.add_file(notebook_id, upload_path)
+                    source = await client.add_file_source(notebook_id, upload_path)
                 source_id = source.id
                 print(f"SUCCESS: Nạp nguồn thành công! Source ID: {source_id}")
 
@@ -349,7 +360,7 @@ async def extract_and_summarize(source_path: str, output_path: str) -> int:
                 "Bản tóm tắt bắt buộc phải liệt kê các quy trình, bước nghiệp vụ, định nghĩa cốt lõi, "
                 "và các patterns nổi bật của tài liệu dưới dạng Markdown sạch sẽ."
             )
-            result = await client.chat.ask(notebook_id, prompt, source_ids=[source_id])
+            result = await client.ask_chat(notebook_id, prompt, source_ids=[source_id])
 
             out_dir = Path(output_path)
             out_dir.mkdir(parents=True, exist_ok=True)
@@ -362,6 +373,7 @@ async def extract_and_summarize(source_path: str, output_path: str) -> int:
 
             print(f"SUCCESS: Đã kết xuất tóm tắt cấu trúc sạch về tệp tin: {out_file.absolute()}")
             return 0
+
 
     except Exception as e:
         print(f"ERROR: Quá trình import hoặc trích xuất thất bại. Chi tiết: {e}", file=sys.stderr)
@@ -389,7 +401,7 @@ async def query_rag(source_path: str, prompt: str) -> int:
             notebook_id = await get_or_create_project_notebook(client, project_name)
             await check_quota_and_warn(client, notebook_id)
 
-            sources = await client.sources.list(notebook_id)
+            sources = await client.list_sources(notebook_id)
             target_source = None
 
             registry = read_registry()
@@ -413,17 +425,17 @@ async def query_rag(source_path: str, prompt: str) -> int:
             if not target_source:
                 print(f"[Info] Không tìm thấy nguồn có sẵn, đang nạp nguồn mới: '{source_path}'...")
                 if source_path.startswith(("http://", "https://")):
-                    target_source = await client.sources.add_url(
+                    target_source = await client.add_url_source(
                         notebook_id, upload_path, wait=True
                     )
                 else:
-                    target_source = await client.sources.add_file(notebook_id, upload_path)
+                    target_source = await client.add_file_source(notebook_id, upload_path)
                 update_registry(source_path, target_source.id, sha256, notebook_id)
 
             target_id = target_source.id
             print(f"[Info] Đang gửi câu hỏi RAG cô lập tới nguồn ID '{target_id}'...")
 
-            result = await client.chat.ask(
+            result = await client.ask_chat(
                 notebook_id=notebook_id, question=prompt, source_ids=[target_id]
             )
 
@@ -431,6 +443,7 @@ async def query_rag(source_path: str, prompt: str) -> int:
             print(result.answer)
             print("=====================================\n")
             return 0
+
 
     except Exception as e:
         print(f"ERROR: Truy vấn RAG thất bại. Chi tiết: {e}", file=sys.stderr)
@@ -454,7 +467,7 @@ async def list_notebooks() -> int:
 
     try:
         async with get_client() as client:
-            notebooks = await client.notebooks.list()
+            notebooks = await client.list_notebooks()
             if not notebooks:
                 print("Không tìm thấy Sổ tay (Notebook) nào trên tài khoản Cloud.")
                 return 0
@@ -480,7 +493,7 @@ async def delete_notebook(notebook_id: str) -> int:
     try:
         async with get_client() as client:
             print(f"[Info] Đang yêu cầu xóa Notebook ID '{notebook_id}' khỏi Cloud...")
-            await client.notebooks.delete(notebook_id)
+            await client.delete_notebook(notebook_id)
 
             # Reset context cục bộ nếu trùng ID vừa xóa
             context_nb_id = get_notebook_id_from_context()
@@ -508,8 +521,8 @@ async def share_notebook(notebook_id: str | None) -> int:
                 notebook_id = await get_or_create_project_notebook(client, project_name)
 
             print(f"[Info] Đang kích hoạt chế độ chia sẻ cho Notebook ID '{notebook_id}'...")
-            await client.sharing.set_public(notebook_id, True)
-            share_url = client.notebooks.get_share_url(notebook_id)
+            await client.set_notebook_public(notebook_id, True)
+            share_url = client.get_share_url(notebook_id)
 
             print("\nSUCCESS: Kích hoạt chia sẻ thành công!")
             print(f"🔗 Share URL: {share_url}\n")
@@ -531,7 +544,7 @@ async def list_sources(notebook_id: str | None) -> int:
             if not notebook_id:
                 notebook_id = await get_or_create_project_notebook(client, project_name)
 
-            sources = await client.sources.list(notebook_id)
+            sources = await client.list_sources(notebook_id)
             if not sources:
                 print(f"Notebook ID '{notebook_id}' đang trống, chưa có nguồn nào.")
                 return 0
@@ -565,7 +578,7 @@ async def delete_source(source_id: str, notebook_id: str | None) -> int:
             print(
                 f"[Info] Đang yêu cầu xóa nguồn ID '{source_id}' khỏi notebook '{notebook_id}'..."
             )
-            await client.sources.delete(notebook_id, source_id)
+            await client.delete_source(notebook_id, source_id)
 
             # Cập nhật registry cục bộ
             registry = read_registry()
@@ -589,3 +602,4 @@ async def delete_source(source_id: str, notebook_id: str | None) -> int:
     except Exception as e:
         print(f"ERROR: Xóa nguồn tài liệu thất bại. Chi tiết: {e}", file=sys.stderr)
         return 3
+
