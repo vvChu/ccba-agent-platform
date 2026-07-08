@@ -33,7 +33,7 @@ from transcript import fetch_youtube_transcript  # noqa: E402
 from visual_extractor import _find_ffmpeg_bin, extract_video_visuals  # noqa: E402
 
 
-def synthesize_concept_notes(transcript: str, filenames: list[str]) -> str:
+def synthesize_concept_notes(transcript: str, filenames: list[str], max_tokens: int = 8192) -> str:
     """Synthesize learning notes inserting markdown links to slide images."""
     from ccba_ai import ai
 
@@ -48,11 +48,11 @@ def synthesize_concept_notes(transcript: str, filenames: list[str]) -> str:
         f"DANH SÁCH HÌNH ẢNH SLIDE ĐÃ TRÍCH XUẤT:\n{filenames}\n\n"
         "Chỉ trả về nội dung Markdown của tài liệu Concept Notes. Không bọc mã nguồn Markdown trong code block lớn."
     )
-    res = ai.chat(prompt, model="gemini-2.5-flash", max_tokens=8192, temperature=0.3)
+    res = ai.chat(prompt, model="gemini-3.1-pro-high", max_tokens=max_tokens, temperature=0.31)
     return res.strip()
 
 
-def synthesize_worldview_notes(transcript: str, speaker_name: str, video_title: str) -> str:
+def synthesize_worldview_notes(transcript: str, speaker_name: str, video_title: str, max_tokens: int = 4096) -> str:
     """Analyze speaker's hidden assumptions and worldviews based on template."""
     from ccba_ai import ai
 
@@ -75,11 +75,11 @@ def synthesize_worldview_notes(transcript: str, speaker_name: str, video_title: 
         f"TRANSCRIPT PHỤ ĐỀ:\n---\n{transcript}\n---\n\n"
         "Chỉ trả về nội dung Markdown hoàn chỉnh của tài liệu Worldview Notes. Không bọc trong code block lớn."
     )
-    res = ai.chat(prompt, model="gemini-2.5-flash", max_tokens=4096, temperature=0.3)
+    res = ai.chat(prompt, model="gemini-3.1-pro-high", max_tokens=max_tokens, temperature=0.31)
     return res.strip()
 
 
-def synthesize_speaker_notes(transcript: str, speaker_name: str) -> str:
+def synthesize_speaker_notes(transcript: str, speaker_name: str, max_tokens: int = 2048) -> str:
     """Generate speaker profile based on transcript and template."""
     from ccba_ai import ai
 
@@ -95,22 +95,54 @@ def synthesize_speaker_notes(transcript: str, speaker_name: str) -> str:
         f"MẪU TEMPLATE ĐỊNH DẠNG:\n---\n{template_content}\n---\n\n"
         f"TÊN DIỄN GIẢ: {speaker_name}\n\n"
         f"TRANSCRIPT PHỤ ĐỀ:\n---\n{transcript}\n---\n\n"
-        "Chỉ trả về nội dung Markdown hoàn chỉnh của tài liệu Speaker Notes. Không bọc trong code block lớn."
+        "Chỉ trả về nội dung Markdown hoàn chỉnh của tài liệu Speaker Notes. Yêu cầu viết cực kỳ súc tích, ngắn gọn từng mục để đảm bảo nội dung đầy đủ tất cả các phần của mẫu và không bị cắt cụt ở cuối. Không bọc trong code block lớn."
     )
-    res = ai.chat(prompt, model="gemini-2.5-flash", max_tokens=2048, temperature=0.3)
+    res = ai.chat(prompt, model="gemini-3.5-flash-medium", max_tokens=max_tokens, temperature=0.31)
     return res.strip()
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python watch_video.py <video_url_or_path> [output_dir]")
-        sys.exit(1)
+def extract_speaker_from_transcript(transcript: str, default: str = "Diễn giả") -> str:
+    """Uses LLM to detect the speaker's real name from the first part of transcript."""
+    from ccba_ai import ai
 
-    video_url = sys.argv[1]
+    # If transcript is very short, just return default
+    if not transcript or len(transcript) < 100:
+        return default
+
+    # Send only the first 3000 chars to save tokens
+    sample = transcript[:3000]
+    prompt = (
+        "Bạn là trợ lý nghiên cứu học thuật cao cấp tại CCBA. Dưới đây là phần đầu của phụ đề một bài phát biểu hoặc bài giảng.\n"
+        "Nhiệm vụ của bạn là xác định chính xác họ và tên của diễn giả (người nói chính) trong bài phát biểu này.\n\n"
+        "Yêu cầu:\n"
+        "1. Chỉ trả về duy nhất họ và tên của diễn giả (ví dụ: 'Đặng Lê Nguyên Vũ', 'TS. Trần Văn A'). Không giải thích thêm.\n"
+        "2. Nếu không tìm thấy tên diễn giả cụ thể hoặc không chắc chắn, hãy trả về đúng giá trị mặc định sau: " + default + "\n\n"
+        f"ĐOẠN TRÍCH PHỤ ĐỀ:\n---\n{sample}\n---"
+    )
+    try:
+        res = ai.chat(prompt, model="gemini-3.1-flash-lite", max_tokens=100, temperature=0.1)
+        cleaned = res.strip().strip("'\"")
+        # If it returned some long sentence instead of a name, fallback
+        if cleaned and len(cleaned) < 50 and "phụ đề" not in cleaned.lower() and "không tìm thấy" not in cleaned.lower():
+            return cleaned
+    except Exception as e:
+        _logger.warning(f"Error auto-detecting speaker name: {e}")
+    return default
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="CCBA youtube-learn Orchestrator.")
+    parser.add_argument("video_url", type=str, help="URL of the video or local video path")
+    parser.add_argument("output_dir", type=str, nargs="?", default=None, help="Output directory path")
+    parser.add_argument("--speaker", type=str, default=None, help="Explicit speaker name")
+    
+    args = parser.parse_args()
+    video_url = args.video_url
 
     # Resolve Output Directory Fallback
-    if len(sys.argv) >= 3:
-        output_dir = Path(sys.argv[2]).absolute()
+    if args.output_dir:
+        output_dir = Path(args.output_dir).absolute()
     else:
         # Fallback to .md/youtube-learn/ inside workspace
         output_dir = (Path.cwd() / ".md" / "youtube-learn").absolute()
@@ -181,9 +213,32 @@ def main():
     except Exception:
         pass
 
-    concept_notes = synthesize_concept_notes(transcript, saved_images)
-    worldview_notes = synthesize_worldview_notes(transcript, speaker_name, video_title)
-    speaker_notes = synthesize_speaker_notes(transcript, speaker_name)
+    # Use explicit speaker name if provided, otherwise extract from transcript
+    if args.speaker:
+        speaker_name = args.speaker
+    else:
+        speaker_name = extract_speaker_from_transcript(transcript, default=speaker_name)
+        _logger.info(f"Auto-detected speaker name: {speaker_name}")
+
+    # Calculate smart adaptive max_tokens limits based on transcript length
+    transcript_len = len(transcript)
+    if transcript_len > 60000:       # Video ~ >1 hour
+        dynamic_concept_limit = 32768
+        dynamic_worldview_limit = 8192
+    elif transcript_len > 30000:     # Video ~ 30-60 minutes
+        dynamic_concept_limit = 16384
+        dynamic_worldview_limit = 6144
+    else:                            # Video ~ <30 minutes
+        dynamic_concept_limit = 8192
+        dynamic_worldview_limit = 4096
+
+    max_tokens_concept = int(os.environ.get("MAX_TOKENS_CONCEPT", dynamic_concept_limit))
+    max_tokens_worldview = int(os.environ.get("MAX_TOKENS_WORLDVIEW", dynamic_worldview_limit))
+    max_tokens_speaker = int(os.environ.get("MAX_TOKENS_SPEAKER", 2048))
+
+    concept_notes = synthesize_concept_notes(transcript, saved_images, max_tokens=max_tokens_concept)
+    worldview_notes = synthesize_worldview_notes(transcript, speaker_name, video_title, max_tokens=max_tokens_worldview)
+    speaker_notes = synthesize_speaker_notes(transcript, speaker_name, max_tokens=max_tokens_speaker)
 
     # Write files
     (output_dir / "notes_concept.md").write_text(concept_notes, encoding="utf-8")
