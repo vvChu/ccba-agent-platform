@@ -61,7 +61,7 @@ Thumbs.db
 .md/**/*.xlsx
 .md/**/*.pptx
 .md/**/*.txt
-# Except keep markdown and raw transcripts
+# Except keep markdown and raw transcripts in general folders
 !.md/**/raw_transcript.txt
 .md/extracted_docs/*
 !.md/extracted_docs/.gitkeep
@@ -69,6 +69,10 @@ Thumbs.db
 .md/**/images/*.webp
 .md/**/images/*.jpg
 .md/**/images/*.png
+
+# Ignore all specific project outputs (OneDrive/SharePoint synced)
+.md/projects/*
+!.md/projects/.gitkeep
 
 # Build artifacts
 dist/

@@ -56,10 +56,11 @@ def parse_inline_styles(paragraph, text: str):
             paragraph.add_run(token)
 
 
-def get_mathml_for_formula(latex_str: str) -> str:
+def get_mathml_for_formula(latex_str: str) -> typing.Optional[str]:
     """Hardcoded MathML for the specific mathematical equations in this paper."""
+    import typing
     # Formula 1: P_{cp} = \sum_{i=1}^{n} (C_i) \times (1 + \mu)
-    if "P_{cp}" in latex_str or "P_{cp}" in latex_str:
+    if "P_{cp}" in latex_str:
         return (
             '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">'
             '<msub><mi>P</mi><mrow><mi>c</mi><mi>p</mi></mrow></msub>'
@@ -71,7 +72,7 @@ def get_mathml_for_formula(latex_str: str) -> str:
             '</math>'
         )
     # Formula 2: P_{vb} = C_{base} + \alpha \times \Delta V
-    if "P_{vb}" in latex_str or "P_{vb}" in latex_str:
+    if "P_{vb}" in latex_str:
         return (
             '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">'
             '<msub><mi>P</mi><mrow><mi>v</mi><mi>b</mi></mrow></msub>'
@@ -360,7 +361,7 @@ def convert_md_to_docx(md_path: Path, docx_path: Path) -> None:
                     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     
                     # Output scratch image path
-                    img_path = Path("d:/GitHubProjects/ccba-agent-platform/.md/scratch/mermaid_flowchart.png")
+                    img_path = Path.cwd() / ".md" / "scratch" / "mermaid_flowchart.png"
                     img_path.parent.mkdir(parents=True, exist_ok=True)
                     
                     # Try downloading chart image
@@ -507,7 +508,7 @@ def convert_md_to_docx(md_path: Path, docx_path: Path) -> None:
         parse_academic_text(p, trimmed)
         i += 1
 
-    # Handline remaining table at the end of file
+    # Handle remaining table at the end of file
     if table_lines:
         parse_and_add_table(document, table_lines)
 
