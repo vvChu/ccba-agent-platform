@@ -53,6 +53,27 @@ Dưới đây là chi tiết kết quả xử lý và giải trình cho toàn b�
     *   *Giải trình:* Đây là hành vi **hoàn toàn có chủ đích theo thiết kế của Kiến trúc đồng bộ mới**. Tập tin `notes_concept.md` nằm trong thư mục dự án `.md/projects/NC_Van_Hoa_Am_Tinh_Tu_Van_XD/` được đồng bộ qua kênh Cloud Sync (SharePoint/OneDrive). Cả thư mục ảnh và file Markdown đều tồn tại đầy đủ và hiển thị đúng liên kết trên máy local của kỹ sư và SharePoint online. Việc Git bỏ qua (ignore) các tệp ảnh `.webp` nhị phân này là bắt buộc để ngăn chặn phình to dung lượng repository của Hub.
 
 ---
+
+## 3. Đối soát & Giải trình Bình luận Review của Copilot cho PR #92
+
+Dưới đây là chi tiết kết quả xử lý và giải trình cho toàn bộ 4 bình luận từ Copilot trên PR #92:
+
+### ✅ Bình luận Hợp lý (VALID) — Đã khắc phục trong Code:
+
+1.  **Comment ID: 3541576421 (Placeholder inconsistency):**
+    *   *Nội dung:* Phát hiện sự không nhất quán giữa placeholder `[Topic_Name]` trong `CONTEXT.md` và `[Ten_De_Tai]` trong các tài liệu khác.
+    *   *Khắc phục:* Đã đổi đồng nhất thành `[Ten_De_Tai]` trong `CONTEXT.md`.
+2.  **Comment ID: 3541576451 (Terminology dash syntax):**
+    *   *Nội dung:* Đề xuất sử dụng dấu gạch ngang `-` thay cho dấu phẩy `,` trong cụm thuật ngữ tiếng Việt để thể hiện khái niệm liên kết.
+    *   *Khắc phục:* Đã cập nhật thành "Nhân Git - Vệ tinh Cloud" và "Git Core - Cloud Artifacts".
+
+### ❌ Bình luận Chưa phù hợp (INVALID) — Giải trình Kiến trúc:
+
+3.  **Comment ID: 3541576465 và 3541576480 (Maskara pre-commit hook scope):**
+    *   *Nội dung:* Copilot thắc mắc tại sao lại mô tả cơ chế pre-commit hook chạy Maskara trong `CONTEXT.md` và `ADR 0009` trong khi tệp `.pre-commit-config.yaml` tĩnh của Hub không khai báo nó.
+    *   *Giải trình:* Đây là bình luận chưa khớp với phạm vi thiết kế Spoke. Cơ chế pre-commit hook chạy Maskara được **thiết lập động (dynamically written)** vào thư mục local `.git/hooks/pre-commit` của riêng không gian làm việc Spoke trong quá trình chạy lệnh khởi tạo `/ccba-init-spoke` (vừa được cập nhật code trong commit này). Chúng tôi cố ý viết trực tiếp dưới dạng native Git hook để đảm bảo tính gọn nhẹ, di động tối đa tại máy trạm Windows của kỹ sư mà không bắt buộc họ phải cài đặt toàn bộ framework `pre-commit` của Python. Do đó, việc không khai báo Maskara trong `.pre-commit-config.yaml` tĩnh của Hub là quyết định thiết kế có chủ đích. Tôi đã hiệu chỉnh lại câu từ trong `CONTEXT.md` và `ADR 0009` để mô tả rõ ràng tính chất động và phạm vi cục bộ tại Spoke này.
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
