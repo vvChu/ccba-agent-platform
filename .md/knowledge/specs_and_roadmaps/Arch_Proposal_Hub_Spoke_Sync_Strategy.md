@@ -43,6 +43,7 @@ graph TD
 | **`.agents/`** | Skills, Workflows, Templates cốt lõi. | Platform Team | **Git Repo** | **Tracked** |
 | **`.md/configs/`** | Cấu hình định danh, brand rules tĩnh. | Platform Team | **Git Repo** | **Tracked** |
 | **`.md/guidelines/`** | Tài liệu cẩm nang, quy chuẩn, bài học kinh nghiệm (`session_learnings.md`). | R&D Team | **Git Repo** | **Tracked** |
+| **`.md/knowledge/research_and_studies/`** | Tài liệu nghiên cứu kiến trúc hệ thống toàn cục, specs và roadmap định hướng chung (Ví dụ: đề xuất kiến trúc này). *Không chứa sản phẩm cụ thể của các đề tài.* | R&D Team | **Git Repo** | **Tracked** |
 | **`.md/data/`** | `legal_registry.yaml`, các DB tĩnh. | Legal/Standard Team | **Git Repo** | **Tracked** |
 | **`.md/projects/`** | Toàn bộ sản phẩm cụ thể của đề tài/dự án (nháp, Word, ảnh video, transcript...). | Tác giả đề tài / PM | **Cloud Sync** (OneDrive/SharePoint) | **Ignored** (Chỉ giữ thư mục rỗng qua `.gitkeep`) |
 | **`.md/scratch/`** | Các test script, file log tạm thời. | Kỹ sư phát triển | Local Only | **Ignored** |

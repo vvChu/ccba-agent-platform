@@ -277,7 +277,7 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 
 ### 29. Cohesive Topic Folder Pattern (Mẫu thư mục đề tài chuyên biệt)
 - **Ngữ cảnh**: Sắp xếp tài liệu nghiên cứu, bản thảo và tệp Word xuất bản liên quan đến một đề tài cụ thể.
-- **Giải pháp**: Nhóm toàn bộ các tệp liên quan vào một thư mục con chuyên đề nằm dưới `.md/knowledge/research_and_studies/[Ten_De_Tai]/` (ví dụ: `NC_Van_Hoa_Am_Tinh_Tu_Van_XD/`). Giúp gom cụm ngữ cảnh tốt, tăng tính kết hợp (High Cohesion), giảm phụ thuộc (Low Coupling) và dễ dàng đóng gói bàn giao.
+- **Giải pháp**: Nhóm toàn bộ các tệp liên quan vào một thư mục con chuyên đề nằm dưới `.md/projects/[Ten_De_Tai]/` (ví dụ: `NC_Van_Hoa_Am_Tinh_Tu_Van_XD/`). Giúp gom cụm ngữ cảnh tốt, tăng tính kết hợp (High Cohesion), giảm phụ thuộc (Low Coupling) và dễ dàng đóng gói bàn giao thông qua kênh đồng bộ đám mây (OneDrive/SharePoint).
 - **Nguồn**: Session `5ad8a2ba-ad29-4bcb-ac3e-dab95c43c54d`, 2026-07-08
 
 ---
@@ -298,7 +298,7 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 
 ### 25. Flat Knowledge Directory Pollution for Research Projects
 - **Vấn đề**: Lưu trữ tất cả tệp nháp, tệp Word xuất bản và báo cáo rà soát trực tiếp ở gốc thư mục `.md/knowledge/` hoặc `.md/knowledge/research_and_studies/` gây lộn xộn thư mục tri thức chính.
-- **Thay thế bằng**: Gom cụm vào thư mục con chuyên biệt của đề tài (Cohesive Topic Folder).
+- **Thay thế bằng**: Gom cụm vào thư mục con chuyên biệt của đề tài dưới phân vùng `.md/projects/[Ten_De_Tai]/` (Cohesive Topic Folder).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
