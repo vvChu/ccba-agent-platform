@@ -141,7 +141,7 @@ foreach ($bundle in $bundles[$type]) {
 ```
 
 ### 6. Khởi tạo cấu trúc .gitignore và Mã nguồn Chuẩn
-Tạo tệp `.gitignore` mẫu **bảo mật 2 lớp** cho dự án (loại bỏ whitelist cho `skills` để Kỹ năng không bị commit vào Spoke):
+Tạo tệp `.gitignore` mẫu **bảo mật 2 lớp** cho dự án (loại bỏ whitelist cho `skills` để Kỹ năng không bị commit vào Spoke, đồng thời loại trừ đệ quy các tệp nhị phân lớn để đồng bộ SharePoint):
 ```text
 # System / IDE
 .env
@@ -168,6 +168,50 @@ dist/
 .agents/**/*.env
 .agents/**/__pycache__/
 .agents/**/*.pyc
+
+# Processing Workspace (.md/)
+# Temp files during processing are ignored, but structure is tracked
+.md/**/*.pdf
+.md/**/*.docx
+.md/**/*.xlsx
+.md/**/*.pptx
+.md/**/*.txt
+# Except keep markdown and raw transcripts in general folders
+!.md/**/raw_transcript.txt
+.md/extracted_docs/*
+!.md/extracted_docs/.gitkeep
+# Ignore images of youtube-learn
+.md/**/images/*.webp
+.md/**/images/*.jpg
+.md/**/images/*.png
+
+# Ignore all specific project outputs (OneDrive/SharePoint synced)
+.md/projects/*
+!.md/projects/.gitkeep
+```
+
+### 6.1. Thiết lập Git Pre-commit Hook Bảo mật (Maskara)
+Tự động cấu hình pre-commit hook cục bộ tại Spoke để gọi Maskara bảo vệ khóa API và thông tin nhạy cảm:
+```powershell
+if (Test-Path ".git") {
+    $hookDir = ".git\hooks"
+    if (-not (Test-Path $hookDir)) {
+        New-Item -ItemType Directory -Path $hookDir -Force | Out-Null
+    }
+    $hookPath = Join-Path $hookDir "pre-commit"
+    $hookContent = @"
+#!/bin/sh
+# CCBA Maskara Pre-commit Security Hook
+echo 'Running Maskara Privacy scan...'
+python "$hub\scripts\maskara.py" --scan-dir .
+if [ `$status_code -ne 0 ]; then
+    echo 'Error: Raw API keys or credentials detected. Commit blocked!'
+    exit 1
+fi
+"@
+    $hookContent = $hookContent.Replace("`$status_code", "$?")
+    [System.IO.File]::WriteAllText($hookPath, $hookContent)
+}
 ```
 
 Nếu `type` là **"Phần mềm"**, đề xuất người dùng chọn ngôn ngữ lập trình mục tiêu (Python/Node.js) và dựng cấu trúc thư mục chuẩn:
