@@ -77,11 +77,11 @@ The process where Functional Spokes package and propose local skills or workflow
 The process where Project Spokes synchronize and update their local `.agents/workflows/` and git-ignored `.agents/skills/` from the Hub.
 
 **Cohesive Topic Folder (Thư mục Đề tài Chuyên biệt)**:
-A directory structure under `.md/projects/[Topic_Name]/` that contains all raw assets, transcripts, notes, drafts, and compiled Word documents belonging to a single R&D or writing project, preventing file fragmentation.
+A directory structure under `.md/projects/[Ten_De_Tai]/` that contains all raw assets, transcripts, notes, drafts, and compiled Word documents belonging to a single R&D or writing project, preventing file fragmentation.
 
-**Git Core, Cloud Artifacts (Nhân Git, Vệ tinh Cloud)**:
+**Git Core - Cloud Artifacts (Nhân Git - Vệ tinh Cloud)**:
 The hybrid synchronization strategy where lightweight, diffable text/code files are synced via Git, while large binaries and raw media files are synchronized via OneDrive/SharePoint.
 
 **Maskara Pre-commit Hook**:
-A security mechanism configured during Spoke initialization that runs the Maskara privacy tool to scan and block commits containing hardcoded API keys or raw credentials.
+A local Git security hook written dynamically to `.git/hooks/pre-commit` in Spoke workspaces during initialization, which runs the Maskara privacy tool to scan and block commits containing hardcoded API keys or raw credentials.
 
