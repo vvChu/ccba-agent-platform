@@ -209,9 +209,9 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
 
         # Automatically scan for clause-level amendments and update target documents / registry
         try:
-            from ccba_legal.registry import LegalRegistryManager
+            from ccba_legal.coordinator import LegalProcessor
 
-            registry_mgr = LegalRegistryManager()
+            processor = LegalProcessor()
 
             # Scan primary document
             primary_md_path = bundle_dir / "full_text.md"
@@ -221,7 +221,7 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
                     rel_path = primary_md_path.relative_to(self.root_dir.parent).as_posix()
                 except ValueError:
                     rel_path = primary_md_path.as_posix()
-                registry_mgr.process_amendments_from_document(
+                processor.process_amendments_from_document(
                     source_doc_id=bundle_slug, source_doc_content=content, source_doc_path=rel_path
                 )
 
@@ -234,7 +234,7 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
                         rel_path = guiding_md_path.relative_to(self.root_dir.parent).as_posix()
                     except ValueError:
                         rel_path = guiding_md_path.as_posix()
-                    registry_mgr.process_amendments_from_document(
+                    processor.process_amendments_from_document(
                         source_doc_id=gf, source_doc_content=content, source_doc_path=rel_path
                     )
         except Exception as e:
