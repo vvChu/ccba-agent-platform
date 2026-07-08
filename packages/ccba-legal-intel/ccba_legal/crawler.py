@@ -33,7 +33,6 @@ class TVPLSessionMutex(FileMutexLock):
         )
 
 
-
 DEFAULT_RELATION_SYNONYMS = {
     "Văn bản bị sửa đổi bổ sung": "amends_docs",
     "Văn bản bị sửa đổi, bổ sung": "amends_docs",

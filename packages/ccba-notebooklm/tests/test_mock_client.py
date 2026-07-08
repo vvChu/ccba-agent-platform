@@ -73,7 +73,6 @@ async def test_flat_client_methods():
         # Kiểm tra context manager trả về chính client
         assert client_ctx is client
 
-
         # Liệt kê notebook
         notebooks = await client.list_notebooks()
         assert len(notebooks) >= 2
@@ -91,7 +90,9 @@ async def test_flat_client_methods():
         await client.delete_notebook(new_nb.id)
 
         # Đăng ký và xóa source
-        new_src = await client.add_file_source(nb_id, "packages/ccba-notebooklm/tests/test_mock_client.py")
+        new_src = await client.add_file_source(
+            nb_id, "packages/ccba-notebooklm/tests/test_mock_client.py"
+        )
         assert new_src.id == "src-mock-file"
         await client.delete_source(nb_id, new_src.id)
 
@@ -104,4 +105,3 @@ async def test_flat_client_methods():
             "quiz", nb_id, [src_id], quantity="standard", difficulty="medium"
         )
         assert artifact.task_id == "task-quiz-1"
-

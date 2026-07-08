@@ -94,7 +94,9 @@ class FileMutexLock:
                 time.sleep(self.retry_interval)
             except Exception as e:
                 if time.time() - start_time >= self.timeout:
-                    raise TimeoutError(f"Failed to acquire file lock on {self.lock_path}: {e}") from e
+                    raise TimeoutError(
+                        f"Failed to acquire file lock on {self.lock_path}: {e}"
+                    ) from e
                 time.sleep(self.retry_interval)
 
         return self

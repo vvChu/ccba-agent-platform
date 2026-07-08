@@ -240,7 +240,6 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
         except Exception as e:
             print(f"[OKF Packager] Error during automatic amendment processing: {e}")
 
-
         # 4. Standardise all bundle links to be bundle-absolute
         self.standardize_bundle_links(bundle_dir)
 
