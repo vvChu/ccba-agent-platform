@@ -85,6 +85,14 @@ Khi viết tài liệu tri thức chung trên Git (ví dụ: cẩm nang guidelin
     *   *Đúng:* `[Tải bản Word của Bài nghiên cứu (SharePoint Link)](https://ccba.sharepoint.com/.../NC_Van_Hoa_Am_Tinh.docx)`
     *   *Sai:* `[Tải bản Word](file:///d:/.../NC_Van_Hoa_Am_Tinh.docx)`
 
+### D. Hướng dẫn Khởi tạo Spoke từ Thư mục SharePoint Đồng bộ
+Khi kỹ sư tiếp quản hoặc khởi tạo một thư mục dự án mới trên hệ thống SharePoint của CCBA đã được đồng bộ về máy tính (thông qua OneDrive Sync Client):
+1.  **Mở thư mục trên IDE:** Kỹ sư mở trực tiếp thư mục dự án đã đồng bộ cục bộ đó trên IDE của mình.
+2.  **Khởi chạy lệnh kết nối:** Thực thi lệnh `/ccba-init-spoke` trên IDE.
+    *   Kịch bản sẽ tự động khởi tạo không gian làm việc Spoke, tạo tệp ngữ cảnh dự án `.md/workspace_context.yaml` để onboard cho Agent.
+    *   Tự động sao chép các bundle kỹ năng/workflows tương ứng từ Platform Hub trung tâm (thông qua biến môi trường `CCBA_HUB_PATH`) về thư mục `.agents/` của Spoke.
+    *   Tạo tệp `.gitignore` chuẩn hai lớp để đảm bảo các tệp tin sản phẩm nhị phân lớn và ảnh thô luôn được giữ an toàn trên đám mây SharePoint để chia sẻ cho cả tổ chức mà không bị commit ngược lên Git.
+
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
