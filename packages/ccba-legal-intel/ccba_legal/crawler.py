@@ -9,8 +9,8 @@ from typing import Any
 import requests
 import websocket
 
-from ccba_legal.registry import resolve_project_root
 from ccba_harness import FileMutexLock
+from ccba_legal.registry import resolve_project_root
 
 
 class TVPLSessionMutex(FileMutexLock):
