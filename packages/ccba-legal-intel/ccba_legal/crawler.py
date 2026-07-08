@@ -10,107 +10,28 @@ import requests
 import websocket
 
 from ccba_legal.registry import resolve_project_root
+from ccba_harness import FileMutexLock
 
 
-class TVPLSessionMutex:
-    """Context manager for TVPL VIP session mutex lock to prevent concurrent sessions."""
+class TVPLSessionMutex(FileMutexLock):
+    """Context manager for TVPL VIP session mutex lock to prevent concurrent sessions.
+
+    Inherits from the unified FileMutexLock in ccba_harness.
+    """
 
     def __init__(
         self, lock_path: Path | None = None, timeout: int = 180, retry_interval: float = 5.0
     ) -> None:
-        """Initialize the mutex.
-
-        Args:
-            lock_path: Path to lock file. If None, resolves to project_root/.md/data/tvpl_vip_session.lock
-            timeout: Maximum seconds to wait for acquiring lock before raising TimeoutError.
-            retry_interval: Seconds to wait between check loops.
-        """
-        self.lock_path = lock_path or (
+        lock_path_resolved = lock_path or (
             resolve_project_root() / ".md" / "data" / "tvpl_vip_session.lock"
         )
-        self.timeout = timeout
-        self.retry_interval = retry_interval
-        self.pid = os.getpid()
+        super().__init__(
+            lock_path=lock_path_resolved,
+            timeout=timeout,
+            retry_interval=retry_interval,
+            expire_seconds=300.0,
+        )
 
-    def __enter__(self) -> "TVPLSessionMutex":
-        """Acquire the lock.
-
-        Raises:
-            TimeoutError: If the lock is held by another active process and timeout is reached.
-        """
-        start_time = time.time()
-        self.lock_path.parent.mkdir(parents=True, exist_ok=True)
-        while True:
-            try:
-                # Atomically try to create the lock file
-                lock_data = {"pid": self.pid, "timestamp": time.time()}
-                with open(self.lock_path, "x", encoding="utf-8") as f:
-                    f.write(json.dumps(lock_data))
-                print(f"[Mutex] Acquired lock with PID: {self.pid}")
-                break
-            except FileExistsError:
-                # Lock file already exists, read details to check active status/deadlock
-                try:
-                    content = self.lock_path.read_text(encoding="utf-8")
-                    data = json.loads(content)
-                    lock_pid = int(data.get("pid")) if data.get("pid") is not None else None
-                    lock_time = float(data.get("timestamp", 0))
-                except Exception:
-                    # Corrupted lock file, treat as expired/deadlock
-                    lock_time = 0.0
-                    lock_pid = None
-
-                pid_active = True
-                if lock_pid is not None:
-                    try:
-                        os.kill(lock_pid, 0)
-                    except OSError:
-                        pid_active = False
-                else:
-                    pid_active = False
-
-                if not pid_active:
-                    print(f"[Mutex] Lock owner PID {lock_pid} is dead. Overriding...")
-                    try:
-                        self.lock_path.unlink(missing_ok=True)
-                    except Exception:
-                        pass
-                    continue
-
-                age = time.time() - lock_time
-                if age >= 300:
-                    print(f"[Mutex] Lock expired (age: {age:.1f}s, PID: {lock_pid}). Overriding...")
-                    try:
-                        self.lock_path.unlink(missing_ok=True)
-                    except Exception:
-                        pass
-                    continue
-
-                # If lock is still active and process is alive, check timeout
-                if time.time() - start_time >= self.timeout:
-                    raise TimeoutError(
-                        f"Timeout waiting to acquire TVPL VIP session lock after {self.timeout} seconds."
-                    ) from None
-                time.sleep(self.retry_interval)
-            except Exception as e:
-                # If other writing / permission errors occur, retry
-                if time.time() - start_time >= self.timeout:
-                    raise TimeoutError(f"Failed to write lock file: {e}") from e
-                time.sleep(self.retry_interval)
-
-        return self
-
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """Release the lock if it belongs to this process."""
-        if self.lock_path.exists():
-            try:
-                content = self.lock_path.read_text(encoding="utf-8")
-                data = json.loads(content)
-                if data.get("pid") == self.pid:
-                    self.lock_path.unlink()
-                    print(f"[Mutex] Released lock for PID: {self.pid}")
-            except Exception as e:
-                print(f"[Mutex] Error releasing lock: {e}")
 
 
 DEFAULT_RELATION_SYNONYMS = {

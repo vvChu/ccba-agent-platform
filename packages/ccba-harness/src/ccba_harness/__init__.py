@@ -104,5 +104,7 @@ from ._engine import (
 
 # Re-exports from _guard.py
 from ._guard import HarnessGuard
+from ._mutex import FileMutexLock
 
-__all__ = ["HarnessGuard"]
+__all__ = ["HarnessGuard", "FileMutexLock"]
+

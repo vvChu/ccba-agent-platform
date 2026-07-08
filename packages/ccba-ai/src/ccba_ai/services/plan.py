@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 import yaml
+from ccba_harness import FileMutexLock
 
 PLAN_TEMPLATE = """# Plan: {title}
 
@@ -46,41 +47,7 @@ Brief objective of this phase.
 """
 
 
-class FileLock:
-    """A simple file-based lock context manager to prevent concurrent write conflicts."""
 
-    def __init__(self, lock_path: Path, timeout: float = 5.0, delay: float = 0.1) -> None:
-        self.lock_path = lock_path
-        self.timeout = timeout
-        self.delay = delay
-        self.is_locked = False
-
-    def __enter__(self) -> "FileLock":
-        start_time = time.time()
-        while time.time() - start_time < self.timeout:
-            try:
-                # Attempt to create the lock file exclusively
-                self.lock_path.touch(exist_ok=False)
-                self.is_locked = True
-                return self
-            except (FileExistsError, PermissionError):
-                time.sleep(self.delay)
-        raise TimeoutError(
-            f"Could not acquire lock on {self.lock_path} within {self.timeout} seconds."
-        )
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: object,
-    ) -> bool | None:
-        if self.is_locked and self.lock_path.exists():
-            try:
-                self.lock_path.unlink()
-            except Exception:
-                pass
-        return None
 
 
 class Phase:
@@ -262,7 +229,7 @@ class Plan:
     def save(self) -> None:
         """Saves the Plan file to disk using FileLock protection."""
         lock_file = self.file_path.with_name(".plan.lock")
-        with FileLock(lock_file):
+        with FileMutexLock(lock_file):
             self.file_path.write_text(self.to_markdown(), encoding="utf-8")
 
 

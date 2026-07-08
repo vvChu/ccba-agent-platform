@@ -5,6 +5,7 @@ Provides structured API for both CLI wrapper and MCP server.
 
 import json
 from pathlib import Path
+from ccba_harness import FileMutexLock
 
 
 def _get_db_file(workspace_root: Path | None = None) -> Path:
@@ -61,19 +62,22 @@ def add_task(name: str, owner: str | None = None, workspace_root: Path | None = 
     Raises:
         ValueError: If a task with the same name already exists.
     """
-    tasks = load_tasks(workspace_root)
-    # Check duplicate
-    if any(t["name"] == name for t in tasks):
-        raise ValueError(f"Task '{name}' already exists.")
+    db_file = _get_db_file(workspace_root)
+    lock_file = db_file.with_suffix(".lock")
+    with FileMutexLock(lock_file):
+        tasks = load_tasks(workspace_root)
+        # Check duplicate
+        if any(t["name"] == name for t in tasks):
+            raise ValueError(f"Task '{name}' already exists.")
 
-    new_task = {
-        "name": name,
-        "owner": owner or "None",
-        "status": "pending" if not owner else "in-progress",
-    }
-    tasks.append(new_task)
-    save_tasks(tasks, workspace_root)
-    return new_task
+        new_task = {
+            "name": name,
+            "owner": owner or "None",
+            "status": "pending" if not owner else "in-progress",
+        }
+        tasks.append(new_task)
+        save_tasks(tasks, workspace_root)
+        return new_task
 
 
 def claim_task(name: str, owner: str, workspace_root: Path | None = None) -> dict:
@@ -91,17 +95,20 @@ def claim_task(name: str, owner: str, workspace_root: Path | None = None) -> dic
         FileNotFoundError: If the task is not found.
         ValueError: If the task is already completed.
     """
-    tasks = load_tasks(workspace_root)
-    for t in tasks:
-        if t["name"] == name:
-            if t["status"] == "completed":
-                raise ValueError(f"Task '{name}' is already completed.")
-            t["owner"] = owner
-            t["status"] = "in-progress"
-            save_tasks(tasks, workspace_root)
-            return t
+    db_file = _get_db_file(workspace_root)
+    lock_file = db_file.with_suffix(".lock")
+    with FileMutexLock(lock_file):
+        tasks = load_tasks(workspace_root)
+        for t in tasks:
+            if t["name"] == name:
+                if t["status"] == "completed":
+                    raise ValueError(f"Task '{name}' is already completed.")
+                t["owner"] = owner
+                t["status"] = "in-progress"
+                save_tasks(tasks, workspace_root)
+                return t
 
-    raise FileNotFoundError(f"Task '{name}' not found.")
+        raise FileNotFoundError(f"Task '{name}' not found.")
 
 
 def complete_task(name: str, workspace_root: Path | None = None) -> dict:
@@ -117,11 +124,15 @@ def complete_task(name: str, workspace_root: Path | None = None) -> dict:
     Raises:
         FileNotFoundError: If the task is not found.
     """
-    tasks = load_tasks(workspace_root)
-    for t in tasks:
-        if t["name"] == name:
-            t["status"] = "completed"
-            save_tasks(tasks, workspace_root)
-            return t
+    db_file = _get_db_file(workspace_root)
+    lock_file = db_file.with_suffix(".lock")
+    with FileMutexLock(lock_file):
+        tasks = load_tasks(workspace_root)
+        for t in tasks:
+            if t["name"] == name:
+                t["status"] = "completed"
+                save_tasks(tasks, workspace_root)
+                return t
 
-    raise FileNotFoundError(f"Task '{name}' not found.")
+        raise FileNotFoundError(f"Task '{name}' not found.")
+
