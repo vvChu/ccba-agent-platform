@@ -30,9 +30,12 @@ Kỹ năng chỉ được coi là thực hiện thành công khi tạo ra cấu 
 ## 🛠️ Hướng dẫn thực thi các Phase
 
 ### Phase 1: Chuẩn bị & Xác thực Đầu vào
-*   **Tham số yêu cầu:** Địa chỉ URL của video (hoặc đường dẫn tệp video nội bộ) và thư mục lưu trữ đầu ra (mặc định là `.md/youtube-learn/` nếu không truyền vào).
+*   **Tham số yêu cầu:** 
+    *   Địa chỉ URL của video (hoặc đường dẫn tệp video nội bộ).
+    *   Thư mục lưu trữ đầu ra (mặc định là `.md/youtube-learn/` nếu không truyền vào).
+    *   Tham số tùy chọn `--speaker`: Tên diễn giả thực tế (nếu không truyền, hệ thống sẽ tự động gọi LLM trích xuất tên diễn giả từ phụ đề hoặc lấy tên người đăng tải video).
 *   **Tiền kiểm duyệt (Pre-checks):** 
-    *   Xác minh các thư viện Python: yt_dlp, PIL (Pillow). Nếu thiếu Pillow, in cảnh báo và bỏ qua bước khử trùng lặp ảnh bằng Hash.
+    *   Xác minh các thư viện Python: yt_dlp, PIL (Pillow). Nếu thiếu Pillow, in cảnh báo và bỏ qua bước khử trùng lặp ảnh bằng Hash (mặc định đã tích hợp nén WebP chất lượng 80 để tiết kiệm dung lượng).
     *   Xác minh sự hiện diện của `ffmpeg` trong PATH hoặc các đường dẫn Windows WinGet mặc định. Nếu thiếu, tự động kích hoạt chế độ **Text-Only Fallback** (chỉ lấy transcript, bỏ qua bóc hình ảnh).
     *   Đối với các URL không phải YouTube, kiểm tra xem đã cấu hình biến môi trường AI_GATEWAY_KEY (hoặc OPENAI_API_KEY) để gọi Whisper STT chưa. Nếu chưa có, dừng ngay lập tức để tránh tải video vô ích.
 
