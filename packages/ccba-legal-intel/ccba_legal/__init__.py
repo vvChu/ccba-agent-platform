@@ -17,6 +17,7 @@ from .monitor import TokenMonitor
 from .packager import OKFBundlePackager, get_concept_type, inject_warning_block, is_guiding_link
 from .parser import LegalAnalysisEngine
 from .registry import LegalRegistryManager
+from .coordinator import LegalProcessor
 
 __all__ = [
     "ChromeCDP",
@@ -35,7 +36,9 @@ __all__ = [
     "get_concept_type",
     "inject_warning_block",
     "LegalRegistryManager",
+    "LegalProcessor",
     "TokenMonitor",
     "HarnessGuard",
     "ADRGenerator",
 ]
+

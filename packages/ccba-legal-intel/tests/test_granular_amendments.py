@@ -6,6 +6,7 @@ import yaml
 from ccba_legal.packager import inject_warning_block
 from ccba_legal.parser import LegalAnalysisEngine
 from ccba_legal.registry import LegalRegistryManager
+from ccba_legal.coordinator import LegalProcessor
 
 
 def test_extract_amendments():
@@ -150,8 +151,8 @@ def test_process_amendments_integration():
         with open(reg_file, "w", encoding="utf-8") as f:
             yaml.safe_dump(initial_data, f)
 
-        # Initialize registry manager
-        manager = LegalRegistryManager(registry_path=reg_file)
+        # Initialize coordinator
+        processor = LegalProcessor(registry_path=reg_file)
 
         # Mock resolve_project_root to return our temp directory so it can find the target markdown file
         import ccba_legal.registry
@@ -175,7 +176,7 @@ def test_process_amendments_integration():
             """
 
             # Process amendments
-            mods = manager.process_amendments_from_document(
+            mods = processor.process_amendments_from_document(
                 source_doc_id="thong_tu_b",
                 source_doc_content=source_content,
                 source_doc_path="../thong_tu_b/thong_tu_b.md",
@@ -191,7 +192,7 @@ def test_process_amendments_integration():
             )
 
             # Verify registry was updated
-            registry_data = manager.load()
+            registry_data = processor.registry_mgr.load()
             assert registry_data["decrees"][0]["clauses"]["d15k2"]["status"] == "amended"
 
         finally:
