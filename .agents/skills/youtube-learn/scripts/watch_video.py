@@ -116,7 +116,7 @@ def extract_speaker_from_transcript(transcript: str, default: str = "Diễn gi�
         "Nhiệm vụ của bạn là xác định chính xác họ và tên của diễn giả (người nói chính) trong bài phát biểu này.\n\n"
         "Yêu cầu:\n"
         "1. Chỉ trả về duy nhất họ và tên của diễn giả (ví dụ: 'Đặng Lê Nguyên Vũ', 'TS. Trần Văn A'). Không giải thích thêm.\n"
-        "2. Nếu không tìm thấy tên diễn giả cụ thể hoặc không chắc chắn, hãy trả về đúng giá trị mặc định sau: " + default + "\n\n"
+        "2. Nếu không tìm thấy tên diễn giả cụ thể hoặc không chắc chắn, hãy trả về đúng giá trị mặc định sau (không bao gồm dấu ngoặc kép): \"" + default + "\"\n\n"
         f"ĐOẠN TRÍCH PHỤ ĐỀ:\n---\n{sample}\n---"
     )
     try:
@@ -232,9 +232,19 @@ def main():
         dynamic_concept_limit = 8192
         dynamic_worldview_limit = 4096
 
-    max_tokens_concept = int(os.environ.get("MAX_TOKENS_CONCEPT", dynamic_concept_limit))
-    max_tokens_worldview = int(os.environ.get("MAX_TOKENS_WORLDVIEW", dynamic_worldview_limit))
-    max_tokens_speaker = int(os.environ.get("MAX_TOKENS_SPEAKER", 2048))
+    def _safe_int_env(var_name: str, fallback: int) -> int:
+        val = os.environ.get(var_name)
+        if val is None:
+            return fallback
+        try:
+            return int(val)
+        except ValueError:
+            _logger.warning(f"Invalid integer for env var '{var_name}': '{val}'. Using default '{fallback}'.")
+            return fallback
+
+    max_tokens_concept = _safe_int_env("MAX_TOKENS_CONCEPT", dynamic_concept_limit)
+    max_tokens_worldview = _safe_int_env("MAX_TOKENS_WORLDVIEW", dynamic_worldview_limit)
+    max_tokens_speaker = _safe_int_env("MAX_TOKENS_SPEAKER", 2048)
 
     concept_notes = synthesize_concept_notes(transcript, saved_images, max_tokens=max_tokens_concept)
     worldview_notes = synthesize_worldview_notes(transcript, speaker_name, video_title, max_tokens=max_tokens_worldview)
