@@ -60,6 +60,8 @@ class LegalProcessor:
                             f"[Registry/Coordinator] Injected warning in target {target_doc_id} at {target_anchor}"
                         )
                     except Exception as e:
-                        print(f"[Registry/Coordinator] Error injecting warning into {markdown_path}: {e}")
+                        print(
+                            f"[Registry/Coordinator] Error injecting warning into {markdown_path}: {e}"
+                        )
 
         return modifications

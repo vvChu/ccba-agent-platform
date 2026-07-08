@@ -185,4 +185,3 @@ class LegalRegistryManager:
                 if p.stem.lower() == slug:
                     return p
         return None
-

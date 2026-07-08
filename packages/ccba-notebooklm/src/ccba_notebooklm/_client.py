@@ -96,7 +96,9 @@ class CCBANotebookLMClient:
         await self._client.sources.delete(notebook_id, source_id)
 
     async def ask_chat(self, notebook_id: str, question: str, source_ids: list[str]) -> Any:
-        return await self._client.chat.ask(notebook_id=notebook_id, question=question, source_ids=source_ids)
+        return await self._client.chat.ask(
+            notebook_id=notebook_id, question=question, source_ids=source_ids
+        )
 
     async def get_account_tier(self) -> Any:
         return await self._client.settings.get_account_tier()
@@ -107,61 +109,94 @@ class CCBANotebookLMClient:
     async def wait_for_task(self, notebook_id: str, task_id: str) -> None:
         await self._client.artifacts.wait_for_completion(notebook_id, task_id)
 
-    async def generate_artifact(self, task_type: str, notebook_id: str, source_ids: list[str], **kwargs) -> Any:
+    async def generate_artifact(
+        self, task_type: str, notebook_id: str, source_ids: list[str], **kwargs
+    ) -> Any:
         """Đại diện sinh các loại Structured Artifacts khác nhau dựa trên task_type."""
         task_type_lower = task_type.lower()
         if task_type_lower == "audio":
             return await self._client.artifacts.generate_audio(notebook_id)
         elif task_type_lower == "quiz":
             return await self._client.artifacts.generate_quiz(
-                notebook_id, source_ids=source_ids, quantity=kwargs.get("quantity"), difficulty=kwargs.get("difficulty")
+                notebook_id,
+                source_ids=source_ids,
+                quantity=kwargs.get("quantity"),
+                difficulty=kwargs.get("difficulty"),
             )
         elif task_type_lower == "slides":
             return await self._client.artifacts.generate_slide_deck(
-                notebook_id, source_ids=source_ids, language=kwargs.get("language", "en"),
-                slide_format=kwargs.get("slide_format"), slide_length=kwargs.get("slide_length")
+                notebook_id,
+                source_ids=source_ids,
+                language=kwargs.get("language", "en"),
+                slide_format=kwargs.get("slide_format"),
+                slide_length=kwargs.get("slide_length"),
             )
         elif task_type_lower == "mindmap":
-            return await self._client.artifacts.generate_mind_map(notebook_id, source_ids=source_ids)
+            return await self._client.artifacts.generate_mind_map(
+                notebook_id, source_ids=source_ids
+            )
         elif task_type_lower == "infographic":
             return await self._client.artifacts.generate_infographic(
-                notebook_id, source_ids=source_ids, orientation=kwargs.get("orientation"),
-                detail_level=kwargs.get("detail_level"), style=kwargs.get("style")
+                notebook_id,
+                source_ids=source_ids,
+                orientation=kwargs.get("orientation"),
+                detail_level=kwargs.get("detail_level"),
+                style=kwargs.get("style"),
             )
         elif task_type_lower == "study-guide":
-            return await self._client.artifacts.generate_study_guide(notebook_id, source_ids=source_ids)
+            return await self._client.artifacts.generate_study_guide(
+                notebook_id, source_ids=source_ids
+            )
         elif task_type_lower == "data-table":
             return await self._client.artifacts.generate_data_table(
                 notebook_id, source_ids=source_ids, instructions=kwargs.get("instructions", "")
             )
         elif task_type_lower == "flashcards":
             return await self._client.artifacts.generate_flashcards(
-                notebook_id, source_ids=source_ids, quantity=kwargs.get("quantity"), difficulty=kwargs.get("difficulty")
+                notebook_id,
+                source_ids=source_ids,
+                quantity=kwargs.get("quantity"),
+                difficulty=kwargs.get("difficulty"),
             )
         elif task_type_lower == "report":
             return await self._client.artifacts.generate_report(
-                notebook_id, source_ids=source_ids, report_format=kwargs.get("report_format"),
-                extra_instructions=kwargs.get("extra_instructions", "")
+                notebook_id,
+                source_ids=source_ids,
+                report_format=kwargs.get("report_format"),
+                extra_instructions=kwargs.get("extra_instructions", ""),
             )
         elif task_type_lower == "video":
             return await self._client.artifacts.generate_video(
-                notebook_id, source_ids=source_ids, video_format=kwargs.get("video_format"), video_style=kwargs.get("video_style")
+                notebook_id,
+                source_ids=source_ids,
+                video_format=kwargs.get("video_format"),
+                video_style=kwargs.get("video_style"),
             )
         else:
             raise ValueError(f"Loại task artifact không hợp lệ hoặc không được hỗ trợ: {task_type}")
 
-    async def download_artifact(self, task_type: str, notebook_id: str, output_path: str, task_id: str | None = None, **kwargs) -> Any:
+    async def download_artifact(
+        self,
+        task_type: str,
+        notebook_id: str,
+        output_path: str,
+        task_id: str | None = None,
+        **kwargs,
+    ) -> Any:
         """Tải Structured Artifact tương ứng về đường dẫn chỉ định."""
         task_type_lower = task_type.lower()
         if task_type_lower == "audio":
-
             return await self._client.artifacts.download_audio(notebook_id, output_path)
         elif task_type_lower == "quiz":
             fmt = kwargs.get("output_format") or "json"
-            return await self._client.artifacts.download_quiz(notebook_id, output_path, output_format=fmt)
+            return await self._client.artifacts.download_quiz(
+                notebook_id, output_path, output_format=fmt
+            )
         elif task_type_lower == "slides":
             fmt = kwargs.get("output_format") or "pdf"
-            return await self._client.artifacts.download_slide_deck(notebook_id, output_path, output_format=fmt)
+            return await self._client.artifacts.download_slide_deck(
+                notebook_id, output_path, output_format=fmt
+            )
         elif task_type_lower == "mindmap":
             return await self._client.artifacts.download_mind_map(notebook_id, output_path)
         elif task_type_lower == "infographic":
@@ -172,15 +207,15 @@ class CCBANotebookLMClient:
             return await self._client.artifacts.download_data_table(notebook_id, output_path)
         elif task_type_lower == "flashcards":
             fmt = kwargs.get("output_format") or "json"
-            return await self._client.artifacts.download_flashcards(notebook_id, output_path, output_format=fmt)
+            return await self._client.artifacts.download_flashcards(
+                notebook_id, output_path, output_format=fmt
+            )
         elif task_type_lower == "report":
             return await self._client.artifacts.download_report(notebook_id, output_path)
         elif task_type_lower == "video":
             return await self._client.artifacts.download_video(notebook_id, output_path)
         else:
             raise ValueError(f"Loại task artifact không hợp lệ hoặc không được hỗ trợ: {task_type}")
-
-
 
     @classmethod
     def from_storage(cls, path: str | None = None, use_mock: bool = False) -> CCBANotebookLMClient:

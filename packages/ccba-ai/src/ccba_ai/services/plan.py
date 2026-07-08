@@ -47,9 +47,6 @@ Brief objective of this phase.
 """
 
 
-
-
-
 class Phase:
     """Domain model representing a single phase in the plan."""
 
@@ -231,7 +228,6 @@ class Plan:
         lock_file = self.file_path.with_name(".plan.lock")
         with FileMutexLock(lock_file):
             self.file_path.write_text(self.to_markdown(), encoding="utf-8")
-
 
 
 def slugify(text: str) -> str:

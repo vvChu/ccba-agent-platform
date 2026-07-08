@@ -136,4 +136,3 @@ def complete_task(name: str, workspace_root: Path | None = None) -> dict:
                 return t
 
         raise FileNotFoundError(f"Task '{name}' not found.")
-
