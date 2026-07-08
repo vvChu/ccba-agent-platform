@@ -26,6 +26,7 @@ jobs:
         run: |
           pip install --upgrade pip
           # Install ccba-ai editable for type check validation references
+          pip install -e packages/ccba-harness
           pip install -e packages/ccba-ai
 
       - name: Run Documentation Accuracy Validator

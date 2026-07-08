@@ -5,11 +5,11 @@ Provides clean, structured API for both CLI wrapper and MCP server.
 
 import re
 import subprocess
-import time
 from datetime import datetime
 from pathlib import Path
 
 import yaml
+
 from ccba_harness import FileMutexLock
 
 PLAN_TEMPLATE = """# Plan: {title}
@@ -227,10 +227,11 @@ class Plan:
         )
 
     def save(self) -> None:
-        """Saves the Plan file to disk using FileLock protection."""
+        """Saves the Plan file to disk using FileMutexLock protection."""
         lock_file = self.file_path.with_name(".plan.lock")
         with FileMutexLock(lock_file):
             self.file_path.write_text(self.to_markdown(), encoding="utf-8")
+
 
 
 def slugify(text: str) -> str:

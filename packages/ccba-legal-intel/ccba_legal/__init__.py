@@ -2,6 +2,7 @@ from ccba_harness import HarnessGuard
 
 from .adr import ADRGenerator
 from .cleaners import Cleaners
+from .coordinator import LegalProcessor
 from .crawler import (
     ChromeCDP,
     ChromeCDPError,
@@ -17,7 +18,6 @@ from .monitor import TokenMonitor
 from .packager import OKFBundlePackager, get_concept_type, inject_warning_block, is_guiding_link
 from .parser import LegalAnalysisEngine
 from .registry import LegalRegistryManager
-from .coordinator import LegalProcessor
 
 __all__ = [
     "ChromeCDP",
