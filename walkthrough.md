@@ -1,77 +1,122 @@
-# Pull Request Release Walkthrough & Audit Report
+# CCBA Architectural Walkthrough — Candidates 1, 2 & 3 Implementations
 
-Tài liệu này tóm tắt các thay đổi đã thực hiện và giải trình kết quả đối soát các bình luận đóng góp của Copilot.
-
----
-
-## 1. Tóm tắt Thay đổi (Commits Log)
-
-*   `feat(platform): upgrade academic DOCX rendering and youtube-learn CLI speaker detection`
-*   `docs(architecture): propose hub-spoke directory sync strategy`
-*   `docs(architecture): add spoke init from synced sharepoint folder to proposal`
-*   `fix(platform): resolve Copilot audit comments and align session learnings folder paths`
+Tài liệu này tóm tắt kết quả thực hiện cải tiến kiến trúc Candidate 1, Candidate 2 và Candidate 3 trên dự án CCBA Platform, kèm theo kết quả đối soát các đóng góp của Copilot.
 
 ---
 
-## 2. Đối soát & Giải trình Bình luận Review của Copilot
+## Candidate 1: Làm sâu `CCBANotebookLMClient` và Đóng gói Artifact Flow
 
-Dưới đây là chi tiết kết quả xử lý và giải trình cho toàn bộ 9 bình luận từ Copilot (mã PR #91):
+### Các thay đổi đã thực hiện
 
-### ✅ Bình luận Hợp lý (VALID) — Đã khắc phục trong Code:
+#### 1. Phẳng hóa `CCBANotebookLMClient`
+*   **Địa điểm sửa đổi**: [_client.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-notebooklm/src/ccba_notebooklm/_client.py)
+*   **Chi tiết**:
+    *   Sửa đổi phương thức `__aenter__` trả về trực tiếp đối tượng `self` (`CCBANotebookLMClient`) thay vì client thô của thư viện bên thứ ba.
+    *   Bổ sung thuộc tính `raw_client` để giữ tính tương thích ngược khi cần.
+    *   Triển khai trực tiếp 15+ API phẳng để gom các dịch vụ con bên dưới (`sources`, `notebooks`, `sharing`, `settings`, `chat`...):
+        *   `list_notebooks`, `create_notebook`, `delete_notebook`
+        *   `list_sources`, `delete_source`, `add_file_source`, `add_url_source`
+        *   `set_notebook_public`, `get_share_url`
+        *   `get_account_tier`, `get_account_limits`
+        *   `ask_chat`
+    *   Triển khai `generate_artifact` và `download_artifact` thực hiện định tuyến động dựa vào loại Task, ẩn đi việc gọi các phương thức deep-nested như `client.artifacts.generate_quiz`.
 
-1.  **Comment ID: 3541469106 (Mermaid absolute path):**
-    *   *Nội dung:* Cảnh báo đường dẫn tuyệt đối Windows `d:/GitHubProjects/...` cho ảnh Mermaid tạm thời gây mất tính di động.
-    *   *Khắc phục:* Đã đổi sang đường dẫn tương đối trong không gian làm việc: `Path.cwd() / ".md" / "scratch" / "mermaid_flowchart.png"`.
-2.  **Comment ID: 3541469127 (get_mathml_for_formula type hint):**
-    *   *Nội dung:* Hàm trả về `None` nhưng type hint chỉ khai báo `str`, kèm điều kiện kiểm tra đầu tiên bị lặp lại.
-    *   *Khắc phục:* Nâng cấp type hint thành `typing.Optional[str]` và làm sạch điều kiện rẽ nhánh.
-3.  **Comment ID: 3541469146 (Duplicate condition):**
-    *   *Nội dung:* Trùng lặp điều kiện kiểm tra `"P_{vb}" in latex_str`.
-    *   *Khắc phục:* Đã loại bỏ điều kiện trùng lặp.
-4.  **Comment ID: 3541469168 (ValueError risk on env vars casting):**
-    *   *Nội dung:* Ép kiểu trực tiếp `int(...)` từ biến môi trường có rủi ro crash chương trình nếu giá trị không hợp lệ.
-    *   *Khắc phục:* Đã viết hàm helper `_safe_int_env` bắt lỗi `ValueError` để tự động fallback về giá trị mặc định của hệ thống kèm cảnh báo.
-5.  **Comment ID: 3541469178 (Prompt default quoting):**
-    *   *Nội dung:* Truyền trực tiếp chuỗi default vào prompt mà không bọc trong dấu nháy kép làm LLM dễ trả về text thừa.
-    *   *Khắc phục:* Bọc tham số trong dấu nháy kép rõ ràng để mô hình copy chính xác: `\"" + default + "\"`.
-6.  **Comment ID: 3541469194 (Session learning path contradiction):**
-    *   *Nội dung:* Tài liệu học tập hướng dẫn lưu tại `research_and_studies/` mâu thuẫn với đề xuất lưu ở `projects/` để Git-ignore.
-    *   *Khắc phục:* Đã sửa đổi `session_learnings.md` để hướng dẫn đồng bộ lưu về thư mục dự án `.md/projects/`.
-7.  **Comment ID: 3541469204 (Missing research_and_studies/ in partition table):**
-    *   *Nội dung:* Bảng phân vùng chưa định nghĩa rõ trạng thái Git của thư mục `research_and_studies/`.
-    *   *Khắc phục:* Đã bổ sung `.md/knowledge/research_and_studies/` vào bảng phân vùng với định danh là tài liệu kiến trúc/roadmap toàn cục được Git theo dõi.
-8.  **Comment ID: 3541469227 (Typo "Handline"):**
-    *   *Nội dung:* Lỗi chính tả từ "Handline" thành "Handle".
-    *   *Khắc phục:* Đã sửa lại đúng chính tả "Handle".
+#### 2. Đơn giản hóa Pipeline Artifact Flow và CLI
+*   **Địa điểm sửa đổi**:
+    *   [_artifacts.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-notebooklm/src/ccba_notebooklm/_artifacts.py)
+    *   [_gc.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-notebooklm/src/ccba_notebooklm/_gc.py)
+    *   [__main__.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-notebooklm/src/ccba_notebooklm/__main__.py)
+*   **Chi tiết**:
+    *   Loại bỏ hoàn toàn hai tham số callback lambda (`generate_fn`, `download_fn`) khỏi chữ ký hàm `handle_artifact_flow`.
+    *   Chuyển sang cơ chế truyền các tham số tùy chọn qua `**kwargs` và gọi trực tiếp `client.generate_artifact` và `client.download_artifact`.
+    *   Cập nhật CLI trong `__main__.py` để gọi `handle_artifact_flow` một cách trực quan, sạch sẽ, không lạm dụng biểu thức lambda phức tạp.
+    *   Cập nhật bộ dọn dẹp `_gc.py` để sử dụng các API phẳng của client.
 
----
-
-### ❌ Bình luận Chưa phù hợp (INVALID) — Giải trình Kiến trúc:
-
-9.  **Comment ID: 3541469216 (images/*.webp link broken on Git):**
-    *   *Nội dung:* Cảnh báo các liên kết ảnh trong `notes_concept.md` bị hỏng trên Git vì thư mục ảnh `images/` đã bị Git-ignore rộng rãi.
-    *   *Giải trình:* Đây là hành vi **hoàn toàn có chủ đích theo thiết kế của Kiến trúc đồng bộ mới**. Tập tin `notes_concept.md` nằm trong thư mục dự án `.md/projects/NC_Van_Hoa_Am_Tinh_Tu_Van_XD/` được đồng bộ qua kênh Cloud Sync (SharePoint/OneDrive). Cả thư mục ảnh và file Markdown đều tồn tại đầy đủ và hiển thị đúng liên kết trên máy local của kỹ sư và SharePoint online. Việc Git bỏ qua (ignore) các tệp ảnh `.webp` nhị phân này là bắt buộc để ngăn chặn phình to dung lượng repository của Hub.
+#### 3. Cập nhật và Bổ sung Unit Tests
+*   **Địa điểm sửa đổi**:
+    *   [test_mock_client.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-notebooklm/tests/test_mock_client.py)
+    *   [_mock_client.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-notebooklm/src/ccba_notebooklm/_mock_client.py)
+*   **Chi tiết**:
+    *   Bổ sung `MockChatService` vào Mock adapter (`_mock_client.py`) để hỗ trợ mô phỏng kiểm thử câu lệnh RAG (`ask_chat`).
+    *   Cập nhật `test_mock_artifact_flow` để tương thích với chữ ký mới không callback của `handle_artifact_flow`.
+    *   Viết thêm test case toàn diện `test_flat_client_methods` để kiểm định toàn bộ hành vi phẳng của client.
 
 ---
 
-## 3. Đối soát & Giải trình Bình luận Review của Copilot cho PR #92
+## Candidate 2: Tách biệt Logic Xử lý VBPL (Amendment Processing) khỏi LegalRegistryManager
 
-Dưới đây là chi tiết kết quả xử lý và giải trình cho toàn bộ 4 bình luận từ Copilot trên PR #92:
+### Các thay đổi đã thực hiện
 
-### ✅ Bình luận Hợp lý (VALID) — Đã khắc phục trong Code:
+#### 1. Tạo mới lớp điều phối `LegalProcessor`
+*   **Địa điểm tạo mới**: [coordinator.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/ccba_legal/coordinator.py)
+*   **Chi tiết**:
+    *   Định nghĩa lớp `LegalProcessor` để chịu trách nhiệm nghiệp vụ phân tích tài liệu sửa đổi/bổ sung VBPL.
+    *   Giao tiếp và điều phối sạch sẽ giữa `LegalRegistryManager` (quản lý lưu trữ), `LegalAnalysisEngine` (phân tích) và `inject_warning_block` (tiêm cảnh báo vào tệp đích).
+    *   Giải quyết triệt độ vấn đề import vòng tròn (circular dependency) trước đây bằng cách đưa mối quan hệ phụ thuộc chéo về một chiều (packager và registry không còn import trực tiếp lẫn nhau nữa, mà packager chỉ dùng `LegalProcessor`).
 
-1.  **Comment ID: 3541576421 (Placeholder inconsistency):**
-    *   *Nội dung:* Phát hiện sự không nhất quán giữa placeholder `[Topic_Name]` trong `CONTEXT.md` và `[Ten_De_Tai]` trong các tài liệu khác.
-    *   *Khắc phục:* Đã đổi đồng nhất thành `[Ten_De_Tai]` trong `CONTEXT.md`.
-2.  **Comment ID: 3541576451 (Terminology dash syntax):**
-    *   *Nội dung:* Đề xuất sử dụng dấu gạch ngang `-` thay cho dấu phẩy `,` trong cụm thuật ngữ tiếng Việt để thể hiện khái niệm liên kết.
-    *   *Khắc phục:* Đã cập nhật thành "Nhân Git - Vệ tinh Cloud" và "Git Core - Cloud Artifacts".
+#### 2. Rút gọn `LegalRegistryManager`
+*   **Địa điểm sửa đổi**: [registry.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/ccba_legal/registry.py)
+*   **Chi tiết**:
+    *   Xóa bỏ hoàn toàn phương thức `process_amendments_from_document` khỏi `LegalRegistryManager`.
+    *   Loại bỏ các inline imports liên quan đến `parser.py` và `packager.py`.
+    *   Trả lại vai trò Repository thuần túy cho `LegalRegistryManager` chỉ để CRUD và định vị tệp dữ liệu.
 
-### ❌ Bình luận Chưa phù hợp (INVALID) — Giải trình Kiến trúc:
+#### 3. Cập nhật caller và Unit Tests
+*   **Địa điểm sửa đổi**:
+    *   [packager.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/ccba_legal/packager.py)
+    *   [test_granular_amendments.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/tests/test_granular_amendments.py)
+*   **Chi tiết**:
+    *   Cập nhật `packager.py` để sử dụng `LegalProcessor` phối hợp luồng nghiệp vụ thay vì gọi registry manager thô.
+    *   Cập nhật import và test case trong `test_granular_amendments.py` để khởi tạo và kiểm thử thông qua lớp điều phối `LegalProcessor`.
 
-3.  **Comment ID: 3541576465 và 3541576480 (Maskara pre-commit hook scope):**
-    *   *Nội dung:* Copilot thắc mắc tại sao lại mô tả cơ chế pre-commit hook chạy Maskara trong `CONTEXT.md` và `ADR 0009` trong khi tệp `.pre-commit-config.yaml` tĩnh của Hub không khai báo nó.
-    *   *Giải trình:* Đây là bình luận chưa khớp với phạm vi thiết kế Spoke. Cơ chế pre-commit hook chạy Maskara được **thiết lập động (dynamically written)** vào thư mục local `.git/hooks/pre-commit` của riêng không gian làm việc Spoke trong quá trình chạy lệnh khởi tạo `/ccba-init-spoke` (vừa được cập nhật code trong commit này). Chúng tôi cố ý viết trực tiếp dưới dạng native Git hook để đảm bảo tính gọn nhẹ, di động tối đa tại máy trạm Windows của kỹ sư mà không bắt buộc họ phải cài đặt toàn bộ framework `pre-commit` của Python. Do đó, việc không khai báo Maskara trong `.pre-commit-config.yaml` tĩnh của Hub là quyết định thiết kế có chủ đích. Tôi đã hiệu chỉnh lại câu từ trong `CONTEXT.md` và `ADR 0009` để mô tả rõ ràng tính chất động và phạm vi cục bộ tại Spoke này.
+---
+
+## Candidate 3: Gom nhóm và Chuẩn hóa File-based Locks trong môi trường Đa tiến trình
+
+### Các thay đổi đã thực hiện
+
+#### 1. Tạo mới lớp khóa an toàn `FileMutexLock`
+*   **Địa điểm tạo mới**: [_mutex.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/_mutex.py)
+*   **Chi tiết**:
+    *   Định nghĩa lớp `FileMutexLock` kế thừa từ cơ chế khóa nguyên tử nguyên bản, nhưng tích hợp kiểm tra sống PID thông qua `os.kill(lock_pid, 0)` để giải phóng deadlock nếu tiến trình nắm giữ lock bị kết thúc bất thường.
+    *   Hỗ trợ thời gian hết hạn tối đa (`expire_seconds`) và cấu hình giãn cách thử lại (`retry_interval`).
+    *   Re-export trực tiếp tại [__init__.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/__init__.py).
+
+#### 2. Đồng bộ hóa trong `ccba-ai`
+*   **Cập nhật dependencies**: Thêm `ccba-harness` vào dependencies của [pyproject.toml](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/pyproject.toml).
+*   **plan.py**: Thay thế hoàn toàn lớp `FileLock` tự chế bằng `FileMutexLock` từ `ccba-harness` để bảo vệ an toàn cho quá trình đồng bộ trạng thái phase của plan.
+*   **team.py**: Bổ sung khóa `FileMutexLock` bảo vệ cho shared database `team_tasks.json` để tránh race condition khi nhiều agents thực hiện `add_task`, `claim_task`, hoặc `complete_task` đồng thời.
+
+#### 3. Kế thừa trong `ccba-legal-intel`
+*   **crawler.py**: Định nghĩa lại `TVPLSessionMutex` kế thừa từ `FileMutexLock` của `ccba-harness` để giữ tính tương thích ngược, đồng thời loại bỏ trùng lặp mã nguồn locking thô.
+
+---
+
+## Báo cáo đối soát phản diện của Copilot (Copilot Review Comments Resolution)
+
+Chúng tôi đã thực hiện chạy công cụ kiểm định bình luận của Copilot trên PR #95 và xử lý 8/8 góp ý (tất cả đều được đánh giá là **HỢP LÝ / VALID**):
+
+- **Comment 3542083145**: `download_artifact() currently treats an explicitly provided empty string output_format (e.g., passed through from handle_artifact_flow default "") as a valid value, overriding the intended per-artifact defaults (json/pdf). This can result in calling the underlying download_* RPC with output_format="", which is likely invalid.`
+- **Comment 3542083164**: `Same as quiz/slides: passing output_format="" via kwargs will override the default and call download_flashcards(..., output_format=""). Treat empty output_format as missing to preserve defaults.`
+- **Comment 3542083186**: `test_flat_client_methods() intends to verify that the async context manager returns the same client instance, but it currently doesn’t capture the __aenter__ return value (and the isinstance check is trivially true while also constructing a second client via get_client()).`
+- **Comment 3542083213**: `The save() docstring still refers to FileLock, but the implementation now uses FileMutexLock.`
+- **Comment 3542083231**: `Import grouping/order will fail ruff isort (I) checks: ccba_harness (first-party) should be separated from stdlib imports by a blank line.`
+- **Comment 3542083258**: `Import order likely fails ruff isort (I) checks: ccba_ai.* should be ordered before ccba_harness.* within the same section.`
+- **Comment 3542083278**: `Import order likely fails ruff isort (I) checks (module names should be sorted within the section).`
+- **Comment 3542083307**: `This import block likely fails ruff isort (I) checks: missing blank line between third-party (yaml) and first-party (ccba_legal.*), and module imports should be sorted.`
+
+*Tất cả 8/8 bản sửa lỗi đã được commit lên nhánh `refactor/architecture-deepening` và đẩy lên GitHub.*
+
+---
+
+## Kết quả kiểm thử & Tích hợp liên tục (CI status)
+
+Tất cả các kiểm định tích hợp liên tục (CI) của GitHub Actions trên PR #95 đều đã **Vượt qua thành công (Passed)**:
+*   `Lint Markdown`: **pass**
+*   `validate`: **pass**
+*   `Test - Python 3.10`: **pass**
+*   `Test - Python 3.11`: **pass**
+*   `Test - Python 3.12`: **pass**
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
