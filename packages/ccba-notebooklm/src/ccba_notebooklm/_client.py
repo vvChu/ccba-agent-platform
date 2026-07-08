@@ -154,11 +154,14 @@ class CCBANotebookLMClient:
         """Tải Structured Artifact tương ứng về đường dẫn chỉ định."""
         task_type_lower = task_type.lower()
         if task_type_lower == "audio":
+
             return await self._client.artifacts.download_audio(notebook_id, output_path)
         elif task_type_lower == "quiz":
-            return await self._client.artifacts.download_quiz(notebook_id, output_path, output_format=kwargs.get("output_format", "json"))
+            fmt = kwargs.get("output_format") or "json"
+            return await self._client.artifacts.download_quiz(notebook_id, output_path, output_format=fmt)
         elif task_type_lower == "slides":
-            return await self._client.artifacts.download_slide_deck(notebook_id, output_path, output_format=kwargs.get("output_format", "pdf"))
+            fmt = kwargs.get("output_format") or "pdf"
+            return await self._client.artifacts.download_slide_deck(notebook_id, output_path, output_format=fmt)
         elif task_type_lower == "mindmap":
             return await self._client.artifacts.download_mind_map(notebook_id, output_path)
         elif task_type_lower == "infographic":
@@ -168,13 +171,15 @@ class CCBANotebookLMClient:
         elif task_type_lower == "data-table":
             return await self._client.artifacts.download_data_table(notebook_id, output_path)
         elif task_type_lower == "flashcards":
-            return await self._client.artifacts.download_flashcards(notebook_id, output_path, output_format=kwargs.get("output_format", "json"))
+            fmt = kwargs.get("output_format") or "json"
+            return await self._client.artifacts.download_flashcards(notebook_id, output_path, output_format=fmt)
         elif task_type_lower == "report":
             return await self._client.artifacts.download_report(notebook_id, output_path)
         elif task_type_lower == "video":
             return await self._client.artifacts.download_video(notebook_id, output_path)
         else:
             raise ValueError(f"Loại task artifact không hợp lệ hoặc không được hỗ trợ: {task_type}")
+
 
 
     @classmethod
