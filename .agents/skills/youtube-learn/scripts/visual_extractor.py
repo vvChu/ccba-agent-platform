@@ -414,8 +414,11 @@ def extract_video_visuals(
             # Run FFmpeg static sampling
             startupinfo = None
             if os.name == "nt":
-                startupinfo = subprocess.STARTUPINFO()
-                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo_class = getattr(subprocess, "STARTUPINFO", None)
+                if startupinfo_class is not None:
+                    startupinfo = startupinfo_class()
+                    flags = getattr(subprocess, "STARTF_USESHOWWINDOW", 0)
+                    startupinfo.dwFlags |= flags
             static_frames = []
             for i, ts in enumerate(target_timestamps):
                 out_path = tmp_dir / f"frame_static_{i:04d}.jpg"

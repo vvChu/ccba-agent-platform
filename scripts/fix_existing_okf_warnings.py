@@ -236,40 +236,42 @@ def pass3_register_orphans_in_index() -> None:
                     "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa.md) (type: `Circular`)"
                 )
             elif "thong_tu_34_2026_tt_bxd_cap_cong_trinh_xay_dung-phu_luc_03.md" in line:
-                new_lines.extend([
-                    "",
-                    "#### Phụ lục Thông tư 36/2026/TT-BXD (Xác định và quản lý chi phí)",
-                    "- [PHỤ LỤC I: Mẫu biểu xác định và quản lý chi phí](guiding_docs/appendices/"
-                    "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_01.md)",
-                    "- [PHỤ LỤC II: Mẫu biểu quản lý chi phí đầu tư](guiding_docs/appendices/"
-                    "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_02.md)",
-                    "- [PHỤ LỤC III: Mẫu biểu báo cáo chi phí](guiding_docs/appendices/"
-                    "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_03.md)",
-                    "- [PHỤ LỤC IV: Mẫu biểu dự toán xây dựng](guiding_docs/appendices/"
-                    "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_04.md)",
-                    "- [PHỤ LỤC V: Mẫu biểu chi phí thiết bị](guiding_docs/appendices/"
-                    "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_05.md)",
-                    "- [PHỤ LỤC VI: Mẫu biểu chi phí quản lý dự án](guiding_docs/appendices/"
-                    "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_06.md)",
-                    "- [PHỤ LỤC VII: Mẫu biểu chi phí tư vấn](guiding_docs/appendices/"
-                    "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_07.md)",
-                    "- [PHỤ LỤC VIII: Mẫu biểu chi phí khác](guiding_docs/appendices/"
-                    "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_08.md)",
-                    "",
-                    "#### Phụ lục Thông tư 37/2026/TT-BXD (Phương pháp xác định định mức)",
-                    "- [PHỤ LỤC I: Phương pháp xác định định mức dự toán](guiding_docs/appendices/"
-                    "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa-phu_luc_01.md)",
-                    "- [PHỤ LỤC II: Phương pháp xác định định mức chi phí](guiding_docs/appendices/"
-                    "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa-phu_luc_02.md)",
-                    "- [PHỤ LỤC III: Phương pháp xác định hao phí vật liệu](guiding_docs/appendices/"
-                    "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa-phu_luc_03.md)",
-                    "- [PHỤ LỤC IV: Phương pháp xác định hao phí nhân công](guiding_docs/appendices/"
-                    "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa-phu_luc_04.md)",
-                    "- [PHỤ LỤC V: Phương pháp xác định hao phí máy thi công](guiding_docs/appendices/"
-                    "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa-phu_luc_05.md)",
-                    "- [PHỤ LỤC VI: Phương pháp xác định chỉ số giá xây dựng](guiding_docs/appendices/"
-                    "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa-phu_luc_06.md)",
-                ])
+                new_lines.extend(
+                    [
+                        "",
+                        "#### Phụ lục Thông tư 36/2026/TT-BXD (Xác định và quản lý chi phí)",
+                        "- [PHỤ LỤC I: Mẫu biểu xác định và quản lý chi phí](guiding_docs/appendices/"
+                        "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_01.md)",
+                        "- [PHỤ LỤC II: Mẫu biểu quản lý chi phí đầu tư](guiding_docs/appendices/"
+                        "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_02.md)",
+                        "- [PHỤ LỤC III: Mẫu biểu báo cáo chi phí](guiding_docs/appendices/"
+                        "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_03.md)",
+                        "- [PHỤ LỤC IV: Mẫu biểu dự toán xây dựng](guiding_docs/appendices/"
+                        "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_04.md)",
+                        "- [PHỤ LỤC V: Mẫu biểu chi phí thiết bị](guiding_docs/appendices/"
+                        "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_05.md)",
+                        "- [PHỤ LỤC VI: Mẫu biểu chi phí quản lý dự án](guiding_docs/appendices/"
+                        "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_06.md)",
+                        "- [PHỤ LỤC VII: Mẫu biểu chi phí tư vấn](guiding_docs/appendices/"
+                        "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_07.md)",
+                        "- [PHỤ LỤC VIII: Mẫu biểu chi phí khác](guiding_docs/appendices/"
+                        "thong_tu_36_2026_tt_bxd_huong_dan_phuong_phap_xac_dinh_va_qu-phu_luc_08.md)",
+                        "",
+                        "#### Phụ lục Thông tư 37/2026/TT-BXD (Phương pháp xác định định mức)",
+                        "- [PHỤ LỤC I: Phương pháp xác định định mức dự toán](guiding_docs/appendices/"
+                        "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa-phu_luc_01.md)",
+                        "- [PHỤ LỤC II: Phương pháp xác định định mức chi phí](guiding_docs/appendices/"
+                        "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa-phu_luc_02.md)",
+                        "- [PHỤ LỤC III: Phương pháp xác định hao phí vật liệu](guiding_docs/appendices/"
+                        "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa-phu_luc_03.md)",
+                        "- [PHỤ LỤC IV: Phương pháp xác định hao phí nhân công](guiding_docs/appendices/"
+                        "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa-phu_luc_04.md)",
+                        "- [PHỤ LỤC V: Phương pháp xác định hao phí máy thi công](guiding_docs/appendices/"
+                        "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa-phu_luc_05.md)",
+                        "- [PHỤ LỤC VI: Phương pháp xác định chỉ số giá xây dựng](guiding_docs/appendices/"
+                        "thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa-phu_luc_06.md)",
+                    ]
+                )
         with open(index_path, "w", encoding="utf-8") as f:
             f.write("\n".join(new_lines) + "\n")
         print("  Successfully updated index.md.")
