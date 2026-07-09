@@ -314,8 +314,12 @@ def extract_video_visuals(
             video_id = "local_video"
 
         # Check Cache
-        cache_dir = output_images_dir.parents[1] / ".md" / "scratch" / "cache"
-        if not (output_images_dir.parents[1] / ".md").exists():
+        resolved_dir = output_images_dir.resolve()
+        if len(resolved_dir.parents) >= 2:
+            cache_dir = resolved_dir.parents[1] / ".md" / "scratch" / "cache"
+            if not (resolved_dir.parents[1] / ".md").exists():
+                cache_dir = Path(".md") / "scratch" / "cache"
+        else:
             cache_dir = Path(".md") / "scratch" / "cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
         cache_file = cache_dir / "video_cache.json"
