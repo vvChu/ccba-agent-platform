@@ -19,6 +19,7 @@ Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo
 - **Map 2 (MEP Water):** So sánh chéo thông số thiết bị chữa cháy giữa bản vẽ MEP và thuyết minh.
 - **Map 3 (MEP Alarm vs Arch):** So sánh sơ đồ báo cháy và bản vẽ kiến trúc (vị trí đầu báo, đèn sự cố, lối thoát nạn).
 - **Reduce:** Tổng hợp các lỗi phát hiện được, loại bỏ trùng lặp và xuất thành báo cáo Markdown hoàn chỉnh theo mẫu PC13 (NĐ 105/2025/NĐ-CP).
+- **Ràng buộc đối soát đệ quy (ADR 0010):** Đối với các lỗi nghi vấn vi phạm quy chuẩn (như QCVN 06 hoặc TCVN 3890), Agent **không tự động** kích hoạt research. Hãy đề xuất người dùng chạy `/ccba-research [tên_quy_chuẩn]` để đối soát chéo dưới nền nhằm kiểm soát chi phí API.
 
 ---
 

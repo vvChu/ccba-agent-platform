@@ -85,6 +85,7 @@ Khi cào trang Lược đồ (`Tab=LuocDo` hoặc `#tab4`), so khớp các tiêu
    ```
 
 ### Bước 2: Chạy Quy trình Cào dữ liệu chênh lệch (Delta-only)
+-  **Sử dụng subagent nghiên cứu (ADR 0010):** Đối với các văn bản pháp lý gốc có dung lượng cực lớn (ví dụ: Luật đất đai, Luật xây dựng, các Nghị định > 100 trang), Agent chính nên đề xuất người dùng spawn subagent `ccba-research` chạy ngầm để thực hiện legwork cào dữ liệu và phân tích cấu trúc ban đầu, tránh làm đơ/block phiên làm việc chính hoặc gây tràn bộ nhớ ngữ cảnh.
 -  **Tra cứu trước (Pre-crawl scoping)**: Đối chiếu URL hoặc số hiệu văn bản cần cào với `legal_registry.yaml`.
 -  **Rẽ nhánh thực thi**:
     *   **Trường hợp đã tồn tại văn bản gốc**: Bỏ qua cào văn bản chính. Chỉ cào bổ sung các văn bản hướng dẫn/sửa đổi mới ban hành xuất hiện trên trang Lược đồ chưa có trong `guiding_docs/`.
