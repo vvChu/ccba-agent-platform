@@ -42,6 +42,11 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
   - Luôn sử dụng type hints trong Python (parameters + return types), viết docstring (Google style) cho tất cả public functions.
   - Hàm/phương thức không dài quá 50 dòng; ưu tiên composition over inheritance.
   - Mọi tài liệu Markdown kỹ thuật chính quy (như README.md, kiến trúc hệ thống) trước khi hoàn tất phải được kiểm định bằng công cụ `validate_docs.py` để đảm bảo không chứa code references ảo ảnh, link hỏng hoặc thiếu cấu hình trong `.env.example`.
+* **Quy trình thực thi mã nguồn (SDLC Implementation Loop):**
+  Khi triển khai bất kỳ mã nguồn nào dựa trên đặc tả (specs/PRDs) hoặc vé công việc (tickets), Agent bắt buộc phải thực thi theo chu kỳ khép kín:
+  1. *TDD (Test-Driven Development)*: Viết unit tests trước tại các điểm khớp nối (seams) đã thỏa thuận nếu dự án áp dụng TDD.
+  2. *Continuous Validation*: Chạy kiểm tra kiểu (typecheck), test thử từng file test đơn lẻ thường xuyên trong quá trình code, và chạy toàn bộ test suite một lần trước khi hoàn tất.
+  3. *Review before Merge*: Chạy kỹ năng `/ccba-code-review` để quét các code smells (như primitive obsession, feature envy) trước khi commit hoặc tạo PR.
 
 ---
 

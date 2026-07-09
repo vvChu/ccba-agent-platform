@@ -142,6 +142,12 @@ skills:
     triggers: [sync upstream, đồng bộ tri thức, claudekit, mattpocock, check update]
     skill_path: .agents/skills/sync-upstream/SKILL.md
 
+  - name: ccba-setup-skills
+    bundle: _core
+    description: "Thiết lập cấu hình dự án cho các công cụ kỹ thuật — issue tracker, nhãn triage, domain docs"
+    triggers: [setup skills, thiết lập cấu hình, cấu hình tracker, cấu hình nhãn, setup-skills, ccba-setup-skills]
+    skill_path: .agents/skills/ccba-setup-skills/SKILL.md
+
 
   - name: mock-debugger
     bundle: _software
@@ -349,11 +355,23 @@ skills:
     triggers: [to-prd, prd, soạn prd, tạo prd, đặc tả sản phẩm]
     skill_path: .agents/skills/to-prd/SKILL.md
 
-  - name: to-issues
+  - name: ccba-to-tickets
     bundle: _core
-    description: "Phân rã bản thiết kế/PRD thành các ticket phát triển độc lập dạng lát cắt dọc"
-    triggers: [to-issues, issues, bẻ ticket, tạo ticket, phân rã]
-    skill_path: .agents/skills/to-issues/SKILL.md
+    description: "Phân rã bản thiết kế/spec/PRD thành các ticket phát triển độc lập dạng lát cắt dọc (vertical slices) và liên kết chặn"
+    triggers: [to-tickets, tickets, bẻ ticket, tạo ticket, phân rã, to-issues]
+    skill_path: .agents/skills/ccba-to-tickets/SKILL.md
+
+  - name: ccba-prototype
+    bundle: _core
+    description: "Xây dựng mẫu thử code thô (throwaway prototype) để trả lời nhanh một câu hỏi thiết kế"
+    triggers: [prototype, mẫu thử, test thô, sanity-check, ccba-prototype]
+    skill_path: .agents/skills/ccba-prototype/SKILL.md
+
+  - name: ccba-research
+    bundle: _core
+    description: "Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý song song dưới nền thông qua subagent chạy ngầm"
+    triggers: [research, nghiên cứu, tìm hiểu, tra cứu, ccba-research]
+    skill_path: .agents/skills/ccba-research/SKILL.md
 
   - name: triage
     bundle: _core
@@ -487,12 +505,26 @@ workflows:
     triggers: [prd, to-prd, soạn prd, tạo prd]
     workflow_path: .agents/workflows/ccba-to-prd.md
 
-  - name: to-issues
+  - name: ccba-to-tickets
     bundle: _core
-    command: /ccba-to-issues
-    description: "Phân rã tài liệu thiết kế/PRD thành các ticket công việc độc lập"
-    triggers: [issues, to-issues, bẻ ticket, tạo ticket]
-    workflow_path: .agents/workflows/ccba-to-issues.md
+    command: /ccba-to-tickets
+    description: "Phân rã tài liệu thiết kế/spec/PRD thành các ticket phát triển độc lập dạng lát cắt dọc (vertical slices)"
+    triggers: [to-tickets, tickets, bẻ ticket, tạo ticket, to-issues, issues]
+    workflow_path: .agents/workflows/ccba-to-tickets.md
+
+  - name: ccba-prototype
+    bundle: _core
+    command: /ccba-prototype
+    description: "Khởi động quy trình xây dựng mẫu thử code thô (Logic hoặc UI) để giải quyết vấn đề thiết kế mờ mịt"
+    triggers: [prototype, mẫu thử, test thô, ccba-prototype]
+    workflow_path: .agents/workflows/ccba-prototype.md
+
+  - name: ccba-research
+    bundle: _core
+    command: /ccba-research
+    description: "Khởi động subagent nghiên cứu chạy ngầm để tra cứu tài liệu, APIs, source code hoặc VBPL song song dưới nền"
+    triggers: [research, nghiên cứu, tìm hiểu, ccba-research]
+    workflow_path: .agents/workflows/ccba-research.md
 
   - name: triage
     bundle: _core
@@ -514,6 +546,13 @@ workflows:
     description: "Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn viết skill của CCBA"
     triggers: [review-skill, audit-skill, review_skill, kiểm định skill]
     workflow_path: .agents/workflows/ccba-review-skill.md
+
+  - name: ccba-setup-skills
+    bundle: _core
+    command: /ccba-setup-skills
+    description: "Thiết lập cấu hình dự án cho các công cụ phát triển phần mềm"
+    triggers: [setup skills, thiết lập cấu hình, cấu hình tracker, cấu hình nhãn, setup-skills, ccba-setup-skills]
+    workflow_path: .agents/workflows/ccba-setup-skills.md
 
   # === _software ===
   - name: new-feature

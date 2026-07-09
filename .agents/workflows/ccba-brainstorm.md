@@ -55,6 +55,7 @@ Sau khi chủ đề được xác nhận, Agent tiến hành:
 
 ### 5. Áp dụng Guidelines và Khởi động Brainstorming
 In ra danh sách các chỉ dẫn thảo luận đặc thù (`guidelines`) của chủ đề đã chọn để bắt đầu phiên trao đổi hai chiều với người dùng.
+*   **Chỉ dẫn nghiên cứu bổ sung (Research Legwork):** Nếu trong quá trình thảo luận phát sinh nhu cầu đọc sâu hoặc nghiên cứu chi tiết các tài liệu lớn, các API bên thứ ba, hoặc so sánh đệ quy các văn bản pháp luật, Agent nên chủ động đề xuất người dùng hoặc tự động kích hoạt kỹ năng `/ccba-research` để spawn subagent chạy song song dưới nền, tránh làm gián đoạn hoặc phình to context của cuộc hội thoại chính.
 
 ---
 
