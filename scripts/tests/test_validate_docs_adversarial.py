@@ -22,8 +22,10 @@ class TestValidateDocsAdversarial(unittest.TestCase):
 
             issues = validate_markdown_file(empty_fm_file, [], set(), tmppath)
             fm_issues = [x[2] for x in issues["okf_frontmatter"]]
-            self.assertTrue(any("Missing required field" in err for err in fm_issues) or
-                            any("Missing YAML frontmatter" in err for err in fm_issues))
+            self.assertTrue(
+                any("Missing required field" in err for err in fm_issues)
+                or any("Missing YAML frontmatter" in err for err in fm_issues)
+            )
 
             # Case 2: Syntax Error in YAML
             bad_yaml_file = bundle_dir / "bad_yaml.md"
