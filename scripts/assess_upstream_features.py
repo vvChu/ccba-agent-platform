@@ -137,18 +137,22 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
         # Read existing file content
         content = ""
         developer_notes = "\n\n<!-- DEVELOPER-NOTES-START -->\n## 📝 Ghi chú của Kỹ sư (Developer Notes)\n*Kỹ sư có thể tự do ghi chép các phân tích, đánh giá thủ công tại đây. Phần này sẽ được tự động bảo toàn khi đồng bộ thượng nguồn.*\n<!-- DEVELOPER-NOTES-END -->"
-        
+
         if RECOMMENDATIONS_FILE.exists():
             content = RECOMMENDATIONS_FILE.read_text(encoding="utf-8")
 
         # Parse developer notes if they exist
-        notes_match = re.search(r"(<!-- DEVELOPER-NOTES-START -->.*?<!-- DEVELOPER-NOTES-END -->)", content, re.DOTALL)
+        notes_match = re.search(
+            r"(<!-- DEVELOPER-NOTES-START -->.*?<!-- DEVELOPER-NOTES-END -->)", content, re.DOTALL
+        )
         if notes_match:
             developer_notes = "\n\n" + notes_match.group(1)
 
         # Parse auto-generated content if it exists
         auto_gen_content = ""
-        auto_match = re.search(r"<!-- AUTO-GENERATED-START -->(.*?)<!-- AUTO-GENERATED-END -->", content, re.DOTALL)
+        auto_match = re.search(
+            r"<!-- AUTO-GENERATED-START -->(.*?)<!-- AUTO-GENERATED-END -->", content, re.DOTALL
+        )
         if auto_match:
             auto_gen_content = auto_match.group(1).strip()
         else:
@@ -202,9 +206,11 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
 
         # Construct final file content
         final_content = f"<!-- AUTO-GENERATED-START -->\n{auto_gen_content.strip()}\n<!-- AUTO-GENERATED-END -->{developer_notes}"
-        
+
         RECOMMENDATIONS_FILE.write_text(final_content, encoding="utf-8")
-        print(f"[Evaluator] Wrote suitability report for '{skill_name}' -> {status_text} (Parse-Protected)")
+        print(
+            f"[Evaluator] Wrote suitability report for '{skill_name}' -> {status_text} (Parse-Protected)"
+        )
     except Exception as e:
         print(f"[Evaluator] Error writing recommendation: {e}")
 

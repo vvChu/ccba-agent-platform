@@ -1,13 +1,13 @@
 ---
-description: Tạo feature branch mới với cleanup tự động
+description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session sạch (Factory Model)
 applies_to:
   - "Phần mềm"
 bundle: "_software"
 ---
 
-# Workflow: Tạo Feature Branch Mới
+# Workflow: Tạo Feature Branch Mới & Phân Tách Session (Factory Model)
 
-Quy trình tự động hóa dọn dẹp các branch cũ đã được tích hợp và khởi tạo một branch tính năng/sửa lỗi mới.
+Quy trình tự động hóa dọn dẹp các branch cũ, khởi tạo branch tính năng mới và cưỡng chế áp dụng mô hình Nhà máy (**The Factory Model**) tách biệt giữa **Planning** và **Coding** để tối ưu hóa chi phí Token (OpEx) và ngăn ngừa lỗi mã nguồn.
 
 ## Các bước thực hiện:
 
@@ -46,8 +46,24 @@ Sau khi người dùng đồng ý, tạo và chuyển sang branch mới:
 git checkout -b [ten_branch_da_chot]
 ```
 
-### Bước 6: Thông báo hoàn tất
-Thông báo cho người dùng:
-- ✅ Branch mới đã được khởi tạo cục bộ thành công.
-- 📉 Đã dọn dẹp các branch cục bộ cũ đã merged.
-- 🚀 Sẵn sàng bắt đầu phát triển tính năng.
+### Bước 6: Lập kế hoạch thiết kế (Planning Phase - Socrates Grill)
+Agent **bắt buộc** phải chuyển sang **Planning Mode**, tuyệt đối không được viết code ở bước này:
+1. Kích hoạt kỹ năng `/ccba-grilling` để phỏng vấn người dùng, stress-test các giả định kiến trúc và xác định seam (khớp nối) tích hợp.
+2. Tạo tệp `implementation_plan.md` đạt chuẩn (phải có mục `## Đánh giá khả năng tái sử dụng (Reuse Assessment)`).
+3. Đợi người dùng nhấn **Proceed** phê duyệt bản kế hoạch.
+
+### Bước 7: Bàn giao cô lập ngữ cảnh (Factory Model Hand-off)
+Sau khi bản kế hoạch được duyệt, để ngăn ngừa phình to ngữ cảnh hội thoại (Context Rot) và giảm OpEx:
+*   **Phương án 1 (Khuyên dùng - Tiết kiệm Token tối đa):** Agent hướng dẫn người dùng tạo một session chat mới hoàn toàn sạch sẽ. Người dùng dán nội dung file `implementation_plan.md` vào lượt chat đầu tiên và ra lệnh cho Coding Agent thực thi.
+*   **Phương án 2 (Tự động hóa ngầm):** Agent chính khởi chạy một **Coding Subagent** ngầm thông qua công cụ `invoke_subagent` trên workspace nhánh để thực thi kế hoạch mà không làm ảnh hưởng đến chat log chính.
+
+### Bước 8: Lập trình, Kiểm chứng & Tự sửa lỗi (Coding & Verification Phase)
+Coding Agent thực hiện nhiệm vụ:
+1. Khởi tạo danh mục theo dõi `task.md`.
+2. Viết mã nguồn tương thích, áp dụng type hints và docstring theo chuẩn CCBA.
+3. Chạy `/ccba-eval-gate` (hoặc `python scripts/run_harness_evals.py`) để xác thực.
+4. Nếu phát hiện linter hoặc type check báo lỗi, tự động kích hoạt **Self-Healing Loop** tối đa 3 lần.
+5. Khi tất cả các Gates đều `PASS`, bàn giao kết quả qua tệp `walkthrough.md` cho người dùng nghiệm thu trước khi merge PR.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

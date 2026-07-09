@@ -214,9 +214,7 @@ def scan_orphan_files(bundle_root: Path, project_root: Path) -> list[Path]:
     Returns:
         List of absolute paths to orphan markdown files.
     """
-    EXCLUDE_DIRS = {
-        ".git", "node_modules", ".venv", "venv", ".pytest_cache"
-    }
+    EXCLUDE_DIRS = {".git", "node_modules", ".venv", "venv", ".pytest_cache"}
 
     all_files = []
     for p in bundle_root.rglob("*.md"):
@@ -461,7 +459,7 @@ def validate_markdown_file(
         "env_vars": [],
         "okf_frontmatter": [],
         "okf_links": [],
-        "okf_conflicts": []
+        "okf_conflicts": [],
     }
 
     try:
@@ -479,15 +477,20 @@ def validate_markdown_file(
         idx = parts.index("legal_docs")
         if idx + 1 < len(parts):
             is_okf = True
-            bundle_root = Path(*parts[:idx + 2])
+            bundle_root = Path(*parts[: idx + 2])
 
     frontmatter = None
     if content.strip().startswith("---"):
         frontmatter, _ = parse_frontmatter(content)
         if frontmatter and isinstance(frontmatter, dict):
             okf_fields = {
-                "type", "resource", "status", "document_number", "timestamp",
-                "parent_document", "uniclass"
+                "type",
+                "resource",
+                "status",
+                "document_number",
+                "timestamp",
+                "parent_document",
+                "uniclass",
             }
             if any(field in frontmatter for field in okf_fields):
                 is_okf = True
@@ -506,31 +509,45 @@ def validate_markdown_file(
                 issues["okf_frontmatter"].append((1, "type", "Missing required field: 'type'"))
             else:
                 okf_keywords = {
-                    "Law", "Decree", "Circular", "Standard", "Appendix",
-                    "Section", "Consolidated Document", "Guiding Document"
+                    "Law",
+                    "Decree",
+                    "Circular",
+                    "Standard",
+                    "Appendix",
+                    "Section",
+                    "Consolidated Document",
+                    "Guiding Document",
                 }
                 if frontmatter["type"] not in okf_keywords:
                     issues["okf_frontmatter"].append(
                         (
                             1,
                             "type",
-                            f"Invalid type: '{frontmatter['type']}'. Must be one of {sorted(okf_keywords)}"
+                            f"Invalid type: '{frontmatter['type']}'. Must be one of {sorted(okf_keywords)}",
                         )
                     )
 
             # Check resource
             if "resource" not in frontmatter:
-                issues["okf_frontmatter"].append((1, "resource", "Missing required field: 'resource'"))
+                issues["okf_frontmatter"].append(
+                    (1, "resource", "Missing required field: 'resource'")
+                )
 
             # Check status or document_number
             if "status" not in frontmatter and "document_number" not in frontmatter:
                 issues["okf_frontmatter"].append(
-                    (1, "status/document_number", "Missing required field: 'status' or 'document_number'")
+                    (
+                        1,
+                        "status/document_number",
+                        "Missing required field: 'status' or 'document_number'",
+                    )
                 )
 
             # Check timestamp
             if "timestamp" not in frontmatter:
-                issues["okf_frontmatter"].append((1, "timestamp", "Missing required field: 'timestamp'"))
+                issues["okf_frontmatter"].append(
+                    (1, "timestamp", "Missing required field: 'timestamp'")
+                )
 
     # 1. Validate Code References
     code_refs = extract_code_references(content)
@@ -569,11 +586,13 @@ def validate_markdown_file(
                         rel_path_guess = f"../../{parts[1]}" if len(parts) > 1 else "relative path"
                         if len(parts) > 1:
                             try:
-                                depth_to_root = os.path.relpath(project_root, filepath.parent).replace(
+                                depth_to_root = os.path.relpath(
+                                    project_root, filepath.parent
+                                ).replace(os.sep, "/")
+                                rel_path_guess = f"{depth_to_root}/{parts[1]}"
+                                rel_path_guess = os.path.normpath(rel_path_guess).replace(
                                     os.sep, "/"
                                 )
-                                rel_path_guess = f"{depth_to_root}/{parts[1]}"
-                                rel_path_guess = os.path.normpath(rel_path_guess).replace(os.sep, "/")
                             except ValueError:
                                 pass
 
@@ -611,17 +630,21 @@ def validate_markdown_file(
 
                 if is_internal:
                     if not target_path.exists():
-                        issues["links"].append((line_num, href, f"File does not exist: {clean_path}"))
+                        issues["links"].append(
+                            (line_num, href, f"File does not exist: {clean_path}")
+                        )
                     else:
                         try:
-                            rel_to_workspace = os.path.relpath(target_path, filepath.parent).replace(
-                                os.sep, "/"
-                            )
+                            rel_to_workspace = os.path.relpath(
+                                target_path, filepath.parent
+                            ).replace(os.sep, "/")
                             if fix:
                                 fixed_href = (
                                     f"{rel_to_workspace}#{anchor}" if anchor else rel_to_workspace
                                 )
-                                fixed_content = fixed_content.replace(f"]({href})", f"]({fixed_href})")
+                                fixed_content = fixed_content.replace(
+                                    f"]({href})", f"]({fixed_href})"
+                                )
                                 file_modified = True
                                 issues["links"].append(
                                     (
@@ -653,8 +676,12 @@ def validate_markdown_file(
                                 os.sep, "/"
                             )
                             if fix:
-                                fixed_href = f"{rel_to_parent}#{anchor}" if anchor else rel_to_parent
-                                fixed_content = fixed_content.replace(f"]({href})", f"]({fixed_href})")
+                                fixed_href = (
+                                    f"{rel_to_parent}#{anchor}" if anchor else rel_to_parent
+                                )
+                                fixed_content = fixed_content.replace(
+                                    f"]({href})", f"]({fixed_href})"
+                                )
                                 file_modified = True
                                 issues["links"].append(
                                     (
@@ -689,7 +716,7 @@ def validate_markdown_file(
                             (
                                 line_num,
                                 href,
-                                "Cross-link inside bundle must start with '/' (absolute path relative to bundle root)"
+                                "Cross-link inside bundle must start with '/' (absolute path relative to bundle root)",
                             )
                         )
                 if not target_path.exists():
@@ -720,7 +747,7 @@ def validate_markdown_file(
                                 (
                                     line_num,
                                     href,
-                                    f"Link points to {status} clause '{anchor}' in '{doc.get('id')}' but is not accompanied by a > [!WARNING] block"
+                                    f"Link points to {status} clause '{anchor}' in '{doc.get('id')}' but is not accompanied by a > [!WARNING] block",
                                 )
                             )
 
@@ -912,14 +939,19 @@ def main():
             else filepath
         )
         issues = validate_markdown_file(
-            filepath, resolved_src_paths, env_vars, project_root, fix=args.fix, registry_map=registry_map
+            filepath,
+            resolved_src_paths,
+            env_vars,
+            project_root,
+            fix=args.fix,
+            registry_map=registry_map,
         )
 
         parts = filepath.resolve().parts
         if "legal_docs" in parts:
             idx = parts.index("legal_docs")
             if idx + 1 < len(parts):
-                bundle_roots.add(Path(*parts[:idx + 2]))
+                bundle_roots.add(Path(*parts[: idx + 2]))
 
         file_has_issues = any(issues.values())
         if file_has_issues:
@@ -937,11 +969,15 @@ def main():
             # Print OKF Frontmatter Issues
             for line, field, err in issues.get("okf_frontmatter", []):
                 if is_hard_error:
-                    print(f"  [L{line}] \x1b[31mOKF Frontmatter Error:\x1b[0m field `{field}` - {err}")
+                    print(
+                        f"  [L{line}] \x1b[31mOKF Frontmatter Error:\x1b[0m field `{field}` - {err}"
+                    )
                     total_issues += 1
                     hard_errors_count += 1
                 else:
-                    print(f"  [L{line}] \x1b[33mOKF Frontmatter Warning:\x1b[0m field `{field}` - {err}")
+                    print(
+                        f"  [L{line}] \x1b[33mOKF Frontmatter Warning:\x1b[0m field `{field}` - {err}"
+                    )
                     total_issues += 1
 
             # Print Code Symbol Issues
@@ -1005,11 +1041,15 @@ def main():
                 is_hard = bundle_has_mod or ("legal_docs" in docs_dir.parts)
 
                 if is_hard:
-                    print(f"  \x1b[31mOrphan File Error:\x1b[0m {rel_o} is not referenced by any other markdown file in the bundle.")
+                    print(
+                        f"  \x1b[31mOrphan File Error:\x1b[0m {rel_o} is not referenced by any other markdown file in the bundle."
+                    )
                     total_issues += 1
                     orphan_issues_count += 1
                 else:
-                    print(f"  \x1b[33mOrphan File Warning:\x1b[0m {rel_o} is not referenced by any other markdown file in the bundle.")
+                    print(
+                        f"  \x1b[33mOrphan File Warning:\x1b[0m {rel_o} is not referenced by any other markdown file in the bundle."
+                    )
                     total_issues += 1
 
     print("-" * 60)
