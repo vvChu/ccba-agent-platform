@@ -73,7 +73,7 @@ Do đó, **điểm nghẽn (bottleneck) của phát triển phần mềm đã d�
 ### Vai trò của Kỹ sư phần mềm chuyển dịch từ:
 *   *Người viết code (Code Writer)* $\rightarrow$ **Người điều phối hệ thống (System Orchestrator)**.
 *   *Người thực thi cú pháp* $\rightarrow$ **Người phán xét và kiểm chứng chất lượng (Arbiter of Quality)**.
-*   Kỹ sư không còn lập trình trực tiếp, mà họ **lập trình ra môi trường (Harness)** để AI Agent lập trình một cách an sau.
+*   Kỹ sư không còn lập trình trực tiếp, mà họ **lập trình ra môi trường (Harness)** để AI Agent lập trình một cách an toàn.
 
 ---
 

@@ -112,6 +112,9 @@ class FileMutexLock:
 
                 elapsed = time.time() - start_time
                 if elapsed >= self.timeout:
+                    if self._thread_lock_acquired:
+                        self._thread_lock.release()
+                        self._thread_lock_acquired = False
                     raise TimeoutError(
                         f"Timeout waiting to acquire file lock on {self.lock_path} after {self.timeout} seconds."
                     ) from None
@@ -120,6 +123,9 @@ class FileMutexLock:
             except Exception as e:
                 elapsed = time.time() - start_time
                 if elapsed >= self.timeout:
+                    if self._thread_lock_acquired:
+                        self._thread_lock.release()
+                        self._thread_lock_acquired = False
                     raise TimeoutError(
                         f"Failed to acquire file lock on {self.lock_path}: {e}"
                     ) from e
