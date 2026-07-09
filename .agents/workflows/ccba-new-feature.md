@@ -49,7 +49,7 @@ git checkout -b [ten_branch_da_chot]
 ### Bước 6: Lập kế hoạch thiết kế (Planning Phase - Socrates Grill)
 Agent **bắt buộc** phải chuyển sang **Planning Mode**, tuyệt đối không được viết code ở bước này:
 1. Kích hoạt kỹ năng `/ccba-grilling` để phỏng vấn người dùng, stress-test các giả định kiến trúc và xác định seam (khớp nối) tích hợp.
-2. Tạo tệp [implementation_plan.md](file:///C:/Users/chuvu/.gemini/antigravity/brain/c64af3c1-a210-4fbc-8ae2-2cd50fd53731/implementation_plan.md) đạt chuẩn (phải có mục `## Đánh giá khả năng tái sử dụng (Reuse Assessment)`).
+2. Tạo tệp `implementation_plan.md` đạt chuẩn (phải có mục `## Đánh giá khả năng tái sử dụng (Reuse Assessment)`).
 3. Đợi người dùng nhấn **Proceed** phê duyệt bản kế hoạch.
 
 ### Bước 7: Bàn giao cô lập ngữ cảnh (Factory Model Hand-off)
