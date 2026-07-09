@@ -119,7 +119,9 @@ class TestValidateDocs(unittest.TestCase):
             # Case 2: invalid frontmatter type and missing fields
             bad_fm_file = bundle_dir / "doc2.md"
             with open(bad_fm_file, "w", encoding="utf-8") as f:
-                f.write("---\ntype: InvalidType\ntimestamp: 2026-07-05T00:00:00Z\n---\nBody content.")
+                f.write(
+                    "---\ntype: InvalidType\ntimestamp: 2026-07-05T00:00:00Z\n---\nBody content."
+                )
 
             issues = validate_markdown_file(bad_fm_file, [], set(), tmppath)
             fm_issues = [x[2] for x in issues["okf_frontmatter"]]
@@ -128,12 +130,19 @@ class TestValidateDocs(unittest.TestCase):
             # Missing resource error
             self.assertTrue(any("Missing required field: 'resource'" in err for err in fm_issues))
             # Missing status/document_number error
-            self.assertTrue(any("Missing required field: 'status' or 'document_number'" in err for err in fm_issues))
+            self.assertTrue(
+                any(
+                    "Missing required field: 'status' or 'document_number'" in err
+                    for err in fm_issues
+                )
+            )
 
             # Case 3: valid frontmatter
             good_fm_file = bundle_dir / "doc3.md"
             with open(good_fm_file, "w", encoding="utf-8") as f:
-                f.write("---\ntype: Decree\nresource: res123\nstatus: current\ntimestamp: 2026-07-05T00:00:00Z\n---\nBody.")
+                f.write(
+                    "---\ntype: Decree\nresource: res123\nstatus: current\ntimestamp: 2026-07-05T00:00:00Z\n---\nBody."
+                )
 
             issues = validate_markdown_file(good_fm_file, [], set(), tmppath)
             self.assertEqual(len(issues["okf_frontmatter"]), 0)
@@ -178,6 +187,7 @@ Relative link inside bundle: [Label](target.md)
 
     def test_orphan_files_scanning(self):
         from scripts.validate_docs import scan_orphan_files
+
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
             bundle_dir = tmppath / ".md" / "legal_docs" / "test_slug"
@@ -200,7 +210,7 @@ Relative link inside bundle: [Label](target.md)
             orphan_stems = [p.stem for p in orphans]
             self.assertIn("doc1", orphan_stems)  # doc1 has no links to it
             self.assertIn("doc3", orphan_stems)  # doc3 has no links to it
-            self.assertNotIn("doc2", orphan_stems) # doc2 IS linked by doc1
+            self.assertNotIn("doc2", orphan_stems)  # doc2 IS linked by doc1
 
     def test_cross_validity_conflicts(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -216,18 +226,10 @@ Relative link inside bundle: [Label](target.md)
                 target_doc.resolve(): {
                     "id": "DOC-123",
                     "clauses": {
-                        "sec1": {
-                            "status": "amended",
-                            "amended_by": "DOC-999"
-                        },
-                        "sec2": {
-                            "status": "superseded",
-                            "amended_by": "DOC-888"
-                        },
-                        "sec3": {
-                            "status": "current"
-                        }
-                    }
+                        "sec1": {"status": "amended", "amended_by": "DOC-999"},
+                        "sec2": {"status": "superseded", "amended_by": "DOC-888"},
+                        "sec3": {"status": "current"},
+                    },
                 }
             }
 
@@ -263,6 +265,7 @@ Here is a link: [Sec 1](/target.md#sec1)
 
     def test_orphan_files_parent_document(self):
         from scripts.validate_docs import scan_orphan_files
+
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
             bundle_dir = tmppath / ".md" / "legal_docs" / "test_slug"
@@ -294,6 +297,7 @@ Here is a link: [Sec 1](/target.md#sec1)
 
     def test_orphan_files_index_full_text_exemption(self):
         from scripts.validate_docs import scan_orphan_files
+
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
             bundle_dir = tmppath / ".md" / "legal_docs" / "test_slug"
