@@ -100,6 +100,7 @@ claudekit-engineer/
 !.agents/workflows/
 !.agents/skills/
 !.agents/proposals/
+!.agents/rules/
 !.agents/AGENTS.md
 
 # Loại trừ các dữ liệu động, log, credentials bên trong các thư mục chính quy này
