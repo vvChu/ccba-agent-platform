@@ -4,6 +4,7 @@ Extracts visual frames from YouTube videos.
 Implements Two-Stage Hybrid Ingestion with Pillow perceptual hash and LLM-as-Judge filtering.
 """
 
+import datetime
 import json
 import logging
 import os
@@ -13,6 +14,7 @@ import subprocess
 import urllib.parse
 import urllib.request
 from pathlib import Path
+from typing import Any
 
 # Setup logging
 _logger = logging.getLogger("ccba.youtube.visual")
@@ -20,7 +22,7 @@ _logger = logging.getLogger("ccba.youtube.visual")
 try:
     from PIL import Image as PILImage
 except ImportError:
-    PILImage = None
+    PILImage = None  # type: ignore[assignment]
 
 
 def _compute_frame_hash(img_path: Path, size: int = 8) -> int:
@@ -72,7 +74,7 @@ def _dedup_frames(frames: list[Path], threshold: int = 2) -> list[Path]:
 
 
 def _get_heatmap_peaks(
-    heatmap: list[dict], duration_sec: float, max_peaks: int = 10
+    heatmap: list[dict[str, Any]], duration_sec: float, max_peaks: int = 10
 ) -> list[float]:
     """Parse YouTube heatmap and find the top timestamps of highest user engagement."""
     if not heatmap:
@@ -92,7 +94,7 @@ def _get_heatmap_peaks(
     valid_entries.sort(key=lambda x: x[0], reverse=True)
 
     # Choose top peaks avoiding duplicates close to each other (within 15s)
-    peaks = []
+    peaks: list[float] = []
     for _val, ts in valid_entries:
         if not any(abs(ts - p) < 15.0 for p in peaks):
             peaks.append(ts)
@@ -103,7 +105,7 @@ def _get_heatmap_peaks(
 
 
 def _get_target_timestamps(
-    duration_sec: float, chapters: list[dict], heatmap: list[dict] = None
+    duration_sec: float, chapters: list[dict[str, Any]], heatmap: list[dict[str, Any]] | None = None
 ) -> list[float]:
     """Calculate adaptive target timestamps for chapter-aware multi-sampling."""
     timestamps = []
@@ -147,7 +149,7 @@ def _get_target_timestamps(
 
     # Sort and remove close timestamps (less than 3 seconds)
     timestamps = sorted(set(timestamps))
-    filtered_ts = []
+    filtered_ts: list[float] = []
     for ts in timestamps:
         if not filtered_ts or ts - filtered_ts[-1] >= 3.0:
             filtered_ts.append(ts)
@@ -169,7 +171,7 @@ def _download_grid_with_retry(url: str, dest_path: Path) -> bool:
 
 
 def _get_storyboard_frames(
-    sb0: dict, tmp_dir: Path, target_timestamps: list[float], duration_sec: float
+    sb0: dict[str, Any], tmp_dir: Path, target_timestamps: list[float], duration_sec: float
 ) -> list[Path]:
     """Download storyboard grids and crop target timestamps into static frame files."""
     fragments = sb0.get("fragments") or []
@@ -276,7 +278,7 @@ def _find_ffmpeg_bin() -> str | None:
 
 
 def extract_video_visuals(
-    url: str, output_images_dir: Path, transcript_text: str = None
+    url: str, output_images_dir: Path, transcript_text: str | None = None
 ) -> list[str]:
     """Extract slide & whiteboard frames from video. Returns list of saved filenames."""
     tmp_dir = output_images_dir.parent / "_video_tmp"
@@ -284,10 +286,12 @@ def extract_video_visuals(
 
     extracted_frames = []
     duration_sec = 600
-    chapters = []
-    heatmap = []
-    video_id = "temp_video"
+    chapters: list[dict[str, Any]] = []
+    heatmap: list[dict[str, Any]] = []
+    video_id: str | None = "temp_video"
     info_dict = None
+    cache_file: Path | None = None
+    cache_data: dict[str, Any] = {}
 
     # Find FFmpeg binary
     ffmpeg_bin = _find_ffmpeg_bin()
@@ -308,6 +312,30 @@ def extract_video_visuals(
 
         if not video_id:
             video_id = "local_video"
+
+        # Check Cache
+        cache_dir = output_images_dir.parents[1] / ".md" / "scratch" / "cache"
+        if not (output_images_dir.parents[1] / ".md").exists():
+            cache_dir = Path(".md") / "scratch" / "cache"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        cache_file = cache_dir / "video_cache.json"
+
+        if cache_file.exists():
+            try:
+                with open(cache_file, encoding="utf-8") as f:
+                    cache_data = json.load(f)
+                if video_id in cache_data:
+                    entry = cache_data[video_id]
+                    cached_filenames: list[str] = list(entry.get("filenames", []))
+                    if cached_filenames and all(
+                        (output_images_dir / fn).exists() for fn in cached_filenames
+                    ):
+                        _logger.info(
+                            f"[CACHE HIT] Đang sử dụng {len(cached_filenames)} ảnh slide được cache cho video {video_id}."
+                        )
+                        return cached_filenames
+            except Exception as ce:
+                _logger.warning(f"Failed to read video cache: {ce}")
 
         # 1. Fetch metadata
         _logger.info(f"Extracting metadata JIT for: {url}")
@@ -342,7 +370,8 @@ def extract_video_visuals(
         frame_metadata = {}
 
         # 2. Frame sampling
-        if sb0 and PILImage is not None:
+        force_video = os.environ.get("FORCE_VIDEO_FALLBACK", "false").lower() == "true"
+        if sb0 and PILImage is not None and not force_video:
             _logger.info("Stage 1: Storyboard coarse sampling from Google CDN...")
             coarse_frames = _get_storyboard_frames(sb0, tmp_dir, target_timestamps, duration_sec)
             for i, p in enumerate(coarse_frames):
@@ -370,10 +399,10 @@ def extract_video_visuals(
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.extract_info(url, download=True)
 
-            video_path = None
-            for f in tmp_dir.glob(f"{video_id}.*"):
-                if f.is_file() and f.suffix in (".mp4", ".webm", ".mkv", ".m4v"):
-                    video_path = f
+            video_path: Path | None = None
+            for file_path in tmp_dir.glob(f"{video_id}.*"):
+                if file_path.is_file() and file_path.suffix in (".mp4", ".webm", ".mkv", ".m4v"):
+                    video_path = file_path
                     break
 
             if not video_path or not video_path.exists():
@@ -387,14 +416,6 @@ def extract_video_visuals(
             if os.name == "nt":
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            run_kwargs = {
-                "stdout": subprocess.PIPE,
-                "stderr": subprocess.PIPE,
-                "startupinfo": startupinfo,
-                "text": True,
-                "timeout": 180,
-            }
-
             static_frames = []
             for i, ts in enumerate(target_timestamps):
                 out_path = tmp_dir / f"frame_static_{i:04d}.jpg"
@@ -409,7 +430,13 @@ def extract_video_visuals(
                     "1",
                     str(out_path),
                 ]
-                res = subprocess.run(cmd, **run_kwargs)
+                res = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    startupinfo=startupinfo,
+                    text=True,
+                    timeout=180,
+                )
                 if res.returncode == 0 and out_path.exists():
                     static_frames.append(out_path)
                     frame_metadata[out_path] = {
@@ -453,7 +480,7 @@ def extract_video_visuals(
             prompt += f"\n\n=== [AUDIO TRANSCRIPT CONTEXT] ===\n{transcript_text}\n==================================\n"
 
         # Multi-modal payload using ccba-ai chat_multi
-        content = [{"type": "text", "text": prompt}]
+        content: list[dict[str, Any]] = [{"type": "text", "text": prompt}]
 
         for f_path in extracted_frames:
             # Encode image to base64 with maximum pixel size 768 for efficiency
@@ -520,6 +547,21 @@ def extract_video_visuals(
                 shutil.rmtree(tmp_dir)
             except OSError:
                 pass
+
+        # Save to Cache
+        if saved_filenames and cache_file is not None:
+            try:
+                cache_data[video_id] = {
+                    "filenames": saved_filenames,
+                    "timestamp": datetime.datetime.now().isoformat(),
+                }
+                with open(cache_file, "w", encoding="utf-8") as f:
+                    json.dump(cache_data, f, ensure_ascii=False, indent=2)
+                _logger.info(
+                    f"[CACHE WRITE] Đã lưu cache kết quả lọc {len(saved_filenames)} slide cho video {video_id}."
+                )
+            except Exception as ce:
+                _logger.warning(f"Failed to write video cache: {ce}")
 
         return saved_filenames
 
