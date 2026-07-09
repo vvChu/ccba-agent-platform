@@ -148,6 +148,11 @@ skills:
     triggers: [setup skills, thiết lập cấu hình, cấu hình tracker, cấu hình nhãn, setup-skills, ccba-setup-skills]
     skill_path: .agents/skills/ccba-setup-skills/SKILL.md
 
+  - name: eval-gate
+    bundle: _core
+    description: "Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động sửa lỗi (Self-Healing Loop)"
+    triggers: [eval gate, kiểm chứng, sửa lỗi tự động, self-healing, check code, run gate]
+    skill_path: .agents/skills/eval-gate/SKILL.md
 
   - name: mock-debugger
     bundle: _software
@@ -554,6 +559,12 @@ workflows:
     triggers: [setup skills, thiết lập cấu hình, cấu hình tracker, cấu hình nhãn, setup-skills, ccba-setup-skills]
     workflow_path: .agents/workflows/ccba-setup-skills.md
 
+  - name: ccba-eval-gate
+    bundle: _core
+    command: /ccba-eval-gate
+    description: "Chạy kiểm định tự động qua CI Gates và kích hoạt vòng lặp tự sửa lỗi (Self-Healing)"
+    triggers: [eval gate, kiểm chứng, self-healing, run gate]
+    workflow_path: .agents/workflows/ccba-eval-gate.md
   # === _software ===
   - name: new-feature
     bundle: _software
@@ -617,22 +628,27 @@ rules:
   - name: ccba_identity
     description: "Brand, voice, phong cách giao tiếp CCBA"
     when: "Mọi output mang danh CCBA"
-    rule_path: rules/ccba_identity.md
-
-  - name: quality_standards
-    description: "Tiêu chuẩn chất lượng QC"
-    when: "Tạo output QC/testing"
-    rule_path: rules/quality_standards.md
+    rule_path: .agents/rules/ccba_identity.md
 
   - name: naming_conventions
-    description: "Quy ước đặt tên file và folder"
-    when: "Tạo file/folder mới"
-    rule_path: rules/naming_conventions.md
+    description: "Quy ước đặt tên file, folder và phân loại thư mục tri thức"
+    when: "Tạo hoặc sắp xếp file/folder mới"
+    rule_path: .agents/rules/naming_conventions.md
 
   - name: compliance
     description: "Tuân thủ pháp luật xây dựng Việt Nam"
-    when: "Output liên quan pháp luật/VBPL"
-    rule_path: rules/compliance.md
+    when: "Output liên quan đến pháp luật/VBPL hoặc các văn bản pháp lý"
+    rule_path: .agents/rules/legal_compliance.md
+
+  - name: release_gate
+    description: "Quy trình kiểm soát PR Release và Copilot Audit"
+    when: "Khi chuẩn bị merge PR hoặc hoàn tất bàn giao"
+    rule_path: .agents/rules/release_gate.md
+
+  - name: debugging
+    description: "Quy tắc đọc logs và chẩn đoán lỗi runtime"
+    when: "Khi người dùng báo lỗi runtime hoặc ứng dụng crash"
+    rule_path: .agents/rules/debugging.md
 
 knowledge:
   - name: session_learnings
