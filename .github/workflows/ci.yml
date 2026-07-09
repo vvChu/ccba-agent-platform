@@ -30,24 +30,16 @@ jobs:
 
       - name: Install packages
         run: |
-          uv pip install -e packages/ccba-harness --system
+          uv pip install -e "packages/ccba-harness" --system
           uv pip install -e "packages/ccba-ai[dev]" --system
+          uv pip install -e "packages/ccba-legal-intel[dev]" --system
+          uv pip install -e "packages/ccba-notebooklm[dev]" --system
+          uv pip install -e "packages/ccba-ooxml[dev]" --system
+          uv pip install -e "packages/ccba-pdf-prep[dev]" --system
           uv pip install -e "packages/mdconverter[dev]" --system
 
-      - name: Run Ruff linter
-        run: ruff check packages/
-
-      - name: Run Ruff formatter check
-        run: ruff format --check packages/
-
-      - name: Run MyPy
-        run: mypy packages/mdconverter/src/ --ignore-missing-imports
-
-      - name: Run mdconverter tests
-        run: pytest packages/mdconverter/tests/ -v --cov=packages/mdconverter/src/mdconverter --cov-report=xml
-
-      - name: Run ccba-ai tests
-        run: pytest packages/ccba-ai/tests/ -v
+      - name: Run CCBA Harness CI Gates
+        run: python scripts/run_harness_evals.py --all
 
       - name: Upload coverage
         uses: codecov/codecov-action@v7

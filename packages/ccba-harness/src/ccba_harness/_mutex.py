@@ -7,9 +7,21 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 import time
 from pathlib import Path
 from typing import Any
+
+_thread_locks: dict[Path, threading.Lock] = {}
+_thread_locks_mutex = threading.Lock()
+
+
+def _get_thread_lock(path: Path) -> threading.Lock:
+    resolved_path = path.resolve()
+    with _thread_locks_mutex:
+        if resolved_path not in _thread_locks:
+            _thread_locks[resolved_path] = threading.Lock()
+        return _thread_locks[resolved_path]
 
 
 class FileMutexLock:
@@ -36,10 +48,22 @@ class FileMutexLock:
         self.expire_seconds = expire_seconds
         self.pid = os.getpid()
         self.is_locked = False
+        self._thread_lock = _get_thread_lock(self.lock_path)
+        self._thread_lock_acquired = False
 
     def __enter__(self) -> FileMutexLock:
         """Acquire the lock, resolving PIDs and expiration dynamically."""
         start_time = time.time()
+
+        # 1. Acquire thread-level lock first
+        acquired = self._thread_lock.acquire(timeout=self.timeout)
+        if not acquired:
+            raise TimeoutError(
+                f"Timeout waiting to acquire thread lock on {self.lock_path} after {self.timeout} seconds."
+            )
+        self._thread_lock_acquired = True
+
+        # 2. Acquire process-level file lock
         self.lock_path.parent.mkdir(parents=True, exist_ok=True)
         while True:
             try:
@@ -86,14 +110,16 @@ class FileMutexLock:
                         pass
                     continue
 
-                if time.time() - start_time >= self.timeout:
+                elapsed = time.time() - start_time
+                if elapsed >= self.timeout:
                     raise TimeoutError(
                         f"Timeout waiting to acquire file lock on {self.lock_path} after {self.timeout} seconds."
                     ) from None
 
                 time.sleep(self.retry_interval)
             except Exception as e:
-                if time.time() - start_time >= self.timeout:
+                elapsed = time.time() - start_time
+                if elapsed >= self.timeout:
                     raise TimeoutError(
                         f"Failed to acquire file lock on {self.lock_path}: {e}"
                     ) from e
@@ -103,12 +129,17 @@ class FileMutexLock:
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Release the lock if it belongs to this process."""
-        if self.is_locked and self.lock_path.exists():
-            try:
-                content = self.lock_path.read_text(encoding="utf-8")
-                data = json.loads(content)
-                if data.get("pid") == self.pid:
-                    self.lock_path.unlink()
-            except Exception:
-                pass
-            self.is_locked = False
+        try:
+            if self.is_locked and self.lock_path.exists():
+                try:
+                    content = self.lock_path.read_text(encoding="utf-8")
+                    data = json.loads(content)
+                    if data.get("pid") == self.pid:
+                        self.lock_path.unlink()
+                except Exception:
+                    pass
+                self.is_locked = False
+        finally:
+            if self._thread_lock_acquired:
+                self._thread_lock.release()
+                self._thread_lock_acquired = False

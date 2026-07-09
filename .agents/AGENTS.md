@@ -22,93 +22,30 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
 
 ---
 
-## 2. CCBA Identity & Voice (Bản sắc & Phong cách giao tiếp)
+## 2. CCBA Core Behavior & Quality Standards
 
 * **Giọng điệu giao tiếp:** Trả lời bằng **tiếng Việt** (trừ khi người dùng dùng tiếng Anh). Giữ nguyên các thuật ngữ kỹ thuật tiếng Anh (function, class, endpoint, database...). Giao tiếp chuyên nghiệp, súc tích, khách quan.
-* **Quy tắc Attribution:** Mọi output tài liệu chính thức đều bắt buộc kèm dòng attribution ở cuối:
-  `*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*`
-* **Disclaimer bắt buộc:** Khi output liên quan đến pháp luật hoặc văn bản pháp lý (VBPL), LUÔN kèm disclaimer ở cuối tài liệu:
-  `*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*`
-
----
-
-## 3. CCBA Quality Standards (Quy chuẩn chất lượng đầu ra)
-
-* **Độ chính xác (Accuracy):** Trích dẫn VBPL phải chính xác số hiệu, điều/khoản, ngày hiệu lực. Không tự sáng tạo số hiệu VBPL không tồn tại hoặc đưa dự thảo (draft) làm căn cứ chính thức.
-* **Tính đầy đủ (Completeness):** Các checklist nghiệm thu, hồ sơ hoàn thành phải đầy đủ theo Phụ lục VBPL hiện hành, không bỏ sót mục.
-* **Tính truy vết (Traceability):** Mọi tuyên bố kỹ thuật hoặc pháp lý phải chỉ rõ nguồn (VBPL, TCVN, hoặc tài liệu tham chiếu cụ thể).
+* **KISS (Keep It Simple, Stupid):** Luôn ưu tiên giải pháp đơn giản nhất. Trước khi đề xuất thêm module/class/abstraction mới, tự hỏi: "Có thể giải quyết bằng 10-15 dòng code trong file hiện có không?" Nếu có $\rightarrow$ làm vậy.
+* **Đăng ký Rules động:** Đối với các quy tắc nghiệp vụ chuyên sâu (đặt tên, debug, release gate, legal...), Agent bắt buộc phải nạp động (**Dynamic Rules**) tương ứng qua `catalog.yaml` thay vì tích hợp tĩnh vào prompt khởi tạo.
 * **Kiểm định mã nguồn, cấu hình & tài liệu:** 
   - Mọi file YAML được Agent chỉnh sửa phải pass qua lệnh parse `yaml.safe_load()`.
   - Luôn sử dụng type hints trong Python (parameters + return types), viết docstring (Google style) cho tất cả public functions.
   - Hàm/phương thức không dài quá 50 dòng; ưu tiên composition over inheritance.
-  - Mọi tài liệu Markdown kỹ thuật chính quy (như README.md, kiến trúc hệ thống) trước khi hoàn tất phải được kiểm định bằng công cụ `validate_docs.py` để đảm bảo không chứa code references ảo ảnh, link hỏng hoặc thiếu cấu hình trong `.env.example`.
+  - Mọi tài liệu Markdown kỹ thuật chính quy trước khi hoàn tất phải được kiểm định bằng công cụ `validate_docs.py`.
 * **Quy trình thực thi mã nguồn (SDLC Implementation Loop):**
-  Khi triển khai bất kỳ mã nguồn nào dựa trên đặc tả (specs/PRDs) hoặc vé công việc (tickets), Agent bắt buộc phải thực thi theo chu kỳ khép kín:
-  1. *TDD (Test-Driven Development)*: Viết unit tests trước tại các điểm khớp nối (seams) đã thỏa thuận nếu dự án áp dụng TDD.
-  2. *Continuous Validation*: Chạy kiểm tra kiểu (typecheck), test thử từng file test đơn lẻ thường xuyên trong quá trình code, và chạy toàn bộ test suite một lần trước khi hoàn tất.
-  3. *Review before Merge*: Chạy kỹ năng `/ccba-code-review` để quét các code smells (như primitive obsession, feature envy) trước khi commit hoặc tạo PR.
+  Khi triển khai bất kỳ mã nguồn nào dựa trên đặc tả (specs/PRDs), Agent bắt buộc phải thực thi theo chu kỳ khép kín:
+  1. *TDD (Test-Driven Development)*: Viết unit tests trước tại các điểm khớp nối (seams) đã thỏa thuận nếu áp dụng.
+  2. *Continuous Validation*: Chạy kiểm tra kiểu (typecheck), test và chạy toàn bộ test suite trước khi hoàn tất.
+  3. *Review before Merge*: Chạy kỹ năng `/ccba-code-review` để quét các code smells trước khi commit/PR.
 
 ---
 
-## 4. CCBA Naming Conventions & Git Conventions
+## 3. Git Conventions
 
-### Quy ước đặt tên file và thư mục
-* **Tài liệu Seminar:** `CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.{ext}`
-  *(ví dụ: CCBA_RD_SEMINAR_004_Rev00-30.03.26-VBPL_Update.docx)*
-* **Tài liệu VBPL (do CCBA tổng hợp):** `CCBA_RD_VBPL_NNN_RevXX-ShortName.{ext}`
-  *(ví dụ: CCBA_RD_VBPL_003_Rev00-ND_06_2021.docx)*
-* **Thư mục và file của AI Agent:** 
-  - Skills: `lowercase_with_underscores` hoặc `kebab-case` (folders & file names).
-  - Workflows: `kebab-case.md`.
-  - YAML data: `lowercase_with_underscores.yaml`.
-  - Templates: `lowercase_with_underscores.md`.
-* **Quy tắc đăng ký Slash Command cho Kỹ năng (Skills):**
-  Khi chuyển dịch (porting) hoặc tạo mới các kỹ năng có thuộc tính `user-invocable: true` từ thượng nguồn (hoặc khi nguồn dùng slash command để kích hoạt), Agent bắt buộc phải đăng ký thành Slash Command chính thức bằng cách tạo một file workflow mỏng tại thư mục `.agents/workflows/`.
-  - Tên file workflow và Slash Command phải bắt đầu bằng tiền tố `ccba-` (ví dụ: `ccba-handoff.md` tạo lệnh `/ccba-handoff`).
-  - Nội dung file workflow chỉ được chứa mô tả frontmatter tiếng Việt ngắn gọn và một dòng lệnh hướng dẫn Agent nạp trực tiếp file `SKILL.md` tương ứng để thực thi.
-
-### Quy định quản lý và phân loại thư mục tri thức `.md/` (Project Root)
-Để duy trì tính ngăn nắp của Knowledge Base dự án, Agent **bắt buộc** phải phân loại các tệp được tạo ra/sửa đổi vào đúng các thư mục con chức năng sau trong `.md/`:
-* `.md/knowledge/`: Lưu trữ các tài liệu nghiên cứu, roadmap, spec kỹ thuật và tệp cấu hình tĩnh (ví dụ: `brand_rules.yaml`).
-* `.md/seminars/`: Lưu trữ các tệp agenda, thông báo, tóm tắt seminar (các tệp bắt đầu bằng `CCBA_RD_SEMINAR_`).
-* `.md/scratch/`: Lưu trữ các scripts test Python dùng một lần, file log tạm và SHA check.
-* `.md/data/`: Lưu trữ dữ liệu động của các tools (ví dụ: `team_tasks.json`).
-* `.md/extracted_docs/` và `.md/legal_docs/`: Lưu trữ văn bản pháp luật và văn bản trích xuất thô.
-Tuyệt đối **không** tạo hoặc để các tệp tin này trực tiếp ở thư mục gốc `.md/` để tránh làm loãng thư mục tri thức chính.
-
-### Quy ước Git (Git Conventions) & Quy trình phát hành (Release Gate)
 * **Đặt tên Branch:** `type/short-description` *(ví dụ: feature/add-auth, fix/query-timeout)*.
 * **Format Commit Message:** `type(scope): description` (bằng tiếng Anh).
   - Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`.
   - Commit theo từng logical unit độc lập, không commit tất cả file cùng lúc.
-* **Rào chắn đối soát PR (Release Gate Audit):**
-  - Trước khi thực hiện merge bất kỳ Pull Request nào (trừ các PR nâng cấp thư viện tự động dependabot/chore đã pass CI và không có phản biện ngoài), Agent **bắt buộc** phải chạy công cụ đối soát `python scripts/audit_pr_comments.py` để quét toàn bộ inline review và PR-level comments từ Copilot hoặc các reviewers khác.
-  - **Quy tắc dừng chờ Copilot**: Khi kiểm tra trạng thái PR qua `gh pr view <PR>`, nếu thấy người đánh giá `copilot-pull-request-reviewer` ở trạng thái `(Requested)` (chưa hoàn thành review), Agent **bắt buộc phải dừng lại và chờ** (sử dụng công cụ `schedule` để hẹn giờ kiểm tra lại sau mỗi 30s-60s). Thời gian chờ tối đa (timeout) là 3 phút; nếu quá thời gian này mà Copilot vẫn chưa chạy xong, Agent mới được báo cáo người dùng xin ý kiến bypass.
-  - Phải tiến hành sửa lỗi đối với các góp ý hợp lý (VALID), hoặc viết giải trình đối với các góp ý sai lệch (INVALID) vào tài liệu bàn giao `walkthrough.md` và nhận được sự đồng thuận tường minh của người dùng trước khi merge.
-  - Ghi nhận chi tiết kết quả xử lý bình luận của Copilot vào tài liệu bàn giao `walkthrough.md`.
 
 ---
-
-## 5. CCBA Legal Compliance Rules (Quy tắc tuân thủ pháp lý)
-
-* **Trạng thái hiệu lực văn bản:**
-  - `draft` (Dự thảo): Được phép phân tích nhưng phải ghi rõ chữ "DỰ THẢO". Không dùng làm căn cứ chính thức.
-  - `enacted` (Đã thông qua): Được phép phân tích, phải ghi rõ ngày hiệu lực.
-  - `current` (Đang hiệu lực): Áp dụng bình thường.
-  - `superseded` (Hết hiệu lực): Chỉ dùng tham chiếu lịch sử, phải ghi rõ "HẾT HIỆU LỰC".
-* **Nguồn tin cậy:** 
-  - **Về thẩm quyền pháp lý (Xác minh thông tin cuối cùng):** Ưu tiên theo thứ tự: (1) Cổng TTĐT Bộ Xây dựng (`moc.gov.vn`), (2) Cổng TTĐT Chính phủ (`vanban.chinhphu.vn`), (3) Cơ sở dữ liệu quốc gia về VBPL (`vbpl.vn`).
-  - **Về công cụ tự động hóa (Cào dữ liệu & Lược đồ quan hệ):** Sử dụng hệ thống **Thư viện Pháp luật (`thuvienphapluat.vn`)** làm engine cào đệ quy và phân tích quan hệ thay thế/hướng dẫn giữa các văn bản (qua workflow `/ccba-legal-intel`).
-* **Cơ chế cập nhật động & Quản lý hiệu lực văn bản:**
-  > [!IMPORTANT]
-  > Agent **BẮT BUỘC** phải tra cứu tệp Registry động tại [.md/data/legal_registry.yaml](../../.md/data/legal_registry.yaml) trước khi thực hiện bất kỳ phân tích pháp lý nào để xác định chính xác văn bản nào đang có hiệu lực (`status: current`) cho từng bộ môn/chủ đề ở thời điểm chạy tác vụ.
-  - Đối với các văn bản pháp luật, Nghị định hoặc Thông tư mới được bổ sung/cập nhật trong tương lai: Thông tin hiệu lực sẽ được cập nhật động vào `legal_registry.yaml` và lưu trữ tệp gốc vào `.md/legal_docs/` (thông qua workflow `/ccba-legal-intel`).
-  - Đối với các dự án xây dựng cụ thể: Đối chiếu ngày quyết định đầu tư của dự án với ngày hiệu lực của văn bản trong Registry để áp dụng điều khoản chuyển tiếp phù hợp (ví dụ: kế thừa quy định cũ theo Điều 53 Nghị định 207/2026/NĐ-CP nếu dự án được duyệt trước 01/07/2026).
-
----
-
-## 6. Runtime Debugging & Diagnostics (Chẩn đoán & Gỡ lỗi Runtime)
-
-* **Dev Server Logs (Log của máy chủ phát triển):** Toàn bộ đầu ra log của dev server đang chạy được ghi nhận tại tệp tin cục bộ `.md/scratch/logs/dev_server.log` (tệp tin này chỉ xuất hiện khi dev server được chạy và xuất log).
-* **Quy tắc đọc log:** Khi người dùng báo cáo lỗi runtime, crash ứng dụng, hoặc hành vi không mong muốn khi đang chạy thử nghiệm, Agent **bắt buộc** phải đọc tệp tin log này. Để tránh quá tải token ngữ cảnh, Agent chỉ được đọc tối đa 200 dòng cuối cùng của tệp tin này bằng cách chỉ định các tham số dòng thích hợp trong công cụ đọc file.
-
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
