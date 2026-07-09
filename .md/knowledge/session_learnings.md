@@ -327,6 +327,31 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Vấn đề**: Commit trực tiếp các tệp nhị phân `.docx`, `.pdf` hoặc thư mục ảnh slide `.webp` lên Git của Hub hoặc Spoke, gây phình to vĩnh viễn kích thước lịch sử Git.
 - **Thay thế bằng**: Cấu hình Git-ignore đệ quy và đồng bộ chúng hoàn toàn qua SharePoint/OneDrive.
 
+### 33. Gated API RAG & Prototyping Boundaries (Ranh giới RAG & Prototype có điều kiện)
+- **Ngữ cảnh**: Tích hợp các kỹ năng nặng về mặt tài nguyên (như `ccba-research` và `ccba-prototype`) với các kỹ năng nghiệp vụ thực tế mà không gây phình to chi phí API Gateway hay làm chậm thời gian phản hồi.
+- **Giải pháp**: 
+  - Áp dụng cơ chế bán tự động (HITL - Human-In-The-Loop) cho đối soát quy chuẩn sâu: Agent chính chỉ gợi ý lệnh chạy thay vì tự ý spawn.
+  - Sử dụng static templates làm mặc định cho các nghiệp vụ ổn định, chỉ kích hoạt RAG qua subagent khi Registry phát hiện văn bản thay thế mới.
+  - Chỉ bắt buộc dựng mẫu thử thô (prototype) đối với các refactor ảnh hưởng trực tiếp đến Core Platform (Hub) để bảo vệ tính ổn định của nhân hệ thống, đối với Spoke apps thì bỏ qua để tối ưu tiến độ.
+- **Nguồn**: Session `d79bdc3f-c199-40c2-b1b7-eefc1865b66b`, 2026-07-09
+
+### 34. Parallel Sub-agent Processing for Batch Matrix (Xử lý subagent song song cho ma trận quét loạt)
+- **Ngữ cảnh**: Quét audit hồ sơ bản vẽ đa bộ môn lớn trên Coordination Matrix mà Agent chính bị nghẽn (block) do xử lý tuần tự từng tầng.
+- **Giải pháp**: Cấu hình Async Batcher để spawn song song các subagents `ccba-research` độc lập dưới nền chạy quét cho từng tầng/Zone, thu gom kết quả JSON/Markdown về Agent chính để tổng hợp báo cáo.
+- **Nguồn**: Session `d79bdc3f-c199-40c2-b1b7-eefc1865b66b`, 2026-07-09
+
+---
+
+## Anti-patterns (Cách tránh)
+
+### 28. Monolithic Agent Core Processing on Large Batches (Agent chính tự xử lý tuần tự trên các lô dữ liệu lớn)
+- **Vấn đề**: Để Agent chính tự lặp và gọi LLM lần lượt cho hàng chục dòng bản vẽ hoặc tài liệu lớn trong ma trận phối hợp, gây kéo dài thời gian chờ và dễ bị lỗi timeout/đứt gãy giữa chừng.
+- **Thay thế bằng**: Spawn song song các subagents độc lập xử lý phân mảnh (Map) rồi gộp kết quả ở Agent chính (Reduce).
+
+### 29. Automatic High-cost Prototyping on Minor Refactors (Dựng prototype tự động cho các thay đổi nhỏ)
+- **Vấn đề**: Bắt buộc Agent phải dựng `/ccba-prototype` cho mọi đề xuất refactor code nhỏ trên các Spoke ứng dụng độc lập, làm kéo dài thời gian phát triển và lãng phí tài nguyên.
+- **Thay thế bằng**: Chỉ bắt buộc dựng prototype cho các thay đổi ở mức độ Core Platform (Hub) có tác động lan rộng.
+
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 

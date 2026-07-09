@@ -43,7 +43,9 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 
 ### 2. Cập nhật khi VBPL thay đổi
 
-1. Kiểm tra `legal_registry.yaml` (skill `legal-document-tracker`) xem có VBPL mới
+1. Kiểm tra `legal_registry.yaml` (skill `legal-document-tracker`) xem có văn bản nào liên quan đến nghiệm thu hoàn công thay đổi trạng thái sang `superseded` (hết hiệu lực) và có văn bản thay thế mới (`current`).
+   - Nếu không có thay đổi: Dùng trực tiếp static templates (`checklist_master.yaml`) để tiết kiệm token và thời gian.
+   - Nếu có thay đổi: Đề xuất người dùng sử dụng `/ccba-research` để spawn subagent nghiên cứu sâu cấu trúc phụ lục nghiệm thu mới và tự động cập nhật lại master checklist.
 2. So sánh nội dung Phụ lục hồ sơ hoàn thành cũ vs mới
 3. Cập nhật `checklist_master.yaml`:
    - Thêm mục mới
