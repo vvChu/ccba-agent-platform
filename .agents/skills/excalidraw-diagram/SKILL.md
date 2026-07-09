@@ -34,6 +34,7 @@ Nguồn gốc: Dựa trên và mở rộng từ [excalidraw-diagram-skill](https
 ## Quy trình thực hiện (6 bước)
 
 ### Bước 0: Đánh giá độ sâu cần thiết
+- **Đề xuất dựng mẫu thử nhanh (ADR 0010):** Khi thiết kế các luồng kiến trúc/giao diện phức tạp dưới dạng Excalidraw, Agent có thể đề xuất người dùng chạy `/ccba-prototype` ở nhánh **UI (UI.md)** để sinh nhanh 3 biến thể giao diện thô kèm bộ switcher nổi dưới đáy màn hình, giúp người dùng trực quan hóa sơ đồ trước khi thiết kế chi tiết trên Excalidraw.
 
 **Diagram đơn giản/khái niệm** — dùng khi:
 - Giải thích mental model hoặc triết lý

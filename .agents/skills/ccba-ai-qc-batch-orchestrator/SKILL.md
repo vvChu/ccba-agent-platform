@@ -30,4 +30,5 @@ python .agents/skills/ccba-ai-qc-batch-orchestrator/scripts/orchestrator.py --pr
 1. **Parser Module:** Phân tích cột `NormalizedLevel` và danh sách các tệp tin bản vẽ tương ứng trong `Coordination_Matrix.csv`.
 2. **Missing Document Handler:** Nếu một cấu kiện bị thiếu sheet, hoặc không tìm thấy trang thực tế thì tự động sinh ra một khung ảnh trắng `blank.png` làm fallback để tránh ngắt quãng pipeline.
 3. **Async Batcher:** Quản lý hàng chờ tác vụ (Task Queue), thực thi song song các cuộc gọi Quad-View (L01, L02...) lên AI Gateway.
+   - **Parallel Sub-agent Dispatch (ADR 0010):** Để tối ưu hóa thời gian chạy hàng loạt các tác vụ quét nặng, Orchestrator được cấu hình để spawn song song các subagents `ccba-research` chạy độc lập dưới nền cho từng dòng bản vẽ (Tầng/Zone) trong Coordination Matrix, sau đó thu thập kết quả để biên soạn báo cáo chung.
 4. **Integration Handoff:** Chuyển kết quả phân tích JSON về cho `IDOPReporter` để biên soạn thành báo cáo Markdown/Docx hoàn chỉnh.
