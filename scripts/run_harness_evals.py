@@ -181,6 +181,16 @@ def main() -> None:
 
         # Chạy pytest
         pytest_cmd = [sys.executable, "-m", "pytest"] + (test_args if test_args else [])
+        try:
+            import pytest_cov  # type: ignore
+            pytest_cmd += [
+                "--cov=packages/mdconverter/src/mdconverter",
+                "--cov=packages/ccba-ai/src/ccba_ai",
+                "--cov-report=xml",
+            ]
+        except ImportError:
+            pass
+
         success_test, out_test = run_command(pytest_cmd, project_root, "Pytest Suite")
         gates_summary.append(("Gate 3: Pytest Unit Tests", success_test, out_test))
         all_success = all_success and success_test
