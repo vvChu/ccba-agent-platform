@@ -18,6 +18,7 @@ topics:
       - "docx"
       - "pdf"
       - "legal-document-tracker"
+      - "ccba-research"
     guidelines:
       - "Kiểm tra kỹ số hiệu, điều khoản, ngày ban hành và ngày có hiệu lực chính thức của văn bản pháp lý."
       - "Đối chiếu xem có văn bản nào mới thay thế hoặc đang ở trạng thái dự thảo không (tuân thủ quy định giai đoạn chuyển tiếp)."
@@ -39,6 +40,7 @@ topics:
       - "pdf"
       - "ccba-ai-qc-pccc-audit"
       - "ccba-ai-qc-discovery"
+      - "ccba-research"
     guidelines:
       - "Quét danh mục bản vẽ MEP để tìm kiếm sơ đồ nguyên lý hệ thống báo cháy, chữa cháy."
       - "Đối chiếu vị trí đầu báo khói, đầu phun sprinkler với thiết kế kiến trúc/trần thạch cao để tìm lỗi xung đột (clash detection phi hình học)."
@@ -60,6 +62,7 @@ topics:
       - "bigbim-rase"
       - "bigbim-risk"
       - "excalidraw-diagram"
+      - "ccba-prototype"
     guidelines:
       - "Kiểm tra quy chuẩn định danh duy nhất (Unique ID) cho cấu kiện từ giai đoạn A0."
       - "Đối chiếu việc phân loại không gian vật tư, vật liệu theo hệ thống Uniclass 200 (PM/En)."
@@ -83,6 +86,8 @@ topics:
       - "web-testing"
       - "api-circuit-breaker"
       - "append-only-logger"
+      - "ccba-research"
+      - "ccba-prototype"
     guidelines:
       - "Tuân thủ tiêu chuẩn chất lượng KISS (Keep It Simple, Stupid) và ưu tiên composition over inheritance."
       - "Rà soát lỗi bảo mật (OWASP Top 10), rò rỉ API keys, thông tin nhạy cảm."
