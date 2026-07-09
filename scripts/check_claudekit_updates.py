@@ -183,7 +183,7 @@ def check_and_evaluate(config: dict, check_only: bool = False):
                 cwd=str(local_path),
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
             changed_files = diff_res.stdout.strip().splitlines()
             if changed_files:
@@ -194,7 +194,9 @@ def check_and_evaluate(config: dict, check_only: bool = False):
             print(f"  - Error retrieving changed files list: {e}")
 
         if check_only:
-            print("  - [Check-Only Mode] Skipping automated evaluator. Please run evaluate command manually.\n")
+            print(
+                "  - [Check-Only Mode] Skipping automated evaluator. Please run evaluate command manually.\n"
+            )
             return
 
         print("  - Triggering Automated Porting Evaluator...")
@@ -226,8 +228,13 @@ def check_and_evaluate(config: dict, check_only: bool = False):
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="Check for ClaudeKit Upstream Updates")
-    parser.add_argument("--check-only", action="store_true", help="Only check for updates and list changed files, do not evaluate")
+    parser.add_argument(
+        "--check-only",
+        action="store_true",
+        help="Only check for updates and list changed files, do not evaluate",
+    )
     args = parser.parse_args()
 
     print("[ClaudeKit Update Check] Running update checks across repositories...\n")
