@@ -160,7 +160,9 @@ def get_notebook_id_for_workflow(workflow_name: str, catalog_path: Path) -> str:
     Returns:
         Mã notebook_id tương ứng, hoặc fallback về notebook_id của _core.
     """
-    fallback_id = "nb-mock-3"  # Mặc định của _core
+    import os
+
+    fallback_id = os.getenv("NOTEBOOKLM_CORE_ID", "nb-mock-3")
     if not catalog_path.exists():
         return fallback_id
 
@@ -171,12 +173,17 @@ def get_notebook_id_for_workflow(workflow_name: str, catalog_path: Path) -> str:
                 return fallback_id
 
             notebook_ids = catalog.get("notebook_ids", {})
-            fallback_id = notebook_ids.get("_core", fallback_id)
+            fallback_id = os.getenv("NOTEBOOKLM_CORE_ID", notebook_ids.get("_core", fallback_id))
 
             workflows = catalog.get("workflows", [])
             for wf in workflows:
                 if isinstance(wf, dict) and wf.get("name") == workflow_name:
                     bundle = wf.get("bundle", "_core")
+                    # Ưu tiên lấy từ biến môi trường định dạng NOTEBOOKLM_<BUNDLE_NAME_UPPER>_ID
+                    env_var_name = f"NOTEBOOKLM_{bundle.strip('_').upper()}_ID"
+                    env_val = os.getenv(env_var_name)
+                    if env_val:
+                        return env_val
                     return str(notebook_ids.get(bundle, fallback_id))
     except Exception as e:
         print(f"[Warn] Lỗi khi định tuyến notebook cho workflow: {e}", file=sys.stderr)
