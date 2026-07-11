@@ -197,4 +197,3 @@ def route_session_to_workflow(workflow_name: str, catalog_path: Path) -> str:
     notebook_id = get_notebook_id_for_workflow(workflow_name, catalog_path)
     save_notebook_id_to_context(notebook_id)
     return notebook_id
-
