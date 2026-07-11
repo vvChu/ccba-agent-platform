@@ -71,3 +71,22 @@ def test_route_session_to_workflow(mock_catalog, monkeypatch) -> None:
         with open(context_file, encoding="utf-8") as f:
             data = yaml.safe_load(f)
             assert data["project"]["notebook_id"] == "nb-mock-qc"
+
+
+def test_get_notebook_id_override_via_env(mock_catalog, monkeypatch) -> None:
+    """Verify that notebook_id is overridden dynamically via environment variables."""
+    catalog_path, _ = mock_catalog
+
+    # Case 1: Override QC bundle ID
+    monkeypatch.setenv("NOTEBOOKLM_QC_ID", "env-mock-qc")
+    nb_id = get_notebook_id_for_workflow("ccba-ai-qc-pccc-audit", catalog_path)
+    assert nb_id == "env-mock-qc"
+
+    # Case 2: Override Core bundle ID (which is the default fallback)
+    monkeypatch.setenv("NOTEBOOKLM_CORE_ID", "env-mock-core")
+    nb_id = get_notebook_id_for_workflow("ccba-new-feature", catalog_path)
+    assert nb_id == "env-mock-core"
+
+    # Case 3: Fallback workflows also receive the overridden Core ID
+    nb_id = get_notebook_id_for_workflow("non-existent-wf", catalog_path)
+    assert nb_id == "env-mock-core"

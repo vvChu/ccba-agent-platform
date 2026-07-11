@@ -24,6 +24,9 @@ Tài liệu này lưu trữ các thuật ngữ nghiệp vụ, khái niệm kỹ 
 ### 🚫 Negation (Lỗi gợi ý phủ định)
 *   **Định nghĩa:** Một lỗi thiết kế prompt (failure mode) khi điều khiển Agent bằng cấm đoán (*không được làm X*). Lỗi này vô tình kéo hành vi bị cấm vào ngữ cảnh khiến Agent dễ phạm phải hơn (hiệu ứng "Don't think of an elephant"). Khắc phục bằng cách mô tả hành vi tích cực cần thực hiện.
 
+### 🌐 Dynamic ID Override (Cơ chế đè ID động)
+*   **Định nghĩa:** Cơ chế định tuyến cho phép ghi đè các Google Notebook IDs mặc định bằng các biến môi trường hệ thống (dạng `NOTEBOOKLM_<BUNDLE>_ID`) giúp tránh việc sửa đổi mã nguồn hay file cấu hình Git khi chạy ở các môi trường staging, production hoặc CI/CD khác nhau.
+
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
