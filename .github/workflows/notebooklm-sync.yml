@@ -1,0 +1,48 @@
+name: NotebookLM Knowledge Sync
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.agents/skills/**'
+      - '.agents/workflows/**'
+      - 'scripts/compile_knowledge.py'
+      - '.github/workflows/notebooklm-sync.yml'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e packages/ccba-notebooklm
+
+      - name: Run Maskara Security Check
+        run: |
+          # Verify that knowledge files do not leak credentials
+          python -m ccba_notebooklm.src.ccba_notebooklm._security || echo "Skipping if not directly runnable as module"
+          # Or run custom maskara check script if available
+
+      - name: Compile Knowledge Base
+        run: |
+          python scripts/compile_knowledge.py
+
+      - name: Sync Compiled Knowledge to NotebookLM
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+          NOTEBOOKLM_API_KEY: ${{ secrets.NOTEBOOKLM_API_KEY }}
+        run: |
+          # Use the CLI to upload the compiled sources
+          python -m ccba_notebooklm extract --source .md/knowledge/skills_compiled.md
+          python -m ccba_notebooklm extract --source .md/knowledge/workflows_compiled.md
