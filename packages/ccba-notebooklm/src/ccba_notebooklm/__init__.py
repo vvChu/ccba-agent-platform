@@ -26,6 +26,8 @@ from ._registry import (
     read_registry,
     save_notebook_id_to_context,
     update_registry,
+    get_notebook_id_for_workflow,
+    route_session_to_workflow,
 )
 from ._security import (
     run_maskara_gate,
@@ -58,4 +60,6 @@ __all__ = [
     "list_sources",
     "query_rag",
     "share_notebook",
+    "get_notebook_id_for_workflow",
+    "route_session_to_workflow",
 ]
