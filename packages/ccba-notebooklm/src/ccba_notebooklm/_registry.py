@@ -148,3 +148,53 @@ def clear_task_state() -> None:
             TASK_STATE_FILE.unlink()
         except Exception:
             pass
+
+
+def get_notebook_id_for_workflow(workflow_name: str, catalog_path: Path) -> str:
+    """Xác định notebook_id tương ứng với workflow dựa vào catalog.yaml.
+
+    Args:
+        workflow_name: Tên workflow cần tra cứu.
+        catalog_path: Đường dẫn vật lý đến file catalog.yaml.
+
+    Returns:
+        Mã notebook_id tương ứng, hoặc fallback về notebook_id của _core.
+    """
+    fallback_id = "nb-mock-3"  # Mặc định của _core
+    if not catalog_path.exists():
+        return fallback_id
+
+    try:
+        with open(catalog_path, encoding="utf-8") as f:
+            catalog = yaml.safe_load(f)
+            if not catalog:
+                return fallback_id
+
+            notebook_ids = catalog.get("notebook_ids", {})
+            fallback_id = notebook_ids.get("_core", fallback_id)
+
+            workflows = catalog.get("workflows", [])
+            for wf in workflows:
+                if isinstance(wf, dict) and wf.get("name") == workflow_name:
+                    bundle = wf.get("bundle", "_core")
+                    return str(notebook_ids.get(bundle, fallback_id))
+    except Exception as e:
+        print(f"[Warn] Lỗi khi định tuyến notebook cho workflow: {e}", file=sys.stderr)
+
+    return fallback_id
+
+
+def route_session_to_workflow(workflow_name: str, catalog_path: Path) -> str:
+    """Định tuyến phiên làm việc hiện tại sang notebook tương ứng của workflow.
+
+    Args:
+        workflow_name: Tên workflow kích hoạt.
+        catalog_path: Đường dẫn đến catalog.yaml.
+
+    Returns:
+        Mã notebook_id đã được định tuyến và lưu vào context.
+    """
+    notebook_id = get_notebook_id_for_workflow(workflow_name, catalog_path)
+    save_notebook_id_to_context(notebook_id)
+    return notebook_id
+
