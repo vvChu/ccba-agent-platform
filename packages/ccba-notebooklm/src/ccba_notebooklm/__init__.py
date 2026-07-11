@@ -22,8 +22,10 @@ from ._gc import (
 )
 from ._registry import (
     get_file_sha256,
+    get_notebook_id_for_workflow,
     get_notebook_id_from_context,
     read_registry,
+    route_session_to_workflow,
     save_notebook_id_to_context,
     update_registry,
 )
@@ -58,4 +60,6 @@ __all__ = [
     "list_sources",
     "query_rag",
     "share_notebook",
+    "get_notebook_id_for_workflow",
+    "route_session_to_workflow",
 ]
