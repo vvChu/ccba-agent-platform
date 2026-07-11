@@ -1,7 +1,11 @@
 """test_compile_knowledge.py - Unit tests for compile_knowledge.py"""
 
+import sys
 import tempfile
 from pathlib import Path
+
+# Add scripts directory to sys.path to allow running from any CWD
+sys.path.append(str(Path(__file__).parent.parent.resolve()))
 
 from compile_knowledge import compile_skills, compile_workflows
 
