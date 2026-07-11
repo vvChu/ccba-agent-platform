@@ -14,6 +14,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Add scripts directory to sys.path to allow running from any CWD
+sys.path.append(str(Path(__file__).parent.resolve()))
+
 import yaml
 
 # Import core utilities
