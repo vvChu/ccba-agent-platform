@@ -121,3 +121,8 @@ scripts/verify_report.py
 # Node dependencies
 node_modules/
 
+# Security and Credentials
+secret_credential.*
+*.db
+!Thumbs.db
+
