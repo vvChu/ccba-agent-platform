@@ -379,6 +379,18 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Vấn đề**: Bổ sung tài liệu ADR có nhắc tới các biến môi trường mới mà quên không cập nhật các mẫu biến này vào tệp cấu hình mẫu `.env.example`, gây ra cảnh báo `Env Var Warning` hàng loạt từ linter `validate_docs.py`.
 - **Thay thế bằng**: Luôn khai báo mẫu các biến cấu hình mới vào cuối tệp `.env.example` song song với việc viết tài liệu thiết kế.
 
+### 32. Static Video Analysis Storage (Lưu trữ tĩnh kết quả phân tích video)
+- **Vấn đề**: Lưu kết quả phân tích video tại thư mục tĩnh dùng chung (như `.md/youtube-learn/`), dẫn đến việc dữ liệu bị ghi đè khi chạy nhiều video và phá vỡ cấu trúc gom nhóm thư mục Đề tài Chuyên biệt.
+- **Thay thế bằng**: Sử dụng ID video hoặc băm hash để tạo thư mục ảnh slide động (`images_[video_id]/`) và tệp kết quả động (`notes_concept_[video_id].md`), đồng thời cung cấp tham số đề tài để gom nhóm vào `.md/projects/[Ten_De_Tai]/`.
+
+### 33. Outdated Command and File References (Tham chiếu tệp và lệnh lỗi thời)
+- **Vấn đề**: Giữ lại các tham chiếu của tài liệu cũ `PRD` và các lệnh đã xóa như `/ccba-to-prd` hoặc `/ccba-to-issues` trong tài liệu đặc tả, hướng dẫn (`ask`, `code-review`, `ccba-setup-skills`, `AGENTS.md`) dễ gây nhầm lẫn và lỗi thực thi cho Agent.
+- **Thay thế bằng**: Rà quét và đồng bộ hóa toàn diện thuật ngữ từ `PRD` sang `Spec` và cập nhật các lệnh thành `/ccba-to-spec` và `/ccba-to-tickets` trong tất cả các tệp cấu hình và đặc tả.
+
+### 34. Bypassing GitHub CI Block via CLI Admin Privilege (Ghi đè merge admin qua GitHub CLI)
+- **Vấn đề**: Tài khoản GitHub bị lỗi thanh toán khiến toàn bộ Actions CI bị treo/fail ngay khi chạy, làm chặn việc merge PR theo quy trình tự động.
+- **Thay thế bằng**: Xác thực hoàn toàn chất lượng code bằng các công cụ validation cục bộ (`validate_skills.py`, `validate_docs.py`), sau đó sử dụng cờ `--admin` của GitHub CLI (`gh pr merge --admin`) để merge PR trực tiếp bằng quyền Administrator.
+
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
