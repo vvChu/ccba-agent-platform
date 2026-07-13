@@ -33,7 +33,7 @@ from transcript import fetch_youtube_transcript  # noqa: E402
 from visual_extractor import _find_ffmpeg_bin, extract_video_visuals  # noqa: E402
 
 
-def synthesize_concept_notes(transcript: str, filenames: list[str], max_tokens: int = 8192) -> str:
+def synthesize_concept_notes(transcript: str, filenames: list[str], images_subfolder: str = "images", max_tokens: int = 8192) -> str:
     """Synthesize learning notes inserting markdown links to slide images."""
     from ccba_ai import ai
 
@@ -43,7 +43,7 @@ def synthesize_concept_notes(transcript: str, filenames: list[str], max_tokens: 
         "YÊU CẦU CỐT LÕI:\n"
         "1. Trình bày chi tiết, mạch lạc toàn bộ kiến thức trong video. Không tóm tắt sơ sài.\n"
         "2. Tích hợp đầy đủ các công thức toán học (dùng LaTeX), sơ đồ logic (dùng Mermaid), bảng biểu so sánh, và mã nguồn (code snippets) thực tế trong bài giảng.\n"
-        "3. Chèn các hình ảnh slide tương ứng vào đúng vị trí dòng chảy kiến thức bằng định dạng markdown: ![Mô tả slide](./images/[tên_file_ảnh]). Viết alt-text chi tiết cho ảnh slide đó (chứa sơ đồ gì, công thức gì).\n\n"
+        f"3. Chèn các hình ảnh slide tương ứng vào đúng vị trí dòng chảy kiến thức bằng định dạng markdown: ![Mô tả slide](./{images_subfolder}/[tên_file_ảnh]). Viết alt-text chi tiết cho ảnh slide đó (chứa sơ đồ gì, công thức gì).\n\n"
         f"TRANSCRIPT PHỤ ĐỀ:\n---\n{transcript}\n---\n\n"
         f"DANH SÁCH HÌNH ẢNH SLIDE ĐÃ TRÍCH XUẤT:\n{filenames}\n\n"
         "Chỉ trả về nội dung Markdown của tài liệu Concept Notes. Không bọc mã nguồn Markdown trong code block lớn."
@@ -130,25 +130,57 @@ def extract_speaker_from_transcript(transcript: str, default: str = "Diễn gi�
     return default
 
 
+def _extract_video_id(video_url: str) -> str:
+    """Extract YouTube video ID from URL or generate a unique slug."""
+    from urllib.parse import urlparse, parse_qs
+    import hashlib
+
+    video_id = None
+    if "youtube.com" in video_url or "youtu.be" in video_url:
+        try:
+            parsed = urlparse(video_url)
+            if parsed.netloc == "youtu.be":
+                video_id = parsed.path[1:]
+            elif "youtube.com" in parsed.netloc:
+                qs = parse_qs(parsed.query)
+                video_id = qs.get("v", [None])[0]
+                if not video_id and parsed.path.startswith("/embed/"):
+                    video_id = parsed.path.split("/")[2]
+        except Exception:
+            pass
+
+    if not video_id:
+        if os.path.exists(video_url):
+            video_id = Path(video_url).stem
+        else:
+            video_id = hashlib.md5(video_url.encode("utf-8")).hexdigest()[:11]
+
+    return video_id
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="CCBA youtube-learn Orchestrator.")
     parser.add_argument("video_url", type=str, help="URL of the video or local video path")
     parser.add_argument("output_dir", type=str, nargs="?", default=None, help="Output directory path")
+    parser.add_argument("--project", "-p", type=str, default=None, help="Tên đề tài/dự án (Cohesive Topic Folder)")
     parser.add_argument("--speaker", type=str, default=None, help="Explicit speaker name")
     
     args = parser.parse_args()
     video_url = args.video_url
+    video_id = _extract_video_id(video_url)
 
     # Resolve Output Directory Fallback
-    if args.output_dir:
+    if args.project:
+        output_dir = (Path.cwd() / ".md" / "projects" / args.project).absolute()
+    elif args.output_dir:
         output_dir = Path(args.output_dir).absolute()
     else:
-        # Fallback to .md/youtube-learn/ inside workspace
-        output_dir = (Path.cwd() / ".md" / "youtube-learn").absolute()
+        # Fallback to default cohesive topic folder
+        output_dir = (Path.cwd() / ".md" / "projects" / "default_topic").absolute()
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    images_dir = output_dir / "images"
+    images_dir = output_dir / f"images_{video_id}"
 
     _logger.info(f"CCBA youtube-learn run started. Output folder: {output_dir.absolute()}")
 
@@ -179,7 +211,7 @@ def main():
         sys.exit(1)
 
     # Save raw transcript
-    transcript_file = output_dir / "raw_transcript.txt"
+    transcript_file = output_dir / f"raw_transcript_{video_id}.txt"
     transcript_file.write_text(transcript, encoding="utf-8")
     try:
         rel_path = transcript_file.relative_to(Path.cwd())
@@ -246,14 +278,15 @@ def main():
     max_tokens_worldview = _safe_int_env("MAX_TOKENS_WORLDVIEW", dynamic_worldview_limit)
     max_tokens_speaker = _safe_int_env("MAX_TOKENS_SPEAKER", 2048)
 
-    concept_notes = synthesize_concept_notes(transcript, saved_images, max_tokens=max_tokens_concept)
+    images_subfolder = f"images_{video_id}" if not is_text_only else "images"
+    concept_notes = synthesize_concept_notes(transcript, saved_images, images_subfolder=images_subfolder, max_tokens=max_tokens_concept)
     worldview_notes = synthesize_worldview_notes(transcript, speaker_name, video_title, max_tokens=max_tokens_worldview)
     speaker_notes = synthesize_speaker_notes(transcript, speaker_name, max_tokens=max_tokens_speaker)
 
     # Write files
-    (output_dir / "notes_concept.md").write_text(concept_notes, encoding="utf-8")
-    (output_dir / "notes_worldview.md").write_text(worldview_notes, encoding="utf-8")
-    (output_dir / "notes_speaker.md").write_text(speaker_notes, encoding="utf-8")
+    (output_dir / f"notes_concept_{video_id}.md").write_text(concept_notes, encoding="utf-8")
+    (output_dir / f"notes_worldview_{video_id}.md").write_text(worldview_notes, encoding="utf-8")
+    (output_dir / f"notes_speaker_{video_id}.md").write_text(speaker_notes, encoding="utf-8")
 
     _logger.info("All documents synthesized and saved successfully!")
     print("\n🎉 CCBA Belief Archaeology completed successfully!")

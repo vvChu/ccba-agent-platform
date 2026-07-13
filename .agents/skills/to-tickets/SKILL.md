@@ -1,5 +1,5 @@
 ---
-name: ccba-to-tickets
+name: to-tickets
 description: Phân rã một kế hoạch, spec hoặc hội thoại hiện tại thành các ticket phát triển dạng lát cắt dọc (tracer-bullet slices), xác định rõ ràng mối quan hệ chặn (blocking edges) và đăng tải lên công cụ theo dõi (Issue Tracker) đã cấu hình.
 disable-model-invocation: true
 ---
