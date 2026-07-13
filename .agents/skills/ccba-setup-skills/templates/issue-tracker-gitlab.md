@@ -1,6 +1,6 @@
 # Công cụ theo dõi công việc: GitLab Issues
 
-Các lỗi (bugs) và yêu cầu tính năng (PRDs) của dự án này được theo dõi trên GitLab Issues. Sử dụng công cụ `glab` CLI cho mọi thao tác.
+Các lỗi (bugs) và yêu cầu tính năng (Specs) của dự án này được theo dõi trên GitLab Issues. Sử dụng công cụ `glab` CLI cho mọi thao tác.
 
 ## Các lệnh thao tác tiêu chuẩn (Conventions)
 

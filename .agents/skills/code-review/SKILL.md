@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells) và Spec (PRD/Requirements).
+description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells) và Spec (Spec/Requirements).
 user-invocable: true
 when_to_use: "Dùng khi người dùng muốn đánh giá chất lượng của một PR, một commit, hoặc các thay đổi chưa commit (--pending)."
 category: utilities
@@ -25,9 +25,9 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
 - **Tiêu chí hoàn thành:** Điểm mốc đối chiếu được xác minh tồn tại và dữ liệu diff so sánh trả về khác rỗng. Nếu mốc đối chiếu không hợp lệ hoặc không có thay đổi nào (diff rỗng), dừng lại và báo lỗi.
 
 ### 2. Xác định tài liệu đặc tả nghiệp vụ (Identify the spec source)
-- Tìm kiếm tài liệu PRD hoặc danh sách ticket tương ứng với tính năng tại thư mục `.md/knowledge/`.
+- Tìm kiếm tài liệu Spec hoặc danh sách ticket tương ứng với tính năng tại thư mục `.md/knowledge/`.
 - Nếu không tìm thấy tệp tin đặc tả nghiệp vụ nào, yêu cầu người dùng cung cấp đường dẫn hoặc xác nhận bỏ qua trục Spec (chỉ review Standards).
-- **Tiêu chí hoàn thành:** Xác định chính xác tệp tin PRD (ví dụ: `prd-{feature-slug}.md`) làm nguồn chân lý để đối chiếu hoặc ghi nhận bỏ qua trục Spec.
+- **Tiêu chí hoàn thành:** Xác định chính xác tệp tin Spec (ví dụ: `spec-{slug}.md`) làm nguồn chân lý để đối chiếu hoặc ghi nhận bỏ qua trục Spec.
 
 ### 3. Xác định tài liệu quy chuẩn (Identify the standards sources)
 - Tìm kiếm các quy định chuẩn viết code của dự án (ví dụ: `.agents/AGENTS.md` hoặc `CODING_STANDARDS.md`).
@@ -37,7 +37,7 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
 ### 4. Gọi song song hai Sub-agents (Spawn sub-agents in parallel)
 - Spawn đồng thời 2 sub-agents (sử dụng subagent `self`):
   - **Standards Sub-agent Prompt:** Nhận Git Diff + danh sách tiêu chuẩn + 12 smells. Yêu cầu chỉ ra các vi phạm quy chuẩn và smell kèm trích dẫn dòng code.
-  - **Spec Sub-agent Prompt:** Nhận Git Diff + nội dung PRD/Spec. Yêu cầu chỉ ra các điểm thiếu hụt tính năng so với yêu cầu hoặc scope creep dư thừa.
+  - **Spec Sub-agent Prompt:** Nhận Git Diff + nội dung Spec. Yêu cầu chỉ ra các điểm thiếu hụt tính năng so với yêu cầu hoặc scope creep dư thừa.
 - **Tiêu chí hoàn thành:** Khởi chạy thành công 2 sub-agents chạy song song và nhận lại đầy đủ 2 báo cáo phân tích độc lập (Standards Report và Spec Report).
 
 ### 5. Tổng hợp báo cáo (Aggregate Findings)

@@ -19,8 +19,8 @@ Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nh
 Đây là lộ trình chuẩn nhất của mọi yêu cầu phát triển tính năng mới trong Platform:
 
 1. **Làm sắc nét ý tưởng:** Gọi `/ccba-grill-with-docs` để phỏng vấn sâu rộng và ghi nhận tri thức dự án vào `CONTEXT.md` và các bản ghi quyết định kiến trúc (ADRs).
-2. **Soạn thảo đặc tả sản phẩm:** Gọi `/ccba-to-prd` để tổng hợp tri thức đã thảo luận thành tài liệu PRD cục bộ hoặc đẩy lên Issue Tracker.
-3. **Phân rã tác vụ công việc:** Gọi `/ccba-to-issues` để bẻ nhỏ PRD thành các ticket phát triển độc lập dạng lát cắt dọc (Tracer-bullet vertical slices).
+2. **Soạn thảo đặc tả kỹ thuật:** Gọi `/ccba-to-spec` để tổng hợp tri thức đã thảo luận thành tài liệu Spec (Đặc tả Kỹ thuật) cục bộ hoặc đẩy lên Issue Tracker.
+3. **Phân rã tác vụ công việc:** Gọi `/ccba-to-tickets` để bẻ nhỏ Spec thành các ticket phát triển độc lập dạng lát cắt dọc (Tracer-bullet vertical slices).
 4. **Triển khai lập trình (TDD):** Mở cửa sổ Agent sạch và chạy `/ccba-tdd` (Red-Green-Refactor) để hiện thực hóa từng ticket độc lập.
 5. **Kiểm soát chất lượng (QC):** Chạy `/ccba-run-qc-pipeline` để quét chất lượng và rà soát lỗi đa bộ môn.
 6. **Bàn giao cuối phiên làm việc:** Chạy `/ccba-session-retrospective` (hoặc `/ccba-handoff`) để dọn dẹp môi trường và tổng hợp tri thức bàn giao.
