@@ -393,17 +393,7 @@ skills:
   data_files:
   - '[bigbim_method_path]/.md/chunks/INDEX.md'
   - '[bigbim_method_path]/.md/knowledge/vbpl-digest/nd-175-digest.md'
-- name: ccba-idop-scaffolder
-  bundle: _core
-  description: SharePoint IDOP deployment support toolkit & React/Vite/TS Code Apps
-    scaffolding
-  triggers:
-  - idop setup
-  - idop scaffolder
-  - idop
-  - scaffolder
-  - app scaffolding
-  skill_path: .agents/skills/idop-scaffolder/SKILL.md
+
 - name: ccba-ai-pdf-preprocessor
   bundle: _qc
   description: 'Tối ưu hóa PDF cho LLM: Segmenting, Chunking, và Tiling'
@@ -650,17 +640,17 @@ skills:
   - tạo spec
   - đặc tả kỹ thuật
   skill_path: .agents/skills/to-spec/SKILL.md
-- name: ccba-to-tickets
+- name: to-tickets
   bundle: _core
   description: Phân rã bản thiết kế/spec/PRD thành các ticket phát triển độc lập dạng
-    lát cắt dọc (vertical slices) và liên kết chặn
+    lát cắt dọc (vertical slices)
   triggers:
   - to-tickets
-  - tickets
-  - bẻ ticket
-  - tạo ticket
+  - ticket
+  - bẻ nhỏ
   - phân rã
-  skill_path: .agents/skills/ccba-to-tickets/SKILL.md
+  - issues
+  skill_path: .agents/skills/to-tickets/SKILL.md
 - name: ccba-prototype
   bundle: _core
   description: Xây dựng mẫu thử code thô (throwaway prototype) để trả lời nhanh một
@@ -905,6 +895,54 @@ skills:
   - youtube
   - belief archaeology
   skill_path: .agents/skills/youtube-learn/SKILL.md
+- name: ask-matt
+  bundle: _core
+  description: Ask which skill or flow fits your situation. A router over the skills in this repo.
+  triggers:
+  - ask matt
+  - router
+  - ask flow
+  skill_path: .agents/skills/ask-matt/SKILL.md
+- name: implement
+  bundle: _core
+  description: Implement a piece of work based on a spec or set of tickets.
+  triggers:
+  - implement
+  - implement spec
+  - implement ticket
+  skill_path: .agents/skills/implement/SKILL.md
+- name: setup-matt-pocock-skills
+  bundle: _core
+  description: Configure this repo for the engineering skills — set up its issue tracker, triage label vocabulary, and domain doc layout.
+  triggers:
+  - setup matt skills
+  - setup engineering
+  - configure repo
+  skill_path: .agents/skills/setup-matt-pocock-skills/SKILL.md
+- name: setup-pre-commit
+  bundle: _core
+  description: Set up Python pre-commit framework with Ruff, MyPy, PyMarkdown, and local CCBA validators.
+  triggers:
+  - setup-pre-commit
+  - setup pre-commit
+  - git hooks
+  skill_path: .agents/skills/setup-pre-commit/SKILL.md
+- name: setup-ts-deep-modules
+  bundle: _core
+  description: Wire dependency-cruiser into a TypeScript repo so each package is a deep module.
+  triggers:
+  - setup-ts-deep-modules
+  - setup ts deep modules
+  - dependency-cruiser
+  skill_path: .agents/skills/setup-ts-deep-modules/SKILL.md
+- name: loop-me
+  bundle: _core
+  description: Grill me about specs for the workflows I want to build.
+  triggers:
+  - loop-me
+  - loop me
+  - thiết kế chu trình
+  skill_path: .agents/skills/loop-me/SKILL.md
 workflows:
 - name: init-ccba-spoke
   bundle: _core
@@ -1426,6 +1464,33 @@ workflows:
   - kiến trúc pccc
   - kiểm soát khói
   workflow_path: .agents/workflows/workflow_pccc_thamdinh_cqxd.md
+- name: ccba-setup-pre-commit
+  bundle: _core
+  command: /ccba-setup-pre-commit
+  description: Thiết lập cấu hình pre-commit cho Python trong repository hiện tại.
+  triggers:
+  - setup-pre-commit
+  - setup precommit
+  - hooks python
+  workflow_path: .agents/workflows/ccba-setup-pre-commit.md
+- name: ccba-setup-ts-deep-modules
+  bundle: _core
+  command: /ccba-setup-ts-deep-modules
+  description: Thiết lập cấu hình Deep Modules cho TypeScript bằng dependency-cruiser.
+  triggers:
+  - setup-ts-deep-modules
+  - setup deep modules
+  - dependency cruiser ts
+  workflow_path: .agents/workflows/ccba-setup-ts-deep-modules.md
+- name: ccba-loop-me
+  bundle: _core
+  command: /ccba-loop-me
+  description: Thiết kế chu trình lặp (Loops) trong công việc và biên soạn thành đặc tả workflow mới.
+  triggers:
+  - loop-me
+  - loop me
+  - thiết kế chu trình
+  workflow_path: .agents/workflows/ccba-loop-me.md
 rules:
 - name: ccba_identity
   description: Brand, voice, phong cách giao tiếp CCBA

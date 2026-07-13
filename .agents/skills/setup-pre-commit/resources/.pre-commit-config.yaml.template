@@ -1,0 +1,54 @@
+# Pre-commit configuration for CCBA Spoke
+
+repos:
+  # Ruff - Fast Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # MyPy - Static type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pydantic>=2.0.0
+          - pydantic-settings>=2.0.0
+          - typer>=0.12.0
+        args: [--ignore-missing-imports]
+
+  # General hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+
+  # Markdown linting & validation
+  - repo: local
+    hooks:
+      - id: pymarkdown
+        name: PyMarkdown Lint
+        entry: python -m pymarkdown scan
+        language: system
+        types: [markdown]
+        pass_filenames: true
+      - id: validate-docs
+        name: Validate Documentation Accuracy
+        entry: python scripts/validate_docs.py . --src scripts,packages
+        language: system
+        types: [markdown]
+        pass_filenames: false
+      - id: validate-skills
+        name: Validate Skills Quality
+        entry: python scripts/validate_skills.py
+        language: system
+        types: [markdown]
+        pass_filenames: true
