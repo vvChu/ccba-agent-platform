@@ -91,3 +91,7 @@ Lớp bọc seam sâu của NotebookLMClient nhằm cung cấp một giao diện
 **Dynamic ID Override**:
 A routing mechanism that allows developers to dynamically override Google Notebook IDs using environment variables (e.g., `NOTEBOOKLM_CORE_ID`) to prevent hardcoded configuration values across different staging environments.
 
+**User Loops (Chu trình Người dùng)**:
+Các mô thức hoặc hoạt động lặp đi lặp lại hàng ngày/hàng tuần của người dùng, được định nghĩa qua `loop-me` và tài liệu hóa trong `.md/knowledge/user_loops.md` trước khi tự động hóa thành workflow chính thức.
+
+

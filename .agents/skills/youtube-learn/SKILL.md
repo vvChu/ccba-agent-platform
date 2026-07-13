@@ -12,15 +12,15 @@ Kỹ năng này chịu trách nhiệm phân tích sâu các video bài giảng, 
 
 ## 📋 Tiêu chí hoàn thành (Completion Criteria)
 
-Kỹ năng chỉ được coi là thực hiện thành công khi tạo ra cấu trúc thư mục sau tại thư mục cục bộ của dự án:
+Kỹ năng chỉ được coi là thực hiện thành công khi tạo ra cấu trúc thư mục và tệp tin động thuộc **Cohesive Topic Folder** tương ứng tại thư mục cục bộ của dự án:
 
 ```
-[project_root]/.md/youtube-learn/
-├── raw_transcript.txt            # Phụ đề được chuẩn hóa định dạng (30s hoặc đoạn văn 5 câu)
-├── notes_concept.md              # Tổng hợp kiến thức, định nghĩa, sơ đồ và mã nguồn học được
-├── notes_worldview.md            # Khảo cổ thế giới quan, giả định ngầm của diễn giả
-├── notes_speaker.md              # Hồ sơ diễn giả (học vị, kinh nghiệm, phong cách)
-└── images/                       # Thư mục chứa các ảnh slide tĩnh độc nhất (.webp)
+[project_root]/.md/projects/[Ten_De_Tai]/
+├── raw_transcript_[video_id].txt     # Phụ đề được chuẩn hóa định dạng (30s hoặc đoạn văn 5 câu)
+├── notes_concept_[video_id].md        # Tổng hợp kiến thức, định nghĩa, sơ đồ và mã nguồn học được
+├── notes_worldview_[video_id].md      # Khảo cổ thế giới quan, giả định ngầm của diễn giả
+├── notes_speaker_[video_id].md        # Hồ sơ diễn giả (học vị, kinh nghiệm, phong cách)
+└── images_[video_id]/                 # Thư mục chứa các ảnh slide tĩnh độc nhất (.webp) của video
     ├── yt_[video_id]_frame_001_ts60.webp
     └── ...
 ```
@@ -32,7 +32,8 @@ Kỹ năng chỉ được coi là thực hiện thành công khi tạo ra cấu 
 ### Phase 1: Chuẩn bị & Xác thực Đầu vào
 *   **Tham số yêu cầu:** 
     *   Địa chỉ URL của video (hoặc đường dẫn tệp video nội bộ).
-    *   Thư mục lưu trữ đầu ra (mặc định là `.md/youtube-learn/` nếu không truyền vào).
+    *   Tham số tùy chọn `--project` hoặc `-p`: Tên đề tài/dự án `Ten_De_Tai` để định vị thư mục **Cohesive Topic Folder** (mặc định lưu vào `default_topic` nếu chạy độc lập).
+    *   Thư mục lưu trữ đầu ra (mặc định tự động trỏ về `.md/projects/[Ten_De_Tai]/` theo cấu trúc Cohesive Topic Folder).
     *   Tham số tùy chọn `--speaker`: Tên diễn giả thực tế (nếu không truyền, hệ thống sẽ tự động gọi LLM trích xuất tên diễn giả từ phụ đề hoặc lấy tên người đăng tải video).
 *   **Tiền kiểm duyệt (Pre-checks):** 
     *   Xác minh các thư viện Python: yt_dlp, PIL (Pillow). Nếu thiếu Pillow, in cảnh báo và bỏ qua bước khử trùng lặp ảnh bằng Hash (mặc định đã tích hợp nén WebP chất lượng 80 để tiết kiệm dung lượng).
