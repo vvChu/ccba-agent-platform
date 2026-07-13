@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Kỹ năng Thiết Lập Cấu Hình Phát Triển (Setup CCBA Skills)
 
-Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát triển phần mềm khác (`triage`, `ccba-to-tickets` (hoặc `to-issues`), `to-prd`, `tdd`, `improve-codebase-architecture`, v.v.) hoạt động chính xác:
+Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát triển phần mềm khác (`triage`, `to-tickets`, `to-spec`, `tdd`, `improve-codebase-architecture`, v.v.) hoạt động chính xác:
 
 - **Issue tracker** — Nơi theo dõi công việc (GitHub, GitLab, hoặc Local Markdown lưu offline).
 - **Triage labels** — Từ vựng nhãn tương ứng với 5 vai trò trạng thái của triage.

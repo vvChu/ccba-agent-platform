@@ -20,6 +20,10 @@ _Avoid_: Tool, plugin
 A markdown script registered as a Slash Command that directs agent actions sequentially.
 _Avoid_: Scenario, command line script
 
+**Spec (Đặc tả Kỹ thuật)**:
+Tài liệu mô tả yêu cầu thiết kế, hành vi và seam kỹ thuật chi tiết cho một tính năng hoặc quy trình công việc, được sinh ra từ quy trình `/ccba-to-spec` và lưu trữ tại `.md/knowledge/specs/spec-{slug}.md`. Thuật ngữ này thay thế hoàn toàn cho khái niệm PRD (Product Requirement Document) đã lỗi thời.
+_Avoid_: PRD, Product Requirement Document, Bản yêu cầu sản phẩm
+
 **Bundle**:
 A grouping of related skills and workflows organized by domain area (e.g., `_core`, `_software`, `_qc`, `_consulting`).
 _Avoid_: Package bundle, module

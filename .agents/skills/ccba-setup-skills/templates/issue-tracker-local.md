@@ -1,11 +1,11 @@
 # Công cụ theo dõi công việc: Local Markdown (Offline)
 
-Các lỗi (bugs), yêu cầu tính năng (PRDs) và nhiệm vụ phát triển của dự án này được lưu trữ ngoại tuyến dưới dạng các file Markdown cục bộ trong thư mục `.md/knowledge/issues/`.
+Các lỗi (bugs), yêu cầu tính năng (Specs) và nhiệm vụ phát triển của dự án này được lưu trữ ngoại tuyến dưới dạng các file Markdown cục bộ trong thư mục `.md/knowledge/issues/`.
 
 ## Quy ước cấu trúc file (Conventions)
 
 - Mỗi tính năng/nhiệm vụ lớn được nhóm vào một thư mục con: `.md/knowledge/issues/<feature-slug>/`
-- Tài liệu Đặc tả Yêu cầu Sản phẩm (PRD) được đặt tại: `.md/knowledge/issues/<feature-slug>/PRD.md`
+- Tài liệu Đặc tả Kỹ thuật (Spec) được đặt tại: `.md/knowledge/specs/spec-{slug}.md`
 - Các issue chi tiết được đánh số và đặt tên theo định dạng: `.md/knowledge/issues/<feature-slug>/issues/<NN>-<slug>.md` (bắt đầu đánh số từ `01`).
 - Trạng thái điều phối (Triage state) được ghi nhận ở dòng `Status: <trạng_thái>` nằm ở các dòng đầu tiên của file issue (xem chi tiết các trạng thái tại `triage_labels.md`).
 - Lịch sử thảo luận, bình luận và log tiến độ sẽ được Agent append vào cuối file dưới tiêu đề `## Comments`.
