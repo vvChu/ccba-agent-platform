@@ -19,7 +19,7 @@ keywords: [academic writing, viết bài báo, nghiên cứu khoa học, IMRAD, 
 Kỹ năng này tuân thủ nghiêm ngặt cẩm nang xuất bản của Đại học Yale (Elena D. Kallestinova, 2011) kết hợp với mô hình không gian nghiên cứu CARS (Swales & Feak):
 
 ### 1. Quy trình Viết & Sắp xếp IMRAD
-Không viết bài báo tuyến tính từ đầu đến cuối. Thực hiện biên soạn theo trình tự sau:
+Thực hiện biên soạn bài báo theo trình tự tối ưu học thuật dưới đây (tránh viết tuyến tính từ đầu đến cuối):
 *   **Materials & Methods:** Viết đầu tiên vì dữ liệu và quy trình thực nghiệm đã sẵn có trong ghi chép phòng lab.
 *   **Results:** Chuẩn bị các hình ảnh, bảng biểu trực quan trước, sau đó viết nội dung mô tả kết quả khách quan.
 *   **Introduction:** Viết sau khi đã có Methods và Results để đảm bảo Mở bài định hướng chính xác vào kết quả đạt được.
