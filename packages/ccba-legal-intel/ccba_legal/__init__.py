@@ -11,13 +11,14 @@ from .crawler import (
     download_three_tier,
     get_crawled_doc_data,
     get_tvpl_metadata,
-    load_relation_synonyms,
     trigger_download,
 )
+from .formatter import OKFStructureProcessor, inject_warning_block
 from .monitor import TokenMonitor
-from .packager import OKFBundlePackager, get_concept_type, inject_warning_block, is_guiding_link
+from .packager import OKFBundlePackager, get_concept_type, is_guiding_link
 from .parser import LegalAnalysisEngine
-from .registry import LegalRegistryManager
+from .registry import LegalRegistryManager, load_relation_synonyms
+
 
 __all__ = [
     "ChromeCDP",
@@ -40,4 +41,6 @@ __all__ = [
     "TokenMonitor",
     "HarnessGuard",
     "ADRGenerator",
+    "OKFStructureProcessor",
 ]
+
