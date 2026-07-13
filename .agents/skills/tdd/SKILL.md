@@ -47,7 +47,7 @@ Hỏi người dùng: *"Giao diện công khai là gì, và chúng ta nên kiể
 ## Các mẫu phản hoa tiêu (Anti-patterns) cần tránh
 
 - **Ràng buộc Implementation (Implementation-coupled):** Mock các cộng tác viên nội bộ, kiểm thử các hàm private, hoặc xác minh qua kênh phụ (truy vấn trực tiếp database thay vì dùng giao diện). Dấu hiệu nhận biết: bộ test bị vỡ khi refactor dù hành vi của module không thay đổi.
-- **Trùng lặp logic (Tautological):** Assert tính toán lại giá trị mong đợi theo đúng cách mà code thực thi. Giá trị mong đợi phải đến từ một nguồn chân lý độc lập (như literals, Spec, PRD).
+- **Trùng lặp logic (Tautological):** Assert tính toán lại giá trị mong đợi theo đúng cách mà code thực thi. Giá trị mong đợi phải đến từ một nguồn chân lý độc lập (như literals, Spec).
 - **Lát cắt ngang (Horizontal slicing):** Viết tất cả test trước rồi mới viết code sau. Hãy làm theo **lát cắt dọc (vertical slices)**: một test → một implementation tối giản → lặp lại. Mỗi test đóng vai trò như một đường đạn dò tìm (tracer bullet) phản hồi lại những gì chu kỳ trước đã dạy bạn.
 
 ## Nguyên tắc của Chu kỳ (Rules of the loop)

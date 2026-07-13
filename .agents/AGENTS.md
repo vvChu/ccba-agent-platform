@@ -33,7 +33,7 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
   - Hàm/phương thức không dài quá 50 dòng; ưu tiên composition over inheritance.
   - Mọi tài liệu Markdown kỹ thuật chính quy trước khi hoàn tất phải được kiểm định bằng công cụ `validate_docs.py`.
 * **Quy trình thực thi mã nguồn (SDLC Implementation Loop):**
-  Khi triển khai bất kỳ mã nguồn nào dựa trên đặc tả (specs/PRDs), Agent bắt buộc phải thực thi theo chu kỳ khép kín:
+  Khi triển khai bất kỳ mã nguồn nào dựa trên đặc tả (specs - Đặc tả Kỹ thuật), Agent bắt buộc phải thực thi theo chu kỳ khép kín:
   1. *TDD (Test-Driven Development)*: Viết unit tests trước tại các điểm khớp nối (seams) đã thỏa thuận nếu áp dụng.
   2. *Continuous Validation*: Chạy kiểm tra kiểu (typecheck), test và chạy toàn bộ test suite trước khi hoàn tất.
   3. *Review before Merge*: Chạy kỹ năng `/ccba-code-review` để quét các code smells trước khi commit/PR.
