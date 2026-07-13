@@ -33,65 +33,13 @@ class TVPLSessionMutex(FileMutexLock):
         )
 
 
-DEFAULT_RELATION_SYNONYMS = {
-    "Văn bản bị sửa đổi bổ sung": "amends_docs",
-    "Văn bản bị sửa đổi, bổ sung": "amends_docs",
-    "Văn bản bị thay thế": "replaced_docs",
-    "Văn bản được dẫn chiếu": "referenced_docs",
-    "Văn bản được căn cứ": "basis_docs",
-    "Văn bản được hướng dẫn": "guided_docs",
-    "Văn bản được hợp nhất": "consolidated_docs",
-    "Văn bản hướng dẫn": "guiding_docs",
-    "Văn bản hợp nhất": "consolidations",
-    "Văn bản sửa đổi bổ sung": "amended_by_docs",
-    "Văn bản sửa đổi, bổ sung": "amended_by_docs",
-    "Văn bản thay thế": "replaced_by_docs",
-    "Văn bản liên quan cùng nội dung": "related_docs",
-}
+from ccba_legal.registry import DEFAULT_RELATION_SYNONYMS
+from ccba_legal.registry import load_relation_synonyms as _load_relation_synonyms
 
 
 def load_relation_synonyms() -> dict[str, str]:
-    """Load relation synonyms configuration from YAML and return a synonym-to-key mapping.
+    return _load_relation_synonyms(resolve_project_root())
 
-    If the configuration file is missing or invalid, falls back to a default mapping.
-
-    Returns:
-        dict[str, str]: A dictionary mapping Vietnamese synonym phrases to CCBA relation keys.
-    """
-    import yaml
-
-    project_root = resolve_project_root()
-    synonyms_path = (
-        project_root
-        / ".agents"
-        / "skills"
-        / "ccba-legal-intel"
-        / "resources"
-        / "relation_synonyms.yaml"
-    )
-
-    if not synonyms_path.exists():
-        print(f"[Crawler] Synonyms config not found at {synonyms_path}. Using default synonyms.")
-        return DEFAULT_RELATION_SYNONYMS.copy()
-
-    try:
-        with open(synonyms_path, encoding="utf-8") as f:
-            config = yaml.safe_load(f) or {}
-
-        synonyms_dict = config.get("relation_synonyms", {})
-        mapping = {}
-        for key, synonyms in synonyms_dict.items():
-            if isinstance(synonyms, list):
-                for syn in synonyms:
-                    mapping[syn] = key
-            elif isinstance(synonyms, str):
-                mapping[synonyms] = key
-        return mapping
-    except Exception as e:
-        print(
-            f"[Crawler] Error reading relation synonyms from {synonyms_path}: {e}. Using default synonyms."
-        )
-        return DEFAULT_RELATION_SYNONYMS.copy()
 
 
 class ChromeCDPError(Exception):
@@ -786,12 +734,13 @@ def _parse_tvpl_date(date_str: str) -> str:
     return date_str
 
 
-def get_tvpl_metadata(cdp: ChromeCDP, url: str) -> dict[str, Any]:
+def get_tvpl_metadata(cdp: ChromeCDP, url: str, relation_map: dict[str, str] | None = None) -> dict[str, Any]:
     """Retrieve structured metadata from the TVPL 'Lược đồ' tab page.
 
     Args:
         cdp: ChromeCDP instance.
         url: The document page URL.
+        relation_map: The optional synonyms mapping dictionary.
 
     Returns:
         dict[str, Any]: Parsed metadata dictionary.
@@ -805,11 +754,12 @@ def get_tvpl_metadata(cdp: ChromeCDP, url: str) -> dict[str, Any]:
     cdp.handle_cloudflare()
     time.sleep(2.0)
 
-    mapping = load_relation_synonyms()
+    mapping = relation_map if relation_map is not None else load_relation_synonyms()
     mapping_json = json.dumps(mapping, ensure_ascii=False)
     metadata_js = METADATA_EXTRACTION_JS_TEMPLATE.replace("__REL_MAP_JSON__", mapping_json)
 
     raw_meta = cdp.evaluate_js(metadata_js) or {}
+
 
     metadata = {
         "document_number": raw_meta.get("Số hiệu", ""),
