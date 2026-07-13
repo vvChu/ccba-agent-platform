@@ -642,7 +642,7 @@ skills:
   skill_path: .agents/skills/to-spec/SKILL.md
 - name: to-tickets
   bundle: _core
-  description: Phân rã bản thiết kế/spec/PRD thành các ticket phát triển độc lập dạng
+  description: Phân rã bản thiết kế hoặc spec (Đặc tả) thành các ticket phát triển độc lập dạng
     lát cắt dọc (vertical slices)
   triggers:
   - to-tickets
@@ -1127,7 +1127,7 @@ workflows:
 - name: ccba-to-tickets
   bundle: _core
   command: /ccba-to-tickets
-  description: Phân rã tài liệu thiết kế/spec/PRD thành các ticket phát triển độc
+  description: Phân rã tài liệu thiết kế hoặc spec (Đặc tả) thành các ticket phát triển độc
     lập dạng lát cắt dọc (vertical slices)
   triggers:
   - to-tickets

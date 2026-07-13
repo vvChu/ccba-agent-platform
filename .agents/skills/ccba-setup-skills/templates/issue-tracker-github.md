@@ -1,6 +1,6 @@
 # Công cụ theo dõi công việc: GitHub Issues
 
-Các lỗi (bugs) và yêu cầu tính năng (PRDs) của dự án này được theo dõi trên GitHub Issues. Sử dụng công cụ `gh` CLI cho mọi thao tác.
+Các lỗi (bugs) và yêu cầu tính năng (Specs) của dự án này được theo dõi trên GitHub Issues. Sử dụng công cụ `gh` CLI cho mọi thao tác.
 
 ## Các lệnh thao tác tiêu chuẩn (Conventions)
 
