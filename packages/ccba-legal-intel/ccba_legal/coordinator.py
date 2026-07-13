@@ -7,8 +7,9 @@ without introducing circular dependencies.
 from pathlib import Path
 from typing import Any
 
-from ccba_legal.packager import inject_warning_block
+from ccba_legal.formatter import inject_warning_block
 from ccba_legal.parser import LegalAnalysisEngine
+
 from ccba_legal.registry import LegalRegistryManager
 
 
