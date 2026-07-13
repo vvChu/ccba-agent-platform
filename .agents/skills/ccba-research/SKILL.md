@@ -24,6 +24,7 @@ Kỹ năng chỉ được coi là hoàn thành khi đáp ứng các điều ki�
 
 ### Bước 1: Xác định câu hỏi nghiên cứu & Nguồn sơ cấp
 Xác định rõ câu hỏi nghiên cứu của người dùng và các nguồn tài liệu gốc cần đọc (ví dụ: file luật trong `.md/legal_docs/`, API docs của bên thứ ba, codebase hiện tại).
+   *Tiêu chí hoàn thành:* Agent đã ghi nhận danh sách các câu hỏi nghiên cứu cốt lõi cùng đường dẫn các tệp nguồn sơ cấp tương ứng.
 
 ### Bước 2: Khởi chạy Subagent chạy ngầm
 Sử dụng công cụ `invoke_subagent` để spawn một subagent thuộc loại `research` với prompt mô tả chi tiết:
@@ -32,12 +33,14 @@ Sử dụng công cụ `invoke_subagent` để spawn một subagent thuộc lo�
   - Giao nhiệm vụ cụ thể cho subagent (những câu hỏi cần trả lời).
   - Chỉ định rõ file/thư mục cần đọc và các URL tài liệu chính thống.
   - Yêu cầu subagent lưu file báo cáo Markdown vào thư mục `.md/knowledge/research_and_studies/research_[chủ_đề]_[timestamp].md` và thông báo lại đường dẫn tuyệt đối khi hoàn tất.
+   *Tiêu chí hoàn thành:* Agent chính nhận được ID phiên làm việc (Conversation ID) của subagent và ghi nhận trạng thái khởi chạy thành công dưới nền.
 
 ### Bước 3: Tiếp tục công việc chính & Hấp thụ kết quả
 Trong khi subagent chạy ngầm đang đọc tài liệu và viết báo cáo, Agent chính tiếp tục trao đổi hoặc thực hiện các task khác với người dùng.
 Khi nhận được thông báo subagent đã hoàn thành:
 - Đọc file báo cáo Markdown mà subagent vừa tạo ra.
 - Trình bày tóm tắt kết quả nghiên cứu và trỏ người dùng tới liên kết file báo cáo click được.
+   *Tiêu chí hoàn thành:* Báo cáo Markdown từ subagent được Agent chính nạp vào ngữ cảnh, trích xuất tóm tắt và hiển thị liên kết truy cập trực tiếp cho người dùng.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
