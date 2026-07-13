@@ -185,3 +185,65 @@ class LegalRegistryManager:
                 if p.stem.lower() == slug:
                     return p
         return None
+
+
+DEFAULT_RELATION_SYNONYMS = {
+    "Văn bản bị sửa đổi bổ sung": "amends_docs",
+    "Văn bản bị sửa đổi, bổ sung": "amends_docs",
+    "Văn bản bị thay thế": "replaced_docs",
+    "Văn bản được dẫn chiếu": "referenced_docs",
+    "Văn bản được căn cứ": "basis_docs",
+    "Văn bản được hướng dẫn": "guided_docs",
+    "Văn bản được hợp nhất": "consolidated_docs",
+    "Văn bản hướng dẫn": "guiding_docs",
+    "Văn bản hợp nhất": "consolidations",
+    "Văn bản sửa đổi bổ sung": "amended_by_docs",
+    "Văn bản sửa đổi, bổ sung": "amended_by_docs",
+    "Văn bản thay thế": "replaced_by_docs",
+    "Văn bản liên quan cùng nội dung": "related_docs",
+}
+
+
+def load_relation_synonyms(project_root: Path | None = None) -> dict[str, str]:
+    """Load relation synonyms configuration from YAML and return a synonym-to-key mapping.
+
+    If the configuration file is missing or invalid, falls back to a default mapping.
+
+    Returns:
+        dict[str, str]: A dictionary mapping Vietnamese synonym phrases to CCBA relation keys.
+    """
+    if project_root is None:
+        project_root = resolve_project_root()
+
+    synonyms_path = (
+        project_root
+        / ".agents"
+        / "skills"
+        / "ccba-legal-intel"
+        / "resources"
+        / "relation_synonyms.yaml"
+    )
+
+    if not synonyms_path.exists():
+        print(f"[Registry] Synonyms config not found at {synonyms_path}. Using default synonyms.")
+        return DEFAULT_RELATION_SYNONYMS.copy()
+
+    try:
+        with open(synonyms_path, encoding="utf-8") as f:
+            config = yaml.safe_load(f) or {}
+
+        synonyms_dict = config.get("relation_synonyms", {})
+        mapping = {}
+        for key, synonyms in synonyms_dict.items():
+            if isinstance(synonyms, list):
+                for syn in synonyms:
+                    mapping[syn] = key
+            elif isinstance(synonyms, str):
+                mapping[synonyms] = key
+        return mapping
+    except Exception as e:
+        print(
+            f"[Registry] Error reading relation synonyms from {synonyms_path}: {e}. Using default synonyms."
+        )
+        return DEFAULT_RELATION_SYNONYMS.copy()
+

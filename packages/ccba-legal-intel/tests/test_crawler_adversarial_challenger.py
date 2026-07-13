@@ -29,9 +29,11 @@ def test_mutex_concurrency_race_condition(tmp_path):
         try:
             with TVPLSessionMutex(lock_path=lock_file, timeout=1, retry_interval=0.1):
                 acquired_locks.append(thread_num)
-                time.sleep(0.5)
+                # Hold the lock longer than Thread 2's timeout (1s) to force a timeout
+                time.sleep(1.5)
         except Exception as e:
             errors.append((thread_num, e))
+
 
     t1 = threading.Thread(target=run_lock, args=(1,))
     t2 = threading.Thread(target=run_lock, args=(2,))
