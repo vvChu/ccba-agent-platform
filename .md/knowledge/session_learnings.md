@@ -391,6 +391,29 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Vấn đề**: Tài khoản GitHub bị lỗi thanh toán khiến toàn bộ Actions CI bị treo/fail ngay khi chạy, làm chặn việc merge PR theo quy trình tự động.
 - **Thay thế bằng**: Xác thực hoàn toàn chất lượng code bằng các công cụ validation cục bộ (`validate_skills.py`, `validate_docs.py`), sau đó sử dụng cờ `--admin` của GitHub CLI (`gh pr merge --admin`) để merge PR trực tiếp bằng quyền Administrator.
 
+### 35. VS Code Multi-repo Auto-discovery Ignored Repositories (Quy tắc bỏ qua Git Repo phụ trong VS Code)
+- **Ngữ cảnh**: VS Code tự động phát hiện các Git repo tạm thời của subagents nằm sâu trong thư mục AppData và hiển thị trong Source Control.
+- **Giải pháp**:
+  - Khai báo đường dẫn tuyệt đối chính xác của thư mục worktree con trong tùy chọn `"git.ignoredRepositories"` của `.vscode/settings.json`.
+  - Cấu hình `"git.autoRepositoryDetection": "subFolders"` để hạn chế VS Code tự động quét các Git repo nằm ngoài thư mục dự án hiện tại.
+  - Sử dụng tùy chọn UI "Close Repository" trên VS Code để làm sạch cache giao diện hiển thị.
+
+### 36. Git Ignore Database files (Chặn theo dõi tệp mật bằng .gitignore)
+- **Ngữ cảnh**: Các file kiểm thử nhạy cảm như `*.db` và `secret_credential.*` sinh ra từ các phiên thử nghiệm của subagent có thể vô tình bị staging.
+- **Giải pháp**: Bổ sung cấu hình chặn toàn cục `secret_credential.*` và `*.db` (cùng loại trừ `!Thumbs.db` của OS) vào tệp `.gitignore` dự án chính.
+
+### 37. Subagent Worktree Hard Cleanup (Dọn dẹp triệt để thư mục làm việc của subagent)
+- **Ngữ cảnh**: Thư mục làm việc tạm thời của subagent chứa các thay đổi thử nghiệm hoặc tệp rác bị drift gây báo động đỏ trên IDE của kỹ sư.
+- **Giải pháp**: Sử dụng Agent chính truy cập trực tiếp qua CLI vào worktree của subagent đó và thực thi `git reset --hard HEAD && git clean -fd` để đưa trạng thái về sạch hoàn toàn.
+
+---
+
+## Anti-patterns (Cách tránh)
+
+### 32. Ignored Parent Repositories in VS Code settings (Bỏ qua thư mục cha trong cấu hình Git VS Code)
+- **Vấn đề**: Khai báo thư mục cha trong `"git.ignoredRepositories"` (ví dụ: `c:\\Users\\chuvu\\.gemini\\antigravity`) không thể ẩn các repo con nằm bên dưới do VS Code yêu cầu khớp đường dẫn tuyệt đối chính xác của thư mục `.git`.
+- **Thay thế bằng**: Sử dụng đường dẫn tuyệt đối chi tiết kết hợp tùy chọn `"git.autoRepositoryDetection": "subFolders"`.
+
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
