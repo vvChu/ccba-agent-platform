@@ -172,16 +172,25 @@ def main() -> None:
         # We write locally to .md/ first, then package into the proper OKF layout
         md_dir = Path(args.output_dir or ".md")
         md_dir.mkdir(parents=True, exist_ok=True)
-        packager = OKFBundlePackager(md_dir)
+
+        analyzer = LegalAnalysisEngine()
+        from ccba_legal.coordinator import LegalProcessor
+        processor = LegalProcessor()
+
+        packager = OKFBundlePackager(
+            md_dir,
+            formula_standardizer=analyzer.standardize_formulas,
+            amendment_processor=processor.process_amendments_from_document,
+        )
 
         if args.download_source:
             trigger_download(cdp, md_dir, slug)
 
         # 3. Analyze Primary Law
         print("[LegalIntel] Performing LLM analysis on primary document...")
-        analyzer = LegalAnalysisEngine()
         metadata = analyzer.analyze_document(main_text)
         checklist = analyzer.generate_checklist(main_text)
+
 
         # Save primary law concept
         packager.write_concept(
