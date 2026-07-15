@@ -6,12 +6,25 @@ import time
 import types
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from ccba_legal.crawler import (
     DEFAULT_RELATION_SYNONYMS,
     TVPLSessionMutex,
     download_three_tier,
     load_relation_synonyms,
 )
+
+
+@pytest.fixture
+def mock_tier3_disabled():
+    """Fixture to mock Tier 3 CDP crawl and headless checks to prevent web interaction."""
+    with (
+        patch("ccba_legal.crawler._check_is_headless", return_value=False),
+        patch("ccba_legal.crawler.trigger_download", return_value=False),
+    ):
+        yield
+
 
 
 # =====================================================================
@@ -128,7 +141,7 @@ def test_relation_synonyms_js_normalization_bug():
 # =====================================================================
 # SCENARIO 4: Network Issues & Invalid/Corrupted Cache Files
 # =====================================================================
-def test_download_three_tier_corrupted_cache(tmp_path):
+def test_download_three_tier_corrupted_cache(tmp_path, mock_tier3_disabled):
     """Verify that an invalid/empty (0-byte) cache file is ignored
     and not copied to the target folder, preventing corrupted cache restoration.
     """
@@ -142,11 +155,7 @@ def test_download_three_tier_corrupted_cache(tmp_path):
     cache_file.write_bytes(b"")  # 0-byte file representing corruption
 
     cdp_mock = MagicMock()
-    with (
-        patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
-        patch("ccba_legal.crawler._check_is_headless", return_value=False),
-        patch("ccba_legal.crawler.trigger_download", return_value=False),
-    ):
+    with patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path):
         result = download_three_tier(cdp_mock, download_dir, "test_corrupted")
         assert result is False
 
@@ -155,7 +164,7 @@ def test_download_three_tier_corrupted_cache(tmp_path):
     assert not target_file.exists()
 
 
-def test_download_three_tier_partial_download_bug(tmp_path):
+def test_download_three_tier_partial_download_bug(tmp_path, mock_tier3_disabled):
     """Verify that when a Tier 2 download fails midway (e.g. network issue),
     it cleans up the partial/corrupted file in the target directory and does
     not leave it behind.
@@ -213,3 +222,22 @@ def test_download_three_tier_partial_download_bug(tmp_path):
         sys.modules.pop("scripts.legal_sync", None)
         sys.modules.pop("googleapiclient", None)
         sys.modules.pop("googleapiclient.http", None)
+
+
+def test_download_three_tier_headless_exit(tmp_path):
+    """Verify that when running in a headless/CI environment, download_three_tier
+    raises HeadlessEnvironmentError instead of attempting CDP crawl at Tier 3.
+    """
+    from ccba_legal.crawler import HeadlessEnvironmentError
+
+    download_dir = tmp_path / "download"
+    download_dir.mkdir()
+
+    cdp_mock = MagicMock()
+    with (
+        patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
+        patch("ccba_legal.crawler._check_is_headless", return_value=True),
+    ):
+        with pytest.raises(HeadlessEnvironmentError):
+            download_three_tier(cdp_mock, download_dir, "test_headless")
+
