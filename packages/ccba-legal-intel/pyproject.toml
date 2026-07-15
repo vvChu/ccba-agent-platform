@@ -18,6 +18,8 @@ dependencies = [
     "pyyaml",
     "ccba-harness",
     "ccba-ai",
+    "pytest-timeout",
+    "beautifulsoup4",
 ]
 
 [tool.setuptools.packages.find]
@@ -27,4 +29,8 @@ include = ["ccba_legal*"]
 [tool.uv.sources]
 ccba-harness = { workspace = true }
 ccba-ai = { workspace = true }
+
+[tool.pytest.ini_options]
+timeout = 5
+
 
