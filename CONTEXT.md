@@ -99,3 +99,8 @@ A routing mechanism that allows developers to dynamically override Google Notebo
 Các mô thức hoặc hoạt động lặp đi lặp lại hàng ngày/hàng tuần của người dùng, được định nghĩa qua `loop-me` và tài liệu hóa trong `.md/knowledge/user_loops.md` trước khi tự động hóa thành workflow chính thức.
 
 
+**Three-Tier Fallback (Quy trình tải tệp ba tầng)**:
+Quy trình tải tài liệu pháp lý 3 tầng (Tier 1: Local & Cache, Tier 2: Cloud Drives/S3, Tier 3: Chrome CDP crawl) được triển khai trong crawler để tối ưu hóa hiệu suất, tránh cào web lặp lại và giảm thiểu nguy cơ bị khóa tài khoản VIP.
+
+**TVPLSessionMutex (Khóa loại trừ tương hỗ phiên TVPL)**:
+Cơ chế khóa loại trừ tương hỗ (Mutex lock) dựa trên tệp tin lock để đảm bảo chỉ có tối đa một phiên cào web (Chrome CDP) VIP diễn ra tại một thời điểm, ngăn ngừa lỗi đăng nhập đồng thời trên hệ thống Thư viện Pháp luật (TVPL).
