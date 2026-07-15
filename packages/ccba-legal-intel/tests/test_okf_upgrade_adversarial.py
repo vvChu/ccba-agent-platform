@@ -3,6 +3,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 from bs4 import BeautifulSoup
+from ccba_legal.formatter import OKFStructureProcessor
 from ccba_legal.packager import OKFBundlePackager
 from ccba_legal.parser import LegalAnalysisEngine
 
@@ -10,7 +11,7 @@ from mdconverter.plugins.vn_legal.linter import VNLegalLinter
 
 
 def test_anchor_injection_edge_cases():
-    packager = OKFBundlePackager(Path())
+    processor = OKFStructureProcessor()
 
     # Case 1: Hierarchy with no prior Điều (should not inject khoan/diem anchors)
     text_no_dieu = """Chương I
@@ -18,13 +19,13 @@ QUY ĐỊNH CHUNG
 1. Phạm vi điều chỉnh
 a) Hoạt động đầu tư xây dựng;
 2. Đối tượng áp dụng"""
-    processed = packager.inject_anchors(text_no_dieu)
+    processed = processor.inject_anchors(text_no_dieu)
     assert '<a id="' not in processed
 
     # Case 2: Hierarchy with Điều but Khoản is not yet parsed (should not inject diem anchors)
     text_no_khoan = """Điều 1. Phạm vi điều chỉnh
 a) Hoạt động đầu tư xây dựng;"""
-    processed = packager.inject_anchors(text_no_khoan)
+    processed = processor.inject_anchors(text_no_khoan)
     assert '<a id="d1"></a>Điều 1. Phạm vi điều chỉnh' in processed
     assert '<a id="d1k' not in processed
 
@@ -32,31 +33,31 @@ a) Hoạt động đầu tư xây dựng;"""
     text_diem_casing = """Điều 1. Phạm vi điều chỉnh
 1. Luật này quy định về:
 đ) Các hoạt động khác."""
-    processed = packager.inject_anchors(text_diem_casing)
+    processed = processor.inject_anchors(text_diem_casing)
     assert '<a id="d1k1dđ"></a>đ) Các hoạt động khác.' in processed
 
 
 def test_table_flattening_edge_cases():
-    packager = OKFBundlePackager(Path())
+    processor = OKFStructureProcessor()
 
     # Case 1: Empty table
     html_empty = "<table></table>"
     soup = BeautifulSoup(html_empty, "html.parser").find("table")
-    grid, is_complex, num_rows = packager.flatten_html_table(soup)
+    grid, is_complex, num_rows = processor.flatten_html_table(soup)
     assert grid == []
     assert is_complex is False
     assert num_rows == 0
-    assert packager.grid_to_markdown(grid) == ""
+    assert processor.grid_to_markdown(grid) == ""
 
     # Case 2: Table with no cells
     html_no_cells = "<table><tr></tr><tr></tr></table>"
     soup = BeautifulSoup(html_no_cells, "html.parser").find("table")
-    grid, is_complex, num_rows = packager.flatten_html_table(soup)
+    grid, is_complex, num_rows = processor.flatten_html_table(soup)
     assert grid == [[], []]
     assert is_complex is False
     assert num_rows == 2
-    assert packager.grid_to_markdown(grid) == ""
-    assert packager.grid_to_markdown([[]]) == ""
+    assert processor.grid_to_markdown(grid) == ""
+    assert processor.grid_to_markdown([[]]) == ""
 
     # Case 3: Table with no headers (only td)
     html_no_headers = """<table>
@@ -66,11 +67,11 @@ def test_table_flattening_edge_cases():
       </tr>
     </table>"""
     soup = BeautifulSoup(html_no_headers, "html.parser").find("table")
-    grid, is_complex, num_rows = packager.flatten_html_table(soup)
+    grid, is_complex, num_rows = processor.flatten_html_table(soup)
     assert grid == [["Val 1", "Val 2"]]
     assert is_complex is False
     assert num_rows == 1
-    assert packager.grid_to_markdown(grid) == "| Val 1 | Val 2 |\n| --- | --- |"
+    assert processor.grid_to_markdown(grid) == "| Val 1 | Val 2 |\n| --- | --- |"
 
     # Case 4: Malformed rowspan / colspan values
     html_malformed_span = """<table>
@@ -80,7 +81,7 @@ def test_table_flattening_edge_cases():
       </tr>
     </table>"""
     soup = BeautifulSoup(html_malformed_span, "html.parser").find("table")
-    grid, is_complex, num_rows = packager.flatten_html_table(soup)
+    grid, is_complex, num_rows = processor.flatten_html_table(soup)
     assert grid == [["Val 1", "Val 2"]]
     assert is_complex is False
     assert num_rows == 1

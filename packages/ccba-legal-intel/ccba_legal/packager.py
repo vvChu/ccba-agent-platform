@@ -8,24 +8,6 @@ import yaml
 
 
 
-def extract_parent_metadata(content: str) -> dict[str, Any]:
-    """Extract required metadata fields from frontmatter in parent content."""
-    parent_fm = {}
-    if content.strip().startswith("---"):
-        parts = content.split("---", 2)
-        if len(parts) >= 3:
-            try:
-                parent_fm = yaml.safe_load(parts[1]) or {}
-            except Exception:
-                pass
-
-    # Extract only the specified target fields
-    inherited = {}
-    for key in ["resource", "status", "document_number", "timestamp"]:
-        if key in parent_fm:
-            inherited[key] = parent_fm[key]
-    return inherited
-
 
 class OKFBundlePackager:
     """Manages creation, writing, and directory structure organization of Open Knowledge Format (OKF) Bundles."""

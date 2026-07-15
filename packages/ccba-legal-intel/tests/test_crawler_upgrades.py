@@ -101,7 +101,7 @@ def test_download_three_tier_target_exists(tmp_path):
     download_dir = tmp_path / "download"
     download_dir.mkdir()
     target_file = download_dir / "test_doc.docx"
-    target_file.touch()
+    target_file.write_bytes(b"dummy content")  # must be non-empty: _check_tier_1 requires st_size > 0
 
     cdp_mock = MagicMock()
     # Should succeed immediately without checking other tiers
