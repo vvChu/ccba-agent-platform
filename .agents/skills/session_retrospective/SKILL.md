@@ -28,13 +28,17 @@ Kỹ năng này được kích hoạt để tự động thu thập, phân loạ
    - Đề xuất tiến hóa kỹ năng (Skill Discovery) lên Hub thông qua lệnh `/ccba-propose-to-hub` nếu phát hiện logic đóng gói tốt (chỉ áp dụng khi đang làm việc tại dự án Spoke, bỏ qua nếu đang đứng tại Hub).
    - **Tiêu chí hoàn thành:** Đề xuất được hiển thị rõ ràng trên màn hình chat cho người dùng lựa chọn (không tự ý ghi đè global memory khi chưa hỏi).
 
-4. **Tự động hóa dọn dẹp Workspace & Phân phối Tài liệu:**
-   - Thực thi công cụ dọn dẹp tự động bằng cách chạy lệnh:
+4. **Tự động hóa dọn dẹp Workspace & Phân phối Tài liệu (Quy trình 2 Bước):**
+   - **Bước 1 (Xem trước):** Chạy công cụ ở chế độ mặc định (dry-run preview) để liệt kê các thay đổi dự kiến:
      ```bash
      python scripts/session_cleanup.py
      ```
-   - Công cụ này sẽ tự động tìm và xóa các Git worktrees tạm thời của subagents, tìm và dọn dẹp các git branches local/remote đã được merge/redundant, đồng thời đề xuất phân phối/di chuyển các tài liệu thô trong [input_documents/](../../../input_documents/) vào phân vùng tri thức `.md/` thích hợp.
-   - **Tiêu chí hoàn thành:** Chạy thành công lệnh `python scripts/session_cleanup.py`, hiển thị bảng đề xuất di chuyển tệp cho người dùng duyệt và thực thi dọn dẹp hoàn tất, trả workspace về trạng thái sạch.
+     Hiển thị danh sách các worktree/branch sẽ xóa và ma trận di chuyển tệp thô từ [input_documents/](../../../input_documents/) vào cửa sổ chat để hỏi ý kiến xác nhận của người dùng.
+   - **Bước 2 (Thực thi):** Chỉ sau khi người dùng phê duyệt tường minh, tiến hành thực thi dọn dẹp thực tế bằng lệnh:
+     ```bash
+     python scripts/session_cleanup.py --execute
+     ```
+   - **Tiêu chí hoàn thành:** Báo cáo xem trước được hiển thị, nhận được sự đồng ý của người dùng, thực thi lệnh với `--execute` thành công và trả workspace về trạng thái sạch sẽ.
 
 5. **Xuất Báo cáo Tóm tắt:**
    - Xuất báo cáo tổng kết ngắn gọn (theo mẫu `## 📋 Session Retrospective Summary`) ra màn hình chat.
