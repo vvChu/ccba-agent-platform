@@ -408,13 +408,30 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 
 ---
 
+### 38. Local CI Simulation for Billing Issues
+- **Ngữ cảnh**: Khi GitHub Actions CI bị tạm dừng hoặc lỗi lập hóa đơn (Billing / Spending Limit) khiến không thể kiểm tra chất lượng code tự động từ PR.
+- **Giải pháp**: Xây dựng kịch bản chạy thử nghiệm cục bộ mô phỏng các Gates của CI (`run_harness_evals.py --all`, `validate_docs.py`, và `ruff`) để xác nhận mã nguồn đạt 100% chất lượng trước khi thực hiện merge PR thủ công.
+- **Nguồn**: Session `948e08e9-1c85-4029-86a4-70c8b70681d3`, 2026-07-16
+
+### 39. Multi-PR Zombie Branch Triage
+- **Ngữ cảnh**: Triage số lượng lớn các PR mở bị tồn đọng lâu ngày trong dự án và có lịch sử rẽ nhánh rất xa.
+- **Giải pháp**: Sử dụng lệnh `git log main..branch` để lọc ra các commit độc nhất. Nếu số lượng commit độc nhất bằng 0, nghĩa là các thay đổi đã được nhập vào `main` qua các PR hoặc commit khác từ trước. Cần đóng thẳng các PR này dưới dạng `Already Merged` để dọn dẹp hệ thống thay vì cố merge gây conflict.
+- **Nguồn**: Session `948e08e9-1c85-4029-86a4-70c8b70681d3`, 2026-07-16
+
+---
+
 ## Anti-patterns (Cách tránh)
 
-### 32. Ignored Parent Repositories in VS Code settings (Bỏ qua thư mục cha trong cấu hình Git VS Code)
-- **Vấn đề**: Khai báo thư mục cha trong `"git.ignoredRepositories"` (ví dụ: `c:\\Users\\chuvu\\.gemini\\antigravity`) không thể ẩn các repo con nằm bên dưới do VS Code yêu cầu khớp đường dẫn tuyệt đối chính xác của thư mục `.git`.
-- **Thay thế bằng**: Sử dụng đường dẫn tuyệt đối chi tiết kết hợp tùy chọn `"git.autoRepositoryDetection": "subFolders"`.
+### 35. Running Async Pytest without pytest-asyncio
+- **Vấn đề**: Chạy các unit tests được đánh dấu `@pytest.mark.asyncio` hoặc chứa hàm `async def` trong khi môi trường ảo `.venv` chưa được cài đặt thư viện `pytest-asyncio`. Điều này dẫn đến các cảnh báo `Unknown pytest.mark.asyncio` và gây lỗi kiểm thử hàng loạt với thông báo không rõ ràng như `"async def functions are not natively supported"`.
+- **Thay thế bằng**: Luôn khai báo `pytest-asyncio` trong phần dev dependencies (`pyproject.toml`) và đảm bảo nó được cài đặt đầy đủ trong `.venv` trước khi thực thi `pytest`.
+
+### 36. Dangling Git Worktrees Blocking Branch Deletion
+- **Vấn đề**: Để lại các thư mục worktree tạm thời được tạo ra bởi các subagent, dẫn đến việc Git chặn hoàn toàn lệnh xóa nhánh cục bộ (`git branch -D`).
+- **Thay thế bằng**: Luôn thực hiện dọn dẹp và gỡ bỏ worktree bằng lệnh `git worktree remove --force <path>` trước khi xóa các nhánh.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
