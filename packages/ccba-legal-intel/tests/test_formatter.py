@@ -1,8 +1,7 @@
-import tempfile
 import json
+import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
-from bs4 import BeautifulSoup
 
 from ccba_legal.formatter import OKFStructureProcessor, inject_warning_block
 
@@ -66,7 +65,7 @@ Nội dung 2
         c1 = (sections_dir / "chuong_01.md").read_text(encoding="utf-8")
         assert "Chương I" in c1
         assert "Điều 1" in c1
-        assert "document_number: \"123\"" in c1
+        assert 'document_number: "123"' in c1
 
         c2 = (sections_dir / "chuong_02.md").read_text(encoding="utf-8")
         assert "Chương II" in c2
@@ -75,7 +74,9 @@ Nội dung 2
 
 def test_generate_chunks():
     processor = OKFStructureProcessor()
-    content = "\n\n".join([f"Paragraph number {i} contains some words that we can chunk." for i in range(20)])
+    content = "\n\n".join(
+        [f"Paragraph number {i} contains some words that we can chunk." for i in range(20)]
+    )
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
@@ -121,7 +122,7 @@ Some other text.
         markdown,
         target_anchor="d15k2",
         amendment_source="Điều 1 Thông tư B",
-        source_doc_path="guiding_docs/tt_b.md"
+        source_doc_path="guiding_docs/tt_b.md",
     )
 
     assert "Khoản này đã bị sửa đổi/bổ sung bởi Điều 1 Thông tư B" in updated
@@ -132,6 +133,6 @@ Some other text.
         updated,
         target_anchor="d15k2",
         amendment_source="Điều 1 Thông tư B",
-        source_doc_path="guiding_docs/tt_b.md"
+        source_doc_path="guiding_docs/tt_b.md",
     )
     assert twice == updated

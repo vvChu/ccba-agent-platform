@@ -5,15 +5,16 @@ import io
 import json
 import math
 import re
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any
 
 import yaml
 
 from ccba_legal.monitor import TokenMonitor
 
 
-def extract_parent_metadata(content: str) -> Dict[str, Any]:
+def extract_parent_metadata(content: str) -> dict[str, Any]:
     """Extract required metadata fields from frontmatter in parent content."""
     parent_fm = {}
     if content.strip().startswith("---"):
@@ -95,7 +96,7 @@ class OKFStructureProcessor:
 
         return "\n".join(output_lines)
 
-    def flatten_html_table(self, table_soup: Any) -> Tuple[List[List[str]], bool, int]:
+    def flatten_html_table(self, table_soup: Any) -> tuple[list[list[str]], bool, int]:
         """Flatten an HTML table with rowspan or colspan using a virtual 2D grid."""
         is_complex = False
         rows = table_soup.find_all("tr")
@@ -139,7 +140,7 @@ class OKFStructureProcessor:
         final_grid = [[grid.get((r, c), "") for c in range(max_c)] for r in range(max_r)]
         return final_grid, is_complex, max_r
 
-    def grid_to_markdown(self, grid: List[List[str]]) -> str:
+    def grid_to_markdown(self, grid: list[list[str]]) -> str:
         """Convert a 2D grid into a markdown table representation."""
         if not grid or all(not row for row in grid):
             return ""
@@ -153,14 +154,14 @@ class OKFStructureProcessor:
             lines.append("| " + " | ".join(escaped_row) + " |")
         return "\n".join(lines)
 
-    def grid_to_csv(self, grid: List[List[str]]) -> str:
+    def grid_to_csv(self, grid: list[list[str]]) -> str:
         """Convert a 2D grid into a CSV string."""
         output = io.StringIO()
         writer = csv.writer(output, lineterminator="\n")
         writer.writerows(grid)
         return output.getvalue()
 
-    def grid_to_json(self, grid: List[List[str]]) -> str:
+    def grid_to_json(self, grid: list[list[str]]) -> str:
         """Convert a 2D grid into a JSON string (list of row dicts)."""
         if not grid:
             return "[]"
@@ -175,7 +176,7 @@ class OKFStructureProcessor:
             data.append(row_dict)
         return json.dumps(data, ensure_ascii=False, indent=2)
 
-    def find_top_level_tables(self, text: str) -> List[str]:
+    def find_top_level_tables(self, text: str) -> list[str]:
         """Find all top-level HTML tables inside the text."""
         tables = []
         pos = 0
@@ -236,7 +237,7 @@ class OKFStructureProcessor:
             content = content.replace(table_str, replacement)
         return content
 
-    def split_concept_appendices(self, file_path: Path) -> List[str]:
+    def split_concept_appendices(self, file_path: Path) -> list[str]:
         """Detect and split appendices from a markdown file, saving them in an appendices/ subdirectory."""
         if not file_path.exists():
             return []
@@ -387,7 +388,6 @@ class OKFStructureProcessor:
     def generate_chunks(self, content: str, bundle_dir: Path) -> None:
         """Segment content into 200-400 word chunks and write to chunks.json."""
         import json
-        import math
 
         monitor = TokenMonitor()
         paragraphs = []

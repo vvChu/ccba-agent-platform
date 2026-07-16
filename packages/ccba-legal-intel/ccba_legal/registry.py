@@ -246,4 +246,3 @@ def load_relation_synonyms(project_root: Path | None = None) -> dict[str, str]:
             f"[Registry] Error reading relation synonyms from {synonyms_path}: {e}. Using default synonyms."
         )
         return DEFAULT_RELATION_SYNONYMS.copy()
-

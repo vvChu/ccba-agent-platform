@@ -10,6 +10,7 @@ import requests
 import websocket
 
 from ccba_harness import FileMutexLock
+from ccba_legal.registry import load_relation_synonyms as _load_relation_synonyms
 from ccba_legal.registry import resolve_project_root
 
 
@@ -33,13 +34,8 @@ class TVPLSessionMutex(FileMutexLock):
         )
 
 
-from ccba_legal.registry import DEFAULT_RELATION_SYNONYMS
-from ccba_legal.registry import load_relation_synonyms as _load_relation_synonyms
-
-
 def load_relation_synonyms() -> dict[str, str]:
     return _load_relation_synonyms(resolve_project_root())
-
 
 
 class ChromeCDPError(Exception):
@@ -734,7 +730,9 @@ def _parse_tvpl_date(date_str: str) -> str:
     return date_str
 
 
-def get_tvpl_metadata(cdp: ChromeCDP, url: str, relation_map: dict[str, str] | None = None) -> dict[str, Any]:
+def get_tvpl_metadata(
+    cdp: ChromeCDP, url: str, relation_map: dict[str, str] | None = None
+) -> dict[str, Any]:
     """Retrieve structured metadata from the TVPL 'Lược đồ' tab page.
 
     Args:
@@ -759,7 +757,6 @@ def get_tvpl_metadata(cdp: ChromeCDP, url: str, relation_map: dict[str, str] | N
     metadata_js = METADATA_EXTRACTION_JS_TEMPLATE.replace("__REL_MAP_JSON__", mapping_json)
 
     raw_meta = cdp.evaluate_js(metadata_js) or {}
-
 
     metadata = {
         "document_number": raw_meta.get("Số hiệu", ""),

@@ -7,7 +7,6 @@ import types
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from ccba_legal.crawler import (
     DEFAULT_RELATION_SYNONYMS,
     TVPLSessionMutex,
@@ -24,7 +23,6 @@ def mock_tier3_disabled():
         patch("ccba_legal.crawler.trigger_download", return_value=False),
     ):
         yield
-
 
 
 # =====================================================================
@@ -46,7 +44,6 @@ def test_mutex_concurrency_race_condition(tmp_path):
                 time.sleep(1.5)
         except Exception as e:
             errors.append((thread_num, e))
-
 
     t1 = threading.Thread(target=run_lock, args=(1,))
     t2 = threading.Thread(target=run_lock, args=(2,))
@@ -240,4 +237,3 @@ def test_download_three_tier_headless_exit(tmp_path):
     ):
         with pytest.raises(HeadlessEnvironmentError):
             download_three_tier(cdp_mock, download_dir, "test_headless")
-
