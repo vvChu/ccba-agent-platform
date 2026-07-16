@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 from bs4 import BeautifulSoup
 from ccba_legal.formatter import OKFStructureProcessor
-from ccba_legal.packager import OKFBundlePackager
 from ccba_legal.parser import LegalAnalysisEngine
 
 from mdconverter.plugins.vn_legal.linter import VNLegalLinter
