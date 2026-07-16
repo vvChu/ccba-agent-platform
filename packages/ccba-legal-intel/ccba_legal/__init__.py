@@ -19,7 +19,6 @@ from .packager import OKFBundlePackager, get_concept_type, is_guiding_link
 from .parser import LegalAnalysisEngine
 from .registry import LegalRegistryManager, load_relation_synonyms
 
-
 __all__ = [
     "ChromeCDP",
     "ChromeCDPError",
@@ -43,4 +42,3 @@ __all__ = [
     "ADRGenerator",
     "OKFStructureProcessor",
 ]
-

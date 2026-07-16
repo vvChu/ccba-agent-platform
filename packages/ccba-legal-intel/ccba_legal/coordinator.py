@@ -9,7 +9,6 @@ from typing import Any
 
 from ccba_legal.formatter import inject_warning_block
 from ccba_legal.parser import LegalAnalysisEngine
-
 from ccba_legal.registry import LegalRegistryManager
 
 

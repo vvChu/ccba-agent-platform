@@ -1,12 +1,8 @@
 import re
 import shutil
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
-
-import yaml
-
-
 
 
 class OKFBundlePackager:
@@ -203,9 +199,7 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
                         rel_path = primary_md_path.relative_to(self.root_dir.parent).as_posix()
                     except ValueError:
                         rel_path = primary_md_path.as_posix()
-                    self.amendment_processor(
-                        bundle_slug, content, rel_path
-                    )
+                    self.amendment_processor(bundle_slug, content, rel_path)
 
                 # Scan guiding documents
                 for gf in guiding_files:
@@ -216,15 +210,12 @@ timestamp: "{time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}"
                             rel_path = guiding_md_path.relative_to(self.root_dir.parent).as_posix()
                         except ValueError:
                             rel_path = guiding_md_path.as_posix()
-                        self.amendment_processor(
-                            gf, content, rel_path
-                        )
+                        self.amendment_processor(gf, content, rel_path)
             except Exception as e:
                 print(f"[OKF Packager] Error during automatic amendment processing: {e}")
 
         # 4. Standardise all bundle links to be bundle-absolute
         self.standardize_bundle_links(bundle_dir)
-
 
     def _write_logs_and_index(
         self, bundle_dir: Path, bundle_slug: str, guiding_files: list[str]
@@ -370,8 +361,3 @@ def get_concept_type(url: str) -> str:
     if "van-ban-hop-nhat" in url_lower or "vbhn" in url_lower:
         return "Consolidated Document"
     return "Guiding Document"
-
-
-from ccba_legal.formatter import inject_warning_block
-
-

@@ -175,6 +175,7 @@ def main() -> None:
 
         analyzer = LegalAnalysisEngine()
         from ccba_legal.coordinator import LegalProcessor
+
         processor = LegalProcessor()
 
         packager = OKFBundlePackager(
@@ -190,7 +191,6 @@ def main() -> None:
         print("[LegalIntel] Performing LLM analysis on primary document...")
         metadata = analyzer.analyze_document(main_text)
         checklist = analyzer.generate_checklist(main_text)
-
 
         # Save primary law concept
         packager.write_concept(
