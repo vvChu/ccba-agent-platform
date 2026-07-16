@@ -28,17 +28,13 @@ Kỹ năng này được kích hoạt để tự động thu thập, phân loạ
    - Đề xuất tiến hóa kỹ năng (Skill Discovery) lên Hub thông qua lệnh `/ccba-propose-to-hub` nếu phát hiện logic đóng gói tốt (chỉ áp dụng khi đang làm việc tại dự án Spoke, bỏ qua nếu đang đứng tại Hub).
    - **Tiêu chí hoàn thành:** Đề xuất được hiển thị rõ ràng trên màn hình chat cho người dùng lựa chọn (không tự ý ghi đè global memory khi chưa hỏi).
 
-4. **Dọn dẹp Workspace Tạm thời & Phân phối Tài liệu Đầu vào Thô:**
-   Agent thực hiện dọn dẹp các thư mục rác và phân phối tri thức đã sử dụng theo các bước con sau:
-   - **Dọn dẹp Workspace tạm của Subagents**: Quét thư mục gốc `.agents/` để tìm các thư mục con của subagents được tạo ra trong quá trình chạy teamwork hoặc song song (bắt đầu bằng: `auditor_`, `challenger_`, `explorer_`, `reviewer_`, `worker_`, `teamwork_preview_`, `sub_orch_`, `victory_auditor_`, `temp-marketing`) và xóa vật lý toàn bộ các thư mục con tạm thời này (chỉ giữ lại các thư mục cấu hình cốt lõi như `skills/`, `workflows/`, `templates/` và tệp hiến pháp `AGENTS.md`).
-   - **Phân phối tài liệu đầu vào thô**: Quét thư mục tạm [input_documents/](../../../input_documents/) ở gốc dự án để phân phối tri thức đã sử dụng:
-     * Tài liệu pháp lý, quy định $\rightarrow$ [.md/legal_docs/](../../../.md/legal_docs/) hoặc [.md/extracted_docs/](../../../.md/extracted_docs/).
-     * Báo cáo phân tích kỹ thuật, sơ đồ, hướng dẫn $\rightarrow$ [.md/knowledge/](../../../.md/knowledge/).
-     * Biên bản, ghi chú thảo luận họp $\rightarrow$ [.md/seminars/](../../../.md/seminars/).
-     * Tệp log, test script tạm $\rightarrow$ [.md/scratch/](../../../.md/scratch/).
-   - **In bảng đề xuất di chuyển**: Trình bày bảng đề xuất Move Matrix rõ ràng trong cửa sổ chat để người dùng xác nhận.
-   - **Thực thi di chuyển & Làm sạch**: Sau khi được người dùng duyệt phê duyệt tường minh, tiến hành di chuyển vật lý các tệp đã chốt vào đúng vị trí và xóa sạch các file rác còn lại trong [input_documents/](../../../input_documents/).
-   - **Tiêu chí hoàn thành:** Bảng đề xuất di chuyển được hiển thị thành công, nhận được xác nhận duyệt của người dùng trước khi tiến hành xóa, và cuối cùng thư mục [input_documents/](../../../input_documents/) cùng các thư mục tạm subagents được làm sạch triệt để.
+4. **Tự động hóa dọn dẹp Workspace & Phân phối Tài liệu:**
+   - Thực thi công cụ dọn dẹp tự động bằng cách chạy lệnh:
+     ```bash
+     python scripts/session_cleanup.py
+     ```
+   - Công cụ này sẽ tự động tìm và xóa các Git worktrees tạm thời của subagents, tìm và dọn dẹp các git branches local/remote đã được merge/redundant, đồng thời đề xuất phân phối/di chuyển các tài liệu thô trong [input_documents/](../../../input_documents/) vào phân vùng tri thức `.md/` thích hợp.
+   - **Tiêu chí hoàn thành:** Chạy thành công lệnh `python scripts/session_cleanup.py`, hiển thị bảng đề xuất di chuyển tệp cho người dùng duyệt và thực thi dọn dẹp hoàn tất, trả workspace về trạng thái sạch.
 
 5. **Xuất Báo cáo Tóm tắt:**
    - Xuất báo cáo tổng kết ngắn gọn (theo mẫu `## 📋 Session Retrospective Summary`) ra màn hình chat.
