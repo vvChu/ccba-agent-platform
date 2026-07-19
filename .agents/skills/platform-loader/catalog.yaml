@@ -704,13 +704,15 @@ skills:
   skill_path: .agents/skills/adk-go-quickstart/SKILL.md
 - name: architecture-sync
   bundle: _core
-  description: Đồng bộ hiến pháp kiến trúc của dự án Spoke từ Hub
+  description: Đồng bộ hóa toàn bộ tài liệu kiến trúc sau khi refactor codebase — bao phủ 4 tầng tài liệu nhạy cảm
   triggers:
   - architecture-sync
   - đồng bộ hiến pháp
   - đồng bộ kiến trúc
   - architecture
   - sync
+  - cập nhật tài liệu kiến trúc
+  - refactor docs
   skill_path: .agents/skills/architecture-sync/SKILL.md
 - name: docs_manager
   bundle: _core

@@ -1144,7 +1144,11 @@ def main() -> None:
                 f"[Maskara] Redaction complete ({redact_sum['replaced']} replaced). Report written to {report_path}"
             )
 
-            sys.exit(1 if any(f["severity"] in ("critical", "high") for f in scan_result["findings"]) else 0)
+            sys.exit(
+                1
+                if any(f["severity"] in ("critical", "high") for f in scan_result["findings"])
+                else 0
+            )
         except Exception as e:
             print(f"[Error] Runtime error: {e}", file=sys.stderr)
             sys.exit(2)
@@ -1163,7 +1167,9 @@ def main() -> None:
                 print(
                     f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}"
                 )
-            sys.exit(1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0)
+            sys.exit(
+                1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0
+            )
 
         elif cmd == "redact":
             targets = resolve_targets(args.agent, args.root)
@@ -1174,7 +1180,9 @@ def main() -> None:
                 print("Backups created:")
                 for f in redact_sum["files"]:
                     print(f"  - {f['path']} -> {f['backup_path']}")
-            sys.exit(1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0)
+            sys.exit(
+                1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0
+            )
 
         elif cmd == "report":
             targets = resolve_targets(args.agent, args.root)
