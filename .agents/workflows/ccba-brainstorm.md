@@ -53,6 +53,8 @@ Sau khi chủ đề được xác nhận, Agent tiến hành:
 ### 4. Áp dụng Guidelines và Khởi động Brainstorming
 In ra danh sách các chỉ dẫn thảo luận đặc thù (`guidelines`) của chủ đề đã chọn, sau đó bắt đầu phiên trao đổi hai chiều tuân thủ các quy tắc tương tác dưới đây.
 
+*   **Gợi ý kỹ thuật:** Tham khảo [brainstorm_techniques.md](resources/brainstorm_techniques.md) để đề xuất kỹ thuật brainstorm phù hợp với chủ đề (SCAMPER, Reversal, Question Storming, v.v.). Để người dùng chọn hoặc đề xuất 1-2 technique kèm lý do.
+
 **Quy tắc tương tác (Hybrid Rhythm):** Mỗi vòng brainstorm tuân thủ 4 nhịp:
 1. **Prompt** — Agent đặt **đúng 1 câu hỏi** mở liên quan đến chủ đề. Không bao giờ hỏi 2 câu cùng lúc — nhiều câu hỏi buộc người dùng chọn thay vì sáng tạo.
 2. **User first** — Chờ người dùng trả lời. Ghi nhận ý tưởng **nguyên văn** (verbatim) với tag `(user)` — không paraphrase, không chỉnh sửa câu chữ.
@@ -67,11 +69,41 @@ In ra danh sách các chỉ dẫn thảo luận đặc thù (`guidelines`) của
 
 ---
 
+### 5. Tổng hợp và Ghi nhận Phiên (Convergence & Session Document)
+Khi người dùng yêu cầu tổng hợp (hoặc sau Energy Checkpoint chọn "tổng hợp"), Agent chuyển sang giai đoạn convergence:
+1. **Nhóm phân loại:** Gom các ý tưởng đã thu thập thành 3-5 nhóm chủ đề tự nhiên.
+2. **Xếp hạng:** Yêu cầu người dùng chọn 3-5 ý tưởng ưu tiên nhất. Agent không tự xếp hạng thay.
+3. **Action items:** Chuyển các ý tưởng được chọn thành bước hành động cụ thể.
+4. **Session Document:** Tạo artifact Markdown ghi nhận toàn bộ phiên với cấu trúc:
+   - **Intake:** Chủ đề, ràng buộc, ngày tháng
+   - **Ý tưởng phát tán:** Liệt kê mọi ý tưởng với tag `(user)` hoặc `(AI)`, giữ nguyên văn
+   - **Nhóm phân loại:** Bảng phân nhóm
+   - **Ưu tiên:** Top ý tưởng được chọn
+   - **Action items:** Bước tiếp theo
+
+*Tiêu chí hoàn thành:* Artifact Session Document đã được tạo và hiển thị cho người dùng.
+
+---
+
+### 6. Party Mode (Tùy chọn — Multi-role Ideation)
+Khi người dùng yêu cầu "nhiều góc nhìn", "phản biện ý tưởng", hoặc "party mode", Agent chuyển sang chế độ brainstorm đa vai:
+1. Tạo 2-3 persona ảo phù hợp với chủ đề (ví dụ: khách hàng, đối thủ cạnh tranh, kỹ sư skeptic, nhà đầu tư).
+2. Mỗi vòng: Agent phát biểu từ góc nhìn của từng persona, gắn tag rõ ràng (ví dụ: `(Khách hàng)`, `(Skeptic)`).
+3. Người dùng vẫn giữ vai trò chính — persona bổ sung góc nhìn, không thay thế.
+4. Kết thúc Party Mode khi người dùng yêu cầu hoặc sau Energy Checkpoint.
+
+> **Phân biệt với `/ccba-grilling`:** Party Mode sinh ý tưởng từ nhiều góc nhìn. Grilling stress-test một kế hoạch đã có. Mục đích khác nhau.
+
+*Tiêu chí hoàn thành:* Ít nhất 2 persona đã phát biểu và ý tưởng được ghi nhận vào Session Document.
+
+---
+
 ## Tiêu chí hoàn thành (Completion Criteria)
 
 *   [x] Config đã nạp và chủ đề đã được xác nhận.
 *   [x] Tài liệu đầu vào đã chuyển đổi Markdown (nếu có).
-*   [x] Guidelines đã hiển thị và phiên brainstorming đã bắt đầu — Agent ở trạng thái chờ trao đổi với người dùng.
+*   [x] Guidelines và quy tắc Hybrid Rhythm đã hiển thị, phiên brainstorming đã bắt đầu.
+*   [x] Khi kết thúc phiên: Session Document artifact đã được tạo với đầy đủ ý tưởng tagged `(user)` / `(AI)`.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
