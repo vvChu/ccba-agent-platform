@@ -195,10 +195,10 @@ def main() -> None:
         all_success = all_success and success_test
 
     # ==========================================
-    # GATE 5: Document Verification (validate_docs.py)
+    # GATE 5: Document & Architecture Verification (validate_docs.py)
     # ==========================================
-    # Chỉ chạy khi có thay đổi file markdown hoặc khi chạy tất cả
-    if args.all or md_modified:
+    # Luôn chạy để bắt Architecture Drift
+    if True:
         # Chạy validate_docs
         validate_script = project_root / "scripts" / "validate_docs.py"
         if validate_script.exists():
