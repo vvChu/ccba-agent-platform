@@ -32,7 +32,7 @@ ccba-seo-audit = "scripts.seo_audit:main"
 members = ["packages/*"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ccba_agent_platform"]
+packages = ["src/ccba_agent_platform", "scripts"]
 
 
 # === Shared Tooling ===
