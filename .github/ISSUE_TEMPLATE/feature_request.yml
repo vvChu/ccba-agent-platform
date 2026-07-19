@@ -1,0 +1,31 @@
+name: 🚀 Yêu cầu tính năng mới (Feature Request)
+description: Đề xuất một tính năng hoặc nâng cấp mới cho CCBA Platform.
+title: "[FEAT]: <Tiêu đề ngắn gọn về tính năng mới>"
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Chúng tôi luôn lắng nghe các đóng góp ý tưởng từ bạn để phát triển CCBA Platform tốt hơn!
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: 💡 Mô tả tính năng đề xuất
+      description: Mô tả chi tiết về tính năng mới hoặc nâng cấp bạn mong muốn có.
+      placeholder: Tôi muốn hệ thống có khả năng...
+    validations:
+      required: true
+  - type: textarea
+    id: user-value
+    attributes:
+      label: 🎯 Giá trị mang lại (User Value / Cost-benefit)
+      description: Tại sao tính năng này lại cần thiết? Nó giúp giải quyết vấn đề gì trong công việc?
+      placeholder: Giúp giảm thiểu thời gian thực hiện...
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: 🛠️ Đề xuất giải pháp kỹ thuật (nếu có)
+      description: Nếu bạn đã có ý tưởng thiết kế hoặc các API dự kiến sử dụng.
+      placeholder: Sử dụng thư viện X để xử lý...
