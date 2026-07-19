@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Một kỹ năng (Skill) được tạo ra nhằm thiết lập tính nhất quán (determinism) từ một hệ thống xác suất (stochastic system). **Tính khả đoán (Predictability)** — việc Agent thực hiện đúng cùng một *quy trình* (process) trong mọi lần chạy, chứ không phải sinh ra cùng một output — là phẩm chất cốt lõi; mọi nguyên tắc dưới đây đều phục vụ mục đích đó.
 
+> **Lưu ý:** Skill này là tài liệu tham chiếu thuần túy (all-reference), không chứa bước quy trình (steps). Các mục đánh số dưới đây là quy tắc chất lượng, không phải hướng dẫn tuần tự.
+
 Các thuật ngữ in đậm được định nghĩa tại [GLOSSARY.md](GLOSSARY.md); vui lòng đối chiếu để nắm rõ ý nghĩa chi tiết.
 
 ---
@@ -44,6 +46,8 @@ Nội dung của một kỹ năng được xây dựng từ hai thành phần: *
 2.  **Tham chiếu trong kỹ năng (In-skill reference):** Định nghĩa, quy tắc hoặc sự thật được tra cứu khi cần thiết trong `SKILL.md`.
 3.  **Tham chiếu ngoài (External reference):** Các tài liệu được đẩy ra ngoài `SKILL.md` và dẫn chiếu qua **Liên kết tương đối (Relative Link)** đến các file Markdown sibling (ví dụ: `GLOSSARY.md`) hoặc thư mục `references/` để giữ cho tệp tin chính gọn gàng. Đây là nguyên tắc **Bộc lộ dần dần (Progressive Disclosure)**.
 
+4.  **Nhánh xử lý (Branch):** Khi skill có nhiều nhánh xử lý (branches), mỗi nhánh được coi là một mini-process riêng biệt. Nếu nhánh chứa steps, mỗi nhánh phải có **Tiêu chí hoàn thành** riêng. Nếu nhánh phức tạp hoặc có nhiều tham số, tách chi tiết ra file sibling (ví dụ: `MODES.md`) theo Progressive Disclosure.
+
 ---
 
 ## 4. Các lỗi thường gặp (Failure Modes)
@@ -65,6 +69,7 @@ Nội dung của một kỹ năng được xây dựng từ hai thành phần: *
 2.  **Tiêu chí hoàn thành:** Mọi bước hướng dẫn quy trình (dưới các tiêu đề `Process` hoặc `Quy trình`) phải có một dòng bắt đầu bằng `Tiêu chí hoàn thành:` hoặc `Completion Criterion:` chỉ rõ trạng thái hoàn thành định lượng.
 3.  **Liên kết tương đối (Relative links):** Mọi dẫn chiếu sang tệp tin khác trong cùng kỹ năng hoặc workspace phải sử dụng relative link hoạt động được, không dùng link tuyệt đối (absolute link) trừ phi đó là tài liệu web ngoài.
 4.  **Đăng ký Slash Command:** Khi tạo skill mới có thuộc tính `user-invocable: true`, bắt buộc phải tạo workflow wrapper mỏng tương ứng tại thư mục `.agents/workflows/` bắt đầu bằng tiền tố `ccba-` và đăng ký vào [catalog.yaml](../platform-loader/catalog.yaml).
+5.  **Attribution (Ghi nhận nguồn gốc):** Khi skill hoặc nhánh được thích ứng từ nguồn bên ngoài, bắt buộc phải ghi blockquote attribution ngay dưới tiêu đề nhánh/skill, bao gồm: tên nguồn, tác giả, loại giấy phép. Ví dụ: `> Nguồn gốc: Thích ứng từ skill-name của Author (License Type).`
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
