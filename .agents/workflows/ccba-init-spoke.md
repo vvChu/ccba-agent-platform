@@ -16,20 +16,25 @@ Workflow này tự động hóa việc thiết lập một không gian làm vi�
 ## Các bước thực hiện:
 
 ### 1. Khởi tạo cấu trúc Knowledge Base (Global Rule 1)
-Tạo kiến trúc thư mục `.md` chứa dữ liệu tri thức bằng PowerShell:
+Tạo kiến trúc thư mục `.md` chứa dữ liệu tri thức bằng PowerShell tùy theo Mode được chọn (`software`, `delivery`, hoặc `hybrid`):
 ```powershell
-$kbDirs = @(
-    ".md\seminars", 
-    ".md\legal_docs", 
-    ".md\extracted_docs", 
-    ".md\scratch", 
-    ".md\data", 
-    ".md\knowledge\configs", 
-    ".md\knowledge\guidelines", 
-    ".md\knowledge\related_papers", 
-    ".md\knowledge\reports", 
-    ".md\knowledge\specs_and_roadmaps"
-)
+$mode = "[mode tương ứng]" # (Phần mềm -> software, Xây dựng/Tư vấn -> delivery, Platform/R&D -> hybrid)
+if ($mode -eq "software") {
+    $kbDirs = @(".md\scratch")
+} else {
+    $kbDirs = @(
+        ".md\seminars", 
+        ".md\legal_docs", 
+        ".md\extracted_docs", 
+        ".md\scratch", 
+        ".md\data", 
+        ".md\knowledge\configs", 
+        ".md\knowledge\guidelines", 
+        ".md\knowledge\related_papers", 
+        ".md\knowledge\reports", 
+        ".md\knowledge\specs_and_roadmaps"
+    )
+}
 foreach ($dir in $kbDirs) {
     if (-not (Test-Path $dir)) {
         New-Item -ItemType Directory -Path $dir -Force | Out-Null
@@ -46,13 +51,14 @@ Lấy tên thư mục Root hiện hành để cấu hình:
 
 ### 3. Tạo file Workspace Context
 Tạo file `.md\workspace_context.yaml` và ghi nội dung cấu hình. Đề nghị người dùng chọn 1 trong các loại dự án sau để điền vào trường `type`:
-- Dự án phần mềm/build tools
-- Thẩm tra thiết kế/ Third-party Review
-- Thiết kế/ Design
-- Kiểm định/Assessment
-- Tác vụ Admin/ Hành chính & Quản trị
+- Dự án phần mềm/build tools (type: `Phần mềm`)
+- Thẩm tra thiết kế/ Third-party Review (type: `Thẩm tra thiết kế`)
+- Thiết kế/ Design (type: `Thiết kế`)
+- Kiểm định/Assessment (type: `Kiểm định`)
+- Tác vụ Admin/ Hành chính & Quản trị (type: `Tác vụ Admin`)
 
-Dựa vào `type` được chọn, xác định `qc_mode` tự động:
+Dựa vào `type` được chọn, xác định `mode` mặc định (`software` cho Phần mềm, `delivery` cho các loại còn lại. Nếu là Hub hoặc Spoke hỗn hợp thì chọn `hybrid`).
+Xác định `qc_mode` tự động:
 - Thiết kế $\rightarrow$ `internal`
 - Thẩm tra thiết kế $\rightarrow$ `third-party`
 - Kiểm định $\rightarrow$ `assessment`
@@ -67,19 +73,10 @@ Dựa vào `type` được chọn, xác định `qc_mode` tự động:
 project:
   name: "[Tên thư mục dự án]"
   type: "[Loại dự án được chọn]"
+  mode: "[mode tương ứng: software | delivery | hybrid]"
   qc_mode: "[qc_mode tương ứng]"
   description: >
     [Mô tả ngắn gọn mục tiêu và phạm vi dự án]
-
-# =============================================================================
-# AGENT BOUNDARIES
-# =============================================================================
-agent_boundaries:
-  allowed_read_paths:
-    - "*"
-  allowed_write_paths:
-    - ".md/"
-  strict_mode: true
 
 # =============================================================================
 # MUST-READ FILES
@@ -88,14 +85,6 @@ must_read:
   always:
     - path: .md/GLOSSARY.md
       why: "Ubiquitous Language — thuật ngữ chuẩn"
-
-# =============================================================================
-# OUTPUT DIRECTORIES
-# =============================================================================
-output_dirs:
-  reports_and_docs: .md/docs/
-  scratch_and_logs: .md/archive/
-  research_scripts: .md/scripts/
 
 # =============================================================================
 # DO NOT TOUCH
@@ -108,7 +97,7 @@ do_not_touch:
 # =============================================================================
 acknowledgment_required: true
 acknowledgment_format: >
-  "Tôi đã đọc workspace_context.yaml. Dự án [tên] là [type]. Tác vụ hiện tại liên quan đến [lĩnh vực]."
+  "Tôi đã đọc workspace_context.yaml. Dự án [tên] là [type] (mode: [mode]). Tác vụ hiện tại liên quan đến [lĩnh vực]."
 ```
 
 ### 4. Quét tìm tài liệu chưa xử lý
@@ -216,12 +205,12 @@ fi
 }
 ```
 
-Nếu `type` là **"Phần mềm"**, đề xuất người dùng chọn ngôn ngữ lập trình mục tiêu (Python/Node.js) và dựng cấu trúc thư mục chuẩn:
-- Tạo các thư mục `src`, `tests`, `scripts`, `docs`
+Nếu `mode` là **"software"** hoặc **"hybrid"**, đề xuất người dùng chọn ngôn ngữ lập trình mục tiêu (Python/Node.js) và dựng cấu trúc thư mục chuẩn:
+- Tạo các thư mục `src`, `tests`, `scripts`, `docs`, `docs/references`, `docs/adr`
 - Khởi tạo `pyproject.toml` (cho Python) hoặc `package.json` (cho Node.js)
 
 ### 7. Khởi tạo cấu trúc Tri thức Mẫu (Dành cho các dự án nghiệp vụ)
-Nếu `type` không phải là **"Phần mềm"** (thuộc các nhóm có nghiệp vụ tư vấn/xây dựng), sao chép các tệp tin templates từ Hub về Spoke để kỹ sư bắt đầu ghi nhận tri thức:
+Nếu `mode` là **"delivery"** hoặc **"hybrid"**, sao chép các tệp tin templates từ Hub về Spoke để kỹ sư bắt đầu ghi nhận tri thức:
 ```powershell
 $hubTemplates = "[hub_path]\.agents\workflows\resources\templates"
 if (Test-Path $hubTemplates) {
