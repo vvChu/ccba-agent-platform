@@ -234,14 +234,15 @@ def get_drive_service() -> Any:
     env_dir = os.environ.get("CCBA_CREDENTIALS_DIR")
     if env_dir:
         token_dir = Path(env_dir)
-        
+
     token_path = token_dir / "drive_token.json"
-    
+
     if old_token.exists():
         if not token_path.exists():
             try:
                 token_dir.mkdir(parents=True, exist_ok=True)
                 import shutil
+
                 shutil.move(str(old_token), str(token_path))
                 print(f"[Drive Info] Tự động di trú token cá nhân sang: {token_path}")
             except Exception as e:

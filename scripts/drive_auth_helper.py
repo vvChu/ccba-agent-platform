@@ -40,18 +40,19 @@ def migrate_old_credentials() -> None:
     """Migrate client_secrets.json and drive_token.json from old .md/scratch/ paths to home folder."""
     old_secrets = Path(".md/scratch/client_secrets.json")
     old_token = Path(".md/scratch/drive_token.json")
-    
+
     target_dir = get_credentials_dir()
-    
+
     if old_secrets.exists() or old_token.exists():
         target_dir.mkdir(parents=True, exist_ok=True)
         print("🔄 Phát hiện credentials cũ ở .md/scratch/. Đang tự động di trú...")
-        
+
         if old_secrets.exists():
             target_secrets = target_dir / "client_secrets.json"
             if not target_secrets.exists():
                 try:
                     import shutil
+
                     shutil.move(str(old_secrets), str(target_secrets))
                     print(f" -> Đã di chuyển client_secrets.json sang: {target_secrets}")
                 except Exception as e:
@@ -61,12 +62,13 @@ def migrate_old_credentials() -> None:
                     old_secrets.unlink()
                 except Exception:
                     pass
-                    
+
         if old_token.exists():
             target_token = target_dir / "drive_token.json"
             if not target_token.exists():
                 try:
                     import shutil
+
                     shutil.move(str(old_token), str(target_token))
                     print(f" -> Đã di chuyển drive_token.json sang: {target_token}")
                 except Exception as e:
