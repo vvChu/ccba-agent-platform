@@ -1,10 +1,21 @@
 name: Documentation Check
 
 on:
-  pull_request:
+  push:
+    branches: [ main ]
     paths:
       - '**/*.md'
       - '**/*.py'
+      - '**/*.yaml'
+      - '**/*.toml'
+      - '.github/workflows/validate-docs.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**/*.md'
+      - '**/*.py'
+      - '**/*.yaml'
+      - '**/*.toml'
       - '.github/workflows/validate-docs.yml'
 
 jobs:
