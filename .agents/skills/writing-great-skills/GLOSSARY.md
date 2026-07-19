@@ -1,4 +1,5 @@
 # Glossary — Building Great Skills
+> Nguồn gốc: Thích ứng từ domain model của Matt Pocock (MIT License). Bản gốc tại `will-ness-ai/skills`. Mục Negation đã được Việt hóa.
 
 The domain model for what makes a skill great. A skill exists to wrangle determinism out of a stochastic system; the root virtue is **Predictability**, and every term below is a lever on it. This is the disclosed reference for [`writing-great-skills`](SKILL.md).
 
