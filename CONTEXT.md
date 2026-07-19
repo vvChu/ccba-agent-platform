@@ -104,3 +104,11 @@ Quy trình tải tài liệu pháp lý 3 tầng (Tier 1: Local & Cache, Tier 2: 
 
 **TVPLSessionMutex (Khóa loại trừ tương hỗ phiên TVPL)**:
 Cơ chế khóa loại trừ tương hỗ (Mutex lock) dựa trên tệp tin lock để đảm bảo chỉ có tối đa một phiên cào web (Chrome CDP) VIP diễn ra tại một thời điểm, ngăn ngừa lỗi đăng nhập đồng thời trên hệ thống Thư viện Pháp luật (TVPL).
+
+**Source Manifest (Biên bản nguồn)**:
+Bản ghi siêu dữ liệu bắt buộc được tạo ra trong Pha 1 (Recon) của quy trình port tính năng (`ccba-xia`), bao gồm đường dẫn repo, nhánh, commit SHA, loại giấy phép (`license_type`) và danh sách dependencies cốt lõi.
+_Avoid_: Source info, repo metadata
+
+**Copy-Raw (Sao chép thô)**:
+Chế độ port tính năng (`--copy-raw`) trong `ccba-xia` cấy ghép mã nguồn với số lượng thay đổi tối thiểu, đánh dấu tường minh các file chưa tuân thủ tiêu chuẩn Platform và bắt buộc tạo follow-up issue refactor.
+_Avoid_: Copy, raw copy, as-is copy
