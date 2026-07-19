@@ -1,0 +1,27 @@
+- name: "needs-triage"
+  color: "fbca04"
+  description: "Sự cố mới tiếp nhận, cần đánh giá sơ bộ"
+
+- name: "needs-info"
+  color: "fef2c0"
+  description: "Cần người báo cáo bổ sung thêm thông tin"
+
+- name: "ready-for-agent"
+  color: "0e8a16"
+  description: "Đã có Agent Brief, sẵn sàng cho Agent tự động xử lý"
+
+- name: "ready-for-human"
+  color: "b60205"
+  description: "Yêu cầu lập trình viên con người xử lý"
+
+- name: "wontfix"
+  color: "ffffff"
+  description: "Đã bị từ chối hoặc không được thực hiện"
+
+- name: "bug"
+  color: "d93f0b"
+  description: "Sự cố/lỗi hệ thống cần sửa đổi"
+
+- name: "enhancement"
+  color: "a2eeef"
+  description: "Yêu cầu nâng cấp hoặc tính năng mới"
