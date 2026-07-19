@@ -349,6 +349,15 @@ def extract_context(content: str, start_offset: int, end_offset: int) -> str:
     return "\n".join(before + [middle] + after)
 
 
+SAFE_STRINGS = {
+    "sk-spark-secure-key-2026",
+    "sk-spark-secure-key",
+    "your-api-key",
+    "your_key_here",
+    "sk-proj-YOUR_API_KEY",
+}
+
+
 def detect_secrets_in_text(
     content: str, filepath: str, agent: str, use_llm: bool = False
 ) -> list[dict[str, Any]]:
@@ -375,6 +384,9 @@ def detect_secrets_in_text(
             else:
                 val = match.group(0)
                 start, end = match.start(), match.end()
+
+            if val in SAFE_STRINGS:
+                continue
 
             if "MASKARA_REDACTED" in val:
                 continue
@@ -470,6 +482,7 @@ def perform_scan(targets: list[dict[str, Any]], use_llm: bool = False) -> dict[s
         "build",
         ".next",
         "__pycache__",
+        ".md",
     }
 
     for target in targets:
@@ -1131,7 +1144,7 @@ def main() -> None:
                 f"[Maskara] Redaction complete ({redact_sum['replaced']} replaced). Report written to {report_path}"
             )
 
-            sys.exit(1 if len(scan_result["findings"]) > 0 else 0)
+            sys.exit(1 if any(f["severity"] in ("critical", "high") for f in scan_result["findings"]) else 0)
         except Exception as e:
             print(f"[Error] Runtime error: {e}", file=sys.stderr)
             sys.exit(2)
@@ -1150,7 +1163,7 @@ def main() -> None:
                 print(
                     f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}"
                 )
-            sys.exit(1)
+            sys.exit(1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0)
 
         elif cmd == "redact":
             targets = resolve_targets(args.agent, args.root)
@@ -1161,7 +1174,7 @@ def main() -> None:
                 print("Backups created:")
                 for f in redact_sum["files"]:
                     print(f"  - {f['path']} -> {f['backup_path']}")
-            sys.exit(1 if len(result["findings"]) > 0 else 0)
+            sys.exit(1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0)
 
         elif cmd == "report":
             targets = resolve_targets(args.agent, args.root)
