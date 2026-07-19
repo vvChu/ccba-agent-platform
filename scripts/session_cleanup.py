@@ -127,7 +127,8 @@ def load_project_mode(root_dir: Path) -> str:
         return "delivery"
     try:
         import yaml
-        with open(context_file, "r", encoding="utf-8") as f:
+
+        with open(context_file, encoding="utf-8") as f:
             data = yaml.safe_load(f)
             if data and isinstance(data, dict):
                 proj = data.get("project", {})
@@ -182,7 +183,9 @@ def distribute_input_documents(root_dir: Path, dry_run: bool) -> None:
         knowledge_dir = md_dir / "knowledge"
         data_dir = md_dir / "data"
         seminar_dir = md_dir / "seminars"
-        target_dirs.update([legal_dir, knowledge_dir, scratch_dir, data_dir, seminar_dir, references_dir])
+        target_dirs.update(
+            [legal_dir, knowledge_dir, scratch_dir, data_dir, seminar_dir, references_dir]
+        )
 
     if not dry_run:
         for d in target_dirs:
@@ -223,7 +226,19 @@ def distribute_input_documents(root_dir: Path, dry_run: bool) -> None:
             seminar_dir = md_dir / "seminars"
 
             # Check if it looks like code/dev document
-            is_dev_doc = any(k in name for k in ("api", "spec", "adr", "architecture", "codebase", "dev", "software", "reference"))
+            is_dev_doc = any(
+                k in name
+                for k in (
+                    "api",
+                    "spec",
+                    "adr",
+                    "architecture",
+                    "codebase",
+                    "dev",
+                    "software",
+                    "reference",
+                )
+            )
 
             if ext in (".py", ".sh", ".ps1", ".bat"):
                 dest = scratch_dir / f.name

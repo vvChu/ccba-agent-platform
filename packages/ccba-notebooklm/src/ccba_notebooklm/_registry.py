@@ -13,7 +13,7 @@ TASK_STATE_FILE = Path(".md/scratch/notebooklm_task_state.yaml")
 # Cấu hình registry động cho mode software
 if CONTEXT_FILE.exists():
     try:
-        with open(CONTEXT_FILE, "r", encoding="utf-8") as f:
+        with open(CONTEXT_FILE, encoding="utf-8") as f:
             data = yaml.safe_load(f)
             if data and isinstance(data, dict):
                 proj = data.get("project", {})
