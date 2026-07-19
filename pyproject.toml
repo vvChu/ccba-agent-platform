@@ -21,6 +21,12 @@ dependencies = []
 Homepage = "https://github.com/vvChu/ccba-agent-platform"
 Repository = "https://github.com/vvChu/ccba-agent-platform"
 
+[project.scripts]
+ccba-decrypt-registry = "scripts.decrypt_spoke_registry:decrypt_registry"
+ccba-gen-keys = "scripts.generate_registry_keys:generate_keys"
+ccba-find-skills = "scripts.find_skills:main"
+ccba-seo-audit = "scripts.seo_audit:main"
+
 # === Workspace Config (for uv) ===
 [tool.uv.workspace]
 members = ["packages/*"]
