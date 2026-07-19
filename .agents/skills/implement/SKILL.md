@@ -12,7 +12,7 @@ Run typechecking regularly, single test files regularly, and the full test suite
 
 Once done, use `/ccba-code-review` to review the work.
 
-Before committing, check if any **structural changes** were made (new/renamed/deleted directories, packages, scripts, skills, or workflows). If yes, run the `architecture-sync` skill to update affected documentation. At minimum, verify that hardcoded statistics (skill count, workflow count, package count) in `README.md` and `PLATFORM.md` still match reality.
+Before committing, check if any **structural changes** were made (new/renamed/deleted directories, packages, scripts, skills, or workflows). If yes, run `python scripts/update_arch_stats.py` to auto-update architecture metrics, and update `architecture-sync/SKILL.md` if necessary. CI will block your PR if you forget to do this.
 
 Commit your work to the current branch.
 

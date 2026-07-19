@@ -5,7 +5,7 @@ Hub contains tools (skills, workflows, knowledge, service modules); Spokes conta
 
 ## Architecture
 
-Two pip-installable packages under `packages/`:
+<!-- KEY_START: PKG_COUNT -->2<!-- KEY_END: PKG_COUNT --> pip-installable packages under `packages/`:
 
 | Package | Purpose | Entry Point |
 |---------|---------|-------------|

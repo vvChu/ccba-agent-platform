@@ -557,6 +557,65 @@ def get_modified_files(project_root: Path) -> set[Path]:
     return modified
 
 
+def check_architecture_drift(project_root: Path) -> list[str]:
+    """Check if structural files were added/deleted without updating architecture docs."""
+    drift_errors = []
+    try:
+        res = subprocess.run(
+            ["git", "diff", "--name-status", "origin/main...HEAD"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+        )
+        if res.returncode != 0:
+            res = subprocess.run(
+                ["git", "diff", "--name-status", "HEAD~1"],
+                cwd=project_root,
+                capture_output=True,
+                text=True,
+            )
+
+        changes = res.stdout.splitlines()
+
+        res2 = subprocess.run(
+            ["git", "status", "--porcelain"], cwd=project_root, capture_output=True, text=True
+        )
+        changes.extend(res2.stdout.splitlines())
+
+        structural_change = False
+        arch_doc_updated = False
+        arch_docs = {"README.md", "PLATFORM.md", ".agents/skills/architecture-sync/SKILL.md"}
+        tracked_prefixes = ("packages/", "scripts/", ".agents/skills/", ".agents/workflows/")
+
+        for line in changes:
+            if not line.strip():
+                continue
+            parts = line.split()
+            status = parts[0]
+            filepath = parts[-1].strip().replace("\\", "/")
+
+            if filepath in arch_docs or (status.startswith("M") and filepath in arch_docs):
+                arch_doc_updated = True
+
+            if (
+                status.startswith("A")
+                or status.startswith("D")
+                or status.startswith("R")
+                or status == "??"
+            ):
+                if filepath == "pyproject.toml" or filepath.startswith(tracked_prefixes):
+                    structural_change = True
+
+        if structural_change and not arch_doc_updated:
+            drift_errors.append(
+                "Structural drift detected: You added/deleted/renamed files in core directories (packages, scripts, skills, workflows) but did not update Architecture Docs (README.md, PLATFORM.md, architecture-sync). Run 'python scripts/update_arch_stats.py' and commit."
+            )
+
+    except Exception:
+        pass
+    return drift_errors
+
+
 def main():
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -799,6 +858,15 @@ def main():
                         f"  \x1b[33mOrphan File Warning:\x1b[0m {rel_o} is not referenced by any other markdown file in the bundle."
                     )
                     total_issues += 1
+
+    # Scan for Architecture Drift
+    arch_drift_issues = check_architecture_drift(project_root)
+    if arch_drift_issues:
+        print("\n\x1b[4mArchitecture Drift Check\x1b[0m")
+        for err in arch_drift_issues:
+            print(f"  \x1b[31mDrift Error:\x1b[0m {err}")
+            total_issues += 1
+            hard_errors_count += 1
 
     print("-" * 60)
     if total_issues > 0:
