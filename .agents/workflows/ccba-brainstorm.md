@@ -51,10 +51,14 @@ Hiển thị danh sách tất cả các chủ đề khả dụng cho người d�
 ### 4. Chuyển đổi định dạng và Nạp Kỹ năng (Ingestion & Skill Activation)
 Sau khi chủ đề được xác nhận, Agent tiến hành:
 1. **Chuyển đổi linh hoạt (On-Demand Convert):**
-   * Đối với các tệp nhẹ `< 5MB` (`.docx`, `.txt`): Tự động chuyển đổi sang Markdown và lưu tạm tại `.md/extracted_docs/` để làm giàu tri thức của phiên làm việc.
+   * Đọc `project.mode` từ `.md/workspace_context.yaml` để xác định thư mục đích:
+     - `software` $\rightarrow$ Lưu tạm tại `docs/references/`
+     - `delivery` $\rightarrow$ Lưu tạm tại `.md/extracted_docs/`
+     - `hybrid` $\rightarrow$ Tự động phân phối (luật/xây dựng $\rightarrow$ `.md/extracted_docs/`, codebase/spec/api $\rightarrow$ `docs/references/`)
+   * Đối với các tệp nhẹ `< 5MB` (`.docx`, `.txt`): Tự động chuyển đổi sang Markdown và lưu vào thư mục đích tương ứng để làm giàu tri thức của phiên làm việc.
    * Đối với các tệp nặng `> 5MB` (PDF bản vẽ kỹ thuật lớn, Excel bảng tính lớn): In cảnh báo, lập bảng tóm tắt metadata và chỉ convert chi tiết khi thảo luận đi sâu vào tệp đó.
 2. **Nạp Kỹ năng:** Nạp toàn bộ các kỹ năng nghiệp vụ được chỉ định trong thuộc tính `required_skills` của chủ đề được chọn.
-   *Tiêu chí hoàn thành:* Toàn bộ các tệp nhẹ đã được chuyển đổi sang Markdown tại `.md/extracted_docs/`, và các kỹ năng nghiệp vụ tương ứng đã được nạp thành công.
+   *Tiêu chí hoàn thành:* Toàn bộ các tệp nhẹ đã được chuyển đổi sang Markdown tại thư mục đích chuẩn xác, và các kỹ năng nghiệp vụ tương ứng đã được nạp thành công.
 
 ---
 
