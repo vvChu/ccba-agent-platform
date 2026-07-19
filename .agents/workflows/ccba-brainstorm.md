@@ -11,6 +11,8 @@ bundle: "_core"
 
 # CCBA Brainstorming & Ingestion Workflow
 
+> **Nguồn gốc:** Cấu trúc tương tác luân phiên (Hybrid Rhythm, Deferred Judgment, Party Mode) được học hỏi từ nguyên tắc của `brainstorm-coach` bởi Lưu Trọng Hiếu (License: All Rights Reserved - Adapted patterns only).
+
 Workflow này giúp khởi chạy một phiên thảo luận ý tưởng, tự động quét và phân loại tài liệu đầu vào tại thư mục nháp `input_documents/`, đồng thời kích hoạt các hướng dẫn phân tích đặc thù theo từng chủ đề nghiệp vụ.
 
 ## Các bước thực hiện của Agent
@@ -56,12 +58,12 @@ In ra danh sách các chỉ dẫn thảo luận đặc thù (`guidelines`) của
 *   **Gợi ý kỹ thuật:** Tham khảo [brainstorm_techniques.md](resources/brainstorm_techniques.md) để đề xuất kỹ thuật brainstorm phù hợp với chủ đề (SCAMPER, Reversal, Question Storming, v.v.). Để người dùng chọn hoặc đề xuất 1-2 technique kèm lý do.
 
 **Quy tắc tương tác (Hybrid Rhythm):** Mỗi vòng brainstorm tuân thủ 4 nhịp:
-1. **Prompt** — Agent đặt **đúng 1 câu hỏi** mở liên quan đến chủ đề. Không bao giờ hỏi 2 câu cùng lúc — nhiều câu hỏi buộc người dùng chọn thay vì sáng tạo.
-2. **User first** — Chờ người dùng trả lời. Ghi nhận ý tưởng **nguyên văn** (verbatim) với tag `(user)` — không paraphrase, không chỉnh sửa câu chữ.
+1. **Prompt** — Agent đặt **đúng 1 câu hỏi** mở liên quan đến chủ đề. Luôn hỏi duy nhất 1 câu mỗi lượt để kích thích sự sáng tạo.
+2. **User first** — Chờ người dùng trả lời. Bắt buộc giữ **nguyên văn** (verbatim) mọi câu chữ của người dùng với tag `(user)`.
 3. **AI Build** — Agent bổ sung 2-4 ý tưởng mới với tag `(AI)`, xây dựng trên ý tưởng người dùng vừa nêu (yes-and), không thay thế.
 4. **Return floor** — Kết thúc bằng **đúng 1 câu hỏi tiếp theo** để trả quyền điều khiển về người dùng.
 
-*   **Deferred Judgment:** Trong giai đoạn phát tán ý tưởng, Agent **không được** đánh giá, xếp hạng, hoặc bình luận tính khả thi. Mọi ý tưởng (kể cả phi thực tế) được ghi nhận bình đẳng. Đánh giá chỉ diễn ra khi người dùng yêu cầu tổng hợp.
+*   **Deferred Judgment:** Trong giai đoạn phát tán ý tưởng, Agent chỉ đóng vai trò ghi nhận và mở rộng ý tưởng; bảo lưu toàn bộ việc đánh giá tính khả thi và xếp hạng cho đến giai đoạn Tổng hợp (mọi ý tưởng được ghi nhận bình đẳng).
 *   **Energy Checkpoint:** Sau mỗi 3-4 vòng trao đổi, Agent chủ động hỏi: tiếp tục hướng hiện tại, đổi góc nhìn/kỹ thuật, hay chuyển sang tổng hợp kết quả?
 *   **Nghiên cứu bổ sung:** Khi phát sinh nhu cầu nghiên cứu chuyên sâu (tài liệu lớn, API bên thứ ba, so sánh VBPL), kích hoạt `/ccba-research` chạy song song.
 
@@ -74,7 +76,7 @@ Khi người dùng yêu cầu tổng hợp (hoặc sau Energy Checkpoint chọn 
 1. **Nhóm phân loại:** Gom các ý tưởng đã thu thập thành 3-5 nhóm chủ đề tự nhiên.
 2. **Xếp hạng:** Yêu cầu người dùng chọn 3-5 ý tưởng ưu tiên nhất. Agent không tự xếp hạng thay.
 3. **Action items:** Chuyển các ý tưởng được chọn thành bước hành động cụ thể.
-4. **Session Document:** Tạo artifact Markdown ghi nhận toàn bộ phiên với cấu trúc:
+4. **Session Document:** Tạo artifact Markdown trong thư mục workspace hiện tại ghi nhận toàn bộ phiên với cấu trúc:
    - **Intake:** Chủ đề, ràng buộc, ngày tháng
    - **Ý tưởng phát tán:** Liệt kê mọi ý tưởng với tag `(user)` hoặc `(AI)`, giữ nguyên văn
    - **Nhóm phân loại:** Bảng phân nhóm
@@ -94,7 +96,7 @@ Khi người dùng yêu cầu "nhiều góc nhìn", "phản biện ý tưởng",
 
 > **Phân biệt với `/ccba-grilling`:** Party Mode sinh ý tưởng từ nhiều góc nhìn. Grilling stress-test một kế hoạch đã có. Mục đích khác nhau.
 
-*Tiêu chí hoàn thành:* Ít nhất 2 persona đã phát biểu và ý tưởng được ghi nhận vào Session Document.
+*Tiêu chí hoàn thành:* Ít nhất 2 persona đã phát biểu và ý tưởng được ghi nhận vào Session Document, hoặc người dùng yêu cầu dừng/chuyển giai đoạn.
 
 ---
 
