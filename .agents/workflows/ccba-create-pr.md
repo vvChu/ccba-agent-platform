@@ -9,6 +9,32 @@ bundle: "_software"
 
 Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request siêu tốc.
 
+## Bước 0: Main Branch Guard (Tự động phát hiện & sửa sai)
+
+1. Lấy tên branch hiện hành:
+   ```bash
+   git branch --show-current
+   ```
+2. **Nếu đang ở `main`**: Kiểm tra xem có commits chưa push không:
+   ```bash
+   git log origin/main..main --oneline
+   ```
+3. **Nếu có commits chưa push trên `main`** → Tự động tạo feature branch retroactively:
+   a. Phân tích commit messages để suy ra loại công việc (`feat`, `fix`, `docs`, `refactor`, `chore`) và mô tả ngắn gọn.
+   b. Đề xuất tên branch (ví dụ: `feat/architecture-sync-enforcement`) và xin xác nhận người dùng.
+   c. Sau khi được đồng ý, thực hiện:
+      ```bash
+      # Tạo feature branch tại vị trí hiện tại (giữ nguyên commits)
+      git branch [ten_branch]
+      # Reset main về origin (xóa commits khỏi main)
+      git reset --hard origin/main
+      # Chuyển sang feature branch
+      git checkout [ten_branch]
+      ```
+   d. Thông báo: *"Đã tự động tạo branch `[ten_branch]` từ N commits trên main. Main đã được reset về origin."*
+4. **Nếu không có commits chưa push trên `main`** → Báo lỗi: *"Không có thay đổi nào trên main để tạo PR. Hãy tạo feature branch và commit trước."* Dừng workflow.
+5. **Nếu đã ở feature branch** → Bỏ qua bước này, tiếp tục Bước 1.
+
 ## Bước 1: Kiểm tra trạng thái và Push code lên remote
 
 1. Kiểm tra trạng thái làm việc (working tree):
