@@ -1,6 +1,6 @@
 ---
 name: grilling
-description: Phỏng vấn dồn dập người dùng về kế hoạch thiết kế (Stress-Test), chất vấn tuân thủ quy chuẩn (Grill with Docs), hoặc hội tụ thiết kế UI qua prototype trực quan (Visual Prototype Grilling).
+description: Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy chuẩn (Grill with Docs), hoặc hội tụ UI qua prototype trực quan.
 user-invocable: true
 keywords: [grill, stress-test, phỏng vấn, chất vấn, đối chiếu, prototype, UI, frontend, visual]
 ---
