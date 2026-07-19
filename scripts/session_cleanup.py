@@ -120,8 +120,32 @@ def clean_branches(dry_run: bool) -> None:
             )
 
 
+def load_project_mode(root_dir: Path) -> str:
+    """Read project mode from workspace_context.yaml or infer it."""
+    context_file = root_dir / ".md" / "workspace_context.yaml"
+    if not context_file.exists():
+        return "delivery"
+    try:
+        import yaml
+        with open(context_file, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+            if data and isinstance(data, dict):
+                proj = data.get("project", {})
+                if isinstance(proj, dict):
+                    mode = proj.get("mode")
+                    if mode in ("software", "delivery", "hybrid"):
+                        return mode
+                    # Auto-inference based on type
+                    proj_type = proj.get("type", "")
+                    if proj_type == "Phần mềm":
+                        return "software"
+    except Exception:
+        pass
+    return "delivery"
+
+
 def distribute_input_documents(root_dir: Path, dry_run: bool) -> None:
-    """Scan and distribute files in input_documents/ into correct .md/ structure."""
+    """Scan and distribute files in input_documents/ based on project mode."""
     input_dir = root_dir / "input_documents"
     if not input_dir.exists():
         return
@@ -131,46 +155,102 @@ def distribute_input_documents(root_dir: Path, dry_run: bool) -> None:
         print("[FILES] No new input documents to distribute.")
         return
 
+    mode = load_project_mode(root_dir)
+    print(f"[FILES] Detected project mode: {mode}")
     print("[FILES] Found documents in input_documents/:")
+
     md_dir = root_dir / ".md"
-    legal_dir = md_dir / "legal_docs"
-    knowledge_dir = md_dir / "knowledge"
+    docs_dir = root_dir / "docs"
+
+    # Define standard target dirs
     scratch_dir = md_dir / "scratch"
-    data_dir = md_dir / "data"
-    seminar_dir = md_dir / "seminars"
+    references_dir = docs_dir / "references"
+
+    # Depending on mode, create appropriate target dirs
+    target_dirs = set()
+    if mode == "software":
+        target_dirs.add(scratch_dir)
+        target_dirs.add(references_dir)
+    elif mode == "delivery":
+        legal_dir = md_dir / "legal_docs"
+        knowledge_dir = md_dir / "knowledge"
+        data_dir = md_dir / "data"
+        seminar_dir = md_dir / "seminars"
+        target_dirs.update([legal_dir, knowledge_dir, scratch_dir, data_dir, seminar_dir])
+    elif mode == "hybrid":
+        legal_dir = md_dir / "legal_docs"
+        knowledge_dir = md_dir / "knowledge"
+        data_dir = md_dir / "data"
+        seminar_dir = md_dir / "seminars"
+        target_dirs.update([legal_dir, knowledge_dir, scratch_dir, data_dir, seminar_dir, references_dir])
 
     if not dry_run:
-        for d in (legal_dir, knowledge_dir, scratch_dir, data_dir, seminar_dir):
+        for d in target_dirs:
             d.mkdir(parents=True, exist_ok=True)
 
     for f in files:
         ext = f.suffix.lower()
         name = f.name.lower()
 
-        # Classification logic
-        if ext in (".pdf", ".docx", ".doc") or any(
-            k in name for k in ("luat", "nd", "tt", "qd", "legal", "law")
-        ):
-            dest = legal_dir / f.name
-        elif ext in (".py", ".sh", ".ps1", ".bat"):
-            dest = scratch_dir / f.name
-        elif ext in (".json", ".csv", ".yaml", ".yml"):
-            dest = data_dir / f.name
-        elif "seminar" in name or "meeting" in name or "bien_ban" in name:
-            dest = seminar_dir / f.name
-        else:
-            dest = knowledge_dir / f.name
+        dest = None
+        if mode == "software":
+            if ext in (".py", ".sh", ".ps1", ".bat", ".json", ".csv", ".yaml", ".yml"):
+                dest = scratch_dir / f.name
+            else:
+                dest = references_dir / f.name
+        elif mode == "delivery":
+            legal_dir = md_dir / "legal_docs"
+            knowledge_dir = md_dir / "knowledge"
+            data_dir = md_dir / "data"
+            seminar_dir = md_dir / "seminars"
 
-        if dry_run:
-            print(
-                f"  [PREVIEW] Would move: {f.relative_to(root_dir)} -> {dest.relative_to(root_dir)}"
-            )
-        else:
-            print(f"  [MOVE] {f.relative_to(root_dir)} -> {dest.relative_to(root_dir)}")
-            try:
-                shutil.move(str(f), str(dest))
-            except Exception as e:
-                print(f"  Failed to move {f.name}: {e}", file=sys.stderr)
+            if ext in (".pdf", ".docx", ".doc") or any(
+                k in name for k in ("luat", "nd", "tt", "qd", "legal", "law")
+            ):
+                dest = legal_dir / f.name
+            elif ext in (".py", ".sh", ".ps1", ".bat"):
+                dest = scratch_dir / f.name
+            elif ext in (".json", ".csv", ".yaml", ".yml"):
+                dest = data_dir / f.name
+            elif "seminar" in name or "meeting" in name or "bien_ban" in name:
+                dest = seminar_dir / f.name
+            else:
+                dest = knowledge_dir / f.name
+        elif mode == "hybrid":
+            legal_dir = md_dir / "legal_docs"
+            knowledge_dir = md_dir / "knowledge"
+            data_dir = md_dir / "data"
+            seminar_dir = md_dir / "seminars"
+
+            # Check if it looks like code/dev document
+            is_dev_doc = any(k in name for k in ("api", "spec", "adr", "architecture", "codebase", "dev", "software", "reference"))
+
+            if ext in (".py", ".sh", ".ps1", ".bat"):
+                dest = scratch_dir / f.name
+            elif is_dev_doc:
+                dest = references_dir / f.name
+            elif ext in (".pdf", ".docx", ".doc") or any(
+                k in name for k in ("luat", "nd", "tt", "qd", "legal", "law")
+            ):
+                dest = legal_dir / f.name
+            elif ext in (".json", ".csv", ".yaml", ".yml"):
+                dest = data_dir / f.name
+            elif "seminar" in name or "meeting" in name or "bien_ban" in name:
+                dest = seminar_dir / f.name
+            else:
+                dest = knowledge_dir / f.name
+
+        if dest:
+            if dry_run:
+                print(
+                    f"  [PREVIEW] Would move: {f.relative_to(root_dir)} -> {dest.relative_to(root_dir)}"
+                )
+            else:
+                print(f"  [MOVE] {f.relative_to(root_dir)} -> {dest.relative_to(root_dir)}")
+                try:
+                    shutil.move(str(f), str(dest))
+                except Exception as e:
+                    print(f"  Failed to move {f.name}: {e}", file=sys.stderr)
 
 
 def main() -> None:

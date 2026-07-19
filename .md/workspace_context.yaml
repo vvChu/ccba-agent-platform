@@ -1,2 +1,5 @@
 project:
+  name: "ccba-agent-platform"
+  type: "Phần mềm"
+  mode: "hybrid"
   notebook_id: nb-mock-3

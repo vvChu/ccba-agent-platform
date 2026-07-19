@@ -18,7 +18,11 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
 * **Quy tắc phân biệt Hub và Spoke (Bắt buộc):**
   Agent tự nhận diện môi trường làm việc thông qua việc chạy lệnh `git remote get-url origin`:
   - Nếu kết quả chứa cụm từ `ccba-agent-platform` $\rightarrow$ Xác định dự án hiện tại là **Hub**. Bỏ qua các lệnh đề xuất đóng góp ngược (như `/ccba-propose-to-hub` hay đề xuất export/pull request lên Hub) do mã nguồn đã nằm trực tiếp tại trung tâm.
-  - Các trường hợp khác hoặc khi đọc cấu hình `.md/workspace_context.yaml` có trường `project.role: spoke` $\rightarrow$ Xác định là **Spoke**. Bắt buộc tuân thủ Reuse-First Gate và đề xuất đóng góp tính năng ngược lên Hub khi hoàn tất.
+  - Các trường hợp khác $\rightarrow$ Xác định là **Spoke**. Bắt buộc tuân thủ Reuse-First Gate và đề xuất đóng góp tính năng ngược lên Hub khi hoàn tất.
+* **Workspace Mode (`project.mode`):** Trường `project.mode` trong `.md/workspace_context.yaml` quyết định cấu trúc workspace vật lý của Spoke:
+  - `software` — `.md/` tối giản (chỉ `workspace_context.yaml` + `scratch/`), output convert → `docs/references/`.
+  - `delivery` — `.md/` đầy đủ (10 thư mục con nghiệp vụ), output convert → `.md/extracted_docs/`.
+  - `hybrid` — Kết hợp cả hai (dùng cho Hub hoặc R&D Spoke cần cả domain knowledge lẫn software tooling).
 
 ---
 
