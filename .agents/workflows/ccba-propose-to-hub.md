@@ -22,7 +22,7 @@ Hỏi người dùng tuần tự từng câu hỏi sau để ghi nhận đề xu
 
 ## Bước 2: Kiểm tra trùng lặp (Duplicate Detection)
 Trước khi tạo mới, Agent bắt buộc phải kiểm tra hệ thống để tránh trùng lặp:
-1. Đọc tệp cấu hình `.agents/workspace_context.yaml` để lấy đường dẫn Hub (`hub_path`).
+1. Đọc tệp cấu hình `.md/workspace_context.yaml` để lấy đường dẫn Hub (`hub_path`).
 2. Đọc tệp catalog của Hub tại `<hub_path>/.agents/skills/platform-loader/catalog.yaml` để tìm kiếm tên hoặc mô tả tương tự.
 3. Đọc tệp hiến pháp `<hub_path>/.agents/AGENTS.md`.
 *Nếu phát hiện đã tồn tại thành phần tương tự:* Báo cáo cho người dùng và đề xuất cập nhật/nâng cấp thành phần cũ thay vì tạo mới.

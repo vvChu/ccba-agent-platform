@@ -193,14 +193,47 @@ if (Test-Path ".git") {
     $hookContent = @"
 #!/bin/sh
 # CCBA Maskara Pre-commit Security Hook
-echo 'Running Maskara Privacy scan...'
-python "$hub\scripts\maskara.py" --scan-dir .
-if [ `$status_code -ne 0 ]; then
+echo 'Running Maskara staged files scan...'
+
+# Get list of staged files (excluding deleted ones)
+staged_files=`$(git diff --cached --name-only --diff-filter=d)
+
+if [ -z "`$staged_files" ]; then
+    echo "No files staged for commit. Skipping scan."
+    exit 0
+fi
+
+has_leak=0
+for file in `$staged_files; do
+    # Skip binary and static asset files
+    if echo "`$file" | grep -qE '\.(png|jpg|jpeg|gif|ico|pdf|zip|tar|gz|exe|dll|so|dylib|woff|woff2|eot|ttf|mp3|mp4|wav|avi)$'; then
+        continue
+    fi
+    
+    # Skip ignored dirs
+    if echo "`$file" | grep -qE '^(\.md/scratch/|\.venv/|node_modules/)'; then
+        continue
+    fi
+    
+    if [ -f "`$file" ]; then
+        python "$hub/scripts/maskara.py" scan --root "`$file" > /dev/null 2>&1
+        status_code=`$?
+        if [ `$status_code -ne 0 ]; then
+            echo "❌ Leak detected in staged file: `$file"
+            python "$hub/scripts/maskara.py" scan --root "`$file"
+            has_leak=1
+        fi
+    fi
+done
+
+if [ `$has_leak -ne 0 ]; then
     echo 'Error: Raw API keys or credentials detected. Commit blocked!'
     exit 1
 fi
+
+echo "✅ Security check passed."
+exit 0
 "@
-    $hookContent = $hookContent.Replace("`$status_code", "$?")
     [System.IO.File]::WriteAllText($hookPath, $hookContent)
 }
 ```
