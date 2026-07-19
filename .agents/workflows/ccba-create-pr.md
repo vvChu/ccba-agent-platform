@@ -25,7 +25,21 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
    git push -u origin [current_branch]
    ```
 
-## Bước 2: Khởi tạo Pull Request
+## Bước 2: Kiểm tra Đồng bộ Tài liệu Kiến trúc (Architecture Sync Gate)
+
+1. Kiểm tra xem branch hiện tại có thay đổi **cấu trúc** (thêm/bớt/rename thư mục, package, script, skill, workflow) không:
+   ```bash
+   git diff main --stat --name-only | grep -E "(scripts/|packages/|\.agents/skills/|\.agents/workflows/|pyproject\.toml)"
+   ```
+2. Nếu có thay đổi cấu trúc:
+   - Chạy `validate_docs` để phát hiện liên kết hỏng:
+     ```bash
+     python scripts/validate_docs.py . --changed
+     ```
+   - Nhắc nhở người dùng: *"Phát hiện thay đổi cấu trúc. Bạn đã chạy `architecture-sync` để cập nhật tài liệu kiến trúc chưa? Chạy ngay nếu chưa."*
+3. Nếu không có thay đổi cấu trúc → bỏ qua bước này.
+
+## Bước 3: Khởi tạo Pull Request
 
 1. Kiểm tra xem GitHub CLI (`gh`) có hoạt động không:
    ```bash
@@ -46,7 +60,7 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
      - Tiêu đề: Lấy từ tên branch (bỏ prefix `feature/`, `fix/`, viết hoa chữ cái đầu).
      - Nội dung: Tóm tắt từ 5 commit gần nhất (`git log -n 5 --pretty=format:"- %s"`).
 
-## Bước 3: Thông báo kết quả
+## Bước 4: Thông báo kết quả
 
 1. Trình bày đường dẫn PR và trạng thái kiểm thử CI cho người dùng.
 2. Nhắc nhở người dùng: "Hãy gọi `/ccba-release-feature` khi CI đã xanh để merge và dọn dẹp."
