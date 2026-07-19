@@ -139,34 +139,7 @@ skills:
   - chuẩn hóa markdown
   - document processing
   skill_path: .agents/skills/markdown-processing/SKILL.md
-- name: table-reconstructor
-  bundle: _core
-  description: Sub-skill dựng lại các bảng biểu Markdown bị vỡ dọc hoặc lệch cột bằng
-    file đối chiếu docx
-  triggers:
-  - process-table
-  - vỡ bảng
-  - lệch cột
-  - reconstruct table
-  skill_path: .agents/skills/table-reconstructor/SKILL.md
-- name: form-template-cleaner
-  bundle: _core
-  description: Sub-skill làm sạch biểu mẫu và tự động khôi phục tiêu đề biểu mẫu bị
-    lỗi placeholder
-  triggers:
-  - clean-form
-  - biểu mẫu
-  - placeholder
-  - lỗi tiêu đề
-  skill_path: .agents/skills/form-template-cleaner/SKILL.md
-- name: relative-link-patcher
-  bundle: _core
-  description: Sub-skill tự động sửa và chuẩn hóa các liên kết tương đối của phụ lục
-  triggers:
-  - patch-links
-  - liên kết tương đối
-  - link patcher
-  skill_path: .agents/skills/relative-link-patcher/SKILL.md
+
 - name: ccba-xia
   bundle: _core
   description: Trich xuat, so sanh, port hoac thich ung tinh nang tu GitHub hoac thu
