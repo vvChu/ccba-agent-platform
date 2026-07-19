@@ -10,6 +10,18 @@ CONTEXT_FILE = Path(".md/workspace_context.yaml")
 REGISTRY_FILE = Path(".md/data/sources_registry.yaml")
 TASK_STATE_FILE = Path(".md/scratch/notebooklm_task_state.yaml")
 
+# Cấu hình registry động cho mode software
+if CONTEXT_FILE.exists():
+    try:
+        with open(CONTEXT_FILE, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+            if data and isinstance(data, dict):
+                proj = data.get("project", {})
+                if isinstance(proj, dict) and proj.get("mode") == "software":
+                    REGISTRY_FILE = Path(".md/scratch/sources_registry.yaml")
+    except Exception:
+        pass
+
 
 def normalize_to_relative(filepath: str) -> str:
     """Normalize file paths to repo-relative format for portability."""

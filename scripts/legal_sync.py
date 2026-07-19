@@ -229,7 +229,29 @@ def get_drive_service() -> Any:
         raise ImportError("Thiếu thư viện googleapiclient hoặc google-auth. Vui lòng cài đặt.")
 
     # 1. Thử nạp token cá nhân nếu có
-    token_path = Path(".md/scratch/drive_token.json")
+    old_token = Path(".md/scratch/drive_token.json")
+    token_dir = Path.home() / ".ccba" / "credentials"
+    env_dir = os.environ.get("CCBA_CREDENTIALS_DIR")
+    if env_dir:
+        token_dir = Path(env_dir)
+        
+    token_path = token_dir / "drive_token.json"
+    
+    if old_token.exists():
+        if not token_path.exists():
+            try:
+                token_dir.mkdir(parents=True, exist_ok=True)
+                import shutil
+                shutil.move(str(old_token), str(token_path))
+                print(f"[Drive Info] Tự động di trú token cá nhân sang: {token_path}")
+            except Exception as e:
+                print(f"[Drive Warning] Lỗi di trú token: {e}")
+                token_path = old_token
+        else:
+            try:
+                old_token.unlink()
+            except Exception:
+                pass
     if token_path.exists():
         try:
             credentials = Credentials.from_authorized_user_file(  # type: ignore
