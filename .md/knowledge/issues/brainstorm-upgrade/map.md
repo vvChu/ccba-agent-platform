@@ -18,8 +18,9 @@ Workflow `/ccba-brainstorm` được bổ sung 6 cải tiến rút ra từ phân
 
 - **Câu hỏi:** Thêm quy tắc tương tác luân phiên user-AI vào workflow.
 - **Đầu ra:**
-  - [ ] Mục "Quy tắc tương tác (Hybrid Rhythm)" trong Bước 4 của `ccba-brainstorm.md`
-  - [ ] 4 nhịp: Prompt (1 câu) → User first (ghi verbatim) → AI Build (2-4 ý, tagged `(AI)`) → Return floor (1 câu hỏi)
+  - [x] Mục "Quy tắc tương tác (Hybrid Rhythm)" trong Bước 4
+  - [x] 4 nhịp: Prompt (1 câu) → User first (ghi verbatim) → AI Build (2-4 ý, tagged `(AI)`) → Return floor (1 câu hỏi)
+- **Trạng thái:** ✅ Hoàn tất — Commit `554520b`
 - **Blocked by:** Không (Frontier ✅)
 - **Effort:** ~5-7 dòng Markdown
 
@@ -29,7 +30,8 @@ Workflow `/ccba-brainstorm` được bổ sung 6 cải tiến rút ra từ phân
 
 - **Câu hỏi:** Thêm quy tắc không đánh giá trong giai đoạn phát tán ý tưởng.
 - **Đầu ra:**
-  - [ ] 1-2 dòng trong mục "Quy tắc tương tác": *"Trong giai đoạn phát tán, không đánh giá, xếp hạng hoặc phê phán — mọi ý tưởng được ghi nhận bình đẳng."*
+  - [x] Quy tắc: *"Trong giai đoạn phát tán, không đánh giá, xếp hạng hoặc phê phán"*
+- **Trạng thái:** ✅ Hoàn tất — Commit `554520b`
 - **Blocked by:** Không (Frontier ✅)
 - **Effort:** 1-2 dòng
 
@@ -39,7 +41,8 @@ Workflow `/ccba-brainstorm` được bổ sung 6 cải tiến rút ra từ phân
 
 - **Câu hỏi:** Thêm cơ chế kiểm tra năng lượng phiên brainstorm.
 - **Đầu ra:**
-  - [ ] 2-3 dòng: Sau 3-4 vòng trao đổi, Agent hỏi: tiếp tục / đổi hướng / tổng hợp?
+  - [x] Sau 3-4 vòng: tiếp tục / đổi hướng / tổng hợp?
+- **Trạng thái:** ✅ Hoàn tất — Commit `554520b`
 - **Blocked by:** Không (Frontier ✅)
 - **Effort:** 2-3 dòng
 
