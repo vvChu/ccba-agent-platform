@@ -18,6 +18,7 @@ if sys.platform == "win32":
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 SKILLS_DIRS = [
+    Path(".agents/skills"),
     Path("claudekit-engineer/claude/skills"),
     Path(".agents/claudekit-marketing/claude/skills"),
 ]
