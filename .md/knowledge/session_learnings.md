@@ -431,6 +431,39 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Thay thế bằng**: Luôn thực hiện dọn dẹp và gỡ bỏ worktree bằng lệnh `git worktree remove --force <path>` trước khi xóa các nhánh.
 
 ---
+
+## Patterns (Mẫu tốt) — Dual-Mode & Security Upgrades (2026-07-19)
+
+### 40. Global AppData Credentials Migration (Di trú credentials toàn cục an toàn)
+- **Ngữ cảnh**: Cần lưu trữ và sử dụng OAuth credentials an toàn mà không sợ rò rỉ lên Git, đồng thời hỗ trợ Single Sign-On (SSO) để các Spokes cùng chia sẻ một token.
+- **Giải pháp**: 
+  - Di dời file credentials ra ngoài workspace dự án, lưu trữ tại thư mục Home của hệ điều hành (ví dụ: `~/.ccba/credentials/`).
+  - Viết logic tự động kiểm tra và di chuyển (auto-migration) các file credentials cũ tại thư mục nháp tạm `.md/scratch/` sang thư mục Home ngay trong lần chạy đầu tiên để bảo toàn trạng thái đăng nhập cũ.
+- **Nguồn**: Session `3e0991fe-f84e-4404-8fc6-e21c68cb9050`, 2026-07-19
+
+### 41. Staged-Only Git Pre-commit Security Hook (Hook pre-commit chỉ quét staged files)
+- **Ngữ cảnh**: Cần chạy quét leak bảo mật (Maskara) khi commit để phát hiện sớm các API keys nhưng tránh bị nghẽn build do quét toàn bộ repository hoặc rà trúng các tệp không track như `.env`.
+- **Giải pháp**: Cấu hình hook pre-commit sử dụng `git diff --cached --name-only --diff-filter=d` để chỉ lấy danh sách các tệp đã stage. Lọc bỏ các tệp nhị phân/hình ảnh và thư mục tạm `.md/scratch/`, sau đó chỉ thực hiện lệnh quét Maskara trên các tệp này.
+- **Nguồn**: Session `3e0991fe-f84e-4404-8fc6-e21c68cb9050`, 2026-07-19
+
+### 42. Selective CI Security Exit Codes (Exit code CI chọn lọc theo mức độ nghiêm trọng)
+- **Ngữ cảnh**: Khi chạy Maskara leak scan trên CI/CD, các mock key dạng ví dụ trong tài liệu (`SECRET_KEY=secret123`) có thể bị khớp pattern và làm đỏ build CI một cách không cần thiết, trong khi chúng chỉ có độ nghiêm trọng thấp/trung bình.
+- **Giải pháp**: Cấu hình Maskara chỉ trả về exit code lỗi (`exit 1`) đối với các findings có độ nghiêm trọng `critical` hoặc `high` (API keys thực sự). Các findings `medium` (mock code/placeholders) vẫn được báo cáo đầy đủ thông tin để kỹ sư rà soát nhưng không làm treo/fail build CI.
+- **Nguồn**: Session `3e0991fe-f84e-4404-8fc6-e21c68cb9050`, 2026-07-19
+
+---
+
+## Anti-patterns (Cách tránh) — Dual-Mode & Security Upgrades (2026-07-19)
+
+### 37. Full-Workspace Pre-commit Scan (Quét toàn bộ workspace tại commit)
+- **Vấn đề**: Để pre-commit hook chạy quét toàn bộ thư mục gốc dự án (`--root .`). Điều này làm tốc độ commit cực kỳ chậm khi dự án phình to, và luôn bị chặn do các file cấu hình local không track như `.env` hoặc mock keys trong các file clone nháp tạm.
+- **Thay thế bằng**: Chỉ trích xuất danh sách staged files và chạy quét Maskara độc lập trên từng file.
+
+### 38. Monolithic CI Exit Code on Mock Keys (Exit code CI cứng nhắc chặn mock keys)
+- **Vấn đề**: Cấu hình lệnh quét bảo mật trả về exit code lỗi và chặn build cho bất kỳ cảnh báo nào (kể cả mock keys hay ví dụ code ở mức `medium`), gây cản trở và treo pipeline CI/CD vô ích.
+- **Thay thế bằng**: Chỉ kích hoạt fail build CI đối với các phát hiện độ nghiêm trọng cao `critical` và `high` (các key thực tế có cấu trúc regex đặc thù).
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
