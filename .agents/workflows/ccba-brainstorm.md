@@ -51,10 +51,19 @@ Sau khi chủ đề được xác nhận, Agent tiến hành:
 ---
 
 ### 4. Áp dụng Guidelines và Khởi động Brainstorming
-In ra danh sách các chỉ dẫn thảo luận đặc thù (`guidelines`) của chủ đề đã chọn để bắt đầu phiên trao đổi hai chiều với người dùng.
+In ra danh sách các chỉ dẫn thảo luận đặc thù (`guidelines`) của chủ đề đã chọn, sau đó bắt đầu phiên trao đổi hai chiều tuân thủ các quy tắc tương tác dưới đây.
+
+**Quy tắc tương tác (Hybrid Rhythm):** Mỗi vòng brainstorm tuân thủ 4 nhịp:
+1. **Prompt** — Agent đặt **đúng 1 câu hỏi** mở liên quan đến chủ đề. Không bao giờ hỏi 2 câu cùng lúc — nhiều câu hỏi buộc người dùng chọn thay vì sáng tạo.
+2. **User first** — Chờ người dùng trả lời. Ghi nhận ý tưởng **nguyên văn** (verbatim) với tag `(user)` — không paraphrase, không chỉnh sửa câu chữ.
+3. **AI Build** — Agent bổ sung 2-4 ý tưởng mới với tag `(AI)`, xây dựng trên ý tưởng người dùng vừa nêu (yes-and), không thay thế.
+4. **Return floor** — Kết thúc bằng **đúng 1 câu hỏi tiếp theo** để trả quyền điều khiển về người dùng.
+
+*   **Deferred Judgment:** Trong giai đoạn phát tán ý tưởng, Agent **không được** đánh giá, xếp hạng, hoặc bình luận tính khả thi. Mọi ý tưởng (kể cả phi thực tế) được ghi nhận bình đẳng. Đánh giá chỉ diễn ra khi người dùng yêu cầu tổng hợp.
+*   **Energy Checkpoint:** Sau mỗi 3-4 vòng trao đổi, Agent chủ động hỏi: tiếp tục hướng hiện tại, đổi góc nhìn/kỹ thuật, hay chuyển sang tổng hợp kết quả?
 *   **Nghiên cứu bổ sung:** Khi phát sinh nhu cầu nghiên cứu chuyên sâu (tài liệu lớn, API bên thứ ba, so sánh VBPL), kích hoạt `/ccba-research` chạy song song.
 
-*Tiêu chí hoàn thành:* Các chỉ dẫn của chủ đề đã chọn được hiển thị đầy đủ và cuộc thảo luận chính thức được bắt đầu.
+*Tiêu chí hoàn thành:* Các chỉ dẫn và quy tắc tương tác đã hiển thị đầy đủ, phiên brainstorming đã bắt đầu với vòng Hybrid Rhythm đầu tiên (Agent đặt câu hỏi mở đầu tiên).
 
 ---
 
