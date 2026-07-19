@@ -1,0 +1,38 @@
+name: 🐛 Báo cáo lỗi (Bug Report)
+description: Báo cáo một sự cố hoặc lỗi hệ thống không hoạt động đúng thiết kế.
+title: "[BUG]: <Tiêu đề ngắn gọn về lỗi>"
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Cảm ơn bạn đã báo cáo lỗi! Vui lòng điền thông tin chi tiết dưới đây để hỗ trợ Agent hoặc lập trình viên tái lập lỗi.
+  - type: textarea
+    id: description
+    attributes:
+      label: 📖 Mô tả lỗi
+      description: Mô tả rõ ràng và chi tiết về lỗi xảy ra.
+      placeholder: Lỗi xảy ra khi tôi thực hiện...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 🚶 Các bước tái lập
+      description: Các bước cụ thể để kích hoạt lỗi.
+      placeholder: |
+        1. Chạy lệnh X...
+        2. Nhấp chọn Y...
+        3. Kết quả Z...
+    validations:
+      required: true
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: 📊 Hành vi mong đợi vs Thực tế
+      description: So sánh hành vi đúng thiết kế và hành vi lỗi thực tế (kèm logs hoặc traceback nếu có).
+      placeholder: |
+        - Mong đợi: ...
+        - Thực tế: ...
+    validations:
+      required: true
