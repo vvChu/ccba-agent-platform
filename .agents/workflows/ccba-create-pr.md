@@ -53,17 +53,9 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
 
 ## Bước 2: Kiểm tra Đồng bộ Tài liệu Kiến trúc (Architecture Sync Gate)
 
-1. Kiểm tra xem branch hiện tại có thay đổi **cấu trúc** (thêm/bớt/rename thư mục, package, script, skill, workflow) không:
-   ```bash
-   git diff main --stat --name-only | grep -E "(scripts/|packages/|\.agents/skills/|\.agents/workflows/|pyproject\.toml)"
-   ```
-2. Nếu có thay đổi cấu trúc:
-   - Chạy `validate_docs` để phát hiện liên kết hỏng:
-     ```bash
-     python scripts/validate_docs.py . --changed
-     ```
-   - Nhắc nhở người dùng: *"Phát hiện thay đổi cấu trúc. Bạn đã chạy `architecture-sync` để cập nhật tài liệu kiến trúc chưa? Chạy ngay nếu chưa."*
-3. Nếu không có thay đổi cấu trúc → bỏ qua bước này.
+1. Hệ thống CI (`scripts/run_harness_evals.py`) sẽ tự động quét biến động kiến trúc (Architecture Drift).
+2. Nếu anh có thay đổi cấu trúc (thêm thư mục package, skill, workflow) nhưng CI báo lỗi Drift, vui lòng chạy `python scripts/update_arch_stats.py` và commit lại trước khi tạo PR.
+3. Nếu không có thay đổi cấu trúc hoặc CI báo xanh → tiếp tục Bước 3.
 
 ## Bước 3: Khởi tạo Pull Request
 
