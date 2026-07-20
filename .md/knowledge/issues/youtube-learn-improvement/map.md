@@ -40,10 +40,10 @@ Kỹ năng [youtube-learn/SKILL.md](file:///d:/GitHubProjects/ccba-agent-platfor
 
 - **Câu hỏi:** Đóng gói thay đổi và commit theo quy chuẩn Git?
 - **Đầu ra:**
-  - [ ] Commit với message: `refactor(youtube-learn): add completion criteria and fix negation from review`
-  - [ ] Đẩy (push) thay đổi lên remote.
-- **Trạng thái:** 🟢 Frontier — sẵn sàng thực thi
-- **Blocked by:** Không (Frontier ✅)
+  - [x] Commit với message: `refactor(youtube-learn): add completion criteria and fix negation from review`
+  - [x] Đẩy (push) thay đổi lên remote.
+- **Trạng thái:** ✅ Hoàn tất
+- **Blocked by:** Không
 
 ---
 
@@ -57,19 +57,20 @@ flowchart TD
 
     T1 --> T2 --> T3
 
-    style T1 fill:#264653,color:#fff
-    style T2 fill:#e76f51,color:#fff
-    style T3 fill:#6c757d,color:#fff
+    style T1 fill:#2d6a4f,color:#fff
+    style T2 fill:#2d6a4f,color:#fff
+    style T3 fill:#2d6a4f,color:#fff
 ```
 
-> 🟢 **Frontier (unblocked):** T1
-> 🔴 **Blocked:** T2, T3
+> ✅ **Tất cả các ticket đã được hoàn tất.**
 
 ---
 
 ## Quyết định đã chốt (Decisions so far)
 
-- Chưa có quyết định nào được chốt (bản đồ mới khởi lập).
+- **QĐ1 (T1):** Bổ sung thuộc tính `user-invocable: true` vào frontmatter của skill `youtube-learn`, hoàn thiện các tiêu chí hoàn thành (`Completion Criteria`) định lượng cho cả 4 Phase và điều chỉnh rào chắn Whisper STT từ phủ định cứng nhắc sang hướng tích cực. (Xem commit `14ca2ed`).
+- **QĐ2 (T2):** Kiểm định chất lượng qua `/ccba-review-skill` và `validate_docs.py` cho kết quả PASS (không phát hiện lỗi).
+- **QĐ3 (T3):** Đóng gói và push thành công các thay đổi lên remote branch `main`.
 
 ## Chưa xác định rõ (Not yet specified)
 
