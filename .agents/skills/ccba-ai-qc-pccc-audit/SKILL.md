@@ -13,6 +13,18 @@ Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo
 
 ---
 
+## 🔍 Điều kiện Áp dụng
+
+### Khi nào sử dụng (When to use)
+- Sử dụng khi người dùng yêu cầu thẩm tra thiết kế phòng cháy chữa cháy (PCCC), hệ thống cơ điện (MEP), hoặc kiến trúc thoát nạn của công trình xây dựng.
+- Sử dụng để đối chiếu, kiểm tra sự tuân thủ quy chuẩn xây dựng Việt Nam (như QCVN 06, TCVN 3890, TCVN 2622).
+
+### Khi nào KHÔNG sử dụng (When NOT to use)
+- Tuyệt đối **KHÔNG** áp dụng kỹ năng này và **KHÔNG** nhắc đến các quy chuẩn PCCC (QCVN 06, TCVN 3890, TCVN 2622) khi người dùng hỏi các câu hỏi thông thường không liên quan đến thẩm tra PCCC (ví dụ: lập trình phần mềm, lắp đặt thiết bị gia dụng đơn giản, viết email công việc, giải toán...).
+- Đối với các yêu cầu không thuộc phạm vi thẩm tra PCCC, hãy trả lời trực tiếp và ngắn gọn theo đúng chủ đề người dùng yêu cầu.
+
+---
+
 ## Quy trình Map-Reduce
 
 - **Map 1 (Legal & Specs):** Đánh giá thuyết minh PCCC dựa trên quy chuẩn QCVN 06:2022/BXD, TCVN 3890:2023 và phản hồi của PC07.
