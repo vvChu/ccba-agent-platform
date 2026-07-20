@@ -97,7 +97,7 @@ def synthesize_speaker_notes(transcript: str, speaker_name: str, max_tokens: int
         f"TRANSCRIPT PHỤ ĐỀ:\n---\n{transcript}\n---\n\n"
         "Chỉ trả về nội dung Markdown hoàn chỉnh của tài liệu Speaker Notes. Yêu cầu viết cực kỳ súc tích, ngắn gọn từng mục để đảm bảo nội dung đầy đủ tất cả các phần của mẫu và không bị cắt cụt ở cuối. Không bọc trong code block lớn."
     )
-    res = ai.chat(prompt, model="gemini-3.5-flash-medium", max_tokens=max_tokens, temperature=0.31)
+    res = ai.chat(prompt, model="gemini-3.1-flash-lite", max_tokens=max_tokens, temperature=0.31)
     return res.strip()
 
 

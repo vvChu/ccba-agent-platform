@@ -1,0 +1,38 @@
+---
+description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) cho các kỹ năng AI trong CCBA Platform.
+---
+
+# Lệnh /ccba-skills-eval
+
+Khi nhận được lệnh này từ người dùng, Agent sẽ tự động nạp và thực thi công cụ kiểm định chất lượng (Evaluations) cho các kỹ năng AI.
+
+---
+
+## 🛠️ Hướng dẫn thực thi các bước
+
+### Bước 1: Xác định phạm vi kiểm thử
+Agent phân tích yêu cầu của người dùng để xác định tham số:
+- **Kiểm thử một kỹ năng cụ thể:** Nếu người dùng yêu cầu kiểm tra một kỹ năng (ví dụ: `/ccba-skills-eval copywriting`), xác lập tham số `--skill copywriting`.
+- **Kiểm thử toàn bộ:** Nếu người dùng chỉ gõ lệnh chung `/ccba-skills-eval`, mặc định chạy cho tất cả kỹ năng bằng cách bỏ trống `--skill` hoặc đặt `--skill all`.
+- **Số lần chạy thử:** Mặc định chạy 3 lần thử (`--trials 3`) để đo độ tin cậy. Nếu người dùng cần chạy nhanh để kiểm tra lỗi cú pháp, có thể đặt `--trials 1`.
+
+### Bước 2: Kích hoạt Core Eval Runner
+Chạy lệnh CLI sau tại thư mục gốc của dự án:
+```bash
+# Kiểm thử một kỹ năng cụ thể
+python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --trials 3
+
+# Kiểm thử toàn bộ các kỹ năng AI
+python .agents/skills/eval-gate/scripts/eval_runner.py --trials 3
+```
+
+### Bước 3: Đánh giá và Khắc phục lỗi (Self-Healing Loop)
+- **Nếu tất cả các test cases đạt PASS (exit code = 0):** Báo cáo kết quả thành công cho người dùng.
+- **Nếu có test case bị FAILED (exit code = 1):**
+  1. Đọc chi tiết lỗi so khớp (Regex mismatch hoặc LLM Judge feedback) được in trong output log.
+  2. Xác định xem lỗi do mô hình suy giảm hiệu năng (regression), lỗi placeholders, hay lỗi over-triggering.
+  3. Thực hiện sửa đổi và bổ sung chỉ thị trực tiếp vào tệp `SKILL.md` của kỹ năng bị lỗi đó để khắc phục (tương tự như cách sửa lỗi over-triggering bằng When to Use / When NOT to Use).
+  4. Chạy lại kiểm thử (tối đa lặp lại 3 lần). Nếu sau 3 lần vẫn lỗi, hãy báo cáo cụ thể cho người dùng để nhận chỉ thị.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

@@ -30,8 +30,9 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 
 2. **Điền thông tin và Viết nội dung**:
    - Phân tích và điền đầy đủ các placeholders `{{placeholder}}` bằng thông tin dự án mới.
+   - Tuyệt đối không để lại bất kỳ dấu chấm lửng "..." hoặc placeholder trống dạng ngoặc vuông (ví dụ: `[...]`) nào trong văn bản hoàn thiện cuối cùng. Nếu thông tin đầu vào thiếu (như số hiệu, ngày tháng, tên người ký), Agent bắt buộc phải tự giả định (mock) các thông tin thực tế phù hợp để điền đầy đủ và làm sạch văn bản.
    - Áp dụng các công thức viết thuyết phục (xem tại [copy-formulas.md](references/copy-formulas.md)) để phát triển nội dung chi tiết.
-   - **Tiêu chí hoàn thành:** Tất cả các placeholders được thay thế bằng dữ liệu chính xác, giữ nguyên cấu trúc khung pháp lý/hành chính của biểu mẫu gốc.
+   - **Tiêu chí hoàn thành:** Tất cả các placeholders (kể cả dấu chấm lửng `...`) được thay thế bằng dữ liệu cụ thể và chính xác, giữ nguyên cấu trúc khung pháp lý/hành chính của biểu mẫu gốc.
 
 3. **Lựa chọn Định dạng tối ưu (Format Selection)**:
    - Agent tự động phân tích tính chất thông tin và định dạng tối ưu nhất cho từng phần văn bản:
