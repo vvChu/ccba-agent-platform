@@ -406,7 +406,15 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Ngữ cảnh**: Thư mục làm việc tạm thời của subagent chứa các thay đổi thử nghiệm hoặc tệp rác bị drift gây báo động đỏ trên IDE của kỹ sư.
 - **Giải pháp**: Sử dụng Agent chính truy cập trực tiếp qua CLI vào worktree của subagent đó và thực thi `git reset --hard HEAD && git clean -fd` để đưa trạng thái về sạch hoàn toàn.
 
----
+### 47. Isolated CLI AI Agent Skill Evaluations (Kiểm thử cô lập kỹ năng AI Agent qua CLI)
+- **Ngữ cảnh**: Cần kiểm thử sự tương tác giữa mô hình LLM và một Skill AI (system instructions của skill) một cách cô lập, tránh việc mô hình "ăn gian" bằng cách đọc lịch sử hội thoại cũ hoặc dữ liệu cache từ sandbox.
+- **Giải pháp**: Thiết lập script Python CLI (`eval_runner.py`) để nạp trực tiếp file `SKILL.md` tương ứng làm system instruction cô lập, đọc test cases cấu hình JSON (gồm cả Happy path và Negative path để chống over-triggering), thực hiện gọi LLM độc lập, và đối sánh kết quả bằng Regex Asserts hoặc LLM-as-a-Judge chấm điểm bằng Rubric. Hỗ trợ tham số `--trials` để chạy nhiều lần nhằm đo lường độ tin cậy do tính phi định tính (non-deterministic) của mô hình.
+- **Nguồn**: Session `0952c8e6-7f38-42e8-a5d7-4ed0d34d034f`, 2026-07-20
+
+### 48. Boundary-Driven Prompt Steering for Over-triggering (Định nghĩa ranh giới kích hoạt để chống over-triggering)
+- **Ngữ cảnh**: AI Agent được trang bị một skill chuyên biệt (ví dụ: PCCC audit) có xu hướng kích hoạt nhầm hoặc áp đặt logic của skill đó vào các yêu cầu thông thường (như lắp ổ điện gia dụng), gây ra lỗi Over-triggering.
+- **Giải pháp**: Bổ sung mục rõ ràng **Khi nào sử dụng (When to use)** và **Khi nào KHÔNG sử dụng (When NOT to use)** (Negative cases) trực tiếp vào tệp `SKILL.md` để mô hình nắm rõ ranh giới áp dụng và trả lời trực tiếp các câu hỏi ngoài phạm vi mà không áp đặt quy trình của skill.
+- **Nguồn**: Session `0952c8e6-7f38-42e8-a5d7-4ed0d34d034f`, 2026-07-20
 
 ### 38. Local CI Simulation for Billing Issues
 - **Ngữ cảnh**: Khi GitHub Actions CI bị tạm dừng hoặc lỗi lập hóa đơn (Billing / Spending Limit) khiến không thể kiểm tra chất lượng code tự động từ PR.
