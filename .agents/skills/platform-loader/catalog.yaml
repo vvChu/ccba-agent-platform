@@ -1466,6 +1466,25 @@ workflows:
   - loop me
   - thiết kế chu trình
   workflow_path: .agents/workflows/ccba-loop-me.md
+- name: ccba-knowledge-loop
+  bundle: _core
+  command: /ccba-knowledge-loop
+  description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm → Wayfinder → Exec)
+  triggers:
+  - knowledge-loop
+  - vòng lặp tri thức
+  - trinh sát thảo luận hoạch định
+  workflow_path: .agents/workflows/ccba-knowledge-loop.md
+- name: ccba-skills-eval
+  bundle: _core
+  command: /ccba-skills-eval
+  description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) cho các kỹ năng AI.
+  triggers:
+  - skills-eval
+  - eval-skills
+  - kiểm thử kỹ năng
+  - chạy evals
+  workflow_path: .agents/workflows/ccba-skills-eval.md
 rules:
 - name: ccba_identity
   description: Brand, voice, phong cách giao tiếp CCBA
