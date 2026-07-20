@@ -453,13 +453,23 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 
 ### 43. GitHub CLI-based API Sync Fallback (Đồng bộ dự phòng qua GitHub CLI)
 - **Ngữ cảnh**: Khi các công cụ MCP hoặc thư viện tích hợp API của GitHub gặp sự cố xác thực (lỗi token / Bad credentials) trong sandbox bảo mật của Agent, làm gián đoạn việc lấy danh sách sự cố hoặc tạo PR.
-- **Giải pháp**: Tận dụng trực tiếp công cụ CLI `gh` đã được xác thực an toàn trên môi trường máy của kỹ sư. Chạy các lệnh CLI (như `gh issue list`, `gh pr create`) qua `subprocess` của Python để thực thi các tác vụ API một cách tin cậy và không phụ thuộc vào token API cục bộ của Agent.
+- **Giải pháp**: Tận dụng trực tiếp công cụ CLI `gh` đã được xác thực an sau trên môi trường máy của kỹ sư. Chạy các lệnh CLI (như `gh issue list`, `gh pr create`) qua `subprocess` của Python để thực thi các tác vụ API một cách tin cậy và không phụ thuộc vào token API cục bộ của Agent.
 - **Nguồn**: Session `f19748c3-84c2-4940-ac7f-7c3488932757`, 2026-07-19
 
 ### 44. Worktree Divergent Branch Merging via API (Merge nhánh bị khóa worktree qua GitHub API)
 - **Ngữ cảnh**: Gặp lỗi `fatal: 'main' is already used by worktree` khi chạy merge nhánh bằng dòng lệnh thông thường (`gh pr merge`) vì nhánh `main` đang được check out và làm việc tại một worktree Git cục bộ khác.
 - **Giải pháp**: Gửi yêu cầu merge trực tiếp lên máy chủ GitHub thông qua Web API (`gh api -X PUT repos/.../pulls/<pr_id>/merge`) mà không cần check out hay đồng bộ nhánh main cục bộ, giúp tránh hoàn toàn xung đột khóa file worktree trên Windows.
 - **Nguồn**: Session `f19748c3-84c2-4940-ac7f-7c3488932757`, 2026-07-19
+
+### 45. HTML Marker Injection for Auto-Stats (Tự động cập nhật số liệu qua thẻ HTML)
+- **Ngữ cảnh**: Các tài liệu kiến trúc (như README, PLATFORM) thường chứa các số liệu tĩnh (ví dụ: "có 53 skills", "có 10 workflows") rất dễ bị lỗi thời (drift) khi dự án phát triển.
+- **Giải pháp**: Nhúng các thẻ HTML ẩn (ví dụ: `<!-- KEY_START: SKILL_COUNT -->...<!-- KEY_END -->`) vào tài liệu Markdown. Viết script chạy trong SDLC pipeline để tự động đếm và tiêm (inject) các số liệu mới nhất vào giữa các thẻ này.
+- **Nguồn**: Session `3e0991fe-f84e-4404-8fc6-e21c68cb9050`, 2026-07-19
+
+### 46. Architecture Drift Detection via Git Diff (Phát hiện trôi dạt kiến trúc bằng Git Diff)
+- **Ngữ cảnh**: Ngăn chặn lập trình viên thêm/xóa thư mục hoặc file cấu trúc lõi (như skills, workflows, packages) mà quên không cập nhật các tài liệu mô tả kiến trúc tương ứng.
+- **Giải pháp**: Tích hợp lệnh `git diff --name-only origin/main...HEAD` (hoặc `HEAD` trên môi trường local) vào CI validation script. Nếu phát hiện thay đổi trong các thư mục lõi nhưng các file tài liệu nền tảng (`README.md`, `PLATFORM.md`) không thay đổi tương ứng, script sẽ trả về Exit Code 1 và chặn build CI.
+- **Nguồn**: Session `3e0991fe-f84e-4404-8fc6-e21c68cb9050`, 2026-07-19
 
 ---
 
@@ -476,6 +486,10 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 ### 39. Ambiguous Variable Name E741 in Comprehensions (Tên biến mơ hồ E741 trong vòng lặp)
 - **Vấn đề**: Sử dụng tên biến một chữ cái như `l` hoặc `I` trong list comprehensions (như `[l["name"] for l in labels]`). Linter Ruff sẽ báo lỗi E741 do các ký tự này dễ bị nhầm lẫn về mặt thị giác với số 1 hoặc chữ I hoa trên màn hình code.
 - **Thay thế bằng**: Sử dụng các tên biến rõ nghĩa hơn như `lbl`, `item`, hoặc `label_item`.
+
+### 40. Manual Metric Updates in Docs (Cập nhật số liệu thủ công trong tài liệu)
+- **Vấn đề**: Bắt buộc nhà phát triển phải tự đếm và sửa bằng tay các con số tổng kết (số lượng package, số lượng file nhạy cảm) trong README hoặc PLATFORM.md mỗi khi tạo PR, gây tốn thời gian và dễ sai sót.
+- **Thay thế bằng**: Thay thế bằng việc nhúng HTML markers và tự động cập nhật qua CI pipeline (`update_arch_stats.py`).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
