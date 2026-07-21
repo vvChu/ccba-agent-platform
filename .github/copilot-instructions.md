@@ -1,95 +1,66 @@
 # CCBA Agent Services Platform
 
-Hub-and-Spoke monorepo for Vietnamese construction (BIM) AI agent services.
-Hub contains tools (skills, workflows, knowledge, service modules); Spokes contain project context.
+Hub-and-spoke monorepo for CCBA agent services. This repository is the **Hub** (shared skills, workflows, packages, and scripts) used by Spoke projects.
 
-## Architecture
+## Build, test, and lint commands
 
-<!-- KEY_START: PKG_COUNT -->2<!-- KEY_END: PKG_COUNT --> pip-installable packages under `packages/`:
-
-| Package | Purpose | Entry Point |
-|---------|---------|-------------|
-| **mdconverter** | PDF/DOCX/HTML → Markdown with Vietnamese legal doc support | `mdconvert` CLI (Typer) |
-| **ccba-ai** | AI Gateway client — 22 models, 1 endpoint (OpenAI-compatible) | `from ccba_ai import ai` |
-
-Key patterns:
-- **Converter registry**: `@ConverterRegistry.register("name", priority=N)` — auto-selects by extension + priority
-- **Plugin system**: Entry-point-based (`pyproject.toml`), dynamic loading via `PluginManager`
-- **Settings**: Pydantic `BaseSettings` with `MDCONVERT_` env prefix, `.env` at CWD only (no recursive search)
-- **Async**: Converters use `async def convert()` throughout
-
-See [PLATFORM.md](../PLATFORM.md) for detailed architecture and extension guide.
-
-## Build & Test
+Run from repository root.
 
 ```bash
-# Install (from repo root)
-pip install -e "packages/mdconverter[dev,llm]"
-pip install -e "packages/ccba-ai"
+# Install workspace packages (CI-aligned)
+uv pip install -e "packages/ccba-harness" --system
+uv pip install -e "packages/ccba-ai[dev]" --system
+uv pip install -e "packages/ccba-legal-intel[dev]" --system
+uv pip install -e "packages/ccba-notebooklm[dev]" --system
+uv pip install -e "packages/ccba-ooxml[dev]" --system
+uv pip install -e "packages/ccba-pdf-prep[dev]" --system
+uv pip install -e "packages/mdconverter[dev]" --system
 
-# Or use the setup script
-./install.ps1
-
-# Test
+# Test suites used in repo
 pytest packages/mdconverter/tests/ -v --cov=src/mdconverter --cov-report=term-missing
+python -m unittest discover -s scripts/tests
+python scripts/run_harness_evals.py --all
 
-# Lint & format
+# Single-test examples
+pytest packages/mdconverter/tests/test_registry.py::TestConverterRegistry::test_auto_select_for_pdf -v
+python -m unittest scripts.tests.test_validate_docs.TestValidateDocs.test_extract_code_references
+
+# Lint / type check
 ruff check packages/
 ruff format packages/
-
-# Type check (strict mode)
 mypy packages/*/src
+
+# Docs/markdown validation used by hooks and workflows
+python scripts/validate_docs.py . --src scripts,packages --changed
+python -m pymarkdown scan README.md PLATFORM.md
 ```
 
-## Code Style
+## High-level architecture
 
-- **Python ≥ 3.10** — use `match`, `str | None` union syntax
-- **Line length**: 100 (ruff-enforced)
-- **Quotes**: double `"`
-- **Type annotations**: required on all functions (mypy strict)
-- **Async**: preferred for I/O-bound operations
-- **Dataclasses/Pydantic v2**: preferred over manual `__init__`
-- **Imports**: absolute within package (`from mdconverter.core.base import BaseConverter`)
+- **Workspace model**: root `pyproject.toml` uses `uv` workspace members (`packages/*`) and centralizes lint/type config for package code.
+- **Hub assets**:
+  - `.agents/skills/` + `.agents/workflows/`: reusable agent behavior and automation.
+  - `.md/`: central knowledge and legal-document data.
+  - `scripts/`: lifecycle hooks, docs validation, privacy scan, and CI helper tooling.
+- **Service modules** (pip-installable under `packages/`): `ccba-ai`, `ccba-harness`, `ccba-legal-intel`, `ccba-notebooklm`, `ccba-ooxml`, `ccba-pdf-prep`, `mdconverter`.
+- **mdconverter flow**:
+  - Typer CLI (`mdconverter.cli`) dispatches to command modules.
+  - `ConversionPipeline` orchestrates analyze → convert → post-process → cache.
+  - Converter selection is registry-based (`ConverterRegistry`) with priority order registered in `mdconverter.core.__init__`.
+  - Post-processing is protocol-based (`PostProcessor`), with VN legal processing wired as default.
+- **ccba-ai flow**:
+  - `from ccba_ai import ai` exposes module-level singleton clients over an OpenAI-compatible gateway.
+  - Built-in privacy hooks scan both input/output content.
+  - Includes sync and async clients plus MCP server entry point (`ccba-mcp`).
+- **Hook orchestration**:
+  - `scripts/hook_runner.py` runs `session-init`, `pre-tool`, `post-tool`.
+  - `pre-tool` combines privacy, naming, scout-block, and simplify-gate checks; `post-tool` runs brand enforcement.
 
-## Git Conventions
+## Key repository conventions
 
-**Branches**: `feature/`, `fix/`, `docs/`, `refactor/`, `experiment/` + short description  
-**Commits**: conventional — `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`  
-**PR requirements**: all tests pass (3.10/3.11/3.12, Linux/Mac/Windows), linting passes, 1 maintainer review
-
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for full workflow and agent commands (`/new-feature`, `/create-pr`, `/release-feature`).
-
-## Vietnamese Legal Documents (VBPL)
-
-This project processes Vietnamese legal texts. Critical rules:
-
-- **Never** present draft VBPL as enacted or fabricate reference numbers
-- **Always** include legal disclaimer: *"Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý..."*
-- **Transition period** (until 01/07/2026): Luật Xây dựng 2014 → 2025 in progress; note "Giai đoạn chuyển tiếp"
-- **Document structure**: `## Chương I` → `### Điều 8` → `#### 8.1` → `a. Điểm a...` (blank line before list items)
-- **Status markers**: draft → "DỰ THẢO", superseded → "HẾT HIỆU LỰC"
-
-Full rules: [.agents/AGENTS.md](../.agents/AGENTS.md)
-Formatting patterns: [.md/knowledge/session_learnings.md](../.md/knowledge/session_learnings.md)  
-VN legal plugin docs: [docs/user-guide/vn-legal.md](../packages/mdconverter/docs/user-guide/vn-legal.md)
-
-## CCBA Identity
-
-- **Official documents**: formal Vietnamese, professional, concise
-- **Technical reports**: mixed Vietnamese-English (technical terms in English)
-- **Footer**: *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-
-Full branding guide: [.agents/AGENTS.md](../.agents/AGENTS.md#2-ccba-identity-voice-ban-sac-phong-cach-giao-tiep)
-
-## Environment
-
-- **Windows primary** (PowerShell) — beware OneDrive Unicode path issues with NFC/NFD
-- **Optional `.env`** at project root: `AI_GATEWAY_URL`, `AI_GATEWAY_KEY`, `AI_MODEL`, `LLAMA_CLOUD_API_KEY`
-- **No secrets in code** — all credentials via env vars
-
-## Pitfalls
-
-- Missing `[llm]` extra → `ImportError` for Gemini/LlamaParse providers
-- Package not installed in editable mode → `ModuleNotFoundError: mdconverter`
-- Plugin not loading → check entry-point in `pyproject.toml` and `PluginManager.load_plugins()` call
-- OneDrive Unicode paths → use `[System.IO.Directory]::GetDirectories()` instead of `Get-ChildItem`
+- Follow the **Hub constitution** in `.agents/AGENTS.md` (Layer 1): this repo is treated as Hub; Reuse-First and CCBA legal/identity constraints are mandatory.
+- Python baseline: **3.10+**, strict mypy, ruff line length 100, double quotes.
+- Keep imports **absolute within package** (e.g., `from mdconverter.core...`).
+- `mdconverter` reads converter-specific env settings from `.env` at CWD (Pydantic settings), while `ccba-ai` client also searches upward for `.env`/`.env.ai-gateway`; avoid assuming one env-loading behavior across packages.
+- For legal (VBPL) outputs, preserve required status markers/disclaimer conventions from `.agents/AGENTS.md` and `packages/mdconverter/docs/user-guide/vn-legal.md`.
+- Use `scripts/validate_docs.py` for markdown correctness checks and `scripts/maskara.py scan --root .` for privacy/security scan alignment with CI.
