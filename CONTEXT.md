@@ -112,3 +112,13 @@ _Avoid_: Source info, repo metadata
 **Copy-Raw (Sao chép thô)**:
 Chế độ port tính năng (`--copy-raw`) trong `ccba-xia` cấy ghép mã nguồn với số lượng thay đổi tối thiểu, đánh dấu tường minh các file chưa tuân thủ tiêu chuẩn Platform và bắt buộc tạo follow-up issue refactor.
 _Avoid_: Copy, raw copy, as-is copy
+
+**Skill Auto-Tuner**:
+Quy trình tự động tinh chỉnh văn bản kỹ năng (`SKILL.md`) của AI Agent thông qua chu trình lặp 4 bước (Rollout - Reflect - Edit - Validate) dựa trên phương pháp SkillOpt mà không cần can thiệp trọng số mô hình (frozen LLM).
+
+**Validation Gate (Cổng kiểm chứng SKILL)**:
+Cơ chế đánh giá bản sửa đổi prompt trên tập bài kiểm tra held-out tasks để chống hiện tượng suy giảm chất lượng ở các tác vụ khác (Prompt Drift).
+
+**Prompt Drift**:
+Hiện tượng tệp hướng dẫn/prompt được sửa để đạt kết quả tốt hơn ở một tác vụ cụ thể nhưng lại làm suy giảm hiệu suất ở các tác vụ hoặc ngữ cảnh khác.
+

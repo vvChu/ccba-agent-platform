@@ -48,6 +48,59 @@ def load_skill_prompt(skill_name: str) -> str:
         return ""
 
 
+def preserve_yaml_frontmatter(original_prompt: str, edited_prompt: str) -> str:
+    """Bảo tồn phần YAML Frontmatter gốc của file SKILL.md khi LLM Optimizer chỉnh sửa nội dung."""
+    if not original_prompt.startswith("---"):
+        return edited_prompt
+
+    parts = original_prompt.split("---", 2)
+    if len(parts) < 3:
+        return edited_prompt
+
+    original_frontmatter = f"---{parts[1]}---"
+
+    cleaned_body = edited_prompt
+    if edited_prompt.startswith("---"):
+        edited_parts = edited_prompt.split("---", 2)
+        if len(edited_parts) >= 3:
+            cleaned_body = edited_parts[2]
+
+    cleaned_body = cleaned_body.lstrip("\r\n")
+    return f"{original_frontmatter}\n\n{cleaned_body}"
+
+
+def optimizer_edit_prompt(
+    original_prompt: str,
+    failure_details: list[dict[str, Any]],
+    model_id: str = "gemini-3.1-pro-high",
+) -> str:
+    """Gọi LLM Optimizer đóng vai trò Prompt Engineer đề xuất chỉnh sửa văn bản SKILL.md."""
+    from ccba_ai import ai
+
+    failures_summary = json.dumps(failure_details, ensure_ascii=False, indent=2)
+
+    optimizer_instruction = (
+        "Bạn là một chuyên gia Prompt Optimizer tối ưu hóa tài liệu kỹ năng AI Agent (SKILL.md) tại CCBA.\n"
+        "Dựa trên các lỗi kiểm thử vừa xảy ra ở giai đoạn Rollout, nhiệm vụ của bạn là chỉnh sửa văn bản nội dung hướng dẫn trong SKILL.md để khắc phục các sai sót này.\n\n"
+        "QUY TẮC BẮT BUỘC:\n"
+        "1. Chỉ điều chỉnh hoặc bổ sung câu từ, quy định rào chắn, hoặc ví dụ minh họa trong phần nội dung markdown.\n"
+        "2. Không thay đổi ý nghĩa cốt lõi của kỹ năng.\n"
+        "3. Trả về toàn bộ nội dung markdown mới đã được tối ưu hóa (không cần bao gồm YAML frontmatter header).\n\n"
+        f"CHI TIẾT LỖI KIỂM THỬ GẦN NHẤT:\n---\n{failures_summary}\n---\n\n"
+        f"NỘI DUNG SKILL.MD HIỆN TẠI:\n---\n{original_prompt}\n---\n\n"
+        "NỘI DUNG SKILL.MD MỚI ĐÃ TỐI ƯU:"
+    )
+
+    try:
+        raw_edited = ai.chat(optimizer_instruction, model=model_id, max_tokens=4096, temperature=0.2)
+        final_prompt = preserve_yaml_frontmatter(original_prompt, raw_edited)
+        return final_prompt
+    except Exception as e:
+        logger.error(f"Lỗi khi chạy Optimizer Prompt: {e}")
+        return original_prompt
+
+
+
 def run_llm_judge(prompt: str, output: str, rubric: str, judge_model: str = "gemini-3.1-pro-high") -> tuple[bool, str]:
     """Sử dụng LLM đóng vai trò Judge để chấm điểm đầu ra dựa trên Rubric."""
     from ccba_ai import ai
@@ -207,12 +260,109 @@ def run_eval_for_skill(skill_name: str, test_cases_path: Path, model_id: str, tr
     return failed_cases == 0
 
 
+def auto_tune_skill(
+    skill_name: str,
+    test_cases_path: Path,
+    model_id: str,
+    trials: int,
+    max_iterations: int = 3,
+) -> bool:
+    """Chạy quy trình Skill Auto-Tuning 4 bước (Rollout -> Reflect -> Edit -> Validate)."""
+    skill_path = project_root / ".agents" / "skills" / skill_name / "SKILL.md"
+    if not skill_path.exists():
+        logger.error(f"Không tìm thấy file SKILL.md cho skill [{skill_name}] tại {skill_path}")
+        return False
+
+    logger.info(f"==================================================")
+    logger.info(f"🚀 BẮT ĐẦU CHU TRÌNH AUTO-TUNE CHO SKILL: {skill_name}")
+    logger.info(f"🔄 Số vòng lặp tối đa: {max_iterations}")
+    logger.info(f"==================================================")
+
+    current_prompt = load_skill_prompt(skill_name)
+    best_prompt = current_prompt
+    best_pass_rate = 0.0
+
+    for iteration in range(1, max_iterations + 1):
+        logger.info(f"\n--- 🔄 AUTO-TUNE ITERATION {iteration}/{max_iterations} ---")
+        
+        # 1. Rollout: Evaluate current prompt
+        try:
+            with open(test_cases_path, "r", encoding="utf-8") as f:
+                cases = json.load(f)
+        except Exception as e:
+            logger.error(f"Lỗi đọc test cases: {e}")
+            return False
+
+        results = []
+        failure_details = []
+        passed_cases = 0
+
+        for case in cases:
+            res = evaluate_case(case, current_prompt, model_id, trials)
+            results.append(res)
+            if res["passed"]:
+                passed_cases += 1
+            else:
+                failure_details.append({"id": res["id"], "failures": res["details"]})
+
+        current_pass_rate = passed_cases / len(cases) if cases else 0.0
+        logger.info(f"📊 Iteration {iteration} Pass Rate: {current_pass_rate:.1%}")
+
+        if current_pass_rate > best_pass_rate:
+            best_pass_rate = current_pass_rate
+            best_prompt = current_prompt
+
+        # Nếu đạt 100% Pass Rate -> Dừng sớm thành công
+        if current_pass_rate == 1.0:
+            logger.info("🎉 SKILL ĐÃ ĐẠT 100% PASS RATE! Không cần tối ưu thêm.")
+            break
+
+        if iteration == max_iterations:
+            logger.info("⚠️ Đã đạt số vòng lặp tối đa.")
+            break
+
+        # 2. Reflect & 3. Edit: Call LLM Optimizer
+        logger.info("💡 Phát hiện lỗi. Đang kích hoạt LLM Optimizer đề xuất chỉnh sửa prompt...")
+        candidate_prompt = optimizer_edit_prompt(current_prompt, failure_details, model_id)
+
+        # 4. Validate Gate: Test candidate prompt
+        logger.info("🛡️ Đang chạy Validation Gate kiểm thử candidate prompt mới...")
+        candidate_passed = 0
+        for case in cases:
+            res = evaluate_case(case, candidate_prompt, model_id, trials)
+            if res["passed"]:
+                candidate_passed += 1
+
+        candidate_pass_rate = candidate_passed / len(cases) if cases else 0.0
+        logger.info(f"📊 Candidate Pass Rate: {candidate_pass_rate:.1%} (Best so far: {best_pass_rate:.1%})")
+
+        if candidate_pass_rate >= best_pass_rate:
+            logger.info("✅ Validation Gate PASSED: Candidate prompt đạt kết quả tốt hơn hoặc bằng. Chấp nhận candidate!")
+            current_prompt = candidate_prompt
+            best_pass_rate = candidate_pass_rate
+            best_prompt = candidate_prompt
+        else:
+            logger.warning("❌ Validation Gate REJECTED: Prompt Drift phát hiện! Candidate giảm điểm số. Từ chối candidate.")
+
+    # Ghi nhận best_prompt vào file SKILL.md nếu đạt kết quả tốt hơn ban đầu
+    if best_pass_rate > 0:
+        try:
+            skill_path.write_text(best_prompt, encoding="utf-8")
+            logger.info(f"💾 Đã cập nhật file SKILL.md tại {skill_path} với Pass Rate tốt nhất: {best_pass_rate:.1%}")
+        except Exception as e:
+            logger.error(f"Không thể ghi đè file SKILL.md: {e}")
+
+    return best_pass_rate == 1.0
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="CCBA AI Skills Evaluation Harness Runner.")
     parser.add_argument("--skill", type=str, default=None, help="Tên skill cần kiểm định (ví dụ: copywriting). Mặc định là 'all'.")
     parser.add_argument("--test-cases", type=str, default=None, help="Đường dẫn file JSON test cases. Mặc định tự tìm trong eval-gate/test_cases.")
     parser.add_argument("--model", type=str, default="gemini-3.1-pro-high", help="Model ID của Agent cần test (mặc định: gemini-3.1-pro-high).")
     parser.add_argument("--trials", type=int, default=3, help="Số lần chạy thử cho mỗi test case (mặc định: 3).")
+    parser.add_argument("--auto-tune", action="store_true", help="Bật chế độ tự động tối ưu hóa SKILL.md (SkillOpt loop).")
+    parser.add_argument("--max-iterations", type=int, default=3, help="Số vòng lặp auto-tune tối đa (mặc định: 3).")
     args = parser.parse_args()
 
     test_cases_dir = project_root / ".agents" / "skills" / "eval-gate" / "test_cases"
@@ -224,7 +374,11 @@ def main() -> None:
         else:
             test_cases_path = test_cases_dir / f"eval_{args.skill}.json"
 
-        success = run_eval_for_skill(args.skill, test_cases_path, args.model, args.trials)
+        if args.auto_tune:
+            success = auto_tune_skill(args.skill, test_cases_path, args.model, args.trials, args.max_iterations)
+        else:
+            success = run_eval_for_skill(args.skill, test_cases_path, args.model, args.trials)
+
         if not success:
             sys.exit(1)
         sys.exit(0)
@@ -247,14 +401,15 @@ def main() -> None:
         summary_results = []
 
         for tf in test_files:
-            # Trích xuất skill name từ file name 'eval_<skill_name>.json'
             skill_name = tf.stem[5:]
-            success = run_eval_for_skill(skill_name, tf, args.model, args.trials)
+            if args.auto_tune:
+                success = auto_tune_skill(skill_name, tf, args.model, args.trials, args.max_iterations)
+            else:
+                success = run_eval_for_skill(skill_name, tf, args.model, args.trials)
             summary_results.append((skill_name, success))
             if not success:
                 all_success = False
 
-        # In báo cáo tổng hợp cuối cùng
         logger.info("==================================================")
         logger.info("🏁 TỔNG HỢP KIỂM THỬ TOÀN BỘ AI SKILLS")
         logger.info("==================================================")
@@ -273,3 +428,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
