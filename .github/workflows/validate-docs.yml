@@ -36,9 +36,10 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
+          pip install pyyaml pydantic
           # Install ccba-ai editable for type check validation references
           pip install -e packages/ccba-harness
-          pip install -e packages/ccba-ai
+          pip install --no-deps -e packages/ccba-ai
 
       - name: Run Documentation Accuracy Validator
         run: |
