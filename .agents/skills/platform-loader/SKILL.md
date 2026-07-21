@@ -50,3 +50,12 @@ Khi Agent đang hoạt động tại Spoke và phát hiện yêu cầu cần s�
    python [hub_path]/scripts/sync_spoke.py --spoke . --sync-item <tên-skill>
    ```
 4. Sau khi đồng bộ thành công, Agent tự động nạp kỹ năng mới qua cơ chế Auto-Discovery và tiếp tục thực hiện công việc.
+
+### 4. Quy tắc Định tuyến Xử lý Văn bản (Master vs Sub-Skill Routing)
+Đối với các yêu cầu xử lý văn bản, tài liệu, hoặc file văn phòng:
+- **Ưu tiên nạp Master Skill**:
+  - Thao tác tệp Office (Word, Excel, PPT, PDF) $\rightarrow$ Nạp Master Skill `xu-ly-van-phong`.
+  - Chuẩn hóa Markdown / PDF $\rightarrow$ Nạp Master Skill `markdown-document-processing`.
+  - Soạn thảo hành chính / đề xuất thầu $\rightarrow$ Nạp Master Skill `copywriting`.
+  - Viết bài báo khoa học $\rightarrow$ Nạp Master Skill `academic_writing`.
+- **Nạp Sub-Skill / Utility khi cần thiết**: Chỉ nạp trực tiếp sub-skills (`docx`, `pptx`, `table-reconstructor`, `form-template-cleaner`, `relative-link-patcher`) khi cần xử lý thao tác vi mô hoặc khi được Master Skill chỉ định.

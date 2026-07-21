@@ -1,6 +1,11 @@
 ---
 name: xu-ly-van-phong
 description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo tiêu chuẩn cấu trúc & phối màu chuyên nghiệp hoặc Nghị định 30.
+role: master_skill
+sub_skills:
+  - docx
+  - pptx
+  - markdown-document-processing
 ---
 
 # Xử lý Văn phòng
