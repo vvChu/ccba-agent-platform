@@ -1,6 +1,10 @@
 ---
 name: copywriting
 description: Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa và áp dụng các công thức viết thuyết phục (AIDA, PAS).
+role: master_skill
+sub_skills:
+  - form-template-cleaner
+  - viet-chuyen-nghiep
 argument-hint: "[loại-văn-bản-theo-mẫu] [ngữ-cảnh]"
 license: MIT
 metadata:

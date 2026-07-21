@@ -1,6 +1,8 @@
 ---
 name: docx
 description: "Công cụ xử lý Word (.docx): tạo mới, chỉnh sửa OOXML, thêm tracked changes & comments."
+role: sub_skill
+master_skill: xu-ly-van-phong
 disable-model-invocation: true
 user-invocable: true
 when_to_use: "Invoke for Word document creation, edits, or extraction."
