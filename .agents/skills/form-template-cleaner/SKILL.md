@@ -1,6 +1,8 @@
 ---
 name: form-template-cleaner
 description: Sub-skill làm sạch biểu mẫu và tự động khôi phục tiêu đề biểu mẫu bị lỗi placeholder (dấu chấm lửng) bằng AI Gateway.
+role: sub_skill
+master_skill: markdown-document-processing
 applies_to:
   - "Phần mềm"
   - "Thẩm tra thiết kế"
