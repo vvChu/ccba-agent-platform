@@ -11,10 +11,13 @@ Kỹ năng này bọc script `scripts/run_harness_evals.py` và chịu trách nh
 
 ## 🛠️ Hướng dẫn thực thi các bước
 
-### Bước 1: Chạy kiểm định tự động
+### Bước 1: Chạy kiểm định tự động & Auto-Tuning
 Kích hoạt chạy script điều phối chính bằng lệnh Python:
 ```bash
 python scripts/run_harness_evals.py
+
+# Tự động tối ưu hóa SKILL.md với Skill Auto-Tuner (SkillOpt loop)
+python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3
 ```
 *(Nếu bạn chỉ muốn kiểm tra định dạng/cú pháp mà không chạy test, bạn có thể truyền `--no-test`)*
 
