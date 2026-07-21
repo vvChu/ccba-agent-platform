@@ -10,7 +10,7 @@ metadata:
 
 # Kỹ năng Soạn thảo Văn bản theo Mẫu chuẩn (Copywriting)
 
-Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, quyết định, công văn, hợp đồng, tờ trình...) theo biểu mẫu chuẩn lưu tại kỹ năng `xu-ly-van-phong` (thư mục `.agents/skills/xu-ly-van-phong/templates/`).
+Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, quyết định, công văn, hợp đồng, tờ trình...) theo biểu mẫu chuẩn lưu tại kỹ năng `xu-ly-van-phong` (thư mục `/.agents/skills/xu-ly-van-phong/templates/`).
 
 ## Khi nào sử dụng
 
@@ -19,20 +19,22 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 
 ## Luồng dữ liệu (Data Flow)
 
-`[Mẫu hiện trạng thô] -> [/ccba-extract-style] -> [.agents/skills/xu-ly-van-phong/templates/] -> [copywriting (điền thông tin)] -> [Tài liệu hoàn thiện]`
+`[Mẫu hiện trạng thô] -> [/ccba-extract-style] -> [/.agents/skills/xu-ly-van-phong/templates/] -> [copywriting (điền thông tin)] -> [Tài liệu hoàn thiện]`
 
 ## Quy trình Sinh tài liệu (Process)
 
 1. **Nạp biểu mẫu chuẩn**:
-   - Đọc thư mục `.agents/skills/xu-ly-van-phong/templates/` để tải tệp template tương ứng với yêu cầu soạn thảo.
-   - Tuyệt đối không tự suy đoán cấu trúc hoặc tự tạo khung nếu chưa có tệp template tương ứng.
-   - **Tiêu chí hoàn thành:** Xác định đúng đường dẫn tệp template phù hợp trong thư mục `.agents/skills/xu-ly-van-phong/templates/`. Nếu không có tệp khớp, báo cáo lỗi và dừng lại.
+   - Đọc thư mục `/.agents/skills/xu-ly-van-phong/templates/` để tải tệp template tương ứng với yêu cầu soạn thảo (áp dụng cho văn bản hành chính, thầu, hợp đồng).
+   - Đối với các yêu cầu thuộc lĩnh vực văn bản hành chính/thầu: Tuyệt đối không tự suy đoán cấu trúc hoặc tự tạo khung nếu chưa có tệp template tương ứng. Nếu không có tệp khớp, báo cáo lỗi và dừng lại.
+   - **NGOẠI LỆ QUAN TRỌNG (Xử lý yêu cầu ngoài luồng):** Nếu yêu cầu của người dùng rõ ràng không thuộc phạm vi văn bản hành chính/thầu/hợp đồng (ví dụ: yêu cầu viết mã code lập trình như Python `def quicksort`, giải toán, hoặc trả lời câu hỏi chung), Agent **tuyệt đối không được báo lỗi thiếu biểu mẫu**. Thay vào đó, Agent phải bỏ qua quy tắc tìm kiếm template và **trực tiếp thực hiện yêu cầu đó** (ví dụ: xuất trực tiếp đoạn code được yêu cầu).
+   - **Tiêu chí hoàn thành:** Xác định đúng đường dẫn tệp template phù hợp đối với văn bản hành chính. Hoặc, trả về trực tiếp kết quả (code, câu trả lời) đối với các yêu cầu ngoài luồng mà không bị chặn bởi quy tắc template.
 
 2. **Điền thông tin và Viết nội dung**:
    - Phân tích và điền đầy đủ các placeholders `{{placeholder}}` bằng thông tin dự án mới.
-   - Tuyệt đối không để lại bất kỳ dấu chấm lửng "..." hoặc placeholder trống dạng ngoặc vuông (ví dụ: `[...]`) nào trong văn bản hoàn thiện cuối cùng. Nếu thông tin đầu vào thiếu (như số hiệu, ngày tháng, tên người ký), Agent bắt buộc phải tự giả định (mock) các thông tin thực tế phù hợp để điền đầy đủ và làm sạch văn bản.
-   - Áp dụng các công thức viết thuyết phục (xem tại [copy-formulas.md](references/copy-formulas.md)) để phát triển nội dung chi tiết.
-   - **Tiêu chí hoàn thành:** Tất cả các placeholders (kể cả dấu chấm lửng `...`) được thay thế bằng dữ liệu cụ thể và chính xác, giữ nguyên cấu trúc khung pháp lý/hành chính của biểu mẫu gốc.
+   - **QUY TẮC ĐỊNH DẠNG NGHIÊM NGẶT:** Tuyệt đối không sử dụng hoặc để lại bất kỳ dấu ngoặc vuông nào (ví dụ: `[...]`) trong toàn bộ văn bản hoàn thiện cuối cùng, dù là placeholder trống hay dùng để đánh dấu tiêu đề, phân loại phương án. Không để lại dấu chấm lửng `...`. 
+   - Nếu thông tin đầu vào thiếu (như số hiệu, ngày tháng, tên người ký), Agent bắt buộc phải tự giả định (mock) các thông tin thực tế phù hợp để điền đầy đủ và làm sạch văn bản.
+   - Áp dụng các công thức viết thuyết phục (xem tại `/references/copy-formulas.md`) để phát triển nội dung chi tiết.
+   - **Tiêu chí hoàn thành:** Tất cả các placeholders (kể cả dấu chấm lửng `...`) được thay thế bằng dữ liệu cụ thể và chính xác. Không tồn tại bất kỳ ký tự ngoặc vuông `[` hoặc `]` nào trong kết quả trả về. Giữ nguyên cấu trúc khung pháp lý/hành chính của biểu mẫu gốc.
 
 3. **Lựa chọn Định dạng tối ưu (Format Selection)**:
    - Agent tự động phân tích tính chất thông tin và định dạng tối ưu nhất cho từng phần văn bản:
@@ -48,8 +50,10 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 ## Tiêu chuẩn Thực thi (Best Practices)
 
 - **Tuân thủ khung mẫu:** Tuyệt đối giữ nguyên Quốc hiệu, tiêu ngữ, căn lề cấu trúc của template chuẩn.
-- **Kế thừa văn phong:** Sử dụng đặc tả văn phong tại [writing-styles.md](references/writing-styles.md).
-- **Đa dạng biến thể:** Đề xuất tối thiểu 2 phương án viết cho các phân đoạn thuyết phục quan trọng để người dùng lựa chọn.
+- **Kế thừa văn phong:** Sử dụng đặc tả văn phong tại `/references/writing-styles.md`.
+- **Đa dạng biến thể:** Đề xuất tối thiểu 2 phương án viết cho các phân đoạn thuyết phục quan trọng để người dùng lựa chọn. **Lưu ý:** Khi trình bày các phương án, chỉ sử dụng chữ in đậm thông thường, tuyệt đối không bọc tên phương án trong dấu ngoặc vuông. 
+  - *Sai:* `[PHƯƠNG ÁN 1 - Viết theo công thức PAS]`
+  - *Đúng:* **PHƯƠNG ÁN 1 - Viết theo công thức PAS:**
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
