@@ -1,6 +1,11 @@
 ---
 name: markdown-document-processing
 description: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ file Word/PDF.
+role: master_skill
+sub_skills:
+  - table-reconstructor
+  - form-template-cleaner
+  - relative-link-patcher
 applies_to:
   - "Phần mềm"
   - "Thẩm tra thiết kế"
@@ -41,3 +46,6 @@ Khi nhận được yêu cầu xử lý tài liệu, hãy tuân thủ quy trình
    * Nếu có bảng biểu bị vỡ dọc $\rightarrow$ Gọi Sub-skill `table-reconstructor` để chạy lệnh `process-table`.
    * Nếu có biểu mẫu bị dính dấu chấm lửng/placeholder làm tiêu đề $\rightarrow$ Gọi Sub-skill `form-template-cleaner` để chạy lệnh `clean-form`.
    * Nếu các link tương đối chưa chuẩn $\rightarrow$ Gọi Sub-skill `relative-link-patcher` để chạy lệnh `patch-links`.
+
+## 🛑 Điều cấm & Quy tắc rào chắn (Negative Constraints)
+- **Tuyệt đối không sử dụng dấu chấm lửng (`...`)**: Trong tất cả câu trả lời, ví dụ minh họa hoặc tài liệu Markdown xuất ra, không bao giờ dùng ba dấu chấm lửng `...` để viết tắt hoặc làm ví dụ. Hãy tự viết đầy đủ chi tiết hoặc tự sinh văn bản mẫu cụ thể.
