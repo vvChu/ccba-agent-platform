@@ -22,11 +22,16 @@ Chạy lệnh CLI sau tại thư mục gốc của dự án:
 # Kiểm thử một kỹ năng cụ thể
 python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --trials 3
 
+# Tự động tối ưu hóa SKILL.md (Skill Auto-Tuner via SkillOpt loop)
+python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3
+
 # Kiểm thử toàn bộ các kỹ năng AI
 python .agents/skills/eval-gate/scripts/eval_runner.py --trials 3
 ```
 
-### Bước 3: Đánh giá và Khắc phục lỗi (Self-Healing Loop)
+### Bước 3: Đánh giá, Khắc phục lỗi & Auto-Tuning (SkillOpt Loop)
+- **Chế độ Auto-Tuner (`--auto-tune`):** 
+  Core Eval Runner sẽ tự động điều phối chu trình 4 bước (**Rollout -> Reflect -> Edit -> Validate**). LLM Optimizer sẽ đề xuất chỉnh sửa văn bản `SKILL.md` và kiểm chứng qua Cổng **Validation Gate** để loại bỏ hiện tượng **Prompt Drift** trước khi cập nhật.
 - **Nếu tất cả các test cases đạt PASS (exit code = 0):** Báo cáo kết quả thành công cho người dùng.
 - **Nếu có test case bị FAILED (exit code = 1):**
   1. Đọc chi tiết lỗi so khớp (Regex mismatch hoặc LLM Judge feedback) được in trong output log.
