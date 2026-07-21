@@ -1,6 +1,8 @@
 ---
 name: table-reconstructor
 description: Sub-skill dựng lại các bảng biểu Markdown bị vỡ dọc hoặc lệch cột bằng file đối chiếu .docx hoặc thuật toán Python.
+role: sub_skill
+master_skill: markdown-document-processing
 applies_to:
   - "Phần mềm"
   - "Thẩm tra thiết kế"
