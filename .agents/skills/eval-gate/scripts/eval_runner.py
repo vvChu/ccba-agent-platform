@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import sys
+import yaml
 from pathlib import Path
 from typing import Any
 
@@ -34,9 +35,31 @@ logging.basicConfig(
 logger = logging.getLogger("ccba.eval.runner")
 
 
+def get_skill_path(skill_name: str) -> Path:
+    """Xác định đường dẫn file SKILL.md từ catalog.yaml hoặc thư mục mặc định."""
+    default_path = project_root / ".agents" / "skills" / skill_name / "SKILL.md"
+    if default_path.exists():
+        return default_path
+
+    catalog_file = project_root / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
+    if catalog_file.exists():
+        try:
+            with open(catalog_file, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+                skills_list = data.get("skills", [])
+                for item in skills_list:
+                    if item.get("name") == skill_name and "skill_path" in item:
+                        candidate = project_root / item["skill_path"]
+                        if candidate.exists():
+                            return candidate
+        except Exception:
+            pass
+    return default_path
+
+
 def load_skill_prompt(skill_name: str) -> str:
     """Đọc tệp SKILL.md của skill tương ứng làm System Prompt."""
-    skill_path = project_root / ".agents" / "skills" / skill_name / "SKILL.md"
+    skill_path = get_skill_path(skill_name)
     if not skill_path.exists():
         logger.warning(f"Không tìm thấy file SKILL.md tại {skill_path}. Chạy ở chế độ không có System Prompt.")
         return ""
