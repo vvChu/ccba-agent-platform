@@ -1,6 +1,8 @@
 ---
 name: pptx
 description: "Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao bằng HTML conversion hoặc OOXML."
+role: sub_skill
+master_skill: xu-ly-van-phong
 disable-model-invocation: true
 user-invocable: true
 when_to_use: "Invoke for presentation deck creation, edits, or extraction."

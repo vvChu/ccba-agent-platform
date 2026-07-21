@@ -132,6 +132,7 @@ skills:
   skill_path: .agents/skills/long-form-writer/SKILL.md
 - name: markdown-document-processing
   bundle: _core
+  tags: [document, writing]
   description: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ file Word/PDF
   triggers:
   - markdown
@@ -463,6 +464,7 @@ skills:
   skill_path: .agents/skills/docx/SKILL.md
 - name: copywriting
   bundle: _core
+  tags: [document, writing]
   description: Công thức viết thuyết phục (AIDA, PAS), trích xuất phong cách viết
     hành chính/thương mại để làm hồ sơ thầu, quy trình, form mẫu của khối Admin
   triggers:
@@ -846,6 +848,7 @@ skills:
   skill_path: .agents/skills/viet-chuyen-nghiep/SKILL.md
 - name: xu-ly-van-phong
   bundle: _software
+  tags: [document, writing]
   description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo
     tiêu chuẩn cấu trúc & phối màu chuyên nghiệp hoặc Nghị định 30.
   triggers:
