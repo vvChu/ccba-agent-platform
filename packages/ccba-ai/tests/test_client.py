@@ -206,7 +206,9 @@ class TestAIClientRetry:
 
     def test_chat_retries_on_connection_error_and_succeeds(self) -> None:
         """Test chat retries when connection error occurs and succeeds on retry."""
-        client = AIClient(base_url="http://fake:1/v1", api_key="fake", max_retries=2, retry_delay=0.01)
+        client = AIClient(
+            base_url="http://fake:1/v1", api_key="fake", max_retries=2, retry_delay=0.01
+        )
 
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
@@ -215,7 +217,9 @@ class TestAIClientRetry:
         from openai import APIConnectionError
 
         side_effects = [APIConnectionError(request=MagicMock()), mock_response]
-        with patch.object(client._client.chat.completions, "create", side_effect=side_effects) as mock_create:
+        with patch.object(
+            client._client.chat.completions, "create", side_effect=side_effects
+        ) as mock_create:
             result = client.chat("test retry")
             assert result == "Recovered response"
             assert mock_create.call_count == 2
@@ -225,9 +229,15 @@ class TestAIClientRetry:
         import pytest
         from openai import APIConnectionError
 
-        client = AIClient(base_url="http://fake:1/v1", api_key="fake", max_retries=2, retry_delay=0.01)
+        client = AIClient(
+            base_url="http://fake:1/v1", api_key="fake", max_retries=2, retry_delay=0.01
+        )
 
-        with patch.object(client._client.chat.completions, "create", side_effect=APIConnectionError(request=MagicMock())) as mock_create:
+        with patch.object(
+            client._client.chat.completions,
+            "create",
+            side_effect=APIConnectionError(request=MagicMock()),
+        ) as mock_create:
             with pytest.raises(APIConnectionError):
                 client.chat("test retry fail")
             assert mock_create.call_count == 3

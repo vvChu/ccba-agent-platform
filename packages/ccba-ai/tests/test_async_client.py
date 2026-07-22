@@ -101,7 +101,9 @@ async def test_async_client_privacy_guard_blocks_api_key():
 @pytest.mark.asyncio
 async def test_async_client_chat_retries_on_connection_error():
     """AsyncAIClient.chat() should retry on connection error and succeed."""
-    client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key", max_retries=2, retry_delay=0.01)
+    client = AsyncAIClient(
+        base_url="http://test-gateway/v1", api_key="mock-key", max_retries=2, retry_delay=0.01
+    )
 
     mock_response = MagicMock()
     mock_response.choices = [MagicMock()]

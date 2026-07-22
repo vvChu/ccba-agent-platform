@@ -4,10 +4,8 @@ Extracts 5-axis legal coordinates (Subject, Action, Impact, Scope, Time)
 from user queries and generates guided interview prompts when coordinates are missing.
 """
 
-from dataclasses import dataclass
 import re
-from typing import Optional
-
+from dataclasses import dataclass
 
 FIELD_DISPLAY_NAMES = {
     "subject": "Đối tượng (Chủ đầu tư, Nhà thầu, Tư vấn...)",
@@ -22,11 +20,11 @@ FIELD_DISPLAY_NAMES = {
 class IntakeTaxonomy:
     """Dataclass holding 5-axis legal intake coordinates."""
 
-    subject: Optional[str] = None
-    action: Optional[str] = None
-    impact: Optional[str] = None
-    scope: Optional[str] = None
-    time_timestamp: Optional[str] = None
+    subject: str | None = None
+    action: str | None = None
+    impact: str | None = None
+    scope: str | None = None
+    time_timestamp: str | None = None
 
 
 def parse_intake_question(text: str) -> IntakeTaxonomy:
@@ -43,7 +41,9 @@ def parse_intake_question(text: str) -> IntakeTaxonomy:
         time_timestamp = time_match.group(1)
 
     # Scope extraction (e.g. công trình cấp I, cấp II, nhà cao tầng)
-    scope_match = re.search(r"((công trình\s+)?cấp\s+[I|V|X]+|cấp\s+\d+|nhà cao tầng|quy mô lớn)", text, re.IGNORECASE)
+    scope_match = re.search(
+        r"((công trình\s+)?cấp\s+[I|V|X]+|cấp\s+\d+|nhà cao tầng|quy mô lớn)", text, re.IGNORECASE
+    )
     if scope_match:
         scope = scope_match.group(0)
 
@@ -103,6 +103,4 @@ def generate_guided_interview_prompt(missing_fields: list[str]) -> str:
 
     labels = [FIELD_DISPLAY_NAMES.get(f, f) for f in missing_fields]
     fields_str = ", ".join(labels)
-    return (
-        f"Để đảm bảo tư vấn chính xác, vui lòng cung cấp thêm thông tin về các dữ kiện: {fields_str}."
-    )
+    return f"Để đảm bảo tư vấn chính xác, vui lòng cung cấp thêm thông tin về các dữ kiện: {fields_str}."
