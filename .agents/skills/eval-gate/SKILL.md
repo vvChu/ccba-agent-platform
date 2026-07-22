@@ -22,7 +22,7 @@ python scripts/run_harness_evals.py
 # Tự động tối ưu hóa SKILL.md với Skill Auto-Tuner (SkillOpt loop)
 python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3
 ```
-*(Nếu bạn chỉ muốn kiểm tra định dạng/cú pháp mà không chạy test, bạn có thể truyền `--no-test`)*
+*(Nếu bạn chỉ muốn kiểm tra định dạng/cú pháp mà không chạy test, bạn có thể truyền `--no-test`. Lưu ý `run_harness_evals.py` đã tự động tích hợp Singleton Process Lock và Pre-Eval Health Check để ngăn ngừa ngốn 100% CPU).*
 
 ### Bước 2: Đánh giá kết quả
 *   **Nếu exit code = 0 (Tất cả Gate PASS):** Codebase sạch sẽ, bạn có thể yên tâm bàn giao/commit/tạo PR.
