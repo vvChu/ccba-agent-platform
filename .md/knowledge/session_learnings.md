@@ -500,7 +500,42 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Thay thế bằng**: Thay thế bằng việc nhúng HTML markers và tự động cập nhật qua CI pipeline (`update_arch_stats.py`).
 
 ---
+
+## Session Learnings — Document Processing Skills & AI Evals Refinement (2026-07-21)
+- **ID Phiên làm việc**: `3df38a11-df52-46c4-883c-f9cdcc0eefec`
+
+### Patterns (Mẫu tốt)
+
+#### 49. Flat Directory Skill Governance via Frontmatter & Virtual Tagging
+- **Ngữ cảnh**: Cần phân cấp cấu trúc Master Skill vs Sub-Skill cho nhóm kỹ năng xử lý văn bản (`xu-ly-van-phong`, `markdown-document-processing`, `copywriting`, `academic_writing`) mà không làm thay đổi vị trí thư mục vật lý phẳng (`.agents/skills/<name>/`) gây đứt gãy liên kết ở các dự án Spoke và CI gates.
+- **Giải pháp**:
+  * Giữ nguyên cấu trúc thư mục phẳng vật lý của tất cả skills.
+  * Phân cấp logic trong YAML Frontmatter bằng thuộc tính `role: master_skill` (khai báo `sub_skills: [...]`) và `role: sub_skill` (khai báo `master_skill: <name>`).
+  * Thực hiện gán nhãn ảo trong `catalog.yaml` bằng `tags: [document, writing]` để nhóm các skill cùng bộ môn.
+  * Thêm quy tắc định tuyến vào `platform-loader/SKILL.md` buộc Agent luôn nạp Master Skill trước khi thực thi các Sub-skills vi mô.
+- **Nguồn**: Session `3df38a11-df52-46c4-883c-f9cdcc0eefec`, 2026-07-21
+
+#### 50. Multi-Alias Skill Resolution in AI Eval Runner
+- **Ngữ cảnh**: Tên của Skill công khai (public alias) như `markdown-document-processing` có thể khác với tên thư mục thực tế trên hệ thống file như `markdown-processing`. Khi chạy `/ccba-skills-eval` dẫn tới lỗi không tìm thấy `SKILL.md`.
+- **Giải pháp**: Bổ sung hàm `get_skill_path(skill_name)` trong `eval_runner.py`. Nếu đường dẫn trực tiếp `.agents/skills/<name>/SKILL.md` không tồn tại, tự động tra cứu danh mục `catalog.yaml` theo key `skill_path` để giải quyết chính xác vị trí tệp `SKILL.md`.
+- **Nguồn**: Session `3df38a11-df52-46c4-883c-f9cdcc0eefec`, 2026-07-21
+
+#### 51. Negative Constraint Prompt Guard for Placeholder Hallucination
+- **Ngữ cảnh**: Trong quá trình kiểm thử AI Evals cho `markdown-document-processing`, mô hình sinh chuỗi placeholder `...` làm đứt đoạn nội dung đoạn văn, vi phạm tiêu chí phân đoạn hoàn chỉnh.
+- **Giải pháp**: Bổ sung mục `## 🛑 Điều cấm & Quy tắc rào chắn` trực tiếp vào `markdown-processing/SKILL.md` cấm tuyệt đối sử dụng các ký tự giữ chỗ `...`, nâng tỷ lệ Pass của AI Evals từ 66.7% lên **100% PASS**.
+- **Nguồn**: Session `3df38a11-df52-46c4-883c-f9cdcc0eefec`, 2026-07-21
+
+---
+
+### Anti-patterns (Cách tránh)
+
+#### 41. Physical Nested Skill Directory Refactoring
+- **Vấn đề**: Di chuyển các tệp sub-skill vào các thư mục con phân cấp (ví dụ: `.agents/skills/xu-ly-van-phong/docx/SKILL.md`). Điều này gây hỏng toàn bộ đường dẫn tương đối trong `catalog.yaml`, đứt gãy linter `validate_docs.py`, và gây crash các dự án Spoke khi đồng bộ.
+- **Thay thế bằng**: Duy trì thư mục vật lý phẳng 100% tại `.agents/skills/` và sử dụng YAML Frontmatter `role: master_skill / sub_skill` và virtual tagging trong `catalog.yaml` để quản trị phân cấp.
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
 

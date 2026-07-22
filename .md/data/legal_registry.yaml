@@ -312,14 +312,27 @@ circulars:
   issued_date: '2026-06-26'
   short_name: TT 37/2026
   status: current
-  title: Thông tư 37/2026/TT-BXD phương pháp xác định định mức dự toán và các chỉ
-    tiêu kinh tế kỹ thuật
+  title: Thông tư 37/2026/TT-BXD phương pháp xác định định mức dự toán và các chỉ tiêu kinh tế kỹ thuật
   topics:
   - construction
   - cost_management
   document_number: 37/2026/TT-BXD
   issued_by: Bộ Xây dựng
   markdown_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa.md
+- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-101-2026-TT-BQP-huong-dan-Luat-Xay-dung-thuoc-pham-vi-quan-ly-cua-Bo-Quoc-phong-713990.aspx
+  effective_date: '2026-07-01'
+  file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_101_2026_tt_bqp_huong_dan_luat_xay_dung_thuoc_pham.docx
+  id: TT-101-2026-BQP
+  issued_date: '2026-06-30'
+  short_name: TT 101/2026
+  status: current
+  title: Thông tư 101/2026/TT-BQP hướng dẫn Luật Xây dựng thuộc phạm vi quản lý của Bộ Quốc phòng
+  topics:
+  - construction
+  - defense
+  document_number: 101/2026/TT-BQP
+  issued_by: Bộ Quốc phòng
+  markdown_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_101_2026_tt_bqp_huong_dan_luat_xay_dung_thuoc_pham.md
 metadata:
   focus_area: Quản lý chất lượng công trình xây dựng
   last_updated: '2026-03-28'
