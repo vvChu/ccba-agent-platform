@@ -4,6 +4,7 @@ Manages loading, updating, and saving information in the YAML registry
 by dynamically resolving file paths relative to the project root.
 """
 
+import re
 from pathlib import Path
 
 import yaml
@@ -238,8 +239,12 @@ def load_relation_synonyms(project_root: Path | None = None) -> dict[str, str]:
             if isinstance(synonyms, list):
                 for syn in synonyms:
                     mapping[syn] = key
+                    norm_syn = re.sub(r"\s+", " ", syn.replace(",", "")).strip()
+                    mapping[norm_syn] = key
             elif isinstance(synonyms, str):
                 mapping[synonyms] = key
+                norm_syn = re.sub(r"\s+", " ", synonyms.replace(",", "")).strip()
+                mapping[norm_syn] = key
         return mapping
     except Exception as e:
         print(

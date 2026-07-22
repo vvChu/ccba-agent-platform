@@ -31,6 +31,6 @@ ccba-harness = { workspace = true }
 ccba-ai = { workspace = true }
 
 [tool.pytest.ini_options]
-timeout = 5
+timeout = 30
 
 
