@@ -268,6 +268,83 @@ def distribute_input_documents(root_dir: Path, dry_run: bool) -> None:
                     print(f"  Failed to move {f.name}: {e}", file=sys.stderr)
 
 
+def clean_zombies(dry_run: bool) -> None:
+    """Scan and terminate orphan background processes (pytest/python) left by crashed sessions."""
+    print("[CLEAN] Checking orphan/zombie background processes...")
+    current_pid = os.getpid()
+
+    try:
+        import psutil
+
+        zombies_found = 0
+        for proc in psutil.process_iter(["pid", "name", "cmdline", "create_time"]):
+            try:
+                pid = proc.info["pid"]
+                if pid == current_pid:
+                    continue
+                name = (proc.info["name"] or "").lower()
+                cmdline = " ".join(proc.info["cmdline"] or [])
+
+                if ("pytest" in name or "python" in name) and ("safe_runner" in cmdline or "pytest" in cmdline):
+                    age_seconds = time.time() - proc.info["create_time"]
+                    if age_seconds > 900:  # Older than 15 minutes
+                        zombies_found += 1
+                        if dry_run:
+                            print(f"  [PREVIEW] Would terminate orphan process PID {pid} ({name}, age {int(age_seconds/60)}m)")
+                        else:
+                            print(f"  [TERMINATE] Killing orphan process PID {pid} ({name}, age {int(age_seconds/60)}m)")
+                            proc.terminate()
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
+
+        if zombies_found == 0:
+            print("  No orphan background processes found.")
+        return
+    except ImportError:
+        pass
+
+    # Fallback for Windows using wmic/tasklist if psutil is not available
+    if sys.platform == "win32":
+        try:
+            out = run_cmd(["wmic", "process", "where", "name='python.exe'", "get", "processid,commandline"], check=False)
+            zombies_found = 0
+            if out:
+                for line in out.splitlines():
+                    if "safe_runner" in line or "pytest" in line:
+                        parts = line.strip().rsplit(maxsplit=1)
+                        if len(parts) == 2 and parts[1].isdigit():
+                            pid = int(parts[1])
+                            if pid != current_pid:
+                                zombies_found += 1
+                                if dry_run:
+                                    print(f"  [PREVIEW] Would terminate orphan process PID {pid}")
+                                else:
+                                    print(f"  [TERMINATE] Killing orphan process PID {pid}")
+                                    run_cmd(["taskkill", "/F", "/PID", str(pid)], check=False)
+            if zombies_found == 0:
+                print("  No orphan background processes found.")
+            return
+        except Exception:
+            pass
+
+    print("  No orphan background processes found.")
+
+
+def health_check() -> None:
+    """Perform system health check (disk space and memory)."""
+    print("[HEALTH] Running workspace health diagnostics...")
+    try:
+        total, used, free = shutil.disk_usage(Path.cwd())
+        free_gb = free / (1024 ** 3)
+        print(f"  Disk Free Space: {free_gb:.2f} GB")
+        if free_gb < 2.0:
+            print("  [WARNING] Disk free space is low (< 2 GB)!", file=sys.stderr)
+        else:
+            print("  [OK] Disk space is healthy.")
+    except Exception as e:
+        print(f"  [HEALTH] Disk check error: {e}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Session Cleanup Utility for CCBA Agent Platform")
     parser.add_argument(
@@ -294,9 +371,11 @@ def main() -> None:
     print(f"[START] Running Session Cleanup Automation [{mode_str}]...")
     print("==================================================")
 
+    health_check()
     distribute_input_documents(root_dir, dry_run)
     clean_worktrees(dry_run)
     clean_branches(dry_run)
+    clean_zombies(dry_run)
 
     print("==================================================")
     status_str = "completed successfully" if args.execute else "preview completed"

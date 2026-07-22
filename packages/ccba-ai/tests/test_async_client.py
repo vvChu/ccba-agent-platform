@@ -96,3 +96,24 @@ async def test_async_client_privacy_guard_blocks_api_key():
 
     with pytest.raises(ValueError, match="PrivacyGuard"):
         await client.chat(malicious_prompt)
+
+
+@pytest.mark.asyncio
+async def test_async_client_chat_retries_on_connection_error():
+    """AsyncAIClient.chat() should retry on connection error and succeed."""
+    client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key", max_retries=2, retry_delay=0.01)
+
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock()]
+    mock_response.choices[0].message.content = "recovered response"
+
+    from openai import APIConnectionError
+
+    side_effects = [APIConnectionError(request=MagicMock()), mock_response]
+    with patch.object(
+        client._client.chat.completions, "create", new_callable=AsyncMock, side_effect=side_effects
+    ) as mock_create:
+        result = await client.chat("Hello", model="test-model")
+
+    assert result == "recovered response"
+    assert mock_create.call_count == 2
