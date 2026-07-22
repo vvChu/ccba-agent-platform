@@ -40,6 +40,7 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 3. Đọc template `resources/checklist_by_project.md`
 4. Tạo checklist phù hợp, bỏ các mục không áp dụng (đánh dấu N/A)
 5. Xuất ra Markdown và Word (.docx)
+   - **Tiêu chí hoàn thành:** Đã tạo checklist đầy đủ theo thông tin dự án và xuất đủ 2 định dạng (.md và .docx).
 
 ### 2. Cập nhật khi VBPL thay đổi
 
@@ -52,21 +53,28 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
    - Sửa đổi mục hiện có
    - Đánh dấu mục bãi bỏ
 4. Ghi log thay đổi trong `changelog` section
+   - **Tiêu chí hoàn thành:** Đã cập nhật file `checklist_master.yaml` và lưu vết thay đổi trong changelog.
 
 ### 3. Tạo tài liệu tập huấn
 
-1. Đọc template `templates/training_handout.md`
+1. Đọc template `resources/training_handout.md`
 2. Điền nội dung dựa trên checklist master
 3. Thêm ví dụ thực tế và lưu ý từ kinh nghiệm CCBA
 4. Xuất ra Word (.docx) cho phát tay trong buổi seminar
+   - **Tiêu chí hoàn thành:** Đã tạo tài liệu tập huấn hoàn chỉnh dạng Word (.docx) sẵn sàng phát hành.
 
 ## Legal Basis
 
-Checklist master hiện dựa trên:
-- **Nghị định 06/2021/NĐ-CP** — Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình (Bắt buộc phải trích dẫn tên đầy đủ "Nghị định 06/2021/NĐ-CP" hoặc "Thông tư 10/2021/TT-BXD" trong phần căn cứ pháp lý của Danh mục).
-- **NĐ 35/2023/NĐ-CP** — Sửa đổi, bổ sung NĐ 06/2021
-- **Thông tư 10/2021/TT-BXD** — Hướng dẫn quản lý chất lượng công trình xây dựng
-- **Dự thảo NĐ QLCL 2026** — Đang lấy ý kiến (chưa áp dụng)
+Checklist master được phân định căn cứ pháp lý theo mốc thời gian nghiệm thu công trình:
+
+### 1. Áp dụng chính thức hiện hành (Công trình nghiệm thu từ 01/07/2026 trở đi):
+- **Nghị định 207/2026/NĐ-CP** (Có hiệu lực từ 01/07/2026) — Quản lý chất lượng thi công xây dựng và bảo trì công trình (**Chính thức thay thế Nghị định 06/2021/NĐ-CP**). Trích dẫn Danh mục hồ sơ hoàn thành công trình theo Phụ lục tương ứng của NĐ 207/2026/NĐ-CP.
+- **Luật Xây dựng 2025 (135/2025/QH15)** (Có hiệu lực từ 01/07/2026) — Quy định chung về công tác quản lý chất lượng và nghiệm thu công trình.
+- **Nghị định 217/2026/NĐ-CP** (Có hiệu lực từ 01/07/2026) — Quản lý hoạt động xây dựng.
+- **Thông tư 34/2026/TT-BXD** (Có hiệu lực từ 01/07/2026) — Quy định về phân cấp công trình xây dựng.
+
+### 2. Áp dụng tra cứu chuyển tiếp (Công trình hoàn thành / nghiệm thu trước 01/07/2026):
+- **Văn bản hợp nhất 19/VBHN-BXD (25/03/2026)** — Hợp nhất Nghị định 06/2021/NĐ-CP và các Nghị định sửa đổi (NĐ 35/2023, NĐ 175/2024, NĐ 14/2026). Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình.
 
 ## Output Formats
 
