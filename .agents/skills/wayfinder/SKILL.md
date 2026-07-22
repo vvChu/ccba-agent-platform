@@ -49,12 +49,14 @@ Mỗi ticket con đại diện cho một câu hỏi cần làm rõ, tương ứn
 - Khi nhận yêu cầu mơ hồ, thực hiện phỏng vấn `/ccba-grilling` để xác định **Điểm đích (Destination)**.
 - Phác thảo bản đồ đầu tiên: Liệt kê các quyết định cần làm rõ, xác định các ticket unblocked ở biên giới (Frontier), đưa các phần chưa rõ ràng vào mục **Chưa xác định rõ (Not yet specified)**. **Nếu quá trình này không phát hiện vùng mờ (fog) nào** — lộ trình đến đích đã hoàn toàn rõ ràng — bạn không cần lập bản đồ Wayfinder. Hãy dừng lại và đề xuất thực hiện trực tiếp.
 - Tạo các ticket con unblocked. Nếu sử dụng tracker thật, hãy thiết lập liên kết chặn bản địa (native dependency) của tracker (ví dụ: native blocking của GitHub/GitLab). Chỉ fallback sang ghi văn bản `Blocked by: #ID` khi tracker không hỗ trợ.
+- **Tiêu chí hoàn thành:** Đã phác thảo xong bản đồ Wayfinder đầu tiên với đầy đủ các mục (Destination, Notes, Decisions so far, Not yet specified, Out of scope) và khởi tạo các ticket unblocked ở biên giới.
 
 ### Bước 2: Thực thi giải quyết Ticket (Work through the map)
 - Chọn ticket unblocked đầu tiên ở **Biên giới (Frontier)** — là các ticket mở, chưa có assignee và không bị chặn bởi bất kỳ ticket mở nào khác.
 - **Đăng ký nhận việc (Claiming):** Bắt buộc tự gán mình làm Assignee trên ticket **trước khi làm bất kỳ việc gì** để các Agent chạy song song khác biết và bỏ qua. Ticket mở và không có assignee được coi là chưa được nhận.
 - Thực thi giải quyết ticket (chạy tối đa 1 ticket mỗi phiên).
 - Sau khi có câu trả lời: post bình luận chứa câu trả lời lên ticket, **đóng (close)** ticket, cập nhật kết quả vào mục **Quyết định đã chốt (Decisions so far)** trên bản đồ, đồng thời chuyển các phần sương mù đã rõ ràng ở mục *Not yet specified* thành các ticket unblocked mới.
+- **Tiêu chí hoàn thành:** Đã gán Assignee, giải quyết xong ticket chọn lựa, cập nhật kết quả vào mục Decisions so far và cập nhật các ticket mới trên bản đồ.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
