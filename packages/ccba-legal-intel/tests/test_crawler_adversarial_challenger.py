@@ -8,9 +8,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from ccba_legal.crawler import (
-    DEFAULT_RELATION_SYNONYMS,
     TVPLSessionMutex,
     download_three_tier,
+)
+from ccba_legal.registry import (
+    DEFAULT_RELATION_SYNONYMS,
     load_relation_synonyms,
 )
 
