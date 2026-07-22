@@ -63,8 +63,9 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 ## Legal Basis
 
 Checklist master hiện dựa trên:
-- **NĐ 06/2021/NĐ-CP** — Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình
+- **Nghị định 06/2021/NĐ-CP** — Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình (Bắt buộc phải trích dẫn tên đầy đủ "Nghị định 06/2021/NĐ-CP" hoặc "Thông tư 10/2021/TT-BXD" trong phần căn cứ pháp lý của Danh mục).
 - **NĐ 35/2023/NĐ-CP** — Sửa đổi, bổ sung NĐ 06/2021
+- **Thông tư 10/2021/TT-BXD** — Hướng dẫn quản lý chất lượng công trình xây dựng
 - **Dự thảo NĐ QLCL 2026** — Đang lấy ý kiến (chưa áp dụng)
 
 ## Output Formats
