@@ -1,8 +1,8 @@
 # Wayfinder Navigation Map: Khắc phục lỗi "User cancelled agent execution" liên tục
 
 **Mã vấn đề**: `issue-wayfinder-cancelled-execution`
-**Trạng thái bản đồ**: 🧭 Đang tiến hành — Ticket 1+2+4+5 hoàn thành, Ticket 3 chưa triển khai
-**Cập nhật**: 2026-07-22T10:52 — Bổ sung phân tích forensic từ 9 phiên gần nhất
+**Trạng thái bản đồ**: ✅ **Hoàn thành** — Ticket 1+2+3+4+5 hoàn thành
+**Cập nhật**: 2026-07-22T11:33 — Hoàn tất Ticket 3 (Retry & Circuit Breaker cho ccba-ai SDK)
 
 ---
 
@@ -72,8 +72,9 @@ Agent CCBA Platform chạy ổn định toàn bộ các tác vụ nặng (Evalua
 1. **[Phân tích Log Lịch sử & Bằng chứng thực tế](#phân-tích-forensic-bằng-chứng-từ-log)** — Xác nhận 2 root cause riêng biệt: Server Daemon Restart + Context Budget Exhaustion.
 2. **[Thiết lập Script Runner Cô lập (Ticket 1)](#ticket-1-thiết-lập-script-runner-cô-lập-detached-process-runner)** — `safe_runner.py` (commit `8ae987b`) cho phép chạy pytest detached khỏi daemon.
 3. **[Phân rã Test Suite (Ticket 2)](#ticket-2-phân-rã--chạy-thử-nghiệm-test-suite-theo-lát-cắt-dọc)** — 23/23 tests pass qua `safe_runner.py`, không xảy ra "User cancelled".
-4. **[Workflow Guard (Ticket 4)](#ticket-4-workflow-guard--giới-hạn-vòng-lặp-edittest-trong-ccba-implement-mới)** — Bổ sung Loop Budget (max 5 vòng/seam) vào AGENTS.md, implement SKILL.md, TDD SKILL.md.
-5. **[Graceful Shutdown (Ticket 5)](#ticket-5-guardrail-invalid_args-error--phát-hiện-sớm--graceful-shutdown-mới)** — Bổ sung Invalid Args Circuit Breaker vào AGENTS.md và implement SKILL.md.
+4. **[Tích hợp Retry & Circuit Breaker (Ticket 3)](#ticket-3-bổ-sung-circuit-breaker--exponential-retry-vào-ccba-ai)** — Nâng cấp `AIClient` & `AsyncAIClient` tự động retry 3 lần khi ngắt kết nối mạng. 38/38 tests PASSED qua `safe_runner.py`.
+5. **[Workflow Guard (Ticket 4)](#ticket-4-workflow-guard--giới-hạn-vòng-lặp-edittest-trong-ccba-implement-mới)** — Bổ sung Loop Budget (max 5 vòng/seam) vào AGENTS.md, implement SKILL.md, TDD SKILL.md.
+6. **[Graceful Shutdown (Ticket 5)](#ticket-5-guardrail-invalid_args-error--phát-hiện-sớm--graceful-shutdown-mới)** — Bổ sung Invalid Args Circuit Breaker vào AGENTS.md và implement SKILL.md.
 
 ---
 
@@ -84,6 +85,17 @@ Agent CCBA Platform chạy ổn định toàn bộ các tác vụ nặng (Evalua
 - **Trạng thái**: ✅ **Hoàn thành** (commit `8ae987b`)
 - **Giải quyết Root Cause**: ⚡ Server Daemon Restart
 - **Kết quả**: `safe_runner.py` (151 LOC) — 3 mode: `--command`, `--status`, `--help`
+
+### Ticket 2: Phân rã & Chạy thử nghiệm Test Suite theo lát cắt dọc
+- **Loại**: `Task [AFK]`
+- **Trạng thái**: ✅ **Hoàn thành** (2026-07-22)
+- **Kết quả**: 23/23 test cases PASSED (4.31s) qua `safe_runner.py`
+
+### Ticket 3: Bổ sung Circuit Breaker & Exponential Retry vào `ccba-ai`
+- **Loại**: `Task [AFK]`
+- **Trạng thái**: ✅ **Hoàn thành** (2026-07-22)
+- **Giải quyết Root Cause**: ⚡ Server Daemon Restart (micro-restart 1-2 giây)
+- **Kết quả**: Tích hợp retry loop + backoff lũy thừa cho `AIClient` và `AsyncAIClient`. 38/38 tests PASSED.ết quả**: `safe_runner.py` (151 LOC) — 3 mode: `--command`, `--status`, `--help`
 
 ### Ticket 2: Phân rã & Chạy thử nghiệm Test Suite theo lát cắt dọc
 - **Loại**: `Task [AFK]`
@@ -110,10 +122,13 @@ Agent CCBA Platform chạy ổn định toàn bộ các tác vụ nặng (Evalua
 
 ---
 
-## 🌫️ Chưa xác định rõ (Not yet specified)
+### Ticket 6: Tự động Dọn Dẹp Zombie Process & Health Monitor
+- **Loại**: `Task [AFK]`
+- **Trạng thái**: ✅ **Hoàn thành** (2026-07-22)
+- **Giải quyết Root Cause**: ⚡ Tối ưu tài nguyên hệ thống & ngăn chặn tiến trình mồ côi
+- **Kết quả**: Đã nâng cấp [session_cleanup.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/session_cleanup.py) tích hợp `clean_zombies()` và `health_check()`.
 
-- *Ticket 6 (Tùy chọn)*: Tự động hóa dọn dẹp zombie background processes trước mỗi phiên mới.
-- *Ticket 7 (Tùy chọn)*: Monitoring dashboard đơn giản cho server daemon health (nếu server restart liên tục).
+---
 
 ## 🚫 Ngoài phạm vi (Out of scope)
 
