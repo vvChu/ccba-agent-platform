@@ -4,9 +4,9 @@ Handles coordination between parser, packager, registry manager, intake taxonomy
 """
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-from ccba_legal.conflict import LexConflictEngine, RiskLabel
+from ccba_legal.conflict import LexConflictEngine
 from ccba_legal.formatter import inject_warning_block
 from ccba_legal.intake import (
     generate_guided_interview_prompt,
@@ -72,9 +72,7 @@ class LegalProcessor:
 
         return modifications
 
-    def generate_advisory_report(
-        self, query_text: str, output_file: Optional[Path] = None
-    ) -> str:
+    def generate_advisory_report(self, query_text: str, output_file: Path | None = None) -> str:
         """Generate a Dual-Layer Legal Advisory Report from raw query text."""
         intake = parse_intake_question(query_text)
         missing_fields = get_missing_intake_fields(intake)
@@ -154,7 +152,9 @@ class LegalProcessor:
             doc.add_paragraph("Độc lập - Tự do - Hạnh phúc")
             doc.add_paragraph("-------------------")
             doc.add_paragraph(f"Kính gửi: {recipient}")
-            doc.add_paragraph(f"V/v: Xin ý kiến hướng dẫn áp dụng quy định pháp luật về {subject_summary}")
+            doc.add_paragraph(
+                f"V/v: Xin ý kiến hướng dẫn áp dụng quy định pháp luật về {subject_summary}"
+            )
             doc.add_paragraph(
                 "Căn cứ Nghị định 30/2020/NĐ-CP ngày 05/03/2020 của Chính phủ về công tác văn thư;"
             )
@@ -177,4 +177,3 @@ class LegalProcessor:
             "output_file": str(output_file),
             "status": "success",
         }
-

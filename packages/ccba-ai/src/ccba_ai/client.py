@@ -32,7 +32,9 @@ def _retry_sync(fn, max_retries: int = 3, initial_delay: float = 1.0, backoff_fa
                 raise
 
 
-async def _retry_async(coro_fn, max_retries: int = 3, initial_delay: float = 1.0, backoff_factor: float = 2.0):
+async def _retry_async(
+    coro_fn, max_retries: int = 3, initial_delay: float = 1.0, backoff_factor: float = 2.0
+):
     delay = initial_delay
     for attempt in range(max_retries + 1):
         try:
