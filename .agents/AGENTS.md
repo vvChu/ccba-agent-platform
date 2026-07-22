@@ -52,4 +52,11 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
   - Commit theo từng logical unit độc lập, không commit tất cả file cùng lúc.
 
 ---
+
+## 4. Execution Guardrails & Async Task Policy
+
+* **Scoped Test Execution:** Nghiêm cấm Agent kích hoạt các lệnh kiểm thử toàn diện (unscoped `pytest -q`) trên cả repository mà không chỉ định rõ file hoặc thư mục test mục tiêu cụ thể (ví dụ: bắt buộc phải dùng `.venv\Scripts\pytest -q tests/test_file.py`).
+* **Bounded Async Task:** Khi một lệnh chạy dưới dạng tác vụ ngầm (Background Task), Agent không được vội vã đưa ra câu trả lời tạm thời rồi kết thúc lượt (`End Turn`) nhường lượt khi chưa thu thập xong kết quả. Agent phải kiểm tra log hoặc trạng thái tác vụ qua `manage_task status` để trả về báo cáo kết quả thực tế cho người dùng.
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
