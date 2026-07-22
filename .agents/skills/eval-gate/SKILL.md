@@ -16,6 +16,9 @@ Kích hoạt chạy script điều phối chính bằng lệnh Python:
 ```bash
 python scripts/run_harness_evals.py
 
+# KHOANH VÙNG TEST (Scoped Test Execution): Chạy file test cụ thể để tiết kiệm thời gian và tránh treo task
+.venv\Scripts\pytest -q tests/test_agent_execution_guardrails.py
+
 # Tự động tối ưu hóa SKILL.md với Skill Auto-Tuner (SkillOpt loop)
 python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3
 ```
