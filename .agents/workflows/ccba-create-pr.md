@@ -35,13 +35,23 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
 4. **Nếu không có commits chưa push trên `main`** → Báo lỗi: *"Không có thay đổi nào trên main để tạo PR. Hãy tạo feature branch và commit trước."* Dừng workflow.
 5. **Nếu đã ở feature branch** → Bỏ qua bước này, tiếp tục Bước 1.
 
-## Bước 1: Kiểm tra trạng thái và Push code lên remote
+## Bước 1: Kiểm định Chất lượng Local CI Eval Gates (Shift-Left Gate)
+
+1. Kích hoạt toàn bộ hệ thống kiểm thử tự động và kiểm định tài liệu tại local TRƯỚC KHI đẩy code:
+   ```bash
+   .venv\Scripts\python scripts/run_harness_evals.py
+   ```
+2. **Quy tắc chặn lỗi tại nguồn:**
+   - Nếu `run_harness_evals.py` trả về `PASS 100%`: Mã nguồn đạt chuẩn, tiếp tục Bước 2.
+   - Nếu có Gate bị `FAIL` hoặc phát hiện Architecture Drift: Tạm dừng workflow, yêu cầu Agent/người dùng sửa lỗi tại local (hoặc chạy `python scripts/update_arch_stats.py`) và commit lại trước khi đẩy mã nguồn.
+
+## Bước 2: Kiểm tra trạng thái và Push code lên remote
 
 1. Kiểm tra trạng thái làm việc (working tree):
    ```bash
    git status --porcelain
    ```
-   *Lưu ý:* Đảm bảo không còn thay đổi chưa commit. Nếu có, hãy commit các thay đổi đó trước khi tiến hành push.
+   *Lưu ý:* Đảm bảo không còn thay đổi chưa commit.
 2. Lấy tên branch hiện hành:
    ```bash
    git branch --show-current
@@ -50,12 +60,6 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
    ```bash
    git push -u origin [current_branch]
    ```
-
-## Bước 2: Kiểm tra Đồng bộ Tài liệu Kiến trúc (Architecture Sync Gate)
-
-1. Hệ thống CI (`scripts/run_harness_evals.py`) sẽ tự động quét biến động kiến trúc (Architecture Drift).
-2. Nếu anh có thay đổi cấu trúc (thêm thư mục package, skill, workflow) nhưng CI báo lỗi Drift, vui lòng chạy `python scripts/update_arch_stats.py` và commit lại trước khi tạo PR.
-3. Nếu không có thay đổi cấu trúc hoặc CI báo xanh → tiếp tục Bước 3.
 
 ## Bước 3: Khởi tạo Pull Request
 
