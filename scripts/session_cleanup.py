@@ -13,6 +13,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 # Core branches that must NEVER be deleted
@@ -285,14 +286,20 @@ def clean_zombies(dry_run: bool) -> None:
                 name = (proc.info["name"] or "").lower()
                 cmdline = " ".join(proc.info["cmdline"] or [])
 
-                if ("pytest" in name or "python" in name) and ("safe_runner" in cmdline or "pytest" in cmdline):
+                if ("pytest" in name or "python" in name) and (
+                    "safe_runner" in cmdline or "pytest" in cmdline
+                ):
                     age_seconds = time.time() - proc.info["create_time"]
                     if age_seconds > 900:  # Older than 15 minutes
                         zombies_found += 1
                         if dry_run:
-                            print(f"  [PREVIEW] Would terminate orphan process PID {pid} ({name}, age {int(age_seconds/60)}m)")
+                            print(
+                                f"  [PREVIEW] Would terminate orphan process PID {pid} ({name}, age {int(age_seconds / 60)}m)"
+                            )
                         else:
-                            print(f"  [TERMINATE] Killing orphan process PID {pid} ({name}, age {int(age_seconds/60)}m)")
+                            print(
+                                f"  [TERMINATE] Killing orphan process PID {pid} ({name}, age {int(age_seconds / 60)}m)"
+                            )
                             proc.terminate()
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 continue
@@ -306,7 +313,10 @@ def clean_zombies(dry_run: bool) -> None:
     # Fallback for Windows using wmic/tasklist if psutil is not available
     if sys.platform == "win32":
         try:
-            out = run_cmd(["wmic", "process", "where", "name='python.exe'", "get", "processid,commandline"], check=False)
+            out = run_cmd(
+                ["wmic", "process", "where", "name='python.exe'", "get", "processid,commandline"],
+                check=False,
+            )
             zombies_found = 0
             if out:
                 for line in out.splitlines():
@@ -335,7 +345,7 @@ def health_check() -> None:
     print("[HEALTH] Running workspace health diagnostics...")
     try:
         total, used, free = shutil.disk_usage(Path.cwd())
-        free_gb = free / (1024 ** 3)
+        free_gb = free / (1024**3)
         print(f"  Disk Free Space: {free_gb:.2f} GB")
         if free_gb < 2.0:
             print("  [WARNING] Disk free space is low (< 2 GB)!", file=sys.stderr)
