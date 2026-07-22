@@ -6,9 +6,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from ccba_legal.crawler import (
-    DEFAULT_RELATION_SYNONYMS,
     TVPLSessionMutex,
     download_three_tier,
+)
+from ccba_legal.registry import (
+    DEFAULT_RELATION_SYNONYMS,
     load_relation_synonyms,
 )
 
@@ -63,10 +65,9 @@ def test_load_relation_synonyms_malformed_yaml(tmp_path):
         "relation_synonyms:\n  amends_docs\n    - 'Văn bản bị sửa đổi'\n  -", encoding="utf-8"
     )
 
-    with patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path):
-        # Should print warning and return the DEFAULT_RELATION_SYNONYMS mapping
-        mapping = load_relation_synonyms()
-        assert mapping == DEFAULT_RELATION_SYNONYMS
+    # Should print warning and return the DEFAULT_RELATION_SYNONYMS mapping
+    mapping = load_relation_synonyms(project_root=tmp_path)
+    assert mapping == DEFAULT_RELATION_SYNONYMS
 
 
 def test_js_matching_logic_mismatch(tmp_path):
@@ -84,8 +85,7 @@ relation_synonyms:
 """
     yaml_file.write_text(yaml_content, encoding="utf-8")
 
-    with patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path):
-        mapping = load_relation_synonyms()
+    mapping = load_relation_synonyms(project_root=tmp_path)
 
     # Verify that load_relation_synonyms correctly loads the keys
     assert "Văn bản bị sửa đổi, bổ sung" in mapping
