@@ -108,6 +108,10 @@ def main() -> None:
         action="store_true",
         help="Download original Word/PDF files into the bundle",
     )
+    parser.add_argument(
+        "--slug",
+        help="Explicit OKF bundle directory slug (overrides dynamic page title)",
+    )
     args = parser.parse_args()
 
     print("[LegalIntel] Initiating pipeline execution...")
@@ -139,7 +143,46 @@ def main() -> None:
         print(f"[LegalIntel] Crawling primary URL: {args.url}")
         main_title, main_text, main_links = get_crawled_doc_data(cdp, args.url)
         temp_packager = OKFBundlePackager(Path())
-        slug = temp_packager.sanitize_slug(main_title)
+
+        if args.slug:
+            slug = args.slug
+            print(f"[LegalIntel] Using explicit CLI slug: {slug}")
+        else:
+            # Auto-lookup in legal_registry.yaml for existing matching bundle slug
+            existing_slug = None
+            registry_file = Path(".md/data/legal_registry.yaml")
+            if registry_file.exists():
+                try:
+                    import yaml
+
+                    with open(registry_file, "r", encoding="utf-8") as f:
+                        reg_data = yaml.safe_load(f) or {}
+                    all_items = (
+                        reg_data.get("laws", [])
+                        + reg_data.get("decrees", [])
+                        + reg_data.get("circulars", [])
+                    )
+                    for item in all_items:
+                        dl_url = item.get("download_url") or item.get("source_url") or ""
+                        file_path = item.get("file_path", "")
+                        if dl_url and (
+                            dl_url in args.url
+                            or args.url in dl_url
+                            or (item.get("id") and item.get("id") in args.url)
+                        ):
+                            if "legal_docs/" in file_path:
+                                parts = file_path.split("legal_docs/")[1].split("/")
+                                if parts and parts[0]:
+                                    existing_slug = parts[0]
+                                    break
+                except Exception as ex:
+                    print(f"[LegalIntel Warning] Registry lookup failed: {ex}")
+
+            if existing_slug:
+                slug = existing_slug
+                print(f"[LegalIntel] Found existing OKF bundle slug in registry: {slug}")
+            else:
+                slug = temp_packager.sanitize_slug(main_title)
 
         # Extract metadata from TVPL Lược đồ page
         print("[LegalIntel] Crawling structured metadata from 'Lược đồ' page...")
