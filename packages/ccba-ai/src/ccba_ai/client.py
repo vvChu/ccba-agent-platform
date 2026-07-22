@@ -1,10 +1,48 @@
+import asyncio
 import os
+import time
 from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
 
-from openai import AsyncOpenAI, OpenAI
+from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI, OpenAI
 
 from ccba_ai.hooks import PrivacyGuardHook
+
+RETRYABLE_EXCEPTIONS = (APIConnectionError, APITimeoutError)
+
+
+def _is_retryable_exception(exc: Exception) -> bool:
+    if isinstance(exc, RETRYABLE_EXCEPTIONS):
+        return True
+    if isinstance(exc, APIStatusError) and getattr(exc, "status_code", 0) >= 500:
+        return True
+    return False
+
+
+def _retry_sync(fn, max_retries: int = 3, initial_delay: float = 1.0, backoff_factor: float = 2.0):
+    delay = initial_delay
+    for attempt in range(max_retries + 1):
+        try:
+            return fn()
+        except Exception as e:
+            if attempt < max_retries and _is_retryable_exception(e):
+                time.sleep(delay)
+                delay *= backoff_factor
+            else:
+                raise
+
+
+async def _retry_async(coro_fn, max_retries: int = 3, initial_delay: float = 1.0, backoff_factor: float = 2.0):
+    delay = initial_delay
+    for attempt in range(max_retries + 1):
+        try:
+            return await coro_fn()
+        except Exception as e:
+            if attempt < max_retries and _is_retryable_exception(e):
+                await asyncio.sleep(delay)
+                delay *= backoff_factor
+            else:
+                raise
 
 
 def _find_and_load_env() -> None:
@@ -35,6 +73,8 @@ class AIClient:
         base_url: str | None = None,
         api_key: str | None = None,
         default_model: str | None = None,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
     ):
         try:
             _find_and_load_env()
@@ -50,6 +90,8 @@ class AIClient:
         )
         self.default_model = default_model or os.environ.get("AI_MODEL", "qwen-local-primary")
         self.privacy_guard = PrivacyGuardHook()
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
 
     def chat(
         self,
@@ -67,11 +109,15 @@ class AIClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": message})
 
-        response = self._client.chat.completions.create(
-            model=model or self.default_model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
+        response = _retry_sync(
+            lambda: self._client.chat.completions.create(
+                model=model or self.default_model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            ),
+            max_retries=self.max_retries,
+            initial_delay=self.retry_delay,
         )
         response_text = response.choices[0].message.content or ""
         self.privacy_guard.check_content(response_text)
@@ -93,12 +139,16 @@ class AIClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": message})
 
-        response = self._client.chat.completions.create(
-            model=model or self.default_model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            stream=True,
+        response = _retry_sync(
+            lambda: self._client.chat.completions.create(
+                model=model or self.default_model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                stream=True,
+            ),
+            max_retries=self.max_retries,
+            initial_delay=self.retry_delay,
         )
         for chunk in response:
             content = chunk.choices[0].delta.content
@@ -128,11 +178,15 @@ class AIClient:
         for msg in messages:
             self.privacy_guard.check_content(msg.get("content", ""))
 
-        response = self._client.chat.completions.create(
-            model=model or self.default_model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
+        response = _retry_sync(
+            lambda: self._client.chat.completions.create(
+                model=model or self.default_model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            ),
+            max_retries=self.max_retries,
+            initial_delay=self.retry_delay,
         )
         response_text = response.choices[0].message.content or ""
         self.privacy_guard.check_content(response_text)
@@ -140,7 +194,11 @@ class AIClient:
 
     def models(self) -> list[str]:
         """List all available models on the gateway."""
-        result = self._client.models.list()
+        result = _retry_sync(
+            lambda: self._client.models.list(),
+            max_retries=self.max_retries,
+            initial_delay=self.retry_delay,
+        )
         return sorted({m.id for m in result.data})
 
     def transcribe(
@@ -156,11 +214,15 @@ class AIClient:
             raise FileNotFoundError(f"Audio file '{audio_path}' not found.")
 
         with open(path, "rb") as f:
-            response = self._client.audio.transcriptions.create(
-                model=model,
-                file=f,
-                language=language,
-                response_format="text",
+            response = _retry_sync(
+                lambda: self._client.audio.transcriptions.create(
+                    model=model,
+                    file=f,
+                    language=language,
+                    response_format="text",
+                ),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
             )
             return str(response).strip()
 
@@ -218,6 +280,8 @@ class AsyncAIClient:
         base_url: str | None = None,
         api_key: str | None = None,
         default_model: str | None = None,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
     ):
         try:
             _find_and_load_env()
@@ -233,6 +297,8 @@ class AsyncAIClient:
         )
         self.default_model = default_model or os.environ.get("AI_MODEL", "qwen-local-primary")
         self.privacy_guard = PrivacyGuardHook()
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
 
     async def chat(
         self,
@@ -250,11 +316,15 @@ class AsyncAIClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": message})
 
-        response = await self._client.chat.completions.create(
-            model=model or self.default_model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
+        response = await _retry_async(
+            lambda: self._client.chat.completions.create(
+                model=model or self.default_model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            ),
+            max_retries=self.max_retries,
+            initial_delay=self.retry_delay,
         )
         response_text = response.choices[0].message.content or ""
         self.privacy_guard.check_content(response_text)
@@ -276,12 +346,16 @@ class AsyncAIClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": message})
 
-        response = await self._client.chat.completions.create(
-            model=model or self.default_model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            stream=True,
+        response = await _retry_async(
+            lambda: self._client.chat.completions.create(
+                model=model or self.default_model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                stream=True,
+            ),
+            max_retries=self.max_retries,
+            initial_delay=self.retry_delay,
         )
         async for chunk in response:
             content = chunk.choices[0].delta.content
@@ -301,11 +375,15 @@ class AsyncAIClient:
         for msg in messages:
             self.privacy_guard.check_content(msg.get("content", ""))
 
-        response = await self._client.chat.completions.create(
-            model=model or self.default_model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
+        response = await _retry_async(
+            lambda: self._client.chat.completions.create(
+                model=model or self.default_model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            ),
+            max_retries=self.max_retries,
+            initial_delay=self.retry_delay,
         )
         response_text = response.choices[0].message.content or ""
         self.privacy_guard.check_content(response_text)
@@ -313,7 +391,11 @@ class AsyncAIClient:
 
     async def models(self) -> list[str]:
         """List all available models on the gateway."""
-        result = await self._client.models.list()
+        result = await _retry_async(
+            lambda: self._client.models.list(),
+            max_retries=self.max_retries,
+            initial_delay=self.retry_delay,
+        )
         return sorted({m.id for m in result.data})
 
     def __repr__(self) -> str:
