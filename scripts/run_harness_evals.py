@@ -4,9 +4,77 @@ Hỗ trợ chạy kiểm tra toàn bộ codebase hoặc chỉ chạy trên các 
 """
 
 import argparse
+import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+
+def check_pre_eval_health(project_root: Path) -> None:
+    """Kiểm tra sức khỏe môi trường (dung lượng đĩa trống và venv) trước khi chạy các CI Gates."""
+    try:
+        total, used, free = shutil.disk_usage(project_root)
+        free_gb = free / (1024**3)
+        if free_gb < 2.0:
+            print(
+                f"⚠️ [HEALTH WARNING] Dung lượng đĩa trống thấp ({free_gb:.2f} GB < 2.0 GB)! "
+                "Khuyến nghị chạy 'python scripts/session_cleanup.py --execute' trước."
+            )
+        else:
+            print(f"ℹ️ [HEALTH] Môi trường khả dụng: {free_gb:.2f} GB đĩa trống.")
+    except Exception as e:
+        print(f"⚠️ [HEALTH] Không thể kiểm tra dung lượng đĩa: {e}")
+
+
+def ensure_single_instance() -> None:
+    """Tự động kiểm tra và triệt hạ các tiến trình run_harness_evals.py bị trùng lặp/treo từ trước."""
+    current_pid = os.getpid()
+    try:
+        import psutil
+
+        for proc in psutil.process_iter(["pid", "name", "cmdline"]):
+            try:
+                pid = proc.info["pid"]
+                if pid == current_pid:
+                    continue
+                cmdline = " ".join(proc.info["cmdline"] or [])
+                if "run_harness_evals.py" in cmdline:
+                    print(
+                        f"🧹 [AUTO-LOCK] Phát hiện tiến trình run_harness_evals.py cũ (PID {pid}). Đang thu hồi..."
+                    )
+                    proc.terminate()
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
+    except ImportError:
+        if sys.platform == "win32":
+            try:
+                res = subprocess.run(
+                    [
+                        "wmic",
+                        "process",
+                        "where",
+                        "name='python.exe'",
+                        "get",
+                        "processid,commandline",
+                    ],
+                    capture_output=True,
+                    text=True,
+                )
+                for line in res.stdout.splitlines():
+                    if "run_harness_evals.py" in line:
+                        parts = line.strip().rsplit(maxsplit=1)
+                        if len(parts) == 2 and parts[1].isdigit():
+                            pid = int(parts[1])
+                            if pid != current_pid:
+                                print(
+                                    f"🧹 [AUTO-LOCK] Thu hồi tiến trình trùng lặp PID {pid} qua taskkill..."
+                                )
+                                subprocess.run(
+                                    ["taskkill", "/F", "/PID", str(pid)], capture_output=True
+                                )
+            except Exception:
+                pass
 
 
 def get_git_modified_files(project_root: Path) -> set[Path]:
@@ -64,12 +132,15 @@ def main() -> None:
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8")
 
+    ensure_single_instance()
+
     parser = argparse.ArgumentParser(description="CCBA CI Eval Gates Runner.")
     parser.add_argument("--all", action="store_true", help="Chạy kiểm tra trên toàn bộ codebase.")
     parser.add_argument("--no-test", action="store_true", help="Bỏ qua phần chạy unit tests.")
     args = parser.parse_args()
 
     project_root = Path(__file__).parent.parent.resolve()
+    check_pre_eval_health(project_root)
     modified_files = get_git_modified_files(project_root) if not args.all else set()
 
     # Phân loại file bị thay đổi
