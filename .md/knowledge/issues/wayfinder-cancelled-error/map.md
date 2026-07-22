@@ -1,7 +1,7 @@
 # Wayfinder Navigation Map: Khắc phục lỗi "User cancelled agent execution" liên tục
 
 **Mã vấn đề**: `issue-wayfinder-cancelled-execution`
-**Trạng thái bản đồ**: 🗺️ Đang lập (Charting)
+**Trạng thái bản đồ**: 🧭 Đang tiến hành (Navigating) — Ticket 1+2 hoàn thành, Ticket 3 chưa triển khai
 
 ---
 
@@ -37,13 +37,15 @@ Hệ thống CCBA Agent Platform chạy ổn định toàn bộ các tác vụ n
 
 ### [Ticket 1: Thiết lập Script Runner Cô lập (Detached Process Runner)](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/wayfinder-cancelled-error/map.md#ticket-1)
 - **Loại**: `Task [AFK]`
-- **Trạng thái**: 🟢 Unblocked
+- **Trạng thái**: ✅ **Hoàn thành** (commit `8ae987b`)
 - **Mục tiêu**: Viết script `scripts/safe_runner.py` (hoặc PowerShell wrapper) giúp thực thi các lệnh pytest/evals ngầm, ghi log độc lập vào `.md/scratch/` và nhả quyền kiểm soát lập tức để Agent không bị dính vệt cancel khi Daemon restart.
+- **Kết quả**: `safe_runner.py` (151 LOC) hỗ trợ 3 mode: `--command`, `--status`, `--help`. Đã test thành công cả chạy lệnh đơn và pytest suite.
 
 ### [Ticket 2: Phân rã & Chạy thử nghiệm Test Suite theo lát cắt dọc](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/wayfinder-cancelled-error/map.md#ticket-2)
 - **Loại**: `Task [AFK]`
-- **Trạng thái**: 🟢 Unblocked
+- **Trạng thái**: ✅ **Hoàn thành** (2026-07-22)
 - **Mục tiêu**: Thực thi chạy kiểm thử từng file test đơn lẻ trong `packages/ccba-legal-intel/tests/` qua `safe_runner.py`, xác nhận 100% test cases pass mà không sinh ra lỗi "User cancelled".
+- **Kết quả**: 23/23 test cases PASSED (4.31s) qua `safe_runner.py --command`. Không xảy ra lỗi "User cancelled".
 
 ### [Ticket 3: Bổ sung Circuit Breaker & Exponential Retry vào `ccba-ai`](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/wayfinder-cancelled-error/map.md#ticket-3)
 - **Loại**: `Task [AFK]`
