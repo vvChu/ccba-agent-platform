@@ -527,11 +527,34 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 
 ---
 
+#### 52. Post-Session Workspace Hygiene via Subagent Review
+- **Ngữ cảnh**: Phiên làm việc trước kết thúc với workspace bẩn: file mới chưa commit (`safe_runner.py`), 11 file modified chưa staged, `coverage.xml` (generated artifact) lẫn trong tracked files, wayfinder map chưa cập nhật trạng thái.
+- **Giải pháp**:
+  * Dùng research subagent chạy `git diff` từng file song song, phân loại từng thay đổi thành: intentional/correct vs leftover/debug artifact.
+  * Nhóm thành logical commit units theo scope (core feature → tests → docs → tooling), mỗi commit có message chuẩn `type(scope): description`.
+  * Loại bỏ generated artifacts (`coverage.xml`) bằng `git checkout --` + thêm vào `.gitignore` + `git rm --cached`.
+- **Nguồn**: Session `4f56855a-16fb-48db-9eee-75fab8d7f0ae`, 2026-07-22
+
+#### 53. Safe Runner Detached Process Pattern for Daemon-Resilient Execution
+- **Ngữ cảnh**: Antigravity Daemon restart giữa chừng → tất cả `run_command` đang chạy bị cancel ("User cancelled agent execution"), đặc biệt nghiêm trọng với pytest suite dài.
+- **Giải pháp**:
+  * Script `scripts/safe_runner.py` (151 LOC) nhận `--command` và chạy subprocess cô lập (`subprocess.Popen` với `CREATE_NEW_PROCESS_GROUP` trên Windows).
+  * Ghi stdout/stderr vào `.md/scratch/exec_log.txt`, trạng thái vào `.md/scratch/exec_status.json`.
+  * Mode `--status` kiểm tra PID còn sống (OpenProcess trên Windows, `os.kill(pid, 0)` trên Unix) và hiển thị tail 20 dòng log.
+  * Kết quả: 23/23 tests PASSED qua safe_runner mà không bị cancel.
+- **Nguồn**: Session `4f56855a-16fb-48db-9eee-75fab8d7f0ae`, 2026-07-22
+
+---
+
 ### Anti-patterns (Cách tránh)
 
 #### 41. Physical Nested Skill Directory Refactoring
 - **Vấn đề**: Di chuyển các tệp sub-skill vào các thư mục con phân cấp (ví dụ: `.agents/skills/xu-ly-van-phong/docx/SKILL.md`). Điều này gây hỏng toàn bộ đường dẫn tương đối trong `catalog.yaml`, đứt gãy linter `validate_docs.py`, và gây crash các dự án Spoke khi đồng bộ.
 - **Thay thế bằng**: Duy trì thư mục vật lý phẳng 100% tại `.agents/skills/` và sử dụng YAML Frontmatter `role: master_skill / sub_skill` và virtual tagging trong `catalog.yaml` để quản trị phân cấp.
+
+#### 42. Agent Loop-Fix Without Global State Check
+- **Vấn đề**: Agent phiên trước cố sửa lỗi `safe_runner.py` bằng cách lặp edit → run → fail → edit liên tục (5+ vòng lặp) mà không dừng lại kiểm tra toàn cảnh (biến nào undefined, flow nào sai). Kết quả: tốn context window, gây frustration cho người dùng, và để lại workspace bẩn.
+- **Thay thế bằng**: Khi gặp lỗi lần thứ 2 liên tiếp trên cùng file, DỪNG lại, đọc toàn bộ file từ đầu, xác định root cause trước khi sửa tiếp. Không sửa mù dựa trên error message đơn lẻ.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
