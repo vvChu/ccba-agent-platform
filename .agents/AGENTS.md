@@ -57,6 +57,8 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
 
 * **Scoped Test Execution:** Nghiêm cấm Agent kích hoạt các lệnh kiểm thử toàn diện (unscoped `pytest -q`) trên cả repository mà không chỉ định rõ file hoặc thư mục test mục tiêu cụ thể (ví dụ: bắt buộc phải dùng `.venv\Scripts\pytest -q tests/test_file.py`).
 * **Bounded Async Task:** Khi một lệnh chạy dưới dạng tác vụ ngầm (Background Task), Agent không được vội vã đưa ra câu trả lời tạm thời rồi kết thúc lượt (`End Turn`) nhường lượt khi chưa thu thập xong kết quả. Agent phải kiểm tra log hoặc trạng thái tác vụ qua `manage_task status` để trả về báo cáo kết quả thực tế cho người dùng.
+* **TDD Retry Cap:** Trong vòng lặp Red→Green→Refactor (TDD) hoặc edit→test (implement), Agent chỉ được lặp lại tối đa **5 vòng** cho cùng một seam hoặc test file. Nếu sau 5 vòng test vẫn fail, Agent phải dừng lại, commit Work-In-Progress (WIP), ghi nhận các blockers chưa giải quyết được, và xin chỉ thị từ người dùng — tuyệt đối không tiếp tục lặp cho đến khi cạn context budget.
+* **Invalid Args Circuit Breaker:** Khi Agent gặp lỗi `model output error: invalid tool call error (invalid_args)` từ **2 lần liên tiếp trở lên**, đây là tín hiệu context budget sắp cạn kiệt. Agent phải **dừng ngay lập tức**, commit WIP nếu có thay đổi chưa lưu, tóm tắt trạng thái công việc hiện tại, và thông báo cho người dùng mở phiên mới để tiếp tục — không được cố gắng chạy thêm bất kỳ tool call nào.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
