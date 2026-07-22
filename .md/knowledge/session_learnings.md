@@ -557,8 +557,39 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Thay thế bằng**: Khi gặp lỗi lần thứ 2 liên tiếp trên cùng file, DỪNG lại, đọc toàn bộ file từ đầu, xác định root cause trước khi sửa tiếp. Không sửa mù dựa trên error message đơn lẻ.
 
 ---
+
+## Session Learnings — System Stability & Auto-Guardrails (2026-07-22)
+- **ID Phiên làm việc**: `9d5aaadb-caba-4a73-a23a-d8ce3d75941a`
+
+### Patterns (Mẫu tốt)
+
+#### 54. Singleton Process Lock for High-Resource Test Runners
+- **Ngữ cảnh**: Khi chạy các lệnh kiểm thử CI Gates (`run_harness_evals.py`) hoặc background tasks, việc gọi trùng lặp nhiều lần khiến nhiều tiến trình Python ngốn 100% CPU/RAM làm IDE Extension Host bị ngắt kết nối (`User cancelled agent execution`) và Agent bị restart.
+- **Giải pháp**: Tích hợp hàm `ensure_single_instance()` sử dụng `psutil` (hoặc `wmic`/`taskkill` fallback trên Windows) ở ngay đầu hàm `main()` của runner script để tự động phát hiện PID trùng lặp và triệt hạ (`terminate`) tiến trình cũ trước khi khởi chạy đợt kiểm thử mới.
+- **Nguồn**: Session `9d5aaadb-caba-4a73-a23a-d8ce3d75941a`, 2026-07-22
+
+#### 55. Pre-Eval Workspace Health & Resource Guardrail
+- **Ngữ cảnh**: Khởi chạy tác vụ kiểm thử hoặc build ngầm khi dung lượng đĩa khả dụng quá thấp hoặc môi trường ảo thiếu phụ thuộc, dẫn đến crash giữa chừng.
+- **Giải pháp**: Tích hợp kiểm tra sức khỏe `check_pre_eval_health()` (dùng `shutil.disk_usage`) trước khi khởi chạy các gates để cảnh báo khi dung lượng đĩa < 2GB và khuyến nghị dọn dẹp không gian workspace qua `session_cleanup.py`.
+- **Nguồn**: Session `9d5aaadb-caba-4a73-a23a-d8ce3d75941a`, 2026-07-22
+
+#### 56. Bounded Async Task & Anti-Duplicate Runner Policy
+- **Ngữ cảnh**: Agent tự động kích hoạt nhiều tác vụ ngầm trùng lặp cho cùng một script test runner trong cùng một phiên làm việc.
+- **Giải pháp**: Bổ sung rào chắn **Anti-Duplicate Background Runner** và **Bounded Async Task** vào Hiến pháp `AGENTS.md`, cưỡng chế Agent luôn chờ kết quả hoặc gỡ bỏ tiến trình cũ trước khi khởi tạo tác vụ ngầm mới.
+- **Nguồn**: Session `9d5aaadb-caba-4a73-a23a-d8ce3d75941a`, 2026-07-22
+
+---
+
+### Anti-patterns (Cách tránh)
+
+#### 43. Unlocked Duplicate Background Test Runners
+- **Vấn đề**: Kích hoạt đồng thời nhiều background tasks chạy `run_harness_evals.py --all` mà không có cơ chế Auto-Lock hoặc cancellation tiến trình trước. Điều này khiến CPU/RAM bị đẩy lên 100%, gây đứt kết nối IPC và restart IDE Extension Host.
+- **Thay thế bằng**: Sử dụng Auto-Lock Singleton `ensure_single_instance()` + Mặc định Scoped Evaluation (chạy theo git diff).
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
 
 
