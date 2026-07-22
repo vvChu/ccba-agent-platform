@@ -1,11 +1,10 @@
 """Tests for Smart Intake Taxonomy and Guided Interview component."""
 
-import pytest
 from ccba_legal.intake import (
     IntakeTaxonomy,
-    parse_intake_question,
-    get_missing_intake_fields,
     generate_guided_interview_prompt,
+    get_missing_intake_fields,
+    parse_intake_question,
 )
 
 
@@ -16,7 +15,7 @@ def test_parse_intake_question_full_coordinates() -> None:
         "thì bị tạm đình chỉ thi công do hết hiệu lực văn bản."
     )
     result = parse_intake_question(question)
-    
+
     assert isinstance(result, IntakeTaxonomy)
     assert result.subject == "Chủ đầu tư"
     assert result.action == "thẩm định thiết kế PCCC"
@@ -29,7 +28,7 @@ def test_parse_intake_question_missing_coordinates() -> None:
     """Test parsing a question missing time and scope coordinates."""
     question = "Nhà thầu bị đình chỉ nghiệm thu do quy định mới."
     result = parse_intake_question(question)
-    
+
     assert result.subject == "Nhà thầu"
     assert result.action == "nghiệm thu"
     assert result.impact == "đình chỉ"
@@ -56,7 +55,7 @@ def test_generate_guided_interview_prompt() -> None:
     """Test generating guided interview prompt for missing intake fields."""
     missing = ["scope", "time_timestamp"]
     prompt = generate_guided_interview_prompt(missing)
-    
+
     assert "Phạm vi" in prompt
     assert "Thời điểm" in prompt
     assert "định danh" in prompt.lower() or "dữ kiện" in prompt.lower()

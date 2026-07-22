@@ -6,15 +6,15 @@ using Lex Superior, Lex Posterior, and Lex Specialis rules, and assigns Risk Sco
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class RiskLabel(str, Enum):
     """Risk classification labels for legal advisory outputs."""
 
-    GREEN = "GREEN"      # Score 80-100 (Safe, full alignment)
-    YELLOW = "YELLOW"    # Score 50-79 (Conditional compliance / Justification dossier required)
-    RED = "RED"          # Score < 50 (High risk / Gray area / Official Consultation Dispatch suggested)
+    GREEN = "GREEN"  # Score 80-100 (Safe, full alignment)
+    YELLOW = "YELLOW"  # Score 50-79 (Conditional compliance / Justification dossier required)
+    RED = "RED"  # Score < 50 (High risk / Gray area / Official Consultation Dispatch suggested)
 
 
 HIERARCHY_RANK = {
@@ -54,7 +54,12 @@ class LexConflictEngine:
         status_b = doc_b.get("status", "effective")
 
         # Check for expired or draft status (RED condition)
-        if status_a == "expired" or status_b == "expired" or status_a == "draft" or status_b == "draft":
+        if (
+            status_a == "expired"
+            or status_b == "expired"
+            or status_a == "draft"
+            or status_b == "draft"
+        ):
             rules_applied.append("Status Check: Expired/Draft document detected")
             return RiskAssessmentScore(
                 score=40,
@@ -74,10 +79,14 @@ class LexConflictEngine:
         # Lex Superior / Hierarchy check: Different hierarchy levels with domain mismatch
         if rank_a != rank_b:
             if domain_a and domain_b and domain_a != domain_b:
-                rules_applied.append("Lex Superior: Hiệu lực văn bản cấp trên ưu tiên áp dụng do khác ngành")
+                rules_applied.append(
+                    "Lex Superior: Hiệu lực văn bản cấp trên ưu tiên áp dụng do khác ngành"
+                )
                 score -= 25
             else:
-                rules_applied.append("Lex Superior: Đối chiếu phân cấp VBQPPL (Luật/Nghị định/Thông tư)")
+                rules_applied.append(
+                    "Lex Superior: Đối chiếu phân cấp VBQPPL (Luật/Nghị định/Thông tư)"
+                )
                 score -= 5
 
         # Lex Specialis / Domain mismatch for same rank
@@ -101,7 +110,9 @@ class LexConflictEngine:
             summary = "Tuân thủ có điều kiện: Xuất hiện sự lệch pha cấp văn bản, cần lập Hồ sơ Giải trình."
         else:
             label = RiskLabel.RED
-            summary = "Rủi ro cao: Phát hiện xung đột trọng yếu hoặc khoảng xám chưa được hướng dẫn."
+            summary = (
+                "Rủi ro cao: Phát hiện xung đột trọng yếu hoặc khoảng xám chưa được hướng dẫn."
+            )
 
         return RiskAssessmentScore(
             score=score,
