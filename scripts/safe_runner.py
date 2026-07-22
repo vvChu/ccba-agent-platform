@@ -53,13 +53,14 @@ def run_detached(command: str) -> None:
     env["PYTHONUNBUFFERED"] = "1"
 
     log_file_handle = open(log_file, "w", encoding="utf-8")
-    log_file_handle.write(f"=== Starting Detached Execution ===\n")
+    log_file_handle.write("=== Starting Detached Execution ===\n")
     log_file_handle.write(f"Command: {command}\n")
     log_file_handle.write(f"Timestamp: {status_data['start_time']}\n")
     log_file_handle.write("=" * 35 + "\n\n")
     log_file_handle.flush()
 
     import shlex
+
     cmd_args = shlex.split(command, posix=False)
 
     process = subprocess.Popen(
@@ -106,13 +107,14 @@ def check_status() -> None:
     if pid:
         if sys.platform.startswith("win"):
             import ctypes
+
             kernel32 = ctypes.windll.kernel32
             # PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
             handle = kernel32.OpenProcess(0x1000, False, pid)
             if handle:
                 exit_code = ctypes.c_ulong()
                 if kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
-                    is_running = (exit_code.value == 259)  # STILL_ACTIVE = 259
+                    is_running = exit_code.value == 259  # STILL_ACTIVE = 259
                 kernel32.CloseHandle(handle)
         else:
             try:
@@ -134,7 +136,9 @@ def check_status() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Detached Process Runner")
     parser.add_argument("--command", type=str, help="Command to run in detached background process")
-    parser.add_argument("--status", action="store_true", help="Check status of background execution")
+    parser.add_argument(
+        "--status", action="store_true", help="Check status of background execution"
+    )
 
     args = parser.parse_args()
 
