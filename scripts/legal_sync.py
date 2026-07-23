@@ -17,22 +17,23 @@ import urllib.parse
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore
+import yaml  # type: ignore[import-untyped]
 
 # Thêm path để import ccba_legal và notebooklm_helper
 
+LegalIntelPipeline: Any = None
+ChromeCDP: Any = None
+trigger_download: Any = None
 try:
-    from ccba_legal import ChromeCDP, LegalIntelPipeline, trigger_download  # type: ignore
+    from ccba_legal import ChromeCDP, LegalIntelPipeline, trigger_download
 except ImportError:
-    LegalIntelPipeline = None
-    ChromeCDP = None
-    trigger_download = None
+    pass
 
 try:
     import google.auth
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
-    from googleapiclient.discovery import build  # type: ignore
+    from googleapiclient.discovery import build  # type: ignore[import-untyped]
     from googleapiclient.errors import HttpError
     from googleapiclient.http import MediaFileUpload
 
