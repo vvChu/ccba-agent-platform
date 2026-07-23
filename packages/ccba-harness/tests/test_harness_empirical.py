@@ -1,8 +1,8 @@
 import ctypes
-from pathlib import Path
 import sqlite3
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -103,4 +103,3 @@ def test_bypass_sqlite_attach_expression(tmp_path: Path) -> None:
         with pytest.raises(PermissionError):
             conn.execute(sql_attach)
         conn.close()
-

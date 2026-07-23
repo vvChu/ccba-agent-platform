@@ -9,13 +9,12 @@ import argparse
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 def ensure_single_instance(script_keyword: str = "run_safe_eval_wrapper.py") -> None:
@@ -39,7 +38,14 @@ def ensure_single_instance(script_keyword: str = "run_safe_eval_wrapper.py") -> 
         if sys.platform == "win32":
             try:
                 res = subprocess.run(
-                    ["wmic", "process", "where", "name='python.exe'", "get", "processid,commandline"],
+                    [
+                        "wmic",
+                        "process",
+                        "where",
+                        "name='python.exe'",
+                        "get",
+                        "processid,commandline",
+                    ],
                     capture_output=True,
                     text=True,
                 )
@@ -50,30 +56,38 @@ def ensure_single_instance(script_keyword: str = "run_safe_eval_wrapper.py") -> 
                             pid = int(parts[1])
                             if pid != current_pid:
                                 print(f"🧹 [AUTO-LOCK] Thu hồi tiến trình trùng lặp PID {pid}...")
-                                subprocess.run(["taskkill", "/F", "/PID", str(pid)], capture_output=True)
+                                subprocess.run(
+                                    ["taskkill", "/F", "/PID", str(pid)], capture_output=True
+                                )
             except Exception:
                 pass
 
 
-def extract_summary_traceback(output: str, max_lines: int = 25) -> List[str]:
+def extract_summary_traceback(output: str, max_lines: int = 25) -> list[str]:
     """Trích xuất 20-25 dòng log lỗi/traceback quan trọng nhất từ output."""
     lines = [line.strip() for line in output.splitlines() if line.strip()]
     if not lines:
         return []
-    
+
     # Tìm các dòng chứa từ khóa lỗi
-    error_indices = [i for i, l in enumerate(lines) if any(k in l.lower() for k in ["error", "exception", "failed", "traceback", "assert"])]
+    error_indices = [
+        i
+        for i, line_str in enumerate(lines)
+        if any(
+            k in line_str.lower() for k in ["error", "exception", "failed", "traceback", "assert"]
+        )
+    ]
     if error_indices:
         last_err_idx = error_indices[-1]
         start = max(0, last_err_idx - max_lines + 5)
         end = min(len(lines), last_err_idx + 10)
         return lines[start:end]
-    
+
     # Fallback: Trả về max_lines dòng cuối cùng
     return lines[-max_lines:]
 
 
-def extract_failed_gate(output: str) -> Optional[str]:
+def extract_failed_gate(output: str) -> str | None:
     """Trích xuất tên cổng kiểm tra bị thất bại nếu có trong output."""
     gate_match = re.search(r"-\s*(Gate\s*[^:\n]+):\s*❌\s*FAILED", output)
     if gate_match:
@@ -81,7 +95,7 @@ def extract_failed_gate(output: str) -> Optional[str]:
     return None
 
 
-def extract_culprit_file(output: str) -> Optional[str]:
+def extract_culprit_file(output: str) -> str | None:
     """Trích xuất đường dẫn file gây ra lỗi chính từ traceback."""
     file_match = re.search(r'File "([^"]+\.py)"', output)
     if file_match:
@@ -92,26 +106,52 @@ def extract_culprit_file(output: str) -> Optional[str]:
     return None
 
 
+import tempfile
+
+
+def kill_process_tree(pid: int) -> None:
+    """Tiêu diệt đệ quy toàn bộ cây tiến trình (process tree) trên Windows/Linux."""
+    try:
+        import psutil
+
+        parent = psutil.Process(pid)
+        for child in parent.children(recursive=True):
+            try:
+                child.kill()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+        parent.kill()
+    except Exception:
+        if sys.platform == "win32":
+            try:
+                subprocess.run(
+                    ["taskkill", "/F", "/T", "/PID", str(pid)],
+                    capture_output=True,
+                )
+            except Exception:
+                pass
+
+
 def run_safe_wrapper(
     cmd: str,
     timeout_seconds: int = 90,
-    output_dir: Optional[Path] = None,
-    cwd: Optional[Path] = None,
-) -> Dict[str, Any]:
+    output_dir: Path | None = None,
+    cwd: Path | None = None,
+) -> dict[str, Any]:
     """Thực thi một lệnh terminal trong môi trường Sandbox cô lập và tạo báo cáo chẩn đoán."""
     if cwd is None:
         cwd = Path.cwd()
     if output_dir is None:
         output_dir = cwd / ".md" / "scratch" / "eval_runs"
-    
+
     output_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_file = output_dir / f"run_{timestamp}.log"
-    
+
     ensure_single_instance("run_safe_eval_wrapper.py")
 
     start_time = time.time()
-    result: Dict[str, Any] = {
+    result: dict[str, Any] = {
         "status": "UNKNOWN",
         "command": cmd,
         "elapsed_seconds": 0.0,
@@ -124,35 +164,31 @@ def run_safe_wrapper(
     }
 
     try:
-        proc = subprocess.Popen(
-            cmd,
-            shell=True,
-            cwd=cwd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="ignore",
-        )
+        with tempfile.TemporaryFile() as tmp_out:
+            proc = subprocess.Popen(
+                cmd,
+                shell=True,
+                cwd=cwd,
+                stdout=tmp_out,
+                stderr=subprocess.STDOUT,
+            )
 
-        stdout_content = []
-        try:
-            out, _ = proc.communicate(timeout=timeout_seconds)
-            stdout_content.append(out or "")
-            result["returncode"] = proc.returncode
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            out, _ = proc.communicate()
-            stdout_content.append(out or "")
-            result["status"] = "TIMEOUT"
-            result["error_type"] = "TIMEOUT"
-            result["returncode"] = -124
-            result["summary_traceback"] = [
-                f"⚠️ Lỗi: Lệnh '{cmd}' đã vượt quá thời gian thực thi tối đa ({timeout_seconds}s) và bị ngắt chủ động."
-            ]
+            try:
+                retcode = proc.wait(timeout=timeout_seconds)
+                result["returncode"] = retcode
+            except subprocess.TimeoutExpired:
+                kill_process_tree(proc.pid)
+                proc.wait()
+                result["status"] = "TIMEOUT"
+                result["error_type"] = "TIMEOUT"
+                result["returncode"] = -124
+                result["summary_traceback"] = [
+                    f"⚠️ Lỗi: Lệnh '{cmd}' đã vượt quá thời gian thực thi tối đa ({timeout_seconds}s) và bị ngắt chủ động."
+                ]
 
-        full_output = "".join(stdout_content)
-        
+            tmp_out.seek(0)
+            full_output = tmp_out.read().decode("utf-8", errors="ignore")
+
         # Ghi log ra file cô lập
         with open(log_file, "w", encoding="utf-8") as f:
             f.write(f"=== Command: {cmd} ===\n")
@@ -184,16 +220,16 @@ def run_safe_wrapper(
         json.dump(result, f, ensure_ascii=False, indent=2)
 
     # In thông tin ngắn gọn ra stdout
-    print(f"\n==================================================")
-    print(f"🛡️ SAFE SANDBOX EXECUTION SUMMARY:")
-    print(f"==================================================")
+    print("\n==================================================")
+    print("🛡️ SAFE SANDBOX EXECUTION SUMMARY:")
+    print("==================================================")
     print(f"- Lệnh thực thi   : {cmd}")
     print(f"- Trạng thái      : {result['status']}")
     print(f"- Thời gian chạy  : {result['elapsed_seconds']}s")
     print(f"- File nhật ký    : {log_file}")
     print(f"- File chẩn đoán  : {diag_file}")
     if result["status"] != "PASS":
-        print(f"\n--- TRÍCH XUẤT VẾT LỖI (DIAGNOSTICS TRACEBACK) ---")
+        print("\n--- TRÍCH XUẤT VẾT LỖI (DIAGNOSTICS TRACEBACK) ---")
         for line in result["summary_traceback"]:
             print(f"  {line}")
         print("--------------------------------------------------")
@@ -210,14 +246,22 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="CCBA Safe Execution Sandbox Wrapper.")
     parser.add_argument("--cmd", required=True, help="Lệnh terminal cần bọc thực thi cô lập.")
-    parser.add_argument("--timeout", type=int, default=90, help="Thời gian tối đa (giây) trước khi ngắt tiến trình.")
+    parser.add_argument(
+        "--timeout", type=int, default=90, help="Thời gian tối đa (giây) trước khi ngắt tiến trình."
+    )
     parser.add_argument("--output-dir", help="Thư mục chứa file log và diagnostics.json.")
     args = parser.parse_args()
 
     project_root = Path(__file__).parent.parent.resolve()
-    out_dir = Path(args.output_dir).resolve() if args.output_dir else project_root / ".md" / "scratch" / "eval_runs"
+    out_dir = (
+        Path(args.output_dir).resolve()
+        if args.output_dir
+        else project_root / ".md" / "scratch" / "eval_runs"
+    )
 
-    res = run_safe_wrapper(cmd=args.cmd, timeout_seconds=args.timeout, output_dir=out_dir, cwd=project_root)
+    res = run_safe_wrapper(
+        cmd=args.cmd, timeout_seconds=args.timeout, output_dir=out_dir, cwd=project_root
+    )
     sys.exit(0 if res["status"] == "PASS" else 1)
 
 

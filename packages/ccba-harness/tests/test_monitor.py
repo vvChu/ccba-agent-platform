@@ -242,4 +242,3 @@ def test_fallback_mode_tiktoken_absent() -> None:
         text_vn_long = "Chào bạn, đây là một ngày tuyệt vời."  # len = 36, split_len = 8
         # max(int(36 * 0.7), int(8 * 2.5)) = max(25, 20) = 25
         assert monitor._get_string_tokens(text_vn_long) == 25
-

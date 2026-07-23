@@ -1,8 +1,8 @@
-from ccba_harness import HarnessGuard  # type: ignore[import-untyped]
+from ccba_harness import HarnessGuard
 
 from .adr import ADRGenerator
 from .cleaners import Cleaners
-from .coordinator import LegalIntelPipeline, LegalProcessResult, LegalProcessor
+from .coordinator import LegalIntelPipeline, LegalProcessor, LegalProcessResult
 from .crawler import (
     ChromeCDP,
     ChromeCDPError,

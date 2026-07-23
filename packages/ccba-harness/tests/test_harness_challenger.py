@@ -1,9 +1,9 @@
 import ctypes
 import os
-from pathlib import Path
 import subprocess
 import sys
 import zlib
+from pathlib import Path
 
 import pytest
 
@@ -426,4 +426,3 @@ def test_bypass_windows_cmd_caret_escape(tmp_path: Path) -> None:
     with HarnessGuard():
         with pytest.raises(PermissionError):
             subprocess.run(cmd_str, shell=True, capture_output=True, text=True, check=True)
-
