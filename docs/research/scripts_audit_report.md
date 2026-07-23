@@ -36,8 +36,8 @@ Các script được tham chiếu trực tiếp bởi tệp cấu hình của Sk
 
 | Script | Đường dẫn | Số tham chiếu | Vai trò & Nơi tham chiếu |
 | :--- | :--- | :---: | :--- |
-| `validate_docs.py` | `scripts/validate_docs.py` | 8 | Kiểm tra định dạng Markdown của tài liệu kỹ thuật ([AGENTS.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/AGENTS.md), `docs-validator/SKILL.md`) |
-| `maskara.py` | `scripts/maskara.py` | 5 | Quét và che giấu API keys/secrets ([init-spoke.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/workflows/ccba-init-spoke.md), `maskara/SKILL.md`) |
+| `validate_docs.py` | `scripts/validate_docs.py` | 8 | Kiểm tra định dạng Markdown của tài liệu kỹ thuật ([AGENTS.md](../../.agents/AGENTS.md), `docs-validator/SKILL.md`) |
+| `maskara.py` | `scripts/maskara.py` | 5 | Quét và che giấu API keys/secrets ([init-spoke.md](../../.agents/workflows/ccba-init-spoke.md), `maskara/SKILL.md`) |
 | `sync_spoke.py` | `scripts/sync_spoke.py` | 2 | Đồng bộ dữ liệu Hub và Spoke (`platform-loader/SKILL.md`, `update-spoke.md`) |
 | `run_harness_evals.py` | `scripts/run_harness_evals.py` | 2 | Chạy kiểm tra tự động (`eval-gate/SKILL.md`, `new-feature.md`) |
 | `validate_skills.py` | `scripts/validate_skills.py` | 2 | Kiểm tra định dạng tệp tin `SKILL.md` (`writing-great-skills/SKILL.md`) |
