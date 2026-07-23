@@ -4,13 +4,17 @@ import subprocess
 import sys
 import threading
 import time
+from pathlib import Path
 
 import pytest
+
+pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
+
 
 from ccba_harness._guard import HarnessGuard
 
 
-def test_subthread_leak(tmp_path):
+def test_subthread_leak(tmp_path: Path) -> None:
     """Verify if a subthread spawned within HarnessGuard context is blocked by the guard."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret")
@@ -18,7 +22,7 @@ def test_subthread_leak(tmp_path):
     leak_succeeded = False
     exception_raised = None
 
-    def worker():
+    def worker() -> None:
         nonlocal leak_succeeded, exception_raised
         try:
             # Attempt to read the sensitive file
@@ -39,7 +43,7 @@ def test_subthread_leak(tmp_path):
     assert isinstance(exception_raised, PermissionError)
 
 
-def test_global_hook_deactivation_race(tmp_path):
+def test_global_hook_deactivation_race(tmp_path: Path) -> None:
     """Verify if Thread B is still blocked by the HarnessGuard while Thread A is running a subprocess."""
     sensitive_file = tmp_path / "secret_api_key.txt"
     sensitive_file.write_text("sensitive-api-key")
@@ -48,7 +52,7 @@ def test_global_hook_deactivation_race(tmp_path):
     bypass_count = 0
     total_attempts = 0
 
-    def thread_a_subprocess_runner():
+    def thread_a_subprocess_runner() -> None:
         # Continually run a dummy subprocess to trigger _wrapped_popen
         while not stop_event.is_set():
             try:
@@ -58,7 +62,7 @@ def test_global_hook_deactivation_race(tmp_path):
                 pass
             time.sleep(0.001)
 
-    def thread_b_file_accessor():
+    def thread_b_file_accessor() -> None:
         nonlocal bypass_count, total_attempts
         with HarnessGuard():
             while not stop_event.is_set():
@@ -90,7 +94,7 @@ def test_global_hook_deactivation_race(tmp_path):
     )
 
 
-def test_bypass_via_os_open(tmp_path):
+def test_bypass_via_os_open(tmp_path: Path) -> None:
     """Verify if low-level os.open is blocked by HarnessGuard file protection."""
     sensitive_file = tmp_path / "secret_password.txt"
     sensitive_file.write_text("password123")
@@ -105,7 +109,7 @@ def test_bypass_via_os_open(tmp_path):
             os.open(sensitive_file, os.O_RDONLY)
 
 
-def test_bypass_via_pre_imported_open(tmp_path):
+def test_bypass_via_pre_imported_open(tmp_path: Path) -> None:
     """Verify if importing open before entering HarnessGuard is blocked."""
     sensitive_file = tmp_path / "secret_private_key.txt"
     sensitive_file.write_text("private-key-data")
@@ -124,7 +128,7 @@ def test_bypass_via_pre_imported_open(tmp_path):
                 f.read()
 
 
-def test_subprocess_execution_bypass(tmp_path):
+def test_subprocess_execution_bypass(tmp_path: Path) -> None:
     """Verify if running a subprocess that attempts to read/use sensitive files is blocked."""
     sensitive_file = tmp_path / "secret_token.txt"
     sensitive_file.write_text("token-value")
@@ -144,7 +148,7 @@ def test_subprocess_execution_bypass(tmp_path):
         assert "Access to sensitive" in str(exc_info.value)
 
 
-def test_deep_nesting_performance():
+def test_deep_nesting_performance() -> None:
     """Verify performance and behaviour with deeply nested guards."""
     start_time = time.time()
     guards = [HarnessGuard() for _ in range(50)]
@@ -168,7 +172,7 @@ def test_deep_nesting_performance():
     assert duration < 1.0  # Should be fast
 
 
-def test_bypass_via_io_fileio(tmp_path):
+def test_bypass_via_io_fileio(tmp_path: Path) -> None:
     """Verify if opening a sensitive file using io.FileIO is blocked."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret")
@@ -179,7 +183,7 @@ def test_bypass_via_io_fileio(tmp_path):
             io.FileIO(sensitive_file)
 
 
-def test_bypass_via_hardlink(tmp_path):
+def test_bypass_via_hardlink(tmp_path: Path) -> None:
     """Verify if creating a hardlink to a sensitive file allows reading it under a benign name."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret")
@@ -191,7 +195,7 @@ def test_bypass_via_hardlink(tmp_path):
                 f.read()
 
 
-def test_bypass_via_symlink(tmp_path):
+def test_bypass_via_symlink(tmp_path: Path) -> None:
     """Verify if creating a symlink to a sensitive file allows reading it under a benign name."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret")
@@ -207,7 +211,7 @@ def test_bypass_via_symlink(tmp_path):
                 f.read()
 
 
-def test_bypass_via_sqlite3(tmp_path):
+def test_bypass_via_sqlite3(tmp_path: Path) -> None:
     """Verify if opening a sensitive database file via sqlite3 is blocked."""
     sensitive_db = tmp_path / "secret_credential.db"
     with HarnessGuard():
@@ -218,7 +222,7 @@ def test_bypass_via_sqlite3(tmp_path):
             conn.close()
 
 
-def test_bypass_via_shell_obfuscation(tmp_path):
+def test_bypass_via_shell_obfuscation(tmp_path: Path) -> None:
     """Verify that command-line obfuscation (quotes/wildcards) is blocked."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret")
@@ -235,7 +239,7 @@ def test_bypass_via_shell_obfuscation(tmp_path):
             )
 
 
-def test_bypass_via_env_variable(tmp_path):
+def test_bypass_via_env_variable(tmp_path: Path) -> None:
     """Verify that passing sensitive paths in subprocess env is blocked."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret")
@@ -254,7 +258,7 @@ def test_bypass_via_env_variable(tmp_path):
             )
 
 
-def test_bypass_via_os_system_blocked(tmp_path):
+def test_bypass_via_os_system_blocked(tmp_path: Path) -> None:
     """Verify os.system with sensitive command arguments is blocked."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret")
@@ -263,7 +267,7 @@ def test_bypass_via_os_system_blocked(tmp_path):
             os.system(f"cat {sensitive_file}")
 
 
-def test_bypass_via_os_spawn_blocked(tmp_path):
+def test_bypass_via_os_spawn_blocked(tmp_path: Path) -> None:
     """Verify os.spawn* functions are blocked when accessing sensitive paths."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret")
@@ -278,7 +282,7 @@ def test_bypass_via_os_spawn_blocked(tmp_path):
                 )
 
 
-def test_bypass_via_os_exec_blocked(tmp_path):
+def test_bypass_via_os_exec_blocked(tmp_path: Path) -> None:
     """Verify os.exec* functions are blocked when accessing sensitive paths."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret")
@@ -292,7 +296,7 @@ def test_bypass_via_os_exec_blocked(tmp_path):
                 )
 
 
-def test_bypass_via_io_open_and_fileio(tmp_path):
+def test_bypass_via_io_open_and_fileio(tmp_path: Path) -> None:
     """Verify that _io.open and _io.FileIO are blocked for sensitive paths."""
     import _io
 
@@ -306,7 +310,7 @@ def test_bypass_via_io_open_and_fileio(tmp_path):
             _io.FileIO(sensitive_file, "r")
 
 
-def test_bypass_via_sqlite3_connection(tmp_path):
+def test_bypass_via_sqlite3_connection(tmp_path: Path) -> None:
     """Verify that sqlite3.Connection directly blocks sensitive paths."""
     sensitive_db = tmp_path / "secret_credential.db"
     with HarnessGuard():
@@ -316,7 +320,7 @@ def test_bypass_via_sqlite3_connection(tmp_path):
             sqlite3.Connection(sensitive_db)
 
 
-def test_bypass_via_base64_obfuscation(tmp_path):
+def test_bypass_via_base64_obfuscation(tmp_path: Path) -> None:
     """Verify that command-line base64 obfuscation is blocked."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret")

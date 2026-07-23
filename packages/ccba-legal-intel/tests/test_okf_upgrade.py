@@ -7,7 +7,7 @@ from ccba_legal.packager import OKFBundlePackager
 from ccba_legal.parser import LegalAnalysisEngine
 
 
-def test_process_tables_large():
+def test_process_tables_large() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         bundle_dir = Path(temp_dir)
         processor = OKFStructureProcessor()
@@ -39,7 +39,7 @@ def test_process_tables_large():
         assert "Row 50" in csv_content
 
 
-def test_standardize_formulas():
+def test_standardize_formulas() -> None:
     mock_ai = MagicMock()
     mock_ai.chat.return_value = """
 $$C_{XD} = V \\times G \\times (1 + G_{dp})$$
@@ -63,7 +63,7 @@ def calculate_c_xd(V, G, G_dp):
     assert "calculate_c_xd" in processed
 
 
-def test_frontmatter_inheritance_and_link_standardization():
+def test_frontmatter_inheritance_and_link_standardization() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         root_dir = Path(temp_dir)
         processor = OKFStructureProcessor()

@@ -45,6 +45,8 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   ├── tests/                         ←   Unit test suites
 │   ├── hook_runner.py                 ←   Unified Hook Runner CLI
 │   ├── maskara.py                     ←   Maskara Privacy Engine CLI
+│   ├── run_safe_eval_wrapper.py       ←   Safe Execution Sandbox (CI Gate wrapper)
+│   ├── run_isolated_tests.py          ←   Cross-package Test Isolation Runner
 │   └── validate_docs.py               ←   Documentation Accuracy Validator
 │
 └── pyproject.toml                     ← Root workspace config (uv)

@@ -1,6 +1,8 @@
 import builtins
 import os
 import subprocess
+from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,7 +11,7 @@ from ccba_harness._guard import HarnessGuard
 from ccba_harness._state import _original_builtins_open
 
 
-def test_pre_action_hook_blocking_sensitive_files():
+def test_pre_action_hook_blocking_sensitive_files() -> None:
     """Verify that sensitive file paths are blocked when not approved."""
     # .env blocking
     with pytest.raises(PermissionError) as exc_info:
@@ -33,7 +35,7 @@ def test_pre_action_hook_blocking_sensitive_files():
         assert "Access to sensitive file blocked" in str(exc_info.value)
 
 
-def test_pre_action_hook_allowing_approved_files(tmp_path):
+def test_pre_action_hook_allowing_approved_files(tmp_path: Path) -> None:
     """Verify that sensitive files are allowed if explicitly approved."""
     secret_file = tmp_path / "my_secret.txt"
     # Write initial data to test file using normal open
@@ -66,7 +68,7 @@ def test_pre_action_hook_allowing_approved_files(tmp_path):
 
 
 @patch("ccba_harness.subprocess.run")
-def test_post_action_hook_success(mock_run, tmp_path):
+def test_post_action_hook_success(mock_run: MagicMock, tmp_path: Path) -> None:
     """Verify post-action quality check hook runs ruff and pytest on success."""
     mock_res = MagicMock()
     mock_res.returncode = 0
@@ -86,7 +88,7 @@ def test_post_action_hook_success(mock_run, tmp_path):
 
 
 @patch("ccba_harness.subprocess.run")
-def test_post_action_hook_ruff_failure(mock_run, tmp_path):
+def test_post_action_hook_ruff_failure(mock_run: MagicMock, tmp_path: Path) -> None:
     """Verify that a ruff check failure raises a RuntimeError."""
     mock_res_fail = MagicMock()
     mock_res_fail.returncode = 1
@@ -106,7 +108,7 @@ def test_post_action_hook_ruff_failure(mock_run, tmp_path):
 
 
 @patch("ccba_harness.subprocess.run")
-def test_post_action_hook_pytest_failure(mock_run, tmp_path):
+def test_post_action_hook_pytest_failure(mock_run: MagicMock, tmp_path: Path) -> None:
     """Verify that a pytest failure raises a RuntimeError."""
     mock_res_ok = MagicMock()
     mock_res_ok.returncode = 0
@@ -131,7 +133,7 @@ def test_post_action_hook_pytest_failure(mock_run, tmp_path):
 
 
 @patch("ccba_harness.subprocess.run")
-def test_post_action_hook_no_py_written(mock_run, tmp_path):
+def test_post_action_hook_no_py_written(mock_run: MagicMock, tmp_path: Path) -> None:
     """Verify that non-python writes or only python reads do not trigger checks."""
     test_txt = tmp_path / "test.txt"
     with HarnessGuard():
@@ -148,7 +150,7 @@ def test_post_action_hook_no_py_written(mock_run, tmp_path):
 
 
 @patch("ccba_harness.subprocess.run")
-def test_decorator_usage(mock_run, tmp_path):
+def test_decorator_usage(mock_run: MagicMock, tmp_path: Path) -> None:
     """Verify that HarnessGuard works when used as a decorator."""
     mock_res = MagicMock()
     mock_res.returncode = 0
@@ -157,7 +159,7 @@ def test_decorator_usage(mock_run, tmp_path):
     test_py = tmp_path / "test_script.py"
 
     @HarnessGuard()
-    def my_func():
+    def my_func() -> None:
         with open(test_py, "w") as f:
             f.write("# decorator code")
 
@@ -165,7 +167,7 @@ def test_decorator_usage(mock_run, tmp_path):
     assert mock_run.call_count == 2
 
 
-def test_original_hooks_restored_in_subprocess():
+def test_original_hooks_restored_in_subprocess() -> None:
     """Verify that the open hooks remain global and only use thread-local in_hook bypass during subprocess creation."""
     with HarnessGuard():
         assert builtins.open != _original_builtins_open
@@ -173,10 +175,10 @@ def test_original_hooks_restored_in_subprocess():
         builtins_open_during_popen = None
         in_hook_during_popen = None
 
-        def mock_popen_check(*args, **kwargs):
+        def mock_popen_check(*args: Any, **kwargs: Any) -> MagicMock:
             nonlocal builtins_open_during_popen, in_hook_during_popen
             builtins_open_during_popen = builtins.open
-            from ccba_harness import _local
+            from ccba_harness import _local  # type: ignore[attr-defined]
 
             in_hook_during_popen = getattr(_local, "in_hook", False)
             # Return a mock process that supports context manager and communicate
@@ -193,14 +195,14 @@ def test_original_hooks_restored_in_subprocess():
         # Check that during subprocess call, builtins.open remained wrapped (global hook intact)
         assert builtins_open_during_popen != _original_builtins_open
         # Check that in_hook was active to bypass the hook locally
-        from ccba_harness import _HOOK_TOKEN
+        from ccba_harness import _HOOK_TOKEN  # type: ignore[attr-defined]
 
         assert in_hook_during_popen is _HOOK_TOKEN
         # Check that after subprocess call, the hook is still wrapped
         assert builtins.open != _original_builtins_open
 
 
-def test_os_rename_and_replace_intercept(tmp_path):
+def test_os_rename_and_replace_intercept(tmp_path: Path) -> None:
     """Verify that os.rename and os.replace to sensitive destination paths are blocked."""
     src_file = tmp_path / "normal.txt"
     src_file.write_text("content")
@@ -218,7 +220,7 @@ def test_os_rename_and_replace_intercept(tmp_path):
 
 
 @patch("ccba_harness.subprocess.run")
-def test_nested_guard_py_tracking(mock_run, tmp_path):
+def test_nested_guard_py_tracking(mock_run: MagicMock, tmp_path: Path) -> None:
     """Verify that writing a .py file tracks it in ALL active nested guards."""
     mock_res = MagicMock()
     mock_res.returncode = 0

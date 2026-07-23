@@ -16,7 +16,7 @@ from ccba_legal.monitor import TokenMonitor
 
 def extract_parent_metadata(content: str) -> dict[str, Any]:
     """Extract required metadata fields from frontmatter in parent content."""
-    parent_fm = {}
+    parent_fm: dict[str, str] = {}
     if content.strip().startswith("---"):
         parts = content.split("---", 2)
         if len(parts) >= 3:
@@ -71,25 +71,25 @@ class OKFStructureProcessor:
             elif muc_pattern.match(line):
                 current_dieu = current_khoan = None
             elif dieu_pattern.match(line):
-                current_dieu = dieu_pattern.match(line).group(2)
+                current_dieu = dieu_pattern.match(line).group(2)  # type: ignore[union-attr]
                 current_khoan = None
                 leading = len(line) - len(line.lstrip())
                 line = line[:leading] + f'<a id="d{current_dieu}"></a>' + line[leading:]
             elif current_dieu and khoan_pattern.match(line):
                 m = khoan_pattern.match(line)
-                current_khoan = m.group(2)
+                current_khoan = m.group(2)  # type: ignore[union-attr]
                 line = (
-                    m.group(1)
+                    m.group(1)  # type: ignore[union-attr]
                     + f'<a id="d{current_dieu}k{current_khoan}"></a>'
-                    + line[len(m.group(1)) :]
+                    + line[len(m.group(1)) :]  # type: ignore[union-attr, operator]
                 )
             elif current_dieu and current_khoan and diem_pattern.match(line):
                 m = diem_pattern.match(line)
-                diem_char = m.group(2).lower()
+                diem_char = m.group(2).lower()  # type: ignore[union-attr]
                 line = (
-                    m.group(1)
+                    m.group(1)  # type: ignore[union-attr]
                     + f'<a id="d{current_dieu}k{current_khoan}d{diem_char}"></a>'
-                    + line[len(m.group(1)) :]
+                    + line[len(m.group(1)) :]  # type: ignore[union-attr, operator]
                 )
 
             output_lines.append(line)
@@ -338,10 +338,10 @@ class OKFStructureProcessor:
         chuong_pattern = re.compile(r"^\s*(Chương|CHƯƠNG)\s+([IVXLCDM\d]+)", re.IGNORECASE)
 
         chapters = []
-        curr_lines = []
+        curr_lines: list[str] = []
         curr_title = ""
         curr_num = 0
-        preamble = []
+        preamble: list[str] = []
         in_preamble = True
 
         for line in lines:
@@ -391,7 +391,7 @@ class OKFStructureProcessor:
 
         monitor = TokenMonitor()
         paragraphs = []
-        curr_para = []
+        curr_para: list[str] = []
         for line in content.splitlines():
             if not line.strip():
                 if curr_para:
@@ -411,7 +411,7 @@ class OKFStructureProcessor:
         target_size = total_words / num_chunks
 
         chunks = []
-        curr_chunk = []
+        curr_chunk: list[str] = []
         curr_words = 0
         idx = 1
 
@@ -440,8 +440,8 @@ class OKFStructureProcessor:
         if curr_chunk:
             c_text = "\n\n".join(curr_chunk)
             if curr_words < 200 and chunks:
-                chunks[-1]["content"] += "\n\n" + c_text
-                chunks[-1]["word_count"] += curr_words
+                chunks[-1]["content"] += "\n\n" + c_text  # type: ignore[operator]
+                chunks[-1]["word_count"] += curr_words  # type: ignore[operator]
                 chunks[-1]["token_count"] = monitor.get_context_token_count([chunks[-1]["content"]])
             else:
                 chunks.append(

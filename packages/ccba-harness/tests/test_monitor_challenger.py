@@ -1,5 +1,8 @@
 import pytest
-from ccba_legal.monitor import TokenMonitor
+
+pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
+
+from ccba_legal.monitor import TokenMonitor  # type: ignore[import-not-found]
 
 # Test inputs for English and Vietnamese
 ENG_TEST_CASES = [
@@ -18,7 +21,7 @@ VIE_TEST_CASES = [
 ]
 
 
-def test_token_estimation_accuracy():
+def test_token_estimation_accuracy() -> None:
     """Verify accuracy of token estimation for English vs Vietnamese under normal and mock-disabled tiktoken."""
     # Under normal environment (tiktoken enabled)
     monitor_normal = TokenMonitor()
@@ -65,7 +68,7 @@ def test_token_estimation_accuracy():
         assert 0.5 <= ratio <= 2.5, f"Fallback ratio {ratio:.2f} for Vietnamese text out of bounds"
 
 
-def test_d_zone_threshold_exact():
+def test_d_zone_threshold_exact() -> None:
     """Verify that the D-Zone threshold triggers exactly at >= 40.0% usage."""
     monitor = TokenMonitor(max_tokens=1000)
 
@@ -75,7 +78,7 @@ def test_d_zone_threshold_exact():
     assert msg == ""
 
     # Boundary: 39.999%
-    in_d, msg = monitor.check_d_zone(399.9)
+    in_d, msg = monitor.check_d_zone(int(399.9))
     assert in_d is False
     assert msg == ""
 
@@ -90,14 +93,14 @@ def test_d_zone_threshold_exact():
     assert "40.10%" in msg
 
     # Float precision test: 39.99999% vs 40.0%
-    in_d, msg = monitor.check_d_zone(399.9999)
+    in_d, msg = monitor.check_d_zone(int(399.9999))
     assert in_d is False
 
-    in_d, msg = monitor.check_d_zone(400.0)
+    in_d, msg = monitor.check_d_zone(int(400.0))
     assert in_d is True
 
 
-def test_stress_empty_and_none():
+def test_stress_empty_and_none() -> None:
     """Stress test with empty and None values."""
     monitor = TokenMonitor()
 
@@ -126,7 +129,7 @@ def test_stress_empty_and_none():
     assert monitor.get_context_token_count(messages_empty) == 7
 
 
-def test_stress_large_inputs():
+def test_stress_large_inputs() -> None:
     """Stress test with extremely large string inputs."""
     monitor = TokenMonitor()
 
@@ -161,7 +164,7 @@ def test_stress_large_inputs():
     assert duration < 1.0
 
 
-def test_stress_unusual_characters():
+def test_stress_unusual_characters() -> None:
     """Stress test with emojis, control characters, and special symbols."""
     monitor = TokenMonitor()
 
@@ -179,7 +182,7 @@ def test_stress_unusual_characters():
     assert tokens_fallback > 0
 
 
-def test_complex_and_non_standard_message_structures():
+def test_complex_and_non_standard_message_structures() -> None:
     """Stress test with deeply nested lists/dicts, non-standard types."""
     monitor = TokenMonitor()
 
@@ -227,7 +230,7 @@ def test_complex_and_non_standard_message_structures():
 
     # 3. Message object returning invalid type from to_dict()
     class BadMessageObject:
-        def to_dict(self):
+        def to_dict(self) -> str:
             return "not-a-dictionary"
 
     with pytest.raises(TypeError):
