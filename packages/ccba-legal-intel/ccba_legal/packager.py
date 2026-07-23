@@ -3,6 +3,7 @@ import shutil
 import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 
 class OKFBundlePackager:
@@ -12,7 +13,7 @@ class OKFBundlePackager:
         self,
         root_dir: Path,
         formula_standardizer: Callable[[str], str] | None = None,
-        amendment_processor: Callable[[str, str, str], list[dict]] | None = None,
+        amendment_processor: Callable[[str, str, str], list[dict[str, Any]]] | None = None,
     ) -> None:
         self.root_dir = root_dir
         self.formula_standardizer = formula_standardizer
@@ -289,7 +290,7 @@ No dead ends or crawler restrictions encountered.
             content = filepath.read_text(encoding="utf-8")
             link_pattern = re.compile(r"(\[([^\]]+)\]\(([^)]+)\))")
 
-            def replace_link(match, filepath=filepath):
+            def replace_link(match: re.Match[str], filepath: Path = filepath) -> str:
                 full_link = match.group(1)
                 text = match.group(2)
                 href = match.group(3)
