@@ -29,7 +29,7 @@ def test_in_hook_flag_tampering_bypass(tmp_path: Path) -> None:
 
     with HarnessGuard():
         # Set the hook flag to True
-        ccba_harness._local.in_hook = True
+        ccba_harness._local.in_hook = True  # type: ignore[attr-defined]
         with pytest.raises(PermissionError):
             fd = os.open(sensitive_file, os.O_RDONLY)
             os.close(fd)
@@ -209,14 +209,14 @@ def test_builtins_open_flag_tampering_bypass_vulnerability(tmp_path: Path) -> No
 
     with HarnessGuard():
         # Set the hook flag to True
-        ccba_harness._local.in_hook = True
+        ccba_harness._local.in_hook = True  # type: ignore[attr-defined]
         try:
             # Now, with the bypass blocked, this must raise PermissionError
             with pytest.raises(PermissionError):
                 with open(sensitive_file) as f:
                     f.read()
         finally:
-            ccba_harness._local.in_hook = None
+            ccba_harness._local.in_hook = None  # type: ignore[attr-defined]
 
 
 def test_compiled_frame_tampering_bypass(tmp_path: Path) -> None:
@@ -233,7 +233,7 @@ def test_compiled_frame_tampering_bypass(tmp_path: Path) -> None:
 
     with HarnessGuard():
         # Set the hook flag to the exact internal _HOOK_TOKEN object
-        ccba_harness._local.in_hook = ccba_harness._HOOK_TOKEN
+        ccba_harness._local.in_hook = ccba_harness._HOOK_TOKEN  # type: ignore[attr-defined]
         try:
             # Compile a payload with filename 'harness.py'
             py_code = f"import os; fd = os.open(r'{sensitive_file}', os.O_RDONLY); data = os.read(fd, 100); os.close(fd); print(data.decode('utf-8'))"
@@ -251,4 +251,4 @@ def test_compiled_frame_tampering_bypass(tmp_path: Path) -> None:
             finally:
                 sys.stdout = old_stdout
         finally:
-            ccba_harness._local.in_hook = None
+            ccba_harness._local.in_hook = None  # type: ignore[attr-defined]

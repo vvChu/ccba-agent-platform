@@ -15,7 +15,7 @@ from __future__ import annotations
 import subprocess
 
 # Re-exports from _engine.py (for backward compatibility)
-from ._engine import (
+from ._engine import (  # type: ignore[attr-defined]
     # shared state
     _HOOK_TOKEN,
     # engine
