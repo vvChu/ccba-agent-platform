@@ -250,7 +250,7 @@ class LegalIntelPipeline:
             packager = OKFBundlePackager(self.output_dir)
             bundle_dir = packager.package_bundle(doc_id, content, meta)
 
-            self.registry_mgr.register_document(doc_id, meta)
+            self.registry_mgr.register_document(doc_id, meta)  # type: ignore[attr-defined]
 
             return LegalProcessResult(
                 doc_id=doc_id,
