@@ -1,9 +1,9 @@
 import sys
-from typing import Any
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
-from ccba_legal.monitor import TokenMonitor
+from ccba_legal.monitor import TokenMonitor  # type: ignore[import-not-found]
 
 
 # Custom message objects for testing
@@ -81,7 +81,7 @@ def test_get_usage_percentage() -> None:
         monitor.get_usage_percentage(True)
 
     with pytest.raises(TypeError):
-        monitor.get_usage_percentage(None)
+        monitor.get_usage_percentage(cast(Any, None))
 
     # Validation value checks
     with pytest.raises(ValueError):
