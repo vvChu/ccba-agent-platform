@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.validate_docs import (
+from scripts.validate_docs import (  # type: ignore[attr-defined]
     extract_code_references,
     extract_env_variables,
     extract_internal_links,
@@ -11,7 +11,7 @@ from scripts.validate_docs import (
 
 
 class TestValidateDocs(unittest.TestCase):
-    def test_extract_code_references(self):
+    def test_extract_code_references(self) -> None:
         content = """
         This is a reference to `my_func()` in the code.
         Also check `MyClass` definition.
@@ -24,7 +24,7 @@ class TestValidateDocs(unittest.TestCase):
         self.assertNotIn("true", ref_names)
         self.assertNotIn("const", ref_names)
 
-    def test_extract_internal_links(self):
+    def test_extract_internal_links(self) -> None:
         content = """
         Check [Installation Guide](./install.md) for help.
         Anchor [Section](#some-header) is ignored.
@@ -36,7 +36,7 @@ class TestValidateDocs(unittest.TestCase):
         self.assertNotIn("#some-header", hrefs)
         self.assertNotIn("https://google.com", hrefs)
 
-    def test_extract_env_variables(self):
+    def test_extract_env_variables(self) -> None:
         content = """
         Setup the `API_KEY` in environment.
         Or use $PORT to configure port.
@@ -49,7 +49,7 @@ class TestValidateDocs(unittest.TestCase):
         self.assertNotIn("NODE_ENV", var_names)
         self.assertNotIn("ARGUMENTS", var_names)
 
-    def test_validate_markdown_file_integration(self):
+    def test_validate_markdown_file_integration(self) -> None:
         # Create a temporary environment to run verification
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
@@ -98,7 +98,7 @@ class TestValidateDocs(unittest.TestCase):
             self.assertIn("SECRET_KEY", env_issues)
             self.assertNotIn("API_KEY", env_issues)
 
-    def test_okf_frontmatter_validation(self):
+    def test_okf_frontmatter_validation(self) -> None:
         # Create a temp directory simulating a bundle structure
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
@@ -147,7 +147,7 @@ class TestValidateDocs(unittest.TestCase):
             issues = validate_markdown_file(good_fm_file, [], set(), tmppath)
             self.assertEqual(len(issues["okf_frontmatter"]), 0)
 
-    def test_okf_cross_links_validation(self):
+    def test_okf_cross_links_validation(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
             bundle_dir = tmppath / ".md" / "legal_docs" / "test_slug"
@@ -185,7 +185,7 @@ Relative link inside bundle: [Label](target.md)
             rel_paths = [x[1] for x in okf_link_issues if "must start with '/'" in x[2]]
             self.assertIn("target.md", rel_paths)
 
-    def test_orphan_files_scanning(self):
+    def test_orphan_files_scanning(self) -> None:
         from scripts.validate_docs import scan_orphan_files
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -212,7 +212,7 @@ Relative link inside bundle: [Label](target.md)
             self.assertIn("doc3", orphan_stems)  # doc3 has no links to it
             self.assertNotIn("doc2", orphan_stems)  # doc2 IS linked by doc1
 
-    def test_cross_validity_conflicts(self):
+    def test_cross_validity_conflicts(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
             bundle_dir = tmppath / ".md" / "legal_docs" / "test_slug"
@@ -263,7 +263,7 @@ Here is a link: [Sec 1](/target.md#sec1)
             issues = validate_markdown_file(md_file2, [], set(), tmppath, registry_map=registry_map)
             self.assertEqual(len(issues["okf_conflicts"]), 0)
 
-    def test_orphan_files_parent_document(self):
+    def test_orphan_files_parent_document(self) -> None:
         from scripts.validate_docs import scan_orphan_files
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -295,7 +295,7 @@ Here is a link: [Sec 1](/target.md#sec1)
             # broken_child.md has parent_document that does not exist, so it IS an orphan
             self.assertIn("broken_child.md", orphan_stems)
 
-    def test_orphan_files_index_full_text_exemption(self):
+    def test_orphan_files_index_full_text_exemption(self) -> None:
         from scripts.validate_docs import scan_orphan_files
 
         with tempfile.TemporaryDirectory() as tmpdir:
