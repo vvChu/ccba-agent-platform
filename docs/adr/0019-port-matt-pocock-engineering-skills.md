@@ -20,7 +20,7 @@ Chúng tôi quyết định thực hiện các thay đổi kiến trúc và cấ
 2.  **Đồng bộ & Thích ứng hóa các skill thượng nguồn:**
     *   **`to-spec`**: Port skill này từ thượng nguồn, nhưng thích ứng hóa đường dẫn lưu trữ offline về vùng cấu trúc ẩn `.md/knowledge/specs/spec-{slug}.md` để tuân thủ hiến pháp CCBA Rule 1.
     *   **`to-tickets`**: Đổi tên thư mục skill cục bộ từ `ccba-to-tickets` thành `to-tickets` để khớp tên gọi thượng nguồn, nhưng giữ nguyên nội dung thích ứng của CCBA (lưu local tickets tại `.md/knowledge/issues/` và tích hợp `/ccba-setup-skills`).
-    *   **`implement`**: Port skill lập trình khép kín này từ thượng nguồn về [implement](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/implement/) và khôi phục workflow `/ccba-implement` trên đĩa.
+    *   **`implement`**: Port skill lập trình khép kín này từ thượng nguồn về [implement](../../.agents/skills/implement/) và khôi phục workflow `/ccba-implement` trên đĩa.
     *   **`setup-matt-pocock-skills` & `ask-matt`**: Port đầy đủ hai skill này về Hub để cung cấp cấu hình chuẩn cho các Spoke không sử dụng cấu trúc thư mục ẩn `.md/`.
 3.  **Cập nhật Danh mục Central Hub:**
     *   Cập nhật `catalog.yaml` để liên kết chính xác các skill và workflow mới/được đổi tên, loại bỏ các đăng ký cũ.

@@ -2,14 +2,14 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from ccba_legal.coordinator import LegalProcessor
 from ccba_legal.formatter import inject_warning_block
 from ccba_legal.parser import LegalAnalysisEngine
 from ccba_legal.registry import LegalRegistryManager
 
 
-def test_extract_amendments():
+def test_extract_amendments() -> None:
     # 1. Test using direct JSON schema input (relation schema parsing)
     engine = LegalAnalysisEngine(ai_client=MagicMock())
     schema_text = """
@@ -57,7 +57,7 @@ def test_extract_amendments():
     assert amendments_llm[0]["target_doc_id"] == "nd_06_2021"
 
 
-def test_inject_warning_block():
+def test_inject_warning_block() -> None:
     markdown_content = """# Test Document
 <a id="d15k1"></a>1. Khoản 1 quy định...
 <a id="d15k2"></a>2. Khoản 2 quy định...
@@ -89,7 +89,7 @@ def test_inject_warning_block():
     assert re_updated == updated
 
 
-def test_update_clause_status_in_registry():
+def test_update_clause_status_in_registry() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         reg_file = Path(temp_dir) / "legal_registry.yaml"
         # Seed registry with a target document
@@ -121,7 +121,7 @@ def test_update_clause_status_in_registry():
         assert clause["source_doc_path"] == "../thong_tu_b/thong_tu_b.md"
 
 
-def test_process_amendments_integration():
+def test_process_amendments_integration() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
         reg_file = temp_path / "legal_registry.yaml"

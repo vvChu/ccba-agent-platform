@@ -3,14 +3,18 @@ import subprocess
 import sys
 import threading
 import time
+from pathlib import Path
 
 import pytest
+
+pytestmark = [pytest.mark.stress, pytest.mark.slow]
+
 
 from ccba_harness._guard import HarnessGuard
 from ccba_harness._state import _original_builtins_open
 
 
-def test_concurrent_guard_bypass_via_subprocess(tmp_path):
+def test_concurrent_guard_bypass_via_subprocess(tmp_path: Path) -> None:
     """Test if a subprocess run in one thread globally disables open hooks for other threads using a loop to catch the race condition."""
     sensitive_file = tmp_path / "secret_credential_file.txt"
     sensitive_file.write_text("super-secret-key")
@@ -18,7 +22,7 @@ def test_concurrent_guard_bypass_via_subprocess(tmp_path):
     bypass_detected = []
     stop_event = threading.Event()
 
-    def thread_subprocess_runner():
+    def thread_subprocess_runner() -> None:
         with HarnessGuard():
             while not stop_event.is_set():
                 # We spawn sub-processes repeatedly to maximize the window where hooks are restored
@@ -26,7 +30,7 @@ def test_concurrent_guard_bypass_via_subprocess(tmp_path):
                 p.wait()
                 time.sleep(0.001)
 
-    def thread_file_accessor():
+    def thread_file_accessor() -> None:
         with HarnessGuard():
             # Try to read the sensitive file repeatedly
             for _ in range(200):
@@ -55,7 +59,7 @@ def test_concurrent_guard_bypass_via_subprocess(tmp_path):
     )
 
 
-def test_security_bypass_via_os_open(tmp_path):
+def test_security_bypass_via_os_open(tmp_path: Path) -> None:
     """Verify that os.open is blocked by HarnessGuard security controls."""
     sensitive_file = tmp_path / "secret_private_key.pem"
     sensitive_file.write_text("private-key-data")
@@ -71,7 +75,7 @@ def test_security_bypass_via_os_open(tmp_path):
             os.open(sensitive_file, os.O_RDONLY)
 
 
-def test_nested_guard_correctness(tmp_path):
+def test_nested_guard_correctness(tmp_path: Path) -> None:
     """Test behavior of nested HarnessGuard instances on the same thread."""
     secret1 = tmp_path / "credential_one.txt"
     secret2 = tmp_path / "password_two.txt"
@@ -102,7 +106,7 @@ def test_nested_guard_correctness(tmp_path):
             open(secret2)
 
 
-def test_deep_recursion_handling(tmp_path):
+def test_deep_recursion_handling(tmp_path: Path) -> None:
     """Verify that deep nested calls or recursion do not crash the guard."""
     # Test nesting up to 100 levels
     guards = []
@@ -122,7 +126,7 @@ def test_deep_recursion_handling(tmp_path):
             g.__exit__(None, None, None)
 
 
-def test_performance_overhead(tmp_path):
+def test_performance_overhead(tmp_path: Path) -> None:
     """Measure file opening performance overhead introduced by HarnessGuard."""
     temp_file = tmp_path / "bench.txt"
     temp_file.write_text("data")
@@ -154,7 +158,7 @@ def test_performance_overhead(tmp_path):
     )
 
 
-def test_path_types(tmp_path):
+def test_path_types(tmp_path: Path) -> None:
     """Test support for various path type arguments in open()."""
     sensitive_file = tmp_path / "api_key.txt"
     sensitive_file.write_text("my-key")
@@ -173,7 +177,7 @@ def test_path_types(tmp_path):
             open(str(sensitive_file))
 
 
-def test_false_positive_path_matching(tmp_path):
+def test_false_positive_path_matching(tmp_path: Path) -> None:
     """Verify that any file under a directory containing a sensitive keyword in its name is blocked."""
     sensitive_dir = tmp_path / "my_secrets_folder"
     sensitive_dir.mkdir()
@@ -187,7 +191,7 @@ def test_false_positive_path_matching(tmp_path):
             open(benign_file)
 
 
-def test_bypasses_blocked_stress(tmp_path):
+def test_bypasses_blocked_stress(tmp_path: Path) -> None:
     """Verify all new bypasses are blocked by HarnessGuard."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret")

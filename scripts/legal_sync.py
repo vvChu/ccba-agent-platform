@@ -17,23 +17,28 @@ import urllib.parse
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore
+import yaml
 
 # Thêm path để import ccba_legal và notebooklm_helper
 
 try:
-    from ccba_legal.crawler import ChromeCDP, trigger_download  # type: ignore
+    from ccba_legal import (
+        ChromeCDP,
+        LegalIntelPipeline,
+        trigger_download,
+    )
 except ImportError:
-    ChromeCDP = None
-    trigger_download = None
+    ChromeCDP = None  # type: ignore[assignment, misc]
+    LegalIntelPipeline = None  # type: ignore[assignment, misc]
+    trigger_download = None  # type: ignore[assignment]
 
 try:
     import google.auth
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
-    from googleapiclient.discovery import build  # type: ignore
-    from googleapiclient.errors import HttpError  # type: ignore
-    from googleapiclient.http import MediaFileUpload  # type: ignore
+    from googleapiclient.discovery import build
+    from googleapiclient.errors import HttpError
+    from googleapiclient.http import MediaFileUpload
 
     GOOGLE_API_AVAILABLE = True
 except ImportError:
@@ -255,7 +260,7 @@ def get_drive_service() -> Any:
                 pass
     if token_path.exists():
         try:
-            credentials = Credentials.from_authorized_user_file(  # type: ignore
+            credentials = Credentials.from_authorized_user_file(
                 str(token_path), scopes=["https://www.googleapis.com/auth/drive"]
             )
             if credentials.expired and credentials.refresh_token:
@@ -357,7 +362,7 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
                 f"[Drive Update] Tệp '{target_name}' đã thay đổi nội dung. Thực hiện ghi đè lên file_id: {existing_id}"
             )
             media = MediaFileUpload(str(file_path), mimetype=local_mime, resumable=True)
-            file_metadata = {}
+            file_metadata: dict[str, Any] = {}
             if google_mime:
                 file_metadata["mimeType"] = google_mime
             updated_file = (
@@ -376,11 +381,13 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
 
         # Chưa có tệp ➔ upload mới
         print(f"[Drive Upload] Đang upload tệp '{target_name}' lên thư mục Drive: {folder_id}")
-        file_metadata = {"name": target_name, "parents": [folder_id]}
+        file_metadata_new: dict[str, Any] = {"name": target_name, "parents": [folder_id]}
         if google_mime:
-            file_metadata["mimeType"] = google_mime
+            file_metadata_new["mimeType"] = google_mime
         media = MediaFileUpload(str(file_path), mimetype=local_mime, resumable=True)
-        file = service.files().create(body=file_metadata, media_body=media, fields="id").execute()
+        file = (
+            service.files().create(body=file_metadata_new, media_body=media, fields="id").execute()
+        )
         file_id = file.get("id")
         try:
             service.permissions().create(

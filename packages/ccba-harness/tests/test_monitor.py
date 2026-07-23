@@ -1,18 +1,19 @@
 import sys
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
-from ccba_legal.monitor import TokenMonitor
+from ccba_legal.monitor import TokenMonitor  # type: ignore[import-not-found]
 
 
 # Custom message objects for testing
 class CustomToDictMessage:
-    def __init__(self, role, content, name=None):
+    def __init__(self, role: str, content: str, name: str | None = None) -> None:
         self.role = role
         self.content = content
         self.name = name
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, str]:
         d = {"role": self.role, "content": self.content}
         if self.name:
             d["name"] = self.name
@@ -20,19 +21,19 @@ class CustomToDictMessage:
 
 
 class CustomDictMessage:
-    def __init__(self, role, content, tool_calls=None):
+    def __init__(self, role: str, content: str, tool_calls: Any = None) -> None:
         self.role = role
         self.content = content
         self.tool_calls = tool_calls
 
-    def dict(self):
-        d = {"role": self.role, "content": self.content}
+    def dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {"role": self.role, "content": self.content}
         if self.tool_calls:
             d["tool_calls"] = self.tool_calls
         return d
 
 
-def test_initialization():
+def test_initialization() -> None:
     # Valid initialization
     monitor = TokenMonitor()
     assert monitor.max_tokens == 128000
@@ -60,7 +61,7 @@ def test_initialization():
         TokenMonitor(max_tokens=-100)
 
 
-def test_get_usage_percentage():
+def test_get_usage_percentage() -> None:
     monitor = TokenMonitor(max_tokens=1000)
 
     # Normal calculations
@@ -80,14 +81,14 @@ def test_get_usage_percentage():
         monitor.get_usage_percentage(True)
 
     with pytest.raises(TypeError):
-        monitor.get_usage_percentage(None)
+        monitor.get_usage_percentage(cast(Any, None))
 
     # Validation value checks
     with pytest.raises(ValueError):
         monitor.get_usage_percentage(-1)
 
 
-def test_check_d_zone():
+def test_check_d_zone() -> None:
     monitor = TokenMonitor(max_tokens=1000)
 
     # Below D-Zone (less than 40%)
@@ -108,13 +109,13 @@ def test_check_d_zone():
     assert "85.00%" in msg
 
 
-def test_context_token_count_empty():
+def test_context_token_count_empty() -> None:
     monitor = TokenMonitor()
     assert monitor.get_context_token_count(None) == 0
     assert monitor.get_context_token_count([]) == 0
 
 
-def test_context_token_count_normal_and_objects():
+def test_context_token_count_normal_and_objects() -> None:
     monitor = TokenMonitor()
 
     # Mix of dict, string, custom to_dict(), custom dict()
@@ -135,7 +136,7 @@ def test_context_token_count_normal_and_objects():
         monitor.get_context_token_count([12345])
 
 
-def test_context_token_count_name():
+def test_context_token_count_name() -> None:
     monitor = TokenMonitor()
 
     messages_no_name = [{"role": "user", "content": "hello"}]
@@ -149,7 +150,7 @@ def test_context_token_count_name():
     assert tokens_with_name == tokens_no_name + 1 + name_tokens
 
 
-def test_context_token_count_multimodal():
+def test_context_token_count_multimodal() -> None:
     monitor = TokenMonitor()
 
     # Content with text and image_url dicts
@@ -179,7 +180,7 @@ def test_context_token_count_multimodal():
     assert tokens_multimodal == expected_base
 
 
-def test_context_token_count_tool_and_function_calls():
+def test_context_token_count_tool_and_function_calls() -> None:
     monitor = TokenMonitor()
 
     # Message with function_call
@@ -213,7 +214,7 @@ def test_context_token_count_tool_and_function_calls():
     assert tokens_tool > 0
 
 
-def test_fallback_mode_tiktoken_absent():
+def test_fallback_mode_tiktoken_absent() -> None:
     monitor = TokenMonitor(max_tokens=1000)
 
     # Simulate tiktoken absent by patching sys.modules

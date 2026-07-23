@@ -112,18 +112,74 @@ def get_git_modified_files(project_root: Path) -> set[Path]:
     return modified
 
 
-def run_command(cmd: list[str], cwd: Path, name: str) -> tuple[bool, str]:
-    """Chạy một lệnh hệ thống và trả về trạng thái cùng stdout/stderr."""
-    print(f"🚀 Chạy {name}...")
+import tempfile
+
+
+def kill_process_tree(pid: int) -> None:
+    """Tiêu diệt đệ quy toàn bộ cây tiến trình (process tree) trên Windows/Linux."""
     try:
-        res = subprocess.run(
-            cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="ignore"
-        )
-        success = res.returncode == 0
-        output = res.stdout if success else res.stdout + "\n" + res.stderr
-        return success, output.strip()
-    except Exception as e:
-        return False, f"Lỗi thực thi lệnh: {e}"
+        import psutil
+
+        parent = psutil.Process(pid)
+        for child in parent.children(recursive=True):
+            try:
+                child.kill()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+        parent.kill()
+    except Exception:
+        if sys.platform == "win32":
+            try:
+                subprocess.run(
+                    ["taskkill", "/F", "/T", "/PID", str(pid)],
+                    capture_output=True,
+                )
+            except Exception:
+                pass
+
+
+def run_command(
+    cmd: list[str], cwd: Path, name: str, timeout_seconds: int = 60
+) -> tuple[bool, str]:
+    """Chạy một lệnh hệ thống và trả về trạng thái cùng stdout/stderr với rào chắn timeout an toàn."""
+    print(f"🚀 Chạy {name}...")
+    with tempfile.TemporaryFile() as tmp_out:
+        try:
+            proc = subprocess.Popen(
+                cmd,
+                cwd=cwd,
+                stdout=tmp_out,
+                stderr=subprocess.STDOUT,
+            )
+            try:
+                retcode = proc.wait(timeout=timeout_seconds)
+            except subprocess.TimeoutExpired:
+                kill_process_tree(proc.pid)
+                proc.wait()
+                tmp_out.seek(0)
+                output = tmp_out.read().decode("utf-8", errors="ignore")
+                return (
+                    False,
+                    f"⚠️ Lỗi: Tiến trình '{name}' vượt quá thời gian cho phép ({timeout_seconds}s) và đã bị hủy.\nOutput trước khi ngắt:\n{output.strip()}",
+                )
+
+            tmp_out.seek(0)
+            output = tmp_out.read().decode("utf-8", errors="ignore")
+            success = retcode == 0
+            return success, output.strip()
+        except Exception as e:
+            return False, f"Lỗi thực thi lệnh '{name}': {e}"
+
+
+def get_venv_python(project_root: Path) -> str:
+    """Trả về đường dẫn tới python trong .venv nếu có, fallback sys.executable."""
+    venv_win = project_root / ".venv" / "Scripts" / "python.exe"
+    if venv_win.exists():
+        return str(venv_win)
+    venv_nix = project_root / ".venv" / "bin" / "python"
+    if venv_nix.exists():
+        return str(venv_nix)
+    return sys.executable
 
 
 def main() -> None:
@@ -137,10 +193,17 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="CCBA CI Eval Gates Runner.")
     parser.add_argument("--all", action="store_true", help="Chạy kiểm tra trên toàn bộ codebase.")
     parser.add_argument("--no-test", action="store_true", help="Bỏ qua phần chạy unit tests.")
+    parser.add_argument(
+        "--stress",
+        action="store_true",
+        help="Kích hoạt chạy cả các bài test tải nặng (stress/adversarial).",
+    )
     args = parser.parse_args()
 
     project_root = Path(__file__).parent.parent.resolve()
+    py_exe = get_venv_python(project_root)
     check_pre_eval_health(project_root)
+
     modified_files = get_git_modified_files(project_root) if not args.all else set()
 
     # Phân loại file bị thay đổi
@@ -174,14 +237,14 @@ def main() -> None:
     if ruff_paths:
         # Check Ruff Lint
         success_lint, out_lint = run_command(
-            [sys.executable, "-m", "ruff", "check"] + ruff_paths, project_root, "Ruff Linter"
+            [py_exe, "-m", "ruff", "check"] + ruff_paths, project_root, "Ruff Linter"
         )
         gates_summary.append(("Gate 1a: Ruff Lint", success_lint, out_lint))
         all_success = all_success and success_lint
 
         # Check Ruff Format
         success_fmt, out_fmt = run_command(
-            [sys.executable, "-m", "ruff", "format", "--check"] + ruff_paths,
+            [py_exe, "-m", "ruff", "format", "--check"] + ruff_paths,
             project_root,
             "Ruff Formatter Check",
         )
@@ -194,20 +257,25 @@ def main() -> None:
     if args.all:
         # Chỉ chạy mypy trên các package và file quan trọng đã được gỡ lỗi type check hoàn chỉnh
         mypy_paths = [
-            "packages/mdconverter/src",
+            "packages/mdconverter/src/mdconverter",
             "scripts/run_harness_evals.py",
             ".agents/skills/youtube-learn/scripts/visual_extractor.py",
         ]
+
     else:
-        mypy_paths = [str(f.relative_to(project_root)) for f in py_modified]
+        mypy_paths = [
+            str(f.relative_to(project_root))
+            for f in py_modified
+            if "tests" not in f.relative_to(project_root).parts
+        ]
     if mypy_paths:
         # Mypy check
         mypy_cmd = [
-            sys.executable,
+            py_exe,
             "-m",
             "mypy",
             "--exclude",
-            "/tests/",
+            r"[\\/]tests[\\/]",
             "--ignore-missing-imports",
             "--follow-imports=silent",
         ] + mypy_paths
@@ -251,7 +319,10 @@ def main() -> None:
                 test_args.append("scripts/tests")
 
         # Chạy pytest
-        pytest_cmd = [sys.executable, "-m", "pytest"] + (test_args if test_args else [])
+        pytest_cmd = [py_exe, "-m", "pytest"] + (test_args if test_args else [])
+        if not args.stress:
+            pytest_cmd += ["-m", "not stress and not slow"]
+
         import importlib.util
 
         if importlib.util.find_spec("pytest_cov") is not None:
@@ -261,7 +332,9 @@ def main() -> None:
                 "--cov-report=xml",
             ]
 
-        success_test, out_test = run_command(pytest_cmd, project_root, "Pytest Suite")
+        success_test, out_test = run_command(
+            pytest_cmd, project_root, "Pytest Suite", timeout_seconds=90
+        )
         gates_summary.append(("Gate 3: Pytest Unit Tests", success_test, out_test))
         all_success = all_success and success_test
 
@@ -274,8 +347,9 @@ def main() -> None:
         validate_script = project_root / "scripts" / "validate_docs.py"
         if validate_script.exists():
             success_docs, out_docs = run_command(
-                [sys.executable, str(validate_script)], project_root, "Validate Docs Check"
+                [py_exe, str(validate_script)], project_root, "Validate Docs Check"
             )
+
             gates_summary.append(("Gate 4: Documentation Integrity", success_docs, out_docs))
             all_success = all_success and success_docs
 

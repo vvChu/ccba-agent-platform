@@ -1,13 +1,17 @@
 import sqlite3
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
+
+pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
+
 
 from ccba_harness._guard import HarnessGuard
 
 
-def test_json_unicode_escape_bypass(tmp_path):
+def test_json_unicode_escape_bypass(tmp_path: Path) -> None:
     """Bypass using JSON unicode escape sequences.
 
     The string containing the sensitive filename is escaped using unicode escapes (e.g. \\u0073 for s).
@@ -30,7 +34,7 @@ def test_json_unicode_escape_bypass(tmp_path):
             )
 
 
-def test_sqlite_custom_function_bypass(tmp_path):
+def test_sqlite_custom_function_bypass(tmp_path: Path) -> None:
     """Bypass using sqlite3 custom SQL function.
 
     We connect to an in-memory database and register a custom function that returns
@@ -44,7 +48,7 @@ def test_sqlite_custom_function_bypass(tmp_path):
     conn.commit()
     conn.close()
 
-    def get_sensitive_path():
+    def get_sensitive_path() -> str:
         return str(sensitive_db)
 
     with HarnessGuard():
@@ -55,7 +59,7 @@ def test_sqlite_custom_function_bypass(tmp_path):
         conn.close()
 
 
-def test_powershell_concatenation_bypass(tmp_path):
+def test_powershell_concatenation_bypass(tmp_path: Path) -> None:
     """Bypass using PowerShell string concatenation in subprocess.
 
     Powershell is used to run a command where the sensitive path is constructed
@@ -82,7 +86,7 @@ def test_powershell_concatenation_bypass(tmp_path):
             subprocess.run(cmd, capture_output=True, text=True, check=True)
 
 
-def test_getattr_replace_fully_obfuscated_bypass(tmp_path):
+def test_getattr_replace_fully_obfuscated_bypass(tmp_path: Path) -> None:
     """Bypass using getattr with fully obfuscated strings.
 
     We obfuscate the path by replacing characters so that neither "secret" nor "credential"

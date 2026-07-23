@@ -1,13 +1,17 @@
 import sqlite3
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
+
+pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
+
 
 from ccba_harness._guard import HarnessGuard
 
 
-def test_iterator_bypass(tmp_path):
+def test_iterator_bypass(tmp_path: Path) -> None:
     """Bypass 1: Passing iterator/generator to subprocess.Popen bypasses the checks.
 
     Since the guard converts non-list/tuple/str arguments to str(cmd_args), it gets the
@@ -21,10 +25,10 @@ def test_iterator_bypass(tmp_path):
 
     with HarnessGuard():
         with pytest.raises(PermissionError):
-            subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)  # type: ignore[call-overload]
 
 
-def test_sqlite_char_attach_bypass(tmp_path):
+def test_sqlite_char_attach_bypass(tmp_path: Path) -> None:
     """Bypass 2: SQLite ATTACH DATABASE using char() function.
 
     HarnessGuard's SQL check only scans single/double-quoted literals and unquoted words.
@@ -48,7 +52,7 @@ def test_sqlite_char_attach_bypass(tmp_path):
         conn.close()
 
 
-def test_sqlite_hex_cast_attach_bypass(tmp_path):
+def test_sqlite_hex_cast_attach_bypass(tmp_path: Path) -> None:
     """Bypass 3: SQLite ATTACH DATABASE using CAST and hex literal.
 
     Using CAST(x'hex_digits' AS TEXT) constructs the filename string dynamically,
@@ -71,7 +75,7 @@ def test_sqlite_hex_cast_attach_bypass(tmp_path):
         conn.close()
 
 
-def test_ast_subscript_bypass(tmp_path):
+def test_ast_subscript_bypass(tmp_path: Path) -> None:
     """Bypass 4: AST Subscript Bypass.
 
     Instead of using a literal list of characters which the AST parser collects and joins,
@@ -101,7 +105,7 @@ def test_ast_subscript_bypass(tmp_path):
             )
 
 
-def test_cmd_caret_bypass(tmp_path):
+def test_cmd_caret_bypass(tmp_path: Path) -> None:
     """Bypass 5: Windows CMD Caret Escape.
 
     On Windows, the CMD shell strips carets (^). However, the guard's string matching
@@ -129,7 +133,7 @@ def test_cmd_caret_bypass(tmp_path):
             )
 
 
-def test_cmd_quoted_set_bypass(tmp_path):
+def test_cmd_quoted_set_bypass(tmp_path: Path) -> None:
     """Bypass 5: Windows CMD double-quoted SET variable concatenation.
 
     CMD supports setting variables like: set "X=sec"
@@ -159,7 +163,7 @@ def test_cmd_quoted_set_bypass(tmp_path):
             )
 
 
-def test_bypass_bitwise_or_map(tmp_path):
+def test_bypass_bitwise_or_map(tmp_path: Path) -> None:
     """Verify that reconstructing sensitive keyword using Bitwise OR in subprocess bypasses the guard."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret-bitwise-or")
@@ -178,7 +182,7 @@ def test_bypass_bitwise_or_map(tmp_path):
             )
 
 
-def test_bypass_bitwise_and_map(tmp_path):
+def test_bypass_bitwise_and_map(tmp_path: Path) -> None:
     """Verify that reconstructing sensitive keyword using Bitwise AND in subprocess bypasses the guard."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret-bitwise-and")
@@ -197,7 +201,7 @@ def test_bypass_bitwise_and_map(tmp_path):
             )
 
 
-def test_bypass_lshift_rshift_map(tmp_path):
+def test_bypass_lshift_rshift_map(tmp_path: Path) -> None:
     """Verify that reconstructing sensitive keyword using Left and Right Shift in subprocess bypasses the guard."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret-shift")

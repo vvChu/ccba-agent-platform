@@ -1,10 +1,11 @@
 import os
+from collections.abc import Generator
 
 import pytest
 
 
 @pytest.fixture(scope="session", autouse=True)
-def clean_env():
+def clean_env() -> Generator[None, None, None]:
     # Pop variables that trigger False Positives in HarnessGuard during subprocess env checks
     vars_to_pop = ["MDCONVERT_MAX_OUTPUT_TOKENS", "VSCODE_GIT_ASKPASS_EXTRA_ARGS"]
     popped = {}

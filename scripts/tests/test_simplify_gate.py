@@ -5,7 +5,7 @@ from scripts.hooks.simplify_gate import main, matched_severity
 
 
 class TestSimplifyGate(unittest.TestCase):
-    def test_matched_severity(self):
+    def test_matched_severity(self) -> None:
         # 1. Hard verbs matching
         sev, verb = matched_severity("please ship these changes")
         self.assertEqual(sev, "hard")
@@ -37,7 +37,7 @@ class TestSimplifyGate(unittest.TestCase):
         self.assertEqual(sev, "")
         self.assertEqual(verb, "")
 
-    def test_main_hook_bypass_and_no_match(self):
+    def test_main_hook_bypass_and_no_match(self) -> None:
         # Empty args should bypass
         payload = {"args": ""}
         self.assertEqual(main("pre-tool", payload), 0)
