@@ -1,4 +1,4 @@
-from ccba_harness import HarnessGuard
+from ccba_harness import HarnessGuard  # type: ignore[import-untyped]
 
 from .adr import ADRGenerator
 from .cleaners import Cleaners

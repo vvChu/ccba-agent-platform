@@ -9,12 +9,12 @@ from typing import Any
 import requests
 import websocket
 
-from ccba_harness import FileMutexLock
+from ccba_harness import FileMutexLock  # type: ignore[import-untyped]
 from ccba_legal.registry import load_relation_synonyms as _load_relation_synonyms
 from ccba_legal.registry import resolve_project_root
 
 
-class TVPLSessionMutex(FileMutexLock):
+class TVPLSessionMutex(FileMutexLock):  # type: ignore[misc]
     """Context manager for TVPL VIP session mutex lock to prevent concurrent sessions.
 
     Inherits from the unified FileMutexLock in ccba_harness.
@@ -82,7 +82,7 @@ class ChromeCDP:
         try:
             self.ws.send(json.dumps(payload))
             resp = self.ws.recv()
-            return json.loads(resp)
+            return json.loads(resp)  # type: ignore[no-any-return]
         except Exception as e:
             raise ChromeCDPError(f"Failed to send CDP command {method}: {e}") from e
 
@@ -567,7 +567,7 @@ def _check_google_drive(download_dir: Path, slug_name: str, extensions: list[str
                 f"[download_three_tier] [Tier 2] Downloading {file_name} from Google Drive (ID: {file_id}) -> {dest_path}"
             )
 
-            from googleapiclient.http import MediaIoBaseDownload
+            from googleapiclient.http import MediaIoBaseDownload  # type: ignore[import-not-found]
 
             request = drive_service.files().get_media(fileId=file_id)
             try:
@@ -595,8 +595,8 @@ def _check_google_drive(download_dir: Path, slug_name: str, extensions: list[str
 def _check_aws_s3(download_dir: Path, slug_name: str, extensions: list[str]) -> bool:
     """Check AWS S3 bucket for the file and download if found."""
     try:
-        import boto3
-        from botocore.exceptions import ClientError
+        import boto3  # type: ignore[import-not-found]
+        from botocore.exceptions import ClientError  # type: ignore[import-not-found]
 
         bucket_name = os.environ.get("AWS_BUCKET_NAME") or os.environ.get("S3_BUCKET")
         if not bucket_name:
