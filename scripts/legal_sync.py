@@ -17,31 +17,30 @@ import urllib.parse
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 # Thêm path để import ccba_legal và notebooklm_helper
 
-LegalIntelPipeline: Any = None
-ChromeCDP: Any = None
-trigger_download: Any = None
 try:
-    from ccba_legal import ChromeCDP, LegalIntelPipeline, trigger_download
+    from ccba_legal import ChromeCDP, LegalIntelPipeline, trigger_download  # type: ignore[import-not-found]
 except ImportError:
-    pass
+    ChromeCDP = None
+    LegalIntelPipeline = None
+    trigger_download = None
 
 try:
     import google.auth
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
     from googleapiclient.discovery import build  # type: ignore[import-untyped]
-    from googleapiclient.errors import HttpError
-    from googleapiclient.http import MediaFileUpload
+    from googleapiclient.errors import HttpError  # type: ignore[import-untyped]
+    from googleapiclient.http import MediaFileUpload  # type: ignore[import-untyped]
 
     GOOGLE_API_AVAILABLE = True
 except ImportError:
     GOOGLE_API_AVAILABLE = False
 
-import notebooklm_helper
+import notebooklm_helper  # type: ignore[import-not-found]
 
 DEFAULT_DRIVE_FOLDER = "1b9vm_1KQ8Fg8Crr1Q-i2xmE62UIHy-_2"
 
@@ -257,7 +256,7 @@ def get_drive_service() -> Any:
                 pass
     if token_path.exists():
         try:
-            credentials = Credentials.from_authorized_user_file(
+            credentials = Credentials.from_authorized_user_file(  # type: ignore[no-untyped-call]
                 str(token_path), scopes=["https://www.googleapis.com/auth/drive"]
             )
             if credentials.expired and credentials.refresh_token:
