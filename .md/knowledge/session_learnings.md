@@ -586,10 +586,39 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Vấn đề**: Kích hoạt đồng thời nhiều background tasks chạy `run_harness_evals.py --all` mà không có cơ chế Auto-Lock hoặc cancellation tiến trình trước. Điều này khiến CPU/RAM bị đẩy lên 100%, gây đứt kết nối IPC và restart IDE Extension Host.
 - **Thay thế bằng**: Sử dụng Auto-Lock Singleton `ensure_single_instance()` + Mặc định Scoped Evaluation (chạy theo git diff).
 
+
+---
+
+## Session Learnings — Safe Execution Sandbox & Technical Debt Cleanup (2026-07-23)
+- **ID Phiên làm việc**: `ef5005bc-3ed1-4118-80c9-7053d12c4522`
+
+### Patterns (Mẫu tốt)
+
+#### 57. Safe Execution Sandbox Wrapper (`run_safe_eval_wrapper.py`) with Structured Diagnostics
+- **Ngữ cảnh**: Các lệnh terminal kiểm thử (pytest, ruff, mypy) chạy đồng bộ bị ngắt ngang bởi AbortSignal của IDE Host khi quá 30-45s, gây ra thông báo giả lập "User cancelled agent execution".
+- **Giải pháp**: Bọc thực thi bằng script `run_safe_eval_wrapper.py` tích hợp `subprocess.Popen`, Timeout Watchdog (90s), Auto-Lock Singleton `ensure_single_instance()`, cô lập file log tại `.md/scratch/eval_runs/run_<timestamp>.log` và tự động trích xuất báo cáo cấu trúc `diagnostics.json` với `status: PASS | FAILED | TIMEOUT`, `error_type`, `failed_gate`, `culprit_file` và `summary_traceback`.
+- **Nguồn**: Session `ef5005bc-3ed1-4118-80c9-7053d12c4522`, 2026-07-23
+
+#### 58. PEP 561 `py.typed` Marker Injection for Monorepo Mypy Resolution
+- **Ngữ cảnh**: Khi Mypy chạy trên monorepo chứa nhiều packages (`packages/mdconverter`, `packages/ccba-ai`), Mypy bỏ qua việc phân tích các module nội bộ (`Skipping analyzing ... missing py.typed marker`) và báo 75+ lỗi giả lập "Class cannot subclass BaseConverter (has type Any)".
+- **Giải pháp**: Thêm tệp marker rỗng `py.typed` vào thư mục gói chính (`packages/<pkg>/src/<pkg>/py.typed`) và cấu hình `mypy_path = ["packages/<pkg>/src"]` trong `pyproject.toml` để Mypy nhận diện 100% type annotations của các gói nội bộ.
+- **Nguồn**: Session `ef5005bc-3ed1-4118-80c9-7053d12c4522`, 2026-07-23
+
+#### 59. Blacklist Directory Filtering in Recursive Markdown Linters
+- **Ngữ cảnh**: Hàm `lint_directory()` duyệt đệ quy `rglob("*.md")` trên toàn thư mục gốc dự án, đọc toàn bộ nội dung của hàng nghìn file Markdown tạm (`.md/scratch/`, `.md/extracted_docs/`, `.venv/`), dẫn đến Pytest Timeout 10s.
+- **Giải pháp**: Bổ sung bộ lọc danh sách đen `EXCLUDED_DIRS = {".venv", ".git", ".md", "node_modules", "build", "dist", "__pycache__"}` trong hàm `lint_directory()`, bỏ qua việc quét file thuộc các thư mục tạm.
+- **Nguồn**: Session `ef5005bc-3ed1-4118-80c9-7053d12c4522`, 2026-07-23
+
+#### 60. Fast Mock Network Exceptions in Async API Error Unit Tests
+- **Ngữ cảnh**: Sử dụng hostname giả lập chưa đăng ký DNS (như `http://invalid:9999`) trong unit test khiến `httpx`/`asyncio` trên Windows ngâm kết nối 30 giây để chờ DNS resolution timeout, làm Pytest dính timeout.
+- **Giải pháp**: Sử dụng `patch.object(GatewayProvider, 'generate', side_effect=httpx.ConnectError(...))` hoặc địa chỉ localhost từ chối kết nối tức thì `http://127.0.0.1:1` trong unit test để kiểm tra bẫy lỗi API mà không gây độ trễ mạng.
+- **Nguồn**: Session `ef5005bc-3ed1-4118-80c9-7053d12c4522`, 2026-07-23
+
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
 
 
 

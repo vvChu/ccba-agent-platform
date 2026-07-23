@@ -40,7 +40,6 @@ def run_isolated_test(
     python_exe = get_venv_python(project_root)
     cmd = [python_exe, "-m", "pytest", str(target_path), "-v", "--tb=short"]
     if not include_stress:
-
         cmd += ["-m", "not stress and not slow"]
 
     print(f"🎯 Kích hoạt kiểm thử cô lập trên: {target_path}")
@@ -66,14 +65,16 @@ def run_isolated_test(
             print(res.stderr)
 
         status_icon = "✅ PASS" if success else "❌ FAILED"
-        print(f"\n==================================================")
+        print("\n==================================================")
         print(f"📊 Kết quả kiểm thử cô lập ({status_icon}) - Thời gian: {elapsed:.2f}s")
-        print(f"==================================================")
+        print("==================================================")
         return success
 
     except subprocess.TimeoutExpired:
         elapsed = time.time() - start_time
-        print(f"\n⚠️ [TIMEOUT ERROR] Lượt kiểm thử bị ngắt sau {elapsed:.2f}s (Giới hạn: {timeout_sec}s).")
+        print(
+            f"\n⚠️ [TIMEOUT ERROR] Lượt kiểm thử bị ngắt sau {elapsed:.2f}s (Giới hạn: {timeout_sec}s)."
+        )
         return False
     except Exception as e:
         print(f"\n❌ [EXECUTION ERROR] Không thể thực thi pytest: {e}")
@@ -95,16 +96,27 @@ def main() -> None:
         choices=AVAILABLE_PACKAGES,
         help=f"Tên package cần test ({', '.join(AVAILABLE_PACKAGES)})",
     )
-    parser.add_argument("--file", "-f", help="Đường dẫn tương đối hoặc tuyệt đối tới file test cụ thể.")
-    parser.add_argument("--stress", action="store_true", help="Chạy cả các bài test tải nặng/stress.")
-    parser.add_argument("--timeout", type=int, default=60, help="Thời gian tối đa cho toàn bộ lượt run (giây). Default: 60s.")
+    parser.add_argument(
+        "--file", "-f", help="Đường dẫn tương đối hoặc tuyệt đối tới file test cụ thể."
+    )
+    parser.add_argument(
+        "--stress", action="store_true", help="Chạy cả các bài test tải nặng/stress."
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=60,
+        help="Thời gian tối đa cho toàn bộ lượt run (giây). Default: 60s.",
+    )
 
     args = parser.parse_args()
 
     if not args.package and not args.file:
         print("❌ Lỗi: Cần truyền --package (-p) hoặc --file (-f).")
-        print(f"Ví dụ: python scripts/run_isolated_tests.py -p ccba-ai")
-        print(f"Ví dụ: python scripts/run_isolated_tests.py -f tests/test_agent_execution_guardrails.py")
+        print("Ví dụ: python scripts/run_isolated_tests.py -p ccba-ai")
+        print(
+            "Ví dụ: python scripts/run_isolated_tests.py -f tests/test_agent_execution_guardrails.py"
+        )
         sys.exit(1)
 
     if args.package:

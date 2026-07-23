@@ -9,12 +9,12 @@ from typing import Any
 import requests
 import websocket
 
-from ccba_harness import FileMutexLock  # type: ignore[import-untyped]
+from ccba_harness import FileMutexLock
 from ccba_legal.registry import load_relation_synonyms as _load_relation_synonyms
 from ccba_legal.registry import resolve_project_root
 
 
-class TVPLSessionMutex(FileMutexLock):  # type: ignore[misc]
+class TVPLSessionMutex(FileMutexLock):
     """Context manager for TVPL VIP session mutex lock to prevent concurrent sessions.
 
     Inherits from the unified FileMutexLock in ccba_harness.
@@ -274,10 +274,17 @@ class MockChromeCDP(ChromeCDP):
             "document.readyState": "complete",
             "document.title": "Mock Legal Document Title",
         }
-        self.mock_html_content = "<html><body><h1>Mock Document</h1><p>Test content</p></body></html>"
+        self.mock_html_content = (
+            "<html><body><h1>Mock Document</h1><p>Test content</p></body></html>"
+        )
 
     def get_pages(self) -> list[dict[str, Any]]:
-        return [{"type": "page", "webSocketDebuggerUrl": f"ws://127.0.0.1:{self.port}/devtools/page/mock123"}]
+        return [
+            {
+                "type": "page",
+                "webSocketDebuggerUrl": f"ws://127.0.0.1:{self.port}/devtools/page/mock123",
+            }
+        ]
 
     def connect_tab(self, ws_url: str) -> None:
         self.connected = True
@@ -319,7 +326,6 @@ class MockChromeCDP(ChromeCDP):
 
     def close(self) -> None:
         self.connected = False
-
 
 
 def get_crawled_doc_data(cdp: ChromeCDP, url: str) -> tuple[str, str, list[dict[str, str]]]:
@@ -567,7 +573,7 @@ def _check_google_drive(download_dir: Path, slug_name: str, extensions: list[str
                 f"[download_three_tier] [Tier 2] Downloading {file_name} from Google Drive (ID: {file_id}) -> {dest_path}"
             )
 
-            from googleapiclient.http import MediaIoBaseDownload  # type: ignore[import-not-found]
+            from googleapiclient.http import MediaIoBaseDownload
 
             request = drive_service.files().get_media(fileId=file_id)
             try:
@@ -595,8 +601,8 @@ def _check_google_drive(download_dir: Path, slug_name: str, extensions: list[str
 def _check_aws_s3(download_dir: Path, slug_name: str, extensions: list[str]) -> bool:
     """Check AWS S3 bucket for the file and download if found."""
     try:
-        import boto3  # type: ignore[import-not-found]
-        from botocore.exceptions import ClientError  # type: ignore[import-not-found]
+        import boto3
+        from botocore.exceptions import ClientError
 
         bucket_name = os.environ.get("AWS_BUCKET_NAME") or os.environ.get("S3_BUCKET")
         if not bucket_name:

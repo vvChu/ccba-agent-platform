@@ -1,8 +1,8 @@
 import base64
-from pathlib import Path
 import sqlite3
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -114,4 +114,3 @@ def test_bypass_base32(tmp_path: Path) -> None:
         cmd = [sys.executable, "-c", py_code]
         with pytest.raises(PermissionError):
             subprocess.run(cmd, capture_output=True, text=True)
-

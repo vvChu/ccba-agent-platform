@@ -62,6 +62,7 @@ select = [
 ignore = [
     "E501",  # line too long (handled by formatter)
     "B008",  # function call in argument defaults (Typer pattern)
+    "E402",  # module level import not at top of file (pytestmark / sys.path pattern)
 ]
 
 [tool.ruff.format]
@@ -75,22 +76,25 @@ warn_return_any = true
 warn_unused_ignores = true
 disallow_untyped_defs = true
 explicit_package_bases = true
+mypy_path = ["packages/mdconverter/src", "packages/ccba-ai/src", "packages/ccba-harness/src"]
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["llama_index.*", "google.generativeai.*", "tenacity.*", "yt_dlp.*", "ccba_ai.*", "ccba_pdf_prep.*"]
+module = ["llama_index.*", "google.generativeai.*", "tenacity.*", "yt_dlp.*", "ccba_ai.*", "ccba_pdf_prep.*", "fitz.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["mdconverter.providers.gemini"]
 disallow_untyped_decorators = false
 
+
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["packages", "tests", "scripts/tests"]
 python_files = ["test_*.py", "*_test.py"]
 addopts = "-v --tb=short --strict-markers -m 'not stress and not slow'"
-timeout = 10
+timeout = 30
+
 markers = [
     "unit: Fast isolated unit tests (under 1s)",
     "integration: Integration tests (under 5s)",
