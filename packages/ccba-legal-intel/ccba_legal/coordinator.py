@@ -55,7 +55,7 @@ class LegalProcessor:
                 target_doc_id=target_doc_id,
                 clause_anchor=target_anchor,
                 status="amended",
-                amended_by=amendment_source,
+                amended_by=amendment_source or "",
                 source_doc_path=mod_source_doc_path,
             )
 
@@ -68,7 +68,7 @@ class LegalProcessor:
                         updated_content = inject_warning_block(
                             markdown_content=content,
                             target_anchor=target_anchor,
-                            amendment_source=amendment_source,
+                            amendment_source=amendment_source or "",
                             source_doc_path=mod_source_doc_path,
                         )
                         markdown_path.write_text(updated_content, encoding="utf-8")
@@ -243,12 +243,12 @@ class LegalIntelPipeline:
                 self.cdp.connect_tab(pages[0].get("webSocketDebuggerUrl", ""))
 
             title, content, links = get_crawled_doc_data(self.cdp, url_or_id)
-            meta = get_tvpl_metadata(self.cdp)
+            meta = get_tvpl_metadata(self.cdp, url_or_id)
             meta["title"] = title
             meta["source_url"] = url_or_id
 
             packager = OKFBundlePackager(self.output_dir)
-            bundle_dir = packager.package_bundle(doc_id, content, meta)
+            bundle_dir = packager.package_bundle(doc_id, content, meta)  # type: ignore[attr-defined]
 
             self.registry_mgr.register_document(doc_id, meta)  # type: ignore[attr-defined]
 

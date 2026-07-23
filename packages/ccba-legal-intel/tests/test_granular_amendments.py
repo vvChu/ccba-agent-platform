@@ -2,7 +2,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from ccba_legal.coordinator import LegalProcessor
 from ccba_legal.formatter import inject_warning_block
 from ccba_legal.parser import LegalAnalysisEngine
