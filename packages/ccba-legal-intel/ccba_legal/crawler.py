@@ -263,6 +263,65 @@ class ChromeCDP:
             self.ws = None
 
 
+class MockChromeCDP(ChromeCDP):
+    """Mock implementation of ChromeCDP for offline testing without a live Chrome browser."""
+
+    def __init__(self, port: int = 9222) -> None:
+        super().__init__(port=port)
+        self.connected = False
+        self.current_url = ""
+        self.mock_js_responses: dict[str, Any] = {
+            "document.readyState": "complete",
+            "document.title": "Mock Legal Document Title",
+        }
+        self.mock_html_content = "<html><body><h1>Mock Document</h1><p>Test content</p></body></html>"
+
+    def get_pages(self) -> list[dict[str, Any]]:
+        return [{"type": "page", "webSocketDebuggerUrl": f"ws://127.0.0.1:{self.port}/devtools/page/mock123"}]
+
+    def connect_tab(self, ws_url: str) -> None:
+        self.connected = True
+
+    def send_command(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
+        if not self.connected:
+            raise ChromeCDPError("No active WebSocket connection.")
+        return {"result": {"value": True}}
+
+    def set_mock_js_response(self, expression: str, value: Any) -> None:
+        self.mock_js_responses[expression] = value
+
+    def evaluate_js(self, expression: str) -> Any:
+        if not self.connected:
+            raise ChromeCDPError("No active WebSocket connection.")
+        if expression in self.mock_js_responses:
+            return self.mock_js_responses[expression]
+        if "document.title" in expression:
+            return self.mock_js_responses.get("document.title", "Mock Title")
+        if "readyState" in expression:
+            return "complete"
+        if "innerHTML" in expression or "outerHTML" in expression:
+            return self.mock_html_content
+        return True
+
+    def navigate(self, url: str) -> None:
+        if not self.connected:
+            raise ChromeCDPError("No active WebSocket connection.")
+        self.current_url = url
+
+    def wait_ready(self, timeout_sec: int = 30) -> None:
+        pass
+
+    def handle_cloudflare(self) -> None:
+        pass
+
+    def handle_login(self) -> bool:
+        return False
+
+    def close(self) -> None:
+        self.connected = False
+
+
+
 def get_crawled_doc_data(cdp: ChromeCDP, url: str) -> tuple[str, str, list[dict[str, str]]]:
     """Retrieve title, clean innerText, and list of links from active browser tab."""
     cdp.navigate(url)

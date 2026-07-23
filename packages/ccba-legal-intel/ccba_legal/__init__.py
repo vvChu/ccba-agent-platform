@@ -2,11 +2,12 @@ from ccba_harness import HarnessGuard
 
 from .adr import ADRGenerator
 from .cleaners import Cleaners
-from .coordinator import LegalProcessor
+from .coordinator import LegalIntelPipeline, LegalProcessResult, LegalProcessor
 from .crawler import (
     ChromeCDP,
     ChromeCDPError,
     HeadlessEnvironmentError,
+    MockChromeCDP,
     TVPLSessionMutex,
     download_three_tier,
     get_crawled_doc_data,
@@ -21,6 +22,7 @@ from .registry import LegalRegistryManager, load_relation_synonyms
 
 __all__ = [
     "ChromeCDP",
+    "MockChromeCDP",
     "ChromeCDPError",
     "HeadlessEnvironmentError",
     "get_crawled_doc_data",
@@ -37,6 +39,8 @@ __all__ = [
     "inject_warning_block",
     "LegalRegistryManager",
     "LegalProcessor",
+    "LegalIntelPipeline",
+    "LegalProcessResult",
     "TokenMonitor",
     "HarnessGuard",
     "ADRGenerator",
