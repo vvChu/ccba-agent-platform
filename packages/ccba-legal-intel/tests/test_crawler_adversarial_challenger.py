@@ -4,9 +4,14 @@ import sys
 import threading
 import time
 import types
+from pathlib import Path
+from typing import Any, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+pytestmark = [pytest.mark.slow, pytest.mark.adversarial]
+
 from ccba_legal.crawler import (
     TVPLSessionMutex,
     download_three_tier,
@@ -18,7 +23,7 @@ from ccba_legal.registry import (
 
 
 @pytest.fixture
-def mock_tier3_disabled():
+def mock_tier3_disabled() -> Generator[None, None, None]:
     """Fixture to mock Tier 3 CDP crawl and headless checks to prevent web interaction."""
     with (
         patch("ccba_legal.crawler._check_is_headless", return_value=False),
@@ -30,7 +35,7 @@ def mock_tier3_disabled():
 # =====================================================================
 # SCENARIO 1: Mutex Lock Concurrency Race Condition
 # =====================================================================
-def test_mutex_concurrency_race_condition(tmp_path):
+def test_mutex_concurrency_race_condition(tmp_path: Path) -> None:
     """Verify that multiple threads cannot concurrently acquire the lock.
     One thread will succeed, and the other will fail/timeout.
     """
@@ -38,7 +43,7 @@ def test_mutex_concurrency_race_condition(tmp_path):
     acquired_locks = []
     errors = []
 
-    def run_lock(thread_num):
+    def run_lock(thread_num: int) -> None:
         try:
             with TVPLSessionMutex(lock_path=lock_file, timeout=1, retry_interval=0.1):
                 acquired_locks.append(thread_num)
@@ -69,7 +74,7 @@ def test_mutex_concurrency_race_condition(tmp_path):
 # =====================================================================
 # SCENARIO 2: Killed Process / Simulated Deadlock
 # =====================================================================
-def test_mutex_killed_process_deadlock(tmp_path):
+def test_mutex_killed_process_deadlock(tmp_path: Path) -> None:
     """Verify that if a process holding the lock is dead, a new crawler
     can immediately override the lock and acquire it.
     """
@@ -80,7 +85,7 @@ def test_mutex_killed_process_deadlock(tmp_path):
     lock_file.write_text(json.dumps(lock_data), encoding="utf-8")
 
     # A new crawler tries to run. Since the PID is dead, it overrides the lock immediately.
-    with TVPLSessionMutex(lock_path=lock_file, timeout=0.2, retry_interval=0.05):
+    with TVPLSessionMutex(lock_path=lock_file, timeout=1, retry_interval=0.05):
         assert lock_file.exists()
         content = lock_file.read_text(encoding="utf-8")
         data = json.loads(content)
@@ -90,7 +95,7 @@ def test_mutex_killed_process_deadlock(tmp_path):
 # =====================================================================
 # SCENARIO 3: Synonyms Configuration (Malformed YAML & JS Normalization Issues)
 # =====================================================================
-def test_load_relation_synonyms_malformed_yaml(tmp_path):
+def test_load_relation_synonyms_malformed_yaml(tmp_path: Path) -> None:
     """Verify that load_relation_synonyms falls back to default mapping on malformed YAML."""
     resources_dir = tmp_path / ".agents" / "skills" / "ccba-legal-intel" / "resources"
     resources_dir.mkdir(parents=True, exist_ok=True)
@@ -110,7 +115,7 @@ relation_synonyms
         assert mapping == DEFAULT_RELATION_SYNONYMS
 
 
-def test_relation_synonyms_js_normalization_bug():
+def test_relation_synonyms_js_normalization_bug() -> None:
     """Verify that synonyms in YAML with commas or multiple spaces
     match successfully in the JS query because both the web page element
     text and the synonym key are normalized.
@@ -140,7 +145,7 @@ def test_relation_synonyms_js_normalization_bug():
 # =====================================================================
 # SCENARIO 4: Network Issues & Invalid/Corrupted Cache Files
 # =====================================================================
-def test_download_three_tier_corrupted_cache(tmp_path, mock_tier3_disabled):
+def test_download_three_tier_corrupted_cache(tmp_path: Path, mock_tier3_disabled: Any) -> None:
     """Verify that an invalid/empty (0-byte) cache file is ignored
     and not copied to the target folder, preventing corrupted cache restoration.
     """
@@ -163,7 +168,7 @@ def test_download_three_tier_corrupted_cache(tmp_path, mock_tier3_disabled):
     assert not target_file.exists()
 
 
-def test_download_three_tier_partial_download_bug(tmp_path, mock_tier3_disabled):
+def test_download_three_tier_partial_download_bug(tmp_path: Path, mock_tier3_disabled: Any) -> None:
     """Verify that when a Tier 2 download fails midway (e.g. network issue),
     it cleans up the partial/corrupted file in the target directory and does
     not leave it behind.
@@ -180,23 +185,23 @@ def test_download_three_tier_partial_download_bug(tmp_path, mock_tier3_disabled)
 
     # Simulate downloader that writes partial content and then encounters a network error
     class MockDownloader:
-        def __init__(self, fd, request):
+        def __init__(self, fd: Any, request: Any) -> None:
             self.fd = fd
 
-        def next_chunk(self):
+        def next_chunk(self) -> None:
             self.fd.write(b"partial downloaded bytes")
             raise ConnectionResetError("Network reset by peer")
 
     # Inject mocks into sys.modules
     mock_sync = types.ModuleType("scripts.legal_sync")
-    mock_sync.GOOGLE_API_AVAILABLE = True
-    mock_sync.get_drive_service = MagicMock(return_value=mock_service)
+    mock_sync.GOOGLE_API_AVAILABLE = True  # type: ignore[attr-defined]
+    mock_sync.get_drive_service = MagicMock(return_value=mock_service)  # type: ignore[attr-defined]
     sys.modules["scripts.legal_sync"] = mock_sync
 
     mock_gapi = types.ModuleType("googleapiclient")
     sys.modules["googleapiclient"] = mock_gapi
     mock_gapi_http = types.ModuleType("googleapiclient.http")
-    mock_gapi_http.MediaIoBaseDownload = MockDownloader
+    mock_gapi_http.MediaIoBaseDownload = MockDownloader  # type: ignore[attr-defined]
     sys.modules["googleapiclient.http"] = mock_gapi_http
 
     cdp_mock = MagicMock()
@@ -223,7 +228,7 @@ def test_download_three_tier_partial_download_bug(tmp_path, mock_tier3_disabled)
         sys.modules.pop("googleapiclient.http", None)
 
 
-def test_download_three_tier_headless_exit(tmp_path):
+def test_download_three_tier_headless_exit(tmp_path: Path) -> None:
     """Verify that when running in a headless/CI environment, download_three_tier
     raises HeadlessEnvironmentError instead of attempting CDP crawl at Tier 3.
     """

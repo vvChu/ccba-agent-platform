@@ -3,13 +3,17 @@ import sqlite3
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import pytest
+
+pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
+
 
 from ccba_harness._guard import HarnessGuard
 
 
-def test_in_hook_flag_tampering_bypass(tmp_path):
+def test_in_hook_flag_tampering_bypass(tmp_path: Path) -> None:
     """Bypass 1: Tampering with the _local.in_hook flag.
 
     By importing the internal thread-local object from ccba_harness and
@@ -31,7 +35,7 @@ def test_in_hook_flag_tampering_bypass(tmp_path):
             os.close(fd)
 
 
-def test_thread_pool_executor_pre_existing_bypass(tmp_path):
+def test_thread_pool_executor_pre_existing_bypass(tmp_path: Path) -> None:
     """Bypass 2: Thread pool concurrency bypass.
 
     Worker threads in a ThreadPoolExecutor created before entering the HarnessGuard
@@ -47,7 +51,7 @@ def test_thread_pool_executor_pre_existing_bypass(tmp_path):
     # Warm up the thread pool to ensure the worker thread is spawned
     executor.submit(lambda: None).result()
 
-    def task():
+    def task() -> str:
         with open(sensitive_file) as f:
             return f.read()
 
@@ -58,7 +62,7 @@ def test_thread_pool_executor_pre_existing_bypass(tmp_path):
     executor.shutdown()
 
 
-def test_sqlite_connection_base_class_method_override_blocked(tmp_path):
+def test_sqlite_connection_base_class_method_override_blocked(tmp_path: Path) -> None:
     """Bypass 3: SQLite ATTACH bypass via base class method override.
 
     HarnessGuard wraps connections using _Wrappedsqlite3Connection, but we can
@@ -106,7 +110,7 @@ def test_sqlite_connection_base_class_method_override_blocked(tmp_path):
         conn.close()
 
 
-def test_sys_argv_bypass(tmp_path):
+def test_sys_argv_bypass(tmp_path: Path) -> None:
     """Bypass 4: Sys.argv concatenation bypass.
 
     By passing the path components of a sensitive path as separate command line
@@ -136,7 +140,7 @@ def test_sys_argv_bypass(tmp_path):
             )
 
 
-def test_py_launcher_bypass(tmp_path):
+def test_py_launcher_bypass(tmp_path: Path) -> None:
     """Bypass 5: Non-python cmd wrapper bypass using py launcher.
 
     Using the 'py' launcher on Windows instead of 'python' or 'sys.executable' causes
@@ -159,7 +163,7 @@ def test_py_launcher_bypass(tmp_path):
             subprocess.run(["py", "-c", py_code], capture_output=True, text=True, check=True)
 
 
-def test_ast_concatenation_with_junk_blocked(tmp_path):
+def test_ast_concatenation_with_junk_blocked(tmp_path: Path) -> None:
     """Bypass 6: Interrupt AST constant concatenation using junk strings.
 
     Our attempt to use a junk variable in a python command (e.g. part1 = 'path'; junk = 'junk'; part2 = 'path')
@@ -192,7 +196,7 @@ def test_ast_concatenation_with_junk_blocked(tmp_path):
             )
 
 
-def test_builtins_open_flag_tampering_bypass_vulnerability(tmp_path):
+def test_builtins_open_flag_tampering_bypass_vulnerability(tmp_path: Path) -> None:
     """Bypass Vector 1: builtins.open/io.open remains bypassable by setting _local.in_hook = True.
 
     Since _wrapped_builtins_open checks `getattr(_local, "in_hook", False)` instead of `_check_in_hook()`,
@@ -215,7 +219,7 @@ def test_builtins_open_flag_tampering_bypass_vulnerability(tmp_path):
             ccba_harness._local.in_hook = None
 
 
-def test_compiled_frame_tampering_bypass(tmp_path):
+def test_compiled_frame_tampering_bypass(tmp_path: Path) -> None:
     """Bypass Vector 2: os.open/sqlite3/FileIO bypassable by executing compiled code under 'harness.py'.
 
     _check_in_hook checks if any stack frame filename matches 'harness.py' and checks if

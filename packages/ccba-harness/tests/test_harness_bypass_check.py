@@ -1,4 +1,5 @@
 import base64
+from pathlib import Path
 import sqlite3
 import subprocess
 import sys
@@ -8,7 +9,7 @@ import pytest
 from ccba_harness._guard import HarnessGuard
 
 
-def test_bypass_list_comp_shift(tmp_path):
+def test_bypass_list_comp_shift(tmp_path: Path) -> None:
     """Bypass 1: Test list comprehension of chr with arithmetic shift in subprocess.
 
     The character codes are shifted by +1 so that they don't contain any sensitive literal strings or
@@ -30,7 +31,7 @@ def test_bypass_list_comp_shift(tmp_path):
             subprocess.run(cmd, capture_output=True, text=True, cwd=tmp_path)
 
 
-def test_bypass_string_format(tmp_path):
+def test_bypass_string_format(tmp_path: Path) -> None:
     """Bypass 2: Test string formatting/modulo operator in subprocess.
 
     Using '%s' string formatting to dynamically construct the open statement. The AST check
@@ -49,7 +50,7 @@ def test_bypass_string_format(tmp_path):
             subprocess.run(cmd, capture_output=True, text=True, cwd=tmp_path)
 
 
-def test_bypass_bytes_shift_eval(tmp_path):
+def test_bypass_bytes_shift_eval(tmp_path: Path) -> None:
     """Bypass 3: Test bytes shift eval in subprocess.
 
     Using shifted character codes for the entire python code string, then reconstructing and
@@ -72,7 +73,7 @@ def test_bypass_bytes_shift_eval(tmp_path):
             subprocess.run(cmd, capture_output=True, text=True)
 
 
-def test_bypass_sqlite_attach_expression(tmp_path):
+def test_bypass_sqlite_attach_expression(tmp_path: Path) -> None:
     """Bypass 4: SQLite ATTACH DATABASE using a parenthesized expression.
 
     HarnessGuard's SQL query parsing only extracts standard ATTACH string literals. It fails to
@@ -95,7 +96,7 @@ def test_bypass_sqlite_attach_expression(tmp_path):
         conn.close()
 
 
-def test_bypass_base32(tmp_path):
+def test_bypass_base32(tmp_path: Path) -> None:
     """Bypass 5: Base32 obfuscation of subprocess arguments.
 
     HarnessGuard only checks base64, zlib, and hex encoding. It does not check base32, base85,
@@ -113,3 +114,4 @@ def test_bypass_base32(tmp_path):
         cmd = [sys.executable, "-c", py_code]
         with pytest.raises(PermissionError):
             subprocess.run(cmd, capture_output=True, text=True)
+

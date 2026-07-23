@@ -1,14 +1,18 @@
 import os
+from pathlib import Path
 import shutil
 import subprocess
 import sys
 
 import pytest
 
+pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
+
+
 from ccba_harness._guard import HarnessGuard
 
 
-def test_env_var_concat_bypass(tmp_path):
+def test_env_var_concat_bypass(tmp_path: Path) -> None:
     """Bypass: Environment variable concatenation.
 
     Split the sensitive path into non-sensitive parts and pass them as separate env vars.
@@ -38,7 +42,7 @@ def test_env_var_concat_bypass(tmp_path):
             )
 
 
-def test_python_copied_exec_bypass(tmp_path):
+def test_python_copied_exec_bypass(tmp_path: Path) -> None:
     """Bypass: Copy the python executable to a non-python name.
 
     This disables the is_python_cmd check in the parent, bypassing all python-specific filters
@@ -86,7 +90,7 @@ def test_python_copied_exec_bypass(tmp_path):
                 pass
 
 
-def test_base64_split_bypass(tmp_path):
+def test_base64_split_bypass(tmp_path: Path) -> None:
     """Bypass: Pass base64 encoded path split into short command arguments.
 
     Split the base64 string into chunks shorter than 4 characters or parts that do not
