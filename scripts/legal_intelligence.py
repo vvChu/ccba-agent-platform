@@ -5,6 +5,7 @@ Thin adapter delegating to LegalIntelPipeline in `ccba_legal.coordinator`.
 """
 
 import sys
+
 from ccba_legal import LegalIntelPipeline
 
 # Enforce UTF-8 output on Windows

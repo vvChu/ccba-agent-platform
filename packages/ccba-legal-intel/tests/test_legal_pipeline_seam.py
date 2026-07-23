@@ -1,7 +1,7 @@
 """Unit tests for LegalIntelPipeline deep seam."""
 
 from pathlib import Path
-import pytest
+
 from ccba_legal.coordinator import LegalIntelPipeline, LegalProcessResult
 from ccba_legal.crawler import MockChromeCDP
 

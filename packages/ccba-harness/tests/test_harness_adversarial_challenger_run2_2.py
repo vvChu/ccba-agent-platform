@@ -1,10 +1,11 @@
 import os
-from pathlib import Path
 import sqlite3
 import subprocess
 import sys
 import threading
-from typing import Any, Iterator
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -70,7 +71,9 @@ def test_env_var_split_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
             )
 
 
-def test_sqlite_attach_concat_expression_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_sqlite_attach_concat_expression_bypass(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """SQLite ATTACH complex expression/concatenation bypass:
     Combine subclassing string (to bypass '||' checks in the 'if "ATTACH" in sql.upper()' block)
     with string concatenation (to hide the sensitive 'secret_db.db' keyword from the
@@ -247,7 +250,9 @@ def test_sqlite_vacuum_into_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPat
         conn.close()
 
 
-def test_thread_local_state_manipulation_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_thread_local_state_manipulation_bypass(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Thread-local state manipulation bypass:
     Manipulate _local.active_guards by setting it to a custom object that evaluates
     to True but has an empty iterator. This bypasses all file checks on the thread.

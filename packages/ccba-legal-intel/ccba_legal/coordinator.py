@@ -10,7 +10,6 @@ from typing import Any
 from ccba_legal.conflict import LexConflictEngine
 from ccba_legal.crawler import (
     ChromeCDP,
-    ChromeCDPError,
     MockChromeCDP,
     TVPLSessionMutex,
     get_crawled_doc_data,
@@ -215,9 +214,7 @@ class LegalIntelPipeline:
         self.output_dir = output_dir or Path(".md/legal_docs")
         self.use_mutex = use_mutex
 
-    def process_document(
-        self, url_or_id: str, force_refresh: bool = False
-    ) -> LegalProcessResult:
+    def process_document(self, url_or_id: str, force_refresh: bool = False) -> LegalProcessResult:
         """Crawl, parse, and package a legal document end-to-end via a deep seam."""
         is_mock = isinstance(self.cdp, MockChromeCDP)
         doc_id = url_or_id.split("/")[-1].replace(".aspx", "") if "/" in url_or_id else url_or_id
@@ -293,4 +290,3 @@ class LegalIntelPipeline:
             return 0
         print(f"[LegalIntel CLI] Failed processing {result.doc_id}: {result.error}")
         return 1
-

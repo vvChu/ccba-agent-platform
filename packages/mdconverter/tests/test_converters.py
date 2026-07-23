@@ -92,12 +92,21 @@ class TestLLMConverter:
     @pytest.mark.asyncio
     async def test_convert_api_error_handled(self, tmp_path: Path) -> None:
         """Test that API errors are handled gracefully."""
+        from unittest.mock import patch
+
+        import httpx
+
         test_file = tmp_path / "test.pdf"
         test_file.write_bytes(b"%PDF-1.4 test content")
 
-        # With no valid API endpoint, conversion should fail gracefully
-        converter = LLMConverter(output_dir=tmp_path, gateway_url="http://invalid:9999")
-        result = await converter.convert(test_file)
+        converter = LLMConverter(
+            output_dir=tmp_path, gateway_url="http://127.0.0.1:1", models=["gemini-2.0-flash"]
+        )
+        with patch(
+            "mdconverter.providers.gemini.GatewayProvider.generate",
+            side_effect=httpx.ConnectError("Connection refused"),
+        ):
+            result = await converter.convert(test_file)
 
         # Should fail but not crash
         assert result.status == ConversionStatus.FAILED

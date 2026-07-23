@@ -9,7 +9,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 from ccba_legal.monitor import TokenMonitor
 
@@ -81,7 +81,7 @@ class OKFStructureProcessor:
                 line = (
                     m.group(1)  # type: ignore[union-attr]
                     + f'<a id="d{current_dieu}k{current_khoan}"></a>'
-                    + line[len(m.group(1)) :]  # type: ignore[union-attr]
+                    + line[len(m.group(1)) :]  # type: ignore[union-attr, operator]
                 )
             elif current_dieu and current_khoan and diem_pattern.match(line):
                 m = diem_pattern.match(line)
@@ -89,7 +89,7 @@ class OKFStructureProcessor:
                 line = (
                     m.group(1)  # type: ignore[union-attr]
                     + f'<a id="d{current_dieu}k{current_khoan}d{diem_char}"></a>'
-                    + line[len(m.group(1)) :]  # type: ignore[union-attr]
+                    + line[len(m.group(1)) :]  # type: ignore[union-attr, operator]
                 )
 
             output_lines.append(line)

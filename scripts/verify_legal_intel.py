@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 
 # Import Cleaners and OKFBundlePackager from ccba_legal
-from ccba_legal import Cleaners, OKFBundlePackager  # type: ignore[import-not-found]
+from ccba_legal import Cleaners, OKFBundlePackager
 
 
 class TestLegalIntelligence(unittest.TestCase):

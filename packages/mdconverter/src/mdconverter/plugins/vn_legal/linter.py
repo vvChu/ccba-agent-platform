@@ -131,12 +131,24 @@ class VNLegalLinter:
 
         return issues
 
+    EXCLUDED_DIRS = {
+        ".venv",
+        ".git",
+        ".md",
+        "node_modules",
+        "build",
+        "dist",
+        "__pycache__",
+        "legacy",
+        "site-packages",
+    }
+
     def lint_directory(self, directory: Path) -> list[LintIssue]:
         """Lint all Markdown files in a directory."""
         all_issues: list[LintIssue] = []
 
         for md_file in directory.rglob("*.md"):
-            if "legacy" in str(md_file) or "node_modules" in str(md_file):
+            if any(part in self.EXCLUDED_DIRS for part in md_file.parts):
                 continue
             all_issues.extend(self.lint_file(md_file))
 
