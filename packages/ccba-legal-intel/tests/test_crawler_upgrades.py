@@ -3,6 +3,7 @@ import os
 import sys
 import time
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -17,7 +18,7 @@ from ccba_legal.registry import (
 )
 
 
-def test_mutex_acquire_and_release(tmp_path):
+def test_mutex_acquire_and_release(tmp_path: Path) -> None:
     lock_file = tmp_path / "tvpl_vip_session.lock"
     # Acquire
     with TVPLSessionMutex(lock_path=lock_file, timeout=1, retry_interval=0.1):
@@ -30,7 +31,7 @@ def test_mutex_acquire_and_release(tmp_path):
     assert not lock_file.exists()
 
 
-def test_mutex_held_timeout(tmp_path):
+def test_mutex_held_timeout(tmp_path: Path) -> None:
     lock_file = tmp_path / "tvpl_vip_session.lock"
 
     # Create an active lock by current process (guaranteed active)
@@ -38,11 +39,11 @@ def test_mutex_held_timeout(tmp_path):
     lock_file.write_text(json.dumps(lock_data), encoding="utf-8")
 
     with pytest.raises(TimeoutError):
-        with TVPLSessionMutex(lock_path=lock_file, timeout=0.2, retry_interval=0.05):
+        with TVPLSessionMutex(lock_path=lock_file, timeout=1, retry_interval=0.05):
             pass
 
 
-def test_mutex_expired_override(tmp_path):
+def test_mutex_expired_override(tmp_path: Path) -> None:
     lock_file = tmp_path / "tvpl_vip_session.lock"
 
     # Create an expired lock (6 minutes ago)
@@ -56,7 +57,7 @@ def test_mutex_expired_override(tmp_path):
         assert data["pid"] == os.getpid()
 
 
-def test_mutex_corrupted_override(tmp_path):
+def test_mutex_corrupted_override(tmp_path: Path) -> None:
     lock_file = tmp_path / "tvpl_vip_session.lock"
 
     # Create a corrupted lock file
@@ -69,7 +70,7 @@ def test_mutex_corrupted_override(tmp_path):
         assert data["pid"] == os.getpid()
 
 
-def test_load_relation_synonyms_no_file():
+def test_load_relation_synonyms_no_file() -> None:
     with patch("ccba_legal.crawler.resolve_project_root") as mock_resolve:
         # Resolve to a non-existent directory
         mock_resolve.return_value = Path("/nonexistent/dir")
@@ -77,7 +78,7 @@ def test_load_relation_synonyms_no_file():
         assert mapping == DEFAULT_RELATION_SYNONYMS
 
 
-def test_load_relation_synonyms_valid_file(tmp_path):
+def test_load_relation_synonyms_valid_file(tmp_path: Path) -> None:
     resources_dir = tmp_path / ".agents" / "skills" / "ccba-legal-intel" / "resources"
     resources_dir.mkdir(parents=True, exist_ok=True)
     yaml_file = resources_dir / "relation_synonyms.yaml"
@@ -99,7 +100,7 @@ relation_synonyms:
         assert mapping["Văn bản bị thay thế"] == "replaced_docs"
 
 
-def test_download_three_tier_target_exists(tmp_path):
+def test_download_three_tier_target_exists(tmp_path: Path) -> None:
     download_dir = tmp_path / "download"
     download_dir.mkdir()
     target_file = download_dir / "test_doc.docx"
@@ -112,7 +113,7 @@ def test_download_three_tier_target_exists(tmp_path):
     assert download_three_tier(cdp_mock, download_dir, "test_doc") is True
 
 
-def test_download_three_tier_cache_exists(tmp_path):
+def test_download_three_tier_cache_exists(tmp_path: Path) -> None:
     download_dir = tmp_path / "download"
     download_dir.mkdir()
 
@@ -131,7 +132,7 @@ def test_download_three_tier_cache_exists(tmp_path):
     assert expected_target.read_text(encoding="utf-8") == "dummy pdf content"
 
 
-def test_download_three_tier_shared_drive_exists(tmp_path):
+def test_download_three_tier_shared_drive_exists(tmp_path: Path) -> None:
     download_dir = tmp_path / "download"
     download_dir.mkdir()
 
@@ -153,7 +154,7 @@ def test_download_three_tier_shared_drive_exists(tmp_path):
     assert expected_target.read_text(encoding="utf-8") == "dummy doc content"
 
 
-def test_download_three_tier_google_drive(tmp_path):
+def test_download_three_tier_google_drive(tmp_path: Path) -> None:
     download_dir = tmp_path / "download"
     download_dir.mkdir()
 
@@ -166,10 +167,10 @@ def test_download_three_tier_google_drive(tmp_path):
 
     # Mock MediaIoBaseDownload to write dummy content
     class MockDownloader:
-        def __init__(self, fd, request):
+        def __init__(self, fd: Any, request: Any) -> None:
             self.fd = fd
 
-        def next_chunk(self):
+        def next_chunk(self) -> Any:
             self.fd.write(b"drive docx content")
             return None, True
 
@@ -177,14 +178,14 @@ def test_download_three_tier_google_drive(tmp_path):
     import types
 
     mock_sync = types.ModuleType("scripts.legal_sync")
-    mock_sync.GOOGLE_API_AVAILABLE = True
-    mock_sync.get_drive_service = MagicMock(return_value=mock_service)
+    mock_sync.GOOGLE_API_AVAILABLE = True  # type: ignore[attr-defined]
+    mock_sync.get_drive_service = MagicMock(return_value=mock_service)  # type: ignore[attr-defined]
     sys.modules["scripts.legal_sync"] = mock_sync
 
     mock_gapi = types.ModuleType("googleapiclient")
     sys.modules["googleapiclient"] = mock_gapi
     mock_gapi_http = types.ModuleType("googleapiclient.http")
-    mock_gapi_http.MediaIoBaseDownload = MockDownloader
+    mock_gapi_http.MediaIoBaseDownload = MockDownloader  # type: ignore[attr-defined]
     sys.modules["googleapiclient.http"] = mock_gapi_http
 
     cdp_mock = MagicMock()
@@ -204,7 +205,7 @@ def test_download_three_tier_google_drive(tmp_path):
     assert expected_target.read_bytes() == b"drive docx content"
 
 
-def test_download_three_tier_s3(tmp_path):
+def test_download_three_tier_s3(tmp_path: Path) -> None:
     download_dir = tmp_path / "download"
     download_dir.mkdir()
 
@@ -212,7 +213,7 @@ def test_download_three_tier_s3(tmp_path):
     mock_s3_client = MagicMock()
 
     # When calling download_file, create a dummy file
-    def mock_download_file(bucket, key, filename):
+    def mock_download_file(bucket: Any, key: Any, filename: str) -> None:
         with open(filename, "wb") as f:
             f.write(b"s3 content")
 
@@ -222,7 +223,7 @@ def test_download_three_tier_s3(tmp_path):
     import types
 
     mock_boto3 = types.ModuleType("boto3")
-    mock_boto3.client = MagicMock(return_value=mock_s3_client)
+    mock_boto3.client = MagicMock(return_value=mock_s3_client)  # type: ignore[attr-defined]
     sys.modules["boto3"] = mock_boto3
 
     mock_botocore = types.ModuleType("botocore")
@@ -232,7 +233,7 @@ def test_download_three_tier_s3(tmp_path):
     class MockClientError(Exception):
         pass
 
-    mock_botocore_exc.ClientError = MockClientError
+    mock_botocore_exc.ClientError = MockClientError  # type: ignore[attr-defined]
     sys.modules["botocore.exceptions"] = mock_botocore_exc
 
     cdp_mock = MagicMock()
@@ -252,7 +253,7 @@ def test_download_three_tier_s3(tmp_path):
     assert expected_target.read_bytes() == b"s3 content"
 
 
-def test_download_three_tier_headless_guard(tmp_path):
+def test_download_three_tier_headless_guard(tmp_path: Path) -> None:
     download_dir = tmp_path / "download"
     download_dir.mkdir()
 
@@ -266,12 +267,12 @@ def test_download_three_tier_headless_guard(tmp_path):
         download_three_tier(cdp_mock, download_dir, "test_doc")
 
 
-def test_download_three_tier_direct_crawl(tmp_path):
+def test_download_three_tier_direct_crawl(tmp_path: Path) -> None:
     download_dir = tmp_path / "download"
     download_dir.mkdir()
 
     # Mock trigger_download to succeed and create the file
-    def mock_trigger(cdp, d_dir, slug):
+    def mock_trigger(cdp: Any, d_dir: Path, slug: str) -> bool:
         f = d_dir / f"{slug}.docx"
         f.write_text("crawled docx", encoding="utf-8")
         return True

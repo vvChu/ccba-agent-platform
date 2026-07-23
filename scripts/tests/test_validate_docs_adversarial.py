@@ -2,6 +2,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import pytest
+
+pytestmark = [pytest.mark.slow, pytest.mark.adversarial]
+
+
 from scripts.validate_docs import (
     scan_orphan_files,
     validate_markdown_file,
@@ -9,7 +14,7 @@ from scripts.validate_docs import (
 
 
 class TestValidateDocsAdversarial(unittest.TestCase):
-    def test_malformed_frontmatter_in_okf(self):
+    def test_malformed_frontmatter_in_okf(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
             bundle_dir = tmppath / ".md" / "legal_docs" / "test_slug"
@@ -47,7 +52,7 @@ class TestValidateDocsAdversarial(unittest.TestCase):
             # Since it's not a dict, it's treated as missing frontmatter
             self.assertIn("Missing YAML frontmatter for OKF Bundle file", fm_issues)
 
-    def test_circular_absolute_links(self):
+    def test_circular_absolute_links(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
             bundle_dir = tmppath / ".md" / "legal_docs" / "test_slug"
@@ -89,7 +94,7 @@ Link to doc 1: [Doc 1](/doc1.md)
             self.assertEqual(len(issues1["okf_links"]), 0)
             self.assertEqual(len(issues2["okf_links"]), 0)
 
-    def test_missing_registry_mapping(self):
+    def test_missing_registry_mapping(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
             bundle_dir = tmppath / ".md" / "legal_docs" / "test_slug"
@@ -108,7 +113,7 @@ Link to unmapped file: [Sec 1](/nonexistent_target.md#d1k1)
 """)
 
             # Validate with empty registry_map (None)
-            issues = validate_markdown_file(md_file, [], set(), tmppath, registry_map=None)
+            issues = validate_markdown_file(md_file, [], set(), tmppath, registry_map=None)  # type: ignore[arg-type]
             # Should not crash and should report file does not exist (not a conflict since registry is missing)
             self.assertEqual(len(issues["okf_conflicts"]), 0)
             self.assertTrue(any("does not exist" in x[2] for x in issues["okf_links"]))

@@ -1,4 +1,5 @@
 import ctypes
+from pathlib import Path
 import sqlite3
 import subprocess
 import sys
@@ -8,13 +9,13 @@ import pytest
 from ccba_harness._guard import HarnessGuard
 
 
-def get_short_path_name(long_name):
+def get_short_path_name(long_name: str | Path) -> str:
     buffer = ctypes.create_unicode_buffer(260)
     ctypes.windll.kernel32.GetShortPathNameW(str(long_name), buffer, 260)
     return buffer.value
 
 
-def test_bypass_reversed_string_obfuscation(tmp_path):
+def test_bypass_reversed_string_obfuscation(tmp_path: Path) -> None:
     """Verify that a subprocess using reversed string reconstruction bypasses the guard and reads a sensitive file."""
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("super-secret-content")
@@ -32,7 +33,7 @@ def test_bypass_reversed_string_obfuscation(tmp_path):
             subprocess.run(cmd, capture_output=True, text=True)
 
 
-def test_bypass_8dot3_short_names(tmp_path):
+def test_bypass_8dot3_short_names(tmp_path: Path) -> None:
     """Verify that using Windows 8.3 short names bypasses the guard's keyword checking."""
     if sys.platform != "win32":
         pytest.skip("8.3 short name behavior is Windows specific.")
@@ -62,7 +63,7 @@ def test_bypass_8dot3_short_names(tmp_path):
                 f.read()
 
 
-def test_bypass_sqlite_attach_expression(tmp_path):
+def test_bypass_sqlite_attach_expression(tmp_path: Path) -> None:
     """Verify that using string concatenation in SQLite ATTACH DATABASE bypasses the guard."""
     sensitive_db = tmp_path / "my_secret_db.db"
 
@@ -102,3 +103,4 @@ def test_bypass_sqlite_attach_expression(tmp_path):
         with pytest.raises(PermissionError):
             conn.execute(sql_attach)
         conn.close()
+
