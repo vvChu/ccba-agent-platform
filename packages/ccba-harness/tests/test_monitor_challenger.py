@@ -2,7 +2,7 @@ import pytest
 
 pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
 
-from ccba_legal.monitor import TokenMonitor
+from ccba_legal.monitor import TokenMonitor  # type: ignore[import-not-found]
 
 # Test inputs for English and Vietnamese
 ENG_TEST_CASES = [
