@@ -1,13 +1,17 @@
 import codecs
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
+
+pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
+
 
 from ccba_harness._guard import HarnessGuard
 
 
-def test_generator_expression_shift_bypass(tmp_path):
+def test_generator_expression_shift_bypass(tmp_path: Path) -> None:
     """Verify that using functools.reduce instead of a loop/join bypasses the guard's AST and loop checkers.
 
     Since we use functools.reduce instead of loops (for/while), comprehensions, or .join(), we bypass
@@ -34,7 +38,7 @@ def test_generator_expression_shift_bypass(tmp_path):
             )
 
 
-def test_rot13_obfuscation_bypass(tmp_path):
+def test_rot13_obfuscation_bypass(tmp_path: Path) -> None:
     """Verify that ROT13 encoding bypasses all keyword and AST checkers.
 
     ROT13-encoded path does not trigger any keyword match, nor does it look like base64/hex/base32/base85.
@@ -54,7 +58,7 @@ def test_rot13_obfuscation_bypass(tmp_path):
             )
 
 
-def test_lambda_unsupported_op_bypass(tmp_path):
+def test_lambda_unsupported_op_bypass(tmp_path: Path) -> None:
     """Verify that using an unsupported operator in a map lambda body bypasses AST evaluation.
 
     The AST evaluator handles BitXor but not FloorDiv (//). This causes the AST evaluator
@@ -77,7 +81,7 @@ def test_lambda_unsupported_op_bypass(tmp_path):
             )
 
 
-def test_child_process_file_copy_bypass(tmp_path):
+def test_child_process_file_copy_bypass(tmp_path: Path) -> None:
     """Verify that copying a sensitive file to a benign name inside a subprocess bypasses the guard.
 
     The subprocess performs the copy, which is not hooked because HarnessGuard is not active

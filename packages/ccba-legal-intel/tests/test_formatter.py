@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from ccba_legal.formatter import OKFStructureProcessor, inject_warning_block
 
 
-def test_inject_anchors():
+def test_inject_anchors() -> None:
     processor = OKFStructureProcessor()
     raw_markdown = """
 Chương I
@@ -29,7 +29,7 @@ b) Công trình công nghiệp.
     assert '<a id="d2k1"></a>1. Cơ quan, tổ chức.' in result
 
 
-def test_format_content_with_formula_callback():
+def test_format_content_with_formula_callback() -> None:
     mock_callback = MagicMock(return_value="Standardized equation content")
     processor = OKFStructureProcessor(formula_standardizer=mock_callback)
 
@@ -42,7 +42,7 @@ def test_format_content_with_formula_callback():
         assert "Standardized equation content" in result
 
 
-def test_split_by_chapters():
+def test_split_by_chapters() -> None:
     processor = OKFStructureProcessor()
     content = """---
 document_number: "123"
@@ -72,7 +72,7 @@ Nội dung 2
         assert "Điều 2" in c2
 
 
-def test_generate_chunks():
+def test_generate_chunks() -> None:
     processor = OKFStructureProcessor()
     content = "\n\n".join(
         [f"Paragraph number {i} contains some words that we can chunk." for i in range(20)]
@@ -91,7 +91,7 @@ def test_generate_chunks():
         assert "Paragraph number" in chunks[0]["content"]
 
 
-def test_process_tables_simple():
+def test_process_tables_simple() -> None:
     processor = OKFStructureProcessor()
     html_table = """
     <table>
@@ -112,7 +112,7 @@ def test_process_tables_simple():
         assert "| Val 1 | Val 2 |" in result
 
 
-def test_inject_warning_block():
+def test_inject_warning_block() -> None:
     markdown = """
 Some text here.
 <a id="d15k2"></a>2. Điều khoản này quan trọng.

@@ -2,10 +2,13 @@ import threading
 from typing import Any
 
 import pytest
-from ccba_legal.monitor import TokenMonitor
+
+pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
+
+from ccba_legal.monitor import TokenMonitor  # type: ignore[import-not-found]
 
 
-def test_extremely_large_values():
+def test_extremely_large_values() -> None:
     """Verify behavior of TokenMonitor with extremely large max_tokens and token counts."""
     # 1. Extremely large max_tokens (e.g., 2^63 - 1)
     huge_limit = 2**63 - 1
@@ -30,13 +33,13 @@ def test_extremely_large_values():
     assert tokens == 50003
 
 
-def test_circular_references_in_messages():
+def test_circular_references_in_messages() -> None:
     """Verify that circular references in message structures raise TypeError or resolve gracefully without looping/crashing."""
     monitor = TokenMonitor()
 
     # 1. Message dict referring to itself in content
     # structure: msg = {"role": "user", "content": msg}
-    msg_circular_content = {"role": "user"}
+    msg_circular_content: dict[str, Any] = {"role": "user"}
     msg_circular_content["content"] = msg_circular_content
 
     # Since content_val is a dict (not a str or list), it should be ignored in token calculation, not crashing
@@ -99,17 +102,17 @@ def test_circular_references_in_messages():
     assert tokens in (7, 8, 9)
 
 
-def test_invalid_types_raise_type_error():
+def test_invalid_types_raise_type_error() -> None:
     """Verify that invalid types inside messages raise TypeError or are handled gracefully."""
     monitor = TokenMonitor()
 
     # 1. Non-iterable messages list
     with pytest.raises(TypeError):
-        monitor.get_context_token_count(12345)  # type: ignore
+        monitor.get_context_token_count(12345)
 
     # 2. Boolean messages list (bool is technically int, not iterable)
     with pytest.raises(TypeError):
-        monitor.get_context_token_count(True)  # type: ignore
+        monitor.get_context_token_count(True)
 
     # 3. Custom object without to_dict or dict methods
     class InvalidMessage:
@@ -121,16 +124,16 @@ def test_invalid_types_raise_type_error():
 
     # 4. Raw string passed directly (should raise TypeError)
     with pytest.raises(TypeError) as exc_info:
-        monitor.get_context_token_count("hello")  # type: ignore
+        monitor.get_context_token_count("hello")
     assert "messages must be a list or tuple" in str(exc_info.value)
 
     # 5. Raw dictionary passed directly (should raise TypeError)
     with pytest.raises(TypeError) as exc_info:
-        monitor.get_context_token_count({"role": "user", "content": "hello"})  # type: ignore
+        monitor.get_context_token_count({"role": "user", "content": "hello"})
     assert "messages must be a list or tuple" in str(exc_info.value)
 
 
-def test_concurrency_safety():
+def test_concurrency_safety() -> None:
     """Test behavior of TokenMonitor under concurrent access by multiple threads."""
     monitor = TokenMonitor()
 
@@ -142,7 +145,7 @@ def test_concurrency_safety():
     results_vie = []
     errors = []
 
-    def worker_eng():
+    def worker_eng() -> None:
         try:
             for _ in range(100):
                 tokens = monitor.get_context_token_count(messages_eng)
@@ -150,7 +153,7 @@ def test_concurrency_safety():
         except Exception as e:
             errors.append(e)
 
-    def worker_vie():
+    def worker_vie() -> None:
         try:
             for _ in range(100):
                 tokens = monitor.get_context_token_count(messages_vie)
@@ -182,7 +185,7 @@ def test_concurrency_safety():
         assert res == expected_vie
 
 
-def test_concurrent_initialization():
+def test_concurrent_initialization() -> None:
     """Verify that multiple threads concurrently triggering the first tiktoken initialization is race-free."""
     # Create a fresh monitor with no encoding initialized
     monitor = TokenMonitor()
@@ -191,7 +194,7 @@ def test_concurrent_initialization():
 
     errors = []
 
-    def initializer():
+    def initializer() -> None:
         try:
             # Trigger tiktoken loading concurrently
             tokens = monitor._get_string_tokens("Test tiktoken concurrent init")

@@ -3,13 +3,19 @@ import sqlite3
 import subprocess
 import sys
 import threading
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
 
 import pytest
+
+pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
+
 
 from ccba_harness._guard import HarnessGuard
 
 
-def test_unicode_normalization_bypass(tmp_path, monkeypatch):
+def test_unicode_normalization_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Unicode/Normalization trick:
     Use unicodedata.normalize inside python subprocess to construct the sensitive path.
     The AST scanner and regex look for ASCII keywords like 'secret'.
@@ -38,7 +44,7 @@ def test_unicode_normalization_bypass(tmp_path, monkeypatch):
             )
 
 
-def test_env_var_split_bypass(tmp_path, monkeypatch):
+def test_env_var_split_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Environment variable manipulation:
     Split the sensitive path into multiple environment variables, none of which contain
     sensitive keywords individually. Reconstruct them in the subprocess.
@@ -65,7 +71,9 @@ def test_env_var_split_bypass(tmp_path, monkeypatch):
             )
 
 
-def test_sqlite_attach_concat_expression_bypass(tmp_path, monkeypatch):
+def test_sqlite_attach_concat_expression_bypass(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """SQLite ATTACH complex expression/concatenation bypass:
     Combine subclassing string (to bypass '||' checks in the 'if "ATTACH" in sql.upper()' block)
     with string concatenation (to hide the sensitive 'secret_db.db' keyword from the
@@ -82,7 +90,7 @@ def test_sqlite_attach_concat_expression_bypass(tmp_path, monkeypatch):
     conn.close()
 
     class QueryStr(str):
-        def upper(self):
+        def upper(self) -> str:
             return "SELECT 1"
 
     # SQLite evaluates 'sec' || 'ret_db.db' to 'secret_db.db'.
@@ -95,7 +103,7 @@ def test_sqlite_attach_concat_expression_bypass(tmp_path, monkeypatch):
         conn.close()
 
 
-def test_base64_whitespace_bypass(tmp_path, monkeypatch):
+def test_base64_whitespace_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Base64 obfuscation:
     Insert whitespace inside the Base64 string.
     Python's base64.b64decode ignores whitespace, but the regex scanner in the guard
@@ -121,7 +129,7 @@ def test_base64_whitespace_bypass(tmp_path, monkeypatch):
             )
 
 
-def test_fs_hardlink_bypass(tmp_path, monkeypatch):
+def test_fs_hardlink_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """File system hardlink bypass:
     Create a hard link of a sensitive file to a benign name BEFORE entering the guard.
     Since hard links do not resolve back to their alternative paths, the guard's
@@ -141,7 +149,7 @@ def test_fs_hardlink_bypass(tmp_path, monkeypatch):
                 f.read()
 
 
-def test_pre_existing_thread_bypass(tmp_path, monkeypatch):
+def test_pre_existing_thread_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Thread concurrency bypass:
     Start a thread BEFORE entering the HarnessGuard context.
     Since HarnessGuard's security hooks and audit hooks are controlled by thread-local
@@ -159,7 +167,7 @@ def test_pre_existing_thread_bypass(tmp_path, monkeypatch):
     thread_ready = threading.Event()
     guard_entered = threading.Event()
 
-    def worker():
+    def worker() -> None:
         thread_ready.set()
         # Wait until parent enters HarnessGuard
         guard_entered.wait()
@@ -186,7 +194,7 @@ def test_pre_existing_thread_bypass(tmp_path, monkeypatch):
     assert isinstance(exception_raised, PermissionError)
 
 
-def test_powershell_obfuscation_bypass(tmp_path, monkeypatch):
+def test_powershell_obfuscation_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """PowerShell interpreter obfuscation bypass:
     Use PowerShell string concatenation to reconstruct the sensitive path.
     Since PowerShell is a native shell interpreter, it doesn't load Python's sitecustomize.py,
@@ -206,7 +214,7 @@ def test_powershell_obfuscation_bypass(tmp_path, monkeypatch):
             subprocess.run(cmd, capture_output=True, text=True, check=True)
 
 
-def test_cmd_obfuscation_bypass(tmp_path, monkeypatch):
+def test_cmd_obfuscation_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """CMD variable replacement obfuscation bypass:
     Use CMD's variable substring substitution syntax %A:a=e% which is not parsed by
     the parent process's _reconstruct_shell_variables regex.
@@ -225,7 +233,7 @@ def test_cmd_obfuscation_bypass(tmp_path, monkeypatch):
             subprocess.run(cmd, capture_output=True, text=True, check=True)
 
 
-def test_sqlite_vacuum_into_bypass(tmp_path, monkeypatch):
+def test_sqlite_vacuum_into_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """SQLite VACUUM INTO bypass:
     Use SQLite's VACUUM INTO statement to write database content to a sensitive path.
     Since it is not an ATTACH query, and writes via SQLite's internal C I/O,
@@ -242,7 +250,9 @@ def test_sqlite_vacuum_into_bypass(tmp_path, monkeypatch):
         conn.close()
 
 
-def test_thread_local_state_manipulation_bypass(tmp_path, monkeypatch):
+def test_thread_local_state_manipulation_bypass(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Thread-local state manipulation bypass:
     Manipulate _local.active_guards by setting it to a custom object that evaluates
     to True but has an empty iterator. This bypasses all file checks on the thread.
@@ -252,22 +262,22 @@ def test_thread_local_state_manipulation_bypass(tmp_path, monkeypatch):
     with open(sensitive_file, "w") as f:
         f.write("thread-local-secret")
 
-    from ccba_harness import _local
+    from ccba_harness import _local  # type: ignore[attr-defined]
 
     class FakeList:
-        def __bool__(self):
+        def __bool__(self) -> bool:
             return True
 
-        def __iter__(self):
+        def __iter__(self) -> Iterator[Any]:
             return iter([])
 
-        def __len__(self):
+        def __len__(self) -> int:
             return 0
 
-        def append(self, x):
+        def append(self, x: Any) -> None:
             pass
 
-        def remove(self, x):
+        def remove(self, x: Any) -> None:
             pass
 
     orig_guards = getattr(_local, "active_guards", None)

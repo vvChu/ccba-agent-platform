@@ -1,13 +1,17 @@
 import sqlite3
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
+
+pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
+
 
 from ccba_harness._guard import HarnessGuard
 
 
-def test_fstring_bypass(tmp_path):
+def test_fstring_bypass(tmp_path: Path) -> None:
     """Bypass 1: Use f-strings and character variables to reconstruct the path.
 
     This avoids list comprehensions, join, replace, format, and is not evaluated
@@ -32,7 +36,7 @@ def test_fstring_bypass(tmp_path):
             )
 
 
-def test_getattr_replace_bypass(tmp_path):
+def test_getattr_replace_bypass(tmp_path: Path) -> None:
     """Bypass 2: Use getattr to call replace dynamically.
 
     This bypasses the AST parser (which doesn't evaluate getattr) and the regex check
@@ -54,7 +58,7 @@ def test_getattr_replace_bypass(tmp_path):
             )
 
 
-def test_sys_argv_bypass(tmp_path):
+def test_sys_argv_bypass(tmp_path: Path) -> None:
     """Bypass 3: Pass path components as separate command arguments.
 
     Splitting the sensitive path into non-sensitive parts and passing them as arguments
@@ -84,7 +88,7 @@ def test_sys_argv_bypass(tmp_path):
             )
 
 
-def test_bytearray_bypass(tmp_path):
+def test_bytearray_bypass(tmp_path: Path) -> None:
     """Bypass 4: Use bytearray to reconstruct path.
 
     This is not evaluated by the AST parser (since it doesn't handle bytearray)
@@ -105,7 +109,7 @@ def test_bytearray_bypass(tmp_path):
             )
 
 
-def test_sqlite_str_subclass_upper_bypass(tmp_path):
+def test_sqlite_str_subclass_upper_bypass(tmp_path: Path) -> None:
     """Bypass 5: Subclass str and override upper() to bypass SQL checks.
 
     Overriding upper() to return a benign query avoids the ATTACH check in _check_sql_query,
@@ -119,7 +123,7 @@ def test_sqlite_str_subclass_upper_bypass(tmp_path):
     conn.close()
 
     class QueryStr(str):
-        def upper(self):
+        def upper(self) -> str:
             return "SELECT 1"
 
     sql_query = QueryStr(f"ATTACH DATABASE '{sensitive_db}' AS subdb")
@@ -131,7 +135,7 @@ def test_sqlite_str_subclass_upper_bypass(tmp_path):
         conn.close()
 
 
-def test_py_launcher_bypass(tmp_path):
+def test_py_launcher_bypass(tmp_path: Path) -> None:
     """Bypass 6: Use the py launcher instead of sys.executable.
 
     Running Python via 'py' disables all Python-specific checks (like blocked libraries,

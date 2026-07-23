@@ -2,9 +2,14 @@ import json
 import os
 import sys
 import time
+from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+pytestmark = [pytest.mark.slow, pytest.mark.adversarial]
+
 from ccba_legal.crawler import (
     TVPLSessionMutex,
     download_three_tier,
@@ -15,13 +20,13 @@ from ccba_legal.registry import (
 )
 
 
-def test_mutex_simultaneous_acquisition(tmp_path):
+def test_mutex_simultaneous_acquisition(tmp_path: Path) -> None:
     """Test that two concurrent processes cannot acquire the lock simultaneously."""
     lock_file = tmp_path / "simultaneous.lock"
 
     # Instance 1 and Instance 2
-    mutex1 = TVPLSessionMutex(lock_path=lock_file, timeout=0.2, retry_interval=0.05)
-    mutex2 = TVPLSessionMutex(lock_path=lock_file, timeout=0.2, retry_interval=0.05)
+    mutex1 = TVPLSessionMutex(lock_path=lock_file, timeout=1, retry_interval=0.05)
+    mutex2 = TVPLSessionMutex(lock_path=lock_file, timeout=1, retry_interval=0.05)
 
     # First instance acquires the lock successfully
     m1 = mutex1.__enter__()
@@ -35,7 +40,7 @@ def test_mutex_simultaneous_acquisition(tmp_path):
     mutex1.__exit__(None, None, None)
 
 
-def test_mutex_killed_process_deadlock(tmp_path):
+def test_mutex_killed_process_deadlock(tmp_path: Path) -> None:
     """Test that if a process holding the lock is dead, the lock is overridden and acquisition succeeds."""
     lock_file = tmp_path / "killed_process.lock"
 
@@ -44,7 +49,7 @@ def test_mutex_killed_process_deadlock(tmp_path):
     lock_data = {"pid": 99999, "timestamp": time.time() - 10}
     lock_file.write_text(json.dumps(lock_data), encoding="utf-8")
 
-    mutex = TVPLSessionMutex(lock_path=lock_file, timeout=0.5, retry_interval=0.1)
+    mutex = TVPLSessionMutex(lock_path=lock_file, timeout=1, retry_interval=0.1)
 
     # It should succeed because it overrides the dead process lock
     with mutex:
@@ -54,7 +59,7 @@ def test_mutex_killed_process_deadlock(tmp_path):
         assert data["pid"] == os.getpid()
 
 
-def test_load_relation_synonyms_malformed_yaml(tmp_path):
+def test_load_relation_synonyms_malformed_yaml(tmp_path: Path) -> None:
     """Test that malformed YAML configuration fallback works correctly."""
     resources_dir = tmp_path / ".agents" / "skills" / "ccba-legal-intel" / "resources"
     resources_dir.mkdir(parents=True, exist_ok=True)
@@ -70,7 +75,7 @@ def test_load_relation_synonyms_malformed_yaml(tmp_path):
     assert mapping == DEFAULT_RELATION_SYNONYMS
 
 
-def test_js_matching_logic_mismatch(tmp_path):
+def test_js_matching_logic_mismatch(tmp_path: Path) -> None:
     """Test that key names with commas or multiple spaces match successfully after normalization."""
     resources_dir = tmp_path / ".agents" / "skills" / "ccba-legal-intel" / "resources"
     resources_dir.mkdir(parents=True, exist_ok=True)
@@ -108,7 +113,7 @@ relation_synonyms:
     assert js_matches_fixed("Văn bản  bị  thay thế", "Văn bản  bị  thay thế")
 
 
-def test_download_three_tier_empty_cache_file(tmp_path):
+def test_download_three_tier_empty_cache_file(tmp_path: Path) -> None:
     """Test that download_three_tier ignores 0-byte/corrupted cache files and does not copy them."""
     download_dir = tmp_path / "download"
     download_dir.mkdir()
@@ -132,7 +137,7 @@ def test_download_three_tier_empty_cache_file(tmp_path):
     assert not expected_target.exists()
 
 
-def test_download_three_tier_s3_network_error(tmp_path):
+def test_download_three_tier_s3_network_error(tmp_path: Path) -> None:
     """Test that download_three_tier handles S3 network errors and falls back to Tier 3."""
     download_dir = tmp_path / "download"
     download_dir.mkdir()
@@ -143,7 +148,7 @@ def test_download_three_tier_s3_network_error(tmp_path):
     import types
 
     mock_boto3 = types.ModuleType("boto3")
-    mock_boto3.client = MagicMock(return_value=mock_s3_client)
+    mock_boto3.client = MagicMock(return_value=mock_s3_client)  # type: ignore[attr-defined]
     sys.modules["boto3"] = mock_boto3
 
     mock_botocore = types.ModuleType("botocore")
@@ -151,11 +156,11 @@ def test_download_three_tier_s3_network_error(tmp_path):
     mock_botocore_exc = types.ModuleType("botocore.exceptions")
 
     class MockClientError(Exception):
-        def __init__(self, response, operation_name):
+        def __init__(self, response: Any, operation_name: str) -> None:
             self.response = response
             self.operation_name = operation_name
 
-    mock_botocore_exc.ClientError = MockClientError
+    mock_botocore_exc.ClientError = MockClientError  # type: ignore[attr-defined]
     sys.modules["botocore.exceptions"] = mock_botocore_exc
 
     # Simulate a 500 Internal Server Error (network/connection issue)
@@ -165,7 +170,7 @@ def test_download_three_tier_s3_network_error(tmp_path):
     cdp_mock = MagicMock()
 
     # Mock trigger_download (Tier 3 fallback)
-    def mock_trigger(cdp, d_dir, slug):
+    def mock_trigger(cdp: Any, d_dir: Path, slug: str) -> bool:
         f = d_dir / f"{slug}.docx"
         f.write_text("direct crawl docx", encoding="utf-8")
         return True

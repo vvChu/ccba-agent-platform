@@ -12,13 +12,13 @@ from scripts.maskara import (
 
 
 class TestMaskara(unittest.TestCase):
-    def test_normalize_agent_name(self):
+    def test_normalize_agent_name(self) -> None:
         self.assertEqual(normalize_agent_name("Claude-Code"), "claude")
         self.assertEqual(normalize_agent_name("gemini-cli"), "gemini")
         self.assertEqual(normalize_agent_name("antigravity-code"), "antigravity")
         self.assertEqual(normalize_agent_name("unknown-agent"), "unknown-agent")
 
-    def test_detect_secrets_in_text(self):
+    def test_detect_secrets_in_text(self) -> None:
         # Fake secrets
         openai_key = "sk-proj-AbCdEfGhIjKlMnOpQrStUvWxYz123456789012345678"
         google_key = "AIzaSyAbCdEfGhIjKlMnOpQrStUvWxYz1234567"
@@ -43,7 +43,7 @@ class TestMaskara(unittest.TestCase):
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0]["rule_id"], "database-url")
 
-    def test_apply_raw_redactions(self):
+    def test_apply_raw_redactions(self) -> None:
         text = "Hello sk-proj-12345678901234567890 World"
         findings = detect_secrets_in_text(text, "dummy.txt", "claude")
         self.assertEqual(len(findings), 1)
@@ -54,7 +54,7 @@ class TestMaskara(unittest.TestCase):
         self.assertIn(b"[MASKARA_REDACTED:openai-api-key]", redacted)
         self.assertNotIn(b"sk-proj-12345678901234567890", redacted)
 
-    def test_validate_structured_json(self):
+    def test_validate_structured_json(self) -> None:
         valid_json = b'{"api_key": "sk-proj-12345678901234567890", "status": "ok"}'
         invalid_after_redact = b'{"api_key": [MASKARA_REDACTED:openai-api-key], "status": "ok"}'  # Missing quotes, invalid JSON
 

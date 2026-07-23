@@ -10,7 +10,7 @@ from scripts.hooks.scout_block import (
 
 
 class TestScoutBlock(unittest.TestCase):
-    def test_is_path_blocked(self):
+    def test_is_path_blocked(self) -> None:
         self.assertTrue(is_path_blocked(".venv/bin/python"))
         self.assertTrue(is_path_blocked("node_modules/express/index.js"))
         self.assertTrue(is_path_blocked("packages/web/node_modules/react"))
@@ -21,7 +21,7 @@ class TestScoutBlock(unittest.TestCase):
         self.assertFalse(is_path_blocked("src/main.py"))
         self.assertFalse(is_path_blocked("docs/setup.md"))
 
-    def test_is_allowed_command(self):
+    def test_is_allowed_command(self) -> None:
         self.assertTrue(is_allowed_command("npm run build"))
         self.assertTrue(is_allowed_command("pnpm install"))
         self.assertTrue(is_allowed_command("python3 -m venv .venv"))
@@ -33,7 +33,7 @@ class TestScoutBlock(unittest.TestCase):
         self.assertFalse(is_allowed_command("cat .venv/pyvenv.cfg"))
         self.assertFalse(is_allowed_command("ls node_modules"))
 
-    def test_check_tool_arguments(self):
+    def test_check_tool_arguments(self) -> None:
         # 1. Blocked path argument
         args = {"AbsolutePath": "d:/project/node_modules/react/index.js"}
         blocked, reason = check_tool_arguments(args, "view_file")
@@ -50,7 +50,7 @@ class TestScoutBlock(unittest.TestCase):
         blocked, reason = check_tool_arguments(args, "run_command")
         self.assertFalse(blocked)
 
-    def test_hook_main_blocking(self):
+    def test_hook_main_blocking(self) -> None:
         # Mock payload that accesses node_modules
         payload = {
             "tool": "view_file",

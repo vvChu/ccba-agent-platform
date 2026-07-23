@@ -2,14 +2,19 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
+
+pytestmark = [pytest.mark.slow, pytest.mark.adversarial]
+
+
 from bs4 import BeautifulSoup
 from ccba_legal.formatter import OKFStructureProcessor
 from ccba_legal.parser import LegalAnalysisEngine
 
-from mdconverter.plugins.vn_legal.linter import VNLegalLinter
+from mdconverter.plugins.vn_legal.linter import VNLegalLinter  # type: ignore[import-untyped]
 
 
-def test_anchor_injection_edge_cases():
+def test_anchor_injection_edge_cases() -> None:
     processor = OKFStructureProcessor()
 
     # Case 1: Hierarchy with no prior Điều (should not inject khoan/diem anchors)
@@ -36,7 +41,7 @@ a) Hoạt động đầu tư xây dựng;"""
     assert '<a id="d1k1dđ"></a>đ) Các hoạt động khác.' in processed
 
 
-def test_table_flattening_edge_cases():
+def test_table_flattening_edge_cases() -> None:
     processor = OKFStructureProcessor()
 
     # Case 1: Empty table
@@ -86,7 +91,7 @@ def test_table_flattening_edge_cases():
     assert num_rows == 1
 
 
-def test_standardize_formulas_edge_cases():
+def test_standardize_formulas_edge_cases() -> None:
     # Setup mock LLM client
     mock_ai = MagicMock()
     engine = LegalAnalysisEngine(ai_client=mock_ai)
@@ -112,7 +117,7 @@ def test_standardize_formulas_edge_cases():
     mock_ai.chat.assert_called_once()
 
 
-def test_linter_vn_legal_rules():
+def test_linter_vn_legal_rules() -> None:
     linter = VNLegalLinter()
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -177,12 +182,12 @@ Nội dung Điều 1.
         assert "Incorrect 'Điểm' format" in vn004_issues[0].message
 
 
-def test_validate_docs_linter_logic(tmp_path):
+def test_validate_docs_linter_logic(tmp_path: Path) -> None:
     # Import validation functions from scripts/validate_docs.py
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
-    import validate_docs
+    import validate_docs  # type: ignore[import-not-found]
 
     # Case 1: Malformed frontmatter
     # Must place it under a "legal_docs" folder structure to make is_okf True
