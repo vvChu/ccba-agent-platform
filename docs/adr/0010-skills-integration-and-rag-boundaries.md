@@ -21,7 +21,7 @@ Chúng tôi thống nhất thiết lập các ranh giới và quy tắc tích h�
 *   **Thực thi:** Agent ghi nhận lỗi nghi vấn vào báo cáo sơ bộ và đưa ra đề xuất tương tác: *"Phát hiện nghi vấn vi phạm TCVN 3890 tại hành lang thoát nạn. Anh có muốn kích hoạt `/ccba-research tcvn-3890` để đối soát sâu dưới nền không?"*. Lệnh nghiên cứu chỉ chạy khi có sự xác nhận tường minh của người dùng.
 
 ### Quyết định 2: Tích hợp RAG có điều kiện trong hồ sơ hoàn công (`completion-checklist`)
-*   **Nguyên tắc:** Ưu tiên sử dụng dữ liệu cấu trúc tĩnh (static templates) mặc định có sẵn cho Nghị định 06/2021/NĐ-CP để tiết kiệm 100% chi phí token RAG.
+*   **Nguyên tắc:** Ưu tiên sử dụng dữ liệu cấu trúc tĩnh (static templates) mặc định có sẵn cho Nghị định 06/2021/NĐ-CP (đã được thay thế bởi NĐ 105/2025/NĐ-CP) để tiết kiệm 100% chi phí token RAG.
 *   **Thực thi:** Chỉ kích hoạt RAG nghiên cứu qua `ccba-research` khi Registry văn bản cục bộ (`legal_registry.yaml`) báo cáo Nghị định hoặc Thông tư về nghiệm thu hoàn công hiện hành đã chuyển trạng thái sang `superseded` (hết hiệu lực) và có văn bản thay thế mới (`current`).
 
 ### Quyết định 3: Giới hạn đề xuất dựng mẫu thử trong cải tiến kiến trúc (`improve-codebase-architecture`)

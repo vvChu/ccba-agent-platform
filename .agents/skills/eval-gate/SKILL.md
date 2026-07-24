@@ -17,8 +17,8 @@ Kích hoạt chạy script điều phối chính ngầm qua Wrapper an toàn v�
 # Kích hoạt CI Gates toàn bộ qua Safe Execution Sandbox Wrapper:
 .venv\Scripts\python.exe scripts/run_safe_eval_wrapper.py --cmd ".venv\Scripts\python.exe scripts/run_harness_evals.py" --timeout 90
 
-# KHOANH VÙNG TEST (Scoped Test Execution): Chạy file test cụ thể để tiết kiệm thời gian
-.venv\Scripts\pytest -q tests/test_agent_execution_guardrails.py
+# KHOANH VÙNG TEST (Scoped Test Execution): Chạy file test cụ thể bằng Wrapper an toàn
+python scripts/safe_pytest.py -f tests/test_agent_execution_guardrails.py
 
 # Tự động tối ưu hóa SKILL.md với Skill Auto-Tuner (SkillOpt loop)
 python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3

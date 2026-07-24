@@ -55,7 +55,7 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
 
 ## 4. Execution Guardrails & Async Task Policy
 
-* **Scoped Test Execution:** Nghiêm cấm Agent kích hoạt các lệnh kiểm thử toàn diện (unscoped `pytest -q`) trên cả repository mà không chỉ định rõ file hoặc thư mục test mục tiêu cụ thể (ví dụ: bắt buộc phải dùng `.venv\Scripts\pytest -q tests/test_file.py`).
+* **Scoped Test Execution:** Nghiêm cấm Agent kích hoạt các lệnh kiểm thử toàn diện (unscoped `pytest`) trên cả repository mà không chỉ định rõ file test mục tiêu cụ thể (ví dụ: bắt buộc phải dùng `python scripts/safe_pytest.py -f tests/test_file.py` hoặc `.venv\Scripts\pytest.exe tests/test_file.py`).
 * **Bounded Async Task:** Khi một lệnh chạy dưới dạng tác vụ ngầm (Background Task), Agent không được vội vã đưa ra câu trả lời tạm thời rồi kết thúc lượt (`End Turn`) nhường lượt khi chưa thu thập xong kết quả. Agent phải kiểm tra log hoặc trạng thái tác vụ qua `manage_task status` để trả về báo cáo kết quả thực tế cho người dùng.
 * **TDD Retry Cap:** Trong vòng lặp Red→Green→Refactor (TDD) hoặc edit→test (implement), Agent chỉ được lặp lại tối đa **5 vòng** cho cùng một seam hoặc test file. Nếu sau 5 vòng test vẫn fail, Agent phải dừng lại, commit Work-In-Progress (WIP), ghi nhận các blockers chưa giải quyết được, và xin chỉ thị từ người dùng — tuyệt đối không tiếp tục lặp cho đến khi cạn context budget.
 * **Anti-Duplicate Background Runner:** Nghiêm cấm Agent kích hoạt nhiều lệnh chạy ngầm (`run_command` async) cho cùng một script test runner (`run_harness_evals.py` hoặc `pytest`). Luôn đảm bảo script test runner đã tự động tích hợp Singleton Process Lock (`ensure_single_instance()`) và chờ tiến trình cũ kết thúc hoặc hủy tiến trình cũ trước khi chạy tiến trình mới.

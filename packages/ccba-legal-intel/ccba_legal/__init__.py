@@ -18,7 +18,7 @@ from .formatter import OKFStructureProcessor, inject_warning_block
 from .monitor import TokenMonitor
 from .packager import OKFBundlePackager, get_concept_type, is_guiding_link
 from .parser import LegalAnalysisEngine
-from .registry import LegalRegistryManager, load_relation_synonyms
+from .sync import LegalSyncEngine, calculate_md5, calculate_sha256
 
 __all__ = [
     "ChromeCDP",
@@ -45,4 +45,7 @@ __all__ = [
     "HarnessGuard",
     "ADRGenerator",
     "OKFStructureProcessor",
+    "LegalSyncEngine",
+    "calculate_md5",
+    "calculate_sha256",
 ]

@@ -144,15 +144,16 @@ def run_llm_judge(prompt: str, output: str, rubric: str, judge_model: str = "gem
 
     try:
         res = ai.chat(judge_prompt, model=judge_model, max_tokens=1024, temperature=0.1)
-        # Clean markdown code blocks if model output them
         cleaned_res = res.strip()
-        if cleaned_res.startswith("```json"):
-            cleaned_res = cleaned_res[7:]
-        if cleaned_res.endswith("```"):
-            cleaned_res = cleaned_res[:-3]
-        cleaned_res = cleaned_res.strip()
+        if "```" in cleaned_res:
+            cleaned_res = re.sub(r"```(?:json)?", "", cleaned_res).strip()
 
-        data = json.loads(cleaned_res)
+        json_match = re.search(r"\{.*\}", cleaned_res, re.DOTALL)
+        if json_match:
+            data = json.loads(json_match.group(0))
+        else:
+            data = json.loads(cleaned_res)
+
         return bool(data.get("passed", False)), str(data.get("reason", "No reason provided."))
     except Exception as e:
         logger.error(f"Lỗi khi chạy LLM Judge: {e}")
@@ -378,6 +379,76 @@ def auto_tune_skill(
     return best_pass_rate == 1.0
 
 
+def dry_run_validate(test_files: list[Path]) -> bool:
+    """Validates JSON structure and regex assertions in all test_files without calling LLM APIs."""
+    logger.info("🧪 Bắt đầu chế độ DRY-RUN (Validate syntax & regex)...")
+    valid_count = 0
+    total_cases = 0
+    errors = []
+
+    for tf in sorted(test_files):
+        skill_name = tf.stem[5:]
+        try:
+            with open(tf, encoding="utf-8") as f:
+                cases = json.load(f)
+        except Exception as e:
+            msg = f"File {tf.name} lỗi JSON syntax: {e}"
+            errors.append(msg)
+            logger.error(f"❌ {msg}")
+            continue
+
+        NOISE_PROMPT_PATTERNS = [
+            r"\bquicksort\b",
+            r"\bfibonacci\b",
+            r"\bbubble\s*sort\b",
+            r"\bsick\s*leave\b",
+            r"\bbinary\s*search\b",
+        ]
+
+        file_ok = True
+        for case in cases:
+            total_cases += 1
+            cid = case.get("id", "")
+            prompt_text = case.get("prompt", "")
+            if not cid or not prompt_text:
+                msg = f"File {tf.name}: case thiếu 'id' hoặc 'prompt'"
+                errors.append(msg)
+                file_ok = False
+                continue
+
+            # Kiểm tra noise prompt ngoại lai không sát nghiệp vụ
+            if skill_name not in ("tdd", "implement", "code-review"):
+                for noise_pat in NOISE_PROMPT_PATTERNS:
+                    if re.search(noise_pat, prompt_text, re.IGNORECASE):
+                        msg = f"File {tf.name} case [{cid}]: Phát hiện Noise Prompt không sát nghiệp vụ (pattern: '{noise_pat}'). Vui lòng thay bằng negative prompt chuyên môn sát thực tế."
+                        errors.append(msg)
+                        file_ok = False
+
+            for assertion in case.get("assertions", []):
+                atype = assertion.get("type")
+                if atype in ("regex", "negative_regex"):
+                    pattern = assertion.get("pattern", "")
+                    try:
+                        re.compile(pattern)
+                    except re.error as e:
+                        msg = f"File {tf.name} case [{cid}]: Regex '{pattern}' không hợp lệ ({e})"
+                        errors.append(msg)
+                        file_ok = False
+        if file_ok:
+            valid_count += 1
+            logger.info(f"  - [{skill_name}] ({len(cases)} cases): Syntax, Regex & Noise-free OK")
+
+    logger.info("==================================================")
+    logger.info(f"🧪 BÁO CÁO DRY-RUN: Validated {len(test_files)} files ({total_cases} test cases).")
+    if errors:
+        logger.error(f"❌ Phát hiện {len(errors)} lỗi syntax/regex:")
+        for err in errors:
+            logger.error(f"  - {err}")
+        return False
+    logger.info("🎉 Tất cả test cases JSON & Regex patterns đều HỢP LỆ 100%!")
+    return True
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="CCBA AI Skills Evaluation Harness Runner.")
     parser.add_argument("--skill", type=str, default=None, help="Tên skill cần kiểm định (ví dụ: copywriting). Mặc định là 'all'.")
@@ -386,9 +457,28 @@ def main() -> None:
     parser.add_argument("--trials", type=int, default=3, help="Số lần chạy thử cho mỗi test case (mặc định: 3).")
     parser.add_argument("--auto-tune", action="store_true", help="Bật chế độ tự động tối ưu hóa SKILL.md (SkillOpt loop).")
     parser.add_argument("--max-iterations", type=int, default=3, help="Số vòng lặp auto-tune tối đa (mặc định: 3).")
+    parser.add_argument("--dry-run", action="store_true", help="Kiểm tra cú pháp file JSON và regex pattern mà không gọi LLM API.")
+    parser.add_argument("--mine-logs", action="store_true", help="Tự động bóc tách user prompts từ transcript logs để auto-tune test cases trước khi chạy evals.")
     args = parser.parse_args()
 
     test_cases_dir = project_root / ".agents" / "skills" / "eval-gate" / "test_cases"
+
+    if args.mine_logs:
+        logger.info("⛏️ Kích hoạt Production Log Mining trước khi chạy Evals...")
+        try:
+            from scripts.log_eval_miner import mine_logs_and_export
+            mine_logs_and_export(project_root / ".system_generated" / "logs", test_cases_dir, args.skill)
+        except Exception as e:
+            logger.warning(f"⚠️ Không thể mine logs: {e}")
+
+    if args.dry_run:
+        if args.skill and args.skill.lower() != "all":
+            tf = test_cases_dir / f"eval_{args.skill}.json"
+            success = dry_run_validate([tf]) if tf.exists() else False
+        else:
+            test_files = list(test_cases_dir.glob("eval_*.json"))
+            success = dry_run_validate(test_files)
+        sys.exit(0 if success else 1)
 
     # Chạy cho một skill cụ thể
     if args.skill and args.skill.lower() != "all":
