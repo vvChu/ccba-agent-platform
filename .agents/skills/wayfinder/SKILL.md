@@ -28,6 +28,7 @@ Bản đồ có thể lưu dưới dạng file Markdown cục bộ (mặc địn
 2. **Ghi chú (Notes):** Các lưu ý đặc biệt, các kỹ năng bổ trợ cần nạp.
 3. **Quyết định đã chốt (Decisions so far):** Nhật ký ghi nhận kết quả của các ticket đã giải quyết (chứa tên ticket, link và tóm tắt 1 dòng).
 4. **Sương mù chiến trận / Chưa xác định rõ (Not yet specified):** Bản đồ cố tình không đầy đủ: không vẽ những gì chưa thể nhìn thấy. Nơi ghi nhận sơ lược các quyết định dự kiến sẽ tới nhưng chưa đủ sắc nét để tạo ticket (do phụ thuộc vào các ticket khác đang mở).
+   - **Quy tắc Kiểm thử Sương mù (Fog vs. Ticket Test):** Tiêu chí phân định là *khả năng phát biểu câu hỏi sắc nét* chứ không phải *khả năng trả lời ngay*. Nếu câu hỏi đã có thể phát biểu chính xác $\rightarrow$ Tạo Ticket ngay (dù đang bị chặn); Nếu chỉ mới dừng lại ở vùng mờ chưa rõ dạng câu hỏi $\rightarrow$ Ghi nhận ở mục *Not yet specified*.
 5. **Ngoài phạm vi (Out of scope):** Danh sách các tác vụ hoặc quyết định đã bị chủ động loại trừ khỏi phạm vi nỗ lực hiện tại. Nếu một ticket đang chạy bị phát hiện là nằm ngoài điểm đích, **đóng ticket đó lại** và ghi nhận lý do tại đây kèm link ticket.
 
 ---
@@ -49,7 +50,8 @@ Mỗi ticket con đại diện cho một câu hỏi cần làm rõ, tương ứn
 - Khi nhận yêu cầu mơ hồ, thực hiện phỏng vấn `/ccba-grilling` để xác định **Điểm đích (Destination)**.
 - Phác thảo bản đồ đầu tiên: Liệt kê các quyết định cần làm rõ, xác định các ticket unblocked ở biên giới (Frontier), đưa các phần chưa rõ ràng vào mục **Chưa xác định rõ (Not yet specified)**. **Nếu quá trình này không phát hiện vùng mờ (fog) nào** — lộ trình đến đích đã hoàn toàn rõ ràng — bạn không cần lập bản đồ Wayfinder. Hãy dừng lại và đề xuất thực hiện trực tiếp.
 - Tạo các ticket con unblocked. Nếu sử dụng tracker thật, hãy thiết lập liên kết chặn bản địa (native dependency) của tracker (ví dụ: native blocking của GitHub/GitLab). Chỉ fallback sang ghi văn bản `Blocked by: #ID` khi tracker không hỗ trợ.
-- **Tiêu chí hoàn thành:** Đã phác thảo xong bản đồ Wayfinder đầu tiên với đầy đủ các mục (Destination, Notes, Decisions so far, Not yet specified, Out of scope) và khởi tạo các ticket unblocked ở biên giới.
+- **Kích hoạt Sub-agent nghiên cứu song song (Parallel Research Dispatch):** Đối với các ticket loại `Research [AFK]` vừa khởi tạo tại Biên giới, Agent khởi chạy ngay sub-agent `/ccba-research` dưới nền để tự động thu thập tài liệu/API song song trong khi hoàn tất phác thảo bản đồ.
+- **Tiêu chí hoàn thành:** Đã phác thảo xong bản đồ Wayfinder đầu tiên với đầy đủ các mục (Destination, Notes, Decisions so far, Not yet specified, Out of scope), khởi tạo các ticket unblocked ở biên giới và kích hoạt sub-agent nghiên cứu ngầm nếu có.
 
 ### Bước 2: Thực thi giải quyết Ticket (Work through the map)
 - Chọn ticket unblocked đầu tiên ở **Biên giới (Frontier)** — là các ticket mở, chưa có assignee và không bị chặn bởi bất kỳ ticket mở nào khác.
