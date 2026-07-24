@@ -1,0 +1,129 @@
+"""sync.py - Legal Auto-Sync Pipeline Deep Module.
+
+Provides `LegalSyncEngine` for automated synchronization of legal documents,
+Google Drive integration, Chrome CDP crawling, and NotebookLM cloud indexing.
+
+Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
+"""
+
+import hashlib
+import os
+import socket
+import subprocess
+import time
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+try:
+    from .crawler import ChromeCDP, trigger_download
+except ImportError:
+    ChromeCDP = None  # type: ignore[assignment, misc]
+    trigger_download = None  # type: ignore[assignment]
+
+try:
+    import google.auth
+    from google.auth.transport.requests import Request
+    from google.oauth2.credentials import Credentials
+    from googleapiclient.discovery import build
+    from googleapiclient.errors import HttpError
+    from googleapiclient.http import MediaFileUpload
+
+    GOOGLE_API_AVAILABLE = True
+except ImportError:
+    GOOGLE_API_AVAILABLE = False
+
+DEFAULT_DRIVE_FOLDER = "1b9vm_1KQ8Fg8Crr1Q-i2xmE62UIHy-_2"
+
+
+def calculate_md5(file_path: Path) -> str:
+    """Calculate MD5 hash of file for Google Drive matching."""
+    hash_md5 = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+
+def calculate_sha256(file_path: Path) -> str:
+    """Calculate SHA-256 hash of file for local cache audit."""
+    hash_sha = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_sha.update(chunk)
+    return hash_sha.hexdigest()
+
+
+def is_port_open(port: int) -> bool:
+    """Check if TCP port is active."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(("127.0.0.1", port)) == 0
+
+
+def ensure_chrome_debug_port() -> bool:
+    """Detect and launch Google Chrome in debug port 9222 mode if inactive."""
+    if is_port_open(9222):
+        return True
+
+    chrome_paths = [
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
+    ]
+
+    chrome_path = None
+    for path in chrome_paths:
+        if os.path.exists(path):
+            chrome_path = path
+            break
+
+    if not chrome_path:
+        return False
+
+    try:
+        user_data_dir = os.path.join(
+            os.path.expanduser("~"), ".gemini", "antigravity", "chrome-debug-profile"
+        )
+        os.makedirs(user_data_dir, exist_ok=True)
+
+        cmd = [
+            chrome_path,
+            "--remote-debugging-port=9222",
+            f"--user-data-dir={user_data_dir}",
+            "--no-first-run",
+            "--no-default-browser-check",
+        ]
+        subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        for _ in range(10):
+            time.sleep(0.5)
+            if is_port_open(9222):
+                return True
+        return False
+    except Exception:
+        return False
+
+
+class LegalSyncEngine:
+    """Deep module coordinating local legal registry sync, Chrome CDP discovery, and cloud drives."""
+
+    def __init__(self, project_root: Path | None = None) -> None:
+        if project_root is None:
+            project_root = Path.cwd()
+        self.project_root = project_root
+
+    def calculate_file_hashes(self, file_path: Path) -> dict[str, str]:
+        """Compute both MD5 and SHA256 for a target file."""
+        return {
+            "md5": calculate_md5(file_path),
+            "sha256": calculate_sha256(file_path),
+        }
+
+    def verify_environment(self) -> dict[str, bool]:
+        """Verify environment dependencies."""
+        return {
+            "google_api": GOOGLE_API_AVAILABLE,
+            "chrome_cdp": ChromeCDP is not None,
+            "chrome_port_open": is_port_open(9222),
+        }
