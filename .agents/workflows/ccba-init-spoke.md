@@ -241,6 +241,16 @@ exit 0
 Nếu `mode` là **"software"** hoặc **"hybrid"**, đề xuất người dùng chọn ngôn ngữ lập trình mục tiêu (Python/Node.js) và dựng cấu trúc thư mục chuẩn:
 - Tạo các thư mục `src`, `tests`, `scripts`, `docs`, `docs/references`, `docs/adr`
 - Khởi tạo `pyproject.toml` (cho Python) hoặc `package.json` (cho Node.js)
+- Với dự án Python: Đồng bộ bộ rào chắn test `conftest.py` và wrapper script `scripts/safe_pytest.py` từ Hub:
+  ```powershell
+  if (Test-Path "$hub\conftest.py") {
+      Copy-Item -Path "$hub\conftest.py" -Destination ".\conftest.py" -Force
+  }
+  if (Test-Path "$hub\scripts\safe_pytest.py") {
+      New-Item -ItemType Directory -Path ".\scripts" -Force | Out-Null
+      Copy-Item -Path "$hub\scripts\safe_pytest.py" -Destination ".\scripts\safe_pytest.py" -Force
+  }
+  ```
 
 ### 7. Khởi tạo cấu trúc Tri thức Mẫu (Dành cho các dự án nghiệp vụ)
 Nếu `mode` là **"delivery"** hoặc **"hybrid"**, sao chép các tệp tin templates từ Hub về Spoke để kỹ sư bắt đầu ghi nhận tri thức:
