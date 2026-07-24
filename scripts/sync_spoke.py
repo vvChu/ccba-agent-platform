@@ -445,6 +445,19 @@ def sync_project(spoke_path: str, sync_item: str = None) -> int:
         )
         shutil.copy2(hub_agents_md, spoke_agents_md)
 
+    # Copy test execution guardrails for Python/Software Spokes
+    if (spoke_root / "pyproject.toml").exists() or project_type == "Phần mềm":
+        hub_conftest = hub_root / "conftest.py"
+        hub_safe_pytest = hub_root / "scripts" / "safe_pytest.py"
+        if hub_conftest.exists():
+            shutil.copy2(hub_conftest, spoke_root / "conftest.py")
+            print("  - Copied test guardrail: conftest.py")
+        if hub_safe_pytest.exists():
+            spoke_scripts_dir = spoke_root / "scripts"
+            spoke_scripts_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(hub_safe_pytest, spoke_scripts_dir / "safe_pytest.py")
+            print("  - Copied test wrapper CLI: scripts/safe_pytest.py")
+
     # Đăng ký Spoke vào Hub Registry (Mã hóa RSA)
     register_spoke_to_hub(spoke_root, hub_root, project_name, project_type)
 
