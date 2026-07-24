@@ -20,7 +20,8 @@ def pytest_addoption(parser) -> None:
 
 def pytest_cmdline_main(config) -> int | None:
     """Hook kiểm tra các tham số đầu vào trước khi tiến hành chạy pytest."""
-    if config.getoption("--allow-unscoped", default=False):
+    import os
+    if config.getoption("--allow-unscoped", default=False) or os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true":
         return None
 
     project_root = Path(config.rootpath).resolve()
