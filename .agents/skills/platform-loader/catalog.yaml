@@ -670,6 +670,16 @@ skills:
   - luồng công việc
   - bản đồ kỹ năng
   skill_path: .agents/skills/ask/SKILL.md
+- name: to-questionnaire
+  bundle: _core
+  description: Chuyển đổi một quyết định chưa có đủ thông tin thành Bảng hỏi (Questionnaire) bất đồng bộ
+  triggers:
+  - to-questionnaire
+  - questionnaire
+  - bảng hỏi
+  - async interview
+  - discovery questionnaire
+  skill_path: .agents/skills/to-questionnaire/SKILL.md
 - name: review_skill
   bundle: _core
   description: Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn
