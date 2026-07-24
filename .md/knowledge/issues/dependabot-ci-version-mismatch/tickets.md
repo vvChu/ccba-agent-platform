@@ -5,34 +5,35 @@
 
 ---
 
-## 🟢 Ticket 1: Close 2 PRs Dependabot bị hỏng CI (#169 và #170)
+## ✅ Ticket 1: Close 2 PRs Dependabot bị hỏng CI (#169 và #170)
 
 - **Mã Ticket**: `ticket-dependabot-1`
 - **Loại**: `Task [AFK]`
-- **Trạng thái**: 🟢 Unblocked
-- **Mục tiêu**:
-  - Chạy `gh pr close 169` và `gh pr close 170` để đóng các PRs lỗi do Dependabot tạo nâng cấp major version không tương thích.
+- **Trạng thái**: ✅ Completed
+- **Kết quả**:
+  - Đã chạy `gh pr close 169` và `gh pr close 170` đóng thành công 2 PRs lỗi do Dependabot tạo.
 
 ---
 
-## 🟢 Ticket 2: Cấu hình Ignore Guardrail trong `dependabot.yml`
+## ✅ Ticket 2: Cấu hình Ignore Guardrail trong `dependabot.yml`
 
 - **Mã Ticket**: `ticket-dependabot-2`
 - **Loại**: `Task [AFK]`
-- **Trạng thái**: 🟢 Unblocked
+- **Trạng thái**: ✅ Completed
 - **Tệp tin tác động**: `[MODIFY] .github/dependabot.yml`
-- **Mục tiêu**:
-  - Bổ sung cấu hình `ignore` với `update-types: ["version-update:semver-major"]` cho phần `package-ecosystem: "github-actions"`.
-  - Ngăn ngừa Dependabot tự ý tạo PRs nâng cấp major version phá vỡ tính tương thích CI.
+- **Kết quả**:
+  - Bổ sung quy tắc `ignore` với `update-types: ["version-update:semver-major"]` cho `actions/checkout` và `actions/setup-python`.
+  - Pass kiểm định YAML parse `yaml.safe_load()`.
 
 ---
 
-## 🟡 Ticket 3: Đẩy commit & Kiểm tra tính ổn định của CI
+## ✅ Ticket 3: Đẩy commit & Kiểm tra tính ổn định của CI
 
 - **Mã Ticket**: `ticket-dependabot-3`
 - **Loại**: `Task [AFK]`
-- **Trạng thái**: 🟡 Blocked by `ticket-dependabot-1`, `ticket-dependabot-2`
+- **Trạng thái**: ✅ Completed
 - **Tệp tin tác động**: `.github/dependabot.yml`
-- **Mục tiêu**:
-  - Đẩy thay đổi `dependabot.yml` lên nhánh `main`.
-  - Kiểm tra `validate_docs.py` đạt 100% PASS.
+- **Kết quả**:
+  - Đã commit và đẩy thay đổi lên `main` (`da67b71`).
+  - Kiểm tra `validate_docs.py` đạt **100% PASS (0 errors)**.
+  - Danh sách open PRs hiện tại: **0 open PRs**.
