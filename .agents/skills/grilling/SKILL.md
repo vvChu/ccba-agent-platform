@@ -48,12 +48,30 @@ Sử dụng khi người dùng muốn hội tụ về một thiết kế giao di
 
 ---
 
+## Cấu trúc Cây Thiết kế & Quản lý Frontier (Design Tree & Frontier Questions)
+
+Để tránh phỏng vấn tràn lan hoặc đặt các câu hỏi tiền đề chưa được làm rõ, Agent phải quản lý cuộc phỏng vấn như một **Cây thiết kế (Design Tree)**:
+
+1. **Cây thiết kế (Design Tree):** Mọi quyết định thiết kế phân nhánh thành các quyết định con phụ thuộc vào nó.
+2. **Biên giới câu hỏi (Frontier Questions):** Tập hợp các quyết định mà các điều kiện tiên quyết (prerequisites) của chúng **đã được chốt**. Chỉ đặt những câu hỏi nằm ở "Frontier" — các câu hỏi có thể trả lời ngay mà không cần đoán trước kết quả của các câu hỏi chưa được hỏi.
+3. **Mở rộng Frontier theo từng vòng (Round-by-Round Expansion):**
+   - Đặt từng câu hỏi ở Frontier (hoặc gom theo nhóm Frontier nếu chọn chế độ Batching), kèm đề xuất (recommended answer).
+   - Khi người dùng phản hồi, các quyết định được chốt sẽ đẩy Frontier đi xa hơn, giải phóng (unblock) các câu hỏi phụ thuộc ở tầng sâu hơn.
+   - Tính toán lại Frontier sau mỗi lượt phản hồi.
+4. **Tự động tra cứu dữ kiện (Facts vs. Decisions):**
+   - **Facts (Dữ kiện thực tế):** Tra cứu từ codebase, logs, tệp tin hoặc khởi chạy sub-agent (`research`) tìm kiếm dưới nền. **Tuyệt đối không hỏi người dùng bất kỳ dữ kiện nào có thể tự tra cứu.**
+   - **Decisions (Quyết định):** Dành riêng cho người dùng lựa chọn và duyệt.
+
+---
+
 ## Tiêu chí hoàn thành (Completion Criteria)
-*   [x] Mọi câu hỏi đặt ra đều phải được thảo luận và có phản hồi phản hồi rõ ràng từ người dùng.
-*   [x] Phải xuất ra biên bản tổng hợp quyết định (Decision Log / Resolution Summary) sau khi kết thúc toàn bộ các câu hỏi.
+*   [x] Mọi câu hỏi ở Frontier đã được thảo luận và có phản hồi rõ ràng từ người dùng.
+*   [x] Không còn giả định mầm (silent assumptions) hay sương mù chưa được làm rõ trên Cây thiết kế.
+*   [x] Xuất ra biên bản tổng hợp quyết định (Decision Log / Resolution Summary) sau khi kết thúc phỏng vấn.
 *   [x] Tự động cập nhật lại bản Kế hoạch triển khai (`implementation_plan.md`) nếu cuộc thảo luận dẫn đến thay đổi thiết kế hoặc cách tiếp cận kỹ thuật.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
