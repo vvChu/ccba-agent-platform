@@ -55,7 +55,7 @@ Hỏi người dùng: *"Giao diện công khai là gì, và chúng ta nên kiể
 - **Đỏ trước Xanh (Red before green):** Luôn viết test thất bại trước, sau đó chỉ viết đủ code để pass test đó.
 - **Một lát cắt tại một thời điểm:** Một seam, một test, một lượng code tối giản cho mỗi chu kỳ.
 - **Refactoring là một phần bắt buộc:** Phải được thực hiện ngay sau khi test pass (Green) để giữ cho codebase luôn sạch sẽ trước khi chuyển sang chu kỳ tiếp theo.
-- **Ngân sách Vòng lặp (Loop Budget):** Tối đa **5 vòng** Red→Green→Refactor cho cùng một seam hoặc test file. Nếu sau 5 vòng test vẫn thất bại, Agent phải dừng lại, commit Work-In-Progress (WIP), ghi nhận rõ các blockers chưa giải quyết được, và chuyển sang seam tiếp theo hoặc xin chỉ thị từ người dùng. Quy tắc này ngăn chặn việc đốt cháy context budget qua vòng lặp vô hạn (xem `issue-wayfinder-cancelled-execution`).
+- **Ngân sách Vòng lặp (Loop Budget):** Tối đa **5 vòng** Red→Green→Refactor cho cùng một seam hoặc test file. Sử dụng `python scripts/safe_pytest.py -f <test_file>` để chạy test an toàn dưới dạng detached process. Nếu sau 5 vòng test vẫn thất bại, Agent phải dừng lại, commit Work-In-Progress (WIP), ghi nhận rõ các blockers chưa giải quyết được, và chuyển sang seam tiếp theo hoặc xin chỉ thị từ người dùng. Quy tắc này ngăn chặn việc đốt cháy context budget qua vòng lặp vô hạn (xem `issue-wayfinder-cancelled-execution`).
 
 ## Tài liệu tham khảo
 - Xem [tests.md](tests.md) để biết các ví dụ thực tế.

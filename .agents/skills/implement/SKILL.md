@@ -12,9 +12,9 @@ Use `/ccba-tdd` where possible, at pre-agreed seams.
 
 To prevent context exhaustion (which causes misleading "User cancelled agent execution" errors):
 
-1. **Scoped Tests Only**: Always run pytest on individual test files (`.venv\Scripts\pytest -q tests/test_specific.py`), never on entire directories.
+1. **Scoped Tests Only**: Always run pytest on individual test files (`python scripts/safe_pytest.py -f tests/test_specific.py`), never on entire directories.
 2. **Loop Budget**: Maximum **5 edit→test cycles** per seam/test file. If a test still fails after 5 attempts, stop, commit WIP, document blockers, and ask the user for guidance.
-3. **Full Suite — Once at the End**: Run the complete test suite only **once** at the very end, preferably via `safe_runner.py` to detach from the daemon process.
+3. **Full Suite — Once at the End**: Run the complete test suite only **once** at the very end, preferably via `python scripts/safe_pytest.py --allow-unscoped` to detach from the daemon process.
 4. **Invalid Args Signal**: If you encounter `invalid tool call (invalid_args)` errors twice in a row, stop immediately — context budget is nearly depleted. Commit WIP and inform the user.
 
 ## Completion Steps
