@@ -615,6 +615,41 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Nguồn**: Session `ef5005bc-3ed1-4118-80c9-7053d12c4522`, 2026-07-23
 
 ---
+
+## Session Learnings — 5-Layer Defense Model & Dependabot CI Guardrails (2026-07-24)
+- **ID Phiên làm việc**: `de07cc2b-5990-47a3-afa4-e1c7ff2626b6`
+
+### Patterns (Mẫu tốt)
+
+#### 61. 5-Layer Defense Model for AI Skills Evals & Legal Guardrails
+- **Ngữ cảnh**: Các bài test kiểm thử AI Skill bị nhiễu do prompt câu hỏi đơn giản (như sort, fibonacci), bị false negative do câu trả lời từ chối lịch sự (disclaimer) của LLM, và linter pháp lý sử dụng luật xây dựng đã hết hiệu lực.
+- **Giải pháp**: 
+  - **Tầng 1 (Domain-Adjacent Standard)**: Thay các prompt lập trình chung bằng các tình huống giáp ranh thuộc bộ môn khác để thử thách độ chính xác ranh giới của skill.
+  - **Tầng 2 (Disclaimer-Aware Assertions)**: Khóa các định danh thành phẩm chính (`checklist_master.yaml`, `Phụ lục VIb`) trong negative regex thay vì tên skill chung để không bị đánh lừa bởi câu disclaimer lịch sự của LLM.
+  - **Tầng 3 (Automated Noise Linter)**: Tích hợp bộ quét mẫu noise prompt (`quicksort`, `fibonacci`, `bubble sort`...) trong `eval_runner.py --dry-run` để tự động phát hiện và chặn các câu hỏi test thiếu thực tế.
+  - **Tầng 4 (Superseded Legal Doc Linter)**: Tăng cường `validate_docs.py` phát hiện số hiệu luật cũ (Luật Xây dựng 2014) và cưỡng chế số hiệu luật mới chuẩn xác (**Luật Xây dựng 2025 số 135/2025/QH15** & **NĐ 105/2025/NĐ-CP**).
+  - **Tầng 5 (Production Log Mining with Maskara Privacy Redaction)**: Bóc tách dữ liệu tương tác thực từ `transcript.jsonl`, redact thông tin nhạy cảm qua `maskara-privacy`, và tự động xuất thành test cases kiểm thử liên tục.
+- **Nguồn**: Session `de07cc2b-5990-47a3-afa4-e1c7ff2626b6`, 2026-07-24
+
+#### 62. Dependabot Semver-Major Ignore Guardrail
+- **Ngữ cảnh**: Dependabot tự động khởi tạo PRs hàng tuần nâng cấp các GitHub Actions (`checkout`, `setup-python`) lên phiên bản major (`v7`) gây hỏng toàn bộ pipeline CI.
+- **Giải pháp**: Khai báo cấu hình `ignore` quy tắc `update-types: ["version-update:semver-major"]` dưới `package-ecosystem: "github-actions"` trong `.github/dependabot.yml` để duy trì các bản patch/minor security updates nhưng chặn các bản major gây gãy pipeline.
+- **Nguồn**: Session `de07cc2b-5990-47a3-afa4-e1c7ff2626b6`, 2026-07-24
+
+#### 63. Scoped Test Execution Interceptor in Pytest (`conftest.py`)
+- **Ngữ cảnh**: Chạy lệnh `pytest` unscoped trên toàn bộ workspace gây bùng nổ context window và làm ngắt phiên làm việc của Agent.
+- **Giải pháp**: Sử dụng hook `pytest_cmdline_main` trong `conftest.py` để chặn đứng các lệnh `pytest` unscoped, trừ khi có tham số `--allow-unscoped` hoặc biến môi trường `CI=true` / `GITHUB_ACTIONS=true` từ GitHub Actions runner.
+- **Nguồn**: Session `de07cc2b-5990-47a3-afa4-e1c7ff2626b6`, 2026-07-24
+
+---
+
+### Anti-patterns (Cách tránh)
+
+#### 44. Unfiltered Major Version Actions Upgrades by Dependabot
+- **Vấn đề**: Để Dependabot tự do nâng cấp major version của các GitHub Actions mà không có cấu hình `ignore`, khiến các PRs nâng cấp v6/v7 liên tục được tạo ra làm hỏng CI.
+- **Thay thế bằng**: Khai báo rào chắn `ignore semver-major` trong `dependabot.yml` cho `github-actions`.
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
