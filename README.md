@@ -12,7 +12,7 @@
 ```
 ccba-agent-platform/                    ← Hub (Git-backed)
 ├── .agents/
-│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->77<!-- SKILL_COUNT_END --> skills)
+│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->78<!-- SKILL_COUNT_END --> skills)
 │   │   ├── legal-document-tracker/    ←   Theo dõi VBPL
 │   │   ├── completion-checklist/      ←   HSHT công trình
 │   │   ├── seminar-builder/           ←   Chuẩn bị seminar
