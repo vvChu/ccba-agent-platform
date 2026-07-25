@@ -20,6 +20,18 @@ from .packager import OKFBundlePackager, get_concept_type, is_guiding_link
 from .parser import LegalAnalysisEngine
 from .sync import LegalSyncEngine, calculate_md5, calculate_sha256
 
+from .ast_parser import (
+    ASTNode,
+    ASTParser,
+    DeltaPatch,
+    DeltaPatchItem,
+    PatchAction,
+)
+from .alert_handler import TelegramAlertHandler
+from .hybrid_rag import LegalHybridRAG
+from .patch_generator import DeltaPatchGenerator
+from .vbhn_merger import VBHNMerger
+
 __all__ = [
     "ChromeCDP",
     "MockChromeCDP",
@@ -48,4 +60,13 @@ __all__ = [
     "LegalSyncEngine",
     "calculate_md5",
     "calculate_sha256",
+    "ASTNode",
+    "ASTParser",
+    "PatchAction",
+    "DeltaPatchItem",
+    "DeltaPatch",
+    "DeltaPatchGenerator",
+    "VBHNMerger",
+    "TelegramAlertHandler",
+    "LegalHybridRAG",
 ]

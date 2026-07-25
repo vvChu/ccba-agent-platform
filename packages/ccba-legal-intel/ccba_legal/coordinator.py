@@ -188,6 +188,80 @@ class LegalProcessor:
         }
 
 
+import hashlib
+
+
+def calculate_content_sha256(content: str) -> str:
+    """Calculate SHA-256 hash of string content."""
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+
+def is_large_legal_document(url_or_id: str) -> bool:
+    """Check if document is a known large legal document requiring async subagent offloading."""
+    target = url_or_id.lower()
+    keywords = [
+        "luat-dat-dai",
+        "luat-xay-dung",
+        "luat-nha-o",
+        "luat-kinh-doanh-bat-dong-san",
+        "dat-dai-2024",
+        "xay-dung-2025",
+    ]
+    return any(k in target for k in keywords)
+
+
+def ensure_chrome_cdp_port(port: int = 9222) -> bool:
+    """Check if Chrome CDP port is listening, auto-launch if not.
+
+    Args:
+        port: The remote debugging port (default: 9222).
+
+    Returns:
+        bool: True if Chrome CDP is available and listening, False otherwise.
+    """
+    import os
+    import shutil
+    import subprocess
+    import time
+    import requests
+
+    try:
+        resp = requests.get(f"http://127.0.0.1:{port}/json", timeout=1.5)
+        if resp.status_code == 200:
+            return True
+    except Exception:
+        pass
+
+    # Attempt to auto-launch Chrome
+    chrome_cmd = (
+        shutil.which("chrome")
+        or shutil.which("google-chrome")
+        or r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+    )
+    if os.path.exists(str(chrome_cmd)) or (chrome_cmd and shutil.which(chrome_cmd)):
+        try:
+            temp_dir = Path(os.environ.get("TEMP", "C:/temp")) / "chrome_dev"
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            subprocess.Popen(
+                [
+                    str(chrome_cmd),
+                    f"--remote-debugging-port={port}",
+                    f"--user-data-dir={temp_dir}",
+                    "--no-first-run",
+                    "--no-default-browser-check",
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            time.sleep(1.5)
+            resp = requests.get(f"http://127.0.0.1:{port}/json", timeout=2)
+            return resp.status_code == 200
+        except Exception as e:
+            print(f"[LegalIntel] Chrome auto-launch error: {e}")
+
+    return False
+
+
 @dataclass
 class LegalProcessResult:
     """Structured result of processing a legal document through LegalIntelPipeline."""
@@ -214,26 +288,47 @@ class LegalIntelPipeline:
         self.output_dir = output_dir or Path(".md/legal_docs")
         self.use_mutex = use_mutex
 
-    def process_document(self, url_or_id: str, force_refresh: bool = False) -> LegalProcessResult:
+    def process_document(
+        self,
+        url_or_id: str,
+        force_refresh: bool = False,
+        async_offload: bool = False,
+    ) -> LegalProcessResult:
         """Crawl, parse, and package a legal document end-to-end via a deep seam."""
         is_mock = isinstance(self.cdp, MockChromeCDP)
+        packager = OKFBundlePackager(self.output_dir)
         doc_id = url_or_id.split("/")[-1].replace(".aspx", "") if "/" in url_or_id else url_or_id
+        bundle_slug = packager.sanitize_slug(doc_id)
+        bundle_dir = self.output_dir / bundle_slug
 
-        if is_mock:
-            # Handle mock pipeline execution cleanly for tests/offline
-            mock_bundle_dir = self.output_dir / f"okf_bundle_{doc_id}"
-            mock_bundle_dir.mkdir(parents=True, exist_ok=True)
+        # 1. Check Large Document Async Offload
+        if async_offload or is_large_legal_document(url_or_id):
+            if async_offload:
+                return LegalProcessResult(
+                    doc_id=doc_id,
+                    bundle_path=None,
+                    status="offloaded_to_subagent",
+                    metadata={"title": f"Large Document {doc_id}", "recommended_subagent": "ccba-research"},
+                    error="Offloaded to subagent ccba-research for async crawling of large document.",
+                )
+
+        # 2. Check SHA-256 / Delta Cache
+        if not force_refresh and bundle_dir.exists():
+            cached_meta = self.registry_mgr.find_doc_by_id(doc_id) or {"title": f"Cached Document {doc_id}"}
             return LegalProcessResult(
                 doc_id=doc_id,
-                bundle_path=mock_bundle_dir,
-                status="mocked",
-                metadata={"title": "Mock Legal Document", "source_url": url_or_id},
+                bundle_path=bundle_dir,
+                status="cached",
+                metadata=cached_meta,
             )
 
-        mutex_context = TVPLSessionMutex() if self.use_mutex else None
+        mutex_context = TVPLSessionMutex() if (self.use_mutex and not is_mock) else None
         try:
             if mutex_context:
                 mutex_context.__enter__()
+
+            if not is_mock:
+                ensure_chrome_cdp_port(self.cdp.port)
 
             pages = self.cdp.get_pages()
             if pages:
@@ -243,16 +338,15 @@ class LegalIntelPipeline:
             meta = get_tvpl_metadata(self.cdp, url_or_id)
             meta["title"] = title
             meta["source_url"] = url_or_id
+            meta["sha256"] = calculate_content_sha256(content)
 
-            packager = OKFBundlePackager(self.output_dir)
             bundle_dir = packager.package_bundle(doc_id, content, meta)  # type: ignore[attr-defined]
-
             self.registry_mgr.register_document(doc_id, meta)  # type: ignore[attr-defined]
 
             return LegalProcessResult(
                 doc_id=doc_id,
                 bundle_path=bundle_dir,
-                status="success",
+                status="mocked" if is_mock else "success",
                 metadata=meta,
             )
         except Exception as e:
@@ -272,21 +366,38 @@ class LegalIntelPipeline:
     def run_cli(self, args: list[str] | None = None) -> int:
         """CLI invocation runner method."""
         import argparse
+        import json
 
         parser = argparse.ArgumentParser(description="CCBA Legal Intelligence Deep CLI")
+        parser.add_argument("positional_target", nargs="?", help="TVPL Document URL or ID (positional)")
         parser.add_argument("--url", help="TVPL Document URL")
         parser.add_argument("--doc-id", help="Legal Document ID")
         parser.add_argument("--force", action="store_true", help="Force refresh")
+        parser.add_argument("--async", "--async-offload", dest="async_offload", action="store_true", help="Offload large documents to subagent async")
+        parser.add_argument("--download-source", action="store_true", help="Download source .docx file")
+        parser.add_argument("--extract-related", action="store_true", help="Extract related documents and guiding docs")
+        parser.add_argument("--json", action="store_true", help="Output result as JSON")
         parsed = parser.parse_args(args)
 
-        target = parsed.url or parsed.doc_id
+        target = parsed.positional_target or parsed.url or parsed.doc_id
         if not target:
-            print("[LegalIntel CLI] Error: Must specify --url or --doc-id")
+            print("[LegalIntel CLI] Error: Must specify --url, --doc-id, or positional target URL")
             return 1
 
-        result = self.process_document(target, force_refresh=parsed.force)
-        if result.status in ("success", "mocked"):
-            print(f"[LegalIntel CLI] Processed {result.doc_id} -> {result.bundle_path}")
+        result = self.process_document(target, force_refresh=parsed.force, async_offload=parsed.async_offload)
+        if parsed.json:
+            out = {
+                "doc_id": result.doc_id,
+                "bundle_path": str(result.bundle_path) if result.bundle_path else None,
+                "status": result.status,
+                "metadata": result.metadata,
+                "error": result.error,
+            }
+            print(json.dumps(out, ensure_ascii=False))
+            return 0 if result.status in ("success", "mocked", "cached", "offloaded_to_subagent") else 1
+
+        if result.status in ("success", "mocked", "cached", "offloaded_to_subagent"):
+            print(f"[LegalIntel CLI] Processed {result.doc_id} -> status: {result.status}, bundle: {result.bundle_path}")
             return 0
         print(f"[LegalIntel CLI] Failed processing {result.doc_id}: {result.error}")
         return 1
