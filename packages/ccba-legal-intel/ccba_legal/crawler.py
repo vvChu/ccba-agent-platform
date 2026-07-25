@@ -277,6 +277,20 @@ class MockChromeCDP(ChromeCDP):
         self.mock_html_content = (
             "<html><body><h1>Mock Document</h1><p>Test content</p></body></html>"
         )
+        self.mock_body_text = "Nội dung chi tiết Luật PCCC số 55/2024/QH15"
+        self.mock_links: list[dict[str, str]] = []
+        self.mock_metadata: dict[str, Any] = {
+            "Số hiệu": "55/2024/QH15",
+            "Loại văn bản": "Luật",
+            "Nơi ban hành": "Quốc hội",
+            "Người ký": "Trần Thanh Mẫn",
+            "Ngày ban hành": "27/11/2024",
+            "Ngày hiệu lực": "01/07/2025",
+            "Tình trạng": "Còn hiệu lực",
+            "relations": {},
+        }
+        self.mock_login_attempted = False
+        self.mock_popup_closed = False
 
     def get_pages(self) -> list[dict[str, Any]]:
         return [
@@ -297,6 +311,32 @@ class MockChromeCDP(ChromeCDP):
     def set_mock_js_response(self, expression: str, value: Any) -> None:
         self.mock_js_responses[expression] = value
 
+    def set_mock_metadata(self, meta_dict: dict[str, Any]) -> None:
+        raw = dict(meta_dict)
+        if "document_number" in meta_dict and "Số hiệu" not in raw:
+            raw["Số hiệu"] = meta_dict["document_number"]
+        if "type" in meta_dict and "Loại văn bản" not in raw:
+            raw["Loại văn bản"] = meta_dict["type"]
+        if "issued_by" in meta_dict and "Nơi ban hành" not in raw:
+            raw["Nơi ban hành"] = meta_dict["issued_by"]
+        if "signer" in meta_dict and "Người ký" not in raw:
+            raw["Người ký"] = meta_dict["signer"]
+        if "issued_date" in meta_dict and "Ngày ban hành" not in raw:
+            raw["Ngày ban hành"] = meta_dict["issued_date"]
+        if "effective_date" in meta_dict and "Ngày hiệu lực" not in raw:
+            raw["Ngày hiệu lực"] = meta_dict["effective_date"]
+        if "published_date" in meta_dict and "Ngày đăng" not in raw:
+            raw["Ngày đăng"] = meta_dict["published_date"]
+        if "status" in meta_dict and "Tình trạng" not in raw:
+            raw["Tình trạng"] = meta_dict["status"]
+        self.mock_metadata = raw
+
+    def set_mock_body_text(self, text: str) -> None:
+        self.mock_body_text = text
+
+    def set_mock_links(self, links: list[dict[str, str]]) -> None:
+        self.mock_links = links
+
     def evaluate_js(self, expression: str) -> Any:
         if not self.connected:
             raise ChromeCDPError("No active WebSocket connection.")
@@ -306,6 +346,12 @@ class MockChromeCDP(ChromeCDP):
             return self.mock_js_responses.get("document.title", "Mock Title")
         if "readyState" in expression:
             return "complete"
+        if "relMap" in expression or "result['relations']" in expression:
+            return self.mock_metadata
+        if "divContentDoc" in expression or "cloneNode" in expression:
+            return self.mock_body_text
+        if "querySelectorAll('a')" in expression or "relationship" in expression:
+            return self.mock_links
         if "innerHTML" in expression or "outerHTML" in expression:
             return self.mock_html_content
         return True
@@ -322,7 +368,10 @@ class MockChromeCDP(ChromeCDP):
         pass
 
     def handle_login(self) -> bool:
-        return False
+        return self.mock_login_attempted
+
+    def close_popup(self) -> bool:
+        return self.mock_popup_closed
 
     def close(self) -> None:
         self.connected = False

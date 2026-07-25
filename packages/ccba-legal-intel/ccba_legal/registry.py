@@ -56,6 +56,16 @@ class LegalRegistryManager:
             yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
         print(f"[Registry] Successfully saved registry to {self.registry_path}")
 
+    def register_document(self, doc_id: str, doc_data: dict) -> None:
+        """Register or update a document in the registry."""
+        doc_type = doc_data.get("type", "").lower()
+        category = "laws"
+        if "nghị định" in doc_type or "decree" in doc_type:
+            category = "decrees"
+        elif "thông tư" in doc_type or "circular" in doc_type:
+            category = "circulars"
+        self.add_or_update_doc(category, doc_id, doc_data)
+
     def add_or_update_doc(self, category: str, doc_id: str, doc_data: dict) -> None:
         """Add a new document entry or update an existing one under the specified category (laws / decrees)."""
         data = self.load()

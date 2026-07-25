@@ -44,6 +44,36 @@ class OKFBundlePackager:
             text = text[:60].rstrip("_")
         return text
 
+    def package_bundle(self, doc_id: str, content: str, metadata: dict[str, Any]) -> Path:
+        """Create and structure an OKF bundle for a document with raw content and metadata.
+
+        Args:
+            doc_id: The document identifier.
+            content: Document text content.
+            metadata: Document metadata dictionary.
+
+        Returns:
+            Path: Path to the created OKF bundle directory.
+        """
+        bundle_slug = self.sanitize_slug(doc_id)
+        bundle_dir = self.root_dir / bundle_slug
+        bundle_dir.mkdir(parents=True, exist_ok=True)
+
+        title = metadata.get("title", f"Legal Document {doc_id}")
+        doc_type = metadata.get("type", "Law")
+
+        self.write_concept(
+            relative_path=f"{bundle_slug}/{bundle_slug}.md",
+            concept_type=doc_type,
+            title=title,
+            description=f"Raw text for {doc_id}",
+            content=content,
+            resource_uri=metadata.get("source_url", ""),
+        )
+
+        self._write_logs_and_index(bundle_dir, bundle_slug, [])
+        return bundle_dir
+
     def write_concept(
         self,
         relative_path: str,
