@@ -680,9 +680,38 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Thay thế bằng**: Áp dụng rào chắn Scoped Testing (chỉ chạy pytest trên file test cụ thể trong TDD lượt trực tiếp — ví dụ 11 tests chỉ mất 5.45s), sử dụng cờ `-m "not slow"` để loại bỏ bài test chậm, và chuyển các bài test full suite sang Bounded Async Tasks.
 
 ---
+
+## Session Learnings — Deep Module Refactoring & Codebase Architecture (2026-07-25)
+- **ID Phiên làm việc**: `08b0430f-7ed1-478f-8842-86e926e8c033`
+
+### Patterns (Mẫu tốt)
+
+#### 67. Deep Module Encapsulation Pattern (Đóng gói Deep Module theo nguyên lý codebase-design)
+- **Ngữ cảnh**: Cần refactor các module dịch vụ nông (shallow modules) có API fragmented hoặc duplicate logic mà vẫn bảo toàn 100% tương thích ngược cho caller site.
+- **Giải pháp**:
+  - Định nghĩa lớp Deep Module (`SEOAuditor`, `LinkPatcher`) cung cấp một giao diện hợp nhất cấp cao (`audit()`, `patch_content()`, `patch_file()`) ẩn toàn bộ format branching, regex matching và scoring logic phía sau.
+  - Duy trì các hàm legacy dạng wrapper mỏng (`audit_markdown`, `audit_html`, `audit_file`, `patch_links`) chuyển tiếp lời gọi đến Deep Module.
+  - Tạo test suite độc lập kiểm thử tại giao diện seam thay vì test chi tiết nội bộ.
+- **Nguồn**: Session `08b0430f-7ed1-478f-8842-86e926e8c033`, 2026-07-25
+
+#### 68. Architecture Drift Verification & Documentation Sync
+- **Ngữ cảnh**: Thêm mới/xóa tệp tin trong các gói `packages/` kích hoạt lỗi Gate 4 (`Architecture Drift Check`) tại `scripts/validate_docs.py`.
+- **Giải pháp**: Đồng thời cập nhật hoặc bổ sung thông tin tệp tài liệu kiến trúc (`PLATFORM.md`, `README.md`) để xác nhận các thay đổi cấu hình mã nguồn mới, đảm bảo CI Gate PASS 100%.
+- **Nguồn**: Session `08b0430f-7ed1-478f-8842-86e926e8c033`, 2026-07-25
+
+---
+
+### Anti-patterns (Cách tránh)
+
+#### 46. Shallow Pass-Through Modules with Scattered Regex / AST Parsing
+- **Vấn đề**: Để caller site tự lặp regex hoặc phân tích cú pháp HTML/Markdown ở nhiều nơi khác nhau, gây trùng lặp mã nguồn và khó khăn khi thay đổi quy tắc kiểm định.
+- **Thay thế bằng**: Đóng gói toàn bộ logic phân tích cú pháp và trích xuất chỉ số vào bên trong một Deep Module duy nhất với giao diện đơn giản.
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
 
 
 
