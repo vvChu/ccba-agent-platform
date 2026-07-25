@@ -3,7 +3,7 @@ Tests for LinkPatcher deep module interface and relative link patching in mdconv
 """
 
 from pathlib import Path
-import pytest
+
 from mdconverter.core.link_patcher import LinkPatcher
 
 

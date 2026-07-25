@@ -5,6 +5,7 @@ Provides structured compliance scoring and detailed validation reports via SEOAu
 
 import re
 from pathlib import Path
+from typing import Any
 
 
 class SEOAuditor:
@@ -14,7 +15,7 @@ class SEOAuditor:
     and scoring deductions behind a simple, high-leverage interface.
     """
 
-    def audit_markdown(self, content: str) -> dict:
+    def audit_markdown(self, content: str) -> dict[str, Any]:
         """Analyze Markdown content for SEO best practices."""
         issues = []
         checks = []
@@ -86,7 +87,7 @@ class SEOAuditor:
 
         return {"score": score, "checks": checks, "issues": issues}
 
-    def audit_html(self, content: str) -> dict:
+    def audit_html(self, content: str) -> dict[str, Any]:
         """Analyze HTML content for SEO best practices."""
         try:
             from bs4 import BeautifulSoup
@@ -103,9 +104,7 @@ class SEOAuditor:
         if len(h1s) == 0:
             issues.append("Missing H1 heading (<h1>). Add exactly one H1 to the page.")
         elif len(h1s) > 1:
-            issues.append(
-                f"Multiple H1 headings found ({len(h1s)}). Keep exactly one H1 per page."
-            )
+            issues.append(f"Multiple H1 headings found ({len(h1s)}). Keep exactly one H1 per page.")
 
         # 2. Heading Hierarchy
         headings = soup.find_all(re.compile(r"^h[1-6]$"))
@@ -128,7 +127,8 @@ class SEOAuditor:
         images = soup.find_all("img")
         empty_alts = 0
         for img in images:
-            if not img.get("alt") or not img["alt"].strip():
+            alt_attr = img.get("alt")
+            if not alt_attr or not str(alt_attr).strip():
                 empty_alts += 1
         checks.append(f"Images with alt tags: {len(images) - empty_alts}/{len(images)}")
         if empty_alts > 0:
@@ -149,7 +149,8 @@ class SEOAuditor:
             checks.append(f"Title tag: Present ('{title_tag.get_text().strip()}')")
 
         meta_desc = soup.find("meta", attrs={"name": "description"})
-        if not meta_desc or not meta_desc.get("content", "").strip():
+        desc_attr = meta_desc.get("content") if meta_desc else None
+        if not meta_desc or not desc_attr or not str(desc_attr).strip():
             issues.append(
                 'Missing or empty meta description (<meta name="description">) in the HTML head.'
             )
@@ -162,9 +163,7 @@ class SEOAuditor:
         words = len(text_content.split())
         checks.append(f"Word count: {words} words")
         if words < 300:
-            issues.append(
-                "Word count is under 300 words. Consider adding more high-quality copy."
-            )
+            issues.append("Word count is under 300 words. Consider adding more high-quality copy.")
 
         # Calculate score
         total_deductions = 0
@@ -192,7 +191,7 @@ class SEOAuditor:
         content: str | None = None,
         format_hint: str | None = None,
         workspace_root: Path | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Unified audit entrypoint accepting file path or raw string content."""
         if content is not None:
             fmt = (format_hint or "md").lower()
@@ -233,16 +232,16 @@ class SEOAuditor:
         return result
 
 
-def audit_markdown(content: str) -> dict:
+def audit_markdown(content: str) -> dict[str, Any]:
     """Analyze Markdown content for SEO best practices (backward compatibility wrapper)."""
     return SEOAuditor().audit_markdown(content)
 
 
-def audit_html(content: str) -> dict:
+def audit_html(content: str) -> dict[str, Any]:
     """Analyze HTML content for SEO best practices (backward compatibility wrapper)."""
     return SEOAuditor().audit_html(content)
 
 
-def audit_file(file_path: str | Path, workspace_root: Path | None = None) -> dict:
+def audit_file(file_path: str | Path, workspace_root: Path | None = None) -> dict[str, Any]:
     """Audit a file (Markdown or HTML) for SEO best practices (backward compatibility wrapper)."""
     return SEOAuditor().audit(target=file_path, workspace_root=workspace_root)
