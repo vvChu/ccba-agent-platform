@@ -32,7 +32,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   └── extracted_docs/                ←   Văn bản pháp luật trích xuất thô
 │
 ├── packages/                          ← Internal service modules (pip installable)
-│   ├── ccba-ai/                       ←   AI Gateway client & SDK
+│   ├── ccba-ai/                       ←   AI Gateway client, SEOAuditor & SDK
 │   ├── ccba-harness/                  ←   Testing harness utilities
 │   ├── ccba-legal-intel/              ←   Legal intelligence connectors
 │   ├── ccba-notebooklm/               ←   Google NotebookLM wrapper & Mock client
