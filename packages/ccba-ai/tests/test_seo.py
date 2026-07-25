@@ -3,18 +3,21 @@ Tests for SEOAuditor deep module interface and legacy functions in ccba_ai.servi
 """
 
 from pathlib import Path
-import pytest
-from ccba_ai.services.seo import SEOAuditor, audit_file, audit_html, audit_markdown
+
+from ccba_ai.services.seo import SEOAuditor, audit_markdown
 
 
 def test_seo_auditor_markdown_content():
     auditor = SEOAuditor()
-    content = """# Test Title
+    content = (
+        """# Test Title
 
 This is a paragraph with more than 300 words. Let us generate enough text for word count testing.
 ![Alt text](http://example.com/image.png)
 [Example Link](http://example.com)
-""" + " word" * 300
+"""
+        + " word" * 300
+    )
 
     result = auditor.audit(content=content, format_hint="markdown")
     assert result["score"] == 100
@@ -42,7 +45,9 @@ Short text.
 
 def test_seo_auditor_file_audit(tmp_path: Path):
     doc_path = tmp_path / "sample.md"
-    doc_path.write_text("# Unique Title\n\n![Valid alt](img.png)\n\n" + " word" * 310, encoding="utf-8")
+    doc_path.write_text(
+        "# Unique Title\n\n![Valid alt](img.png)\n\n" + " word" * 310, encoding="utf-8"
+    )
 
     auditor = SEOAuditor()
     result = auditor.audit(target=doc_path)
