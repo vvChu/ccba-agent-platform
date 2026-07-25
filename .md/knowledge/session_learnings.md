@@ -650,6 +650,36 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Thay thế bằng**: Khai báo rào chắn `ignore semver-major` trong `dependabot.yml` cho `github-actions`.
 
 ---
+
+## Session Learnings — Legal Intel Deep Module, VBHN Merger & Execution Stability (2026-07-25)
+- **ID Phiên làm việc**: `0c0a9304-cfbb-4fa3-9c81-3e11441ace97`
+
+### Patterns (Mẫu tốt)
+
+#### 64. Article-Scoped Chunking & Double-Pass Alignment Verification
+- **Ngữ cảnh**: Sinh `delta_patch.yaml` sửa đổi văn bản pháp luật lớn bằng LLM (`ccba-ai`).
+- **Giải pháp**: Phân đoạn Markdown theo từng Điều (`Điều X`), gửi prompt qua `ai.chat()`, và thực hiện dry-run verification (`apply_patch_dry_run()`) để đối soát neo chuỗi (`old_text_anchor`) trước khi nạp vào AST Merger. Tránh trôi neo chuỗi hoặc nhầm lẫn giữa các khoản.
+- **Nguồn**: Session `0c0a9304-cfbb-4fa3-9c81-3e11441ace97`, 2026-07-25
+
+#### 65. Visual Diff Markdown Exporter (`~~` Strikethrough & Footnote Citations)
+- **Ngữ cảnh**: Trình bày tệp hợp nhất VBHN (`VBHN_{slug}.md`) trực quan cho kỹ sư/chủ đầu tư đọc.
+- **Giải pháp**: Render các đoạn bị bãi bỏ bằng gạch ngang `~~text~~`, các đoạn sửa đổi bằng `+ text`, và tự động chèn chú thích chân trang (footnotes `[^1]`) trích dẫn văn bản sửa đổi.
+- **Nguồn**: Session `0c0a9304-cfbb-4fa3-9c81-3e11441ace97`, 2026-07-25
+
+#### 66. Telegram VIP Alert & CAPTCHA Barrier Detector
+- **Ngữ cảnh**: Cào dữ liệu TVPL gặp rào chắn Đăng nhập, hết hạn tài khoản VIP hoặc thử thách CAPTCHA.
+- **Giải pháp**: Quét từ khóa HTML nhạy cảm ("đăng nhập", "captcha", "hết hạn") và kích hoạt Telegram Webhook alert bắn thẳng về Telegram group của quản trị viên kèm URL văn bản để can thiệp kịp thời.
+- **Nguồn**: Session `0c0a9304-cfbb-4fa3-9c81-3e11441ace97`, 2026-07-25
+
+---
+
+### Anti-patterns (Cách tránh)
+
+#### 45. Synchronous Unscoped Test Suite Execution (Lỗi "User Cancelled Agent Execution")
+- **Vấn đề**: Kích hoạt `pytest` toàn bộ 88+ test cases trong lượt tương tác trực tiếp đồng bộ (synchronous turn) làm luồng chính bị timeout (>15-30s) hoặc dính lock đĩa (`_mutex.py`), dẫn đến hệ thống kích hoạt Circuit Breaker hủy tiến trình và bắn thông báo `"User cancelled agent execution"`.
+- **Thay thế bằng**: Áp dụng rào chắn Scoped Testing (chỉ chạy pytest trên file test cụ thể trong TDD lượt trực tiếp — ví dụ 11 tests chỉ mất 5.45s), sử dụng cờ `-m "not slow"` để loại bỏ bài test chậm, và chuyển các bài test full suite sang Bounded Async Tasks.
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
