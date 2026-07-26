@@ -52,5 +52,33 @@ laws:
   title: Mock Legal Document Title
   source_url: https://thuvienphapluat.vn/van-ban/PCCC/Luat-CLI-Positional-Test.aspx
   sha256: 3f0465b7c5949482b81ec5b3c2ae38bf2740854e1ac27cc80f49551852de80f2
+- id: Thong-tu-06-2022-TT-BXD-Quy-chuan-ky-thuat-quoc-gia-an-toan-chay-cho-nha-va-cong-trinh-545229
+  document_number: 2627/SGDĐT-TTr
+  type: ''
+  issued_by: Sở Giáo dục và Đào tạo Thành phố Hồ Chí Minh
+  signer: ''
+  issued_date: '2021-10-04'
+  effective_date: ''
+  published_date: ''
+  status: ''
+  relations: {}
+  title: Công văn 2627/SGDĐT-TTr 2021 công tác kiểm tra của Phòng Giáo dục Sở Giáo
+    dục Hồ Chí Minh
+  source_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-06-2022-TT-BXD-Quy-chuan-ky-thuat-quoc-gia-an-toan-chay-cho-nha-va-cong-trinh-545229.aspx
+  sha256: d66d3eb508273daca17a79df478e933417b6179424525932774c8661e0caad3b
+- id: Thong-tu-09-2023-TT-BXD-Sua-doi-1-2023-QCVN-06-2022-BXD-An-toan-chay-cho-nha-va-cong-trinh-583002
+  document_number: 2285/QĐ-UBND
+  type: ''
+  issued_by: Tỉnh Thái Bình
+  signer: ''
+  issued_date: '2023-10-13'
+  effective_date: ''
+  published_date: ''
+  status: ''
+  relations: {}
+  title: Quyết định 2285/QĐ-UBND 2023 điều chỉnh quy mô dự án trong quy hoạch sử dụng
+    đất Thái Bình
+  source_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-09-2023-TT-BXD-Sua-doi-1-2023-QCVN-06-2022-BXD-An-toan-chay-cho-nha-va-cong-trinh-583002.aspx
+  sha256: c7f2ede5038ef465b0dd99ea9090e16cbc127319401098349a72764a3271592b
 decrees: []
 circulars: []
