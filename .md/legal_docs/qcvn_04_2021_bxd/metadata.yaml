@@ -1,0 +1,16 @@
+id: QCVN-04-2021-BXD
+title: QCVN 04:2021/BXD — Quy chuẩn kỹ thuật quốc gia về Nhà chung cư
+document_number: QCVN 04:2021/BXD
+issued_by: Bộ Xây dựng
+issued_date: '2021-05-19'
+effective_date: '2021-07-05'
+status: current
+has_amendments: true
+amendments:
+  - id: SD1-2026-QCVN-04
+    title: Sửa đổi 01:2026 QCVN 04:2021/BXD (Thông tư 31/2026/TT-BXD)
+    technical_file: guiding_docs/sua_doi_01_2026_qcvn_04_2021_bxd.md
+    admin_file: guiding_docs/thong_tu_31_2026_tt_bxd.md
+    diff_matrix: guiding_docs/bang_so_sanh_sua_doi_2026.md
+    issued_date: '2026-06-15'
+    effective_date: '2026-12-15'

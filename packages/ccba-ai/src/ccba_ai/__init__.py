@@ -19,6 +19,7 @@ Quick Start:
 from ccba_ai import services
 from ccba_ai.client import AIClient, AsyncAIClient
 from ccba_ai.exceptions import CCBABaseException, CCBAErrorCode, format_error_json
+from ccba_ai.legal_knowledge import legal_knowledge, LegalKnowledgeGateway
 from ccba_ai.llm_utils import parse_llm_json, strip_think_tags
 from ccba_ai.models import AuditFinding, AuditReport
 from ccba_ai.protocols import QCAuditEngine, QCDiscoveryEngine, QCReporterEngine
@@ -51,9 +52,11 @@ __all__ = [
     # Singletons
     "ai",
     "async_ai",
+    "legal_knowledge",
     # Client classes
     "AIClient",
     "AsyncAIClient",
+    "LegalKnowledgeGateway",
     # Convenience shorthands (sync)
     "chat",
     "stream",
@@ -79,3 +82,4 @@ __all__ = [
     "format_error_json",
 ]
 __version__ = "1.0.0"
+
