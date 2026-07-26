@@ -12,14 +12,14 @@
 ```
 ccba-agent-platform/                    ← Hub (Git-backed)
 ├── .agents/
-│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->78<!-- SKILL_COUNT_END --> skills)
+│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->79<!-- SKILL_COUNT_END --> skills)
 │   │   ├── legal-document-tracker/    ←   Theo dõi VBPL
 │   │   ├── completion-checklist/      ←   HSHT công trình
 │   │   ├── seminar-builder/           ←   Chuẩn bị seminar
 │   │   ├── docs-validator/            ←   Linter tài liệu tĩnh (Patched)
 │   │   ├── architecture-sync/         ←   Đồng bộ hiến pháp kiến trúc (Patched)
 │   │   └── ...                        ←   Và 52+ kỹ năng chuyên dụng khác
-│   ├── workflows/                     ← Automated workflows (<!-- WORKFLOW_COUNT_START -->54<!-- WORKFLOW_COUNT_END --> workflows)
+│   ├── workflows/                     ← Automated workflows (<!-- WORKFLOW_COUNT_START -->55<!-- WORKFLOW_COUNT_END --> workflows)
 │   └── templates/                     ← Shared templates
 ├── .md/                               ← Central Knowledge Base (Project Knowledge Base)
 │   ├── knowledge/                     ←   Tài liệu nghiên cứu, roadmap, spec kỹ thuật
