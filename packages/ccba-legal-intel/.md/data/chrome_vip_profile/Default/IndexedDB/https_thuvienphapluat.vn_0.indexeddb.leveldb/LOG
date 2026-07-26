@@ -1,0 +1,13 @@
+2026/07/26-11:28:47.119 790c Reusing MANIFEST D:\GitHubProjects\ccba-agent-platform\packages\ccba-legal-intel\.md\data\chrome_vip_profile\Default\IndexedDB\https_thuvienphapluat.vn_0.indexeddb.leveldb/MANIFEST-000001
+2026/07/26-11:28:47.119 790c Recovering log #7
+2026/07/26-11:28:47.120 790c Reusing old log D:\GitHubProjects\ccba-agent-platform\packages\ccba-legal-intel\.md\data\chrome_vip_profile\Default\IndexedDB\https_thuvienphapluat.vn_0.indexeddb.leveldb/000007.log 
+2026/07/26-11:28:47.145 5420 Level-0 table #11: started
+2026/07/26-11:28:47.146 5420 Level-0 table #11: 1380 bytes OK
+2026/07/26-11:28:47.147 5420 Delete type=0 #7
+2026/07/26-11:28:47.148 5420 Manual compaction at level-0 from '\x00\x03\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x04\x00\x00\x00' @ 0 : 0; will stop at '\x00\x03\x01\x03\x01\x01\x00x' @ 233 : 1
+2026/07/26-11:28:47.148 5420 Compacting 1@0 + 1@1 files
+2026/07/26-11:28:47.150 5420 Generated table #12@0: 28 keys, 679 bytes
+2026/07/26-11:28:47.150 5420 Compacted 1@0 + 1@1 files => 679 bytes
+2026/07/26-11:28:47.151 5420 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/07/26-11:28:47.151 5420 Delete type=2 #11
+2026/07/26-11:28:47.152 790c Manual compaction at level-0 from '\x00\x03\x01\x03\x01\x01\x00x' @ 233 : 1 .. '\x00\x04\x00\x00\x00' @ 0 : 0; will stop at (end)
