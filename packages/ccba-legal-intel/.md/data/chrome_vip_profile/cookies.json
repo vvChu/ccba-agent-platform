@@ -1,0 +1,50 @@
+[
+  {
+    "name": "cf_clearance",
+    "value": "7GkdzF1joO4M5ZvQ8VX5UQuA6glBhKl4H4.JzrPvi8U-1785040120-1.2.1.1-nPUWNjVh6ZGZMrJV4D1IhUpUOSTVhammJ2OULlrHdSO2.60iYIe3fOguiaDbZr63rtnG4ahvu4RV4okxF63Nermo_9qihARneTQUvv_F1_aNkwt412gqPreGZ1Cico5445bL042KX4HzofliatwqTaeiFixRO.sC0vJtFgfGGfQTV6vWaaNbBo7OwW7QsvoSpTCpOM4sukfKJzd.WvBQ6PBa8hIXVrZd2.r.ZLR49p9jc6Kv2Go1eav5C3HSHXrkLG6KboNlPBmQ6n_X5bXuBGVMIUMAH52OMGiat1afxl0UEjRSNC8X3TkI46yM8dJ72j9AlJGUQVy6zGtSyPtZPBv.JyBnFHByC7uCiljJLlK0SosRspITwIU8Wby6D1YpfMVoS5cfAf91RuD0mpSBr6qxTNZvbRtiXIuYBdQQyaWF68tliGKki4Ij8U0mWgjgHieEMPKrOhLiZWvGQgo1R0ev1IXJ.utpYIkXqjcpKs6kTHh1qKlv1akuAGHJWmwCK8zC3ui6MCtijXf.fpU8k2hBR3S.c.wVjn1vvfNTQG5egXolnlU8YSTMYvNki2.nba4zAccDo0l7oBaMZTAYpg",
+    "domain": ".thuvienphapluat.vn",
+    "path": "/",
+    "expires": 1816576120.328371,
+    "size": 673,
+    "httpOnly": true,
+    "secure": true,
+    "session": false,
+    "sameSite": "None",
+    "priority": "Medium",
+    "sourceScheme": "Secure",
+    "sourcePort": 443,
+    "partitionKey": {
+      "topLevelSite": "https://thuvienphapluat.vn",
+      "hasCrossSiteAncestor": false
+    }
+  },
+  {
+    "name": "ASP.NET_SessionId",
+    "value": "j2jut0dh4f3ttbuyha02egkd",
+    "domain": "thuvienphapluat.vn",
+    "path": "/",
+    "expires": -1,
+    "size": 41,
+    "httpOnly": true,
+    "secure": false,
+    "session": true,
+    "sameSite": "Lax",
+    "priority": "Medium",
+    "sourceScheme": "Secure",
+    "sourcePort": 443
+  },
+  {
+    "name": "Culture",
+    "value": "vi",
+    "domain": ".thuvienphapluat.vn",
+    "path": "/",
+    "expires": 1816576120.597666,
+    "size": 9,
+    "httpOnly": false,
+    "secure": false,
+    "session": false,
+    "priority": "Medium",
+    "sourceScheme": "Secure",
+    "sourcePort": 443
+  }
+]
