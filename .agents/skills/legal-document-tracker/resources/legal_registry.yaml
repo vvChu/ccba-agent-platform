@@ -4,6 +4,7 @@ decrees:
   file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_207_2026_nd_cp_quan_ly_chat_luong_thi_cong_xay_dung.docx
   id: ND-207-2026
   issued_date: '2026-06-15'
+  replaces: ND-06-2021
   short_name: NĐ 207/2026
   status: current
   title: Nghị định 207/2026/NĐ-CP về quản lý chất lượng thi công xây dựng
@@ -83,6 +84,7 @@ decrees:
   file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/nghi_dinh_217_2026_nd_cp_quan_ly_hoat_dong_xay_dung.docx
   id: ND-217-2026
   issued_date: '2026-06-25'
+  replaces: ND-175-2024
   short_name: NĐ 217/2026
   status: current
   title: Nghị định 217/2026/NĐ-CP về quản lý hoạt động xây dựng
@@ -133,11 +135,12 @@ decrees:
   key_appendices:
   - 'Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình'
   local_files: []
-  notes: Văn bản chính về QLCL đang áp dụng
-  replaced_by: ND-QLCL-2026
+  notes: Đã hết hiệu lực từ 01/07/2026, được thay thế bởi Nghị định 207/2026/NĐ-CP
+  replaced_by: ND-207-2026
   short_name: NĐ 06/2021
   source_url: https://vanban.chinhphu.vn/
-  status: current
+  status: superseded
+  superseded_date: '2026-07-01'
   title: Nghị định 06/2021/NĐ-CP về QLCL, thi công XD và bảo trì CTXD
   topics:
   - quality_management
@@ -185,8 +188,11 @@ decrees:
 - effective_date: '2021-03-03'
   id: ND-15-2021
   issued_date: '2021-03-03'
+  notes: Đã bị thay thế bởi Nghị định 175/2024/NĐ-CP từ 30/12/2024
+  replaced_by: ND-175-2024
   short_name: NĐ 15/2021
-  status: current
+  status: superseded
+  superseded_date: '2024-12-30'
   title: Nghị định 15/2021/NĐ-CP về quản lý dự án đầu tư xây dựng
   topics:
   - project_management
@@ -205,12 +211,16 @@ decrees:
   effective_date: '2024-12-31'
   id: ND-175-2024
   issued_date: '2024-12-31'
+  notes: Đã bị thay thế bởi Nghị định 217/2026/NĐ-CP từ 01/07/2026
+  replaced_by: ND-217-2026
   short_name: NĐ 175/2024
-  status: current
-  title: Nghị định 175/2024/NĐ-CP sửa đổi bổ sung NĐ 06/2021
+  status: superseded
+  superseded_date: '2026-07-01'
+  title: Nghị định 175/2024/NĐ-CP sửa đổi bổ sung NĐ 06/2021 và quản lý hoạt động xây dựng
   topics:
   - quality_management
   - construction
+  - project_management
 - amends: ND-06-2021
   effective_date: '2026-01-15'
   id: ND-14-2026
@@ -248,11 +258,11 @@ laws:
   effective_date: '2015-01-01'
   id: LXD-2014
   issued_date: '2014-06-18'
-  notes: Đang áp dụng đến 30/06/2026
+  notes: Đã hết hiệu lực từ 01/07/2026, được thay thế bởi Luật Xây dựng 2025 (135/2025/QH15)
   replaced_by: LXD-2025
   short_name: Luật XD 2014
   source_url: https://vanban.chinhphu.vn/
-  status: current
+  status: superseded
   superseded_date: '2026-07-01'
   title: Luật Xây dựng 2014 (50/2014/QH13)
   topics:
@@ -264,14 +274,11 @@ laws:
   file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/luat_xay_dung_2025_so_135_2025_qh15.docx
   id: LXD-2025
   issued_date: '2025-12-10'
-  notes: 'Thông qua bởi QH khóa XV.  Một số quy định có hiệu lực từ 01/01/2026. Cần
-    7 Nghị định + 4 Thông tư hướng dẫn.
-
-    '
+  notes: Thông qua bởi Quốc hội khóa XV, chính thức có hiệu lực từ 01/07/2026.
   replaces: LXD-2014
   short_name: Luật XD 2025
   source_url: https://vanban.chinhphu.vn/
-  status: enacted
+  status: current
   title: Luật Xây dựng 2025 (135/2025/QH15)
   topics:
   - construction
@@ -322,21 +329,24 @@ circulars:
   markdown_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/guiding_docs/thong_tu_37_2026_tt_bxd_phuong_phap_xac_dinh_dinh_muc_du_toa.md
 metadata:
   focus_area: Quản lý chất lượng công trình xây dựng
-  last_updated: '2026-03-28'
+  last_updated: '2026-07-25'
   maintained_by: CCBA - BIM RD
 monitoring:
 - description: 7 Nghị định hướng dẫn Luật XD 2025
-  expected: Trước 01/07/2026
+  expected: Đã ban hành tháng 6/2026
+  result: NĐ 193, 206, 207, 209, 210, 212, 217/2026/NĐ-CP
   source: moc.gov.vn
-  status: pending
+  status: fulfilled
 - description: 4 Thông tư hướng dẫn Luật XD 2025
-  expected: Trước 01/07/2026
+  expected: Đã ban hành tháng 6/2026
+  result: TT 34, 36, 37/2026/TT-BXD...
   source: moc.gov.vn
-  status: pending
+  status: fulfilled
 - description: NĐ QLCL 2026 chính thức
-  expected: Tháng 4-5/2026
+  expected: Đã ban hành
+  result: Nghị định 207/2026/NĐ-CP (15/06/2026)
   source: moc.gov.vn
-  status: watching
+  status: fulfilled
 - description: VBHN NĐ 06/2021 mới nhất
   expected: Đã ban hành
   result: VBHN 19/VBHN-BXD ngày 25/03/2026

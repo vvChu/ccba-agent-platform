@@ -1,0 +1,7 @@
+2026/07/26-11:24:37.268 68fc Reusing MANIFEST D:\GitHubProjects\ccba-agent-platform\packages\ccba-legal-intel\.md\data\chrome_vip_profile\Default\IndexedDB\https_thuvienphapluat.vn_0.indexeddb.leveldb/MANIFEST-000001
+2026/07/26-11:24:37.269 68fc Recovering log #4
+2026/07/26-11:24:37.269 68fc Reusing old log D:\GitHubProjects\ccba-agent-platform\packages\ccba-legal-intel\.md\data\chrome_vip_profile\Default\IndexedDB\https_thuvienphapluat.vn_0.indexeddb.leveldb/000004.log 
+2026/07/26-11:24:37.372 52d4 Level-0 table #8: started
+2026/07/26-11:24:37.375 52d4 Level-0 table #8: 1403 bytes OK
+2026/07/26-11:24:37.376 52d4 Delete type=0 #4
+2026/07/26-11:24:37.376 68fc Manual compaction at level-0 from '\x00\x02\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x03\x00\x00\x00' @ 0 : 0; will stop at (end)
