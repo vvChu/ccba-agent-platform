@@ -586,7 +586,6 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Vấn đề**: Kích hoạt đồng thời nhiều background tasks chạy `run_harness_evals.py --all` mà không có cơ chế Auto-Lock hoặc cancellation tiến trình trước. Điều này khiến CPU/RAM bị đẩy lên 100%, gây đứt kết nối IPC và restart IDE Extension Host.
 - **Thay thế bằng**: Sử dụng Auto-Lock Singleton `ensure_single_instance()` + Mặc định Scoped Evaluation (chạy theo git diff).
 
-
 ---
 
 ## Session Learnings — Safe Execution Sandbox & Technical Debt Cleanup (2026-07-23)
