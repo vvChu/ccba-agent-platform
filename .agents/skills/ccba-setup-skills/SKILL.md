@@ -26,51 +26,54 @@ Quét dự án hiện tại để nhận diện trạng thái ban đầu:
 - Kiểm tra sự tồn tại của file hiến pháp `.agents/AGENTS.md` hoặc `AGENTS.md`.
 - Kiểm tra sự tồn tại của `CONTEXT.md` / `CONTEXT-MAP.md` ở thư mục gốc hoặc `.md/knowledge/`.
 - Kiểm tra sự tồn tại của thư mục cấu hình đích `.md/knowledge/agents/`.
+- **Kiểm tra Kỹ năng Triage (Multi-tier Detection)**: Quét qua 3 cấp: (1) Thư mục `.agents/skills/triage/` hoặc `.agents/skills/ccba-triage/`, (2) Đăng ký trong `catalog.yaml`, (3) Danh sách Kỹ năng khả dụng trong ngữ cảnh. Thiết lập cờ `triage_installed = true` nếu tìm thấy; ngược lại `triage_installed = false`.
+- **Kiểm tra Tín hiệu Monorepo (Monorepo Inference)**: Kiểm tra file `pnpm-workspace.yaml`, trường `workspaces` trong `package.json`, hoặc sự tồn tại của `CONTEXT-MAP.md`. Thiết lập cờ `is_monorepo = true` nếu phát hiện; ngược lại `is_monorepo = false`.
 
 ### 2. Gợi ý cấu hình & Phỏng vấn (Present findings and ask)
 
-Tóm tắt kết quả trinh sát và đưa ra cấu hình đề xuất cho người dùng:
-- **Nếu đã có cấu hình trong `workspace_context.yaml`**: Hiển thị cấu hình hiện tại và hỏi người dùng có muốn thay đổi không. Nếu không, đề xuất dùng tiếp cấu hình này (bỏ qua phỏng vấn từng bước).
-- **Nếu chưa có cấu hình**: Hỏi người dùng từng quyết định một (one-by-one):
+Tóm tắt kết quả trinh sát và đưa ra cấu hình đề xuất cho người dùng (luôn áp dụng **Recommended-First UX** — đưa câu trả lời đề xuất tốt nhất lên Lựa chọn 1 để người dùng xác nhận bằng Phím Enter hoặc `1`):
+
+- **Nếu đã có cấu hình trong `workspace_context.yaml`**: Hiển thị cấu hình hiện tại và đề xuất dùng tiếp cấu hình này (bỏ qua phỏng vấn từng bước).
+- **Nếu chưa có cấu hình**: Thực hiện phỏng vấn tương tác:
 
   **Câu A — Issue tracker**:
-  Giải thích: Đây là nơi theo dõi task/bug. Lựa chọn:
-  - **GitHub** — Sử dụng GitHub Issues (yêu cầu `gh` CLI). Tự động đề xuất nếu git remote là github.com.
-  - **GitLab** — Sử dụng GitLab Issues (yêu cầu `glab` CLI). Tự động đề xuất nếu git remote là gitlab.com.
+  > *Lựa chọn 1 (Recommended)*: Đề xuất mặc định dựa trên `git remote` (Ví dụ: **GitHub Issues** nếu remote chứa `github.com`, **GitLab Issues** nếu remote chứa `gitlab.com`, hoặc **Local Markdown** nếu chạy offline/chưa có remote).
+  - **GitHub** — Sử dụng GitHub Issues (yêu cầu `gh` CLI).
+  - **GitLab** — Sử dụng GitLab Issues (yêu cầu `glab` CLI).
   - **Local markdown** — Lưu issue thành các file md dưới `.md/knowledge/issues/` (phù hợp chạy offline hoặc dự án solo).
   - **Khác** — Nhận mô tả quy trình dạng văn bản tự do từ người dùng.
   
   Nếu chọn GitHub/GitLab, hỏi thêm:
-  - *Xem PR như yêu cầu tính năng?* (yes / no - Mặc định: no). Nếu yes, `/triage` sẽ quét cả PR của cộng tác viên ngoài để xếp hàng phân loại.
+  - *Xem PR như yêu cầu tính năng?* (yes / no - Mặc định: **no**).
 
-  **Câu B — Nhãn Triage**:
-  Cấu hình ánh xạ cho 5 vai trò nhãn triage:
-  - `needs-triage` (Cần đánh giá)
-  - `needs-info` (Cần thông tin)
-  - `ready-for-agent` (Sẵn sàng cho Agent)
-  - `ready-for-human` (Cần lập trình viên xử lý)
-  - `wontfix` (Từ chối/Không làm)
-  (Mặc định: Giữ nguyên tên vai trò làm nhãn. Hỏi người dùng xem có muốn ghi đè nhãn nào theo thói quen cũ của repo không).
+  **Câu B — Nhãn Triage (Smart Skipping)**:
+  > ⚡ **Smart Skipping Rule**: Nếu bước Trinh sát xác định `triage_installed = false`, **BỎ QUA TOÀN BỘ CÂU B NÀY** và thông báo ngầm: *"Đã tự động bỏ qua cấu hình Nhãn Triage do dự án không sử dụng kỹ năng Triage."*
 
-  **Câu C — Cấu trúc tài liệu miền (Domain layout)**:
-  Xác định cấu trúc lưu trữ tri thức:
-  - **Single-context** — Chỉ có 1 file `CONTEXT.md` và `docs/adr/` ở root (phù hợp với hầu hết dự án).
-  - **Multi-context** — Có file `CONTEXT-MAP.md` dẫn tới nhiều folder con chứa `CONTEXT.md` riêng (phù hợp monorepo).
+  Nếu `triage_installed = true`, thực hiện phỏng vấn cấu hình ánh xạ cho 5 vai trò nhãn triage:
+  - Lựa chọn 1 (Recommended): **Giữ nguyên 5 nhãn mặc định** (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`).
+  - Lựa chọn 2: Nhận ghi đè nhãn từ người dùng.
+
+  **Câu C — Cấu trúc tài liệu miền (Monorepo Inference)**:
+  > ⚡ **Monorepo Inference Rule**: Nếu bước Trinh sát xác định `is_monorepo = false`, **TỰ ĐỘNG CHỐT Single-context** (`CONTEXT.md` duy nhất tại root) mà không bắt người dùng phỏng vấn thủ công.
+
+  Chỉ khi `is_monorepo = true`, mới hỏi phỏng vấn chọn cấu trúc:
+  - **Single-context** (Recommended) — 1 file `CONTEXT.md` và `docs/adr/` ở root.
+  - **Multi-context** — Có file `CONTEXT-MAP.md` dẫn tới nhiều folder con chứa `CONTEXT.md` riêng.
 
 ### 3. Xác nhận (Confirm)
 
 Hiển thị cho người dùng xem bản nháp của:
-- Khối cấu hình `## Agent skills` sẽ được ghi vào file `.agents/AGENTS.md` (hoặc `AGENTS.md` ở root).
+- Khối cấu hình `## Agent skills` sẽ được ghi vào file `.agents/AGENTS.md` (hoặc `AGENTS.md` ở root). (Bao gồm tiểu mục `### Triage labels` chỉ khi `triage_installed = true`).
 - Nội dung chi tiết của các file sẽ được tạo ra tại `.md/knowledge/agents/`:
   - `issue_tracker.md`
-  - `triage_labels.md`
+  - `triage_labels.md` (chỉ khi `triage_installed = true`)
   - `domain.md`
 
 ### 4. Ghi cấu hình (Write)
 
 **Bước A: Cập nhật Hiến pháp**:
 - Xác định file ghi hiến pháp: Ưu tiên `.agents/AGENTS.md`, sau đó đến `AGENTS.md` ở root.
-- Cập nhật (hoặc thêm mới) block `## Agent skills` vào file đó mà không làm mất các quy định khác:
+- Cập nhật (hoặc thêm mới) block `## Agent skills` vào file đó:
   ```markdown
   ## Agent skills
 
@@ -78,7 +81,7 @@ Hiển thị cho người dùng xem bản nháp của:
 
   [Tóm tắt ngắn gọn tracker và trạng thái PR]. Xem `.md/knowledge/agents/issue_tracker.md`.
 
-  ### Triage labels
+  ### Triage labels (chỉ có khi triage_installed = true)
 
   [Tóm tắt ngắn gọn nhãn triage]. Xem `.md/knowledge/agents/triage_labels.md`.
 
@@ -91,9 +94,9 @@ Hiển thị cho người dùng xem bản nháp của:
 - Ghi nhận hoặc cập nhật trường `project.issue_tracker` trong file `.md/workspace_context.yaml` (ví dụ: `github`, `gitlab` hoặc `local_markdown`).
 
 **Bước C: Tạo các file chỉ dẫn chi tiết**:
-Tạo thư mục `.md/knowledge/agents/` (nếu chưa có) và ghi 3 file cấu hình chi tiết từ các file template tương ứng của skill:
+Tạo thư mục `.md/knowledge/agents/` (nếu chưa có) và ghi các file cấu hình chi tiết:
 - Hướng dẫn Issue Tracker: Lấy từ `issue-tracker-github.md`, `issue-tracker-gitlab.md`, hoặc `issue-tracker-local.md`.
-- Hướng dẫn nhãn Triage: Lấy từ `triage-labels.md`.
+- Hướng dẫn nhãn Triage: Lấy từ `triage-labels.md` (chỉ tạo khi `triage_installed = true`).
 - Hướng dẫn Domain: Lấy từ `domain.md`.
 
 ### 5. Hoàn tất (Done)

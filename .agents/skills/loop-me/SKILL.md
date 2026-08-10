@@ -15,8 +15,8 @@ Tạo mới, sửa đổi hoặc xóa bỏ các đặc tả workflow tùy thuộ
 
 Để tuân thủ hiến pháp CCBA, skill này bắt buộc phải ghi nhận thông tin theo các đường dẫn sau:
 
-- **Ghi chú thô & Thuật ngữ**: Ghi nhận vào [.md/knowledge/user_loops.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/user_loops.md) (thay vì `NOTES.md` ở root). Hãy phỏng vấn người dùng về các công cụ họ dùng, kênh thông tin họ xử lý và thuật ngữ đặc thù của họ. Làm sắc nét các từ khóa mơ hồ thành các từ khóa chuẩn hóa.
-- **Tệp Đặc tả Workflow**: Sinh trực tiếp vào thư mục [.agents/workflows/](file:///d:/GitHubProjects/ccba-agent-platform/.agents/workflows/) (thay vì `workflows/` ở root) dưới dạng tệp Markdown tiêu chuẩn của CCBA, mang định dạng tên `ccba-<slug>.md`.
+- **Ghi chú thô & Thuật ngữ**: Ghi nhận vào `.md/knowledge/user_loops.md` (thay vì `NOTES.md` ở root). Hãy phỏng vấn người dùng về các công cụ họ dùng, kênh thông tin họ xử lý và thuật ngữ đặc thù của họ. Làm sắc nét các từ khóa mơ hồ thành các từ khóa chuẩn hóa.
+- **Tệp Đặc tả Workflow**: Sinh trực tiếp vào thư mục [.agents/workflows/](../../workflows/) (thay vì `workflows/` ở root) dưới dạng tệp Markdown tiêu chuẩn của CCBA, mang định dạng tên `ccba-<slug>.md`.
 
 ## Metadata của Workflow CCBA
 Mọi tệp workflow được tạo ra bắt buộc phải có frontmatter YAML chuẩn sau:

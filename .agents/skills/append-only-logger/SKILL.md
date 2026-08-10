@@ -21,7 +21,7 @@ Thread-safe logging pattern cho các pipeline chạy nhiều daemon/process đ�
 ## Kiến trúc & Triển khai
 
 Mã nguồn triển khai chi tiết của lớp logger thread-safe được tách biệt hoàn toàn ra tệp tin mô-đun:
-👉 **Mã nguồn:** [append_only_logger.py](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/append-only-logger/resources/append_only_logger.py)
+👉 **Mã nguồn:** [append_only_logger.py](resources/append_only_logger.py)
 
 Kỹ sư hoặc Agent tại dự án Spoke có thể dễ dàng import và sử dụng trực tiếp:
 ```python

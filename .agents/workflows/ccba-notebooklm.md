@@ -10,4 +10,4 @@ bundle: "_core"
 
 # Workflow: NotebookLM Connector (/ccba-notebooklm)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `notebooklm-connector` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/notebooklm-connector/SKILL.md) để bắt đầu chu trình kết nối, xác thực và xử lý tri thức với Google NotebookLM Cloud.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `notebooklm-connector` tại [SKILL.md](../skills/notebooklm-connector/SKILL.md) để bắt đầu chu trình kết nối, xác thực và xử lý tri thức với Google NotebookLM Cloud.
