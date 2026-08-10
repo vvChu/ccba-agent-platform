@@ -7,7 +7,7 @@ Các lỗi (bugs), yêu cầu tính năng (Specs) và nhiệm vụ phát triển
 - Mỗi tính năng/nhiệm vụ lớn được nhóm vào một thư mục con: `.md/knowledge/issues/<feature-slug>/`
 - Tài liệu Đặc tả Kỹ thuật (Spec) được đặt tại: `.md/knowledge/specs/spec-{slug}.md`
 - Các issue chi tiết được đánh số và đặt tên theo định dạng: `.md/knowledge/issues/<feature-slug>/issues/<NN>-<slug>.md` (bắt đầu đánh số từ `01`).
-- Trạng thái điều phối (Triage state) được ghi nhận ở dòng `Status: <trạng_thái>` nằm ở các dòng đầu tiên của file issue (xem chi tiết các trạng thái tại `triage_labels.md`).
+- Trạng thái điều phối (Triage state) được ghi nhận ở dòng `Status: <trạng_thái>` nằm ở các dòng đầu tiên của file issue (xem chi tiết các trạng thái tại `triage_labels.md` nếu dự án có cài đặt triage, hoặc các trạng thái cơ bản: `claimed`, `resolved`, `open`).
 - Lịch sử thảo luận, bình luận và log tiến độ sẽ được Agent append vào cuối file dưới tiêu đề `## Comments`.
 
 ## Khi Agent cần tạo Issue mới ("publish to the issue tracker")

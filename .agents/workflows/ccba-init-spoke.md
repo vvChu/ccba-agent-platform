@@ -265,4 +265,7 @@ if (Test-Path $hubTemplates) {
 
 ### 8. Báo cáo hoàn tất
 - In thông báo thiết lập Spoke Workspace thành công.
-- Hướng dẫn người dùng các lệnh liên quan: `/ccba-update-spoke` và `/ccba-convert-markdown`.
+- Hướng dẫn người dùng các bước kế tiếp:
+  - Chạy `/ccba-setup-skills` để thiết lập cấu hình công cụ phát triển (Issue Tracker, Domain Docs).
+  - Sử dụng `/ccba-update-spoke` để nâng cấp các skills/workflows mới từ Hub.
+  - Sử dụng `/ccba-convert-markdown` nếu cần chuyển đổi tài liệu Word/PDF sang Markdown.
