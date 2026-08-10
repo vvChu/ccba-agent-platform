@@ -7,4 +7,4 @@ bundle: "_core"
 
 # Workflow: Cải Tiến Kiến Trúc Codebase (/ccba-improve-codebase-architecture)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `improve-codebase-architecture` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/improve-codebase-architecture/SKILL.md) để bắt đầu phân tích cấu trúc module.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `improve-codebase-architecture` tại [SKILL.md](../skills/improve-codebase-architecture/SKILL.md) để bắt đầu phân tích cấu trúc module.

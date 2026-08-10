@@ -10,4 +10,4 @@ bundle: "_core"
 
 # Workflow: Phân rã công việc thành Tickets (/ccba-to-tickets)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `to-tickets` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/to-tickets/SKILL.md) để phân rã yêu cầu thành các ticket phát triển độc lập và liên kết chặn.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `to-tickets` tại [SKILL.md](../skills/to-tickets/SKILL.md) để phân rã yêu cầu thành các ticket phát triển độc lập và liên kết chặn.

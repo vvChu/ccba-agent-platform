@@ -21,7 +21,7 @@ Rate limiter + Circuit Breaker 3-trạng-thái cho LLM API calls. Thiết kế c
 ## Kiến trúc & Triển khai
 
 Mã nguồn triển khai chi tiết của lớp `CircuitBreaker` được tách biệt hoàn toàn ra tệp tin mô-đun:
-👉 **Mã nguồn:** [circuit_breaker.py](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/api-circuit-breaker/resources/circuit_breaker.py)
+👉 **Mã nguồn:** [circuit_breaker.py](resources/circuit_breaker.py)
 
 Kỹ sư hoặc Agent tại dự án Spoke có thể dễ dàng import và sử dụng trực tiếp:
 ```python
