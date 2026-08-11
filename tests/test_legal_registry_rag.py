@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from scripts.legal_rag_indexer import (
+from scripts.legal.legal_rag_indexer import (
     format_citation,
     load_legal_registry,
     search_legal_registry,

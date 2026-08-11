@@ -1,7 +1,7 @@
 """Unit tests for Legal Template Generator (Seam tests)."""
 
 import pytest
-from scripts.legal_template_generator import (
+from scripts.legal.legal_template_generator import (
     generate_legal_document,
 )
 
