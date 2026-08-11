@@ -28,6 +28,7 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
         pass
 
 import requests
+
 from ccba_legal.crawler import ChromeCDP, TVPLSessionMutex, resolve_project_root
 
 

@@ -7,7 +7,7 @@ from pathlib import Path
 # Add scripts directory to sys.path to allow running from any CWD
 sys.path.append(str(Path(__file__).parent.parent.resolve()))
 
-from compile_knowledge import compile_skills, compile_workflows
+from scripts.spoke.compile_knowledge import compile_skills, compile_workflows
 
 
 def test_compile_skills() -> None:

@@ -4,7 +4,7 @@
 import json
 from pathlib import Path
 
-from scripts.log_eval_miner import (
+from scripts.eval.log_eval_miner import (
     generate_synthetic_test_case,
     identify_router_failures,
     mine_logs_and_export,
