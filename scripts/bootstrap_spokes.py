@@ -1,6 +1,5 @@
 """Bootstrap script for setting up CCBA Spokes on an engineer's local machine."""
 
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -8,7 +7,9 @@ from pathlib import Path
 # Force UTF-8 encoding
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+
 
 def bootstrap():
     print("=== CCBA AGENT PLATFORM — LOCAL DEV BOOTSTRAP ===")
@@ -19,7 +20,11 @@ def bootstrap():
 
     if ai_pkg.exists():
         print(f"\n[1/2] Installing ccba-ai package editable mode from {ai_pkg.resolve()}...")
-        res = subprocess.run([sys.executable, "-m", "pip", "install", "-e", str(ai_pkg.resolve())], capture_output=True, text=True)
+        res = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-e", str(ai_pkg.resolve())],
+            capture_output=True,
+            text=True,
+        )
         if res.returncode == 0:
             print(" ✅ ccba-ai installed successfully.")
         else:
@@ -38,6 +43,7 @@ def bootstrap():
         print(" ✅ Knowledge Spoke folder initialized.")
 
     print("\n🎉 BOOTSTRAP COMPLETE! Smart Resolution Gateway is active.")
+
 
 if __name__ == "__main__":
     bootstrap()

@@ -21,7 +21,12 @@ def pytest_addoption(parser) -> None:
 def pytest_cmdline_main(config) -> int | None:
     """Hook kiểm tra các tham số đầu vào trước khi tiến hành chạy pytest."""
     import os
-    if config.getoption("--allow-unscoped", default=False) or os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true":
+
+    if (
+        config.getoption("--allow-unscoped", default=False)
+        or os.getenv("CI") == "true"
+        or os.getenv("GITHUB_ACTIONS") == "true"
+    ):
         return None
 
     project_root = Path(config.rootpath).resolve()
@@ -52,7 +57,9 @@ def pytest_cmdline_main(config) -> int | None:
         sys.stderr.write("  1. Chỉ định file test cụ thể:\n")
         sys.stderr.write("     .venv\\Scripts\\pytest.exe packages/ccba-ai/tests/test_client.py\n")
         sys.stderr.write("  2. Hoặc sử dụng CLI Wrapper tự động:\n")
-        sys.stderr.write("     python scripts/safe_pytest.py -f scripts/tests/test_doc_auditor.py\n")
+        sys.stderr.write(
+            "     python scripts/safe_pytest.py -f scripts/tests/test_doc_auditor.py\n"
+        )
         sys.stderr.write("  3. Để chạy toàn bộ test suite (chỉ ở bước nghiệm thu cuối):\n")
         sys.stderr.write("     .venv\\Scripts\\pytest.exe --allow-unscoped\n")
         sys.stderr.write("=" * 65 + "\n\n")

@@ -223,6 +223,7 @@ def ensure_chrome_cdp_port(port: int = 9222) -> bool:
     import shutil
     import subprocess
     import time
+
     import requests
 
     try:
@@ -308,13 +309,18 @@ class LegalIntelPipeline:
                     doc_id=doc_id,
                     bundle_path=None,
                     status="offloaded_to_subagent",
-                    metadata={"title": f"Large Document {doc_id}", "recommended_subagent": "ccba-research"},
+                    metadata={
+                        "title": f"Large Document {doc_id}",
+                        "recommended_subagent": "ccba-research",
+                    },
                     error="Offloaded to subagent ccba-research for async crawling of large document.",
                 )
 
         # 2. Check SHA-256 / Delta Cache
         if not force_refresh and bundle_dir.exists():
-            cached_meta = self.registry_mgr.find_doc_by_id(doc_id) or {"title": f"Cached Document {doc_id}"}
+            cached_meta = self.registry_mgr.find_doc_by_id(doc_id) or {
+                "title": f"Cached Document {doc_id}"
+            }
             return LegalProcessResult(
                 doc_id=doc_id,
                 bundle_path=bundle_dir,
@@ -369,13 +375,27 @@ class LegalIntelPipeline:
         import json
 
         parser = argparse.ArgumentParser(description="CCBA Legal Intelligence Deep CLI")
-        parser.add_argument("positional_target", nargs="?", help="TVPL Document URL or ID (positional)")
+        parser.add_argument(
+            "positional_target", nargs="?", help="TVPL Document URL or ID (positional)"
+        )
         parser.add_argument("--url", help="TVPL Document URL")
         parser.add_argument("--doc-id", help="Legal Document ID")
         parser.add_argument("--force", action="store_true", help="Force refresh")
-        parser.add_argument("--async", "--async-offload", dest="async_offload", action="store_true", help="Offload large documents to subagent async")
-        parser.add_argument("--download-source", action="store_true", help="Download source .docx file")
-        parser.add_argument("--extract-related", action="store_true", help="Extract related documents and guiding docs")
+        parser.add_argument(
+            "--async",
+            "--async-offload",
+            dest="async_offload",
+            action="store_true",
+            help="Offload large documents to subagent async",
+        )
+        parser.add_argument(
+            "--download-source", action="store_true", help="Download source .docx file"
+        )
+        parser.add_argument(
+            "--extract-related",
+            action="store_true",
+            help="Extract related documents and guiding docs",
+        )
         parser.add_argument("--json", action="store_true", help="Output result as JSON")
         parsed = parser.parse_args(args)
 
@@ -384,7 +404,9 @@ class LegalIntelPipeline:
             print("[LegalIntel CLI] Error: Must specify --url, --doc-id, or positional target URL")
             return 1
 
-        result = self.process_document(target, force_refresh=parsed.force, async_offload=parsed.async_offload)
+        result = self.process_document(
+            target, force_refresh=parsed.force, async_offload=parsed.async_offload
+        )
         if parsed.json:
             out = {
                 "doc_id": result.doc_id,
@@ -394,10 +416,16 @@ class LegalIntelPipeline:
                 "error": result.error,
             }
             print(json.dumps(out, ensure_ascii=False))
-            return 0 if result.status in ("success", "mocked", "cached", "offloaded_to_subagent") else 1
+            return (
+                0
+                if result.status in ("success", "mocked", "cached", "offloaded_to_subagent")
+                else 1
+            )
 
         if result.status in ("success", "mocked", "cached", "offloaded_to_subagent"):
-            print(f"[LegalIntel CLI] Processed {result.doc_id} -> status: {result.status}, bundle: {result.bundle_path}")
+            print(
+                f"[LegalIntel CLI] Processed {result.doc_id} -> status: {result.status}, bundle: {result.bundle_path}"
+            )
             return 0
         print(f"[LegalIntel CLI] Failed processing {result.doc_id}: {result.error}")
         return 1

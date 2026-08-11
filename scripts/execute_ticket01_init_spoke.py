@@ -1,13 +1,16 @@
 """Script to execute Ticket 01: Initializing ccba-legal-knowledge Spoke repository."""
 
 import sys
-import yaml
 from pathlib import Path
+
+import yaml
 
 # Force UTF-8 encoding
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+
 
 def init_spoke():
     spoke_dir = Path("D:/GitHubProjects/ccba-legal-knowledge")
@@ -21,15 +24,14 @@ def init_spoke():
             "type": "knowledge-spoke",
             "mode": "delivery",
             "is_hub": False,
-            "hub_path": "D:/GitHubProjects/ccba-agent-platform"
+            "hub_path": "D:/GitHubProjects/ccba-agent-platform",
         },
-        "agents": {
-            "primary_domain": "legal-compliance",
-            "language": "vi"
-        }
+        "agents": {"primary_domain": "legal-compliance", "language": "vi"},
     }
     context_file = spoke_dir / "workspace_context.yaml"
-    context_file.write_text(yaml.dump(context_data, allow_unicode=True, default_flow_style=False), encoding="utf-8")
+    context_file.write_text(
+        yaml.dump(context_data, allow_unicode=True, default_flow_style=False), encoding="utf-8"
+    )
     print(" ✅ Created workspace_context.yaml (project.mode: delivery)")
 
     # 2. Create AGENTS.md
@@ -79,18 +81,21 @@ Cơ sở dữ liệu Tri thức Pháp luật và Quy chuẩn Kỹ thuật Xây d
                 "id": "QCVN-04-2021-BXD",
                 "title": "QCVN 04:2021/BXD — Quy chuẩn kỹ thuật quốc gia về Nhà chung cư",
                 "category": "REGULATION_QCVN",
-                "bundle_path": "legal_docs/REGULATION_QCVN/qcvn_04_2021_bxd"
+                "bundle_path": "legal_docs/REGULATION_QCVN/qcvn_04_2021_bxd",
             },
             {
                 "id": "QCVN-06-2022-BXD",
                 "title": "QCVN 06:2022/BXD — Quy chuẩn kỹ thuật quốc gia về An toàn cháy cho nhà và công trình",
                 "category": "REGULATION_QCVN",
-                "bundle_path": "legal_docs/REGULATION_QCVN/qcvn_06_2022_bxd"
-            }
-        ]
+                "bundle_path": "legal_docs/REGULATION_QCVN/qcvn_06_2022_bxd",
+            },
+        ],
     }
-    root_registry.write_text(yaml.dump(reg_data, allow_unicode=True, default_flow_style=False), encoding="utf-8")
+    root_registry.write_text(
+        yaml.dump(reg_data, allow_unicode=True, default_flow_style=False), encoding="utf-8"
+    )
     print(" ✅ Created Root legal_registry.yaml")
+
 
 if __name__ == "__main__":
     init_spoke()

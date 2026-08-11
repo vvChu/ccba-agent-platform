@@ -1,10 +1,6 @@
 """Unit tests for DeltaPatchGenerator and apply_patch_dry_run in ccba_legal."""
 
-from pathlib import Path
-import yaml
-
 from ccba_legal.ast_parser import (
-    ASTNode,
     ASTParser,
     DeltaPatch,
     DeltaPatchItem,

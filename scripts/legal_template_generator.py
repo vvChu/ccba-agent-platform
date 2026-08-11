@@ -1,7 +1,8 @@
 """Module generating legal advisory documents compliant with Decree 30/2020/NĐ-CP formatting."""
 
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Any
+
 from scripts.legal_grounding_gate import format_grounded_response
 
 SUPPORTED_DOC_TYPES = ["compliance_report", "inquiry_letter", "contract_risk_advisory"]
@@ -13,10 +14,12 @@ TRUNG TÂM TƯ VẤN VÀ ỨNG DỤNG BIM    CỘNG HÒA XÃ HỘI CHỦ NGHĨA 
 """
 
 
-def generate_legal_document(doc_type: str, data: Dict[str, Any]) -> str:
+def generate_legal_document(doc_type: str, data: dict[str, Any]) -> str:
     """Generate standardized legal document formatted per NĐ 30/2020/NĐ-CP."""
     if doc_type not in SUPPORTED_DOC_TYPES:
-        raise ValueError(f"Unsupported document type '{doc_type}'. Must be one of: {SUPPORTED_DOC_TYPES}")
+        raise ValueError(
+            f"Unsupported document type '{doc_type}'. Must be one of: {SUPPORTED_DOC_TYPES}"
+        )
 
     today_str = datetime.now().strftime("ngày %d tháng %m năm %Y")
     author = data.get("author", "Hệ thống AI Agent CCBA")
