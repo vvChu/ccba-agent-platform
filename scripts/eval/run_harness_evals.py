@@ -8,7 +8,14 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
+
+from scripts.eval.process_safety import (
+    ensure_single_instance,
+    get_venv_python,
+    kill_process_tree,
+)
 
 
 def check_pre_eval_health(project_root: Path) -> None:
@@ -25,30 +32,6 @@ def check_pre_eval_health(project_root: Path) -> None:
             print(f"ℹ️ [HEALTH] Môi trường khả dụng: {free_gb:.2f} GB đĩa trống.")
     except Exception as e:
         print(f"⚠️ [HEALTH] Không thể kiểm tra dung lượng đĩa: {e}")
-
-
-def ensure_single_instance() -> None:
-    """Tự động kiểm tra và triệt hạ các tiến trình run_harness_evals.py bị trùng lặp/treo từ trước."""
-    current_pid = os.getpid()
-    parent_pid = getattr(os, "getppid", lambda: None)()
-    try:
-        import psutil
-
-        for proc in psutil.process_iter(["pid", "name", "cmdline"]):
-            try:
-                pid = proc.info["pid"]
-                if pid == current_pid or (parent_pid and pid == parent_pid):
-                    continue
-                cmdline = " ".join(proc.info["cmdline"] or [])
-                if "run_harness_evals.py" in cmdline:
-                    print(
-                        f"🧹 [AUTO-LOCK] Phát hiện tiến trình run_harness_evals.py cũ (PID {pid}). Đang thu hồi..."
-                    )
-                    proc.terminate()
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                continue
-    except Exception:
-        pass
 
 
 def get_git_modified_files(project_root: Path) -> set[Path]:
@@ -86,32 +69,6 @@ def get_git_modified_files(project_root: Path) -> set[Path]:
     return modified
 
 
-import tempfile
-
-
-def kill_process_tree(pid: int) -> None:
-    """Tiêu diệt đệ quy toàn bộ cây tiến trình (process tree) trên Windows/Linux."""
-    try:
-        import psutil
-
-        parent = psutil.Process(pid)
-        for child in parent.children(recursive=True):
-            try:
-                child.kill()
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                pass
-        parent.kill()
-    except Exception:
-        if sys.platform == "win32":
-            try:
-                subprocess.run(
-                    ["taskkill", "/F", "/T", "/PID", str(pid)],
-                    capture_output=True,
-                )
-            except Exception:
-                pass
-
-
 def run_command(
     cmd: list[str], cwd: Path, name: str, timeout_seconds: int = 60
 ) -> tuple[bool, str]:
@@ -145,24 +102,13 @@ def run_command(
             return False, f"Lỗi thực thi lệnh '{name}': {e}"
 
 
-def get_venv_python(project_root: Path) -> str:
-    """Trả về đường dẫn tới python trong .venv nếu có, fallback sys.executable."""
-    venv_win = project_root / ".venv" / "Scripts" / "python.exe"
-    if venv_win.exists():
-        return str(venv_win)
-    venv_nix = project_root / ".venv" / "bin" / "python"
-    if venv_nix.exists():
-        return str(venv_nix)
-    return sys.executable
-
-
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8")
 
-    ensure_single_instance()
+    ensure_single_instance("run_harness_evals.py")
 
     parser = argparse.ArgumentParser(description="CCBA CI Eval Gates Runner.")
     parser.add_argument("--all", action="store_true", help="Chạy kiểm tra trên toàn bộ codebase.")

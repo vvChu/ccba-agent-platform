@@ -10,6 +10,8 @@ import sys
 import time
 from pathlib import Path
 
+from scripts.eval.process_safety import get_venv_python
+
 AVAILABLE_PACKAGES = [
     "ccba-ai",
     "ccba-harness",
@@ -20,17 +22,6 @@ AVAILABLE_PACKAGES = [
     "mdconverter",
     "scripts",
 ]
-
-
-def get_venv_python(project_root: Path) -> str:
-    """Trả về đường dẫn tới python trong .venv nếu có, fallback sys.executable."""
-    venv_win = project_root / ".venv" / "Scripts" / "python.exe"
-    if venv_win.exists():
-        return str(venv_win)
-    venv_nix = project_root / ".venv" / "bin" / "python"
-    if venv_nix.exists():
-        return str(venv_nix)
-    return sys.executable
 
 
 def run_isolated_test(

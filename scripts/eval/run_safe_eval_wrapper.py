@@ -11,125 +11,13 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-
-def ensure_single_instance(script_keyword: str = "run_safe_eval_wrapper.py") -> None:
-    """Kiểm tra và thu hồi tiến trình trùng lặp đang chạy script ngầm."""
-    current_pid = os.getpid()
-    try:
-        import psutil
-
-        for proc in psutil.process_iter(["pid", "name", "cmdline"]):
-            try:
-                pid = proc.info["pid"]
-                if pid == current_pid:
-                    continue
-                cmdline = " ".join(proc.info["cmdline"] or [])
-                if script_keyword in cmdline:
-                    print(f"🧹 [AUTO-LOCK] Thu hồi tiến trình cũ PID {pid} ({script_keyword})...")
-                    proc.terminate()
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                continue
-    except ImportError:
-        if sys.platform == "win32":
-            try:
-                res = subprocess.run(
-                    [
-                        "wmic",
-                        "process",
-                        "where",
-                        "name='python.exe'",
-                        "get",
-                        "processid,commandline",
-                    ],
-                    capture_output=True,
-                    text=True,
-                )
-                for line in res.stdout.splitlines():
-                    if script_keyword in line:
-                        parts = line.strip().rsplit(maxsplit=1)
-                        if len(parts) == 2 and parts[1].isdigit():
-                            pid = int(parts[1])
-                            if pid != current_pid:
-                                print(f"🧹 [AUTO-LOCK] Thu hồi tiến trình trùng lặp PID {pid}...")
-                                subprocess.run(
-                                    ["taskkill", "/F", "/PID", str(pid)], capture_output=True
-                                )
-            except Exception:
-                pass
-
-
-def extract_summary_traceback(output: str, max_lines: int = 25) -> list[str]:
-    """Trích xuất 20-25 dòng log lỗi/traceback quan trọng nhất từ output."""
-    lines = [line.strip() for line in output.splitlines() if line.strip()]
-    if not lines:
-        return []
-
-    # Tìm các dòng chứa từ khóa lỗi
-    error_indices = [
-        i
-        for i, line_str in enumerate(lines)
-        if any(
-            k in line_str.lower() for k in ["error", "exception", "failed", "traceback", "assert"]
-        )
-    ]
-    if error_indices:
-        last_err_idx = error_indices[-1]
-        start = max(0, last_err_idx - max_lines + 5)
-        end = min(len(lines), last_err_idx + 10)
-        return lines[start:end]
-
-    # Fallback: Trả về max_lines dòng cuối cùng
-    return lines[-max_lines:]
-
-
-def extract_failed_gate(output: str) -> str | None:
-    """Trích xuất tên cổng kiểm tra bị thất bại nếu có trong output."""
-    gate_match = re.search(r"-\s*(Gate\s*[^:\n]+):\s*❌\s*FAILED", output)
-    if gate_match:
-        return gate_match.group(1).strip()
-    return None
-
-
-def extract_culprit_file(output: str) -> str | None:
-    """Trích xuất đường dẫn file gây ra lỗi chính từ traceback."""
-    file_match = re.search(r'File "([^"]+\.py)"', output)
-    if file_match:
-        return file_match.group(1)
-    pytest_file_match = re.search(r" (packages/[^\s:]+\.py|scripts/[^\s:]+\.py):", output)
-    if pytest_file_match:
-        return pytest_file_match.group(1)
-    return None
-
-
-import tempfile
-
-
-def kill_process_tree(pid: int) -> None:
-    """Tiêu diệt đệ quy toàn bộ cây tiến trình (process tree) trên Windows/Linux."""
-    try:
-        import psutil
-
-        parent = psutil.Process(pid)
-        for child in parent.children(recursive=True):
-            try:
-                child.kill()
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                pass
-        parent.kill()
-    except Exception:
-        if sys.platform == "win32":
-            try:
-                subprocess.run(
-                    ["taskkill", "/F", "/T", "/PID", str(pid)],
-                    capture_output=True,
-                )
-            except Exception:
-                pass
+from scripts.eval.process_safety import ensure_single_instance, kill_process_tree
 
 
 def run_safe_wrapper(

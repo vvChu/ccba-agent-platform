@@ -2,7 +2,7 @@
 
 import os
 
-from scripts.eval.run_harness_evals import ensure_single_instance
+from scripts.eval.process_safety import ensure_single_instance
 
 
 def test_ensure_single_instance_safe_execution():
@@ -11,7 +11,7 @@ def test_ensure_single_instance_safe_execution():
     parent_pid = getattr(os, "getppid", lambda: None)()
 
     # Execute lock check
-    ensure_single_instance()
+    ensure_single_instance("test_keyword")
 
     # Verify self and parent process remain intact
     assert os.getpid() == current_pid
