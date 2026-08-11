@@ -35,12 +35,12 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
   - Mọi file YAML được Agent chỉnh sửa phải pass qua lệnh parse `yaml.safe_load()`.
   - Luôn sử dụng type hints trong Python (parameters + return types), viết docstring (Google style) cho tất cả public functions.
   - Hàm/phương thức không dài quá 50 dòng; ưu tiên composition over inheritance.
-  - Mọi tài liệu Markdown kỹ thuật chính quy trước khi hoàn tất phải được kiểm định bằng công cụ `validate_docs.py`.
 * **Quy trình thực thi mã nguồn (SDLC Implementation Loop):**
   Khi triển khai bất kỳ mã nguồn nào dựa trên đặc tả (specs - Đặc tả Kỹ thuật), Agent bắt buộc phải thực thi theo chu kỳ khép kín:
   1. *TDD (Test-Driven Development)*: Viết unit tests trước tại các điểm khớp nối (seams) đã thỏa thuận nếu áp dụng.
   2. *Continuous Validation*: Chạy kiểm tra kiểu (typecheck), test và chạy toàn bộ test suite trước khi hoàn tất.
   3. *Review before Merge*: Chạy kỹ năng `/ccba-code-review` để quét các code smells trước khi commit/PR.
+* **Ruff Scoping & Markdown Isolation:** Khi cấu hình Ruff Linter & Formatter (trong `pyproject.toml` hoặc script test runner `run_harness_evals.py`), Agent **bắt buộc phải loại trừ `*.md`** (`docstring-code-format = false`) và chỉ định rõ các thư mục chứa mã nguồn Python thực sự (`packages`, `scripts`, `src`). Tránh quét format các đoạn mã ví dụ trong tài liệu Markdown làm bẻ gãy CI runner.
 
 ---
 
@@ -59,6 +59,7 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
 * **Bounded Async Task:** Khi một lệnh chạy dưới dạng tác vụ ngầm (Background Task), Agent không được vội vã đưa ra câu trả lời tạm thời rồi kết thúc lượt (`End Turn`) nhường lượt khi chưa thu thập xong kết quả. Agent phải kiểm tra log hoặc trạng thái tác vụ qua `manage_task status` để trả về báo cáo kết quả thực tế cho người dùng.
 * **TDD Retry Cap:** Trong vòng lặp Red→Green→Refactor (TDD) hoặc edit→test (implement), Agent chỉ được lặp lại tối đa **5 vòng** cho cùng một seam hoặc test file. Nếu sau 5 vòng test vẫn fail, Agent phải dừng lại, commit Work-In-Progress (WIP), ghi nhận các blockers chưa giải quyết được, và xin chỉ thị từ người dùng — tuyệt đối không tiếp tục lặp cho đến khi cạn context budget.
 * **Anti-Duplicate Background Runner:** Nghiêm cấm Agent kích hoạt nhiều lệnh chạy ngầm (`run_command` async) cho cùng một script test runner (`run_harness_evals.py` hoặc `pytest`). Luôn đảm bảo script test runner đã tự động tích hợp Singleton Process Lock (`ensure_single_instance()`) và chờ tiến trình cũ kết thúc hoặc hủy tiến trình cũ trước khi chạy tiến trình mới.
+* **Safe Process Termination Invariant:** Khi viết bất kỳ script nào có chức năng dọn dẹp hoặc duy trì đơn tiến trình (Singleton Process Lock / `ensure_single_instance()`), Agent **bắt buộc phải loại trừ** cả tiến trình hiện tại (`os.getpid()`) và tiến trình cha (`os.getppid()`). Nghiêm cấm kích hoạt `taskkill` hoặc `proc.terminate()` lên `os.getppid()` để tránh làm sập Agent Server Host.
 * **Task Log Readiness Check:** Nghiêm cấm Agent gọi `view_file` tới tệp `task-XXX.log` lập tức ngay sau lượt `run_command` async mà không kiểm tra xem tệp tin log đã thực sự được hệ thống tạo và ghi dữ liệu lên ổ đĩa hay chưa. Phải dùng `command_status` hoặc chờ thông báo hoàn tất từ hệ thống trước khi đọc log.
 * **Invalid Args Circuit Breaker:** Khi Agent gặp lỗi `model output error: invalid tool call error (invalid_args)` từ **2 lần liên tiếp trở lên**, đây là tín hiệu context budget sắp cạn kiệt. Agent phải **dừng ngay lập tức**, commit WIP nếu có thay đổi chưa lưu, tóm tắt trạng thái công việc hiện tại, và thông báo cho người dùng mở phiên mới để tiếp tục — không được cố gắng chạy thêm bất kỳ tool call nào.
 
