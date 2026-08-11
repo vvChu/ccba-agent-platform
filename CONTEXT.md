@@ -131,4 +131,9 @@ Chuỗi định danh mô hình ảo (`ocr-primary`, `ocr-fallback`, `rag-core`, 
 **Primary Local GPU Model Alias**:
 Định danh chuẩn `qwen-local-primary` đại diện cho model Qwen 3.5 35B FP8 chạy trực tiếp trên GPU local của Server Spark, thay thế hoàn toàn cho chuỗi `qwen3.5-35b` đã bị khai tử.
 
+**Kiểm thử cô lập (Isolated Test Execution)**:
+Chiến lược chạy từng file kiểm thử độc lập trong một sub-process Python cô lập kèm giới hạn thời gian (timeout 5s) và khóa đơn tiến trình (`ensure_single_instance()`). Mô thức này ngăn chặn triệt me hiện tượng rò rỉ tiến trình, treo CPU hoặc đứt gãy phiên làm việc của AI Agent (`User Cancelled Agent Execution`) do các bộ kiểm thử lớn gây ra.
+_Avoid_: Test chung, pytest unscoped, full test run
+
+
 
