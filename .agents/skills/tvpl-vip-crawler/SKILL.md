@@ -1,6 +1,6 @@
 ---
 name: tvpl-vip-crawler
-description: Kỹ năng tự động kết nối tài khoản VIP Thư viện Pháp luật (vuvanchu119), xử lý Cloudflare/Popups, bảo vệ VIP Session (CookieVault), khôi phục bảng biểu (Dual-Parser Table) và đóng gói OKF Bundle.
+description: Kỹ năng tự động kết nối tài khoản VIP Thư viện Pháp luật, xử lý Cloudflare/Popups, bảo vệ VIP Session (CookieVault), khôi phục bảng biểu và đóng gói OKF Bundle.
 ---
 
 # Kỹ Năng Cào & Đóng Gói Văn Bản VIP Thư Viện Pháp Luật (`tvpl-vip-crawler`)
