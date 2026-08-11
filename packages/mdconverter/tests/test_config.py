@@ -20,7 +20,7 @@ class TestSettings:
         """Test default model list."""
         settings = Settings(_env_file=None)
         assert len(settings.models) > 0
-        assert "qwen3.5-35b" in settings.models
+        assert "qwen-local-primary" in settings.models
 
     def test_env_override(self, monkeypatch):
         """Test environment variable override."""

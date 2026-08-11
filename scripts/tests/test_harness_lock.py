@@ -1,7 +1,7 @@
 """Unit tests for safe single-instance process lock in run_harness_evals.py."""
 
 import os
-import pytest
+
 from scripts.run_harness_evals import ensure_single_instance
 
 

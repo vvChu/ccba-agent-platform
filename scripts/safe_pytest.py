@@ -6,7 +6,6 @@ via safe_runner.py in a detached background process to prevent daemon cancellati
 """
 
 import argparse
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -43,12 +42,8 @@ def find_modified_test_files() -> list[str]:
 
 def main() -> int:
     """Main CLI entry point for safe_pytest."""
-    parser = argparse.ArgumentParser(
-        description="Safe Pytest Runner Wrapper for CCBA Platform"
-    )
-    parser.add_argument(
-        "-f", "--file", type=str, help="Specific test file or pattern to run"
-    )
+    parser = argparse.ArgumentParser(description="Safe Pytest Runner Wrapper for CCBA Platform")
+    parser.add_argument("-f", "--file", type=str, help="Specific test file or pattern to run")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -59,9 +54,7 @@ def main() -> int:
         action="store_true",
         help="Allow running pytest across entire workspace",
     )
-    parser.add_argument(
-        "extra_args", nargs=argparse.REMAINDER, help="Additional pytest options"
-    )
+    parser.add_argument("extra_args", nargs=argparse.REMAINDER, help="Additional pytest options")
 
     args = parser.parse_args()
 

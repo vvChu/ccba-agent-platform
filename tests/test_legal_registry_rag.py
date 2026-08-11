@@ -1,11 +1,11 @@
 """Unit tests for Legal Registry Loader & RAG Indexer (Seam tests)."""
 
-import pytest
 from pathlib import Path
+
 from scripts.legal_rag_indexer import (
+    format_citation,
     load_legal_registry,
     search_legal_registry,
-    format_citation,
 )
 
 REGISTRY_PATH = Path(".agents/skills/legal-document-tracker/resources/legal_registry.yaml")
@@ -16,7 +16,7 @@ def test_load_legal_registry_valid_yaml():
     data = load_legal_registry(REGISTRY_PATH)
     assert isinstance(data, dict)
     assert "decrees" in data or "laws" in data or "standards" in data
-    
+
     # Verify metadata
     metadata = data.get("metadata", {})
     assert "focus_area" in metadata
@@ -40,7 +40,8 @@ def test_search_legal_registry_query_pccc():
     assert len(results) > 0
     # Check that QCVN-06 or fire_safety topic is present in top results
     titles_and_topics = [
-        str(doc.get("title", "")) + " " + " ".join(doc.get("topics", []))
-        for doc in results
+        str(doc.get("title", "")) + " " + " ".join(doc.get("topics", [])) for doc in results
     ]
-    assert any("cháy" in item.lower() or "fire_safety" in item.lower() for item in titles_and_topics)
+    assert any(
+        "cháy" in item.lower() or "fire_safety" in item.lower() for item in titles_and_topics
+    )

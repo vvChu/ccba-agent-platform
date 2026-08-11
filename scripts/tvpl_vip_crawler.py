@@ -13,13 +13,11 @@ Features:
 import json
 import os
 import random
-import re
-import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Force UTF-8 encoding safely on Windows
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
@@ -31,13 +29,12 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
 
 import requests
 from ccba_legal.crawler import ChromeCDP, TVPLSessionMutex, resolve_project_root
-from scripts.tvpl_table_engine import extract_docx_with_tables
 
 
 class CookieVault:
     """Manages encrypted persistence and HTTP injection of TVPL VIP session cookies."""
 
-    def __init__(self, vault_dir: Optional[Path] = None) -> None:
+    def __init__(self, vault_dir: Path | None = None) -> None:
         project_root = resolve_project_root()
         self.vault_dir = vault_dir or (project_root / ".md" / "data" / "chrome_vip_profile")
         self.vault_dir.mkdir(parents=True, exist_ok=True)
@@ -63,7 +60,9 @@ class CookieVault:
         try:
             cookies_data = json.loads(self.cookie_file.read_text(encoding="utf-8"))
             for c in cookies_data:
-                session.cookies.set(c["name"], c["value"], domain=c.get("domain", "thuvienphapluat.vn"))
+                session.cookies.set(
+                    c["name"], c["value"], domain=c.get("domain", "thuvienphapluat.vn")
+                )
             return True
         except Exception as e:
             log_session_audit("CookieVault", f"Error loading cookies into session: {e}")
@@ -124,7 +123,7 @@ def get_chrome_path() -> str:
     paths = [
         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-        os.path.expanduser(r"~\AppData\Local\Google\Chrome\Application\chrome.exe")
+        os.path.expanduser(r"~\AppData\Local\Google\Chrome\Application\chrome.exe"),
     ]
     for p in paths:
         if os.path.exists(p):
@@ -151,7 +150,7 @@ def ensure_chrome_cdp(port: int = 9222) -> ChromeCDP:
         chrome_bin,
         f"--remote-debugging-port={port}",
         f"--user-data-dir={profile_dir.resolve()}",
-        "https://thuvienphapluat.vn/dang-nhap.aspx"
+        "https://thuvienphapluat.vn/dang-nhap.aspx",
     ]
     subprocess.Popen(cmd)
     time.sleep(4)
@@ -163,7 +162,7 @@ def ensure_chrome_cdp(port: int = 9222) -> ChromeCDP:
     return cdp
 
 
-def crawl_tvpl_vip_document(url: str, output_dir: Optional[Path] = None) -> Dict[str, Any]:
+def crawl_tvpl_vip_document(url: str, output_dir: Path | None = None) -> dict[str, Any]:
     """Main crawler entry point: Logs in, navigates to document, downloads full text & packages OKF Bundle."""
     username, password = get_tvpl_credentials()
     project_root = resolve_project_root()
@@ -176,7 +175,9 @@ def crawl_tvpl_vip_document(url: str, output_dir: Optional[Path] = None) -> Dict
 
     # 1. VIP Session Health Check
     if not check_vip_session_health(session):
-        log_session_audit("VIPGuard", "Session expired or missing. Triggering auto-relogin via CDP...")
+        log_session_audit(
+            "VIPGuard", "Session expired or missing. Triggering auto-relogin via CDP..."
+        )
         with TVPLSessionMutex(timeout=120):
             cdp = ensure_chrome_cdp(port=9222)
             pages = cdp.get_pages()
@@ -245,7 +246,9 @@ def crawl_tvpl_vip_document(url: str, output_dir: Optional[Path] = None) -> Dict
         })()
         """
         relationships = cdp.evaluate_js(rel_js) or []
-        log_session_audit("AutoTaxonomy", f"Extracted {len(relationships)} document relationship links.")
+        log_session_audit(
+            "AutoTaxonomy", f"Extracted {len(relationships)} document relationship links."
+        )
 
         # Create slug and directory (Target Knowledge Spoke)
         slug = "tvpl_doc_" + str(int(time.time()))
@@ -274,10 +277,10 @@ def crawl_tvpl_vip_document(url: str, output_dir: Optional[Path] = None) -> Dict
 
         # Write metadata.yaml
         meta_content = f"""id: {slug.upper()}
-title: "{title.replace('"', '')}"
+title: "{title.replace('"', "")}"
 source_url: "{url}"
 crawled_by: "TVPL VIP vuvanchu119"
-crawled_at: "{time.strftime('%Y-%m-%dT%H:%M:%SZ')}"
+crawled_at: "{time.strftime("%Y-%m-%dT%H:%M:%SZ")}"
 status: current
 relationships_count: {len(relationships)}
 """
@@ -287,7 +290,7 @@ relationships_count: {len(relationships)}
         doc_filename = f"{slug}.md"
         doc_content = f"""# {title}
 
-*(Tải về tự động từ Thư viện Pháp luật VIP vuvanchu119 - {time.strftime('%d/%m/%Y')})*
+*(Tải về tự động từ Thư viện Pháp luật VIP vuvanchu119 - {time.strftime("%d/%m/%Y")})*
 
 ---
 
@@ -308,9 +311,8 @@ relationships_count: {len(relationships)}
             "status": "success",
             "title": title,
             "bundle_path": str(bundle_dir.resolve()),
-            "slug": slug
+            "slug": slug,
         }
-
 
 
 if __name__ == "__main__":
@@ -318,6 +320,6 @@ if __name__ == "__main__":
         target_url = sys.argv[1]
     else:
         target_url = "https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-03-2021-TT-BXD-QCVN-04-2021-BXD-Quy-chuan-ky-thuat-quoc-gia-ve-Nha-chung-cu-474758.aspx"
-    
+
     res = crawl_tvpl_vip_document(target_url)
     print("Result:", res)

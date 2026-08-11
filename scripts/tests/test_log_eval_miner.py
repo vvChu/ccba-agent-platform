@@ -2,7 +2,6 @@
 """test_log_eval_miner.py - Unit tests for log_eval_miner.py."""
 
 import json
-import pytest
 from pathlib import Path
 
 from scripts.log_eval_miner import (
@@ -30,8 +29,14 @@ def test_parse_transcript_logs(tmp_path: Path):
     """Test parsing user prompts from transcript.jsonl."""
     log_file = tmp_path / "transcript.jsonl"
     lines = [
-        json.dumps({"type": "USER_INPUT", "content": "Hỏi về Nghị định 105/2025/NĐ-CP SĐT 0987654321"}) + "\n",
-        json.dumps({"type": "PLANNER_RESPONSE", "step_index": 1, "content": "Tôi là trợ lý PCCC..."}) + "\n",
+        json.dumps(
+            {"type": "USER_INPUT", "content": "Hỏi về Nghị định 105/2025/NĐ-CP SĐT 0987654321"}
+        )
+        + "\n",
+        json.dumps(
+            {"type": "PLANNER_RESPONSE", "step_index": 1, "content": "Tôi là trợ lý PCCC..."}
+        )
+        + "\n",
     ]
     log_file.write_text("".join(lines), encoding="utf-8")
 
@@ -72,8 +77,16 @@ def test_mine_logs_and_export(tmp_path: Path):
     log_dir.mkdir()
     log_file = log_dir / "transcript.jsonl"
     lines = [
-        json.dumps({"type": "USER_INPUT", "content": "Hãy tính toán tiết diện dầm thép I300"}) + "\n",
-        json.dumps({"type": "PLANNER_RESPONSE", "step_index": 1, "content": "Tôi không hỗ trợ tính toán kết cấu..."}) + "\n",
+        json.dumps({"type": "USER_INPUT", "content": "Hãy tính toán tiết diện dầm thép I300"})
+        + "\n",
+        json.dumps(
+            {
+                "type": "PLANNER_RESPONSE",
+                "step_index": 1,
+                "content": "Tôi không hỗ trợ tính toán kết cấu...",
+            }
+        )
+        + "\n",
     ]
     log_file.write_text("".join(lines), encoding="utf-8")
 

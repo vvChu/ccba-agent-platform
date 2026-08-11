@@ -44,7 +44,9 @@ class LegalHybridRAG:
                     # Term frequency
                     tf = doc_tokens.count(token) / doc_len
                     # IDF approximation
-                    docs_containing = sum(1 for tokens in self.tokenized_corpus.values() if token in tokens)
+                    docs_containing = sum(
+                        1 for tokens in self.tokenized_corpus.values() if token in tokens
+                    )
                     idf = math.log((doc_count + 1) / (docs_containing + 1)) + 1.0
                     score += tf * idf
 
@@ -59,10 +61,12 @@ class LegalHybridRAG:
             content = self.corpus[doc_id]
             # Extract snippet containing query words
             snippet = content[:300].strip()
-            results.append({
-                "doc_id": doc_id,
-                "score": round(score, 4),
-                "snippet": snippet,
-            })
+            results.append(
+                {
+                    "doc_id": doc_id,
+                    "score": round(score, 4),
+                    "snippet": snippet,
+                }
+            )
 
         return results

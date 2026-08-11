@@ -3,7 +3,6 @@
 import pytest
 from scripts.legal_template_generator import (
     generate_legal_document,
-    SUPPORTED_DOC_TYPES,
 )
 
 
@@ -16,7 +15,7 @@ def test_generate_compliance_report_format():
         "retrieved_docs": [{"short_name": "NĐ 207/2026", "document_number": "207/2026/NĐ-CP"}],
         "author": "Chuyên gia Pháp lý CCBA",
     }
-    
+
     result = generate_legal_document("compliance_report", data)
     assert "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM" in result
     assert "Độc lập - Tự do - Hạnh phúc" in result
@@ -33,7 +32,7 @@ def test_generate_inquiry_letter_format():
         "advisory_content": "Kính gửi Bộ Xây dựng cho ý kiến về việc áp dụng [SĐ 1:2023 QCVN 06].",
         "author": "CCBA Legal Team",
     }
-    
+
     result = generate_legal_document("inquiry_letter", data)
     assert "CÔNG VĂN HOỎI Ý KIẾN" in result or "Kính gửi" in result
     assert "Bộ Xây dựng" in result

@@ -86,9 +86,7 @@ class TVPLCrawlerEngine:
             try:
                 return self.provider.fetch_doc(doc_id_or_url)
             except Exception as e:
-                raise TVPLCrawlFailedException(
-                    f"Crawl failed for {doc_id_or_url}: {e}"
-                ) from e
+                raise TVPLCrawlFailedException(f"Crawl failed for {doc_id_or_url}: {e}") from e
 
 
 def load_relation_synonyms() -> dict[str, str]:

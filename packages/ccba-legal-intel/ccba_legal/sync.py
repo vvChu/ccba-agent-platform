@@ -12,9 +12,6 @@ import socket
 import subprocess
 import time
 from pathlib import Path
-from typing import Any
-
-import yaml
 
 try:
     from .crawler import ChromeCDP, trigger_download
@@ -23,12 +20,12 @@ except ImportError:
     trigger_download = None  # type: ignore[assignment]
 
 try:
-    import google.auth
-    from google.auth.transport.requests import Request
-    from google.oauth2.credentials import Credentials
-    from googleapiclient.discovery import build
-    from googleapiclient.errors import HttpError
-    from googleapiclient.http import MediaFileUpload
+    import google.auth  # noqa: F401
+    from google.auth.transport.requests import Request  # noqa: F401
+    from google.oauth2.credentials import Credentials  # noqa: F401
+    from googleapiclient.discovery import build  # noqa: F401
+    from googleapiclient.errors import HttpError  # noqa: F401
+    from googleapiclient.http import MediaFileUpload  # noqa: F401
 
     GOOGLE_API_AVAILABLE = True
 except ImportError:
