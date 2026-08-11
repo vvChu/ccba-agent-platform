@@ -9,10 +9,13 @@ cancellations during server restarts or timeouts.
 import argparse
 import json
 import os
+import shlex
 import subprocess
 import sys
 import time
+import uuid
 from pathlib import Path
+from typing import Optional
 
 
 def resolve_scratch_dir() -> Path:
@@ -28,83 +31,126 @@ def resolve_scratch_dir() -> Path:
     return scratch
 
 
+def _write_status(status_file: Path, data: dict) -> None:
+    """Writes status atomically using a temporary file."""
+    tmp_file = status_file.with_suffix(".tmp")
+    with open(tmp_file, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    os.replace(tmp_file, status_file)
+
+
+def _cleanup_old_logs(scratch_dir: Path, max_age_hours: int = 24) -> None:
+    """Removes log and status files older than max_age_hours."""
+    now = time.time()
+    for file in scratch_dir.glob("exec_*"):
+        try:
+            if now - file.stat().st_mtime > max_age_hours * 3600:
+                file.unlink()
+        except OSError:
+            pass
+
+
 def run_detached(command: str) -> None:
     """Launches command in a detached subprocess and records status."""
     scratch_dir = resolve_scratch_dir()
-    log_file = scratch_dir / "exec_log.txt"
-    status_file = scratch_dir / "exec_status.json"
+    _cleanup_old_logs(scratch_dir)
+
+    run_id = str(uuid.uuid4())[:8]
+    log_file = scratch_dir / f"exec_log_{run_id}.txt"
+    status_file = scratch_dir / f"exec_status_{run_id}.json"
 
     # Initial status
     status_data = {
+        "id": run_id,
         "command": command,
         "status": "running",
         "start_time": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "return_code": None,
+        "pid": None,
+        "error": None,
     }
 
-    with open(status_file, "w", encoding="utf-8") as f:
-        json.dump(status_data, f, indent=2)
-
-    creationflags = 0
-    if sys.platform.startswith("win"):
-        creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
-
-    env = os.environ.copy()
-    env["PYTHONUNBUFFERED"] = "1"
+    _write_status(status_file, status_data)
 
     log_file_handle = open(log_file, "w", encoding="utf-8")
-    log_file_handle.write("=== Starting Detached Execution ===\n")
-    log_file_handle.write(f"Command: {command}\n")
-    log_file_handle.write(f"Timestamp: {status_data['start_time']}\n")
-    log_file_handle.write("=" * 35 + "\n\n")
-    log_file_handle.flush()
+    try:
+        log_file_handle.write("=== Starting Detached Execution ===\n")
+        log_file_handle.write(f"Command: {command}\n")
+        log_file_handle.write(f"Timestamp: {status_data['start_time']}\n")
+        log_file_handle.write("=" * 35 + "\n\n")
+        log_file_handle.flush()
 
-    import shlex
+        try:
+            cmd_args = shlex.split(command, posix=not sys.platform.startswith("win"))
+        except ValueError as e:
+            raise ValueError(f"Command parsing failed: {e}")
 
-    cmd_args = shlex.split(command, posix=False)
+        creationflags = 0
+        start_new_session = False
+        if sys.platform.startswith("win"):
+            creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
+            if hasattr(subprocess, "DETACHED_PROCESS"):
+                creationflags |= getattr(subprocess, "DETACHED_PROCESS")
+            if hasattr(subprocess, "CREATE_NO_WINDOW"):
+                creationflags |= getattr(subprocess, "CREATE_NO_WINDOW")
+        else:
+            start_new_session = True
 
-    process = subprocess.Popen(
-        cmd_args,
-        stdout=log_file_handle,
-        stderr=subprocess.STDOUT,
-        creationflags=creationflags,
-        env=env,
-    )
+        env = os.environ.copy()
+        env["PYTHONUNBUFFERED"] = "1"
 
-    status_data["pid"] = process.pid
-    with open(status_file, "w", encoding="utf-8") as f:
-        json.dump(status_data, f, indent=2)
+        try:
+            process = subprocess.Popen(
+                cmd_args,
+                stdout=log_file_handle,
+                stderr=subprocess.STDOUT,
+                creationflags=creationflags,
+                start_new_session=start_new_session,
+                env=env,
+            )
+        except (FileNotFoundError, OSError) as e:
+            raise RuntimeError(f"Process launch failed: {e}")
 
-    # Wait for process to complete in background task
-    ret = process.wait()
-    log_file_handle.close()
+        status_data["pid"] = process.pid
+        _write_status(status_file, status_data)
 
-    status_data["status"] = "completed"
-    status_data["return_code"] = ret
-    with open(status_file, "w", encoding="utf-8") as f:
-        json.dump(status_data, f, indent=2)
+        print(f"[SafeRunner] Process PID {process.pid} launched in background.")
+        print(f"[SafeRunner] Log file: {log_file}")
+        print(f"[SafeRunner] Status ID: {run_id}")
 
-    print(f"[SafeRunner] Process PID {process.pid} completed with return code {ret}.")
-    print(f"[SafeRunner] Log file saved at: {log_file}")
+    except Exception as e:
+        status_data["status"] = "failed"
+        status_data["error"] = str(e)
+        _write_status(status_file, status_data)
+        print(f"[SafeRunner] Execution failed: {e}")
+    finally:
+        log_file_handle.close()
 
 
-def check_status() -> None:
+def check_status(status_id: Optional[str] = None) -> None:
     """Reads and displays current execution status and log tail."""
     scratch_dir = resolve_scratch_dir()
-    log_file = scratch_dir / "exec_log.txt"
-    status_file = scratch_dir / "exec_status.json"
 
-    if not status_file.exists():
-        print("[SafeRunner] No active execution status found.")
-        return
+    if status_id:
+        status_file = scratch_dir / f"exec_status_{status_id}.json"
+        if not status_file.exists():
+            print(f"[SafeRunner] Status file not found for ID: {status_id}")
+            return
+    else:
+        status_files = list(scratch_dir.glob("exec_status_*.json"))
+        if not status_files:
+            print("[SafeRunner] No active execution status found.")
+            return
+        status_file = max(status_files, key=lambda f: f.stat().st_mtime)
 
     with open(status_file, encoding="utf-8") as f:
         status_data = json.load(f)
 
     pid = status_data.get("pid")
-    is_running = False
+    current_status = status_data.get("status")
 
-    if pid:
+    if current_status == "running" and pid:
+        is_running = False
         if sys.platform.startswith("win"):
             import ctypes
 
@@ -114,7 +160,10 @@ def check_status() -> None:
             if handle:
                 exit_code = ctypes.c_ulong()
                 if kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
-                    is_running = exit_code.value == 259  # STILL_ACTIVE = 259
+                    if exit_code.value == 259:  # STILL_ACTIVE
+                        is_running = True
+                    else:
+                        status_data["return_code"] = exit_code.value
                 kernel32.CloseHandle(handle)
         else:
             try:
@@ -123,9 +172,13 @@ def check_status() -> None:
             except OSError:
                 is_running = False
 
-    status_data["status"] = "running" if is_running else "completed"
+        if not is_running:
+            status_data["status"] = "completed"
+            _write_status(status_file, status_data)
+
     print(json.dumps(status_data, indent=2))
 
+    log_file = scratch_dir / f"exec_log_{status_data.get('id', '')}.txt"
     if log_file.exists():
         print("\n--- Recent Log Output ---")
         lines = log_file.read_text(encoding="utf-8", errors="ignore").splitlines()
@@ -139,11 +192,14 @@ def main() -> None:
     parser.add_argument(
         "--status", action="store_true", help="Check status of background execution"
     )
+    parser.add_argument(
+        "--status-id", type=str, help="Check status of a specific execution ID"
+    )
 
     args = parser.parse_args()
 
-    if args.status:
-        check_status()
+    if args.status or args.status_id:
+        check_status(args.status_id)
     elif args.command:
         run_detached(args.command)
     else:
