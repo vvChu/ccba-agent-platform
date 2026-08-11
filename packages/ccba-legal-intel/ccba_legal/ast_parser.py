@@ -1,8 +1,8 @@
 """AST Parser & Delta Patch Schema for Vietnamese Legal Documents."""
 
+import re
 from dataclasses import dataclass, field
 from enum import Enum
-import re
 from typing import Any
 
 
@@ -53,7 +53,9 @@ class DeltaPatchItem:
         """Serialize patch item to dictionary."""
         return {
             "node_id": self.node_id,
-            "action": self.action.value if isinstance(self.action, PatchAction) else str(self.action),
+            "action": self.action.value
+            if isinstance(self.action, PatchAction)
+            else str(self.action),
             "old_text_anchor": self.old_text_anchor,
             "new_content": self.new_content,
             "citation": self.citation,
@@ -103,7 +105,9 @@ class ASTParser:
 
     # Regex patterns matching legal headers and items
     PART_PATTERN = re.compile(r"^#\s+(Phần\s+\d+|Phần\s+[IVXLCDM]+)[\.\:]?\s*(.*)$", re.IGNORECASE)
-    CHAPTER_PATTERN = re.compile(r"^##\s+(Chương\s+\d+|Chương\s+[IVXLCDM]+)[\.\:]?\s*(.*)$", re.IGNORECASE)
+    CHAPTER_PATTERN = re.compile(
+        r"^##\s+(Chương\s+\d+|Chương\s+[IVXLCDM]+)[\.\:]?\s*(.*)$", re.IGNORECASE
+    )
     ARTICLE_PATTERN = re.compile(r"^###\s+Điều\s+(\d+)[\.\:]?\s*(.*)$", re.IGNORECASE)
     CLAUSE_PATTERN = re.compile(r"^(\d+)[\.\)]\s*(.*)$")
     POINT_PATTERN = re.compile(r"^([a-zđ])[\.\)]\s*(.*)$", re.IGNORECASE)
@@ -158,7 +162,11 @@ class ASTParser:
             if point_match and current_clause:
                 point_char = point_match.group(1).lower()
                 point_text = line_str
-                node_id = f"{current_clause.node_id}-P{point_char.upper()}a" if point_char == "a" else f"{current_clause.node_id}-P{point_char}"
+                node_id = (
+                    f"{current_clause.node_id}-P{point_char.upper()}a"
+                    if point_char == "a"
+                    else f"{current_clause.node_id}-P{point_char}"
+                )
                 if point_char == "a":
                     node_id = f"{current_clause.node_id}-Pa"
                 elif point_char == "b":

@@ -2,11 +2,11 @@
 
 import sys
 from pathlib import Path
-from typing import List, Optional
 
 # Force UTF-8 encoding
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 try:
@@ -17,7 +17,7 @@ except ImportError:
 
 def convert_docx_table_to_markdown(table) -> str:
     """Convert a python-docx Table object to clean Markdown format."""
-    rows_data: List[List[str]] = []
+    rows_data: list[list[str]] = []
     for row in table.rows:
         row_cells = [cell.text.strip().replace("\n", "<br>") for cell in row.cells]
         rows_data.append(row_cells)
@@ -35,7 +35,7 @@ def convert_docx_table_to_markdown(table) -> str:
         if len(r) < len(rows_data[0]):
             r += [""] * (len(rows_data[0]) - len(r))
         elif len(r) > len(rows_data[0]):
-            r = r[:len(rows_data[0])]
+            r = r[: len(rows_data[0])]
         body_rows.append("| " + " | ".join(r) + " |")
 
     return "\n".join([header, separator] + body_rows)
@@ -50,12 +50,12 @@ def extract_docx_with_tables(docx_path: Path) -> str:
     output_parts = []
 
     for elem in doc.element.body:
-        if elem.tag.endswith('p'):
+        if elem.tag.endswith("p"):
             para = docx.text.paragraph.Paragraph(elem, doc)
             txt = para.text.strip()
             if txt:
                 output_parts.append(txt)
-        elif elem.tag.endswith('table'):
+        elif elem.tag.endswith("table"):
             tbl = docx.table.Table(elem, doc)
             md_tbl = convert_docx_table_to_markdown(tbl)
             if md_tbl:

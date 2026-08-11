@@ -1,9 +1,9 @@
 """Delta Patch Generator and Dry-Run Verification Engine via AI Gateway."""
 
 import json
-from typing import Any
+import re
 
-from .ast_parser import ASTNode, ASTParser, DeltaPatch, DeltaPatchItem, PatchAction
+from .ast_parser import ASTNode, ASTParser, DeltaPatch, PatchAction
 
 
 class DeltaPatchGenerator:
@@ -58,7 +58,7 @@ Output ONLY raw JSON with no extra markdown codeblocks or text."""
 
             data = json.loads(clean_json)
             return DeltaPatch.from_dict(data)
-        except Exception as e:
+        except Exception:
             # Fallback empty patch on error
             return DeltaPatch(
                 target_doc_id=target_doc_id,
@@ -83,7 +83,9 @@ Output ONLY raw JSON with no extra markdown codeblocks or text."""
         for item in patch.patches:
             target_node = flat_nodes.get(item.node_id)
             if not target_node:
-                errors.append(f"[NODE_NOT_FOUND] Node ID '{item.node_id}' does not exist in AST tree.")
+                errors.append(
+                    f"[NODE_NOT_FOUND] Node ID '{item.node_id}' does not exist in AST tree."
+                )
                 continue
 
             if item.action in (PatchAction.REPLACE, PatchAction.ABROGATE):

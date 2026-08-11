@@ -242,7 +242,12 @@ def search_codebase_for_symbol(symbol: str, search_dirs: list[Path]) -> bool:
         try:
             d_resolved = d.resolve()
             # If d is inside another directory in search_dirs, skip it
-            if any(other.exists() and d_resolved != other.resolve() and d_resolved.is_relative_to(other.resolve()) for other in search_dirs):
+            if any(
+                other.exists()
+                and d_resolved != other.resolve()
+                and d_resolved.is_relative_to(other.resolve())
+                for other in search_dirs
+            ):
                 continue
         except Exception:
             pass
@@ -256,7 +261,24 @@ def search_codebase_for_symbol(symbol: str, search_dirs: list[Path]) -> bool:
                 for filepath in sdir.rglob(ext):
                     if any(
                         p in filepath.parts
-                        for p in ["tests", "venv", ".venv", "node_modules", "dist", "build", ".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", ".agents", "scratch", "input_documents", "CDE", ".md", "assets"]
+                        for p in [
+                            "tests",
+                            "venv",
+                            ".venv",
+                            "node_modules",
+                            "dist",
+                            "build",
+                            ".git",
+                            ".mypy_cache",
+                            ".pytest_cache",
+                            ".ruff_cache",
+                            ".agents",
+                            "scratch",
+                            "input_documents",
+                            "CDE",
+                            ".md",
+                            "assets",
+                        ]
                     ):
                         continue
                     try:
@@ -266,7 +288,7 @@ def search_codebase_for_symbol(symbol: str, search_dirs: list[Path]) -> bool:
                         continue
             _CODEBASE_FILE_CACHE[sdir] = files
 
-        for filepath, file_content in _CODEBASE_FILE_CACHE[sdir]:
+        for _filepath, file_content in _CODEBASE_FILE_CACHE[sdir]:
             if any(pat.search(file_content) for pat in patterns):
                 return True
     return False

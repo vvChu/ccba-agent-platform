@@ -7,7 +7,9 @@ from pathlib import Path
 # Force UTF-8 encoding
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+
 
 def migrate_data():
     hub_base = Path("d:/GitHubProjects/ccba-agent-platform/.md/legal_docs")
@@ -40,6 +42,7 @@ def migrate_data():
     for f in sorted(spoke_files):
         rel = f.relative_to(Path("D:/GitHubProjects/ccba-legal-knowledge"))
         print(f" - {rel}")
+
 
 if __name__ == "__main__":
     migrate_data()

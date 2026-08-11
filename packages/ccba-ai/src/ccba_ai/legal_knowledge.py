@@ -1,42 +1,44 @@
 """Smart Resolution Gateway module for CCBA Legal Knowledge Access."""
 
 import os
-import yaml
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
+
+import yaml
 
 SPOKE_LOCAL_PATH = Path("D:/GitHubProjects/ccba-legal-knowledge/legal_docs")
 SPOKE_REGISTRY_PATH = Path("D:/GitHubProjects/ccba-legal-knowledge/legal_registry.yaml")
 HUB_FALLBACK_PATH = Path(__file__).parents[4] / ".md" / "legal_docs"
 
+
 class LegalKnowledgeGateway:
     """Smart Resolution Gateway 3-Layer Fallback for CCBA Legal Knowledge."""
 
-    def __init__(self, custom_spoke_path: Optional[str] = None):
+    def __init__(self, custom_spoke_path: str | None = None):
         if custom_spoke_path:
             self.spoke_path = Path(custom_spoke_path)
         else:
             env_path = os.getenv("CCBA_KNOWLEDGE_SPOKE_PATH")
             self.spoke_path = Path(env_path) if env_path else SPOKE_LOCAL_PATH
 
-    def get_registry(self) -> Dict[str, Any]:
+    def get_registry(self) -> dict[str, Any]:
         """Layer 1: Local Spoke Registry -> Layer 2: Hub Registry Fallback."""
         if SPOKE_REGISTRY_PATH.exists():
             try:
                 return yaml.safe_load(SPOKE_REGISTRY_PATH.read_text(encoding="utf-8")) or {}
             except Exception:
                 pass
-        
+
         hub_reg = HUB_FALLBACK_PATH / "legal_registry.yaml"
         if hub_reg.exists():
             try:
                 return yaml.safe_load(hub_reg.read_text(encoding="utf-8")) or {}
             except Exception:
                 pass
-        
+
         return {"version": "2.0.0", "documents": []}
 
-    def search_documents(self, query: str) -> List[Dict[str, Any]]:
+    def search_documents(self, query: str) -> list[dict[str, Any]]:
         """Search documents across resolution layers."""
         reg = self.get_registry()
         docs = reg.get("documents", [])
@@ -49,7 +51,7 @@ class LegalKnowledgeGateway:
                 results.append(doc)
         return results
 
-    def get_document_content(self, doc_slug: str) -> Optional[str]:
+    def get_document_content(self, doc_slug: str) -> str | None:
         """Fetch document content prioritizing Local Spoke -> Hub Fallback."""
         # Layer 1: Check Local Spoke
         if self.spoke_path.exists():
@@ -69,6 +71,7 @@ class LegalKnowledgeGateway:
                 return target.read_text(encoding="utf-8")
 
         return None
+
 
 # Singleton Instance
 legal_knowledge = LegalKnowledgeGateway()

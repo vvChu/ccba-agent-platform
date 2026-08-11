@@ -39,9 +39,9 @@ class PDFReport(BaseReport):
     def get_segments(self, model_hints: dict[str, str] | None = None) -> list[BaseSegment]:
         """Group contiguous pages of the same type into segments with mdconverter defaults."""
         hints = {
-            "text": "qwen3.5-35b",
+            "text": "qwen-local-primary",
             "scan": "ocr-primary",
-            "drawing": "qwen3.5-35b",
+            "drawing": "qwen-local-primary",
         }
         if model_hints:
             hints.update(model_hints)

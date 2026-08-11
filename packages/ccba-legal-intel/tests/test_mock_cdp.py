@@ -113,4 +113,3 @@ def test_mock_cdp_handling_login_and_popups() -> None:
 
     assert mock_cdp.handle_login() is True
     assert mock_cdp.close_popup() is True
-

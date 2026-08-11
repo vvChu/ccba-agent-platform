@@ -47,15 +47,17 @@ def test_legal_intel_pipeline_process_document_full_mock(tmp_path: Path) -> None
     """Verify process_document with MockChromeCDP processes metadata and creates OKF bundle."""
     mock_cdp = MockChromeCDP()
     mock_cdp.connect_tab("ws://127.0.0.1:9222/mock")
-    mock_cdp.set_mock_metadata({
-        "document_number": "55/2024/QH15",
-        "type": "Luật",
-        "issued_by": "Quốc hội",
-        "signer": "Trần Thanh Mẫn",
-        "issued_date": "2024-11-27",
-        "status": "Còn hiệu lực",
-        "relations": {},
-    })
+    mock_cdp.set_mock_metadata(
+        {
+            "document_number": "55/2024/QH15",
+            "type": "Luật",
+            "issued_by": "Quốc hội",
+            "signer": "Trần Thanh Mẫn",
+            "issued_date": "2024-11-27",
+            "status": "Còn hiệu lực",
+            "relations": {},
+        }
+    )
     mock_cdp.set_mock_body_text("Nội dung chi tiết Luật Phòng cháy và chữa cháy 2024")
 
     pipeline = LegalIntelPipeline(
@@ -133,7 +135,9 @@ def test_legal_intel_pipeline_large_doc_async_offloading(tmp_path: Path) -> None
         use_mutex=False,
     )
 
-    large_url = "https://thuvienphapluat.vn/van-ban/Bat-dong-san/Luat-Dat-dai-2024-31-2024-QH15.aspx"
+    large_url = (
+        "https://thuvienphapluat.vn/van-ban/Bat-dong-san/Luat-Dat-dai-2024-31-2024-QH15.aspx"
+    )
     result = pipeline.process_document(url_or_id=large_url, async_offload=True)
 
     assert result.status == "offloaded_to_subagent"
@@ -160,6 +164,3 @@ def test_legal_intel_pipeline_run_cli(tmp_path: Path) -> None:
 
     # 3. Named option --url
     assert pipeline.run_cli(["--url", url, "--force"]) == 0
-
-
-

@@ -75,4 +75,3 @@ def test_tvpl_crawler_engine_exception_handling(tmp_path):
     assert "Connection dropped mid-crawl" in str(exc_info.value)
     # Lock file must be cleanly released despite the exception
     assert not custom_lock.exists()
-

@@ -246,7 +246,7 @@ class PDFAnalyzer:
         is_oversized = any(p.is_oversized for p in page_details)
 
         model_map = {
-            PDFCategory.TEXT_RICH: "qwen3.5-35b",
+            PDFCategory.TEXT_RICH: "qwen-local-primary",
             PDFCategory.SCANNED: "ocr-primary",
             PDFCategory.HYBRID: "ocr-primary",
             PDFCategory.DRAWING: "",
