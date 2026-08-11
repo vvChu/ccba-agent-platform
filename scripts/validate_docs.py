@@ -19,8 +19,8 @@ sys.path.append(str(Path(__file__).parent.resolve()))
 
 import yaml
 
-# Import core utilities
-from doc_core import (
+# Import core utilities (consolidated from doc_core into doc_auditor)
+from doc_auditor import (
     extract_code_references,
     extract_env_variables,
     extract_internal_links,

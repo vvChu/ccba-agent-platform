@@ -21,8 +21,12 @@ if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
-# Patterns
-FRONTMATTER_RE = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*\r?\n", re.DOTALL)
+# Add scripts directory to sys.path
+sys.path.insert(0, str(Path(__file__).parent.resolve()))
+
+# Import shared regex from doc_auditor (single source of truth)
+from doc_auditor import FRONTMATTER_RE
+
 STEP_LINE_RE = re.compile(r"^\s*([0-9]+)\.\s+(.*)$")
 
 # Header keywords that indicate a workflow/steps section

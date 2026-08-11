@@ -22,6 +22,13 @@ dependencies = [
     "beautifulsoup4",
 ]
 
+[project.optional-dependencies]
+cloud = [
+    "ccba-notebooklm",
+    "google-api-python-client",
+    "google-auth",
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["ccba_legal*"]
@@ -29,6 +36,7 @@ include = ["ccba_legal*"]
 [tool.uv.sources]
 ccba-harness = { workspace = true }
 ccba-ai = { workspace = true }
+ccba-notebooklm = { workspace = true }
 
 [tool.pytest.ini_options]
 timeout = 30
