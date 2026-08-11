@@ -741,9 +741,49 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Thay thế bằng**: Khấu trừ `*.md` trong `pyproject.toml` và chỉ định rõ các thư mục chứa mã nguồn Python thực sự (`packages`, `scripts`).
 
 ---
+
+## Session Learnings — Codebase Architecture Deepening Initiative (2026-08-11)
+- **ID Phiên làm việc**: `27ffc3bc-9896-4100-a13f-2a833ae12b12`
+
+### Patterns (Mẫu tốt)
+
+#### 72. Double-Pass Adversarial Plan Review (Vòng Lặp Phản Biện Đề Xuất 2 Vòng)
+- **Ngữ cảnh**: Cần stress-test kế hoạch tái cấu trúc codebase (đặc biệt khi đụng vào internal state hoặc domain scripts) để phát hiện lỗ hổng trước khi triển khai.
+- **Giải pháp**: Vòng 1 (Code-First Research) search/grep codebase xác nhận thực tế implementation và data flow. Vòng 2 (Self-Adversarial Review) tự đặt câu hỏi "Đề xuất này sai ở đâu?" và kiểm tra 3 giả định cốt lõi bằng dữ liệu thực. Giúp phát hiện sớm các trap như leak `_original_*` trong harness hay vỡ CLI entry points trong `scripts/`.
+- **Nguồn**: Session `27ffc3bc-9896-4100-a13f-2a833ae12b12`, 2026-08-11
+
+#### 73. Hybrid Domain Clustering for Utility Scripts (Mô Hình Clustering Domain Script Kết Hợp Shims)
+- **Ngữ cảnh**: Tái cấu trúc thư mục phẳng chứa hàng chục scripts (`scripts/`) mà không làm bẻ gãy các lệnh CLI hiện có, Hiến pháp Layer 1 (`AGENTS.md`) hay script đồng bộ Spoke (`sync_spoke.py`).
+- **Giải pháp**: Phân nhóm các utility scripts theo domain sub-directories (`scripts/legal/`, `scripts/eval/`, `scripts/spoke/`, `scripts/security/`, `scripts/validation/`), nhưng giữ lại các Core Platform Engines nguyên bản tại root `scripts/` và tạo các CLI Shims mỏng cho các entry points chính. Giảm 80% độ phức tạp của gốc `scripts/` mà vẫn bảo đảm 100% backward compatibility.
+- **Nguồn**: Session `27ffc3bc-9896-4100-a13f-2a833ae12b12`, 2026-08-11
+
+#### 74. Monitor State Encapsulation via Explicit Class Reference (`_Originals.<attr>` Encapsulation)
+- **Ngữ cảnh**: Loại bỏ interface leak và dead code fallback (`__getattr__`) trong module giám sát harness `_state.py` và `_engine.py`.
+- **Giải pháp**: Loại bỏ toàn bộ các module-level aliases dạng `_original_*`, chuyển sang cưỡng chế truy cập tập trung qua lớp `_Originals.<attr>` (vd: `_Originals.builtins_open`). Giúp code tường minh, tĩnh hoàn toàn, và dễ dàng linter quét.
+- **Nguồn**: Session `27ffc3bc-9896-4100-a13f-2a833ae12b12`, 2026-08-11
+
+#### 75. Multi-Commit Logical Staging for Multi-Candidate Refactor
+- **Ngữ cảnh**: Đóng gói công việc từ phiên làm việc đa ứng viên thành các Git commits riêng biệt tuân thủ Git Conventions (`type(scope): description`).
+- **Giải pháp**: Sử dụng `git reset` / `git reset --soft` để tách bạch từng gói thay đổi (Candidate #2, Candidate #3, Candidate #4, Docs) và commit theo thứ tự phụ thuộc logic thay vì `git add .` một lần duy nhất.
+- **Nguồn**: Session `27ffc3bc-9896-4100-a13f-2a833ae12b12`, 2026-08-11
+
+---
+
+### Anti-patterns (Cách tránh)
+
+#### 49. Module-level Attribute Aliasing for Monkey-patched Builtins
+- **Vấn đề**: Tạo các biến module-level dạng `_original_open = builtins.open` tại thời điểm import module. Nếu module monkey-patch bị import muộn hoặc re-import, các biến alias này dễ bị ghi đè hoặc leak ra public interface.
+- **Thay thế bằng**: Đóng gói tất cả bản lưu gốc bên trong một Class tĩnh (`class _Originals`) duy nhất và chỉ đọc qua `_Originals.<attr>`.
+
+#### 50. Full Sub-directory Migration without Entry Point Shims
+- **Vấn đề**: Di chuyển 100% tệp script tại root `scripts/` vào các thư mục con mà không để lại shim hay giữ Core Engines ở root, gây đổ vỡ hàng loạt lệnh trong Spoke sync, CI runners, hoặc hướng dẫn trong `.agents/workflows/`.
+- **Thay thế bằng**: Áp dụng Hybrid Model: giữ Core Engines tại root và bổ sung thin CLI shims cho các entry points công khai.
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
 
 
 
