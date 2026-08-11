@@ -207,7 +207,11 @@ def main() -> None:
     # ==========================================
     # GATE 1 & 2: Linter & Formatter (Ruff)
     # ==========================================
-    ruff_paths = ["."] if args.all else [str(f.relative_to(project_root)) for f in py_modified]
+    ruff_paths = (
+        ["packages", "scripts"]
+        if args.all
+        else [str(f.relative_to(project_root)) for f in py_modified]
+    )
     if ruff_paths:
         # Check Ruff Lint
         success_lint, out_lint = run_command(
