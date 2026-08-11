@@ -72,7 +72,7 @@ Agent CCBA Platform chạy ổn định toàn bộ các tác vụ nặng (Evalua
 1. **[Phân tích Log Lịch sử & Bằng chứng thực tế](#phân-tích-forensic-bằng-chứng-từ-log)** — Xác nhận 2 root cause riêng biệt: Server Daemon Restart + Context Budget Exhaustion.
 2. **[Thiết lập Script Runner Cô lập (Ticket 1)](#ticket-1-thiết-lập-script-runner-cô-lập-detached-process-runner)** — `safe_runner.py` (commit `8ae987b`) cho phép chạy pytest detached khỏi daemon.
 3. **[Phân rã Test Suite (Ticket 2)](#ticket-2-phân-rã--chạy-thử-nghiệm-test-suite-theo-lát-cắt-dọc)** — 23/23 tests pass qua `safe_runner.py`, không xảy ra "User cancelled".
-4. **[Tích hợp Retry & Circuit Breaker (Ticket 3)](#ticket-3-bổ-sung-circuit-breaker--exponential-retry-vào-ccba-ai)** — Nâng cấp `AIClient` & `AsyncAIClient` tự động retry 3 lần khi ngắt kết nối mạng. 38/38 tests PASSED qua `safe_runner.py`.
+4. **[Tích hợp Exponential Retry (Ticket 3)](#ticket-3-bổ-sung-exponential-retry-vào-ccba-ai)** — Retry + Exponential Backoff đã tích hợp vào ccba-ai SDK. Circuit Breaker giữ riêng ở skill api-circuit-breaker cho batch pipeline use case. 38/38 tests PASSED qua `safe_runner.py`.
 5. **[Workflow Guard (Ticket 4)](#ticket-4-workflow-guard--giới-hạn-vòng-lặp-edittest-trong-ccba-implement-mới)** — Bổ sung Loop Budget (max 5 vòng/seam) vào AGENTS.md, implement SKILL.md, TDD SKILL.md.
 6. **[Graceful Shutdown (Ticket 5)](#ticket-5-guardrail-invalid_args-error--phát-hiện-sớm--graceful-shutdown-mới)** — Bổ sung Invalid Args Circuit Breaker vào AGENTS.md và implement SKILL.md.
 
@@ -91,22 +91,11 @@ Agent CCBA Platform chạy ổn định toàn bộ các tác vụ nặng (Evalua
 - **Trạng thái**: ✅ **Hoàn thành** (2026-07-22)
 - **Kết quả**: 23/23 test cases PASSED (4.31s) qua `safe_runner.py`
 
-### Ticket 3: Bổ sung Circuit Breaker & Exponential Retry vào `ccba-ai`
+### Ticket 3: Bổ sung Exponential Retry vào `ccba-ai`
 - **Loại**: `Task [AFK]`
 - **Trạng thái**: ✅ **Hoàn thành** (2026-07-22)
 - **Giải quyết Root Cause**: ⚡ Server Daemon Restart (micro-restart 1-2 giây)
-- **Kết quả**: Tích hợp retry loop + backoff lũy thừa cho `AIClient` và `AsyncAIClient`. 38/38 tests PASSED.ết quả**: `safe_runner.py` (151 LOC) — 3 mode: `--command`, `--status`, `--help`
-
-### Ticket 2: Phân rã & Chạy thử nghiệm Test Suite theo lát cắt dọc
-- **Loại**: `Task [AFK]`
-- **Trạng thái**: ✅ **Hoàn thành** (2026-07-22)
-- **Kết quả**: 23/23 test cases PASSED (4.31s) qua `safe_runner.py`
-
-### Ticket 3: Bổ sung Circuit Breaker & Exponential Retry vào `ccba-ai`
-- **Loại**: `Task [AFK]`
-- **Trạng thái**: 🟢 Unblocked
-- **Giải quyết Root Cause**: ⚡ Server Daemon Restart (micro-restart 1-2 giây)
-- **Mục tiêu**: Tích hợp retry loop cho `ai.chat()` trong SDK `ccba-ai` để nuốt gián đoạn ngắn hạn.
+- **Kết quả**: Retry + Exponential Backoff đã tích hợp vào ccba-ai SDK. Circuit Breaker giữ riêng ở skill api-circuit-breaker cho batch pipeline use case. 38/38 tests PASSED.
 
 ### Ticket 4: Workflow Guard — Giới hạn vòng lặp Edit→Test trong `/ccba-implement`
 - **Loại**: `Task [AFK]`
