@@ -210,6 +210,9 @@ def extract_env_variables(content: str) -> list[tuple[int, str]]:
     return env_vars
 
 
+_CODEBASE_FILE_CACHE: dict[Path, list[tuple[Path, str]]] = {}
+
+
 def search_codebase_for_symbol(symbol: str, search_dirs: list[Path]) -> bool:
     """Check if the given class or function symbol is declared in source dirs.
 
@@ -231,25 +234,63 @@ def search_codebase_for_symbol(symbol: str, search_dirs: list[Path]) -> bool:
         re.compile(r"\blet\s+" + re.escape(clean_sym) + r"\s*="),
     ]
 
-    for sdir in search_dirs:
-        if not sdir.exists():
+    # Filter search_dirs to avoid scanning subdirectories if a parent directory (e.g. Path(".")) is already present
+    unique_dirs = []
+    for d in search_dirs:
+        if not d.exists():
             continue
-        # Scan source files
-        for ext in ["*.py", "*.js", "*.cjs", "*.ts", "*.go", "*.sh"]:
-            for filepath in sdir.rglob(ext):
-                # Ignore test folders or build target folders
-                if any(
-                    p in filepath.parts
-                    for p in ["tests", "venv", ".venv", "node_modules", "dist", "build"]
-                ):
-                    continue
-                try:
-                    with open(filepath, encoding="utf-8", errors="ignore") as f:
-                        file_content = f.read()
-                        if any(pat.search(file_content) for pat in patterns):
-                            return True
-                except Exception:
-                    continue
+        try:
+            d_resolved = d.resolve()
+            # If d is inside another directory in search_dirs, skip it
+            if any(
+                other.exists()
+                and d_resolved != other.resolve()
+                and d_resolved.is_relative_to(other.resolve())
+                for other in search_dirs
+            ):
+                continue
+        except Exception:
+            pass
+        if d not in unique_dirs:
+            unique_dirs.append(d)
+
+    for sdir in unique_dirs:
+        if sdir not in _CODEBASE_FILE_CACHE:
+            files = []
+            for ext in ["*.py", "*.js", "*.cjs", "*.ts", "*.go", "*.sh"]:
+                for filepath in sdir.rglob(ext):
+                    if any(
+                        p in filepath.parts
+                        for p in [
+                            "tests",
+                            "venv",
+                            ".venv",
+                            "node_modules",
+                            "dist",
+                            "build",
+                            ".git",
+                            ".mypy_cache",
+                            ".pytest_cache",
+                            ".ruff_cache",
+                            ".agents",
+                            "scratch",
+                            "input_documents",
+                            "CDE",
+                            ".md",
+                            "assets",
+                        ]
+                    ):
+                        continue
+                    try:
+                        with open(filepath, encoding="utf-8", errors="ignore") as f:
+                            files.append((filepath, f.read()))
+                    except Exception:
+                        continue
+            _CODEBASE_FILE_CACHE[sdir] = files
+
+        for _filepath, file_content in _CODEBASE_FILE_CACHE[sdir]:
+            if any(pat.search(file_content) for pat in patterns):
+                return True
     return False
 
 

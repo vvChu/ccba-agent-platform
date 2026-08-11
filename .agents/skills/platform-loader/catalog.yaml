@@ -704,16 +704,6 @@ skills:
   - Yale
   - thesis
   skill_path: .agents/skills/academic_writing/SKILL.md
-- name: adk-go-quickstart
-  bundle: _core
-  description: Hướng dẫn thiết lập, viết mã nguồn và khởi chạy AI Agent bằng ngôn
-    ngữ Go sử dụng Google Agent Development Kit (ADK) v2
-  triggers:
-  - adk-go-quickstart
-  - adk go
-  - go quickstart
-  - agent go
-  skill_path: .agents/skills/adk-go-quickstart/SKILL.md
 - name: architecture-sync
   bundle: _core
   description: Đồng bộ hóa toàn bộ tài liệu kiến trúc sau khi refactor codebase — bao phủ 4 tầng tài liệu nhạy cảm
@@ -931,6 +921,55 @@ skills:
   - loop me
   - thiết kế chu trình
   skill_path: .agents/skills/loop-me/SKILL.md
+- name: form-template-cleaner
+  bundle: _core
+  description: Sub-skill làm sạch biểu mẫu và tự động khôi phục tiêu đề biểu mẫu bị lỗi placeholder (dấu chấm lửng) bằng AI Gateway.
+  triggers:
+  - form-template-cleaner
+  - form template cleaner
+  - làm sạch biểu mẫu
+  - khôi phục tiêu đề
+  - placeholder
+  skill_path: .agents/skills/form-template-cleaner/SKILL.md
+- name: relative-link-patcher
+  bundle: _core
+  description: Sub-skill tự động sửa và chuẩn hóa các liên kết tương đối của phụ lục (tiền tố ./appendices/) trong file Markdown chính và đồng bộ mục lục index.md.
+  triggers:
+  - relative-link-patcher
+  - relative link patcher
+  - sửa liên kết
+  - chuẩn hóa liên kết
+  - phụ lục
+  skill_path: .agents/skills/relative-link-patcher/SKILL.md
+- name: table-reconstructor
+  bundle: _core
+  description: Sub-skill dựng lại các bảng biểu Markdown bị vỡ dọc hoặc lệch cột bằng file đối chiếu .docx hoặc thuật toán Python.
+  triggers:
+  - table-reconstructor
+  - table reconstructor
+  - dựng lại bảng
+  - sửa bảng markdown
+  - vỡ bảng
+  skill_path: .agents/skills/table-reconstructor/SKILL.md
+- name: tvpl-vip-crawler
+  bundle: _consulting
+  description: Kỹ năng tự động kết nối tài khoản VIP Thư viện Pháp luật (vuvanchu119), xử lý Cloudflare/Popups, bảo vệ VIP Session (CookieVault), khôi phục bảng biểu (Dual-Parser Table) và đóng gói OKF Bundle.
+  triggers:
+  - tvpl-vip-crawler
+  - tvpl vip crawler
+  - cào thư viện pháp luật
+  - tvpl vip
+  - vip crawler
+  skill_path: .agents/skills/tvpl-vip-crawler/SKILL.md
+- name: wait-what
+  bundle: _core
+  description: Dừng lại. Ý ở tin nhắn trước chưa được hiểu rõ — hãy giải thích lại bằng ngôn ngữ đơn giản.
+  triggers:
+  - wait-what
+  - wait what
+  - giải thích lại
+  - chưa hiểu
+  skill_path: .agents/skills/wait-what/SKILL.md
 workflows:
 - name: init-ccba-spoke
   bundle: _core
@@ -1498,6 +1537,37 @@ workflows:
   - kiểm thử kỹ năng
   - chạy evals
   workflow_path: .agents/workflows/ccba-skills-eval.md
+- name: ccba-to-questionnaire
+  bundle: _core
+  command: /ccba-to-questionnaire
+  description: Chuyển đổi một quyết định chưa có đủ thông tin thành Bảng hỏi (Questionnaire) bất đồng bộ.
+  triggers:
+  - to-questionnaire
+  - questionnaire
+  - bảng hỏi
+  - async questionnaire
+  workflow_path: .agents/workflows/ccba-to-questionnaire.md
+- name: ccba-tvpl-vip-crawler
+  bundle: _consulting
+  command: /ccba-tvpl-vip-crawler
+  description: Quy trình thực thi cào dữ liệu văn bản pháp luật VIP từ Thư viện Pháp luật (TVPL)
+  triggers:
+  - tvpl-vip-crawler
+  - tvpl vip crawler
+  - cào thư viện pháp luật
+  - tvpl vip
+  - vip crawler
+  workflow_path: .agents/workflows/ccba-tvpl-vip-crawler.md
+- name: ccba-wait-what
+  bundle: _core
+  command: /ccba-wait-what
+  description: Dừng lại và giải thích lại tin nhắn trước bằng ngôn ngữ tiếng Việt đơn giản.
+  triggers:
+  - wait-what
+  - wait what
+  - giải thích lại
+  - chưa hiểu
+  workflow_path: .agents/workflows/ccba-wait-what.md
 rules:
 - name: ccba_identity
   description: Brand, voice, phong cách giao tiếp CCBA

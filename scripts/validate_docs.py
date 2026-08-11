@@ -514,15 +514,24 @@ def validate_markdown_file(
     SUPERSEDED_DOCS_PATTERNS = [
         (r"Nghị định 06/2021", "NĐ 06/2021 đã bị thay thế bởi NĐ 105/2025/NĐ-CP"),
         (r"Nghị định 15/2021", "NĐ 15/2021 đã bị thay thế bởi NĐ 105/2025/NĐ-CP"),
-        (r"Luật Xây dựng 2014", "Luật XD 2014 đã bị thay thế bởi Luật Xây dựng 2025 (135/2025/QH15)"),
+        (
+            r"Luật Xây dựng 2014",
+            "Luật XD 2014 đã bị thay thế bởi Luật Xây dựng 2025 (135/2025/QH15)",
+        ),
     ]
     for line_idx, line_str in enumerate(lines, 1):
         for pattern, note in SUPERSEDED_DOCS_PATTERNS:
             if re.search(pattern, line_str, re.IGNORECASE):
                 # Ignore if line explicitly mentions superseded / thay thế / NĐ 105 / Luật 135
-                if not re.search(r"(thay thế|superseded|105/2025|135/2025)", line_str, re.IGNORECASE):
+                if not re.search(
+                    r"(thay thế|superseded|105/2025|135/2025)", line_str, re.IGNORECASE
+                ):
                     issues["okf_conflicts"].append(
-                        (line_idx, line_str.strip()[:60], f"[WARNING] Tham chiếu văn bản hết hiệu lực: '{pattern}'. {note}")
+                        (
+                            line_idx,
+                            line_str.strip()[:60],
+                            f"[WARNING] Tham chiếu văn bản hết hiệu lực: '{pattern}'. {note}",
+                        )
                     )
 
     return issues

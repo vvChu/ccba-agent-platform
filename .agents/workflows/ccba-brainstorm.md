@@ -32,7 +32,7 @@ Agent bắt buộc phải đọc và gộp cấu hình các chủ đề từ hai
 ---
 
 ### 2. Quét tài liệu và Chọn chủ đề (Scan & Select)
-Quét toàn bộ danh sách tệp tin nằm trong thư mục [input_documents/](../../../input_documents/):
+Quét toàn bộ danh sách tệp tin nằm trong thư mục [input_documents/](../../input_documents/):
 * In bảng danh sách tệp tin phát hiện được kèm dung lượng (KB/MB).
 * Đọc lướt nội dung (skimming) và so khớp từ khóa của các tệp với danh sách `keywords` của các chủ đề trong cấu hình để tự động đề xuất chủ đề phù hợp nhất.
 * Hiển thị danh sách tất cả các chủ đề khả dụng cho người dùng lựa chọn. Chờ người dùng xác nhận chủ đề hoặc yêu cầu đổi sang chủ đề khác.
