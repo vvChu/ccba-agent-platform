@@ -460,3 +460,46 @@ class DocumentAuditor:
             "skills": skill_issues,
             "total_skill_issues": len(skill_issues),
         }
+
+
+# ---------------------------------------------------------------------------
+# Backward-compatible standalone function aliases (previously in doc_core.py)
+# These delegate to a default DocumentAuditor instance so that consumers
+# can do `from doc_auditor import parse_frontmatter` without refactoring.
+# ---------------------------------------------------------------------------
+
+_default_auditor = DocumentAuditor()
+
+
+def parse_frontmatter(content: str) -> tuple[dict[str, Any] | None, str]:
+    """Parse YAML frontmatter from document content (standalone alias)."""
+    return _default_auditor.parse_frontmatter(content)
+
+
+def extract_code_references(content: str) -> list[tuple[int, str]]:
+    """Extract code symbol references (standalone alias)."""
+    return _default_auditor.extract_code_references(content)
+
+
+def extract_internal_links(content: str) -> list[tuple[int, str, str]]:
+    """Extract relative internal Markdown links (standalone alias)."""
+    return _default_auditor.extract_internal_links(content)
+
+
+def extract_env_variables(content: str) -> list[tuple[int, str]]:
+    """Extract documented environment variables (standalone alias)."""
+    return _default_auditor.extract_env_variables(content)
+
+
+def search_codebase_for_symbol(
+    symbol: str, search_dirs: list[Path] | None = None
+) -> bool:
+    """Check if symbol declaration exists in codebase (standalone alias)."""
+    return _default_auditor.search_codebase_for_symbol(symbol, search_dirs)
+
+
+def load_env_example(project_root: Path) -> set[str]:
+    """Load declared env variable names from .env.example (standalone alias)."""
+    auditor = DocumentAuditor(project_root)
+    return auditor.load_env_example()
+
