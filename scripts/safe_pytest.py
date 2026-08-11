@@ -6,6 +6,7 @@ via safe_runner.py in a detached background process to prevent daemon cancellati
 """
 
 import argparse
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -86,7 +87,7 @@ def main() -> int:
     if args.extra_args:
         cmd_parts.extend(args.extra_args)
 
-    cmd_str = " ".join(cmd_parts)
+    cmd_str = " ".join(shlex.quote(p) for p in cmd_parts)
     safe_runner_script = Path(__file__).parent / "safe_runner.py"
 
     full_runner_cmd = f'"{python_exec}" "{safe_runner_script}" --command "{cmd_str}"'
