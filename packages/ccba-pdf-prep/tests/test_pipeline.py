@@ -38,7 +38,7 @@ def _make_report(
     return PDFReport(
         file_path=tmp_path / "fake.pdf",
         category=category,
-        recommended_model="qwen3.5-35b",
+        recommended_model="qwen-local-primary",
         confidence=0.95,
         pages=pages,
         text_pages=pages,

@@ -7,7 +7,6 @@ AST/heading section analysis, and link validation behind a clean 2-method surfac
 Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 """
 
-import os
 import re
 from pathlib import Path
 from typing import Any, NamedTuple

@@ -1,7 +1,7 @@
 """Telegram Alert Handler for VIP Expiry and CAPTCHA detection."""
 
 import os
-from typing import Any, Callable
+from collections.abc import Callable
 
 
 class TelegramAlertHandler:
@@ -37,17 +37,21 @@ class TelegramAlertHandler:
         target_chat = chat_id or os.environ.get("TELEGRAM_CHAT_ID")
 
         if not token or not target_chat:
-            print(f"[TelegramAlert] Warning: Missing bot token or chat ID. Alert not sent: {message}")
+            print(
+                f"[TelegramAlert] Warning: Missing bot token or chat ID. Alert not sent: {message}"
+            )
             return False
 
         try:
-            import urllib.request
-            import urllib.parse
             import json
+            import urllib.parse
+            import urllib.request
 
             url = f"https://api.telegram.org/bot{token}/sendMessage"
             payload = json.dumps({"chat_id": target_chat, "text": message}).encode("utf-8")
-            req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+            req = urllib.request.Request(
+                url, data=payload, headers={"Content-Type": "application/json"}
+            )
             with urllib.request.urlopen(req, timeout=10) as resp:
                 return resp.status == 200
         except Exception as e:

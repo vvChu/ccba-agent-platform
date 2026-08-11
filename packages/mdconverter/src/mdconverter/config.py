@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     # Model Configuration — AI Gateway models
     models: list[str] = Field(
         default=[
-            "qwen3.5-35b",  # Local GPU — private, fast
+            "qwen-local-primary",  # Local GPU — private, fast
             "gemini-3-flash",  # Cloud — fast, multimodal
             "ocr-primary",  # Alias for Gemini 3.1 Flash Lite - explicit OCR
             "claude-sonnet-4-6",  # Cloud — best coding

@@ -10,4 +10,4 @@ bundle: "_core"
 
 # Workflow: Port tính năng (xỉa code) từ repository ngoài (/ccba-xia)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `ccba-xia` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/xia/SKILL.md) để bắt đầu quy trình trích xuất và chuyển dịch mã nguồn.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `ccba-xia` tại [SKILL.md](../skills/xia/SKILL.md) để bắt đầu quy trình trích xuất và chuyển dịch mã nguồn.

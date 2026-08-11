@@ -122,3 +122,13 @@ Cơ chế đánh giá bản sửa đổi prompt trên tập bài kiểm tra held
 **Prompt Drift**:
 Hiện tượng tệp hướng dẫn/prompt được sửa để đạt kết quả tốt hơn ở một tác vụ cụ thể nhưng lại làm suy giảm hiệu suất ở các tác vụ hoặc ngữ cảnh khác.
 
+**AI Gateway Master Endpoint**:
+Cổng giao tiếp duy nhất `http://100.83.192.30:8090/v1` kết nối qua Tailscale VPN tới hệ thống LiteLLM AI Gateway trên Server Spark, điều hướng tự động 44 models AI.
+
+**RAG Virtual Aliases (Bí danh ảo RAG)**:
+Chuỗi định danh mô hình ảo (`ocr-primary`, `ocr-fallback`, `rag-core`, `text-gemma`, `reasoning-gemma`) được AI Gateway tự động định tuyến nhằm tối ưu hóa chi phí (Free Tier Farm) và hiệu năng xử lý văn bản lớn.
+
+**Primary Local GPU Model Alias**:
+Định danh chuẩn `qwen-local-primary` đại diện cho model Qwen 3.5 35B FP8 chạy trực tiếp trên GPU local của Server Spark, thay thế hoàn toàn cho chuỗi `qwen3.5-35b` đã bị khai tử.
+
+

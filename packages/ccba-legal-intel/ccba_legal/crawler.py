@@ -34,6 +34,61 @@ class TVPLSessionMutex(FileMutexLock):
         )
 
 
+class TVPLCrawlFailedException(Exception):
+    """Raised when TVPLCrawlerEngine fails to fetch or parse a legal document."""
+
+    pass
+
+
+class LegalDocProvider:
+    """Abstract base provider for fetching legal documents."""
+
+    def fetch_doc(self, doc_id_or_url: str) -> dict[str, Any]:
+        """Fetch legal document by ID or URL."""
+        raise NotImplementedError("Subclasses must implement fetch_doc()")
+
+
+class MockLegalDocProvider(LegalDocProvider):
+    """Mock provider returning pre-registered or default test fixtures."""
+
+    def __init__(self, fixtures: dict[str, dict[str, Any]] | None = None) -> None:
+        self.fixtures: dict[str, dict[str, Any]] = fixtures or {}
+
+    def add_fixture(self, doc_id: str, data: dict[str, Any]) -> None:
+        """Register a custom test fixture."""
+        self.fixtures[doc_id] = data
+
+    def fetch_doc(self, doc_id_or_url: str) -> dict[str, Any]:
+        """Fetch mock document data."""
+        if doc_id_or_url in self.fixtures:
+            return self.fixtures[doc_id_or_url]
+        return {
+            "document_number": doc_id_or_url,
+            "type": "Nghị định",
+            "issued_by": "Chính phủ",
+            "status": "Còn hiệu lực",
+            "content": f"Mock content for {doc_id_or_url}",
+        }
+
+
+class TVPLCrawlerEngine:
+    """Orchestrator for executing legal document crawl operations under session lock."""
+
+    def __init__(
+        self, provider: LegalDocProvider | None = None, mutex: TVPLSessionMutex | None = None
+    ) -> None:
+        self.provider = provider or MockLegalDocProvider()
+        self.mutex = mutex or TVPLSessionMutex()
+
+    def fetch_doc(self, doc_id_or_url: str) -> dict[str, Any]:
+        """Fetch legal document under mutex lock."""
+        with self.mutex:
+            try:
+                return self.provider.fetch_doc(doc_id_or_url)
+            except Exception as e:
+                raise TVPLCrawlFailedException(f"Crawl failed for {doc_id_or_url}: {e}") from e
+
+
 def load_relation_synonyms() -> dict[str, str]:
     return _load_relation_synonyms(resolve_project_root())
 

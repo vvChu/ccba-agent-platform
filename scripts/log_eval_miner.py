@@ -9,7 +9,6 @@ import argparse
 import json
 import logging
 import re
-import sys
 from pathlib import Path
 
 # Configure logging
@@ -20,8 +19,14 @@ logger = logging.getLogger("ccba.eval.miner")
 SENSITIVE_PATTERNS = [
     (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL_REDACTED]"),
     (r"\b(?:0\d{9,10}|\+84\d{9,10})\b", "[PHONE_REDACTED]"),
-    (r"\b(?:sk-[A-Za-z0-9]{20,}|AIzaSy[A-Za-z0-9_-]{33}|ghp_[A-Za-z0-9]{36})\b", "[API_KEY_REDACTED]"),
-    (r"\b(?:100\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3})\b", "[IP_REDACTED]"),
+    (
+        r"\b(?:sk-[A-Za-z0-9]{20,}|AIzaSy[A-Za-z0-9_-]{33}|ghp_[A-Za-z0-9]{36})\b",
+        "[API_KEY_REDACTED]",
+    ),
+    (
+        r"\b(?:100\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3})\b",
+        "[IP_REDACTED]",
+    ),
 ]
 
 
@@ -133,7 +138,9 @@ def identify_router_failures(interactions: list[dict]) -> list[dict]:
                 }
             )
 
-    logger.info(f"🔍 Phát hiện {len(flagged_cases)} cases nghi vấn Router Failure / Disclaimer Mismatch.")
+    logger.info(
+        f"🔍 Phát hiện {len(flagged_cases)} cases nghi vấn Router Failure / Disclaimer Mismatch."
+    )
     return flagged_cases
 
 
@@ -153,11 +160,8 @@ def generate_synthetic_test_case(prompt: str, skill_name: str, case_index: int) 
         "id": cid,
         "prompt": prompt,
         "assertions": [
-            {
-                "type": "regex",
-                "pattern": f"({skill_name}|xử lý|hướng dẫn|thực hiện|quy định)"
-            }
-        ]
+            {"type": "regex", "pattern": f"({skill_name}|xử lý|hướng dẫn|thực hiện|quy định)"}
+        ],
     }
 
 
@@ -195,7 +199,7 @@ def mine_logs_and_export(log_dir: Path, output_dir: Path, skill_filter: str = No
 
     existing_prompts = {c.get("prompt") for c in existing_cases if "prompt" in c}
 
-    for idx, fcase in enumerate(failures, 1):
+    for _idx, fcase in enumerate(failures, 1):
         p_text = fcase["user_prompt"]
         if p_text in existing_prompts:
             continue
@@ -214,9 +218,17 @@ def mine_logs_and_export(log_dir: Path, output_dir: Path, skill_filter: str = No
 
 
 def main():
-    parser = argparse.ArgumentParser(description="CCBA Production Log Mining & Eval Auto-Tuning Tool")
-    parser.add_argument("--log-dir", default=".system_generated/logs", help="Thư mục chứa transcript logs")
-    parser.add_argument("--output-dir", default=".agents/skills/eval-gate/test_cases", help="Thư mục xuất test_cases JSON")
+    parser = argparse.ArgumentParser(
+        description="CCBA Production Log Mining & Eval Auto-Tuning Tool"
+    )
+    parser.add_argument(
+        "--log-dir", default=".system_generated/logs", help="Thư mục chứa transcript logs"
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=".agents/skills/eval-gate/test_cases",
+        help="Thư mục xuất test_cases JSON",
+    )
     parser.add_argument("--skill", help="Tên skill cụ thể cần nạp test cases mined")
 
     args = parser.parse_args()

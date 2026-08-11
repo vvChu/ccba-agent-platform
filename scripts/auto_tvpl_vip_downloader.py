@@ -1,14 +1,14 @@
 """Automated TVPL VIP login and document crawler/downloader via Chrome CDP."""
 
-import os
+import subprocess
 import sys
 import time
-import subprocess
 from pathlib import Path
 
 # Force UTF-8 encoding on Windows
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
@@ -18,10 +18,13 @@ from ccba_legal.crawler import ChromeCDP
 def run_auto_crawler():
     print("[AutoTVPL] Starting Chrome browser on debug port 9222...")
     chrome_cmd = [
-        "cmd.exe", "/c", "start", "chrome",
+        "cmd.exe",
+        "/c",
+        "start",
+        "chrome",
         "--remote-debugging-port=9222",
         "--user-data-dir=C:\\temp\\chrome_dev",
-        "https://thuvienphapluat.vn/dang-nhap.aspx"
+        "https://thuvienphapluat.vn/dang-nhap.aspx",
     ]
     subprocess.Popen(chrome_cmd)
     time.sleep(4)
@@ -97,14 +100,19 @@ def run_auto_crawler():
     extracted_text = cdp.evaluate_js(extract_js)
     print(f"[AutoTVPL] Extracted content length: {len(extracted_text)} characters.")
 
-    if len(extracted_text) > 1000 and "Thứ trưởng" in extracted_text or "Bộ Xây dựng" in extracted_text or "Quy chuẩn" in extracted_text:
+    if (
+        len(extracted_text) > 1000
+        and "Thứ trưởng" in extracted_text
+        or "Bộ Xây dựng" in extracted_text
+        or "Quy chuẩn" in extracted_text
+    ):
         out_dir = Path("d:/GitHubProjects/ccba-agent-platform/.md/legal_docs/qcvn_06_2022_bxd")
         out_dir.mkdir(parents=True, exist_ok=True)
         concept_file = out_dir / "concept.md"
-        
+
         full_markdown = f"""# QCVN 06:2022/BXD — QUY CHUẨN KỸ THUẬT QUỐC GIA VỀ AN TOÀN CHÁY CHO NHÀ VÀ CÔNG TRÌNH
 
-*(Toàn văn tải về từ Thư viện Pháp luật VIP vuvanchu119 - Ngày {time.strftime('%d/%m/%Y')})*
+*(Toàn văn tải về từ Thư viện Pháp luật VIP vuvanchu119 - Ngày {time.strftime("%d/%m/%Y")})*
 
 ---
 
