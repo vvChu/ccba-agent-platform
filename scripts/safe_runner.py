@@ -15,7 +15,6 @@ import sys
 import time
 import uuid
 from pathlib import Path
-from typing import Optional
 
 
 def resolve_scratch_dir() -> Path:
@@ -83,16 +82,16 @@ def run_detached(command: str) -> None:
         try:
             cmd_args = shlex.split(command, posix=not sys.platform.startswith("win"))
         except ValueError as e:
-            raise ValueError(f"Command parsing failed: {e}")
+            raise ValueError(f"Command parsing failed: {e}") from e
 
         creationflags = 0
         start_new_session = False
-        if sys.platform.startswith("win"):
+        if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP"):
             creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
             if hasattr(subprocess, "DETACHED_PROCESS"):
-                creationflags |= getattr(subprocess, "DETACHED_PROCESS")
+                creationflags |= subprocess.DETACHED_PROCESS
             if hasattr(subprocess, "CREATE_NO_WINDOW"):
-                creationflags |= getattr(subprocess, "CREATE_NO_WINDOW")
+                creationflags |= subprocess.CREATE_NO_WINDOW
         else:
             start_new_session = True
 
@@ -109,7 +108,7 @@ def run_detached(command: str) -> None:
                 env=env,
             )
         except (FileNotFoundError, OSError) as e:
-            raise RuntimeError(f"Process launch failed: {e}")
+            raise RuntimeError(f"Process launch failed: {e}") from e
 
         status_data["pid"] = process.pid
         _write_status(status_file, status_data)
@@ -127,7 +126,7 @@ def run_detached(command: str) -> None:
         log_file_handle.close()
 
 
-def check_status(status_id: Optional[str] = None) -> None:
+def check_status(status_id: str | None = None) -> None:
     """Reads and displays current execution status and log tail."""
     scratch_dir = resolve_scratch_dir()
 
