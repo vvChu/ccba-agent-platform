@@ -19,3 +19,20 @@ def clean_env() -> Generator[None, None, None]:
     # Restore them after the session
     for var, val in popped.items():
         os.environ[var] = val
+
+
+@pytest.fixture(autouse=True)
+def cleanup_lock_files() -> Generator[None, None, None]:
+    """Ensure lock files are cleaned up before and after each test execution."""
+    def remove_locks():
+        for filename in os.listdir("."):
+            if filename.endswith(".lock"):
+                try:
+                    os.remove(filename)
+                except OSError:
+                    pass
+
+    remove_locks()
+    yield
+    remove_locks()
+

@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "ccba-legal-intel"
@@ -29,9 +29,8 @@ cloud = [
     "google-auth",
 ]
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["ccba_legal*"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/ccba_legal"]
 
 [tool.uv.sources]
 ccba-harness = { workspace = true }
