@@ -40,9 +40,9 @@ _Avoid_: Client, buyer, account
 
 ## Contexts
 
-- [Ordering]\(./src/ordering/CONTEXT.md\) — receives and tracks customer orders
-- [Billing]\(./src/billing/CONTEXT.md\) — generates invoices and processes payments
-- [Fulfillment]\(./src/fulfillment/CONTEXT.md\) — manages warehouse picking and shipping
+- [Ordering](https://example.com/src/ordering/CONTEXT.md) — receives and tracks customer orders
+- [Billing](https://example.com/src/billing/CONTEXT.md) — generates invoices and processes payments
+- [Fulfillment](https://example.com/src/fulfillment/CONTEXT.md) — manages warehouse picking and shipping
 
 ## Relationships
 

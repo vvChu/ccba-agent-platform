@@ -16,7 +16,7 @@ Wayfinder mặc định là quá trình lập kế hoạch (planning): mỗi tic
 
 ## Nguyên tắc Tham chiếu theo Tên (Refer by name)
 
-Mỗi bản đồ và ticket đều có tên gọi cụ thể. Trong mọi báo cáo hoặc nhật ký giao tiếp, **bắt buộc** phải gọi tên đầy đủ của ticket (nhúng liên kết tương ứng) thay vì chỉ dùng số hiệu hoặc mã định danh (Ví dụ: dùng `[Đóng gói Mutex Lock]\(file:///...\)` hoặc link GitHub `#42` thay vì chỉ viết ngắn gọn).
+Mỗi bản đồ và ticket đều có tên gọi cụ thể. Trong mọi báo cáo hoặc nhật ký giao tiếp, **bắt buộc** phải gọi tên đầy đủ của ticket (nhúng liên kết tương ứng) thay vì chỉ dùng số hiệu hoặc mã định danh (Ví dụ: dùng `[Đóng gói Mutex Lock](https://github.com/...)` hoặc link GitHub `#42` thay vì chỉ viết ngắn gọn).
 
 ---
 

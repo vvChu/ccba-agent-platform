@@ -1,6 +1,6 @@
 # Danh sách Tickets: Tái cấu trúc Sâu TVPL VIP Crawler Module
 
-Spec tham chiếu: [spec-deepen-tvpl-crawler.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/specs/spec-deepen-tvpl-crawler.md)
+Spec tham chiếu: [spec-deepen-tvpl-crawler.md](../../specs/spec-deepen-tvpl-crawler.md)
 
 👉 Nguyên tắc: Chỉ thực hiện các ticket nằm ở Biên giới (Frontier) — là những ticket không bị chặn hoặc tất cả blockers của nó đã hoàn thành.
 
