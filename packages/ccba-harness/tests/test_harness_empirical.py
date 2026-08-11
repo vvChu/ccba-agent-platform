@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ccba_harness._guard import HarnessGuard
+from ccba_harness import HarnessGuard
 
 
 def get_short_path_name(long_name: str | Path) -> str:

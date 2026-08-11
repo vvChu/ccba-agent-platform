@@ -18,16 +18,7 @@ from ._state import (
     HarnessState,
     _check_in_hook,
     _get_active_guards,
-    _original__io_FileIO,
-    _original__io_open,
-    _original_builtins_open,
-    _original_io_FileIO,
-    _original_io_open,
-    _original_os_link,
-    _original_os_open,
-    _original_os_rename,
-    _original_os_replace,
-    _original_os_symlink,
+    _Originals,
 )
 
 
@@ -899,62 +890,62 @@ def _scan_ast_nodes(
 # ---------------------------------------------------------------------------
 def _wrapped_builtins_open(file: Any, *args: Any, **kwargs: Any) -> Any:
     if getattr(HarnessState.local, "in_hook", None) is _HOOK_TOKEN:
-        return _original_builtins_open(file, *args, **kwargs)
+        return _Originals.builtins_open(file, *args, **kwargs)
 
     guards = _get_active_guards()
     if not guards:
-        return _original_builtins_open(file, *args, **kwargs)
+        return _Originals.builtins_open(file, *args, **kwargs)
 
     HarnessState.local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         for g in guards:
             g._check_file_access(file, args, kwargs)
-        return _original_builtins_open(file, *args, **kwargs)
+        return _Originals.builtins_open(file, *args, **kwargs)
     finally:
         HarnessState.local.__dict__["in_hook"] = None
 
 
 def _wrapped_io_open(file: Any, *args: Any, **kwargs: Any) -> Any:
     if getattr(HarnessState.local, "in_hook", None) is _HOOK_TOKEN:
-        return _original_io_open(file, *args, **kwargs)
+        return _Originals.io_open(file, *args, **kwargs)
 
     guards = _get_active_guards()
     if not guards:
-        return _original_io_open(file, *args, **kwargs)
+        return _Originals.io_open(file, *args, **kwargs)
 
     HarnessState.local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         for g in guards:
             g._check_file_access(file, args, kwargs)
-        return _original_io_open(file, *args, **kwargs)
+        return _Originals.io_open(file, *args, **kwargs)
     finally:
         HarnessState.local.__dict__["in_hook"] = None
 
 
 def _wrapped__io_open(file: Any, *args: Any, **kwargs: Any) -> Any:
     if getattr(HarnessState.local, "in_hook", None) is _HOOK_TOKEN:
-        return _original__io_open(file, *args, **kwargs)
+        return _Originals._io_open(file, *args, **kwargs)
 
     guards = _get_active_guards()
     if not guards:
-        return _original__io_open(file, *args, **kwargs)
+        return _Originals._io_open(file, *args, **kwargs)
 
     HarnessState.local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
         for g in guards:
             g._check_file_access(file, args, kwargs)
-        return _original__io_open(file, *args, **kwargs)
+        return _Originals._io_open(file, *args, **kwargs)
     finally:
         HarnessState.local.__dict__["in_hook"] = None
 
 
 def _wrapped_os_open(path: Any, flags: int, *args: Any, **kwargs: Any) -> int:
     if _check_in_hook():
-        return _original_os_open(path, flags, *args, **kwargs)
+        return _Originals.os_open(path, flags, *args, **kwargs)
 
     guards = _get_active_guards()
     if not guards:
-        return _original_os_open(path, flags, *args, **kwargs)
+        return _Originals.os_open(path, flags, *args, **kwargs)
 
     HarnessState.local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
@@ -972,18 +963,18 @@ def _wrapped_os_open(path: Any, flags: int, *args: Any, **kwargs: Any) -> int:
             for g in guards:
                 _safe_record_written_file(g, file_str)
 
-        return _original_os_open(path, flags, *args, **kwargs)
+        return _Originals.os_open(path, flags, *args, **kwargs)
     finally:
         HarnessState.local.__dict__["in_hook"] = None
 
 
 def _wrapped_os_rename(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if _check_in_hook():
-        return _original_os_rename(src, dst, *args, **kwargs)
+        return _Originals.os_rename(src, dst, *args, **kwargs)
 
     guards = _get_active_guards()
     if not guards:
-        return _original_os_rename(src, dst, *args, **kwargs)
+        return _Originals.os_rename(src, dst, *args, **kwargs)
 
     HarnessState.local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
@@ -999,18 +990,18 @@ def _wrapped_os_rename(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
         for g in guards:
             _safe_record_written_file(g, dst_str)
 
-        return _original_os_rename(src, dst, *args, **kwargs)
+        return _Originals.os_rename(src, dst, *args, **kwargs)
     finally:
         HarnessState.local.__dict__["in_hook"] = None
 
 
 def _wrapped_os_replace(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if _check_in_hook():
-        return _original_os_replace(src, dst, *args, **kwargs)
+        return _Originals.os_replace(src, dst, *args, **kwargs)
 
     guards = _get_active_guards()
     if not guards:
-        return _original_os_replace(src, dst, *args, **kwargs)
+        return _Originals.os_replace(src, dst, *args, **kwargs)
 
     HarnessState.local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
@@ -1026,12 +1017,12 @@ def _wrapped_os_replace(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
         for g in guards:
             _safe_record_written_file(g, dst_str)
 
-        return _original_os_replace(src, dst, *args, **kwargs)
+        return _Originals.os_replace(src, dst, *args, **kwargs)
     finally:
         HarnessState.local.__dict__["in_hook"] = None
 
 
-class _WrappedFileIO(_original_io_FileIO):
+class _WrappedFileIO(_Originals.io_FileIO):
     def __init__(self, file: Any, mode: str = "r", *args: Any, **kwargs: Any) -> None:
         if _check_in_hook():
             super().__init__(file, mode, *args, **kwargs)
@@ -1051,7 +1042,7 @@ class _WrappedFileIO(_original_io_FileIO):
             HarnessState.local.__dict__["in_hook"] = None
 
 
-class _Wrapped_io_FileIO(_original__io_FileIO):
+class _Wrapped_io_FileIO(_Originals._io_FileIO):
     def __init__(self, file: Any, mode: str = "r", *args: Any, **kwargs: Any) -> None:
         if _check_in_hook():
             super().__init__(file, mode, *args, **kwargs)
@@ -1073,11 +1064,11 @@ class _Wrapped_io_FileIO(_original__io_FileIO):
 
 def _wrapped_os_link(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if _check_in_hook():
-        return _original_os_link(src, dst, *args, **kwargs)
+        return _Originals.os_link(src, dst, *args, **kwargs)
 
     guards = _get_active_guards()
     if not guards:
-        return _original_os_link(src, dst, *args, **kwargs)
+        return _Originals.os_link(src, dst, *args, **kwargs)
 
     HarnessState.local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
@@ -1097,18 +1088,18 @@ def _wrapped_os_link(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
         for g in guards:
             _safe_record_written_file(g, dst_str)
 
-        return _original_os_link(src, dst, *args, **kwargs)
+        return _Originals.os_link(src, dst, *args, **kwargs)
     finally:
         HarnessState.local.__dict__["in_hook"] = None
 
 
 def _wrapped_os_symlink(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
     if _check_in_hook():
-        return _original_os_symlink(src, dst, *args, **kwargs)
+        return _Originals.os_symlink(src, dst, *args, **kwargs)
 
     guards = _get_active_guards()
     if not guards:
-        return _original_os_symlink(src, dst, *args, **kwargs)
+        return _Originals.os_symlink(src, dst, *args, **kwargs)
 
     HarnessState.local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
@@ -1128,7 +1119,7 @@ def _wrapped_os_symlink(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
         for g in guards:
             _safe_record_written_file(g, dst_str)
 
-        return _original_os_symlink(src, dst, *args, **kwargs)
+        return _Originals.os_symlink(src, dst, *args, **kwargs)
     finally:
         HarnessState.local.__dict__["in_hook"] = None
 

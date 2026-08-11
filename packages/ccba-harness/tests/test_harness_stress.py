@@ -10,8 +10,8 @@ import pytest
 pytestmark = [pytest.mark.stress, pytest.mark.slow]
 
 
-from ccba_harness._guard import HarnessGuard
-from ccba_harness._state import _original_builtins_open
+from ccba_harness import HarnessGuard
+from ccba_harness._state import _Originals
 
 
 def test_concurrent_guard_bypass_via_subprocess(tmp_path: Path) -> None:
@@ -133,13 +133,13 @@ def test_performance_overhead(tmp_path: Path) -> None:
 
     # Warm up
     for _ in range(100):
-        with _original_builtins_open(temp_file, "r") as f:
+        with _Originals.builtins_open(temp_file, "r") as f:
             f.read()
 
     # Benchmark original open
     t0 = time.perf_counter()
     for _ in range(1000):
-        with _original_builtins_open(temp_file, "r") as f:
+        with _Originals.builtins_open(temp_file, "r") as f:
             f.read()
     t_orig = time.perf_counter() - t0
 

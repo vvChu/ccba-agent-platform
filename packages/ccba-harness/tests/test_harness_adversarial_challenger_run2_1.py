@@ -10,7 +10,7 @@ import pytest
 pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
 
 
-from ccba_harness._guard import HarnessGuard
+from ccba_harness import HarnessGuard
 
 
 def test_in_hook_flag_tampering_bypass(tmp_path: Path) -> None:
@@ -25,7 +25,7 @@ def test_in_hook_flag_tampering_bypass(tmp_path: Path) -> None:
 
     import os
 
-    import ccba_harness
+    from ccba_harness import _engine as ccba_harness
 
     with HarnessGuard():
         # Set the hook flag to True
@@ -205,7 +205,7 @@ def test_builtins_open_flag_tampering_bypass_vulnerability(tmp_path: Path) -> No
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("vulnerable-builtins-open-content")
 
-    import ccba_harness
+    from ccba_harness import _engine as ccba_harness
 
     with HarnessGuard():
         # Set the hook flag to True
@@ -229,7 +229,7 @@ def test_compiled_frame_tampering_bypass(tmp_path: Path) -> None:
     sensitive_file = tmp_path / "secret_credential.txt"
     sensitive_file.write_text("vulnerable-compiled-code-content")
 
-    import ccba_harness
+    from ccba_harness import _engine as ccba_harness
 
     with HarnessGuard():
         # Set the hook flag to the exact internal _HOOK_TOKEN object

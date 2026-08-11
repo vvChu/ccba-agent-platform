@@ -12,7 +12,7 @@ import pytest
 pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
 
 
-from ccba_harness._guard import HarnessGuard
+from ccba_harness import HarnessGuard
 
 
 def test_unicode_normalization_bypass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
