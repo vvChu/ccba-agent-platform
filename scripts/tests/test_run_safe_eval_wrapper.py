@@ -9,7 +9,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.run_safe_eval_wrapper import run_safe_wrapper
+from scripts.eval.run_safe_eval_wrapper import run_safe_wrapper
 
 
 def test_wrapper_successful_execution(tmp_path: Path) -> None:

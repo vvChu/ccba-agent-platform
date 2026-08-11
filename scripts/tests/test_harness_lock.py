@@ -2,7 +2,7 @@
 
 import os
 
-from scripts.run_harness_evals import ensure_single_instance
+from scripts.eval.run_harness_evals import ensure_single_instance
 
 
 def test_ensure_single_instance_safe_execution():
