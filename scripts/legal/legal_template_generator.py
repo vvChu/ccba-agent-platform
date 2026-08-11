@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Any
 
-from scripts.legal_grounding_gate import format_grounded_response
+from .legal_grounding_gate import format_grounded_response
 
 SUPPORTED_DOC_TYPES = ["compliance_report", "inquiry_letter", "contract_risk_advisory"]
 

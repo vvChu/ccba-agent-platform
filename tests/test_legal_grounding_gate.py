@@ -1,6 +1,6 @@
 """Unit tests for Legal Grounding Gate Verifier (Seam tests)."""
 
-from scripts.legal_grounding_gate import format_grounded_response, verify_legal_grounding
+from scripts.legal.legal_grounding_gate import format_grounded_response, verify_legal_grounding
 
 
 def test_verify_legal_grounding_valid_citation():
