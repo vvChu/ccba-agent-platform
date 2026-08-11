@@ -14,7 +14,7 @@ Qua phân tích log kỹ thuật (forensic analysis), nguyên nhân được xá
 
 Hệ thống triển khai một cơ chế phòng vệ 3 lớp (3-Tier Resilience Architecture):
 1. **Detached Execution Layer**: Sử dụng bộ chạy cô lập `safe_runner.py` để tách tiến trình kiểm thử khỏi vòng đời trực tiếp của Client Daemon, đảm bảo kết quả kiểm thử không bị hủy chớp nhoáng khi daemon gặp sự cố micro-restart.
-2. **Gateway Fault Tolerance**: Tích hợp cơ chế tự động thử lại với thời gian chờ tăng theo cấp số nhân (Exponential Backoff Retry) và chốt ngắt mạch (Circuit Breaker) trong lớp SDK kết nối AI Gateway (`ccba-ai`), giúp các cuộc gọi LLM tự hồi phục sau các đợt gián đoạn mạng ngắn hạn.
+2. **Gateway Fault Tolerance**: Tích hợp cơ chế tự động thử lại với thời gian chờ tăng theo cấp số nhân (Exponential Backoff Retry: 3 lần, 1s→2s→4s) trong lớp SDK kết nối AI Gateway (`ccba-ai`), giúp các cuộc gọi LLM tự hồi phục sau các đợt gián đoạn mạng ngắn hạn. Mô hình Circuit Breaker 3 trạng thái được giữ riêng như một component độc lập tại skill `api-circuit-breaker` phục vụ các batch pipeline use case.
 3. **Workflow & Context Guardrails**: Áp dụng quy tắc quản trị cấp cao tại Hiến pháp `AGENTS.md` bao gồm giới hạn số vòng lặp TDD (TDD Retry Cap = 5) và cơ chế ngắt sớm khẩn cấp (Invalid Args Circuit Breaker) để bảo toàn ngân sách ngữ cảnh và đưa ra thông báo bàn giao (handoff) chủ động trước khi bị crash.
 
 ---
@@ -23,7 +23,7 @@ Hệ thống triển khai một cơ chế phòng vệ 3 lớp (3-Tier Resilience
 
 1. As an **AI Agent Engineer**, I want pytest execution to run in a detached process wrapper, so that transient server daemon restarts do not kill active test runs or report false cancellation errors.
 2. As a **Developer**, I want the `ccba-ai` SDK to automatically retry failed LLM API requests on transient 5xx or connection errors, so that temporary network glitches do not fail long-running batch operations.
-3. As a **Platform Administrator**, I want a Circuit Breaker mechanism in the AI Gateway SDK, so that persistent backend outages trigger an immediate structured failure response instead of hanging background threads.
+3. As a **Platform Administrator**, I want a Circuit Breaker mechanism provided by the `api-circuit-breaker` skill, so that persistent backend outages trigger an immediate structured failure response instead of hanging background threads.
 4. As an **AI Coding Agent**, I want a hard cap of 5 edit-test iterations per seam, so that I do not exhaust the context window and get terminated unexpectedly.
 5. As a **User**, I want the agent to save Work-In-Progress (WIP) commits and request a new session when encountering repeated tool-call errors, so that my work is never lost to silent context crashes.
 6. As a **Quality Engineer**, I want fast, scoped test execution by default, so that individual unit changes can be verified quickly without clogging the context log with full-suite test outputs.
@@ -42,7 +42,7 @@ Hệ thống triển khai một cơ chế phòng vệ 3 lớp (3-Tier Resilience
 - Nâng cấp `AIClient` và `AsyncAIClient` để bọc tất cả các thao tác tương tác API (`chat`, `chat_multi`, `stream`, `transcribe`) qua một lớp Retry Logic.
 - Tự động bắt các ngoại lệ lỗi kết nối mạng (Connection Error, Timeout, HTTP 502/503/504).
 - Cấu hình thử lại tối đa 3 lần với khoảng thời gian delay tăng lũy thừa (1s -> 2s -> 4s).
-- Tích hợp mô hình Circuit Breaker 3 trạng thái (`CLOSED`, `OPEN`, `HALF_OPEN`) với ngưỡng lỗi liên tiếp và thời gian hồi phục để chặn cascade failure.
+- Mô hình Circuit Breaker 3 trạng thái (`CLOSED`, `OPEN`, `HALF_OPEN`) được giữ riêng như một component độc lập tại skill `api-circuit-breaker` phục vụ các batch pipeline use case, không tích hợp trực tiếp vào SDK.
 
 ### 3. Core Policy & Workflow Guardrails
 - Cập nhật quy tắc bắt buộc tại `AGENTS.md` (Layer 1 Constitution):
