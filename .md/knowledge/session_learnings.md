@@ -707,6 +707,40 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Thay thế bằng**: Đóng gói toàn bộ logic phân tích cú pháp và trích xuất chỉ số vào bên trong một Deep Module duy nhất với giao diện đơn giản.
 
 ---
+
+## Session Learnings — Platform Onboarding, Process Safety & CI Scoping (2026-08-11)
+- **ID Phiên làm việc**: `c47d256e-b05b-447f-b755-01fb94286daf`
+
+### Patterns (Mẫu tốt)
+
+#### 69. Parent-Safe Process Isolation (`parent_pid = os.getppid()`)
+- **Ngữ cảnh**: Xây dựng hàm dọn dẹp hoặc duy trì đơn tiến trình (`ensure_single_instance()`) trên Windows/Linux để loại bỏ tiến trình test runner chạy trùng lặp.
+- **Giải pháp**: Luôn thu thập `current_pid = os.getpid()` và `parent_pid = os.getppid()`, loại trừ tuyệt đối hai PID này trước khi kích hoạt `taskkill` hoặc `proc.terminate()`. Tránh diệt nhầm Agent Server Host (Parent process) gây crash extension IDE và báo lỗi `context canceled`.
+- **Nguồn**: Session `c47d256e-b05b-447f-b755-01fb94286daf`, 2026-08-11
+
+#### 70. Markdown-Isolated Ruff Scoping (`exclude = ["*.md"]` & `docstring-code-format = false`)
+- **Ngữ cảnh**: Cấu hình Ruff Linter & Formatter cho dự án chứa cả mã nguồn Python (`packages/`, `scripts/`) và nhiều tài liệu hướng dẫn Markdown chứa code snippets minh họa.
+- **Giải pháp**: Cấu hình `exclude = ["*.md"]` và `docstring-code-format = false` trong `pyproject.toml` [tool.ruff], đồng thời giới hạn `ruff_paths = ["packages", "scripts"]` trong runner script. Tránh việc Ruff tự động định dạng lại mã ví dụ trong Markdown làm bẻ gãy CI runner trên Ubuntu/Linux.
+- **Nguồn**: Session `c47d256e-b05b-447f-b755-01fb94286daf`, 2026-08-11
+
+#### 71. Smart Skipping & Monorepo Inference in Onboarding Wizards
+- **Ngữ cảnh**: Thiết kế wizard cấu hình dự án (`/ccba-setup-skills`) tự động giảm thiểu câu hỏi phỏng vấn tương tác gây phiền người dùng.
+- **Giải pháp**: Thực hiện trinh sát tự động 3 cấp (`folder local` ➔ `catalog.yaml` ➔ `Available Skills`) để kiểm tra tính khả dụng của phụ thuộc (như `triage`). Tự động bỏ qua câu hỏi phỏng vấn nếu kỹ năng phụ thuộc chưa được cài đặt.
+- **Nguồn**: Session `c47d256e-b05b-447f-b755-01fb94286daf`, 2026-08-11
+
+---
+
+### Anti-patterns (Cách tránh)
+
+#### 47. Unscoped Process Termination on Script Name Match
+- **Vấn đề**: Thực hiện `taskkill /F` dựa trên từ khóa tên script trong command line mà không kiểm tra PID của tiến trình cha. Do tiến trình Agent Host khởi chạy command chứa tên script, lệnh kill đã làm sập Agent Server Host.
+- **Thay thế bằng**: Kiểm tra `pid != current_pid and pid != parent_pid` trước khi chấm dứt bất kỳ tiến trình nào.
+
+#### 48. Global Unscoped `ruff format .` on Repositories with Markdown Docs
+- **Vấn đề**: Chạy `ruff format --check .` trên toàn bộ root directory mà không loại trừ các tệp `*.md`, khiến Ruff cố định dạng lại các snippet minh họa trong tài liệu và báo lỗi `File would be reformatted` bẻ gãy CI.
+- **Thay thế bằng**: Khấu trừ `*.md` trong `pyproject.toml` và chỉ định rõ các thư mục chứa mã nguồn Python thực sự (`packages`, `scripts`).
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
