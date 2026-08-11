@@ -262,7 +262,7 @@ def test_thread_local_state_manipulation_bypass(
     with open(sensitive_file, "w") as f:
         f.write("thread-local-secret")
 
-    from ccba_harness import _local  # type: ignore[attr-defined]
+    from ccba_harness._engine import _local  # type: ignore[attr-defined]
 
     class FakeList:
         def __bool__(self) -> bool:

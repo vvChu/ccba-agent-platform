@@ -178,7 +178,7 @@ def test_original_hooks_restored_in_subprocess() -> None:
         def mock_popen_check(*args: Any, **kwargs: Any) -> MagicMock:
             nonlocal builtins_open_during_popen, in_hook_during_popen
             builtins_open_during_popen = builtins.open
-            from ccba_harness import _local  # type: ignore[attr-defined]
+            from ccba_harness._engine import _local  # type: ignore[attr-defined]
 
             in_hook_during_popen = getattr(_local, "in_hook", False)
             # Return a mock process that supports context manager and communicate
@@ -195,7 +195,7 @@ def test_original_hooks_restored_in_subprocess() -> None:
         # Check that during subprocess call, builtins.open remained wrapped (global hook intact)
         assert builtins_open_during_popen != _original_builtins_open
         # Check that in_hook was active to bypass the hook locally
-        from ccba_harness import _HOOK_TOKEN  # type: ignore[attr-defined]
+        from ccba_harness._engine import _HOOK_TOKEN  # type: ignore[attr-defined]
 
         assert in_hook_during_popen is _HOOK_TOKEN
         # Check that after subprocess call, the hook is still wrapped
