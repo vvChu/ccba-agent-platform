@@ -31,7 +31,7 @@ def mock_analyzer_report():
 
     # Mock get_segments
     report.get_segments.return_value = [
-        Segment(0, 4, "text", "qwen3.5-35b"),
+        Segment(0, 4, "text", "qwen-local-primary"),
         Segment(5, 9, "scan", "ocr-primary"),
     ]
     report.to_dict.return_value = {"category": "hybrid", "pages": 10}
@@ -88,7 +88,7 @@ async def test_drawing_extraction_enabled(tmp_path: Path):
     report.should_skip = True  # Standard check still returns True
     report.skip_reason = "Oversized"
     report.pages = 1
-    report.recommended_model = "qwen3.5-35b"  # Fixed: Add missing attribute
+    report.recommended_model = "qwen-local-primary"  # Fixed: Add missing attribute
     report.to_dict.return_value = {"category": "drawing"}
 
     # Mock analyzer and converter
@@ -118,7 +118,7 @@ async def test_large_pdf_chunking(tmp_path: Path):
     report.category = "text_rich"
     report.pages = 50
     report.should_skip = False
-    report.recommended_model = "qwen3.5-35b"
+    report.recommended_model = "qwen-local-primary"
     report.to_dict.return_value = {"category": "text_rich"}
 
     # Mock split_pdf and converters

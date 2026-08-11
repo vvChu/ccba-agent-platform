@@ -30,13 +30,14 @@ def check_pre_eval_health(project_root: Path) -> None:
 def ensure_single_instance() -> None:
     """Tự động kiểm tra và triệt hạ các tiến trình run_harness_evals.py bị trùng lặp/treo từ trước."""
     current_pid = os.getpid()
+    parent_pid = getattr(os, "getppid", lambda: None)()
     try:
         import psutil
 
         for proc in psutil.process_iter(["pid", "name", "cmdline"]):
             try:
                 pid = proc.info["pid"]
-                if pid == current_pid:
+                if pid == current_pid or (parent_pid and pid == parent_pid):
                     continue
                 cmdline = " ".join(proc.info["cmdline"] or [])
                 if "run_harness_evals.py" in cmdline:
@@ -46,35 +47,8 @@ def ensure_single_instance() -> None:
                     proc.terminate()
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 continue
-    except ImportError:
-        if sys.platform == "win32":
-            try:
-                res = subprocess.run(
-                    [
-                        "wmic",
-                        "process",
-                        "where",
-                        "name='python.exe'",
-                        "get",
-                        "processid,commandline",
-                    ],
-                    capture_output=True,
-                    text=True,
-                )
-                for line in res.stdout.splitlines():
-                    if "run_harness_evals.py" in line:
-                        parts = line.strip().rsplit(maxsplit=1)
-                        if len(parts) == 2 and parts[1].isdigit():
-                            pid = int(parts[1])
-                            if pid != current_pid:
-                                print(
-                                    f"🧹 [AUTO-LOCK] Thu hồi tiến trình trùng lặp PID {pid} qua taskkill..."
-                                )
-                                subprocess.run(
-                                    ["taskkill", "/F", "/PID", str(pid)], capture_output=True
-                                )
-            except Exception:
-                pass
+    except Exception:
+        pass
 
 
 def get_git_modified_files(project_root: Path) -> set[Path]:
@@ -233,7 +207,11 @@ def main() -> None:
     # ==========================================
     # GATE 1 & 2: Linter & Formatter (Ruff)
     # ==========================================
-    ruff_paths = ["."] if args.all else [str(f.relative_to(project_root)) for f in py_modified]
+    ruff_paths = (
+        ["packages", "scripts"]
+        if args.all
+        else [str(f.relative_to(project_root)) for f in py_modified]
+    )
     if ruff_paths:
         # Check Ruff Lint
         success_lint, out_lint = run_command(

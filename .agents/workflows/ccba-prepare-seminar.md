@@ -9,4 +9,4 @@ bundle: "_consulting"
 
 # Workflow: Prepare Seminar (/ccba-prepare-seminar)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `seminar-builder` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/seminar-builder/SKILL.md) để bắt đầu quy trình chuẩn bị nội dung, chương trình nghị sự và recap cho buổi seminar.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `seminar-builder` tại [SKILL.md](../skills/seminar-builder/SKILL.md) để bắt đầu quy trình chuẩn bị nội dung, chương trình nghị sự và recap cho buổi seminar.

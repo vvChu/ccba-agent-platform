@@ -69,6 +69,13 @@ Tài liệu này lưu trữ các thuật ngữ và biên bản quyết định k
   - Loại bỏ từ hậu tố rườm rà `-spoke` (vốn là vai trò kiến trúc đã được khai báo sẵn trong `workspace_context.yaml`).
   - Tên `ccba-legal-knowledge` ngắn gọn (20 chars), dễ gõ CLI, chuẩn hóa quốc tế và đồng bộ 100% với Python Package `ccba-legal-intel`.
 
+### ADR-011: Chuẩn hóa Luồng Onboarding & Chuyển đổi Cấu hình Idempotent (`/ccba-platform` ➔ `/ccba-init-spoke` ➔ `/ccba-setup-skills`)
+- **Trạng thái:** CHẤP THUẬN (ACCEPTED)
+- **Quyết định:**
+  1. *Triết lý Onboarding Lazy Setup*: Kỹ năng `/ccba-platform` giữ vai trò Cổng Router toàn cục siêu tốc, ủy quyền hoàn toàn phỏng vấn cấu hình dev cho `/ccba-setup-skills`. Ở bước cuối của `/ccba-init-spoke`, in thông báo đề xuất hướng dẫn người dùng gọi `/ccba-setup-skills` khi sẵn sàng.
+  2. *Ghi đè An toàn & Idempotent (Backup First)*: Khi chuyển đổi Issue Tracker qua `/ccba-setup-skills`, hệ thống ghi đè file cấu hình mới và tự động đổi tên file cũ thành `issue_tracker.md.bak` nếu chứa dữ liệu task cũ để đảm bảo không mất mát dữ liệu.
+
+
 
 
 

@@ -1,7 +1,7 @@
 """Module implementing Grounding Gate verifier for legal advice responses."""
 
 import re
-from typing import Dict, List, Any
+from typing import Any
 
 LEGAL_DISCLAIMER = """
 ---
@@ -10,16 +10,15 @@ LEGAL_DISCLAIMER = """
 
 
 def verify_legal_grounding(
-    response_text: str,
-    retrieved_docs: List[Dict[str, Any]]
-) -> Dict[str, Any]:
+    response_text: str, retrieved_docs: list[dict[str, Any]]
+) -> dict[str, Any]:
     """Verify that response_text contains valid citations matching retrieved_docs."""
     # Pattern matching brackets like [Short Name - Doc Num] or [Short Name]
     citations = re.findall(r"\[(.*?)\]", response_text)
-    
+
     valid_citations = []
     retrieved_identifiers = set()
-    
+
     for doc in retrieved_docs:
         if doc.get("short_name"):
             retrieved_identifiers.add(doc["short_name"].lower())
@@ -27,19 +26,19 @@ def verify_legal_grounding(
             retrieved_identifiers.add(doc["document_number"].lower())
         if doc.get("id"):
             retrieved_identifiers.add(str(doc["id"]).lower())
-            
+
     for citation in citations:
         citation_lower = citation.lower()
         if any(ident in citation_lower for ident in retrieved_identifiers):
             valid_citations.append(citation)
-            
+
     if valid_citations:
         return {
             "is_grounded": True,
             "valid_citations": valid_citations,
             "warning_reason": None,
         }
-    
+
     return {
         "is_grounded": False,
         "valid_citations": [],
@@ -47,18 +46,15 @@ def verify_legal_grounding(
     }
 
 
-def format_grounded_response(
-    response_text: str,
-    retrieved_docs: List[Dict[str, Any]]
-) -> str:
+def format_grounded_response(response_text: str, retrieved_docs: list[dict[str, Any]]) -> str:
     """Format final response with grounding check & disclaimer."""
     verification = verify_legal_grounding(response_text, retrieved_docs)
-    
+
     output = response_text
     if not verification["is_grounded"]:
         output = f"⚠️ **[{verification['warning_reason']}]**\n\n" + output
-        
+
     if "⚠️ **Disclaimer:**" not in output:
         output = output.strip() + "\n" + LEGAL_DISCLAIMER
-        
+
     return output

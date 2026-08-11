@@ -46,7 +46,7 @@ class TestPDFReport:
         report = PDFReport(
             file_path=Path("doc.pdf"),
             category=PDFCategory.TEXT_RICH,
-            recommended_model="qwen3.5-35b",
+            recommended_model="qwen-local-primary",
             confidence=0.9,
             pages=10,
             text_pages=10,
@@ -270,7 +270,7 @@ class TestPDFAnalyzerWithRealPDF:
         report = analyzer.analyze(pdf_path)
 
         assert report.category == PDFCategory.TEXT_RICH
-        assert report.recommended_model == "qwen3.5-35b"
+        assert report.recommended_model == "qwen-local-primary"
         assert report.text_pages == 5
         assert report.should_skip is False
 

@@ -7,4 +7,4 @@ bundle: "_core"
 
 # Workflow: Phỏng Vấn Dồn Dập (/ccba-grilling)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `grilling` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/grilling/SKILL.md) để bắt đầu grilling loop.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `grilling` tại [SKILL.md](../skills/grilling/SKILL.md) để bắt đầu grilling loop.

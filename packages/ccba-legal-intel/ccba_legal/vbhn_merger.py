@@ -1,9 +1,8 @@
 """VBHN Merger Engine and Visual Diff Exporter."""
 
 from pathlib import Path
-import copy
 
-from .ast_parser import ASTNode, ASTParser, DeltaPatch, DeltaPatchItem, PatchAction
+from .ast_parser import ASTNode, ASTParser, DeltaPatch, PatchAction
 
 
 class VBHNMerger:

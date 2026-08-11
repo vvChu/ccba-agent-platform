@@ -1,10 +1,7 @@
 """Unit tests for ASTParser and DeltaPatch schema in ccba_legal."""
 
-from pathlib import Path
 import yaml
-
 from ccba_legal.ast_parser import (
-    ASTNode,
     ASTParser,
     DeltaPatch,
     DeltaPatchItem,
@@ -32,6 +29,7 @@ Văn bản này áp dụng cho mọi cơ quan, tổ chức, cá nhân trên lãn
 
     assert len(nodes) > 0
     flat_nodes = parser.flatten_ast(nodes)
+    assert len(flat_nodes) > 0
 
     # Verify Article 1 Node
     d1 = parser.find_node(nodes, "D1")

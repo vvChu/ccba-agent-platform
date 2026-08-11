@@ -11,8 +11,8 @@
 
 | # | Ngày | Chủ đề | Người trình bày | Tài liệu |
 |---|------|--------|----------------|----------|
-| 1 | {{DATE_1}} | {{TOPIC_1}} | {{PRESENTER_1}} | [Link]({{FILE_1}}) |
-| 2 | {{DATE_2}} | {{TOPIC_2}} | {{PRESENTER_2}} | [Link]({{FILE_2}}) |
+| 1 | {{DATE_1}} | {{TOPIC_1}} | {{PRESENTER_1}} | `[Link](https://example.com/file1)` |
+| 2 | {{DATE_2}} | {{TOPIC_2}} | {{PRESENTER_2}} | `[Link](https://example.com/file2)` |
 
 ---
 
