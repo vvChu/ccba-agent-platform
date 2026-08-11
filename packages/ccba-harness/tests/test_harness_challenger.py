@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ccba_harness._guard import HarnessGuard
+from ccba_harness import HarnessGuard
 
 
 def test_bypass_hex_obfuscation_in_subprocess(tmp_path: Path) -> None:

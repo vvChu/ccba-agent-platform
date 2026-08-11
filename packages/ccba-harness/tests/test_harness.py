@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ccba_harness._guard import HarnessGuard
-from ccba_harness._state import _original_builtins_open
+from ccba_harness import HarnessGuard
+from ccba_harness._state import _Originals
 
 
 def test_pre_action_hook_blocking_sensitive_files() -> None:
@@ -170,7 +170,7 @@ def test_decorator_usage(mock_run: MagicMock, tmp_path: Path) -> None:
 def test_original_hooks_restored_in_subprocess() -> None:
     """Verify that the open hooks remain global and only use thread-local in_hook bypass during subprocess creation."""
     with HarnessGuard():
-        assert builtins.open != _original_builtins_open
+        assert builtins.open != _Originals.builtins_open
 
         builtins_open_during_popen = None
         in_hook_during_popen = None
@@ -189,17 +189,17 @@ def test_original_hooks_restored_in_subprocess() -> None:
             mock_proc.returncode = 0
             return mock_proc
 
-        with patch("ccba_harness._process_monitor._original_popen", side_effect=mock_popen_check):
+        with patch("ccba_harness._process_monitor._Originals.popen", side_effect=mock_popen_check):
             subprocess.run(["dummy_command"])
 
         # Check that during subprocess call, builtins.open remained wrapped (global hook intact)
-        assert builtins_open_during_popen != _original_builtins_open
+        assert builtins_open_during_popen != _Originals.builtins_open
         # Check that in_hook was active to bypass the hook locally
         from ccba_harness._engine import _HOOK_TOKEN  # type: ignore[attr-defined]
 
         assert in_hook_during_popen is _HOOK_TOKEN
         # Check that after subprocess call, the hook is still wrapped
-        assert builtins.open != _original_builtins_open
+        assert builtins.open != _Originals.builtins_open
 
 
 def test_os_rename_and_replace_intercept(tmp_path: Path) -> None:

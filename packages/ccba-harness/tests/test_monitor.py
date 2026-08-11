@@ -3,6 +3,7 @@ from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
+
 from ccba_legal.monitor import TokenMonitor  # type: ignore[import-not-found]
 
 

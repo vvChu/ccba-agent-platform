@@ -9,7 +9,7 @@ import pytest
 pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
 
 
-from ccba_harness._guard import HarnessGuard
+from ccba_harness import HarnessGuard
 
 
 def test_env_var_concat_bypass(tmp_path: Path) -> None:

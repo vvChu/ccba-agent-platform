@@ -28,10 +28,7 @@ from ._state import (
     HarnessState,
     _check_in_hook,
     _get_active_guards,
-    _original_popen,
-    _original_thread_start,
-    _original_thread_start_new,
-    _original_thread_start_new_thread,
+    _Originals,
 )
 
 
@@ -1003,7 +1000,7 @@ def _wrapped_popen(*args: Any, **kwargs: Any) -> Any:
     old_in_hook = getattr(HarnessState.local, "in_hook", None)
     HarnessState.local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
-        return _original_popen(*args_list, **kwargs)
+        return _Originals.popen(*args_list, **kwargs)
     finally:
         HarnessState.local.__dict__["in_hook"] = old_in_hook
 
@@ -1125,7 +1122,7 @@ def _wrapped_thread_start(self: threading.Thread, *args: Any, **kwargs: Any) -> 
                             HarnessEngine._restore_global_hooks_internal()
 
     self.run = wrapped_run
-    return _original_thread_start(self, *args, **kwargs)
+    return _Originals.thread_start(self, *args, **kwargs)
 
 
 def _wrapped_thread_start_new_thread(
@@ -1152,7 +1149,7 @@ def _wrapped_thread_start_new_thread(
 
                             HarnessEngine._restore_global_hooks_internal()
 
-    return _original_thread_start_new_thread(thread_target_wrapper, args, kwargs)
+    return _Originals.thread_start_new_thread(thread_target_wrapper, args, kwargs)
 
 
 def _wrapped_thread_start_new(function: Callable, args: tuple, kwargs: dict | None = None) -> int:
@@ -1177,10 +1174,10 @@ def _wrapped_thread_start_new(function: Callable, args: tuple, kwargs: dict | No
 
                             HarnessEngine._restore_global_hooks_internal()
 
-    if _original_thread_start_new is not None:
-        return _original_thread_start_new(thread_target_wrapper, args, kwargs)
+    if _Originals.thread_start_new is not None:
+        return _Originals.thread_start_new(thread_target_wrapper, args, kwargs)
     else:
-        return _original_thread_start_new_thread(thread_target_wrapper, args, kwargs)
+        return _Originals.thread_start_new_thread(thread_target_wrapper, args, kwargs)
 
 
 # ===========================================================================
