@@ -767,6 +767,21 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Giải pháp**: Sử dụng `git reset` / `git reset --soft` để tách bạch từng gói thay đổi (Candidate #2, Candidate #3, Candidate #4, Docs) và commit theo thứ tự phụ thuộc logic thay vì `git add .` một lần duy nhất.
 - **Nguồn**: Session `27ffc3bc-9896-4100-a13f-2a833ae12b12`, 2026-08-11
 
+#### 76. Tiered Public API Export Surface for Deep Modules
+- **Ngữ cảnh**: Package `ccba-notebooklm` re-export 26 symbols hỗn loạn ở `__init__.py`, gây nhầm lẫn mức trừu tượng giữa transport client, orchestration workflows, và internal utilities.
+- **Giải pháp**: Thu gọn `__all__` thành 2 Tier rõ ràng (Tier 1: Transport & Auth, Tier 2: Orchestration Workflows). Ẩn hoàn toàn internal utilities (`_registry`, `_security`, `_gc`) khỏi `__all__` nhưng vẫn cho phép import đường dẫn đầy đủ khi cần.
+- **Nguồn**: Session `a5991b1a-c8b1-4519-af84-3cce9e3d6b38`, 2026-08-11
+
+#### 77. Process Safety Infrastructure Centralization (`process_safety.py`)
+- **Ngữ cảnh**: Các script kiểm thử ngầm (`run_harness_evals.py`, `run_safe_eval_wrapper.py`, `run_isolated_tests.py`) bị lặp lại các hàm singleton lock và timeout process tree termination.
+- **Giải pháp**: Hợp nhất các hàm an toàn tiến trình vào module chung `scripts/eval/process_safety.py`. Cưỡng chế quy tắc **Safe Process Termination Invariant** (loại trừ cả `os.getpid()` VÀ `os.getppid()`) để bảo vệ Agent Host Process khỏi bị `taskkill` nhầm.
+- **Nguồn**: Session `a5991b1a-c8b1-4519-af84-3cce9e3d6b38`, 2026-08-11
+
+#### 78. 2-Tier Architecture for Platform Utility Scripts
+- **Ngữ cảnh**: Chuẩn hóa cấu trúc thư mục `scripts/` vừa phục vụ đường dẫn CLI ngắn gọn cho Workflows/Skills/Rules vừa giữ code phân nhóm theo domain ngăn nắp.
+- **Giải pháp**: Áp dụng mô hình 2 tầng: Root CLI Entry-Points & Bridge Adapters (`scripts/*.py` ~7 dòng call `sys.exit(main())`) + Domain Implementation Subfolders (`scripts/eval/`, `scripts/legal/`, `scripts/spoke/`, `scripts/security/`, `scripts/validation/`). Đã tài liệu hóa chính thức tại `scripts/README.md`.
+- **Nguồn**: Session `a5991b1a-c8b1-4519-af84-3cce9e3d6b38`, 2026-08-11
+
 ---
 
 ### Anti-patterns (Cách tránh)
@@ -778,6 +793,10 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 #### 50. Full Sub-directory Migration without Entry Point Shims
 - **Vấn đề**: Di chuyển 100% tệp script tại root `scripts/` vào các thư mục con mà không để lại shim hay giữ Core Engines ở root, gây đổ vỡ hàng loạt lệnh trong Spoke sync, CI runners, hoặc hướng dẫn trong `.agents/workflows/`.
 - **Thay thế bằng**: Áp dụng Hybrid Model: giữ Core Engines tại root và bổ sung thin CLI shims cho các entry points công khai.
+
+#### 51. Merging High-level Orchestration Workflows into Low-level Transport Clients
+- **Vấn đề**: Nhồi các workflow 100-200 dòng (quản lý state, retry loop, cache, post-processing) vào transport client class đơn thuần (`CCBANotebookLMClient`). Gây phình to class 363→900 dòng, trộn lẫn 2 trách nhiệm transport và orchestration.
+- **Thay thế bằng**: Giữ tách biệt 2 tầng: `_client.py` (transport seam) và `_artifacts.py` (orchestration), chỉ phân tầng bề mặt export trong `__init__.py`.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
