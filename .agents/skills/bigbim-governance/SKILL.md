@@ -21,11 +21,11 @@ bundle: "_core"
 
 | Article | Nội dung cốt lõi |
 |:--------|:----------------|
-| `[bbp-lifecycle.md]\(<bigbim_method_path>/.md/knowledge/bigbim-governance/bbp-lifecycle.md\)` | BBP A0→C2, RIBA mapping, deliverables từng giai đoạn |
-| `[v-gates.md]\(<bigbim_method_path>/.md/knowledge/bigbim-governance/v-gates.md\)` | 7 Verification Gates — tiêu chí go/no-go, checklist |
-| `[cde-workflow.md]\(<bigbim_method_path>/.md/knowledge/bigbim-governance/cde-workflow.md\)` | CDE 4 states, naming convention, access control |
-| `[unique-id.md]\(<bigbim_method_path>/.md/knowledge/bigbim-governance/unique-id.md\)` | Sợi Chỉ Đỏ — UniqueID syntax, RK codes, 4 RKs |
-| `[midp-guide.md]\(<bigbim_method_path>/.md/knowledge/bigbim-governance/midp-guide.md\)` | MIDP structure, thời điểm nộp, TIDP vs MIDP |
+| `[bbp-lifecycle.md](https://example.com/bigbim-governance/bbp-lifecycle.md)` | BBP A0→C2, RIBA mapping, deliverables từng giai đoạn |
+| `[v-gates.md](https://example.com/bigbim-governance/v-gates.md)` | 7 Verification Gates — tiêu chí go/no-go, checklist |
+| `[cde-workflow.md](https://example.com/bigbim-governance/cde-workflow.md)` | CDE 4 states, naming convention, access control |
+| `[unique-id.md](https://example.com/bigbim-governance/unique-id.md)` | Sợi Chỉ Đỏ — UniqueID syntax, RK codes, 4 RKs |
+| `[midp-guide.md](https://example.com/bigbim-governance/midp-guide.md)` | MIDP structure, thời điểm nộp, TIDP vs MIDP |
 
 **KB Root:** `[bigbim_method_path]/.md/`  
 **Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`

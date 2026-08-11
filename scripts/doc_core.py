@@ -234,9 +234,22 @@ def search_codebase_for_symbol(symbol: str, search_dirs: list[Path]) -> bool:
         re.compile(r"\blet\s+" + re.escape(clean_sym) + r"\s*="),
     ]
 
-    for sdir in search_dirs:
-        if not sdir.exists():
+    # Filter search_dirs to avoid scanning subdirectories if a parent directory (e.g. Path(".")) is already present
+    unique_dirs = []
+    for d in search_dirs:
+        if not d.exists():
             continue
+        try:
+            d_resolved = d.resolve()
+            # If d is inside another directory in search_dirs, skip it
+            if any(other.exists() and d_resolved != other.resolve() and d_resolved.is_relative_to(other.resolve()) for other in search_dirs):
+                continue
+        except Exception:
+            pass
+        if d not in unique_dirs:
+            unique_dirs.append(d)
+
+    for sdir in unique_dirs:
         if sdir not in _CODEBASE_FILE_CACHE:
             files = []
             for ext in ["*.py", "*.js", "*.cjs", "*.ts", "*.go", "*.sh"]:
