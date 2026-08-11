@@ -13,7 +13,6 @@ from ._state import (
     HarnessState,
     _check_in_hook,
     _get_active_guards,
-    _original_sqlite3_connect,
     _Originals,
 )
 
@@ -200,11 +199,11 @@ class _Wrappedsqlite3Connection(_Originals.sqlite3_Connection):
 
 def _wrapped_sqlite3_connect(*args: Any, **kwargs: Any) -> Any:
     if _check_in_hook():
-        return _original_sqlite3_connect(*args, **kwargs)
+        return _Originals.sqlite3_connect(*args, **kwargs)
 
     guards = _get_active_guards()
     if not guards:
-        return _original_sqlite3_connect(*args, **kwargs)
+        return _Originals.sqlite3_connect(*args, **kwargs)
 
     HarnessState.local.__dict__["in_hook"] = _HOOK_TOKEN
     try:
@@ -218,6 +217,6 @@ def _wrapped_sqlite3_connect(*args: Any, **kwargs: Any) -> Any:
                 _check_db_path(db_str)
 
         kwargs["factory"] = _Wrappedsqlite3Connection
-        return _original_sqlite3_connect(*args, **kwargs)
+        return _Originals.sqlite3_connect(*args, **kwargs)
     finally:
         HarnessState.local.__dict__["in_hook"] = None

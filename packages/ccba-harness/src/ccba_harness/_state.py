@@ -56,24 +56,6 @@ for _name in dir(os):
             _Originals.os_funcs[_name] = _attr
 
 
-# Backward-compat aliases expected by existing test files
-_original_builtins_open = _Originals.builtins_open
-_original_io_open = _Originals.io_open
-_original_popen = _Originals.popen
-_original_thread_start = _Originals.thread_start
-_original_os_open = _Originals.os_open
-_original_os_rename = _Originals.os_rename
-_original_os_replace = _Originals.os_replace
-_original_io_FileIO = _Originals.io_FileIO
-_original_sqlite3_connect = _Originals.sqlite3_connect
-_original_os_link = _Originals.os_link
-_original_os_symlink = _Originals.os_symlink
-_original__io_open = _Originals._io_open
-_original__io_FileIO = _Originals._io_FileIO
-_original_sqlite3_Connection = _Originals.sqlite3_Connection
-_original_os_funcs = _Originals.os_funcs
-_original_thread_start_new_thread = _Originals.thread_start_new_thread
-_original_thread_start_new = _Originals.thread_start_new
 
 
 # ---------------------------------------------------------------------------

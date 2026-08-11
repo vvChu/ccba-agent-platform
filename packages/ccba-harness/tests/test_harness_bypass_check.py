@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ccba_harness._guard import HarnessGuard
+from ccba_harness import HarnessGuard
 
 
 def test_bypass_list_comp_shift(tmp_path: Path) -> None:

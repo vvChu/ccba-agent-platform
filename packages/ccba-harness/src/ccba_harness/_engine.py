@@ -81,23 +81,6 @@ from ._state import (
     _get_active_guards,
     _local,
     _lock,
-    _original__io_FileIO,
-    _original__io_open,
-    _original_builtins_open,
-    _original_io_FileIO,
-    _original_io_open,
-    _original_os_funcs,
-    _original_os_link,
-    _original_os_open,
-    _original_os_rename,
-    _original_os_replace,
-    _original_os_symlink,
-    _original_popen,
-    _original_sqlite3_connect,
-    _original_sqlite3_Connection,
-    _original_thread_start,
-    _original_thread_start_new,
-    _original_thread_start_new_thread,
     _Originals,
     _safe_limit_iter,
 )
@@ -267,36 +250,3 @@ class HarnessEngine:
         for name, orig in _Originals.os_funcs.items():
             setattr(os, name, orig)
         HarnessState.global_hooks_active = False
-
-
-# Dynamic attribute resolution for backward compatibility with direct module imports
-def __getattr__(name: str) -> Any:
-    if name == "_active_count":
-        return HarnessState.active_count
-    if name == "_active_subthreads_count":
-        return HarnessState.active_subthreads_count
-    if name == "_global_hooks_active":
-        return HarnessState.global_hooks_active
-    if name == "_global_active_guards":
-        return HarnessState.global_active_guards
-    if name == "_sensitive_inodes":
-        return HarnessState.sensitive_inodes
-    if name == "_path_resolution_cache":
-        return HarnessState.path_resolution_cache
-    if name == "_shared_temp_dir":
-        return HarnessState.shared_temp_dir
-    if name == "_shared_temp_dir_lock":
-        return HarnessState.shared_temp_dir_lock
-    if name == "_sensitivity_cache":
-        return HarnessState.sensitivity_cache
-    if name == "_abs_path_cache":
-        return HarnessState.abs_path_cache
-    if name == "_caller_code_cache":
-        return HarnessState.caller_code_cache
-    if name == "_active_guarded_threads":
-        return HarnessState.active_guarded_threads
-    if name == "_scanned_dirs":
-        return HarnessState.scanned_dirs
-    if name == "_audit_hook_registered":
-        return HarnessState.audit_hook_registered
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

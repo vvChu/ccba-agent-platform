@@ -8,7 +8,7 @@ import pytest
 pytestmark = [pytest.mark.stress, pytest.mark.adversarial]
 
 
-from ccba_harness._guard import HarnessGuard
+from ccba_harness import HarnessGuard
 
 
 def test_generator_expression_shift_bypass(tmp_path: Path) -> None:
