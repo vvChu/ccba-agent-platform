@@ -20,6 +20,32 @@ from typing import Any
 from scripts.eval.process_safety import ensure_single_instance, kill_process_tree
 
 
+def extract_summary_traceback(output: str, max_lines: int = 10) -> list[str]:
+    """Extracts summary error traceback lines from process output."""
+    lines = [line.rstrip() for line in output.splitlines() if line.strip()]
+    error_lines = [l for l in lines if "Error" in l or "FAILED" in l or "Traceback" in l or "FAIL" in l]
+    return error_lines[-max_lines:] if error_lines else lines[-max_lines:]
+
+
+def extract_failed_gate(output: str) -> str | None:
+    """Extracts failed gate name if present in output."""
+    for line in output.splitlines():
+        if "FAILED" in line or "FAILED" in line.upper():
+            return line.strip()
+    return None
+
+
+def extract_culprit_file(output: str) -> str | None:
+    """Extracts culprit test file name from output."""
+    for line in output.splitlines():
+        if ".py" in line and ("FAILED" in line or "Error" in line):
+            parts = line.split()
+            for part in parts:
+                if ".py" in part:
+                    return part.strip(":,")
+    return None
+
+
 def run_safe_wrapper(
     cmd: str,
     timeout_seconds: int = 90,
@@ -167,7 +193,7 @@ def main() -> None:
     parser.add_argument("--output-dir", help="Thư mục chứa file log và diagnostics.json.")
     args = parser.parse_args()
 
-    project_root = Path(__file__).parent.parent.resolve()
+    project_root = Path(__file__).parent.parent.parent.resolve()
     out_dir = (
         Path(args.output_dir).resolve()
         if args.output_dir
