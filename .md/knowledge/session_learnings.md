@@ -782,6 +782,21 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Giải pháp**: Áp dụng mô hình 2 tầng: Root CLI Entry-Points & Bridge Adapters (`scripts/*.py` ~7 dòng call `sys.exit(main())`) + Domain Implementation Subfolders (`scripts/eval/`, `scripts/legal/`, `scripts/spoke/`, `scripts/security/`, `scripts/validation/`). Đã tài liệu hóa chính thức tại `scripts/README.md`.
 - **Nguồn**: Session `a5991b1a-c8b1-4519-af84-3cce9e3d6b38`, 2026-08-11
 
+#### 79. Non-blocking Thread+Queue Subprocess I/O Streaming
+- **Ngữ cảnh**: Đọc stream stdout theo dòng từ subprocess với `readline()` gây ngâm blocking thread chính của Python khi chạy tác vụ nặng, khiến đo đạc timeout bị sai lệch và đơ hệ thống.
+- **Giải pháp**: Sinh background worker `threading.Thread` để đọc `stream.readline()` vào `queue.Queue`. Vòng lặp chính sử dụng `queue.get_nowait()` với `time.sleep(0.05)`, giúp luồng chính luôn nhả CPU, gửi nhịp tim `⏱️ [HEARTBEAT]` 10s mượt mà và ngắt timeout chính xác.
+- **Nguồn**: Session `2bd463ae-fee1-401f-b1e2-7f6d93b3833c`, 2026-08-12
+
+#### 80. Process-Detached Background Runner (`safe_pytest` & `safe_runner`)
+- **Ngữ cảnh**: Chạy các bài test nặng hoặc tác vụ dài (> 25 giây) đồng bộ trong lượt chat khiến Agent Host Watchdog dập hủy lượt (`User cancelled agent execution`).
+- **Giải pháp**: Sử dụng `safe_pytest.py` bọc `safe_runner.py` với cờ `CREATE_NO_WINDOW` trên Windows để khởi tạo tiến trình độc lập dưới OS. Parent command trả về PID và Status ID trong 0.1s, log ghi ngầm ra đĩa `.md/scratch/exec_log_<id>.txt`, vượt 100% rào chắn ngắt 25s.
+- **Nguồn**: Session `2bd463ae-fee1-401f-b1e2-7f6d93b3833c`, 2026-08-12
+
+#### 81. Targeted Unit Test Network Patching
+- **Ngữ cảnh**: Bài unit test ngầm gọi các SDK đám mây (boto3 AWS S3, Google Drive API) bị ngâm 20 giây chờ timeout socket kết nối tới IP `169.254.169.254` (AWS IMDS).
+- **Giải pháp**: Phải patch/mock các hàm kết nối mạng Tier-2 (`_check_aws_s3`, `_check_google_drive`) ngay trong fixture của unit test bằng `unittest.mock.patch` để bài test chạy hoàn tất trong 0.01 giây thay vì 20 giây.
+- **Nguồn**: Session `2bd463ae-fee1-401f-b1e2-7f6d93b3833c`, 2026-08-12
+
 ---
 
 ### Anti-patterns (Cách tránh)
@@ -797,6 +812,14 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 #### 51. Merging High-level Orchestration Workflows into Low-level Transport Clients
 - **Vấn đề**: Nhồi các workflow 100-200 dòng (quản lý state, retry loop, cache, post-processing) vào transport client class đơn thuần (`CCBANotebookLMClient`). Gây phình to class 363→900 dòng, trộn lẫn 2 trách nhiệm transport và orchestration.
 - **Thay thế bằng**: Giữ tách biệt 2 tầng: `_client.py` (transport seam) và `_artifacts.py` (orchestration), chỉ phân tầng bề mặt export trong `__init__.py`.
+
+#### 52. Synchronous Long-running Test Execution in Chat Turns
+- **Vấn đề**: Gọi `pytest` trực tiếp trên 90+ test files trong lượt chat đồng bộ làm ngâm lượt > 25s, kích hoạt Watchdog Host dập ngắt tiến trình.
+- **Thay thế bằng**: Tách kiến trúc 2 tầng (Fast suite `< 2s` vs Slow suite `--stress` qua `safe_pytest` background task hoặc Nightly CI).
+
+#### 53. Windows `DETACHED_PROCESS` File Handle Suppression
+- **Vấn đề**: Truyền cờ `subprocess.DETACHED_PROCESS` trên Windows khiến OS tự động ép stdout/stderr = `NULL`, làm tệp log background hoàn toàn rỗng.
+- **Thay thế bằng**: Sử dụng `CREATE_NO_WINDOW` (`0x08000000`) thay cho `DETACHED_PROCESS` để ẩn cửa sổ console mà vẫn giữ nguyên đường ống ghi file log Win32.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
