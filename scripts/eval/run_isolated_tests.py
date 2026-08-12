@@ -8,9 +8,11 @@ import argparse
 import subprocess
 import sys
 import time
+import queue
+import threading
 from pathlib import Path
 
-from scripts.eval.process_safety import get_venv_python
+from scripts.eval.process_safety import get_venv_python, kill_process_tree
 
 AVAILABLE_PACKAGES = [
     "ccba-ai",
@@ -24,17 +26,31 @@ AVAILABLE_PACKAGES = [
 ]
 
 
+def _enqueue_output(stream, q: queue.Queue[str]) -> None:
+    try:
+        for l in iter(stream.readline, ""):
+            q.put(l)
+    except Exception:
+        pass
+    finally:
+        try:
+            stream.close()
+        except Exception:
+            pass
+
+
 def run_isolated_test(
     target_path: Path, project_root: Path, include_stress: bool = False, timeout_sec: int = 60
 ) -> bool:
-    """Chạy pytest trên một đường dẫn cụ thể với rào chắn timeout."""
-    python_exe = get_venv_python(project_root)
-    cmd = [python_exe, "-m", "pytest", str(target_path), "-v", "--tb=short"]
+    """Chạy lệnh pytest trong subprocess cô lập với timeout giám sát."""
+    pytest_cmd = [str(target_path), "-v", "--tb=short"]
     if not include_stress:
-        cmd += ["-m", "not stress and not slow"]
+        pytest_cmd += ["-m", "not stress and not slow"]
 
+    cmd = [get_venv_python(project_root), "-m", "pytest"] + pytest_cmd
     print(f"🎯 Kích hoạt kiểm thử cô lập trên: {target_path}")
     print(f"⚙️ Command: {' '.join(cmd)}")
+
     start_time = time.time()
 
     try:
@@ -49,14 +65,37 @@ def run_isolated_test(
             bufsize=1,
         )
 
+        out_queue: queue.Queue[str] = queue.Queue()
+        if proc.stdout:
+            t = threading.Thread(
+                target=_enqueue_output, args=(proc.stdout, out_queue), daemon=True
+            )
+            t.start()
+
         full_output: list[str] = []
         while True:
-            line = proc.stdout.readline() if proc.stdout else ""
+            try:
+                line = out_queue.get_nowait()
+            except queue.Empty:
+                line = ""
+
             if line:
                 sys.stdout.write(line)
                 sys.stdout.flush()
                 full_output.append(line)
-            if not line and proc.poll() is not None:
+            else:
+                time.sleep(0.05)
+
+            elapsed = time.time() - start_time
+            if elapsed > timeout_sec and proc.poll() is None:
+                kill_process_tree(proc.pid)
+                proc.wait()
+                print(
+                    f"\n⚠️ [TIMEOUT ERROR] Lượt kiểm thử bị ngắt sau {elapsed:.2f}s (Giới hạn: {timeout_sec}s)."
+                )
+                return False
+
+            if not line and proc.poll() is not None and out_queue.empty():
                 break
 
         retcode = proc.poll() or 0
