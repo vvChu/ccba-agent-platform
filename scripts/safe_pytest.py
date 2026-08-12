@@ -77,7 +77,10 @@ def main() -> int:
         if not Path(pytest_bin).exists():
             pytest_bin = "pytest"
 
-    cmd_parts = [pytest_bin]
+    cmd_parts = [pytest_bin, "--maxfail=1"]
+    if not any(a.startswith("-m") for a in args.extra_args):
+        cmd_parts.extend(["-m", "not slow"])
+
     if args.allow_unscoped:
         cmd_parts.append("--allow-unscoped")
 

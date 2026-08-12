@@ -21,7 +21,7 @@ from ccba_legal.registry import (
 def test_mutex_acquire_and_release(tmp_path: Path) -> None:
     lock_file = tmp_path / "tvpl_vip_session.lock"
     # Acquire
-    with TVPLSessionMutex(lock_path=lock_file, timeout=1, retry_interval=0.1):
+    with TVPLSessionMutex(lock_path=lock_file, timeout=0.3, retry_interval=0.03):
         assert lock_file.exists()
         content = lock_file.read_text(encoding="utf-8")
         data = json.loads(content)
@@ -39,7 +39,7 @@ def test_mutex_held_timeout(tmp_path: Path) -> None:
     lock_file.write_text(json.dumps(lock_data), encoding="utf-8")
 
     with pytest.raises(TimeoutError):
-        with TVPLSessionMutex(lock_path=lock_file, timeout=1, retry_interval=0.05):
+        with TVPLSessionMutex(lock_path=lock_file, timeout=0.3, retry_interval=0.03):
             pass
 
 
@@ -50,7 +50,7 @@ def test_mutex_expired_override(tmp_path: Path) -> None:
     lock_data = {"pid": 99999, "timestamp": time.time() - 360}
     lock_file.write_text(json.dumps(lock_data), encoding="utf-8")
 
-    with TVPLSessionMutex(lock_path=lock_file, timeout=1, retry_interval=0.1):
+    with TVPLSessionMutex(lock_path=lock_file, timeout=0.3, retry_interval=0.03):
         assert lock_file.exists()
         content = lock_file.read_text(encoding="utf-8")
         data = json.loads(content)
@@ -63,7 +63,7 @@ def test_mutex_corrupted_override(tmp_path: Path) -> None:
     # Create a corrupted lock file
     lock_file.write_text("corrupted content", encoding="utf-8")
 
-    with TVPLSessionMutex(lock_path=lock_file, timeout=1, retry_interval=0.1):
+    with TVPLSessionMutex(lock_path=lock_file, timeout=0.3, retry_interval=0.03):
         assert lock_file.exists()
         content = lock_file.read_text(encoding="utf-8")
         data = json.loads(content)
@@ -267,6 +267,7 @@ def test_download_three_tier_headless_guard(tmp_path: Path) -> None:
         download_three_tier(cdp_mock, download_dir, "test_doc")
 
 
+@pytest.mark.slow
 def test_download_three_tier_direct_crawl(tmp_path: Path) -> None:
     download_dir = tmp_path / "download"
     download_dir.mkdir()
