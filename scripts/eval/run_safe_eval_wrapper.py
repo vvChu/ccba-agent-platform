@@ -46,6 +46,23 @@ def extract_culprit_file(output: str) -> str | None:
     return None
 
 
+import queue
+import threading
+
+
+def enqueue_output(stream: Any, q: queue.Queue[str]) -> None:
+    try:
+        for l in iter(stream.readline, ""):
+            q.put(l)
+    except Exception:
+        pass
+    finally:
+        try:
+            stream.close()
+        except Exception:
+            pass
+
+
 def run_safe_wrapper(
     cmd: str,
     timeout_seconds: int = 90,
@@ -94,16 +111,29 @@ def run_safe_wrapper(
             bufsize=1,
         )
 
+        out_queue: queue.Queue[str] = queue.Queue()
+        if proc.stdout:
+            t = threading.Thread(
+                target=enqueue_output, args=(proc.stdout, out_queue), daemon=True
+            )
+            t.start()
+
         full_output_chunks: list[str] = []
         last_heartbeat = start_time
 
         while True:
-            line = proc.stdout.readline() if proc.stdout else ""
+            try:
+                line = out_queue.get_nowait()
+            except queue.Empty:
+                line = ""
+
             if line:
                 log_f.write(line)
                 log_f.flush()
                 full_output_chunks.append(line)
-            
+            else:
+                time.sleep(0.05)
+
             elapsed = time.time() - start_time
             if elapsed > timeout_seconds and proc.poll() is None:
                 kill_process_tree(proc.pid)
@@ -122,7 +152,7 @@ def run_safe_wrapper(
                 log_f.flush()
                 last_heartbeat = time.time()
 
-            if not line and proc.poll() is not None:
+            if not line and proc.poll() is not None and out_queue.empty():
                 result["returncode"] = proc.poll() or 0
                 break
 
