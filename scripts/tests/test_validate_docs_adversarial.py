@@ -7,7 +7,7 @@ import pytest
 pytestmark = [pytest.mark.slow, pytest.mark.adversarial]
 
 
-from scripts.validate_docs import (
+from scripts.doc_auditor import (
     scan_orphan_files,
     validate_markdown_file,
 )

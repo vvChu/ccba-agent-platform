@@ -187,7 +187,7 @@ def test_validate_docs_linter_logic(tmp_path: Path) -> None:
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
-    import validate_docs  # type: ignore[import-not-found]
+    import doc_auditor as validate_docs  # type: ignore[import-not-found]
 
     # Case 1: Malformed frontmatter
     # Must place it under a "legal_docs" folder structure to make is_okf True
