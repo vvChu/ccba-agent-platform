@@ -1,0 +1,46 @@
+# Nightly CI Pipeline for Heavy & Slow Integration Tests
+name: Nightly Slow Tests
+
+on:
+  schedule:
+    # Trigger at 02:00 UTC (09:00 AM ICT) every night
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    # Allow manual trigger from GitHub Actions UI
+
+jobs:
+  nightly-slow-tests:
+    name: Run Slow Integration & Stress Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install packages and dev tools
+        run: |
+          uv pip install ruff mypy pytest pytest-timeout pytest-cov pyyaml requests pydantic pydantic-settings psutil --system
+          uv pip install -e "packages/ccba-harness" --system
+          uv pip install -e "packages/ccba-ai[dev]" --system
+          uv pip install -e "packages/ccba-legal-intel[dev]" --system
+          uv pip install -e "packages/ccba-notebooklm[dev]" --system
+          uv pip install -e "packages/ccba-ooxml[dev]" --system
+          uv pip install -e "packages/ccba-pdf-prep[dev]" --system
+          uv pip install -e "packages/mdconverter[dev]" --system
+
+      - name: Run Slow & Stress Tests for ccba-legal-intel
+        run: python scripts/run_isolated_tests.py -p ccba-legal-intel --stress
+
+      - name: Run Slow & Stress Tests for ccba-harness
+        run: python scripts/run_isolated_tests.py -p ccba-harness --stress
+
+      - name: Run Test Speed Guard Compliance Audit
+        run: python scripts/hooks/test_speed_guard.py
