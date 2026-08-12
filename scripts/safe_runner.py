@@ -71,29 +71,19 @@ def run_detached(command: str) -> None:
 
     _write_status(status_file, status_data)
 
-    log_file_handle = open(log_file, "w", encoding="utf-8")
+    log_file_handle = open(log_file, "a", encoding="utf-8")
     try:
-        log_file_handle.write("=== Starting Detached Execution ===\n")
-        log_file_handle.write(f"Command: {command}\n")
-        log_file_handle.write(f"Timestamp: {status_data['start_time']}\n")
-        log_file_handle.write("=" * 35 + "\n\n")
+        log_file_handle.write(f"=== Starting Detached Execution ===\nCommand: {command}\nTimestamp: {status_data['start_time']}\n" + "=" * 35 + "\n\n")
         log_file_handle.flush()
 
-        try:
-            cmd_args = shlex.split(command, posix=not sys.platform.startswith("win"))
-        except ValueError as e:
-            raise ValueError(f"Command parsing failed: {e}") from e
+        cmd_args = shlex.split(command, posix=not sys.platform.startswith("win"))
+        cmd_args = [arg.strip("\"'") for arg in cmd_args]
 
         creationflags = 0
-        start_new_session = False
         if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP"):
             creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
-            if hasattr(subprocess, "DETACHED_PROCESS"):
-                creationflags |= subprocess.DETACHED_PROCESS
             if hasattr(subprocess, "CREATE_NO_WINDOW"):
                 creationflags |= subprocess.CREATE_NO_WINDOW
-        else:
-            start_new_session = True
 
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
@@ -104,7 +94,6 @@ def run_detached(command: str) -> None:
                 stdout=log_file_handle,
                 stderr=subprocess.STDOUT,
                 creationflags=creationflags,
-                start_new_session=start_new_session,
                 env=env,
             )
         except (FileNotFoundError, OSError) as e:
@@ -117,13 +106,20 @@ def run_detached(command: str) -> None:
         print(f"[SafeRunner] Log file: {log_file}")
         print(f"[SafeRunner] Status ID: {run_id}")
 
+        # Wait for child process to complete and flush logs
+        retcode = process.wait()
+        log_file_handle.flush()
+        log_file_handle.close()
+
+        status_data["status"] = "completed" if retcode == 0 else "failed"
+        status_data["return_code"] = retcode
+        _write_status(status_file, status_data)
+
     except Exception as e:
         status_data["status"] = "failed"
         status_data["error"] = str(e)
         _write_status(status_file, status_data)
         print(f"[SafeRunner] Execution failed: {e}")
-    finally:
-        log_file_handle.close()
 
 
 def check_status(status_id: str | None = None) -> None:

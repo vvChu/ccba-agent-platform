@@ -282,6 +282,9 @@ def test_download_three_tier_direct_crawl(tmp_path: Path) -> None:
     with (
         patch("ccba_legal.crawler.trigger_download", side_effect=mock_trigger),
         patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
+        patch("ccba_legal.crawler._check_shared_drive", return_value=False),
+        patch("ccba_legal.crawler._check_google_drive", return_value=False),
+        patch("ccba_legal.crawler._check_aws_s3", return_value=False),
     ):
         assert download_three_tier(cdp_mock, download_dir, "test_doc") is True
 
