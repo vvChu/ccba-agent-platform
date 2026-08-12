@@ -135,5 +135,11 @@ Chuỗi định danh mô hình ảo (`ocr-primary`, `ocr-fallback`, `rag-core`, 
 Chiến lược chạy từng file kiểm thử độc lập trong một sub-process Python cô lập kèm giới hạn thời gian (timeout 5s) và khóa đơn tiến trình (`ensure_single_instance()`). Mô thức này ngăn chặn triệt me hiện tượng rò rỉ tiến trình, treo CPU hoặc đứt gãy phiên làm việc của AI Agent (`User Cancelled Agent Execution`) do các bộ kiểm thử lớn gây ra.
 _Avoid_: Test chung, pytest unscoped, full test run
 
+**Chính sách 2 Tầng Kiểm thử (2-Tier Testing Policy)**:
+Mô hình phân tầng kiểm thử bắt buộc: Fast Unit Tests (Layer 1, runtime < 2.0s, chạy hàng ngày qua cờ `-m "not slow"`) và Slow Integration Tests (Layer 2, giả lập cào mạng/CDP/file IO lớn, bắt buộc gắn decorator `@pytest.mark.slow` hoặc `@pytest.mark.stress`).
+
+**Test Speed Guard**:
+Công cụ Linter & Pre-commit hook tại `scripts/hooks/test_speed_guard.py` tự động đo thời gian thực thi của tệp test và phát cảnh báo/chặn commit nếu một tệp test chạy > 2.0s mà không được dán nhãn `@pytest.mark.slow`.
+
 
 

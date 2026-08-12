@@ -52,19 +52,34 @@ def run_safe_wrapper(
     }
 
     try:
-        with tempfile.TemporaryFile() as tmp_out:
-            proc = subprocess.Popen(
-                cmd,
-                shell=True,
-                cwd=cwd,
-                stdout=tmp_out,
-                stderr=subprocess.STDOUT,
-            )
+        log_f = open(log_file, "w", encoding="utf-8", buffering=1)
+        log_f.write(f"=== Command: {cmd} ===\n")
+        log_f.write(f"=== Started: {timestamp} ===\n\n")
 
-            try:
-                retcode = proc.wait(timeout=timeout_seconds)
-                result["returncode"] = retcode
-            except subprocess.TimeoutExpired:
+        proc = subprocess.Popen(
+            cmd,
+            shell=True,
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="ignore",
+            bufsize=1,
+        )
+
+        full_output_chunks: list[str] = []
+        last_heartbeat = start_time
+
+        while True:
+            line = proc.stdout.readline() if proc.stdout else ""
+            if line:
+                log_f.write(line)
+                log_f.flush()
+                full_output_chunks.append(line)
+            
+            elapsed = time.time() - start_time
+            if elapsed > timeout_seconds and proc.poll() is None:
                 kill_process_tree(proc.pid)
                 proc.wait()
                 result["status"] = "TIMEOUT"
@@ -73,16 +88,28 @@ def run_safe_wrapper(
                 result["summary_traceback"] = [
                     f"⚠️ Lỗi: Lệnh '{cmd}' đã vượt quá thời gian thực thi tối đa ({timeout_seconds}s) và bị ngắt chủ động."
                 ]
+                break
 
-            tmp_out.seek(0)
-            full_output = tmp_out.read().decode("utf-8", errors="ignore")
+            if time.time() - last_heartbeat >= 10.0 and proc.poll() is None:
+                hb_msg = f"⏱️ [HEARTBEAT] Command running... Elapsed: {round(elapsed, 1)}s / {timeout_seconds}s\n"
+                log_f.write(hb_msg)
+                log_f.flush()
+                last_heartbeat = time.time()
 
-        # Ghi log ra file cô lập
-        with open(log_file, "w", encoding="utf-8") as f:
-            f.write(f"=== Command: {cmd} ===\n")
-            f.write(f"=== Started: {timestamp} ===\n\n")
-            f.write(full_output)
+            if not line and proc.poll() is not None:
+                result["returncode"] = proc.poll() or 0
+                break
 
+        # Read any remaining output after process exit
+        if proc.stdout:
+            remaining = proc.stdout.read()
+            if remaining:
+                log_f.write(remaining)
+                log_f.flush()
+                full_output_chunks.append(remaining)
+
+        log_f.close()
+        full_output = "".join(full_output_chunks)
         result["elapsed_seconds"] = round(time.time() - start_time, 2)
 
         if result["status"] == "UNKNOWN":

@@ -19,6 +19,11 @@ def ensure_single_instance(script_keyword: str) -> None:
     CRITICAL INVARIANT: Bắt buộc loại trừ cả os.getpid() (tiến trình hiện tại)
     và os.getppid() (tiến trình cha/Agent host) để không làm sập Agent Server.
     """
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(line_buffering=True)
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(line_buffering=True)
+
     current_pid = os.getpid()
     parent_pid = getattr(os, "getppid", lambda: None)()
 

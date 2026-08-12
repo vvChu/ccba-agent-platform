@@ -62,6 +62,7 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
 * **Safe Process Termination Invariant:** Khi viết bất kỳ script nào có chức năng dọn dẹp hoặc duy trì đơn tiến trình (Singleton Process Lock / `ensure_single_instance()`), Agent **bắt buộc phải loại trừ** cả tiến trình hiện tại (`os.getpid()`) và tiến trình cha (`os.getppid()`). Nghiêm cấm kích hoạt `taskkill` hoặc `proc.terminate()` lên `os.getppid()` để tránh làm sập Agent Server Host.
 * **Task Log Readiness Check:** Nghiêm cấm Agent gọi `view_file` tới tệp `task-XXX.log` lập tức ngay sau lượt `run_command` async mà không kiểm tra xem tệp tin log đã thực sự được hệ thống tạo và ghi dữ liệu lên ổ đĩa hay chưa. Phải dùng `command_status` hoặc chờ thông báo hoàn tất từ hệ thống trước khi đọc log.
 * **Invalid Args Circuit Breaker:** Khi Agent gặp lỗi `model output error: invalid tool call error (invalid_args)` từ **2 lần liên tiếp trở lên**, đây là tín hiệu context budget sắp cạn kiệt. Agent phải **dừng ngay lập tức**, commit WIP nếu có thay đổi chưa lưu, tóm tắt trạng thái công việc hiện tại, và thông báo cho người dùng mở phiên mới để tiếp tục — không được cố gắng chạy thêm bất kỳ tool call nào.
+* **2-Tier Test Speed Compliance:** Mọi tệp kiểm thử đơn vị (Unit Test) mới viết bắt buộc phải chạy dưới 2.0 giây (`test_speed_guard.py`). Các tệp test tích hợp mạng/CDP nặng phải được dán decorator `@pytest.mark.slow` hoặc `@pytest.mark.stress` để tự động loại trừ khỏi vòng lặp kiểm thử nhanh hàng ngày (`-m "not slow"`).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

@@ -22,6 +22,12 @@ During test execution across large package suites (such as `ccba-legal-intel` wi
    - **Layer 2 (pytest-timeout):** Individual test functions are governed by `pytest-timeout` configured in each package's `pyproject.toml` (e.g., `timeout = 30` for `ccba-legal-intel`).
    - Layer 1 timeout MUST always be greater than Layer 2 to avoid conflicts. Layer 2 handles individual slow tests gracefully; Layer 1 is the hard backstop against full process hangs.
 
+4. **2-Tier Testing & Speed Guard Policy**:
+   - **Tier 1 (Fast Unit Tests):** Execution duration MUST be < 2.0s per file. Executed in daily workflow via `-m 'not slow'`.
+   - **Tier 2 (Slow Integration Tests):** Heavy network, CDP, or large file I/O tests MUST be decorated with `@pytest.mark.slow` or `@pytest.mark.stress`.
+   - **Automated Speed Guard:** `scripts/hooks/test_speed_guard.py` automatically detects and warns if any test file takes > 2.0s without the `@pytest.mark.slow` decorator.
+   - **No Over-Mocking:** Monolithic codebase-wide refactoring to replace integration tests with in-memory mocks is prohibited when Tier 1 fast execution (< 5s total) is already achieved.
+
 ## Consequences
 - Completely eliminates Agent session freezes caused by deadlocked or slow test execution.
 - Centralizes test infrastructure in `scripts/eval/` following the 2-tier architecture, avoiding duplicate scripts in `.md/scripts/`.
