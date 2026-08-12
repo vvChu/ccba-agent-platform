@@ -1,26 +1,28 @@
 # 26. Isolated Test Execution and Timeout Policy for Agent Stability
 
 Date: 2026-08-11
-Status: Approved
+Status: Approved (Revised 2026-08-12)
 
 ## Context
-During test execution across large package suites (such as `ccba-legal-intel`), running unscoped or monolithic test commands (`pytest`) frequently led to sub-process hangs, CPU locks, or inter-test state leakage. This caused external timeout cancellations (`User Cancelled Agent Execution`), disrupting agent sessions and requiring manual task restarts.
+During test execution across large package suites (such as `ccba-legal-intel` with 22 test files), running unscoped or monolithic test commands (`pytest`) frequently led to sub-process hangs, CPU locks, or inter-test state leakage. This caused external timeout cancellations (`User Cancelled Agent Execution`), disrupting agent sessions and requiring manual task restarts.
 
 ## Decisions
 
 1. **Isolated Sub-process Execution**:
-   - Test suites MUST be executed per test file in isolated Python sub-processes (`python .md/scripts/run_isolated_tests.py`).
+   - Test suites MUST be executed via the centralized runner: `python scripts/run_isolated_tests.py -p <package-name>` (located at `scripts/eval/run_isolated_tests.py`).
    - Monolithic unscoped pytest invocations across multi-package repos are strictly prohibited in automated workflows.
 
-2. **Singleton Process Lock (`ensure_single_instance()`)**:
-   - The isolated test runner MUST enforce a singleton process lock to prevent concurrent runner invocations.
+2. **Process Safety via Centralized Utilities**:
+   - All test runner scripts MUST use utilities from `scripts.eval.process_safety` (`ensure_single_instance`, `kill_process_tree`, `get_venv_python`) as mandated by `scripts/README.md`.
    - Process cleanup routines MUST explicitly preserve both current process (`os.getpid()`) and parent host process (`os.getppid()`).
+   - Scripts MUST NOT re-implement singleton locks via file-based mechanisms; use the `psutil`-based `ensure_single_instance()` which verifies process liveness.
 
-3. **Per-File Timeout & Suite Non-Blocking Policy**:
-   - Each test file receives a strict 5-second execution deadline (`timeout=5`).
-   - If a test file times out, the runner kills the isolated sub-process, logs `TIMEOUT` for that specific file, and continues scanning all remaining test files to provide a complete benchmark report (`.md/wayfinder/test_benchmark_report.md`).
+3. **Dual-Layer Timeout Policy**:
+   - **Layer 1 (subprocess):** The runner enforces a configurable subprocess timeout (default `--timeout 60`) that kills the entire pytest sub-process if it exceeds the deadline.
+   - **Layer 2 (pytest-timeout):** Individual test functions are governed by `pytest-timeout` configured in each package's `pyproject.toml` (e.g., `timeout = 30` for `ccba-legal-intel`).
+   - Layer 1 timeout MUST always be greater than Layer 2 to avoid conflicts. Layer 2 handles individual slow tests gracefully; Layer 1 is the hard backstop against full process hangs.
 
 ## Consequences
 - Completely eliminates Agent session freezes caused by deadlocked or slow test execution.
-- Enables clear, actionable benchmark reports pinpointing exact failing or timing out test files.
+- Centralizes test infrastructure in `scripts/eval/` following the 2-tier architecture, avoiding duplicate scripts in `.md/scripts/`.
 - Protects Agent Server host stability and resource utilization.
