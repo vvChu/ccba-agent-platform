@@ -38,22 +38,30 @@ def run_isolated_test(
     start_time = time.time()
 
     try:
-        res = subprocess.run(
+        proc = subprocess.Popen(
             cmd,
             cwd=project_root,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
             encoding="utf-8",
             errors="ignore",
-            timeout=timeout_sec,
+            bufsize=1,
         )
-        elapsed = time.time() - start_time
-        success = res.returncode == 0
 
-        print(res.stdout)
-        if not success and res.stderr:
-            print("\n--- STDERR ---")
-            print(res.stderr)
+        full_output: list[str] = []
+        while True:
+            line = proc.stdout.readline() if proc.stdout else ""
+            if line:
+                sys.stdout.write(line)
+                sys.stdout.flush()
+                full_output.append(line)
+            if not line and proc.poll() is not None:
+                break
+
+        retcode = proc.poll() or 0
+        elapsed = time.time() - start_time
+        success = retcode == 0
 
         status_icon = "✅ PASS" if success else "❌ FAILED"
         print("\n==================================================")
