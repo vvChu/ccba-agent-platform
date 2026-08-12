@@ -71,14 +71,19 @@ def main() -> int:
             print(f"[SafePytest] Auto-detected modified test files: {', '.join(targets)}")
 
     python_exec = sys.executable
-    pytest_bin = str(Path(python_exec).parent / "pytest.exe")
-    if not Path(pytest_bin).exists():
-        pytest_bin = str(Path(python_exec).parent / "pytest")
-        if not Path(pytest_bin).exists():
-            pytest_bin = "pytest"
+    cmd_parts = [python_exec, "-m", "pytest", "--maxfail=1"]
 
-    cmd_parts = [pytest_bin, "--maxfail=1"]
-    if not any(a.startswith("-m") for a in args.extra_args):
+    target_has_slow = False
+    for t in targets:
+        try:
+            p = Path(t)
+            if p.exists() and ("pytest.mark.slow" in p.read_text(encoding="utf-8", errors="ignore")):
+                target_has_slow = True
+                break
+        except Exception:
+            pass
+
+    if not any(a.startswith("-m") for a in args.extra_args) and not target_has_slow:
         cmd_parts.extend(["-m", "not slow"])
 
     if args.allow_unscoped:
@@ -87,10 +92,12 @@ def main() -> int:
     if targets:
         cmd_parts.extend(targets)
 
-    if args.extra_args:
-        cmd_parts.extend(args.extra_args)
+    def safe_quote(arg: str) -> str:
+        if sys.platform.startswith("win"):
+            return f'"{arg}"' if (" " in arg or "\t" in arg) else arg
+        return shlex.quote(arg)
 
-    cmd_str = " ".join(shlex.quote(p) for p in cmd_parts)
+    cmd_str = " ".join(safe_quote(p) for p in cmd_parts)
     safe_runner_script = Path(__file__).parent / "safe_runner.py"
 
     full_runner_cmd = f'"{python_exec}" "{safe_runner_script}" --command "{cmd_str}"'
