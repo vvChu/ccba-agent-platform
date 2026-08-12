@@ -1,5 +1,5 @@
 project:
-  name: "ccba-agent-platform"
-  type: "Phần mềm"
-  mode: "hybrid"
+  mode: hybrid
+  name: ccba-agent-platform
   notebook_id: nb-mock-3
+  type: Phần mềm
