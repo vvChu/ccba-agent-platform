@@ -78,7 +78,7 @@ def main() -> None:
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8")
 
-    project_root = Path(__file__).parent.parent.resolve()
+    project_root = Path(__file__).resolve().parent.parent.parent
 
     parser = argparse.ArgumentParser(description="CCBA Isolated Test Helper.")
     parser.add_argument(
