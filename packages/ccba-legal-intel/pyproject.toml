@@ -39,5 +39,10 @@ ccba-notebooklm = { workspace = true }
 
 [tool.pytest.ini_options]
 timeout = 30
+markers = [
+    "slow: Marks tests as slow-running",
+    "adversarial: Marks tests as adversarial/stress tests",
+]
+
 
 
