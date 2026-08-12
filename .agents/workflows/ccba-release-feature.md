@@ -9,6 +9,15 @@ bundle: "_software"
 
 Quy trình tự động hóa tích hợp mã nguồn (merge) và dọn dẹp môi trường.
 
+## Bước 0: Thực thi Kiểm thử Toàn diện Slow Integration Tests (Pre-release Gate)
+
+*Quy tắc bắt buộc:* Trước khi thực hiện merge PR, Agent **bắt buộc phải chạy kiểm thử toàn bộ tập test `slow` và `stress`** để đảm bảo các bài test cào mạng/tích hợp không bị hỏng ngầm (test decay):
+```bash
+python scripts/run_isolated_tests.py -p ccba-legal-intel --stress
+python scripts/run_isolated_tests.py -p ccba-harness --stress
+```
+- Nếu có bài test `slow` nào thất bại, Agent **phải dừng quy trình release ngay lập tức** để tiến hành sửa lỗi trước khi tiếp tục.
+
 ## Bước 1: Đối soát bình luận và Merge PR trên GitHub
 
 1. Lấy và ghi nhớ tên branch hiện hành (Feature Branch Name) trước khi thực hiện dọn dẹp:
