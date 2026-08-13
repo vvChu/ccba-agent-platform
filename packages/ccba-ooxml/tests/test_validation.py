@@ -43,3 +43,11 @@ def test_ooxml_validator_docx():
         # Test validation runs without exceptions
         result = validator.validate()
         assert isinstance(result, bool)
+
+        # Test structured report validation
+        report = validator.validate_report()
+        assert hasattr(report, "is_valid")
+        assert hasattr(report, "issues")
+        assert hasattr(report, "validators_run")
+        assert "DOCXSchemaValidator" in report.validators_run
+
