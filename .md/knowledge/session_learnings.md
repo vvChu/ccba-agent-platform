@@ -852,6 +852,59 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Thay thế bằng**: Luôn kiểm tra `if src.resolve() != dest.resolve():` trước khi thực hiện các thao tác xóa/sao chép đè tệp tin.
 
 ---
+
+## Session Learnings — Deep Modules Delivery & CI Cross-Platform Hardening (2026-08-13)
+- **ID Phiên làm việc**: `19ce4564-e0d6-4eb5-a6bb-ff44ad93ddae`
+
+### Patterns (Mẫu tốt)
+
+#### 85. Module-Level Stream Rewrapping Exclusion Invariant
+- **Ngữ cảnh**: Cần reconfigure mã hóa UTF-8 cho `sys.stdout`/`sys.stderr` trong các script CLI Python trên Windows.
+- **Giải pháp**: Không gọi `sys.stdout = io.TextIOWrapper(...)` hay `sys.stdout.reconfigure(...)` ở top-level module scope khi import. Làm vậy sẽ làm hỏng đối tượng capture buffer của Pytest (`SysCapture`/`FDCapture`) tại thời điểm `importlib`, sinh ra lỗi `ValueError: I/O operation on closed file.`. Luôn bọc các lệnh reconfigure stream an toàn bên trong hàm `main()` hoặc entrypoint function.
+- **Nguồn**: Session `19ce4564-e0d6-4eb5-a6bb-ff44ad93ddae`, 2026-08-13
+
+#### 86. Project Root Prepend for Subprocess Python Executables on Linux CI
+- **Ngữ cảnh**: Chạy các script wrapper trong `scripts/` (như `run_harness_evals.py` hay `run_isolated_tests.py`) từ root repository trên môi trường Linux CI runner của GitHub Actions.
+- **Giải pháp**: Mặc định trên Linux `sys.path[0]` sẽ là thư mục chứa script (`scripts/`), gây ra lỗi `ModuleNotFoundError: No module named 'scripts'` khi import các submodule. Luôn chủ động gắn `project_root` vào vị trí đầu tiên của `sys.path` (`sys.path.insert(0, str(project_root))`) ở đầu các script entrypoints.
+- **Nguồn**: Session `19ce4564-e0d6-4eb5-a6bb-ff44ad93ddae`, 2026-08-13
+
+#### 87. Cross-Platform OS Process Check Abstraction in Unit Tests
+- **Ngữ cảnh**: Kiểm thử logic kiểm tra PID tiến trình đang chạy (`check_status`) hoạt động trên cả Windows và Linux CI runners.
+- **Giải pháp**: Không mock trực tiếp `ctypes.windll` trong unit tests vì thuộc tính `windll` không tồn tại trên Linux OS làm crash test suite với `AttributeError`. Hãy mock `os.kill` kết hợp `with patch("sys.platform", "linux")` hoặc patch ở mức abstraction cao hơn (`_is_pid_running`) để đảm bảo test cases chạy mượt trên mọi hệ điều hành.
+- **Nguồn**: Session `19ce4564-e0d6-4eb5-a6bb-ff44ad93ddae`, 2026-08-13
+
+#### 88. Synchronous Execution Guard for Eval Runner CI Gates
+- **Ngữ cảnh**: Kích hoạt kiểm thử Pytest trong CI Gates tự động (`ccba-eval`).
+- **Giải pháp**: Tránh gọi các detached background runners (như `safe_pytest.py`) trong các bước kiểm định đồng bộ của CI Gates, vì runner thoát ngay lập tức khiến CI runner báo sai kết quả hoặc kết thúc trước khi test chạy xong. Thực thi `pytest` đồng bộ qua `run_command` với timeout watchdog để thu thập chính xác exit code và log output vào báo cáo CI.
+#### 89. Double-Pass Adversarial Review for Codebase Proposals
+- **Ngữ cảnh**: Xây dựng kế hoạch cải tiến kiến trúc codebase (Deep Modules).
+- **Giải pháp**: Luôn thực hiện 2 vòng rà soát trước khi xuất bản bản kế hoạch: Vòng 1 (Code-First) đọc trực tiếp triển khai thực tế để phát hiện các module/pipeline đã tồn tại (tránh lặp abstraction); Vòng 2 (Self-Adversarial) phản biện ít nhất 3 giả định cốt lõi và cập nhật lại bản kế hoạch chính xác theo thực tế mã nguồn.
+- **Nguồn**: Session `e356d59b-6e9b-464d-b362-4d2f6872aa61`, 2026-08-13
+
+#### 90. Anti-Polling Circuit Breaker for Background Tasks
+- **Ngữ cảnh**: Xử lý các tác vụ ngầm (Background Tasks) chạy thời gian dài trong Agent Platform.
+- **Giải pháp**: Giới hạn tối đa 2 lần gọi `manage_task status` để kiểm tra tiến độ ngắn. Nếu task vẫn ở trạng thái `RUNNING`, Agent bắt buộc xuất ra thông báo súc tích rồi End Turn nhường luồng. Hệ thống sẽ tự động Reactive Wakeup đánh thức Agent khi task kết thúc, tuyệt đối cấm Polling Loop dồn dập trong cùng 1 turn.
+- **Nguồn**: Session `e356d59b-6e9b-464d-b362-4d2f6872aa61`, 2026-08-13
+
+#### 91. Structured Validation Reporting Pattern
+- **Ngữ cảnh**: Xây dựng các validator deep modules cho định dạng file phức tạp (như OOXML docx/pptx/xlsx).
+- **Giải pháp**: Tránh việc chỉ trả về `bool` thuần túy hoặc `print()` ra console. Định nghĩa các dataclasses `ValidationIssue` và `ValidationReport` chứa thông tin chi tiết (file_path, line_number, severity, validator_name) và tích hợp thuộc tính `last_report` trực tiếp vào context manager session.
+- **Nguồn**: Session `e356d59b-6e9b-464d-b362-4d2f6872aa61`, 2026-08-13
+
+---
+
+
+### Anti-patterns (Cách tránh)
+
+#### 55. Top-level `sys.stdout.reconfigure()` in CLI Scripts
+- **Vấn đề**: Gọi `sys.stdout.reconfigure()` ngoài phạm vi hàm ở top-level module scope khiến việc import module đó phá hỏng I/O stream capture của Pytest runner.
+- **Thay thế bằng**: Đưa logic stream reconfigure vào bên trong khối `if __name__ == "__main__":` hoặc trong hàm `main()`.
+
+#### 56. Non-Portable OS-Specific Mocking in Cross-Platform Test Suite
+- **Vấn đề**: Sử dụng `@patch("ctypes.windll...")` trực tiếp trong test decorator khiến test suite crash ngay lập tức trên môi trường Linux CI runner với lỗi `AttributeError`.
+- **Thay thế bằng**: Mock abstraction layer hoặc mock `os.kill` với `sys.platform = "linux"`.
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*

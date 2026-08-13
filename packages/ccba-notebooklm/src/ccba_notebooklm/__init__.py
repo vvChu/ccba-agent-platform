@@ -38,7 +38,6 @@ from ._client import (
     check_auth,
     get_client,
 )
-from ._service import NotebookLMService
 
 # Alias for backward compatibility
 NotebookLMClient = CCBANotebookLMClient
@@ -54,7 +53,6 @@ __all__ = [
     "HAS_NOTEBOOKLM",
     "CCBANotebookLMClient",
     "NotebookLMClient",
-    "NotebookLMService",
     "check_auth",
     "get_client",
     # Tier 2 — Orchestration Workflows

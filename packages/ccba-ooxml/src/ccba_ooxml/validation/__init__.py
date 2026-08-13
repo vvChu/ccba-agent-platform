@@ -6,7 +6,7 @@ from .base import BaseSchemaValidator
 from .docx import DOCXSchemaValidator
 from .pptx import PPTXSchemaValidator
 from .redlining import RedliningValidator
-from .validator import OOXMLValidator
+from .validator import OOXMLValidator, ValidationIssue, ValidationReport
 
 __all__ = [
     "BaseSchemaValidator",
@@ -14,4 +14,6 @@ __all__ = [
     "PPTXSchemaValidator",
     "RedliningValidator",
     "OOXMLValidator",
+    "ValidationIssue",
+    "ValidationReport",
 ]

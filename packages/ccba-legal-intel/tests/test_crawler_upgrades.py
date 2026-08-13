@@ -155,6 +155,7 @@ def test_download_three_tier_shared_drive_exists(tmp_path: Path) -> None:
     assert expected_target.read_text(encoding="utf-8") == "dummy doc content"
 
 
+@pytest.mark.slow
 def test_download_three_tier_google_drive(tmp_path: Path) -> None:
     download_dir = tmp_path / "download"
     download_dir.mkdir()
