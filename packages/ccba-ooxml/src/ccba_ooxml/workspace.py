@@ -45,7 +45,6 @@ class OOXMLWorkspace:
         self.last_report = validator.validate_report()
         return self.last_report
 
-
     def __enter__(self) -> OOXMLWorkspace:
         """Unpack the document and enter the context."""
         if not self.file_path.exists():

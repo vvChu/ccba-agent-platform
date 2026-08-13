@@ -17,7 +17,6 @@ def anyio_backend():
 
 @pytest.fixture
 def mock_analyzer_report():
-
     """Create a mock hybrid PDF report."""
     report = MagicMock(spec=PDFReport)
     report.file_path = Path("hybrid.pdf")
