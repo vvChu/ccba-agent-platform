@@ -89,7 +89,7 @@ mypy_path = ["packages/mdconverter/src", "packages/ccba-ai/src", "packages/ccba-
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["llama_index.*", "google.generativeai.*", "tenacity.*", "yt_dlp.*", "ccba_ai.*", "ccba_pdf_prep.*", "fitz.*"]
+module = ["llama_index.*", "google.generativeai.*", "tenacity.*", "yt_dlp.*", "ccba_ai.*", "ccba_pdf_prep.*", "fitz.*", "ccba_ooxml.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
@@ -99,6 +99,15 @@ disallow_untyped_decorators = false
 
 [tool.pytest.ini_options]
 minversion = "7.0"
+pythonpath = [
+    "packages/ccba-ai/src",
+    "packages/ccba-harness/src",
+    "packages/ccba-legal-intel/src",
+    "packages/ccba-notebooklm/src",
+    "packages/ccba-ooxml/src",
+    "packages/ccba-pdf-prep/src",
+    "packages/mdconverter/src",
+]
 testpaths = ["packages", "tests", "scripts/tests"]
 python_files = ["test_*.py", "*_test.py"]
 addopts = "-v --tb=short --strict-markers -m 'not stress and not slow'"

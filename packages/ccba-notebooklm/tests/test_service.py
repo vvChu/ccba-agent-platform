@@ -8,6 +8,7 @@ if str(src_dir) not in sys.path:
 
 import pytest
 
+from ccba_notebooklm._artifacts import get_source_id_by_path
 from ccba_notebooklm._client import get_client
 from ccba_notebooklm._registry import (
     get_file_sha256,
@@ -15,7 +16,6 @@ from ccba_notebooklm._registry import (
     read_registry,
     update_registry,
 )
-from ccba_notebooklm._service import NotebookLMService
 
 
 @pytest.fixture(autouse=True)
@@ -24,22 +24,18 @@ def clean_env(monkeypatch, tmp_path):
     monkeypatch.delenv("NOTEBOOKLM_COOKIES_JSON", raising=False)
     test_reg = tmp_path / "sources_registry.yaml"
     monkeypatch.setattr("ccba_notebooklm._registry.REGISTRY_FILE", test_reg)
-    import ccba_notebooklm._service
-
-    monkeypatch.setattr(ccba_notebooklm._service, "REGISTRY_FILE", test_reg, raising=False)
 
 
 @pytest.mark.anyio
 async def test_ensure_source_new_file(tmp_path):
-    """Xác minh ensure_source thêm file mới chưa có trong registry."""
+    """Xác minh get_source_id_by_path thêm file mới chưa có trong registry."""
     dummy_file = tmp_path / "test_doc.txt"
     dummy_file.write_text("Hello NotebookLM Test Content", encoding="utf-8")
 
     client = get_client()
-    service = NotebookLMService(client)
     nb_id = "nb-mock-1"
 
-    source_id = await service.ensure_source(nb_id, str(dummy_file))
+    source_id = await get_source_id_by_path(client, nb_id, str(dummy_file))
     assert source_id == "src-mock-file"
 
     # Kiểm tra registry được ghi lại đúng
@@ -52,7 +48,7 @@ async def test_ensure_source_new_file(tmp_path):
 
 @pytest.mark.anyio
 async def test_ensure_source_cache_hit(tmp_path):
-    """Xác minh ensure_source trả về source_id trực tiếp khi SHA-256 khớp (Cache HIT)."""
+    """Xác minh get_source_id_by_path trả về source_id trực tiếp khi SHA-256 khớp (Cache HIT)."""
     dummy_file = tmp_path / "cached_doc.txt"
     dummy_file.write_text("Cached content for NotebookLM", encoding="utf-8")
     sha256 = get_file_sha256(str(dummy_file))
@@ -62,16 +58,15 @@ async def test_ensure_source_cache_hit(tmp_path):
     update_registry(str(dummy_file), "src-mock-1", sha256, nb_id)
 
     client = get_client()
-    service = NotebookLMService(client)
 
-    # Calling ensure_source should hit cache and return "src-mock-1" without uploading
-    source_id = await service.ensure_source(nb_id, str(dummy_file))
+    # Calling get_source_id_by_path should hit cache and return "src-mock-1" without uploading
+    source_id = await get_source_id_by_path(client, nb_id, str(dummy_file))
     assert source_id == "src-mock-1"
 
 
 @pytest.mark.anyio
 async def test_ensure_source_sha256_mismatch(tmp_path):
-    """Xác minh ensure_source tự động xóa source cũ và upload source mới khi SHA-256 thay đổi."""
+    """Xác minh get_source_id_by_path tự động xóa source cũ và upload source mới khi SHA-256 thay đổi."""
     dummy_file = tmp_path / "mismatched_doc.txt"
     dummy_file.write_text("Original Version 1", encoding="utf-8")
     nb_id = "nb-mock-1"
@@ -84,9 +79,8 @@ async def test_ensure_source_sha256_mismatch(tmp_path):
     new_sha256 = get_file_sha256(str(dummy_file))
 
     client = get_client()
-    service = NotebookLMService(client)
 
-    source_id = await service.ensure_source(nb_id, str(dummy_file))
+    source_id = await get_source_id_by_path(client, nb_id, str(dummy_file))
     assert source_id == "src-mock-file"
 
     # Registry updated with new sha256
