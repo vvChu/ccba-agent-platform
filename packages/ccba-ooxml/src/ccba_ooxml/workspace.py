@@ -6,12 +6,15 @@ import shutil
 import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import defusedxml.ElementTree as DET
 
 from .pack import pack_document
 from .unpack import unpack_document
+
+if TYPE_CHECKING:
+    from .validation import ValidationReport
 
 
 class OOXMLWorkspace:
@@ -32,9 +35,9 @@ class OOXMLWorkspace:
         self.validate = validate
         self._temp_dir_obj: tempfile.TemporaryDirectory[str] | None = None
         self.working_dir: Path | None = None
-        self.last_report: Any | None = None
+        self.last_report: ValidationReport | None = None
 
-    def validate_workspace(self) -> Any:
+    def validate_workspace(self) -> ValidationReport:
         """Validate current workspace state and store report in self.last_report."""
         from .validation import OOXMLValidator
 
@@ -42,8 +45,9 @@ class OOXMLWorkspace:
             raise RuntimeError("Workspace is not active.")
 
         validator = OOXMLValidator(self.working_dir, self.file_path)
-        self.last_report = validator.validate_report()
-        return self.last_report
+        report = validator.validate_report()
+        self.last_report = report
+        return report
 
     def __enter__(self) -> OOXMLWorkspace:
         """Unpack the document and enter the context."""
