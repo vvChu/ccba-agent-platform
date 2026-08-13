@@ -22,10 +22,16 @@ Homepage = "https://github.com/vvChu/ccba-agent-platform"
 Repository = "https://github.com/vvChu/ccba-agent-platform"
 
 [project.scripts]
-ccba-decrypt-registry = "scripts.decrypt_spoke_registry:decrypt_registry"
-ccba-gen-keys = "scripts.generate_registry_keys:generate_keys"
-ccba-find-skills = "scripts.find_skills:main"
-ccba-seo-audit = "scripts.seo_audit:main"
+ccba-decrypt-registry = "scripts.spoke.decrypt_spoke_registry:decrypt_registry"
+ccba-gen-keys = "scripts.spoke.generate_registry_keys:generate_keys"
+ccba-find-skills = "scripts.spoke.find_skills:main"
+ccba-seo-audit = "scripts.validation.seo_audit:main"
+ccba-eval = "scripts.eval.run_harness_evals:main"
+ccba-test = "scripts.eval.run_isolated_tests:main"
+ccba-compile-knowledge = "scripts.spoke.compile_knowledge:main"
+ccba-legal-sync = "scripts.legal.legal_sync:main"
+ccba-audit-pr = "scripts.validation.audit_pr_comments:main"
+
 
 # === Workspace Config (for uv) ===
 [tool.uv.workspace]

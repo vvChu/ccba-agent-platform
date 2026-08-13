@@ -5,11 +5,11 @@ tự động áp dụng timeout rào chắn và in báo cáo kết quả súc t�
 """
 
 import argparse
+import queue
 import subprocess
 import sys
-import time
-import queue
 import threading
+import time
 from pathlib import Path
 
 from scripts.eval.process_safety import get_venv_python, kill_process_tree
@@ -28,8 +28,8 @@ AVAILABLE_PACKAGES = [
 
 def _enqueue_output(stream, q: queue.Queue[str]) -> None:
     try:
-        for l in iter(stream.readline, ""):
-            q.put(l)
+        for line in iter(stream.readline, ""):
+            q.put(line)
     except Exception:
         pass
     finally:
@@ -67,9 +67,7 @@ def run_isolated_test(
 
         out_queue: queue.Queue[str] = queue.Queue()
         if proc.stdout:
-            t = threading.Thread(
-                target=_enqueue_output, args=(proc.stdout, out_queue), daemon=True
-            )
+            t = threading.Thread(target=_enqueue_output, args=(proc.stdout, out_queue), daemon=True)
             t.start()
 
         full_output: list[str] = []

@@ -8,7 +8,6 @@ import os
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 from scripts.eval.process_safety import (
@@ -69,37 +68,53 @@ def get_git_modified_files(project_root: Path) -> set[Path]:
     return modified
 
 
+import uuid
+
+
 def run_command(
     cmd: list[str], cwd: Path, name: str, timeout_seconds: int = 60
 ) -> tuple[bool, str]:
     """Chạy một lệnh hệ thống và trả về trạng thái cùng stdout/stderr với rào chắn timeout an toàn."""
     print(f"🚀 Chạy {name}...")
-    with tempfile.TemporaryFile() as tmp_out:
-        try:
+    log_dir = cwd / ".md" / "scratch"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / f"eval_gate_{uuid.uuid4().hex[:8]}.log"
+    env = dict(os.environ)
+    env["PYTHONUNBUFFERED"] = "1"
+    env["PYTHONIOENCODING"] = "utf-8"
+    try:
+        with open(log_file, "w+", encoding="utf-8") as f:
             proc = subprocess.Popen(
                 cmd,
                 cwd=cwd,
-                stdout=tmp_out,
+                stdout=f,
                 stderr=subprocess.STDOUT,
+                env=env,
             )
             try:
                 retcode = proc.wait(timeout=timeout_seconds)
             except subprocess.TimeoutExpired:
                 kill_process_tree(proc.pid)
                 proc.wait()
-                tmp_out.seek(0)
-                output = tmp_out.read().decode("utf-8", errors="ignore")
+                f.seek(0)
+                output = f.read()
                 return (
                     False,
                     f"⚠️ Lỗi: Tiến trình '{name}' vượt quá thời gian cho phép ({timeout_seconds}s) và đã bị hủy.\nOutput trước khi ngắt:\n{output.strip()}",
                 )
 
-            tmp_out.seek(0)
-            output = tmp_out.read().decode("utf-8", errors="ignore")
+            f.seek(0)
+            output = f.read()
             success = retcode == 0
             return success, output.strip()
-        except Exception as e:
-            return False, f"Lỗi thực thi lệnh '{name}': {e}"
+    except Exception as e:
+        return False, f"⚠️ Lỗi khi khởi chạy {name}: {e}"
+    finally:
+        if log_file.exists():
+            try:
+                log_file.unlink()
+            except Exception:
+                pass
 
 
 def main() -> None:
@@ -120,7 +135,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    project_root = Path(__file__).parent.parent.resolve()
+    project_root = Path(__file__).resolve().parents[2]
     py_exe = get_venv_python(project_root)
     check_pre_eval_health(project_root)
 
@@ -242,19 +257,15 @@ def main() -> None:
             if (project_root / "scripts/tests").exists():
                 test_args.append("scripts/tests")
 
-        # Chạy pytest
-        pytest_cmd = [py_exe, "-m", "pytest"] + (test_args if test_args else [])
-        if not args.stress:
-            pytest_cmd += ["-m", "not stress and not slow"]
-
-        import importlib.util
-
-        if importlib.util.find_spec("pytest_cov") is not None:
-            pytest_cmd += [
-                "--cov=packages/mdconverter/src/mdconverter",
-                "--cov=packages/ccba-ai/src/ccba_ai",
-                "--cov-report=xml",
-            ]
+        # Gate 3: Pytest Unit Tests
+        pytest_cmd = [
+            py_exe,
+            "-m",
+            "pytest",
+            "--maxfail=1",
+            "-m",
+            "not slow",
+        ] + test_args
 
         success_test, out_test = run_command(
             pytest_cmd, project_root, "Pytest Suite", timeout_seconds=90

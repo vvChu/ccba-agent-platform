@@ -1,6 +1,7 @@
 """Unit tests for ASTParser and DeltaPatch schema in ccba_legal."""
 
 import yaml
+
 from ccba_legal.ast_parser import (
     ASTParser,
     DeltaPatch,

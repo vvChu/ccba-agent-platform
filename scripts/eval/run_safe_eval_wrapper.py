@@ -7,11 +7,8 @@ Singleton Process Lock, ghi nhật ký cô lập và trích xuất tệp chẩn 
 
 import argparse
 import json
-import os
-import re
 import subprocess
 import sys
-import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
@@ -23,7 +20,11 @@ from scripts.eval.process_safety import ensure_single_instance, kill_process_tre
 def extract_summary_traceback(output: str, max_lines: int = 10) -> list[str]:
     """Extracts summary error traceback lines from process output."""
     lines = [line.rstrip() for line in output.splitlines() if line.strip()]
-    error_lines = [l for l in lines if "Error" in l or "FAILED" in l or "Traceback" in l or "FAIL" in l]
+    error_lines = [
+        line
+        for line in lines
+        if "Error" in line or "FAILED" in line or "Traceback" in line or "FAIL" in line
+    ]
     return error_lines[-max_lines:] if error_lines else lines[-max_lines:]
 
 
@@ -52,8 +53,8 @@ import threading
 
 def enqueue_output(stream: Any, q: queue.Queue[str]) -> None:
     try:
-        for l in iter(stream.readline, ""):
-            q.put(l)
+        for line in iter(stream.readline, ""):
+            q.put(line)
     except Exception:
         pass
     finally:
@@ -113,9 +114,7 @@ def run_safe_wrapper(
 
         out_queue: queue.Queue[str] = queue.Queue()
         if proc.stdout:
-            t = threading.Thread(
-                target=enqueue_output, args=(proc.stdout, out_queue), daemon=True
-            )
+            t = threading.Thread(target=enqueue_output, args=(proc.stdout, out_queue), daemon=True)
             t.start()
 
         full_output_chunks: list[str] = []
@@ -158,11 +157,15 @@ def run_safe_wrapper(
 
         # Read any remaining output after process exit
         if proc.stdout:
-            remaining = proc.stdout.read()
-            if remaining:
-                log_f.write(remaining)
-                log_f.flush()
-                full_output_chunks.append(remaining)
+            try:
+                if not proc.stdout.closed:
+                    remaining = proc.stdout.read()
+                    if remaining:
+                        log_f.write(remaining)
+                        log_f.flush()
+                        full_output_chunks.append(remaining)
+            except Exception:
+                pass
 
         log_f.close()
         full_output = "".join(full_output_chunks)

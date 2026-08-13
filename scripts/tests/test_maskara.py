@@ -36,7 +36,9 @@ class TestMaskaraScanner(unittest.TestCase):
     def test_scan_file_and_perform_scan(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = Path(tmpdir) / "session.log"
-            file_path.write_text("Database at postgresql://user:pass1234@localhost:5432/mydb\n", encoding="utf-8")
+            file_path.write_text(
+                "Database at postgresql://user:pass1234@localhost:5432/mydb\n", encoding="utf-8"
+            )
 
             targets = [{"agent": "test", "root": Path(tmpdir)}]
             result = self.scanner.perform_scan(targets)

@@ -10,15 +10,14 @@ from pathlib import Path
 
 from ccba_ai.services import seo
 
-# Enforce UTF-8 output
-if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
-
 
 def main():
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+            sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     parser = argparse.ArgumentParser(description="CCBA Technical SEO Auditor CLI")
     parser.add_argument("file", help="Path to the file to audit (Markdown or HTML)")
     args = parser.parse_args()

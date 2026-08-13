@@ -98,7 +98,7 @@ class TestPandocConverterQualityScore:
 class TestLLMConverterFallbackChain:
     """Test model fallback chain behavior."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_fallback_on_first_model_failure(self, tmp_path: Path) -> None:
         """Test that second model is tried when first fails."""
         converter = LLMConverter(
@@ -125,7 +125,7 @@ class TestLLMConverterFallbackChain:
             assert "model-b" in result.tool_used
             assert call_count == 2
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_all_models_fail_reports_all_errors(self, tmp_path: Path) -> None:
         """Test that all errors are reported when all models fail."""
         converter = LLMConverter(
@@ -146,7 +146,7 @@ class TestLLMConverterFallbackChain:
             assert "model-a" in result.error_message
             assert "model-b" in result.error_message
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_metadata_tracks_models_tried(self, tmp_path: Path) -> None:
         """Test that metadata includes models_tried and errors_per_model."""
         converter = LLMConverter(
@@ -173,7 +173,7 @@ class TestLLMConverterFallbackChain:
 class TestConverterEdgeCases:
     """Test edge cases for converters."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_convert_zero_byte_file(self, tmp_path: Path) -> None:
         """Test conversion of zero-byte file."""
         test_file = tmp_path / "empty.pdf"
@@ -189,7 +189,7 @@ class TestConverterEdgeCases:
             # Should fail because output is too short (< min_content_length)
             assert result.status == ConversionStatus.FAILED
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_convert_with_spaces_in_filename(self, tmp_path: Path) -> None:
         """Test conversion handles filenames with spaces."""
         test_file = tmp_path / "my document.pdf"
@@ -201,7 +201,7 @@ class TestConverterEdgeCases:
         assert " " not in output_path.stem  # Spaces should be replaced with _
         assert output_path.stem == "my_document"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_pandoc_convert_unsupported_extension(self, tmp_path: Path) -> None:
         """Test Pandoc skips unsupported extensions."""
         test_file = tmp_path / "test.xyz"

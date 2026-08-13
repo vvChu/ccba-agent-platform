@@ -37,6 +37,7 @@ DEFAULT_DRIVE_FOLDER = "1b9vm_1KQ8Fg8Crr1Q-i2xmE62UIHy-_2"
 # Standalone utility functions (kept at module level for backward compat)
 # ---------------------------------------------------------------------------
 
+
 def calculate_md5(file_path: Path) -> str:
     """Calculate MD5 hash of file for Google Drive matching."""
     hash_md5 = hashlib.md5()
@@ -109,6 +110,7 @@ def ensure_chrome_debug_port() -> bool:
 # Lazy import helpers for optional dependencies
 # ---------------------------------------------------------------------------
 
+
 def _import_google_api() -> tuple[bool, Any, Any, Any, Any, Any, Any]:
     """Lazy import Google API client libraries.
 
@@ -128,6 +130,15 @@ def _import_google_api() -> tuple[bool, Any, Any, Any, Any, Any, Any]:
         return False, None, None, None, None, None, None
 
 
+GOOGLE_API_AVAILABLE, *_ = _import_google_api()
+
+
+def get_drive_service() -> Any:
+    """Standalone module-level helper to obtain Google Drive API service."""
+    engine = LegalSyncEngine()
+    return engine.get_drive_service()
+
+
 def _import_notebooklm_client() -> Any:
     """Lazy import ccba_notebooklm.get_client (optional [cloud] dependency).
 
@@ -136,6 +147,7 @@ def _import_notebooklm_client() -> Any:
     """
     try:
         from ccba_notebooklm import get_client
+
         return get_client
     except ImportError:
         return None
@@ -144,6 +156,7 @@ def _import_notebooklm_client() -> Any:
 # ---------------------------------------------------------------------------
 # LegalSyncEngine — Deep Module
 # ---------------------------------------------------------------------------
+
 
 class LegalSyncEngine:
     """Deep module coordinating local legal registry sync, Chrome CDP discovery, and cloud drives.
@@ -203,9 +216,7 @@ class LegalSyncEngine:
             cdp.connect_tab(pages[0]["webSocketDebuggerUrl"])
 
             search_query = f'site:thuvienphapluat.vn "{query}"'
-            search_url = (
-                f"https://www.google.com/search?q={urllib.parse.quote_plus(search_query)}"
-            )
+            search_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(search_query)}"
 
             cdp.navigate(search_url)
             cdp.wait_ready()
@@ -260,9 +271,7 @@ class LegalSyncEngine:
 
             print(f"[Urllib] Tải trực tiếp từ URL: {url}")
             dest_path.parent.mkdir(parents=True, exist_ok=True)
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-            }
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
             req = urllib.request.Request(url, headers=headers)
             with (
                 urllib.request.urlopen(req, timeout=20) as response,
@@ -279,9 +288,7 @@ class LegalSyncEngine:
 
     def get_drive_service(self) -> Any:
         """Initialize Drive API service using personal token or ADC fallback."""
-        available, google_auth, Request, Credentials, build, HttpError, _ = (
-            _import_google_api()
-        )
+        available, google_auth, Request, Credentials, build, HttpError, _ = _import_google_api()
         if not available:
             raise ImportError(
                 "Thiếu thư viện googleapiclient hoặc google-auth. "
@@ -377,9 +384,7 @@ class LegalSyncEngine:
                 )
                 google_mime = "application/vnd.google-apps.document"
             elif ext in [".xlsx", ".xls"]:
-                local_mime = (
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+                local_mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 google_mime = "application/vnd.google-apps.spreadsheet"
             else:
                 local_mime = "application/octet-stream"
@@ -392,9 +397,7 @@ class LegalSyncEngine:
                 f"(name = '{target_name}' or name = '{name_without_ext}') "
                 f"and trashed = false"
             )
-            results = (
-                service.files().list(q=q, fields="files(id, name, md5Checksum)").execute()
-            )
+            results = service.files().list(q=q, fields="files(id, name, md5Checksum)").execute()
             files = results.get("files", [])
 
             if files:
@@ -404,9 +407,7 @@ class LegalSyncEngine:
                 local_md5 = calculate_md5(file_path)
 
                 if existing_md5 == local_md5:
-                    print(
-                        f"[Drive Deduplicate] Tệp '{target_name}' trùng khớp. Bỏ qua upload."
-                    )
+                    print(f"[Drive Deduplicate] Tệp '{target_name}' trùng khớp. Bỏ qua upload.")
                     try:
                         service.permissions().create(
                             fileId=existing_id, body={"type": "anyone", "role": "reader"}
@@ -416,7 +417,9 @@ class LegalSyncEngine:
                     return str(existing_id)
 
                 # Content changed → overwrite
-                print(f"[Drive Update] Tệp '{target_name}' đã thay đổi. Ghi đè file_id: {existing_id}")
+                print(
+                    f"[Drive Update] Tệp '{target_name}' đã thay đổi. Ghi đè file_id: {existing_id}"
+                )
                 media = MediaFileUpload(str(file_path), mimetype=local_mime, resumable=True)
                 file_metadata: dict[str, Any] = {}
                 if google_mime:
@@ -501,9 +504,7 @@ class LegalSyncEngine:
                             if not item.get("download_url"):
                                 item["download_url"] = download_url
                                 registry_changed = True
-                                print(
-                                    f"[Registry Auto-Save] Đăng ký download_url cho {doc_key}."
-                                )
+                                print(f"[Registry Auto-Save] Đăng ký download_url cho {doc_key}.")
         return download_url, registry_changed
 
     async def sync_registry_to_notebooklm(
@@ -592,9 +593,7 @@ class LegalSyncEngine:
                                 dir_path = first_file.get("path", "")
                                 files = first_file.get("files", [])
                                 if files and isinstance(files, list):
-                                    extracted_file_path = os.path.join(
-                                        dir_path, str(files[0])
-                                    )
+                                    extracted_file_path = os.path.join(dir_path, str(files[0]))
                             elif isinstance(first_file, str):
                                 extracted_file_path = first_file
 
@@ -603,9 +602,7 @@ class LegalSyncEngine:
                             "title": item.get("title", doc_id),
                             "short_name": item.get("short_name", doc_id),
                             "file_path": item.get("file_path", extracted_file_path),
-                            "download_url": item.get(
-                                "download_url", item.get("source_url", "")
-                            ),
+                            "download_url": item.get("download_url", item.get("source_url", "")),
                         }
 
             # Process each document
@@ -643,15 +640,12 @@ class LegalSyncEngine:
                             f"'{drive_folder_id}' in parents and "
                             f"name = '{pdf_filename}' and trashed = false"
                         )
-                        results = (
-                            service.files().list(q=q, fields="files(id, name)").execute()
-                        )
+                        results = service.files().list(q=q, fields="files(id, name)").execute()
                         pdf_files = results.get("files", [])
                         if pdf_files:
                             drive_file_id = pdf_files[0]["id"]
                             print(
-                                f"[Drive Info] PDF '{pdf_filename}' đã tồn tại. "
-                                f"ID: {drive_file_id}"
+                                f"[Drive Info] PDF '{pdf_filename}' đã tồn tại. ID: {drive_file_id}"
                             )
                     except Exception as e:
                         print(f"[Drive Warning] Không thể quét PDF trên Drive: {e}")
@@ -673,9 +667,7 @@ class LegalSyncEngine:
                                 except Exception:
                                     pass
 
-                            success = self.download_via_cdp_or_client(
-                                download_url, temp_pdf_path
-                            )
+                            success = self.download_via_cdp_or_client(download_url, temp_pdf_path)
                             if success and temp_pdf_path.exists():
                                 drive_file_id = self.upload_to_google_drive(
                                     temp_pdf_path, drive_folder_id, pdf_filename
@@ -761,7 +753,9 @@ class LegalSyncEngine:
                         source_id_to_use = cached_source_id
                         print(f"[Sync Match] '{target_filename}' đã khớp. Bỏ qua.")
                     else:
-                        print(f"[Sync Mismatch] Lệch hash/cache cho '{target_filename}'. Gỡ bản cũ...")
+                        print(
+                            f"[Sync Mismatch] Lệch hash/cache cho '{target_filename}'. Gỡ bản cũ..."
+                        )
                         try:
                             await client.sources.delete(notebook_id, cloud_id_by_title)
                         except Exception:

@@ -1,6 +1,7 @@
 """Unit tests for MockChromeCDP offline testing adapter."""
 
 import pytest
+
 from ccba_legal.crawler import ChromeCDPError, MockChromeCDP
 
 

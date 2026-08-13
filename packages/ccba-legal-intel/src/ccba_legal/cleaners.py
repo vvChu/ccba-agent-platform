@@ -1,42 +1,34 @@
 """Helper utilities to clean up text and extract JSON from LLM responses."""
 
-import json
 import re
-from typing import Any
+from typing import Any, TypeVar
+
+from ccba_ai import parse_llm_json, strip_think_tags
+
+T = TypeVar("T")
 
 
 class Cleaners:
-    """Helper utilities to clean up text and extract JSON from LLM responses."""
+    """Helper utilities to clean up text and extract JSON from LLM responses.
 
-    _THINK_PATTERN = re.compile(r"<think>.*?</think>\n*", re.DOTALL | re.IGNORECASE)
-    _THINK_UNCLOSED = re.compile(r"<think>.*", re.DOTALL | re.IGNORECASE)
-    _ORPHAN_END = re.compile(r"^.*?</think>\n*", re.DOTALL | re.IGNORECASE)
+    Delegates LLM output parsing and tag stripping to `ccba-ai`'s `LLMOutputParser`,
+    while retaining domain-specific OCR cleanup helpers.
+    """
 
     @classmethod
     def strip_think_tags(cls, text: str) -> str:
         """Strip <think>...</think> tags and their contents from reasoning models."""
-        text = cls._THINK_PATTERN.sub("", text)
-        text = cls._THINK_UNCLOSED.sub("", text)
-        text = cls._ORPHAN_END.sub("", text)
-        return text.strip()
+        return strip_think_tags(text)
 
     @classmethod
-    def extract_json(cls, raw: str) -> Any:
+    def extract_json(
+        cls,
+        raw: str,
+        schema: type[T] | None = None,
+        strict: bool = False,
+    ) -> Any:
         """Extract JSON dictionary or list from raw text containing Markdown fences."""
-        clean = cls.strip_think_tags(raw)
-        match = re.search(r"```(?:json)?\s*([\{\[].*?[\}\]])\s*```", clean, flags=re.DOTALL)
-        if match:
-            try:
-                return json.loads(match.group(1))
-            except json.JSONDecodeError:
-                pass
-        match = re.search(r"([\{\[].*[\}\]])", clean, flags=re.DOTALL)
-        if match:
-            try:
-                return json.loads(match.group(1))
-            except json.JSONDecodeError:
-                pass
-        return None
+        return parse_llm_json(raw, schema=schema, strict=strict)
 
     @classmethod
     def remove_ocr_artifacts(cls, text: str) -> str:

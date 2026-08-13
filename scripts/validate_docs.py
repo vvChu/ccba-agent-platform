@@ -13,6 +13,17 @@ sys.path.insert(0, str(Path(__file__).parent.resolve()))
 
 from doc_auditor import DocumentAuditor
 
+_auditor_inst = DocumentAuditor()
+extract_code_references = _auditor_inst.extract_code_references
+extract_env_variables = _auditor_inst.extract_env_variables
+extract_internal_links = _auditor_inst.extract_internal_links
+validate_markdown_file = _auditor_inst.validate_markdown_file
+
+
+def scan_orphan_files(bundle_root: Path, *args, **kwargs):
+    auditor = DocumentAuditor(project_root=args[0] if args and isinstance(args[0], Path) else None)
+    return auditor.scan_orphan_files(bundle_root)
+
 
 def main():
     auditor = DocumentAuditor()

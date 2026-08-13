@@ -24,6 +24,7 @@ def clean_env() -> Generator[None, None, None]:
 @pytest.fixture(autouse=True)
 def cleanup_lock_files() -> Generator[None, None, None]:
     """Ensure lock files are cleaned up before and after each test execution."""
+
     def remove_locks():
         for filename in os.listdir("."):
             if filename.endswith(".lock"):
@@ -35,4 +36,3 @@ def cleanup_lock_files() -> Generator[None, None, None]:
     remove_locks()
     yield
     remove_locks()
-

@@ -67,7 +67,7 @@ class TestLLMConverter:
         converter = LLMConverter()
         assert converter.supports(".txt") is False
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_convert_nonexistent_file(self, tmp_path: Path) -> None:
         """Test conversion of non-existent file fails."""
         converter = LLMConverter(output_dir=tmp_path)
@@ -76,7 +76,7 @@ class TestLLMConverter:
         assert result.status == ConversionStatus.FAILED
         assert "not found" in result.error_message.lower()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_convert_unsupported_extension(self, tmp_path: Path) -> None:
         """Test conversion of unsupported file type is skipped."""
         # Create a test file
@@ -89,7 +89,7 @@ class TestLLMConverter:
         assert result.status == ConversionStatus.SKIPPED
         assert "unsupported" in result.error_message.lower()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_convert_api_error_handled(self, tmp_path: Path) -> None:
         """Test that API errors are handled gracefully."""
         from unittest.mock import patch
@@ -131,7 +131,7 @@ class TestPandocConverter:
         converter = PandocConverter()
         assert converter.supports(".pdf") is False
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_convert_nonexistent_file(self, tmp_path: Path) -> None:
         """Test conversion of non-existent file fails."""
         converter = PandocConverter(output_dir=tmp_path)
@@ -140,7 +140,7 @@ class TestPandocConverter:
         assert result.status == ConversionStatus.FAILED
         assert "not found" in result.error_message.lower()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_pandoc_not_installed(self, tmp_path: Path) -> None:
         """Test error when Pandoc is not installed."""
         test_file = tmp_path / "test.docx"
@@ -173,7 +173,7 @@ class TestLlamaParseConverter:
         # Depends on environment, but we test the method exists
         assert hasattr(converter, "is_available")
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_convert_without_api_key(self, tmp_path: Path) -> None:
         """Test conversion fails without API key."""
         test_file = tmp_path / "test.pdf"

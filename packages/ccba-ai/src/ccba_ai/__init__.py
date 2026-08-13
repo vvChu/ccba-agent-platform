@@ -20,7 +20,7 @@ from ccba_ai import services
 from ccba_ai.client import AIClient, AsyncAIClient
 from ccba_ai.exceptions import CCBABaseException, CCBAErrorCode, format_error_json
 from ccba_ai.legal_knowledge import LegalKnowledgeGateway, legal_knowledge
-from ccba_ai.llm_utils import parse_llm_json, strip_think_tags
+from ccba_ai.llm_utils import LLMParseError, parse_llm_json, strip_think_tags
 from ccba_ai.models import AuditFinding, AuditReport
 from ccba_ai.protocols import QCAuditEngine, QCDiscoveryEngine, QCReporterEngine
 
@@ -68,6 +68,7 @@ __all__ = [
     "write_file",
     "strip_think_tags",
     "parse_llm_json",
+    "LLMParseError",
     # QC audit models
     "AuditFinding",
     "AuditReport",
@@ -76,7 +77,7 @@ __all__ = [
     "QCReporterEngine",
     # Services
     "services",
-    # Exceptions
+    # Exceptions",
     "CCBAErrorCode",
     "CCBABaseException",
     "format_error_json",
