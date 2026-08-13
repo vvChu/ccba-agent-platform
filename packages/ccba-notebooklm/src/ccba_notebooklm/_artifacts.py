@@ -1,13 +1,14 @@
 import asyncio
 import datetime
 import json
+import logging
 import os
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore
+import yaml
 
 from ._client import (
     HAS_NOTEBOOKLM,
@@ -20,12 +21,16 @@ from ._registry import (
     clear_task_state,
     get_file_sha256,
     get_notebook_id_from_context,
+    normalize_to_relative,
     read_registry,
     read_task_state,
     save_notebook_id_to_context,
     save_task_state,
+    update_registry,
 )
-from ._service import NotebookLMService
+from ._security import run_maskara_gate
+
+logger = logging.getLogger(__name__)
 
 
 def run_docs_validator(file_path: str) -> None:
@@ -42,22 +47,23 @@ def run_docs_validator(file_path: str) -> None:
             break
 
     if not val_path:
-        print("[Warn] Không tìm thấy scripts/validate_docs.py. Bỏ qua kiểm định.", file=sys.stderr)
+        logger.warning(
+            "Vật phẩm %s đã được tạo nhưng không tìm thấy validate_docs.py để kiểm định", file_path
+        )
         return
 
+    logger.info("Đang kiểm định chất lượng tài liệu qua %s...", val_path)
     try:
-        print("[Info] Đang chạy kiểm định chất lượng tài liệu qua Docs Validator...")
-        file_dir = Path(file_path).parent
-        result = subprocess.run(
-            [sys.executable, str(val_path), str(file_dir)], capture_output=True, text=True
+        res = subprocess.run(
+            [sys.executable, str(val_path), file_path],
+            capture_output=True,
+            text=True,
+            check=False,
         )
-        if result.returncode == 0:
-            print("SUCCESS: Kiểm định chất lượng tài liệu ĐẠT CHUẨN!")
+        if res.returncode != 0:
+            logger.warning("Docs Validation CẢNH BÁO / LỖI:\n%s", res.stdout or res.stderr)
         else:
-            print(
-                f"[Warning] Docs Validator phát hiện vấn đề định dạng trong thư mục tài liệu:\n{result.stdout.strip()}",
-                file=sys.stderr,
-            )
+            logger.info("Docs Validation THÀNH CÔNG cho %s", file_path)
     except Exception as e:
         print(f"[Warn] Không thể chạy validate_docs.py: {e}", file=sys.stderr)
 
@@ -116,9 +122,52 @@ sha256: "{sha256}"
 async def get_source_id_by_path(
     client: Any, notebook_id: str, source_path: str, sha256: str | None = None
 ) -> str:
-    """Tìm hoặc nạp nguồn, trả về source_id và cập nhật registry via NotebookLMService."""
-    service = NotebookLMService(client)
-    return await service.ensure_source(notebook_id, source_path)
+    """Ensure a local file or URL source exists in the given cloud notebook and is up to date.
+
+    Calculates SHA-256 hash, checks registry cache, removes outdated cloud source if SHA-256 mismatched,
+    runs Maskara security gate lazily if upload is required, uploads the new source, and updates registry.
+    """
+    if sha256 is None:
+        sha256 = get_file_sha256(source_path)
+    registry = read_registry()
+    norm_path = normalize_to_relative(source_path)
+    sources = await client.list_sources(notebook_id)
+
+    if norm_path in registry:
+        registered_info = registry[norm_path]
+        if registered_info.get("notebook_id") == notebook_id:
+            existing_id = registered_info.get("source_id")
+            matched = next(
+                (src for src in sources if getattr(src, "id", None) == existing_id), None
+            )
+            if matched:
+                if registered_info.get("sha256") == sha256:
+                    # Cache HIT — return existing source ID directly (Lazy Maskara & no re-upload)
+                    return str(existing_id)
+                else:
+                    # Cache MISMATCH — delete outdated source on cloud
+                    await client.delete_source(notebook_id, str(existing_id))
+
+    # Lazy Maskara Security Gate (called ONLY when upload is needed)
+    upload_path, is_temp = run_maskara_gate(source_path)
+    try:
+        if source_path.startswith(("http://", "https://")):
+            new_source = await client.add_url_source(notebook_id, upload_path, wait=True)
+        else:
+            new_source = await client.add_file_source(notebook_id, upload_path)
+
+        source_id = str(getattr(new_source, "id", new_source))
+        update_registry(source_path, source_id, sha256, notebook_id)
+        return source_id
+    finally:
+        # Clean up temp redacted file if Maskara created one
+        if is_temp:
+            try:
+                p = Path(upload_path)
+                if p.exists() and "redacted_" in p.name:
+                    p.unlink()
+            except Exception:
+                pass
 
 
 async def get_or_create_project_notebook(client: Any, project_name: str) -> str:
@@ -267,11 +316,10 @@ async def extract_and_summarize(source_path: str, output_path: str) -> int:
                 print("ERROR: Thư viện 'notebooklm-py' chưa được cài đặt.", file=sys.stderr)
                 return 1
 
-            service = NotebookLMService(client)
             notebook_id = await get_or_create_project_notebook(client, project_name)
             await check_quota_and_warn(client, notebook_id)
 
-            source_id = await service.ensure_source(notebook_id, source_path)
+            source_id = await get_source_id_by_path(client, notebook_id, source_path)
 
             print(f"[Info] Đang yêu cầu NotebookLM tóm tắt tri thức từ nguồn '{source_id}'...")
             prompt = (
@@ -308,11 +356,10 @@ async def query_rag(source_path: str, prompt: str) -> int:
                 print("ERROR: Thư viện 'notebooklm-py' chưa được cài đặt.", file=sys.stderr)
                 return 1
 
-            service = NotebookLMService(client)
             notebook_id = await get_or_create_project_notebook(client, project_name)
             await check_quota_and_warn(client, notebook_id)
 
-            target_id = await service.ensure_source(notebook_id, source_path)
+            target_id = await get_source_id_by_path(client, notebook_id, source_path)
             print(f"[Info] Đang gửi câu hỏi RAG cô lập tới nguồn ID '{target_id}'...")
 
             result = await client.ask_chat(

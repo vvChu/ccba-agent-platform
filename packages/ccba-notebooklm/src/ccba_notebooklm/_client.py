@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from notebooklm import NotebookLMClient
-    from notebooklm.exceptions import NetworkError
+    from notebooklm.exceptions import NetworkError as NetworkError
     from notebooklm.rpc.types import (
         InfographicDetail,
         InfographicOrientation,
@@ -37,7 +37,7 @@ except ImportError:
     QuizQuantity = QuizDifficulty = SlideDeckFormat = SlideDeckLength = None
     ReportFormat = InfographicOrientation = InfographicDetail = InfographicStyle = None
     VideoFormat = VideoStyle = None
-    NetworkError = Exception
+    NetworkError = Exception  # type: ignore[no-redef, misc]
 
 
 # ---------------------------------------------------------------------------
