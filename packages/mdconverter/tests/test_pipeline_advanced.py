@@ -147,3 +147,12 @@ async def test_large_pdf_chunking(tmp_path: Path):
         assert result.tool_used == "segmented"
         assert result.metadata["segments"] == 3
         assert mock_split.call_count == 1
+
+
+def test_default_post_processors_includes_link_patcher():
+    """Test that LinkPatcherPostProcessor is included in default post-processors."""
+    from mdconverter.core.pipeline import LinkPatcherPostProcessor, get_default_post_processors
+
+    processors = get_default_post_processors()
+    processor_types = [type(p) for p in processors]
+    assert LinkPatcherPostProcessor in processor_types
