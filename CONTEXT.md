@@ -92,6 +92,10 @@ A local Git security hook written dynamically to `.git/hooks/pre-commit` in Spok
 **Flat NotebookLM Client (Deep Seam)**:
 Lớp bọc seam sâu của NotebookLMClient nhằm cung cấp một giao diện phẳng duy nhất, tự động điều phối các loại tác vụ sinh/tải Structured Artifacts và ẩn đi cấu trúc RPC dịch vụ con phức tạp của thư viện Google thô. Giúp tăng tính leverage và đơn giản hóa việc viết unit tests.
 
+**PDFProcessingPipeline (Unified PDF Preprocessor Deep Module)**:
+Deep module của package `ccba-pdf-prep` cung cấp seam công khai duy nhất `pipeline.process(pdf_path, output_dir)` điều phối toàn bộ pipeline phân tích PDF, tiling ảnh, trích xuất khung tên và tổng hợp composite. Sub-modules (`PDFAnalyzer`, `VisionOptimizer`, `TitleBlockDetector`, `CompositeBuilder`) là chi tiết triển khai nội bộ — caller bên ngoài chỉ nên tương tác qua `PDFProcessingPipeline`. DTOs trả về (`PDFReport`, `PDFCategory`, `Segment`, `PageDetail`) vẫn là public để caller đọc kết quả.
+_Avoid_: PDFPrepEngine, pdf_pipeline, pdf_processor
+
 **Dynamic ID Override**:
 A routing mechanism that allows developers to dynamically override Google Notebook IDs using environment variables (e.g., `NOTEBOOKLM_CORE_ID`) to prevent hardcoded configuration values across different staging environments.
 
