@@ -653,7 +653,7 @@ def _check_google_drive(download_dir: Path, slug_name: str, extensions: list[str
         project_root = resolve_project_root()
         if str(project_root) not in sys.path:
             sys.path.append(str(project_root))
-        from scripts.legal_sync import GOOGLE_API_AVAILABLE, get_drive_service
+        from .sync import GOOGLE_API_AVAILABLE, get_drive_service
 
         if not GOOGLE_API_AVAILABLE:
             return False

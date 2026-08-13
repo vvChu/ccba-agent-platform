@@ -466,7 +466,7 @@ def main() -> None:
     if args.mine_logs:
         logger.info("⛏️ Kích hoạt Production Log Mining trước khi chạy Evals...")
         try:
-            from scripts.log_eval_miner import mine_logs_and_export
+            from scripts.eval.log_eval_miner import mine_logs_and_export
             mine_logs_and_export(project_root / ".system_generated" / "logs", test_cases_dir, args.skill)
         except Exception as e:
             logger.warning(f"⚠️ Không thể mine logs: {e}")

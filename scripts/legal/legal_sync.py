@@ -13,11 +13,6 @@ import os
 import sys
 from pathlib import Path
 
-# Force UTF-8 on Windows to avoid charmap encoding errors with Vietnamese text
-if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
-
 # Ensure scripts/ is importable (for running from repo root)
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -26,6 +21,12 @@ from ccba_legal.sync import DEFAULT_DRIVE_FOLDER, LegalSyncEngine
 
 def main() -> None:
     """Parse CLI arguments and delegate to LegalSyncEngine."""
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+            sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     parser = argparse.ArgumentParser(
         description="Tự động đồng bộ pháp lý (Legal Auto-Sync Pipeline) cho CCBA"
     )

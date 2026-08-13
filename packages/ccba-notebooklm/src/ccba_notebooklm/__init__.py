@@ -19,13 +19,6 @@ Internal modules (import trực tiếp khi cần):
 """
 
 # --- Tier 1: Transport & Auth ---
-from ._client import (
-    HAS_NOTEBOOKLM,
-    CCBANotebookLMClient,
-    check_auth,
-    get_client,
-)
-
 # --- Tier 2: Orchestration Workflows ---
 from ._artifacts import (
     delete_notebook,
@@ -39,6 +32,13 @@ from ._artifacts import (
     query_rag,
     share_notebook,
 )
+from ._client import (
+    HAS_NOTEBOOKLM,
+    CCBANotebookLMClient,
+    check_auth,
+    get_client,
+)
+from ._service import NotebookLMService
 
 # Alias for backward compatibility
 NotebookLMClient = CCBANotebookLMClient
@@ -54,6 +54,7 @@ __all__ = [
     "HAS_NOTEBOOKLM",
     "CCBANotebookLMClient",
     "NotebookLMClient",
+    "NotebookLMService",
     "check_auth",
     "get_client",
     # Tier 2 — Orchestration Workflows

@@ -101,9 +101,7 @@ def main() -> int:
 
     project_root = Path(__file__).parent.parent.parent.resolve()
 
-    parser = argparse.ArgumentParser(
-        description="CCBA Test Execution Speed Guard Linter/Hook."
-    )
+    parser = argparse.ArgumentParser(description="CCBA Test Execution Speed Guard Linter/Hook.")
     parser.add_argument("files", nargs="*", help="Specific test file(s) to check.")
     parser.add_argument(
         "--threshold",
@@ -138,9 +136,7 @@ def main() -> int:
     warnings_count = 0
 
     for tf in targets:
-        ok, duration, msg = check_test_file_speed(
-            tf, project_root, max_fast_seconds=args.threshold
-        )
+        ok, duration, msg = check_test_file_speed(tf, project_root, max_fast_seconds=args.threshold)
         if not ok:
             warnings_count += 1
             print(f"  {msg}")

@@ -45,7 +45,7 @@ def test_async_ai_repr():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_async_client_chat_calls_api():
     """AsyncAIClient.chat() should call the underlying OpenAI async client."""
     client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key")
@@ -64,7 +64,7 @@ async def test_async_client_chat_calls_api():
     mock_create.assert_called_once()
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_async_client_chat_multi():
     """AsyncAIClient.chat_multi() should accept message list and return text."""
     client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key")
@@ -87,7 +87,7 @@ async def test_async_client_chat_multi():
     assert result == "multi response"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_async_client_privacy_guard_blocks_api_key():
     """PrivacyGuard must block API keys from being sent via async client."""
     client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key")
@@ -98,7 +98,7 @@ async def test_async_client_privacy_guard_blocks_api_key():
         await client.chat(malicious_prompt)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_async_client_chat_retries_on_connection_error():
     """AsyncAIClient.chat() should retry on connection error and succeed."""
     client = AsyncAIClient(

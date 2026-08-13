@@ -7,7 +7,7 @@
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $VenvPython = Join-Path $ScriptDir ".venv\Scripts\python.exe"
-$SyncScript = Join-Path $ScriptDir "scripts\check_claudekit_updates.py"
+$SyncScript = Join-Path $ScriptDir "scripts\spoke\check_claudekit_updates.py"
 
 Write-Host "=========================================================" -ForegroundColor Cyan
 Write-Host "CCBA Agent Platform - Đồng bộ tri thức thượng nguồn" -ForegroundColor Cyan

@@ -10,13 +10,6 @@ from pathlib import Path
 
 import yaml
 
-# Enforce UTF-8 output
-if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
-
 SKILLS_DIRS = [
     Path(".agents/skills"),
     Path("claudekit-engineer/claude/skills"),
@@ -113,6 +106,11 @@ def find_skills(query: str = ""):
 
 
 def main():
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     query = ""
     if len(sys.argv) > 1:
         query = " ".join(sys.argv[1:])

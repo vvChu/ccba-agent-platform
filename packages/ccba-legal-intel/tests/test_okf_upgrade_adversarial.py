@@ -8,9 +8,9 @@ pytestmark = [pytest.mark.slow, pytest.mark.adversarial]
 
 
 from bs4 import BeautifulSoup
+
 from ccba_legal.formatter import OKFStructureProcessor
 from ccba_legal.parser import LegalAnalysisEngine
-
 from mdconverter.plugins.vn_legal.linter import VNLegalLinter  # type: ignore[import-untyped]
 
 
