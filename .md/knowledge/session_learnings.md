@@ -904,6 +904,32 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Vấn đề**: Sử dụng `@patch("ctypes.windll...")` trực tiếp trong test decorator khiến test suite crash ngay lập tức trên môi trường Linux CI runner với lỗi `AttributeError`.
 - **Thay thế bằng**: Mock abstraction layer hoặc mock `os.kill` với `sys.platform = "linux"`.
 
+
+---
+
+## Session Learnings — Deep Module Refactoring, Copilot Audit & UI Timeout Guardrails (2026-08-13)
+- **ID Phiên làm việc**: `53b1283e-64f2-44b6-8e02-d4c8eb582413`
+
+### Patterns (Mẫu tốt)
+
+#### 92. IDE Client UI Timeout Prevention via `safe_runner` Background Process
+- **Ngữ cảnh**: Chạy các lệnh kiểm thử toàn diện / slow integration tests trong quy trình release hoặc eval.
+- **Giải pháp**: Tránh gọi lệnh đồng bộ trực tiếp kéo dài > 9s bằng `run_command`, vì bộ giám sát Timeout Watchdog của IDE Client UI sẽ tự động gửi lệnh hủy cưỡng chế (`"User cancelled agent execution"`). Luôn khởi chạy qua `safe_runner.py` với `WaitMsBeforeAsync: 1000` để trả về kết quả trong 1s, để tiến trình chạy ngầm cô lập và chờ Reactive Wakeup thông báo từ hệ thống.
+- **Nguồn**: Session `53b1283e-64f2-44b6-8e02-d4c8eb582413`, 2026-08-13
+
+#### 93. Dynamic Compatibility Alias Preservation in CLI Entrypoint Refactoring
+- **Ngữ cảnh**: Làm sâu module (Deepening module) và biến script CLI thành adapter mỏng (`validate_docs.py`).
+- **Giải pháp**: Khi dọn dẹp entrypoint nhưng giữ lại các hàm helper alias cho tương thích ngược (backward compatibility) với test suite cũ, cần đồng bộ lại docstring của module để tránh mâu thuẫn giữa mô tả và mã nguồn thực tế, giúp vượt qua kiểm duyệt code review của Copilot.
+- **Nguồn**: Session `53b1283e-64f2-44b6-8e02-d4c8eb582413`, 2026-08-13
+
+---
+
+### Anti-patterns (Cách tránh)
+
+#### 57. Synchronous Execution of Long Tests (> 9s) on Agent Main Loop
+- **Vấn đề**: Gọi các câu lệnh chạy test lâu (> 9 giây) một cách đồng bộ trực tiếp trên Agent turn, làm trigger bộ giám sát UI Timeout Watchdog làm hủy phiên ngắt chừng với lỗi `User cancelled agent execution`.
+- **Thay thế bằng**: Đẩy tiến trình test xuống background via `safe_runner.py` hoặc `safe_pytest.py` với `WaitMsBeforeAsync: 1000`.
+
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
