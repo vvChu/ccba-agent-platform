@@ -22,8 +22,8 @@ Homepage = "https://github.com/vvChu/ccba-agent-platform"
 Repository = "https://github.com/vvChu/ccba-agent-platform"
 
 [project.scripts]
-ccba-decrypt-registry = "scripts.decrypt_spoke_registry:decrypt_registry"
-ccba-gen-keys = "scripts.generate_registry_keys:generate_keys"
+ccba-decrypt-registry = "scripts.spoke.decrypt_spoke_registry:decrypt_registry"
+ccba-gen-keys = "scripts.spoke.generate_registry_keys:generate_keys"
 ccba-find-skills = "scripts.spoke.find_skills:main"
 ccba-seo-audit = "scripts.validation.seo_audit:main"
 ccba-eval = "scripts.eval.run_harness_evals:main"

@@ -6,10 +6,6 @@ import yaml
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
-# Đảm bảo in ký tự tiếng Việt an toàn trên console Windows
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8")
-
 # Cấu hình đường dẫn
 REGISTRY_PATH = ".md/data/spoke_registry.yaml"
 DECRYPTED_PATH = ".md/data/spoke_registry_decrypted.yaml"
@@ -18,6 +14,11 @@ PRIVATE_KEY_PATH = os.path.join(PRIVATE_KEY_DIR, "registry_private_key.pem")
 
 
 def decrypt_registry():
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     print("🔓 Bắt đầu tiến trình giải mã Spoke Registry trung tâm...")
 
     # 1. Kiểm tra khóa bí mật

@@ -15,11 +15,10 @@ def test_repaired_log_eval_miner_imports():
 
 def test_repaired_legal_sync_imports():
     """Verify legal_sync module re-exports GOOGLE_API_AVAILABLE and get_drive_service."""
-    from scripts.legal_sync import GOOGLE_API_AVAILABLE as shim_flag
-    from scripts.legal_sync import get_drive_service as shim_get
-
     from ccba_legal.sync import GOOGLE_API_AVAILABLE as deep_flag
     from ccba_legal.sync import get_drive_service as deep_get
+    from scripts.legal_sync import GOOGLE_API_AVAILABLE as shim_flag
+    from scripts.legal_sync import get_drive_service as shim_get
 
     assert isinstance(deep_flag, bool)
     assert isinstance(shim_flag, bool)
@@ -31,13 +30,15 @@ def test_repaired_legal_sync_imports():
 def test_console_scripts_entry_points_resolvable():
     """Verify all pyproject.toml console script target functions exist and are callable."""
     targets = [
+        ("scripts.spoke.decrypt_spoke_registry", "decrypt_registry"),
+        ("scripts.spoke.generate_registry_keys", "generate_keys"),
+        ("scripts.spoke.find_skills", "main"),
+        ("scripts.validation.seo_audit", "main"),
         ("scripts.eval.run_harness_evals", "main"),
         ("scripts.eval.run_isolated_tests", "main"),
         ("scripts.spoke.compile_knowledge", "main"),
         ("scripts.legal.legal_sync", "main"),
         ("scripts.validation.audit_pr_comments", "main"),
-        ("scripts.spoke.find_skills", "main"),
-        ("scripts.validation.seo_audit", "main"),
     ]
 
     for module_name, func_name in targets:

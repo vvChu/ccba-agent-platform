@@ -19,9 +19,14 @@ from ccba_notebooklm._service import NotebookLMService
 
 
 @pytest.fixture(autouse=True)
-def clean_env(monkeypatch):
+def clean_env(monkeypatch, tmp_path):
     monkeypatch.delenv("NOTEBOOKLM_SESSION_COOKIE", raising=False)
     monkeypatch.delenv("NOTEBOOKLM_COOKIES_JSON", raising=False)
+    test_reg = tmp_path / "sources_registry.yaml"
+    monkeypatch.setattr("ccba_notebooklm._registry.REGISTRY_FILE", test_reg)
+    import ccba_notebooklm._service
+
+    monkeypatch.setattr(ccba_notebooklm._service, "REGISTRY_FILE", test_reg, raising=False)
 
 
 @pytest.mark.anyio

@@ -19,7 +19,7 @@ ccba-agent-platform/                    ← Hub (Git-backed)
 │   │   ├── docs-validator/            ←   Linter tài liệu tĩnh (Patched)
 │   │   ├── architecture-sync/         ←   Đồng bộ hiến pháp kiến trúc (Patched)
 │   │   └── ...                        ←   Và 52+ kỹ năng chuyên dụng khác
-│   ├── workflows/                     ← Automated workflows (<!-- WORKFLOW_COUNT_START -->0<!-- WORKFLOW_COUNT_END --> workflows)
+│   ├── workflows/                     ← Automated workflows (<!-- WORKFLOW_COUNT_START -->57<!-- WORKFLOW_COUNT_END --> workflows)
 │   └── templates/                     ← Shared templates
 ├── .md/                               ← Central Knowledge Base (Project Knowledge Base)
 │   ├── knowledge/                     ←   Tài liệu nghiên cứu, roadmap, spec kỹ thuật
