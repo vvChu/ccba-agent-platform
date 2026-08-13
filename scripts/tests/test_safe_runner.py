@@ -72,25 +72,25 @@ def test_run_detached_returns_immediately(mock_popen, mock_scratch_dir):
     mock_process.wait.assert_called_once()
 
 
-@patch("scripts.safe_runner.sys.platform", "win32")
-@patch("ctypes.windll.kernel32.OpenProcess", return_value=None)
-def test_check_status_latest(mock_open_process, mock_scratch_dir, capsys):
-    # Create two status files
-    file1 = mock_scratch_dir / "exec_status_11111111.json"
-    with open(file1, "w", encoding="utf-8") as f:
-        json.dump({"id": "11111111", "status": "completed", "pid": 111}, f)
+@patch("os.kill", side_effect=OSError)
+def test_check_status_latest(mock_os_kill, mock_scratch_dir, capsys):
+    with patch("sys.platform", "linux"):
+        # Create two status files
+        file1 = mock_scratch_dir / "exec_status_11111111.json"
+        with open(file1, "w", encoding="utf-8") as f:
+            json.dump({"id": "11111111", "status": "completed", "pid": 111}, f)
 
-    time.sleep(0.1)  # ensure mtime is different
+        time.sleep(0.1)  # ensure mtime is different
 
-    file2 = mock_scratch_dir / "exec_status_22222222.json"
-    with open(file2, "w", encoding="utf-8") as f:
-        json.dump({"id": "22222222", "status": "running", "pid": 222}, f)
+        file2 = mock_scratch_dir / "exec_status_22222222.json"
+        with open(file2, "w", encoding="utf-8") as f:
+            json.dump({"id": "22222222", "status": "running", "pid": 222}, f)
 
-    safe_runner.check_status()
-    captured = capsys.readouterr()
+        safe_runner.check_status()
+        captured = capsys.readouterr()
 
-    assert "22222222" in captured.out
-    assert "11111111" not in captured.out
+        assert "22222222" in captured.out
+        assert "11111111" not in captured.out
 
 
 @patch("subprocess.Popen", side_effect=FileNotFoundError("Executable not found"))
