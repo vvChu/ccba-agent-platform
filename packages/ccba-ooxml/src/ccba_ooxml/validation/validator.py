@@ -77,9 +77,7 @@ class OOXMLValidator:
                     )
                 )
 
-        return ValidationReport(
-            is_valid=is_valid, issues=issues, validators_run=validators_run
-        )
+        return ValidationReport(is_valid=is_valid, issues=issues, validators_run=validators_run)
 
     def validate(self) -> bool:
         """Run all applicable validators based on file extension.
@@ -89,4 +87,3 @@ class OOXMLValidator:
         """
         report = self.validate_report()
         return report.is_valid
-

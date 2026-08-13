@@ -93,7 +93,6 @@ class LinkPatcherPostProcessor:
         return {"relative_links_patched": self._last_patched_count}
 
 
-
 def get_default_post_processors() -> list[PostProcessor]:
     """Get the default list of post-processors.
 
@@ -104,7 +103,6 @@ def get_default_post_processors() -> list[PostProcessor]:
         List of PostProcessor instances.
     """
     return [VNLegalPostProcessor(), LinkPatcherPostProcessor()]
-
 
 
 # ---------------------------------------------------------------------------
