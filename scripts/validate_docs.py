@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-"""validate_docs.py - Thin CLI Entrypoint for Document & Governance Validation.
+"""validate_docs.py - Thin CLI Entrypoint & Compatibility Adapter for Document Validation.
 
-This file is a minimal CLI adapter. All auditing logic lives in DocumentAuditor
-(doc_auditor.py). Do NOT add re-exports or wrapper functions here — call
-DocumentAuditor directly instead:
-
-    from doc_auditor import DocumentAuditor
-    auditor = DocumentAuditor()
-    auditor.validate_markdown_file(path)
+Delegates scanning, frontmatter parsing, link validation, and reporting logic
+to DocumentAuditor in doc_auditor.py. Maintains backward-compatible helper aliases
+for existing test harnesses.
 """
 
 import sys
