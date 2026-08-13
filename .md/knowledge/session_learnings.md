@@ -876,9 +876,23 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 #### 88. Synchronous Execution Guard for Eval Runner CI Gates
 - **Ngữ cảnh**: Kích hoạt kiểm thử Pytest trong CI Gates tự động (`ccba-eval`).
 - **Giải pháp**: Tránh gọi các detached background runners (như `safe_pytest.py`) trong các bước kiểm định đồng bộ của CI Gates, vì runner thoát ngay lập tức khiến CI runner báo sai kết quả hoặc kết thúc trước khi test chạy xong. Thực thi `pytest` đồng bộ qua `run_command` với timeout watchdog để thu thập chính xác exit code và log output vào báo cáo CI.
-- **Nguồn**: Session `19ce4564-e0d6-4eb5-a6bb-ff44ad93ddae`, 2026-08-13
+#### 89. Double-Pass Adversarial Review for Codebase Proposals
+- **Ngữ cảnh**: Xây dựng kế hoạch cải tiến kiến trúc codebase (Deep Modules).
+- **Giải pháp**: Luôn thực hiện 2 vòng rà soát trước khi xuất bản bản kế hoạch: Vòng 1 (Code-First) đọc trực tiếp triển khai thực tế để phát hiện các module/pipeline đã tồn tại (tránh lặp abstraction); Vòng 2 (Self-Adversarial) phản biện ít nhất 3 giả định cốt lõi và cập nhật lại bản kế hoạch chính xác theo thực tế mã nguồn.
+- **Nguồn**: Session `e356d59b-6e9b-464d-b362-4d2f6872aa61`, 2026-08-13
+
+#### 90. Anti-Polling Circuit Breaker for Background Tasks
+- **Ngữ cảnh**: Xử lý các tác vụ ngầm (Background Tasks) chạy thời gian dài trong Agent Platform.
+- **Giải pháp**: Giới hạn tối đa 2 lần gọi `manage_task status` để kiểm tra tiến độ ngắn. Nếu task vẫn ở trạng thái `RUNNING`, Agent bắt buộc xuất ra thông báo súc tích rồi End Turn nhường luồng. Hệ thống sẽ tự động Reactive Wakeup đánh thức Agent khi task kết thúc, tuyệt đối cấm Polling Loop dồn dập trong cùng 1 turn.
+- **Nguồn**: Session `e356d59b-6e9b-464d-b362-4d2f6872aa61`, 2026-08-13
+
+#### 91. Structured Validation Reporting Pattern
+- **Ngữ cảnh**: Xây dựng các validator deep modules cho định dạng file phức tạp (như OOXML docx/pptx/xlsx).
+- **Giải pháp**: Tránh việc chỉ trả về `bool` thuần túy hoặc `print()` ra console. Định nghĩa các dataclasses `ValidationIssue` và `ValidationReport` chứa thông tin chi tiết (file_path, line_number, severity, validator_name) và tích hợp thuộc tính `last_report` trực tiếp vào context manager session.
+- **Nguồn**: Session `e356d59b-6e9b-464d-b362-4d2f6872aa61`, 2026-08-13
 
 ---
+
 
 ### Anti-patterns (Cách tránh)
 
