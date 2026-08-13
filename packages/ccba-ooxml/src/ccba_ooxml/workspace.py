@@ -32,6 +32,19 @@ class OOXMLWorkspace:
         self.validate = validate
         self._temp_dir_obj: tempfile.TemporaryDirectory[str] | None = None
         self.working_dir: Path | None = None
+        self.last_report: Any | None = None
+
+    def validate_workspace(self) -> Any:
+        """Validate current workspace state and store report in self.last_report."""
+        from .validation import OOXMLValidator
+
+        if not self.working_dir:
+            raise RuntimeError("Workspace is not active.")
+
+        validator = OOXMLValidator(self.working_dir, self.file_path)
+        self.last_report = validator.validate_report()
+        return self.last_report
+
 
     def __enter__(self) -> OOXMLWorkspace:
         """Unpack the document and enter the context."""
