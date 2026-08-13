@@ -17,6 +17,7 @@ import os
 import re
 import subprocess
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -28,6 +29,33 @@ CODE_REF_RE = re.compile(r"`([a-zA-Z_][a-zA-Z0-9_]*(?:\(\))?)`")
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 ENV_VAR_RE = re.compile(r"`([A-Z][A-Z0-9_]{2,})`|\$([A-Z][A-Z0-9_]{2,})")
 STEP_LINE_RE = re.compile(r"^\s*([0-9]+)\.\s+(.*)$")
+
+
+class AuditIssue(NamedTuple):
+    """Container for a single audit issue."""
+
+    line_number: int
+    subject: str
+    message: str
+    category: str = ""
+    file_path: str = ""
+
+
+@dataclass
+class AuditReport:
+    """Structured report container for workspace audit results."""
+
+    issues: list[AuditIssue] = field(default_factory=list)
+    total_issues: int = 0
+    has_hard_errors: bool = False
+    scanned_files: int = 0
+
+    def by_category(self, category: str) -> list[AuditIssue]:
+        return [i for i in self.issues if i.category == category]
+
+    def by_file(self, file_path: str) -> list[AuditIssue]:
+        return [i for i in self.issues if i.file_path == file_path]
+
 
 # Common Keywords to Ignore in Code Symbol Audit
 IGNORE_CODE_REFS: set[str] = {
@@ -147,12 +175,7 @@ EXCLUSION_HEADERS: set[str] = {
 }
 
 
-class AuditIssue(NamedTuple):
-    """Container for a single audit issue."""
 
-    line_number: int
-    subject: str
-    message: str
 
 
 class DocumentAuditor:
@@ -1017,6 +1040,138 @@ class DocumentAuditor:
             "skills": skill_issues,
             "total_skill_issues": len(skill_issues),
         }
+
+    def audit_documents(
+        self,
+        docs_dir: Path | str = "docs",
+        src_dirs: list[Path] | None = None,
+        fix: bool = False,
+        changed_only: bool = False,
+    ) -> AuditReport:
+        """Audit documentation files and return a structured AuditReport."""
+        target_dir = Path(docs_dir)
+        if not target_dir.is_absolute():
+            target_dir = self.project_root / target_dir
+
+        if src_dirs is None:
+            src_dirs = [
+                self.project_root / "scripts",
+                self.project_root / "packages",
+                self.project_root,
+            ]
+
+        if not target_dir.exists():
+            return AuditReport(
+                issues=[
+                    AuditIssue(0, str(target_dir), "Directory does not exist", category="docs")
+                ],
+                total_issues=1,
+                has_hard_errors=True,
+                scanned_files=0,
+            )
+
+        exclude_dirs = {
+            ".git",
+            "node_modules",
+            ".venv",
+            "venv",
+            "claudekit-engineer",
+            "claudekit-marketing",
+            ".pytest_cache",
+            "extracted_docs",
+            ".md",
+            "CDE",
+        }
+        md_files = []
+
+        if target_dir.is_file():
+            if target_dir.suffix == ".md" and not target_dir.name.endswith("_compiled.md"):
+                md_files.append(target_dir)
+        else:
+            for p in target_dir.rglob("*.md"):
+                if p.is_file():
+                    if p.name.endswith("_compiled.md"):
+                        continue
+                    if "legal_docs" in p.parts:
+                        other_excludes = exclude_dirs - {".md"}
+                        if any(ex in p.parts for ex in other_excludes):
+                            continue
+                    else:
+                        if any(ex in p.parts for ex in exclude_dirs):
+                            continue
+                    if ".agents" in p.parts:
+                        idx = p.parts.index(".agents")
+                        if len(p.parts) > idx + 1:
+                            subfolder = p.parts[idx + 1]
+                            if subfolder not in {"skills", "workflows"}:
+                                continue
+                    md_files.append(p)
+
+        for root_file in ["README.md", "PLATFORM.md", "CONTRIBUTING.md", "SECURITY.md"]:
+            root_path = self.project_root / root_file
+            if root_path.exists() and root_path not in md_files:
+                md_files.append(root_path)
+
+        env_vars = self.load_env_example()
+        modified_files = self.get_modified_files()
+
+        if changed_only:
+            md_files = [f for f in md_files if f.resolve() in modified_files]
+
+        registry = self.load_legal_registry()
+        registry_map = self.build_markdown_to_doc_map(registry)
+
+        issues_list: list[AuditIssue] = []
+        has_hard_errors = False
+
+        for filepath in md_files:
+            file_issues = self.validate_markdown_file(
+                filepath,
+                src_dirs,
+                env_vars,
+                fix=fix,
+                registry_map=registry_map,
+            )
+
+            str_path = str(
+                filepath.relative_to(self.project_root)
+                if filepath.is_relative_to(self.project_root)
+                else filepath
+            )
+
+            for cat, items in file_issues.items():
+                for line, subj, msg in items:
+                    issues_list.append(
+                        AuditIssue(
+                            line_number=line,
+                            subject=subj,
+                            message=msg,
+                            category=cat,
+                            file_path=str_path,
+                        )
+                    )
+                    if "Error" in msg or "Broken" in msg or "does not exist" in msg:
+                        has_hard_errors = True
+
+        arch_drift = self.check_architecture_drift()
+        for err in arch_drift:
+            issues_list.append(
+                AuditIssue(
+                    line_number=0,
+                    subject="Architecture Drift",
+                    message=err,
+                    category="architecture_drift",
+                    file_path="README.md",
+                )
+            )
+            has_hard_errors = True
+
+        return AuditReport(
+            issues=issues_list,
+            total_issues=len(issues_list),
+            has_hard_errors=has_hard_errors,
+            scanned_files=len(md_files),
+        )
 
     def run_docs_validation_cli(self, args_list: list[str] | None = None) -> int:
         """CLI entry point for validate_docs.py."""
