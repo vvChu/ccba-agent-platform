@@ -87,3 +87,42 @@ class TestDocumentAuditor(unittest.TestCase):
             auditor = DocumentAuditor(project_root=Path(tmpdir))
             exit_code = auditor.run_skills_validation_cli([str(skills_dir.parent)])
             self.assertEqual(exit_code, 0)
+
+    def test_audit_issue_extended_backward_compatibility(self) -> None:
+        from doc_auditor import AuditIssue
+
+        # 3 positional args (old usage)
+        issue1 = AuditIssue(1, "subject", "message")
+        self.assertEqual(issue1.line_number, 1)
+        self.assertEqual(issue1.subject, "subject")
+        self.assertEqual(issue1.message, "message")
+        self.assertEqual(issue1.category, "")
+        self.assertEqual(issue1.file_path, "")
+
+        # 5 args (new extended usage)
+        issue2 = AuditIssue(10, "doc.md", "Broken link", category="link", file_path="doc.md")
+        self.assertEqual(issue2.category, "link")
+        self.assertEqual(issue2.file_path, "doc.md")
+
+    def test_audit_report_structure(self) -> None:
+        from doc_auditor import AuditIssue, AuditReport
+
+        issue_a = AuditIssue(5, "file1.md", "Broken link", category="link", file_path="file1.md")
+        issue_b = AuditIssue(
+            12, "file1.md", "Missing var", category="env_vars", file_path="file1.md"
+        )
+
+        report = AuditReport(
+            issues=[issue_a, issue_b],
+            total_issues=2,
+            has_hard_errors=True,
+            scanned_files=1,
+        )
+        self.assertEqual(report.total_issues, 2)
+        self.assertTrue(report.has_hard_errors)
+        self.assertEqual(len(report.by_category("link")), 1)
+        self.assertEqual(len(report.by_file("file1.md")), 2)
+
+
+if __name__ == "__main__":
+    unittest.main()

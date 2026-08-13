@@ -81,14 +81,14 @@ Dưới đây là bảng phân loại và đánh giá chi tiết các kỹ năng
 
 ```mermaid
 graph TD
-    A[Cron Job / Lệnh Gọi Sync] --> B[scripts/check_claudekit_updates.py]
+    A[Cron Job / Lệnh Gọi Sync] --> B[scripts/spoke/check_claudekit_updates.py]
     B --> C{Kiểm tra SHA trên Remote}
     C -->|SHA Trùng khớp| D[Kết thúc - Up-to-date]
     C -->|SHA Khác biệt hoặc Chưa clone| E[ensure_local_repo]
     E --> F[Tự động Git Clone/Fetch vào .md/scratch/repos/]
-    F --> G[scripts/assess_upstream_features.py]
+    F --> G[scripts/spoke/upstream_evaluator.py]
     G --> H[Quét các SKILL.md mới/thay đổi bằng Regex]
-    H --> I[Gửi chi tiết Kỹ năng lên Spark AI Gateway]
+    H --> I[Gửi chi tiết Kỹ năng lên Spark AI Gateway / Rule-Based Fallback]
     I --> J[Tự động cập nhật .md/knowledge/port_recommendations.md]
     J --> K[Cập nhật SHA cục bộ]
 ```

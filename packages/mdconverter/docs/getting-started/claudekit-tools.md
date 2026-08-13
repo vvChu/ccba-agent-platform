@@ -11,7 +11,7 @@ Hệ thống này cung cấp bộ khung điều phối Agent, kiểm soát chấ
 ```mermaid
 graph TD
     A[Khởi chạy Session] -->|1. Tự động kiểm tra| B(session_init.py & check_claudekit_updates.py)
-    B -->|Phát hiện cập nhật| H[Đánh giá tự động - assess_upstream_features.py]
+    B -->|Phát hiện cập nhật| H[Đánh giá tự động - upstream_evaluator.py]
     H -->|Đề xuất port| I[.md/port_recommendations.md]
     B -->|2. Tìm kiếm kỹ năng| C{/ccba-kit find}
     C -->|3. Lập kế hoạch| D[ccba-plan / plan_manager.py]
@@ -84,14 +84,14 @@ Phân tích nhanh chất lượng SEO kỹ thuật của bất kỳ file Markdow
 
 ---
 
-### 6. Đánh giá tính năng mới (`assess_upstream_features.py`)
-Tự động so sánh sự thay đổi ở cả hai kho chứa thượng nguồn `claudekit-engineer` và `claudekit-marketing`, sau đó gọi LLM để đánh giá sự phù hợp trước khi port:
-*   **Cách chạy thủ công (Kiểm thử giả lập)**:
+### 6. Đánh giá tính năng mới (`upstream_evaluator.py`)
+Tự động so sánh sự thay đổi ở cả hai kho chứa thượng nguồn `claudekit-engineer` và `claudekit-marketing`, sau đó gọi LLM / Rule-Based Fallback để đánh giá sự phù hợp trước khi port:
+*   **Cách chạy kiểm tra cập nhật (Check-Only Mode)**:
     ```bash
-    python scripts/assess_upstream_features.py --test-mock
+    python scripts/spoke/check_claudekit_updates.py --check-only
     ```
-*   **Cách chạy thực tế (So sánh Git SHA)**:
+*   **Cách chạy đồng bộ & đánh giá toàn diện**:
     ```bash
-    python scripts/assess_upstream_features.py --repo-path <đường_dẫn_repo> --repo-type <engineer|marketing> --base <SHA_cũ> --head <SHA_mới>
+    python scripts/spoke/check_claudekit_updates.py
     ```
 *   **Đầu ra**: Báo cáo chấm điểm và đề xuất port sẽ được xuất tại `.md/port_recommendations.md`.

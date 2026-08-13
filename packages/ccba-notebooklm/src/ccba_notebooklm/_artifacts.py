@@ -20,14 +20,12 @@ from ._registry import (
     clear_task_state,
     get_file_sha256,
     get_notebook_id_from_context,
-    normalize_to_relative,
     read_registry,
     read_task_state,
     save_notebook_id_to_context,
     save_task_state,
-    update_registry,
 )
-from ._security import run_maskara_gate
+from ._service import NotebookLMService
 
 
 def run_docs_validator(file_path: str) -> None:
@@ -116,54 +114,11 @@ sha256: "{sha256}"
 
 
 async def get_source_id_by_path(
-    client: Any, notebook_id: str, source_path: str, sha256: str
+    client: Any, notebook_id: str, source_path: str, sha256: str | None = None
 ) -> str:
-    """Tìm hoặc nạp nguồn, trả về source_id và cập nhật registry."""
-    sources = await client.list_sources(notebook_id)
-    target_source = None
-
-    registry = read_registry()
-    norm_path = normalize_to_relative(source_path)
-    if norm_path in registry:
-        registered_info = registry[norm_path]
-        if registered_info.get("notebook_id") == notebook_id:
-            target_source_id = registered_info.get("source_id")
-            target_source = next((src for src in sources if src.id == target_source_id), None)
-
-            # Kiểm tra nếu file đã bị thay đổi nội dung thì xóa nguồn cũ trên Cloud
-            if target_source and registered_info.get("sha256") != sha256:
-                try:
-                    print(
-                        f"[Info] Phát hiện thay đổi nội dung (SHA-256 mismatch). Đang xóa nguồn cũ '{target_source_id}'..."
-                    )
-                    await client.delete_source(notebook_id, target_source_id)
-                    target_source = None
-                except Exception as ex:
-                    print(f"[Warn] Lỗi xóa bản cũ: {ex}", file=sys.stderr)
-
-    if not target_source:
-        for src in sources:
-            if source_path in getattr(src, "url", "") or source_path in getattr(src, "title", ""):
-                target_source = src
-                break
-
-    if not target_source:
-        upload_path, is_temp = run_maskara_gate(source_path)
-        try:
-            print(f"[Info] Đang nạp nguồn dữ liệu mới: '{source_path}'...")
-            if source_path.startswith(("http://", "https://")):
-                target_source = await client.add_url_source(notebook_id, upload_path, wait=True)
-            else:
-                target_source = await client.add_file_source(notebook_id, upload_path)
-            update_registry(source_path, target_source.id, sha256, notebook_id)
-        finally:
-            if is_temp and Path(upload_path).exists():
-                try:
-                    Path(upload_path).unlink()
-                except Exception:
-                    pass
-
-    return str(target_source.id)
+    """Tìm hoặc nạp nguồn, trả về source_id và cập nhật registry via NotebookLMService."""
+    service = NotebookLMService(client)
+    return await service.ensure_source(notebook_id, source_path)
 
 
 async def get_or_create_project_notebook(client: Any, project_name: str) -> str:
@@ -193,15 +148,15 @@ async def handle_artifact_flow(
     **kwargs: Any,
 ) -> int:
     """Hàm điều phối tổng quát cho việc sinh, polling và download mọi loại Structured Artifacts."""
-    if not HAS_NOTEBOOKLM:
-        print("ERROR: Thư viện 'notebooklm-py' chưa được cài đặt.", file=sys.stderr)
-        return 1
-
     project_name = Path(os.getcwd()).name
     sha256 = get_file_sha256(source_path)
 
     try:
         async with get_client() as client:
+            if not HAS_NOTEBOOKLM and not client.use_mock:
+                print("ERROR: Thư viện 'notebooklm-py' chưa được cài đặt.", file=sys.stderr)
+                return 1
+
             notebook_id = await get_or_create_project_notebook(client, project_name)
             await check_quota_and_warn(client, notebook_id)
 
@@ -303,54 +258,20 @@ async def handle_artifact_flow(
 
 async def extract_and_summarize(source_path: str, output_path: str) -> int:
     """Usecase 1: Import đa nguồn, đối soát SHA-256 hash và kết xuất tóm tắt cấu trúc sạch."""
-    if not HAS_NOTEBOOKLM:
-        print("ERROR: Thư viện 'notebooklm-py' chưa được cài đặt.", file=sys.stderr)
-        return 1
-
     project_name = Path(os.getcwd()).name
     sha256 = get_file_sha256(source_path)
-    registry = read_registry()
-    upload_path, is_temp = run_maskara_gate(source_path)
 
     try:
         async with get_client() as client:
+            if not HAS_NOTEBOOKLM and not client.use_mock:
+                print("ERROR: Thư viện 'notebooklm-py' chưa được cài đặt.", file=sys.stderr)
+                return 1
+
+            service = NotebookLMService(client)
             notebook_id = await get_or_create_project_notebook(client, project_name)
             await check_quota_and_warn(client, notebook_id)
 
-            source_id = None
-            norm_path = normalize_to_relative(source_path)
-            if norm_path in registry:
-                registered_info = registry[norm_path]
-                if (
-                    registered_info.get("sha256") == sha256
-                    and registered_info.get("notebook_id") == notebook_id
-                ):
-                    print(
-                        f"[Info] Phát hiện nội dung trùng khớp trên Cloud (SHA-256 match). Tái sử dụng Source ID: {registered_info['source_id']}"
-                    )
-                    source_id = registered_info["source_id"]
-                else:
-                    old_id = registered_info.get("source_id")
-                    try:
-                        print(
-                            f"[Info] Nội dung thay đổi (SHA-256 mismatch). Đang xóa nguồn cũ '{old_id}'..."
-                        )
-                        await client.delete_source(notebook_id, old_id)
-                    except Exception as ex:
-                        print(f"[Warn] Lỗi xóa bản cũ: {ex}", file=sys.stderr)
-
-            if not source_id:
-                print(
-                    f"[Info] Đang import nguồn dữ liệu: '{upload_path}' vào notebook '{notebook_id}'..."
-                )
-                if source_path.startswith(("http://", "https://")):
-                    source = await client.add_url_source(notebook_id, upload_path, wait=True)
-                else:
-                    source = await client.add_file_source(notebook_id, upload_path)
-                source_id = source.id
-                print(f"SUCCESS: Nạp nguồn thành công! Source ID: {source_id}")
-
-            update_registry(source_path, source_id, sha256, notebook_id)
+            source_id = await service.ensure_source(notebook_id, source_path)
 
             print(f"[Info] Đang yêu cầu NotebookLM tóm tắt tri thức từ nguồn '{source_id}'...")
             prompt = (
@@ -375,59 +296,23 @@ async def extract_and_summarize(source_path: str, output_path: str) -> int:
     except Exception as e:
         print(f"ERROR: Quá trình import hoặc trích xuất thất bại. Chi tiết: {e}", file=sys.stderr)
         return 3
-    finally:
-        if is_temp and Path(upload_path).exists():
-            try:
-                Path(upload_path).unlink()
-            except Exception:
-                pass
 
 
 async def query_rag(source_path: str, prompt: str) -> int:
     """Usecase 2: Truy vấn RAG cô lập trên một tài liệu nguồn cụ thể."""
-    if not HAS_NOTEBOOKLM:
-        print("ERROR: Thư viện 'notebooklm-py' chưa được cài đặt.", file=sys.stderr)
-        return 1
-
     project_name = Path(os.getcwd()).name
-    sha256 = get_file_sha256(source_path)
-    upload_path, is_temp = run_maskara_gate(source_path)
 
     try:
         async with get_client() as client:
+            if not HAS_NOTEBOOKLM and not client.use_mock:
+                print("ERROR: Thư viện 'notebooklm-py' chưa được cài đặt.", file=sys.stderr)
+                return 1
+
+            service = NotebookLMService(client)
             notebook_id = await get_or_create_project_notebook(client, project_name)
             await check_quota_and_warn(client, notebook_id)
 
-            sources = await client.list_sources(notebook_id)
-            target_source = None
-
-            registry = read_registry()
-            norm_path = normalize_to_relative(source_path)
-            if norm_path in registry:
-                registered_info = registry[norm_path]
-                if registered_info.get("notebook_id") == notebook_id:
-                    target_source_id = registered_info.get("source_id")
-                    target_source = next(
-                        (src for src in sources if src.id == target_source_id), None
-                    )
-
-            if not target_source:
-                for src in sources:
-                    if source_path in getattr(src, "url", "") or source_path in getattr(
-                        src, "title", ""
-                    ):
-                        target_source = src
-                        break
-
-            if not target_source:
-                print(f"[Info] Không tìm thấy nguồn có sẵn, đang nạp nguồn mới: '{source_path}'...")
-                if source_path.startswith(("http://", "https://")):
-                    target_source = await client.add_url_source(notebook_id, upload_path, wait=True)
-                else:
-                    target_source = await client.add_file_source(notebook_id, upload_path)
-                update_registry(source_path, target_source.id, sha256, notebook_id)
-
-            target_id = target_source.id
+            target_id = await service.ensure_source(notebook_id, source_path)
             print(f"[Info] Đang gửi câu hỏi RAG cô lập tới nguồn ID '{target_id}'...")
 
             result = await client.ask_chat(
@@ -442,12 +327,6 @@ async def query_rag(source_path: str, prompt: str) -> int:
     except Exception as e:
         print(f"ERROR: Truy vấn RAG thất bại. Chi tiết: {e}", file=sys.stderr)
         return 3
-    finally:
-        if is_temp and Path(upload_path).exists():
-            try:
-                Path(upload_path).unlink()
-            except Exception:
-                pass
 
 
 async def list_notebooks() -> int:

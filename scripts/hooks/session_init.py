@@ -48,7 +48,7 @@ def main(event: str, payload: dict) -> int:
             print(f"[session-init] Error creating .md directory: {e}")
 
     # 4. Trigger ClaudeKit update checker
-    checker_script = Path(__file__).parent.parent / "check_claudekit_updates.py"
+    checker_script = Path(__file__).parent.parent / "spoke" / "check_claudekit_updates.py"
     if checker_script.exists():
         try:
             subprocess.Popen([sys.executable, str(checker_script)])

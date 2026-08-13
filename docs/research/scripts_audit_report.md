@@ -42,7 +42,8 @@ Các script được tham chiếu trực tiếp bởi tệp cấu hình của Sk
 | `run_harness_evals.py` | `scripts/run_harness_evals.py` | 2 | Chạy kiểm tra tự động (`eval-gate/SKILL.md`, `new-feature.md`) |
 | `validate_skills.py` | `scripts/validate_skills.py` | 2 | Kiểm tra định dạng tệp tin `SKILL.md` (`writing-great-skills/SKILL.md`) |
 | `audit_pr_comments.py` | `scripts/audit_pr_comments.py` | 2 | Kiểm duyệt comments trên pull request (`release-feature.md`, `release_gate.md`) |
-| `check_claudekit_updates.py` | `scripts/check_claudekit_updates.py` | 1 | Đồng bộ cập nhật từ ClaudeKit (`sync-upstream/SKILL.md`) |
+| `check_claudekit_updates.py` | `scripts/spoke/check_claudekit_updates.py` | 1 | Đồng bộ cập nhật từ ClaudeKit (`sync-upstream/SKILL.md`) |
+| `upstream_evaluator.py` | `scripts/spoke/upstream_evaluator.py` | 1 | Engine hợp nhất đồng bộ và đánh AI tính năng thượng nguồn (`sync-upstream/SKILL.md`) |
 | `legal_intelligence.py` | `scripts/legal_intelligence.py` | 1 | Cào và xử lý văn bản pháp luật (`ccba-legal-intel/SKILL.md`) |
 | `legal_sync.py` | `scripts/legal_sync.py` | 1 | Đồng bộ văn bản lên NotebookLM (`update-legal-registry.md`) |
 | `mock_debugger.py` | `scripts/mock_debugger.py` | 1 | Trình giả lập debug lỗi (`mock-debugger/SKILL.md`) |
@@ -93,7 +94,7 @@ Các script đã hoàn thành nhiệm vụ lịch sử hoặc không còn phù h
 | Script | Đường dẫn | Lý do đề xuất xóa |
 | :--- | :--- | :--- |
 | `standardize_iso.py` | `scripts/standardize_iso.py` | Script một lần (one-off) để đổi tên file VBPL sang chuẩn ISO. Đã chạy xong, không còn giá trị. |
-| `assess_upstream_features.py` | `scripts/assess_upstream_features.py` | Script nháp để nghiên cứu ClaudeKit. Đã có workflow `/ccba-sync-upstream`. |
+| `assess_upstream_features.py` | `scripts/spoke/assess_upstream_features.py` | Script nháp để nghiên cứu ClaudeKit (Đã xóa — hợp nhất vào `upstream_evaluator.py`). |
 | `install_ported_dependencies.py` | `scripts/install_ported_dependencies.py` | Chứa hardcode cài package từ đợt di trú cũ. Đã có `uv` quản lý dependencies. |
 | `plan_manager.py` | `scripts/plan_manager.py` | Tiện ích quản lý plan kiểu cũ. Đã bị thay thế hoàn toàn bởi quy trình `implementation_plan.md` của Antigravity. |
 | `team_coordinator.py` | `scripts/team_coordinator.py` | Code thử nghiệm teamwork coordinator cũ, chưa hoàn thiện. |

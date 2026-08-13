@@ -9,14 +9,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Setup console encoding for Windows
-if sys.platform.startswith("win"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
-    except AttributeError:
-        pass
-
 
 def run_command(cmd: list[str]) -> str:
     """Run a system command and return its stdout."""
@@ -76,6 +68,15 @@ def check_if_resolved_in_code_or_walkthrough(comment: dict) -> bool:
 
 
 def main():
+    if sys.platform.startswith("win"):
+        try:
+            if hasattr(sys.stdout, "reconfigure"):
+                sys.stdout.reconfigure(encoding="utf-8")
+            if hasattr(sys.stderr, "reconfigure"):
+                sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
     pr_number = get_current_pr_number()
     if pr_number == 0:
         print("[OK] No active Pull Request detected. Skipping.")

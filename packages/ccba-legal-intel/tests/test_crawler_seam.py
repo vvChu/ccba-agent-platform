@@ -1,6 +1,7 @@
 """Unit tests for TVPL Crawler Provider Seam & Mock Legal Provider."""
 
 import pytest
+
 from ccba_legal.crawler import LegalDocProvider, MockLegalDocProvider, TVPLCrawlFailedException
 
 

@@ -38,7 +38,7 @@ def mock_analyzer_report():
     return report
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_process_segmented_hybrid(tmp_path: Path, mock_analyzer_report):
     """Test that a hybrid PDF is split and converted per segment."""
     pipeline = ConversionPipeline(output_dir=tmp_path)
@@ -78,7 +78,7 @@ async def test_process_segmented_hybrid(tmp_path: Path, mock_analyzer_report):
         assert result.tool_used == "segmented"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_drawing_extraction_enabled(tmp_path: Path):
     """Test that drawings are NOT skipped when extract_drawing is True."""
     pipeline = ConversionPipeline(output_dir=tmp_path, extract_drawing=True)
@@ -109,7 +109,7 @@ async def test_drawing_extraction_enabled(tmp_path: Path):
         mock_create_conv.assert_called_once()
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_large_pdf_chunking(tmp_path: Path):
     """Test that a large non-hybrid PDF is chunked."""
     pipeline = ConversionPipeline(output_dir=tmp_path)

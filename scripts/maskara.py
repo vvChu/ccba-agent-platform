@@ -232,9 +232,7 @@ class MaskaraScanner:
         spec = AGENT_SPECS[norm]
         return [
             {"agent": norm, "root": path.resolve()}
-            for path in self.get_default_roots(
-                spec["dot_dir"], spec["app_name"], spec["xdg_name"]
-            )
+            for path in self.get_default_roots(spec["dot_dir"], spec["app_name"], spec["xdg_name"])
         ]
 
     def looks_like_session_text(self, path: Path) -> bool:
@@ -303,7 +301,9 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
             response = ai.chat(prompt)
             return "YES" in response.upper()
         except Exception as e:
-            print(f"[Warning] AI Gateway validation failed, defaulting to True: {e}", file=sys.stderr)
+            print(
+                f"[Warning] AI Gateway validation failed, defaulting to True: {e}", file=sys.stderr
+            )
             return True
 
     def extract_context(self, content: str, start_offset: int, end_offset: int) -> str:
@@ -396,9 +396,7 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
         except OSError:
             return [], 0, 1
 
-    def perform_scan(
-        self, targets: list[dict[str, Any]], use_llm: bool = False
-    ) -> dict[str, Any]:
+    def perform_scan(self, targets: list[dict[str, Any]], use_llm: bool = False) -> dict[str, Any]:
         """Perform scanning across resolved targets."""
         findings: list[dict[str, Any]] = []
         warnings: list[str] = []
@@ -538,9 +536,7 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
         files_summary.sort(key=lambda x: x["path"])
         return {"files": files_summary, "replaced": total_replaced, "skipped": total_skipped}
 
-    def generate_markdown(
-        self, result: dict[str, Any], redact_summary: dict[str, Any]
-    ) -> str:
+    def generate_markdown(self, result: dict[str, Any], redact_summary: dict[str, Any]) -> str:
         """Generate Markdown report contents."""
         lines = [
             "# Maskara Secret Exposure Report\n",
@@ -606,9 +602,7 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
 
         return "\n".join(lines)
 
-    def install_guardrails(
-        self, agent_name: str, dry_run: bool = False
-    ) -> list[dict[str, str]]:
+    def install_guardrails(self, agent_name: str, dry_run: bool = False) -> list[dict[str, str]]:
         """Install guardrail instructions and hooks for target agent."""
         changes: list[dict[str, str]] = []
         norm = self.normalize_agent_name(agent_name)
@@ -653,9 +647,7 @@ exit 0
 """
         for agent in target_agents:
             spec = AGENT_SPECS[agent]
-            roots = self.get_default_roots(
-                spec["dot_dir"], spec["app_name"], spec["xdg_name"]
-            )
+            roots = self.get_default_roots(spec["dot_dir"], spec["app_name"], spec["xdg_name"])
             if not roots:
                 continue
             primary_root = roots[0]
@@ -714,9 +706,7 @@ exit 0
                             backup_path = str(bp)
                         path.write_text(content, encoding="utf-8")
 
-                changes.append(
-                    {"path": str(path), "action": action, "backup_path": backup_path}
-                )
+                changes.append({"path": str(path), "action": action, "backup_path": backup_path})
 
         return changes
 
@@ -756,9 +746,7 @@ exit 0
             "redact", help="Scan and redact secrets (replace with masked tokens)"
         )
         redact_parser.add_argument("-a", "--agent", default="auto", help="Target agent name")
-        redact_parser.add_argument(
-            "-r", "--root", help="Explicit root path to scan and redact"
-        )
+        redact_parser.add_argument("-r", "--root", help="Explicit root path to scan and redact")
         redact_parser.add_argument(
             "--llm", action="store_true", help="Use AI Gateway to double-verify findings"
         )
@@ -815,22 +803,24 @@ exit 0
                         f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}"
                     )
                 return (
-                    1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0
+                    1
+                    if any(f["severity"] in ("critical", "high") for f in result["findings"])
+                    else 0
                 )
 
             elif cmd == "redact":
                 targets = self.resolve_targets(args.agent, args.root)
                 result = self.perform_scan(targets, args.llm)
                 redact_sum = self.redact_findings(result)
-                print(
-                    f"[Maskara] Redaction complete: {redact_sum['replaced']} secret(s) redacted."
-                )
+                print(f"[Maskara] Redaction complete: {redact_sum['replaced']} secret(s) redacted.")
                 if redact_sum["files"]:
                     print("Backups created:")
                     for f in redact_sum["files"]:
                         print(f"  - {f['path']} -> {f['backup_path']}")
                 return (
-                    1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0
+                    1
+                    if any(f["severity"] in ("critical", "high") for f in result["findings"])
+                    else 0
                 )
 
             elif cmd == "report":

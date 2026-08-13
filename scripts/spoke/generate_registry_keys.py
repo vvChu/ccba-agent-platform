@@ -4,10 +4,6 @@ import sys
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-# Đảm bảo in ký tự tiếng Việt an toàn trên console Windows
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8")
-
 # Cấu hình đường dẫn
 PUBLIC_KEY_PATH = ".agents/workflows/resources/registry_public_key.pem"
 # Lưu khóa bí mật ngoài codebase
@@ -16,6 +12,11 @@ PRIVATE_KEY_PATH = os.path.join(PRIVATE_KEY_DIR, "registry_private_key.pem")
 
 
 def generate_keys():
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     print("🔑 Bắt đầu khởi tạo cặp khóa mật mã RSA 2048-bit...")
 
     # 1. Sinh khóa bí mật

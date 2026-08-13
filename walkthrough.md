@@ -23,7 +23,7 @@ Tôi đã giải quyết tận gốc lỗi deadlock tranh chấp tệp tin đa l
 *   **Khắc phục:** Sử dụng hàm `getattr` động để kiểm tra và khởi tạo `STARTUPINFO` trên Windows, tránh dùng comment `# type: ignore` vốn gây ra lỗi `Unused ignore` trên Windows.
 
 ### 3. Lỗi định dạng Ruff trên CI:
-*   Các file trong thư mục `scripts/` (như `assess_upstream_features.py`, `check_claudekit_updates.py`, `fix_existing_okf_warnings.py`) có khoảng trắng rác ở cuối dòng hoặc chưa được format đúng chuẩn do khác biệt line endings (CRLF vs LF).
+*   Các file trong thư mục `scripts/` (như `upstream_evaluator.py`, `check_claudekit_updates.py`, `fix_existing_okf_warnings.py`) có khoảng trắng rác ở cuối dòng hoặc chưa được format đúng chuẩn do khác biệt line endings (CRLF vs LF).
 *   **Khắc phục:** Đã chạy `ruff check --fix` and `ruff format` toàn bộ thư mục `scripts/` để đảm bảo định dạng nhất quán trước khi commit.
 
 ---

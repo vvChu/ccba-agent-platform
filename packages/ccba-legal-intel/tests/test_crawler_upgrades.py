@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from ccba_legal.crawler import (
     HeadlessEnvironmentError,
     TVPLSessionMutex,
