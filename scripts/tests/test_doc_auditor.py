@@ -90,6 +90,7 @@ class TestDocumentAuditor(unittest.TestCase):
 
     def test_audit_issue_extended_backward_compatibility(self) -> None:
         from doc_auditor import AuditIssue
+
         # 3 positional args (old usage)
         issue1 = AuditIssue(1, "subject", "message")
         self.assertEqual(issue1.line_number, 1)
@@ -105,8 +106,11 @@ class TestDocumentAuditor(unittest.TestCase):
 
     def test_audit_report_structure(self) -> None:
         from doc_auditor import AuditIssue, AuditReport
+
         issue_a = AuditIssue(5, "file1.md", "Broken link", category="link", file_path="file1.md")
-        issue_b = AuditIssue(12, "file1.md", "Missing var", category="env_vars", file_path="file1.md")
+        issue_b = AuditIssue(
+            12, "file1.md", "Missing var", category="env_vars", file_path="file1.md"
+        )
 
         report = AuditReport(
             issues=[issue_a, issue_b],

@@ -17,7 +17,6 @@ from scripts.spoke.spoke_synchronizer import (
     CatalogMerger,
     HubDiscoverer,
     HubNotFoundError,
-    SpokeSynchronizer,
     TestGuardrailCopier,
 )
 

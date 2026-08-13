@@ -15,10 +15,10 @@ import yaml
 
 # Enforce UTF-8 output on Windows
 if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
 
 # Attempt importing AI Gateway
 try:
@@ -314,7 +314,9 @@ class UpstreamEvaluator:
             for f in files:
                 match = skill_pattern.search(f)
                 if match:
-                    skill_name = match.group(2) if repo_type == "mattpocock-skills" else match.group(1)
+                    skill_name = (
+                        match.group(2) if repo_type == "mattpocock-skills" else match.group(1)
+                    )
                     print(f"[Evaluator] Found new/modified skill: '{skill_name}' in {repo_type}")
 
                     show_res = subprocess.run(
@@ -352,7 +354,9 @@ class UpstreamEvaluator:
         local_sha = self.get_local_sha(config)
 
         if not local_sha:
-            print(f"[Upstream Check] Initializing tracker for {repo_type} with remote SHA: {remote_sha[:8]}")
+            print(
+                f"[Upstream Check] Initializing tracker for {repo_type} with remote SHA: {remote_sha[:8]}"
+            )
             if not check_only:
                 sha_file.write_text(remote_sha, encoding="utf-8")
             return
@@ -400,7 +404,9 @@ class UpstreamEvaluator:
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="CCBA Upstream Synchronization & Evaluation Engine")
+    parser = argparse.ArgumentParser(
+        description="CCBA Upstream Synchronization & Evaluation Engine"
+    )
     parser.add_argument(
         "--check-only",
         action="store_true",

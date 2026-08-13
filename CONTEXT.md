@@ -271,3 +271,9 @@ Module sâu hợp nhất tại `scripts/spoke/spoke_synchronizer.py` chịu trá
 **DocumentAuditor (Trình Kiểm định Tài liệu & Governance)**:
 Module sâu hợp nhất tại `scripts/doc_auditor.py` đóng vai trò Coordinator điều phối 5 Sub-Auditors nội bộ (`LinkSymbolAuditor`, `SkillWorkflowAuditor`, `LegalRegistryAuditor`, `EnvVarAuditor`, `ArchitectureDriftAuditor`) để kiểm soát chất lượng tài liệu, skills và quy định quản trị đằng sau giao diện báo cáo chuẩn hóa `AuditReport`.
 
+**NotebookLMService (Dịch vụ Điều phối Nguồn & Artifact NotebookLM)**:
+Module dịch vụ sâu hợp nhất tại `ccba_notebooklm._service` chịu trách nhiệm bọc `CCBANotebookLMClient`, tự động điều phối SHA-256 registry caching, Lazy Maskara security gating, xóa/cập nhật nguồn cloud khi mismatch, và cung cấp API đơn giản hóa cho các quy trình RAG và Artifact flow.
+
+**DetachedExecutionEngine (Động cơ Thực thi detatached An toàn Tiến trình)**:
+Module sâu hợp nhất tại `scripts/eval/process_safety.py` chịu trách nhiệm quản lý an toàn tiến trình (Single-instance Process Lock, Tree Kill), thực thi tiến trình chạy ngầm detached không bị gián đoạn daemon, dọn dẹp log atomic, và tự động phát hiện danh sách file test bị thay đổi từ `git status`. Các tệp `safe_runner.py` và `safe_pytest.py` chỉ còn là các thin CLI facade delegates.
+

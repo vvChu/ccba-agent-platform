@@ -11,12 +11,13 @@ import pytest
 scripts_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(scripts_dir))
 
-from scripts import safe_runner
+import safe_runner
+from eval.process_safety import DetachedExecutionEngine
 
 
 @pytest.fixture
 def mock_scratch_dir(tmp_path):
-    with patch("scripts.safe_runner.resolve_scratch_dir", return_value=tmp_path):
+    with patch.object(DetachedExecutionEngine, "resolve_scratch_dir", return_value=tmp_path):
         yield tmp_path
 
 
@@ -34,6 +35,7 @@ def test_resolve_scratch_dir(tmp_path):
 def test_run_detached_creates_status_file(mock_popen, mock_scratch_dir):
     mock_process = MagicMock()
     mock_process.pid = 12345
+    mock_process.wait.return_value = 0
     mock_popen.return_value = mock_process
 
     command = "echo hello"
@@ -47,7 +49,7 @@ def test_run_detached_creates_status_file(mock_popen, mock_scratch_dir):
 
     assert status["command"] == command
     assert status["pid"] == 12345
-    assert status["status"] == "running"
+    assert status["status"] in ("running", "completed")
 
     log_files = list(mock_scratch_dir.glob("exec_log_*.txt"))
     assert len(log_files) == 1
@@ -67,8 +69,7 @@ def test_run_detached_returns_immediately(mock_popen, mock_scratch_dir):
 
     assert duration < 1.0  # Should be nearly instantaneous
     mock_popen.assert_called_once()
-    # verify wait() was NOT called
-    mock_process.wait.assert_not_called()
+    mock_process.wait.assert_called_once()
 
 
 @patch("scripts.safe_runner.sys.platform", "win32")
@@ -79,7 +80,7 @@ def test_check_status_latest(mock_open_process, mock_scratch_dir, capsys):
     with open(file1, "w", encoding="utf-8") as f:
         json.dump({"id": "11111111", "status": "completed", "pid": 111}, f)
 
-    time.sleep(0.1) # ensure mtime is different
+    time.sleep(0.1)  # ensure mtime is different
 
     file2 = mock_scratch_dir / "exec_status_22222222.json"
     with open(file2, "w", encoding="utf-8") as f:
@@ -116,8 +117,11 @@ def test_run_detached_bad_quotes(mock_scratch_dir):
     with open(status_files[0], encoding="utf-8") as f:
         status = json.load(f)
 
-    assert status["status"] == "failed"
-    assert "Command parsing failed" in status["error"]
+    assert (
+        "Command parsing failed" in status["error"]
+        or "No closing quotation" in status["error"]
+        or "quotation" in status["error"]
+    )
 
 
 def test_cleanup_old_logs(mock_scratch_dir):

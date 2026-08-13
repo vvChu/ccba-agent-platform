@@ -12,7 +12,7 @@ PLATFORM_ROOT = Path(__file__).resolve().parents[2]
 if str(PLATFORM_ROOT) not in sys.path:
     sys.path.insert(0, str(PLATFORM_ROOT))
 
-from scripts.spoke.upstream_evaluator import UpstreamEvaluator, main
+from scripts.spoke.upstream_evaluator import main
 
 if __name__ == "__main__":
     main()

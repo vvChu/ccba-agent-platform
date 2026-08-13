@@ -17,10 +17,10 @@ import yaml
 
 # Enforce UTF-8 output on Windows
 if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
 
 # Attempt importing cryptography for RSA Spoke registration
 try:
@@ -234,7 +234,10 @@ class TestGuardrailCopier:
             hub_conftest = self.hub_root / "conftest.py"
             hub_safe_pytest = self.hub_root / "scripts" / "safe_pytest.py"
 
-            if hub_conftest.exists() and hub_conftest.resolve() != (self.spoke_root / "conftest.py").resolve():
+            if (
+                hub_conftest.exists()
+                and hub_conftest.resolve() != (self.spoke_root / "conftest.py").resolve()
+            ):
                 shutil.copy2(hub_conftest, self.spoke_root / "conftest.py")
                 print("  - Copied test guardrail: conftest.py")
 
@@ -493,7 +496,10 @@ class SpokeSynchronizer:
                 f"[Sync] Error: Could not find workspace_context.yaml in {self.spoke_root}/.agents/ or {self.spoke_root}/.md/",
                 file=sys.stderr,
             )
-            print("[Sync] Please run 'init spoke' first in the target project folder.", file=sys.stderr)
+            print(
+                "[Sync] Please run 'init spoke' first in the target project folder.",
+                file=sys.stderr,
+            )
             return 1
 
         context = load_yaml(context_file)
@@ -523,7 +529,9 @@ class SpokeSynchronizer:
 
         # Auto git pull Hub if git repo
         if (hub_root / ".git").exists():
-            print("[Sync] Hub is a Git repository. Attempting to pull latest changes from GitHub...")
+            print(
+                "[Sync] Hub is a Git repository. Attempting to pull latest changes from GitHub..."
+            )
             try:
                 import subprocess
 

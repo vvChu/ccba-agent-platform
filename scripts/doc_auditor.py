@@ -175,9 +175,6 @@ EXCLUSION_HEADERS: set[str] = {
 }
 
 
-
-
-
 class DocumentAuditor:
     """Deep module for auditing CCBA Agent markdown documentation, skills, and governance rules.
 
@@ -581,9 +578,7 @@ class DocumentAuditor:
                 )
             else:
                 if "type" not in frontmatter:
-                    issues["okf_frontmatter"].append(
-                        (1, "type", "Missing required field: 'type'")
-                    )
+                    issues["okf_frontmatter"].append((1, "type", "Missing required field: 'type'"))
                 else:
                     okf_keywords = {
                         "Law",
@@ -1354,9 +1349,7 @@ class DocumentAuditor:
                         total_issues += 1
                     else:
                         if is_hard_error:
-                            print(
-                                f"  [L{line}] \x1b[31mBroken Link Error:\x1b[0m ({link}) - {err}"
-                            )
+                            print(f"  [L{line}] \x1b[31mBroken Link Error:\x1b[0m ({link}) - {err}")
                             total_issues += 1
                             broken_links_count += 1
                         else:
@@ -1371,9 +1364,7 @@ class DocumentAuditor:
                         total_issues += 1
                         hard_errors_count += 1
                     else:
-                        print(
-                            f"  [L{line}] \x1b[33mOKF Conflict Warning:\x1b[0m ({link}) - {err}"
-                        )
+                        print(f"  [L{line}] \x1b[33mOKF Conflict Warning:\x1b[0m ({link}) - {err}")
                         total_issues += 1
 
                 for line, var, err in issues["env_vars"]:
@@ -1515,9 +1506,7 @@ def extract_env_variables(content: str) -> list[tuple[int, str]]:
     return _default_auditor.extract_env_variables(content)
 
 
-def search_codebase_for_symbol(
-    symbol: str, search_dirs: list[Path] | None = None
-) -> bool:
+def search_codebase_for_symbol(symbol: str, search_dirs: list[Path] | None = None) -> bool:
     """Check if symbol declaration exists in codebase (standalone alias)."""
     return _default_auditor.search_codebase_for_symbol(symbol, search_dirs)
 

@@ -5,7 +5,7 @@ Unit tests for UpstreamEvaluator module.
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 # Ensure platform root is on sys.path
 PLATFORM_ROOT = Path(__file__).resolve().parents[2]
@@ -13,7 +13,6 @@ if str(PLATFORM_ROOT) not in sys.path:
     sys.path.insert(0, str(PLATFORM_ROOT))
 
 from scripts.spoke.upstream_evaluator import (
-    UpstreamEvaluator,
     append_recommendation,
     call_ai_evaluation,
     get_existing_elements,
