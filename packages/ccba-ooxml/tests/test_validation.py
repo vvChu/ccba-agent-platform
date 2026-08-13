@@ -50,4 +50,3 @@ def test_ooxml_validator_docx():
         assert hasattr(report, "issues")
         assert hasattr(report, "validators_run")
         assert "DOCXSchemaValidator" in report.validators_run
-
