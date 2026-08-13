@@ -69,6 +69,31 @@ class VNLegalPostProcessor:
         return self._processor.get_fix_summary()
 
 
+class LinkPatcherPostProcessor:
+    """Post-processor adapter for relative link patching."""
+
+    def __init__(self) -> None:
+        from mdconverter.core.link_patcher import LinkPatcher
+
+        self._patcher = LinkPatcher()
+        self._last_patched_count = 0
+
+    def should_process(self, content: str) -> bool:
+        """Check if content contains un-prefixed relative appendix links."""
+        return bool(self._patcher.LINK_PATTERN.search(content))
+
+    def process(self, content: str) -> str:
+        """Patch relative links in content."""
+        new_content, count = self._patcher.patch_content(content)
+        self._last_patched_count = count
+        return new_content
+
+    def get_summary(self) -> dict[str, int]:
+        """Get summary of patched links."""
+        return {"relative_links_patched": self._last_patched_count}
+
+
+
 def get_default_post_processors() -> list[PostProcessor]:
     """Get the default list of post-processors.
 
@@ -78,7 +103,8 @@ def get_default_post_processors() -> list[PostProcessor]:
     Returns:
         List of PostProcessor instances.
     """
-    return [VNLegalPostProcessor()]
+    return [VNLegalPostProcessor(), LinkPatcherPostProcessor()]
+
 
 
 # ---------------------------------------------------------------------------
