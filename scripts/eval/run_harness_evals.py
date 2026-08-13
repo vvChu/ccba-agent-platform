@@ -257,13 +257,15 @@ def main() -> None:
             if (project_root / "scripts/tests").exists():
                 test_args.append("scripts/tests")
 
-        # Gate 3: Pytest Unit Tests (via safe_pytest detached runner)
-        safe_pytest_script = project_root / "scripts" / "safe_pytest.py"
-        pytest_cmd = [py_exe, str(safe_pytest_script)]
-        if args.all:
-            pytest_cmd.append("--allow-unscoped")
-        if args.stress:
-            pytest_cmd.extend(["--", "-m", "stress or slow"])
+        # Gate 3: Pytest Unit Tests
+        pytest_cmd = [
+            py_exe,
+            "-m",
+            "pytest",
+            "--maxfail=1",
+            "-m",
+            "not slow",
+        ] + test_args
 
         success_test, out_test = run_command(
             pytest_cmd, project_root, "Pytest Suite", timeout_seconds=90

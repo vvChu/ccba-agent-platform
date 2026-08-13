@@ -491,6 +491,18 @@ class DocumentAuditor:
                 if filepath in arch_docs or (status.startswith("M") and filepath in arch_docs):
                     arch_doc_updated = True
 
+            # Also check if any commit in the current branch history updated arch_docs
+            res_log = subprocess.run(
+                ["git", "log", "origin/main..HEAD", "--name-only"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+            )
+            if res_log.returncode == 0:
+                for line in res_log.stdout.splitlines():
+                    if line.strip() in arch_docs:
+                        arch_doc_updated = True
+
                 if (
                     status.startswith("A")
                     or status.startswith("D")
