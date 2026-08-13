@@ -822,9 +822,40 @@ Tài liệu này tổng hợp các bài học kinh nghiệm, patterns và giải
 - **Thay thế bằng**: Sử dụng `CREATE_NO_WINDOW` (`0x08000000`) thay cho `DETACHED_PROCESS` để ẩn cửa sổ console mà vẫn giữ nguyên đường ống ghi file log Win32.
 
 ---
+
+## Session Learnings — Deep Module Refactoring & Governance Architecture (2026-08-13)
+- **ID Phiên làm việc**: `d9157d49-a48e-4b78-917a-1587e3c8b665`
+
+### Patterns (Mẫu tốt)
+
+#### 82. Unified Deep Module Consolidation & Deletion Test Verification
+- **Ngữ cảnh**: Tái cấu trúc các script phân tán và tiến trình IPC cũ thành một Deep Module duy nhất (`UpstreamEvaluator` tại `scripts/spoke/upstream_evaluator.py`).
+- **Giải pháp**: Đóng gói toàn bộ logic trinh sát, đối soát catalog và đánh giá tính năng thượng nguồn đằng sau giao diện class Facade phẳng. Thực hiện Deletion Test xóa bỏ các script IPC cũ (`assess_upstream_features.py`) mà không gây ảnh hưởng đến bất kỳ caller site nào.
+- **Nguồn**: Session `d9157d49-a48e-4b78-917a-1587e3c8b665`, 2026-08-13
+
+#### 83. Atomic Catalog Merge & Self-Copy Protection
+- **Ngữ cảnh**: Đồng bộ hóa danh mục `catalog.yaml` và các tệp tin skills/workflows từ Hub về Spoke hoặc chạy đồng bộ trực tiếp tại Hub.
+- **Giải pháp**: Sử dụng cơ chế ghi file tạm `.catalog.yaml.tmp`, kiểm chứng qua `yaml.safe_load()`, rồi hoán đổi nguyên tử bằng `os.replace()`. Bổ sung kiểm tra `src.resolve() != dest.resolve()` để tránh tự xóa tệp hoặc gây ra lỗi `shutil.SameFileError` khi chạy đồng bộ ngay tại chính thư mục gốc của Hub.
+- **Nguồn**: Session `d9157d49-a48e-4b78-917a-1587e3c8b665`, 2026-08-13
+
+#### 84. AuditReport Dataclass Wrapper with Extended AuditIssue
+- **Ngữ cảnh**: Chuẩn hóa kiểu dữ liệu trả về cho trình kiểm định `DocumentAuditor` (`scripts/doc_auditor.py`).
+- **Giải pháp**: Mở rộng `AuditIssue` NamedTuple với các trường optional có giá trị mặc định (`category: str = ""`, `file_path: str = ""`) để đảm bảo tương thích ngược 100% với caller cũ, đồng thời đóng gói báo cáo vào dataclass `AuditReport` hỗ trợ các phương thức lọc `by_category()` và `by_file()`.
+- **Nguồn**: Session `d9157d49-a48e-4b78-917a-1587e3c8b665`, 2026-08-13
+
+---
+
+### Anti-patterns (Cách tránh)
+
+#### 54. Unprotected File Copies on Hub Self-Sync
+- **Vấn đề**: Thực hiện xóa thư mục đích `safe_remove(dest)` và `shutil.copytree` mà không kiểm tra `src.resolve() != dest.resolve()`. Khi chạy đồng bộ ngay tại Hub root, `src` và `dest` trùng nhau khiến script tự xóa tệp danh mục nguồn (`catalog.yaml`) trước khi sao chép.
+- **Thay thế bằng**: Luôn kiểm tra `if src.resolve() != dest.resolve():` trước khi thực hiện các thao tác xóa/sao chép đè tệp tin.
+
+---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
 
 
 
