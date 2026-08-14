@@ -103,6 +103,7 @@ pythonpath = [
     "packages/ccba-ai/src",
     "packages/ccba-harness/src",
     "packages/ccba-legal-intel/src",
+    "packages/ccba-maskara/src",
     "packages/ccba-notebooklm/src",
     "packages/ccba-ooxml/src",
     "packages/ccba-pdf-prep/src",
