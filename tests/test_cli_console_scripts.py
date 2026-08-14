@@ -12,10 +12,11 @@ def test_repaired_log_eval_miner_imports():
 
 def test_repaired_legal_sync_imports():
     """Verify legal_sync module re-exports GOOGLE_API_AVAILABLE and get_drive_service."""
-    from ccba_legal.sync import GOOGLE_API_AVAILABLE as deep_flag
-    from ccba_legal.sync import get_drive_service as deep_get
     from scripts.legal_sync import GOOGLE_API_AVAILABLE as shim_flag
     from scripts.legal_sync import get_drive_service as shim_get
+
+    from ccba_legal.sync import GOOGLE_API_AVAILABLE as deep_flag
+    from ccba_legal.sync import get_drive_service as deep_get
 
     assert isinstance(deep_flag, bool)
     assert isinstance(shim_flag, bool)
