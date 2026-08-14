@@ -40,6 +40,23 @@ def test_async_ai_repr():
     assert "AsyncAIClient" in r
 
 
+def test_async_client_init_timeout():
+    """Test AsyncAIClient timeout initialization."""
+    with patch.dict("os.environ", {}, clear=True):
+        client = AsyncAIClient(base_url="http://fake:1/v1", api_key="fake")
+        assert client.timeout == 60.0
+        assert client._client.timeout == 60.0
+
+    with patch.dict("os.environ", {"AI_GATEWAY_TIMEOUT": "45.0"}, clear=False):
+        client = AsyncAIClient(base_url="http://fake:1/v1", api_key="fake")
+        assert client.timeout == 45.0
+        assert client._client.timeout == 45.0
+
+    client_custom = AsyncAIClient(base_url="http://fake:1/v1", api_key="fake", timeout=30.0)
+    assert client_custom.timeout == 30.0
+    assert client_custom._client.timeout == 30.0
+
+
 # ---------------------------------------------------------------------------
 # Test: async chat methods work correctly (mocked)
 # ---------------------------------------------------------------------------
@@ -65,6 +82,47 @@ async def test_async_client_chat_calls_api():
 
 
 @pytest.mark.anyio
+async def test_async_client_chat_strip_thinking():
+    """AsyncAIClient.chat() should strip <think> tags by default."""
+    client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key")
+
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock()]
+    mock_response.choices[0].message.content = "<think>Pondering async...</think>Async Result"
+
+    with patch.object(
+        client._client.chat.completions, "create", new_callable=AsyncMock
+    ) as mock_create:
+        mock_create.return_value = mock_response
+        result = await client.chat("Hello")
+    assert result == "Async Result"
+
+    with patch.object(
+        client._client.chat.completions, "create", new_callable=AsyncMock
+    ) as mock_create:
+        mock_create.return_value = mock_response
+        result_raw = await client.chat("Hello", strip_thinking=False)
+    assert "<think>Pondering async...</think>Async Result" in result_raw
+
+
+@pytest.mark.anyio
+async def test_async_client_chat_auto_max_tokens():
+    """AsyncAIClient.chat() should auto-allocate 16384 max_tokens for reasoning models."""
+    client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key")
+
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock()]
+    mock_response.choices[0].message.content = "OK"
+
+    with patch.object(
+        client._client.chat.completions, "create", new_callable=AsyncMock
+    ) as mock_create:
+        mock_create.return_value = mock_response
+        await client.chat("Hello", model="gemini-3.7-flash-high")
+        assert mock_create.call_args.kwargs["max_tokens"] == 16384
+
+
+@pytest.mark.anyio
 async def test_async_client_chat_multi():
     """AsyncAIClient.chat_multi() should accept message list and return text."""
     client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key")
@@ -85,6 +143,36 @@ async def test_async_client_chat_multi():
         result = await client.chat_multi(messages, model="test-model")
 
     assert result == "multi response"
+
+
+@pytest.mark.anyio
+async def test_async_client_chat_with_metadata():
+    """AsyncAIClient.chat_with_metadata() should return ChatResult with usage & latency."""
+    from ccba_ai.models import ChatResult
+
+    client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key")
+
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock()]
+    mock_response.choices[0].message.content = "<think>Pondering...</think>Async Answer"
+    mock_response.model = "gemini-3.7-flash-high"
+    mock_response.usage.prompt_tokens = 250
+    mock_response.usage.completion_tokens = 80
+    mock_response.usage.total_tokens = 330
+
+    with patch.object(
+        client._client.chat.completions, "create", new_callable=AsyncMock
+    ) as mock_create:
+        mock_create.return_value = mock_response
+        res = await client.chat_with_metadata("Test async metadata")
+
+    assert isinstance(res, ChatResult)
+    assert res.content == "Async Answer"
+    assert res.model == "gemini-3.7-flash-high"
+    assert res.usage.prompt_tokens == 250
+    assert res.usage.completion_tokens == 80
+    assert res.usage.total_tokens == 330
+    assert res.latency_ms >= 0.0
 
 
 @pytest.mark.anyio
@@ -119,3 +207,24 @@ async def test_async_client_chat_retries_on_connection_error():
 
     assert result == "recovered response"
     assert mock_create.call_count == 2
+
+
+@pytest.mark.anyio
+async def test_async_client_chat_fast_fails_when_circuit_breaker_open():
+    """AsyncAIClient.chat() should fail immediately with CircuitBreakerOpenError."""
+    from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
+
+    cb = CircuitBreaker(failure_threshold=1, recovery_timeout=60.0)
+    cb.record_failure()
+    assert cb.allow_request() is False
+
+    client = AsyncAIClient(
+        base_url="http://test-gateway/v1", api_key="mock-key", circuit_breaker=cb
+    )
+
+    with patch.object(
+        client._client.chat.completions, "create", new_callable=AsyncMock
+    ) as mock_create:
+        with pytest.raises(CircuitBreakerOpenError):
+            await client.chat("should fast fail async")
+        mock_create.assert_not_called()

@@ -4,29 +4,26 @@ Blocks access to sensitive files and scans tool arguments for secret patterns
 using the Maskara detection engine.
 """
 
-# Ensure maskara is loaded dynamically without sys.path modification
-import importlib.util
+from __future__ import annotations
+
+import sys
 from pathlib import Path
 from typing import Any
 
-detect_secrets_in_text = None
-maskara_path = Path(__file__).parent.parent / "maskara.py"
-if maskara_path.exists():
+try:
+    from ccba_maskara import detect_secrets_in_text
+except ImportError:
+    _pkg_src = Path(__file__).resolve().parents[2] / "packages" / "ccba-maskara" / "src"
+    if _pkg_src.exists() and str(_pkg_src) not in sys.path:
+        sys.path.insert(0, str(_pkg_src))
     try:
-        spec = importlib.util.spec_from_file_location("maskara", maskara_path)
-        if spec and spec.loader:
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            detect_secrets_in_text = getattr(module, "detect_secrets_in_text", None)
-    except Exception:
-        pass
+        from ccba_maskara import detect_secrets_in_text
+    except ImportError:
 
-if detect_secrets_in_text is None:
-    # Safe fallback if maskara script is not available
-    def detect_secrets_in_text(
-        content: str, filepath: str, agent: str, use_llm: bool = False
-    ) -> list:
-        return []
+        def detect_secrets_in_text(  # type: ignore[misc]
+            content: str, filepath: str = "", agent: str = "", use_llm: bool = False
+        ) -> list[dict[str, Any]]:
+            return []
 
 
 def main(event: str, payload: dict[str, Any]) -> int:

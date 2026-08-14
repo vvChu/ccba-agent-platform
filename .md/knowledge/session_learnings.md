@@ -141,9 +141,19 @@
           ...
   ```
 
+#### P4.5. 4 Model Archetypes & Bounded HTTP Timeout (Client Contract)
+* **Giải pháp:** Phía client luôn cấu hình `timeout >= 30.0s` (chuẩn `60.0s`) để đảm bảo không ngắt kết nối trong khi AI Gateway failover qua 10 API keys. Phân tách rõ `ocr-primary` (OCR Ingestion thuần túy) với `gemini-3.7-flash` (Vision Multimodal + JSON schema reasoning).
+
+#### P4.6. Reasoning Models Auto-Allocation & CoT Stripping
+* **Giải pháp:** Tự động nâng ngân sách `max_tokens=16384` khi gọi các model suy luận sâu (`gemini-3.7-flash-high`, `claude-sonnet-4-6-thinking`) và tự động làm sạch thẻ `<think>` (`strip_thinking=True`) ở cấp độ SDK `ccba-ai` để chống rò rỉ Chain-of-Thought làm ô nhiễm Markdown và JSON downstream.
+
+#### P4.7. Local Fast-Fail Circuit Breaker cho Mạng VPN
+* **Giải pháp:** Tích hợp in-memory `CircuitBreaker` với 3 trạng thái (`CLOSED`, `OPEN`, `HALF_OPEN`) tự động ngắt nhanh các tác vụ khi kết nối Tailscale VPN tới Server Spark bị gián đoạn (ngưỡng 3 lỗi liên tiếp, 30s cooldown), tránh làm treo batch pipeline bởi các chu kỳ 60s timeout lặp lại.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP4.1. Hardcoded API Keys:** Tuyệt đối không hardcode keys vào code/markdown. Luôn dùng biến môi trường hoặc `.env`.
 * **AP4.2. Raw Exception Context Chaining (Ruff B904):** Dùng `raise NewException(...) from None` khi ném ngoại lệ mới trong block except không liên quan.
+* **AP4.3. Reasoning Models trong Converter Fallback Chains:** Tuyệt đối không đưa các model có hậu tố `-thinking` vào chuỗi fallback của document converter (`mdconverter`) để tránh rò rỉ khối thẻ `<think>` làm ô nhiễm file Markdown đầu ra.
 
 ---
 
@@ -197,9 +207,18 @@
 #### P6.4. Two-axis Parallel Review (Đánh Giá Song Song Hai Trục)
 * **Giải pháp:** Khi rà soát mã nguồn hoặc thiết kế phức tạp, spawn 2 subagents chạy song song độc lập: Subagent 1 quét trục **Standards & Smells** (Coding style, KISS, Type hints); Subagent 2 quét trục **Spec & Requirements** (Hợp đồng API, Edge cases).
 
+#### P6.5. Caller Justification Gate & Anti-Shallow Seams (Rào Chắn Xác Thực Caller)
+* **Nguyên tắc:** Trước khi đề xuất tạo thêm một Seam/Class/Wrapper mới, Agent bắt buộc phải chứng minh được có **ít nhất một caller/consumer thực tế** cần giao diện này. Nếu một Deep Seam đã tồn tại (như `ConversionPipeline`), nghiêm cấm tạo thêm một wrapper nông (như `MarkdownConverter`) chỉ để đổi tên mà không tăng leverage hoặc locality.
+
+#### P6.6. Deepening via Extraction before Script Thinning (Bóc Tách Logic Trước Khi Tinh Gọn Script)
+* **Nguyên tắc:** Khi tinh gọn một script dài (> 100 dòng), phải phân tích xem script đó là *Thin CLI đơn thuần* hay là *Domain Orchestration Script* (chứa routing, taxonomy, error recovery). Nếu chứa domain logic, **bắt buộc phải bóc tách logic đó đưa vào package lõi trước**, viết unit test cho seam mới, rồi mới chuyển script thành Thin CLI Delegate. Tuyệt đối không xóa bỏ logic nghiệp vụ chỉ để làm ngắn script.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP6.1. Leaky Interface Exporting 30+ Symbols:** Xuất khẩu toàn bộ hàm con ra `__init__.py` làm rối loạn AI navigation.
 * **AP6.2. Domain Drift:** Đặt file xử lý PDF vào package OOXML hoặc đặt logic cào web vào module phân tích xung đột.
+* **AP6.3. Shallow-Wrapping Deep Seams (Bọc Nông trên Seam Sâu):** Tạo thêm một class/function bọc quanh một Deep Seam đã hoàn chỉnh chỉ để tạo "cảm giác dễ dùng", gây phân mảnh API và vi phạm nguyên lý KISS.
+* **AP6.4. Unchecked Transport/SDK Assumptions:** Giả định các SDK/Client hỗ trợ các khả năng đặc thù (như xử lý multimodal bytes, async streams) mà chưa inspect code thực tế của thư viện, dẫn đến kế hoạch sai lệch nghiêm trọng.
+* **AP6.5. Deleting Embedded Domain Logic:** Nhầm lẫn giữa mã boilerplate lặp lại với domain orchestration logic (dù đã có docstring) và xóa bỏ khi tinh gọn scripts.
 
 ---
 
