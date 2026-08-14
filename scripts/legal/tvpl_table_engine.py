@@ -1,13 +1,6 @@
 """Dual-Parser Table Engine for converting complex docx tables into Markdown tables."""
 
-import sys
 from pathlib import Path
-
-# Force UTF-8 encoding
-if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 try:
     import docx

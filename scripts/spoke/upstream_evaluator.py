@@ -13,18 +13,12 @@ from pathlib import Path
 
 import yaml
 
-# Enforce UTF-8 output on Windows
-if sys.platform == "win32":
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
-    if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(encoding="utf-8")
-
 # Attempt importing AI Gateway
 try:
     from ccba_ai import ai
 except ImportError:
     ai = None
+
 
 PLATFORM_ROOT = Path(__file__).resolve().parents[2]
 RECOMMENDATIONS_FILE = PLATFORM_ROOT / ".md" / "knowledge" / "port_recommendations.md"
@@ -404,9 +398,16 @@ class UpstreamEvaluator:
 def main():
     import argparse
 
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8")
+
     parser = argparse.ArgumentParser(
         description="CCBA Upstream Synchronization & Evaluation Engine"
     )
+
     parser.add_argument(
         "--check-only",
         action="store_true",

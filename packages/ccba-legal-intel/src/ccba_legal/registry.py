@@ -4,8 +4,11 @@ Manages loading, updating, and saving information in the YAML registry
 by dynamically resolving file paths relative to the project root.
 """
 
+from __future__ import annotations
+
 import re
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -197,6 +200,53 @@ class LegalRegistryManager:
                     return p
         return None
 
+    def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
+        """Search legal registry documents matching query terms across titles, topics, and notes.
+
+        Args:
+            query: Space-separated search query terms.
+            top_k: Maximum number of top matching documents to return.
+
+        Returns:
+            List of matching document dictionaries sorted descending by relevance score.
+        """
+        data = self.load()
+        query_terms = [t.lower() for t in query.split() if len(t) > 1]
+        if not query_terms:
+            return []
+
+        matched_docs: list[tuple[int, dict[str, Any]]] = []
+        categories = ["decrees", "laws", "circulars", "standards", "seminars"]
+
+        for category in categories:
+            docs = data.get(category, [])
+            for doc in docs:
+                if not isinstance(doc, dict):
+                    continue
+
+                score = 0
+                title = str(doc.get("title", "")).lower()
+                short_name = str(doc.get("short_name", "")).lower()
+                topics = [str(t).lower() for t in doc.get("topics", [])]
+                notes = str(doc.get("notes", "")).lower()
+                doc_num = str(doc.get("document_number", "")).lower()
+
+                combined_text = f"{title} {short_name} {doc_num} {' '.join(topics)} {notes}"
+
+                for term in query_terms:
+                    if term in combined_text:
+                        score += 1
+                    if term in title or term in short_name:
+                        score += 2
+                    if any(term in t for t in topics):
+                        score += 3
+
+                if score > 0:
+                    matched_docs.append((score, doc))
+
+        matched_docs.sort(key=lambda x: x[0], reverse=True)
+        return [doc for score, doc in matched_docs[:top_k]]
+
 
 DEFAULT_RELATION_SYNONYMS = {
     "Văn bản bị sửa đổi bổ sung": "amends_docs",
@@ -261,3 +311,49 @@ def load_relation_synonyms(project_root: Path | None = None) -> dict[str, str]:
             f"[Registry] Error reading relation synonyms from {synonyms_path}: {e}. Using default synonyms."
         )
         return DEFAULT_RELATION_SYNONYMS.copy()
+
+
+def format_citation(doc: dict[str, Any]) -> str:
+    """Format a legal document citation strictly [Short Name - Doc Number].
+
+    Args:
+        doc: Dictionary containing document metadata fields (short_name, document_number, id).
+
+    Returns:
+        Formatted citation string, e.g. '[Luật XD 2025 - 135/2025/QH15]'.
+    """
+    short_name = doc.get("short_name") or doc.get("id", "VBPL")
+    doc_num = doc.get("document_number")
+    if doc_num:
+        return f"[{short_name} - {doc_num}]"
+    return f"[{short_name}]"
+
+
+def load_legal_registry(registry_path: Path | str | None = None) -> dict[str, Any]:
+    """Safely load and parse legal_registry.yaml into a dictionary.
+
+    Args:
+        registry_path: Optional path to the legal_registry.yaml file.
+
+    Returns:
+        Loaded registry dictionary or empty structure if not found.
+    """
+    mgr = LegalRegistryManager(registry_path=Path(registry_path) if registry_path else None)
+    return mgr.load()
+
+
+def search_legal_registry(
+    query: str, registry_path: Path | str | None = None, top_k: int = 5
+) -> list[dict[str, Any]]:
+    """Search legal registry documents matching query terms across titles, topics, and notes.
+
+    Args:
+        query: Space-separated search query terms.
+        registry_path: Optional path to legal_registry.yaml.
+        top_k: Maximum number of top matching documents to return.
+
+    Returns:
+        List of matching document dictionaries sorted descending by relevance score.
+    """
+    mgr = LegalRegistryManager(registry_path=Path(registry_path) if registry_path else None)
+    return mgr.search(query=query, top_k=top_k)

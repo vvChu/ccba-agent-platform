@@ -1,144 +1,260 @@
-# CCBA Agent Services Platform
+# CCBA Agent Services Platform (Hub)
 
-> Central Hub for AI Agent skills, workflows, knowledge, and internal tools. 
+> **Bộ Não Trung Tâm & Nền Tảng Dịch Vụ AI Agent** cho Hệ Sinh Thái CCBA và Ngành Xây Dựng / BIM Việt Nam.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Architecture: Hub-and-Spoke](https://img.shields.io/badge/Architecture-Hub--and--Spoke-teal.svg)](#kien-truc-hub-and-spoke)
+[![AI Gateway: 50+ Models](https://img.shields.io/badge/AI%20Gateway-50+%20Models-orange.svg)](#ccba-ai--ai-gateway-client)
 
-## Architecture
+---
 
-**Hub-and-Spoke** — Hub lưu trữ tập trung, mỗi project (Spoke) chỉ lưu config riêng.
+## 🏛️ Kiến Trúc Hub-and-Spoke (Hub & Spoke Ecosystem)
+
+CCBA Agent Services Platform vận hành theo kiến trúc **Hub-and-Spoke**:
 
 ```
-ccba-agent-platform/                    ← Hub (Git-backed)
+                              ┌─────────────────────────────────────────┐
+                              │            CCBA HUB (Bộ Não)             │
+                              │  ├── Hiến pháp AGENTS.md (Layer 1)      │
+                              │  ├── 83 Kỹ năng (Skills) & 57 Workflows │
+                              │  ├── 8 Service Packages (ccba-*)        │
+                              │  └── Spoke Synchronizer Engine          │
+                              └────────────────────┬────────────────────┘
+                                                   │
+                   ┌───────────────────────────────┼───────────────────────────────┐
+                   │ sync_spoke.py                 │ sync_spoke.py                 │ sync_spoke.py
+                   ▼                               ▼                               ▼
+       ┌───────────────────────┐       ┌───────────────────────┐       ┌───────────────────────┐
+       │   SPOKE: SOFTWARE     │       │   SPOKE: DELIVERY     │       │    SPOKE: HYBRID      │
+       │ (Phần mềm & Tooling)  │       │ (Kho Tri thức Pháp lý)│       │ (Nghiên cứu & Hub Ext)│
+       │ mode: software        │       │ mode: delivery        │       │ mode: hybrid          │
+       └───────────────────────┘       └───────────────────────┘       └───────────────────────┘
+```
+
+- **CCBA Hub (`ccba-agent-platform`)**: Repository trung tâm lưu trữ toàn bộ tài sản trí tuệ chung, bao gồm Hiến pháp tối cao [`AGENTS.md`](.agents/AGENTS.md), 83 kỹ năng AI, 57 workflows, 8 gói thư viện lõi và công cụ điều phối đồng bộ.
+- **Dự Án Con (Spokes)**: Các repositories chuyên biệt (như `ccba-legal-knowledge`, `ccba-qc-web-app`, các dự án thẩm tra công trình cụ thể). Spoke kế thừa toàn bộ năng lực AI của Hub thông qua cơ chế **Reuse-First Gate** và công cụ đồng bộ **`sync_spoke.py`**.
+
+---
+
+## 📁 Cấu Trúc Thư Mục Repository
+
+```
+ccba-agent-platform/                    ← Hub Repository
 ├── .agents/
 │   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->83<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-08-14 -->
-│   │   ├── legal-document-tracker/    ←   Theo dõi VBPL
-│   │   ├── completion-checklist/      ←   HSHT công trình
-│   │   ├── seminar-builder/           ←   Chuẩn bị seminar
-│   │   ├── docs-validator/            ←   Linter tài liệu tĩnh (Patched)
-│   │   ├── architecture-sync/         ←   Đồng bộ hiến pháp kiến trúc (Patched)
-│   │   └── ...                        ←   Và 52+ kỹ năng chuyên dụng khác
+│   │   ├── ai-gateway-sdk/            ←   Kết nối AI Gateway (50+ models)
+│   │   ├── legal-document-tracker/    ←   Theo dõi & rà soát VBPL
+│   │   ├── completion-checklist/      ←   Quản lý HSHT công trình
+│   │   ├── ccba-ai-qc-pccc-audit/     ←   Thẩm tra thiết kế PCCC AI
+│   │   ├── codebase-design/           ←   Nguyên lý thiết kế Deep Modules
+│   │   └── ...                        ←   Và 78+ kỹ năng chuyên dụng khác
 │   ├── workflows/                     ← Automated workflows (<!-- WORKFLOW_COUNT_START -->57<!-- WORKFLOW_COUNT_END --> workflows)
-│   └── templates/                     ← Shared templates
-├── .md/                               ← Central Knowledge Base (Project Knowledge Base)
-│   ├── knowledge/                     ←   Tài liệu nghiên cứu, roadmap, spec kỹ thuật
-│   ├── seminars/                      ←   Agenda, tóm tắt seminar
+│   └── templates/                     ← Biểu mẫu hành chính & kỹ thuật dùng chung
+├── .md/                               ← Central Knowledge Base
+│   ├── knowledge/                     ←   Tài liệu nghiên cứu, ADRs, Session Learnings
+│   ├── seminars/                      ←   Agenda & biên bản thảo luận
 │   └── extracted_docs/                ←   Văn bản pháp luật trích xuất thô
-├── packages/                          ← Internal service modules (pip installable)
-│   ├── ccba-ai/                       ←   AI Gateway client & SDK
-│   ├── ccba-harness/                  ←   Testing harness utilities
-│   ├── ccba-legal-intel/              ←   Legal intelligence connectors
-│   ├── ccba-maskara/                  ←   Secret detection and redaction engine
+├── packages/                          ← 8 Internal Service Modules (pip installable)
+│   ├── ccba-harness/                  ←   Testing harness, singleton locks & process monitors
+│   ├── ccba-ai/                       ←   AI Gateway client & SDK đa mô hình
+│   ├── ccba-maskara/                  ←   Secret detection, PII redaction & privacy guard
+│   ├── ccba-ooxml/                    ←   OOXML validation, Word DOM & Excel macro calculation
+│   ├── ccba-pdf-prep/                 ←   PDF Vision Preprocessor (tiling, title-block, chunks)
 │   ├── ccba-notebooklm/               ←   Google NotebookLM wrapper & Mock client
-│   ├── ccba-ooxml/                    ←   OOXML validation and parsing engine
-│   ├── ccba-pdf-prep/                 ←   PDF processing (tiling, title-block, chunks)
-│   └── mdconverter/                   ←   Document-to-Markdown converter
-├── scripts/                           ← CLI & Lifecycle Hooks
+│   ├── ccba-legal-intel/              ←   Legal intelligence connectors & TVPL VIP crawler
+│   └── mdconverter/                   ←   Document-to-Markdown converter (PDF/DOCX/HTML)
+├── scripts/                           ← CLI Tooling & Governance Engines
+│   ├── spoke/                         ←   Spoke governance & synchronization engines
 │   ├── hooks/                         ←   Git hooks & guards (privacy, naming, simplify)
-│   ├── tests/                         ←   Unit test suites
-│   ├── hook_runner.py                 ←   Unified Hook Runner CLI
-│   ├── maskara.py                     ←   Maskara Privacy Engine CLI
+│   ├── tests/                         ←   Unit test suites cho Hub tools
+│   ├── session_cleanup.py             ←   Workspace & Session Cleanup CLI Delegate
+│   ├── sync_spoke.py                  ←   Spoke Synchronizer CLI Delegate
 │   ├── safe_pytest.py                 ←   Safe Scoped Pytest Execution Wrapper
-│   └── validate_docs.py               ←   Documentation Accuracy Validator
+│   ├── safe_runner.py                 ←   Detached Background Command Runner
+│   ├── validate_skills.py             ←   Skill Integrity & Schema Validator
+│   └── validate_docs.py               ←   Documentation Accuracy & Drift Validator
 ├── conftest.py                        ← Pytest Scoped Guardrail Hook
 └── pyproject.toml                     ← Workspace config
 ```
 
-## Services & Tools
+---
 
-### ccba-ai — AI Gateway Client
+## 📦 8 Service Modules (Gói Dịch Vụ Cốt Lõi)
 
-Kết nối AI Gateway trên Server Spark — 22 models, 1 endpoint.
+Toàn bộ các gói dịch vụ nằm trong thư mục `packages/` được thiết kế dưới dạng Deep Modules độc lập, có thể cài đặt trực tiếp vào môi trường Python của kỹ sư:
 
-```python
-from ccba_ai import ai
-reply = ai.chat("Xin chào!")
-```
+| Package | Mô tả Chức năng | Lệnh Cài Đặt (Editable Mode) |
+| :--- | :--- | :--- |
+| **`ccba-harness`** | Testing harness, Singleton Process Locks, giám sát tệp tin và tiến trình an toàn đa nền tảng. | `pip install -e "packages/ccba-harness"` |
+| **`ccba-ai`** | AI Gateway SDK — Kết nối 50+ models (Qwen GPU DGX, Claude, Gemini) qua 1 endpoint, tự động quản lý token và Circuit Breaker. | `pip install -e "packages/ccba-ai"` |
+| **`ccba-maskara`** | Quét và che giấu (redact) thông tin nhạy cảm (API Keys, PII) trong log/tệp trước khi commit. | `pip install -e "packages/ccba-maskara"` |
+| **`ccba-ooxml`** | Thao tác DOM file Office (.docx, .pptx), kiểm định tính toàn vẹn XML và tính toán công thức Excel (`recalc_xlsx`). | `pip install -e "packages/ccba-ooxml"` |
+| **`ccba-pdf-prep`** | Tiền xử lý PDF cho AI Vision: Phân mảnh thông minh (Tiling), bóc tách khung tên bản vẽ, chia nhỏ chunks. | `pip install -e "packages/ccba-pdf-prep"` |
+| **`ccba-notebooklm`** | Tích hợp Google NotebookLM Cloud RAG, sinh Audio Overview, hỗ trợ Mock Client chạy test offline. | `pip install -e "packages/ccba-notebooklm"` |
+| **`ccba-legal-intel`** | Pipeline tự động hóa TVPL VIP, bóc tách phụ lục, AST diffing và hợp nhất Văn Bản Hợp Nhất (VBHN). | `pip install -e "packages/ccba-legal-intel"` |
+| **`mdconverter`** | Chuyển đổi PDF/DOCX/HTML sang Markdown chuẩn, phục hồi bảng biểu vỡ và tiêm anchor điều khoản. | `pip install -e "packages/mdconverter[dev,llm]"` |
 
-### ccba-pdf-prep — PDF Preprocessor
-Phân mảnh thông minh (tiling) lọc pixel trắng, bóc tách khung tên (title block) và chia nhỏ PDF cho mô hình AI Vision.
+---
 
-```python
-from ccba_pdf_prep import PDFProcessingPipeline
-pipeline = PDFProcessingPipeline()
-result = pipeline.process(pdf_path, output_dir)
-```
+## 🚀 Hướng Dẫn Cài Đặt & Khởi Chạy Trên Máy Client (Quick Start)
 
-### ccba-notebooklm — NotebookLM Cloud Connector
-Tích hợp Google NotebookLM Cloud RAG, sinh podcast audio overview, quiz, slides... Hỗ trợ Mock Client giả lập chạy test/CI-CD không cần cookies.
+Dành cho Kỹ sư khi clone `ccba-agent-platform` về máy cá nhân để sử dụng hoặc phát triển tính năng mới:
 
-### ccba-ooxml — OOXML Validator
-Kiểm định tính toàn vẹn cấu trúc file Office XML (.docx, .pptx) và bóc tách tracked changes thông qua deep validator seam.
+### 1. Điều Kiện Tiên Quyết (Prerequisites)
+- **Python**: Phiên bản `>= 3.10` (Khuyến nghị **Python 3.11**).
+- **Tailscale VPN**: Kết nối vào mạng Server Spark (`100.83.192.30`) để truy cập AI Gateway nội bộ và các models GPU không tốn chi phí.
+- **LibreOffice** *(Tùy chọn)*: Cài đặt nếu cần sử dụng tính năng tính toán công thức Excel headless (`recalc_xlsx`) trong `ccba-ooxml`.
 
-### mdconverter — Document Converter
-Modern Document to Markdown Converter với hỗ trợ đặc thù cho cấu trúc văn bản pháp luật xây dựng Việt Nam.
+---
 
-### validate_docs — Documentation Accuracy Validator
-Quét tài liệu Markdown đối soát với codebase để phát hiện link hỏng, sai tên hàm/lớp hoặc biến môi trường thiếu trong `.env.example`.
+### 2. Cài Đặt Môi Trường Ảo & Toàn Bộ 8 Packages
 
-```bash
-python scripts/validate_docs.py [docs-dir] --src scripts,packages
-```
-
-## Workflows
-
-| Command | Mô tả |
-|---------|--------|
-| `/ccba-prepare-seminar` | Chuẩn bị nội dung seminar |
-| `/ccba-update-legal-registry` | Cập nhật registry VBPL |
-| `/ccba-session-retrospective` | Tổng hợp kiến thức cuối phiên |
-| `/ccba-new-feature` | Tạo feature branch |
-| `/ccba-create-pr` | Push + tạo PR |
-| `/ccba-release-feature` | Merge PR + cleanup |
-| `/ccba-convert-markdown` | Chuyển đổi tài liệu sang Markdown bằng mdconverter |
-| `/ccba-xia` | Trích xuất, so sánh, thích ứng tính năng từ repository khác |
-| `/ccba-brainstorm` | Khởi động phiên thảo luận ý tưởng và chuẩn bị tài liệu đầu vào |
-| `/ccba-init-spoke` | Khởi tạo dự án con (Spoke) tuân thủ kiến trúc CAP |
-| `/ccba-run-qc-pipeline` | Chạy chuỗi kiểm soát chất lượng (QC) đa bộ môn |
-| `/ccba-propose-to-hub` | Đề xuất tích hợp skill/workflow mới từ Spoke lên Hub |
-| `/ccba-update-spoke` | Cập nhật thủ công các lệnh và kỹ năng mới từ Hub về Spoke |
-| `/ccba-discard-feature` | Hủy bỏ branch hiện tại cả local và remote |
-| `/ccba-sync-upstream` | Kiểm tra cập nhật và đồng bộ tri thức từ ClaudeKit và MattPocock |
-| `/ccba-improve-codebase-architecture` | Quét phát hiện module nông (shallow modules) và sinh sơ đồ Mermaid đề xuất refactor |
-| `/ccba-build-skill` | Nghiên cứu tài liệu và đóng gói tạo Skill mới đạt chuẩn CCBA |
-| `/ccba-copywriting` | Soạn thảo tài liệu, biểu mẫu hành chính/thương mại |
-| `/ccba-docs` | Cập nhật, đồng bộ và kiểm định tài liệu tĩnh |
-| `/ccba-extract-style` | Trích xuất văn phong hành chính/thầu từ tài liệu mẫu |
-| `/ccba-git-guardrails` | Kích hoạt rào chắn ngăn lệnh Git nguy hiểm |
-| `/ccba-grilling` | Phỏng vấn dồn dập để kiểm chứng kế hoạch hoặc thiết kế |
-| `/ccba-handoff` | Đóng gói phiên làm việc chuyển giao context |
-| `/ccba-notebooklm` | RAG query, import tài liệu và tạo Audio Overview |
-| `/ccba-resolving-merge-conflicts` | Giải quyết xung đột merge/rebase an toàn |
-| `/ccba-review-skill` | Đánh giá chất lượng và tối ưu hóa file SKILL.md |
-| `/ccba-tdd` | Thiết kế và viết code theo quy trình TDD |
-| `/ccba-wayfinder` | Phân tích giải quyết bài toán mù mờ (foggy problems) |
-| `/ccba-wizard` | Tạo bash script setup môi trường dev tương tác |
-| `/workflow_pccc_cdt_tuthamdinh` | Quy trình hỗ trợ Chủ đầu tư Tự thẩm định thiết kế PCCC |
-| `/workflow_pccc_thamdinh_congan` | Quy trình Thẩm định thiết kế PCCC phần MEP nộp PC07 |
-| `/workflow_pccc_thamdinh_cqxd` | Quy trình Thẩm định PCCC phần Kiến trúc nộp Cơ quan xây dựng |
-
-## Development
+Mở terminal tại thư mục gốc dự án và thực hiện tuần tự:
 
 ```bash
-# Clone
-git clone https://github.com/vvChu/ccba-agent-platform.git
-cd ccba-agent-platform
+# 1. Khởi tạo môi trường ảo Python
+python -m venv .venv
 
-# Install services
-pip install -e "packages/ccba-ai"
-pip install -e "packages/mdconverter[dev,llm]"
+# 2. Kích hoạt môi trường ảo
+# Trên Windows (PowerShell / Command Prompt):
+.venv\Scripts\activate
+# Trên Linux / macOS:
+source .venv/bin/activate
 
-# Run core tests
-python -m pytest packages/mdconverter/tests/
-
-# Run Lifecycle Hooks tests
-python -m unittest discover -s scripts/tests
-
-# Lint
-ruff check packages/
+# 3. Cài đặt toàn bộ 8 internal packages ở chế độ Editable (-e)
+pip install -e "packages/ccba-harness" \
+            -e "packages/ccba-ai" \
+            -e "packages/ccba-maskara" \
+            -e "packages/ccba-ooxml" \
+            -e "packages/ccba-pdf-prep" \
+            -e "packages/ccba-notebooklm" \
+            -e "packages/ccba-legal-intel" \
+            -e "packages/mdconverter[dev,llm]"
 ```
 
-## License
+---
 
-MIT License — developed by IBST BIM Team for Vietnamese construction industry.
+### 3. Thiết Lập Biến Môi Trường (.env)
+
+Khởi tạo tệp `.env` từ mẫu chuẩn:
+
+```bash
+# Trên Windows:
+copy .env.example .env
+
+# Trên Linux / macOS:
+cp .env.example .env
+```
+
+Kiểm tra tệp `.env` cục bộ đã trỏ đúng vào AI Gateway Server:
+```env
+AI_GATEWAY_URL=http://100.83.192.30:8090/v1
+AI_GATEWAY_KEY=your-spark-gateway-key
+AI_MODEL=qwen-local-primary
+```
+
+---
+
+### 4. Kiểm Tra & Xác Thực Hệ Thống (Verification)
+
+Chạy các lệnh kiểm thử nhanh sau để bảo đảm toàn bộ hệ thống hoạt động hoàn hảo:
+
+```bash
+# 1. Thăm dò kết nối AI Gateway (Lấy danh sách 50+ models online thời gian thực)
+python -c "from ccba_ai import ai; print('✅ AI Gateway Models:', len(ai.models()), 'models available!')"
+
+# 2. Chạy toàn bộ Fast Test Suite (< 2.0s per test, loại trừ test mạng nặng)
+pytest -m "not slow"
+
+# 3. Chạy Governance Gate (Kiểm định 83 Skills & Toàn bộ Tài liệu Markdown)
+python scripts/validate_skills.py
+python scripts/validate_docs.py
+
+# 4. Kiểm tra Linting Codebase
+ruff check packages/ scripts/
+```
+
+---
+
+## 🌐 Quy Trình Phát Triển Dự Án Con (From Hub to Spokes)
+
+Sau khi thiết lập Hub trên máy, Kỹ sư có thể phát triển các dự án con (Spokes) độc lập:
+
+### 1. Khởi Tạo Dự Án Spoke Mới (`/ccba-init-spoke`)
+Tại thư mục Spoke mới, tạo tệp `.md/workspace_context.yaml` để khai báo ngữ cảnh:
+```yaml
+project:
+  name: my-bim-audit-spoke
+  mode: software  # Chọn: software | delivery | hybrid
+  type: Thẩm tra thiết kế
+  hub_path: D:/GitHubProjects/ccba-agent-platform
+```
+
+> **Quy ước Workspace Mode (`project.mode`):**
+> - **`software`**: Dành cho các dự án ứng dụng web, CLI, tooling (.md tối giản, output $\rightarrow$ `docs/`).
+> - **`delivery`**: Dành cho kho tri thức văn bản pháp luật, tài sản tri thức OKF Bundles (.md đầy đủ 10 thư mục con).
+> - **`hybrid`**: Dành cho các Hub mở rộng hoặc Spoke R&D cần cả domain knowledge lẫn tooling.
+
+---
+
+### 2. Kế Thừa Dịch Vụ Hub (Reuse-First Gate)
+Trong mã nguồn Python tại Spoke, Kỹ sư chỉ cần cài đặt `ccba-ai` từ Hub và import sử dụng trực tiếp:
+```python
+from ccba_ai import ai, ModelArchetype
+
+# Gọi LLM với tự động định tuyến Archetype & Circuit Breaker
+reply = ai.chat("Soát xét sự phù hợp giữa bản vẽ PCCC và QCVN 06:2022/BXD", model=ModelArchetype.REASONING)
+print(reply)
+```
+
+---
+
+### 3. Đồng Bộ Hóa Kỹ Năng & Workflows (Hub ➔ Spoke)
+Khi Hub cập nhật kỹ năng mới hoặc muốn nạp thêm workflow vào Spoke:
+```bash
+# Chạy từ thư mục Hub trỏ đến Spoke:
+python scripts/sync_spoke.py --spoke "D:/GitHubProjects/my-bim-audit-spoke"
+
+# Hoặc đồng bộ một kỹ năng cụ thể:
+python scripts/sync_spoke.py --spoke "D:/GitHubProjects/my-bim-audit-spoke" --sync-item "ccba-ai-qc-pccc-audit"
+```
+
+---
+
+### 4. Đóng Góp Tính Năng Ngược Lên Hub (`/ccba-propose-to-hub`)
+Khi Kỹ sư xây dựng thành công một Skill, Workflow hoặc Tiện ích hữu ích tại Spoke, kích hoạt lệnh `/ccba-propose-to-hub` để hệ thống tự động đánh giá, đóng gói và tạo đề xuất tích hợp ngược về Hub trung tâm.
+
+---
+
+## ⚡ Workflows & Slash Commands Thường Dùng
+
+| Lệnh Slash | Mô tả Nghiệp vụ |
+| :--- | :--- |
+| **`/ccba-init-spoke`** | Khởi tạo dự án Spoke mới đạt chuẩn kiến trúc CCBA Hub-and-Spoke. |
+| **`/ccba-update-spoke`** | Cập nhật các kỹ năng, workflows và test guardrails mới nhất từ Hub về Spoke. |
+| **`/ccba-ai-qc-pccc-audit`** | Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) qua Semantic Map-Reduce. |
+| **`/ccba-convert-markdown`** | Chuyển đổi PDF/Word sang Markdown cấu trúc cao bằng `mdconverter`. |
+| **`/ccba-improve-codebase-architecture`** | Quét module nông, sinh sơ đồ Mermaid trực quan và thực hiện Grilling loop làm sâu module. |
+| **`/ccba-legal-intel`** | Tư vấn, tra cứu và so sánh đối chiếu văn bản pháp luật xây dựng Việt Nam. |
+| **`/ccba-notebooklm`** | Kết nối Google NotebookLM để thực hiện RAG query và tạo Audio Overview podcast. |
+| **`/ccba-session-retrospective`** | Tổng kết tri thức cuối phiên làm việc, tiến hóa kỹ năng và kích hoạt Governance Gate. |
+| **`/ccba-implement`** | Triển khai lập trình khép kín: TDD $\rightarrow$ Eval Gate $\rightarrow$ Code Review $\rightarrow$ Commit. |
+| **`/ccba-create-pr`** | Chạy kiểm định CI nội bộ và tạo Pull Request tự động lên GitHub. |
+
+---
+
+## 🛡️ Rào Chắn Quản Trị & Đóng Góp (Governance & Quality Standards)
+
+- **Hiến pháp Tối cao**: Tuân thủ 100% các quy định trong [`.agents/AGENTS.md`](.agents/AGENTS.md).
+- **Nguyên lý KISS (Keep It Simple, Stupid)**: Luôn ưu tiên giải pháp đơn giản, giao diện nhỏ (Small Interface) sau đó mới triển khai sâu (Deep Implementation).
+- **Kỷ Luật Kiểm Thử 2 Tầng (2-Tier Test Discipline)**: Toàn bộ Unit Tests thông thường bắt buộc chạy dưới **2.0 giây**. Các test nặng/mạng phải gắn `@pytest.mark.slow`.
+- **An Toàn Đa Nền Tảng (P2.2)**: Tuyệt đối không can thiệp stream `sys.stdout.reconfigure()` ở root scope module để bảo vệ luồng bắt test của Pytest trên Windows.
+- **Bảo Mật Tuyệt Đối**: Nghiêm cấm hardcode API Keys; toàn bộ mã nguồn phải pass qua `ccba-maskara` trước khi commit.
+
+---
+
+## 📜 License
+
+Phát triển bởi **CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng** (IBST BIM Team) phục vụ sự phát triển của ngành Xây dựng & Tư vấn số hóa Việt Nam.  
+Phát hành theo giấy phép **MIT License**.

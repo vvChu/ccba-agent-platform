@@ -13,7 +13,7 @@ PLATFORM_ROOT = Path(__file__).resolve().parents[1]
 if str(PLATFORM_ROOT) not in sys.path:
     sys.path.insert(0, str(PLATFORM_ROOT))
 
-from scripts.spoke.spoke_synchronizer import sync_project
+from scripts.spoke import sync_project
 
 
 def main():

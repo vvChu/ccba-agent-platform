@@ -20,9 +20,10 @@ This is a paragraph with more than 300 words. Let us generate enough text for wo
     )
 
     result = auditor.audit(content=content, format_hint="markdown")
-    assert result["score"] == 100
-    assert any("H1 count: 1" in check for check in result["checks"])
-    assert len(result["issues"]) == 0
+    assert result.score == 100
+    assert any("H1 count: 1" in check for check in result.checks)
+    assert len(result.issues) == 0
+    assert result.to_dict()["score"] == 100
 
 
 def test_seo_auditor_markdown_issues():
@@ -36,11 +37,11 @@ def test_seo_auditor_markdown_issues():
 Short text.
 """
     result = auditor.audit(content=content, format_hint="md")
-    assert result["score"] < 100
-    assert len(result["issues"]) >= 3
-    assert any("Multiple H1 headings" in issue for issue in result["issues"])
-    assert any("Heading hierarchy skip" in issue for issue in result["issues"])
-    assert any("empty alt text" in issue for issue in result["issues"])
+    assert result.score < 100
+    assert len(result.issues) >= 3
+    assert any("Multiple H1 headings" in issue for issue in result.issues)
+    assert any("Heading hierarchy skip" in issue for issue in result.issues)
+    assert any("empty alt text" in issue for issue in result.issues)
 
 
 def test_seo_auditor_file_audit(tmp_path: Path):
@@ -51,14 +52,14 @@ def test_seo_auditor_file_audit(tmp_path: Path):
 
     auditor = SEOAuditor()
     result = auditor.audit(target=doc_path)
-    assert result["score"] == 100
-    assert result["file_name"] == "sample.md"
+    assert result.score == 100
+    assert result.file_name == "sample.md"
 
 
 def test_legacy_wrappers_compatibility():
     content = "# Title\n\nParagraph text here."
     res_md = audit_markdown(content)
-    assert "score" in res_md
+    assert res_md.score > 0
 
     res_auditor = SEOAuditor().audit_markdown(content)
     assert res_md == res_auditor

@@ -69,3 +69,82 @@ class AuditReport(BaseModel):
         # Ensure clashes is serialized as a list of dicts for backward compatibility
         d["clashes"] = [f.model_dump() for f in self.findings]
         return d
+
+
+class SEOAuditResult(BaseModel):
+    """Structured report of technical SEO compliance audit."""
+
+    score: int = 100
+    checks: list[str] = Field(default_factory=list)
+    issues: list[str] = Field(default_factory=list)
+    file_name: str = ""
+    error: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return self.model_dump()
+
+
+class TeamTask(BaseModel):
+    """Structured representation of a shared team task."""
+
+    name: str
+    owner: str = "None"
+    status: str = "pending"  # pending | in-progress | completed
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return self.model_dump()
+
+
+class PlanCreationResult(BaseModel):
+    """Structured result of creating a new development plan."""
+
+    status: str = "success"
+    plan_title: str = ""
+    plan_folder: str = ""
+    plan_file: str = ""
+    created_files: list[str] = Field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return self.model_dump()
+
+
+class PhaseUpdateResult(BaseModel):
+    """Structured result of updating a plan phase status."""
+
+    status: str = "success"
+    phase_id: str = ""
+    phase_name: str = ""
+    old_status: str = ""
+    new_status: str = ""
+    plan_file: str = ""
+    phase_file: str = ""
+    phase_file_updated: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return self.model_dump()
+
+
+class PlanPhaseData(BaseModel):
+    """Data item representing a single phase in plan status."""
+
+    id: str
+    name: str
+    status: str
+    file: str
+
+
+class PlanStatusResult(BaseModel):
+    """Structured result of querying plan status and its phases."""
+
+    title: str = ""
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    phases: list[PlanPhaseData] = Field(default_factory=list)
+    plan_file: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return self.model_dump()
