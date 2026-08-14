@@ -97,9 +97,7 @@ def resolve_targets(agent_name: str, custom_root: str | None = None) -> list[dic
         existing = []
         for agent in agents_list:
             spec = AGENT_SPECS[agent]
-            for path in get_default_roots(
-                spec["dot_dir"], spec["app_name"], spec["xdg_name"]
-            ):
+            for path in get_default_roots(spec["dot_dir"], spec["app_name"], spec["xdg_name"]):
                 if path.is_dir():
                     existing.append({"agent": agent, "root": path.resolve()})
         return (
@@ -112,9 +110,7 @@ def resolve_targets(agent_name: str, custom_root: str | None = None) -> list[dic
         all_targets = []
         for agent in agents_list:
             spec = AGENT_SPECS[agent]
-            for path in get_default_roots(
-                spec["dot_dir"], spec["app_name"], spec["xdg_name"]
-            ):
+            for path in get_default_roots(spec["dot_dir"], spec["app_name"], spec["xdg_name"]):
                 all_targets.append({"agent": agent, "root": path.resolve()})
         return all_targets
 

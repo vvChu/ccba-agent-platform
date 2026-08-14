@@ -197,10 +197,22 @@ class CommentEngine:
         """Ensure all comment-related content types are in [Content_Types].xml."""
         editor = self.doc["[Content_Types].xml"]
         overrides = [
-            ("/word/comments.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"),
-            ("/word/commentsExtended.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.commentsExtended+xml"),
-            ("/word/commentsIds.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.commentsIds+xml"),
-            ("/word/commentsExtensible.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.commentsExtensible+xml"),
+            (
+                "/word/comments.xml",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml",
+            ),
+            (
+                "/word/commentsExtended.xml",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.commentsExtended+xml",
+            ),
+            (
+                "/word/commentsIds.xml",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.commentsIds+xml",
+            ),
+            (
+                "/word/commentsExtensible.xml",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.commentsExtensible+xml",
+            ),
         ]
         root = editor.dom.documentElement
         for part_name, content_type in overrides:
@@ -227,10 +239,22 @@ class CommentEngine:
         """Ensure all comment-related relationships are in word/_rels/document.xml.rels."""
         editor = self.doc["word/_rels/document.xml.rels"]
         rels = [
-            ("comments.xml", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments"),
-            ("commentsExtended.xml", "http://schemas.microsoft.com/office/2011/relationships/commentsExtended"),
-            ("commentsIds.xml", "http://schemas.microsoft.com/office/2016/09/relationships/commentsIds"),
-            ("commentsExtensible.xml", "http://schemas.microsoft.com/office/2018/08/relationships/commentsExtensible"),
+            (
+                "comments.xml",
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments",
+            ),
+            (
+                "commentsExtended.xml",
+                "http://schemas.microsoft.com/office/2011/relationships/commentsExtended",
+            ),
+            (
+                "commentsIds.xml",
+                "http://schemas.microsoft.com/office/2016/09/relationships/commentsIds",
+            ),
+            (
+                "commentsExtensible.xml",
+                "http://schemas.microsoft.com/office/2018/08/relationships/commentsExtensible",
+            ),
         ]
         root = editor.dom.documentElement
         root_tag = root.tagName
@@ -238,7 +262,9 @@ class CommentEngine:
         for target, rel_type in rels:
             if not self.doc._has_relationship(editor, target):
                 next_rid = editor.get_next_rid()
-                rel_xml = f'<{prefix}Relationship Id="{next_rid}" Type="{rel_type}" Target="{target}"/>'
+                rel_xml = (
+                    f'<{prefix}Relationship Id="{next_rid}" Type="{rel_type}" Target="{target}"/>'
+                )
                 editor.append_to(root, rel_xml)
 
     def _update_settings(self, path: Path, track_revisions: bool = False) -> None:

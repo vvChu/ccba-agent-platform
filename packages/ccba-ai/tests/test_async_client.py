@@ -218,7 +218,9 @@ async def test_async_client_chat_fast_fails_when_circuit_breaker_open():
     cb.record_failure()
     assert cb.allow_request() is False
 
-    client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key", circuit_breaker=cb)
+    client = AsyncAIClient(
+        base_url="http://test-gateway/v1", api_key="mock-key", circuit_breaker=cb
+    )
 
     with patch.object(
         client._client.chat.completions, "create", new_callable=AsyncMock

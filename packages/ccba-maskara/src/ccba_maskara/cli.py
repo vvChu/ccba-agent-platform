@@ -20,9 +20,7 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
         scanner = MaskaraScanner()
 
     parser = argparse.ArgumentParser(description="CCBA Maskara offline scanner and redactor")
-    parser.add_argument(
-        "-v", "--version", action="store_true", help="Print version information"
-    )
+    parser.add_argument("-v", "--version", action="store_true", help="Print version information")
     subparsers = parser.add_subparsers(dest="subcommand", help="Available subcommands")
 
     scan_parser = subparsers.add_parser("scan", help="Scan folders for secrets")
@@ -34,14 +32,10 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
         "--llm", action="store_true", help="Use AI Gateway to double-verify findings"
     )
 
-    report_parser = subparsers.add_parser(
-        "report", help="Scan and write Markdown or JSON report"
-    )
+    report_parser = subparsers.add_parser("report", help="Scan and write Markdown or JSON report")
     report_parser.add_argument("-a", "--agent", default="auto", help="Target agent name")
     report_parser.add_argument("-r", "--root", help="Explicit root path to scan")
-    report_parser.add_argument(
-        "--json", action="store_true", help="Format output report as JSON"
-    )
+    report_parser.add_argument("--json", action="store_true", help="Format output report as JSON")
     report_parser.add_argument(
         "-o", "--output", help="Output file path (default: current directory)"
     )
@@ -58,9 +52,7 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
         "--llm", action="store_true", help="Use AI Gateway to double-verify findings"
     )
 
-    guard_parser = subparsers.add_parser(
-        "guardrails", help="Install safety guardrails and hooks"
-    )
+    guard_parser = subparsers.add_parser("guardrails", help="Install safety guardrails and hooks")
     guard_parser.add_argument("-a", "--agent", default="auto", help="Target agent name")
     guard_parser.add_argument(
         "--dry-run", action="store_true", help="Log planned actions without writing"
@@ -110,9 +102,7 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                     f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}"
                 )
             return (
-                1
-                if any(f["severity"] in ("critical", "high") for f in result["findings"])
-                else 0
+                1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0
             )
 
         elif cmd == "redact":
@@ -125,9 +115,7 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                 for f in redact_sum["files"]:
                     print(f"  - {f['path']} -> {f['backup_path']}")
             return (
-                1
-                if any(f["severity"] in ("critical", "high") for f in result["findings"])
-                else 0
+                1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0
             )
 
         elif cmd == "report":
@@ -147,9 +135,7 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                 else Path("maskara-report.json" if args.json else "maskara-report.md")
             )
             if out_path.is_dir():
-                out_path = out_path / (
-                    "maskara-report.json" if args.json else "maskara-report.md"
-                )
+                out_path = out_path / ("maskara-report.json" if args.json else "maskara-report.md")
 
             out_path.write_text(report_str, encoding="utf-8")
             print(f"[Maskara] Report written to {out_path}")

@@ -24,7 +24,7 @@ Following the deployment of AI Gateway on Server Spark with Fallback Cascade acr
    - The Gateway's internal preprocessor (`custom_callbacks.gemini_corrector`) automatically parses suffixes (`-low`, `-medium`, `-high`) and manages token budgets.
 
 4. **Modular Routing Architecture**:
-   - Model constants and routing helpers are encapsulated in [`ccba_ai.routing`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/routing.py) preserving Deep Module principles.
+   - Model constants and routing helpers are encapsulated in [`ccba_ai.routing`](../../packages/ccba-ai/src/ccba_ai/routing.py) preserving Deep Module principles.
 
 ## Consequences
 - Guarantees 99.9% uptime resilience via transparent Fallback Cascade.

@@ -204,6 +204,7 @@ class XMLEditor:
 
 def _create_line_tracking_parser() -> Any:
     """Create a SAX parser that tracks line and column numbers for each element."""
+
     def set_content_handler(dom_handler: Any) -> None:
         def startElementNS(name: Any, tagName: Any, attrs: Any) -> None:
             orig_start_cb(name, tagName, attrs)
