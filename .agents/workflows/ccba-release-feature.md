@@ -11,12 +11,12 @@ Quy trình tự động hóa tích hợp mã nguồn (merge) và dọn dẹp mô
 
 ## Bước 0: Thực thi Kiểm thử Toàn diện Slow Integration Tests (Pre-release Gate)
 
-*Quy tắc bắt buộc:* Trước khi thực hiện merge PR, Agent **bắt buộc phải chạy kiểm thử toàn bộ tập test `slow` và `stress`** để đảm bảo các bài test cào mạng/tích hợp không bị hỏng ngầm (test decay):
+*Quy tắc bắt buộc:* Trước khi thực hiện merge PR, Agent **bắt buộc phải chạy kiểm thử toàn bộ tập test `slow` và `stress` trên toàn bộ packages** (thông qua cơ chế Dynamic Discovery) để đảm bảo các bài test cào mạng/tích hợp không bị hỏng ngầm (test decay):
 ```bash
-python scripts/run_isolated_tests.py -p ccba-legal-intel --stress
-python scripts/run_isolated_tests.py -p ccba-harness --stress
+python scripts/eval/run_isolated_tests.py --all --stress
 ```
-- Nếu có bài test `slow` nào thất bại, Agent **phải dừng quy trình release ngay lập tức** để tiến hành sửa lỗi trước khi tiếp tục.
+- Nếu có bài test nào thất bại, Agent **phải dừng quy trình release ngay lập tức** để tiến hành sửa lỗi trước khi tiếp tục.
+
 
 ## Bước 1: Đối soát bình luận và Merge PR trên GitHub
 
