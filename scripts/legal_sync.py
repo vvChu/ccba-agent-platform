@@ -5,7 +5,8 @@ root_dir = Path(__file__).resolve().parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
-from ccba_legal.sync import *  # noqa: F403, F401
+from ccba_legal import LegalSyncEngine
+from ccba_legal.sync import GOOGLE_API_AVAILABLE, get_drive_service
 
 
 def main():

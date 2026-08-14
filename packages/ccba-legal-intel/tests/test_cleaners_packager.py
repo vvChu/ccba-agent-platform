@@ -1,16 +1,10 @@
-#!/usr/bin/env python3
-"""Verification script for Legal Intelligence Pipeline.
+"""test_cleaners_packager.py — Unit tests for cleaning utilities and bundle packager."""
 
-Validates that cleaning utilities, slug generation, and key imports
-function correctly in the pipeline.
-"""
-
-import sys
 import unittest
 from pathlib import Path
 
-# Import Cleaners and OKFBundlePackager from ccba_legal
-from ccba_legal import Cleaners, OKFBundlePackager
+from ccba_legal.cleaners import Cleaners
+from ccba_legal.packager import OKFBundlePackager
 
 
 class TestLegalIntelligence(unittest.TestCase):
@@ -57,17 +51,3 @@ Random thoughts from model...
         title = "Luật Xây dựng 2025 số 135/2025/QH15"
         expected = "luat_xay_dung_2025_so_135_2025_qh15"
         self.assertEqual(packager.sanitize_slug(title), expected)
-
-
-def main() -> None:
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestLegalIntelligence)
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-    if not result.wasSuccessful():
-        sys.exit(1)
-    print("\n[Verify] All tests passed successfully!")
-    sys.exit(0)
-
-
-if __name__ == "__main__":
-    main()

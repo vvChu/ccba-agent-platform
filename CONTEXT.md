@@ -281,3 +281,13 @@ Module dịch vụ sâu hợp nhất tại `ccba_notebooklm._service` chịu tr�
 **DetachedExecutionEngine (Động cơ Thực thi detatached An toàn Tiến trình)**:
 Module sâu hợp nhất tại `scripts/eval/process_safety.py` chịu trách nhiệm quản lý an toàn tiến trình (Single-instance Process Lock, Tree Kill), thực thi tiến trình chạy ngầm detached không bị gián đoạn daemon, dọn dẹp log atomic, và tự động phát hiện danh sách file test bị thay đổi từ `git status`. Các tệp `safe_runner.py` và `safe_pytest.py` chỉ còn là các thin CLI facade delegates.
 
+**LegalIntelPipeline (Unified Legal Intelligence Deep Module)**:
+Deep module hợp nhất của package `ccba-legal-intel` cung cấp seam công khai duy nhất `pipeline.process_document(url_or_id)` điều phối toàn bộ chu trình cào Chrome CDP, bảo vệ session CookieVault, mutex lock, giải mã bảng TVPL, phân tích AST và đóng gói OKF Bundle.
+
+**LegalProcessor (Legal Advisory Deep Seam)**:
+Seam điều phối phân tích xung đột văn bản pháp lý (`LexConflictEngine`), trích xuất điều khoản sửa đổi và tạo báo cáo tư vấn pháp lý Dual-Layer.
+
+**LegalSyncEngine (Cloud Sync Deep Seam)**:
+Deep module của `ccba-legal-intel` chịu trách nhiệm đồng bộ legal registry lên Google NotebookLM và Google Drive chung, quản lý tính toán băm SHA-256 deduplication và nguồn tài liệu.
+
+
