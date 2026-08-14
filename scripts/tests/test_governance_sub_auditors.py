@@ -13,11 +13,9 @@ import unittest
 from pathlib import Path
 
 from scripts.governance import (
-    AuditIssue,
     AuditReport,
     BaseAuditor,
     DocumentAuditor,
-    DriftAuditor,
     EnvAuditor,
     LinkAuditor,
     RegistryAuditor,

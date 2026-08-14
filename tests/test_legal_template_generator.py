@@ -7,13 +7,14 @@ and thin facade re-exports.
 from __future__ import annotations
 
 import pytest
+from scripts.legal.legal_template_generator import (
+    generate_legal_document as facade_generate_legal_document,
+)
+
 from ccba_legal.templates import (
     ND30_HEADER,
     SUPPORTED_DOC_TYPES,
     generate_legal_document,
-)
-from scripts.legal.legal_template_generator import (
-    generate_legal_document as facade_generate_legal_document,
 )
 
 

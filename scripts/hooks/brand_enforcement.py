@@ -4,10 +4,13 @@ Brand Enforcement Hook for ccba-agent-platform.
 Checks generated markdown and text files for correct brand names and prohibited words.
 """
 
+from __future__ import annotations
+
 import os
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -27,7 +30,7 @@ DEFAULT_PROHIBITED_WORDS = [
 BRAND_RULES_FILE = Path(".md/knowledge/brand_rules.yaml")
 
 
-def load_brand_rules():
+def load_brand_rules() -> tuple[list[tuple[str, str]], list[str]]:
     """Load brand rules from configuration file, falling back to defaults."""
     if not BRAND_RULES_FILE.exists():
         return DEFAULT_BRAND_PATTERNS, DEFAULT_PROHIBITED_WORDS
@@ -51,7 +54,7 @@ def load_brand_rules():
 BRAND_PATTERNS, PROHIBITED_WORDS = load_brand_rules()
 
 
-def check_file(file_path: Path):
+def check_file(file_path: Path) -> None:
     """Check a file's content for brand and policy compliance."""
     try:
         content = file_path.read_text(encoding="utf-8")
@@ -76,7 +79,8 @@ def check_file(file_path: Path):
             )
 
 
-def main(event=None, payload=None):
+def main(event: str | None = None, payload: dict[str, Any] | None = None) -> int:
+
     # If path is provided in payload, check only that file
     if payload and payload.get("path"):
         path = Path(payload["path"])
@@ -108,12 +112,15 @@ def main(event=None, payload=None):
 
 
 if __name__ == "__main__":
-    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    if sys.platform == "win32":
+        import io
+
         try:
-            sys.stdout.reconfigure(encoding="utf-8")
-            sys.stderr.reconfigure(encoding="utf-8")
+            if isinstance(sys.stdout, io.TextIOWrapper):
+                sys.stdout.reconfigure(encoding="utf-8")
+            if isinstance(sys.stderr, io.TextIOWrapper):
+                sys.stderr.reconfigure(encoding="utf-8")
         except Exception:
             pass
     main()
     sys.exit(0)
-

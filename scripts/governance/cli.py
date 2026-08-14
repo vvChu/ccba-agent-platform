@@ -9,15 +9,13 @@ import argparse
 import os
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .coordinator import DocumentAuditor
 
 
-def run_docs_validation_cli(
-    auditor: DocumentAuditor, args_list: list[str] | None = None
-) -> int:
+def run_docs_validation_cli(auditor: DocumentAuditor, args_list: list[str] | None = None) -> int:
     """CLI entry point for document validation (validate_docs.py)."""
     if sys.platform == "win32":
         if hasattr(sys.stdout, "reconfigure"):
@@ -273,15 +271,11 @@ def run_docs_validation_cli(
             )
             return 0
     else:
-        print(
-            "\x1b[32mDocumentation validation completed successfully! No issues detected.\x1b[0m"
-        )
+        print("\x1b[32mDocumentation validation completed successfully! No issues detected.\x1b[0m")
         return 0
 
 
-def run_skills_validation_cli(
-    auditor: DocumentAuditor, args_list: list[str] | None = None
-) -> int:
+def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | None = None) -> int:
     """CLI entry point for skill validation (validate_skills.py)."""
     if sys.platform == "win32":
         if hasattr(sys.stdout, "reconfigure"):
