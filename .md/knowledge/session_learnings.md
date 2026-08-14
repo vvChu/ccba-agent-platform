@@ -207,9 +207,18 @@
 #### P6.4. Two-axis Parallel Review (Đánh Giá Song Song Hai Trục)
 * **Giải pháp:** Khi rà soát mã nguồn hoặc thiết kế phức tạp, spawn 2 subagents chạy song song độc lập: Subagent 1 quét trục **Standards & Smells** (Coding style, KISS, Type hints); Subagent 2 quét trục **Spec & Requirements** (Hợp đồng API, Edge cases).
 
+#### P6.5. Caller Justification Gate & Anti-Shallow Seams (Rào Chắn Xác Thực Caller)
+* **Nguyên tắc:** Trước khi đề xuất tạo thêm một Seam/Class/Wrapper mới, Agent bắt buộc phải chứng minh được có **ít nhất một caller/consumer thực tế** cần giao diện này. Nếu một Deep Seam đã tồn tại (như `ConversionPipeline`), nghiêm cấm tạo thêm một wrapper nông (như `MarkdownConverter`) chỉ để đổi tên mà không tăng leverage hoặc locality.
+
+#### P6.6. Deepening via Extraction before Script Thinning (Bóc Tách Logic Trước Khi Tinh Gọn Script)
+* **Nguyên tắc:** Khi tinh gọn một script dài (> 100 dòng), phải phân tích xem script đó là *Thin CLI đơn thuần* hay là *Domain Orchestration Script* (chứa routing, taxonomy, error recovery). Nếu chứa domain logic, **bắt buộc phải bóc tách logic đó đưa vào package lõi trước**, viết unit test cho seam mới, rồi mới chuyển script thành Thin CLI Delegate. Tuyệt đối không xóa bỏ logic nghiệp vụ chỉ để làm ngắn script.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP6.1. Leaky Interface Exporting 30+ Symbols:** Xuất khẩu toàn bộ hàm con ra `__init__.py` làm rối loạn AI navigation.
 * **AP6.2. Domain Drift:** Đặt file xử lý PDF vào package OOXML hoặc đặt logic cào web vào module phân tích xung đột.
+* **AP6.3. Shallow-Wrapping Deep Seams (Bọc Nông trên Seam Sâu):** Tạo thêm một class/function bọc quanh một Deep Seam đã hoàn chỉnh chỉ để tạo "cảm giác dễ dùng", gây phân mảnh API và vi phạm nguyên lý KISS.
+* **AP6.4. Unchecked Transport/SDK Assumptions:** Giả định các SDK/Client hỗ trợ các khả năng đặc thù (như xử lý multimodal bytes, async streams) mà chưa inspect code thực tế của thư viện, dẫn đến kế hoạch sai lệch nghiêm trọng.
+* **AP6.5. Deleting Undocumented Domain Logic:** Nhầm lẫn giữa mã boilerplate lặp lại với domain orchestration logic và xóa bỏ khi tinh gọn scripts.
 
 ---
 
