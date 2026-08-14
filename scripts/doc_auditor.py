@@ -225,13 +225,24 @@ class DocumentAuditor:
         """Extract relative internal Markdown links."""
         links = []
         lines = content.splitlines()
+        in_code_block = False
         for idx, line in enumerate(lines):
-            matches = LINK_RE.findall(line)
+            stripped = line.strip()
+            if stripped.startswith("```"):
+                in_code_block = not in_code_block
+                continue
+            if in_code_block:
+                continue
+
+            # Loại bỏ inline code spans (ví dụ `[link](url)`) để không bắt nhầm link ví dụ
+            line_no_inline_code = re.sub(r"`[^`]+`", "", line)
+            matches = LINK_RE.findall(line_no_inline_code)
             for text, href in matches:
                 if href.startswith("http") or href.startswith("#") or href.startswith("mailto:"):
                     continue
                 links.append((idx + 1, text, href))
         return links
+
 
     def extract_env_variables(self, content: str) -> list[tuple[int, str]]:
         """Extract documented environment variables."""
