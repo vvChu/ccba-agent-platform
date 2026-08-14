@@ -7,16 +7,8 @@ Orchestrates lifecycle hooks: session-init, pre-tool, post-tool.
 import argparse
 import importlib.util
 import sys
-from pathlib import Path
-
-# Enforce UTF-8 output
-if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
-
 HOOKS_DIR = Path(__file__).parent / "hooks"
+
 
 
 def run_hook_script(script_path: Path, event: str, payload: dict) -> int:
@@ -44,8 +36,15 @@ def run_hook_script(script_path: Path, event: str, payload: dict) -> int:
         return 1
 
 
-def main():
-    parser = argparse.ArgumentParser(description="CCBA Agent Lifecycle Hook Runner")
+def main() -> None:
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+            sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
+    parser = argparse.ArgumentParser(description="CCBA Platform Lifecycle Hook Runner")
     parser.add_argument(
         "event",
         choices=["session-init", "pre-tool", "post-tool"],

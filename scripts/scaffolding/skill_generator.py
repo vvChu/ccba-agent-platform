@@ -1,9 +1,15 @@
 #!/usr/bin/env python
-"""
-Module xử lý lõi tự động hóa sinh và đồng bộ Skill (Auto-Dev Loop).
-Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng
+"""skill_generator.py - Autonomous Skill & Workflow Scaffolder for CCBA Platform.
+
+Parses script CLI interfaces (argparse / click / AST) to generate standardized
+CCBA Skills (SKILL.md, cli_spec.yaml, workflow routers).
+
+Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 """
 
+from __future__ import annotations
+
+import argparse
 import ast
 import importlib.util
 import inspect
@@ -11,14 +17,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore
-
-# Đảm bảo UTF-8 cho stdout/stderr
-if sys.stdout.encoding != "utf-8":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+import yaml
 
 # Mock click if not installed to avoid import crashes
 try:
@@ -28,6 +27,7 @@ try:
 except ImportError:
     click = None  # type: ignore
     HAS_CLICK = False
+
 
 # ==========================================
 # 1. PARSING KỸ THUẬT: DYNAMIC INSPECTION
@@ -47,7 +47,6 @@ def get_argparse_schema(parser: Any) -> dict[str, Any]:
             continue
 
         # Xác định key của tham số trong schema
-        # Lấy option dài nhất (ví dụ '--source' -> 'source') hoặc lấy action.dest
         param_name = action.dest
         if action.option_strings:
             longest_opt = max(action.option_strings, key=len)
@@ -72,13 +71,11 @@ def get_argparse_schema(parser: Any) -> dict[str, Any]:
             param_schema["enum"] = list(action.choices)
 
         # Bổ sung giá trị mặc định nếu có
-        # argparse đặt default là None hoặc các giá trị cụ thể, tránh in ra hằng số nội bộ
         if action.default is not None and str(action.default) != "==SUPPRESS==":
             param_schema["default"] = action.default
 
         properties[param_name] = param_schema
 
-        # Xác định thuộc tính bắt buộc (required)
         # Positional arguments (không có option_strings) thường là bắt buộc
         if action.required or not action.option_strings:
             required.append(param_name)
@@ -134,8 +131,8 @@ def get_click_schema(command: Any) -> dict[str, Any]:
 
 
 def inspect_via_dynamic_import(script_path: Path) -> tuple[str, dict[str, Any], str]:
-    """
-    Import runtime script Python và inspect để lấy parser.
+    """Import runtime script Python và inspect để lấy parser.
+
     Trả về: (command_base_string, commands_dict, module_docstring)
     """
     module_name = script_path.stem
@@ -144,13 +141,11 @@ def inspect_via_dynamic_import(script_path: Path) -> tuple[str, dict[str, Any], 
         raise ImportError(f"Không thể tạo module spec cho {script_path}")
 
     module = importlib.util.module_from_spec(spec)
-    # Load module directly without path manipulation
     spec.loader.exec_module(module)
 
     docstring = inspect.getdoc(module) or ""
 
     # 1. Trường hợp sử dụng click
-    # Tìm kiếm các đối tượng click.Command hoặc click.Group ở module level
     click_commands: list[tuple[str, Any]] = []
     if HAS_CLICK:
         for name, obj in inspect.getmembers(module):
@@ -158,7 +153,6 @@ def inspect_via_dynamic_import(script_path: Path) -> tuple[str, dict[str, Any], 
                 click_commands.append((name, obj))
 
     if click_commands:
-        # Nếu có click Group (chứa subcommands)
         group_obj = next(
             (obj for name, obj in click_commands if isinstance(obj, click.Group)), None
         )
@@ -171,7 +165,6 @@ def inspect_via_dynamic_import(script_path: Path) -> tuple[str, dict[str, Any], 
                 }
             return f"python scripts/{script_path.name}", commands_map, docstring
         else:
-            # Click command đơn lẻ
             cmd_name, cmd_obj = click_commands[0]
             commands_map = {
                 "default": {
@@ -181,12 +174,10 @@ def inspect_via_dynamic_import(script_path: Path) -> tuple[str, dict[str, Any], 
             }
             return f"python scripts/{script_path.name}", commands_map, docstring
 
-    # 2. Trường hợp sử dụng argparse
-    # Quy ước: Tìm hàm get_parser() trả về ArgumentParser
+    # 2. Trường hợp sử dụng argparse (tìm hàm get_parser())
     if hasattr(module, "get_parser"):
         get_parser_fn = module.get_parser
         parser = get_parser_fn()
-        # Kiểm tra xem có subparsers (các nhóm lệnh con) không
         subparsers_action = next(
             (
                 action
@@ -232,13 +223,11 @@ class ASTCLIParser(ast.NodeVisitor):
         self.subcommands: list[str] = []
 
     def visit_Call(self, node: ast.Call) -> None:
-        # Tìm kiếm lệnh gọi parser.add_argument(...)
         if isinstance(node.func, ast.Attribute) and node.func.attr == "add_argument":
             self.parse_add_argument(node)
         self.generic_visit(node)
 
     def parse_add_argument(self, node: ast.Call) -> None:
-        # Lấy tên tham số từ positional args của add_argument
         opts: list[str] = []
         for arg in node.args:
             if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
@@ -247,13 +236,11 @@ class ASTCLIParser(ast.NodeVisitor):
         if not opts:
             return
 
-        # Chuyển đổi flag thành key (ví dụ '--source' -> 'source')
         longest_opt = max(opts, key=len)
         param_name = longest_opt.lstrip("-").replace("-", "_")
 
-        # Phân tích keywords (default, choices, help, required, type)
         param_schema: dict[str, Any] = {"type": "string", "description": f"Tham số {param_name}"}
-        is_required = not longest_opt.startswith("-")  # Positional mặc định là bắt buộc
+        is_required = not longest_opt.startswith("-")
 
         for kw in node.keywords:
             if kw.arg == "help" and isinstance(kw.value, ast.Constant):
@@ -287,7 +274,6 @@ def inspect_via_static_ast(script_path: Path) -> tuple[str, dict[str, Any], str]
     visitor = ASTCLIParser()
     visitor.visit(tree)
 
-    # Dựng một schema mặc định
     commands_map = {
         "default": {
             "command_base": f"python scripts/{script_path.name}",
@@ -308,17 +294,18 @@ def inspect_via_static_ast(script_path: Path) -> tuple[str, dict[str, Any], str]
 
 def write_cli_spec(output_path: Path, commands: dict[str, Any]) -> None:
     """Ghi cấu trúc CLI spec ra tệp yaml."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     data = {"commands": commands}
     with open(output_path, "w", encoding="utf-8") as f:
         yaml.safe_dump(data, f, allow_unicode=True, default_flow_style=False)
-    print(f"[Info] Đã ghi tệp đặc tả kỹ thuật: {output_path.absolute()}")
+    print(f"[Info] Đã ghi tệp đặc tả kỹ thuật: {output_path.resolve()}")
 
 
 def write_skill_markdown(output_path: Path, skill_name: str, docstring: str) -> None:
     """Ghi tệp tin SKILL.md mẫu nghiệp vụ ban đầu (chỉ ghi nếu chưa có)."""
     if output_path.exists():
         print(
-            f"[Info] File SKILL.md đã tồn tại. Bỏ qua ghi đè để bảo vệ nội dung viết tay: {output_path.absolute()}"
+            f"[Info] File SKILL.md đã tồn tại. Bỏ qua ghi đè để bảo vệ nội dung viết tay: {output_path.resolve()}"
         )
         return
 
@@ -344,23 +331,27 @@ disable-model-invocation: true
 
 ### Bước 1: Khởi động và Xác thực
 *   Kiểm tra sự tồn tại của script và nạp tham chiếu kỹ thuật tại file `cli_spec.yaml` cùng cấp.
+*   **Tiêu chí hoàn thành:** Tệp script tồn tại và schema tham số được nạp thành công.
 
 ---
 
 ### Bước 2: Bảo mật & Chốt chặn Maskara Gate
 *   **BẮT BUỘC:** Nếu đầu vào có chứa tệp tin cục bộ, Agent phải chạy quét bảo mật qua `scripts/maskara.py` trước khi thực thi.
+*   **Tiêu chí hoàn thành:** Không còn khóa bí mật hoặc thông tin nhạy cảm rò rỉ.
 
 ---
 
 ### Bước 3: Thực thi dòng lệnh (CLI Invocation)
 *   Đọc các tham số của người dùng, map tương ứng vào JSON Schema trong `cli_spec.yaml`.
 *   Gọi lệnh qua terminal và bắt lỗi (`stdout`/`stderr`).
+*   **Tiêu chí hoàn thành:** Lệnh thực thi thành công với mã trả về 0.
 
 ---
 
 ### Bước 4: Hậu xử lý & QC
 *   Định dạng đầu ra sạch sẽ.
 *   Chèn dòng Attribution và Disclaimer của CCBA vào cuối tài liệu.
+*   **Tiêu chí hoàn thành:** Kết quả đầu ra được xác thực và trình bày rõ ràng.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -370,7 +361,7 @@ disable-model-invocation: true
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(content)
-    print(f"[Info] Đã tạo file tri thức nghiệp vụ mẫu: {output_path.absolute()}")
+    print(f"[Info] Đã tạo file tri thức nghiệp vụ mẫu: {output_path.resolve()}")
 
 
 def write_workflow_router(output_path: Path, skill_name: str, commands: dict[str, Any]) -> None:
@@ -378,7 +369,6 @@ def write_workflow_router(output_path: Path, skill_name: str, commands: dict[str
     if output_path.exists():
         return
 
-    # Xác định các subcommands hỗ trợ để liệt kê trong description
     subcmds = list(commands.keys())
     subcmd_str = f" [{'/'.join(subcmds)}]" if subcmds and subcmds != ["default"] else ""
 
@@ -396,8 +386,10 @@ Khi người dùng kích hoạt lệnh này dưới dạng:
 
 Agent tiếp nhận lệnh bắt buộc phải thực hiện tác vụ sau:
 
-1.  **Nạp Kỹ năng**: Nạp trực tiếp file hướng dẫn nghiệp vụ tại [SKILL.md](file:///[hub_path]/.agents/skills/{skill_name}/SKILL.md) và file tham số tại [cli_spec.yaml](file:///[hub_path]/.agents/skills/{skill_name}/cli_spec.yaml) vào ngữ cảnh (phân giải [hub_path] thành đường dẫn Hub thực tế).
+1.  **Nạp Kỹ năng**: Nạp trực tiếp file hướng dẫn nghiệp vụ tại [.agents/skills/{skill_name}/SKILL.md](../skills/{skill_name}/SKILL.md) và file tham số tại [.agents/skills/{skill_name}/cli_spec.yaml](../skills/{skill_name}/cli_spec.yaml) vào ngữ cảnh.
+    *   **Tiêu chí hoàn thành:** Nạp thành công tài liệu SKILL.md.
 2.  **Làm theo chỉ dẫn**: Thực thi đúng quy trình (Validate, Maskara, Terminal execution, QC) mô tả trong tệp tin `SKILL.md` đó để trả lời người dùng.
+    *   **Tiêu chí hoàn thành:** Hoàn thành quy trình và phản hồi kết quả.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -407,7 +399,7 @@ Agent tiếp nhận lệnh bắt buộc phải thực hiện tác vụ sau:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(content)
-    print(f"[Info] Đã đăng ký Slash Command workflow: {output_path.absolute()}")
+    print(f"[Info] Đã đăng ký Slash Command workflow: {output_path.resolve()}")
 
 
 # ==========================================
@@ -415,7 +407,12 @@ Agent tiếp nhận lệnh bắt buộc phải thực hiện tác vụ sau:
 # ==========================================
 
 
-def create_skill_from_script(script_path_str: str, skill_name: str | None = None) -> int:
+def create_skill_from_script(
+    script_path_str: str | Path,
+    skill_name: str | None = None,
+    skills_base_dir: Path | None = None,
+    workflows_base_dir: Path | None = None,
+) -> int:
     """Tạo mới cấu trúc Skill từ tệp Python script."""
     script_p = Path(script_path_str)
     if not script_p.exists():
@@ -423,12 +420,14 @@ def create_skill_from_script(script_path_str: str, skill_name: str | None = None
         return 1
 
     name = skill_name or script_p.stem.replace("_helper", "").replace("_", "-")
-    skill_dir = Path(".agents/skills") / name
+    base_skills = skills_base_dir or (Path(".agents") / "skills")
+    base_workflows = workflows_base_dir or (Path(".agents") / "workflows")
+
+    skill_dir = base_skills / name
     skill_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"[Info] Bắt đầu phân tích script '{script_p.name}'...")
     try:
-        # Thử Dynamic Inspection trước
         _, commands, docstring = inspect_via_dynamic_import(script_p)
         print("[Info] Phân tích động (Dynamic Inspection) thành công.")
     except Exception as e:
@@ -445,22 +444,21 @@ def create_skill_from_script(script_path_str: str, skill_name: str | None = None
             )
             return 3
 
-    # Ghi 3 file cấu thành Skill
     write_cli_spec(skill_dir / "cli_spec.yaml", commands)
     write_skill_markdown(skill_dir / "SKILL.md", name, docstring)
 
-    workflow_path = Path(".agents/workflows") / f"ccba-{name}.md"
+    workflow_path = base_workflows / f"ccba-{name}.md"
     write_workflow_router(workflow_path, name, commands)
 
     print(f"\nSUCCESS: Tạo Skill '{name}' thành công!")
-    print(f"👉 Thư mục skill: {skill_dir.absolute()}")
+    print(f"👉 Thư mục skill: {skill_dir.resolve()}")
     print(f"👉 Lệnh Slash Command: /ccba-{name}\n")
     return 0
 
 
-def sync_all_skills() -> int:
+def sync_all_skills(skills_base_dir: Path | None = None) -> int:
     """Quét toàn bộ thư mục skills cục bộ và đồng bộ lại cli_spec.yaml nếu có file script tương ứng."""
-    skills_dir = Path(".agents/skills")
+    skills_dir = skills_base_dir or (Path(".agents") / "skills")
     if not skills_dir.exists():
         print("[Info] Chưa có thư mục skills nào để đồng bộ.")
         return 0
@@ -477,12 +475,14 @@ def sync_all_skills() -> int:
         if not cli_spec_file.exists():
             continue
 
-        # Thử tìm script tương ứng trong thư mục scripts/
-        # Quy tắc ánh xạ tên: my-skill-name -> scripts/my_skill_name.py hoặc scripts/my_skill_name_helper.py
         name_snake = folder.name.replace("-", "_")
         candidates = [
             Path("scripts") / f"{name_snake}.py",
             Path("scripts") / f"{name_snake}_helper.py",
+            Path("scripts") / "scaffolding" / f"{name_snake}.py",
+            Path("scripts") / "governance" / f"{name_snake}.py",
+            Path("scripts") / "legal" / f"{name_snake}.py",
+            Path("scripts") / "security" / f"{name_snake}.py",
         ]
 
         target_script = next((c for c in candidates if c.exists()), None)
@@ -495,7 +495,6 @@ def sync_all_skills() -> int:
             write_cli_spec(cli_spec_file, commands)
             success_count += 1
         except Exception as e:
-            # Fallback sang Static AST
             try:
                 _, commands, _ = inspect_via_static_ast(target_script)
                 write_cli_spec(cli_spec_file, commands)
@@ -506,3 +505,38 @@ def sync_all_skills() -> int:
 
     print(f"\nSUCCESS: Đồng bộ hoàn tất! (Thành công: {success_count}, Thất bại: {fail_count})\n")
     return 0 if fail_count == 0 else 3
+
+
+def main() -> int:
+    """CLI entry point for skill scaffolder."""
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            try:
+                sys.stdout.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+        if hasattr(sys.stderr, "reconfigure"):
+            try:
+                sys.stderr.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+
+    parser = argparse.ArgumentParser(description="CCBA Autonomous Skill & Workflow Scaffolder")
+    parser.add_argument("--script", "-s", help="Đường dẫn file Python script nguồn")
+    parser.add_argument("--name", "-n", default=None, help="Tên Skill muốn tạo (mặc định theo tên script)")
+    parser.add_argument("--sync-all", action="store_true", help="Đồng bộ lại tất cả cli_spec.yaml từ scripts")
+
+    args = parser.parse_args()
+
+    if args.sync_all:
+        return sync_all_skills()
+
+    if not args.script:
+        parser.print_help()
+        return 1
+
+    return create_skill_from_script(args.script, args.name)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

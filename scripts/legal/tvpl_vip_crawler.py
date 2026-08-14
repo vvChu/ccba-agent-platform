@@ -3,19 +3,14 @@
 
 Thin CLI Delegate and programmatic API for TVPL VIP document crawling,
 delegating to LegalIntelPipeline in `packages/ccba-legal-intel`.
+Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 """
+
+from __future__ import annotations
 
 import sys
 from pathlib import Path
 from typing import Any
-
-# Force UTF-8 encoding safely on Windows
-if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
 
 # Ensure packages/ccba-legal-intel/src is in sys.path
 _PKG_SRC = Path(__file__).resolve().parents[2] / "packages" / "ccba-legal-intel" / "src"
@@ -65,6 +60,13 @@ def crawl_tvpl_vip_document(url: str, output_dir: Path | None = None) -> dict[st
 
 def main() -> None:
     """CLI runner supporting both single URL argument and full flag CLI."""
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+            sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
     if len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
         target_url = sys.argv[1]
         res = crawl_tvpl_vip_document(target_url)

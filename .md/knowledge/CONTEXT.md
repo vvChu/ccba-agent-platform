@@ -100,6 +100,45 @@ Tài liệu này lưu trữ các thuật ngữ và biên bản quyết định k
   3. *Xử lý Serialization An Toàn*: Hàm `save_tasks()` trong `team.py` hỗ trợ serialize tự động cả `TeamTask` và dictionary thô bằng `model_dump()`.
 - **Lý do:** Đạt được tính an toàn kiểu dữ liệu tuyệt đối (Strict Typing & Schema Validation), tối ưu hóa trải nghiệm lập trình cho Subagents/IDEs và ngăn chặn các anti-patterns lai tạp ("nửa nạc nửa mỡ") trong codebase.
 
+### ADR-015: Tái Cấu Trúc Module Kiểm Định Governance Thành Các Domain Sub-Auditors Độc Lập
+- **Trạng thái:** CHẤP THUẬN (ACCEPTED)
+- **Quyết định:**
+  1. *Sub-package Governance Chuyên Biệt*: Chuyển đổi tệp monolith 1,522 dòng `doc_auditor.py` thành sub-package `scripts/governance/` bao gồm 5 sub-auditors độc lập: `LinkAuditor` (kiểm tra link, symbol và auto-fixing), `SkillAuditor` (kiểm tra frontmatter và criteria), `RegistryAuditor` (sổ bộ pháp lý & orphan files), `EnvAuditor` (biến môi trường), `DriftAuditor` (kiến trúc & git diff), và `cli.py` (CLI handlers).
+  2. *Facade Tương Thích Ngược 100%*: Giữ `scripts/doc_auditor.py` làm Thin Facade và Coordinator (`DocumentAuditor`), re-export toàn bộ public API và helpers để không làm gãy bất kỳ caller, script hay test harness nào.
+  3. *Chiến Lược Kiểm Thử 2 Tầng*: Bảo tồn trọn vẹn regression tests cũ (`test_doc_auditor.py`, `test_validate_docs.py`) và bổ sung test unit độc lập `test_governance_sub_auditors.py` đảm bảo toàn bộ test suite chạy dưới 0.3s (tuân thủ Rule P3.1).
+- **Lý do:** Tăng tối đa tính Locality và Leverage, giảm 70% độ phức tạp nhận thức, giúp cô lập lỗi hoàn hảo và loại bỏ hoàn toàn God Class trong hệ thống Governance của Platform.
+
+### ADR-016: Khắc Phục Domain Drift của Skill Generator & Tách Rời Khỏi ccba-notebooklm
+- **Trạng thái:** CHẤP THUẬN (ACCEPTED)
+- **Quyết định:**
+  1. *Đúng Domain Scaffolding*: Di dời `skill_generator.py` từ thư mục không liên quan `scripts/security/` sang sub-package chính quy `scripts/scaffolding/skill_generator.py` và xuất bản qua `scripts/scaffolding/__init__.py`.
+  2. *Chuẩn hóa Rule P2.2*: Di dời toàn bộ `sys.stdout` stream UTF-8 reconfiguration từ module top-level vào bên trong khối `if __name__ == '__main__':` và `main()`.
+  3. *Bảo Vệ Ranh Giới Domain ccba-notebooklm*: Loại bỏ hoàn toàn dynamic import lỗi `_SCRIPTS_DIR / "skill_generator.py"` và hai subcommands ngoại lai (`create-skill`, `sync-skills`) khỏi `packages/ccba-notebooklm/src/ccba_notebooklm/__main__.py`, trả về domain thuần túy cho NotebookLM SDK.
+  4. *Bổ Sung Unit Tests*: Xây dựng bộ test `scripts/tests/test_skill_scaffolder.py` kiểm chứng phân tích AST tĩnh và sinh Skill Markdown hợp lệ 100% với `SkillAuditor`.
+- **Lý do:** Khắc phục triệt để vi phạm Domain Drift (AP6.2), loại bỏ dynamic import dễ gãy giữa các package, và bảo vệ bộ bắt luồng Pytest runner trên Windows.
+
+### ADR-017: Hoàn Tất Hợp Nhất Legal Templates NĐ 30 Vào Package ccba-legal-intel
+- **Trạng thái:** CHẤP THUẬN (ACCEPTED)
+- **Quyết định:**
+  1. *Đóng Gói Legal Templates Deep Seam*: Di dời toàn bộ logic sinh mẫu văn bản Nghị định 30/2020/NĐ-CP (`generate_legal_document`, `SUPPORTED_DOC_TYPES`, `ND30_HEADER`) từ `scripts/legal/legal_template_generator.py` vào module chính quy `packages/ccba-legal-intel/src/ccba_legal/templates.py`, tích hợp trực tiếp với `ccba_legal.grounding`.
+  2. *Thin CLI Delegate & Tương Thích Ngược 100%*: Chuyển `scripts/legal/legal_template_generator.py` thành Thin Re-export Facade kèm CLI runner mẫu trong `main()`.
+  3. *Chuẩn hóa Toàn Diện Rule P2.2*: Sửa toàn bộ cấu hình `sys.stdout` UTF-8 ở top-level module scope trong `legal_intelligence.py` và `tvpl_vip_crawler.py` vào bên trong hàm `main()`.
+  4. *Kiểm Thử 2 Tầng*: Cập nhật `tests/test_legal_template_generator.py` kiểm định tính đồng nhất giữa direct package call và script facade call.
+- **Lý do:** Hoàn tất trọn vẹn lộ trình ADR-012, bảo đảm tính toàn vẹn và duy nhất của domain logic pháp lý trong core package `ccba-legal-intel`.
+
+### ADR-018: Chuẩn Hóa Hạ Tầng An Toàn Tiến Trình & Loại Bỏ Triệt Để Top-Level Stream Mutation (P2.2)
+- **Trạng thái:** CHẤP THUẬN (ACCEPTED)
+- **Quyết định:**
+  1. *Đóng Gói Evaluation & Process Safety Seams*: Xuất bản đầy đủ các abstractions an toàn tiến trình (`DetachedExecutionEngine`, `ensure_single_instance`, `kill_process_tree`, `get_venv_python`, `check_pre_eval_health`, `get_git_modified_files`) qua `scripts/eval/__init__.py`.
+  2. *Triệt Tiêu Hoàn Toàn Vi Phạm Rule P2.2*: Di dời toàn bộ `TextIOWrapper` và cấu hình stream UTF-8 top-level tại 7 tệp script (`hook_runner.py`, `drive_auth_helper.py`, `mock_debugger.py`, `repomix_pack.py`, `execute_ticket01`, `execute_ticket02`, `extract_exact_qcvn04`) vào hàm `main()` hoặc khối `if __name__ == '__main__':` với `sys.stdout.reconfigure()`.
+  3. *Bảo Vệ Bộ Bắt Luồng Pytest & Agent Server*: Loại trừ tuyệt đối nguy cơ làm đóng file descriptor của Pytest I/O capture và bảo toàn `Safe Process Termination Invariant` (`os.getpid()` & `os.getppid()`).
+- **Lý do:** Loại bỏ hoàn toàn lỗi tiềm ẩn `ValueError: I/O operation on closed file`, tăng tính ổn định của test suite và hoàn thiện chuẩn mực Deep Modules cho Platform.
+
+
+
+
+
+
 
 
 

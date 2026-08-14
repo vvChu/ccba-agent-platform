@@ -5,14 +5,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-# Cấu hình UTF-8 cho console đầu ra trên Windows để tránh lỗi mã hóa ký tự tiếng Việt
-if sys.stdout.encoding != "utf-8":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
-
-
-import importlib.util
-
 # Import dynamically from our own package
 from . import (
     check_auth,
@@ -38,21 +30,15 @@ from ._client import (
     VideoStyle,
 )
 
-# Optional skill_generator import (no sys.path mutation)
-_SCRIPTS_DIR = Path(__file__).parents[4] / "scripts"
-_skill_gen_path = _SCRIPTS_DIR / "skill_generator.py"
-if _skill_gen_path.exists():
-    try:
-        _spec = importlib.util.spec_from_file_location("skill_generator", _skill_gen_path)
-        skill_generator = importlib.util.module_from_spec(_spec)
-        _spec.loader.exec_module(skill_generator)
-    except Exception:
-        skill_generator = None
-else:
-    skill_generator = None
-
 
 def main() -> int:
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+            sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
     parser = argparse.ArgumentParser(description="CCBA Platform NotebookLM Helper Wrapper")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -202,18 +188,6 @@ def main() -> int:
     parser_del_src = subparsers.add_parser("delete-source", help="Xóa một nguồn cụ thể")
     parser_del_src.add_argument("--source-id", required=True, help="Source ID cần xóa")
     parser_del_src.add_argument("--notebook-id", default=None, help="Notebook ID (tùy chọn)")
-
-    # Sub-command create-skill
-    parser_create_skill = subparsers.add_parser(
-        "create-skill", help="Tự động tạo Skill từ tệp Python script"
-    )
-    parser_create_skill.add_argument(
-        "--script", required=True, help="Đường dẫn file script Python nguồn"
-    )
-    parser_create_skill.add_argument("--name", default=None, help="Tên Skill muốn tạo (tùy chọn)")
-
-    # Sub-command sync-skills
-    subparsers.add_parser("sync-skills", help="Đồng bộ tự động các cli_spec.yaml từ scripts")
 
     args = parser.parse_args()
 
@@ -379,16 +353,7 @@ def main() -> int:
             return int(loop.run_until_complete(list_sources(args.notebook_id)))
         elif args.command == "delete-source":
             return int(loop.run_until_complete(delete_source(args.source_id, args.notebook_id)))
-        elif args.command == "create-skill":
-            if skill_generator:
-                return int(skill_generator.create_skill_from_script(args.script, args.name))
-            print("ERROR: Thư viện skill_generator không khả dụng.", file=sys.stderr)
-            return 1
-        elif args.command == "sync-skills":
-            if skill_generator:
-                return int(skill_generator.sync_all_skills())
-            print("ERROR: Thư viện skill_generator không khả dụng.", file=sys.stderr)
-            return 1
+
     finally:
         loop.close()
 
