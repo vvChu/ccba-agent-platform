@@ -9,7 +9,7 @@
 
 ## 🎯 1. Điểm Đích (Destination) — [ĐẠT ĐƯỢC / REACHED]
 
-Toàn bộ các domain services trong [`ccba_ai.services`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/services) (`seo.py`, `team.py`, `plan.py`) đã được chuyển đổi dứt điểm sang **Pydantic v2 `BaseModel` DTOs thuần túy** (không dùng các lớp bọc lai tạp `DictLikeModel`). Tất cả callers, CLI wrappers, và test suites đã được tái cấu trúc triệt để theo truy cập thuộc tính tường minh (`res.score`, `task.name`), bảo đảm type safety tuyệt đối và pass 100% test suite toàn repo (`605/605`).
+Toàn bộ các domain services trong [`ccba_ai.services`](../../../../packages/ccba-ai/src/ccba_ai/services) (`seo.py`, `team.py`, `plan.py`) đã được chuyển đổi dứt điểm sang **Pydantic v2 `BaseModel` DTOs thuần túy** (không dùng các lớp bọc lai tạp `DictLikeModel`). Tất cả callers, CLI wrappers, và test suites đã được tái cấu trúc triệt để theo truy cập thuộc tính tường minh (`res.score`, `task.name`), bảo đảm type safety tuyệt đối và pass 100% test suite toàn repo (`605/605`).
 
 ---
 
@@ -23,9 +23,9 @@ Toàn bộ các domain services trong [`ccba_ai.services`](file:///d:/GitHubProj
 
 ## 🏛️ 3. Quyết Định Đã Chốt (Decisions So Far)
 
-1. **[Quyết định #1 — Loại bỏ DictLikeModel Hybrid](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/pydantic-pure-domain-services/map.md)**: Không tạo class bọc giả lập dictionary để tránh anti-pattern "nửa nạc nửa mỡ". Thay vào đó, refactor dứt điểm toàn bộ callers.
-2. **[Quyết định #2 — Đồng bộ Chuẩn Pydantic v2](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/pydantic-pure-domain-services/map.md)**: Đặt các DTOs mới (`SEOAuditResult`, `TeamTask`, `PlanCreationResult`, `PhaseUpdateResult`, `PlanStatusResult`) trong `packages/ccba-ai/src/ccba_ai/models.py` bên cạnh `ChatResult` và `AuditReport`.
-3. **[Quyết định #3 — Ghi nhận ADR-014](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/CONTEXT.md)**: Lưu trữ quyết định kiến trúc chính thức vào Sổ bộ Quyết định ADRs của Platform.
+1. **[Quyết định #1 — Loại bỏ DictLikeModel Hybrid](map.md)**: Không tạo class bọc giả lập dictionary để tránh anti-pattern "nửa nạc nửa mỡ". Thay vào đó, refactor dứt điểm toàn bộ callers.
+2. **[Quyết định #2 — Đồng bộ Chuẩn Pydantic v2](map.md)**: Đặt các DTOs mới (`SEOAuditResult`, `TeamTask`, `PlanCreationResult`, `PhaseUpdateResult`, `PlanStatusResult`) trong `packages/ccba-ai/src/ccba_ai/models.py` bên cạnh `ChatResult` và `AuditReport`.
+3. **[Quyết định #3 — Ghi nhận ADR-014](../CONTEXT.md)**: Lưu trữ quyết định kiến trúc chính thức vào Sổ bộ Quyết định ADRs của Platform.
 
 ---
 
@@ -33,11 +33,11 @@ Toàn bộ các domain services trong [`ccba_ai.services`](file:///d:/GitHubProj
 
 | Ticket | Tiêu Đề | Loại | Phụ Thuộc | Trạng Thái |
 | :--- | :--- | :---: | :---: | :---: |
-| **[Ticket #1](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/pydantic-pure-domain-services/ticket-01-models-definition.md)** | Định nghĩa Pydantic v2 DTOs trong `models.py` & Export | Task [AFK] | None | `CLOSED` ✅ |
-| **[Ticket #2](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/pydantic-pure-domain-services/ticket-02-seo-service-refactor.md)** | Refactor `seo.py`, CLI `seo_audit.py`, và `test_seo.py` | Task [AFK] | Ticket #1 | `CLOSED` ✅ |
-| **[Ticket #3](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/pydantic-pure-domain-services/ticket-03-team-service-refactor.md)** | Refactor `team.py`, File Mutex Lock & JSON Persistence | Task [AFK] | Ticket #1 | `CLOSED` ✅ |
-| **[Ticket #4](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/pydantic-pure-domain-services/ticket-04-plan-service-refactor.md)** | Refactor `plan.py` DTOs & `test_plan_manager.py` | Task [AFK] | Ticket #1 | `CLOSED` ✅ |
-| **[Ticket #5](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/pydantic-pure-domain-services/ticket-05-end-to-end-validation.md)** | Kiểm định Toàn Trình, Governance Gate & ADR-014 | Task [AFK] | Ticket #2, #3, #4 | `CLOSED` ✅ |
+| **[Ticket #1](ticket-01-models-definition.md)** | Định nghĩa Pydantic v2 DTOs trong `models.py` & Export | Task [AFK] | None | `CLOSED` ✅ |
+| **[Ticket #2](ticket-02-seo-service-refactor.md)** | Refactor `seo.py`, CLI `seo_audit.py`, và `test_seo.py` | Task [AFK] | Ticket #1 | `CLOSED` ✅ |
+| **[Ticket #3](ticket-03-team-service-refactor.md)** | Refactor `team.py`, File Mutex Lock & JSON Persistence | Task [AFK] | Ticket #1 | `CLOSED` ✅ |
+| **[Ticket #4](ticket-04-plan-service-refactor.md)** | Refactor `plan.py` DTOs & `test_plan_manager.py` | Task [AFK] | Ticket #1 | `CLOSED` ✅ |
+| **[Ticket #5](ticket-05-end-to-end-validation.md)** | Kiểm định Toàn Trình, Governance Gate & ADR-014 | Task [AFK] | Ticket #2, #3, #4 | `CLOSED` ✅ |
 
 ---
 

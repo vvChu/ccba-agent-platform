@@ -8,11 +8,11 @@
 ---
 
 ## 🎯 Mục Tiêu
-1. Cập nhật [`packages/ccba-ai/src/ccba_ai/services/plan.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/services/plan.py):
+1. Cập nhật [`packages/ccba-ai/src/ccba_ai/services/plan.py`](../../../../packages/ccba-ai/src/ccba_ai/services/plan.py):
    - `create_plan() -> PlanCreationResult`
    - `update_phase_status() -> PhaseUpdateResult`
    - `get_plan_status() -> PlanStatusResult`
-2. Cập nhật [`packages/ccba-ai/tests/test_plan_manager.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/tests/test_plan_manager.py):
+2. Cập nhật [`packages/ccba-ai/tests/test_plan_manager.py`](../../../../packages/ccba-ai/tests/test_plan_manager.py):
    - Cập nhật các assertions truy cập trực tiếp bằng thuộc tính (`res.status`, `res.plan_file`, `res.phases`).
 
 ## 🧪 Tiêu Chí Nghiệm Thu

@@ -8,15 +8,15 @@
 ---
 
 ## 🎯 Mục Tiêu
-1. Cập nhật [`packages/ccba-ai/src/ccba_ai/services/seo.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/services/seo.py):
+1. Cập nhật [`packages/ccba-ai/src/ccba_ai/services/seo.py`](../../../../packages/ccba-ai/src/ccba_ai/services/seo.py):
    - `SEOAuditor.audit_markdown()` $\rightarrow$ trả về `SEOAuditResult`
    - `SEOAuditor.audit_html()` $\rightarrow$ trả về `SEOAuditResult`
    - `SEOAuditor.audit_file()` $\rightarrow$ trả về `SEOAuditResult`
    - `SEOAuditor.audit()` $\rightarrow$ trả về `SEOAuditResult`
    - Các hàm legacy: `audit_markdown()`, `audit_html()`, `audit_file()` $\rightarrow$ trả về `SEOAuditResult`
-2. Cập nhật CLI [`scripts/validation/seo_audit.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/validation/seo_audit.py):
+2. Cập nhật CLI [`scripts/validation/seo_audit.py`](../../../../scripts/validation/seo_audit.py):
    - Đổi từ `result["score"]`, `result["checks"]`, `result["issues"]` sang `result.score`, `result.checks`, `result.issues`.
-3. Cập nhật Test Suite [`packages/ccba-ai/tests/test_seo.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/tests/test_seo.py):
+3. Cập nhật Test Suite [`packages/ccba-ai/tests/test_seo.py`](../../../../packages/ccba-ai/tests/test_seo.py):
    - Kiểm thử truy cập thuộc tính `result.score`, `result.checks`, `result.issues`, `result.file_name`.
 
 ## 🧪 Tiêu Chí Nghiệm Thu
