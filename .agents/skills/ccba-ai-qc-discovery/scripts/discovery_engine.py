@@ -94,7 +94,7 @@ class IDOPDiscovery:
         self,
         project_name: str = "CCBA Project",
         output_dir: Path | None = None,
-        ai_model: str = "gemini-3.1-pro-low",
+        ai_model: str = "gemini-3.7-flash",
     ) -> None:
         self.project_name = project_name
         self.output_dir = Path(output_dir) if output_dir else Path("discovery_output")
