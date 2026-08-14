@@ -218,7 +218,7 @@
 * **AP6.2. Domain Drift:** Đặt file xử lý PDF vào package OOXML hoặc đặt logic cào web vào module phân tích xung đột.
 * **AP6.3. Shallow-Wrapping Deep Seams (Bọc Nông trên Seam Sâu):** Tạo thêm một class/function bọc quanh một Deep Seam đã hoàn chỉnh chỉ để tạo "cảm giác dễ dùng", gây phân mảnh API và vi phạm nguyên lý KISS.
 * **AP6.4. Unchecked Transport/SDK Assumptions:** Giả định các SDK/Client hỗ trợ các khả năng đặc thù (như xử lý multimodal bytes, async streams) mà chưa inspect code thực tế của thư viện, dẫn đến kế hoạch sai lệch nghiêm trọng.
-* **AP6.5. Deleting Undocumented Domain Logic:** Nhầm lẫn giữa mã boilerplate lặp lại với domain orchestration logic và xóa bỏ khi tinh gọn scripts.
+* **AP6.5. Deleting Embedded Domain Logic:** Nhầm lẫn giữa mã boilerplate lặp lại với domain orchestration logic (dù đã có docstring) và xóa bỏ khi tinh gọn scripts.
 
 ---
 

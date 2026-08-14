@@ -6,7 +6,7 @@ category: engineering
 keywords: [architecture, design, deep-module, refactor, visual-report, cải tiến kiến trúc, module sâu, báo cáo trực quan, refactor mã nguồn]
 metadata:
   author: CCBA
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Cải tiến Kiến trúc Mã nguồn (Improve Codebase Architecture)
@@ -38,6 +38,7 @@ Trước khi tổng hợp các ứng viên vào Báo cáo HTML hoặc Implementa
 2. **Caller Justification Gate (KISS):** Lớp Seam mới định tạo có caller/consumer thực tế nào mới cần đến không? Đã có Deep Seam nào tương đương tồn tại chưa (ví dụ: `ConversionPipeline`)? Nếu đã có, nghiêm cấm tạo wrapper nông mới (như `MarkdownConverter`).
 3. **Phân biệt Boilerplate vs Domain Orchestration:** Khi đề xuất tinh gọn script, script đó có chứa logic nghiệp vụ đặc thù (routing, taxonomy, mutex, popups) không? Nếu có, phải đưa logic vào package lõi trước, viết test đầy đủ rồi mới tinh gọn script thành Thin CLI Delegate.
 4. **Submodule Verification:** Các submodule/class định import (`ccba_legal.formatter`, `cleaners`, v.v.) có thực sự tồn tại và sẵn sàng sử dụng trong package đích không?
+- **Tiêu chí hoàn thành:** Mỗi ứng viên đề xuất phải có 4 dòng tự xác nhận (✅/❌) cho 4 câu hỏi trên trong ghi chú nội bộ trước khi đưa vào báo cáo HTML hoặc Implementation Plan. Ứng viên nào có bất kỳ ❌ nào phải được điều chỉnh hoặc loại bỏ.
 
 ### 2. Trình bày Báo cáo dưới dạng HTML (Present candidates as an HTML report)
 - Viết một file HTML đơn lẻ (single-file) vào thư mục tạm của dự án: `.md/scratch/architecture-review/architecture-review-<timestamp>.html` (tự động tạo thư mục nếu chưa tồn tại).
