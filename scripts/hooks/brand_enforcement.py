@@ -1,114 +1,45 @@
-#!/usr/bin/env python3
-"""
-Brand Enforcement Hook for ccba-agent-platform.
-Checks generated markdown and text files for correct brand names and prohibited words.
+"""Thin Backward-Compatible Facade for Brand Enforcement Hook.
+
+Delegates execution to the deep ``BrandHook`` class in ``scripts.hooks.brand``.
 """
 
 from __future__ import annotations
 
-import os
-import re
 import sys
 from pathlib import Path
 from typing import Any
 
-import yaml
+try:
+    from .base import HookContext
+    from .brand import BrandHook
+except (ImportError, ValueError):
+    _PROJECT_ROOT = Path(__file__).resolve().parents[2]
+    if str(_PROJECT_ROOT) not in sys.path:
+        sys.path.insert(0, str(_PROJECT_ROOT))
+    from scripts.hooks.base import HookContext
+    from scripts.hooks.brand import BrandHook
 
-# Fallback defaults if configuration file is missing or invalid
-DEFAULT_BRAND_PATTERNS = [
-    (r"\bclaudekit\b", "ClaudeKit"),
-    (r"\blitellm\b", "LiteLLM"),
-    (r"\bantigravity\b", "Antigravity"),
-    (r"\bgemini\b", "Gemini"),
+load_brand_rules = BrandHook.load_brand_rules
+check_file = BrandHook.check_file
+DEFAULT_BRAND_PATTERNS = BrandHook.DEFAULT_BRAND_PATTERNS
+DEFAULT_PROHIBITED_WORDS = BrandHook.DEFAULT_PROHIBITED_WORDS
+
+__all__ = [
+    "BrandHook",
+    "load_brand_rules",
+    "check_file",
+    "DEFAULT_BRAND_PATTERNS",
+    "DEFAULT_PROHIBITED_WORDS",
+    "main",
 ]
 
-DEFAULT_PROHIBITED_WORDS = [
-    r"\blorem ipsum\b",
-    r"\bplaceholder\b",
-]
 
-BRAND_RULES_FILE = Path(".md/knowledge/brand_rules.yaml")
-
-
-def load_brand_rules() -> tuple[list[tuple[str, str]], list[str]]:
-    """Load brand rules from configuration file, falling back to defaults."""
-    if not BRAND_RULES_FILE.exists():
-        return DEFAULT_BRAND_PATTERNS, DEFAULT_PROHIBITED_WORDS
-
-    try:
-        with open(BRAND_RULES_FILE, encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-
-        patterns = []
-        for item in data.get("brand_patterns", []):
-            patterns.append((item["pattern"], item["correct"]))
-
-        prohibited = data.get("prohibited_words", [])
-
-        # If successfully parsed but empty, return defaults
-        return (patterns or DEFAULT_BRAND_PATTERNS), (prohibited or DEFAULT_PROHIBITED_WORDS)
-    except Exception:
-        return DEFAULT_BRAND_PATTERNS, DEFAULT_PROHIBITED_WORDS
-
-
-BRAND_PATTERNS, PROHIBITED_WORDS = load_brand_rules()
-
-
-def check_file(file_path: Path) -> None:
-    """Check a file's content for brand and policy compliance."""
-    try:
-        content = file_path.read_text(encoding="utf-8")
-    except Exception:
-        return
-
-    # Check brand spellings
-    for pattern, correct in BRAND_PATTERNS:
-        matches = re.findall(pattern, content, re.IGNORECASE)
-        for m in matches:
-            if m != correct:
-                print(
-                    f"\x1b[33m[Brand Warning]\x1b[0m In file '{file_path}': Found '{m}', expected '{correct}'"
-                )
-
-    # Check prohibited words
-    for pattern in PROHIBITED_WORDS:
-        matches = re.findall(pattern, content, re.IGNORECASE)
-        for m in matches:
-            print(
-                f"\x1b[31m[Policy Alert]\x1b[0m In file '{file_path}': Found prohibited word '{m}'"
-            )
-
-
-def main(event: str | None = None, payload: dict[str, Any] | None = None) -> int:
-
-    # If path is provided in payload, check only that file
-    if payload and payload.get("path"):
-        path = Path(payload["path"])
-        if path.exists() and path.is_file():
-            check_file(path)
-            return 0
-
-    # Otherwise, check CLI args if passed
-    if sys.argv and len(sys.argv) > 1 and not event:
-        for arg in sys.argv[1:]:
-            path = Path(arg)
-            if path.exists() and path.is_file():
-                check_file(path)
-        return 0
-
-    # Otherwise, scan newly created or modified .md/.txt files in the workspace (excluding claudekit-engineer and .agents)
-    cwd = Path.cwd()
-    exclude_dirs = {".git", "claudekit-engineer", ".agents", "node_modules", "venv", ".venv"}
-
-    for root, dirs, files in os.walk(cwd):
-        dirs[:] = [d for d in dirs if d not in exclude_dirs]
-        for f in files:
-            if f.endswith((".md", ".txt")):
-                file_path = Path(root) / f
-                if "node_modules" in str(file_path):
-                    continue
-                check_file(file_path)
-    return 0
+def main(event: str = "post-tool", payload: dict[str, Any] | None = None) -> int:
+    """Entrypoint forwarding to BrandHook.execute()."""
+    hook = BrandHook()
+    context = HookContext.from_payload(event, payload)
+    result = hook.execute(context)
+    return result.exit_code
 
 
 if __name__ == "__main__":
