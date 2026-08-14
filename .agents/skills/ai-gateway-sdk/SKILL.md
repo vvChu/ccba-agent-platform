@@ -1,6 +1,6 @@
 ---
 name: AI Gateway SDK
-description: Kết nối AI Gateway trên Server Spark — 22 models (local GPU + cloud), 1 endpoint. Bao gồm Python package ccba-ai.
+description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endpoint. Bao gồm Python package ccba-ai.
 applies_to:
   - "Phần mềm"
   - "Thẩm tra thiết kế"
@@ -11,7 +11,7 @@ bundle: "_core"
 
 # AI Gateway SDK
 
-Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoint duy nhất cung cấp 22 models — từ Qwen 35B chạy local GPU đến Claude 4.6, Gemini 3.1 Pro trên cloud.
+Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoint duy nhất cung cấp đa dạng mô hình (50+ models/aliases thời gian thực qua `ai.models()`) — từ Qwen 35B chạy local GPU đến Claude 4.6, Gemini 3.7 Flash trên cloud.
 
 ## Kiến trúc
 

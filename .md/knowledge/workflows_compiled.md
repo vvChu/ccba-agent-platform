@@ -63,72 +63,106 @@ bundle: "_core"
 
 # CCBA Brainstorming & Ingestion Workflow
 
+> **Nguồn gốc:** Cấu trúc tương tác luân phiên (Hybrid Rhythm, Deferred Judgment, Party Mode) được học hỏi từ nguyên tắc của `brainstorm-coach` bởi Lưu Trọng Hiếu (License: All Rights Reserved - Adapted patterns only).
+
 Workflow này giúp khởi chạy một phiên thảo luận ý tưởng, tự động quét và phân loại tài liệu đầu vào tại thư mục nháp `input_documents/`, đồng thời kích hoạt các hướng dẫn phân tích đặc thù theo từng chủ đề nghiệp vụ.
 
 ## Các bước thực hiện của Agent
 
-### 1. Đọc và Gộp cấu hình chủ đề (Hierarchical Config Merge)
+### 1. Đọc cấu hình và Xử lý tham số (Config & Routing)
 Agent bắt buộc phải đọc và gộp cấu hình các chủ đề từ hai nguồn:
-1. **Mặc định từ Hub:** Đọc cấu hình mặc định tại [.agents/workflows/resources/brainstorm_topics.yaml](file:///d:/GitHubProjects/ccba-agent-platform/.agents/workflows/resources/brainstorm_topics.yaml).
-2. **Cục bộ từ Spoke:** Kiểm tra sự tồn tại của tệp cấu hình cục bộ tại `.md/knowledge/brainstorm_topics.yaml`. Nếu có, đọc và gộp (merge) với cấu hình mặc định (tập tin cục bộ được phép ghi đè các chủ đề trùng `topic_id` hoặc khai báo thêm chủ đề mới như Back Office/Admin).
+1. **Mặc định từ Hub:** Đọc cấu hình mặc định tại [brainstorm_topics.yaml](resources/brainstorm_topics.yaml).
+2. **Cục bộ từ Spoke:** Kiểm tra sự tồn tại của tệp cấu hình cục bộ tại `.md/knowledge/brainstorm_topics.yaml`. Nếu có, đọc và gộp (merge) với cấu hình mặc định (tập tin cục bộ được phép ghi đè các chủ đề trùng `topic_id` hoặc khai báo thêm chủ đề mới).
 
-### 1.5. Xử lý tham số Bypass (Hybrid Branching Logic)
-Agent phân tích câu lệnh kích hoạt để phát hiện tham số truyền sau ký tự `--`:
-* **Nếu có tham số truyền vào (ví dụ: `/ccba-brainstorm -- legal`):**
-  * So khớp tham số đó với danh sách các `topic_id` trong cấu hình đã gộp.
-  * Nếu **TRÙNG KHỚP**: Agent thực hiện **Bypass** — lập tức di chuyển sang **Bước 4** để nạp Kỹ năng và chuyển đổi tài liệu, bỏ qua hoàn toàn Bước 2 (Quét tài liệu) và Bước 3 (Hiển thị Menu).
-  * Nếu **KHÔNG TRÙNG KHỚP**: Agent in ra cảnh báo: `⚠️ Chủ đề '[tham-so]' không tồn tại trong cấu hình. Tự động chuyển về luồng quét và hiển thị menu chọn.` và chuyển sang **Bước 2**.
-* **Nếu không có tham số truyền vào (gõ `/ccba-brainstorm` đơn thuần):** Chạy tiếp **Bước 2** thông thường.
+**Xử lý tham số Bypass:** Agent phân tích câu lệnh kích hoạt để phát hiện tham số truyền sau ký tự `--`:
+* **Nếu có tham số trùng khớp `topic_id`:** Bypass — lập tức di chuyển sang **Bước 3** để nạp Kỹ năng và chuyển đổi tài liệu, bỏ qua Bước 2 (Quét) và Menu chọn.
+* **Nếu tham số không trùng khớp:** In cảnh báo `⚠️ Chủ đề '[tham-so]' không tồn tại trong cấu hình.` và chuyển sang **Bước 2**.
+* **Nếu không có tham số:** Chạy tiếp **Bước 2** thông thường.
+
+*Tiêu chí hoàn thành:* Agent đã nạp cấu hình từ ít nhất một nguồn, in ra cấu trúc các chủ đề khả dụng, và quyết định rẽ nhánh chính xác.
 
 ---
 
-### 2. Quét tài liệu đầu vào (Input Scan)
-Quét toàn bộ danh sách tệp tin nằm trong thư mục [input_documents/](file:///d:/GitHubProjects/ccba-agent-platform/input_documents/):
+### 2. Quét tài liệu và Chọn chủ đề (Scan & Select)
+Quét toàn bộ danh sách tệp tin nằm trong thư mục [input_documents/](../../input_documents/):
 * In bảng danh sách tệp tin phát hiện được kèm dung lượng (KB/MB).
 * Đọc lướt nội dung (skimming) và so khớp từ khóa của các tệp với danh sách `keywords` của các chủ đề trong cấu hình để tự động đề xuất chủ đề phù hợp nhất.
+* Hiển thị danh sách tất cả các chủ đề khả dụng cho người dùng lựa chọn. Chờ người dùng xác nhận chủ đề hoặc yêu cầu đổi sang chủ đề khác.
+
+*Tiêu chí hoàn thành:* Người dùng đã phản hồi lựa chọn chủ đề từ danh sách và Agent đã xác nhận chủ đề được kích hoạt.
 
 ---
 
-### 3. Hiển thị Menu Tương tác và Rẽ nhánh (Interactive Branching)
-Hiển thị danh sách tất cả các chủ đề khả dụng cho người dùng lựa chọn:
-* In rõ chủ đề được Agent đề xuất tự động dựa trên kết quả khớp từ khóa ở Bước 2.
-* Chờ người dùng xác nhận chủ đề được chọn hoặc yêu cầu đổi sang chủ đề khác (ví dụ: Pháp lý, MEP/PCCC, Admin...).
-
----
-
-### 4. Chuyển đổi định dạng và Nạp Kỹ năng (Ingestion & Skill Activation)
+### 3. Chuyển đổi định dạng và Nạp Kỹ năng (Ingestion & Skill Activation)
 Sau khi chủ đề được xác nhận, Agent tiến hành:
-1. **Chuyển đổi linh hoạt (On-Demand Convert):**
-   * Đối với các tệp nhẹ `< 5MB` (`.docx`, `.txt`): Tự động chuyển đổi sang Markdown và lưu tạm tại `.md/extracted_docs/` để làm giàu tri thức của phiên làm việc.
-   * Đối với các tệp nặng `> 5MB` (PDF bản vẽ kỹ thuật lớn, Excel bảng tính lớn): In cảnh báo, lập bảng tóm tắt metadata và chỉ convert chi tiết khi thảo luận đi sâu vào tệp đó.
+1. **Chuyển đổi tài liệu:** Chuyển đổi theo quy trình `/ccba-convert-markdown` — tham khảo skill [markdown-document-processing](../skills/markdown-processing/SKILL.md) cho quy tắc routing theo `project.mode`.
+   * Đối với các tệp nhẹ `< 5MB` (`.docx`, `.txt`): Tự động chuyển đổi sang Markdown.
+   * Đối với các tệp nặng `> 5MB` (PDF bản vẽ, Excel lớn): In cảnh báo, lập bảng tóm tắt metadata và chỉ convert chi tiết khi thảo luận đi sâu vào tệp đó.
 2. **Nạp Kỹ năng:** Nạp toàn bộ các kỹ năng nghiệp vụ được chỉ định trong thuộc tính `required_skills` của chủ đề được chọn.
 
----
-
-### 5. Áp dụng Guidelines và Khởi động Brainstorming
-In ra danh sách các chỉ dẫn thảo luận đặc thù (`guidelines`) của chủ đề đã chọn để bắt đầu phiên trao đổi hai chiều với người dùng.
-*   **Chỉ dẫn nghiên cứu bổ sung (Research Legwork):** Nếu trong quá trình thảo luận phát sinh nhu cầu đọc sâu hoặc nghiên cứu chi tiết các tài liệu lớn, các API bên thứ ba, hoặc so sánh đệ quy các văn bản pháp luật, Agent nên chủ động đề xuất người dùng hoặc tự động kích hoạt kỹ năng `/ccba-research` để spawn subagent chạy song song dưới nền, tránh làm gián đoạn hoặc phình to context của cuộc hội thoại chính.
+*Tiêu chí hoàn thành:* Toàn bộ các tệp nhẹ đã được chuyển đổi sang Markdown, và các kỹ năng nghiệp vụ tương ứng đã được nạp thành công.
 
 ---
 
-## Cách kích hoạt workflow
+### 4. Áp dụng Guidelines và Khởi động Brainstorming
+In ra danh sách các chỉ dẫn thảo luận đặc thù (`guidelines`) của chủ đề đã chọn, sau đó bắt đầu phiên trao đổi hai chiều tuân thủ các quy tắc tương tác dưới đây.
 
-Người dùng có thể gọi workflow này bằng cách:
+*   **Gợi ý kỹ thuật:** Tham khảo [brainstorm_techniques.md](resources/brainstorm_techniques.md) để đề xuất kỹ thuật brainstorm phù hợp với chủ đề (SCAMPER, Reversal, Question Storming, v.v.). Để người dùng chọn hoặc đề xuất 1-2 technique kèm lý do.
 
-* **Luồng chuẩn (Quét & Chọn tương tác):**
-  ```text
-  /ccba-brainstorm
-  ```
-* **Luồng nhanh (Bypass đi thẳng vào chủ đề):**
-  ```text
-  /ccba-brainstorm -- <topic_id>
-  ```
-  *(Ví dụ: `/ccba-brainstorm -- legal`, `/ccba-brainstorm -- pccc_mep`)*
+**Quy tắc tương tác (Hybrid Rhythm):** Mỗi vòng brainstorm tuân thủ 4 nhịp:
+1. **Prompt** — Agent đặt **đúng 1 câu hỏi** mở liên quan đến chủ đề. Luôn hỏi duy nhất 1 câu mỗi lượt để kích thích sự sáng tạo.
+2. **User first** — Chờ người dùng trả lời. Bắt buộc giữ **nguyên văn** (verbatim) mọi câu chữ của người dùng với tag `(user)`.
+3. **AI Build** — Agent bổ sung 2-4 ý tưởng mới với tag `(AI)`, xây dựng trên ý tưởng người dùng vừa nêu (yes-and), không thay thế.
+4. **Return floor** — Kết thúc bằng **đúng 1 câu hỏi tiếp theo** để trả quyền điều khiển về người dùng.
 
-hoặc nói:
-* "Bắt đầu brainstorm tài liệu mới"
-* "Quét input_documents và thảo luận ý tưởng"
-* "Khởi chạy quy trình brainstorm với chủ đề [tên_chủ_đề]"
+*   **Deferred Judgment:** Trong giai đoạn phát tán ý tưởng, Agent chỉ đóng vai trò ghi nhận và mở rộng ý tưởng; bảo lưu toàn bộ việc đánh giá tính khả thi và xếp hạng cho đến giai đoạn Tổng hợp (mọi ý tưởng được ghi nhận bình đẳng).
+*   **Energy Checkpoint:** Sau mỗi 3-4 vòng trao đổi, Agent chủ động hỏi: tiếp tục hướng hiện tại, đổi góc nhìn/kỹ thuật, hay chuyển sang tổng hợp kết quả?
+*   **Nghiên cứu bổ sung:** Khi phát sinh nhu cầu nghiên cứu chuyên sâu (tài liệu lớn, API bên thứ ba, so sánh VBPL), kích hoạt `/ccba-research` chạy song song.
+
+*Tiêu chí hoàn thành:* Các chỉ dẫn và quy tắc tương tác đã hiển thị đầy đủ, phiên brainstorming đã bắt đầu với vòng Hybrid Rhythm đầu tiên (Agent đặt câu hỏi mở đầu tiên).
+
+---
+
+### 5. Tổng hợp và Ghi nhận Phiên (Convergence & Session Document)
+Khi người dùng yêu cầu tổng hợp (hoặc sau Energy Checkpoint chọn "tổng hợp"), Agent chuyển sang giai đoạn convergence:
+1. **Nhóm phân loại:** Gom các ý tưởng đã thu thập thành 3-5 nhóm chủ đề tự nhiên.
+2. **Xếp hạng:** Yêu cầu người dùng chọn 3-5 ý tưởng ưu tiên nhất. Agent không tự xếp hạng thay.
+3. **Action items:** Chuyển các ý tưởng được chọn thành bước hành động cụ thể.
+4. **Session Document:** Tạo artifact Markdown trong thư mục workspace hiện tại ghi nhận toàn bộ phiên với cấu trúc:
+   - **Intake:** Chủ đề, ràng buộc, ngày tháng
+   - **Ý tưởng phát tán:** Liệt kê mọi ý tưởng với tag `(user)` hoặc `(AI)`, giữ nguyên văn
+   - **Nhóm phân loại:** Bảng phân nhóm
+   - **Ưu tiên:** Top ý tưởng được chọn
+   - **Action items:** Bước tiếp theo
+
+*Tiêu chí hoàn thành:* Artifact Session Document đã được tạo và hiển thị cho người dùng.
+
+---
+
+### 6. Party Mode (Tùy chọn — Multi-role Ideation)
+Khi người dùng yêu cầu "nhiều góc nhìn", "phản biện ý tưởng", hoặc "party mode", Agent chuyển sang chế độ brainstorm đa vai:
+1. Tạo 2-3 persona ảo phù hợp với chủ đề (ví dụ: khách hàng, đối thủ cạnh tranh, kỹ sư skeptic, nhà đầu tư).
+2. Mỗi vòng: Agent phát biểu từ góc nhìn của từng persona, gắn tag rõ ràng (ví dụ: `(Khách hàng)`, `(Skeptic)`).
+3. Người dùng vẫn giữ vai trò chính — persona bổ sung góc nhìn, không thay thế.
+4. Kết thúc Party Mode khi người dùng yêu cầu hoặc sau Energy Checkpoint.
+
+> **Phân biệt với `/ccba-grilling`:** Party Mode sinh ý tưởng từ nhiều góc nhìn. Grilling stress-test một kế hoạch đã có. Mục đích khác nhau.
+
+*Tiêu chí hoàn thành:* Ít nhất 2 persona đã phát biểu và ý tưởng được ghi nhận vào Session Document, hoặc người dùng yêu cầu dừng/chuyển giai đoạn.
+
+---
+
+## Tiêu chí hoàn thành (Completion Criteria)
+
+*   [x] Config đã nạp và chủ đề đã được xác nhận.
+*   [x] Tài liệu đầu vào đã chuyển đổi Markdown (nếu có).
+*   [x] Guidelines và quy tắc Hybrid Rhythm đã hiển thị, phiên brainstorming đã bắt đầu.
+*   [x] Khi kết thúc phiên: Session Document artifact đã được tạo với đầy đủ ý tưởng tagged `(user)` / `(AI)`.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
 
 
 ---
@@ -187,7 +221,7 @@ bundle: "_core"
 
 # Workflow: Convert to Markdown (/ccba-convert-markdown)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `markdown-document-processing` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/markdown-processing/SKILL.md) để bắt đầu quy trình chuyển đổi tài liệu Word/PDF sang Markdown và tự động khắc phục các lỗi định dạng (bảng biểu, biểu mẫu, liên kết tương đối).
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `markdown-document-processing` tại [SKILL.md](../skills/markdown-processing/SKILL.md) để bắt đầu quy trình chuyển đổi tài liệu Word/PDF sang Markdown và tự động khắc phục các lỗi định dạng (bảng biểu, biểu mẫu, liên kết tương đối).
 
 
 ---
@@ -220,13 +254,49 @@ bundle: "_software"
 
 Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request siêu tốc.
 
-## Bước 1: Kiểm tra trạng thái và Push code lên remote
+## Bước 0: Main Branch Guard (Tự động phát hiện & sửa sai)
+
+1. Lấy tên branch hiện hành:
+   ```bash
+   git branch --show-current
+   ```
+2. **Nếu đang ở `main`**: Kiểm tra xem có commits chưa push không:
+   ```bash
+   git log origin/main..main --oneline
+   ```
+3. **Nếu có commits chưa push trên `main`** → Tự động tạo feature branch retroactively:
+   a. Phân tích commit messages để suy ra loại công việc (`feat`, `fix`, `docs`, `refactor`, `chore`) và mô tả ngắn gọn.
+   b. Đề xuất tên branch (ví dụ: `feat/architecture-sync-enforcement`) và xin xác nhận người dùng.
+   c. Sau khi được đồng ý, thực hiện:
+      ```bash
+      # Tạo feature branch tại vị trí hiện tại (giữ nguyên commits)
+      git branch [ten_branch]
+      # Reset main về origin (xóa commits khỏi main)
+      git reset --hard origin/main
+      # Chuyển sang feature branch
+      git checkout [ten_branch]
+      ```
+   d. Thông báo: *"Đã tự động tạo branch `[ten_branch]` từ N commits trên main. Main đã được reset về origin."*
+4. **Nếu không có commits chưa push trên `main`** → Báo lỗi: *"Không có thay đổi nào trên main để tạo PR. Hãy tạo feature branch và commit trước."* Dừng workflow.
+5. **Nếu đã ở feature branch** → Bỏ qua bước này, tiếp tục Bước 1.
+
+## Bước 1: Kiểm định Chất lượng Local CI Eval Gates (Shift-Left Gate)
+
+1. Kích hoạt toàn bộ hệ thống kiểm thử tự động và kiểm định tài liệu tại local TRƯỚC KHI đẩy code:
+   ```bash
+   .venv\Scripts\python scripts/run_harness_evals.py
+   ```
+2. **Quy tắc chặn lỗi tại nguồn:**
+   - Nếu `run_harness_evals.py` trả về `PASS 100%`: Mã nguồn đạt chuẩn, tiếp tục Bước 2.
+   - Nếu có Gate bị `FAIL` hoặc phát hiện Architecture Drift: Tạm dừng workflow, yêu cầu Agent/người dùng sửa lỗi tại local (hoặc chạy `python scripts/update_arch_stats.py`) và commit lại trước khi đẩy mã nguồn.
+
+## Bước 2: Kiểm tra trạng thái và Push code lên remote
 
 1. Kiểm tra trạng thái làm việc (working tree):
    ```bash
    git status --porcelain
    ```
-   *Lưu ý:* Đảm bảo không còn thay đổi chưa commit. Nếu có, hãy commit các thay đổi đó trước khi tiến hành push.
+   *Lưu ý:* Đảm bảo không còn thay đổi chưa commit.
 2. Lấy tên branch hiện hành:
    ```bash
    git branch --show-current
@@ -236,7 +306,7 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
    git push -u origin [current_branch]
    ```
 
-## Bước 2: Khởi tạo Pull Request
+## Bước 3: Khởi tạo Pull Request
 
 1. Kiểm tra xem GitHub CLI (`gh`) có hoạt động không:
    ```bash
@@ -257,7 +327,7 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
      - Tiêu đề: Lấy từ tên branch (bỏ prefix `feature/`, `fix/`, viết hoa chữ cái đầu).
      - Nội dung: Tóm tắt từ 5 commit gần nhất (`git log -n 5 --pretty=format:"- %s"`).
 
-## Bước 3: Thông báo kết quả
+## Bước 4: Thông báo kết quả
 
 1. Trình bày đường dẫn PR và trạng thái kiểm thử CI cho người dùng.
 2. Nhắc nhở người dùng: "Hãy gọi `/ccba-release-feature` khi CI đã xanh để merge và dọn dẹp."
@@ -397,7 +467,7 @@ bundle: "_core"
 
 # Workflow: Phỏng Vấn Dồn Dập (/ccba-grilling)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `grilling` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/grilling/SKILL.md) để bắt đầu grilling loop.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `grilling` tại [SKILL.md](../skills/grilling/SKILL.md) để bắt đầu grilling loop.
 
 
 ---
@@ -418,6 +488,22 @@ Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi k�
 
 ---
 
+# Workflow: ccba-implement
+
+---
+description: Triển khai lập trình khép kín (TDD -> Eval Gate -> Code Review -> Commit -> Walkthrough)
+applies_to:
+  - "Phần mềm"
+bundle: "_core"
+---
+
+# Workflow: Triển khai lập trình (/ccba-implement)
+
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `implement` tại [SKILL.md](../skills/implement/SKILL.md) để bắt đầu quy trình lập trình khép kín dựa trên đặc tả kỹ thuật (Spec) hoặc các tickets công việc đã chia nhỏ.
+
+
+---
+
 # Workflow: ccba-improve-codebase-architecture
 
 ---
@@ -429,7 +515,7 @@ bundle: "_core"
 
 # Workflow: Cải Tiến Kiến Trúc Codebase (/ccba-improve-codebase-architecture)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `improve-codebase-architecture` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/improve-codebase-architecture/SKILL.md) để bắt đầu phân tích cấu trúc module.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `improve-codebase-architecture` tại [SKILL.md](../skills/improve-codebase-architecture/SKILL.md) để bắt đầu phân tích cấu trúc module.
 
 
 ---
@@ -454,20 +540,25 @@ Workflow này tự động hóa việc thiết lập một không gian làm vi�
 ## Các bước thực hiện:
 
 ### 1. Khởi tạo cấu trúc Knowledge Base (Global Rule 1)
-Tạo kiến trúc thư mục `.md` chứa dữ liệu tri thức bằng PowerShell:
+Tạo kiến trúc thư mục `.md` chứa dữ liệu tri thức bằng PowerShell tùy theo Mode được chọn (`software`, `delivery`, hoặc `hybrid`):
 ```powershell
-$kbDirs = @(
-    ".md\seminars", 
-    ".md\legal_docs", 
-    ".md\extracted_docs", 
-    ".md\scratch", 
-    ".md\data", 
-    ".md\knowledge\configs", 
-    ".md\knowledge\guidelines", 
-    ".md\knowledge\related_papers", 
-    ".md\knowledge\reports", 
-    ".md\knowledge\specs_and_roadmaps"
-)
+$mode = "[mode tương ứng]" # (Phần mềm -> software, Xây dựng/Tư vấn -> delivery, Platform/R&D -> hybrid)
+if ($mode -eq "software") {
+    $kbDirs = @(".md\scratch")
+} else {
+    $kbDirs = @(
+        ".md\seminars", 
+        ".md\legal_docs", 
+        ".md\extracted_docs", 
+        ".md\scratch", 
+        ".md\data", 
+        ".md\knowledge\configs", 
+        ".md\knowledge\guidelines", 
+        ".md\knowledge\related_papers", 
+        ".md\knowledge\reports", 
+        ".md\knowledge\specs_and_roadmaps"
+    )
+}
 foreach ($dir in $kbDirs) {
     if (-not (Test-Path $dir)) {
         New-Item -ItemType Directory -Path $dir -Force | Out-Null
@@ -484,13 +575,14 @@ Lấy tên thư mục Root hiện hành để cấu hình:
 
 ### 3. Tạo file Workspace Context
 Tạo file `.md\workspace_context.yaml` và ghi nội dung cấu hình. Đề nghị người dùng chọn 1 trong các loại dự án sau để điền vào trường `type`:
-- Dự án phần mềm/build tools
-- Thẩm tra thiết kế/ Third-party Review
-- Thiết kế/ Design
-- Kiểm định/Assessment
-- Tác vụ Admin/ Hành chính & Quản trị
+- Dự án phần mềm/build tools (type: `Phần mềm`)
+- Thẩm tra thiết kế/ Third-party Review (type: `Thẩm tra thiết kế`)
+- Thiết kế/ Design (type: `Thiết kế`)
+- Kiểm định/Assessment (type: `Kiểm định`)
+- Tác vụ Admin/ Hành chính & Quản trị (type: `Tác vụ Admin`)
 
-Dựa vào `type` được chọn, xác định `qc_mode` tự động:
+Dựa vào `type` được chọn, xác định `mode` mặc định (`software` cho Phần mềm, `delivery` cho các loại còn lại. Nếu là Hub hoặc Spoke hỗn hợp thì chọn `hybrid`).
+Xác định `qc_mode` tự động:
 - Thiết kế $\rightarrow$ `internal`
 - Thẩm tra thiết kế $\rightarrow$ `third-party`
 - Kiểm định $\rightarrow$ `assessment`
@@ -505,19 +597,10 @@ Dựa vào `type` được chọn, xác định `qc_mode` tự động:
 project:
   name: "[Tên thư mục dự án]"
   type: "[Loại dự án được chọn]"
+  mode: "[mode tương ứng: software | delivery | hybrid]"
   qc_mode: "[qc_mode tương ứng]"
   description: >
     [Mô tả ngắn gọn mục tiêu và phạm vi dự án]
-
-# =============================================================================
-# AGENT BOUNDARIES
-# =============================================================================
-agent_boundaries:
-  allowed_read_paths:
-    - "*"
-  allowed_write_paths:
-    - ".md/"
-  strict_mode: true
 
 # =============================================================================
 # MUST-READ FILES
@@ -526,14 +609,6 @@ must_read:
   always:
     - path: .md/GLOSSARY.md
       why: "Ubiquitous Language — thuật ngữ chuẩn"
-
-# =============================================================================
-# OUTPUT DIRECTORIES
-# =============================================================================
-output_dirs:
-  reports_and_docs: .md/docs/
-  scratch_and_logs: .md/archive/
-  research_scripts: .md/scripts/
 
 # =============================================================================
 # DO NOT TOUCH
@@ -546,7 +621,7 @@ do_not_touch:
 # =============================================================================
 acknowledgment_required: true
 acknowledgment_format: >
-  "Tôi đã đọc workspace_context.yaml. Dự án [tên] là [type]. Tác vụ hiện tại liên quan đến [lĩnh vực]."
+  "Tôi đã đọc workspace_context.yaml. Dự án [tên] là [type] (mode: [mode]). Tác vụ hiện tại liên quan đến [lĩnh vực]."
 ```
 
 ### 4. Quét tìm tài liệu chưa xử lý
@@ -642,24 +717,67 @@ if (Test-Path ".git") {
     $hookContent = @"
 #!/bin/sh
 # CCBA Maskara Pre-commit Security Hook
-echo 'Running Maskara Privacy scan...'
-python "$hub\scripts\maskara.py" --scan-dir .
-if [ `$status_code -ne 0 ]; then
+echo 'Running Maskara staged files scan...'
+
+# Get list of staged files (excluding deleted ones)
+staged_files=`$(git diff --cached --name-only --diff-filter=d)
+
+if [ -z "`$staged_files" ]; then
+    echo "No files staged for commit. Skipping scan."
+    exit 0
+fi
+
+has_leak=0
+for file in `$staged_files; do
+    # Skip binary and static asset files
+    if echo "`$file" | grep -qE '\.(png|jpg|jpeg|gif|ico|pdf|zip|tar|gz|exe|dll|so|dylib|woff|woff2|eot|ttf|mp3|mp4|wav|avi)$'; then
+        continue
+    fi
+    
+    # Skip ignored dirs
+    if echo "`$file" | grep -qE '^(\.md/scratch/|\.venv/|node_modules/)'; then
+        continue
+    fi
+    
+    if [ -f "`$file" ]; then
+        python "$hub/scripts/maskara.py" scan --root "`$file" > /dev/null 2>&1
+        status_code=`$?
+        if [ `$status_code -ne 0 ]; then
+            echo "❌ Leak detected in staged file: `$file"
+            python "$hub/scripts/maskara.py" scan --root "`$file"
+            has_leak=1
+        fi
+    fi
+done
+
+if [ `$has_leak -ne 0 ]; then
     echo 'Error: Raw API keys or credentials detected. Commit blocked!'
     exit 1
 fi
+
+echo "✅ Security check passed."
+exit 0
 "@
-    $hookContent = $hookContent.Replace("`$status_code", "$?")
     [System.IO.File]::WriteAllText($hookPath, $hookContent)
 }
 ```
 
-Nếu `type` là **"Phần mềm"**, đề xuất người dùng chọn ngôn ngữ lập trình mục tiêu (Python/Node.js) và dựng cấu trúc thư mục chuẩn:
-- Tạo các thư mục `src`, `tests`, `scripts`, `docs`
+Nếu `mode` là **"software"** hoặc **"hybrid"**, đề xuất người dùng chọn ngôn ngữ lập trình mục tiêu (Python/Node.js) và dựng cấu trúc thư mục chuẩn:
+- Tạo các thư mục `src`, `tests`, `scripts`, `docs`, `docs/references`, `docs/adr`
 - Khởi tạo `pyproject.toml` (cho Python) hoặc `package.json` (cho Node.js)
+- Với dự án Python: Đồng bộ bộ rào chắn test `conftest.py` và wrapper script `scripts/safe_pytest.py` từ Hub:
+  ```powershell
+  if (Test-Path "$hub\conftest.py") {
+      Copy-Item -Path "$hub\conftest.py" -Destination ".\conftest.py" -Force
+  }
+  if (Test-Path "$hub\scripts\safe_pytest.py") {
+      New-Item -ItemType Directory -Path ".\scripts" -Force | Out-Null
+      Copy-Item -Path "$hub\scripts\safe_pytest.py" -Destination ".\scripts\safe_pytest.py" -Force
+  }
+  ```
 
 ### 7. Khởi tạo cấu trúc Tri thức Mẫu (Dành cho các dự án nghiệp vụ)
-Nếu `type` không phải là **"Phần mềm"** (thuộc các nhóm có nghiệp vụ tư vấn/xây dựng), sao chép các tệp tin templates từ Hub về Spoke để kỹ sư bắt đầu ghi nhận tri thức:
+Nếu `mode` là **"delivery"** hoặc **"hybrid"**, sao chép các tệp tin templates từ Hub về Spoke để kỹ sư bắt đầu ghi nhận tri thức:
 ```powershell
 $hubTemplates = "[hub_path]\.agents\workflows\resources\templates"
 if (Test-Path $hubTemplates) {
@@ -671,7 +789,92 @@ if (Test-Path $hubTemplates) {
 
 ### 8. Báo cáo hoàn tất
 - In thông báo thiết lập Spoke Workspace thành công.
-- Hướng dẫn người dùng các lệnh liên quan: `/ccba-update-spoke` và `/ccba-convert-markdown`.
+- Hướng dẫn người dùng các bước kế tiếp:
+  - Chạy `/ccba-setup-skills` để thiết lập cấu hình công cụ phát triển (Issue Tracker, Domain Docs).
+  - Sử dụng `/ccba-update-spoke` để nâng cấp các skills/workflows mới từ Hub.
+  - Sử dụng `/ccba-convert-markdown` nếu cần chuyển đổi tài liệu Word/PDF sang Markdown.
+
+
+---
+
+# Workflow: ccba-knowledge-loop
+
+---
+name: ccba-knowledge-loop
+description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm → Wayfinder → Exec)
+---
+
+# Quy trình Vòng lặp Tri thức & Định hướng (/ccba-knowledge-loop)
+
+Quy trình này hướng dẫn Agent cách kết hợp đồng bộ 4 kỹ năng cốt lõi của CCBA Agent Services Platform: [YouTube-Learn](../skills/youtube-learn/SKILL.md) (Trinh sát tri thức video), [Research](../skills/ccba-research/SKILL.md) (Nghiên cứu ngầm), [Brainstorm](ccba-brainstorm.md) (Hội chẩn giải pháp) và [Wayfinder](../skills/wayfinder/SKILL.md) (Lập lộ trình) để giải quyết một bài toán kỹ thuật/nghiệp vụ lớn và mơ hồ (Foggy Problem) mà không gây block phiên làm việc hoặc làm tràn ngữ cảnh (token bloating).
+
+---
+
+## 📋 Tiêu chí hoàn thành (Completion Criteria)
+
+Quy trình chỉ được coi là thực thi thành công khi đáp ứng:
+1. [x] Đã trinh sát và ingest tri thức nền tảng (Video/VBPL/Code) vào Knowledge Base của dự án.
+2. [x] Đã tổ chức brainstorm để thống nhất giải pháp thô và tạo Session Document chứa các Action Items.
+3. [x] Đã lập Bản đồ định hướng (`map.md`) thông qua Wayfinder với Điểm đích (Destination) và các Frontier Tickets.
+4. [x] Các ticket Research được giao cho subagent chạy ngầm tự động và cập nhật kết quả ngược lại bản đồ tuần tự.
+
+---
+
+## 🛠️ Hướng dẫn thực thi các Phase
+
+### Phase 1: Trinh sát & Thu thập Tri thức Sơ cấp (Reconnaissance)
+Khi đối mặt với yêu cầu mới hoặc vùng tri thức chưa được định hình rõ ràng:
+1. **Bóc tách video/bài giảng:** Agent chạy [/ccba-youtube-learn](../skills/youtube-learn/SKILL.md) trên các video hướng dẫn của chuyên gia, webinar công nghệ hoặc seminar tập huấn liên quan để thu thập tri thức thực hành và các slide tĩnh.
+   * *Đầu ra:* `notes_concept_[video_id].md` và thế giới quan `notes_worldview_[video_id].md`.
+2. **Nghiên cứu ngầm tài liệu sơ cấp:** Agent chính kích hoạt [/ccba-research](../skills/ccba-research/SKILL.md) để spawn subagent chạy ngầm quét các văn bản pháp lý (VBPL), API docs của bên thứ ba, hoặc cấu trúc code hiện có.
+   * *Đầu ra:* File báo cáo `.md/knowledge/research_and_studies/research_[chủ_đề]_[timestamp].md`.
+3. **Đọc và nạp ngữ cảnh:** Agent chính nạp các tài liệu được sinh ra ở trên vào thư mục tri thức nháp của dự án để chuẩn bị làm ngữ cảnh cho Phase tiếp theo.
+
+Tiêu chí hoàn thành: Toàn bộ tài liệu bóc tách từ video (`notes_concept_[video_id].md`) và báo cáo nghiên cứu ngầm (`research_[chủ_đề]_[timestamp].md`) hiện diện đầy đủ trong thư mục dự án và được nạp vào ngữ cảnh của Agent chính.
+
+---
+
+### Phase 2: Hội chẩn & Sáng tạo Phương án (Brainstorming)
+Sau khi có dữ liệu trinh sát, Agent cùng User thống nhất phương án triển khai thô:
+1. **Nạp tri thức:** Kích hoạt [/ccba-brainstorm](ccba-brainstorm.md). Đảm bảo các ghi chú và báo cáo nghiên cứu ở Phase 1 nằm trong thư mục `input_documents/` để làm nền tảng tri thức.
+2. **Hybrid Rhythm:** Thực hiện thảo luận hai chiều tuân thủ nghiêm ngặt 4 nhịp:
+   * **Prompt:** Agent đặt đúng 1 câu hỏi mở.
+   * **User first:** Chờ user trả lời, giữ nguyên văn với tag `(user)`.
+   * **AI Build:** AI bổ sung 2-4 ý tưởng mới với tag `(AI)` xây dựng trên ý tưởng của user (Yes-and).
+   * **Return floor:** Trả quyền điều khiển kèm đúng 1 câu hỏi mở tiếp theo.
+3. **Party Mode (Phản biện đa vai):** Kích hoạt Party Mode. Sử dụng thông tin từ tệp `notes_worldview.md` của diễn giả ở Phase 1 để tạo Persona ảo phản biện sắc nét các điểm yếu của phương án (ví dụ: *Persona "Kỹ sư Skeptic"* phản biện về tính khả thi, *Persona "Cảnh sát PCCC"* phản biện về tính pháp lý).
+4. **Hội tụ:** Gom nhóm ý tưởng, nhờ user xếp hạng và ghi nhận Session Document chứa các **Action Items**.
+
+Tiêu chí hoàn thành: Người dùng đã xếp hạng các ý tưởng ưu tiên và Agent đã tạo thành công tệp Session Document ghi nhận Action Items trong thư mục dự án.
+
+---
+
+### Phase 3: Hoạch định & Thiết lập Bản đồ (Wayfinder Mapping)
+Tổ chức các Action Items rời rạc thành một lộ trình có cấu trúc:
+1. **Thiết lập bản đồ:** Kích hoạt [/ccba-wayfinder](../skills/wayfinder/SKILL.md) để khởi tạo bản đồ định hướng tại `.md/knowledge/issues/<feature>/map.md`.
+2. **Cấu trúc bản đồ:**
+   * **Điểm đích (Destination):** Xác định rõ tiêu chí nghiệm thu hoàn thành của bài toán.
+   * **Frontier Tickets:** Các ticket mở, sẵn sàng thực thi ngay và độc lập với các ticket khác. Phân loại rõ: *Research [AFK]*, *Prototype [HITL]*, *Grilling [HITL]*, *Task [HITL/AFK]*.
+   * **Sương mù chiến trận / Chưa xác định rõ (Not yet specified):** Chỉ ghi nhận các vùng thông tin và quyết định đã rõ ràng; các phần chưa thể nhìn thấy sẽ được giữ lại trong mục này dưới dạng ghi chú phác thảo cho đến khi đủ thông tin unblock.
+3. **Tham chiếu theo tên:** Mọi ticket đều phải có tên gọi và link Markdown cụ thể (Ví dụ: `[Đóng gói Mutex Lock](../skills/wayfinder/SKILL.md)`).
+
+Tiêu chí hoàn thành: Bản đồ định hướng `map.md` được khởi tạo với mục Điểm đích (Destination) rõ ràng và ít nhất một Frontier ticket được tạo lập.
+
+---
+
+### Phase 4: Vận hành Thực thi Song song & Đóng gói Quyết định
+Giải quyết các Frontier Tickets và mở rộng bản đồ:
+1. **Phân phối AFK:** Với các ticket thuộc loại **Research [AFK]**, Agent chính kích hoạt [/ccba-research](../skills/ccba-research/SKILL.md) để spawn subagent chạy ngầm xử lý, đồng thời tiếp tục nhận các yêu cầu khác từ người dùng trong khi subagent đang chạy.
+2. **Tự động cập nhật:** Khi subagent nghiên cứu hoàn thành và xuất báo cáo (xác nhận file báo cáo thực sự tồn tại), Agent chính hấp thụ kết quả, đóng (close) ticket tương ứng, cập nhật vào mục **Quyết định đã chốt (Decisions so far)** trên bản đồ.
+3. **Mở rộng biên giới:** Dựa trên kết quả vừa chốt, chuyển đổi các vùng mờ trong mục *Not yet specified* thành các ticket Frontier mới.
+4. **Giải quyết vùng mờ đột xuất:** Nếu biên giới bản đồ gặp sương mù quá dày không thể tự quyết, Agent đề xuất chạy một phiên [/ccba-brainstorm](ccba-brainstorm.md) mini với User để thống nhất hướng đi tiếp theo.
+
+Tiêu chí hoàn thành: Mọi ticket trên bản đồ được chuyển sang trạng thái đóng (closed), không còn Frontier ticket nào chưa giải quyết và lộ trình đạt tới Điểm đích hoàn toàn.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
 
 
 ---
@@ -679,46 +882,61 @@ if (Test-Path $hubTemplates) {
 # Workflow: ccba-legal-intel
 
 ---
-description: Khởi động quy trình tự động cào, đóng gói và tích hợp văn bản pháp luật mới từ Thư viện Pháp luật (TVPL)
+description: Workflow tư vấn và rà soát pháp luật xây dựng Việt Nam với RAG và Grounding Gate
+---
+
+# Workflow: Tư Vấn & Rà Soát Pháp Luật Xây Dựng (/ccba-legal-intel)
+
+> **Mô tả:** Workflow tự động cào, tra cứu RAG, đối chiếu và tư vấn giải đáp thắc mắc pháp lý xây dựng Việt Nam với cơ chế kiểm định trích dẫn nguồn bắt buộc (Grounding Gate).
+
+## Các bước thực hiện của Agent
+
+### 1. Tiếp nhận Câu hỏi & Nạp Sổ bộ (`legal_registry.yaml`)
+- Nạp module `scripts/legal_rag_indexer.py` và đọc cơ sở dữ liệu pháp lý tại `.agents/skills/legal-document-tracker/resources/legal_registry.yaml`.
+- Phân tích câu hỏi của người dùng để xác định các từ khóa trọng tâm (Luật Xây dựng, Nghị định QLCL, Giấy phép xây dựng, PCCC, Hợp đồng...).
+
+---
+
+### 2. Tra cứu RAG & Trích xuất Văn bản
+- Chạy hàm `search_legal_registry(query, registry_path)` để tìm 3-5 văn bản pháp lý phù hợp nhất.
+- Kiểm tra trạng thái vòng đời văn bản (Văn bản còn hiệu lực `current`, Hết hiệu lực `superseded`, hay Dự thảo `draft`).
+- Trích xuất chính xác Điều, Khoản, Điểm điều luật liên quan.
+
+---
+
+### 3. Kiểm định Grounding Gate (`scripts/legal_grounding_gate.py`)
+- Kiểm tra câu trả lời tư vấn với hàm `verify_legal_grounding(response_text, retrieved_docs)`.
+- **Rào chắn:** Nếu câu trả lời thiếu trích dẫn nguồn dạng `[Short Name - Doc Number]` hoặc suy diễn không có căn cứ, Agent bắt buộc phải bổ sung trích dẫn hoặc gắn cảnh báo ungrounded.
+
+---
+
+### 4. Định dạng Đầu ra & Đính kèm Disclaimer
+- Đặt trích dẫn nguồn chi tiết tại từng ý kiến tư vấn.
+- Đính kèm tự động disclaimer chuẩn CCBA:
+
+```markdown
+---
+⚠️ **Disclaimer:** Nội dung tư vấn trên được tự động trích xuất và kiểm định bằng AI Agent dựa trên Sổ bộ Pháp lý CCBA (`legal_registry.yaml`). Đây là thông tin tham khảo kỹ thuật, KHÔNG phải văn bản tư vấn pháp lý chính thức. Luôn cần chuyên gia pháp lý hoặc Luật sư xác nhận trước khi áp dụng vào dự án thực tế.
+```
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+---
+
+# Workflow: ccba-loop-me
+
+---
+description: Thiết kế chu trình lặp (Loops) trong công việc và biên soạn thành đặc tả workflow mới.
 applies_to:
   - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_consulting"
+bundle: "_core"
 ---
 
-# Workflow: Legal Intelligence Crawler (/ccba-legal-intel)
+# Workflow: Thiết kế chu trình công việc (/ccba-loop-me)
 
-Sử dụng lệnh này để tự động cào, đóng gói và tích hợp văn bản pháp luật mới từ Thư viện Pháp luật (TVPL) vào hệ thống tri thức.
-
-## Hành vi mặc định khi không có tham số (Default Behavior)
-Khi người dùng gọi lệnh `/ccba-legal-intel` không kèm tham số, Agent **bắt buộc** phải:
-1. Đọc tệp tin [legal_registry.yaml](../../.md/data/legal_registry.yaml) để lấy danh sách các Luật gốc (Parent Laws) đang có trong hệ thống.
-2. Sinh động danh sách các ví dụ mẫu (clickable/copyable commands) tương ứng với các Luật gốc đó để người dùng dễ dàng sao chép và thực thi ngay lập tức.
-
-## Cách ra lệnh (Command Usage)
-
-Người dùng có thể gọi lệnh theo 3 cách tương ứng với 3 kịch bản:
-
-### 1. Cào mới Luật gốc (New Parent Law)
-*   **Cú pháp**: `/ccba-legal-intel <URL_Luat_goc>`
-*   **Ví dụ**: `/ccba-legal-intel https://thuvienphapluat.vn/van-ban/Luat-Xay-dung-2025`
-*   **Mô tả**: Tạo một OKF Bundle độc lập cấp cao nhất tại `.md/legal_docs/<slug>/` và tự động tải đệ quy các văn bản hướng dẫn ban hành kèm.
-
-### 2. Cào bổ sung văn bản hướng dẫn vào Luật cha hiện có (Add Guiding Doc)
-*   **Cú pháp**: `/ccba-legal-intel <URL_Nghi_dinh_Thong_tu> parent=<ID_Luat_cha>`
-*   **Ví dụ**: `/ccba-legal-intel https://thuvienphapluat.vn/van-ban/...Thong-tu-36-2026 parent=LXD-2025`
-*   **Mô tả**: Tải và đóng gói văn bản hướng dẫn, tự động tích hợp phẳng vào thư mục con `guiding_docs/` và `guiding_docs/appendices/` của Luật cha tương ứng.
-
-### 3. Cập nhật chênh lệch lược đồ (Delta Update)
-*   **Cú pháp**: `/ccba-legal-intel delta=<ID_Luat>`
-*   **Ví dụ**: `/ccba-legal-intel delta=LXD-2025`
-*   **Mô tả**: Quét lược đồ trực tuyến trên TVPL của Luật tương ứng và chỉ tải bổ sung các văn bản hướng dẫn mới ban hành chưa tồn tại trong registry cục bộ.
-
----
-
-Agent tiếp nhận bắt buộc phải nạp và thực thi kỹ năng `ccba-legal-intel` tại [SKILL.md](../skills/ccba-legal-intel/SKILL.md) để bắt đầu quy trình kiểm tra cổng Chrome CDP, thực thi cào dữ liệu, phân tách phụ lục, sửa liên kết tương đối và đăng ký văn bản mới vào Registry hệ thống.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `loop-me` tại [SKILL.md](../skills/loop-me/SKILL.md) để bắt đầu chuỗi phỏng vấn Socrates làm rõ và sinh workflow mới.
 
 
 ---
@@ -812,7 +1030,7 @@ bundle: "_core"
 
 # Workflow: NotebookLM Connector (/ccba-notebooklm)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `notebooklm-connector` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/notebooklm-connector/SKILL.md) để bắt đầu chu trình kết nối, xác thực và xử lý tri thức với Google NotebookLM Cloud.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `notebooklm-connector` tại [SKILL.md](../skills/notebooklm-connector/SKILL.md) để bắt đầu chu trình kết nối, xác thực và xử lý tri thức với Google NotebookLM Cloud.
 
 
 ---
@@ -830,7 +1048,7 @@ bundle: "_consulting"
 
 # Workflow: Prepare Seminar (/ccba-prepare-seminar)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `seminar-builder` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/seminar-builder/SKILL.md) để bắt đầu quy trình chuẩn bị nội dung, chương trình nghị sự và recap cho buổi seminar.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `seminar-builder` tại [SKILL.md](../skills/seminar-builder/SKILL.md) để bắt đầu quy trình chuẩn bị nội dung, chương trình nghị sự và recap cho buổi seminar.
 
 
 ---
@@ -861,7 +1079,7 @@ Hỏi người dùng tuần tự từng câu hỏi sau để ghi nhận đề xu
 
 ## Bước 2: Kiểm tra trùng lặp (Duplicate Detection)
 Trước khi tạo mới, Agent bắt buộc phải kiểm tra hệ thống để tránh trùng lặp:
-1. Đọc tệp cấu hình `.agents/workspace_context.yaml` để lấy đường dẫn Hub (`hub_path`).
+1. Đọc tệp cấu hình `.md/workspace_context.yaml` để lấy đường dẫn Hub (`hub_path`).
 2. Đọc tệp catalog của Hub tại `<hub_path>/.agents/skills/platform-loader/catalog.yaml` để tìm kiếm tên hoặc mô tả tương tự.
 3. Đọc tệp hiến pháp `<hub_path>/.agents/AGENTS.md`.
 *Nếu phát hiện đã tồn tại thành phần tương tự:* Báo cáo cho người dùng và đề xuất cập nhật/nâng cấp thành phần cũ thay vì tạo mới.
@@ -946,6 +1164,15 @@ bundle: "_software"
 
 Quy trình tự động hóa tích hợp mã nguồn (merge) và dọn dẹp môi trường.
 
+## Bước 0: Thực thi Kiểm thử Toàn diện Slow Integration Tests (Pre-release Gate)
+
+*Quy tắc bắt buộc:* Trước khi thực hiện merge PR, Agent **bắt buộc phải chạy kiểm thử toàn bộ tập test `slow` và `stress` trên toàn bộ packages** (thông qua cơ chế Dynamic Discovery) để đảm bảo các bài test cào mạng/tích hợp không bị hỏng ngầm (test decay):
+```bash
+python scripts/eval/run_isolated_tests.py --all --stress
+```
+- Nếu có bài test nào thất bại, Agent **phải dừng quy trình release ngay lập tức** để tiến hành sửa lỗi trước khi tiếp tục.
+
+
 ## Bước 1: Đối soát bình luận và Merge PR trên GitHub
 
 1. Lấy và ghi nhớ tên branch hiện hành (Feature Branch Name) trước khi thực hiện dọn dẹp:
@@ -969,13 +1196,13 @@ Quy trình tự động hóa tích hợp mã nguồn (merge) và dọn dẹp mô
      ```bash
      gh pr checks
      ```
-   - Nếu CI pass: Thực hiện merge và xóa remote branch tự động:
+   - Nếu CI pass: Thực hiện merge và xóa remote branch tự động (sử dụng Squash and Merge để giữ lịch sử nhánh main tinh gọn):
      ```bash
-     gh pr merge --merge --delete-branch
+     gh pr merge --squash --delete-branch
      ```
 5. Nếu `gh` chưa đăng nhập:
    - Sử dụng `browser_subagent` truy cập trang PR của branch hiện tại.
-   - Chờ CI pass, click nút **Merge** -> **Confirm** -> **Delete branch**.
+   - Chờ CI pass, chọn **Squash and merge** -> **Confirm squash and merge** -> **Delete branch**.
    - Báo lỗi cụ thể cho người dùng nếu CI thất bại hoặc có xung đột (conflict).
 
 ## Bước 2: Cập nhật Lịch sử Thay đổi (Walkthrough)
@@ -1017,10 +1244,10 @@ Quy trình tự động hóa tích hợp mã nguồn (merge) và dọn dẹp mô
 ---
 name: ccba-research
 command: /ccba-research
-description: Khởi động subagent nghiên cứu chạy ngầm để tra cứu tài liệu, APIs, source code hoặc VBPL song song dưới nền.
+description: Khởi động subagent nghiên cứu chạy ngầm để tra cứu tài liệu, APIs, source code hoặc VBPL song song dưới nền với rào chắn Search Budget Cap (5 tool calls) và Mẫu báo cáo 5 phần chuẩn hóa.
 ---
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `ccba-research` tại [SKILL.md](../skills/ccba-research/SKILL.md) để bắt đầu quy trình spawn subagent chạy ngầm và ghi nhận báo cáo.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `ccba-research` tại [SKILL.md](../skills/ccba-research/SKILL.md) để bắt đầu quy trình spawn subagent chạy ngầm, áp dụng Search Budget Cap (Max 5 tool calls), Cross-Reference Validation và xuất Báo cáo Kỹ thuật 5 phần chuẩn hóa.
 
 
 ---
@@ -1087,6 +1314,22 @@ Khi người dùng gọi lệnh này, hãy nạp và thực thi kỹ năng tại
 
 ---
 
+# Workflow: ccba-setup-pre-commit
+
+---
+description: Thiết lập cấu hình pre-commit cho Python trong repository hiện tại.
+applies_to:
+  - "Phần mềm"
+bundle: "_core"
+---
+
+# Workflow: Thiết lập Pre-commit (/ccba-setup-pre-commit)
+
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `setup-pre-commit` tại [SKILL.md](../skills/setup-pre-commit/SKILL.md) để bắt đầu quy trình thiết lập pre-commit hooks cho Python.
+
+
+---
+
 # Workflow: ccba-setup-skills
 
 ---
@@ -1098,7 +1341,72 @@ bundle: "_core"
 
 # Workflow: Thiết lập Cấu Hình Phát Triển (/ccba-setup-skills)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `ccba-setup-skills` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-setup-skills/SKILL.md) để bắt đầu quy trình trinh sát, phỏng vấn và ghi nhận cấu hình phát triển cho dự án.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `ccba-setup-skills` tại [SKILL.md](../skills/ccba-setup-skills/SKILL.md) để bắt đầu quy trình trinh sát, phỏng vấn và ghi nhận cấu hình phát triển cho dự án.
+
+
+---
+
+# Workflow: ccba-setup-ts-deep-modules
+
+---
+description: Thiết lập cấu hình Deep Modules cho TypeScript bằng dependency-cruiser.
+applies_to:
+  - "Phần mềm"
+bundle: "_core"
+---
+
+# Workflow: Thiết lập TS Deep Modules (/ccba-setup-ts-deep-modules)
+
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `setup-ts-deep-modules` tại [SKILL.md](../skills/setup-ts-deep-modules/SKILL.md) để bắt đầu quy trình cấu hình ranh giới import cho TypeScript.
+
+
+---
+
+# Workflow: ccba-skills-eval
+
+---
+description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) cho các kỹ năng AI trong CCBA Platform.
+---
+
+# Lệnh /ccba-skills-eval
+
+Khi nhận được lệnh này từ người dùng, Agent sẽ tự động nạp và thực thi công cụ kiểm định chất lượng (Evaluations) cho các kỹ năng AI.
+
+---
+
+## 🛠️ Hướng dẫn thực thi các bước
+
+### Bước 1: Xác định phạm vi kiểm thử
+Agent phân tích yêu cầu của người dùng để xác định tham số:
+- **Kiểm thử một kỹ năng cụ thể:** Nếu người dùng yêu cầu kiểm tra một kỹ năng (ví dụ: `/ccba-skills-eval copywriting`), xác lập tham số `--skill copywriting`.
+- **Kiểm thử toàn bộ:** Nếu người dùng chỉ gõ lệnh chung `/ccba-skills-eval`, mặc định chạy cho tất cả kỹ năng bằng cách bỏ trống `--skill` hoặc đặt `--skill all`.
+- **Số lần chạy thử:** Mặc định chạy 3 lần thử (`--trials 3`) để đo độ tin cậy. Nếu người dùng cần chạy nhanh để kiểm tra lỗi cú pháp, có thể đặt `--trials 1`.
+
+### Bước 2: Kích hoạt Core Eval Runner
+Chạy lệnh CLI sau tại thư mục gốc của dự án:
+```bash
+# Kiểm thử một kỹ năng cụ thể
+python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --trials 3
+
+# Tự động tối ưu hóa SKILL.md (Skill Auto-Tuner via SkillOpt loop)
+python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3
+
+# Kiểm thử toàn bộ các kỹ năng AI
+python .agents/skills/eval-gate/scripts/eval_runner.py --trials 3
+```
+
+### Bước 3: Đánh giá, Khắc phục lỗi & Auto-Tuning (SkillOpt Loop)
+- **Chế độ Auto-Tuner (`--auto-tune`):** 
+  Core Eval Runner sẽ tự động điều phối chu trình 4 bước (**Rollout -> Reflect -> Edit -> Validate**). LLM Optimizer sẽ đề xuất chỉnh sửa văn bản `SKILL.md` và kiểm chứng qua Cổng **Validation Gate** để loại bỏ hiện tượng **Prompt Drift** trước khi cập nhật.
+- **Nếu tất cả các test cases đạt PASS (exit code = 0):** Báo cáo kết quả thành công cho người dùng.
+- **Nếu có test case bị FAILED (exit code = 1):**
+  1. Đọc chi tiết lỗi so khớp (Regex mismatch hoặc LLM Judge feedback) được in trong output log.
+  2. Xác định xem lỗi do mô hình suy giảm hiệu năng (regression), lỗi placeholders, hay lỗi over-triggering.
+  3. Thực hiện sửa đổi và bổ sung chỉ thị trực tiếp vào tệp `SKILL.md` của kỹ năng bị lỗi đó để khắc phục (tương tự như cách sửa lỗi over-triggering bằng When to Use / When NOT to Use).
+  4. Chạy lại kiểm thử (tối đa lặp lại 3 lần). Nếu sau 3 lần vẫn lỗi, hãy báo cáo cụ thể cho người dùng để nhận chỉ thị.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 
 ---
@@ -1128,7 +1436,7 @@ bundle: "_core"
 
 # Workflow: Test-Driven Development (/ccba-tdd)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `tdd` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/tdd/SKILL.md) để bắt đầu chu kỳ Red-Green-Refactor cục bộ.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `tdd` tại [SKILL.md](../skills/tdd/SKILL.md) để bắt đầu chu kỳ Red-Green-Refactor cục bộ.
 
 
 ---
@@ -1147,38 +1455,34 @@ Khi người dùng gọi lệnh này, hãy nạp và thực thi kỹ năng tại
 
 ---
 
-# Workflow: ccba-to-issues
+# Workflow: ccba-to-questionnaire
 
 ---
-description: Phân rã tài liệu thiết kế/PRD thành các ticket công việc độc lập.
+description: Chuyển đổi một quyết định chưa có đủ thông tin thành Bảng hỏi (Questionnaire) bất đồng bộ.
 applies_to:
   - "Phần mềm"
 bundle: "_core"
 ---
 
-# Workflow: Phân rã tính năng thành Ticket (/ccba-to-issues) - [ALIAS]
+# Workflow: Tạo Bảng Hỏi Bất Đồng Bộ (/ccba-to-questionnaire)
 
-> [!NOTE]
-> Đây là lệnh alias tương thích ngược của `/ccba-to-tickets`. 
-
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `ccba-to-tickets` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-to-tickets/SKILL.md) để bắt đầu quy trình bẻ nhỏ tài liệu thiết kế hoặc PRD thành các ticket phát triển cục bộ hoặc đẩy lên Issue Tracker theo các lát cắt dọc.
-
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `to-questionnaire` tại [SKILL.md](../skills/to-questionnaire/SKILL.md) để bắt đầu quy trình phỏng vấn 2 bước và soạn thảo Bảng hỏi Markdown.
 
 
 ---
 
-# Workflow: ccba-to-prd
+# Workflow: ccba-to-spec
 
 ---
-description: Soạn thảo tài liệu PRD từ ngữ cảnh hiện tại.
+description: Soạn thảo tài liệu Spec từ ngữ cảnh hiện tại.
 applies_to:
   - "Phần mềm"
 bundle: "_core"
 ---
 
-# Workflow: Soạn thảo PRD (/ccba-to-prd)
+# Workflow: Soạn thảo Spec (/ccba-to-spec)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `to-prd` tại [SKILL.md](../skills/to-prd/SKILL.md) để bắt đầu quy trình soạn thảo tài liệu Yêu cầu Sản phẩm cục bộ hoặc đẩy lên Issue Tracker.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `to-spec` tại [SKILL.md](../skills/to-spec/SKILL.md) để bắt đầu quy trình soạn thảo tài liệu Đặc tả Kỹ thuật (Spec) dựa trên ngữ cảnh hội thoại hiện tại.
 
 
 ---
@@ -1186,7 +1490,7 @@ Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi k�
 # Workflow: ccba-to-tickets
 
 ---
-description: Phân rã kế hoạch, spec hoặc PRD hiện tại thành các ticket phát triển độc lập dạng lát cắt dọc (vertical slices)
+description: Phân rã kế hoạch hoặc spec (Đặc tả) hiện tại thành các ticket phát triển độc lập dạng lát cắt dọc (vertical slices)
 applies_to:
   - "Phần mềm"
   - "Thẩm tra thiết kế"
@@ -1197,7 +1501,7 @@ bundle: "_core"
 
 # Workflow: Phân rã công việc thành Tickets (/ccba-to-tickets)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `ccba-to-tickets` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-to-tickets/SKILL.md) để phân rã yêu cầu thành các ticket phát triển độc lập và liên kết chặn.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `to-tickets` tại [SKILL.md](../skills/to-tickets/SKILL.md) để phân rã yêu cầu thành các ticket phát triển độc lập và liên kết chặn.
 
 
 ---
@@ -1214,6 +1518,39 @@ bundle: "_core"
 # Workflow: Điều phối và Sàng lọc Sự cố (/ccba-triage)
 
 Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `triage` tại [SKILL.md](../skills/triage/SKILL.md) để bắt đầu quy trình điều phối trạng thái, xác thực lỗi, rà soát trùng lặp và soạn thảo Agent Brief.
+
+
+---
+
+# Workflow: ccba-tvpl-vip-crawler
+
+---
+description: Quy trình thực thi cào dữ liệu văn bản pháp luật VIP từ Thư viện Pháp luật (TVPL)
+---
+
+# Quy trình thực thi Slash Command `/ccba-tvpl-vip-crawler`
+
+Khi người dùng kích hoạt lệnh Slash Command này dưới dạng:
+`/ccba-tvpl-vip-crawler <đường-dẫn-url-hoặc-tên-văn-bản-tvpl>`
+
+Agent tiếp nhận lệnh bắt buộc phải thực thi theo các bước sau:
+
+1. **Kiểm tra Cấu hình & Nạp Kỹ năng**:
+   - Đọc hướng dẫn tại [SKILL.md](../skills/tvpl-vip-crawler/SKILL.md).
+   - Xác nhận tài khoản VIP `TVPL_USERNAME` và `TVPL_PASSWORD` sẵn sàng tại `.env`.
+
+2. **Kích hoạt Script Cào VIP Trực tiếp**:
+   - Thực thi lệnh cào tự động:
+     ```bash
+     python scripts/tvpl_vip_crawler.py "<đường-dẫn-url-hoặc-tên-văn-bản-tvpl>"
+     ```
+
+3. **Cấu trúc hóa OKF Bundle & Đồng bộ Google Drive**:
+   - Kiểm tra kết quả đóng gói tại `.md/legal_docs/<slug>/`.
+   - Báo cáo kết quả đóng gói thành công bao gồm các tệp `metadata.yaml`, `concept.md`, `index.md`.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 
 ---
@@ -1322,6 +1659,22 @@ Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi k�
 
 ---
 
+# Workflow: ccba-wait-what
+
+---
+description: Dừng lại và giải thích lại tin nhắn trước bằng ngôn ngữ tiếng Việt đơn giản.
+applies_to:
+  - "Phần mềm"
+bundle: "_core"
+---
+
+# Workflow: Giải Thích Lại Bằng Ngôn Ngữ Đơn Giản (/ccba-wait-what)
+
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `wait-what` tại [SKILL.md](../skills/wait-what/SKILL.md) để dừng lại và diễn đạt lại nội dung vừa rồi bằng ngôn ngữ đơn giản, bổ sung ngữ cảnh cần thiết.
+
+
+---
+
 # Workflow: ccba-wayfinder
 
 ---
@@ -1333,7 +1686,7 @@ bundle: "_core"
 
 # Workflow: Wayfinder Vạch Đường (/ccba-wayfinder)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `wayfinder` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/wayfinder/SKILL.md) để bắt đầu phân tích vấn đề và thiết lập bản đồ.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `wayfinder` tại [SKILL.md](../skills/wayfinder/SKILL.md) để bắt đầu phân tích vấn đề và thiết lập bản đồ.
 
 
 ---
@@ -1349,7 +1702,7 @@ bundle: "_core"
 
 # Workflow: Tạo Script Setup Wizard (/ccba-wizard)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `wizard` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/wizard/SKILL.md) để bắt đầu scope và sinh script setup wizard.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `wizard` tại [SKILL.md](../skills/wizard/SKILL.md) để bắt đầu scope và sinh script setup wizard.
 
 
 ---
@@ -1368,7 +1721,7 @@ bundle: "_core"
 
 # Workflow: Port tính năng (xỉa code) từ repository ngoài (/ccba-xia)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `ccba-xia` tại [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/xia/SKILL.md) để bắt đầu quy trình trích xuất và chuyển dịch mã nguồn.
+Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `ccba-xia` tại [SKILL.md](../skills/xia/SKILL.md) để bắt đầu quy trình trích xuất và chuyển dịch mã nguồn.
 
 
 ---

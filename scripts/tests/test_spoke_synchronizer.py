@@ -87,6 +87,23 @@ class TestSpokeSynchronizer(unittest.TestCase):
         self.assertTrue((spoke_dir / "conftest.py").exists())
         self.assertTrue((spoke_dir / "scripts" / "safe_pytest.py").exists())
 
+    def test_spoke_sync_engine_alias_and_method(self):
+        """Test SpokeSyncEngine alias and sync() method integration."""
+        from scripts.spoke import SpokeSyncEngine, SpokeSynchronizer, sync_project
+
+        self.assertIs(SpokeSyncEngine, SpokeSynchronizer)
+
+        spoke_dir = self.test_root / "spoke_engine_test"
+        spoke_dir.mkdir(parents=True, exist_ok=True)
+
+        engine = SpokeSyncEngine(spoke_dir)
+        self.assertTrue(hasattr(engine, "sync"))
+
+        # Test sync_project wrapper with mock
+        with patch.object(SpokeSynchronizer, "sync_spoke_bundle", return_value=0):
+            exit_code = sync_project(spoke_dir)
+            self.assertEqual(exit_code, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

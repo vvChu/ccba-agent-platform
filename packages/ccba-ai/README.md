@@ -1,6 +1,6 @@
 # ccba-ai — CCBA AI Gateway Client
 
-Kết nối AI Gateway trên Server Spark — **22 models, 1 endpoint**.
+Kết nối AI Gateway trên Server Spark — **Đa mô hình (local GPU + cloud), 1 endpoint**.
 
 ## Cài đặt
 
@@ -65,4 +65,4 @@ AI_MODEL=qwen-local-primary
 | ☁️ Fast | `gemini-3.1-pro-low` | Nhanh, speed optimized |
 | ☁️ Deep | `gemini-3.1-pro` | 1M context, research |
 
-Xem đầy đủ 22 models trong SKILL.md.
+Khám phá danh sách models động theo thời gian thực bằng `ai.models()` hoặc xem catalog trong SKILL.md.

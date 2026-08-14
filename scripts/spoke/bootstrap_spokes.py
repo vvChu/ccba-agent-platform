@@ -4,12 +4,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Force UTF-8 encoding
-if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-
 
 def bootstrap():
     print("=== CCBA AGENT PLATFORM — LOCAL DEV BOOTSTRAP ===")
@@ -46,4 +40,9 @@ def bootstrap():
 
 
 if __name__ == "__main__":
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8")
     bootstrap()

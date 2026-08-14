@@ -2,7 +2,7 @@
 CCBA AI Gateway Client
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Kết nối AI Gateway trên Server Spark — 22 models, 1 endpoint.
+Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endpoint (tự động khám phá qua ai.models()).
 
 Quick Start:
     from ccba_ai import ai
@@ -22,7 +22,18 @@ from ccba_ai.client import AIClient, AsyncAIClient
 from ccba_ai.exceptions import CCBABaseException, CCBAErrorCode, format_error_json
 from ccba_ai.legal_knowledge import LegalKnowledgeGateway, legal_knowledge
 from ccba_ai.llm_utils import LLMParseError, parse_llm_json, strip_think_tags
-from ccba_ai.models import AuditFinding, AuditReport, ChatResult, ChatUsage
+from ccba_ai.models import (
+    AuditFinding,
+    AuditReport,
+    ChatResult,
+    ChatUsage,
+    PhaseUpdateResult,
+    PlanCreationResult,
+    PlanPhaseData,
+    PlanStatusResult,
+    SEOAuditResult,
+    TeamTask,
+)
 from ccba_ai.protocols import QCAuditEngine, QCDiscoveryEngine, QCReporterEngine
 from ccba_ai.routing import ModelArchetype, choose_model, is_reasoning_model, resolve_max_tokens
 
@@ -83,6 +94,12 @@ __all__ = [
     "ChatUsage",
     "AuditFinding",
     "AuditReport",
+    "SEOAuditResult",
+    "TeamTask",
+    "PlanCreationResult",
+    "PhaseUpdateResult",
+    "PlanPhaseData",
+    "PlanStatusResult",
     "QCDiscoveryEngine",
     "QCAuditEngine",
     "QCReporterEngine",

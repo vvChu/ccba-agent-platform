@@ -5,7 +5,8 @@ Provides structured compliance scoring and detailed validation reports via SEOAu
 
 import re
 from pathlib import Path
-from typing import Any
+
+from ccba_ai.models import SEOAuditResult
 
 
 class SEOAuditor:
@@ -15,7 +16,7 @@ class SEOAuditor:
     and scoring deductions behind a simple, high-leverage interface.
     """
 
-    def audit_markdown(self, content: str) -> dict[str, Any]:
+    def audit_markdown(self, content: str) -> SEOAuditResult:
         """Analyze Markdown content for SEO best practices."""
         issues = []
         checks = []
@@ -85,14 +86,17 @@ class SEOAuditor:
 
         score = max(0, 100 - total_deductions)
 
-        return {"score": score, "checks": checks, "issues": issues}
+        return SEOAuditResult(score=score, checks=checks, issues=issues)
 
-    def audit_html(self, content: str) -> dict[str, Any]:
+    def audit_html(self, content: str) -> SEOAuditResult:
         """Analyze HTML content for SEO best practices."""
         try:
             from bs4 import BeautifulSoup
         except ImportError:
-            return {"error": "beautifulsoup4 package is required for HTML SEO audits."}
+            return SEOAuditResult(
+                score=0,
+                error="beautifulsoup4 package is required for HTML SEO audits.",
+            )
 
         soup = BeautifulSoup(content, "html.parser")
         issues = []
@@ -182,7 +186,7 @@ class SEOAuditor:
 
         score = max(0, 100 - total_deductions)
 
-        return {"score": score, "checks": checks, "issues": issues}
+        return SEOAuditResult(score=score, checks=checks, issues=issues)
 
     def audit(
         self,
@@ -191,7 +195,7 @@ class SEOAuditor:
         content: str | None = None,
         format_hint: str | None = None,
         workspace_root: Path | None = None,
-    ) -> dict[str, Any]:
+    ) -> SEOAuditResult:
         """Unified audit entrypoint accepting file path or raw string content."""
         if content is not None:
             fmt = (format_hint or "md").lower()
@@ -199,8 +203,8 @@ class SEOAuditor:
                 res = self.audit_html(content)
             else:
                 res = self.audit_markdown(content)
-            if "error" in res:
-                raise RuntimeError(res["error"])
+            if res.error:
+                raise RuntimeError(res.error)
             return res
 
         if target is None:
@@ -225,23 +229,23 @@ class SEOAuditor:
         else:
             result = self.audit_markdown(file_content)
 
-        if "error" in result:
-            raise RuntimeError(result["error"])
+        if result.error:
+            raise RuntimeError(result.error)
 
-        result["file_name"] = path.name
+        result.file_name = path.name
         return result
 
 
-def audit_markdown(content: str) -> dict[str, Any]:
+def audit_markdown(content: str) -> SEOAuditResult:
     """Analyze Markdown content for SEO best practices (backward compatibility wrapper)."""
     return SEOAuditor().audit_markdown(content)
 
 
-def audit_html(content: str) -> dict[str, Any]:
+def audit_html(content: str) -> SEOAuditResult:
     """Analyze HTML content for SEO best practices (backward compatibility wrapper)."""
     return SEOAuditor().audit_html(content)
 
 
-def audit_file(file_path: str | Path, workspace_root: Path | None = None) -> dict[str, Any]:
+def audit_file(file_path: str | Path, workspace_root: Path | None = None) -> SEOAuditResult:
     """Audit a file (Markdown or HTML) for SEO best practices (backward compatibility wrapper)."""
     return SEOAuditor().audit(target=file_path, workspace_root=workspace_root)

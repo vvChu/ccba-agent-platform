@@ -1,72 +1,38 @@
-"""Utility script and module for loading, indexing, and searching legal_registry.yaml."""
+"""Thin CLI Delegate for Loading, Indexing, and Searching legal_registry.yaml.
 
+Delegates core registry operations and search to the deep seam in ``ccba_legal.registry``.
+"""
+
+from __future__ import annotations
+
+import sys
 from pathlib import Path
-from typing import Any
 
-import yaml
+from ccba_legal.registry import (
+    format_citation,
+    load_legal_registry,
+    search_legal_registry,
+)
 
-
-def load_legal_registry(registry_path: Path) -> dict[str, Any]:
-    """Load and parse legal_registry.yaml safely."""
-    path = Path(registry_path)
-    if not path.is_file():
-        raise FileNotFoundError(f"Registry file not found at: {registry_path}")
-
-    with open(path, encoding="utf-8") as f:
-        data = yaml.safe_load(f) or {}
-    return data
+__all__ = [
+    "load_legal_registry",
+    "format_citation",
+    "search_legal_registry",
+]
 
 
-def format_citation(doc: dict[str, Any]) -> str:
-    """Format a legal document citation strictly [Short Name - Doc Number]."""
-    short_name = doc.get("short_name") or doc.get("id", "VBPL")
-    doc_num = doc.get("document_number")
-    if doc_num:
-        return f"[{short_name} - {doc_num}]"
-    return f"[{short_name}]"
+def main() -> None:
+    """CLI test entry point."""
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8")
 
-
-def search_legal_registry(query: str, registry_path: Path, top_k: int = 5) -> list[dict[str, Any]]:
-    """Search legal registry documents matching query terms across titles, topics, and notes."""
-    registry = load_legal_registry(registry_path)
-    query_terms = [t.lower() for t in query.split() if len(t) > 1]
-
-    matched_docs: list[tuple[int, dict[str, Any]]] = []
-
-    # Categories in registry (decrees, laws, circulars, standards, etc.)
-    categories = ["decrees", "laws", "circulars", "standards", "seminars"]
-
-    for category in categories:
-        docs = registry.get(category, [])
-        for doc in docs:
-            if not isinstance(doc, dict):
-                continue
-
-            score = 0
-            title = doc.get("title", "").lower()
-            short_name = doc.get("short_name", "").lower()
-            topics = [str(t).lower() for t in doc.get("topics", [])]
-            notes = str(doc.get("notes", "")).lower()
-
-            combined_text = f"{title} {short_name} {' '.join(topics)} {notes}"
-
-            for term in query_terms:
-                if term in combined_text:
-                    score += 1
-                if term in title:
-                    score += 2
-                if any(term in t for t in topics):
-                    score += 3
-
-            if score > 0:
-                matched_docs.append((score, doc))
-
-    # Sort by relevance score descending
-    matched_docs.sort(key=lambda x: x[0], reverse=True)
-    return [doc for score, doc in matched_docs[:top_k]]
-
-
-if __name__ == "__main__":
     default_path = Path(".agents/skills/legal-document-tracker/resources/legal_registry.yaml")
     data = load_legal_registry(default_path)
     print(f"✅ Loaded legal registry with metadata: {data.get('metadata')}")
+    results = search_legal_registry("PCCC", registry_path=default_path, top_k=2)
+    print(f"✅ Search results for 'PCCC': {len(results)} found")
+
+
+if __name__ == "__main__":
+    main()
