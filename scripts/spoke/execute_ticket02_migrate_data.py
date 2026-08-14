@@ -4,11 +4,6 @@ import shutil
 import sys
 from pathlib import Path
 
-# Force UTF-8 encoding
-if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 
 def migrate_data():
@@ -45,4 +40,10 @@ def migrate_data():
 
 
 if __name__ == "__main__":
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     migrate_data()
+

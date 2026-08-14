@@ -8,12 +8,6 @@ import os
 import sys
 from pathlib import Path
 
-# Cấu hình UTF-8 cho console đầu ra trên Windows để tránh lỗi mã hóa
-if sys.stdout.encoding != "utf-8":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 # Thêm path để import các thư viện
 
@@ -167,7 +161,14 @@ def login_drive() -> None:
 
 
 def main() -> None:
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+            sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     login_drive()
+
 
 
 if __name__ == "__main__":

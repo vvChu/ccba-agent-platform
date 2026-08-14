@@ -5,11 +5,6 @@ from pathlib import Path
 
 import yaml
 
-# Force UTF-8 encoding
-if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 
 def init_spoke():
@@ -98,4 +93,10 @@ Cơ sở dữ liệu Tri thức Pháp luật và Quy chuẩn Kỹ thuật Xây d
 
 
 if __name__ == "__main__":
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     init_spoke()
+

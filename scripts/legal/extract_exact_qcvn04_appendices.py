@@ -1,18 +1,21 @@
 """Script to inspect concept.md and extract exact full text of Appendices A, B, and C."""
 
+from __future__ import annotations
+
 import sys
 from pathlib import Path
 
-# Force UTF-8 encoding
-if sys.platform == "win32":
-    import io
 
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+def extract_appendices(bundle_dir: Path | None = None) -> None:
+    if bundle_dir is None:
+        project_root = Path(__file__).resolve().parents[2]
+        bundle_dir = project_root / ".md" / "legal_docs" / "qcvn_04_2021_bxd"
 
-
-def extract_appendices():
-    bundle_dir = Path("d:/GitHubProjects/ccba-agent-platform/.md/legal_docs/qcvn_04_2021_bxd")
     concept_file = bundle_dir / "concept.md"
+    if not concept_file.exists():
+        print(f"[Warn] File concept.md not found in: {bundle_dir}")
+        return
+
     appendices_dir = bundle_dir / "guiding_docs" / "appendices"
     appendices_dir.mkdir(parents=True, exist_ok=True)
 
@@ -69,4 +72,9 @@ def extract_appendices():
 
 
 if __name__ == "__main__":
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     extract_appendices()

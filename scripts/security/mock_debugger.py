@@ -12,12 +12,6 @@ from pathlib import Path
 
 from ccba_ai import ai
 
-# Enforce UTF-8 on Windows
-if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 
 def run_target_script(script_path: Path, args: list) -> tuple[int, str, str]:
@@ -75,8 +69,16 @@ def analyze_error(script_path: Path, stderr: str) -> str:
         return f"Error calling AI Gateway: {e}"
 
 
-def main():
+def main() -> None:
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+            sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
     parser = argparse.ArgumentParser(description="CCBA Self-Healing Mock Debugger")
+
     parser.add_argument("script", help="Path to the Python script to run and debug")
     parser.add_argument("args", nargs=argparse.REMAINDER, help="Arguments to pass to the script")
 

@@ -35,6 +35,11 @@ from .registry import (
     search_legal_registry,
 )
 from .sync import LegalSyncEngine, calculate_md5, calculate_sha256
+from .templates import (
+    ND30_HEADER,
+    SUPPORTED_DOC_TYPES,
+    generate_legal_document,
+)
 
 __all__ = [
     # === Deep Seams (Advertised Public Interface) ===
@@ -53,6 +58,9 @@ __all__ = [
     "load_legal_registry",
     "roman_to_decimal",
     "LEGAL_DISCLAIMER",
+    "generate_legal_document",
+    "SUPPORTED_DOC_TYPES",
+    "ND30_HEADER",
     # === Infrastructure & Cross-Package Facilities ===
     "TVPLSessionMutex",
     "MockChromeCDP",
@@ -62,3 +70,4 @@ __all__ = [
     "calculate_md5",
     "calculate_sha256",
 ]
+
