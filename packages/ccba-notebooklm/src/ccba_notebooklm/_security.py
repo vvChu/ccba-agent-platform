@@ -1,40 +1,51 @@
+"""Security gating and Maskara privacy redaction for NotebookLM source ingestion."""
+
+from __future__ import annotations
+
 import sys
 from pathlib import Path
 
+try:
+    from ccba_maskara import (
+        MaskaraScanner,
+        apply_raw_redactions,
+        detect_secrets_in_text,
+        is_binary,
+    )
+except ImportError:
+    # Bootstrap fallback if not installed in current interpreter
+    _pkg_src = Path(__file__).resolve().parents[4] / "packages" / "ccba-maskara" / "src"
+    if _pkg_src.exists() and str(_pkg_src) not in sys.path:
+        sys.path.insert(0, str(_pkg_src))
+    try:
+        from ccba_maskara import (
+            MaskaraScanner,
+            apply_raw_redactions,
+            detect_secrets_in_text,
+            is_binary,
+        )
+    except ImportError:
+        MaskaraScanner = None  # type: ignore[assignment,misc]
+        detect_secrets_in_text = None  # type: ignore[assignment]
+        apply_raw_redactions = None  # type: ignore[assignment]
+        is_binary = None  # type: ignore[assignment]
+
 
 def run_maskara_gate(source_path: str) -> tuple[str, bool]:
-    """
-    Kiểm tra bảo mật file cục bộ qua Maskara.
-    Trả về: (đường dẫn_file_để_upload, có_phải_file_tạm_không)
+    """Kiểm tra bảo mật file cục bộ qua Maskara trước khi nạp lên NotebookLM.
+
+    Args:
+        source_path: Đường dẫn tới file hoặc URL.
+
+    Returns:
+        tuple: (đường_dẫn_file_để_upload, có_phải_file_tạm_không)
     """
     if source_path.startswith(("http://", "https://")):
         return source_path, False
 
-    # Find maskara.py robustly
-    candidates = [
-        Path("scripts/maskara.py"),
-        Path(__file__).parents[4] / "scripts" / "maskara.py",
-        Path(__file__).parents[3] / "scripts" / "maskara.py",
-    ]
-    maskara_path = None
-    for cand in candidates:
-        if cand.exists():
-            maskara_path = cand
-            break
-
-    try:
-        import importlib.util
-
-        if not maskara_path:
-            raise ImportError("maskara.py not found")
-        spec = importlib.util.spec_from_file_location("maskara", maskara_path)
-        if spec is None or spec.loader is None:
-            raise ImportError("Could not load spec for maskara")
-        maskara = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(maskara)
-    except Exception as e:
+    if detect_secrets_in_text is None or is_binary is None or apply_raw_redactions is None:
         print(
-            f"[Warn] Thư viện maskara.py không import được: {e}. Bỏ qua chốt chặn bảo mật.",
+            "[Warn] Thư viện ccba_maskara không khả dụng. Bỏ qua chốt chặn bảo mật.",
             file=sys.stderr,
         )
         return source_path, False
@@ -43,7 +54,7 @@ def run_maskara_gate(source_path: str) -> tuple[str, bool]:
     if not file_p.exists():
         return source_path, False
 
-    if maskara.is_binary(file_p):
+    if is_binary(file_p):
         return source_path, False
 
     try:
@@ -56,7 +67,7 @@ def run_maskara_gate(source_path: str) -> tuple[str, bool]:
         except UnicodeDecodeError:
             content = original_bytes.decode("latin-1")
 
-        findings = maskara.detect_secrets_in_text(content, str(file_p), "notebooklm")
+        findings = detect_secrets_in_text(content, str(file_p), "notebooklm")
 
         if findings:
             critical_findings = [f for f in findings if f.get("severity") in ("critical", "high")]
@@ -76,7 +87,7 @@ def run_maskara_gate(source_path: str) -> tuple[str, bool]:
             print(
                 f"[Warning] Phát hiện {len(findings)} thông tin nhạy cảm. Đang che giấu (redact)..."
             )
-            rewritten_bytes, num_redacted = maskara.apply_raw_redactions(original_bytes, findings)
+            rewritten_bytes, num_redacted = apply_raw_redactions(original_bytes, findings)
 
             scratch_dir = Path(".md/scratch/redacted")
             scratch_dir.mkdir(parents=True, exist_ok=True)
