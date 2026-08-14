@@ -18,7 +18,7 @@ Cần một cơ chế chuẩn mực để chuyển đổi **kinh nghiệm cá nh
 
 ### 1. Phân Tầng Vòng Lặp Tiến Hóa 3 Cấp Độ (3-Tier Evolution Loop)
 
-Tại bước kết thúc phiên làm việc ([`/ccba-session-retrospective`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/workflows/ccba-session-retrospective.md)), Agent phân loại tri thức đúc kết theo 3 cấp độ:
+Tại bước kết thúc phiên làm việc ([`/ccba-session-retrospective`](../../../.agents/workflows/ccba-session-retrospective.md)), Agent phân loại tri thức đúc kết theo 3 cấp độ:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -79,7 +79,7 @@ Tại bước kết thúc phiên làm việc ([`/ccba-session-retrospective`](fi
 
 ## Tài Liệu Liên Quan
 
-- [AGENTS.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/AGENTS.md) — Hiến pháp Layer 1
-- [CONTEXT.md](file:///d:/GitHubProjects/ccba-agent-platform/CONTEXT.md) — Từ điển Thuật ngữ & System Metaphor
-- [session_retrospective/SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/session_retrospective/SKILL.md) — Quy trình Retrospective
-- [ccba-build-skill.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/workflows/ccba-build-skill.md) — Quy trình Skill Factory
+- [AGENTS.md](../../../.agents/AGENTS.md) — Hiến pháp Layer 1
+- [CONTEXT.md](../../../CONTEXT.md) — Từ điển Thuật ngữ & System Metaphor
+- [session_retrospective/SKILL.md](../../../.agents/skills/session_retrospective/SKILL.md) — Quy trình Retrospective
+- [ccba-build-skill.md](../../../.agents/workflows/ccba-build-skill.md) — Quy trình Skill Factory
