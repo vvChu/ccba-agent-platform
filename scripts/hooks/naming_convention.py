@@ -1,42 +1,36 @@
-"""
-Hook script for pre-tool naming convention checks.
-Enforces snake_case for Python, camelCase for JavaScript/TypeScript, and warns against generic names.
+"""Thin Backward-Compatible Facade for Naming Convention Hook.
+
+Delegates execution to the deep ``NamingHook`` class in ``scripts.hooks.naming``.
 """
 
-import re
+from __future__ import annotations
+
+import sys
 from pathlib import Path
+from typing import Any
+
+try:
+    from .base import HookContext
+    from .naming import NamingHook
+except (ImportError, ValueError):
+    _PROJECT_ROOT = Path(__file__).resolve().parents[2]
+    if str(_PROJECT_ROOT) not in sys.path:
+        sys.path.insert(0, str(_PROJECT_ROOT))
+    from scripts.hooks.base import HookContext
+    from scripts.hooks.naming import NamingHook
+
+GENERIC_NAMES = NamingHook.GENERIC_NAMES
+
+__all__ = ["NamingHook", "GENERIC_NAMES", "main"]
 
 
-def main(event: str, payload: dict) -> int:
-    path_arg = payload.get("path")
-    if not path_arg:
-        return 0
+def main(event: str = "pre-tool", payload: dict[str, Any] | None = None) -> int:
+    """Entrypoint forwarding to NamingHook.execute()."""
+    hook = NamingHook()
+    context = HookContext.from_payload(event, payload)
+    result = hook.execute(context)
+    return result.exit_code
 
-    path_obj = Path(path_arg)
-    filename = path_obj.name
-    ext = path_obj.suffix.lower()
 
-    # 1. Warn against generic file names
-    generic_names = ["test", "temp", "tmp", "report", "dummy", "file", "output", "untitled"]
-    if path_obj.stem.lower() in generic_names:
-        print(
-            f"[naming-convention] Warning: '{filename}' is a generic name. Use more descriptive file names."
-        )
-        return 0  # Warn only
-
-    # 2. Enforce naming conventions based on file extension
-    # snake_case for Python
-    if ext == ".py":
-        if not re.match(r"^[a-z_][a-z0-9_]*$", path_obj.stem):
-            print(
-                f"[naming-convention] Warning: Python file '{filename}' does not follow snake_case naming conventions."
-            )
-
-    # camelCase for JavaScript/TypeScript
-    elif ext in [".js", ".ts", ".jsx", ".tsx"]:
-        if not re.match(r"^[a-z][a-zA-Z0-9]*$", path_obj.stem):
-            print(
-                f"[naming-convention] Warning: JavaScript/TypeScript file '{filename}' does not follow camelCase naming conventions."
-            )
-
-    return 0
+if __name__ == "__main__":
+    sys.exit(main())
