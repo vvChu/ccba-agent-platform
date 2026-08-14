@@ -27,6 +27,7 @@ dependencies = [
     "pypdf>=4.0.0",
     "PyMuPDF>=1.24.0",
     "ccba-pdf-prep",
+    "ccba-ai",
 ]
 
 [project.optional-dependencies]
