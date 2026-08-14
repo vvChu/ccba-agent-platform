@@ -243,7 +243,6 @@ class DocumentAuditor:
                 links.append((idx + 1, text, href))
         return links
 
-
     def extract_env_variables(self, content: str) -> list[tuple[int, str]]:
         """Extract documented environment variables."""
         env_vars = []
