@@ -36,11 +36,8 @@ jobs:
           uv pip install -e "packages/ccba-pdf-prep[dev]" --system
           uv pip install -e "packages/mdconverter[dev]" --system
 
-      - name: Run Slow & Stress Tests for ccba-legal-intel
-        run: python scripts/eval/run_isolated_tests.py -p ccba-legal-intel --stress
-
-      - name: Run Slow & Stress Tests for ccba-harness
-        run: python scripts/eval/run_isolated_tests.py -p ccba-harness --stress
+      - name: Run Slow & Stress Tests Across All Packages (Dynamic Discovery)
+        run: python scripts/eval/run_isolated_tests.py --all --stress
 
 
       - name: Run Test Speed Guard Compliance Audit
