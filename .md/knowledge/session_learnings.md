@@ -127,6 +127,14 @@
 #### P3.4. Scoped Test Execution & TDD Retry Cap (Tối đa 5 Vòng)
 * **Nguyên tắc:** Nghiêm cấm chạy unscoped `pytest` toàn repository. Luôn chỉ định file test mục tiêu cụ thể (`pytest path/to/test_file.py`). Giới hạn tối đa 5 vòng lặp Red-Green-Refactor; nếu sau 5 vòng vẫn fail phải dừng lại commit WIP và xin ý kiến người dùng.
 
+#### P3.5. Pytest Class Collection Protection cho Source Classes (`__test__ = False`)
+* **Nguyên tắc:** Bất kỳ lớp nghiệp vụ nào trong mã nguồn có tên bắt đầu bằng tiền tố `Test*` (ví dụ: `TestSpeedHook`, `TestRunnerEngine`) sẽ bị Pytest tự động nhận diện nhầm là test class và phát sinh cảnh báo `PytestCollectionWarning` do có hàm khởi tạo `__init__`.
+* **Giải pháp:** Bắt buộc khai báo thuộc tính lớp `__test__ = False` để Pytest bỏ qua khi quét test collection.
+
+#### P3.6. Subprocess Binary Mocking trong Unit Tests Tầng 1
+* **Nguyên tắc:** Khi kiểm thử các lớp wrapper tương tác với công cụ dòng lệnh bên ngoài (`npx --version`, `git --version`, `ffmpeg`), việc kích hoạt subprocess thực tế có thể tốn từ 2-4 giây trên Windows, làm vi phạm Rule P3.1 (< 2.0s).
+* **Giải pháp:** Luôn mock `subprocess.run` trong các bài unit tests nhanh tầng 1 và phân tầng các bài kiểm thử thực tế vào tầng `@pytest.mark.slow`.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP3.1. Unscoped Full Pytest Run:** Kích hoạt quét test toàn bộ repo làm tràn context và chạm timeout.
 * **AP3.2. Blind Retries without Instrumentation:** Thử lại test fail mà không thêm probe log hoặc thu hẹp seam qua `/diagnosing-bugs`.
@@ -254,6 +262,30 @@
 
 #### P6.10. Coordinator Property Delegation Pattern (Đồng Bộ Thuộc Tính Workspace)
 * **Nguyên tắc:** Khi một lớp Điều phối (Coordinator như `DocumentAuditor`) chứa nhiều sub-auditors/sub-services, các thuộc tính trạng thái (như `project_root`) phải được thiết kế dưới dạng `@property` và setter. Khi giá trị này bị thay đổi động từ bên ngoài (e.g., CLI flag `--root`), setter sẽ tự động cập nhật và lan truyền đồng bộ xuống toàn bộ các sub-components.
+
+#### P6.11. Resilient Forwarding Shims with Direct CLI Support (Shims Tương Thích Kép)
+* **Nguyên tắc:** Khi di dời/tái cấu trúc scripts thành domain sub-package (như `scripts/hooks/`, `scripts/scaffolding/`, `scripts/legal/`), các scripts facade cũ bắt buộc phải hỗ trợ cả hai phương thức thực thi:
+  1. *Package Import:* `from scripts.hooks.test_speed_guard import ...`
+  2. *Direct CLI Execution:* `python scripts/hooks/test_speed_guard.py ...`
+* **Giải pháp:** Sử dụng mẫu Resilient Import với bootstrap `sys.path`:
+  ```python
+  try:
+      from .base import HookContext
+      from .speed import TestSpeedHook
+  except (ImportError, ValueError):
+      _PROJECT_ROOT = Path(__file__).resolve().parents[2]
+      if str(_PROJECT_ROOT) not in sys.path:
+          sys.path.insert(0, str(_PROJECT_ROOT))
+      from scripts.hooks.base import HookContext
+      from scripts.hooks.speed import TestSpeedHook
+  ```
+
+#### P6.12. Optional Soft Dependencies for Modular Subsystems (Nhập Khẩu Phụ Thuộc Mềm Tự Phục Hồi)
+* **Nguyên tắc:** Sự thiếu vắng của một thư viện phụ trợ (như `PyYAML` trong `BrandHook` hoặc `python-docx` trong `Cleaners`) **tuyệt đối không được làm sập việc import toàn bộ subsystem**.
+* **Giải pháp:** Bọc `import` trong khối `try...except ImportError` và cung cấp bộ dữ liệu mặc định (in-code fallback defaults) để hệ thống tiếp tục vận hành an toàn trong môi trường tối giản.
+
+#### P6.13. Standardized DTO Clean Property for Guardrails (`context.clean_path` vs `context.path`)
+* **Nguyên tắc:** Khi hệ thống hỗ trợ cơ chế bypass có kiểm soát (như tiền tố `APPROVED:` trên file path), toàn bộ các rào chắn con (Privacy, Naming, Speed Guard) bắt buộc phải truy cập thuộc tính đã làm sạch `context.clean_path` thay vì `context.path` thô, tránh việc đường dẫn bị phân tích sai và fallback ngoài ý muốn.
 
 
 
