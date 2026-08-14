@@ -81,8 +81,22 @@
 #### P2.1. Dynamic AppData & Tool Discovery trên Windows
 * **Giải pháp:** Định vị các công cụ hệ thống (Chrome, Winget, FFmpeg) tự động qua biến môi trường `%LOCALAPPDATA%`, `os.getenv("PROGRAMFILES")` hoặc fallback sang `Path.home() / "AppData" / "Local"` thay vì hardcode tên user `C:\Users\username`.
 
-#### P2.2. Isolated Standard Stream Reconfiguration
-* **Nguyên tắc:** Khi cần cấu hình UTF-8 cho console Windows (`sys.stdout.reconfigure(encoding='utf-8')`), **chỉ đặt bên trong khối `if __name__ == '__main__':` hoặc hàm `main()`**. Tuyệt đối không đặt ở top-level module scope vì sẽ làm hỏng bộ bắt luồng I/O (stream capture) của Pytest runner khi import.
+#### P2.2. Isolated Standard Stream Reconfiguration & Mypy Type Narrowing
+* **Nguyên tắc:** Khi cần cấu hình UTF-8 cho console Windows (`sys.stdout.reconfigure(encoding='utf-8')`):
+  1. **Chỉ đặt bên trong khối `if __name__ == '__main__':` hoặc hàm `main()`** để không làm hỏng bộ bắt luồng I/O (stream capture) của Pytest runner khi import.
+  2. **Dùng Type Narrowing với `isinstance`** để Mypy tự động nhận diện `sys.stdout` là `io.TextIOWrapper` (tránh lỗi `[union-attr]` trên `TextIO` mà không cần `# type: ignore`):
+     ```python
+     if sys.platform == "win32":
+         import io
+         try:
+             if isinstance(sys.stdout, io.TextIOWrapper):
+                 sys.stdout.reconfigure(encoding="utf-8")
+             if isinstance(sys.stderr, io.TextIOWrapper):
+                 sys.stderr.reconfigure(encoding="utf-8")
+         except Exception:
+             pass
+     ```
+
 
 #### P2.3. Safe Workspace Sandbox & Path Traversal Guard
 * **Giải pháp:** 
@@ -237,6 +251,10 @@
   2. *Domain Sub-Auditors:* Phân chia mỗi nhiệm vụ thành 1 lớp độc lập có context cache riêng.
   3. *Coordinator & Thin Facade:* Giữ tệp script cũ làm Thin Facade re-export 100% public API để bảo toàn tương thích ngược cho mọi caller và test suite cũ.
   4. *Two-Tier Testing Discipline:* Viết unit tests cô lập cho từng sub-auditor mới (< 0.3s) và bảo tồn nguyên vẹn các bài test cũ.
+
+#### P6.10. Coordinator Property Delegation Pattern (Đồng Bộ Thuộc Tính Workspace)
+* **Nguyên tắc:** Khi một lớp Điều phối (Coordinator như `DocumentAuditor`) chứa nhiều sub-auditors/sub-services, các thuộc tính trạng thái (như `project_root`) phải được thiết kế dưới dạng `@property` và setter. Khi giá trị này bị thay đổi động từ bên ngoài (e.g., CLI flag `--root`), setter sẽ tự động cập nhật và lan truyền đồng bộ xuống toàn bộ các sub-components.
+
 
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
