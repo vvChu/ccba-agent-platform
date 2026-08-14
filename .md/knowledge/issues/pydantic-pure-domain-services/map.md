@@ -25,7 +25,7 @@ Toàn bộ các domain services trong [`ccba_ai.services`](../../../../packages/
 
 1. **[Quyết định #1 — Loại bỏ DictLikeModel Hybrid](map.md)**: Không tạo class bọc giả lập dictionary để tránh anti-pattern "nửa nạc nửa mỡ". Thay vào đó, refactor dứt điểm toàn bộ callers.
 2. **[Quyết định #2 — Đồng bộ Chuẩn Pydantic v2](map.md)**: Đặt các DTOs mới (`SEOAuditResult`, `TeamTask`, `PlanCreationResult`, `PhaseUpdateResult`, `PlanStatusResult`) trong `packages/ccba-ai/src/ccba_ai/models.py` bên cạnh `ChatResult` và `AuditReport`.
-3. **[Quyết định #3 — Ghi nhận ADR-014](../CONTEXT.md)**: Lưu trữ quyết định kiến trúc chính thức vào Sổ bộ Quyết định ADRs của Platform.
+3. **[Quyết định #3 — Ghi nhận ADR-014](../../CONTEXT.md)**: Lưu trữ quyết định kiến trúc chính thức vào Sổ bộ Quyết định ADRs của Platform.
 
 ---
 

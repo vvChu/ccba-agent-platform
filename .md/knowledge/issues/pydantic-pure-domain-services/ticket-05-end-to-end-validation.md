@@ -13,7 +13,7 @@
    - `python scripts/validate_skills.py`
    - `python scripts/validate_docs.py`
    - `ruff check packages/ scripts/`
-3. Ghi nhận quyết định kiến trúc **ADR-014: Chuẩn Hóa Toàn Bộ Domain Services Sang Pydantic v2 DTOs Thuần Túy** vào [`.md/knowledge/CONTEXT.md`](../CONTEXT.md).
+3. Ghi nhận quyết định kiến trúc **ADR-014: Chuẩn Hóa Toàn Bộ Domain Services Sang Pydantic v2 DTOs Thuần Túy** vào [`.md/knowledge/CONTEXT.md`](../../CONTEXT.md).
 4. Cập nhật trạng thái các tickets và đóng bản đồ Wayfinder [Map](map.md).
 
 ## 🧪 Tiêu Chí Nghiệm Thu
