@@ -245,6 +245,9 @@
   - *Trong Phản Hồi Chat UI:* Sử dụng `[file.py](file:///path/to/file.py)` để hỗ trợ người dùng bấm click mở file ngay trên IDE.
   - *Trong Tệp Lưu Trữ Git Repo (`.md`):* BẮT BUỘC sử dụng đường dẫn tương đối (repo-relative, ví dụ: `[doc.md](../../path/to/doc.md)`) để tương thích 100% trên GitHub Web UI và mọi máy trạm.
 
+#### P7.4. Squash-and-Merge Standard for Feature Releases
+* **Nguyên tắc:** Khi release feature branch về `main`, luôn áp dụng chiến lược **Squash and Merge** (`gh pr merge --squash --delete-branch`). Việc này giúp gộp toàn bộ các commits trung gian (sửa linter, test fix, feedback review) thành 1 commit duy nhất mang thông điệp tóm tắt hoàn chỉnh, giữ cho lịch sử nhánh `main` luôn tinh gọn và dễ truy vết.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
 * **AP7.2. Committing Unscanned Code:** Bỏ qua quy trình `/ccba-code-review` hoặc Governance Audit trước khi tạo PR.
