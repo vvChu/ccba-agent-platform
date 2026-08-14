@@ -31,6 +31,7 @@ Trước khi viết bất kỳ utility/script mới nào tại Spoke (extract, c
 * **Giọng điệu giao tiếp:** Trả lời bằng **tiếng Việt** (trừ khi người dùng dùng tiếng Anh). Giữ nguyên các thuật ngữ kỹ thuật tiếng Anh (function, class, endpoint, database...). Giao tiếp chuyên nghiệp, súc tích, khách quan.
 * **KISS (Keep It Simple, Stupid):** Luôn ưu tiên giải pháp đơn giản nhất. Trước khi đề xuất thêm module/class/abstraction mới, tự hỏi: "Có thể giải quyết bằng 10-15 dòng code trong file hiện có không?" Nếu có $\rightarrow$ làm vậy.
 * **Đăng ký Rules động:** Đối với các quy tắc nghiệp vụ chuyên sâu (đặt tên, debug, release gate, legal...), Agent bắt buộc phải nạp động (**Dynamic Rules**) tương ứng qua `catalog.yaml` thay vì tích hợp tĩnh vào prompt khởi tạo.
+* **Nạp Tri thức Tích lũy (Session Learnings Bootstrap):** Khi bắt đầu lập kế hoạch (**Planning Mode**) hoặc triển khai mã nguồn (**SDLC Implementation Loop**), Agent **bắt buộc phải đọc** tệp `.md/knowledge/session_learnings.md` (nếu tệp tồn tại) để nạp các Patterns/Anti-patterns đã được đúc kết qua các phiên trước, tránh lặp lại sai lầm cũ. Tệp này chứa 7 trụ cột tri thức cốt lõi của Platform.
 * **Kiểm định mã nguồn, cấu hình & tài liệu:** 
   - Mọi file YAML được Agent chỉnh sửa phải pass qua lệnh parse `yaml.safe_load()`.
   - Luôn sử dụng type hints trong Python (parameters + return types), viết docstring (Google style) cho tất cả public functions.
