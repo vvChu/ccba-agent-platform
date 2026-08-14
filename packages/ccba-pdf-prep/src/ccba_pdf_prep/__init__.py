@@ -1,3 +1,15 @@
+"""ccba-pdf-prep — Unified PDF Preprocessor for AI Vision Pipelines.
+
+Primary Deep Seam:
+    PDFProcessingPipeline — Segment, tile, and analyze PDF drawings end-to-end.
+                            Call: pipeline.process(pdf_path, output_dir)
+
+Document Skills (standalone utilities):
+    fill_pdf_fields  — Fill interactive PDF form fields programmatically.
+    get_field_info   — Inspect PDF form field metadata.
+    recalc_xlsx      — Recalculate Excel formulas headlessly via LibreOffice.
+"""
+
 from .composite import CompositeBuilder as CompositeBuilder
 from .core import (
     PageDetail as PageDetail,
