@@ -314,6 +314,7 @@ class AIClient:
         max_tokens: int = 2048,
         temperature: float = 0.7,
         strip_thinking: bool = True,
+        timeout: float | None = None,
     ) -> str:
         """Send a multi-turn conversation and get a response.
 
@@ -323,6 +324,7 @@ class AIClient:
             max_tokens: Maximum tokens in the response (auto-allocated to 16384 for reasoning models if at default 2048).
             temperature: Sampling temperature (0.0–2.0).
             strip_thinking: If True, automatically strips <think>...</think> tags from output.
+            timeout: Optional per-request timeout in seconds.
 
         Returns:
             The assistant's response text, or empty string if model refused.
@@ -335,13 +337,17 @@ class AIClient:
             target_model, max_tokens, baseline_default=2048, reasoning_allocation=16384
         )
 
+        create_kwargs = {
+            "model": target_model,
+            "messages": messages,
+            "max_tokens": effective_max_tokens,
+            "temperature": temperature,
+        }
+        if timeout is not None:
+            create_kwargs["timeout"] = timeout
+
         response = _retry_sync(
-            lambda: self._client.chat.completions.create(
-                model=target_model,
-                messages=messages,
-                max_tokens=effective_max_tokens,
-                temperature=temperature,
-            ),
+            lambda: self._client.chat.completions.create(**create_kwargs),
             max_retries=self.max_retries,
             initial_delay=self.retry_delay,
             circuit_breaker=self.circuit_breaker,
@@ -445,6 +451,13 @@ class AIClient:
         except Exception:
             # Fallback: raw base64 without resize
             return base64.b64encode(path.read_bytes()).decode("utf-8")
+
+    def close(self) -> None:
+        """Close the underlying OpenAI client session."""
+        try:
+            self._client.close()
+        except Exception:
+            pass
 
     def __repr__(self) -> str:
         return f"AIClient(url={self._client.base_url}, model={self.default_model})"
@@ -665,6 +678,7 @@ class AsyncAIClient:
         max_tokens: int = 2048,
         temperature: float = 0.7,
         strip_thinking: bool = True,
+        timeout: float | None = None,
     ) -> str:
         """Send an async multi-turn conversation and get a response."""
         for msg in messages:
@@ -675,13 +689,17 @@ class AsyncAIClient:
             target_model, max_tokens, baseline_default=2048, reasoning_allocation=16384
         )
 
+        create_kwargs = {
+            "model": target_model,
+            "messages": messages,
+            "max_tokens": effective_max_tokens,
+            "temperature": temperature,
+        }
+        if timeout is not None:
+            create_kwargs["timeout"] = timeout
+
         response = await _retry_async(
-            lambda: self._client.chat.completions.create(
-                model=target_model,
-                messages=messages,
-                max_tokens=effective_max_tokens,
-                temperature=temperature,
-            ),
+            lambda: self._client.chat.completions.create(**create_kwargs),
             max_retries=self.max_retries,
             initial_delay=self.retry_delay,
             circuit_breaker=self.circuit_breaker,
@@ -705,6 +723,17 @@ class AsyncAIClient:
             circuit_breaker=self.circuit_breaker,
         )
         return sorted({m.id for m in result.data})
+
+    async def aclose(self) -> None:
+        """Close the underlying AsyncOpenAI client session."""
+        try:
+            await self._client.close()
+        except Exception:
+            pass
+
+    async def close(self) -> None:
+        """Alias for aclose()."""
+        await self.aclose()
 
     def __repr__(self) -> str:
         return f"AsyncAIClient(url={self._client.base_url}, model={self.default_model})"

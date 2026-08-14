@@ -47,7 +47,12 @@ def test_privacy_guard_detects_keys():
             "role": "user",
             "content": [
                 {"type": "text", "text": "Describe this drawing"},
-                {"type": "image_url", "image_url": {"url": "data:image/png;base64,..."}},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+                    },
+                },
             ],
         }
     )

@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "ccba-ai"
 version = "1.0.0"
-description = "CCBA AI Gateway Client — Kết nối 22 models (local GPU + cloud) qua 1 endpoint"
+description = "CCBA AI Gateway Client — Kết nối đa mô hình (local GPU + cloud) qua 1 endpoint"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

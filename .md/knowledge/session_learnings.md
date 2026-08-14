@@ -150,10 +150,21 @@
 #### P4.7. Local Fast-Fail Circuit Breaker cho Mạng VPN
 * **Giải pháp:** Tích hợp in-memory `CircuitBreaker` với 3 trạng thái (`CLOSED`, `OPEN`, `HALF_OPEN`) tự động ngắt nhanh các tác vụ khi kết nối Tailscale VPN tới Server Spark bị gián đoạn (ngưỡng 3 lỗi liên tiếp, 30s cooldown), tránh làm treo batch pipeline bởi các chu kỳ 60s timeout lặp lại.
 
+#### P4.8. Multimodal Binary Base64 Data URI Filtering trong Privacy Guard
+* **Giải pháp:** Khi quét rò rỉ API Keys (`PrivacyGuardHook`), tự động bỏ qua các chuỗi Data URI chứa base64 (`data:...;base64,...`). Việc này ngăn chặn 100% rủi ro false-positive match do chuỗi base64 ngẫu nhiên của file PDF/Image trùng khớp với pattern regex của API keys, đồng thời tiết kiệm đáng kể tài nguyên CPU.
+
+#### P4.9. Per-Request Dynamic Timeout Overrides trong AI Gateway SDK
+* **Giải pháp:** Trong các hàm gọi `AsyncAIClient.chat_multi()` / `chat()`, cho phép truyền tham số `timeout: float | None = None` để override timeout per-call khi gửi xuống `AsyncOpenAI(timeout=...)`. Giúp các tác vụ chuyển đổi tài liệu nặng (`mdconverter`) có thể chạy tới 600s mà không bị gò bó bởi timeout mặc định 60s của client.
+
+#### P4.10. Dynamic Model Discovery over Static Hardcoded Counts
+* **Nguyên tắc:** Tránh hardcode các con số tĩnh (như *"22 models"*) trong tài liệu kỹ thuật khi hạ tầng backend (LiteLLM/vLLM Gateway) có khả năng thay đổi và mở rộng động.
+* **Giải pháp:** Sử dụng giao diện khám phá động `ai.models()` / `async_ai.models()` để truy vấn trực tiếp danh sách mô hình thời gian thực từ Gateway, và ghi tài liệu dưới dạng mở (ví dụ: *"50+ models (khám phá động qua `ai.models()`)"*).
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP4.1. Hardcoded API Keys:** Tuyệt đối không hardcode keys vào code/markdown. Luôn dùng biến môi trường hoặc `.env`.
 * **AP4.2. Raw Exception Context Chaining (Ruff B904):** Dùng `raise NewException(...) from None` khi ném ngoại lệ mới trong block except không liên quan.
 * **AP4.3. Reasoning Models trong Converter Fallback Chains:** Tuyệt đối không đưa các model có hậu tố `-thinking` vào chuỗi fallback của document converter (`mdconverter`) để tránh rò rỉ khối thẻ `<think>` làm ô nhiễm file Markdown đầu ra.
+
 
 ---
 
@@ -213,12 +224,21 @@
 #### P6.6. Deepening via Extraction before Script Thinning (Bóc Tách Logic Trước Khi Tinh Gọn Script)
 * **Nguyên tắc:** Khi tinh gọn một script dài (> 100 dòng), phải phân tích xem script đó là *Thin CLI đơn thuần* hay là *Domain Orchestration Script* (chứa routing, taxonomy, error recovery). Nếu chứa domain logic, **bắt buộc phải bóc tách logic đó đưa vào package lõi trước**, viết unit test cho seam mới, rồi mới chuyển script thành Thin CLI Delegate. Tuyệt đối không xóa bỏ logic nghiệp vụ chỉ để làm ngắn script.
 
+#### P6.7. Safe Macro Injection (Bảo Tồn Macro Cá Nhân trong LibreOffice Basic)
+* **Nguyên tắc:** Khi tự động cấu hình hoặc cập nhật macro LibreOffice (`Module1.xba`), **tuyệt đối không ghi đè toàn bộ tệp**. Phải đọc nội dung hiện tại và chỉ chèn subroutine mới vào ngay trước thẻ đóng `</script:module>`. Việc này bảo vệ 100% macro cá nhân do kỹ sư tự viết trước đó trên máy trạm.
+
+#### P6.8. Pure Pydantic v2 DTOs over Hybrid Dict-Like Wrappers (Không Dùng Hybrid Shims)
+* **Nguyên tắc:** Khi chuyển đổi các domain services sang Pydantic v2 `BaseModel`, hãy refactor dứt điểm toàn bộ callers, CLI scripts và tests sang truy cập thuộc tính tường minh (`res.score`, `res.model_dump()`).
+* **Lợi ích:** Đảm bảo type safety tuyệt đối, hỗ trợ IDE auto-complete chuẩn xác, JSON serialization an toàn và loại bỏ hoàn toàn nợ kỹ thuật (technical debt).
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
+
 * **AP6.1. Leaky Interface Exporting 30+ Symbols:** Xuất khẩu toàn bộ hàm con ra `__init__.py` làm rối loạn AI navigation.
 * **AP6.2. Domain Drift:** Đặt file xử lý PDF vào package OOXML hoặc đặt logic cào web vào module phân tích xung đột.
 * **AP6.3. Shallow-Wrapping Deep Seams (Bọc Nông trên Seam Sâu):** Tạo thêm một class/function bọc quanh một Deep Seam đã hoàn chỉnh chỉ để tạo "cảm giác dễ dùng", gây phân mảnh API và vi phạm nguyên lý KISS.
 * **AP6.4. Unchecked Transport/SDK Assumptions:** Giả định các SDK/Client hỗ trợ các khả năng đặc thù (như xử lý multimodal bytes, async streams) mà chưa inspect code thực tế của thư viện, dẫn đến kế hoạch sai lệch nghiêm trọng.
 * **AP6.5. Deleting Embedded Domain Logic:** Nhầm lẫn giữa mã boilerplate lặp lại với domain orchestration logic (dù đã có docstring) và xóa bỏ khi tinh gọn scripts.
+* **AP6.6. Hybrid "Neither Fish Nor Fowl" Model Anti-Pattern (Lớp Mô Hình Lai Tạp):** Cài đặt đè `__getitem__` trên `BaseModel` để vừa hỗ trợ dot notation vừa hỗ trợ dict subscripting, gây mơ hồ khi phân tích kiểu dữ liệu tĩnh và làm sai lệch quá trình serialize JSON/dump.
 
 ---
 

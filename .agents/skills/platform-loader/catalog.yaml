@@ -38,7 +38,7 @@ skills:
   skill_path: .agents/skills/platform-loader/SKILL.md
 - name: ai-gateway-sdk
   bundle: _core
-  description: Kết nối AI Gateway — 22 models (local GPU + cloud), 1 endpoint
+  description: Kết nối AI Gateway — Đa mô hình (local GPU + cloud), 1 endpoint
   triggers:
   - ai
   - llm

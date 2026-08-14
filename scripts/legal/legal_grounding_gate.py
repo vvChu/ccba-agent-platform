@@ -1,60 +1,45 @@
-"""Module implementing Grounding Gate verifier for legal advice responses."""
+"""Thin CLI Delegate for Legal Grounding Gate and Citation Verifier.
 
-import re
-from typing import Any
-
-LEGAL_DISCLAIMER = """
----
-⚠️ **Disclaimer:** Nội dung tư vấn trên được tự động trích xuất và kiểm định bằng AI Agent dựa trên Sổ bộ Pháp lý CCBA (`legal_registry.yaml`). Đây là thông tin tham khảo kỹ thuật, KHÔNG phải văn bản tư vấn pháp lý chính thức. Luôn cần chuyên gia pháp lý hoặc Luật sư xác nhận trước khi áp dụng vào dự án thực tế.
+Delegates core verification logic to the deep seam in ``ccba_legal.grounding``.
 """
 
+from __future__ import annotations
 
-def verify_legal_grounding(
-    response_text: str, retrieved_docs: list[dict[str, Any]]
-) -> dict[str, Any]:
-    """Verify that response_text contains valid citations matching retrieved_docs."""
-    # Pattern matching brackets like [Short Name - Doc Num] or [Short Name]
-    citations = re.findall(r"\[(.*?)\]", response_text)
+import sys
+from typing import Any
 
-    valid_citations = []
-    retrieved_identifiers = set()
+from ccba_legal.grounding import (
+    LEGAL_DISCLAIMER,
+    LegalGroundingGate,
+    format_grounded_response,
+    verify_legal_grounding,
+)
 
-    for doc in retrieved_docs:
-        if doc.get("short_name"):
-            retrieved_identifiers.add(doc["short_name"].lower())
-        if doc.get("document_number"):
-            retrieved_identifiers.add(doc["document_number"].lower())
-        if doc.get("id"):
-            retrieved_identifiers.add(str(doc["id"]).lower())
-
-    for citation in citations:
-        citation_lower = citation.lower()
-        if any(ident in citation_lower for ident in retrieved_identifiers):
-            valid_citations.append(citation)
-
-    if valid_citations:
-        return {
-            "is_grounded": True,
-            "valid_citations": valid_citations,
-            "warning_reason": None,
-        }
-
-    return {
-        "is_grounded": False,
-        "valid_citations": [],
-        "warning_reason": "Cảnh báo: Câu trả lời thiếu trích dẫn nguồn văn bản pháp lý hợp lệ từ cơ sở dữ liệu.",
-    }
+__all__ = [
+    "verify_legal_grounding",
+    "format_grounded_response",
+    "LegalGroundingGate",
+    "LEGAL_DISCLAIMER",
+]
 
 
-def format_grounded_response(response_text: str, retrieved_docs: list[dict[str, Any]]) -> str:
-    """Format final response with grounding check & disclaimer."""
-    verification = verify_legal_grounding(response_text, retrieved_docs)
+def main() -> None:
+    """CLI test entry point."""
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8")
 
-    output = response_text
-    if not verification["is_grounded"]:
-        output = f"⚠️ **[{verification['warning_reason']}]**\n\n" + output
+    sample_retrieved: list[dict[str, Any]] = [
+        {"short_name": "NĐ 207/2026", "document_number": "207/2026/NĐ-CP", "id": "ND-207-2026"}
+    ]
+    sample_text = (
+        "Theo quy định tại [NĐ 207/2026 - 207/2026/NĐ-CP], nghiệm thu công trình theo Điều 12."
+    )
+    result = verify_legal_grounding(sample_text, sample_retrieved)
+    print(f"Grounding verification result: {result}")
+    formatted = format_grounded_response(sample_text, sample_retrieved)
+    print(f"\nFormatted Output:\n{formatted}")
 
-    if "⚠️ **Disclaimer:**" not in output:
-        output = output.strip() + "\n" + LEGAL_DISCLAIMER
 
-    return output
+if __name__ == "__main__":
+    main()

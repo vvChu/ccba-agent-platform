@@ -1,109 +1,36 @@
-import os
-import platform
-import subprocess
+"""Backward-compatible forwarding shim for Excel formula recalculation.
+
+.. deprecated:: 1.2.0
+    ``xlsx_recalc`` in ``ccba-pdf-prep`` has been relocated to ``ccba_ooxml``
+    to align with domain boundaries (OOXML vs PDF Vision).
+    Import from ``ccba_ooxml.calc`` or use ``ccba_ooxml.recalc_xlsx`` instead.
+"""
+
+from __future__ import annotations
+
+import warnings
 from pathlib import Path
+from typing import Any
 
-from openpyxl import load_workbook
-
-
-def setup_libreoffice_macro():
-    """Setup LibreOffice macro for recalculation if not already configured"""
-    if platform.system() == "Darwin":
-        macro_dir = os.path.expanduser(
-            "~/Library/Application Support/LibreOffice/4/user/basic/Standard"
-        )
-    elif platform.system() == "Windows":
-        macro_dir = os.path.expandvars("%APPDATA%/LibreOffice/4/user/basic/Standard")
-    else:
-        macro_dir = os.path.expanduser("~/.config/libreoffice/4/user/basic/Standard")
-
-    macro_file = os.path.join(macro_dir, "Module1.xba")
-
-    if os.path.exists(macro_file):
-        try:
-            with open(macro_file, encoding="utf-8") as f:
-                if "RecalculateAndSave" in f.read():
-                    return True
-        except Exception:
-            pass
-
-    try:
-        os.makedirs(macro_dir, exist_ok=True)
-    except Exception:
-        return False
-
-    macro_content = """<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE script:module PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "module.dtd">
-<script:module xmlns:script="http://openoffice.org/2000/script" script:name="Module1" script:language="StarBasic">
-    Sub RecalculateAndSave()
-      ThisComponent.calculateAll()
-      ThisComponent.store()
-      ThisComponent.close(True)
-    End Sub
-</script:module>"""
-
-    try:
-        with open(macro_file, "w", encoding="utf-8") as f:
-            f.write(macro_content)
-        return True
-    except Exception:
-        return False
+from ccba_ooxml.calc import recalc_xlsx as _ooxml_recalc_xlsx
+from ccba_ooxml.calc import setup_libreoffice_macro as _ooxml_setup_macro
 
 
-def recalc_xlsx(filename: str, timeout: int = 30) -> dict:
-    """
-    Recalculate formulas in Excel file using LibreOffice or fall back to openpyxl.
-    """
-    file_path = Path(filename)
-    if not file_path.exists():
-        return {"error": f"File {filename} does not exist"}
+def setup_libreoffice_macro() -> bool:
+    """Setup LibreOffice macro (forwarded to ccba_ooxml.calc)."""
+    warnings.warn(
+        "setup_libreoffice_macro in ccba_pdf_prep is deprecated; import from ccba_ooxml instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _ooxml_setup_macro()
 
-    abs_path = str(file_path.absolute())
 
-    # Try LibreOffice first
-    libreoffice_setup_ok = False
-    try:
-        libreoffice_setup_ok = setup_libreoffice_macro()
-        if not libreoffice_setup_ok:
-            print(
-                "[xlsx_recalc] Warning: LibreOffice macro setup returned False (possible AppData permission issue). Falling back to openpyxl."
-            )
-    except Exception as e:
-        print(
-            f"[xlsx_recalc] Warning: Failed to set up LibreOffice macro due to exception: {e}. Falling back to openpyxl."
-        )
-
-    if libreoffice_setup_ok:
-        soffice_cmd = "soffice"
-        if platform.system() == "Windows":
-            # Common paths for LibreOffice on Windows
-            win_paths = [
-                r"C:\Program Files\LibreOffice\program\soffice.exe",
-                r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
-            ]
-            for p in win_paths:
-                if os.path.exists(p):
-                    soffice_cmd = p
-                    break
-
-        try:
-            cmd = [
-                soffice_cmd,
-                "--headless",
-                "--norestore",
-                "vnd.sun.star.script:Standard.Module1.RecalculateAndSave?language=Basic&location=application",
-                abs_path,
-            ]
-            res = subprocess.run(cmd, capture_output=True, timeout=timeout)
-            if res.returncode == 0:
-                return {"success": True, "method": "LibreOffice"}
-        except (subprocess.SubprocessError, FileNotFoundError):
-            pass
-
-    # Fallback to openpyxl
-    try:
-        wb = load_workbook(filename, data_only=False)
-        wb.save(filename)
-        return {"success": True, "method": "openpyxl (Save-back only)"}
-    except Exception as e:
-        return {"error": f"Failed recalculation: {e}"}
+def recalc_xlsx(filename: str | Path, timeout: int = 30) -> dict[str, Any]:
+    """Recalculate formulas in Excel file (forwarded to ccba_ooxml.calc)."""
+    warnings.warn(
+        "recalc_xlsx in ccba_pdf_prep is deprecated; import from ccba_ooxml instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _ooxml_recalc_xlsx(filename, timeout=timeout)

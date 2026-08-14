@@ -5,6 +5,7 @@ Shared library for packaging, unpackaging, validating, and DOM manipulating docx
 
 from __future__ import annotations
 
+from .calc import recalc_xlsx, setup_libreoffice_macro
 from .docx import (
     CommentEngine,
     Document,
@@ -26,6 +27,9 @@ __all__ = [
     "unpack_document",
     "validate_document",
     "OOXMLWorkspace",
+    # Spreadsheet calculation
+    "recalc_xlsx",
+    "setup_libreoffice_macro",
     # Docx DOM manipulation
     "DocxDocument",
     "Document",

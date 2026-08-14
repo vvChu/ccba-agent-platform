@@ -6,6 +6,10 @@ Public Deep Seams:
     LegalSyncEngine     — Cloud sync of legal registry to NotebookLM.
 """
 
+from .appendices import (
+    AppendixSplitter,
+    roman_to_decimal,
+)
 from .coordinator import (
     LegalIntelPipeline,
     LegalProcessor,
@@ -17,8 +21,19 @@ from .crawler import (
     MockChromeCDP,
     TVPLSessionMutex,
 )
+from .grounding import (
+    LEGAL_DISCLAIMER,
+    LegalGroundingGate,
+    format_grounded_response,
+    verify_legal_grounding,
+)
 from .monitor import TokenMonitor
-from .registry import LegalRegistryManager
+from .registry import (
+    LegalRegistryManager,
+    format_citation,
+    load_legal_registry,
+    search_legal_registry,
+)
 from .sync import LegalSyncEngine, calculate_md5, calculate_sha256
 
 __all__ = [
@@ -28,6 +43,16 @@ __all__ = [
     "LegalProcessResult",
     "LegalSyncEngine",
     "LegalRegistryManager",
+    "LegalGroundingGate",
+    "AppendixSplitter",
+    # === Domain Helper Seams ===
+    "verify_legal_grounding",
+    "format_grounded_response",
+    "format_citation",
+    "search_legal_registry",
+    "load_legal_registry",
+    "roman_to_decimal",
+    "LEGAL_DISCLAIMER",
     # === Infrastructure & Cross-Package Facilities ===
     "TVPLSessionMutex",
     "MockChromeCDP",
