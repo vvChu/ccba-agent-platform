@@ -1027,4 +1027,3 @@ def get_tvpl_credentials() -> tuple[str, str]:
                 password = line.split("=", 1)[1].strip().strip('"').strip("'")
 
     return username or "vuvanchu119", password or "ccba@ibst"
-
