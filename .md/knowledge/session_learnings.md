@@ -2,7 +2,7 @@
 
 > **Trạng thái:** Active & Consolidated  
 > **Cập nhật gần nhất:** 2026-08-14 (Sau Refactor Deep Modules & Incident Fix)  
-> **Phiên bản lưu trữ lịch sử:** [`.md/knowledge/archive/session_learnings_v1_archive.md`](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/archive/session_learnings_v1_archive.md)  
+> **Phiên bản lưu trữ lịch sử:** [`.md/knowledge/archive/session_learnings_v1_archive.md`](archive/session_learnings_v1_archive.md)  
 > **Mục đích:** Tài liệu tri thức cốt lõi cô đọng ~30 nguyên lý thực chiến và các anti-patterns nguy hiểm cần tránh trên toàn bộ hệ sinh thái CCBA Agent Platform.
 
 ---
@@ -221,12 +221,16 @@
   - `EnvVarAuditor`: Phát hiện rò rỉ keys hoặc thiếu biến môi trường.
   - `ArchitectureDriftAuditor`: Phát hiện drift kiến trúc so với `AGENTS.md`.
 
-#### P7.3. Relative Markdown Link Portability
-* **Nguyên tắc:** Trong tất cả các file tài liệu và skills, luôn sử dụng đường dẫn tương đối (relative paths) hoặc format link markdown chuẩn để bảo đảm tính di động trên mọi máy trạm.
+#### P7.3. Context-Aware Markdown Link Separation
+* **Nguyên tắc Phân Biệt Ngữ Cảnh:**
+  - *Trong Phản Hồi Chat UI:* Sử dụng `[file.py](file:///path/to/file.py)` để hỗ trợ người dùng bấm click mở file ngay trên IDE.
+  - *Trong Tệp Lưu Trữ Git Repo (`.md`):* BẮT BUỘC sử dụng đường dẫn tương đối (repo-relative, ví dụ: `[doc.md](../../path/to/doc.md)`) để tương thích 100% trên GitHub Web UI và mọi máy trạm.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
 * **AP7.2. Committing Unscanned Code:** Bỏ qua quy trình `/ccba-code-review` hoặc Governance Audit trước khi tạo PR.
+* **AP7.3. Context-Blind Link Leakage (`file:///` in Git Repo Docs):** Vô thức đem cú pháp `file:///` từ giao tiếp chat vào nội dung tệp `.md` trong repo. Bộ điều phối `doc_auditor.py` đã tích hợp rào chắn cross-platform để chặn đứng và tự động sửa (`--fix`) lỗi này ngay tại local.
+
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

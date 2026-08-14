@@ -323,6 +323,57 @@ Here is a link: [Sec 1](/target.md#sec1)
             # normal.md is still an orphan
             self.assertIn("normal.md", orphan_stems)
 
+    def test_detect_file_protocol_links_cross_platform(self) -> None:
+        """Ensure file:// and absolute drive links are detected on all platforms."""
+        from scripts.doc_auditor import DocumentAuditor
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+            auditor = DocumentAuditor(project_root=tmppath)
+
+            target_doc = tmppath / "sub" / "target.md"
+            target_doc.parent.mkdir(parents=True, exist_ok=True)
+            target_doc.write_text("# Target\n", encoding="utf-8")
+
+            source_doc = tmppath / "docs" / "source.md"
+            source_doc.parent.mkdir(parents=True, exist_ok=True)
+            # Use file:/// with the real target path
+            source_doc.write_text(
+                f"# Source\nCheck [Link](file:///{target_doc.as_posix()})\n",
+                encoding="utf-8",
+            )
+
+            issues = auditor.validate_markdown_file(source_doc, fix=False)
+            link_errors = [err for _, _, err in issues.get("links", [])]
+            self.assertTrue(
+                any("Non-portable absolute file link" in err for err in link_errors),
+                f"Expected non-portable file link error, got: {link_errors}",
+            )
+
+    def test_autofix_file_protocol_links(self) -> None:
+        """Ensure autofix mode converts file:// links to repo-relative links."""
+        from scripts.doc_auditor import DocumentAuditor
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+            auditor = DocumentAuditor(project_root=tmppath)
+
+            target_doc = tmppath / "sub" / "target.md"
+            target_doc.parent.mkdir(parents=True, exist_ok=True)
+            target_doc.write_text("# Target\n", encoding="utf-8")
+
+            source_doc = tmppath / "docs" / "source.md"
+            source_doc.parent.mkdir(parents=True, exist_ok=True)
+            source_doc.write_text(
+                f"# Source\nCheck [Link](file:///{target_doc.as_posix()})\n",
+                encoding="utf-8",
+            )
+
+            auditor.validate_markdown_file(source_doc, fix=True)
+            fixed_content = source_doc.read_text(encoding="utf-8")
+            self.assertIn("[Link](../sub/target.md)", fixed_content)
+            self.assertNotIn("file:///", fixed_content)
+
 
 if __name__ == "__main__":
     unittest.main()

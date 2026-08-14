@@ -94,6 +94,6 @@ và `AsyncAIClient` thiếu `Args:`, `Returns:`, `Raises:` sections chuẩn Goog
 
 ## Tài Liệu Liên Quan
 
-- [ADR 0011](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/specs_and_roadmaps/adr_0011_legal_intel_deep_module.md) — Deep Seam cho ccba-legal-intel
-- [AGENTS.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/AGENTS.md) — Layer 1 Constitution
-- [session_learnings.md — Trụ Cột 2 (P2.2)](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/session_learnings.md) — Top-level side-effect anti-pattern
+- [ADR 0011](adr_0011_legal_intel_deep_module.md) — Deep Seam cho ccba-legal-intel
+- [AGENTS.md](../../../.agents/AGENTS.md) — Layer 1 Constitution
+- [session_learnings.md — Trụ Cột 2 (P2.2)](../session_learnings.md) — Top-level side-effect anti-pattern
