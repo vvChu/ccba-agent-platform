@@ -108,35 +108,24 @@ Copy file `.env.ai-gateway` (đã cung cấp sẵn) vào project, hoặc thêm c
 
 AI_GATEWAY_URL=http://100.83.192.30:8090/v1
 AI_GATEWAY_KEY=sk-spark-secure-key-2026
+AI_GATEWAY_TIMEOUT=60.0
 
 # Nếu project dùng OpenAI SDK convention:
 OPENAI_API_BASE=http://100.83.192.30:8090/v1
 OPENAI_API_KEY=sk-spark-secure-key-2026
 
-# Model mặc định (tùy chọn)
-AI_MODEL=qwen-local-primary
+# Model mặc định (4 Archetypes chuẩn)
+AI_MODEL=gemini-3.7-flash
 ```
 
-### 2.2 — Danh Sách Models Có Sẵn
+### 2.2 — 4 Model Archetypes Chuẩn
 
-| Tier | Model Name | Mô Tả |
-|------|-----------|--------|
-| 🖥️ **Local GPU** | `qwen-local-primary` | Main local GPU model alias (Qwen 3.5 35B FP8 - private, offline, nhanh) |
-| 🖥️ **Local GPU** | `qwen-3.5-35b` | Version-specific alias cho Qwen 3.5 35B |
-| 🖥️ **Local GPU** | `rag-core` | Alias của `qwen-local-primary` (dùng trong RAG) |
-| 🖥️ **Local GPU** | `rag-light` | Qwen 3.5 9B / fallback routing (nhẹ, nhanh hơn) |
-
-> ⚠️ **Cảnh báo**: Không sử dụng các alias lỗi thời không có trong registry như `qwen3.5-35b` hay `Qwen-3.6-35B-NVFP4`. Dùng `qwen-local-primary`, `qwen-3.5-35b` hoặc `rag-core`.
-| ☁️ **Cloud** | `claude-sonnet-4-6` | ⭐ Best coding/agentic |
-| ☁️ **Cloud** | `claude-sonnet-4-6-thinking` | Claude + Chain-of-Thought |
-| ☁️ **Cloud** | `claude-opus-4-6` | Claude mạnh nhất |
-| ☁️ **Cloud** | `claude-opus-4-5-thinking` | Deep reasoning |
-| ☁️ **Cloud** | `gemini-3-flash` | Nhanh, multimodal |
-| ☁️ **Cloud** | `gemini-3.1-pro` | 1M context, research |
-| ☁️ **Cloud** | `gemini-3.1-pro-high` | Scientific reasoning |
-| ☁️ **Cloud** | `gemini-3.1-flash-lite` | Rẻ nhất, nhanh nhất |
-| ☁️ **Cloud** | `gemma-3-27b` | Free tier, metadata |
-| ☁️ **Cloud** | `gpt-oss-120b-medium` | OpenAI OSS model |
+| Archetype | Model Aliases | Target Backend | Khi nào sử dụng? |
+| :--- | :--- | :--- | :--- |
+| **1. OCR & Vision Ingestion** | `ocr-primary`<br>`ocr-fallback`<br>`ocr-tier4` | Google AI Studio Direct (10 keys) | Xử lý OCR tài liệu PDF, bản vẽ, hình ảnh, trích xuất text bảng biểu. |
+| **2. Standard General / Coding** | `gemini-3.7-flash`<br>`gemini-3.7-flash-medium`<br>`text-gemma` | Google API + Centralized Proxy | Chat tổng quát, code sinh tự động, tóm tắt bài viết, đàm thoại agent. |
+| **3. Deep Reasoning / Complex Audit** | `gemini-3.7-flash-high`<br>`claude-sonnet-4-6-thinking`<br>`reasoning-gemma` | Google API + Centralized Proxy | Phân tích điều khoản hợp đồng phức tạp, đối soát pháp lý, suy luận đa bước. |
+| **4. Local Private / Zero-Cost** | `rag-core`<br>`qwen-local-primary` | vLLM Qwen 35B Local (GPU DGX) | Chạy offline, dữ liệu tuyệt mật nội bộ, fallback chốt chặn khi mất Internet. |
 
 > 💡 **Tất cả models dùng chung 1 endpoint.** Chỉ cần thay `model` name.
 
@@ -144,7 +133,28 @@ AI_MODEL=qwen-local-primary
 
 ## Bước 3: Tích Hợp Vào Code
 
-### Python (OpenAI SDK)
+### Python (`ccba-ai` Package — Khuyến nghị)
+
+```python
+from ccba_ai import ai, ModelArchetype, chat_with_metadata, CircuitBreaker
+
+# 1. Chat cơ bản (mặc định timeout=60s, strip_thinking=True)
+response = ai.chat("Giải thích REST API trong 3 câu", model=ModelArchetype.STANDARD)
+print(response)
+
+# 2. Deep reasoning (Tự động cấp phát max_tokens=16384 và lọc sạch thẻ <think>)
+response = ai.chat("Phân tích điều khoản hợp đồng", model=ModelArchetype.REASONING)
+print(response)
+
+# 3. Trích xuất Telemetry (Token Usage, Latency & Model Resolution)
+result = ai.chat_with_metadata("Audit xung đột thiết kế", model=ModelArchetype.REASONING)
+print(f"Latency: {result.latency_ms}ms | Tokens: {result.usage.total_tokens}")
+
+# 4. Resilience: Fast-Fail Circuit Breaker khi rớt mạng Tailscale
+ai.circuit_breaker = CircuitBreaker(failure_threshold=3, recovery_timeout=30.0)
+```
+
+### Python (OpenAI SDK trực tiếp)
 
 ```bash
 pip install openai python-dotenv
@@ -158,13 +168,14 @@ from openai import OpenAI
 load_dotenv()
 
 client = OpenAI(
-    base_url=os.environ["AI_GATEWAY_URL"],
-    api_key=os.environ["AI_GATEWAY_KEY"],
+    base_url=os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1"),
+    api_key=os.environ.get("AI_GATEWAY_KEY", "sk-spark-secure-key-2026"),
+    timeout=60.0,  # Bắt buộc: >= 30s - 60s
 )
 
 # --- Chat đơn giản ---
 response = client.chat.completions.create(
-    model="qwen-local-primary",
+    model="gemini-3.7-flash",
     messages=[{"role": "user", "content": "Giải thích REST API trong 3 câu"}],
     max_tokens=512,
     temperature=0.7,
@@ -173,7 +184,7 @@ print(response.choices[0].message.content)
 
 # --- Streaming ---
 stream = client.chat.completions.create(
-    model="gemini-3-flash",
+    model="gemini-3.7-flash",
     messages=[{"role": "user", "content": "Viết hàm quicksort bằng Python"}],
     stream=True,
 )
@@ -181,14 +192,14 @@ for chunk in stream:
     if chunk.choices[0].delta.content:
         print(chunk.choices[0].delta.content, end="")
 
-# --- Dùng Claude cho coding ---
+# --- Deep reasoning ---
 response = client.chat.completions.create(
-    model="claude-sonnet-4-6",
+    model="gemini-3.7-flash-high",
     messages=[
-        {"role": "system", "content": "You are an expert Python developer."},
-        {"role": "user", "content": "Review this code and suggest improvements: ..."},
+        {"role": "system", "content": "You are an expert auditor."},
+        {"role": "user", "content": "Review this contract clause: ..."},
     ],
-    max_tokens=2048,
+    max_tokens=4096,
 )
 ```
 

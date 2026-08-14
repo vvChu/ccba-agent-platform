@@ -53,155 +53,122 @@ Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoin
 
 ---
 
-## Model Catalog (Trích xuất từ API)
+---
 
-### 🖥️ Local GPU (Private, Offline, RAG)
-| Model | Mô tả |
-|-------|-------------|
-| `qwen-local-primary` | ⭐ **Default** — Qwen reasoning model, mạnh mẽ cho audit |
-| `rag-core` | Alias của qwen-local-primary (RAG pipeline) |
-| `rag-light` | Qwen 3.5 4B — lightweight fallback |
+## 🏛️ 4 Model Archetypes (Vai trò Nghiệp vụ Chuẩn)
 
-### 🛠️ RAG Virtual Aliases (Free Tier Farm)
-Mô hình "ảo" (Alias) được Gateway tự động định tuyến để tận dụng Quota Free của Google.
-| Alias / Bí Danh | Model Thật (Backend) | Công Dụng (Best For) |
-|-------|----------|----------|
-| `text-gemma` | Gemma 3 27B | High-volume NLP (Sinh câu hỏi, Summarize) |
-| `text-light-gemma` | Gemma 3 12B | Bóc tách siêu dữ liệu (Metadata, Tagging) |
-| `reasoning-gemma` | Gemma 4 31B | Logical Graph (Neo4j), Structured JSON |
-| `ocr-primary` | Gemini 3.1 Flash Lite| Cloud OCR Vision (Trích xuất văn bản từ Ảnh) |
+Khi tích hợp từ phía client (Hub/Spoke/Web/CLI), luôn định tuyến model theo đúng 4 Archetypes chuẩn:
 
-### 🏎️ Cloud — Speed Tier (< 1.5s)
-| Model | Best For |
-|-------|----------|
-| `gemini-3-flash` / `gemini-3.1-flash-lite` | Nhanh, multimodal / rẻ nhất |
-| `gemma-3-27b` | Free tier, high-volume tasks |
-| `claude-haiku-4` / `claude-haiku-4-5` | Fast Claude, better quality |
+| Archetype | Model Aliases | Target Backend | Khi nào sử dụng? |
+| :--- | :--- | :--- | :--- |
+| **1. OCR & Vision Ingestion** | `ocr-primary`<br>`ocr-fallback`<br>`ocr-tier4` | Google AI Studio Direct (10 keys) | Xử lý OCR tài liệu PDF, bản vẽ, hình ảnh, trích xuất text bảng biểu. |
+| **2. Standard General / Coding** | `gemini-3.7-flash`<br>`gemini-3.7-flash-medium`<br>`text-gemma` | Google API + Centralized Proxy | Chat tổng quát, code sinh tự động, tóm tắt bài viết, đàm thoại agent. |
+| **3. Deep Reasoning / Complex Audit** | `gemini-3.7-flash-high`<br>`claude-sonnet-4-6-thinking`<br>`reasoning-gemma` | Google API + Centralized Proxy | Phân tích điều khoản hợp đồng phức tạp, đối soát pháp lý, suy luận đa bước. |
+| **4. Local Private / Zero-Cost** | `rag-core`<br>`qwen-local-primary` | vLLM Qwen 35B Local (GPU DGX) | Chạy offline, dữ liệu tuyệt mật nội bộ, fallback chốt chặn khi mất Internet. |
 
-### 🧠 Cloud — Balanced Tier (1–3s)
-| Model | Best For |
-|-------|----------|
-| `claude-sonnet-4-6` ⭐ | Best coding, agentic pipelines |
-| `claude-sonnet-4-6-thinking` | Reasoning with CoT |
-| `claude-opus-4-6` / `claude-opus-4-6-thinking` | Deep analysis, legal/financial, Opus + CoT |
-| `gpt-oss-120b-medium` | Large OSS model via proxy |
+---
 
-### 🔬 Cloud — Deep Reasoning (7–13s, 1M context)
-| Model | Best For |
-|-------|----------|
-| `gemini-3.1-pro` / `gemini-3.1-pro-high` / `gemini-3.1-pro-low`| Full codebase analysis, research, novel problems |
-| `gemini-3-pro-high` / `gemini-3-pro-low` | Scientific reasoning, budget deep reasoning |
+## ⚙️ Quy tắc Hợp đồng Tích hợp (Client Contract Rules)
+
+### 1. Quy tắc HTTP Timeout (Bắt buộc: 30s – 60s, Mặc định: 60s)
+- **Lý do**: AI Gateway triển khai cơ chế **Fallback Cascade** đa tầng (tự động xoay vòng 10 API keys và giáng cấp model khi upstream gặp lỗi 503/429).
+- **Quy chuẩn**: Phía client **PHẢI** cấu hình `timeout >= 30.0s` (mặc định trong SDK: `60.0s`). Tuyệt đối không cấu hình timeout quá ngắn (<15s) tránh cắt đứt luồng failover ngầm.
+
+### 2. Zero-Config Thinking Parameters
+- Phía client **KHÔNG CẦN** tự tạo cấu trúc Google-specific như `generationConfig.thinking_config` hay `thinking_budget`.
+- AI Gateway tích hợp sẵn middleware `custom_callbacks.gemini_corrector` tự động chuẩn hóa, chèn và lọc tham số suy luận theo từng model (`-low`, `-medium`, `-high`).
+
+---
+
+## 🛡️ Sơ đồ Chuyển vùng Dự phòng (Fallback Cascade)
+
+```mermaid
+graph TD
+    User([Client Request]) --> ModelChoice{Model Requested}
+
+    ModelChoice -->|gemini-3.7-flash-high| G37H[gemini-3.7-flash-high]
+    G37H -->|503/429/Timeout| G37M[gemini-3.7-flash-medium]
+    G37M -->|503/429/Timeout| G36H[gemini-3.6-flash-high]
+    G36H -->|503/429/Timeout| G35H[gemini-3.5-flash-high]
+    G35H -->|503/429/Timeout| OCT4[ocr-tier4: gemini-2.5-flash]
+    OCT4 -->|503/429/Timeout| RAGC[rag-core: Local Qwen 35B GPU]
+
+    ModelChoice -->|ocr-primary| OCR1[ocr-primary: gemini-3.1-flash-lite]
+    OCR1 -->|503/429/Timeout| OCRFB[ocr-fallback: gemini-3.5-flash-lite]
+    OCRFB -->|503/429/Timeout| OCT4
+```
 
 ---
 
 ## Cách dùng
 
-### Option A — `ccba-ai` Package (Recommended)
+### Option A — `ccba-ai` Package (Khuyến nghị cho Hub/Spoke)
 
 ```bash
 pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-ai"
 ```
 
 ```python
-from ccba_ai import ai
+from ccba_ai import ai, async_ai, ModelArchetype, choose_model, chat_with_metadata
 
-# Chat đơn giản (Qwen 35B local — mặc định)
-reply = ai.chat("Xin chào!")
+# 1. Chat cơ bản (mặc định timeout=60.0s, strip_thinking=True)
+response = ai.chat(
+    "Tóm tắt các điểm chính trong tài liệu đính kèm...",
+    model=ModelArchetype.STANDARD  # gemini-3.7-flash
+)
+print(response)
 
-# Chọn model
-reply = ai.chat("Review code", model="claude-sonnet-4-6")
+# 2. Deep reasoning (Tự động cấp phát max_tokens=16384 và tự làm sạch thẻ <think>)
+deep_res = ai.chat(
+    "Phân tích xung đột giữa Điều 12 và Điều 18 của dự thảo...",
+    model=ModelArchetype.REASONING  # gemini-3.7-flash-high
+)
+print(deep_res)
 
-# System prompt
-reply = ai.chat("Tóm tắt...", system="Bạn là chuyên gia pháp luật", model="qwen-local-primary")
+# 3. Đo lường Telemetry, Token Usage & Độ trễ (ChatResult)
+res = ai.chat_with_metadata("Kiểm tra pháp lý hợp đồng...", model=ModelArchetype.REASONING)
+print(f"Content: {res.content}")
+print(f"Model used: {res.model}")
+print(f"Tokens: prompt={res.usage.prompt_tokens}, completion={res.usage.completion_tokens}, total={res.usage.total_tokens}")
+print(f"Latency: {res.latency_ms} ms")
 
-# Streaming
-for chunk in ai.stream("Viết quicksort"):
-    print(chunk, end="")
-
-# Multi-turn
-reply = ai.chat_multi([
-    {"role": "system", "content": "Expert Python dev"},
-    {"role": "user", "content": "Review this code..."},
-])
-
-# List models
-print(ai.models())
+# 4. Định tuyến tự động theo task
+model_name = choose_model("ocr")  # ocr-primary
 ```
 
-### Option B — OpenAI SDK trực tiếp
+---
+
+## ⚡ Local Fast-Fail Circuit Breaker (Chống Treo Khi Mất Mạng)
+
+Để bảo vệ các batch processing pipelines không bị treo 60s timeout khi mạng Tailscale VPN rớt, `ccba-ai` tích hợp sẵn **`CircuitBreaker`**:
+
+- **3 Trạng thái**: `CLOSED` (bình thường), `OPEN` (ngắt nhanh fast-fail), `HALF_OPEN` (thử thăm dò phục hồi sau 30s cooldown).
+- **Ngưỡng kích hoạt**: Mặc định 3 lần lỗi kết nối liên tiếp sẽ ngắt kết nối (`CircuitBreakerOpenError`) tức thì ở các request sau.
 
 ```python
-from openai import OpenAI
+from ccba_ai import ai, CircuitBreaker
 
-client = OpenAI(
-    base_url="http://100.83.192.30:8090/v1",
-    api_key="sk-spark-secure-key-2026"
-)
-
-response = client.chat.completions.create(
-    model="claude-sonnet-4-6",
-    messages=[{"role": "user", "content": "Hello!"}]
-)
-print(response.choices[0].message.content)
-```
-
-### Option C — TypeScript/Node.js
-
-```typescript
-import OpenAI from 'openai';
-import 'dotenv/config';
-
-const client = new OpenAI({
-    baseURL: process.env.AI_GATEWAY_URL || 'http://100.83.192.30:8090/v1',
-    apiKey: process.env.AI_GATEWAY_KEY,
-});
-
-const response = await client.chat.completions.create({
-    model: 'qwen-local-primary',
-    messages: [{ role: 'user', content: 'Hello!' }],
-});
-```
-
-### Option D — cURL
-
-```bash
-curl http://100.83.192.30:8090/v1/chat/completions \
-  -H "Authorization: Bearer sk-spark-secure-key-2026" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"qwen-local-primary","messages":[{"role":"user","content":"Hello!"}]}'
+# Tùy chỉnh Circuit Breaker cho batch pipeline
+custom_cb = CircuitBreaker(failure_threshold=2, recovery_timeout=15.0)
+ai.circuit_breaker = custom_cb
 ```
 
 ---
 
 ## 🧠 Đặc tính & Cách Xử lý Reasoning Models (Thinking Models)
 
-Một số model trên Gateway (như `qwen-local-primary`, họ DeepSeek-R1, hoặc các model có hậu tố `-thinking` như `claude-sonnet-4-6-thinking`) sở hữu cơ chế tư duy nội suy. 
+Một số model trên Gateway (như `gemini-3.7-flash-high`, `claude-sonnet-4-6-thinking`, `reasoning-gemma`, `qwen-local-primary`) sở hữu cơ chế tư duy nội suy. 
 
-**Bản chất:** Thay vì sinh ra ngay kết quả, model sẽ phân tích logic, lập kế hoạch và in ra quá trình này bên trong thẻ `<think>...</think>`, sau đó mới cung cấp đáp án thực sự.
+**Bản chất:** Model sinh ra quá trình suy luận bên trong thẻ `<think>...</think>` trước khi đưa ra kết quả cuối cùng.
 
-### Cấu hình bắt buộc khi gọi Reasoning Models
+### Cơ chế Tự động hóa trong `ccba-ai` SDK:
 
-Để Agent/Script làm việc hiệu quả với dòng model này (đặc biệt trong các Task trích xuất dữ liệu JSON), **bắt buộc tuân thủ 3 nguyên tắc sau:**
-
-1. **Cắt bỏ thẻ `<think>` bằng Regex:** 
-   Các API Client chuẩn sẽ trả về toàn bộ text (bao gồm cả tư duy). Nếu bạn yêu cầu model trả về JSON, bạn **không thể** gọi `json.loads(raw_text)` ngay, mà phải làm sạch văn bản trước.
-   ```python
-   import re
-   # Xóa toàn bộ nội dung trong thẻ <think>, bao gồm cả newline (DOTALL)
-   clean_text = re.sub(r"<think>.*?</think>", "", raw_text, flags=re.DOTALL).strip()
-   
-   # Sau đó mới tìm kiếm JSON block
-   match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", clean_text, flags=re.DOTALL)
-   # ...
-   ```
-
-2. **Tham số `max_tokens` cực lớn:**
-   Quá trình `<think>` có thể tiêu tốn từ `1000` đến `4000` tokens. Nếu bạn để `max_tokens` mặc định hoặc quá thấp, model sẽ bị đứt gãy (truncated) giữa chừng khi đang "suy nghĩ", dẫn đến không bao giờ trả ra JSON. 
-   👉 **Khuyến nghị:** Luôn set `max_tokens=8192` (hoặc tối đa) khi dùng reasoning model.
-
-3. **Tham số `temperature` cực thấp:**
-   Bản thân quá trình `<think>` đã tạo ra độ đa dạng và sáng tạo (Variance) trong cách giải quyết vấn đề.
-   👉 **Khuyến nghị:** Set `temperature=0.1` hoặc `0.0` để đảm bảo output cuối cùng (đặc biệt là schema JSON) luôn ổn định và đáng tin cậy.
+1. **Auto Max-Tokens (16,384 tokens)**: 
+   Khi gọi reasoning model với `max_tokens` mặc định (`1024` hoặc `2048`), SDK tự động nâng ngân sách lên **`16,384` tokens** để chứa trọn vẹn cả thinking budget và câu trả lời mà không bị cắt cụt (truncated).
+2. **Auto Strip Thinking (`strip_thinking=True`)**:
+   Mặc định, `ai.chat()` và `ai.chat_multi()` tự động lọc sạch các thẻ `<think>` khỏi output trả về. Nếu muốn lấy toàn bộ nội dung suy luận thô, truyền `strip_thinking=False`.
+3. **Nhiệt độ khuyến nghị**: 
+   Đặt `temperature=0.1` hoặc `0.0` khi yêu cầu trích xuất JSON cấu trúc để giữ tính ổn định.
 
 ### Khi nào nên dùng Reasoning Models?
 - **NÊN DÙNG:** Các bài toán phức tạp, đòi hỏi phân tích chéo, toán học, đối chiếu luật (như Semantic PCCC Audit), hoặc xử lý code quy mô lớn.

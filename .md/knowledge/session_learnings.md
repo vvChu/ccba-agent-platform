@@ -141,9 +141,19 @@
           ...
   ```
 
+#### P4.5. 4 Model Archetypes & Bounded HTTP Timeout (Client Contract)
+* **Giải pháp:** Phía client luôn cấu hình `timeout >= 30.0s` (chuẩn `60.0s`) để đảm bảo không ngắt kết nối trong khi AI Gateway failover qua 10 API keys. Phân tách rõ `ocr-primary` (OCR Ingestion thuần túy) với `gemini-3.7-flash` (Vision Multimodal + JSON schema reasoning).
+
+#### P4.6. Reasoning Models Auto-Allocation & CoT Stripping
+* **Giải pháp:** Tự động nâng ngân sách `max_tokens=16384` khi gọi các model suy luận sâu (`gemini-3.7-flash-high`, `claude-sonnet-4-6-thinking`) và tự động làm sạch thẻ `<think>` (`strip_thinking=True`) ở cấp độ SDK `ccba-ai` để chống rò rỉ Chain-of-Thought làm ô nhiễm Markdown và JSON downstream.
+
+#### P4.7. Local Fast-Fail Circuit Breaker cho Mạng VPN
+* **Giải pháp:** Tích hợp in-memory `CircuitBreaker` với 3 trạng thái (`CLOSED`, `OPEN`, `HALF_OPEN`) tự động ngắt nhanh các tác vụ khi kết nối Tailscale VPN tới Server Spark bị gián đoạn (ngưỡng 3 lỗi liên tiếp, 30s cooldown), tránh làm treo batch pipeline bởi các chu kỳ 60s timeout lặp lại.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP4.1. Hardcoded API Keys:** Tuyệt đối không hardcode keys vào code/markdown. Luôn dùng biến môi trường hoặc `.env`.
 * **AP4.2. Raw Exception Context Chaining (Ruff B904):** Dùng `raise NewException(...) from None` khi ném ngoại lệ mới trong block except không liên quan.
+* **AP4.3. Reasoning Models trong Converter Fallback Chains:** Tuyệt đối không đưa các model có hậu tố `-thinking` vào chuỗi fallback của document converter (`mdconverter`) để tránh rò rỉ khối thẻ `<think>` làm ô nhiễm file Markdown đầu ra.
 
 ---
 
