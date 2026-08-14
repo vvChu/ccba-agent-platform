@@ -66,7 +66,7 @@ def compile_workflows(workflows_dir: Path, output_file: Path) -> None:
 
 def main() -> None:
     """Main execution entry point."""
-    project_root = Path(__file__).resolve().parent.parent
+    project_root = Path(__file__).resolve().parents[2]
     agents_dir = project_root / ".agents"
     output_dir = project_root / ".md" / "knowledge"
 

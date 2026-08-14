@@ -4,10 +4,9 @@ Primary Deep Seam:
     PDFProcessingPipeline — Segment, tile, and analyze PDF drawings end-to-end.
                             Call: pipeline.process(pdf_path, output_dir)
 
-Document Skills (standalone utilities):
+Document Skills (standalone utilities for PDF forms):
     fill_pdf_fields  — Fill interactive PDF form fields programmatically.
     get_field_info   — Inspect PDF form field metadata.
-    recalc_xlsx      — Recalculate Excel formulas headlessly via LibreOffice.
 """
 
 from .composite import CompositeBuilder as CompositeBuilder
@@ -43,7 +42,6 @@ from .document_skills.pdf_forms import (
 from .document_skills.pdf_forms import (
     get_field_info as get_field_info,
 )
-from .document_skills.xlsx_recalc import recalc_xlsx as recalc_xlsx
 from .pipeline import (
     PDFProcessingError as PDFProcessingError,
 )
@@ -70,10 +68,9 @@ __all__ = [
     "PDFCategory",
     "Segment",
     "PageDetail",
-    # === DOCUMENT SKILLS (standalone utilities, unrelated to PDF pipeline) ===
+    # === DOCUMENT SKILLS (standalone utilities for PDF forms) ===
     "get_field_info",
     "fill_pdf_fields",
-    "recalc_xlsx",
 ]
 
 # ---------------------------------------------------------------------------

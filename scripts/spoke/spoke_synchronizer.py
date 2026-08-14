@@ -15,13 +15,6 @@ from pathlib import Path
 
 import yaml
 
-# Enforce UTF-8 output on Windows
-if sys.platform == "win32":
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
-    if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(encoding="utf-8")
-
 # Attempt importing cryptography for RSA Spoke registration
 try:
     from cryptography.hazmat.primitives import hashes, serialization
@@ -222,6 +215,8 @@ class SpokeRegistrar:
 
 class TestGuardrailCopier:
     """Distributor of test guardrails (conftest.py, safe_pytest.py) for software Spokes."""
+
+    __test__ = False
 
     def __init__(self, spoke_root: Path, hub_root: Path, project_type: str):
         self.spoke_root = spoke_root
@@ -568,8 +563,37 @@ class SpokeSynchronizer:
                 self.spoke_root, hub_root, catalog, project_type, project_name
             )
 
+    def sync(self, sync_item: str | None = None) -> int:
+        """Deep Seam entry point for syncing spoke bundle."""
+        return self.sync_spoke_bundle(sync_item=sync_item)
 
-def sync_project(spoke_path: str, sync_item: str = None) -> int:
-    """Helper wrapper for backward compatibility."""
-    synchronizer = SpokeSynchronizer(spoke_path)
-    return synchronizer.sync_spoke_bundle(sync_item=sync_item)
+
+# Deep Seam Alias
+SpokeSyncEngine = SpokeSynchronizer
+
+
+def sync_project(spoke_path: str | Path = ".", sync_item: str | None = None) -> int:
+    """Helper procedural delegate for spoke synchronization."""
+    engine = SpokeSyncEngine(spoke_path)
+    return engine.sync(sync_item=sync_item)
+
+
+def main() -> None:
+    """CLI entrypoint with safe stream reconfigure."""
+    import argparse
+
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8")
+
+    parser = argparse.ArgumentParser(description="CCBA Spoke Synchronizer")
+    parser.add_argument("--spoke", default=".", help="Path to spoke project")
+    parser.add_argument("--sync-item", default=None, help="Specific skill/workflow name")
+    args = parser.parse_args()
+    sys.exit(sync_project(args.spoke, args.sync_item))
+
+
+if __name__ == "__main__":
+    main()

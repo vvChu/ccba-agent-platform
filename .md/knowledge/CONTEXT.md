@@ -83,10 +83,22 @@ Tài liệu này lưu trữ các thuật ngữ và biên bản quyết định k
   3. *Chuẩn hóa Stream Reconfiguration (P2.2)*: Di chuyển toàn bộ cấu hình `sys.stdout` UTF-8 vào bên trong `if __name__ == '__main__':` để bảo toàn bộ bắt luồng Pytest runner.
 - **Lý do:** Tăng 100% tính Locality và Leverage, loại bỏ sự phân mảnh công cụ và bảo vệ an toàn macro người dùng trên máy trạm.
 
+### ADR-013: Kiến Trúc Spoke Governance Seams & Hoàn Tất Tinh Gọn API ccba-pdf-prep
+- **Trạng thái:** CHẤP THUẬN (ACCEPTED)
+- **Quyết định:**
+  1. *Spoke Governance Deep Seams*: Xây dựng `SpokeSyncEngine` (và alias `SpokeSynchronizer`) tại `scripts/spoke/spoke_synchronizer.py` chịu trách nhiệm toàn bộ quá trình Discovery, Catalog Merge, RSA Registration và Guardrail Copy. Xuất bản qua `scripts/spoke/__init__.py` kèm procedural delegate `sync_project()`.
+  2. *Thin CLI Delegates*: Cung cấp `scripts/session_cleanup.py` và `scripts/sync_spoke.py` làm CLI entrypoint mỏng chuyển tiếp lời gọi sang `scripts/spoke/`.
+  3. *Tuân thủ P2.2*: Di dời toàn bộ `sys.stdout.reconfigure()` và `io.TextIOWrapper` từ root module scope trong `spoke_synchronizer.py` và `bootstrap_spokes.py` vào bên trong khối `if __name__ == '__main__':`.
+  4. *Hoàn tất Domain Purity ccba-pdf-prep*: Loại bỏ hoàn toàn `recalc_xlsx` khỏi `__all__`, docstrings và public exports của `ccba_pdf_prep`, cập nhật test suite `test_document_skills.py` khẳng định ranh giới chuyên biệt cho PDF Vision và PDF Form Filling.
+- **Lý do:** Tăng cường tính Locality, bảo vệ bộ bắt luồng Pytest runner trên Windows và ngăn chặn LLM Agent gọi nhầm thư viện.
 
-
-
-
+### ADR-014: Chuẩn Hóa Toàn Bộ Domain Services Sang Pydantic v2 DTOs Thuần Túy (Phương Án 3 Wayfinder)
+- **Trạng thái:** CHẤP THUẬN (ACCEPTED)
+- **Quyết định:**
+  1. *Pydantic v2 DTOs Thuần Túy*: Định nghĩa các mô hình `SEOAuditResult`, `TeamTask`, `PlanCreationResult`, `PhaseUpdateResult`, `PlanPhaseData`, `PlanStatusResult` trong `packages/ccba-ai/src/ccba_ai/models.py`.
+  2. *Refactor Dứt Điểm Không Hybrid*: Loại bỏ triệt để ý tưởng dùng lớp bọc giả lập dictionary (`DictLikeModel`), chuyển đổi 100% callers (`scripts/validation/seo_audit.py`, `test_seo.py`, `test_plan_manager.py`, `test_models.py`, `test_team.py`) sang truy cập thuộc tính tường minh (`res.score`, `task.name`, `res.model_dump()`).
+  3. *Xử lý Serialization An Toàn*: Hàm `save_tasks()` trong `team.py` hỗ trợ serialize tự động cả `TeamTask` và dictionary thô bằng `model_dump()`.
+- **Lý do:** Đạt được tính an toàn kiểu dữ liệu tuyệt đối (Strict Typing & Schema Validation), tối ưu hóa trải nghiệm lập trình cho Subagents/IDEs và ngăn chặn các anti-patterns lai tạp ("nửa nạc nửa mỡ") trong codebase.
 
 
 

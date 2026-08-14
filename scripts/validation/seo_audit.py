@@ -28,7 +28,7 @@ def main():
     try:
         result = seo.audit_file(file_path)
 
-        score = result["score"]
+        score = result.score
         if score >= 90:
             color = "\x1b[32m"  # Green
         elif score >= 70:
@@ -39,13 +39,13 @@ def main():
         print(f"Overall SEO Score: {color}{score}/100\x1b[0m")
         print("-" * 50)
         print("Checked Metrics:")
-        for c in result["checks"]:
+        for c in result.checks:
             print(f"  - {c}")
         print("-" * 50)
 
-        if result["issues"]:
+        if result.issues:
             print("Issues found:")
-            for idx, issue in enumerate(result["issues"], 1):
+            for idx, issue in enumerate(result.issues, 1):
                 print(f"  {idx}. \x1b[33m[Warning]\x1b[0m {issue}")
         else:
             print("\x1b[32mCongratulations! No SEO issues found in this file.\x1b[0m")
