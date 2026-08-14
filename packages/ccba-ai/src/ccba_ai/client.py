@@ -6,7 +6,11 @@ from pathlib import Path
 
 from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI, OpenAI
 
+from ccba_ai.circuit_breaker import CircuitBreaker
 from ccba_ai.hooks import PrivacyGuardHook
+from ccba_ai.llm_utils import strip_think_tags
+from ccba_ai.models import ChatResult, ChatUsage
+from ccba_ai.routing import resolve_max_tokens
 
 RETRYABLE_EXCEPTIONS = (APIConnectionError, APITimeoutError)
 
@@ -19,12 +23,27 @@ def _is_retryable_exception(exc: Exception) -> bool:
     return False
 
 
-def _retry_sync(fn, max_retries: int = 3, initial_delay: float = 1.0, backoff_factor: float = 2.0):
+def _retry_sync(
+    fn,
+    max_retries: int = 3,
+    initial_delay: float = 1.0,
+    backoff_factor: float = 2.0,
+    circuit_breaker: CircuitBreaker | None = None,
+):
+    if circuit_breaker is not None:
+        circuit_breaker.check_allowed()
+
     delay = initial_delay
     for attempt in range(max_retries + 1):
         try:
-            return fn()
+            result = fn()
+            if circuit_breaker is not None:
+                circuit_breaker.record_success()
+            return result
         except Exception as e:
+            if _is_retryable_exception(e):
+                if circuit_breaker is not None:
+                    circuit_breaker.record_failure(e)
             if attempt < max_retries and _is_retryable_exception(e):
                 time.sleep(delay)
                 delay *= backoff_factor
@@ -33,13 +52,26 @@ def _retry_sync(fn, max_retries: int = 3, initial_delay: float = 1.0, backoff_fa
 
 
 async def _retry_async(
-    coro_fn, max_retries: int = 3, initial_delay: float = 1.0, backoff_factor: float = 2.0
+    coro_fn,
+    max_retries: int = 3,
+    initial_delay: float = 1.0,
+    backoff_factor: float = 2.0,
+    circuit_breaker: CircuitBreaker | None = None,
 ):
+    if circuit_breaker is not None:
+        circuit_breaker.check_allowed()
+
     delay = initial_delay
     for attempt in range(max_retries + 1):
         try:
-            return await coro_fn()
+            result = await coro_fn()
+            if circuit_breaker is not None:
+                circuit_breaker.record_success()
+            return result
         except Exception as e:
+            if _is_retryable_exception(e):
+                if circuit_breaker is not None:
+                    circuit_breaker.record_failure(e)
             if attempt < max_retries and _is_retryable_exception(e):
                 await asyncio.sleep(delay)
                 delay *= backoff_factor
@@ -75,13 +107,23 @@ class AIClient:
         base_url: str | None = None,
         api_key: str | None = None,
         default_model: str | None = None,
+        timeout: float | None = None,
         max_retries: int = 3,
         retry_delay: float = 1.0,
+        circuit_breaker: CircuitBreaker | None = None,
     ):
         try:
             _find_and_load_env()
         except Exception:
             pass
+
+        if timeout is not None:
+            self.timeout = float(timeout)
+        else:
+            try:
+                self.timeout = float(os.environ.get("AI_GATEWAY_TIMEOUT", "60.0"))
+            except ValueError:
+                self.timeout = 60.0
 
         self._client = OpenAI(
             base_url=base_url or os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1"),
@@ -89,11 +131,13 @@ class AIClient:
             or os.environ.get(
                 "AI_GATEWAY_KEY", os.environ.get("OPENAI_API_KEY", "mock-key-for-ci")
             ),
+            timeout=self.timeout,
         )
         self.default_model = default_model or os.environ.get("AI_MODEL", "qwen-local-primary")
         self.privacy_guard = PrivacyGuardHook()
         self.max_retries = max_retries
         self.retry_delay = retry_delay
+        self.circuit_breaker = circuit_breaker if circuit_breaker is not None else CircuitBreaker()
 
     def chat(
         self,
@@ -103,6 +147,7 @@ class AIClient:
         system: str | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
+        strip_thinking: bool = True,
     ) -> str:
         """Send a chat message and get a text response.
 
@@ -110,8 +155,9 @@ class AIClient:
             message: The user message to send.
             model: Model name override. Uses default_model if None.
             system: Optional system prompt.
-            max_tokens: Maximum tokens in the response.
+            max_tokens: Maximum tokens in the response (auto-allocated to 16384 for reasoning models if at default 1024).
             temperature: Sampling temperature (0.0–2.0).
+            strip_thinking: If True, automatically strips <think>...</think> tags from output.
 
         Returns:
             The assistant's response text, or empty string if model refused.
@@ -122,19 +168,98 @@ class AIClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": message})
 
+        target_model = model or self.default_model
+        effective_max_tokens = resolve_max_tokens(
+            target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
+        )
+
         response = _retry_sync(
             lambda: self._client.chat.completions.create(
-                model=model or self.default_model,
+                model=target_model,
                 messages=messages,
-                max_tokens=max_tokens,
+                max_tokens=effective_max_tokens,
                 temperature=temperature,
             ),
             max_retries=self.max_retries,
             initial_delay=self.retry_delay,
+            circuit_breaker=self.circuit_breaker,
         )
         response_text = response.choices[0].message.content or ""
         self.privacy_guard.check_content(response_text)
+        if strip_thinking:
+            response_text = strip_think_tags(response_text)
         return response_text
+
+    def chat_with_metadata(
+        self,
+        message: str,
+        *,
+        model: str | None = None,
+        system: str | None = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.7,
+        strip_thinking: bool = True,
+    ) -> ChatResult:
+        """Send a chat message and receive structured result with latency and token usage.
+
+        Args:
+            message: The user message to send.
+            model: Model name override. Uses default_model if None.
+            system: Optional system prompt.
+            max_tokens: Maximum tokens in the response (auto-allocated to 16384 for reasoning models if at default 1024).
+            temperature: Sampling temperature (0.0–2.0).
+            strip_thinking: If True, automatically strips <think>...</think> tags from output.
+
+        Returns:
+            ChatResult object containing content, model, usage, latency_ms, and raw_response.
+        """
+        self.privacy_guard.check_content(message)
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": message})
+
+        target_model = model or self.default_model
+        effective_max_tokens = resolve_max_tokens(
+            target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
+        )
+
+        start_time = time.perf_counter()
+        response = _retry_sync(
+            lambda: self._client.chat.completions.create(
+                model=target_model,
+                messages=messages,
+                max_tokens=effective_max_tokens,
+                temperature=temperature,
+            ),
+            max_retries=self.max_retries,
+            initial_delay=self.retry_delay,
+            circuit_breaker=self.circuit_breaker,
+        )
+        latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
+        response_text = response.choices[0].message.content or ""
+        self.privacy_guard.check_content(response_text)
+        if strip_thinking:
+            response_text = strip_think_tags(response_text)
+
+        usage = ChatUsage()
+        if hasattr(response, "usage") and response.usage:
+            usage = ChatUsage(
+                prompt_tokens=getattr(response.usage, "prompt_tokens", 0) or 0,
+                completion_tokens=getattr(response.usage, "completion_tokens", 0) or 0,
+                total_tokens=getattr(response.usage, "total_tokens", 0) or 0,
+            )
+
+        resolved_model = getattr(response, "model", target_model) or target_model
+
+        return ChatResult(
+            content=response_text,
+            model=resolved_model,
+            usage=usage,
+            latency_ms=latency_ms,
+            raw_response=response,
+        )
 
     def stream(
         self,
@@ -173,6 +298,7 @@ class AIClient:
             ),
             max_retries=self.max_retries,
             initial_delay=self.retry_delay,
+            circuit_breaker=self.circuit_breaker,
         )
         for chunk in response:
             content = chunk.choices[0].delta.content
@@ -187,14 +313,16 @@ class AIClient:
         model: str | None = None,
         max_tokens: int = 2048,
         temperature: float = 0.7,
+        strip_thinking: bool = True,
     ) -> str:
         """Send a multi-turn conversation and get a response.
 
         Args:
             messages: List of message dicts with 'role' and 'content' keys.
             model: Model name override. Uses default_model if None.
-            max_tokens: Maximum tokens in the response.
+            max_tokens: Maximum tokens in the response (auto-allocated to 16384 for reasoning models if at default 2048).
             temperature: Sampling temperature (0.0–2.0).
+            strip_thinking: If True, automatically strips <think>...</think> tags from output.
 
         Returns:
             The assistant's response text, or empty string if model refused.
@@ -202,18 +330,26 @@ class AIClient:
         for msg in messages:
             self.privacy_guard.check_content(msg.get("content", ""))
 
+        target_model = model or self.default_model
+        effective_max_tokens = resolve_max_tokens(
+            target_model, max_tokens, baseline_default=2048, reasoning_allocation=16384
+        )
+
         response = _retry_sync(
             lambda: self._client.chat.completions.create(
-                model=model or self.default_model,
+                model=target_model,
                 messages=messages,
-                max_tokens=max_tokens,
+                max_tokens=effective_max_tokens,
                 temperature=temperature,
             ),
             max_retries=self.max_retries,
             initial_delay=self.retry_delay,
+            circuit_breaker=self.circuit_breaker,
         )
         response_text = response.choices[0].message.content or ""
         self.privacy_guard.check_content(response_text)
+        if strip_thinking:
+            response_text = strip_think_tags(response_text)
         return response_text
 
     def models(self) -> list[str]:
@@ -226,6 +362,7 @@ class AIClient:
             lambda: self._client.models.list(),
             max_retries=self.max_retries,
             initial_delay=self.retry_delay,
+            circuit_breaker=self.circuit_breaker,
         )
         return sorted({m.id for m in result.data})
 
@@ -263,6 +400,7 @@ class AIClient:
                 ),
                 max_retries=self.max_retries,
                 initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
             )
             return str(response).strip()
 
@@ -320,13 +458,23 @@ class AsyncAIClient:
         base_url: str | None = None,
         api_key: str | None = None,
         default_model: str | None = None,
+        timeout: float | None = None,
         max_retries: int = 3,
         retry_delay: float = 1.0,
+        circuit_breaker: CircuitBreaker | None = None,
     ):
         try:
             _find_and_load_env()
         except Exception:
             pass
+
+        if timeout is not None:
+            self.timeout = float(timeout)
+        else:
+            try:
+                self.timeout = float(os.environ.get("AI_GATEWAY_TIMEOUT", "60.0"))
+            except ValueError:
+                self.timeout = 60.0
 
         self._client = AsyncOpenAI(
             base_url=base_url or os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1"),
@@ -334,11 +482,13 @@ class AsyncAIClient:
             or os.environ.get(
                 "AI_GATEWAY_KEY", os.environ.get("OPENAI_API_KEY", "mock-key-for-ci")
             ),
+            timeout=self.timeout,
         )
         self.default_model = default_model or os.environ.get("AI_MODEL", "qwen-local-primary")
         self.privacy_guard = PrivacyGuardHook()
         self.max_retries = max_retries
         self.retry_delay = retry_delay
+        self.circuit_breaker = circuit_breaker if circuit_breaker is not None else CircuitBreaker()
 
     async def chat(
         self,
@@ -348,6 +498,7 @@ class AsyncAIClient:
         system: str | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
+        strip_thinking: bool = True,
     ) -> str:
         """Send an async chat message and get a text response.
 
@@ -355,8 +506,9 @@ class AsyncAIClient:
             message: The user message to send.
             model: Model name override. Uses default_model if None.
             system: Optional system prompt.
-            max_tokens: Maximum tokens in the response.
+            max_tokens: Maximum tokens in the response (auto-allocated to 16384 for reasoning models if at default 1024).
             temperature: Sampling temperature (0.0–2.0).
+            strip_thinking: If True, automatically strips <think>...</think> tags from output.
 
         Returns:
             The assistant's response text, or empty string if model refused.
@@ -367,19 +519,98 @@ class AsyncAIClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": message})
 
+        target_model = model or self.default_model
+        effective_max_tokens = resolve_max_tokens(
+            target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
+        )
+
         response = await _retry_async(
             lambda: self._client.chat.completions.create(
-                model=model or self.default_model,
+                model=target_model,
                 messages=messages,
-                max_tokens=max_tokens,
+                max_tokens=effective_max_tokens,
                 temperature=temperature,
             ),
             max_retries=self.max_retries,
             initial_delay=self.retry_delay,
+            circuit_breaker=self.circuit_breaker,
         )
         response_text = response.choices[0].message.content or ""
         self.privacy_guard.check_content(response_text)
+        if strip_thinking:
+            response_text = strip_think_tags(response_text)
         return response_text
+
+    async def chat_with_metadata(
+        self,
+        message: str,
+        *,
+        model: str | None = None,
+        system: str | None = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.7,
+        strip_thinking: bool = True,
+    ) -> ChatResult:
+        """Send an async chat message and receive structured result with latency and token usage.
+
+        Args:
+            message: The user message to send.
+            model: Model name override. Uses default_model if None.
+            system: Optional system prompt.
+            max_tokens: Maximum tokens in the response (auto-allocated to 16384 for reasoning models if at default 1024).
+            temperature: Sampling temperature (0.0–2.0).
+            strip_thinking: If True, automatically strips <think>...</think> tags from output.
+
+        Returns:
+            ChatResult object containing content, model, usage, latency_ms, and raw_response.
+        """
+        self.privacy_guard.check_content(message)
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": message})
+
+        target_model = model or self.default_model
+        effective_max_tokens = resolve_max_tokens(
+            target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
+        )
+
+        start_time = time.perf_counter()
+        response = await _retry_async(
+            lambda: self._client.chat.completions.create(
+                model=target_model,
+                messages=messages,
+                max_tokens=effective_max_tokens,
+                temperature=temperature,
+            ),
+            max_retries=self.max_retries,
+            initial_delay=self.retry_delay,
+            circuit_breaker=self.circuit_breaker,
+        )
+        latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
+        response_text = response.choices[0].message.content or ""
+        self.privacy_guard.check_content(response_text)
+        if strip_thinking:
+            response_text = strip_think_tags(response_text)
+
+        usage = ChatUsage()
+        if hasattr(response, "usage") and response.usage:
+            usage = ChatUsage(
+                prompt_tokens=getattr(response.usage, "prompt_tokens", 0) or 0,
+                completion_tokens=getattr(response.usage, "completion_tokens", 0) or 0,
+                total_tokens=getattr(response.usage, "total_tokens", 0) or 0,
+            )
+
+        resolved_model = getattr(response, "model", target_model) or target_model
+
+        return ChatResult(
+            content=response_text,
+            model=resolved_model,
+            usage=usage,
+            latency_ms=latency_ms,
+            raw_response=response,
+        )
 
     async def stream(
         self,
@@ -418,6 +649,7 @@ class AsyncAIClient:
             ),
             max_retries=self.max_retries,
             initial_delay=self.retry_delay,
+            circuit_breaker=self.circuit_breaker,
         )
         async for chunk in response:
             content = chunk.choices[0].delta.content
@@ -432,23 +664,32 @@ class AsyncAIClient:
         model: str | None = None,
         max_tokens: int = 2048,
         temperature: float = 0.7,
+        strip_thinking: bool = True,
     ) -> str:
         """Send an async multi-turn conversation and get a response."""
         for msg in messages:
             self.privacy_guard.check_content(msg.get("content", ""))
 
+        target_model = model or self.default_model
+        effective_max_tokens = resolve_max_tokens(
+            target_model, max_tokens, baseline_default=2048, reasoning_allocation=16384
+        )
+
         response = await _retry_async(
             lambda: self._client.chat.completions.create(
-                model=model or self.default_model,
+                model=target_model,
                 messages=messages,
-                max_tokens=max_tokens,
+                max_tokens=effective_max_tokens,
                 temperature=temperature,
             ),
             max_retries=self.max_retries,
             initial_delay=self.retry_delay,
+            circuit_breaker=self.circuit_breaker,
         )
         response_text = response.choices[0].message.content or ""
         self.privacy_guard.check_content(response_text)
+        if strip_thinking:
+            response_text = strip_think_tags(response_text)
         return response_text
 
     async def models(self) -> list[str]:
@@ -461,6 +702,7 @@ class AsyncAIClient:
             lambda: self._client.models.list(),
             max_retries=self.max_retries,
             initial_delay=self.retry_delay,
+            circuit_breaker=self.circuit_breaker,
         )
         return sorted({m.id for m in result.data})
 

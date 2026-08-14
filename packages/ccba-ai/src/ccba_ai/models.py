@@ -3,6 +3,24 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
+class ChatUsage(BaseModel):
+    """Token usage metrics for an LLM completion."""
+
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+
+
+class ChatResult(BaseModel):
+    """Structured LLM completion result including content and execution telemetry."""
+
+    content: str = ""
+    model: str = ""
+    usage: ChatUsage = Field(default_factory=ChatUsage)
+    latency_ms: float = 0.0
+    raw_response: Any = None
+
+
 class AuditFinding(BaseModel):
     """A standard representation of a detected design clash / coordination issue."""
 

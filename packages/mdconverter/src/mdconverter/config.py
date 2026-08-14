@@ -45,10 +45,10 @@ class Settings(BaseSettings):
     models: list[str] = Field(
         default=[
             "qwen-local-primary",  # Local GPU — private, fast
-            "gemini-3-flash",  # Cloud — fast, multimodal
+            "gemini-3.7-flash",  # Cloud — fast, multimodal
             "ocr-primary",  # Alias for Gemini 3.1 Flash Lite - explicit OCR
+            "gemini-3.7-flash-high",  # Cloud — deep reasoning
             "claude-sonnet-4-6",  # Cloud — best coding
-            "gemini-3.1-pro",  # Cloud — 1M context, research
         ],
         description="Ordered list of models to try (fallback chain)",
     )

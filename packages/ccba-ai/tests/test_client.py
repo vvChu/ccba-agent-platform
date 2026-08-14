@@ -3,6 +3,10 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+import pytest
+from openai import APIConnectionError
+
+from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
 from ccba_ai.client import AIClient
 
 
@@ -36,6 +40,26 @@ class TestAIClientInit:
         """Test client uses explicitly provided model."""
         client = AIClient(default_model="custom-model")
         assert client.default_model == "custom-model"
+
+    def test_init_default_timeout(self) -> None:
+        """Test client defaults to 60.0s timeout."""
+        with patch.dict("os.environ", {}, clear=True):
+            client = AIClient(base_url="http://fake:1/v1", api_key="fake")
+            assert client.timeout == 60.0
+            assert client._client.timeout == 60.0
+
+    @patch.dict("os.environ", {"AI_GATEWAY_TIMEOUT": "45.0"}, clear=False)
+    def test_init_timeout_from_env(self) -> None:
+        """Test client picks up timeout from environment."""
+        client = AIClient(base_url="http://fake:1/v1", api_key="fake")
+        assert client.timeout == 45.0
+        assert client._client.timeout == 45.0
+
+    def test_init_explicit_timeout(self) -> None:
+        """Test client uses explicitly provided timeout."""
+        client = AIClient(base_url="http://fake:1/v1", api_key="fake", timeout=30.0)
+        assert client.timeout == 30.0
+        assert client._client.timeout == 30.0
 
 
 class TestAIClientChat:
@@ -84,6 +108,93 @@ class TestAIClientChat:
             assert len(messages) == 2
             assert messages[0]["role"] == "system"
             assert messages[1]["role"] == "user"
+
+    def test_chat_strip_thinking_default(self) -> None:
+        """Test chat automatically strips <think> tags by default."""
+        client = AIClient(base_url="http://fake:1/v1", api_key="fake")
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "<think>Let me ponder...</think>Final Answer"
+
+        with patch.object(client._client.chat.completions, "create", return_value=mock_response):
+            result = client.chat("test")
+            assert result == "Final Answer"
+
+    def test_chat_strip_thinking_disabled(self) -> None:
+        """Test chat preserves <think> tags when strip_thinking=False."""
+        client = AIClient(base_url="http://fake:1/v1", api_key="fake")
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "<think>Let me ponder...</think>Final Answer"
+
+        with patch.object(client._client.chat.completions, "create", return_value=mock_response):
+            result = client.chat("test", strip_thinking=False)
+            assert "<think>Let me ponder...</think>Final Answer" in result
+
+    def test_chat_auto_max_tokens_for_reasoning(self) -> None:
+        """Test chat automatically increases max_tokens to 16384 for reasoning models."""
+        client = AIClient(base_url="http://fake:1/v1", api_key="fake")
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "Answer"
+
+        with patch.object(
+            client._client.chat.completions, "create", return_value=mock_response
+        ) as mock_create:
+            # When calling reasoning model with default max_tokens=1024
+            client.chat("test", model="gemini-3.7-flash-high")
+            assert mock_create.call_args.kwargs["max_tokens"] == 16384
+
+            # When calling reasoning model with explicit max_tokens=500
+            client.chat("test", model="gemini-3.7-flash-high", max_tokens=500)
+            assert mock_create.call_args.kwargs["max_tokens"] == 500
+
+            # When calling standard model with default max_tokens=1024
+            client.chat("test", model="gemini-3.7-flash")
+            assert mock_create.call_args.kwargs["max_tokens"] == 1024
+
+
+class TestAIClientChatWithMetadata:
+    """Test AIClient.chat_with_metadata() method."""
+
+    def test_chat_with_metadata_returns_chat_result(self) -> None:
+        """Test chat_with_metadata returns a ChatResult with usage and latency."""
+        from ccba_ai.models import ChatResult
+
+        client = AIClient(base_url="http://fake:1/v1", api_key="fake")
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "<think>Think...</think>Result Text"
+        mock_response.model = "gemini-3.7-flash"
+        mock_response.usage.prompt_tokens = 100
+        mock_response.usage.completion_tokens = 50
+        mock_response.usage.total_tokens = 150
+
+        with patch.object(client._client.chat.completions, "create", return_value=mock_response):
+            res = client.chat_with_metadata("test prompt")
+            assert isinstance(res, ChatResult)
+            assert res.content == "Result Text"
+            assert res.model == "gemini-3.7-flash"
+            assert res.usage.prompt_tokens == 100
+            assert res.usage.completion_tokens == 50
+            assert res.usage.total_tokens == 150
+            assert res.latency_ms >= 0.0
+
+    def test_chat_with_metadata_without_usage_object(self) -> None:
+        """Test chat_with_metadata handles responses without usage object gracefully."""
+        client = AIClient(base_url="http://fake:1/v1", api_key="fake")
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "No usage response"
+        mock_response.model = "qwen-local-primary"
+        mock_response.usage = None
+
+        with patch.object(client._client.chat.completions, "create", return_value=mock_response):
+            res = client.chat_with_metadata("test")
+            assert res.content == "No usage response"
+            assert res.usage.prompt_tokens == 0
+            assert res.usage.completion_tokens == 0
+            assert res.usage.total_tokens == 0
 
 
 class TestAIClientStream:
@@ -214,8 +325,6 @@ class TestAIClientRetry:
         mock_response.choices = [MagicMock()]
         mock_response.choices[0].message.content = "Recovered response"
 
-        from openai import APIConnectionError
-
         side_effects = [APIConnectionError(request=MagicMock()), mock_response]
         with patch.object(
             client._client.chat.completions, "create", side_effect=side_effects
@@ -226,9 +335,6 @@ class TestAIClientRetry:
 
     def test_chat_raises_after_max_retries(self) -> None:
         """Test chat raises exception if retries are exhausted."""
-        import pytest
-        from openai import APIConnectionError
-
         client = AIClient(
             base_url="http://fake:1/v1", api_key="fake", max_retries=2, retry_delay=0.01
         )
@@ -241,3 +347,16 @@ class TestAIClientRetry:
             with pytest.raises(APIConnectionError):
                 client.chat("test retry fail")
             assert mock_create.call_count == 3
+
+    def test_chat_fast_fails_when_circuit_breaker_open(self) -> None:
+        """Test chat fails immediately with CircuitBreakerOpenError without calling API."""
+        cb = CircuitBreaker(failure_threshold=1, recovery_timeout=60.0)
+        cb.record_failure()
+        assert cb.allow_request() is False
+
+        client = AIClient(base_url="http://fake:1/v1", api_key="fake", circuit_breaker=cb)
+
+        with patch.object(client._client.chat.completions, "create") as mock_create:
+            with pytest.raises(CircuitBreakerOpenError):
+                client.chat("should fast fail")
+            mock_create.assert_not_called()

@@ -151,3 +151,29 @@ class OOXMLWorkspace:
         # Register namespaces to prevent ns0 prefixes if present
         # (Minidom/condense will handle formatting, we just output standard XML)
         tree.write(str(file_path), encoding="utf-8", xml_declaration=True)
+
+    def get_docx_document(
+        self,
+        author: str = "Claude",
+        initials: str = "C",
+        rsid: str | None = None,
+        track_revisions: bool = False,
+    ) -> Any:
+        """Get a DocxDocument instance operating directly on this workspace.
+
+        Operates in-place on self.working_dir without creating additional
+        nested temporary directories.
+        """
+        if not self.working_dir:
+            raise RuntimeError("Workspace is not active.")
+
+        from .docx import DocxDocument
+
+        return DocxDocument(
+            self.working_dir,
+            rsid=rsid,
+            track_revisions=track_revisions,
+            author=author,
+            initials=initials,
+            in_place=True,
+        )

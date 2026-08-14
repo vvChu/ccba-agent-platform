@@ -232,7 +232,7 @@ timestamp: "2026-07-05T14:00:00Z"
     )
     # It should detect absolute link warning
     assert len(issues_link["links"]) > 0
-    assert "Absolute file link inside workspace" in issues_link["links"][0][2]
+    assert "Non-portable absolute file link" in issues_link["links"][0][2]
 
     # Run again with fix=True to verify relative path resolution
     issues_link_fixed = validate_docs.validate_markdown_file(
