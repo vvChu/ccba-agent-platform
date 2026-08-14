@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import threading
 import time
 from pathlib import Path
@@ -14,6 +15,35 @@ from typing import Any
 
 _thread_locks: dict[Path, threading.Lock] = {}
 _thread_locks_mutex = threading.Lock()
+
+
+def _is_process_alive(pid: int | None) -> bool:
+    """Check whether a process with given PID is still active across Windows and POSIX without terminating it."""
+    if pid is None or pid <= 0:
+        return False
+    if sys.platform.startswith("win"):
+        try:
+            import ctypes
+
+            kernel32 = ctypes.windll.kernel32
+            handle = kernel32.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+            if not handle:
+                return False
+            exit_code = ctypes.c_ulong()
+            if kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+                is_active = exit_code.value == 259  # STILL_ACTIVE
+            else:
+                is_active = False
+            kernel32.CloseHandle(handle)
+            return is_active
+        except Exception:
+            return False
+    else:
+        try:
+            os.kill(pid, 0)
+            return True
+        except OSError:
+            return False
 
 
 def _get_thread_lock(path: Path) -> threading.Lock:
@@ -85,15 +115,7 @@ class FileMutexLock:
                     lock_pid = None
                     lock_time = 0.0
 
-                pid_active = True
-                if lock_pid is not None:
-                    try:
-                        # Check if process is still alive (SIG 0 does not kill the process)
-                        os.kill(lock_pid, 0)
-                    except OSError:
-                        pid_active = False
-                else:
-                    pid_active = False
+                pid_active = _is_process_alive(lock_pid)
 
                 if not pid_active:
                     try:
