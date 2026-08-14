@@ -10,6 +10,12 @@ from pathlib import Path
 
 import yaml
 
+from ccba_ai.models import (
+    PhaseUpdateResult,
+    PlanCreationResult,
+    PlanPhaseData,
+    PlanStatusResult,
+)
 from ccba_harness import FileMutexLock
 
 PLAN_TEMPLATE = """# Plan: {title}
@@ -237,7 +243,9 @@ def slugify(text: str) -> str:
     return re.sub(r"[-\s]+", "-", text).strip("-")
 
 
-def create_plan(title: str, phases_list: list[str], workspace_root: Path | None = None) -> dict:
+def create_plan(
+    title: str, phases_list: list[str], workspace_root: Path | None = None
+) -> PlanCreationResult:
     """Create a new plan directory with plan.md and phase markdown stubs."""
     root = workspace_root or Path.cwd()
     plans_dir = root / "plans"
@@ -290,18 +298,18 @@ def create_plan(title: str, phases_list: list[str], workspace_root: Path | None 
     plan_obj.save()
     created_files.append(str(plan_filepath.relative_to(root)))
 
-    return {
-        "status": "success",
-        "plan_title": title,
-        "plan_folder": str(plan_folder.relative_to(root)),
-        "plan_file": str(plan_filepath.relative_to(root)),
-        "created_files": created_files,
-    }
+    return PlanCreationResult(
+        status="success",
+        plan_title=title,
+        plan_folder=str(plan_folder.relative_to(root)),
+        plan_file=str(plan_filepath.relative_to(root)),
+        created_files=created_files,
+    )
 
 
 def update_phase_status(
     plan_file: str | Path, phase_id: str, status: str, workspace_root: Path | None = None
-) -> dict:
+) -> PhaseUpdateResult:
     """Update a phase status in both plan.md and the corresponding phase file."""
     root = workspace_root or Path.cwd()
     plan_path = Path(plan_file)
@@ -327,21 +335,23 @@ def update_phase_status(
         phase_obj.save(plan_path.parent)
         phase_file_updated = True
 
-    return {
-        "status": "success",
-        "phase_id": phase_id,
-        "phase_name": phase_obj.name,
-        "old_status": old_status,
-        "new_status": status,
-        "plan_file": str(
+    return PhaseUpdateResult(
+        status="success",
+        phase_id=phase_id,
+        phase_name=phase_obj.name,
+        old_status=old_status,
+        new_status=status,
+        plan_file=str(
             plan_path.relative_to(root) if plan_path.is_relative_to(root) else plan_path
         ),
-        "phase_file": phase_obj.filename,
-        "phase_file_updated": phase_file_updated,
-    }
+        phase_file=phase_obj.filename,
+        phase_file_updated=phase_file_updated,
+    )
 
 
-def get_plan_status(plan_file: str | Path, workspace_root: Path | None = None) -> dict:
+def get_plan_status(
+    plan_file: str | Path, workspace_root: Path | None = None
+) -> PlanStatusResult:
     """Parse and return the plan status."""
     root = workspace_root or Path.cwd()
     plan_path = Path(plan_file)
@@ -359,13 +369,15 @@ def get_plan_status(plan_file: str | Path, workspace_root: Path | None = None) -
 
     phases_data = []
     for p in plan_obj.phases:
-        phases_data.append({"id": p.num, "name": p.name, "status": p.status, "file": p.filename})
+        phases_data.append(
+            PlanPhaseData(id=p.num, name=p.name, status=p.status, file=p.filename)
+        )
 
-    return {
-        "title": plan_obj.title,
-        "metadata": metadata,
-        "phases": phases_data,
-        "plan_file": str(
+    return PlanStatusResult(
+        title=plan_obj.title,
+        metadata=metadata,
+        phases=phases_data,
+        plan_file=str(
             plan_path.relative_to(root) if plan_path.is_relative_to(root) else plan_path
         ),
-    }
+    )

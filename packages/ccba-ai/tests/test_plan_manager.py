@@ -103,29 +103,31 @@ def test_plan_lifecycle_and_compatibility():
         res = create_plan(
             title="Refactor Platform", phases_list=["Phase A", "Phase B"], workspace_root=tmp_path
         )
-        assert res["status"] == "success"
-        plan_file = tmp_path / res["plan_file"]
+        assert res.status == "success"
+        plan_file = tmp_path / res.plan_file
         assert plan_file.exists()
+        assert res.to_dict()["status"] == "success"
 
         # 2. Read plan status
         status = get_plan_status(plan_file, workspace_root=tmp_path)
-        assert status["title"] == "Refactor Platform"
-        assert len(status["phases"]) == 2
-        assert status["phases"][0]["status"] == "pending"
-        assert status["phases"][0]["name"] == "Phase A"
+        assert status.title == "Refactor Platform"
+        assert len(status.phases) == 2
+        assert status.phases[0].status == "pending"
+        assert status.phases[0].name == "Phase A"
 
         # 3. Update phase status
         update_res = update_phase_status(
             plan_file=plan_file, phase_id="01", status="completed", workspace_root=tmp_path
         )
-        assert update_res["status"] == "success"
-        assert update_res["old_status"] == "pending"
-        assert update_res["new_status"] == "completed"
+        assert update_res.status == "success"
+        assert update_res.old_status == "pending"
+        assert update_res.new_status == "completed"
 
         # Verify both files are updated
         new_status = get_plan_status(plan_file, workspace_root=tmp_path)
-        assert new_status["phases"][0]["status"] == "completed"
+        assert new_status.phases[0].status == "completed"
 
-        phase_file = plan_file.parent / new_status["phases"][0]["file"]
+        phase_file = plan_file.parent / new_status.phases[0].file
         assert phase_file.exists()
         assert "status: completed" in phase_file.read_text(encoding="utf-8")
+

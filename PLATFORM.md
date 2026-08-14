@@ -14,7 +14,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   │   ├── completion-checklist/      ←   HSHT công trình
 │   │   ├── seminar-builder/           ←   Chuẩn bị seminar
 │   │   ├── long-form-writer/          ←   Viết tài liệu dài
-│   │   ├── ai-gateway-sdk/            ←   Kết nối AI Gateway (22 models)
+│   │   ├── ai-gateway-sdk/            ←   Kết nối AI Gateway (Đa mô hình local GPU + cloud)
 │   │   └── platform-loader/           ←   Bootstrap + service routing
 │   │
 │   ├── workflows/                     ← Automated workflows (<!-- WORKFLOW_COUNT_START -->57<!-- WORKFLOW_COUNT_END --> workflows)
@@ -79,7 +79,7 @@ Là các thư viện bổ trợ, middleware, hoặc các cấu hình tự độn
 
 | Package | Mô tả | Install |
 |---------|--------|---------|
-| `ccba-ai` | AI Gateway client & SDK — 22 models, 1 endpoint | `pip install -e "packages/ccba-ai"` |
+| `ccba-ai` | AI Gateway client & SDK — Đa mô hình (local GPU + cloud), 1 endpoint | `pip install -e "packages/ccba-ai"` |
 | `ccba-harness` | Testing harness and mocking utilities | `pip install -e "packages/ccba-harness"` |
 | `ccba-legal-intel` | Legal intelligence services and connectors | `pip install -e "packages/ccba-legal-intel"` |
 | `ccba-maskara` | Secret detection, redaction and commit privacy engine | `pip install -e "packages/ccba-maskara"` |
