@@ -227,6 +227,14 @@ class TestSpeedAndSessionHooks(unittest.TestCase):
         res = hook.execute(ctx)
         self.assertEqual(res.exit_code, 0)
 
+    def test_speed_hook_approved_clean_path(self) -> None:
+        hook = TestSpeedHook()
+        # Should resolve target path even with APPROVED: prefix
+        ctx = HookContext(event="post-tool", path="APPROVED:scripts/tests/test_hooks.py")
+        self.assertEqual(ctx.clean_path, "scripts/tests/test_hooks.py")
+        res = hook.execute(ctx)
+        self.assertEqual(res.exit_code, 0)
+
 
 class TestHookRunnerCLI(unittest.TestCase):
     def test_run_hooks_pre_tool_allow_and_block(self) -> None:

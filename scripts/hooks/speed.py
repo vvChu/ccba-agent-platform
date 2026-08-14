@@ -106,8 +106,9 @@ class TestSpeedHook(BaseHook):
         project_root = Path(context.cwd or Path(__file__).resolve().parents[2])
 
         targets: list[Path] = []
-        if context.path:
-            p = Path(context.path)
+        target_path = context.clean_path or context.path
+        if target_path:
+            p = Path(target_path)
             if not p.is_absolute():
                 p = project_root / p
             if p.exists() and p.name.startswith("test_") and p.suffix == ".py":

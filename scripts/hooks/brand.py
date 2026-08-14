@@ -11,7 +11,10 @@ import os
 import re
 from pathlib import Path
 
-import yaml
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 from .base import BaseHook, HookContext, HookResult
 
@@ -38,7 +41,7 @@ class BrandHook(BaseHook):
 
     @classmethod
     def load_brand_rules(cls) -> tuple[list[tuple[str, str]], list[str]]:
-        if not cls.BRAND_RULES_FILE.exists():
+        if yaml is None or not cls.BRAND_RULES_FILE.exists():
             return cls.DEFAULT_BRAND_PATTERNS, cls.DEFAULT_PROHIBITED_WORDS
 
         try:
