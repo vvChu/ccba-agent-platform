@@ -182,6 +182,12 @@ Quy trình bắt buộc trong `AGENTS.md` (Layer 1) yêu cầu Agent tra cứu H
 **Session Learnings Bootstrap (Nạp Tri thức Tích lũy)**:
 Quy trình bắt buộc trong `AGENTS.md` (Layer 1) yêu cầu Agent đọc tệp `.md/knowledge/session_learnings.md` khi bắt đầu Planning Mode hoặc SDLC Implementation Loop để nạp các Patterns/Anti-patterns đã được đúc kết.
 
+**Self-Evolution Loop (Vòng lặp Tiến hóa Tri thức)**:
+Chu trình phản hồi 3 cấp độ (Micro: Rules, Meso: Skill Refactor, Macro: New Skill) diễn ra tại `/ccba-session-retrospective` giúp nền tảng tự động nâng cấp năng lực sau mỗi phiên làm việc mà không làm phình ngữ cảnh (Decoupled Recommendation Pattern).
+
+**Skill Factory (Nhà máy Sản xuất Kỹ năng)**:
+Kiến trúc Meta-Skill (`/ccba-build-skill`) tự động hóa toàn trình việc quét an toàn (Maskara), chưng cất tri thức (NotebookLM RAG từ Canonical Artifacts & Code Seams), sinh cấu trúc Skill đạt chuẩn CCBA và phân định đăng ký Hub/Spoke.
+
 ---
 
 ## System Metaphor
@@ -194,3 +200,5 @@ Quy trình bắt buộc trong `AGENTS.md` (Layer 1) yêu cầu Agent đọc tệ
 - **Upstream Loop** = Đóng góp Sáng kiến từ Chi nhánh — khi một Spoke phát triển quy trình mới hiệu quả, đóng gói và đề xuất ngược lên Hub qua Pull Request.
 - **AI Gateway** = Đường dây nóng trung tâm — mọi chi nhánh đều liên lạc qua một cổng duy nhất (`100.83.192.30:8090/v1`) để truy cập hệ thống đa mô hình AI (local GPU & cloud).
 - **Deep Seams** = Chuyên gia nội bộ — mỗi package/module đóng vai trò một chuyên gia đầu ngành, ẩn giấu toàn bộ sự phức tạp nghiệp vụ đằng sau một giao diện đơn giản duy nhất.
+- **Skill Factory (`/ccba-build-skill`)** = Dây chuyền R&D nhượng quyền — tự động đóng gói các công thức nấu ăn / quy trình nghiệp vụ mới thành sổ tay chuẩn (Skill) phân phối cho toàn mạng lưới.
+
