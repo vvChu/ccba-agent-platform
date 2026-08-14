@@ -40,7 +40,8 @@ jobs:
           uv pip install -e "packages/mdconverter[dev]" --system
 
       - name: Run CCBA Harness CI Gates
-        run: python scripts/run_harness_evals.py --all
+        run: python scripts/eval/run_harness_evals.py --all
+
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
