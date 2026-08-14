@@ -176,14 +176,7 @@ def test_download_three_tier_google_drive(tmp_path: Path) -> None:
             self.fd.write(b"drive docx content")
             return None, True
 
-    # Inject mock scripts.legal_sync module into sys.modules
     import types
-
-    mock_sync = types.ModuleType("scripts.legal_sync")
-    mock_sync.GOOGLE_API_AVAILABLE = True  # type: ignore[attr-defined]
-    mock_sync.get_drive_service = MagicMock(return_value=mock_service)  # type: ignore[attr-defined]
-    sys.modules["scripts.legal_sync"] = mock_sync
-
     mock_gapi = types.ModuleType("googleapiclient")
     sys.modules["googleapiclient"] = mock_gapi
     mock_gapi_http = types.ModuleType("googleapiclient.http")
@@ -193,12 +186,13 @@ def test_download_three_tier_google_drive(tmp_path: Path) -> None:
     cdp_mock = MagicMock()
     try:
         with (
+            patch("ccba_legal.sync.GOOGLE_API_AVAILABLE", True),
+            patch("ccba_legal.sync.get_drive_service", return_value=mock_service),
             patch.dict(os.environ, {"DRIVE_FOLDER_ID": "mock_folder_id"}),
             patch("ccba_legal.crawler.resolve_project_root", return_value=tmp_path),
         ):
             assert download_three_tier(cdp_mock, download_dir, "test_doc") is True
     finally:
-        sys.modules.pop("scripts.legal_sync", None)
         sys.modules.pop("googleapiclient", None)
         sys.modules.pop("googleapiclient.http", None)
 

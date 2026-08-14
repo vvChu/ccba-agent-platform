@@ -939,3 +939,92 @@ def get_tvpl_metadata(
         "relations": raw_meta.get("relations", {}),
     }
     return metadata
+
+
+class CookieVault:
+    """Manages encrypted persistence and HTTP injection of TVPL VIP session cookies."""
+
+    def __init__(self, vault_dir: Path | None = None) -> None:
+        project_root = resolve_project_root()
+        self.vault_dir = vault_dir or (project_root / ".md" / "data" / "chrome_vip_profile")
+        self.vault_dir.mkdir(parents=True, exist_ok=True)
+        self.cookie_file = self.vault_dir / "cookies.json"
+
+    def save_cookies_from_cdp(self, cdp: ChromeCDP) -> bool:
+        """Extract cookies from Chrome CDP and persist to vault."""
+        try:
+            res = cdp.send_command("Network.getAllCookies", {})
+            cookies = res.get("result", {}).get("cookies", [])
+            if cookies:
+                self.cookie_file.write_text(json.dumps(cookies, indent=2), encoding="utf-8")
+                log_session_audit("CookieVault", f"Saved {len(cookies)} cookies to vault.")
+                return True
+        except Exception as e:
+            log_session_audit("CookieVault", f"Error saving cookies: {e}")
+        return False
+
+    def load_cookies_into_session(self, session: requests.Session) -> bool:
+        """Inject vault cookies into a requests.Session object."""
+        if not self.cookie_file.exists():
+            return False
+        try:
+            cookies_data = json.loads(self.cookie_file.read_text(encoding="utf-8"))
+            for c in cookies_data:
+                session.cookies.set(
+                    c["name"], c["value"], domain=c.get("domain", "thuvienphapluat.vn")
+                )
+            return True
+        except Exception as e:
+            log_session_audit("CookieVault", f"Error loading cookies into session: {e}")
+        return False
+
+
+def log_session_audit(event_type: str, message: str) -> None:
+    """Append-only logging for VIP session audit trail."""
+    project_root = resolve_project_root()
+    log_file = project_root / ".md" / "data" / "tvpl_session_audit.log"
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+
+    timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ")
+    entry = f"[{timestamp}] [{event_type}] {message}\n"
+    try:
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(entry)
+    except Exception:
+        pass
+
+
+def check_vip_session_health(session: requests.Session) -> bool:
+    """Send a micro-probe HEAD request to TVPL to verify active VIP session."""
+    probe_url = "https://thuvienphapluat.vn/thong-tin-ca-nhan.aspx"
+    try:
+        resp = session.head(probe_url, allow_redirects=False, timeout=5)
+        if resp.status_code == 200:
+            log_session_audit("VIPHealthCheck", "Session status: ACTIVE (200 OK)")
+            return True
+        elif resp.status_code in (301, 302):
+            loc = resp.headers.get("Location", "")
+            if "dang-nhap" in loc:
+                log_session_audit("VIPHealthCheck", "Session status: EXPIRED (Redirected to login)")
+                return False
+    except Exception as e:
+        log_session_audit("VIPHealthCheck", f"Probe failed: {e}")
+    return False
+
+
+def get_tvpl_credentials() -> tuple[str, str]:
+    """Retrieve TVPL credentials from environment variables or .env file."""
+    env_file = resolve_project_root() / ".env"
+    username = os.getenv("TVPL_USERNAME")
+    password = os.getenv("TVPL_PASSWORD")
+
+    if (not username or not password) and env_file.exists():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line.startswith("TVPL_USERNAME="):
+                username = line.split("=", 1)[1].strip().strip('"').strip("'")
+            elif line.startswith("TVPL_PASSWORD="):
+                password = line.split("=", 1)[1].strip().strip('"').strip("'")
+
+    return username or "vuvanchu119", password or "ccba@ibst"
+

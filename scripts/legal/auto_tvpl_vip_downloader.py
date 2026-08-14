@@ -12,11 +12,12 @@ if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
-from ccba_legal.crawler import ChromeCDP
+from ccba_legal.crawler import ChromeCDP, get_tvpl_credentials
 
 
 def run_auto_crawler():
-    print("[AutoTVPL] Starting Chrome browser on debug port 9222...")
+    username, password = get_tvpl_credentials()
+    print(f"[AutoTVPL] Starting Chrome browser on debug port 9222...")
     chrome_cmd = [
         "cmd.exe",
         "/c",
@@ -39,24 +40,25 @@ def run_auto_crawler():
     cdp.connect_tab(ws_url)
 
     # 1. Login to TVPL
-    print("[AutoTVPL] Performing VIP Login for user 'vuvanchu119'...")
-    login_js = """
-    (() => {
+    print(f"[AutoTVPL] Performing VIP Login for user '{username}'...")
+    login_js = f"""
+    (() => {{
         let userInp = document.querySelector('#txtUser') || document.querySelector('input[name*="User"]') || document.querySelector('input[type="text"]');
         let passInp = document.querySelector('#txtPassword') || document.querySelector('input[name*="Pass"]') || document.querySelector('input[type="password"]');
         let btnSubmit = document.querySelector('#btLogin') || document.querySelector('button[type="submit"]') || document.querySelector('input[type="submit"]');
 
-        if (userInp && passInp) {
-            userInp.value = "vuvanchu119";
-            passInp.value = "ccba@ibst";
-            if (btnSubmit) {
+        if (userInp && passInp) {{
+            userInp.value = "{username}";
+            passInp.value = "{password}";
+            if (btnSubmit) {{
                 btnSubmit.click();
                 return "Login submitted";
-            }
-        }
+            }}
+        }}
         return "Login fields not found or already logged in";
-    })()
+    }})()
     """
+
     login_res = cdp.evaluate_js(login_js)
     print(f"[AutoTVPL] Login action result: {login_res}")
     time.sleep(4)
