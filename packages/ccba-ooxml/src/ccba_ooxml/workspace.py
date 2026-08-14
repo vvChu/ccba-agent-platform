@@ -177,4 +177,3 @@ class OOXMLWorkspace:
             initials=initials,
             in_place=True,
         )
-

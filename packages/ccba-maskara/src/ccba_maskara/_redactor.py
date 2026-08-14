@@ -11,9 +11,7 @@ from typing import Any
 BACKUP_DIR = Path(".md/scratch/backups")
 
 
-def apply_raw_redactions(
-    original: bytes, findings: list[dict[str, Any]]
-) -> tuple[bytes, int]:
+def apply_raw_redactions(original: bytes, findings: list[dict[str, Any]]) -> tuple[bytes, int]:
     """Substitute secrets index ranges with redaction strings in bytearray."""
     rewritten = bytearray(original)
     findings_sorted = sorted(findings, key=lambda x: x["start"], reverse=True)
@@ -35,7 +33,9 @@ def apply_raw_redactions(
     return bytes(rewritten), replaced
 
 
-def backup_and_write(path: Path, original: bytes, rewritten: bytes, backup_dir: Path = BACKUP_DIR) -> str:
+def backup_and_write(
+    path: Path, original: bytes, rewritten: bytes, backup_dir: Path = BACKUP_DIR
+) -> str:
     """Save backup to centralized gitignored directory and write redacted file."""
     backup_dir.mkdir(parents=True, exist_ok=True)
     abs_path_str = str(path.resolve())
