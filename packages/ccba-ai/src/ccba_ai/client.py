@@ -104,7 +104,18 @@ class AIClient:
         max_tokens: int = 1024,
         temperature: float = 0.7,
     ) -> str:
-        """Send a chat message and get a text response."""
+        """Send a chat message and get a text response.
+
+        Args:
+            message: The user message to send.
+            model: Model name override. Uses default_model if None.
+            system: Optional system prompt.
+            max_tokens: Maximum tokens in the response.
+            temperature: Sampling temperature (0.0–2.0).
+
+        Returns:
+            The assistant's response text, or empty string if model refused.
+        """
         self.privacy_guard.check_content(message)
         messages = []
         if system:
@@ -134,7 +145,18 @@ class AIClient:
         max_tokens: int = 1024,
         temperature: float = 0.7,
     ) -> Generator[str, None, None]:
-        """Stream a chat response. Yields text chunks."""
+        """Stream a chat response, yielding text chunks as they arrive.
+
+        Args:
+            message: The user message to send.
+            model: Model name override. Uses default_model if None.
+            system: Optional system prompt.
+            max_tokens: Maximum tokens in the response.
+            temperature: Sampling temperature (0.0–2.0).
+
+        Yields:
+            Text chunks of the assistant response as they stream in.
+        """
         self.privacy_guard.check_content(message)
         messages = []
         if system:
@@ -195,7 +217,11 @@ class AIClient:
         return response_text
 
     def models(self) -> list[str]:
-        """List all available models on the gateway."""
+        """List all available models on the gateway.
+
+        Returns:
+            Sorted list of unique model ID strings.
+        """
         result = _retry_sync(
             lambda: self._client.models.list(),
             max_retries=self.max_retries,
@@ -210,7 +236,19 @@ class AIClient:
         model: str = "audio-primary",
         language: str = "vi",
     ) -> str:
-        """Transcribe an audio file via the AI Gateway."""
+        """Transcribe an audio file via the AI Gateway.
+
+        Args:
+            audio_path: Path to the audio file (mp3, wav, m4a, etc.).
+            model: Transcription model to use on the gateway.
+            language: BCP-47 language code (e.g. 'vi', 'en').
+
+        Returns:
+            The transcribed text, stripped of leading/trailing whitespace.
+
+        Raises:
+            FileNotFoundError: If the audio file does not exist.
+        """
         path = Path(audio_path)
         if not path.exists():
             raise FileNotFoundError(f"Audio file '{audio_path}' not found.")
@@ -311,7 +349,18 @@ class AsyncAIClient:
         max_tokens: int = 1024,
         temperature: float = 0.7,
     ) -> str:
-        """Send an async chat message and get a text response."""
+        """Send an async chat message and get a text response.
+
+        Args:
+            message: The user message to send.
+            model: Model name override. Uses default_model if None.
+            system: Optional system prompt.
+            max_tokens: Maximum tokens in the response.
+            temperature: Sampling temperature (0.0–2.0).
+
+        Returns:
+            The assistant's response text, or empty string if model refused.
+        """
         self.privacy_guard.check_content(message)
         messages = []
         if system:
@@ -341,7 +390,18 @@ class AsyncAIClient:
         max_tokens: int = 1024,
         temperature: float = 0.7,
     ) -> AsyncGenerator[str, None]:
-        """Stream an async chat response. Yields text chunks."""
+        """Stream an async chat response, yielding text chunks as they arrive.
+
+        Args:
+            message: The user message to send.
+            model: Model name override. Uses default_model if None.
+            system: Optional system prompt.
+            max_tokens: Maximum tokens in the response.
+            temperature: Sampling temperature (0.0–2.0).
+
+        Yields:
+            Text chunks of the assistant response as they stream in.
+        """
         self.privacy_guard.check_content(message)
         messages = []
         if system:
@@ -392,7 +452,11 @@ class AsyncAIClient:
         return response_text
 
     async def models(self) -> list[str]:
-        """List all available models on the gateway."""
+        """List all available models on the gateway.
+
+        Returns:
+            Sorted list of unique model ID strings.
+        """
         result = await _retry_async(
             lambda: self._client.models.list(),
             max_retries=self.max_retries,

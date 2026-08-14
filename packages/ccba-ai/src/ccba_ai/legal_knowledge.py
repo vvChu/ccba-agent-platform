@@ -1,4 +1,9 @@
-"""Smart Resolution Gateway module for CCBA Legal Knowledge Access."""
+"""Smart Resolution Gateway module for CCBA Legal Knowledge Access.
+
+NOTE: The `legal_knowledge` singleton exported from this module currently has
+zero active callers outside ccba_ai itself. It is retained for API stability
+but should be migrated to ccba-legal-intel if active usage emerges.
+"""
 
 import os
 from pathlib import Path
@@ -6,8 +11,6 @@ from typing import Any
 
 import yaml
 
-SPOKE_LOCAL_PATH = Path("D:/GitHubProjects/ccba-legal-knowledge/legal_docs")
-SPOKE_REGISTRY_PATH = Path("D:/GitHubProjects/ccba-legal-knowledge/legal_registry.yaml")
 HUB_FALLBACK_PATH = Path(__file__).parents[4] / ".md" / "legal_docs"
 
 
@@ -15,20 +18,22 @@ class LegalKnowledgeGateway:
     """Smart Resolution Gateway 3-Layer Fallback for CCBA Legal Knowledge."""
 
     def __init__(self, custom_spoke_path: str | None = None):
-        if custom_spoke_path:
-            self.spoke_path = Path(custom_spoke_path)
-        else:
-            env_path = os.getenv("CCBA_KNOWLEDGE_SPOKE_PATH")
-            self.spoke_path = Path(env_path) if env_path else SPOKE_LOCAL_PATH
+        env_path = custom_spoke_path or os.getenv("CCBA_KNOWLEDGE_SPOKE_PATH")
+        self.spoke_path = Path(env_path) if env_path else None
+
+        env_reg = os.getenv("CCBA_KNOWLEDGE_REGISTRY_PATH")
+        self.registry_path = Path(env_reg) if env_reg else None
 
     def get_registry(self) -> dict[str, Any]:
         """Layer 1: Local Spoke Registry -> Layer 2: Hub Registry Fallback."""
-        if SPOKE_REGISTRY_PATH.exists():
+        # Layer 1: Env-configured registry
+        if self.registry_path and self.registry_path.exists():
             try:
-                return yaml.safe_load(SPOKE_REGISTRY_PATH.read_text(encoding="utf-8")) or {}
+                return yaml.safe_load(self.registry_path.read_text(encoding="utf-8")) or {}
             except Exception:
                 pass
 
+        # Layer 2: Hub fallback
         hub_reg = HUB_FALLBACK_PATH / "legal_registry.yaml"
         if hub_reg.exists():
             try:
@@ -53,11 +58,10 @@ class LegalKnowledgeGateway:
 
     def get_document_content(self, doc_slug: str) -> str | None:
         """Fetch document content prioritizing Local Spoke -> Hub Fallback."""
-        # Layer 1: Check Local Spoke
-        if self.spoke_path.exists():
+        # Layer 1: Check Local Spoke (only if configured via env)
+        if self.spoke_path and self.spoke_path.exists():
             matches = list(self.spoke_path.glob(f"**/{doc_slug}*.md"))
             if matches:
-                # Prefer consolidated text if available
                 consolidated = [m for m in matches if "hop_nhat" in m.name]
                 target = consolidated[0] if consolidated else matches[0]
                 return target.read_text(encoding="utf-8")
