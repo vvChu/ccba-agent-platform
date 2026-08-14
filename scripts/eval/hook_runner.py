@@ -1,25 +1,22 @@
 #!/usr/bin/env python3
-"""
-Unified Hook Runner CLI for ccba-agent-platform.
+"""Unified Hook Runner CLI for ccba-agent-platform.
+
 Orchestrates lifecycle hooks: session-init, pre-tool, post-tool.
+Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 """
+
+from __future__ import annotations
 
 import argparse
 import importlib.util
 import sys
 from pathlib import Path
-
-# Enforce UTF-8 output
-if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+from typing import Any
 
 HOOKS_DIR = Path(__file__).parent / "hooks"
 
 
-def run_hook_script(script_path: Path, event: str, payload: dict) -> int:
+def run_hook_script(script_path: Path, event: str, payload: dict[str, Any]) -> int:
     """Dynamically load and run a hook script. Expects a `main(event, payload)` function."""
     if not script_path.exists():
         print(f"[Hook Runner] Warning: Script {script_path.name} not found.")
@@ -27,13 +24,17 @@ def run_hook_script(script_path: Path, event: str, payload: dict) -> int:
 
     try:
         spec = importlib.util.spec_from_file_location(script_path.stem, str(script_path))
+        if not spec or not spec.loader:
+            print(f"[Hook Runner] Error: Cannot load spec for {script_path.name}")
+            return 1
+
         module = importlib.util.module_from_spec(spec)
         sys.modules[script_path.stem] = module
         spec.loader.exec_module(module)
 
         if hasattr(module, "main"):
-            # Execute main function and return exit code
-            return module.main(event, payload)
+            res = module.main(event, payload)
+            return int(res) if isinstance(res, (int, float)) else 0
         else:
             print(
                 f"[Hook Runner] Error: {script_path.name} does not define a 'main(event, payload)' function."
@@ -44,8 +45,19 @@ def run_hook_script(script_path: Path, event: str, payload: dict) -> int:
         return 1
 
 
-def main():
-    parser = argparse.ArgumentParser(description="CCBA Agent Lifecycle Hook Runner")
+def main() -> None:
+    if sys.platform == "win32":
+        import io
+
+        try:
+            if isinstance(sys.stdout, io.TextIOWrapper):
+                sys.stdout.reconfigure(encoding="utf-8")
+            if isinstance(sys.stderr, io.TextIOWrapper):
+                sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
+    parser = argparse.ArgumentParser(description="CCBA Platform Lifecycle Hook Runner")
     parser.add_argument(
         "event",
         choices=["session-init", "pre-tool", "post-tool"],
@@ -70,14 +82,12 @@ def main():
     if args.event == "session-init":
         exit_code = run_hook_script(HOOKS_DIR / "session_init.py", args.event, payload)
     elif args.event == "pre-tool":
-        # Run privacy check, naming checks, scout directory block checks, and simplify gate checks
         exit_code_privacy = run_hook_script(HOOKS_DIR / "privacy_block.py", args.event, payload)
         exit_code_naming = run_hook_script(HOOKS_DIR / "naming_convention.py", args.event, payload)
         exit_code_scout = run_hook_script(HOOKS_DIR / "scout_block.py", args.event, payload)
         exit_code_simplify = run_hook_script(HOOKS_DIR / "simplify_gate.py", args.event, payload)
         exit_code = max(exit_code_privacy, exit_code_naming, exit_code_scout, exit_code_simplify)
     elif args.event == "post-tool":
-        # Run brand enforcement checks
         exit_code = run_hook_script(HOOKS_DIR / "brand_enforcement.py", args.event, payload)
 
     sys.exit(exit_code)

@@ -231,6 +231,14 @@
 * **Nguyên tắc:** Khi chuyển đổi các domain services sang Pydantic v2 `BaseModel`, hãy refactor dứt điểm toàn bộ callers, CLI scripts và tests sang truy cập thuộc tính tường minh (`res.score`, `res.model_dump()`).
 * **Lợi ích:** Đảm bảo type safety tuyệt đối, hỗ trợ IDE auto-complete chuẩn xác, JSON serialization an toàn và loại bỏ hoàn toàn nợ kỹ thuật (technical debt).
 
+#### P6.9. Deep Sub-package Modularization of Monolithic Scripts (Tái Cấu Trúc Monolith Thành Sub-Package)
+* **Nguyên tắc:** Khi một script nội bộ phình to thành God Class (> 500-1000 dòng) xử lý đa nhiệm, hãy chuyển đổi nó thành một **Domain Sub-Package** chuyên biệt (như `scripts/governance/`, `scripts/scaffolding/`):
+  1. *Polymorphic Base & Typed Reports:* Định nghĩa `BaseAuditor` và các DTOs bất biến (`NamedTuple`/`dataclass`) tại `base.py`.
+  2. *Domain Sub-Auditors:* Phân chia mỗi nhiệm vụ thành 1 lớp độc lập có context cache riêng.
+  3. *Coordinator & Thin Facade:* Giữ tệp script cũ làm Thin Facade re-export 100% public API để bảo toàn tương thích ngược cho mọi caller và test suite cũ.
+  4. *Two-Tier Testing Discipline:* Viết unit tests cô lập cho từng sub-auditor mới (< 0.3s) và bảo tồn nguyên vẹn các bài test cũ.
+
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 
 * **AP6.1. Leaky Interface Exporting 30+ Symbols:** Xuất khẩu toàn bộ hàm con ra `__init__.py` làm rối loạn AI navigation.

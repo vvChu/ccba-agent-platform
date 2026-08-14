@@ -5,15 +5,10 @@ from pathlib import Path
 
 import yaml
 
-# Force UTF-8 encoding
-if sys.platform == "win32":
-    import io
 
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-
-
-def init_spoke():
+def init_spoke() -> None:
     spoke_dir = Path("D:/GitHubProjects/ccba-legal-knowledge")
+
     spoke_dir.mkdir(parents=True, exist_ok=True)
     print(f"[Ticket 01] Initializing Knowledge Spoke at: {spoke_dir.resolve()}")
 
@@ -98,4 +93,12 @@ Cơ sở dữ liệu Tri thức Pháp luật và Quy chuẩn Kỹ thuật Xây d
 
 
 if __name__ == "__main__":
+    if sys.platform == "win32":
+        import io
+
+        try:
+            if isinstance(sys.stdout, io.TextIOWrapper):
+                sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     init_spoke()
