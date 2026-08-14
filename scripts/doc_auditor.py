@@ -225,8 +225,18 @@ class DocumentAuditor:
         """Extract relative internal Markdown links."""
         links = []
         lines = content.splitlines()
+        in_code_block = False
         for idx, line in enumerate(lines):
-            matches = LINK_RE.findall(line)
+            stripped = line.strip()
+            if stripped.startswith("```"):
+                in_code_block = not in_code_block
+                continue
+            if in_code_block:
+                continue
+
+            # Loại bỏ inline code spans (ví dụ `[link](url)`) để không bắt nhầm link ví dụ
+            line_no_inline_code = re.sub(r"`[^`]+`", "", line)
+            matches = LINK_RE.findall(line_no_inline_code)
             for text, href in matches:
                 if href.startswith("http") or href.startswith("#") or href.startswith("mailto:"):
                     continue
@@ -310,7 +320,7 @@ class DocumentAuditor:
             pass
         return env_vars
 
-    def load_legal_registry(self) -> dict:
+    def load_legal_registry(self) -> dict[str, Any]:
         """Load legal document registry from workspace YAML."""
         registry_path = self.project_root / ".md" / "data" / "legal_registry.yaml"
         if not registry_path.exists():
@@ -321,7 +331,9 @@ class DocumentAuditor:
         except Exception:
             return {}
 
-    def build_markdown_to_doc_map(self, registry: dict | None = None) -> dict[Path, dict]:
+    def build_markdown_to_doc_map(
+        self, registry: dict[str, Any] | None = None
+    ) -> dict[Path, dict[str, Any]]:
         """Map resolved markdown file paths to document definitions in legal registry."""
         if registry is None:
             registry = self.load_legal_registry()
@@ -526,8 +538,8 @@ class DocumentAuditor:
         search_dirs: list[Path] | None = None,
         env_example_vars: set[str] | None = None,
         fix: bool = False,
-        registry_map: dict[Path, dict] | None = None,
-    ) -> dict[str, list[tuple[int, str, str]]]:
+        registry_map: dict[Path, dict[str, Any]] | None = None,
+    ) -> dict[str, list[Any]]:
         """Validate a single markdown file for inconsistencies, broken links, and hallucinations."""
         if search_dirs is None:
             search_dirs = [
@@ -540,7 +552,7 @@ class DocumentAuditor:
         if registry_map is None:
             registry_map = self.build_markdown_to_doc_map()
 
-        issues = {
+        issues: dict[str, list[Any]] = {
             "code_refs": [],
             "links": [],
             "env_vars": [],
@@ -552,6 +564,7 @@ class DocumentAuditor:
         try:
             with open(filepath, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
+
         except Exception as e:
             issues["links"].append((0, "Error reading file", str(e)))
             return issues
@@ -648,150 +661,79 @@ class DocumentAuditor:
             target_path = None
 
             if base_href:
-                if is_okf and href.startswith("/"):
+                if is_okf and bundle_root and href.startswith("/"):
                     target_path = (bundle_root / base_href.lstrip("/")).resolve()
                     if not target_path.exists():
                         issues["okf_links"].append(
                             (line_num, href, f"Resolved file does not exist: {target_path}")
                         )
                 elif base_href.startswith("file:") or bool(re.match(r"^[a-zA-Z]:", base_href)):
-                    clean_path = base_href.replace("file:///", "").replace("file://", "")
-                    has_win_drive = bool(re.match(r"^[a-zA-Z]:", clean_path))
+                    clean_path = (
+                        base_href.replace("file:///", "").replace("file://", "").replace("\\", "/")
+                    )
+                    workspace_name = self.project_root.name
+                    rel_path_guess = None
 
-                    if has_win_drive and sys.platform != "win32":
-                        workspace_name = self.project_root.name
-                        if workspace_name in clean_path:
-                            parts_link = clean_path.split(workspace_name + "/", 1)
-                            rel_path_guess = (
-                                f"../../{parts_link[1]}" if len(parts_link) > 1 else "relative path"
-                            )
-                            if len(parts_link) > 1:
-                                try:
-                                    depth_to_root = os.path.relpath(
-                                        self.project_root, filepath.parent
-                                    ).replace(os.sep, "/")
-                                    rel_path_guess = f"{depth_to_root}/{parts_link[1]}"
-                                    rel_path_guess = os.path.normpath(rel_path_guess).replace(
-                                        os.sep, "/"
-                                    )
-                                except ValueError:
-                                    pass
-
-                            if fix:
-                                fixed_href = (
-                                    f"{rel_path_guess}#{anchor}" if anchor else rel_path_guess
-                                )
-                                fixed_content = fixed_content.replace(
-                                    f"]({href})", f"]({fixed_href})"
-                                )
-                                file_modified = True
-                                issues["links"].append(
-                                    (
-                                        line_num,
-                                        href,
-                                        f"[AUTO-FIXED] Absolute file link inside workspace on Linux. Fixed to: '{fixed_href}'",
-                                    )
-                                )
-                            else:
-                                issues["links"].append(
-                                    (
-                                        line_num,
-                                        href,
-                                        f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_path_guess}'",
-                                    )
-                                )
-                        continue
-
-                    target_path = Path(clean_path).resolve()
+                    # 1. Thử resolve đường dẫn tuyệt đối trực tiếp
                     try:
-                        is_internal = target_path.is_relative_to(self.project_root)
-                    except ValueError:
-                        is_internal = False
-
-                    try:
-                        is_sibling = target_path.is_relative_to(self.project_root.parent)
-                    except ValueError:
-                        is_sibling = False
-
-                    if is_internal:
-                        if not target_path.exists():
-                            issues["links"].append(
-                                (line_num, href, f"File does not exist: {clean_path}")
+                        target_path = Path(clean_path).resolve()
+                        if target_path.is_relative_to(self.project_root):
+                            rel_path_guess = os.path.relpath(target_path, filepath.parent).replace(
+                                os.sep, "/"
                             )
-                        else:
+                        elif target_path.is_relative_to(self.project_root.parent):
+                            rel_path_guess = os.path.relpath(target_path, filepath.parent).replace(
+                                os.sep, "/"
+                            )
+                    except (ValueError, Exception):
+                        pass
+
+                    # 2. Nếu không resolve được (ví dụ chạy trên Linux nhưng link có D:/workspace), tách theo tên workspace
+                    if not rel_path_guess and workspace_name in clean_path:
+                        parts_link = clean_path.split(workspace_name + "/", 1)
+                        if len(parts_link) > 1:
+                            target_in_root = self.project_root / parts_link[1]
                             try:
-                                rel_to_workspace = os.path.relpath(
-                                    target_path, filepath.parent
+                                rel_path_guess = os.path.relpath(
+                                    target_in_root, filepath.parent
                                 ).replace(os.sep, "/")
-                                if fix:
-                                    fixed_href = (
-                                        f"{rel_to_workspace}#{anchor}"
-                                        if anchor
-                                        else rel_to_workspace
-                                    )
-                                    fixed_content = fixed_content.replace(
-                                        f"]({href})", f"]({fixed_href})"
-                                    )
-                                    file_modified = True
-                                    issues["links"].append(
-                                        (
-                                            line_num,
-                                            href,
-                                            f"[AUTO-FIXED] Absolute file link inside workspace. Fixed to: '{fixed_href}'",
-                                        )
-                                    )
-                                else:
-                                    issues["links"].append(
-                                        (
-                                            line_num,
-                                            href,
-                                            f"[WARNING] Absolute file link inside workspace. Recommend relative link: '{rel_to_workspace}'",
-                                        )
-                                    )
-                            except ValueError:
-                                issues["links"].append(
-                                    (
-                                        line_num,
-                                        href,
-                                        f"[WARNING] Absolute file link inside workspace on different drive: '{clean_path}'",
-                                    )
-                                )
-                    elif is_sibling:
-                        if target_path.exists():
-                            try:
-                                rel_to_parent = os.path.relpath(
-                                    target_path, filepath.parent
-                                ).replace(os.sep, "/")
-                                if fix:
-                                    fixed_href = (
-                                        f"{rel_to_parent}#{anchor}" if anchor else rel_to_parent
-                                    )
-                                    fixed_content = fixed_content.replace(
-                                        f"]({href})", f"]({fixed_href})"
-                                    )
-                                    file_modified = True
-                                    issues["links"].append(
-                                        (
-                                            line_num,
-                                            href,
-                                            f"[AUTO-FIXED] Sibling repository link. Fixed to: '{fixed_href}'",
-                                        )
-                                    )
-                                else:
-                                    issues["links"].append(
-                                        (
-                                            line_num,
-                                            href,
-                                            f"[WARNING] Sibling repository absolute link. Recommend relative link: '{rel_to_parent}'",
-                                        )
-                                    )
                             except ValueError:
                                 pass
+
+                    if rel_path_guess:
+                        rel_path_guess = os.path.normpath(rel_path_guess).replace(os.sep, "/")
+                        fixed_href = f"{rel_path_guess}#{anchor}" if anchor else rel_path_guess
+                        if fix:
+                            fixed_content = fixed_content.replace(f"]({href})", f"]({fixed_href})")
+                            file_modified = True
+                            issues["links"].append(
+                                (
+                                    line_num,
+                                    href,
+                                    f"[AUTO-FIXED] Non-portable absolute file link. Fixed to: '{fixed_href}'",
+                                )
+                            )
+                        else:
+                            issues["links"].append(
+                                (
+                                    line_num,
+                                    href,
+                                    f"Non-portable absolute file link. Must use repo-relative link: '{fixed_href}'",
+                                )
+                            )
                     else:
-                        continue
+                        issues["links"].append(
+                            (
+                                line_num,
+                                href,
+                                f"Non-portable absolute file link cannot be resolved to workspace: '{clean_path}'",
+                            )
+                        )
+                    continue
+
                 else:
                     target_path = (filepath.parent / base_href).resolve()
-                    if is_okf:
+                    if is_okf and bundle_root:
                         try:
                             is_inside = target_path.is_relative_to(bundle_root)
                         except ValueError:
@@ -808,6 +750,7 @@ class DocumentAuditor:
                         issues["links"].append(
                             (line_num, href, f"File does not exist: {base_href}")
                         )
+
             else:
                 target_path = filepath.resolve()
 
@@ -1238,7 +1181,8 @@ class DocumentAuditor:
             "claudekit-marketing",
             ".pytest_cache",
             "extracted_docs",
-            ".md",
+            "scratch",
+            ".system_generated",
             "CDE",
         }
         md_files = []
@@ -1251,13 +1195,8 @@ class DocumentAuditor:
                 if p.is_file():
                     if p.name.endswith("_compiled.md"):
                         continue
-                    if "legal_docs" in p.parts:
-                        other_excludes = exclude_dirs - {".md"}
-                        if any(ex in p.parts for ex in other_excludes):
-                            continue
-                    else:
-                        if any(ex in p.parts for ex in exclude_dirs):
-                            continue
+                    if any(ex in p.parts for ex in exclude_dirs):
+                        continue
                     if ".agents" in p.parts:
                         idx = p.parts.index(".agents")
                         if len(p.parts) > idx + 1:
@@ -1266,7 +1205,13 @@ class DocumentAuditor:
                                 continue
                     md_files.append(p)
 
-        for root_file in ["README.md", "PLATFORM.md", "CONTRIBUTING.md", "SECURITY.md"]:
+        for root_file in [
+            "README.md",
+            "PLATFORM.md",
+            "CONTRIBUTING.md",
+            "SECURITY.md",
+            "CONTEXT.md",
+        ]:
             root_path = self.project_root / root_file
             if root_path.exists() and root_path not in md_files:
                 md_files.append(root_path)
@@ -1479,8 +1424,8 @@ class DocumentAuditor:
                     else skill_path
                 )
                 print(f"\n\x1b[31m[ERROR]\x1b[0m {rel_path}:")
-                for line, _subject, msg in issues:
-                    print(f"  Line {line}: {msg}")
+                for issue_item in issues:
+                    print(f"  Line {issue_item.line_number}: {issue_item.message}")
                     total_errors += 1
 
         if total_errors > 0:
@@ -1529,13 +1474,15 @@ def load_env_example(project_root: Path) -> set[str]:
     return auditor.load_env_example()
 
 
-def load_legal_registry(project_root: Path) -> dict:
+def load_legal_registry(project_root: Path) -> dict[str, Any]:
     """Load legal document registry (standalone alias)."""
     auditor = DocumentAuditor(project_root)
     return auditor.load_legal_registry()
 
 
-def build_markdown_to_doc_map(registry: dict, project_root: Path) -> dict[Path, dict]:
+def build_markdown_to_doc_map(
+    registry: dict[str, Any], project_root: Path
+) -> dict[Path, dict[str, Any]]:
     """Build map from path to legal doc definition (standalone alias)."""
     auditor = DocumentAuditor(project_root)
     return auditor.build_markdown_to_doc_map(registry)
@@ -1553,8 +1500,8 @@ def validate_markdown_file(
     env_example_vars: set[str],
     project_root: Path,
     fix: bool = False,
-    registry_map: dict[Path, dict] = None,
-) -> dict[str, list[tuple[int, str, str]]]:
+    registry_map: dict[Path, dict[str, Any]] | None = None,
+) -> dict[str, list[Any]]:
     """Validate a single markdown file (standalone alias)."""
     auditor = DocumentAuditor(project_root)
     return auditor.validate_markdown_file(
