@@ -75,6 +75,15 @@ Tài liệu này lưu trữ các thuật ngữ và biên bản quyết định k
   1. *Triết lý Onboarding Lazy Setup*: Kỹ năng `/ccba-platform` giữ vai trò Cổng Router toàn cục siêu tốc, ủy quyền hoàn toàn phỏng vấn cấu hình dev cho `/ccba-setup-skills`. Ở bước cuối của `/ccba-init-spoke`, in thông báo đề xuất hướng dẫn người dùng gọi `/ccba-setup-skills` khi sẵn sàng.
   2. *Ghi đè An toàn & Idempotent (Backup First)*: Khi chuyển đổi Issue Tracker qua `/ccba-setup-skills`, hệ thống ghi đè file cấu hình mới và tự động đổi tên file cũ thành `issue_tracker.md.bak` nếu chứa dữ liệu task cũ để đảm bảo không mất mát dữ liệu.
 
+### ADR-012: Hợp Nhất Legal Seams & Di Dời Excel Recalculation Về Đúng Domain OOXML
+- **Trạng thái:** CHẤP THUẬN (ACCEPTED)
+- **Quyết định:**
+  1. *Đóng gói Legal Seams*: Đưa toàn bộ logic trích dẫn (`grounding.py`), tìm kiếm Sổ bộ (`registry.py`), và bóc tách phụ lục (`appendices.py`) từ các script riêng lẻ vào package lõi `ccba_legal`. Chuyển các file trong `scripts/legal/` thành Thin CLI Delegates.
+  2. *Khắc phục Domain Drift*: Di dời tiện ích tính toán Excel `recalc_xlsx` từ `ccba-pdf-prep` về `ccba-ooxml` (`calc.py`), tích hợp phương thức `recalculate()` trên `OOXMLWorkspace`, áp dụng **Safe Macro Injection** (không ghi đè `Module1.xba`) và **Lazy Import `openpyxl`**.
+  3. *Chuẩn hóa Stream Reconfiguration (P2.2)*: Di chuyển toàn bộ cấu hình `sys.stdout` UTF-8 vào bên trong `if __name__ == '__main__':` để bảo toàn bộ bắt luồng Pytest runner.
+- **Lý do:** Tăng 100% tính Locality và Leverage, loại bỏ sự phân mảnh công cụ và bảo vệ an toàn macro người dùng trên máy trạm.
+
+
 
 
 

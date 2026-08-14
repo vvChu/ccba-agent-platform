@@ -49,6 +49,24 @@ class OOXMLWorkspace:
         self.last_report = report
         return report
 
+    def recalculate(self, timeout: int = 30) -> dict[str, Any]:
+        """Recalculate formulas in the target document (if .xlsx).
+
+        Args:
+            timeout: Timeout in seconds for recalculation subprocess.
+
+        Returns:
+            Dictionary with status/method or error message.
+        """
+        from .calc import recalc_xlsx
+
+        if self.file_path.suffix.lower() != ".xlsx":
+            return {
+                "error": f"Recalculation only supported for .xlsx files, got {self.file_path.suffix}"
+            }
+        return recalc_xlsx(self.file_path, timeout=timeout)
+
+
     def __enter__(self) -> OOXMLWorkspace:
         """Unpack the document and enter the context."""
         if not self.file_path.exists():
