@@ -41,13 +41,13 @@ python scripts/eval/run_isolated_tests.py --all --stress
      ```bash
      gh pr checks
      ```
-   - Nếu CI pass: Thực hiện merge và xóa remote branch tự động:
+   - Nếu CI pass: Thực hiện merge và xóa remote branch tự động (sử dụng Squash and Merge để giữ lịch sử nhánh main tinh gọn):
      ```bash
-     gh pr merge --merge --delete-branch
+     gh pr merge --squash --delete-branch
      ```
 5. Nếu `gh` chưa đăng nhập:
    - Sử dụng `browser_subagent` truy cập trang PR của branch hiện tại.
-   - Chờ CI pass, click nút **Merge** -> **Confirm** -> **Delete branch**.
+   - Chờ CI pass, chọn **Squash and merge** -> **Confirm squash and merge** -> **Delete branch**.
    - Báo lỗi cụ thể cho người dùng nếu CI thất bại hoặc có xung đột (conflict).
 
 ## Bước 2: Cập nhật Lịch sử Thay đổi (Walkthrough)
