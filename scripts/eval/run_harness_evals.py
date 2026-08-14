@@ -10,6 +10,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Ensure project root is in sys.path when running script directly
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
 from scripts.eval.process_safety import (
     ensure_single_instance,
     get_venv_python,
@@ -197,7 +202,7 @@ def main() -> None:
         # Chỉ chạy mypy trên các package và file quan trọng đã được gỡ lỗi type check hoàn chỉnh
         mypy_paths = [
             "packages/mdconverter/src/mdconverter",
-            "scripts/run_harness_evals.py",
+            "scripts/eval/run_harness_evals.py",
             ".agents/skills/youtube-learn/scripts/visual_extractor.py",
         ]
 

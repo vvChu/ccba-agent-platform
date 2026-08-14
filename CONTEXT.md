@@ -102,128 +102,6 @@ A routing mechanism that allows developers to dynamically override Google Notebo
 **User Loops (Chu trình Người dùng)**:
 Các mô thức hoặc hoạt động lặp đi lặp lại hàng ngày/hàng tuần của người dùng, được định nghĩa qua `loop-me` và tài liệu hóa trong `.md/knowledge/user_loops.md` trước khi tự động hóa thành workflow chính thức.
 
-
-**Three-Tier Fallback (Quy trình tải tệp ba tầng)**:
-Quy trình tải tài liệu pháp lý 3 tầng (Tier 1: Local & Cache, Tier 2: Cloud Drives/S3, Tier 3: Chrome CDP crawl) được triển khai trong crawler để tối ưu hóa hiệu suất, tránh cào web lặp lại và giảm thiểu nguy cơ bị khóa tài khoản VIP.
-
-**TVPLSessionMutex (Khóa loại trừ tương hỗ phiên TVPL)**:
-Cơ chế khóa loại trừ tương hỗ (Mutex lock) dựa trên tệp tin lock để đảm bảo chỉ có tối đa một phiên cào web (Chrome CDP) VIP diễn ra tại một thời điểm, ngăn ngừa lỗi đăng nhập đồng thời trên hệ thống Thư viện Pháp luật (TVPL).
-
-**Source Manifest (Biên bản nguồn)**:
-Bản ghi siêu dữ liệu bắt buộc được tạo ra trong Pha 1 (Recon) của quy trình port tính năng (`ccba-xia`), bao gồm đường dẫn repo, nhánh, commit SHA, loại giấy phép (`license_type`) và danh sách dependencies cốt lõi.
-_Avoid_: Source info, repo metadata
-
-**Copy-Raw (Sao chép thô)**:
-Chế độ port tính năng (`--copy-raw`) trong `ccba-xia` cấy ghép mã nguồn với số lượng thay đổi tối thiểu, đánh dấu tường minh các file chưa tuân thủ tiêu chuẩn Platform và bắt buộc tạo follow-up issue refactor.
-_Avoid_: Copy, raw copy, as-is copy
-
-**Skill Auto-Tuner**:
-Quy trình tự động tinh chỉnh văn bản kỹ năng (`SKILL.md`) của AI Agent thông qua chu trình lặp 4 bước (Rollout - Reflect - Edit - Validate) dựa trên phương pháp SkillOpt mà không cần can thiệp trọng số mô hình (frozen LLM).
-
-**Validation Gate (Cổng kiểm chứng SKILL)**:
-Cơ chế đánh giá bản sửa đổi prompt trên tập bài kiểm tra held-out tasks để chống hiện tượng suy giảm chất lượng ở các tác vụ khác (Prompt Drift).
-
-# CCBA Agent Platform Context
-
-The CCBA Agent Services Platform is a framework to develop and coordinate AI agent skills, workflows, and compliance checks across construction consulting projects.
-
-## Language
-
-**Hub**:
-The central repository containing the master constitution, catalogs, reusable skills, and templates.
-_Avoid_: Central, upstream
-
-**Spoke**:
-A downstream project-specific workspace that inherits and syncs bundles of skills/workflows from the Hub.
-_Avoid_: Sub-project, spoke repo
-
-**Skill**:
-A structured set of agent guidelines, scripts, and completion criteria defined in a `SKILL.md` file.
-_Avoid_: Tool, plugin
-
-**Workflow**:
-A markdown script registered as a Slash Command that directs agent actions sequentially.
-_Avoid_: Scenario, command line script
-
-**Spec (Đặc tả Kỹ thuật)**:
-Tài liệu mô tả yêu cầu thiết kế, hành vi và seam kỹ thuật chi tiết cho một tính năng hoặc quy trình công việc, được sinh ra từ quy trình `/ccba-to-spec` và lưu trữ tại `.md/knowledge/specs/spec-{slug}.md`. Thuật ngữ này thay thế hoàn toàn cho khái niệm PRD (Product Requirement Document) đã lỗi thời.
-_Avoid_: PRD, Product Requirement Document, Bản yêu cầu sản phẩm
-
-**Bundle**:
-A grouping of related skills and workflows organized by domain area (e.g., `_core`, `_software`, `_qc`, `_consulting`).
-_Avoid_: Package bundle, module
-
-**Hierarchical Section Parser**:
-The parsing algorithm in `validate_skills.py` that tracks Markdown heading levels using a stack to determine which lines belong to a workflow section.
-
-**Exclusion Headers**:
-A set of common static headings (such as "Lưu ý", "Tham chiếu") that temporarily disable step-validation checking to prevent false positives.
-
-**Plan Lock**:
-A file-based locking mechanism (`.plan.lock`) to prevent lost updates when multiple agents concurrently modify phase status.
-
-**Target Line Override**:
-A formatting preservation technique where only specific key-value pairs (like status) in frontmatter are overwritten instead of full file re-serialization.
-
-**Section-Based Thresholds**:
-Dynamic constraints in microstructure auditing where different passive voice and stylistic rules are applied based on the parsed section header (e.g., Methods vs. Discussion).
-
-**Signal Phrases Matcher**:
-Pattern matching algorithms used to verify structural components of academic texts, such as identifying the 3-moves of the CARS model in an Introduction.
-
-**Bối cảnh Nghiên cứu (Research Territory)**:
-Thuật ngữ chuẩn hóa thay thế cho "Lãnh thổ nghiên cứu" (Move 1 trong mô hình CARS), biểu thị khu vực kiến thức, tầm quan trọng và bối cảnh tổng quan của đề tài nghiên cứu.
-_Avoid_: Lãnh thổ nghiên cứu, Vùng nghiên cứu.
-
-**Academic Title Page**:
-The automatically formatted cover section of a research paper containing title, author names, affiliations, and corresponding email, generated from Markdown YAML frontmatter.
-
-**Citation Consistency Audit**:
-The verification algorithm in `microstructure_audit.py` that cross-references in-text citations with the references section.
-
-**Belief Archaeology (Khảo cổ học Niềm tin)**:
-The analytical process of extracting a speaker's hidden assumptions and worldviews from video transcript and visual frames.
-
-**Storyboard Coarse Sampling**:
-The first-stage frame extraction method that downloads storyboard image grids from CDN and slices them at chapter/heatmap timestamps, avoiding raw video downloading.
-
-**Talking Head Filter**:
-The image filtering logic that rejects frames consisting only of the speaker's face without educational slides, drawings, or code.
-
-**Delivery Spoke (Spoke Triển khai / Spoke Dự án)**:
-A downstream project-specific workspace created for a service contract or project execution, which syncs workflows/skills from the local Hub. It operates without a local or remote Git/GitHub repository, and synchronizes its raw and output assets exclusively via OneDrive/SharePoint.
-
-**Functional Spoke / R&D Spoke (Spoke Chức năng)**:
-A permanent workspace owned by a specific department (e.g., BIM Design, BIM Project, Legal & QA) to research rules, develop skills/checklists, and propose updates to the Hub. It uses local Git and remote GitHub repositories to submit Pull Requests back to the Hub (Upstream Loop).
-
-**Nền tảng số IDOP**:
-The Integrated Digital Operations Platform of CCBA, serving as the physical runtime and repository environment of the Hub/Spoke platform.
-
-**Upstream Loop (Vòng đóng góp ngược)**:
-The process where Functional Spokes package and propose local skills or workflows back to the central Hub via Pull Requests and validation gates.
-
-**Downstream Sync (Vòng đồng bộ xuôi)**:
-The process where Project Spokes synchronize and update their local `.agents/workflows/` and git-ignored `.agents/skills/` from the Hub.
-
-**Cohesive Topic Folder (Thư mục Đề tài Chuyên biệt)**:
-A directory structure under `.md/projects/[Ten_De_Tai]/` that contains all raw assets, transcripts, notes, drafts, and compiled Word documents belonging to a single R&D or writing project, preventing file fragmentation.
-
-**Git Core - Cloud Artifacts (Nhân Git - Vệ tinh Cloud)**:
-The hybrid synchronization strategy where lightweight, diffable text/code files are synced via Git, while large binaries and raw media files are synchronized via OneDrive/SharePoint.
-
-**Maskara Pre-commit Hook**:
-A local Git security hook written dynamically to `.git/hooks/pre-commit` in Spoke workspaces during initialization, which runs the Maskara privacy tool to scan and block commits containing hardcoded API keys or raw credentials.
-
-**Flat NotebookLM Client (Deep Seam)**:
-Lớp bọc seam sâu của NotebookLMClient nhằm cung cấp một giao diện phẳng duy nhất, tự động điều phối các loại tác vụ sinh/tải Structured Artifacts và ẩn đi cấu trúc RPC dịch vụ con phức tạp của thư viện Google thô. Giúp tăng tính leverage và đơn giản hóa việc viết unit tests.
-
-**Dynamic ID Override**:
-A routing mechanism that allows developers to dynamically override Google Notebook IDs using environment variables (e.g., `NOTEBOOKLM_CORE_ID`) to prevent hardcoded configuration values across different staging environments.
-
-**User Loops (Chu trình Người dùng)**:
-Các mô thức hoặc hoạt động lặp đi lặp lại hàng ngày/hàng tuần của người dùng, được định nghĩa qua `loop-me` và tài liệu hóa trong `.md/knowledge/user_loops.md` trước khi tự động hóa thành workflow chính thức.
-
-
 **Three-Tier Fallback (Quy trình tải tệp ba tầng)**:
 Quy trình tải tài liệu pháp lý 3 tầng (Tier 1: Local & Cache, Tier 2: Cloud Drives/S3, Tier 3: Chrome CDP crawl) được triển khai trong crawler để tối ưu hóa hiệu suất, tránh cào web lặp lại và giảm thiểu nguy cơ bị khóa tài khoản VIP.
 
@@ -248,7 +126,7 @@ Cơ chế đánh giá bản sửa đổi prompt trên tập bài kiểm tra held
 Hiện tượng tệp hướng dẫn/prompt được sửa để đạt kết quả tốt hơn ở một tác vụ cụ thể nhưng lại làm suy giảm hiệu suất ở các tác vụ hoặc ngữ cảnh khác.
 
 **AI Gateway Master Endpoint**:
-Cổng giao tiếp duy nhất `http://100.83.192.30:8090/v1` kết nối qua Tailscale VPN tới hệ thống LiteLLM AI Gateway trên Server Spark, điều hướng tự động 44 models AI.
+Cổng giao tiếp duy nhất `http://100.83.192.30:8090/v1` kết nối qua Tailscale VPN tới hệ thống LiteLLM AI Gateway trên Server Spark, điều hướng tự động đa mô hình AI (local GPU & cloud).
 
 **RAG Virtual Aliases (Bí danh ảo RAG)**:
 Chuỗi định danh mô hình ảo (`ocr-primary`, `ocr-fallback`, `rag-core`, `text-gemma`, `reasoning-gemma`) được AI Gateway tự động định tuyến nhằm tối ưu hóa chi phí (Free Tier Farm) và hiệu năng xử lý văn bản lớn.
@@ -257,11 +135,11 @@ Chuỗi định danh mô hình ảo (`ocr-primary`, `ocr-fallback`, `rag-core`, 
 Định danh chuẩn `qwen-local-primary` đại diện cho model Qwen 3.5 35B FP8 chạy trực tiếp trên GPU local của Server Spark, thay thế hoàn toàn cho chuỗi `qwen3.5-35b` đã bị khai tử.
 
 **Kiểm thử cô lập (Isolated Test Execution)**:
-Chiến lược chạy từng file kiểm thử độc lập trong một sub-process Python cô lập kèm giới hạn thời gian (timeout 5s) và khóa đơn tiến trình (`ensure_single_instance()`). Mô thức này ngăn chặn triệt me hiện tượng rò rỉ tiến trình, treo CPU hoặc đứt gãy phiên làm việc của AI Agent (`User Cancelled Agent Execution`) do các bộ kiểm thử lớn gây ra.
+Chiến lược chạy từng file kiểm thử độc lập trong một sub-process Python cô lập kèm giới hạn thời gian (timeout 5s) và khóa đơn tiến trình (`ensure_single_instance()`). Mô thức này ngăn chặn triệt để hiện tượng rò rỉ tiến trình, treo CPU hoặc đứt gãy phiên làm việc của AI Agent.
 _Avoid_: Test chung, pytest unscoped, full test run
 
 **Chính sách 2 Tầng Kiểm thử (2-Tier Testing Policy)**:
-Mô hình phân tầng kiểm thử bắt buộc: Fast Unit Tests (Layer 1, runtime < 2.0s, chạy hàng ngày qua cờ `-m "not slow"`) và Slow Integration Tests (Layer 2, giả lập cào mạng/CDP/file IO lớn, bắt buộc gắn decorator `@pytest.mark.slow` hoặc `@pytest.mark.stress`).
+Mô hình phân tầng kiểm thử bắt buộc: Fast Unit Tests (Layer 1, runtime < 2.0s, chạy hàng ngày qua cờ `-m "not slow"`) và Slow Integration Tests (Layer 2, bắt buộc gắn decorator `@pytest.mark.slow` hoặc `@pytest.mark.stress`).
 
 **Test Speed Guard**:
 Công cụ Linter & Pre-commit hook tại `scripts/hooks/test_speed_guard.py` tự động đo thời gian thực thi của tệp test và phát cảnh báo/chặn commit nếu một tệp test chạy > 2.0s mà không được dán nhãn `@pytest.mark.slow`.
@@ -273,13 +151,13 @@ Module sâu hợp nhất tại `scripts/spoke/upstream_evaluator.py` thay thế 
 Module sâu hợp nhất tại `scripts/spoke/spoke_synchronizer.py` chịu trách nhiệm định vị Hub thông minh (Smart Hub Discovery), đồng bộ nguyên tử tệp tin skills/workflows, hòa trộn danh mục `catalog.yaml` an toàn và đăng ký Spoke bảo mật với Hub.
 
 **DocumentAuditor (Trình Kiểm định Tài liệu & Governance)**:
-Module sâu hợp nhất tại `scripts/doc_auditor.py` đóng vai trò Coordinator điều phối 5 Sub-Auditors nội bộ (`LinkSymbolAuditor`, `SkillWorkflowAuditor`, `LegalRegistryAuditor`, `EnvVarAuditor`, `ArchitectureDriftAuditor`) để kiểm soát chất lượng tài liệu, skills và quy định quản trị đằng sau giao diện báo cáo chuẩn hóa `AuditReport`.
+Module sâu hợp nhất tại `scripts/doc_auditor.py` đóng vai trò Coordinator điều phối 5 Sub-Auditors nội bộ để kiểm soát chất lượng tài liệu, skills và quy định quản trị đằng sau giao diện báo cáo chuẩn hóa `AuditReport`.
 
 **NotebookLMService (Dịch vụ Điều phối Nguồn & Artifact NotebookLM)**:
-Module dịch vụ sâu hợp nhất tại `ccba_notebooklm._service` chịu trách nhiệm bọc `CCBANotebookLMClient`, tự động điều phối SHA-256 registry caching, Lazy Maskara security gating, xóa/cập nhật nguồn cloud khi mismatch, và cung cấp API đơn giản hóa cho các quy trình RAG và Artifact flow.
+Module dịch vụ sâu hợp nhất tại `ccba_notebooklm._service` chịu trách nhiệm bọc `CCBANotebookLMClient`, tự động điều phối SHA-256 registry caching, Lazy Maskara security gating, và cung cấp API đơn giản hóa cho các quy trình RAG và Artifact flow.
 
-**DetachedExecutionEngine (Động cơ Thực thi detatached An toàn Tiến trình)**:
-Module sâu hợp nhất tại `scripts/eval/process_safety.py` chịu trách nhiệm quản lý an toàn tiến trình (Single-instance Process Lock, Tree Kill), thực thi tiến trình chạy ngầm detached không bị gián đoạn daemon, dọn dẹp log atomic, và tự động phát hiện danh sách file test bị thay đổi từ `git status`. Các tệp `safe_runner.py` và `safe_pytest.py` chỉ còn là các thin CLI facade delegates.
+**DetachedExecutionEngine (Động cơ Thực thi Detached An toàn Tiến trình)**:
+Module sâu hợp nhất tại `scripts/eval/process_safety.py` chịu trách nhiệm quản lý an toàn tiến trình (Single-instance Process Lock, Tree Kill), thực thi tiến trình chạy ngầm detached không bị gián đoạn daemon, dọn dẹp log atomic, và tự động phát hiện danh sách file test bị thay đổi từ `git status`.
 
 **LegalIntelPipeline (Unified Legal Intelligence Deep Module)**:
 Deep module hợp nhất của package `ccba-legal-intel` cung cấp seam công khai duy nhất `pipeline.process_document(url_or_id)` điều phối toàn bộ chu trình cào Chrome CDP, bảo vệ session CookieVault, mutex lock, giải mã bảng TVPL, phân tích AST và đóng gói OKF Bundle.
@@ -290,4 +168,29 @@ Seam điều phối phân tích xung đột văn bản pháp lý (`LexConflictEn
 **LegalSyncEngine (Cloud Sync Deep Seam)**:
 Deep module của `ccba-legal-intel` chịu trách nhiệm đồng bộ legal registry lên Google NotebookLM và Google Drive chung, quản lý tính toán băm SHA-256 deduplication và nguồn tài liệu.
 
+**Deep Seam (Mối nối sâu)**:
+Mô thức thiết kế cốt lõi của CCBA Platform: một module công khai duy nhất ẩn giấu toàn bộ logic phức tạp bên trong (high depth, low surface area), cung cấp 1-3 entry points cho callers bên ngoài. Ngược lại với "Shallow Module" (nhiều public methods, logic rải rác).
+_Avoid_: Facade (quá chung), Wrapper, Service layer
 
+**Smart Zone & D-Zone (Phân vùng Ngữ cảnh)**:
+Mô hình phân loại nội dung trong cửa sổ ngữ cảnh (context window) của AI Agent: Smart Zone chứa tri thức cô đọng, cấu trúc hóa cao phục vụ suy luận; D-Zone (Danger Zone) chứa nội dung rác, verbose, stale làm phình context và suy giảm chất lượng. Mục tiêu: tối đa Smart Zone, loại bỏ D-Zone.
+_Avoid_: Context budget, token limit (quá chung)
+
+**Reuse-First Gate (Rào cản Tái sử dụng)**:
+Quy trình bắt buộc trong `AGENTS.md` (Layer 1) yêu cầu Agent tra cứu Hub catalog trước khi viết bất kỳ utility/script mới nào, ghi nhận quyết định reuse/viết mới kèm lý do.
+
+**Session Learnings Bootstrap (Nạp Tri thức Tích lũy)**:
+Quy trình bắt buộc trong `AGENTS.md` (Layer 1) yêu cầu Agent đọc tệp `.md/knowledge/session_learnings.md` khi bắt đầu Planning Mode hoặc SDLC Implementation Loop để nạp các Patterns/Anti-patterns đã được đúc kết.
+
+---
+
+## System Metaphor
+
+> **Hệ thống CCBA hoạt động như một Mạng lưới Nhượng quyền Tri thức (Knowledge Franchise Network).**
+
+- **Hub** = Tổng hành dinh nhượng quyền — nắm giữ Hiến pháp (`AGENTS.md`), bộ sổ tay vận hành chuẩn (Skills/Workflows), và khuôn mẫu kiểm soát chất lượng.
+- **Spoke** = Chi nhánh nhượng quyền — vận hành độc lập tại từng dự án, kế thừa quy trình từ Hub, nhưng tùy chỉnh theo ngữ cảnh địa phương (`workspace_context.yaml`).
+- **Downstream Sync** = Cập nhật Sổ tay Nhượng quyền — khi Hub cập nhật kỹ năng/workflow mới, các Spoke đồng bộ xuôi để nhận bản mới nhất.
+- **Upstream Loop** = Đóng góp Sáng kiến từ Chi nhánh — khi một Spoke phát triển quy trình mới hiệu quả, đóng gói và đề xuất ngược lên Hub qua Pull Request.
+- **AI Gateway** = Đường dây nóng trung tâm — mọi chi nhánh đều liên lạc qua một cổng duy nhất (`100.83.192.30:8090/v1`) để truy cập hệ thống đa mô hình AI (local GPU & cloud).
+- **Deep Seams** = Chuyên gia nội bộ — mỗi package/module đóng vai trò một chuyên gia đầu ngành, ẩn giấu toàn bộ sự phức tạp nghiệp vụ đằng sau một giao diện đơn giản duy nhất.
