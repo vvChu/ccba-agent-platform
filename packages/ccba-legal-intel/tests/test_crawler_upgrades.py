@@ -177,6 +177,7 @@ def test_download_three_tier_google_drive(tmp_path: Path) -> None:
             return None, True
 
     import types
+
     mock_gapi = types.ModuleType("googleapiclient")
     sys.modules["googleapiclient"] = mock_gapi
     mock_gapi_http = types.ModuleType("googleapiclient.http")
