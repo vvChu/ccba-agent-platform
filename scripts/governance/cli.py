@@ -128,10 +128,14 @@ def run_docs_validation_cli(auditor: DocumentAuditor, args_list: list[str] | Non
     registry = auditor.load_legal_registry()
     registry_map = auditor.build_markdown_to_doc_map(registry)
 
-    print(f"Scanned {len(md_files)} markdown file(s).")
-    print(
-        f"Searching code declarations in: {', '.join(str(p.relative_to(auditor.project_root)) for p in resolved_src_paths if p.exists())}"
-    )
+    formatted_src_paths = [
+        str(p.relative_to(auditor.project_root))
+        if p.is_relative_to(auditor.project_root)
+        else str(p)
+        for p in resolved_src_paths
+        if p.exists()
+    ]
+    print(f"Searching code declarations in: {', '.join(formatted_src_paths)}")
     print("-" * 60)
 
     total_issues = 0

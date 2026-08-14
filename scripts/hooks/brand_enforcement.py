@@ -122,5 +122,4 @@ if __name__ == "__main__":
                 sys.stderr.reconfigure(encoding="utf-8")
         except Exception:
             pass
-    main()
-    sys.exit(0)
+    sys.exit(main())

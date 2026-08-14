@@ -50,8 +50,13 @@ class LinkAuditor(BaseAuditor):
         """Extract code symbol references like `my_func()` or `MyClass`."""
         references = []
         lines = content.splitlines()
+        in_code_block = False
         for idx, line in enumerate(lines):
-            if line.strip().startswith("```"):
+            stripped = line.strip()
+            if stripped.startswith("```"):
+                in_code_block = not in_code_block
+                continue
+            if in_code_block:
                 continue
             matches = CODE_REF_RE.findall(line)
             for ref in matches:

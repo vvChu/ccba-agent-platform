@@ -30,12 +30,34 @@ class DocumentAuditor(BaseAuditor):
 
     def __init__(self, project_root: Path | None = None) -> None:
         """Initialize DocumentAuditor with workspace root path."""
-        super().__init__(project_root)
-        self.link_auditor = LinkAuditor(self.project_root)
-        self.skill_auditor = SkillAuditor(self.project_root)
-        self.registry_auditor = RegistryAuditor(self.project_root)
-        self.env_auditor = EnvAuditor(self.project_root)
-        self.drift_auditor = DriftAuditor(self.project_root)
+        if project_root is None:
+            project_root = Path(__file__).resolve().parent.parent.parent
+        self._project_root: Path = project_root
+        self.link_auditor = LinkAuditor(self._project_root)
+        self.skill_auditor = SkillAuditor(self._project_root)
+        self.registry_auditor = RegistryAuditor(self._project_root)
+        self.env_auditor = EnvAuditor(self._project_root)
+        self.drift_auditor = DriftAuditor(self._project_root)
+
+    @property
+    def project_root(self) -> Path:
+        """Get the current project workspace root."""
+        return self._project_root
+
+    @project_root.setter
+    def project_root(self, new_root: Path) -> None:
+        """Set project root and propagate to all sub-auditors."""
+        self._project_root = new_root
+        if hasattr(self, "link_auditor"):
+            self.link_auditor.project_root = new_root
+        if hasattr(self, "skill_auditor"):
+            self.skill_auditor.project_root = new_root
+        if hasattr(self, "registry_auditor"):
+            self.registry_auditor.project_root = new_root
+        if hasattr(self, "env_auditor"):
+            self.env_auditor.project_root = new_root
+        if hasattr(self, "drift_auditor"):
+            self.drift_auditor.project_root = new_root
 
     # ---------------------------------------------------------------------------
     # Delegation methods for LinkAuditor
