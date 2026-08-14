@@ -8,17 +8,10 @@ import os
 import sys
 from pathlib import Path
 
-# Cấu hình UTF-8 cho console đầu ra trên Windows để tránh lỗi mã hóa
-if sys.stdout.encoding != "utf-8":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
-
 # Thêm path để import các thư viện
 
 try:
-    from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore
+    from google_auth_oauthlib.flow import InstalledAppFlow
 
     LIBS_AVAILABLE = True
 except ImportError:
@@ -167,6 +160,16 @@ def login_drive() -> None:
 
 
 def main() -> None:
+    if sys.platform == "win32":
+        import io
+
+        try:
+            if isinstance(sys.stdout, io.TextIOWrapper):
+                sys.stdout.reconfigure(encoding="utf-8")
+            if isinstance(sys.stderr, io.TextIOWrapper):
+                sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     login_drive()
 
 
