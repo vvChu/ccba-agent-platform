@@ -42,7 +42,7 @@ CCBA Agent Services Platform vận hành theo kiến trúc **Hub-and-Spoke**:
 ```
 ccba-agent-platform/                    ← Hub Repository
 ├── .agents/
-│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->83<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-08-14 -->
+│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->80<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-08-14 -->
 │   │   ├── ai-gateway-sdk/            ←   Kết nối AI Gateway (50+ models)
 │   │   ├── legal-document-tracker/    ←   Theo dõi & rà soát VBPL
 │   │   ├── completion-checklist/      ←   Quản lý HSHT công trình

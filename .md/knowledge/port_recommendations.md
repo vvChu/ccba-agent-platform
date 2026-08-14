@@ -87,6 +87,14 @@ Báo cáo tự động đánh giá các tính năng mới từ thượng nguồn
     *   Kiểm tra nội dung tệp SKILL.md của nhánh thượng nguồn để so sánh với phiên bản local hiện tại.
     *   Nếu phiên bản thượng nguồn có cải tiến về logic prompt, hãy thực hiện 'cherry-pick' hoặc cập nhật logic đó vào file local thay vì tạo mới.
     *   Đánh giá xem workflow 'ccba-grill-with-docs' có thể được tối ưu hóa để bao hàm các trigger mới từ thượng nguồn hay không.
+---
+
+### 🔴 [IGNORE (Đã tồn tại)] Skill: `domain-modeling` (Score: 25/100)
+*   **Kho chứa nguồn**: `mattpocock-skills`
+*   **Đánh giá**: IGNORE (Đã tồn tại): Kỹ năng 'domain-modeling' đã tồn tại sẵn trên local catalog.
+*   **Các bước triển khai**:
+    *   So sánh tệp SKILL.md mới với phiên bản local
+    *   Cherry-pick cải tiến nếu cần thay vì port mới
 <!-- AUTO-GENERATED-END -->
 
 <!-- DEVELOPER-NOTES-START -->

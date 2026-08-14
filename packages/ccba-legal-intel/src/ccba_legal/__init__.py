@@ -4,11 +4,18 @@ Public Deep Seams:
     LegalIntelPipeline  — Crawl, parse, package legal documents end-to-end.
     LegalProcessor      — Legal advisory, conflict analysis, dispatch drafts.
     LegalSyncEngine     — Cloud sync of legal registry to NotebookLM.
+    Cleaners            — OCR cleanup, DOCX table parsing, Markdown conversion.
 """
 
 from .appendices import (
     AppendixSplitter,
     roman_to_decimal,
+)
+from .cleaners import (
+    Cleaners,
+    convert_docx_table_to_markdown,
+    convert_markdown_to_docx,
+    extract_docx_with_tables,
 )
 from .coordinator import (
     LegalIntelPipeline,
@@ -50,6 +57,7 @@ __all__ = [
     "LegalRegistryManager",
     "LegalGroundingGate",
     "AppendixSplitter",
+    "Cleaners",
     # === Domain Helper Seams ===
     "verify_legal_grounding",
     "format_grounded_response",
@@ -61,6 +69,9 @@ __all__ = [
     "generate_legal_document",
     "SUPPORTED_DOC_TYPES",
     "ND30_HEADER",
+    "convert_docx_table_to_markdown",
+    "extract_docx_with_tables",
+    "convert_markdown_to_docx",
     # === Infrastructure & Cross-Package Facilities ===
     "TVPLSessionMutex",
     "MockChromeCDP",

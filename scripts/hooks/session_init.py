@@ -1,58 +1,34 @@
-"""
-Hook script for session-init lifecycle event.
-Initializes session parameters and logs environment context.
+"""Thin Backward-Compatible Facade for Session Init Hook.
+
+Delegates execution to the deep ``SessionInitHook`` class in ``scripts.hooks.session``.
 """
 
-import subprocess
+from __future__ import annotations
+
 import sys
 from pathlib import Path
+from typing import Any
+
+try:
+    from .base import HookContext
+    from .session import SessionInitHook
+except (ImportError, ValueError):
+    _PROJECT_ROOT = Path(__file__).resolve().parents[2]
+    if str(_PROJECT_ROOT) not in sys.path:
+        sys.path.insert(0, str(_PROJECT_ROOT))
+    from scripts.hooks.base import HookContext
+    from scripts.hooks.session import SessionInitHook
+
+__all__ = ["SessionInitHook", "main"]
 
 
-def main(event: str, payload: dict) -> int:
-    print("[session-init] Initializing workspace context...")
-    cwd = Path.cwd()
+def main(event: str = "session-init", payload: dict[str, Any] | None = None) -> int:
+    """Entrypoint forwarding to SessionInitHook.execute()."""
+    hook = SessionInitHook()
+    context = HookContext.from_payload(event, payload)
+    result = hook.execute(context)
+    return result.exit_code
 
-    # 1. Detect Git Root
-    git_root = None
-    try:
-        res = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True
-        )
-        git_root = res.stdout.strip()
-    except subprocess.SubprocessError:
-        pass
 
-    # 2. Log workspace properties
-    print(f"[session-init] Current Directory: {cwd}")
-    if git_root:
-        print(f"[session-init] Git Repository Root: {git_root}")
-        # Detect Git branch
-        try:
-            branch_res = subprocess.run(
-                ["git", "branch", "--show-current"], capture_output=True, text=True, check=True
-            )
-            print(f"[session-init] Active Git Branch: {branch_res.stdout.strip()}")
-        except subprocess.SubprocessError:
-            pass
-    else:
-        print("[session-init] Warning: Not inside a Git repository.")
-
-    # 3. Create .md directory if missing (Global Rule 1)
-    kb_dir = cwd / ".md"
-    if not kb_dir.exists():
-        try:
-            kb_dir.mkdir(exist_ok=True)
-            (kb_dir / "extracted_docs").mkdir(exist_ok=True)
-            print(f"[session-init] Created central Knowledge Base folder: {kb_dir}")
-        except Exception as e:
-            print(f"[session-init] Error creating .md directory: {e}")
-
-    # 4. Trigger ClaudeKit update checker
-    checker_script = Path(__file__).parent.parent / "spoke" / "check_claudekit_updates.py"
-    if checker_script.exists():
-        try:
-            subprocess.Popen([sys.executable, str(checker_script)])
-        except Exception:
-            pass
-
-    return 0
+if __name__ == "__main__":
+    sys.exit(main())

@@ -134,6 +134,36 @@ Tài liệu này lưu trữ các thuật ngữ và biên bản quyết định k
   3. *Bảo Vệ Bộ Bắt Luồng Pytest & Agent Server*: Loại trừ tuyệt đối nguy cơ làm đóng file descriptor của Pytest I/O capture và bảo toàn `Safe Process Termination Invariant` (`os.getpid()` & `os.getppid()`).
 - **Lý do:** Loại bỏ hoàn toàn lỗi tiềm ẩn `ValueError: I/O operation on closed file`, tăng tính ổn định của test suite và hoàn thiện chuẩn mực Deep Modules cho Platform.
 
+### ADR-019: Tái Cấu Trúc Hệ Thống Lifecycle Hooks Thành Domain Sub-Package Có Typed Contracts
+- **Trạng thái:** CHẤP THUẬN (ACCEPTED)
+- **Quyết định:**
+  1. *Sub-package Lifecycle Hooks Chuyên Biệt*: Chuyển đổi 7 script hook rời rạc thành sub-package `scripts/hooks/` hoàn chỉnh với các typed contracts `HookContext`, `HookResult`, lớp trừu tượng `BaseHook`, và 7 domain hook classes (`PrivacyHook`, `SimplifyGateHook`, `ScoutBlockHook`, `BrandHook`, `NamingHook`, `SessionInitHook`, `TestSpeedHook`).
+  2. *Bộ Điều Phối Tập Trung (HookCoordinator)*: Xây dựng `HookCoordinator` tại `scripts/hooks/coordinator.py` quản lý đăng ký, định tuyến sự kiện (`session-init`, `pre-tool`, `post-tool`, `user-prompt-submit`), tự động phát hiện bypass cờ `APPROVED:` và tính toán max exit code tổng hợp.
+  3. *Khắc Phục Bug Đường Dẫn Hook Runner*: Chuyển `scripts/eval/hook_runner.py` thành Thin CLI Facade gọi trực tiếp `get_default_coordinator().run_event()`, khắc phục triệt để lỗi đường dẫn `scripts/eval/hooks/` khiến hooks bị fail-open im lặng trước đây.
+  4. *Bảo Toàn Tương Thích Ngược 100%*: Duy trì 7 tệp script cũ trong `scripts/hooks/*.py` làm Thin Delegates với cơ chế resilient import (`try ... except ImportError`) hỗ trợ cả standalone CLI execution lẫn package import.
+  5. *Kiểm Thử 2 Tầng Siêu Tốc*: Xây dựng bộ test `scripts/tests/test_hooks.py` gồm 17 unit tests bao phủ 100% các rào chắn an ninh, chạy toàn bộ trong < 0.20s (tuân thủ Rule P3.1).
+- **Lý do:** Khắc phục lỗi đứt gãy bảo mật im lặng, tăng tối đa tính Locality và Leverage, loại bỏ trùng lặp code, và hoàn thiện cấu trúc Deep Modules cho Platform.
+
+### ADR-020: Hoàn Tất Quy Hoạch Domain Scaffolding & Khắc Phục Triệt Để Domain Drift Tại scripts/security/
+- **Trạng thái:** CHẤP THUẬN (ACCEPTED)
+- **Quyết định:**
+  1. *Khắc Phục Domain Drift (AP6.2)*: Di dời hai tiện ích thống kê tài liệu kiến trúc (`update_arch_stats.py`) và đóng gói mã nguồn (`repomix_pack.py`) từ thư mục `scripts/security/` về đúng sub-package `scripts/scaffolding/` (`arch_stats.py` và `repomix.py`).
+  2. *Đóng Gói Deep Seams*: Xây dựng hai lớp xử lý chuyên biệt `ArchStatsUpdater` (tự động đếm metrics và cập nhật an toàn marker regex `<!-- KEY_START -->...<!-- KEY_END -->`) và `RepomixPackager` (quản lý config tạm và chạy npx repomix với cleanup an toàn).
+  3. *Loại Bỏ Vi Phạm Rule P2.2*: Di dời toàn bộ `sys.stdout.reconfigure(encoding="utf-8")` ở module top-level trong `arch_stats.py` vào bên trong hàm `main()`, bảo vệ bộ bắt luồng Pytest I/O capture khi import.
+  4. *Bảo Toàn Tương Thích Ngược 100%*: Giữ các tệp script cũ tại `scripts/security/update_arch_stats.py` và `scripts/security/repomix_pack.py` làm Thin Forwarding Facades với cơ chế *Resilient Import*.
+  5. *Kiểm Thử 2 Tầng*: Bổ sung bộ test `scripts/tests/test_scaffolding.py` kiểm định toàn diện việc cập nhật marker và cấu hình đóng gói repomix trong < 0.20s.
+- **Lý do:** Khắc phục triệt để vi phạm phân mảnh ranh giới domain, bảo vệ ranh giới chuyên biệt cho `scripts/security/` (chỉ dành cho an ninh, bảo mật, và redaction) và hoàn thiện chuẩn Deep Modules cho Platform.
+
+### ADR-021: Hợp Nhất DOCX Table Engine & Markdown Converter Vào Package ccba-legal-intel
+- **Trạng thái:** CHẤP THUẬN (ACCEPTED)
+- **Quyết định:**
+  1. *Đóng Gói Cleaners Deep Seams*: Mở rộng lớp `Cleaners` tại `packages/ccba-legal-intel/src/ccba_legal/cleaners.py` tích hợp các phương thức trích xuất và chuyển đổi bảng biểu: `convert_docx_table_to_markdown`, `extract_docx_with_tables`, và `convert_markdown_to_docx`.
+  2. *Xuất Bản Public Seams*: Đăng ký các hàm tiện ích bảng biểu qua `ccba_legal/__init__.py`, cho phép toàn bộ pipelines và Spokes tái sử dụng trực tiếp.
+  3. *Thin Forwarding CLI Delegates*: Chuyển đổi các script mồ côi tại `scripts/legal/tvpl_table_engine.py` và `scripts/legal/convert_rules_to_docx.py` thành Thin Delegates với cơ chế *Resilient Import*.
+  4. *Chuẩn Hóa Toàn Diện Rule P2.2*: Di dời toàn bộ `sys.stdout.reconfigure()` trong `auto_tvpl_vip_downloader.py` và `convert_rules_to_docx.py` vào bên trong hàm `main()`.
+  5. *Kiểm Thử 2 Tầng Siêu Tốc*: Xây dựng bộ test `tests/test_legal_table_engine.py` kiểm định toàn diện việc trích xuất bảng, chuyển đổi Markdown $\leftrightarrow$ DOCX, gắn decorator `@pytest.mark.slow` cho các bài test nặng I/O filesystem.
+- **Lý do:** Hợp nhất trọn vẹn domain logic xử lý tài liệu pháp lý vào package lõi, loại bỏ hoàn toàn các script mồ côi ngoài luồng và tăng cường tính dùng lại (Leverage).
+
 
 
 
