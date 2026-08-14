@@ -66,7 +66,6 @@ class OOXMLWorkspace:
             }
         return recalc_xlsx(self.file_path, timeout=timeout)
 
-
     def __enter__(self) -> OOXMLWorkspace:
         """Unpack the document and enter the context."""
         if not self.file_path.exists():

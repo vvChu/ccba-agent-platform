@@ -44,7 +44,16 @@ def setup_libreoffice_macro() -> bool:
         if app_data:
             macro_dir = os.path.join(app_data, "LibreOffice", "4", "user", "basic", "Standard")
         else:
-            macro_dir = str(Path.home() / "AppData" / "Roaming" / "LibreOffice" / "4" / "user" / "basic" / "Standard")
+            macro_dir = str(
+                Path.home()
+                / "AppData"
+                / "Roaming"
+                / "LibreOffice"
+                / "4"
+                / "user"
+                / "basic"
+                / "Standard"
+            )
     else:
         macro_dir = os.path.expanduser("~/.config/libreoffice/4/user/basic/Standard")
 
@@ -137,8 +146,6 @@ def recalc_xlsx(filename: str | Path, timeout: int = 30) -> dict[str, Any]:
         wb.save(filename)
         return {"success": True, "method": "openpyxl (Save-back only)"}
     except ImportError:
-        return {
-            "error": "Failed recalculation: Neither LibreOffice nor openpyxl is available."
-        }
+        return {"error": "Failed recalculation: Neither LibreOffice nor openpyxl is available."}
     except Exception as e:
         return {"error": f"Failed recalculation: {e}"}

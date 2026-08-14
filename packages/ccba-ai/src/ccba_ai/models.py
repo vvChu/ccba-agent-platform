@@ -148,4 +148,3 @@ class PlanStatusResult(BaseModel):
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return self.model_dump()
-

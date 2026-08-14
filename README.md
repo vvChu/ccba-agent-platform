@@ -150,7 +150,7 @@ cp .env.example .env
 Kiểm tra tệp `.env` cục bộ đã trỏ đúng vào AI Gateway Server:
 ```env
 AI_GATEWAY_URL=http://100.83.192.30:8090/v1
-AI_GATEWAY_KEY=[REDACTED_LITELLM_KEY]
+AI_GATEWAY_KEY=your-spark-gateway-key
 AI_MODEL=qwen-local-primary
 ```
 

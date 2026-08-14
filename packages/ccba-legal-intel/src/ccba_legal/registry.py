@@ -357,4 +357,3 @@ def search_legal_registry(
     """
     mgr = LegalRegistryManager(registry_path=Path(registry_path) if registry_path else None)
     return mgr.search(query=query, top_k=top_k)
-

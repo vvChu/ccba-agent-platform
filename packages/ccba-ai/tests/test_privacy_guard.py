@@ -47,11 +47,15 @@ def test_privacy_guard_detects_keys():
             "role": "user",
             "content": [
                 {"type": "text", "text": "Describe this drawing"},
-                {"type": "image_url", "image_url": {"url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="}},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+                    },
+                },
             ],
         }
     )
-
 
 
 def test_safe_write_file_blocks_leak(tmp_path):
