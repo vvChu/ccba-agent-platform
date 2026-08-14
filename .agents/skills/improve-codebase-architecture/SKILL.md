@@ -6,7 +6,7 @@ category: engineering
 keywords: [architecture, design, deep-module, refactor, visual-report, cải tiến kiến trúc, module sâu, báo cáo trực quan, refactor mã nguồn]
 metadata:
   author: CCBA
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Cải tiến Kiến trúc Mã nguồn (Improve Codebase Architecture)
@@ -31,6 +31,14 @@ Quy trình này được định hướng bởi domain model của dự án và 
   * Phân vùng nào đang thiếu kiểm thử hoặc cực kỳ khó viết unit test với giao diện hiện tại?
 - Áp dụng **phép thử xóa bỏ (deletion test)** đối với các module nghi ngờ bị nông: Nếu xóa module đó đi thì độ phức tạp sẽ tập trung lại một chỗ hay chỉ bị dịch chuyển sang chỗ khác? Nếu câu trả lời là "tập trung lại một chỗ", đó chính là seam tốt cần làm sâu.
 - **Tiêu chí hoàn thành:** Lập danh sách ghi nhận được ít nhất 2 vùng module bị nông hoặc coupling cao, kèm kết quả phép thử xóa bỏ (deletion test) cho mỗi vùng.
+
+### 1.5. Tự Phản Biện Trước Đề Xuất (Pre-Proposal Adversarial Self-Check)
+Trước khi tổng hợp các ứng viên vào Báo cáo HTML hoặc Implementation Plan, Agent **bắt buộc** phải tự chạy rà soát 4 câu hỏi phản biện (theo Rule #8):
+1. **Kiểm chứng SDK/Dependency:** Các phương thức/class định tích hợp (ví dụ: `ccba_ai`, `httpx`) có thực sự hỗ trợ kiểu dữ liệu cần thiết (multimodal bytes, headers, async stream) và có signature khớp với mã nguồn thực tế không? (Bắt buộc `grep`/`view_file` mã nguồn package, không suy đoán).
+2. **Caller Justification Gate (KISS):** Lớp Seam mới định tạo có caller/consumer thực tế nào mới cần đến không? Đã có Deep Seam nào tương đương tồn tại chưa (ví dụ: `ConversionPipeline`)? Nếu đã có, nghiêm cấm tạo wrapper nông mới (như `MarkdownConverter`).
+3. **Phân biệt Boilerplate vs Domain Orchestration:** Khi đề xuất tinh gọn script, script đó có chứa logic nghiệp vụ đặc thù (routing, taxonomy, mutex, popups) không? Nếu có, phải đưa logic vào package lõi trước, viết test đầy đủ rồi mới tinh gọn script thành Thin CLI Delegate.
+4. **Submodule Verification:** Các submodule/class định import (`ccba_legal.formatter`, `cleaners`, v.v.) có thực sự tồn tại và sẵn sàng sử dụng trong package đích không?
+- **Tiêu chí hoàn thành:** Mỗi ứng viên đề xuất phải có 4 dòng tự xác nhận (✅/❌) cho 4 câu hỏi trên trong ghi chú nội bộ trước khi đưa vào báo cáo HTML hoặc Implementation Plan. Ứng viên nào có bất kỳ ❌ nào phải được điều chỉnh hoặc loại bỏ.
 
 ### 2. Trình bày Báo cáo dưới dạng HTML (Present candidates as an HTML report)
 - Viết một file HTML đơn lẻ (single-file) vào thư mục tạm của dự án: `.md/scratch/architecture-review/architecture-review-<timestamp>.html` (tự động tạo thư mục nếu chưa tồn tại).

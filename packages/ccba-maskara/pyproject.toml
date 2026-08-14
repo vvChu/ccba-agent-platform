@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ccba-maskara"
+version = "1.0.0"
+description = "CCBA Maskara — Unified Security Scanning & PII Redaction Deep Module"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+maskara = "ccba_maskara.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ccba_maskara"]

@@ -17,6 +17,7 @@ from tenacity import (
     wait_exponential,
 )
 
+from ccba_ai.circuit_breaker import CircuitBreaker
 from mdconverter.config import get_settings
 from mdconverter.core.llm import GenerationConfig, LLMProvider
 
@@ -37,11 +38,17 @@ def _is_retryable(exc: BaseException) -> bool:
 class GatewayProvider(LLMProvider):
     """Provider for AI Gateway (LiteLLM) — supports all models."""
 
-    def __init__(self, gateway_url: str | None = None, api_key: str | None = None) -> None:
+    def __init__(
+        self,
+        gateway_url: str | None = None,
+        api_key: str | None = None,
+        circuit_breaker: CircuitBreaker | None = None,
+    ) -> None:
         """Initialize provider."""
         settings = get_settings()
         self.gateway_url = (gateway_url or settings.ai_gateway_url).rstrip("/")
         self.api_key = api_key or settings.ai_gateway_key
+        self.circuit_breaker = circuit_breaker or CircuitBreaker()
         # M1 fix: Use explicit timeout config instead of flat 60s.
         # read timeout must accommodate large document conversion (up to 600s).
         self.client = httpx.AsyncClient(
@@ -70,6 +77,8 @@ class GatewayProvider(LLMProvider):
         config: GenerationConfig,
     ) -> str:
         """Generate content using AI Gateway (OpenAI-compatible endpoint)."""
+        self.circuit_breaker.check_allowed()
+
         file_b64 = base64.b64encode(file_content).decode("utf-8")
         data_uri = f"data:{mime_type};base64,{file_b64}"
 
@@ -94,13 +103,18 @@ class GatewayProvider(LLMProvider):
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
 
-        response = await self.client.post(
-            url, json=payload, headers=headers, timeout=config.timeout_seconds
-        )
-        response.raise_for_status()
-
-        data = response.json()
-        return self._extract_content(data)
+        try:
+            response = await self.client.post(
+                url, json=payload, headers=headers, timeout=config.timeout_seconds
+            )
+            response.raise_for_status()
+            self.circuit_breaker.record_success()
+            data = response.json()
+            return self._extract_content(data)
+        except Exception as exc:
+            if _is_retryable(exc):
+                self.circuit_breaker.record_failure(exc)
+            raise
 
     def _extract_content(self, response_data: dict[str, Any]) -> str:
         """Extract text content from OpenAI-compatible response."""
