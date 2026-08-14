@@ -4,13 +4,10 @@ import importlib
 
 
 def test_repaired_log_eval_miner_imports():
-    """Verify log_eval_miner module re-exports mine_logs_and_export correctly."""
+    """Verify log_eval_miner deep module exports mine_logs_and_export correctly."""
     from scripts.eval.log_eval_miner import mine_logs_and_export as deep_miner
-    from scripts.log_eval_miner import mine_logs_and_export as shim_miner
 
     assert callable(deep_miner)
-    assert callable(shim_miner)
-    assert deep_miner is shim_miner
 
 
 def test_repaired_legal_sync_imports():
