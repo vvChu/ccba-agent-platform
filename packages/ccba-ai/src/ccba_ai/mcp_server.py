@@ -12,13 +12,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Force UTF-8 on Windows
-if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
-
 # Attempt import of FastMCP
 try:
     from mcp.server.fastmcp import FastMCP
@@ -398,8 +391,22 @@ async def convert_document(file_path: str, output_dir: str | None = None) -> dic
         return {"status": "error", "message": str(e)}
 
 
-def main():
+def _configure_utf8_streams() -> None:
+    """Configure UTF-8 output streams on Windows.
+
+    Must only be called at process entrypoint (main), never at module import
+    time, to avoid breaking Pytest stream capture.
+    """
+    if sys.platform == "win32":
+        import io
+
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+
+
+def main() -> None:
     """Main Entry Point for launching the FastMCP Server."""
+    _configure_utf8_streams()
     log("[ccba-mcp-server] Starting FastMCP Server...")
     mcp.run()
 

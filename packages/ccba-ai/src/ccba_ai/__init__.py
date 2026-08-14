@@ -52,7 +52,7 @@ __all__ = [
     # Singletons
     "ai",
     "async_ai",
-    "legal_knowledge",
+    "legal_knowledge",  # NOTE: zero active callers — retained for API stability only
     # Client classes
     "AIClient",
     "AsyncAIClient",
