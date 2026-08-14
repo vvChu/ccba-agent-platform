@@ -157,7 +157,9 @@ def test_change_engine_revert_operations(
 
     # Insert an ins element
     p_elem = editor.get_node("w:p")
-    ins_nodes = editor.append_to(p_elem, '<w:ins w:id="99"><w:r><w:t>Added Text</w:t></w:r></w:ins>')
+    ins_nodes = editor.append_to(
+        p_elem, '<w:ins w:id="99"><w:r><w:t>Added Text</w:t></w:r></w:ins>'
+    )
     ins_node = ins_nodes[0]
 
     # Revert insertion

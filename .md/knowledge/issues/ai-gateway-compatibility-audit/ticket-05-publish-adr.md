@@ -10,7 +10,7 @@
 
 ## 🎯 Mục tiêu
 Ban hành Architecture Decision Record chính thức:
-- Ban hành [ADR-0029](../../../docs/adr/0029-ai-gateway-client-integration-contract.md) ghi nhận quyết định chuẩn hóa hợp đồng tích hợp client (HTTP Timeout $\ge$ 30-60s, 4 Archetypes, Zero-Config Thinking, Deep Module routing).
+- Ban hành [ADR-0029](../../../../docs/adr/0029-ai-gateway-client-integration-contract.md) ghi nhận quyết định chuẩn hóa hợp đồng tích hợp client (HTTP Timeout $\ge$ 30-60s, 4 Archetypes, Zero-Config Thinking, Deep Module routing).
 
 ---
 

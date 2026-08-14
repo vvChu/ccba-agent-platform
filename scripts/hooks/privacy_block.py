@@ -19,6 +19,7 @@ except ImportError:
     try:
         from ccba_maskara import detect_secrets_in_text
     except ImportError:
+
         def detect_secrets_in_text(  # type: ignore[misc]
             content: str, filepath: str = "", agent: str = "", use_llm: bool = False
         ) -> list[dict[str, Any]]:

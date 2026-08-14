@@ -16,8 +16,8 @@ from ccba_ai.exceptions import CCBAErrorCode, format_error_json
 class CircuitState(str, Enum):
     """Circuit Breaker States."""
 
-    CLOSED = "CLOSED"        # Normal operation: all requests allowed
-    OPEN = "OPEN"            # Fast-fail: connection failed repeatedly, reject calls immediately
+    CLOSED = "CLOSED"  # Normal operation: all requests allowed
+    OPEN = "OPEN"  # Fast-fail: connection failed repeatedly, reject calls immediately
     HALF_OPEN = "HALF_OPEN"  # Probe mode: test if gateway recovered with a single trial request
 
 
@@ -34,9 +34,7 @@ class CircuitBreakerOpenError(Exception):
         self.message = message
         self.suggestion = suggestion
         self.extra = extra or {}
-        self.json_output = format_error_json(
-            self.code, self.message, self.suggestion, self.extra
-        )
+        self.json_output = format_error_json(self.code, self.message, self.suggestion, self.extra)
         super().__init__(self.json_output)
 
     def to_json(self) -> str:
@@ -45,7 +43,7 @@ class CircuitBreakerOpenError(Exception):
 
 
 class CircuitBreaker:
-    """In-memory Circuit Breaker with Exponential Recovery Cooldown."""
+    """In-memory Fast-Fail Circuit Breaker with Recovery Cooldown."""
 
     def __init__(
         self,
@@ -88,7 +86,9 @@ class CircuitBreaker:
     def check_allowed(self) -> None:
         """Ensure requests are allowed, or raise CircuitBreakerOpenError immediately."""
         if not self.allow_request():
-            remaining = max(0.0, round(self.recovery_timeout - (time.time() - self.last_state_change), 1))
+            remaining = max(
+                0.0, round(self.recovery_timeout - (time.time() - self.last_state_change), 1)
+            )
             raise CircuitBreakerOpenError(
                 message=f"AI Gateway connection failure threshold reached ({self.failure_count} consecutive errors). Circuit is OPEN.",
                 suggestion=f"Wait {remaining}s for cooldown or check Tailscale connection to Server Spark.",

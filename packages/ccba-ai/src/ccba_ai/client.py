@@ -169,7 +169,9 @@ class AIClient:
         messages.append({"role": "user", "content": message})
 
         target_model = model or self.default_model
-        effective_max_tokens = resolve_max_tokens(target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384)
+        effective_max_tokens = resolve_max_tokens(
+            target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
+        )
 
         response = _retry_sync(
             lambda: self._client.chat.completions.create(
@@ -329,7 +331,9 @@ class AIClient:
             self.privacy_guard.check_content(msg.get("content", ""))
 
         target_model = model or self.default_model
-        effective_max_tokens = resolve_max_tokens(target_model, max_tokens, baseline_default=2048, reasoning_allocation=16384)
+        effective_max_tokens = resolve_max_tokens(
+            target_model, max_tokens, baseline_default=2048, reasoning_allocation=16384
+        )
 
         response = _retry_sync(
             lambda: self._client.chat.completions.create(
@@ -516,7 +520,9 @@ class AsyncAIClient:
         messages.append({"role": "user", "content": message})
 
         target_model = model or self.default_model
-        effective_max_tokens = resolve_max_tokens(target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384)
+        effective_max_tokens = resolve_max_tokens(
+            target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
+        )
 
         response = await _retry_async(
             lambda: self._client.chat.completions.create(
@@ -665,7 +671,9 @@ class AsyncAIClient:
             self.privacy_guard.check_content(msg.get("content", ""))
 
         target_model = model or self.default_model
-        effective_max_tokens = resolve_max_tokens(target_model, max_tokens, baseline_default=2048, reasoning_allocation=16384)
+        effective_max_tokens = resolve_max_tokens(
+            target_model, max_tokens, baseline_default=2048, reasoning_allocation=16384
+        )
 
         response = await _retry_async(
             lambda: self._client.chat.completions.create(

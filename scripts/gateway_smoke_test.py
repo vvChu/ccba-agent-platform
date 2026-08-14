@@ -208,7 +208,9 @@ def check_h2_usage_forwarding(client: OpenAI) -> HypothesisResult:
 
         if pt is None or ct is None or tt is None:
             result.verdict = "CONFIRMED"
-            result.evidence.append("FAIL: Mot hoac nhieu truong usage la None -> Gateway KHONG forward du.")
+            result.evidence.append(
+                "FAIL: Mot hoac nhieu truong usage la None -> Gateway KHONG forward du."
+            )
         elif pt == 0 or ct == 0 or tt == 0:
             result.verdict = "CONFIRMED"
             result.evidence.append("FAIL: Truong usage = 0 -> Gateway co the dang drop usage data.")
@@ -306,7 +308,9 @@ def print_report(results: list[HypothesisResult]) -> None:
     print(sep)
 
     for r in results:
-        icon = {"REFUTED": "[OK]", "CONFIRMED": "[FAIL]", "INCONCLUSIVE": "[WARN]"}.get(r.verdict, "[?]")
+        icon = {"REFUTED": "[OK]", "CONFIRMED": "[FAIL]", "INCONCLUSIVE": "[WARN]"}.get(
+            r.verdict, "[?]"
+        )
         print(f"\n[{r.name}] {r.hypothesis}")
         print(f"  Verdict: {icon} {r.verdict}")
         for ev in r.evidence:
@@ -334,6 +338,7 @@ def print_report(results: list[HypothesisResult]) -> None:
 def main() -> None:
     """Chay toan bo smoke-test."""
     import sys
+
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
