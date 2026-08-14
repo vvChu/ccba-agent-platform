@@ -8,7 +8,7 @@
 ---
 
 ## 🎯 Mục Tiêu
-1. Cập nhật [`packages/ccba-ai/src/ccba_ai/services/team.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/services/team.py):
+1. Cập nhật [`packages/ccba-ai/src/ccba_ai/services/team.py`](../../../../packages/ccba-ai/src/ccba_ai/services/team.py):
    - `load_tasks() -> list[TeamTask]`: Tự động parse từng phần tử JSON thành `TeamTask`.
    - `save_tasks(tasks: list[TeamTask | dict], ...)`: Tự động chuyển đổi `[t.model_dump() if isinstance(t, TeamTask) else t for t in tasks]` trước khi ghi JSON.
    - `add_task(name, owner, ...) -> TeamTask`: Trả về `TeamTask`.

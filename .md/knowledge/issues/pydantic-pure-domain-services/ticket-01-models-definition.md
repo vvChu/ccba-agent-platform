@@ -8,7 +8,7 @@
 ---
 
 ## 🎯 Mục Tiêu
-Bổ sung các Pydantic v2 `BaseModel` DTOs vào [`packages/ccba-ai/src/ccba_ai/models.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/models.py) và xuất bản ra `__all__`:
+Bổ sung các Pydantic v2 `BaseModel` DTOs vào [`packages/ccba-ai/src/ccba_ai/models.py`](../../../../packages/ccba-ai/src/ccba_ai/models.py) và xuất bản ra `__all__`:
 1. `SEOAuditResult(BaseModel)`:
    - `score: int = 100`
    - `checks: list[str] = Field(default_factory=list)`
