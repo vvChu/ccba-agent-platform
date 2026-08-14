@@ -42,6 +42,10 @@ class PrivacyGuardHook:
             return
 
         if isinstance(content, str):
+            # Skip large binary base64 data URIs (e.g. data:image/...;base64,... or data:application/pdf;base64,...)
+            if content.startswith("data:") and ";base64," in content[:100]:
+                return
+
             for pattern in self.block_patterns:
                 matches = re.findall(pattern, content)
                 if matches:
