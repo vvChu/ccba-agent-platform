@@ -33,7 +33,7 @@ def get_target_model(default_model: str) -> str:
     return os.environ.get("CCBA_MODEL", default_model)
 
 
-def generate_text(prompt: str, default_model: str = "gemini-3.1-pro-preview") -> str:
+def generate_text(prompt: str, default_model: str = "gemini-3.7-flash") -> str:
     """Sinh nội dung văn bản (Text Generation) sử dụng luồng gọi LLM mềm dẻo.
 
     Args:

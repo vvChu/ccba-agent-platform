@@ -14,7 +14,7 @@ from .cleaners import Cleaners
 class LegalAnalysisEngine:
     """Module responsible for calling Spark LiteLLM to analyze law texts."""
 
-    def __init__(self, model: str = "gemini-3.1-pro-high", ai_client: Any = None) -> None:
+    def __init__(self, model: str = "gemini-3.7-flash-high", ai_client: Any = None) -> None:
         """Initialize the engine with an LLM model and optional adapter client (seam)."""
         self.model = model
         self.ai_client = ai_client or ai

@@ -146,7 +146,7 @@ class QCBatchOrchestrator:
 
         return level, images
 
-    async def run_batch(self, ai_model: str = "gemini-3.1-pro-low"):
+    async def run_batch(self, ai_model: str = "gemini-3.7-flash-high"):
         print("=" * 60)
         print("CCBA QC BATCH ORCHESTRATOR")
         print("=" * 60)
@@ -202,7 +202,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--out-dir", type=str, required=True, help="Output directory for reports and renders"
     )
-    parser.add_argument("--model", type=str, default="gemini-3.1-pro-low", help="AI Model to use")
+    parser.add_argument("--model", type=str, default="gemini-3.7-flash-high", help="AI Model to use")
     args = parser.parse_args()
 
     orchestrator = QCBatchOrchestrator(args.project_dir, args.matrix, args.out_dir)
