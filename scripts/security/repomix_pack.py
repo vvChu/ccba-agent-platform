@@ -11,13 +11,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Enforce UTF-8 output on Windows
-if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
-
 
 def check_npx_available() -> bool:
     """Check if npx CLI is available in the current environment."""
@@ -36,7 +29,7 @@ def check_npx_available() -> bool:
         return False
 
 
-def run_repomix(source_dir: Path, output_file: Path, exclude_patterns: list) -> bool:
+def run_repomix(source_dir: Path, output_file: Path, exclude_patterns: list[str]) -> bool:
     """Generate temporary config and execute repomix packaging."""
     config_file = source_dir / "repomix.config.json"
 
@@ -117,8 +110,20 @@ def run_repomix(source_dir: Path, output_file: Path, exclude_patterns: list) -> 
                 )
 
 
-def main():
+def main() -> None:
+    if sys.platform == "win32":
+        import io
+
+        try:
+            if isinstance(sys.stdout, io.TextIOWrapper):
+                sys.stdout.reconfigure(encoding="utf-8")
+            if isinstance(sys.stderr, io.TextIOWrapper):
+                sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
     parser = argparse.ArgumentParser(description="CCBA Repomix Packaging Wrapper")
+
     parser.add_argument(
         "--source", default=".", help="Source directory to package (default: current)"
     )

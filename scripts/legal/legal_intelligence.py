@@ -2,22 +2,29 @@
 """Legal Intelligence Pipeline CLI wrapper.
 
 Thin adapter delegating to LegalIntelPipeline in `ccba_legal.coordinator`.
+Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 """
+
+from __future__ import annotations
 
 import sys
 
 from ccba_legal import LegalIntelPipeline
 
-# Enforce UTF-8 output on Windows
-if sys.platform == "win32":
-    import io
-
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
-
 
 def main() -> None:
     """Run the Legal Intelligence Pipeline CLI."""
+    if sys.platform == "win32":
+        import io
+
+        try:
+            if isinstance(sys.stdout, io.TextIOWrapper):
+                sys.stdout.reconfigure(encoding="utf-8")
+            if isinstance(sys.stderr, io.TextIOWrapper):
+                sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
     pipeline = LegalIntelPipeline()
     sys.exit(pipeline.run_cli(sys.argv[1:]))
 

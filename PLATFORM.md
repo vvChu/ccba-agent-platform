@@ -42,8 +42,12 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   └── mdconverter/                   ←   Document converter service
 │
 ├── scripts/                           ← CLI & Lifecycle Hooks
+│   ├── governance/                    ←   Documentation, Skills & Architecture Auditors (Deep Seam)
+│   ├── scaffolding/                   ←   Skill generation & AST scaffolding tools
+│   ├── eval/                          ←   Process safety & evaluation gate runners
 │   ├── hooks/                         ←   Git hooks & guards (privacy, naming, simplify)
 │   ├── tests/                         ←   Unit test suites
+│   ├── doc_auditor.py                 ←   Governance Facade
 │   ├── hook_runner.py                 ←   Unified Hook Runner CLI
 │   ├── maskara.py                     ←   Maskara Privacy Engine CLI
 │   ├── run_safe_eval_wrapper.py       ←   Safe Execution Sandbox (CI Gate wrapper)
@@ -52,6 +56,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │
 └── pyproject.toml                     ← Root workspace config (uv)
 ```
+
 
 ## Phân loại Kỹ năng (Skills Classification)
 
