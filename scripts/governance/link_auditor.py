@@ -15,7 +15,6 @@ import yaml
 from .base import (
     CODE_REF_RE,
     ENV_VAR_RE,
-    FRONTMATTER_RE,
     IGNORE_CODE_REFS,
     IGNORE_ENV_PREFIXES,
     IGNORE_ENV_VARS,

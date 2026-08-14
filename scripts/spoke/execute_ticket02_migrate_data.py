@@ -5,9 +5,9 @@ import sys
 from pathlib import Path
 
 
-
-def migrate_data():
+def migrate_data() -> None:
     hub_base = Path("d:/GitHubProjects/ccba-agent-platform/.md/legal_docs")
+
     spoke_base = Path("D:/GitHubProjects/ccba-legal-knowledge/legal_docs/REGULATION_QCVN")
 
     print("[Ticket 02] Migrating OKF Bundles to Spoke...")
@@ -40,10 +40,12 @@ def migrate_data():
 
 
 if __name__ == "__main__":
-    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    if sys.platform == "win32":
+        import io
+
         try:
-            sys.stdout.reconfigure(encoding="utf-8")
+            if isinstance(sys.stdout, io.TextIOWrapper):
+                sys.stdout.reconfigure(encoding="utf-8")
         except Exception:
             pass
     migrate_data()
-

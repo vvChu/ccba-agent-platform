@@ -72,9 +72,12 @@ def extract_appendices(bundle_dir: Path | None = None) -> None:
 
 
 if __name__ == "__main__":
-    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    if sys.platform == "win32":
+        import io
+
         try:
-            sys.stdout.reconfigure(encoding="utf-8")
+            if isinstance(sys.stdout, io.TextIOWrapper):
+                sys.stdout.reconfigure(encoding="utf-8")
         except Exception:
             pass
     extract_appendices()

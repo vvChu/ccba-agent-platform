@@ -51,44 +51,44 @@ from governance import (
 # Backward-compatible standalone function aliases
 # ---------------------------------------------------------------------------
 
-_default_auditor = DocumentAuditor()
+_default_auditor: DocumentAuditor = DocumentAuditor()
 
 
 def parse_frontmatter(content: str) -> tuple[dict[str, Any] | None, str]:
     """Parse YAML frontmatter from document content (standalone alias)."""
-    return _default_auditor.parse_frontmatter(content)
+    return _default_auditor.parse_frontmatter(content)  # type: ignore[no-any-return]
 
 
 def extract_code_references(content: str) -> list[tuple[int, str]]:
     """Extract code symbol references (standalone alias)."""
-    return _default_auditor.extract_code_references(content)
+    return _default_auditor.extract_code_references(content)  # type: ignore[no-any-return]
 
 
 def extract_internal_links(content: str) -> list[tuple[int, str, str]]:
     """Extract relative internal Markdown links (standalone alias)."""
-    return _default_auditor.extract_internal_links(content)
+    return _default_auditor.extract_internal_links(content)  # type: ignore[no-any-return]
 
 
 def extract_env_variables(content: str) -> list[tuple[int, str]]:
     """Extract documented environment variables (standalone alias)."""
-    return _default_auditor.extract_env_variables(content)
+    return _default_auditor.extract_env_variables(content)  # type: ignore[no-any-return]
 
 
 def search_codebase_for_symbol(symbol: str, search_dirs: list[Path] | None = None) -> bool:
     """Check if symbol declaration exists in codebase (standalone alias)."""
-    return _default_auditor.search_codebase_for_symbol(symbol, search_dirs)
+    return _default_auditor.search_codebase_for_symbol(symbol, search_dirs)  # type: ignore[no-any-return]
 
 
 def load_env_example(project_root: Path) -> set[str]:
     """Load declared env variable names from .env.example (standalone alias)."""
     auditor = DocumentAuditor(project_root)
-    return auditor.load_env_example()
+    return auditor.load_env_example()  # type: ignore[no-any-return]
 
 
 def load_legal_registry(project_root: Path) -> dict[str, Any]:
     """Load legal document registry (standalone alias)."""
     auditor = DocumentAuditor(project_root)
-    return auditor.load_legal_registry()
+    return auditor.load_legal_registry()  # type: ignore[no-any-return]
 
 
 def build_markdown_to_doc_map(
@@ -96,13 +96,13 @@ def build_markdown_to_doc_map(
 ) -> dict[Path, dict[str, Any]]:
     """Build map from path to legal doc definition (standalone alias)."""
     auditor = DocumentAuditor(project_root)
-    return auditor.build_markdown_to_doc_map(registry)
+    return auditor.build_markdown_to_doc_map(registry)  # type: ignore[no-any-return]
 
 
 def scan_orphan_files(bundle_root: Path, project_root: Path) -> list[Path]:
     """Scan orphan files in legal bundle (standalone alias)."""
     auditor = DocumentAuditor(project_root)
-    return auditor.scan_orphan_files(bundle_root)
+    return auditor.scan_orphan_files(bundle_root)  # type: ignore[no-any-return]
 
 
 def validate_markdown_file(
@@ -115,7 +115,7 @@ def validate_markdown_file(
 ) -> dict[str, list[Any]]:
     """Validate a single markdown file (standalone alias)."""
     auditor = DocumentAuditor(project_root)
-    return auditor.validate_markdown_file(
+    return auditor.validate_markdown_file(  # type: ignore[no-any-return]
         filepath, search_dirs, env_example_vars, fix=fix, registry_map=registry_map
     )
 
@@ -123,13 +123,13 @@ def validate_markdown_file(
 def get_modified_files(project_root: Path) -> set[Path]:
     """Get modified files (standalone alias)."""
     auditor = DocumentAuditor(project_root)
-    return auditor.get_modified_files()
+    return auditor.get_modified_files()  # type: ignore[no-any-return]
 
 
 def check_architecture_drift(project_root: Path) -> list[str]:
     """Check architecture drift (standalone alias)."""
     auditor = DocumentAuditor(project_root)
-    return auditor.check_architecture_drift()
+    return auditor.check_architecture_drift()  # type: ignore[no-any-return]
 
 
 __all__ = [

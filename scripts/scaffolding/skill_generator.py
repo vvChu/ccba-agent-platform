@@ -523,8 +523,12 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="CCBA Autonomous Skill & Workflow Scaffolder")
     parser.add_argument("--script", "-s", help="Đường dẫn file Python script nguồn")
-    parser.add_argument("--name", "-n", default=None, help="Tên Skill muốn tạo (mặc định theo tên script)")
-    parser.add_argument("--sync-all", action="store_true", help="Đồng bộ lại tất cả cli_spec.yaml từ scripts")
+    parser.add_argument(
+        "--name", "-n", default=None, help="Tên Skill muốn tạo (mặc định theo tên script)"
+    )
+    parser.add_argument(
+        "--sync-all", action="store_true", help="Đồng bộ lại tất cả cli_spec.yaml từ scripts"
+    )
 
     args = parser.parse_args()
 

@@ -8,11 +8,10 @@ import os
 import sys
 from pathlib import Path
 
-
 # Thêm path để import các thư viện
 
 try:
-    from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore
+    from google_auth_oauthlib.flow import InstalledAppFlow
 
     LIBS_AVAILABLE = True
 except ImportError:
@@ -161,14 +160,17 @@ def login_drive() -> None:
 
 
 def main() -> None:
-    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    if sys.platform == "win32":
+        import io
+
         try:
-            sys.stdout.reconfigure(encoding="utf-8")
-            sys.stderr.reconfigure(encoding="utf-8")
+            if isinstance(sys.stdout, io.TextIOWrapper):
+                sys.stdout.reconfigure(encoding="utf-8")
+            if isinstance(sys.stderr, io.TextIOWrapper):
+                sys.stderr.reconfigure(encoding="utf-8")
         except Exception:
             pass
     login_drive()
-
 
 
 if __name__ == "__main__":

@@ -6,9 +6,9 @@ from pathlib import Path
 import yaml
 
 
-
-def init_spoke():
+def init_spoke() -> None:
     spoke_dir = Path("D:/GitHubProjects/ccba-legal-knowledge")
+
     spoke_dir.mkdir(parents=True, exist_ok=True)
     print(f"[Ticket 01] Initializing Knowledge Spoke at: {spoke_dir.resolve()}")
 
@@ -93,10 +93,12 @@ Cơ sở dữ liệu Tri thức Pháp luật và Quy chuẩn Kỹ thuật Xây d
 
 
 if __name__ == "__main__":
-    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    if sys.platform == "win32":
+        import io
+
         try:
-            sys.stdout.reconfigure(encoding="utf-8")
+            if isinstance(sys.stdout, io.TextIOWrapper):
+                sys.stdout.reconfigure(encoding="utf-8")
         except Exception:
             pass
     init_spoke()
-

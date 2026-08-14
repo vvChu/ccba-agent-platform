@@ -12,7 +12,6 @@ import sys
 from pathlib import Path
 
 
-
 def check_npx_available() -> bool:
     """Check if npx CLI is available in the current environment."""
     try:
@@ -30,7 +29,7 @@ def check_npx_available() -> bool:
         return False
 
 
-def run_repomix(source_dir: Path, output_file: Path, exclude_patterns: list) -> bool:
+def run_repomix(source_dir: Path, output_file: Path, exclude_patterns: list[str]) -> bool:
     """Generate temporary config and execute repomix packaging."""
     config_file = source_dir / "repomix.config.json"
 
@@ -112,10 +111,14 @@ def run_repomix(source_dir: Path, output_file: Path, exclude_patterns: list) -> 
 
 
 def main() -> None:
-    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    if sys.platform == "win32":
+        import io
+
         try:
-            sys.stdout.reconfigure(encoding="utf-8")
-            sys.stderr.reconfigure(encoding="utf-8")
+            if isinstance(sys.stdout, io.TextIOWrapper):
+                sys.stdout.reconfigure(encoding="utf-8")
+            if isinstance(sys.stderr, io.TextIOWrapper):
+                sys.stderr.reconfigure(encoding="utf-8")
         except Exception:
             pass
 

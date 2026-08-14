@@ -13,8 +13,7 @@ from pathlib import Path
 from ccba_ai import ai
 
 
-
-def run_target_script(script_path: Path, args: list) -> tuple[int, str, str]:
+def run_target_script(script_path: Path, args: list[str]) -> tuple[int, str, str]:
     """Execute the target Python script and return returncode, stdout, and stderr."""
     cmd = [sys.executable, str(script_path)] + args
     try:
@@ -70,10 +69,14 @@ def analyze_error(script_path: Path, stderr: str) -> str:
 
 
 def main() -> None:
-    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    if sys.platform == "win32":
+        import io
+
         try:
-            sys.stdout.reconfigure(encoding="utf-8")
-            sys.stderr.reconfigure(encoding="utf-8")
+            if isinstance(sys.stdout, io.TextIOWrapper):
+                sys.stdout.reconfigure(encoding="utf-8")
+            if isinstance(sys.stderr, io.TextIOWrapper):
+                sys.stderr.reconfigure(encoding="utf-8")
         except Exception:
             pass
 

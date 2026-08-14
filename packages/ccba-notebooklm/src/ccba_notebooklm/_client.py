@@ -35,9 +35,26 @@ except ImportError:
     NotebookLMClient = None
     HAS_NOTEBOOKLM = False
     QuizQuantity = QuizDifficulty = SlideDeckFormat = SlideDeckLength = None
-    ReportFormat = InfographicOrientation = InfographicDetail = InfographicStyle = None
-    VideoFormat = VideoStyle = None
-    NetworkError = Exception  # type: ignore[no-redef, misc]
+    NetworkError = Exception
+
+
+__all__ = [
+    "CCBANotebookLMClient",
+    "HAS_NOTEBOOKLM",
+    "NetworkError",
+    "get_client",
+    "check_auth",
+    "InfographicDetail",
+    "InfographicOrientation",
+    "InfographicStyle",
+    "QuizDifficulty",
+    "QuizQuantity",
+    "ReportFormat",
+    "SlideDeckFormat",
+    "SlideDeckLength",
+    "VideoFormat",
+    "VideoStyle",
+]
 
 
 # ---------------------------------------------------------------------------
@@ -69,7 +86,7 @@ class CCBANotebookLMClient:
     # ---------------------------------------------------------------------------
 
     async def list_notebooks(self) -> list[Any]:
-        return await self._client.notebooks.list()
+        return await self._client.notebooks.list()  # type: ignore[no-any-return]
 
     async def create_notebook(self, title: str) -> Any:
         return await self._client.notebooks.create(title)
@@ -81,10 +98,10 @@ class CCBANotebookLMClient:
         await self._client.sharing.set_public(notebook_id, is_public)
 
     def get_share_url(self, notebook_id: str) -> str:
-        return self._client.notebooks.get_share_url(notebook_id)
+        return str(self._client.notebooks.get_share_url(notebook_id))
 
     async def list_sources(self, notebook_id: str) -> list[Any]:
-        return await self._client.sources.list(notebook_id)
+        return await self._client.sources.list(notebook_id)  # type: ignore[no-any-return]
 
     async def add_file_source(self, notebook_id: str, path: str) -> Any:
         return await self._client.sources.add_file(notebook_id, path)
@@ -110,42 +127,23 @@ class CCBANotebookLMClient:
         await self._client.artifacts.wait_for_completion(notebook_id, task_id)
 
     async def generate_artifact(
-        self, task_type: str, notebook_id: str, source_ids: list[str], **kwargs
+        self, task_type: str, notebook_id: str, source_ids: list[str], **kwargs: Any
     ) -> Any:
-        """Đại diện sinh các loại Structured Artifacts khác nhau dựa trên task_type."""
+        """Sinh Structured Artifact tương ứng với task_type."""
         task_type_lower = task_type.lower()
         if task_type_lower == "audio":
-            return await self._client.artifacts.generate_audio(notebook_id)
+            return await self._client.artifacts.generate_audio(
+                notebook_id,
+                source_ids=source_ids,
+                audio_format=kwargs.get("audio_format"),
+                language=kwargs.get("language") or "vi",
+            )
         elif task_type_lower == "quiz":
             return await self._client.artifacts.generate_quiz(
                 notebook_id,
                 source_ids=source_ids,
                 quantity=kwargs.get("quantity"),
                 difficulty=kwargs.get("difficulty"),
-            )
-        elif task_type_lower == "slides":
-            return await self._client.artifacts.generate_slide_deck(
-                notebook_id,
-                source_ids=source_ids,
-                language=kwargs.get("language", "en"),
-                slide_format=kwargs.get("slide_format"),
-                slide_length=kwargs.get("slide_length"),
-            )
-        elif task_type_lower == "mindmap":
-            return await self._client.artifacts.generate_mind_map(
-                notebook_id, source_ids=source_ids
-            )
-        elif task_type_lower == "infographic":
-            return await self._client.artifacts.generate_infographic(
-                notebook_id,
-                source_ids=source_ids,
-                orientation=kwargs.get("orientation"),
-                detail_level=kwargs.get("detail_level"),
-                style=kwargs.get("style"),
-            )
-        elif task_type_lower == "study-guide":
-            return await self._client.artifacts.generate_study_guide(
-                notebook_id, source_ids=source_ids
             )
         elif task_type_lower == "data-table":
             return await self._client.artifacts.generate_data_table(
@@ -181,7 +179,7 @@ class CCBANotebookLMClient:
         notebook_id: str,
         output_path: str,
         task_id: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> Any:
         """Tải Structured Artifact tương ứng về đường dẫn chỉ định."""
         task_type_lower = task_type.lower()
@@ -349,11 +347,12 @@ async def check_auth() -> int:
 
     try:
         async with client_instance as client:
-            await client.notebooks.list()
+            await client.list_notebooks()
             print("SUCCESS: Kết nối và xác thực thành công với Google NotebookLM Cloud!")
-            tier = await client.settings.get_account_tier()
+            tier = await client.get_account_tier()
             print(f"[Info] Subscription Tier: {tier.tier} ({tier.plan_name or 'Standard Plan'})")
             return 0
+
     except Exception as e:
         print(
             f"ERROR_AUTH: Session cookie đã hết hạn hoặc không tồn tại. Vui lòng chạy 'python -m notebooklm login' trên trình duyệt để đăng nhập lại. Chi tiết: {e}",
