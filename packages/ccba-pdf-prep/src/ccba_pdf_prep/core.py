@@ -250,13 +250,13 @@ class PDFAnalyzer:
             PDFCategory.SCANNED: "ocr-primary",
             PDFCategory.HYBRID: "ocr-primary",
             PDFCategory.DRAWING: "",
-            PDFCategory.UNKNOWN: "gemini-3-flash",
+            PDFCategory.UNKNOWN: "gemini-3.7-flash",
         }
 
         return PDFReport(
             file_path=pdf_path,
             category=category,
-            recommended_model=model_map.get(category, "gemini-3-flash"),
+            recommended_model=model_map.get(category, "gemini-3.7-flash"),
             confidence=confidence,
             pages=num_pages,
             text_pages=text_pages,
