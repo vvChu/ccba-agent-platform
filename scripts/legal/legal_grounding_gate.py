@@ -32,7 +32,9 @@ def main() -> None:
     sample_retrieved: list[dict[str, Any]] = [
         {"short_name": "NĐ 207/2026", "document_number": "207/2026/NĐ-CP", "id": "ND-207-2026"}
     ]
-    sample_text = "Theo quy định tại [NĐ 207/2026 - 207/2026/NĐ-CP], nghiệm thu công trình theo Điều 12."
+    sample_text = (
+        "Theo quy định tại [NĐ 207/2026 - 207/2026/NĐ-CP], nghiệm thu công trình theo Điều 12."
+    )
     result = verify_legal_grounding(sample_text, sample_retrieved)
     print(f"Grounding verification result: {result}")
     formatted = format_grounded_response(sample_text, sample_retrieved)

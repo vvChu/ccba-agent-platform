@@ -47,8 +47,9 @@ class GatewayProvider(LLMProvider):
         return self
 
     async def __aexit__(self, *exc: object) -> None:
-        """Exit async context."""
-        pass
+        """Close the underlying client on exit."""
+        if hasattr(self.client, "aclose"):
+            await self.client.aclose()
 
     async def generate(
         self,

@@ -63,4 +63,3 @@ def test_legacy_wrappers_compatibility():
 
     res_auditor = SEOAuditor().audit_markdown(content)
     assert res_md == res_auditor
-

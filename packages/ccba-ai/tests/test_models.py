@@ -148,4 +148,3 @@ def test_domain_dtos_initialization_and_serialization():
     assert len(plan_status.phases) == 2
     assert plan_status.phases[0].status == "completed"
     assert plan_status.to_dict()["metadata"]["status"] == "in-progress"
-

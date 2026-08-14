@@ -66,9 +66,7 @@ def verify_legal_grounding(
     }
 
 
-def format_grounded_response(
-    response_text: str, retrieved_docs: list[dict[str, Any]]
-) -> str:
+def format_grounded_response(response_text: str, retrieved_docs: list[dict[str, Any]]) -> str:
     """Format final response with grounding verification banner and standard disclaimer.
 
     Args:
@@ -97,14 +95,10 @@ class LegalGroundingGate:
     def __init__(self, disclaimer: str = LEGAL_DISCLAIMER) -> None:
         self.disclaimer = disclaimer
 
-    def verify(
-        self, response_text: str, retrieved_docs: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def verify(self, response_text: str, retrieved_docs: list[dict[str, Any]]) -> dict[str, Any]:
         """Verify citations in response."""
         return verify_legal_grounding(response_text, retrieved_docs)
 
-    def format(
-        self, response_text: str, retrieved_docs: list[dict[str, Any]]
-    ) -> str:
+    def format(self, response_text: str, retrieved_docs: list[dict[str, Any]]) -> str:
         """Format response with verification banner and disclaimer."""
         return format_grounded_response(response_text, retrieved_docs)

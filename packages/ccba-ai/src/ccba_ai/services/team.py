@@ -140,4 +140,3 @@ def complete_task(name: str, workspace_root: Path | None = None) -> TeamTask:
                 return t
 
         raise FileNotFoundError(f"Task '{name}' not found.")
-

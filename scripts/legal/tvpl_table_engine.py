@@ -8,7 +8,6 @@ except ImportError:
     docx = None
 
 
-
 def convert_docx_table_to_markdown(table) -> str:
     """Convert a python-docx Table object to clean Markdown format."""
     rows_data: list[list[str]] = []

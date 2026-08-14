@@ -17,7 +17,9 @@ def test_verify_legal_grounding_valid_citation():
     retrieved = [
         {"short_name": "NĐ 207/2026", "document_number": "207/2026/NĐ-CP", "id": "ND-207-2026"}
     ]
-    response = "Theo quy định tại [NĐ 207/2026 - 207/2026/NĐ-CP], nghiệm thu công trình theo Điều 12."
+    response = (
+        "Theo quy định tại [NĐ 207/2026 - 207/2026/NĐ-CP], nghiệm thu công trình theo Điều 12."
+    )
     res = verify_legal_grounding(response, retrieved)
     assert res["is_grounded"] is True
     assert len(res["valid_citations"]) == 1
@@ -137,4 +139,4 @@ Nội dung chi tiết phụ lục 2...
     assert appendices[1]["filename"] == "nd_105_2025-phu_luc_02.md"
     assert "Biểu mẫu nghiệm thu PCCC" in appendices[0]["content"]
     assert "Danh mục phương tiện PCCC" in appendices[1]["content"]
-    assert "uniclass: \"Fi_10_20\"" in appendices[0]["content"]
+    assert 'uniclass: "Fi_10_20"' in appendices[0]["content"]

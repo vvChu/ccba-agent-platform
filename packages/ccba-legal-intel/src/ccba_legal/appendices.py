@@ -111,7 +111,7 @@ class AppendixSplitter:
             frontmatter = f"""---
 type: Appendix
 title: "{full_label} - {title}"
-description: "Chi tiết {full_label} ban hành kèm theo {parent_slug.replace('_', ' ').title()}"
+description: "Chi tiết {full_label} ban hành kèm theo {parent_slug.replace("_", " ").title()}"
 parent_document: "{parent_ref}"
 uniclass: "{self.uniclass_code}"
 ---
@@ -190,7 +190,9 @@ uniclass: "{self.uniclass_code}"
             if "### Phụ lục đính kèm" not in index_content:
                 appendix_section = "\n### Phụ lục đính kèm (Decree Appendices)\n\n"
                 appendix_section += "\n".join(all_index_links) + "\n"
-                index_path.write_text(index_content.strip() + "\n" + appendix_section, encoding="utf-8")
+                index_path.write_text(
+                    index_content.strip() + "\n" + appendix_section, encoding="utf-8"
+                )
 
         return {
             "files_processed": files_processed,

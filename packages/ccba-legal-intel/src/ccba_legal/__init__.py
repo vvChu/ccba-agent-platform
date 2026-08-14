@@ -62,4 +62,3 @@ __all__ = [
     "calculate_md5",
     "calculate_sha256",
 ]
-

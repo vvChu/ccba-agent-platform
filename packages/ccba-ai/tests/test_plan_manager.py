@@ -130,4 +130,3 @@ def test_plan_lifecycle_and_compatibility():
         phase_file = plan_file.parent / new_status.phases[0].file
         assert phase_file.exists()
         assert "status: completed" in phase_file.read_text(encoding="utf-8")
-

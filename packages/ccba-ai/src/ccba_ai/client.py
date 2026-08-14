@@ -452,6 +452,13 @@ class AIClient:
             # Fallback: raw base64 without resize
             return base64.b64encode(path.read_bytes()).decode("utf-8")
 
+    def close(self) -> None:
+        """Close the underlying OpenAI client session."""
+        try:
+            self._client.close()
+        except Exception:
+            pass
+
     def __repr__(self) -> str:
         return f"AIClient(url={self._client.base_url}, model={self.default_model})"
 
@@ -716,6 +723,17 @@ class AsyncAIClient:
             circuit_breaker=self.circuit_breaker,
         )
         return sorted({m.id for m in result.data})
+
+    async def aclose(self) -> None:
+        """Close the underlying AsyncOpenAI client session."""
+        try:
+            await self._client.close()
+        except Exception:
+            pass
+
+    async def close(self) -> None:
+        """Alias for aclose()."""
+        await self.aclose()
 
     def __repr__(self) -> str:
         return f"AsyncAIClient(url={self._client.base_url}, model={self.default_model})"

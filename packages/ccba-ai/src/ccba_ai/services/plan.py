@@ -341,17 +341,13 @@ def update_phase_status(
         phase_name=phase_obj.name,
         old_status=old_status,
         new_status=status,
-        plan_file=str(
-            plan_path.relative_to(root) if plan_path.is_relative_to(root) else plan_path
-        ),
+        plan_file=str(plan_path.relative_to(root) if plan_path.is_relative_to(root) else plan_path),
         phase_file=phase_obj.filename,
         phase_file_updated=phase_file_updated,
     )
 
 
-def get_plan_status(
-    plan_file: str | Path, workspace_root: Path | None = None
-) -> PlanStatusResult:
+def get_plan_status(plan_file: str | Path, workspace_root: Path | None = None) -> PlanStatusResult:
     """Parse and return the plan status."""
     root = workspace_root or Path.cwd()
     plan_path = Path(plan_file)
@@ -369,15 +365,11 @@ def get_plan_status(
 
     phases_data = []
     for p in plan_obj.phases:
-        phases_data.append(
-            PlanPhaseData(id=p.num, name=p.name, status=p.status, file=p.filename)
-        )
+        phases_data.append(PlanPhaseData(id=p.num, name=p.name, status=p.status, file=p.filename))
 
     return PlanStatusResult(
         title=plan_obj.title,
         metadata=metadata,
         phases=phases_data,
-        plan_file=str(
-            plan_path.relative_to(root) if plan_path.is_relative_to(root) else plan_path
-        ),
+        plan_file=str(plan_path.relative_to(root) if plan_path.is_relative_to(root) else plan_path),
     )

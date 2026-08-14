@@ -41,4 +41,3 @@ __all__ = [
     "suggest_paragraph",
     "suggest_deletion",
 ]
-

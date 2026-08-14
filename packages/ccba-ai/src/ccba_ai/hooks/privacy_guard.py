@@ -42,9 +42,18 @@ class PrivacyGuardHook:
             return
 
         if isinstance(content, str):
-            # Skip large binary base64 data URIs (e.g. data:image/...;base64,... or data:application/pdf;base64,...)
+            # Skip binary base64 data URIs (images, pdfs, audio, video) to avoid false positives on random binary noise
             if content.startswith("data:") and ";base64," in content[:100]:
-                return
+                header = content[: content.find(";base64,")].lower()
+                binary_prefixes = (
+                    "data:image/",
+                    "data:application/pdf",
+                    "data:video/",
+                    "data:audio/",
+                    "data:application/octet-stream",
+                )
+                if any(header.startswith(prefix) for prefix in binary_prefixes):
+                    return
 
             for pattern in self.block_patterns:
                 matches = re.findall(pattern, content)
