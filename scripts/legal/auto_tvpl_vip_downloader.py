@@ -17,7 +17,7 @@ from ccba_legal.crawler import ChromeCDP, get_tvpl_credentials
 
 def run_auto_crawler():
     username, password = get_tvpl_credentials()
-    print(f"[AutoTVPL] Starting Chrome browser on debug port 9222...")
+    print("[AutoTVPL] Starting Chrome browser on debug port 9222...")
     chrome_cmd = [
         "cmd.exe",
         "/c",

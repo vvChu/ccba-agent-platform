@@ -7,7 +7,7 @@ on:
     paths:
       - '.agents/skills/**'
       - '.agents/workflows/**'
-      - 'scripts/compile_knowledge.py'
+      - 'scripts/spoke/compile_knowledge.py'
       - '.github/workflows/notebooklm-sync.yml'
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
 
       - name: Compile Knowledge Base
         run: |
-          python scripts/compile_knowledge.py
+          python scripts/spoke/compile_knowledge.py
 
       - name: Sync Compiled Knowledge to NotebookLM
         env:

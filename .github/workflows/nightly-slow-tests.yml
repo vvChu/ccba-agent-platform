@@ -37,10 +37,11 @@ jobs:
           uv pip install -e "packages/mdconverter[dev]" --system
 
       - name: Run Slow & Stress Tests for ccba-legal-intel
-        run: python scripts/run_isolated_tests.py -p ccba-legal-intel --stress
+        run: python scripts/eval/run_isolated_tests.py -p ccba-legal-intel --stress
 
       - name: Run Slow & Stress Tests for ccba-harness
-        run: python scripts/run_isolated_tests.py -p ccba-harness --stress
+        run: python scripts/eval/run_isolated_tests.py -p ccba-harness --stress
+
 
       - name: Run Test Speed Guard Compliance Audit
         run: python scripts/hooks/test_speed_guard.py
