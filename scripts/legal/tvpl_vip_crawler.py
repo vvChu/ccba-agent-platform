@@ -10,7 +10,6 @@ Features:
 - Dual-Parser Table Engine: Markdown table reconstruction
 """
 
-import json
 import os
 import random
 import subprocess
@@ -38,7 +37,6 @@ from ccba_legal.crawler import (
     log_session_audit,
     resolve_project_root,
 )
-
 
 
 def get_chrome_path() -> str:

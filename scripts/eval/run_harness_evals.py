@@ -202,7 +202,7 @@ def main() -> None:
         # Chỉ chạy mypy trên các package và file quan trọng đã được gỡ lỗi type check hoàn chỉnh
         mypy_paths = [
             "packages/mdconverter/src/mdconverter",
-            "scripts/run_harness_evals.py",
+            "scripts/eval/run_harness_evals.py",
             ".agents/skills/youtube-learn/scripts/visual_extractor.py",
         ]
 
