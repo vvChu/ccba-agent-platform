@@ -12,7 +12,7 @@
 ```
 ccba-agent-platform/                    ← Hub (Git-backed)
 ├── .agents/
-│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->80<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-08-11 -->
+│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->83<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-08-14 -->
 │   │   ├── legal-document-tracker/    ←   Theo dõi VBPL
 │   │   ├── completion-checklist/      ←   HSHT công trình
 │   │   ├── seminar-builder/           ←   Chuẩn bị seminar
@@ -29,6 +29,7 @@ ccba-agent-platform/                    ← Hub (Git-backed)
 │   ├── ccba-ai/                       ←   AI Gateway client & SDK
 │   ├── ccba-harness/                  ←   Testing harness utilities
 │   ├── ccba-legal-intel/              ←   Legal intelligence connectors
+│   ├── ccba-maskara/                  ←   Secret detection and redaction engine
 │   ├── ccba-notebooklm/               ←   Google NotebookLM wrapper & Mock client
 │   ├── ccba-ooxml/                    ←   OOXML validation and parsing engine
 │   ├── ccba-pdf-prep/                 ←   PDF processing (tiling, title-block, chunks)
