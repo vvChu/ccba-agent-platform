@@ -12,6 +12,13 @@ import threading
 import time
 from pathlib import Path
 
+# Ensure project root is in sys.path when running script directly
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from typing import Any
+
 from scripts.eval.process_safety import get_venv_python, kill_process_tree
 
 AVAILABLE_PACKAGES = [
@@ -26,7 +33,8 @@ AVAILABLE_PACKAGES = [
 ]
 
 
-def _enqueue_output(stream, q: queue.Queue[str]) -> None:
+def _enqueue_output(stream: Any, q: queue.Queue[str]) -> None:
+
     try:
         for line in iter(stream.readline, ""):
             q.put(line)

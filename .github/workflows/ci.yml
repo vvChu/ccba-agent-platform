@@ -40,6 +40,8 @@ jobs:
           uv pip install -e "packages/mdconverter[dev]" --system
 
       - name: Run CCBA Harness CI Gates
+        env:
+          PYTHONPATH: .
         run: python scripts/eval/run_harness_evals.py --all
 
 
