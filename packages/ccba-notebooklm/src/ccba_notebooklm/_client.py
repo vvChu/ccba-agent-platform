@@ -35,6 +35,8 @@ except ImportError:
     NotebookLMClient = None
     HAS_NOTEBOOKLM = False
     QuizQuantity = QuizDifficulty = SlideDeckFormat = SlideDeckLength = None
+    ReportFormat = InfographicOrientation = InfographicDetail = InfographicStyle = None
+    VideoFormat = VideoStyle = None
     NetworkError = Exception
 
 

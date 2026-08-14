@@ -88,6 +88,15 @@ class DriftAuditor(BaseAuditor):
                 if filepath in arch_docs or (status.startswith("M") and filepath in arch_docs):
                     arch_doc_updated = True
 
+                if (
+                    status.startswith("A")
+                    or status.startswith("D")
+                    or status.startswith("R")
+                    or status == "??"
+                ):
+                    if filepath == "pyproject.toml" or filepath.startswith(tracked_prefixes):
+                        structural_change = True
+
             # Also check if any commit in the current branch history updated arch_docs
             res_log = subprocess.run(
                 ["git", "log", "origin/main..HEAD", "--name-only"],
@@ -99,15 +108,6 @@ class DriftAuditor(BaseAuditor):
                 for line in res_log.stdout.splitlines():
                     if line.strip() in arch_docs:
                         arch_doc_updated = True
-
-                if (
-                    status.startswith("A")
-                    or status.startswith("D")
-                    or status.startswith("R")
-                    or status == "??"
-                ):
-                    if filepath == "pyproject.toml" or filepath.startswith(tracked_prefixes):
-                        structural_change = True
 
             if structural_change and not arch_doc_updated:
                 drift_errors.append(
