@@ -21,6 +21,7 @@ from .spoke_synchronizer import (
     CatalogMerger,
     HubDiscoverer,
     HubNotFoundError,
+    SharedSdkInspector,
     SpokeSyncEngine,
     SpokeSynchronizer,
     TestGuardrailCopier,
@@ -31,6 +32,7 @@ from .spoke_synchronizer import (
 __all__ = [
     "SpokeSyncEngine",
     "SpokeSynchronizer",
+    "SharedSdkInspector",
     "sync_project",
     "sync_all_spokes",
     "get_registered_spokes",

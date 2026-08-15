@@ -294,6 +294,95 @@ class TestGuardrailCopier:
                         print("  - Copied test wrapper CLI: scripts/safe_pytest.py")
 
 
+class SharedSdkInspector:
+    """Zero-latency static file inspector for Hub shared packages in Spoke virtual environments."""
+
+    def __init__(self, spoke_root: Path, hub_root: Path, project_type: str):
+        self.spoke_root = spoke_root
+        self.hub_root = hub_root
+        self.project_type = project_type
+
+    def is_python_project(self) -> bool:
+        """Check if Spoke is a Python project by configuration or file presence."""
+        return (
+            self.project_type == "Phần mềm"
+            or (self.spoke_root / "pyproject.toml").exists()
+            or (self.spoke_root / "requirements.txt").exists()
+            or (self.spoke_root / ".venv").exists()
+            or (self.spoke_root / "venv").exists()
+        )
+
+    def find_site_packages(self) -> list[Path]:
+        """Locate site-packages directories across standard virtual environment folders."""
+        site_packages_dirs: list[Path] = []
+        for venv_name in [".venv", "venv", "env", ".env"]:
+            venv_path = self.spoke_root / venv_name
+            if not venv_path.exists():
+                continue
+            # Windows: .venv/Lib/site-packages
+            win_sp = venv_path / "Lib" / "site-packages"
+            if win_sp.exists():
+                site_packages_dirs.append(win_sp)
+            # POSIX: .venv/lib/pythonX.Y/site-packages
+            posix_lib = venv_path / "lib"
+            if posix_lib.exists():
+                for py_dir in posix_lib.glob("python*"):
+                    sp = py_dir / "site-packages"
+                    if sp.exists():
+                        site_packages_dirs.append(sp)
+        return site_packages_dirs
+
+    def inspect(self) -> dict[str, bool]:
+        """Returns {package_name: is_installed} for key Hub shared packages."""
+        if not self.is_python_project():
+            return {}
+
+        packages_to_check = ["ccba-ai", "ccba-ooxml"]
+        installed_status = dict.fromkeys(packages_to_check, False)
+        site_packages_dirs = self.find_site_packages()
+
+        if not site_packages_dirs:
+            return installed_status
+
+        for sp_dir in site_packages_dirs:
+            try:
+                for item in sp_dir.iterdir():
+                    item_name_lower = item.name.lower().replace("-", "_")
+                    for pkg in packages_to_check:
+                        pkg_norm = pkg.replace("-", "_")
+                        if pkg_norm in item_name_lower:
+                            installed_status[pkg] = True
+                    # Check inside .pth files (e.g. easy-install.pth or custom .pth)
+                    if item.suffix == ".pth" and item.is_file():
+                        try:
+                            content = item.read_text(encoding="utf-8", errors="ignore").lower()
+                            for pkg in packages_to_check:
+                                pkg_norm = pkg.replace("-", "_")
+                                if pkg_norm in content:
+                                    installed_status[pkg] = True
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+        return installed_status
+
+    def get_recommendations(self) -> list[str]:
+        """Returns actionable pip install commands for unlinked shared packages."""
+        status = self.inspect()
+        if not status:
+            return []
+        missing = [pkg for pkg, installed in status.items() if not installed]
+        if not missing:
+            return []
+        commands: list[str] = []
+        for pkg in missing:
+            pkg_path = self.hub_root / "packages" / pkg
+            if pkg_path.exists():
+                commands.append(f'pip install -e "{pkg_path}"')
+        return commands
+
+
 def safe_remove(path: Path):
     """Safely remove a directory or file without crashing on permission errors."""
     if not path.exists():
@@ -687,6 +776,16 @@ class SpokeSynchronizer:
         print(
             f"Tổng kết: {new_count} mới, {updated_count} cập nhật, {unchanged_count} không đổi, {preserved_count} giữ nguyên nội bộ."
         )
+
+        # 7. Zero-Latency Shared Python SDKs Inspection
+        sdk_inspector = SharedSdkInspector(spoke_root, hub_root, project_type)
+        sdk_recs = sdk_inspector.get_recommendations()
+        if sdk_recs:
+            print("\n💡 Gợi ý Shared SDKs cho Spoke Python:")
+            print("   Để sử dụng AI Gateway hoặc Office Processing dùng chung từ Hub:")
+            for cmd in sdk_recs:
+                print(f"   -> {cmd}")
+
         if dry_run:
             print("\n[DRY-RUN] Quá trình mô phỏng hoàn tất. 0 tệp tin nào bị sửa đổi trên đĩa.")
         else:
