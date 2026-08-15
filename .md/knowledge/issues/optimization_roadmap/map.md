@@ -27,19 +27,19 @@ Xây dựng hệ sinh thái Hub-Spoke hoàn thiện, đạt độ gắn kết ca
 
 ## ⚖️ 3. Quyết Định Đã Chốt (Decisions So Far)
 
-* **[D01: Phân Ranh Giới Kiến Trúc Rõ Ràng](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0036-brownfield-spoke-adoption-and-governance-engine.md):** Hub giữ vai trò Nền tảng (Platform Framework & Shared Deep Modules); Spoke `ccba-legal-knowledge` giữ vai trò Trung tâm Dữ liệu & Tri thức Pháp điển (Domain Knowledge Corpus & Execution).
-* **[D02: Zero-Duplication SSOT](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0037-constitution-traceability-matrix-and-zero-duplication.md):** Giải phóng 110,647 dòng tệp `.txt`/`.md` lịch sử trên Hub, chỉ lưu logic xử lý và tham chiếu qua `catalog.yaml: legal_knowledge_kb`.
+* **[D01: Phân Ranh Giới Kiến Trúc Rõ Ràng](../../../../docs/adr/0036-brownfield-spoke-adoption-and-governance-engine.md):** Hub giữ vai trò Nền tảng (Platform Framework & Shared Deep Modules); Spoke `ccba-legal-knowledge` giữ vai trò Trung tâm Dữ liệu & Tri thức Pháp điển (Domain Knowledge Corpus & Execution).
+* **[D02: Zero-Duplication SSOT](../../../../docs/adr/0037-constitution-traceability-matrix-and-zero-duplication.md):** Giải phóng 110,647 dòng tệp `.txt`/`.md` lịch sử trên Hub, chỉ lưu logic xử lý và tham chiếu qua `catalog.yaml: legal_knowledge_kb`.
 * **[D03: Độc Lập Vận Hành Của Spoke]:** Spoke sở hữu CLI độc lập (`spoke_cli.py`), test suite riêng (28 passed) và validator 4 tầng riêng (`validate_legal_spoke.py`).
 * **[D04: Định Vị Deep Seam Bóc Tách Bảng Phức Tạp `TableReconstructor` trong `packages/ccba-ooxml`]:**
   - **Vị trí chuẩn:** `packages/ccba-ooxml/src/ccba_ooxml/tables.py` (vì bảng biểu Word xuất hiện ở mọi bộ môn: Pháp lý, QC Thẩm tra, Hồ sơ hoàn thành, Hợp đồng).
   - **DTO chuẩn hóa:** `StructuredTable` (gồm `table_id`, `title`, `headers`, `rows`, `footnotes`) cung cấp 3 phương thức xuất khẩu: `.to_markdown()`, `.to_json()`, `.to_csv()`.
   - **Public Interface:** `TableReconstructor.extract_docx_tables(docx_path)` và `TableReconstructor.replace_markdown_tables(md_path, tables)`.
   - **Tái sử dụng:** `packages/ccba-legal-intel` và các Spokes (`ccba-legal-knowledge`, `idop-ccba-way`) tái sử dụng trực tiếp qua `from ccba_ooxml import TableReconstructor, StructuredTable`.
-* **[D05: Chuẩn Hóa Đặc Tả Gói Tri Thức OKF Bundle v2.0](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0038-unified-okf-v2-bundle-specification.md):**
+* **[D05: Chuẩn Hóa Đặc Tả Gói Tri Thức OKF Bundle v2.0](../../../../docs/adr/0038-unified-okf-v2-bundle-specification.md):**
   - **Cấu trúc SSOT:** Tệp `metadata.yaml` độc lập trong từng bundle directory (loại bỏ frontmatter trong `.md`).
   - **AST `clauses.json`:** Mảng danh sách phẳng có bổ sung `node_type` và `parent_id` (tra cứu $O(1)$ và tái dựng cây AST trong 1 vòng lặp).
   - **Đối chuẩn `qa_benchmark.json`:** Mở rộng 5 trường (`question`, `answer`, `anchor`, `citation`, `ground_truth_context`) phục vụ đo lường và rào chắn `LegalGroundingGate`.
-* **[D06: Giao Thức Chuyển Giao Tự Động Crawl $\rightarrow$ Ingestion](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0039-autonomous-crawler-to-spoke-ingestion-protocol.md):**
+* **[D06: Giao Thức Chuyển Giao Tự Động Crawl $\rightarrow$ Ingestion](../../../../docs/adr/0039-autonomous-crawler-to-spoke-ingestion-protocol.md):**
   - **Quy trình 4 bước:** Crawl (Hub) $\rightarrow$ Sandbox Temp $\rightarrow$ Ingest & Validate (Spoke) $\rightarrow$ Auto-Purge Temp & Sync Cloud.
   - **Lệnh Launcher thống nhất:** `ccba-platform ingest-legal <TVPL_URL> [--spoke <name>]`.
   - **Zero-Duplication Invariant:** Tự động xóa sạch tệp `.docx` tạm sau khi Spoke xác nhận `Exit Code 0`.
@@ -58,12 +58,12 @@ Mọi câu hỏi kiến trúc cốt lõi tại Biên giới đã được giải
 ### 🎫 Ticket 2: [Research/Grilling] Hợp Nhất Hợp Đồng Cấu Trúc OKF Bundle (OKF Schema Alignment)
 * **Loại:** `Grilling [HITL]`
 * **Assignee:** Antigravity Agent & User
-* **Trạng thái:** `COMPLETED` ✅ (Đã chốt đặc tả tại [ADR 0038](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0038-unified-okf-v2-bundle-specification.md))
+* **Trạng thái:** `COMPLETED` ✅ (Đã chốt đặc tả tại [ADR 0038](../../../../docs/adr/0038-unified-okf-v2-bundle-specification.md))
 
 ### 🎫 Ticket 3: [Design] Thiết Kế Giao Thức Điều Phối Tự Động Crawl $\rightarrow$ Ingestion Khép Kín
 * **Loại:** `Research [AFK]`
 * **Assignee:** Antigravity Agent
-* **Trạng thái:** `COMPLETED` ✅ (Đã chốt giao thức tại [ADR 0039](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0039-autonomous-crawler-to-spoke-ingestion-protocol.md))
+* **Trạng thái:** `COMPLETED` ✅ (Đã chốt giao thức tại [ADR 0039](../../../../docs/adr/0039-autonomous-crawler-to-spoke-ingestion-protocol.md))
 
 ---
 
@@ -71,8 +71,9 @@ Mọi câu hỏi kiến trúc cốt lõi tại Biên giới đã được giải
 
 Bản đồ Wayfinder `wayfinder:optimization_roadmap` đã hoàn thành 100% sứ mệnh định hướng (Decisions charted). Không còn sương mù kỹ thuật nào cản trở.
 
-Toàn bộ hệ thống sẵn sàng bước vào giai đoạn **Thực Thi Mã Nguồn ([`/ccba-implement`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/workflows/ccba-implement.md))**:
+Toàn bộ hệ thống sẵn sàng bước vào giai đoạn **Thực Thi Mã Nguồn ([`/ccba-implement`](../../../../.agents/workflows/ccba-implement.md))**:
 1. **Gói 1 (Core Deep Seam):** Xây dựng `TableReconstructor` trong `packages/ccba-ooxml/src/ccba_ooxml/tables.py`.
 2. **Gói 2 (Schema v2.0):** Nâng cấp `OKFBundlePackager` (Hub) & `gold_standard_processor.py` (Spoke) theo ADR 0038.
 3. **Gói 3 (Autonomous CLI):** Tích hợp lệnh `ccba-platform ingest-legal` theo ADR 0039.
+
 
