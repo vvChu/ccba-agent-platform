@@ -1,5 +1,5 @@
 ---
-description: Cập nhật thủ công các lệnh và kỹ năng mới từ Hub về dự án Spoke hiện tại
+description: Đồng bộ hóa các kỹ năng, quy trình và cập nhật phiên bản giữa Hub và các Spoke (đơn lẻ hoặc hàng loạt)
 applies_to:
   - "Phần mềm"
   - "Thẩm tra thiết kế"
@@ -8,33 +8,67 @@ applies_to:
 bundle: "_core"
 ---
 
-# Cập nhật CCBA Spoke Workspace
+# Cập Nhật & Đồng Bộ Hóa CCBA Spoke Workspace (/ccba-update-spoke)
 
-Workflow này cho phép dự án (Spoke) hiện tại đồng bộ hóa và tải về các bản cập nhật mới nhất (kịch bản lệnh, kỹ năng) từ trung tâm CCBA Agent Platform (Hub) thông qua python sync script.
+Workflow này cho phép đồng bộ hóa các bản cập nhật mới nhất (kịch bản lệnh, kỹ năng, hiến pháp `AGENTS.md`, rào chắn test) từ trung tâm **CCBA Agent Platform (Hub)** sang các dự án **Spoke**, hỗ trợ cả đồng bộ đơn lẻ, tải On-Demand và đồng bộ hàng loạt toàn bộ hệ sinh thái.
 
-## Khi nào dùng:
-- Khi khởi tạo hoặc cần cập nhật lại toàn bộ Skills và Workflows của Spoke theo nghiệp vụ.
-- Khi Agent phát hiện yêu cầu của User cần đến kỹ năng trên Hub nhưng chưa được tải về Spoke (On-Demand / Lazy Loading).
+---
 
-## Các bước thực hiện:
+## 🎯 Khi Nào Dùng:
+1. **Tại Hub:** Khi muốn kiểm tra độ trễ phiên bản hoặc đồng bộ 1 chạm cho tất cả các Spoke đang kết nối (`--all`).
+2. **Tại Spoke:** Khi muốn cập nhật toàn bộ Skills/Workflows của dự án hiện tại theo đúng nghiệp vụ (`project_type`).
+3. **Tại Spoke (On-Demand):** Khi Agent phát hiện cần một kỹ năng trên Hub nhưng Spoke chưa tải về (Lazy Loading).
 
-### 1. Định vị Hub Path
-Agent đọc tệp cấu hình `.md/workspace_context.yaml` hoặc biến môi trường `CCBA_HUB_PATH` để lấy đường dẫn Hub (`hub_path`). Mặc định sử dụng repository chung.
+---
 
-### 2. Đồng bộ toàn bộ theo nghiệp vụ
-Chạy lệnh đồng bộ tự động dựa trên `project_type` khai báo trong `workspace_context.yaml`:
+## 🛠️ Các Chế Độ Thực Hiện:
+
+### 📊 Chế độ 1: Kiểm Tra Trạng Thái Sức Khỏe & Độ Lệch Phiên Bản (Tại Hub)
+Trước khi đồng bộ, kiểm tra xem các Spoke đang kết nối có bị thiếu hoặc quá hạn đồng bộ (> 30 ngày) hay không:
 ```powershell
+python scripts\ccba_platform_cli.py spoke-status
+```
+
+---
+
+### 🌐 Chế độ 2: Đồng Bộ Hàng Loạt Toàn Bộ Spoke Đang Đăng Ký (Từ Hub)
+Tự động duyệt qua danh sách trong Hub Registry (`.md/data/spoke_registry.yaml`) và đồng bộ lần lượt tất cả Spoke còn hoạt động:
+
+```powershell
+# 1. (Khuyên dùng) Xem trước mô phỏng không ghi file:
+python scripts\sync_spoke.py --all --dry-run
+
+# 2. Thực thi đồng bộ chính thức:
+python scripts\sync_spoke.py --all
+```
+
+---
+
+### 📁 Chế độ 3: Đồng Bộ Toàn Bộ Cho Spoke Hiện Tại (Tại Spoke)
+Định vị Hub Path qua `.md/workspace_context.yaml` hoặc biến môi trường `CCBA_HUB_PATH` và tiến hành đồng bộ:
+
+```powershell
+# 1. Xem trước thay đổi:
+python [hub_path]\scripts\sync_spoke.py --spoke . --dry-run
+
+# 2. Thực thi đồng bộ:
 python [hub_path]\scripts\sync_spoke.py --spoke .
 ```
 
-### 3. Đồng bộ bổ sung một Kỹ năng/Workflow cụ thể (On-Demand)
-Khi Agent nhận thấy cần bổ sung một skill cụ thể (ví dụ: `excalidraw-diagram`) để xử lý yêu cầu của User:
-1. Agent xin sự cho phép từ người dùng: *"Tôi cần tải bổ sung kỹ năng [excalidraw-diagram] từ Hub để vẽ sơ đồ, bạn có đồng ý không?"*
+*Lưu ý:* Cơ chế **Selective Merge** sẽ tự động bảo vệ nguyên vẹn 100% các file workflows/skills nội bộ do Spoke tự viết (`🛡️ PRESERVED`).
+
+---
+
+### ⚡ Chế độ 4: Tải Bổ Sung Một Kỹ Năng / Workflow Cụ Thể (On-Demand)
+Khi Agent cần bổ sung 1 kỹ năng cụ thể (ví dụ: `excalidraw-diagram`, `sharepoint-iac`) để xử lý yêu cầu tức thì của User:
+1. Agent xin sự cho phép từ người dùng: *"Tôi cần tải bổ sung kỹ năng [tên-kỹ-năng] từ Hub, bạn có đồng ý không?"*
 2. Sau khi người dùng đồng ý, chạy lệnh:
    ```powershell
-   python [hub_path]\scripts\sync_spoke.py --spoke . --sync-item excalidraw-diagram
+   python [hub_path]\scripts\sync_spoke.py --spoke . --sync-item [tên-kỹ-năng]
    ```
-3. Sau khi đồng bộ bổ sung, Antigravity sẽ tự động nhận diện skill mới nạp (Auto-Discovery) mà không cần khởi động lại. Agent tiếp tục thực thi yêu cầu của User.
+3. Hệ thống sẽ tự động nạp kỹ năng mới (Auto-Discovery) mà không cần khởi động lại.
 
-## Báo cáo kết quả:
-- In ra thông báo: *"Đã đồng bộ thành công các thành phần cập nhật từ Hub về Spoke."*
+---
+
+## 📋 Báo Cáo Kết Quả:
+Sau khi hoàn tất, in bảng báo cáo tổng kết chi tiết gồm số lượng: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
