@@ -27,8 +27,9 @@ Xây dựng hệ sinh thái Hub-Spoke hoàn thiện, đạt độ gắn kết ca
 
 ## ⚖️ 3. Quyết Định Đã Chốt (Decisions So Far)
 
-* **[D01: Phân Ranh Giới Kiến Trúc Rõ Ràng](../../../../docs/adr/0036-brownfield-spoke-adoption-and-governance-engine.md):** Hub giữ vai trò Nền tảng (Platform Framework & Shared Deep Modules); Spoke `ccba-legal-knowledge` giữ vai trò Trung tâm Dữ liệu & Tri thức Pháp điển (Domain Knowledge Corpus & Execution).
-* **[D02: Zero-Duplication SSOT](../../../../docs/adr/0037-constitution-traceability-matrix-and-zero-duplication.md):** Giải phóng 110,647 dòng tệp `.txt`/`.md` lịch sử trên Hub, chỉ lưu logic xử lý và tham chiếu qua `catalog.yaml: legal_knowledge_kb`.
+* **[D01: Phân Ranh Giới Kiến Trúc Rõ Ràng](../../../../docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md):** Hub giữ vai trò Nền tảng (Platform Framework & Shared Deep Modules); Spoke `ccba-legal-knowledge` giữ vai trò Trung tâm Dữ liệu & Tri thức Pháp điển (Domain Knowledge Corpus & Execution).
+* **[D02: Zero-Duplication SSOT](../../../../docs/adr/0037-constitution-driven-traceability-matrix.md):** Giải phóng 110,647 dòng tệp `.txt`/`.md` lịch sử trên Hub, chỉ lưu logic xử lý và tham chiếu qua `catalog.yaml: legal_knowledge_kb`.
+
 * **[D03: Độc Lập Vận Hành Của Spoke]:** Spoke sở hữu CLI độc lập (`spoke_cli.py`), test suite riêng (28 passed) và validator 4 tầng riêng (`validate_legal_spoke.py`).
 * **[D04: Định Vị Deep Seam Bóc Tách Bảng Phức Tạp `TableReconstructor` trong `packages/ccba-ooxml`]:**
   - **Vị trí chuẩn:** `packages/ccba-ooxml/src/ccba_ooxml/tables.py` (vì bảng biểu Word xuất hiện ở mọi bộ môn: Pháp lý, QC Thẩm tra, Hồ sơ hoàn thành, Hợp đồng).
