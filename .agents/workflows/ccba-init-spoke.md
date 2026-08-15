@@ -122,28 +122,20 @@ Kiểm tra xem dự án có file tài liệu thô (Word/PDF) nào chưa được
 Get-ChildItem -Path . -Recurse -Depth 3 | Where-Object { $_.Extension -match "\.(pdf|docx)$" } | Select-Object Name
 ```
 
-### 5. Đồng bộ hóa Giao diện Lệnh (Copy theo Bundle)
-Xác định đường dẫn Hub (`hub_path`) của Platform (mặc định lấy từ biến môi trường `CCBA_HUB_PATH` hoặc repository chung). Tiến hành sao chép các kỹ năng/workflows tương ứng về Spoke:
+### 5. Đồng bộ hóa Kỹ năng & Đăng ký Spoke với Hub (Single-Engine Sync)
+Xác định đường dẫn Hub (`hub_path`) của Platform (mặc định lấy từ biến môi trường `CCBA_HUB_PATH`, cấu hình `workspace_context.yaml` hoặc thư mục anh em). Tiến hành đồng bộ kỹ năng và workflows bằng Deep Seam `SpokeSynchronizer`:
+
 ```powershell
-$bundles = @{
-    "Phần mềm"          = @("_core", "_software")
-    "Thẩm tra thiết kế" = @("_core", "_qc", "_consulting")
-    "Thiết kế"          = @("_core", "_qc", "_consulting")
-    "Kiểm định"         = @("_core", "_qc", "_consulting")
-    "Tác vụ Admin"      = @("_core", "_consulting")
-}
-$type = "[type vừa được chọn]"
-$hub  = "[hub_path]"
-New-Item -ItemType Directory -Force -Path ".agents\skills", ".agents\workflows" | Out-Null
-foreach ($bundle in $bundles[$type]) {
-    if (Test-Path "$hub\skills\$bundle") {
-        Copy-Item -Path "$hub\skills\$bundle\*" -Destination ".agents\skills\" -Recurse -Force
-    }
-    if (Test-Path "$hub\workflows\$bundle") {
-        Copy-Item -Path "$hub\workflows\$bundle\*" -Destination ".agents\workflows\" -Recurse -Force
-    }
-}
+# Chạy đồng bộ tự động theo bundle nghiệp vụ và đăng ký RSA Spoke Registry
+python "$hub\scripts\sync_spoke.py" --spoke .
 ```
+
+*Lưu ý:* Lệnh `sync_spoke.py` sẽ tự động:
+- Đọc `project_type` trong `workspace_context.yaml` để chọn đúng bundle từ `catalog.yaml`.
+- Đồng bộ các skills và workflows chuẩn vào `.agents/skills/` và `.agents/workflows/`.
+- Đồng bộ hiến pháp `.agents/AGENTS.md`.
+- Tự động sao chép bộ rào chắn test (`conftest.py`, `scripts/safe_pytest.py`) nếu là dự án Phần mềm.
+- Mã hóa RSA 2048-bit thông tin Spoke và tự động đăng ký vào Hub Registry (`.md/data/spoke_registry.yaml`).
 
 ### 6. Khởi tạo cấu trúc .gitignore và Mã nguồn Chuẩn
 *Lưu ý:* Bước này và bước 6.1 chỉ áp dụng nếu dự án được khởi tạo dưới dạng Spoke Chức năng (Functional/R&D Spoke) có sẵn Git cục bộ. Đối với các Spoke Dự án/Triển khai (Delivery Spoke) đồng bộ thuần túy qua OneDrive/SharePoint và không có repo GitHub riêng, hãy bỏ qua các bước cấu hình Git này.
@@ -257,16 +249,7 @@ exit 0
 Nếu `mode` là **"software"** hoặc **"hybrid"**, đề xuất người dùng chọn ngôn ngữ lập trình mục tiêu (Python/Node.js) và dựng cấu trúc thư mục chuẩn:
 - Tạo các thư mục `src`, `tests`, `scripts`, `docs`, `docs/references`, `docs/adr`
 - Khởi tạo `pyproject.toml` (cho Python) hoặc `package.json` (cho Node.js)
-- Với dự án Python: Đồng bộ bộ rào chắn test `conftest.py` và wrapper script `scripts/safe_pytest.py` từ Hub:
-  ```powershell
-  if (Test-Path "$hub\conftest.py") {
-      Copy-Item -Path "$hub\conftest.py" -Destination ".\conftest.py" -Force
-  }
-  if (Test-Path "$hub\scripts\safe_pytest.py") {
-      New-Item -ItemType Directory -Path ".\scripts" -Force | Out-Null
-      Copy-Item -Path "$hub\scripts\safe_pytest.py" -Destination ".\scripts\safe_pytest.py" -Force
-  }
-  ```
+- *(Lưu ý: Bộ rào chắn test `conftest.py` và wrapper script `scripts/safe_pytest.py` đã được `sync_spoke.py` tự động đồng bộ ở Bước 5)*.
 
 ### 7. Khởi tạo cấu trúc Tri thức Mẫu (Dành cho các dự án nghiệp vụ)
 Nếu `mode` là **"delivery"** hoặc **"hybrid"**, sao chép các tệp tin templates từ Hub về Spoke để kỹ sư bắt đầu ghi nhận tri thức:
