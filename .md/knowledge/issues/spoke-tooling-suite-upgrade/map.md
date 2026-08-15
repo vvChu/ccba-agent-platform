@@ -35,12 +35,13 @@ Xây dựng bộ công cụ tương tác Hub ↔ Spoke đạt chuẩn công nghi
 * **[D04: Cơ Chế Non-Destructive Selective Merge & Dry-Run Preview]:** Đã triển khai và kiểm chứng qua TDD (`tests/test_spoke_synchronizer.py` 4/4 passed). Động cơ `SpokeSynchronizer` bảo toàn 100% các workflow nội bộ riêng của Spoke (không wipe thư mục), phân loại chi tiết trạng thái (`NEW`, `UPDATED`, `UNCHANGED`, `PRESERVED`) và xuất báo cáo mô phỏng trực quan khi chạy với cờ `--dry-run`.
 * **[D05: Thống Nhất Động Cơ Khởi Tạo Greenfield (Single Engine SSOT)]:** Đã tái cấu trúc Bước 5 trong `.agents/workflows/ccba-init-spoke.md` sử dụng trực tiếp `python "$hub\scripts\sync_spoke.py" --spoke .`, loại bỏ hoàn toàn các đoạn script copy PowerShell thủ công lỗi thời và tự động đăng ký RSA vào Hub Registry (`tests/test_init_spoke_integration.py` 2/2 passed).
 * **[D06: Multi-Spoke Batch Sync Engine & Spoke Health Dashboard]:** Đã triển khai `sync_all_spokes()` và `display_spoke_health_dashboard()`, tích hợp tham số `--all` cho `sync_spoke.py` và subcommand `spoke-status` vào `ccba-platform` CLI (`tests/test_spoke_batch_sync.py` 3/3 passed).
+* **[D07: Zero-Latency Static Inspection cho Shared Python SDKs]:** Đã triển khai `SharedSdkInspector` trong `spoke_synchronizer.py` quét file tĩnh `.pth` / `dist-info` trong `site-packages` của `.venv`/`venv` với thời gian thực thi < 1ms, đưa ra gợi ý `pip install -e` thân thiện cho Spoke Python (`tests/test_spoke_sdk_detector.py` 4/4 passed).
 
 ---
 
 ## 🧭 4. Danh Sách Ticket Tại Biên Giới (Frontier Tickets)
 
-* **Toàn bộ 3/3 Ticket tại Biên giới đã hoàn thành 100%!**
+* **Toàn bộ 4/4 Ticket tại Biên giới đã hoàn thành 100%!**
 
 ### 🎫 Ticket 1: [Design/TDD] Nâng Cấp `SpokeSynchronizer` với `--dry-run` và Selective Workflow Merge
 * **Mã:** `TICKET-SPOKE-01`
@@ -57,24 +58,30 @@ Xây dựng bộ công cụ tương tác Hub ↔ Spoke đạt chuẩn công nghi
 * **Loại:** `Task [AFK]`
 * **Trạng thái:** `COMPLETED` ✅ (Đã triển khai trong `spoke_synchronizer.py`, `sync_spoke.py`, `ccba_platform_cli.py` và test suite `test_spoke_batch_sync.py` 3/3 passed)
 
+### 🎫 Ticket 4: [Design/TDD] Zero-Latency Auto-Detection & Prompt cho Shared Python SDKs
+* **Mã:** `TICKET-SPOKE-04`
+* **Loại:** `Task [AFK]`
+* **Trạng thái:** `COMPLETED` ✅ (Đã giải tỏa `FOG-01`, triển khai `SharedSdkInspector` và test suite `tests/test_spoke_sdk_detector.py` 4/4 passed)
+
 ---
 
-## 🏁 5. Kết Luận Bản Đồ Wayfinder (Mission Accomplished)
+## 🏁 5. Kết Luận Bản Đồ Wayfinder (Mission Fully Accomplished)
 
 Bản đồ định hướng `wayfinder:spoke_tooling_suite_upgrade` đã hoàn thành **100% mục tiêu** đề ra:
 1. Đã thống nhất toàn bộ quy trình khởi tạo/tiếp nhận/cập nhật Spoke về chung 1 động cơ Deep Seam `SpokeSynchronizer` và `spoke_adopter.py`.
 2. Bảo vệ an toàn tuyệt đối dữ liệu và workflow nội bộ của Spoke (Non-destructive selective merge).
 3. Cung cấp bộ công cụ điều phối hàng loạt `python scripts/sync_spoke.py --all [--dry-run]` và bảng giám sát `ccba-platform spoke-status`.
+4. Tự động kiểm tra và gợi ý liên kết các Shared Packages (`ccba-ai`, `ccba-ooxml`) không làm giảm tốc độ đồng bộ.
 
 ---
 
-## 🌫️ 5. Sương Mù Chiến Trận / Chưa Xác Định Rõ (Not Yet Specified)
+## 🌫️ 6. Sương Mù Chiến Trận (Fog of War)
 
-* **[FOG-01: Auto-Detect & Prompt for Python Shared Package SDKs]:** Khi Spoke là dự án Python/Phần mềm, làm thế nào để `sync_spoke` tự động phát hiện xem Spoke đã cài đặt các package dùng chung (`ccba-ai`, `ccba-ooxml`) ở chế độ editable (`pip install -e`) hay chưa để đưa ra cảnh báo thân thiện mà không gây chậm tiến trình sync? Sẽ được giải tỏa sau khi hoàn thành `TICKET-SPOKE-01`.
+* **Không còn sương mù nào còn tồn đọng.** `FOG-01` đã được giải quyết triệt để thông qua `TICKET-SPOKE-04`.
 
 ---
 
-## 🚫 6. Ngoài Phạm Vi (Out of Scope)
+## 🚫 7. Ngoài Phạm Vi (Out of Scope)
 
 * **Tự động `git commit` hoặc `git push` trong Spoke:** Việc commit/push mã nguồn tại Spoke phải do Kỹ sư hoặc Agent tại Spoke quyết định, Hub Sync Engine không can thiệp vào Git history của Spoke.
 * **Xóa tệp tin mã nguồn nghiệp vụ của Spoke:** Không xóa bất kỳ tệp tin nào ngoài các tệp do chính Platform quản lý.
