@@ -970,6 +970,28 @@ skills:
   - giải thích lại
   - chưa hiểu
   skill_path: .agents/skills/wait-what/SKILL.md
+- name: spoke-adopter
+  bundle: _core
+  description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield) vào CCBA Platform
+  triggers:
+  - adopt spoke
+  - tiếp nhận dự án
+  - brownfield
+  - onboard spoke
+  - kết nối dự án cũ
+  - adopt-spoke
+  skill_path: .agents/skills/spoke-adopter/SKILL.md
+- name: sharepoint-iac
+  bundle: _software
+  description: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code). Hướng dẫn thiết kế JSON schema, kiểm định Lookups/Taxonomy và triển khai bằng PnP PowerShell.
+  triggers:
+  - sharepoint-iac
+  - sharepoint iac
+  - sharepoint schema
+  - pnp powershell
+  - m365 iac
+  - datamodel sharepoint
+  skill_path: .agents/skills/sharepoint-iac/SKILL.md
 workflows:
 - name: init-ccba-spoke
   bundle: _core
@@ -1568,6 +1590,17 @@ workflows:
   - giải thích lại
   - chưa hiểu
   workflow_path: .agents/workflows/ccba-wait-what.md
+- name: ccba-adopt-spoke
+  bundle: _core
+  command: /ccba-adopt-spoke
+  description: Đánh giá hiện trạng và tiếp nhận an toàn một codebase hiện hữu (Brownfield) vào CCBA Platform
+  triggers:
+  - adopt-spoke
+  - adopt spoke
+  - tiếp nhận spoke
+  - onboard spoke
+  - tiếp nhận dự án có sẵn
+  workflow_path: .agents/workflows/ccba-adopt-spoke.md
 rules:
 - name: ccba_identity
   description: Brand, voice, phong cách giao tiếp CCBA
@@ -1599,3 +1632,10 @@ knowledge:
   knowledge_path: '[bigbim_method_path]/.md/knowledge/INDEX.md'
   chunks_index: '[bigbim_method_path]/.md/chunks/INDEX.md'
   kb_root: '[bigbim_method_path]/.md/'
+- name: ccba_operations_kb
+  description: Thể chế Quản lý Dự án (QCTK 2815), Chi tiêu Nội bộ (QCCTNB 3209), Điều lệ CCBA 2026 & Quy chế KHCN IBST
+  knowledge_path: '[idop_path]/.md/INDEX.md'
+  cross_references: '[idop_path]/.md/cross_references.yaml'
+  constitution_root: '[idop_path]/.md/governance_constitution/'
+  blueprint_root: '[idop_path]/.md/system_blueprint/'
+

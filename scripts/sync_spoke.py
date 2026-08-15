@@ -17,6 +17,12 @@ from scripts.spoke import sync_project
 
 
 def main():
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8")
+
     parser = argparse.ArgumentParser(description="CCBA Spoke Selective Skills Synchronizer")
     parser.add_argument(
         "--spoke",

@@ -8,6 +8,13 @@ Sub-Engines:
     HubDiscoverer, CatalogMerger, TestGuardrailCopier, HubNotFoundError
 """
 
+from .spoke_adopter import (
+    SpokeAdopter,
+    SpokeDiscoveryReport,
+    adopt_project,
+    detect_spoke_stack,
+    merge_workspace_context,
+)
 from .spoke_synchronizer import (
     CatalogMerger,
     HubDiscoverer,
@@ -22,8 +29,14 @@ __all__ = [
     "SpokeSyncEngine",
     "SpokeSynchronizer",
     "sync_project",
+    "SpokeAdopter",
+    "SpokeDiscoveryReport",
+    "adopt_project",
+    "detect_spoke_stack",
+    "merge_workspace_context",
     "HubDiscoverer",
     "CatalogMerger",
     "TestGuardrailCopier",
     "HubNotFoundError",
 ]
+

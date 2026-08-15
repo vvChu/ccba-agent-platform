@@ -1,13 +1,9 @@
-"""CCBA Governance Engine sub-package.
+"""Governance Module for CCBA Agent Platform.
 
-Public re-export surface for Governance, Skill, Document and Architecture Auditing.
-
-Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
+Unified Deep Facade exporting Sub-Auditors, Common Regexes, and Constitution Cross-Reference Validator.
 """
 
-from __future__ import annotations
-
-from .base import (
+from scripts.governance.base import (
     CODE_REF_RE,
     ENV_VAR_RE,
     EXCLUSION_HEADERS,
@@ -22,13 +18,24 @@ from .base import (
     AuditReport,
     BaseAuditor,
 )
-from .cli import run_docs_validation_cli, run_skills_validation_cli
-from .coordinator import DocumentAuditor
-from .drift_auditor import DriftAuditor
-from .env_auditor import EnvAuditor
-from .link_auditor import LinkAuditor
-from .registry_auditor import RegistryAuditor
-from .skill_auditor import SkillAuditor
+from scripts.governance.cli import (
+    run_docs_validation_cli,
+    run_skills_validation_cli,
+)
+from scripts.governance.coordinator import DocumentAuditor
+from scripts.governance.cross_ref_validator import (
+    CrossRefIssue,
+    CrossRefValidationReport,
+    CrossRefValidator,
+    extract_markdown_headings,
+    find_closest_heading,
+    validate_cross_references,
+)
+from scripts.governance.drift_auditor import DriftAuditor
+from scripts.governance.env_auditor import EnvAuditor
+from scripts.governance.link_auditor import LinkAuditor
+from scripts.governance.registry_auditor import RegistryAuditor
+from scripts.governance.skill_auditor import SkillAuditor
 
 __all__ = [
     "AuditIssue",
@@ -42,14 +49,20 @@ __all__ = [
     "SkillAuditor",
     "run_docs_validation_cli",
     "run_skills_validation_cli",
-    "FRONTMATTER_RE",
     "CODE_REF_RE",
-    "LINK_RE",
     "ENV_VAR_RE",
-    "STEP_LINE_RE",
+    "EXCLUSION_HEADERS",
+    "FRONTMATTER_RE",
     "IGNORE_CODE_REFS",
     "IGNORE_ENV_PREFIXES",
     "IGNORE_ENV_VARS",
+    "LINK_RE",
+    "STEP_LINE_RE",
     "WORKFLOW_HEADERS",
-    "EXCLUSION_HEADERS",
+    "CrossRefIssue",
+    "CrossRefValidationReport",
+    "CrossRefValidator",
+    "extract_markdown_headings",
+    "find_closest_heading",
+    "validate_cross_references",
 ]
