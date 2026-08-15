@@ -21,6 +21,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from datetime import datetime
 from pathlib import Path
 
 # Ensure project root is in sys.path
@@ -192,6 +193,57 @@ def execute_ingest_legal(
     return True
 
 
+def display_spoke_health_dashboard(hub_root: Path | None = None) -> int:
+    """Display health and sync status of all registered CCBA Spokes."""
+    from scripts.spoke.decrypt_spoke_registry import get_registered_spokes
+
+    root = hub_root or _ROOT_DIR
+    spokes = get_registered_spokes(hub_root=root)
+
+    print("==========================================================================================")
+    print("                      🏛️  CCBA SPOKE HEALTH & DRIFT DASHBOARD")
+    print("==========================================================================================")
+    if not spokes:
+        print("  Không tìm thấy Spoke nào được đăng ký trong Hub Registry.")
+        print("  Gợi ý: Dùng '/ccba-init-spoke' hoặc '/ccba-adopt-spoke' để kết nối Spoke mới.")
+        print("==========================================================================================")
+        return 0
+
+    print(
+        f"{'Tên Spoke':<22} | {'Loại Nghiệp Vụ':<16} | {'Lần Đồng Bộ Cuối':<20} | {'Trạng Thái':<12} | {'Đường Dẫn Vật Lý'}"
+    )
+    print("-" * 105)
+
+    now = datetime.now()
+    for sp in spokes:
+        sp_name = sp.get("name", "Unknown")
+        sp_type = sp.get("project_type", "Unknown")
+        sp_path = sp.get("path", "")
+        last_sync_str = sp.get("last_sync", "")
+
+        # Status check
+        if not os.path.exists(sp_path):
+            status = "❌ MISSING"
+        else:
+            try:
+                sync_dt = datetime.fromisoformat(last_sync_str)
+                days_diff = (now - sync_dt).days
+                if days_diff > 30:
+                    status = "⚠️ OUTDATED"
+                else:
+                    status = "🟢 ACTIVE"
+            except Exception:
+                status = "🟢 ACTIVE"
+
+        display_sync = last_sync_str[:19].replace("T", " ") if last_sync_str else "Chưa rõ"
+        print(f"{sp_name:<22} | {sp_type:<16} | {display_sync:<20} | {status:<12} | {sp_path}")
+
+    print("=" * 105)
+    print(f"Tổng số: {len(spokes)} Spoke(s) đăng ký trong hệ sinh thái.")
+    print("Gợi ý: Chạy 'python scripts/sync_spoke.py --all' để đồng bộ toàn bộ Spoke.")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build unified argument parser for ccba-platform."""
     parser = argparse.ArgumentParser(
@@ -218,8 +270,18 @@ def build_parser() -> argparse.ArgumentParser:
     sync_p.add_argument(
         "spoke_path", nargs="?", default=".", help="Path to target spoke (default: current dir)"
     )
-    sync_p.add_argument("--type", dest="project_type", default=None, help="Target project type")
-    sync_p.add_argument("--force", action="store_true", help="Force overwrite of existing skills")
+    sync_p.add_argument("--sync-item", default=None, help="Specific skill/workflow name")
+    sync_p.add_argument(
+        "--all", action="store_true", help="Batch sync all registered Spokes in Hub Registry"
+    )
+    sync_p.add_argument(
+        "--dry-run", action="store_true", help="Preview changes without modifying files"
+    )
+
+    # spoke-status
+    subparsers.add_parser(
+        "spoke-status", help="Display CCBA Spoke Health & Synchronization Dashboard"
+    )
 
     # ingest-legal (ADR 0039)
     ingest_p = subparsers.add_parser(
@@ -279,15 +341,25 @@ def main() -> int:
         )
 
     elif args.command == "sync-spoke":
-        from scripts.spoke.spoke_synchronizer import SpokeSynchronizer
+        if args.all:
+            from scripts.spoke import sync_all_spokes
 
-        syncer = SpokeSynchronizer(hub_root=_ROOT_DIR)
-        success = syncer.sync_spoke(
-            spoke_path=Path(args.spoke_path),
-            project_type=args.project_type,
-            force=args.force,
-        )
-        return 0 if success else 1
+            return sync_all_spokes(
+                hub_root=_ROOT_DIR,
+                sync_item=args.sync_item,
+                dry_run=args.dry_run,
+            )
+        else:
+            from scripts.spoke import sync_project
+
+            return sync_project(
+                spoke_path=args.spoke_path,
+                sync_item=args.sync_item,
+                dry_run=args.dry_run,
+            )
+
+    elif args.command == "spoke-status":
+        return display_spoke_health_dashboard(hub_root=_ROOT_DIR)
 
     elif args.command == "ingest-legal":
         success = execute_ingest_legal(

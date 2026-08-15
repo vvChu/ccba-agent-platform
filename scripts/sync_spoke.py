@@ -13,7 +13,7 @@ PLATFORM_ROOT = Path(__file__).resolve().parents[1]
 if str(PLATFORM_ROOT) not in sys.path:
     sys.path.insert(0, str(PLATFORM_ROOT))
 
-from scripts.spoke import sync_project
+from scripts.spoke import sync_all_spokes, sync_project
 
 
 def main():
@@ -34,8 +34,22 @@ def main():
         default=None,
         help="Name of a specific skill or workflow to synchronize on-demand.",
     )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Batch synchronize all registered Spokes from Hub Registry.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview changes without modifying any files on disk.",
+    )
     args = parser.parse_args()
-    sys.exit(sync_project(args.spoke, args.sync_item))
+
+    if args.all:
+        sys.exit(sync_all_spokes(sync_item=args.sync_item, dry_run=args.dry_run))
+    else:
+        sys.exit(sync_project(args.spoke, args.sync_item, dry_run=args.dry_run))
 
 
 if __name__ == "__main__":

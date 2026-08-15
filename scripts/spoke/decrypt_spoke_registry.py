@@ -1,16 +1,81 @@
 import base64
 import os
 import sys
+from pathlib import Path
 
 import yaml
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding
 
-# Cấu hình đường dẫn
-REGISTRY_PATH = ".md/data/spoke_registry.yaml"
-DECRYPTED_PATH = ".md/data/spoke_registry_decrypted.yaml"
+# Attempt importing cryptography
+try:
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import padding
+
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
+
+# Cấu hình đường dẫn mặc định
+REGISTRY_REL_PATH = ".md/data/spoke_registry.yaml"
+DECRYPTED_REL_PATH = ".md/data/spoke_registry_decrypted.yaml"
 PRIVATE_KEY_DIR = os.path.expanduser(r"~\.gemini\antigravity\keys")
 PRIVATE_KEY_PATH = os.path.join(PRIVATE_KEY_DIR, "registry_private_key.pem")
+
+
+def get_registered_spokes(hub_root: Path | None = None) -> list[dict]:
+    """Retrieve all decrypted active registered spokes from registry or local cache.
+
+    Returns:
+        list[dict]: List of spoke dicts with 'name', 'path', 'project_type', 'last_sync', 'spoke_id', 'exists'.
+    """
+    root = hub_root or Path(__file__).resolve().parents[2]
+    registry_file = root / REGISTRY_REL_PATH
+    decrypted_file = root / DECRYPTED_REL_PATH
+
+    decrypted_spokes: list[dict] = []
+
+    # Case 1: Try decrypting with RSA Private Key if available
+    if HAS_CRYPTOGRAPHY and os.path.exists(PRIVATE_KEY_PATH) and registry_file.exists():
+        try:
+            with open(PRIVATE_KEY_PATH, "rb") as f:
+                private_key = serialization.load_pem_private_key(f.read(), password=None)
+
+            with open(registry_file, encoding="utf-8") as f:
+                registry_data = yaml.safe_load(f) or {"spokes": []}
+
+            for spoke in registry_data.get("spokes", []):
+                spoke_id = spoke.get("spoke_id")
+                encrypted_b64 = spoke.get("encrypted_data")
+                try:
+                    encrypted_bytes = base64.b64decode(encrypted_b64)
+                    decrypted_bytes = private_key.decrypt(
+                        encrypted_bytes,
+                        padding.OAEP(
+                            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                            algorithm=hashes.SHA256(),
+                            label=None,
+                        ),
+                    )
+                    spoke_info = yaml.safe_load(decrypted_bytes.decode("utf-8"))
+                    spoke_info["spoke_id"] = spoke_id
+                    spoke_info["exists"] = os.path.exists(spoke_info.get("path", ""))
+                    decrypted_spokes.append(spoke_info)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    # Case 2: Fallback to decrypted cache file if RSA decrypt returned nothing
+    if not decrypted_spokes and decrypted_file.exists():
+        try:
+            with open(decrypted_file, encoding="utf-8") as f:
+                cache_data = yaml.safe_load(f) or {"spokes": []}
+                for s in cache_data.get("spokes", []):
+                    s["exists"] = os.path.exists(s.get("path", ""))
+                    decrypted_spokes.append(s)
+        except Exception:
+            pass
+
+    return decrypted_spokes
 
 
 def decrypt_registry():
@@ -21,30 +86,27 @@ def decrypt_registry():
             pass
     print("🔓 Bắt đầu tiến trình giải mã Spoke Registry trung tâm...")
 
-    # 1. Kiểm tra khóa bí mật
     if not os.path.exists(PRIVATE_KEY_PATH):
         print(f"❌ Lỗi: Không tìm thấy Khóa bí mật tại {PRIVATE_KEY_PATH}")
         print(" -> Vui lòng đảm bảo bạn đang chạy script này với quyền Admin giữ khóa.")
         return
 
-    # 2. Đọc khóa bí mật
-    with open(PRIVATE_KEY_PATH, "rb") as f:
-        private_key = serialization.load_pem_private_key(f.read(), password=None)
-
-    # 3. Kiểm tra tệp registry mã hóa
-    if not os.path.exists(REGISTRY_PATH):
+    if not os.path.exists(REGISTRY_REL_PATH):
         print(
-            f"⚠️ Cảnh báo: Tệp registry {REGISTRY_PATH} chưa được tạo hoặc chưa có Spoke nào đăng ký."
+            f"⚠️ Cảnh báo: Tệp registry {REGISTRY_REL_PATH} chưa được tạo hoặc chưa có Spoke nào đăng ký."
         )
         return
 
-    with open(REGISTRY_PATH, encoding="utf-8") as f:
+    with open(REGISTRY_REL_PATH, encoding="utf-8") as f:
         registry_data = yaml.safe_load(f) or {"spokes": []}
 
     spokes = registry_data.get("spokes", [])
     if not spokes:
         print("Chưa có Spoke nào được ghi nhận trong registry.")
         return
+
+    with open(PRIVATE_KEY_PATH, "rb") as f:
+        private_key = serialization.load_pem_private_key(f.read(), password=None)
 
     decrypted_spokes = []
     print(
@@ -57,7 +119,6 @@ def decrypt_registry():
         encrypted_b64 = spoke.get("encrypted_data")
 
         try:
-            # Giải mã dữ liệu
             encrypted_bytes = base64.b64decode(encrypted_b64)
             decrypted_bytes = private_key.decrypt(
                 encrypted_bytes,
@@ -67,7 +128,6 @@ def decrypt_registry():
                     label=None,
                 ),
             )
-            # Parse YAML dữ liệu gốc của Spoke
             spoke_info = yaml.safe_load(decrypted_bytes.decode("utf-8"))
 
             print(
@@ -78,7 +138,7 @@ def decrypt_registry():
         except Exception as e:
             print(f"❌ Lỗi giải mã Spoke ID {spoke_id[:8]}: {str(e)}")
 
-    # 4. Tự động dọn dẹp (Auto-Prune) các Spoke không còn tồn tại vật lý
+    # Auto-Prune các Spoke không còn tồn tại vật lý
     pruned_spoke_ids = []
     active_spokes_yaml = []
 
@@ -93,22 +153,20 @@ def decrypt_registry():
             active_spokes_yaml.append(s_info)
 
     if pruned_spoke_ids:
-        # Cập nhật lại file registry mã hóa gốc
         original_spokes = registry_data.get("spokes", [])
         updated_spokes = [s for s in original_spokes if s.get("spoke_id") not in pruned_spoke_ids]
         registry_data["spokes"] = updated_spokes
 
-        with open(REGISTRY_PATH, "w", encoding="utf-8") as f:
+        with open(REGISTRY_REL_PATH, "w", encoding="utf-8") as f:
             yaml.dump(registry_data, f, allow_unicode=True)
-        print(f" -> Đã cập nhật và dọn dẹp tệp registry mã hóa {REGISTRY_PATH}.")
+        print(f" -> Đã cập nhật và dọn dẹp tệp registry mã hóa {REGISTRY_REL_PATH}.")
 
-    # 5. Ghi file giải mã nháp cục bộ
     if active_spokes_yaml:
-        os.makedirs(os.path.dirname(DECRYPTED_PATH), exist_ok=True)
-        with open(DECRYPTED_PATH, "w", encoding="utf-8") as f:
+        os.makedirs(os.path.dirname(DECRYPTED_REL_PATH), exist_ok=True)
+        with open(DECRYPTED_REL_PATH, "w", encoding="utf-8") as f:
             yaml.dump({"spokes": active_spokes_yaml}, f, allow_unicode=True)
         print(
-            f"\n✅ Đã lưu kết quả giải mã các Spoke hoạt động tại: {DECRYPTED_PATH} (Được bỏ qua bởi Git)"
+            f"\n✅ Đã lưu kết quả giải mã các Spoke hoạt động tại: {DECRYPTED_REL_PATH} (Được bỏ qua bởi Git)"
         )
 
 

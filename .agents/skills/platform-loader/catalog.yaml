@@ -1027,12 +1027,17 @@ workflows:
 - name: update-ccba-spoke
   bundle: _core
   command: /ccba-update-spoke
-  description: Sync bundle phù hợp từ Hub về dự án Spoke hiện tại
+  description: Đồng bộ hóa kỹ năng và quy trình từ Hub về Spoke (hỗ trợ đơn lẻ, On-Demand hoặc hàng loạt --all)
   triggers:
   - update spoke
   - đồng bộ hub
   - lấy lệnh mới
   - cập nhật dự án
+  - sync all
+  - sync all spokes
+  - đồng bộ toàn bộ spoke
+  - spoke status
+  - kiểm tra spoke
   workflow_path: .agents/workflows/ccba-update-spoke.md
 - name: session-retrospective
   bundle: _core
