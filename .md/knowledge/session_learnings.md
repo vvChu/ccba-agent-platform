@@ -375,12 +375,31 @@
   - Quy trình 4 bước tự động: Crawl VIP (Hub) $\rightarrow$ Sandbox Temp $\rightarrow$ Ingest & Validate (Spoke) $\rightarrow$ Auto-Purge Temp & Sync Cloud.
   - Tự động hủy bỏ toàn bộ tệp tạm `.docx` ngay khi Spoke xác nhận `Exit Code 0`, bảo vệ 100% nguyên tắc Zero-Duplication SSOT trên Hub.
 
+#### P7.12. Non-Destructive Selective Merge & Dry-Run Preview (`SpokeSynchronizer`)
+* **Nguyên tắc:** Khi đồng bộ tài nguyên từ Hub về Spoke:
+  1. **Tuyệt đối không xóa đè toàn bộ thư mục** `workflows/` hoặc `skills/`.
+  2. Áp dụng cơ chế so sánh nội dung từng tệp (byte-level comparison), phân loại rõ ràng 4 trạng thái: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED` và `🛡️ PRESERVED` (bảo toàn 100% các file nội bộ do Spoke tự viết).
+  3. Cung cấp cờ `--dry-run` cho phép mô phỏng toàn bộ tiến trình và xuất bảng báo cáo trạng thái chi tiết mà không sửa đổi bất kỳ byte nào trên đĩa.
+
+#### P7.13. Multi-Spoke Batch Sync Engine & Spoke Health/Drift Dashboard
+* **Nguyên tắc:** 
+  - Điều phối đồng bộ tập trung hàng loạt: Tự động giải mã Hub Registry (RSA 2048-bit), duyệt qua tất cả các Spoke còn tồn tại vật lý và đồng bộ 1 chạm qua `python scripts/sync_spoke.py --all`.
+  - Cung cấp Bảng điều khiển Giám sát (`ccba-platform spoke-status`): Tự động phát hiện các Spoke đang hoạt động (`🟢 ACTIVE`), Spoke bị trễ phiên bản (`⚠️ OUTDATED` > 30 ngày kể từ lần sync cuối) hoặc đường dẫn vật lý bị mất (`❌ MISSING`).
+
+#### P7.14. Zero-Latency Static File Inspection for Shared Python Packages (`SharedSdkInspector`)
+* **Nguyên tắc:** Khi cần phát hiện xem Spoke Python đã cài đặt các package dùng chung (`ccba-ai`, `ccba-ooxml`) ở chế độ editable (`pip install -e`) hay chưa:
+  - **Tuyệt đối không spawn tiến trình subprocess `pip list`** trong vòng lặp sync làm chậm 2–4s cho mỗi Spoke.
+  - Thay vào đó, quét trực tiếp cấu trúc file tĩnh trong `.venv/Lib/site-packages/` (hoặc `venv/`) để tìm kiếm sự hiện diện của `.pth`, `__editable__*`, `.egg-link` hoặc `.dist-info` với tốc độ tức thì (< 1ms).
+  - Tự động đưa ra khối gợi ý cài đặt 1 dòng lệnh thân thiện (`pip install -e "[hub_path]/packages/..."`) ngay sau bảng báo cáo sync khi phát hiện SDK chưa được liên kết.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
 * **AP7.2. Committing Unscanned Code:** Bỏ qua quy trình `/ccba-code-review` hoặc Governance Audit trước khi tạo PR.
 * **AP7.3. Context-Blind Link Leakage (`file:///` in Git Repo Docs):** Vô thức đem cú pháp `file:///` từ giao tiếp chat vào nội dung tệp `.md` trong repo. Bộ điều phối `doc_auditor.py` đã tích hợp rào chắn cross-platform để chặn đứng và tự động sửa (`--fix`) lỗi này ngay tại local.
 * **AP7.4. Duplicating Domain Corpus onto Central Hub (Anti-SSOT Proliferation):** Sao chép toàn văn các văn bản dữ liệu từ Spoke lên Hub dưới dạng tệp `.txt` cào thô hoặc bản sao `.md`, làm phình to repository trung tâm và gây lệch pha phiên bản khi Spoke cập nhật.
 * **AP7.5. Destructive Brownfield Onboarding:** Dùng template tĩnh ghi đè toàn bộ `AGENTS.md` và `workspace_context.yaml` khi kết nối một Spoke hiện hữu, làm mất mát metadata và quy chuẩn riêng của dự án.
+* **AP7.6. Destructive Workflow Wipe during Spoke Sync:** Xóa sạch toàn bộ thư mục `.agents/workflows/` của Spoke trước khi copy đè các tệp từ Hub, làm mất vĩnh viễn các workflow tùy biến nội bộ mà đội ngũ Spoke đã tự phát triển.
+* **AP7.7. Subprocess Latency Bottleneck in Batch Sync Operations:** Gọi các lệnh shell nặng như `pip list` hoặc `python -m pip` bên trong vòng lặp duyệt qua danh sách hàng loạt Spoke, gây nghẽn và làm chậm tiến trình đồng bộ gấp 10-20 lần.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
