@@ -2,6 +2,6 @@
 
 Autonomous Vietnamese construction legal intelligence, TVPL crawl coordination, and AST checklist generation.
 
-- **Public Deep Seams**: `ccba_legal.pipeline.LegalIntelPipeline`, `ccba_legal.adr.LegalProcessor`, `ccba_legal.sync.LegalSyncEngine`.
+- **Public Deep Seams**: `from ccba_legal import LegalIntelPipeline, LegalProcessor, LegalSyncEngine, LegalRegistryManager, LegalGroundingGate`.
 - **Contracts**: Chrome CDP crawlers MUST use `TVPLSessionMutex` and `CookieVault` to prevent session conflict and rate limits.
 - **Scoped Tests**: `pytest packages/ccba-legal-intel/tests`
