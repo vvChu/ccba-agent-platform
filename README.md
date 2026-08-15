@@ -48,8 +48,10 @@ ccba-agent-platform/                    ← Hub Repository
 │   └── rules/                         ← Progressive Disclosure Rules (Guardrails, Git, Code Quality)
 ├── .agents/
 │   ├── AGENTS.md                      ← Layer 1 Constitution Mirror
-│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->80<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-08-15 -->
+│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->85<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-08-15 -->
 │   │   ├── ai-gateway-sdk/            ←   Kết nối AI Gateway (50+ models)
+│   │   ├── spoke-adopter/             ←   Tiếp nhận Brownfield Spoke an toàn
+│   │   ├── sharepoint-iac/            ←   SharePoint Lists Schema & IaC
 │   │   ├── legal-document-tracker/    ←   Theo dõi & rà soát VBPL
 │   │   ├── completion-checklist/      ←   Quản lý HSHT công trình
 │   │   ├── ccba-ai-qc-pccc-audit/     ←   Thẩm tra thiết kế PCCC AI
@@ -71,9 +73,12 @@ ccba-agent-platform/                    ← Hub Repository
 │   ├── ccba-legal-intel/              ←   Legal intelligence connectors & TVPL VIP crawler
 │   └── mdconverter/                   ←   Document-to-Markdown converter (PDF/DOCX/HTML)
 ├── scripts/                           ← CLI Tooling & Governance Engines
-│   ├── spoke/                         ←   Spoke governance & synchronization engines
+│   ├── spoke/                         ←   Spoke governance, adoption & synchronization engines
+│   ├── governance/                    ←   Unified Governance & Cross-Reference validation
 │   ├── hooks/                         ←   Git hooks & guards (privacy, naming, simplify)
 │   ├── tests/                         ←   Unit test suites cho Hub tools
+│   ├── adopt_spoke.py                 ←   Brownfield Spoke Adoption CLI Delegate
+│   ├── validate_cross_references.py   ←   Constitution Cross-Reference Matrix Validator
 │   ├── session_cleanup.py             ←   Workspace & Session Cleanup CLI Delegate
 │   ├── sync_spoke.py                  ←   Spoke Synchronizer CLI Delegate
 │   ├── safe_pytest.py                 ←   Safe Scoped Pytest Execution Wrapper

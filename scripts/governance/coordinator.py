@@ -11,6 +11,7 @@ from typing import Any
 from .base import AuditIssue, AuditReport, BaseAuditor
 from .cli import run_docs_validation_cli, run_skills_validation_cli
 from .drift_auditor import DriftAuditor
+from .duplication_auditor import DuplicationAuditor
 from .env_auditor import EnvAuditor
 from .link_auditor import LinkAuditor
 from .registry_auditor import RegistryAuditor
@@ -20,12 +21,13 @@ from .skill_auditor import SkillAuditor
 class DocumentAuditor(BaseAuditor):
     """Deep Coordinator Module for Document, Skill & Governance Auditing.
 
-    Coordinates 5 domain sub-auditors:
+    Coordinates 6 domain sub-auditors:
     - LinkAuditor: Markdown links, code symbol declarations & auto-fixing
     - SkillAuditor: Skill frontmatter, character limits & step completion criteria
     - RegistryAuditor: Legal registry mapping & orphan file detection
     - EnvAuditor: Environment variable documentation & .env.example parity
     - DriftAuditor: Git change tracking & Architecture drift detection
+    - DuplicationAuditor: Anti-duplication SSOT guardrail for Hub-Spoke
     """
 
     def __init__(self, project_root: Path | None = None) -> None:
@@ -38,6 +40,7 @@ class DocumentAuditor(BaseAuditor):
         self.registry_auditor = RegistryAuditor(self._project_root)
         self.env_auditor = EnvAuditor(self._project_root)
         self.drift_auditor = DriftAuditor(self._project_root)
+        self.duplication_auditor = DuplicationAuditor(self._project_root)
 
     @property
     def project_root(self) -> Path:
@@ -58,6 +61,8 @@ class DocumentAuditor(BaseAuditor):
             self.env_auditor.project_root = new_root
         if hasattr(self, "drift_auditor"):
             self.drift_auditor.project_root = new_root
+        if hasattr(self, "duplication_auditor"):
+            self.duplication_auditor.project_root = new_root
 
     # ---------------------------------------------------------------------------
     # Delegation methods for LinkAuditor
@@ -283,6 +288,11 @@ class DocumentAuditor(BaseAuditor):
                     file_path="README.md",
                 )
             )
+            has_hard_errors = True
+
+        dup_issues = self.duplication_auditor.audit()
+        for issue in dup_issues:
+            issues_list.append(issue)
             has_hard_errors = True
 
         return AuditReport(

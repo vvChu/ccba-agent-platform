@@ -10,8 +10,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-# Add scripts directory to sys.path
-sys.path.insert(0, str(Path(__file__).parent.resolve()))
+# Add root and scripts directory to sys.path
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+_ROOT_DIR = _SCRIPTS_DIR.parent
+if str(_ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(_ROOT_DIR))
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from doc_auditor import DocumentAuditor
 

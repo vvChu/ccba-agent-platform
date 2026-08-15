@@ -134,7 +134,7 @@ IGNORE_CODE_REFS: set[str] = {
 }
 
 IGNORE_ENV_PREFIXES: list[str] = ["NODE_", "PATH", "HOME", "USER", "SHELL", "TERM", "PWD", "CI"]
-IGNORE_ENV_VARS: set[str] = {"ARGUMENTS"}
+IGNORE_ENV_VARS: set[str] = {"ARGUMENTS", "SLF001", "B023", "B904", "I001", "F401", "E501"}
 
 WORKFLOW_HEADERS: set[str] = {
     "workflow",

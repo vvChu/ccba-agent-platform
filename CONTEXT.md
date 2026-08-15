@@ -212,6 +212,30 @@ Nguyên tắc chuyển giao toàn bộ việc kiểm soát cú pháp, kiểu d�
 **Cross-Agent Parity Bridge (Cầu nối Tương thích Đa Tác nhân)**:
 Cơ chế duy trì tính tương thích giữa các định dạng tệp cấu hình tác nhân khác nhau (`AGENTS.md` theo chuẩn mở và `CLAUDE.md` của Claude Code) tại thư mục gốc repository, đảm bảo mọi công cụ AI đều tự động nạp cùng một bộ chỉ dẫn Layer 1 nhất quán.
 
+**Two-Layer Sub-Agent Guardrail (Rào chắn Kép Sub-Agent)**:
+Cơ chế bảo vệ trong quy trình Code Review kết hợp chặn prompt tường minh (chống đệ quy, cấm gọi lệnh review con) và giới hạn công cụ (read-only tools / `disable-model-invocation`), ngăn chặn triệt để hiện tượng bùng nổ đệ quy sub-agents lồng nhau.
+
+**Reference Skill vs Driver Skill (Phân định Kỹ năng Tham chiếu & Kỹ năng Hành động)**:
+Mô hình phân loại kỹ năng của Platform: Reference Skill (`codebase-design`, `domain-modeling`) chỉ đóng vai trò từ vựng và tiêu chuẩn gốc, áp dụng quy tắc dừng cứng khi gọi độc lập; trong khi Driver Skill (`implement`, `improve-codebase-architecture`, `grill-with-docs`) sở hữu quy trình lặp và điểm kết thúc rõ ràng.
+
+**Polyglot Deep Module Enforcement (Cơ chế Cưỡng chế Module Sâu Đa Ngôn Ngữ)**:
+Chuẩn quản trị ranh giới module trong Monorepo: Đối với Python packages (`packages/*/`), bắt buộc chỉ xuất khẩu 2–3 Deep Seams qua `__all__` tại `__init__.py`, bảo vệ các submodule bằng tiền tố gạch dưới và linter (`Ruff SLF001`); đối với TypeScript packages, sử dụng `dependency-cruiser` cấm import sâu qua thư mục con `lib/`.
+
+**Brownfield Spoke Adoption (Tiếp Nhận Spoke Hiện Hữu)**:
+Quy trình kỹ thuật và công cụ (`/ccba-adopt-spoke`) cho phép kết nạp an toàn một repository/codebase đã có sẵn vào mạng lưới CCBA Platform mà không phá hủy cấu trúc dữ liệu, Hiến pháp riêng hoặc mã nguồn hiện hữu.
+
+**Non-Destructive Schema Merging (Hợp Nhất Cấu Hình Bảo Toàn)**:
+Giao thức hợp nhất tệp `workspace_context.yaml` theo nguyên tắc Additive (chỉ thêm các trường bắt buộc của Hub, bảo tồn 100% các nhóm tài liệu và milestone tùy biến cũ của Spoke) kèm sao lưu tự động.
+
+**Brownfield Safety Guard (Rào Chắn An Toàn Dự Án Hiện Hữu)**:
+Cơ chế kiểm tra tự động trong `/ccba-init-spoke` nhằm phát hiện mã nguồn hoặc cấu trúc tri thức có sẵn, chủ động chặn đứng hành vi ghi đè nguy hiểm và điều hướng sang quy trình tiếp nhận thích ứng.
+
+**Constitution-Driven Traceability Matrix (Ma Trận Truy Vết Dẫn Dắt Bởi Thể Chế)**:
+Mô hình cấu trúc dữ liệu (`cross_references.yaml`) ánh xạ 2 chiều chính xác 100% giữa từng Đặc tả Kỹ thuật (Spec/User Story/AC) với từng Điều/Khoản/Phụ lục trong các văn bản quy chế pháp lý và tài liệu thiết kế hệ thống, đảm bảo tính giải trình và khả năng kiểm toán toàn diện.
+
+**Dynamic Knowledge Pointer (Con Trỏ Tri Thức Động)**:
+Mẫu hình chia sẻ tri thức giữa Hub và Spoke thông qua khai báo đường dẫn phân giải động trong `catalog.yaml` thay vì sao chép nội dung tệp tin, duy trì nguyên tắc Một Nguồn Sự Thật Duy Nhất (Single Source of Truth) và loại bỏ hoàn toàn nguy cơ trùng lặp dữ liệu.
+
 ---
 
 ## System Metaphor

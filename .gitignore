@@ -127,3 +127,9 @@ secret_credential.*
 *.db
 !Thumbs.db
 
+# Spoke-Exclusive Domains (Protected by Zero-Duplication SSOT)
+.md/legal_docs/
+.md/governance_constitution/
+.md/system_blueprint/
+specs/modules/
+

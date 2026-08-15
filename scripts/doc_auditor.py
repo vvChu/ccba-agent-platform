@@ -18,10 +18,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
-# Ensure scripts directory is importable
+# Ensure root and scripts directories are in sys.path
 _SCRIPTS_DIR = Path(__file__).resolve().parent
+_ROOT_DIR = _SCRIPTS_DIR.parent
+if str(_ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(_ROOT_DIR))
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
+
 
 from governance import (
     CODE_REF_RE,
