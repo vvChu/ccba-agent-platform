@@ -1638,4 +1638,14 @@ knowledge:
   cross_references: '[idop_path]/.md/cross_references.yaml'
   constitution_root: '[idop_path]/.md/governance_constitution/'
   blueprint_root: '[idop_path]/.md/system_blueprint/'
+- name: legal_knowledge_kb
+  description: Kho Tri thức Pháp luật Xây dựng & PCCC Việt Nam (OKF v2.0 Native-First & NotebookLM) — Luật 55/2024, Luật 135/2025, NĐ 193-217/2026, QCVN, TCVN
+  knowledge_path: '[legal_knowledge_path]/legal_registry.yaml'
+  registry_file: '[legal_knowledge_path]/legal_registry.yaml'
+  docs_root: '[legal_knowledge_path]/legal_docs/'
+  vbpl_root: '[legal_knowledge_path]/legal_docs/01_vbpl/'
+  qcvn_root: '[legal_knowledge_path]/legal_docs/02_qcvn/'
+  tcvn_root: '[legal_knowledge_path]/legal_docs/03_tcvn/'
+  appendices_root: '[legal_knowledge_path]/legal_docs/04_appendices/'
+
 
