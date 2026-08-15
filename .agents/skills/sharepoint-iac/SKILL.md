@@ -81,15 +81,21 @@ Khi làm việc trên một Spoke có SharePoint IaC (như `idop-ccba-way`):
    # Kiểm tra tính hợp lệ cú pháp JSON, Lookup references và Naming conventions
    .\idop.ps1 validate datamodel
    ```
+   * **Tiêu chí hoàn thành:** Lệnh `.\idop.ps1 validate datamodel` trả về kết quả 100% hợp lệ không có lỗi cú pháp hoặc trường tham chiếu thiếu.
+
 2. **Bước 2: Triển Khai Thử Nghiệm (DryRun)**:
    ```powershell
    # Quét sự khác biệt (diff) giữa JSON Schema và SharePoint Online thật
    .\idop.ps1 deploy lists -Environment IDOP -DryRun
    ```
+   * **Tiêu chí hoàn thành:** Báo cáo diff hiển thị danh sách các trường thay đổi dự kiến mà không gặp lỗi kết nối hay quyền truy cập.
+
 3. **Bước 3: Triển Khai Thật (Full Deployment)**:
    ```powershell
+   # Đồng bộ cấu trúc vào môi trường production
    .\idop.ps1 deploy lists -Environment IDOP -Full
    ```
+   * **Tiêu chí hoàn thành:** Toàn bộ SharePoint Lists và Managed Metadata được provisioning thành công trên SharePoint Online.
 
 ---
 
