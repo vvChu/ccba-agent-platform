@@ -139,7 +139,9 @@ def test_validate_broken_heading_suggestion_and_fix(tmp_path: Path):
 
     # Edit yaml to use an obsolete heading
     data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-    data["modules"][0]["governance_constitution_references"][0]["section_context"] = "1.1 Mục tiêu cũ"
+    data["modules"][0]["governance_constitution_references"][0]["section_context"] = (
+        "1.1 Mục tiêu cũ"
+    )
     yaml_path.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
 
     validator = CrossRefValidator(project_root)
@@ -155,7 +157,9 @@ def test_validate_broken_heading_suggestion_and_fix(tmp_path: Path):
 
     # Verify YAML content after fix
     reloaded_data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-    fixed_context = reloaded_data["modules"][0]["governance_constitution_references"][0]["section_context"]
+    fixed_context = reloaded_data["modules"][0]["governance_constitution_references"][0][
+        "section_context"
+    ]
     assert fixed_context == "1.1 Mục tiêu & Phạm vi"
 
 

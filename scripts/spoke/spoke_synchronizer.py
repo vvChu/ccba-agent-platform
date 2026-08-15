@@ -2,7 +2,7 @@
 """
 Deep Module for Spoke Synchronization Engine.
 Handles smart Hub discovery, atomic catalog merging, selective skill/workflow copying,
-test guardrail distribution, and encrypted Spoke registration.
+test guardrail distribution, encrypted Spoke registration, and non-destructive dry-run preview.
 """
 
 import base64
@@ -43,10 +43,42 @@ def load_yaml(file_path: Path) -> dict:
         return {}
 
 
+def are_files_identical(file1: Path, file2: Path) -> bool:
+    """Compare two files by byte content."""
+    if not file1.exists() or not file2.exists():
+        return False
+    try:
+        return file1.read_bytes() == file2.read_bytes()
+    except Exception:
+        return False
+
+
+def are_dirs_identical(dir1: Path, dir2: Path) -> bool:
+    """Recursively compare two directories by file contents."""
+    if not dir1.exists() or not dir2.exists():
+        return False
+
+    files1 = {p.relative_to(dir1): p for p in dir1.rglob("*") if p.is_file()}
+    files2 = {p.relative_to(dir2): p for p in dir2.rglob("*") if p.is_file()}
+
+    if set(files1.keys()) != set(files2.keys()):
+        return False
+
+    for rel_path, f1 in files1.items():
+        f2 = files2[rel_path]
+        try:
+            if f1.read_bytes() != f2.read_bytes():
+                return False
+        except Exception:
+            return False
+
+    return True
+
+
 class HubDiscoverer:
     """Smart Discovery Engine to locate the CCBA Hub directory."""
 
-    def __init__(self, spoke_root: Path, context: dict, context_file: Path = None):
+    def __init__(self, spoke_root: Path, context: dict, context_file: Path | None = None):
         self.spoke_root = spoke_root
         self.context = context
         self.context_file = context_file
@@ -145,7 +177,14 @@ class CatalogMerger:
 class SpokeRegistrar:
     """Encrypted Registration Engine for registering Spokes to Hub."""
 
-    def register(self, spoke_root: Path, hub_root: Path, project_name: str, project_type: str):
+    def register(
+        self,
+        spoke_root: Path,
+        hub_root: Path,
+        project_name: str,
+        project_type: str,
+        dry_run: bool = False,
+    ):
         if not HAS_CRYPTOGRAPHY:
             print(
                 "[Registry] Warning: cryptography package not installed. Skipping Spoke registration.",
@@ -157,6 +196,12 @@ class SpokeRegistrar:
             hub_root / ".agents" / "workflows" / "resources" / "registry_public_key.pem"
         )
         if not public_key_path.exists():
+            return
+
+        if dry_run:
+            print(
+                f"[Registry] [DRY-RUN] Would register Spoke '{project_name}' to Hub Spoke Registry (Encrypted)."
+            )
             return
 
         try:
@@ -223,26 +268,30 @@ class TestGuardrailCopier:
         self.hub_root = hub_root
         self.project_type = project_type
 
-    def copy_if_needed(self):
+    def copy_if_needed(self, dry_run: bool = False):
         """Copy conftest.py and safe_pytest.py if Spoke is a software project."""
         if (self.spoke_root / "pyproject.toml").exists() or self.project_type == "Phần mềm":
             hub_conftest = self.hub_root / "conftest.py"
             hub_safe_pytest = self.hub_root / "scripts" / "safe_pytest.py"
 
-            if (
-                hub_conftest.exists()
-                and hub_conftest.resolve() != (self.spoke_root / "conftest.py").resolve()
-            ):
-                shutil.copy2(hub_conftest, self.spoke_root / "conftest.py")
-                print("  - Copied test guardrail: conftest.py")
+            dest_conftest = self.spoke_root / "conftest.py"
+            if hub_conftest.exists() and hub_conftest.resolve() != dest_conftest.resolve():
+                if dry_run:
+                    print("  - [DRY-RUN] Would copy test guardrail: conftest.py")
+                else:
+                    shutil.copy2(hub_conftest, dest_conftest)
+                    print("  - Copied test guardrail: conftest.py")
 
             if hub_safe_pytest.exists():
                 spoke_scripts_dir = self.spoke_root / "scripts"
-                spoke_scripts_dir.mkdir(parents=True, exist_ok=True)
                 dest_safe_pytest = spoke_scripts_dir / "safe_pytest.py"
                 if hub_safe_pytest.resolve() != dest_safe_pytest.resolve():
-                    shutil.copy2(hub_safe_pytest, dest_safe_pytest)
-                    print("  - Copied test wrapper CLI: scripts/safe_pytest.py")
+                    if dry_run:
+                        print("  - [DRY-RUN] Would copy test wrapper CLI: scripts/safe_pytest.py")
+                    else:
+                        spoke_scripts_dir.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(hub_safe_pytest, dest_safe_pytest)
+                        print("  - Copied test wrapper CLI: scripts/safe_pytest.py")
 
 
 def safe_remove(path: Path):
@@ -266,16 +315,22 @@ def safe_remove(path: Path):
 
 
 class SpokeSynchronizer:
-    """Deep Engine managing Spoke workspace synchronization."""
+    """Deep Engine managing Spoke workspace synchronization with non-destructive selective merge."""
 
     def __init__(self, spoke_path: str):
         self.spoke_root = Path(spoke_path).resolve()
 
     def _sync_single_item(
-        self, spoke_root: Path, hub_root: Path, catalog: dict, sync_item: str
+        self,
+        spoke_root: Path,
+        hub_root: Path,
+        catalog: dict,
+        sync_item: str,
+        dry_run: bool = False,
     ) -> int:
         """On-Demand synchronization for a single skill or workflow."""
-        print(f"Mode: On-Demand Synchronization for '{sync_item}'")
+        mode_str = " [DRY-RUN]" if dry_run else ""
+        print(f"Mode: On-Demand Synchronization for '{sync_item}'{mode_str}")
         spoke_agents_dir = spoke_root / ".agents"
         spoke_skills_dir = spoke_agents_dir / "skills"
         spoke_workflows_dir = spoke_agents_dir / "workflows"
@@ -294,10 +349,17 @@ class SpokeSynchronizer:
                     if src.resolve() == dest.resolve():
                         found = True
                         break
-                    print(f"[Sync] Copying skill [{sync_item}] -> {dest.relative_to(spoke_root)}")
-                    dest.parent.mkdir(parents=True, exist_ok=True)
-                    safe_remove(dest)
-                    shutil.copytree(src, dest)
+                    if dry_run:
+                        print(
+                            f"[Sync] [DRY-RUN] Would copy skill [{sync_item}] -> {dest.relative_to(spoke_root)}"
+                        )
+                    else:
+                        print(
+                            f"[Sync] Copying skill [{sync_item}] -> {dest.relative_to(spoke_root)}"
+                        )
+                        dest.parent.mkdir(parents=True, exist_ok=True)
+                        safe_remove(dest)
+                        shutil.copytree(src, dest)
                     found = True
                     break
                 else:
@@ -317,13 +379,18 @@ class SpokeSynchronizer:
                         if src.resolve() == dest.resolve():
                             found = True
                             break
-                        print(
-                            f"[Sync] Copying workflow [{sync_item}] -> {dest.relative_to(spoke_root)}"
-                        )
-                        dest.parent.mkdir(parents=True, exist_ok=True)
-                        if dest.exists():
-                            dest.unlink()
-                        shutil.copy2(src, dest)
+                        if dry_run:
+                            print(
+                                f"[Sync] [DRY-RUN] Would copy workflow [{sync_item}] -> {dest.relative_to(spoke_root)}"
+                            )
+                        else:
+                            print(
+                                f"[Sync] Copying workflow [{sync_item}] -> {dest.relative_to(spoke_root)}"
+                            )
+                            dest.parent.mkdir(parents=True, exist_ok=True)
+                            if dest.exists():
+                                dest.unlink()
+                            shutil.copy2(src, dest)
                         found = True
                         break
                     else:
@@ -343,9 +410,18 @@ class SpokeSynchronizer:
         hub_agents_md = hub_root / ".agents" / "AGENTS.md"
         spoke_agents_md = spoke_agents_dir / "AGENTS.md"
         if hub_agents_md.exists():
-            shutil.copy2(hub_agents_md, spoke_agents_md)
+            if dry_run:
+                print(
+                    f"[Sync] [DRY-RUN] Would copy constitutional rules -> {spoke_agents_md.relative_to(spoke_root)}"
+                )
+            else:
+                spoke_agents_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(hub_agents_md, spoke_agents_md)
 
-        print("\n=== Sync Completed Successfully ===")
+        if dry_run:
+            print("\n=== [DRY-RUN] On-Demand Sync Simulation Completed ===")
+        else:
+            print("\n=== Sync Completed Successfully ===")
         return 0
 
     def _sync_full_bundle(
@@ -355,8 +431,9 @@ class SpokeSynchronizer:
         catalog: dict,
         project_type: str,
         project_name: str,
+        dry_run: bool = False,
     ) -> int:
-        """Full synchronization according to Spoke project_type."""
+        """Full synchronization with Non-Destructive Selective Merge."""
         if not project_type:
             print(
                 "[Sync] Error: 'project_type' is not defined in workspace_context.yaml.",
@@ -364,7 +441,8 @@ class SpokeSynchronizer:
             )
             return 1
 
-        print(f"Project Type: {project_type}")
+        mode_banner = " [DRY-RUN MODE]" if dry_run else ""
+        print(f"Project Type: {project_type}{mode_banner}")
 
         bundle_defs = catalog.get("bundles", {})
         if project_type not in bundle_defs:
@@ -416,70 +494,209 @@ class SpokeSynchronizer:
                     }
                 )
 
-        is_same_root = spoke_root.resolve() == hub_root.resolve()
+        # Status tracking
+        actions: list[dict] = []
 
-        if not is_same_root:
-            safe_remove(spoke_workflows_dir)
-        spoke_workflows_dir.mkdir(parents=True, exist_ok=True)
-        spoke_skills_dir.mkdir(parents=True, exist_ok=True)
+        # 1. Process Skills (Selective Merge)
+        if not dry_run:
+            spoke_skills_dir.mkdir(parents=True, exist_ok=True)
 
-        print("\n[Sync] Copying skills...")
-        copied_skills_count = 0
+        synced_skill_folders = {sk["dest_name"] for sk in skills_to_sync}
+        if spoke_skills_dir.exists():
+            for existing_skill in spoke_skills_dir.iterdir():
+                if existing_skill.is_dir() and existing_skill.name not in synced_skill_folders:
+                    actions.append(
+                        {
+                            "type": "Skill",
+                            "name": existing_skill.name,
+                            "status": "PRESERVED",
+                            "path": str(existing_skill.relative_to(spoke_root)),
+                        }
+                    )
+
         for sk in skills_to_sync:
             src = sk["src_dir"]
             dest = spoke_skills_dir / sk["dest_name"]
-            if src.exists():
-                if src.resolve() == dest.resolve():
-                    copied_skills_count += 1
-                    continue
-                print(f"  - [{sk['name']}] -> {dest.relative_to(spoke_root)}")
-                try:
+            if not src.exists():
+                print(f"  - [Warning] Skill source path not found: {src}", file=sys.stderr)
+                continue
+
+            if src.resolve() == dest.resolve():
+                actions.append(
+                    {
+                        "type": "Skill",
+                        "name": sk["name"],
+                        "status": "UNCHANGED",
+                        "path": str(dest.relative_to(spoke_root)),
+                    }
+                )
+                continue
+
+            if not dest.exists():
+                actions.append(
+                    {
+                        "type": "Skill",
+                        "name": sk["name"],
+                        "status": "NEW",
+                        "path": str(dest.relative_to(spoke_root)),
+                    }
+                )
+                if not dry_run:
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copytree(src, dest, dirs_exist_ok=True)
+            elif are_dirs_identical(src, dest):
+                actions.append(
+                    {
+                        "type": "Skill",
+                        "name": sk["name"],
+                        "status": "UNCHANGED",
+                        "path": str(dest.relative_to(spoke_root)),
+                    }
+                )
+            else:
+                actions.append(
+                    {
+                        "type": "Skill",
+                        "name": sk["name"],
+                        "status": "UPDATED",
+                        "path": str(dest.relative_to(spoke_root)),
+                    }
+                )
+                if not dry_run:
                     safe_remove(dest)
                     shutil.copytree(src, dest, dirs_exist_ok=True)
-                    copied_skills_count += 1
-                except Exception as e:
-                    print(f"  - [Cảnh báo] Lỗi ghi đè skill {sk['name']}: {e}", file=sys.stderr)
-            else:
-                print(f"  - [Warning] Skill source path not found: {src}", file=sys.stderr)
 
-        print("\n[Sync] Copying workflows...")
-        copied_wfs_count = 0
+        # 2. Process Workflows (Non-Destructive Selective Merge)
+        if not dry_run:
+            spoke_workflows_dir.mkdir(parents=True, exist_ok=True)
+
+        synced_wf_filenames = {wf["filename"] for wf in wfs_to_sync}
+        if spoke_workflows_dir.exists():
+            for existing_wf in spoke_workflows_dir.iterdir():
+                if existing_wf.is_file() and existing_wf.name not in synced_wf_filenames:
+                    actions.append(
+                        {
+                            "type": "Workflow",
+                            "name": existing_wf.stem,
+                            "status": "PRESERVED",
+                            "path": str(existing_wf.relative_to(spoke_root)),
+                        }
+                    )
+
         for wf in wfs_to_sync:
             src = wf["src_file"]
             dest = spoke_workflows_dir / wf["filename"]
-            if src.exists():
-                if src.resolve() == dest.resolve():
-                    copied_wfs_count += 1
-                    continue
-                print(f"  - [{wf['name']}] -> {dest.relative_to(spoke_root)}")
-                shutil.copy2(src, dest)
-                copied_wfs_count += 1
-            else:
+            if not src.exists():
                 print(f"  - [Warning] Workflow source file not found: {src}", file=sys.stderr)
+                continue
 
-        # Copy AGENTS.md
+            if src.resolve() == dest.resolve():
+                actions.append(
+                    {
+                        "type": "Workflow",
+                        "name": wf["name"],
+                        "status": "UNCHANGED",
+                        "path": str(dest.relative_to(spoke_root)),
+                    }
+                )
+                continue
+
+            if not dest.exists():
+                actions.append(
+                    {
+                        "type": "Workflow",
+                        "name": wf["name"],
+                        "status": "NEW",
+                        "path": str(dest.relative_to(spoke_root)),
+                    }
+                )
+                if not dry_run:
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src, dest)
+            elif are_files_identical(src, dest):
+                actions.append(
+                    {
+                        "type": "Workflow",
+                        "name": wf["name"],
+                        "status": "UNCHANGED",
+                        "path": str(dest.relative_to(spoke_root)),
+                    }
+                )
+            else:
+                actions.append(
+                    {
+                        "type": "Workflow",
+                        "name": wf["name"],
+                        "status": "UPDATED",
+                        "path": str(dest.relative_to(spoke_root)),
+                    }
+                )
+                if not dry_run:
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src, dest)
+
+        # 3. Copy AGENTS.md
         hub_agents_md = hub_root / ".agents" / "AGENTS.md"
         spoke_agents_md = spoke_agents_dir / "AGENTS.md"
         if hub_agents_md.exists() and hub_agents_md.resolve() != spoke_agents_md.resolve():
-            print(
-                f"\n[Sync] Copying constitutional rules (AGENTS.md) -> {spoke_agents_md.relative_to(spoke_root)}"
+            if not spoke_agents_md.exists():
+                rule_status = "NEW"
+            elif are_files_identical(hub_agents_md, spoke_agents_md):
+                rule_status = "UNCHANGED"
+            else:
+                rule_status = "UPDATED"
+
+            actions.append(
+                {
+                    "type": "Rule",
+                    "name": "AGENTS.md",
+                    "status": rule_status,
+                    "path": str(spoke_agents_md.relative_to(spoke_root)),
+                }
             )
-            shutil.copy2(hub_agents_md, spoke_agents_md)
+            if not dry_run and rule_status in ("NEW", "UPDATED"):
+                spoke_agents_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(hub_agents_md, spoke_agents_md)
 
-        # Copy test guardrails
-        TestGuardrailCopier(spoke_root, hub_root, project_type).copy_if_needed()
+        # 4. Test guardrails
+        TestGuardrailCopier(spoke_root, hub_root, project_type).copy_if_needed(dry_run=dry_run)
 
-        # Register Spoke to Hub
-        SpokeRegistrar().register(spoke_root, hub_root, project_name, project_type)
+        # 5. Spoke registration
+        SpokeRegistrar().register(spoke_root, hub_root, project_name, project_type, dry_run=dry_run)
 
-        print("\n=== Sync Completed Successfully ===")
-        print(f"Synced {copied_skills_count} skills and {copied_wfs_count} workflows.")
-        print("Project now structured native for Google Antigravity Auto-Discovery.")
+        # 6. Print Structured Output & Summary Table
+        new_count = sum(1 for a in actions if a["status"] == "NEW")
+        updated_count = sum(1 for a in actions if a["status"] == "UPDATED")
+        unchanged_count = sum(1 for a in actions if a["status"] == "UNCHANGED")
+        preserved_count = sum(1 for a in actions if a["status"] == "PRESERVED")
+
+        print("\n" + "=" * 90)
+        print(f" CCBA SPOKE SYNC REPORT — {'[DRY-RUN SIMULATION]' if dry_run else '[EXECUTION]'}")
+        print("=" * 90)
+        print(f"{'Loại':<10} | {'Tên Kỹ Năng / Quy Trình':<30} | {'Trạng Thái':<12} | {'Đích Đến'}")
+        print("-" * 90)
+        for act in actions:
+            status_symbol = {
+                "NEW": "🟢 NEW",
+                "UPDATED": "🔄 UPDATED",
+                "UNCHANGED": "⚪ UNCHANGED",
+                "PRESERVED": "🛡️ PRESERVED",
+            }.get(act["status"], act["status"])
+            print(f"{act['type']:<10} | {act['name']:<30} | {status_symbol:<12} | {act['path']}")
+        print("-" * 90)
+        print(
+            f"Tổng kết: {new_count} mới, {updated_count} cập nhật, {unchanged_count} không đổi, {preserved_count} giữ nguyên nội bộ."
+        )
+        if dry_run:
+            print("\n[DRY-RUN] Quá trình mô phỏng hoàn tất. 0 tệp tin nào bị sửa đổi trên đĩa.")
+        else:
+            print("\n=== Sync Completed Successfully ===")
         return 0
 
-    def sync_spoke_bundle(self, sync_item: str = None) -> int:
+    def sync_spoke_bundle(self, sync_item: str | None = None, dry_run: bool = False) -> int:
         """Main entrypoint for Spoke synchronization."""
-        print("\n=== CCBA Spoke Synchronization ===")
+        mode_str = " [DRY-RUN]" if dry_run else ""
+        print(f"\n=== CCBA Spoke Synchronization{mode_str} ===")
         print(f"Target Spoke: {self.spoke_root}")
 
         context_file = self.spoke_root / ".agents" / "workspace_context.yaml"
@@ -522,8 +739,8 @@ class SpokeSynchronizer:
 
         print(f"Hub Location: {hub_root}")
 
-        # Auto git pull Hub if git repo
-        if (hub_root / ".git").exists():
+        # Auto git pull Hub if git repo (only when not dry_run)
+        if (hub_root / ".git").exists() and not dry_run:
             print(
                 "[Sync] Hub is a Git repository. Attempting to pull latest changes from GitHub..."
             )
@@ -557,25 +774,101 @@ class SpokeSynchronizer:
         catalog = load_yaml(catalog_file)
 
         if sync_item:
-            return self._sync_single_item(self.spoke_root, hub_root, catalog, sync_item)
+            return self._sync_single_item(
+                self.spoke_root, hub_root, catalog, sync_item, dry_run=dry_run
+            )
         else:
             return self._sync_full_bundle(
-                self.spoke_root, hub_root, catalog, project_type, project_name
+                self.spoke_root,
+                hub_root,
+                catalog,
+                project_type,
+                project_name,
+                dry_run=dry_run,
             )
 
-    def sync(self, sync_item: str | None = None) -> int:
+    def sync(self, sync_item: str | None = None, dry_run: bool = False) -> int:
         """Deep Seam entry point for syncing spoke bundle."""
-        return self.sync_spoke_bundle(sync_item=sync_item)
+        return self.sync_spoke_bundle(sync_item=sync_item, dry_run=dry_run)
 
 
 # Deep Seam Alias
 SpokeSyncEngine = SpokeSynchronizer
 
 
-def sync_project(spoke_path: str | Path = ".", sync_item: str | None = None) -> int:
+def sync_project(
+    spoke_path: str | Path = ".",
+    sync_item: str | None = None,
+    dry_run: bool = False,
+) -> int:
     """Helper procedural delegate for spoke synchronization."""
-    engine = SpokeSyncEngine(spoke_path)
-    return engine.sync(sync_item=sync_item)
+    engine = SpokeSyncEngine(str(spoke_path))
+    return engine.sync(sync_item=sync_item, dry_run=dry_run)
+
+
+def sync_all_spokes(
+    hub_root: Path | None = None,
+    sync_item: str | None = None,
+    dry_run: bool = False,
+) -> int:
+    """Batch synchronize all registered active Spokes found in Hub Registry."""
+    root = hub_root or Path(__file__).resolve().parents[2]
+    from scripts.spoke.decrypt_spoke_registry import get_registered_spokes
+
+    spokes = get_registered_spokes(hub_root=root)
+    if not spokes:
+        print("[BatchSync] Warning: No registered Spokes found in Hub Registry.", file=sys.stderr)
+        return 1
+
+    mode_str = " [DRY-RUN SIMULATION]" if dry_run else ""
+    print("\n" + "=" * 90)
+    print(f" CCBA MULTI-SPOKE BATCH SYNCHRONIZATION{mode_str}")
+    print(f" Tìm thấy {len(spokes)} Spoke(s) trong Hub Registry.")
+    print("=" * 90)
+
+    results: list[dict] = []
+    total_exit_code = 0
+
+    for idx, sp in enumerate(spokes, 1):
+        sp_name = sp.get("name", "Unknown")
+        sp_path = sp.get("path", "")
+        sp_type = sp.get("project_type", "Unknown")
+
+        print(f"\n[{idx}/{len(spokes)}] 🔄 Đang xử lý Spoke: '{sp_name}' ({sp_type})")
+        print(f"  Đường dẫn: {sp_path}")
+
+        if not os.path.exists(sp_path):
+            print("  ⚠️ Cảnh báo: Spoke không tồn tại vật lý trên ổ đĩa. Bỏ qua.")
+            results.append({"name": sp_name, "path": sp_path, "status": "MISSING", "code": 1})
+            continue
+
+        try:
+            engine = SpokeSynchronizer(sp_path)
+            res = engine.sync(sync_item=sync_item, dry_run=dry_run)
+            status = "SUCCESS" if res == 0 else "FAILED"
+            results.append({"name": sp_name, "path": sp_path, "status": status, "code": res})
+            if res != 0:
+                total_exit_code = 1
+        except Exception as e:
+            print(f"  ❌ Lỗi khi đồng bộ Spoke '{sp_name}': {e}", file=sys.stderr)
+            results.append({"name": sp_name, "path": sp_path, "status": f"ERROR: {e}", "code": 1})
+            total_exit_code = 1
+
+    print("\n" + "=" * 90)
+    print(f" BÁO CÁO TỔNG KẾT BATCH SYNC{mode_str}")
+    print("=" * 90)
+    print(f"{'Tên Spoke':<25} | {'Trạng Thái':<14} | {'Đường Dẫn Vật Lý'}")
+    print("-" * 90)
+    for r in results:
+        status_icon = (
+            "✅ SUCCESS"
+            if r["status"] == "SUCCESS"
+            else ("⚠️ MISSING" if r["status"] == "MISSING" else f"❌ {r['status']}")
+        )
+        print(f"{r['name']:<25} | {status_icon:<14} | {r['path']}")
+    print("=" * 90)
+
+    return total_exit_code
 
 
 def main() -> None:
@@ -591,8 +884,22 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="CCBA Spoke Synchronizer")
     parser.add_argument("--spoke", default=".", help="Path to spoke project")
     parser.add_argument("--sync-item", default=None, help="Specific skill/workflow name")
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Batch synchronize all registered Spokes from Hub Registry.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview changes without modifying any files on disk.",
+    )
     args = parser.parse_args()
-    sys.exit(sync_project(args.spoke, args.sync_item))
+
+    if args.all:
+        sys.exit(sync_all_spokes(sync_item=args.sync_item, dry_run=args.dry_run))
+    else:
+        sys.exit(sync_project(args.spoke, args.sync_item, dry_run=args.dry_run))
 
 
 if __name__ == "__main__":

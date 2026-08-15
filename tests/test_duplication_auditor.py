@@ -17,7 +17,9 @@ def test_clean_hub_passes_duplication_audit(tmp_path: Path):
     extracted_dir.mkdir(parents=True)
 
     # Add legitimate research files
-    (extracted_dir / "01_Chien_luoc_dam_phan_hop_dong.md").write_text("# Research", encoding="utf-8")
+    (extracted_dir / "01_Chien_luoc_dam_phan_hop_dong.md").write_text(
+        "# Research", encoding="utf-8"
+    )
     (extracted_dir / "notes_concept.md").write_text("# Notes", encoding="utf-8")
     (extracted_dir / "fb_academic_research_post.md").write_text("# Post", encoding="utf-8")
 
@@ -58,7 +60,9 @@ def test_raw_scraped_law_text_file_detected(tmp_path: Path):
     """Adding raw scraped law .txt files in .md/extracted_docs must be blocked."""
     extracted_dir = tmp_path / ".md" / "extracted_docs"
     extracted_dir.mkdir(parents=True)
-    (extracted_dir / "nghi_dinh_207_2026_nd_cp_toan_van.txt").write_text("Raw text", encoding="utf-8")
+    (extracted_dir / "nghi_dinh_207_2026_nd_cp_toan_van.txt").write_text(
+        "Raw text", encoding="utf-8"
+    )
 
     auditor = DuplicationAuditor(tmp_path)
     issues = auditor.audit()
@@ -71,7 +75,9 @@ def test_legitimate_hub_research_files_allowed(tmp_path: Path):
     """Ensure legitimate markdown and report files are never falsely flagged."""
     extracted_dir = tmp_path / ".md" / "extracted_docs"
     extracted_dir.mkdir(parents=True)
-    (extracted_dir / "hows_to_write_your_first_research_paper_2011.md").write_text("Guide", encoding="utf-8")
+    (extracted_dir / "hows_to_write_your_first_research_paper_2011.md").write_text(
+        "Guide", encoding="utf-8"
+    )
     (extracted_dir / "new_dossier_comparison_report.md").write_text("Report", encoding="utf-8")
 
     auditor = DuplicationAuditor(tmp_path)
