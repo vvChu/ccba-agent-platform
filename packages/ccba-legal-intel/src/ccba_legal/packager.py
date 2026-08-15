@@ -5,6 +5,8 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 
 class OKFBundlePackager:
     """Manages creation, writing, and directory structure organization of Open Knowledge Format (OKF) Bundles."""
@@ -45,7 +47,7 @@ class OKFBundlePackager:
         return text
 
     def package_bundle(self, doc_id: str, content: str, metadata: dict[str, Any]) -> Path:
-        """Create and structure an OKF bundle for a document with raw content and metadata.
+        """Create and structure an OKF v2.0 bundle for a document with raw content and metadata.
 
         Args:
             doc_id: The document identifier.
@@ -61,6 +63,27 @@ class OKFBundlePackager:
 
         title = metadata.get("title", f"Legal Document {doc_id}")
         doc_type = metadata.get("type", "Law")
+
+        # OKF v2.0 (ADR 0038): Write independent metadata.yaml
+        meta_dict = {
+            "doc_id": doc_id,
+            "title": title,
+            "type": doc_type,
+            "doc_number": metadata.get("document_number", metadata.get("doc_number", "")),
+            "category": metadata.get("category", doc_type),
+            "issuer": metadata.get("issued_by", metadata.get("issuer", "")),
+            "issued_date": metadata.get("issued_date", ""),
+            "effective_date": metadata.get("effective_date", ""),
+            "status": metadata.get("status", "effective"),
+            "source_url": metadata.get("source_url", ""),
+            "sha256": metadata.get("sha256", ""),
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
+        meta_yaml_path = bundle_dir / "metadata.yaml"
+        meta_yaml_path.write_text(
+            yaml.safe_dump(meta_dict, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
 
         self.write_concept(
             relative_path=f"{bundle_slug}/{bundle_slug}.md",
