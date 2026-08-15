@@ -1,7 +1,7 @@
 # 🧠 CCBA Platform — Tổng Hợp Tri Thức & Bài Học Hệ Thống (Session Learnings)
 
 > **Trạng thái:** Active & Consolidated  
-> **Cập nhật gần nhất:** 2026-08-14 (Sau Refactor Deep Modules & Incident Fix)  
+> **Cập nhật gần nhất:** 2026-08-15 (Sau Tái cấu trúc Progressive Disclosure & Hierarchical AGENTS.md)  
 > **Phiên bản lưu trữ lịch sử:** [`.md/knowledge/archive/session_learnings_v1_archive.md`](archive/session_learnings_v1_archive.md)  
 > **Mục đích:** Tài liệu tri thức cốt lõi cô đọng ~30 nguyên lý thực chiến và các anti-patterns nguy hiểm cần tránh trên toàn bộ hệ sinh thái CCBA Agent Platform.
 
@@ -182,10 +182,14 @@
 * **Nguyên tắc:** Tránh hardcode các con số tĩnh (như *"22 models"*) trong tài liệu kỹ thuật khi hạ tầng backend (LiteLLM/vLLM Gateway) có khả năng thay đổi và mở rộng động.
 * **Giải pháp:** Sử dụng giao diện khám phá động `ai.models()` / `async_ai.models()` để truy vấn trực tiếp danh sách mô hình thời gian thực từ Gateway, và ghi tài liệu dưới dạng mở (ví dụ: *"50+ models (khám phá động qua `ai.models()`)"*).
 
+#### P4.11. Progressive Instruction Disclosure Architecture (Kiến Trúc Phân Rã Chỉ Dẫn Lũy Tiến)
+* **Nguyên tắc:** Tối ưu hóa Instruction Budget (~150–200 instructions). Tinh giản Root `AGENTS.md` thành mỏ neo định vị (< 25 dòng / ~300 tokens), phân rã các quy tắc chuyên biệt vào `docs/rules/` (`execution_guardrails.md`, `git_conventions.md`, `code_quality.md`) và thiết lập `CLAUDE.md` tại root để đạt cross-agent parity.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP4.1. Hardcoded API Keys:** Tuyệt đối không hardcode keys vào code/markdown. Luôn dùng biến môi trường hoặc `.env`.
 * **AP4.2. Raw Exception Context Chaining (Ruff B904):** Dùng `raise NewException(...) from None` khi ném ngoại lệ mới trong block except không liên quan.
 * **AP4.3. Reasoning Models trong Converter Fallback Chains:** Tuyệt đối không đưa các model có hậu tố `-thinking` vào chuỗi fallback của document converter (`mdconverter`) để tránh rò rỉ khối thẻ `<think>` làm ô nhiễm file Markdown đầu ra.
+* **AP4.4. Monolithic Context Overloading (Ball of Mud Prompt):** Nhồi nhét hàng chục trang quy tắc tĩnh và các quy định hiển nhiên (như f-strings, type hints, bare except) vào `AGENTS.md` gốc, làm tiêu tốn ~80% ngân sách chỉ dẫn của LLM và gây phân tâm khi suy luận.
 
 
 ---
@@ -289,6 +293,10 @@
 
 
 
+#### P6.14. Monorepo Hierarchical AGENTS.md for Package Deep Seams
+* **Nguyên tắc:** Trong kiến trúc Monorepo, tận dụng cơ chế tự động hòa trộn `AGENTS.md` ở thư mục con vào ngữ cảnh.
+* **Giải pháp:** Mỗi package (`packages/{pkg}/AGENTS.md`) sở hữu tệp chỉ dẫn cục bộ ngắn gọn (3-6 dòng) xác định rõ ràng Public Deep Seams (`from {pkg} import ...`), contracts (timeout, caching) và lệnh test độc lập (`pytest packages/{pkg}/tests`).
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 
 * **AP6.1. Leaky Interface Exporting 30+ Symbols:** Xuất khẩu toàn bộ hàm con ra `__init__.py` làm rối loạn AI navigation.
@@ -297,6 +305,7 @@
 * **AP6.4. Unchecked Transport/SDK Assumptions:** Giả định các SDK/Client hỗ trợ các khả năng đặc thù (như xử lý multimodal bytes, async streams) mà chưa inspect code thực tế của thư viện, dẫn đến kế hoạch sai lệch nghiêm trọng.
 * **AP6.5. Deleting Embedded Domain Logic:** Nhầm lẫn giữa mã boilerplate lặp lại với domain orchestration logic (dù đã có docstring) và xóa bỏ khi tinh gọn scripts.
 * **AP6.6. Hybrid "Neither Fish Nor Fowl" Model Anti-Pattern (Lớp Mô Hình Lai Tạp):** Cài đặt đè `__getitem__` trên `BaseModel` để vừa hỗ trợ dot notation vừa hỗ trợ dict subscripting, gây mơ hồ khi phân tích kiểu dữ liệu tĩnh và làm sai lệch quá trình serialize JSON/dump.
+* **AP6.7. Brittle File Path Instructions (Context Poisoning):** Ghi cứng đường dẫn script phụ trợ cụ thể (`scripts/safe_pytest.py`, `scripts/hooks/test_speed_guard.py`) trong tài liệu quy tắc. Khi refactor module, Agent bị ảo giác và tìm kiếm ở vị trí sai. Thay vào đó, áp dụng **Capability-First Instructions**.
 
 ---
 
@@ -325,6 +334,9 @@
 
 #### P7.4. Squash-and-Merge Standard for Feature Releases
 * **Nguyên tắc:** Khi release feature branch về `main`, luôn áp dụng chiến lược **Squash and Merge** (`gh pr merge --squash --delete-branch`). Việc này giúp gộp toàn bộ các commits trung gian (sửa linter, test fix, feedback review) thành 1 commit duy nhất mang thông điệp tóm tắt hoàn chỉnh, giữ cho lịch sử nhánh `main` luôn tinh gọn và dễ truy vết.
+
+#### P7.5. Automated Copilot PR Review Comment Audit Gate
+* **Nguyên tắc:** Trước khi merge PR, tự động hóa việc đối soát các inline review comments từ Copilot bằng `scripts/validation/audit_pr_comments.py`, đảm bảo mọi phản hồi kỹ thuật đều được tiếp thu hoặc giải trình trong `walkthrough.md`.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
