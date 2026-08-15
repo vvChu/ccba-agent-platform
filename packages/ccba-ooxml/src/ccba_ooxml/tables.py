@@ -19,6 +19,7 @@ from typing import Any
 
 try:
     from docx import Document
+
     DOCX_AVAILABLE = True
 except ImportError:
     Document = None  # type: ignore[assignment,misc]
@@ -53,8 +54,20 @@ def make_descriptive_table_slug(table_num: str, title: str = "") -> str:
     words = re.findall(r"\b[a-z0-9]+\b", ascii_title)
 
     stopwords = {
-        "va", "cua", "cho", "cac", "thuc", "hien", "tuong",
-        "ung", "voi", "chung", "nhung", "theo", "đoi", "doi",
+        "va",
+        "cua",
+        "cho",
+        "cac",
+        "thuc",
+        "hien",
+        "tuong",
+        "ung",
+        "voi",
+        "chung",
+        "nhung",
+        "theo",
+        "đoi",
+        "doi",
     }
     filtered = [w for w in words if w not in stopwords][:5]
 
@@ -78,7 +91,9 @@ class StructuredTable:
     def __post_init__(self) -> None:
         """Calculate column count if not provided."""
         if not self.cols_count:
-            self.cols_count = len(self.headers) if self.headers else (len(self.rows[0]) if self.rows else 0)
+            self.cols_count = (
+                len(self.headers) if self.headers else (len(self.rows[0]) if self.rows else 0)
+            )
 
     def to_markdown(self, anchor: bool = True) -> str:
         """Convert table to clean 2D GFM Markdown Pipe Table."""
@@ -158,19 +173,25 @@ class TableReconstructor:
         for p_idx, text in enumerate(paragraphs):
             match = title_pattern.match(text)
             if match:
-                table_titles.append({
-                    "num": match.group(1),
-                    "title": f"Bảng {match.group(1)} - {match.group(2).strip()}",
-                    "p_idx": p_idx,
-                })
+                table_titles.append(
+                    {
+                        "num": match.group(1),
+                        "title": f"Bảng {match.group(1)} - {match.group(2).strip()}",
+                        "p_idx": p_idx,
+                    }
+                )
 
         extracted_tables: list[StructuredTable] = []
 
         for idx, table in enumerate(doc.tables):
-            table_info = table_titles[idx] if idx < len(table_titles) else {
-                "num": str(idx + 1),
-                "title": f"Bảng {idx + 1}",
-            }
+            table_info = (
+                table_titles[idx]
+                if idx < len(table_titles)
+                else {
+                    "num": str(idx + 1),
+                    "title": f"Bảng {idx + 1}",
+                }
+            )
 
             num_str = str(table_info["num"])
             title_str = str(table_info["title"])

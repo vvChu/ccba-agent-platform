@@ -12,9 +12,7 @@ from scripts.ccba_platform_cli import build_parser, execute_ingest_legal, main
 def test_cli_parser_help_and_subcommands() -> None:
     """Verify that the parser includes adopt-spoke, sync-spoke, and ingest-legal."""
     parser = build_parser()
-    subparsers_actions = [
-        action for action in parser._actions if action.dest == "command"
-    ]
+    subparsers_actions = [action for action in parser._actions if action.dest == "command"]
     assert len(subparsers_actions) == 1
     choices = subparsers_actions[0].choices
     assert "adopt-spoke" in choices
@@ -38,7 +36,9 @@ def test_execute_ingest_legal_mock_flow() -> None:
         )
 
         with patch("scripts.ccba_platform_cli.subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0, stdout="Mocked Ingest Success", stderr="")
+            mock_run.return_value = MagicMock(
+                returncode=0, stdout="Mocked Ingest Success", stderr=""
+            )
 
             res = execute_ingest_legal(
                 url="https://thuvienphapluat.vn/van-ban/mock-law-123.aspx",

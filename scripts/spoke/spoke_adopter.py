@@ -45,13 +45,19 @@ def detect_spoke_stack(spoke_root: Path) -> tuple[str, str]:
     default_type = "Phần mềm"
 
     # SharePoint / PowerShell / IDOP
-    has_ps1 = bool(list(spoke_root.glob("*.ps1"))) or bool(list((spoke_root / "tools").glob("**/*.ps1") if (spoke_root / "tools").exists() else []))
+    has_ps1 = bool(list(spoke_root.glob("*.ps1"))) or bool(
+        list((spoke_root / "tools").glob("**/*.ps1") if (spoke_root / "tools").exists() else [])
+    )
     has_datamodel = (spoke_root / "datamodel").exists()
     if has_ps1 or has_datamodel:
         stacks.append("SharePoint Online / PowerShell Automation")
 
     # Python
-    if (spoke_root / "pyproject.toml").exists() or (spoke_root / "requirements.txt").exists() or (spoke_root / "setup.py").exists():
+    if (
+        (spoke_root / "pyproject.toml").exists()
+        or (spoke_root / "requirements.txt").exists()
+        or (spoke_root / "setup.py").exists()
+    ):
         stacks.append("Python Software")
 
     # TypeScript / Node.js
@@ -64,7 +70,9 @@ def detect_spoke_stack(spoke_root: Path) -> tuple[str, str]:
         default_type = "Thiết kế"
 
     # Construction Consulting / Legal / QC
-    if (spoke_root / ".md" / "extracted_docs").exists() or (spoke_root / ".md" / "legal_docs").exists():
+    if (spoke_root / ".md" / "extracted_docs").exists() or (
+        spoke_root / ".md" / "legal_docs"
+    ).exists():
         stacks.append("Construction Consulting / Knowledge Base")
         default_type = "Thẩm tra thiết kế"
 
@@ -100,27 +108,37 @@ def merge_workspace_context(
     if not project_name and isinstance(existing_data.get("project"), dict):
         project_name = existing_data.get("project").get("name")
     if not project_name:
-        project_name = ctx_path.parent.parent.name if ctx_path.parent.name == ".md" else ctx_path.parent.name
+        project_name = (
+            ctx_path.parent.parent.name if ctx_path.parent.name == ".md" else ctx_path.parent.name
+        )
 
     # 3. Additive Merge
     merged_data = dict(existing_data)  # Preserve all original keys
 
     # Additive 'project' block
-    current_proj = merged_data.get("project") if isinstance(merged_data.get("project"), dict) else {}
+    current_proj = (
+        merged_data.get("project") if isinstance(merged_data.get("project"), dict) else {}
+    )
     merged_data["project"] = {
         "name": str(project_name),
         "type": current_proj.get("type", project_type),
         "mode": current_proj.get("mode", mode),
         "qc_mode": current_proj.get("qc_mode", None),
         "hub_path": str(hub_path.resolve()),
-        "description": current_proj.get("description", existing_data.get("description", f"CCBA Spoke Workspace for {project_name}")),
+        "description": current_proj.get(
+            "description",
+            existing_data.get("description", f"CCBA Spoke Workspace for {project_name}"),
+        ),
     }
 
     # Additive 'must_read'
     if "must_read" not in merged_data:
         merged_data["must_read"] = {
             "always": [
-                {"path": ".md/workspace_context.yaml", "why": "Workspace configuration & bootstrap"},
+                {
+                    "path": ".md/workspace_context.yaml",
+                    "why": "Workspace configuration & bootstrap",
+                },
                 {"path": ".md/INDEX.md", "why": "Ubiquitous Language & Knowledge Base Index"},
             ]
         }
@@ -167,7 +185,9 @@ class SpokeAdopter:
         # 1. Check Git
         report.has_git = (self.spoke_root / ".git").exists()
         if not report.has_git:
-            report.identified_risks.append("Không phát hiện Git repository cục bộ (Bỏ qua cấu hình pre-commit hook).")
+            report.identified_risks.append(
+                "Không phát hiện Git repository cục bộ (Bỏ qua cấu hình pre-commit hook)."
+            )
 
         # 2. Check workspace context
         ctx_md = self.spoke_root / ".md" / "workspace_context.yaml"
@@ -181,13 +201,17 @@ class SpokeAdopter:
             report.context_path = ctx_agents
             report.existing_context_data = load_yaml(ctx_agents) or {}
         else:
-            report.identified_risks.append("Chưa có tệp workspace_context.yaml (Sẽ tạo mới từ stack nhận diện).")
+            report.identified_risks.append(
+                "Chưa có tệp workspace_context.yaml (Sẽ tạo mới từ stack nhận diện)."
+            )
 
         # 3. Check existing constitutions
         report.has_custom_agents_md = (self.spoke_root / "AGENTS.md").exists()
         report.has_custom_claude_md = (self.spoke_root / "CLAUDE.md").exists()
         if report.has_custom_agents_md:
-            report.identified_risks.append("Đã có AGENTS.md tùy biến riêng (Bảo tồn nguyên vẹn, không ghi đè).")
+            report.identified_risks.append(
+                "Đã có AGENTS.md tùy biến riêng (Bảo tồn nguyên vẹn, không ghi đè)."
+            )
 
         # 4. Detect Stack
         stack_desc, default_type = detect_spoke_stack(self.spoke_root)
@@ -211,10 +235,14 @@ class SpokeAdopter:
         print("========================================================")
         print(f"Target Spoke Path : {report.spoke_root}")
         print(f"Detected Stack    : {', '.join(report.detected_stacks)}")
-        print(f"Suggested Type    : {report.suggested_project_type} (Mode: {report.suggested_mode})")
+        print(
+            f"Suggested Type    : {report.suggested_project_type} (Mode: {report.suggested_mode})"
+        )
         print(f"Git Repository    : {'✅ Có (.git)' if report.has_git else '❌ Không có'}")
         print(f"Workspace Context : {'✅ Đã có' if report.has_workspace_context else '⚠️ Chưa có'}")
-        print(f"Custom AGENTS.md  : {'✅ Có (Được bảo vệ)' if report.has_custom_agents_md else 'Chưa có'}")
+        print(
+            f"Custom AGENTS.md  : {'✅ Có (Được bảo vệ)' if report.has_custom_agents_md else 'Chưa có'}"
+        )
 
         if report.identified_risks:
             print("\n⚠️  Risk & Protection Checklist:")

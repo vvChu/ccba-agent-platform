@@ -114,6 +114,7 @@ def execute_ingest_legal(
             # Create a synthetic docx for testing/mocking
             try:
                 from docx import Document
+
                 doc = Document()
                 doc.add_paragraph(f"Văn bản pháp luật: {slug}")
                 doc.add_paragraph("Điều 1. Phạm vi điều chỉnh\nNội dung điều 1...")
@@ -134,6 +135,7 @@ def execute_ingest_legal(
         else:
             try:
                 from ccba_legal.coordinator import LegalIntelPipeline
+
                 pipeline = LegalIntelPipeline(output_dir=sandbox_path)
                 res = pipeline.process_document(url)
                 if res.status not in ("success", "cached", "mocked"):
@@ -176,6 +178,7 @@ def execute_ingest_legal(
         print("\n[Cloud Sync] Triggering LegalSyncEngine to update NotebookLM...")
         try:
             from ccba_legal.sync import LegalSyncEngine
+
             _sync_engine = LegalSyncEngine()
             _ = _sync_engine
             # Run sync
@@ -198,35 +201,63 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", help="Platform commands")
 
     # adopt-spoke
-    adopt_p = subparsers.add_parser("adopt-spoke", help="Adopt an existing codebase as a CCBA Spoke")
-    adopt_p.add_argument("spoke_path", nargs="?", default=".", help="Path to target spoke (default: current dir)")
+    adopt_p = subparsers.add_parser(
+        "adopt-spoke", help="Adopt an existing codebase as a CCBA Spoke"
+    )
+    adopt_p.add_argument(
+        "spoke_path", nargs="?", default=".", help="Path to target spoke (default: current dir)"
+    )
     adopt_p.add_argument("--type", dest="project_type", default=None, help="Explicit project type")
     adopt_p.add_argument("--mode", default=None, help="Execution mode (software/delivery/hybrid)")
-    adopt_p.add_argument("--dry-run", action="store_true", help="Display discovery matrix without modifying files")
+    adopt_p.add_argument(
+        "--dry-run", action="store_true", help="Display discovery matrix without modifying files"
+    )
 
     # sync-spoke
     sync_p = subparsers.add_parser("sync-spoke", help="Synchronize skills and workflows to a spoke")
-    sync_p.add_argument("spoke_path", nargs="?", default=".", help="Path to target spoke (default: current dir)")
+    sync_p.add_argument(
+        "spoke_path", nargs="?", default=".", help="Path to target spoke (default: current dir)"
+    )
     sync_p.add_argument("--type", dest="project_type", default=None, help="Target project type")
     sync_p.add_argument("--force", action="store_true", help="Force overwrite of existing skills")
 
     # ingest-legal (ADR 0039)
-    ingest_p = subparsers.add_parser("ingest-legal", help="Autonomous TVPL VIP Crawler to Spoke Ingestion (ADR 0039)")
+    ingest_p = subparsers.add_parser(
+        "ingest-legal", help="Autonomous TVPL VIP Crawler to Spoke Ingestion (ADR 0039)"
+    )
     ingest_p.add_argument("url", help="Target TVPL URL or Document Identifier")
-    ingest_p.add_argument("--spoke", default=None, help="Path to legal spoke (default: ccba-legal-knowledge)")
-    ingest_p.add_argument("-t", "--doc-type", default="vbpl", help="Document profile type (vbpl/qcvn/tcvn)")
-    ingest_p.add_argument("--sync-cloud", action="store_true", help="Trigger cloud sync to NotebookLM after ingestion")
-    ingest_p.add_argument("--mock", action="store_true", help="Use mock crawler for offline testing")
+    ingest_p.add_argument(
+        "--spoke", default=None, help="Path to legal spoke (default: ccba-legal-knowledge)"
+    )
+    ingest_p.add_argument(
+        "-t", "--doc-type", default="vbpl", help="Document profile type (vbpl/qcvn/tcvn)"
+    )
+    ingest_p.add_argument(
+        "--sync-cloud", action="store_true", help="Trigger cloud sync to NotebookLM after ingestion"
+    )
+    ingest_p.add_argument(
+        "--mock", action="store_true", help="Use mock crawler for offline testing"
+    )
 
     # doc-audit
-    doc_audit_p = subparsers.add_parser("doc-audit", help="Run 5-axis documentation governance audit")
-    doc_audit_p.add_argument("--fix", action="store_true", help="Auto-fix trivial link and formatting issues")
+    doc_audit_p = subparsers.add_parser(
+        "doc-audit", help="Run 5-axis documentation governance audit"
+    )
+    doc_audit_p.add_argument(
+        "--fix", action="store_true", help="Auto-fix trivial link and formatting issues"
+    )
     doc_audit_p.add_argument("--root", default=None, help="Custom project root directory")
 
     # validate-cross-ref
-    cross_p = subparsers.add_parser("validate-cross-ref", help="Validate cross-reference traceability matrix")
-    cross_p.add_argument("--matrix", default=".md/data/cross_references.yaml", help="Path to cross_references.yaml")
-    cross_p.add_argument("--fix", action="store_true", help="Auto-fix heading anchor drifts with fuzzy matching")
+    cross_p = subparsers.add_parser(
+        "validate-cross-ref", help="Validate cross-reference traceability matrix"
+    )
+    cross_p.add_argument(
+        "--matrix", default=".md/data/cross_references.yaml", help="Path to cross_references.yaml"
+    )
+    cross_p.add_argument(
+        "--fix", action="store_true", help="Auto-fix heading anchor drifts with fuzzy matching"
+    )
 
     return parser
 
@@ -239,6 +270,7 @@ def main() -> int:
 
     if args.command == "adopt-spoke":
         from scripts.spoke.spoke_adopter import adopt_project
+
         return adopt_project(
             spoke_path=args.spoke_path,
             dry_run=args.dry_run,
@@ -248,6 +280,7 @@ def main() -> int:
 
     elif args.command == "sync-spoke":
         from scripts.spoke.spoke_synchronizer import SpokeSynchronizer
+
         syncer = SpokeSynchronizer(hub_root=_ROOT_DIR)
         success = syncer.sync_spoke(
             spoke_path=Path(args.spoke_path),
@@ -268,12 +301,14 @@ def main() -> int:
 
     elif args.command == "doc-audit":
         from scripts.doc_auditor import DocumentAuditor
+
         auditor = DocumentAuditor(project_root=Path(args.root) if args.root else _ROOT_DIR)
         report = auditor.audit_all()
         return 0 if not report.has_errors else 1
 
     elif args.command == "validate-cross-ref":
         from scripts.governance.cross_ref_validator import CrossReferenceValidator
+
         validator = CrossReferenceValidator(matrix_path=Path(args.matrix), root_dir=_ROOT_DIR)
         report = validator.validate(auto_fix=args.fix)
         return 0 if not report.has_errors else 1

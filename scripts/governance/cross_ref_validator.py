@@ -68,7 +68,9 @@ class CrossRefValidationReport:
             for idx, warn in enumerate(self.warnings, 1):
                 print(f"  {idx}. [{warn.module_id}] {warn.message}")
                 if warn.suggestion:
-                    print(f"     💡 Gợi ý sửa: '{warn.suggestion}' (thay vì '{warn.current_value}')")
+                    print(
+                        f"     💡 Gợi ý sửa: '{warn.suggestion}' (thay vì '{warn.current_value}')"
+                    )
         print("=" * 60 + "\n")
 
 
@@ -93,7 +95,9 @@ def extract_markdown_headings(content_or_path: str | Path) -> list[str]:
     return headings
 
 
-def find_closest_heading(target: str, available_headings: list[str], cutoff: float = 0.4) -> str | None:
+def find_closest_heading(
+    target: str, available_headings: list[str], cutoff: float = 0.4
+) -> str | None:
     """Finds the most similar heading using fuzzy matching (Levenshtein-based)."""
     if not available_headings or not target:
         return None
@@ -264,7 +268,9 @@ class CrossRefValidator:
                                 applied_fixes += 1
 
         if applied_fixes > 0:
-            yaml_file.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+            yaml_file.write_text(
+                yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8"
+            )
             print(f"✨ Đã tự động vá {applied_fixes} liên kết trong {yaml_file.name}!")
             return True
         return False
@@ -288,7 +294,9 @@ def validate_cross_references(
 
     if not report.is_valid:
         if warn_only:
-            print("⚠️ [WARN-ONLY] Phát hiện lỗi nhưng không chặn tiến trình do cờ --warn-only được bật.")
+            print(
+                "⚠️ [WARN-ONLY] Phát hiện lỗi nhưng không chặn tiến trình do cờ --warn-only được bật."
+            )
             return 0
         print("❌ [HARD-GATE] Chặn tiến trình do phát hiện lỗi liên kết gãy!")
         return 1

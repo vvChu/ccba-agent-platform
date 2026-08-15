@@ -97,7 +97,6 @@ class OKFBundlePackager:
         self._write_logs_and_index(bundle_dir, bundle_slug, [])
         return bundle_dir
 
-
     def write_concept(
         self,
         relative_path: str,

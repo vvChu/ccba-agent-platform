@@ -52,4 +52,3 @@ __all__ = [
     "make_descriptive_table_slug",
     "vietnamese_to_ascii",
 ]
-

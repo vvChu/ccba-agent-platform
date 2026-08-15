@@ -3,7 +3,7 @@
 Unified Deep Facade exporting Sub-Auditors, Common Regexes, and Constitution Cross-Reference Validator.
 """
 
-from scripts.governance.base import (
+from .base import (
     CODE_REF_RE,
     ENV_VAR_RE,
     EXCLUSION_HEADERS,
@@ -18,12 +18,12 @@ from scripts.governance.base import (
     AuditReport,
     BaseAuditor,
 )
-from scripts.governance.cli import (
+from .cli import (
     run_docs_validation_cli,
     run_skills_validation_cli,
 )
-from scripts.governance.coordinator import DocumentAuditor
-from scripts.governance.cross_ref_validator import (
+from .coordinator import DocumentAuditor
+from .cross_ref_validator import (
     CrossRefIssue,
     CrossRefValidationReport,
     CrossRefValidator,
@@ -31,16 +31,16 @@ from scripts.governance.cross_ref_validator import (
     find_closest_heading,
     validate_cross_references,
 )
-from scripts.governance.drift_auditor import DriftAuditor
-from scripts.governance.duplication_auditor import (
+from .drift_auditor import DriftAuditor
+from .duplication_auditor import (
     FORBIDDEN_DIRECTORIES,
     FORBIDDEN_RAW_SCRAPE_PATTERNS,
     DuplicationAuditor,
 )
-from scripts.governance.env_auditor import EnvAuditor
-from scripts.governance.link_auditor import LinkAuditor
-from scripts.governance.registry_auditor import RegistryAuditor
-from scripts.governance.skill_auditor import SkillAuditor
+from .env_auditor import EnvAuditor
+from .link_auditor import LinkAuditor
+from .registry_auditor import RegistryAuditor
+from .skill_auditor import SkillAuditor
 
 __all__ = [
     "AuditIssue",

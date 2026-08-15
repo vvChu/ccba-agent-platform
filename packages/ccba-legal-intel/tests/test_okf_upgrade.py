@@ -196,4 +196,3 @@ def test_okf_v2_package_bundle_creates_metadata_yaml() -> None:
         assert meta["issuer"] == "Chính phủ"
         assert meta["status"] == "effective"
         assert meta["sha256"] == "abc123sha"
-
