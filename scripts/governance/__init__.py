@@ -32,6 +32,11 @@ from scripts.governance.cross_ref_validator import (
     validate_cross_references,
 )
 from scripts.governance.drift_auditor import DriftAuditor
+from scripts.governance.duplication_auditor import (
+    FORBIDDEN_DIRECTORIES,
+    FORBIDDEN_RAW_SCRAPE_PATTERNS,
+    DuplicationAuditor,
+)
 from scripts.governance.env_auditor import EnvAuditor
 from scripts.governance.link_auditor import LinkAuditor
 from scripts.governance.registry_auditor import RegistryAuditor
@@ -43,6 +48,7 @@ __all__ = [
     "BaseAuditor",
     "DocumentAuditor",
     "DriftAuditor",
+    "DuplicationAuditor",
     "EnvAuditor",
     "LinkAuditor",
     "RegistryAuditor",
@@ -65,4 +71,6 @@ __all__ = [
     "extract_markdown_headings",
     "find_closest_heading",
     "validate_cross_references",
+    "FORBIDDEN_DIRECTORIES",
+    "FORBIDDEN_RAW_SCRAPE_PATTERNS",
 ]
