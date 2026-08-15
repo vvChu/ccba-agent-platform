@@ -12,8 +12,8 @@ The CCBA Agent Services Platform is a framework to develop and coordinate AI age
 ## Progressive Disclosure
 
 For detailed operational guidance, follow these domain resources:
-- **Execution Guardrails & Async Tasks**: See [`docs/rules/execution_guardrails.md`](../docs/rules/execution_guardrails.md)
-- **Git Conventions**: See [`docs/rules/git_conventions.md`](../docs/rules/git_conventions.md)
-- **Code Quality & SDLC Loop**: See [`docs/rules/code_quality.md`](../docs/rules/code_quality.md)
-- **Domain Vocabulary & ADRs**: See [`CONTEXT.md`](../CONTEXT.md) and [`docs/adr/`](../docs/adr/)
-- **Monorepo Packages**: See individual `packages/*/AGENTS.md` for package-specific Deep Seams and scoped tests.
+- **Execution Guardrails & Async Tasks**: See [`docs/rules/execution_guardrails.md`](docs/rules/execution_guardrails.md)
+- **Git Conventions**: See [`docs/rules/git_conventions.md`](docs/rules/git_conventions.md)
+- **Code Quality & SDLC Loop**: See [`docs/rules/code_quality.md`](docs/rules/code_quality.md)
+- **Domain Vocabulary & ADRs**: See [`CONTEXT.md`](CONTEXT.md) and [`docs/adr/`](docs/adr/)
+- **Monorepo Packages**: See individual [`packages/*/AGENTS.md`](packages/) for package-specific Deep Seams and scoped tests.

@@ -41,8 +41,14 @@ CCBA Agent Services Platform vận hành theo kiến trúc **Hub-and-Spoke**:
 
 ```
 ccba-agent-platform/                    ← Hub Repository
+├── AGENTS.md                          ← Minimal Root Constitution (Layer 1 Anchor)
+├── CLAUDE.md                          ← Claude Code Cross-Agent Parity Bridge
+├── docs/
+│   ├── adr/                           ← Architectural Decision Records (ADRs)
+│   └── rules/                         ← Progressive Disclosure Rules (Guardrails, Git, Code Quality)
 ├── .agents/
-│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->80<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-08-14 -->
+│   ├── AGENTS.md                      ← Layer 1 Constitution Mirror
+│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->80<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-08-15 -->
 │   │   ├── ai-gateway-sdk/            ←   Kết nối AI Gateway (50+ models)
 │   │   ├── legal-document-tracker/    ←   Theo dõi & rà soát VBPL
 │   │   ├── completion-checklist/      ←   Quản lý HSHT công trình
