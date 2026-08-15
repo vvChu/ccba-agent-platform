@@ -14,7 +14,7 @@
 ## 2. Bounded Async Task & Anti-Polling Circuit Breaker
 - Khi một lệnh chạy dưới dạng tác vụ ngầm (Background Task):
   - Agent chỉ được dùng `manage_task status` tối đa **2 lần** để kiểm tra tiến độ tác vụ ngắn.
-  - Nếu tác vụ vẫn ở trạng thái `RUNNING` sau 2 lần kiểm tra, Agent **NGHIÊM CẤM** lặp polling `manage_task status` dồn dập trong cùng một lượt. Agent phải xuất ra thông báo súc tích cho người dùng rồi **kết thúc lượt (End Turn)** để chờ thông báo Reactive Wakeup từ hệ thống.
+  - Nếu tác vụ vẫn ở trạng thái **RUNNING** sau 2 lần kiểm tra, Agent **NGHIÊM CẤM** lặp polling `manage_task status` dồn dập trong cùng một lượt. Agent phải xuất ra thông báo súc tích cho người dùng rồi **kết thúc lượt (End Turn)** để chờ thông báo Reactive Wakeup từ hệ thống.
 
 ---
 
