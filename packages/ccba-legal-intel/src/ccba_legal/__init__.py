@@ -35,6 +35,7 @@ from .grounding import (
     verify_legal_grounding,
 )
 from .monitor import TokenMonitor
+from .packager import OKFBundlePackager
 from .registry import (
     LegalRegistryManager,
     format_citation,
@@ -56,6 +57,7 @@ __all__ = [
     "LegalSyncEngine",
     "LegalRegistryManager",
     "LegalGroundingGate",
+    "OKFBundlePackager",
     "AppendixSplitter",
     "Cleaners",
     # === Domain Helper Seams ===
