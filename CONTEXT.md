@@ -188,6 +188,30 @@ Chu trình phản hồi 3 cấp độ (Micro: Rules, Meso: Skill Refactor, Macro
 **Skill Factory (Nhà máy Sản xuất Kỹ năng)**:
 Kiến trúc Meta-Skill (`/ccba-build-skill`) tự động hóa toàn trình việc quét an toàn (Maskara), chưng cất tri thức (NotebookLM RAG từ Canonical Artifacts & Code Seams), sinh cấu trúc Skill đạt chuẩn CCBA và phân định đăng ký Hub/Spoke.
 
+**Progressive Instruction Disclosure (Phân rã Chỉ dẫn Lũy tiến)**:
+Mô thức phân rã tập chỉ dẫn của Agent thành nhiều lớp độc lập: chỉ giữ mỏ neo định vị và bất biến cốt lõi tại `AGENTS.md` gốc, phân phối chi tiết nghiệp vụ và rào chắn kỹ thuật vào các tài liệu chuyên biệt (`docs/rules/*.md`) hoặc kỹ năng động để tối ưu hóa ngân sách chỉ dẫn.
+
+**Instruction Budget (Ngân sách Chỉ dẫn)**:
+Giới hạn số lượng chỉ dẫn (~150-200 chỉ dẫn nhất quán) mà mô hình ngôn ngữ lớn (Frontier LLM) có thể ghi nhớ và tuân thủ chặt chẽ trên mỗi lượt gọi prompt mà không bị suy giảm độ chính xác hoặc phân tâm.
+
+**Ball of Mud Prevention (Chống Cục Bùn Chỉ dẫn)**:
+Nguyên tắc kiểm soát và tái cấu trúc định kỳ bộ quy chuẩn Agent nhằm phát hiện và loại bỏ các chỉ dẫn thừa thãi, hiển nhiên hoặc xung đột, ngăn ngừa `AGENTS.md` trở thành khối văn bản không thể bảo trì.
+
+**Capability-First Instruction (Chỉ dẫn Hướng Năng lực)**:
+Phương pháp biên soạn tài liệu và quy chuẩn cho AI Agent tập trung vào mô tả mục tiêu hành vi và giao diện chuẩn hóa thay vì ghi cứng đường dẫn file nội bộ, giúp ngăn chặn hiện tượng nhiễm độc ngữ cảnh khi codebase tái cấu trúc.
+
+**Context Poisoning (Nhiễm độc Ngữ cảnh)**:
+Hiện tượng thông tin lỗi thời, đường dẫn tệp tin không còn tồn tại hoặc chỉ dẫn sai lệch trong tệp cấu hình khiến AI Agent liên tục suy đoán sai và mắc kẹt trong vòng lặp tìm kiếm vô ích.
+
+**Hierarchical Monorepo AGENTS.md (Hệ thống AGENTS.md Phân tầng Monorepo)**:
+Mô hình phân cấp tệp chỉ dẫn trong kiến trúc Monorepo; Root `AGENTS.md` chỉ quản lý bức tranh tổng thể và công cụ dùng chung, trong khi mỗi package (`packages/{pkg}/AGENTS.md`) sở hữu tệp chỉ dẫn cục bộ ngắn gọn (3-6 dòng) định nghĩa mục đích, Public Deep Seams và lệnh kiểm thử riêng biệt.
+
+**Automation-First Quality Gate (Cổng Chất lượng Hướng Tự động hóa)**:
+Nguyên tắc chuyển giao toàn bộ việc kiểm soát cú pháp, kiểu dữ liệu và định dạng mã nguồn cho các công cụ phân tích tĩnh tự động (Ruff, Mypy, Pre-commit hooks) thay vì tiêu hao ngân sách chỉ dẫn của LLM bằng các quy định văn bản hiển nhiên.
+
+**Cross-Agent Parity Bridge (Cầu nối Tương thích Đa Tác nhân)**:
+Cơ chế duy trì tính tương thích giữa các định dạng tệp cấu hình tác nhân khác nhau (`AGENTS.md` theo chuẩn mở và `CLAUDE.md` của Claude Code) tại thư mục gốc repository, đảm bảo mọi công cụ AI đều tự động nạp cùng một bộ chỉ dẫn Layer 1 nhất quán.
+
 ---
 
 ## System Metaphor

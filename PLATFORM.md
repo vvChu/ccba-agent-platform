@@ -8,8 +8,16 @@
 ```
 ccba-agent-platform/                   ← Hub (Git-backed)
 │
+├── AGENTS.md                          ← Minimal Root Constitution (Layer 1 Anchor)
+├── CLAUDE.md                          ← Claude Code Cross-Agent Parity Bridge
+│
+├── docs/                              ← Documentation & Reference
+│   ├── adr/                           ←   Architectural Decision Records (ADRs)
+│   └── rules/                         ←   Progressive Disclosure Rules (Guardrails, Git, Code Quality)
+│
 ├── .agents/                           ← AI Agent configurations
-│   ├── skills/                        ← Reusable AI skills (<!-- SKILL_COUNT_START -->80<!-- SKILL_COUNT_END --> skills)
+│   ├── AGENTS.md                      ←   Layer 1 Constitution Mirror
+│   ├── skills/                        ←   Reusable AI skills (<!-- SKILL_COUNT_START -->80<!-- SKILL_COUNT_END --> skills)
 │   │   ├── legal-document-tracker/    ←   Theo dõi VBPL
 │   │   ├── completion-checklist/      ←   HSHT công trình
 │   │   ├── seminar-builder/           ←   Chuẩn bị seminar
