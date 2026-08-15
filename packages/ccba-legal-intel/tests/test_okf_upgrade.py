@@ -158,3 +158,42 @@ Nội dung chi tiết phụ lục I.
         assert "[Trang chủ](/index.md)" in sections_content_fixed
         assert "[Full text](/full_text.md)" in sections_content_fixed
         assert "[Phụ lục](/appendices/test_law-phu_luc_01.md)" in sections_content_fixed
+
+
+def test_okf_v2_package_bundle_creates_metadata_yaml() -> None:
+    """Test that OKFBundlePackager creates metadata.yaml according to OKF v2.0 (ADR 0038)."""
+    import yaml
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root_dir = Path(temp_dir)
+        packager = OKFBundlePackager(root_dir)
+
+        metadata = {
+            "title": "Nghị định 217/2026/NĐ-CP",
+            "type": "vbpl",
+            "document_number": "217/2026/NĐ-CP",
+            "issued_by": "Chính phủ",
+            "issued_date": "2026-06-19",
+            "effective_date": "2026-07-01",
+            "source_url": "https://thuvienphapluat.vn/test",
+            "sha256": "abc123sha",
+        }
+
+        bundle_dir = packager.package_bundle(
+            doc_id="nghi_dinh_217_2026_nd_cp",
+            content="Nội dung điều khoản nghị định 217...",
+            metadata=metadata,
+        )
+
+        assert bundle_dir.exists()
+        metadata_file = bundle_dir / "metadata.yaml"
+        assert metadata_file.exists()
+
+        meta = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
+        assert meta["doc_id"] == "nghi_dinh_217_2026_nd_cp"
+        assert meta["doc_number"] == "217/2026/NĐ-CP"
+        assert meta["title"] == "Nghị định 217/2026/NĐ-CP"
+        assert meta["issuer"] == "Chính phủ"
+        assert meta["status"] == "effective"
+        assert meta["sha256"] == "abc123sha"
+

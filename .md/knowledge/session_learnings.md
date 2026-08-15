@@ -297,7 +297,12 @@
 * **Nguyên tắc:** Trong kiến trúc Monorepo, tận dụng cơ chế tự động hòa trộn `AGENTS.md` ở thư mục con vào ngữ cảnh.
 * **Giải pháp:** Mỗi package (`packages/{pkg}/AGENTS.md`) sở hữu tệp chỉ dẫn cục bộ ngắn gọn (3-6 dòng) xác định rõ ràng Public Deep Seams (`from {pkg} import ...`), contracts (timeout, caching) và lệnh test độc lập (`pytest packages/{pkg}/tests`).
 
+#### P6.15. Domain OpenXML Table Extraction & Reconstruction Deep Seam (`TableReconstructor`)
+* **Nguyên tắc:** Bảng biểu phức tạp (rowspan/colspan gộp ô, đa cấp, footnotes) xuất hiện ở mọi miền nghiệp vụ (QCVN PCCC, QC Thẩm tra, Hồ sơ hoàn thành, Hợp đồng).
+* **Giải pháp:** Gom toàn bộ năng lực bóc tách ma trận bảng 2D, unmerge ô gộp, sinh slug mô tả (`make_descriptive_table_slug`) và thay thế Markdown vào package SSOT `packages/ccba-ooxml` (`from ccba_ooxml import TableReconstructor, StructuredTable`). Các packages khác (`ccba-legal-intel`) và Spokes tái sử dụng trực tiếp mà không viết lại logic.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
+
 
 * **AP6.1. Leaky Interface Exporting 30+ Symbols:** Xuất khẩu toàn bộ hàm con ra `__init__.py` làm rối loạn AI navigation.
 * **AP6.2. Domain Drift:** Đặt file xử lý PDF vào package OOXML hoặc đặt logic cào web vào module phân tích xung đột.
@@ -358,6 +363,17 @@
 
 #### P7.9. Automated 4-Layer Zero-Duplication Guardrail on Hub (`DuplicationAuditor`)
 * **Nguyên tắc:** Thiết lập hệ thống bảo vệ 4 tầng tự động (Git Pre-Commit Hook $\rightarrow$ `DuplicationAuditor` trong `DocAuditor` $\rightarrow$ Khóa cứng `.gitignore` $\rightarrow$ Pointer-First Linting) để ngăn chặn vĩnh viễn việc tái nhiễm các tệp dữ liệu thuộc quyền quản lý độc quyền của Spoke lên Hub.
+
+#### P7.10. OKF v2.0 Clean Markdown & Independent Metadata Bundle SSOT (ADR 0038)
+* **Nguyên tắc:** 
+  - Tách biệt hoàn toàn metadata ra tệp `metadata.yaml` độc lập cấp bundle, loại bỏ 100% YAML frontmatter khỏi tệp `.md` để giữ định dạng thuần sạch khi hiển thị và xuất bản ra Word/PDF.
+  - Danh mục AST `clauses.json` theo mô hình Flat Index có bổ sung `node_type` và `parent_id` (vừa tra cứu $O(1)$, vừa tái dựng cây AST trong 1 vòng lặp cho VBHN Delta Patching).
+  - Bộ đối chuẩn `qa_benchmark.json` mở rộng 5 trường (`question`, `answer`, `anchor`, `citation`, `ground_truth_context`) phục vụ đo lường và rào chắn `LegalGroundingGate`.
+
+#### P7.11. Autonomous 4-Step Crawler-to-Spoke Ingestion Protocol (ADR 0039)
+* **Nguyên tắc:** 
+  - Quy trình 4 bước tự động: Crawl VIP (Hub) $\rightarrow$ Sandbox Temp $\rightarrow$ Ingest & Validate (Spoke) $\rightarrow$ Auto-Purge Temp & Sync Cloud.
+  - Tự động hủy bỏ toàn bộ tệp tạm `.docx` ngay khi Spoke xác nhận `Exit Code 0`, bảo vệ 100% nguyên tắc Zero-Duplication SSOT trên Hub.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
