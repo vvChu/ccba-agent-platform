@@ -18,6 +18,12 @@ from .docx import (
     suggest_paragraph,
 )
 from .pack import pack_document, validate_document
+from .tables import (
+    StructuredTable,
+    TableReconstructor,
+    make_descriptive_table_slug,
+    vietnamese_to_ascii,
+)
 from .unpack import unpack_document
 from .workspace import OOXMLWorkspace
 
@@ -40,4 +46,9 @@ __all__ = [
     "revert_deletion",
     "suggest_paragraph",
     "suggest_deletion",
+    # Table extraction & reconstruction
+    "StructuredTable",
+    "TableReconstructor",
+    "make_descriptive_table_slug",
+    "vietnamese_to_ascii",
 ]

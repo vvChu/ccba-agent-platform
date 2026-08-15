@@ -35,10 +35,12 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
 - **Tiêu chí hoàn thành:** Xác định đầy đủ các tệp tài liệu tiêu chuẩn hiện hành của repo để nạp vào prompt cho sub-agent.
 
 ### 4. Gọi song song hai Sub-agents (Spawn sub-agents in parallel)
-- Spawn đồng thời 2 sub-agents (sử dụng subagent `self`):
-  - **Standards Sub-agent Prompt:** Nhận Git Diff + danh sách tiêu chuẩn + 12 smells. Yêu cầu chỉ ra các vi phạm quy chuẩn và smell kèm trích dẫn dòng code.
-  - **Spec Sub-agent Prompt:** Nhận Git Diff + nội dung Spec. Yêu cầu chỉ ra các điểm thiếu hụt tính năng so với yêu cầu hoặc scope creep dư thừa.
-- **Tiêu chí hoàn thành:** Khởi chạy thành công 2 sub-agents chạy song song và nhận lại đầy đủ 2 báo cáo phân tích độc lập (Standards Report và Spec Report).
+- Áp dụng **Rào Chắn Kép (Two-Layer Sub-Agent Guardrail)**:
+  - Bắt buộc chèn chỉ dẫn cấm ủy thác vào prompt của cả hai sub-agents: `"CRITICAL CONSTRAINT: You are a dedicated review sub-agent. Do NOT invoke /code-review, do NOT spawn any child sub-agents, and do NOT propose bash execution. Perform this review directly using read-only tools and output your structured report immediately."`
+- Spawn đồng thời 2 sub-agents (sử dụng subagent `self` hoặc `research` với công cụ chỉ đọc):
+  - **Standards Sub-agent Prompt:** Nhận Git Diff + danh sách tiêu chuẩn + 12 smells + chỉ dẫn cấm ủy thác. Yêu cầu chỉ ra các vi phạm quy chuẩn và smell kèm trích dẫn dòng code.
+  - **Spec Sub-agent Prompt:** Nhận Git Diff + nội dung Spec + chỉ dẫn cấm ủy thác. Yêu cầu chỉ ra các điểm thiếu hụt tính năng so với yêu cầu hoặc scope creep dư thừa.
+- **Tiêu chí hoàn thành:** Khởi chạy thành công 2 sub-agents chạy song song và nhận lại đầy đủ 2 báo cáo phân tích độc lập (Standards Report và Spec Report) mà không phát sinh đệ quy sub-agent.
 
 ### 5. Tổng hợp báo cáo (Aggregate Findings)
 - Tổng hợp kết quả từ hai sub-agents dưới dạng báo cáo rõ ràng với hai tiêu đề `## Standards` and `## Spec`.

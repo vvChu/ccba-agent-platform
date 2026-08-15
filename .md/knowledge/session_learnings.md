@@ -297,7 +297,12 @@
 * **Nguyên tắc:** Trong kiến trúc Monorepo, tận dụng cơ chế tự động hòa trộn `AGENTS.md` ở thư mục con vào ngữ cảnh.
 * **Giải pháp:** Mỗi package (`packages/{pkg}/AGENTS.md`) sở hữu tệp chỉ dẫn cục bộ ngắn gọn (3-6 dòng) xác định rõ ràng Public Deep Seams (`from {pkg} import ...`), contracts (timeout, caching) và lệnh test độc lập (`pytest packages/{pkg}/tests`).
 
+#### P6.15. Domain OpenXML Table Extraction & Reconstruction Deep Seam (`TableReconstructor`)
+* **Nguyên tắc:** Bảng biểu phức tạp (rowspan/colspan gộp ô, đa cấp, footnotes) xuất hiện ở mọi miền nghiệp vụ (QCVN PCCC, QC Thẩm tra, Hồ sơ hoàn thành, Hợp đồng).
+* **Giải pháp:** Gom toàn bộ năng lực bóc tách ma trận bảng 2D, unmerge ô gộp, sinh slug mô tả (`make_descriptive_table_slug`) và thay thế Markdown vào package SSOT `packages/ccba-ooxml` (`from ccba_ooxml import TableReconstructor, StructuredTable`). Các packages khác (`ccba-legal-intel`) và Spokes tái sử dụng trực tiếp mà không viết lại logic.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
+
 
 * **AP6.1. Leaky Interface Exporting 30+ Symbols:** Xuất khẩu toàn bộ hàm con ra `__init__.py` làm rối loạn AI navigation.
 * **AP6.2. Domain Drift:** Đặt file xử lý PDF vào package OOXML hoặc đặt logic cào web vào module phân tích xung đột.
@@ -338,13 +343,47 @@
 #### P7.5. Automated Copilot PR Review Comment Audit Gate
 * **Nguyên tắc:** Trước khi merge PR, tự động hóa việc đối soát các inline review comments từ Copilot bằng `scripts/validation/audit_pr_comments.py`, đảm bảo mọi phản hồi kỹ thuật đều được tiếp thu hoặc giải trình trong `walkthrough.md`.
 
+#### P7.6. Non-Destructive Brownfield Spoke Adoption (`SpokeAdopter` & ADR 0036)
+* **Nguyên tắc:** Khi tiếp nhận một codebase/dự án hiện hữu (Brownfield) vào mạng lưới Hub-Spoke:
+  1. Áp dụng ma trận khám phá 3 tầng (Stack Detection, Risk Checklist, Constitution Preservation).
+  2. Sử dụng thuật toán **Hợp nhất Cộng dồn (Additive Schema Merge)** và tự động tạo bản backup `workspace_context.yaml.bak`.
+  3. **Tuyệt đối không ghi đè** tệp `AGENTS.md` tùy biến riêng của Spoke.
+  4. Tự động cài đặt Git Pre-commit Security Hook (Maskara) và đồng bộ trọn gói Skills/Workflows theo `project_type`.
+
+#### P7.7. Constitution-Driven Traceability Matrix & Dynamic Knowledge Pointers (ADR 0037)
+* **Nguyên tắc:** 
+  - Khóa chặt mối liên kết 2 chiều giữa từng dòng Spec/User Story với Điều/Khoản trong văn bản quy chế thể chế và sơ đồ hệ thống qua tệp `cross_references.yaml`.
+  - Mọi tri thức nghiệp vụ chuyên biệt thuộc về Spoke (như toàn văn VBPL OKF v2.0 của `ccba-legal-knowledge` hay quy chế nội bộ của `idop-ccba-way`) được Hub tham chiếu qua **Con Trỏ Động (Dynamic Pointer)** `[spoke_path]` trong `catalog.yaml` thay vì copy tệp tin, triệt tiêu 100% rủi ro trùng lặp dữ liệu và duy trì SSOT duy nhất.
+
+#### P7.8. Automated Fuzzy Auto-Patch & Hard Gate for Cross-References (`CrossRefValidator`)
+* **Nguyên tắc:** 
+  - Ma trận truy vết `cross_references.yaml` được bảo vệ bằng Hard Gate: trả về `Exit Code 1` nếu có bất kỳ liên kết gãy nào (missing file, missing doc, invalid anchor).
+  - Tích hợp thuật toán **Fuzzy Matching** (Levenshtein similarity) tự động tìm kiếm heading gần nhất và hỗ trợ cờ `--fix` để tự động vá lỗi cập nhật file YAML khi tài liệu markdown bị sửa đổi tiêu đề mục.
+  - Hỗ trợ cờ `--warn-only` cho giai đoạn nháp ban đầu.
+
+#### P7.9. Automated 4-Layer Zero-Duplication Guardrail on Hub (`DuplicationAuditor`)
+* **Nguyên tắc:** Thiết lập hệ thống bảo vệ 4 tầng tự động (Git Pre-Commit Hook $\rightarrow$ `DuplicationAuditor` trong `DocAuditor` $\rightarrow$ Khóa cứng `.gitignore` $\rightarrow$ Pointer-First Linting) để ngăn chặn vĩnh viễn việc tái nhiễm các tệp dữ liệu thuộc quyền quản lý độc quyền của Spoke lên Hub.
+
+#### P7.10. OKF v2.0 Clean Markdown & Independent Metadata Bundle SSOT (ADR 0038)
+* **Nguyên tắc:** 
+  - Tách biệt hoàn toàn metadata ra tệp `metadata.yaml` độc lập cấp bundle, loại bỏ 100% YAML frontmatter khỏi tệp `.md` để giữ định dạng thuần sạch khi hiển thị và xuất bản ra Word/PDF.
+  - Danh mục AST `clauses.json` theo mô hình Flat Index có bổ sung `node_type` và `parent_id` (vừa tra cứu $O(1)$, vừa tái dựng cây AST trong 1 vòng lặp cho VBHN Delta Patching).
+  - Bộ đối chuẩn `qa_benchmark.json` mở rộng 5 trường (`question`, `answer`, `anchor`, `citation`, `ground_truth_context`) phục vụ đo lường và rào chắn `LegalGroundingGate`.
+
+#### P7.11. Autonomous 4-Step Crawler-to-Spoke Ingestion Protocol (ADR 0039)
+* **Nguyên tắc:** 
+  - Quy trình 4 bước tự động: Crawl VIP (Hub) $\rightarrow$ Sandbox Temp $\rightarrow$ Ingest & Validate (Spoke) $\rightarrow$ Auto-Purge Temp & Sync Cloud.
+  - Tự động hủy bỏ toàn bộ tệp tạm `.docx` ngay khi Spoke xác nhận `Exit Code 0`, bảo vệ 100% nguyên tắc Zero-Duplication SSOT trên Hub.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
 * **AP7.2. Committing Unscanned Code:** Bỏ qua quy trình `/ccba-code-review` hoặc Governance Audit trước khi tạo PR.
 * **AP7.3. Context-Blind Link Leakage (`file:///` in Git Repo Docs):** Vô thức đem cú pháp `file:///` từ giao tiếp chat vào nội dung tệp `.md` trong repo. Bộ điều phối `doc_auditor.py` đã tích hợp rào chắn cross-platform để chặn đứng và tự động sửa (`--fix`) lỗi này ngay tại local.
-
+* **AP7.4. Duplicating Domain Corpus onto Central Hub (Anti-SSOT Proliferation):** Sao chép toàn văn các văn bản dữ liệu từ Spoke lên Hub dưới dạng tệp `.txt` cào thô hoặc bản sao `.md`, làm phình to repository trung tâm và gây lệch pha phiên bản khi Spoke cập nhật.
+* **AP7.5. Destructive Brownfield Onboarding:** Dùng template tĩnh ghi đè toàn bộ `AGENTS.md` và `workspace_context.yaml` khi kết nối một Spoke hiện hữu, làm mất mát metadata và quy chuẩn riêng của dự án.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Tài liệu này là tài sản tri thức cốt lõi được cập nhật liên tục qua từng phiên làm việc của Platform.*
+

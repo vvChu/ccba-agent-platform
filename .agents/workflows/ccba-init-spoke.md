@@ -15,6 +15,22 @@ Workflow này tự động hóa việc thiết lập một không gian làm vi�
 
 ## Các bước thực hiện:
 
+### 0. Rào Chắn An Toàn Dự Án Hiện Hữu (Brownfield Safety Guard)
+> [!CAUTION]
+> **KIỂM TRA BẮT BUỘC TRƯỚC KHI KHỞI TẠO:**  
+> Nếu thư mục hiện tại **đã có sẵn mã nguồn** (ví dụ: có file `workspace_context.yaml`, thư mục `.md/`, `.agents/`, `AGENTS.md`, hoặc code nghiệp vụ):
+> - **TUYỆT ĐỐI KHÔNG** chạy tiếp `/ccba-init-spoke` vì sẽ ghi đè và làm mất dữ liệu hiện hữu!
+> - Hãy chuyển ngay sang lệnh: **`/ccba-adopt-spoke`** để tự động quét hiện trạng, bảo tồn 100% dữ liệu cũ và kết nạp an toàn vào Hub.
+
+Kiểm tra an toàn bằng PowerShell:
+```powershell
+if ((Test-Path ".md\workspace_context.yaml") -or (Test-Path "AGENTS.md") -or (Test-Path ".agents\workspace_context.yaml")) {
+    Write-Warning "PHÁT HIỆN CODEBASE HIỆN HỮU (BROWNFIELD SPOKE)!"
+    Write-Host "Để tránh mất dữ liệu cấu hình, vui lòng chạy lệnh: /ccba-adopt-spoke" -ForegroundColor Yellow
+    return
+}
+```
+
 ### 1. Khởi tạo cấu trúc Knowledge Base (Global Rule 1)
 Tạo kiến trúc thư mục `.md` chứa dữ liệu tri thức bằng PowerShell tùy theo Mode được chọn (`software`, `delivery`, hoặc `hybrid`):
 ```powershell
