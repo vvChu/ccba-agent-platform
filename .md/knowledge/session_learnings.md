@@ -392,6 +392,13 @@
   - Thay vào đó, quét trực tiếp cấu trúc file tĩnh trong `.venv/Lib/site-packages/` (hoặc `venv/`) để tìm kiếm sự hiện diện của `.pth`, `__editable__*`, `.egg-link` hoặc `.dist-info` với tốc độ tức thì (< 1ms).
   - Tự động đưa ra khối gợi ý cài đặt 1 dòng lệnh thân thiện (`pip install -e "[hub_path]/packages/..."`) ngay sau bảng báo cáo sync khi phát hiện SDK chưa được liên kết.
 
+#### P7.15. Dual-Mode Spoke Discovery Seam (Registry Lookup with Fallback)
+* **Nguyên tắc:** Khi một công cụ dòng lệnh toàn cục (`ccba-platform ingest-legal`) cần định vị đường dẫn vật lý của một Spoke chuyên biệt (như Spoke Pháp điển `ccba-legal-knowledge`):
+  - **Ưu tiên 1:** Giải mã và tra cứu danh mục `spoke_registry.yaml` thông qua `get_registered_spokes` theo `spoke_id`, `name`, hoặc hồ sơ `project_type`.
+  - **Ưu tiên 2 (Fallback):** Đọc biến môi trường chuyên biệt (`CCBA_LEGAL_SPOKE_PATH`).
+  - **Ưu tiên 3 (Standard Defaults):** Quét các đường dẫn repo tiêu chuẩn (`D:/GitHubProjects/...`, `../<spoke-name>`, `./<spoke-name>`).
+  - Đảm bảo hệ thống vận hành trơn tru cả trong môi trường phát triển độc lập (isolated standalone) lẫn môi trường mạng lưới đa Spoke đã đăng ký bảo mật.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
 * **AP7.2. Committing Unscanned Code:** Bỏ qua quy trình `/ccba-code-review` hoặc Governance Audit trước khi tạo PR.
