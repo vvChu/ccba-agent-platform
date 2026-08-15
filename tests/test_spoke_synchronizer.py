@@ -62,7 +62,9 @@ def mock_hub(tmp_path: Path) -> Path:
     workflows_dir = agents_dir / "workflows"
     workflows_dir.mkdir(parents=True, exist_ok=True)
     (workflows_dir / "core-workflow.md").write_text("# Core Workflow v2.0", encoding="utf-8")
-    (workflows_dir / "software-workflow.md").write_text("# Software Workflow v2.0", encoding="utf-8")
+    (workflows_dir / "software-workflow.md").write_text(
+        "# Software Workflow v2.0", encoding="utf-8"
+    )
 
     # 4. Setup AGENTS.md
     (agents_dir / "AGENTS.md").write_text("# Hub Constitution", encoding="utf-8")

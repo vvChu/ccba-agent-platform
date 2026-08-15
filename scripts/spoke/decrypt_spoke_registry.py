@@ -78,7 +78,7 @@ def get_registered_spokes(hub_root: Path | None = None) -> list[dict]:
     return decrypted_spokes
 
 
-def decrypt_registry():
+def decrypt_registry(hub_root: Path | None = None) -> None:
     if hasattr(sys.stdout, "reconfigure"):
         try:
             sys.stdout.reconfigure(encoding="utf-8")
@@ -86,18 +86,22 @@ def decrypt_registry():
             pass
     print("🔓 Bắt đầu tiến trình giải mã Spoke Registry trung tâm...")
 
+    root = hub_root or Path(__file__).resolve().parents[2]
+    registry_file = root / REGISTRY_REL_PATH
+    decrypted_file = root / DECRYPTED_REL_PATH
+
     if not os.path.exists(PRIVATE_KEY_PATH):
         print(f"❌ Lỗi: Không tìm thấy Khóa bí mật tại {PRIVATE_KEY_PATH}")
         print(" -> Vui lòng đảm bảo bạn đang chạy script này với quyền Admin giữ khóa.")
         return
 
-    if not os.path.exists(REGISTRY_REL_PATH):
+    if not registry_file.exists():
         print(
-            f"⚠️ Cảnh báo: Tệp registry {REGISTRY_REL_PATH} chưa được tạo hoặc chưa có Spoke nào đăng ký."
+            f"⚠️ Cảnh báo: Tệp registry {registry_file} chưa được tạo hoặc chưa có Spoke nào đăng ký."
         )
         return
 
-    with open(REGISTRY_REL_PATH, encoding="utf-8") as f:
+    with open(registry_file, encoding="utf-8") as f:
         registry_data = yaml.safe_load(f) or {"spokes": []}
 
     spokes = registry_data.get("spokes", [])
@@ -157,16 +161,16 @@ def decrypt_registry():
         updated_spokes = [s for s in original_spokes if s.get("spoke_id") not in pruned_spoke_ids]
         registry_data["spokes"] = updated_spokes
 
-        with open(REGISTRY_REL_PATH, "w", encoding="utf-8") as f:
+        with open(registry_file, "w", encoding="utf-8") as f:
             yaml.dump(registry_data, f, allow_unicode=True)
-        print(f" -> Đã cập nhật và dọn dẹp tệp registry mã hóa {REGISTRY_REL_PATH}.")
+        print(f" -> Đã cập nhật và dọn dẹp tệp registry mã hóa {registry_file}.")
 
     if active_spokes_yaml:
-        os.makedirs(os.path.dirname(DECRYPTED_REL_PATH), exist_ok=True)
-        with open(DECRYPTED_REL_PATH, "w", encoding="utf-8") as f:
+        decrypted_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(decrypted_file, "w", encoding="utf-8") as f:
             yaml.dump({"spokes": active_spokes_yaml}, f, allow_unicode=True)
         print(
-            f"\n✅ Đã lưu kết quả giải mã các Spoke hoạt động tại: {DECRYPTED_REL_PATH} (Được bỏ qua bởi Git)"
+            f"\n✅ Đã lưu kết quả giải mã các Spoke hoạt động tại: {decrypted_file} (Được bỏ qua bởi Git)"
         )
 
 

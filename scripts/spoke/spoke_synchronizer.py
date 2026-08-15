@@ -662,9 +662,7 @@ class SpokeSynchronizer:
         TestGuardrailCopier(spoke_root, hub_root, project_type).copy_if_needed(dry_run=dry_run)
 
         # 5. Spoke registration
-        SpokeRegistrar().register(
-            spoke_root, hub_root, project_name, project_type, dry_run=dry_run
-        )
+        SpokeRegistrar().register(spoke_root, hub_root, project_name, project_type, dry_run=dry_run)
 
         # 6. Print Structured Output & Summary Table
         new_count = sum(1 for a in actions if a["status"] == "NEW")

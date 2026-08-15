@@ -49,9 +49,7 @@ def test_discovery_report_on_mature_spoke(temp_spoke: Path):
     custom_yaml = {
         "project_name": "MOCK-IDOP",
         "custom_milestone": "Stage 2 Ready",
-        "document_groups": {
-            "governance": ["rule1.md", "rule2.md"]
-        }
+        "document_groups": {"governance": ["rule1.md", "rule2.md"]},
     }
     with open(md_dir / "workspace_context.yaml", "w", encoding="utf-8") as f:
         yaml.safe_dump(custom_yaml, f)
@@ -77,20 +75,15 @@ def test_additive_merge_preserves_custom_fields(temp_spoke: Path):
         "project_name": "CUSTOM-SPOKE",
         "custom_milestone": "Production Phase 1",
         "database": "Custom DB Schema",
-        "document_groups": {
-            "custom_group": ["file1.md"]
-        },
-        "initial_reading_sequence": [".md/file1.md"]
+        "document_groups": {"custom_group": ["file1.md"]},
+        "initial_reading_sequence": [".md/file1.md"],
     }
     with open(ctx_path, "w", encoding="utf-8") as f:
         yaml.safe_dump(original_data, f)
 
     hub_path = Path("D:/GitHubProjects/ccba-agent-platform")
     merged_data, backup_path = merge_workspace_context(
-        ctx_path=ctx_path,
-        hub_path=hub_path,
-        project_type="Phần mềm",
-        mode="hybrid"
+        ctx_path=ctx_path, hub_path=hub_path, project_type="Phần mềm", mode="hybrid"
     )
 
     assert backup_path.exists()
@@ -107,7 +100,9 @@ def test_adopt_project_installs_maskara_hook(temp_spoke: Path):
     """Installs Maskara pre-commit hook if git repository exists."""
     (temp_spoke / ".git").mkdir()
     (temp_spoke / ".md").mkdir()
-    (temp_spoke / ".md" / "workspace_context.yaml").write_text("project_name: Test\n", encoding="utf-8")
+    (temp_spoke / ".md" / "workspace_context.yaml").write_text(
+        "project_name: Test\n", encoding="utf-8"
+    )
 
     adopter = SpokeAdopter(temp_spoke)
     adopter.install_security_guardrails()
