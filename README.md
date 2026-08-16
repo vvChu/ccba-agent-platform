@@ -100,10 +100,10 @@ Toàn bộ các gói dịch vụ nằm trong thư mục `packages/` được thi
 | **`ccba-harness`** | Testing harness, Singleton Process Locks, giám sát tệp tin và tiến trình an toàn đa nền tảng. | `pip install -e "packages/ccba-harness"` |
 | **`ccba-ai`** | AI Gateway SDK — Kết nối 50+ models (Qwen GPU DGX, Claude, Gemini) qua 1 endpoint, tự động quản lý token và Circuit Breaker. | `pip install -e "packages/ccba-ai"` |
 | **`ccba-maskara`** | Quét và che giấu (redact) thông tin nhạy cảm (API Keys, PII) trong log/tệp trước khi commit. | `pip install -e "packages/ccba-maskara"` |
-| **`ccba-ooxml`** | Thao tác DOM file Office (.docx, .pptx), kiểm định tính toàn vẹn XML và tính toán công thức Excel (`recalc_xlsx`). | `pip install -e "packages/ccba-ooxml"` |
+| **`ccba-ooxml`** | Thao tác DOM file Office (.docx, .pptx), bóc tách và tái dựng cấu trúc bảng phức tạp (`TableReconstructor`), kiểm định tính toàn vẹn XML và tính toán công thức Excel (`recalc_xlsx`). | `pip install -e "packages/ccba-ooxml"` |
 | **`ccba-pdf-prep`** | Tiền xử lý PDF cho AI Vision: Phân mảnh thông minh (Tiling), bóc tách khung tên bản vẽ, chia nhỏ chunks. | `pip install -e "packages/ccba-pdf-prep"` |
 | **`ccba-notebooklm`** | Tích hợp Google NotebookLM Cloud RAG, sinh Audio Overview, hỗ trợ Mock Client chạy test offline. | `pip install -e "packages/ccba-notebooklm"` |
-| **`ccba-legal-intel`** | Pipeline tự động hóa TVPL VIP, bóc tách phụ lục, AST diffing và hợp nhất Văn Bản Hợp Nhất (VBHN). | `pip install -e "packages/ccba-legal-intel"` |
+| **`ccba-legal-intel`** | Pipeline tự động hóa TVPL VIP, đóng gói bộ chuẩn OKF Bundle v2.0 (`OKFBundlePackager`), bóc tách phụ lục, AST diffing và hợp nhất Văn Bản Hợp Nhất (VBHN). | `pip install -e "packages/ccba-legal-intel"` |
 | **`mdconverter`** | Chuyển đổi PDF/DOCX/HTML sang Markdown chuẩn, phục hồi bảng biểu vỡ và tiêm anchor điều khoản. | `pip install -e "packages/mdconverter[dev,llm]"` |
 
 ---

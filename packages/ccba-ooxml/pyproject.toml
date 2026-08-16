@@ -12,6 +12,7 @@ license = "MIT"
 dependencies = [
     "lxml>=5.0.0",
     "defusedxml>=0.7.1",
+    "python-docx>=1.1.0",
 ]
 
 [project.optional-dependencies]

@@ -6,6 +6,8 @@ import pytest
 
 from ccba_legal.monitor import TokenMonitor  # type: ignore[import-not-found]
 
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
+
 
 # Custom message objects for testing
 class CustomToDictMessage:

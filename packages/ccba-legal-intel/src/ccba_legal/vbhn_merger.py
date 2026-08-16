@@ -17,8 +17,19 @@ class VBHNMerger:
         parser = ASTParser()
         flat_nodes = parser.flatten_ast(nodes)
 
+        # Build normalized lookup for resilient node matching
+        norm_map: dict[str, ASTNode] = {}
+        for nid, node in flat_nodes.items():
+            norm_map[nid.upper()] = node
+            if nid.startswith("D") and nid[1:].isdigit():
+                num = nid[1:]
+                norm_map[f"DIEU-{num}"] = node
+                norm_map[f"DIEU_{num}"] = node
+                norm_map[f"DIEU {num}"] = node
+                norm_map[num] = node
+
         for item in patch.patches:
-            target_node = flat_nodes.get(item.node_id)
+            target_node = flat_nodes.get(item.node_id) or norm_map.get(item.node_id.upper())
             if not target_node:
                 continue
 

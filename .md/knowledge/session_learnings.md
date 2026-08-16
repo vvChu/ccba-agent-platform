@@ -301,6 +301,20 @@
 * **Nguyên tắc:** Bảng biểu phức tạp (rowspan/colspan gộp ô, đa cấp, footnotes) xuất hiện ở mọi miền nghiệp vụ (QCVN PCCC, QC Thẩm tra, Hồ sơ hoàn thành, Hợp đồng).
 * **Giải pháp:** Gom toàn bộ năng lực bóc tách ma trận bảng 2D, unmerge ô gộp, sinh slug mô tả (`make_descriptive_table_slug`) và thay thế Markdown vào package SSOT `packages/ccba-ooxml` (`from ccba_ooxml import TableReconstructor, StructuredTable`). Các packages khác (`ccba-legal-intel`) và Spokes tái sử dụng trực tiếp mà không viết lại logic.
 
+#### P6.16. Isolated Fast Test Suites & Strict SLA (< 2s) for AI Fast Feedback Loops (Matt Pocock Pattern)
+* **Nguyên tắc:** AI Agent cần vòng lặp phản hồi siêu tốc (< 2s) sau mỗi lần sửa mã nguồn để tránh gián đoạn tư duy và lãng phí token.
+* **Giải pháp:**
+  1. Đăng ký marker `fast` chính quy trong `pyproject.toml` và gán nhãn `pytestmark = [pytest.mark.fast, pytest.mark.unit]` cho các bài test thuần logic/mock in-memory.
+  2. Nâng cấp bộ điều phối test runner `scripts/eval/run_isolated_tests.py --fast` và `scripts/safe_pytest.py --fast` với cấu hình bắt buộc `-c pyproject.toml`.
+  3. Cưỡng chế SLA tự động bằng test suite `tests/governance/test_fast_test_suites.py` xác thực 100% các package đều hoàn thành kiểm thử trong thời gian siêu tốc.
+
+#### P6.17. Dual-Layer Dependency Contract Enforcement (Import-Linter & Native AST Scanner)
+* **Nguyên tắc:** Bảo vệ tuyệt đối ranh giới của các Deep Seams, cấm gọi trực tiếp vào các file private nội bộ `_*` của package khác và ngăn chặn phụ thuộc vòng hoặc đảo ngược tầng (layer inversion).
+* **Giải pháp:**
+  1. **Cấu hình chuẩn công nghiệp `.importlinter`**: Khai báo các contracts `layers`, `forbidden`, `independence` cho `lint-imports`.
+  2. **Native AST Governance Scanner (`scripts/governance/check_dependency_contracts.py`)**: Bộ quét AST zero-dependency quét toàn bộ 200+ file mã nguồn trong `< 0.4s`, bẫy các lỗi `PrivateSubmoduleSeamViolation`, `FoundationLeafPurityViolation`, `LeafIndependenceViolation` mà không cần cài đặt thêm thư viện bên ngoài.
+  3. Tích hợp trực tiếp vào CI và `ccba-lint-imports` CLI.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 
 
@@ -391,6 +405,13 @@
   - **Tuyệt đối không spawn tiến trình subprocess `pip list`** trong vòng lặp sync làm chậm 2–4s cho mỗi Spoke.
   - Thay vào đó, quét trực tiếp cấu trúc file tĩnh trong `.venv/Lib/site-packages/` (hoặc `venv/`) để tìm kiếm sự hiện diện của `.pth`, `__editable__*`, `.egg-link` hoặc `.dist-info` với tốc độ tức thì (< 1ms).
   - Tự động đưa ra khối gợi ý cài đặt 1 dòng lệnh thân thiện (`pip install -e "[hub_path]/packages/..."`) ngay sau bảng báo cáo sync khi phát hiện SDK chưa được liên kết.
+
+#### P7.15. Dual-Mode Spoke Discovery Seam (Registry Lookup with Fallback)
+* **Nguyên tắc:** Khi một công cụ dòng lệnh toàn cục (`ccba-platform ingest-legal`) cần định vị đường dẫn vật lý của một Spoke chuyên biệt (như Spoke Pháp điển `ccba-legal-knowledge`):
+  - **Ưu tiên 1:** Giải mã và tra cứu danh mục `spoke_registry.yaml` thông qua `get_registered_spokes` theo `spoke_id`, `name`, hoặc hồ sơ `project_type`.
+  - **Ưu tiên 2 (Fallback):** Đọc biến môi trường chuyên biệt (`CCBA_LEGAL_SPOKE_PATH`).
+  - **Ưu tiên 3 (Standard Defaults):** Quét các đường dẫn repo tiêu chuẩn (`D:/GitHubProjects/...`, `../<spoke-name>`, `./<spoke-name>`).
+  - Đảm bảo hệ thống vận hành trơn tru cả trong môi trường phát triển độc lập (isolated standalone) lẫn môi trường mạng lưới đa Spoke đã đăng ký bảo mật.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.

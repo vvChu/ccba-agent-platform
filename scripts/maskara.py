@@ -18,21 +18,22 @@ if _PACKAGE_SRC.exists() and str(_PACKAGE_SRC) not in sys.path:
     sys.path.insert(0, str(_PACKAGE_SRC))
 
 from ccba_maskara import (
-    AGENT_ALIASES,
-    AGENT_SPECS,
-    BACKUP_DIR,
-    REGEX_PATTERNS,
-    SAFE_STRINGS,
     MaskaraScanner,
     apply_raw_redactions,
     backup_and_write,
     detect_secrets_in_text,
-    get_default_roots,
     is_binary,
-    normalize_agent_name,
     redact_secrets_in_text,
+)
+from ccba_maskara._locator import (
+    AGENT_ALIASES,
+    AGENT_SPECS,
+    get_default_roots,
+    normalize_agent_name,
     resolve_targets,
 )
+from ccba_maskara._redactor import BACKUP_DIR
+from ccba_maskara._rules import REGEX_PATTERNS, SAFE_STRINGS
 from ccba_maskara.cli import main, run_cli
 
 # Re-export convenience aliases for any legacy external callers

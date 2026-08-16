@@ -24,6 +24,7 @@ from ._engine import (
 )
 from ._guard import HarnessGuard
 from ._mutex import FileMutexLock
+from .orchestrator import EvalOrchestrator
 
 __all__ = [
     "HarnessEngine",
@@ -31,4 +32,5 @@ __all__ = [
     "HarnessLocal",
     "HarnessState",
     "FileMutexLock",
+    "EvalOrchestrator",
 ]

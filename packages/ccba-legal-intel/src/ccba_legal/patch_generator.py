@@ -47,7 +47,7 @@ Output ONLY raw JSON with no extra markdown codeblocks or text."""
 
         # Real AI Gateway invocation
         try:
-            from ccba_ai import ai  # type: ignore[import-untyped]
+            from ccba_ai import ai
 
             user_prompt = f"""Original Text:\n{original_text}\n\nAmending Text:\n{amending_text}"""
             response_text = ai.chat(f"{self.SYSTEM_PROMPT}\n\n{user_prompt}")

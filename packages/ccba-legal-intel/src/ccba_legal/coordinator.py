@@ -224,7 +224,7 @@ def ensure_chrome_cdp_port(port: int = 9222) -> bool:
     import subprocess
     import time
 
-    import requests
+    import requests  # type: ignore[import-untyped]
 
     try:
         resp = requests.get(f"http://127.0.0.1:{port}/json", timeout=1.5)
@@ -256,7 +256,7 @@ def ensure_chrome_cdp_port(port: int = 9222) -> bool:
             )
             time.sleep(1.5)
             resp = requests.get(f"http://127.0.0.1:{port}/json", timeout=2)
-            return resp.status_code == 200
+            return bool(resp.status_code == 200)
         except Exception as e:
             print(f"[LegalIntel] Chrome auto-launch error: {e}")
 
@@ -346,8 +346,8 @@ class LegalIntelPipeline:
             meta["source_url"] = url_or_id
             meta["sha256"] = calculate_content_sha256(content)
 
-            bundle_dir = packager.package_bundle(doc_id, content, meta)  # type: ignore[attr-defined]
-            self.registry_mgr.register_document(doc_id, meta)  # type: ignore[attr-defined]
+            bundle_dir = packager.package_bundle(doc_id, content, meta)
+            self.registry_mgr.register_document(doc_id, meta)
 
             return LegalProcessResult(
                 doc_id=doc_id,

@@ -6,7 +6,11 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+import pytest
+
 from ccba_ooxml import pack_document, unpack_document
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_unpack_and_pack_cycle():

@@ -2,7 +2,11 @@
 
 from pathlib import Path
 
+import pytest
+
 from mdconverter.plugins.vn_legal.linter import LintIssue, VNLegalLinter
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 class TestLintIssue:

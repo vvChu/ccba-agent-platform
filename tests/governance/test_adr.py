@@ -1,9 +1,13 @@
 import tempfile
+from unittest.mock import patch
 
-from ccba_legal.adr import ADRGenerator
+import pytest
+from scripts.governance.adr_generator import ADRGenerator
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
-def test_adr_generation():
+def test_adr_generation() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         generator = ADRGenerator(repo_dir=temp_dir)
 
@@ -24,23 +28,21 @@ def test_adr_generation():
         assert "Hệ quả & Đánh đổi" in content
 
 
-def test_detect_architectural_changes_empty():
+def test_detect_architectural_changes_empty() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         generator = ADRGenerator(repo_dir=temp_dir)
-        # Mock get_git_diff_summary to return empty string
-        generator.get_git_diff_summary = lambda: ""
-        changes = generator.detect_architectural_changes()
-        assert len(changes) == 0
+        with patch.object(generator, "get_git_diff_summary", return_value=""):
+            changes = generator.detect_architectural_changes()
+            assert len(changes) == 0
 
 
-def test_detect_architectural_changes_mock():
+def test_detect_architectural_changes_mock() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         generator = ADRGenerator(repo_dir=temp_dir)
-        generator.get_git_diff_summary = lambda: (
-            "M  pyproject.toml\nA  packages/ccba-legal-intel/ccba_legal/adr.py\nM  secret.db"
-        )
-        changes = generator.detect_architectural_changes()
-        assert len(changes) == 3
-        assert any("pyproject.toml" in c for c in changes)
-        assert any("adr.py" in c for c in changes)
-        assert any("secret.db" in c for c in changes)
+        mock_diff = "M  pyproject.toml\nA  scripts/governance/adr_generator.py\nM  secret.db"
+        with patch.object(generator, "get_git_diff_summary", return_value=mock_diff):
+            changes = generator.detect_architectural_changes()
+            assert len(changes) == 3
+            assert any("pyproject.toml" in c for c in changes)
+            assert any("adr_generator.py" in c for c in changes)
+            assert any("secret.db" in c for c in changes)

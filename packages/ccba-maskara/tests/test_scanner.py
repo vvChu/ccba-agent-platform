@@ -15,6 +15,8 @@ from ccba_maskara import (
     redact_secrets_in_text,
 )
 
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
+
 
 @pytest.fixture
 def scanner() -> MaskaraScanner:

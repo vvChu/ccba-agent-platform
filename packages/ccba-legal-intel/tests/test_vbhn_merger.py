@@ -1,6 +1,6 @@
-"""Unit tests for VBHNMerger in ccba_legal."""
-
 from pathlib import Path
+
+import pytest
 
 from ccba_legal.ast_parser import (
     ASTParser,
@@ -9,6 +9,8 @@ from ccba_legal.ast_parser import (
     PatchAction,
 )
 from ccba_legal.vbhn_merger import VBHNMerger
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_vbhn_merger_apply_patch_replace_and_abrogate() -> None:
