@@ -1,8 +1,10 @@
 ---
 name: ccba-legal-intel
-description: Autonomous legal intelligence agent to crawl, diff, and generate compliance checklists from Vietnamese legal documents.
+description: Autonomous legal intelligence agent to crawl, diff, and generate compliance
+  checklists from Vietnamese legal documents.
+bundle: _consulting
+layer: _consulting
 ---
-
 # Skill: CCBA Legal Intelligence Crawler & Packager (`ccba-legal-intel`)
 
 Kỹ năng này hướng dẫn Agent tự động thực hiện quy trình cào dữ liệu từ Thư viện Pháp luật (TVPL) qua Deep Seam **`TVPLCrawler`** ([`packages/ccba-legal-intel`](../../packages/ccba-legal-intel)), phân tích đóng gói thành cấu trúc OKF Bundle lồng nhau, phân rã phụ lục, vá liên kết tương đối và đăng ký văn bản mới vào cơ sở tri thức cục bộ.

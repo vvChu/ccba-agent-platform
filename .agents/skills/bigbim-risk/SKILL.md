@@ -1,12 +1,14 @@
 ---
 name: bigbim-risk
-description: Phát hiện "Mâu thuẫn thông tin" (Information Conflict) phi hình học tại bước phối hợp thông tin V2 - Coordination, vượt ngoài giới hạn Clash Detection truyền thống.
+description: Phát hiện "Mâu thuẫn thông tin" (Information Conflict) phi hình học tại
+  bước phối hợp thông tin V2 - Coordination, vượt ngoài giới hạn Clash Detection truyền
+  thống.
 applies_to:
-  - "Quản lý thông tin"
-  - "Thẩm tra thiết kế"
-bundle: "_core"
+- Quản lý thông tin
+- Thẩm tra thiết kế
+bundle: _bim
+layer: _bim
 ---
-
 # BIGBIM Risk & Information Conflict Audit Skill
 
 > **Vai trò**: Chuyên gia Quét Rủi ro & Tối ưu hóa Phối hợp Thông tin (AEC Coordination Auditor) tối cao của BIGBIM.

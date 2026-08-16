@@ -1,8 +1,10 @@
 ---
 name: domain-modeling
-description: Build, refine, and maintain the project's domain model, ubiquitous language, and record architectural decisions (ADRs).
+description: Build, refine, and maintain the project's domain model, ubiquitous language,
+  and record architectural decisions (ADRs).
+disable-model-invocation: true
+bundle: _software
 ---
-
 # Domain Modeling
 
 Actively build and sharpen the project's domain model as you design. This is the *active* discipline — challenging terms, inventing edge-case scenarios, and writing the glossary and decisions down the moment they crystallise. (Merely *reading* `CONTEXT.md` for vocabulary is not this skill — that's a one-line habit any skill can do. This skill is for when you're changing the model, not just consuming it.)

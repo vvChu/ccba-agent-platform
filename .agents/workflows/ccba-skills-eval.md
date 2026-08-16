@@ -1,7 +1,7 @@
 ---
 description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) cho các kỹ năng AI trong CCBA Platform.
+disable-model-invocation: true
 ---
-
 # Lệnh /ccba-skills-eval
 
 Khi nhận được lệnh này từ người dùng, Agent sẽ tự động nạp và thực thi công cụ kiểm định chất lượng (Evaluations) cho các kỹ năng AI.

@@ -1,13 +1,14 @@
 ---
 name: bigbim-classification
-description: Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass 200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
+description: Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass
+  200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
 applies_to:
-  - "Quản lý thông tin"
-  - "Thiết kế"
-  - "Thẩm tra thiết kế"
-bundle: "_core"
+- Quản lý thông tin
+- Thiết kế
+- Thẩm tra thiết kế
+bundle: _bim
+layer: _bim
 ---
-
 # BIGBIM Classification & Naming Skill
 
 > **Vai trò**: Chuyên gia Kiến trúc thông tin & Phân loại học tối cao của BIGBIM.

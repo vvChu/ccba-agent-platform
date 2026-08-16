@@ -1,8 +1,8 @@
 ---
 name: ccba-knowledge-loop
 description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm → Wayfinder → Exec)
+disable-model-invocation: true
 ---
-
 # Quy trình Vòng lặp Tri thức & Định hướng (/ccba-knowledge-loop)
 
 Quy trình này hướng dẫn Agent cách kết hợp đồng bộ 4 kỹ năng cốt lõi của CCBA Agent Services Platform: [YouTube-Learn](../skills/youtube-learn/SKILL.md) (Trinh sát tri thức video), [Research](../skills/ccba-research/SKILL.md) (Nghiên cứu ngầm), [Brainstorm](ccba-brainstorm.md) (Hội chẩn giải pháp) và [Wayfinder](../skills/wayfinder/SKILL.md) (Lập lộ trình) để giải quyết một bài toán kỹ thuật/nghiệp vụ lớn và mơ hồ (Foggy Problem) mà không gây block phiên làm việc hoặc làm tràn ngữ cảnh (token bloating).

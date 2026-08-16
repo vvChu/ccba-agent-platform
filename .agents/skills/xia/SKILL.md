@@ -1,16 +1,24 @@
 ---
 name: ccba-xia
-description: Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại.
+description: Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository
+  GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại.
 user-invocable: true
 when_to_use: Dùng khi cần port tính năng giữa các repository.
 category: dev-tools
-keywords: [port, extract, compare, feature, repo]
-argument-hint: "<github-url-or-owner/repo|local-path> [feature] [--compare|--copy-raw|--improve|--port] [--auto|--fast]"
+keywords:
+- port
+- extract
+- compare
+- feature
+- repo
+argument-hint: <github-url-or-owner/repo|local-path> [feature] [--compare|--copy-raw|--improve|--port]
+  [--auto|--fast]
 metadata:
   author: CCBA
   version: 2.0.0
+disable-model-invocation: true
+bundle: _software
 ---
-
 # Xia (Xỉa) - Kỹ năng Trích xuất & Chuyển dịch Tính năng
 
 Trích xuất, phân tích và port (chuyển dịch) các tính năng từ bất kỳ GitHub repository nào hoặc từ đường dẫn thư mục cục bộ vào dự án của bạn.

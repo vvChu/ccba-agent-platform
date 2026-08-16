@@ -3,8 +3,8 @@ description: Tạo feature branch mới với quy trình lập kế hoạch và 
 applies_to:
   - "Phần mềm"
 bundle: "_software"
+disable-model-invocation: true
 ---
-
 # Workflow: Tạo Feature Branch Mới & Phân Tách Session (Factory Model)
 
 Quy trình tự động hóa dọn dẹp các branch cũ, khởi tạo branch tính năng mới và cưỡng chế áp dụng mô hình Nhà máy (**The Factory Model**) tách biệt giữa **Planning** và **Coding** để tối ưu hóa chi phí Token (OpEx) và ngăn ngừa lỗi mã nguồn.
