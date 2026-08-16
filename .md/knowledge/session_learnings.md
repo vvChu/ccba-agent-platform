@@ -493,6 +493,28 @@
   - *Tầng 2 (Curated Master Index & Append-Only Log):* Duy trì danh mục [`index.md`](index.md) với 8 phân nhánh tri thức chuẩn và nhật ký đột biến bất biến [`log.md`](log.md) theo cú pháp `## [YYYY-MM-DD] [operation] | Title`.
   - *Tầng 3 (Automated Health Linter):* Tích hợp `WikiHealthLinter` vào CI Governance Gate để tự động phát hiện liên kết gãy (broken links), tệp tri thức mồ côi (orphan notes), và bảo đảm tính toàn vẹn 100% trước khi commit.
 
+#### P7.20. Dual-Tier Practical Architecture (Project Spoke ↔ IDOP Governance ↔ IBST Handshake Interface)
+* **Nguyên tắc:** Tập trung khép kín 2 tầng:
+  - *Tầng 1 (Project Spokes):* Kỹ sư thực hiện bản vẽ BIM, thẩm tra PCCC, bóc tách cấu kiện và xuất báo cáo nghiệm thu kỹ thuật.
+  - *Tầng 2 (Enterprise Governance Spoke `IDOP-CCBA-WAY`):* Tiếp nhận hồ sơ qua quy trình QA/QC 5 cấp, phân bổ dòng tiền 3 tầng theo QCCTNB 3209, và liên thông với Viện IBST qua `ROLE_HEAD_ADMIN` (Cổng duy nhất gửi KHKT, TCKT, TCHC).
+
+#### P7.21. Autonomous Git-Ratchet Multi-Skill Nightly Daemon (Weighted Priority Queue & Early Stopping)
+* **Nguyên tắc:** Vận hành tối ưu hóa tự động qua đêm cho 73+ kỹ năng trên Server Spark (`localhost:8090`):
+  - *Hàng đợi ưu tiên thông minh (Weighted Priority Queue):* Kỹ năng có baseline score < 90% được cấp tối đa 30 vòng lặp; kỹ năng 100% chỉ chạy 1 vòng smoke test.
+  - *Early Stopping:* Tự ngắt ngay khi đạt 100% hoặc stall 5 vòng liên tiếp.
+  - *Git Ratchet:* Tự tạo branch `auto-tune/nightly-YYYYMMDD`, commit đột biến thành công và mở GitHub PR tổng hợp + bắn Telegram Bot alert.
+
+#### P7.22. Hub-Spoke 5-Archetype Taxonomy & Extensibility Framework (ADR 0041)
+* **Nguyên tắc:** Phân định rõ 5 loại Spoke trong toàn hệ sinh thái:
+  1. `platform_hub` (Công nghệ & AI Engine `ccba-agent-platform`).
+  2. `enterprise_governance` (Hệ điều hành doanh nghiệp & Quy chế CCBA `IDOP-CCBA-WAY`).
+  3. `knowledge_corpus` (Kho tri thức pháp luật quốc gia SSOT `ccba-legal-knowledge`).
+  4. `project_delivery` (Hiện trường dự án thực tế `2026-04 DH Viet Nhat`).
+  5. `specialized_extension` (`research_lab`, `tooling_plugin`, `client_portal`).
+
+#### P7.23. Master OneDrive 5TB Offloading vs SharePoint Metadata Pattern
+* **Nguyên tắc:** Giữ dung lượng 58 SharePoint lists luôn < 5GB bằng cách chỉ lưu trữ Metadata (Text, Lookups, URLs). Toàn bộ file binary nặng (Revit `.rvt` 500MB, file scan HĐ có dấu đỏ, hồ sơ thầu HSMT) được tự động phân luồng sang **5TB Master OneDrive (`ccba@ibst-bim.vn`)** theo 5 thư mục module chuẩn hóa.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
 * **AP7.2. Committing Unscanned Code:** Bỏ qua quy trình `/ccba-code-review` hoặc Governance Audit trước khi tạo PR.
