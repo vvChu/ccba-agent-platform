@@ -159,10 +159,9 @@ class WikiHealthLinter(BaseAuditor):
                 continue
 
             resolved_path = p.resolve()
-            # If the file is inside issues/ or adr/, allow if parent directory or file is cataloged
+            # If the file or any of its parent directories is cataloged, accept it
             if resolved_path not in cataloged:
-                parent_resolved = p.parent.resolve()
-                if parent_resolved in cataloged or (self.knowledge_dir / "issues") in cataloged:
+                if any(parent.resolve() in cataloged for parent in p.parents):
                     continue
 
                 rel_path = (

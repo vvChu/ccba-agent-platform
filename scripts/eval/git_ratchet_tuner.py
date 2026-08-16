@@ -58,9 +58,11 @@ class RatchetConfig:
         )
         if not target_match:
             target_match = re.search(r"-\s*Target:\s*`?([^`\r\n]+)`?", content, re.IGNORECASE)
-        target_str = (
-            target_match.group(1).strip() if target_match else ".agents/skills/copywriting/SKILL.md"
-        )
+        if not target_match:
+            raise ValueError(
+                f"Missing required 'Target File' specification in program file: {program_path}"
+            )
+        target_str = target_match.group(1).strip()
         target_path = (
             (root / target_str).resolve()
             if not Path(target_str).is_absolute()
@@ -321,7 +323,7 @@ class GitRatchetTuner:
             trial = RatchetTrialResult(
                 iteration=i,
                 score=current_score,
-                passed=(report.pass_rate >= self.config.target_score),
+                passed=(current_score >= self.config.target_score and crit_fails == 0),
                 critical_fails=crit_fails,
                 decision=decision,
                 summary=summary,

@@ -17,7 +17,7 @@ Kỹ năng này bọc script [`scripts/eval/run_harness_evals.py`](../../../scri
 Kích hoạt chạy script điều phối chính ngầm qua Wrapper an toàn với `WaitMsBeforeAsync: 1000`:
 ```bash
 # Kích hoạt CI Gates toàn bộ qua Safe Execution Sandbox Wrapper:
-python scripts/eval/run_safe_eval_wrapper.py --cmd ".venv\Scripts\python.exe scripts/eval/run_harness_evals.py" --timeout 90
+python scripts/eval/run_safe_eval_wrapper.py --cmd "python scripts/eval/run_harness_evals.py" --timeout 90
 
 # KHOANH VÙNG TEST (Scoped Test Execution): Chạy file test cụ thể bằng Wrapper an toàn
 python scripts/safe_pytest.py -f scripts/tests/test_wiki_health_linter.py

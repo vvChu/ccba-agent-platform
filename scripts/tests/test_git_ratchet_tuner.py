@@ -35,6 +35,14 @@ def test_ratchet_config_from_markdown_program(tmp_path: Path):
     assert config.eval_dataset_file == (tmp_path / "tests/eval_my_skill.json").resolve()
 
 
+def test_ratchet_config_missing_target_raises_error(tmp_path: Path):
+    """Test that omitting Target File raises a fast ValueError."""
+    prog_file = tmp_path / "program.md"
+    prog_file.write_text("# Program with no target\n- **Target Score**: 90%", encoding="utf-8")
+    with pytest.raises(ValueError, match="Missing required 'Target File'"):
+        RatchetConfig.from_markdown_program(prog_file, root=tmp_path)
+
+
 def test_ratchet_frontmatter_preservation():
     """Test preserving YAML frontmatter during prompt mutations."""
     orig = "---\nname: my-skill\nversion: 1.0.0\n---\n\n# Body content"

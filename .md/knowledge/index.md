@@ -20,6 +20,9 @@
 
 - [guidelines/domain_success_criteria_rubrics.md](guidelines/domain_success_criteria_rubrics.md): **[MỚI]** Quy chuẩn Tiêu chí Thành công & Barem điểm Rubrics Định lượng Đa miền (QC PCCC 40/30/20/10, Pháp điển VBHN 35/35/20/10, Viết Học thuật 35/25/25/15).
 - [guidelines/phuong_phap_luan_lap_trinh_agentic.md](guidelines/phuong_phap_luan_lap_trinh_agentic.md): Cẩm nang phương pháp luận lập trình Agentic AI thực chiến.
+- [guidelines/CCBA_ADM_QD_006_Rev00_BoNhiemMEP.md](guidelines/CCBA_ADM_QD_006_Rev00_BoNhiemMEP.md): Quyết định bổ nhiệm nhân sự phụ trách bộ môn MEP.
+- [guidelines/CCBA_RD_VBPL_004_Rev00-ND_30_2020_CongTacVanThu.md](guidelines/CCBA_RD_VBPL_004_Rev00-ND_30_2020_CongTacVanThu.md): Hướng dẫn công tác văn thư theo Nghị định 30/2020/NĐ-CP.
+- [guidelines/CCBA_SOP_001_Rev00-Brainstorming_Workflow.md](guidelines/CCBA_SOP_001_Rev00-Brainstorming_Workflow.md): Quy trình thao tác chuẩn cho phiên Brainstorming.
 
 ---
 
@@ -30,6 +33,7 @@
 - [specs_and_roadmaps/adr_0011_legal_intel_deep_module.md](specs_and_roadmaps/adr_0011_legal_intel_deep_module.md): ADR-0011 về Deep Module hóa gói `ccba-legal-intel`.
 - [specs_and_roadmaps/adr_0012_ccba_ai_pure_gateway.md](specs_and_roadmaps/adr_0012_ccba_ai_pure_gateway.md): ADR-0012 về kiến trúc AI Gateway thuần túy.
 - [specs_and_roadmaps/adr_0013_knowledge_evolution_loop.md](specs_and_roadmaps/adr_0013_knowledge_evolution_loop.md): ADR-0013 về Vòng lặp Tiến hóa Tri thức Knowledge Loop.
+- [adr/adr_20260815_224158_chuan_hoa_deep_seams_cho_4_sub_systems_t.md](adr/adr_20260815_224158_chuan_hoa_deep_seams_cho_4_sub_systems_t.md): Chuẩn hóa Deep Seams cho 4 hệ thống con.
 
 ---
 
@@ -87,6 +91,7 @@
 
 - [client-setup-guide.md](client-setup-guide.md): Hướng dẫn chi tiết thiết lập môi trường trạm làm việc cho Kỹ sư mới.
 - [remote-access.md](remote-access.md): Hướng dẫn cấu hình VPN Tailscale và truy cập hạ tầng GPU Server Spark.
+- [configs/SETUP_USER_GLOBAL.md](configs/SETUP_USER_GLOBAL.md): Cấu hình môi trường toàn cục và quy chuẩn tích hợp Agent.
 
 ---
 

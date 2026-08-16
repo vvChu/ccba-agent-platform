@@ -307,8 +307,7 @@ class DocumentAuditor(BaseAuditor):
         wiki_issues = self.wiki_linter.audit()
         for issue in wiki_issues:
             issues_list.append(issue)
-            if "Missing" in issue.message or "Broken" in issue.message:
-                has_hard_errors = True
+            has_hard_errors = True
 
         return AuditReport(
             issues=issues_list,

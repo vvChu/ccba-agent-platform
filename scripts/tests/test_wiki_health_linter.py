@@ -19,8 +19,7 @@ def test_wiki_health_linter_real_workspace():
     """Verify that current repository LLM-Wiki passes 100% with zero hard issues."""
     linter = WikiHealthLinter()
     issues = linter.audit()
-    hard_issues = [i for i in issues if "Broken" in i.message or "Missing" in i.message]
-    assert len(hard_issues) == 0
+    assert len(issues) == 0
 
 
 def test_wiki_health_linter_missing_index(tmp_path: Path):
