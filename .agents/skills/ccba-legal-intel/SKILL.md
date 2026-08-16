@@ -26,7 +26,24 @@ Kỹ năng này hướng dẫn Agent tự động thực hiện quy trình cào 
     *   Tệp phụ lục phân tách: `\.md\legal_docs\<law_slug>\guiding_docs\appendices\<guiding_slug>-phu_luc_xx.md`
 *   **Đăng ký Registry**: Cập nhật `file_path` và `markdown_path` trong `legal_registry.yaml`.
 
+### 1.4. Đặc Tả Gói Tri Thức Hợp Nhất OKF Bundle v2.0 (ADR 0038)
+Mỗi văn bản quy phạm pháp luật khi đóng gói thành công **bắt buộc** phải tuân thủ cấu trúc bundle độc lập qua Deep Seam `OKFBundlePackager`:
+```text
+legal_docs/<category_prefix>/<document_slug>/
+├── metadata.yaml               # Metadata độc lập (SSOT cấp bundle, loại bỏ YAML frontmatter khỏi .md)
+├── <document_slug>.md          # Nội dung Markdown thuần sạch 100%
+├── clauses.json                # Danh mục AST phẳng (tra cứu O(1), có node_type và parent_id)
+├── qa_benchmark.json           # Tập dữ liệu đối chuẩn Ground-Truth QA (5 trường hỗ trợ RAG Gate)
+├── index.md                    # Mục lục điều hướng nội bộ
+└── tables/                     # Thư mục chứa bảng dữ liệu trích xuất
+    ├── json/                   # JSON ma trận 2D
+    └── csv/                    # CSV UTF-8 with BOM
+```
+* **Quy chuẩn `qa_benchmark.json` (5 trường bắt buộc):** `question`, `answer`, `anchor`, `citation`, `ground_truth_context`.
+* **Cơ chế Khớp nối Hub-Spoke:** Tương thích 100% hai chiều giữa Hub (`OKFBundlePackager`) và Spoke (`gold_standard_processor.py`).
+
 ---
+
 
 ## 2. Ánh xạ Đồ thị Quan hệ Lược đồ (11 nhóm quan hệ)
 
