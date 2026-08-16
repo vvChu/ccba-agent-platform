@@ -25,6 +25,7 @@ Xây dựng và đưa vào vận hành hoàn chỉnh **Động Cơ Tự Tiến H
 
 ## 3. Quyết Định Đã Chốt (Decisions So Far)
 
+* ✅ **[Ticket D-01: AST Heuristics & Code-Grounding Logic](research-d01.md):** Hoàn tất nghiên cứu thuật toán đếm/phân rã Pillar ($N \ge 15$), AST Symbol Indexer xác thực dẫn chứng code, và rào chắn Zero-Deletion/Parse-Protection.
 * ✅ **[Refactor CONTEXT.md into 6 Domains](file:///d:/GitHubProjects/ccba-agent-platform/CONTEXT.md):** Đã phân loại 100% thuật ngữ hệ thống thành 6 Trục Miền Nghiệp Vụ và thiết lập Mục lục điều hướng $O(1)$.
 * ✅ **[Rebalance session_learnings.md into 8 Pillars](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/session_learnings.md):** Đã phân rã Trụ Cột 7 quá tải thành Trụ Cột 7 (Hub-Spoke Sync) và Trụ Cột 8 (Quản trị IDOP, Server Spark & Viện IBST).
 * ✅ **[Tri-Repo Server Sibling Protocol (ADR 0042)](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md):** Đã thiết lập cơ chế kéo mã 3 kho lưu trữ trước 00:00 trên Server Spark.
@@ -36,15 +37,15 @@ Xây dựng và đưa vào vận hành hoàn chỉnh **Động Cơ Tự Tiến H
 
 ```mermaid
 graph LR
-    D01["Ticket D-01 [Research/AFK]:<br/>Thiết Kế AST Heuristics & Grounding Logic"] --> D02["Ticket D-02 [Task/AFK]:<br/>Xây Dựng doc_refactor_daemon.py Deep Seam"]
-    D02 --> D03["Ticket D-03 [Prototype/HITL]:<br/>Mẫu Báo Cáo PR & Telegram Alert"]
-    D03 --> D04["Ticket D-04 [Task/AFK]:<br/>Tích Hợp Nightly Cron & CI Pre-commit Gate"]
+    D01["✅ Ticket D-01 [Research/AFK]:<br/>Thiết Kế AST Heuristics & Grounding Logic"] --> D02["🟢 Ticket D-02 [Task/AFK]:<br/>Xây Dựng doc_refactor_daemon.py Deep Seam"]
+    D02 --> D03["🟡 Ticket D-03 [Prototype/HITL]:<br/>Mẫu Báo Cáo PR & Telegram Alert"]
+    D03 --> D04["🟡 Ticket D-04 [Task/AFK]:<br/>Tích Hợp Nightly Cron & CI Pre-commit Gate"]
 ```
 
 | Mã Ticket | Phân Loại | Loại Hình | Tên Nhiệm Vụ & Mục Tiêu | Trạng Thái |
 | :--- | :---: | :---: | :--- | :---: |
-| **`D-01`** | `Research` | `AFK` | **Khảo sát Thuật toán Phân tích Cấu trúc & Code-Grounding**: Nghiên cứu heuristics phát hiện Pillar phình to (>15 patterns), thuật toán regex/AST trích xuất references, và logic tra cứu nhanh symbol trong codebase. | 🟢 **UNBLOCKED** |
-| **`D-02`** | `Task` | `AFK` | **Xây dựng Deep Seam `doc_refactor_daemon.py`**: Triển khai class `DocAutoEvolutionEngine` bọc toàn bộ chu trình (Quét sức khỏe $\rightarrow$ Code Grounding $\rightarrow$ Auto-Balancing $\rightarrow$ Git Branch & Commit). | 🟡 *Blocked by D-01* |
+| **`D-01`** | `Research` | `AFK` | **Khảo sát Thuật toán Phân tích Cấu trúc & Code-Grounding**: Nghiên cứu heuristics phát hiện Pillar phình to (>15 patterns), thuật toán regex/AST trích xuất references, và logic tra cứu nhanh symbol trong codebase. | ✅ **COMPLETED** |
+| **`D-02`** | `Task` | `AFK` | **Xây dựng Deep Seam `doc_refactor_daemon.py`**: Triển khai class `DocAutoEvolutionEngine` bọc toàn bộ chu trình (Quét sức khỏe $\rightarrow$ Code Grounding $\rightarrow$ Auto-Balancing $\rightarrow$ Git Branch & Commit). | 🟢 **UNBLOCKED** |
 | **`D-03`** | `Prototype` | `HITL` | **Thiết kế Mẫu Báo cáo PR & Thông báo Telegram**: Xây dựng mẫu Markdown PR trực quan (Trước/Sau, Dẫn chứng code, Rủi ro) và template tin nhắn Telegram tóm tắt 3 dòng. | 🟡 *Blocked by D-02* |
 | **`D-04`** | `Task` | `AFK` | **Tích hợp Hạ Tầng Server Spark & CI Gate**: Bổ sung `doc_refactor_daemon.py` vào kịch bản Linux Cron `run_nightly_tuner.sh` và `bootstrap_spark_server.sh`. | 🟡 *Blocked by D-02, D-03* |
 
