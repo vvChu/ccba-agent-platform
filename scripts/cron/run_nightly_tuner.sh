@@ -4,10 +4,24 @@
 
 set -euo pipefail
 
+# 1. Ensure Full PATH and UTF-8 Locale for Linux Cron execution
+export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:/snap/bin:${PATH:-}"
+export LANG="C.UTF-8"
+export LC_ALL="C.UTF-8"
+export PYTHONIOENCODING="utf-8"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+# 2. Auto-load .env secrets if present
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -a
+    source "$PROJECT_ROOT/.env"
+    set +a
+fi
+
 cd "$PROJECT_ROOT"
+
 
 echo "================================================================="
 echo "[CCBA Nightly Auto-Tuner Daemon] Starting at $(date)"
