@@ -1,0 +1,82 @@
+[importlinter]
+root_packages =
+    ccba_ai
+    ccba_harness
+    ccba_legal
+    ccba_maskara
+    ccba_notebooklm
+    ccba_ooxml
+    ccba_pdf_prep
+    mdconverter
+
+[importlinter:contract:1]
+name = Forbid Direct External Access to Maskara Private Submodules
+type = forbidden
+source_modules =
+    ccba_ai
+    ccba_harness
+    ccba_legal
+    ccba_notebooklm
+    ccba_ooxml
+    ccba_pdf_prep
+    mdconverter
+forbidden_modules =
+    ccba_maskara._locator
+    ccba_maskara._redactor
+    ccba_maskara._rules
+allow_indirect_imports = true
+
+[importlinter:contract:2]
+name = Forbid Direct External Access to NotebookLM Private Submodules
+type = forbidden
+source_modules =
+    ccba_ai
+    ccba_harness
+    ccba_legal
+    ccba_maskara
+    ccba_ooxml
+    ccba_pdf_prep
+    mdconverter
+forbidden_modules =
+    ccba_notebooklm._artifacts
+    ccba_notebooklm._client
+    ccba_notebooklm._models
+    ccba_notebooklm._registry
+allow_indirect_imports = true
+
+[importlinter:contract:3]
+name = Forbid Direct External Access to Harness Private Submodules
+type = forbidden
+source_modules =
+    ccba_ai
+    ccba_legal
+    ccba_maskara
+    ccba_notebooklm
+    ccba_ooxml
+    ccba_pdf_prep
+    mdconverter
+forbidden_modules =
+    ccba_harness._engine
+    ccba_harness._state
+    ccba_harness._metrics_core
+allow_indirect_imports = true
+
+[importlinter:contract:4]
+name = Foundation Leaf Parsers Purity
+type = forbidden
+source_modules =
+    ccba_pdf_prep
+    ccba_ooxml
+forbidden_modules =
+    ccba_legal
+    ccba_notebooklm
+    ccba_ai
+    ccba_harness
+allow_indirect_imports = true
+
+[importlinter:contract:5]
+name = Leaf Utilities Independence
+type = independence
+modules =
+    ccba_ooxml
+    ccba_pdf_prep

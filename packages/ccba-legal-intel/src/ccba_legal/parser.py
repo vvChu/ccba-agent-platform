@@ -37,7 +37,7 @@ Law text:
 """
         reply = self.ai_client.chat(prompt, model=self.model, temperature=0.1, max_tokens=8192)
         res = Cleaners.extract_json(reply)
-        if not res:
+        if not isinstance(res, dict):
             res = {
                 "title": "Unknown Legal Document",
                 "doc_number": "Unknown",
@@ -46,7 +46,7 @@ Law text:
                 "effective_date": "",
                 "summary": "Could not parse summary from LLM.",
             }
-        return res
+        return dict(res)
 
     def generate_checklist(self, text: str) -> list[dict[str, Any]]:
         """Identify key compliance requirements and build a RACI checklist."""
@@ -67,9 +67,9 @@ Text:
         reply = self.ai_client.chat(prompt, model=self.model, temperature=0.1, max_tokens=8192)
         res = Cleaners.extract_json(reply)
         if isinstance(res, list):
-            return res
-        if isinstance(res, dict) and "requirements" in res:
-            return res["requirements"]
+            return list(res)
+        if isinstance(res, dict) and "requirements" in res and isinstance(res["requirements"], list):
+            return list(res["requirements"])
         return []
 
     def perform_diff(self, old_text: str, new_text: str) -> dict[str, Any]:
@@ -91,9 +91,9 @@ New law sample:
 """
         reply = self.ai_client.chat(prompt, model=self.model, temperature=0.1, max_tokens=8192)
         res = Cleaners.extract_json(reply)
-        if not res:
+        if not isinstance(res, dict):
             res = {"changes_summary": "Failed to extract diff summary.", "comparison_table": []}
-        return res
+        return dict(res)
 
     def standardize_formulas(self, text: str) -> str:
         """Detect construction cost formulas in the text and standardize them using the LLM.

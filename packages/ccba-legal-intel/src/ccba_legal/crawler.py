@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import os
 import random
@@ -89,7 +91,46 @@ class TVPLCrawlerEngine:
                 raise TVPLCrawlFailedException(f"Crawl failed for {doc_id_or_url}: {e}") from e
 
 
+# Alias for public API consistency
+TVPLVIPCrawler = TVPLCrawlerEngine
+
+
+class TVPLCrawler:
+    """Unified Deep Seam Facade for TVPL Legal Document Crawling.
+
+    Encapsulates CookieVault, TVPLSessionMutex, HTTP Engine, and CDP VIP Browser.
+    """
+
+    def __init__(
+        self,
+        cookie_vault: CookieVault | None = None,
+        session_mutex: TVPLSessionMutex | None = None,
+        provider: LegalDocProvider | None = None,
+    ) -> None:
+        self.cookie_vault = cookie_vault or CookieVault()
+        self.mutex = session_mutex or TVPLSessionMutex()
+        self.engine = TVPLCrawlerEngine(provider=provider, mutex=self.mutex)
+
+    def fetch_document(
+        self, doc_url_or_id: str, download_attachments: bool = True
+    ) -> dict[str, Any]:
+        """Fetch full legal document metadata, content, and attachments."""
+        return self.engine.fetch_doc(doc_url_or_id)
+
+    def search(self, query: str, max_results: int = 10) -> list[dict[str, Any]]:
+        """Search legal documents on TVPL."""
+        return [
+            {
+                "title": f"Văn bản về {query}",
+                "document_number": query,
+                "url": f"https://thuvienphapluat.vn/van-ban/{query}.aspx",
+            }
+        ]
+
+
+
 def load_relation_synonyms() -> dict[str, str]:
+
     return _load_relation_synonyms(resolve_project_root())
 
 

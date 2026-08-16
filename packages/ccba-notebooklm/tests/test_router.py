@@ -12,6 +12,8 @@ import yaml  # type: ignore
 # We will import the routing functions from ccba_notebooklm._registry
 from ccba_notebooklm._registry import get_notebook_id_for_workflow, route_session_to_workflow
 
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
+
 
 @pytest.fixture
 def mock_catalog() -> tuple[Path, dict]:

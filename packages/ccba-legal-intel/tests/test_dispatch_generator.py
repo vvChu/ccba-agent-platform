@@ -1,8 +1,10 @@
-"""Tests for On-Demand Consultation Dispatch Draft Generator."""
-
 from pathlib import Path
 
+import pytest
+
 from ccba_legal.coordinator import LegalProcessor
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_generate_consultation_dispatch_draft(tmp_path: Path) -> None:

@@ -14,6 +14,8 @@ from ccba_notebooklm import (
     handle_artifact_flow,
 )
 
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
+
 
 # Đảm bảo tắt môi trường auth thực tế trong test cases này
 @pytest.fixture(autouse=True)

@@ -7,7 +7,10 @@ from unittest.mock import MagicMock, patch
 # Add scripts directory to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import pytest
 from safe_pytest import find_modified_test_files, main
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_find_modified_test_files():

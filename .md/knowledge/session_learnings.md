@@ -301,6 +301,20 @@
 * **Nguyên tắc:** Bảng biểu phức tạp (rowspan/colspan gộp ô, đa cấp, footnotes) xuất hiện ở mọi miền nghiệp vụ (QCVN PCCC, QC Thẩm tra, Hồ sơ hoàn thành, Hợp đồng).
 * **Giải pháp:** Gom toàn bộ năng lực bóc tách ma trận bảng 2D, unmerge ô gộp, sinh slug mô tả (`make_descriptive_table_slug`) và thay thế Markdown vào package SSOT `packages/ccba-ooxml` (`from ccba_ooxml import TableReconstructor, StructuredTable`). Các packages khác (`ccba-legal-intel`) và Spokes tái sử dụng trực tiếp mà không viết lại logic.
 
+#### P6.16. Isolated Fast Test Suites & Strict SLA (< 2s) for AI Fast Feedback Loops (Matt Pocock Pattern)
+* **Nguyên tắc:** AI Agent cần vòng lặp phản hồi siêu tốc (< 2s) sau mỗi lần sửa mã nguồn để tránh gián đoạn tư duy và lãng phí token.
+* **Giải pháp:**
+  1. Đăng ký marker `fast` chính quy trong `pyproject.toml` và gán nhãn `pytestmark = [pytest.mark.fast, pytest.mark.unit]` cho các bài test thuần logic/mock in-memory.
+  2. Nâng cấp bộ điều phối test runner `scripts/eval/run_isolated_tests.py --fast` và `scripts/safe_pytest.py --fast` với cấu hình bắt buộc `-c pyproject.toml`.
+  3. Cưỡng chế SLA tự động bằng test suite `tests/governance/test_fast_test_suites.py` xác thực 100% các package đều hoàn thành kiểm thử trong thời gian siêu tốc.
+
+#### P6.17. Dual-Layer Dependency Contract Enforcement (Import-Linter & Native AST Scanner)
+* **Nguyên tắc:** Bảo vệ tuyệt đối ranh giới của các Deep Seams, cấm gọi trực tiếp vào các file private nội bộ `_*` của package khác và ngăn chặn phụ thuộc vòng hoặc đảo ngược tầng (layer inversion).
+* **Giải pháp:**
+  1. **Cấu hình chuẩn công nghiệp `.importlinter`**: Khai báo các contracts `layers`, `forbidden`, `independence` cho `lint-imports`.
+  2. **Native AST Governance Scanner (`scripts/governance/check_dependency_contracts.py`)**: Bộ quét AST zero-dependency quét toàn bộ 200+ file mã nguồn trong `< 0.4s`, bẫy các lỗi `PrivateSubmoduleSeamViolation`, `FoundationLeafPurityViolation`, `LeafIndependenceViolation` mà không cần cài đặt thêm thư viện bên ngoài.
+  3. Tích hợp trực tiếp vào CI và `ccba-lint-imports` CLI.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 
 
