@@ -26,8 +26,12 @@ git checkout main
 git pull origin main
 
 
+echo [1/2] Running Document Auto-Evolution Engine...
+python scripts\eval\doc_refactor_daemon.py
+
+echo [2/2] Running Multi-Skill Nightly Auto-Tuner...
 python scripts\eval\nightly_tuner_daemon.py --max-iter 30
 
 echo =================================================================
-echo [CCBA Nightly Auto-Tuner Daemon] Completed at %DATE% %TIME%
+echo [CCBA Nightly Daemon] Completed at %DATE% %TIME%
 echo =================================================================

@@ -51,9 +51,14 @@ if [ -f "$PROJECT_ROOT/.venv/bin/activate" ]; then
 fi
 
 
-# Run Nightly Auto-Tuner Daemon with 30 iterations for weak skills
+# 1. Run Document Auto-Evolution Engine (Audit -> AST Grounding -> Zero-Deletion -> PR)
+echo "📚 [1/2] Running Document Auto-Evolution Engine..."
+python3 scripts/eval/doc_refactor_daemon.py
+
+# 2. Run Nightly Auto-Tuner Daemon with 30 iterations for weak skills
+echo "🌙 [2/2] Running Multi-Skill Nightly Auto-Tuner..."
 python3 scripts/eval/nightly_tuner_daemon.py --max-iter 30
 
 echo "================================================================="
-echo "[CCBA Nightly Auto-Tuner Daemon] Finished at $(date)"
+echo "[CCBA Nightly Daemon] Finished at $(date)"
 echo "================================================================="
