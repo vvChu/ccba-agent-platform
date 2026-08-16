@@ -73,15 +73,29 @@ def load_upstream_sources(config_file: Path | None = None) -> list[dict[str, Any
         if not isinstance(data, dict) or "sources" not in data:
             return DEFAULT_REPOS_CONFIG
 
+        LEGACY_SHA_NAMES: dict[str, str] = {
+            "claudekit-engineer": "claudekit_last_sha.txt",
+            "claudekit-marketing": "claudekit_marketing_last_sha.txt",
+            "mattpocock-skills": "mattpocock_last_sha.txt",
+        }
+
         sources: list[dict[str, Any]] = []
         for s in data.get("sources", []):
             if not isinstance(s, dict) or not s.get("enabled", True):
                 continue
-            name = str(s.get("name", s.get("type", "unknown")))
-            repo_type = str(s.get("type", name))
-            remote_url = str(s.get("remote_url", ""))
-            branch = str(s.get("branch", "main"))
-            description = str(s.get("description", ""))
+            name = str(s.get("name", s.get("type", "unknown"))).strip()
+            repo_type = str(s.get("type", name)).strip()
+            remote_url = str(s.get("remote_url", "")).strip()
+            branch = str(s.get("branch", "main")).strip()
+            description = str(s.get("description", "")).strip()
+
+            if not remote_url:
+                print(f"[Evaluator] Warning: Skipping source '{name}' because remote_url is empty.")
+                continue
+
+            sha_filename = LEGACY_SHA_NAMES.get(
+                name, LEGACY_SHA_NAMES.get(repo_type, f"{name}_last_sha.txt")
+            )
 
             sources.append(
                 {
@@ -90,7 +104,7 @@ def load_upstream_sources(config_file: Path | None = None) -> list[dict[str, Any
                     "local_path": PLATFORM_ROOT / ".md" / "scratch" / "repos" / name,
                     "remote_url": remote_url,
                     "branch": branch,
-                    "sha_file": PLATFORM_ROOT / ".md" / "scratch" / f"{name}_last_sha.txt",
+                    "sha_file": PLATFORM_ROOT / ".md" / "scratch" / sha_filename,
                     "description": description,
                 }
             )
@@ -133,7 +147,7 @@ def check_repo_license(repo_path: Path) -> tuple[str, str]:
                     return "PERMISSIVE", "BSD License (Tự do sử dụng)"
                 if "all rights reserved" in text or "proprietary" in text:
                     return "PROPRIETARY", "Bản quyền đóng (Không được sao chép)"
-                return "CUSTOM", "Giấy phép riêng biệt"
+                return "UNKNOWN", "Custom license: cần kiểm tra thủ công"
             except Exception:
                 pass
 
@@ -387,23 +401,29 @@ class UpstreamEvaluator:
                 subprocess.run(
                     ["git", "fetch", "origin"], cwd=str(local_path), check=True, capture_output=True
                 )
-                res = subprocess.run(
-                    ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
-                    cwd=str(local_path),
-                    capture_output=True,
-                    text=True,
-                )
-                default_branch = config.get("branch", "main")
-                if res.returncode == 0:
-                    default_branch = res.stdout.strip().split("/")[-1]
+                configured_branch = config.get("branch")
+                if configured_branch:
+                    target_branch = configured_branch
+                else:
+                    res = subprocess.run(
+                        ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
+                        cwd=str(local_path),
+                        capture_output=True,
+                        text=True,
+                    )
+                    target_branch = (
+                        res.stdout.strip().split("/")[-1] if res.returncode == 0 else "main"
+                    )
 
                 subprocess.run(
-                    ["git", "reset", "--hard", f"origin/{default_branch}"],
+                    ["git", "reset", "--hard", f"origin/{target_branch}"],
                     cwd=str(local_path),
                     check=True,
                     capture_output=True,
                 )
-                print(f"[Repo Update] Successfully updated {repo_type}.")
+                print(
+                    f"[Repo Update] Successfully updated {repo_type} on branch '{target_branch}'."
+                )
                 return True
             except subprocess.SubprocessError as e:
                 print(f"[Repo Update] Error updating {repo_type}: {e}")
@@ -432,9 +452,14 @@ class UpstreamEvaluator:
                 pass
         return ""
 
-    def get_remote_sha(self, remote_url: str) -> str:
+    def get_remote_sha(self, remote_url: str, branch: str | None = None) -> str:
         """Query git ls-remote for the remote repository head commit."""
-        for ref in ["refs/heads/main", "refs/heads/master"]:
+        refs_to_try: list[str] = []
+        if branch:
+            refs_to_try.append(f"refs/heads/{branch}")
+        refs_to_try.extend(["refs/heads/main", "refs/heads/master", "HEAD"])
+
+        for ref in refs_to_try:
             try:
                 res = subprocess.run(
                     ["git", "ls-remote", remote_url, ref],
@@ -515,7 +540,7 @@ class UpstreamEvaluator:
 
         print(f"[Upstream Check] Checking remote {repo_type} ({remote_url}) for new updates...")
 
-        remote_sha = self.get_remote_sha(remote_url)
+        remote_sha = self.get_remote_sha(remote_url, branch=config.get("branch"))
         if not remote_sha:
             print(f"[Upstream Check] Warning: Could not connect to remote {repo_type}.")
             return

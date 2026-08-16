@@ -50,15 +50,36 @@ def test_load_upstream_sources_from_custom_yaml(tmp_path: Path) -> None:
                 "enabled": False,
                 "description": "Disabled repo",
             },
+            {
+                "name": "empty-url-repo",
+                "type": "empty",
+                "remote_url": "   ",
+                "branch": "main",
+                "enabled": True,
+                "description": "Empty URL repo",
+            },
+            {
+                "name": "claudekit-engineer",
+                "type": "engineer",
+                "remote_url": "https://github.com/claudekit/claudekit-engineer",
+                "branch": "main",
+                "enabled": True,
+                "description": "Default repo mapping",
+            },
         ],
     }
     config_file.write_text(yaml.safe_dump(data), encoding="utf-8")
 
     sources = load_upstream_sources(config_file)
-    assert len(sources) == 1
+    assert len(sources) == 2
     assert sources[0]["name"] == "custom-repo-1"
     assert sources[0]["remote_url"] == "https://github.com/custom/repo1"
     assert sources[0]["branch"] == "main"
+    assert sources[0]["sha_file"].name == "custom-repo-1_last_sha.txt"
+
+    # Legacy SHA file mapping test
+    assert sources[1]["name"] == "claudekit-engineer"
+    assert sources[1]["sha_file"].name == "claudekit_last_sha.txt"
 
 
 def test_load_upstream_sources_fallback_on_missing_file(tmp_path: Path) -> None:
@@ -70,7 +91,7 @@ def test_load_upstream_sources_fallback_on_missing_file(tmp_path: Path) -> None:
 
 
 def test_check_repo_license(tmp_path: Path) -> None:
-    """Verify license detection correctly classifies MIT, GPL, and Unknown."""
+    """Verify license detection correctly classifies MIT, GPL, Unknown, and Custom."""
     # 1. MIT License
     mit_dir = tmp_path / "mit_repo"
     mit_dir.mkdir()
@@ -89,7 +110,15 @@ def test_check_repo_license(tmp_path: Path) -> None:
     assert lic_type_gpl == "COPYLEFT"
     assert "GPL" in lic_desc_gpl
 
-    # 3. Unknown License
+    # 3. Custom License -> Classified as UNKNOWN per 4-value contract
+    custom_dir = tmp_path / "custom_repo"
+    custom_dir.mkdir()
+    (custom_dir / "LICENSE").write_text("Custom Special License Terms", encoding="utf-8")
+    lic_type_custom, lic_desc_custom = check_repo_license(custom_dir)
+    assert lic_type_custom == "UNKNOWN"
+    assert "Custom license" in lic_desc_custom
+
+    # 4. Unknown/Empty License
     empty_dir = tmp_path / "empty_repo"
     empty_dir.mkdir()
     lic_type_empty, _ = check_repo_license(empty_dir)
@@ -187,3 +216,27 @@ def test_append_recommendation_preserves_developer_notes(tmp_path: Path) -> None
         assert "`test-skill`" in updated_content
         assert "`dup-skill`" in updated_content
         assert "⚡ **Lệnh kích hoạt Port 1-Click:** `/ccba-xia" in updated_content
+
+
+def test_get_remote_sha_with_custom_branch() -> None:
+    """Verify get_remote_sha prioritizes querying custom branch before falling back."""
+    from unittest.mock import MagicMock
+
+    from scripts.spoke.upstream_evaluator import UpstreamEvaluator
+
+    evaluator = UpstreamEvaluator()
+    calls = []
+
+    def mock_subprocess_run(cmd, **kwargs):
+        calls.append(cmd)
+        mock_res = MagicMock()
+        if "refs/heads/feature-xyz" in cmd:
+            mock_res.stdout = "abc1234567890\trefs/heads/feature-xyz\n"
+            return mock_res
+        mock_res.stdout = ""
+        return mock_res
+
+    with patch("subprocess.run", side_effect=mock_subprocess_run):
+        sha = evaluator.get_remote_sha("https://github.com/test/repo", branch="feature-xyz")
+        assert sha == "abc1234567890"
+        assert any("refs/heads/feature-xyz" in c for c in calls)
