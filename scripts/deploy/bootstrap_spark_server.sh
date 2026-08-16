@@ -36,13 +36,25 @@ else
     git clone https://github.com/vvChu/ccba-legal-knowledge.git "$BASE_DIR/ccba-legal-knowledge"
 fi
 
-# 4. Setup Python Virtual Environment & Install Monorepo Packages
+# 4. Clone or Update Enterprise Governance Spoke (IDOP-CCBA-WAY)
+if [ -d "$BASE_DIR/IDOP-CCBA-WAY/.git" ]; then
+    echo "🔄 Updating IDOP-CCBA-WAY (Governance Spoke)..."
+    cd "$BASE_DIR/IDOP-CCBA-WAY"
+    git checkout main
+    git pull origin main
+else
+    echo "📥 Cloning IDOP-CCBA-WAY (Governance Spoke)..."
+    git clone https://github.com/vvChu/IDOP-CCBA-WAY.git "$BASE_DIR/IDOP-CCBA-WAY"
+fi
+
+# 5. Setup Python Virtual Environment & Install Monorepo Packages
 cd "$BASE_DIR/ccba-agent-platform"
 echo "🐍 Setting up Python Virtual Environment..."
 if [ ! -d ".venv" ]; then
     python3 -m venv .venv
 fi
 source .venv/bin/activate
+
 
 echo "📦 Installing Monorepo Packages in Editable mode..."
 pip install --upgrade pip setuptools wheel
