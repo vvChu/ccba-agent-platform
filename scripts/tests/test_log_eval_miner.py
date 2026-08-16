@@ -36,7 +36,6 @@ def test_resolve_log_dir(tmp_path: Path):
     assert resolved_default is not None
 
 
-
 def test_redact_sensitive_info():
     """Test redaction of email, phone, API key, and IP address."""
     raw = "Liên hệ user@example.com hoặc SĐT 0912345678 với key sk-abcdef12345678901234567890 tại 100.83.192.30"
@@ -70,17 +69,12 @@ def test_extract_clean_user_prompt():
 def test_classify_target_skill():
     """Test automatic classification of user prompts into target skills."""
     assert classify_target_skill("Soạn thảo hợp đồng và công văn gửi đối tác") == "copywriting"
-    assert (
-        classify_target_skill("Kiểm tra bậc chịu lửa PCCC và kiểm soát khói")
-        == "pccc_audit"
-    )
+    assert classify_target_skill("Kiểm tra bậc chịu lửa PCCC và kiểm soát khói") == "pccc_audit"
     assert (
         classify_target_skill("Nghiên cứu văn bản pháp điển Nghị định 105/2025/NĐ-CP")
         == "legal_intel"
     )
-    assert (
-        classify_target_skill("Viết bài báo khoa học cấu trúc IMRAD") == "academic_writing"
-    )
+    assert classify_target_skill("Viết bài báo khoa học cấu trúc IMRAD") == "academic_writing"
     assert classify_target_skill("Phân loại mã IFC Uniclass theo BIM") == "bigbim_classification"
     assert classify_target_skill("Tính năng khác không rõ") == "general_domain"
 
@@ -192,8 +186,7 @@ def test_mine_logs_and_export_idempotent(tmp_path: Path):
     log_dir.mkdir()
     log_file = log_dir / "transcript.jsonl"
     lines = [
-        json.dumps({"type": "USER_INPUT", "content": "Soạn thảo hợp đồng tư vấn thiết kế"})
-        + "\n",
+        json.dumps({"type": "USER_INPUT", "content": "Soạn thảo hợp đồng tư vấn thiết kế"}) + "\n",
         json.dumps(
             {
                 "type": "PLANNER_RESPONSE",

@@ -6,6 +6,7 @@ import os
 import sys
 import urllib.request
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Auto-load .env
@@ -13,6 +14,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 env_file = PROJECT_ROOT / ".env"
 if env_file.exists():
     load_dotenv(dotenv_path=env_file)
+
 
 def main() -> None:
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
@@ -32,8 +34,12 @@ def main() -> None:
         print("     TELEGRAM_CHAT_ID=-1001234567890 (hoặc ID cá nhân/nhóm)")
         print()
         print("💡 Cách lấy Token & Chat ID:")
-        print("  - Bot Token: Chat với @BotFather trên Telegram -> gõ /newbot -> lưu HTTP API Token")
-        print("  - Chat ID: Chat với bot @userinfobot hoặc @RawDataBot để lấy Chat ID của bạn / nhóm")
+        print(
+            "  - Bot Token: Chat với @BotFather trên Telegram -> gõ /newbot -> lưu HTTP API Token"
+        )
+        print(
+            "  - Chat ID: Chat với bot @userinfobot hoặc @RawDataBot để lấy Chat ID của bạn / nhóm"
+        )
         print("=================================================================")
         sys.exit(1)
 
@@ -50,11 +56,13 @@ def main() -> None:
     )
 
     api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload = json.dumps({
-        "chat_id": chat_id,
-        "text": test_message,
-        "parse_mode": "Markdown",
-    }).encode("utf-8")
+    payload = json.dumps(
+        {
+            "chat_id": chat_id,
+            "text": test_message,
+            "parse_mode": "Markdown",
+        }
+    ).encode("utf-8")
 
     try:
         req = urllib.request.Request(
@@ -75,6 +83,7 @@ def main() -> None:
         print(f"❌ Gửi tin nhắn thất bại: {e}")
         print("💡 Kiểm tra lại Token, Chat ID và quyền gửi tin của Bot vào nhóm/kênh.")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

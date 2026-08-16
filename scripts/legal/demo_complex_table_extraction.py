@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import re
 import sys
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -45,13 +45,15 @@ class ExtractedLegalTable:
 class LegalTableExtractor:
     """Extracts, normalizes, and reconstructs complex multi-header legal tables."""
 
-    def extract_from_raw_html(self, html_content: str, table_id: str, title: str, source_standard: str) -> ExtractedLegalTable:
+    def extract_from_raw_html(
+        self, html_content: str, table_id: str, title: str, source_standard: str
+    ) -> ExtractedLegalTable:
         """Parses HTML table markup with multi-row headers and merged cells into structured matrix."""
         # Clean tags and extract tr elements
         tr_matches = re.findall(r"<tr[^>]*>(.*?)</tr>", html_content, re.DOTALL | re.IGNORECASE)
         raw_grid: list[list[dict[str, Any]]] = []
 
-        for row_idx, tr in enumerate(tr_matches):
+        for _row_idx, tr in enumerate(tr_matches):
             cells = re.findall(r"<(th|td)([^>]*)>(.*?)</\1>", tr, re.DOTALL | re.IGNORECASE)
             row_cells = []
             for tag, attrs, text in cells:
@@ -61,12 +63,14 @@ class LegalTableExtractor:
                 rowspan = int(rowspan_m.group(1)) if rowspan_m else 1
                 clean_text = re.sub(r"<[^>]+>", "", text).strip()
                 clean_text = re.sub(r"\s+", " ", clean_text)
-                row_cells.append({
-                    "text": clean_text,
-                    "colspan": colspan,
-                    "rowspan": rowspan,
-                    "is_header": tag.lower() == "th",
-                })
+                row_cells.append(
+                    {
+                        "text": clean_text,
+                        "colspan": colspan,
+                        "rowspan": rowspan,
+                        "is_header": tag.lower() == "th",
+                    }
+                )
             raw_grid.append(row_cells)
 
         # Normalize 2D grid resolving colspans
@@ -85,7 +89,7 @@ class LegalTableExtractor:
         # Reconstruct composite column names (Multi-tier hierarchical headers)
         composite_headers: list[str] = []
         num_cols = max(len(r) for r in normalized_rows) if normalized_rows else 0
-        
+
         for col_idx in range(num_cols):
             h_parts = []
             for h_row in header_rows:
@@ -93,11 +97,13 @@ class LegalTableExtractor:
                     val = h_row[col_idx]
                     if val not in h_parts:
                         h_parts.append(val)
-            composite_headers.append(" > ".join(h_parts) if h_parts else f"Column_{col_idx+1}")
+            composite_headers.append(" > ".join(h_parts) if h_parts else f"Column_{col_idx + 1}")
 
         # Extract Footnotes
         footnotes: dict[str, str] = {}
-        fn_matches = re.findall(r"(Ghi chú|Chú thích|\(\*\)|\(\d+\))[:\s]+([^\n<]+)", html_content, re.IGNORECASE)
+        fn_matches = re.findall(
+            r"(Ghi chú|Chú thích|\(\*\)|\(\d+\))[:\s]+([^\n<]+)", html_content, re.IGNORECASE
+        )
         for mark, desc in fn_matches:
             footnotes[mark.strip()] = desc.strip()
 
@@ -106,7 +112,11 @@ class LegalTableExtractor:
         for row in body_rows:
             row_dict: dict[str, Any] = {}
             for col_idx, cell_val in enumerate(row):
-                header_name = composite_headers[col_idx] if col_idx < len(composite_headers) else f"Col_{col_idx}"
+                header_name = (
+                    composite_headers[col_idx]
+                    if col_idx < len(composite_headers)
+                    else f"Col_{col_idx}"
+                )
                 row_dict[header_name] = cell_val
             flattened_matrix.append(row_dict)
 
@@ -252,7 +262,9 @@ def run_table_extraction_experiment() -> None:
     <p>Ghi chú: Toàn bộ hồ sơ hoàn thành công trình phải được số hóa và lập chỉ mục điện tử.</p>
     """
 
-    print("\n📋 2. BÓC TÁCH BẢNG 2: PHỤ LỤC VIb NGHỊ ĐỊNH 06/2021/NĐ-CP (Hồ sơ hoàn thành công trình)")
+    print(
+        "\n📋 2. BÓC TÁCH BẢNG 2: PHỤ LỤC VIb NGHỊ ĐỊNH 06/2021/NĐ-CP (Hồ sơ hoàn thành công trình)"
+    )
     table2 = extractor.extract_from_raw_html(
         html_content=raw_nd06_html,
         table_id="nd06_appendix_vib",
@@ -270,9 +282,9 @@ def run_table_extraction_experiment() -> None:
 
     report_content = f"""# Báo Cáo Thí Nghiệm: Bóc Tách Bảng Biểu Pháp Lý Phức Tạp (Complex Legal Table Extraction)
 
-> **Mã thí nghiệm:** EXP-03-TABLE-PARSER  
-> **Bộ máy thực thi:** `LegalTableExtractor` (Deep Seam)  
-> **Thời gian:** 2026-08-16  
+> **Mã thí nghiệm:** EXP-03-TABLE-PARSER
+> **Bộ máy thực thi:** `LegalTableExtractor` (Deep Seam)
+> **Thời gian:** 2026-08-16
 
 ---
 
@@ -299,14 +311,14 @@ def run_table_extraction_experiment() -> None:
 ---
 
 ## 3. Đánh Giá Khả Năng Truy Vấn Tự Động (Querying Benchmark)
-- **Truy vấn 1:** *'Bậc chịu lửa II thì Cột chịu lực yêu cầu giới hạn nào?'*  
+- **Truy vấn 1:** *'Bậc chịu lửa II thì Cột chịu lực yêu cầu giới hạn nào?'*
   $\rightarrow$ **Kết quả:** `R 90 / REI 90` (Chính xác 100%).
-- **Truy vấn 2:** *'Mô hình BIM As-built lưu trữ định dạng gì?'*  
+- **Truy vấn 2:** *'Mô hình BIM As-built lưu trữ định dạng gì?'*
   $\rightarrow$ **Kết quả:** `Bắt buộc lưu trữ định dạng IFC` (Chính xác 100%).
 """
 
     report_path.write_text(report_content, encoding="utf-8")
-    print(f"\n💾 3. ĐÃ XUẤT BẢN BÁO CÁO THÍ NGHIỆM:")
+    print("\n💾 3. ĐÃ XUẤT BẢN BÁO CÁO THÍ NGHIỆM:")
     print(f"👉 File: {report_path}")
     print("\n✅ THÍ NGHIỆM BÓC TÁCH BẢNG BIỂU PHÁP LÝ HOÀN TẤT THÀNH CÔNG!")
     print("=" * 75)

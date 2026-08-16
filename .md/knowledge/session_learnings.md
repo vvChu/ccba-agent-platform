@@ -369,6 +369,15 @@
   2. **Tier 2 (Progressive References):** Các tài liệu hướng dẫn kỹ thuật chi tiết của sub-skills nông được gom vào thư mục `references/*.md` bên trong Master Skill (Progressive Disclosure — chỉ nạp khi cần xử lý ngoại lệ).
   3. **Tier 3 (User Workflows - User Invoked):** 100% các quy trình mang tính nghi thức, có sự điều khiển của con người (`/ccba-implement`, `/ccba-new-feature`, `/ccba-wait-what`...) bắt buộc gắn `disable-model-invocation: true` để tiêu tốn **0 token** trong System Prompt khởi tạo.
 
+#### P6.21. Infrastructure Glue Code vs Domain Orchestration Distinction (Phân Biệt Rõ Mã Nối Hạ Tầng & Logic Điều Phối)
+* **Nguyên tắc:** Khi rà soát mã nguồn để làm sâu module (Deepening via Extraction - P6.6), **bắt buộc phải phân biệt rõ ràng giữa Infrastructure Glue Code với Domain Orchestration Logic**:
+  - *Infrastructure Glue Code:* Lệnh gọi `subprocess.run()`, tạo thư mục tạm `tempfile.TemporaryDirectory()`, in banner màu `print()`, đo runtime... $\rightarrow$ Thuộc về CLI scripts hoặc test helpers, **không cấu thành domain depth**. Nghiêm cấm bọc các đoạn glue code này thành Class/Service mới khi không có ít nhất 2 caller thực tế (tránh vi phạm AP6.3 Shallow-Wrapping).
+  - *Domain Orchestration Logic:* Xử lý phân loại nghiệp vụ, chuyển đổi định dạng phức tạp, phân giải AST, mutex locks liên quan đến phiên làm việc, cơ chế tự sửa lỗi $\rightarrow$ Bắt buộc bóc tách đưa vào packages lõi trước khi tinh gọn script.
+
+#### P6.22. Cross-Package Unique Symbol Naming Invariant (Bất Biến Định Danh Symbol Độc Nhất Toàn Monorepo)
+* **Nguyên tắc:** Mỗi class, protocol hoặc public seam trong Monorepo phải sở hữu một định danh duy nhất phản ánh chính xác 100% năng lực cốt lõi của nó.
+* **Quy chuẩn:** Tuyệt đối không đặt tên trùng lặp (ví dụ: `TableReconstructor` ở cả `mdconverter` và `ccba-ooxml`) khi bản chất của một bên chỉ là trích xuất phụ lục (`AppendixExtractor`). Việc này triệt tiêu hoàn toàn nguy cơ ô nhiễm ngữ cảnh (Context Poisoning) và giúp AI Agent luôn định vị đúng Deep Seam chuẩn.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 
 * **AP6.1. Leaky Interface Exporting 30+ Symbols:** Xuất khẩu toàn bộ hàm con ra `__init__.py` làm rối loạn AI navigation.

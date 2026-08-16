@@ -287,7 +287,10 @@ def main() -> None:
         validate_script = project_root / "scripts" / "validate_docs.py"
         if validate_script.exists():
             success_docs, out_docs = run_command(
-                [py_exe, str(validate_script)], project_root, "Validate Docs Check"
+                [py_exe, str(validate_script)],
+                project_root,
+                "Validate Docs Check",
+                timeout_seconds=180,
             )
 
             gates_summary.append(("Gate 4: Documentation Integrity", success_docs, out_docs))

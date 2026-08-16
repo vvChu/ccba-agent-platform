@@ -1,3 +1,11 @@
+"""Appendix Extractor utility for mdconverter.
+
+Extracts and reconstructs embedded appendices (Phụ lục) in markdown files
+using docx alignment via Pandoc.
+"""
+
+from __future__ import annotations
+
 import os
 import re
 import subprocess
@@ -7,15 +15,14 @@ from pathlib import Path
 from .utils import int_to_roman, roman_to_int
 
 
-class TableReconstructor:
-    """Core utility to reconstruct broken tables in markdown files using docx alignment."""
+class AppendixExtractor:
+    """Core utility to extract and reconstruct appendices in markdown files using docx alignment."""
 
     def __init__(self) -> None:
         pass
 
-    def reconstruct_table(self, md_path: Path, docx_path: Path) -> bool:
-        """
-        Reconstruct the table in md_path using content from docx_path.
+    def extract_appendix(self, md_path: Path, docx_path: Path) -> bool:
+        """Extract and reconstruct the appendix section in md_path using content from docx_path.
 
         Args:
             md_path: Path to the target markdown file (usually a split appendix).
