@@ -1,7 +1,7 @@
 # 🗺️ Bản Đồ Tác Chiến Wayfinder: Hệ Thống Tự Tiến Hóa & Bảo Trì Tài Liệu Tự Động (Doc-Auto-Evolution)
 
 > **Mã Vấn Đề (Issue Slug):** `doc-auto-evolution`  
-> **Trạng thái Bản đồ:** `Active / Charted`  
+> **Trạng thái Bản đồ:** `Completed / Shipped`  
 > **Khởi tạo:** 2026-08-16  
 > **Nhãn (Labels):** `wayfinder:map`, `architecture:llm-wiki`, `tooling:doc-ratchet`, `automation:server-spark`
 
@@ -25,6 +25,7 @@ Xây dựng và đưa vào vận hành hoàn chỉnh **Động Cơ Tự Tiến H
 
 ## 3. Quyết Định Đã Chốt (Decisions So Far)
 
+* ✅ **[Ticket D-03: PR Template & Telegram Alert Spec](pr_template_spec.md):** Đã thiết kế mẫu báo cáo Pull Request Markdown chuẩn mực (Bảng 8 Trụ Cột, AST Code Grounding, Rào chắn Zero-Deletion, Lệnh duyệt 1-chạm `gh pr merge --squash`) và template Telegram mobile payload.
 * ✅ **[Ticket D-04: Server Spark Cron & Bootstrap Integration](file:///d:/GitHubProjects/ccba-agent-platform/scripts/cron/run_nightly_tuner.sh):** Tích hợp `doc_refactor_daemon.py` vào `run_nightly_tuner.sh` (Linux Cron 00:00), `run_nightly_tuner.bat` và `bootstrap_spark_server.sh`.
 * ✅ **[Ticket D-02: Deep Seam doc_refactor_daemon.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/eval/doc_refactor_daemon.py):** Hoàn thành đóng gói động cơ `DocAutoEvolutionEngine` (AST Grounding, Zero-Deletion Guard, Pillar Balance Auditor, Windows UTF-8 Safe Console) và đạt 9/9 unit tests PASS (2.7s).
 * ✅ **[Ticket D-01: AST Heuristics & Code-Grounding Logic](research-d01.md):** Hoàn tất nghiên cứu thuật toán đếm/phân rã Pillar ($N \ge 15$), AST Symbol Indexer xác thực dẫn chứng code, và rào chắn Zero-Deletion/Parse-Protection.
@@ -41,14 +42,14 @@ Xây dựng và đưa vào vận hành hoàn chỉnh **Động Cơ Tự Tiến H
 graph LR
     D01["✅ Ticket D-01 [Research/AFK]:<br/>Thiết Kế AST Heuristics & Grounding Logic"] --> D02["✅ Ticket D-02 [Task/AFK]:<br/>Xây Dựng doc_refactor_daemon.py Deep Seam"]
     D02 --> D04["✅ Ticket D-04 [Task/AFK]:<br/>Tích Hợp Nightly Cron & Bootstrap Server"]
-    D02 --> D03["🟢 Ticket D-03 [Prototype/HITL]:<br/>Mẫu Báo Cáo PR & Telegram Alert"]
+    D02 --> D03["✅ Ticket D-03 [Prototype/HITL]:<br/>Mẫu Báo Cáo PR & Telegram Alert"]
 ```
 
 | Mã Ticket | Phân Loại | Loại Hình | Tên Nhiệm Vụ & Mục Tiêu | Trạng Thái |
 | :--- | :---: | :---: | :--- | :---: |
 | **`D-01`** | `Research` | `AFK` | **Khảo sát Thuật toán Phân tích Cấu trúc & Code-Grounding**: Nghiên cứu heuristics phát hiện Pillar phình to (>15 patterns), thuật toán regex/AST trích xuất references, và logic tra cứu nhanh symbol trong codebase. | ✅ **COMPLETED** |
 | **`D-02`** | `Task` | `AFK` | **Xây dựng Deep Seam `doc_refactor_daemon.py`**: Triển khai class `DocAutoEvolutionEngine` bọc toàn bộ chu trình (Quét sức khỏe $\rightarrow$ Code Grounding $\rightarrow$ Auto-Balancing $\rightarrow$ Git Branch & Commit). | ✅ **COMPLETED** |
-| **`D-03`** | `Prototype` | `HITL` | **Thiết kế Mẫu Báo cáo PR & Thông báo Telegram**: Xây dựng mẫu Markdown PR trực quan (Trước/Sau, Dẫn chứng code, Rủi ro) và template tin nhắn Telegram tóm tắt 3 dòng. | 🟢 **UNBLOCKED** |
+| **`D-03`** | `Prototype` | `HITL` | **Thiết kế Mẫu Báo cáo PR & Thông báo Telegram**: Xây dựng mẫu Markdown PR trực quan (Trước/Sau, Dẫn chứng code, Rủi ro) và template tin nhắn Telegram tóm tắt 3 dòng. | ✅ **COMPLETED** |
 | **`D-04`** | `Task` | `AFK` | **Tích hợp Hạ Tầng Server Spark & CI Gate**: Bổ sung `doc_refactor_daemon.py` vào kịch bản Linux Cron `run_nightly_tuner.sh` và `bootstrap_spark_server.sh`. | ✅ **COMPLETED** |
 
 ---
