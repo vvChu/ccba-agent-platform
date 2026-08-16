@@ -29,7 +29,7 @@ sys.path.insert(0, str(project_root / "packages" / "ccba-harness" / "src"))
 
 from ccba_harness.evals.models import EvalItem, EvalReport
 from ccba_harness.evals.runner import EvalRunner
-from ccba_harness.evals.scorers import BaseScorer, RegexScorer
+from ccba_harness.evals.scorers import BaseScorer, LengthBoundsScorer, RegexScorer
 
 
 @dataclass
@@ -128,6 +128,39 @@ class RatchetReport:
     history: list[RatchetTrialResult] = field(default_factory=list)
 
 
+def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
+    """Provides domain-aligned default scorers based on target skill."""
+    sname = skill_name.lower()
+    if any(k in sname for k in ["legal", "luat", "tvpl", "vbpl"]):
+        return [
+            RegexScorer(
+                name="legal_grounding",
+                pattern=r"(Nghị định|Thông tư|Luật|Quy chuẩn|Điều|Khoản|VBHN|pháp lý)",
+                weight=0.6,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.4),
+        ]
+    if any(k in sname for k in ["pccc", "qc", "audit", "thamdinh"]):
+        return [
+            RegexScorer(
+                name="technical_qc",
+                pattern=r"(QCVN|PCCC|bậc chịu lửa|khói|thẩm tra|tiêu chuẩn|thiết kế)",
+                weight=0.6,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.4),
+        ]
+    if any(k in sname for k in ["academic", "writing", "khoahoc"]):
+        return [
+            RegexScorer(
+                name="academic_structure",
+                pattern=r"(IMRAD|nghiên cứu|phương pháp|kết quả|thảo luận|trích dẫn)",
+                weight=0.6,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.4),
+        ]
+    return [RegexScorer(pattern=r"(xử lý|hướng dẫn|thực hiện|quy định)", weight=1.0)]
+
+
 class GitRatchetTuner:
     """Autonomous Ratchet Optimization Engine using Git commits for state persistence."""
 
@@ -139,12 +172,11 @@ class GitRatchetTuner:
     ) -> None:
         self.config = config
         self.target_file = config.target_file
-        self.scorers = scorers or [
-            RegexScorer(pattern=r"(xử lý|hướng dẫn|thực hiện|quy định)", weight=1.0)
-        ]
+        self.scorers = scorers or get_default_domain_scorers(config.skill_name)
         self.dry_run_git = dry_run_git
         self.runner = EvalRunner(default_pass_threshold=config.target_score)
         self.dataset: list[EvalItem] = self._load_dataset()
+
 
     def _load_dataset(self) -> list[EvalItem]:
         """Loads evaluation dataset from JSON or creates synthetic items."""
