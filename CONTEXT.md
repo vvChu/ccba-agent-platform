@@ -283,3 +283,19 @@ Quy tắc linter tự động cấm tạo các file `SKILL.md` trùng tên hoặ
    - `tooling_plugin`: Kho phát triển Add-in/Plugin cho Revit, AutoCAD, Rhino/Grasshopper.
    - `client_portal`: Cổng giao tiếp Extranet phục vụ Chủ đầu tư tra cứu báo cáo thẩm tra trực tiếp.
 
+---
+
+## Tiered Governance & Integration Vocabulary (ADR 0042)
+
+**Tri-Repo Server Synchronization Gate**:
+Cơ chế đồng bộ hóa tuần tự kéo mã mới nhất của cả 3 kho lưu trữ cốt lõi (`ccba-legal-knowledge` $\rightarrow$ `IDOP-CCBA-WAY` $\rightarrow$ `ccba-agent-platform`) trước khi kích hoạt Auto-Tuner lúc 00:00 hàng đêm trên Server Spark.
+
+**Headless IDOPBridge SDK**:
+Module Python kết nối trực tiếp đa nền tảng (Windows Kỹ sư & Linux Server) qua Microsoft Graph REST API và App-Only Certificate (`c055c7a4-9150-4bd5-bf01-445c65467feb`) để tự động cập nhật tiến độ WBS, PGV và đăng ký tài liệu ISO 19650 vào `CdeDocuments`.
+
+**Tiered AI Pre-Submission Gate (Rào Chắn Tiền Kiểm 3 Tầng)**:
+Hệ thống kiểm soát đa cấp trước khi nộp hồ sơ trình Viện IBST:
+- **Tier 1 (Hard-Floor Auto-Block):** Tự động khóa cứng 100% đối với văn bản luật hết hiệu lực, tạm ứng $> 90\%$ hoặc sai lệch toán học dòng tiền 3 tầng.
+- **Tier 2 (Governance Override):** Cho phép Giám đốc (`ROLE_DIRECTOR`) phê duyệt vượt rào đối với các trường hợp ngoại lệ nghiệp vụ và bắt buộc ghi nhật ký giải trình bất biến (`Audit Trail`) vào `lessons_learned.json`.
+- **Tier 3 (Advisory Warnings):** Cảnh báo mềm về văn phong, định dạng và nhắc nhở mốc tiến độ WBS.
+
