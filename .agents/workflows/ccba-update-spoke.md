@@ -6,8 +6,8 @@ applies_to:
   - "Thiết kế"
   - "Kiểm định"
 bundle: "_core"
+disable-model-invocation: true
 ---
-
 # Cập Nhật & Đồng Bộ Hóa CCBA Spoke Workspace (/ccba-update-spoke)
 
 Workflow này cho phép đồng bộ hóa các bản cập nhật mới nhất (kịch bản lệnh, kỹ năng, hiến pháp `AGENTS.md`, rào chắn test) từ trung tâm **CCBA Agent Platform (Hub)** sang các dự án **Spoke**, hỗ trợ cả đồng bộ đơn lẻ, tải On-Demand và đồng bộ hàng loạt toàn bộ hệ sinh thái.

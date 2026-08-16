@@ -6,8 +6,8 @@ applies_to:
   - "Thẩm tra thiết kế"
   - "PCCC"
 bundle: "_qc"
+disable-model-invocation: true
 ---
-
 # Quy trình Tư vấn Hỗ trợ Chủ đầu tư Tự thẩm định toàn bộ thiết kế PCCC
 
 Căn cứ điểm đ khoản 1 Điều 17 Luật PCCC số 55/2024/QH15 và khoản 1 Điều 8 Nghị định số 105/2025/NĐ-CP, đối với các công trình không thuộc thẩm quyền thẩm định của Cơ quan chuyên môn về xây dựng và Cơ quan Công an, **Chủ đầu tư / Chủ sở hữu công trình có trách nhiệm tự tổ chức thẩm định thiết kế về PCCC**.

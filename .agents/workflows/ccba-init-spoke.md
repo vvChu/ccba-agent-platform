@@ -7,8 +7,8 @@ applies_to:
   - "Kiểm định"
   - "Tác vụ Admin"
 bundle: "_core"
+disable-model-invocation: true
 ---
-
 # Khởi tạo CCBA Spoke Workspace
 
 Workflow này tự động hóa việc thiết lập một không gian làm việc (workspace) dự án mới để tuân thủ kiến trúc **CCBA Hub-and-Spoke** và **Global Rules**. Bạn nên chạy command `/ccba-init-spoke` ngay khi mở một thư mục dự án trên IDE.

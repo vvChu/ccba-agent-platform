@@ -3,8 +3,8 @@ description: Merge PR, cleanup branch và cập nhật walkthrough
 applies_to:
   - "Phần mềm"
 bundle: "_software"
+disable-model-invocation: true
 ---
-
 # Workflow: Release Feature
 
 Quy trình tự động hóa tích hợp mã nguồn (merge) và dọn dẹp môi trường.

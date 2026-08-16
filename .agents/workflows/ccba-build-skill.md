@@ -3,8 +3,8 @@ name: ccba-build-skill
 description: Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói sinh Skill mới đạt chuẩn CCBA.
 user-invocable: true
 keywords: [build-skill, create-skill, research, notebooklm]
+disable-model-invocation: true
 ---
-
 # Quy trình thực thi Slash Command `/ccba-build-skill`
 
 Khi người dùng kích hoạt lệnh này dưới dạng:

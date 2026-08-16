@@ -7,8 +7,8 @@ applies_to:
   - "Kiểm định"
   - "Tác vụ Admin"
 bundle: "_core"
+disable-model-invocation: true
 ---
-
 # Tiếp Nhận Spoke Hiện Hữu (/ccba-adopt-spoke)
 
 Workflow này tự động hóa việc đánh giá hiện trạng, phân tích rủi ro và tiếp nhận thích ứng an toàn (**Non-Destructive Adoption**) một repository/codebase đã có sẵn vào mạng lưới **CCBA Hub-and-Spoke**, bảo tồn 100% dữ liệu nghiệp vụ và Hiến pháp riêng của Spoke.

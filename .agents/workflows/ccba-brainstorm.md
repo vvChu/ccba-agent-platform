@@ -7,8 +7,8 @@ applies_to:
   - "Thiết kế"
   - "Kiểm định"
 bundle: "_core"
+disable-model-invocation: true
 ---
-
 # CCBA Brainstorming & Ingestion Workflow
 
 > **Nguồn gốc:** Cấu trúc tương tác luân phiên (Hybrid Rhythm, Deferred Judgment, Party Mode) được học hỏi từ nguyên tắc của `brainstorm-coach` bởi Lưu Trọng Hiếu (License: All Rights Reserved - Adapted patterns only).

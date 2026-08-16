@@ -3,8 +3,8 @@ description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, PowerP
 applies_to:
   - "Phần mềm"
 bundle: "_software"
+disable-model-invocation: true
 ---
-
 # Workflow: Xử lý Văn phòng (/ccba-xu-ly-van-phong)
 
 Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `xu-ly-van-phong` tại [SKILL.md](../skills/xu-ly-van-phong/SKILL.md) để bắt đầu quy trình tạo, sửa, chuyển đổi định dạng và format văn bản văn phòng chuyên nghiệp.

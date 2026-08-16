@@ -1,10 +1,21 @@
 ---
 name: grilling
-description: Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy chuẩn (Grill with Docs), hoặc hội tụ UI qua prototype trực quan.
+description: Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy
+  chuẩn (Grill with Docs), hoặc hội tụ UI qua prototype trực quan.
 user-invocable: true
-keywords: [grill, stress-test, phỏng vấn, chất vấn, đối chiếu, prototype, UI, frontend, visual]
+keywords:
+- grill
+- stress-test
+- phỏng vấn
+- chất vấn
+- đối chiếu
+- prototype
+- UI
+- frontend
+- visual
+disable-model-invocation: true
+bundle: _software
 ---
-
 # Grilling (Phỏng Vấn Dồn Dập & Đối Chiếu Quy Chuẩn)
 
 Kỹ năng này bắt buộc Agent phải chạy một vòng lặp phỏng vấn Socrates dồn dập (Grilling Loop) để stress-test kế hoạch thiết kế của người dùng hoặc đối chiếu tính tuân thủ của kế hoạch đó với các quy chuẩn tài liệu được chỉ định.

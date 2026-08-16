@@ -3,8 +3,8 @@ description: Push code hiện tại và tạo Pull Request tự động
 applies_to:
   - "Phần mềm"
 bundle: "_software"
+disable-model-invocation: true
 ---
-
 # Workflow: Create Pull Request
 
 Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request siêu tốc.
