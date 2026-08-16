@@ -88,7 +88,6 @@ def parse_sections(content: str) -> dict[str, list[str]]:
     for line in content.splitlines():
         trimmed = line.strip()
         if trimmed.startswith("#"):
-            # Check for section keywords
             lower_header = trimmed.lower()
             if any(k in lower_header for k in ["introduction", "mở đầu", "mở bài"]):
                 current_section = "Introduction"
@@ -98,12 +97,14 @@ def parse_sections(content: str) -> dict[str, list[str]]:
                 current_section = "Results"
             elif any(k in lower_header for k in ["discussion", "thảo luận"]):
                 current_section = "Discussion"
-            else:
+            elif trimmed.startswith("## "):
+                # Only reset to Other on major headings that don't match known sections
                 current_section = "Other"
-        
+
         sections[current_section].append(line)
-        
+
     return sections
+
 
 
 def analyze_passive_voice(lines: list[str]) -> tuple[int, int, float]:
@@ -256,13 +257,24 @@ def main():
             ref_lines.append(line)
         else:
             body_lines.append(line)
-            
+
     body_text = " ".join(body_lines)
-    
-    # Parse in-text numerical citations [N]
+
+    # Parse in-text numerical citations [N], [N, M], [N-M]
     citations_found = set()
-    for match in re.finditer(r'\[(\d+)\]', body_text):
-        citations_found.add(int(match.group(1)))
+    for match in re.finditer(r'\[([\d\s,\-]+)\]', body_text):
+
+        group_str = match.group(1)
+        for part in group_str.split(','):
+            part = part.strip()
+            if '-' in part:
+                subparts = part.split('-')
+                if len(subparts) == 2 and subparts[0].isdigit() and subparts[1].isdigit():
+                    for n in range(int(subparts[0]), int(subparts[1]) + 1):
+                        citations_found.add(n)
+            elif part.isdigit():
+                citations_found.add(int(part))
+
         
     # Parse declared references
     references_declared = {}
