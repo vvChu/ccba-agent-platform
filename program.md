@@ -1,14 +1,14 @@
 # CCBA AutoResearch: Program Specification (program.md)
 
-> Thí nghiệm tối ưu hóa tự động (Git-Ratchet Loop) cho kỹ năng Tra cứu & Pháp điển Pháp luật (ccba-legal-intel).
+> Thí nghiệm tối ưu hóa tự động mở rộng toàn diện (Maximized Git-Ratchet Loop) cho kỹ năng Tra cứu & Pháp điển Pháp luật (ccba-legal-intel).
 
 ---
 
 ## 🎯 Mục tiêu Thí nghiệm (Experiment Goal)
-- **Target File**: `.agents/skills/ccba-legal-intel/SKILL.md`
-- **Target Score**: 95.0%
-- **Max Iterations**: 5
-- **Dataset File**: `.agents/skills/eval-gate/test_cases/eval_legal_intel.json`
+- **Target File**: .agents/skills/ccba-legal-intel/SKILL.md
+- **Target Score**: 100.0%
+- **Max Iterations**: 10
+- **Dataset File**: .agents/skills/eval-gate/test_cases/eval_legal_intel.json
 
 ---
 
