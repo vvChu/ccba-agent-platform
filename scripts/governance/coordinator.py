@@ -16,18 +16,20 @@ from .env_auditor import EnvAuditor
 from .link_auditor import LinkAuditor
 from .registry_auditor import RegistryAuditor
 from .skill_auditor import SkillAuditor
+from .wiki_health_linter import WikiHealthLinter
 
 
 class DocumentAuditor(BaseAuditor):
     """Deep Coordinator Module for Document, Skill & Governance Auditing.
 
-    Coordinates 6 domain sub-auditors:
+    Coordinates 7 domain sub-auditors:
     - LinkAuditor: Markdown links, code symbol declarations & auto-fixing
     - SkillAuditor: Skill frontmatter, character limits & step completion criteria
     - RegistryAuditor: Legal registry mapping & orphan file detection
     - EnvAuditor: Environment variable documentation & .env.example parity
     - DriftAuditor: Git change tracking & Architecture drift detection
     - DuplicationAuditor: Anti-duplication SSOT guardrail for Hub-Spoke
+    - WikiHealthLinter: LLM-Wiki index, mutation log & orphan note detection
     """
 
     def __init__(self, project_root: Path | None = None) -> None:
@@ -41,6 +43,7 @@ class DocumentAuditor(BaseAuditor):
         self.env_auditor = EnvAuditor(self._project_root)
         self.drift_auditor = DriftAuditor(self._project_root)
         self.duplication_auditor = DuplicationAuditor(self._project_root)
+        self.wiki_linter = WikiHealthLinter(self._project_root)
 
     @property
     def project_root(self) -> Path:
@@ -63,6 +66,8 @@ class DocumentAuditor(BaseAuditor):
             self.drift_auditor.project_root = new_root
         if hasattr(self, "duplication_auditor"):
             self.duplication_auditor.project_root = new_root
+        if hasattr(self, "wiki_linter"):
+            self.wiki_linter.project_root = new_root
 
     # ---------------------------------------------------------------------------
     # Delegation methods for LinkAuditor
@@ -298,6 +303,12 @@ class DocumentAuditor(BaseAuditor):
         for issue in dup_issues:
             issues_list.append(issue)
             has_hard_errors = True
+
+        wiki_issues = self.wiki_linter.audit()
+        for issue in wiki_issues:
+            issues_list.append(issue)
+            if "Missing" in issue.message or "Broken" in issue.message:
+                has_hard_errors = True
 
         return AuditReport(
             issues=issues_list,

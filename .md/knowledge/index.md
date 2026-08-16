@@ -1,0 +1,102 @@
+# 🧭 CCBA Central Knowledge Base Index (LLM-Wiki Master Catalog)
+
+> **Vai trò:** Bản đồ Danh mục & Cấu trúc Phân loại Tri thức Trung tâm (Master Knowledge Catalog) cho CCBA Agent Platform.  
+> **Mô hình:** 3-Tier LLM-Wiki (Raw Sources $\rightarrow$ Curated Wiki Index/Log $\rightarrow$ Health Linter/Query).  
+> **Nhật ký Đột biến:** Xem lịch sử cập nhật chi tiết tại [log.md](log.md).
+
+---
+
+## 📌 1. Nền Tảng Cốt Lõi & Từ Điển Thuật Ngữ (Core Invariants & Vocabulary)
+
+- [CONTEXT.md](CONTEXT.md): Từ điển thuật ngữ domain xây dựng, BIM, pháp điển hóa và các nguyên lý kiến trúc nền tảng.
+- [session_learnings.md](session_learnings.md): Kho tri thức 30+ nguyên lý thực chiến qua các phiên làm việc (Process Locks, 2-Tier Test SLA, Windows Subprocess, Deep Modules).
+- [port_recommendations.md](port_recommendations.md): Tổng hợp khuyến nghị porting tính năng từ các nguồn upstream.
+- [upstream_skills_mapping.md](upstream_skills_mapping.md): Bản đồ phân rã và ánh xạ kỹ năng giữa ClaudeKit, MattPocock và CCBA Platform.
+- [upstream_sources.yaml](upstream_sources.yaml): Định nghĩa các nguồn upstream chính thức.
+
+---
+
+## 📜 2. Quy Chuẩn & Phương Pháp Luận Nghiệp Vụ (Domain Guidelines & Standards)
+
+- [guidelines/domain_success_criteria_rubrics.md](guidelines/domain_success_criteria_rubrics.md): **[MỚI]** Quy chuẩn Tiêu chí Thành công & Barem điểm Rubrics Định lượng Đa miền (QC PCCC 40/30/20/10, Pháp điển VBHN 35/35/20/10, Viết Học thuật 35/25/25/15).
+- [guidelines/phuong_phap_luan_lap_trinh_agentic.md](guidelines/phuong_phap_luan_lap_trinh_agentic.md): Cẩm nang phương pháp luận lập trình Agentic AI thực chiến.
+
+---
+
+## 🏗️ 3. Quyết Định Kiến Trúc & Thiết Kế (Architecture & ADRs)
+
+- [specs_and_roadmaps/Arch_Proposal_Hub_Spoke_Sync_Strategy.md](specs_and_roadmaps/Arch_Proposal_Hub_Spoke_Sync_Strategy.md): Chiến lược đồng bộ hóa Hub-and-Spoke giữa Platform và các dự án vệ tinh.
+- [specs_and_roadmaps/adr_0010_skills_integration.md](specs_and_roadmaps/adr_0010_skills_integration.md): ADR-0010 về tích hợp kỹ năng AI.
+- [specs_and_roadmaps/adr_0011_legal_intel_deep_module.md](specs_and_roadmaps/adr_0011_legal_intel_deep_module.md): ADR-0011 về Deep Module hóa gói `ccba-legal-intel`.
+- [specs_and_roadmaps/adr_0012_ccba_ai_pure_gateway.md](specs_and_roadmaps/adr_0012_ccba_ai_pure_gateway.md): ADR-0012 về kiến trúc AI Gateway thuần túy.
+- [specs_and_roadmaps/adr_0013_knowledge_evolution_loop.md](specs_and_roadmaps/adr_0013_knowledge_evolution_loop.md): ADR-0013 về Vòng lặp Tiến hóa Tri thức Knowledge Loop.
+
+---
+
+## 🔬 4. Nghiên Cứu Chuyên Sâu & Phân Tích Upstream (Research & Studies)
+
+- [research_and_studies/codebase_summary.md](research_and_studies/codebase_summary.md): Báo cáo tóm tắt kiến trúc codebase CCBA.
+- [research_and_studies/vibe_coding_sdlc_analysis.md](research_and_studies/vibe_coding_sdlc_analysis.md): Phân tích quy trình phát triển phần mềm theo định hướng AI-first.
+- [research_and_studies/thuvienphapluat_structure_analysis.md](research_and_studies/thuvienphapluat_structure_analysis.md): Phân tích cấu trúc dữ liệu và API của Thư Viện Pháp Luật (TVPL).
+- [research_and_studies/claudekit_architectural_study.md](research_and_studies/claudekit_architectural_study.md): Nghiên cứu kiến trúc framework ClaudeKit.
+- [research_and_studies/claudekit_skills_analysis.md](research_and_studies/claudekit_skills_analysis.md): Khảo sát hệ thống skills của ClaudeKit.
+- [research_and_studies/claudekit_mattpocock_skills_reference.md](research_and_studies/claudekit_mattpocock_skills_reference.md): Tài liệu tham chiếu chi tiết skills của Matt Pocock.
+- [research_and_studies/claudekit_docs_manager_research.md](research_and_studies/claudekit_docs_manager_research.md): Nghiên cứu quản trị tài liệu kỹ thuật.
+- [research_and_studies/claudekit_docs_manager_resolution.md](research_and_studies/claudekit_docs_manager_resolution.md): Biên bản thống nhất giải pháp Docs Manager.
+- [research_and_studies/claudekit_marketing_port_analysis.md](research_and_studies/claudekit_marketing_port_analysis.md): Phân tích module Marketing & Copywriting.
+- [research_and_studies/claudekit_porting_comparison.md](research_and_studies/claudekit_porting_comparison.md): So sánh chi tiết trước và sau khi porting.
+- [research_and_studies/power_platform_skills_comparison.md](research_and_studies/power_platform_skills_comparison.md): Đánh giá tích hợp Microsoft Power Platform.
+- [research_and_studies/research-platform-init-setup-sync.md](research_and_studies/research-platform-init-setup-sync.md): Nghiên cứu cơ chế khởi tạo và đồng bộ Hub-Spoke.
+- [research_and_studies/port_recommendations.md](research_and_studies/port_recommendations.md): Danh mục chi tiết đề xuất porting.
+
+---
+
+## 📋 5. Đặc Tả Kỹ Thuật & Lộ Trình Phát Triển (Specs & Roadmaps)
+
+- [specs_and_roadmaps/agentic_programming_roadmap.md](specs_and_roadmaps/agentic_programming_roadmap.md): Lộ trình phát triển hệ sinh thái lập trình Agentic.
+- [specs_and_roadmaps/auto_dev_loop_spec.md](specs_and_roadmaps/auto_dev_loop_spec.md): Đặc tả vòng lặp phát triển phần mềm tự động (Auto-Dev Loop).
+- [specs_and_roadmaps/legal_sync_pipeline_spec.md](specs_and_roadmaps/legal_sync_pipeline_spec.md): Đặc tả pipeline đồng bộ văn bản pháp luật tự động.
+- [specs_and_roadmaps/marketing_integration_plan.md](specs_and_roadmaps/marketing_integration_plan.md): Kế hoạch tích hợp các công cụ soạn thảo thương mại.
+- [specs_and_roadmaps/spec.md](specs_and_roadmaps/spec.md): Tài liệu đặc tả kỹ thuật chung của hệ thống.
+- [specs/spec-deep-seams-implementation.md](specs/spec-deep-seams-implementation.md): Đặc tả triển khai kiến trúc Deep Seams Monorepo.
+- [specs/spec-safe-execution-sandbox.md](specs/spec-safe-execution-sandbox.md): Đặc tả Safe Execution Sandbox và Process Guards.
+- [specs/spec-system-stability-auto-guardrails.md](specs/spec-system-stability-auto-guardrails.md): Đặc tả hệ thống rào chắn tự động ổn định hệ thống.
+- [specs/spec-test-isolation-and-stability.md](specs/spec-test-isolation-and-stability.md): Đặc tả cô lập và ổn định hóa kiểm thử Pytest.
+- [specs/spec-deepen-tvpl-crawler.md](specs/spec-deepen-tvpl-crawler.md): Đặc tả Deepening module TVPL VIP Crawler.
+- [specs/spec-legal-intel-deep-module.md](specs/spec-legal-intel-deep-module.md): Đặc tả Deep Module cho dịch vụ Pháp điển hóa.
+- [specs/spec-tu-van-phap-luat-tu-dong.md](specs/spec-tu-van-phap-luat-tu-dong.md): Đặc tả tính năng trợ lý tư vấn pháp luật tự động.
+- [specs/spec-wayfinder-cancelled-error.md](specs/spec-wayfinder-cancelled-error.md): Đặc tả khắc phục lỗi timeout/cancel trong Wayfinder.
+
+---
+
+## 📊 6. Báo Cáo Kiểm Định, Chất Lượng & Đánh Giá (Audits & Reports)
+
+- [shallow_modules_audit.md](shallow_modules_audit.md): Báo cáo rà soát và đánh giá các module nông (Shallow Modules) trong toàn bộ codebase.
+- [reports/ccba_docs_evaluation_report.md](reports/ccba_docs_evaluation_report.md): Báo cáo đánh giá chất lượng hệ thống tài liệu CCBA.
+- [reports/drawing_comprehension_report.md](reports/drawing_comprehension_report.md): Báo cáo năng lực hiểu bản vẽ kỹ thuật của AI Vision.
+- [reports/qwen_evaluation_report.md](reports/qwen_evaluation_report.md): Báo cáo benchmark các model dòng Qwen trên hạ tầng Spark.
+- [reports/qwen_ntp_eval_report.md](reports/qwen_ntp_eval_report.md): Báo cáo đánh giá hiệu năng tiếp nhận tác vụ nghiệp vụ của Qwen.
+- [reports/session_retrospective_2026-04-15.md](reports/session_retrospective_2026-04-15.md): Báo cáo tổng kết phiên làm việc định kỳ.
+- [brainstorm_session_software_micro_agent.md](brainstorm_session_software_micro_agent.md): Biên bản thảo luận ý tưởng Micro-Agent phần mềm.
+- [brainstorm_session_tvpl_vip_knowledge_pipeline.md](brainstorm_session_tvpl_vip_knowledge_pipeline.md): Biên bản thảo luận pipeline tri thức TVPL VIP.
+- [brainstorm_skills_eval_legal_guardrails.md](brainstorm_skills_eval_legal_guardrails.md): Biên bản thảo luận rào chắn an toàn cho Legal Skills.
+
+---
+
+## 🛠️ 7. Vận Hành, Cài Đặt & Kết Nối Hệ Thống (Operations & Setup)
+
+- [client-setup-guide.md](client-setup-guide.md): Hướng dẫn chi tiết thiết lập môi trường trạm làm việc cho Kỹ sư mới.
+- [remote-access.md](remote-access.md): Hướng dẫn cấu hình VPN Tailscale và truy cập hạ tầng GPU Server Spark.
+
+---
+
+## 🗄️ 8. Không Gian Vấn Đề Kỹ Thuật (Feature Issues & Trackers)
+
+- Toàn bộ tài liệu chi tiết của từng bài toán kỹ thuật được quản lý tập trung tại [issues/](issues/):
+  - [issues/5-layer-eval-legal-framework/map.md](issues/5-layer-eval-legal-framework/map.md)
+  - [issues/safe-execution-sandbox/map.md](issues/safe-execution-sandbox/map.md)
+  - [issues/pydantic-pure-domain-services/map.md](issues/pydantic-pure-domain-services/map.md)
+  - [issues/prevent-agent-cancellation/map.md](issues/prevent-agent-cancellation/map.md)
+  - [issues/ccba-ai-sdk-enhancements/map.md](issues/ccba-ai-sdk-enhancements/map.md)
+  - [issues/triage-infrastructure/map.md](issues/triage-infrastructure/map.md)
+  - Và các thư mục issue chuyên đề khác.

@@ -7,7 +7,7 @@ bundle: _software
 ---
 # 🛡️ Kỹ năng: eval-gate (Tự kiểm chứng & Sửa lỗi)
 
-Kỹ năng này bọc script `scripts/run_harness_evals.py` và chịu trách nhiệm bảo vệ codebase khỏi các lỗi cú pháp, kiểu dữ liệu, test cases thất bại hoặc tài liệu bị ảo ảnh.
+Kỹ năng này bọc script [`scripts/eval/run_harness_evals.py`](../../../scripts/eval/run_harness_evals.py), tích hợp framework [`ccba_harness.evals`](../../../packages/ccba-harness/AGENTS.md) và chịu trách nhiệm bảo vệ codebase khỏi các lỗi cú pháp, kiểu dữ liệu, test cases thất bại, phá vỡ hợp đồng Seam, hoặc tài liệu bị ảo ảnh.
 
 ---
 
@@ -17,10 +17,13 @@ Kỹ năng này bọc script `scripts/run_harness_evals.py` và chịu trách nh
 Kích hoạt chạy script điều phối chính ngầm qua Wrapper an toàn với `WaitMsBeforeAsync: 1000`:
 ```bash
 # Kích hoạt CI Gates toàn bộ qua Safe Execution Sandbox Wrapper:
-.venv\Scripts\python.exe scripts/run_safe_eval_wrapper.py --cmd ".venv\Scripts\python.exe scripts/run_harness_evals.py" --timeout 90
+python scripts/eval/run_safe_eval_wrapper.py --cmd ".venv\Scripts\python.exe scripts/eval/run_harness_evals.py" --timeout 90
 
 # KHOANH VÙNG TEST (Scoped Test Execution): Chạy file test cụ thể bằng Wrapper an toàn
-python scripts/safe_pytest.py -f tests/test_agent_execution_guardrails.py
+python scripts/safe_pytest.py -f scripts/tests/test_wiki_health_linter.py
+
+# Khai phá lỗi từ production log và tự động sinh test cases (Eval Flywheel)
+python scripts/eval/log_eval_miner.py --skill [tên-skill] --auto-inject
 
 # Tự động tối ưu hóa SKILL.md với Skill Auto-Tuner (SkillOpt loop)
 python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3

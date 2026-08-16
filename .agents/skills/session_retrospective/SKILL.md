@@ -29,10 +29,12 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   * **Độ Chuẩn xác Định danh (Naming Precision):** Đặt tên Core Patterns / Anti-Patterns phản ánh đúng bản chất kỹ thuật (ví dụ: *Embedded Domain Logic* thay vì *Undocumented Domain Logic*).
 - **Tiêu chí hoàn thành:** Lập danh sách tri thức mới kèm dẫn chứng cụ thể từ codebase (tên class, tên module, mã lỗi) và phân loại chuẩn vào đúng Trụ Cột.
 
-### 2. Cập nhật Knowledge Base Hệ thống
+### 2. Cập nhật Knowledge Base Hệ thống & Mutation Log
 - Ghi nhận các Core Patterns (P) và Anti-Patterns (AP) mới vào [`.md/knowledge/session_learnings.md`](../../../.md/knowledge/session_learnings.md).
+- Ghi nhận nhật ký dòng thời gian vào [`.md/knowledge/log.md`](../../../.md/knowledge/log.md) theo chuẩn `## [YYYY-MM-DD] [operation] | Title` nếu phiên làm việc có nạp/sửa đổi/ban hành tài liệu mới.
+- Cập nhật mục lục danh mục [`.md/knowledge/index.md`](../../../.md/knowledge/index.md) nếu có thêm tệp tài liệu mới.
 - Giữ nguyên cấu trúc phân loại theo Trụ Cột, sử dụng đúng bộ từ vựng thiết kế Deep Modules (`/codebase-design`).
-- **Tiêu chí hoàn thành:** Tệp `session_learnings.md` được cập nhật gọn gàng, định dạng Markdown chuẩn, không làm hỏng mục lục.
+- **Tiêu chí hoàn thành:** Tệp `session_learnings.md` và `log.md` được cập nhật gọn gàng, định dạng Markdown chuẩn, không tạo orphan notes.
 
 ### 3. Tiến hóa Kỹ năng Trực tiếp (Direct Skill Evolution Loop)
 - **Nguyên tắc "Học đi đôi với Hành":** Không dừng lại ở việc ghi nhận thụ động vào `session_learnings.md`. Nếu bài học ở Bước 2 chỉ ra một quy trình trong `SKILL.md` (như `improve-codebase-architecture`, `code-review`, `tvpl-vip-crawler`...) còn thiếu rào chắn hoặc gây sai lệch:
@@ -43,21 +45,25 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
 - **Tiêu chí hoàn thành:** Danh sách đề xuất được hiển thị cho người dùng; các `SKILL.md` được người dùng phê duyệt đã được cập nhật hoàn chỉnh và nhất quán.
 
 ### 4. Rào chắn Kiểm định Quản trị & Đồng bộ (Governance & Drift Gate)
-Trước khi kết thúc phiên, Agent **bắt buộc** phải chạy bộ 3 lệnh kiểm tra tự động:
+Trước khi kết thúc phiên, Agent **bắt buộc** phải chạy bộ 4 lệnh kiểm tra tự động:
 1. **Kiểm tra tính hợp lệ của Skills:**
    ```bash
    python scripts/validate_skills.py
    ```
-2. **Kiểm tra Tài liệu, Biến môi trường & Architecture Drift:**
+2. **Kiểm tra Sức khỏe LLM-Wiki Knowledge Hub:**
+   ```bash
+   python scripts/governance/wiki_health_linter.py
+   ```
+3. **Kiểm tra Tài liệu, Biến môi trường & Architecture Drift:**
    ```bash
    python scripts/validate_docs.py
    ```
    *Nếu phát hiện cảnh báo Structural Drift hoặc thiếu biến môi trường, Agent phải cập nhật ngay `README.md`, `PLATFORM.md`, và `.env.example` trước khi tiếp tục.*
-3. **Kiểm tra Test Suite cục bộ:**
+4. **Kiểm tra Test Suite cục bộ:**
    ```bash
    pytest -m "not slow" tests/
    ```
-- **Tiêu chí hoàn thành:** Cả 3 lệnh kiểm định đều chạy thành công (Exit code 0). Lưu ý: `validate_docs.py` có thể trả về Exit code 0 kèm cảnh báo `[WARN]` (ví dụ: code refs trong ADR chưa triển khai) — đây là chấp nhận được. Chỉ khi Exit code 1 (`[ERROR]` — hard errors như architecture drift hoặc broken links) mới phải sửa trước khi tiếp tục.
+- **Tiêu chí hoàn thành:** Cả 4 lệnh kiểm định đều chạy thành công (Exit code 0). Lưu ý: `validate_docs.py` có thể trả về Exit code 0 kèm cảnh báo `[WARN]` (ví dụ: code refs trong ADR chưa triển khai) — đây là chấp nhận được. Chỉ khi Exit code 1 (`[ERROR]` — hard errors như architecture drift hoặc broken links) mới phải sửa trước khi tiếp tục.
 
 ### 5. Dọn dẹp Workspace & Trạng thái Git Sạch sẽ
 - **Dọn dẹp tệp tạm:** Xóa bỏ các file debug nháp, log tạm, hoặc script một lần trong `.md/scratch/` không có giá trị lưu trữ lâu dài.
