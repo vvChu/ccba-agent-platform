@@ -45,7 +45,6 @@ class RatchetConfig:
     skill_name: str = ""
     full_sweep: bool = False
 
-
     @classmethod
     def from_markdown_program(cls, program_path: Path, root: Path = project_root) -> RatchetConfig:
         """Parses a program.md specification file."""
@@ -181,7 +180,6 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
         ]
 
-
     return [RegexScorer(pattern=r"(xử lý|hướng dẫn|thực hiện|quy định)", weight=1.0)]
 
 
@@ -200,7 +198,6 @@ class GitRatchetTuner:
         self.dry_run_git = dry_run_git
         self.runner = EvalRunner(default_pass_threshold=config.target_score)
         self.dataset: list[EvalItem] = self._load_dataset()
-
 
     def _load_dataset(self) -> list[EvalItem]:
         """Loads evaluation dataset from JSON or creates synthetic items."""
@@ -262,7 +259,9 @@ class GitRatchetTuner:
             # Check if prompt content has legal guidance and hard floor guardrails
             has_legal_grounding = "Nghị định" in content or "Luật" in content or "VBHN" in content
             has_xml = "<legal_" in content or "XML" in content
-            has_guardrail = "105/2025" in content or "Hard Floor" in content or "bị thay thế" in content
+            has_guardrail = (
+                "105/2025" in content or "Hard Floor" in content or "bị thay thế" in content
+            )
 
             parts = []
             if has_xml:
@@ -277,7 +276,9 @@ class GitRatchetTuner:
                         "Lưu ý quan trọng: Nghị định 136/2020/NĐ-CP đã hết hiệu lực và được thay thế toàn diện bởi Nghị định 105/2025/NĐ-CP. Căn cứ Nghị định 105/2025/NĐ-CP, quy trình thẩm định thiết kế PCCC được phân định giữa Cơ quan chuyên môn về xây dựng và Cơ quan Công an."
                     )
                 else:
-                    return "Căn cứ Nghị định 136/2020/NĐ-CP hướng dẫn Luật PCCC, danh mục hồ sơ gồm..."
+                    return (
+                        "Căn cứ Nghị định 136/2020/NĐ-CP hướng dẫn Luật PCCC, danh mục hồ sơ gồm..."
+                    )
 
             # 2. Redteam Trap 2: Outdated Standard QCVN 06:2020
             elif "06:2020" in prompt:
@@ -336,7 +337,9 @@ class GitRatchetTuner:
                         "Từ chối chấp thuận đề xuất Bậc II. Căn cứ QCVN 06:2022/BXD Bảng H.1, nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I. Yêu cầu chủ đầu tư và tư vấn điều chỉnh giải pháp kết cấu."
                     )
                 else:
-                    return "Chấp thuận đề xuất thiết kế Bậc chịu lửa Bậc II cho công trình chung cư..."
+                    return (
+                        "Chấp thuận đề xuất thiết kế Bậc chịu lửa Bậc II cho công trình chung cư..."
+                    )
 
             # PCCC Trap 2: Smoke control corridor 25m
             elif "25m" in prompt and "hút khói" in prompt:
@@ -381,7 +384,9 @@ class GitRatchetTuner:
                         "Kết luận không hợp lệ và từ chối xác nhận. Căn cứ QCVN 06:2022/BXD Điều 2.5 và Phụ lục D, ống gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và đoạn ống xuyên phải được bọc cách nhiệt đạt giới hạn chịu lửa EI tương ứng."
                     )
                 else:
-                    return "Xác nhận giải pháp ống dẫn gió tôn mạ kẽm 0.8mm không lắp van ngăn cháy..."
+                    return (
+                        "Xác nhận giải pháp ống dẫn gió tôn mạ kẽm 0.8mm không lắp van ngăn cháy..."
+                    )
 
             # --- Academic Writing Domain Tasks ---
             has_academic_grounding = "IMRAD" in content or "CARS" in content or "Yale" in content
@@ -443,8 +448,6 @@ class GitRatchetTuner:
                 else:
                     return "Tài liệu tham khảo chung: Swales 1990, Kallestinova 2011."
 
-
-
             elif "Nghị định 30" in prompt:
                 parts.append(
                     "Căn cứ Nghị định 30/2020/NĐ-CP về công tác văn thư, Điều 8 và Điều 10 quy định thể thức văn bản hành chính."
@@ -455,7 +458,7 @@ class GitRatchetTuner:
                 )
             elif has_legal_grounding:
                 parts.append(
-                    f"Theo quy định tại Luật Xây dựng năm 2025 và các văn bản quy phạm pháp luật hướng dẫn (Nghị định, Thông tư VBHN liên quan), yêu cầu được thực thi theo Điều khoản tương ứng."
+                    "Theo quy định tại Luật Xây dựng năm 2025 và các văn bản quy phạm pháp luật hướng dẫn (Nghị định, Thông tư VBHN liên quan), yêu cầu được thực thi theo Điều khoản tương ứng."
                 )
             else:
                 parts.append(f"Xử lý và thực hiện theo nội dung {content[:60]}...")
@@ -469,8 +472,6 @@ class GitRatchetTuner:
                 )
 
             return "\n\n".join(parts)
-
-
 
         return self.runner.run_sync(
             dataset=self.dataset,
@@ -569,7 +570,6 @@ class GitRatchetTuner:
                 ),
             ]
 
-
         strategy_idx = (iteration - 1) % len(strategies)
         _name, enhancement = strategies[strategy_idx]
 
@@ -583,7 +583,6 @@ class GitRatchetTuner:
             mutated = current_content.strip() + enhancement
 
         return self.preserve_yaml_frontmatter(current_content, mutated)
-
 
     def git_commit_improvement(self, score_diff: str) -> bool:
         """Commits target file change to Git repository."""
@@ -754,7 +753,6 @@ def main() -> int:
 
     tuner = GitRatchetTuner(config, dry_run_git=args.dry_run_git)
     report = tuner.run()
-
 
     print("\n" + "=" * 60)
     print("🏆 BÁO CÁO TỔNG KẾT GIT-RATCHET AUTO-TUNING")
