@@ -1,4 +1,4 @@
-"""Script to execute Ticket 02: Migrating and restructuring OKF Bundles into Knowledge Spoke."""
+"""Script to execute Ticket 02: Migrating and restructuring OKF Bundles into Knowledge Spoke (Archived)."""
 
 import shutil
 import sys

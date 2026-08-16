@@ -65,7 +65,7 @@ from .vbhn_engine import MergedLegalDocument, VBHNEngine
 from .vbhn_merger import VBHNMerger
 
 __all__ = [
-    # === Deep Seams (Advertised Public Interface) ===
+    # === Core Deep Seams (Public Interface) ===
     "LegalIntelPipeline",
     "LegalProcessor",
     "LegalProcessResult",
@@ -74,41 +74,23 @@ __all__ = [
     "LegalGroundingGate",
     "OKFBundlePackager",
     "AppendixSplitter",
-    "Cleaners",
     "ASTParser",
-    "ASTNode",
-    "PatchAction",
-    "DeltaPatchItem",
-    "DeltaPatch",
-    "DeltaPatchGenerator",
-    "VBHNMerger",
     "VBHNEngine",
+    "VBHNMerger",
+    "Cleaners",
+    # === Core DTOs & Domain Models ===
+    "ASTNode",
+    "DeltaPatch",
+    "DeltaPatchItem",
+    "PatchAction",
     "MergedLegalDocument",
-    "TVPLCrawler",
-    "TVPLCrawlerEngine",
-    "TVPLVIPCrawler",
-    "LegalAnalysisEngine",
-    "OKFStructureProcessor",
-    # === Domain Helper Seams ===
+    # === Essential Public Helpers & Guards ===
     "verify_legal_grounding",
     "format_grounded_response",
     "format_citation",
-    "search_legal_registry",
     "load_legal_registry",
-    "roman_to_decimal",
-    "LEGAL_DISCLAIMER",
-    "generate_legal_document",
-    "SUPPORTED_DOC_TYPES",
-    "ND30_HEADER",
-    "convert_docx_table_to_markdown",
-    "extract_docx_with_tables",
-    "convert_markdown_to_docx",
-    # === Infrastructure & Cross-Package Facilities ===
+    "search_legal_registry",
     "TVPLSessionMutex",
-    "MockChromeCDP",
     "CookieVault",
-    "TokenMonitor",
-    "ensure_chrome_cdp_port",
-    "calculate_md5",
-    "calculate_sha256",
+    "LEGAL_DISCLAIMER",
 ]

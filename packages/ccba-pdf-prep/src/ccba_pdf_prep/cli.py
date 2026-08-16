@@ -54,7 +54,7 @@ def analyze(
     detail: bool = typer.Option(False, "--detail", "-d", help="Show per-page details."),
 ) -> None:
     """Analyze PDF files and recommend optimal processing strategy."""
-    from ccba_pdf_prep import PDFAnalyzer
+    from .core import PDFAnalyzer
 
     analyzer = PDFAnalyzer()
     pdf_files = _collect_pdfs(path, recursive)
@@ -92,7 +92,7 @@ def tile(
     overlap: int = typer.Option(0, "--overlap", help="Overlap between tiles in pixels."),
 ) -> None:
     """Slice a PDF page into high-resolution tiles for AI Vision."""
-    from ccba_pdf_prep.vision import VisionOptimizer
+    from .vision import VisionOptimizer
 
     out = output_dir or (pdf_path.parent / "tiles")
     console.print(f"[bold]Tiling[/bold] {pdf_path.name} page {page + 1} at {dpi} DPI...")
@@ -125,7 +125,7 @@ def split(
     """Split a large PDF into smaller chunks."""
     import fitz
 
-    from ccba_pdf_prep import get_blind_chunks, split_pdf
+    from .core import get_blind_chunks, split_pdf
 
     doc = fitz.open(str(pdf_path))
     total_pages = len(doc)

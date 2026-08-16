@@ -3,7 +3,7 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from mdconverter.core.table_reconstructor import TableReconstructor
+from mdconverter.core.appendix_extractor import AppendixExtractor
 
 console = Console()
 
@@ -27,8 +27,8 @@ def process_table(
     """Reconstruct broken markdown tables from original Word document."""
     console.print(f"[bold blue]Processing table for:[/bold blue] {file.name}")
 
-    reconstructor = TableReconstructor()
-    success = reconstructor.reconstruct_table(file, docx)
+    reconstructor = AppendixExtractor()
+    success = reconstructor.extract_appendix(file, docx)
 
     if success:
         console.print("[bold green]Success:[/bold green] Reconstructed table successfully!")
