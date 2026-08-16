@@ -60,6 +60,24 @@ class DependencyASTVisitor(ast.NodeVisitor):
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         if node.module:
             self._check_module_import(node.module, node.lineno)
+            # Also check imported member names for private member/submodule access (e.g., from pkg import _private)
+            root_mod = node.module.split(".")[0]
+            if root_mod in MONOREPO_ROOT_MODULES and root_mod != self.current_package:
+                for alias in node.names:
+                    if alias.name.startswith("_") and not alias.name.startswith("__"):
+                        self.violations.append(
+                            ImportViolation(
+                                file_path=self.current_file,
+                                line_number=node.lineno,
+                                imported_module=f"{node.module}.{alias.name}",
+                                rule_name="PrivateSubmoduleSeamViolation",
+                                message=(
+                                    f"Package '{self.current_package or 'external'}' cannot import private "
+                                    f"symbol '{alias.name}' from '{node.module}'. "
+                                    f"Must import from '{root_mod}' public seam."
+                                ),
+                            )
+                        )
         self.generic_visit(node)
 
     def _check_module_import(self, module_name: str, line_number: int) -> None:
@@ -135,9 +153,16 @@ def scan_file_for_violations(file_path: Path, packages_dir: Path) -> list[Import
     try:
         content = file_path.read_text(encoding="utf-8")
         tree = ast.parse(content, filename=str(file_path))
-    except Exception:
-        # If file cannot be parsed, skip
-        return []
+    except Exception as exc:
+        return [
+            ImportViolation(
+                file_path=file_path,
+                line_number=1,
+                imported_module=str(file_path),
+                rule_name="SyntaxOrEncodingError",
+                message=f"Failed to read or parse Python file: {exc}",
+            )
+        ]
 
     visitor = DependencyASTVisitor(current_package=pkg, current_file=file_path)
     visitor.visit(tree)

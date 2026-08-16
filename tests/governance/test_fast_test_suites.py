@@ -20,7 +20,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from scripts.eval.run_isolated_tests import discover_test_targets, run_isolated_test
 
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.slow, pytest.mark.integration]
 
 
 def test_discover_test_targets_includes_all_packages() -> None:

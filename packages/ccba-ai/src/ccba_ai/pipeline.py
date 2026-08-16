@@ -114,17 +114,19 @@ class QCAuditPipeline:
         output_dir: Path | str | None = None,
         disciplines: list[str] | None = None,
     ) -> AuditReportSummary:
-        """Synchronously run full QC audit."""
+        """Synchronously run full QC audit.
+
+        Raises RuntimeError if an asyncio event loop is already running.
+        Use 'await pipeline.run_audit(...)' directly instead.
+        """
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
             loop = None
 
         if loop and loop.is_running():
-            import concurrent.futures
-
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-                return pool.submit(
-                    asyncio.run, self.run_audit(project_dir, output_dir, disciplines)
-                ).result()
+            raise RuntimeError(
+                "QCAuditPipeline.run_audit_sync() cannot be called from within a running event loop. "
+                "Please use 'await pipeline.run_audit(...)' directly."
+            )
         return asyncio.run(self.run_audit(project_dir, output_dir, disciplines))

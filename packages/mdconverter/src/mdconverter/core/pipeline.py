@@ -142,6 +142,11 @@ class ConversionPipeline:
         """Synchronously convert a single file with caching and post-processing.
 
         Convenience wrapper around async ``process_file`` for synchronous callers.
+
+        Note:
+            If called from within an existing event loop, raises RuntimeError to prevent
+            asyncio concurrency/semaphore binding issues. Callers in async contexts
+            should use ``await pipeline.process_file(file)`` directly.
         """
         path = Path(file)
         try:
@@ -150,10 +155,10 @@ class ConversionPipeline:
             loop = None
 
         if loop and loop.is_running():
-            import concurrent.futures
-
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-                return pool.submit(asyncio.run, self.process_file(path)).result()
+            raise RuntimeError(
+                "ConversionPipeline.convert() cannot be called from within a running event loop. "
+                "Please use 'await pipeline.process_file(file)' directly."
+            )
         return asyncio.run(self.process_file(path))
 
     async def process_file(self, file: Path) -> ConversionResult:
