@@ -56,20 +56,28 @@ Agent duy trì cấu trúc **Thư mục Ngang Hàng (Sibling Directory)** tại 
 BASE_DIR="$HOME/ccba"
 mkdir -p "$BASE_DIR" && cd "$BASE_DIR"
 
-# 1. Clone / Pull Hub
+# 1. Clone / Pull Hub (ccba-agent-platform)
 if [ -d "$BASE_DIR/ccba-agent-platform/.git" ]; then
     cd "$BASE_DIR/ccba-agent-platform" && git pull origin main
 else
     git clone https://github.com/vvChu/ccba-agent-platform.git "$BASE_DIR/ccba-agent-platform"
 fi
 
-# 2. Clone / Pull Knowledge Spoke
+# 2. Clone / Pull Knowledge Spoke (ccba-legal-knowledge)
 if [ -d "$BASE_DIR/ccba-legal-knowledge/.git" ]; then
     cd "$BASE_DIR/ccba-legal-knowledge" && git pull origin main
 else
     git clone https://github.com/vvChu/ccba-legal-knowledge.git "$BASE_DIR/ccba-legal-knowledge"
 fi
+
+# 3. Clone / Pull Enterprise Governance Spoke (IDOP-CCBA-WAY)
+if [ -d "$BASE_DIR/IDOP-CCBA-WAY/.git" ]; then
+    cd "$BASE_DIR/IDOP-CCBA-WAY" && git pull origin main
+else
+    git clone https://github.com/vvChu/IDOP-CCBA-WAY.git "$BASE_DIR/IDOP-CCBA-WAY"
+fi
 ```
+
 
 ---
 
