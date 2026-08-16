@@ -114,8 +114,11 @@ class TVPLCrawler:
     def fetch_document(
         self, doc_url_or_id: str, download_attachments: bool = True
     ) -> dict[str, Any]:
-        """Fetch full legal document metadata, content, and attachments."""
-        return self.engine.fetch_doc(doc_url_or_id)
+        """Fetch full legal document metadata, content, and optionally attachments."""
+        doc = self.engine.fetch_doc(doc_url_or_id)
+        if not download_attachments and isinstance(doc, dict):
+            return {k: v for k, v in doc.items() if k != "attachments"}
+        return doc
 
     def search(self, query: str, max_results: int = 10) -> list[dict[str, Any]]:
         """Search legal documents on TVPL."""
