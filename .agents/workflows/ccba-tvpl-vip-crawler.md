@@ -1,5 +1,5 @@
 ---
-description: Quy trình thực thi cào dữ liệu văn bản pháp luật VIP từ Thư viện Pháp luật (TVPL)
+description: Quy trình thực thi cào dữ liệu văn bản pháp luật VIP từ Thư viện Pháp luật (TVPL) qua Deep Seam TVPLCrawler
 ---
 
 # Quy trình thực thi Slash Command `/ccba-tvpl-vip-crawler`
@@ -13,13 +13,13 @@ Agent tiếp nhận lệnh bắt buộc phải thực thi theo các bước sau:
    - Đọc hướng dẫn tại [SKILL.md](../skills/tvpl-vip-crawler/SKILL.md).
    - Xác nhận tài khoản VIP `TVPL_USERNAME` và `TVPL_PASSWORD` sẵn sàng tại `.env`.
 
-2. **Kích hoạt Script Cào VIP Trực tiếp**:
-   - Thực thi lệnh cào tự động:
+2. **Kích hoạt Deep Seam TVPLCrawler Trực tiếp**:
+   - Thực thi lệnh cào tự động qua Facade:
      ```bash
-     python scripts/tvpl_vip_crawler.py "<đường-dẫn-url-hoặc-tên-văn-bản-tvpl>"
+     python scripts/legal/tvpl_vip_crawler.py "<đường-dẫn-url-hoặc-tên-văn-bản-tvpl>"
      ```
 
-3. **Cấu trúc hóa OKF Bundle & Đồng bộ Google Drive**:
+3. **Cấu trúc hóa OKF Bundle & Kiểm tra Kết quả**:
    - Kiểm tra kết quả đóng gói tại `.md/legal_docs/<slug>/`.
    - Báo cáo kết quả đóng gói thành công bao gồm các tệp `metadata.yaml`, `concept.md`, `index.md`.
 
