@@ -262,3 +262,24 @@ Quy tắc linter tự động cấm tạo các file `SKILL.md` trùng tên hoặ
 - **Deep Seams** = Chuyên gia nội bộ — mỗi package/module đóng vai trò một chuyên gia đầu ngành, ẩn giấu toàn bộ sự phức tạp nghiệp vụ đằng sau một giao diện đơn giản duy nhất.
 - **Skill Factory (`/ccba-build-skill`)** = Dây chuyền R&D nhượng quyền — tự động đóng gói các công thức nấu ăn / quy trình nghiệp vụ mới thành sổ tay chuẩn (Skill) phân phối cho toàn mạng lưới.
 
+---
+
+## Spoke Archetypes Taxonomy (Phân Loại Vai Trò Spokes — ADR 0041)
+
+1. **Platform Hub (`platform_hub`)**:
+   Tổng hành dinh công nghệ, lưu trữ 73+ Skills/Workflows, Deep Seam Packages Python, hệ thống Auto-Tuner và Quality Gates (`ccba-agent-platform`).
+
+2. **Enterprise Governance Spoke (`enterprise_governance`)**:
+   Hệ điều hành doanh nghiệp & Quản trị nội bộ ("The CCBA Way"): Quy chế QCTK 2815, Phân bổ dòng tiền 3 tầng, Phiếu giao việc PGV, 15 Vai trò chuẩn hóa, 58 SharePoint lists (`IDOP-CCBA-WAY`).
+
+3. **Knowledge Corpus Spoke (`knowledge_corpus`)**:
+   Kho lưu trữ chuẩn quốc gia về Văn bản quy phạm pháp luật, Quy chuẩn PCCC, Tiêu chuẩn Xây dựng theo định dạng OKF v2.0 Bundle (`ccba-legal-knowledge`).
+
+4. **Project Delivery Spoke (`project_delivery`)**:
+   Hiện trường triển khai công trình thực tế: Hồ sơ thiết kế, Bản vẽ BIM, Báo cáo Thẩm tra PCCC, Danh mục hồ sơ hoàn công (`2026-04 DH Viet Nhat`).
+
+5. **Specialized Extension Spokes (Khung Mở Rộng Tương Lai)**:
+   - `research_lab`: Không gian R&D thuật toán chuyên sâu, mô phỏng kết cấu và bài báo khoa học.
+   - `tooling_plugin`: Kho phát triển Add-in/Plugin cho Revit, AutoCAD, Rhino/Grasshopper.
+   - `client_portal`: Cổng giao tiếp Extranet phục vụ Chủ đầu tư tra cứu báo cáo thẩm tra trực tiếp.
+
