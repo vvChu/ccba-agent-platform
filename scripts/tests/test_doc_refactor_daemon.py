@@ -6,8 +6,9 @@ and dry-run orchestration.
 
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from scripts.eval.doc_refactor_daemon import (
     CodeGroundingEngine,
@@ -37,14 +38,18 @@ class TestDocRefactorDaemon:
 
         # Verify presence of real symbols
         fake_symbol = "NonExistent" + "FakeSymbol" + "_999"
-        verified, missing = grounding_engine.verify_symbols(["DocAutoEvolutionEngine", "ZeroDeletionGuard", fake_symbol])
+        verified, missing = grounding_engine.verify_symbols(
+            ["DocAutoEvolutionEngine", "ZeroDeletionGuard", fake_symbol]
+        )
         assert "DocAutoEvolutionEngine" in verified
         assert "ZeroDeletionGuard" in verified
         assert fake_symbol in missing
 
     def test_code_grounding_file_verification(self, grounding_engine: CodeGroundingEngine) -> None:
         """Verifies file existence checking in grounding engine."""
-        verified, missing = grounding_engine.verify_files(["doc_refactor_daemon.py", "non_existent_file_abc.py"])
+        verified, missing = grounding_engine.verify_files(
+            ["doc_refactor_daemon.py", "non_existent_file_abc.py"]
+        )
         assert "doc_refactor_daemon.py" in verified
         assert "non_existent_file_abc.py" in missing
 
@@ -84,7 +89,9 @@ class TestDocRefactorDaemon:
 
     def test_pillar_balance_auditor_bloat_detection(self) -> None:
         """Verifies that pillars exceeding max_patterns are flagged as bloated."""
-        bloated_text = "\n## 1. Pillar One\n" + "\n".join([f"#### P1.{i}. Pattern {i}" for i in range(1, 18)])
+        bloated_text = "\n## 1. Pillar One\n" + "\n".join(
+            [f"#### P1.{i}. Pattern {i}" for i in range(1, 18)]
+        )
         results = PillarBalanceAuditor.audit_pillars(bloated_text, max_patterns=15)
 
         assert len(results) == 1
@@ -100,7 +107,9 @@ class TestDocRefactorDaemon:
 
         assert len(results) == 8  # 8 Pillars
         for p in results:
-            assert p.is_bloated is False, f"Pillar {p.pillar_index} ({p.pillar_title}) is unexpectedly bloated: {p.pattern_count}"
+            assert p.is_bloated is False, (
+                f"Pillar {p.pillar_index} ({p.pillar_title}) is unexpectedly bloated: {p.pattern_count}"
+            )
 
     def test_doc_auto_evolution_engine_dry_run(self, project_root: Path) -> None:
         """Verifies that run_nightly_evolution runs cleanly in dry-run mode."""

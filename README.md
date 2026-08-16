@@ -56,7 +56,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   │   ├── completion-checklist/      ←   Quản lý HSHT công trình
 │   │   ├── ccba-ai-qc-pccc-audit/     ←   Thẩm tra thiết kế PCCC AI
 │   │   ├── codebase-design/           ←   Nguyên lý thiết kế Deep Modules
-│   │   └── ...                        ←   Và 78+ kỹ năng chuyên dụng khác
+│   │   └── ...                        ←   Và 70+ kỹ năng chuyên dụng khác
 │   ├── workflows/                     ← Automated workflows (<!-- WORKFLOW_COUNT_START -->60<!-- WORKFLOW_COUNT_END --> workflows)
 │   └── templates/                     ← Biểu mẫu hành chính & kỹ thuật dùng chung
 ├── .md/                               ← Central Knowledge Base

@@ -91,9 +91,6 @@ class AppendixExtractor:
 
         return True
 
-    # Alias for backward compatibility
-    reconstruct_table = extract_appendix
-
     def _get_frontmatter(self, md_path: Path) -> str:
         with open(md_path, encoding="utf-8") as f:
             content = f.read()
@@ -162,7 +159,3 @@ class AppendixExtractor:
                     break
 
         return "".join(lines[start_idx:end_idx])
-
-
-# Alias for backward compatibility
-TableReconstructor = AppendixExtractor

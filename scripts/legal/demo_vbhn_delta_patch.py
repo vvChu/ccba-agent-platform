@@ -12,7 +12,9 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # Add package root to sys.path
 
-package_root = Path(__file__).resolve().parent.parent.parent / "packages" / "ccba-legal-intel" / "src"
+package_root = (
+    Path(__file__).resolve().parent.parent.parent / "packages" / "ccba-legal-intel" / "src"
+)
 if str(package_root) not in sys.path:
     sys.path.insert(0, str(package_root))
 
@@ -55,7 +57,7 @@ Nghị định này quy định chi tiết một số nội dung về quản lý
 """
 
     print("\n📄 1. NẠP VĂN BẢN GỐC (Base Document: Nghị định 06/2021/NĐ-CP)")
-    print(f"- Tổng số điều/khoản gốc: 5 Điều")
+    print("- Tổng số điều/khoản gốc: 5 Điều")
 
     # 2. Tạo DeltaPatch đa tầng kết hợp từ NĐ 35/2023, NĐ 175/2024 và NĐ 14/2026
     patch = DeltaPatch(
@@ -101,12 +103,16 @@ Nghị định này quy định chi tiết một số nội dung về quản lý
 
     print("\n🔧 2. TỔNG HỢP DELTA PATCHES:")
     for idx, p in enumerate(patch.patches, 1):
-        print(f"  [{idx}] Hành động: {p.action.value:<12} | Vị trí: {p.node_id:<10} | Nguồn: {p.citation}")
+        print(
+            f"  [{idx}] Hành động: {p.action.value:<12} | Vị trí: {p.node_id:<10} | Nguồn: {p.citation}"
+        )
 
     # 3. Kích hoạt VBHNEngine
-    print("\n⚡ 3. KÍCH HOẠT VBHN ENGINE (AST Parsing -> Delta Patching -> Tree Merge -> Visual Diff)")
+    print(
+        "\n⚡ 3. KÍCH HOẠT VBHN ENGINE (AST Parsing -> Delta Patching -> Tree Merge -> Visual Diff)"
+    )
     engine = VBHNEngine()
-    
+
     out_dir = Path("d:/GitHubProjects/ccba-agent-platform/.md")
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / "VBHN_ND06_2026_demo.md"
@@ -133,7 +139,9 @@ Nghị định này quy định chi tiết một số nội dung về quản lý
     print("📜 TRÍCH ĐOẠN VISUAL DIFF MARKDOWN (Tệp VBHN):")
     print("=" * 70)
     for line in result.content.splitlines():
-        if any(marker in line for marker in ["### Điều", "~~", "BIM", "bãi bỏ", "bổ sung", "Sửa đổi"]):
+        if any(
+            marker in line for marker in ["### Điều", "~~", "BIM", "bãi bỏ", "bổ sung", "Sửa đổi"]
+        ):
             print(f"  {line}")
 
     print("\n✅ THÍ NGHIỆM VBHN DELTA PATCH HOÀN TẤT THÀNH CÔNG!")
