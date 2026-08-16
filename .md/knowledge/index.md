@@ -97,7 +97,8 @@
 
 ## 🗄️ 8. Không Gian Vấn Đề Kỹ Thuật (Feature Issues & Trackers)
 
-- Toàn bộ tài liệu chi tiết của từng bài toán kỹ thuật được quản lý tập trung tại [issues/](issues/):
+  - [issues/doc-auto-evolution/map.md](issues/doc-auto-evolution/map.md): **[MỚI]** Hệ thống Tự Tiến Hóa & Bảo Trì Tài Liệu Tự Động (AST Grounding, Zero-Deletion, Nightly PR & Telegram Alert).
+  - [issues/idop-bridge/map.md](issues/idop-bridge/map.md): Cầu Nối Dữ Liệu Tầng 1 (Dự Án) ↔ Tầng 2 (IDOP CCBA & Viện IBST).
   - [issues/5-layer-eval-legal-framework/map.md](issues/5-layer-eval-legal-framework/map.md)
   - [issues/safe-execution-sandbox/map.md](issues/safe-execution-sandbox/map.md)
   - [issues/pydantic-pure-domain-services/map.md](issues/pydantic-pure-domain-services/map.md)
