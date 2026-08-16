@@ -378,6 +378,11 @@
 * **Nguyên tắc:** Mỗi class, protocol hoặc public seam trong Monorepo phải sở hữu một định danh duy nhất phản ánh chính xác 100% năng lực cốt lõi của nó.
 * **Quy chuẩn:** Tuyệt đối không đặt tên trùng lặp (ví dụ: `TableReconstructor` ở cả `mdconverter` và `ccba-ooxml`) khi bản chất của một bên chỉ là trích xuất phụ lục (`AppendixExtractor`). Việc này triệt tiêu hoàn toàn nguy cơ ô nhiễm ngữ cảnh (Context Poisoning) và giúp AI Agent luôn định vị đúng Deep Seam chuẩn.
 
+#### P6.23. Hard Caller Count Gate & Ground-Truth Architecture Sweeps (Rào Chắn Số Lượng Caller Thực Tế & Quét Kiến Trúc Thực Chiến)
+* **Nguyên tắc:** Khi rà soát mã nguồn để đề xuất các cơ hội làm sâu module (Deepening Opportunities):
+  1. **Đếm Caller Thực Tế Bằng `grep_search`:** Tuyệt đối không suy đoán số caller trên lý thuyết. Nếu một đoạn code chỉ có duy nhất 1 caller (`Callers == 1`), đề xuất bóc tách tạo Seam mới bắt buộc phải bị xếp loại `Speculative / Low ROI` (không được gán `Strong Recommendation`). Chỉ đề xuất Deep Seam mới khi có ít nhất $\ge 2$ callers độc lập thực sự cần dùng.
+  2. **Ưu Tiên Quét Nợ Kỹ Thuật Thực Tế:** Trong các phiên rà soát kiến trúc, ưu tiên quét triệt tiêu các nợ kỹ thuật gây nguy cơ tiềm ẩn cao: Xung đột tên định danh giữa các packages (P6.22), trôi dạt import cục bộ trong submodules, và các script dùng một lần tồn dư trong thư mục vận hành thay vì chỉ tập trung vào việc bóc tách hàm dài.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 
 * **AP6.1. Leaky Interface Exporting 30+ Symbols:** Xuất khẩu toàn bộ hàm con ra `__init__.py` làm rối loạn AI navigation.
