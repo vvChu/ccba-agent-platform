@@ -3,7 +3,11 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
+
 from ccba_legal.formatter import OKFStructureProcessor, inject_warning_block
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_inject_anchors() -> None:

@@ -1,3 +1,4 @@
+import json
 import re
 import shutil
 import time
@@ -392,6 +393,364 @@ No dead ends or crawler restrictions encountered.
             if new_content != content:
                 filepath.write_text(new_content, encoding="utf-8")
                 print(f"[OKF Packager] Standardized links in {filepath}")
+
+    # =========================================================================
+    # OKF Bundle v2.0 (ADR 0038 Specification)
+    # =========================================================================
+
+    REQUIRED_QA_FIELDS = {
+        "question",
+        "answer",
+        "anchor",
+        "citation",
+        "ground_truth_context",
+    }
+
+    def generate_clauses_json(
+        self,
+        content: str,
+        bundle_dir: Path | None = None,
+    ) -> list[dict[str, Any]]:
+        """Parse markdown content into a flat list of AST clause coordinates according to OKF v2.0 (ADR 0038).
+
+        Args:
+            content: Document markdown content.
+            bundle_dir: Optional bundle directory to write clauses.json to.
+
+        Returns:
+            list[dict[str, Any]]: List of clause coordinate objects.
+        """
+        lines = content.splitlines()
+        clauses: list[dict[str, Any]] = []
+
+        current_chapter: dict[str, Any] | None = None
+        current_section: dict[str, Any] | None = None
+        current_article: dict[str, Any] | None = None
+        current_clause: dict[str, Any] | None = None
+
+        chapter_pattern = re.compile(
+            r"^(?:##|#)?\s*(?:<a id=\"[^\"]+\"></a>)?\s*(Chương\s+([0-9IVXLCDM]+)(?:[\.\:]|\s*[-–])?\s*(.*))$",
+            re.IGNORECASE,
+        )
+        section_pattern = re.compile(
+            r"^(?:###|##)?\s*(?:<a id=\"[^\"]+\"></a>)?\s*(Mục\s+(\d+)(?:[\.\:]|\s*[-–])?\s*(.*))$",
+            re.IGNORECASE,
+        )
+        article_pattern = re.compile(
+            r"^(?:###|##|#)?\s*(?:<a id=\"[^\"]+\"></a>)?\s*(Điều\s+(\d+)(?:[\.\:]|\s*[-–])?\s*(.*))$",
+            re.IGNORECASE,
+        )
+        clause_pattern = re.compile(r"^(?:<a id=\"[^\"]+\"></a>)?\s*(\d+)[\.\)]\s*(.*)$")
+        point_pattern = re.compile(
+            r"^(?:<a id=\"[^\"]+\"></a>)?\s*([a-zđĐ])[\.\)]\s*(.*)$",
+            re.IGNORECASE,
+        )
+
+        for idx, line in enumerate(lines):
+            line_num = idx + 1
+            line_str = line.strip()
+            if not line_str:
+                continue
+
+            # Check Chapter
+            chap_match = chapter_pattern.match(line_str)
+            if chap_match:
+                chap_num = chap_match.group(2).lower()
+                chap_title = chap_match.group(1).strip()
+                clause_id = f"chuong-{chap_num}"
+                node = {
+                    "clause_id": clause_id,
+                    "anchor": clause_id,
+                    "node_type": "chapter",
+                    "parent_id": None,
+                    "title": chap_title,
+                    "line_start": line_num,
+                    "line_end": line_num,
+                }
+                if clauses:
+                    clauses[-1]["line_end"] = line_num - 1
+                clauses.append(node)
+                current_chapter = node
+                current_section = None
+                current_article = None
+                current_clause = None
+                continue
+
+            # Check Section (Mục)
+            sec_match = section_pattern.match(line_str)
+            if sec_match:
+                sec_num = sec_match.group(2)
+                sec_title = sec_match.group(1).strip()
+                clause_id = f"muc-{sec_num}"
+                parent_id = current_chapter["clause_id"] if current_chapter else None
+                node = {
+                    "clause_id": clause_id,
+                    "anchor": clause_id,
+                    "node_type": "section",
+                    "parent_id": parent_id,
+                    "title": sec_title,
+                    "line_start": line_num,
+                    "line_end": line_num,
+                }
+                if clauses:
+                    clauses[-1]["line_end"] = line_num - 1
+                clauses.append(node)
+                current_section = node
+                current_article = None
+                current_clause = None
+                continue
+
+            # Check Article (Điều)
+            art_match = article_pattern.match(line_str)
+            if art_match:
+                art_num = art_match.group(2)
+                art_title = art_match.group(1).strip()
+                clause_id = f"dieu-{art_num}"
+                parent_id = (
+                    current_section["clause_id"]
+                    if current_section
+                    else (current_chapter["clause_id"] if current_chapter else None)
+                )
+                node = {
+                    "clause_id": clause_id,
+                    "anchor": clause_id,
+                    "node_type": "article",
+                    "parent_id": parent_id,
+                    "title": art_title,
+                    "line_start": line_num,
+                    "line_end": line_num,
+                }
+                if clauses:
+                    clauses[-1]["line_end"] = line_num - 1
+                clauses.append(node)
+                current_article = node
+                current_clause = None
+                continue
+
+            # Check Clause (Khoản) inside an Article
+            if current_article:
+                cl_match = clause_pattern.match(line_str)
+                if cl_match:
+                    cl_num = cl_match.group(1)
+                    cl_text = line_str
+                    clause_id = f"{current_article['clause_id']}-khoan-{cl_num}"
+                    node = {
+                        "clause_id": clause_id,
+                        "anchor": clause_id,
+                        "node_type": "clause",
+                        "parent_id": current_article["clause_id"],
+                        "title": cl_text,
+                        "line_start": line_num,
+                        "line_end": line_num,
+                    }
+                    if clauses:
+                        clauses[-1]["line_end"] = line_num - 1
+                    clauses.append(node)
+                    current_clause = node
+                    continue
+
+            # Check Point (Điểm) inside a Clause
+            if current_clause and current_article:
+                pt_match = point_pattern.match(line_str)
+                if pt_match:
+                    pt_char = pt_match.group(1).lower()
+                    pt_text = line_str
+                    clause_id = f"{current_clause['clause_id']}-diem-{pt_char}"
+                    node = {
+                        "clause_id": clause_id,
+                        "anchor": clause_id,
+                        "node_type": "point",
+                        "parent_id": current_clause["clause_id"],
+                        "title": pt_text,
+                        "line_start": line_num,
+                        "line_end": line_num,
+                    }
+                    if clauses:
+                        clauses[-1]["line_end"] = line_num - 1
+                    clauses.append(node)
+                    continue
+
+        if clauses:
+            clauses[-1]["line_end"] = len(lines)
+
+        if bundle_dir:
+            out_file = Path(bundle_dir) / "clauses.json"
+            out_file.write_text(
+                json.dumps(clauses, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+
+        return clauses
+
+    def write_qa_benchmark(
+        self,
+        qa_items: list[dict[str, Any]],
+        bundle_dir: Path,
+    ) -> Path:
+        """Write verified 5-field QA benchmark items to qa_benchmark.json according to ADR 0038.
+
+        Args:
+            qa_items: List of ground-truth QA dictionaries.
+            bundle_dir: Path to the OKF bundle directory.
+
+        Returns:
+            Path: Path to the created qa_benchmark.json.
+
+        Raises:
+            ValueError: If any item is missing required fields.
+        """
+        for idx, item in enumerate(qa_items):
+            missing = [f for f in self.REQUIRED_QA_FIELDS if not item.get(f)]
+            if missing:
+                raise ValueError(
+                    f"Invalid QA benchmark item at index {idx}: missing or empty required fields {missing}"
+                )
+
+        dest = Path(bundle_dir) / "qa_benchmark.json"
+        dest.write_text(
+            json.dumps(qa_items, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return dest
+
+    def integrate_tables(
+        self,
+        docx_path: str | Path,
+        bundle_dir: Path,
+    ) -> list[Any]:
+        """Extract and structure tables from a DOCX source into tables/json/ and tables/csv/.
+
+        Args:
+            docx_path: Path to DOCX source file.
+            bundle_dir: Path to the OKF bundle root directory.
+
+        Returns:
+            list: List of extracted StructuredTable objects.
+        """
+        path = Path(docx_path)
+        if not path.exists():
+            return []
+
+        try:
+            from ccba_ooxml import TableReconstructor
+
+            tables = TableReconstructor.extract_docx_tables(path)
+            tables_dir = Path(bundle_dir) / "tables"
+            for t in tables:
+                TableReconstructor.save_table_exports(t, tables_dir)
+            return tables
+        except ImportError:
+            return []
+
+    def package_bundle_v2(
+        self,
+        doc_id: str,
+        content: str,
+        metadata: dict[str, Any],
+        docx_path: str | Path | None = None,
+        qa_items: list[dict[str, Any]] | None = None,
+    ) -> Path:
+        """Create and structure a complete OKF v2.0 bundle conforming to ADR 0038.
+
+        Args:
+            doc_id: Unique document identifier.
+            content: Raw markdown text content.
+            metadata: Metadata dictionary for metadata.yaml.
+            docx_path: Optional path to source docx file for table extraction.
+            qa_items: Optional list of 5-field QA benchmark items.
+
+        Returns:
+            Path: Path to the generated OKF v2.0 bundle directory.
+        """
+        bundle_slug = self.sanitize_slug(doc_id)
+        bundle_dir = self.root_dir / bundle_slug
+        bundle_dir.mkdir(parents=True, exist_ok=True)
+
+        title = metadata.get("title", f"Legal Document {doc_id}")
+        doc_type = metadata.get("type", "vbpl")
+
+        # 1. Write independent metadata.yaml (SSOT)
+        meta_dict = {
+            "doc_id": doc_id,
+            "doc_number": metadata.get("document_number", metadata.get("doc_number", "")),
+            "title": title,
+            "type": doc_type,
+            "category": metadata.get("category", metadata.get("type", "vbpl")),
+            "issuer": metadata.get("issued_by", metadata.get("issuer", "")),
+            "issued_date": metadata.get("issued_date", ""),
+            "effective_date": metadata.get("effective_date", ""),
+            "status": metadata.get("status", "effective"),
+            "source_url": metadata.get("source_url", ""),
+            "sha256": metadata.get("sha256", ""),
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
+        meta_yaml_path = bundle_dir / "metadata.yaml"
+        meta_yaml_path.write_text(
+            yaml.safe_dump(meta_dict, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        # 2. Write clean markdown file without YAML frontmatter (OKF v2.0 Pure Markdown)
+        clean_md_path = bundle_dir / f"{bundle_slug}.md"
+        clean_content = content
+        if clean_content.strip().startswith("---"):
+            parts = clean_content.split("---", 2)
+            if len(parts) >= 3:
+                clean_content = parts[2].strip()
+        clean_md_path.write_text(clean_content, encoding="utf-8")
+
+        # 3. Generate AST clauses.json
+        self.generate_clauses_json(clean_content, bundle_dir)
+
+        # 4. Save QA Benchmark if provided
+        if qa_items:
+            self.write_qa_benchmark(qa_items, bundle_dir)
+
+        # 5. Extract tables if docx_path provided
+        if docx_path:
+            self.integrate_tables(docx_path, bundle_dir)
+
+        # 6. Write index.md and logs
+        self._write_logs_and_index_v2(bundle_dir, bundle_slug, has_qa=bool(qa_items))
+
+        return bundle_dir
+
+    def _write_logs_and_index_v2(
+        self,
+        bundle_dir: Path,
+        bundle_slug: str,
+        has_qa: bool = False,
+    ) -> None:
+        """Generate index.md and log.md according to OKF v2.0 specification."""
+        timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+        log_content = f"""# OKF v2.0 Bundle Processing Log
+
+- [{timestamp}] Bundle '{bundle_slug}' initialized.
+- [{timestamp}] Independent metadata.yaml generated (ADR 0038 SSOT).
+- [{timestamp}] Pure markdown '{bundle_slug}.md' saved.
+- [{timestamp}] AST clauses.json flat coordinates extracted.
+- [{timestamp}] QA benchmark & tables structured.
+"""
+        (bundle_dir / "log.md").write_text(log_content, encoding="utf-8")
+
+        index_content = f"""# OKF v2.0 Bundle Index — {bundle_slug}
+
+## Thành Phần Cốt Lõi (Core Artifacts)
+- [`metadata.yaml`](/metadata.yaml) — Cấu hình và thuộc tính pháp lý chính quy (SSOT)
+- [`{bundle_slug}.md`](/{bundle_slug}.md) — Toàn văn văn bản Markdown thuần sạch 100%
+- [`clauses.json`](/clauses.json) — Danh mục tọa độ AST phẳng hỗ trợ tra cứu $O(1)$
+"""
+        if has_qa:
+            index_content += "- [`qa_benchmark.json`](/qa_benchmark.json) — Tập đối chuẩn 5 trường phục vụ Grounding Gate\n"
+
+        tables_dir = bundle_dir / "tables"
+        if tables_dir.exists():
+            index_content += (
+                "- [`tables/`](/tables/) — Bảng biểu trích xuất ma trận 2D (JSON/CSV)\n"
+            )
+
+        (bundle_dir / "index.md").write_text(index_content, encoding="utf-8")
 
 
 def is_guiding_link(url: str) -> bool:

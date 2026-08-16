@@ -5,10 +5,14 @@ src_dir = Path(__file__).parents[1] / "src"
 if str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
+import pytest
+
 from ccba_notebooklm import (
     check_auth,
     get_client,
 )
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 from ccba_notebooklm.__main__ import (
     map_info_detail,
     map_info_orientation,

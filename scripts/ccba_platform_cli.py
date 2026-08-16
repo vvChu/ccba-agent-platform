@@ -47,8 +47,32 @@ def configure_utf8_output() -> None:
             pass
 
 
-def resolve_default_legal_spoke() -> Path:
-    """Resolve the default path to the ccba-legal-knowledge spoke."""
+def resolve_default_legal_spoke(spoke_name_or_path: str | None = None) -> Path:
+    """Resolve the path to the legal spoke by name, explicit path, or registry discovery."""
+    if spoke_name_or_path:
+        p = Path(spoke_name_or_path)
+        if p.exists():
+            return p
+
+    # Search registered spokes in Hub Registry
+    try:
+        from scripts.spoke.decrypt_spoke_registry import get_registered_spokes
+
+        spokes = get_registered_spokes(hub_root=_ROOT_DIR)
+        if spoke_name_or_path:
+            for s in spokes:
+                if s.get("name") == spoke_name_or_path or s.get("spoke_id") == spoke_name_or_path:
+                    return Path(s["path"])
+        else:
+            for s in spokes:
+                if (
+                    "legal" in s.get("name", "").lower()
+                    or "pháp điển" in s.get("project_type", "").lower()
+                ):
+                    return Path(s["path"])
+    except Exception:
+        pass
+
     env_spoke = os.getenv("CCBA_LEGAL_SPOKE_PATH")
     if env_spoke and Path(env_spoke).exists():
         return Path(env_spoke)
@@ -136,12 +160,15 @@ def execute_ingest_legal(
         else:
             try:
                 from ccba_legal.coordinator import LegalIntelPipeline
+                from ccba_legal.crawler import TVPLSessionMutex
 
-                pipeline = LegalIntelPipeline(output_dir=sandbox_path)
-                res = pipeline.process_document(url)
-                if res.status not in ("success", "cached", "mocked"):
-                    print(f"  [Crawler Error] Failed to crawl document: {res.error}")
-                    return False
+                mutex = TVPLSessionMutex()
+                with mutex:
+                    pipeline = LegalIntelPipeline(output_dir=sandbox_path)
+                    res = pipeline.process_document(url)
+                    if res.status not in ("success", "cached", "mocked"):
+                        print(f"  [Crawler Error] Failed to crawl document: {res.error}")
+                        return False
             except Exception as exc:
                 print(f"  [Crawler Error] Exception during crawl: {exc}")
                 return False

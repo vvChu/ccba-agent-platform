@@ -7,6 +7,8 @@ import pytest
 
 from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError, CircuitState
 
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
+
 
 def test_circuit_breaker_initial_state() -> None:
     """Verify initial state is CLOSED and allows requests."""

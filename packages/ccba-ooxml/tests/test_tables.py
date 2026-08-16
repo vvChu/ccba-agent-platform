@@ -12,6 +12,8 @@ from docx import Document
 
 from ccba_ooxml.tables import StructuredTable, TableReconstructor
 
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
+
 
 @pytest.fixture
 def sample_table_dto() -> StructuredTable:

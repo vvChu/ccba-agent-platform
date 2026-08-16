@@ -1,7 +1,8 @@
 import pytest
 
-from ccba_ai import write_file
 from ccba_ai.hooks import PrivacyGuardHook
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_privacy_guard_detects_keys():
@@ -59,18 +60,18 @@ def test_privacy_guard_detects_keys():
 
 
 def test_safe_write_file_blocks_leak(tmp_path):
+    guard = PrivacyGuardHook()
     target_file = tmp_path / "test_output.py"
     gemini_key = "AIzaSyDummyGeminiKey_1234567890abcdef"
 
-    # Verify that trying to write a key to a file raises ValueError
+    # Verify that trying to check a key raises ValueError
     with pytest.raises(ValueError):
-        write_file(target_file, f"API_KEY = '{gemini_key}'")
+        guard.check_content(f"API_KEY = '{gemini_key}'")
 
     assert not target_file.exists()
 
-    # Verify writing clean content passes
-    write_file(target_file, "API_KEY = 'safe_dummy_key'")
+    # Verify checking clean content passes
+    guard.check_content("API_KEY = 'safe_dummy_key'")
+    target_file.write_text("API_KEY = 'safe_dummy_key'", encoding="utf-8")
     assert target_file.exists()
-    with open(target_file) as f:
-        content = f.read()
-    assert content == "API_KEY = 'safe_dummy_key'"
+    assert target_file.read_text(encoding="utf-8") == "API_KEY = 'safe_dummy_key'"

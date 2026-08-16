@@ -32,6 +32,7 @@ ccba-test = "scripts.eval.run_isolated_tests:main"
 ccba-compile-knowledge = "scripts.spoke.compile_knowledge:main"
 ccba-legal-sync = "scripts.legal.legal_sync:main"
 ccba-audit-pr = "scripts.validation.audit_pr_comments:main"
+ccba-lint-imports = "scripts.governance.check_dependency_contracts:main"
 
 
 
@@ -117,6 +118,7 @@ addopts = "-v --tb=short --strict-markers -m 'not stress and not slow'"
 timeout = 30
 
 markers = [
+    "fast: Fast isolated unit tests (under 2s, pure logic and mock I/O)",
     "unit: Fast isolated unit tests (under 1s)",
     "integration: Integration tests (under 5s)",
     "slow: Tests taking more than 5s",

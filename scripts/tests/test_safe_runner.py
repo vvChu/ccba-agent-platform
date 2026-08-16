@@ -14,6 +14,8 @@ sys.path.insert(0, str(scripts_dir))
 import safe_runner
 from eval.process_safety import DetachedExecutionEngine
 
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
+
 
 @pytest.fixture
 def mock_scratch_dir(tmp_path):

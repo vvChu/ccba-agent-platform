@@ -22,7 +22,7 @@ try:
 
     DOCX_AVAILABLE = True
 except ImportError:
-    Document = None  # type: ignore[assignment,misc]
+    Document = None  # type: ignore[assignment]
     DOCX_AVAILABLE = False
 
 

@@ -1,7 +1,9 @@
-"""Unit tests for ccba-pdf-prep document skills (PDF forms) and domain boundary purity."""
+import pytest
 
 import ccba_pdf_prep
 from ccba_pdf_prep import fill_pdf_fields, get_field_info
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_pdf_form_skills_exports():
