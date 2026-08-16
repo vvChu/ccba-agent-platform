@@ -80,7 +80,7 @@ echo "🧪 Running Nightly Auto-Tuner Dry-Run Verification..."
 python scripts/eval/nightly_tuner_daemon.py --dry-run --max-iter 1
 
 # 8. Setup Crontab Schedule (00:00 Daily)
-CRON_JOB="0 0 * * * $BASE_DIR/ccba-agent-platform/scripts/cron/run_nightly_tuner.sh >> $BASE_DIR/ccba-agent-platform/.md/logs/nightly_cron.log 2>&1"
+CRON_JOB="0 0 * * * /bin/bash $BASE_DIR/ccba-agent-platform/scripts/cron/run_nightly_tuner.sh >> $BASE_DIR/ccba-agent-platform/.md/logs/nightly_cron.log 2>&1"
 (crontab -l 2>/dev/null | grep -Fv "run_nightly_tuner.sh" ; echo "$CRON_JOB") | crontab -
 echo "⏰ Cron Schedule Verified: 0 0 * * * (Daily at Midnight)"
 
