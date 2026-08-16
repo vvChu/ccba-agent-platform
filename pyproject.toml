@@ -117,6 +117,8 @@ python_files = ["test_*.py", "*_test.py"]
 addopts = "-v --tb=short --strict-markers -m 'not stress and not slow'"
 timeout = 30
 
+asyncio_mode = "strict"
+
 markers = [
     "fast: Fast isolated unit tests (under 2s, pure logic and mock I/O)",
     "unit: Fast isolated unit tests (under 1s)",

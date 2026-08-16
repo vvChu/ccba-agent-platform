@@ -62,7 +62,7 @@ def test_async_client_init_timeout():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_async_client_chat_calls_api():
     """AsyncAIClient.chat() should call the underlying OpenAI async client."""
     client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key")
@@ -81,7 +81,7 @@ async def test_async_client_chat_calls_api():
     mock_create.assert_called_once()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_async_client_chat_strip_thinking():
     """AsyncAIClient.chat() should strip <think> tags by default."""
     client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key")
@@ -105,7 +105,7 @@ async def test_async_client_chat_strip_thinking():
     assert "<think>Pondering async...</think>Async Result" in result_raw
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_async_client_chat_auto_max_tokens():
     """AsyncAIClient.chat() should auto-allocate 16384 max_tokens for reasoning models."""
     client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key")
@@ -122,7 +122,7 @@ async def test_async_client_chat_auto_max_tokens():
         assert mock_create.call_args.kwargs["max_tokens"] == 16384
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_async_client_chat_multi():
     """AsyncAIClient.chat_multi() should accept message list and return text."""
     client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key")
@@ -145,7 +145,7 @@ async def test_async_client_chat_multi():
     assert result == "multi response"
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_async_client_chat_with_metadata():
     """AsyncAIClient.chat_with_metadata() should return ChatResult with usage & latency."""
     from ccba_ai.models import ChatResult
@@ -175,7 +175,7 @@ async def test_async_client_chat_with_metadata():
     assert res.latency_ms >= 0.0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_async_client_privacy_guard_blocks_api_key():
     """PrivacyGuard must block API keys from being sent via async client."""
     client = AsyncAIClient(base_url="http://test-gateway/v1", api_key="mock-key")
@@ -186,7 +186,7 @@ async def test_async_client_privacy_guard_blocks_api_key():
         await client.chat(malicious_prompt)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_async_client_chat_retries_on_connection_error():
     """AsyncAIClient.chat() should retry on connection error and succeed."""
     client = AsyncAIClient(
@@ -209,7 +209,7 @@ async def test_async_client_chat_retries_on_connection_error():
     assert mock_create.call_count == 2
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_async_client_chat_fast_fails_when_circuit_breaker_open():
     """AsyncAIClient.chat() should fail immediately with CircuitBreakerOpenError."""
     from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError

@@ -24,21 +24,21 @@ def clean_env(monkeypatch):
     monkeypatch.delenv("NOTEBOOKLM_COOKIES_JSON", raising=False)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_mock_auth():
     """Xác minh mock client auth luôn trả về 0 (thành công)."""
     code = await check_auth()
     assert code == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_mock_client_creation():
     """Xác minh client được tạo ra là mock client."""
     client = get_client()
     assert client.use_mock is True
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_mock_artifact_flow():
     """Xác minh handle_artifact_flow chạy thành công với Mock client."""
     test_src = "packages/ccba-notebooklm/tests/test_notebooklm_basic.py"
@@ -72,7 +72,7 @@ async def test_mock_artifact_flow():
             shutil.rmtree(out_dir)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_flat_client_methods():
     """Xác minh các phương thức phẳng mới của CCBANotebookLMClient."""
     client = get_client()
