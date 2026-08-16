@@ -34,6 +34,14 @@ from ccba_ai.models import (
     TeamTask,
 )
 from ccba_ai.pipeline import AuditReportSummary, QCAuditPipeline
+from ccba_ai.prompting import (
+    OptimizationResult,
+    OptimizationStep,
+    evaluator_optimizer_loop,
+    evaluator_optimizer_loop_async,
+    parse_xml_tags,
+    xml_envelope,
+)
 from ccba_ai.protocols import QCAuditEngine, QCDiscoveryEngine, QCReporterEngine
 from ccba_ai.routing import ModelArchetype, choose_model, is_reasoning_model, resolve_max_tokens
 
@@ -71,10 +79,16 @@ __all__ = [
     "choose_model",
     "is_reasoning_model",
     "resolve_max_tokens",
-    # Utilities
+    # Utilities & Prompting
     "strip_think_tags",
     "parse_llm_json",
     "LLMParseError",
+    "xml_envelope",
+    "parse_xml_tags",
+    "evaluator_optimizer_loop",
+    "evaluator_optimizer_loop_async",
+    "OptimizationResult",
+    "OptimizationStep",
     # QC audit & Telemetry models
     "ChatResult",
     "ChatUsage",

@@ -41,6 +41,7 @@ from .env_auditor import EnvAuditor
 from .link_auditor import LinkAuditor
 from .registry_auditor import RegistryAuditor
 from .skill_auditor import SkillAuditor
+from .wiki_health_linter import WikiHealthLinter
 
 __all__ = [
     "AuditIssue",
@@ -53,6 +54,7 @@ __all__ = [
     "LinkAuditor",
     "RegistryAuditor",
     "SkillAuditor",
+    "WikiHealthLinter",
     "run_docs_validation_cli",
     "run_skills_validation_cli",
     "CODE_REF_RE",

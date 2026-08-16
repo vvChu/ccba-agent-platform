@@ -44,7 +44,7 @@ Tài liệu này lưu trữ các thuật ngữ và biên bản quyết định k
 
 ### ADR-005: Tự động Đóng gói Văn bản Hợp nhất (Consolidated Reference Text)
 - **Trạng thái:** CHẤP THUẬN (ACCEPTED)
-- **Quyết định:** Khi một Quy chuẩn/Tiêu chuẩn có bản sửa đổi bổ sung, OKF Bundle bắt buộc tạo thêm tệp **Văn bản Hợp nhất mới nhất** (ví dụ: [`qcvn_04_2021_bxd_hop_nhat_2026.md`](../legal_docs/qcvn_04_2021_bxd/qcvn_04_2021_bxd_hop_nhat_2026.md)).
+- **Quyết định:** Khi một Quy chuẩn/Tiêu chuẩn có bản sửa đổi bổ sung, OKF Bundle bắt buộc tạo thêm tệp **Văn bản Hợp nhất mới nhất** (ví dụ: `qcvn_04_2021_bxd_hop_nhat_2026.md`).
 - **Lý do:** Giúp Kỹ sư tra cứu 1 tệp duy nhất thể hiện đúng quy định đang có hiệu lực hiện tại mà không phải tự đối chiếu 2 file, đồng thời ưu tiên tệp này làm nguồn RAG Query chính cho AI Agent.
 
 ### ADR-006: Cấu trúc Workspace Mode cho Knowledge Spoke (`project.mode: delivery`)
