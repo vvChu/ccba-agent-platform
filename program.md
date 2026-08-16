@@ -1,12 +1,12 @@
 # CCBA AutoResearch: Program Specification (program.md)
 
-> Thí nghiệm tối ưu hóa tự động (Karpathy Git-Ratchet Auto-Tuner) cho Kỹ năng Biên soạn Học thuật (academic_writing).
+> Thí nghiệm tối ưu hóa tự động hoàn hảo 100% (Karpathy Git-Ratchet Auto-Tuner) cho Kỹ năng Biên soạn Học thuật (academic_writing).
 
 ---
 
 ## 🎯 Mục tiêu Thí nghiệm (Experiment Goal)
 - **Target File**: .agents/skills/academic_writing/SKILL.md
-- **Target Score**: 95.0%
+- **Target Score**: 100.0%
 - **Max Iterations**: 5
 - **Dataset File**: .agents/skills/eval-gate/test_cases/eval_academic_writing.json
 
@@ -15,7 +15,7 @@
 ## 🛡️ Ranh giới & Rào chắn (Guardrails)
 - **Được phép sửa (Allowed Files)**: Chỉ sửa duy nhất nội dung phần body của `Target File`.
 - **Cấm sửa (Prohibited Files)**: `test_cases/`, `scorers.py`, `eval_runner.py`, `git_ratchet_tuner.py`.
-- **Rào chắn Điểm Liệt (Hard Floor Invariant)**: Bắt buộc 0 Critical Failures (tuyệt đối không vi phạm văn phong cảm tính, bắt buộc trích dẫn chuẩn APA/BibTeX và cấu trúc CARS 3-Move).
+- **Rào chắn Điểm Liệt (Hard Floor Invariant)**: Bắt buộc 0 Critical Failures (tuyệt đối không vi phạm văn phong cảm tính, bắt buộc trích dẫn chuẩn APA/BibTeX, CARS 3-Move và thể bị động Methods).
 
 ---
 
