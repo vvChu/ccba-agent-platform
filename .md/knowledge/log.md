@@ -4,7 +4,29 @@
 
 ---
 
+## [2026-08-16] [adr] | Ban Hành ADR 0043: Decoupled Resilience & Active Development Cho IDOP-CCBA-WAY
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên Socrates /ccba-grill-with-docs)
+- **Affected Files**: `docs/adr/0043-idop-active-dev-resilience-and-fallback.md`, `scripts/eval/nightly_tuner_daemon.py`, `scripts/tests/test_idop_schema_compatibility.py`, `CONTEXT.md`
+- **Summary**: Ban hành cơ chế Hàng Đợi Lưu Trữ Cục Bộ (`.md/idop_staged/`), kiểm soát biến động Schema (`CI Schema Drift Gate`) và xác thực môi trường mềm (`Zero-Config Dual-Mode Auth`), đảm bảo Zero-Downtime cho dự án và cô lập tuyệt đối cho Nightly Auto-Tuner Daemon trên Server Spark.
+
+---
+
+## [2026-08-16] [adr] | Ban Hành ADR 0042: Tiered Pre-Submission Gate & Tri-Repo Server Sync
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên Socrates /ccba-grill-with-docs)
+- **Affected Files**: `docs/adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md`, `scripts/deploy/bootstrap_spark_server.sh`, `scripts/cron/run_nightly_tuner.sh`, `CONTEXT.md`
+- **Summary**: Ban hành Rào Chắn Tiền Kiểm Định 3 Cấp Độ (Tier 1: Auto-Block, Tier 2: Director Override, Tier 3: Advisory) trình Viện IBST và cơ chế đồng bộ chuỗi ba kho lưu trữ cốt lõi trên Server Spark lúc 00:00 hàng đêm.
+
+---
+
+## [2026-08-16] [adr] | Ban Hành ADR 0041: Hub-Spoke Ecosystem Taxonomy & 5 Archetypes
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên Socrates /ccba-grill-with-docs)
+- **Affected Files**: `docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md`, `CONTEXT.md`
+- **Summary**: Chuẩn hóa cấu trúc phân loại 5 Archetypes của hệ sinh thái (`platform_hub`, `enterprise_governance`, `knowledge_corpus`, `project_delivery`, `specialized_extension`) và ban hành Bộ Lọc 4 Tiêu Chí Vàng để xác định Spoke clone về Server.
+
+---
+
 ## [2026-08-16] [ingest] | Khai Phá Log Lỗi Thực Tế Từ Sản Xuất & Nâng Cấp Resilient Log Miner
+
 - **Author / Agent**: AI Lead Agent
 - **Affected Files**: `scripts/eval/log_eval_miner.py`, `scripts/tests/test_log_eval_miner.py`, `.agents/skills/eval-gate/test_cases/`
 - **Summary**: Hoàn tất đợt khai phá 507 file transcript trong `.gemini/antigravity/brain/` (2,205 tương tác), phát hiện và trích xuất 177 test cases thực chiến mới cho các bộ môn (PCCC Audit: 15, Legal Intel: 15, Academic Writing: 3, BigBIM: 3, Copywriting: 1, Agent Orchestration: 34, General Software: 106). Nâng cấp tính năng duyệt cây thư mục an toàn (Safe Directory Walk chống lỗi Windows junction `wt`), tự động làm sạch thẻ XML prompt và phân loại tự động miền nghiệp vụ.
