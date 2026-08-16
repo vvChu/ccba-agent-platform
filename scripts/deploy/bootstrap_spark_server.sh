@@ -18,6 +18,7 @@ cd "$BASE_DIR"
 if [ -d "$BASE_DIR/ccba-agent-platform/.git" ]; then
     echo "🔄 Updating ccba-agent-platform (Hub)..."
     cd "$BASE_DIR/ccba-agent-platform"
+    git checkout -- . || true
     git checkout main
     git pull origin main
 else
@@ -29,6 +30,7 @@ fi
 if [ -d "$BASE_DIR/ccba-legal-knowledge/.git" ]; then
     echo "🔄 Updating ccba-legal-knowledge (Knowledge Spoke)..."
     cd "$BASE_DIR/ccba-legal-knowledge"
+    git checkout -- . || true
     git checkout main
     git pull origin main
 else
@@ -40,6 +42,7 @@ fi
 if [ -d "$BASE_DIR/IDOP-CCBA-WAY/.git" ]; then
     echo "🔄 Updating IDOP-CCBA-WAY (Governance Spoke)..."
     cd "$BASE_DIR/IDOP-CCBA-WAY"
+    git checkout -- . || true
     git checkout main
     git pull origin main
 else
