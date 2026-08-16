@@ -29,7 +29,8 @@ class LinkAuditor(BaseAuditor):
 
     def __init__(self, project_root: Path | None = None) -> None:
         super().__init__(project_root)
-        self._symbol_cache: dict[str, bool] = {}
+        self._symbol_cache: dict[tuple[str, tuple[str, ...]], bool] = {}
+        self._file_list_cache: dict[tuple[str, ...], list[Path]] = {}
 
     def parse_frontmatter(self, content: str) -> tuple[dict[str, Any] | None, str]:
         """Parse YAML frontmatter from document content."""
@@ -95,15 +96,17 @@ class LinkAuditor(BaseAuditor):
         self, symbol: str, search_dirs: list[Path] | None = None
     ) -> bool:
         """Check if symbol declaration exists in codebase source files."""
-        if symbol in self._symbol_cache:
-            return self._symbol_cache[symbol]
-
         if search_dirs is None:
             search_dirs = [
                 self.project_root / "src",
                 self.project_root / "packages",
                 self.project_root / "scripts",
             ]
+
+        dirs_key = tuple(str(d.resolve()) for d in search_dirs)
+        cache_key = (symbol, dirs_key)
+        if cache_key in self._symbol_cache:
+            return self._symbol_cache[cache_key]
 
         clean_sym = symbol.replace("()", "")
         patterns = [
@@ -114,26 +117,31 @@ class LinkAuditor(BaseAuditor):
             re.compile(r"\blet\s+" + re.escape(clean_sym) + r"\s*="),
         ]
 
-        for sdir in search_dirs:
-            if not sdir.exists():
-                continue
-            for ext in ["*.py", "*.js", "*.cjs", "*.ts", "*.go", "*.sh"]:
-                for filepath in sdir.rglob(ext):
-                    if any(
-                        p in filepath.parts
-                        for p in ["tests", "venv", ".venv", "node_modules", "dist", "build"]
-                    ):
-                        continue
-                    try:
-                        with open(filepath, encoding="utf-8", errors="ignore") as f:
-                            file_content = f.read()
-                            if any(pat.search(file_content) for pat in patterns):
-                                self._symbol_cache[symbol] = True
-                                return True
-                    except Exception:
-                        continue
+        if dirs_key not in self._file_list_cache:
+            files: list[Path] = []
+            excludes = ["tests", "venv", ".venv", "node_modules", "dist", "build", ".md", ".git", "__pycache__"]
+            for sdir in search_dirs:
+                if not sdir.exists():
+                    continue
+                for ext in ["*.py", "*.js", "*.cjs", "*.ts", "*.go", "*.sh"]:
+                    for filepath in sdir.rglob(ext):
+                        if any(p in filepath.parts for p in excludes):
+                            continue
+                        files.append(filepath)
+            self._file_list_cache[dirs_key] = files
 
-        self._symbol_cache[symbol] = False
+        file_list = self._file_list_cache[dirs_key]
+        for filepath in file_list:
+            try:
+                with open(filepath, encoding="utf-8", errors="ignore") as f:
+                    file_content = f.read()
+                    if any(pat.search(file_content) for pat in patterns):
+                        self._symbol_cache[cache_key] = True
+                        return True
+            except Exception:
+                continue
+
+        self._symbol_cache[cache_key] = False
         return False
 
     def validate_markdown_file(
@@ -147,10 +155,23 @@ class LinkAuditor(BaseAuditor):
         """Validate a single markdown file for inconsistencies, broken links, and hallucinations."""
         if search_dirs is None:
             search_dirs = [
-                self.project_root / "scripts",
+                self.project_root / "src",
                 self.project_root / "packages",
-                self.project_root,
+                self.project_root / "scripts",
             ]
+            # Dynamic Skill Scope: nạp thêm scripts của skill nếu đang audit file trong skill đó
+            resolved_path = filepath.resolve()
+            parts = resolved_path.parts
+            if ".agents" in parts and "skills" in parts:
+                try:
+                    idx = parts.index("skills")
+                    if idx + 1 < len(parts):
+                        skill_root = Path(*parts[: idx + 2])
+                        skill_scripts = skill_root / "scripts"
+                        if skill_scripts.exists() and skill_scripts.is_dir():
+                            search_dirs = list(search_dirs) + [skill_scripts]
+                except Exception:
+                    pass
 
         issues: dict[str, list[Any]] = {
             "code_refs": [],

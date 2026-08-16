@@ -200,6 +200,76 @@ disable-model-invocation: true
         self.assertIsInstance(report, AuditReport)
         self.assertIsInstance(report.issues, list)
 
+    def test_link_auditor_dynamic_skill_scope(self) -> None:
+        """Test LinkAuditor dynamically discovering skill scripts for skill docs but not global docs."""
+        auditor = LinkAuditor(project_root=self.root)
+
+        # 1. Create a skill with internal script
+        skill_dir = self.root / ".agents" / "skills" / "demo-skill"
+        skill_scripts = skill_dir / "scripts"
+        skill_scripts.mkdir(parents=True)
+        (skill_scripts / "helper.py").write_text("def demo_skill_func(): pass\n", encoding="utf-8")
+
+        # Skill doc referencing demo_skill_func
+        skill_md = skill_dir / "SKILL.md"
+        skill_md.write_text("# Demo Skill\nCall `demo_skill_func()` here.\n", encoding="utf-8")
+
+        # Global doc outside .agents referencing demo_skill_func
+        docs_dir = self.root / "docs"
+        docs_dir.mkdir(parents=True)
+        global_md = docs_dir / "guide.md"
+        global_md.write_text("# Global Guide\nCall `demo_skill_func()` here.\n", encoding="utf-8")
+
+        # 2. Skill doc should find the symbol
+        skill_issues = auditor.validate_markdown_file(skill_md)
+        self.assertEqual(len(skill_issues["code_refs"]), 0)
+
+        # 3. Global doc should NOT find the symbol (isolated)
+        global_issues = auditor.validate_markdown_file(global_md)
+        self.assertEqual(len(global_issues["code_refs"]), 1)
+        self.assertIn("Symbol is not defined in codebase", global_issues["code_refs"][0][2])
+
+    def test_link_auditor_scoped_cache_isolation(self) -> None:
+        """Test that symbol cache is scoped to search_dirs and does not leak across scopes."""
+        auditor = LinkAuditor(project_root=self.root)
+
+        skill_dir = self.root / ".agents" / "skills" / "cache-skill"
+        skill_scripts = skill_dir / "scripts"
+        skill_scripts.mkdir(parents=True)
+        (skill_scripts / "worker.py").write_text("class UniqueSkillWorker: pass\n", encoding="utf-8")
+
+        skill_md = skill_dir / "SKILL.md"
+        skill_md.write_text("# Cache Skill\nUse `UniqueSkillWorker` here.\n", encoding="utf-8")
+
+        global_md = self.root / "README.md"
+        global_md.write_text("# Project\nUse `UniqueSkillWorker` here.\n", encoding="utf-8")
+
+        # 1. Audit skill doc first -> caches (UniqueSkillWorker, (skill_scope...)) = True
+        skill_issues = auditor.validate_markdown_file(skill_md)
+        self.assertEqual(len(skill_issues["code_refs"]), 0)
+
+        # 2. Audit global doc immediately -> must check (UniqueSkillWorker, (global_scope...)) -> False
+        global_issues = auditor.validate_markdown_file(global_md)
+        self.assertEqual(len(global_issues["code_refs"]), 1)
+        self.assertIn("Symbol is not defined in codebase", global_issues["code_refs"][0][2])
+
+    def test_link_auditor_excludes_safety(self) -> None:
+        """Test LinkAuditor safely excludes non-code directories like .md/ and .git/."""
+        auditor = LinkAuditor(project_root=self.root)
+
+        # Create valid core package code
+        pkg_dir = self.root / "packages" / "pkg1" / "src" / "pkg1"
+        pkg_dir.mkdir(parents=True)
+        (pkg_dir / "core.py").write_text("class ValidCoreClass: pass\n", encoding="utf-8")
+
+        # Create fake code in .md directory
+        md_scratch = self.root / ".md" / "scratch"
+        md_scratch.mkdir(parents=True)
+        (md_scratch / "temp.py").write_text("class ExcludedTempClass: pass\n", encoding="utf-8")
+
+        self.assertTrue(auditor.search_codebase_for_symbol("ValidCoreClass"))
+        self.assertFalse(auditor.search_codebase_for_symbol("ExcludedTempClass"))
+
 
 if __name__ == "__main__":
     unittest.main()
