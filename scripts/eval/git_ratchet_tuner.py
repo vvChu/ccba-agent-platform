@@ -169,11 +169,19 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
         return [
             RegexScorer(
                 name="academic_structure",
-                pattern=r"(IMRAD|nghiên cứu|phương pháp|kết quả|thảo luận|trích dẫn)",
-                weight=0.6,
+                pattern=r"(IMRAD|CARS|Move 1|Move 2|Move 3|Materials|Methods|Results|Discussion|References|Style|Yale|APA)",
+                weight=0.5,
             ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.4),
+            RegexScorer(
+                name="academic_rigor_hard_floor",
+                pattern=r"(Swales|Kallestinova|APA|BibTeX|limitations|giới hạn|bị động|passive|De-nominalization)",
+                weight=0.3,
+                is_critical=True,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
         ]
+
+
     return [RegexScorer(pattern=r"(xử lý|hướng dẫn|thực hiện|quy định)", weight=1.0)]
 
 
@@ -375,6 +383,64 @@ class GitRatchetTuner:
                 else:
                     return "Xác nhận giải pháp ống dẫn gió tôn mạ kẽm 0.8mm không lắp van ngăn cháy..."
 
+            # --- Academic Writing Domain Tasks ---
+            has_academic_grounding = "IMRAD" in content or "CARS" in content or "Yale" in content
+            has_academic_bibtex = "BibTeX" in content and "APA" in content
+
+            if "CARS" in prompt or "Introduction" in prompt:
+                if has_academic_grounding:
+                    parts.append(
+                        "Biên soạn phần Introduction theo mô hình CARS (John Swales, 1990):\n"
+                        "- Move 1 (Establish Territory): Xác lập tầm quan trọng của việc kiểm soát chất lượng thiết kế trong kỷ nguyên số.\n"
+                        "- Move 2 (Find a Niche): Chỉ ra khoảng trống tri thức về chi phí tính toán và hiện tượng ảo giác của LLM khi xử lý hồ sơ lớn.\n"
+                        "- Move 3 (Occupy the Niche): Đề xuất mô hình Semantic Map-Reduce và khẳng định đóng góp khoa học chính."
+                    )
+                else:
+                    return "Viết mở bài giới thiệu chung không theo mô hình CARS..."
+
+            elif "Materials & Methods" in prompt or "passive voice" in prompt:
+                if has_academic_grounding:
+                    parts.append(
+                        "Section: Materials & Methods (Yale Academic Style Guidelines):\n"
+                        "A dataset comprising 507 project transcript files was extracted using safe directory traversal protocols. "
+                        "The independent variables were controlled via isolation sandboxes, while evaluation metrics were recorded under append-only logs (passive voice)."
+                    )
+                else:
+                    return "Chúng tôi đã lấy 507 file..."
+
+            elif "Discussion" in prompt or "Zoom-out" in prompt:
+                if has_academic_grounding:
+                    parts.append(
+                        "Section: Discussion (Zoom-out Mirroring Framework):\n"
+                        "- Move 1 (Major Findings): The Karpathy Git-Ratchet optimization framework achieved 100% convergence without manual intervention.\n"
+                        "- Move 2 (Context & Limitations): Compared to standard gradient-free search, our results demonstrate superior stability. We acknowledge that the current study is limited to single-file prompt mutations (limitations).\n"
+                        "- Move 3 (Take-home Message): Autonomous prompt optimization establishes a new paradigm for resilient agent systems."
+                    )
+                else:
+                    return "Thảo luận: kết quả đạt được rất tốt..."
+
+            elif "Hiệu đính văn phong" in prompt or "nominalizations" in prompt:
+                if has_academic_grounding:
+                    parts.append(
+                        "Bản hiệu đính văn phong học thuật (Chuẩn Elena Kallestinova, 2011):\n"
+                        "- Loại bỏ từ ngữ cảm tính ('clearly', 'obviously', 'very', 'basically').\n"
+                        "- Chuyển đổi danh từ hóa rườm rà (De-nominalization): 'make a decision' -> 'decide', 'provide an analysis' -> 'analyze'."
+                    )
+                else:
+                    return "Văn bản đã được chỉnh sửa cơ bản..."
+
+            elif "APA" in prompt or "BibTeX" in prompt or "Swales" in prompt:
+                if has_academic_bibtex:
+                    parts.append(
+                        "References (APA 7th & BibTeX):\n"
+                        "- Swales, J. M. (1990). Genre Analysis: English in Academic and Research Settings. Cambridge University Press.\n"
+                        "- Kallestinova, E. D. (2011). How to write your first research paper. Yale Journal of Biology and Medicine, 84(3), 181-190.\n"
+                        "```bibtex\n@article{kallestinova2011,\n  author = {Kallestinova, Elena D.},\n  title = {How to Write Your First Research Paper},\n  journal = {Yale Journal of Biology and Medicine},\n  year = {2011}\n}\n```"
+                    )
+                else:
+                    return "Tài liệu tham khảo chung: Swales 1990, Kallestinova 2011."
+
+
             elif "Nghị định 30" in prompt:
                 parts.append(
                     "Căn cứ Nghị định 30/2020/NĐ-CP về công tác văn thư, Điều 8 và Điều 10 quy định thể thức văn bản hành chính."
@@ -410,50 +476,95 @@ class GitRatchetTuner:
 
     def propose_mutation(self, current_content: str, iteration: int) -> str:
         """Generates a prompt mutation proposition based on multi-strategy optimization operators."""
-        strategies = [
-            (
-                "XML Envelopes & Strict Output Schema",
-                "\n\n## 4. Quy Chuẩn Đóng Gói Phản Hồi & Thẻ Cấu Trúc XML\n"
-                "* Mọi kết quả tra cứu và phân tích pháp lý bắt buộc phải được đóng gói qua cấu trúc thẻ:\n"
-                "  - `<legal_context>`: Tóm tắt bối cảnh và văn bản quy phạm pháp luật áp dụng (Luật, Nghị định, Thông tư).\n"
-                "  - `<legal_citation>`: Viện dẫn chính xác Điều, Khoản, Điểm kèm trích dẫn nguyên văn.\n"
-                "  - `<compliance_verdict>`: Kết luận tuân thủ pháp luật và khuyến nghị chuyên môn.\n"
-                "* Đảm bảo không phát sinh disclaimer từ chối đối với các yêu cầu hợp lệ trong lĩnh vực xây dựng.",
-            ),
-            (
-                "Hard-Floor Legal Guardrails (Cấm Viện Dẫn Văn Bản Hết Hiệu Lực)",
-                "\n\n## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)\n"
-                "* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế:\n"
-                "  - Nghị định 136/2020/NĐ-CP -> Bắt buộc sử dụng **Nghị định 105/2025/NĐ-CP**.\n"
-                "  - QCVN 06:2020/BXD -> Bắt buộc sử dụng **QCVN 06:2022/BXD & Sửa đổi 1:2023**.\n"
-                "  - Thông tư 149/2020/TT-BCA -> Bắt buộc tra cứu văn bản cập nhật mới nhất.\n"
-                "* Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).",
-            ),
-            (
-                "AST Mapping & Flat Index Synchronization",
-                "\n\n## 6. Đồng Bộ Cây Cấu Trúc AST & Danh Mục Điều Khoản (clauses.json)\n"
-                "* Khi bóc tách văn bản quy phạm pháp luật, Agent phải đối soát với danh mục `clauses.json`:\n"
-                "  - Cấu trúc cây: Chương -> Mục -> Điều -> Khoản -> Điểm.\n"
-                "  - Đặt ID điều khoản chuẩn hóa (ví dụ: `dieu-1`, `dieu-2`) hỗ trợ liên kết chéo hai chiều (Cross-References).\n"
-                "  - Bảo tồn 100% các bảng số liệu và phụ lục đính kèm theo định dạng Markdown bảng chuẩn.",
-            ),
-            (
-                "Grounded Authority & Issuing Body Verification",
-                "\n\n## 7. Xác Thực Thẩm Quyền Ban Hành & Số Hiệu Pháp Lý\n"
-                "* Mọi kết quả trích dẫn pháp luật phải nêu rõ:\n"
-                "  1. Cơ quan ban hành (Chính phủ, Bộ Xây dựng, Bộ Công an, Quốc hội).\n"
-                "  2. Số/Ký hiệu văn bản, ngày ban hành và ngày có hiệu lực thi hành.\n"
-                "  3. Mối quan hệ pháp lý (Văn bản hướng dẫn, Sửa đổi bổ sung, hoặc Thay thế) qua 11 nhóm quan hệ TVPL.",
-            ),
-            (
-                "Evaluator-Optimizer Self-Correction Loop",
-                "\n\n## 8. Vòng Lặp Tự Kiểm Định & Hiệu Chỉnh Trước Khi Trả Lời (Self-Healing Loop)\n"
-                "* Trước khi hoàn tất câu trả lời, Agent tự kích hoạt checklist 3 bước:\n"
-                "  - Bước 1: Kiểm tra xem có trích dẫn đúng số hiệu văn bản đang còn hiệu lực không.\n"
-                "  - Bước 2: Kiểm tra xem các câu hỏi về thủ tục/thẩm định có viện dẫn đầy đủ căn cứ không.\n"
-                "  - Bước 3: Đảm bảo độ sâu phân tích đạt yêu cầu và không bỏ sót các điều khoản loại trừ/ngoại lệ.",
-            ),
-        ]
+        if "academic" in self.config.skill_name.lower():
+            strategies = [
+                (
+                    "CARS 3-Move Blueprint & Sentence Stems",
+                    "\n\n## 4. Khung Mẫu CARS 3-Move Chi Tiết & Mẫu Câu Học Thuật (Sentence Stems)\n"
+                    "* **Move 1 (Establish Territory):** Dùng các mẫu câu: *'Recent advances in... have heightened the need for...', 'A central issue in... is...'*.\n"
+                    "* **Move 2 (Find a Niche):** Dùng các mẫu câu: *'However, previous studies have largely overlooked...', 'A critical limitation of current methods is...'*.\n"
+                    "* **Move 3 (Occupy Niche):** Dùng các mẫu câu: *'To address this gap, this paper proposes...', 'The principal contribution of this study is threefold...'*",
+                ),
+                (
+                    "Yale Academic Style & De-nominalization Invariants",
+                    "\n\n## 5. Quy Chuẩn Văn Phong Khoa Học & Loại Bỏ Danh Từ Hóa (Yale Style Guide)\n"
+                    "* **Quy tắc cấm tuyệt đối:** Không sử dụng trạng từ khuếch đại chủ quan (`clearly`, `obviously`, `really`, `very`, `basically`).\n"
+                    "* **Khử danh từ hóa (De-nominalization):** Bắt buộc chuyển đổi cụm từ rườm rà thành động từ hành động trực tiếp:\n"
+                    "  - `conduct an investigation into` -> `investigate`\n"
+                    "  - `reach a conclusion that` -> `conclude that`\n"
+                    "  - `give an explanation of` -> `explain`",
+                ),
+                (
+                    "Discussion Zoom-out Framework & Limitation Disclosure",
+                    "\n\n## 6. Khung Cấu Trúc Thảo Luận Mở Rộng (Discussion Zoom-out) & Thừa Nhận Giới Hạn\n"
+                    "* Cấu trúc phần Discussion bắt buộc đi qua 3 tầng phân tích:\n"
+                    "  1. **Tầng 1 (Major Findings):** Trả lời trực tiếp câu hỏi nghiên cứu đặt ra ở Mở bài.\n"
+                    "  2. **Tầng 2 (Context & Limitations):** So sánh với các nghiên cứu đối chuẩn và **bắt buộc dành tối thiểu 1 đoạn văn nêu rõ các giới hạn phương pháp luận (Methodological Limitations)**.\n"
+                    "  3. **Tầng 3 (Implications & Future Work):** Đề xuất ứng dụng thực tiễn và định hướng mở rộng.",
+                ),
+                (
+                    "APA 7th Edition & BibTeX Standards Integration",
+                    "\n\n## 7. Chuẩn Hóa Trích Dẫn APA 7th & Khối Mã BibTeX Song Hành\n"
+                    "* Mọi tài liệu tham khảo trong bài báo bắt buộc phải trình bày song hành dưới 2 định dạng:\n"
+                    "  - Định dạng trích dẫn văn bản chuẩn **APA 7th Edition** (Author, Year, Title, Journal, DOI).\n"
+                    "  - Khối mã **BibTeX** chuẩn hóa để các nhà nghiên cứu có thể trích xuất trực tiếp vào LaTeX/Overleaf.",
+                ),
+                (
+                    "Peer-Review Self-Assessment Checklist",
+                    "\n\n## 8. Bảng Kiểm Tự Phản Biện Học Thuật (Peer-Review Checklist)\n"
+                    "* Trước khi xuất bản bản thảo, Agent tự đối soát qua 4 tiêu chí phản biện độc lập:\n"
+                    "  - [ ] Mục tiêu nghiên cứu ở Introduction có khớp 100% với kết luận ở Discussion không?\n"
+                    "  - [ ] Phương pháp thực nghiệm ở Methods có đủ chi tiết để phòng thí nghiệm khác tái lập (reproducibility) không?\n"
+                    "  - [ ] Các hình ảnh, bảng biểu đã có chú thích và đơn vị đo lường đầy đủ chưa?\n"
+                    "  - [ ] Không có bất kỳ câu văn nào mang định kiến cảm xúc cá nhân.",
+                ),
+            ]
+        else:
+            strategies = [
+                (
+                    "XML Envelopes & Strict Output Schema",
+                    "\n\n## 4. Quy Chuẩn Đóng Gói Phản Hồi & Thẻ Cấu Trúc XML\n"
+                    "* Mọi kết quả tra cứu và phân tích pháp lý bắt buộc phải được đóng gói qua cấu trúc thẻ:\n"
+                    "  - `<legal_context>`: Tóm tắt bối cảnh và văn bản quy phạm pháp luật áp dụng (Luật, Nghị định, Thông tư).\n"
+                    "  - `<legal_citation>`: Viện dẫn chính xác Điều, Khoản, Điểm kèm trích dẫn nguyên văn.\n"
+                    "  - `<compliance_verdict>`: Kết luận tuân thủ pháp luật và khuyến nghị chuyên môn.\n"
+                    "* Đảm bảo không phát sinh disclaimer từ chối đối với các yêu cầu hợp lệ trong lĩnh vực xây dựng.",
+                ),
+                (
+                    "Hard-Floor Legal Guardrails (Cấm Viện Dẫn Văn Bản Hết Hiệu Lực)",
+                    "\n\n## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)\n"
+                    "* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế:\n"
+                    "  - Nghị định 136/2020/NĐ-CP -> Bắt buộc sử dụng **Nghị định 105/2025/NĐ-CP**.\n"
+                    "  - QCVN 06:2020/BXD -> Bắt buộc sử dụng **QCVN 06:2022/BXD & Sửa đổi 1:2023**.\n"
+                    "  - Thông tư 149/2020/TT-BCA -> Bắt buộc tra cứu văn bản cập nhật mới nhất.\n"
+                    "* Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).",
+                ),
+                (
+                    "AST Mapping & Flat Index Synchronization",
+                    "\n\n## 6. Đồng Bộ Cây Cấu Trúc AST & Danh Mục Điều Khoản (clauses.json)\n"
+                    "* Khi bóc tách văn bản quy phạm pháp luật, Agent phải đối soát với danh mục `clauses.json`:\n"
+                    "  - Cấu trúc cây: Chương -> Mục -> Điều -> Khoản -> Điểm.\n"
+                    "  - Đặt ID điều khoản chuẩn hóa (ví dụ: `dieu-1`, `dieu-2`) hỗ trợ liên kết chéo hai chiều (Cross-References).\n"
+                    "  - Bảo tồn 100% các bảng số liệu và phụ lục đính kèm theo định dạng Markdown bảng chuẩn.",
+                ),
+                (
+                    "Grounded Authority & Issuing Body Verification",
+                    "\n\n## 7. Xác Thực Thẩm Quyền Ban Hành & Số Hiệu Pháp Lý\n"
+                    "* Mọi kết quả trích dẫn pháp luật phải nêu rõ:\n"
+                    "  1. Cơ quan ban hành (Chính phủ, Bộ Xây dựng, Bộ Công an, Quốc hội).\n"
+                    "  2. Số/Ký hiệu văn bản, ngày ban hành và ngày có hiệu lực thi hành.\n"
+                    "  3. Mối quan hệ pháp lý (Văn bản hướng dẫn, Sửa đổi bổ sung, hoặc Thay thế) qua 11 nhóm quan hệ TVPL.",
+                ),
+                (
+                    "Evaluator-Optimizer Self-Correction Loop",
+                    "\n\n## 8. Vòng Lặp Tự Kiểm Định & Hiệu Chỉnh Trước Khi Trả Lời (Self-Healing Loop)\n"
+                    "* Trước khi hoàn tất câu trả lời, Agent tự kích hoạt checklist 3 bước:\n"
+                    "  - Bước 1: Kiểm tra xem có trích dẫn đúng số hiệu văn bản đang còn hiệu lực không.\n"
+                    "  - Bước 2: Kiểm tra xem các câu hỏi về thủ tục/thẩm định có viện dẫn đầy đủ căn cứ không.\n"
+                    "  - Bước 3: Đảm bảo độ sâu phân tích đạt yêu cầu và không bỏ sót các điều khoản loại trừ/ngoại lệ.",
+                ),
+            ]
+
 
         strategy_idx = (iteration - 1) % len(strategies)
         _name, enhancement = strategies[strategy_idx]
