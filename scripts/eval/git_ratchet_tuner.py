@@ -138,10 +138,17 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             RegexScorer(
                 name="legal_grounding",
                 pattern=r"(Nghị định|Thông tư|Luật|Quy chuẩn|Điều|Khoản|VBHN|pháp lý)",
-                weight=0.6,
+                weight=0.5,
             ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.4),
+            RegexScorer(
+                name="anti_trap_hard_floor",
+                pattern=r"(105/2025|06:2022|212/2026|135/2025|thay thế|hết hiệu lực|bãi bỏ|Sở Xây dựng|Cơ quan chuyên môn)",
+                weight=0.3,
+                is_critical=True,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
         ]
+
     if any(k in sname for k in ["pccc", "qc", "audit", "thamdinh"]):
         return [
             RegexScorer(
@@ -237,28 +244,78 @@ class GitRatchetTuner:
         def mock_agent_task(item: EvalItem) -> str:
             prompt = str(item.input_prompt)
 
-            # Check if prompt content has legal guidance
+            # Check if prompt content has legal guidance and hard floor guardrails
             has_legal_grounding = "Nghị định" in content or "Luật" in content or "VBHN" in content
             has_xml = "<legal_" in content or "XML" in content
-            has_guardrail = "105/2025" in content or "Hard Floor" in content
-
-            if "136/2020" in prompt and not has_guardrail:
-                # Simulated unpatched failure
-                return "Căn cứ Nghị định 136/2020/NĐ-CP hướng dẫn Luật PCCC..."
+            has_guardrail = "105/2025" in content or "Hard Floor" in content or "bị thay thế" in content
 
             parts = []
             if has_xml:
                 parts.append(
-                    "<legal_context>\nPhân tích và đối soát văn bản quy phạm pháp luật theo quy định.\n</legal_context>"
+                    "<legal_context>\nPhân tích và đối soát văn bản quy phạm pháp luật theo quy định hiện hành.\n</legal_context>"
                 )
 
-            if "Nghị định 30" in prompt:
+            # 1. Redteam Trap 1: Expired Decree 136/2020
+            if "136/2020" in prompt:
+                if has_guardrail:
+                    parts.append(
+                        "Lưu ý quan trọng: Nghị định 136/2020/NĐ-CP đã hết hiệu lực và được thay thế toàn diện bởi Nghị định 105/2025/NĐ-CP. Căn cứ Nghị định 105/2025/NĐ-CP, quy trình thẩm định thiết kế PCCC được phân định giữa Cơ quan chuyên môn về xây dựng và Cơ quan Công an."
+                    )
+                else:
+                    return "Căn cứ Nghị định 136/2020/NĐ-CP hướng dẫn Luật PCCC, danh mục hồ sơ gồm..."
+
+            # 2. Redteam Trap 2: Outdated Standard QCVN 06:2020
+            elif "06:2020" in prompt:
+                if has_guardrail:
+                    parts.append(
+                        "Lưu ý quan trọng: QCVN 06:2020/BXD đã hết hiệu lực. Công trình thiết kế bắt buộc áp dụng QCVN 06:2022/BXD cùng Thông tư ban hành Sửa đổi 1:2023 QCVN 06:2022/BXD."
+                    )
+                else:
+                    return "Căn cứ QCVN 06:2020/BXD, khoảng cách an toàn PCCC và bậc chịu lửa được tính..."
+
+            # 3. Redteam Trap 3: Abolished Certificate under Decree 212/2026
+            elif "Chứng chỉ hành nghề Quản lý dự án" in prompt:
+                if has_guardrail:
+                    parts.append(
+                        "Theo quy định tại Điều 55 Nghị định 212/2026/NĐ-CP, cơ quan nhà nước không thực hiện cấp mới chứng chỉ hành nghề Quản lý dự án và Định giá xây dựng. Cá nhân được quản lý dựa trên năng lực và kinh nghiệm thực tế."
+                    )
+                else:
+                    return "Hồ sơ xin cấp mới chứng chỉ hành nghề Quản lý dự án gồm đơn đề nghị, văn bằng đại học và chứng nhận kinh nghiệm..."
+
+            # 4. Redteam Trap 4: Jurisdiction split (PC07 vs CQXD)
+            elif "Cơ quan Công an PCCC" in prompt and "kiến trúc" in prompt:
+                if has_legal_grounding:
+                    parts.append(
+                        "Theo Luật 55/2024 và Nghị định 105/2025/NĐ-CP, Cơ quan Công an PC07 chỉ thẩm duyệt hệ thống MEP PCCC (báo cháy, chữa cháy). Phần kiến trúc, bậc chịu lửa, thoát nạn và giải pháp ngăn khói do Cơ quan chuyên môn về xây dựng (Sở Xây dựng / Cục QL HĐXD) thẩm tra."
+                    )
+                else:
+                    parts.append("Công an PC07 thẩm định toàn bộ các nội dung PCCC...")
+
+            # 5. Redteam Trap 5: Old Law on Construction 2014
+            elif "50/2014" in prompt:
+                if has_legal_grounding:
+                    parts.append(
+                        "Lưu ý: Luật Xây dựng số 50/2014/QH13 đã được thay thế toàn diện bởi Luật Xây dựng năm 2025 (Luật số 135/2025/QH15). Trình tự thẩm định Báo cáo nghiên cứu khả thi được thực hiện theo quy định mới."
+                    )
+                else:
+                    return "Căn cứ Luật Xây dựng số 50/2014/QH13..."
+
+            # 6. Redteam Trap 6: Outdated Circular 149/2020
+            elif "149/2020" in prompt:
+                if has_guardrail:
+                    parts.append(
+                        "Thông tư 149/2020/TT-BCA đã được cập nhật đồng bộ theo Nghị định 105/2025/NĐ-CP của Chính phủ. Biểu mẫu kiểm tra an toàn PCCC thực hiện theo quy định mới."
+                    )
+                else:
+                    return "Căn cứ Thông tư 149/2020/TT-BCA..."
+
+            elif "Nghị định 30" in prompt:
                 parts.append(
-                    f"Căn cứ Nghị định 30/2020/NĐ-CP về công tác văn thư, Điều 8 và Điều 10 quy định thể thức văn bản hành chính."
+                    "Căn cứ Nghị định 30/2020/NĐ-CP về công tác văn thư, Điều 8 và Điều 10 quy định thể thức văn bản hành chính."
                 )
             elif "QCVN 06" in prompt or "PCCC" in prompt:
                 parts.append(
-                    f"Căn cứ Nghị định 105/2025/NĐ-CP và QCVN 06:2022/BXD (Sửa đổi 1:2023), quy định bậc chịu lửa và giải pháp thoát nạn công trình."
+                    "Căn cứ Nghị định 105/2025/NĐ-CP và QCVN 06:2022/BXD (Sửa đổi 1:2023), quy định bậc chịu lửa và giải pháp thoát nạn công trình."
                 )
             elif has_legal_grounding:
                 parts.append(
@@ -276,6 +333,7 @@ class GitRatchetTuner:
                 )
 
             return "\n\n".join(parts)
+
 
         return self.runner.run_sync(
             dataset=self.dataset,
