@@ -456,6 +456,20 @@
   4. *Step Completion Criteria Gate:* Cưỡng chế 100% các bước quy trình phải có tiêu chí hoàn thành định lượng.
 * **Quy chuẩn CI:** Mọi vi phạm đều kích hoạt `Exit Code 1` và chặn đứng quy trình commit/PR tại chỗ.
 
+#### P7.17. Radar-to-Handshake Upstream Integration Pipeline (Upstream Radar v2.0 & ADR 0040)
+* **Nguyên tắc:** 
+  - Đăng ký nguồn theo dõi động qua tệp cấu hình trung tâm `.md/knowledge/upstream_sources.yaml` (hỗ trợ cờ `enabled` và chỉ định `branch`).
+  - Kiểm tra bản quyền tự động (License Classifier) với hợp đồng 4 giá trị nghiêm ngặt (PERMISSIVE, COPYLEFT, PROPRIETARY, UNKNOWN).
+  - AI Gateway thẩm định trực tiếp độ tương thích với thể chế ADR-0040 (Phân tầng Tier 1/2/3, đánh giá mã nguồn Python Monorepo vs TypeScript/pnpm).
+  - Kích hoạt 1-Click: Tự động sinh lệnh `/ccba-xia` tương ứng vào bảng khuyến nghị `.md/knowledge/port_recommendations.md` với cơ chế Parse-Protection (`<!-- DEVELOPER-NOTES-START -->` ... `<!-- DEVELOPER-NOTES-END -->`) bảo toàn 100% các ghi chú thảo luận thủ công của kỹ sư qua các chu kỳ quét.
+
+#### P7.18. Master Deep Skill Consolidation with Progressive References (Consolidation Gate)
+* **Nguyên tắc:** 
+  - Khi một nhóm kỹ năng cùng phục vụ một chuỗi dây chuyền xử lý kỹ thuật (như Discovery, Batcher, VisionAudit, Reporter trong `_qc`):
+  - Gom toàn bộ thành **1 Master Deep Skill duy nhất** (`ccba-ai-qc`) đại diện cho Deep Seam Python (`QCAuditPipeline`), tuân thủ trần mô tả $\le 180$ ký tự.
+  - Bóc tách chi tiết từng pha nghiệp vụ thành các tài liệu tham chiếu chuyên sâu **Progressive References (Tier 2)** nằm trong thư mục `references/*.md` (chỉ đọc khi cần, không tự nạp vào System Prompt).
+  - Gom toàn bộ scripts thực thi vào thư mục `scripts/` chung của Master Skill. Giúp giảm 50% số lượng kỹ năng chiếm dụng System Prompt, bảo vệ trần Context Budget (< 120k tokens).
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
 * **AP7.2. Committing Unscanned Code:** Bỏ qua quy trình `/ccba-code-review` hoặc Governance Audit trước khi tạo PR.
@@ -465,6 +479,8 @@
 * **AP7.6. Destructive Workflow Wipe during Spoke Sync:** Xóa sạch toàn bộ thư mục `.agents/workflows/` của Spoke trước khi copy đè các tệp từ Hub, làm mất vĩnh viễn các workflow tùy biến nội bộ mà đội ngũ Spoke đã tự phát triển.
 * **AP7.7. Subprocess Latency Bottleneck in Batch Sync Operations:** Gọi các lệnh shell nặng như `pip list` hoặc `python -m pip` bên trong vòng lặp duyệt qua danh sách hàng loạt Spoke, gây nghẽn và làm chậm tiến trình đồng bộ gấp 10-20 lần.
 * **AP7.8. Context Bloat via Equal-Level Flat Skills Proliferation (Phình To Ngữ Cảnh Bằng Kỹ Năng Nông Đồng Cấp):** Tạo hàng chục tệp `SKILL.md` nhỏ lẻ nằm ngang hàng và đều để ở chế độ `model_invoked`, làm phình to System Prompt khởi tạo, gây lãng phí 70-80% token nền và làm AI bị phân vân khi định tuyến công cụ (Routing Confusion). Cần gom các kỹ năng nông thành `references/*.md` của Master Skill và bật `disable-model-invocation: true` cho toàn bộ User Workflows.
+* **AP7.9. License Classification Semantic Leakage (Lệch Pha Ngữ Nghĩa Bộ Phân Loại Bản Quyền):** Trả về giá trị enum lạ (như CUSTOM) không nằm trong hợp đồng 4 giá trị (PERMISSIVE, COPYLEFT, PROPRIETARY, UNKNOWN), làm đứt gãy hoặc gây sai lệch logic phân nhánh trong AI Prompt và báo cáo downstream.
+* **AP7.10. State File Path Mismatch during Registry Migration (Lệch Pha Tên Tệp Lưu Vết Khi Chuyển Sang Registry Động):** Tự ý đổi tên tệp tin lưu commit SHA (như đổi `claudekit_last_sha.txt` thành `claudekit-engineer_last_sha.txt`) trong quá trình chuyển đổi sang YAML registry, khiến hệ thống hiểu nhầm là kho mới và kích hoạt quét toàn bộ tệp từ đầu (False Positive Full Rescan).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
