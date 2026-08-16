@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-08-16] [synthesize] | Dọn Dẹp Kỹ Thuật, Khử Xung Đột Định Danh & Tiến Hóa Kỹ Năng Rà Soát Kiến Trúc
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `.agents/skills/improve-codebase-architecture/SKILL.md`, `.md/knowledge/session_learnings.md`, `packages/mdconverter/`, `packages/ccba-legal-intel/`, `packages/ccba-pdf-prep/`, `scripts/spoke/`, `scripts/update_arch_stats.py`
+- **Summary**: Hoàn tất PR #201 giải quyết xung đột định danh `AppendixExtractor` (thay thế `TableReconstructor` trong mdconverter), chuẩn hóa relative imports trong ccba-pdf-prep, thu gọn xuất khẩu `ccba_legal` về 23 Deep Seams/DTOs cốt lõi, lưu trữ script di trú cũ vào `.md/knowledge/archive/`. Tiến hóa kỹ năng `improve-codebase-architecture` (v1.3.0) với 5 Cổng Phản Biện Bắt Buộc (cưỡng chế P6.21 phân biệt Glue Code vs Domain Logic, P6.22 Unique Symbol Naming, và P6.23 Hard Caller Count Gate).
+
+---
+
 ## [2026-08-16] [ingest] | Hoàn Tất Triển Khai Động Cơ Tự Tiến Hóa Tài Liệu (Doc-Auto-Evolution)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Wayfinder Ticket D-01 -> D-04)
 - **Affected Files**: `scripts/eval/doc_refactor_daemon.py`, `scripts/tests/test_doc_refactor_daemon.py`, `scripts/cron/run_nightly_tuner.sh`, `scripts/cron/run_nightly_tuner.bat`, `scripts/deploy/bootstrap_spark_server.sh`, `.md/knowledge/issues/doc-auto-evolution/`
