@@ -337,9 +337,20 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
                 print(f"  Line {issue_item.line_number}: {issue_item.message}")
                 total_errors += 1
 
+    # Run Workspace Hard CI Gates (ADR-0040)
+    if not args.file and search_path.exists():
+        gate_issues = auditor.audit_workspace_gates(search_path)
+        if gate_issues:
+            print("\n\x1b[31m[HARD CI GATE ERROR]\x1b[0m Workspace-level Skill Violations:")
+            for g_issue in gate_issues:
+                print(f"  [{g_issue.category}] {g_issue.message}")
+                total_errors += 1
+
     if total_errors > 0:
         print(f"\nValidation failed with {total_errors} error(s).")
         return 1
 
-    print(f"\x1b[32mSuccessfully validated {len(skills_files)} SKILL.md file(s).\x1b[0m")
+    print(
+        f"\x1b[32mSuccessfully validated {len(skills_files)} SKILL.md file(s) across all 4 CI Gates.\x1b[0m"
+    )
     return 0

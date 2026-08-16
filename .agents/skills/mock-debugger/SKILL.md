@@ -1,8 +1,10 @@
 ---
 name: mock-debugger
-description: Automated debugger and self-healing trace analyzer. Runs scripts, captures tracebacks, and provides root cause analysis and code patch suggestions via AI.
+description: Automated debugger and self-healing trace analyzer. Runs scripts, captures
+  tracebacks, and provides root cause analysis and code patch suggestions via AI.
+disable-model-invocation: true
+bundle: _software
 ---
-
 # Mock Debugger (`mock-debugger`)
 
 Kích hoạt bộ tự động gỡ lỗi và tự phục hồi mã nguồn Python (Self-Healing Debugger).

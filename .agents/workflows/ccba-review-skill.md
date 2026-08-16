@@ -3,8 +3,8 @@ description: Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md t
 applies_to:
   - "Phần mềm"
 bundle: "_core"
+disable-model-invocation: true
 ---
-
 # Workflow: Đánh giá Chất lượng Skill (/ccba-review-skill)
 
 Khi người dùng kích hoạt lệnh này dưới dạng `/ccba-review-skill <đường-dẫn-file>`, Agent hãy nạp và thực thi kỹ năng `review_skill` tại [SKILL.md](../skills/review_skill/SKILL.md) để bắt đầu quy trình rà soát, cắt tỉa và tối ưu hóa chất lượng tệp tin kỹ năng.

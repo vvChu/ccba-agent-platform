@@ -2,10 +2,10 @@
 name: docs_manager
 description: Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _software
+disable-model-invocation: true
 ---
-
 # Kỹ năng: Quản lý Tài liệu Kỹ thuật (Docs Manager)
 
 Kỹ năng này đóng vai trò là một **Technical Writer QA** chuyên biệt, chịu trách nhiệm duy trì tính nhất quán, bảo mật và chính xác của tài liệu kỹ thuật so với thực tế mã nguồn (codebase).

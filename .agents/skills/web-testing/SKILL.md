@@ -1,17 +1,24 @@
 ---
 name: web-testing
-description: Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y testing. Use for test automation, flakiness, Core Web Vitals, and cross-browser.
+description: Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y
+  testing. Use for test automation, flakiness, Core Web Vitals, and cross-browser.
 user-invocable: true
-when_to_use: "Invoke for browser, visual, load, or accessibility tests."
+when_to_use: Invoke for browser, visual, load, or accessibility tests.
 category: dev-tools
-keywords: [Playwright, Vitest, k6, e2e, load-testing]
+keywords:
+- Playwright
+- Vitest
+- k6
+- e2e
+- load-testing
 license: Apache-2.0
-argument-hint: "[test-type] [target]"
+argument-hint: '[test-type] [target]'
 metadata:
   author: claudekit
-  version: "3.0.0"
+  version: 3.0.0
+disable-model-invocation: true
+bundle: _software
 ---
-
 # Web Testing Skill
 
 Comprehensive web testing: unit, integration, E2E, load, security, visual regression, accessibility.

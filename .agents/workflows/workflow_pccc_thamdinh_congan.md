@@ -6,8 +6,8 @@ applies_to:
   - "Thẩm tra thiết kế"
   - "PCCC"
 bundle: "_qc"
+disable-model-invocation: true
 ---
-
 # Quy trình Thẩm định thiết kế PCCC phần Hệ thống MEP (Cơ quan Công an)
 
 Căn cứ theo điểm c khoản 1 Điều 17 Luật PCCC số 55/2024/QH15 và Nghị định số 105/2025/NĐ-CP, Cơ quan Công an (Cục/Phòng Cảnh sát PCCC - PC07) thực hiện thẩm định chuyên biệt đối với phần Hệ thống chủ động và Hệ thống điện PCCC.
