@@ -157,6 +157,18 @@
 * **Nguyên tắc:** Mọi file test thực hiện sinh tiến trình con (`subprocess.run`, `pytest` runner, linter CLI) như `test_fast_test_suites.py` **bắt buộc phải gắn nhãn** `pytestmark = [pytest.mark.slow, pytest.mark.integration]`.
 * **Lý do:** Tách biệt hoàn toàn các bài test tốn I/O khởi tạo tiến trình khỏi vòng lặp test nhanh mặc định (`pytest -m "not slow and not stress"`), bảo toàn nghiêm ngặt SLA < 2.0s cho AI Feedback Loops.
 
+#### P3.8. Local Multi-Scorer Fast Assertion Framework (`ccba_harness.evals`)
+* **Nguyên tắc:** Đo lường chất lượng AI Agent bằng cơ chế Hybrid Scoring kết hợp:
+  - *Code-based Scorers (< 1ms):* `ExactMatchScorer`, `RegexScorer`, `LengthBoundsScorer`, `JsonSchemaScorer` cho các ràng buộc kỹ thuật tuyệt đối.
+  - *Model-based Rubric Scorer:* `LLMRubricScorer` triển khai cấu trúc Anthropic Chain-of-Thought (`<rubric>`, `<answer>`, `<thinking>`, `<score>1-5</score>`) quy đổi về thang điểm phần trăm chuẩn hóa 0–100%.
+  - *Rào chắn Điểm Liệt (Hard Floor Invariant):* Bất kỳ vi phạm nghiêm trọng nào (như trích dẫn luật hết hiệu lực, sai bậc chịu lửa PCCC) sẽ kích hoạt `critical_failed = True` và lập tức kéo điểm tổng thể về 0.0% (Fail-Fast).
+
+#### P3.9. Git-Ratchet Autonomous Experimentation Loop (`karpathy/autoresearch` Pattern)
+* **Nguyên tắc:** Biến Git thành bộ lưu trữ state bất biến cho các thí nghiệm tối ưu hóa Prompt và Kỹ năng AI (`SKILL.md`):
+  - Khai báo mục tiêu tối giản qua tệp `program.md` (`Target File`, `Target Score`, `Dataset File`, `Guardrails`).
+  - *KEEP (Commit):* Khi `Score_mới > Score_cũ` và không có Điểm Liệt $\rightarrow$ AI tự động `git commit`.
+  - *REVERT (Rollback):* Khi `Score_mới <= Score_cũ` hoặc có lỗi $\rightarrow$ AI tự động `git checkout -- <target_file>` khôi phục trạng thái cũ an toàn.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP3.1. Unscoped Full Pytest Run:** Kích hoạt quét test toàn bộ repo làm tràn context và chạm timeout.
 * **AP3.2. Blind Retries without Instrumentation:** Thử lại test fail mà không thêm probe log hoặc thu hẹp seam qua `/diagnosing-bugs`.
@@ -206,6 +218,11 @@
 
 #### P4.11. Progressive Instruction Disclosure Architecture (Kiến Trúc Phân Rã Chỉ Dẫn Lũy Tiến)
 * **Nguyên tắc:** Tối ưu hóa Instruction Budget (~150–200 instructions). Tinh giản Root `AGENTS.md` thành mỏ neo định vị (< 25 dòng / ~300 tokens), phân rã các quy tắc chuyên biệt vào `docs/rules/` (`execution_guardrails.md`, `git_conventions.md`, `code_quality.md`) và thiết lập `CLAUDE.md` tại root để đạt cross-agent parity.
+
+#### P4.12. Structured XML Prompt Envelopes & Evaluator-Optimizer Loop (`ccba-ai` prompting)
+* **Nguyên tắc:** 
+  - *Đóng gói Thẻ XML:* Sử dụng `xml_envelope` và `parse_xml_tags` để đóng gói ngữ cảnh dữ liệu (`<context>`, `<input>`, `<instructions>`, `<thinking>`, `<output>`), tạo ranh giới dữ liệu rõ ràng giúp LLM nhận diện đúng cấu trúc và triệt tiêu nguy cơ prompt injection.
+  - *Vòng lặp Tự sửa lỗi (Technique 15):* Triển khai `evaluator_optimizer_loop` kết hợp Generator Model và Evaluator Model để tự đánh giá và tinh chỉnh câu trả lời với trần lặp `max_iterations=3`.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP4.1. Hardcoded API Keys:** Tuyệt đối không hardcode keys vào code/markdown. Luôn dùng biến môi trường hoặc `.env`.
@@ -469,6 +486,12 @@
   - Gom toàn bộ thành **1 Master Deep Skill duy nhất** (`ccba-ai-qc`) đại diện cho Deep Seam Python (`QCAuditPipeline`), tuân thủ trần mô tả $\le 180$ ký tự.
   - Bóc tách chi tiết từng pha nghiệp vụ thành các tài liệu tham chiếu chuyên sâu **Progressive References (Tier 2)** nằm trong thư mục `references/*.md` (chỉ đọc khi cần, không tự nạp vào System Prompt).
   - Gom toàn bộ scripts thực thi vào thư mục `scripts/` chung của Master Skill. Giúp giảm 50% số lượng kỹ năng chiếm dụng System Prompt, bảo vệ trần Context Budget (< 120k tokens).
+
+#### P7.19. 3-Tier Karpathy LLM-Wiki with Sub-Auditor (`WikiHealthLinter`)
+* **Nguyên tắc:** Quản trị kho tri thức trung tâm theo mô hình 3 tầng:
+  - *Tầng 1 (Raw Knowledge Sources):* Lưu trữ các văn bản, báo cáo, nhật ký thô.
+  - *Tầng 2 (Curated Master Index & Append-Only Log):* Duy trì danh mục [`index.md`](index.md) với 8 phân nhánh tri thức chuẩn và nhật ký đột biến bất biến [`log.md`](log.md) theo cú pháp `## [YYYY-MM-DD] [operation] | Title`.
+  - *Tầng 3 (Automated Health Linter):* Tích hợp `WikiHealthLinter` vào CI Governance Gate để tự động phát hiện liên kết gãy (broken links), tệp tri thức mồ côi (orphan notes), và bảo đảm tính toàn vẹn 100% trước khi commit.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
