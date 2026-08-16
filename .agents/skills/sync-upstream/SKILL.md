@@ -22,7 +22,7 @@ Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho 
   ```powershell
   python scripts/spoke/check_claudekit_updates.py --check-only
   ```
-- **Kiểm tra Bản quyền (License Audit):** Tự động phân loại giấy phép repo nguồn (`PERMISSIVE`, `COPYLEFT`, `PROPRIETARY`, `UNKNOWN`).
+- **Kiểm tra Bản quyền (License Audit):** Tự động phân loại giấy phép repo nguồn (PERMISSIVE, COPYLEFT, PROPRIETARY, UNKNOWN).
 - **Tiêu chí hoàn thành:** Script chạy thành công với exit code 0. Toàn bộ kho nguồn được cập nhật, in ra danh sách thay đổi và SHA tương ứng.
 - **Cơ chế tự chữa lành (Self-Healing):** Nếu gặp lỗi Git index corruption hoặc đứt kết nối mạng, Agent xóa sạch thư mục `.md/scratch/repos/<repo-name>` và tiến hành Clean Clone lại.
 

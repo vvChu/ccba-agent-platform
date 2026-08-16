@@ -105,13 +105,25 @@ def check_repo_license(repo_path: Path) -> tuple[str, str]:
     if not repo_path.exists():
         return "UNKNOWN", "Thư mục không tồn tại"
 
-    license_names = ["LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING", "LICENSE-MIT", "LICENSE-APACHE"]
+    license_names = [
+        "LICENSE",
+        "LICENSE.md",
+        "LICENSE.txt",
+        "COPYING",
+        "LICENSE-MIT",
+        "LICENSE-APACHE",
+    ]
     for name in license_names:
         lic_file = repo_path / name
         if lic_file.exists():
             try:
                 text = lic_file.read_text(encoding="utf-8", errors="ignore").lower()
-                if "gnu general public" in text or "gpl" in text or "agpl" in text or "lgpl" in text:
+                if (
+                    "gnu general public" in text
+                    or "gpl" in text
+                    or "agpl" in text
+                    or "lgpl" in text
+                ):
                     return "COPYLEFT", "GPL/AGPL/LGPL (Rủi ro sao chép mã nguồn)"
                 if "mit license" in text or "permission is hereby granted" in text:
                     return "PERMISSIVE", "MIT License (Tự do sử dụng)"
@@ -230,8 +242,12 @@ def call_ai_evaluation(
             print(f"[Evaluator] AI Gateway error: {e}. Switching to Rule-Based Fallback.")
 
     # Rule-Based Fallback when AI Gateway is not available
-    is_workflow_like = any(kw in skill_name for kw in ["workflow", "setup", "sync", "run", "to-", "create"])
-    recommended_tier = "Tier 3 (User Workflow)" if is_workflow_like else "Tier 2 (Progressive Reference)"
+    is_workflow_like = any(
+        kw in skill_name for kw in ["workflow", "setup", "sync", "run", "to-", "create"]
+    )
+    recommended_tier = (
+        "Tier 3 (User Workflow)" if is_workflow_like else "Tier 2 (Progressive Reference)"
+    )
     return {
         "should_port": True,
         "score": 80,
@@ -433,7 +449,9 @@ class UpstreamEvaluator:
                 pass
         return ""
 
-    def evaluate_repo_diff(self, repo_path: Path, base_sha: str, head_sha: str, repo_type: str, remote_url: str):
+    def evaluate_repo_diff(
+        self, repo_path: Path, base_sha: str, head_sha: str, repo_type: str, remote_url: str
+    ):
         """Run git diff and evaluate modified or new skills under ADR-0040."""
         if not repo_path.exists():
             return

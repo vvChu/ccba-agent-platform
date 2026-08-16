@@ -74,7 +74,9 @@ def test_check_repo_license(tmp_path: Path) -> None:
     # 1. MIT License
     mit_dir = tmp_path / "mit_repo"
     mit_dir.mkdir()
-    (mit_dir / "LICENSE").write_text("MIT License\nPermission is hereby granted...", encoding="utf-8")
+    (mit_dir / "LICENSE").write_text(
+        "MIT License\nPermission is hereby granted...", encoding="utf-8"
+    )
     lic_type, lic_desc = check_repo_license(mit_dir)
     assert lic_type == "PERMISSIVE"
     assert "MIT" in lic_desc
@@ -96,17 +98,26 @@ def test_check_repo_license(tmp_path: Path) -> None:
 
 def test_generate_xia_command() -> None:
     """Verify 1-click command generation produces valid CLI invocation string."""
-    cmd_compare = generate_xia_command("https://github.com/mattpocock/skills", "grill-me", "--compare")
+    cmd_compare = generate_xia_command(
+        "https://github.com/mattpocock/skills", "grill-me", "--compare"
+    )
     assert cmd_compare == "/ccba-xia https://github.com/mattpocock/skills grill-me --compare"
 
-    cmd_port = generate_xia_command("https://github.com/claudekit/claudekit-engineer", "new-tool", "--port")
+    cmd_port = generate_xia_command(
+        "https://github.com/claudekit/claudekit-engineer", "new-tool", "--port"
+    )
     assert cmd_port == "/ccba-xia https://github.com/claudekit/claudekit-engineer new-tool --port"
 
 
 def test_call_ai_evaluation_duplicate_rejection() -> None:
     """Verify duplicate skills in catalog are rejected without calling LLM."""
-    with patch("scripts.spoke.upstream_evaluator.get_existing_elements", return_value=(["my-existing-skill"], [])):
-        res = call_ai_evaluation("engineer", "my-existing-skill", "content", "https://github.com/test/repo")
+    with patch(
+        "scripts.spoke.upstream_evaluator.get_existing_elements",
+        return_value=(["my-existing-skill"], []),
+    ):
+        res = call_ai_evaluation(
+            "engineer", "my-existing-skill", "content", "https://github.com/test/repo"
+        )
         assert res["should_port"] is False
         assert "IGNORE" in res["reason"]
         assert res["recommended_tier"] == "Reject/Duplicate"
@@ -117,7 +128,9 @@ def test_call_ai_evaluation_rule_based_fallback() -> None:
     """Verify rule-based fallback produces ADR-0040 tiering and xia_command."""
     with patch("scripts.spoke.upstream_evaluator.ai", None):
         with patch("scripts.spoke.upstream_evaluator.get_existing_elements", return_value=([], [])):
-            res = call_ai_evaluation("engineer", "brand-new-workflow", "content", "https://github.com/test/repo")
+            res = call_ai_evaluation(
+                "engineer", "brand-new-workflow", "content", "https://github.com/test/repo"
+            )
             assert res["should_port"] is True
             assert res["score"] >= 70
             assert "Tier 3" in res["recommended_tier"]
@@ -140,12 +153,16 @@ def test_append_recommendation_preserves_developer_notes(tmp_path: Path) -> None
             "actionable_steps": ["Chạy lệnh /ccba-xia"],
             "xia_command": "/ccba-xia https://github.com/test/repo test-skill --compare",
         }
-        append_recommendation("test-repo", "test-skill", sample_result, "https://github.com/test/repo", "MIT License")
+        append_recommendation(
+            "test-repo", "test-skill", sample_result, "https://github.com/test/repo", "MIT License"
+        )
 
         # 2. Engineer manually adds a note
         content = recs_file.read_text(encoding="utf-8")
         custom_note = "\n- [x] Đã thảo luận cùng team kỹ thuật ngày 2026-08-16."
-        content_with_notes = content.replace("<!-- DEVELOPER-NOTES-END -->", f"{custom_note}\n<!-- DEVELOPER-NOTES-END -->")
+        content_with_notes = content.replace(
+            "<!-- DEVELOPER-NOTES-END -->", f"{custom_note}\n<!-- DEVELOPER-NOTES-END -->"
+        )
         recs_file.write_text(content_with_notes, encoding="utf-8")
 
         # 3. Second run: adds another recommendation
@@ -160,7 +177,9 @@ def test_append_recommendation_preserves_developer_notes(tmp_path: Path) -> None
             "actionable_steps": ["Bỏ qua"],
             "xia_command": "/ccba-xia https://github.com/test/repo dup-skill --compare",
         }
-        append_recommendation("test-repo", "dup-skill", second_result, "https://github.com/test/repo", "MIT License")
+        append_recommendation(
+            "test-repo", "dup-skill", second_result, "https://github.com/test/repo", "MIT License"
+        )
 
         # 4. Verify developer note is preserved and both skills are present
         updated_content = recs_file.read_text(encoding="utf-8")

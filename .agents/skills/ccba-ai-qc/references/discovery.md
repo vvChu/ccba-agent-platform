@@ -9,7 +9,7 @@ Pha Discovery tự động phân tích cấu trúc của bộ hồ sơ bản v�
 ## 1. Tiêu Chí Hoàn Thành (Completion Criteria)
 - [x] Đã quét qua danh mục bản vẽ và tạo thành công tệp tin ma trận phối hợp tại đường dẫn:
   `[target_project]/.md/extracts/discovery/Coordination_Matrix.csv`
-- [x] Tệp tin `Coordination_Matrix.csv` không rỗng và chứa đầy đủ các cột dữ liệu tối thiểu: `Level`, `NormalizedLevel`, `ArchitecturalSheet`, `StructuralSheet`, `MEPSheet`, `FireProtectionSheet`.
+- [x] Tệp tin `Coordination_Matrix.csv` không rỗng và chứa đầy đủ các cột dữ liệu tối thiểu: Level, NormalizedLevel, ArchitecturalSheet, StructuralSheet, MEPSheet, FireProtectionSheet.
 
 ---
 
