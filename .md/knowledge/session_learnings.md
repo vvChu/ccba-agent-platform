@@ -67,6 +67,24 @@
 * **Ngữ cảnh:** Các câu lệnh chạy lâu (> 9 giây) như slow integration test hoặc crawler.
 * **Giải pháp:** Không chạy đồng bộ kéo dài trên main turn làm kích hoạt bộ giám sát IDE Client UI Timeout Watchdog (`User cancelled agent execution`). Hãy chuyển sang chế độ background qua `safe_runner.py` / `run_command async` với `WaitMsBeforeAsync: 1000` và chờ Reactive Wakeup.
 
+#### P1.5. Event-Loop-Bound Primitives Concurrency Invariant
+* **Nguyên tắc:** Khi xây dựng wrapper đồng bộ (`convert()` / `run_audit_sync()`) cho các async pipeline sở hữu asyncio primitives (như `asyncio.Semaphore`, `asyncio.Lock`), **tuyệt đối không** dùng `ThreadPoolExecutor` + `asyncio.run()` để lách khi có event loop đang chạy.
+* **Hậu quả:** Primitives gắn chặt với event loop gốc sẽ gây lỗi `"bound to a different event loop"` hoặc sinh lỗi concurrency ngầm.
+* **Chuẩn thực thi (Fail Fast):**
+  ```python
+  def convert_sync(...) -> Result:
+      try:
+          loop = asyncio.get_running_loop()
+      except RuntimeError:
+          loop = None
+      if loop and loop.is_running():
+          raise RuntimeError(
+              "Sync method cannot be called from within a running event loop. "
+              "Please use 'await async_method()' directly."
+          )
+      return asyncio.run(async_method(...))
+  ```
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP1.1. Using `os.kill(pid, 0)` on Windows:** Gây tự sát tiến trình bí ẩn không có traceback.
 * **AP1.2. Superficial "User Cancelled" Attribution:** Vội vã kết luận người dùng bấm Cancel khi thấy thông báo giao diện, thay vì dùng `/diagnosing-bugs` kiểm tra xem tiến trình con có bị ngắt socket/terminated hay không.
@@ -134,6 +152,10 @@
 #### P3.6. Subprocess Binary Mocking trong Unit Tests Tầng 1
 * **Nguyên tắc:** Khi kiểm thử các lớp wrapper tương tác với công cụ dòng lệnh bên ngoài (`npx --version`, `git --version`, `ffmpeg`), việc kích hoạt subprocess thực tế có thể tốn từ 2-4 giây trên Windows, làm vi phạm Rule P3.1 (< 2.0s).
 * **Giải pháp:** Luôn mock `subprocess.run` trong các bài unit tests nhanh tầng 1 và phân tầng các bài kiểm thử thực tế vào tầng `@pytest.mark.slow`.
+
+#### P3.7. Subprocess-Spawning Tests Categorization (SLA Guard)
+* **Nguyên tắc:** Mọi file test thực hiện sinh tiến trình con (`subprocess.run`, `pytest` runner, linter CLI) như `test_fast_test_suites.py` **bắt buộc phải gắn nhãn** `pytestmark = [pytest.mark.slow, pytest.mark.integration]`.
+* **Lý do:** Tách biệt hoàn toàn các bài test tốn I/O khởi tạo tiến trình khỏi vòng lặp test nhanh mặc định (`pytest -m "not slow and not stress"`), bảo toàn nghiêm ngặt SLA < 2.0s cho AI Feedback Loops.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP3.1. Unscoped Full Pytest Run:** Kích hoạt quét test toàn bộ repo làm tràn context và chạm timeout.
@@ -314,6 +336,14 @@
   1. **Cấu hình chuẩn công nghiệp `.importlinter`**: Khai báo các contracts `layers`, `forbidden`, `independence` cho `lint-imports`.
   2. **Native AST Governance Scanner (`scripts/governance/check_dependency_contracts.py`)**: Bộ quét AST zero-dependency quét toàn bộ 200+ file mã nguồn trong `< 0.4s`, bẫy các lỗi `PrivateSubmoduleSeamViolation`, `FoundationLeafPurityViolation`, `LeafIndependenceViolation` mà không cần cài đặt thêm thư viện bên ngoài.
   3. Tích hợp trực tiếp vào CI và `ccba-lint-imports` CLI.
+
+#### P6.18. AST Visitor Private Member Import Guard
+* **Nguyên tắc:** Linter kiểm soát ranh giới phụ thuộc (`DependencyASTVisitor`) không được chỉ kiểm tra `node.module`, mà **bắt buộc phải duyệt qua cả `node.names`** trong câu lệnh `from pkg import ...`.
+* **Lý do:** Ngăn chặn triệt để hành vi lách luật Seam bằng cách import trực tiếp private symbols/functions (`from ccba_maskara import _private_symbol`), bảo vệ 100% tính toàn vẹn của Thin Seams.
+
+#### P6.19. Resilient Legal AST Node Normalization for VBHN Merging
+* **Nguyên tắc:** Trong quy trình đối soát và hợp nhất văn bản pháp luật (VBHN Engine), các node ID sinh ra từ AST (ví dụ `D1`, `D2`) và các patch diff (ví dụ `dieu-1`, `dieu_1`, `1`) phải được chuẩn hóa qua `norm_map` hai chiều.
+* **Lý do:** Đảm bảo phép so khớp và chắp vá luôn thành công bất chấp sự khác biệt về case và dấu gạch nối giữa các hệ thống trích xuất.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 
