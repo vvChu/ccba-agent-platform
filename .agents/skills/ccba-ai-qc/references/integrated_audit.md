@@ -1,20 +1,12 @@
----
-name: ccba-ai-qc-integrated-audit
-description: Sử dụng AI Vision để đối soát đồng thời 4 bộ môn (Arch-KC-MEP-PCCC) qua hình ảnh Quad-View.
-applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_qc"
----
+# 🔍 Progressive Reference: Pha 2B — Đối Soát Quad-View AI Vision (Integrated Audit)
 
-# CCBA AI QC Integrated Audit Skill
+> Thuộc Master Skill [`ccba-ai-qc`](../SKILL.md).
 
-Skill này thực hiện kiểm tra xung đột đa bộ môn (Multi-disciplinary Clash Check) thông qua AI Vision đối với hình ảnh collage ghép từ 4 bản vẽ (Kiến trúc, Kết cấu, MEP, PCCC) trên cùng một cao độ/tầng.
+Module này thực hiện kiểm tra xung đột đa bộ môn (Multi-disciplinary Clash Check) thông qua AI Vision đối với hình ảnh collage ghép từ 4 bản vẽ (Kiến trúc, Kết cấu, MEP, PCCC) trên cùng một cao độ/tầng.
 
 ---
 
-## Tiêu chí hoàn thành (Completion Criteria)
+## 1. Tiêu Chí Hoàn Thành (Completion Criteria)
 
 1. **Tìm kiếm & Trích xuất Bản vẽ:**
    - **Xác nhận:** Đã định vị và trích xuất thành công 4 tệp tin ảnh bản vẽ tương ứng của tầng được chỉ định dựa trên dữ liệu ma trận.
@@ -27,9 +19,9 @@ Skill này thực hiện kiểm tra xung đột đa bộ môn (Multi-disciplinar
 
 ---
 
-## Công cụ thực thi
+## 2. Công Cụ Thực Thi
 
 Quy trình ghép ảnh và điều phối AI Vision được xử lý qua script:
-```text
-.agents/skills/ccba-ai-qc-integrated-audit/scripts/semantic_audit_engine.py
+```powershell
+python .agents/skills/ccba-ai-qc/scripts/semantic_audit_engine.py
 ```

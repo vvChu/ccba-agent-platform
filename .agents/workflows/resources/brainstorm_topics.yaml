@@ -39,7 +39,7 @@ topics:
     required_skills:
       - "pdf"
       - "ccba-ai-qc-pccc-audit"
-      - "ccba-ai-qc-discovery"
+      - "ccba-ai-qc"
       - "ccba-research"
     guidelines:
       - "Quét danh mục bản vẽ MEP để tìm kiếm sơ đồ nguyên lý hệ thống báo cháy, chữa cháy."

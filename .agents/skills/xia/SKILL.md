@@ -57,10 +57,10 @@ Tìm hiểu repo nguồn và định vị tính năng mục tiêu.
 1. Sử dụng lệnh git CLI để clone repository nguồn về thư mục tạm `.md/scratch/xia_sources/` trong workspace, luôn sử dụng cờ `--depth 1` (shallow clone) để giảm dung lượng và tránh kéo theo lịch sử commit không cần thiết. Nếu là đường dẫn thư mục cục bộ, quét trực tiếp mà không clone.
 2. Sử dụng các công cụ tìm kiếm và đọc thư mục (`list_dir`, `grep_search`) để đọc cấu trúc file và dependencies thực tế của dự án nguồn.
 3. Quét codebase cục bộ để ánh xạ kiến trúc, các tính năng tương đương và các điểm tích hợp.
-4. **License Check (Kiểm tra giấy phép):** Đọc file `LICENSE` (hoặc `LICENSE.md`, `COPYING`) ở thư mục gốc của repo nguồn và phân loại giấy phép:
-   - `PERMISSIVE` (MIT, Apache 2.0, BSD): Tiếp tục quy trình bình thường. Ghi nhận thông báo attribution vào kế hoạch triển khai.
-   - `COPYLEFT` (GPL, AGPL, LGPL): **Dừng ngay** và cảnh báo người dùng về rủi ro pháp lý. Chỉ được tiếp tục nếu người dùng xác nhận tường minh, hoặc chuyển sang chế độ `--compare`.
-   - `UNKNOWN/NONE`: **Dừng ngay**. Thông báo repo không có giấy phép rõ ràng (mặc định All Rights Reserved). Đề xuất chỉ dùng chế độ `--compare` để học hỏi kiến trúc mà không sao chép.
+4. **License Check (Kiểm tra giấy phép):** Đọc file LICENSE (hoặc LICENSE.md, COPYING) ở thư mục gốc của repo nguồn và phân loại giấy phép:
+   - PERMISSIVE (MIT, Apache 2.0, BSD): Tiếp tục quy trình bình thường. Ghi nhận thông báo attribution vào kế hoạch triển khai.
+   - COPYLEFT (GPL, AGPL, LGPL): **Dừng ngay** và cảnh báo người dùng về rủi ro pháp lý. Chỉ được tiếp tục nếu người dùng xác nhận tường minh, hoặc chuyển sang chế độ `--compare`.
+   - UNKNOWN/NONE: **Dừng ngay**. Thông báo repo không có giấy phép rõ ràng (mặc định All Rights Reserved). Đề xuất chỉ dùng chế độ `--compare` để học hỏi kiến trúc mà không sao chép.
 
 **Tiêu chí hoàn thành (Completion Criterion):**
 *   [x] Phải xuất ra cụ thể `source manifest` (đường dẫn repo, nhánh, commit SHA, `license_type`).
@@ -74,14 +74,14 @@ Tìm hiểu repo nguồn và định vị tính năng mục tiêu.
 Phân tách tính năng thành các lớp để ánh xạ sang Platform hiện tại, đồng thời đối sánh miền dữ liệu và thuật ngữ để đảm bảo tính nhất quán.
 
 **Các bước thực hiện:**
-1. **Hub Catalog Check (Kiểm tra tái sử dụng):** Trước khi tiến hành ánh xạ, Agent bắt buộc phải tra cứu `platform-loader/catalog.yaml` của Hub để kiểm tra sự tồn tại của các tool, skill hoặc workflow tương đương với tính năng cần port. Nếu phát hiện trùng lặp, Agent phải **nghiên cứu skill trùng lặp đó** (đọc SKILL.md của nó) để đánh giá chính xác mức độ bao phủ trước khi quyết định: kế thừa từ Hub, mở rộng skill hiện có, hoặc viết mới kèm lý do chi tiết.
+1. **Hub Catalog Check (Kiểm tra tái sử dụng):** Trước khi tiến hành ánh xạ, Agent bắt buộc phải tra cứu `.agents/skills/platform-loader/catalog.yaml` của Hub để kiểm tra sự tồn tại của các tool, skill hoặc workflow tương đương với tính năng cần port. Nếu phát hiện trùng lặp, Agent phải **nghiên cứu skill trùng lặp đó** (đọc SKILL.md của nó) để đánh giá chính xác mức độ bao phủ trước khi quyết định: kế thừa từ Hub, mở rộng skill hiện có, hoặc viết mới kèm lý do chi tiết.
 2. Kiểm kê thành phần: logic cốt lõi, trạng thái (state), dữ liệu, API surface, config, types, tests.
 3. Xây dựng ma trận dependency từ thành phần nguồn sang thành phần cục bộ tương đương, bao gồm cột **Reuse Assessment** ghi nhận kết quả Hub Catalog Check cho từng thành phần.
 4. **Domain Alignment:** Đối chiếu thuật ngữ nghiệp vụ (Domain Glossary) và kiểu dữ liệu (Data Schema / Type mapping) nguồn - đích.
 5. Xác định các vấn đề cắt ngang (cross-cutting concerns) như middleware, interceptors, listeners nằm ngoài folder tính năng.
 
 **Tiêu chí hoàn thành (Completion Criterion):**
-*   [x] Phải hoàn thành bảng ma trận dependency mapping phân loại rõ ràng từng thành phần nguồn sang trạng thái: `EXISTS` (đã có), `NEW` (cần tạo mới), `CONFLICT` (xung đột), hoặc `HUB-REUSE` (kế thừa từ Hub).
+*   [x] Phải hoàn thành bảng ma trận dependency mapping phân loại rõ ràng từng thành phần nguồn sang trạng thái: EXISTS (đã có), NEW (cần tạo mới), CONFLICT (xung đột), hoặc HUB-REUSE (kế thừa từ Hub).
 *   [x] Phải lập bảng đối chiếu ít nhất 3 kiểu dữ liệu cốt lõi hoặc thuật ngữ nghiệp vụ nguồn - Platform.
 *   [x] Phải hoàn thành Hub Catalog Check và ghi nhận kết quả vào cột Reuse Assessment.
 
