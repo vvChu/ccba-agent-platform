@@ -28,9 +28,9 @@ python scripts/eval/run_isolated_tests.py --all --stress
    ```bash
    gh auth status
    ```
-3. Thực hiện đối soát tự động toàn bộ bình luận của Copilot:
+3. Thực hiện đối soát bình luận của Copilot trên PR:
    ```bash
-   uv run python scripts/audit_pr_comments.py
+   gh api repos/:owner/:repo/pulls/[PR_NUMBER]/comments --jq '.[] | {id: .id, path: .path, line: .line, body: .body}'
    ```
    *Quy tắc bắt buộc:* 
    - Kể cả khi quy trình `/ccba-create-pr` đã bị quá thời gian chờ (timeout) đối với Copilot, khi thực hiện `/ccba-release-feature` Agent **bắt buộc phải chạy lại đối soát comments** trước khi merge.
