@@ -1,54 +1,53 @@
 ---
 name: tvpl-vip-crawler
-description: Kỹ năng tự động kết nối tài khoản VIP Thư viện Pháp luật, xử lý Cloudflare/Popups, bảo vệ VIP Session (CookieVault), khôi phục bảng biểu và đóng gói OKF Bundle.
+description: Kỹ năng tự động cào và đóng gói văn bản pháp luật VIP TVPL qua Deep Seam TVPLCrawler (tự động CookieVault & Mutex).
 ---
 
 # Kỹ Năng Cào & Đóng Gói Văn Bản VIP Thư Viện Pháp Luật (`tvpl-vip-crawler`)
 
-Kỹ năng này chịu trách nhiệm tự động hóa toàn bộ quy trình thu thập, đăng nhập tài khoản VIP Thư viện Pháp luật, duy trì session Chrome CDP cố định tại `.md/data/chrome_vip_profile`, vượt các rào chắn kiểm tra Cloudflare Security, tự động gia hạn session cookie qua `CookieVault` và đóng gói văn bản pháp lý thành bộ chuẩn **OKF (Open Knowledge Format) Bundle**.
+Kỹ năng này điều phối quy trình thu thập, đăng nhập tài khoản VIP Thư viện Pháp luật, tự động quản lý cookie qua `CookieVault`, bảo vệ phiên làm việc bằng `TVPLSessionMutex`, vượt các rào chắn kiểm tra Cloudflare/Popups và đóng gói văn bản pháp lý thành bộ chuẩn **OKF (Open Knowledge Format) Bundle** thông qua Deep Seam **`TVPLCrawler`** ([`packages/ccba-legal-intel`](../../packages/ccba-legal-intel)).
 
 ---
 
-## 🛠️ Hướng Dẫn Sử Dụng & Luồng Thực Thi
+## 🛠️ Hướng Dẫn Vận Hành & Luồng Thực Thi
 
-### 1. Cấu Hình Tài Khoản VIP (`.env`)
-Đảm bảo các biến môi trường sau đã được khai báo tại tệp `.env` của dự án:
-```env
-TVPL_USERNAME=vuvanchu119
-TVPL_PASSWORD=ccba@ibst
-DRIVE_FOLDER_ID=1b9vm_1KQ8Fg8Crr1Q-i2xmE62UIHy-_2
-```
+1. **Kiểm tra Cấu hình Môi trường (`.env`)**:
+   - Đảm bảo các biến môi trường sau đã được khai báo tại tệp `.env` của dự án:
+     ```env
+     TVPL_USERNAME=vuvanchu119
+     TVPL_PASSWORD=ccba@ibst
+     ```
+   - **Tiêu chí hoàn thành:** Xác nhận biến môi trường `TVPL_USERNAME` và `TVPL_PASSWORD` đã sẵn sàng.
 
-### 2. Kích Hoạt Lệnh Cào Văn Bản
-Chạy script tự động hóa với đường dẫn URL văn bản cần cào từ TVPL:
-```bash
-python scripts/tvpl_vip_crawler.py "https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-06-2022-TT-BXD-Quy-chuan-QCVN-06-2022-BXD-An-toan-chay-cho-nha-va-cong-trinh-544059.aspx"
-```
+2. **Kích hoạt Lệnh Cào Văn bản qua Deep Seam**:
+   - Sử dụng Python API hoặc Script CLI Facade:
+     ```python
+     from ccba_legal import TVPLCrawler
 
----
+     crawler = TVPLCrawler()
+     doc = crawler.fetch_document("https://thuvienphapluat.vn/van-ban/...")
+     ```
+     Hoặc chạy qua CLI:
+     ```bash
+     python scripts/legal/tvpl_vip_crawler.py "https://thuvienphapluat.vn/van-ban/..."
+     ```
+   - **Tiêu chí hoàn thành:** Văn bản và tệp đính kèm được tải về đầy đủ mà không bị lỗi xác thực hay xung đột session lock.
 
-## 📁 Cấu Trúc Kết Xuất OKF Bundle (`.md/legal_docs/<slug>/`)
-
-Mỗi văn bản cào về từ TVPL VIP sẽ được tự động cấu trúc hóa thành một thư mục OKF Bundle độc lập:
-
-```text
-.md/legal_docs/<slug>/
-├── metadata.yaml        <-- Định danh ID, tên văn bản, ngày hiệu lực & quan hệ pháp lý
-├── index.md            <-- Mục lục liên kết tương đối (Relative links)
-├── concept.md          <-- Toàn văn nội dung quy chuẩn / văn bản (Markdown)
-└── guiding_docs/       <-- Thư mục chứa các văn bản sửa đổi, bổ sung hoặc thông tư hướng dẫn
-```
-
----
-
-## 🔒 Quy Tắc Bảo Mật & Duy Trì Session Chrome CDP
-
-1. **Kho Lưu Trữ Cookie Mã Hóa (`CookieVault`):**
-   Lưu trữ file cookie tại `.md/data/chrome_vip_profile/cookies.json` và nạp vào HTTP Session giúp giảm 90% tài nguyên và ẩn danh hoàn toàn.
-2. **Khóa Mutex Lock & Nhịp Jitter Queue (`TVPLSessionMutex`):**
-   Mọi quá trình kết nối đều được bảo vệ bởi `TVPLSessionMutex` với nhịp sinh học Jitter Delay $3.5\text{s} \rightarrow 7.2\text{s}$ tránh bị khóa IP/tài khoản VIP.
-3. **Kiểm Toán Session (`.md/data/tvpl_session_audit.log`):**
-   Ghi nhận minh bạch mọi mốc thời gian đăng nhập, vượt Cloudflare và lưu lượng cào tệp.
+3. **Cấu trúc hóa OKF Bundle (`.md/legal_docs/<slug>/`)**:
+   - Kiểm tra kết quả đóng gói tại thư mục đích:
+     ```text
+     .md/legal_docs/<slug>/
+     ├── metadata.yaml        <-- Định danh ID, tên văn bản, ngày hiệu lực & quan hệ pháp lý
+     ├── index.md            <-- Mục lục liên kết tương đối (Relative links)
+     ├── concept.md          <-- Toàn văn nội dung quy chuẩn / văn bản (Markdown)
+     └── guiding_docs/       <-- Văn bản sửa đổi, bổ sung hoặc thông tư hướng dẫn
+     ```
+   - **Tiêu chí hoàn thành:** Thư mục bundle chứa đầy đủ các tệp `metadata.yaml`, `concept.md`, `index.md` hợp lệ.
 
 ---
-*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+## 🔒 Cơ Chế Tự Động Trong Deep Seam (`TVPLCrawler`)
+
+1. **Kho Lưu Trữ Cookie Tự Động (`CookieVault`):** Lưu trữ cookie tại `.md/data/chrome_vip_profile/cookies.json` và nạp vào HTTP session giúp tăng tốc độ tải và ẩn danh hoàn toàn.
+2. **Khóa Mutex An Toàn (`TVPLSessionMutex`):** Tự động khóa và giải phóng lock file `.md/data/tvpl_vip_session.lock` (bọc trong `try...finally`), kèm nhịp Jitter Delay tránh bị khóa IP/tài khoản VIP.
+3. **Multi-tier Fallback:** Tự động chuyển đổi giữa HTTP Crawler tốc độ cao và Chrome CDP Browser khi gặp Cloudflare/Anti-bot.
