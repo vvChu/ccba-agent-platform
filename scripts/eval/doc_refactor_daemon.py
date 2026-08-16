@@ -28,10 +28,14 @@ from typing import Any
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("ccba.eval.doc_refactor")
 
-if sys.platform.startswith("win") and hasattr(sys.stdout, "reconfigure"):
+if sys.platform.startswith("win"):
     try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
+        reconfig_out = getattr(sys.stdout, "reconfigure", None)
+        if callable(reconfig_out):
+            reconfig_out(encoding="utf-8")
+        reconfig_err = getattr(sys.stderr, "reconfigure", None)
+        if callable(reconfig_err):
+            reconfig_err(encoding="utf-8")
     except Exception:
         pass
 
@@ -160,9 +164,14 @@ class CodeGroundingEngine:
 
         for ref in raw_refs:
             ref_name = Path(ref).name
-            if any(ref_name.endswith(ext) for ext in [".py", ".md", ".yaml", ".json", ".sh", ".bat", ".toml"]):
+            if any(
+                ref_name.endswith(ext)
+                for ext in [".py", ".md", ".yaml", ".json", ".sh", ".bat", ".toml"]
+            ):
                 raw_file_refs.append(ref_name)
-            elif ref.isidentifier() and not ref.startswith("_") and (ref[0].isupper() or "_" in ref):
+            elif (
+                ref.isidentifier() and not ref.startswith("_") and (ref[0].isupper() or "_" in ref)
+            ):
                 # Filter out pure UPPERCASE constants or lowercase words
                 if not ref.isupper() and ref != "true" and ref != "false":
                     raw_code_refs.append(ref)
@@ -198,17 +207,25 @@ class ZeroDeletionGuard:
         missing_patterns = orig_patterns - prop_patterns
         for p in missing_patterns:
             if f"{p} (DEPRECATED)" not in proposed_text:
-                violations.append(f"Zero-Deletion Violation: Pattern `{p}` bị xóa bỏ trái phép mà không có tag [DEPRECATED]!")
+                violations.append(
+                    f"Zero-Deletion Violation: Pattern `{p}` bị xóa bỏ trái phép mà không có tag [DEPRECATED]!"
+                )
 
         # 2. Parse-Protection Blocks Check
         orig_notes = re.findall(
-            r"<!-- DEVELOPER-NOTES-START -->(.*?)<!-- DEVELOPER-NOTES-END -->", original_text, re.DOTALL
+            r"<!-- DEVELOPER-NOTES-START -->(.*?)<!-- DEVELOPER-NOTES-END -->",
+            original_text,
+            re.DOTALL,
         )
         prop_notes = re.findall(
-            r"<!-- DEVELOPER-NOTES-START -->(.*?)<!-- DEVELOPER-NOTES-END -->", proposed_text, re.DOTALL
+            r"<!-- DEVELOPER-NOTES-START -->(.*?)<!-- DEVELOPER-NOTES-END -->",
+            proposed_text,
+            re.DOTALL,
         )
         if orig_notes != prop_notes:
-            violations.append("Parse-Protection Violation: Khối ghi chú DEVELOPER-NOTES do con người viết tay đã bị sửa đổi!")
+            violations.append(
+                "Parse-Protection Violation: Khối ghi chú DEVELOPER-NOTES do con người viết tay đã bị sửa đổi!"
+            )
 
         return violations
 
@@ -275,7 +292,11 @@ class DocAutoEvolutionEngine:
         if self.context_doc_path.exists():
             ctx_content = self.context_doc_path.read_text(encoding="utf-8")
             # Extract CamelCase symbols with >= 2 words
-            camel_symbols = [s for s in re.findall(r"`([A-Z][a-zA-Z0-9]+)`", ctx_content) if re.search(r"[a-z][A-Z]", s)]
+            camel_symbols = [
+                s
+                for s in re.findall(r"`([A-Z][a-zA-Z0-9]+)`", ctx_content)
+                if re.search(r"[a-z][A-Z]", s)
+            ]
             verified_syms, missing_syms = self.grounding_engine.verify_symbols(camel_symbols)
             for sym in missing_syms:
                 # Exclude standard English / acronym words
@@ -304,7 +325,7 @@ class DocAutoEvolutionEngine:
             "",
             f"> **🌿 Branch:** `{report.branch_name}`  ",
             f"> **📊 Health Status:** {'🟢 100% HEALTHY' if report.health.is_healthy else '⚠️ REFACTOR SUGGESTIONS'}  ",
-            f"> **🤖 Automated Engine:** `DocAutoEvolutionEngine` on Server Spark (`100.83.192.30`)  ",
+            "> **🤖 Automated Engine:** `DocAutoEvolutionEngine` on Server Spark (`100.83.192.30`)  ",
             "",
             "---",
             "",
@@ -316,36 +337,40 @@ class DocAutoEvolutionEngine:
 
         for p in report.health.bloated_pillars:
             status = "🔴 BLOATED (>25)" if p.is_bloated else "🟢 BALANCED"
-            lines.append(f"| `{p.pillar_index}` | {p.pillar_title} | **{p.pattern_count}** | {status} |")
+            lines.append(
+                f"| `{p.pillar_index}` | {p.pillar_title} | **{p.pattern_count}** | {status} |"
+            )
 
-        lines.extend([
-            "",
-            "---",
-            "",
-            "### 🔍 Kết Quả Đối Soát Dẫn Chứng Mã Nguồn (AST Code-Grounding Audit)",
-            "- ✅ **Classes & Functions Verified:** 100% các Deep Seams (`DocAutoEvolutionEngine`, `LegalIntelPipeline`, `TableReconstructor`, `ZeroDeletionGuard`) đều tồn tại thực tế trong `packages/` và `scripts/`.",
-            "- ✅ **Architectural ADRs Grounded:** Ánh xạ chính xác 100% các thuật ngữ tới ADR 0041, ADR 0042, ADR 0043.",
-            "- ✅ **Zero Broken Links:** Không phát hiện bất kỳ liên kết nội bộ bị gãy nào.",
-            "",
-            "---",
-            "",
-            "### 🛡️ Chứng Nhận Rào Chắn An Toàn Bất Biến (Safety Certification)",
-            "- [x] **Zero-Deletion:** Bảo tồn 100% tri thức lịch sử; 0 pattern bị xóa bỏ.",
-            "- [x] **Parse-Protection:** Toàn bộ ghi chú viết tay trong `DEVELOPER-NOTES` được bảo toàn nguyên vẹn.",
-            "- [x] **Cross-Platform:** Kiểm định định dạng đường dẫn tương đối (Repo-relative links) tương thích 100% trên GitHub Web UI.",
-            "",
-            "---",
-            "",
-            "### ⚡ Hướng Dẫn Duyệt & Hợp Nhất 1-Chạm (1-Click Merge Protocol)",
-            "Tech Lead hoặc Kỹ sư có thể phê duyệt và gộp nhánh ngay bằng GitHub CLI:",
-            "```bash",
-            "gh pr merge --squash --delete-branch",
-            "```",
-            "*(Hoặc bấm nút **Squash and merge** trực tiếp trên giao diện GitHub Web).* ",
-            "",
-            "---",
-            "*Báo cáo được tạo tự động bởi CCBA Doc-Auto-Evolution Engine trên Server Spark.*",
-        ])
+        lines.extend(
+            [
+                "",
+                "---",
+                "",
+                "### 🔍 Kết Quả Đối Soát Dẫn Chứng Mã Nguồn (AST Code-Grounding Audit)",
+                "- ✅ **Classes & Functions Verified:** 100% các Deep Seams (`DocAutoEvolutionEngine`, `LegalIntelPipeline`, `TableReconstructor`, `ZeroDeletionGuard`) đều tồn tại thực tế trong `packages/` và `scripts/`.",
+                "- ✅ **Architectural ADRs Grounded:** Ánh xạ chính xác 100% các thuật ngữ tới ADR 0041, ADR 0042, ADR 0043.",
+                "- ✅ **Zero Broken Links:** Không phát hiện bất kỳ liên kết nội bộ bị gãy nào.",
+                "",
+                "---",
+                "",
+                "### 🛡️ Chứng Nhận Rào Chắn An Toàn Bất Biến (Safety Certification)",
+                "- [x] **Zero-Deletion:** Bảo tồn 100% tri thức lịch sử; 0 pattern bị xóa bỏ.",
+                "- [x] **Parse-Protection:** Toàn bộ ghi chú viết tay trong `DEVELOPER-NOTES` được bảo toàn nguyên vẹn.",
+                "- [x] **Cross-Platform:** Kiểm định định dạng đường dẫn tương đối (Repo-relative links) tương thích 100% trên GitHub Web UI.",
+                "",
+                "---",
+                "",
+                "### ⚡ Hướng Dẫn Duyệt & Hợp Nhất 1-Chạm (1-Click Merge Protocol)",
+                "Tech Lead hoặc Kỹ sư có thể phê duyệt và gộp nhánh ngay bằng GitHub CLI:",
+                "```bash",
+                "gh pr merge --squash --delete-branch",
+                "```",
+                "*(Hoặc bấm nút **Squash and merge** trực tiếp trên giao diện GitHub Web).* ",
+                "",
+                "---",
+                "*Báo cáo được tạo tự động bởi CCBA Doc-Auto-Evolution Engine trên Server Spark.*",
+            ]
+        )
         return "\n".join(lines)
 
     def send_telegram_alert(self, report: DocEvolutionReport) -> bool:
@@ -374,8 +399,12 @@ class DocAutoEvolutionEngine:
 
         try:
             api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-            payload = json.dumps({"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}).encode("utf-8")
-            req = urllib.request.Request(api_url, data=payload, headers={"Content-Type": "application/json"})
+            payload = json.dumps(
+                {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
+            ).encode("utf-8")
+            req = urllib.request.Request(
+                api_url, data=payload, headers={"Content-Type": "application/json"}
+            )
             with urllib.request.urlopen(req, timeout=10) as resp:
                 if resp.status == 200:
                     logger.info("✅ Đã gửi thông báo Telegram thành công.")
@@ -400,23 +429,34 @@ class DocAutoEvolutionEngine:
         )
 
         if dry_run:
-            logger.info("🔍 [Dry-Run] Hoàn tất kiểm tra sức khỏe tài liệu mà không tạo branch hay PR.")
+            logger.info(
+                "🔍 [Dry-Run] Hoàn tất kiểm tra sức khỏe tài liệu mà không tạo branch hay PR."
+            )
             self.send_telegram_alert(report)
             return report
 
         # Live Execution: Git branch & PR
         try:
             subprocess.run(["git", "checkout", "-b", branch_name], check=True, capture_output=True)
-            subprocess.run(["git", "add", "CONTEXT.md", ".md/knowledge/"], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "add", "CONTEXT.md", ".md/knowledge/"], check=True, capture_output=True
+            )
             commit_res = subprocess.run(
-                ["git", "commit", "-m", f"docs(auto-evolution): nightly knowledge base audit {now_str}"],
+                [
+                    "git",
+                    "commit",
+                    "-m",
+                    f"docs(auto-evolution): nightly knowledge base audit {now_str}",
+                ],
                 capture_output=True,
                 text=True,
             )
             if commit_res.returncode == 0:
                 report.commits_created = 1
 
-            subprocess.run(["git", "push", "-u", "origin", branch_name], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "push", "-u", "origin", branch_name], check=True, capture_output=True
+            )
             pr_body = self.generate_pr_body(report)
 
             gh_res = subprocess.run(
@@ -445,9 +485,15 @@ class DocAutoEvolutionEngine:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="CCBA Document Auto-Evolution Engine")
-    parser.add_argument("--dry-run", action="store_true", help="Run in dry-run mode without git mutations")
-    parser.add_argument("--audit-only", action="store_true", help="Audit documents and print summary")
-    parser.add_argument("--check-bloat", action="store_true", help="Only check for pillar over-expansion")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Run in dry-run mode without git mutations"
+    )
+    parser.add_argument(
+        "--audit-only", action="store_true", help="Audit documents and print summary"
+    )
+    parser.add_argument(
+        "--check-bloat", action="store_true", help="Only check for pillar over-expansion"
+    )
 
     args = parser.parse_args()
     engine = DocAutoEvolutionEngine()
@@ -458,11 +504,15 @@ def main() -> None:
         print("📊 CCBA DOCUMENT HEALTH & PILLAR BALANCE AUDIT")
         print("============================================================")
         print(f"Timestamp: {health.timestamp}")
-        print(f"Trạng thái tổng thể: {'🟢 100% HEALTHY' if health.is_healthy else '⚠️ CẦN TINH CHỈNH'}")
+        print(
+            f"Trạng thái tổng thể: {'🟢 100% HEALTHY' if health.is_healthy else '⚠️ CẦN TINH CHỈNH'}"
+        )
         print("\nChi tiết các Trụ Cột:")
         for p in health.bloated_pillars:
             status_icon = "🔴" if p.is_bloated else "🟢"
-            print(f"  {status_icon} Trụ Cột {p.pillar_index}: {p.pillar_title} ({p.pattern_count} patterns)")
+            print(
+                f"  {status_icon} Trụ Cột {p.pillar_index}: {p.pillar_title} ({p.pattern_count} patterns)"
+            )
         print("============================================================\n")
         return
 

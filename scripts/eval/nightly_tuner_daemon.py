@@ -35,6 +35,7 @@ sys.path.insert(0, str(project_root / "packages" / "ccba-harness" / "src"))
 # Auto-load .env if present
 try:
     from dotenv import load_dotenv
+
     load_dotenv(project_root / ".env")
 except ImportError:
     pass
@@ -44,7 +45,6 @@ os.environ.setdefault("IDOP_ENV", "DEV")
 os.environ.setdefault("CCBA_IDOP_MOCK_MODE", "1")
 
 from scripts.eval.git_ratchet_tuner import GitRatchetTuner, RatchetConfig, RatchetReport
-
 
 
 @dataclass
@@ -84,6 +84,7 @@ class WeightedPriorityQueue:
     @staticmethod
     def rank_skills(skills_data: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Sorts skills such that lower baseline scores and untested skills are tuned first."""
+
         def priority_key(item: dict[str, Any]) -> tuple[int, float]:
             score = item.get("baseline_score", 0.0)
             if score < 90.0:
@@ -134,11 +135,13 @@ class NightlyTunerDaemon:
             if not full_dataset_path.exists():
                 full_dataset_path = self.test_cases_dir / "eval_general_domain.json"
 
-            discovered.append({
-                "skill_name": skill_name,
-                "target_file": skill_path,
-                "dataset_file": full_dataset_path,
-            })
+            discovered.append(
+                {
+                    "skill_name": skill_name,
+                    "target_file": skill_path,
+                    "dataset_file": full_dataset_path,
+                }
+            )
 
         return discovered
 
@@ -170,7 +173,7 @@ class NightlyTunerDaemon:
             dataset_file = item["dataset_file"]
 
             logger.info(f"\n⚡ --- Tối ưu hóa Kỹ năng: {skill_name} ---")
-            
+
             # Cấu hình vòng lặp động
             config = RatchetConfig(
                 target_file=target_file,
@@ -201,18 +204,19 @@ class NightlyTunerDaemon:
                 summaries.append(summary)
                 total_commits += result.kept_commits
 
-
             except Exception as e:
                 logger.error(f"❌ Lỗi trong quá trình tối ưu {skill_name}: {e}")
-                summaries.append(SkillEvolutionSummary(
-                    skill_name=skill_name,
-                    target_file=target_file,
-                    baseline_score=0.0,
-                    final_score=0.0,
-                    commits_kept=0,
-                    rollbacks=0,
-                    status=f"ERROR: {e}",
-                ))
+                summaries.append(
+                    SkillEvolutionSummary(
+                        skill_name=skill_name,
+                        target_file=target_file,
+                        baseline_score=0.0,
+                        final_score=0.0,
+                        commits_kept=0,
+                        rollbacks=0,
+                        status=f"ERROR: {e}",
+                    )
+                )
 
         # 4. Tổng hợp Báo Cáo Tiến Hóa (Evolution Report)
         skills_improved = sum(1 for s in summaries if s.score_delta > 0)
@@ -259,22 +263,28 @@ class NightlyTunerDaemon:
 
         for s in report.results:
             delta_str = f"+{s.score_delta:.1f}%" if s.score_delta > 0 else f"{s.score_delta:.1f}%"
-            badge = "🟢 IMPROVED" if s.score_delta > 0 else ("⭐ 100% PERFECT" if s.final_score == 100.0 else "⚪ UNCHANGED")
+            badge = (
+                "🟢 IMPROVED"
+                if s.score_delta > 0
+                else ("⭐ 100% PERFECT" if s.final_score == 100.0 else "⚪ UNCHANGED")
+            )
             lines.append(
                 f"| `{s.skill_name}` | {s.baseline_score:.1f}% | **{s.final_score:.1f}%** | `{delta_str}` | {s.commits_kept} | {badge} |"
             )
 
-        lines.extend([
-            "",
-            "---",
-            "",
-            "### 🛡️ Rào Chắn An Toàn (Safety Hard Floor Invariant)",
-            "- ✅ **Zero-Regression:** 100% các đột biến làm giảm điểm hoặc dính Điểm Liệt đã được `git checkout` hoàn tác sạch.",
-            "- ✅ **Hard Floor Compliance:** Tuyệt đối không chấp thuận các điều luật bãi bỏ hoặc lỗi kỹ thuật nghiêm trọng.",
-            "",
-            "---",
-            "*Báo cáo được tạo tự động bởi CCBA Nightly Auto-Tuner Daemon trên Server Spark.*",
-        ])
+        lines.extend(
+            [
+                "",
+                "---",
+                "",
+                "### 🛡️ Rào Chắn An Toàn (Safety Hard Floor Invariant)",
+                "- ✅ **Zero-Regression:** 100% các đột biến làm giảm điểm hoặc dính Điểm Liệt đã được `git checkout` hoàn tác sạch.",
+                "- ✅ **Hard Floor Compliance:** Tuyệt đối không chấp thuận các điều luật bãi bỏ hoặc lỗi kỹ thuật nghiêm trọng.",
+                "",
+                "---",
+                "*Báo cáo được tạo tự động bởi CCBA Nightly Auto-Tuner Daemon trên Server Spark.*",
+            ]
+        )
         return "\n".join(lines)
 
     def send_telegram_notification(self, report: NightlyDaemonReport) -> bool:
@@ -303,8 +313,12 @@ class NightlyTunerDaemon:
 
         try:
             api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-            payload = json.dumps({"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}).encode("utf-8")
-            req = urllib.request.Request(api_url, data=payload, headers={"Content-Type": "application/json"})
+            payload = json.dumps(
+                {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
+            ).encode("utf-8")
+            req = urllib.request.Request(
+                api_url, data=payload, headers={"Content-Type": "application/json"}
+            )
             with urllib.request.urlopen(req, timeout=10) as resp:
                 if resp.status == 200:
                     logger.info("✅ Đã gửi thông báo Telegram thành công.")
@@ -324,7 +338,9 @@ class NightlyTunerDaemon:
     def _create_pull_request(self, branch_name: str, report_body: str) -> str | None:
         """Pushes branch and creates a GitHub Pull Request using GitHub CLI (gh) if available."""
         try:
-            subprocess.run(["git", "push", "-u", "origin", branch_name], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "push", "-u", "origin", branch_name], check=True, capture_output=True
+            )
             logger.info(f"🚀 Đã push nhánh {branch_name} lên remote.")
 
             res = subprocess.run(
@@ -353,7 +369,9 @@ class NightlyTunerDaemon:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="CCBA Nightly Auto-Tuner Daemon")
-    parser.add_argument("--dry-run", action="store_true", help="Run without creating git branches or PRs")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Run without creating git branches or PRs"
+    )
     parser.add_argument("--max-iter", type=int, default=10, help="Max iterations for weak skills")
     args = parser.parse_args()
 

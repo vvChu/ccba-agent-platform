@@ -147,8 +147,8 @@ class WikiHealthLinter(BaseAuditor):
         cataloged.add(self.index_file.resolve())
         cataloged.add(self.log_file.resolve())
 
-        # Exclude archives and snapshot notes
-        exclude_dirs = {"archive", ".agents", ".git", "__pycache__"}
+        # Exclude archives, task trackers, and snapshot notes
+        exclude_dirs = {"archive", ".agents", ".git", "__pycache__", "issues", "teach"}
 
         for p in self.knowledge_dir.rglob("*.md"):
             if not p.is_file():

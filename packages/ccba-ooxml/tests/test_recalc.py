@@ -33,7 +33,10 @@ def test_safe_macro_injection_existing_file(tmp_path: Path):
 </script:module>"""
     macro_file.write_text(existing_macro_content, encoding="utf-8")
 
-    with patch("platform.system", return_value="Windows"), patch.dict(os.environ, {"APPDATA": str(fake_appdata)}):
+    with (
+        patch("platform.system", return_value="Windows"),
+        patch.dict(os.environ, {"APPDATA": str(fake_appdata)}),
+    ):
         ok = setup_libreoffice_macro()
         assert ok is True
 

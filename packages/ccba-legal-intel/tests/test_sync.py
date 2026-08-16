@@ -4,7 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ccba_legal import LegalSyncEngine, calculate_md5, calculate_sha256
+from ccba_legal import LegalSyncEngine
+from ccba_legal.sync import calculate_md5, calculate_sha256
 
 
 class TestLegalSyncEngine(unittest.TestCase):

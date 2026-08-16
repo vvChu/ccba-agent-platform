@@ -17,7 +17,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │
 ├── .agents/                           ← AI Agent configurations
 │   ├── AGENTS.md                      ←   Layer 1 Constitution Mirror
-│   ├── skills/                        ←   Reusable AI skills (<!-- SKILL_COUNT_START -->79<!-- SKILL_COUNT_END --> skills)
+│   ├── skills/                        ←   Reusable AI skills (<!-- SKILL_COUNT_START -->73<!-- SKILL_COUNT_END --> skills)
 │   │   ├── legal-document-tracker/    ←   Theo dõi VBPL
 │   │   ├── completion-checklist/      ←   HSHT công trình
 │   │   ├── seminar-builder/           ←   Chuẩn bị seminar
@@ -25,7 +25,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   │   ├── ai-gateway-sdk/            ←   Kết nối AI Gateway (Đa mô hình local GPU + cloud)
 │   │   └── platform-loader/           ←   Bootstrap + service routing
 │   │
-│   ├── workflows/                     ← Automated workflows (<!-- WORKFLOW_COUNT_START -->58<!-- WORKFLOW_COUNT_END --> workflows)
+│   ├── workflows/                     ← Automated workflows (<!-- WORKFLOW_COUNT_START -->60<!-- WORKFLOW_COUNT_END --> workflows)
 │   │   ├── ccba-prepare-seminar.md
 │   │   ├── ccba-update-legal-registry.md
 │   │   ├── ccba-session-retrospective.md

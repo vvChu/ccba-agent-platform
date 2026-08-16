@@ -1,4 +1,4 @@
-"""Script to execute Ticket 01: Initializing ccba-legal-knowledge Spoke repository."""
+"""Script to execute Ticket 01: Initializing ccba-legal-knowledge Spoke repository (Archived)."""
 
 import sys
 from pathlib import Path

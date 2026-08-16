@@ -12,7 +12,9 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 # Add package root to sys.path
-package_root = Path(__file__).resolve().parent.parent.parent / "packages" / "ccba-legal-intel" / "src"
+package_root = (
+    Path(__file__).resolve().parent.parent.parent / "packages" / "ccba-legal-intel" / "src"
+)
 if str(package_root) not in sys.path:
     sys.path.insert(0, str(package_root))
 
@@ -32,7 +34,7 @@ def run_okf_packaging_demo() -> Path:
 
     doc_id = "nghi_dinh_105_2025_nd_cp"
     title = "Nghị định 105/2025/NĐ-CP: Quy định chi tiết thi hành một số điều của Luật Phòng cháy, chữa cháy và cứu nạn, cứu hộ"
-    
+
     # 1. Raw Markdown content (Clean 100%, without YAML frontmatter)
     markdown_content = """# NGHỊ ĐỊNH 105/2025/NĐ-CP: QUY ĐỊNH CHI TIẾT THI HÀNH LUẬT PCCC & CNCH
 
@@ -71,7 +73,9 @@ Nghị định này áp dụng đối với cơ quan, tổ chức, hộ gia đì
 
     # 2. Package into OKF v2.0 Bundle
     print("\n⚡ 1. KÍCH HOẠT OKF BUNDLE PACKAGER (Tạo thư mục & phân tách SSOT)")
-    bundle_path = packager.package_bundle(doc_id=doc_id, content=markdown_content, metadata=metadata)
+    bundle_path = packager.package_bundle(
+        doc_id=doc_id, content=markdown_content, metadata=metadata
+    )
     print(f"👉 Thư mục Bundle được tạo: {bundle_path}")
 
     # 3. Tạo tệp clauses.json (Flat AST index with hierarchical coordinates)
@@ -133,7 +137,9 @@ Nghị định này áp dụng đối với cơ quan, tổ chức, hộ gia đì
     ]
 
     clauses_path = bundle_path / "clauses.json"
-    clauses_path.write_text(json.dumps(clauses_data, ensure_ascii=False, indent=2), encoding="utf-8")
+    clauses_path.write_text(
+        json.dumps(clauses_data, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     print(f"✅ Đã tạo {clauses_path.name} (6 mục AST phẳng kèm phân cấp)")
 
     # 4. Tạo tệp qa_benchmark.json (5 trường Ground-Truth phục vụ RAG Grounding Gate)
@@ -155,7 +161,9 @@ Nghị định này áp dụng đối với cơ quan, tổ chức, hộ gia đì
     ]
 
     qa_path = bundle_path / "qa_benchmark.json"
-    qa_path.write_text(json.dumps(qa_benchmark_data, ensure_ascii=False, indent=2), encoding="utf-8")
+    qa_path.write_text(
+        json.dumps(qa_benchmark_data, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     print(f"✅ Đã tạo {qa_path.name} (2 câu hỏi đối chuẩn Ground-Truth 5 trường)")
 
     # 5. Tạo cấu trúc bảng tables/
@@ -166,8 +174,16 @@ Nghị định này áp dụng đối với cơ quan, tổ chức, hộ gia đì
     tables_csv.mkdir(parents=True, exist_ok=True)
 
     table_sample = [
-        {"STT": 1, "Bộ môn": "Kiến trúc & Ngăn cháy", "Thẩm quyền thẩm định": "Cơ quan chuyên môn về xây dựng"},
-        {"STT": 2, "Bộ môn": "Hệ thống PCCC cơ điện (Báo cháy, Chữa cháy)", "Thẩm quyền thẩm định": "Cơ quan Công an (PC07)"},
+        {
+            "STT": 1,
+            "Bộ môn": "Kiến trúc & Ngăn cháy",
+            "Thẩm quyền thẩm định": "Cơ quan chuyên môn về xây dựng",
+        },
+        {
+            "STT": 2,
+            "Bộ môn": "Hệ thống PCCC cơ điện (Báo cháy, Chữa cháy)",
+            "Thẩm quyền thẩm định": "Cơ quan Công an (PC07)",
+        },
     ]
     (tables_json / "bang_phan_dinh_tham_quyen.json").write_text(
         json.dumps(table_sample, ensure_ascii=False, indent=2), encoding="utf-8"
@@ -176,7 +192,7 @@ Nghị định này áp dụng đối với cơ quan, tổ chức, hộ gia đì
         "STT,Bộ môn,Thẩm quyền thẩm định\n1,Kiến trúc & Ngăn cháy,Cơ quan chuyên môn về xây dựng\n2,Hệ thống PCCC cơ điện,Cơ quan Công an (PC07)\n",
         encoding="utf-8-sig",
     )
-    print(f"✅ Đã tạo thư mục tables/ (json/ và csv/ UTF-8 with BOM)")
+    print("✅ Đã tạo thư mục tables/ (json/ và csv/ UTF-8 with BOM)")
 
     # 6. Kiểm tra cấu trúc thư mục Bundle
     print("\n📂 2. CẤU TRÚC GÓI TRI THỨC OKF BUNDLE v2.0 HOÀN CHỈNH:")

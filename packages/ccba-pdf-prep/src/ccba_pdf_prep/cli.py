@@ -10,6 +10,7 @@ Commands:
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -54,7 +55,7 @@ def analyze(
     detail: bool = typer.Option(False, "--detail", "-d", help="Show per-page details."),
 ) -> None:
     """Analyze PDF files and recommend optimal processing strategy."""
-    from ccba_pdf_prep import PDFAnalyzer
+    from .core import PDFAnalyzer
 
     analyzer = PDFAnalyzer()
     pdf_files = _collect_pdfs(path, recursive)
@@ -92,7 +93,7 @@ def tile(
     overlap: int = typer.Option(0, "--overlap", help="Overlap between tiles in pixels."),
 ) -> None:
     """Slice a PDF page into high-resolution tiles for AI Vision."""
-    from ccba_pdf_prep.vision import VisionOptimizer
+    from .vision import VisionOptimizer
 
     out = output_dir or (pdf_path.parent / "tiles")
     console.print(f"[bold]Tiling[/bold] {pdf_path.name} page {page + 1} at {dpi} DPI...")
@@ -125,7 +126,7 @@ def split(
     """Split a large PDF into smaller chunks."""
     import fitz
 
-    from ccba_pdf_prep import get_blind_chunks, split_pdf
+    from .core import get_blind_chunks, split_pdf
 
     doc = fitz.open(str(pdf_path))
     total_pages = len(doc)
@@ -167,7 +168,7 @@ def _collect_pdfs(path: Path, recursive: bool) -> list[Path]:
     raise typer.Exit(code=1)
 
 
-def _print_analysis_table(reports: list, show_detail: bool = False) -> None:
+def _print_analysis_table(reports: list[Any], show_detail: bool = False) -> None:
     """Print analysis results as a rich table."""
     table = Table(show_header=True, header_style="bold cyan")
     table.add_column("", width=2)
@@ -215,7 +216,7 @@ def _print_analysis_table(reports: list, show_detail: bool = False) -> None:
                     console.print(f"  ... and {len(r.page_details) - 20} more pages")
 
 
-def _print_summary(reports: list) -> None:
+def _print_summary(reports: list[Any]) -> None:
     """Print category summary."""
     from collections import Counter
 
