@@ -4,7 +4,15 @@
 
 ---
 
+## [2026-08-16] [ingest] | Khai Phá Log Lỗi Thực Tế Từ Sản Xuất & Nâng Cấp Resilient Log Miner
+- **Author / Agent**: AI Lead Agent
+- **Affected Files**: `scripts/eval/log_eval_miner.py`, `scripts/tests/test_log_eval_miner.py`, `.agents/skills/eval-gate/test_cases/`
+- **Summary**: Hoàn tất đợt khai phá 507 file transcript trong `.gemini/antigravity/brain/` (2,205 tương tác), phát hiện và trích xuất 177 test cases thực chiến mới cho các bộ môn (PCCC Audit: 15, Legal Intel: 15, Academic Writing: 3, BigBIM: 3, Copywriting: 1, Agent Orchestration: 34, General Software: 106). Nâng cấp tính năng duyệt cây thư mục an toàn (Safe Directory Walk chống lỗi Windows junction `wt`), tự động làm sạch thẻ XML prompt và phân loại tự động miền nghiệp vụ.
+
+---
+
 ## [2026-08-16] [ingest] | Phát Hành Git-Ratchet Autonomous Skill Auto-Tuner (ccba-autoresearch)
+
 - **Author / Agent**: AI Lead Agent
 - **Affected Files**: `scripts/eval/git_ratchet_tuner.py`, `scripts/tests/test_git_ratchet_tuner.py`, `.agents/workflows/ccba-autoresearch.md`, `.agents/skills/eval-gate/program_template.md`
 - **Summary**: Hiện thực hóa cơ chế tối ưu hóa tự động theo mô hình bánh cóc Git của Karpathy (autoresearch). Tự động commit khi điểm số tăng và rollback sạch qua git checkout khi điểm số giảm hoặc dính Điểm Liệt.

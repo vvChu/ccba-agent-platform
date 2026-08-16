@@ -12,6 +12,7 @@ import argparse
 import datetime
 import json
 import logging
+import os
 import re
 import sys
 from pathlib import Path
@@ -30,7 +31,7 @@ SENSITIVE_PATTERNS = [
         "[API_KEY_REDACTED]",
     ),
     (
-        r"\b(?:100\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3})\b",
+        r"\b(?:100\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3})\b",
         "[IP_REDACTED]",
     ),
 ]
@@ -64,6 +65,22 @@ OUTDATED_LEGAL_CITATIONS = [
     (r"149/2020/TT-BCA", "Thông tư 149/2020 đã được cập nhật"),
 ]
 
+IGNORABLE_CONTROL_COMMANDS = {
+    "proceed",
+    "approve",
+    "yes",
+    "y",
+    "ok",
+    "tiếp tục",
+    "đồng ý",
+    "1",
+    "2",
+    "3",
+    "continue",
+    "/proceed",
+    "/approve",
+}
+
 
 def redact_sensitive_info(text: str) -> str:
     """Redacts sensitive user data (emails, phone numbers, API keys, IPs) using Maskara patterns."""
@@ -75,15 +92,122 @@ def redact_sensitive_info(text: str) -> str:
     return cleaned.strip()
 
 
-def parse_transcript_logs(log_dir: Path) -> list[dict[str, Any]]:
-    """Scans log_dir recursively for transcript.jsonl files and extracts user prompts and assistant outputs."""
-    interactions: list[dict[str, Any]] = []
+def extract_clean_user_prompt(raw_text: str) -> str:
+    """Extracts clean user prompt, stripping XML enclosing tags and system metadata."""
+    if not raw_text:
+        return ""
+    # Extract <USER_REQUEST>...</USER_REQUEST> if present
+    match = re.search(r"<USER_REQUEST>(.*?)</USER_REQUEST>", raw_text, re.DOTALL)
+    if match:
+        raw_text = match.group(1)
+    raw_text = re.sub(
+        r"<ADDITIONAL_METADATA>.*?</ADDITIONAL_METADATA>", "", raw_text, flags=re.DOTALL
+    )
+    raw_text = re.sub(
+        r"<USER_SETTINGS_CHANGE>.*?</USER_SETTINGS_CHANGE>", "", raw_text, flags=re.DOTALL
+    )
+    raw_text = re.sub(r"<SYSTEM_MESSAGE>.*?</SYSTEM_MESSAGE>", "", raw_text, flags=re.DOTALL)
+    return redact_sensitive_info(raw_text.strip())
+
+
+def resolve_log_dir(configured_dir: Path | str | None) -> Path:
+    """Resolves log directory with fallback to ~/.gemini/antigravity/brain."""
+    if configured_dir:
+        p = Path(configured_dir)
+        if p.exists():
+            return p
+
+    # Fallback 1: Local workspace .system_generated/logs
+    local_logs = Path(".system_generated/logs")
+    if local_logs.exists():
+        return local_logs
+
+    # Fallback 2: ~/.gemini/antigravity/brain
+    brain_dir = Path.home() / ".gemini" / "antigravity" / "brain"
+    if brain_dir.exists():
+        return brain_dir
+
+    return Path(configured_dir or ".system_generated/logs")
+
+
+def find_transcript_files(log_dir: Path) -> list[Path]:
+    """Safely traverses directory tree to find all transcript.jsonl files, skipping broken symlinks/junctions."""
     if not log_dir.exists():
-        logger.warning(f"⚠️ Thư mục log '{log_dir}' không tồn tại.")
+        return []
+    if log_dir.is_file() and log_dir.name.endswith(".jsonl"):
+        return [log_dir]
+
+    log_files: list[Path] = []
+    for dirpath, _dirnames, filenames in os.walk(log_dir, followlinks=False):
+        if "transcript.jsonl" in filenames:
+            log_files.append(Path(dirpath) / "transcript.jsonl")
+        elif any(f.startswith("transcript") and f.endswith(".jsonl") for f in filenames):
+            for f in filenames:
+                if (
+                    f.startswith("transcript")
+                    and f.endswith(".jsonl")
+                    and not f.endswith("_full.jsonl")
+                ):
+                    log_files.append(Path(dirpath) / f)
+    return log_files
+
+
+def classify_target_skill(user_prompt: str) -> str:
+    """Classifies user prompt to appropriate skill domain based on keywords."""
+    prompt_lower = user_prompt.lower()
+
+    if prompt_lower.startswith("you are teamwork_preview_") or prompt_lower.startswith(
+        "you are forensic auditor"
+    ):
+        return "agent_orchestration"
+
+    if any(
+        k in prompt_lower
+        for k in ["pccc", "thẩm tra", "mep", "qcvn 06", "chịu lửa", "bản vẽ", "dwg", "cad", "khói"]
+    ):
+        return "pccc_audit"
+
+    if any(
+        k in prompt_lower
+        for k in [
+            "luật",
+            "nghị định",
+            "thông tư",
+            "vbpl",
+            "pháp lý",
+            "pháp điển",
+            "vbhn",
+            "tvpl",
+            "nghị định 105",
+            "nghị định 136",
+        ]
+    ):
+        return "legal_intel"
+    if any(
+        k in prompt_lower
+        for k in ["bài báo", "khoa học", "imrad", "nghiên cứu", "học thuật", "trích dẫn"]
+    ):
+        return "academic_writing"
+    if any(
+        k in prompt_lower
+        for k in ["công văn", "tờ trình", "hợp đồng", "biên bản", "soạn thảo", "copywriting"]
+    ):
+        return "copywriting"
+    if any(k in prompt_lower for k in ["bim", "ifc", "uniclass", "rase", "revit"]):
+        return "bigbim_classification"
+    return "general_domain"
+
+
+def parse_transcript_logs(log_dir: Path) -> list[dict[str, Any]]:
+    """Scans log_dir safely for transcript.jsonl files and extracts user prompts and assistant outputs."""
+    target_dir = resolve_log_dir(log_dir)
+    interactions: list[dict[str, Any]] = []
+    if not target_dir.exists():
+        logger.warning(f"⚠️ Thư mục log '{target_dir}' không tồn tại.")
         return interactions
 
-    log_files = list(log_dir.rglob("transcript*.jsonl"))
-    logger.info(f"📂 Tìm thấy {len(log_files)} file transcript log trong {log_dir}")
+    log_files = find_transcript_files(target_dir)
+    logger.info(f"📂 Tìm thấy {len(log_files)} file transcript log trong {target_dir}")
 
     for log_file in log_files:
         try:
@@ -94,6 +218,7 @@ def parse_transcript_logs(log_dir: Path) -> list[dict[str, Any]]:
             continue
 
         last_user_prompt = None
+        conv_id = log_file.parents[2].name if len(log_file.parents) >= 3 else log_file.parent.name
 
         for line in lines:
             if not line.strip():
@@ -105,19 +230,42 @@ def parse_transcript_logs(log_dir: Path) -> list[dict[str, Any]]:
 
             stype = data.get("type", "")
             content = data.get("content", "")
+            status = data.get("status", "")
 
             if stype == "USER_INPUT":
-                last_user_prompt = redact_sensitive_info(content)
-            elif stype == "PLANNER_RESPONSE" and last_user_prompt:
-                interactions.append(
-                    {
-                        "source_file": log_file.name,
-                        "step_index": data.get("step_index", 0),
-                        "user_prompt": last_user_prompt,
-                        "planner_response": content,
-                    }
-                )
-                last_user_prompt = None
+                clean_p = extract_clean_user_prompt(content)
+                if len(clean_p) >= 5 and clean_p.lower() not in IGNORABLE_CONTROL_COMMANDS:
+                    last_user_prompt = clean_p
+            elif last_user_prompt:
+                has_error = False
+                response_snippet = ""
+
+                if stype == "PLANNER_RESPONSE" and content:
+                    response_snippet = content
+                elif stype in ("TOOL_EXECUTION", "RUN_COMMAND") and (
+                    status == "ERROR" or "Traceback" in content
+                ):
+                    response_snippet = content
+                    has_error = True
+                elif stype == "SYSTEM_MESSAGE" and (
+                    "Traceback" in content or "error" in content.lower()
+                ):
+                    response_snippet = content
+                    has_error = True
+
+                if response_snippet:
+                    interactions.append(
+                        {
+                            "conversation_id": conv_id,
+                            "source_file": log_file.name,
+                            "step_index": data.get("step_index", 0),
+                            "user_prompt": last_user_prompt,
+                            "planner_response": response_snippet,
+                            "is_error": has_error,
+                        }
+                    )
+                    if stype == "PLANNER_RESPONSE" and content:
+                        last_user_prompt = None
 
     logger.info(f"📊 Đã bóc tách được {len(interactions)} lượt tương tác người dùng.")
     return interactions
@@ -126,13 +274,7 @@ def parse_transcript_logs(log_dir: Path) -> list[dict[str, Any]]:
 def identify_failures(
     interactions: list[dict[str, Any]], taxonomy_filter: str | None = None
 ) -> list[dict[str, Any]]:
-    """Identifies and classifies interaction failures into a 3-category taxonomy.
-
-    Categories:
-    - ROUTER_DISCLAIMER: False refusal or domain mismatch disclaimer.
-    - TOOL_EXCEPTION: Tool call crash or Python unhandled exception.
-    - OUTDATED_CITATION: Citation of superseded or expired legal decrees.
-    """
+    """Identifies and classifies interaction failures into a 3-category taxonomy."""
     flagged_cases: list[dict[str, Any]] = []
 
     for item in interactions:
@@ -146,24 +288,24 @@ def identify_failures(
         detected_type = None
         reason = ""
 
-        # 1. Check Tool Exception
-        if any(exc in response_lower for exc in EXCEPTION_KEYWORDS):
-            detected_type = "TOOL_EXCEPTION"
-            reason = "Tool execution crashed or encountered an unhandled exception."
+        # 1. Check Outdated Legal Citation
+        for pattern, explanation in OUTDATED_LEGAL_CITATIONS:
+            if re.search(pattern, response_text, re.IGNORECASE):
+                detected_type = "OUTDATED_CITATION"
+                reason = f"Detected citation of outdated decree: {explanation}"
+                break
 
-        # 2. Check Outdated Legal Citation
-        if not detected_type:
-            for pattern, explanation in OUTDATED_LEGAL_CITATIONS:
-                if re.search(pattern, response_text, re.IGNORECASE):
-                    detected_type = "OUTDATED_CITATION"
-                    reason = f"Detected citation of outdated decree: {explanation}"
-                    break
-
-        # 3. Check Router Disclaimer
+        # 2. Check Router Disclaimer
         if not detected_type:
             if any(kw in response_lower for kw in DISCLAIMER_KEYWORDS):
                 detected_type = "ROUTER_DISCLAIMER"
                 reason = "Agent issued a refusal disclaimer on potentially valid domain prompt."
+
+        # 3. Check Tool Exception / Crash
+        if not detected_type:
+            if item.get("is_error") or any(exc in response_lower for exc in EXCEPTION_KEYWORDS):
+                detected_type = "TOOL_EXCEPTION"
+                reason = "Tool execution crashed or encountered an unhandled exception."
 
         if detected_type:
             if taxonomy_filter and taxonomy_filter.upper() != detected_type:
@@ -171,6 +313,7 @@ def identify_failures(
 
             flagged_cases.append(
                 {
+                    "conversation_id": item.get("conversation_id", ""),
                     "user_prompt": user_prompt,
                     "failure_type": detected_type,
                     "reason": reason,
@@ -190,17 +333,7 @@ def generate_eval_spec_item(
     case_index: int,
     format_type: str = "harness",
 ) -> dict[str, Any]:
-    """Generates an evaluation test case dictionary formatted for ccba_harness.evals.
-
-    Args:
-        failure_case: Detected failure case dictionary.
-        skill_name: Target skill name.
-        case_index: Sequential index for unique ID.
-        format_type: 'harness' (EvalItem format) or 'legacy' (4-layer assertions).
-
-    Returns:
-        Structured test case dictionary.
-    """
+    """Generates an evaluation test case dictionary formatted for ccba_harness.evals."""
     cid = f"test_{skill_name.replace('-', '_')}_mined_{case_index:02d}"
     prompt = failure_case["user_prompt"]
     ftype = failure_case.get("failure_type", "UNKNOWN")
@@ -233,6 +366,7 @@ def generate_eval_spec_item(
         "metadata": {
             "failure_type": ftype,
             "source_file": failure_case.get("source_file", ""),
+            "conversation_id": failure_case.get("conversation_id", ""),
             "step_index": failure_case.get("step_index", 0),
             "mined_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "target_skill": skill_name,
@@ -259,40 +393,50 @@ def mine_logs_and_export(
     exported_count = 0
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    target_skill = skill_filter or "academic_writing"
-    target_json = output_dir / f"eval_{target_skill}.json"
-
-    existing_cases: list[dict[str, Any]] = []
-    if target_json.exists():
-        try:
-            with open(target_json, encoding="utf-8") as f:
-                existing_cases = json.load(f)
-        except Exception:
-            existing_cases = []
-
-    existing_prompts = {
-        c.get("input_prompt") or c.get("prompt") for c in existing_cases if isinstance(c, dict)
-    }
-
+    # Group failures by skill
+    grouped_failures: dict[str, list[dict[str, Any]]] = {}
     for fcase in failures:
-        p_text = fcase["user_prompt"]
-        if p_text in existing_prompts:
-            continue
+        skill = skill_filter or classify_target_skill(fcase["user_prompt"])
+        grouped_failures.setdefault(skill, []).append(fcase)
 
-        eval_spec = generate_eval_spec_item(
-            fcase,
-            target_skill,
-            len(existing_cases) + 1,
-            format_type=format_type,
-        )
-        existing_cases.append(eval_spec)
-        existing_prompts.add(p_text)
-        exported_count += 1
+    for target_skill, skill_cases in grouped_failures.items():
+        target_json = output_dir / f"eval_{target_skill}.json"
 
-    if exported_count > 0 or auto_inject:
-        with open(target_json, "w", encoding="utf-8") as f:
-            json.dump(existing_cases, f, ensure_ascii=False, indent=2)
-        logger.info(f"✅ Đã xuất {exported_count} test cases thực chiến mới vào {target_json.name}")
+        existing_cases: list[dict[str, Any]] = []
+        if target_json.exists():
+            try:
+                with open(target_json, encoding="utf-8") as f:
+                    existing_cases = json.load(f)
+            except Exception:
+                existing_cases = []
+
+        existing_prompts = {
+            c.get("input_prompt") or c.get("prompt") for c in existing_cases if isinstance(c, dict)
+        }
+
+        skill_exported = 0
+        for fcase in skill_cases:
+            p_text = fcase["user_prompt"]
+            if p_text in existing_prompts:
+                continue
+
+            eval_spec = generate_eval_spec_item(
+                fcase,
+                target_skill,
+                len(existing_cases) + 1,
+                format_type=format_type,
+            )
+            existing_cases.append(eval_spec)
+            existing_prompts.add(p_text)
+            skill_exported += 1
+            exported_count += 1
+
+        if skill_exported > 0 or auto_inject:
+            with open(target_json, "w", encoding="utf-8") as f:
+                json.dump(existing_cases, f, ensure_ascii=False, indent=2)
+            logger.info(
+                f"✅ Đã xuất {skill_exported} test cases thực chiến mới vào {target_json.name}"
+            )
 
     return exported_count
 
@@ -306,7 +450,9 @@ def main() -> int:
         description="CCBA Production Log Mining & Eval Auto-Tuning Tool"
     )
     parser.add_argument(
-        "--log-dir", default=".system_generated/logs", help="Thư mục chứa transcript logs"
+        "--log-dir",
+        default=None,
+        help="Thư mục chứa transcript logs (mặc định tự động tìm ~/.gemini/antigravity/brain)",
     )
     parser.add_argument(
         "--output-dir",
@@ -332,7 +478,7 @@ def main() -> int:
     )
 
     args = parser.parse_args()
-    log_dir = Path(args.log_dir)
+    log_dir = Path(args.log_dir) if args.log_dir else resolve_log_dir(None)
     output_dir = Path(args.output_dir)
 
     count = mine_logs_and_export(
