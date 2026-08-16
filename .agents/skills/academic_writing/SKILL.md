@@ -86,3 +86,8 @@ Khi người dùng kích hoạt kỹ năng, Agent thực hiện theo các bướ
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+## 7. Chuẩn Hóa Trích Dẫn APA 7th & Khối Mã BibTeX Song Hành
+* Mọi tài liệu tham khảo trong bài báo bắt buộc phải trình bày song hành dưới 2 định dạng:
+  - Định dạng trích dẫn văn bản chuẩn **APA 7th Edition** (Author, Year, Title, Journal, DOI).
+  - Khối mã **BibTeX** chuẩn hóa để các nhà nghiên cứu có thể trích xuất trực tiếp vào LaTeX/Overleaf.
