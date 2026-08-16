@@ -79,7 +79,8 @@ else
 fi
 
 # 7. Execute Self-Verification Dry Run
-echo "🧪 Running Nightly Auto-Tuner Dry-Run Verification..."
+echo "🧪 Running Nightly Auto-Tuner & Doc-Evolution Dry-Run Verification..."
+python scripts/eval/doc_refactor_daemon.py --dry-run
 python scripts/eval/nightly_tuner_daemon.py --dry-run --max-iter 1
 
 # 8. Setup Crontab Schedule (00:00 Daily)
