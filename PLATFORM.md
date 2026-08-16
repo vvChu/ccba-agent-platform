@@ -68,7 +68,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 
 ## Phân loại Kỹ năng (Skills Classification)
 
-Hệ thống kỹ năng (<!-- SKILL_COUNT_START -->79<!-- SKILL_COUNT_END --> skills) được phân làm hai loại chính dựa trên cơ chế kích hoạt và tương tác:
+Hệ thống kỹ năng (<!-- SKILL_COUNT_START -->73<!-- SKILL_COUNT_END --> skills) được phân làm hai loại chính dựa trên cơ chế kích hoạt và tương tác:
 
 ### 1. Kỹ năng kích hoạt bởi User (User-Invocable Skills)
 Là các kỹ năng nhận lệnh trực tiếp từ người dùng thông qua Slash Commands hoặc quy trình tương ứng:
@@ -76,14 +76,14 @@ Là các kỹ năng nhận lệnh trực tiếp từ người dùng thông qua S
 *   **Soạn thảo & Đóng gói:** `copywriting` (qua `/ccba-copywriting`), `design` (thiết kế slides/brief), `wizard` (sinh setup scripts).
 *   **Nghiệp vụ Xây dựng & Tư vấn:** `legal-document-tracker` (qua `/ccba-update-legal-registry`), `completion-checklist` (quản lý HSHT), `seminar-builder` (qua `/ccba-prepare-seminar`).
 *   **Kỹ thuật Phần mềm & Kiểm thử:** `code-review` (rà soát code), `ccba-xia` (port/clone tính năng qua `/ccba-xia`), `ccba-idop-scaffolder` (setup app).
-*   **Điều phối & Thẩm định:** `ccba-ai-qc-batch-orchestrator` (qua `/ccba-run-qc-pipeline`), `grilling` (hỏi xoáy để test thiết kế), `wayfinder` (vạch bản đồ giải quyết bài toán mù mờ).
+*   **Điều phối & Thẩm định:** `ccba-ai-qc` (qua `/ccba-run-qc-pipeline`), `grilling` (hỏi xoáy để test thiết kế), `wayfinder` (vạch bản đồ giải quyết bài toán mù mờ).
 
 ### 2. Kỹ năng kích hoạt tự động bởi Model (Model-Triggered / Helper Skills)
 Là các thư viện bổ trợ, middleware, hoặc các cấu hình tự động kích hoạt bởi model khi thực hiện tác vụ:
 *   **Bootstrap & Kết nối:** `platform-loader` (bootstrap hệ thống), `ai-gateway-sdk` (giao tiếp AI Gateway).
 *   **Quy chuẩn & Pipeline:** `llm-pipeline-patterns` (patterns pipeline), `file-stability-guard` (phát hiện file sync), `api-circuit-breaker` (middleware rate limit), `append-only-logger` (thread-safe logger).
 *   **Bảo mật & Suy nghĩ:** `maskara-privacy` (tự động quét/redact keys), `sequential-thinking` (lập luận tuần tự), `docs-validator` (linter tài liệu).
-*   **Phân tích & Xử lý (Sub-skills):** `table-reconstructor` (dựng bảng vỡ), `form-template-cleaner` (làm sạch form), `relative-link-patcher` (sửa liên kết tương đối).
+*   **Master Skills với Progressive References:** `markdown-document-processing` (xử lý tài liệu Markdown), `ccba-ai-qc` (thẩm tra thiết kế đa bộ môn).
 *   **Phát hiện rủi ro (BIGBIM):** `bigbim-rase`, `bigbim-governance`, `bigbim-classification`, `bigbim-risk`, `bigbim-vbpl-digest`.
 *   **Thư viện phân tích file:** `pdf`, `pptx`, `docx` (các parser/manipulator định dạng OOXML/PDF).
 *   **Hỗ trợ phát triển:** `diagnosing-bugs` (chẩn đoán bug), `writing-great-skills` (quy chuẩn thiết kế skill).

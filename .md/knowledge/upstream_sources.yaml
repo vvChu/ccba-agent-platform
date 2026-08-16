@@ -1,0 +1,26 @@
+# CCBA Upstream Sources Registry
+# Danh mục các kho chứa mã nguồn/kỹ năng thượng nguồn được theo dõi định kỳ bởi /ccba-sync-upstream.
+
+version: "1.0"
+
+sources:
+  - name: "claudekit-engineer"
+    type: "engineer"
+    remote_url: "https://github.com/claudekit/claudekit-engineer"
+    branch: "main"
+    enabled: true
+    description: "ClaudeKit Engineering Skills & Workflows"
+
+  - name: "claudekit-marketing"
+    type: "marketing"
+    remote_url: "https://github.com/claudekit/claudekit-marketing"
+    branch: "main"
+    enabled: true
+    description: "ClaudeKit Marketing & Copywriting Skills"
+
+  - name: "mattpocock-skills"
+    type: "mattpocock-skills"
+    remote_url: "https://github.com/mattpocock/skills"
+    branch: "main"
+    enabled: true
+    description: "Matt Pocock's AI Engineering Skills & Mental Models"
