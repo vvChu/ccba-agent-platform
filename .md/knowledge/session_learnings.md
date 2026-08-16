@@ -515,6 +515,26 @@
 #### P7.23. Master OneDrive 5TB Offloading vs SharePoint Metadata Pattern
 * **Nguyên tắc:** Giữ dung lượng 58 SharePoint lists luôn < 5GB bằng cách chỉ lưu trữ Metadata (Text, Lookups, URLs). Toàn bộ file binary nặng (Revit `.rvt` 500MB, file scan HĐ có dấu đỏ, hồ sơ thầu HSMT) được tự động phân luồng sang **5TB Master OneDrive (`ccba@ibst-bim.vn`)** theo 5 thư mục module chuẩn hóa.
 
+#### P7.24. Tri-Repo Server Sibling Synchronization & Linux Cron Hardening Gate (ADR 0042)
+* **Nguyên tắc:** Server Spark duy trì 3 kho lưu trữ cốt lõi ngang hàng (`~/ccba/ccba-agent-platform`, `~/ccba/ccba-legal-knowledge`, `~/ccba/IDOP-CCBA-WAY`).
+* **Giải pháp:** Trước khi Auto-Tuner chạy lúc 00:00, kịch bản cron thực thi chuỗi **Tri-Repo Sequential Pull Gate** (`git pull` lần lượt Luật $\rightarrow$ Quy chế $\rightarrow$ Hub) và được bảo vệ bởi **Linux Cron Hardening** (export full `PATH`, `UTF-8` locale `LANG=C.UTF-8`, `PYTHONIOENCODING=utf-8`, và tự động nạp bí mật `.env`).
+
+#### P7.25. Tiered Multi-Severity AI Pre-Submission Gate (ADR 0042)
+* **Nguyên tắc:** Phân loại rào chắn tiền kiểm hồ sơ trình Viện IBST thành 3 cấp độ rõ rệt:
+  - 🔴 **Tier 1 (Hard-Floor Auto-Block):** Tự động khóa cứng 100% khi viện dẫn luật hết hiệu lực, tạm ứng $> 90\%$ hoặc sai lệch số học dòng tiền 3 tầng.
+  - 🟡 **Tier 2 (Governance Override):** Cho phép Giám đốc (`ROLE_DIRECTOR`) phê duyệt vượt rào đối với các ngoại lệ nghiệp vụ cấp bách và bắt buộc ghi nhật ký giải trình bất biến (`Audit Trail`) vào `lessons_learned.json`.
+  - 🟢 **Tier 3 (Advisory Warnings):** Cảnh báo mềm về văn phong, thể thức và nhắc nhở mốc tiến độ WBS.
+
+#### P7.26. Decoupled Resilience & Local Staging Queue for Active Spoke Development (ADR 0043)
+* **Nguyên tắc:** Khi một Spoke doanh nghiệp (`IDOP-CCBA-WAY`) đang trong giai đoạn tích cực triển khai lên Microsoft 365, hệ thống duy trì tính độc lập (Decoupling) bằng hàng đợi cục bộ [`.md/idop_staged/`](../../.md/) với trạng thái `STAGED_LOCAL`.
+* **Giải pháp:** Kỹ sư dự án tiếp tục làm việc bình thường (**Zero-Downtime**), khi kết nối mạng/SharePoint thông suốt trở lại, lệnh `idop_bridge --flush` thực hiện **Idempotent Replay** đồng bộ bù lên đám mây mà không gây trùng lặp bản ghi.
+
+#### P7.27. CI Schema Contract Drift Gate & Zero-Config Dual-Mode Auth (ADR 0043)
+* **Nguyên tắc:**
+  - *Bảo vệ Schema Khung Xương:* Bài test tự động `test_idop_schema_compatibility.py` cho phép nhóm IDOP tự do thêm cột/bảng mới (Open for Extension) nhưng khóa cứng không cho phép xóa/đổi tên 5 trường cốt lõi (`ProjectCode`, `NationalProjectID`, `ContractId`, `JobAssignments`, `CdeDocuments`).
+  - *Trải nghiệm Lập trình 0-Giây (Zero-Config):* Mặc định `IDOP_ENV="DEV"` kích hoạt Local Mock Sandbox, cho phép Kỹ sư mới và CI runners chạy thử toàn bộ logic mà không cần cấp quyền truy cập hay chứng chỉ `.pfx` thật.
+
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
 * **AP7.2. Committing Unscanned Code:** Bỏ qua quy trình `/ccba-code-review` hoặc Governance Audit trước khi tạo PR.
