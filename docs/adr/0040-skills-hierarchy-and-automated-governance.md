@@ -14,7 +14,7 @@ Sau đợt tái cấu trúc kiến trúc Monorepo theo ADR-0011 (hoàn thành 4 
 
 ```mermaid
 graph TD
-    subgraph Tier 1: Master Deep Skills [Model-Invoked — 12-15 Skills Toàn Trình]
+    subgraph Tier 1: Master Deep Skills [Model-Invoked — Giới hạn <= 10 Skills / Bundle]
         M1[markdown-document-processing]
         M2[ccba-legal-intel]
         M3[ccba-ai-qc-audit]
@@ -36,7 +36,7 @@ graph TD
     end
 ```
 
-- **Tier 1 (Master Deep Skills - Model Invoked):** Đại diện cho các năng lực đầu cuối hoàn chỉnh, bảo trợ bởi Deep Seams. Mô tả `description` súc tích $\le 180$ ký tự để Agent nhận diện trong ngôn ngữ tự nhiên.
+- **Tier 1 (Master Deep Skills - Model Invoked):** Đại diện cho các năng lực đầu cuối hoàn chỉnh, bảo trợ bởi Deep Seams. Khống chế nghiêm ngặt $\le 10$ skills cho mỗi Bundle (toàn platform duy trì ~25 model-invoked skills). Mô tả `description` súc tích $\le 180$ ký tự để Agent nhận diện trong ngôn ngữ tự nhiên.
 - **Tier 2 (Progressive References):** Các tài liệu hướng dẫn kỹ thuật chi tiết của sub-skills được chuyển vào thư mục `references/*.md` của Master Skill tương ứng. Xóa bỏ các thư mục sub-skill trùng lặp ở root.
 - **Tier 3 (User Workflows - User Invoked):** 100% các quy trình mang tính nghi thức, có sự điều khiển của con người (`/ccba-implement`, `/ccba-new-feature`, `/ccba-wait-what`...) được gắn `disable-model-invocation: true` để tiêu tốn **0 token** trong System Prompt khởi tạo.
 
@@ -44,7 +44,7 @@ graph TD
 
 Tích hợp vào `scripts/governance/skill_auditor.py` (chạy qua `validate_skills.py`) các Hard Gates trả về `Exit Code 1` nếu vi phạm:
 1. **Zero-Duplicate Gate:** Cấm tuyệt đối trùng lặp `name` hoặc trùng lặp file `SKILL.md` giữa root và thư mục con.
-2. **Context Budget Ceiling:** Trong mỗi Bundle (`_core`, `_qc`, `_consulting`), tổng số kỹ năng `model_invoked` không được vượt quá **10 skills** để bảo toàn vùng nhớ *Smart Zone* (< 120k tokens).
+2. **Context Budget Ceiling:** Trong mỗi Bundle (`_core`, `_qc`, `_consulting`, `_bim`), tổng số kỹ năng `model_invoked` không được vượt quá **10 skills** để bảo toàn vùng nhớ *Smart Zone* (< 120k tokens).
 3. **Taxonomy Metadata Gate:** Bắt buộc khai báo trường `bundle` và `role` (`master_skill`, `router`, `sub_reference`, `workflow_adapter`).
 4. **Shallow Skill Warning Gate:** Cảnh báo và hướng dẫn chuyển đổi nếu một skill độc lập quá ngắn (< 35 dòng) không có Deep Seam bảo trợ.
 
@@ -52,6 +52,6 @@ Tích hợp vào `scripts/governance/skill_auditor.py` (chạy qua `validate_ski
 
 ## Hệ quả & Lợi ích (Consequences)
 
-1. **Giảm 60% số lượng SKILL.md:** Từ 85 files xuống còn ~35-40 files sạch sẽ, không còn file trùng lặp.
-2. **Tiết kiệm 75% Context Token ban đầu:** Nhờ chuyển các Interactive Workflows sang `disable-model-invocation: true`.
+1. **Khử 100% trùng lặp vật lý & Giảm 70% Context-Loaded Skills:** Xóa bỏ 6 thư mục trùng lặp/nông (từ 85 xuống còn 79 tệp `SKILL.md` hợp lệ), giảm số lượng skill nạp vào prompt khởi tạo từ 85 xuống còn 25 `model_invoked` skills (hướng tới lộ trình dài hạn tiếp tục hợp nhất đạt ~35–40 files toàn nền tảng).
+2. **Tiết kiệm 75% Context Token ban đầu:** Nhờ chuyển 57 User Workflows và các ritual skills sang `disable-model-invocation: true`.
 3. **Bảo tồn Single Source of Truth (SSOT):** Mọi tài liệu tham chiếu đều gom về đúng Master Skill sở hữu nó.
