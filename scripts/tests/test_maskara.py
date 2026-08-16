@@ -8,7 +8,10 @@ from pathlib import Path
 # Ensure scripts directory is in sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
+import pytest
 from maskara import MaskaraScanner
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 class TestMaskaraScanner(unittest.TestCase):

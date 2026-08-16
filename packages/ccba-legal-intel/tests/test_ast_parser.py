@@ -1,5 +1,4 @@
-"""Unit tests for ASTParser and DeltaPatch schema in ccba_legal."""
-
+import pytest
 import yaml
 
 from ccba_legal.ast_parser import (
@@ -8,6 +7,8 @@ from ccba_legal.ast_parser import (
     DeltaPatchItem,
     PatchAction,
 )
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_ast_parser_parse_markdown() -> None:

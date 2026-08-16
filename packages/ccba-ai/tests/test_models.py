@@ -1,4 +1,8 @@
+import pytest
+
 from ccba_ai import AuditFinding, AuditReport
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_audit_finding_initialization():

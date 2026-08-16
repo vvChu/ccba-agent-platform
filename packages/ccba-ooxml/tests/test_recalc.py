@@ -4,7 +4,11 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from ccba_ooxml import OOXMLWorkspace, recalc_xlsx, setup_libreoffice_macro
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_recalc_xlsx_nonexistent():

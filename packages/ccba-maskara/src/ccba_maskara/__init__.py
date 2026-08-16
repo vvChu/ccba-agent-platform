@@ -15,22 +15,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from ._locator import (
-    AGENT_ALIASES,
-    AGENT_SPECS,
-    get_default_roots,
-    normalize_agent_name,
-    resolve_targets,
-)
 from ._redactor import (
-    BACKUP_DIR,
     apply_raw_redactions,
     backup_and_write,
 )
 from ._redactor import (
     redact_findings as apply_redact_findings,
 )
-from ._rules import REGEX_PATTERNS, SAFE_STRINGS
 from ._scanner import MaskaraScanner
 
 __version__ = "1.0.0"
@@ -65,14 +56,5 @@ __all__ = [
     "apply_redact_findings",
     "backup_and_write",
     "is_binary",
-    "normalize_agent_name",
-    "get_default_roots",
-    "resolve_targets",
-    # Constants
-    "REGEX_PATTERNS",
-    "SAFE_STRINGS",
-    "AGENT_SPECS",
-    "AGENT_ALIASES",
-    "BACKUP_DIR",
     "__version__",
 ]

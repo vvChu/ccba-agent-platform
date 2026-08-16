@@ -63,8 +63,8 @@ class ADRGenerator:
                 changes.append(f"Platform Catalog/Manifest modified: {filepath} ({status})")
             elif filepath.endswith(".db") or filepath.endswith(".sqlite"):
                 changes.append(f"Database schema/file modified: {filepath} ({status})")
-            elif "packages/" in filepath and filepath.endswith(".py"):
-                changes.append(f"Core Package modified: {filepath} ({status})")
+            elif ("packages/" in filepath or "scripts/" in filepath) and filepath.endswith(".py"):
+                changes.append(f"Core Code/Script modified: {filepath} ({status})")
 
         return changes
 

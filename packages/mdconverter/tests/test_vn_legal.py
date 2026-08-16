@@ -1,6 +1,8 @@
-"""Tests for VN Legal detector."""
+import pytest
 
 from mdconverter.plugins.vn_legal.detector import get_document_type, is_legal_document
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 class TestIsLegalDocument:
