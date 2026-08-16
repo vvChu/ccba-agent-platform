@@ -350,5 +350,7 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
         print(f"\nValidation failed with {total_errors} error(s).")
         return 1
 
-    print(f"\x1b[32mSuccessfully validated {len(skills_files)} SKILL.md file(s) across all 4 CI Gates.\x1b[0m")
+    print(
+        f"\x1b[32mSuccessfully validated {len(skills_files)} SKILL.md file(s) across all 4 CI Gates.\x1b[0m"
+    )
     return 0

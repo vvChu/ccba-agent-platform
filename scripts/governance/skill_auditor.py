@@ -37,30 +37,76 @@ class SkillAuditor(BaseAuditor):
         """Audit a single SKILL.md or workflow file for CCBA compliance."""
         issues: list[AuditIssue] = []
         if not file_path.exists():
-            return [AuditIssue(1, str(file_path), "File does not exist", category="MISSING_FILE", file_path=str(file_path))]
+            return [
+                AuditIssue(
+                    1,
+                    str(file_path),
+                    "File does not exist",
+                    category="MISSING_FILE",
+                    file_path=str(file_path),
+                )
+            ]
 
         content = file_path.read_text(encoding="utf-8")
         match = FRONTMATTER_RE.match(content)
         if not match:
-            return [AuditIssue(1, str(file_path), "Missing YAML frontmatter '---'", category="MALFORMED_FRONTMATTER", file_path=str(file_path))]
+            return [
+                AuditIssue(
+                    1,
+                    str(file_path),
+                    "Missing YAML frontmatter '---'",
+                    category="MALFORMED_FRONTMATTER",
+                    file_path=str(file_path),
+                )
+            ]
 
         try:
             meta = yaml.safe_load(match.group(1))
         except Exception as e:
-            return [AuditIssue(1, str(file_path), f"Failed to parse frontmatter YAML: {e}", category="YAML_PARSE_ERROR", file_path=str(file_path))]
+            return [
+                AuditIssue(
+                    1,
+                    str(file_path),
+                    f"Failed to parse frontmatter YAML: {e}",
+                    category="YAML_PARSE_ERROR",
+                    file_path=str(file_path),
+                )
+            ]
 
         if not isinstance(meta, dict):
-            return [AuditIssue(1, str(file_path), "Frontmatter YAML is not a valid dictionary", category="MALFORMED_FRONTMATTER", file_path=str(file_path))]
+            return [
+                AuditIssue(
+                    1,
+                    str(file_path),
+                    "Frontmatter YAML is not a valid dictionary",
+                    category="MALFORMED_FRONTMATTER",
+                    file_path=str(file_path),
+                )
+            ]
 
         name = meta.get("name")
         description = meta.get("description")
         disable_model_inv = meta.get("disable-model-invocation", False)
 
         if not name or not isinstance(name, str):
-            issues.append(AuditIssue(1, str(file_path), "Missing or invalid 'name' in frontmatter", category="MISSING_NAME", file_path=str(file_path)))
+            issues.append(
+                AuditIssue(
+                    1,
+                    str(file_path),
+                    "Missing or invalid 'name' in frontmatter",
+                    category="MISSING_NAME",
+                    file_path=str(file_path),
+                )
+            )
         if not description or not isinstance(description, str):
             issues.append(
-                AuditIssue(1, str(file_path), "Missing or invalid 'description' in frontmatter", category="MISSING_DESCRIPTION", file_path=str(file_path))
+                AuditIssue(
+                    1,
+                    str(file_path),
+                    "Missing or invalid 'description' in frontmatter",
+                    category="MISSING_DESCRIPTION",
+                    file_path=str(file_path),
+                )
             )
 
         if description and isinstance(description, str) and not disable_model_inv:
@@ -81,7 +127,15 @@ class SkillAuditor(BaseAuditor):
         step_errors = self._analyze_steps_completion_criteria(body)
         for line_offset, err_msg in step_errors:
             abs_line = line_offset + frontmatter_lines
-            issues.append(AuditIssue(abs_line, str(file_path), err_msg, category="MISSING_COMPLETION_CRITERIA", file_path=str(file_path)))
+            issues.append(
+                AuditIssue(
+                    abs_line,
+                    str(file_path),
+                    err_msg,
+                    category="MISSING_COMPLETION_CRITERIA",
+                    file_path=str(file_path),
+                )
+            )
 
         return issues
 
@@ -228,7 +282,14 @@ class SkillAuditor(BaseAuditor):
         # 1. Zero-Duplicate Gate
         for skill_name, paths in seen_names.items():
             if len(paths) > 1:
-                rel_paths = [str(p.relative_to(self.project_root) if p.is_relative_to(self.project_root) else p) for p in paths]
+                rel_paths = [
+                    str(
+                        p.relative_to(self.project_root)
+                        if p.is_relative_to(self.project_root)
+                        else p
+                    )
+                    for p in paths
+                ]
                 issues.append(
                     AuditIssue(
                         1,

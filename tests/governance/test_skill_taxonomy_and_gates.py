@@ -34,7 +34,9 @@ def test_real_codebase_skill_ci_gates() -> None:
 
     # 2. Check workspace-level hard gates
     gate_issues = auditor.audit_workspace_gates(skills_dir)
-    assert len(gate_issues) == 0, f"Workspace hard gate violations: {[g.message for g in gate_issues]}"
+    assert len(gate_issues) == 0, (
+        f"Workspace hard gate violations: {[g.message for g in gate_issues]}"
+    )
 
 
 def test_zero_duplicate_gate_catches_duplicates(tmp_path: Path) -> None:
@@ -45,8 +47,14 @@ def test_zero_duplicate_gate_catches_duplicates(tmp_path: Path) -> None:
     skill_a.parent.mkdir(parents=True)
     skill_b.parent.mkdir(parents=True)
 
-    skill_a.write_text("---\nname: my-duplicate-skill\ndescription: Test A\nbundle: _core\n---\n# Test A\n", encoding="utf-8")
-    skill_b.write_text("---\nname: my-duplicate-skill\ndescription: Test B\nbundle: _qc\n---\n# Test B\n", encoding="utf-8")
+    skill_a.write_text(
+        "---\nname: my-duplicate-skill\ndescription: Test A\nbundle: _core\n---\n# Test A\n",
+        encoding="utf-8",
+    )
+    skill_b.write_text(
+        "---\nname: my-duplicate-skill\ndescription: Test B\nbundle: _qc\n---\n# Test B\n",
+        encoding="utf-8",
+    )
 
     issues = auditor.audit_workspace_gates(tmp_path)
     dup_issues = [i for i in issues if i.category == "ZERO_DUPLICATE_GATE_VIOLATION"]
@@ -63,7 +71,10 @@ def test_context_budget_ceiling_catches_overflow(tmp_path: Path) -> None:
     for i in range(12):
         sf = bundle_dir / f"skill_{i}" / "SKILL.md"
         sf.parent.mkdir(parents=True)
-        sf.write_text(f"---\nname: skill-{i}\ndescription: Test skill {i}\nbundle: _test_bundle\n---\n# Skill {i}\n", encoding="utf-8")
+        sf.write_text(
+            f"---\nname: skill-{i}\ndescription: Test skill {i}\nbundle: _test_bundle\n---\n# Skill {i}\n",
+            encoding="utf-8",
+        )
 
     issues = auditor.audit_workspace_gates(tmp_path)
     overflow_issues = [i for i in issues if i.category == "CONTEXT_BUDGET_CEILING_EXCEEDED"]
@@ -76,7 +87,10 @@ def test_description_length_limit_on_model_invoked(tmp_path: Path) -> None:
     auditor = SkillAuditor(tmp_path)
     sf = tmp_path / "SKILL.md"
     long_desc = "A" * 185
-    sf.write_text(f"---\nname: long-desc-skill\ndescription: {long_desc}\nbundle: _core\n---\n# Long Desc\n", encoding="utf-8")
+    sf.write_text(
+        f"---\nname: long-desc-skill\ndescription: {long_desc}\nbundle: _core\n---\n# Long Desc\n",
+        encoding="utf-8",
+    )
 
     issues = auditor.audit_skill(sf)
     desc_issues = [i for i in issues if i.category == "DESCRIPTION_TOO_LONG"]
