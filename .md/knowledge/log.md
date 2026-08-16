@@ -2,6 +2,11 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-08-16] [ingest] | Hoàn Tất Triển Khai Động Cơ Tự Tiến Hóa Tài Liệu (Doc-Auto-Evolution)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Wayfinder Ticket D-01 -> D-04)
+- **Affected Files**: `scripts/eval/doc_refactor_daemon.py`, `scripts/tests/test_doc_refactor_daemon.py`, `scripts/cron/run_nightly_tuner.sh`, `scripts/cron/run_nightly_tuner.bat`, `scripts/deploy/bootstrap_spark_server.sh`, `.md/knowledge/issues/doc-auto-evolution/`
+- **Summary**: Xây dựng Deep Seam `DocAutoEvolutionEngine` bọc toàn bộ chu trình tự bảo trì tài liệu tri thức LLM-Wiki. Tích hợp động cơ `CodeGroundingEngine` quét AST in-memory (< 150ms), rào chắn `ZeroDeletionGuard`, `Parse-Protection Guard`, và `PillarBalanceAuditor`. Tích hợp quy trình chạy tự động 00:00 hàng đêm trên Server Spark tạo Pull Request và gửi thông báo Telegram.
+
 ---
 
 ## [2026-08-16] [adr] | Ban Hành ADR 0043: Decoupled Resilience & Active Development Cho IDOP-CCBA-WAY

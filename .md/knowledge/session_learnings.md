@@ -525,10 +525,18 @@
   - *Bảo vệ Schema Khung Xương:* Bài test tự động `test_idop_schema_compatibility.py` cho phép nhóm IDOP tự do thêm cột/bảng mới (Open for Extension) nhưng khóa cứng không cho phép xóa/đổi tên 5 trường cốt lõi (`ProjectCode`, `NationalProjectID`, `ContractId`, `JobAssignments`, `CdeDocuments`).
   - *Trải nghiệm Lập trình 0-Giây (Zero-Config):* Mặc định `IDOP_ENV="DEV"` kích hoạt Local Mock Sandbox, cho phép Kỹ sư mới và CI runners chạy thử toàn bộ logic mà không cần cấp quyền truy cập hay chứng chỉ `.pfx` thật.
 
+#### P8.9. Automated Knowledge Doc-Evolution Daemon & In-Memory AST Grounding (Ticket D-01-D-04)
+* **Nguyên tắc:** Hệ thống tài liệu tri thức (LLM-Wiki) phải tự tiến hóa song song với mã nguồn thực tế mà không đòi hỏi con người cập nhật thủ công liên tục.
+* **Giải pháp:**
+  - *In-Memory AST Code-Grounding:* `CodeGroundingEngine` quét toàn bộ ký hiệu Python và ADRs trong bộ nhớ (< 150ms) để xác thực mọi dẫn chứng mã nguồn trước khi AI được phép đề xuất cập nhật tài liệu.
+  - *Zero-Deletion & Parse-Protection Invariants:* `ZeroDeletionGuard` bẫy diff để ngăn chặn AI xóa bỏ bất kỳ tri thức cũ nào (chỉ cho phép gắn thẻ `[DEPRECATED]`) và bảo vệ 100% các khối ghi chú viết tay `<!-- DEVELOPER-NOTES-START -->` ... `<!-- DEVELOPER-NOTES-END -->`.
+  - *HitL PR Ratchet & Telegram Alert:* Tiến trình qua đêm lúc 00:00 trên Server Spark tự động tạo branch `docs/auto-refactor-YYYYMMDD`, mở PR trên GitHub kèm lệnh duyệt 1-chạm `gh pr merge --squash` và gửi báo cáo tóm tắt 3 dòng tới Telegram của Kỹ sư.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP8.1. Bypassing Tier 1 Hard-Floor Gate:** Cho phép xuất hồ sơ trình Viện IBST khi vẫn còn lỗi sai số học dòng tiền hoặc viện dẫn luật hết hiệu lực.
 * **AP8.2. Direct Heavy Binary Upload to SharePoint:** Upload trực tiếp file mô hình Revit 3D hoặc scan nặng vào SharePoint List làm cạn kiệt dung lượng Tenant 2TB thay vì đưa sang 5TB Master OneDrive.
 * **AP8.3. Running Production Daemon without Mock Sandbox Isolation:** Chạy các bài test đánh giá kỹ năng ban đêm mà không cô lập biến môi trường `IDOP_ENV=DEV`, gây nghẽn và fail test khi SharePoint bảo trì.
+* **AP8.4. Ungrounded Knowledge Document Refactoring:** Cho phép AI tự do sửa đổi tài liệu kiến trúc hoặc session learnings mà không có AST Code-Grounding và Zero-Deletion guardrails bảo vệ, dẫn đến mất mát bài học lịch sử và sinh ảo giác (hallucinations).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
