@@ -1,8 +1,10 @@
 ---
 name: eval-gate
-description: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động sửa lỗi (Self-Healing Loop).
+description: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động sửa
+  lỗi (Self-Healing Loop).
+disable-model-invocation: true
+bundle: _software
 ---
-
 # 🛡️ Kỹ năng: eval-gate (Tự kiểm chứng & Sửa lỗi)
 
 Kỹ năng này bọc script `scripts/run_harness_evals.py` và chịu trách nhiệm bảo vệ codebase khỏi các lỗi cú pháp, kiểu dữ liệu, test cases thất bại hoặc tài liệu bị ảo ảnh.

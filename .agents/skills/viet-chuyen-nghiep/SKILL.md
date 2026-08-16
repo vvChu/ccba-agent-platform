@@ -1,8 +1,10 @@
 ---
 name: viet-chuyen-nghiep
-description: Viết tiếng Việt chuyên nghiệp — nhà xuất bản AI. Hỗ trợ soạn thảo, review, biên tập, và xuất bản nội dung chuẩn phong cách.
+description: Viết tiếng Việt chuyên nghiệp — nhà xuất bản AI. Hỗ trợ soạn thảo, review,
+  biên tập, và xuất bản nội dung chuẩn phong cách.
+disable-model-invocation: true
+bundle: _software
 ---
-
 # Nhà Xuất Bản AI — v3.0
 
 ## ⚠️ Always Check (mọi output tiếng Việt)

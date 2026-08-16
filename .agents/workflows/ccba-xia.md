@@ -6,8 +6,8 @@ applies_to:
   - "Thiết kế"
   - "Kiểm định"
 bundle: "_core"
+disable-model-invocation: true
 ---
-
 # Workflow: Port tính năng (xỉa code) từ repository ngoài (/ccba-xia)
 
 Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `ccba-xia` tại [SKILL.md](../skills/xia/SKILL.md) để bắt đầu quy trình trích xuất và chuyển dịch mã nguồn.

@@ -1,15 +1,22 @@
 ---
 name: tdd
-description: Phát triển hướng kiểm thử (Red-Green-Refactor) giúp tạo mã nguồn ổn định, tin cậy thông qua các giao diện công khai (seams).
+description: Phát triển hướng kiểm thử (Red-Green-Refactor) giúp tạo mã nguồn ổn định,
+  tin cậy thông qua các giao diện công khai (seams).
 user-invocable: true
-when_to_use: "Dùng khi người dùng yêu cầu phát triển tính năng mới hoặc sửa lỗi bằng phương pháp viết test trước (test-first)."
+when_to_use: Dùng khi người dùng yêu cầu phát triển tính năng mới hoặc sửa lỗi bằng
+  phương pháp viết test trước (test-first).
 category: utilities
-keywords: [tdd, test, refactor, quality]
+keywords:
+- tdd
+- test
+- refactor
+- quality
 metadata:
   author: CCBA
-  version: "1.1.0"
+  version: 1.1.0
+disable-model-invocation: true
+bundle: _software
 ---
-
 # Quy trình Phát triển Hướng Kiểm thử (Test-Driven Development)
 
 TDD là chu kỳ lặp Red → Green → Refactor. Kỹ năng này cung cấp quy trình và tiêu chuẩn để chu kỳ đó tạo ra những bộ test chất lượng cao, dễ bảo trì và bám sát ngôn ngữ nghiệp vụ của dự án.

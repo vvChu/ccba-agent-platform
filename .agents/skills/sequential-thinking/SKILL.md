@@ -1,17 +1,24 @@
 ---
 name: ck:sequential-thinking
-description: Áp dụng phương pháp phân tích suy nghĩ tuần tự từng bước cho các vấn đề phức tạp. Hỗ trợ rẽ nhánh giả thuyết, cập nhật và chỉnh sửa nhận định cũ.
+description: Áp dụng phương pháp phân tích suy nghĩ tuần tự từng bước cho các vấn
+  đề phức tạp. Hỗ trợ rẽ nhánh giả thuyết, cập nhật và chỉnh sửa nhận định cũ.
 user-invocable: true
-when_to_use: "Dùng khi cần phân rã bài toán phức tạp, phân tích pháp lý hoặc gỡ lỗi nhiều bước."
+when_to_use: Dùng khi cần phân rã bài toán phức tạp, phân tích pháp lý hoặc gỡ lỗi
+  nhiều bước.
 category: utilities
-keywords: [reasoning, step-by-step, analysis]
+keywords:
+- reasoning
+- step-by-step
+- analysis
 license: MIT
-argument-hint: "[vấn đề cần phân tích]"
+argument-hint: '[vấn đề cần phân tích]'
 metadata:
   author: claudekit
-  version: "1.0.0"
+  version: 1.0.0
+bundle: _core
+layer: _core
+disable-model-invocation: true
 ---
-
 # Sequential Thinking (Suy nghĩ tuần tự)
 
 Phương pháp phân rã và giải quyết vấn đề thông qua chuỗi suy nghĩ có cấu trúc, linh hoạt điều chỉnh và tự kiểm chứng.

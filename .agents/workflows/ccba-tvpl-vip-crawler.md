@@ -1,7 +1,7 @@
 ---
 description: Quy trình thực thi cào dữ liệu văn bản pháp luật VIP từ Thư viện Pháp luật (TVPL) qua Deep Seam TVPLCrawler
+disable-model-invocation: true
 ---
-
 # Quy trình thực thi Slash Command `/ccba-tvpl-vip-crawler`
 
 Khi người dùng kích hoạt lệnh Slash Command này dưới dạng:

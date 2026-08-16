@@ -1,9 +1,15 @@
 ---
 name: ccba-prototype
-description: Xây dựng mẫu thử thô (throwaway prototype) để trả lời câu hỏi thiết kế (Logic hoặc UI) trước khi triển khai chính thức.
-keywords: [prototype, mẫu thử, test thô, sanity-check]
+description: Xây dựng mẫu thử thô (throwaway prototype) để trả lời câu hỏi thiết kế
+  (Logic hoặc UI) trước khi triển khai chính thức.
+keywords:
+- prototype
+- mẫu thử
+- test thô
+- sanity-check
+disable-model-invocation: true
+bundle: _software
 ---
-
 # 🚀 Kỹ năng: ccba-prototype (Xây Dựng Mẫu Thử Nhanh)
 
 Mẫu thử (prototype) là **mã nguồn thô viết nhanh, chỉ dùng một lần (throwaway code) để trả lời một câu hỏi thiết kế cụ thể**. Mục tiêu của mẫu thử không phải là sản phẩm hoàn thiện, mà là để kiểm chứng ý tưởng nhanh nhất và sau đó xóa bỏ hoặc hấp thụ.

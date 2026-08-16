@@ -6,8 +6,8 @@ applies_to:
   - "Thiết kế"
   - "Kiểm định"
 bundle: "_core"
+disable-model-invocation: true
 ---
-
 # Workflow: Phân rã công việc thành Tickets (/ccba-to-tickets)
 
 Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `to-tickets` tại [SKILL.md](../skills/to-tickets/SKILL.md) để phân rã yêu cầu thành các ticket phát triển độc lập và liên kết chặn.

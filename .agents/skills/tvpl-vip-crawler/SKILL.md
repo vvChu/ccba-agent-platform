@@ -1,8 +1,10 @@
 ---
 name: tvpl-vip-crawler
-description: Kỹ năng tự động cào và đóng gói văn bản pháp luật VIP TVPL qua Deep Seam TVPLCrawler (tự động CookieVault & Mutex).
+description: Kỹ năng tự động cào và đóng gói văn bản pháp luật VIP TVPL qua Deep Seam
+  TVPLCrawler (tự động CookieVault & Mutex).
+disable-model-invocation: true
+bundle: _software
 ---
-
 # Kỹ Năng Cào & Đóng Gói Văn Bản VIP Thư Viện Pháp Luật (`tvpl-vip-crawler`)
 
 Kỹ năng này điều phối quy trình thu thập, đăng nhập tài khoản VIP Thư viện Pháp luật, tự động quản lý cookie qua `CookieVault`, bảo vệ phiên làm việc bằng `TVPLSessionMutex`, vượt các rào chắn kiểm tra Cloudflare/Popups và đóng gói văn bản pháp lý thành bộ chuẩn **OKF (Open Knowledge Format) Bundle** thông qua Deep Seam **`TVPLCrawler`** ([`packages/ccba-legal-intel`](../../packages/ccba-legal-intel)).

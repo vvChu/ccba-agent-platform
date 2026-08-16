@@ -2,16 +2,15 @@
 name: markdown-document-processing
 description: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep Seam ConversionPipeline.
 role: master_skill
-sub_skills:
-  - table-reconstructor
-  - form-template-cleaner
-  - relative-link-patcher
+layer: _core
+bundle: _core
+invocation: model_invoked
+deep_seam: ConversionPipeline
 applies_to:
   - "Phần mềm"
   - "Thẩm tra thiết kế"
   - "Thiết kế"
   - "Kiểm định"
-bundle: "_core"
 ---
 
 # Master Skill: Markdown Document Processing
@@ -35,9 +34,9 @@ graph TD
     Pipeline --> Output[Tài liệu Markdown chuẩn hóa]
 ```
 
-1. **`table-reconstructor`**: Tự động nhận diện và ghép lại các bảng bị vỡ dọc/lệch cột.
-2. **`form-template-cleaner`**: Tự động khôi phục tiêu đề biểu mẫu bị lỗi placeholder.
-3. **`relative-link-patcher`**: Tự động chuẩn hóa liên kết phụ lục `./appendices/` và đồng bộ `index.md`.
+1. **`table-reconstructor`**: Tự động nhận diện và ghép lại các bảng bị vỡ dọc/lệch cột (Xem chi tiết tại [table_reconstruction.md](references/table_reconstruction.md)).
+2. **`form-template-cleaner`**: Tự động khôi phục tiêu đề biểu mẫu bị lỗi placeholder (Xem chi tiết tại [form_cleaner.md](references/form_cleaner.md)).
+3. **`relative-link-patcher`**: Tự động chuẩn hóa liên kết phụ lục `./appendices/` và đồng bộ `index.md` (Xem chi tiết tại [link_patcher.md](references/link_patcher.md)).
 
 ---
 
@@ -49,7 +48,7 @@ Khi nhận được yêu cầu xử lý chuyển đổi tài liệu, hãy tuân 
    - Sử dụng Python API hoặc CLI để chuyển đổi tài liệu. Hệ thống tự động kích hoạt toàn bộ các post-processors làm sạch bảng, biểu mẫu và vá liên kết tương đối:
      ```python
      from mdconverter import ConversionPipeline
-     
+
      pipeline = ConversionPipeline()
      result = pipeline.convert("path/to/document.docx")
      # Hoặc với async pipeline:
@@ -62,10 +61,10 @@ Khi nhận được yêu cầu xử lý chuyển đổi tài liệu, hãy tuân 
    - **Tiêu chí hoàn thành:** Tệp `.md` đầu ra được tạo thành công, bảng biểu nguyên vẹn, tiêu đề biểu mẫu chuẩn xác và các liên kết phụ lục hợp lệ.
 
 2. **Kiểm tra chất lượng & Can thiệp chuyên biệt (Chỉ khi cần)**:
-   - Đọc lướt tệp `.md` đầu ra để xác nhận chất lượng. Trong trường hợp đặc thù cần tinh chỉnh riêng lẻ từng cấu phần, kích hoạt sub-skill tương ứng:
-     * Tinh chỉnh bảng thủ công $\rightarrow$ Xem Sub-skill `table-reconstructor`
-     * Tinh chỉnh tiêu đề form bằng Prompt tùy biến $\rightarrow$ Xem Sub-skill `form-template-cleaner`
-     * Vá lại liên kết tương đối $\rightarrow$ Xem Sub-skill `relative-link-patcher`
+   - Đọc lướt tệp `.md` đầu ra để xác nhận chất lượng. Trong trường hợp đặc thù cần tinh chỉnh riêng lẻ từng cấu phần, tham chiếu tài liệu chuyên sâu:
+     * Tinh chỉnh bảng thủ công $\rightarrow$ Xem [table_reconstruction.md](references/table_reconstruction.md)
+     * Tinh chỉnh tiêu đề form bằng Prompt $\rightarrow$ Xem [form_cleaner.md](references/form_cleaner.md)
+     * Vá lại liên kết tương đối $\rightarrow$ Xem [link_patcher.md](references/link_patcher.md)
    - **Tiêu chí hoàn thành:** Toàn bộ nội dung văn bản đạt chuẩn định dạng Markdown CCBA, không còn placeholder rác hoặc liên kết đứt gãy.
 
 ---

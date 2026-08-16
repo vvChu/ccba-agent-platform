@@ -1,16 +1,23 @@
 ---
 name: code-review
-description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells) và Spec (Spec/Requirements).
+description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells)
+  và Spec (Spec/Requirements).
 user-invocable: true
-when_to_use: "Dùng khi người dùng muốn đánh giá chất lượng của một PR, một commit, hoặc các thay đổi chưa commit (--pending)."
+when_to_use: Dùng khi người dùng muốn đánh giá chất lượng của một PR, một commit,
+  hoặc các thay đổi chưa commit (--pending).
 category: utilities
-keywords: [review, quality, verification, reliability]
-argument-hint: "[#PR | COMMIT | --pending | codebase [parallel]]"
+keywords:
+- review
+- quality
+- verification
+- reliability
+argument-hint: '[#PR | COMMIT | --pending | codebase [parallel]]'
 metadata:
   author: CCBA
-  version: "2.0.0"
+  version: 2.0.0
+disable-model-invocation: true
+bundle: _software
 ---
-
 # Quy trình Rà soát Chất lượng Code (Code Review)
 
 Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn đối chiếu giữa `HEAD` hiện tại và một điểm mốc (fixed point) được chỉ định trên hai trục độc lập: **Standards** (Quy chuẩn code) và **Spec** (Đặc tả nghiệp vụ). 

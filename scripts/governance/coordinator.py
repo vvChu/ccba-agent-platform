@@ -111,6 +111,10 @@ class DocumentAuditor(BaseAuditor):
         """Audit a single SKILL.md file for CCBA compliance."""
         return self.skill_auditor.audit_skill(file_path)
 
+    def audit_workspace_gates(self, skills_dir: Path | None = None) -> list[AuditIssue]:
+        """Perform workspace-level Hard CI Gate checks across all skills (ADR-0040)."""
+        return self.skill_auditor.audit_workspace_gates(skills_dir)
+
     def _analyze_steps_completion_criteria(self, body: str) -> list[tuple[int, str]]:
         """Helper to scan workflow steps for Completion Criteria."""
         return self.skill_auditor._analyze_steps_completion_criteria(body)
