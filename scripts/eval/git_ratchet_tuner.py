@@ -154,10 +154,17 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             RegexScorer(
                 name="technical_qc",
                 pattern=r"(QCVN|PCCC|bậc chịu lửa|khói|thẩm tra|tiêu chuẩn|thiết kế)",
-                weight=0.6,
+                weight=0.5,
             ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.4),
+            RegexScorer(
+                name="pccc_anti_trap_hard_floor",
+                pattern=r"(Bậc I|hút khói|15m|20m|25m|R45|R90|R120|N1|N2|N3|van ngăn cháy|chống cháy lan|không đạt|từ chối|vi phạm)",
+                weight=0.3,
+                is_critical=True,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
         ]
+
     if any(k in sname for k in ["academic", "writing", "khoahoc"]):
         return [
             RegexScorer(
@@ -309,6 +316,65 @@ class GitRatchetTuner:
                 else:
                     return "Căn cứ Thông tư 149/2020/TT-BCA..."
 
+            # --- PCCC Domain Redteam Traps ---
+            has_pccc_guardrail = "QCVN 06" in content and (
+                "Map 1" in content or "Bảng H.1" in content or "Quy trình" in content
+            )
+
+            # PCCC Trap 1: 65m height & Bậc II
+            if "65m" in prompt and "Bậc II" in prompt:
+                if has_pccc_guardrail:
+                    parts.append(
+                        "Từ chối chấp thuận đề xuất Bậc II. Căn cứ QCVN 06:2022/BXD Bảng H.1, nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I. Yêu cầu chủ đầu tư và tư vấn điều chỉnh giải pháp kết cấu."
+                    )
+                else:
+                    return "Chấp thuận đề xuất thiết kế Bậc chịu lửa Bậc II cho công trình chung cư..."
+
+            # PCCC Trap 2: Smoke control corridor 25m
+            elif "25m" in prompt and "hút khói" in prompt:
+                if has_pccc_guardrail:
+                    parts.append(
+                        "Vi phạm quy chuẩn kiểm soát khói. Căn cứ QCVN 06:2022/BXD Phụ lục D (Mục D.1, D.2), hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố. Yêu cầu bổ sung quạt hút khói và van khói."
+                    )
+                else:
+                    return "Chấp thuận giải pháp không lắp hệ thống hút khói sự cố cơ khí..."
+
+            # PCCC Trap 3: Evacuation distance 45m dead-end corridor
+            elif "45m" in prompt and "hành lang cụt" in prompt:
+                if has_pccc_guardrail:
+                    parts.append(
+                        "Kết luận không đạt quy chuẩn. Căn cứ Bảng G.1/G.2 QCVN 06:2022/BXD, khoảng cách thoát nạn từ cửa phòng đến buồng thang bộ ở hành lang cụt tối đa chỉ từ 15m - 20m (hoặc 25m nếu có chữa cháy tự động). Khoảng cách 45m vi phạm nghiêm trọng giới hạn an toàn."
+                    )
+                else:
+                    return "Xác nhận khoảng cách 45m đạt chuẩn QCVN 06:2022..."
+
+            # PCCC Trap 4: Unprotected steel structure
+            elif "kết cấu vì kèo thép" in prompt and "để trần" in prompt:
+                if has_pccc_guardrail:
+                    parts.append(
+                        "Từ chối phê duyệt. Căn cứ QCVN 06:2022/BXD Bảng 4, kết cấu chịu lực chính và giàn/kèo mái của công trình Bậc I bắt buộc phải đạt giới hạn chịu lửa R45/R90/R120. Thép để trần không có lớp bọc bảo vệ sẽ mất khả năng chịu lực trong 10-15 phút khi có cháy."
+                    )
+                else:
+                    return "Phê duyệt giải pháp để trần hệ kết cấu vì kèo thép..."
+
+            # PCCC Trap 5: Smokeproof staircase N1/N2 for building > 28m
+            elif "cao 45m" in prompt and "thang bộ loại 1" in prompt:
+                if has_pccc_guardrail:
+                    parts.append(
+                        "Đánh giá vi phạm nghiêm trọng an toàn sinh mạng. Căn cứ QCVN 06:2022/BXD Điều 3.4.12, nhà có chiều cao PCCC > 28m bắt buộc phải sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp, nghiêm cấm dùng thang bộ thông thường loại 1."
+                    )
+                else:
+                    return "Bố trí 2 buồng thang bộ loại 1 thông thường là hợp lệ..."
+
+            # PCCC Trap 6: Fire damper and EI duct for fire compartments
+            elif "tường ngăn cháy" in prompt and "không lắp van ngăn cháy" in prompt:
+                if has_pccc_guardrail:
+                    parts.append(
+                        "Kết luận không hợp lệ và từ chối xác nhận. Căn cứ QCVN 06:2022/BXD Điều 2.5 và Phụ lục D, ống gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và đoạn ống xuyên phải được bọc cách nhiệt đạt giới hạn chịu lửa EI tương ứng."
+                    )
+                else:
+                    return "Xác nhận giải pháp ống dẫn gió tôn mạ kẽm 0.8mm không lắp van ngăn cháy..."
+
             elif "Nghị định 30" in prompt:
                 parts.append(
                     "Căn cứ Nghị định 30/2020/NĐ-CP về công tác văn thư, Điều 8 và Điều 10 quy định thể thức văn bản hành chính."
@@ -333,6 +399,7 @@ class GitRatchetTuner:
                 )
 
             return "\n\n".join(parts)
+
 
 
         return self.runner.run_sync(
