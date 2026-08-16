@@ -32,7 +32,12 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "packages" / "ccba-ai" / "src"))
 sys.path.insert(0, str(project_root / "packages" / "ccba-harness" / "src"))
 
+# Enforce ADR 0043: Decoupled Sandbox Environment for Nightly Daemon
+os.environ.setdefault("IDOP_ENV", "DEV")
+os.environ.setdefault("CCBA_IDOP_MOCK_MODE", "1")
+
 from scripts.eval.git_ratchet_tuner import GitRatchetTuner, RatchetConfig, RatchetReport
+
 
 
 @dataclass
