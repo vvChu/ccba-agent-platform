@@ -299,3 +299,20 @@ Hệ thống kiểm soát đa cấp trước khi nộp hồ sơ trình Viện IB
 - **Tier 2 (Governance Override):** Cho phép Giám đốc (`ROLE_DIRECTOR`) phê duyệt vượt rào đối với các trường hợp ngoại lệ nghiệp vụ và bắt buộc ghi nhật ký giải trình bất biến (`Audit Trail`) vào `lessons_learned.json`.
 - **Tier 3 (Advisory Warnings):** Cảnh báo mềm về văn phong, định dạng và nhắc nhở mốc tiến độ WBS.
 
+---
+
+## Active Development & Resilience Vocabulary (ADR 0043)
+
+**Local Staging Queue (Hàng Đợi Lưu Trữ Cục Bộ)**:
+Cơ chế đệm dữ liệu tại `.md/idop_staged/` khi SharePoint IDOP đang bảo trì, mất mạng hoặc ở chế độ DEV, giúp Kỹ sư tiếp tục làm việc liên tục (Zero-Downtime).
+
+**Idempotent Replay (Đồng Bộ Bù Bất Biến)**:
+Quy trình quét hàng đợi `.md/idop_staged/` và đẩy bù lên Microsoft Graph API khi có mạng trở lại mà không tạo bản ghi trùng lặp trên SharePoint.
+
+**CI Schema Contract Drift Gate**:
+Bài kiểm thử tự động trên Hub bảo vệ các trường dữ liệu cốt lõi (`ProjectCode`, `NationalProjectID`, `ContractId`, `JobAssignments`, `CdeDocuments`) không bị đổi tên hay xóa bỏ trong lúc nhóm IDOP phát triển tính năng mới.
+
+**Zero-Config Dual-Mode Auth**:
+Cơ chế tự động chuyển đổi giữa chế độ Mock Sandbox (`IDOP_ENV=DEV` - không cần mật khẩu/chứng chỉ) và chế độ Production (`IDOP_ENV=PROD` - xác thực qua `.pfx`), giúp kỹ sư mới và CI runner chạy thử nghiệm tức thì mà không cần xin cấp quyền.
+
+
