@@ -202,9 +202,7 @@ def run_import_linter_tool(project_root: Path) -> int:
 
 def main(argv: Sequence[str] | None = None) -> int:
     """CLI entry point for check_dependency_contracts."""
-    parser = argparse.ArgumentParser(
-        description="CCBA Monorepo Dependency Contract & Seam Linter"
-    )
+    parser = argparse.ArgumentParser(description="CCBA Monorepo Dependency Contract & Seam Linter")
     parser.add_argument(
         "--with-import-linter",
         action="store_true",
@@ -234,7 +232,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"📁 Scanned {files_scanned} Python source files in {elapsed:.3f}s.")
 
     if passed:
-        print("✅ Tất cả các gói Monorepo đều tuân thủ 100% ranh giới phụ thuộc và Seam invariants!")
+        print(
+            "✅ Tất cả các gói Monorepo đều tuân thủ 100% ranh giới phụ thuộc và Seam invariants!"
+        )
     else:
         print(f"❌ Phát hiện {len(violations)} lỗi vi phạm hợp đồng kiến trúc:")
         for v in violations:

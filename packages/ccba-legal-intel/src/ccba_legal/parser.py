@@ -68,7 +68,11 @@ Text:
         res = Cleaners.extract_json(reply)
         if isinstance(res, list):
             return list(res)
-        if isinstance(res, dict) and "requirements" in res and isinstance(res["requirements"], list):
+        if (
+            isinstance(res, dict)
+            and "requirements" in res
+            and isinstance(res["requirements"], list)
+        ):
             return list(res["requirements"])
         return []
 

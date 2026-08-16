@@ -440,9 +440,7 @@ No dead ends or crawler restrictions encountered.
             r"^(?:###|##|#)?\s*(?:<a id=\"[^\"]+\"></a>)?\s*(Điều\s+(\d+)(?:[\.\:]|\s*[-–])?\s*(.*))$",
             re.IGNORECASE,
         )
-        clause_pattern = re.compile(
-            r"^(?:<a id=\"[^\"]+\"></a>)?\s*(\d+)[\.\)]\s*(.*)$"
-        )
+        clause_pattern = re.compile(r"^(?:<a id=\"[^\"]+\"></a>)?\s*(\d+)[\.\)]\s*(.*)$")
         point_pattern = re.compile(
             r"^(?:<a id=\"[^\"]+\"></a>)?\s*([a-zđĐ])[\.\)]\s*(.*)$",
             re.IGNORECASE,
@@ -748,7 +746,9 @@ No dead ends or crawler restrictions encountered.
 
         tables_dir = bundle_dir / "tables"
         if tables_dir.exists():
-            index_content += "- [`tables/`](/tables/) — Bảng biểu trích xuất ma trận 2D (JSON/CSV)\n"
+            index_content += (
+                "- [`tables/`](/tables/) — Bảng biểu trích xuất ma trận 2D (JSON/CSV)\n"
+            )
 
         (bundle_dir / "index.md").write_text(index_content, encoding="utf-8")
 

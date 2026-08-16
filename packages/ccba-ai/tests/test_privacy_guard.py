@@ -75,4 +75,3 @@ def test_safe_write_file_blocks_leak(tmp_path):
     target_file.write_text("API_KEY = 'safe_dummy_key'", encoding="utf-8")
     assert target_file.exists()
     assert target_file.read_text(encoding="utf-8") == "API_KEY = 'safe_dummy_key'"
-

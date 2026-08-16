@@ -373,7 +373,9 @@ class DetachedExecutionEngine:
         cmd_parts = [python_exec, "-m", "pytest", "--maxfail=1"]
 
         if fast:
-            cmd_parts.extend(["-m", "fast or (unit and not slow and not integration and not stress)"])
+            cmd_parts.extend(
+                ["-m", "fast or (unit and not slow and not integration and not stress)"]
+            )
         elif not any(a.startswith("-m") for a in extra_args):
             target_has_slow = False
             for t in targets:

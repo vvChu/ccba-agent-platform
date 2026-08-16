@@ -213,7 +213,9 @@ def main() -> None:
         print(
             "Ví dụ 1 (Toàn bộ platform - Fast): python scripts/eval/run_isolated_tests.py --all --fast"
         )
-        print("Ví dụ 2 (Từng package - Fast)    : python scripts/eval/run_isolated_tests.py -p ccba-ai --fast")
+        print(
+            "Ví dụ 2 (Từng package - Fast)    : python scripts/eval/run_isolated_tests.py -p ccba-ai --fast"
+        )
         print(
             "Ví dụ 3 (File cụ thể)            : python scripts/eval/run_isolated_tests.py -f tests/test_agent_execution_guardrails.py"
         )

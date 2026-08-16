@@ -36,7 +36,7 @@ Toàn bộ kiến trúc mã nguồn của **CCBA Agent Services Platform** (và 
 - **[Đã chốt - 2026-08-15] Chuẩn hóa Seam & Public Exports (Ticket 2)**: Đã re-export `EvalOrchestrator` trong `ccba_harness`, xóa `legal_knowledge.py` & `write_file` trong `ccba_ai`, xóa `xlsx_recalc.py` trong `ccba_pdf_prep`, di chuyển `adr.py` sang `scripts/governance/adr_generator.py`, re-export toàn bộ deep seams trong `ccba_legal`, và tinh gọn `ccba_maskara.__all__`. Toàn bộ test suites cô lập và static checks (`ruff` + `mypy`) đạt 100% PASS.
 - **[Đã chốt - 2026-08-15] Thiết lập Isolated Fast Test Suite (< 2s) cho Từng Package (Ticket 3)**: Đăng ký marker `fast` trong `pyproject.toml`, bổ sung cờ `--fast` (`-F`) vào `run_isolated_tests.py` và `safe_pytest.py`, gán nhãn unit tests nòng cốt cho toàn bộ 8 packages + scripts + root-tests. Thiết lập test tự động [`tests/governance/test_fast_test_suites.py`](../../tests/governance/test_fast_test_suites.py) xác thực 100% các package đều vượt qua kiểm thử trong thời gian siêu tốc.
 - **[Đã chốt - 2026-08-15] Cấu hình Rào chắn Dependency Linter (Ticket 4)**: Thiết lập cấu hình kép: [`.importlinter`](../../.importlinter) (5 contracts chuẩn công nghiệp) và [`scripts/governance/check_dependency_contracts.py`](../../scripts/governance/check_dependency_contracts.py) (Native AST Linter, zero-dependency, tốc độ 0.3s). Toàn bộ 208 file nguồn Python và 5 bài kiểm tra tại [`tests/governance/test_dependency_contracts.py`](../../tests/governance/test_dependency_contracts.py) đạt 100% PASS. Đăng ký entrypoint CLI `ccba-lint-imports`.
-- **[Đã chốt - 2026-08-15] Phỏng vấn Chốt Seams Cho 4 Sub-systems Trọng Tâm (Ticket 5)**: Hoàn thành phiên Grilling Socrates 4 vòng cùng Kỹ sư trưởng, thống nhất đóng gói 4 Deep Seams duy nhất (`QCAuditPipeline`, `VBHNEngine`, `TVPLCrawler`, `ConversionPipeline`), ban hành tài liệu quyết định kiến trúc [ADR-0011](../../knowledge/adr/adr_20260815_224158_chuan_hoa_deep_seams_cho_4_sub_systems_t.md).
+- **[Đã chốt - 2026-08-15] Phỏng vấn Chốt Seams Cho 4 Sub-systems Trọng Tâm (Ticket 5)**: Hoàn thành phiên Grilling Socrates 4 vòng cùng Kỹ sư trưởng, thống nhất đóng gói 4 Deep Seams duy nhất (`QCAuditPipeline`, `VBHNEngine`, `TVPLCrawler`, `ConversionPipeline`), ban hành tài liệu quyết định kiến trúc [ADR-0011](../knowledge/adr/adr_20260815_224158_chuan_hoa_deep_seams_cho_4_sub_systems_t.md).
 
 ---
 
@@ -75,7 +75,7 @@ flowchart TD
 
 ### Ticket 5: [Grilling/HITL] `[Phỏng vấn Chốt Seams cho các Sub-systems Trọng tâm]` ✅
 - **Mục tiêu**: Thực hiện grilling với Kỹ sư trưởng để thống nhất boundary cho các hệ thống phức tạp: QC Pipeline, Legal Intel RAG, TVPL VIP Crawler, Document Conversion Pipeline.
-- **Đầu ra**: Biên bản phỏng vấn Grilling và tài liệu quyết định kiến trúc [ADR-0011](../../knowledge/adr/adr_20260815_224158_chuan_hoa_deep_seams_cho_4_sub_systems_t.md).
+- **Đầu ra**: Biên bản phỏng vấn Grilling và tài liệu quyết định kiến trúc [ADR-0011](../knowledge/adr/adr_20260815_224158_chuan_hoa_deep_seams_cho_4_sub_systems_t.md).
 - **Trạng thái**: **Closed (Done)**
 
 ---

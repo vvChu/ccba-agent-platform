@@ -75,7 +75,9 @@ def test_resolve_default_legal_spoke_discovery() -> None:
         {"name": "ccba-legal-knowledge", "path": "/mock/legal/path", "project_type": "Pháp điển"},
         {"name": "ccba-delivery", "path": "/mock/delivery/path", "project_type": "Quản lý"},
     ]
-    with patch("scripts.spoke.decrypt_spoke_registry.get_registered_spokes", return_value=mock_spokes):
+    with patch(
+        "scripts.spoke.decrypt_spoke_registry.get_registered_spokes", return_value=mock_spokes
+    ):
         # Match by specific name
         spoke_by_name = resolve_default_legal_spoke("ccba-legal-knowledge")
         assert spoke_by_name == Path("/mock/legal/path")
