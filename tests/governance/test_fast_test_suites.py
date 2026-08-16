@@ -69,4 +69,6 @@ def test_isolated_package_fast_suite_sla(pkg_name: str) -> None:
 
     assert success is True, f"Fast test suite for {pkg_name} failed!"
     # Process wall-clock SLA on Windows is max 5.0s (including python bootstrap), with pure test time < 2.0s
-    assert elapsed < 5.0, f"Fast test suite for {pkg_name} took {elapsed:.2f}s, exceeding 5.0s limit"
+    assert elapsed < 5.0, (
+        f"Fast test suite for {pkg_name} took {elapsed:.2f}s, exceeding 5.0s limit"
+    )

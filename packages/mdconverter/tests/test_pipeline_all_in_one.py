@@ -60,7 +60,9 @@ Xem thêm tại [Phụ lục 1](appendices/phu_luc_1.md).
     assert "[Phụ lục 1](./appendices/phu_luc_1.md)" in result.content
     assert result.output_path is not None
     assert result.output_path.exists()
-    assert "[Phụ lục 1](./appendices/phu_luc_1.md)" in result.output_path.read_text(encoding="utf-8")
+    assert "[Phụ lục 1](./appendices/phu_luc_1.md)" in result.output_path.read_text(
+        encoding="utf-8"
+    )
 
 
 def test_pipeline_custom_post_processor_toggle(tmp_path: Path) -> None:

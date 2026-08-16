@@ -128,9 +128,7 @@ class TVPLCrawler:
         ]
 
 
-
 def load_relation_synonyms() -> dict[str, str]:
-
     return _load_relation_synonyms(resolve_project_root())
 
 

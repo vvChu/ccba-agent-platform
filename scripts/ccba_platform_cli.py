@@ -61,10 +61,7 @@ def resolve_default_legal_spoke(spoke_name_or_path: str | None = None) -> Path:
         spokes = get_registered_spokes(hub_root=_ROOT_DIR)
         if spoke_name_or_path:
             for s in spokes:
-                if (
-                    s.get("name") == spoke_name_or_path
-                    or s.get("spoke_id") == spoke_name_or_path
-                ):
+                if s.get("name") == spoke_name_or_path or s.get("spoke_id") == spoke_name_or_path:
                     return Path(s["path"])
         else:
             for s in spokes:
