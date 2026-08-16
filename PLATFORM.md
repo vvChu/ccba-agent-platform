@@ -41,7 +41,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │
 ├── packages/                          ← Internal service modules (pip installable)
 │   ├── ccba-ai/                       ←   AI Gateway client, SEOAuditor & SDK
-│   ├── ccba-harness/                  ←   Testing harness utilities
+│   ├── ccba-harness/                  ←   Testing harness & Multi-Scorer Evals engine
 │   ├── ccba-legal-intel/              ←   Legal intelligence connectors
 │   ├── ccba-maskara/                  ←   Secret detection and redaction engine
 │   ├── ccba-notebooklm/               ←   Google NotebookLM wrapper & Mock client
@@ -93,7 +93,7 @@ Là các thư viện bổ trợ, middleware, hoặc các cấu hình tự độn
 | Package | Mô tả | Install |
 |---------|--------|---------|
 | `ccba-ai` | AI Gateway client & SDK — Đa mô hình (local GPU + cloud), 1 endpoint | `pip install -e "packages/ccba-ai"` |
-| `ccba-harness` | Testing harness and mocking utilities | `pip install -e "packages/ccba-harness"` |
+| `ccba-harness` | Testing harness and multi-scorer evaluation engine | `pip install -e "packages/ccba-harness"` |
 | `ccba-legal-intel` | Legal intelligence services and connectors | `pip install -e "packages/ccba-legal-intel"` |
 | `ccba-maskara` | Secret detection, redaction and commit privacy engine | `pip install -e "packages/ccba-maskara"` |
 | `ccba-notebooklm` | Google NotebookLM API wrapper & mock client | `pip install -e "packages/ccba-notebooklm"` |

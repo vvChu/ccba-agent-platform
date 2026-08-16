@@ -17,13 +17,23 @@ from __future__ import annotations
 import subprocess  # needed as patch target for tests
 
 # Public API re-exports
-from ._engine import (
-    HarnessEngine,
-    HarnessLocal,
-    HarnessState,
-)
+from ._engine import HarnessEngine
 from ._guard import HarnessGuard
 from ._mutex import FileMutexLock
+from ._state import HarnessLocal, HarnessState
+from .evals import (
+    BaseScorer,
+    EvalItem,
+    EvalItemResult,
+    EvalReport,
+    EvalRunner,
+    ExactMatchScorer,
+    JsonSchemaScorer,
+    LengthBoundsScorer,
+    LLMRubricScorer,
+    RegexScorer,
+    ScoreResult,
+)
 from .orchestrator import EvalOrchestrator
 
 __all__ = [
@@ -33,4 +43,15 @@ __all__ = [
     "HarnessState",
     "FileMutexLock",
     "EvalOrchestrator",
+    "EvalItem",
+    "ScoreResult",
+    "EvalItemResult",
+    "EvalReport",
+    "BaseScorer",
+    "ExactMatchScorer",
+    "RegexScorer",
+    "LengthBoundsScorer",
+    "JsonSchemaScorer",
+    "LLMRubricScorer",
+    "EvalRunner",
 ]

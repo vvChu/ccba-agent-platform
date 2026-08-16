@@ -1523,6 +1523,20 @@ workflows:
   - onboard spoke
   - tiếp nhận dự án có sẵn
   workflow_path: .agents/workflows/ccba-adopt-spoke.md
+- name: ccba-autoresearch
+  bundle: _core
+  command: /ccba-autoresearch
+  description: Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet Auto-Tuner) lấy cảm hứng từ karpathy/autoresearch.
+  triggers:
+  - autoresearch
+  - auto-research
+  - git ratchet
+  - ratchet
+  - auto tune
+  - auto-tune
+  - tối ưu qua đêm
+  - tối ưu prompt tự động
+  workflow_path: .agents/workflows/ccba-autoresearch.md
 rules:
 - name: ccba_identity
   description: Brand, voice, phong cách giao tiếp CCBA

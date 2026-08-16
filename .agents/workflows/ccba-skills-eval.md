@@ -16,20 +16,27 @@ Agent phân tích yêu cầu của người dùng để xác định tham số:
 - **Kiểm thử toàn bộ:** Nếu người dùng chỉ gõ lệnh chung `/ccba-skills-eval`, mặc định chạy cho tất cả kỹ năng bằng cách bỏ trống `--skill` hoặc đặt `--skill all`.
 - **Số lần chạy thử:** Mặc định chạy 3 lần thử (`--trials 3`) để đo độ tin cậy. Nếu người dùng cần chạy nhanh để kiểm tra lỗi cú pháp, có thể đặt `--trials 1`.
 
-### Bước 2: Kích hoạt Core Eval Runner
+### Bước 2: Kích hoạt Core Eval Runner & Harness Engine
 Chạy lệnh CLI sau tại thư mục gốc của dự án:
 ```bash
-# Kiểm thử một kỹ năng cụ thể
+# Kiểm thử một kỹ năng cụ thể qua ccba_harness Multi-Scorer Engine
 python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --trials 3
 
 # Tự động tối ưu hóa SKILL.md (Skill Auto-Tuner via SkillOpt loop)
 python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3
 
+# Khai phá lỗi từ transcript log thực chiến và tự động sinh test cases
+python scripts/eval/log_eval_miner.py --skill [tên-skill] --auto-inject
+
 # Kiểm thử toàn bộ các kỹ năng AI
 python .agents/skills/eval-gate/scripts/eval_runner.py --trials 3
 ```
 
-### Bước 3: Đánh giá, Khắc phục lỗi & Auto-Tuning (SkillOpt Loop)
+### Bước 3: Đánh giá Đa chiều theo Barem Rubrics & Rào chắn Điểm Liệt
+- **Bộ Tiêu chí Định lượng & Rubrics:** Đối chiếu kết quả với Quy chuẩn tại [`.md/knowledge/guidelines/domain_success_criteria_rubrics.md`](../../.md/knowledge/guidelines/domain_success_criteria_rubrics.md):
+  * **Code-Based Assertions (< 1ms):** ExactMatch, RegexMatch, JsonSchemaMatch, LengthBounds.
+  * **Model-Based Rubrics (Likert 1–5):** Anthropic Prompt Structure (`<rubric>`, `<answer>`, `<thinking>`, `<score>`).
+  * **Rào chắn Điểm Liệt (Hard Floor):** Nếu vi phạm tiêu chí cốt lõi (False Negative PCCC, sai hiệu lực văn bản luật, bịa trích dẫn), bài thi bị đánh rớt ngay lập tức (Score = 0.0%) bất kể các tiêu chí phụ.
 - **Chế độ Auto-Tuner (`--auto-tune`):** 
   Core Eval Runner sẽ tự động điều phối chu trình 4 bước (**Rollout -> Reflect -> Edit -> Validate**). LLM Optimizer sẽ đề xuất chỉnh sửa văn bản `SKILL.md` và kiểm chứng qua Cổng **Validation Gate** để loại bỏ hiện tượng **Prompt Drift** trước khi cập nhật.
 - **Nếu tất cả các test cases đạt PASS (exit code = 0):** Báo cáo kết quả thành công cho người dùng.
