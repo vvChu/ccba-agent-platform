@@ -345,8 +345,13 @@
 * **Nguyên tắc:** Trong quy trình đối soát và hợp nhất văn bản pháp luật (VBHN Engine), các node ID sinh ra từ AST (ví dụ `D1`, `D2`) và các patch diff (ví dụ `dieu-1`, `dieu_1`, `1`) phải được chuẩn hóa qua `norm_map` hai chiều.
 * **Lý do:** Đảm bảo phép so khớp và chắp vá luôn thành công bất chấp sự khác biệt về case và dấu gạch nối giữa các hệ thống trích xuất.
 
-### ⚠️ Anti-Patterns (Cần Tránh)
+#### P6.20. 3-Tier Skills Hierarchy & Progressive Disclosure (Kim Tự Tháp Kỹ Năng 3 Tầng & ADR 0040)
+* **Nguyên tắc:** Để giải quyết triệt để vấn đề Context Bloat và giảm tải 70-80% token nền:
+  1. **Tier 1 (Master Deep Skills - Model Invoked):** Đại diện cho các năng lực đầu cuối hoàn chỉnh, bảo trợ bởi Deep Seams. Khống chế nghiêm ngặt $\le 10$ skills cho mỗi Bundle (`_core: 10`, `_qc: 6`, `_consulting: 4`, `_bim: 5`), với mô tả súc tích $\le 180$ ký tự để AI tự nhận diện trong hội thoại tự nhiên.
+  2. **Tier 2 (Progressive References):** Các tài liệu hướng dẫn kỹ thuật chi tiết của sub-skills nông được gom vào thư mục `references/*.md` bên trong Master Skill (Progressive Disclosure — chỉ nạp khi cần xử lý ngoại lệ).
+  3. **Tier 3 (User Workflows - User Invoked):** 100% các quy trình mang tính nghi thức, có sự điều khiển của con người (`/ccba-implement`, `/ccba-new-feature`, `/ccba-wait-what`...) bắt buộc gắn `disable-model-invocation: true` để tiêu tốn **0 token** trong System Prompt khởi tạo.
 
+### ⚠️ Anti-Patterns (Cần Tránh)
 
 * **AP6.1. Leaky Interface Exporting 30+ Symbols:** Xuất khẩu toàn bộ hàm con ra `__init__.py` làm rối loạn AI navigation.
 * **AP6.2. Domain Drift:** Đặt file xử lý PDF vào package OOXML hoặc đặt logic cào web vào module phân tích xung đột.
@@ -443,6 +448,14 @@
   - **Ưu tiên 3 (Standard Defaults):** Quét các đường dẫn repo tiêu chuẩn (`D:/GitHubProjects/...`, `../<spoke-name>`, `./<spoke-name>`).
   - Đảm bảo hệ thống vận hành trơn tru cả trong môi trường phát triển độc lập (isolated standalone) lẫn môi trường mạng lưới đa Spoke đã đăng ký bảo mật.
 
+#### P7.16. Automated 4-Layer Hard CI Gate for Skills Governance (`SkillAuditor` & ADR 0040)
+* **Nguyên tắc:** Hệ thống quản trị Kỹ năng được bảo vệ tự động bằng 4 Hard Gates trong `scripts/governance/skill_auditor.py` (chạy qua `validate_skills.py`):
+  1. *Zero-Duplicate Gate:* Tự động quét và phát hiện trùng lặp tên skill across toàn bộ cây thư mục `.agents/skills/`.
+  2. *Context Budget Ceiling Gate:* Khống chế nghiêm ngặt tối đa $\le 10$ `model_invoked` skills cho mỗi Bundle để bảo vệ Smart Zone (< 120k tokens).
+  3. *Taxonomy Metadata Gate:* Kiểm tra bắt buộc metadata `bundle/layer` trên các kỹ năng được kích hoạt bởi mô hình.
+  4. *Step Completion Criteria Gate:* Cưỡng chế 100% các bước quy trình phải có tiêu chí hoàn thành định lượng.
+* **Quy chuẩn CI:** Mọi vi phạm đều kích hoạt `Exit Code 1` và chặn đứng quy trình commit/PR tại chỗ.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
 * **AP7.2. Committing Unscanned Code:** Bỏ qua quy trình `/ccba-code-review` hoặc Governance Audit trước khi tạo PR.
@@ -451,6 +464,7 @@
 * **AP7.5. Destructive Brownfield Onboarding:** Dùng template tĩnh ghi đè toàn bộ `AGENTS.md` và `workspace_context.yaml` khi kết nối một Spoke hiện hữu, làm mất mát metadata và quy chuẩn riêng của dự án.
 * **AP7.6. Destructive Workflow Wipe during Spoke Sync:** Xóa sạch toàn bộ thư mục `.agents/workflows/` của Spoke trước khi copy đè các tệp từ Hub, làm mất vĩnh viễn các workflow tùy biến nội bộ mà đội ngũ Spoke đã tự phát triển.
 * **AP7.7. Subprocess Latency Bottleneck in Batch Sync Operations:** Gọi các lệnh shell nặng như `pip list` hoặc `python -m pip` bên trong vòng lặp duyệt qua danh sách hàng loạt Spoke, gây nghẽn và làm chậm tiến trình đồng bộ gấp 10-20 lần.
+* **AP7.8. Context Bloat via Equal-Level Flat Skills Proliferation (Phình To Ngữ Cảnh Bằng Kỹ Năng Nông Đồng Cấp):** Tạo hàng chục tệp `SKILL.md` nhỏ lẻ nằm ngang hàng và đều để ở chế độ `model_invoked`, làm phình to System Prompt khởi tạo, gây lãng phí 70-80% token nền và làm AI bị phân vân khi định tuyến công cụ (Routing Confusion). Cần gom các kỹ năng nông thành `references/*.md` của Master Skill và bật `disable-model-invocation: true` cho toàn bộ User Workflows.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
