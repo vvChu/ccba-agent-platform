@@ -12,6 +12,8 @@ from ccba_pdf_prep import (
     split_pdf,
 )
 
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
+
 
 # ---------------------------------------------------------------------------
 # get_blind_chunks

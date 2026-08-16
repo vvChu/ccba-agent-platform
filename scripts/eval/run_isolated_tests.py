@@ -66,7 +66,11 @@ def _enqueue_output(stream: Any, q: queue.Queue[str]) -> None:
 
 
 def run_isolated_test(
-    target_path: Path, project_root: Path, include_stress: bool = False, timeout_sec: int = 60
+    target_path: Path,
+    project_root: Path,
+    include_stress: bool = False,
+    fast_mode: bool = False,
+    timeout_sec: int = 60,
 ) -> tuple[bool, float]:
     """Chạy lệnh pytest trong subprocess cô lập với timeout giám sát.
 
@@ -74,17 +78,22 @@ def run_isolated_test(
         target_path: Đường dẫn mục tiêu test (thư mục hoặc file).
         project_root: Đường dẫn gốc repo.
         include_stress: Có chạy cả test slow/stress hay không.
+        fast_mode: Chỉ chạy fast unit tests (SLA < 2s).
         timeout_sec: Giới hạn thời gian (giây).
 
     Returns:
         Tuple (success: bool, elapsed_seconds: float).
     """
-    pytest_cmd = [str(target_path), "-v", "--tb=short"]
-    if not include_stress:
+    pytest_cmd = ["-c", str(project_root / "pyproject.toml"), str(target_path), "-v", "--tb=short"]
+    if fast_mode:
+        pytest_cmd += ["-m", "fast or (unit and not slow and not integration and not stress)"]
+    elif not include_stress:
         pytest_cmd += ["-m", "not stress and not slow"]
 
     cmd = [get_venv_python(project_root), "-m", "pytest"] + pytest_cmd
     print(f"\n🎯 Kích hoạt kiểm thử cô lập trên: {target_path}")
+    if fast_mode:
+        print("⚡ Chế độ: FAST (<2s SLA)")
     print(f"⚙️ Command: {' '.join(cmd)}")
 
     start_time = time.time()
@@ -182,6 +191,12 @@ def main() -> None:
         "--file", "-f", help="Đường dẫn tương đối hoặc tuyệt đối tới file test cụ thể."
     )
     parser.add_argument(
+        "--fast",
+        "-F",
+        action="store_true",
+        help="Chế độ Fast Unit Tests (< 2s SLA, chỉ chạy logic thuần / mock I/O).",
+    )
+    parser.add_argument(
         "--stress", action="store_true", help="Chạy cả các bài test tải nặng/stress/slow."
     )
     parser.add_argument(
@@ -196,17 +211,20 @@ def main() -> None:
     if not args.all and not args.package and not args.file:
         print("❌ Lỗi: Cần truyền --all (-a), --package (-p) hoặc --file (-f).")
         print(
-            "Ví dụ 1 (Toàn bộ platform): python scripts/eval/run_isolated_tests.py --all --stress"
+            "Ví dụ 1 (Toàn bộ platform - Fast): python scripts/eval/run_isolated_tests.py --all --fast"
         )
-        print("Ví dụ 2 (Từng package)    : python scripts/eval/run_isolated_tests.py -p ccba-ai")
+        print("Ví dụ 2 (Từng package - Fast)    : python scripts/eval/run_isolated_tests.py -p ccba-ai --fast")
         print(
-            "Ví dụ 3 (File cụ thể)     : python scripts/eval/run_isolated_tests.py -f tests/test_agent_execution_guardrails.py"
+            "Ví dụ 3 (File cụ thể)            : python scripts/eval/run_isolated_tests.py -f tests/test_agent_execution_guardrails.py"
         )
         sys.exit(1)
 
+    effective_timeout = 10 if args.fast and args.timeout == 60 else args.timeout
+
     if args.all:
+        mode_str = " (⚡ FAST MODE <2s SLA)" if args.fast else ""
         print(
-            f"🔍 Phát hiện tự động {len(discovered_targets)} test targets: {', '.join(discovered_targets.keys())}"
+            f"🔍 Phát hiện tự động {len(discovered_targets)} test targets{mode_str}: {', '.join(discovered_targets.keys())}"
         )
         summary_results: list[tuple[str, bool, float]] = []
         overall_success = True
@@ -216,7 +234,8 @@ def main() -> None:
                 target_path=target_path,
                 project_root=project_root,
                 include_stress=args.stress,
-                timeout_sec=args.timeout,
+                fast_mode=args.fast,
+                timeout_sec=effective_timeout,
             )
             summary_results.append((name, success, elapsed))
             if not success:
@@ -227,7 +246,8 @@ def main() -> None:
         print("=" * 60)
         for name, success, elapsed in summary_results:
             icon = "✅ PASS" if success else "❌ FAIL"
-            print(f" - {name:<25}: {icon} ({elapsed:.2f}s)")
+            time_warn = " ⚡" if elapsed <= 2.0 else " ⚠️ (>2s)"
+            print(f" - {name:<25}: {icon} ({elapsed:.2f}s){time_warn}")
         print("=" * 60)
         if overall_success:
             print("🎉 TẤT CẢ CÁC PACKAGES ĐỀU VƯỢT QUA KIỂM THỬ AN TOÀN!")
@@ -251,7 +271,8 @@ def main() -> None:
         target_path=target_path,
         project_root=project_root,
         include_stress=args.stress,
-        timeout_sec=args.timeout,
+        fast_mode=args.fast,
+        timeout_sec=effective_timeout,
     )
 
     sys.exit(0 if success else 1)

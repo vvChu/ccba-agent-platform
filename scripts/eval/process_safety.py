@@ -34,7 +34,7 @@ def ensure_single_instance(script_keyword: str) -> None:
     parent_pid = getattr(os, "getppid", lambda: None)()
 
     try:
-        import psutil
+        import psutil  # type: ignore[import-untyped]
 
         for proc in psutil.process_iter(["pid", "name", "cmdline"]):
             try:
@@ -331,6 +331,8 @@ class DetachedExecutionEngine:
     def run_safe_pytest(
         cls,
         target_file: str | None = None,
+        package: str | None = None,
+        fast: bool = False,
         dry_run: bool = False,
         allow_unscoped: bool = False,
         extra_args: list[str] | None = None,
@@ -341,6 +343,15 @@ class DetachedExecutionEngine:
 
         if target_file:
             targets.append(target_file)
+        elif package:
+            pkg_path = Path("packages") / package / "tests"
+            if not pkg_path.exists():
+                pkg_path = Path("packages") / f"ccba-{package}" / "tests"
+            if pkg_path.exists():
+                targets.append(str(pkg_path))
+            else:
+                print(f"[SafePytest Error] Package tests directory not found: {package}")
+                return 1
         elif extra_args and any(not a.startswith("-") for a in extra_args):
             pass
         elif not allow_unscoped:
@@ -361,20 +372,22 @@ class DetachedExecutionEngine:
         python_exec = sys.executable
         cmd_parts = [python_exec, "-m", "pytest", "--maxfail=1"]
 
-        target_has_slow = False
-        for t in targets:
-            try:
-                p = Path(t)
-                if p.exists() and (
-                    "pytest.mark.slow" in p.read_text(encoding="utf-8", errors="ignore")
-                ):
-                    target_has_slow = True
-                    break
-            except Exception:
-                pass
-
-        if not any(a.startswith("-m") for a in extra_args) and not target_has_slow:
-            cmd_parts.extend(["-m", "not slow"])
+        if fast:
+            cmd_parts.extend(["-m", "fast or (unit and not slow and not integration and not stress)"])
+        elif not any(a.startswith("-m") for a in extra_args):
+            target_has_slow = False
+            for t in targets:
+                try:
+                    p = Path(t)
+                    if p.exists() and (
+                        "pytest.mark.slow" in p.read_text(encoding="utf-8", errors="ignore")
+                    ):
+                        target_has_slow = True
+                        break
+                except Exception:
+                    pass
+            if not target_has_slow:
+                cmd_parts.extend(["-m", "not slow and not stress"])
 
         if targets:
             cmd_parts.extend(targets)

@@ -138,6 +138,24 @@ class ConversionPipeline:
         self.extract_drawing = extract_drawing
         self._sem = asyncio.Semaphore(max_concurrency)
 
+    def convert(self, file: Path | str) -> ConversionResult:
+        """Synchronously convert a single file with caching and post-processing.
+
+        Convenience wrapper around async ``process_file`` for synchronous callers.
+        """
+        path = Path(file)
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            import concurrent.futures
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                return pool.submit(asyncio.run, self.process_file(path)).result()
+        return asyncio.run(self.process_file(path))
+
     async def process_file(self, file: Path) -> ConversionResult:
         """Convert a single file with caching and post-processing.
 

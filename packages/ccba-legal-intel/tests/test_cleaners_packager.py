@@ -1,10 +1,12 @@
-"""test_cleaners_packager.py — Unit tests for cleaning utilities and bundle packager."""
-
 import unittest
 from pathlib import Path
 
+import pytest
+
 from ccba_legal.cleaners import Cleaners
 from ccba_legal.packager import OKFBundlePackager
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 class TestLegalIntelligence(unittest.TestCase):

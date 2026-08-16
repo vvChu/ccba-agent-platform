@@ -9,7 +9,11 @@ HARNESS_SRC = PROJECT_ROOT / "packages" / "ccba-harness" / "src"
 if str(HARNESS_SRC) not in sys.path:
     sys.path.insert(0, str(HARNESS_SRC))
 
-from ccba_harness.orchestrator import EvalOrchestrator
+import pytest
+
+from ccba_harness import EvalOrchestrator
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 class TestEvalOrchestrator(unittest.TestCase):

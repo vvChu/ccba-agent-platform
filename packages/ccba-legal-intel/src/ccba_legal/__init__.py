@@ -11,6 +11,13 @@ from .appendices import (
     AppendixSplitter,
     roman_to_decimal,
 )
+from .ast_parser import (
+    ASTNode,
+    ASTParser,
+    DeltaPatch,
+    DeltaPatchItem,
+    PatchAction,
+)
 from .cleaners import (
     Cleaners,
     convert_docx_table_to_markdown,
@@ -26,8 +33,12 @@ from .coordinator import (
 from .crawler import (
     CookieVault,
     MockChromeCDP,
+    TVPLCrawler,
+    TVPLCrawlerEngine,
     TVPLSessionMutex,
+    TVPLVIPCrawler,
 )
+from .formatter import OKFStructureProcessor
 from .grounding import (
     LEGAL_DISCLAIMER,
     LegalGroundingGate,
@@ -36,6 +47,8 @@ from .grounding import (
 )
 from .monitor import TokenMonitor
 from .packager import OKFBundlePackager
+from .parser import LegalAnalysisEngine
+from .patch_generator import DeltaPatchGenerator
 from .registry import (
     LegalRegistryManager,
     format_citation,
@@ -48,6 +61,8 @@ from .templates import (
     SUPPORTED_DOC_TYPES,
     generate_legal_document,
 )
+from .vbhn_engine import MergedLegalDocument, VBHNEngine
+from .vbhn_merger import VBHNMerger
 
 __all__ = [
     # === Deep Seams (Advertised Public Interface) ===
@@ -60,6 +75,20 @@ __all__ = [
     "OKFBundlePackager",
     "AppendixSplitter",
     "Cleaners",
+    "ASTParser",
+    "ASTNode",
+    "PatchAction",
+    "DeltaPatchItem",
+    "DeltaPatch",
+    "DeltaPatchGenerator",
+    "VBHNMerger",
+    "VBHNEngine",
+    "MergedLegalDocument",
+    "TVPLCrawler",
+    "TVPLCrawlerEngine",
+    "TVPLVIPCrawler",
+    "LegalAnalysisEngine",
+    "OKFStructureProcessor",
     # === Domain Helper Seams ===
     "verify_legal_grounding",
     "format_grounded_response",
@@ -83,3 +112,4 @@ __all__ = [
     "calculate_md5",
     "calculate_sha256",
 ]
+
