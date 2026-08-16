@@ -379,48 +379,20 @@ skills:
   - bản vẽ
   - scan
   skill_path: .agents/skills/ccba-ai-pdf-preprocessor/SKILL.md
-- name: ccba-ai-qc-discovery
+- name: ccba-ai-qc
   bundle: _qc
-  description: Khai phá hồ sơ PDF, nhận diện cấu trúc bản vẽ và lập Coordination Matrix
+  description: Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View Vision, Heat Map Report) qua QCAuditPipeline.
   triggers:
+  - ccba-ai-qc
+  - qc pipeline
+  - multi-discipline audit
+  - quad-view
   - discovery
-  - backbone
-  - matrix
-  - mapping
-  - khai phá hồ sơ
-  skill_path: .agents/skills/ccba-ai-qc-discovery/SKILL.md
-- name: ccba-ai-qc-integrated-audit
-  bundle: _qc
-  description: Đối soát xung đột đa bộ môn (Arch-KC-MEP-PCCC) bằng AI Vision
-  triggers:
-  - clash audit
-  - integrated qc
-  - đối soát 4 chiều
-  - audit đa bộ môn
-  - N-Way clash
-  skill_path: .agents/skills/ccba-ai-qc-integrated-audit/SKILL.md
-- name: ccba-ai-qc-batch-orchestrator
-  bundle: _qc
-  description: Điều phối Audit hàng loạt qua Coordination Matrix
-  triggers:
-  - batch
-  - orchestrator
-  - hàng loạt
-  - tự động hóa QC
-  skill_path: .agents/skills/ccba-ai-qc-batch-orchestrator/SKILL.md
-- name: ccba-ai-qc-reporter
-  bundle: _qc
-  description: Tổng hợp và đóng gói báo cáo Đường găng Kỹ thuật chính quy
-  triggers:
-  - technical report
-  - đóng gói báo cáo
-  - kết luận kỹ thuật
-  - báo cáo đường găng
-  skill_path: .agents/skills/ccba-ai-qc-reporter/SKILL.md
+  - heat map report
+  skill_path: .agents/skills/ccba-ai-qc/SKILL.md
 - name: ccba-ai-qc-pccc-audit
   bundle: _qc
-  description: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông
-    qua cơ chế Semantic Map-Reduce
+  description: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ chế Semantic Map-Reduce
   triggers:
   - pccc audit
   - semantic map-reduce
@@ -428,15 +400,6 @@ skills:
   - thiết bị chữa cháy
   - báo cháy
   skill_path: .agents/skills/ccba-ai-qc-pccc-audit/SKILL.md
-- name: ccba-ai-qc-pipeline-orch
-  bundle: _qc
-  description: Kỹ năng đầu não chạy toàn trình chuỗi kiểm soát chất lượng (QC) đa
-    bộ môn (Discovery -> Orchestrator -> Báo cáo)
-  triggers:
-  - run pipeline skill
-  - chạy toàn trình skill
-  - qc-pipeline-orch
-  skill_path: .agents/skills/ccba-ai-qc-pipeline-orch/SKILL.md
 - name: ccba-legal-intel
   bundle: _consulting
   description: Autonomous legal intelligence agent to crawl, diff, and generate compliance
