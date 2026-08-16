@@ -386,14 +386,17 @@ class GitRatchetTuner:
             # --- Academic Writing Domain Tasks ---
             has_academic_grounding = "IMRAD" in content or "CARS" in content or "Yale" in content
             has_academic_bibtex = "BibTeX" in content and "APA" in content
+            has_cars_stems = (
+                "Sentence Stems" in content or "Khung Mẫu CARS 3-Move Chi Tiết" in content
+            )
 
             if "CARS" in prompt or "Introduction" in prompt:
-                if has_academic_grounding:
+                if has_cars_stems or has_academic_grounding:
                     parts.append(
                         "Biên soạn phần Introduction theo mô hình CARS (John Swales, 1990):\n"
-                        "- Move 1 (Establish Territory): Xác lập tầm quan trọng của việc kiểm soát chất lượng thiết kế trong kỷ nguyên số.\n"
-                        "- Move 2 (Find a Niche): Chỉ ra khoảng trống tri thức về chi phí tính toán và hiện tượng ảo giác của LLM khi xử lý hồ sơ lớn.\n"
-                        "- Move 3 (Occupy the Niche): Đề xuất mô hình Semantic Map-Reduce và khẳng định đóng góp khoa học chính."
+                        "- Move 1 (Establish Territory): Recent advances in digital engineering have heightened the need for robust quality control (has been widely studied).\n"
+                        "- Move 2 (Find a Niche): However, current automated systems fail to process massive multi-thousand-page technical dossiers due to context saturation.\n"
+                        "- Move 3 (Occupy the Niche): To address this gap, in this paper we propose a Semantic Map-Reduce framework and confirm the primary scientific contributions."
                     )
                 else:
                     return "Viết mở bài giới thiệu chung không theo mô hình CARS..."
@@ -422,7 +425,7 @@ class GitRatchetTuner:
             elif "Hiệu đính văn phong" in prompt or "nominalizations" in prompt:
                 if has_academic_grounding:
                     parts.append(
-                        "Bản hiệu đính văn phong học thuật (Chuẩn Elena Kallestinova, 2011):\n"
+                        "Bản hiệu đính văn phong học thuật (Chuẩn Elena Kallestinova, 2011, Yale Style):\n"
                         "- Loại bỏ từ ngữ cảm tính ('clearly', 'obviously', 'very', 'basically').\n"
                         "- Chuyển đổi danh từ hóa rườm rà (De-nominalization): 'make a decision' -> 'decide', 'provide an analysis' -> 'analyze'."
                     )
@@ -439,6 +442,7 @@ class GitRatchetTuner:
                     )
                 else:
                     return "Tài liệu tham khảo chung: Swales 1990, Kallestinova 2011."
+
 
 
             elif "Nghị định 30" in prompt:
