@@ -1,9 +1,9 @@
 # 🧠 CCBA Platform — Tổng Hợp Tri Thức & Bài Học Hệ Thống (Session Learnings)
 
 > **Trạng thái:** Active & Consolidated  
-> **Cập nhật gần nhất:** 2026-08-15 (Sau Tái cấu trúc Progressive Disclosure & Hierarchical AGENTS.md)  
+> **Cập nhật gần nhất:** 2026-08-16 (Chuẩn hóa 8 Trụ Cột Tri Thức, ADR 0041-0043 & Server Spark)  
 > **Phiên bản lưu trữ lịch sử:** [`.md/knowledge/archive/session_learnings_v1_archive.md`](archive/session_learnings_v1_archive.md)  
-> **Mục đích:** Tài liệu tri thức cốt lõi cô đọng ~30 nguyên lý thực chiến và các anti-patterns nguy hiểm cần tránh trên toàn bộ hệ sinh thái CCBA Agent Platform.
+> **Mục đích:** Tài liệu tri thức cốt lõi cô đọng ~60 nguyên lý thực chiến và các anti-patterns nguy hiểm cần tránh trên toàn bộ hệ sinh thái CCBA Agent Platform.
 
 ---
 
@@ -15,7 +15,8 @@
 4. [Trụ Cột 4: Quản Trị LLM, Token Budget & AI Gateway (LLM OS & Gateway)](#4-quản-trị-llm-token-budget--ai-gateway)
 5. [Trụ Cột 5: Xử Lý Văn Bản, Bảng Biểu & Tài Liệu Pháp Lý (Document Engineering)](#5-xử-lý-văn-bản-bảng-biểu--tài-liệu-pháp-lý)
 6. [Trụ Cột 6: Thiết Kế Kiến Trúc Deep Modules & AI-Navigability (Architecture Design)](#6-thiết-kế-kiến-trúc-deep-modules--ai-navigability)
-7. [Trụ Cột 7: Quy Trình Quản Trị & Đồng Bộ Spoke-Hub (Governance & Synchronization)](#7-quy-trình-quản-trị--đồng-bộ-spoke-hub)
+7. [Trụ Cột 7: Hệ Sinh Thái Hub-Spoke, Tiếp Nhận & Đồng Bộ (Spoke-Hub Ecosystem & Sync)](#7-hệ-sinh-thái-hub-spoke-tiếp-nhận--đồng-bộ)
+8. [Trụ Cột 8: Quản Trị Doanh Nghiệp IDOP, Server Spark & Viện IBST (ADR 0041-0043)](#8-quản-trị-doanh-nghiệp-idop-server-spark--viện-ibst-adr-0041-0043)
 
 ---
 
@@ -380,7 +381,7 @@
 
 ---
 
-## 7. Quy Trình Quản Trị & Đồng Bộ Spoke-Hub
+## 7. Hệ Sinh Thái Hub-Spoke, Tiếp Nhận & Đồng Bộ
 
 ### 🌟 Core Patterns (Mẫu Tốt)
 
@@ -465,76 +466,6 @@
   - **Ưu tiên 3 (Standard Defaults):** Quét các đường dẫn repo tiêu chuẩn (`D:/GitHubProjects/...`, `../<spoke-name>`, `./<spoke-name>`).
   - Đảm bảo hệ thống vận hành trơn tru cả trong môi trường phát triển độc lập (isolated standalone) lẫn môi trường mạng lưới đa Spoke đã đăng ký bảo mật.
 
-#### P7.16. Automated 4-Layer Hard CI Gate for Skills Governance (`SkillAuditor` & ADR 0040)
-* **Nguyên tắc:** Hệ thống quản trị Kỹ năng được bảo vệ tự động bằng 4 Hard Gates trong `scripts/governance/skill_auditor.py` (chạy qua `validate_skills.py`):
-  1. *Zero-Duplicate Gate:* Tự động quét và phát hiện trùng lặp tên skill across toàn bộ cây thư mục `.agents/skills/`.
-  2. *Context Budget Ceiling Gate:* Khống chế nghiêm ngặt tối đa $\le 10$ `model_invoked` skills cho mỗi Bundle để bảo vệ Smart Zone (< 120k tokens).
-  3. *Taxonomy Metadata Gate:* Kiểm tra bắt buộc metadata `bundle/layer` trên các kỹ năng được kích hoạt bởi mô hình.
-  4. *Step Completion Criteria Gate:* Cưỡng chế 100% các bước quy trình phải có tiêu chí hoàn thành định lượng.
-* **Quy chuẩn CI:** Mọi vi phạm đều kích hoạt `Exit Code 1` và chặn đứng quy trình commit/PR tại chỗ.
-
-#### P7.17. Radar-to-Handshake Upstream Integration Pipeline (Upstream Radar v2.0 & ADR 0040)
-* **Nguyên tắc:** 
-  - Đăng ký nguồn theo dõi động qua tệp cấu hình trung tâm `.md/knowledge/upstream_sources.yaml` (hỗ trợ cờ `enabled` và chỉ định `branch`).
-  - Kiểm tra bản quyền tự động (License Classifier) với hợp đồng 4 giá trị nghiêm ngặt (PERMISSIVE, COPYLEFT, PROPRIETARY, UNKNOWN).
-  - AI Gateway thẩm định trực tiếp độ tương thích với thể chế ADR-0040 (Phân tầng Tier 1/2/3, đánh giá mã nguồn Python Monorepo vs TypeScript/pnpm).
-  - Kích hoạt 1-Click: Tự động sinh lệnh `/ccba-xia` tương ứng vào bảng khuyến nghị `.md/knowledge/port_recommendations.md` với cơ chế Parse-Protection (`<!-- DEVELOPER-NOTES-START -->` ... `<!-- DEVELOPER-NOTES-END -->`) bảo toàn 100% các ghi chú thảo luận thủ công của kỹ sư qua các chu kỳ quét.
-
-#### P7.18. Master Deep Skill Consolidation with Progressive References (Consolidation Gate)
-* **Nguyên tắc:** 
-  - Khi một nhóm kỹ năng cùng phục vụ một chuỗi dây chuyền xử lý kỹ thuật (như Discovery, Batcher, VisionAudit, Reporter trong `_qc`):
-  - Gom toàn bộ thành **1 Master Deep Skill duy nhất** (`ccba-ai-qc`) đại diện cho Deep Seam Python (`QCAuditPipeline`), tuân thủ trần mô tả $\le 180$ ký tự.
-  - Bóc tách chi tiết từng pha nghiệp vụ thành các tài liệu tham chiếu chuyên sâu **Progressive References (Tier 2)** nằm trong thư mục `references/*.md` (chỉ đọc khi cần, không tự nạp vào System Prompt).
-  - Gom toàn bộ scripts thực thi vào thư mục `scripts/` chung của Master Skill. Giúp giảm 50% số lượng kỹ năng chiếm dụng System Prompt, bảo vệ trần Context Budget (< 120k tokens).
-
-#### P7.19. 3-Tier Karpathy LLM-Wiki with Sub-Auditor (`WikiHealthLinter`)
-* **Nguyên tắc:** Quản trị kho tri thức trung tâm theo mô hình 3 tầng:
-  - *Tầng 1 (Raw Knowledge Sources):* Lưu trữ các văn bản, báo cáo, nhật ký thô.
-  - *Tầng 2 (Curated Master Index & Append-Only Log):* Duy trì danh mục [`index.md`](index.md) với 8 phân nhánh tri thức chuẩn và nhật ký đột biến bất biến [`log.md`](log.md) theo cú pháp `## [YYYY-MM-DD] [operation] | Title`.
-  - *Tầng 3 (Automated Health Linter):* Tích hợp `WikiHealthLinter` vào CI Governance Gate để tự động phát hiện liên kết gãy (broken links), tệp tri thức mồ côi (orphan notes), và bảo đảm tính toàn vẹn 100% trước khi commit.
-
-#### P7.20. Dual-Tier Practical Architecture (Project Spoke ↔ IDOP Governance ↔ IBST Handshake Interface)
-* **Nguyên tắc:** Tập trung khép kín 2 tầng:
-  - *Tầng 1 (Project Spokes):* Kỹ sư thực hiện bản vẽ BIM, thẩm tra PCCC, bóc tách cấu kiện và xuất báo cáo nghiệm thu kỹ thuật.
-  - *Tầng 2 (Enterprise Governance Spoke `IDOP-CCBA-WAY`):* Tiếp nhận hồ sơ qua quy trình QA/QC 5 cấp, phân bổ dòng tiền 3 tầng theo QCCTNB 3209, và liên thông với Viện IBST qua `ROLE_HEAD_ADMIN` (Cổng duy nhất gửi KHKT, TCKT, TCHC).
-
-#### P7.21. Autonomous Git-Ratchet Multi-Skill Nightly Daemon (Weighted Priority Queue & Early Stopping)
-* **Nguyên tắc:** Vận hành tối ưu hóa tự động qua đêm cho 73+ kỹ năng trên Server Spark (`localhost:8090`):
-  - *Hàng đợi ưu tiên thông minh (Weighted Priority Queue):* Kỹ năng có baseline score < 90% được cấp tối đa 30 vòng lặp; kỹ năng 100% chỉ chạy 1 vòng smoke test.
-  - *Early Stopping:* Tự ngắt ngay khi đạt 100% hoặc stall 5 vòng liên tiếp.
-  - *Git Ratchet:* Tự tạo branch `auto-tune/nightly-YYYYMMDD`, commit đột biến thành công và mở GitHub PR tổng hợp + bắn Telegram Bot alert.
-
-#### P7.22. Hub-Spoke 5-Archetype Taxonomy & Extensibility Framework (ADR 0041)
-* **Nguyên tắc:** Phân định rõ 5 loại Spoke trong toàn hệ sinh thái:
-  1. `platform_hub` (Công nghệ & AI Engine `ccba-agent-platform`).
-  2. `enterprise_governance` (Hệ điều hành doanh nghiệp & Quy chế CCBA `IDOP-CCBA-WAY`).
-  3. `knowledge_corpus` (Kho tri thức pháp luật quốc gia SSOT `ccba-legal-knowledge`).
-  4. `project_delivery` (Hiện trường dự án thực tế `2026-04 DH Viet Nhat`).
-  5. `specialized_extension` (`research_lab`, `tooling_plugin`, `client_portal`).
-
-#### P7.23. Master OneDrive 5TB Offloading vs SharePoint Metadata Pattern
-* **Nguyên tắc:** Giữ dung lượng 58 SharePoint lists luôn < 5GB bằng cách chỉ lưu trữ Metadata (Text, Lookups, URLs). Toàn bộ file binary nặng (Revit `.rvt` 500MB, file scan HĐ có dấu đỏ, hồ sơ thầu HSMT) được tự động phân luồng sang **5TB Master OneDrive (`ccba@ibst-bim.vn`)** theo 5 thư mục module chuẩn hóa.
-
-#### P7.24. Tri-Repo Server Sibling Synchronization & Linux Cron Hardening Gate (ADR 0042)
-* **Nguyên tắc:** Server Spark duy trì 3 kho lưu trữ cốt lõi ngang hàng (`~/ccba/ccba-agent-platform`, `~/ccba/ccba-legal-knowledge`, `~/ccba/IDOP-CCBA-WAY`).
-* **Giải pháp:** Trước khi Auto-Tuner chạy lúc 00:00, kịch bản cron thực thi chuỗi **Tri-Repo Sequential Pull Gate** (`git pull` lần lượt Luật $\rightarrow$ Quy chế $\rightarrow$ Hub) và được bảo vệ bởi **Linux Cron Hardening** (export full `PATH`, `UTF-8` locale `LANG=C.UTF-8`, `PYTHONIOENCODING=utf-8`, và tự động nạp bí mật `.env`).
-
-#### P7.25. Tiered Multi-Severity AI Pre-Submission Gate (ADR 0042)
-* **Nguyên tắc:** Phân loại rào chắn tiền kiểm hồ sơ trình Viện IBST thành 3 cấp độ rõ rệt:
-  - 🔴 **Tier 1 (Hard-Floor Auto-Block):** Tự động khóa cứng 100% khi viện dẫn luật hết hiệu lực, tạm ứng $> 90\%$ hoặc sai lệch số học dòng tiền 3 tầng.
-  - 🟡 **Tier 2 (Governance Override):** Cho phép Giám đốc (`ROLE_DIRECTOR`) phê duyệt vượt rào đối với các ngoại lệ nghiệp vụ cấp bách và bắt buộc ghi nhật ký giải trình bất biến (`Audit Trail`) vào `lessons_learned.json`.
-  - 🟢 **Tier 3 (Advisory Warnings):** Cảnh báo mềm về văn phong, thể thức và nhắc nhở mốc tiến độ WBS.
-
-#### P7.26. Decoupled Resilience & Local Staging Queue for Active Spoke Development (ADR 0043)
-* **Nguyên tắc:** Khi một Spoke doanh nghiệp (`IDOP-CCBA-WAY`) đang trong giai đoạn tích cực triển khai lên Microsoft 365, hệ thống duy trì tính độc lập (Decoupling) bằng hàng đợi cục bộ [`.md/idop_staged/`](../../.md/) với trạng thái `STAGED_LOCAL`.
-* **Giải pháp:** Kỹ sư dự án tiếp tục làm việc bình thường (**Zero-Downtime**), khi kết nối mạng/SharePoint thông suốt trở lại, lệnh `idop_bridge --flush` thực hiện **Idempotent Replay** đồng bộ bù lên đám mây mà không gây trùng lặp bản ghi.
-
-#### P7.27. CI Schema Contract Drift Gate & Zero-Config Dual-Mode Auth (ADR 0043)
-* **Nguyên tắc:**
-  - *Bảo vệ Schema Khung Xương:* Bài test tự động `test_idop_schema_compatibility.py` cho phép nhóm IDOP tự do thêm cột/bảng mới (Open for Extension) nhưng khóa cứng không cho phép xóa/đổi tên 5 trường cốt lõi (`ProjectCode`, `NationalProjectID`, `ContractId`, `JobAssignments`, `CdeDocuments`).
-  - *Trải nghiệm Lập trình 0-Giây (Zero-Config):* Mặc định `IDOP_ENV="DEV"` kích hoạt Local Mock Sandbox, cho phép Kỹ sư mới và CI runners chạy thử toàn bộ logic mà không cần cấp quyền truy cập hay chứng chỉ `.pfx` thật.
-
-
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
 * **AP7.2. Committing Unscanned Code:** Bỏ qua quy trình `/ccba-code-review` hoặc Governance Audit trước khi tạo PR.
@@ -543,9 +474,61 @@
 * **AP7.5. Destructive Brownfield Onboarding:** Dùng template tĩnh ghi đè toàn bộ `AGENTS.md` và `workspace_context.yaml` khi kết nối một Spoke hiện hữu, làm mất mát metadata và quy chuẩn riêng của dự án.
 * **AP7.6. Destructive Workflow Wipe during Spoke Sync:** Xóa sạch toàn bộ thư mục `.agents/workflows/` của Spoke trước khi copy đè các tệp từ Hub, làm mất vĩnh viễn các workflow tùy biến nội bộ mà đội ngũ Spoke đã tự phát triển.
 * **AP7.7. Subprocess Latency Bottleneck in Batch Sync Operations:** Gọi các lệnh shell nặng như `pip list` hoặc `python -m pip` bên trong vòng lặp duyệt qua danh sách hàng loạt Spoke, gây nghẽn và làm chậm tiến trình đồng bộ gấp 10-20 lần.
-* **AP7.8. Context Bloat via Equal-Level Flat Skills Proliferation (Phình To Ngữ Cảnh Bằng Kỹ Năng Nông Đồng Cấp):** Tạo hàng chục tệp `SKILL.md` nhỏ lẻ nằm ngang hàng và đều để ở chế độ `model_invoked`, làm phình to System Prompt khởi tạo, gây lãng phí 70-80% token nền và làm AI bị phân vân khi định tuyến công cụ (Routing Confusion). Cần gom các kỹ năng nông thành `references/*.md` của Master Skill và bật `disable-model-invocation: true` cho toàn bộ User Workflows.
-* **AP7.9. License Classification Semantic Leakage (Lệch Pha Ngữ Nghĩa Bộ Phân Loại Bản Quyền):** Trả về giá trị enum lạ (như CUSTOM) không nằm trong hợp đồng 4 giá trị (PERMISSIVE, COPYLEFT, PROPRIETARY, UNKNOWN), làm đứt gãy hoặc gây sai lệch logic phân nhánh trong AI Prompt và báo cáo downstream.
-* **AP7.10. State File Path Mismatch during Registry Migration (Lệch Pha Tên Tệp Lưu Vết Khi Chuyển Sang Registry Động):** Tự ý đổi tên tệp tin lưu commit SHA (như đổi `claudekit_last_sha.txt` thành `claudekit-engineer_last_sha.txt`) trong quá trình chuyển đổi sang YAML registry, khiến hệ thống hiểu nhầm là kho mới và kích hoạt quét toàn bộ tệp từ đầu (False Positive Full Rescan).
+* **AP7.8. Context Bloat via Equal-Level Flat Skills Proliferation:** Tạo hàng chục tệp `SKILL.md` nhỏ lẻ nằm ngang hàng và đều để ở chế độ `model_invoked`, làm phình to System Prompt khởi tạo. Cần gom các kỹ năng nông thành `references/*.md` của Master Skill và bật `disable-model-invocation: true` cho toàn bộ User Workflows.
+* **AP7.9. License Classification Semantic Leakage:** Trả về giá trị enum lạ không nằm trong hợp đồng 4 giá trị (PERMISSIVE, COPYLEFT, PROPRIETARY, UNKNOWN), làm đứt gãy logic phân nhánh downstream.
+* **AP7.10. State File Path Mismatch during Registry Migration:** Tự ý đổi tên tệp tin lưu commit SHA trong quá trình chuyển đổi sang YAML registry, khiến hệ thống hiểu nhầm là kho mới và quét lại từ đầu.
+
+---
+
+## 8. Quản Trị Doanh Nghiệp IDOP, Server Spark & Viện IBST (ADR 0041-0043)
+
+### 🌟 Core Patterns (Mẫu Tốt)
+
+#### P8.1. Hub-Spoke 5-Archetype Taxonomy & Extensibility Framework (ADR 0041)
+* **Nguyên tắc:** Phân định rõ 5 loại Spoke trong toàn hệ sinh thái:
+  1. `platform_hub` (Công nghệ & AI Engine `ccba-agent-platform`).
+  2. `enterprise_governance` (Hệ điều hành doanh nghiệp & Quy chế CCBA `IDOP-CCBA-WAY`).
+  3. `knowledge_corpus` (Kho tri thức pháp luật quốc gia SSOT `ccba-legal-knowledge`).
+  4. `project_delivery` (Hiện trường dự án thực tế `2026-04 DH Viet Nhat`).
+  5. `specialized_extension` (`research_lab`, `tooling_plugin`, `client_portal`).
+
+#### P8.2. Master OneDrive 5TB Offloading vs SharePoint Metadata Pattern
+* **Nguyên tắc:** Giữ dung lượng 58 SharePoint lists luôn < 5GB bằng cách chỉ lưu trữ Metadata (Text, Lookups, URLs). Toàn bộ file binary nặng (Revit `.rvt` 500MB, file scan HĐ có dấu đỏ, hồ sơ thầu HSMT) được tự động phân luồng sang **5TB Master OneDrive (`ccba@ibst-bim.vn`)** theo 5 thư mục module chuẩn hóa.
+
+#### P8.3. Autonomous Git-Ratchet Multi-Skill Nightly Daemon (Weighted Priority Queue & Early Stopping)
+* **Nguyên tắc:** Vận hành tối ưu hóa tự động qua đêm cho 73+ kỹ năng trên Server Spark (`localhost:8090`):
+  - *Hàng đợi ưu tiên thông minh (Weighted Priority Queue):* Kỹ năng có baseline score < 90% được cấp tối đa 30 vòng lặp; kỹ năng 100% chỉ chạy 1 vòng smoke test.
+  - *Early Stopping:* Tự ngắt ngay khi đạt 100% hoặc stall 5 vòng liên tiếp.
+  - *Git Ratchet:* Tự tạo branch `auto-tune/nightly-YYYYMMDD`, commit đột biến thành công và mở GitHub PR tổng hợp + bắn Telegram Bot alert.
+
+#### P8.4. Dual-Tier Practical Architecture (Project Spoke ↔ IDOP Governance ↔ IBST Handshake Interface)
+* **Nguyên tắc:** Tập trung khép kín 2 tầng:
+  - *Tầng 1 (Project Spokes):* Kỹ sư thực hiện bản vẽ BIM, thẩm tra PCCC, bóc tách cấu kiện và xuất báo cáo nghiệm thu kỹ thuật.
+  - *Tầng 2 (Enterprise Governance Spoke `IDOP-CCBA-WAY`):* Tiếp nhận hồ sơ qua quy trình QA/QC 5 cấp, phân bổ dòng tiền 3 tầng theo QCCTNB 3209, và liên thông với Viện IBST qua `ROLE_HEAD_ADMIN` (Cổng duy nhất gửi KHKT, TCKT, TCHC).
+
+#### P8.5. Tri-Repo Server Sibling Synchronization & Linux Cron Hardening Gate (ADR 0042)
+* **Nguyên tắc:** Server Spark duy trì 3 kho lưu trữ cốt lõi ngang hàng (`~/ccba/ccba-agent-platform`, `~/ccba/ccba-legal-knowledge`, `~/ccba/IDOP-CCBA-WAY`).
+* **Giải pháp:** Trước khi Auto-Tuner chạy lúc 00:00, kịch bản cron thực thi chuỗi **Tri-Repo Sequential Pull Gate** (`git pull` lần lượt Luật $\rightarrow$ Quy chế $\rightarrow$ Hub) và được bảo vệ bởi **Linux Cron Hardening** (export full `PATH`, `UTF-8` locale `LANG=C.UTF-8`, `PYTHONIOENCODING=utf-8`, và tự động nạp bí mật `.env`).
+
+#### P8.6. Tiered Multi-Severity AI Pre-Submission Gate (ADR 0042)
+* **Nguyên tắc:** Phân loại rào chắn tiền kiểm hồ sơ trình Viện IBST thành 3 cấp độ rõ rệt:
+  - 🔴 **Tier 1 (Hard-Floor Auto-Block):** Tự động khóa cứng 100% khi viện dẫn luật hết hiệu lực, tạm ứng $> 90\%$ hoặc sai lệch số học dòng tiền 3 tầng.
+  - 🟡 **Tier 2 (Governance Override):** Cho phép Giám đốc (`ROLE_DIRECTOR`) phê duyệt vượt rào đối với các ngoại lệ nghiệp vụ cấp bách và bắt buộc ghi nhật ký giải trình bất biến (`Audit Trail`) vào `lessons_learned.json`.
+  - 🟢 **Tier 3 (Advisory Warnings):** Cảnh báo mềm về văn phong, thể thức và nhắc nhở mốc tiến độ WBS.
+
+#### P8.7. Decoupled Resilience & Local Staging Queue for Active Spoke Development (ADR 0043)
+* **Nguyên tắc:** Khi một Spoke doanh nghiệp (`IDOP-CCBA-WAY`) đang trong giai đoạn tích cực triển khai lên Microsoft 365, hệ thống duy trì tính độc lập (Decoupling) bằng hàng đợi cục bộ [`.md/idop_staged/`](../../.md/) với trạng thái `STAGED_LOCAL`.
+* **Giải pháp:** Kỹ sư dự án tiếp tục làm việc bình thường (**Zero-Downtime**), khi kết nối mạng/SharePoint thông suốt trở lại, lệnh `idop_bridge --flush` thực hiện **Idempotent Replay** đồng bộ bù lên đám mây mà không gây trùng lặp bản ghi.
+
+#### P8.8. CI Schema Contract Drift Gate & Zero-Config Dual-Mode Auth (ADR 0043)
+* **Nguyên tắc:**
+  - *Bảo vệ Schema Khung Xương:* Bài test tự động `test_idop_schema_compatibility.py` cho phép nhóm IDOP tự do thêm cột/bảng mới (Open for Extension) nhưng khóa cứng không cho phép xóa/đổi tên 5 trường cốt lõi (`ProjectCode`, `NationalProjectID`, `ContractId`, `JobAssignments`, `CdeDocuments`).
+  - *Trải nghiệm Lập trình 0-Giây (Zero-Config):* Mặc định `IDOP_ENV="DEV"` kích hoạt Local Mock Sandbox, cho phép Kỹ sư mới và CI runners chạy thử toàn bộ logic mà không cần cấp quyền truy cập hay chứng chỉ `.pfx` thật.
+
+### ⚠️ Anti-Patterns (Cần Tránh)
+* **AP8.1. Bypassing Tier 1 Hard-Floor Gate:** Cho phép xuất hồ sơ trình Viện IBST khi vẫn còn lỗi sai số học dòng tiền hoặc viện dẫn luật hết hiệu lực.
+* **AP8.2. Direct Heavy Binary Upload to SharePoint:** Upload trực tiếp file mô hình Revit 3D hoặc scan nặng vào SharePoint List làm cạn kiệt dung lượng Tenant 2TB thay vì đưa sang 5TB Master OneDrive.
+* **AP8.3. Running Production Daemon without Mock Sandbox Isolation:** Chạy các bài test đánh giá kỹ năng ban đêm mà không cô lập biến môi trường `IDOP_ENV=DEV`, gây nghẽn và fail test khi SharePoint bảo trì.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
