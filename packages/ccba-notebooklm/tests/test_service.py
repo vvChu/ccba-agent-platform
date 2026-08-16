@@ -26,7 +26,7 @@ def clean_env(monkeypatch, tmp_path):
     monkeypatch.setattr("ccba_notebooklm._registry.REGISTRY_FILE", test_reg)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_ensure_source_new_file(tmp_path):
     """Xác minh get_source_id_by_path thêm file mới chưa có trong registry."""
     dummy_file = tmp_path / "test_doc.txt"
@@ -46,7 +46,7 @@ async def test_ensure_source_new_file(tmp_path):
     assert registry[norm_path]["notebook_id"] == nb_id
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_ensure_source_cache_hit(tmp_path):
     """Xác minh get_source_id_by_path trả về source_id trực tiếp khi SHA-256 khớp (Cache HIT)."""
     dummy_file = tmp_path / "cached_doc.txt"
@@ -64,7 +64,7 @@ async def test_ensure_source_cache_hit(tmp_path):
     assert source_id == "src-mock-1"
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_ensure_source_sha256_mismatch(tmp_path):
     """Xác minh get_source_id_by_path tự động xóa source cũ và upload source mới khi SHA-256 thay đổi."""
     dummy_file = tmp_path / "mismatched_doc.txt"

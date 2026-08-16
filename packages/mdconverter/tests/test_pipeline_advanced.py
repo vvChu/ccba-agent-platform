@@ -10,10 +10,6 @@ from mdconverter.core.analyzer import PageDetail, PDFReport, Segment
 from mdconverter.core.base import ConversionStatus
 
 
-@pytest.fixture
-def anyio_backend():
-    return "asyncio"
-
 
 @pytest.fixture
 def mock_analyzer_report():
@@ -43,7 +39,7 @@ def mock_analyzer_report():
     return report
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_process_segmented_hybrid(tmp_path: Path, mock_analyzer_report):
     """Test that a hybrid PDF is split and converted per segment."""
     pipeline = ConversionPipeline(output_dir=tmp_path)
@@ -83,7 +79,7 @@ async def test_process_segmented_hybrid(tmp_path: Path, mock_analyzer_report):
         assert result.tool_used == "segmented"
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_drawing_extraction_enabled(tmp_path: Path):
     """Test that drawings are NOT skipped when extract_drawing is True."""
     pipeline = ConversionPipeline(output_dir=tmp_path, extract_drawing=True)
@@ -114,7 +110,7 @@ async def test_drawing_extraction_enabled(tmp_path: Path):
         mock_create_conv.assert_called_once()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_large_pdf_chunking(tmp_path: Path):
     """Test that a large non-hybrid PDF is chunked."""
     pipeline = ConversionPipeline(output_dir=tmp_path)
