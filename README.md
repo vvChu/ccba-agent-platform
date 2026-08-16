@@ -64,7 +64,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   ├── seminars/                      ←   Agenda & biên bản thảo luận
 │   └── extracted_docs/                ←   Văn bản pháp luật trích xuất thô
 ├── packages/                          ← 8 Internal Service Modules (pip installable)
-│   ├── ccba-harness/                  ←   Testing harness, singleton locks & process monitors
+│   ├── ccba-harness/                  ←   Testing harness, evals engine, singleton locks & process monitors
 │   ├── ccba-ai/                       ←   AI Gateway client & SDK đa mô hình
 │   ├── ccba-maskara/                  ←   Secret detection, PII redaction & privacy guard
 │   ├── ccba-ooxml/                    ←   OOXML validation, Word DOM & Excel macro calculation
@@ -97,7 +97,7 @@ Toàn bộ các gói dịch vụ nằm trong thư mục `packages/` được thi
 
 | Package | Mô tả Chức năng | Lệnh Cài Đặt (Editable Mode) |
 | :--- | :--- | :--- |
-| **`ccba-harness`** | Testing harness, Singleton Process Locks, giám sát tệp tin và tiến trình an toàn đa nền tảng. | `pip install -e "packages/ccba-harness"` |
+| **`ccba-harness`** | Testing harness, Evals Engine đa tiêu chí (Code & LLM Rubrics), Singleton Process Locks, giám sát tệp tin và tiến trình an toàn. | `pip install -e "packages/ccba-harness"` |
 | **`ccba-ai`** | AI Gateway SDK — Kết nối 50+ models (Qwen GPU DGX, Claude, Gemini) qua 1 endpoint, tự động quản lý token và Circuit Breaker. | `pip install -e "packages/ccba-ai"` |
 | **`ccba-maskara`** | Quét và che giấu (redact) thông tin nhạy cảm (API Keys, PII) trong log/tệp trước khi commit. | `pip install -e "packages/ccba-maskara"` |
 | **`ccba-ooxml`** | Thao tác DOM file Office (.docx, .pptx), bóc tách và tái dựng cấu trúc bảng phức tạp (`TableReconstructor`), kiểm định tính toàn vẹn XML và tính toán công thức Excel (`recalc_xlsx`). | `pip install -e "packages/ccba-ooxml"` |

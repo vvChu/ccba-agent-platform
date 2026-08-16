@@ -138,6 +138,45 @@ model_name = choose_model("ocr")  # ocr-primary
 
 ---
 
+## 📦 Prompt Engineering & Evaluator-Optimizer Loop
+
+SDK `ccba-ai` cung cấp sẵn các module hỗ trợ kỹ thuật Prompting nâng cao (Technique 15 & Anthropic Best Practices):
+
+### 1. XML Prompt Envelopes (`xml_envelope`, `parse_xml_tags`)
+Đóng gói tài liệu, chỉ thị và ngữ cảnh vào các thẻ XML để phân định ranh giới ngữ cảnh rõ ràng và triệt tiêu prompt injection:
+
+```python
+from ccba_ai import ai, xml_envelope, parse_xml_tags
+
+# Bọc có cấu trúc
+envelope_prompt = xml_envelope({
+    "instructions": "Soạn thảo văn bản thẩm tra PCCC theo chuẩn Nghị định 105/2025",
+    "context": {"decree": "105/2025/NĐ-CP", "standard": "QCVN 06:2022/BXD"},
+    "documents": ["Nội dung thuyết minh thiết kế công trình..."],
+})
+
+response = ai.chat(envelope_prompt, model="claude-sonnet-4-6")
+tags = parse_xml_tags(response)
+print(tags.get("answer", response))
+```
+
+### 2. Evaluator-Optimizer Feedback Loop (`evaluator_optimizer_loop`)
+Vòng lặp tự động sửa lỗi giữa Generator $\leftrightarrow$ Evaluator:
+
+```python
+from ccba_ai import ai, evaluator_optimizer_loop
+
+result = evaluator_optimizer_loop(
+    generator_fn=lambda fb: ai.chat(f"Soạn thảo tài liệu. Phản hồi vòng trước: {fb}"),
+    evaluator_fn=lambda draft: (95.0, "Đạt") if "105/2025" in draft else (60.0, "Bổ sung viện dẫn NĐ 105/2025"),
+    max_iterations=3,
+    pass_score=85.0,
+)
+print(f"Hoàn tất: {result.passed} trong {result.iterations} vòng. Điểm: {result.score}")
+```
+
+---
+
 ## ⚡ Local Fast-Fail Circuit Breaker (Chống Treo Khi Mất Mạng)
 
 Để bảo vệ các batch processing pipelines không bị treo 60s timeout khi mạng Tailscale VPN rớt, `ccba-ai` tích hợp sẵn **`CircuitBreaker`**:

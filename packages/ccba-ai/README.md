@@ -66,3 +66,24 @@ AI_MODEL=qwen-local-primary
 | ☁️ Deep | `gemini-3.1-pro` | 1M context, research |
 
 Khám phá danh sách models động theo thời gian thực bằng `ai.models()` hoặc xem catalog trong SKILL.md.
+
+## Prompting Helpers & Evaluator-Optimizer Loop
+
+```python
+from ccba_ai import xml_envelope, parse_xml_tags, evaluator_optimizer_loop
+
+# 1. Đóng gói XML Envelopes
+prompt = xml_envelope({
+    "instructions": "Soạn thảo văn bản thẩm tra thiết kế PCCC",
+    "context": {"decree": "105/2025/NĐ-CP", "standard": "QCVN 06:2022/BXD"},
+})
+
+# 2. Vòng lặp Generator <-> Evaluator tự sửa lỗi (Technique 15)
+result = evaluator_optimizer_loop(
+    generator_fn=lambda fb: ai.chat(f"Draft document with feedback: {fb}"),
+    evaluator_fn=lambda draft: (90.0, "Đạt yêu cầu") if "105/2025" in draft else (60.0, "Thiếu viện dẫn NĐ 105/2025"),
+    max_iterations=3,
+    pass_score=85.0,
+)
+print(f"Passed: {result.passed} in {result.iterations} iterations")
+```
