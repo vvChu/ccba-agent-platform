@@ -32,6 +32,13 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "packages" / "ccba-ai" / "src"))
 sys.path.insert(0, str(project_root / "packages" / "ccba-harness" / "src"))
 
+# Auto-load .env if present
+try:
+    from dotenv import load_dotenv
+    load_dotenv(project_root / ".env")
+except ImportError:
+    pass
+
 # Enforce ADR 0043: Decoupled Sandbox Environment for Nightly Daemon
 os.environ.setdefault("IDOP_ENV", "DEV")
 os.environ.setdefault("CCBA_IDOP_MOCK_MODE", "1")
