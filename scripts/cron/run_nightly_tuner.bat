@@ -8,8 +8,23 @@ echo =================================================================
 echo [CCBA Nightly Auto-Tuner Daemon] Starting at %DATE% %TIME%
 echo =================================================================
 
+REM Tri-Repo Sequential Pull Gate (ADR 0042)
+if exist "%~dp0\..\..\..\ccba-legal-knowledge" (
+    echo Updating ccba-legal-knowledge...
+    cd /d "%~dp0\..\..\..\ccba-legal-knowledge"
+    git checkout main && git pull origin main
+)
+
+if exist "%~dp0\..\..\..\IDOP-CCBA-WAY" (
+    echo Updating IDOP-CCBA-WAY...
+    cd /d "%~dp0\..\..\..\IDOP-CCBA-WAY"
+    git checkout main && git pull origin main
+)
+
+cd /d "%~dp0\..\.."
 git checkout main
 git pull origin main
+
 
 python scripts\eval\nightly_tuner_daemon.py --max-iter 30
 
