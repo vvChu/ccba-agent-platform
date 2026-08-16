@@ -7,10 +7,7 @@ Public Deep Seams:
     Cleaners            — OCR cleanup, DOCX table parsing, Markdown conversion.
 """
 
-from .appendices import (
-    AppendixSplitter,
-    roman_to_decimal,
-)
+from .appendices import AppendixSplitter, roman_to_decimal
 from .ast_parser import (
     ASTNode,
     ASTParser,
@@ -18,49 +15,31 @@ from .ast_parser import (
     DeltaPatchItem,
     PatchAction,
 )
-from .cleaners import (
-    Cleaners,
-    convert_docx_table_to_markdown,
-    convert_markdown_to_docx,
-    extract_docx_with_tables,
-)
+from .cleaners import Cleaners
 from .coordinator import (
     LegalIntelPipeline,
     LegalProcessor,
     LegalProcessResult,
-    ensure_chrome_cdp_port,
 )
 from .crawler import (
     CookieVault,
-    MockChromeCDP,
     TVPLCrawler,
-    TVPLCrawlerEngine,
     TVPLSessionMutex,
-    TVPLVIPCrawler,
 )
-from .formatter import OKFStructureProcessor
 from .grounding import (
     LEGAL_DISCLAIMER,
     LegalGroundingGate,
     format_grounded_response,
     verify_legal_grounding,
 )
-from .monitor import TokenMonitor
 from .packager import OKFBundlePackager
-from .parser import LegalAnalysisEngine
-from .patch_generator import DeltaPatchGenerator
 from .registry import (
     LegalRegistryManager,
     format_citation,
     load_legal_registry,
     search_legal_registry,
 )
-from .sync import LegalSyncEngine, calculate_md5, calculate_sha256
-from .templates import (
-    ND30_HEADER,
-    SUPPORTED_DOC_TYPES,
-    generate_legal_document,
-)
+from .sync import LegalSyncEngine
 from .vbhn_engine import MergedLegalDocument, VBHNEngine
 from .vbhn_merger import VBHNMerger
 
@@ -77,6 +56,7 @@ __all__ = [
     "ASTParser",
     "VBHNEngine",
     "VBHNMerger",
+    "TVPLCrawler",
     "Cleaners",
     # === Core DTOs & Domain Models ===
     "ASTNode",
@@ -90,6 +70,7 @@ __all__ = [
     "format_citation",
     "load_legal_registry",
     "search_legal_registry",
+    "roman_to_decimal",
     "TVPLSessionMutex",
     "CookieVault",
     "LEGAL_DISCLAIMER",

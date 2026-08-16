@@ -10,6 +10,7 @@ Commands:
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -167,7 +168,7 @@ def _collect_pdfs(path: Path, recursive: bool) -> list[Path]:
     raise typer.Exit(code=1)
 
 
-def _print_analysis_table(reports: list, show_detail: bool = False) -> None:
+def _print_analysis_table(reports: list[Any], show_detail: bool = False) -> None:
     """Print analysis results as a rich table."""
     table = Table(show_header=True, header_style="bold cyan")
     table.add_column("", width=2)
@@ -215,7 +216,7 @@ def _print_analysis_table(reports: list, show_detail: bool = False) -> None:
                     console.print(f"  ... and {len(r.page_details) - 20} more pages")
 
 
-def _print_summary(reports: list) -> None:
+def _print_summary(reports: list[Any]) -> None:
     """Print category summary."""
     from collections import Counter
 
