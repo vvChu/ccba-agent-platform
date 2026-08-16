@@ -58,8 +58,8 @@ source .venv/bin/activate
 
 echo "📦 Installing Monorepo Packages in Editable mode..."
 pip install --upgrade pip setuptools wheel
-pip install -e "./packages/ccba-ai"
 pip install -e "./packages/ccba-harness"
+pip install -e "./packages/ccba-ai"
 pip install -e "./packages/ccba-legal-intel"
 pip install pytest pytest-timeout
 
