@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
+"""Deep Module for Upstream Repository Synchronization and Feature Evaluation.
+
+Handles dynamic repo configuration, cloning, fetching, diffing, ADR-0040 informed
+AI evaluation, license auditing, and parse-protected 1-click reporting for ccba-xia.
+
+Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 """
-Deep Module for Upstream Repository Synchronization and Feature Evaluation.
-Handles cloning, fetching, diffing, AI evaluation, and parse-protected reporting.
-"""
+
+from __future__ import annotations
 
 import json
 import re
@@ -10,6 +15,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -21,28 +27,105 @@ except ImportError:
 
 
 PLATFORM_ROOT = Path(__file__).resolve().parents[2]
+SOURCES_CONFIG_FILE = PLATFORM_ROOT / ".md" / "knowledge" / "upstream_sources.yaml"
 RECOMMENDATIONS_FILE = PLATFORM_ROOT / ".md" / "knowledge" / "port_recommendations.md"
 
-REPOS_CONFIG = [
+DEFAULT_REPOS_CONFIG = [
     {
+        "name": "claudekit-engineer",
         "type": "engineer",
         "local_path": PLATFORM_ROOT / ".md/scratch/repos/claudekit-engineer",
         "remote_url": "https://github.com/claudekit/claudekit-engineer",
+        "branch": "main",
         "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_last_sha.txt",
+        "description": "ClaudeKit Engineering Skills",
     },
     {
+        "name": "claudekit-marketing",
         "type": "marketing",
         "local_path": PLATFORM_ROOT / ".md/scratch/repos/claudekit-marketing",
         "remote_url": "https://github.com/claudekit/claudekit-marketing",
+        "branch": "main",
         "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_marketing_last_sha.txt",
+        "description": "ClaudeKit Marketing Skills",
     },
     {
+        "name": "mattpocock-skills",
         "type": "mattpocock-skills",
         "local_path": PLATFORM_ROOT / ".md/scratch/repos/mattpocock-skills",
         "remote_url": "https://github.com/mattpocock/skills",
+        "branch": "main",
         "sha_file": PLATFORM_ROOT / ".md/scratch/mattpocock_skills_last_sha.txt",
+        "description": "Matt Pocock Skills Repository",
     },
 ]
+
+
+def load_upstream_sources(config_file: Path | None = None) -> list[dict[str, Any]]:
+    """Load upstream repositories configuration from YAML with fallback to defaults."""
+    target_file = config_file or SOURCES_CONFIG_FILE
+    if not target_file.exists():
+        return DEFAULT_REPOS_CONFIG
+
+    try:
+        content = target_file.read_text(encoding="utf-8")
+        data = yaml.safe_load(content)
+        if not isinstance(data, dict) or "sources" not in data:
+            return DEFAULT_REPOS_CONFIG
+
+        sources: list[dict[str, Any]] = []
+        for s in data.get("sources", []):
+            if not isinstance(s, dict) or not s.get("enabled", True):
+                continue
+            name = str(s.get("name", s.get("type", "unknown")))
+            repo_type = str(s.get("type", name))
+            remote_url = str(s.get("remote_url", ""))
+            branch = str(s.get("branch", "main"))
+            description = str(s.get("description", ""))
+
+            sources.append(
+                {
+                    "name": name,
+                    "type": repo_type,
+                    "local_path": PLATFORM_ROOT / ".md" / "scratch" / "repos" / name,
+                    "remote_url": remote_url,
+                    "branch": branch,
+                    "sha_file": PLATFORM_ROOT / ".md" / "scratch" / f"{name}_last_sha.txt",
+                    "description": description,
+                }
+            )
+        return sources if sources else DEFAULT_REPOS_CONFIG
+    except Exception as e:
+        print(f"[Evaluator] Warning: Could not parse {target_file}: {e}. Using defaults.")
+        return DEFAULT_REPOS_CONFIG
+
+
+def check_repo_license(repo_path: Path) -> tuple[str, str]:
+    """Audit license file in repository and classify type (PERMISSIVE, COPYLEFT, PROPRIETARY, UNKNOWN)."""
+    if not repo_path.exists():
+        return "UNKNOWN", "Thư mục không tồn tại"
+
+    license_names = ["LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING", "LICENSE-MIT", "LICENSE-APACHE"]
+    for name in license_names:
+        lic_file = repo_path / name
+        if lic_file.exists():
+            try:
+                text = lic_file.read_text(encoding="utf-8", errors="ignore").lower()
+                if "gnu general public" in text or "gpl" in text or "agpl" in text or "lgpl" in text:
+                    return "COPYLEFT", "GPL/AGPL/LGPL (Rủi ro sao chép mã nguồn)"
+                if "mit license" in text or "permission is hereby granted" in text:
+                    return "PERMISSIVE", "MIT License (Tự do sử dụng)"
+                if "apache license" in text:
+                    return "PERMISSIVE", "Apache 2.0 License (Tự do sử dụng)"
+                if "bsd" in text:
+                    return "PERMISSIVE", "BSD License (Tự do sử dụng)"
+                if "all rights reserved" in text or "proprietary" in text:
+                    return "PROPRIETARY", "Bản quyền đóng (Không được sao chép)"
+                return "CUSTOM", "Giấy phép riêng biệt"
+            except Exception:
+                pass
+
+    return "UNKNOWN", "Không phát hiện tệp LICENSE rõ ràng"
 
 
 def get_existing_elements() -> tuple[list[str], list[str]]:
@@ -61,8 +144,21 @@ def get_existing_elements() -> tuple[list[str], list[str]]:
         return [], []
 
 
-def call_ai_evaluation(repo_type: str, skill_name: str, content: str) -> dict:
-    """Evaluate a skill using AI Gateway, or Rule-Based Fallback if unavailable."""
+def generate_xia_command(remote_url: str, skill_name: str, mode: str = "--compare") -> str:
+    """Generate 1-click CLI command for ccba-xia."""
+    if remote_url:
+        return f"/ccba-xia {remote_url} {skill_name} {mode}"
+    return f"/ccba-xia <repo-url> {skill_name} {mode}"
+
+
+def call_ai_evaluation(
+    repo_type: str,
+    skill_name: str,
+    content: str,
+    remote_url: str = "",
+    license_type: str = "PERMISSIVE",
+) -> dict[str, Any]:
+    """Evaluate a skill using AI Gateway under ADR-0040 (3-Tier Skill Hierarchy), with Rule-Based Fallback."""
     existing_skills, existing_workflows = get_existing_elements()
 
     is_duplicate = skill_name in existing_skills or skill_name in existing_workflows
@@ -71,35 +167,50 @@ def call_ai_evaluation(repo_type: str, skill_name: str, content: str) -> dict:
     if is_duplicate:
         return {
             "should_port": False,
-            "score": 25,
+            "score": 20,
+            "recommended_tier": "Reject/Duplicate",
+            "target_bundle": "_core",
+            "disable_model_invocation": True,
+            "parent_master_skill": None,
+            "python_compatibility_assessment": "Đã tồn tại tương đương trên hệ thống.",
             "reason": f"IGNORE (Đã tồn tại): Kỹ năng '{skill_name}' đã tồn tại sẵn trên local catalog.",
             "actionable_steps": [
                 "So sánh tệp SKILL.md mới với phiên bản local",
-                "Cherry-pick cải tiến nếu cần thay vì port mới",
+                "Cherry-pick cải tiến quy trình nếu cần thay vì port mới",
             ],
+            "xia_command": generate_xia_command(remote_url, skill_name, "--compare"),
         }
 
     if ai is not None:
         system_prompt = (
-            "Bạn là kiến trúc sư phần mềm trưởng của ccba-agent-platform.\n"
-            "Nhiệm vụ của bạn là đánh giá xem có nên port một kỹ năng mới từ thượng nguồn hay không.\n"
-            "Phản hồi bằng JSON sạch:\n"
+            "Bạn là Kiến trúc sư trưởng của ccba-agent-platform (Python Monorepo).\n"
+            "Nhiệm vụ: Đánh giá kỹ năng mới từ kho thượng nguồn theo thể chế ADR-0040 (Kim tự tháp 3 Tầng):\n"
+            "- Tier 1 (Master Deep Skill): model-invoked, logic dày, <= 10 skill/bundle.\n"
+            "- Tier 2 (Progressive Reference): tài liệu tham chiếu sâu nằm trong references/ của một Master Skill.\n"
+            "- Tier 3 (User Workflow): workflow thủ công của người dùng với 'disable-model-invocation: true'.\n\n"
+            "Hãy phân tích và trả về JSON thuần túy (không markdown block):\n"
             "{\n"
             '  "should_port": true/false,\n'
             '  "score": 0-100,\n'
+            '  "recommended_tier": "Tier 1" | "Tier 2" | "Tier 3" | "Reject",\n'
+            '  "target_bundle": "_core" | "_software" | "_consulting" | "_qc" | "_bim",\n'
+            '  "disable_model_invocation": true/false,\n'
+            '  "parent_master_skill": "tên master skill nếu là Tier 2 hoặc null",\n'
+            '  "python_compatibility_assessment": "Đánh giá mức độ phù hợp khi chuyển sang Python Monorepo",\n'
             '  "reason": "Tóm tắt lý do bằng tiếng Việt",\n'
             '  "actionable_steps": ["Bước 1...", "Bước 2..."]\n'
             "}"
         )
 
         user_prompt = f"""
-        Kho thượng nguồn: {repo_type}
+        Kho thượng nguồn: {repo_type} ({remote_url})
+        Giấy phép repo: {license_type}
         Tên kỹ năng đề xuất: {skill_name}
         Kỹ năng tương tự trên local: {similar_skills}
-        Danh sách skills hiện có: {existing_skills}
+        Danh sách skills hiện có ({len(existing_skills)} skills): {existing_skills[:30]}...
         Nội dung SKILL.md:
         ```markdown
-        {content}
+        {content[:4000]}
         ```
         """
         try:
@@ -110,29 +221,58 @@ def call_ai_evaluation(repo_type: str, skill_name: str, content: str) -> dict:
             if clean_reply.endswith("```"):
                 clean_reply = clean_reply[:-3]
             clean_reply = clean_reply.strip()
-            return json.loads(clean_reply)
+            result = json.loads(clean_reply)
+            result["xia_command"] = generate_xia_command(
+                remote_url, skill_name, "--port" if result.get("should_port") else "--compare"
+            )
+            return result
         except Exception as e:
             print(f"[Evaluator] AI Gateway error: {e}. Switching to Rule-Based Fallback.")
 
     # Rule-Based Fallback when AI Gateway is not available
+    is_workflow_like = any(kw in skill_name for kw in ["workflow", "setup", "sync", "run", "to-", "create"])
+    recommended_tier = "Tier 3 (User Workflow)" if is_workflow_like else "Tier 2 (Progressive Reference)"
     return {
         "should_port": True,
-        "score": 85,
-        "reason": "Kỹ năng mới chưa có trên local catalog (AI Gateway không khả dụng - Cần rà soát thủ công).",
-        "actionable_steps": ["Rà soát thủ công tệp SKILL.md", "Port qua ccba-kit"],
+        "score": 80,
+        "recommended_tier": recommended_tier,
+        "target_bundle": "_software",
+        "disable_model_invocation": True,
+        "parent_master_skill": "codebase-design" if not is_workflow_like else None,
+        "python_compatibility_assessment": "Cần địa hóa sang môi trường Python / Ruff / PyTest.",
+        "reason": f"Kỹ năng mới chưa có trên catalog ({license_type}). Đề xuất đánh giá qua /ccba-xia.",
+        "actionable_steps": [
+            f"Chạy lệnh `{generate_xia_command(remote_url, skill_name, '--compare')}` để trinh sát",
+            "Xem xét bóc tách thành Progressive Reference theo ADR-0040",
+        ],
+        "xia_command": generate_xia_command(remote_url, skill_name, "--compare"),
     }
 
 
-def append_recommendation(repo_type: str, skill_name: str, result: dict):
+def append_recommendation(
+    repo_type: str,
+    skill_name: str,
+    result: dict[str, Any],
+    remote_url: str = "",
+    license_desc: str = "MIT License",
+):
     """Write recommendation to port_recommendations.md using Parse-Protection markers."""
     try:
         if not RECOMMENDATIONS_FILE.parent.exists():
             RECOMMENDATIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-        header = f"# 📋 Upstream Porting Recommendations\n\nBáo cáo tự động đánh giá các tính năng mới từ thượng nguồn. Cập nhật ngày: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        header = (
+            "# 📋 Upstream Porting Recommendations (ADR-0040 Radar)\n\n"
+            f"Báo cáo tự động đánh giá các tính năng mới từ thượng nguồn. Cập nhật ngày: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        )
 
         content = ""
-        developer_notes = "\n\n<!-- DEVELOPER-NOTES-START -->\n## 📝 Ghi chú của Kỹ sư (Developer Notes)\n*Kỹ sư có thể tự do ghi chép các phân tích, đánh giá thủ công tại đây. Phần này sẽ được tự động bảo toàn khi đồng bộ thượng nguồn.*\n<!-- DEVELOPER-NOTES-END -->"
+        developer_notes = (
+            "\n\n<!-- DEVELOPER-NOTES-START -->\n"
+            "## 📝 Ghi chú của Kỹ sư (Developer Notes)\n"
+            "*Kỹ sư có thể tự do ghi chép các phân tích, đánh giá thủ công tại đây. Phần này sẽ được tự động bảo toàn khi đồng bộ thượng nguồn.*\n"
+            "<!-- DEVELOPER-NOTES-END -->"
+        )
 
         if RECOMMENDATIONS_FILE.exists():
             content = RECOMMENDATIONS_FILE.read_text(encoding="utf-8")
@@ -161,10 +301,13 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
         existing_skills, existing_workflows = get_existing_elements()
         is_duplicate = skill_name in existing_skills or skill_name in existing_workflows
 
-        if is_duplicate:
-            status_text = "IGNORE (Đã tồn tại)"
-            color = "🔴"
-        elif not result.get("should_port", True):
+        tier = result.get("recommended_tier", "Tier 3")
+        bundle = result.get("target_bundle", "_software")
+        disable_inv = result.get("disable_model_invocation", True)
+        py_compat = result.get("python_compatibility_assessment", "Chưa có đánh giá")
+        xia_cmd = result.get("xia_command", generate_xia_command(remote_url, skill_name))
+
+        if is_duplicate or not result.get("should_port", True):
             status_text = "IGNORE"
             color = "🔴"
         else:
@@ -174,13 +317,18 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
         item_md = f"""
 ---
 
-### {color} [{status_text}] Skill: `{skill_name}` (Score: {result.get("score", 0)}/100)
-*   **Kho chứa nguồn**: `{repo_type}`
-*   **Đánh giá**: {result.get("reason", "Không có lý do chi tiết từ AI")}
+### {color} [{status_text}] Skill: `{skill_name}` (Score: {result.get("score", 0)}/100) — {tier}
+*   **Kho chứa nguồn**: `{repo_type}` ({remote_url})
+*   **Bản quyền**: `{license_desc}`
+*   **Phân tầng đề xuất (ADR-0040)**: `{tier}` (Bundle: `{bundle}`, `disable-model-invocation: {str(disable_inv).lower()}`)
+*   **Đánh giá tương thích Python**: {py_compat}
+*   **Lý do**: {result.get("reason", "Không có lý do chi tiết từ AI")}
 *   **Các bước triển khai**:
 """
         for step in result.get("actionable_steps", []):
             item_md += f"    *   {step}\n"
+
+        item_md += f"> ⚡ **Lệnh kích hoạt Port 1-Click:** `{xia_cmd}`\n"
 
         if f"`{skill_name}`" not in auto_gen_content:
             auto_gen_content += "\n" + item_md.strip()
@@ -188,7 +336,7 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
         final_content = f"<!-- AUTO-GENERATED-START -->\n{auto_gen_content.strip()}\n<!-- AUTO-GENERATED-END -->{developer_notes}"
 
         RECOMMENDATIONS_FILE.write_text(final_content, encoding="utf-8")
-        print(f"[Evaluator] Wrote recommendation for '{skill_name}' -> {status_text}")
+        print(f"[Evaluator] Wrote recommendation for '{skill_name}' -> {status_text} ({tier})")
     except Exception as e:
         print(f"[Evaluator] Error writing recommendation: {e}")
 
@@ -196,14 +344,14 @@ def append_recommendation(repo_type: str, skill_name: str, result: dict):
 class UpstreamEvaluator:
     """Unified engine for upstream repository updates and feature evaluation."""
 
-    def __init__(self, configs: list[dict] = None):
-        self.configs = configs or REPOS_CONFIG
+    def __init__(self, configs: list[dict[str, Any]] | None = None):
+        self.configs = configs or load_upstream_sources()
 
-    def ensure_local_repo(self, config: dict) -> bool:
+    def ensure_local_repo(self, config: dict[str, Any]) -> bool:
         """Ensure the local repository is cloned and updated."""
-        local_path = config["local_path"]
-        remote_url = config["remote_url"]
-        repo_type = config["type"]
+        local_path: Path = config["local_path"]
+        remote_url: str = config["remote_url"]
+        repo_type: str = config["type"]
 
         if not local_path.exists():
             print(f"[Repo Update] Cloning {repo_type} from {remote_url}...")
@@ -229,7 +377,7 @@ class UpstreamEvaluator:
                     capture_output=True,
                     text=True,
                 )
-                default_branch = "main"
+                default_branch = config.get("branch", "main")
                 if res.returncode == 0:
                     default_branch = res.stdout.strip().split("/")[-1]
 
@@ -245,13 +393,13 @@ class UpstreamEvaluator:
                 print(f"[Repo Update] Error updating {repo_type}: {e}")
                 return False
 
-    def get_local_sha(self, config: dict) -> str:
+    def get_local_sha(self, config: dict[str, Any]) -> str:
         """Get the recorded SHA or the current local clone's head commit."""
-        sha_file = config["sha_file"]
+        sha_file: Path = config["sha_file"]
         if sha_file.exists():
             return sha_file.read_text(encoding="utf-8").strip()
 
-        local_path = config["local_path"]
+        local_path: Path = config["local_path"]
         if local_path.exists() and (local_path / ".git").exists():
             try:
                 res = subprocess.run(
@@ -285,10 +433,12 @@ class UpstreamEvaluator:
                 pass
         return ""
 
-    def evaluate_repo_diff(self, repo_path: Path, base_sha: str, head_sha: str, repo_type: str):
-        """Run git diff and evaluate modified or new skills."""
+    def evaluate_repo_diff(self, repo_path: Path, base_sha: str, head_sha: str, repo_type: str, remote_url: str):
+        """Run git diff and evaluate modified or new skills under ADR-0040."""
         if not repo_path.exists():
             return
+
+        license_type, license_desc = check_repo_license(repo_path)
 
         try:
             res = subprocess.run(
@@ -321,19 +471,31 @@ class UpstreamEvaluator:
                         check=True,
                     )
                     skill_content = show_res.stdout
-                    result = call_ai_evaluation(repo_type, skill_name, skill_content)
-                    append_recommendation(repo_type, skill_name, result)
+                    result = call_ai_evaluation(
+                        repo_type=repo_type,
+                        skill_name=skill_name,
+                        content=skill_content,
+                        remote_url=remote_url,
+                        license_type=license_type,
+                    )
+                    append_recommendation(
+                        repo_type=repo_type,
+                        skill_name=skill_name,
+                        result=result,
+                        remote_url=remote_url,
+                        license_desc=license_desc,
+                    )
         except subprocess.SubprocessError as e:
             print(f"[Evaluator] Git diff error in '{repo_path}': {e}")
 
-    def check_and_evaluate_single(self, config: dict, check_only: bool = False):
+    def check_and_evaluate_single(self, config: dict[str, Any], check_only: bool = False):
         """Check and evaluate a single repository config."""
         repo_type = config["type"]
-        local_path = config["local_path"]
-        remote_url = config["remote_url"]
-        sha_file = config["sha_file"]
+        local_path: Path = config["local_path"]
+        remote_url: str = config["remote_url"]
+        sha_file: Path = config["sha_file"]
 
-        print(f"[Upstream Check] Checking remote {repo_type} for new updates...")
+        print(f"[Upstream Check] Checking remote {repo_type} ({remote_url}) for new updates...")
 
         remote_sha = self.get_remote_sha(remote_url)
         if not remote_sha:
@@ -380,8 +542,8 @@ class UpstreamEvaluator:
                 print("  - [Check-Only Mode] Skipping automated evaluator.\n")
                 return
 
-            print("  - Running Automated Feature Evaluator...")
-            self.evaluate_repo_diff(local_path, local_sha, remote_sha, repo_type)
+            print("  - Running Automated ADR-0040 Feature Evaluator...")
+            self.evaluate_repo_diff(local_path, local_sha, remote_sha, repo_type, remote_url)
             sha_file.write_text(remote_sha, encoding="utf-8")
             print(f"[Upstream Check] Successfully processed updates for {repo_type}.\n")
         else:
@@ -405,7 +567,7 @@ def main():
             sys.stderr.reconfigure(encoding="utf-8")
 
     parser = argparse.ArgumentParser(
-        description="CCBA Upstream Synchronization & Evaluation Engine"
+        description="CCBA Upstream Synchronization & Evaluation Engine (ADR-0040 Radar)"
     )
 
     parser.add_argument(

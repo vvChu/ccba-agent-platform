@@ -873,14 +873,6 @@ skills:
   - youtube
   - belief archaeology
   skill_path: .agents/skills/youtube-learn/SKILL.md
-- name: ask-matt
-  bundle: _core
-  description: Ask which skill or flow fits your situation. A router over the skills in this repo.
-  triggers:
-  - ask matt
-  - router
-  - ask flow
-  skill_path: .agents/skills/ask-matt/SKILL.md
 - name: implement
   bundle: _core
   description: Implement a piece of work based on a spec or set of tickets.
@@ -889,14 +881,6 @@ skills:
   - implement spec
   - implement ticket
   skill_path: .agents/skills/implement/SKILL.md
-- name: setup-matt-pocock-skills
-  bundle: _core
-  description: Configure this repo for the engineering skills — set up its issue tracker, triage label vocabulary, and domain doc layout.
-  triggers:
-  - setup matt skills
-  - setup engineering
-  - configure repo
-  skill_path: .agents/skills/setup-matt-pocock-skills/SKILL.md
 - name: setup-pre-commit
   bundle: _core
   description: Set up Python pre-commit framework with Ruff, MyPy, PyMarkdown, and local CCBA validators.
