@@ -192,7 +192,7 @@ def hybrid_search_with_fallback(query, corpus, bm25_index, embedding_matrix=None
 | Use case | Corpus | Scoping |
 |---|---|---|
 | `legal-document-tracker` | Toàn bộ text VBPL (NĐ, TT) | Theo loại văn bản, năm ban hành |
-| `ccba-ai-qc-discovery` | Standard clauses, requirements | Theo bộ môn (PCCC, KC, MEP) |
+| `ccba-ai-qc` | Standard clauses, requirements | Theo bộ môn (PCCC, KC, MEP) |
 | `ccba-ai-qc-pccc-audit` | QCVN 06, TCVN 7568, NĐ 105 | Theo điều khoản, loại yêu cầu |
 | `seminar-builder` | Vault concepts, past seminars | Theo domain/topic |
 
