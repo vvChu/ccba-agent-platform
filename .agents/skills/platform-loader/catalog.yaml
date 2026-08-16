@@ -921,36 +921,6 @@ skills:
   - loop me
   - thiết kế chu trình
   skill_path: .agents/skills/loop-me/SKILL.md
-- name: form-template-cleaner
-  bundle: _core
-  description: Sub-skill làm sạch biểu mẫu và tự động khôi phục tiêu đề biểu mẫu bị lỗi placeholder (dấu chấm lửng) bằng AI Gateway.
-  triggers:
-  - form-template-cleaner
-  - form template cleaner
-  - làm sạch biểu mẫu
-  - khôi phục tiêu đề
-  - placeholder
-  skill_path: .agents/skills/form-template-cleaner/SKILL.md
-- name: relative-link-patcher
-  bundle: _core
-  description: Sub-skill tự động sửa và chuẩn hóa các liên kết tương đối của phụ lục (tiền tố ./appendices/) trong file Markdown chính và đồng bộ mục lục index.md.
-  triggers:
-  - relative-link-patcher
-  - relative link patcher
-  - sửa liên kết
-  - chuẩn hóa liên kết
-  - phụ lục
-  skill_path: .agents/skills/relative-link-patcher/SKILL.md
-- name: table-reconstructor
-  bundle: _core
-  description: Sub-skill dựng lại các bảng biểu Markdown bị vỡ dọc hoặc lệch cột bằng file đối chiếu .docx hoặc thuật toán Python.
-  triggers:
-  - table-reconstructor
-  - table reconstructor
-  - dựng lại bảng
-  - sửa bảng markdown
-  - vỡ bảng
-  skill_path: .agents/skills/table-reconstructor/SKILL.md
 - name: tvpl-vip-crawler
   bundle: _consulting
   description: Kỹ năng tự động kết nối tài khoản VIP Thư viện Pháp luật (vuvanchu119), xử lý Cloudflare/Popups, bảo vệ VIP Session (CookieVault), khôi phục bảng biểu (Dual-Parser Table) và đóng gói OKF Bundle.

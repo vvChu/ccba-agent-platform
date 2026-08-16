@@ -3,8 +3,8 @@ description: Hủy bỏ branch hiện tại, xóa cả local và remote
 applies_to:
   - "Phần mềm"
 bundle: "_software"
+disable-model-invocation: true
 ---
-
 # Workflow: Discard Feature (Hủy bỏ Branch)
 
 Quy trình xóa bỏ an toàn một branch thử nghiệm không sử dụng nữa.

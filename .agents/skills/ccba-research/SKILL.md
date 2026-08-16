@@ -1,9 +1,16 @@
 ---
 name: ccba-research
-description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm.
-keywords: [research, nghiên cứu, tìm hiểu, tra cứu, citations]
+description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với
+  các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm.
+keywords:
+- research
+- nghiên cứu
+- tìm hiểu
+- tra cứu
+- citations
+disable-model-invocation: true
+bundle: _software
 ---
-
 # 📚 Kỹ năng: ccba-research (Nghiên Cứu Chạy Ngầm)
 
 Kỹ năng này hướng dẫn Agent cách khởi chạy một **background subagent** (`research` subagent) để thực hiện các cuộc điều tra tài liệu, thu thập thông tin facts từ các API, mã nguồn hoặc Văn bản Pháp luật (VBPL) song song dưới nền. Điều này giúp Agent chính tiếp tục làm việc mà không bị block và giảm thiểu token bloating cho cuộc hội thoại chính.

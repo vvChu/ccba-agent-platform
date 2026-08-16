@@ -5,8 +5,8 @@ applies_to:
   - "Thẩm tra thiết kế"
   - "Thiết kế"
   - "Kiểm định"
+disable-model-invocation: true
 ---
-
 # Workflow: Propose to Hub (Đóng Góp Ngược Lên Hub)
 
 Quy trình chuẩn hóa đề xuất đóng góp ngược các cải tiến từ dự án Spoke lên Platform Hub chung.

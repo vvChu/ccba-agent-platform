@@ -1,13 +1,14 @@
 ---
 name: bigbim-vbpl-digest
-description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024, ISO 19650-1/2/3/5, QCVN liên quan.
+description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024,
+  ISO 19650-1/2/3/5, QCVN liên quan.
 applies_to:
-  - "Quản lý thông tin"
-  - "Tư vấn pháp luật xây dựng"
-  - "BIM Execution"
-bundle: "_core"
+- Quản lý thông tin
+- Tư vấn pháp luật xây dựng
+- BIM Execution
+bundle: _bim
+layer: _bim
 ---
-
 # BIGBIM VBPL Digest Skill
 
 > **Vai trò**: Chuyên gia Pháp lý BIM — tra cứu điều khoản, tóm tắt yêu cầu, giải thích nghĩa vụ theo VBPL hiện hành.

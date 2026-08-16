@@ -1,17 +1,25 @@
 ---
 name: design
-description: "Design brand identity, logos, banners, and visual assets. Use for brand systems, design tokens, corporate identity programs. Not for UI code patterns."
+description: Design brand identity, logos, banners, and visual assets. Use for brand
+  systems, design tokens, corporate identity programs. Not for UI code patterns.
 user-invocable: true
-when_to_use: "Invoke for brand systems and visual identity, not UI code."
+when_to_use: Invoke for brand systems and visual identity, not UI code.
 category: frontend
-keywords: [brand, logo, CIP, banners, identity]
-argument-hint: "[design-type] [context]"
+keywords:
+- brand
+- logo
+- CIP
+- banners
+- identity
+argument-hint: '[design-type] [context]'
 license: MIT
 metadata:
   author: claudekit
-  version: "2.1.0"
+  version: 2.1.0
+bundle: _consulting
+layer: _consulting
+disable-model-invocation: true
 ---
-
 # Design
 
 Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social photos, icons.

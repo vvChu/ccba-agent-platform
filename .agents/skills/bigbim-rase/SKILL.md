@@ -1,13 +1,14 @@
 ---
 name: bigbim-rase
-description: Tự động phân tích RASE (Requirement, Applicability, Selection, Exception) cho dự án BIM dựa trên sơ đồ dữ liệu IFC4X3 và bộ Quantity Take-Off (Qto_xxx).
+description: Tự động phân tích RASE (Requirement, Applicability, Selection, Exception)
+  cho dự án BIM dựa trên sơ đồ dữ liệu IFC4X3 và bộ Quantity Take-Off (Qto_xxx).
 applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Quản lý thông tin"
-bundle: "_core"
+- Thẩm tra thiết kế
+- Thiết kế
+- Quản lý thông tin
+bundle: _bim
+layer: _bim
 ---
-
 # BIGBIM RASE Analyzer Skill
 
 > **Vai trò**: Chuyên gia Phân tích & Kiểm duyệt RASE tối cao của BIGBIM.

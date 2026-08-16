@@ -1,16 +1,33 @@
 ---
 name: notebooklm-connector
-description: Interact with Google NotebookLM to import YouTube, URLs, PDFs, and Drive docs, perform RAG query, generate Audio Overview, and handle auth, polling, and retry loops.
+description: Interact with Google NotebookLM to import YouTube, URLs, PDFs, and Drive
+  docs, perform RAG query, generate Audio Overview, and handle auth, polling, and
+  retry loops.
 user-invocable: true
-when_to_use: Dùng khi cần trích xuất tóm tắt, truy vấn RAG, hoặc sinh các tài liệu cấu trúc (Podcast, Quiz, Slides, Mind Map, Infographic, Video, v.v.) từ các tài liệu lớn, cũng như quản trị Notebooks và Sources trên Cloud.
+when_to_use: Dùng khi cần trích xuất tóm tắt, truy vấn RAG, hoặc sinh các tài liệu
+  cấu trúc (Podcast, Quiz, Slides, Mind Map, Infographic, Video, v.v.) từ các tài
+  liệu lớn, cũng như quản trị Notebooks và Sources trên Cloud.
 category: dev-tools
-keywords: [notebooklm, rag, summary, youtube, audio, podcast, quiz, slides, mindmap, infographic, admin]
-argument-hint: "<source-path-or-url> [--extract|--query|--audio|--quiz|--slides|--mindmap|--infographic|--study-guide|--data-table|--flashcards|--report|--video|--list-notebooks|--delete-notebook|--share-notebook|--list-sources|--delete-source] [args]"
+keywords:
+- notebooklm
+- rag
+- summary
+- youtube
+- audio
+- podcast
+- quiz
+- slides
+- mindmap
+- infographic
+- admin
+argument-hint: <source-path-or-url> [--extract|--query|--audio|--quiz|--slides|--mindmap|--infographic|--study-guide|--data-table|--flashcards|--report|--video|--list-notebooks|--delete-notebook|--share-notebook|--list-sources|--delete-source]
+  [args]
 metadata:
   author: CCBA
   version: 1.3.0
+bundle: _core
+layer: _core
 ---
-
 # NotebookLM Connector
 
 Kỹ năng này dẫn dắt Agent tương tác tự động với Google NotebookLM thông qua thư viện `notebooklm-py` để trích xuất tri thức, RAG query cô lập, sinh các tài liệu cấu trúc (Structured Artifacts) và quản trị Notebooks/Sources.

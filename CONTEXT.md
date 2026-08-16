@@ -236,6 +236,18 @@ Mô hình cấu trúc dữ liệu (`cross_references.yaml`) ánh xạ 2 chiều 
 **Dynamic Knowledge Pointer (Con Trỏ Tri Thức Động)**:
 Mẫu hình chia sẻ tri thức giữa Hub và Spoke thông qua khai báo đường dẫn phân giải động trong `catalog.yaml` thay vì sao chép nội dung tệp tin, duy trì nguyên tắc Một Nguồn Sự Thật Duy Nhất (Single Source of Truth) và loại bỏ hoàn toàn nguy cơ trùng lặp dữ liệu.
 
+**Master Skill (Kỹ Năng Toàn Trình)**:
+Kỹ năng cấp cao đóng vai trò nhạc trưởng điều phối một hoặc nhiều Deep Seams (ví dụ: `markdown-document-processing`, `ccba-legal-intel`, `ccba-ai-qc-audit`), cung cấp khả năng tự động nhận diện tác vụ đầu cuối (Model-Invoked) và dẫn xuất chi tiết sang các Progressive References.
+
+**Progressive Reference (Tài Liệu Tham Chiếu Bộc Lộ Dần)**:
+Tài liệu hướng dẫn kỹ thuật chi tiết hoặc SOP chuyên biệt được lưu trữ trong thư mục `references/*.md` của một Master Skill, chỉ được AI Agent nạp khi cần xử lý các ca biên đặc thù, giúp giữ cho tệp `SKILL.md` chính luôn gọn gàng và không làm ô nhiễm context.
+
+**Context Budget Ceiling (Trần Ngân Sách Ngữ Cảnh Kỹ Năng)**:
+Rào chắn cứng trong kiểm định CI (`skill_auditor.py`) giới hạn tổng số kỹ năng tự động kích hoạt (`model_invoked`) trong một Bundle tối đa là 10 skills, bảo vệ vùng nhớ thông minh (*Smart Zone* < 120k tokens) của AI Agent.
+
+**Zero-Duplicate Skill Gate (Rào Chắn Không Trùng Lặp Kỹ Năng)**:
+Quy tắc linter tự động cấm tạo các file `SKILL.md` trùng tên hoặc trùng lặp cấu trúc thư mục giữa cấp root `.agents/skills/` và các thư mục con.
+
 ---
 
 ## System Metaphor

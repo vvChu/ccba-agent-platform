@@ -1,14 +1,15 @@
 ---
 name: long-form-writer
-description: Generates long-form documentation (2000+ words) by actively managing LLM context to bypass output limits. Ideal for regulations, whitepapers, or manuals.
+description: Generates long-form documentation (2000+ words) by actively managing
+  LLM context to bypass output limits. Ideal for regulations, whitepapers, or manuals.
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _software
+disable-model-invocation: true
 ---
-
 # Long-Form Writer Skill
 
 This skill allows Antigravity to generate "super-long" content that exceeds standard output token limits. It uses a Python script (`scripts/generate.py`) that implements a "Chain of Continuation" loop, forcing the model to write deeply about specific sections without summarizing.

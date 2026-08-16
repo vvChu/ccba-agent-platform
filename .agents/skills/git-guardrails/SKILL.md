@@ -1,8 +1,10 @@
 ---
 name: git-guardrails
-description: Guardrails to block or request explicit user permission before executing dangerous git operations (force push, hard reset, clean, etc.) via terminal.
+description: Guardrails to block or request explicit user permission before executing
+  dangerous git operations (force push, hard reset, clean, etc.) via terminal.
+disable-model-invocation: true
+bundle: _software
 ---
-
 # Setup Git Guardrails
 
 Establish runtime guardrails to intercept and prevent the Agent from executing dangerous or destructive Git operations automatically.
