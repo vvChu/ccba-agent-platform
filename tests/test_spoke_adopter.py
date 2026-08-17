@@ -26,17 +26,19 @@ def test_detect_spoke_stack_powershell(temp_spoke: Path):
     (temp_spoke / "tools").mkdir(parents=True, exist_ok=True)
     (temp_spoke / "tools" / "deploy.ps1").write_text("# deploy", encoding="utf-8")
 
-    stack, default_type = detect_spoke_stack(temp_spoke)
+    stack, default_type, default_archetype = detect_spoke_stack(temp_spoke)
     assert "PowerShell" in stack or "SharePoint" in stack
-    assert default_type == "Phần mềm"
+    assert default_type == "Tác vụ Admin"
+    assert default_archetype == "enterprise_governance"
 
 
 def test_detect_spoke_stack_python(temp_spoke: Path):
     """Detects Python stack."""
     (temp_spoke / "pyproject.toml").write_text("[project]\nname='my-tool'", encoding="utf-8")
-    stack, default_type = detect_spoke_stack(temp_spoke)
+    stack, default_type, default_archetype = detect_spoke_stack(temp_spoke)
     assert "Python" in stack
     assert default_type == "Phần mềm"
+    assert default_archetype == "specialized_extension"
 
 
 def test_discovery_report_on_mature_spoke(temp_spoke: Path):
