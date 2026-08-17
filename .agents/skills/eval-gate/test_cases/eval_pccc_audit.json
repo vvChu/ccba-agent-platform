@@ -1,0 +1,212 @@
+[
+  {
+    "id": "test_pccc_audit_mined_01",
+    "input_prompt": "/browser  Hãy nghiên cứu bổ sung thông tin sau:\nDưới đây là chi tiết các **Nhóm Chức danh Nghiệp vụ** trong hoạt động xây dựng (bao gồm cả lĩnh vực kiến trúc, quy hoạch) được quy định thống nhất theo **Luật Xây dựng năm 2025** và **Nghị định số 212/2026/NĐ-CP**:\r\n\r\n### I. Định nghĩa pháp lý các Chức danh Nghiệp vụ cốt lõi\r\nTheo quy định tại Điều 3 Nghị định số 212/2026/NĐ-CP, các chức danh nghiệp vụ chính được định nghĩa như sau:\r\n*   **Chủ nhiệm**: Là chức danh của cá nhân được tổ chức giao nhiệm vụ quản lý, điều phối thực hiện toàn bộ công việc tư vấn có nhiều chuyên môn khác nhau, bao gồm: Chủ nhiệm lập quy hoạch đô thị và nông thôn; chủ nhiệm khảo sát xây dựng; chủ nhiệm thiết kế, thẩm tra thiết kế xây dựng.\r\n*   **Chủ trì**: Là chức danh của cá nhân được tổ chức giao nhiệm vụ phụ trách thực hiện công việc theo lĩnh vực chuyên môn, gồm: chủ trì lập quy hoạch đô thị và nông thôn; chủ trì thiết kế, thẩm tra thiết kế xây dựng; chủ trì kiểm định xây dựng; chủ trì xác định, thẩm tra và quản lý chi phí đầu tư xây dựng.\r\n*   **Chỉ huy trưởng hoặc giám đốc dự án của nhà thầu (gọi chung là chỉ huy trưởng)**: Là chức danh của cá nhân được tổ chức thi công xây dựng giao nhiệm vụ quản lý, điều hành hoạt động thi công xây dựng đối với một hoặc một số công trình hoặc gói thầu cụ thể.\r\n*   **Giám sát trưởng**: Là chức danh của cá nhân được tổ chức giám sát thi công xây dựng công trình giao nhiệm vụ quản lý, điều hành hoạt động giám sát thi công xây dựng đối với công trình hoặc gói thầu cụ thể.\r\n*   **Giám đốc quản lý dự án**: Là chức da\n<truncated 4000 bytes>\nbãi bỏ chứng chỉ (Điều 55 Nghị định 212/2026/NĐ-CP)**: \r\n> Kể từ khi Nghị định này có hiệu lực thi hành, cơ quan nhà nước có thẩm quyền **không thực hiện việc cấp mới** chứng chỉ hành nghề đối với hai lĩnh vực: **Quản lý dự án** và **Định giá xây dựng**. Các cá nhân đảm nhận hai chức danh này sẽ được quản lý dựa trên việc đáp ứng các điều kiện năng lực, kinh nghiệm nghề nghiệp thực tế thay vì cấp chứng chỉ hành nghề riêng biệt.\r\n\r\n---\r\n\r\n### IV. Các trường hợp được miễn Chứng chỉ hành nghề chuyên môn\r\nCá nhân không có chứng chỉ hành nghề được phép tham gia thực hiện các hoạt động xây dựng đặc thù dưới đây nếu phù hợp với chuyên ngành đào tạo:\r\n*   Thiết kế, thẩm tra thiết kế sơ bộ được lập trong Báo cáo nghiên cứu tiền khả thi đầu tư xây dựng.\r\n*   Thiết kế, thẩm tra thiết kế, giám sát hệ thống thông tin liên lạc, viễn thông trong công trình.\r\n*   Thiết kế, thẩm tra thiết kế, giám sát công tác hoàn thiện công trình xây dựng (như trát, ốp lát, sơn, lắp đặt cửa) và các công việc thiết kế, giám sát không ảnh hưởng đến kết cấu chịu lực của công trình.\r\n*   Các hoạt động xây dựng đối với công viên cây xanh, công trình chiếu sáng công cộng, đường cáp truyền dẫn tín hiệu viễn thông.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "106c1928-e997-4ed1-8f11-84845181a169",
+      "step_index": 1199,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_02",
+    "input_prompt": "/ccba-implement @[c:\\Users\\chuvu\\.gemini\\antigravity\\brain\\2733a09c-445a-4302-8330-8cad05add786\\map.md]",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "2733a09c-445a-4302-8330-8cad05add786",
+      "step_index": 200,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_03",
+    "input_prompt": "Nhiệm vụ: Khôi phục và đồng bộ hóa catalog.yaml cùng các tài liệu chính của hệ thống.\nThư mục làm việc của bạn là: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_milestone3_gen4\nBạn là Document Synchronization Worker Gen4. Hãy thực hiện các công việc sau (LƯU Ý: KHÔNG chạy lệnh `git filter-repo` để tránh bị rollback/mất file):\n\n1. Đồng bộ `catalog.yaml` (d:\\GitHubProjects\\ccba-agent-platform\\.agents\\skills\\platform-loader\\catalog.yaml):\n   - Đăng ký đầy đủ 19 skills mồ côi và 17 workflows mồ côi (bạn có thể đọc danh sách tại d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_milestone2\\analysis.md hoặc viết script quét tự động).\n   - Sửa đổi skill_path của 3 sub-skills (table-reconstructor, form-template-cleaner, relative-link-patcher) trỏ đến đường dẫn phẳng .agents/skills/<name>/SKILL.md.\n   - Xóa bỏ hoàn toàn khai báo kỹ năng pdf bị thiếu file vật lý.\n   - Đồng bộ triggers/keywords của toàn bộ các file SKILL.md cho khớp 100% với catalog.yaml.\n\n2. Đồng bộ hóa tài liệu chính ở Project Root:\n   - Cập nhật số lượng kỹ năng thực tế (73 skills) và quy trình thực tế (49 workflows) trong README.md và PLATFORM.md.\n   - Cập nhật PROJECT.md và CONTRIBUTING.md để đảm bảo phản ánh đúng cấu trúc và mốc dự án thực tế.\n   - Cập nhật workspace_context.yaml để chuyển current_milestone sang Milestone 2.\n   - Đảm bảo EXCLUSION_HEADERS đã được thêm vào .env.example.\n\n3. Kiểm tra bảo mật & registry:\n   - Đảm bảo các file credentials (secret_credential.txt, secret_credential.db) đã được xóa hoàn toàn và root .gitignore đã được cấu hình ignore credentials tổng quát.\n   - Đảm bảo tệp registry pháp lý gốc .md/data/legal_registry.yaml và của skill đã được cập nhật trạng thái các văn bản cũ sang superseded.\n\n4. Chạy và kiểm định:\n   - Chạy linter tài liệu: python scripts/validate_docs.py --fix\n     Đảm bảo báo cáo 0 lỗi.\n   - Chạy bộ test suite của ccba-legal-intel: python -m pytest packages/ccba-legal-intel/tests/\n     Đảm bảo tất cả 41 test cases passed 100%.\n\n5. Gửi báo cáo kết quả chi tiết cho parent (conversation ID: 8e26420f-5b9f-4350-aa35-94cdff370bf5).\n\n⚠️ MANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A Forensic Auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "31bc607a-5393-499e-95ac-4cdb2f179fe9",
+      "step_index": 37,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_04",
+    "input_prompt": "You are the Forensic Integrity Auditor for Milestone 4 (Verification & Quality Validation) - Gen4.\nYour working directory is d:\\GitHubProjects\\ccba-agent-platform\\.agents\\auditor_milestone4_gen4.\nYour identity: auditor_milestone4_gen4.\n\nObjective:\n1. Verify the integrity and authenticity of the codebase and Git history.\n2. Perform the checks from the Integrity Forensics section:\n   - Check if any secret credentials (e.g. `secret_credential.txt`, `secret_credential.db`) exist on disk.\n   - Run git searches to ensure no credential leaks exist in the entire Git history (e.g. using `git log --all --full-history --name-only -- *secret_credential*`).\n   - Check if the previously compromised commit `495c5cb` is completely deleted/purged from the Git tree.\n   - Verify that there are no facade/dummy/hardcoded test results or cheating logic in the crawler, evaluator, and MCP server.\n   - Verify that appropriate boundaries (like `.gitignore`) are correctly configured to block future credential commits.\n3. Write your detailed audit report and verdict (CLEAN or INTEGRITY VIOLATION) to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\auditor_milestone4_gen4\\handoff.md`.\n\nPlease complete the audit and report your findings.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "37537996-d6c0-44b6-a186-16f59f641b1b",
+      "step_index": 81,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_05",
+    "input_prompt": "You are the independent Victory Auditor (teamwork_preview_victory_auditor).\nWorking directory: d:\\idop-ccba-way\\.agents\\victory_auditor.\n\nThe Project Orchestrator has claimed project completion for updating and completing 100% of all `spec.md` technical specification documents across all 6 modules of IDOP-CCBA-WAY according to `extracted_docs` regulations (QCTK 2815, QCCTNB 3209, Quy chế CCBA 2026) and `implementation_plan.md`.\n\nRead `.agents/ORIGINAL_REQUEST.md` for the verbatim user request and requirements.\n\nPerform your independent 3-phase audit:\n1. Timeline & Audit Trace verification.\n2. Cheating detection (hardcoded fake data, facade schemas, placeholder sweeps for `...`).\n3. Independent test execution: Run `idop.ps1 validate datamodel` and verify 100% PASS (57/57 lists valid, 19/19 taxonomy valid, 0 errors) and verify that all 21 `spec.md` files follow the standard 6-part framework with zero `...` placeholders and reflect QCTK 2815 & QCCTNB 3209 regulations accurately.\n\nWrite your complete audit report to `.agents/victory_auditor/audit_report.md` and report your structured verdict (`VICTORY CONFIRMED` or `VICTORY REJECTED`) back to Sentinel.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "5a7dd2d0-461e-4c6f-b069-ec32c0e99cf7",
+      "step_index": 63,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_06",
+    "input_prompt": "You are worker_m2_iter2 (type: teamwork_preview_worker).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m2_iter2\nRead original request: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead project spec: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\orchestrator\\PROJECT.md\nRead remediation plan: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_m2_iter2\\fix_plan.md\nRead Forensic Auditor evidence report: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\auditor_m2\\handoff.md\n\nMANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A teamwork_preview_auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.\n\nYour task (Milestone 2 Iteration 2 Log Attestation Remediation):\n1. Execute the remediation plan in `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_m2_iter2\\fix_plan.md`.\n2. Run `python -c \"import yaml; data=yaml.safe_load(open('.agents/skills/platform-loader/catalog.yaml', encoding='utf-8')); print('YAML VALID!', len(data['skills']), 'skills,', len(data['workflows']), 'workflows')\"` and capture verbatim stdout: `YAML VALID! 80 skills, 57 workflows`. Do NOT hand-type multi-line synthetic text.\n3. Run `python scripts/update_arch_stats.py` and capture full raw terminal stdout.\n4. Run `python -u scripts/validate_docs.py .agents` and capture full raw terminal stdout without truncation.\n5. Run `git diff .agents/AGENTS.md .md/workspace_context.yaml .md/knowledge/` and confirm empty output.\n6. Publish your complete handoff report with authentic verbatim raw stdout to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m2_iter2\\handoff.md` (and also update `.agents/worker_m2/handoff.md` as specified in fix_plan.md) and send a summary message to parent.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "5b51216a-dfc7-49f0-ac61-708c96c8e63c",
+      "step_index": 67,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_07",
+    "input_prompt": "You are a teamwork_preview_worker agent.\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\teamwork_preview_worker_milestone3_1\n\nYour task is to implement and execute the migration script for Milestone 3: Create `scripts/fix_existing_okf_warnings.py` to fix all linter errors in the OKF bundle `luat_xay_dung_2025_so_135_2025_qh15`, and verify the system is warning-free.\n\nPlease refer to the Explorer's reports:\n- Analysis report: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\teamwork_preview_explorer_milestone3_1\\analysis.md\n- Handoff report: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\teamwork_preview_explorer_milestone3_1\\handoff.md\n\nInstructions:\n1. Create the file `scripts/fix_existing_okf_warnings.py` and write the migration code as designed in the Explorer's analysis report.\n2. Execute the migration script using `python scripts/fix_existing_okf_warnings.py` to update the documents in `d:\\GitHubProjects\\ccba-agent-platform\\.md\\legal_docs\\luat_xay_dung_2025_so_135_2025_qh15`.\n3. Verify that the linter runs successfully and detects ZERO issues in the bundle:\n   - Run: `python scripts/validate_docs.py .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15`\n   - Confirm it prints \"Documentation validation completed successfully! No issues detected.\" and exits with code 0.\n4. Run all unit tests to ensure no regressions:\n   - Run: `python -m unittest scripts/tests/test_validate_docs.py`\n   - Run: `uv run pytest tests/test_okf_upgrade.py tests/test_okf_upgrade_adversarial.py`\n5. Report the terminal commands, output logs, and list of modified/added files in your handoff report.\n\nMANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A Forensic Auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.\n\nMaintain a `progress.md` in your working directory and update it regularly with your status and timestamp. When done, write `handoff.md` and send a message back to the parent orchestrator (conversation ID: c6f7cef2-bf56-44c6-9806-78beeea57d73) with your results.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "75466b3e-f24e-4cb2-a2d5-fb34640ccabc",
+      "step_index": 109,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_08",
+    "input_prompt": "You are the teamwork_preview_auditor (Forensic Auditor).\nYour mission is to perform forensic integrity verification of the OKF v0.1 upgrade in `packages/ccba-legal-intel` and `scripts/validate_docs.py`.\n\nTasks:\n1. Scan the modified codebase and newly added tests to verify there are no integrity violations (hardcoding test results, dummy/facade implementations, or circumvention of intended logic).\n2. Confirm that all outputs (anchors, tables, LaTeX formulas, registry changes) are computed dynamically.\n3. Output your forensic audit report to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\auditor_okf_upgrade\\audit.md` and handoff to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\auditor_okf_upgrade\\handoff.md`.\n4. Report your final verdict (CLEAN or VIOLATION) with full evidence to the orchestrator (conversation ID: da249104-d906-4942-b85c-8ab7fd472633).",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "80caf57f-5c03-4234-8b4d-da085249e892",
+      "step_index": 73,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_09",
+    "input_prompt": "You are Explorer 2 (Workflows Explorer).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_survey_2\nRead ORIGINAL_REQUEST.md at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\n\nTask:\n1. Survey all 57 workflow markdown files located under d:\\GitHubProjects\\ccba-agent-platform\\.agents\\workflows\\*.md (including workflow_pccc_*.md).\n2. Inspect frontmatter YAML validity and check relative links and cross-references pointing to SKILL.md files.\n3. Check if all referenced skills exist in `.agents/skills/`.\n4. Execute `python scripts/validate_docs.py` using run_command to gather official validation output.\n5. Do NOT modify any source files. You are strictly read-only.\n6. Write your comprehensive analysis to d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_survey_2\\analysis.md and handoff summary to d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_survey_2\\handoff.md. Send a message to parent when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "9c18208d-bb42-41c7-8195-869fdc94c611",
+      "step_index": 60,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_10",
+    "input_prompt": "bản QCVN 06 .docx lưu ở đâu?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b1c59b02-b09f-400a-9a7f-b3fa24087716",
+      "step_index": 804,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_11",
+    "input_prompt": "You are Worker 1 (Iteration 2 - Remediation) for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_2\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. `d:/GitHubProjects/ccba-legal-knowledge/.agents/orchestrator_r2/PROJECT.md`\n3. Fix Explorer Handoff: `d:/GitHubProjects/ccba-legal-knowledge/.agents/explorer_m1_fix1/handoff.md` and `analysis.md`\n4. Forensic Auditor Report: `d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_1/audit.md`\n\nMANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A teamwork_preview_auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.\n\nObjective:\nExecute code refactoring for `scripts/convert_luat_135_to_md.py` and re-generate `luat_xay_dung_2025_135_2025_qh15.md` to resolve all defects identified in Iteration 1.\n\nTasks:\n1. Refactor `scripts/convert_luat_135_to_md.py` following the exact implementation in `d:/GitHubProjects/ccba-legal-knowledge/.agents/explorer_m1_fix1/analysis.md`:\n   - Replace absolute transient system path with workspace-relative path `.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/raw_page.html`.\n   - Use strict Article title regex `r\"^(ĐIỀU|Điều)\\s+(\\d+)\\.\\s*(.*)$\"` to ensure exactly 95 Articles and 0 false H2 headings.\n   - Use DOM block `<p>` tag parsing to prevent mid-sentence title truncation across Chapters (8), Sections (13), and Articles (95).\n   - Preserve continuous paragraph text.\n2. Execute `scripts/convert_luat_135_to_md.py` to regenerate `d:/GitHubProjects/ccba-legal-knowledge/.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`.\n3. Verify the generated Markdown file:\n   - Contains exactly 95 `## Điều` headings (Articles 1 to 95).\n   - Contains 8 `# Chương` headings (Chapters I to VIII) with complete titles.\n   - Contains 13 `### Mục` headings (Sections 1 to 13) with complete titles.\n   - Contains 0 false H2 headings.\n   - File size > 10KB.\n\nWrite your change log and handoff report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_2/changes.md` and `handoff.md`.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b9087154-361b-46d3-b185-d3a4208b5faa",
+      "step_index": 35,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_12",
+    "input_prompt": "You are auditor_m3 (type: teamwork_preview_auditor).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\auditor_m3\nYour parent is orchestrator: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\orchestrator\n\nYou MUST read:\n1. d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\n2. d:\\GitHubProjects\\ccba-agent-platform\\.agents\\orchestrator\\PROJECT.md\n3. d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m3\\handoff.md\n4. d:\\GitHubProjects\\ccba-agent-platform\\audit_report.md\n\nTask:\nPerform a forensic integrity audit on worker_m3's work product and audit_report.md artifact:\n1. Check for hardcoded test results, dummy/facade implementations, or synthetic/fabricated terminal execution logs.\n2. Verify that the terminal logs in worker_m3's handoff.md and audit_report.md match authentic execution output of `validate_docs.py .agents` and `update_arch_stats.py`.\n3. Verify that Constitution files (`.agents/AGENTS.md`, `.md/workspace_context.yaml`, `.md/knowledge/*`) remain 100% untouched (`git diff`).\n4. Audit all git changes to confirm no business logic or prohibited file edits occurred.\n\nWrite your forensic audit report and verdict (CLEAN or INTEGRITY VIOLATION) to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\auditor_m3\\handoff.md` and notify parent via send_message.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "c8aae306-0245-434a-ba98-6343a53f0258",
+      "step_index": 34,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_13",
+    "input_prompt": "Bạn là teamwork_preview_worker. Bạn phụ trách Milestone 2 (Setup Simulation) và Milestone 3 (Stress Test Run) để đánh giá thực nghiệm Slash Command `/ccba-docs`.\n\n## Nhiệm vụ cụ thể\n1. Đọc file `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\workflows\\ccba-docs.md` để hiểu quy trình 5 bước.\n2. Thiết lập một codebase con giả lập tại thư mục `.md/scratch/teamwork_test/` trong workspace hiện tại:\n   `C:\\Users\\chuvu\\.gemini\\antigravity\\brain\\4adb3c4a-3709-4d72-8346-ed0627775238\\.system_generated\\worktrees\\subagent-CCBA-Docs-Quality-Team-teamwork-preview-6a69aef0\\.md\\scratch\\teamwork_test\\`.\n   Tạo các thành phần giả lập ở trong thư mục đó:\n   - File `.env` chứa Google API key giả lập: `API_KEY = \"AIzaSyA1234567890123456789012345678901\"` hoặc tương tự.\n   - File tài liệu markdown `docs/big_document.md` có kích thước lớn hơn 800 dòng (ví dụ 805 dòng) để kích hoạt cơ chế chia nhỏ file. Trong file này, đặt một liên kết ảnh tương đối `[Sơ đồ](./assets/architecture.png)` và một liên kết phụ lục `./appendices/appendix_a.md`.\n   - Các thư mục `docs/assets/` và `docs/appendices/` tương ứng.\n3. Tiến hành chạy thực tế và giả lập các pha của `/ccba-docs` trên codebase giả lập này:\n   - **Pha 1**: Chạy `python scripts/repomix_pack.py` để đóng gói codebase giả lập này thành file XML `.md/scratch/teamwork_test/repomix-output.xml`. Ghi nhận kết quả đóng gói.\n   - **Pha 2**: Chạy `python scripts/maskara.py scan` (hoặc import `maskara`) trên file `.md/scratch/teamwork_test/repomix-output.xml`. Kiểm chứng xem Maskara có bỏ qua file `.xml` này một cách âm thầm hay không. Sau đó, chạy Maskara trên file `.env` giả lập để so sánh.\n   - **Pha 3**: Thực hiện phân tách file `big_document.md` lớn hơn 800 dòng thành `index.md` và các file con. Chạy thử nghiệm phân tách và chạy `relative-link-patcher` (qua command line hoặc script Python). Đánh giá xem các liên kết ảnh tương đối `[Sơ đồ](./assets/architecture.png)` có bị hỏng hay không sau khi file con bị chuyển vào thư mục con (ví dụ: `docs/big-document/sub_part.md` thì liên kết đúng phải là `../assets/architecture.png` nhưng patcher có sửa được không?).\n   - **Pha 4**: Chạy `python scripts/validate_docs.py` trên các file đã chỉnh sửa. Xác minh xem linter có trả về Exit 1 hay không vì có liên kết hỏng. Sau đó thực hiện Rollback và kiểm chứng: tệp backup có thực sự là tệp gốc hay đã là tệp bị chỉnh sửa ở Pha 3 rồi (do thứ tự backup bị trễ)? Các file con có được xóa sạch không?\n   - **Pha 5**: Nghiệm thu và dọn dẹp các file rác.\n4. Chụp/ghi lại log chạy thực tế, các output lỗi và kết quả kiểm chứng.\n5. Viết báo cáo đánh giá thực nghiệm chi tiết vào file `handoff.md` trong thư mục artifact của bạn. Báo cáo phải bao gồm đầy đủ dữ liệu thực nghiệm (logs, lệnh chạy, kết quả rollback). Gửi tin nhắn chứa đường dẫn tuyệt đối của báo cáo này cho parent (conversation ID: 66862662-20a2-484a-9a33-7265be08d26f).\n\nMANDATORY INTEGRITY WARNING:\n> DO NOT CHEAT. All implementations must be genuine. DO NOT\n> hardcode test results, create dummy/facade implementations, or\n> circumvent the intended task. A Forensic Auditor will independently\n> verify your work. Integrity violations WILL be detected and your\n> work WILL be rejected.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "d4aeba3a-8c4f-497a-b7e9-ea7f76777459",
+      "step_index": 111,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_14",
+    "input_prompt": "You are worker_m3 (type: teamwork_preview_worker).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m3\nYour parent is orchestrator: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\orchestrator\n\nYou MUST read:\n1. d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\n2. d:\\GitHubProjects\\ccba-agent-platform\\.agents\\orchestrator\\PROJECT.md\n3. d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1_iter7\\handoff.md\n4. d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m2_iter2\\handoff.md\n\nYour Task (Milestone 3 Execution & Artifact Generation):\n1. Run `python -u scripts/validate_docs.py .agents` in terminal and capture raw stdout/stderr. Verify exit code is 0 and 0 issues are detected (AC1 Compliance).\n2. Run `python -u scripts/update_arch_stats.py` and verify stats in README.md and PLATFORM.md (80 skills, 57 workflows, 7 packages - AC2 Compliance).\n3. Verify AC3 Compliance: All 80 skills in .agents/skills/ and 57 workflows in .agents/workflows/ are registered in .agents/skills/platform-loader/catalog.yaml.\n4. Verify AC4 Compliance: 100% relative links point to existing files.\n5. Create the final audit report artifact at project root: `d:\\GitHubProjects\\ccba-agent-platform\\audit_report.md` (AC5 Compliance).\n   The `audit_report.md` file MUST include:\n   - Executive Summary (project objective, audit scope, key accomplishments)\n   - Acceptance Criteria Compliance Matrix (AC1 - AC5) with explicit status and evidence\n   - Scanned Statistics (80 skills, 57 workflows, 7 packages, 137 total markdown files scanned)\n   - Issues Detected & Auto-Fixed Breakdown across M1, M2, and M3\n   - List of modified files and rationale for changes\n   - Output of `git diff --stat`\n   - Authentic terminal execution logs for `validate_docs.py .agents` and `update_arch_stats.py`\n6. Verify Constitution files (`.agents/AGENTS.md`, `.md/workspace_context.yaml`, `.md/knowledge/*`) remain 100% untouched.\n\nMANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or fabricate terminal output. Capture authentic terminal outputs directly from tool execution. A teamwork_preview_auditor will independently verify your work.\n\nWrite your final completion and handoff report to: `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m3\\handoff.md` and notify parent when done via send_message.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "e0f74e04-bbd4-4d77-b2ff-6f30e859a093",
+      "step_index": 33,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  },
+  {
+    "id": "test_pccc_audit_mined_15",
+    "input_prompt": "You are Worker 1 (M1 Worker).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1\nRead ORIGINAL_REQUEST.md at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead M1 Fix Plan at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_m1_strategy\\fix_plan.md\n\nTask:\n1. FIRST, execute Git Backup per Guardrail 2:\n   Run `git stash push -m \"pre-audit-backup\"` via run_command.\n2. Execute the precise structural edits documented in `fix_plan.md`:\n   - Add missing `---` YAML frontmatter headers to `.agents/workflows/ccba-legal-intel.md` and `.agents/workflows/ccba-tvpl-vip-crawler.md`.\n   - Fix broken relative link in `.agents/workflows/ccba-brainstorm.md` L35 (`../../../input_documents/` -> `../../input_documents/`).\n   - Format placeholder pseudo-links in `.agents/skills/bigbim-risk/SKILL.md` into plain code formatting.\n   - Convert hardcoded absolute `file:///d:/...` links to clean relative links in the 5 skill files and 11 workflow files identified in `fix_plan.md`.\n3. Verify your fixes:\n   Run `python scripts/validate_docs.py` using run_command.\n4. Do NOT touch any Constitution files (`.agents/AGENTS.md`, `.md/workspace_context.yaml`, `.md/knowledge/*`).\n5. Do NOT fabricate any SKILL.md business content.\n\nMANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.\n\nWrite your changes summary to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1\\changes.md` and handoff report to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1\\handoff.md`. Send a message to parent when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "e14b66cb-e13f-4fff-94cf-9ef5731cc9f2",
+      "step_index": 130,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "pccc_audit"
+    }
+  }
+]

@@ -1,0 +1,478 @@
+[
+  {
+    "id": "test_agent_orchestration_mined_01",
+    "input_prompt": "You are Forensic Auditor 1 for Milestone 1.\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\auditor_m1_1\nRead ORIGINAL_REQUEST.md at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead Worker 1 Handoff at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1\\handoff.md\n\nTask:\n1. Perform forensic integrity audit on Worker 1's work product:\n   - Check if any test results, outputs, or links were hardcoded, fake, or fabricated.\n   - Confirm git stash pre-audit backup exists (`git stash list`).\n   - Run `python scripts/validate_docs.py` via run_command to verify actual execution output.\n   - Verify zero edits to Constitution files.\n2. Render binary audit verdict: CLEAN or INTEGRITY VIOLATION.\n3. Write complete audit report to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\auditor_m1_1\\handoff.md`. Send a message to parent when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "01a501d2-ee46-4277-852c-958c29f1ef45",
+      "step_index": 59,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_02",
+    "input_prompt": "You are teamwork_preview_explorer_m1_1. Your working directory is d:\\idop-ccba-way\\.agents\\teamwork_preview_explorer_m1_1\\. Create your directory if needed.\nYour task:\n1. Inspect d:\\idop-ccba-way\\extracted_docs\\ and record the 8 files, their exact names, sizes, and headers.\n2. List all spec.md files in d:\\idop-ccba-way\\specs\\modules\\.\n3. Perform regex/grep search across specs/modules/ for references to QCTK 2815, QCCTNB 3209, CCBA Charter, IBST, IDOP v2. Count total reference occurrences and list which spec.md files contain them.\n4. Write your analysis to d:\\idop-ccba-way\\.agents\\teamwork_preview_explorer_m1_1\\analysis.md and send a completion message with summary to the parent orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "09de80ba-b00b-4653-b6c5-b5995aded5e8",
+      "step_index": 43,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_03",
+    "input_prompt": "You are teamwork_preview_auditor conducting a forensic integrity audit on the spec updates and project codebase.\nYour working directory is d:\\idop-ccba-way\\.agents\\auditor_1.\n\nMission:\nPerform systematic forensic integrity checks on all updated `spec.md` files and project artifacts.\nVerify:\n1. No hardcoded test results or fake verification strings.\n2. No dummy/facade implementations or empty placeholders.\n3. Genuine, complete technical specifications with true domain logic matching QCTK 2815, QCCTNB 3209, and Quy chế CCBA 2026.\n4. Clean audit verdict: CLEAN vs INTEGRITY VIOLATION.\n\nWrite your full evidence report to `d:\\idop-ccba-way\\.agents\\auditor_1\\handoff.md` and send a message back to parent facc159b-48b9-479d-8ba2-cbdb942c29e0 with your audit verdict.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "16871ddb-5f73-4001-affd-32eac3c4f9cb",
+      "step_index": 34,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_04",
+    "input_prompt": "You are teamwork_preview_worker_m2_1. Your working directory is d:/GitHubProjects/ccba-legal-knowledge/.agents/teamwork_preview_worker_m2_1/\nYou must read ORIGINAL_REQUEST.md at: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\n\nMANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A teamwork_preview_auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.\n\nSkill instructions: read d:\\GitHubProjects\\ccba-legal-knowledge\\.agents\\skills\\markdown-processing\\SKILL.md if needed.\n\nYour task for Milestone 2 (OKF v0.2 Packaging - Requirement R2):\nPack 7 OKF v0.2 Native-First bundles under `legal_docs/01_vbpl/<slug>/` for the 7 target Decrees:\n1. `nghi_dinh_217_2026_nd_cp`\n2. `nghi_dinh_207_2026_nd_cp`\n3. `nghi_dinh_212_2026_nd_cp`\n4. `nghi_dinh_206_2026_nd_cp`\n5. `nghi_dinh_210_2026_nd_cp`\n6. `nghi_dinh_209_2026_nd_cp`\n7. `nghi_dinh_193_2026_nd_cp`\n\nFor each Decree bundle:\n1. Create directory `legal_docs/01_vbpl/<slug>/`.\n2. Generate `<slug>.md`: >5KB Markdown file containing full authentic text with YAML frontmatter, headers, and article anchors (`<a id=\"...\"></a>`). Frontmatter must contain id, document_number, title, issued_by, issued_date, effective_date, status: active, relations.guided_by: Luat-Xay-dung-2025-135-2025-QH15.\n3. Generate `index.md`: Master MOC linking to `<slug>.md`, `clauses.json`, `qa_benchmark.json`, `tables/`.\n4. Generate `clauses.json`: Structural AST index containing ≥ 10 clause items extracted from the decree text.\n5. Generate `qa_benchmark.json`: Ground-truth Q&A pairs containing ≥ 5 pairs per decree.\n6. Create `tables/` directory (with any extracted table files if present).\n7. Run `python scripts/gold_standard_processor.py legal_docs/01_vbpl/<slug> --type vbpl` on each bundle to format and ensure OKF v0.2 compliance.\n\nVerification:\n- Run `python -m pytest tests/` to confirm 100% PASSED (all tests, including `test_okf_bundles_match_raw_evidence`, must pass!).\n- Record exact outputs and file structures in `changes.md` and `handoff.md`.\n\nReport back via send_message to recipient 2abc6f03-9aca-4df7-a4e5-0c1d86c0af2d.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "176d4e4b-c2ab-4fa0-b421-975f0f3d3bfe",
+      "step_index": 50,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_05",
+    "input_prompt": "You are teamwork_preview_explorer_crawler_upgrade_1_run7.\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\teamwork_preview_explorer_crawler_upgrade_1_run7\nYour task is to explore the codebase in `packages/ccba-legal-intel` (specifically `ccba_legal/crawler.py`) and design the TVPL crawler upgrade according to the PROJECT.md:\n1. Cache-First & Three-Tier Download Flow (R1): Check local file existence, check and download from Shared Cache (Google Drive or S3 based on configuration), crawl/download from TVPL only as a fallback. Exit with code 1 if headless/CI and forced to crawl.\n2. Dynamic Synonym Mapping (R2): Load synonyms dynamically from `.agents/skills/ccba-legal-intel/resources/relation_synonyms.yaml` and inject into `metadata_js` as a JSON string.\n3. VIP Session Mutex (R3): Implement lock using `.md/data/tvpl_vip_session.lock` (wait/retry up to 3 mins, overwrite dead lock > 5 mins, clean lock file in try...finally).\n\nYou must write a detailed design plan and report your findings in `handoff.md` in your working directory.\nDo not modify any source code files. Focus on exploration and design.\nAlways remember to update your progress.md periodically to show you are active.\nReport back by sending a message to the Project Orchestrator (conversation ID: 2c7100ce-a655-460b-8b1d-3a3049dd5ab9).",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "17ba0357-1516-4709-85a0-93a7fc52bd31",
+      "step_index": 91,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_06",
+    "input_prompt": "You are teamwork_preview_challenger conducting placeholder sweep and schema consistency verification.\nYour working directory is d:\\idop-ccba-way\\.agents\\challenger_2.\n\nMission:\nPerform automated empirical sweep across all `spec.md` files in `specs/modules/` across all 6 modules:\n1. Search for any remaining `...` placeholders in any `.md` file in `specs/modules/`.\n2. Confirm all 17 target `spec.md` files exist and are fully populated.\n3. Verify that all 52 SharePoint List JSON schemas in `datamodel/sharepoint/lists/` are explicitly mapped 1-to-1 in the corresponding spec.md files.\n\nWrite your report to `d:\\idop-ccba-way\\.agents\\challenger_2\\handoff.md` and send a message back to parent facc159b-48b9-479d-8ba2-cbdb942c29e0 with your findings.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "17ca85e8-e72a-4922-8070-00d63440b6cb",
+      "step_index": 19,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_07",
+    "input_prompt": "You are teamwork_preview_worker working on Modules 4-6 Spec Standardisation & Completion (people_assets, performance_okrs, system_governance).\nYour working directory is d:\\idop-ccba-way\\.agents\\worker_m2.\nIdentity: Archetype teamwork_preview_worker, Working directory d:\\idop-ccba-way\\.agents\\worker_m2.\n\nYour mission:\nWrite and complete 100% of all `spec.md` technical specification files for Modules 4-6 (`people_assets`, `performance_okrs`, `system_governance`) according to regulations in `extracted_docs` (QCTK 2815, QCCTNB 3209, Quy chế CCBA 2026) and SharePoint JSON datamodel schemas in `datamodel/sharepoint/lists/`.\n\nStandard 6-Part Spec Framework (Mandatory for ALL spec.md files):\n1. **Mục tiêu & Phạm vi (Goal & Scope)**\n2. **User Stories & Ma trận Vai trò (Role Matrix)**: Include 5 departments (Tổ chức - Hành chính, Kế hoạch - Tài chính, Kỹ thuật - Đào tạo, các Phòng Chuyên môn/Tư vấn, Ban Giám đốc) + 3 CCBA roles (Chủ nhiệm dự án / PM, Trưởng phòng chuyên môn, Giám đốc / BGD).\n3. **Cơ sở Pháp lý & Quy chế Áp dụng**: Precise citations of QCTK 2815, QCCTNB 3209, Quy chế CCBA 2026.\n4. **Quy trình Nghiệp vụ Chi tiết (Operational Flow & BPMN)**: Operational flows and financial mechanism integration.\n5. **Acceptance Criteria & List Mapping**: 1-to-1 mapping with corresponding SharePoint List JSON schemas in `datamodel/sharepoint/lists/` (field names, types, lookups, taxonomy mapping).\n6. **Bảo mật, Phân quyền & Audit Trail**: Role permission matrix and audit trail fields.\n\nSpecific Spec files to write/update:\n- **`people_assets`**:\n  - `specs/modules/people_assets/hr/spec.md` (Complete from empty placeholder: 5 depts + 3 CCBA roles, Timesheets, mapping to `employees.json`, `departments.json`, `employment_contracts.json`, `timesheets.json`, `project_members.json`, `employee_history.json`, `certifications.json`, `benefit_packages.json`, `employee_benefits.json`, `rewards.json`)\n  - `specs/modules/people_assets/assets/spec.md` (Update: BIM device management & maintenance, mapping to `assets.json`, `maintenance_logs.json`)\n- **`performance_okrs`**:\n  - `specs/modules/performance_okrs/performance/spec.md` (Complete from empty placeholder: OKRs/KPIs evaluation tied to Tier 3 Production Bonus Fund under QCCTNB 3209, mapping to `okrs_objectives.json`, `okrs_key_results.json`, `measurables.json`, `quarters.json`, `scorecard_data.json`)\n  - `specs/modules/performance_okrs/reports/spec.md` (Update: Performance reports spec)\n- **`system_governance`**:\n  - `specs/modules/system_governance/governance/spec.md` (Update: Environment variables, system parameters, permissions)\n  - `specs/modules/system_governance/approvals/spec.md` (Update: Polymorphic Soft Key `Submissions`, multi-stage approval workflows, mapping to `submissions.json`, `approval_nodes.json`, `approval_histories.json`, `approval_delegations.json`)\n  - `specs/modules/system_governance/forms/spec.md` (Update: Dynamic forms & system configuration, mapping to `dynamic_forms.json`, `system_settings.json`, `environment_variables.json`)\n\nMANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A Forensic Auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.\n\nEnsure zero `...` placeholders remain.\nWrite your handoff report to `d:\\idop-ccba-way\\.agents\\worker_m2\\handoff.md` and send a message back to parent facc159b-48b9-479d-8ba2-cbdb942c29e0 when finished.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "1bd7b1b1-fbb0-4e1e-9014-056f5a41d64b",
+      "step_index": 164,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_08",
+    "input_prompt": "You are teamwork_preview_worker_m1_1. Your working directory is d:/GitHubProjects/ccba-legal-knowledge/.agents/teamwork_preview_worker_m1_1/\nYou must read ORIGINAL_REQUEST.md at: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\n\nMANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A teamwork_preview_auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.\n\nSkill instructions: read d:\\GitHubProjects\\ccba-legal-knowledge\\.agents\\skills\\markdown-processing\\SKILL.md if needed.\n\nYour task for Milestone 1:\n1. Refactor `scripts/docx_converter.py`:\n   - Fix line 45 where output path is hardcoded as `qcvn_06_2022_bxd.md`.\n   - Update `convert_docx_to_okf_bundle()` signature to accept optional `output_filename` (defaulting to `<target_bundle_dir.name>.md`) and `doc_type`.\n   - Add CLI `argparse` support in `main()` so it can be called via CLI:\n     `python scripts/docx_converter.py <docx_path> <target_bundle_dir> [-o output_filename] [-t doc_type]`\n\n2. Implement Raw Evidence Extraction (Requirement R1):\n   - For all 7 target Decrees:\n     1. `nghi_dinh_217_2026_nd_cp` (217/2026/NĐ-CP - Quản lý dự án đầu tư xây dựng)\n     2. `nghi_dinh_207_2026_nd_cp` (207/2026/NĐ-CP - Quản lý chất lượng, thi công & bảo trì công trình)\n     3. `nghi_dinh_212_2026_nd_cp` (212/2026/NĐ-CP - Điều kiện năng lực hoạt động xây dựng & CSDL quốc gia)\n     4. `nghi_dinh_206_2026_nd_cp` (206/2026/NĐ-CP - Quản lý chi phí đầu tư xây dựng)\n     5. `nghi_dinh_210_2026_nd_cp` (210/2026/NĐ-CP - Hợp đồng xây dựng)\n     6. `nghi_dinh_209_2026_nd_cp` (209/2026/NĐ-CP - Quản lý vật liệu xây dựng)\n     7. `nghi_dinh_193_2026_nd_cp` (193/2026/NĐ-CP - Quyết toán vốn đầu tư dự án)\n   - Create directories `.md/extracted_docs/<slug>/` for each of the 7 Decrees.\n   - Acquire authentic full-text raw legal document evidence for each of the 7 Decrees using existing scripts (`scripts/download_tvpl_docx.py`, `scripts/direct_download.py`, or web text extraction) and save raw files at `.md/extracted_docs/<slug>/<slug>.docx` or `.md/extracted_docs/<slug>/raw_text.txt` / `.md/extracted_docs/<slug>/<slug>.md` (size > 5KB per decree).\n\n3. Verify:\n   - Run `python -m pytest tests/` to make sure test suite passes 100%.\n   - Run `python scripts/validate_legal_spoke.py`.\n   - Record exact build & test commands and results in `changes.md` and `handoff.md`.\n\nReport back via send_message to recipient 2abc6f03-9aca-4df7-a4e5-0c1d86c0af2d.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "1d42374a-2ebb-433c-84c2-3aaa838b5431",
+      "step_index": 51,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_09",
+    "input_prompt": "You are teamwork_preview_auditor_m4_2. Your working directory is d:\\idop-ccba-way\\.agents\\teamwork_preview_auditor_m4_2\\. Create your directory if needed.\n\nYour task: Perform Re-evaluation Forensic Integrity Audit following Remediation Execution for IDOP-CCBA-WAY Knowledge Base Restructuring.\n\n1. Verify that `teamwork_preview_worker_m2_1/handoff.md` now contains 100% authentic SHA-256 hashes matching disk contents of `.md/governance_constitution/` and `.md/system_blueprint/`.\n2. Verify that `git status` shows working tree clean for specs/, datamodel/, tools/, .md/, CLAUDE.md, README.md.\n3. Verify that `extracted_docs/` is deleted.\n4. Verify valid YAML syntax for `.md/workspace_context.yaml` and `.md/cross_references.yaml`.\n5. Verify `CLAUDE.md` (`## Governance Knowledge Base`) and `README.md` (`## 📚 Knowledge Base (.md/)`) discoverability sections.\n6. Execute `.\\idop.ps1 validate datamodel` using run_command tool and verify exit code 0 (57 lists valid, 19 taxonomy items valid, 0 errors).\n7. Deliver an explicit binary verdict: CLEAN or INTEGRITY VIOLATION.\n8. Write your audit report to d:\\idop-ccba-way\\.agents\\teamwork_preview_auditor_m4_2\\handoff.md and send completion message to parent orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "1db78d6b-ce88-4aed-a103-9a6ab104131d",
+      "step_index": 30,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_10",
+    "input_prompt": "You are teamwork_preview_worker performing Remediation for Modules 1-3 Specs based on Reviewer 1 & Challenger 2 feedback.\nYour working directory is d:\\idop-ccba-way\\.agents\\worker_m1.\n\nMission & Specific Remediation Tasks:\n1. `specs/modules/strategy_crm/opportunities/spec.md`:\n   - In Section 5.1, add explicit, detailed 1-to-1 field mapping tables (Field Name, Field Type, Required, Lookup/Taxonomy/Choices, Field Description) for satellite lists: `OpportunityServices`, `OpportunityStageHistory`, `OpportunityStakeholders` matching their corresponding JSON schemas (`opportunity_services.json`, `opportunity_stage_history.json`, `opportunity_stakeholders.json`).\n2. `specs/modules/strategy_crm/potential_projects/spec.md`:\n   - In Section 5.1, update `Owner` to `PMOOwner` to match `potential_projects.json`. Reconcile `Notes` column.\n3. Text Ellipses (`...`) Elimination in Modules 1-3:\n   - Eliminate all occurrences of `...` in text descriptions across `expenses/spec.md`, `cde_documents/spec.md`, `pmo/spec.md`, `projects/spec.md`, `work_packages/spec.md`, `crm/spec.md`, `potential_projects/spec.md` (replace with explicit enumerations like `và các dịch vụ khác`).\n4. In `cash_data/finance/spec.md` or `cash_data/spec.md`, ensure explicit 1-to-1 field table mapping for `document_requirements.json`.\n5. Run `pwsh -ExecutionPolicy Bypass -Command \".\\idop.ps1 validate datamodel\"` and confirm validation passes 100%.\n\nMANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine.\n\nWrite your handoff report to `d:\\idop-ccba-way\\.agents\\worker_m1\\handoff.md` and send a message back to parent facc159b-48b9-479d-8ba2-cbdb942c29e0 when completed.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "1f04052f-e8cf-4c01-8b4b-f06e2baf38a2",
+      "step_index": 100,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_11",
+    "input_prompt": "You are teamwork_preview_worker_crawler_upgrade_1_run7.\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\teamwork_preview_worker_crawler_upgrade_1_run7\nYour task is to implement the TVPL crawler upgrades in `packages/ccba-legal-intel/ccba_legal/crawler.py` based on the designs from Explorers:\n- Explorer 1 handoff: C:\\Users\\chuvu\\.gemini\\antigravity\\brain\\17ba0357-1516-4709-85a0-93a7fc52bd31\\handoff.md\n- Explorer 2 proposed file: C:\\Users\\chuvu\\.gemini\\antigravity\\brain\\f4815e59-f188-4c25-bbb4-b1ab6c7059d2\\.agents\\teamwork_preview_explorer_crawler_upgrade_2_run7\\proposed_crawler.py\n\nRequirements:\n1. Cache-First & Three-Tier Download Flow (R1): In `trigger_download`, check if file exists locally (Tier 1). If not, check and download from Shared Cache (Google Drive or S3 based on configuration) (Tier 2). If not in both, perform direct crawler download from TVPL (Tier 3). If running in headless or CI/CD environment and forced to crawl from TVPL -> exit with code 1 immediately and do not log in or crawl.\n2. Dynamic Synonym Mapping (R2): In `get_tvpl_metadata`, dynamically load synonyms from `.agents/skills/ccba-legal-intel/resources/relation_synonyms.yaml`, handle both root-level mapping and nested structure under `relation_synonyms` key, convert it to a JSON string, and inject it into the Chrome CDP `metadata_js` block.\n3. VIP Session Mutex (R3): Implement file-based mutex lock using `.md/data/tvpl_vip_session.lock`. Before logging in or triggering download, check lock. If it exists and is valid (< 5 min), wait/sleep and check again (retry up to 3 mins). If lock is older than 5 minutes (dead lock), overwrite it. Wrap the critical section in a context manager or try...finally block to ensure lock release in all scenarios.\n\nMANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A Forensic Auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.\n\nPlease implement the requirements in `packages/ccba-legal-intel/ccba_legal/crawler.py`.\nVerify that your changes compile and pass static checks.\nCreate/run verification tests if possible (note the pre-existing environment issue with `openai` if it affects pytest, but make sure your crawler-specific logic is fully verified).\nUpdate your progress.md regularly. Report your results in handoff.md in your working directory and notify the Project Orchestrator (conversation ID: 2c7100ce-a655-460b-8b1d-3a3049dd5ab9) when complete.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "1f290935-4a35-423f-89c5-b905128355be",
+      "step_index": 45,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_12",
+    "input_prompt": "You are teamwork_preview_challenger_m1_2. Your working directory is d:/GitHubProjects/ccba-legal-knowledge/.agents/teamwork_preview_challenger_m1_2/\nYou must read ORIGINAL_REQUEST.md at: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\n\nTask: Adversarial stress testing of Milestone 1:\n1. Test CLI boundary conditions for `scripts/docx_converter.py`.\n2. Inspect raw evidence store files across all 7 Decree directories under `.md/extracted_docs/` for formatting, encoding, and minimum length (>5KB).\n3. Execute build, unit tests (`python -m pytest tests/`), and spoke validator (`python scripts/validate_legal_spoke.py`).\n\nDeliver your verdict (APPROVE or REJECT) in your handoff report and send_message to recipient 2abc6f03-9aca-4df7-a4e5-0c1d86c0af2d.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "310061b6-1567-4a0e-bedc-103eee8be78f",
+      "step_index": 24,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_13",
+    "input_prompt": "You are teamwork_preview_reviewer_m2_2. Your working directory is d:/GitHubProjects/ccba-legal-knowledge/.agents/teamwork_preview_reviewer_m2_2/\nYou must read ORIGINAL_REQUEST.md at: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\n\nTask: Review Worker M2's deliverables for Milestone 2 independently:\n1. Inspect OKF bundles across all 7 Decrees in `legal_docs/01_vbpl/`.\n2. Check markdown sizes (>5KB), clause counts (≥10), qa pairs (≥5), index.md links, and table directories.\n3. Execute `python -m pytest tests/` and `python scripts/validate_legal_spoke.py`.\n\nDeliver your verdict (APPROVE or REQUEST_CHANGES) in your handoff report and send_message to recipient 2abc6f03-9aca-4df7-a4e5-0c1d86c0af2d.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "464a10ab-0a89-4780-96c2-22eb69059b66",
+      "step_index": 41,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_14",
+    "input_prompt": "You are teamwork_preview_auditor_m2_1. Your working directory is d:/GitHubProjects/ccba-legal-knowledge/.agents/teamwork_preview_auditor_m2_1/\nYou must read ORIGINAL_REQUEST.md at: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\n\nTask: Perform Forensic Integrity Audit for Milestone 2:\n1. Audit all 7 OKF v0.2 bundles under `legal_docs/01_vbpl/` to verify they contain authentic legal texts and genuine JSON ASTs/QA pairs, with no hardcoded dummy passes or truncated files.\n2. Run `python -m pytest tests/` -> must pass 100% cleanly (0 failures, exit code 0).\n3. Run `python scripts/validate_legal_spoke.py` -> must return 0 Errors, 0 Warnings, exit code 0.\n\nDeliver your verdict (CLEAN or INTEGRITY_VIOLATION) with full evidence in your handoff report and send_message to recipient 2abc6f03-9aca-4df7-a4e5-0c1d86c0af2d.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "5917e713-5f3f-4382-9a7c-1439e14ead89",
+      "step_index": 36,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_15",
+    "input_prompt": "You are teamwork_preview_auditor_m4_1. Your working directory is d:\\idop-ccba-way\\.agents\\teamwork_preview_auditor_m4_1\\. Create your directory if needed.\n\nYour task: Perform a Forensic Integrity Audit on all work products for IDOP-CCBA-WAY Knowledge Base Restructuring.\n1. Check for genuine implementation vs dummy/facade bypasses or hardcoded test returns.\n2. Verify 100% content integrity of the 8 migrated files in .md/governance_constitution/ and .md/system_blueprint/.\n3. Verify that extracted_docs/ was deleted.\n4. Verify that NO files in specs/, datamodel/, tools/ were modified.\n5. Verify valid YAML syntax of .md/workspace_context.yaml and .md/cross_references.yaml.\n6. Verify CLAUDE.md and README.md discoverability updates.\n7. Deliver an explicit binary verdict: CLEAN or INTEGRITY VIOLATION.\n8. Write your audit report to d:\\idop-ccba-way\\.agents\\teamwork_preview_auditor_m4_1\\handoff.md and send completion message to parent orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "5e0972f2-9f57-46d3-86ab-4a5d48adb6bf",
+      "step_index": 54,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_16",
+    "input_prompt": "You are teamwork_preview_explorer_m1_rem_1. Your working directory is d:/GitHubProjects/ccba-legal-knowledge/.agents/teamwork_preview_explorer_m1_rem_1/\nYou must read ORIGINAL_REQUEST.md at: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\nYou must read the FULL Forensic Auditor evidence report at: d:/GitHubProjects/ccba-legal-knowledge/.agents/teamwork_preview_auditor_m1_1/handoff.md\n\nTask:\nMilestone 1 audit failed because `python -m pytest tests/` failed 1 test:\n`tests/test_m1_adversarial.py::test_okf_bundles_match_raw_evidence`\n\nAnalyze why this test is failing (it asserts `LEGAL_DOCS_DIR / slug` exists before Milestone 2 OKF bundle packaging has run) and analyze `sys.path` behavior when running `python scripts/docx_converter.py --help`.\nDesign a remediation strategy so that `pytest tests/` passes 100% cleanly for Milestone 1 without circumvention, and ensure proper milestone gating.\n\nProduce your remediation strategy report in `analysis.md` and `handoff.md` in your working directory.\nReport back via send_message to recipient 2abc6f03-9aca-4df7-a4e5-0c1d86c0af2d.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "67a90e8a-e631-47cb-8d1e-78bd0d90371c",
+      "step_index": 25,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_17",
+    "input_prompt": "You are teamwork_preview_auditor_crawler_upgrade_3_run7.\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\teamwork_preview_auditor_crawler_upgrade_3_run7\nYour task is to perform an integrity verification audit on the final committed codebase and resources in the workspace.\n\nSpecifically:\n1. Verify that all changes (`crawler.py`, `relation_synonyms.yaml`, `test_crawler.py`, `verify_legal_intel.py`) are committed to Git.\n2. Verify that there are no integrity violations, facade implementations, or hardcoded test results.\n3. Run the verification script:\n   uv run python scripts/verify_legal_intel.py\n4. Run the package tests:\n   uv run python -m pytest packages/ccba-legal-intel/tests\n5. Report your final audit verdict (CLEAN or VIOLATION) and detailed findings in `handoff.md` in your working directory.\nAlways remember to update your progress.md periodically to show you are active.\nReport back by sending a message to the Project Orchestrator (conversation ID: 2c7100ce-a655-460b-8b1d-3a3049dd5ab9).",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "67b6ab88-b2b9-42ab-b326-e066bb8211be",
+      "step_index": 45,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_18",
+    "input_prompt": "You are teamwork_preview_worker_m2_1. Your working directory is d:\\idop-ccba-way\\.agents\\teamwork_preview_worker_m2_1\\. Create your directory if needed.\n\nYour task: Implement Milestone 2 (Migration & Meta Files Generation).\n\n1. FILE MIGRATION & CLEANUP:\n   - Create directories `.md/governance_constitution` and `.md/system_blueprint`.\n   - Copy/move 8 files from `extracted_docs/` to their new locations:\n     Group A -> `.md/governance_constitution/`:\n     - `qctk_01.12.2025.md` -> `01_qctk_2815_project_management.md`\n     - `qcctnb_2025.md` -> `02_qcctnb_3209_financial_norms.md`\n     - `Du thao_QuyCheToChucHoatDong_CCBA_2026_v2.2.md` -> `03_ccba_charter_2026.md`\n     - `quy_che_khcn_ibst_01.12.2025.md` -> `04_ibst_science_tech_regulations.md`\n     Group B -> `.md/system_blueprint/`:\n     - `IDOP_v2.0_F1_Architecture.md` -> `01_idop_v2_architecture.md`\n     - `IDOP_v2.0_F2_Operations_Finance.md` -> `02_idop_v2_operations_finance.md`\n     - `IDOP_v2.0_F3_Technical_Implementation.md` -> `03_idop_v2_technical_implementation.md`\n     - `IDOP_v2.0_F4_Enterprise_Architecture.md` -> `04_idop_v2_enterprise_architecture.md`\n   - Verify 100% content integrity (compare file size/content line by line).\n   - Remove `extracted_docs/` folder completely once verified.\n\n2. GENERATE META FILES IN `.md/`:\n   - `workspace_context.yaml`: Valid YAML bootstrap configuration for AI Agents (project_name, version, current_milestone, document_groups, initial_reading_sequence).\n   - `INDEX.md`: Table of contents for all 8 documents with 2-3 sentence summaries, quick lookup table (\"Tôi cần biết về X -> đọc file Y, Điều/Phần Z\"), and anchor links to key Articles/Clauses in governance rules.\n   - `cross_references.yaml`: Valid YAML file mapping all 21 `spec.md` files in `specs/modules/` to specific Articles/Clauses/Sections in original governance constitution & system blueprint documents. Scan all 21 `spec.md` files to extract exact real-world references (~150+ references).\n\n3. REPORT & HANDOFF:\n   - Document your work, file paths created, verification results, and YAML parsing checks in `d:\\idop-ccba-way\\.agents\\teamwork_preview_worker_m2_1\\handoff.md`.\n   - Send completion message to parent orchestrator.\n\nMANDATORY INTEGRITY WARNING: DO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A Forensic Auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "6ac494b0-9038-4638-a1d1-19954075c386",
+      "step_index": 21,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_19",
+    "input_prompt": "You are Forensic Auditor 1 for Milestone 1 (Iteration 2).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\auditor_m1_iter2\nRead ORIGINAL_REQUEST.md at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead Worker 2 Handoff at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1_iter2\\handoff.md\n\nTask:\n1. Perform forensic integrity audit on Worker 2's remediation:\n   - Check if any outputs or links were hardcoded, fake, or fabricated.\n   - Run `python scripts/validate_docs.py .agents/skills` via run_command to verify actual execution output.\n   - Confirm zero edits to Constitution files.\n2. Render binary audit verdict: CLEAN or INTEGRITY VIOLATION.\n3. Write complete audit report to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\auditor_m1_iter2\\handoff.md`. Send a message to parent when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "8a962af9-5f3b-4952-b8fc-01549629fe63",
+      "step_index": 84,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_20",
+    "input_prompt": "You are teamwork_preview_reviewer_m1_1. Your working directory is d:/GitHubProjects/ccba-legal-knowledge/.agents/teamwork_preview_reviewer_m1_1/\nYou must read ORIGINAL_REQUEST.md at: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\n\nTask: Review Worker M1's changes for Milestone 1:\n1. Check `scripts/docx_converter.py` refactoring. Verify line 45 hardcoding is fixed, signature updated, and CLI argparse works correctly.\n2. Check raw evidence store at `.md/extracted_docs/` for all 7 Decrees (`nghi_dinh_217_2026_nd_cp`, `nghi_dinh_207_2026_nd_cp`, `nghi_dinh_212_2026_nd_cp`, `nghi_dinh_206_2026_nd_cp`, `nghi_dinh_210_2026_nd_cp`, `nghi_dinh_209_2026_nd_cp`, `nghi_dinh_193_2026_nd_cp`). Confirm files exist and are >5KB.\n3. Execute `python -m pytest tests/` and `python scripts/validate_legal_spoke.py`.\n\nDeliver your review verdict (APPROVE or REQUEST_CHANGES) in your handoff report and send_message to recipient 2abc6f03-9aca-4df7-a4e5-0c1d86c0af2d.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "950475e0-b5db-4cd9-8d25-78a341c43df7",
+      "step_index": 19,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_21",
+    "input_prompt": "You are teamwork_preview_worker_m1_rem_1. Your working directory is d:/GitHubProjects/ccba-legal-knowledge/.agents/teamwork_preview_worker_m1_rem_1/\nYou must read ORIGINAL_REQUEST.md at: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\n\nMANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A teamwork_preview_auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.\n\nSkill instructions: read d:\\GitHubProjects\\ccba-legal-knowledge\\.agents\\skills\\markdown-processing\\SKILL.md if needed.\n\nYour task for Milestone 1 Remediation:\n1. Fix `scripts/docx_converter.py`: Prepend `sys.path.insert(0, str(Path(__file__).resolve().parent.parent))` at top of file so direct execution (`python scripts/docx_converter.py --help`) resolves `from scripts.gold_standard_processor ...` cleanly without `ModuleNotFoundError`.\n2. Update `tests/test_m1_adversarial.py`: Add dynamic milestone skip logic / `@pytest.mark.milestone2` for `test_okf_bundles_match_raw_evidence` so it skips when OKF bundles under `legal_docs/01_vbpl/` do not exist yet in Milestone 1, and automatically runs when OKF bundles are created in Milestone 2.\n3. Verify:\n   - Run `python scripts/docx_converter.py --help` -> Exit Code 0.\n   - Run `python -m pytest tests/` -> 0 failures, Exit Code 0.\n   - Run `python scripts/validate_legal_spoke.py` -> 0 Errors, 0 Warnings, Exit Code 0.\n   - Record exact commands and output in `changes.md` and `handoff.md`.\n\nReport back via send_message to recipient 2abc6f03-9aca-4df7-a4e5-0c1d86c0af2d.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "9796f96f-d303-4f97-accf-49dddce35e25",
+      "step_index": 17,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_22",
+    "input_prompt": "You are teamwork_preview_explorer_m4_2. Your working directory is d:\\idop-ccba-way\\.agents\\teamwork_preview_explorer_m4_2\\. Create your directory if needed.\n\nContext: Milestone 4 verification failed due to a Forensic Auditor INTEGRITY VIOLATION verdict.\n\nFULL FORENSIC AUDITOR EVIDENCE REPORT (UNFILTERED):\n=====================================================\nAuditor: teamwork_preview_auditor_m4_1\nAudit Date: 2026-07-28T15:56:00+07:00\nTarget Work Product: Knowledge Base Restructuring (.md/, CLAUDE.md, README.md)\nOverall Verdict: INTEGRITY VIOLATION\n\nSummary of Audit Findings:\n1. Genuine Implementation vs Dummy/Facade: PASS — .\\idop.ps1 validate datamodel dynamically validates 57 lists and 19 taxonomy items. .md/scripts/build_meta.py dynamically parses 21 spec.md files via regex/AST.\n2. 100% Content Integrity of 8 Migrated Files: FAIL (Attestation Flaw) — All 8 files in .md/governance_constitution/ and .md/system_blueprint/ match original files 100% in byte size and line count (77302, 135746, 67778, 76876, 23359, 22411, 20364, 46486 bytes). However, teamwork_preview_worker_m2_1/handoff.md contained fabricated SHA-256 strings (62569566...) that did NOT match actual file hashes (f3f71935...).\n3. Deletion of extracted_docs/: PASS — Test-Path extracted_docs returned False.\n4. No Modifications in specs/, datamodel/, tools/: FAIL (Git Working Tree Dirty State) — Knowledge Base Restructuring workers touched zero files in specs/, datamodel/, tools/. However, git status shows uncommitted modifications in 54 files in these directories created prior to this restructuring session (between 2:13 PM and 3:07 PM).\n5. Valid YAML Syntax: PASS — .md/workspace_context.yaml and .md/cross_references.yaml parse cleanly with yaml.safe_load(). 259 total cross-references mapped.\n6. CLAUDE.md & README.md Discoverability: PASS — CLAUDE.md lines 11-20 (## Governance Knowledge Base) and README.md lines 204-222 (## 📚 Knowledge Base (.md/)) are properly inserted.\n\nActual SHA-256 Hashes of Migrated Files:\n- 01_qctk_2815_project_management.md: f3f71935d2f9f18d79b33154a244ed2c45737fee7ed9d244f7e068ce8340c4e1\n- 02_qcctnb_3209_financial_norms.md: 0b964c7ec29289ea730d61d813d9cb30483d5626d3c979f7fca4475b2cfed3f9\n- 03_ccba_charter_2026.md: 7d94912c19fdadff93e304cbe67c92196c273d90ee8faa8e1ff720f9718193f8\n- 04_ibst_science_tech_regulations.md: 7dcc5dd850c2ae4e7e5b8a36e007fa8b92e8c237304e8baa64af8020c4ea8056\n- 01_idop_v2_architecture.md: 6b1876ba1df458eb70c8894f42f3c3e11e9668b47d8c9fd8dedee23228493f74\n- 02_idop_v2_operations_finance.md: 701b77ef26d849e29619f0f098699091d64f429927e16c1a63936727d871dde8\n- 03_idop_v2_technical_implementation.md: 268f0bc52f92528eeb9af9f5a5e0154d0d520c8865c34b017c8b0fd193dfeee3\n- 04_idop_v2_enterprise_architecture.md: a2649f665a6a7f23420633f0f2abd3a88738181f10834c45ebeda254e84e6349\n=====================================================\n\nYour task as Explorer 3:\n1. Analyze the exact remediation steps required to fix both issues identified in the audit.\n2. For Attestation Flaw: Formulate exact fix for d:\\idop-ccba-way\\.agents\\teamwork_preview_worker_m2_1\\handoff.md replacing fabricated hashes with authentic SHA-256 hashes.\n3. For Git Working Tree Dirty State: Check git status and inspect uncommitted changes in specs/, datamodel/, tools/. Determine if git checkout or stash should be executed to clean working tree for specs/, datamodel/, tools/ while ensuring `.\\idop.ps1 validate datamodel` passes 100%.\n4. Write your analysis and concrete remediation strategy to d:\\idop-ccba-way\\.agents\\teamwork_preview_explorer_m4_2\\analysis.md and send completion message to parent orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "9c0ca9f8-d522-41ba-9857-45e39327d506",
+      "step_index": 24,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_23",
+    "input_prompt": "You are teamwork_preview_explorer_crawler_upgrade_3_run7.\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\teamwork_preview_explorer_crawler_upgrade_3_run7\nYour task is to explore the codebase in `packages/ccba-legal-intel` (specifically `ccba_legal/crawler.py`) and design the TVPL crawler upgrade according to the PROJECT.md:\n1. Cache-First & Three-Tier Download Flow (R1): Check local file existence, check and download from Shared Cache (Google Drive or S3 based on configuration), crawl/download from TVPL only as a fallback. Exit with code 1 if headless/CI and forced to crawl.\n2. Dynamic Synonym Mapping (R2): Load synonyms dynamically from `.agents/skills/ccba-legal-intel/resources/relation_synonyms.yaml` and inject into `metadata_js` as a JSON string.\n3. VIP Session Mutex (R3): Implement lock using `.md/data/tvpl_vip_session.lock` (wait/retry up to 3 mins, overwrite dead lock > 5 mins, clean lock file in try...finally).\n\nYou must write a detailed design plan and report your findings in `handoff.md` in your working directory.\nDo not modify any source code files. Focus on exploration and design.\nAlways remember to update your progress.md periodically to show you are active.\nReport back by sending a message to the Project Orchestrator (conversation ID: 2c7100ce-a655-460b-8b1d-3a3049dd5ab9).",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "a6193c43-168b-4749-a98d-3d7b0997c001",
+      "step_index": 66,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_24",
+    "input_prompt": "You are teamwork_preview_challenger_m1_1. Your working directory is d:/GitHubProjects/ccba-legal-knowledge/.agents/teamwork_preview_challenger_m1_1/\nYou must read ORIGINAL_REQUEST.md at: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\n\nTask: Adversarial challenge of Milestone 1 changes:\n1. Stress-test `scripts/docx_converter.py` with custom output filenames, non-existent directories, invalid CLI flags, and various docx inputs.\n2. Test edge cases of raw evidence files in `.md/extracted_docs/<slug>/` to check for truncation, corruption, or missing slugs.\n3. Run `python -m pytest tests/` and `python scripts/validate_legal_spoke.py`.\n\nDeliver your verdict (APPROVE or REJECT) in your handoff report and send_message to recipient 2abc6f03-9aca-4df7-a4e5-0c1d86c0af2d.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "a93ae257-0ce3-477b-9f9e-e56008df35b4",
+      "step_index": 47,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_25",
+    "input_prompt": "You are Forensic Auditor for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_1\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. Worker 1 Handoff: `d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_1/handoff.md`\n\nObjective:\nPerform forensic integrity verification on Milestone 1 deliverables.\nFile under audit: `d:/GitHubProjects/ccba-legal-knowledge/.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`\n\nIntegrity Checks:\n1. Verify genuine content (not dummy, placeholder, or truncated text).\n2. Verify text matches authentic legal text of Luật Xây dựng số 135/2025/QH15.\n3. Check for any hardcoding, spoofing, or deceptive artifacts.\n\nWrite your audit report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_1/audit.md` and `handoff.md`. Include a clear verdict: CLEAN or INTEGRITY VIOLATION.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "aa330186-9683-47b5-b1b0-c19f417e4629",
+      "step_index": 17,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_26",
+    "input_prompt": "You are teamwork_preview_challenger_m4_1. Your working directory is d:\\idop-ccba-way\\.agents\\teamwork_preview_challenger_m4_1\\. Create your directory if needed.\n\nYour task: Empirically stress-test and verify deliverables for IDOP-CCBA-WAY Knowledge Base Restructuring.\n1. Run `git status` or file inspection to verify that ZERO files in specs/, datamodel/, and tools/ were created, modified, or deleted.\n2. Programmatically load and test .md/workspace_context.yaml and .md/cross_references.yaml to ensure valid YAML structure and that all 21 spec.md files in specs/modules/ are mapped.\n3. Execute `.\\idop.ps1 validate datamodel` using run_command tool and verify exit code 0.\n4. Write your challenge report to d:\\idop-ccba-way\\.agents\\teamwork_preview_challenger_m4_1\\handoff.md and send completion message to parent orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b2b7d415-b824-44b6-9bd3-ce3302a4fe35",
+      "step_index": 25,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_27",
+    "input_prompt": "You are teamwork_preview_reviewer_m4_1. Your working directory is d:\\idop-ccba-way\\.agents\\teamwork_preview_reviewer_m4_1\\. Create your directory if needed.\n\nYour task: Independently review and verify all deliverables for IDOP-CCBA-WAY Knowledge Base Restructuring.\n1. Check .md/governance_constitution/ (4 files with exact names) and .md/system_blueprint/ (4 files with exact names).\n2. Check that extracted_docs/ has been completely removed.\n3. Validate YAML syntax for .md/workspace_context.yaml and .md/cross_references.yaml.\n4. Check .md/INDEX.md for 8 document summaries, quick lookup table, and anchor links.\n5. Check CLAUDE.md for ## Governance Knowledge Base section and README.md for ## 📚 Knowledge Base (.md/) section.\n6. Run `.\\idop.ps1 validate datamodel` using run_command tool and confirm 0 errors.\n7. Write your review report to d:\\idop-ccba-way\\.agents\\teamwork_preview_reviewer_m4_1\\handoff.md and send completion message to parent orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b5133779-0f68-428e-bf4b-0bfb5876eb52",
+      "step_index": 25,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_28",
+    "input_prompt": "You are teamwork_preview_auditor conducting final forensic integrity audit on all updated specs, newly added list schemas, and project artifacts.\nYour working directory is d:\\idop-ccba-way\\.agents\\auditor_1.\n\nMission:\nPerform comprehensive forensic integrity audit:\n1. Confirm all 57 JSON list schemas exist and are valid.\n2. Confirm all 21 `spec.md` files are 100% complete with genuine domain logic matching QCTK 2815, QCCTNB 3209, and Quy chế CCBA 2026.\n3. Confirm zero hardcoding, dummy implementations, or fake token generation.\n4. Issue final audit verdict: CLEAN vs INTEGRITY VIOLATION.\n\nWrite your full evidence report to `d:\\idop-ccba-way\\.agents\\auditor_1\\handoff.md` and send a message back to parent facc159b-48b9-479d-8ba2-cbdb942c29e0 with your audit verdict.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "bb5060b0-e5cc-463e-ab5c-72cc0f1ff488",
+      "step_index": 22,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_29",
+    "input_prompt": "You are teamwork_preview_reviewer_m2_1. Your working directory is d:/GitHubProjects/ccba-legal-knowledge/.agents/teamwork_preview_reviewer_m2_1/\nYou must read ORIGINAL_REQUEST.md at: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\n\nTask: Review Worker M2's deliverables for Milestone 2 (Requirement R2):\n1. Inspect all 7 OKF v0.2 bundles under `legal_docs/01_vbpl/<slug>/`:\n   - `nghi_dinh_217_2026_nd_cp`\n   - `nghi_dinh_207_2026_nd_cp`\n   - `nghi_dinh_212_2026_nd_cp`\n   - `nghi_dinh_206_2026_nd_cp`\n   - `nghi_dinh_210_2026_nd_cp`\n   - `nghi_dinh_209_2026_nd_cp`\n   - `nghi_dinh_193_2026_nd_cp`\n2. Verify each bundle contains `<slug>.md` (>5KB), `index.md`, `clauses.json` (≥10 clauses), `qa_benchmark.json` (≥5 QA pairs), `tables/`.\n3. Verify `<slug>.md` frontmatter has `relations.guided_by: Luat-Xay-dung-2025-135-2025-QH15`, `status: active`.\n4. Execute `python -m pytest tests/` and `python scripts/validate_legal_spoke.py`.\n\nDeliver your verdict (APPROVE or REQUEST_CHANGES) in your handoff report and send_message to recipient 2abc6f03-9aca-4df7-a4e5-0c1d86c0af2d.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "c0163791-aa1a-4651-af9e-ad585f8e0fc6",
+      "step_index": 22,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_30",
+    "input_prompt": "You are teamwork_preview_worker performing Remediation for Modules 4-6 & Data Model JSON Schemas based on Reviewer 2 feedback.\nYour working directory is d:\\idop-ccba-way\\.agents\\worker_m2.\n\nMission & Specific Remediation Tasks:\n1. Create 5 Missing JSON List Schemas in `datamodel/sharepoint/lists/system_governance/`:\n   - `approval_nodes.json` (Approval nodes/steps in multi-stage approval engine)\n   - `approval_histories.json` (Audit log of approval actions/decisions)\n   - `approval_delegations.json` (Temporary delegation of approval authority)\n   - `dynamic_forms.json` (Dynamic form definitions & metadata)\n   - `system_settings.json` (System parameters and configuration key-values)\n   Follow standard IDOP list JSON schema format (Title, InternalName, Description, Fields array with Name, Type, DisplayName, Required, etc.).\n2. Update Data Model JSON Schemas:\n   - `datamodel/sharepoint/lists/people_assets/assets.json`: Add financial fields (`OriginalValue` - Number, `DepreciationRate` - Number, `AccumulatedDepreciation` - Number, `SerialNumber` - Text, `Location` - Text).\n   - `datamodel/sharepoint/lists/performance_okrs/okrs_objectives.json`: Add `ParentObjectiveId` (Lookup to `okrs_objectives`) and `DepartmentId` (Lookup to `departments`).\n   - `datamodel/sharepoint/lists/people_assets/departments.json`: Add `ParentDepartmentId` (Lookup to `departments`).\n3. Re-verify all specs in Modules 4-6 (`hr/spec.md`, `assets/spec.md`, `performance/spec.md`, `reports/spec.md`, `governance/spec.md`, `approvals/spec.md`, `forms/spec.md`) against these newly created/updated JSON files so 1-to-1 schema mapping is 100% genuine and verified.\n4. Eliminate any remaining `...` placeholders in Modules 4-6 specs.\n5. Run `pwsh -ExecutionPolicy Bypass -Command \".\\idop.ps1 validate datamodel\"` and confirm all lists pass datamodel validation with 0 errors!\n\nMANDATORY INTEGRITY WARNING:\nDO NOT CHEAT. All implementations must be genuine.\n\nWrite your handoff report to `d:\\idop-ccba-way\\.agents\\worker_m2\\handoff.md` and send a message back to parent facc159b-48b9-479d-8ba2-cbdb942c29e0 when completed.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "ded0b37b-1195-41bc-aed7-dde12c7c54a1",
+      "step_index": 86,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_31",
+    "input_prompt": "You are teamwork_preview_challenger_m2_1. Your working directory is d:/GitHubProjects/ccba-legal-knowledge/.agents/teamwork_preview_challenger_m2_1/\nYou must read ORIGINAL_REQUEST.md at: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\n\nTask: Adversarial challenge of Milestone 2 OKF v0.2 bundles:\n1. Check structural validity of `clauses.json` and `qa_benchmark.json` across all 7 Decrees under `legal_docs/01_vbpl/`.\n2. Check frontmatter metadata and anchor tags in `<slug>.md`.\n3. Execute `python -m pytest tests/` and `python scripts/validate_legal_spoke.py`.\n\nDeliver your verdict (APPROVE or REJECT) in your handoff report and send_message to recipient 2abc6f03-9aca-4df7-a4e5-0c1d86c0af2d.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "e8d93411-20a7-4156-9626-99418205eaf9",
+      "step_index": 33,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_32",
+    "input_prompt": "You are Forensic Auditor (Iteration 2) for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_2\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. Worker 1 Iteration 2 Handoff: `d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_2/handoff.md` and `scripts/convert_luat_135_to_md.py`\n3. Previous Audit Report: `d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_1/audit.md`\n\nObjective:\nPerform forensic integrity verification on Milestone 1 remediated deliverables.\nFiles under audit:\n- `d:/GitHubProjects/ccba-legal-knowledge/.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`\n- `scripts/convert_luat_135_to_md.py`\n\nIntegrity Checks:\n1. Verify absolute hardcoded paths are removed from `convert_luat_135_to_md.py` and replaced with workspace-relative pathing (`.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/raw_page.html`).\n2. Verify genuine content (95 authentic Articles, 8 Chapters, 13 Sections).\n3. Verify no false H2 headings or misleading metric claims.\n4. Check for any hardcoding, spoofing, or deceptive artifacts.\n\nWrite your audit report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_2/audit.md` and `handoff.md`. Include a clear verdict: CLEAN or INTEGRITY VIOLATION.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "ec50b51b-3bff-4226-baa5-cb575b9dbe69",
+      "step_index": 20,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_33",
+    "input_prompt": "You are teamwork_preview_challenger_crawler_upgrade_1_run7.\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\teamwork_preview_challenger_crawler_upgrade_1_run7\nYour task is to empirically verify and stress-test the TVPL crawler upgrades in `packages/ccba-legal-intel/ccba_legal/crawler.py` (focusing on the atomic mutex lock VIPSessionLock and cache checks).\n\nSpecifically:\n1. Write a script or execute parallel tests to stress test the concurrent lock acquisition. Verify that when multiple processes attempt to grab the lock, only one succeeds while others wait or timeout as designed.\n2. Verify that stale locks (lock file age > 5 mins) are cleaned up and overwritten properly under concurrent attempts.\n3. Validate that R1 (Cache-First) checks work correctly.\n4. Report your findings, test results, and empirical evidence in `handoff.md` in your working directory.\nAlways remember to update your progress.md periodically to show you are active.\nReport back by sending a message to the Project Orchestrator (conversation ID: 2c7100ce-a655-460b-8b1d-3a3049dd5ab9).",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "fa4a3894-5e94-49be-bbcb-c06d2a23f7ad",
+      "step_index": 29,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  },
+  {
+    "id": "test_agent_orchestration_mined_34",
+    "input_prompt": "You are Forensic Auditor (Iteration 3) for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_3\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. Worker 1 Iteration 3 Handoff: `d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_3/handoff.md` and `scripts/convert_luat_135_to_md.py`\n3. Previous Audit Report: `d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_2/audit.md`\n\nObjective:\nPerform forensic integrity verification on Milestone 1 remediated deliverables.\nFiles under audit:\n- `d:/GitHubProjects/ccba-legal-knowledge/.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`\n- `scripts/convert_luat_135_to_md.py`\n\nIntegrity Checks:\n1. Verify ZERO occurrences of `C:\\Users` or hardcoded absolute paths in `scripts/convert_luat_135_to_md.py`. All paths must be workspace-relative.\n2. Verify genuine content (95 authentic Articles, 8 Chapters, 13 Sections).\n3. Verify no false H2 headings or deceptive artifacts.\n\nWrite your audit report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_3/audit.md` and `handoff.md`. Include a clear verdict: CLEAN or INTEGRITY VIOLATION.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "ffc98f52-361f-40ea-b90d-a81ab236d7b1",
+      "step_index": 21,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "agent_orchestration"
+    }
+  }
+]

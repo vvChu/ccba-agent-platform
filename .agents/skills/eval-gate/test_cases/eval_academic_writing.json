@@ -1,0 +1,57 @@
+[
+  {
+    "id": "test_academic_cars_move_introduction",
+    "input_prompt": "Hãy viết phần Mở bài (Introduction) cho bài báo nghiên cứu khoa học về ứng dụng Semantic Map-Reduce trong thẩm tra đa bộ môn BIM/PCCC theo mô hình CARS (3 Moves: Establish Territory, Find a Niche, Occupy Niche).",
+    "golden_answer": null,
+    "rubric": "Phải triển khai đầy đủ 3 Moves của mô hình CARS: Move 1 (Establish Territory), Move 2 (Find a Niche), Move 3 (Occupy Niche). Nêu rõ bối cảnh nghiên cứu, khoảng trống tri thức và đóng góp khoa học.",
+    "metadata": {
+      "section": "Introduction",
+      "framework": "CARS Model (Swales & Feak)",
+      "target_skill": "academic_writing"
+    }
+  },
+  {
+    "id": "test_academic_methods_materials_protocol",
+    "input_prompt": "Biên soạn mục Materials & Methods mô tả quy trình thực nghiệm trích xuất 507 tệp nhật ký dự án, sử dụng thể bị động khoa học (passive voice) và phân định rõ các biến số thực nghiệm.",
+    "golden_answer": null,
+    "rubric": "Phải tuân thủ quy chuẩn biên soạn Methods: sử dụng thể bị động khách quan, mô tả chi tiết quy trình thực nghiệm từng bước và kiểm soát các biến số độc lập/phụ thuộc.",
+    "metadata": {
+      "section": "Materials & Methods",
+      "style": "Passive Voice & Objective",
+      "target_skill": "academic_writing"
+    }
+  },
+  {
+    "id": "test_academic_discussion_zoom_out",
+    "input_prompt": "Viết phần Discussion (Thảo luận kết quả) phân tích tính ưu việt của cơ chế Karpathy Git-Ratchet so với tối ưu hóa thủ công, đối chiếu với các nghiên cứu trước và thẳng thắn thừa nhận giới hạn (limitations).",
+    "golden_answer": null,
+    "rubric": "Phải triển khai theo cấu trúc Zoom-out: Move 1 (Major Findings), Move 2 (Research Context & Limitations), Move 3 (Take-home Message & Future Work).",
+    "metadata": {
+      "section": "Discussion",
+      "structure": "Zoom-out Mirroring",
+      "target_skill": "academic_writing"
+    }
+  },
+  {
+    "id": "test_academic_style_and_vocabulary",
+    "input_prompt": "Hiệu đính văn phong đoạn văn học thuật sau để loại bỏ từ ngữ cảm tính ('clearly', 'obviously', 'very', 'basically') và cấu trúc danh từ hóa rườm rà (nominalizations).",
+    "golden_answer": null,
+    "rubric": "Phải loại bỏ hoàn toàn các từ bổ trợ cảm xúc mang tính khẳng định chủ quan và chuyển đổi danh từ hóa thành động từ hành động ngắn gọn, chuẩn xác theo cẩm nang Yale.",
+    "metadata": {
+      "section": "Style & Grammar",
+      "guideline": "Yale Academic Style Guide",
+      "target_skill": "academic_writing"
+    }
+  },
+  {
+    "id": "test_academic_citation_bibtex_apa",
+    "input_prompt": "Trích dẫn các tài liệu tham khảo kinh điển của John Swales (1990), Elena Kallestinova (2011) và ISO 19650 theo định dạng chuẩn APA 7th và khối BibTeX.",
+    "golden_answer": null,
+    "rubric": "Phải định dạng chính xác theo chuẩn APA 7th (Author, Year, Title, Publisher) và xuất khối mã BibTeX chuẩn hóa.",
+    "metadata": {
+      "section": "References",
+      "format": "APA 7th & BibTeX",
+      "target_skill": "academic_writing"
+    }
+  }
+]

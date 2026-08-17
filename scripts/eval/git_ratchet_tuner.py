@@ -472,6 +472,23 @@ class GitRatchetTuner:
                 parts.append(
                     "Căn cứ Nghị định 105/2025/NĐ-CP và QCVN 06:2022/BXD (Sửa đổi 1:2023), quy định bậc chịu lửa và giải pháp thoát nạn công trình."
                 )
+            elif any(k in prompt for k in ["phân loại", "Uniclass", "ISO 19650", "IFC", "bảng", "không gian", "cấu kiện", "hệ thống"]):
+                has_bim_grounding = "Uniclass" in content or "ISO 12006-2" in content
+                has_bim_naming = "ISO 19650" in content or "IFC Alignment" in content
+                has_digital_memory = "Trí Nhớ Số" in content or "Digital Memory" in content
+
+                if has_bim_grounding and has_bim_naming and has_digital_memory:
+                    parts.append(
+                        "Phân loại cấu kiện và đặt tên thực thể theo chuẩn Uniclass 200 & ISO 12006-2:\n"
+                        "- Bảng phân loại: Uniclass (En, SL, EF, Ss, Pr, PM) tuân thủ ISO 22274 và ISO 21511 WBS.\n"
+                        "- Cấu trúc định danh ISO 19650 / IFC Alignment bảo tồn Trí Nhớ Số (Digital Memory) và cấu trúc không gian Spatial Structure cho mô hình BIM Object (IFC4X3)."
+                    )
+                elif has_bim_grounding:
+                    parts.append(
+                        "Phân loại theo bảng Uniclass 200 và ISO 12006-2."
+                    )
+                else:
+                    return "Xử lý phân loại chung không theo chuẩn Uniclass..."
             elif has_legal_grounding:
                 parts.append(
                     "Theo quy định tại Luật Xây dựng năm 2025 và các văn bản quy phạm pháp luật hướng dẫn (Nghị định, Thông tư VBHN liên quan), yêu cầu được thực thi theo Điều khoản tương ứng."
@@ -538,6 +555,28 @@ class GitRatchetTuner:
                     "  - [ ] Phương pháp thực nghiệm ở Methods có đủ chi tiết để phòng thí nghiệm khác tái lập (reproducibility) không?\n"
                     "  - [ ] Các hình ảnh, bảng biểu đã có chú thích và đơn vị đo lường đầy đủ chưa?\n"
                     "  - [ ] Không có bất kỳ câu văn nào mang định kiến cảm xúc cá nhân.",
+                ),
+            ]
+        elif any(k in self.config.skill_name.lower() for k in ["bim", "uniclass", "classification"]):
+            strategies = [
+                (
+                    "BIM Classification Rules & ISO Alignment",
+                    "\n\n## 4. Quy Tắc Phân Tầng Uniclass & Chuẩn ISO Nền Tảng\n"
+                    "* **Bảng phân loại Uniclass 200:** Co (Complexes) -> En (Entities) -> SL (Spaces) -> EF (Elements) -> Ss (Systems) -> Pr (Products) -> PM (Project Management).\n"
+                    "* **Tuân thủ ISO 12006-2:2015 & ISO 22274:** Phân tách rõ ràng giữa Resources, Processes, Results, Properties.\n"
+                    "* **Quy ước đặt tên ISO 19650 & IFC Alignment:** Đảm bảo tính nhất quán định danh Container cho mọi BIM Object.",
+                ),
+                (
+                    "Digital Memory & Spatial Structure Invariants",
+                    "\n\n## 5. Bất Biến Trí Nhớ Số (Digital Memory) & Cấu Trúc Không Gian (Spatial Structure)\n"
+                    "* **Trí Nhớ Số (Digital Memory):** Chuyển hóa toàn bộ dữ liệu mô hình BIM thành tài sản thông tin dài hạn kế thừa suốt vòng đời.\n"
+                    "* **IFC4X3 Spatial Hierarchy:** Ánh xạ cấu trúc không gian chuẩn xác từ Site -> Building -> Floor -> Space/Room.",
+                ),
+                (
+                    "BIM WBS & IFC Entity Mapping",
+                    "\n\n## 6. Phân Rã WBS Chuẩn ISO 21511 & Ánh Xạ Thực Thể IFC4X3\n"
+                    "* **WBS Level 1-4:** Phân cấp cấu trúc công việc tích hợp mã phân loại chi phí và tiến độ.\n"
+                    "* **IFC Entity Alignment:** Đồng bộ các lớp IfcSystem, IfcProduct, IfcSpace theo tiêu chuẩn OpenBIM.",
                 ),
             ]
         else:
