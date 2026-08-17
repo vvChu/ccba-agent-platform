@@ -457,8 +457,8 @@ class ConversionPipeline:
         from mdconverter.core.gemini import LLMConverter
 
         settings = get_settings()
-        # Drawing always uses qwen-35b if available as it's the best for this
-        preferred = "qwen3.5-35b"
+        # Drawing always uses qwen-local-primary if available as it's the best for this
+        preferred = "qwen-local-primary"
         models = [preferred] + [m for m in settings.models if m != preferred]
 
         converter = LLMConverter(output_dir=self.output_dir, models=models)
