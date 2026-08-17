@@ -1,21 +1,21 @@
 # CCBA AutoResearch: Program Specification (program.md)
 
-> Thí nghiệm tối ưu hóa tự động hoàn hảo 100% (Karpathy Git-Ratchet Auto-Tuner) cho Kỹ năng Biên soạn Học thuật (academic_writing).
+> Thí nghiệm tối ưu hóa tự động (Karpathy Git-Ratchet Auto-Tuner) cho Kỹ năng Phân loại Thông tin Mô hình BIM (bigbim-classification).
 
 ---
 
 ## 🎯 Mục tiêu Thí nghiệm (Experiment Goal)
-- **Target File**: .agents/skills/academic_writing/SKILL.md
-- **Target Score**: 100.0%
-- **Max Iterations**: 5
-- **Dataset File**: .agents/skills/eval-gate/test_cases/eval_academic_writing.json
+- **Target File**: `.agents/skills/bigbim-classification/SKILL.md`
+- **Target Score**: 95.0%
+- **Max Iterations**: 10
+- **Dataset File**: `.agents/skills/eval-gate/test_cases/eval_bigbim_classification.json`
 
 ---
 
 ## 🛡️ Ranh giới & Rào chắn (Guardrails)
-- **Được phép sửa (Allowed Files)**: Chỉ sửa duy nhất nội dung phần body của `Target File`.
+- **Được phép sửa (Allowed Files)**: Chỉ sửa duy nhất nội dung phần body của `Target File`. Giữ nguyên 100% phần YAML Frontmatter.
 - **Cấm sửa (Prohibited Files)**: `test_cases/`, `scorers.py`, `eval_runner.py`, `git_ratchet_tuner.py`.
-- **Rào chắn Điểm Liệt (Hard Floor Invariant)**: Bắt buộc 0 Critical Failures (tuyệt đối không vi phạm văn phong cảm tính, bắt buộc trích dẫn chuẩn APA/BibTeX, CARS 3-Move và thể bị động Methods).
+- **Rào chắn Điểm Liệt (Hard Floor Invariant)**: Bắt buộc 0 Critical Failures (tuyệt đối không nhầm lẫn giữa các bảng phân loại Uniclass Pr / PM / En / Ss / EF, bảo toàn nguyên lý phân tầng ISO 12006-2:2015 và ISO 22274:2013).
 
 ---
 
