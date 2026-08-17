@@ -457,7 +457,7 @@ class ConversionPipeline:
         from mdconverter.core.gemini import LLMConverter
 
         settings = get_settings()
-        # Drawing always uses qwen-local-primary if available as it's the best for this
+        # Prioritize qwen-local-primary as the preferred model for engineering drawings
         preferred = "qwen-local-primary"
         models = [preferred] + [m for m in settings.models if m != preferred]
 

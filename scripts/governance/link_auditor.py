@@ -133,9 +133,15 @@ class LinkAuditor(BaseAuditor):
             for sdir in search_dirs:
                 if not sdir.exists():
                     continue
+                # If searching from project_root or general top-level dirs, exclude .agents
+                # to prevent skill-local scripts from polluting global symbol scope.
+                sdir_excludes = list(excludes)
+                if ".agents" not in sdir.parts:
+                    sdir_excludes.append(".agents")
+
                 for ext in ["*.py", "*.js", "*.cjs", "*.ts", "*.go", "*.sh"]:
                     for filepath in sdir.rglob(ext):
-                        if any(p in filepath.parts for p in excludes):
+                        if any(p in filepath.parts for p in sdir_excludes):
                             continue
                         files.append(filepath)
             self._file_list_cache[dirs_key] = files
@@ -164,24 +170,33 @@ class LinkAuditor(BaseAuditor):
     ) -> dict[str, list[Any]]:
         """Validate a single markdown file for inconsistencies, broken links, and hallucinations."""
         if search_dirs is None:
-            search_dirs = [
+            resolved_search_dirs = [
                 self.project_root / "src",
                 self.project_root / "packages",
                 self.project_root / "scripts",
             ]
-            # Dynamic Skill Scope: nạp thêm scripts của skill nếu đang audit file trong skill đó
-            resolved_path = filepath.resolve()
-            parts = resolved_path.parts
-            if ".agents" in parts and "skills" in parts:
-                try:
-                    idx = parts.index("skills")
-                    if idx + 1 < len(parts):
-                        skill_root = Path(*parts[: idx + 2])
-                        skill_scripts = skill_root / "scripts"
-                        if skill_scripts.exists() and skill_scripts.is_dir():
-                            search_dirs = list(search_dirs) + [skill_scripts]
-                except Exception:
-                    pass
+        else:
+            resolved_search_dirs = list(search_dirs)
+
+        # Dynamic Skill Scope: nạp thêm scripts của skill nếu đang audit file trong skill đó
+        resolved_path = filepath.resolve()
+        parts = resolved_path.parts
+        if ".agents" in parts and "skills" in parts:
+            try:
+                idx = parts.index("skills")
+                if idx + 1 < len(parts):
+                    skill_root = Path(*parts[: idx + 2])
+                    skill_scripts = skill_root / "scripts"
+                    if (
+                        skill_scripts.exists()
+                        and skill_scripts.is_dir()
+                        and skill_scripts not in resolved_search_dirs
+                    ):
+                        resolved_search_dirs.append(skill_scripts)
+            except Exception:
+                pass
+
+        search_dirs = resolved_search_dirs
 
         issues: dict[str, list[Any]] = {
             "code_refs": [],

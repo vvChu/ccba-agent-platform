@@ -272,6 +272,41 @@ disable-model-invocation: true
         self.assertTrue(auditor.search_codebase_for_symbol("ValidCoreClass"))
         self.assertFalse(auditor.search_codebase_for_symbol("ExcludedTempClass"))
 
+    def test_link_auditor_dynamic_skill_scope_with_explicit_search_dirs(self) -> None:
+        """Test Dynamic Skill Scope activates even when search_dirs is explicitly provided."""
+        auditor = LinkAuditor(project_root=self.root)
+
+        skill_dir = self.root / ".agents" / "skills" / "explicit-skill"
+        skill_scripts = skill_dir / "scripts"
+        skill_scripts.mkdir(parents=True)
+        (skill_scripts / "helper.py").write_text(
+            "class ExplicitSkillHelper: pass\n", encoding="utf-8"
+        )
+
+        skill_md = skill_dir / "SKILL.md"
+        skill_md.write_text("# Skill\nCall `ExplicitSkillHelper` here.\n", encoding="utf-8")
+
+        # Explicit search_dirs passed (e.g. from CLI or custom runner)
+        custom_search_dirs = [self.root / "src"]
+        issues = auditor.validate_markdown_file(skill_md, search_dirs=custom_search_dirs)
+        self.assertEqual(len(issues["code_refs"]), 0)
+
+    def test_link_auditor_project_root_search_excludes_agents(self) -> None:
+        """Test scanning project_root excludes .agents to prevent leaking skill symbols into global scope."""
+        auditor = LinkAuditor(project_root=self.root)
+
+        skill_dir = self.root / ".agents" / "skills" / "isolated-skill"
+        skill_scripts = skill_dir / "scripts"
+        skill_scripts.mkdir(parents=True)
+        (skill_scripts / "isolated.py").write_text(
+            "class IsolatedSkillLocalClass: pass\n", encoding="utf-8"
+        )
+
+        # Direct search with project_root must NOT find symbol inside .agents
+        self.assertFalse(
+            auditor.search_codebase_for_symbol("IsolatedSkillLocalClass", search_dirs=[self.root])
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
