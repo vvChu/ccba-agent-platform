@@ -35,7 +35,7 @@ def test_merge_markdown():
     assert merged == "# Part 1***## Part 2"
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_split_pdf(tmp_path: Path):
     """Test splitting a real PDF using pypdf."""
     from pypdf import PdfWriter

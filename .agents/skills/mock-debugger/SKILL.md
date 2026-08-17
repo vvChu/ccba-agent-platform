@@ -14,7 +14,7 @@ Kích hoạt bộ tự động gỡ lỗi và tự phục hồi mã nguồn Pyth
 Khi chạy thử nghiệm mã nguồn Python bị lỗi crash hoặc gặp lỗi logic:
 1. Chạy gỡ lỗi và phân tích vết traceback:
    ```bash
-   python scripts/mock_debugger.py path/to/failing_script.py [arguments]
+   python scripts/security/mock_debugger.py path/to/failing_script.py [arguments]
    ```
 2. AI sẽ tự động phân tích và đưa ra:
    * Nguyên nhân lỗi (RCA).
