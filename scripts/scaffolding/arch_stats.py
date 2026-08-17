@@ -75,7 +75,7 @@ class ArchStatsUpdater:
 
         if content != original_content:
             target.write_text(content, encoding="utf-8")
-            print(f"✅ Updated markers in {target.name}")
+            print(f"[ArchStats] Updated markers in {target.name}")
             return True
         return False
 
