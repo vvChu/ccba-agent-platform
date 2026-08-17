@@ -464,15 +464,7 @@ class GitRatchetTuner:
                 else:
                     return "Tài liệu tham khảo chung: Swales 1990, Kallestinova 2011."
 
-            elif "Nghị định 30" in prompt:
-                parts.append(
-                    "Căn cứ Nghị định 30/2020/NĐ-CP về công tác văn thư, Điều 8 và Điều 10 quy định thể thức văn bản hành chính."
-                )
-            elif "QCVN 06" in prompt or "PCCC" in prompt:
-                parts.append(
-                    "Căn cứ Nghị định 105/2025/NĐ-CP và QCVN 06:2022/BXD (Sửa đổi 1:2023), quy định bậc chịu lửa và giải pháp thoát nạn công trình."
-                )
-            elif any(k in prompt for k in ["phân loại", "Uniclass", "ISO 19650", "IFC", "bảng", "không gian", "cấu kiện", "hệ thống"]):
+            elif any(k in prompt for k in ["phân loại", "Uniclass", "ISO 19650", "IFC", "bảng", "không gian", "cấu kiện", "hệ thống", "thực thể"]):
                 has_bim_grounding = "Uniclass" in content or "ISO 12006-2" in content
                 has_bim_naming = "ISO 19650" in content or "IFC Alignment" in content
                 has_digital_memory = "Trí Nhớ Số" in content or "Digital Memory" in content
@@ -483,12 +475,22 @@ class GitRatchetTuner:
                         "- Bảng phân loại: Uniclass (En, SL, EF, Ss, Pr, PM) tuân thủ ISO 22274 và ISO 21511 WBS.\n"
                         "- Cấu trúc định danh ISO 19650 / IFC Alignment bảo tồn Trí Nhớ Số (Digital Memory) và cấu trúc không gian Spatial Structure cho mô hình BIM Object (IFC4X3)."
                     )
+                    if "QCVN 06" in prompt or "PCCC" in prompt:
+                        parts.append("Đảm bảo đáp ứng đầy đủ yêu cầu an toàn cháy và thoát nạn theo QCVN 06:2022/BXD.")
                 elif has_bim_grounding:
                     parts.append(
                         "Phân loại theo bảng Uniclass 200 và ISO 12006-2."
                     )
                 else:
                     return "Xử lý phân loại chung không theo chuẩn Uniclass..."
+            elif "Nghị định 30" in prompt:
+                parts.append(
+                    "Căn cứ Nghị định 30/2020/NĐ-CP về công tác văn thư, Điều 8 và Điều 10 quy định thể thức văn bản hành chính."
+                )
+            elif "QCVN 06" in prompt or "PCCC" in prompt:
+                parts.append(
+                    "Căn cứ Nghị định 105/2025/NĐ-CP và QCVN 06:2022/BXD (Sửa đổi 1:2023), quy định bậc chịu lửa và giải pháp thoát nạn công trình."
+                )
             elif has_legal_grounding:
                 parts.append(
                     "Theo quy định tại Luật Xây dựng năm 2025 và các văn bản quy phạm pháp luật hướng dẫn (Nghị định, Thông tư VBHN liên quan), yêu cầu được thực thi theo Điều khoản tương ứng."
