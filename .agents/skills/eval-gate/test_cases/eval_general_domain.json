@@ -1,0 +1,1486 @@
+[
+  {
+    "id": "test_general_domain_mined_01",
+    "input_prompt": "hãy review comments của copilot",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "06dc6968-74f0-4ee0-9291-0806c3cf9536",
+      "step_index": 457,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_02",
+    "input_prompt": "/ccba-session-retrospective",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "06dc6968-74f0-4ee0-9291-0806c3cf9536",
+      "step_index": 566,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_03",
+    "input_prompt": "/ccba-create-pr",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "08b0430f-7ed1-478f-8842-86e926e8c033",
+      "step_index": 158,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_04",
+    "input_prompt": "/ccba-implement",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "0c0a9304-cfbb-4fa3-9c81-3e11441ace97",
+      "step_index": 54,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_05",
+    "input_prompt": "Candedates còn lại theo Báo cáo Quét Kiến trúc Codebase & Cơ hội Làm Sâu Module thì sao?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "0e98ff1e-51c5-4e15-8e0f-d4b44c15ae5e",
+      "step_index": 460,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_06",
+    "input_prompt": "Hãy kiểm tra kết quả của việc nạp chính thức Term Set CCBA_NhomHopDongKT (ID: e58b1001-923f-4e0a-b312-7da381909a41) vào nhóm CCBA Taxonomy",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "106c1928-e997-4ed1-8f11-84845181a169",
+      "step_index": 1154,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_07",
+    "input_prompt": "Chức danh Nghiệp vụ tương ứng với mỗi nhóm đã đủ chưa?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "106c1928-e997-4ed1-8f11-84845181a169",
+      "step_index": 1217,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_08",
+    "input_prompt": "chưa được?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "106c1928-e997-4ed1-8f11-84845181a169",
+      "step_index": 1303,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_09",
+    "input_prompt": "danh mục Term Nodes của CCBA_LinhVucChuyenMon chưa xuất hiện trên Term store?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "106c1928-e997-4ed1-8f11-84845181a169",
+      "step_index": 1370,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_10",
+    "input_prompt": "what's next?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "1553cc25-937a-4286-b516-925270f483b2",
+      "step_index": 47,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_11",
+    "input_prompt": "You are challenger_m1_iter6_1 (type: teamwork_preview_challenger).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_iter6_1\nRead the original request at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead the project spec at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\orchestrator\\PROJECT.md\nRead Worker 6 handoff report at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1_iter6\\handoff.md\n\nYour task:\n1. Perform adversarial link resolution testing on `.agents/skills/` and `.agents/workflows/`.\n2. Verify that all relative links resolve to existing target files on disk, including parenthetically escaped links in `domain-modeling/CONTEXT-FORMAT.md`.\n3. Verify that no absolute links (`file:///...` or hardcoded Windows drive letters like `C:\\` or `D:\\`) exist in documentation files outside explicit allowed contexts.\n4. Run `python scripts/validate_docs.py .agents`.\n5. Write your findings and final verdict (APPROVE or REQUEST_CHANGES) to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_iter6_1\\handoff.md` and send a summary message to parent.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "17868b4f-14c2-473b-8a02-5f1722167930",
+      "step_index": 22,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_12",
+    "input_prompt": "Fix ALL Mypy type errors in these files under d:\\GitHubProjects\\ccba-agent-platform\\packages\\ccba-harness\\:\n\n## 1. src/ccba_harness/__init__.py (line 18)\nThis file has a wildcard re-export: `from ccba_harness._engine import *` that causes dozens of attr-defined errors because _engine doesn't have `__all__`.\n\nFix: Read packages/ccba-harness/src/ccba_harness/__init__.py first. Then read packages/ccba-harness/src/ccba_harness/_engine.py to find all public + private names being exported. Add a `# type: ignore[attr-defined]` comment to the wildcard import line 18 to suppress all these errors at once. Do NOT try to enumerate all names.\n\n## 2. tests/test_monitor.py (line 84)\nRead the file. Line 84 has `arg-type` error: passing `None` to `get_usage_percentage` which expects `int`. Fix by passing `0` or casting.\n\n## 3. tests/test_monitor_challenger.py (line 5)\nLine 5 has `import-not-found` for `ccba_legal.monitor`. Add `# type: ignore[import-not-found]` to this import line.\n\n## 4. tests/test_monitor.py (line 6)\nSimilar import-not-found for `ccba_legal.monitor`. Add `# type: ignore[import-not-found]`.\n\n## 5. tests/test_harness_adversarial_challenger_run2_1.py (lines 32, 212, 219, 236, 254)\nThese lines have `attr-defined` errors for `ccba_harness._local` and `ccba_harness._HOOK_TOKEN`. Add `# type: ignore[attr-defined]` back to each of these lines.\n\nAfter fixing all files, report back with a count of fixes per file.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "183aaabf-b9d8-48b8-b9d6-f9f60314ca29",
+      "step_index": 10,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_13",
+    "input_prompt": "Hãy kiểm tra các comments của copilot và status của CI",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "19ce4564-e0d6-4eb5-a6bb-ff44ad93ddae",
+      "step_index": 1358,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_14",
+    "input_prompt": "hãy kiểm tra status của CI",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "19ce4564-e0d6-4eb5-a6bb-ff44ad93ddae",
+      "step_index": 1753,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_15",
+    "input_prompt": "Hãy thực hiện Squash and merge",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "19ce4564-e0d6-4eb5-a6bb-ff44ad93ddae",
+      "step_index": 1898,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_16",
+    "input_prompt": "You are the teamwork_preview_challenger (Adversarial Challenger).\nYour mission is to empirically verify the correctness of the OKF v0.1 upgrade.\n\nTasks:\n1. Write adversarial test cases targeting edge conditions in anchor parsing, HTML table flattening, LaTeX formula conversion, and OKF linter rules.\n2. Verify that there are no bugs when parsing empty tables, tables with no headers, invalid LaTeX cost expressions, malformed frontmatter, or circular absolute links.\n3. Document your test execution and findings in `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_okf_upgrade_1\\challenge.md` and handoff file in `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_okf_upgrade_1\\handoff.md`.\n4. Send your findings and confirmation of correctness to the orchestrator (conversation ID: da249104-d906-4942-b85c-8ab7fd472633).",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "19d9b469-9a73-42b4-87cf-58e52920494d",
+      "step_index": 67,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_17",
+    "input_prompt": "You are Challenger 1 (Iteration 3) for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_3\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. Worker 1 Iteration 3 Handoff: `d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_3/handoff.md`\n\nObjective:\nProgrammatically stress-test and verify the remediated markdown file at:\n`d:/GitHubProjects/ccba-legal-knowledge/.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`\n\nProgrammatic checks:\n- Verify empty line ratio is < 15%.\n- Verify exact count of `# Chương` is 8, `### Mục` is 13, and `## Điều` is 95.\n- Verify 0 false H2 headings.\n- Verify UTF-8 clean, file size > 10KB.\n\nWrite your verification report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_3/challenge.md` and `handoff.md`. Include a clear verdict: APPROVE or REQUEST_CHANGES.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "1cf2a804-8c09-4051-ba04-9f1aeb098d2f",
+      "step_index": 13,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_18",
+    "input_prompt": "You are Challenger 2 for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_2\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. Worker 1 Handoff: `d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_1/handoff.md`\n\nObjective:\nEmpirically verify and stress-test the raw markdown file produced by Worker 1 at:\n`d:/GitHubProjects/ccba-legal-knowledge/.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`\n\nPerform programmatic checks (using python script or tool inspection):\n- Check line count and character length.\n- Check formatting of clauses (e.g. `1.`, `2.`) and points (e.g. `a)`, `b)`).\n- Ensure no truncation at beginning or end of file.\n\nWrite your verification report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_2/challenge.md` and `handoff.md`. Include a clear verdict: APPROVE or REQUEST_CHANGES.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "22d44957-1efb-42a3-a0c1-5dd350ffd94c",
+      "step_index": 11,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_19",
+    "input_prompt": "/ccba-brainstorm hãy kiểm tra lỗi restart server từ last 3 conversation để tìm lỗi",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "2455f5b7-0996-4093-a796-6d5cf688bbd6",
+      "step_index": 12,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_20",
+    "input_prompt": "You are an independent Victory Auditor. Your task is to perform a mandatory blocking audit to verify that all claims made by the project team match the requirements, guardrails, and acceptance criteria in ORIGINAL_REQUEST.md.\n\nPath to ORIGINAL_REQUEST.md: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nWorking directory: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\victory_auditor\n\nPlease conduct your 3-phase audit:\n1. Timeline & Audit History Analysis\n2. Cheating & Fabrication Detection (raw terminal output authenticity, character-for-character comparison)\n3. Independent Test Execution & Verification:\n   - AC1: Execute `python scripts/validate_docs.py .agents` and verify 0 issues detected.\n   - AC2: Execute `python scripts/update_arch_stats.py` and verify metrics (80 skills, 57 workflows, 7 packages) match README.md and PLATFORM.md.\n   - AC3: Verify all 80 skill directories and 57 workflow files are registered in `.agents/skills/platform-loader/catalog.yaml`.\n   - AC4: Verify 100% relative link integrity across all markdown files.\n   - AC5: Verify artifact `d:\\GitHubProjects\\ccba-agent-platform\\audit_report.md` exists and contains complete details including `git diff --stat`.\n   - Guardrails: Verify Constitution files (`.agents/AGENTS.md`, `.md/workspace_context.yaml`, `.md/knowledge/*`) were NOT modified (`git diff` check).\n\nReturn a clear structured verdict: VICTORY CONFIRMED or VICTORY REJECTED with full evidence.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "2bb83c89-dcc9-4439-8374-44c57c8e03fc",
+      "step_index": 44,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_21",
+    "input_prompt": "/ccba-wait-what",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "2bd463ae-fee1-401f-b1e2-7f6d93b3833c",
+      "step_index": 469,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_22",
+    "input_prompt": "/ccba-wait-what Viewed task-450.log\r\nListed directory eval_runs\r\nViewed run_20260812_163608.log:1-6\r\nViewed run_isolated_tests.py:40-70\r\nEdited run_isolated_tests.py\r\nRan command: `git add scripts/eval/run_isolated_tests.py scripts/eval/run_safe_eval_wrapper.py && git commit -m \"fix(eval): stream stdout live line-by-line in test runners to eliminate buffering latency\"`\r\nRan command: `python scripts/eval/run_safe_eval_wrapper.py --cmd \"python scripts/eval/run_isolated_tests.py -p ccba-legal-intel --stress\" --timeout 180`",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "2bd463ae-fee1-401f-b1e2-7f6d93b3833c",
+      "step_index": 481,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_23",
+    "input_prompt": "thực hiện đi",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "2bd463ae-fee1-401f-b1e2-7f6d93b3833c",
+      "step_index": 489,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_24",
+    "input_prompt": "hãy chạy kiểm tra các bài test có tag slow",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "2bd463ae-fee1-401f-b1e2-7f6d93b3833c",
+      "step_index": 588,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_25",
+    "input_prompt": "Hãy kiểm chứng lại",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "2bd463ae-fee1-401f-b1e2-7f6d93b3833c",
+      "step_index": 636,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_26",
+    "input_prompt": "Vấn đề là làm sao để xử lý \"Agent Host có rào chắn Watchdog ngắt lượt tự động ở mốc 25-30 giây.\" để chạy được bài test thứ 34 (test_download_three_tier_direct_crawl mà không bị lỗi?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "2bd463ae-fee1-401f-b1e2-7f6d93b3833c",
+      "step_index": 676,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_27",
+    "input_prompt": "vấn đề là các bài test slow đang gây lỗi user cancelled",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "2bd463ae-fee1-401f-b1e2-7f6d93b3833c",
+      "step_index": 718,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_28",
+    "input_prompt": "You are the teamwork_preview_reviewer (Review Agent).\nYour mission is to perform an independent review of the OKF v0.1 upgrade implemented in `packages/ccba-legal-intel` and `scripts/validate_docs.py`.\n\nTasks:\n1. Examine code correctness, completeness, robustness, and conformance with requirements R1 to R7 and all acceptance criteria.\n2. Review the implementations in `packages/ccba-legal-intel/ccba_legal/packager.py`, `parser.py`, `registry.py`, `crawler.py`, and `scripts/validate_docs.py`.\n3. Run the package tests and linter tests (`uv run pytest packages/ccba-legal-intel/tests` and `uv run pytest scripts/tests/test_validate_docs.py`) to confirm that all pass.\n4. Output your detailed review report to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\reviewer_okf_upgrade_1\\review.md` and handoff file to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\reviewer_okf_upgrade_1\\handoff.md`.\n5. Send your verdict (VETO or PASS) and feedback to the orchestrator (conversation ID: da249104-d906-4942-b85c-8ab7fd472633).",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "2fb0b147-2b46-4f22-861c-52722f0480e7",
+      "step_index": 66,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_29",
+    "input_prompt": "You are Explorer 3 for Milestone 1 (Iteration 3 Audit Remediation Explorer).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_m1_iter3\nRead ORIGINAL_REQUEST.md at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\n\nCRITICAL INSTRUCTION — FORENSIC AUDIT FAILURE REMEDIATION:\nYou MUST review the FULL Forensic Auditor evidence report at:\nd:\\GitHubProjects\\ccba-agent-platform\\.agents\\auditor_m1_iter2\\handoff.md\nAnd Challenger 1 report at:\nd:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_iter2_1\\handoff.md\n\nTask:\n1. Inspect lines 25 and 26 of `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\skills\\markdown-processing\\relative-link-patcher\\SKILL.md`.\n2. Formulate an explicit, line-by-line repair strategy to wrap the raw example pseudo-links (`[Phụ lục I](./appendices/nghi_dinh_217-phu_luc_01.md)` and `[Phụ lục I](appendices/nghi_dinh_217-phu_luc_01.md)`) on lines 25 and 26 in inline backticks so Markdown link parsers do not evaluate them as active links.\n3. Verify that your repair strategy directly resolves the integrity violation and link errors identified by the auditor.\n4. Do NOT recommend any strategy that circumvents validation or edits Constitution files.\n\nWrite your fix plan to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_m1_iter3\\fix_plan.md` and handoff report to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_m1_iter3\\handoff.md`. Send a message to parent when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "3557ffe0-82e0-471e-9151-50804efdbc91",
+      "step_index": 20,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_30",
+    "input_prompt": "You are Explorer M1-1 (Path Resolution Auditor).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_m1_1\nRead d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md first (MANDATORY).\nRead d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_m1_1\\DISPATCH.md for detailed instructions.\n\nAudit and trace `Path(__file__)` logic in `scripts/eval/run_isolated_tests.py` and `scripts/run_isolated_tests.py` across (a) bridge adapter, (b) direct execution, and (c) python -m invocation.\n\nWrite your report to d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_m1_1\\handoff.md and report completion via send_message to parent (conversation ID: f4ace30d-c0ed-40e0-8c13-15d9554cb298).",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "38e36550-ab2d-4e3b-9eb2-d33636603624",
+      "step_index": 41,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_31",
+    "input_prompt": "You are Challenger 1 (Iteration 2) for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_2_1\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. Worker 1 Iteration 2 Handoff: `d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_2/handoff.md`\n\nObjective:\nProgrammatically stress-test and verify the remediated markdown file at:\n`d:/GitHubProjects/ccba-legal-knowledge/.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`\n\nProgrammatic checks:\n- Verify exact count of `# Chương` is 8 and `### Mục` is 13.\n- Verify exact count of `## Điều` is 95, covering Articles 1 to 95 continuously.\n- Verify no false `##` matches exist for inline cross-references.\n- Verify UTF-8 encoding and paragraph continuity.\n\nWrite your verification report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_2_1/challenge.md` and `handoff.md`. Include a clear verdict: APPROVE or REQUEST_CHANGES.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "39c36df4-9037-4e45-b900-6b5947e612d9",
+      "step_index": 15,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_32",
+    "input_prompt": "You are Auditor 1 (teamwork_preview_auditor) for Milestone 4 of project IDOP-CCBA-WAY.\nWorking directory: d:\\idop-ccba-way\\.agents\\teamwork_preview_auditor_m4_1\n\nYour task is to perform a forensic integrity audit on the work delivered in `datamodel/sharepoint/lists/process_execution/` and `specs/modules/process_execution/pmo/spec.md`.\n\nVerify:\n1. All JSON schema modifications and additions implement genuine, valid SharePoint schema constructs per `sp-list.schema.json`.\n2. No test results, expected validation logs, or fake schema outputs are hardcoded.\n3. `specs/modules/process_execution/pmo/spec.md` contains genuine technical specifications and legal compliance clauses.\n4. Execute `.\\idop.ps1 validate datamodel` to verify actual execution output on the live repository.\n\nProvide an explicit binary verdict: CLEAN or VIOLATION in your handoff report.\nWrite your audit report to `d:\\idop-ccba-way\\.agents\\teamwork_preview_auditor_m4_1\\handoff.md`.\nSend a completion message when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "3b27a844-9524-4105-bc66-53bbdf15206b",
+      "step_index": 51,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_33",
+    "input_prompt": "không lưu 15 tệp mẫu từ input_documents/ vào  thư mục tri thức .md/legal_docs/ của dự án",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "3df38a11-df52-46c4-883c-f9cdcc0eefec",
+      "step_index": 831,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_34",
+    "input_prompt": "🟢 Ticket 4: [Task] Cấu hình Rào chắn Dependency Linter (import-linter)",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "41c4b35b-ec6a-48a6-8d38-dd7616775831",
+      "step_index": 602,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_35",
+    "input_prompt": "hãy review các comments của copilot",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "41c4b35b-ec6a-48a6-8d38-dd7616775831",
+      "step_index": 1162,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_36",
+    "input_prompt": "Your identity: teamwork_preview_auditor Auditor 1\nYour working directory: d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_1\n\nRead instructions in d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_1/DISPATCH.md, ORIGINAL_REQUEST.md, and PROJECT.md.\n\nTask:\nPerform forensic integrity verification of `.md/codebase_architecture_analysis.md` and related work products.\nVerify no hardcoded test outputs, no fake citations, no dummy implementations, no unauthorized shortcuts. Verify exact match between report claims and physical codebase contents.\nRecord verdict (CLEAN / INTEGRITY VIOLATION) in `d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_1/handoff.md`.\nWhen done, send a message to parent with your verdict and handoff path.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "440d4520-dbc5-4b9e-98bf-f88519c68d8f",
+      "step_index": 43,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_37",
+    "input_prompt": "Fix all Mypy type annotation errors in the following files under d:\\GitHubProjects\\ccba-agent-platform\\packages\\ccba-harness\\tests\\:\n\n1. conftest.py (line 7: missing return type)\n2. test_harness.py (lines 12,36,69,89,109,134,151,160,168,176,179,196,203,221: missing type annotations, attr-defined)\n3. test_harness_adversarial.py (lines 16,24,45,54,64,96,111,130,150,174,185,197,213,224,241,260,269,284,298,312,322: missing type annotations)\n4. test_harness_adversarial_challenger.py (lines 13,27,30,54,77,107,135,165,184,203: missing types, call-overload at line 27)\n5. test_harness_adversarial_challenger_gen2.py (lines 13,40,60,83: missing type annotations)\n6. test_harness_adversarial_challenger_gen3.py (lines 13,38,60,90,111,125,137: missing type annotations)\n7. test_harness_adversarial_challenger_gen4.py (lines 13,36,50,61,88: missing type annotations)\n8. test_harness_adversarial_challenger_gen5.py (check for similar errors)\n9. test_harness_adversarial_challenger_run2_1.py (check for similar errors)\n10. test_harness_adversarial_challenger_run2_2.py (check for similar errors)\n11. test_harness_stress.py (check for similar errors)\n12. test_monitor_adversarial.py (check for similar errors)\n13. test_monitor_challenger.py (check for similar errors)\n\nFor EACH file:\n- Read it first\n- Add `-> None` to all test_ and fixture functions missing return types\n- Add parameter type annotations where missing\n- For attr-defined errors (like _local, _HOOK_TOKEN), add `# type: ignore[attr-defined]`\n- For call-overload errors, add `# type: ignore[call-overload]`\n- Use multi_replace_file_content for efficiency\n\nAfter fixing ALL files, report back with a count of fixes per file.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "4789065f-2da2-4b17-a078-5ef5b7e3ac16",
+      "step_index": 20,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_38",
+    "input_prompt": "thế còn thư mục trên drive thì sao? https://drive.google.com/drive/u/0/folders/1b9vm_1KQ8Fg8Crr1Q-i2xmE62UIHy-_2",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "49823473-eb8c-4ac7-9dc6-c55d0690e5f7",
+      "step_index": 782,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_39",
+    "input_prompt": "Liệu có thể lọc dữ liệu metadata từ code của website?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "49823473-eb8c-4ac7-9dc6-c55d0690e5f7",
+      "step_index": 1062,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_40",
+    "input_prompt": "/ccba-implement @[.agents/scratch/notebooklm-rag-governance/issues/02-develop-knowledge-compiler-script.md]",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "53854b3e-b698-4bfe-9ccd-8b7cde145e0a",
+      "step_index": 836,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_41",
+    "input_prompt": "/ccba-implement @[.agents/scratch/notebooklm-rag-governance/issues/03-integrate-dynamic-rag-router-engine.md]",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "53854b3e-b698-4bfe-9ccd-8b7cde145e0a",
+      "step_index": 899,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_42",
+    "input_prompt": "kiểm tra CI",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "53854b3e-b698-4bfe-9ccd-8b7cde145e0a",
+      "step_index": 1031,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_43",
+    "input_prompt": "tại sao bị scrash?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "53854b3e-b698-4bfe-9ccd-8b7cde145e0a",
+      "step_index": 1052,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_44",
+    "input_prompt": "You are challenger_m1_iter5_1 in workspace d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_iter5_1.\nYou MUST read d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md before starting work.\nAlso inspect Worker 5's handoff at d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1_iter5\\handoff.md.\n\nYour task: Adversarially challenge relative link resolution in domain-modeling/CONTEXT-FORMAT.md and all modified skills.\n1. Run python scripts/validate_docs.py .agents directly to verify 0 issues detected.\n2. Parse link occurrences in CONTEXT-FORMAT.md using doc_core.py regex r'\\[([^\\]]+)\\]\\(([^)]+)\\)' to ensure zero false positive relative link errors.\n\nWrite your verdict (APPROVE or REQUEST_CHANGES) and analysis to d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_iter5_1\\handoff.md and send a summary message to parent.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "5c2ccfe1-6e22-4f01-9076-bbd79d9cb7ad",
+      "step_index": 38,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_45",
+    "input_prompt": "chưa thấy cửa sổ mở?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "5dfd9630-1dde-40d1-ba47-c8203b58a8cc",
+      "step_index": 393,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_46",
+    "input_prompt": "Hãy tạo bài trình bày cho 15 Slide PowerPoint/PDF theo dàn ý chi tiết",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "5dfd9630-1dde-40d1-ba47-c8203b58a8cc",
+      "step_index": 462,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_47",
+    "input_prompt": "Kiểm tra tính nhất quán của 3 loại tài liệu sau trong d\\idop-ccba-way:\n\n## Phần 1: spec.md ↔ governance_constitution docs\n\nĐọc:\n- `d:\\idop-ccba-way\\.md\\governance_constitution\\01_qctk_2815_project_management.md` (lấy số điều chính xác: Điều 4, 5, 6, 7, 8, 9, 10, 11, 12...)\n- `d:\\idop-ccba-way\\.md\\governance_constitution\\02_qcctnb_3209_financial_norms.md` (cơ chế 3 tầng tài chính)\n- Một số spec.md tiêu biểu: `specs/modules/cash_data/spec.md`, `specs/modules/process_execution/contracts/spec.md`, `specs/modules/strategy_crm/opportunities/spec.md`\n- Kiểm tra: các tham chiếu \"Điều X QCTK 2815\" trong spec.md có đúng số điều không?\n\n## Phần 2: INDEX.md và cross_references.yaml ↔ file thực tế\n\nĐọc:\n- `d:\\idop-ccba-way\\.md\\INDEX.md`\n- `d:\\idop-ccba-way\\.md\\cross_references.yaml` (100 dòng đầu)\n- Kiểm tra: các đường dẫn file được liệt kê trong INDEX.md và cross_references.yaml có thực sự tồn tại không? Có file nào bị sâu sai đường dẫn không?\n\n## Phần 3: Deployment Guide ↔ idop.ps1 commands\n\nĐọc:\n- `d:\\idop-ccba-way\\idop.ps1` (liệt kê các subcommands có sẵn và parameter names chính xác)\n- Kiểm tra các lệnh trong `d:\\idop-ccba-way\\CLAUDE.md` và README.md có dùng đúng subcommand/parameter names không\n- Đặc biệt kiểm tra: `taxonomy import` vs `deploy taxonomy`, `-Environment IDOP` có được hỗ trợ không (ValidateSet trong script)\n\n## Format kết quả\n\nTừng phần kết quả riêng, rõ PASS/FAIL, liệt kê cụ thể lỗi nếu có.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Agent issued a refusal disclaimer on potentially valid domain prompt.",
+    "metadata": {
+      "failure_type": "ROUTER_DISCLAIMER",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "6312fa6a-1f75-4981-a51c-e310cc15944c",
+      "step_index": 54,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_48",
+    "input_prompt": "You are the independent Victory Auditor for project IDOP-CCBA-WAY.\n\nWorking directory: d:\\idop-ccba-way\nAuditor directory: d:\\idop-ccba-way\\.agents\\victory_auditor\n\nThe Project Orchestrator (ID: 57e49422-7846-4e01-9c23-31812bbc93e4) has claimed completed implementation of:\n1. R1: Data Model JSON Schemas Implementation in `datamodel/sharepoint/lists/process_execution/`:\n   - `contract_scopes.json`\n   - `scope_department_allocations.json` [NEW]\n   - `projects.json`\n   - `job_assignments.json`\n   - `assignment_details.json`\n   - `cde_documents.json`\n2. R2: PMO Specification Update in `specs/modules/process_execution/pmo/spec.md`.\n3. R3: Data Model Validation via `.\\idop.ps1 validate datamodel`.\n\nConduct a mandatory 3-phase independent audit:\nPhase 1: Timeline & Evidence Audit — Verify commit history, timestamps, file modification logs.\nPhase 2: Cheating & Anti-Pattern Audit — Ensure schemas are real valid JSON schemas, lookups point to existing lists/fields, spec contains required sections (Ubiquitous Language matrix, 3-tier role hierarchy, Law 135 workflow).\nPhase 3: Independent Execution & Verification — Run `.\\idop.ps1 validate datamodel` directly, parse all 6 JSON schemas, verify lookup dependencies.\n\nReport your final structured verdict: `VICTORY CONFIRMED` or `VICTORY REJECTED` with a full audit report. Write your report to `d:\\idop-ccba-way\\.agents\\victory_auditor\\handoff.md`.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "72436ac6-ff44-42f4-872c-84caaddb280a",
+      "step_index": 28,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_49",
+    "input_prompt": "You are challenger_m2_iter2 (type: teamwork_preview_challenger).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m2_iter2\nRead original request: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead project spec: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\orchestrator\\PROJECT.md\nRead worker_m2_iter2 handoff report: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m2_iter2\\handoff.md\n\nYour task:\n1. Perform adversarial cross-validation between filesystem assets (`.agents/skills/`, `.agents/workflows/`) and `catalog.yaml`.\n2. Verify all 80 skill folders have a corresponding `catalog.yaml` entry and all 57 workflow markdown files have a corresponding entry.\n3. Run `python scripts/update_arch_stats.py` and verify `README.md` and `PLATFORM.md` match actual filesystem stats.\n4. Run `python scripts/validate_docs.py .agents` and verify zero hard structural errors.\n5. Write findings and verdict (APPROVE or REQUEST_CHANGES) to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m2_iter2\\handoff.md` and send summary message to parent.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "740f6960-1a33-49ec-80da-adede7193e92",
+      "step_index": 24,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_50",
+    "input_prompt": "You are reviewer_m1_iter4_2 in workspace d:\\GitHubProjects\\ccba-agent-platform\\.agents\\reviewer_m1_iter4_2.\nYou MUST read d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md before starting work.\nAlso inspect Worker 4's handoff at d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1_iter4\\handoff.md.\n\nYour task: Review structural integrity across all skills and workflows.\nVerify:\n1. Workflow cross-references to skills point to existing SKILL.md files.\n2. Frontmatter YAML format in all 57 workflow .md files.\n3. No Constitution files (.agents/AGENTS.md, .md/workspace_context.yaml, .md/knowledge/*) were edited.\n4. Run python scripts/validate_docs.py .agents and verify execution result.\n\nWrite your report and verdict (APPROVE or REQUEST_CHANGES) to d:\\GitHubProjects\\ccba-agent-platform\\.agents\\reviewer_m1_iter4_2\\handoff.md and send a summary message to parent.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "76786c48-3294-47f3-90d7-acfdaaa44c34",
+      "step_index": 195,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_51",
+    "input_prompt": "You are challenger_m2 (type: teamwork_preview_challenger).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m2\nRead original request: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead project spec: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\orchestrator\\PROJECT.md\nRead worker_m2 handoff report: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m2\\handoff.md\n\nYour task:\n1. Perform adversarial cross-validation between filesystem assets (`.agents/skills/`, `.agents/workflows/`) and `catalog.yaml`.\n2. Verify all 80 skill folders have a corresponding `catalog.yaml` entry and all 57 workflow markdown files have a corresponding entry.\n3. Run `python scripts/update_arch_stats.py` and verify `README.md` and `PLATFORM.md` match actual filesystem stats.\n4. Run `python scripts/validate_docs.py .agents` and verify zero hard structural errors.\n5. Write findings and verdict (APPROVE or REQUEST_CHANGES) to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m2\\handoff.md` and send summary message to parent.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "798d271b-2ef2-4650-9659-d27a59ca8895",
+      "step_index": 18,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_52",
+    "input_prompt": "anything else?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "7b5cab45-0d27-4172-ab87-a0f810bd1c99",
+      "step_index": 211,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_53",
+    "input_prompt": "You are Reviewer 1 (Iteration 3) for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/reviewer_m1_3\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. Worker 1 Iteration 3 Handoff: `d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_3/handoff.md` and `changes.md`\n\nObjective:\nReview the remediated raw document collection artifact generated by Worker 1 (Iteration 3) at:\n`d:/GitHubProjects/ccba-legal-knowledge/.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`\nand script `scripts/convert_luat_135_to_md.py`.\n\nChecks:\n1. Verify exact count of `## Điều` headings is 95 (Articles 1 to 95).\n2. Verify 0 false H2 headings from inline cross-references.\n3. Verify all 8 `# Chương` and 13 `### Mục` headings are complete without truncation.\n4. Verify valid YAML frontmatter, clean paragraph text continuity, and empty line ratio < 15%.\n\nWrite your review report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/reviewer_m1_3/review.md` and `handoff.md`. Include a clear verdict: APPROVE or REQUEST_CHANGES.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "8a9a6c34-fbe3-41e6-b9d1-609bc18195f7",
+      "step_index": 17,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_54",
+    "input_prompt": "You are Challenger 1 for Milestone 1 (Iteration 2).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_iter2_1\nRead ORIGINAL_REQUEST.md at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead Worker 2 Handoff at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1_iter2\\handoff.md\n\nTask:\n1. Empirically test link resolution across all edited skills and workflows.\n2. Run `python scripts/validate_docs.py .agents/skills` using run_command.\n3. Render your verdict (APPROVE or REQUEST_CHANGES) in `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_iter2_1\\handoff.md`. Send a message to parent when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "90679d1b-4dbf-44eb-abf3-7cc9a95f24db",
+      "step_index": 34,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_55",
+    "input_prompt": "/ccba-wayfinder đang bị lỗi User cancelled agent execution liên tục, có cách nào để kiểm tra triệt để?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "9be0891d-ff89-48af-9ddc-e1a09ce613c3",
+      "step_index": 32,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_56",
+    "input_prompt": "/ccba-grill-with-docs https://www.aihero.dev/a-complete-guide-to-agents-md",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "9d049bc0-caba-4880-ab4f-77b423d8b851",
+      "step_index": 15,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_57",
+    "input_prompt": "Làm sao để đảm bảo tự động thực hiện các nội dung tại \"✅ Hành động đã thực hiện & Khắc phục\r\nKhôi phục & Dọn dẹp tiến trình: Đã kích hoạt script \r\nsession_cleanup.py\r\n để quét và thu hồi toàn bộ các tiến trình Python/Pytest mồ côi còn sót lại dưới nền. Hệ thống hiện đã trở về trạng thái sạch sẽ và ổn định.\r\n\r\nKhuyên dùng khi vận hành:\r\n\r\nKhi kích hoạt kiểm thử CI Gates, tránh gọi dồn dập nhiều lệnh test cùng lúc khi tiến trình trước chưa hoàn tất.\r\nƯu tiên chạy lệnh \r\nrun_harness_evals.py\r\n chỉ định phạm vi (scoped) thay vì chạy unscoped --all nếu không thực sự cần thiết.\"?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "9d5aaadb-caba-4a73-a23a-d8ce3d75941a",
+      "step_index": 53,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_58",
+    "input_prompt": "/ccba-implement @[c:\\Users\\chuvu\\.gemini\\antigravity\\brain\\9d5aaadb-caba-4a73-a23a-d8ce3d75941a\\tickets_system_stability_auto_guardrails.md]",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "9d5aaadb-caba-4a73-a23a-d8ce3d75941a",
+      "step_index": 118,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_59",
+    "input_prompt": "/ccba-release-feature",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "9d5aaadb-caba-4a73-a23a-d8ce3d75941a",
+      "step_index": 221,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_60",
+    "input_prompt": "You are Challenger 1 for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_1\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. Worker 1 Handoff: `d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_1/handoff.md`\n\nObjective:\nEmpirically verify and stress-test the raw markdown file produced by Worker 1 at:\n`d:/GitHubProjects/ccba-legal-knowledge/.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`\n\nPerform programmatic checks (using python script or tool inspection):\n- Count number of `# Chương` (must be 8).\n- Count number of `## Điều` (must be 107).\n- Verify articles sequence from 1 to 107 without missing numbers.\n- Check UTF-8 encoding and absence of replacement characters (`\\ufffd`).\n\nWrite your verification report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_1/challenge.md` and `handoff.md`. Include a clear verdict: APPROVE or REQUEST_CHANGES.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "a092d8d4-1543-45af-b601-6771914749ea",
+      "step_index": 15,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_61",
+    "input_prompt": "hãy phản biện @[c:\\Users\\chuvu\\.gemini\\antigravity\\brain\\a30eb6eb-e8aa-4038-976f-d6e357b609fb\\implementation_plan.md]",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "a30eb6eb-e8aa-4038-976f-d6e357b609fb",
+      "step_index": 409,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_62",
+    "input_prompt": "hãy kiểm tra comments của copilot và status CI",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "a30eb6eb-e8aa-4038-976f-d6e357b609fb",
+      "step_index": 622,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_63",
+    "input_prompt": "You are the independent Victory Auditor for project IDOP-CCBA-WAY (`d:\\idop-ccba-way`).\nYour working directory is `d:\\idop-ccba-way\\.agents\\victory_auditor`.\n\nThe Orchestrator has claimed victory and generated the report at:\n`d:\\idop-ccba-way\\.agents\\orchestrator\\golden_circle_technical_evaluation_report.md`\n\nThe original user requirements are recorded in `d:\\idop-ccba-way\\.agents\\ORIGINAL_REQUEST.md`.\n\nPlease conduct a 3-phase audit:\n1. Requirements & Acceptance Criteria Traceability Audit (R1 Golden Circle Architecture, R2 Deep-Dive into 6 Core Modules, R3 Validation & Testing Scenarios Evaluation, R4 Technical Debt & Strategic Roadmap).\n2. Veracity & Evidence Audit (Verify claims against actual codebase files `datamodel/`, `specs/`, `tools/`, `workflows/`, `idop.ps1`, `README.md`, etc.).\n3. Technical Quality & Rigor Audit (Verify the schema mismatch findings, lookups mapping, term sets mapping, pre-deployment matrix, and KISS recommendations).\n\nDeliver your final audit report at `d:\\idop-ccba-way\\.agents\\victory_auditor\\audit_report.md` and send a message back to Sentinel with your explicit verdict: `VICTORY CONFIRMED` or `VICTORY REJECTED`.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "a59aaf8f-3ee2-421c-84e7-4dd0a5a7954b",
+      "step_index": 43,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_64",
+    "input_prompt": "Bạn là một Explorer agent (teamwork_preview_explorer) thuộc đội ngũ phát triển.\nMục tiêu của bạn: Khảo sát mã nguồn và thiết kế giải pháp cho R1 (Nâng cấp packager) và R2 (Nâng cấp linter).\n\nThư mục làm việc của bạn: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\teamwork_preview_explorer_okf_upgrade_m1_1\nBạn hãy:\n1. Đọc và phân tích logic đóng gói trong `packages/ccba-legal-intel/ccba_legal/packager.py`.\n2. Đọc và phân tích logic kiểm định trong `scripts/validate_docs.py`.\n3. Kiểm tra các cảnh báo/lỗi hiện tại của linter bằng cách chạy linter (nếu có thể) hoặc phân tích cấu trúc tài liệu hiện có trong `.md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/`.\n4. Thiết kế giải pháp chi tiết cho R1 và R2:\n   - Cách trích xuất frontmatter từ `full_text.md` và sao chép `resource`, `status`/`document_number`, `timestamp` sang Section và Appendix.\n   - Cách chuyển liên kết chéo tương đối thành liên kết tuyệt đối dạng `/` từ gốc bundle.\n   - Cách parse `parent_document` trong frontmatter để đưa tệp cha vào danh sách được tham chiếu.\n   - Cách miễn trừ lỗi orphan cho `index.md` và `full_text.md`.\n5. Viết báo cáo khảo sát và thiết kế chi tiết tại thư mục làm việc của bạn dưới dạng `analysis.md` và gửi tin nhắn hoàn thành kèm đường dẫn tuyệt đối của báo cáo này cho parent.\n\nLưu ý:\n- Bạn là tác nhân READ-ONLY, không được phép sửa đổi code hay file sản phẩm của dự án. Chỉ ghi nhận kết quả và đề xuất.\n- Tuân thủ Hiến pháp Layer 1 Constitution (đặt tên, phong cách, tiếng Việt).",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "aab74293-6b18-43d7-bc4e-b981dd15fcab",
+      "step_index": 42,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_65",
+    "input_prompt": "You are reviewer_m1_iter3_2 in workspace d:\\GitHubProjects\\ccba-agent-platform\\.agents\\reviewer_m1_iter3_2.\nYou MUST read d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md before starting work.\nAlso inspect Worker 3's handoff at d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1_iter3\\handoff.md and Explorer 3's fix plan at d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_m1_iter3\\fix_plan.md.\n\nYour task: Review structural integrity across all skills and workflows.\nVerify:\n1. Workflow cross-references to skills point to existing SKILL.md files.\n2. Frontmatter YAML format in all 57 workflow .md files.\n3. No Constitution files (.agents/AGENTS.md, .md/workspace_context.yaml, .md/knowledge/*) were edited.\n4. Run python scripts/validate_docs.py .agents and check execution result.\n\nWrite your report and verdict (APPROVE or REQUEST_CHANGES) to d:\\GitHubProjects\\ccba-agent-platform\\.agents\\reviewer_m1_iter3_2\\handoff.md and send a summary message to parent.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "acb1a4b9-758b-4731-8283-df6bcd714763",
+      "step_index": 28,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_66",
+    "input_prompt": "\"Cách 1: Thiết lập Biến Môi trường trong tệp .env (Khuyên dùng)\" Sao không kế thừa thông tin từ Hub?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b1c59b02-b09f-400a-9a7f-b3fa24087716",
+      "step_index": 171,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_67",
+    "input_prompt": "tôi thấy dữ liệu chưa được bóc tách đầy đủ, ví dụ như tại legal_docs\\02_qcvn\\qcvn_06_2022_bxd\\tables",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b1c59b02-b09f-400a-9a7f-b3fa24087716",
+      "step_index": 538,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_68",
+    "input_prompt": "nên lưu trữ dưới dạng \"Bảng số liệu CSV\" hay định dạng khác tối ưu hơn với LLM Agents?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Agent issued a refusal disclaimer on potentially valid domain prompt.",
+    "metadata": {
+      "failure_type": "ROUTER_DISCLAIMER",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b1c59b02-b09f-400a-9a7f-b3fa24087716",
+      "step_index": 561,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_69",
+    "input_prompt": "các tệp .csv hiện tại không có dữ liệu",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b1c59b02-b09f-400a-9a7f-b3fa24087716",
+      "step_index": 568,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_70",
+    "input_prompt": "Ok, hãy kiểm tra dữ liệu tại legal_docs\\02_qcvn\\qcvn_06_2022_bxd\\tables để tiếp tục xử lý, tối ưu",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b1c59b02-b09f-400a-9a7f-b3fa24087716",
+      "step_index": 615,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_71",
+    "input_prompt": "hãy tải bản .docx về",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b1c59b02-b09f-400a-9a7f-b3fa24087716",
+      "step_index": 824,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_72",
+    "input_prompt": "Tệp qcvn_06_2022_bxd.docx ở đâu?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b1c59b02-b09f-400a-9a7f-b3fa24087716",
+      "step_index": 890,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_73",
+    "input_prompt": "/ccba-convert-markdown .md\\extracted_docs\\qcvn_06_2022_bxd\\qcvn_06_2022_bxd.docx",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b1c59b02-b09f-400a-9a7f-b3fa24087716",
+      "step_index": 948,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_74",
+    "input_prompt": "tên của các bảng có thể thêm thông tin về tên bảng để dễ nhận diện nội dung?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b1c59b02-b09f-400a-9a7f-b3fa24087716",
+      "step_index": 1077,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_75",
+    "input_prompt": "hãy tự kích hoạt /browser để tự xử lý đi",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Agent issued a refusal disclaimer on potentially valid domain prompt.",
+    "metadata": {
+      "failure_type": "ROUTER_DISCLAIMER",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b2a5d26b-602d-42ee-ae31-32988b035a0f",
+      "step_index": 862,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_76",
+    "input_prompt": "không đúng, bạn đã từng tự truy cập https://thuvienphapluat.vn/ và lấy dữ liệu về",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b2a5d26b-602d-42ee-ae31-32988b035a0f",
+      "step_index": 885,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_77",
+    "input_prompt": "\"Prod\" đã được thay thế bằng \"IDOP\"",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "b5a8f934-e1af-4c2f-93d6-ac30546ee64a",
+      "step_index": 205,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_78",
+    "input_prompt": "hãy sử dụng tk vip của thuvienphapluat.vn để tìm kiếm và tải về rồi xử lý",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "bb6b76dd-7a8d-44e9-85be-6ea70ffabf5f",
+      "step_index": 250,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_79",
+    "input_prompt": "hãy kiểm tra lại skill tải tài liệu từ trang thuvienphapluat.vn từ tk vip đã cấp",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "bb6b76dd-7a8d-44e9-85be-6ea70ffabf5f",
+      "step_index": 274,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_80",
+    "input_prompt": "You are Challenger 2 for Milestone 1 (Iteration 2).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_iter2_2\nRead ORIGINAL_REQUEST.md at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead Worker 2 Handoff at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1_iter2\\handoff.md\n\nTask:\n1. Verify Guardrail compliance: 0 Constitution edits, git stash pre-audit backup preserved, 0 fabricated business content.\n2. Render your verdict (APPROVE or REQUEST_CHANGES) in `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_iter2_2\\handoff.md`. Send a message to parent when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "c314a24c-d949-4652-a5e9-03deb57dd999",
+      "step_index": 180,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_81",
+    "input_prompt": "hãy kiểm tra status CI",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "c47d256e-b05b-447f-b755-01fb94286daf",
+      "step_index": 734,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_82",
+    "input_prompt": "hãy kiểm tra status CI của PR #182",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "c47d256e-b05b-447f-b755-01fb94286daf",
+      "step_index": 817,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_83",
+    "input_prompt": "Hãy kiểm tra status CI",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "c47d256e-b05b-447f-b755-01fb94286daf",
+      "step_index": 919,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_84",
+    "input_prompt": "/ccba-wayfinder hãy kiểm tra trạng thái CI",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "c47d256e-b05b-447f-b755-01fb94286daf",
+      "step_index": 952,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_85",
+    "input_prompt": "tiếp tục Gói 1",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "c4a49150-3e72-4c6d-81f4-3e478fbeb0fd",
+      "step_index": 76,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_86",
+    "input_prompt": "/ccba-implement @[d:\\GitHubProjects\\ccba-agent-platform\\.md\\knowledge\\issues\\legal-intel-deep-module\\tickets.md]",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "c6cb279b-8729-4248-94a5-a6cec5474e90",
+      "step_index": 109,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_87",
+    "input_prompt": "Hãy đánh giá Engine trên Hub và Engine tại spoke ccba-legal-knowledge",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "c9ba032c-d90f-4eb9-9403-91159d83376e",
+      "step_index": 94,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_88",
+    "input_prompt": "hãy kiểm tra status CI và comments của copilot",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "c9ba032c-d90f-4eb9-9403-91159d83376e",
+      "step_index": 439,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_89",
+    "input_prompt": "/ccba-wayfinder tiếp tục lỗi User cancelled agent execution với last conversation",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "d0db312b-a7a5-4486-94fc-675ba6f45f98",
+      "step_index": 23,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_90",
+    "input_prompt": "/ccba-improve-codebase-architecture",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "d523ef7a-e720-4d2b-b1f7-642130cfeb95",
+      "step_index": 59,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_91",
+    "input_prompt": "/ccba-xia https://github.com/mattpocock/skills/blob/main/skills/engineering/setup-matt-pocock-skills/SKILL.md",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "d79bdc3f-c199-40c2-b1b7-eefc1865b66b",
+      "step_index": 56,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_92",
+    "input_prompt": "Chạy toàn bộ test suite của ccba-legal-intel và báo cáo kết quả đầy đủ.\n\n**Nhiệm vụ:**\n1. Chạy lệnh: `uv run pytest packages/ccba-legal-intel/tests --timeout=15 -q` trong thư mục `d:\\GitHubProjects\\ccba-agent-platform`\n2. Đợi cho đến khi lệnh hoàn tất (tối đa 120 giây)\n3. Báo cáo TOÀN BỘ output của lệnh — số test passed, failed, error, timeout — kèm chi tiết traceback nếu có lỗi\n\n**Lưu ý quan trọng:**\n- Nếu lệnh bị cancel/timeout do WaitMsBeforeAsync, hãy thử lại với WaitMsBeforeAsync=90000\n- Báo cáo NGAY KHI có kết quả, kể cả kết quả trung gian\n- KHÔNG làm bất cứ việc gì khác ngoài chạy test và báo cáo kết quả",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "d8457118-7713-4638-bb8c-0bcd5500a3ab",
+      "step_index": 5,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_93",
+    "input_prompt": "hãy thực hiện 1 và 2",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "d9157d49-a48e-4b78-917a-1587e3c8b665",
+      "step_index": 513,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_94",
+    "input_prompt": "You are Challenger 2 (Iteration 2) for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_2_2\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. Worker 1 Iteration 2 Handoff: `d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_2/handoff.md`\n\nObjective:\nProgrammatically stress-test and verify the remediated markdown file at:\n`d:/GitHubProjects/ccba-legal-knowledge/.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`\n\nProgrammatic checks:\n- Check line count, empty line ratio (< 20%), character count.\n- Check title completeness for all 8 Chapters, 13 Sections, and 95 Articles.\n- Ensure no truncation at beginning or end of file.\n\nWrite your verification report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_2_2/challenge.md` and `handoff.md`. Include a clear verdict: APPROVE or REQUEST_CHANGES.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "dbbb1e14-075d-4a00-8717-b9fe266e0b4a",
+      "step_index": 16,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_95",
+    "input_prompt": "You are Explorer Fix 2 for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/explorer_m1_fix2\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. `d:/GitHubProjects/ccba-legal-knowledge/.agents/orchestrator_r2/PROJECT.md`\n3. Forensic Auditor Full Evidence Report: `d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_2/audit.md` and `d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_2/handoff.md`\n4. Challenger 2 Report: `d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_2_2/challenge.md`\n\nObjective:\nFormulate the exact remediation code for `scripts/convert_luat_135_to_md.py` to fix the 2 remaining issues:\n1. **REMOVE ALL `C:\\Users` ABSOLUTE PATH RESIDUALS**: Completely delete `FALLBACK_HTML_PATH` line 16 in `scripts/convert_luat_135_to_md.py` containing `C:\\Users\\chuvu\\.gemini\\...`. Use strictly workspace-relative paths (`Path(__file__).parent.parent / \".md\" / \"extracted_docs\" / \"luat_xay_dung_2025_135_2025_qh15\" / \"raw_page.html\"`). Zero occurrences of `C:\\Users` or absolute user paths allowed anywhere in the script.\n2. **FIX DOUBLE NEWLINE OVER-SPACING**: Refactor `output_blocks` joining so that standard body paragraphs are separated cleanly without excessive empty lines, reducing empty line ratio from 49.8% to < 15%.\n\nDo NOT edit source files yourself. Write your analysis and exact fix code to `d:/GitHubProjects/ccba-legal-knowledge/.agents/explorer_m1_fix2/analysis.md` and `handoff.md`.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "dc90275a-1ded-4b27-89c1-a1da19c04dde",
+      "step_index": 39,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_96",
+    "input_prompt": "Hãy bắt đầu với từng ứng viên một theo thứ tự ưu tiên",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "e7bc59b9-6695-4373-ad6e-95f623b0ae4e",
+      "step_index": 81,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_97",
+    "input_prompt": "hãy khảo sát thông tin cụ thể ở last conversation",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "e809390d-92e5-4d5e-bee4-00a7f23ff389",
+      "step_index": 24,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_98",
+    "input_prompt": "You are challenger_m1_iter7_1 (type: teamwork_preview_challenger).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_iter7_1\nRead the original request at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead the project spec at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\orchestrator\\PROJECT.md\nRead Worker 7 handoff report at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1_iter7\\handoff.md\n\nYour task:\n1. Perform adversarial link resolution testing on `.agents/skills/` and `.agents/workflows/`.\n2. Verify that all relative links resolve to existing target files on disk, including parenthetically escaped links in `domain-modeling/CONTEXT-FORMAT.md`.\n3. Verify that no absolute links (`file:///...` or hardcoded Windows drive letters like `C:\\` or `D:\\`) exist in documentation files outside explicit allowed contexts.\n4. Run `python scripts/validate_docs.py .agents`.\n5. Write your findings and final verdict (APPROVE or REQUEST_CHANGES) to `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_iter7_1\\handoff.md` and send a summary message to parent.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "e9a17666-163f-4add-867c-d17894e4c6f0",
+      "step_index": 28,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_99",
+    "input_prompt": "Fix ALL remaining Mypy type annotation errors in the following files under d:\\GitHubProjects\\ccba-agent-platform\\. The errors are split into 3 categories:\n\n## Category 1: Files with missing type annotations (no-untyped-def, no-untyped-call)\nThese files need `-> None` return types and parameter type annotations added:\n\n1. packages/ccba-harness/tests/test_monitor.py - lines 24,42,58,78,96,103,108,111,116,125,138,152,182,216 (no-untyped-def + no-untyped-call)\n2. packages/ccba-harness/tests/test_harness_empirical.py - lines 11,17,35,43,65 (no-untyped-def + no-untyped-call)\n3. packages/ccba-harness/tests/test_harness_challenger.py - lines 12,29,46,59,77,100,105,131,153,178,203,213,228,250,268,277,293,308,338,359,383,403 (no-untyped-def)\n4. packages/ccba-harness/tests/test_harness_bypass_check.py - lines 11,33,52,75,98 (no-untyped-def)\n5. scripts/legal_sync.py - line 380: Dict entry 1 has incompatible type \"str\": \"list[str]\"; expected \"str\": \"str\" [dict-item]\n\nFor no-untyped-call errors, add `# type: ignore[no-untyped-call]` on the offending line.\n\n## Category 2: Unused type: ignore comments that need to be REMOVED\nThese files have `# type: ignore[...]` comments that are now unnecessary and must be removed:\n\n6. packages/ccba-harness/tests/test_harness.py - lines 10,11,161 have unused type: ignore. Lines 181,198 have BOTH unused-ignore AND attr-defined — keep only `# type: ignore[attr-defined]` (remove the extra ignore comment if it has wrong error code).\n7. packages/ccba-harness/tests/test_harness_adversarial.py - line 14: unused type: ignore\n8. packages/ccba-harness/tests/test_harness_adversarial_challenger.py - line 11: unused type: ignore\n9. packages/ccba-harness/tests/test_harness_adversarial_challenger_gen2.py - line 11: unused type: ignore\n10. packages/ccba-harness/tests/test_harness_adversarial_challenger_gen3.py - line 11: unused type: ignore\n11. packages/ccba-harness/tests/test_harness_adversarial_challenger_gen4.py - line 11: unused type: ignore\n12. packages/ccba-harness/tests/test_harness_adversarial_challenger_gen5.py - line 12: unused type: ignore\n13. packages/ccba-harness/tests/test_harness_adversarial_challenger_run2_1.py - lines 13,28: unused type: ignore. Lines 32,212,219,236,254 have attr-defined errors for _local and _HOOK_TOKEN — make sure those have `# type: ignore[attr-defined]`.\n14. packages/ccba-harness/tests/test_harness_adversarial_challenger_run2_2.py - line 14: unused type: ignore. Line 260 has BOTH unused-ignore AND attr-defined for _local — fix the type: ignore to only have `[attr-defined]`.\n15. packages/ccba-harness/tests/test_harness_stress.py - lines 13,14: unused type: ignore\n16. scripts/legal_sync.py - lines 36,37,259: unused type: ignore comments — remove them\n\nFor each file:\n- Read it first to understand exact content\n- For unused type: ignore: remove the `# type: ignore[...]` comment entirely from those lines\n- For lines with BOTH unused-ignore AND attr-defined: the ignore comment has the wrong error code — change it to `# type: ignore[attr-defined]`\n- For missing type annotations: add `-> None` and parameter types\n- Use multi_replace_file_content for efficiency\n\nAfter fixing ALL files, report back with a count of fixes per file.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "ee3953dd-f322-432a-b06c-11aee6f59958",
+      "step_index": 7,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_100",
+    "input_prompt": "You are Explorer 3 (Catalog & Stats Explorer).\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_survey_3\nRead ORIGINAL_REQUEST.md at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\n\nTask:\n1. Compare skills on filesystem (`.agents/skills/*/SKILL.md`) vs catalog (`.agents/skills/platform-loader/catalog.yaml`). List all unmapped/missing skills.\n2. Compare workflows on filesystem (`.agents/workflows/*.md`) vs catalog (`catalog.yaml`). List all unmapped/missing workflows.\n3. Inspect `README.md`, `PLATFORM.md`, and `scripts/update_arch_stats.py`. Run `python scripts/update_arch_stats.py` to see what stats need synchronization.\n4. Do NOT modify any source files. You are strictly read-only in exploration phase.\n5. Write your comprehensive analysis to d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_survey_3\\analysis.md and handoff summary to d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_survey_3\\handoff.md. Send a message to parent when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "ee82b9f2-527a-4832-8843-f13675ea57a5",
+      "step_index": 29,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_101",
+    "input_prompt": "/ccba-implement @[d:\\GitHubProjects\\ccba-agent-platform\\.md\\knowledge\\issues\\technical-debt-cleanup\\tickets.md]",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "ef5005bc-3ed1-4118-80c9-7053d12c4522",
+      "step_index": 140,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_102",
+    "input_prompt": "You are Challenger 1 for Milestone 1.\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_1\nRead ORIGINAL_REQUEST.md at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead Worker 1 Handoff at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1\\handoff.md\n\nTask:\n1. Empirically verify that every single modified relative link in skills and workflows resolves to an existing file on the filesystem.\n2. Run `python scripts/validate_docs.py` using run_command to check for any residual or newly introduced link errors.\n3. Render your verdict (APPROVE or REQUEST_CHANGES) in `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\challenger_m1_1\\handoff.md`. Send a message to parent when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "f293b16c-a925-4fa7-ad28-0651084d75e1",
+      "step_index": 22,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_103",
+    "input_prompt": "Fix ALL Mypy type errors in these files under d:\\GitHubProjects\\ccba-agent-platform\\scripts\\:\n\n## 1. scripts/legal_sync.py\nThe current file has these issues:\n- Line 20: `import yaml  # type: ignore[import-untyped]` — BUT the harness script says this is `unused-ignore`. Read the actual file first to check the current state.\n- Lines 24-29: The conditional import pattern was changed. Check for `no-redef` errors and fix.\n- Line 36: has `# type: ignore[import-untyped]` that's unused because the error is actually `import-not-found`. Change to `# type: ignore[import-not-found]`.\n- Lines 33-38: All google imports have `import-not-found`. Add `# type: ignore[import-not-found]` to each import line that doesn't have it.\n- Line 44: `notebooklm_helper` import-not-found. Add `# type: ignore[import-not-found]`.\n\n## 2. scripts/verify_legal_intel.py (line 13)\nAdd `# type: ignore[import-not-found]` to the ccba_legal import.\n\n## 3. scripts/tests/test_validate_docs.py (lines 163,178,187,215,266,298)\nAdd `-> None` return type annotations to all test functions missing them.\n\n## 4. scripts/tests/test_simplify_gate.py (lines 8,40)\nAdd `-> None` return type annotations.\n\n## 5. scripts/tests/test_scout_block.py (lines 13,24,36,53)\nAdd `-> None` return type annotations.\n\n## 6. scripts/tests/test_maskara.py (lines 15,21,46,57)\nAdd `-> None` return type annotations.\n\nRead each file first, then fix. Report back with fixes per file.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "f3b4059d-2e30-422e-9bdf-ba0b9236cc39",
+      "step_index": 18,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_104",
+    "input_prompt": "/ccba-wayfinder Hãy kiểm tra lỗi ở last conversation",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "f413cad5-16de-4ea2-8a3c-a3fbb036312c",
+      "step_index": 29,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_105",
+    "input_prompt": "You are reviewer_m1_iter5_2 in workspace d:\\GitHubProjects\\ccba-agent-platform\\.agents\\reviewer_m1_iter5_2.\nYou MUST read d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md before starting work.\nAlso inspect Worker 5's handoff at d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1_iter5\\handoff.md and Explorer 5's fix plan at d:\\GitHubProjects\\ccba-agent-platform\\.agents\\explorer_m1_iter5\\fix_plan.md.\n\nYour task: Review structural integrity across all skills and workflows.\nVerify:\n1. Workflow cross-references to skills point to existing SKILL.md files.\n2. Frontmatter YAML format in all 57 workflow .md files.\n3. No Constitution files (.agents/AGENTS.md, .md/workspace_context.yaml, .md/knowledge/*) were edited.\n4. Run python scripts/validate_docs.py .agents and verify execution result.\n\nWrite your report and verdict (APPROVE or REQUEST_CHANGES) to d:\\GitHubProjects\\ccba-agent-platform\\.agents\\reviewer_m1_iter5_2\\handoff.md and send a summary message to parent.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "f4fcefb1-89df-40b1-81ec-e16f58429e8b",
+      "step_index": 29,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  },
+  {
+    "id": "test_general_domain_mined_106",
+    "input_prompt": "You are Reviewer 2 for Milestone 1.\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\reviewer_m1_2\nRead ORIGINAL_REQUEST.md at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead Worker 1 Handoff at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1\\handoff.md\nRead Worker 1 Changes at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1\\changes.md\n\nTask:\n1. Independently review Worker 1's modifications across skills and workflows.\n2. Verify that converted relative links point to actual existing files on the filesystem.\n3. Run `python scripts/validate_docs.py` using run_command to independently confirm document integrity.\n4. Render your verdict (APPROVE or REQUEST_CHANGES) with supporting evidence in your handoff report `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\reviewer_m1_2\\handoff.md`. Send a message to parent when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "fa1ee00a-61d5-416a-90e2-266ea8a2c70b",
+      "step_index": 86,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "general_domain"
+    }
+  }
+]

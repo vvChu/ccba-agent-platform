@@ -1,0 +1,16 @@
+[
+  {
+    "id": "test_copywriting_mined_01",
+    "input_prompt": "Làm sao để trong tương lai không phát sinh vấn đề liên quan đến \"Loại bỏ 100% Prompt nhiễu: Không còn các test prompt vô lý (như hỏi quicksort Python trong copywriting hay Fibonnaci trong legal intel).\"?",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Agent issued a refusal disclaimer on potentially valid domain prompt.",
+    "metadata": {
+      "failure_type": "ROUTER_DISCLAIMER",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "de07cc2b-5990-47a3-afa4-e1c7ff2626b6",
+      "step_index": 347,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "copywriting"
+    }
+  }
+]
