@@ -46,7 +46,7 @@ Các script được tham chiếu trực tiếp bởi tệp cấu hình của Sk
 | `upstream_evaluator.py` | `scripts/spoke/upstream_evaluator.py` | 1 | Engine hợp nhất đồng bộ và đánh AI tính năng thượng nguồn (`sync-upstream/SKILL.md`) |
 | `legal_intelligence.py` | `scripts/legal_intelligence.py` | 1 | Cào và xử lý văn bản pháp luật (`ccba-legal-intel/SKILL.md`) |
 | `legal_sync.py` | `scripts/legal_sync.py` | 1 | Đồng bộ văn bản lên NotebookLM (`update-legal-registry.md`) |
-| `mock_debugger.py` | `scripts/mock_debugger.py` | 1 | Trình giả lập debug lỗi (`mock-debugger/SKILL.md`) |
+| `mock_debugger.py` | `scripts/security/mock_debugger.py` | 1 | Trình giả lập debug lỗi (`mock-debugger/SKILL.md`) |
 | `notebooklm_helper.py` | `scripts/notebooklm_helper.py` | 1 | Helper kết nối RAG NotebookLM (`notebooklm-connector/SKILL.md`) |
 | `privacy_block.py` | `scripts/hooks/privacy_block.py` | 1 | Core filter của Maskara (`maskara/SKILL.md`) |
 | `repomix_pack.py` | `scripts/repomix_pack.py` | 1 | Đóng gói codebase cho LLMs (`docs_manager/SKILL.md`) |
