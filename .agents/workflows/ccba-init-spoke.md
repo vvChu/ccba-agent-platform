@@ -66,12 +66,19 @@ Lấy tên thư mục Root hiện hành để cấu hình:
 ```
 
 ### 3. Tạo file Workspace Context
-Tạo file `.md\workspace_context.yaml` và ghi nội dung cấu hình. Đề nghị người dùng chọn 1 trong các loại dự án sau để điền vào trường `type`:
-- Dự án phần mềm/build tools (type: `Phần mềm`)
-- Thẩm tra thiết kế/ Third-party Review (type: `Thẩm tra thiết kế`)
-- Thiết kế/ Design (type: `Thiết kế`)
-- Kiểm định/Assessment (type: `Kiểm định`)
-- Tác vụ Admin/ Hành chính & Quản trị (type: `Tác vụ Admin`)
+Tạo file `.md\workspace_context.yaml` và ghi nội dung cấu hình. Đề nghị người dùng chọn:
+1. **Phân loại Archetype ([ADR 0041](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)):**
+   - `project_delivery` (Mặc định cho các dự án tư vấn, thiết kế, thẩm tra công trình thực tế)
+   - `enterprise_governance` (Hệ điều hành quản trị nội bộ CCBA / IDOP-CCBA-WAY)
+   - `knowledge_corpus` (Kho tri thức pháp điển quốc gia OKF v2.0 / ccba-legal-knowledge)
+   - `specialized_extension` (R&D Lab, Add-in/Plugin CAD-BIM, Client Extranet Portal)
+
+2. **Loại dự án nghiệp vụ (`type`):**
+   - Dự án phần mềm/build tools (type: `Phần mềm`)
+   - Thẩm tra thiết kế/ Third-party Review (type: `Thẩm tra thiết kế`)
+   - Thiết kế/ Design (type: `Thiết kế`)
+   - Kiểm định/Assessment (type: `Kiểm định`)
+   - Tác vụ Admin/ Hành chính & Quản trị (type: `Tác vụ Admin`)
 
 Dựa vào `type` được chọn, xác định `mode` mặc định (`software` cho Phần mềm, `delivery` cho các loại còn lại. Nếu là Hub hoặc Spoke hỗn hợp thì chọn `hybrid`).
 Xác định `qc_mode` tự động:
@@ -88,6 +95,7 @@ Xác định `qc_mode` tự động:
 
 project:
   name: "[Tên thư mục dự án]"
+  archetype: "[archetype: project_delivery | enterprise_governance | knowledge_corpus | specialized_extension]"
   type: "[Loại dự án được chọn]"
   mode: "[mode tương ứng: software | delivery | hybrid]"
   qc_mode: "[qc_mode tương ứng]"
@@ -113,7 +121,7 @@ do_not_touch:
 # =============================================================================
 acknowledgment_required: true
 acknowledgment_format: >
-  "Tôi đã đọc workspace_context.yaml. Dự án [tên] là [type] (mode: [mode]). Tác vụ hiện tại liên quan đến [lĩnh vực]."
+  "Tôi đã đọc workspace_context.yaml. Dự án [tên] thuộc Archetype [archetype], loại [type] (mode: [mode]). Tác vụ hiện tại liên quan đến [lĩnh vực]."
 ```
 
 ### 4. Quét tìm tài liệu chưa xử lý
@@ -193,6 +201,7 @@ dist/
 Tự động cấu hình pre-commit hook cục bộ tại Spoke để gọi Maskara bảo vệ khóa API và thông tin nhạy cảm:
 ```powershell
 if (Test-Path ".git") {
+    $hubPath = if ($env:CCBA_HUB_PATH) { $env:CCBA_HUB_PATH } else { "[hub_path]" }
     $hookDir = ".git\hooks"
     if (-not (Test-Path $hookDir)) {
         New-Item -ItemType Directory -Path $hookDir -Force | Out-Null
@@ -224,11 +233,11 @@ for file in `$staged_files; do
     fi
     
     if [ -f "`$file" ]; then
-        python "$hub/scripts/maskara.py" scan --root "`$file" > /dev/null 2>&1
+        python "$hubPath/scripts/maskara.py" scan --root "`$file" > /dev/null 2>&1
         status_code=`$?
         if [ `$status_code -ne 0 ]; then
             echo "❌ Leak detected in staged file: `$file"
-            python "$hub/scripts/maskara.py" scan --root "`$file"
+            python "$hubPath/scripts/maskara.py" scan --root "`$file"
             has_leak=1
         fi
     fi

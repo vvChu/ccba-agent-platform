@@ -38,6 +38,11 @@ def main() -> None:
         help="Perform assessment and display discovery matrix without writing files.",
     )
     parser.add_argument(
+        "--archetype",
+        default=None,
+        help="Explicit CCBA Spoke Archetype ('project_delivery', 'enterprise_governance', 'knowledge_corpus', 'specialized_extension').",
+    )
+    parser.add_argument(
         "--type",
         dest="project_type",
         default=None,
@@ -55,6 +60,7 @@ def main() -> None:
             dry_run=args.dry_run,
             project_type=args.project_type,
             mode=args.mode,
+            archetype=args.archetype,
         )
     )
 
