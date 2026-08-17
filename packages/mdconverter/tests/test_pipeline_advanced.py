@@ -10,7 +10,6 @@ from mdconverter.core.analyzer import PageDetail, PDFReport, Segment
 from mdconverter.core.base import ConversionStatus
 
 
-
 @pytest.fixture
 def mock_analyzer_report():
     """Create a mock hybrid PDF report."""

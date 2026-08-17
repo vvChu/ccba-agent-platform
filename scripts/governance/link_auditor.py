@@ -119,7 +119,17 @@ class LinkAuditor(BaseAuditor):
 
         if dirs_key not in self._file_list_cache:
             files: list[Path] = []
-            excludes = ["tests", "venv", ".venv", "node_modules", "dist", "build", ".md", ".git", "__pycache__"]
+            excludes = [
+                "tests",
+                "venv",
+                ".venv",
+                "node_modules",
+                "dist",
+                "build",
+                ".md",
+                ".git",
+                "__pycache__",
+            ]
             for sdir in search_dirs:
                 if not sdir.exists():
                     continue
