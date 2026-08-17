@@ -499,6 +499,12 @@
   - **Ưu tiên 3 (Standard Defaults):** Quét các đường dẫn repo tiêu chuẩn (`D:/GitHubProjects/...`, `../<spoke-name>`, `./<spoke-name>`).
   - Đảm bảo hệ thống vận hành trơn tru cả trong môi trường phát triển độc lập (isolated standalone) lẫn môi trường mạng lưới đa Spoke đã đăng ký bảo mật.
 
+#### P7.16. End-to-End Archetype Lifecycle Enforcement (ADR 0041 & Spoke Workflows)
+* **Nguyên tắc:** Mọi giai đoạn trong vòng đời của một Spoke (tạo mới `/ccba-init-spoke`, tiếp nhận `/ccba-adopt-spoke`, thiết lập cấu hình `/ccba-setup-skills`) đều phải nhận diện và định danh tường minh trường `archetype` (`project_delivery`, `enterprise_governance`, `knowledge_corpus`, `specialized_extension`, `platform_hub`) trong `workspace_context.yaml`. Việc này giúp loại bỏ phỏng vấn thừa và tự động hóa việc cấu hình đúng công cụ nghiệp vụ (ví dụ: `project_delivery` $\rightarrow$ Local Markdown Issues thay vì GitHub Issues).
+
+#### P7.17. Upstream Proposal Archetype Attribution & Local Pre-PR Governance Linter (`ccba-propose-to-hub`)
+* **Nguyên tắc:** Khi một Spoke đề xuất sáng kiến ngược lên Hub, mẫu proposal bắt buộc ghi nhận `proposed_by_archetype` để phân loại bối cảnh nghiệp vụ, đồng thời phải vượt qua Governance Gate (`validate_skills.py`, `doc_auditor.py`) tại local trước khi mở Pull Request.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
 * **AP7.2. Committing Unscanned Code:** Bỏ qua quy trình `/ccba-code-review` hoặc Governance Audit trước khi tạo PR.
