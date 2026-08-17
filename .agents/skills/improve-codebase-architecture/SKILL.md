@@ -6,7 +6,7 @@ category: engineering
 keywords: [architecture, design, deep-module, refactor, visual-report, cải tiến kiến trúc, module sâu, báo cáo trực quan, refactor mã nguồn]
 metadata:
   author: CCBA
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # Cải tiến Kiến trúc Mã nguồn (Improve Codebase Architecture)
@@ -31,25 +31,38 @@ Quy trình này được định hướng bởi domain model của dự án và 
   * **Logic Bị Phân Mảnh (Scattered Domain Logic):** Nơi nào muốn hiểu một khái niệm nghiệp vụ lại phải nhảy qua nhảy lại giữa quá nhiều module nhỏ?
   * **Thiếu Kiểm Thử / Khó Viết Unit Test:** Phân vùng nào đang thiếu kiểm thử hoặc cực kỳ khó viết unit test với giao diện hiện tại?
 - Áp dụng **phép thử xóa bỏ (deletion test)** đối với các module nghi ngờ bị nông: Nếu xóa module đó đi thì độ phức tạp sẽ tập trung lại một chỗ hay chỉ bị dịch chuyển sang chỗ khác? Nếu câu trả lời là "tập trung lại một chỗ", đó chính là seam tốt cần làm sâu.
-- **Tiêu chí hoàn thành:** Lập danh sách ghi nhận được ít nhất 2 vùng module bị nông, coupling cao hoặc chứa nợ kỹ thuật thực tế, kèm kết quả phép thử xóa bỏ (deletion test) cho mỗi vùng.
+- **Tiêu chí hoàn thành:** Lập danh sách thô các vùng module bị nông, coupling cao hoặc chứa nợ kỹ thuật thực tế.
 
-### 1.5. Tự Phản Biện Trước Đề Xuất (5 Mandatory Adversarial Gates)
-Trước khi tổng hợp các ứng viên vào Báo cáo HTML hoặc Implementation Plan, Agent **bắt buộc** phải tự chạy rà soát 5 cổng phản biện (theo Rule #8 và Session Learnings):
+### 1.4. Vòng Bắn Hạ Ứng Viên Khép Kín (Pre-HTML Adversarial Shoot-Down Pass)
+*Quy tắc bất biến:* **Tuyệt đối không đưa các phỏng đoán hoặc heuristic chưa kiểm chứng vào Báo cáo HTML.** Trước khi chuyển sang bước dựng báo cáo, Agent **bắt buộc** phải thực thi vòng bắn hạ (Shoot-Down Pass) đối với từng ứng viên thô:
+
+1. **Kiểm tra Implementation Thực Tế Của Toàn Bộ Callers (`view_file` Pass):**
+   - Mở trực tiếp mã nguồn của từng caller tìm thấy qua `grep_search`.
+   - Xác minh xem caller đang *tự viết lại logic* hay *đã import từ Deep Seam SSOT*. Nếu caller đã import SSOT chuẩn (như trường hợp `OKFBundlePackager` đã import `ccba_ooxml.TableReconstructor`) $\rightarrow$ **Xác định ngay là False Positive và Loại bỏ 100% khỏi danh sách**.
+2. **Đo Đếm Profiling Thực Tế (Measurable Benchmark Pass):**
+   - Nếu ứng viên liên quan đến hiệu năng I/O hoặc CPU: Bắt buộc chạy 1 lệnh benchmark ngắn (sử dụng `time.perf_counter()` hoặc `Measure-Command`) để lấy số đo thực tế `[đo thực tế: X ms]`. Nghiêm cấm đưa công thức lý thuyết ước lượng chưa qua kiểm chứng vào báo cáo.
+   - Khi phát hiện điểm nghẽn duyệt file/I/O: Luôn kiểm tra xem lệnh quét có đang duyệt vào các thư mục rác (`node_modules`, `.md`, `.git`, `.venv`) hay không trước khi kết luận thuật toán bị chậm.
+3. **Đào Thải Tự Động (Auto-Elimination):**
+   - Bất kỳ ứng viên nào là False Positive, hoặc chỉ là mã nối hạ tầng (Glue Code), hoặc chỉ có 1 caller đơn lẻ mà không có độ phức tạp domain $\rightarrow$ **Loại bỏ ngay lập tức**.
+   - Chỉ giữ lại tối đa **2–3 ứng viên chất lượng cao nhất** đã sống sót qua vòng bắn hạ để đưa vào Báo cáo HTML.
+
+### 1.5. Khóa Chặt 5 Cổng Phản Biện Kèm Dẫn Chứng Cụ Thể (5 Mandatory Adversarial Gates with Hard Evidence)
+Trước khi ghi file HTML, mỗi ứng viên còn sống sót **bắt buộc** phải có đầy đủ bằng chứng thực địa (Hard Evidence) cho 5 cổng:
 
 1. **Cổng 1: Phân biệt Glue Code vs Domain Logic (Rule P6.21):**
-   * Đọc trực tiếp từng dòng của hàm/module định bóc tách: Nếu $\ge 70\%$ nội dung là `subprocess.run()`, `tempfile.TemporaryDirectory()`, `argparse/typer` logic, hoặc in banner console (`print`), đó là **Infrastructure Glue Code**.
-   * *Rào chắn:* Nghiêm cấm bọc Glue Code thành Class/Seam mới trong core packages khi không có nghiệp vụ tính toán nội tại. Glue Code thuộc về tầng script/CLI.
+   * Dẫn chứng: Đọc tỷ lệ dòng `subprocess/tempfile/print` so với dòng thuật toán nghiệp vụ.
+   * *Rào chắn:* Nếu $\ge 70\%$ là Glue Code $\rightarrow$ Giữ nguyên tại CLI script, không bọc thành Seam lõi.
 2. **Cổng 2: Đếm Số Caller Thực Tế (Hard Caller Count Gate - Rule P6.5 & P6.23):**
-   * Chạy lệnh `grep_search` đếm số lượng callers thực tế đang tồn tại trong codebase hiện hành.
-   * *Rào chắn:* Nếu số **Caller $= 1$** (chỉ có chính CLI/script gọi nó), đề xuất bóc tách tạo Seam mới **bắt buộc phải bị xếp loại `Speculative / Low ROI`**, tuyệt đối không được gắn nhãn `Strong Recommendation`. Chỉ đề xuất Seam mới khi có **$\ge 2$ callers độc lập**.
+   * Dẫn chứng: Trích xuất chính xác danh sách đường dẫn `file:line` của các callers độc lập từ lệnh `grep_search`.
+   * *Rào chắn:* Caller $= 1 \rightarrow$ Xếp loại `Speculative / Low ROI`. Chỉ gán `Strong Recommendation` khi có $\ge 2$ callers độc lập.
 3. **Cổng 3: Kiểm chứng SDK & Dependency Signatures:**
-   * Các phương thức/class định tích hợp (ví dụ: `ccba_ai`, `httpx`) có thực sự hỗ trợ kiểu dữ liệu cần thiết và có signature khớp với mã nguồn thực tế không? (Bắt buộc `grep`/`view_file` mã nguồn package, không suy đoán).
+   * Dẫn chứng: Trích xuất signature thực tế của method/class từ mã nguồn package (`packages/.../core.py`).
 4. **Cổng 4: Bất Biến Định Danh Duy Nhất (Cross-Package Unique Naming - Rule P6.22):**
-   * Các tên class/module mới định đặt có bị trùng lặp với bất kỳ symbol nào khác trong Monorepo không? Nếu có, phải đổi tên phản ánh chính xác 100% trách nhiệm (ví dụ `AppendixExtractor` thay vì `TableReconstructor`).
+   * Dẫn chứng: Kết quả `grep_search` xác nhận symbol name mới chưa từng tồn tại ở bất kỳ package nào khác trong Monorepo.
 5. **Cổng 5: Bằng Chứng Cản Trở Đo Lường Được (Measurable Friction over Theoretical Purity):**
-   * Đề xuất refactor có giải quyết một điểm đau đo lường được (giảm thời gian test, sửa lỗi flaky test, triệt tiêu symbol collision, sửa import drift) hay chỉ là "tái cấu trúc thẩm mỹ cho đẹp mắt"? Nếu chỉ mang tính thẩm mỹ mà có rủi ro gãy vỡ $\rightarrow$ Ghi nhận ADR và Hoãn lại (Defer under KISS).
+   * Dẫn chứng: Số đo thời gian thực tế hoặc log lỗi crash terminal cụ thể (ví dụ: `UnicodeEncodeError charmap CP1252`).
 
-- **Tiêu chí hoàn thành:** Mỗi ứng viên đề xuất phải có bảng đánh giá 5 Cổng trên. Ứng viên vi phạm Cổng 1 hoặc Cổng 2 phải bị hạ cấp xuống `Speculative` hoặc loại bỏ trước khi xuất bản báo cáo.
+- **Tiêu chí hoàn thành:** Toàn bộ 2–3 ứng viên đưa vào HTML đều có bảng 5 Cổng đính kèm dẫn chứng `file:line` và số liệu đo thực tế.
 
 ### 2. Trình bày Báo cáo dưới dạng HTML (Present candidates as an HTML report)
 - Viết một file HTML đơn lẻ (single-file) vào thư mục tạm của dự án: `.md/scratch/architecture-review/architecture-review-<timestamp>.html` (tự động tạo thư mục nếu chưa tồn tại).
@@ -61,19 +74,19 @@ Trước khi tổng hợp các ứng viên vào Báo cáo HTML hoặc Implementa
 - **Đặc trưng thiết kế báo cáo:**
   * Sử dụng **Tailwind CSS qua CDN** để dàn trang và **Mermaid JS qua CDN** để vẽ sơ đồ trực quan (quan hệ call graphs, dependencies, sequences).
   * *Lưu ý Offline:* Đính kèm một dòng thông báo nổi bật ở đầu trang: *"Báo cáo này yêu cầu kết nối Internet để tải các tài nguyên đồ họa trực tuyến (Mermaid & Tailwind CSS)"*.
-  * Sử dụng kết hợp CSS/SVG tự chế cho các phần visual dạng editorial (biểu đồ khối lượng, mặt cắt cấu trúc, animation đóng/mở).
+  * Giới hạn báo cáo tập trung: **Chỉ hiển thị 2–3 ứng viên xuất sắc nhất** đã vượt qua Vòng Bắn Hạ (Bước 1.4), tránh làm loãng ngữ cảnh.
   * Mỗi ứng viên cải tiến phải có hình ảnh so sánh **trước/sau (Before/After)** trực quan.
 - Mỗi ứng viên đề xuất (card) phải hiển thị đủ:
-  * **Files:** Các tệp tin/module liên quan.
-  * **Problem:** Lý do kiến trúc hiện tại gây cản trở/friction đo lường được.
-  * **Solution:** Mô tả bằng văn xuôi giải pháp thay đổi.
+  * **Files:** Các tệp tin/module liên quan kèm dòng code cụ thể.
+  * **Problem:** Lý do kiến trúc hiện tại gây cản trở/friction đo lường được (kèm số đo benchmark thực tế).
+  * **Solution:** Mô tả bằng văn xuôi giải pháp thay đổi (ưu tiên Re-export / KISS trước khi tạo Seam).
   * **Benefits:** Giải thích dưới góc độ tăng tính locality, leverage và cách cải thiện bộ test.
   * **Before / After diagram:** Sơ đồ side-by-side minh họa trực quan việc làm sâu module.
-  * **Adversarial Gate Score:** Kết quả kiểm chứng 5 Cổng phản biện (Callers count, Glue vs Domain, Unique Naming).
+  * **Adversarial Gate Evidence:** Bảng dẫn chứng 5 Cổng phản biện (Callers count thực tế, SDK signature, Unique Naming, Real friction).
   * **Recommendation strength:** Đánh giá mức độ đề xuất chính xác theo 5 Cổng:
-    - `Strong`: $\ge 2$ callers thực tế + Domain Orchestration phức tạp + Giảm thời gian test rõ rệt.
+    - `Strong`: $\ge 2$ callers thực tế + Domain Orchestration phức tạp + Bằng chứng đo lường cải thiện rõ rệt.
     - `Worth exploring`: Housekeeping/Cleanup (giải quyết symbol collisions, import drift, dọn dẹp scripts).
-    - `Speculative`: 1 caller, hoặc Glue Code thuần túy, hoặc rủi ro phá vỡ hợp đồng downstream (ADR + Defer).
+    - `Speculative`: 1 caller, hoặc Glue Code thuần túy (ADR + Defer under KISS).
 - Kết thúc báo cáo bằng phần **Đề xuất hàng đầu (Top recommendation)** để chỉ rõ ứng viên nên xử lý đầu tiên kèm lý do.
 - **Tiêu chí hoàn thành:** Báo cáo HTML được ghi thành công vào thư mục tạm `.md/scratch/`, mở được trên trình duyệt mặc định mà không gặp lỗi CLI, hiển thị đầy đủ các thẻ ứng viên và sơ đồ Before/After.
 
