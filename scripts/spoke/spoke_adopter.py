@@ -34,15 +34,17 @@ class SpokeDiscoveryReport:
     has_custom_claude_md: bool = False
     detected_stacks: list[str] = field(default_factory=list)
     suggested_project_type: str = "Phần mềm"
+    suggested_archetype: str = "project_delivery"
     suggested_mode: str = "hybrid"
     existing_context_data: dict[str, Any] = field(default_factory=dict)
     identified_risks: list[str] = field(default_factory=list)
 
 
-def detect_spoke_stack(spoke_root: Path) -> tuple[str, str]:
-    """Detect the technology stack and suggest the CCBA project type."""
+def detect_spoke_stack(spoke_root: Path) -> tuple[str, str, str]:
+    """Detect the technology stack and suggest CCBA project type and archetype (ADR 0041)."""
     stacks = []
     default_type = "Phần mềm"
+    default_archetype = "project_delivery"
 
     # SharePoint / PowerShell / IDOP
     has_ps1 = bool(list(spoke_root.glob("*.ps1"))) or bool(
@@ -51,6 +53,8 @@ def detect_spoke_stack(spoke_root: Path) -> tuple[str, str]:
     has_datamodel = (spoke_root / "datamodel").exists()
     if has_ps1 or has_datamodel:
         stacks.append("SharePoint Online / PowerShell Automation")
+        default_archetype = "enterprise_governance"
+        default_type = "Tác vụ Admin"
 
     # Python
     if (
@@ -59,15 +63,20 @@ def detect_spoke_stack(spoke_root: Path) -> tuple[str, str]:
         or (spoke_root / "setup.py").exists()
     ):
         stacks.append("Python Software")
+        if default_archetype == "project_delivery":
+            default_archetype = "specialized_extension"
 
     # TypeScript / Node.js
     if (spoke_root / "package.json").exists():
         stacks.append("Node.js / TypeScript / Web")
+        if default_archetype == "project_delivery":
+            default_archetype = "specialized_extension"
 
     # BIM / Engineering / Construction
     if bool(list(spoke_root.glob("**/*.ifc"))) or bool(list(spoke_root.glob("**/*.rvt"))):
         stacks.append("BIM / CAD Delivery")
         default_type = "Thiết kế"
+        default_archetype = "project_delivery"
 
     # Construction Consulting / Legal / QC
     if (spoke_root / ".md" / "extracted_docs").exists() or (
@@ -75,11 +84,15 @@ def detect_spoke_stack(spoke_root: Path) -> tuple[str, str]:
     ).exists():
         stacks.append("Construction Consulting / Knowledge Base")
         default_type = "Thẩm tra thiết kế"
+        if (spoke_root / "bundles").exists() or (spoke_root / "OKF").exists():
+            default_archetype = "knowledge_corpus"
+        else:
+            default_archetype = "project_delivery"
 
     if not stacks:
         stacks.append("Generic Project")
 
-    return " + ".join(stacks), default_type
+    return " + ".join(stacks), default_type, default_archetype
 
 
 def merge_workspace_context(
@@ -87,6 +100,7 @@ def merge_workspace_context(
     hub_path: Path,
     project_type: str = "Phần mềm",
     mode: str = "hybrid",
+    archetype: str = "project_delivery",
 ) -> tuple[dict[str, Any], Path]:
     """Perform non-destructive additive merge on workspace_context.yaml.
 
@@ -121,6 +135,7 @@ def merge_workspace_context(
     )
     merged_data["project"] = {
         "name": str(project_name),
+        "archetype": current_proj.get("archetype", archetype),
         "type": current_proj.get("type", project_type),
         "mode": current_proj.get("mode", mode),
         "qc_mode": current_proj.get("qc_mode", None),
@@ -152,7 +167,7 @@ def merge_workspace_context(
         merged_data["acknowledgment_required"] = True
     if "acknowledgment_format" not in merged_data:
         merged_data["acknowledgment_format"] = (
-            f"Tôi đã đọc workspace_context.yaml. Dự án {project_name} là {project_type} (mode: {mode})."
+            f"Tôi đã đọc workspace_context.yaml. Dự án {project_name} thuộc Archetype {merged_data['project']['archetype']}, loại {project_type} (mode: {mode})."
         )
 
     # 4. Write back merged yaml with UTF-8 encoding
@@ -213,18 +228,26 @@ class SpokeAdopter:
                 "Đã có AGENTS.md tùy biến riêng (Bảo tồn nguyên vẹn, không ghi đè)."
             )
 
-        # 4. Detect Stack
-        stack_desc, default_type = detect_spoke_stack(self.spoke_root)
+        # 4. Detect Stack & Archetype (ADR 0041)
+        stack_desc, default_type, default_archetype = detect_spoke_stack(self.spoke_root)
         report.detected_stacks = [stack_desc]
         report.suggested_project_type = default_type
+        report.suggested_archetype = default_archetype
 
-        # If existing context has explicit type, prioritize it
+        # If existing context has explicit type or archetype, prioritize it
         if report.existing_context_data:
             existing_type = report.existing_context_data.get("project_type")
-            if not existing_type and isinstance(report.existing_context_data.get("project"), dict):
-                existing_type = report.existing_context_data.get("project").get("type")
+            existing_archetype = report.existing_context_data.get("archetype")
+            if isinstance(report.existing_context_data.get("project"), dict):
+                proj_dict = report.existing_context_data.get("project")
+                if not existing_type:
+                    existing_type = proj_dict.get("type")
+                if not existing_archetype:
+                    existing_archetype = proj_dict.get("archetype")
             if existing_type:
                 report.suggested_project_type = str(existing_type)
+            if existing_archetype:
+                report.suggested_archetype = str(existing_archetype)
 
         return report
 
@@ -236,7 +259,7 @@ class SpokeAdopter:
         print(f"Target Spoke Path : {report.spoke_root}")
         print(f"Detected Stack    : {', '.join(report.detected_stacks)}")
         print(
-            f"Suggested Type    : {report.suggested_project_type} (Mode: {report.suggested_mode})"
+            f"Suggested Concept : Archetype '{report.suggested_archetype}' | Type '{report.suggested_project_type}' (Mode: {report.suggested_mode})"
         )
         print(f"Git Repository    : {'✅ Có (.git)' if report.has_git else '❌ Không có'}")
         print(f"Workspace Context : {'✅ Đã có' if report.has_workspace_context else '⚠️ Chưa có'}")
@@ -307,6 +330,7 @@ exit 0
         dry_run: bool = False,
         project_type: str | None = None,
         mode: str | None = None,
+        archetype: str | None = None,
     ) -> int:
         """Execute full non-destructive adoption pipeline."""
         hub_path = self._resolve_hub()
@@ -315,6 +339,7 @@ exit 0
 
         chosen_type = project_type or report.suggested_project_type
         chosen_mode = mode or report.suggested_mode
+        chosen_archetype = archetype or report.suggested_archetype
 
         if dry_run:
             print("🚀 [DRY-RUN] Không ghi tệp. Đánh giá hoàn tất thành công.")
@@ -331,6 +356,7 @@ exit 0
             hub_path=hub_path,
             project_type=chosen_type,
             mode=chosen_mode,
+            archetype=chosen_archetype,
         )
         if backup_path.exists():
             print(f"  - Backup created: {backup_path.name}")
@@ -362,7 +388,10 @@ def adopt_project(
     dry_run: bool = False,
     project_type: str | None = None,
     mode: str | None = None,
+    archetype: str | None = None,
 ) -> int:
     """Procedural delegate for adopting a brownfield spoke."""
     adopter = SpokeAdopter(spoke_path)
-    return adopter.adopt(dry_run=dry_run, project_type=project_type, mode=mode)
+    return adopter.adopt(
+        dry_run=dry_run, project_type=project_type, mode=mode, archetype=archetype
+    )

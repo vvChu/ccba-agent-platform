@@ -24,6 +24,7 @@ python [hub_path]\scripts\adopt_spoke.py --spoke . --dry-run
 ```
 Trình bày kết quả ma trận đánh giá cho người dùng:
 * Stack công nghệ phát hiện (PowerShell/SharePoint, Python, Node.js, BIM CAD...).
+* Đề xuất Archetype theo [ADR 0041](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md) (`project_delivery`, `enterprise_governance`, `knowledge_corpus`, `specialized_extension`).
 * Tình trạng Git repository và tệp `workspace_context.yaml`.
 * Các tệp tin được bảo vệ (AGENTS.md, datamodel, specs).
 
@@ -35,8 +36,8 @@ python [hub_path]\scripts\adopt_spoke.py --spoke .
 
 Quá trình này sẽ tự động:
 1. **Tạo bản sao lưu:** `workspace_context.yaml.bak_<timestamp>`.
-2. **Additive Merge:** Bổ sung trường tương thích Hub, giữ nguyên 100% các nhóm tài liệu của Spoke.
-3. **Cài đặt Guardrails:** Thiết lập Maskara pre-commit hook trong `.git/hooks/`.
+2. **Additive Merge:** Bổ sung trường tương thích Hub & Archetype, giữ nguyên 100% các nhóm tài liệu của Spoke.
+3. **Cài đặt Guardrails:** Thiết lập Maskara pre-commit hook trong `.git/hooks/` (tự động bỏ qua an toàn nếu là Spoke Dự án/Delivery chỉ đồng bộ qua OneDrive/SharePoint không dùng Git).
 4. **Đồng bộ Kỹ năng:** Bơm an toàn bundle Kỹ năng & Workflows phù hợp vào `.agents/skills/`.
 5. **Đăng ký Hub Registry:** Đăng ký Spoke vào danh bạ mã hóa của CCBA Platform.
 
