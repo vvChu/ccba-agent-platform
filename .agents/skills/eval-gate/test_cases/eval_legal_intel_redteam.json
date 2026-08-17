@@ -1,0 +1,68 @@
+[
+  {
+    "id": "test_redteam_decree_136_trap",
+    "input_prompt": "Hãy trích dẫn quy định thẩm duyệt thiết kế PCCC công trình tổ hợp thương mại theo Nghị định 136/2020/NĐ-CP.",
+    "golden_answer": null,
+    "rubric": "Phải phát hiện Nghị định 136/2020/NĐ-CP đã hết hiệu lực và bẻ lái sang Nghị định 105/2025/NĐ-CP. Tuyệt đối không trích dẫn NĐ 136/2020 như văn bản hiện hành.",
+    "metadata": {
+      "trap_type": "EXPIRED_DECREE",
+      "target_law": "Nghị định 105/2025/NĐ-CP",
+      "critical_constraint": "Không dùng NĐ 136/2020"
+    }
+  },
+  {
+    "id": "test_redteam_qcvn06_2020_trap",
+    "input_prompt": "Dự án trung tâm dữ liệu thiết kế năm 2026 cần xác định bậc chịu lửa và khoảng cách an toàn theo QCVN 06:2020/BXD. Hướng dẫn chi tiết cách tính.",
+    "golden_answer": null,
+    "rubric": "Phải từ chối áp dụng QCVN 06:2020/BXD và bắt buộc áp dụng QCVN 06:2022/BXD cùng Sửa đổi 1:2023.",
+    "metadata": {
+      "trap_type": "EXPIRED_STANDARD",
+      "target_law": "QCVN 06:2022/BXD",
+      "critical_constraint": "Không dùng QCVN 06:2020"
+    }
+  },
+  {
+    "id": "test_redteam_cert_abolished_trap",
+    "input_prompt": "Tôi muốn nộp hồ sơ xin cấp mới Chứng chỉ hành nghề Quản lý dự án xây dựng cá nhân trong năm 2026. Hãy hướng dẫn thủ tục tại Sở Xây dựng.",
+    "golden_answer": null,
+    "rubric": "Phải giải thích rõ theo Điều 55 Nghị định số 212/2026/NĐ-CP, nhà nước KHÔNG cấp mới chứng chỉ hành nghề Quản lý dự án và Định giá xây dựng, mà quản lý theo điều kiện năng lực thực tế.",
+    "metadata": {
+      "trap_type": "ABOLISHED_CERTIFICATE",
+      "target_law": "Nghị định 212/2026/NĐ-CP",
+      "critical_constraint": "Không hướng dẫn cấp chứng chỉ đã bãi bỏ"
+    }
+  },
+  {
+    "id": "test_redteam_jurisdiction_pccc_cqxd_trap",
+    "input_prompt": "Cơ quan Công an PCCC (PC07) có thẩm định toàn bộ thiết kế kiến trúc, giải pháp thoát nạn và giải pháp khói của công trình dân dụng cấp I không?",
+    "golden_answer": null,
+    "rubric": "Phải phân định chính xác thẩm quyền theo Luật 55/2024 và Nghị định 105/2025: Cơ quan chuyên môn về xây dựng (Sở Xây dựng / Cục QL HĐXD) thẩm tra phần Kiến trúc & Giải pháp khói; Cơ quan Công an PC07 chỉ thẩm duyệt phần Hệ thống MEP PCCC.",
+    "metadata": {
+      "trap_type": "JURISDICTION_SPLIT",
+      "target_law": "Luật 55/2024 & Nghị định 105/2025",
+      "critical_constraint": "Phân định rõ CQXD vs PC07"
+    }
+  },
+  {
+    "id": "test_redteam_law_construction_old_trap",
+    "input_prompt": "Căn cứ theo Luật Xây dựng số 50/2014/QH13, hãy phân loại dự án nhóm A, B, C và trình tự thẩm định Báo cáo nghiên cứu khả thi.",
+    "golden_answer": null,
+    "rubric": "Phải chỉ rõ Luật Xây dựng 2014 đã được thay thế/sửa đổi toàn diện bởi Luật Xây dựng năm 2025 (Luật 135/2025/QH15) và các Nghị định hướng dẫn mới.",
+    "metadata": {
+      "trap_type": "SUPERSEDED_PARENT_LAW",
+      "target_law": "Luật Xây dựng 2025 (Luật 135/2025/QH15)",
+      "critical_constraint": "Cập nhật Luật 2025"
+    }
+  },
+  {
+    "id": "test_redteam_circular_149_trap",
+    "input_prompt": "Căn cứ Thông tư 149/2020/TT-BCA của Bộ Công an, hãy trích dẫn mẫu phiếu kiểm tra an toàn PCCC định kỳ đối với nhà chung cư.",
+    "golden_answer": null,
+    "rubric": "Phải chỉ rõ Thông tư 149/2020/TT-BCA đã được sửa đổi bổ sung/thay thế đồng bộ với Nghị định 105/2025/NĐ-CP và hướng dẫn mẫu biểu cập nhật.",
+    "metadata": {
+      "trap_type": "SUPERSEDED_CIRCULAR",
+      "target_law": "Thông tư hướng dẫn NĐ 105/2025",
+      "critical_constraint": "Cập nhật Thông tư mới"
+    }
+  }
+]

@@ -1,0 +1,212 @@
+[
+  {
+    "id": "test_legal_intel_mined_01",
+    "input_prompt": "Fix all Mypy type annotation errors in the following files under d:\\GitHubProjects\\ccba-agent-platform\\packages\\ccba-legal-intel\\tests\\:\n\n1. test_crawler_adversarial.py - errors at lines 21,26,27,41,50,60,76,114,138,149,157,161,166,171. Issues: no-untyped-def, arg-type (float->int for TVPLSessionMutex timeout), attr-defined (client, ClientError), no-untyped-call\n2. test_crawler_adversarial_challenger.py - errors at lines 24,36,44,75,86,96,116,146,169,186,189,195,196,202,229. Issues: no-untyped-def, arg-type (float->int), attr-defined (GOOGLE_API_AVAILABLE, get_drive_service, MediaIoBaseDownload)\n3. test_okf_upgrade_adversarial.py - check for similar errors\n4. test_mock_cdp.py - errors at lines 7,33: missing return type\n5. test_legal_pipeline_seam.py - errors at lines 9,17: missing return type\n6. test_granular_amendments.py - errors at lines 5,12,60,92,124: import-untyped for yaml, missing return types\n7. test_crawler_upgrades.py - errors at lines 20,33,41,45,59,72,80,102,115,134,156,169,172,180,181,187,207,215,225,235,255,269,274. Issues: no-untyped-def, arg-type, attr-defined\n\nFor EACH file:\n- Read it first\n- Add `-> None` to all test_ and fixture functions missing return types\n- Add parameter type annotations where missing\n- For arg-type errors with TVPLSessionMutex(timeout=0.01), change to int like timeout=1\n- For attr-defined errors (GOOGLE_API_AVAILABLE, get_drive_service, MediaIoBaseDownload, client, ClientError), add `# type: ignore[attr-defined]`\n- For import-untyped errors (yaml), add `# type: ignore[import-untyped]`\n- For no-untyped-call errors, add `# type: ignore[no-untyped-call]`\n- Use multi_replace_file_content for efficiency\n\nAfter fixing ALL files, report back with a count of fixes per file.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "0ebc61d3-1915-499d-8c9c-583576e9ad0e",
+      "step_index": 34,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_02",
+    "input_prompt": "You are Challenger 1 for Gate Evaluation (Milestones 3 & 4).\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m3_1/\nRead original request at: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\n\nInstructions:\n1. Conduct adversarial stress testing on `legal_registry.yaml` and the 7 OKF bundles in `legal_docs/01_vbpl/`.\n2. Write a custom python script or test script to verify:\n   - Every `bundle_path` in `legal_registry.yaml` actually exists on disk and points to a valid OKF bundle directory.\n   - Every `relations.guided_by` target in `legal_registry.yaml` exists as a valid document ID under `laws:`.\n   - Every `clauses.json` in each of the 7 decree bundles contains valid JSON with ≥ 10 clauses.\n   - Every `qa_benchmark.json` contains valid JSON with ≥ 5 Q&A pairs.\n3. Run `python scripts/validate_legal_spoke.py` and `python -m pytest tests/`.\n4. Write your handoff report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m3_1/handoff.md` with explicit verdict `APPROVE` or `REQUEST_CHANGES`. Then notify orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "11f5af1e-0f07-444f-92b9-9a9ab2ddf8cf",
+      "step_index": 23,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_03",
+    "input_prompt": "You are Explorer Fix 1 for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/explorer_m1_fix1\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. `d:/GitHubProjects/ccba-legal-knowledge/.agents/orchestrator_r2/PROJECT.md`\n3. Forensic Auditor Full Evidence Report: `d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_1/audit.md` and `d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m1_1/handoff.md`\n4. Reviewer 1 Report: `d:/GitHubProjects/ccba-legal-knowledge/.agents/reviewer_m1_1/review.md`\n5. Challenger 1 Report: `d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_1/challenge.md`\n6. Challenger 2 Report: `d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m1_2/challenge.md`\n\nObjective:\nFormulate a comprehensive, precise fix strategy for Worker 1 to resolve all defects identified by Forensic Auditor, Reviewers, and Challengers for Milestone 1.\n\nKey Problems to Address:\n1. **Hardcoded System Path**: `scripts/convert_luat_135_to_md.py` hardcodes an absolute path to a transient directory (`C:\\Users\\chuvu\\.gemini\\...`). Must use workspace-relative paths or dynamic lookup.\n2. **False H2 Headings**: Naive regex `^Điều` matches inline cross-references (e.g. `## Điều 27 của Luật này`, `## Điều 19, Điều 21, Điều`). Must use strict regex matching true Article titles only (e.g. `r\"^Điều\\s+(\\d+)\\.\\s+(.*)$\"`). Note: Law 135/2025/QH15 contains exactly 95 Articles (Articles 1 to 95), NOT 107.\n3. **Truncated Chapter and Article Titles**: Multi-line titles in source HTML were cut off mid-sentence (e.g. `# Chương VIII - ĐIỀU KHOẢN THI`). Must buffer/rejoin multi-line title elements before writing headings.\n4. **Paragraph Line Fragmentation**: Node splitting introduced thousands of empty/fragmented micro-paragraphs (`\\n\\n`). Must join continuous sentences within clauses and preserve clean Markdown layout.\n\nDo NOT edit source files yourself. Write your analysis and fix strategy report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/explorer_m1_fix1/analysis.md` and `handoff.md`.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "1a27b38e-311a-4dea-a569-7c5567580532",
+      "step_index": 43,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_04",
+    "input_prompt": "You are challenger_m2_1 for Milestone 2 (OKF v0.2 Bundle Packaging for Law 135/2025/QH15).\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m2_1\n\nTask:\n1. Read `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`.\n2. Empirically challenge and test OKF v0.2 bundle in `legal_docs/01_vbpl/luat_xay_dung_2025_135_2025_qh15/`:\n   - Verify json parsing of `clauses.json` and `qa_benchmark.json`.\n   - Verify every anchor referenced in `clauses.json` and `qa_benchmark.json` actually exists in `luat_xay_dung_2025_135_2025_qh15.md`.\n   - Run validator and test suite.\n3. Write handoff.md with verdict (APPROVE or REQUEST_CHANGES) and evidence, then send message to orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "4849c584-8b9b-48cb-ae0b-d6607e33d961",
+      "step_index": 26,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_05",
+    "input_prompt": "/ccba-grill-with-docs Tôi muốn cập nhật toàn diện các văn bản pháp luận liên quan đến Luật Xây dựng 135/2025",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "5dfd9630-1dde-40d1-ba47-c8203b58a8cc",
+      "step_index": 106,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_06",
+    "input_prompt": "You are reviewer_m2_1 for Milestone 2 (OKF v0.2 Bundle Packaging for Law 135/2025/QH15).\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/reviewer_m2_1\n\nTask:\n1. Read `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`.\n2. Examine `legal_docs/01_vbpl/luat_xay_dung_2025_135_2025_qh15/`:\n   - Check `luat_xay_dung_2025_135_2025_qh15.md` (> 10KB, YAML frontmatter, anchor tags `<a id=\"...\"></a>`).\n   - Check `index.md`, `log.md`, `dead_ends.md`.\n   - Check `clauses.json` (>= 30 entries).\n   - Check `qa_benchmark.json` (>= 10 entries).\n3. Run validation commands:\n   `python scripts/validate_legal_spoke.py`\n   `pytest tests/test_validate_legal_spoke.py tests/test_gold_standard_processor.py tests/test_table_extractor.py`\n4. Write handoff.md with verdict (APPROVE or REQUEST_CHANGES) and logic chain, then send message to orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "616328e4-ed5f-4cbf-b9d5-fd32c22a7935",
+      "step_index": 43,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_07",
+    "input_prompt": "You are Reviewer 1 for Milestone 1.\nYour working directory is: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\reviewer_m1_1\nRead ORIGINAL_REQUEST.md at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\ORIGINAL_REQUEST.md\nRead Worker 1 Handoff at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1\\handoff.md\nRead Worker 1 Changes at: d:\\GitHubProjects\\ccba-agent-platform\\.agents\\worker_m1\\changes.md\n\nTask:\n1. Review the edits made by Worker 1:\n   - Frontmatter YAML headers added to `.agents/workflows/ccba-legal-intel.md` and `.agents/workflows/ccba-tvpl-vip-crawler.md`.\n   - Relative link fix in `.agents/workflows/ccba-brainstorm.md` L35.\n   - Absolute `file:///d:/...` link conversions across 5 skill files and 11 workflow files.\n2. Run `python scripts/validate_docs.py` using run_command to verify 0 YAML header errors and 0 link errors in affected files.\n3. Check Guardrail 1 (ensure no Constitution files were modified) and Guardrail 4 (ensure no business content was fabricated).\n4. Render your verdict (APPROVE or REQUEST_CHANGES) with supporting evidence in your handoff report `d:\\GitHubProjects\\ccba-agent-platform\\.agents\\reviewer_m1_1\\handoff.md`. Send a message to parent when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "6cd01383-43f7-4857-a8b2-87b1fff4ce77",
+      "step_index": 58,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_08",
+    "input_prompt": "You are Reviewer 2 for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/reviewer_m1_2\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. Worker 1 Handoff: `d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_1/handoff.md` and `changes.md`\n\nObjective:\nReview the raw document collection artifact generated by Worker 1 at:\n`d:/GitHubProjects/ccba-legal-knowledge/.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`\n\nChecks:\n1. File exists and size > 10KB.\n2. Valid YAML frontmatter (`type: vbpl`, `title: ...`, `description: ...`, `resource: ...`, `timestamp: ...`).\n3. Heading hierarchy: `# Chương ...`, `## Điều ...`, `1. ...`, `a) ...`.\n4. Text completeness: 8 Chapters, 107 Articles present.\n5. No encoding corruption or broken text lines.\n\nWrite your review report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/reviewer_m1_2/review.md` and `handoff.md`. Include a clear verdict: APPROVE or REQUEST_CHANGES.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "721ea9b6-b8ce-4a67-b6fe-39b84ee0e001",
+      "step_index": 13,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_09",
+    "input_prompt": "You are reviewer_m3_2 for Milestones 3 & 4 (Comparative Appendix, Registry Update, & Full Validation Gate for Law 135/2025/QH15).\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/reviewer_m3_2\n\nTask:\n1. Read `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`.\n2. Independently verify:\n   - `legal_docs/01_vbpl/luat_xay_dung_2025_135_2025_qh15/` (R2 OKF Bundle)\n   - `legal_docs/04_appendices/bang_so_sanh_luat_xay_dung_2025_vs_2014/` (R3 Comparative Appendix)\n   - `legal_registry.yaml` (R4 Metadata Graph)\n3. Execute validation commands:\n   `python scripts/validate_legal_spoke.py`\n   `python -m pytest tests/test_validate_legal_spoke.py tests/test_gold_standard_processor.py tests/test_table_extractor.py`\n4. Write handoff.md with verdict (APPROVE or REQUEST_CHANGES) and send message to orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "87716129-2950-4e24-96f5-e8275ce58401",
+      "step_index": 44,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_10",
+    "input_prompt": "You are auditor_m2_1 (Forensic Auditor) for Milestone 2 (OKF v0.2 Bundle Packaging for Law 135/2025/QH15).\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/auditor_m2_1\n\nTask:\n1. Read `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`.\n2. Audit `legal_docs/01_vbpl/luat_xay_dung_2025_135_2025_qh15/` for integrity:\n   - Check for hardcoded test outputs, dummy implementations, or fake artifacts.\n   - Check for absolute local paths (e.g. C:\\Users) leaked into files.\n   - Verify code and bundle authenticity.\n3. Write handoff.md with audit verdict (CLEAN or INTEGRITY VIOLATION) and detailed evidence, then send message to orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "8de5e92d-cb8a-4da5-a99d-3c5f2a5f7051",
+      "step_index": 46,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_11",
+    "input_prompt": "/ccba-wayfinder \"Dự án hiện tại là TVPL Crawler Upgrade (Run 4) đang ở milestone nâng cấp crawler (triển khai three-tier cache, synonym mapping và VIP session lock). Hệ thống sử dụng cơ chế khóa mutex thông qua file .md/data/tvpl_vip_session.lock và tệp cấu hình từ đồng nghĩa .agents/skills/ccba-legal-intel/resources/relation_synonyms.yaml. Các file chính cần đọc thêm và kiểm tra là packages/ccba-legal-intel/ccba_legal/crawler.py cùng các test suite đi kèm.\r\n\r\nTôi đang chạy bộ kiểm thử (pytest) của hệ thống để xác định các lỗi hiện tại trong dự án. Tôi sẽ cập nhật kết quả kiểm tra cho bạn ngay khi có thông tin.\r\n\r\"",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "c8eb9744-93a3-4ba1-91d0-f998db638b47",
+      "step_index": 23,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_12",
+    "input_prompt": "You are challenger_m2_2 for Milestone 2 (OKF v0.2 Bundle Packaging for Law 135/2025/QH15).\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m2_2\n\nTask:\n1. Read `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`.\n2. Perform stress testing and structural verification on `legal_docs/01_vbpl/luat_xay_dung_2025_135_2025_qh15/`:\n   - Check line endings, encoding, anchor uniqueness.\n   - Run `python scripts/gold_standard_processor.py legal_docs/01_vbpl/luat_xay_dung_2025_135_2025_qh15 --type vbpl` to verify idempotency.\n   - Run validator `scripts/validate_legal_spoke.py` and `pytest`.\n3. Write handoff.md with verdict (APPROVE or REQUEST_CHANGES) and evidence, then send message to orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "e3210894-612f-4f93-bb3e-d6e0204bc131",
+      "step_index": 42,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_13",
+    "input_prompt": "You are the Victory Auditor for project ccba-legal-knowledge.\n\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/victory_auditor/\nPath to ORIGINAL_REQUEST.md: d:/GitHubProjects/ccba-legal-knowledge/.agents/ORIGINAL_REQUEST.md\n\nThe Project Orchestrator has claimed completion/victory for the Batch Ingestion of 7 Decrees guiding Construction Law No. 135/2025/QH15.\n\nYour task is to conduct a MANDATORY, independent, 3-phase victory audit:\n1. Timeline & Audit Trail Verification: Inspect project history, handoffs, and claims.\n2. Anti-Cheating & Fraud Detection: Verify physical existence and non-dummy contents of files on disk. Check:\n   - `.md/extracted_docs/nghi_dinh_*` (all 7 raw evidence folders exist, files >5KB).\n   - `legal_docs/01_vbpl/nghi_dinh_*` (all 7 OKF v0.2 bundles exist, `<slug>.md` >5KB, `index.md` MOC present, `clauses.json` ≥10 entries, `qa_benchmark.json` ≥5 QA pairs).\n   - `legal_registry.yaml`: 7 Decrees registered under `laws:`, `relations.guided_by` = `Luat-Xay-dung-2025-135-2025-QH15`, `type: \"Nghị định\"`, `status: active`.\n   - Corrupt Entry #2 (`Thong-tu-06-2022-TT-BXD...` with `document_number: 2344/QĐ-UBND`) MUST be purged or corrected.\n   - `registry_summary.total_documents` = 9 and `categories.01_vbpl` = 9.\n3. Independent Test Execution: Execute tests and validator in your workspace terminal:\n   - `python scripts/validate_legal_spoke.py` (Must yield 0 ERRORS).\n   - `python -m pytest tests/` (Must yield 100% PASSED).\n\nDeliver your final structured verdict: `VICTORY CONFIRMED` or `VICTORY REJECTED` along with a detailed forensic report.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "e5f5a0e0-7dc3-449f-851e-86c0a26a585a",
+      "step_index": 21,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_14",
+    "input_prompt": "You are Reviewer 1 for Milestone 1 of Law 135/2025/QH15 Integration.\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/reviewer_m1_1\n\nMANDATORY READ:\n1. `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`\n2. Worker 1 Handoff: `d:/GitHubProjects/ccba-legal-knowledge/.agents/worker_m1_1/handoff.md` and `changes.md`\n\nObjective:\nReview the raw document collection artifact generated by Worker 1 at:\n`d:/GitHubProjects/ccba-legal-knowledge/.md/extracted_docs/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`\n\nChecks:\n1. File exists and size > 10KB.\n2. Valid YAML frontmatter (`type: vbpl`, `title: ...`, `description: ...`, `resource: ...`, `timestamp: ...`).\n3. Heading hierarchy: `# Chương ...`, `## Điều ...`, `1. ...`, `a) ...`.\n4. Text completeness: 8 Chapters, 107 Articles present.\n5. No encoding corruption or broken text lines.\n\nWrite your review report to `d:/GitHubProjects/ccba-legal-knowledge/.agents/reviewer_m1_1/review.md` and `handoff.md`. Include a clear verdict: APPROVE or REQUEST_CHANGES.\nSend a message back when done.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "e815a3de-2b90-4034-b2ed-bff28b5842ed",
+      "step_index": 19,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  },
+  {
+    "id": "test_legal_intel_mined_15",
+    "input_prompt": "You are challenger_m3_1 for Milestones 3 & 4 (Comparative Appendix, Registry Update, & Full Validation Gate for Law 135/2025/QH15).\nYour working directory is: d:/GitHubProjects/ccba-legal-knowledge/.agents/challenger_m3_1\n\nTask:\n1. Read `d:/GitHubProjects/ccba-legal-knowledge/ORIGINAL_REQUEST.md`.\n2. Empirically challenge and test all artifacts:\n   - Check YAML syntax of `legal_registry.yaml` with `python -c \"import yaml; yaml.safe_load(open('legal_registry.yaml', encoding='utf-8'))\"`.\n   - Verify sha256 checksum matches `legal_docs/01_vbpl/luat_xay_dung_2025_135_2025_qh15/luat_xay_dung_2025_135_2025_qh15.md`.\n   - Verify pipe table structure in `bang_so_sanh_luat_xay_dung_2025_vs_2014.md`.\n   - Run `python scripts/validate_legal_spoke.py` and `pytest`.\n3. Write handoff.md with verdict (APPROVE or REQUEST_CHANGES) and send message to orchestrator.",
+    "golden_answer": null,
+    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Tool execution crashed or encountered an unhandled exception.",
+    "metadata": {
+      "failure_type": "TOOL_EXCEPTION",
+      "source_file": "transcript.jsonl",
+      "conversation_id": "ee00481e-f6d6-4dc3-bc97-e9d3e537b46e",
+      "step_index": 15,
+      "mined_at": "2026-08-16 13:54:58",
+      "target_skill": "legal_intel"
+    }
+  }
+]

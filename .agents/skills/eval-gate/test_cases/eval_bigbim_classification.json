@@ -1,0 +1,322 @@
+[
+  {
+    "id": "test_bigbim_domain_01",
+    "input_prompt": "Hãy thực hiện phân loại thực thể và đặt tên vùng không gian cho 'Phòng đọc sách đa phương tiện số 02 tại Tầng 3 Tòa nhà Thư viện Trung tâm (Mã dự án: HUB-LIB, Tòa B1)' theo chuẩn ISO 19650 và bảng Uniclass 200.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_25_10_72",
+      "iso_19650_naming": "HUB-LIB-B1-L03-SL_25_10_72-002",
+      "iso_12006_layer": "Result (Spaces)"
+    },
+    "rubric": "Must map correctly to Uniclass SL table (Spaces/locations), generate compliant ISO 19650 container name, and map to ISO 12006-2 Result.",
+    "metadata": {
+      "discipline": "Architecture / Room Naming",
+      "uniclass_table": "SL",
+      "standard": "ISO 19650 / ISO 12006-2"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_02",
+    "input_prompt": "Phân loại cấu kiện 'Cột bê tông cốt thép đổ tại chỗ kích thước 600x800mm mác B35 chịu lực chính tầng 1' theo bảng Uniclass 200 và cấu trúc phân tầng ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_10_15",
+      "title_vi": "Cột chịu lực bê tông cốt thép",
+      "iso_12006_layer": "Result (Elements)"
+    },
+    "rubric": "Must classify as Uniclass Elements (EF_20) or Products (Pr), identify as ISO 12006-2 Result layer, and preserve structural hierarchy.",
+    "metadata": {
+      "discipline": "Structural Engineering",
+      "uniclass_table": "EF",
+      "standard": "ISO 12006-2 / ISO 22274"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_03",
+    "input_prompt": "Thiết lập phân loại và đặt tên theo tuyến hạ tầng cho 'Móng mố cầu dẫn trụ P04 tại lý trình KM 15+350 của Dự án Đường Cao Tốc Bắc Nam (Tuyến CT01)' theo chuẩn IFC Alignment và Uniclass EF.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_10",
+      "ifc_alignment_naming": "CT01-KM015_350-P04-EF_20_10",
+      "project_type": "Infrastructure"
+    },
+    "rubric": "Must apply linear infrastructure naming convention with IFC Alignment coordinates and Uniclass EF element code.",
+    "metadata": {
+      "discipline": "Infrastructure / GIS",
+      "uniclass_table": "EF",
+      "standard": "IFC4X3 / ISO 19650"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_04",
+    "input_prompt": "Phân loại hệ thống 'Hệ thống điều hòa không khí lưu lượng môi chất biến đổi VRV trung tâm phục vụ khối văn phòng' sang bảng Uniclass Hệ thống (Ss) và xác định quan hệ với bảng Sản phẩm (Pr).",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_60_40_36",
+      "title_vi": "Hệ thống điều hòa không khí VRF/VRV",
+      "iso_12006_layer": "Result (Systems)"
+    },
+    "rubric": "Must distinguish Systems (Ss) from Products (Pr), assigning Ss_60 (Building services systems) correctly.",
+    "metadata": {
+      "discipline": "MEP / HVAC",
+      "uniclass_table": "Ss",
+      "standard": "ISO 12006-2 / Uniclass 200"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_05",
+    "input_prompt": "Phân loại thiết bị 'Máy bơm ly tâm trục đứng cấp nước sinh hoạt công suất 15kW lưu lượng 45m3/h' theo bảng Uniclass Sản phẩm (Pr) và phân định lớp ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_60_65_62",
+      "title_vi": "Máy bơm cấp nước ly tâm",
+      "iso_12006_layer": "Resource / Product"
+    },
+    "rubric": "Must classify under Uniclass Pr (Products) instead of Ss (Systems) and map to ISO 12006-2 Resource/Product layer.",
+    "metadata": {
+      "discipline": "MEP / Plumbing",
+      "uniclass_table": "Pr",
+      "standard": "ISO 12006-2 / ISO 22274"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_06",
+    "input_prompt": "Xác định mã phân loại thực thể công trình (En) cho 'Bệnh viện đa khoa quy mô 500 giường bệnh bao gồm khu khám, điều trị nội trú và cấp cứu' theo Uniclass 200 Entities.",
+    "golden_answer": {
+      "uniclass_table": "Entities (En)",
+      "uniclass_code": "En_30_20_36",
+      "title_vi": "Công trình bệnh viện đa khoa",
+      "iso_12006_layer": "Result (Entities)"
+    },
+    "rubric": "Must classify under Uniclass En table (Entities) for health care buildings.",
+    "metadata": {
+      "discipline": "Architecture / Healthcare",
+      "uniclass_table": "En",
+      "standard": "Uniclass 200 / ISO 12006-2"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_07",
+    "input_prompt": "Phân loại cấu kiện và đặt tên container không gian cho 'Buồng thang bộ thoát nạn chống nhiễm khói N1 tại Tầng 5 Tòa Tháp Văn Phòng (Mã: TWR-A, Dự án: SKY-PARK)' theo QCVN 06:2022/BXD và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_25_30_80",
+      "iso_19650_naming": "SKY-PARK-TWR-A-L05-SL_25_30_80-001",
+      "pccc_compliance": "Buồng thang N1 chống nhiễm khói"
+    },
+    "rubric": "Must apply SL table for escape stairs and generate compliant ISO 19650 room container name.",
+    "metadata": {
+      "discipline": "PCCC / Architecture",
+      "uniclass_table": "SL",
+      "standard": "ISO 19650 / QCVN 06:2022"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_08",
+    "input_prompt": "Phân loại hệ thống 'Hệ thống chữa cháy tự động bằng khí FM-200 (HFC-227ea) bảo vệ phòng máy chủ Data Center' theo bảng Uniclass Ss và kiểm tra liên kết IFC Entity.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_55_30_30",
+      "ifc_entity": "IfcFireSuppressionTerminal / IfcSystem",
+      "title_vi": "Hệ thống chữa cháy khí sạch"
+    },
+    "rubric": "Must classify under Uniclass Ss_55 (Fire suppression systems) and align with IFC4X3 fire protection entities.",
+    "metadata": {
+      "discipline": "PCCC / MEP",
+      "uniclass_table": "Ss",
+      "standard": "IFC4X3 / ISO 12006-2"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_09",
+    "input_prompt": "Phân loại vật tư 'Cáp điện ngầm 3 pha 4 lõi bọc giáp đồng cách điện XLPE vỏ PVC chống cháy Cu/XLPE/PVC/DSTA/FR-PVC 4x240mm2' theo bảng Uniclass Pr.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_65_70_11",
+      "title_vi": "Cáp điện lực hạ thế bọc giáp chống cháy",
+      "iso_12006_layer": "Resource (Products)"
+    },
+    "rubric": "Must identify as Uniclass Pr (Products) under electrical cables and wire products.",
+    "metadata": {
+      "discipline": "Electrical / Materials",
+      "uniclass_table": "Pr",
+      "standard": "ISO 12006-2 / ISO 22274"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_10",
+    "input_prompt": "Thiết lập phân rã WBS cấp 3 và phân loại 'Hệ kết cấu mái dàn thép không gian vượt nhịp 45m của Cung thể thao trong nhà' theo chuẩn ISO 21511 và Uniclass EF.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_30_10",
+      "wbs_level": "Level 3 - Roof Structural System",
+      "title_vi": "Kết cấu dàn thép không gian mái"
+    },
+    "rubric": "Must combine ISO 21511 WBS level assignment with Uniclass EF_30 (Roof elements).",
+    "metadata": {
+      "discipline": "Structural / WBS",
+      "uniclass_table": "EF",
+      "standard": "ISO 21511 / ISO 12006-2"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_11",
+    "input_prompt": "Phân loại 'Tường vây bê tông cốt thép Barrette dày 1000mm sâu 35m phục vụ giữ hố đào sâu 4 tầng hầm' theo Uniclass EF và xác định lớp đối tượng ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_05_70",
+      "title_vi": "Tường vây hố đào Barrette",
+      "iso_12006_layer": "Result (Substructure Elements)"
+    },
+    "rubric": "Must classify under Uniclass EF (Substructure/retaining elements) and distinguish from temporary processes.",
+    "metadata": {
+      "discipline": "Geotechnical / Structural",
+      "uniclass_table": "EF",
+      "standard": "ISO 12006-2"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_12",
+    "input_prompt": "Phân loại 'Phòng mổ phẫu thuật vô trùng áp lực dương số 03 tại Tầng 4 Khối Nhà Ngoại Khoa (Mã: SURG, Dự án: HOSP-DN)' theo chuẩn Uniclass SL và cấu trúc container ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_30_20_58",
+      "iso_19650_naming": "HOSP-DN-SURG-L04-SL_30_20_58-003",
+      "title_vi": "Phòng mổ phẫu thuật sạch"
+    },
+    "rubric": "Must map to cleanroom/operating theater SL code and construct valid ISO 19650 container string.",
+    "metadata": {
+      "discipline": "Healthcare / Architecture",
+      "uniclass_table": "SL",
+      "standard": "ISO 19650 / Uniclass 200"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_13",
+    "input_prompt": "Phân loại 'Van ngăn cháy và khói truyền động động cơ điện 24V DC tích hợp cầu chì nhiệt 72°C kích thước 800x500mm' theo bảng Uniclass Pr và kiểm tra liên kết hệ thống Ss.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_60_70_23",
+      "parent_system": "Ss_65_40_33 (Hệ thống kiểm soát khói)",
+      "title_vi": "Van ngăn cháy và kiểm soát khói"
+    },
+    "rubric": "Must classify as Uniclass Pr (Fire dampers) and identify parent smoke control system (Ss).",
+    "metadata": {
+      "discipline": "MEP / Fire Damper",
+      "uniclass_table": "Pr",
+      "standard": "ISO 12006-2 / QCVN 06:2022"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_14",
+    "input_prompt": "Phân loại 'Khu phức hợp Trung tâm Thương mại, Căn hộ Cao cấp và Khách sạn 5 sao quy mô 3 tòa tháp (Mã dự án: VIN-GRAND)' sang bảng Uniclass Khu phức hợp (Co).",
+    "golden_answer": {
+      "uniclass_table": "Complexes (Co)",
+      "uniclass_code": "Co_25_10_55",
+      "title_vi": "Tổ hợp thương mại - dịch vụ - nhà ở",
+      "iso_12006_layer": "Result (Complexes)"
+    },
+    "rubric": "Must assign Uniclass Co (Complexes) table for mixed-use multi-tower development.",
+    "metadata": {
+      "discipline": "Master Planning",
+      "uniclass_table": "Co",
+      "standard": "Uniclass 200 / ISO 12006-2"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_15",
+    "input_prompt": "Phân loại cấu kiện tuyến hạ tầng 'Cống hộp đôi bê tông cốt thép đúc sẵn kích thước 2x(3.0x2.5m) tại lý trình KM 04+120 Tuyến tránh Đô thị' theo chuẩn IFC Alignment và Uniclass EF.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_50_10_20",
+      "ifc_alignment_naming": "TTRANH-KM004_120-CH01-EF_50_10_20",
+      "title_vi": "Cống hộp thoát nước ngang đường"
+    },
+    "rubric": "Must apply linear infrastructure GIS/IFC Alignment naming and Uniclass EF drainage element code.",
+    "metadata": {
+      "discipline": "Infrastructure / Drainage",
+      "uniclass_table": "EF",
+      "standard": "IFC4X3 / ISO 19650"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_16",
+    "input_prompt": "Phân loại 'Cửa đi 2 cánh thép chống cháy 120 phút (EI120) kích thước 1200x2200mm lắp tay co thủy lực và thanh thoát hiểm' theo Uniclass Pr và kiểm định tiêu chuẩn chống cháy.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_30_59_24",
+      "fire_rating": "EI 120",
+      "title_vi": "Cửa thép chống cháy mở quay"
+    },
+    "rubric": "Must classify under Uniclass Pr (Fire door assemblies) with EI 120 fire performance property.",
+    "metadata": {
+      "discipline": "Architecture / PCCC",
+      "uniclass_table": "Pr",
+      "standard": "ISO 12006-2 / QCVN 06:2022"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_17",
+    "input_prompt": "Phân loại 'Hệ thống pin năng lượng mặt trời áp mái công suất 250kWp hòa lưới điện tòa nhà' theo bảng Uniclass Hệ thống (Ss) và phân tích WBS.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_70_10_70",
+      "wbs_level": "Level 3 - Renewable Energy System",
+      "title_vi": "Hệ thống phát điện quang điện mặt trời (PV)"
+    },
+    "rubric": "Must assign Uniclass Ss_70 (Renewable electrical generation systems) and map to WBS structure.",
+    "metadata": {
+      "discipline": "Electrical / Renewable",
+      "uniclass_table": "Ss",
+      "standard": "ISO 21511 / Uniclass 200"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_18",
+    "input_prompt": "Phân loại 'Vật liệu kính hộp 2 lớp dán an toàn Low-E dày 24mm (6Low-E + 12Argon + 6Clear) hệ số SHGC 0.35' theo Uniclass Pr và ISO 12006-2 Resources.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_25_71_36",
+      "iso_12006_layer": "Resource (Glazing Products)",
+      "title_vi": "Kính hộp cách nhiệt an toàn Low-E"
+    },
+    "rubric": "Must classify as Uniclass Pr under glazing units and link to ISO 12006-2 Resources.",
+    "metadata": {
+      "discipline": "Facade / Architecture",
+      "uniclass_table": "Pr",
+      "standard": "ISO 12006-2 / ISO 22274"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_19",
+    "input_prompt": "Thiết lập phân loại và đặt tên cho 'Phòng máy biến áp khô 22/0.4kV công suất 2x2000kVA tại Tầng hầm B1 Tòa nhà Trụ sở Ngân hàng (Mã: BANK-HQ, Tòa T1)' theo ISO 19650 và Uniclass SL.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_70_20_88",
+      "iso_19650_naming": "BANK-HQ-T1-B01-SL_70_20_88-001",
+      "title_vi": "Phòng máy biến áp hạ thế"
+    },
+    "rubric": "Must classify under electrical utility space SL code and generate valid ISO 19650 naming format.",
+    "metadata": {
+      "discipline": "Electrical / Space Naming",
+      "uniclass_table": "SL",
+      "standard": "ISO 19650 / Uniclass 200"
+    }
+  },
+  {
+    "id": "test_bigbim_domain_20",
+    "input_prompt": "Phân loại 'Hệ thống hút khói sự cố hành lang và tạo áp buồng thang bộ sử dụng quạt ly tâm chịu nhiệt 300°C/2h' theo Uniclass Ss và QCVN 06:2022/BXD.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_65_40_33",
+      "title_vi": "Hệ thống kiểm soát khói và tạo áp cầu thang",
+      "pccc_standard": "QCVN 06:2022 Phụ lục D"
+    },
+    "rubric": "Must assign Uniclass Ss_65 smoke extraction system and reference fire safety compliance.",
+    "metadata": {
+      "discipline": "PCCC / Smoke Control",
+      "uniclass_table": "Ss",
+      "standard": "QCVN 06:2022 / Uniclass 200"
+    }
+  }
+]
