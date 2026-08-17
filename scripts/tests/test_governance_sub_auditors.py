@@ -236,7 +236,9 @@ disable-model-invocation: true
         skill_dir = self.root / ".agents" / "skills" / "cache-skill"
         skill_scripts = skill_dir / "scripts"
         skill_scripts.mkdir(parents=True)
-        (skill_scripts / "worker.py").write_text("class UniqueSkillWorker: pass\n", encoding="utf-8")
+        (skill_scripts / "worker.py").write_text(
+            "class UniqueSkillWorker: pass\n", encoding="utf-8"
+        )
 
         skill_md = skill_dir / "SKILL.md"
         skill_md.write_text("# Cache Skill\nUse `UniqueSkillWorker` here.\n", encoding="utf-8")
