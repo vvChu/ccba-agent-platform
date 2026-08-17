@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-08-17] [synthesize] | Chuẩn Hóa Toàn Trình 4 Workflows Spoke & Archetype-Aware Setup Skills (ADR 0041)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-session-retrospective)
+- **Affected Files**: `.agents/workflows/ccba-init-spoke.md`, `.agents/workflows/ccba-adopt-spoke.md`, `.agents/workflows/ccba-update-spoke.md`, `.agents/workflows/ccba-propose-to-hub.md`, `.agents/skills/ccba-setup-skills/SKILL.md`, `.agents/skills/ccba-setup-skills/templates/domain.md`, `scripts/spoke/spoke_adopter.py`, `scripts/adopt_spoke.py`, `tests/test_spoke_adopter.py`
+- **Summary**: Hoàn tất rà soát và chuẩn hóa toàn trình 4 Workflows quản trị Spoke theo ADR 0041 (5 Archetypes): (1) Bổ sung trường `archetype` vào `workspace_context.yaml`, sửa lỗi biến PowerShell Maskara hook trong `/ccba-init-spoke`; (2) Bổ sung nhận diện Archetype và xử lý an toàn cho Delivery Spoke không dùng Git trong `/ccba-adopt-spoke`; (3) Tích hợp kiểm tra sức khỏe và rà soát kỹ năng mồ côi (Orphaned Skills) trong `/ccba-update-spoke`; (4) Thêm `proposed_by_archetype` và rào chắn linter kiểm thử trước khi mở PR trong `/ccba-propose-to-hub`; (5) Nâng cấp `ccba-setup-skills` tự động gợi ý Issue Tracker thông minh dựa trên Archetype và chuẩn hóa đường dẫn ADRs về `docs/adr/`; (6) Cập nhật engine `SpokeAdopter` và bổ sung unit tests pass 100% (18/18).
+
+---
+
 ## [2026-08-17] [synthesize] | Tối Ưu Hóa Hiệu Năng LinkAuditor, Hiện Đại Hóa Async Test & Tinh Gọn Analyzer
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `scripts/governance/link_auditor.py`, `scripts/scaffolding/arch_stats.py`, `packages/mdconverter/`, `packages/ccba-pdf-prep/`, `packages/ccba-ai/tests/`, `packages/ccba-notebooklm/tests/`, `pyproject.toml`
