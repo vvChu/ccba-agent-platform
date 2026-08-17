@@ -83,10 +83,10 @@ echo "🧪 Running Nightly Auto-Tuner & Doc-Evolution Dry-Run Verification..."
 python scripts/eval/doc_refactor_daemon.py --dry-run
 python scripts/eval/nightly_tuner_daemon.py --dry-run --max-iter 1
 
-# 8. Setup Crontab Schedule (00:00 Daily)
-CRON_JOB="0 0 * * * /bin/bash $BASE_DIR/ccba-agent-platform/scripts/cron/run_nightly_tuner.sh >> $BASE_DIR/ccba-agent-platform/.md/logs/nightly_cron.log 2>&1"
+# 8. Setup Crontab Schedule (10:00 UTC-7 = 00:00 ICT Vietnam Time)
+CRON_JOB="0 10 * * * /bin/bash $BASE_DIR/ccba-agent-platform/scripts/cron/run_nightly_tuner.sh >> $BASE_DIR/ccba-agent-platform/.md/logs/nightly_cron.log 2>&1"
 ((crontab -l 2>/dev/null | grep -Fv "run_nightly_tuner.sh" || true) ; echo "$CRON_JOB") | crontab -
-echo "⏰ Cron Schedule Verified: 0 0 * * * (Daily at Midnight)"
+echo "⏰ Cron Schedule Verified: 0 10 * * * (Daily at 00:00 ICT / Midnight Vietnam Time)"
 git checkout -- . || true
 
 echo "================================================================="
