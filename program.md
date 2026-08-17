@@ -8,7 +8,7 @@
 - **Target File**: `.agents/skills/bigbim-classification/SKILL.md`
 - **Target Score**: 95.0%
 - **Max Iterations**: 10
-- **Dataset File**: `.agents/skills/eval-gate/test_cases/eval_bigbim_classification.json`
+- **Dataset File**: `.agents/skills/eval-gate/test_cases/eval_bigbim_classification_redteam.json`
 
 ---
 
