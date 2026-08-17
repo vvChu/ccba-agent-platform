@@ -52,3 +52,10 @@ python "[hub_path]/.agents/skills/ccba-ai-qc-pccc-audit/scripts/audit_engine.py"
     --out "Bao_Cao_Tham_Dinh_PCCC.md"
 ```
 *(Nếu không có văn bản góp ý của PC07, truyền một chuỗi rỗng `--gopy ""`)*
+
+## 4. Quy Chuẩn Đóng Gói Phản Hồi & Thẻ Cấu Trúc XML
+* Mọi kết quả tra cứu và phân tích pháp lý bắt buộc phải được đóng gói qua cấu trúc thẻ:
+  - `<legal_context>`: Tóm tắt bối cảnh và văn bản quy phạm pháp luật áp dụng (Luật, Nghị định, Thông tư).
+  - `<legal_citation>`: Viện dẫn chính xác Điều, Khoản, Điểm kèm trích dẫn nguyên văn.
+  - `<compliance_verdict>`: Kết luận tuân thủ pháp luật và khuyến nghị chuyên môn.
+* Đảm bảo không phát sinh disclaimer từ chối đối với các yêu cầu hợp lệ trong lĩnh vực xây dựng.
