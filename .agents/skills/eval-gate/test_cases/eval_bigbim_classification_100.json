@@ -1,0 +1,1619 @@
+[
+  {
+    "id": "test_bigbim_m1_01_library_space",
+    "input_prompt": "Xác định mã phân loại không gian (SL) và đặt tên vùng không gian cho: 'Phòng đọc sách đa phương tiện tại Tầng 3 Tòa nhà Trung tâm Thư viện (Mã: LIB, Dự án: VNU-CAMPUS)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_25_10_72",
+      "title_vi": "Phòng đọc sách / Không gian học tập đa phương tiện",
+      "iso_19650_naming": "VNU-CAMPUS-LIB-L03-SL_25_10_72-001"
+    },
+    "rubric": "Must assign SL_25_10_72 for library/learning spaces and output ISO 19650 container string.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Architecture",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_02_main_lobby",
+    "input_prompt": "Xác định mã phân loại không gian (SL) cho: 'Sảnh đón tiếp chính tại Tầng 1 Tòa Tháp Văn Phòng (Mã: TWR1, Dự án: SUN-TOWER)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_25_30_20",
+      "title_vi": "Sảnh đón tiếp chính / Không gian lưu thông",
+      "iso_19650_naming": "SUN-TOWER-TWR1-L01-SL_25_30_20-001"
+    },
+    "rubric": "Must assign SL_25_30_20 for main reception lobbies and generate ISO 19650 string.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Architecture",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_03_operating_room",
+    "input_prompt": "Xác định mã phân loại không gian y tế chuyên dụng: 'Phòng mổ phẫu thuật tim vô trùng áp lực dương tại Tầng 4 Khối Nhà Ngoại Khoa (Mã: MED-SUR, Dự án: HOS-VINMEC)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_30_20_58",
+      "title_vi": "Phòng phẫu thuật / Không gian phòng mổ vô trùng",
+      "iso_19650_naming": "HOS-VINMEC-MED-SUR-L04-SL_30_20_58-001"
+    },
+    "rubric": "Must assign SL_30_20_58 for sterile operating theater rooms and generate valid container code.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Healthcare Architecture",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_04_cleanroom",
+    "input_prompt": "Phân loại không gian kỹ thuật cao: 'Phòng sạch sản xuất vi mạch bán dẫn cấp độ Class 100 (ISO 14644-1) tại Tầng 2 Nhà xưởng số 1 (Mã: FAB1, Dự án: TECH-PARK)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_35_80_14",
+      "title_vi": "Không gian phòng sạch công nghệ cao",
+      "iso_19650_naming": "TECH-PARK-FAB1-L02-SL_35_80_14-001"
+    },
+    "rubric": "Must assign SL_35_80_14 for high-tech cleanroom manufacturing spaces.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Industrial Architecture",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_05_smoke_staircase",
+    "input_prompt": "Phân loại và đặt tên không gian: 'Buồng thang bộ thoát nạn chống nhiễm khói N1 Tầng 5 Tòa tháp A (Mã: TWR-A, Dự án: SKY-PARK)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_25_30_80",
+      "title_vi": "Buồng thang bộ thoát hiểm / Không gian lưu thông đứng",
+      "iso_19650_naming": "SKY-PARK-TWR-A-L05-SL_25_30_80-ST01"
+    },
+    "rubric": "Must assign SL_25_30_80 for smoke-proof emergency stairs and apply ISO 19650 naming.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Architecture / Life Safety",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_06_transformer_room",
+    "input_prompt": "Xác định mã phân loại không gian kỹ thuật: 'Phòng đặt máy biến áp khô 2000kVA tại Tầng hầm B1 Tòa nhà Plaza (Mã: PLZ, Dự án: METRO-CITY)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_70_80_65",
+      "title_vi": "Phòng trạm biến áp điện",
+      "iso_19650_naming": "METRO-CITY-PLZ-B01-SL_70_80_65-001"
+    },
+    "rubric": "Must assign SL_70_80_65 for electrical substation spaces.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Architecture / Electrical",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_07_canteen_dining",
+    "input_prompt": "Phân loại không gian dịch vụ: 'Phòng ăn tập thể nhân viên 300 chỗ ngồi tại Tầng 2 Tòa nhà Hành chính (Mã: ADM, Dự án: FACTORY-01)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_20_15_50",
+      "title_vi": "Không gian căn tin / Phòng ăn tập thể",
+      "iso_19650_naming": "FACTORY-01-ADM-L02-SL_20_15_50-001"
+    },
+    "rubric": "Must assign SL_20_15_50 for staff dining and cafeteria spaces.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Architecture",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_08_auditorium",
+    "input_prompt": "Phân loại không gian hội trường lớn: 'Hội trường đa năng 500 chỗ có sân khấu biểu diễn tại Tầng 3 Trung tâm Văn hóa (Mã: CUL, Dự án: CITY-HALL)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_40_20_35",
+      "title_vi": "Hội trường lớn / Phòng khán giả đa năng",
+      "iso_19650_naming": "CITY-HALL-CUL-L03-SL_40_20_35-001"
+    },
+    "rubric": "Must assign SL_40_20_35 for large auditorium and conference theater spaces.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Architecture",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_09_classroom",
+    "input_prompt": "Phân loại không gian giáo dục: 'Phòng học lý thuyết 40 học sinh tại Tầng 2 Khối Tiểu học (Mã: PRI, Dự án: EDU-SCHOOL)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_25_10_45",
+      "title_vi": "Phòng học lý thuyết tiêu chuẩn",
+      "iso_19650_naming": "EDU-SCHOOL-PRI-L02-SL_25_10_45-001"
+    },
+    "rubric": "Must assign SL_25_10_45 for standard classroom spaces.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Educational Architecture",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_10_clinic_consultation",
+    "input_prompt": "Phân loại không gian khám chữa bệnh: 'Phòng khám chuyên khoa nội tổng quát tại Tầng 1 Khu khám bệnh (Mã: OPD, Dự án: MED-CENTER)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_30_10_20",
+      "title_vi": "Phòng khám tư vấn y tế",
+      "iso_19650_naming": "MED-CENTER-OPD-L01-SL_30_10_20-001"
+    },
+    "rubric": "Must assign SL_30_10_20 for outpatient consultation spaces.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Healthcare Architecture",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_11_underground_parking",
+    "input_prompt": "Phân loại không gian giao thông tĩnh: 'Bãi đỗ xe ô tô ngầm tự động thông minh tại Tầng hầm B2 Khối Podium (Mã: POD, Dự án: GRAND-MALL)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_80_10_10",
+      "title_vi": "Khu vực đỗ xe ngầm tự động",
+      "iso_19650_naming": "GRAND-MALL-POD-B02-SL_80_10_10-001"
+    },
+    "rubric": "Must assign SL_80_10_10 for underground car parking spaces.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Architecture",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_12_server_room_space",
+    "input_prompt": "Phân loại không gian lưu trữ dữ liệu: 'Phòng máy chủ trung tâm (Server Room) tiêu chuẩn Tier III tại Tầng 4 Tòa nhà Công nghệ (Mã: TECH, Dự án: DATA-HUB)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_50_20_30",
+      "title_vi": "Phòng máy chủ trung tâm dữ liệu",
+      "iso_19650_naming": "DATA-HUB-TECH-L04-SL_50_20_30-001"
+    },
+    "rubric": "Must assign SL_50_20_30 for IT server rooms and data center spaces.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Architecture / IT Infrastructure",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_13_accessible_restroom",
+    "input_prompt": "Phân loại không gian vệ sinh: 'Phòng vệ sinh công cộng tiếp cận cho người khuyết tật (Accessible Toilet) tại Tầng 1 Tòa nhà Ga hành khách (Mã: TRM, Dự án: AIRPORT-T2)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_25_75_10",
+      "title_vi": "Không gian vệ sinh tiếp cận người khuyết tật",
+      "iso_19650_naming": "AIRPORT-T2-TRM-L01-SL_25_75_10-001"
+    },
+    "rubric": "Must assign SL_25_75_10 for accessible toilet spaces.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Architecture",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_14_green_roof",
+    "input_prompt": "Phân loại không gian cảnh quan: 'Vườn cảnh quan trên mái (Green Roof Garden) tại Tầng mái Tòa nhà Văn phòng (Mã: OFC, Dự án: ECO-SUITE)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_90_30_15",
+      "title_vi": "Không gian vườn cảnh quan trên mái",
+      "iso_19650_naming": "ECO-SUITE-OFC-ROOF-SL_90_30_15-001"
+    },
+    "rubric": "Must assign SL_90_30_15 for roof garden and terrace landscape spaces.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Landscape Architecture",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m1_15_security_guard_space",
+    "input_prompt": "Phân loại không gian an ninh: 'Phòng trực bảo vệ và kiểm soát ra vào cổng chính tại Cổng 1 (Mã: GATE1, Dự án: PORT-COMPLEX)' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_60_10_10",
+      "title_vi": "Không gian trực an ninh / Chòi bảo vệ cổng",
+      "iso_19650_naming": "PORT-COMPLEX-GATE1-L01-SL_60_10_10-001"
+    },
+    "rubric": "Must assign SL_60_10_10 for security guard and checkpoint spaces.",
+    "metadata": {
+      "module": "M1_ARCHITECTURE_SPACES",
+      "discipline": "Architecture",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_01_bored_pile",
+    "input_prompt": "Phân loại cấu kiện kết cấu nền móng: 'Cọc khoan nhồi bê tông cốt thép đường kính D1200mm sâu 45m ngàm vào tầng đá gốc' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_10",
+      "title_vi": "Cấu kiện móng sâu / Cọc khoan nhồi",
+      "iso_12006_layer": "Result (Substructure Elements)"
+    },
+    "rubric": "Must classify deep bored pile foundation as EF_20_10.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Structural / Geotechnical",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_02_diaphragm_wall",
+    "input_prompt": "Phân loại cấu kiện chắn giữ hố đào: 'Tường vây bê tông cốt thép Barrette dày 800mm sâu 32m phục vụ thi công Top-Down 3 tầng hầm' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_05",
+      "title_vi": "Tường vây chắn đất hố đào Barrette",
+      "iso_12006_layer": "Result (Retaining and Basements)"
+    },
+    "rubric": "Must classify diaphragm retaining wall as EF_20_05.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Structural / Geotechnical",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_03_rc_column",
+    "input_prompt": "Phân loại cấu kiện chịu lực đứng: 'Cột bê tông cốt thép B40 tiết diện 800x800mm chịu lực chính khung nhà cao tầng' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_15",
+      "title_vi": "Cột kết cấu bê tông cốt thép",
+      "iso_12006_layer": "Result (Superstructure Columns)"
+    },
+    "rubric": "Must classify structural RC column as EF_20_15.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Structural",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_04_post_tensioned_beam",
+    "input_prompt": "Phân loại cấu kiện chịu uốn: 'Dầm bê tông cốt thép dự ứng lực căng sau nhịp lớn 15m tiết diện 400x1000mm' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_20",
+      "title_vi": "Dầm kết cấu bê tông cốt thép",
+      "iso_12006_layer": "Result (Superstructure Beams)"
+    },
+    "rubric": "Must classify post-tensioned beam as EF_20_20.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Structural",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_05_flat_slab",
+    "input_prompt": "Phân loại cấu kiện sàn: 'Bản sàn nấm bê tông cốt thép ứng lực trước dày 250mm có mũ cột chống chọc thủng' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_25",
+      "title_vi": "Sàn kết cấu bê tông cốt thép",
+      "iso_12006_layer": "Result (Superstructure Floors/Slabs)"
+    },
+    "rubric": "Must classify flat structural slab as EF_20_25.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Structural",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_06_shear_wall",
+    "input_prompt": "Phân loại vách chịu lực: 'Vách cứng lõi thang máy bê tông cốt thép dày 400mm chịu tải trọng gió và động đất' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_30",
+      "title_vi": "Vách cứng kết cấu chịu lực",
+      "iso_12006_layer": "Result (Superstructure Shear Walls)"
+    },
+    "rubric": "Must classify shear core wall as EF_20_30.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Structural",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_07_steel_truss",
+    "input_prompt": "Phân loại kết cấu mái: 'Dàn vì kèo thép tổ hợp ống thép khẩu độ nhịp 45m mái nhà thi đấu thể thao' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_35",
+      "title_vi": "Dàn kết cấu mái thép không gian",
+      "iso_12006_layer": "Result (Superstructure Roof Trusses)"
+    },
+    "rubric": "Must classify large-span steel roof truss as EF_20_35.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Structural Steel",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_08_rc_stair_element",
+    "input_prompt": "Phân loại cấu kiện giao thông đứng kết cấu: 'Bản thang bộ bê tông cốt thép đúc liền khối 2 vế có chiếu nghỉ' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_40",
+      "title_vi": "Cầu thang kết cấu bê tông cốt thép",
+      "iso_12006_layer": "Result (Stairs Structure)"
+    },
+    "rubric": "Must classify structural RC stairs as EF_20_40.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Structural",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_09_raft_foundation",
+    "input_prompt": "Phân loại móng khối lớn: 'Bản đáy móng bè bê tông cốt thép khối lớn dày 2500mm cho tòa tháp 50 tầng' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_45",
+      "title_vi": "Móng bè bê tông khối lớn",
+      "iso_12006_layer": "Result (Substructure Raft Foundation)"
+    },
+    "rubric": "Must classify thick raft foundation as EF_20_45.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Structural / Foundations",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_10_ground_anchor",
+    "input_prompt": "Phân loại cấu kiện neo gia cố: 'Hệ neo đất dự ứng lực nhiều tao cáp dài 24m neo giữ ổn định tường vây' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_50",
+      "title_vi": "Neo đất dự ứng lực gia cố tường chắn",
+      "iso_12006_layer": "Result (Ground Anchors)"
+    },
+    "rubric": "Must classify prestressed ground anchors as EF_20_50.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Geotechnical / Structural",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_11_src_column",
+    "input_prompt": "Phân loại cột liên hợp: 'Cột thép hình chữ H bọc bê tông cốt thép chống cháy (SRC Column)' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_55",
+      "title_vi": "Cột thép - bê tông liên hợp (SRC)",
+      "iso_12006_layer": "Result (Composite Columns)"
+    },
+    "rubric": "Must classify composite steel-reinforced concrete column as EF_20_55.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Composite Structural",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_12_space_frame_dome",
+    "input_prompt": "Phân loại mái không gian: 'Mái vòm bán cầu kết cấu giàn không gian nút cầu thép đường kính 60m' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_60",
+      "title_vi": "Mái vòm giàn không gian nút cầu",
+      "iso_12006_layer": "Result (Space Frame Domes)"
+    },
+    "rubric": "Must classify space frame sphere dome as EF_20_60.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Structural Steel",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_13_ground_beam",
+    "input_prompt": "Phân loại giằng móng: 'Dầm giằng móng bê tông cốt thép liên kết các đài cọc chịu lực chống lún lệch' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_65",
+      "title_vi": "Dầm giằng móng / Đà kiềng",
+      "iso_12006_layer": "Result (Ground Beams)"
+    },
+    "rubric": "Must classify foundation ground tie beams as EF_20_65.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Structural",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_14_alc_panel_slab",
+    "input_prompt": "Phân loại sàn lắp ghép: 'Tấm panel sàn bê tông khí chưng áp có lõi thép ALC lắp ghép chịu lực' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_70",
+      "title_vi": "Sàn panel bê tông nhẹ lắp ghép",
+      "iso_12006_layer": "Result (Prefabricated Floor Panels)"
+    },
+    "rubric": "Must classify prefabricated ALC lightweight floor panels as EF_20_70.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Structural / Prefabrication",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m2_15_sand_compaction_pile",
+    "input_prompt": "Phân loại xử lý nền: 'Hệ cọc cát đầm chặt D500mm xử lý chống cố kết lún nền đất yếu' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_75",
+      "title_vi": "Cọc cát xử lý gia cố đất yếu",
+      "iso_12006_layer": "Result (Ground Improvement Columns)"
+    },
+    "rubric": "Must classify geotechnical sand compaction piles as EF_20_75.",
+    "metadata": {
+      "module": "M2_STRUCTURAL_FOUNDATION",
+      "discipline": "Geotechnical",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_01_water_chiller_system",
+    "input_prompt": "Phân loại hệ thống HVAC: 'Hệ thống làm lạnh Chiller giải nhiệt nước trung tâm công suất 1000RT kèm tháp giải nhiệt' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_60_40_20",
+      "title_vi": "Hệ thống làm lạnh Chiller trung tâm",
+      "iso_12006_layer": "Result (Central Cooling Systems)"
+    },
+    "rubric": "Must classify water-cooled central chiller system as Ss_60_40_20.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "MEP / HVAC",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_02_vrv_vrf_system",
+    "input_prompt": "Phân loại hệ thống điều hòa văn phòng: 'Hệ thống điều hòa không khí biến tần trung tâm VRV/VRF thu hồi nhiệt 3 ống' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_60_40_30",
+      "title_vi": "Hệ thống điều hòa VRV/VRF",
+      "iso_12006_layer": "Result (Variable Refrigerant Systems)"
+    },
+    "rubric": "Must classify VRV/VRF air conditioning systems as Ss_60_40_30.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "MEP / HVAC",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_03_ahu_fresh_air",
+    "input_prompt": "Phân loại hệ thống xử lý không khí: 'Hệ thống xử lý không khí tươi AHU có dàn lạnh nước và lọc HEPA H14' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_65_40_33",
+      "title_vi": "Hệ thống xử lý không khí tươi AHU",
+      "iso_12006_layer": "Result (Air Handling Systems)"
+    },
+    "rubric": "Must classify fresh air AHU ventilation systems as Ss_65_40_33.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "MEP / HVAC",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_04_mv_substation",
+    "input_prompt": "Phân loại hệ thống cấp nguồn điện: 'Hệ thống trạm biến áp trung thế 22kV/0.4kV công suất 2x2000kVA tủ trung thế RMU' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_70_10_10",
+      "title_vi": "Hệ thống phân phối điện trung thế và trạm biến áp",
+      "iso_12006_layer": "Result (High/Medium Voltage Systems)"
+    },
+    "rubric": "Must classify 22kV/0.4kV electrical substation system as Ss_70_10_10.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "MEP / Electrical",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_05_emergency_generator",
+    "input_prompt": "Phân loại nguồn điện khẩn cấp: 'Hệ thống máy phát điện Diesel dự phòng khẩn cấp 1500kVA có vỏ cách âm và bồn dầu ngầm' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_70_10_30",
+      "title_vi": "Hệ thống nguồn điện phát dự phòng",
+      "iso_12006_layer": "Result (Emergency Generation Systems)"
+    },
+    "rubric": "Must classify backup diesel generator system as Ss_70_10_30.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "MEP / Electrical",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_06_ups_system",
+    "input_prompt": "Phân loại hệ thống nguồn sạch: 'Hệ thống lưu điện liên tục UPS trực tuyến Online Double Conversion 300kVA 3 pha' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_70_30_10",
+      "title_vi": "Hệ thống cấp nguồn liên tục UPS",
+      "iso_12006_layer": "Result (Uninterruptible Power Systems)"
+    },
+    "rubric": "Must classify online UPS system as Ss_70_30_10.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "MEP / Electrical",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_07_lightning_protection",
+    "input_prompt": "Phân loại chống sét công trình: 'Hệ thống chống sét chủ động phát tia tiên đạo sớm kim ESE bán kính bảo vệ 105m' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_70_80_10",
+      "title_vi": "Hệ thống chống sét và tiếp địa",
+      "iso_12006_layer": "Result (Lightning Protection Systems)"
+    },
+    "rubric": "Must classify ESE lightning protection system as Ss_70_80_10.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "MEP / Electrical",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_08_booster_water_supply",
+    "input_prompt": "Phân loại cấp nước sinh hoạt: 'Hệ thống cấp nước sinh hoạt qua cụm bơm tăng áp biến tần 3 bơm trục đứng 15kW' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_50_30_20",
+      "title_vi": "Hệ thống bơm tăng áp cấp nước sinh hoạt",
+      "iso_12006_layer": "Result (Pressurised Water Supply Systems)"
+    },
+    "rubric": "Must classify booster pump domestic water supply as Ss_50_30_20.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "MEP / Plumbing",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_09_mbr_wastewater",
+    "input_prompt": "Phân loại xử lý nước thải: 'Hệ thống trạm xử lý nước thải sinh hoạt công nghệ màng sinh học MBR công suất 300m3/ngày đêm' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_50_35_10",
+      "title_vi": "Hệ thống xử lý nước thải sinh hoạt",
+      "iso_12006_layer": "Result (Wastewater Treatment Systems)"
+    },
+    "rubric": "Must classify MBR wastewater treatment system as Ss_50_35_10.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "MEP / Environmental",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_10_siphonic_drainage",
+    "input_prompt": "Phân loại thoát nước mưa: 'Hệ thống thoát nước mưa mái bằng siphon áp lực âm công suất thoát nước 120 lít/giây' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_50_40_10",
+      "title_vi": "Hệ thống thoát nước mưa siphon",
+      "iso_12006_layer": "Result (Siphonic Roof Drainage Systems)"
+    },
+    "rubric": "Must classify siphonic rainwater drainage as Ss_50_40_10.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "MEP / Plumbing",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_11_emergency_exit_lighting",
+    "input_prompt": "Phân loại chiếu sáng khẩn cấp: 'Hệ thống đèn chiếu sáng sự cố và đèn chỉ dẫn thoát hiểm Exit pin dự phòng 2 giờ' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_75_10_10",
+      "title_vi": "Hệ thống chiếu sáng sự cố và thoát hiểm",
+      "iso_12006_layer": "Result (Emergency Lighting Systems)"
+    },
+    "rubric": "Must classify emergency and exit path lighting system as Ss_75_10_10.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "MEP / Electrical",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_12_bipv_solar",
+    "input_prompt": "Phân loại năng lượng tái tạo: 'Hệ thống điện mặt trời tích hợp vào mái công trình BIPV công suất hòa lưới 500kWp' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_75_50_20",
+      "title_vi": "Hệ thống điện năng lượng mặt trời BIPV",
+      "iso_12006_layer": "Result (Solar Photovoltaic Systems)"
+    },
+    "rubric": "Must classify building-integrated solar PV systems as Ss_75_50_20.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "Renewable Energy / MEP",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_13_bms_bas_system",
+    "input_prompt": "Phân loại điều khiển thông minh: 'Hệ thống quản lý tòa nhà BMS/BAS tích hợp giao thức BACnet IP điều khiển HVAC và chiếu sáng' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_80_10_20",
+      "title_vi": "Hệ thống quản lý tòa nhà thông minh BMS",
+      "iso_12006_layer": "Result (Building Management Systems)"
+    },
+    "rubric": "Must classify building management system as Ss_80_10_20.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "Smart Building / ELV",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_14_biometric_access_control",
+    "input_prompt": "Phân loại an ninh kiểm soát: 'Hệ thống kiểm soát ra vào Access Control bằng sinh trắc học nhận diện khuôn mặt 3D' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_80_50_30",
+      "title_vi": "Hệ thống kiểm soát ra vào Access Control",
+      "iso_12006_layer": "Result (Access Control Systems)"
+    },
+    "rubric": "Must classify biometric access control systems as Ss_80_50_30.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "ELV / Security",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m3_15_fiber_backbone",
+    "input_prompt": "Phân loại hạ tầng mạng viễn thông: 'Hệ thống đường trục cáp quang Single-mode 24-core kết nối các tủ IDF đến MDF' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_80_30_10",
+      "title_vi": "Hệ thống mạng cáp truyền dẫn dữ liệu",
+      "iso_12006_layer": "Result (Telecommunication Cabling Systems)"
+    },
+    "rubric": "Must classify fiber optic backbone telecommunication cabling as Ss_80_30_10.",
+    "metadata": {
+      "module": "M3_MEP_HVAC_ENERGY",
+      "discipline": "ELV / ICT",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_01_sprinkler_system",
+    "input_prompt": "Phân loại hệ thống PCCC tự động: 'Hệ thống chữa cháy tự động Sprinkler đường ống ướt tiêu chuẩn NFPA 13 và QCVN 06:2022/BXD' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_55_10_10",
+      "title_vi": "Hệ thống chữa cháy Sprinkler tự động",
+      "iso_12006_layer": "Result (Wet Sprinkler Fire Suppression Systems)"
+    },
+    "rubric": "Must classify wet pipe sprinkler fire suppression system as Ss_55_10_10.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Protection",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_02_drencher_deluge",
+    "input_prompt": "Phân loại màng ngăn cháy: 'Hệ thống chữa cháy màn nước Drencher ngăn cháy lan giữa 2 khoang cháy nhà xưởng' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_55_10_30",
+      "title_vi": "Hệ thống màng ngăn nước Drencher",
+      "iso_12006_layer": "Result (Deluge Water Curtain Systems)"
+    },
+    "rubric": "Must classify deluge water curtain fire separation system as Ss_55_10_30.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Protection",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_03_fm200_clean_agent",
+    "input_prompt": "Phân loại chữa cháy khí sạch: 'Hệ thống chữa cháy tự động khí FM-200 (HFC-227ea) xả ngập phòng Data Center' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_55_30_10",
+      "title_vi": "Hệ thống chữa cháy khí sạch FM-200",
+      "iso_12006_layer": "Result (Clean Agent Gas Suppression Systems)"
+    },
+    "rubric": "Must classify FM-200 clean agent gas suppression system as Ss_55_30_10.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Protection",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_04_nitrogen_ig541",
+    "input_prompt": "Phân loại chữa cháy khí trơ: 'Hệ thống chữa cháy khí trơ hỗn hợp Nitơ IG-541 cho kho bảo mật tài liệu' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_55_30_20",
+      "title_vi": "Hệ thống chữa cháy khí trơ IG-541",
+      "iso_12006_layer": "Result (Inert Gas Suppression Systems)"
+    },
+    "rubric": "Must classify IG-541 inert gas fire extinguishing system as Ss_55_30_20.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Protection",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_05_hydrant_network",
+    "input_prompt": "Phân loại cấp nước cứu hỏa ngoài trời: 'Hệ thống mạng lưới đường ống cấp nước và trụ cứu hỏa ngoài nhà 3 cửa D100/D65' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_55_70_10",
+      "title_vi": "Hệ thống trụ cứu hỏa ngoài nhà",
+      "iso_12006_layer": "Result (External Fire Hydrant Systems)"
+    },
+    "rubric": "Must classify external fire hydrant distribution network as Ss_55_70_10.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Protection",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_06_indoor_hose_reel",
+    "input_prompt": "Phân loại họng nước trong nhà: 'Hệ thống họng nước chữa cháy vách tường D65 kèm cuộn vòi lăng phun 20m' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_55_70_30",
+      "title_vi": "Hệ thống họng nước chữa cháy vách tường",
+      "iso_12006_layer": "Result (Indoor Fire Hose Reel Systems)"
+    },
+    "rubric": "Must classify indoor fire hose reel cabinets as Ss_55_70_30.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Protection",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_07_stair_pressurization",
+    "input_prompt": "Phân loại hệ thống tạo áp: 'Hệ thống quạt tạo áp cầu thang bộ và giếng thang máy áp suất dư 20-50Pa khi có cháy' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_65_40_40",
+      "title_vi": "Hệ thống quạt tăng áp buồng thang thoát nạn",
+      "iso_12006_layer": "Result (Stair Pressurization Systems)"
+    },
+    "rubric": "Must classify emergency stairwell positive pressurization system as Ss_65_40_40.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Safety / Mechanical",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_08_smoke_exhaust",
+    "input_prompt": "Phân loại hút khói sự cố: 'Hệ thống quạt hút khói hành lang và tầng hầm chịu nhiệt 300°C trong 2 giờ' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_65_40_50",
+      "title_vi": "Hệ thống hút khói sự cố chịu nhiệt",
+      "iso_12006_layer": "Result (Smoke Spill Exhaust Systems)"
+    },
+    "rubric": "Must classify high-temperature smoke exhaust ventilation as Ss_65_40_50.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Safety / Mechanical",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_09_addressable_fire_alarm",
+    "input_prompt": "Phân loại báo cháy tự động: 'Hệ thống tủ trung tâm báo cháy địa chỉ thông minh 4 loop kết nối 500 đầu báo khói nhiệt' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_75_50_10",
+      "title_vi": "Hệ thống báo cháy tự động địa chỉ",
+      "iso_12006_layer": "Result (Addressable Fire Detection Systems)"
+    },
+    "rubric": "Must classify addressable fire detection system as Ss_75_50_10.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Safety / ELV",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_10_vesda_early_smoke",
+    "input_prompt": "Phân loại phát hiện khói cực sớm: 'Hệ thống phát hiện khói cực sớm bằng công nghệ laser hút khí VESDA cho phòng máy chủ' theo Uniclass Ss và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Systems (Ss)",
+      "uniclass_code": "Ss_75_50_20",
+      "title_vi": "Hệ thống phát hiện khói cực sớm VESDA",
+      "iso_12006_layer": "Result (Aspirating Smoke Detection Systems)"
+    },
+    "rubric": "Must classify aspirating smoke detection systems (VESDA) as Ss_75_50_20.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Safety / ELV",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_11_fire_damper_product",
+    "input_prompt": "Phân loại sản phẩm van ngăn cháy: 'Van ngăn cháy tự động cầu chì nhiệt 70°C có động cơ Servo kích hoạt điện 24V EI 120' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_60_65_22",
+      "title_vi": "Van ngăn cháy tự động (Fire Damper)",
+      "iso_12006_layer": "Resource (Fire Dampers)"
+    },
+    "rubric": "Must classify motorized fire damper product unit as Pr_60_65_22.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Safety / Mechanical Products",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_12_fire_door_product",
+    "input_prompt": "Phân loại sản phẩm cửa ngăn cháy: 'Cửa thép chống cháy 2 cánh EI 90 có tay co thủy lực và thanh thoát hiểm Panic Bar' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_30_59_24",
+      "title_vi": "Cửa thép chống cháy EI 90",
+      "iso_12006_layer": "Resource (Fire Doorsets)"
+    },
+    "rubric": "Must classify steel fire rated doorset product as Pr_30_59_24.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Safety / Architectural Products",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_13_smoke_curtain",
+    "input_prompt": "Phân loại màn ngăn khói: 'Màn cuốn ngăn khói tự động chịu nhiệt 600°C hạ xuống trần khi có tín hiệu báo cháy' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_30_59_30",
+      "title_vi": "Màn cuốn ngăn khói tự động",
+      "iso_12006_layer": "Resource (Automatic Smoke Curtains)"
+    },
+    "rubric": "Must classify automatic smoke barrier curtain product as Pr_30_59_30.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Safety / Architectural Products",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_14_intumescent_paint",
+    "input_prompt": "Phân loại sơn chống cháy: 'Sơn phồng nở chống cháy cho kết cấu thép giới hạn chịu lửa R120 tiêu chuẩn BS 476' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_60_60_15",
+      "title_vi": "Sơn phồng nở chống cháy kết cấu thép",
+      "iso_12006_layer": "Resource (Intumescent Coatings)"
+    },
+    "rubric": "Must classify intumescent fireproofing coating product as Pr_60_60_15.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Fire Protection / Materials",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m4_15_fire_airlock_space",
+    "input_prompt": "Phân loại không gian khoang đệm: 'Khoang đệm ngăn cháy loại 1 có áp suất dương ngăn giữa phòng biến áp và hành lang' theo Uniclass SL và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_25_30_70",
+      "title_vi": "Khoang đệm ngăn cháy tăng áp (Air-lock)",
+      "iso_19650_naming": "PRJ-T1-B02-SL_25_30_70-001"
+    },
+    "rubric": "Must classify fire airlock vestibule as SL_25_30_70.",
+    "metadata": {
+      "module": "M4_FIRE_SAFETY_PCCC",
+      "discipline": "Life Safety / Architecture",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_01_highway_embankment",
+    "input_prompt": "Phân loại đoạn nền đường: 'Đoạn nền đường cao tốc đắp đất đầm chặt K98 từ lý trình KM 05+200 đến KM 07+800 Dự án Cao Tốc CT01' theo IFC Alignment và Uniclass EF.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_10_10",
+      "ifc_alignment_naming": "CT01-KM005_200_KM007_800-EF_10_10",
+      "spatial_type": "Linear Infrastructure Alignment Segment"
+    },
+    "rubric": "Must classify linear highway embankment segment as EF_10_10 with IFC alignment naming.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Civil / Highway",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_02_asphalt_pavement",
+    "input_prompt": "Phân loại mặt đường giao thông: 'Mặt đường bê tông nhựa chặt nóng Polyme nhám cao cấp dày 12cm trên lớp cấp phối đá dăm' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_10_20",
+      "title_vi": "Mặt đường bê tông nhựa asphalt",
+      "iso_12006_layer": "Result (Pavements/Surfacings)"
+    },
+    "rubric": "Must classify asphalt road pavement surfacing as EF_10_20.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Highway Engineering",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_03_bridge_abutment",
+    "input_prompt": "Phân loại mố cầu: 'Mố cầu dẫn bê tông cốt thép chữ U đặt trên hệ móng cọc khoan nhồi tại km 15+350' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_50_10",
+      "title_vi": "Mố cầu bê tông cốt thép",
+      "iso_12006_layer": "Result (Bridge Abutments)"
+    },
+    "rubric": "Must classify bridge abutments as EF_50_10.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Bridge Engineering",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_04_cable_stayed_pylon",
+    "input_prompt": "Phân loại trụ tháp cầu: 'Trụ tháp cầu dây văng chữ H bê tông cường độ cao B60 cao 120m từ mặt cầu' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_50_20",
+      "title_vi": "Trụ tháp cầu dây văng",
+      "iso_12006_layer": "Result (Bridge Pylons/Towers)"
+    },
+    "rubric": "Must classify cable-stayed bridge pylon as EF_50_20.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Bridge Engineering",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_05_super_t_girder",
+    "input_prompt": "Phân loại dầm cầu: 'Dầm hộp bê tông cốt thép dự ứng lực đúc sẵn Super-T chiều dài nhịp 38.3m' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_50_30",
+      "title_vi": "Dầm cầu đúc sẵn Super-T",
+      "iso_12006_layer": "Result (Bridge Superstructure Girders)"
+    },
+    "rubric": "Must classify precast Super-T bridge girders as EF_50_30.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Bridge Engineering",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_06_urban_underpass",
+    "input_prompt": "Phân loại hầm chui đô thị: 'Hầm chui nút giao thông kết cấu khung kín bê tông cốt thép 4 làn xe dài 450m' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_10_30",
+      "title_vi": "Hầm chui đô thị khung kín",
+      "iso_12006_layer": "Result (Urban Road Underpasses)"
+    },
+    "rubric": "Must classify cut-and-cover urban road underpass tunnel as EF_10_30.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Tunnel & Highway",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_07_natm_mountain_tunnel",
+    "input_prompt": "Phân loại hầm xuyên núi: 'Hầm đường bộ xuyên núi 3 làn xe thi công theo phương pháp đào ngầm NATM vỏ bê tông phun' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_10_40",
+      "title_vi": "Hầm đường bộ ngầm xuyên núi (NATM)",
+      "iso_12006_layer": "Result (Bored Mountain Tunnels)"
+    },
+    "rubric": "Must classify NATM bored mountain road tunnel as EF_10_40.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Tunnel Engineering",
+      "difficulty": "VERY_HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_08_box_culvert",
+    "input_prompt": "Phân loại cống thoát nước ngang: 'Cống hộp đôi bê tông cốt thép đúc sẵn kích thước 2x(2.5x2.5m) tại lý trình km 04+120' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_50_40",
+      "title_vi": "Cống hộp ngang đường",
+      "iso_12006_layer": "Result (Culverts)"
+    },
+    "rubric": "Must classify road box culvert as EF_50_40.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Drainage / Highway",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_09_retaining_wall_talus",
+    "input_prompt": "Phân loại tường chắn đất taluy: 'Tường chắn bê tông cốt thép có bản giảm tải và sườn gia cố chống sạt lở taluy âm cao 8m' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_10_50",
+      "title_vi": "Tường chắn đất taluy đường",
+      "iso_12006_layer": "Result (Highway Retaining Walls)"
+    },
+    "rubric": "Must classify road slope retaining wall as EF_10_50.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Geotechnical / Highway",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_10_side_drainage_ditch",
+    "input_prompt": "Phân loại rãnh thoát nước dọc: 'Rãnh thoát nước biên hình thang gia cố tấm đan bê tông đúc sẵn B60 dọc hai bên lề đường' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_10_60",
+      "title_vi": "Rãnh thoát nước dọc tuyến đường",
+      "iso_12006_layer": "Result (Roadside Drainage Channels)"
+    },
+    "rubric": "Must classify roadside trapezoidal drainage channel as EF_10_60.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Civil / Drainage",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_11_guardrail_barrier",
+    "input_prompt": "Phân loại rào chắn an toàn: 'Hộ lan tôn sóng mạ kẽm nhúng nóng hai sóng kèm tiêu phản quang gắn trên trụ thép' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_10_70",
+      "title_vi": "Hộ lan mềm tôn sóng an toàn đường bộ",
+      "iso_12006_layer": "Result (Road Safety Barriers)"
+    },
+    "rubric": "Must classify corrugated steel highway guardrail barrier as EF_10_70.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Traffic Safety",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_12_vms_gantry_sign",
+    "input_prompt": "Phân loại biển báo điện tử: 'Hệ thống biển thông tin thay đổi VMS gắn trên khung giá long môn vượt khẩu độ 22m' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_10_80",
+      "title_vi": "Biển báo quang báo VMS và giá long môn",
+      "iso_12006_layer": "Result (Variable Message Sign Gantries)"
+    },
+    "rubric": "Must classify highway VMS overhead gantry sign as EF_10_80.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "ITS / Traffic Systems",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_13_metro_rail_track",
+    "input_prompt": "Phân loại đường ray đường sắt đô thị: 'Hệ thống đường ray tiêu chuẩn khổ 1435mm đặt trên bản đệm không đá ba lát tuyến Metro' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_50_50",
+      "title_vi": "Đường ray đường sắt đô thị Metro",
+      "iso_12006_layer": "Result (Railway Track Superstructure)"
+    },
+    "rubric": "Must classify ballastless urban metro railway track system as EF_50_50.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Railway Engineering",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_14_tetrapod_breakwater",
+    "input_prompt": "Phân loại công trình thủy: 'Đê chắn sóng biển đá đổ bọc lớp phủ tiêu sóng bằng khối bê tông 4 chân Tetrapod 16 tấn' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_10_90",
+      "title_vi": "Đê chắn sóng biển Tetrapod",
+      "iso_12006_layer": "Result (Maritime Breakwaters)"
+    },
+    "rubric": "Must classify tetrapod coastal breakwater marine structure as EF_10_90.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Marine & Coastal",
+      "difficulty": "VERY_HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m5_15_gabion_river_revetment",
+    "input_prompt": "Phân loại kè bảo vệ bờ: 'Kè mái bờ sông chống xói lở bằng rọ đá mạ kẽm bọc nhựa PVC lót vải địa kỹ thuật không dệt' theo Uniclass EF và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_50_60",
+      "title_vi": "Kè bảo vệ bờ rọ đá",
+      "iso_12006_layer": "Result (River Revetments/Gabions)"
+    },
+    "rubric": "Must classify gabion river bank revetment structure as EF_50_60.",
+    "metadata": {
+      "module": "M5_LINEAR_INFRASTRUCTURE_GIS",
+      "discipline": "Hydraulic & River",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_01_wbs_substructure_package",
+    "input_prompt": "Xác định mã phân loại Quản lý Dự án (PM) và cấu trúc WBS Cấp 2 cho: 'Gói thầu thi công xây dựng phần ngầm, cọc móng và 3 tầng hầm' theo Uniclass PM và ISO 21511.",
+    "golden_answer": {
+      "uniclass_table": "Project Management (PM)",
+      "uniclass_code": "PM_10_20",
+      "wbs_level": "Level 2 (Work Package)",
+      "title_vi": "Gói thầu xây dựng phần ngầm và móng"
+    },
+    "rubric": "Must classify substructure works package under PM_10_20 in ISO 21511 WBS.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Project Management / QS",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_02_pile_load_testing_plan",
+    "input_prompt": "Phân loại công tác quản lý chất lượng: 'Kế hoạch kiểm định chất lượng và thí nghiệm nén tĩnh cọc tải trọng 1200 tấn' theo Uniclass PM và ISO 21511.",
+    "golden_answer": {
+      "uniclass_table": "Project Management (PM)",
+      "uniclass_code": "PM_30_40",
+      "wbs_level": "Level 3 (Quality Activity)",
+      "title_vi": "Kế hoạch thí nghiệm và kiểm định chất lượng cọc"
+    },
+    "rubric": "Must classify pile static load testing quality activity as PM_30_40.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "QA/QC Management",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_03_eia_hse_plan",
+    "input_prompt": "Phân loại tài liệu quản lý môi trường: 'Báo cáo đánh giá tác động môi trường (ĐTM) và Kế hoạch an toàn vệ sinh lao động HSE công trường' theo Uniclass PM và ISO 21511.",
+    "golden_answer": {
+      "uniclass_table": "Project Management (PM)",
+      "uniclass_code": "PM_40_10",
+      "wbs_level": "Level 2 (HSE Management)",
+      "title_vi": "Báo cáo ĐTM và Kế hoạch quản trị HSE"
+    },
+    "rubric": "Must classify EIA and HSE management plan as PM_40_10.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "HSE / Project Management",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_04_master_schedule_handover",
+    "input_prompt": "Phân loại quản lý tiến độ: 'Tiến độ tổng thể thi công hoàn thiện, nghiệm thu chạy thử liên động và bàn giao công trình' theo Uniclass PM và ISO 21511.",
+    "golden_answer": {
+      "uniclass_table": "Project Management (PM)",
+      "uniclass_code": "PM_60_20",
+      "wbs_level": "Level 1 (Master Milestone)",
+      "title_vi": "Kế hoạch tiến độ nghiệm thu và bàn giao tổng thể"
+    },
+    "rubric": "Must classify master handover commissioning schedule as PM_60_20.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Planning & Scheduling",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_05_rebar_d25_product",
+    "input_prompt": "Phân loại bóc tách dự toán vật tư (BOQ Resource): 'Thép thanh vằn cốt bê tông CB400-V đường kính D25mm chiều dài tiêu chuẩn 11.7m' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_20_10_10",
+      "title_vi": "Thép thanh vằn cốt bê tông CB400-V D25",
+      "iso_12006_layer": "Resource (Reinforcing Steel Bars)"
+    },
+    "rubric": "Must classify CB400-V D25 steel rebar product resource as Pr_20_10_10.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Cost Estimation / QS",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_06_ready_mix_concrete_b35",
+    "input_prompt": "Phân loại bóc tách vật tư: 'Bê tông thương phẩm độ sụt 14±2cm cấp độ bền chịu nén B35 (M450) sử dụng xi măng bền sunfat' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_20_10_20",
+      "title_vi": "Bê tông thương phẩm mác B35",
+      "iso_12006_layer": "Resource (Ready-mix Concrete Materials)"
+    },
+    "rubric": "Must classify B35 ready-mix concrete material resource as Pr_20_10_20.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Cost Estimation / Materials",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_07_aac_block_product",
+    "input_prompt": "Phân loại vật tư tường xây: 'Gạch bê tông khí chưng áp AAC kích thước 600x200x100mm tỷ trọng khô 550kg/m3' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_25_10_30",
+      "title_vi": "Gạch bê tông khí chưng áp AAC",
+      "iso_12006_layer": "Resource (Autoclaved Aerated Concrete Blocks)"
+    },
+    "rubric": "Must classify AAC block masonry material as Pr_25_10_30.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Cost Estimation / Architecture",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_08_acrylic_paint_material",
+    "input_prompt": "Phân loại vật liệu hoàn thiện sơn: 'Sơn nước nội thất gốc Acrylic cao cấp kháng kiềm chống ẩm mốc hàm lượng VOC thấp' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_25_30_10",
+      "title_vi": "Sơn nước nội thất gốc Acrylic",
+      "iso_12006_layer": "Resource (Interior Emulsion Paints)"
+    },
+    "rubric": "Must classify acrylic interior paint resource as Pr_25_30_10.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Cost Estimation / Finishes",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_09_granite_tile_800",
+    "input_prompt": "Phân loại vật tư ốp lát: 'Gạch ốp lát Granite nhân tạo mài bóng nano 800x800mm độ hút nước < 0.1%' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_25_50_20",
+      "title_vi": "Gạch ốp lát Granite nhân tạo 800x800",
+      "iso_12006_layer": "Resource (Polished Porcelain/Granite Floor Tiles)"
+    },
+    "rubric": "Must classify polished granite tile material resource as Pr_25_50_20.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Cost Estimation / Finishes",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_10_unitized_curtain_wall_product",
+    "input_prompt": "Phân loại vật tư bao che: 'Modun vách kính mặt dựng Unitized khung nhôm cầu cách nhiệt gắn kính Low-E dán 24mm' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_30_10_15",
+      "title_vi": "Modun vách kính Unitized mặt dựng",
+      "iso_12006_layer": "Resource (Unitized Curtain Wall Modules)"
+    },
+    "rubric": "Must classify unitized curtain wall module product resource as Pr_30_10_15.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Cost Estimation / Facade",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_11_acp_panel_product",
+    "input_prompt": "Phân loại tấm ốp trang trí: 'Tấm ốp nhôm nhựa phức hợp Aluminium Composite Panel (ACP) dày 4mm sơn phủ PVDF 3 lớp' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_30_30_40",
+      "title_vi": "Tấm ốp nhôm nhựa Aluminium (ACP)",
+      "iso_12006_layer": "Resource (Aluminium Composite Panels)"
+    },
+    "rubric": "Must classify ACP cladding panel product as Pr_30_30_40.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Cost Estimation / Facade",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_12_smart_toilet_product",
+    "input_prompt": "Phân loại thiết bị vệ sinh: 'Bồn cầu sứ thông minh tự động mở nắp xả xoáy cảm ứng tiết kiệm nước men kháng khuẩn CeFiONtect' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_35_10_20",
+      "title_vi": "Bồn cầu thông minh tự động",
+      "iso_12006_layer": "Resource (Smart Sanitary Appliances)"
+    },
+    "rubric": "Must classify smart electronic water closet appliance as Pr_35_10_20.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Cost Estimation / Plumbing Products",
+      "difficulty": "MEDIUM"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_13_low_voltage_cable_cu_xlpe",
+    "input_prompt": "Phân loại vật tư cáp điện: 'Cáp điện hạ thế 4 lõi đồng Cu/XLPE/PVC/DSTA/PVC 0.6/1kV tiết diện 4x185mm2' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_60_70_10",
+      "title_vi": "Cáp điện lực hạ thế bọc giáp thép",
+      "iso_12006_layer": "Resource (Armoured Power Cables)"
+    },
+    "rubric": "Must classify armoured XLPE low voltage power cable as Pr_60_70_10.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Cost Estimation / Electrical Products",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_14_spiral_duct_product",
+    "input_prompt": "Phân loại vật tư ống gió: 'Ống gió tôn tráng kẽm xoắn tròn D300 dày 0.75mm có lớp bọc bảo ôn bông thủy tinh dày 25mm' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_65_10_30",
+      "title_vi": "Ống gió xoắn tròn tôn mạ kẽm bọc cách nhiệt",
+      "iso_12006_layer": "Resource (Insulated Circular Ducts)"
+    },
+    "rubric": "Must classify pre-insulated spiral galvanized duct product as Pr_65_10_30.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Cost Estimation / HVAC Products",
+      "difficulty": "HARD"
+    }
+  },
+  {
+    "id": "test_bigbim_m6_15_ppr_pipe_pn20",
+    "input_prompt": "Phân loại vật tư đường ống: 'Ống dẫn nước nóng lạnh chịu nhiệt chất liệu nhựa PP-R cấp áp lực PN20 đường kính ngoài D50mm' theo Uniclass Pr và ISO 12006-2.",
+    "golden_answer": {
+      "uniclass_table": "Products (Pr)",
+      "uniclass_code": "Pr_50_20_10",
+      "title_vi": "Ống cấp nước chịu nhiệt PP-R PN20",
+      "iso_12006_layer": "Resource (Polypropylene Pressure Pipes)"
+    },
+    "rubric": "Must classify PPR PN20 pressure water pipe as Pr_50_20_10.",
+    "metadata": {
+      "module": "M6_WBS_BOQ_PROJECT_MANAGEMENT",
+      "discipline": "Cost Estimation / Plumbing Products",
+      "difficulty": "EASY"
+    }
+  },
+  {
+    "id": "test_bigbim_m7_01_hybrid_shaft_trap",
+    "input_prompt": "Phân loại cấu kiện: 'Hộp kỹ thuật thạch cao chống cháy EI 60 bao che ống đứng thoát nước mưa kết hợp máng cáp điện và miệng gió hút khói sự cố' theo chuẩn Uniclass 200 và ISO 12006-2.",
+    "golden_answer": {
+      "primary_uniclass_table": "Elements/Functions (EF)",
+      "primary_uniclass_code": "EF_25_10",
+      "iso_12006_layer": "Result (Enclosure Elements)",
+      "disambiguation_rule": "Hộp kỹ thuật bao che là cấu kiện Kiến trúc (EF_25_10), chứa các hệ thống MEP con (Ss_50, Ss_70, Ss_65) bên trong, không được gộp nhầm thành một Hệ thống MEP đơn lẻ."
+    },
+    "rubric": "Must classify the enclosure shaft as EF_25 (Architecture Enclosure Element) rather than confusing it with internal MEP systems (Ss_50/Ss_65/Ss_70).",
+    "metadata": {
+      "module": "M7_REDTEAM_TRAIN_TRAPS",
+      "trap_type": "HYBRID_MULTI_DISCIPLINE",
+      "difficulty": "HARD",
+      "discipline": "Architecture vs MEP"
+    }
+  },
+  {
+    "id": "test_bigbim_m7_02_slang_normalization_trap",
+    "input_prompt": "Phân loại và chuẩn hóa định danh: 'dam D1 300x600 btct du ung luc san T3 truc A-B b tong mac 350 toa nha VP1 du an SUN-CITY' theo Uniclass EF và ISO 19650.",
+    "golden_answer": {
+      "normalized_title": "Dầm bê tông cốt thép dự ứng lực sàn tầng 3",
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_20",
+      "iso_19650_naming": "SUN-CITY-VP1-L03-EF_20_20-D1",
+      "disambiguation_rule": "Tự động chuẩn hóa viết tắt tiếng Việt ('btct' -> Bê tông cốt thép, 'du ung luc' -> Dự ứng lực, 'san T3' -> Tầng L03)."
+    },
+    "rubric": "Must normalize slang abbreviations (btct, du ung luc, san T3), classify as EF_20_20 (Beams), and generate valid ISO 19650 container string.",
+    "metadata": {
+      "module": "M7_REDTEAM_TRAIN_TRAPS",
+      "trap_type": "SLANG_AND_TYPO_NORMALIZATION",
+      "difficulty": "HARD",
+      "discipline": "Structural"
+    }
+  },
+  {
+    "id": "test_bigbim_m7_03_element_vs_product_trap",
+    "input_prompt": "Phân định rõ sự khác biệt phân loại khi bóc tách khối lượng vật tư (BOQ/Resources) so với khi dựng mô hình hình học (BIM Elements) cho: 'Cửa trượt tự động 2 cánh nhôm kính cảm biến hồng ngoại 2000x2400mm'.",
+    "golden_answer": {
+      "bim_model_view": {
+        "uniclass_table": "Elements/Functions (EF)",
+        "uniclass_code": "EF_25_30",
+        "iso_12006_layer": "Result (Openings/Doors)"
+      },
+      "boq_procurement_view": {
+        "uniclass_table": "Products (Pr)",
+        "uniclass_code": "Pr_30_59_24",
+        "iso_12006_layer": "Resource (Door Products)"
+      },
+      "disambiguation_rule": "Bắt buộc tách bạch 2 góc nhìn theo ISO 12006-2: Mô hình BIM = EF (Elements) vs Dự toán mua sắm = Pr (Products)."
+    },
+    "rubric": "Must explicitly distinguish between EF_25_30 (BIM Result Element) and Pr_30_59_24 (BOQ Resource Product) under ISO 12006-2.",
+    "metadata": {
+      "module": "M7_REDTEAM_TRAIN_TRAPS",
+      "trap_type": "DUAL_VIEW_PERSPECTIVE_TRAP",
+      "difficulty": "VERY_HARD",
+      "discipline": "Architecture / QS"
+    }
+  },
+  {
+    "id": "test_bigbim_m7_04_curved_alignment_trap",
+    "input_prompt": "Thiết lập phân loại và định danh cho 'Đoạn đường cong chuyển tiếp siêu cao bán kính R=250m từ lý trình KM 02+150 đến KM 02+450 thuộc Dự án Cao Tốc CT05' theo IFC Alignment (IFC4X3) và Uniclass EF.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_10_10",
+      "ifc_alignment_naming": "CT05-KM002_150_KM002_450-EF_10_10",
+      "spatial_type": "Linear Infrastructure Alignment Segment",
+      "disambiguation_rule": "Công trình tuyến tính không được chia theo Tầng/Phòng mà phải định vị theo dải lý trình IFC Alignment dọc tim tuyến."
+    },
+    "rubric": "Must apply linear chainage segment naming (KM002_150_KM002_450) without creating artificial building floor containers.",
+    "metadata": {
+      "module": "M7_REDTEAM_TRAIN_TRAPS",
+      "trap_type": "LINEAR_CHAINAGE_SEGMENTATION",
+      "difficulty": "HARD",
+      "discipline": "Infrastructure / GIS"
+    }
+  },
+  {
+    "id": "test_bigbim_m7_05_phantom_airlock_trap",
+    "input_prompt": "Phân loại không gian và kiểm định an toàn cháy cho: 'Khoang đệm ngăn cháy có tăng áp không khí dương (Air-lock Vestibule) ngăn cách giữa Phòng biến áp dầu tầng hầm B2 và sảnh thang máy' theo QCVN 06:2022/BXD và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_25_30_70",
+      "title_vi": "Khoang đệm ngăn cháy tăng áp",
+      "pccc_classification": "Khoang đệm loại 1 ngăn cháy có áp suất dương",
+      "iso_19650_naming": "PRJ-T1-B02-SL_25_30_70-001",
+      "disambiguation_rule": "Khoang đệm ngăn cháy là không gian bảo vệ trung gian (SL_25_30_70), không được phân loại nhầm thành phòng điện SL_70 hay sảnh thang máy SL_25_30_20."
+    },
+    "rubric": "Must classify specifically as SL_25_30_70 (Fire Airlock / Vestibule) and avoid confusing with electrical space or elevator lobby.",
+    "metadata": {
+      "module": "M7_REDTEAM_TRAIN_TRAPS",
+      "trap_type": "BUFFER_SPACE_FIRE_DISAMBIGUATION",
+      "difficulty": "VERY_HARD",
+      "discipline": "PCCC / Spatial Naming"
+    }
+  },
+  {
+    "id": "test_bigbim_m7_06_diaphragm_vs_partition_trap",
+    "input_prompt": "Phân biệt rạch ròi giữa 'Tường vây bê tông Barrette dày 1000mm hố đào sâu' và 'Vách thạch cao ngăn phòng dày 100mm' theo bảng Uniclass EF và nguyên lý ISO 12006-2.",
+    "golden_answer": {
+      "retaining_wall": "EF_20_05 (Substructure Retaining Walls)",
+      "partition_wall": "EF_25_10 (Architecture Internal Wall Elements)",
+      "disambiguation_rule": "Tường vây Barrette là kết cấu chịu tải địa kỹ thuật ngầm (EF_20_05), tuyệt đối không gộp chung với vách ngăn kiến trúc nhẹ (EF_25_10)."
+    },
+    "rubric": "Must separate underground retaining wall (EF_20_05) from internal partition elements (EF_25_10).",
+    "metadata": {
+      "module": "M7_REDTEAM_TRAIN_TRAPS",
+      "trap_type": "STRUCTURAL_VS_ARCH_WALL_TRAP",
+      "difficulty": "HARD",
+      "discipline": "Structural vs Architecture"
+    }
+  },
+  {
+    "id": "test_bigbim_m7_07_messy_pile_slang_trap",
+    "input_prompt": "Chuẩn hóa và phân loại: 'mc D800 sau 35m coc ly tam san T1 du an ECO-GREEN' theo Uniclass EF và ISO 19650.",
+    "golden_answer": {
+      "normalized_title": "Cọc bê tông ly tâm dự ứng lực D800mm sâu 35m",
+      "uniclass_code": "EF_20_10",
+      "iso_19650_naming": "ECO-GREEN-BLD1-L01-EF_20_10-P01",
+      "disambiguation_rule": "Tự động chuẩn hóa từ lóng 'mc' (móng cọc) -> Cọc bê tông ly tâm (EF_20_10)."
+    },
+    "rubric": "Must normalize slang abbreviations ('mc', 'coc ly tam') into EF_20_10 foundation pile element.",
+    "metadata": {
+      "module": "M7_REDTEAM_TRAIN_TRAPS",
+      "trap_type": "SLANG_FOUNDATION_NORMALIZATION",
+      "difficulty": "HARD",
+      "discipline": "Geotechnical"
+    }
+  },
+  {
+    "id": "test_bigbim_m7_08_elevator_arch_vs_mep_trap",
+    "input_prompt": "Phân định góc nhìn cho 'Thang máy chở khách tải trọng 1000kg tốc độ 2.5m/s': trong mô hình phối hợp kiến trúc (BIM Element) so với hệ thống cơ điện (MEP System).",
+    "golden_answer": {
+      "bim_arch_element": "EF_25_50 (Circulation/Conveying Elements)",
+      "mep_system": "Ss_70_50_10 (Passenger Lift Systems)",
+      "disambiguation_rule": "Trong mô hình kiến trúc, thang máy là phần tử không gian lưu thông đứng (EF_25_50); khi quản lý cơ điện MEP, nó là hệ thống thiết bị thang máy (Ss_70_50_10)."
+    },
+    "rubric": "Must distinguish between architectural conveying element EF_25_50 and MEP lift system Ss_70_50_10.",
+    "metadata": {
+      "module": "M7_REDTEAM_TRAIN_TRAPS",
+      "trap_type": "ELEVATOR_MULTI_DISCIPLINE_VIEW",
+      "difficulty": "VERY_HARD",
+      "discipline": "Architecture vs MEP"
+    }
+  },
+  {
+    "id": "test_bigbim_m7_09_intumescent_paint_dual_view",
+    "input_prompt": "Phân loại 'Sơn phồng nở chống cháy R90': khi mua sắm vật tư theo kg/thùng (BOQ Resource) so với khi gắn thuộc tính chống cháy vào cột dầm thép trong mô hình BIM.",
+    "golden_answer": {
+      "boq_procurement": "Pr_60_60_15 (Intumescent Paint Product)",
+      "bim_model_view": "Property Set (Pset_FireRating) gắn vào EF_20_15 / EF_20_20",
+      "disambiguation_rule": "Sơn chống cháy khi mua sắm là Product Pr; khi dựng mô hình BIM, nó là thuộc tính (Property/Pset) của cấu kiện chịu lực, không dựng thành hình học riêng."
+    },
+    "rubric": "Must classify procurement as Pr_60_60_15 and model integration as structural Property Set.",
+    "metadata": {
+      "module": "M7_REDTEAM_TRAIN_TRAPS",
+      "trap_type": "PROPERTY_VS_PRODUCT_DISAMBIGUATION",
+      "difficulty": "VERY_HARD",
+      "discipline": "QS vs BIM Modeling"
+    }
+  },
+  {
+    "id": "test_bigbim_m7_10_kiosk_substation_trap",
+    "input_prompt": "Phân loại 'Trạm biến áp Kiosk hợp bộ ngoài trời 1000kVA đặt tại góc sân công trình': phân biệt giữa Cấp độ Thực thể công trình phụ trợ (En) và Cấp độ Hệ thống cơ điện (Ss).",
+    "golden_answer": {
+      "entity_level": "En_50_10 (Auxiliary/Utility Electrical Entities)",
+      "system_level": "Ss_70_10_10 (MV Substation Electrical Systems)",
+      "disambiguation_rule": "Khi nhìn toàn thể khu đất là Thực thể công trình phụ trợ En_50_10; khi đi vào chi tiết thiết bị bên trong là Hệ thống điện Ss_70_10_10."
+    },
+    "rubric": "Must distinguish between Entity level (En_50_10) and System level (Ss_70_10_10) under ISO 12006-2.",
+    "metadata": {
+      "module": "M7_REDTEAM_TRAIN_TRAPS",
+      "trap_type": "ENTITY_VS_SYSTEM_HIERARCHY",
+      "difficulty": "HARD",
+      "discipline": "Electrical / Site Planning"
+    }
+  }
+]
