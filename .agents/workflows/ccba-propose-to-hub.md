@@ -43,11 +43,12 @@ Thực thi các lệnh Git tại thư mục Hub (`hub_path`):
    ```markdown
    ---
    proposal_id: "[YYYY-MM-DD]_[tên-đề-xuất]"
-   type: "[loại-đề-xuất]"
+   type: "[loại-đề-xuất: skill | workflow | tool | rules]"
    name: "[tên-đề-xuất]"
    status: "open"
-   priority: "[mức-độ-ưu-tiên]"
+   priority: "[mức-độ-ưu-tiên: Cao | Trung bình | Thấp]"
    proposed_by_project: "[tên-dự-án-spoke]"
+   proposed_by_archetype: "[archetype: project_delivery | enterprise_governance | knowledge_corpus | specialized_extension]"
    proposed_date: "[YYYY-MM-DD]"
    applies_to:
      - "[bộ-môn-áp-dụng]"
@@ -60,7 +61,13 @@ Thực thi các lệnh Git tại thư mục Hub (`hub_path`):
    ## Giải pháp / Cấu trúc đề xuất
    ...
    ```
-4. **Commit & Push:**
+4. **Kiểm tra Hợp lệ & Cú pháp (Linter & Governance Gate):**
+   Chạy công cụ kiểm định tài liệu và kỹ năng để đảm bảo đề xuất không chứa lỗi cú pháp hoặc liên kết gãy:
+   ```bash
+   python scripts/validate_skills.py
+   python scripts/doc_auditor.py
+   ```
+5. **Commit & Push:**
    Thực hiện commit và push lên remote branch (do thư mục `.agents/proposals/` đã được whitelist trong `.gitignore`, bạn có thể dùng lệnh add thông thường):
    ```bash
    git add .agents/proposals/ && git commit -m "docs(proposal): add proposal for [tên-đề-xuất]" && git push origin proposal/[tên-đề-xuất]
@@ -70,7 +77,7 @@ Thực thi các lệnh Git tại thư mục Hub (`hub_path`):
 Kiểm tra quyền qua GitHub CLI bằng cách chạy `gh auth status` hoặc kiểm tra biến môi trường:
 - **Nếu có quyền:** Chạy lệnh tạo PR:
   ```bash
-  gh pr create --title "docs(proposal): add proposal for [tên-đề-xuất]" --body "Automated proposal submission." --base main --head proposal/[tên-đề-xuất]
+  gh pr create --title "docs(proposal): add proposal for [tên-đề-xuất]" --body "Automated proposal submission from Spoke." --base main --head proposal/[tên-đề-xuất]
   ```
 - **Nếu không có quyền:** Cung cấp link tạo PR thủ công dựa trên remote URL lấy được từ `git remote get-url origin`:
   👉 `[PR-creation-URL]/pull/new/proposal/[tên-đề-xuất]`
