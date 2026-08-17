@@ -122,6 +122,12 @@
   - Thao tác tệp tạm trong `tempfile.TemporaryDirectory()`, đặt tệp repacked/unpacked trung gian bên trong thư mục sandbox này để tự động dọn dẹp sạch sẽ khi thoát context.
   - Khi nhận đường dẫn từ bên ngoài, luôn kiểm tra an toàn bằng `resolved_path.is_relative_to(sandbox_root.resolve())` để ngăn chặn tấn công vượt cấp (`../../`).
 
+#### P2.4. Cross-Platform CP1252 Terminal Encoding Safe Logging (Ghi Nhật Ký An Toàn Trên Windows)
+* **Nguyên tắc:** Trên Windows, terminal mặc định (`cp1252` hoặc `cp936`) sẽ phát sinh lỗi `UnicodeEncodeError: 'charmap' codec can't encode character...` khi in trực tiếp các ký tự unicode nâng cao (như emoji 🔍, 🚀, ❌, mũi tên `→`, `│`).
+* **Chuẩn thực thi:** Khi định dạng log xuất ra console/terminal:
+  - Khuyến nghị sử dụng chuẩn ASCII tương đương (ví dụ: `->` thay vì `→`, `[OK]` thay vì `✅`, `*` thay vì `•`).
+  - Hoặc bọc hàm in bằng bộ giải mã an toàn `text.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(...)`.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP2.1. Hardcoded Path Delimiters:** Dùng nối chuỗi chuỗi `/` hoặc `\` thay cho `pathlib.Path`.
 * **AP2.2. Leaking Temp Files to Project Root:** Để rải rác tệp tạm `.tmp`, `.lock`, `.log` tại root thay vì gom vào `.md/scratch/` hoặc `.md/data/`.
@@ -169,6 +175,13 @@
   - Khai báo mục tiêu tối giản qua tệp `program.md` (`Target File`, `Target Score`, `Dataset File`, `Guardrails`).
   - *KEEP (Commit):* Khi `Score_mới > Score_cũ` và không có Điểm Liệt $\rightarrow$ AI tự động `git commit`.
   - *REVERT (Rollback):* Khi `Score_mới <= Score_cũ` hoặc có lỗi $\rightarrow$ AI tự động `git checkout -- <target_file>` khôi phục trạng thái cũ an toàn.
+
+#### P3.10. Isolated Fast Test Suites & Strict SLA (< 2s) for AI Fast Feedback Loops (Matt Pocock Pattern)
+* **Nguyên tắc:** AI Agent cần vòng lặp phản hồi siêu tốc (< 2s) sau mỗi lần sửa mã nguồn để tránh gián đoạn tư duy và lãng phí token.
+* **Giải pháp:**
+  1. Đăng ký marker `fast` chính quy trong `pyproject.toml` và gán nhãn `pytestmark = [pytest.mark.fast, pytest.mark.unit]` cho các bài test thuần logic/mock in-memory.
+  2. Nâng cấp bộ điều phối test runner `scripts/eval/run_isolated_tests.py --fast` và `scripts/safe_pytest.py --fast` với cấu hình bắt buộc `-c pyproject.toml`.
+  3. Cưỡng chế SLA tự động bằng test suite `tests/governance/test_fast_test_suites.py` xác thực 100% các package đều hoàn thành kiểm thử trong thời gian siêu tốc.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP3.1. Unscoped Full Pytest Run:** Kích hoạt quét test toàn bộ repo làm tràn context và chạm timeout.
@@ -341,60 +354,48 @@
 * **Nguyên tắc:** Bảng biểu phức tạp (rowspan/colspan gộp ô, đa cấp, footnotes) xuất hiện ở mọi miền nghiệp vụ (QCVN PCCC, QC Thẩm tra, Hồ sơ hoàn thành, Hợp đồng).
 * **Giải pháp:** Gom toàn bộ năng lực bóc tách ma trận bảng 2D, unmerge ô gộp, sinh slug mô tả (`make_descriptive_table_slug`) và thay thế Markdown vào package SSOT `packages/ccba-ooxml` (`from ccba_ooxml import TableReconstructor, StructuredTable`). Các packages khác (`ccba-legal-intel`) và Spokes tái sử dụng trực tiếp mà không viết lại logic.
 
-#### P6.16. Isolated Fast Test Suites & Strict SLA (< 2s) for AI Fast Feedback Loops (Matt Pocock Pattern)
-* **Nguyên tắc:** AI Agent cần vòng lặp phản hồi siêu tốc (< 2s) sau mỗi lần sửa mã nguồn để tránh gián đoạn tư duy và lãng phí token.
-* **Giải pháp:**
-  1. Đăng ký marker `fast` chính quy trong `pyproject.toml` và gán nhãn `pytestmark = [pytest.mark.fast, pytest.mark.unit]` cho các bài test thuần logic/mock in-memory.
-  2. Nâng cấp bộ điều phối test runner `scripts/eval/run_isolated_tests.py --fast` và `scripts/safe_pytest.py --fast` với cấu hình bắt buộc `-c pyproject.toml`.
-  3. Cưỡng chế SLA tự động bằng test suite `tests/governance/test_fast_test_suites.py` xác thực 100% các package đều hoàn thành kiểm thử trong thời gian siêu tốc.
-
-#### P6.17. Dual-Layer Dependency Contract Enforcement (Import-Linter & Native AST Scanner)
+#### P6.16. Dual-Layer Dependency Contract Enforcement (Import-Linter & Native AST Scanner)
 * **Nguyên tắc:** Bảo vệ tuyệt đối ranh giới của các Deep Seams, cấm gọi trực tiếp vào các file private nội bộ `_*` của package khác và ngăn chặn phụ thuộc vòng hoặc đảo ngược tầng (layer inversion).
 * **Giải pháp:**
   1. **Cấu hình chuẩn công nghiệp `.importlinter`**: Khai báo các contracts `layers`, `forbidden`, `independence` cho `lint-imports`.
   2. **Native AST Governance Scanner (`scripts/governance/check_dependency_contracts.py`)**: Bộ quét AST zero-dependency quét toàn bộ 200+ file mã nguồn trong `< 0.4s`, bẫy các lỗi `PrivateSubmoduleSeamViolation`, `FoundationLeafPurityViolation`, `LeafIndependenceViolation` mà không cần cài đặt thêm thư viện bên ngoài.
   3. Tích hợp trực tiếp vào CI và `ccba-lint-imports` CLI.
 
-#### P6.18. AST Visitor Private Member Import Guard
+#### P6.17. AST Visitor Private Member Import Guard
 * **Nguyên tắc:** Linter kiểm soát ranh giới phụ thuộc (`DependencyASTVisitor`) không được chỉ kiểm tra `node.module`, mà **bắt buộc phải duyệt qua cả `node.names`** trong câu lệnh `from pkg import ...`.
 * **Lý do:** Ngăn chặn triệt để hành vi lách luật Seam bằng cách import trực tiếp private symbols/functions (`from ccba_maskara import _private_symbol`), bảo vệ 100% tính toàn vẹn của Thin Seams.
 
-#### P6.19. Resilient Legal AST Node Normalization for VBHN Merging
+#### P6.18. Resilient Legal AST Node Normalization for VBHN Merging
 * **Nguyên tắc:** Trong quy trình đối soát và hợp nhất văn bản pháp luật (VBHN Engine), các node ID sinh ra từ AST (ví dụ `D1`, `D2`) và các patch diff (ví dụ `dieu-1`, `dieu_1`, `1`) phải được chuẩn hóa qua `norm_map` hai chiều.
 * **Lý do:** Đảm bảo phép so khớp và chắp vá luôn thành công bất chấp sự khác biệt về case và dấu gạch nối giữa các hệ thống trích xuất.
 
-#### P6.20. 3-Tier Skills Hierarchy & Progressive Disclosure (Kim Tự Tháp Kỹ Năng 3 Tầng & ADR 0040)
+#### P6.19. 3-Tier Skills Hierarchy & Progressive Disclosure (Kim Tự Tháp Kỹ Năng 3 Tầng & ADR 0040)
 * **Nguyên tắc:** Để giải quyết triệt để vấn đề Context Bloat và giảm tải 70-80% token nền:
   1. **Tier 1 (Master Deep Skills - Model Invoked):** Đại diện cho các năng lực đầu cuối hoàn chỉnh, bảo trợ bởi Deep Seams. Khống chế nghiêm ngặt $\le 10$ skills cho mỗi Bundle (`_core: 10`, `_qc: 6`, `_consulting: 4`, `_bim: 5`), với mô tả súc tích $\le 180$ ký tự để AI tự nhận diện trong hội thoại tự nhiên.
   2. **Tier 2 (Progressive References):** Các tài liệu hướng dẫn kỹ thuật chi tiết của sub-skills nông được gom vào thư mục `references/*.md` bên trong Master Skill (Progressive Disclosure — chỉ nạp khi cần xử lý ngoại lệ).
   3. **Tier 3 (User Workflows - User Invoked):** 100% các quy trình mang tính nghi thức, có sự điều khiển của con người (`/ccba-implement`, `/ccba-new-feature`, `/ccba-wait-what`...) bắt buộc gắn `disable-model-invocation: true` để tiêu tốn **0 token** trong System Prompt khởi tạo.
 
-#### P6.21. Infrastructure Glue Code vs Domain Orchestration Distinction (Phân Biệt Rõ Mã Nối Hạ Tầng & Logic Điều Phối)
+#### P6.20. Infrastructure Glue Code vs Domain Orchestration Distinction (Phân Biệt Rõ Mã Nối Hạ Tầng & Logic Điều Phối)
 * **Nguyên tắc:** Khi rà soát mã nguồn để làm sâu module (Deepening via Extraction - P6.6), **bắt buộc phải phân biệt rõ ràng giữa Infrastructure Glue Code với Domain Orchestration Logic**:
   - *Infrastructure Glue Code:* Lệnh gọi `subprocess.run()`, tạo thư mục tạm `tempfile.TemporaryDirectory()`, in banner màu `print()`, đo runtime... $\rightarrow$ Thuộc về CLI scripts hoặc test helpers, **không cấu thành domain depth**. Nghiêm cấm bọc các đoạn glue code này thành Class/Service mới khi không có ít nhất 2 caller thực tế (tránh vi phạm AP6.3 Shallow-Wrapping).
   - *Domain Orchestration Logic:* Xử lý phân loại nghiệp vụ, chuyển đổi định dạng phức tạp, phân giải AST, mutex locks liên quan đến phiên làm việc, cơ chế tự sửa lỗi $\rightarrow$ Bắt buộc bóc tách đưa vào packages lõi trước khi tinh gọn script.
 
-#### P6.22. Cross-Package Unique Symbol Naming Invariant (Bất Biến Định Danh Symbol Độc Nhất Toàn Monorepo)
+#### P6.21. Cross-Package Unique Symbol Naming Invariant (Bất Biến Định Danh Symbol Độc Nhất Toàn Monorepo)
 * **Nguyên tắc:** Mỗi class, protocol hoặc public seam trong Monorepo phải sở hữu một định danh duy nhất phản ánh chính xác 100% năng lực cốt lõi của nó.
 * **Quy chuẩn:** Tuyệt đối không đặt tên trùng lặp (ví dụ: `TableReconstructor` ở cả `mdconverter` và `ccba-ooxml`) khi bản chất của một bên chỉ là trích xuất phụ lục (`AppendixExtractor`). Việc này triệt tiêu hoàn toàn nguy cơ ô nhiễm ngữ cảnh (Context Poisoning) và giúp AI Agent luôn định vị đúng Deep Seam chuẩn.
 
-#### P6.23. Hard Caller Count Gate & Ground-Truth Architecture Sweeps (Rào Chắn Số Lượng Caller Thực Tế & Quét Kiến Trúc Thực Chiến)
+#### P6.22. Hard Caller Count Gate & Ground-Truth Architecture Sweeps (Rào Chắn Số Lượng Caller Thực Tế & Quét Kiến Trúc Thực Chiến)
 * **Nguyên tắc:** Khi rà soát mã nguồn để đề xuất các cơ hội làm sâu module (Deepening Opportunities):
   1. **Đếm Caller Thực Tế Bằng `grep_search`:** Tuyệt đối không suy đoán số caller trên lý thuyết. Nếu một đoạn code chỉ có duy nhất 1 caller (`Callers == 1`), đề xuất bóc tách tạo Seam mới bắt buộc phải bị xếp loại `Speculative / Low ROI` (không được gán `Strong Recommendation`). Chỉ đề xuất Deep Seam mới khi có ít nhất $\ge 2$ callers độc lập thực sự cần dùng.
-  2. **Ưu Tiên Quét Nợ Kỹ Thuật Thực Tế:** Trong các phiên rà soát kiến trúc, ưu tiên quét triệt tiêu các nợ kỹ thuật gây nguy cơ tiềm ẩn cao: Xung đột tên định danh giữa các packages (P6.22), trôi dạt import cục bộ trong submodules, và các script dùng một lần tồn dư trong thư mục vận hành thay vì chỉ tập trung vào việc bóc tách hàm dài.
+  2. **Ưu Tiên Quét Nợ Kỹ Thuật Thực Tế:** Trong các phiên rà soát kiến trúc, ưu tiên quét triệt tiêu các nợ kỹ thuật gây nguy cơ tiềm ẩn cao: Xung đột tên định danh giữa các packages (P6.21), trôi dạt import cục bộ trong submodules, và các script dùng một lần tồn dư trong thư mục vận hành thay vì chỉ tập trung vào việc bóc tách hàm dài.
 
-#### P6.24. Dynamic Skill Scope & Broad Scan Isolation (Cô Lập Phạm Vi Symbol & Tra Cứu Động)
+#### P6.23. Dynamic Skill Scope & Broad Scan Isolation (Cô Lập Phạm Vi Symbol & Tra Cứu Động)
 * **Nguyên tắc:** Khi xây dựng công cụ kiểm tra tĩnh, quét mã nguồn hoặc symbol indexing (như `LinkAuditor`):
   1. **Loại trừ thư mục cục bộ khi quét diện rộng:** Tự động loại trừ `.agents` khi `search_dirs` bao gồm `project_root`, ngăn symbol cục bộ của một skill rò rỉ thành symbol toàn cục (global leak).
   2. **Dynamic Skill Scope:** Tự động phát hiện nếu tệp markdown đang kiểm tra nằm trong `.agents/skills/<skill-name>/` và nạp thêm thư mục `scripts/` nội bộ của chính skill đó vào phạm vi tra cứu, bất kể `search_dirs` được truyền tường minh hay ngầm định.
   3. **Scoped Caching:** Khóa cache kết quả tìm kiếm theo tuple `(symbol, tuple(search_dirs))` để tránh ô nhiễm kết quả giữa các phạm vi kiểm tra khác nhau.
 
-#### P6.25. Cross-Platform CP1252 Terminal Encoding Safe Logging (Ghi Nhật Ký An Toàn Trên Windows)
-* **Nguyên tắc:** Trong các module xử lý nội bộ, workers hoặc domain services chạy trên môi trường đa nền tảng (đặc biệt Windows terminal sử dụng mã hóa `cp1252`/charmap):
-  - Tuyệt đối không gọi `print()` trực tiếp các ký tự emoji Unicode (như `\u2705`, `🚀`, `⚠️`) ở tầng thư viện/class methods.
-  - Sử dụng tiền tố ASCII chuẩn hóa (như `[ArchStats]`, `[+]`, `[OK]`, `[WARN]`, `[ERROR]`) hoặc bọc an toàn qua `TextIOWrapper` reconfigure encoding UTF-8 bên trong CLI `main()` entrypoint.
-
-#### P6.26. Direct Re-export over Shallow Subclassing (Ưu Tiên Re-Export Trực Tiếp Hơn Lớp Con Rỗng)
+#### P6.24. Direct Re-export over Shallow Subclassing (Ưu Tiên Re-Export Trực Tiếp Hơn Lớp Con Rỗng)
 * **Nguyên tắc:** Khi một package cấp cao (consumer như `mdconverter`) kế thừa các kiểu dữ liệu, báo cáo hoặc thực thể từ package nền tảng (foundation như `ccba_pdf_prep`):
   - Nếu không mở rộng hành vi hay bổ sung trường dữ liệu mới, hãy re-export trực tiếp tại `__all__` thay vì tạo các lớp con rỗng (`class Segment(BaseSegment): pass`) hay viết wrapper hàm unpack 15 tham số thủ công.
   - Giúp mã nguồn tinh gọn, bảo đảm tính nhất quán của kiểu dữ liệu (`isinstance` checks luôn khớp) và giảm chi phí bảo trì boilerplate.
