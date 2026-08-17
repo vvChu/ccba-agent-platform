@@ -6,7 +6,7 @@
 
 ## 🎯 Mục tiêu Thí nghiệm (Experiment Goal)
 - **Target File**: `.agents/skills/bigbim-classification/SKILL.md`
-- **Target Score**: 95.0%
+- **Target Score**: 100.0%
 - **Max Iterations**: 10
 - **Dataset File**: `.agents/skills/eval-gate/test_cases/eval_bigbim_classification_100.json`
 
