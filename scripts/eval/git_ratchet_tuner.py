@@ -180,6 +180,22 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
         ]
 
+    if any(k in sname for k in ["bim", "uniclass", "classification", "ifc"]):
+        return [
+            RegexScorer(
+                name="bim_classification_rules",
+                pattern=r"(Uniclass|ISO 12006-2|ISO 22274|ISO 21511|En_|PM_|Pr_|Ss_|EF_|SL_|WBS|phân loại)",
+                weight=0.5,
+            ),
+            RegexScorer(
+                name="bim_anti_trap_hard_floor",
+                pattern=r"(ISO 19650|IFC4X3|IFC Alignment|BIM Object|Spatial Structure|Trí Nhớ Số|Digital Memory)",
+                weight=0.3,
+                is_critical=True,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
+        ]
+
     return [RegexScorer(pattern=r"(xử lý|hướng dẫn|thực hiện|quy định)", weight=1.0)]
 
 
