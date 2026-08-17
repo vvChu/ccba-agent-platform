@@ -383,6 +383,22 @@
   1. **Đếm Caller Thực Tế Bằng `grep_search`:** Tuyệt đối không suy đoán số caller trên lý thuyết. Nếu một đoạn code chỉ có duy nhất 1 caller (`Callers == 1`), đề xuất bóc tách tạo Seam mới bắt buộc phải bị xếp loại `Speculative / Low ROI` (không được gán `Strong Recommendation`). Chỉ đề xuất Deep Seam mới khi có ít nhất $\ge 2$ callers độc lập thực sự cần dùng.
   2. **Ưu Tiên Quét Nợ Kỹ Thuật Thực Tế:** Trong các phiên rà soát kiến trúc, ưu tiên quét triệt tiêu các nợ kỹ thuật gây nguy cơ tiềm ẩn cao: Xung đột tên định danh giữa các packages (P6.22), trôi dạt import cục bộ trong submodules, và các script dùng một lần tồn dư trong thư mục vận hành thay vì chỉ tập trung vào việc bóc tách hàm dài.
 
+#### P6.24. Dynamic Skill Scope & Broad Scan Isolation (Cô Lập Phạm Vi Symbol & Tra Cứu Động)
+* **Nguyên tắc:** Khi xây dựng công cụ kiểm tra tĩnh, quét mã nguồn hoặc symbol indexing (như `LinkAuditor`):
+  1. **Loại trừ thư mục cục bộ khi quét diện rộng:** Tự động loại trừ `.agents` khi `search_dirs` bao gồm `project_root`, ngăn symbol cục bộ của một skill rò rỉ thành symbol toàn cục (global leak).
+  2. **Dynamic Skill Scope:** Tự động phát hiện nếu tệp markdown đang kiểm tra nằm trong `.agents/skills/<skill-name>/` và nạp thêm thư mục `scripts/` nội bộ của chính skill đó vào phạm vi tra cứu, bất kể `search_dirs` được truyền tường minh hay ngầm định.
+  3. **Scoped Caching:** Khóa cache kết quả tìm kiếm theo tuple `(symbol, tuple(search_dirs))` để tránh ô nhiễm kết quả giữa các phạm vi kiểm tra khác nhau.
+
+#### P6.25. Cross-Platform CP1252 Terminal Encoding Safe Logging (Ghi Nhật Ký An Toàn Trên Windows)
+* **Nguyên tắc:** Trong các module xử lý nội bộ, workers hoặc domain services chạy trên môi trường đa nền tảng (đặc biệt Windows terminal sử dụng mã hóa `cp1252`/charmap):
+  - Tuyệt đối không gọi `print()` trực tiếp các ký tự emoji Unicode (như `\u2705`, `🚀`, `⚠️`) ở tầng thư viện/class methods.
+  - Sử dụng tiền tố ASCII chuẩn hóa (như `[ArchStats]`, `[+]`, `[OK]`, `[WARN]`, `[ERROR]`) hoặc bọc an toàn qua `TextIOWrapper` reconfigure encoding UTF-8 bên trong CLI `main()` entrypoint.
+
+#### P6.26. Direct Re-export over Shallow Subclassing (Ưu Tiên Re-Export Trực Tiếp Hơn Lớp Con Rỗng)
+* **Nguyên tắc:** Khi một package cấp cao (consumer như `mdconverter`) kế thừa các kiểu dữ liệu, báo cáo hoặc thực thể từ package nền tảng (foundation như `ccba_pdf_prep`):
+  - Nếu không mở rộng hành vi hay bổ sung trường dữ liệu mới, hãy re-export trực tiếp tại `__all__` thay vì tạo các lớp con rỗng (`class Segment(BaseSegment): pass`) hay viết wrapper hàm unpack 15 tham số thủ công.
+  - Giúp mã nguồn tinh gọn, bảo đảm tính nhất quán của kiểu dữ liệu (`isinstance` checks luôn khớp) và giảm chi phí bảo trì boilerplate.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 
 * **AP6.1. Leaky Interface Exporting 30+ Symbols:** Xuất khẩu toàn bộ hàm con ra `__init__.py` làm rối loạn AI navigation.
@@ -392,6 +408,7 @@
 * **AP6.5. Deleting Embedded Domain Logic:** Nhầm lẫn giữa mã boilerplate lặp lại với domain orchestration logic (dù đã có docstring) và xóa bỏ khi tinh gọn scripts.
 * **AP6.6. Hybrid "Neither Fish Nor Fowl" Model Anti-Pattern (Lớp Mô Hình Lai Tạp):** Cài đặt đè `__getitem__` trên `BaseModel` để vừa hỗ trợ dot notation vừa hỗ trợ dict subscripting, gây mơ hồ khi phân tích kiểu dữ liệu tĩnh và làm sai lệch quá trình serialize JSON/dump.
 * **AP6.7. Brittle File Path Instructions (Context Poisoning):** Ghi cứng đường dẫn script phụ trợ cụ thể (`scripts/safe_pytest.py`, `scripts/hooks/test_speed_guard.py`) trong tài liệu quy tắc. Khi refactor module, Agent bị ảo giác và tìm kiếm ở vị trí sai. Thay vào đó, áp dụng **Capability-First Instructions**.
+* **AP6.8. Implicit Scope Leaks in Unfiltered Root Scans:** Quét toàn bộ `project_root` bằng `rglob` mà không có bộ lọc ranh giới (`.agents`, `node_modules`, `.md`), dẫn đến việc tài liệu toàn cục tham chiếu nhầm vào các hàm/biến cục bộ của skill (False Positive) hoặc làm chậm CI gấp hàng chục lần.
 
 ---
 

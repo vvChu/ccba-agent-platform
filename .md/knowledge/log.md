@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-08-17] [synthesize] | Tối Ưu Hóa Hiệu Năng LinkAuditor, Hiện Đại Hóa Async Test & Tinh Gọn Analyzer
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `scripts/governance/link_auditor.py`, `scripts/scaffolding/arch_stats.py`, `packages/mdconverter/`, `packages/ccba-pdf-prep/`, `packages/ccba-ai/tests/`, `packages/ccba-notebooklm/tests/`, `pyproject.toml`
+- **Summary**: Hoàn tất PR #204 giải quyết 5 ứng viên tối ưu hóa kiến trúc: (1) Tối ưu hóa LinkAuditor đạt gia tốc 17.6x (<1.3s) bằng Directory Exclusions (-95.7% traversal), Scoped Caching, và Dynamic Skill Scope; (2) Hiện đại hóa toàn bộ 30+ async test fixtures sang `@pytest.mark.asyncio` với `asyncio_mode = "strict"`; (3) Khắc phục lỗi charmap encoding CP1252 trên Windows cho arch_stats.py; (4) Đồng bộ hóa model alias `qwen-local-primary` theo ADR-025 và tinh gọn `mdconverter/core/analyzer.py` thành re-export trực tiếp 10 dòng; (5) Tiếp thu và giải quyết 100% review comments từ GitHub Copilot, bổ sung kiểm thử hồi quy và vượt qua toàn bộ 10/10 test suites trong Pre-release Gate.
+
+---
+
 ## [2026-08-16] [synthesize] | Dọn Dẹp Kỹ Thuật, Khử Xung Đột Định Danh & Tiến Hóa Kỹ Năng Rà Soát Kiến Trúc
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `.agents/skills/improve-codebase-architecture/SKILL.md`, `.md/knowledge/session_learnings.md`, `packages/mdconverter/`, `packages/ccba-legal-intel/`, `packages/ccba-pdf-prep/`, `scripts/spoke/`, `scripts/update_arch_stats.py`
