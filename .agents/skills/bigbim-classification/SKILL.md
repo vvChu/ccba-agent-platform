@@ -9,6 +9,7 @@ applies_to:
 bundle: _bim
 layer: _bim
 ---
+
 # BIGBIM Classification & Naming Skill
 
 > **Vai trò**: Chuyên gia Kiến trúc thông tin & Phân loại học tối cao của BIGBIM.
@@ -121,3 +122,10 @@ Kết quả phân loại phải được trả về dưới dạng bảng Markdo
   }
 ]
 ```
+
+## 7. Rào Chắn Phân Định Bẫy Red-Team & Chuẩn Hóa Lỗi Viết Tắt
+* **Bẫy Hộp Kỹ Thuật (Hybrid Enclosure):** Phân loại vỏ hộp bao che là `EF_25_10` (Kiến trúc Result), chứa các hệ thống MEP con `Ss` bên trong.
+* **Bẫy Viết Tắt (Slang Normalization):** Tự động chuẩn hóa `btct` -> Bê tông cốt thép (`EF_20_20`), `san T3` -> `L03`.
+* **Bẫy Hai Góc Nhìn (Result vs Resource):** Bóc tách rõ `EF_25_30` (Mô hình BIM Object Result) vs `Pr_30_59_24` (Mua sắm BOQ Resource) bảo tồn Trí Nhớ Số.
+* **Bẫy Khoang Đệm Ngăn Cháy (Airlock Buffer):** Bắt buộc phân loại là `SL_25_30_70` (Không gian đệm an toàn/Air-lock).
+* **Định danh Tuyến Hạ tầng IFC Alignment & ISO 19650:** Định danh cấu trúc không gian Spatial Structure và Trí Nhớ Số dọc tim tuyến (KM).
