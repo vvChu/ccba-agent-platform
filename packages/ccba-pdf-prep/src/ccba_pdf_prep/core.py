@@ -92,11 +92,13 @@ class PDFReport:
         if not self.page_details:
             return []
 
-        hints = model_hints or {
-            "text": "qwen3.5-35b",
+        hints = {
+            "text": "qwen-local-primary",
             "scan": "ocr-primary",
-            "drawing": "qwen3.5-35b",
+            "drawing": "qwen-local-primary",
         }
+        if model_hints:
+            hints.update(model_hints)
 
         segments: list[Segment] = []
         current_start = 0
@@ -125,6 +127,22 @@ class PDFReport:
             )
         )
         return segments
+
+    @property
+    def should_skip(self) -> bool:
+        """Whether this PDF should be skipped by standard converters."""
+        return self.category == PDFCategory.DRAWING
+
+    @property
+    def skip_reason(self) -> str:
+        """Human-readable reason for skipping."""
+        if self.category == PDFCategory.DRAWING:
+            return (
+                f"Engineering drawing detected "
+                f"({self.drawing_pages}/{self.pages} oversized pages). "
+                f"Use specialised QC tools instead."
+            )
+        return ""
 
 
 # --- Analyzer ---
