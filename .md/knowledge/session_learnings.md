@@ -409,6 +409,7 @@
 * **AP6.6. Hybrid "Neither Fish Nor Fowl" Model Anti-Pattern (Lớp Mô Hình Lai Tạp):** Cài đặt đè `__getitem__` trên `BaseModel` để vừa hỗ trợ dot notation vừa hỗ trợ dict subscripting, gây mơ hồ khi phân tích kiểu dữ liệu tĩnh và làm sai lệch quá trình serialize JSON/dump.
 * **AP6.7. Brittle File Path Instructions (Context Poisoning):** Ghi cứng đường dẫn script phụ trợ cụ thể (`scripts/safe_pytest.py`, `scripts/hooks/test_speed_guard.py`) trong tài liệu quy tắc. Khi refactor module, Agent bị ảo giác và tìm kiếm ở vị trí sai. Thay vào đó, áp dụng **Capability-First Instructions**.
 * **AP6.8. Implicit Scope Leaks in Unfiltered Root Scans:** Quét toàn bộ `project_root` bằng `rglob` mà không có bộ lọc ranh giới (`.agents`, `node_modules`, `.md`), dẫn đến việc tài liệu toàn cục tham chiếu nhầm vào các hàm/biến cục bộ của skill (False Positive) hoặc làm chậm CI gấp hàng chục lần.
+* **AP6.9. Overlapping Skill Steps (Bước Hướng Dẫn Phủ Lấp):** Thêm bước mới vào SKILL.md mà không hợp nhất với bước cũ có chức năng tương tự, tạo ra các bước đánh số nhảy cóc (1 → 1.4 → 1.5 → 2) và nội dung trùng lặp. Agent phải đọc 2 lần hướng dẫn gần như đồng nghĩa, vi phạm KISS. *Chuẩn:* Khi bổ sung logic mới, tích hợp trực tiếp vào bước cũ hoặc thay thế hoàn toàn, không xếp chồng song song.
 
 ---
 
