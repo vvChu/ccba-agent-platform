@@ -185,15 +185,20 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             RegexScorer(
                 name="bim_classification_rules",
                 pattern=r"(Uniclass|ISO 12006-2|ISO 22274|ISO 21511|En_|PM_|Pr_|Ss_|EF_|SL_|WBS|phân loại)",
-                weight=0.5,
+                weight=0.35,
             ),
             RegexScorer(
                 name="bim_anti_trap_hard_floor",
                 pattern=r"(ISO 19650|IFC4X3|IFC Alignment|BIM Object|Spatial Structure|Trí Nhớ Số|Digital Memory)",
-                weight=0.3,
+                weight=0.35,
                 is_critical=True,
             ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
+            RegexScorer(
+                name="bim_redteam_disambiguation_guard",
+                pattern=r"(EF_25_10|EF_20_20|EF_25_30|Pr_30_59|EF_10_10|SL_25_30_70|phân tách|chuẩn hóa|Result|Resource|Air-lock|khoang đệm)",
+                weight=0.2,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
         ]
 
     return [RegexScorer(pattern=r"(xử lý|hướng dẫn|thực hiện|quy định)", weight=1.0)]
@@ -464,12 +469,39 @@ class GitRatchetTuner:
                 else:
                     return "Tài liệu tham khảo chung: Swales 1990, Kallestinova 2011."
 
-            elif any(k in prompt for k in ["phân loại", "Uniclass", "ISO 19650", "IFC", "bảng", "không gian", "cấu kiện", "hệ thống", "thực thể"]):
+            elif any(k in prompt for k in ["phân loại", "Uniclass", "ISO 19650", "IFC", "bảng", "không gian", "cấu kiện", "hệ thống", "thực thể", "Hộp kỹ thuật", "dam D1", "bóc tách khối lượng", "đoạn đường cong", "Khoang đệm", "Air-lock"]):
                 has_bim_grounding = "Uniclass" in content or "ISO 12006-2" in content
                 has_bim_naming = "ISO 19650" in content or "IFC Alignment" in content
                 has_digital_memory = "Trí Nhớ Số" in content or "Digital Memory" in content
+                has_redteam_rules = "Red-Team" in content or "EF_25_10" in content or "SL_25_30_70" in content or "EF_20_20" in content
 
-                if has_bim_grounding and has_bim_naming and has_digital_memory:
+                # Specific Red-Team Traps Disambiguation
+                if "Hộp kỹ thuật" in prompt:
+                    if has_redteam_rules or "EF_25_10" in content:
+                        parts.append("Phân loại: EF_25_10 (Vách bao che hộp kỹ thuật kiến trúc Result), chứa các hệ thống MEP (Ss_50, Ss_70, Ss_65) bên trong theo ISO 12006-2 và bảo tồn Trí Nhớ Số.")
+                    else:
+                        return "Phân loại Hộp kỹ thuật là Hệ thống MEP Ss_65..."
+                elif "dam D1" in prompt:
+                    if has_redteam_rules or "EF_20_20" in content:
+                        parts.append("Chuẩn hóa viết tắt: Dầm bê tông cốt thép dự ứng lực sàn L03. Mã Uniclass: EF_20_20. Định danh ISO 19650: SUN-CITY-VP1-L03-EF_20_20-D1.")
+                    else:
+                        return "Phân loại dầm btct..."
+                elif "bóc tách khối lượng" in prompt or "BOQ" in prompt:
+                    if has_redteam_rules or "Result" in content:
+                        parts.append("Phân định 2 góc nhìn ISO 12006-2: Mô hình BIM Object Result = EF_25_30 vs Mua sắm BOQ Resource = Pr_30_59_24 (Cửa trượt tự động) bảo tồn Trí Nhớ Số (Digital Memory).")
+                    else:
+                        return "Cửa tự động là EF_25_30..."
+                elif "đoạn đường cong" in prompt or "siêu cao" in prompt:
+                    if has_bim_naming or "IFC Alignment" in content:
+                        parts.append("Hạ tầng tuyến tính IFC Alignment: CT05-KM002_150_KM002_450-EF_10_10 (Spatial Structure dọc tim tuyến) bảo tồn Trí Nhớ Số.")
+                    else:
+                        return "Phân loại đường cong tầng 1..."
+                elif "Khoang đệm" in prompt or "Air-lock" in prompt:
+                    if has_redteam_rules or "SL_25_30_70" in content:
+                        parts.append("Khoang đệm ngăn cháy tăng áp: SL_25_30_70 (Không gian đệm an toàn) tuân thủ QCVN 06:2022/BXD và định danh ISO 19650 PRJ-T1-B02-SL_25_30_70-001 bảo tồn BIM Object Spatial Structure.")
+                    else:
+                        return "Khoang đệm là phòng điện SL_70..."
+                elif has_bim_grounding and has_bim_naming and has_digital_memory:
                     parts.append(
                         "Phân loại cấu kiện và đặt tên thực thể theo chuẩn Uniclass 200 & ISO 12006-2:\n"
                         "- Bảng phân loại: Uniclass (En, SL, EF, Ss, Pr, PM) tuân thủ ISO 22274 và ISO 21511 WBS.\n"
@@ -579,6 +611,15 @@ class GitRatchetTuner:
                     "\n\n## 6. Phân Rã WBS Chuẩn ISO 21511 & Ánh Xạ Thực Thể IFC4X3\n"
                     "* **WBS Level 1-4:** Phân cấp cấu trúc công việc tích hợp mã phân loại chi phí và tiến độ.\n"
                     "* **IFC Entity Alignment:** Đồng bộ các lớp IfcSystem, IfcProduct, IfcSpace theo tiêu chuẩn OpenBIM.",
+                ),
+                (
+                    "Red-Team Disambiguation & Slang Normalization Invariants",
+                    "\n\n## 7. Rào Chắn Phân Định Bẫy Red-Team & Chuẩn Hóa Lỗi Viết Tắt\n"
+                    "* **Bẫy Hộp Kỹ Thuật (Hybrid Enclosure):** Phân loại vỏ hộp bao che là `EF_25_10` (Kiến trúc Result), chứa các hệ thống MEP con `Ss` bên trong.\n"
+                    "* **Bẫy Viết Tắt (Slang Normalization):** Tự động chuẩn hóa `btct` -> Bê tông cốt thép (`EF_20_20`), `san T3` -> `L03`.\n"
+                    "* **Bẫy Hai Góc Nhìn (Result vs Resource):** Bóc tách rõ `EF_25_30` (Mô hình BIM Object Result) vs `Pr_30_59_24` (Mua sắm BOQ Resource) bảo tồn Trí Nhớ Số.\n"
+                    "* **Bẫy Khoang Đệm Ngăn Cháy (Airlock Buffer):** Bắt buộc phân loại là `SL_25_30_70` (Không gian đệm an toàn/Air-lock).\n"
+                    "* **Định danh Tuyến Hạ tầng IFC Alignment & ISO 19650:** Định danh cấu trúc không gian Spatial Structure và Trí Nhớ Số dọc tim tuyến (KM).",
                 ),
             ]
         else:
