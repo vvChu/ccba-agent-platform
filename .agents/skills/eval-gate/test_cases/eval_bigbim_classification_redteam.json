@@ -1,0 +1,93 @@
+[
+  {
+    "id": "redteam_trap_01_hybrid_shaft",
+    "input_prompt": "Phân loại cấu kiện: 'Hộp kỹ thuật thạch cao chống cháy EI 60 bao che ống đứng thoát nước mưa kết hợp máng cáp điện và miệng gió hút khói sự cố' theo chuẩn Uniclass 200 và ISO 12006-2.",
+    "golden_answer": {
+      "primary_uniclass_table": "Elements/Functions (EF)",
+      "primary_uniclass_code": "EF_25_10",
+      "iso_12006_layer": "Result (Enclosure Elements)",
+      "disambiguation_rule": "Hộp kỹ thuật bao che là cấu kiện Kiến trúc (EF_25_10), chứa các hệ thống MEP con (Ss_50, Ss_70, Ss_65) bên trong, không được gộp nhầm thành một Hệ thống MEP đơn lẻ."
+    },
+    "rubric": "Must classify the enclosure shaft as EF_25 (Architecture Enclosure Element) rather than confusing it with internal MEP systems (Ss_50/Ss_65/Ss_70).",
+    "metadata": {
+      "trap_type": "HYBRID_MULTI_DISCIPLINE",
+      "difficulty": "HARD",
+      "discipline": "Architecture vs MEP"
+    }
+  },
+  {
+    "id": "redteam_trap_02_slang_normalization",
+    "input_prompt": "Phân loại và chuẩn hóa định danh: 'dam D1 300x600 btct du ung luc san T3 truc A-B b tong mac 350 toa nha VP1 du an SUN-CITY' theo Uniclass EF và ISO 19650.",
+    "golden_answer": {
+      "normalized_title": "Dầm bê tông cốt thép dự ứng lực sàn tầng 3",
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_20_20",
+      "iso_19650_naming": "SUN-CITY-VP1-L03-EF_20_20-D1",
+      "disambiguation_rule": "Tự động chuẩn hóa viết tắt tiếng Việt ('btct' -> Bê tông cốt thép, 'du ung luc' -> Dự ứng lực, 'san T3' -> Tầng L03)."
+    },
+    "rubric": "Must normalize slang abbreviations (btct, du ung luc, san T3), classify as EF_20_20 (Beams), and generate valid ISO 19650 container string.",
+    "metadata": {
+      "trap_type": "SLANG_AND_TYPO_NORMALIZATION",
+      "difficulty": "HARD",
+      "discipline": "Structural"
+    }
+  },
+  {
+    "id": "redteam_trap_03_element_vs_product",
+    "input_prompt": "Phân định rõ sự khác biệt phân loại khi bóc tách khối lượng vật tư (BOQ/Resources) so với khi dựng mô hình hình học (BIM Elements) cho: 'Cửa trượt tự động 2 cánh nhôm kính cảm biến hồng ngoại 2000x2400mm'.",
+    "golden_answer": {
+      "bim_model_view": {
+        "uniclass_table": "Elements/Functions (EF)",
+        "uniclass_code": "EF_25_30",
+        "iso_12006_layer": "Result (Openings/Doors)"
+      },
+      "boq_procurement_view": {
+        "uniclass_table": "Products (Pr)",
+        "uniclass_code": "Pr_30_59_24",
+        "iso_12006_layer": "Resource (Door Products)"
+      },
+      "disambiguation_rule": "Bắt buộc tách bạch 2 góc nhìn theo ISO 12006-2: Mô hình BIM = EF (Elements) vs Dự toán mua sắm = Pr (Products)."
+    },
+    "rubric": "Must explicitly distinguish between EF_25_30 (BIM Result Element) and Pr_30_59_24 (BOQ Resource Product) under ISO 12006-2.",
+    "metadata": {
+      "trap_type": "DUAL_VIEW_PERSPECTIVE_TRAP",
+      "difficulty": "VERY_HARD",
+      "discipline": "Architecture / QS"
+    }
+  },
+  {
+    "id": "redteam_trap_04_curved_alignment_infra",
+    "input_prompt": "Thiết lập phân loại và định danh cho 'Đoạn đường cong chuyển tiếp siêu cao bán kính R=250m từ lý trình KM 02+150 đến KM 02+450 thuộc Dự án Cao Tốc CT05' theo IFC Alignment (IFC4X3) và Uniclass EF.",
+    "golden_answer": {
+      "uniclass_table": "Elements/Functions (EF)",
+      "uniclass_code": "EF_10_10",
+      "ifc_alignment_naming": "CT05-KM002_150_KM002_450-EF_10_10",
+      "spatial_type": "Linear Infrastructure Alignment Segment",
+      "disambiguation_rule": "Công trình tuyến tính không được chia theo Tầng/Phòng mà phải định vị theo dải lý trình IFC Alignment dọc tim tuyến."
+    },
+    "rubric": "Must apply linear chainage segment naming (KM002_150_KM002_450) without creating artificial building floor containers.",
+    "metadata": {
+      "trap_type": "LINEAR_CHAINAGE_SEGMENTATION",
+      "difficulty": "HARD",
+      "discipline": "Infrastructure / GIS"
+    }
+  },
+  {
+    "id": "redteam_trap_05_phantom_fire_airlock",
+    "input_prompt": "Phân loại không gian và kiểm định an toàn cháy cho: 'Khoang đệm ngăn cháy có tăng áp không khí dương (Air-lock Vestibule) ngăn cách giữa Phòng biến áp dầu tầng hầm B2 và sảnh thang máy' theo QCVN 06:2022/BXD và ISO 19650.",
+    "golden_answer": {
+      "uniclass_table": "Spaces/locations (SL)",
+      "uniclass_code": "SL_25_30_70",
+      "title_vi": "Khoang đệm ngăn cháy tăng áp",
+      "pccc_classification": "Khoang đệm loại 1 ngăn cháy có áp suất dương",
+      "iso_19650_naming": "PRJ-T1-B02-SL_25_30_70-001",
+      "disambiguation_rule": "Khoang đệm ngăn cháy là không gian bảo vệ trung gian (SL_25_30_70), không được phân loại nhầm thành phòng điện SL_70 hay sảnh thang máy SL_25_30_20."
+    },
+    "rubric": "Must classify specifically as SL_25_30_70 (Fire Airlock / Vestibule) and avoid confusing with electrical space or elevator lobby.",
+    "metadata": {
+      "trap_type": "BUFFER_SPACE_FIRE_DISAMBIGUATION",
+      "difficulty": "VERY_HARD",
+      "discipline": "PCCC / Spatial Naming"
+    }
+  }
+]
