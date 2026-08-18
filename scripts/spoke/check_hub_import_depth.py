@@ -68,15 +68,16 @@ def scan_file(filepath: Path) -> list[tuple[int, str]]:
 
 def main() -> int:
     """Scans Spoke Python files for deep Hub package imports."""
-    parser = argparse.ArgumentParser(
-        description="CCBA Hub Import Depth Checker (ADR 0044)"
-    )
+    parser = argparse.ArgumentParser(description="CCBA Hub Import Depth Checker (ADR 0044)")
     parser.add_argument(
-        "--path", "-p", default=".",
+        "--path",
+        "-p",
+        default=".",
         help="Root directory to scan (default: current dir)",
     )
     parser.add_argument(
-        "files", nargs="*",
+        "files",
+        nargs="*",
         help="Specific files to check (for pre-commit integration)",
     )
     args = parser.parse_args()
@@ -94,10 +95,10 @@ def main() -> int:
 
     # Exclude .venv, __pycache__, .git
     target_files = [
-        f for f in target_files
+        f
+        for f in target_files
         if not any(
-            part in (".venv", "venv", "__pycache__", ".git", "node_modules")
-            for part in f.parts
+            part in (".venv", "venv", "__pycache__", ".git", "node_modules") for part in f.parts
         )
     ]
 

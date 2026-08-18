@@ -144,11 +144,11 @@ def test_sys_path_migration_cleans_boilerplate(tmp_path: Path):
     spoke_dir.mkdir()
     script_file = spoke_dir / "test_script.py"
     script_file.write_text(
-        'from pathlib import Path\n'
-        'import sys\n'
+        "from pathlib import Path\n"
+        "import sys\n"
         'HUB_SRC = Path(r"D:\\GitHubProjects\\ccba-agent-platform\\packages\\ccba-legal-intel\\src")\n'
-        'sys.path.insert(0, str(HUB_SRC))\n'
-        'from ccba_legal.crawler import ChromeCDP\n'
+        "sys.path.insert(0, str(HUB_SRC))\n"
+        "from ccba_legal.crawler import ChromeCDP\n"
         'print("hello")\n',
         encoding="utf-8",
     )
@@ -161,4 +161,3 @@ def test_sys_path_migration_cleans_boilerplate(tmp_path: Path):
     assert "sys.path.insert" not in cleaned_content
     assert "from ccba_legal.crawler import ChromeCDP" in cleaned_content
     assert (spoke_dir / "test_script.py.bak").exists()
-

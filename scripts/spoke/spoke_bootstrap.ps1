@@ -36,10 +36,10 @@ if (Get-Command "py" -ErrorAction SilentlyContinue) {
     $pythonCmd = "py -3"
 }
 
-$argsList = @("`"$engineScript`"", "--spoke", "`"$Spoke`"")
+$argsList = @($engineScript, "--spoke", $Spoke)
 
 if ($Hub) {
-    $argsList += @("--hub", "`"$Hub`"")
+    $argsList += @("--hub", $Hub)
 }
 if ($CreateVenv) {
     $argsList += "--create-venv"
@@ -54,6 +54,6 @@ if ($Force) {
     $argsList += "--force"
 }
 
-$cmd = "$pythonCmd $($argsList -join ' ')"
-Invoke-Expression $cmd
+# Use call operator instead of Invoke-Expression to prevent argument injection
+& $pythonCmd @argsList
 exit $LASTEXITCODE

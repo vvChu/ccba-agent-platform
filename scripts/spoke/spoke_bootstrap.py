@@ -30,6 +30,7 @@ def _safe_load_yaml(filepath: Path) -> dict[str, Any]:
     except Exception:
         return {}
 
+
 # Dependency topology order: harness must be first, then ai, then domain packages
 PACKAGE_TOPOLOGY_ORDER = [
     "ccba-harness",
@@ -115,7 +116,12 @@ class SpokeBootstrapper:
             return True
 
         # Scan for .py files in root, scripts, src, tests
-        for search_dir in [self.spoke_root, self.spoke_root / "scripts", self.spoke_root / "src", self.spoke_root / "tests"]:
+        for search_dir in [
+            self.spoke_root,
+            self.spoke_root / "scripts",
+            self.spoke_root / "src",
+            self.spoke_root / "tests",
+        ]:
             if search_dir.exists():
                 if any(search_dir.glob("*.py")):
                     return True
@@ -209,7 +215,10 @@ class SpokeBootstrapper:
             return False
 
         if not dry_run:
-            new_content = content.rstrip() + f"\n\n# Hub auto-generated editable links (local machine specific)\n{rule}\n"
+            new_content = (
+                content.rstrip()
+                + f"\n\n# Hub auto-generated editable links (local machine specific)\n{rule}\n"
+            )
             gitignore_path.write_text(new_content, encoding="utf-8")
         return True
 
@@ -286,11 +295,16 @@ class SpokeBootstrapper:
                 file=sys.stderr,
             )
             if not force:
-                print("   → Hủy bootstrap. Checkout Hub về main hoặc chạy lại với --force.", file=sys.stderr)
+                print(
+                    "   → Hủy bootstrap. Checkout Hub về main hoặc chạy lại với --force.",
+                    file=sys.stderr,
+                )
                 return 1
 
         if not self.is_python_project():
-            print("\n[Bootstrap] Spoke là dự án phi-Python (Pure Data/Document). Bỏ qua thiết lập Python SDK an toàn.")
+            print(
+                "\n[Bootstrap] Spoke là dự án phi-Python (Pure Data/Document). Bỏ qua thiết lập Python SDK an toàn."
+            )
             return 0
 
         packages = self.resolve_target_packages()
@@ -326,14 +340,19 @@ class SpokeBootstrapper:
         self.ensure_gitignore_rule(dry_run=dry_run)
         req_path = self.generate_requirements_hub_file(packages, dry_run=dry_run)
         commit_hash = self.get_hub_commit_hash()
-        print(f"Generated lockfile: {req_path.name} (hub_commit: {commit_hash}, đã cách ly trong .gitignore)")
+        print(
+            f"Generated lockfile: {req_path.name} (hub_commit: {commit_hash}, đã cách ly trong .gitignore)"
+        )
 
         if check_only:
             print("\n[Bootstrap] Check completed.")
             return 0
 
         if not venv_dir:
-            print("\nKhông thể tiếp tục cài đặt vì thiếu virtual environment. Vui lòng tạo .venv và thử lại.", file=sys.stderr)
+            print(
+                "\nKhông thể tiếp tục cài đặt vì thiếu virtual environment. Vui lòng tạo .venv và thử lại.",
+                file=sys.stderr,
+            )
             return 1
 
         python_bin = self.get_python_exec(venv_dir)
@@ -399,21 +418,36 @@ class SpokeBootstrapper:
                 has_failures = True
 
         if not has_failures:
-            print("\n🎉 Bootstrap hoàn tất thành công! Spoke đã được kết nối chuẩn với Hub Packages.")
+            print(
+                "\n🎉 Bootstrap hoàn tất thành công! Spoke đã được kết nối chuẩn với Hub Packages."
+            )
             return 0
         else:
-            print("\n⚠️ Một số package gặp lỗi. Xem chi tiết bên trên và chạy lại bootstrap sau khi sửa.", file=sys.stderr)
+            print(
+                "\n⚠️ Một số package gặp lỗi. Xem chi tiết bên trên và chạy lại bootstrap sau khi sửa.",
+                file=sys.stderr,
+            )
             return 1
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="CCBA Spoke Hub Package Bootstrapper")
-    parser.add_argument("--spoke", "-s", default=".", help="Path to Spoke repository (default: current dir)")
-    parser.add_argument("--hub", "-H", default=None, help="Path to Platform Hub (default: auto-discover)")
-    parser.add_argument("--create-venv", action="store_true", help="Automatically create .venv if missing")
+    parser.add_argument(
+        "--spoke", "-s", default=".", help="Path to Spoke repository (default: current dir)"
+    )
+    parser.add_argument(
+        "--hub", "-H", default=None, help="Path to Platform Hub (default: auto-discover)"
+    )
+    parser.add_argument(
+        "--create-venv", action="store_true", help="Automatically create .venv if missing"
+    )
     parser.add_argument("--check-only", action="store_true", help="Check status without installing")
-    parser.add_argument("--dry-run", action="store_true", help="Simulate without modifying filesystem")
-    parser.add_argument("--force", action="store_true", help="Force bootstrap even if Hub is on non-main branch")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Simulate without modifying filesystem"
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Force bootstrap even if Hub is on non-main branch"
+    )
 
     args = parser.parse_args()
     bootstrapper = SpokeBootstrapper(spoke_path=args.spoke, hub_path=args.hub)

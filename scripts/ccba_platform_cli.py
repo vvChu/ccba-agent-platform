@@ -313,7 +313,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     # bootstrap-spoke (ADR 0044)
     boot_p = subparsers.add_parser(
-        "bootstrap-spoke", help="Bootstrap editable links to Hub packages for Spoke Python venv (ADR 0044)"
+        "bootstrap-spoke",
+        help="Bootstrap editable links to Hub packages for Spoke Python venv (ADR 0044)",
     )
     boot_p.add_argument(
         "spoke_path", nargs="?", default=".", help="Path to target spoke (default: current dir)"
@@ -321,11 +322,12 @@ def build_parser() -> argparse.ArgumentParser:
     boot_p.add_argument(
         "--create-venv", action="store_true", help="Automatically create .venv if missing"
     )
-    boot_p.add_argument(
-        "--check-only", action="store_true", help="Check status without installing"
-    )
+    boot_p.add_argument("--check-only", action="store_true", help="Check status without installing")
     boot_p.add_argument(
         "--dry-run", action="store_true", help="Preview changes without modifying files"
+    )
+    boot_p.add_argument(
+        "--force", action="store_true", help="Force bootstrap even if Hub is on non-main branch"
     )
 
     # spoke-status
@@ -416,6 +418,7 @@ def main() -> int:
             auto_create_venv=args.create_venv,
             dry_run=args.dry_run,
             check_only=args.check_only,
+            force=args.force,
         )
 
     elif args.command == "spoke-status":

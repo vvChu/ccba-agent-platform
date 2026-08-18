@@ -14,13 +14,15 @@ from pathlib import Path
 
 SYS_PATH_PATTERNS = [
     # Match HUB_SRC = Path(...)
-    re.compile(r'^\s*HUB_SRC\s*=\s*Path\(.*?\).*?$', re.MULTILINE),
+    re.compile(r"^\s*HUB_SRC\s*=\s*Path\(.*?\).*?$", re.MULTILINE),
     # Match sys.path.insert(0, str(HUB_SRC))
-    re.compile(r'^\s*sys\.path\.insert\(\s*0\s*,\s*str\(\s*HUB_SRC\s*\)\s*\).*?$', re.MULTILINE),
+    re.compile(r"^\s*sys\.path\.insert\(\s*0\s*,\s*str\(\s*HUB_SRC\s*\)\s*\).*?$", re.MULTILINE),
     # Match sys.path.insert(0, str(Path(__file__).resolve().parent.parent)) or similar
-    re.compile(r'^\s*sys\.path\.insert\(\s*0\s*,\s*str\(Path\(__file__\).*?\)\s*\).*?$', re.MULTILINE),
+    re.compile(
+        r"^\s*sys\.path\.insert\(\s*0\s*,\s*str\(Path\(__file__\).*?\)\s*\).*?$", re.MULTILINE
+    ),
     # Match sys.path.insert(0, str(root_dir)) where root_dir is parent
-    re.compile(r'^\s*sys\.path\.insert\(\s*0\s*,\s*str\(\s*root_dir\s*\)\s*\).*?$', re.MULTILINE),
+    re.compile(r"^\s*sys\.path\.insert\(\s*0\s*,\s*str\(\s*root_dir\s*\)\s*\).*?$", re.MULTILINE),
 ]
 
 
@@ -30,7 +32,9 @@ class SysPathMigration:
     def __init__(self, spoke_root: Path | str):
         self.spoke_root = Path(spoke_root).resolve()
 
-    def scan_and_clean_file(self, py_file: Path, dry_run: bool = False, backup: bool = True) -> bool:
+    def scan_and_clean_file(
+        self, py_file: Path, dry_run: bool = False, backup: bool = True
+    ) -> bool:
         """Cleans a single python file. Returns True if file was modified."""
         try:
             content = py_file.read_text(encoding="utf-8")
@@ -72,14 +76,29 @@ class SysPathMigration:
         for py_file in self.spoke_root.rglob("*.py"):
             # Skip virtualenvs and caches
             parts = py_file.parts
-            if any(p in [".venv", "venv", ".git", "__pycache__", ".pytest_cache", ".ruff_cache", "build", "dist"] for p in parts):
+            if any(
+                p
+                in [
+                    ".venv",
+                    "venv",
+                    ".git",
+                    "__pycache__",
+                    ".pytest_cache",
+                    ".ruff_cache",
+                    "build",
+                    "dist",
+                ]
+                for p in parts
+            ):
                 continue
 
             total_scanned += 1
             if self.scan_and_clean_file(py_file, dry_run=dry_run, backup=backup):
                 modified_count += 1
 
-        print(f"\nTổng kết: Đã quét {total_scanned} tệp .py, phát hiện và xử lý {modified_count} tệp.")
+        print(
+            f"\nTổng kết: Đã quét {total_scanned} tệp .py, phát hiện và xử lý {modified_count} tệp."
+        )
         if dry_run and modified_count > 0:
             print("Chạy lại mà không có cờ `--dry-run` để áp dụng thay đổi.")
         return 0
@@ -87,8 +106,12 @@ class SysPathMigration:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Migrate Spoke sys.path hacks to standard imports")
-    parser.add_argument("--spoke", "-s", default=".", help="Path to Spoke repository (default: current dir)")
-    parser.add_argument("--dry-run", action="store_true", help="Preview changes without modifying files")
+    parser.add_argument(
+        "--spoke", "-s", default=".", help="Path to Spoke repository (default: current dir)"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview changes without modifying files"
+    )
     parser.add_argument("--no-backup", action="store_true", help="Do not create .bak backup files")
 
     args = parser.parse_args()

@@ -415,7 +415,6 @@ class SharedSdkInspector:
         return commands
 
 
-
 def safe_remove(path: Path):
     """Safely remove a directory or file without crashing on permission errors."""
     if not path.exists():
