@@ -8,8 +8,9 @@ from scripts.spoke.spoke_synchronizer import SharedSdkInspector
 
 @pytest.fixture
 def mock_hub_with_packages(tmp_path: Path) -> Path:
-    """Creates a mock Hub with packages/ccba-ai and packages/ccba-ooxml."""
+    """Creates a mock Hub with packages/ccba-harness, ccba-ai, and ccba-ooxml."""
     hub_dir = tmp_path / "mock-hub"
+    (hub_dir / "packages" / "ccba-harness").mkdir(parents=True, exist_ok=True)
     (hub_dir / "packages" / "ccba-ai").mkdir(parents=True, exist_ok=True)
     (hub_dir / "packages" / "ccba-ooxml").mkdir(parents=True, exist_ok=True)
     return hub_dir
@@ -39,11 +40,13 @@ def test_python_project_without_installed_packages_returns_recommendations(
     inspector = SharedSdkInspector(spoke_dir, mock_hub_with_packages, project_type="Phần mềm")
     assert inspector.is_python_project()
     status = inspector.inspect()
+    assert status.get("ccba-harness") is False
     assert status.get("ccba-ai") is False
     assert status.get("ccba-ooxml") is False
 
     recs = inspector.get_recommendations()
-    assert len(recs) == 2
+    assert len(recs) == 3
+    assert any("ccba-harness" in r for r in recs)
     assert any("ccba-ai" in r for r in recs)
     assert any("ccba-ooxml" in r for r in recs)
     assert all(r.startswith("pip install -e ") for r in recs)
@@ -61,6 +64,9 @@ def test_python_project_with_installed_packages_via_pth_returns_clean(
     site_packages.mkdir(parents=True, exist_ok=True)
 
     # Mock editable install .pth files
+    (site_packages / "ccba_harness.pth").write_text(
+        str(mock_hub_with_packages / "packages" / "ccba-harness"), encoding="utf-8"
+    )
     (site_packages / "ccba_ai.pth").write_text(
         str(mock_hub_with_packages / "packages" / "ccba-ai"), encoding="utf-8"
     )
@@ -71,6 +77,7 @@ def test_python_project_with_installed_packages_via_pth_returns_clean(
     inspector = SharedSdkInspector(spoke_dir, mock_hub_with_packages, project_type="Phần mềm")
     assert inspector.is_python_project()
     status = inspector.inspect()
+    assert status.get("ccba-harness") is True
     assert status.get("ccba-ai") is True
     assert status.get("ccba-ooxml") is True
 
@@ -88,11 +95,13 @@ def test_python_project_with_installed_packages_via_dist_info(
     site_packages = spoke_dir / "venv" / "lib" / "python3.11" / "site-packages"
     site_packages.mkdir(parents=True, exist_ok=True)
 
+    (site_packages / "ccba_harness-0.1.0.dist-info").mkdir(parents=True, exist_ok=True)
     (site_packages / "ccba_ai-0.1.0.dist-info").mkdir(parents=True, exist_ok=True)
     (site_packages / "__editable__.ccba_ooxml-0.1.0.pth").write_text("...", encoding="utf-8")
 
     inspector = SharedSdkInspector(spoke_dir, mock_hub_with_packages, project_type="Phần mềm")
     status = inspector.inspect()
+    assert status.get("ccba-harness") is True
     assert status.get("ccba-ai") is True
     assert status.get("ccba-ooxml") is True
     assert inspector.get_recommendations() == []

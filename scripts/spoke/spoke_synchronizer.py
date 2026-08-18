@@ -342,7 +342,7 @@ class SharedSdkInspector:
 
     def resolve_packages_to_check(self) -> list[str]:
         """Resolves the list of Hub packages to inspect for the Spoke."""
-        packages = ["ccba-ai", "ccba-ooxml"]
+        packages = ["ccba-harness", "ccba-ai", "ccba-ooxml"]
 
         # Read workspace_context.yaml if available
         for ctx_dir in [self.spoke_root / ".agents", self.spoke_root / ".md"]:
