@@ -23,9 +23,9 @@ Xây dựng và kiểm thử hoàn chỉnh **Cầu Nối Dữ Liệu Thực Chi�
 
 ## 3. Quyết Định Đã Chốt (Decisions So Far)
 
-* ✅ **[ADR 0041: Hub-Spoke Ecosystem Taxonomy](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md):** Phân loại rành mạch 5 Archetypes (Platform Hub, Enterprise Governance, Knowledge Corpus, Project Delivery, Specialized).
-* ✅ **[Non-Destructive Spoke Batch Sync](file:///d:/GitHubProjects/ccba-agent-platform/scripts/sync_spoke.py):** Đồng bộ hóa an toàn công cụ từ Hub xuống 3 Spokes mà không xóa đè tệp tin nội bộ.
-* ✅ **[Zero-Duplication Legal Knowledge Pointer](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/):** Dự án tra cứu trực tiếp kho luật OKF v2.0 tại `ccba-legal-knowledge` mà không sao chép tệp về máy.
+* ✅ **[ADR 0041: Hub-Spoke Ecosystem Taxonomy](../../../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md):** Phân loại rành mạch 5 Archetypes (Platform Hub, Enterprise Governance, Knowledge Corpus, Project Delivery, Specialized).
+* ✅ **[Non-Destructive Spoke Batch Sync](../../../../scripts/sync_spoke.py):** Đồng bộ hóa an toàn công cụ từ Hub xuống 3 Spokes mà không xóa đè tệp tin nội bộ.
+* ✅ **[Zero-Duplication Legal Knowledge Pointer](../../../../packages/ccba-legal-intel/):** Dự án tra cứu trực tiếp kho luật OKF v2.0 tại `ccba-legal-knowledge` mà không sao chép tệp về máy.
 
 ---
 

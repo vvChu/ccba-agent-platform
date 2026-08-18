@@ -72,5 +72,10 @@ Khi Agent cần bổ sung 1 kỹ năng cụ thể (ví dụ: `excalidraw-diagram
 
 ## 📋 Báo Cáo Kết Quả & Dọn Dẹp:
 1. **Tổng kết đồng bộ:** In bảng báo cáo tổng kết chi tiết gồm số lượng: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
-2. **Rà soát Kỹ năng Mồ côi (Orphaned / Deprecated Skills):** Nếu Hub đã xóa bỏ hoặc đổi tên một Skill cũ nhưng tại `.agents/skills/` của Spoke vẫn còn file cũ, Agent chủ động thông báo cho người dùng để xác nhận dọn dẹp các kỹ năng không còn nằm trong `catalog.yaml`.
-3. **Kiểm tra sức khỏe tổng thể:** Tại Hub, có thể chạy lại lệnh `python scripts\ccba_platform_cli.py spoke-status` để xác nhận toàn bộ hệ sinh thái đã xanh (Synced & Healthy).
+2. **Đồng bộ Pre-commit Hooks (ADR 0044 §7):** Nếu Spoke là Python project, tự động cập nhật `check_hub_import_depth.py` từ Hub:
+   ```powershell
+   Copy-Item "$hub\scripts\spoke\check_hub_import_depth.py" -Destination ".\scripts\check_hub_import_depth.py" -Force
+   ```
+3. **Rà soát Kỹ năng Mồ côi (Orphaned / Deprecated Skills):** Nếu Hub đã xóa bỏ hoặc đổi tên một Skill cũ nhưng tại `.agents/skills/` của Spoke vẫn còn file cũ, Agent chủ động thông báo cho người dùng để xác nhận dọn dẹp các kỹ năng không còn nằm trong `catalog.yaml`.
+4. **Kiểm tra sức khỏe tổng thể:** Tại Hub, có thể chạy lại lệnh `python scripts\ccba_platform_cli.py spoke-status` để xác nhận toàn bộ hệ sinh thái đã xanh (Synced & Healthy).
+
