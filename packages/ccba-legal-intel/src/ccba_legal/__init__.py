@@ -22,9 +22,15 @@ from .coordinator import (
     LegalProcessResult,
 )
 from .crawler import (
+    ChromeCDP,
+    ChromeCDPError,
     CookieVault,
+    MockChromeCDP,
     TVPLCrawler,
     TVPLSessionMutex,
+    download_three_tier,
+    get_crawled_doc_data,
+    trigger_download,
 )
 from .grounding import (
     LEGAL_DISCLAIMER,
@@ -58,6 +64,9 @@ __all__ = [
     "VBHNMerger",
     "TVPLCrawler",
     "Cleaners",
+    "ChromeCDP",
+    "MockChromeCDP",
+    "ChromeCDPError",
     # === Core DTOs & Domain Models ===
     "ASTNode",
     "DeltaPatch",
@@ -74,4 +83,8 @@ __all__ = [
     "TVPLSessionMutex",
     "CookieVault",
     "LEGAL_DISCLAIMER",
+    "download_three_tier",
+    "get_crawled_doc_data",
+    "trigger_download",
 ]
+

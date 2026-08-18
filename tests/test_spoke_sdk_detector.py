@@ -96,3 +96,69 @@ def test_python_project_with_installed_packages_via_dist_info(
     assert status.get("ccba-ai") is True
     assert status.get("ccba-ooxml") is True
     assert inspector.get_recommendations() == []
+
+
+def test_spoke_bootstrapper_resolves_packages_and_generates_lockfile(
+    tmp_path: Path, mock_hub_with_packages: Path
+):
+    """Verify SpokeBootstrapper resolves Tier 0 + declared packages and generates git-ignored lockfile."""
+    from scripts.spoke.spoke_bootstrap import SpokeBootstrapper
+
+    spoke_dir = tmp_path / "target-spoke"
+    spoke_dir.mkdir()
+    (spoke_dir / ".agents").mkdir()
+    (spoke_dir / ".agents" / "workspace_context.yaml").write_text(
+        "project:\n  name: target-spoke\n  archetype: knowledge_corpus\n  type: Phần mềm\nhub_packages:\n  - ccba-ooxml\n",
+        encoding="utf-8",
+    )
+
+    bootstrapper = SpokeBootstrapper(spoke_path=spoke_dir, hub_path=mock_hub_with_packages)
+    assert bootstrapper.is_python_project() is True
+
+    packages = bootstrapper.resolve_target_packages()
+    assert "ccba-harness" in packages
+    assert "ccba-ai" in packages
+    assert "ccba-ooxml" in packages
+    # Check topology order: ccba-harness before ccba-ai
+    assert packages.index("ccba-harness") < packages.index("ccba-ai")
+
+    # Generate requirements-hub.txt
+    req_file = bootstrapper.generate_requirements_hub_file(packages)
+    assert req_file.exists()
+    content = req_file.read_text(encoding="utf-8")
+    assert "-e " in content
+    assert "ccba-ai" in content
+
+    # Check gitignore update
+    bootstrapper.ensure_gitignore_rule()
+    gitignore = spoke_dir / ".gitignore"
+    assert gitignore.exists()
+    assert "requirements-hub.txt" in gitignore.read_text(encoding="utf-8")
+
+
+def test_sys_path_migration_cleans_boilerplate(tmp_path: Path):
+    """Verify SysPathMigration tool removes sys.path.insert and HUB_SRC hacks."""
+    from scripts.spoke.migrate_sys_path_hacks import SysPathMigration
+
+    spoke_dir = tmp_path / "messy-spoke"
+    spoke_dir.mkdir()
+    script_file = spoke_dir / "test_script.py"
+    script_file.write_text(
+        'from pathlib import Path\n'
+        'import sys\n'
+        'HUB_SRC = Path(r"D:\\GitHubProjects\\ccba-agent-platform\\packages\\ccba-legal-intel\\src")\n'
+        'sys.path.insert(0, str(HUB_SRC))\n'
+        'from ccba_legal.crawler import ChromeCDP\n'
+        'print("hello")\n',
+        encoding="utf-8",
+    )
+
+    migration = SysPathMigration(spoke_root=spoke_dir)
+    migration.run(dry_run=False, backup=True)
+
+    cleaned_content = script_file.read_text(encoding="utf-8")
+    assert "HUB_SRC" not in cleaned_content
+    assert "sys.path.insert" not in cleaned_content
+    assert "from ccba_legal.crawler import ChromeCDP" in cleaned_content
+    assert (spoke_dir / "test_script.py.bak").exists()
+

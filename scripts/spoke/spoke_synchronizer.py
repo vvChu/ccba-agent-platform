@@ -295,7 +295,7 @@ class TestGuardrailCopier:
 
 
 class SharedSdkInspector:
-    """Zero-latency static file inspector for Hub shared packages in Spoke virtual environments."""
+    """Zero-latency static file inspector for Hub shared packages in Spoke virtual environments (ADR 0044)."""
 
     def __init__(self, spoke_root: Path, hub_root: Path, project_type: str):
         self.spoke_root = spoke_root
@@ -303,14 +303,22 @@ class SharedSdkInspector:
         self.project_type = project_type
 
     def is_python_project(self) -> bool:
-        """Check if Spoke is a Python project by configuration or file presence."""
-        return (
+        """Check if Spoke is a Python project by configuration, file presence, or scripts."""
+        if (
             self.project_type == "Phần mềm"
             or (self.spoke_root / "pyproject.toml").exists()
             or (self.spoke_root / "requirements.txt").exists()
             or (self.spoke_root / ".venv").exists()
             or (self.spoke_root / "venv").exists()
-        )
+        ):
+            return True
+
+        # Check for any .py file in spoke
+        for d in [self.spoke_root, self.spoke_root / "scripts", self.spoke_root / "src"]:
+            if d.exists() and any(d.glob("*.py")):
+                return True
+
+        return False
 
     def find_site_packages(self) -> list[Path]:
         """Locate site-packages directories across standard virtual environment folders."""
@@ -332,12 +340,36 @@ class SharedSdkInspector:
                         site_packages_dirs.append(sp)
         return site_packages_dirs
 
+    def resolve_packages_to_check(self) -> list[str]:
+        """Resolves the list of Hub packages to inspect for the Spoke."""
+        packages = ["ccba-ai", "ccba-ooxml"]
+
+        # Read workspace_context.yaml if available
+        for ctx_dir in [self.spoke_root / ".agents", self.spoke_root / ".md"]:
+            ctx_file = ctx_dir / "workspace_context.yaml"
+            if ctx_file.exists():
+                try:
+                    data = yaml.safe_load(ctx_file.read_text(encoding="utf-8")) or {}
+                    declared = data.get("hub_packages", [])
+                    if isinstance(declared, list):
+                        for p in declared:
+                            if p and p not in packages:
+                                packages.append(p)
+                    # If knowledge_corpus archetype, check ccba-legal-intel
+                    if data.get("project", {}).get("archetype") == "knowledge_corpus":
+                        if "ccba-legal-intel" not in packages:
+                            packages.append("ccba-legal-intel")
+                except Exception:
+                    pass
+
+        return packages
+
     def inspect(self) -> dict[str, bool]:
         """Returns {package_name: is_installed} for key Hub shared packages."""
         if not self.is_python_project():
             return {}
 
-        packages_to_check = ["ccba-ai", "ccba-ooxml"]
+        packages_to_check = self.resolve_packages_to_check()
         installed_status = dict.fromkeys(packages_to_check, False)
         site_packages_dirs = self.find_site_packages()
 
@@ -381,6 +413,7 @@ class SharedSdkInspector:
             if pkg_path.exists():
                 commands.append(f'pip install -e "{pkg_path}"')
         return commands
+
 
 
 def safe_remove(path: Path):
