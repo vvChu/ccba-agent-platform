@@ -38,7 +38,7 @@ Khi `DocAutoEvolutionEngine` chạy qua đêm lúc 00:00 trên Server Spark, m�
 ### 🔍 Kết Quả Đối Soát Dẫn Chứng Mã Nguồn (AST Code-Grounding Audit)
 
 - ✅ **Classes & Functions Verified:** 100% các Deep Seams (`DocAutoEvolutionEngine`, `LegalIntelPipeline`, `TableReconstructor`, `ZeroDeletionGuard`) đều tồn tại thực tế trong `packages/` và `scripts/`.
-- ✅ **Architectural ADRs Grounded:** Ánh xạ chính xác 100% các thuật ngữ tới [ADR 0041](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md), [ADR 0042](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md), [ADR 0043](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0043-idop-active-dev-resilience-and-fallback.md).
+- ✅ **Architectural ADRs Grounded:** Ánh xạ chính xác 100% các thuật ngữ tới [ADR 0041](../../../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md), [ADR 0042](../../../../docs/adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md), [ADR 0043](../../../../docs/adr/0043-idop-active-dev-resilience-and-fallback.md).
 - ✅ **Zero Broken Links:** Không phát hiện bất kỳ liên kết nội bộ bị gãy nào.
 
 ---

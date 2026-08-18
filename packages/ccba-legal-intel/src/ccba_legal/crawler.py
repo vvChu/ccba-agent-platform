@@ -854,12 +854,22 @@ def download_three_tier(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> b
 METADATA_EXTRACTION_JS_TEMPLATE = r"""
 (() => {
     let result = {};
-    let tables = Array.from(document.querySelectorAll('table'));
-    let targetTable = tables.find(t => t.innerText.includes('Số hiệu') && t.innerText.includes('Ngày ban hành'));
+    let propertyContainer = document.querySelector('#divThuocTinh') ||
+                            document.querySelector('#ctl00_Content_Tab_ThuocTinh') ||
+                            document.querySelector('.properties') ||
+                            document.querySelector('#divContentDoc') ||
+                            document;
+    let tables = Array.from(propertyContainer.querySelectorAll('table'));
+    let targetTable = tables.find(t => {
+        let txt = t.innerText || '';
+        return (txt.includes('Số hiệu') || txt.includes('Số hiệu:')) &&
+               (txt.includes('Ngày ban hành') || txt.includes('Nơi ban hành') || txt.includes('Cơ quan ban hành'));
+    }) || tables.find(t => t.innerText.includes('Số hiệu'));
+
     if (targetTable) {
         let rows = Array.from(targetTable.querySelectorAll('tr'));
         rows.forEach(row => {
-            let cols = Array.from(row.querySelectorAll('td'));
+            let cols = Array.from(row.querySelectorAll('td, th'));
             if (cols.length >= 2) {
                 let key = cols[0].innerText.trim().replace(':', '');
                 let val = cols[1].innerText.trim();

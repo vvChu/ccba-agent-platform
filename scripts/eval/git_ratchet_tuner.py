@@ -469,62 +469,117 @@ class GitRatchetTuner:
                 else:
                     return "Tài liệu tham khảo chung: Swales 1990, Kallestinova 2011."
 
-            elif any(k.lower() in prompt.lower() for k in ["phân loại", "phân biệt", "phân định", "chuẩn hóa", "thiết lập", "xác định", "uniclass", "iso 19650", "ifc", "bảng", "không gian", "cấu kiện", "hệ thống", "thực thể", "hộp kỹ thuật", "dam d1", "bóc tách", "boq", "đoạn đường cong", "khoang đệm", "air-lock", "sơn phồng nở", "kiosk", "thang máy", "barrette", "mc d800"]):
+            elif any(
+                k.lower() in prompt.lower()
+                for k in [
+                    "phân loại",
+                    "phân biệt",
+                    "phân định",
+                    "chuẩn hóa",
+                    "thiết lập",
+                    "xác định",
+                    "uniclass",
+                    "iso 19650",
+                    "ifc",
+                    "bảng",
+                    "không gian",
+                    "cấu kiện",
+                    "hệ thống",
+                    "thực thể",
+                    "hộp kỹ thuật",
+                    "dam d1",
+                    "bóc tách",
+                    "boq",
+                    "đoạn đường cong",
+                    "khoang đệm",
+                    "air-lock",
+                    "sơn phồng nở",
+                    "kiosk",
+                    "thang máy",
+                    "barrette",
+                    "mc d800",
+                ]
+            ):
                 prompt_l = prompt.lower()
                 has_bim_grounding = "Uniclass" in content or "ISO 12006-2" in content
                 has_bim_naming = "ISO 19650" in content or "IFC Alignment" in content
                 has_digital_memory = "Trí Nhớ Số" in content or "Digital Memory" in content
-                has_redteam_rules = "Red-Team" in content or "EF_25_10" in content or "SL_25_30_70" in content or "EF_20_20" in content
+                has_redteam_rules = (
+                    "Red-Team" in content
+                    or "EF_25_10" in content
+                    or "SL_25_30_70" in content
+                    or "EF_20_20" in content
+                )
 
                 # Specific Red-Team Traps Disambiguation
                 if "hộp kỹ thuật" in prompt_l:
                     if has_redteam_rules or "EF_25_10" in content:
-                        parts.append("Phân loại: EF_25_10 (Vách bao che hộp kỹ thuật kiến trúc Result), chứa các hệ thống MEP (Ss_50, Ss_70, Ss_65) bên trong theo ISO 12006-2 và bảo tồn Trí Nhớ Số.")
+                        parts.append(
+                            "Phân loại: EF_25_10 (Vách bao che hộp kỹ thuật kiến trúc Result), chứa các hệ thống MEP (Ss_50, Ss_70, Ss_65) bên trong theo ISO 12006-2 và bảo tồn Trí Nhớ Số."
+                        )
                     else:
                         return "Phân loại Hộp kỹ thuật là Hệ thống MEP Ss_65..."
                 elif "dam d1" in prompt_l:
                     if has_redteam_rules or "EF_20_20" in content:
-                        parts.append("Chuẩn hóa viết tắt: Dầm bê tông cốt thép dự ứng lực sàn L03. Mã Uniclass: EF_20_20. Định danh ISO 19650: SUN-CITY-VP1-L03-EF_20_20-D1.")
+                        parts.append(
+                            "Chuẩn hóa viết tắt: Dầm bê tông cốt thép dự ứng lực sàn L03. Mã Uniclass: EF_20_20. Định danh ISO 19650: SUN-CITY-VP1-L03-EF_20_20-D1."
+                        )
                     else:
                         return "Phân loại dầm btct..."
                 elif "cửa trượt tự động" in prompt_l:
                     if has_redteam_rules or "Result" in content:
-                        parts.append("Phân định 2 góc nhìn ISO 12006-2: Mô hình BIM Object Result = EF_25_30 vs Mua sắm BOQ Resource = Pr_30_59_24 (Cửa trượt tự động) bảo tồn Trí Nhớ Số (Digital Memory).")
+                        parts.append(
+                            "Phân định 2 góc nhìn ISO 12006-2: Mô hình BIM Object Result = EF_25_30 vs Mua sắm BOQ Resource = Pr_30_59_24 (Cửa trượt tự động) bảo tồn Trí Nhớ Số (Digital Memory)."
+                        )
                     else:
                         return "Cửa tự động là EF_25_30..."
                 elif "đoạn đường cong" in prompt_l or "siêu cao" in prompt_l:
                     if has_bim_naming or "IFC Alignment" in content:
-                        parts.append("Hạ tầng tuyến tính IFC Alignment: CT05-KM002_150_KM002_450-EF_10_10 (Spatial Structure dọc tim tuyến) bảo tồn Trí Nhớ Số.")
+                        parts.append(
+                            "Hạ tầng tuyến tính IFC Alignment: CT05-KM002_150_KM002_450-EF_10_10 (Spatial Structure dọc tim tuyến) bảo tồn Trí Nhớ Số."
+                        )
                     else:
                         return "Phân loại đường cong tầng 1..."
                 elif "khoang đệm" in prompt_l or "air-lock" in prompt_l:
                     if has_redteam_rules or "SL_25_30_70" in content:
-                        parts.append("Khoang đệm ngăn cháy tăng áp: SL_25_30_70 (Không gian đệm an toàn) tuân thủ QCVN 06:2022/BXD và định danh ISO 19650 PRJ-T1-B02-SL_25_30_70-001 bảo tồn BIM Object Spatial Structure.")
+                        parts.append(
+                            "Khoang đệm ngăn cháy tăng áp: SL_25_30_70 (Không gian đệm an toàn) tuân thủ QCVN 06:2022/BXD và định danh ISO 19650 PRJ-T1-B02-SL_25_30_70-001 bảo tồn BIM Object Spatial Structure."
+                        )
                     else:
                         return "Khoang đệm là phòng điện SL_70..."
                 elif "barrette" in prompt_l and "vách thạch cao" in prompt_l:
                     if has_redteam_rules or "EF_20_05" in content:
-                        parts.append("Phân định kết cấu ngầm EF_20_05 (Tường vây Barrette Result) tách biệt với vách ngăn nhẹ EF_25_10 bảo tồn Trí Nhớ Số.")
+                        parts.append(
+                            "Phân định kết cấu ngầm EF_20_05 (Tường vây Barrette Result) tách biệt với vách ngăn nhẹ EF_25_10 bảo tồn Trí Nhớ Số."
+                        )
                     else:
                         return "Tường vây là vách ngăn EF_25..."
                 elif "mc d800" in prompt_l or "coc ly tam" in prompt_l:
                     if has_redteam_rules or "EF_20_10" in content:
-                        parts.append("Chuẩn hóa viết tắt: Móng cọc bê tông ly tâm D800. Mã Uniclass EF_20_10 (Result) định danh ISO 19650 ECO-GREEN-BLD1-L01-EF_20_10-P01.")
+                        parts.append(
+                            "Chuẩn hóa viết tắt: Móng cọc bê tông ly tâm D800. Mã Uniclass EF_20_10 (Result) định danh ISO 19650 ECO-GREEN-BLD1-L01-EF_20_10-P01."
+                        )
                     else:
                         return "Móng cọc ly tâm là mc..."
                 elif "thang máy" in prompt_l and "phối hợp kiến trúc" in prompt_l:
                     if has_redteam_rules or "EF_25_50" in content:
-                        parts.append("Phân định 2 góc nhìn: Mô hình kiến trúc Result = EF_25_50 (Lưu thông đứng) vs Hệ thống cơ điện = Ss_70_50_10 (Thang máy) bảo tồn Trí Nhớ Số BIM Object.")
+                        parts.append(
+                            "Phân định 2 góc nhìn: Mô hình kiến trúc Result = EF_25_50 (Lưu thông đứng) vs Hệ thống cơ điện = Ss_70_50_10 (Thang máy) bảo tồn Trí Nhớ Số BIM Object."
+                        )
                     else:
                         return "Thang máy là EF_25..."
                 elif "sơn phồng nở" in prompt_l or "r90" in prompt_l:
                     if has_redteam_rules or "Pr_60_60_15" in content:
-                        parts.append("Phân định bóc tách mua sắm Resource = Pr_60_60_15 vs Thuộc tính mô hình BIM Object Property Set (Pset_FireRating) bảo tồn Trí Nhớ Số.")
+                        parts.append(
+                            "Phân định bóc tách mua sắm Resource = Pr_60_60_15 vs Thuộc tính mô hình BIM Object Property Set (Pset_FireRating) bảo tồn Trí Nhớ Số."
+                        )
                     else:
                         return "Sơn chống cháy là lớp hoàn thiện..."
                 elif "kiosk" in prompt_l or "hợp bộ ngoài trời" in prompt_l:
                     if has_redteam_rules or "En_50_10" in content:
-                        parts.append("Phân định phân tách cấp độ ISO 12006-2: Thực thể quy hoạch En_50_10 Result vs Hệ thống thiết bị điện Ss_70_10_10 bảo tồn Trí Nhớ Số BIM Object.")
+                        parts.append(
+                            "Phân định phân tách cấp độ ISO 12006-2: Thực thể quy hoạch En_50_10 Result vs Hệ thống thiết bị điện Ss_70_10_10 bảo tồn Trí Nhớ Số BIM Object."
+                        )
                     else:
                         return "Trạm Kiosk là hệ thống điện..."
                 elif has_bim_grounding and has_bim_naming and has_digital_memory:
@@ -535,11 +590,11 @@ class GitRatchetTuner:
                         "- Cấu trúc định danh ISO 19650 / IFC Alignment bảo tồn Trí Nhớ Số (Digital Memory) và cấu trúc không gian Spatial Structure cho mô hình BIM Object (IFC4X3)."
                     )
                     if "qcvn 06" in prompt_l or "pccc" in prompt_l:
-                        parts.append("Đảm bảo đáp ứng đầy đủ yêu cầu an toàn cháy và thoát nạn theo QCVN 06:2022/BXD.")
+                        parts.append(
+                            "Đảm bảo đáp ứng đầy đủ yêu cầu an toàn cháy và thoát nạn theo QCVN 06:2022/BXD."
+                        )
                 elif has_bim_grounding:
-                    parts.append(
-                        "Phân loại theo bảng Uniclass 200 và ISO 12006-2."
-                    )
+                    parts.append("Phân loại theo bảng Uniclass 200 và ISO 12006-2.")
                 else:
                     return "Xử lý phân loại chung không theo chuẩn Uniclass..."
             elif "nghị định 30" in prompt_l:
@@ -618,7 +673,9 @@ class GitRatchetTuner:
                     "  - [ ] Không có bất kỳ câu văn nào mang định kiến cảm xúc cá nhân.",
                 ),
             ]
-        elif any(k in self.config.skill_name.lower() for k in ["bim", "uniclass", "classification"]):
+        elif any(
+            k in self.config.skill_name.lower() for k in ["bim", "uniclass", "classification"]
+        ):
             strategies = [
                 (
                     "BIM Classification Rules & ISO Alignment",
