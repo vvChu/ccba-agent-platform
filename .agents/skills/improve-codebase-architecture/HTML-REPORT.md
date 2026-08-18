@@ -11,8 +11,9 @@ The architectural review is rendered as a single self-contained HTML file in the
     <meta charset="utf-8" />
     <title>Architecture review — {{repo name}}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Mermaid JS — PINNED to v11 ESM. Do NOT change version or import method. -->
     <script type="module">
-      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
       mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
     </script>
     <style>
@@ -26,8 +27,11 @@ The architectural review is rendered as a single self-contained HTML file in the
   <body class="bg-stone-50 text-slate-900 font-sans">
     <main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
       <header>...</header>
+      <!-- MAX 3 CANDIDATE CARDS. Hard limit enforced by SKILL.md Step 2. -->
       <section id="candidates" class="space-y-10">...</section>
       <section id="top-recommendation">...</section>
+      <!-- MANDATORY: Eliminated Candidates table. Never omit this section. -->
+      <section id="eliminated-candidates">...</section>
     </main>
   </body>
 </html>
@@ -102,6 +106,31 @@ Before: a tree of function calls rendered as nested boxes. After: the same tree 
 ## Top recommendation section
 
 One larger card. Candidate name, one sentence on why, anchor link to its card. That's it.
+
+## Eliminated candidates section (mandatory)
+
+This section **must always be present** at the end of the report, even if no candidates were eliminated. It serves as institutional memory across architecture sweeps.
+
+```html
+<section id="eliminated-candidates" class="mt-12 border-t border-slate-200 pt-8">
+  <h2 class="text-lg font-bold text-slate-900 mb-4">Ứng Viên Đã Loại (Eliminated Candidates)</h2>
+  <table class="w-full text-left text-xs border border-slate-200 rounded-lg">
+    <thead class="bg-slate-100 text-slate-700">
+      <tr>
+        <th class="p-2.5 font-bold border-b">Tên Ứng Viên</th>
+        <th class="p-2.5 font-bold border-b">Cổng Bắn Hạ</th>
+        <th class="p-2.5 font-bold border-b">Lý Do (1 câu)</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-200 bg-white">
+      <!-- Agent MUST populate rows here. If none eliminated, add single row: -->
+      <!-- <tr><td colspan="3" class="p-2.5 text-slate-400 italic">Không có ứng viên bị loại trong đợt quét này.</td></tr> -->
+    </tbody>
+  </table>
+</section>
+```
+
+If the report has no eliminated candidates, render the single-row fallback shown in the comment above. Never skip this section entirely.
 
 ## Tone
 

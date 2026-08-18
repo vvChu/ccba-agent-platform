@@ -54,6 +54,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   ├── scaffolding/                   ←   Skill generation & AST scaffolding tools
 │   ├── eval/                          ←   Process safety & evaluation gate runners
 │   ├── hooks/                         ←   Git hooks & guards (privacy, naming, simplify)
+│   ├── spoke/                         ←   Hub↔Spoke bootstrap, sync & migration tools (ADR 0044)
 │   ├── tests/                         ←   Unit test suites
 │   ├── doc_auditor.py                 ←   Governance Facade
 │   ├── hook_runner.py                 ←   Unified Hook Runner CLI

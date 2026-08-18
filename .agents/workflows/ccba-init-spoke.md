@@ -67,7 +67,7 @@ Lấy tên thư mục Root hiện hành để cấu hình:
 
 ### 3. Tạo file Workspace Context
 Tạo file `.md\workspace_context.yaml` và ghi nội dung cấu hình. Đề nghị người dùng chọn:
-1. **Phân loại Archetype ([ADR 0041](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)):**
+1. **Phân loại Archetype ([ADR 0041](../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)):**
    - `project_delivery` (Mặc định cho các dự án tư vấn, thiết kế, thẩm tra công trình thực tế)
    - `enterprise_governance` (Hệ điều hành quản trị nội bộ CCBA / IDOP-CCBA-WAY)
    - `knowledge_corpus` (Kho tri thức pháp điển quốc gia OKF v2.0 / ccba-legal-knowledge)
@@ -145,6 +145,38 @@ python "$hub\scripts\sync_spoke.py" --spoke .
 - Tự động sao chép bộ rào chắn test (`conftest.py`, `scripts/safe_pytest.py`) nếu là dự án Phần mềm.
 - Mã hóa RSA 2048-bit thông tin Spoke và tự động đăng ký vào Hub Registry (`.md/data/spoke_registry.yaml`).
 
+### 5.1. Thiết lập Môi trường Python & Hub Packages Editable Links (ADR 0044)
+Đối với các Spoke có mã nguồn hoặc tác vụ tự động hóa Python (`is_python_project = True`), tự động kết nối các packages dùng chung của Hub (`ccba-harness`, `ccba-ai`, `ccba-legal-intel`, `ccba-ooxml`...) qua cơ chế `pip install -e` chuẩn thay vì hardcode `sys.path.insert`:
+
+```powershell
+# Tự động tạo .venv (nếu chưa có) và liên kết các Hub packages theo Tier 0/1/2
+python "$hub\scripts\spoke\spoke_bootstrap.py" --spoke . --create-venv
+```
+
+*(Đối với các Spoke thuần túy tư vấn/tài liệu Markdown không có code Python, lệnh trên sẽ tự động phát hiện và bỏ qua an toàn).*
+
+### 5.2. Thiết lập Pre-commit Hook kiểm tra Import Depth (ADR 0044 §7)
+Đối với Spoke Python, sao chép script `check_hub_import_depth.py` từ Hub vào Spoke và cấu hình pre-commit hook để đảm bảo Spoke chỉ import từ top-level Hub packages (depth ≤ 2):
+
+```powershell
+# Copy import depth checker vào Spoke scripts/
+$spokeScripts = ".\scripts"
+if (-not (Test-Path $spokeScripts)) { New-Item -ItemType Directory -Path $spokeScripts | Out-Null }
+Copy-Item "$hub\scripts\spoke\check_hub_import_depth.py" -Destination "$spokeScripts\check_hub_import_depth.py" -Force
+```
+
+Nếu Spoke đã cài đặt `pre-commit`, thêm hook entry vào `.pre-commit-config.yaml`:
+```yaml
+  - repo: local
+    hooks:
+      - id: hub-import-depth
+        name: CCBA Hub Import Depth Check (ADR 0044)
+        entry: python scripts/check_hub_import_depth.py
+        language: system
+        types: [python]
+        pass_filenames: false
+```
+
 ### 6. Khởi tạo cấu trúc .gitignore và Mã nguồn Chuẩn
 *Lưu ý:* Bước này và bước 6.1 chỉ áp dụng nếu dự án được khởi tạo dưới dạng Spoke Chức năng (Functional/R&D Spoke) có sẵn Git cục bộ. Đối với các Spoke Dự án/Triển khai (Delivery Spoke) đồng bộ thuần túy qua OneDrive/SharePoint và không có repo GitHub riêng, hãy bỏ qua các bước cấu hình Git này.
 
@@ -164,6 +196,7 @@ node_modules/
 build/
 dist/
 *.egg-info/
+requirements-hub.txt
 
 # CCBA Agent Platform - Whitelist selected configs (skills is local only and git-ignored)
 .agents/*

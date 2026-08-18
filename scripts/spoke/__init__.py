@@ -17,6 +17,7 @@ from .spoke_adopter import (
     detect_spoke_stack,
     merge_workspace_context,
 )
+from .spoke_bootstrap import SpokeBootstrapper
 from .spoke_synchronizer import (
     CatalogMerger,
     HubDiscoverer,
@@ -33,6 +34,7 @@ __all__ = [
     "SpokeSyncEngine",
     "SpokeSynchronizer",
     "SharedSdkInspector",
+    "SpokeBootstrapper",
     "sync_project",
     "sync_all_spokes",
     "get_registered_spokes",
