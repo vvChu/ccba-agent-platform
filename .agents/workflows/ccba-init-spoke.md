@@ -67,7 +67,7 @@ Lấy tên thư mục Root hiện hành để cấu hình:
 
 ### 3. Tạo file Workspace Context
 Tạo file `.md\workspace_context.yaml` và ghi nội dung cấu hình. Đề nghị người dùng chọn:
-1. **Phân loại Archetype ([ADR 0041](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)):**
+1. **Phân loại Archetype ([ADR 0041](../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)):**
    - `project_delivery` (Mặc định cho các dự án tư vấn, thiết kế, thẩm tra công trình thực tế)
    - `enterprise_governance` (Hệ điều hành quản trị nội bộ CCBA / IDOP-CCBA-WAY)
    - `knowledge_corpus` (Kho tri thức pháp điển quốc gia OKF v2.0 / ccba-legal-knowledge)
