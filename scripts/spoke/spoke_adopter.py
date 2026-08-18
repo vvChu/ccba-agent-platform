@@ -392,6 +392,4 @@ def adopt_project(
 ) -> int:
     """Procedural delegate for adopting a brownfield spoke."""
     adopter = SpokeAdopter(spoke_path)
-    return adopter.adopt(
-        dry_run=dry_run, project_type=project_type, mode=mode, archetype=archetype
-    )
+    return adopter.adopt(dry_run=dry_run, project_type=project_type, mode=mode, archetype=archetype)
