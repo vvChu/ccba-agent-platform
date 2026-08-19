@@ -6,23 +6,22 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .dual_mode_parser import (
+    ASTNode,
+    DualModeASTParser,
+)
 from .patch_manifest_schema import (
-    DefectSeverity,
-    DocMode,
     PatchAction,
     PatchItem,
     PatchManifest,
     load_manifest,
-)
-from .dual_mode_parser import (
-    ASTNode,
-    DualModeASTParser,
 )
 
 
 @dataclass
 class ConsolidationResult:
     """Result container of the consolidation pipeline."""
+
     success: bool
     consolidated_md_path: Path
     clauses_json_path: Path
@@ -82,10 +81,16 @@ class LegislativeConsolidator:
         for p_idx, patch in enumerate(self.manifest.patches):
             success, msg, rec = self._apply_single_patch(nodes, patch, amending_text)
             if not success:
-                errors.append(f"Patch #{p_idx+1} ({patch.action.value} on {patch.target_anchor}) failed: {msg}")
+                errors.append(
+                    f"Patch #{p_idx + 1} ({patch.action.value} on {patch.target_anchor}) failed: {msg}"
+                )
             else:
-                if patch.action in (PatchAction.INSERT_AFTER, PatchAction.INSERT_BEFORE, PatchAction.INSERT_RANGE_AFTER):
-                    added_count += (len(patch.new_anchors) if patch.new_anchors else 1)
+                if patch.action in (
+                    PatchAction.INSERT_AFTER,
+                    PatchAction.INSERT_BEFORE,
+                    PatchAction.INSERT_RANGE_AFTER,
+                ):
+                    added_count += len(patch.new_anchors) if patch.new_anchors else 1
                 elif patch.action == PatchAction.REPEAL:
                     repealed_count += 1
                 else:
@@ -96,7 +101,7 @@ class LegislativeConsolidator:
         # Render outputs
         # 1. Consolidated Markdown
         consolidated_md = self._render_consolidated_markdown(nodes)
-        
+
         # File naming convention
         base_slug = base_path.stem
         out_md_name = f"{base_slug}_hop_nhat.md"
@@ -111,21 +116,27 @@ class LegislativeConsolidator:
         # 2. Rich clauses.json
         clauses_data = self._render_clauses_json(nodes)
         clauses_json_path = out_dir / "clauses.json"
-        clauses_json_path.write_text(json.dumps(clauses_data, ensure_ascii=False, indent=2), encoding="utf-8")
+        clauses_json_path.write_text(
+            json.dumps(clauses_data, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
         # 2b. Sync qa_benchmark.json
         qa_list = []
         for c in clauses_data:
             num = c.get("clause_number", "")
             title = c.get("title", "")
-            qa_list.append({
-                "question": f"Quy định kỹ thuật tại mục {num} ({title}) của {self.manifest.title} quy định như thế nào?",
-                "ground_truth_clause": num,
-                "ground_truth_id": c["id"],
-                "expected_keywords": [w for w in title.split() if len(w) > 3][:4]
-            })
+            qa_list.append(
+                {
+                    "question": f"Quy định kỹ thuật tại mục {num} ({title}) của {self.manifest.title} quy định như thế nào?",
+                    "ground_truth_clause": num,
+                    "ground_truth_id": c["id"],
+                    "expected_keywords": [w for w in title.split() if len(w) > 3][:4],
+                }
+            )
         qa_benchmark_path = out_dir / "qa_benchmark.json"
-        qa_benchmark_path.write_text(json.dumps(qa_list, ensure_ascii=False, indent=2), encoding="utf-8")
+        qa_benchmark_path.write_text(
+            json.dumps(qa_list, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
         # 3. Diff Matrix Markdown
         diff_matrix_md = self._render_diff_matrix(diff_records)
@@ -161,7 +172,11 @@ class LegislativeConsolidator:
         if patch.new_content_source and amending_text:
             new_content = self._extract_source_content(patch.new_content_source, amending_text)
 
-        old_content_snippet = target_node.content[:150] + "..." if len(target_node.content) > 150 else target_node.content
+        old_content_snippet = (
+            target_node.content[:150] + "..."
+            if len(target_node.content) > 150
+            else target_node.content
+        )
 
         rec: dict[str, Any] = {
             "clause_id": patch.new_anchor or patch.target_anchor,
@@ -175,7 +190,9 @@ class LegislativeConsolidator:
 
         # Apply Action Token
         if patch.action == PatchAction.REPLACE:
-            callout = f"> [!NOTE]\n> **{patch.citation}:**\n" + "\n".join(f"> {line}" for line in new_content.splitlines())
+            callout = f"> [!NOTE]\n> **{patch.citation}:**\n" + "\n".join(
+                f"> {line}" for line in new_content.splitlines()
+            )
             target_node.content = callout
             target_node.is_amended = True
             if patch.jurisdiction:
@@ -186,24 +203,30 @@ class LegislativeConsolidator:
                 target_node.source_pdf_page = patch.source_pdf_page
 
         elif patch.action == PatchAction.APPEND:
-            callout = f"\n\n> [!NOTE]\n> **{patch.citation}:**\n" + "\n".join(f"> {line}" for line in new_content.splitlines())
+            callout = f"\n\n> [!NOTE]\n> **{patch.citation}:**\n" + "\n".join(
+                f"> {line}" for line in new_content.splitlines()
+            )
             target_node.content += callout
             target_node.is_amended = True
 
         elif patch.action == PatchAction.REPEAL:
-            target_node.content = f"> [!WARNING]\n> **Đã bãi bỏ theo {patch.citation}**\n\n~~{target_node.content}~~"
+            target_node.content = (
+                f"> [!WARNING]\n> **Đã bãi bỏ theo {patch.citation}**\n\n~~{target_node.content}~~"
+            )
             target_node.is_repealed = True
 
         elif patch.action == PatchAction.SUBSTITUTE_PHRASE:
             if patch.old_phrase and patch.new_phrase:
-                target_node.content = target_node.content.replace(patch.old_phrase, patch.new_phrase)
+                target_node.content = target_node.content.replace(
+                    patch.old_phrase, patch.new_phrase
+                )
                 target_node.is_amended = True
 
         elif patch.action in (PatchAction.INSERT_AFTER, PatchAction.INSERT_BEFORE):
             idx = nodes.index(target_node)
             insert_idx = idx + 1 if patch.action == PatchAction.INSERT_AFTER else idx
             new_anchor = patch.new_anchor or f"{patch.target_anchor}-new"
-            
+
             # Extract number from new_anchor if available
             m_num = re.search(r"(\d+(?:\.\d+)*)", new_anchor)
             cnum = m_num.group(1) if m_num else ""
@@ -261,16 +284,16 @@ class LegislativeConsolidator:
     def _extract_source_content(self, source_expr: str, text: str) -> str:
         """Extract section from source document using anchor pattern file#anchor."""
         anchor_part = source_expr.split("#")[-1] if "#" in source_expr else source_expr
-        
+
         # Range match e.g. sd1-muc-1-4-31..sd1-muc-1-4-34
         if ".." in anchor_part:
             start_a, end_a = anchor_part.split("..")
-            patt = rf'<a\s+id=[\"\']{re.escape(start_a)}[\"\'][\s\S]*?(?=<a\s+id=[\"\']{re.escape(end_a)}[\"\']|\Z)'
+            patt = rf"<a\s+id=[\"\']{re.escape(start_a)}[\"\'][\s\S]*?(?=<a\s+id=[\"\']{re.escape(end_a)}[\"\']|\Z)"
             m = re.search(patt, text)
             if m:
                 return m.group(0).strip()
         else:
-            patt = rf'<a\s+id=[\"\']{re.escape(anchor_part)}[\"\'][\s\S]*?(?=\n<a\s+id=|\n#{{1,6}}\s+|\Z)'
+            patt = rf"<a\s+id=[\"\']{re.escape(anchor_part)}[\"\'][\s\S]*?(?=\n<a\s+id=|\n#{{1,6}}\s+|\Z)"
             m = re.search(patt, text)
             if m:
                 return m.group(0).strip()
@@ -290,10 +313,12 @@ class LegislativeConsolidator:
             # Standard Heading with Canonical Anchor
             hashes = node.heading_prefix or "###"
             anchor = node.anchor or node.node_id
-            
+
             # Format header line: #### <a id="muc-1-1-3" name="muc-1-1-3"></a>1.1.3 Tiêu đề
-            citation_note = f" *({node.citation})*" if node.citation and node.citation not in node.title else ""
-            h_line = f"{hashes} <a id=\"{anchor}\" name=\"{anchor}\"></a>{node.title}{citation_note}"
+            citation_note = (
+                f" *({node.citation})*" if node.citation and node.citation not in node.title else ""
+            )
+            h_line = f'{hashes} <a id="{anchor}" name="{anchor}"></a>{node.title}{citation_note}'
             lines.append(h_line)
             lines.append("")
 
@@ -333,7 +358,13 @@ class LegislativeConsolidator:
         ]
 
         for i, rec in enumerate(diff_records, 1):
-            sev_badge = "🔴 Critical Defect" if rec["severity"] == "CRITICAL_DEFECT" else ("🟡 Warning Notice" if rec["severity"] == "WARNING_NOTICE" else "🔵 Informative")
+            sev_badge = (
+                "🔴 Critical Defect"
+                if rec["severity"] == "CRITICAL_DEFECT"
+                else (
+                    "🟡 Warning Notice" if rec["severity"] == "WARNING_NOTICE" else "🔵 Informative"
+                )
+            )
             action_badge = f"`{rec['action']}`"
             clean_new = rec["new_content"].replace("\n", " ").replace("|", "\\|")[:80] + "..."
             lines.append(

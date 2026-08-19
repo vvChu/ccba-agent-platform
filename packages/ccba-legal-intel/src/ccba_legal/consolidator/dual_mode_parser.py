@@ -3,12 +3,14 @@
 import re
 from dataclasses import dataclass, field
 from typing import Any
+
 from .patch_manifest_schema import DocMode
 
 
 @dataclass
 class ASTNode:
     """Represents a structured node in the legal document syntax tree."""
+
     node_id: str
     node_type: str  # "chapter", "section", "clause", "article", "point", "table", "appendix", "header_block"
     title: str = ""
@@ -20,7 +22,7 @@ class ASTNode:
     heading_level: int = 3
     heading_prefix: str = "###"
     raw_header_line: str = ""
-    
+
     # Metadata fields conforming to OKF v2.0
     jurisdiction: str | None = "CQXD"
     grace_period_end: str | None = None
@@ -100,11 +102,11 @@ class DualModeASTParser:
     # Regex for Law / Decree Headings
     ARTICLE_REGEX = re.compile(
         r"^(#{1,6})\s*(?:<a\s+id=[\"']([^\"']+)[\"'][^>]*></a>\s*)?(?:Điều|ĐIỀU)\s+(\d+[a-z]?)[\.\:]?\s*(.*?)$",
-        re.IGNORECASE
+        re.IGNORECASE,
     )
     CHAPTER_REGEX = re.compile(
         r"^(#{1,6})\s*(?:<a\s+id=[\"']([^\"']+)[\"'][^>]*></a>\s*)?(?:Chương|CHƯƠNG)\s+([IVXLCDM\d]+)[\.\:]?\s*(.*?)$",
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
     def parse(self, markdown_text: str, mode: DocMode = DocMode.QCVN) -> list[ASTNode]:
@@ -165,7 +167,9 @@ class DualModeASTParser:
 
         return root_nodes
 
-    def _parse_heading_line(self, line_str: str, pending_anchor: str | None, mode: DocMode) -> ASTNode | None:
+    def _parse_heading_line(
+        self, line_str: str, pending_anchor: str | None, mode: DocMode
+    ) -> ASTNode | None:
         """Helper to match and construct an ASTNode from a heading line."""
         if not line_str.startswith("#"):
             return None

@@ -4,11 +4,13 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any
+
 import yaml
 
 
 class DocMode(str, Enum):
     """Document hierarchy mode for AST parsing."""
+
     QCVN = "qcvn"
     TCVN = "tcvn"
     LUAT = "luat"
@@ -18,6 +20,7 @@ class DocMode(str, Enum):
 
 class PatchAction(str, Enum):
     """Actions applicable to AST nodes during patching."""
+
     REPLACE = "REPLACE"
     INSERT_AFTER = "INSERT_AFTER"
     INSERT_BEFORE = "INSERT_BEFORE"
@@ -30,6 +33,7 @@ class PatchAction(str, Enum):
 
 class DefectSeverity(str, Enum):
     """Compliance audit defect severity."""
+
     CRITICAL_DEFECT = "CRITICAL_DEFECT"
     WARNING_NOTICE = "WARNING_NOTICE"
     INFORMATIVE = "INFORMATIVE"
@@ -38,6 +42,7 @@ class DefectSeverity(str, Enum):
 @dataclass
 class PatchItem:
     """Individual patch instruction adhering to OKF v2.0."""
+
     action: PatchAction
     target_anchor: str
     citation: str
@@ -117,6 +122,7 @@ class PatchItem:
 @dataclass
 class PatchManifest:
     """Complete patch manifest specifying all delta modifications."""
+
     target_doc_id: str
     amending_doc_id: str
     doc_mode: DocMode
@@ -173,15 +179,20 @@ class PatchManifest:
 
         for idx, p in enumerate(self.patches):
             if not p.target_anchor:
-                errors.append(f"Patch #{idx+1} ({p.action.value}): missing target_anchor")
+                errors.append(f"Patch #{idx + 1} ({p.action.value}): missing target_anchor")
             if not p.citation:
-                errors.append(f"Patch #{idx+1} ({p.action.value}): missing citation")
-            if p.action in (PatchAction.INSERT_AFTER, PatchAction.INSERT_BEFORE) and not p.new_anchor:
-                errors.append(f"Patch #{idx+1} ({p.action.value}): missing new_anchor")
+                errors.append(f"Patch #{idx + 1} ({p.action.value}): missing citation")
+            if (
+                p.action in (PatchAction.INSERT_AFTER, PatchAction.INSERT_BEFORE)
+                and not p.new_anchor
+            ):
+                errors.append(f"Patch #{idx + 1} ({p.action.value}): missing new_anchor")
             if p.action == PatchAction.INSERT_RANGE_AFTER and not p.new_anchors:
-                errors.append(f"Patch #{idx+1} (INSERT_RANGE_AFTER): missing new_anchors list")
+                errors.append(f"Patch #{idx + 1} (INSERT_RANGE_AFTER): missing new_anchors list")
             if p.action == PatchAction.SUBSTITUTE_PHRASE and (not p.old_phrase or not p.new_phrase):
-                errors.append(f"Patch #{idx+1} (SUBSTITUTE_PHRASE): missing old_phrase or new_phrase")
+                errors.append(
+                    f"Patch #{idx + 1} (SUBSTITUTE_PHRASE): missing old_phrase or new_phrase"
+                )
         return errors
 
 
@@ -191,7 +202,7 @@ def load_manifest(yaml_path: Path | str) -> PatchManifest:
     if not path.exists():
         raise FileNotFoundError(f"Manifest file not found: {path}")
 
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
     if not isinstance(data, dict):
@@ -200,6 +211,9 @@ def load_manifest(yaml_path: Path | str) -> PatchManifest:
     manifest = PatchManifest.from_dict(data)
     errors = manifest.validate()
     if errors:
-        raise ValueError(f"Manifest validation failed ({len(errors)} errors):\n" + "\n".join(f"- {e}" for e in errors))
+        raise ValueError(
+            f"Manifest validation failed ({len(errors)} errors):\n"
+            + "\n".join(f"- {e}" for e in errors)
+        )
 
     return manifest

@@ -1,5 +1,12 @@
 """CCBA Legislative Consolidator Package — Deterministic Legal Document Patching & VBHN Generation."""
 
+from .dual_mode_parser import (
+    ASTNode,
+    DualModeASTParser,
+)
+from .manifest_generator import (
+    ManifestGenerator,
+)
 from .patch_manifest_schema import (
     DocMode,
     PatchAction,
@@ -7,16 +14,9 @@ from .patch_manifest_schema import (
     PatchManifest,
     load_manifest,
 )
-from .dual_mode_parser import (
-    ASTNode,
-    DualModeASTParser,
-)
 from .patcher import (
     ConsolidationResult,
     LegislativeConsolidator,
-)
-from .manifest_generator import (
-    ManifestGenerator,
 )
 
 __all__ = [

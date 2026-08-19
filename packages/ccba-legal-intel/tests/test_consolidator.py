@@ -1,9 +1,13 @@
 """Unit & Integration Tests for Legislative Consolidator Deep Seam on Hub."""
 
-import json
 from pathlib import Path
+
 import pytest
 
+from ccba_legal.consolidator.dual_mode_parser import (
+    DualModeASTParser,
+)
+from ccba_legal.consolidator.manifest_generator import ManifestGenerator
 from ccba_legal.consolidator.patch_manifest_schema import (
     DefectSeverity,
     DocMode,
@@ -12,15 +16,9 @@ from ccba_legal.consolidator.patch_manifest_schema import (
     PatchManifest,
     load_manifest,
 )
-from ccba_legal.consolidator.dual_mode_parser import (
-    ASTNode,
-    DualModeASTParser,
-)
 from ccba_legal.consolidator.patcher import (
-    ConsolidationResult,
     LegislativeConsolidator,
 )
-from ccba_legal.consolidator.manifest_generator import ManifestGenerator
 
 
 @pytest.fixture
@@ -124,7 +122,7 @@ def test_insert_after_patch(sample_qcvn_md: str, tmp_path: Path):
                 defect_severity=DefectSeverity.CRITICAL_DEFECT,
                 new_content_inline="Quy định chỗ để xe điện áp dụng cho chung cư mới và hiện hữu.",
             )
-        ]
+        ],
     )
 
     base_file = tmp_path / "base.md"
@@ -155,7 +153,7 @@ def test_triple_output_generation(sample_qcvn_md: str, tmp_path: Path):
                 defect_severity=DefectSeverity.CRITICAL_DEFECT,
                 new_content_inline="Nội dung mới cho 2.1",
             )
-        ]
+        ],
     )
 
     base_file = tmp_path / "base.md"

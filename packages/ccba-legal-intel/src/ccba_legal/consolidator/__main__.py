@@ -66,9 +66,13 @@ def main() -> None:
     if result.success:
         print("✅ CONSOLIDATION COMPLETED SUCCESSFULLY!")
         print(f"  • Consolidated Markdown: {result.consolidated_md_path}")
-        print(f"  • Rich AST clauses.json: {result.clauses_json_path} ({result.total_clauses} clauses)")
+        print(
+            f"  • Rich AST clauses.json: {result.clauses_json_path} ({result.total_clauses} clauses)"
+        )
         print(f"  • Diff Matrix: {result.diff_matrix_path}")
-        print(f"  • Statistics: +{result.added_clauses} added, ~{result.modified_clauses} modified, -{result.repealed_clauses} repealed")
+        print(
+            f"  • Statistics: +{result.added_clauses} added, ~{result.modified_clauses} modified, -{result.repealed_clauses} repealed"
+        )
         print("=================================================================")
         sys.exit(0)
     else:
