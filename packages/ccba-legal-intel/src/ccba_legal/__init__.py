@@ -1,10 +1,11 @@
 """ccba-legal-intel — Unified Legal Intelligence Platform.
 
 Public Deep Seams:
-    LegalIntelPipeline  — Crawl, parse, package legal documents end-to-end.
-    LegalProcessor      — Legal advisory, conflict analysis, dispatch drafts.
-    LegalSyncEngine     — Cloud sync of legal registry to NotebookLM.
-    Cleaners            — OCR cleanup, DOCX table parsing, Markdown conversion.
+    LegalIntelPipeline      — Crawl, parse, package legal documents end-to-end.
+    LegalProcessor          — Legal advisory, conflict analysis, dispatch drafts.
+    LegalSyncEngine         — Cloud sync of legal registry to NotebookLM.
+    LegislativeConsolidator — Automated OKF v2.0 AST Structural Patching & VBHN Merger.
+    Cleaners                — OCR cleanup, DOCX table parsing, Markdown conversion.
 """
 
 from .appendices import AppendixSplitter, roman_to_decimal
@@ -16,6 +17,16 @@ from .ast_parser import (
     PatchAction,
 )
 from .cleaners import Cleaners
+from .consolidator import (
+    ConsolidationResult,
+    DocMode,
+    DualModeASTParser,
+    LegislativeConsolidator,
+    ManifestGenerator,
+    PatchItem,
+    PatchManifest,
+    load_manifest,
+)
 from .coordinator import (
     LegalIntelPipeline,
     LegalProcessor,
@@ -57,9 +68,12 @@ __all__ = [
     "LegalSyncEngine",
     "LegalRegistryManager",
     "LegalGroundingGate",
+    "LegislativeConsolidator",
+    "ManifestGenerator",
     "OKFBundlePackager",
     "AppendixSplitter",
     "ASTParser",
+    "DualModeASTParser",
     "VBHNEngine",
     "VBHNMerger",
     "TVPLCrawler",
@@ -72,6 +86,10 @@ __all__ = [
     "DeltaPatch",
     "DeltaPatchItem",
     "PatchAction",
+    "PatchManifest",
+    "PatchItem",
+    "DocMode",
+    "ConsolidationResult",
     "MergedLegalDocument",
     # === Essential Public Helpers & Guards ===
     "verify_legal_grounding",
@@ -79,6 +97,7 @@ __all__ = [
     "format_citation",
     "load_legal_registry",
     "search_legal_registry",
+    "load_manifest",
     "roman_to_decimal",
     "TVPLSessionMutex",
     "CookieVault",
