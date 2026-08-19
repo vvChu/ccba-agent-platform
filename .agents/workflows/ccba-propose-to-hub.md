@@ -1,5 +1,5 @@
 ---
-description: Đề xuất tích hợp skill/workflow/tool hoặc rules/directory mới từ Spoke lên Hub
+description: Đề xuất và đóng gói code/skill/workflow/tool từ Spoke lên Hub kèm Vòng lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
 applies_to:
   - "Phần mềm"
   - "Thẩm tra thiết kế"
@@ -7,80 +7,109 @@ applies_to:
   - "Kiểm định"
 disable-model-invocation: true
 ---
-# Workflow: Propose to Hub (Đóng Góp Ngược Lên Hub)
+# Workflow: Propose to Hub (Đóng Góp Ngược Lên Hub Chuẩn OKF v2.0)
 
-Quy trình chuẩn hóa đề xuất đóng góp ngược các cải tiến từ dự án Spoke lên Platform Hub chung.
+Quy trình chuẩn hóa toàn trình để đề xuất, đóng gói mã nguồn và hoàn tất thẩm định tự động các cải tiến từ dự án Spoke lên Platform Hub chung.
 
-## Bước 1: Thu thập thông tin đề xuất
-Hỏi người dùng tuần tự từng câu hỏi sau để ghi nhận đề xuất:
-1. **Loại đề xuất:** `skill` / `workflow` / `tool` / `rules`.
-2. **Tên đề xuất:** Dạng kebab-case (ví dụ: `auto-pdf-namer`).
-3. **Mô tả:** Giải thích ngắn gọn mục đích (1-2 câu).
-4. **Vấn đề giải quyết:** Chi tiết khó khăn thực tế cần giải quyết.
+---
+
+## 📋 Bước 1: Thu thập Thông tin & Mã Nguồn Đóng Gói
+Ghi nhận đầy đủ 6 thông tin cốt lõi:
+1. **Loại đề xuất:** `tool` (Package mã nguồn trong `packages/`), `skill` (Kỹ năng trong `.agents/skills/`), `workflow` (Quy trình trong `.agents/workflows/`), hoặc `rules`.
+2. **Tên đề xuất:** Dạng kebab-case (ví dụ: `legislative-consolidator-okf-v2`).
+3. **Mô tả & Vấn đề giải quyết:** Chi tiết nỗi đau thực tế đã giải quyết tại Spoke.
+4. **Mã nguồn thực thi & Bộ test:** Đường dẫn các file code và file test tại Spoke đã vượt qua $100\%$ test cục bộ.
 5. **Dự án áp dụng:** Các bộ môn áp dụng cụ thể.
 6. **Mức độ ưu tiên:** "Cao" / "Trung bình" / "Thấp".
 
-## Bước 2: Kiểm tra trùng lặp (Duplicate Detection)
-Trước khi tạo mới, Agent bắt buộc phải kiểm tra hệ thống để tránh trùng lặp:
-1. Đọc tệp cấu hình `.md/workspace_context.yaml` để lấy đường dẫn Hub (`hub_path`).
-2. Đọc tệp catalog của Hub tại `<hub_path>/.agents/skills/platform-loader/catalog.yaml` để tìm kiếm tên hoặc mô tả tương tự.
-3. Đọc tệp hiến pháp `<hub_path>/.agents/AGENTS.md`.
-*Nếu phát hiện đã tồn tại thành phần tương tự:* Báo cáo cho người dùng và đề xuất cập nhật/nâng cấp thành phần cũ thay vì tạo mới.
+---
 
-## Bước 3: Tạo và Commit Đề xuất trên Branch mới
-Thực thi các lệnh Git tại thư mục Hub (`hub_path`):
-1. **Kiểm tra trạng thái workspace:**
-   Chạy `git status`. Nếu có thay đổi chưa commit, yêu cầu người dùng commit hoặc stash các thay đổi đó trước khi tiếp tục.
-2. **Đồng bộ main:**
+## 🔍 Bước 2: Kiểm tra Trùng lặp (Duplicate Detection)
+Trước khi tạo mới, Agent **bắt buộc** kiểm tra hệ sinh thái Hub:
+1. Đọc tệp cấu hình `.md/workspace_context.yaml` để lấy đường dẫn Hub (`hub_path`).
+2. Đọc tệp catalog của Hub tại `<hub_path>/.agents/skills/platform-loader/catalog.yaml` và danh mục `packages/` để tìm kiếm thành phần tương tự.
+3. Đọc tệp hiến pháp `<hub_path>/.agents/AGENTS.md` và `PLATFORM.md`.
+*Nếu phát hiện đã tồn tại thành phần tương tự:* Đề xuất nâng cấp/mở rộng thành phần cũ thay vì tạo mới trùng lặp.
+
+---
+
+## 📦 Bước 3: Đóng Gói Mã Nguồn & Tạo Proposal Trên Branch Mới
+Thực thi tại thư mục Hub (`hub_path`):
+1. **Kiểm tra trạng thái workspace:** Đảm bảo `git status` sạch sẽ.
+2. **Đồng bộ nhánh main:**
    ```bash
    git checkout main && git pull origin main
    ```
-3. **Tạo branch và ghi nhận proposal:**
-   - Tạo branch mới: `git checkout -b proposal/[tên-đề-xuất]`
-   - Tạo tệp proposal tại: `<hub_path>/.agents/proposals/[YYYY-MM-DD]_[tên-đề-xuất].md`
-   
-   *Cấu trúc tệp proposal:*
-   ```markdown
-   ---
-   proposal_id: "[YYYY-MM-DD]_[tên-đề-xuất]"
-   type: "[loại-đề-xuất: skill | workflow | tool | rules]"
-   name: "[tên-đề-xuất]"
-   status: "open"
-   priority: "[mức-độ-ưu-tiên: Cao | Trung bình | Thấp]"
-   proposed_by_project: "[tên-dự-án-spoke]"
-   proposed_by_archetype: "[archetype: project_delivery | enterprise_governance | knowledge_corpus | specialized_extension]"
-   proposed_date: "[YYYY-MM-DD]"
-   applies_to:
-     - "[bộ-môn-áp-dụng]"
-   ---
-   
-   ## Mô tả
-   ...
-   ## Vấn đề giải quyết
-   ...
-   ## Giải pháp / Cấu trúc đề xuất
-   ...
-   ```
-4. **Kiểm tra Hợp lệ & Cú pháp (Linter & Governance Gate):**
-   Chạy công cụ kiểm định tài liệu và kỹ năng để đảm bảo đề xuất không chứa lỗi cú pháp hoặc liên kết gãy:
+3. **Tạo branch mới:**
    ```bash
-   python scripts/validate_skills.py
-   python scripts/doc_auditor.py
+   git checkout -b proposal/[tên-đề-xuất]
    ```
-5. **Commit & Push:**
-   Thực hiện commit và push lên remote branch (do thư mục `.agents/proposals/` đã được whitelist trong `.gitignore`, bạn có thể dùng lệnh add thông thường):
+4. **Đóng gói Mã nguồn & Tests vào Package tương ứng trên Hub:**
+   - Copy code vào: `packages/[package-name]/src/[submodule]/`
+   - Export public deep seam trong: `packages/[package-name]/src/__init__.py`
+   - Copy unit/integration tests vào: `packages/[package-name]/tests/`
+   - Chạy format & linting cục bộ trên Hub:
+     ```bash
+     python -m ruff check --fix packages/[package-name]/
+     python -m ruff format packages/[package-name]/
+     ```
+   - Cập nhật tài liệu kiến trúc nếu có thay đổi cấu trúc:
+     ```bash
+     python scripts/update_arch_stats.py
+     ```
+5. **Ghi nhận tệp Proposal:**
+   Tạo tệp tại `<hub_path>/.agents/proposals/[YYYY-MM-DD]_[tên-đề-xuất].md` với đầy đủ YAML frontmatter, tóm tắt kiến trúc, action tokens và kết quả kiểm thử.
+6. **Commit & Push:**
    ```bash
-   git add .agents/proposals/ && git commit -m "docs(proposal): add proposal for [tên-đề-xuất]" && git push origin proposal/[tên-đề-xuất]
+   git add -A && git commit -m "feat([scope]): add [tên-đề-xuất] and proposal" && git push origin proposal/[tên-đề-xuất]
    ```
 
-## Bước 4: Tạo Pull Request (PR Flow)
-Kiểm tra quyền qua GitHub CLI bằng cách chạy `gh auth status` hoặc kiểm tra biến môi trường:
+---
+
+## 🚀 Bước 4: Mở GitHub Pull Request (PR Flow)
+Kiểm tra quyền qua GitHub CLI:
 - **Nếu có quyền:** Chạy lệnh tạo PR:
   ```bash
-  gh pr create --title "docs(proposal): add proposal for [tên-đề-xuất]" --body "Automated proposal submission from Spoke." --base main --head proposal/[tên-đề-xuất]
+  gh pr create --title "feat([scope]): add [tên-đề-xuất]" --body "Automated proposal submission with implementation and test suite." --base main --head proposal/[tên-đề-xuất]
   ```
-- **Nếu không có quyền:** Cung cấp link tạo PR thủ công dựa trên remote URL lấy được từ `git remote get-url origin`:
+- **Nếu không có quyền:** Cung cấp link tạo PR thủ công dựa trên remote URL:
   👉 `[PR-creation-URL]/pull/new/proposal/[tên-đề-xuất]`
 
-## Bước 5: Báo cáo hoàn tất
-Báo cáo ngắn gọn cho người dùng bao gồm: đường dẫn tệp đề xuất, tên branch, URL của Pull Request (hoặc link tạo thủ công) và bước tiếp theo.
+---
+
+## 🔄 Bước 5: Vòng Lặp Dừng Chờ Bất Đồng Bộ & Tự Làm Xanh CI (Self-Healing Loop)
+
+> [!IMPORTANT]
+> **Tuyệt đối không kết thúc quy trình ngay sau khi mở PR.** Agent phải chủ động đồng hành cùng PR cho đến khi $100\%$ CI chuyển sang Tích Xanh.
+
+### 5.1. Chiến Lược Dừng Chờ Động (Dynamic Grace Period & Timer Strategy)
+Tùy thuộc vào khối lượng code của PR (diff size), Agent chủ động thiết lập thời gian chờ đệm để GitHub Actions khởi chạy và GitHub Copilot hoàn tất phân tích diff:
+* **PR nhỏ (< 100 dòng diff):** Dừng chờ tối thiểu `45s`.
+* **PR vừa (100 - 500 dòng diff):** Dừng chờ tối thiểu `60s – 90s`.
+* **PR lớn (> 500 dòng diff / package mới):** Dừng chờ tối thiểu `90s – 180s`.
+
+*(Sử dụng công cụ `schedule` để hẹn giờ kiểm tra không chiếm dụng tài nguyên).*
+
+### 5.2. Kiểm Tra Song Song 2 Cổng (Dual-Gate Polling)
+1. **Cổng 1 (GitHub Actions CI Status):**
+   ```bash
+   gh pr checks <PR_NUMBER>
+   ```
+2. **Cổng 2 (GitHub Copilot Automated Review & Comments):**
+   ```bash
+   gh pr view <PR_NUMBER> --json reviews,comments --jq '.reviews[] | select(.author.login=="copilot-pull-request-reviewer")'
+   ```
+
+### 5.3. Vòng Phản Hồi & Tự Khắc Phục (Self-Healing Action)
+* **Nếu CI Bị Fail:** Đọc log chi tiết qua `gh run view <RUN_ID> --log-failed` $\rightarrow$ Xác định nguyên nhân (ruff lint, mypy typing, test assertion, architecture drift) $\rightarrow$ Tự sửa code cục bộ $\rightarrow$ Commit & push bản vá lên branch PR.
+* **Nếu Copilot Có Góp Ý Kỹ Thuật:** Đọc từng review comment $\rightarrow$ Đối soát với tiêu chuẩn CCBA $\rightarrow$ Thực hiện refactor sửa đổi $\rightarrow$ Commit & push.
+* **Tiêu chí Hoàn Thành:** Lặp lại chu trình kiểm tra cho đến khi `gh pr checks <PR_NUMBER>` trả về exit code `0` (**`ALL CHECKS HAVE PASSED`**).
+
+---
+
+## ✅ Bước 6: Báo Cáo Hoàn Tất & Sẵn Sàng Merge
+Sau khi toàn bộ CI đã xanh $100\%$, Agent tổng hợp báo cáo gửi người dùng:
+1. **Link PR chính thức:** `https://github.com/[org]/[repo]/pull/[PR_NUMBER]`.
+2. **Bảng tổng hợp kết quả CI:** Liệt kê các job tests, scan, linting đã pass.
+3. **Tóm tắt các điểm đã khắc phục qua review Copilot.**
+4. **Thông báo Sẵn sàng Merge:** Người dùng hoặc Maintainer có thể an tâm bấm nút Merge ngay lập tức mà không lo gãy vỡ hệ thống chung.
