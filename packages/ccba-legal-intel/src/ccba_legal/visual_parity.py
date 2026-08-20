@@ -29,6 +29,7 @@ class VisualParityAuditor:
         )
         critical_issues: list[str] = []
         warning_issues: list[str] = []
+        audited_files_count = 0
 
         for md_path in all_md_files:
             if md_path.name in (
@@ -38,6 +39,7 @@ class VisualParityAuditor:
                 "README.md",
             ):
                 continue
+            audited_files_count += 1
 
             rel_path = (
                 str(md_path.relative_to(self.legal_docs_root))
@@ -91,7 +93,7 @@ class VisualParityAuditor:
                 stripped = line.strip()
                 if stripped.startswith("|") and stripped.endswith("|"):
                     raw_sup = re.findall(
-                        r"\b([A-Z]{1,4}\s*\d+|\d+)\s+([1-9]\))(?!\<|/sup)",
+                        r"\b([A-Z]{1,4}\s*\d+|\d+)\s+([1-9]\))(?!<|/sup)",
                         stripped,
                     )
                     if raw_sup:
@@ -113,7 +115,7 @@ class VisualParityAuditor:
         passed = len(critical_issues) == 0
         return {
             "passed": passed,
-            "total_files": len(all_md_files),
+            "total_files": audited_files_count,
             "critical_errors_count": len(critical_issues),
             "warning_count": len(warning_issues),
             "critical_errors": critical_issues,

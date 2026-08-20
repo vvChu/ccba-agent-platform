@@ -71,7 +71,7 @@ def normalize_tvpl_formatting(text: str) -> str:
     """Normalize line wrapping in raw TVPL text."""
     text = re.sub(r"Điều\s*[\r\n]+\s*(\d+\.)", r"Điều \1", text, flags=re.IGNORECASE)
     text = re.sub(
-        r"Chương\s*[\r\n]+\s*([I|V|X|L|C|D|M]+)",
+        r"Chương\s*[\r\n]+\s*([IVXLCDM]+)",
         r"Chương \1",
         text,
         flags=re.IGNORECASE,
@@ -158,12 +158,12 @@ def clean_table_footnotes_and_superscripts(text: str) -> str:
                 return f"{m.group(1)}<sup>{m.group(2)}</sup>"
 
             line = re.sub(
-                r"(\b(?:EIW|REI|EI|E|RE|R|DN|\d+)\s*(?:\d+)?)\s+([1-9]\))(?!\<|/sup)",
+                r"(\b(?:EIW|REI|EI|E|RE|R|DN|\d+)\s*(?:\d+)?)\s+([1-9]\))(?!<|/sup)",
                 _superscript_marker,
                 line,
             )
             line = re.sub(
-                r"([a-zA-ZÀ-ỹ]+)\s+([1-9]\))(?!\<|/sup)",
+                r"([a-zA-ZÀ-ỹ]+)\s+([1-9]\))(?!<|/sup)",
                 r"\1<sup>\2</sup>",
                 line,
             )
@@ -212,7 +212,7 @@ def normalize_notes_and_lists(text: str) -> str:
 
     # 1. Fix 1.4.9 definitions
     text = re.sub(
-        r"(####\s*<a id=\"muc-1-4-9\"[^\n]+\n+Chiều cao PCCC của nhà[^\n]+\n+)\s*(Bằng khoảng cách lớn nhất[^\n]+)\n+\s*(Bằng một nửa tổng khoảng cách[^\n]+)",
+        r'(####\s*<a id="muc-1-4-9"[^\n]+\n+Chiều cao PCCC của nhà[^\n]+\n+)\s*(Bằng khoảng cách lớn nhất[^\n]+)\n+\s*(Bằng một nửa tổng khoảng cách[^\n]+)',
         r"\1- \2\n\n- \3",
         text,
     )
@@ -300,6 +300,7 @@ def inject_semantic_anchors(text: str, profile: DocProfile | None = None) -> str
 
         if re.match(r"^([-*]\s+)+", stripped):
             stripped = re.sub(r"^([-*]\s+)+", "- ", stripped)
+            line = stripped
 
         dieu_match = profile.dieu_pattern.match(stripped)
         if dieu_match:
@@ -329,7 +330,9 @@ def inject_semantic_anchors(text: str, profile: DocProfile | None = None) -> str
 
 
 def generate_bundle_ast_and_qa(
-    bundle_dir: Path, doc_title: str | None = None
+    bundle_dir: Path,
+    doc_title: str | None = None,
+    cong_bao_number: str | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Extract deduplicated AST and QA Benchmark across Active Core and Modular Annexes."""
     core_files = [
@@ -388,18 +391,19 @@ def generate_bundle_ast_and_qa(
                 ):
                     jurisdiction = "CONG_AN"
 
-                clauses.append(
-                    {
-                        "clause_id": anc_id,
-                        "anchor": anc_id,
-                        "title": clean_title,
-                        "source_file": rel_path,
-                        "jurisdiction": jurisdiction,
-                        "cong_bao_number": "373/2026",
-                        "line_start": idx,
-                        "line_end": idx,
-                    }
-                )
+                clause_item: dict[str, Any] = {
+                    "clause_id": anc_id,
+                    "anchor": anc_id,
+                    "title": clean_title,
+                    "source_file": rel_path,
+                    "jurisdiction": jurisdiction,
+                    "line_start": idx,
+                    "line_end": idx,
+                }
+                if cong_bao_number:
+                    clause_item["cong_bao_number"] = cong_bao_number
+
+                clauses.append(clause_item)
 
                 qa_list.append(
                     {
@@ -442,16 +446,25 @@ class GoldStandardProcessor:
 
         meta_path = bundle_dir / "metadata.yaml"
         doc_title = bundle_dir.name
+        cong_bao_num = None
         if meta_path.exists():
             try:
                 with open(meta_path, encoding="utf-8") as f:
                     meta = yaml.safe_load(f)
-                    if isinstance(meta, dict) and meta.get("title"):
-                        doc_title = meta["title"].split("—")[0].strip()
+                    if isinstance(meta, dict):
+                        if meta.get("title"):
+                            doc_title = meta["title"].split("—")[0].strip()
+                        cong_bao_num = meta.get("cong_bao_number") or (
+                            meta.get("pdf_source", {}).get("cong_bao")
+                            if isinstance(meta.get("pdf_source"), dict)
+                            else None
+                        )
             except Exception:
                 pass
 
-        clauses, qa_benchmark = generate_bundle_ast_and_qa(bundle_dir, doc_title=doc_title)
+        clauses, qa_benchmark = generate_bundle_ast_and_qa(
+            bundle_dir, doc_title=doc_title, cong_bao_number=cong_bao_num
+        )
 
         clauses_file = bundle_dir / "clauses.json"
         clauses_file.write_text(json.dumps(clauses, ensure_ascii=False, indent=2), encoding="utf-8")
