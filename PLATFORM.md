@@ -95,7 +95,7 @@ Là các thư viện bổ trợ, middleware, hoặc các cấu hình tự độn
 |---------|--------|---------|
 | `ccba-ai` | AI Gateway client & SDK — Đa mô hình (local GPU + cloud), 1 endpoint | `pip install -e "packages/ccba-ai"` |
 | `ccba-harness` | Testing harness and multi-scorer evaluation engine | `pip install -e "packages/ccba-harness"` |
-| `ccba-legal-intel` | Legal intelligence services and connectors | `pip install -e "packages/ccba-legal-intel"` |
+| `ccba-legal-intel` | Legal intelligence services, OKF v2.2 GoldStandardProcessor & VisualParityAuditor Gate 4 | `pip install -e "packages/ccba-legal-intel"` |
 | `ccba-maskara` | Secret detection, redaction and commit privacy engine | `pip install -e "packages/ccba-maskara"` |
 | `ccba-notebooklm` | Google NotebookLM API wrapper & mock client | `pip install -e "packages/ccba-notebooklm"` |
 | `ccba-ooxml` | OOXML document structure integrity validator | `pip install -e "packages/ccba-ooxml"` |
