@@ -70,63 +70,68 @@ class CCBANotebookLMClient:
     def __init__(self, client: Any, use_mock: bool = False) -> None:
         self._client = client
         self.use_mock = use_mock
+        self._active_client: Any = None
 
     async def __aenter__(self) -> CCBANotebookLMClient:
-        await self._client.__aenter__()
+        if hasattr(self._client, "__aenter__"):
+            self._active_client = await self._client.__aenter__()
+        else:
+            self._active_client = self._client
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        await self._client.__aexit__(exc_type, exc_val, exc_tb)
+        if hasattr(self._client, "__aexit__"):
+            await self._client.__aexit__(exc_type, exc_val, exc_tb)
 
     @property
     def raw_client(self) -> Any:
         """Truy xuất trực tiếp client RPC thô nếu cần thiết."""
-        return self._client
+        return self._active_client if self._active_client is not None else self._client
 
     # ---------------------------------------------------------------------------
     # Flat API Methods
     # ---------------------------------------------------------------------------
 
     async def list_notebooks(self) -> list[Any]:
-        return await self._client.notebooks.list()  # type: ignore[no-any-return]
+        return await self.raw_client.notebooks.list()  # type: ignore[no-any-return]
 
     async def create_notebook(self, title: str) -> Any:
-        return await self._client.notebooks.create(title)
+        return await self.raw_client.notebooks.create(title)
 
     async def delete_notebook(self, notebook_id: str) -> None:
-        await self._client.notebooks.delete(notebook_id)
+        await self.raw_client.notebooks.delete(notebook_id)
 
     async def set_notebook_public(self, notebook_id: str, is_public: bool = True) -> None:
-        await self._client.sharing.set_public(notebook_id, is_public)
+        await self.raw_client.sharing.set_public(notebook_id, is_public)
 
     def get_share_url(self, notebook_id: str) -> str:
-        return str(self._client.notebooks.get_share_url(notebook_id))
+        return str(self.raw_client.notebooks.get_share_url(notebook_id))
 
     async def list_sources(self, notebook_id: str) -> list[Any]:
-        return await self._client.sources.list(notebook_id)  # type: ignore[no-any-return]
+        return await self.raw_client.sources.list(notebook_id)  # type: ignore[no-any-return]
 
     async def add_file_source(self, notebook_id: str, path: str) -> Any:
-        return await self._client.sources.add_file(notebook_id, path)
+        return await self.raw_client.sources.add_file(notebook_id, path)
 
     async def add_url_source(self, notebook_id: str, url: str, wait: bool = True) -> Any:
-        return await self._client.sources.add_url(notebook_id, url, wait=wait)
+        return await self.raw_client.sources.add_url(notebook_id, url, wait=wait)
 
     async def delete_source(self, notebook_id: str, source_id: str) -> None:
-        await self._client.sources.delete(notebook_id, source_id)
+        await self.raw_client.sources.delete(notebook_id, source_id)
 
     async def ask_chat(self, notebook_id: str, question: str, source_ids: list[str]) -> Any:
-        return await self._client.chat.ask(
+        return await self.raw_client.chat.ask(
             notebook_id=notebook_id, question=question, source_ids=source_ids
         )
 
     async def get_account_tier(self) -> Any:
-        return await self._client.settings.get_account_tier()
+        return await self.raw_client.settings.get_account_tier()
 
     async def get_account_limits(self) -> Any:
-        return await self._client.settings.get_account_limits()
+        return await self.raw_client.settings.get_account_limits()
 
     async def wait_for_task(self, notebook_id: str, task_id: str) -> None:
-        await self._client.artifacts.wait_for_completion(notebook_id, task_id)
+        await self.raw_client.artifacts.wait_for_completion(notebook_id, task_id)
 
     async def generate_artifact(
         self, task_type: str, notebook_id: str, source_ids: list[str], **kwargs: Any
@@ -134,39 +139,39 @@ class CCBANotebookLMClient:
         """Sinh Structured Artifact tương ứng với task_type."""
         task_type_lower = task_type.lower()
         if task_type_lower == "audio":
-            return await self._client.artifacts.generate_audio(
+            return await self.raw_client.artifacts.generate_audio(
                 notebook_id,
                 source_ids=source_ids,
                 audio_format=kwargs.get("audio_format"),
                 language=kwargs.get("language") or "vi",
             )
         elif task_type_lower == "quiz":
-            return await self._client.artifacts.generate_quiz(
+            return await self.raw_client.artifacts.generate_quiz(
                 notebook_id,
                 source_ids=source_ids,
                 quantity=kwargs.get("quantity"),
                 difficulty=kwargs.get("difficulty"),
             )
         elif task_type_lower == "data-table":
-            return await self._client.artifacts.generate_data_table(
+            return await self.raw_client.artifacts.generate_data_table(
                 notebook_id, source_ids=source_ids, instructions=kwargs.get("instructions", "")
             )
         elif task_type_lower == "flashcards":
-            return await self._client.artifacts.generate_flashcards(
+            return await self.raw_client.artifacts.generate_flashcards(
                 notebook_id,
                 source_ids=source_ids,
                 quantity=kwargs.get("quantity"),
                 difficulty=kwargs.get("difficulty"),
             )
         elif task_type_lower == "report":
-            return await self._client.artifacts.generate_report(
+            return await self.raw_client.artifacts.generate_report(
                 notebook_id,
                 source_ids=source_ids,
                 report_format=kwargs.get("report_format"),
                 extra_instructions=kwargs.get("extra_instructions", ""),
             )
         elif task_type_lower == "video":
-            return await self._client.artifacts.generate_video(
+            return await self.raw_client.artifacts.generate_video(
                 notebook_id,
                 source_ids=source_ids,
                 video_format=kwargs.get("video_format"),
@@ -186,34 +191,34 @@ class CCBANotebookLMClient:
         """Tải Structured Artifact tương ứng về đường dẫn chỉ định."""
         task_type_lower = task_type.lower()
         if task_type_lower == "audio":
-            return await self._client.artifacts.download_audio(notebook_id, output_path)
+            return await self.raw_client.artifacts.download_audio(notebook_id, output_path)
         elif task_type_lower == "quiz":
             fmt = kwargs.get("output_format") or "json"
-            return await self._client.artifacts.download_quiz(
+            return await self.raw_client.artifacts.download_quiz(
                 notebook_id, output_path, output_format=fmt
             )
         elif task_type_lower == "slides":
             fmt = kwargs.get("output_format") or "pdf"
-            return await self._client.artifacts.download_slide_deck(
+            return await self.raw_client.artifacts.download_slide_deck(
                 notebook_id, output_path, output_format=fmt
             )
         elif task_type_lower == "mindmap":
-            return await self._client.artifacts.download_mind_map(notebook_id, output_path)
+            return await self.raw_client.artifacts.download_mind_map(notebook_id, output_path)
         elif task_type_lower == "infographic":
-            return await self._client.artifacts.download_infographic(notebook_id, output_path)
+            return await self.raw_client.artifacts.download_infographic(notebook_id, output_path)
         elif task_type_lower == "study-guide":
-            return await self._client.artifacts.download_report(notebook_id, output_path)
+            return await self.raw_client.artifacts.download_report(notebook_id, output_path)
         elif task_type_lower == "data-table":
-            return await self._client.artifacts.download_data_table(notebook_id, output_path)
+            return await self.raw_client.artifacts.download_data_table(notebook_id, output_path)
         elif task_type_lower == "flashcards":
             fmt = kwargs.get("output_format") or "json"
-            return await self._client.artifacts.download_flashcards(
+            return await self.raw_client.artifacts.download_flashcards(
                 notebook_id, output_path, output_format=fmt
             )
         elif task_type_lower == "report":
-            return await self._client.artifacts.download_report(notebook_id, output_path)
+            return await self.raw_client.artifacts.download_report(notebook_id, output_path)
         elif task_type_lower == "video":
-            return await self._client.artifacts.download_video(notebook_id, output_path)
+            return await self.raw_client.artifacts.download_video(notebook_id, output_path)
         else:
             raise ValueError(f"Loại task artifact không hợp lệ hoặc không được hỗ trợ: {task_type}")
 
