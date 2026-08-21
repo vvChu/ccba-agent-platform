@@ -238,12 +238,20 @@
   - *Đóng gói Thẻ XML:* Sử dụng `xml_envelope` và `parse_xml_tags` để đóng gói ngữ cảnh dữ liệu (`<context>`, `<input>`, `<instructions>`, `<thinking>`, `<output>`), tạo ranh giới dữ liệu rõ ràng giúp LLM nhận diện đúng cấu trúc và triệt tiêu nguy cơ prompt injection.
   - *Vòng lặp Tự sửa lỗi (Technique 15):* Triển khai `evaluator_optimizer_loop` kết hợp Generator Model và Evaluator Model để tự đánh giá và tinh chỉnh câu trả lời với trần lặp `max_iterations=3`.
 
+#### P4.13. Wayfinding Pattern & Leading Words for Foggy Problems (Latent Space & Matt Pocock Pattern)
+* **Vấn đề (Planning Fatigue):** Khi lập kế hoạch cho các bài toán lớn/mờ mịt (greenfield) để chuẩn bị cho AFK Agents chạy ngầm qua đêm, việc nhồi toàn bộ bài toán vào một session duy nhất sẽ làm cạn kiệt context window và suy giảm độ sắc nét của Agent.
+* **Giải pháp (Orchestrator Layer & Fog of War):** 
+  - *Tư duy Warcraft III:* Không cố quyết định mọi thứ ngay từ đầu. Chỉ tạo các ticket unblocked ở rìa biên giới (`Frontier`), mỗi ticket giải quyết 1 câu hỏi cụ thể trong 1 session ~100K token độc lập.
+  - *Ngôn ngữ dẫn đường (Leading Words):* Định hình 3 thực thể chuẩn mực để AI không nhầm lẫn: `Map` (Bản đồ tổng thể lưu quyết định), `Ticket` (Câu hỏi cụ thể giao cho 1 session con), `Session` (Ngữ cảnh giải quyết trọn vẹn 1 ticket).
+  - *Fog vs. Ticket Test:* Nếu câu hỏi đã phát biểu sắc nét $\rightarrow$ Tạo Ticket ngay (dù đang bị block); nếu chưa rõ câu hỏi $\rightarrow$ Giữ trong vùng sương mù `Not yet specified`.
+  - *Bàn giao khép kín:* Khi bản đồ tan hết sương mù $\rightarrow$ Chuyển giao sang `/ccba-to-spec` $\rightarrow$ `/ccba-to-tickets` $\rightarrow$ `/ccba-implement`.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP4.1. Hardcoded API Keys:** Tuyệt đối không hardcode keys vào code/markdown. Luôn dùng biến môi trường hoặc `.env`.
 * **AP4.2. Raw Exception Context Chaining (Ruff B904):** Dùng `raise NewException(...) from None` khi ném ngoại lệ mới trong block except không liên quan.
 * **AP4.3. Reasoning Models trong Converter Fallback Chains:** Tuyệt đối không đưa các model có hậu tố `-thinking` vào chuỗi fallback của document converter (`mdconverter`) để tránh rò rỉ khối thẻ `<think>` làm ô nhiễm file Markdown đầu ra.
 * **AP4.4. Monolithic Context Overloading (Ball of Mud Prompt):** Nhồi nhét hàng chục trang quy tắc tĩnh và các quy định hiển nhiên (như f-strings, type hints, bare except) vào `AGENTS.md` gốc, làm tiêu tốn ~80% ngân sách chỉ dẫn của LLM và gây phân tâm khi suy luận.
-
+* **AP4.5. Premature Code Generation on Foggy Problems:** Nhảy vào viết code khi chưa xua tan sương mù chiến trận của bài toán. Luôn dùng `/ccba-wayfinder` hoặc `/ccba-grilling` để chốt quyết định thiết kế trước khi lập trình.
 
 ---
 
