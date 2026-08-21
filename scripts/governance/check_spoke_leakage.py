@@ -189,6 +189,35 @@ class SpokeLeakageAuditor:
             except Exception as ex:
                 self.errors.append(f"PROPOSAL_PARSE_ERROR [{rel_p}]: {ex}")
 
+    def check_md_root_hygiene(self) -> None:
+        """Verify that .md/ root is clean and conforms to Global Rule 1 & Rule 3."""
+        md_dir = self.root_dir / ".md"
+        if not md_dir.exists():
+            return
+
+        allowed_root_files = {
+            "workspace_context.yaml",
+            ".gitkeep",
+            "cross_references.yaml",
+            "GLOSSARY.md",
+        }
+
+        for item in md_dir.iterdir():
+            if item.is_file() and item.name not in allowed_root_files:
+                self.errors.append(
+                    f"STRAY_MD_ROOT_FILE [.md/{item.name}]: Only 'workspace_context.yaml' is allowed at .md/ root. Move reports to '.md/knowledge/reports/', extracts to '.md/extracted_docs/', or scratch to '.md/scratch/' per Global Rule 1."
+                )
+
+        # Check for .env files inside .md/ (excluding ephemeral local scratch)
+        for env_file in md_dir.rglob("*.env*"):
+            if env_file.is_file() and not env_file.name.endswith(".example"):
+                if "scratch" in env_file.parts:
+                    continue
+                rel_env = env_file.relative_to(self.root_dir).as_posix()
+                self.errors.append(
+                    f"ENV_FILE_IN_MD_DIR [{rel_env}]: .env files must reside at Project Root, not inside .md/ per Global Rule 3."
+                )
+
     def run_audit(self, changed_only: bool = True) -> int:
         """Run complete Spoke leakage audit."""
         print("=================================================================")
@@ -208,6 +237,7 @@ class SpokeLeakageAuditor:
         self.check_forbidden_paths(file_paths)
         self.check_hardcoded_paths_in_content(file_paths)
         self.check_proposal_metadata()
+        self.check_md_root_hygiene()
 
         print(f"Files Evaluated       : {len(file_paths)}")
         print(f"Critical Violations   : {len(self.errors)}")
