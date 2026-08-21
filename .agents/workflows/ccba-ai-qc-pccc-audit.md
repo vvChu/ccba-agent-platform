@@ -6,4 +6,6 @@ applies_to:
 bundle: "_qc"
 disable-model-invocation: true
 ---
+# Workflow: Thẩm Tra Thiết Kế PCCC Map-Reduce (/ccba-ai-qc-pccc-audit)
+
 Khi người dùng gọi lệnh này, hãy nạp và thực thi kỹ năng tại [SKILL.md](../skills/ccba-ai-qc-pccc-audit/SKILL.md) để bắt đầu quy trình rà soát và kiểm soát chất lượng thiết kế PCCC (Map-Reduce).
