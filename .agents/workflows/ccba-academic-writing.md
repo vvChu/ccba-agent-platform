@@ -5,6 +5,8 @@ user-invocable: true
 workflow_trigger_level: 1
 disable-model-invocation: true
 ---
+# Workflow: Viết Bài Báo Khoa Học IMRAD (/ccba-academic-writing)
+
 Hãy nạp và thực thi kỹ năng viết bài báo khoa học tại [SKILL.md](../skills/academic_writing/SKILL.md) và chạy kiểm duyệt vi mô thông qua script [microstructure_audit.py](../skills/academic_writing/scripts/microstructure_audit.py) khi có bản thảo hoặc dữ liệu thực tế.
 
 ---

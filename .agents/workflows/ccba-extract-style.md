@@ -6,4 +6,6 @@ applies_to:
 bundle: "_core"
 disable-model-invocation: true
 ---
+# Workflow: Trích Xuất & Chuẩn Hóa Biểu Mẫu (/ccba-extract-style)
+
 Khi người dùng gọi lệnh này, hãy nạp và thực thi kỹ năng copywriting tại [SKILL.md](../skills/copywriting/SKILL.md) và chạy phần trích xuất/nghiên cứu văn phong thô để chuẩn hóa thành tệp template.

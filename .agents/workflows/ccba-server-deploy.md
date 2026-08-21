@@ -1,3 +1,11 @@
+---
+description: Tự động triển khai và cấu hình nền tảng CCBA Agent Platform trên Server Spark
+applies_to:
+  - "Phần mềm"
+  - "Quản trị hệ thống"
+bundle: "_core"
+disable-model-invocation: true
+---
 # Workflow: Tự Động Triển Khai Nền Tảng Trên Server Spark (/ccba-server-deploy)
 
 Khi người dùng kích hoạt lệnh này, Agent hãy đọc và thực thi chỉ dẫn triển khai tự động theo tài liệu [server_spark_agent_instructions.md](../../docs/playbooks/server_spark_agent_instructions.md).
