@@ -2,6 +2,10 @@
 description: Chuyển đổi một quyết định chưa có đủ thông tin thành Bảng hỏi (Questionnaire) bất đồng bộ.
 applies_to:
   - "Phần mềm"
+  - "Thẩm tra thiết kế"
+  - "Thiết kế"
+  - "Kiểm định"
+  - "Tác vụ Admin"
 bundle: "_core"
 disable-model-invocation: true
 ---
