@@ -1,12 +1,13 @@
 ---
 name: to-questionnaire
 description: Chuyển đổi một quyết định chưa có đủ thông tin thành Bảng hỏi (Questionnaire) dạng Markdown để gửi cho đối tác/chuyên gia điền bất đồng bộ.
+bundle: _core
 disable-model-invocation: true
 category: productivity
 keywords: [questionnaire, async, interview, discovery, decision, handoff]
 metadata:
   author: CCBA
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Kỹ năng: Tạo Bảng Hỏi Bất Đồng Bộ (To Questionnaire)
@@ -17,23 +18,26 @@ Nguyên tắc cốt lõi: **"Grill the send, not the subject"** — Chỉ phỏn
 
 ---
 
-## Quy trình Thực hiện (3 Bước)
+## Quy trình Thực hiện (Process)
 
-### 1. Người nhận là ai? (Who is it going to?)
-Trong một lượt trao đổi duy nhất, hãy làm rõ:
-- Vai trò, chuyên môn của người nhận (recipient's role & expertise).
-- Mối quan hệ giữa người nhận và người dùng.
-- *Mục đích:* Xác định văn phong, giọng điệu và lượng ngữ cảnh (context) cần đưa vào bảng hỏi.
+1. **Bước 1: Xác định Người nhận (Who is it going to?)**
+   - Trong một lượt trao đổi duy nhất, làm rõ:
+     * Vai trò, chuyên môn của người nhận (recipient's role & expertise).
+     * Mối quan hệ giữa người nhận và người dùng.
+   - *Mục đích:* Xác định văn phong, giọng điệu và lượng ngữ cảnh (context) cần đưa vào bảng hỏi.
+   **Tiêu chí hoàn thành:** Đã xác định rõ danh tính, vai trò và mức độ trang trọng/ngữ cảnh cần thiết của người nhận.
 
-### 2. Cần thu về những gì? (What do you need back?)
-Trong một lượt trao đổi duy nhất, xác định:
-- Danh sách các quyết định hoặc sự thật cụ thể mà người dùng chưa thể tự chốt và cần người nhận giải đáp.
-- *Mục đích:* Lập danh sách kết quả đầu ra cụ thể mà người dùng cần nhận được sau khi thu thập xong bảng hỏi.
+2. **Bước 2: Xác định Thông tin Cần thu về (What do you need back?)**
+   - Trong một lượt trao đổi duy nhất, xác định:
+     * Danh sách các quyết định hoặc sự thật cụ thể mà người dùng chưa thể tự chốt và cần người nhận giải đáp.
+   - *Mục đích:* Lập danh sách kết quả đầu ra cụ thể mà người dùng cần nhận được sau khi thu thập xong bảng hỏi.
+   **Tiêu chí hoàn thành:** Đã liệt kê tối thiểu 1-5 quyết định/thông số kỹ thuật cụ thể cần thu thập từ người nhận.
 
-### 3. Soạn thảo Bảng hỏi (Write the questionnaire)
-Dựa trên khoảng trống thông tin từ Bước 1 và 2, soạn thảo tệp bảng hỏi theo cấu trúc chuẩn dưới đây:
-- Ghi tệp ra đường dẫn: `to-questionnaire-<slug>.md` (slug lấy từ chủ đề) tại thư mục hiện tại hoặc `.md/knowledge/` tùy ngữ cảnh.
-- Đảm bảo mọi điểm cần thu về ở Bước 2 đều được bao phủ bởi ít nhất một câu hỏi cụ thể.
+3. **Bước 3: Soạn thảo Bảng hỏi Chuẩn Mực (Write the questionnaire)**
+   - Dựa trên khoảng trống thông tin từ Bước 1 và 2, soạn thảo tệp bảng hỏi theo cấu trúc chuẩn.
+   - Lưu tệp theo đúng [Global Rule 1](../../../rules/user_global.md) tại: `.md/knowledge/questionnaires/to-questionnaire-<slug>.md` (hoặc `.md/knowledge/reports/`).
+   - Đảm bảo mọi điểm cần thu về ở Bước 2 đều được bao phủ bởi ít nhất một câu hỏi cụ thể.
+   **Tiêu chí hoàn thành:** Tệp bảng hỏi Markdown được tạo thành công với đầy đủ các mục (Mục đích, Ngữ cảnh, Hướng dẫn trả lời, Các câu hỏi trọng tâm và Ý kiến khác).
 
 ---
 
@@ -66,4 +70,5 @@ Câu hỏi mở cuối cùng: Còn điều gì chúng tôi chưa hỏi mà ông/
 ```
 
 ---
+
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
