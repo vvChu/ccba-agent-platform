@@ -201,23 +201,33 @@ class SpokeBootstrapper:
         return ordered
 
     def ensure_gitignore_rule(self, dry_run: bool = False) -> bool:
-        """Ensures requirements-hub.txt is included in .gitignore."""
+        """Ensures requirements-hub.txt and Spoke Leakage Guard rules are included in .gitignore."""
         gitignore_path = self.spoke_root / ".gitignore"
-        rule = "requirements-hub.txt"
+        rules = [
+            "requirements-hub.txt",
+            ".md/teach/",
+            ".md/scratch/",
+            ".tmp/",
+            ".out-of-scope/",
+        ]
 
         if not gitignore_path.exists():
             if not dry_run:
-                gitignore_path.write_text(f"{rule}\n", encoding="utf-8")
+                header = "# Hub auto-generated editable links & Spoke Leakage Guard (ADR 0045)\n"
+                gitignore_path.write_text(header + "\n".join(rules) + "\n", encoding="utf-8")
             return True
 
         content = gitignore_path.read_text(encoding="utf-8")
-        if rule in content:
+        missing_rules = [r for r in rules if r not in content]
+        if not missing_rules:
             return False
 
         if not dry_run:
             new_content = (
                 content.rstrip()
-                + f"\n\n# Hub auto-generated editable links (local machine specific)\n{rule}\n"
+                + "\n\n# Hub auto-generated editable links & Spoke Leakage Guard (ADR 0045)\n"
+                + "\n".join(missing_rules)
+                + "\n"
             )
             gitignore_path.write_text(new_content, encoding="utf-8")
         return True

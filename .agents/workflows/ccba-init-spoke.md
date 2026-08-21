@@ -228,6 +228,12 @@ requirements-hub.txt
 # Ignore all specific project outputs (OneDrive/SharePoint synced)
 .md/projects/*
 !.md/projects/.gitkeep
+
+# Temporary, Scratch & Local Learning Workspace (ADR 0045 Spoke Leakage Guard)
+.md/teach/
+.md/scratch/
+.tmp/
+.out-of-scope/
 ```
 
 ### 6.1. Thiết lập Git Pre-commit Hook Bảo mật (Maskara)
