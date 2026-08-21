@@ -2,7 +2,7 @@
 proposal_id: "2026-07-04_ccba-document-standardization"
 type: "skill"
 name: "ccba-document-standardization"
-status: "open"
+status: "merged"
 priority: "High"
 proposed_by_project: "ccba-agent-platform"
 proposed_date: "2026-07-04"

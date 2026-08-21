@@ -2,7 +2,7 @@
 proposal_id: "2026-07-02_skills-validator"
 type: "skill"
 name: "skills-validator"
-status: "open"
+status: "merged"
 priority: "Cao"
 proposed_by_project: "ccba-agent-platform"
 proposed_date: "2026-07-02"

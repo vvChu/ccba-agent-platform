@@ -2,8 +2,8 @@
 proposal_id: "2026-07-03_path-registry-normalizer"
 type: "skill"
 name: "path-registry-normalizer"
-status: "open"
-priority: "Trung bình"
+status: "merged"
+priority: "Cao"
 proposed_by_project: "ccba-agent-platform"
 proposed_date: "2026-07-03"
 applies_to:
