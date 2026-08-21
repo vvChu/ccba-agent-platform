@@ -4,6 +4,7 @@ Public Deep Seams:
     LegalIntelPipeline      — Crawl, parse, package legal documents end-to-end.
     LegalProcessor          — Legal advisory, conflict analysis, dispatch drafts.
     LegalSyncEngine         — Cloud sync of legal registry to NotebookLM.
+    LegislativeConsolidator — Automated OKF v2.0 AST Structural Patching & VBHN Merger.
     Cleaners                — OCR cleanup, DOCX table parsing, Markdown conversion.
     GoldStandardProcessor   — OKF v2.2 Gold standard normalizer, footnote & AST/QA generator.
     VisualParityAuditor     — CI Gate 4 visual & footnote formatting auditor.
@@ -18,6 +19,16 @@ from .ast_parser import (
     PatchAction,
 )
 from .cleaners import Cleaners
+from .consolidator import (
+    ConsolidationResult,
+    DocMode,
+    DualModeASTParser,
+    LegislativeConsolidator,
+    ManifestGenerator,
+    PatchItem,
+    PatchManifest,
+    load_manifest,
+)
 from .coordinator import (
     LegalIntelPipeline,
     LegalProcessor,
@@ -75,9 +86,12 @@ __all__ = [
     "LegalSyncEngine",
     "LegalRegistryManager",
     "LegalGroundingGate",
+    "LegislativeConsolidator",
+    "ManifestGenerator",
     "OKFBundlePackager",
     "AppendixSplitter",
     "ASTParser",
+    "DualModeASTParser",
     "VBHNEngine",
     "VBHNMerger",
     "TVPLCrawler",
@@ -93,6 +107,10 @@ __all__ = [
     "DeltaPatch",
     "DeltaPatchItem",
     "PatchAction",
+    "PatchManifest",
+    "PatchItem",
+    "DocMode",
+    "ConsolidationResult",
     "MergedLegalDocument",
     "DocProfile",
     # === Essential Public Helpers & Guards ===
@@ -101,6 +119,7 @@ __all__ = [
     "format_citation",
     "load_legal_registry",
     "search_legal_registry",
+    "load_manifest",
     "roman_to_decimal",
     "TVPLSessionMutex",
     "CookieVault",

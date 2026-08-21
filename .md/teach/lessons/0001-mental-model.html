@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 1: Tư Duy Cốt Lõi — Bạn là Nhạc Trưởng, AI là Thợ Lập Trình</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #EEF2FF;
+            --accent: #06B6D4;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --dark: #0F172A;
+            --dark-card: #1E293B;
+            --text-main: #334155;
+            --text-light: #64748B;
+            --bg: #F8FAFC;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4F46E5 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px -15px rgba(79, 70, 229, 0.3);
+            margin-bottom: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            color: #A5B4FC;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 0.35rem 1rem;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 0.75rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #C7D2FE;
+            max-width: 650px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid #E2E8F0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .analogy-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.25rem;
+        }
+
+        @media (max-width: 640px) {
+            .analogy-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .role-box {
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 2px solid transparent;
+        }
+
+        .role-user {
+            background: #F0FDF4;
+            border-color: #BBF7D0;
+        }
+
+        .role-ai {
+            background: #EFF6FF;
+            border-color: #BFDBFE;
+        }
+
+        .role-title {
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .role-user .role-title { color: #166534; }
+        .role-ai .role-title { color: #1E40AF; }
+
+        .role-desc {
+            font-size: 0.95rem;
+            color: #374151;
+        }
+
+        .role-desc ul {
+            list-style: none;
+            margin-top: 0.75rem;
+        }
+
+        .role-desc li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .role-desc li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        .role-user li::before { color: #16A34A; }
+        .role-ai li::before { color: #2563EB; }
+
+        .pipeline-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #F1F5F9;
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin: 1.5rem 0;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .pipeline-flow {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        .flow-step {
+            background: white;
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            text-align: center;
+            flex: 1;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+
+        .flow-step strong {
+            display: block;
+            color: var(--primary);
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-step span {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .flow-arrow {
+            color: #94A3B8;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        .rule-card {
+            background: linear-gradient(to right, #FAF5FF, #F3E8FF);
+            border-left: 5px solid #9333EA;
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 16px 16px 0;
+            margin-bottom: 1rem;
+        }
+
+        .rule-card h3 {
+            font-size: 1.05rem;
+            color: #6B21A8;
+            margin-bottom: 0.35rem;
+        }
+
+        .rule-card p {
+            font-size: 0.95rem;
+            color: #4C1D95;
+        }
+
+        .quiz-section {
+            background: #1E293B;
+            color: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .quiz-section h2 {
+            color: #38BDF8;
+        }
+
+        .quiz-option {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #38BDF8;
+            transform: translateX(4px);
+        }
+
+        .quiz-option input {
+            cursor: pointer;
+        }
+
+        .quiz-feedback {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+            color: white;
+            border: none;
+            padding: 0.85rem 1.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <span class="badge">Bài học số 01 / 04</span>
+            <h1>Tư Duy Cốt Lõi: Nhạc Trưởng & Thợ Lập Trình</h1>
+            <p class="subtitle">Hiểu bản chất phần mềm, giải mã lý do AI code sai và phương pháp chỉ huy AI bất bại từ con số 0.</p>
+        </header>
+
+        <!-- Phần 1 -->
+        <div class="card">
+            <h2>🧠 1. Phần Mềm Thực Chất Là Gì?</h2>
+            <p>Rất nhiều người sợ học lập trình vì nghĩ phải nhớ hàng nghìn câu lệnh phức tạp bằng tiếng Anh. Nhưng sự thật là: <strong>Mọi phần mềm trên thế giới chỉ là một chu trình 3 bước đơn giản:</strong></p>
+            
+            <div class="pipeline-flow">
+                <div class="flow-step">
+                    <strong>1. ĐẦU VÀO (Input)</strong>
+                    <span>Dữ liệu thô đưa vào (File Excel, văn bản, cú click chuột)</span>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step">
+                    <strong>2. CHẾ BIẾN (Logic)</strong>
+                    <span>Công thức tính toán, lọc, sắp xếp hoặc biến đổi</span>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step">
+                    <strong>3. ĐẦU RA (Output)</strong>
+                    <span>Kết quả mong muốn (Báo cáo Word, biểu đồ, email tự gửi)</span>
+                </div>
+            </div>
+            
+            <p style="color: var(--text-light); font-size: 0.95rem;"><em>Ví dụ:</em> Giống như nấu ăn — bạn chỉ cần chuẩn bị nguyên liệu (Input), làm theo công thức xào nấu (Logic) để tạo ra món ăn ngon (Output). Bạn không cần tự chế tạo ra cái chảo hay cái bếp ga (vì AI và các thư viện đã làm sẵn việc đó cho bạn!).</p>
+        </div>
+
+        <!-- Phần 2 -->
+        <div class="card">
+            <h2>🎼 2. Phân Vai: Nhạc Trưởng vs Thợ Lập Trình</h2>
+            <p>Để dùng AI hiệu quả, bạn cần chuyển đổi tâm thế: <strong>Bạn không phải là người gõ code, bạn là Người Chỉ Huy.</strong></p>
+            
+            <div class="analogy-grid">
+                <div class="role-box role-user">
+                    <div class="role-title">👑 BẠN (Tổng Công Trình Sư)</div>
+                    <div class="role-desc">
+                        Nắm rõ bài toán thực tế ngoài đời và tiêu chuẩn đầu ra.
+                        <ul>
+                            <li>Hiểu rõ nghiệp vụ & nhu cầu người dùng.</li>
+                            <li>Xác định thế nào là "Đúng" và "Sai".</li>
+                            <li>Chia nhỏ bài toán thành các mẩu việc.</li>
+                            <li>Kiểm tra và nghiệm thu sản phẩm cuối.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="role-box role-ai">
+                    <div class="role-title">🤖 AI (Thợ Lập Trình Siêu Tốc)</div>
+                    <div class="role-desc">
+                        Cỗ máy ghi nhớ cú pháp và viết code với tốc độ ánh sáng.
+                        <ul>
+                            <li>Thuộc làu cú pháp Python, JS, HTML...</li>
+                            <li>Viết hàng trăm dòng mã trong 5 giây.</li>
+                            <li>Tìm kiếm và sửa lỗi kỹ thuật theo lệnh.</li>
+                            <li><em>Không có trực giác đời thực nếu thiếu chỉ dẫn.</em></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phần 3 -->
+        <div class="card">
+            <h2>⚠️ 3. Vì Sao AI Viết Code Bị Sai?</h2>
+            <p>Khi bạn nhờ AI viết code mà kết quả ra không như ý, 95% nguyên nhân <strong>không phải do AI dốt</strong>, mà là do <strong>bài toán bị mô tả mơ hồ (Vague Prompting)</strong>.</p>
+            
+            <div style="margin-top: 1rem; display: grid; gap: 1rem;">
+                <div style="background: #FEF2F2; border-left: 4px solid #EF4444; padding: 1rem; border-radius: 8px;">
+                    <strong style="color: #991B1B;">❌ Yêu cầu mơ hồ:</strong> 
+                    <p style="color: #7F1D1D; font-size: 0.95rem; margin-top: 0.25rem;"><em>"Viết cho tôi một công cụ quản lý dự án."</em> ➔ AI sẽ tự bịa ra 100 tính năng bạn không cần, code rối rắm và dễ lỗi.</p>
+                </div>
+                <div style="background: #F0FDF4; border-left: 4px solid #22C55E; padding: 1rem; border-radius: 8px;">
+                    <strong style="color: #166534;">✅ Yêu cầu chuẩn của Nhạc Trưởng:</strong>
+                    <p style="color: #14532D; font-size: 0.95rem; margin-top: 0.25rem;"><em>"Tôi có bảng Excel danh sách dự án. Hãy viết script đọc cột 'Hạn nộp hồ sơ', nếu còn dưới 3 ngày thì bôi đỏ và in thông báo ra màn hình."</em> ➔ AI làm chính xác 100%.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phần 4 -->
+        <div class="card">
+            <h2>⭐ 4. Ba Nguyên Tắc Vàng Khi "Giao Việc" Cho AI</h2>
+            
+            <div class="rule-card">
+                <h3>1. Ngữ cảnh đi trước (Context First)</h3>
+                <p>Luôn nói rõ: Dữ liệu mẫu trông như thế nào, chạy trên máy gì (Windows, web, Excel) trước khi bảo AI viết code.</p>
+            </div>
+
+            <div class="rule-card">
+                <h3>2. Chia nhỏ miếng bánh (Chunking)</h3>
+                <p>Đừng bảo AI làm cả hệ thống cùng lúc. Hãy bảo làm Bước 1 (đọc file), kiểm tra chạy xong mới bảo làm Bước 2 (tính toán).</p>
+            </div>
+
+            <div class="rule-card">
+                <h3>3. Tiêu chí nghiệm thu rõ ràng (Definition of Done)</h3>
+                <p>Cho AI biết trước ví dụ kết quả: <em>"Đầu vào là A thì đầu ra phải đúng bằng B"</em>. AI sẽ tự chạy thử và sửa cho đến khi đúng.</p>
+            </div>
+        </div>
+
+        <!-- Mini Quiz -->
+        <div class="quiz-section">
+            <h2>🎯 Trắc Nghiệm Nhanh Củng Cố Bài Học</h2>
+            <p style="color: #94A3B8; margin-bottom: 1.25rem;">Theo bạn, trong quy trình lập trình với AI, việc quan trọng nhất của người chỉ huy là gì?</p>
+            
+            <label class="quiz-option" onclick="checkQuiz(1)">
+                <input type="radio" name="quiz" id="q1">
+                <span>A. Học thuộc lòng tất cả các câu lệnh và cú pháp của ngôn ngữ Python.</span>
+            </label>
+
+            <label class="quiz-option" onclick="checkQuiz(2)">
+                <input type="radio" name="quiz" id="q2">
+                <span>B. Định nghĩa rõ Đầu vào (Input), Đầu ra mong muốn (Output) và chia nhỏ bài toán.</span>
+            </label>
+
+            <label class="quiz-option" onclick="checkQuiz(3)">
+                <input type="radio" name="quiz" id="q3">
+                <span>C. Nhờ AI tự đoán xem mình đang muốn làm gì mà không cần cung cấp dữ liệu mẫu.</span>
+            </label>
+
+            <div id="feedback" class="quiz-feedback"></div>
+        </div>
+    </div>
+
+    <script>
+        function checkQuiz(option) {
+            const fb = document.getElementById('feedback');
+            fb.style.display = 'block';
+            if (option === 2) {
+                fb.style.background = '#065F46';
+                fb.style.color = '#6EE7B7';
+                fb.innerHTML = '🎉 CHÍNH XÁC 100%! Bạn đã nắm vững tư duy cốt lõi: Người chỉ huy tập trung vào Bài toán (Input/Output/Logic) và chia nhỏ công việc, việc viết cú pháp hãy để AI lo!';
+            } else {
+                fb.style.background = '#7F1D1D';
+                fb.style.color = '#FCA5A5';
+                fb.innerHTML = '❌ Chưa chính xác. Hãy nhớ: Bạn là Nhạc Trưởng — bạn không cần học vẹt cú pháp, và AI không thể đọc được suy nghĩ nếu thiếu dữ liệu đầu vào rõ ràng!';
+            }
+        }
+    </script>
+</body>
+</html>
