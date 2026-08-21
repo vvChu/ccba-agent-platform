@@ -340,6 +340,34 @@ def clean_zombies(dry_run: bool) -> None:
     print("  No orphan background processes found.")
 
 
+def clean_subagent_artifacts(root_dir: Path, dry_run: bool) -> None:
+    """Clean up ephemeral subagent directories and files in .agents/."""
+    print("[CLEAN] Checking ephemeral subagent artifacts in .agents/...")
+    agents_dir = root_dir / ".agents"
+    if not agents_dir.exists():
+        return
+
+    canonical = {"skills", "workflows", "proposals", "rules", "templates", "AGENTS.md", ".gitkeep"}
+    stray_items = [p for p in agents_dir.iterdir() if p.name not in canonical]
+
+    if not stray_items:
+        print("  No stray subagent artifacts found in .agents/.")
+        return
+
+    for item in stray_items:
+        if dry_run:
+            print(f"  [PREVIEW] Would remove: .agents/{item.name}")
+        else:
+            print(f"  [DELETE] Removing: .agents/{item.name}")
+            try:
+                if item.is_dir():
+                    shutil.rmtree(item)
+                else:
+                    item.unlink()
+            except Exception as e:
+                print(f"  [WARNING] Could not remove .agents/{item.name}: {e}")
+
+
 def health_check() -> None:
     """Perform system health check (disk space and memory)."""
     print("[HEALTH] Running workspace health diagnostics...")
@@ -367,7 +395,7 @@ def main() -> None:
 
     # Resolve workspace root
     script_path = Path(__file__).resolve()
-    root_dir = script_path.parent.parent
+    root_dir = script_path.parent.parent.parent
 
     # Fix stdout encoding to UTF-8 on Windows if supported
     if sys.platform == "win32":
@@ -386,6 +414,7 @@ def main() -> None:
     clean_worktrees(dry_run)
     clean_branches(dry_run)
     clean_zombies(dry_run)
+    clean_subagent_artifacts(root_dir, dry_run)
 
     print("==================================================")
     status_str = "completed successfully" if args.execute else "preview completed"
