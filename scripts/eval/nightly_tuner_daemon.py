@@ -229,9 +229,9 @@ class NightlyTunerDaemon:
             results=summaries,
         )
 
-        report_md = self.generate_evolution_report_markdown(report)
-        report_file = self.root / ".md" / f"nightly_tuner_report_{now_str}.md"
-        report_file.parent.mkdir(parents=True, exist_ok=True)
+        reports_dir = self.root / ".md" / "knowledge" / "reports"
+        reports_dir.mkdir(parents=True, exist_ok=True)
+        report_file = reports_dir / f"nightly_tuner_report_{now_str}.md"
         report_file.write_text(report_md, encoding="utf-8")
         logger.info(f"📄 Đã lưu báo cáo: {report_file}")
 
