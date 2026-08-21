@@ -41,6 +41,10 @@ jobs:
           pip install -e packages/ccba-harness
           pip install --no-deps -e packages/ccba-ai
 
+      - name: Run Spoke Leakage Guard (ADR 0045)
+        run: |
+          python scripts/governance/check_spoke_leakage.py
+
       - name: Run Documentation Accuracy Validator
         run: |
           python scripts/validate_docs.py . --src scripts,packages --changed
