@@ -5,4 +5,6 @@ applies_to:
 bundle: "_core"
 disable-model-invocation: true
 ---
+# Workflow: Giảng Dạy & Không Gian Học Tập Tương Tác (/ccba-teach)
+
 Khi người dùng gọi lệnh này, hãy nạp và thực thi kỹ năng tại [SKILL.md](../skills/teach/SKILL.md) để bắt đầu phiên giảng dạy tương tác (setup mục tiêu hoặc biên soạn bài giảng kế tiếp).
