@@ -45,6 +45,10 @@ jobs:
         run: |
           python scripts/governance/check_spoke_leakage.py
 
+      - name: Run Skills & Workflows Quality Validator (ADR 0040)
+        run: |
+          python scripts/validate_skills.py
+
       - name: Run Documentation Accuracy Validator
         run: |
           python scripts/validate_docs.py . --src scripts,packages --changed

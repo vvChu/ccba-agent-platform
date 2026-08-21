@@ -315,27 +315,138 @@ class SkillAuditor(BaseAuditor):
 
         return issues
 
+    def audit_workflow(self, file_path: Path) -> list[AuditIssue]:
+        """Audit a single workflow file for CCBA compliance."""
+        issues: list[AuditIssue] = []
+        if not file_path.exists():
+            return issues
+
+        content = file_path.read_text(encoding="utf-8")
+        match = FRONTMATTER_RE.match(content)
+        if not match:
+            return [
+                AuditIssue(
+                    1,
+                    str(file_path),
+                    "Missing YAML frontmatter '---'",
+                    category="MALFORMED_FRONTMATTER",
+                    file_path=str(file_path),
+                )
+            ]
+
+        try:
+            meta = yaml.safe_load(match.group(1))
+        except Exception as e:
+            return [
+                AuditIssue(
+                    1,
+                    str(file_path),
+                    f"Failed to parse frontmatter YAML: {e}",
+                    category="YAML_PARSE_ERROR",
+                    file_path=str(file_path),
+                )
+            ]
+
+        if not isinstance(meta, dict):
+            return [
+                AuditIssue(
+                    1,
+                    str(file_path),
+                    "Frontmatter YAML is not a valid dictionary",
+                    category="MALFORMED_FRONTMATTER",
+                    file_path=str(file_path),
+                )
+            ]
+
+        description = meta.get("description")
+        disable_model_inv = meta.get("disable-model-invocation", False)
+
+        if not description or not isinstance(description, str):
+            issues.append(
+                AuditIssue(
+                    1,
+                    str(file_path),
+                    "Missing or invalid 'description' in workflow frontmatter",
+                    category="MISSING_DESCRIPTION",
+                    file_path=str(file_path),
+                )
+            )
+
+        # Critical Invariant: Workflows must be 0-token (disable-model-invocation: true)
+        if disable_model_inv is not True:
+            issues.append(
+                AuditIssue(
+                    1,
+                    str(file_path),
+                    "Workflow must have 'disable-model-invocation: true' to enforce 0-token system prompt invariant (ADR-0040)",
+                    category="WORKFLOW_MODEL_INVOCATION_NOT_DISABLED",
+                    file_path=str(file_path),
+                )
+            )
+
+        lines = content.splitlines()
+        if len(lines) > 150:
+            issues.append(
+                AuditIssue(
+                    1,
+                    str(file_path),
+                    f"Workflow length ({len(lines)} lines) exceeds maximum 150 lines limit. Extract large scripts/templates to Deep Seams per ADR-0011.",
+                    category="WORKFLOW_TOO_LONG",
+                    file_path=str(file_path),
+                )
+            )
+
+        import re
+        body = content[match.end() :]
+        if not re.search(r"^#\s+", body, re.MULTILINE):
+            issues.append(
+                AuditIssue(
+                    len(match.group(0).splitlines()) + 1,
+                    str(file_path),
+                    "Missing H1 heading '# Workflow: ...' in workflow body",
+                    category="MISSING_H1_HEADING",
+                    file_path=str(file_path),
+                )
+            )
+
+        return issues
+
     def audit_workspace(self) -> dict[str, Any]:
-        """Audit all skills in the workspace."""
+        """Audit all skills and workflows in the workspace."""
         skill_issues: list[AuditIssue] = []
+        workflow_issues: list[AuditIssue] = []
         skills_dir = self.project_root / ".agents" / "skills"
+        workflows_dir = self.project_root / ".agents" / "workflows"
 
         if skills_dir.exists():
             for skill_path in skills_dir.rglob("SKILL.md"):
                 skill_issues.extend(self.audit_skill(skill_path))
             skill_issues.extend(self.audit_workspace_gates(skills_dir))
 
+        if workflows_dir.exists():
+            for wf_path in workflows_dir.glob("*.md"):
+                workflow_issues.extend(self.audit_workflow(wf_path))
+
+        all_issues = skill_issues + workflow_issues
         return {
             "skills": skill_issues,
+            "workflows": workflow_issues,
             "total_skill_issues": len(skill_issues),
+            "total_workflow_issues": len(workflow_issues),
+            "total_issues": len(all_issues),
         }
 
     def audit(self, target: Path) -> list[AuditIssue]:
-        """Polymorphic entry point for auditing a skill or skills directory."""
+        """Polymorphic entry point for auditing a skill/workflow file or directory."""
         if target.is_file():
-            return self.audit_skill(target)
-        skill_issues: list[AuditIssue] = []
+            if target.name == "SKILL.md":
+                return self.audit_skill(target)
+            return self.audit_workflow(target)
+        issues: list[AuditIssue] = []
         for skill_path in target.rglob("SKILL.md"):
-            skill_issues.extend(self.audit_skill(skill_path))
-        skill_issues.extend(self.audit_workspace_gates(target))
-        return skill_issues
+            issues.extend(self.audit_skill(skill_path))
+        for wf_path in target.rglob("*.md"):
+            if wf_path.name != "SKILL.md" and "workflows" in wf_path.parts:
+                issues.extend(self.audit_workflow(wf_path))
+        issues.extend(self.audit_workspace_gates(target))
+        return issues
