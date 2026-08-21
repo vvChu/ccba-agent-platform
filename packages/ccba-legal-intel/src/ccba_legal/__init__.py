@@ -6,6 +6,8 @@ Public Deep Seams:
     LegalSyncEngine         — Cloud sync of legal registry to NotebookLM.
     LegislativeConsolidator — Automated OKF v2.0 AST Structural Patching & VBHN Merger.
     Cleaners                — OCR cleanup, DOCX table parsing, Markdown conversion.
+    GoldStandardProcessor   — OKF v2.2 Gold standard normalizer, footnote & AST/QA generator.
+    VisualParityAuditor     — CI Gate 4 visual & footnote formatting auditor.
 """
 
 from .appendices import AppendixSplitter, roman_to_decimal
@@ -43,6 +45,18 @@ from .crawler import (
     get_crawled_doc_data,
     trigger_download,
 )
+from .gold_standard import (
+    DocProfile,
+    GoldStandardProcessor,
+    clean_html_tables,
+    clean_table_footnotes_and_superscripts,
+    generate_bundle_ast_and_qa,
+    get_doc_profile,
+    inject_semantic_anchors,
+    normalize_notes_and_lists,
+    normalize_tvpl_formatting,
+    strip_existing_anchors,
+)
 from .grounding import (
     LEGAL_DISCLAIMER,
     LegalGroundingGate,
@@ -59,6 +73,10 @@ from .registry import (
 from .sync import LegalSyncEngine
 from .vbhn_engine import MergedLegalDocument, VBHNEngine
 from .vbhn_merger import VBHNMerger
+from .visual_parity import (
+    VisualParityAuditor,
+    audit_visual_parity,
+)
 
 __all__ = [
     # === Core Deep Seams (Public Interface) ===
@@ -81,6 +99,9 @@ __all__ = [
     "ChromeCDP",
     "MockChromeCDP",
     "ChromeCDPError",
+    "GoldStandardProcessor",
+    "VisualParityAuditor",
+    "audit_visual_parity",
     # === Core DTOs & Domain Models ===
     "ASTNode",
     "DeltaPatch",
@@ -91,6 +112,7 @@ __all__ = [
     "DocMode",
     "ConsolidationResult",
     "MergedLegalDocument",
+    "DocProfile",
     # === Essential Public Helpers & Guards ===
     "verify_legal_grounding",
     "format_grounded_response",
@@ -105,4 +127,12 @@ __all__ = [
     "download_three_tier",
     "get_crawled_doc_data",
     "trigger_download",
+    "get_doc_profile",
+    "strip_existing_anchors",
+    "normalize_tvpl_formatting",
+    "clean_html_tables",
+    "clean_table_footnotes_and_superscripts",
+    "normalize_notes_and_lists",
+    "inject_semantic_anchors",
+    "generate_bundle_ast_and_qa",
 ]

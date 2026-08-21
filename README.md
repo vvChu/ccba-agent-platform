@@ -70,7 +70,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   ├── ccba-ooxml/                    ←   OOXML validation, Word DOM & Excel macro calculation
 │   ├── ccba-pdf-prep/                 ←   PDF Vision Preprocessor (tiling, title-block, chunks)
 │   ├── ccba-notebooklm/               ←   Google NotebookLM wrapper & Mock client
-│   ├── ccba-legal-intel/              ←   Legal intelligence connectors & TVPL VIP crawler
+│   ├── ccba-legal-intel/              ←   Legal intelligence connectors, OKF v2.2 GoldStandardProcessor & VisualParityAuditor
 │   └── mdconverter/                   ←   Document-to-Markdown converter (PDF/DOCX/HTML)
 ├── scripts/                           ← CLI Tooling & Governance Engines
 │   ├── spoke/                         ←   Spoke governance, adoption & synchronization engines
@@ -103,7 +103,7 @@ Toàn bộ các gói dịch vụ nằm trong thư mục `packages/` được thi
 | **`ccba-ooxml`** | Thao tác DOM file Office (.docx, .pptx), bóc tách và tái dựng cấu trúc bảng phức tạp (`TableReconstructor`), kiểm định tính toàn vẹn XML và tính toán công thức Excel (`recalc_xlsx`). | `pip install -e "packages/ccba-ooxml"` |
 | **`ccba-pdf-prep`** | Tiền xử lý PDF cho AI Vision: Phân mảnh thông minh (Tiling), bóc tách khung tên bản vẽ, chia nhỏ chunks. | `pip install -e "packages/ccba-pdf-prep"` |
 | **`ccba-notebooklm`** | Tích hợp Google NotebookLM Cloud RAG, sinh Audio Overview, hỗ trợ Mock Client chạy test offline. | `pip install -e "packages/ccba-notebooklm"` |
-| **`ccba-legal-intel`** | Pipeline tự động hóa TVPL VIP, đóng gói bộ chuẩn OKF Bundle v2.0 (`OKFBundlePackager`), bóc tách phụ lục, AST diffing và hợp nhất Văn Bản Hợp Nhất (VBHN). | `pip install -e "packages/ccba-legal-intel"` |
+| **`ccba-legal-intel`** | Pipeline tự động hóa TVPL VIP, đóng gói bộ chuẩn OKF Bundle v2.2 (`OKFBundlePackager`, `GoldStandardProcessor`), kiểm định Visual Parity Gate 4, bóc tách phụ lục, AST diffing và hợp nhất Văn Bản Hợp Nhất (VBHN). | `pip install -e "packages/ccba-legal-intel"` |
 | **`mdconverter`** | Chuyển đổi PDF/DOCX/HTML sang Markdown chuẩn, phục hồi bảng biểu vỡ và tiêm anchor điều khoản. | `pip install -e "packages/mdconverter[dev,llm]"` |
 
 ---
