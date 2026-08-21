@@ -332,10 +332,29 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
                 if skill_path.is_relative_to(auditor.project_root)
                 else skill_path
             )
-            print(f"\n\x1b[31m[ERROR]\x1b[0m {rel_path}:")
+            print(f"\n\x1b[31m[SKILL ERROR]\x1b[0m {rel_path}:")
             for issue_item in issues:
                 print(f"  Line {issue_item.line_number}: {issue_item.message}")
                 total_errors += 1
+
+    # Validate all Workflows in .agents/workflows
+    workflow_files = []
+    if not args.file:
+        wf_dir = auditor.project_root / ".agents" / "workflows"
+        if wf_dir.exists():
+            workflow_files = list(wf_dir.glob("*.md"))
+            for wf_path in workflow_files:
+                wf_issues = auditor.skill_auditor.audit_workflow(wf_path)
+                if wf_issues:
+                    rel_wf = (
+                        wf_path.relative_to(auditor.project_root)
+                        if wf_path.is_relative_to(auditor.project_root)
+                        else wf_path
+                    )
+                    print(f"\n\x1b[31m[WORKFLOW ERROR]\x1b[0m {rel_wf}:")
+                    for w_issue in wf_issues:
+                        print(f"  Line {w_issue.line_number}: {w_issue.message}")
+                        total_errors += 1
 
     # Run Workspace Hard CI Gates (ADR-0040)
     if not args.file and search_path.exists():
@@ -350,7 +369,8 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
         print(f"\nValidation failed with {total_errors} error(s).")
         return 1
 
+    wf_msg = f" and {len(workflow_files)} workflow file(s)" if workflow_files else ""
     print(
-        f"\x1b[32mSuccessfully validated {len(skills_files)} SKILL.md file(s) across all 4 CI Gates.\x1b[0m"
+        f"\x1b[32mSuccessfully validated {len(skills_files)} SKILL.md file(s){wf_msg} across all CI Gates.\x1b[0m"
     )
     return 0
