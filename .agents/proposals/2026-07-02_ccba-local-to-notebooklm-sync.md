@@ -2,7 +2,7 @@
 proposal_id: "2026-07-02_ccba-local-to-notebooklm-sync"
 type: "skill"
 name: "ccba-local-to-notebooklm-sync"
-status: "open"
+status: "merged"
 priority: "Cao"
 proposed_by_project: "CCBA Agent Platform (Hub)"
 proposed_date: "2026-07-02"

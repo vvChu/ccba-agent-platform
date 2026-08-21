@@ -2,7 +2,7 @@
 proposal_id: "2026-06-29_docs-validator"
 type: "skill"
 name: "docs-validator"
-status: "open"
+status: "merged"
 priority: "Cao"
 proposed_by_project: "ccba-agent-platform"
 proposed_date: "2026-06-29"
