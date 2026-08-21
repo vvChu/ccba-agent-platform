@@ -57,9 +57,29 @@ Thực thi tại thư mục Hub (`hub_path`):
      ```bash
      python scripts/update_arch_stats.py
      ```
-5. **Ghi nhận tệp Proposal:**
-   Tạo tệp tại `<hub_path>/.agents/proposals/[YYYY-MM-DD]_[tên-đề-xuất].md` với đầy đủ YAML frontmatter, tóm tắt kiến trúc, action tokens và kết quả kiểm thử.
-6. **Commit & Push:**
+5. **Ghi nhận tệp Proposal (chuẩn ADR 0045):**
+   Tạo tệp tại `<hub_path>/.agents/proposals/[YYYY-MM-DD]_[tên-đề-xuất].md` với đầy đủ 8 trường YAML frontmatter chuẩn hóa:
+   ```yaml
+   ---
+   proposal_id: "[YYYY-MM-DD]_[tên-đề-xuất]"
+   type: "tool" # "tool" | "skill" | "workflow" | "rules"
+   name: "[tên-đề-xuất]"
+   status: "open"
+   priority: "Cao" # "Cao" | "Trung bình" | "Thấp"
+   proposed_by_project: "[tên-spoke]"
+   proposed_by_archetype: "knowledge_corpus" # theo 5 Spoke Archetypes (ADR 0041)
+   proposed_date: "YYYY-MM-DD"
+   applies_to:
+     - "Phần mềm"
+     - "Thẩm tra thiết kế"
+   ---
+   ```
+6. **Chạy Rào chắn Rò rỉ Tiền Kiểm (Pre-push Spoke Leakage Guard):**
+   ```bash
+   python scripts/governance/check_spoke_leakage.py
+   ```
+   *Đảm bảo không chứa thư mục rác Spoke (`.md/teach/`, `.tmp/`), đường dẫn tuyệt đối dạng Windows `D:\...`, hoặc thiếu metadata proposal.*
+7. **Commit & Push:**
    ```bash
    git add -A && git commit -m "feat([scope]): add [tên-đề-xuất] and proposal" && git push origin proposal/[tên-đề-xuất]
    ```
@@ -112,4 +132,5 @@ Sau khi toàn bộ CI đã xanh $100\%$, Agent tổng hợp báo cáo gửi ngư
 1. **Link PR chính thức:** `https://github.com/[org]/[repo]/pull/[PR_NUMBER]`.
 2. **Bảng tổng hợp kết quả CI:** Liệt kê các job tests, scan, linting đã pass.
 3. **Tóm tắt các điểm đã khắc phục qua review Copilot.**
-4. **Thông báo Sẵn sàng Merge:** Người dùng hoặc Maintainer có thể an tâm bấm nút Merge ngay lập tức mà không lo gãy vỡ hệ thống chung.
+4. **Thông báo Sẵn sàng Thẩm định & Merge:** 
+   - Thông báo cho Hub Maintainer có thể kích hoạt workflow `/ccba-review-proposal [PR_NUMBER]` để tự động rà soát kiến trúc, kiểm tra Spoke Leakage Guard và tiến hành squash merge 1-click an toàn.
