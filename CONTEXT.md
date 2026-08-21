@@ -84,6 +84,15 @@ The hybrid synchronization strategy where lightweight, diffable text/code files 
 **Maskara Pre-commit Hook**:
 A local Git security hook written dynamically to `.git/hooks/pre-commit` in Spoke workspaces during initialization, which runs the Maskara privacy tool to scan and block commits containing hardcoded API keys or raw credentials.
 
+**Spoke Leakage Guard (Rào Chắn Rò Rỉ Spoke)**:
+Cơ chế kiểm soát tự động tại CI và Agent Workflow nhằm phát hiện, ngăn chặn và bóc tách các tệp tin rác hoặc tài sản cục bộ của Spoke (thư mục `.md/teach/`, `.tmp/`, `.out-of-scope/`, cache hoặc đường dẫn tuyệt đối dạng Windows `D:\...`) trước khi chúng bị hợp nhất vào Hub Monorepo.
+
+**Supervised Self-Healing (Tự Khắc Phục Lỗi Có Giám Sát)**:
+Mô thức vận hành của Agent khi thẩm định PR đề xuất: Agent chủ động checkout nhánh, áp dụng các bản vá lỗi kỹ thuật rõ ràng (fix regex, resolve conflict cơ bản, format code), chạy bộ kiểm thử để xác minh xanh 100%, và trình bày tóm tắt diff cho Maintainer phê duyệt trước khi commit/merge.
+
+**Proposal Lifecycle Governance (Quản Trị Vòng Đời Đề Xuất)**:
+Quy chuẩn quản trị trạng thái tệp đề xuất `.agents/proposals/[YYYY-MM-DD]_[name].md` xuyên suốt chu trình: từ khi mở (`status: "open"`), qua thẩm định, đến khi hoàn tất merge (`status: "merged"` kèm `merged_commit` hash và ngày merge) đồng thời tự động cập nhật catalog hệ sinh thái (`catalog.yaml`, `PLATFORM.md`).
+
 ---
 
 ## 2. Kiến Trúc Cốt Lõi, Deep Seams & Ngân Sách Chỉ Dẫn
