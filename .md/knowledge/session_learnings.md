@@ -251,6 +251,12 @@
   1. Khi một lệnh chạy dưới dạng background task: Agent chỉ kiểm tra tối đa 2 lần cho task siêu ngắn (< 5s).
   2. Nếu task vẫn `RUNNING`: Agent **bắt buộc dừng gọi công cụ và kết thúc lượt (End Turn)**. Hệ thống sẽ tự động thông báo và đánh thức Agent (*Reactive Wakeup*) ngay khi task kết thúc.
 
+#### P4.15. Copilot Review Requests Gate & Defense-in-Depth Release Invariant
+* **Vấn đề (Race Condition Merge Sớm):** GitHub Actions CI thường hoàn thành trước Copilot Review (~30-60s). Nếu Agent kiểm tra comments ngay khi CI xanh, API trả về rỗng do Copilot chưa kịp nộp bài $\rightarrow$ Dẫn đến merge PR sớm và bỏ sót các phản biện quan trọng của Copilot.
+* **Giải pháp:** Áp dụng mô hình phòng thủ đa tầng (**Defense-in-Depth**):
+  1. *Shift-Left Reminder (`/ccba-create-pr`):* Nhắc nhở người dùng chờ cả CI xanh và Copilot review.
+  2. *Hard Gate (`/ccba-release-feature`):* Kiểm tra `gh pr view [PR] --json reviewRequests --jq '.reviewRequests[].login'`. Bắt buộc chỉ thực hiện `gh pr merge` khi danh sách `reviewRequests` không còn `copilot-pull-request-reviewer` và toàn bộ comments đã được xử lý hoặc giải trình trong `walkthrough.md`.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP4.1. Hardcoded API Keys:** Tuyệt đối không hardcode keys vào code/markdown. Luôn dùng biến môi trường hoặc `.env`.
 * **AP4.2. Raw Exception Context Chaining (Ruff B904):** Dùng `raise NewException(...) from None` khi ném ngoại lệ mới trong block except không liên quan.
@@ -258,6 +264,7 @@
 * **AP4.4. Monolithic Context Overloading (Ball of Mud Prompt):** Nhồi nhét hàng chục trang quy tắc tĩnh và các quy định hiển nhiên (như f-strings, type hints, bare except) vào `AGENTS.md` gốc, làm tiêu tốn ~80% ngân sách chỉ dẫn của LLM và gây phân tâm khi suy luận.
 * **AP4.5. Premature Code Generation on Foggy Problems:** Nhảy vào viết code khi chưa xua tan sương mù chiến trận của bài toán. Luôn dùng `/ccba-wayfinder` hoặc `/ccba-grilling` để chốt quyết định thiết kế trước khi lập trình.
 * **AP4.6. Background Task Polling Loop:** Lặp lại `manage_task status` liên tục trong cùng một lượt gọi để chờ tác vụ ngầm hoàn thành thay vì kết thúc lượt để chờ cơ chế Reactive Wakeup tự động.
+* **AP4.7. Premature Merge on Pending Bot Reviews:** Kích hoạt `gh pr merge` ngay khi CI vừa xanh mà không kiểm tra xem Copilot Review Bot có còn đang phân tích (`reviewRequests`) hay không.
 
 ---
 
