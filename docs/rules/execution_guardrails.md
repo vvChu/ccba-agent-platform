@@ -18,6 +18,7 @@
     - Agent chỉ được gọi `manage_task status` tối đa **2 lần** để kiểm tra các tác vụ ngắn hạn (< 5 giây).
     - Nếu tác vụ vẫn ở trạng thái **RUNNING** sau 2 lần kiểm tra, Agent **BẮT BUỘC** dừng gọi tool (kết thúc lượt - End Turn) hoặc chuyển sang làm việc độc lập khác. Tuyệt đối không lặp polling liên tiếp làm ô nhiễm giao diện (UI noise), phình to context window và lãng phí token.
   - **Rào chắn lệnh theo dõi CI (`gh pr checks`):** Nghiêm cấm chạy `gh pr checks --watch` kết hợp lặp `manage_task status`. Thay vào đó, chạy `gh pr checks` đơn lẻ hoặc khởi chạy `--watch` rồi lập tức dừng lượt để hệ thống tự động trả về kết quả khi CI hoàn tất.
+  - **Rào chắn Review Requests của Copilot (Chống Race Condition):** Nghiêm cấm kích hoạt `gh pr merge` khi `gh pr view --json reviewRequests` vẫn còn chứa bot reviewer (`copilot-pull-request-reviewer`). Phải đợi bot hoàn thành nộp bài review và đối soát toàn bộ comments trước khi merge.
 
 ---
 

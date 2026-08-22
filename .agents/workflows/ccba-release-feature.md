@@ -20,38 +20,45 @@ python scripts/eval/run_isolated_tests.py --all --stress
 
 ## Bước 1: Đối soát bình luận và Merge PR trên GitHub
 
-1. Lấy và ghi nhớ tên branch hiện hành (Feature Branch Name) trước khi thực hiện dọn dẹp:
+1. Lấy và ghi nhớ tên branch hiện hành (Feature Branch Name) cùng PR Number:
    ```bash
    git branch --show-current
+   gh pr view --json number,title,state
    ```
 2. Kiểm tra xem GitHub CLI (`gh`) có hoạt động không:
    ```bash
    gh auth status
    ```
-3. Thực hiện đối soát bình luận của Copilot trên PR:
+3. **Kiểm tra trạng thái GitHub Actions CI:**
    ```bash
-   gh api repos/:owner/:repo/pulls/[PR_NUMBER]/comments --jq '.[] | {id: .id, path: .path, line: .line, body: .body}'
+   gh pr checks
    ```
-   *Quy tắc bắt buộc:* 
-   - Kể cả khi quy trình `/ccba-create-pr` đã bị quá thời gian chờ (timeout) đối với Copilot, khi thực hiện `/ccba-release-feature` Agent **bắt buộc phải chạy lại đối soát comments** trước khi merge.
-   - Nếu phát hiện bất kỳ bình luận mới nào của Copilot (vừa được tạo sau thời điểm timeout), Agent phải tạm dừng quy trình merge, đánh giá và thực hiện chỉnh sửa mã nguồn cục bộ, commit & push cập nhật, và cập nhật `walkthrough.md` trước khi tiếp tục.
-   - Nếu phát hiện các góp ý hợp lý (VALID) chưa sửa, hoặc các góp ý không hợp lý chưa được giải trình trong `walkthrough.md`, script sẽ báo lỗi chặn merge để Agent tiến hành sửa lỗi cục bộ và push cập nhật trước.
-4. Nếu `gh` đã đăng nhập và đối soát thành công:
-   - Kiểm tra trạng thái CI của PR hiện hành:
-     ```bash
-     gh pr checks
-     ```
    - *Rào chắn Zero-Polling CI:* 
      - Nếu các checks đang ở trạng thái `pending`, Agent có thể khởi chạy `gh pr checks --watch` rồi **lập tức dừng gọi công cụ (End Turn)** để hệ thống đánh thức qua cơ chế *Reactive Wakeup* khi CI xanh.
      - **Tuyệt đối nghiêm cấm** chạy vòng lặp gọi `manage_task status` liên tiếp 10-15 lần để thăm dò task `--watch`.
-   - Nếu CI pass (100% xanh): Thực hiện merge và xóa remote branch tự động (sử dụng Squash and Merge để giữ lịch sử nhánh main tinh gọn):
+
+4. **Chốt chặn Review Requests của Copilot (Chống Race Condition Merge Sớm):**
+   - Trước khi đọc comments, Agent **bắt buộc phải kiểm tra xem Copilot đã nộp bài review xong hay chưa**:
+     ```bash
+     gh pr view [PR_NUMBER] --json reviewRequests --jq '.reviewRequests[].login'
+     ```
+   - *Quy tắc bắt buộc:*
+     - Nếu output chứa `copilot-pull-request-reviewer` hoặc bot review: Có nghĩa là Copilot **vẫn đang phân tích và chưa Submit Review**. Agent **tuyệt đối không được merge ngay**, mà phải dừng lượt hoặc chờ Copilot hoàn tất lượt nộp bài.
+     - Chỉ khi `reviewRequests` không còn tên Copilot (đã nộp review xong vào `reviews`), Agent mới chuyển sang bước 5.
+
+5. **Thực hiện đối soát bình luận của Copilot trên PR:**
+   ```bash
+   gh api repos/:owner/:repo/pulls/[PR_NUMBER]/comments --jq '.[] | {id: .id, path: .path, line: .line, body: .body}'
+   ```
+   - Nếu phát hiện bất kỳ bình luận nào của Copilot, Agent phải tạm dừng quy trình merge, đánh giá và thực hiện chỉnh sửa mã nguồn cục bộ, commit & push cập nhật, và cập nhật `walkthrough.md` trước khi tiếp tục.
+   - Nếu phát hiện các góp ý hợp lý (VALID) chưa sửa, hoặc các góp ý không hợp lý chưa được giải trình trong `walkthrough.md`, script sẽ báo lỗi chặn merge để Agent tiến hành sửa lỗi cục bộ và push cập nhật trước.
+
+6. **Tiến hành Merge khi 100% điều kiện đạt chuẩn:**
+   - Nếu `gh` đã đăng nhập, CI pass (100% xanh) và Copilot review đã xử lý xong: Thực hiện merge và xóa remote branch tự động (sử dụng Squash and Merge để giữ lịch sử nhánh main tinh gọn):
      ```bash
      gh pr merge --squash --delete-branch
      ```
-5. Nếu `gh` chưa đăng nhập:
-   - Sử dụng `browser_subagent` truy cập trang PR của branch hiện tại.
-   - Chờ CI pass, chọn **Squash and merge** -> **Confirm squash and merge** -> **Delete branch**.
-   - Báo lỗi cụ thể cho người dùng nếu CI thất bại hoặc có xung đột (conflict).
+   - Nếu `gh` chưa đăng nhập: Sử dụng `browser_subagent` truy cập trang PR, chờ CI và Review hoàn tất rồi chọn **Squash and merge** -> **Confirm squash and merge** -> **Delete branch**.
 
 ## Bước 2: Cập nhật Lịch sử Thay đổi (Walkthrough)
 
