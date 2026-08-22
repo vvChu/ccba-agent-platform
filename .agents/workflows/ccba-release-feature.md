@@ -23,7 +23,7 @@ python scripts/eval/run_isolated_tests.py --all --stress
 1. Lấy và ghi nhớ tên branch hiện hành (Feature Branch Name) cùng PR Number:
    ```bash
    git branch --show-current
-   gh pr view --json number,title,state
+   PR_NUMBER=$(gh pr view --json number --jq .number)
    ```
 2. Kiểm tra xem GitHub CLI (`gh`) có hoạt động không:
    ```bash
@@ -40,15 +40,15 @@ python scripts/eval/run_isolated_tests.py --all --stress
 4. **Chốt chặn Review Requests của Copilot (Chống Race Condition Merge Sớm):**
    - Trước khi đọc comments, Agent **bắt buộc phải kiểm tra xem Copilot đã nộp bài review xong hay chưa**:
      ```bash
-     gh pr view [PR_NUMBER] --json reviewRequests --jq '.reviewRequests[].login'
+     gh pr view $PR_NUMBER --json reviewRequests,reviews --jq '{pending: [.reviewRequests[]?.login], reviewed: [.reviews[]?.user.login]}'
      ```
    - *Quy tắc bắt buộc:*
-     - Nếu output chứa `copilot-pull-request-reviewer` hoặc bot review: Có nghĩa là Copilot **vẫn đang phân tích và chưa Submit Review**. Agent **tuyệt đối không được merge ngay**, mà phải dừng lượt hoặc chờ Copilot hoàn tất lượt nộp bài.
-     - Chỉ khi `reviewRequests` không còn tên Copilot (đã nộp review xong vào `reviews`), Agent mới chuyển sang bước 5.
+     - Nếu danh sách `pending` chứa `copilot-pull-request-reviewer` (hoặc bot review) HOẶC Copilot chưa xuất hiện trong `reviewed` (nếu PR vừa tạo chưa quá 2 phút): Có nghĩa là Copilot **vẫn đang phân tích và chưa Submit Review**. Agent **tuyệt đối không được merge ngay**, mà phải dừng lượt hoặc chờ Copilot hoàn tất nộp bài.
+     - Chỉ khi Copilot đã hoàn tất lượt review và nộp bài vào `reviews` (hoặc không yêu cầu review), Agent mới chuyển sang bước 5.
 
 5. **Thực hiện đối soát bình luận của Copilot trên PR:**
    ```bash
-   gh api repos/:owner/:repo/pulls/[PR_NUMBER]/comments --jq '.[] | {id: .id, path: .path, line: .line, body: .body}'
+   gh api repos/:owner/:repo/pulls/$PR_NUMBER/comments --jq '.[] | {id: .id, path: .path, line: .line, body: .body}'
    ```
    - Nếu phát hiện bất kỳ bình luận nào của Copilot, Agent phải tạm dừng quy trình merge, đánh giá và thực hiện chỉnh sửa mã nguồn cục bộ, commit & push cập nhật, và cập nhật `walkthrough.md` trước khi tiếp tục.
    - Nếu phát hiện các góp ý hợp lý (VALID) chưa sửa, hoặc các góp ý không hợp lý chưa được giải trình trong `walkthrough.md`, script sẽ báo lỗi chặn merge để Agent tiến hành sửa lỗi cục bộ và push cập nhật trước.

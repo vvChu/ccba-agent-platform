@@ -255,7 +255,7 @@
 * **Vấn đề (Race Condition Merge Sớm):** GitHub Actions CI thường hoàn thành trước Copilot Review (~30-60s). Nếu Agent kiểm tra comments ngay khi CI xanh, API trả về rỗng do Copilot chưa kịp nộp bài $\rightarrow$ Dẫn đến merge PR sớm và bỏ sót các phản biện quan trọng của Copilot.
 * **Giải pháp:** Áp dụng mô hình phòng thủ đa tầng (**Defense-in-Depth**):
   1. *Shift-Left Reminder (`/ccba-create-pr`):* Nhắc nhở người dùng chờ cả CI xanh và Copilot review.
-  2. *Hard Gate (`/ccba-release-feature`):* Kiểm tra `gh pr view [PR] --json reviewRequests --jq '.reviewRequests[].login'`. Bắt buộc chỉ thực hiện `gh pr merge` khi danh sách `reviewRequests` không còn `copilot-pull-request-reviewer` và toàn bộ comments đã được xử lý hoặc giải trình trong `walkthrough.md`.
+  2. *Hard Gate (`/ccba-release-feature`):* Kiểm tra `gh pr view $PR_NUMBER --json reviewRequests,reviews --jq '{pending: [.reviewRequests[]?.login], reviewed: [.reviews[]?.user.login]}'`. Bắt buộc chỉ thực hiện `gh pr merge` khi danh sách `reviewRequests` không còn `copilot-pull-request-reviewer` và toàn bộ comments đã được xử lý hoặc giải trình trong `walkthrough.md`.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP4.1. Hardcoded API Keys:** Tuyệt đối không hardcode keys vào code/markdown. Luôn dùng biến môi trường hoặc `.env`.
