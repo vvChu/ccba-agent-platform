@@ -30,16 +30,16 @@ git branch --merged main | Where-Object { $_ -notmatch 'main' -and $_ -notmatch 
   ```bash
   gh issue view <issue_id> --json title,body,labels
   ```
-  - Tự động nhận diện loại công việc từ tiêu đề hoặc labels (ví dụ: `feat(...)` $\rightarrow$ `feature`, `fix(...)` $\rightarrow$ `fix`, `docs(...)` $\rightarrow$ `docs`, `refactor(...)` $\rightarrow$ `refactor`).
+  - Tự động nhận diện loại công việc từ tiêu đề hoặc labels (ví dụ: `feat(...)` $\rightarrow$ `feat`, `fix(...)` $\rightarrow$ `fix`, `docs(...)` $\rightarrow$ `docs`, `refactor(...)` $\rightarrow$ `refactor`).
   - Tự động trích xuất mô tả ngắn gọn và đề xuất ngay tên branch ở Bước 4 mà **không cần hỏi lại người dùng**.
 - **Trường hợp 2 (Không cung cấp mã Issue):**
   Hỏi người dùng lần lượt các thông tin:
-  1. Loại công việc cần thực hiện: `feature` (tính năng mới), `fix` (sửa lỗi), `docs` (tài liệu), `refactor` (cải tiến cấu trúc), hoặc `experiment` (thử nghiệm).
+  1. Loại công việc cần thực hiện: `feat` (tính năng mới), `fix` (sửa lỗi), `docs` (tài liệu), `refactor` (cải tiến cấu trúc), hoặc `experiment` (thử nghiệm).
   2. Mô tả ngắn gọn tính năng (3-5 từ).
 
 ### Bước 4: Đề xuất tên branch
 Dựa trên thông tin thu thập được, đề xuất tên branch theo định dạng chuẩn CCBA:
-- `feature/ten-tinh-nang` hoặc `feat/ten-tinh-nang`
+- `feat/ten-tinh-nang`
 - `fix/ten-loi`
 - `docs/ten-tai-lieu`
 - `refactor/ten-module`

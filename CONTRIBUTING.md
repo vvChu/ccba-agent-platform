@@ -16,7 +16,7 @@ Sử dụng Agent Workflow: `/ccba-new-feature` để tự động hóa.
 
 **Quy tắc đặt tên:**
 
-- `feature/ten-tinh-nang`: Tính năng mới
+- `feat/ten-tinh-nang`: Tính năng mới
 - `fix/ten-loi`: Sửa bug
 - `docs/ten-tai-lieu`: Cập nhật tài liệu
 - `refactor/ten-module`: Tối ưu code
@@ -29,8 +29,8 @@ Sử dụng Agent Workflow: `/ccba-new-feature` để tự động hóa.
 Commit thường xuyên với message rõ ràng.
 
 ```bash
-git commit -m "Add login feature"
-git push origin feature/login
+git commit -m "feat(auth): add login feature"
+git push origin feat/login
 ```
 
 ### Bước 3: Tạo Pull Request (PR)
