@@ -128,6 +128,10 @@
   - Khuyến nghị sử dụng chuẩn ASCII tương đương (ví dụ: `->` thay vì `→`, `[OK]` thay vì `✅`, `*` thay vì `•`).
   - Hoặc bọc hàm in bằng bộ giải mã an toàn `text.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(...)`.
 
+#### P2.5. Universal Branch Naming Parity Invariant (`feat/...` vs `feature/...`)
+* **Nguyên tắc:** Đồng bộ hóa tuyệt đối tiền tố branch sang `feat/short-description` (hoặc `fix/`, `docs/`, `refactor/`, `experiment/`) trên toàn bộ tài liệu hiến pháp, quy ước Git (`git_conventions.md`), tài liệu đóng góp (`CONTRIBUTING.md`), và kịch bản khởi tạo (`ccba-new-feature.md`).
+* **Lợi ích:** Tránh sự phân mảnh và cảnh báo phản biện từ các công cụ kiểm tra tĩnh (như GitHub Copilot PR Review Bot) khi hướng dẫn quy trình cho kỹ sư.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP2.1. Hardcoded Path Delimiters:** Dùng nối chuỗi chuỗi `/` hoặc `\` thay cho `pathlib.Path`.
 * **AP2.2. Leaking Temp Files to Project Root:** Để rải rác tệp tạm `.tmp`, `.lock`, `.log` tại root thay vì gom vào `.md/scratch/` hoặc `.md/data/`.
@@ -287,9 +291,15 @@
 #### P5.4. Parse-Protection (Bảo Vệ Ghi Chú Thủ Công của Con Người)
 * **Giải pháp:** Sử dụng cặp thẻ comment ẩn `<!-- DEVELOPER-NOTES-START -->` và `<!-- DEVELOPER-NOTES-END -->` để AI không bao giờ ghi đè lên các phân tích thủ công của kỹ sư khi cập nhật tài liệu tự động.
 
+#### P5.5. YAML Frontmatter Flow Scalar Bracket Quoting Invariant
+* **Nguyên tắc:** Trong YAML frontmatter của các tệp Markdown (`SKILL.md`, `workflows/*.md`), nếu giá trị của một trường vô hướng (như `description:`) bắt đầu bằng ký tự mở ngoặc vuông `[` (ví dụ: `description: [Alias ...] ...`):
+  - **Bắt buộc:** Phải bọc toàn bộ chuỗi trong dấu nháy kép `"` (ví dụ: `description: "[Alias ...] ..."`).
+* **Lý do:** Parser YAML tiêu chuẩn (PyYAML) sẽ diễn giải `[` ở đầu dòng như một Flow Sequence (danh sách YAML) và ném lỗi cú pháp nghiêm trọng `Failed to parse frontmatter YAML: expected <block end>, but found '<scalar>'` làm vỡ CI validation gates.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP5.1. Naive Regex Regex Table Replacement:** Dùng regex đơn giản làm mất merge cell hoặc xô lệch dữ liệu bảng số liệu.
 * **AP5.2. Stripping YAML Comments on Re-dump:** Dùng `yaml.dump()` thô làm mất toàn bộ comment giải thích do con người viết trước đó.
+* **AP5.3. Unquoted Bracket-Leading Scalar in YAML Frontmatter:** Khai báo trường chuỗi bắt đầu bằng `[` mà không bọc nháy kép trong header tệp markdown.
 
 ---
 
@@ -525,6 +535,15 @@
 
 #### P7.17. Upstream Proposal Archetype Attribution & Local Pre-PR Governance Linter (`ccba-propose-to-hub`)
 * **Nguyên tắc:** Khi một Spoke đề xuất sáng kiến ngược lên Hub, mẫu proposal bắt buộc ghi nhận `proposed_by_archetype` để phân loại bối cảnh nghiệp vụ, đồng thời phải vượt qua Governance Gate (`validate_skills.py`, `doc_auditor.py`) tại local trước khi mở Pull Request.
+
+#### P7.18. Symmetric Two-Phase Upstream Contribution Lifecycle (`/ccba-issue-to-hub` & `/ccba-contribute-to-hub`)
+* **Nguyên tắc:** Hoàn thiện chu trình đóng góp 2 chiều đối xứng từ Spoke lên Hub bằng cách phân tách độc lập 2 pha:
+  1. **Pha 1 (Ý tưởng & RFC - `/ccba-issue-to-hub`):** Tự động bóc tách bối cảnh từ phiên thảo luận Spoke, soạn thảo RFC tiêu chuẩn và tạo GitHub Issue lên Hub trung tâm thông qua `gh issue create`.
+  2. **Pha 2 (Mã nguồn & Pull Request - `/ccba-contribute-to-hub`):** Đóng gói mã nguồn, test suite, proposal ADR-0045, chạy rào chắn rò rỉ `check_spoke_leakage.py`, mở GitHub PR và duy trì vòng lặp Self-Healing CI & Copilot Review.
+  3. **Tương thích ngược (Backward Compatibility):** Duy trì `/ccba-propose-to-hub` làm Alias chuyển tiếp an toàn để không làm gãy thói quen của kỹ sư.
+
+#### P7.19. Automated Issue Context Bootstrapping in Feature Workflows (`/ccba-new-feature #[ID]`)
+* **Nguyên tắc:** Khi kỹ sư kích hoạt workflow khởi tạo branch với mã Issue (ví dụ: `/ccba-new-feature #209`), workflow tự động gọi `gh issue view <id> --json title,body,labels` để bóc tách loại công việc (`feat`, `fix`, `docs`, `refactor`) và mô tả tính năng. Tự động đề xuất branch name chuẩn `feat/...` và bỏ qua hoàn toàn các câu hỏi thủ công, tối ưu hóa tối đa trải nghiệm lập trình.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
