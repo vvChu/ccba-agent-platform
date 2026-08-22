@@ -41,7 +41,10 @@ python scripts/eval/run_isolated_tests.py --all --stress
      ```bash
      gh pr checks
      ```
-   - Nếu CI pass: Thực hiện merge và xóa remote branch tự động (sử dụng Squash and Merge để giữ lịch sử nhánh main tinh gọn):
+   - *Rào chắn Zero-Polling CI:* 
+     - Nếu các checks đang ở trạng thái `pending`, Agent có thể khởi chạy `gh pr checks --watch` rồi **lập tức dừng gọi công cụ (End Turn)** để hệ thống đánh thức qua cơ chế *Reactive Wakeup* khi CI xanh.
+     - **Tuyệt đối nghiêm cấm** chạy vòng lặp gọi `manage_task status` liên tiếp 10-15 lần để thăm dò task `--watch`.
+   - Nếu CI pass (100% xanh): Thực hiện merge và xóa remote branch tự động (sử dụng Squash and Merge để giữ lịch sử nhánh main tinh gọn):
      ```bash
      gh pr merge --squash --delete-branch
      ```
