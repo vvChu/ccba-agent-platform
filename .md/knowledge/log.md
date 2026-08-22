@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-08-22] [synthesize] | Chuẩn Hóa Bộ Đôi Upstream Contribution /ccba-issue-to-hub & /ccba-contribute-to-hub (#209)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `.agents/workflows/ccba-issue-to-hub.md`, `.agents/workflows/ccba-contribute-to-hub.md`, `.agents/workflows/ccba-propose-to-hub.md`, `.agents/workflows/ccba-new-feature.md`, `.agents/skills/platform-loader/catalog.yaml`, `.agents/skills/architecture-sync/SKILL.md`, `README.md`, `CONTRIBUTING.md`, `tests/test_upstream_workflows.py`, `.md/knowledge/session_learnings.md`
+- **Summary**: Hoàn tất PR #213 giải quyết Issue #209: (1) Chuẩn hóa bộ đôi Upstream Contribution đối xứng tách bạch 2 pha: `/ccba-issue-to-hub` (soạn RFC & mở GitHub Issue) và `/ccba-contribute-to-hub` (đóng gói code/tests & mở PR lên Hub); (2) Giữ `/ccba-propose-to-hub` làm Alias tương thích ngược; (3) Tối ưu hóa `/ccba-new-feature` tự động bóc tách Issue metadata qua `gh issue view` và sửa đường dẫn test `scripts/eval/run_harness_evals.py`; (4) Chuẩn hóa tiền tố nhánh sang `feat/...` theo `git_conventions.md`; (5) Vượt qua toàn bộ 6/6 checks GitHub Actions CI và Pre-release Gate (81/81 tests).
+
+---
+
 ## [2026-08-17] [synthesize] | Chuẩn Hóa Toàn Trình 4 Workflows Spoke & Archetype-Aware Setup Skills (ADR 0041)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-session-retrospective)
 - **Affected Files**: `.agents/workflows/ccba-init-spoke.md`, `.agents/workflows/ccba-adopt-spoke.md`, `.agents/workflows/ccba-update-spoke.md`, `.agents/workflows/ccba-propose-to-hub.md`, `.agents/skills/ccba-setup-skills/SKILL.md`, `.agents/skills/ccba-setup-skills/templates/domain.md`, `scripts/spoke/spoke_adopter.py`, `scripts/adopt_spoke.py`, `tests/test_spoke_adopter.py`
