@@ -1,5 +1,5 @@
 ---
-description: [Alias tương thích ngược của /ccba-contribute-to-hub] Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub
+description: "[Alias tương thích ngược của /ccba-contribute-to-hub] Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub"
 applies_to:
   - "Phần mềm"
   - "Thẩm tra thiết kế"
