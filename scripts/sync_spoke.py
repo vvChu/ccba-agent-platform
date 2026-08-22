@@ -141,7 +141,9 @@ def main() -> None:
             # Phase 2: Confirmation
             if sys.stdin.isatty():
                 try:
-                    ans = input("\n[Safe-by-Default] Bạn có muốn áp dụng các thay đổi trên vào Spoke? [y/N]: ")
+                    ans = input(
+                        "\n[Safe-by-Default] Bạn có muốn áp dụng các thay đổi trên vào Spoke? [y/N]: "
+                    )
                     if ans.strip().lower() in ("y", "yes", "dong y", "có", "co"):
                         sys.exit(
                             sync_project(
@@ -153,7 +155,9 @@ def main() -> None:
                             )
                         )
                     else:
-                        print("[Safe-by-Default] Đã hủy bỏ thao tác. Không có tệp tin nào bị sửa đổi.")
+                        print(
+                            "[Safe-by-Default] Đã hủy bỏ thao tác. Không có tệp tin nào bị sửa đổi."
+                        )
                         sys.exit(0)
                 except (EOFError, KeyboardInterrupt):
                     print("\n[Safe-by-Default] Đã hủy bỏ thao tác.")

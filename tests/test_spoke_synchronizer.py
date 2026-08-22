@@ -177,7 +177,9 @@ def test_sync_creates_backup_snapshot(mock_spoke: Path, mock_hub: Path):
     assert (latest_backup / "original_file.txt").read_text(encoding="utf-8") == "old version"
 
 
-def test_sync_blocks_on_dirty_working_tree_unless_forced(mock_spoke: Path, mock_hub: Path, monkeypatch: pytest.MonkeyPatch):
+def test_sync_blocks_on_dirty_working_tree_unless_forced(
+    mock_spoke: Path, mock_hub: Path, monkeypatch: pytest.MonkeyPatch
+):
     """Verifies that sync blocks execution on dirty git working tree unless force=True."""
     from scripts.spoke.spoke_synchronizer import GitWorkingTreeGuard
 
@@ -219,4 +221,3 @@ def test_rollback_restores_previous_agents_state(mock_spoke: Path, mock_hub: Pat
     rollback_ok = synchronizer.rollback()
     assert rollback_ok is True
     assert custom_wf.read_text(encoding="utf-8") == "# Initial Custom Doc"
-

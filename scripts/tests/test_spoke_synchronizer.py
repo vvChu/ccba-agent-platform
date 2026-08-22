@@ -132,12 +132,17 @@ class TestSpokeSynchronizer(unittest.TestCase):
 
         # Modify original file
         (spoke_agents / "test_file.txt").write_text("modified corrupted version", encoding="utf-8")
-        self.assertEqual((spoke_agents / "test_file.txt").read_text(encoding="utf-8"), "modified corrupted version")
+        self.assertEqual(
+            (spoke_agents / "test_file.txt").read_text(encoding="utf-8"),
+            "modified corrupted version",
+        )
 
         # Restore from backup
         restored = mgr.restore_backup()
         self.assertTrue(restored)
-        self.assertEqual((spoke_agents / "test_file.txt").read_text(encoding="utf-8"), "initial version")
+        self.assertEqual(
+            (spoke_agents / "test_file.txt").read_text(encoding="utf-8"), "initial version"
+        )
 
     def test_spoke_sync_engine_alias_and_method(self):
         """Test SpokeSyncEngine alias and sync() method integration."""
