@@ -12,6 +12,7 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -19,6 +20,7 @@ import yaml
 try:
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import padding
+    from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 
     HAS_CRYPTOGRAPHY = True
 except ImportError:
@@ -33,7 +35,7 @@ class HubNotFoundError(Exception):
     pass
 
 
-def load_yaml(file_path: Path) -> dict:
+def load_yaml(file_path: Path) -> dict[str, Any]:
     """Safely load a YAML file."""
     try:
         with open(file_path, encoding="utf-8") as f:
@@ -78,7 +80,7 @@ def are_dirs_identical(dir1: Path, dir2: Path) -> bool:
 class HubDiscoverer:
     """Smart Discovery Engine to locate the CCBA Hub directory."""
 
-    def __init__(self, spoke_root: Path, context: dict, context_file: Path | None = None):
+    def __init__(self, spoke_root: Path, context: dict[str, Any], context_file: Path | None = None):
         self.spoke_root = spoke_root
         self.context = context
         self.context_file = context_file
@@ -89,10 +91,12 @@ class HubDiscoverer:
 
     def discover(self) -> Path:
         """Locate Hub using 4-step smart discovery and auto-save if path changed."""
-        hub_path_str = self.context.get("hub_path")
-        if not hub_path_str and isinstance(self.context.get("project"), dict):
-            hub_path_str = self.context.get("project").get("hub_path")
-        hub_path_str = str(hub_path_str or "").strip()
+        hub_path_val = self.context.get("hub_path")
+        if not hub_path_val:
+            proj_info = self.context.get("project")
+            if isinstance(proj_info, dict):
+                hub_path_val = proj_info.get("hub_path")
+        hub_path_str = str(hub_path_val or "").strip()
 
         hub_root = None
 
@@ -147,7 +151,7 @@ class CatalogMerger:
     def __init__(self, target_path: Path):
         self.target_path = target_path
 
-    def atomic_write(self, data: dict) -> bool:
+    def atomic_write(self, data: dict[str, Any]) -> bool:
         """Write YAML data atomically via temp file replace after safe validation."""
         temp_file = self.target_path.parent / f".{self.target_path.name}.tmp"
         try:
@@ -184,7 +188,7 @@ class SpokeRegistrar:
         project_name: str,
         project_type: str,
         dry_run: bool = False,
-    ):
+    ) -> None:
         if not HAS_CRYPTOGRAPHY:
             print(
                 "[Registry] Warning: cryptography package not installed. Skipping Spoke registration.",
@@ -208,6 +212,10 @@ class SpokeRegistrar:
             with open(public_key_path, "rb") as f:
                 public_key = serialization.load_pem_public_key(f.read())
 
+            if not isinstance(public_key, RSAPublicKey):
+                print("[Registry] Warning: Public key is not RSA key.", file=sys.stderr)
+                return
+
             spoke_info = {
                 "name": project_name,
                 "path": str(spoke_root.resolve()),
@@ -229,7 +237,7 @@ class SpokeRegistrar:
             registry_file = hub_root / ".md" / "data" / "spoke_registry.yaml"
             registry_file.parent.mkdir(parents=True, exist_ok=True)
 
-            registry_data = {"spokes": []}
+            registry_data: dict[str, Any] = {"spokes": []}
             if registry_file.exists():
                 try:
                     with open(registry_file, encoding="utf-8") as f:
@@ -268,7 +276,7 @@ class TestGuardrailCopier:
         self.hub_root = hub_root
         self.project_type = project_type
 
-    def copy_if_needed(self, dry_run: bool = False):
+    def copy_if_needed(self, dry_run: bool = False) -> None:
         """Copy conftest.py and safe_pytest.py if Spoke is a software project."""
         if (self.spoke_root / "pyproject.toml").exists() or self.project_type == "Phần mềm":
             hub_conftest = self.hub_root / "conftest.py"
@@ -415,7 +423,7 @@ class SharedSdkInspector:
         return commands
 
 
-def safe_remove(path: Path):
+def safe_remove(path: Path) -> None:
     """Safely remove a directory or file without crashing on permission errors."""
     if not path.exists():
         return
@@ -435,6 +443,127 @@ def safe_remove(path: Path):
                     pass
 
 
+class GitWorkingTreeGuard:
+    """Guard checking Spoke Git working tree for uncommitted changes to prevent accidental overwrites."""
+
+    def __init__(self, spoke_root: Path):
+        self.spoke_root = spoke_root
+
+    def is_git_repo(self) -> bool:
+        """Check if spoke is located inside a git repository."""
+        return (self.spoke_root / ".git").exists() or (self.spoke_root.parent / ".git").exists()
+
+    def check_clean_working_tree(self, path_filter: str = ".agents") -> tuple[bool, str]:
+        """Check if working tree is clean under specified path filter.
+
+        Returns:
+            Tuple of (is_clean, dirty_details_str)
+        """
+        if not self.is_git_repo():
+            return True, ""
+
+        try:
+            import subprocess
+
+            cmd = ["git", "status", "--porcelain"]
+            if path_filter:
+                cmd.append(path_filter)
+            res = subprocess.run(
+                cmd,
+                cwd=str(self.spoke_root),
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if res.returncode != 0:
+                return True, ""
+
+            output = res.stdout.strip()
+            if output:
+                return False, output
+            return True, ""
+        except Exception:
+            return True, ""
+
+
+class SpokeBackupManager:
+    """Snapshot Backup & Rollback Engine for Spoke .agents workspace."""
+
+    def __init__(self, spoke_root: Path):
+        self.spoke_root = spoke_root
+        self.backup_root = self._resolve_backup_dir()
+
+    def _resolve_backup_dir(self) -> Path:
+        """Determine backup root directory (.md/backups or .agents_backups)."""
+        md_dir = self.spoke_root / ".md"
+        if md_dir.exists():
+            return md_dir / "backups"
+        return self.spoke_root / ".md" / "backups"
+
+    def create_backup(self) -> Path | None:
+        """Create a timestamped snapshot backup of .agents/ directory.
+
+        Returns:
+            Path to created snapshot directory, or None if .agents/ does not exist.
+        """
+        agents_dir = self.spoke_root / ".agents"
+        if not agents_dir.exists():
+            return None
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.backup_root.mkdir(parents=True, exist_ok=True)
+        backup_dest = self.backup_root / f"agents_backup_{timestamp}"
+
+        counter = 1
+        while backup_dest.exists():
+            backup_dest = self.backup_root / f"agents_backup_{timestamp}_{counter}"
+            counter += 1
+
+        shutil.copytree(agents_dir, backup_dest, dirs_exist_ok=True)
+        return backup_dest
+
+    def list_backups(self) -> list[Path]:
+        """List all available backup snapshots ordered by newest first."""
+        if not self.backup_root.exists():
+            return []
+        backups = [
+            p
+            for p in self.backup_root.iterdir()
+            if p.is_dir()
+            and (p.name.startswith("agents_backup_") or p.name.startswith(".agents.bak"))
+        ]
+        return sorted(backups, key=lambda p: p.stat().st_mtime, reverse=True)
+
+    def restore_backup(self, backup_path: Path | None = None) -> bool:
+        """Restore .agents/ directory from a specific backup or latest snapshot.
+
+        Returns:
+            True if restored successfully, False otherwise.
+        """
+        target_backup = backup_path
+        if target_backup is None:
+            backups = self.list_backups()
+            if not backups:
+                print(f"[Backup] No backups found in {self.backup_root}", file=sys.stderr)
+                return False
+            target_backup = backups[0]
+
+        if not target_backup.exists() or not target_backup.is_dir():
+            print(f"[Backup] Backup directory does not exist: {target_backup}", file=sys.stderr)
+            return False
+
+        agents_dir = self.spoke_root / ".agents"
+        try:
+            if agents_dir.exists():
+                safe_remove(agents_dir)
+            shutil.copytree(target_backup, agents_dir, dirs_exist_ok=True)
+            print(f"[Backup] Successfully restored .agents/ from {target_backup.name}")
+            return True
+        except Exception as e:
+            print(f"[Backup] Failed to restore backup: {e}", file=sys.stderr)
+            return False
+
+
 class SpokeSynchronizer:
     """Deep Engine managing Spoke workspace synchronization with non-destructive selective merge."""
 
@@ -445,7 +574,7 @@ class SpokeSynchronizer:
         self,
         spoke_root: Path,
         hub_root: Path,
-        catalog: dict,
+        catalog: dict[str, Any],
         sync_item: str,
         dry_run: bool = False,
     ) -> int:
@@ -549,7 +678,7 @@ class SpokeSynchronizer:
         self,
         spoke_root: Path,
         hub_root: Path,
-        catalog: dict,
+        catalog: dict[str, Any],
         project_type: str,
         project_name: str,
         dry_run: bool = False,
@@ -616,7 +745,7 @@ class SpokeSynchronizer:
                 )
 
         # Status tracking
-        actions: list[dict] = []
+        actions: list[dict[str, Any]] = []
 
         # 1. Process Skills (Selective Merge)
         if not dry_run:
@@ -824,11 +953,41 @@ class SpokeSynchronizer:
             print("\n=== Sync Completed Successfully ===")
         return 0
 
-    def sync_spoke_bundle(self, sync_item: str | None = None, dry_run: bool = False) -> int:
+    def sync_spoke_bundle(
+        self,
+        sync_item: str | None = None,
+        dry_run: bool = False,
+        force: bool = False,
+        backup: bool = True,
+        check_git: bool = True,
+    ) -> int:
         """Main entrypoint for Spoke synchronization."""
         mode_str = " [DRY-RUN]" if dry_run else ""
         print(f"\n=== CCBA Spoke Synchronization{mode_str} ===")
         print(f"Target Spoke: {self.spoke_root}")
+
+        # Git Working Tree Guard (Execution mode only)
+        if not dry_run and check_git and not force:
+            guard = GitWorkingTreeGuard(self.spoke_root)
+            is_clean, dirty_details = guard.check_clean_working_tree()
+            if not is_clean:
+                print("\n" + "!" * 80, file=sys.stderr)
+                print(
+                    "[Sync] ⚠️  CẢNH BÁO: Phát hiện uncommitted changes trong thư mục .agents/:",
+                    file=sys.stderr,
+                )
+                for line in dirty_details.splitlines():
+                    print(f"  {line}", file=sys.stderr)
+                print(
+                    "  Để tránh ghi đè dữ liệu ngoài ý muốn, vui lòng commit hoặc stash các thay đổi.",
+                    file=sys.stderr,
+                )
+                print(
+                    "  Hoặc truyền cờ '--force' / '--ignore-dirty' nếu muốn bỏ qua cảnh báo này.",
+                    file=sys.stderr,
+                )
+                print("!" * 80 + "\n", file=sys.stderr)
+                return 1
 
         context_file = self.spoke_root / ".agents" / "workspace_context.yaml"
         if not context_file.exists():
@@ -847,19 +1006,25 @@ class SpokeSynchronizer:
 
         context = load_yaml(context_file)
 
-        project_name = context.get("project_name")
-        if not project_name and isinstance(context.get("project"), dict):
-            project_name = context.get("project").get("name")
-        if not project_name:
+        project_name_val = context.get("project_name")
+        if not project_name_val:
+            proj_dict = context.get("project")
+            if isinstance(proj_dict, dict):
+                project_name_val = proj_dict.get("name")
+        if not project_name_val:
             project_name = self.spoke_root.name
-        project_name = str(project_name).strip()
+        else:
+            project_name = str(project_name_val).strip()
 
-        project_type = context.get("project_type")
-        if not project_type and isinstance(context.get("project"), dict):
-            project_type = context.get("project").get("type")
-        if not project_type:
+        project_type_val = context.get("project_type")
+        if not project_type_val:
+            proj_dict = context.get("project")
+            if isinstance(proj_dict, dict):
+                project_type_val = proj_dict.get("type")
+        if not project_type_val:
             project_type = ""
-        project_type = str(project_type).strip()
+        else:
+            project_type = str(project_type_val).strip()
 
         try:
             discoverer = HubDiscoverer(self.spoke_root, context, context_file)
@@ -869,6 +1034,17 @@ class SpokeSynchronizer:
             return 1
 
         print(f"Hub Location: {hub_root}")
+
+        # Snapshot Backup before actual modification
+        if not dry_run and backup:
+            backup_mgr = SpokeBackupManager(self.spoke_root)
+            snapshot_dir = backup_mgr.create_backup()
+            if snapshot_dir:
+                try:
+                    rel_backup = snapshot_dir.relative_to(self.spoke_root)
+                except ValueError:
+                    rel_backup = snapshot_dir
+                print(f"[Sync] 🛡️  Đã tạo snapshot sao lưu an toàn: {rel_backup}")
 
         # Auto git pull Hub if git repo (only when not dry_run)
         if (hub_root / ".git").exists() and not dry_run:
@@ -918,9 +1094,30 @@ class SpokeSynchronizer:
                 dry_run=dry_run,
             )
 
-    def sync(self, sync_item: str | None = None, dry_run: bool = False) -> int:
+    def sync(
+        self,
+        sync_item: str | None = None,
+        dry_run: bool = False,
+        force: bool = False,
+        backup: bool = True,
+        check_git: bool = True,
+    ) -> int:
         """Deep Seam entry point for syncing spoke bundle."""
-        return self.sync_spoke_bundle(sync_item=sync_item, dry_run=dry_run)
+        return self.sync_spoke_bundle(
+            sync_item=sync_item,
+            dry_run=dry_run,
+            force=force,
+            backup=backup,
+            check_git=check_git,
+        )
+
+    def rollback(self, backup_path: Path | None = None) -> bool:
+        """Restore .agents/ from latest snapshot or specified backup path."""
+        return SpokeBackupManager(self.spoke_root).restore_backup(backup_path)
+
+    def list_backups(self) -> list[Path]:
+        """List available snapshots for this spoke."""
+        return SpokeBackupManager(self.spoke_root).list_backups()
 
 
 # Deep Seam Alias
@@ -931,16 +1128,43 @@ def sync_project(
     spoke_path: str | Path = ".",
     sync_item: str | None = None,
     dry_run: bool = False,
+    force: bool = False,
+    backup: bool = True,
+    check_git: bool = True,
 ) -> int:
     """Helper procedural delegate for spoke synchronization."""
     engine = SpokeSyncEngine(str(spoke_path))
-    return engine.sync(sync_item=sync_item, dry_run=dry_run)
+    return engine.sync(
+        sync_item=sync_item,
+        dry_run=dry_run,
+        force=force,
+        backup=backup,
+        check_git=check_git,
+    )
+
+
+def rollback_project(
+    spoke_path: str | Path = ".",
+    backup_path: Path | None = None,
+) -> bool:
+    """Helper procedural delegate for spoke rollback from snapshot."""
+    engine = SpokeSyncEngine(str(spoke_path))
+    return engine.rollback(backup_path=backup_path)
+
+
+def list_project_backups(spoke_path: str | Path = ".") -> list[Path]:
+    """Helper procedural delegate to list spoke backup snapshots."""
+    engine = SpokeSyncEngine(str(spoke_path))
+    return engine.list_backups()
 
 
 def sync_all_spokes(
     hub_root: Path | None = None,
     sync_item: str | None = None,
     dry_run: bool = False,
+    force: bool = False,
+    backup: bool = True,
+    check_git: bool = True,
 ) -> int:
     """Batch synchronize all registered active Spokes found in Hub Registry."""
     root = hub_root or Path(__file__).resolve().parents[2]
@@ -957,7 +1181,7 @@ def sync_all_spokes(
     print(f" Tìm thấy {len(spokes)} Spoke(s) trong Hub Registry.")
     print("=" * 90)
 
-    results: list[dict] = []
+    results: list[dict[str, Any]] = []
     total_exit_code = 0
 
     for idx, sp in enumerate(spokes, 1):
@@ -975,7 +1199,13 @@ def sync_all_spokes(
 
         try:
             engine = SpokeSynchronizer(sp_path)
-            res = engine.sync(sync_item=sync_item, dry_run=dry_run)
+            res = engine.sync(
+                sync_item=sync_item,
+                dry_run=dry_run,
+                force=force,
+                backup=backup,
+                check_git=check_git,
+            )
             status = "SUCCESS" if res == 0 else "FAILED"
             results.append({"name": sp_name, "path": sp_path, "status": status, "code": res})
             if res != 0:
@@ -1025,12 +1255,178 @@ def main() -> None:
         action="store_true",
         help="Preview changes without modifying any files on disk.",
     )
+    parser.add_argument(
+        "--apply",
+        "-y",
+        action="store_true",
+        help="Apply synchronization changes directly to disk.",
+    )
+    parser.add_argument(
+        "--force",
+        "--ignore-dirty",
+        action="store_true",
+        dest="force",
+        help="Ignore uncommitted changes warning and proceed with sync.",
+    )
+    parser.add_argument(
+        "--no-backup",
+        action="store_true",
+        help="Disable automatic snapshot backup of .agents/ directory.",
+    )
+    parser.add_argument(
+        "--rollback",
+        "--undo",
+        action="store_true",
+        dest="rollback",
+        help="Restore .agents/ directory from the latest backup snapshot.",
+    )
+    parser.add_argument(
+        "--list-backups",
+        action="store_true",
+        help="List available snapshot backups for the target Spoke.",
+    )
     args = parser.parse_args()
 
+    if args.list_backups:
+        backups = list_project_backups(args.spoke)
+        if not backups:
+            print("[Backup] Không tìm thấy bản snapshot sao lưu nào.")
+        else:
+            print(f"[Backup] Danh sách {len(backups)} bản sao lưu:")
+            for idx, b in enumerate(backups, 1):
+                mtime = datetime.fromtimestamp(b.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                print(f"  {idx}. {b.name} ({mtime}) -> {b}")
+        sys.exit(0)
+
+    if args.rollback:
+        success = rollback_project(args.spoke)
+        sys.exit(0 if success else 1)
+
     if args.all:
-        sys.exit(sync_all_spokes(sync_item=args.sync_item, dry_run=args.dry_run))
+        if args.dry_run:
+            sys.exit(
+                sync_all_spokes(
+                    sync_item=args.sync_item,
+                    dry_run=True,
+                    force=args.force,
+                    backup=not args.no_backup,
+                )
+            )
+        elif args.apply:
+            sys.exit(
+                sync_all_spokes(
+                    sync_item=args.sync_item,
+                    dry_run=False,
+                    force=args.force,
+                    backup=not args.no_backup,
+                )
+            )
+        else:
+            print(
+                "[Safe-by-Default] Đang thực hiện Pha 1: Xem trước các thay đổi cho tất cả Spokes (Preview)..."
+            )
+            preview_code = sync_all_spokes(
+                sync_item=args.sync_item,
+                dry_run=True,
+                force=args.force,
+                backup=not args.no_backup,
+            )
+            if preview_code != 0:
+                sys.exit(preview_code)
+
+            if sys.stdin.isatty():
+                try:
+                    ans = input(
+                        "\n[Safe-by-Default] Bạn có muốn áp dụng các thay đổi trên cho tất cả Spokes? [y/N]: "
+                    )
+                    if ans.strip().lower() in ("y", "yes", "dong y", "có", "co"):
+                        sys.exit(
+                            sync_all_spokes(
+                                sync_item=args.sync_item,
+                                dry_run=False,
+                                force=args.force,
+                                backup=not args.no_backup,
+                            )
+                        )
+                    else:
+                        print(
+                            "[Safe-by-Default] Đã hủy bỏ thao tác. Không có tệp tin nào bị sửa đổi."
+                        )
+                        sys.exit(0)
+                except (EOFError, KeyboardInterrupt):
+                    print("\n[Safe-by-Default] Đã hủy bỏ thao tác.")
+                    sys.exit(0)
+            else:
+                print(
+                    "\n[Safe-by-Default] Quá trình xem trước hoàn tất. "
+                    "Để áp dụng thay đổi cho tất cả Spokes, vui lòng truyền cờ '--apply' hoặc '-y'."
+                )
+                sys.exit(0)
     else:
-        sys.exit(sync_project(args.spoke, args.sync_item, dry_run=args.dry_run))
+        # Two-Phase Safe-by-Default CLI logic
+        if args.dry_run:
+            sys.exit(
+                sync_project(
+                    args.spoke,
+                    args.sync_item,
+                    dry_run=True,
+                    force=args.force,
+                    backup=not args.no_backup,
+                )
+            )
+        elif args.apply:
+            sys.exit(
+                sync_project(
+                    args.spoke,
+                    args.sync_item,
+                    dry_run=False,
+                    force=args.force,
+                    backup=not args.no_backup,
+                )
+            )
+        else:
+            # Phase 1: Preview simulation
+            print("[Safe-by-Default] Đang thực hiện Pha 1: Xem trước các thay đổi (Preview)...")
+            preview_code = sync_project(
+                args.spoke,
+                args.sync_item,
+                dry_run=True,
+                force=args.force,
+                backup=not args.no_backup,
+            )
+            if preview_code != 0:
+                sys.exit(preview_code)
+
+            # Phase 2: Confirmation
+            if sys.stdin.isatty():
+                try:
+                    ans = input(
+                        "\n[Safe-by-Default] Bạn có muốn áp dụng các thay đổi trên vào Spoke? [y/N]: "
+                    )
+                    if ans.strip().lower() in ("y", "yes", "dong y", "có", "co"):
+                        sys.exit(
+                            sync_project(
+                                args.spoke,
+                                args.sync_item,
+                                dry_run=False,
+                                force=args.force,
+                                backup=not args.no_backup,
+                            )
+                        )
+                    else:
+                        print(
+                            "[Safe-by-Default] Đã hủy bỏ thao tác. Không có tệp tin nào bị sửa đổi."
+                        )
+                        sys.exit(0)
+                except (EOFError, KeyboardInterrupt):
+                    print("\n[Safe-by-Default] Đã hủy bỏ thao tác.")
+                    sys.exit(0)
+            else:
+                print(
+                    "\n[Safe-by-Default] Quá trình xem trước hoàn tất. "
+                    "Để áp dụng thay đổi vào Spoke, vui lòng truyền cờ '--apply' hoặc '-y'."
+                )
+                sys.exit(0)
 
 
 if __name__ == "__main__":
