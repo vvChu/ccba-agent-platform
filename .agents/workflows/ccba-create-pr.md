@@ -84,5 +84,5 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
 
 ## Bước 4: Thông báo kết quả
 
-1. Trình bày đường dẫn PR và trạng thái kiểm thử CI cho người dùng.
-2. Nhắc nhở người dùng: "Hãy gọi `/ccba-release-feature` khi CI đã xanh để merge và dọn dẹp."
+1. Trình bày đường dẫn PR, trạng thái kiểm thử CI và tiến trình yêu cầu review (Review Requests) cho người dùng.
+2. Nhắc nhở người dùng: "PR đã được khởi tạo. GitHub Actions CI và GitHub Copilot Review đang chạy ngầm. Hãy gọi `/ccba-release-feature` khi CI đã xanh và Copilot đã hoàn tất lượt review để đối soát và merge."
