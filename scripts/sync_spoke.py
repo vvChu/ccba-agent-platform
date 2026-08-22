@@ -95,14 +95,65 @@ def main() -> None:
         sys.exit(0 if success else 1)
 
     if args.all:
-        sys.exit(
-            sync_all_spokes(
+        if args.dry_run:
+            sys.exit(
+                sync_all_spokes(
+                    sync_item=args.sync_item,
+                    dry_run=True,
+                    force=args.force,
+                    backup=not args.no_backup,
+                )
+            )
+        elif args.apply:
+            sys.exit(
+                sync_all_spokes(
+                    sync_item=args.sync_item,
+                    dry_run=False,
+                    force=args.force,
+                    backup=not args.no_backup,
+                )
+            )
+        else:
+            print(
+                "[Safe-by-Default] Đang thực hiện Pha 1: Xem trước các thay đổi cho tất cả Spokes (Preview)..."
+            )
+            preview_code = sync_all_spokes(
                 sync_item=args.sync_item,
-                dry_run=args.dry_run,
+                dry_run=True,
                 force=args.force,
                 backup=not args.no_backup,
             )
-        )
+            if preview_code != 0:
+                sys.exit(preview_code)
+
+            if sys.stdin.isatty():
+                try:
+                    ans = input(
+                        "\n[Safe-by-Default] Bạn có muốn áp dụng các thay đổi trên cho tất cả Spokes? [y/N]: "
+                    )
+                    if ans.strip().lower() in ("y", "yes", "dong y", "có", "co"):
+                        sys.exit(
+                            sync_all_spokes(
+                                sync_item=args.sync_item,
+                                dry_run=False,
+                                force=args.force,
+                                backup=not args.no_backup,
+                            )
+                        )
+                    else:
+                        print(
+                            "[Safe-by-Default] Đã hủy bỏ thao tác. Không có tệp tin nào bị sửa đổi."
+                        )
+                        sys.exit(0)
+                except (EOFError, KeyboardInterrupt):
+                    print("\n[Safe-by-Default] Đã hủy bỏ thao tác.")
+                    sys.exit(0)
+            else:
+                print(
+                    "\n[Safe-by-Default] Quá trình xem trước hoàn tất. "
+                    "Để áp dụng thay đổi cho tất cả Spokes, vui lòng truyền cờ '--apply' hoặc '-y'."
+                )
+                sys.exit(0)
     else:
         # Two-Phase Safe-by-Default CLI logic
         if args.dry_run:
