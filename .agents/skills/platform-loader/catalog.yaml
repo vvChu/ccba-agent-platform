@@ -1030,7 +1030,7 @@ workflows:
 - name: propose-to-hub
   bundle: _core
   command: /ccba-propose-to-hub
-  description: Đóng góp skill/workflow mới từ Spoke lên Hub
+  description: Đóng góp skill/workflow/code từ Spoke lên Hub (Alias của /ccba-contribute-to-hub)
   triggers:
   - đề xuất
   - tích hợp Hub
@@ -1038,6 +1038,30 @@ workflows:
   - propose
   - skill mới
   workflow_path: .agents/workflows/ccba-propose-to-hub.md
+- name: ccba-issue-to-hub
+  bundle: _core
+  command: /ccba-issue-to-hub
+  description: Soạn thảo RFC và tạo GitHub Issue đề xuất tính năng/báo lỗi từ Spoke lên Hub
+  triggers:
+  - issue to hub
+  - đề xuất ý tưởng
+  - rfc
+  - tạo issue
+  - feature request
+  - ccba-issue-to-hub
+  workflow_path: .agents/workflows/ccba-issue-to-hub.md
+- name: ccba-contribute-to-hub
+  bundle: _core
+  command: /ccba-contribute-to-hub
+  description: Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Self-Healing CI Gate
+  triggers:
+  - contribute
+  - contribute to hub
+  - đóng góp mã nguồn
+  - tạo pr lên hub
+  - mở proposal
+  - ccba-contribute-to-hub
+  workflow_path: .agents/workflows/ccba-contribute-to-hub.md
 - name: convert-markdown
   bundle: _core
   command: /ccba-convert-markdown
