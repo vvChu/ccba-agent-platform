@@ -21,27 +21,35 @@ git checkout main && git pull origin main
 Dọn dẹp các branch cục bộ đã được tích hợp vào `main` để giải phóng bộ nhớ. Lệnh này tương thích đa nền tảng (bao gồm Windows PowerShell và Linux):
 ```powershell
 git fetch -p
-git branch --merged main | Where-Object { $_ -notmatch 'main' } | ForEach-Object { git branch -d $_.Trim() }
+git branch --merged main | Where-Object { $_ -notmatch 'main' -and $_ -notmatch '^\*' } | ForEach-Object { git branch -d $_.Trim() }
 ```
 
-### Bước 3: Thu thập thông tin tính năng mới
-Hỏi người dùng lần lượt các thông tin:
-1. Loại công việc cần thực hiện: `feature` (tính năng mới), `fix` (sửa lỗi), `docs` (tài liệu), `refactor` (cải tiến cấu trúc), hoặc `experiment` (thử nghiệm).
-2. Mô tả ngắn gọn tính năng (3-5 từ).
+### Bước 3: Thu thập thông tin & Bóc tách Issue tự động
+- **Trường hợp 1 (Có mã Issue, ví dụ `/ccba-new-feature #209`):**
+  Agent tự động gọi GitHub CLI để trích xuất thông tin:
+  ```bash
+  gh issue view <issue_id> --json title,body,labels
+  ```
+  - Tự động nhận diện loại công việc từ tiêu đề hoặc labels (ví dụ: `feat(...)` $\rightarrow$ `feature`, `fix(...)` $\rightarrow$ `fix`, `docs(...)` $\rightarrow$ `docs`, `refactor(...)` $\rightarrow$ `refactor`).
+  - Tự động trích xuất mô tả ngắn gọn và đề xuất ngay tên branch ở Bước 4 mà **không cần hỏi lại người dùng**.
+- **Trường hợp 2 (Không cung cấp mã Issue):**
+  Hỏi người dùng lần lượt các thông tin:
+  1. Loại công việc cần thực hiện: `feature` (tính năng mới), `fix` (sửa lỗi), `docs` (tài liệu), `refactor` (cải tiến cấu trúc), hoặc `experiment` (thử nghiệm).
+  2. Mô tả ngắn gọn tính năng (3-5 từ).
 
 ### Bước 4: Đề xuất tên branch
-Dựa trên câu trả lời, đề xuất tên branch theo định dạng chuẩn CCBA:
-- `feature/ten-tinh-nang`
+Dựa trên thông tin thu thập được, đề xuất tên branch theo định dạng chuẩn CCBA:
+- `feature/ten-tinh-nang` hoặc `feat/ten-tinh-nang`
 - `fix/ten-loi`
 - `docs/ten-tai-lieu`
 - `refactor/ten-module`
 - `experiment/ten-thu-nghiem`
 
 *Quy tắc đặt tên branch:* Viết thường hoàn toàn (lowercase), sử dụng dấu gạch ngang `-` thay cho khoảng trắng, ngắn gọn và tường minh.
-Yêu cầu người dùng xác nhận tên branch đề xuất (`yes/no`).
+Yêu cầu người dùng xác nhận tên branch đề xuất (`yes/no`) nếu chưa được cấu hình tự động.
 
 ### Bước 5: Khởi tạo branch mới
-Sau khi người dùng đồng ý, tạo và chuyển sang branch mới:
+Sau khi chốt tên branch, tạo và chuyển sang branch mới:
 ```bash
 git checkout -b [ten_branch_da_chot]
 ```
@@ -61,9 +69,9 @@ Sau khi bản kế hoạch được duyệt, để ngăn ngừa phình to ngữ 
 Coding Agent thực hiện nhiệm vụ:
 1. Khởi tạo danh mục theo dõi `task.md`.
 2. Viết mã nguồn tương thích, áp dụng type hints và docstring theo chuẩn CCBA.
-3. Chạy `/ccba-eval-gate` (hoặc `python scripts/run_harness_evals.py`) để xác thực.
+3. Chạy `/ccba-eval-gate` (hoặc `python scripts/eval/run_harness_evals.py`) để xác thực.
 4. Nếu phát hiện linter hoặc type check báo lỗi, tự động kích hoạt **Self-Healing Loop** tối đa 3 lần.
-5. Khi tất cả các Gates đều `PASS`, bàn giao kết quả qua tệp `walkthrough.md` cho người dùng nghiệm thu trước khi merge PR.
+5. Khi tất cả các Gates đều vượt qua thành công (PASS), bàn giao kết quả qua tệp `walkthrough.md` cho người dùng nghiệm thu trước khi merge PR.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

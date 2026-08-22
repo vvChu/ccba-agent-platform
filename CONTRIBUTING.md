@@ -64,6 +64,8 @@ Dự án có sẵn các workflow tự động hóa (trong `.agents/workflows/`):
 | `/ccba-create-pr` | Push code hiện tại và mở trang tạo PR | Code xong, cần review |
 | `/ccba-release-feature` | Merge PR, xóa branch local/remote, update docs | Khi CI xanh + Approved |
 | `/ccba-discard-feature` | Xóa bỏ branch thử nghiệm (Local + Remote) | Khi thử nghiệm thất bại |
+| `/ccba-issue-to-hub` | Soạn thảo RFC & tạo GitHub Issue lên Hub repo | Đề xuất ý tưởng/báo lỗi từ Spoke |
+| `/ccba-contribute-to-hub` | Đóng gói code, package, tests và mở PR lên Hub | Đóng góp mã nguồn từ Spoke |
 
 ---
 
