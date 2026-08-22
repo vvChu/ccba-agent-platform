@@ -397,6 +397,7 @@ class SkillAuditor(BaseAuditor):
             )
 
         import re
+
         body = content[match.end() :]
         if not re.search(r"^#\s+", body, re.MULTILINE):
             issues.append(

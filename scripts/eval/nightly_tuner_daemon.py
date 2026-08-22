@@ -229,6 +229,8 @@ class NightlyTunerDaemon:
             results=summaries,
         )
 
+        report_md = self.generate_evolution_report_markdown(report)
+
         reports_dir = self.root / ".md" / "knowledge" / "reports"
         reports_dir.mkdir(parents=True, exist_ok=True)
         report_file = reports_dir / f"nightly_tuner_report_{now_str}.md"

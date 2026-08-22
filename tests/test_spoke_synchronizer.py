@@ -158,3 +158,66 @@ def test_sync_single_item_on_demand(mock_spoke: Path, mock_hub: Path):
     assert (mock_spoke / ".agents" / "skills" / "software-skill" / "SKILL.md").exists()
     # Other skills should not be copied
     assert not (mock_spoke / ".agents" / "skills" / "core-skill").exists()
+
+
+def test_sync_creates_backup_snapshot(mock_spoke: Path, mock_hub: Path):
+    """Verifies that actual sync automatically creates a snapshot backup of .agents/."""
+    spoke_agents_dir = mock_spoke / ".agents"
+    spoke_agents_dir.mkdir(parents=True, exist_ok=True)
+    (spoke_agents_dir / "original_file.txt").write_text("old version", encoding="utf-8")
+
+    synchronizer = SpokeSynchronizer(str(mock_spoke))
+    result = synchronizer.sync(dry_run=False, backup=True)
+    assert result == 0
+
+    backups = synchronizer.list_backups()
+    assert len(backups) >= 1
+    latest_backup = backups[0]
+    assert (latest_backup / "original_file.txt").exists()
+    assert (latest_backup / "original_file.txt").read_text(encoding="utf-8") == "old version"
+
+
+def test_sync_blocks_on_dirty_working_tree_unless_forced(
+    mock_spoke: Path, mock_hub: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """Verifies that sync blocks execution on dirty git working tree unless force=True."""
+    from scripts.spoke.spoke_synchronizer import GitWorkingTreeGuard
+
+    # Mock dirty working tree
+    monkeypatch.setattr(
+        GitWorkingTreeGuard,
+        "check_clean_working_tree",
+        lambda self, path_filter=".agents": (False, " M .agents/workflows/modified.md"),
+    )
+
+    synchronizer = SpokeSynchronizer(str(mock_spoke))
+
+    # Without force -> should return 1 (blocked)
+    res_blocked = synchronizer.sync(dry_run=False, force=False, check_git=True)
+    assert res_blocked == 1
+
+    # With force -> should proceed (return 0)
+    res_forced = synchronizer.sync(dry_run=False, force=True, check_git=True)
+    assert res_forced == 0
+
+
+def test_rollback_restores_previous_agents_state(mock_spoke: Path, mock_hub: Path):
+    """Verifies that rollback() restores the .agents directory from the snapshot."""
+    spoke_wf_dir = mock_spoke / ".agents" / "workflows"
+    spoke_wf_dir.mkdir(parents=True, exist_ok=True)
+    custom_wf = spoke_wf_dir / "my_custom_doc.md"
+    custom_wf.write_text("# Initial Custom Doc", encoding="utf-8")
+
+    synchronizer = SpokeSynchronizer(str(mock_spoke))
+    # Sync creates a backup snapshot
+    res = synchronizer.sync(dry_run=False, backup=True)
+    assert res == 0
+
+    # User accidentally corrupts or deletes a file
+    custom_wf.write_text("# Corrupted Doc", encoding="utf-8")
+    assert custom_wf.read_text(encoding="utf-8") == "# Corrupted Doc"
+
+    # Rollback
+    rollback_ok = synchronizer.rollback()
+    assert rollback_ok is True
+    assert custom_wf.read_text(encoding="utf-8") == "# Initial Custom Doc"
