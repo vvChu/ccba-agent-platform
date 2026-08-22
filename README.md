@@ -233,8 +233,10 @@ python scripts/sync_spoke.py --spoke "D:/GitHubProjects/my-bim-audit-spoke" --sy
 
 ---
 
-### 4. Đóng Góp Tính Năng Ngược Lên Hub (`/ccba-propose-to-hub`)
-Khi Kỹ sư xây dựng thành công một Skill, Workflow hoặc Tiện ích hữu ích tại Spoke, kích hoạt lệnh `/ccba-propose-to-hub` để hệ thống tự động đánh giá, đóng gói và tạo đề xuất tích hợp ngược về Hub trung tâm.
+### 4. Đóng Góp Tính Năng Ngược Lên Hub (`/ccba-issue-to-hub` & `/ccba-contribute-to-hub`)
+Hệ thống chuẩn hóa chu trình đóng góp 2 chiều:
+- **Đề xuất Ý tưởng / RFC:** Kích hoạt `/ccba-issue-to-hub` để tự động tổng hợp bối cảnh, soạn RFC và tạo GitHub Issue lên Hub repo.
+- **Đóng góp Mã nguồn & Tests:** Kích hoạt `/ccba-contribute-to-hub` (hoặc `/ccba-propose-to-hub`) để đóng gói code, package, tests và mở Pull Request lên Hub kèm Self-Healing CI Gate.
 
 ---
 
@@ -244,6 +246,8 @@ Khi Kỹ sư xây dựng thành công một Skill, Workflow hoặc Tiện ích h
 | :--- | :--- |
 | **`/ccba-init-spoke`** | Khởi tạo dự án Spoke mới đạt chuẩn kiến trúc CCBA Hub-and-Spoke. |
 | **`/ccba-update-spoke`** | Cập nhật các kỹ năng, workflows và test guardrails mới nhất từ Hub về Spoke. |
+| **`/ccba-issue-to-hub`** | Soạn thảo RFC và tạo GitHub Issue đề xuất ý tưởng/tính năng mới lên Hub. |
+| **`/ccba-contribute-to-hub`** | Đóng gói mã nguồn, tests và mở Pull Request lên Hub kèm Self-Healing CI. |
 | **`/ccba-ai-qc-pccc-audit`** | Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) qua Semantic Map-Reduce. |
 | **`/ccba-convert-markdown`** | Chuyển đổi PDF/Word sang Markdown cấu trúc cao bằng `mdconverter`. |
 | **`/ccba-improve-codebase-architecture`** | Quét module nông, sinh sơ đồ Mermaid trực quan và thực hiện Grilling loop làm sâu module. |

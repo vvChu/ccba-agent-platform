@@ -38,7 +38,7 @@ disable-model-invocation: true
 | `.pre-commit-config.yaml` | Hook scripts, đường dẫn cấu hình |
 | `PROJECT.md` | Active project code layout, interface contracts |
 | Skills chứa CLI: `platform-loader`, `ai-gateway-sdk`, `docs-validator`, `docs_manager`, `setup-pre-commit`, `eval-gate`, `xu-ly-van-phong` | Đường dẫn `scripts/`, `templates/`, import paths |
-| Workflows chứa paths: `ccba-init-spoke`, `ccba-propose-to-hub`, `ccba-update-spoke`, `ccba-build-skill`, `ccba-release-feature` | Đường dẫn Hub/Spoke, script commands |
+| Workflows chứa paths: `ccba-init-spoke`, `ccba-issue-to-hub`, `ccba-contribute-to-hub`, `ccba-propose-to-hub`, `ccba-update-spoke`, `ccba-build-skill`, `ccba-release-feature` | Đường dẫn Hub/Spoke, script commands |
 | Rules chứa paths: `naming_conventions`, `release_gate` | Cấu trúc `.md/`, đường dẫn scripts |
 
 ### Tier 3 — Kiểm tra khi có thay đổi kiến trúc lớn (rename module, xóa package)
