@@ -15,9 +15,13 @@ if str(PLATFORM_ROOT) not in sys.path:
 
 from scripts.spoke.spoke_synchronizer import (
     CatalogMerger,
+    GitWorkingTreeGuard,
     HubDiscoverer,
     HubNotFoundError,
+    SpokeBackupManager,
     TestGuardrailCopier,
+    list_project_backups,
+    rollback_project,
 )
 
 
@@ -87,6 +91,54 @@ class TestSpokeSynchronizer(unittest.TestCase):
         self.assertTrue((spoke_dir / "conftest.py").exists())
         self.assertTrue((spoke_dir / "scripts" / "safe_pytest.py").exists())
 
+    def test_git_working_tree_guard_non_git(self):
+        """Test GitWorkingTreeGuard returns clean on non-git directory."""
+        spoke_dir = self.test_root / "spoke_no_git"
+        spoke_dir.mkdir(parents=True, exist_ok=True)
+
+        guard = GitWorkingTreeGuard(spoke_dir)
+        is_clean, details = guard.check_clean_working_tree()
+        self.assertTrue(is_clean)
+        self.assertEqual(details, "")
+
+    def test_git_working_tree_guard_with_dirty_tree(self):
+        """Test GitWorkingTreeGuard detects dirty working tree when git reports changes."""
+        spoke_dir = self.test_root / "spoke_git"
+        (spoke_dir / ".git").mkdir(parents=True, exist_ok=True)
+
+        guard = GitWorkingTreeGuard(spoke_dir)
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value.returncode = 0
+            mock_run.return_value.stdout = " M .agents/workflows/test.md\n"
+            is_clean, details = guard.check_clean_working_tree()
+            self.assertFalse(is_clean)
+            self.assertIn("test.md", details)
+
+    def test_spoke_backup_manager_create_and_restore(self):
+        """Test SpokeBackupManager creates snapshot and restores it accurately."""
+        spoke_dir = self.test_root / "spoke_backup_test"
+        spoke_agents = spoke_dir / ".agents"
+        spoke_agents.mkdir(parents=True, exist_ok=True)
+        (spoke_agents / "test_file.txt").write_text("initial version", encoding="utf-8")
+
+        mgr = SpokeBackupManager(spoke_dir)
+        backup_path = mgr.create_backup()
+        self.assertIsNotNone(backup_path)
+        self.assertTrue(backup_path.exists())
+        self.assertTrue((backup_path / "test_file.txt").exists())
+
+        backups = mgr.list_backups()
+        self.assertEqual(len(backups), 1)
+
+        # Modify original file
+        (spoke_agents / "test_file.txt").write_text("modified corrupted version", encoding="utf-8")
+        self.assertEqual((spoke_agents / "test_file.txt").read_text(encoding="utf-8"), "modified corrupted version")
+
+        # Restore from backup
+        restored = mgr.restore_backup()
+        self.assertTrue(restored)
+        self.assertEqual((spoke_agents / "test_file.txt").read_text(encoding="utf-8"), "initial version")
+
     def test_spoke_sync_engine_alias_and_method(self):
         """Test SpokeSyncEngine alias and sync() method integration."""
         from scripts.spoke import SpokeSyncEngine, SpokeSynchronizer, sync_project
@@ -98,11 +150,20 @@ class TestSpokeSynchronizer(unittest.TestCase):
 
         engine = SpokeSyncEngine(spoke_dir)
         self.assertTrue(hasattr(engine, "sync"))
+        self.assertTrue(hasattr(engine, "rollback"))
+        self.assertTrue(hasattr(engine, "list_backups"))
 
         # Test sync_project wrapper with mock
         with patch.object(SpokeSynchronizer, "sync_spoke_bundle", return_value=0):
             exit_code = sync_project(spoke_dir)
             self.assertEqual(exit_code, 0)
+
+        # Test rollback_project and list_project_backups wrapper with mock
+        with patch.object(SpokeSynchronizer, "rollback", return_value=True):
+            self.assertTrue(rollback_project(spoke_dir))
+
+        with patch.object(SpokeSynchronizer, "list_backups", return_value=[]):
+            self.assertEqual(list_project_backups(spoke_dir), [])
 
 
 if __name__ == "__main__":

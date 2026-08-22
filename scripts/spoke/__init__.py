@@ -20,12 +20,16 @@ from .spoke_adopter import (
 from .spoke_bootstrap import SpokeBootstrapper
 from .spoke_synchronizer import (
     CatalogMerger,
+    GitWorkingTreeGuard,
     HubDiscoverer,
     HubNotFoundError,
     SharedSdkInspector,
+    SpokeBackupManager,
     SpokeSyncEngine,
     SpokeSynchronizer,
     TestGuardrailCopier,
+    list_project_backups,
+    rollback_project,
     sync_all_spokes,
     sync_project,
 )
@@ -33,9 +37,13 @@ from .spoke_synchronizer import (
 __all__ = [
     "SpokeSyncEngine",
     "SpokeSynchronizer",
+    "SpokeBackupManager",
+    "GitWorkingTreeGuard",
     "SharedSdkInspector",
     "SpokeBootstrapper",
     "sync_project",
+    "rollback_project",
+    "list_project_backups",
     "sync_all_spokes",
     "get_registered_spokes",
     "SpokeAdopter",
