@@ -244,7 +244,11 @@
   - *Tư duy Warcraft III:* Không cố quyết định mọi thứ ngay từ đầu. Chỉ tạo các ticket unblocked ở rìa biên giới (`Frontier`), mỗi ticket giải quyết 1 câu hỏi cụ thể trong 1 session ~100K token độc lập.
   - *Ngôn ngữ dẫn đường (Leading Words):* Định hình 3 thực thể chuẩn mực để AI không nhầm lẫn: `Map` (Bản đồ tổng thể lưu quyết định), `Ticket` (Câu hỏi cụ thể giao cho 1 session con), `Session` (Ngữ cảnh giải quyết trọn vẹn 1 ticket).
   - *Fog vs. Ticket Test:* Nếu câu hỏi đã phát biểu sắc nét $\rightarrow$ Tạo Ticket ngay (dù đang bị block); nếu chưa rõ câu hỏi $\rightarrow$ Giữ trong vùng sương mù `Not yet specified`.
-  - *Bàn giao khép kín:* Khi bản đồ tan hết sương mù $\rightarrow$ Chuyển giao sang `/ccba-to-spec` $\rightarrow$ `/ccba-to-tickets` $\rightarrow$ `/ccba-implement`.
+#### P4.14. Event-Driven Reactive Wakeup over Background Polling Loops
+* **Vấn đề:** Khi chạy các tác vụ nền kéo dài (như `gh pr checks --watch` hoặc `run_harness_evals.py`), Agent vô thức rơi vào vòng lặp gọi `manage_task(status)` liên tiếp 10-15 lần. Gây lãng phí token, phình to context window và tạo ra hàng chục dòng "Checked Task..." gây nhiễu UI.
+* **Giải pháp:** Cưỡng chế nguyên tắc **Zero-Polling Invariant**:
+  1. Khi một lệnh chạy dưới dạng background task: Agent chỉ kiểm tra tối đa 2 lần cho task siêu ngắn (< 5s).
+  2. Nếu task vẫn `RUNNING`: Agent **bắt buộc dừng gọi công cụ và kết thúc lượt (End Turn)**. Hệ thống sẽ tự động thông báo và đánh thức Agent (*Reactive Wakeup*) ngay khi task kết thúc.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP4.1. Hardcoded API Keys:** Tuyệt đối không hardcode keys vào code/markdown. Luôn dùng biến môi trường hoặc `.env`.
@@ -252,6 +256,7 @@
 * **AP4.3. Reasoning Models trong Converter Fallback Chains:** Tuyệt đối không đưa các model có hậu tố `-thinking` vào chuỗi fallback của document converter (`mdconverter`) để tránh rò rỉ khối thẻ `<think>` làm ô nhiễm file Markdown đầu ra.
 * **AP4.4. Monolithic Context Overloading (Ball of Mud Prompt):** Nhồi nhét hàng chục trang quy tắc tĩnh và các quy định hiển nhiên (như f-strings, type hints, bare except) vào `AGENTS.md` gốc, làm tiêu tốn ~80% ngân sách chỉ dẫn của LLM và gây phân tâm khi suy luận.
 * **AP4.5. Premature Code Generation on Foggy Problems:** Nhảy vào viết code khi chưa xua tan sương mù chiến trận của bài toán. Luôn dùng `/ccba-wayfinder` hoặc `/ccba-grilling` để chốt quyết định thiết kế trước khi lập trình.
+* **AP4.6. Background Task Polling Loop:** Lặp lại `manage_task(action="status")` liên tục trong cùng một lượt gọi để chờ tác vụ ngầm hoàn thành thay vì kết thúc lượt để chờ cơ chế Reactive Wakeup tự động.
 
 ---
 

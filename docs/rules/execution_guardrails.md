@@ -11,10 +11,13 @@
 
 ---
 
-## 2. Bounded Async Task & Anti-Polling Circuit Breaker
-- Khi một lệnh chạy dưới dạng tác vụ ngầm (Background Task):
-  - Agent chỉ được dùng `manage_task status` tối đa **2 lần** để kiểm tra tiến độ tác vụ ngắn.
-  - Nếu tác vụ vẫn ở trạng thái **RUNNING** sau 2 lần kiểm tra, Agent **NGHIÊM CẤM** lặp polling `manage_task status` dồn dập trong cùng một lượt. Agent phải xuất ra thông báo súc tích cho người dùng rồi **kết thúc lượt (End Turn)** để chờ thông báo Reactive Wakeup từ hệ thống.
+## 2. Bounded Async Task, Zero-Polling & Reactive Wakeup Invariant
+- Khi một lệnh chạy dưới dạng tác vụ ngầm (Background Task) như `run_harness_evals.py`, `pytest`, hoặc `gh pr checks`:
+  - **Nguyên lý Reactive Wakeup (Thức dậy theo sự kiện):** Hệ thống tự động đánh thức và gửi thông báo cho Agent ngay khi tác vụ hoàn thành. Agent **NGHIÊM CẤM** tự tạo vòng lặp kín để thăm dò (`polling loop`) bằng `manage_task status`.
+  - **Quy tắc kiểm tra tiến độ:**
+    - Agent chỉ được gọi `manage_task status` tối đa **2 lần** để kiểm tra các tác vụ ngắn hạn (< 5 giây).
+    - Nếu tác vụ vẫn ở trạng thái **RUNNING** sau 2 lần kiểm tra, Agent **BẮT BUỘC** dừng gọi tool (kết thúc lượt - End Turn) hoặc chuyển sang làm việc độc lập khác. Tuyệt đối không lặp polling liên tiếp làm ô nhiễm giao diện (UI noise), phình to context window và lãng phí token.
+  - **Rào chắn lệnh theo dõi CI (`gh pr checks`):** Nghiêm cấm chạy `gh pr checks --watch` kết hợp lặp `manage_task status`. Thay vào đó, chạy `gh pr checks` đơn lẻ hoặc khởi chạy `--watch` rồi lập tức dừng lượt để hệ thống tự động trả về kết quả khi CI hoàn tất.
 
 ---
 
