@@ -30,7 +30,7 @@ class AuditIssue(NamedTuple):
 
 
 @dataclass
-class AuditReport:
+class GovernanceAuditReport:
     """Structured report container for workspace audit results."""
 
     issues: list[AuditIssue] = field(default_factory=list)
@@ -45,6 +45,10 @@ class AuditReport:
     def by_file(self, file_path: str) -> list[AuditIssue]:
         """Filter issues by file path."""
         return [i for i in self.issues if i.file_path == file_path]
+
+
+# Backward-compatible alias
+AuditReport = GovernanceAuditReport
 
 
 # Common Keywords to Ignore in Code Symbol Audit
@@ -176,6 +180,6 @@ class BaseAuditor(ABC):
         self.project_root = project_root
 
     @abstractmethod
-    def audit(self, target: Any = None) -> list[AuditIssue] | AuditReport:
-        """Audit target and return a list of AuditIssues or AuditReport."""
+    def audit(self, *args: Any, **kwargs: Any) -> list[AuditIssue] | GovernanceAuditReport:
+        """Audit target and return a list of AuditIssues or GovernanceAuditReport."""
         raise NotImplementedError

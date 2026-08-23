@@ -44,6 +44,7 @@ from governance import (
     DocumentAuditor,
     DriftAuditor,
     EnvAuditor,
+    GovernanceAuditReport,
     LinkAuditor,
     RegistryAuditor,
     SkillAuditor,
@@ -139,6 +140,7 @@ def check_architecture_drift(project_root: Path) -> list[str]:
 __all__ = [
     "AuditIssue",
     "AuditReport",
+    "GovernanceAuditReport",
     "BaseAuditor",
     "DocumentAuditor",
     "DriftAuditor",

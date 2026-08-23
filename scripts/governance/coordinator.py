@@ -8,7 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .base import AuditIssue, AuditReport, BaseAuditor
+from .base import AuditIssue, BaseAuditor, GovernanceAuditReport
 from .cli import run_docs_validation_cli, run_skills_validation_cli
 from .drift_auditor import DriftAuditor
 from .duplication_auditor import DuplicationAuditor
@@ -180,8 +180,8 @@ class DocumentAuditor(BaseAuditor):
         src_dirs: list[Path] | None = None,
         fix: bool = False,
         changed_only: bool = False,
-    ) -> AuditReport:
-        """Audit documentation files and return a structured AuditReport."""
+    ) -> GovernanceAuditReport:
+        """Audit documentation files and return a structured GovernanceAuditReport."""
         target_dir = Path(docs_dir)
         if not target_dir.is_absolute():
             target_dir = self.project_root / target_dir
@@ -194,7 +194,7 @@ class DocumentAuditor(BaseAuditor):
             ]
 
         if not target_dir.exists():
-            return AuditReport(
+            return GovernanceAuditReport(
                 issues=[
                     AuditIssue(0, str(target_dir), "Directory does not exist", category="docs")
                 ],
@@ -309,7 +309,7 @@ class DocumentAuditor(BaseAuditor):
             issues_list.append(issue)
             has_hard_errors = True
 
-        return AuditReport(
+        return GovernanceAuditReport(
             issues=issues_list,
             total_issues=len(issues_list),
             has_hard_errors=has_hard_errors,
