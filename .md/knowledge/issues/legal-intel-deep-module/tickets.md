@@ -1,6 +1,6 @@
 # 🎫 Danh Sách Tickets: Refactor Seam Sâu LegalIntelPipeline
 
-Tóm tắt: Phân rã công việc refactor gói dịch vụ `ccba-legal-intel` từ tài liệu đặc tả [spec-legal-intel-deep-module.md](../../specs/spec-legal-intel-deep-module.md) và kết quả Brainstorming [brainstorm_session_legal_intel_eval.md](file:///C:/Users/chuvu/.gemini/antigravity/brain/0c0a9304-cfbb-4fa3-9c81-3e11441ace97/brainstorm_session_legal_intel_eval.md).
+Tóm tắt: Phân rã công việc refactor gói dịch vụ `ccba-legal-intel` từ tài liệu đặc tả [spec-legal-intel-deep-module.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/specs/spec-legal-intel-deep-module.md) và kết quả Brainstorming [brainstorm_session_legal_intel_eval.md](file:///C:/Users/chuvu/.gemini/antigravity/brain/0c0a9304-cfbb-4fa3-9c81-3e11441ace97/brainstorm_session_legal_intel_eval.md).
 
 👉 **Nguyên tắc:** Chỉ thực hiện các ticket nằm ở Biên giới (Frontier) - là những ticket không bị chặn hoặc tất cả blockers của nó đã ở trạng thái `[x]` hoàn thành.
 

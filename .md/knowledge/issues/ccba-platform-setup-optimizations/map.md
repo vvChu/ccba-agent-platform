@@ -24,17 +24,17 @@ Nâng cấp kỹ năng [`/ccba-setup-skills`](file:///d:/GitHubProjects/ccba-age
 
 ## 🗺️ 3. Frontier Tickets (Các ticket tại Biên giới)
 
-### 🎫 [Ticket #01: Tự động bỏ câu hỏi Triage khi thiếu Skill Triage](01-smart-skipping-triage.md)
+### 🎫 [Ticket #01: Tự động bỏ câu hỏi Triage khi thiếu Skill Triage](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/ccba-platform-setup-optimizations/01-smart-skipping-triage.md)
 - **Loại**: `Research [AFK]`
 - **Mục tiêu**: Bổ sung bước trinh sát kiểm tra sự tồn tại của skill `triage` trong `catalog.yaml` / `.agents/skills/`. Nếu không có, tự động bỏ qua phỏng vấn Triage labels.
-- **Trạng thái**: CLOSED (Đã nghiên cứu tại [research_01_smart_skipping.md](research_01_smart_skipping.md))
+- **Trạng thái**: CLOSED (Đã nghiên cứu tại [research_01_smart_skipping.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/ccba-platform-setup-optimizations/research_01_smart_skipping.md))
 
-### 🎫 [Ticket #02: Tự động suy luận Monorepo để chốt Single/Multi-Context](02-monorepo-inference.md)
+### 🎫 [Ticket #02: Tự động suy luận Monorepo để chốt Single/Multi-Context](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/ccba-platform-setup-optimizations/02-monorepo-inference.md)
 - **Loại**: `Task [AFK]`
 - **Mục tiêu**: Bổ sung thuật toán quét các file đặc trưng Monorepo (`pnpm-workspace.yaml`, `workspaces` trong `package.json`, `CONTEXT-MAP.md`). Nếu không thấy tín hiệu Monorepo ➔ Tự động chốt `single-context` mà không làm phiền người dùng.
 - **Trạng thái**: CLOSED (Đã triển khai trong `ccba-setup-skills/SKILL.md`)
 
-### 🎫 [Ticket #03: Chuẩn hóa Recommended-First UX cho toàn bộ Phỏng vấn](03-recommended-first-ux.md)
+### 🎫 [Ticket #03: Chuẩn hóa Recommended-First UX cho toàn bộ Phỏng vấn](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/ccba-platform-setup-optimizations/03-recommended-first-ux.md)
 - **Loại**: `Task [AFK]`
 - **Mục tiêu**: Đánh giá và cập nhật lại câu từ phỏng vấn trong `ccba-setup-skills` và `ccba-platform` để luôn đưa Lựa chọn 1 (Recommended) lên dòng đầu tiên.
 - **Trạng thái**: CLOSED (Đã triển khai trong `ccba-setup-skills/SKILL.md`)
@@ -58,5 +58,5 @@ Nâng cấp kỹ năng [`/ccba-setup-skills`](file:///d:/GitHubProjects/ccba-age
 ## ✅ 6. Quyết định đã chốt (Decisions so far)
 
 - **ADR-010**: Học hỏi 4 tư duy thiết kế setup từ `mattpocock/skills` để tối ưu trải nghiệm khởi tạo cấu hình trên CCBA Platform.
-- **Quyết định Ticket #01**: Áp dụng thuật toán trinh sát **Multi-tier Detection 3 cấp** (Local folder ➔ Catalog registry ➔ Available Skills prompt context). Nếu không tìm thấy skill `triage` ➔ Tự động bỏ qua phỏng vấn Triage labels và cập nhật linh hoạt template `issue-tracker-local.md` để tránh broken link. (Xem chi tiết tại [research_01_smart_skipping.md](research_01_smart_skipping.md)).
+- **Quyết định Ticket #01**: Áp dụng thuật toán trinh sát **Multi-tier Detection 3 cấp** (Local folder ➔ Catalog registry ➔ Available Skills prompt context). Nếu không tìm thấy skill `triage` ➔ Tự động bỏ qua phỏng vấn Triage labels và cập nhật linh hoạt template `issue-tracker-local.md` để tránh broken link. (Xem chi tiết tại [research_01_smart_skipping.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/ccba-platform-setup-optimizations/research_01_smart_skipping.md)).
 - **Quyết định Ticket #02 & #03**: Đã hoàn tất cài đặt Monorepo Inference và Recommended-First UX vào `.agents/skills/ccba-setup-skills/SKILL.md`. Tự động giảm từ 3 câu hỏi phỏng vấn xuống 1 câu hỏi duy nhất cho các dự án Spoke đơn giản.

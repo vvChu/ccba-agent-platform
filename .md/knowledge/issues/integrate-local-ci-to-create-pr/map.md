@@ -13,11 +13,11 @@ Tích hợp bắt buộc quy trình chạy Local CI Evaluation Gates (`.venv\Scr
 ---
 
 ## Quyết định đã chốt (Decisions so far)
-- **[Ticket 1: Nghiên cứu Vị trí Tích hợp Tối ưu](map.md#ticket-1)** — *Đã hoàn thành*  
+- **[Ticket 1: Nghiên cứu Vị trí Tích hợp Tối ưu](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/integrate-local-ci-to-create-pr/map.md#ticket-1)** — *Đã hoàn thành*  
   Xác định tích hợp vào Bước 1 của `/ccba-create-pr` (Shift-Left Execution: Local CI Check $\rightarrow$ Push $\rightarrow$ PR Create).
-- **[Ticket 2: Cập nhật Workflow ccba-create-pr.md](../../../../.agents/workflows/ccba-create-pr.md)** — *Đã hoàn thành*  
+- **[Ticket 2: Cập nhật Workflow ccba-create-pr.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/workflows/ccba-create-pr.md)** — *Đã hoàn thành*  
   Đã đưa bước chạy Local CI Eval Gates (`run_harness_evals.py`) lên Bước 1 trước khi push.
-- **[Ticket 3: Bổ sung Test Suite Kiểm tra Quy trình ccba-create-pr (test_create_pr_workflow.py)](../../../../tests/test_create_pr_workflow.py)** — *Đã hoàn thành*  
+- **[Ticket 3: Bổ sung Test Suite Kiểm tra Quy trình ccba-create-pr (test_create_pr_workflow.py)](file:///d:/GitHubProjects/ccba-agent-platform/tests/test_create_pr_workflow.py)** — *Đã hoàn thành*  
   Đã viết unit test `tests/test_create_pr_workflow.py` kiểm định thành công (1 passed in 0.02s).
 
 ---

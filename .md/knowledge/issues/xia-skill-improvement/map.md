@@ -2,7 +2,7 @@
 
 ## Điểm đích (Destination)
 
-Skill [ccba-xia/SKILL.md](../../../../research-ccba-skill-evaluation/.agents/skills/xia/SKILL.md) và [MODES.md](../../../../research-ccba-skill-evaluation/.agents/skills/xia/MODES.md) được cập nhật hoàn chỉnh, tích hợp đầy đủ 7 rào chắn an toàn đã được phê duyệt trong [phiên Grilling](file:///C:/Users/chuvu/.gemini/antigravity/brain/55474119-0d98-4cae-a3d2-3a8835108b90/xia_skill_evaluation_decision_log.md), tuân thủ Hiến pháp Layer 1 ([AGENTS.md](../../../../research-ccba-skill-evaluation/.agents/AGENTS.md)). Kết quả qua được `/ccba-review-skill`.
+Skill [ccba-xia/SKILL.md](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/research-ccba-skill-evaluation/.agents/skills/xia/SKILL.md) và [MODES.md](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/research-ccba-skill-evaluation/.agents/skills/xia/MODES.md) được cập nhật hoàn chỉnh, tích hợp đầy đủ 7 rào chắn an toàn đã được phê duyệt trong [phiên Grilling](file:///C:/Users/chuvu/.gemini/antigravity/brain/55474119-0d98-4cae-a3d2-3a8835108b90/xia_skill_evaluation_decision_log.md), tuân thủ Hiến pháp Layer 1 ([AGENTS.md](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/research-ccba-skill-evaluation/.agents/AGENTS.md)). Kết quả qua được `/ccba-review-skill`.
 
 ## Ghi chú (Notes)
 
@@ -21,7 +21,7 @@ Skill [ccba-xia/SKILL.md](../../../../research-ccba-skill-evaluation/.agents/ski
   - [x] `--copy` → `--copy-raw` với mô tả mới
   - [x] Thêm dòng cấm `--copy-raw` + `--fast`
   - [x] Cập nhật Intent Detection: `"copy", "exact", "as-is"` → `--copy-raw`
-- **File:** [MODES.md](../../../../research-ccba-skill-evaluation/.agents/skills/xia/MODES.md)
+- **File:** [MODES.md](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/research-ccba-skill-evaluation/.agents/skills/xia/MODES.md)
 - **Blocked by:** Không (Frontier ✅)
 - **Quyết định liên quan:** #5
 
@@ -32,7 +32,7 @@ Skill [ccba-xia/SKILL.md](../../../../research-ccba-skill-evaluation/.agents/ski
 - **Câu hỏi:** `.gitignore` đã chặn thư mục tạm clone của xia chưa?
 - **Đầu ra:**
   - [x] Đã được bao phủ bởi `.md/scratch/` (dòng 119 trong `.gitignore`) — không cần thay đổi thêm
-- **File:** [.gitignore](../../../../research-ccba-skill-evaluation/.gitignore)
+- **File:** [.gitignore](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/research-ccba-skill-evaluation/.gitignore)
 - **Blocked by:** Không (Frontier ✅)
 - **Quyết định liên quan:** #3
 
@@ -55,7 +55,7 @@ Skill [ccba-xia/SKILL.md](../../../../research-ccba-skill-evaluation/.agents/ski
 | Pha 6 (Deliver) | Auto-cleanup `.md/scratch/xia_sources/` | #3 |
 | Pha 6 (Deliver) | Thêm Next Step Recommendation → `/ccba-implement` | #7 |
 
-- **File:** [SKILL.md](../../../../research-ccba-skill-evaluation/.agents/skills/xia/SKILL.md)
+- **File:** [SKILL.md](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/research-ccba-skill-evaluation/.agents/skills/xia/SKILL.md)
 - **Blocked by:** [T1: Cập nhật MODES.md] (vì SKILL.md tham chiếu MODES.md, cần đảm bảo nhất quán thuật ngữ `--copy-raw`)
 
 ---

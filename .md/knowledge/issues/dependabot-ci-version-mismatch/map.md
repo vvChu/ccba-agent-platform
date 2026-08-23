@@ -20,16 +20,16 @@
 ---
 
 ## ✅ 3. Quyết định đã chốt (Decisions so far)
-- [Phát hiện nguyên nhân Dependabot](../../../../.github/dependabot.yml#L20-L26): Dependabot được cấu hình quét `package-ecosystem: "github-actions"` hàng tuần mà chưa có rào chắn `ignore semver-major`.
-- [Cố định phiên bản CI ổn định](../../../../.github/workflows/ci.yml#L21): Nhánh `main` đã chuẩn hóa sử dụng `actions/checkout@v4` và `actions/setup-python@v5`.
+- [Phát hiện nguyên nhân Dependabot](file:///.github/dependabot.yml#L20-L26): Dependabot được cấu hình quét `package-ecosystem: "github-actions"` hàng tuần mà chưa có rào chắn `ignore semver-major`.
+- [Cố định phiên bản CI ổn định](file:///.github/workflows/ci.yml#L21): Nhánh `main` đã chuẩn hóa sử dụng `actions/checkout@v4` và `actions/setup-python@v5`.
 
 ---
 
 ## 🚀 4. Vé Biên giới & Lộ trình Thực thi (Frontier Tickets)
 
-- 🟢 [Ticket 1: Close 2 PRs Dependabot bị hỏng CI (#169 và #170)](tickets.md#ticket-dependabot-1) `Task [AFK]` — Chạy `gh pr close` để dọn dẹp PRs rác.
-- 🟢 [Ticket 2: Cấu hình Ignore Guardrail trong dependabot.yml](tickets.md#ticket-dependabot-2) `Task [AFK]` — Bổ sung `ignore` semver-major cho `actions/checkout` và `actions/setup-python`.
-- 🟡 [Ticket 3: Đẩy commit & Kiểm tra tính ổn định của CI](tickets.md#ticket-dependabot-3) `Task [AFK]` — Đẩy `dependabot.yml` lên `main` và kiểm tra `validate_docs.py`.
+- 🟢 [Ticket 1: Close 2 PRs Dependabot bị hỏng CI (#169 và #170)](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/dependabot-ci-version-mismatch/tickets.md#ticket-dependabot-1) `Task [AFK]` — Chạy `gh pr close` để dọn dẹp PRs rác.
+- 🟢 [Ticket 2: Cấu hình Ignore Guardrail trong dependabot.yml](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/dependabot-ci-version-mismatch/tickets.md#ticket-dependabot-2) `Task [AFK]` — Bổ sung `ignore` semver-major cho `actions/checkout` và `actions/setup-python`.
+- 🟡 [Ticket 3: Đẩy commit & Kiểm tra tính ổn định của CI](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/dependabot-ci-version-mismatch/tickets.md#ticket-dependabot-3) `Task [AFK]` — Đẩy `dependabot.yml` lên `main` và kiểm tra `validate_docs.py`.
 
 ---
 

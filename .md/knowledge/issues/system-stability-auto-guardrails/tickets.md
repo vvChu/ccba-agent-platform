@@ -1,6 +1,6 @@
 # Danh Sách Tickets: System Stability & Auto-Guardrails for Async Tasks
 
-Tài liệu này phân rã kế hoạch và đặc tả [spec-system-stability-auto-guardrails.md](../../specs/spec-system-stability-auto-guardrails.md) thành các ticket phát triển độc lập theo dạng lát cắt dọc (tracer bullets).
+Tài liệu này phân rã kế hoạch và đặc tả [spec-system-stability-auto-guardrails.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/specs/spec-system-stability-auto-guardrails.md) thành các ticket phát triển độc lập theo dạng lát cắt dọc (tracer bullets).
 
 👉 **Nguyên tắc**: Chỉ thực hiện các ticket nằm ở **Biên giới (Frontier)** - là những ticket không bị chặn hoặc tất cả blockers của nó đã ở trạng thái `[x]` hoàn thành.
 
@@ -54,7 +54,7 @@ Tài liệu này phân rã kế hoạch và đặc tả [spec-system-stability-a
 
 ## Ticket 5: Cập nhật Hiến pháp AGENTS.md & Quy Trình Eval Gate Workflow
 
-**Nghiệp vụ cần làm**: Cập nhật chính thức các quy tắc **Bounded Async Task Policy** và rào chắn chống trùng lặp tác vụ ngầm vào [AGENTS.md](../../../../.agents/AGENTS.md) và tài liệu workflow `/ccba-eval-gate`.
+**Nghiệp vụ cần làm**: Cập nhật chính thức các quy tắc **Bounded Async Task Policy** và rào chắn chống trùng lặp tác vụ ngầm vào [AGENTS.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/AGENTS.md) và tài liệu workflow `/ccba-eval-gate`.
 
 **Bị chặn bởi**: Ticket 3, Ticket 4
 

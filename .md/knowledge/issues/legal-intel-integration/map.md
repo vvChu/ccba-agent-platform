@@ -1,7 +1,7 @@
 # Wayfinder Map: Triển Khai Ứng Viên #3 - Legal Intel Pipeline Refactoring
 
 ## 🎯 Điểm Đích (Destination)
-Hoàn thành việc refactor monolithic script [legal_sync.py](../../../../scripts/legal_sync.py) (878 dòng) về đúng package [packages/ccba-legal-intel](../../../../packages/ccba-legal-intel) dưới dạng deep module `LegalSyncManager` trong `ccba_legal.sync`, biến `scripts/legal_sync.py` thành thin CLI adapter và đảm bảo 100% test suite `ccba-legal-intel` trôi qua thành công.
+Hoàn thành việc refactor monolithic script [legal_sync.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/legal_sync.py) (878 dòng) về đúng package [packages/ccba-legal-intel](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel) dưới dạng deep module `LegalSyncManager` trong `ccba_legal.sync`, biến `scripts/legal_sync.py` thành thin CLI adapter và đảm bảo 100% test suite `ccba-legal-intel` trôi qua thành công.
 
 ---
 
@@ -20,11 +20,11 @@ Hoàn thành việc refactor monolithic script [legal_sync.py](../../../../scrip
 
 ## 🚩 Danh Sách Ticket Mở (Frontier / Unblocked Tickets)
 
-1. **[Kiểm thử đơn lập suite ccba-legal-intel](ticket-1-run-tests.md)** `[Task - AFK]`
+1. **[Kiểm thử đơn lập suite ccba-legal-intel](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-integration/ticket-1-run-tests.md)** `[Task - AFK]`
    - Chạy test suite `packages/ccba-legal-intel/tests` trực tiếp trên từng file test nhỏ để tránh timeout.
-2. **[Đóng gói LegalSyncManager vào ccba_legal](ticket-2-refactor-sync.md)** `[Task - AFK]`
+2. **[Đóng gói LegalSyncManager vào ccba_legal](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-integration/ticket-2-refactor-sync.md)** `[Task - AFK]`
    - Di chuyển core class `LegalSyncManager` vào `packages/ccba-legal-intel/ccba_legal/sync.py` và re-export tại `ccba_legal.__init__`.
-3. **[Chuyển scripts/legal_sync.py thành thin adapter](ticket-3-thin-adapter.md)** `[Task - AFK]`
+3. **[Chuyển scripts/legal_sync.py thành thin adapter](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-integration/ticket-3-thin-adapter.md)** `[Task - AFK]`
    - Rút gọn `scripts/legal_sync.py` thành CLI adapter mỏng chỉ còn 30-40 dòng code.
 
 ---

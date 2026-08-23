@@ -115,7 +115,7 @@ Agent CCBA Platform chạy ổn định toàn bộ các tác vụ nặng (Evalua
 - **Loại**: `Task [AFK]`
 - **Trạng thái**: ✅ **Hoàn thành** (2026-07-22)
 - **Giải quyết Root Cause**: ⚡ Tối ưu tài nguyên hệ thống & ngăn chặn tiến trình mồ côi
-- **Kết quả**: Đã nâng cấp [session_cleanup.py](../../../../scripts/session_cleanup.py) tích hợp `clean_zombies()` và `health_check()`.
+- **Kết quả**: Đã nâng cấp [session_cleanup.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/session_cleanup.py) tích hợp `clean_zombies()` và `health_check()`.
 
 ---
 

@@ -22,27 +22,27 @@ Xây dựng hoàn chỉnh Hệ thống Pipeline Thu thập & Cấu trúc hóa Tr
 
 ## 📑 3. QUYẾT ĐỊNH ĐÃ CHỐT (DECISIONS SO FAR)
 
-1. **[Quyết định P0: VIP Guard Engine](../../brainstorm_session_tvpl_vip_knowledge_pipeline.md#iii-b%E1%BA%A3ng-ph%C3%A2n-nh%C3%B3m--%C6%B0u-ti%C3%AAn-h%C3%A0nh-%C4%91%E1%BB%99ng):** Chốt mô hình Cookie Vault + VIP Health-Check Micro-probe + Auto-Relogin ngầm.
-2. **[Quyết định P1: Dual-Parser Table Engine](../../brainstorm_session_tvpl_vip_knowledge_pipeline.md#iii-b%E1%BA%A3ng-ph%C3%A2n-nh%C3%B3m--%C6%B0u-ti%C3%AAn-h%C3%A0nh-%C4%91%E1%BB%99ng):** Kết hợp `python-docx` với `table-reconstructor` và AI Vision rendering snapshot.
-3. **[Quyết định P2: Auto-Taxonomy Graph](../../brainstorm_session_tvpl_vip_knowledge_pipeline.md#iii-b%E1%BA%A3ng-ph%C3%A2n-nh%C3%B3m--%C6%B0u-ti%C3%AAn-h%C3%A0nh-%C4%91%E1%BB%99ng):** Tự động bóc tách Lược đồ TVPL để tạo `metadata.yaml` và cập nhật `legal_registry.yaml`.
+1. **[Quyết định P0: VIP Guard Engine](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/brainstorm_session_tvpl_vip_knowledge_pipeline.md#iii-b%E1%BA%A3ng-ph%C3%A2n-nh%C3%B3m--%C6%B0u-ti%C3%AAn-h%C3%A0nh-%C4%91%E1%BB%99ng):** Chốt mô hình Cookie Vault + VIP Health-Check Micro-probe + Auto-Relogin ngầm.
+2. **[Quyết định P1: Dual-Parser Table Engine](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/brainstorm_session_tvpl_vip_knowledge_pipeline.md#iii-b%E1%BA%A3ng-ph%C3%A2n-nh%C3%B3m--%C6%B0u-ti%C3%AAn-h%C3%A0nh-%C4%91%E1%BB%99ng):** Kết hợp `python-docx` với `table-reconstructor` và AI Vision rendering snapshot.
+3. **[Quyết định P2: Auto-Taxonomy Graph](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/brainstorm_session_tvpl_vip_knowledge_pipeline.md#iii-b%E1%BA%A3ng-ph%C3%A2n-nh%C3%B3m--%C6%B0u-ti%C3%AAn-h%C3%A0nh-%C4%91%E1%BB%99ng):** Tự động bóc tách Lược đồ TVPL để tạo `metadata.yaml` và cập nhật `legal_registry.yaml`.
 
 ---
 
 ## 🚀 4. BIÊN GIỚI TICKET CẦN GIẢI QUYẾT (FRONTIER TICKETS)
 
-### [Ticket 01: Cookie Vault & VIP Health-Check Engine](ticket_01_cookie_vault.md) `[Research/AFK]`
+### [Ticket 01: Cookie Vault & VIP Health-Check Engine](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/tvpl_vip_knowledge_pipeline/ticket_01_cookie_vault.md) `[Research/AFK]`
 - **Mục tiêu:** Xây dựng class `CookieVault` và Micro-probe HEAD Request kiểm tra trạng thái session, tự động gọi Chrome CDP ngầm tái tạo `cookies.json` khi hết hạn.
 - **Blocked by:** Không.
 
-### [Ticket 02: Single-Point Mutex Lock & Jitter Queue](ticket_02_mutex_queue.md) `[Research/AFK]`
+### [Ticket 02: Single-Point Mutex Lock & Jitter Queue](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/tvpl_vip_knowledge_pipeline/ticket_02_mutex_queue.md) `[Research/AFK]`
 - **Mục tiêu:** Nâng cấp `TVPLSessionMutex` với FIFO Queue và nhịp sinh học Jitter Delay từ 3.5s - 7.2s giữa các lượt tải `.docx`.
 - **Blocked by:** Ticket 01.
 
-### [Ticket 03: Dual-Parser Table Engine & AI Vision Snapshot](ticket_03_dual_parser.md) `[Task/HITL]`
+### [Ticket 03: Dual-Parser Table Engine & AI Vision Snapshot](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/tvpl_vip_knowledge_pipeline/ticket_03_dual_parser.md) `[Task/HITL]`
 - **Mục tiêu:** Tích hợp `python-docx` + `table-reconstructor` xử lý các bảng biểu bị vỡ ô/gộp dòng trong Phụ lục H.
 - **Blocked by:** Ticket 01, Ticket 02.
 
-### [Ticket 04: Auto-Taxonomy Graph & OKF Packager Integration](ticket_04_auto_taxonomy.md) `[Task/HITL]`
+### [Ticket 04: Auto-Taxonomy Graph & OKF Packager Integration](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/tvpl_vip_knowledge_pipeline/ticket_04_auto_taxonomy.md) `[Task/HITL]`
 - **Mục tiêu:** Tự động bóc tách mối quan hệ pháp lý từ trang Lược đồ TVPL và cập nhật `legal_registry.yaml`.
 - **Blocked by:** Ticket 01, Ticket 02, Ticket 03.
 

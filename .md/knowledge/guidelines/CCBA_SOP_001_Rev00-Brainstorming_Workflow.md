@@ -20,7 +20,7 @@ Tài liệu này định nghĩa quy trình chuẩn hóa để tiếp nhận, th�
 ## 2. Luồng xử lý chi tiết (Workflow Steps)
 
 ### Bước 1: Thu thập và Nạp tài liệu (Ingestion)
-Người dùng copy tất cả các nguồn dữ liệu vào thư mục [input_documents/](../../../input_documents):
+Người dùng copy tất cả các nguồn dữ liệu vào thư mục [input_documents/](file:///d:/GitHubProjects/ccba-agent-platform/input_documents/):
 * Các file PDF pháp lý, bản vẽ thiết kế.
 * Các file Excel dữ liệu hoặc tiến độ.
 * Các file ảnh sơ đồ, ảnh chụp màn hình.

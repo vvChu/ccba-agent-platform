@@ -26,13 +26,13 @@ Xây dựng và đưa vào vận hành hoàn chỉnh **Động Cơ Tự Tiến H
 ## 3. Quyết Định Đã Chốt (Decisions So Far)
 
 * ✅ **[Ticket D-03: PR Template & Telegram Alert Spec](pr_template_spec.md):** Đã thiết kế mẫu báo cáo Pull Request Markdown chuẩn mực (Bảng 8 Trụ Cột, AST Code Grounding, Rào chắn Zero-Deletion, Lệnh duyệt 1-chạm `gh pr merge --squash`) và template Telegram mobile payload.
-* ✅ **[Ticket D-04: Server Spark Cron & Bootstrap Integration](../../../../scripts/cron/run_nightly_tuner.sh):** Tích hợp `doc_refactor_daemon.py` vào `run_nightly_tuner.sh` (Linux Cron 00:00), `run_nightly_tuner.bat` và `bootstrap_spark_server.sh`.
-* ✅ **[Ticket D-02: Deep Seam doc_refactor_daemon.py](../../../../scripts/eval/doc_refactor_daemon.py):** Hoàn thành đóng gói động cơ `DocAutoEvolutionEngine` (AST Grounding, Zero-Deletion Guard, Pillar Balance Auditor, Windows UTF-8 Safe Console) và đạt 9/9 unit tests PASS (2.7s).
+* ✅ **[Ticket D-04: Server Spark Cron & Bootstrap Integration](file:///d:/GitHubProjects/ccba-agent-platform/scripts/cron/run_nightly_tuner.sh):** Tích hợp `doc_refactor_daemon.py` vào `run_nightly_tuner.sh` (Linux Cron 00:00), `run_nightly_tuner.bat` và `bootstrap_spark_server.sh`.
+* ✅ **[Ticket D-02: Deep Seam doc_refactor_daemon.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/eval/doc_refactor_daemon.py):** Hoàn thành đóng gói động cơ `DocAutoEvolutionEngine` (AST Grounding, Zero-Deletion Guard, Pillar Balance Auditor, Windows UTF-8 Safe Console) và đạt 9/9 unit tests PASS (2.7s).
 * ✅ **[Ticket D-01: AST Heuristics & Code-Grounding Logic](research-d01.md):** Hoàn tất nghiên cứu thuật toán đếm/phân rã Pillar ($N \ge 15$), AST Symbol Indexer xác thực dẫn chứng code, và rào chắn Zero-Deletion/Parse-Protection.
-* ✅ **[Refactor CONTEXT.md into 6 Domains](../../../../CONTEXT.md):** Đã phân loại 100% thuật ngữ hệ thống thành 6 Trục Miền Nghiệp Vụ và thiết lập Mục lục điều hướng $O(1)$.
-* ✅ **[Rebalance session_learnings.md into 8 Pillars](../../session_learnings.md):** Đã phân rã Trụ Cột 7 quá tải thành Trụ Cột 7 (Hub-Spoke Sync) và Trụ Cột 8 (Quản trị IDOP, Server Spark & Viện IBST).
-* ✅ **[Tri-Repo Server Sibling Protocol (ADR 0042)](../../../../docs/adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md):** Đã thiết lập cơ chế kéo mã 3 kho lưu trữ trước 00:00 trên Server Spark.
-* ✅ **[Unified Document Governance Tools](../../../../scripts/doc_auditor.py):** Đã có sẵn `WikiHealthLinter`, `DocAuditor`, `CrossRefValidator`, `test_validate_docs.py`.
+* ✅ **[Refactor CONTEXT.md into 6 Domains](file:///d:/GitHubProjects/ccba-agent-platform/CONTEXT.md):** Đã phân loại 100% thuật ngữ hệ thống thành 6 Trục Miền Nghiệp Vụ và thiết lập Mục lục điều hướng $O(1)$.
+* ✅ **[Rebalance session_learnings.md into 8 Pillars](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/session_learnings.md):** Đã phân rã Trụ Cột 7 quá tải thành Trụ Cột 7 (Hub-Spoke Sync) và Trụ Cột 8 (Quản trị IDOP, Server Spark & Viện IBST).
+* ✅ **[Tri-Repo Server Sibling Protocol (ADR 0042)](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md):** Đã thiết lập cơ chế kéo mã 3 kho lưu trữ trước 00:00 trên Server Spark.
+* ✅ **[Unified Document Governance Tools](file:///d:/GitHubProjects/ccba-agent-platform/scripts/doc_auditor.py):** Đã có sẵn `WikiHealthLinter`, `DocAuditor`, `CrossRefValidator`, `test_validate_docs.py`.
 
 ---
 

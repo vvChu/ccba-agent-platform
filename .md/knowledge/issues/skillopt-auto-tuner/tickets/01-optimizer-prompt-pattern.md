@@ -1,6 +1,6 @@
-# Ticket 1: [Nghiên cứu Optimizer Prompt Pattern cho SKILL.md](01-optimizer-prompt-pattern.md)
+# Ticket 1: [Nghiên cứu Optimizer Prompt Pattern cho SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skillopt-auto-tuner/tickets/01-optimizer-prompt-pattern.md)
 
-* **Thuộc bản đồ**: [CCBA Skill Auto-Tuner Map](../map.md)
+* **Thuộc bản đồ**: [CCBA Skill Auto-Tuner Map](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skillopt-auto-tuner/map.md)
 * **Loại tác vụ**: Research [AFK]
 * **Người thực hiện (Assignee)**: Unassigned
 * **Trạng thái**: Open (Unblocked)

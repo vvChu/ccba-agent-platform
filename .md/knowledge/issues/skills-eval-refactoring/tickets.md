@@ -1,7 +1,7 @@
 # Danh sách Ticket Chi Tiết: Refactor & Tối ưu hóa Bộ Kiểm thử AI Skills (/ccba-skills-eval)
 
 **Mã bản đồ**: `issue-skills-eval-refactoring`
-**Đường dẫn bản đồ**: [map.md](map.md)
+**Đường dẫn bản đồ**: [map.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skills-eval-refactoring/map.md)
 
 ---
 

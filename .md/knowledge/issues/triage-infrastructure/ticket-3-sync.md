@@ -24,6 +24,6 @@ Xây dựng một script thử nghiệm (Proof of Concept) để kéo các issue
 ---
 
 ## 📝 Kết quả thực hiện (2026-07-19)
-- Đã viết script Python [sync_issues.py](../../../../triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/sync_issues.py) để thực hiện đồng bộ issues từ GitHub thông qua `gh` CLI.
-- Chạy thử nghiệm thành công: Script tự động gọi GitHub CLI, xử lý dữ liệu trả về và kết xuất thành file Markdown hoàn chỉnh với metadata YAML frontmatter. Vì repo hiện tại rỗng, script đã tự động sinh [issue-0.md](../../../../triage-ccba-issues/.md/knowledge/issues/issue-0.md) làm dữ liệu thử nghiệm ngoại tuyến (offline demo).
+- Đã viết script Python [sync_issues.py](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/sync_issues.py) để thực hiện đồng bộ issues từ GitHub thông qua `gh` CLI.
+- Chạy thử nghiệm thành công: Script tự động gọi GitHub CLI, xử lý dữ liệu trả về và kết xuất thành file Markdown hoàn chỉnh với metadata YAML frontmatter. Vì repo hiện tại rỗng, script đã tự động sinh [issue-0.md](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/triage-ccba-issues/.md/knowledge/issues/issue-0.md) làm dữ liệu thử nghiệm ngoại tuyến (offline demo).
 

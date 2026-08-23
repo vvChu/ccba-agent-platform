@@ -1,7 +1,7 @@
 # Danh sách Ticket Chi Tiết: Automated Operational Guardrails
 
 **Mã bản đồ**: `issue-automated-operational-guardrails`
-**Đường dẫn bản đồ**: [map.md](map.md)
+**Đường dẫn bản đồ**: [map.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/automated-operational-guardrails/map.md)
 
 ---
 

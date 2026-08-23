@@ -1,6 +1,6 @@
 # Danh sách Tickets: Safe Execution Sandbox & Self-Healing Loop
 
-Tài liệu này phân rã Đặc tả Kỹ thuật [spec-safe-execution-sandbox.md](../../specs/spec-safe-execution-sandbox.md) thành các ticket công việc độc lập theo mô hình lát cắt dọc (vertical slice).
+Tài liệu này phân rã Đặc tả Kỹ thuật [spec-safe-execution-sandbox.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/specs/spec-safe-execution-sandbox.md) thành các ticket công việc độc lập theo mô hình lát cắt dọc (vertical slice).
 
 👉 **Nguyên tắc:** Chỉ thực hiện các ticket thuộc **Biên giới (Frontier)** — những ticket không bị chặn bởi bất kỳ ticket mở nào khác.
 
@@ -37,9 +37,9 @@ Xây dựng bộ kiểm thử tự động độc lập cho wrapper tại `scrip
 ## Ticket 3: Cập nhật Skill & Workflow Quy chế Async Execution & Self-Healing Protocol
 
 **Nghiệp vụ cần làm:**  
-Cập nhật tệp kỹ năng [.agents/skills/eval-gate/SKILL.md](../../../../.agents/skills/eval-gate/SKILL.md) và workflow [/ccba-eval-gate](../../../../.agents/workflows/ccba-eval-gate.md) để quy định Agent luôn kích hoạt runner ngầm thông qua `run_safe_eval_wrapper.py` với `WaitMsBeforeAsync` $\le 2000$ms và tự động đọc `diagnostics.json` để sửa lỗi mã nguồn khi nhận tin nhắn notification.
+Cập nhật tệp kỹ năng [.agents/skills/eval-gate/SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/eval-gate/SKILL.md) và workflow [/ccba-eval-gate](file:///d:/GitHubProjects/ccba-agent-platform/.agents/workflows/ccba-eval-gate.md) để quy định Agent luôn kích hoạt runner ngầm thông qua `run_safe_eval_wrapper.py` với `WaitMsBeforeAsync` $\le 2000$ms và tự động đọc `diagnostics.json` để sửa lỗi mã nguồn khi nhận tin nhắn notification.
 
 **Bị chặn bởi:** Ticket 1 & Ticket 2.
 
 - [x] Cập nhật quy tắc `WaitMsBeforeAsync` $\le 2000$ms trong `eval-gate/SKILL.md`.
-- [x] Thêm quy trình Self-Healing Feedback Protocol (đọc `diagnostics.json` và vá code tự động) vào [/ccba-eval-gate](../../../../.agents/workflows/ccba-eval-gate.md).
+- [x] Thêm quy trình Self-Healing Feedback Protocol (đọc `diagnostics.json` và vá code tự động) vào [/ccba-eval-gate](file:///d:/GitHubProjects/ccba-agent-platform/.agents/workflows/ccba-eval-gate.md).

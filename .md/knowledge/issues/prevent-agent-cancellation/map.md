@@ -25,19 +25,19 @@ Xây dựng cơ chế rào chắn sinh tồn tuyệt đối cho CCBA Agent Platf
 
 ## ✅ 3. Quyết định đã chốt (Decisions so far)
 
-1. **[Tối ưu Mutex Timeout lên 0.3s](../../../../packages/ccba-legal-intel/tests/test_crawler_upgrades.py#L24)**
+1. **[Tối ưu Mutex Timeout lên 0.3s](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/tests/test_crawler_upgrades.py#L24)**
    - *Tóm tắt:* Đã hạ timeout trong unit test từ 1.0s xuống 0.3s, cắt giảm thời gian chạy test suite từ > 80s xuống **9.41s** (Fast suite 4.09s), loại bỏ Flaky Test trên CI.
-2. **[Bật Unbuffered Logging tập trung](../../../../scripts/eval/process_safety.py#L22)**
+2. **[Bật Unbuffered Logging tập trung](file:///d:/GitHubProjects/ccba-agent-platform/scripts/eval/process_safety.py#L22)**
    - *Tóm tắt:* Đã đưa `sys.stdout.reconfigure(line_buffering=True)` vào `process_safety.py` để mọi background script tự động đẩy log trực tiếp xuống đĩa ngay lập tức.
-3. **[Phân tầng `@pytest.mark.slow`](../../../../packages/ccba-legal-intel/tests/test_crawler_upgrades.py#L270)**
+3. **[Phân tầng `@pytest.mark.slow`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/tests/test_crawler_upgrades.py#L270)**
    - *Tóm tắt:* Đã gắn tag `slow` cho các test cào mạng nặng, giúp cờ `-m "not slow"` tự động lọc bỏ 19 bài test nặng khỏi lượt chạy nhanh hàng ngày.
-4. **[Ticket 1: Live Heartbeat Logging](../../../../scripts/eval/run_safe_eval_wrapper.py#L77)**
+4. **[Ticket 1: Live Heartbeat Logging](file:///d:/GitHubProjects/ccba-agent-platform/scripts/eval/run_safe_eval_wrapper.py#L77)**
    - *Tóm tắt:* Đã nâng cấp `run_safe_eval_wrapper.py` tự động ghi log dòng theo dòng và phát heartbeat `⏱️ [HEARTBEAT]` mỗi 10 giây.
-5. **[Ticket 2: Tập trung Unbuffered I/O vào `process_safety.py`](../../../../scripts/eval/process_safety.py#L22)**
+5. **[Ticket 2: Tập trung Unbuffered I/O vào `process_safety.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/eval/process_safety.py#L22)**
    - *Tóm tắt:* Đã đưa cấu hình `line_buffering=True` vào hàm `ensure_single_instance()` dùng chung cho toàn bộ scripts.
-6. **[Ticket 3: Tự động cờ an toàn trong `safe_pytest.py`](../../../../scripts/safe_pytest.py#L80)**
+6. **[Ticket 3: Tự động cờ an toàn trong `safe_pytest.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/safe_pytest.py#L80)**
    - *Tóm tắt:* Đã tự động chèn cờ `--maxfail=1` và `-m "not slow"` vào CLI bridge `safe_pytest.py` (chạy test 2.46s).
-7. **[Ticket 4: Linter `test_speed_guard.py`](../../../../scripts/hooks/test_speed_guard.py)**
+7. **[Ticket 4: Linter `test_speed_guard.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/hooks/test_speed_guard.py)**
    - *Tóm tắt:* Đã giải mã mục Sương mù chiến trận thành công, tạo script `scripts/hooks/test_speed_guard.py` tự động phát hiện và cảnh báo các file test chạy > 2.0s mà thiếu tag `@pytest.mark.slow`.
 
 ---

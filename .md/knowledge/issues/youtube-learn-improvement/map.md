@@ -2,7 +2,7 @@
 
 ## Điểm đích (Destination)
 
-Kỹ năng [youtube-learn/SKILL.md](../../../../.agents/skills/youtube-learn/SKILL.md) được cập nhật hoàn chỉnh, tích hợp đầy đủ các tiêu chí hoàn thành (Completion Criteria) cho từng Phase, chuyển dịch rào chắn phủ định (Negation) sang hướng tích cực, vượt qua kiểm định chất lượng của `/ccba-review-skill`.
+Kỹ năng [youtube-learn/SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/youtube-learn/SKILL.md) được cập nhật hoàn chỉnh, tích hợp đầy đủ các tiêu chí hoàn thành (Completion Criteria) cho từng Phase, chuyển dịch rào chắn phủ định (Negation) sang hướng tích cực, vượt qua kiểm định chất lượng của `/ccba-review-skill`.
 
 ## Ghi chú (Notes)
 
@@ -20,7 +20,7 @@ Kỹ năng [youtube-learn/SKILL.md](../../../../.agents/skills/youtube-learn/SKI
   - [x] Bổ sung `user-invocable: true` vào frontmatter.
   - [x] Bổ sung `Tiêu chí hoàn thành:` định lượng cho Phase 1, Phase 2, Phase 3, Phase 4.
   - [x] Sửa đổi rào chắn API Key ở Phase 1 để hướng dẫn in thông báo lỗi và thoát an toàn thay vì ghi "dừng ngay lập tức".
-- **File:** [SKILL.md](../../../../.agents/skills/youtube-learn/SKILL.md)
+- **File:** [SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/youtube-learn/SKILL.md)
 - **Trạng thái:** ✅ Hoàn tất
 - **Blocked by:** Không
 

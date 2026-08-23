@@ -1,6 +1,6 @@
 # Danh sách Tickets: Khắc Phục Triệt Để Lỗi "User cancelled agent execution"
 
-Chuỗi ticket này phân rã từ tài liệu Spec [spec-wayfinder-cancelled-error.md](../../specs/spec-wayfinder-cancelled-error.md) và Wayfinder Map [map.md](map.md).
+Chuỗi ticket này phân rã từ tài liệu Spec [spec-wayfinder-cancelled-error.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/specs/spec-wayfinder-cancelled-error.md) và Wayfinder Map [map.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/wayfinder-cancelled-error/map.md).
 
 👉 **Nguyên tắc**: Chỉ thực hiện các ticket nằm ở **Biên giới (Frontier)** - là những ticket không bị chặn hoặc tất cả blockers của nó đã ở trạng thái `[x]` hoàn thành.
 

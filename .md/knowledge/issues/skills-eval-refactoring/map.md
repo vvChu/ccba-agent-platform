@@ -25,7 +25,7 @@ Chuẩn hóa 100% các file test cases (`.agents/skills/eval-gate/test_cases/eva
 
 ## 📋 Quyết định đã chốt (Decisions so far)
 
-1. **[Thống nhất Cấu trúc 3 Lớp Kiểm thử cho Skills](map.md)** — Mỗi file eval JSON phải chứa 3 loại case: Happy Path (chuẩn nghiệp vụ), Edge/Boundary (biên điều kiện/placeholders), Negative/Over-triggering (yêu cầu không thuộc phạm vi skill).
+1. **[Thống nhất Cấu trúc 3 Lớp Kiểm thử cho Skills](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skills-eval-refactoring/map.md)** — Mỗi file eval JSON phải chứa 3 loại case: Happy Path (chuẩn nghiệp vụ), Edge/Boundary (biên điều kiện/placeholders), Negative/Over-triggering (yêu cầu không thuộc phạm vi skill).
 
 ---
 

@@ -1,7 +1,7 @@
 # Wayfinder Master Navigation Map: Khung Phòng Vệ 5 Tầng AI Skills Evals & Thống Nhất Ngôn Ngữ Pháp Lý
 
 **Mã vấn đề**: `issue-5-layer-eval-legal-framework`  
-**Tài liệu báo cáo gốc**: [brainstorm_skills_eval_legal_guardrails.md](../../brainstorm_skills_eval_legal_guardrails.md)  
+**Tài liệu báo cáo gốc**: [brainstorm_skills_eval_legal_guardrails.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/brainstorm_skills_eval_legal_guardrails.md)  
 **Trạng thái bản đồ**: 🟢 **Đã hoàn thành 100%** — Đã triển khai và nghiệm thu 100% 5 Tầng Phòng Vệ  
 **Khởi tạo**: 2026-07-24  
 
@@ -26,23 +26,23 @@ Thiết lập và vận hành hoàn chỉnh **Mô hình Giải pháp Phòng vệ
 
 ## ✅ 3. Quyết định đã chốt (Decisions so far)
 
-- [Tích hợp Noise Prompt Linter vào dry-run validator](../../../../.agents/skills/eval-gate/scripts/eval_runner.py#L400-L425): Đã loại bỏ 100% prompt rác trong 11 skills evals. *(Ticket 1 & Ticket 3)*
-- [Tích hợp Superseded Legal Doc Linter vào validate_docs.py](../../../../scripts/validate_docs.py#L510-L530): Đã cưỡng chế tham chiếu Luật Xây dựng 2025 (135/2025/QH15) & NĐ 105/2025/NĐ-CP. *(Ticket 4)*
-- [Chuẩn hóa ADR 0010 và Registry](../../../../docs/adr/0010-skills-integration-and-rag-boundaries.md#L24): Đã cập nhật chú thích thay thế NĐ 105/2025 cho NĐ 06/2021. *(Ticket 4)*
+- [Tích hợp Noise Prompt Linter vào dry-run validator](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/eval-gate/scripts/eval_runner.py#L400-L425): Đã loại bỏ 100% prompt rác trong 11 skills evals. *(Ticket 1 & Ticket 3)*
+- [Tích hợp Superseded Legal Doc Linter vào validate_docs.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/validate_docs.py#L510-L530): Đã cưỡng chế tham chiếu Luật Xây dựng 2025 (135/2025/QH15) & NĐ 105/2025/NĐ-CP. *(Ticket 4)*
+- [Chuẩn hóa ADR 0010 và Registry](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0010-skills-integration-and-rag-boundaries.md#L24): Đã cập nhật chú thích thay thế NĐ 105/2025 cho NĐ 06/2021. *(Ticket 4)*
 
 ---
 
 ## 🚀 4. Vé Biên giới & Lộ trình Thực thi (Frontier Tickets)
 
 ### Nhóm A: Tầng 1 đến Tầng 4 (Refactoring & Linters — Đã hoàn thành)
-- ✅ [Ticket 1: Rà soát & Tái thiết kế Schema Test Cases](tickets.md#ticket-5-layer-1) — 11 skills pass 100%.
-- ✅ [Ticket 2: Nâng cấp Robustness & Dry-run Noise Linter](tickets.md#ticket-5-layer-2) — `eval_runner.py --dry-run` OK.
-- ✅ [Ticket 3: Superseded Legal Doc Linter & Alignment](tickets.md#ticket-5-layer-3) — `validate_docs.py` check Luật 135 & NĐ 105 OK.
+- ✅ [Ticket 1: Rà soát & Tái thiết kế Schema Test Cases](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/5-layer-eval-legal-framework/tickets.md#ticket-5-layer-1) — 11 skills pass 100%.
+- ✅ [Ticket 2: Nâng cấp Robustness & Dry-run Noise Linter](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/5-layer-eval-legal-framework/tickets.md#ticket-5-layer-2) — `eval_runner.py --dry-run` OK.
+- ✅ [Ticket 3: Superseded Legal Doc Linter & Alignment](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/5-layer-eval-legal-framework/tickets.md#ticket-5-layer-3) — `validate_docs.py` check Luật 135 & NĐ 105 OK.
 
 ### Nhóm B: Tầng 5 (Production Log Mining & Auto-Tuning — Chưa thực thi)
-- 🟢 [Ticket 5.1: Thiết kế Parser log & Redaction với Maskara](tickets.md#ticket-5-layer-5-1) `Task [AFK]` — Đọc `transcript.jsonl` và redact nhạy cảm.
-- 🟡 [Ticket 5.2: Thuật toán Failure-Driven Auto-Tuning](tickets.md#ticket-5-layer-5-2) `Task [AFK]` — Bóc tách edge cases & router failures thành test cases mới.
-- 🟡 [Ticket 5.3: Tích hợp CLI Runner `--mine-logs` & Unit Tests](tickets.md#ticket-5-layer-5-3) `Task [AFK]` — Viết `test_log_eval_miner.py` và kiểm thử qua `safe_pytest.py`.
+- 🟢 [Ticket 5.1: Thiết kế Parser log & Redaction với Maskara](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/5-layer-eval-legal-framework/tickets.md#ticket-5-layer-5-1) `Task [AFK]` — Đọc `transcript.jsonl` và redact nhạy cảm.
+- 🟡 [Ticket 5.2: Thuật toán Failure-Driven Auto-Tuning](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/5-layer-eval-legal-framework/tickets.md#ticket-5-layer-5-2) `Task [AFK]` — Bóc tách edge cases & router failures thành test cases mới.
+- 🟡 [Ticket 5.3: Tích hợp CLI Runner `--mine-logs` & Unit Tests](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/5-layer-eval-legal-framework/tickets.md#ticket-5-layer-5-3) `Task [AFK]` — Viết `test_log_eval_miner.py` và kiểm thử qua `safe_pytest.py`.
 
 ---
 

@@ -1,6 +1,6 @@
-# Ticket 3: [Cập nhật Hướng dẫn Định tuyến Routing trong platform-loader](03-update-platform-loader-routing.md)
+# Ticket 3: [Cập nhật Hướng dẫn Định tuyến Routing trong platform-loader](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/document-skills-refinement/tickets/03-update-platform-loader-routing.md)
 
-* **Thuộc bản đồ**: [Document Skills Refinement Map](../map.md)
+* **Thuộc bản đồ**: [Document Skills Refinement Map](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/document-skills-refinement/map.md)
 * **Loại tác vụ**: Docs [AFK]
 * **Người thực hiện (Assignee)**: Unassigned
 * **Trạng thái**: Open (Blocked by Ticket 1, 2)

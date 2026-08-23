@@ -17,7 +17,7 @@
 
 ## 📝 2. Ghi chú (Notes)
 
-- Nạp các kỹ năng liên quan: [eval-gate](../../../../.agents/skills/eval-gate/SKILL.md), [code-review](../../../../.agents/skills/code-review/SKILL.md), [tdd](../../../../.agents/skills/tdd/SKILL.md).
+- Nạp các kỹ năng liên quan: [eval-gate](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/eval-gate/SKILL.md), [code-review](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/code-review/SKILL.md), [tdd](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/tdd/SKILL.md).
 - Tuân thủ nguyên tắc **KISS (Keep It Simple, Stupid)**: Sửa đúng điểm lỗi, không refactor lan man sang các module không liên quan.
 - Sau mỗi lần sửa, kiểm tra lại bằng lệnh bọc an toàn `run_safe_eval_wrapper.py`.
 
@@ -25,21 +25,21 @@
 
 ## 📌 3. Quyết định đã chốt (Decisions so far)
 
-1. **[Báo cáo Kiểm tra Nợ kỹ thuật Toàn diện](../../../scratch/eval_runs/diagnostics.json)**: Quét toàn bộ codebase bằng `run_harness_evals.py --all` và khoanh vùng 2 điểm lỗi chính ở `mdconverter`.
+1. **[Báo cáo Kiểm tra Nợ kỹ thuật Toàn diện](file:///d:/GitHubProjects/ccba-agent-platform/.md/scratch/eval_runs/diagnostics.json)**: Quét toàn bộ codebase bằng `run_harness_evals.py --all` và khoanh vùng 2 điểm lỗi chính ở `mdconverter`.
 
 ---
 
 ## 🚀 4. Danh sách các Ticket Biên Giới (Frontier Tickets)
 
-* **[Ticket 1: Khắc phục lỗi Pytest Timeout tại `packages/mdconverter/src/mdconverter/plugins/vn_legal/linter.py`](../../../../packages/mdconverter/src/mdconverter/plugins/vn_legal/linter.py)** `[AFK/Task]`
+* **[Ticket 1: Khắc phục lỗi Pytest Timeout tại `packages/mdconverter/src/mdconverter/plugins/vn_legal/linter.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/mdconverter/src/mdconverter/plugins/vn_legal/linter.py)** `[AFK/Task]`
   - *Mục tiêu:* Tối ưu hàm `lint_directory()` loại bỏ các thư mục tạm (`.md/scratch`, `.venv`, `.git`, `node_modules`) khỏi phạm vi quét file để tránh lặp đệ quy/đọc file quá 10s.
   - *Đầu ra:* `pytest packages/mdconverter/tests/` chạy qua 100% không bị Timeout.
 
-* **[Ticket 2: Sửa 10 lỗi Mypy Typecheck trong `mdconverter`](../../../../packages/mdconverter/src/mdconverter/core/pandoc.py)** `[AFK/Task]`
+* **[Ticket 2: Sửa 10 lỗi Mypy Typecheck trong `mdconverter`](file:///d:/GitHubProjects/ccba-agent-platform/packages/mdconverter/src/mdconverter/core/pandoc.py)** `[AFK/Task]`
   - *Mục tiêu:* Bổ sung đầy đủ Type Hints cho `core/pandoc.py`, `core/gemini.py`, `core/pipeline.py`, `core/llamaparse.py`, và `providers/gemini.py`.
   - *Đầu ra:* Lệnh `mypy` cho `mdconverter` trả về `Success: no issues found`.
 
-* **[Ticket 3: Xác minh Toàn diện 5 CI Eval Gates](../../../../scripts/run_harness_evals.py)** `[AFK/Task]`
+* **[Ticket 3: Xác minh Toàn diện 5 CI Eval Gates](file:///d:/GitHubProjects/ccba-agent-platform/scripts/run_harness_evals.py)** `[AFK/Task]`
   - *Mục tiêu:* Kích hoạt `run_harness_evals.py --all` qua `run_safe_eval_wrapper.py` để xác nhận cả 5 Gates đều PASS.
   - *Đầu ra:* Báo cáo `diagnostics.json` trả về `status: PASS`.
 

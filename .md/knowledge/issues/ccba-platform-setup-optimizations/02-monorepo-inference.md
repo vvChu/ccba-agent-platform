@@ -1,4 +1,4 @@
-# Ticket #02: [Tự động suy luận Monorepo để chốt Single/Multi-Context](02-monorepo-inference.md)
+# Ticket #02: [Tự động suy luận Monorepo để chốt Single/Multi-Context](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/ccba-platform-setup-optimizations/02-monorepo-inference.md)
 
 - **Mã số**: `02-monorepo-inference`
 - **Loại Ticket**: `Task [AFK]`

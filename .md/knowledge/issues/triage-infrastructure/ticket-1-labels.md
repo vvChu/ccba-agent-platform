@@ -26,5 +26,5 @@
 
 ## 📝 Kết quả thực hiện (2026-07-19)
 - Đã khảo sát và thống nhất bộ nhãn chuẩn bao gồm: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`, `bug`, và `enhancement`.
-- Đã xuất đặc tả nhãn hoàn chỉnh ra tệp tin [labels.yaml](../../../../triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/labels.yaml).
+- Đã xuất đặc tả nhãn hoàn chỉnh ra tệp tin [labels.yaml](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/labels.yaml).
 

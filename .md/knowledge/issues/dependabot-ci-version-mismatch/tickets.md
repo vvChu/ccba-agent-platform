@@ -1,7 +1,7 @@
 # Danh sách Ticket Chi Tiết: Xử Lý Dependabot PRs Lỗi CI & Cấu Hình Rào Chắn
 
 **Mã bản đồ**: `issue-dependabot-ci-version-mismatch`  
-**Đường dẫn bản đồ**: [map.md](map.md)  
+**Đường dẫn bản đồ**: [map.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/dependabot-ci-version-mismatch/map.md)  
 
 ---
 

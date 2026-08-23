@@ -1,6 +1,6 @@
-# Ticket 2: [Thiết kế Synthetic Task Generator via AI Gateway](02-synthetic-task-generator.md)
+# Ticket 2: [Thiết kế Synthetic Task Generator via AI Gateway](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skillopt-auto-tuner/tickets/02-synthetic-task-generator.md)
 
-* **Thuộc bản đồ**: [CCBA Skill Auto-Tuner Map](../map.md)
+* **Thuộc bản đồ**: [CCBA Skill Auto-Tuner Map](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skillopt-auto-tuner/map.md)
 * **Loại tác vụ**: Research [AFK]
 * **Người thực hiện (Assignee)**: Unassigned
 * **Trạng thái**: Open (Unblocked)

@@ -2,7 +2,7 @@
 
 > **Tính năng:** Refactor & Nâng cấp Kỹ năng / Gói dịch vụ `ccba-legal-intel`
 > **File đối chiếu:** [brainstorm_session_legal_intel_eval.md](file:///C:/Users/chuvu/.gemini/antigravity/brain/0c0a9304-cfbb-4fa3-9c81-3e11441ace97/brainstorm_session_legal_intel_eval.md)
-> **Đặc tả Kỹ thuật:** [spec-legal-intel-deep-module.md](../../specs/spec-legal-intel-deep-module.md)
+> **Đặc tả Kỹ thuật:** [spec-legal-intel-deep-module.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/specs/spec-legal-intel-deep-module.md)
 
 ---
 
@@ -45,17 +45,17 @@ Bóc tách và đóng gói toàn bộ quy trình cào, kiểm tra CDP, xử lý 
 
 ## 🚩 4. Danh Sách Ticket Tại Biên Giới (Frontier Tickets)
 
-Chi tiết nội dung nghiệm thu được theo dõi tại [tickets.md](tickets.md):
+Chi tiết nội dung nghiệm thu được theo dõi tại [tickets.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-deep-module/tickets.md):
 
-* ✅ **[Ticket 1: Pre-factoring - MockChromeCDP Adapter](tickets.md#ticket-1-pre-factoring-build-mockchromecdp-adapter--mock-fixtures-for-offline-testing)** `[DONE]` `[AFK]`
+* ✅ **[Ticket 1: Pre-factoring - MockChromeCDP Adapter](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-deep-module/tickets.md#ticket-1-pre-factoring-build-mockchromecdp-adapter--mock-fixtures-for-offline-testing)** `[DONE]` `[AFK]`
   * *Mục tiêu:* Xây dựng lớp giả lập CDP và Fixtures để test suite chạy offline hoàn toàn.
-* ✅ **[Ticket 2: Core Seam - Auto-Launch CDP & LegalIntelPipeline](tickets.md#ticket-2-core-seam-implement-legalintelpipeline-deep-class-in-ccba_legalcoordinator)** `[DONE]` `[AFK]`
+* ✅ **[Ticket 2: Core Seam - Auto-Launch CDP & LegalIntelPipeline](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-deep-module/tickets.md#ticket-2-core-seam-implement-legalintelpipeline-deep-class-in-ccba_legalcoordinator)** `[DONE]` `[AFK]`
   * *Mục tiêu:* Triển khai Class `LegalIntelPipeline` tích hợp `TVPLSessionMutex` và auto-detect/launch Chrome debug port 9222 + Event-driven DOM ready.
-* ✅ **[Ticket 3: Performance - Async Offloading & SHA-256 Caching](tickets.md#ticket-3-performance-integrate-subagent-ccba-research-offloading--sha-256-delta-caching)** `[DONE]` `[AFK]`
+* ✅ **[Ticket 3: Performance - Async Offloading & SHA-256 Caching](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-deep-module/tickets.md#ticket-3-performance-integrate-subagent-ccba-research-offloading--sha-256-delta-caching)** `[DONE]` `[AFK]`
   * *Mục tiêu:* Tự động delegate subagent `ccba-research` cho VBPL lớn và chỉ cào Delta khi SHA-256/Lược đồ có biến động.
-* ✅ **[Ticket 4: CLI Adapters - Thin Wrappers for Scripts](tickets.md#ticket-4-cli-adapters-refactor-legal_intelligencepy--legal_syncpy-into-thin-invocation-wrappers)** `[DONE]` `[AFK]`
+* ✅ **[Ticket 4: CLI Adapters - Thin Wrappers for Scripts](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-deep-module/tickets.md#ticket-4-cli-adapters-refactor-legal_intelligencepy--legal_syncpy-into-thin-invocation-wrappers)** `[DONE]` `[AFK]`
   * *Mục tiêu:* Rút gọn `scripts/legal_intelligence.py` và `scripts/legal_sync.py` thành wrapper mỏng (< 15 dòng).
-* ✅ **[Ticket 5: Verification - End-to-End Seam Test & CI Gate](tickets.md#ticket-5-verification-add-end-to-end-seam-test-suite--ci-gate-integration)** `[DONE]` `[AFK]`
+* ✅ **[Ticket 5: Verification - End-to-End Seam Test & CI Gate](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-deep-module/tickets.md#ticket-5-verification-add-end-to-end-seam-test-suite--ci-gate-integration)** `[DONE]` `[AFK]`
   * *Mục tiêu:* Kiểm thử toàn trình qua test seam `LegalIntelPipeline` và xác nhận 0 lỗi lặp lại.
 
 ---

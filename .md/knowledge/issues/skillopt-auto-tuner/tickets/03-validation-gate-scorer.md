@@ -1,6 +1,6 @@
-# Ticket 3: [Thiết kế Validation Gate & Metrics Scorer](03-validation-gate-scorer.md)
+# Ticket 3: [Thiết kế Validation Gate & Metrics Scorer](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skillopt-auto-tuner/tickets/03-validation-gate-scorer.md)
 
-* **Thuộc bản đồ**: [CCBA Skill Auto-Tuner Map](../map.md)
+* **Thuộc bản đồ**: [CCBA Skill Auto-Tuner Map](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skillopt-auto-tuner/map.md)
 * **Loại tác vụ**: Research [AFK]
 * **Người thực hiện (Assignee)**: Unassigned
 * **Trạng thái**: Open (Unblocked)
