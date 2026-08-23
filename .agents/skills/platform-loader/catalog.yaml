@@ -919,6 +919,17 @@ workflows:
   - setup project
   - khởi tạo dự án
   workflow_path: .agents/workflows/ccba-init-spoke.md
+- name: ccba-promote-sandbox
+  bundle: _core
+  command: /ccba-promote-sandbox
+  description: Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc Hub theo ADR 0046
+  triggers:
+  - promote sandbox
+  - bàn giao sandbox
+  - thăng cấp sản phẩm
+  - nghiệm thu pgv
+  - pgv handover
+  workflow_path: .agents/workflows/ccba-promote-sandbox.md
 - name: ccba-implement
   bundle: _core
   command: /ccba-implement

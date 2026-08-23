@@ -5,6 +5,8 @@ applies_to:
   - "Thẩm tra thiết kế"
   - "Thiết kế"
   - "Kiểm định"
+  - "Tác vụ Admin"
+  - "Pháp điển"
 bundle: "_core"
 disable-model-invocation: true
 ---
@@ -53,9 +55,14 @@ Tự động duyệt qua danh sách trong Hub Registry (`.md/data/spoke_registry
 # 1. Xem trước mô phỏng (Pha 1):
 python scripts\sync_spoke.py --all --dry-run
 
-# 2. Thực thi đồng bộ chính thức (Pha 2):
+# 2. Thực thi đồng bộ chính thức (Pha 2 - Mặc định bỏ qua Sandbox cá nhân):
 python scripts\sync_spoke.py --all --apply
+
+# 3. Đồng bộ bao gồm cả Spoke Cá Nhân (ADR 0046):
+python scripts\sync_spoke.py --all --apply --include-sandboxes
 ```
+
+*Lưu ý (ADR 0046):* Lệnh `--all` mặc định loại trừ các Spoke Cá Nhân (`is_sandbox: true`) để tiết kiệm tài nguyên máy chủ. Sử dụng thêm cờ `--include-sandboxes` khi muốn đồng bộ toàn bộ.
 
 ---
 

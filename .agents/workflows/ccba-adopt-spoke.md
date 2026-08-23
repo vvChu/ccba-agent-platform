@@ -6,6 +6,7 @@ applies_to:
   - "Thiết kế"
   - "Kiểm định"
   - "Tác vụ Admin"
+  - "Pháp điển"
 bundle: "_core"
 disable-model-invocation: true
 ---
