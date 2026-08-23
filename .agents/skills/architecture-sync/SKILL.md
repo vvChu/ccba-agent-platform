@@ -95,7 +95,7 @@ Nếu phát hiện sai lệch → ghi nhận và cập nhật ở Bước 3.
 4. **`CONTRIBUTING.md`**: Cập nhật hướng dẫn cài đặt và bảng workflows.
 5. **`copilot-instructions.md`**: Cập nhật bảng packages, import paths, tham chiếu chéo.
 6. **`ci.yml`**: Cập nhật đường dẫn packages, script commands.
-7. **`catalog.yaml`**: Cập nhật `skill_path` / `workflow_path` nếu rename.
+7. **`catalog.yaml`**: Chạy `python scripts/governance/compile_catalog.py` để tự động tái tạo manifest từ frontmatters (ADR 0047).
 8. **`pyproject.toml`**: Cập nhật entry points, workspace members nếu thêm/bớt package.
 
 **Tier 2 (khi ảnh hưởng):**
