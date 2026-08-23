@@ -26,21 +26,16 @@ Hệ thống hoàn chỉnh hỗ trợ trọn vẹn vòng đời của Spoke Cá 
 - [x] **[ADR 0046] Quy Trình Promotion 3 Bước:** Cleanse/Validate $\rightarrow$ Target Ingestion $\rightarrow$ PGV Sign-off Staging.
 - [x] **[T-01 Hoàn Tất] Động Cơ SandboxPromoter:** Xây dựng `SandboxPromoter` và CLI `scripts/promote_sandbox.py` (4/4 test passed).
 - [x] **[T-02 Hoàn Tất] Quản Trị Registry TTL & Batch Sync:** Bổ sung `is_sandbox` flag, lọc batch sync và hàm `sweep_inactive_sandboxes()` (3/3 test passed).
+- [x] **[T-03 Hoàn Tất] Rào Chắn Thủy Ấn Draft & QC Level 1 Cap:** Xây dựng `SandboxAuditor` bảo đảm an toàn báo cáo nháp và khóa quyền Cấp 1 (4/4 test passed).
 
 ---
 
 ## 🎫 Danh Sách Ticket Tại Biên Giới (Frontier Tickets)
 - [x] **[T-01: Thiết Kế & Hiện Thực Hóa Động Cơ SandboxPromoter](tickets/01_sandbox_promoter_engine.md)** `[Task]` *(DONE)*
 - [x] **[T-02: Quản Trị Registry TTL & Bộ Lọc Batch Sync](tickets/02_registry_ttl_and_batch_sync.md)** `[Task]` *(DONE)*
-- [ ] **[T-03: Rào Chắn Thủy Ấn Draft & QC Level 1 Cap Guardrail](tickets/03_sandbox_watermark_guardrail.md)** `[Task]` *(Unblocked)*: Tích hợp kiểm tra thủy ấn draft và khóa quyền Cấp 1 trong `DocAuditor`.
+- [x] **[T-03: Rào Chắn Thủy Ấn Draft & QC Level 1 Cap Guardrail](tickets/03_sandbox_watermark_guardrail.md)** `[Task]` *(DONE)*
 
 ---
 
-## 🌫️ Sương Mù Chiến Trận / Chưa Xác Định Rõ (Not yet specified)
-- **Workflow `/ccba-promote-sandbox`:** Giao diện tương tác thân thiện cho kỹ sư kích hoạt thăng cấp sản phẩm từ terminal.
-
----
-
-## 🚫 Ngoài Phạm Vi (Out of scope)
-- Sửa đổi các trường dữ liệu production trên Microsoft 365 SharePoint Tenant thật khi chưa qua nghiệm thu.
-- Áp dụng cơ chế Sandbox Watermark cho các Spoke chính thức (`project_delivery`, `enterprise_governance`).\n
+## 🏁 Trạng Thái Hoàn Thành (Destination Reached)
+✅ **Bản đồ Wayfinder đã hoàn thành 100%!** Toàn bộ các quyết định kiến trúc trong ADR 0046 đã được hiện thực hóa, tích hợp vào các Deep Seams, cung cấp CLI entrypoint và kiểm thử đạt 11/11 tests PASSED.\n
