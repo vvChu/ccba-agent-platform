@@ -8,6 +8,11 @@ validation logic to the `DocumentAuditor` deep module in `doc_auditor.py`.
 import sys
 from pathlib import Path
 
+# Add project root to sys.path for cross-environment imports
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 from scripts.doc_auditor import DocumentAuditor
 from scripts.governance.compile_catalog import check_catalog_in_sync
 
