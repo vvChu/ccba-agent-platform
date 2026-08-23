@@ -19,9 +19,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-import mammoth
 import yaml
-from docx import Document
 
 from ccba_legal.gold_standard import (
     GoldStandardProcessor,
@@ -194,6 +192,13 @@ def extract_legal_basis_graph(
 
 def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[str, Any]]:
     """3-Tier Semantic Table Classifier according to ADR 0021."""
+    try:
+        from docx import Document
+    except ImportError:
+        raise ImportError(
+            "Gói 'python-docx' chưa được cài đặt. Vui lòng cài đặt qua 'pip install python-docx' để bóc tách bảng DOCX."
+        )
+
     doc = Document(str(docx_path))
     tables_dir = bundle_dir / "tables"
     csv_dir = tables_dir / "csv"
@@ -312,6 +317,13 @@ def process_vbpl_bundle_okf_v22(
                     or item.get("document_number") == bundle_dir.name
                 ):
                     doc_registry_meta = item
+
+    try:
+        import mammoth
+    except ImportError:
+        raise ImportError(
+            "Gói 'mammoth' chưa được cài đặt. Vui lòng cài đặt qua 'pip install mammoth' để chuyển đổi DOCX sang Markdown."
+        )
 
     with open(docx_path, "rb") as f:
         result = mammoth.convert_to_markdown(f)
@@ -745,6 +757,13 @@ def convert_docx_to_okf_bundle(
             output_filename = f"{target_bundle_dir.name}.md"
 
         target_md_path = target_bundle_dir / output_filename
+        try:
+            import mammoth
+        except ImportError:
+            raise ImportError(
+                "Gói 'mammoth' chưa được cài đặt. Vui lòng cài đặt qua 'pip install mammoth' để chuyển đổi DOCX sang Markdown."
+            )
+
         with open(docx_path, "rb") as docx_file:
             result = mammoth.convert_to_markdown(docx_file)
             raw_md = result.value
