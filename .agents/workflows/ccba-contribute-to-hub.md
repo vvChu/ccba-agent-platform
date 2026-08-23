@@ -49,9 +49,16 @@ Thực thi tại thư mục Hub (`hub_path`):
    ```bash
    git checkout main && git pull origin main
    ```
-3. **Tạo branch mới:**
+3. **Tạo branch mới & Khóa bảo vệ nhánh (Pre-Commit Branch Assertion):**
    ```bash
    git checkout -b proposal/[tên-đề-xuất]
+   
+   # Bắt buộc xác nhận nhánh hiện tại trước khi sửa đổi:
+   CURRENT_BRANCH=$(git branch --show-current)
+   if [ "$CURRENT_BRANCH" = "main" ]; then
+     echo "❌ Lỗi: Đang ở nhánh main! Bắt buộc checkout nhánh proposal trước khi thao tác!"
+     exit 1
+   fi
    ```
 4. **Đóng gói Mã nguồn & Tests vào Package tương ứng trên Hub:**
    - Copy code vào: `packages/[package-name]/src/[submodule]/`
@@ -143,6 +150,38 @@ Sau khi toàn bộ CI đã xanh $100\%$, Agent tổng hợp báo cáo gửi ngư
 3. **Tóm tắt các điểm đã khắc phục qua review Copilot.**
 4. **Thông báo Sẵn sàng Thẩm định & Merge:** 
    - Thông báo cho Hub Maintainer có thể kích hoạt workflow `/ccba-review-proposal [PR_NUMBER]` để tự động rà soát kiến trúc, kiểm tra Spoke Leakage Guard và tiến hành squash merge 1-click an toàn.
+
+---
+
+## 🔄 Bước 7: Vòng Khép Kín Hậu Hợp Nhất (Closed-Loop Spoke Sync Gate)
+
+Sau khi PR được Hub Maintainer kiểm duyệt và hợp nhất (Squash Merge), Agent thực hiện chu trình 4 bước đóng vòng tại Spoke:
+
+### 7.1. Xác nhận Trạng thái Hợp nhất (Merge Status Assertion)
+Kiểm tra xác nhận PR đã chuyển sang trạng thái `MERGED`:
+```bash
+gh pr view <PR_NUMBER> --json state,mergedAt --jq '.state'
+```
+
+### 7.2. Đồng bộ Kỹ năng & Quy trình về Spoke (Downstream Workflow Sync)
+Chạy lệnh `/ccba-update-spoke` từ Spoke hoặc kích hoạt script:
+```powershell
+python [hub_path]\scripts\sync_spoke.py --spoke . --apply
+```
+
+### 7.3. Tái Cài đặt Package Hub ở Chế độ Editable (`pip install -e`)
+Nếu đề xuất thuộc loại `tool` (Package trong `packages/`):
+```powershell
+pip install -e "[hub_path]\packages\[package-name]"
+```
+
+### 7.4. Chạy Kiểm định Hồi quy Cục bộ & Dọn dẹp Nhánh (Spoke Regression & Cleanup)
+- Chạy bộ kiểm thử toàn diện của Spoke (ví dụ: `python scripts\validate_legal_spoke.py`).
+- Xóa nhánh đề xuất cục bộ trên Hub và Spoke sau khi đã hợp nhất:
+  ```bash
+  git branch -D proposal/[tên-đề-xuất]
+  ```
+- Ghi nhận nhật ký phiên làm việc vào `.md/knowledge/session_learnings.md` tại Spoke để ghi nhớ các mẫu hình đã giải quyết.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
