@@ -26,6 +26,7 @@ from scripts.spoke.sync import (
     are_files_identical,
     list_project_backups,
     load_yaml,
+    resolve_canonical_project_type,
     run_spoke_sync_cli,
     safe_remove,
 )
@@ -62,6 +63,60 @@ def test_base_utilities(tmp_path: Path):
     assert not d1.exists()
 
 
+def test_resolve_canonical_project_type():
+    """Test resolve_canonical_project_type with exact, alias, and fuzzy matching."""
+    bundle_defs = {
+        "Phần mềm": ["_core", "_software"],
+        "Thẩm tra thiết kế": ["_core", "_qc", "_consulting"],
+        "Thiết kế": ["_core", "_qc", "_consulting"],
+        "Kiểm định": ["_core", "_qc", "_consulting"],
+        "BIM": ["_core"],
+        "Tác vụ Admin": ["_core", "_consulting"],
+        "Pháp điển": ["_core", "_software"],
+    }
+
+    # 1. Exact match
+    canonical, note = resolve_canonical_project_type("Pháp điển", bundle_defs)
+    assert canonical == "Pháp điển"
+    assert note is None
+
+    # 2. Case-insensitive match
+    canonical, note = resolve_canonical_project_type("phần mềm", bundle_defs)
+    assert canonical == "Phần mềm"
+    assert note is not None
+    assert "chữ hoa/thường" in note
+
+    # 3. Aliases
+    aliases_to_test = [
+        ("Kho Tri thức Pháp lý & Quy chuẩn", "Pháp điển"),
+        ("Kho Tri thức Pháp lý", "Pháp điển"),
+        ("Pháp lý & Quy chuẩn", "Pháp điển"),
+        ("Legal Knowledge", "Pháp điển"),
+        ("knowledge_corpus", "Pháp điển"),
+        ("Software", "Phần mềm"),
+        ("Tư vấn & Thẩm tra", "Thẩm tra thiết kế"),
+        ("Thẩm tra", "Thẩm tra thiết kế"),
+        ("QC", "Thẩm tra thiết kế"),
+        ("BIM Consulting", "BIM"),
+        ("Admin", "Tác vụ Admin"),
+        ("Tác vụ Hành chính", "Tác vụ Admin"),
+    ]
+    for raw, expected in aliases_to_test:
+        can, n = resolve_canonical_project_type(raw, bundle_defs)
+        assert can == expected, f"Failed for {raw}: expected {expected}, got {can}"
+        assert n is not None
+        assert "Alias" in n
+
+    # 4. Fuzzy match suggestion
+    can, suggestion = resolve_canonical_project_type("Phap Dien OKF", bundle_defs)
+    assert can is None
+    assert suggestion is not None
+    assert "Có phải ý bạn là" in suggestion
+
+    # 5. Empty / missing
+    can, err = resolve_canonical_project_type("", bundle_defs)
+    assert can is None
+    assert "bị trống" in err
 def test_hub_discoverer_success_and_not_found(tmp_path: Path):
     """Test HubDiscoverer resolution and HubNotFoundError."""
     spoke_root = tmp_path / "spoke"

@@ -35,6 +35,7 @@ bundles:
   Pháp điển:
   - _core
   - _software
+  - _consulting
 skills:
 - name: platform-loader
   bundle: _core
@@ -597,11 +598,9 @@ skills:
   - refactor mã nguồn
   skill_path: .agents/skills/improve-codebase-architecture/SKILL.md
 - name: legal-advisor
-  bundle: _core
-  description: 'Chuyên gia Tư vấn & Giải đáp Pháp lý Xây dựng: Làm rõ câu hỏi mơ hồ
-    qua cơ chế Phỏng vấn Thích ứng (Adaptive Diagnostic Interview), áp dụng 4 Khung
-    Mẫu Tương tác Động theo ngữ cảnh, và xuất Phiếu Ý kiến Pháp lý (Legal Opinion)
-    chuẩn mực.'
+  bundle: _consulting
+  description: 'Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ
+    cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.2.'
   triggers:
   - tu van phap ly
   - giai dap phap luat
