@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-08-23] [synthesize] | Thẩm Định & Hợp Nhất Đề Xuất PR #216 (OKF v2.2 Table & Direct Form Extractor) & PR #215/217 (ADR 0045)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-review-proposal & /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-legal-intel/`, `scripts/spoke/sync/`, `.agents/proposals/`, `.agents/skills/platform-loader/catalog.yaml`, `.agents/skills/legal-advisor/`, `scripts/tests/`
+- **Summary**: Hoàn tất thẩm định và hợp nhất PR #216 (OKF v2.2 Table & Direct Form Template Extractor) và PR #215/217 (Hub-Spoke Standardization, Cleanliness Gate, Enum Aliasing): (1) Khử hoàn toàn hardcode slug bảng, sinh 2D GFM Pipe Tables và bóc tách trực tiếp biểu mẫu `Mẫu số XX/...` vào `templates/`; (2) Bổ sung canonical models `ASTNode` và `PatchAction`; (3) Tái cấu trúc bộ đồng bộ Spoke `spoke_synchronizer.py` thành sub-package module sâu `scripts/spoke/sync/`; (4) Giải quyết xung đột merge với `main` và squash-merge vào `main` tại commit `cd1a2bd6`; (5) Cập nhật trạng thái `merged` cho 3 proposals và biên dịch lại `catalog.yaml` (74 skills, 65 workflows); (6) Vượt qua 100% Spoke Leakage Guard, ruff linter và 261/261 unit tests.
+
+---
+
 ## [2026-08-22] [synthesize] | Chuẩn Hóa Bộ Đôi Upstream Contribution /ccba-issue-to-hub & /ccba-contribute-to-hub (#209)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `.agents/workflows/ccba-issue-to-hub.md`, `.agents/workflows/ccba-contribute-to-hub.md`, `.agents/workflows/ccba-propose-to-hub.md`, `.agents/workflows/ccba-new-feature.md`, `.agents/skills/platform-loader/catalog.yaml`, `.agents/skills/architecture-sync/SKILL.md`, `README.md`, `CONTRIBUTING.md`, `tests/test_upstream_workflows.py`, `.md/knowledge/session_learnings.md`
