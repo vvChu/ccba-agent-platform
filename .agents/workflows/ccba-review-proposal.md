@@ -93,7 +93,7 @@ python scripts/governance/check_spoke_leakage.py
 4. **Quản trị Vòng đời Hậu Merge (Post-Merge Governance):**
    - **Cập nhật Proposal Header:** Đổi `status: "open"` $\rightarrow$ `status: "merged"`, ghi nhận `merged_commit` hash và `merged_date`.
    - **Đăng ký Hệ Sinh Thái (ADR 0047):** Chạy `python scripts/governance/compile_catalog.py` để tự động cập nhật `catalog.yaml` từ frontmatter của skill/workflow mới và cập nhật bảng Service Modules tại `PLATFORM.md`.
-   - **Gợi ý Spoke Sync:** Thông báo danh sách Spoke downstream nên chạy `/ccba-update-spoke` để nạp tính năng mới.
+   - **Gợi ý Spoke Sync (Closed-Loop Sync):** Thông báo cho Spoke đề xuất kích hoạt **Bước 7 của `/ccba-contribute-to-hub`** (hoặc `/ccba-update-spoke`) để nạp tính năng mới và hoàn tất đóng vòng.
 
 ---
 
