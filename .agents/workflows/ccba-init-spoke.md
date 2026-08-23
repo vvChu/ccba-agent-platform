@@ -17,15 +17,13 @@ triggers:
 - khởi tạo dự án
 ---
 # Workflow: Khởi Tạo CCBA Spoke Workspace (/ccba-init-spoke)
-
-Workflow này tự động hóa việc thiết lập một không gian làm việc (workspace) dự án mới để tuân thủ kiến trúc **CCBA Hub-and-Spoke** (ADR 0041, ADR 0044) và **Global Rules**.
+Workflow này tự động hóa việc thiết lập không gian làm việc dự án mới theo chuẩn **CCBA Hub-and-Spoke** (ADR 0041, ADR 0044) và **Global Rules**.
 
 ---
 
 ## 🛡️ Bước 0: Rào Chắn An Toàn Dự Án Hiện Hữu (Brownfield Safety Guard)
-
 > [!CAUTION]
-> Nếu thư mục hiện tại **đã có sẵn mã nguồn hoặc cấu hình cũ** (có `workspace_context.yaml`, thư mục `.md/`, `.agents/`, hoặc `AGENTS.md`):
+> Nếu thư mục hiện tại **đã có sẵn mã nguồn hoặc cấu hình cũ** (có `workspace_context.yaml`, `.md/`, `.agents/`):
 > - **TUYỆT ĐỐI KHÔNG** chạy tiếp `/ccba-init-spoke` để tránh ghi đè dữ liệu!
 > - Hãy chuyển sang lệnh: **`/ccba-adopt-spoke`** để tự động tiếp nhận an toàn và bảo tồn 100% dữ liệu cũ.
 
@@ -64,43 +62,34 @@ project:
   hub_path: "D:/GitHubProjects/ccba-agent-platform"
   description: "Dự án Thẩm tra Thiết kế PCCC & MEP Công trình ĐH Việt Nhật"
 must_read:
-  always:
-    - path: .md/GLOSSARY.md
-      why: "Thuật ngữ chuẩn hóa dự án"
+  always: [{path: .md/GLOSSARY.md, why: "Thuật ngữ chuẩn hóa dự án"}]
 do_not_touch: [.env]
 acknowledgment_required: true
 acknowledgment_format: "Tôi đã đọc workspace_context.yaml. Đây là Spoke Dự Án '[project_name]'. Sẵn sàng làm việc!"
 ```
 
-#### Mẫu B: Spoke Cá Nhân (`specialized_extension` / `personal_sandbox` — Chuẩn Quy chế 2026)
+#### Mẫu B: Spoke Cá Nhân (`specialized_extension` / `personal_sandbox` — Quy chế 2026)
 ```yaml
 project:
   name: "chuvu-sandbox"
   archetype: "specialized_extension"
   sub_type: "personal_sandbox"
   hub_path: "D:/GitHubProjects/ccba-agent-platform"
-  description: "Không gian nghiên cứu, thử nghiệm AI prompts & ươm tạo sáng kiến cá nhân"
+  description: "Không gian nghiên cứu & làm việc cá nhân theo Quy chế CCBA 2026"
 organizational_identity:
   owner_name: "Chu Vũ"
   owner_email: "chuvu@ibst-bim.vn"
-  department: "PHONG_RD_HTQT"                  # PHONG_TONG_HOP | PHONG_RD_HTQT | PHONG_BIM_THIET_KE | PHONG_BIM_DU_AN | PHONG_TV_KD_HCM | BAN_GIAM_DOC
-  seat_role: "IDOP_LEAD"                       # 1 trong 11 Ghế giải trình theo Phụ lục 01 Quy chế 2026
+  department: "PHONG_RD_HTQT"
+  seat_role: "IDOP_LEAD"
 qc_governance:
-  authorized_qc_level: "LEVEL_1_TECHNICAL_CHECK" # LEVEL_1 đến LEVEL_5 theo Điều 13 Quy chế 2026
+  authorized_qc_level: "LEVEL_1_TECHNICAL_CHECK"
   can_sign_off_technical: true
-idop_tasks:
-  active_pgv_list:
-    - pgv_code: "PGV-2026-08-014"
-      task_name: "Nghiên cứu tối ưu hóa RAG pháp điển PCCC"
-      max_advance_rate: 0.70                   # Hạn mức tạm ứng tối đa 70% theo Điều 17
 guardrails:
   sandbox_mode: true
-  prevent_direct_production_publish: true     # Hồ sơ chính thức phải kiểm soát 5 cấp theo Điều 13
+  prevent_direct_production_publish: true
   upstream_proposal_target: "main"
 must_read:
-  always:
-    - path: d:/idop-ccba-way/.md/governance_constitution/03_ccba_charter_2026.md
-      why: "Quy chế Tổ chức và Hoạt động CCBA 2026"
+  always: [{path: d:/idop-ccba-way/.md/governance_constitution/03_ccba_charter_2026.md, why: "Quy chế 2026"}]
 do_not_touch: [.env, "*.pfx", "*.key"]
 ```
 
@@ -113,14 +102,10 @@ project:
   mode: "software"
   qc_mode: "legal"
   hub_path: "D:/GitHubProjects/ccba-agent-platform"
-  description: "Kho Tri thức Pháp điển & Quy chuẩn Xây dựng Quốc gia (OKF v2.2 Bundle)"
-hub_packages:
-  - ccba-legal-intel
-  - ccba-notebooklm
+  description: "Kho Tri thức Pháp điển & Quy chuẩn Xây dựng Quốc gia (OKF v2.2)"
+hub_packages: [ccba-legal-intel, ccba-notebooklm]
 must_read:
-  always:
-    - path: .md/GLOSSARY.md
-      why: "Thuật ngữ pháp lý chuẩn hóa"
+  always: [{path: .md/GLOSSARY.md, why: "Thuật ngữ pháp lý chuẩn hóa"}]
 do_not_touch: [.env]
 acknowledgment_required: true
 acknowledgment_format: "Tôi đã đọc workspace_context.yaml. Đây là Spoke Kho Tri Thức '[project_name]'. Sẵn sàng làm việc!"
@@ -128,9 +113,9 @@ acknowledgment_format: "Tôi đã đọc workspace_context.yaml. Đây là Spoke
 
 > [!NOTE]
 > **Quy chuẩn Spoke Tri thức (ADR 0044 & Issue #215):**
-> 1. **Script Budget:** Thư mục `scripts/` duy trì tối đa 15 core scripts. Các script fix/audit chạy 1 lần chuyển vào `.md/archive/legacy_scripts/`.
-> 2. **Thin Wrappers:** Tái sử dụng tối đa `ccba_legal` và `ccba_ai` từ Hub qua `spoke_bootstrap.py`, không viết lại crawler hay logger.
-> 3. **Cleanliness Gate:** Pre-commit hook `check_spoke_cleanliness.py` tự động kiểm soát script budget và chống duplicate mã nguồn Hub.
+> 1. **Script Budget:** Duy trì $\le 15$ core scripts trong `scripts/`. Script one-off chuyển vào `.md/archive/legacy_scripts/`.
+> 2. **Thin Wrappers:** Tái sử dụng `ccba_legal` và `ccba_ai` từ Hub qua `spoke_bootstrap.py`.
+> 3. **Cleanliness Gate:** Pre-commit hook `check_spoke_cleanliness.py` tự động kiểm soát script budget.
 
 ---
 

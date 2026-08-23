@@ -83,7 +83,7 @@ dist/
 # Logs
 *.log
 .md/logs/
-.md/nightly_tuner_report_*.md
+.md/**/nightly_tuner_report_*.md
 
 # Temp/debug files in root
 *.docx
