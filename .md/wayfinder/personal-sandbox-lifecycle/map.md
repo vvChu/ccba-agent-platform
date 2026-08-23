@@ -25,12 +25,13 @@ Hệ thống hoàn chỉnh hỗ trợ trọn vẹn vòng đời của Spoke Cá 
 - [x] **[ADR 0046] Thủy Ấn Nghiên Cứu & QC Cap:** Chèn watermark `[CCBA SANDBOX DRAFT]` và chặn xuất bản Cấp 5 trực tiếp vào `CdeDocuments`.
 - [x] **[ADR 0046] Quy Trình Promotion 3 Bước:** Cleanse/Validate $\rightarrow$ Target Ingestion $\rightarrow$ PGV Sign-off Staging.
 - [x] **[T-01 Hoàn Tất] Động Cơ SandboxPromoter:** Xây dựng `SandboxPromoter` và CLI `scripts/promote_sandbox.py` (4/4 test passed).
+- [x] **[T-02 Hoàn Tất] Quản Trị Registry TTL & Batch Sync:** Bổ sung `is_sandbox` flag, lọc batch sync và hàm `sweep_inactive_sandboxes()` (3/3 test passed).
 
 ---
 
 ## 🎫 Danh Sách Ticket Tại Biên Giới (Frontier Tickets)
 - [x] **[T-01: Thiết Kế & Hiện Thực Hóa Động Cơ SandboxPromoter](tickets/01_sandbox_promoter_engine.md)** `[Task]` *(DONE)*
-- [ ] **[T-02: Quản Trị Registry TTL & Bộ Lọc Batch Sync](tickets/02_registry_ttl_and_batch_sync.md)** `[Task]` *(Unblocked)*: Nâng cấp `spoke_synchronizer.py` và `decrypt_spoke_registry.py` để hỗ trợ cờ `is_sandbox` và quét TTL 60 ngày.
+- [x] **[T-02: Quản Trị Registry TTL & Bộ Lọc Batch Sync](tickets/02_registry_ttl_and_batch_sync.md)** `[Task]` *(DONE)*
 - [ ] **[T-03: Rào Chắn Thủy Ấn Draft & QC Level 1 Cap Guardrail](tickets/03_sandbox_watermark_guardrail.md)** `[Task]` *(Unblocked)*: Tích hợp kiểm tra thủy ấn draft và khóa quyền Cấp 1 trong `DocAuditor`.
 
 ---

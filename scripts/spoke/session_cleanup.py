@@ -383,6 +383,66 @@ def health_check() -> None:
         print(f"  [HEALTH] Disk check error: {e}")
 
 
+def sweep_inactive_sandboxes(
+    hub_root: Path | None = None,
+    max_age_days: int = 60,
+    dry_run: bool = True,
+) -> list[str]:
+    """Identify and sweep personal sandboxes with no sync activity for > max_age_days.
+
+    Args:
+        hub_root: Path to Hub root (defaults to platform root).
+        max_age_days: Inactivity threshold in days (default: 60 per ADR 0046).
+        dry_run: If True, previews swept sandboxes without modifying registry.
+
+    Returns:
+        list[str]: List of swept sandbox spoke names.
+    """
+    import datetime
+
+    import yaml
+
+    root = hub_root or Path(__file__).resolve().parents[2]
+    decrypted_cache = root / ".md" / "data" / "spoke_registry_decrypted.yaml"
+
+    from scripts.spoke.decrypt_spoke_registry import get_registered_spokes
+
+    spokes = get_registered_spokes(hub_root=root)
+    now = datetime.datetime.now()
+    swept_names: list[str] = []
+
+    for sp in spokes:
+        if not sp.get("is_sandbox", False):
+            continue
+        last_sync_str = sp.get("last_sync", "")
+        if not last_sync_str:
+            continue
+        try:
+            last_sync_dt = datetime.datetime.fromisoformat(last_sync_str)
+            age_days = (now - last_sync_dt).days
+            if age_days > max_age_days:
+                sp_name = sp.get("name", "Unnamed Sandbox")
+                swept_names.append(sp_name)
+                print(f"  [SANDBOX SWEEP] Found inactive sandbox '{sp_name}' ({age_days} days inactive).")
+        except Exception:
+            continue
+
+    if swept_names and not dry_run and decrypted_cache.exists():
+        try:
+            with open(decrypted_cache, encoding="utf-8") as f:
+                cache_data = yaml.safe_load(f) or {"spokes": []}
+            cache_data["spokes"] = [
+                s for s in cache_data.get("spokes", [])
+                if s.get("name") not in swept_names
+            ]
+            with open(decrypted_cache, "w", encoding="utf-8") as f:
+                yaml.safe_dump(cache_data, f, allow_unicode=True)
+        except Exception:
+            pass
+
+    return swept_names
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Session Cleanup Utility for CCBA Agent Platform")
     parser.add_argument(
