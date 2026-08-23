@@ -4,6 +4,12 @@ description: Automated debugger and self-healing trace analyzer. Runs scripts, c
   tracebacks, and provides root cause analysis and code patch suggestions via AI.
 disable-model-invocation: true
 bundle: _software
+triggers:
+- debug
+- mock-debugger
+- sửa lỗi
+- self-healing
+- gỡ lỗi
 ---
 # Mock Debugger (`mock-debugger`)
 

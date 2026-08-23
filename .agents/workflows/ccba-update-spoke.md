@@ -1,15 +1,27 @@
 ---
-description: Đồng bộ hóa các kỹ năng, quy trình và cập nhật phiên bản giữa Hub và các Spoke (đơn lẻ hoặc hàng loạt)
+description: Đồng bộ hóa các kỹ năng, quy trình và cập nhật phiên bản giữa Hub và
+  các Spoke (đơn lẻ hoặc hàng loạt)
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-  - "BIM"
-  - "Tác vụ Admin"
-  - "Pháp điển"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+- BIM
+- Tác vụ Admin
+- Pháp điển
+bundle: _core
 disable-model-invocation: true
+command: /ccba-update-spoke
+triggers:
+- update spoke
+- đồng bộ hub
+- lấy lệnh mới
+- cập nhật dự án
+- sync all
+- sync all spokes
+- đồng bộ toàn bộ spoke
+- spoke status
+- kiểm tra spoke
 ---
 # Cập Nhật & Đồng Bộ Hóa CCBA Spoke Workspace (/ccba-update-spoke)
 

@@ -7,6 +7,19 @@ applies_to:
 - Tác vụ Admin
 bundle: _bim
 layer: _bim
+triggers:
+- sợi chỉ vàng
+- sợi chỉ đỏ
+- unique id
+- governance-core
+- golden thread
+- red thread
+- eir matrix
+- air matrix
+- RK_50_40_35
+- RK_10_70_04
+- RK_50_40_45
+- RK_50_60_28
 ---
 # BIGBIM Governance Core Guardrails Skill
 

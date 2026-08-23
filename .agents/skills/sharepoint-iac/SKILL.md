@@ -1,12 +1,21 @@
 ---
 name: sharepoint-iac
-description: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code). Hướng dẫn thiết kế JSON schema, kiểm định Lookups/Taxonomy và triển khai bằng PnP PowerShell.
+description: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code).
+  Hướng dẫn thiết kế JSON schema, kiểm định Lookups/Taxonomy và triển khai bằng PnP
+  PowerShell.
 disable-model-invocation: true
 metadata:
   version: v1.0
   publisher: CCBA
+bundle: _software
+triggers:
+- sharepoint-iac
+- sharepoint iac
+- sharepoint schema
+- pnp powershell
+- m365 iac
+- datamodel sharepoint
 ---
-
 # Kỹ Năng: SharePoint & M365 Infrastructure-as-Code (`sharepoint-iac`)
 
 Kỹ năng này hướng dẫn AI Agent thiết kế, kiểm định và triển khai hạ tầng dữ liệu trên SharePoint Online (Microsoft 365) bằng phương pháp **Infrastructure-as-Code (IaC)** chuẩn hóa của CCBA Platform.

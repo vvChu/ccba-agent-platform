@@ -1,19 +1,35 @@
 ---
 name: docx
-description: "Công cụ xử lý Word (.docx): tạo mới, chỉnh sửa OOXML, thêm tracked changes & comments."
+description: 'Công cụ xử lý Word (.docx): tạo mới, chỉnh sửa OOXML, thêm tracked changes
+  & comments.'
 role: sub_skill
 master_skill: xu-ly-van-phong
 disable-model-invocation: true
 user-invocable: true
-when_to_use: "Invoke for Word document creation, edits, or extraction."
+when_to_use: Invoke for Word document creation, edits, or extraction.
 category: multimedia
-keywords: [docx, word, document, office]
+keywords:
+- docx
+- word
+- document
+- office
 license: Proprietary. LICENSE.txt has complete terms
 metadata:
   author: claudekit
-  version: "1.0.0"
+  version: 1.0.0
+bundle: _core
+triggers:
+- docx
+- word
+- document
+- office
+- ooxml
+- unpack docx
+- pack docx
+- tracked changes
+- Word document
+- excel xml
 ---
-
 # DOCX creation, editing, and analysis
 
 ## Overview

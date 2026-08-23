@@ -1,12 +1,34 @@
 ---
 name: spoke-adopter
-description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield Spokes) vào CCBA Platform mà không phá hủy cấu trúc dữ liệu cũ.
-argument-hint: "[--spoke <path>] [--dry-run] [--archetype <archetype>] [--type <project_type>] [--mode <mode>]"
+description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield
+  Spokes) vào CCBA Platform mà không phá hủy cấu trúc dữ liệu cũ.
+argument-hint: '[--spoke <path>] [--dry-run] [--archetype <archetype>] [--type <project_type>]
+  [--mode <mode>]'
 disable-model-invocation: true
 category: management
-keywords: [spoke, adopt, brownfield, onboarding, migration, schema-merge, hub-and-spoke]
+keywords:
+- spoke
+- adopt
+- brownfield
+- onboarding
+- migration
+- schema-merge
+- hub-and-spoke
+bundle: _core
+triggers:
+- spoke
+- adopt
+- brownfield
+- onboarding
+- migration
+- schema-merge
+- hub-and-spoke
+- adopt spoke
+- tiếp nhận dự án
+- onboard spoke
+- kết nối dự án cũ
+- adopt-spoke
 ---
-
 # Kỹ Năng Tiếp Nhận Spoke Hiện Hữu (Brownfield Spoke Adopter)
 
 Kỹ năng này chịu trách nhiệm đánh giá hiện trạng, phân tích rủi ro và thực hiện tiếp nhận thích ứng (Adaptive Non-Destructive Onboarding) cho các codebase đã có sẵn vào mạng lưới CCBA Agent Platform.

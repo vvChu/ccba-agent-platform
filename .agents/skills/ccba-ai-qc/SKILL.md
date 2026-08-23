@@ -1,18 +1,37 @@
 ---
 name: ccba-ai-qc
-description: Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View Vision, Heat Map Report) qua Deep Seam QCAuditPipeline.
+description: Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế đa
+  bộ môn (Discovery, Quad-View Vision, Heat Map Report) qua Deep Seam QCAuditPipeline.
 applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_qc"
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _qc
 category: engineering
-keywords: [qc, audit, quad-view, discovery, reporter, collision-check, qcauditpipeline]
+keywords:
+- qc
+- audit
+- quad-view
+- discovery
+- reporter
+- collision-check
+- qcauditpipeline
 metadata:
   author: CCBA
-  version: "2.0.0"
+  version: 2.0.0
+triggers:
+- qc
+- audit
+- quad-view
+- discovery
+- reporter
+- collision-check
+- qcauditpipeline
+- ccba-ai-qc
+- qc pipeline
+- multi-discipline audit
+- heat map report
 ---
-
 # Master Deep Skill: Kiểm Soát Chất Lượng Thiết Kế Đa Bộ Môn (`ccba-ai-qc`)
 
 Kỹ năng này là cổng điều phối thống nhất cho toàn bộ quy trình kiểm soát chất lượng (QC) và phát hiện xung đột bản vẽ thiết kế đa bộ môn (Kiến trúc, Kết cấu, MEP, PCCC) thông qua Deep Seam **`QCAuditPipeline`** ([`packages/ccba-ai`](../../packages/ccba-ai)).

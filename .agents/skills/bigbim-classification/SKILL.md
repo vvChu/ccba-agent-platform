@@ -7,6 +7,20 @@ applies_to:
 - Thiết kế
 bundle: _bim
 layer: _bim
+triggers:
+- phân loại
+- naming convention
+- room naming
+- uniclass
+- ISO 22274
+- ISO 21511
+- ISO 12006-2
+- Trí Nhớ Số
+- Digital Memory
+- ifc alignment
+- gis
+- SL_table
+- En_table
 ---
 # BIGBIM Classification & Naming Skill
 

@@ -1,9 +1,18 @@
 ---
 name: ccba-academic-writing
-description: Hướng dẫn lập đề cương, viết bản thảo và tự động kiểm định văn phong bài báo khoa học theo cấu trúc IMRAD.
+description: Hướng dẫn lập đề cương, viết bản thảo và tự động kiểm định văn phong
+  bài báo khoa học theo cấu trúc IMRAD.
 user-invocable: true
 workflow_trigger_level: 1
 disable-model-invocation: true
+bundle: _core
+command: /ccba-academic-writing
+triggers:
+- academic writing
+- viết bài báo
+- nghiên cứu khoa học
+- IMRAD
+- CARS
 ---
 # Workflow: Viết Bài Báo Khoa Học IMRAD (/ccba-academic-writing)
 

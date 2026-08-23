@@ -1,9 +1,16 @@
 ---
-description: Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn viết skill của CCBA.
+description: Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn viết
+  skill của CCBA.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-review-skill
+triggers:
+- review-skill
+- audit-skill
+- review_skill
+- kiểm định skill
 ---
 # Workflow: Đánh giá Chất lượng Skill (/ccba-review-skill)
 

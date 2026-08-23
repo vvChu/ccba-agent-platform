@@ -1,15 +1,20 @@
 ---
 description: Khởi tạo một dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-  - "BIM"
-  - "Tác vụ Admin"
-  - "Pháp điển"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+- BIM
+- Tác vụ Admin
+- Pháp điển
+bundle: _core
 disable-model-invocation: true
+command: /ccba-init-spoke
+triggers:
+- init spoke
+- setup project
+- khởi tạo dự án
 ---
 # Workflow: Khởi Tạo CCBA Spoke Workspace (/ccba-init-spoke)
 

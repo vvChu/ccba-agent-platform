@@ -1,9 +1,18 @@
 ---
 name: architecture-sync
-description: Đồng bộ hóa toàn bộ tài liệu kiến trúc sau khi refactor codebase — bao phủ 4 tầng tài liệu nhạy cảm.
+description: Đồng bộ hóa toàn bộ tài liệu kiến trúc sau khi refactor codebase — bao
+  phủ 4 tầng tài liệu nhạy cảm.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- architecture-sync
+- đồng bộ hiến pháp
+- đồng bộ kiến trúc
+- architecture
+- sync
+- cập nhật tài liệu kiến trúc
+- refactor docs
 ---
-
 # Constitution Sync: Architecture Synchronizer
 
 Đồng bộ hóa toàn bộ tài liệu kiến trúc và hướng dẫn vận hành của hệ thống sau khi refactor cấu trúc thư mục hoặc thay đổi thiết kế module.

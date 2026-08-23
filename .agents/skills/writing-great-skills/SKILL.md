@@ -1,9 +1,15 @@
 ---
 name: writing-great-skills
-description: Tài liệu cẩm nang hướng dẫn kỹ sư thiết kế và viết các file SKILL.md đạt tiêu chuẩn chất lượng cao.
+description: Tài liệu cẩm nang hướng dẫn kỹ sư thiết kế và viết các file SKILL.md
+  đạt tiêu chuẩn chất lượng cao.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- writing-great-skills
+- viết skill
+- quy chuẩn skill
+- tạo skill mới
 ---
-
 # Cẩm nang Viết Kỹ năng chất lượng cao (Writing Great Skills)
 
 Một kỹ năng (Skill) được tạo ra nhằm thiết lập tính nhất quán (determinism) từ một hệ thống xác suất (stochastic system). **Tính khả đoán (Predictability)** — việc Agent thực hiện đúng cùng một *quy trình* (process) trong mọi lần chạy, chứ không phải sinh ra cùng một output — là phẩm chất cốt lõi; mọi nguyên tắc dưới đây đều phục vụ mục đích đó.

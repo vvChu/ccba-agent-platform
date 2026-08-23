@@ -6,6 +6,11 @@ applies_to:
 - Thiết kế
 bundle: _qc
 disable-model-invocation: true
+command: /ccba-ai-qc-pccc-audit
+triggers:
+- pccc audit command
+- chạy kiểm tra PCCC
+- run pccc audit
 ---
 # Workflow: Thẩm Tra Thiết Kế PCCC Map-Reduce (/ccba-ai-qc-pccc-audit)
 

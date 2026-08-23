@@ -7,6 +7,12 @@ applies_to:
 - Thiết kế
 bundle: _qc
 disable-model-invocation: true
+command: /workflow_pccc_cdt_tuthamdinh
+triggers:
+- tự thẩm định
+- cdt tự thẩm định
+- luật 55/2024
+- NĐ 105/2025
 ---
 # Quy trình Tư vấn Hỗ trợ Chủ đầu tư Tự thẩm định toàn bộ thiết kế PCCC
 

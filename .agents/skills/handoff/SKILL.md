@@ -1,14 +1,19 @@
 ---
 name: handoff
-description: Đóng gói và tổng hợp phiên làm việc hiện tại thành tài liệu Handoff chuẩn mực để Agent tiếp theo tiếp quản liền mạch.
-argument-hint: "Mục tiêu hoặc nhiệm vụ trọng tâm cho phiên làm việc tiếp theo?"
-bundle: "_core"
+description: Đóng gói và tổng hợp phiên làm việc hiện tại thành tài liệu Handoff chuẩn
+  mực để Agent tiếp theo tiếp quản liền mạch.
+argument-hint: Mục tiêu hoặc nhiệm vụ trọng tâm cho phiên làm việc tiếp theo?
+bundle: _core
 disable-model-invocation: true
 metadata:
   author: CCBA
-  version: "2.0.0"
+  version: 2.0.0
+triggers:
+- handoff
+- đóng gói phiên
+- transfer context
+- chuyển tiếp
 ---
-
 # 🤝 Kỹ Năng: Handoff Phiên Làm Việc (`handoff`)
 
 Kỹ năng này chịu trách nhiệm nén toàn bộ ngữ cảnh, quyết định kiến trúc, tiến độ công việc và trạng thái môi trường của phiên hiện tại thành một tài liệu bàn giao chuẩn mực tại `.md/scratch/handoffs/handoff-<timestamp>.md`.

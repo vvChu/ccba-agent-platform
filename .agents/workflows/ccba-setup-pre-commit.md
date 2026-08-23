@@ -1,9 +1,14 @@
 ---
 description: Thiết lập cấu hình pre-commit cho Python trong repository hiện tại.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-setup-pre-commit
+triggers:
+- setup-pre-commit
+- setup precommit
+- hooks python
 ---
 # Workflow: Thiết lập Pre-commit (/ccba-setup-pre-commit)
 

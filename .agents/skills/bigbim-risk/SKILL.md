@@ -8,6 +8,16 @@ applies_to:
 - Thẩm tra thiết kế
 bundle: _bim
 layer: _bim
+triggers:
+- mâu thuẫn thông tin
+- information conflict
+- rủi ro thông tin
+- V2 coordination
+- clash audit
+- gap detection
+- va chạm vật lý
+- không gian lắp đặt
+- không gian bảo trì
 ---
 # BIGBIM Risk & Information Conflict Audit Skill
 

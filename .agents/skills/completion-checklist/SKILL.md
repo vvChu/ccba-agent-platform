@@ -1,12 +1,20 @@
 ---
 name: completion-checklist
-description: Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện hành. Hỗ trợ xuất Markdown và Word (.docx).
+description: Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện hành.
+  Hỗ trợ xuất Markdown và Word (.docx).
 applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-bundle: "_consulting"
+- Thẩm tra thiết kế
+- Thiết kế
+bundle: _consulting
+triggers:
+- hồ sơ hoàn thành
+- HSHT
+- completion
+- checklist
+- danh mục hồ sơ
+- nghiệm thu
+- hoàn công
 ---
-
 # Completion Checklist Generator
 
 Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Trình** (Construction Completion Document Checklist) theo quy định VBPL hiện hành, phục vụ kỹ sư giám sát tại CCBA.

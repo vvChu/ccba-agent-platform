@@ -1,13 +1,22 @@
 ---
 name: legal-document-tracker
-description: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine và Registry.
+description: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine
+  và Registry.
 applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_consulting"
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _consulting
+triggers:
+- VBPL
+- pháp luật
+- legal
+- registry
+- nghị định
+- thông tư
+- văn bản pháp luật
+- luật xây dựng
 ---
-
 # Legal Document Tracker
 
 Skill hỗ trợ theo dõi, phân tích và so sánh các Văn bản Pháp luật (VBPL) liên quan đến quản lý chất lượng công trình xây dựng tại Việt Nam kết hợp Deep Seam **`VBHNEngine`** ([`packages/ccba-legal-intel`](../../packages/ccba-legal-intel)).

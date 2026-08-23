@@ -1,9 +1,16 @@
 ---
 name: triage
-description: Sàng lọc sự cố và yêu cầu (Issues/PRs) qua các trạng thái phân loại và soạn thảo brief cho Agent.
+description: Sàng lọc sự cố và yêu cầu (Issues/PRs) qua các trạng thái phân loại và
+  soạn thảo brief cho Agent.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- triage
+- sàng lọc
+- phân loại
+- incident
+- bug triage
 ---
-
 # Quy trình Sàng lọc Sự cố và Yêu cầu (Triage)
 
 Kỹ năng này giúp điều phối và sàng lọc các sự cố hoặc yêu cầu tính năng mới (Issues/PRs) trên Issue Tracker (hoặc danh sách file cục bộ), chuyển đổi trạng thái của chúng qua các phân vai kiểm soát chất lượng, và soạn thảo tài liệu tóm tắt kỹ thuật (Agent Brief) cho phiên làm việc tiếp theo.

@@ -7,6 +7,11 @@ applies_to:
 - Thiết kế
 bundle: _qc
 disable-model-invocation: true
+command: /workflow_pccc_thamdinh_cqxd
+triggers:
+- thẩm định cơ quan xây dựng
+- kiến trúc pccc
+- kiểm soát khói
 ---
 # Quy trình Thẩm định/Thẩm tra PCCC phần Kiến trúc & Kiểm soát khói (CQCMVXD)
 

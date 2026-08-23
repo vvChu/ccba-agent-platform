@@ -1,9 +1,14 @@
 ---
 description: Merge PR, cleanup branch và cập nhật walkthrough
 applies_to:
-  - "Phần mềm"
-bundle: "_software"
+- Phần mềm
+bundle: _software
 disable-model-invocation: true
+command: /ccba-release-feature
+triggers:
+- release
+- merge PR
+- phát hành
 ---
 # Workflow: Release Feature
 

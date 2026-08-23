@@ -15,6 +15,20 @@ keywords:
 - visual
 disable-model-invocation: true
 bundle: _software
+triggers:
+- grill
+- stress-test
+- phỏng vấn
+- chất vấn
+- đối chiếu
+- prototype
+- UI
+- frontend
+- visual
+- grilling
+- hỏi xoáy
+- stress test
+- kiểm chứng kế hoạch
 ---
 # Grilling (Phỏng Vấn Dồn Dập & Đối Chiếu Quy Chuẩn)
 

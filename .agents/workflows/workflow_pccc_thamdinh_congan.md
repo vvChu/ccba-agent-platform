@@ -7,6 +7,11 @@ applies_to:
 - Thiết kế
 bundle: _qc
 disable-model-invocation: true
+command: /workflow_pccc_thamdinh_congan
+triggers:
+- thẩm định công an
+- mep pccc
+- pc07
 ---
 # Quy trình Thẩm định thiết kế PCCC phần Hệ thống MEP (Cơ quan Công an)
 

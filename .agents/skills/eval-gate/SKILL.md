@@ -4,6 +4,13 @@ description: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự �
   lỗi (Self-Healing Loop).
 disable-model-invocation: true
 bundle: _software
+triggers:
+- eval gate
+- kiểm chứng
+- sửa lỗi tự động
+- self-healing
+- check code
+- run gate
 ---
 # 🛡️ Kỹ năng: eval-gate (Tự kiểm chứng & Sửa lỗi)
 

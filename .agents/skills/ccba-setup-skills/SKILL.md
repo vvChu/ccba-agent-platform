@@ -1,9 +1,18 @@
 ---
 name: ccba-setup-skills
-description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu hình issue tracker, nhãn phân loại (triage), và bố cục tài liệu tri thức (Domain Docs). Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
+description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu hình
+  issue tracker, nhãn phân loại (triage), và bố cục tài liệu tri thức (Domain Docs).
+  Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- setup skills
+- thiết lập cấu hình
+- cấu hình tracker
+- cấu hình nhãn
+- setup-skills
+- ccba-setup-skills
 ---
-
 # Kỹ năng Thiết Lập Cấu Hình Phát Triển (Setup CCBA Skills)
 
 Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát triển phần mềm khác (`triage`, `to-tickets`, `to-spec`, `tdd`, `improve-codebase-architecture`, v.v.) hoạt động chính xác:

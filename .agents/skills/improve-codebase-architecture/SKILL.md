@@ -1,14 +1,24 @@
 ---
 name: improve-codebase-architecture
-description: Quét codebase tìm kiếm cơ hội làm sâu module, xuất báo cáo trực quan dưới dạng HTML, và thực hiện grilling để chốt phương án cải tiến.
+description: Quét codebase tìm kiếm cơ hội làm sâu module, xuất báo cáo trực quan
+  dưới dạng HTML, và thực hiện grilling để chốt phương án cải tiến.
 disable-model-invocation: true
 category: engineering
-keywords: [architecture, design, deep-module, refactor, visual-report, cải tiến kiến trúc, module sâu, báo cáo trực quan, refactor mã nguồn]
+keywords:
+- architecture
+- design
+- deep-module
+- refactor
+- visual-report
+- cải tiến kiến trúc
+- module sâu
+- báo cáo trực quan
+- refactor mã nguồn
 metadata:
   author: CCBA
-  version: "1.5.0"
+  version: 1.5.0
+bundle: _core
 ---
-
 # Cải tiến Kiến trúc Mã nguồn (Improve Codebase Architecture)
 
 Kỹ năng này giúp phát hiện các điểm nghẽn kiến trúc thực tế và đề xuất **Cơ hội làm sâu module (Deepening Opportunities)** — các hoạt động refactor giúp chuyển đổi các module nông (shallow modules) thành các module sâu (deep modules), đồng thời loại bỏ nợ kỹ thuật tồn dư (symbol collisions, import drift, legacy scripts). Mục tiêu tối thượng là tăng khả năng kiểm thử (testability) và tính dễ định hướng cho AI (AI-navigability).

@@ -18,6 +18,16 @@ metadata:
 bundle: _core
 layer: _core
 disable-model-invocation: true
+triggers:
+- reasoning
+- step-by-step
+- analysis
+- sequential-thinking
+- suy nghĩ tuần tự
+- lập luận từng bước
+- rẽ nhánh suy nghĩ
+- thought-history
+- thought
 ---
 # Sequential Thinking (Suy nghĩ tuần tự)
 

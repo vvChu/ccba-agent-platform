@@ -1,11 +1,31 @@
 ---
 name: codebase-design
-description: Shared vocabulary for designing deep modules (locality, depth, leverage, seams) to improve testability and code quality. Reference skill.
+description: Shared vocabulary for designing deep modules (locality, depth, leverage,
+  seams) to improve testability and code quality. Reference skill.
 disable-model-invocation: true
 category: engineering
-keywords: [codebase-design, deep-module, seam, interface, adapter, leverage, locality]
+keywords:
+- codebase-design
+- deep-module
+- seam
+- interface
+- adapter
+- leverage
+- locality
+bundle: _core
+triggers:
+- codebase-design
+- deep-module
+- seam
+- interface
+- adapter
+- leverage
+- locality
+- codebase design
+- deep module
+- module sâu
+- software design
 ---
-
 # Codebase Design
 
 > **Loại Kỹ Năng:** **Reference Skill (Kỹ Năng Tham Chiếu & Từ Điển Chuẩn Mực)**  

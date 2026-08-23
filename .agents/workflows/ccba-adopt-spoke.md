@@ -1,15 +1,23 @@
 ---
-description: Đánh giá hiện trạng và tiếp nhận an toàn một codebase hiện hữu (Brownfield) vào mạng lưới CCBA Platform.
+description: Đánh giá hiện trạng và tiếp nhận an toàn một codebase hiện hữu (Brownfield)
+  vào mạng lưới CCBA Platform.
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-  - "BIM"
-  - "Tác vụ Admin"
-  - "Pháp điển"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+- BIM
+- Tác vụ Admin
+- Pháp điển
+bundle: _core
 disable-model-invocation: true
+command: /ccba-adopt-spoke
+triggers:
+- adopt-spoke
+- adopt spoke
+- tiếp nhận spoke
+- onboard spoke
+- tiếp nhận dự án có sẵn
 ---
 # Tiếp Nhận Spoke Hiện Hữu (/ccba-adopt-spoke)
 

@@ -1,9 +1,13 @@
 ---
 name: implement
-description: "Implement a piece of work based on a spec or set of tickets."
+description: Implement a piece of work based on a spec or set of tickets.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- implement
+- implement spec
+- implement ticket
 ---
-
 Implement the work described by the user in the spec or tickets.
 
 Use `/ccba-tdd` where possible, at pre-agreed seams.

@@ -1,13 +1,21 @@
 ---
-description: Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc Hub (ADR 0046)
+description: Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc
+  Hub (ADR 0046)
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-  - "Tác vụ Admin"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+- Tác vụ Admin
+bundle: _core
 disable-model-invocation: true
+command: /ccba-promote-sandbox
+triggers:
+- promote sandbox
+- bàn giao sandbox
+- thăng cấp sản phẩm
+- nghiệm thu pgv
+- pgv handover
 ---
 # Workflow: Thăng Cấp & Bàn Giao Sản Phẩm Từ Sandbox (/ccba-promote-sandbox)
 

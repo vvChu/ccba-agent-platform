@@ -1,15 +1,32 @@
 ---
 name: to-questionnaire
-description: Chuyển đổi một quyết định chưa có đủ thông tin thành Bảng hỏi (Questionnaire) dạng Markdown để gửi cho đối tác/chuyên gia điền bất đồng bộ.
+description: Chuyển đổi một quyết định chưa có đủ thông tin thành Bảng hỏi (Questionnaire)
+  dạng Markdown để gửi cho đối tác/chuyên gia điền bất đồng bộ.
 bundle: _core
 disable-model-invocation: true
 category: productivity
-keywords: [questionnaire, async, interview, discovery, decision, handoff]
+keywords:
+- questionnaire
+- async
+- interview
+- discovery
+- decision
+- handoff
 metadata:
   author: CCBA
-  version: "1.1.0"
+  version: 1.1.0
+triggers:
+- questionnaire
+- async
+- interview
+- discovery
+- decision
+- handoff
+- to-questionnaire
+- bảng hỏi
+- async interview
+- discovery questionnaire
 ---
-
 # Kỹ năng: Tạo Bảng Hỏi Bất Đồng Bộ (To Questionnaire)
 
 Kỹ năng này giúp biến một bài toán hoặc quyết định mà người dùng không thể tự trả lời một mình thành một **Bảng hỏi (Questionnaire)** dạng Markdown. Tệp này có thể gửi cho người khác điền bất đồng bộ (async) hoặc dùng làm tài liệu thảo luận trong cuộc họp.

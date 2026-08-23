@@ -1,9 +1,15 @@
 ---
-description: Triển khai lập trình khép kín (TDD -> Eval Gate -> Code Review -> Commit -> Walkthrough)
+description: Triển khai lập trình khép kín (TDD -> Eval Gate -> Code Review -> Commit
+  -> Walkthrough)
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-implement
+triggers:
+- implement
+- triển khai code
+- lập trình tính năng
 ---
 # Workflow: Triển khai lập trình (/ccba-implement)
 

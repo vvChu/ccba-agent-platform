@@ -8,6 +8,16 @@ applies_to:
 - Thẩm tra thiết kế
 bundle: _bim
 layer: _bim
+triggers:
+- NĐ 175
+- nghị định BIM
+- Nghị định 175
+- điều khoản BIM
+- ISO 19650
+- luật xây dựng BIM
+- pháp lý BIM
+- quy định nộp BIM
+- bắt buộc BIM
 ---
 # BIGBIM VBPL Digest Skill
 

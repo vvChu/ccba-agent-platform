@@ -7,6 +7,14 @@ applies_to:
 - Thẩm tra thiết kế
 bundle: _bim
 layer: _bim
+triggers:
+- rase
+- phân tích rase
+- ifc property
+- pset map
+- IFC4X3
+- Qto_SpaceBaseQuantities
+- Qto_WallBaseQuantities
 ---
 # BIGBIM RASE Analyzer Skill
 

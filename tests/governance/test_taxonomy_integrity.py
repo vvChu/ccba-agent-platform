@@ -148,3 +148,11 @@ def test_adopt_spoke_cli_type_help_completeness(catalog_bundles: set[str]) -> No
         assert f"'{bundle}'" in content or f'"{bundle}"' in content, (
             f"Bundle type '{bundle}' is missing from scripts/adopt_spoke.py help/options"
         )
+
+
+def test_catalog_yaml_is_compiled_and_in_sync() -> None:
+    """Verify catalog.yaml is compiled and 100% in sync with markdown frontmatters (ADR 0047)."""
+    from scripts.governance.compile_catalog import check_catalog_in_sync
+
+    in_sync, msg = check_catalog_in_sync(HUB_ROOT)
+    assert in_sync, f"catalog.yaml is out of sync with frontmatters:\n{msg}"

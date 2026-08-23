@@ -1,13 +1,20 @@
 ---
 name: ccba-ai-pdf-preprocessor
-description: "Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking) và Tiling cho AI Vision."
+description: 'Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking)
+  và Tiling cho AI Vision.'
 applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_qc"
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _qc
+triggers:
+- pdf
+- preprocessor
+- chunk
+- tiling
+- bản vẽ
+- scan
 ---
-
 # CCBA AI PDF Preprocessor
 
 Skill này cung cấp các công cụ chuyên dụng để chuẩn bị tài liệu PDF trước khi gửi đến AI Gateway. Giúp giải quyết các lỗi `Payload Too Large`, lỗi trích xuất trên bản scan mờ, và tối ưu hóa chi tiết cho bản vẽ kỹ thuật.

@@ -6,6 +6,12 @@ applies_to:
 - Thẩm tra thiết kế
 - Thiết kế
 bundle: _qc
+triggers:
+- pccc audit
+- semantic map-reduce
+- thẩm tra PCCC
+- thiết bị chữa cháy
+- báo cháy
 ---
 # CCBA AI QC PCCC Audit
 

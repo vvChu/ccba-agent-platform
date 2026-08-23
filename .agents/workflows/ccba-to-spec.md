@@ -1,9 +1,15 @@
 ---
 description: Soạn thảo tài liệu Spec từ ngữ cảnh hiện tại.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-to-spec
+triggers:
+- spec
+- to-spec
+- soạn spec
+- tạo spec
 ---
 # Workflow: Soạn thảo Spec (/ccba-to-spec)
 
