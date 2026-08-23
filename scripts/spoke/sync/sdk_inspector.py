@@ -79,7 +79,6 @@ class TestGuardrailCopier:
                         shutil.copy2(hub_cleanliness, dest_cleanliness)
                         print("  - Copied guardrail: scripts/check_spoke_cleanliness.py")
 
-
 class SharedSdkInspector:
     """Zero-latency static file inspector for Hub shared packages in Spoke virtual environments (ADR 0044)."""
 

@@ -117,8 +117,6 @@ def test_resolve_canonical_project_type():
     can, err = resolve_canonical_project_type("", bundle_defs)
     assert can is None
     assert "bị trống" in err
-
-
 def test_hub_discoverer_success_and_not_found(tmp_path: Path):
     """Test HubDiscoverer resolution and HubNotFoundError."""
     spoke_root = tmp_path / "spoke"
