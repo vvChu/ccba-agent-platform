@@ -127,10 +127,15 @@ python [hub_path]\scripts\sync_spoke.py --spoke . --rollback
 ## 📋 Báo Cáo Kết Quả & Dọn Dẹp:
 1. **Tổng kết đồng bộ:** In bảng báo cáo tổng kết chi tiết gồm số lượng: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
 2. **Snapshot sao lưu:** Hiển thị đường dẫn bản sao lưu đã tạo (ví dụ: `.md/backups/agents_backup_20260822_120000`).
-3. **Đồng bộ Pre-commit Hooks (ADR 0044 §7):** Nếu Spoke là Python project, tự động cập nhật `check_hub_import_depth.py` từ Hub:
+3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (ADR 0044 §7 / Issue #215):** Nếu Spoke là Python project, tự động cập nhật các guardrail scripts từ Hub:
    ```powershell
    Copy-Item "$hub\scripts\spoke\check_hub_import_depth.py" -Destination ".\scripts\check_hub_import_depth.py" -Force
+   Copy-Item "$hub\scripts\spoke\check_spoke_cleanliness.py" -Destination ".\scripts\check_spoke_cleanliness.py" -Force
    ```
-4. **Rà soát Kỹ năng Mồ côi (Orphaned / Deprecated Skills):** Nếu Hub đã xóa bỏ hoặc đổi tên một Skill cũ nhưng tại `.agents/skills/` của Spoke vẫn còn file cũ, Agent chủ động thông báo cho người dùng để xác nhận dọn dẹp các kỹ năng không còn nằm trong `catalog.yaml`.
-5. **Kiểm tra sức khỏe tổng thể:** Tại Hub, có thể chạy lại lệnh `python scripts\ccba_platform_cli.py spoke-status` để xác nhận toàn bộ hệ sinh thái đã xanh (Synced & Healthy).
+4. **Kiểm tra Script Budget & Cleanliness:** Chạy kiểm tra độ tinh gọn và ngân sách 15 core scripts:
+   ```powershell
+   python .\scripts\check_spoke_cleanliness.py
+   ```
+5. **Rà soát Kỹ năng Mồ côi (Orphaned / Deprecated Skills):** Nếu Hub đã xóa bỏ hoặc đổi tên một Skill cũ nhưng tại `.agents/skills/` của Spoke vẫn còn file cũ, Agent chủ động thông báo cho người dùng để xác nhận dọn dẹp các kỹ năng không còn nằm trong `catalog.yaml`.
+6. **Kiểm tra sức khỏe tổng thể:** Tại Hub, có thể chạy lại lệnh `python scripts\ccba_platform_cli.py spoke-status` để xác nhận toàn bộ hệ sinh thái đã xanh (Synced & Healthy).
 

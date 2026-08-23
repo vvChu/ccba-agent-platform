@@ -275,7 +275,7 @@ def clean_zombies(dry_run: bool) -> None:
     current_pid = os.getpid()
 
     try:
-        import psutil
+        import psutil  # type: ignore[import-untyped]
 
         zombies_found = 0
         for proc in psutil.process_iter(["pid", "name", "cmdline", "create_time"]):

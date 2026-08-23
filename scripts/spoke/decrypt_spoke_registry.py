@@ -2,13 +2,14 @@ import base64
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 import yaml
 
 # Attempt importing cryptography
 try:
     from cryptography.hazmat.primitives import hashes, serialization
-    from cryptography.hazmat.primitives.asymmetric import padding
+    from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
     HAS_CRYPTOGRAPHY = True
 except ImportError:
@@ -21,7 +22,7 @@ PRIVATE_KEY_DIR = os.path.expanduser(r"~\.gemini\antigravity\keys")
 PRIVATE_KEY_PATH = os.path.join(PRIVATE_KEY_DIR, "registry_private_key.pem")
 
 
-def get_registered_spokes(hub_root: Path | None = None) -> list[dict]:
+def get_registered_spokes(hub_root: Path | None = None) -> list[dict[str, Any]]:
     """Retrieve all decrypted active registered spokes from registry or local cache.
 
     Returns:
@@ -31,7 +32,7 @@ def get_registered_spokes(hub_root: Path | None = None) -> list[dict]:
     registry_file = root / REGISTRY_REL_PATH
     decrypted_file = root / DECRYPTED_REL_PATH
 
-    decrypted_spokes: list[dict] = []
+    decrypted_spokes: list[dict[str, Any]] = []
 
     # Case 1: Try decrypting with RSA Private Key if available
     if HAS_CRYPTOGRAPHY and os.path.exists(PRIVATE_KEY_PATH) and registry_file.exists():
@@ -39,28 +40,29 @@ def get_registered_spokes(hub_root: Path | None = None) -> list[dict]:
             with open(PRIVATE_KEY_PATH, "rb") as f:
                 private_key = serialization.load_pem_private_key(f.read(), password=None)
 
-            with open(registry_file, encoding="utf-8") as f:
-                registry_data = yaml.safe_load(f) or {"spokes": []}
+            if isinstance(private_key, rsa.RSAPrivateKey):
+                with open(registry_file, encoding="utf-8") as f:
+                    registry_data = yaml.safe_load(f) or {"spokes": []}
 
-            for spoke in registry_data.get("spokes", []):
-                spoke_id = spoke.get("spoke_id")
-                encrypted_b64 = spoke.get("encrypted_data")
-                try:
-                    encrypted_bytes = base64.b64decode(encrypted_b64)
-                    decrypted_bytes = private_key.decrypt(
-                        encrypted_bytes,
-                        padding.OAEP(
-                            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                            algorithm=hashes.SHA256(),
-                            label=None,
-                        ),
-                    )
-                    spoke_info = yaml.safe_load(decrypted_bytes.decode("utf-8"))
-                    spoke_info["spoke_id"] = spoke_id
-                    spoke_info["exists"] = os.path.exists(spoke_info.get("path", ""))
-                    decrypted_spokes.append(spoke_info)
-                except Exception:
-                    pass
+                for spoke in registry_data.get("spokes", []):
+                    spoke_id = spoke.get("spoke_id")
+                    encrypted_b64 = spoke.get("encrypted_data")
+                    try:
+                        encrypted_bytes = base64.b64decode(encrypted_b64)
+                        decrypted_bytes = private_key.decrypt(
+                            encrypted_bytes,
+                            padding.OAEP(
+                                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                                algorithm=hashes.SHA256(),
+                                label=None,
+                            ),
+                        )
+                        spoke_info = yaml.safe_load(decrypted_bytes.decode("utf-8"))
+                        spoke_info["spoke_id"] = spoke_id
+                        spoke_info["exists"] = os.path.exists(spoke_info.get("path", ""))
+                        decrypted_spokes.append(spoke_info)
+                    except Exception:
+                        pass
         except Exception:
             pass
 
@@ -112,6 +114,10 @@ def decrypt_registry(hub_root: Path | None = None) -> None:
     with open(PRIVATE_KEY_PATH, "rb") as f:
         private_key = serialization.load_pem_private_key(f.read(), password=None)
 
+    if not isinstance(private_key, rsa.RSAPrivateKey):
+        print("❌ Khóa riêng tư không hợp lệ hoặc không phải RSA.")
+        return
+
     decrypted_spokes = []
     print(
         f"\n{'Tên Spoke':<20} | {'Loại Nghiệp vụ':<15} | {'Đồng bộ lúc':<20} | {'Đường dẫn Vật lý':<35}"
@@ -140,7 +146,7 @@ def decrypt_registry(hub_root: Path | None = None) -> None:
 
             decrypted_spokes.append({"spoke_id": spoke_id, **spoke_info})
         except Exception as e:
-            print(f"❌ Lỗi giải mã Spoke ID {spoke_id[:8]}: {str(e)}")
+            print(f"❌ Lỗi giải mã Spoke ID {spoke_id[:8] if spoke_id else 'unknown'}: {str(e)}")
 
     # Auto-Prune các Spoke không còn tồn tại vật lý
     pruned_spoke_ids = []
@@ -149,9 +155,9 @@ def decrypt_registry(hub_root: Path | None = None) -> None:
     for s_info in decrypted_spokes:
         spoke_path = s_info.get("path")
         s_id = s_info.get("spoke_id")
-        if not os.path.exists(spoke_path):
-            print(f"⚠️ Phát hiện Spoke '{s_info['name']}' không tồn tại vật lý tại: {spoke_path}")
-            print(f" -> Tiến hành gỡ bỏ Spoke ID {s_id[:8]} khỏi Registry...")
+        if not spoke_path or not os.path.exists(str(spoke_path)):
+            print(f"⚠️ Phát hiện Spoke '{s_info.get('name')}' không tồn tại vật lý tại: {spoke_path}")
+            print(f" -> Tiến hành gỡ bỏ Spoke ID {str(s_id)[:8]} khỏi Registry...")
             pruned_spoke_ids.append(s_id)
         else:
             active_spokes_yaml.append(s_info)

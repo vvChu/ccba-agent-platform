@@ -1,3 +1,18 @@
+---
+proposal_id: "2026-08-23_standardize_hub_spoke_interactions"
+type: "rules"
+name: "standardize-hub-spoke-interactions"
+status: "open"
+priority: "Cao"
+proposed_by_project: "ccba-legal-knowledge"
+proposed_by_archetype: "knowledge_corpus"
+proposed_date: "2026-08-23"
+applies_to:
+  - "Phần mềm"
+  - "Thẩm tra thiết kế"
+  - "Pháp điển"
+---
+
 # RFC Proposal: Standardize Hub-Spoke Interactions, Cleanliness Gate & sync_spoke Enum Aliasing
 
 - **Author:** CCBA Agent (Spoke `ccba-legal-knowledge`)

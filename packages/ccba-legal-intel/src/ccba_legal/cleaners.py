@@ -211,6 +211,37 @@ class Cleaners:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         document.save(str(out_path))
 
+    @classmethod
+    def strip_administrative_noise(cls, text: str) -> str:
+        """Strip administrative header/footer noise (Quoc hieu, Tieu ngu, Noi nhan, Signatures)."""
+        # Cut off trailing administrative signature blocks
+        noi_nhan_split = re.split(
+            r"(?:\n\s*__\*?\s*Nơi nhận\s*:|\n\s*\*+Nơi nhận\s*:|\n\s*Nơi nhận\s*:|\n\s*__KT\.\s+BỘ\s+TRƯỞNG|\n\s*KT\.\s+BỘ\s+TRƯỞNG\s*\n|\n\s*__BỘ\s+TRƯỞNG__|\n\s*__THỨ\s+TRƯỞNG__|\n\s*__CHỦ\s+TỊCH\s+QUỐC\s+HỘI|\n\s*CHỦ\s+TỊCH\s+QUỐC\s+HỘI\s*\n|\n\s*__TM\.\s+QUỐC\s+HỘI|\n\s*__TM\.\s+CHÍNH\s+PHỦ|\n\s*__THỦ\s+TƯỚNG__|\n\s*\*+Luật\s+này\s+được\s+Quốc\s+hội|\n\s*Luật\s+này\s+được\s+Quốc\s+hội)",
+            text,
+            flags=re.IGNORECASE,
+        )
+        body = noi_nhan_split[0].strip()
+
+        # Remove header noise
+        body = re.sub(
+            r"(?:^|\n)\s*(?:CỘNG\s+HÒA\s+XÃ\s+HỘI\s+CHỦ\s+NGHĨA\s+VIỆT\s+NAM|Độc\s+lập\s*-\s*Tự\s+do\s*-\s*Hạnh\s+phúc).*?(?=\n\n|#)",
+            "",
+            body,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+        return body.strip()
+
+    @classmethod
+    def strip_web_artifacts(cls, text: str) -> str:
+        """Strip web scraping HTML tags and tracking scripts."""
+        text = re.sub(r"<script.*?>.*?</script>", "", text, flags=re.DOTALL | re.IGNORECASE)
+        text = re.sub(r"<form.*?>.*?</form>", "", text, flags=re.DOTALL | re.IGNORECASE)
+        text = re.sub(r"<iframe.*?>.*?</iframe>", "", text, flags=re.DOTALL | re.IGNORECASE)
+        text = re.sub(r"<input.*?>", "", text, flags=re.IGNORECASE)
+        text = re.sub(r'class="NoiDungChiase"', "", text, flags=re.IGNORECASE)
+        text = re.sub(r'onclick=".*?"', "", text, flags=re.IGNORECASE)
+        return text
+
 
 # Procedural convenience aliases
 convert_docx_table_to_markdown = Cleaners.convert_docx_table_to_markdown
@@ -219,3 +250,5 @@ convert_markdown_to_docx = Cleaners.convert_markdown_to_docx
 strip_think_tags_clean = Cleaners.strip_think_tags
 extract_json_clean = Cleaners.extract_json
 remove_ocr_artifacts = Cleaners.remove_ocr_artifacts
+strip_administrative_noise = Cleaners.strip_administrative_noise
+strip_web_artifacts = Cleaners.strip_web_artifacts

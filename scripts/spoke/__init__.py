@@ -20,7 +20,7 @@ from .spoke_adopter import (
     merge_workspace_context,
 )
 from .spoke_bootstrap import SpokeBootstrapper
-from .spoke_synchronizer import (
+from .sync import (
     CatalogMerger,
     GitWorkingTreeGuard,
     HubDiscoverer,

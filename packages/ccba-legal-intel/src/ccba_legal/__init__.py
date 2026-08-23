@@ -12,11 +12,9 @@ Public Deep Seams:
 
 from .appendices import AppendixSplitter, roman_to_decimal
 from .ast_parser import (
-    ASTNode,
     ASTParser,
     DeltaPatch,
     DeltaPatchItem,
-    PatchAction,
 )
 from .cleaners import Cleaners
 from .consolidator import (
@@ -76,6 +74,10 @@ from .grounding import (
     LegalGroundingGate,
     format_grounded_response,
     verify_legal_grounding,
+)
+from .models import (
+    ASTNode,
+    PatchAction,
 )
 from .packager import OKFBundlePackager
 from .registry import (

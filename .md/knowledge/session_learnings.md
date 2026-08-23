@@ -639,6 +639,14 @@
   - *Tier 3 (Platform Hub & Nightly Daemon):* Dynamic Budget $10/đêm, ưu tiên chạy 00:00-05:00 kết hợp Circuit Breaker.
   - *Graceful Fallback Invariant:* Khi cạn quota Cloud hoặc API ngoài gặp lỗi 429/503, Gateway tự động giáng cấp ngầm về Qwen 35B Local GPU mà không làm gián đoạn hay crash tiến trình của Kỹ sư.
 
+#### P8.12. Deep Sub-Package Modularization & Forwarding Shim Invariant (ADR 0048, Pattern P6.9 & P6.11)
+* **Nguyên tắc:** Khi một tệp mã nguồn đơn lẻ vượt ngưỡng monolith (> 1.000 dòng hoặc gánh trên 5 trách nhiệm miền), tệp đó PHẢI được phân rã thành domain sub-package với các sub-module chuyên biệt và giữ lại Thin Forwarding Facade để duy trì 100% tương thích ngược.
+* **Giải pháp:**
+  - *Domain Sub-Package Layout:* Chia nhỏ thành các module rõ ràng (`discovery.py`, `catalog.py`, `registry.py`, `sdk_inspector.py`, `backup.py`, `coordinator.py`, `cli.py`, `base.py`).
+  - *Resilient Forwarding Shim (P6.11):* Tệp monolith ban đầu được thu gọn thành Thin Facade (&le; 60 dòng) re-export 100% symbols và điều hướng CLI an toàn, cho phép 12+ callers cũ hoạt động bình thường mà không cần sửa code caller.
+  - *Dynamic Monkeypatch Support:* Coordinator hỗ trợ phân giải động các class được mock trên Facade trong môi trường kiểm thử unit tests.
+  - *Canonical DTO Single Source of Truth (P6.21):* Triệt tiêu duplicate classes (`ASTNode`, `PatchAction`, `GovernanceAuditReport`) về một `models.py` duy nhất, loại bỏ xung đột ký hiệu trên toàn monorepo.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP8.1. Bypassing Tier 1 Hard-Floor Gate:** Cho phép xuất hồ sơ trình Viện IBST khi vẫn còn lỗi sai số học dòng tiền hoặc viện dẫn luật hết hiệu lực.
 * **AP8.2. Direct Heavy Binary Upload to SharePoint:** Upload trực tiếp file mô hình Revit 3D hoặc scan nặng vào SharePoint List làm cạn kiệt dung lượng Tenant 2TB thay vì đưa sang 5TB Master OneDrive.
