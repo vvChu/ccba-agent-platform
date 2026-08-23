@@ -52,7 +52,7 @@ Nguyên tắc cốt lõi: **"Grill the send, not the subject"** — Chỉ phỏn
 
 3. **Bước 3: Soạn thảo Bảng hỏi Chuẩn Mực (Write the questionnaire)**
    - Dựa trên khoảng trống thông tin từ Bước 1 và 2, soạn thảo tệp bảng hỏi theo cấu trúc chuẩn.
-   - Lưu tệp theo đúng [Global Rule 1](../../../rules/user_global.md) tại: `.md/knowledge/questionnaires/to-questionnaire-<slug>.md` (hoặc `.md/knowledge/reports/`).
+   - Lưu tệp theo đúng **Global Rule 1** tại: `.md/knowledge/questionnaires/to-questionnaire-<slug>.md` (hoặc `.md/knowledge/reports/`).
    - Đảm bảo mọi điểm cần thu về ở Bước 2 đều được bao phủ bởi ít nhất một câu hỏi cụ thể.
    **Tiêu chí hoàn thành:** Tệp bảng hỏi Markdown được tạo thành công với đầy đủ các mục (Mục đích, Ngữ cảnh, Hướng dẫn trả lời, Các câu hỏi trọng tâm và Ý kiến khác).
 

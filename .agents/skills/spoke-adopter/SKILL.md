@@ -77,7 +77,7 @@ python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke] --archetype "knowl
 * **Deep Seam Engine:** `scripts/spoke/spoke_adopter.py`
 * **CLI Command:** `python scripts/adopt_spoke.py`
 * **Slash Command:** `/ccba-adopt-spoke`
-* **ADR Quy Chuẩn:** [`docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md)
+* **ADR Quy Chuẩn:** [`docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md`](../../../docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md)
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

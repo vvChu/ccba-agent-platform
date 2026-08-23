@@ -31,7 +31,7 @@ Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát
 
 Quét dự án hiện tại để nhận diện trạng thái ban đầu:
 - Chạy lệnh `git remote get-url origin` hoặc `git remote -v` để nhận diện repo có sử dụng GitHub, GitLab hay không.
-- Đọc file `.md/workspace_context.yaml` tại thư mục gốc để xem đã có cấu hình `archetype` ([ADR 0041](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)), `issue_tracker` hoặc các cấu hình khác chưa.
+- Đọc file `.md/workspace_context.yaml` tại thư mục gốc để xem đã có cấu hình `archetype` ([ADR 0041](../../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)), `issue_tracker` hoặc các cấu hình khác chưa.
 - Kiểm tra sự tồn tại của file hiến pháp `.agents/AGENTS.md` hoặc `AGENTS.md`.
 - Kiểm tra sự tồn tại của `CONTEXT.md` / `CONTEXT-MAP.md` ở thư mục gốc hoặc `.md/knowledge/`.
 - Kiểm tra sự tồn tại của thư mục cấu hình đích `.md/knowledge/agents/`.
@@ -46,7 +46,7 @@ Tóm tắt kết quả trinh sát và đưa ra cấu hình đề xuất cho ngư
 - **Nếu chưa có cấu hình**: Thực hiện phỏng vấn tương tác:
 
   **Câu A — Issue tracker**:
-  > *Lựa chọn 1 (Recommended)*: Đề xuất mặc định thông minh dựa trên `archetype` ([ADR 0041](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)), `sub_type` ([ADR 0046](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md)) và `git remote`:
+  > *Lựa chọn 1 (Recommended)*: Đề xuất mặc định thông minh dựa trên `archetype` ([ADR 0041](../../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)), `sub_type` ([ADR 0046](../../../docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md)) và `git remote`:
   > - Nếu `archetype == "project_delivery"` hoặc dự án không có remote Git: **Local markdown** (Lưu dưới `.md/knowledge/issues/`).
   > - Nếu `archetype == "enterprise_governance"`: **Local markdown** (Lưu dưới `.md/knowledge/issues/` kết hợp IDOP Governance).
   > - Nếu `archetype == "knowledge_corpus"`: **GitHub Issues** (nếu có remote Git) hoặc **Local markdown** (nếu offline).

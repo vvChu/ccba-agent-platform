@@ -1,12 +1,11 @@
 # 🗺️ Bản đồ Định hướng Wayfinder: Hệ Sinh Thái IDOP Hub-Spoke & Phân Phối Tri Thức CCBA
 
 > **Tham chiếu nền tảng**:
-> - [ADR 0041: Hub-Spoke Ecosystem Taxonomy & 4 Core Archetypes](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)
-> - [ADR 0042: Tri-Repo Sync & Tiered AI Pre-Submission Gate](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0042-tri-repo-server-sync-and-pre-submission-gate.md)
-> - [ADR 0043: Decoupled Resilience & IDOP Local Staging Queue](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0043-idop-active-dev-resilience-and-fallback.md)
-> - [ADR 0044: Standard Editable Package Bootstrap](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0044-standard-editable-package-bootstrap.md)
-> - [Handoff Document](file:///D:/GitHubProjects/ccba-legal-knowledge/.md/scratch/handoffs/handoff-2026-08-22-143728.md)
-> - [Ubiquitous Language Context](file:///d:/GitHubProjects/ccba-agent-platform/CONTEXT.md)
+> - [ADR 0041: Hub-Spoke Ecosystem Taxonomy & 4 Core Archetypes](../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)
+> - [ADR 0042: Tri-Repo Sync & Tiered AI Pre-Submission Gate](../../docs/adr/0042-tri-repo-server-sync-and-pre-submission-gate.md)
+> - [ADR 0043: Decoupled Resilience & IDOP Local Staging Queue](../../docs/adr/0043-idop-active-dev-resilience-and-fallback.md)
+> - [ADR 0044: Standard Editable Package Bootstrap](../../docs/adr/0044-standard-editable-package-bootstrap.md)
+> - Ubiquitous Language: [CONTEXT.md](../../CONTEXT.md)
 
 ---
 
@@ -109,24 +108,24 @@ graph LR
 
 ### 🎯 Các Ticket ở Biên giới (Frontier - Ready to Work)
 
-1. **`[WF-01]` [HITL / Grilling] [Giao diện Tương tác Nộp Hồ sơ IDOP cho Kỹ sư](file:///d:/GitHubProjects/ccba-agent-platform/.md/wayfinder/tickets/wf_01_idop_submission_interface.md)**
+1. **`[WF-01]` [HITL / Grilling] [Giao diện Tương tác Nộp Hồ sơ IDOP cho Kỹ sư](tickets/wf_01_idop_submission_interface.md)**
    - **Loại**: `Grilling` (Chất vấn Socrates với Kỹ sư trưởng)
    - **Mục tiêu**: Làm rõ hành vi người dùng mong muốn nhất: Kỹ sư muốn chạy lệnh CLI dòng lệnh (`ccba idop submit --file ...`), hay để Agent tự động quét và đẩy ngầm khi hoàn thành task, hay kéo thả file vào thư mục đệm `.md/idop_staged/`?
    - **Trạng thái**: `OPEN` (Frontier)
 
-2. **`[WF-02]` [AFK / Research] [Ma trận Cấp phát Quota & Routing Rule cho AI Gateway Server Spark](file:///d:/GitHubProjects/ccba-agent-platform/.md/wayfinder/tickets/wf_02_ai_gateway_quota_matrix.md)**
+2. **`[WF-02]` [AFK / Research] [Ma trận Cấp phát Quota & Routing Rule cho AI Gateway Server Spark](tickets/wf_02_ai_gateway_quota_matrix.md)**
    - **Loại**: `Research` (Nghiên cứu cấu hình LiteLLM & Tailscale)
    - **Mục tiêu**: Khảo sát năng lực 22 models trên LiteLLM Server Spark (`100.83.192.30:8090`), thiết lập bảng quy tắc phân luồng: model nào chạy local GPU (miễn phí, không giới hạn), model nào chạy cloud (áp dụng Token Bucket / Quota per Engineer), và cấu trúc Virtual Key.
    - **Trạng thái**: `OPEN` (Frontier)
 
-3. **`[WF-03]` [AFK / Task] [Bộ Quy Chuẩn & SOP Khởi Tạo Project Delivery Spoke trên OneDrive](file:///d:/GitHubProjects/ccba-agent-platform/.md/wayfinder/tickets/wf_03_project_delivery_spoke_sop.md)**
+3. **`[WF-03]` [AFK / Task] [Bộ Quy Chuẩn & SOP Khởi Tạo Project Delivery Spoke trên OneDrive](tickets/wf_03_project_delivery_spoke_sop.md)**
    - **Loại**: `Task` (Biên soạn tài liệu SOP & template)
    - **Mục tiêu**: Xây dựng mẫu cấu hình `workspace_context.yaml` cho Spoke dự án (Archetype `project_delivery`), kịch bản đồng bộ xuôi `.agents/workflows/` mà không tạo kho Git remote.
    - **Trạng thái**: `OPEN` (Frontier)
 
 ### ⏳ Các Ticket Bị Chặn (Blocked)
 
-4. **`[WF-04]` [AFK / Task] [Đóng gói Tiện ích CLI `ccba-spoke` Hỗ trợ Kỹ sư Thao tác Staging và Đồng bộ](file:///d:/GitHubProjects/ccba-agent-platform/.md/wayfinder/tickets/wf_04_ccba_spoke_cli.md)**
+4. **`[WF-04]` [AFK / Task] [Đóng gói Tiện ích CLI `ccba-spoke` Hỗ trợ Kỹ sư Thao tác Staging và Đồng bộ](tickets/wf_04_ccba_spoke_cli.md)**
    - **Loại**: `Task` (Triển khai code trong `packages/ccba-core` hoặc script standalone)
    - **Bị chặn bởi**: `[WF-01]` (Cần chốt giao diện tương tác trước khi viết code CLI)
    - **Trạng thái**: `BLOCKED`

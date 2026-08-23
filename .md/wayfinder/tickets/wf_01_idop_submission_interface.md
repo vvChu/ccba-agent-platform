@@ -1,6 +1,6 @@
 # 🎫 Ticket WF-01: [HITL / Grilling] Làm rõ Giao thức Tương tác Kỹ sư khi Nộp Hồ sơ vào IDOP
 
-> **Thuộc bản đồ**: [🗺️ Bản đồ Định hướng IDOP Hub-Spoke Ecosystem](file:///d:/GitHubProjects/ccba-agent-platform/.md/wayfinder/idop_spoke_ecosystem_map.md)  
+> **Thuộc bản đồ**: [🗺️ Bản đồ Định hướng IDOP Hub-Spoke Ecosystem](../idop_spoke_ecosystem_map.md)  
 > **Loại ticket**: `HITL / Grilling`  
 > **Trạng thái**: `OPEN` (Frontier)  
 > **Assignee**: *Chưa gán*

@@ -1,6 +1,6 @@
 # 🎫 Ticket WF-02: [AFK / Research] Ma trận Cấp phát Quota & Routing Rule cho AI Gateway Server Spark
 
-> **Thuộc bản đồ**: [🗺️ Bản đồ Định hướng IDOP Hub-Spoke Ecosystem](file:///d:/GitHubProjects/ccba-agent-platform/.md/wayfinder/idop_spoke_ecosystem_map.md)  
+> **Thuộc bản đồ**: [🗺️ Bản đồ Định hướng IDOP Hub-Spoke Ecosystem](../idop_spoke_ecosystem_map.md)  
 > **Loại ticket**: `AFK / Research`  
 > **Trạng thái**: `OPEN` (Frontier)  
 > **Assignee**: *Chưa gán*
