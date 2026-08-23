@@ -48,6 +48,7 @@ Quy trình áp dụng cơ chế **Mặc định An toàn (Safe-by-Default)** 2 p
 2. **Tại Spoke:** Khi muốn cập nhật toàn bộ Skills/Workflows của dự án hiện tại theo đúng nghiệp vụ (`project_type`).
 3. **Tại Spoke (On-Demand):** Khi Agent phát hiện cần một kỹ năng trên Hub nhưng Spoke chưa tải về (Lazy Loading).
 4. **Khi Cần Hoàn Tác:** Khi muốn khôi phục lại trạng thái `.agents/` trước lần đồng bộ gần nhất (`--rollback`).
+5. **Đóng Vòng Hậu Hợp Nhất:** Khi PR đóng góp từ Spoke vừa được merge vào Hub (Bước 7 của `/ccba-contribute-to-hub`).
 
 ---
 
@@ -75,7 +76,7 @@ python scripts\sync_spoke.py --all --apply
 python scripts\sync_spoke.py --all --apply --include-sandboxes
 ```
 
-*Lưu ý (ADR 0046):* Lệnh `--all` mặc định loại trừ các Spoke Cá Nhân (`is_sandbox: true`) để tiết kiệm tài nguyên máy chủ. Sử dụng thêm cờ `--include-sandboxes` khi muốn đồng bộ toàn bộ.
+*Lưu ý (ADR 0046):* Lệnh `--all` mặc định loại trừ các Spoke Cá Nhân (`is_sandbox: true`). Thêm `--include-sandboxes` để đồng bộ toàn bộ.
 
 ---
 
@@ -86,36 +87,34 @@ python scripts\sync_spoke.py --all --apply --include-sandboxes
 # 1. Chế độ Safe-by-Default (Mặc định: Hiện bảng Preview -> Hỏi xác nhận [y/N]):
 python [hub_path]\scripts\sync_spoke.py --spoke .
 
-# 2. Chế độ Xem trước mô phỏng thuần túy:
+# 2. Chế độ Xem trước mô phỏng:
 python [hub_path]\scripts\sync_spoke.py --spoke . --dry-run
 
 # 3. Chế độ Áp dụng ngay (Non-interactive / CI):
 python [hub_path]\scripts\sync_spoke.py --spoke . --apply
 
-# 4. Bỏ qua cảnh báo uncommitted changes nếu cần:
+# 4. Bỏ qua cảnh báo uncommitted changes:
 python [hub_path]\scripts\sync_spoke.py --spoke . --apply --force
 ```
 
-*Lưu ý:* Cơ chế **Selective Merge** sẽ tự động bảo vệ nguyên vẹn 100% các file workflows/skills nội bộ do Spoke tự viết (`🛡️ PRESERVED`).
+*Lưu ý:* Cơ chế **Selective Merge** sẽ tự động bảo vệ nguyên vẹn 100% các file workflows/skills nội bộ của Spoke (`🛡️ PRESERVED`).
 
 ---
 
 ### ⚡ Chế độ 4: Tải Bổ Sung Một Kỹ Năng / Workflow Cụ Thể (On-Demand)
-Khi Agent cần bổ sung 1 kỹ năng cụ thể (ví dụ: `excalidraw-diagram`, `sharepoint-iac`) để xử lý yêu cầu tức thì của User:
-1. Agent xin sự cho phép từ người dùng: *"Tôi cần tải bổ sung kỹ năng [tên-kỹ-năng] từ Hub, bạn có đồng ý không?"*
-2. Sau khi người dùng đồng ý, chạy lệnh:
-   ```powershell
-   python [hub_path]\scripts\sync_spoke.py --spoke . --sync-item [tên-kỹ-năng] --apply
-   ```
-3. Hệ thống sẽ tự động nạp kỹ năng mới (Auto-Discovery) mà không cần khởi động lại.
+Khi Agent cần bổ sung 1 kỹ năng cụ thể (ví dụ: `excalidraw-diagram`, `sharepoint-iac`) để xử lý yêu cầu tức thì:
+```powershell
+python [hub_path]\scripts\sync_spoke.py --spoke . --sync-item [tên-kỹ-năng] --apply
+```
+Hệ thống sẽ tự động nạp kỹ năng mới (Auto-Discovery) mà không cần khởi động lại.
 
 ---
 
 ### ⏪ Chế độ 5: Hoàn Tác & Quản Lý Snapshot Sao Lưu (Rollback & Undo)
-Khi cần khôi phục lại cấu hình `.agents/` về trạng thái trước khi đồng bộ:
+Khôi phục lại cấu hình `.agents/` về trạng thái trước khi đồng bộ:
 
 ```powershell
-# 1. Xem danh sách các bản snapshot sao lưu đã tạo:
+# 1. Xem danh sách các bản snapshot sao lưu:
 python [hub_path]\scripts\sync_spoke.py --spoke . --list-backups
 
 # 2. Khôi phục từ bản sao lưu gần nhất:
@@ -125,17 +124,15 @@ python [hub_path]\scripts\sync_spoke.py --spoke . --rollback
 ---
 
 ## 📋 Báo Cáo Kết Quả & Dọn Dẹp:
-1. **Tổng kết đồng bộ:** In bảng báo cáo tổng kết chi tiết gồm số lượng: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
-2. **Snapshot sao lưu:** Hiển thị đường dẫn bản sao lưu đã tạo (ví dụ: `.md/backups/agents_backup_20260822_120000`).
-3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (ADR 0044 §7 / Issue #215):** Nếu Spoke là Python project, tự động cập nhật các guardrail scripts từ Hub:
+1. **Tổng kết đồng bộ:** Báo cáo chi tiết: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
+2. **Snapshot sao lưu:** Hiển thị đường dẫn bản sao lưu đã tạo (ví dụ: `.md/backups/agents_backup_<timestamp>/`).
+3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (ADR 0044 §7):** Cập nhật guardrail scripts từ Hub:
    ```powershell
    Copy-Item "$hub\scripts\spoke\check_hub_import_depth.py" -Destination ".\scripts\check_hub_import_depth.py" -Force
    Copy-Item "$hub\scripts\spoke\check_spoke_cleanliness.py" -Destination ".\scripts\check_spoke_cleanliness.py" -Force
    ```
-4. **Kiểm tra Script Budget & Cleanliness:** Chạy kiểm tra độ tinh gọn và ngân sách 15 core scripts:
-   ```powershell
-   python .\scripts\check_spoke_cleanliness.py
-   ```
-5. **Rà soát Kỹ năng Mồ côi (Orphaned / Deprecated Skills):** Nếu Hub đã xóa bỏ hoặc đổi tên một Skill cũ nhưng tại `.agents/skills/` của Spoke vẫn còn file cũ, Agent chủ động thông báo cho người dùng để xác nhận dọn dẹp các kỹ năng không còn nằm trong `catalog.yaml`.
-6. **Kiểm tra sức khỏe tổng thể:** Tại Hub, có thể chạy lại lệnh `python scripts\ccba_platform_cli.py spoke-status` để xác nhận toàn bộ hệ sinh thái đã xanh (Synced & Healthy).
+4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python .\scripts\check_spoke_cleanliness.py`.
+5. **Rà soát Kỹ năng Mồ côi:** Dọn dẹp các kỹ năng không còn nằm trong `catalog.yaml`.
+6. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Nếu Spoke vừa đóng góp tool, chạy `pip install -e "[hub_path]\packages\[pkg]"` và chạy bộ test cục bộ (ví dụ: `python scripts\validate_legal_spoke.py`) để đảm bảo không gãy chức năng.
+7. **Kiểm tra sức khỏe tổng thể:** Chạy `python scripts\ccba_platform_cli.py spoke-status` để xác nhận trạng thái xanh.
 
