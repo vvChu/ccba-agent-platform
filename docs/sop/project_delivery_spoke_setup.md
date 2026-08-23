@@ -9,7 +9,7 @@
 
 ## 1. Mục Đích & Phạm Vi Áp Dụng
 
-Quy trình thao tác chuẩn (SOP) này hướng dẫn chi tiết các bước thiết lập, cấu hình và vận hành một **Project Delivery Spoke** (Không gian làm việc dự án tư vấn / thẩm tra / kiểm định) trên môi trường thư mục đồng bộ đám mây OneDrive của Viện IBST.
+Quy trình thao tác chuẩn (SOP) này hướng dẫn chi tiết các bước thiết lập, cấu hình và vận hành một **Project Delivery Spoke** (Không gian làm việc dự án tư vấn / thẩm tra / kiểm định) trên môi trường thư mục đồng bộ đám mây OneDrive của CCBA.
 
 ### 🏛️ Các Nguyên Tắc Bất Biến (Core Invariants):
 1. **Không Sử Dụng Git Remote**: Dự án tư vấn sản xuất hồ sơ thực tế chứa các tệp nhạy cảm của khách hàng và các tệp đồ họa dung lượng lớn (Revit `.rvt`, AutoCAD `.dwg`, PDF scan). Tuyệt đối **không** tạo kho Git remote công khai hoặc đẩy lên GitHub.
@@ -134,7 +134,7 @@ Khi hoàn thành một mốc tiến độ hoặc có sản phẩm cần trình d
    $PROJECT_DIR\.md\idop_staged\
    ```
 2. Tệp tin sẽ tự động được gán nhãn biên nhận PGV (ví dụ `PGV-2026-08-014.json`).
-3. Cầu nối `IDOPBridge` sẽ đẩy các bản ghi lên SharePoint Lists của Viện IBST khi có kết nối mạng.
+3. Cầu nối `IDOPBridge` sẽ đẩy các bản ghi lên SharePoint Lists IDOP của CCBA khi có kết nối mạng.
 
 ---
 
