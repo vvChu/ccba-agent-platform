@@ -9,6 +9,15 @@ sub_skills:
 - markdown-document-processing
 disable-model-invocation: true
 bundle: _software
+triggers:
+- xu-ly-van-phong
+- xử lý văn phòng
+- word
+- excel
+- pptx
+- pdf
+- pdf to docx
+- office
 ---
 # Xử lý Văn phòng
 

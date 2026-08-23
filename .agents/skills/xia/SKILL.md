@@ -18,6 +18,17 @@ metadata:
   version: 2.0.0
 disable-model-invocation: true
 bundle: _software
+triggers:
+- port
+- extract
+- compare
+- feature
+- repo
+- xia
+- port from
+- copy from repo
+- clone feature
+- adapt from
 ---
 # Xia (Xỉa) - Kỹ năng Trích xuất & Chuyển dịch Tính năng
 

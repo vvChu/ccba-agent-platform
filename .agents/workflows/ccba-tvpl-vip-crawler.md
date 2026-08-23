@@ -1,6 +1,15 @@
 ---
-description: Quy trình thực thi cào dữ liệu văn bản pháp luật VIP từ Thư viện Pháp luật (TVPL) qua Deep Seam TVPLCrawler
+description: Quy trình thực thi cào dữ liệu văn bản pháp luật VIP từ Thư viện Pháp
+  luật (TVPL) qua Deep Seam TVPLCrawler
 disable-model-invocation: true
+bundle: _consulting
+command: /ccba-tvpl-vip-crawler
+triggers:
+- tvpl-vip-crawler
+- tvpl vip crawler
+- cào thư viện pháp luật
+- tvpl vip
+- vip crawler
 ---
 # Quy trình thực thi Slash Command `/ccba-tvpl-vip-crawler`
 

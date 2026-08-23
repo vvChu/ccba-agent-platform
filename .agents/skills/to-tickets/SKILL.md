@@ -1,9 +1,17 @@
 ---
 name: to-tickets
-description: Phân rã một kế hoạch, spec hoặc hội thoại hiện tại thành các ticket phát triển dạng lát cắt dọc (tracer-bullet slices), xác định rõ ràng mối quan hệ chặn (blocking edges) và đăng tải lên công cụ theo dõi (Issue Tracker) đã cấu hình.
+description: Phân rã một kế hoạch, spec hoặc hội thoại hiện tại thành các ticket phát
+  triển dạng lát cắt dọc (tracer-bullet slices), xác định rõ ràng mối quan hệ chặn
+  (blocking edges) và đăng tải lên công cụ theo dõi (Issue Tracker) đã cấu hình.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- to-tickets
+- ticket
+- bẻ nhỏ
+- phân rã
+- issues
 ---
-
 # Kỹ năng Phân Rã Công Việc thành Tickets (To Tickets)
 
 Phân rã một kế hoạch, đặc tả yêu cầu (spec), hoặc nội dung thảo luận hiện tại thành một bộ các **ticket** công việc độc lập. Mỗi ticket đại diện cho một lát cắt dọc (vertical slice) và khai báo rõ ràng các ticket con/mối nối **chặn** (block) nó.

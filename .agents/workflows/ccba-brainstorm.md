@@ -2,12 +2,18 @@
 description: Khởi động phiên thảo luận ý tưởng và chuẩn bị tài liệu đầu vào tại input_documents/
 command: /ccba-brainstorm [-- <topic_id>]
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
 disable-model-invocation: true
+triggers:
+- brainstorm
+- ý tưởng
+- nạp tài liệu
+- thảo luận
+- đầu vào
 ---
 # CCBA Brainstorming & Ingestion Workflow
 

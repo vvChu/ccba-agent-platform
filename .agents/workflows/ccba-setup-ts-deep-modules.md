@@ -1,9 +1,14 @@
 ---
 description: Thiết lập cấu hình Deep Modules cho TypeScript bằng dependency-cruiser.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-setup-ts-deep-modules
+triggers:
+- setup-ts-deep-modules
+- setup deep modules
+- dependency cruiser ts
 ---
 # Workflow: Thiết lập TS Deep Modules (/ccba-setup-ts-deep-modules)
 

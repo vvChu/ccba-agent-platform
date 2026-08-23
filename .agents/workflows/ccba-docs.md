@@ -1,10 +1,17 @@
 ---
-description: Khởi động quy trình tự động cập nhật và kiểm định tài liệu kỹ thuật của dự án.
-triggers: [/ccba-docs, cập nhật tài liệu, update docs]
+description: Khởi động quy trình tự động cập nhật và kiểm định tài liệu kỹ thuật của
+  dự án.
+triggers:
+- /ccba-docs
+- cập nhật tài liệu
+- update docs
+- docs
+- validate docs
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-docs
 ---
 # Workflow: ccba-docs
 

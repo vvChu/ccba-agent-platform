@@ -4,6 +4,12 @@ description: Build, refine, and maintain the project's domain model, ubiquitous 
   and record architectural decisions (ADRs).
 disable-model-invocation: true
 bundle: _software
+triggers:
+- domain-modeling
+- domain model
+- modeling
+- ubiquitous language
+- adr
 ---
 # Domain Modeling
 

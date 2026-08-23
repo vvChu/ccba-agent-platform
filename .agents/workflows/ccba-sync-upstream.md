@@ -1,9 +1,16 @@
 ---
 description: Kiểm tra cập nhật và đồng bộ tri thức từ ClaudeKit và MattPocock
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-sync-upstream
+triggers:
+- sync upstream
+- đồng bộ tri thức
+- claudekit
+- mattpocock
+- check update
 ---
 # Workflow: Đồng Bộ Tri Thức Thượng Nguồn (/ccba-sync-upstream)
 

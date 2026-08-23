@@ -1,11 +1,18 @@
 ---
-description: Tự động chạy toàn trình chuỗi kiểm soát chất lượng (QC) đa bộ môn qua Deep Seam QCAuditPipeline
+description: Tự động chạy toàn trình chuỗi kiểm soát chất lượng (QC) đa bộ môn qua
+  Deep Seam QCAuditPipeline
 applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_qc"
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _qc
 disable-model-invocation: true
+command: /ccba-run-qc-pipeline
+triggers:
+- qc pipeline
+- run QC
+- audit tự động
+- kiểm tra hồ sơ
 ---
 # Workflow: Run QC Pipeline (/ccba-run-qc-pipeline)
 

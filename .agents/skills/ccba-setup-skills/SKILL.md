@@ -1,9 +1,18 @@
 ---
 name: ccba-setup-skills
-description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu hình issue tracker, nhãn phân loại (triage), và bố cục tài liệu tri thức (Domain Docs). Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
+description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu hình
+  issue tracker, nhãn phân loại (triage), và bố cục tài liệu tri thức (Domain Docs).
+  Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- setup skills
+- thiết lập cấu hình
+- cấu hình tracker
+- cấu hình nhãn
+- setup-skills
+- ccba-setup-skills
 ---
-
 # Kỹ năng Thiết Lập Cấu Hình Phát Triển (Setup CCBA Skills)
 
 Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát triển phần mềm khác (`triage`, `to-tickets`, `to-spec`, `tdd`, `improve-codebase-architecture`, v.v.) hoạt động chính xác:
@@ -22,7 +31,7 @@ Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát
 
 Quét dự án hiện tại để nhận diện trạng thái ban đầu:
 - Chạy lệnh `git remote get-url origin` hoặc `git remote -v` để nhận diện repo có sử dụng GitHub, GitLab hay không.
-- Đọc file `.md/workspace_context.yaml` tại thư mục gốc để xem đã có cấu hình `archetype` ([ADR 0041](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)), `issue_tracker` hoặc các cấu hình khác chưa.
+- Đọc file `.md/workspace_context.yaml` tại thư mục gốc để xem đã có cấu hình `archetype` ([ADR 0041](../../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)), `issue_tracker` hoặc các cấu hình khác chưa.
 - Kiểm tra sự tồn tại của file hiến pháp `.agents/AGENTS.md` hoặc `AGENTS.md`.
 - Kiểm tra sự tồn tại của `CONTEXT.md` / `CONTEXT-MAP.md` ở thư mục gốc hoặc `.md/knowledge/`.
 - Kiểm tra sự tồn tại của thư mục cấu hình đích `.md/knowledge/agents/`.
@@ -37,11 +46,16 @@ Tóm tắt kết quả trinh sát và đưa ra cấu hình đề xuất cho ngư
 - **Nếu chưa có cấu hình**: Thực hiện phỏng vấn tương tác:
 
   **Câu A — Issue tracker**:
-  > *Lựa chọn 1 (Recommended)*: Đề xuất mặc định thông minh dựa trên `archetype` ([ADR 0041](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)) và `git remote`:
+  > *Lựa chọn 1 (Recommended)*: Đề xuất mặc định thông minh dựa trên `archetype` ([ADR 0041](../../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)), `sub_type` ([ADR 0046](../../../docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md)) và `git remote`:
   > - Nếu `archetype == "project_delivery"` hoặc dự án không có remote Git: **Local markdown** (Lưu dưới `.md/knowledge/issues/`).
-  > - Nếu `archetype` là `platform_hub` / `specialized_extension` và có remote GitHub: **GitHub Issues** (yêu cầu `gh` CLI).
+  > - Nếu `archetype == "enterprise_governance"`: **Local markdown** (Lưu dưới `.md/knowledge/issues/` kết hợp IDOP Governance).
+  > - Nếu `archetype == "knowledge_corpus"`: **GitHub Issues** (nếu có remote Git) hoặc **Local markdown** (nếu offline).
+  > - Nếu `archetype == "specialized_extension"`:
+  >   * Spoke Cá Nhân (`sub_type: personal_sandbox` - ADR 0046): Mặc định **Local markdown** (`.md/knowledge/issues/` hoặc liên kết `idop_tasks.active_pgv_list`), tránh tạo issue công khai cho nghiên cứu cá nhân.
+  >   * Spoke Tiện ích / R&D (`tooling_plugin`, `research_lab`) có remote GitHub: **GitHub Issues** (yêu cầu `gh` CLI).
+  > - Nếu `archetype == "platform_hub"` và có remote GitHub: **GitHub Issues** (yêu cầu `gh` CLI).
   > - Nếu remote chứa `gitlab.com`: **GitLab Issues** (yêu cầu `glab` CLI).
-  - **Local markdown** — Lưu issue thành các file md dưới `.md/knowledge/issues/` (phù hợp dự án tư vấn hiện trường, chạy offline hoặc solo).
+  - **Local markdown** — Lưu issue thành các file md dưới `.md/knowledge/issues/` (phù hợp dự án tư vấn hiện trường, sandbox cá nhân, chạy offline hoặc solo).
   - **GitHub** — Sử dụng GitHub Issues (yêu cầu `gh` CLI).
   - **GitLab** — Sử dụng GitLab Issues (yêu cầu `glab` CLI).
   - **Khác** — Nhận mô tả quy trình dạng văn bản tự do từ người dùng.

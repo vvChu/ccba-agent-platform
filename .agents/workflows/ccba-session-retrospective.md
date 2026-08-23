@@ -1,10 +1,17 @@
 ---
-description: Session Knowledge Retrospective Workflow — Tự động tổng hợp tri thức cuối phiên làm việc và dọn dẹp workspace.
+description: Session Knowledge Retrospective Workflow — Tự động tổng hợp tri thức
+  cuối phiên làm việc và dọn dẹp workspace.
 applies_to:
-  - "Tác vụ Admin"
-  - "Phần mềm"
-bundle: "_core"
+- Tác vụ Admin
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-session-retrospective
+triggers:
+- retrospective
+- cuối phiên
+- tổng kết
+- session learnings
 ---
 # Workflow: Tổng Hợp Tri Thức Cuối Phiên (/ccba-session-retrospective)
 

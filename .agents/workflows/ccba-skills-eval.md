@@ -1,6 +1,14 @@
 ---
-description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) cho các kỹ năng AI trong CCBA Platform.
+description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) cho các kỹ năng AI
+  trong CCBA Platform.
 disable-model-invocation: true
+bundle: _core
+command: /ccba-skills-eval
+triggers:
+- skills-eval
+- eval-skills
+- kiểm thử kỹ năng
+- chạy evals
 ---
 # Lệnh /ccba-skills-eval
 

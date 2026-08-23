@@ -1,14 +1,33 @@
 ---
 name: sync-upstream
-description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0040 Radar) kết hợp kích hoạt 1-Click Port qua /ccba-xia.
+description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0040 Radar)
+  kết hợp kích hoạt 1-Click Port qua /ccba-xia.
 disable-model-invocation: true
 category: utilities
-keywords: [sync, upstream, update, porting, radar, xia]
+keywords:
+- sync
+- upstream
+- update
+- porting
+- radar
+- xia
 metadata:
   author: CCBA
-  version: "2.0.0"
+  version: 2.0.0
+bundle: _core
+triggers:
+- sync
+- upstream
+- update
+- porting
+- radar
+- xia
+- sync upstream
+- đồng bộ tri thức
+- claudekit
+- mattpocock
+- check update
 ---
-
 # Kỹ năng: Radar Thượng Nguồn & Cầu Nối Porting (Upstream Radar & Handshake)
 
 Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho chứa thượng nguồn (được cấu hình linh hoạt tại [`.md/knowledge/upstream_sources.yaml`](../../../.md/knowledge/upstream_sources.yaml)), kiểm tra bản quyền, thẩm tra tính năng mới theo **Thể chế ADR-0040 (Kim tự tháp 3 Tầng)** qua AI Gateway và tự động sinh lệnh **1-Click Porting** với `/ccba-xia`.

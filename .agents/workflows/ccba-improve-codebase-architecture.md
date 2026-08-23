@@ -1,9 +1,16 @@
 ---
-description: Cải tiến kiến trúc codebase bằng cách quét phát hiện module nông và đề xuất deepening.
+description: Cải tiến kiến trúc codebase bằng cách quét phát hiện module nông và đề
+  xuất deepening.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-improve-codebase-architecture
+triggers:
+- improve architecture
+- codebase architecture
+- module nông
+- refactor
 ---
 # Workflow: Cải Tiến Kiến Trúc Codebase (/ccba-improve-codebase-architecture)
 

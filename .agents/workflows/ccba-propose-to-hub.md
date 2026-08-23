@@ -1,12 +1,20 @@
 ---
-description: "[Alias tương thích ngược của /ccba-contribute-to-hub] Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub"
+name: propose-to-hub
+description: '[Alias tương thích ngược của /ccba-contribute-to-hub] Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub'
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
 disable-model-invocation: true
+command: /ccba-propose-to-hub
+triggers:
+- đề xuất
+- tích hợp Hub
+- contribution
+- propose
+- skill mới
 ---
 # Workflow: Propose to Hub (Alias -> /ccba-contribute-to-hub)
 

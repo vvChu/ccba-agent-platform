@@ -1,18 +1,23 @@
 ---
 name: markdown-document-processing
-description: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep Seam ConversionPipeline.
+description: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep
+  Seam ConversionPipeline.
 role: master_skill
 layer: _core
 bundle: _core
 invocation: model_invoked
 deep_seam: ConversionPipeline
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+triggers:
+- markdown
+- xử lý markdown
+- chuẩn hóa markdown
+- document processing
 ---
-
 # Master Skill: Markdown Document Processing
 
 Kỹ năng này điều phối toàn bộ quy trình chuyển đổi, làm sạch và chuẩn hóa tài liệu Markdown trong CCBA Agent Services Platform thông qua Deep Seam **`ConversionPipeline`** ([`packages/mdconverter`](../../packages/mdconverter)).

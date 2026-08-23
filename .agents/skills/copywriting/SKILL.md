@@ -13,6 +13,14 @@ metadata:
   version: 1.0.0
 disable-model-invocation: true
 bundle: _software
+triggers:
+- copywriting
+- viết thầu
+- soạn thầu
+- hồ sơ đề xuất
+- văn phong thầu
+- viết thuyết phục
+- marketing admin
 ---
 # Kỹ năng Soạn thảo Văn bản theo Mẫu chuẩn (Copywriting)
 

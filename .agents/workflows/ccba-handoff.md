@@ -1,9 +1,16 @@
 ---
-description: Đóng gói phiên làm việc thành tài liệu handoff nhỏ gọn cho Agent tiếp theo.
+description: Đóng gói phiên làm việc thành tài liệu handoff nhỏ gọn cho Agent tiếp
+  theo.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-handoff
+triggers:
+- handoff
+- đóng gói phiên
+- transfer context
+- bàn giao
 ---
 # Workflow: Handoff Phiên Làm Việc (/ccba-handoff)
 

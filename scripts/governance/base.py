@@ -176,6 +176,6 @@ class BaseAuditor(ABC):
         self.project_root = project_root
 
     @abstractmethod
-    def audit(self, target: Any) -> list[AuditIssue]:
-        """Audit target and return a list of AuditIssues."""
+    def audit(self, target: Any = None) -> list[AuditIssue] | AuditReport:
+        """Audit target and return a list of AuditIssues or AuditReport."""
         raise NotImplementedError

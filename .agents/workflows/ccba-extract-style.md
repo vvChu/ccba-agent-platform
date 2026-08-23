@@ -1,10 +1,18 @@
 ---
-description: Trích xuất và phân tích đặc trưng văn phong thầu/hành chính từ tài liệu mẫu của CCBA, tự động dựng biểu mẫu (Template) có placeholders.
+description: Trích xuất và phân tích đặc trưng văn phong thầu/hành chính từ tài liệu
+  mẫu của CCBA, tự động dựng biểu mẫu (Template) có placeholders.
 applies_to:
-  - "Phần mềm"
-  - "Tác vụ Admin"
-bundle: "_core"
+- Phần mềm
+- Tác vụ Admin
+bundle: _core
 disable-model-invocation: true
+command: /ccba-extract-style
+triggers:
+- extract style
+- trích xuất văn phong
+- văn phong mẫu
+- style thầu
+- phong cách viết
 ---
 # Workflow: Trích Xuất & Chuẩn Hóa Biểu Mẫu (/ccba-extract-style)
 

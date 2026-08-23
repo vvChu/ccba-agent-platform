@@ -45,8 +45,8 @@ PACKAGE_TOPOLOGY_ORDER = [
 
 ARCHETYPE_TIER1_DEFAULTS = {
     "knowledge_corpus": ["ccba-legal-intel"],
-    "project_delivery": ["ccba-ooxml", "ccba-pdf-prep"],
-    "enterprise_governance": ["ccba-ooxml"],
+    "project_delivery": ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"],
+    "enterprise_governance": ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"],
 }
 
 
@@ -104,8 +104,12 @@ class SpokeBootstrapper:
         proj = context.get("project", {})
         proj_type = proj.get("type", "")
         proj_mode = proj.get("mode", "")
-
-        if proj_type == "Phần mềm" or proj_mode == "software":
+        archetype = proj.get("archetype", "")
+        if (
+            proj_type in ("Phần mềm", "Pháp điển")
+            or proj_mode in ("software", "knowledge")
+            or archetype == "knowledge_corpus"
+        ):
             return True
 
         if (self.spoke_root / "pyproject.toml").exists():

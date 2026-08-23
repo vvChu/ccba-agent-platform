@@ -1,0 +1,76 @@
+hub_path: .
+hub_repo: https://github.com/vvChu/ccba-agent-platform
+notebook_ids:
+  _core: nb-mock-3
+  _software: nb-mock-software
+  _qc: nb-mock-qc
+  _consulting: nb-mock-consulting
+bundles:
+  Phần mềm:
+  - _core
+  - _software
+  Thẩm tra thiết kế:
+  - _core
+  - _qc
+  - _consulting
+  Thiết kế:
+  - _core
+  - _qc
+  - _consulting
+  Kiểm định:
+  - _core
+  - _qc
+  - _consulting
+  BIM:
+  - _core
+  Tác vụ Admin:
+  - _core
+  - _consulting
+  Pháp điển:
+  - _core
+  - _software
+rules:
+- name: identity
+  description: Brand, voice, phong cách giao tiếp CCBA
+  when: Mọi output mang danh CCBA
+  rule_path: .agents/rules/ccba_identity.md
+- name: naming_conventions
+  description: Quy ước đặt tên file, folder và phân loại thư mục tri thức
+  when: Tạo hoặc sắp xếp file/folder mới
+  rule_path: .agents/rules/naming_conventions.md
+- name: compliance
+  description: Tuân thủ pháp luật xây dựng Việt Nam
+  when: Output liên quan đến pháp luật/VBPL hoặc các văn bản pháp lý
+  rule_path: .agents/rules/legal_compliance.md
+- name: release_gate
+  description: Quy trình kiểm soát PR Release và Copilot Audit
+  when: Khi chuẩn bị merge PR hoặc hoàn tất bàn giao
+  rule_path: .agents/rules/release_gate.md
+- name: debugging
+  description: Quy tắc đọc logs và chẩn đoán lỗi runtime
+  when: Khi người dùng báo lỗi runtime hoặc ứng dụng crash
+  rule_path: .agents/rules/debugging.md
+knowledge:
+- name: session_learnings
+  description: Patterns, anti-patterns, solutions tích lũy qua các phiên
+  knowledge_path: knowledge/session_learnings.md
+- name: bigbim_method_kb
+  description: BIGBIM Method Knowledge Base v1.0 — 36 articles, 266 chunks, 3-layer architecture
+  knowledge_path: '[bigbim_method_path]/.md/knowledge/INDEX.md'
+  chunks_index: '[bigbim_method_path]/.md/chunks/INDEX.md'
+  kb_root: '[bigbim_method_path]/.md/'
+- name: ccba_operations_kb
+  description: Thể chế Quản lý Dự án (QCTK 2815), Chi tiêu Nội bộ (QCCTNB 3209), Điều lệ CCBA 2026 & Quy chế KHCN IBST
+  knowledge_path: '[idop_path]/.md/INDEX.md'
+  cross_references: '[idop_path]/.md/cross_references.yaml'
+  constitution_root: '[idop_path]/.md/governance_constitution/'
+  blueprint_root: '[idop_path]/.md/system_blueprint/'
+- name: legal_knowledge_kb
+  description: Kho Tri thức Pháp luật Xây dựng & PCCC Việt Nam (OKF v2.0 Native-First & NotebookLM) — Luật 55/2024, Luật 135/2025, NĐ 193-217/2026, QCVN, TCVN
+  knowledge_path: '[legal_knowledge_path]/legal_registry.yaml'
+  registry_file: '[legal_knowledge_path]/legal_registry.yaml'
+  docs_root: '[legal_knowledge_path]/legal_docs/'
+  vbpl_root: '[legal_knowledge_path]/legal_docs/01_vbpl/'
+  qcvn_root: '[legal_knowledge_path]/legal_docs/02_qcvn/'
+  tcvn_root: '[legal_knowledge_path]/legal_docs/03_tcvn/'
+  appendices_root: '[legal_knowledge_path]/legal_docs/04_appendices/'

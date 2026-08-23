@@ -1,9 +1,18 @@
 ---
-description: Phiên phỏng vấn Socrates dồn dập giúp làm sắc nét kế hoạch thiết kế và tự động ghi nhận tệp thuật ngữ (CONTEXT.md) cùng quyết định kiến trúc (ADRs).
+description: Phiên phỏng vấn Socrates dồn dập giúp làm sắc nét kế hoạch thiết kế và
+  tự động ghi nhận tệp thuật ngữ (CONTEXT.md) cùng quyết định kiến trúc (ADRs).
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-grill-with-docs
+triggers:
+- grill
+- grilling
+- phỏng vấn
+- socrates
+- context.md
+- adrs
 ---
 # Workflow: Phỏng Vấn Socrates Đối Chiếu Quy Chuẩn (/ccba-grill-with-docs)
 

@@ -4,6 +4,12 @@ description: Diagnosis loop for hard bugs and performance regressions. Use when 
   user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
 disable-model-invocation: true
 bundle: _software
+triggers:
+- diagnose bugs
+- chẩn đoán lỗi
+- fix bug
+- debug
+- regression
 ---
 # Diagnosing Bugs
 

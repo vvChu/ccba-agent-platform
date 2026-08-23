@@ -5,6 +5,11 @@ applies_to:
 - Phần mềm
 bundle: _software
 disable-model-invocation: true
+triggers:
+- docs_manager
+- quản lý tài liệu
+- document manager
+- docs
 ---
 # Kỹ năng: Quản lý Tài liệu Kỹ thuật (Docs Manager)
 

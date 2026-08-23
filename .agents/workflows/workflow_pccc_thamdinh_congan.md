@@ -1,12 +1,17 @@
 ---
 name: workflow_pccc_thamdinh_congan
-description: Quy trình Thẩm định thiết kế PCCC phần Hệ thống Cơ điện (MEP) nộp Cơ quan Công an (PC07)
+description: Quy trình Thẩm định thiết kế PCCC phần Hệ thống Cơ điện (MEP) nộp Cơ
+  quan Công an (PC07)
 applies_to:
-  - "Quản lý chất lượng"
-  - "Thẩm tra thiết kế"
-  - "PCCC"
-bundle: "_qc"
+- Thẩm tra thiết kế
+- Thiết kế
+bundle: _qc
 disable-model-invocation: true
+command: /workflow_pccc_thamdinh_congan
+triggers:
+- thẩm định công an
+- mep pccc
+- pc07
 ---
 # Quy trình Thẩm định thiết kế PCCC phần Hệ thống MEP (Cơ quan Công an)
 

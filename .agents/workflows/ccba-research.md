@@ -1,8 +1,16 @@
 ---
 name: ccba-research
 command: /ccba-research
-description: Khởi động subagent nghiên cứu chạy ngầm để tra cứu tài liệu, APIs, source code hoặc VBPL song song dưới nền với rào chắn Search Budget Cap (5 tool calls) và Mẫu báo cáo 5 phần chuẩn hóa.
+description: Khởi động subagent nghiên cứu chạy ngầm để tra cứu tài liệu, APIs, source
+  code hoặc VBPL song song dưới nền với rào chắn Search Budget Cap (5 tool calls)
+  và Mẫu báo cáo 5 phần chuẩn hóa.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- research
+- nghiên cứu
+- tìm hiểu
+- ccba-research
 ---
 # Workflow: Nghiên Cứu Chạy Ngầm Đa Luồng (/ccba-research)
 

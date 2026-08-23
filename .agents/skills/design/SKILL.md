@@ -19,6 +19,19 @@ metadata:
 bundle: _consulting
 layer: _consulting
 disable-model-invocation: true
+triggers:
+- brand
+- logo
+- CIP
+- banners
+- identity
+- design
+- logo design
+- slide design
+- banner design
+- cip mockup
+- ckm:design
+- mockup
 ---
 # Design
 

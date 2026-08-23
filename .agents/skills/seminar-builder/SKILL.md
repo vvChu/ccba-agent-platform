@@ -1,13 +1,20 @@
 ---
 name: seminar-builder
-description: Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda, outline, và archive nội dung các buổi thảo luận.
+description: Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda, outline,
+  và archive nội dung các buổi thảo luận.
 applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_consulting"
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _consulting
+triggers:
+- seminar
+- đào tạo
+- training
+- recap
+- agenda
+- buổi thảo luận
 ---
-
 # Seminar Content Builder
 
 Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/Training nội bộ của CCBA.

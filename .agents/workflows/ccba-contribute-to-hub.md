@@ -1,19 +1,24 @@
 ---
 description: Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
 disable-model-invocation: true
+command: /ccba-contribute-to-hub
+triggers:
+- contribute
+- contribute to hub
+- đóng góp mã nguồn
+- tạo pr lên hub
+- mở proposal
+- ccba-contribute-to-hub
 ---
 # Workflow: Contribute to Hub (Đóng Góp Mã Nguồn Ngược Lên Hub Chuẩn OKF v2.0)
 
-Quy trình chuẩn hóa toàn trình để đóng gói mã nguồn, bộ kiểm thử (test suite), tài liệu proposal và mở GitHub Pull Request (PR) kèm hoàn tất thẩm định tự động từ dự án Spoke lên Platform Hub chung (`ccba-agent-platform`).
-
-> [!NOTE]
-> **Tương thích ngược (Alias):** Lệnh `/ccba-propose-to-hub` được định tuyến tự động về quy trình này.
+Quy trình chuẩn hóa toàn trình để đóng gói mã nguồn, bộ kiểm thử (test suite), tài liệu proposal và mở GitHub Pull Request (PR) kèm hoàn tất thẩm định tự động từ Spoke lên Platform Hub chung (`ccba-agent-platform`). *(Alias: `/ccba-propose-to-hub`)*
 
 ---
 

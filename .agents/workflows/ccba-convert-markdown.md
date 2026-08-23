@@ -1,12 +1,19 @@
 ---
-description: Chuyển đổi tài liệu sang Markdown qua Deep Seam ConversionPipeline (tự động xử lý bảng biểu, biểu mẫu, liên kết)
+description: Chuyển đổi tài liệu sang Markdown qua Deep Seam ConversionPipeline (tự
+  động xử lý bảng biểu, biểu mẫu, liên kết)
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
 disable-model-invocation: true
+command: /ccba-convert-markdown
+triggers:
+- convert
+- mdconverter
+- chuyển đổi tài liệu
+- pdf to markdown
 ---
 # Workflow: Convert to Markdown (/ccba-convert-markdown)
 

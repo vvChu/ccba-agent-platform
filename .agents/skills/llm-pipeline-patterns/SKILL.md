@@ -1,13 +1,21 @@
 ---
 name: LLM Pipeline Patterns
-description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đúc rút từ VvC LLM OS (v5.1→v8.7, 2026).
+description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
+  Đúc rút từ VvC LLM OS (v5.1→v8.7, 2026).
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Kiểm định
+bundle: _core
+triggers:
+- llm pipeline
+- pipeline patterns
+- 2-pass
+- ground truth
+- rag pipeline
+- synthesis pipeline
+- self-correction
 ---
-
 # LLM Pipeline Patterns
 
 Pattern library cho các pipeline LLM multi-stage — đúc rút từ thực tế vận hành **VvC LLM OS** (v5.1 → v8.7, 2026). Mỗi pattern đều có ít nhất 1 incident thực tế chứng minh sự cần thiết.

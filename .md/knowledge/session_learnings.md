@@ -545,6 +545,19 @@
 #### P7.19. Automated Issue Context Bootstrapping in Feature Workflows (`/ccba-new-feature #[ID]`)
 * **Nguyên tắc:** Khi kỹ sư kích hoạt workflow khởi tạo branch với mã Issue (ví dụ: `/ccba-new-feature #209`), workflow tự động gọi `gh issue view <id> --json title,body,labels` để bóc tách loại công việc (`feat`, `fix`, `docs`, `refactor`) và mô tả tính năng. Tự động đề xuất branch name chuẩn `feat/...` và bỏ qua hoàn toàn các câu hỏi thủ công, tối ưu hóa tối đa trải nghiệm lập trình.
 
+#### P7.20. Hub-Spoke Taxonomy & Bundle Integrity Guard (ADR 0041, ADR 0044)
+* **Nguyên tắc:** Mọi thay đổi hoặc bổ sung về Danh mục Bundle, Archetype, Spoke Type hay Workflows trong Hub-Spoke bắt buộc phải được đồng bộ hóa nhất quán qua **4 điểm chạm**:
+  1. `catalog.yaml` (SSOT danh mục bundles và workflows)
+  2. CLI Help/Choices (`scripts/adopt_spoke.py`, `scripts/sync_spoke.py`)
+  3. Workflows & Skills frontmatter `applies_to`
+  4. Engine nhận diện mã nguồn Python (`spoke_bootstrap.py`, `spoke_adopter.py`)
+* **Rào chắn tự động:** Bắt buộc duy trì 2 CI Gates `tests/governance/test_taxonomy_integrity.py` và `tests/governance/test_global_skills_integrity.py` để tự động phát hiện và chặn đứng mọi sai lệch khai báo ngay trước khi commit.
+
+#### P7.21. Sandbox Identification Invariant vs Extension Archetypes (ADR 0046)
+* **Nguyên tắc:** **TUYỆT ĐỐI KHÔNG ĐÁNH ĐỒNG** Archetype cấp cao `specialized_extension` với cờ trạng thái tạm thời `is_sandbox: True`.
+* **Thực tế:** `specialized_extension` bao gồm cả các dự án tiện ích chính thức (`tooling_plugin`, `research_lab`). Việc gán nhầm toàn bộ extension thành sandbox sẽ khiến dự án chính thức bị loại trừ khỏi batch sync và bị xóa dọn sau 60 ngày.
+* **Chuẩn thực thi:** Chỉ kích hoạt `is_sandbox = True` khi thỏa mãn: `sub_type == "personal_sandbox"` hoặc `guardrails.get("sandbox_mode") is True`.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
 * **AP7.2. Committing Unscanned Code:** Bỏ qua quy trình `/ccba-code-review` hoặc Governance Audit trước khi tạo PR.
@@ -556,6 +569,7 @@
 * **AP7.8. Context Bloat via Equal-Level Flat Skills Proliferation:** Tạo hàng chục tệp `SKILL.md` nhỏ lẻ nằm ngang hàng và đều để ở chế độ `model_invoked`, làm phình to System Prompt khởi tạo. Cần gom các kỹ năng nông thành `references/*.md` của Master Skill và bật `disable-model-invocation: true` cho toàn bộ User Workflows.
 * **AP7.9. License Classification Semantic Leakage:** Trả về giá trị enum lạ không nằm trong hợp đồng 4 giá trị (PERMISSIVE, COPYLEFT, PROPRIETARY, UNKNOWN), làm đứt gãy logic phân nhánh downstream.
 * **AP7.10. State File Path Mismatch during Registry Migration:** Tự ý đổi tên tệp tin lưu commit SHA trong quá trình chuyển đổi sang YAML registry, khiến hệ thống hiểu nhầm là kho mới và quét lại từ đầu.
+* **AP7.11. Unvalidated Free-Text Bundle Declarations:** Tự ý gõ chuỗi tự do trong trường `applies_to` của workflow hoặc `type` trong `workspace_context.yaml` mà không đối soát với enum chuẩn trong `catalog.yaml.bundles`, gây đứt gãy tiến trình đồng bộ Hub-Spoke.
 
 ---
 

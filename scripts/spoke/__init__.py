@@ -10,6 +10,8 @@ Sub-Engines:
 """
 
 from .decrypt_spoke_registry import get_registered_spokes
+from .sandbox_promoter import PromotionResult, SandboxPromoter
+from .session_cleanup import sweep_inactive_sandboxes
 from .spoke_adopter import (
     SpokeAdopter,
     SpokeDiscoveryReport,
@@ -41,6 +43,9 @@ __all__ = [
     "GitWorkingTreeGuard",
     "SharedSdkInspector",
     "SpokeBootstrapper",
+    "SandboxPromoter",
+    "PromotionResult",
+    "sweep_inactive_sandboxes",
     "sync_project",
     "rollback_project",
     "list_project_backups",

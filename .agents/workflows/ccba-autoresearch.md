@@ -1,6 +1,18 @@
 ---
-description: Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet Auto-Tuner) lấy cảm hứng từ karpathy/autoresearch.
+description: Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet
+  Auto-Tuner) lấy cảm hứng từ karpathy/autoresearch.
 disable-model-invocation: true
+bundle: _core
+command: /ccba-autoresearch
+triggers:
+- autoresearch
+- auto-research
+- git ratchet
+- ratchet
+- auto tune
+- auto-tune
+- tối ưu qua đêm
+- tối ưu prompt tự động
 ---
 # Lệnh /ccba-autoresearch
 

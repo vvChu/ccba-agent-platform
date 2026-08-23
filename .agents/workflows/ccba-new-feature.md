@@ -1,9 +1,15 @@
 ---
-description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session sạch (Factory Model)
+description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session
+  sạch (Factory Model)
 applies_to:
-  - "Phần mềm"
-bundle: "_software"
+- Phần mềm
+bundle: _software
 disable-model-invocation: true
+command: /ccba-new-feature
+triggers:
+- new feature
+- feature mới
+- tạo branch
 ---
 # Workflow: Tạo Feature Branch Mới & Phân Tách Session (Factory Model)
 

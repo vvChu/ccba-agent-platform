@@ -1,10 +1,16 @@
 ---
 name: wayfinder
-description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua danh sách các ticket công việc.
+description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua
+  danh sách các ticket công việc.
 bundle: _core
 disable-model-invocation: true
+triggers:
+- wayfinder
+- vạch đường
+- bài toán mơ hồ
+- foggy
+- chia nhỏ bài toán
 ---
-
 # Kỹ năng Định hướng Giải quyết Bài toán Mơ hồ (Wayfinder)
 
 > **Nguồn gốc & Tham chiếu:** Kỹ năng được phát triển dựa trên mô hình *Wayfinder* của **Matt Pocock** (Latent Space interview: [The /wayfinder Skill: Navigating the “Fog of War” of Planning](https://www.latent.space/p/wayfinder-skill)) và được bản địa hóa, nâng cấp cho hệ sinh thái CCBA Agent Platform.

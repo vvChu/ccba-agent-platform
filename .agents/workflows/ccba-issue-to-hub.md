@@ -1,12 +1,21 @@
 ---
-description: Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ Spoke lên Hub dưới dạng GitHub Issue
+description: Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ
+  Spoke lên Hub dưới dạng GitHub Issue
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
 disable-model-invocation: true
+command: /ccba-issue-to-hub
+triggers:
+- issue to hub
+- đề xuất ý tưởng
+- rfc
+- tạo issue
+- feature request
+- ccba-issue-to-hub
 ---
 # Workflow: Đề Xuất Ý Tưởng & Tính Năng Lên Hub (/ccba-issue-to-hub)
 
