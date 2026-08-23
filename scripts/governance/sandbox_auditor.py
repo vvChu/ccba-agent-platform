@@ -39,11 +39,9 @@ class SandboxAuditor(BaseAuditor):
         """Determine whether current workspace is a personal sandbox."""
         proj = context.get("project", {})
         sub_type = proj.get("sub_type", "")
-        archetype = proj.get("archetype", "")
         guardrails = context.get("guardrails", {})
         return (
             sub_type == "personal_sandbox"
-            or archetype == "specialized_extension"
             or guardrails.get("sandbox_mode") is True
         )
 

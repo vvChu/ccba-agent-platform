@@ -96,3 +96,28 @@ def test_sandbox_auditor_skips_non_sandbox_workspaces(tmp_path: Path):
     auditor = SandboxAuditor(ws)
     report = auditor.audit()
     assert report.total_issues == 0
+
+
+def test_sandbox_auditor_skips_non_sandbox_specialized_extensions(tmp_path: Path):
+    """Ensure specialized extensions (tooling_plugin / research_lab) are not audited as sandboxes."""
+    ws = tmp_path / "tooling-plugin-spoke"
+    ws.mkdir()
+    (ws / ".md").mkdir()
+    ctx = {
+        "project": {
+            "name": "tooling-plugin-spoke",
+            "archetype": "specialized_extension",
+            "sub_type": "tooling_plugin",
+        },
+        "qc_governance": {
+            "authorized_qc_level": "LEVEL_3_DEPARTMENT_REVIEW",
+        },
+    }
+    (ws / ".md" / "workspace_context.yaml").write_text(yaml.safe_dump(ctx), encoding="utf-8")
+    (ws / "output").mkdir()
+    (ws / "output" / "plugin.md").write_text("# Production Tooling Doc", encoding="utf-8")
+
+    auditor = SandboxAuditor(ws)
+    report = auditor.audit()
+    assert report.total_issues == 0
+

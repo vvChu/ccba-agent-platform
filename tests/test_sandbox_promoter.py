@@ -83,6 +83,26 @@ def test_promoter_blocks_non_sandbox_source(tmp_path: Path, target_delivery_proj
         SandboxPromoter(sandbox_root=invalid_ws)
 
 
+def test_promoter_blocks_non_sandbox_specialized_extension(tmp_path: Path):
+    """Ensure promoter blocks non-sandbox specialized extensions (e.g. tooling_plugin)."""
+    ws = tmp_path / "tooling-plugin-spoke"
+    ws.mkdir()
+    md_dir = ws / ".md"
+    md_dir.mkdir()
+    context = {
+        "project": {
+            "name": "tooling-plugin-spoke",
+            "archetype": "specialized_extension",
+            "sub_type": "tooling_plugin",
+        }
+    }
+    (md_dir / "workspace_context.yaml").write_text(yaml.safe_dump(context), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="personal_sandbox"):
+        SandboxPromoter(sandbox_root=ws)
+
+
+
 def test_promoter_cleanse_watermark_and_copies_to_target(
     sandbox_workspace: Path, target_delivery_project: Path
 ):

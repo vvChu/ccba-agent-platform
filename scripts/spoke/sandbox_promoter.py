@@ -58,7 +58,7 @@ class SandboxPromoter:
         is_sandbox = sub_type == "personal_sandbox" or self.context_data.get("guardrails", {}).get(
             "sandbox_mode", False
         )
-        if not is_sandbox and archetype != "specialized_extension":
+        if not is_sandbox:
             raise ValueError(
                 f"Source workspace '{self.sandbox_root.name}' is not a personal_sandbox "
                 f"(archetype: {archetype}, sub_type: {sub_type}). Promotion aborted."
