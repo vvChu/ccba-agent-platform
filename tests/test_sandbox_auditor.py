@@ -120,4 +120,3 @@ def test_sandbox_auditor_skips_non_sandbox_specialized_extensions(tmp_path: Path
     auditor = SandboxAuditor(ws)
     report = auditor.audit()
     assert report.total_issues == 0
-

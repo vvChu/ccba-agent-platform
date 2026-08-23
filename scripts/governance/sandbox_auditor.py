@@ -40,10 +40,7 @@ class SandboxAuditor(BaseAuditor):
         proj = context.get("project", {})
         sub_type = proj.get("sub_type", "")
         guardrails = context.get("guardrails", {})
-        return (
-            sub_type == "personal_sandbox"
-            or guardrails.get("sandbox_mode") is True
-        )
+        return sub_type == "personal_sandbox" or guardrails.get("sandbox_mode") is True
 
     def _audit_qc_cap(self, context: dict[str, Any], issues: list[AuditIssue]) -> None:
         """Ensure personal sandbox does not claim QC authorization > LEVEL_1."""

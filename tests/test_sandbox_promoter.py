@@ -102,7 +102,6 @@ def test_promoter_blocks_non_sandbox_specialized_extension(tmp_path: Path):
         SandboxPromoter(sandbox_root=ws)
 
 
-
 def test_promoter_cleanse_watermark_and_copies_to_target(
     sandbox_workspace: Path, target_delivery_project: Path
 ):
