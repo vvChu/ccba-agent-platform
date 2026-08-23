@@ -11,25 +11,36 @@ We formally establish the **Personal Sandbox Spoke Specification (`specialized_e
 
 ### 1. Personal Sandbox Taxonomy & CCBA Charter 2026 Schema
 Personal sandboxes are classified under Archetype `specialized_extension` with `sub_type: "personal_sandbox"`. Their `.md/workspace_context.yaml` strictly maps to CCBA Charter 2026:
-- The 5 Functional Departments + Ban GiÃ¡m Ä‘á»‘c (`department`): `PHONG_TONG_HOP`, `PHONG_RD_HTQT`, `PHONG_BIM_THIET_KE`, `PHONG_BIM_DU_AN`, `PHLNG_TV_KD_HCM`, `BAN_GIAM_DOC`.
-- The 11 Accountability Seats (`seat_role`): `GIAM_DOC`, `PHO_GIAM_DOC`, `CO_VAN_PHAP_LY_QA`, `TRUONG_PHONG_TONG_HOP`, `PHU_TRACH_KE_TOAN`, `TRUONG_PHONG_RD_HTQT`, `IDOP_LEAD`, `TRUONG_PHONG_BIM_THIET_KE`, `TRUONG_PHONG_BIM_DU_AN`, `CHU_TRI_HOP_DONG_PM`, `CHU_TRI_BO_MON`, `KY_SU_THUC_THI`‚‹HKS]™[PÈ]]Üš^˜][Ûˆ
-X×ÙÛİ™\›˜[˜ÙX
-NˆU‘SÌWÕPÒ’PĞSĞÒPÒØÈU‘SÍWÑ’SSĞT“ÕS
-1$xnà]HLÊK‚‹HQÔÈ\ÚÈ[YÜ˜][Ûˆ
-YÜİ\ÚÜØ
-NˆX\ÈXİ]™Hİ—ØÛÙX][\ÈÚ]X^Ì	HY˜[˜ÙH[Z]
-X^ØY˜[˜ÙWÜ˜]NˆÌ\ˆ1$xnà]HMÊK‚‚ˆÈÈÈ‹ˆY\™Y™YÚ\İH™YÚ\İ˜][Ûˆ	ˆŒQ^HİÙY\‹HX‰ÜÈÜÚÙWÜ™YÚ\İKX[[›YÜÈØ[™›Ş\ÈÚ]\×ÜØ[™›ŞˆYX[™İÛ™\—Ù[XZ[‚‹HÙ[˜[˜]ÚŞ[˜ÜÈ
-Ş[˜×ÜÜÚÙKœHKX[
-H]]ÛX]XØ[H^ÛYH\œÛÛ˜[Ø[™›Ş\È[›\ÜÈ^XÚ]H\™Ù]Y
+- The 5 Functional Departments + Ban GiÃ¡m Ä‘á»‘c (`department`): `PHONG_TONG_HOP`, `PHONG_RD_HTQT`, `PHONG_BIM_THIET_KE`, `PHONG_BIM_DU_AN`, `PHONG_TV_KD_HCM`, `BAN_GIAM_DOC`.
+- The 11 Accountability Seats (`seat_role`): `GIAM_DOC`, `PHO_GIAM_DOC`, `CO_VAN_PHAP_LY_QA`, `TRUONG_PHONG_TONG_HOP`, `PHU_TRACH_KE_TOAN`, `TRUONG_PHONG_RD_HTQT`, `IDOP_LEAD`, `TRUONG_PHONG_BIM_THIET_KE`, `TRUONG_PHONG_BIM_DU_AN`, `CHU_TRI_HOP_DONG_PM`, `CHU_TRI_BO_MON`, `KY_SU_THUC_THI`.
+- 5-Level QC Authorization (`qc_governance`): `LEVEL_1_TECHNICAL_CHECK` to `LEVEL_5_FINAL_APPROVAL` (Äiá»u 13).
+- IDOP Task Integration (`idop_tasks`): Maps active `pgv_code` items with max 70% advance limit (`max_advance_rate: 0.70` per Äiá»u 17).
 
-Z[˜ÛYK\Ø[™›Ş\Ø
-K‚‹HØ[™›Ş\È[˜Xİ]™H›ÜˆˆŒ^\È\™HX\šÙYS’PÕU‘WÔĞS‘“Ö[™ØY™[HİÙ\\š[™È™YÚ\İHXZ[[˜[˜ÙK‚‚ˆÈÈÈËˆØ[™›ŞØ]\›X\šÚ[™È	ˆPÈ]™[Ø\‹H[Øİ[Y[ËØ[İ[][ÛœË[™]Y]™\ÜÈÙ[™\˜]Y[œÚYHHØ[™›Ş]]ÛX]XØ[H[˜ÛYHHX[™]ÜHXY\‹Ù›Ûİ\‚ˆĞĞĞHĞS‘“ÖS‘TÈ¸n¨“ˆ8n¨“ÈQÒpâ“ˆĞUH“ÒH¸næHÒPH0àU0à’Ò0ãS’8n«×X‚‹HØ[™›ŞÜ\˜][ÛœÈ\™HØ\Y]
-”TH]™[H
-XÚšXØ[ÚXÚÊJ‹ˆ\™XİX›\Ú[™ÈÈÙ™šXÚX[Ú\™TÚ[ÙQØİ[Y[Ø\ÈİšXİH›ØÚÙYHQÔœšYÙXÚ[ˆØ[™›ŞÛ[ÙNˆYX‚‚ˆÈÈÈˆËTİ\[]™\˜X›H›Û[İ[Ûˆ	ˆØH[YÜ˜][Û‚‚ŒKˆ
-ŠÛX[œÙH	ˆ˜[Y]JŠˆønîHñ¬Ú8n¨^HÚxnàÛH˜Høn©\K8náÈ8nä[™È8nìH1$xnæ[™ÈønèH8nèŞH0è[ˆĞĞHĞS‘“ÖQ•ÚH1$xn¨]Úxnª[‹‚Œ‹ˆ
-Š•\™Ù][™Ù\İ[ÛŠŠˆ8nëÈxnáİH1$pìÛ™ÈğìÚH1$q¬8nèØÈÚ^xnàÛˆ8n¬Û™ÈØ[™ÈÜÚÙH8nìH0à[ˆ1$pëXÚ
-[]™\WÜ›Ú™Xİ
-Høn­ØÈ1$xnª^H0ê›ˆXˆ]XHØØØ˜K\›ÜÜÙK]ËZX˜‚ŒËˆ
-Š”ÕˆÚYÛ‹[Ù™ˆİYÚ[™ÊŠˆQÔœšYÙX8nìH1$xnæ[™È1$pà[šğìÚH0í™È[ˆxn¯İHÚX[ÈšxnáØÈ
-›Ø\ÜÚYÛ›Y[Ø
-H1$xnàÈÚxnª[ˆ¸nâÈH^xnáİ± Û™Èİxn©]8n©Û™ÈË‚‚ˆÈÈÛÛœÙ\]Y[˜Ù\Â‹HÜÚ]]™Nˆ8nìHÈğè[™È8n¨[È°è8nëH™ÚxnáÛH[ˆğèˆxn©]8nìXÈÚÈ0èššpê›ˆĞĞK‚‹HÜÚ]]™Nˆpè›ˆ8néÈL	H]^HÚ8n¯ÈĞĞHŒ‹špêpêH¸néŞ¹’Æ¸wR6’Î¸v6‚n¹¶’f¸vâ”%5Bà¢Ò÷6—F—fS¢Œ:&âI¸¶æ‚,:æ‚Şª6‚vºöL:’>ª6âN»:â6Œ:Öæ‚Fº–2l:,ª6âæŒ:FºÒæv†¸vÒ<:æŒ:&âà
+### 2. Tiered Registry Registration & 60-Day TTL Sweep
+- Hub's `spoke_registry.yaml` flags sandboxes with `is_sandbox: true` and `owner_email`.
+- Central batch syncs (`sync_spoke.py --all`) automatically exclude personal sandboxes unless explicitly targeted (`--include-sandboxes`).
+- Sandboxes inactive for > 60 days are marked `INACTIVE_SANDBOX` and safely swept during registry maintenance.
+
+### 3. Sandbox Watermarking & QC Level Cap
+- All documents, calculations, and audit reports generated inside a sandbox automatically include the mandatory header/footer:
+  `[CCBA SANDBOX DRAFT â€” Báº¢N THáº¢O NGHIÃŠN Cá»¨U Ná»˜I Bá»˜ â€” CHÆ¯A PHÃT HÃ€NH CHÃNH THá»¨C]`.
+- Sandbox operations are capped at **QC Level 1 (Technical Check)**. Direct publishing to official SharePoint `CdeDocuments` is strictly blocked by `IDOPBridge` when `sandbox_mode: true`.
+
+### 4. 3-Step Deliverable Promotion & PGV Handover Pipeline
+
+```mermaid
+graph LR
+    Sandbox["ğŸ§‘â€ğŸ’» Spoke CÃ¡ NhÃ¢n<br/>(Báº£n nhÃ¡p / Script / PGV)"] --> Step1["1. Cleanse & Validate<br/>(Kiá»ƒm tra Cáº¥p 1, gá»¡ Watermark)"]
+    Step1 --> Step2["2. Target Ingestion<br/>(Chuyá»ƒn giao sang project_delivery)"]
+    Step2 --> Step3["3. PGV Sign-off Staging<br/>(ÄÄƒng kÃ½ nghiá»‡m thu IDOP)"]
+    Step3 --> Signoff["âœ… PM / TrÆ°á»Ÿng PhÃ²ng Duyá»‡t Nghiá»‡m Thu"]
+```
+
+1. **Cleanse & Validate**: Ká»¹ sÆ° cháº¡y kiá»ƒm tra Cáº¥p 1, há»‡ thá»‘ng tá»± Ä‘á»™ng gá»¡ thá»§y áº¥n `[CCBA SANDBOX DRAFT]` khi Ä‘áº¡t chuáº©n.
+2. **Target Ingestion**: Dá»¯ liá»‡u Ä‘Ã³ng gÃ³i Ä‘Æ°á»£c chuyá»ƒn tháº³ng sang Spoke Dá»± Ãn Ä‘Ã­ch (`delivery_project`) hoáº·c Ä‘áº©y lÃªn Hub qua `/ccba-propose-to-hub`.
+3. **PGV Sign-off Staging**: `IDOPBridge` tá»± Ä‘á»™ng Ä‘Ã¡nh dáº¥u thÃ´ng tin phiáº¿u giao viá»‡c (`JobAssignments`) Ä‘á»ƒ chuáº©n bá»‹ PM duyá»‡t nÄƒng suáº¥t Táº§ng 3.
+
+## Consequences
+- **Positive**: Tá»± do sÃ¡ng táº¡o vÃ  thá»­ nghiá»‡m an toÃ n thiáº¿t thá»±c cho thÃ nh viÃªn CCBA.
+- **Positive**: TuÃ¢n thá»§ 100% Quy cháº¿ CCBA 2026, triá»‡t tiÃªu rá»§i ro sai lá»‡ch dá»¯ liá»‡u vá»›i Viá»‡n IBST.
+- **Positive**: PhÃ¢n Ä‘á»‹nh rÃ nh máº¡ch giá»¯a tÃ i sáº£n dá»± Ã¡n chÃ­nh thá»©c vÃ  báº£n nhÃ¡p thá»­ nghiá»‡m cÃ¡ nhÃ¢n.
