@@ -84,12 +84,16 @@ graph TD
   - Tương tác: Agent tự động gợi ý nộp sau khi hoàn thành Workflow, kết hợp lệnh CLI tường minh `ccba idop submit --file ... --task-id ...`.
   - Phân cấp: Kỹ sư stage hồ sơ vào `.md/idop_staged/` (AI Pre-Submission Gate tự động kiểm tra); PM / Chủ trì hợp đồng xác nhận nộp chính thức.
   - Phản hồi: Lỗi vi phạm Tier 1 Hard-Floor được hiển thị tức thì tại Chat/Terminal và chặn tạo biên nhận nộp.
+- **[Đã chốt - 2026-08-23] Tiện Ích CLI `ccba-spoke` Cho Kỹ Sư Hiện Trường (`[WF-04]`)**:
+  - Đóng gói trọn bộ CLI tool: `ccba-spoke status`, `ccba-spoke sync`, `ccba-spoke stage`, `ccba-spoke submit`, `ccba-spoke flush`.
+  - Tích hợp rào chắn tiền kiểm AI Pre-Submission Gate và Idempotent Replay qua `.md/idop_staged/`.
+  - Đăng ký console script entry point chính thức trong `pyproject.toml`.
 
 ---
 
 ## 4. Sương mù Chiến trận / Chưa xác định rõ (Not yet specified)
 
-*(Hiện tại toàn bộ 3 sương mù ban đầu đã được làm sáng tỏ qua các ticket `[WF-01]`, `[WF-02]`, `[WF-03]`)*.
+*(Toàn bộ sương mù chiến trận ban đầu đã được giải tỏa hoàn toàn; hệ sinh thái IDOP Hub-Spoke đã bước vào trạng thái vận hành ổn định).*
 
 ---
 
@@ -105,34 +109,27 @@ graph TD
 
 ```mermaid
 graph LR
-    subgraph Done ["✅ ĐÃ HOÀN THÀNH (Done)"]
+    subgraph Done ["✅ ĐÃ HOÀN THÀNH TOÀN DIỆN (Done 4/4)"]
         T01["[WF-01] Giao diện Kỹ sư Nộp Hồ sơ IDOP<br/><i>(HITL / Grilling)</i>"]
         T02["[WF-02] Ma trận Cấp Quota AI Gateway<br/><i>(AFK / Research)</i>"]
         T03["[WF-03] SOP Khởi tạo Project Delivery Spoke<br/><i>(AFK / Task)</i>"]
-    end
-
-    subgraph Frontier ["🎯 BIÊN GIỚI (Frontier - Unblocked)"]
         T04["[WF-04] Đóng gói CLI Tool <code>ccba-spoke</code><br/><i>(AFK / Task)</i>"]
     end
 ```
 
-### 🎯 Các Ticket ở Biên giới (Frontier - Ready to Work)
+### ✅ Toàn Bộ 4 Ticket Định Hướng Đã Hoàn Tất (All Closed)
 
-1. **`[WF-04]` [AFK / Task] [Đóng gói Tiện ích CLI `ccba-spoke` Hỗ trợ Kỹ sư Thao tác Staging và Đồng bộ](tickets/wf_04_ccba_spoke_cli.md)**
-   - **Loại**: `Task` (Triển khai code trong `scripts/spoke/` và CLI entrypoint `ccba idop submit`)
-   - **Mục tiêu**: Đóng gói lệnh CLI `ccba idop submit` hỗ trợ stage hồ sơ, kiểm tra rào chắn AI Pre-Submission Gate, tạo PGV receipt JSON và đẩy vào `.md/idop_staged/`.
-   - **Trạng thái**: `OPEN` (Frontier - Unblocked by `[WF-01]`)
-
-### ✅ Các Ticket Đã Đóng (Closed)
-
-2. **`[WF-01]` [HITL / Grilling] [Giao diện Tương tác Nộp Hồ sơ IDOP cho Kỹ sư](tickets/wf_01_idop_submission_interface.md)**
+1. **`[WF-01]` [HITL / Grilling] [Giao diện Tương tác Nộp Hồ sơ IDOP cho Kỹ sư](tickets/wf_01_idop_submission_interface.md)**
    - **Trạng thái**: `CLOSED` (Chốt Hybrid Workflow + CLI, Phân cấp 2 tầng)
 
-3. **`[WF-02]` [AFK / Research] [Ma trận Cấp phát Quota & Routing Rule cho AI Gateway Server Spark](tickets/wf_02_ai_gateway_quota_matrix.md)**
+2. **`[WF-02]` [AFK / Research] [Ma trận Cấp phát Quota & Routing Rule cho AI Gateway Server Spark](tickets/wf_02_ai_gateway_quota_matrix.md)**
    - **Trạng thái**: `CLOSED` (Xem báo cáo tại [`ai_gateway_quota_matrix_and_routing_architecture.md`](../knowledge/research_and_studies/ai_gateway_quota_matrix_and_routing_architecture.md))
 
-4. **`[WF-03]` [AFK / Task] [Bộ Quy Chuẩn & SOP Khởi Tạo Project Delivery Spoke trên OneDrive](tickets/wf_03_project_delivery_spoke_sop.md)**
+3. **`[WF-03]` [AFK / Task] [Bộ Quy Chuẩn & SOP Khởi Tạo Project Delivery Spoke trên OneDrive](tickets/wf_03_project_delivery_spoke_sop.md)**
    - **Trạng thái**: `CLOSED` (Xem SOP tại [`project_delivery_spoke_setup.md`](../../docs/sop/project_delivery_spoke_setup.md))
+
+4. **`[WF-04]` [AFK / Task] [Đóng gói Tiện ích CLI `ccba-spoke` Hỗ trợ Kỹ sư Thao tác Staging và Đồng bộ](tickets/wf_04_ccba_spoke_cli.md)**
+   - **Trạng thái**: `CLOSED` (Xem mã nguồn [`scripts/spoke/spoke_cli.py`](../../scripts/spoke/spoke_cli.py))
 
 ---
 

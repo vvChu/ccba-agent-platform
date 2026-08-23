@@ -33,6 +33,7 @@ ccba-compile-knowledge = "scripts.spoke.compile_knowledge:main"
 ccba-legal-sync = "scripts.legal.legal_sync:main"
 ccba-audit-pr = "scripts.validation.audit_pr_comments:main"
 ccba-lint-imports = "scripts.governance.check_dependency_contracts:main"
+ccba-spoke = "scripts.spoke.spoke_cli:main"
 
 
 
