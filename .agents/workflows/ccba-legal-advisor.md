@@ -1,6 +1,6 @@
 ---
 description: "Tư vấn & Giải đáp Pháp lý Xây dựng: Tự động phân tích câu hỏi mơ hồ, phỏng vấn làm rõ thích ứng, truy xuất tri thức OKF v2.2 và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực. Kích hoạt khi người dùng hỏi các câu hỏi về cấp phép xây dựng, PCCC, nghiệm thu, đấu thầu, hoặc xin tư vấn pháp lý công trình."
-disable-model-invocation: false
+disable-model-invocation: true
 ---
 
 # Workflow: Tư Vấn & Giải Đáp Pháp Lý Xây Dựng (/ccba-legal-advisor)

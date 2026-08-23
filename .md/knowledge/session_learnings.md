@@ -296,10 +296,17 @@
   - **Bắt buộc:** Phải bọc toàn bộ chuỗi trong dấu nháy kép `"` (ví dụ: `description: "[Alias ...] ..."`).
 * **Lý do:** Parser YAML tiêu chuẩn (PyYAML) sẽ diễn giải `[` ở đầu dòng như một Flow Sequence (danh sách YAML) và ném lỗi cú pháp nghiêm trọng `Failed to parse frontmatter YAML: expected <block end>, but found '<scalar>'` làm vỡ CI validation gates.
 
+#### P5.6. Universal 2D Table Reconstruction & Direct Form Template Extractor (OKF v2.2)
+* **Nguyên tắc:** Đối với các văn bản quy phạm pháp luật chứa biểu mẫu trực tiếp (`Mẫu số XX/...`) mà không có phân đoạn tiêu đề `PHỤ LỤC`, hoặc các bảng danh mục lớn hàng trăm hàng:
+  1. **Khử Hardcode Table Slug:** Tuyệt đối không gán cứng tên bảng theo từ khóa tìm kiếm. Sử dụng định danh tuần tự chuẩn `bang_{idx:02d}` an toàn và cập nhật MOC liên kết tương ứng.
+  2. **Trích xuất Biểu mẫu Trực tiếp:** Quét phát hiện `Mẫu số XX/...` bằng regex và sinh tệp độc lập trong thư mục `templates/` kèm YAML frontmatter `type: "form_template"`.
+  3. **Tái tạo Bảng 2D GFM Chuẩn:** Render bảng 2D Markdown chuẩn GFM có bọc `<br>` cho ô dữ liệu đa dòng, lọc bỏ các dòng tiêu đề lặp lại từ Word và dọn dẹp các cột trống cuối bảng.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP5.1. Naive Regex Regex Table Replacement:** Dùng regex đơn giản làm mất merge cell hoặc xô lệch dữ liệu bảng số liệu.
 * **AP5.2. Stripping YAML Comments on Re-dump:** Dùng `yaml.dump()` thô làm mất toàn bộ comment giải thích do con người viết trước đó.
 * **AP5.3. Unquoted Bracket-Leading Scalar in YAML Frontmatter:** Khai báo trường chuỗi bắt đầu bằng `[` mà không bọc nháy kép trong header tệp markdown.
+* **AP5.4. Hardcoded Table Slugs:** Hardcode tên bảng cố định theo từ khóa heuristic làm sai lệch hàng trăm bảng phân loại khác.
 
 ---
 
@@ -557,6 +564,12 @@
 * **Nguyên tắc:** **TUYỆT ĐỐI KHÔNG ĐÁNH ĐỒNG** Archetype cấp cao `specialized_extension` với cờ trạng thái tạm thời `is_sandbox: True`.
 * **Thực tế:** `specialized_extension` bao gồm cả các dự án tiện ích chính thức (`tooling_plugin`, `research_lab`). Việc gán nhầm toàn bộ extension thành sandbox sẽ khiến dự án chính thức bị loại trừ khỏi batch sync và bị xóa dọn sau 60 ngày.
 * **Chuẩn thực thi:** Chỉ kích hoạt `is_sandbox = True` khi thỏa mãn: `sub_type == "personal_sandbox"` hoặc `guardrails.get("sandbox_mode") is True`.
+
+#### P7.22. Post-Merge Proposal Life-cycle Transition & SSOT Catalog Recompilation (ADR 0045, ADR 0047)
+* **Nguyên tắc:** Khi hoàn tất thẩm định và squash-merge một Pull Request đề xuất từ Spoke lên Hub:
+  1. **Cập nhật Proposal Header:** Ngay lập tức đổi `status: "open"` $\rightarrow$ `status: "merged"`, ghi nhận `merged_commit` hash và `merged_date` vào YAML frontmatter của tệp `.agents/proposals/*.md`.
+  2. **Biên Dịch Lại Central Catalog:** Chạy `python scripts/governance/compile_catalog.py` để đồng bộ `catalog.yaml` từ frontmatter của skill/workflow mới.
+  3. **Bảo tồn SSOT:** Không để tồn tại proposal "open" khi mã nguồn thực tế đã được đưa vào `main`.
 
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP7.1. Editing YAML without Validation:** Sửa đổi YAML mà không chạy kiểm thử qua `yaml.safe_load()`.
