@@ -11,7 +11,7 @@
 
 ## 1. Bối cảnh & Mục tiêu
 
-Khác với các Spoke phát triển phần mềm (có kho Git riêng và mở PR), **Project Delivery Spoke** (như `D:\OneDrive - IBST BIM\00 Works\2026-04 DH Viet Nhat`) vận hành trên hệ thống tệp tin đám mây OneDrive/SharePoint của Viện IBST:
+Khác với các Spoke phát triển phần mềm (có kho Git riêng và mở PR), **Project Delivery Spoke** (như `D:\OneDrive - IBST BIM\00 Works\2026-04 DH Viet Nhat`) vận hành trên hệ thống tệp tin đám mây OneDrive/SharePoint của CCBA:
 - Không sử dụng Git remote để tránh rò rỉ hồ sơ mật của khách hàng và tránh xung đột binary (Revit, AutoCAD, PDF scan).
 - Vẫn cần kế thừa các AI Skills & Workflows từ Hub (`.agents/workflows/`, `.agents/skills/`).
 - Cần có tệp `workspace_context.yaml` để Agent hiểu đúng thông tin dự án, tiêu chuẩn áp dụng, mốc tiến độ WBS.
