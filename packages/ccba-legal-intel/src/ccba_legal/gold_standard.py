@@ -507,18 +507,20 @@ def generate_clauses_ast(text: str) -> list[dict[str, Any]]:
             seen.add(anc_id)
             title = re.sub(r"<[^>]+>", "", line).strip("# *").strip()
             if not title and idx < len(lines):
-                for next_line in lines[idx:idx+3]:
+                for next_line in lines[idx : idx + 3]:
                     clean_next = re.sub(r"<[^>]+>", "", next_line).strip("# *").strip()
                     if clean_next:
                         title = clean_next
                         break
-            clauses.append({
-                "clause_id": anc_id,
-                "anchor": anc_id,
-                "title": title,
-                "line_start": idx,
-                "line_end": idx,
-            })
+            clauses.append(
+                {
+                    "clause_id": anc_id,
+                    "anchor": anc_id,
+                    "title": title,
+                    "line_start": idx,
+                    "line_end": idx,
+                }
+            )
     return clauses
 
 

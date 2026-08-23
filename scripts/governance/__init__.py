@@ -17,6 +17,7 @@ from .base import (
     AuditIssue,
     AuditReport,
     BaseAuditor,
+    GovernanceAuditReport,
 )
 from .cli import (
     run_docs_validation_cli,
@@ -47,6 +48,7 @@ from .wiki_health_linter import WikiHealthLinter
 __all__ = [
     "AuditIssue",
     "AuditReport",
+    "GovernanceAuditReport",
     "BaseAuditor",
     "DocumentAuditor",
     "DriftAuditor",

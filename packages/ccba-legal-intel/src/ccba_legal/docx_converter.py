@@ -12,25 +12,19 @@ into Gold Standard OKF v2.2 Markdown bundles with:
 
 from __future__ import annotations
 
-import argparse
 import csv
 import json
 import re
 import shutil
-import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-import mammoth
 import yaml
-from docx import Document
 
 from ccba_legal.gold_standard import (
     GoldStandardProcessor,
     generate_bundle_ast_and_qa,
-    get_doc_profile,
     inject_semantic_anchors,
-    normalize_notes_and_lists,
 )
 
 
@@ -126,7 +120,9 @@ def format_all_qcvn_md_tables(md_path: Path) -> int:
 
 def normalize_docx_markdown(md_text: str) -> str:
     """Normalize mammoth converted markdown headings and clean up escape chars."""
-    md_text = md_text.replace(r"\.", ".").replace(r"\-", "-").replace(r"\(", "(").replace(r"\)", ")")
+    md_text = (
+        md_text.replace(r"\.", ".").replace(r"\-", "-").replace(r"\(", "(").replace(r"\)", ")")
+    )
 
     md_text = re.sub(r"__(Chương\s+[IVXLCDM0-9]+(?::\s*[^_]+)?)__", r"## \1", md_text)
     md_text = re.sub(r"__(Điều\s+\d+\.\s*[^_]+)__", r"### \1", md_text)
@@ -142,9 +138,7 @@ def normalize_docx_markdown(md_text: str) -> str:
     md_text = re.sub(
         r"__Bảng\s+([A-Z0-9]+(?:\.[0-9]+)?)\s*[-–:]\s*([^_]+)__", r"### Bảng \1 - \2", md_text
     )
-    md_text = re.sub(
-        r"__((?:[1-7]|[A-I])\.\d+\.\d+\.\d+)\.?\s*([^_]+)__", r"##### \1 \2", md_text
-    )
+    md_text = re.sub(r"__((?:[1-7]|[A-I])\.\d+\.\d+\.\d+)\.?\s*([^_]+)__", r"##### \1 \2", md_text)
     md_text = re.sub(r"__((?:[1-7]|[A-I])\.\d+\.\d+)\.?\s*([^_]+)__", r"#### \1 \2", md_text)
     md_text = re.sub(r"__((?:[1-7]|[A-I])\.\d+)\.?\s*([^_]+)__", r"### \1 \2", md_text)
     md_text = re.sub(r"(###\s*)+", "### ", md_text)
@@ -170,8 +164,8 @@ def normalize_clause_numbers(text: str) -> str:
 
 
 def extract_legal_basis_graph(
-    raw_text: str, registry_lookup: Dict[str, str]
-) -> List[Dict[str, str]]:
+    raw_text: str, registry_lookup: dict[str, str]
+) -> list[dict[str, str]]:
     """Extract legal basis citations and resolve to canonical doc_ids."""
     basis_list: list[dict[str, str]] = []
     pattern = re.compile(
@@ -196,8 +190,15 @@ def extract_legal_basis_graph(
     return basis_list
 
 
-def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> List[Dict[str, Any]]:
+def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[str, Any]]:
     """3-Tier Semantic Table Classifier according to ADR 0021."""
+    try:
+        from docx import Document
+    except ImportError:
+        raise ImportError(
+            "Gói 'python-docx' chưa được cài đặt. Vui lòng cài đặt qua 'pip install python-docx' để bóc tách bảng DOCX."
+        )
+
     doc = Document(str(docx_path))
     tables_dir = bundle_dir / "tables"
     csv_dir = tables_dir / "csv"
@@ -246,13 +247,6 @@ def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> List[Dict[
             continue
 
         table_slug = f"bang_{idx:02d}"
-        if any(
-            "loại công trình" in h.lower()
-            or "quy mô" in h.lower()
-            or "cấp công trình" in h.lower()
-            for h in headers
-        ):
-            table_slug = "bang_danh_muc_cong_trinh_anh_huong_an_toan_cong_dong"
 
         csv_file = csv_dir / f"{table_slug}.csv"
         with open(csv_file, "w", encoding="utf-8-sig", newline="") as f:
@@ -264,7 +258,7 @@ def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> List[Dict[
             for r in grid[1:]:
                 rec = {}
                 for c_idx, h in enumerate(headers):
-                    col_key = h if h else f"col_{c_idx+1}"
+                    col_key = h if h else f"col_{c_idx + 1}"
                     rec[col_key] = r[c_idx] if c_idx < len(r) else ""
                 records.append(rec)
 
@@ -296,8 +290,8 @@ def process_vbpl_bundle_okf_v22(
     docx_path: Path,
     bundle_dir: Path,
     registry_file: Path,
-    output_filename: Optional[str] = None,
-) -> Dict[str, Any]:
+    output_filename: str | None = None,
+) -> dict[str, Any]:
     """Complete OKF v2.2 Transformation Pipeline for Decrees and Laws."""
     bundle_dir.mkdir(parents=True, exist_ok=True)
     templates_dir = bundle_dir / "templates"
@@ -311,7 +305,7 @@ def process_vbpl_bundle_okf_v22(
         with open(registry_file, encoding="utf-8") as f:
             reg_data = yaml.safe_load(f)
             all_items = []
-            for k, v in reg_data.items():
+            for _k, v in reg_data.items():
                 if isinstance(v, list):
                     all_items.extend(v)
             for item in all_items:
@@ -323,6 +317,13 @@ def process_vbpl_bundle_okf_v22(
                     or item.get("document_number") == bundle_dir.name
                 ):
                     doc_registry_meta = item
+
+    try:
+        import mammoth
+    except ImportError:
+        raise ImportError(
+            "Gói 'mammoth' chưa được cài đặt. Vui lòng cài đặt qua 'pip install mammoth' để chuyển đổi DOCX sang Markdown."
+        )
 
     with open(docx_path, "rb") as f:
         result = mammoth.convert_to_markdown(f)
@@ -357,9 +358,7 @@ def process_vbpl_bundle_okf_v22(
         end_pos = app_matches[idx + 1].start() if idx + 1 < len(app_matches) else len(cleaned_md)
         app_full_text = cleaned_md[start_pos:end_pos].strip()
 
-        pattern = re.compile(
-            r"(?:^|\n)#*\s*__?\s*Mẫu\s+số\s+(\d+[a-zA-Z]?)[.\s_]*", re.IGNORECASE
-        )
+        pattern = re.compile(r"(?:^|\n)#*\s*__?\s*Mẫu\s+số\s+(\d+[a-zA-Z]?)[.\s_]*", re.IGNORECASE)
         all_matches = list(pattern.finditer(app_full_text))
         form_positions = {}
         for m in all_matches:
@@ -378,10 +377,14 @@ def process_vbpl_bundle_okf_v22(
                 )
                 form_raw_text = app_full_text[f_start:f_end].strip()
                 form_norm_text = normalize_clause_numbers(form_raw_text)
-                lines = [l.strip() for l in form_raw_text.splitlines() if l.strip()]
+                lines = [
+                    line_item.strip()
+                    for line_item in form_raw_text.splitlines()
+                    if line_item.strip()
+                ]
                 form_title = f"Mẫu số {f_num}"
-                for l in lines[1:6]:
-                    clean_l = re.sub(r"^__+|__+$", "", l).replace("*", "").strip()
+                for line_item in lines[1:6]:
+                    clean_l = re.sub(r"^__+|__+$", "", line_item).replace("*", "").strip()
                     if (
                         clean_l
                         and not clean_l.startswith("CỘNG HÒA")
@@ -419,20 +422,17 @@ usage: "Biểu mẫu chuẩn hóa phục vụ AI Copywriting, QC Audit & Sinh H�
                     }
                 )
         else:
-            is_data_table_appendix = (
-                any(
-                    k in app_title_clean.lower()
-                    for k in [
-                        "danh mục công trình ảnh hưởng lớn",
-                        "danh mục công trình quy mô lớn",
-                        "bảng danh mục công trình",
-                    ]
-                )
-                or (
-                    len(app_full_text.splitlines()) > 50
-                    and "mã số" in app_full_text.lower()
-                    and "cấp công trình" in app_full_text.lower()
-                )
+            is_data_table_appendix = any(
+                k in app_title_clean.lower()
+                for k in [
+                    "danh mục công trình ảnh hưởng lớn",
+                    "danh mục công trình quy mô lớn",
+                    "bảng danh mục công trình",
+                ]
+            ) or (
+                len(app_full_text.splitlines()) > 50
+                and "mã số" in app_full_text.lower()
+                and "cấp công trình" in app_full_text.lower()
             )
             if is_data_table_appendix:
                 continue
@@ -464,6 +464,72 @@ usage: "Biểu mẫu / Phụ lục chuẩn hóa phục vụ AI Copywriting, QC A
                     "roman": roman_num,
                     "filename": filename,
                     "title": f"Phụ lục {roman_num}: {app_title_clean}",
+                    "path": str(target_file.relative_to(bundle_dir)),
+                }
+            )
+
+    if not app_matches:
+        direct_form_matches = list(
+            re.finditer(
+                r"(?:^|\n)#*\s*__?\s*Mẫu\s+số\s*[:\.]?\s*(\d+[a-zA-Z\(\)]*(?:/[\w\.\-]+)?)[.\s_]*([^\n]*)",
+                cleaned_md,
+                re.IGNORECASE,
+            )
+        )
+        for idx, match in enumerate(direct_form_matches):
+            f_code = match.group(1).strip()
+            f_title_line = match.group(2).strip()
+            start_pos = match.start()
+            end_pos = (
+                direct_form_matches[idx + 1].start()
+                if idx + 1 < len(direct_form_matches)
+                else len(cleaned_md)
+            )
+            form_raw_text = cleaned_md[start_pos:end_pos].strip()
+            form_norm_text = normalize_clause_numbers(form_raw_text)
+
+            lines = [
+                line_item.strip() for line_item in form_raw_text.splitlines() if line_item.strip()
+            ]
+            form_title = f_title_line
+            if not form_title:
+                for line_item in lines[1:6]:
+                    clean_l = re.sub(r"^__+|__+$", "", line_item).replace("*", "").strip()
+                    if (
+                        clean_l
+                        and not clean_l.startswith("CỘNG HÒA")
+                        and not clean_l.startswith("Độc lập")
+                        and not clean_l.startswith("-----")
+                    ):
+                        form_title = clean_l
+                        break
+            if not form_title:
+                form_title = f"Mẫu số {f_code}"
+
+            clean_slug = re.sub(r"[^\w\d]+", "_", form_title.lower()).strip("_")[:40]
+            clean_f_code = re.sub(r"[^\w\d]+", "_", f_code.lower()).strip("_")
+            filename = f"mau_{clean_f_code}_{clean_slug}.md"
+            tmpl_content = f"""---
+title: "Mẫu số {f_code} - {form_title}"
+document: "{doc_num_str}"
+form_number: "Mẫu số {f_code}"
+type: "form_template"
+usage: "Biểu mẫu chuẩn hóa phục vụ AI Copywriting, QC Audit & Sinh Hồ Sơ"
+---
+
+# Mẫu Số {f_code} - {form_title}
+*(Kèm theo {doc_num_str})*
+
+---
+
+{form_norm_text}
+"""
+            target_file = templates_dir / filename
+            target_file.write_text(tmpl_content, encoding="utf-8")
+            created_templates.append(
+                {
+                    "filename": filename,
+                    "title": f"Mẫu số {f_code}: {form_title}",
                     "path": str(target_file.relative_to(bundle_dir)),
                 }
             )
@@ -516,13 +582,9 @@ usage: "Biểu mẫu / Phụ lục chuẩn hóa phục vụ AI Copywriting, QC A
         "> Toàn bộ các Phụ lục của văn bản đã được chuẩn hóa thành các Module Biểu mẫu độc lập tại thư mục [`./templates/`](./templates/) và Bảng tra cứu kỹ thuật tại [`./tables/`](./tables/):\n",
     ]
     for tmpl in created_templates:
-        moc_lines.append(
-            f"- 📄 **[{tmpl['title']}](./{tmpl['path'].replace(chr(92), '/')})**"
-        )
+        moc_lines.append(f"- 📄 **[{tmpl['title']}](./{tmpl['path'].replace(chr(92), '/')})**")
     for tbl in extracted_tables:
-        moc_lines.append(
-            f"- 📊 **[{tbl['table_id']}](./{tbl['csv'].replace(chr(92), '/')})**"
-        )
+        moc_lines.append(f"- 📊 **[{tbl['table_id']}](./{tbl['csv'].replace(chr(92), '/')})**")
 
     doc_num = doc_registry_meta.get("document_number", "Đang cập nhật")
     doc_title = doc_registry_meta.get("title", bundle_dir.name)
@@ -556,8 +618,8 @@ pdf_anchor: "./{Path(pdf_path).name}"
 ## {doc_title.upper()}
 
 > [!NOTE]
-> **Cơ quan ban hành:** {issued_by} (Người ký: {signer}).  
-> **Ngày ban hành:** {issued_date} | **Hiệu lực:** {effective_date}.  
+> **Cơ quan ban hành:** {issued_by} (Người ký: {signer}).
+> **Ngày ban hành:** {issued_date} | **Hiệu lực:** {effective_date}.
 > **Mỏ neo PDF Công báo (PDF Anchor of Trust):** [`{Path(pdf_path).name}`](./{Path(pdf_path).name}) *(SHA-256: `{pdf_sha256}`)*.
 
 ---
@@ -600,9 +662,9 @@ pdf_anchor: "./{Path(pdf_path).name}"
     index_md = f"""# Gói Tri Thức Pháp Lý OKF v2.2: {doc_num}
 
 > [!NOTE]
-> **Văn bản:** {doc_title}  
-> **Cơ quan ban hành:** Chính phủ (Người ký: {signer}).  
-> **Hiệu lực:** {effective_date}.  
+> **Văn bản:** {doc_title}
+> **Cơ quan ban hành:** Chính phủ (Người ký: {signer}).
+> **Hiệu lực:** {effective_date}.
 > **Mỏ neo PDF Công báo:** [{Path(pdf_path).name}](./{Path(pdf_path).name}) *(SHA-256: `{pdf_sha256}`)*.
 
 ---
@@ -631,8 +693,8 @@ pdf_anchor: "./{Path(pdf_path).name}"
 
 def detect_document_pipeline(
     target_bundle_dir: Path,
-    doc_type: Optional[str] = None,
-    registry_file: Optional[Path] = None,
+    doc_type: str | None = None,
+    registry_file: Path | None = None,
 ) -> str:
     """Determine whether to use VBPL (OKF v2.2) or QCVN pipeline."""
     if doc_type:
@@ -652,13 +714,13 @@ def detect_document_pipeline(
         with open(reg_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
             all_items = []
-            for k, v in data.items():
+            for _k, v in data.items():
                 if isinstance(v, list):
                     all_items.extend(v)
             for item in all_items:
-                if item.get("id") == target_bundle_dir.name or item.get(
-                    "bundle_path", ""
-                ).rstrip("/\\").endswith(target_bundle_dir.name):
+                if item.get("id") == target_bundle_dir.name or item.get("bundle_path", "").rstrip(
+                    "/\\"
+                ).endswith(target_bundle_dir.name):
                     t = item.get("type", "").lower()
                     if "quy chuẩn" in t or "tiêu chuẩn" in t:
                         return "qcvn"
@@ -670,10 +732,10 @@ def detect_document_pipeline(
 def convert_docx_to_okf_bundle(
     docx_path: Path,
     target_bundle_dir: Path,
-    output_filename: Optional[str] = None,
-    doc_type: Optional[str] = None,
-    registry_file: Optional[Path] = None,
-) -> Dict[str, Any]:
+    output_filename: str | None = None,
+    doc_type: str | None = None,
+    registry_file: Path | None = None,
+) -> dict[str, Any]:
     """Convert .docx file to Gold Standard OKF v2.2 Markdown bundle."""
     if not docx_path.exists():
         raise FileNotFoundError(f"Input file not found: {docx_path}")
@@ -695,6 +757,13 @@ def convert_docx_to_okf_bundle(
             output_filename = f"{target_bundle_dir.name}.md"
 
         target_md_path = target_bundle_dir / output_filename
+        try:
+            import mammoth
+        except ImportError:
+            raise ImportError(
+                "Gói 'mammoth' chưa được cài đặt. Vui lòng cài đặt qua 'pip install mammoth' để chuyển đổi DOCX sang Markdown."
+            )
+
         with open(docx_path, "rb") as docx_file:
             result = mammoth.convert_to_markdown(docx_file)
             raw_md = result.value

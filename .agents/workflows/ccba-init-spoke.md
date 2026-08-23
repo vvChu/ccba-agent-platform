@@ -104,11 +104,33 @@ must_read:
 do_not_touch: [.env, "*.pfx", "*.key"]
 ```
 
+#### Mẫu C: Spoke Kho Tri Thức Pháp Điển (`knowledge_corpus` / `Pháp điển`)
+```yaml
+project:
+  name: "ccba-legal-knowledge"
+  archetype: "knowledge_corpus"
+  type: "Pháp điển"
+  mode: "software"
+  qc_mode: "legal"
+  hub_path: "D:/GitHubProjects/ccba-agent-platform"
+  description: "Kho Tri thức Pháp điển & Quy chuẩn Xây dựng Quốc gia (OKF v2.2 Bundle)"
+hub_packages:
+  - ccba-legal-intel
+  - ccba-notebooklm
+must_read:
+  always:
+    - path: .md/GLOSSARY.md
+      why: "Thuật ngữ pháp lý chuẩn hóa"
+do_not_touch: [.env]
+acknowledgment_required: true
+acknowledgment_format: "Tôi đã đọc workspace_context.yaml. Đây là Spoke Kho Tri Thức '[project_name]'. Sẵn sàng làm việc!"
+```
+
 > [!NOTE]
-> **Vòng đời Spoke Cá Nhân (ADR 0046):**
-> 1. **TTL 60 ngày:** Sandbox không hoạt động > 60 ngày sẽ dọn dẹp bởi `sweep_inactive_sandboxes()`.
-> 2. **Thủy ấn & QC:** Mọi file tự động mang watermark `[CCBA SANDBOX DRAFT]`, giới hạn QC Cấp 1.
-> 3. **Bàn giao PGV:** Dùng [`/ccba-promote-sandbox`](ccba-promote-sandbox.md) để chuyển giao sang dự án chính thức.
+> **Quy chuẩn Spoke Tri thức (ADR 0044 & Issue #215):**
+> 1. **Script Budget:** Thư mục `scripts/` duy trì tối đa 15 core scripts. Các script fix/audit chạy 1 lần chuyển vào `.md/archive/legacy_scripts/`.
+> 2. **Thin Wrappers:** Tái sử dụng tối đa `ccba_legal` và `ccba_ai` từ Hub qua `spoke_bootstrap.py`, không viết lại crawler hay logger.
+> 3. **Cleanliness Gate:** Pre-commit hook `check_spoke_cleanliness.py` tự động kiểm soát script budget và chống duplicate mã nguồn Hub.
 
 ---
 

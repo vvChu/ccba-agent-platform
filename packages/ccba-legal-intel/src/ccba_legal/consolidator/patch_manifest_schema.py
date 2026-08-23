@@ -18,17 +18,7 @@ class DocMode(str, Enum):
     THONG_TU = "thong_tu"
 
 
-class PatchAction(str, Enum):
-    """Actions applicable to AST nodes during patching."""
-
-    REPLACE = "REPLACE"
-    INSERT_AFTER = "INSERT_AFTER"
-    INSERT_BEFORE = "INSERT_BEFORE"
-    APPEND = "APPEND"
-    INSERT_RANGE_AFTER = "INSERT_RANGE_AFTER"
-    REPEAL = "REPEAL"
-    SUSPEND = "SUSPEND"
-    SUBSTITUTE_PHRASE = "SUBSTITUTE_PHRASE"
+from ..models import PatchAction
 
 
 class DefectSeverity(str, Enum):
