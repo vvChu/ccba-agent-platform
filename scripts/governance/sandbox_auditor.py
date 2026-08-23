@@ -10,7 +10,7 @@ from typing import Any
 
 import yaml
 
-from scripts.governance.base import AuditIssue, AuditReport, BaseAuditor
+from scripts.governance.base import AuditIssue, BaseAuditor, GovernanceAuditReport
 from scripts.spoke.sandbox_promoter import WATERMARK_HEADER
 
 
@@ -106,18 +106,18 @@ class SandboxAuditor(BaseAuditor):
                     continue
         return scanned
 
-    def audit(self, target: Any = None) -> AuditReport:
+    def audit(self, target: Any = None) -> GovernanceAuditReport:
         """Execute sandbox governance audits."""
         issues: list[AuditIssue] = []
         context = self._load_context()
 
         if not self._is_sandbox(context):
-            return AuditReport(issues=[], total_issues=0, has_hard_errors=False, scanned_files=0)
+            return GovernanceAuditReport(issues=[], total_issues=0, has_hard_errors=False, scanned_files=0)
 
         self._audit_qc_cap(context, issues)
         scanned = self._audit_watermarks(issues)
 
-        return AuditReport(
+        return GovernanceAuditReport(
             issues=issues,
             total_issues=len(issues),
             has_hard_errors=len(issues) > 0,

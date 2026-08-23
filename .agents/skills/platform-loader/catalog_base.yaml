@@ -29,6 +29,7 @@ bundles:
   Pháp điển:
   - _core
   - _software
+  - _consulting
 rules:
 - name: identity
   description: Brand, voice, phong cách giao tiếp CCBA
