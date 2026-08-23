@@ -20,7 +20,11 @@ dependencies = [
     "ccba-ai",
     "pytest-timeout",
     "beautifulsoup4",
+    "mammoth",
 ]
+
+[project.scripts]
+ccba-legal = "ccba_legal.cli:main"
 
 [project.optional-dependencies]
 cloud = [
