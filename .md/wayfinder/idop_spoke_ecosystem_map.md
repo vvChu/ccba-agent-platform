@@ -75,13 +75,16 @@ graph TD
   - Project Delivery (`Tier 2`): Phân bổ theo ngân sách dự án ($50-$200/dự án); cấp quyền Full Multimodal Vision Quad-view.
   - Platform Hub & Daemon (`Tier 3`): Dynamic Budget $10/đêm, ưu tiên chạy 00:00-05:00 kết hợp Circuit Breaker.
   - Chi tiết tại: [`ai_gateway_quota_matrix_and_routing_architecture.md`](../knowledge/research_and_studies/ai_gateway_quota_matrix_and_routing_architecture.md).
+- **[Đã chốt - 2026-08-23] Quy Chuẩn Khởi Tạo Project Delivery Spoke (`[WF-03]`)**:
+  - Mọi Spoke dự án (tư vấn/thẩm tra/kiểm định) vận hành trên OneDrive/SharePoint tuân thủ SOP 4 bước, không dùng Git remote.
+  - Sử dụng tệp mẫu [`templates/workspace_context.delivery.yaml`](../../templates/workspace_context.delivery.yaml) và tài liệu SOP [`docs/sop/project_delivery_spoke_setup.md`](../../docs/sop/project_delivery_spoke_setup.md).
+  - Tự động kế thừa toàn bộ quy trình thẩm tra chuyên sâu (`/workflow_pccc_cdt_tuthamdinh`, `/ccba-ai-qc-pccc-audit`) từ Hub.
 
 ---
 
 ## 4. Sương mù Chiến trận / Chưa xác định rõ (Not yet specified)
 
 - **Sương mù 1 (Giao diện Kỹ sư Nộp Hồ sơ IDOP)**: Chưa thống nhất hình thức tương tác tối ưu cho Kỹ sư khi muốn đẩy báo cáo/tiến độ từ Spoke dự án vào SharePoint IDOP (dùng lệnh CLI `ccba idop push`, hay kéo thả file vào thư mục watcher `.md/idop_staged/`, hay form web). *(Giải quyết tại `[WF-01]`)*.
-- **Sương mù 2 (SOP Khởi tạo & Vận hành Delivery Spoke)**: Chưa có tài liệu hướng dẫn từng bước ngắn gọn để PM dự án thiết lập thư mục Spoke trên OneDrive và liên kết với Hub. *(Giải quyết tại `[WF-03]`)*.
 
 ---
 
@@ -99,11 +102,11 @@ graph TD
 graph LR
     subgraph Done ["✅ ĐÃ HOÀN THÀNH (Done)"]
         T02["[WF-02] Ma trận Cấp Quota AI Gateway<br/><i>(AFK / Research)</i>"]
+        T03["[WF-03] SOP Khởi tạo Project Delivery Spoke<br/><i>(AFK / Task)</i>"]
     end
 
     subgraph Frontier ["🎯 BIÊN GIỚI (Frontier - Unblocked)"]
         T01["[WF-01] Giao diện Kỹ sư Nộp Hồ sơ IDOP<br/><i>(HITL / Grilling)</i>"]
-        T03["[WF-03] SOP Khởi tạo Project Delivery Spoke<br/><i>(AFK / Task)</i>"]
     end
     
     subgraph Blocked ["⏳ BỊ CHẶN (Blocked)"]
@@ -120,22 +123,20 @@ graph LR
    - **Mục tiêu**: Làm rõ hành vi người dùng mong muốn nhất: Kỹ sư muốn chạy lệnh CLI dòng lệnh (`ccba idop submit --file ...`), hay để Agent tự động quét và đẩy ngầm khi hoàn thành task, hay kéo thả file vào thư mục đệm `.md/idop_staged/`?
    - **Trạng thái**: `OPEN` (Frontier)
 
-2. **`[WF-03]` [AFK / Task] [Bộ Quy Chuẩn & SOP Khởi Tạo Project Delivery Spoke trên OneDrive](tickets/wf_03_project_delivery_spoke_sop.md)**
-   - **Loại**: `Task` (Biên soạn tài liệu SOP & template)
-   - **Mục tiêu**: Xây dựng mẫu cấu hình `workspace_context.yaml` cho Spoke dự án (Archetype `project_delivery`), kịch bản đồng bộ xuôi `.agents/workflows/` mà không tạo kho Git remote.
-   - **Trạng thái**: `OPEN` (Frontier)
-
 ### ⏳ Các Ticket Bị Chặn (Blocked)
 
-3. **`[WF-04]` [AFK / Task] [Đóng gói Tiện ích CLI `ccba-spoke` Hỗ trợ Kỹ sư Thao tác Staging và Đồng bộ](tickets/wf_04_ccba_spoke_cli.md)**
+2. **`[WF-04]` [AFK / Task] [Đóng gói Tiện ích CLI `ccba-spoke` Hỗ trợ Kỹ sư Thao tác Staging và Đồng bộ](tickets/wf_04_ccba_spoke_cli.md)**
    - **Loại**: `Task` (Triển khai code trong `packages/ccba-core` hoặc script standalone)
    - **Bị chặn bởi**: `[WF-01]` (Cần chốt giao diện tương tác trước khi viết code CLI)
    - **Trạng thái**: `BLOCKED`
 
 ### ✅ Các Ticket Đã Đóng (Closed)
 
-4. **`[WF-02]` [AFK / Research] [Ma trận Cấp phát Quota & Routing Rule cho AI Gateway Server Spark](tickets/wf_02_ai_gateway_quota_matrix.md)**
+3. **`[WF-02]` [AFK / Research] [Ma trận Cấp phát Quota & Routing Rule cho AI Gateway Server Spark](tickets/wf_02_ai_gateway_quota_matrix.md)**
    - **Trạng thái**: `CLOSED` (Xem báo cáo tại [`ai_gateway_quota_matrix_and_routing_architecture.md`](../knowledge/research_and_studies/ai_gateway_quota_matrix_and_routing_architecture.md))
+
+4. **`[WF-03]` [AFK / Task] [Bộ Quy Chuẩn & SOP Khởi Tạo Project Delivery Spoke trên OneDrive](tickets/wf_03_project_delivery_spoke_sop.md)**
+   - **Trạng thái**: `CLOSED` (Xem SOP tại [`project_delivery_spoke_setup.md`](../../docs/sop/project_delivery_spoke_setup.md))
 
 ---
 

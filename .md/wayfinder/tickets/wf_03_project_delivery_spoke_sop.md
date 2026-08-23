@@ -2,8 +2,10 @@
 
 > **Thuộc bản đồ**: [🗺️ Bản đồ Định hướng IDOP Hub-Spoke Ecosystem](../idop_spoke_ecosystem_map.md)  
 > **Loại ticket**: `AFK / Task`  
-> **Trạng thái**: `OPEN` (Frontier)  
-> **Assignee**: *Chưa gán*
+> **Trạng thái**: `CLOSED` (Đã hoàn thành)  
+> **Tài liệu SOP**: [project_delivery_spoke_setup.md](../../../docs/sop/project_delivery_spoke_setup.md)  
+> **Template**: [workspace_context.delivery.yaml](../../../templates/workspace_context.delivery.yaml)  
+> **Assignee**: *AI Platform Engineering*
 
 ---
 
@@ -16,20 +18,21 @@ Khác với các Spoke phát triển phần mềm (có kho Git riêng và mở P
 
 ---
 
-## 2. Nhiệm vụ Triển khai
+## 2. Kết Quả Triển Khai
 
-1. **Chuẩn hóa Mẫu `workspace_context.yaml` cho Project Delivery Spoke**:
-   - Bao gồm: `project_code`, `national_project_id`, `contract_id`, `archetype: project_delivery`, `standards_applied`, `milestones`, `assigned_roles`.
-2. **Xây dựng Quy trình Khởi tạo Tối giản (1-Click / 1-Command Bootstrap SOP)**:
-   - Kỹ sư chạy lệnh hoặc copy script khởi tạo $\rightarrow$ Tạo cấu trúc thư mục chuẩn `.md/`, tải các workflow cần thiết từ Hub cục bộ, thiết lập link tới `ccba-legal-knowledge`.
-3. **Cơ chế Đồng bộ Xuôi (Downstream Sync without Git)**:
-   - Sử dụng `SpokeSynchronizer` để copy cập nhật các workflow mới từ `D:\GitHubProjects\ccba-agent-platform` sang thư mục OneDrive của dự án.
+1. **Chuẩn hóa Mẫu `workspace_context.delivery.yaml`**:
+   - Định nghĩa đầy đủ các trường: `project.name`, `project_code`, `national_project_id`, `contract_id`, `archetype: project_delivery`, `type: Thẩm tra thiết kế`, `mode: consulting`, `organizational_identity` (15 vai trò IDOP), `qc_governance` (cấp bậc thẩm tra, Quad-view Vision), `standards_applied`, `cde_structure`, `idop_staging`.
+2. **Quy trình Khởi tạo 4 Bước (SOP)**:
+   - Soạn thảo tài liệu chuẩn `docs/sop/project_delivery_spoke_setup.md` hướng dẫn chi tiết từ tạo thư mục OneDrive, sao chép cấu hình, kích hoạt `adopt_spoke.py` đến nộp hồ sơ vào IDOP Staging.
+3. **Kiểm thử Xác minh Hoàn tất**:
+   - `tests/test_delivery_spoke_setup.py` kiểm thử toàn bộ cấu trúc YAML và mô phỏng thành công quy trình adopt một Spoke Delivery mock.
 
 ---
 
 ## 3. Tiêu chí Hoàn thành (Completion Criteria)
 
-- [ ] Soạn thảo tài liệu SOP `docs/sop/project_delivery_spoke_setup.md`.
-- [ ] Tạo template `templates/workspace_context.delivery.yaml`.
-- [ ] Kiểm thử mẫu khởi tạo trên một thư mục mock.
-- [ ] Cập nhật kết quả vào mục *Decisions so far* trên Bản đồ Wayfinder.
+- [x] Soạn thảo tài liệu SOP `docs/sop/project_delivery_spoke_setup.md`.
+- [x] Tạo template `templates/workspace_context.delivery.yaml`.
+- [x] Kiểm thử mẫu khởi tạo trên một thư mục mock (`tests/test_delivery_spoke_setup.py`).
+- [x] Cập nhật kết quả vào mục *Decisions so far* trên Bản đồ Wayfinder.
+

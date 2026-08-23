@@ -1,0 +1,80 @@
+# ==============================================================================
+# CCBA Workspace Context — Project Delivery Spoke Template
+# ==============================================================================
+# Sử dụng cho các dự án tư vấn, thẩm tra thiết kế, kiểm định và BIM vận hành
+# trên nền tảng OneDrive / SharePoint (Không dùng Git remote, chống rò rỉ dữ liệu).
+# Chuẩn hóa theo ADR 0041, ADR 0042, ADR 0043, ADR 0044 và Quy chế CCBA/IDOP 2026.
+# ==============================================================================
+
+version: "2.0.0"
+
+# 1. THÔNG TIN DỰ ÁN & ĐỊNH NHAU (Project Identity)
+project:
+  name: "2026-04-dh-viet-nhat"
+  project_code: "2026-04-DH-VIET-NHAT"
+  national_project_id: "VN-BXD-2026-0482"
+  contract_id: "HD-2026/CCBA-DHVN-01"
+  
+  # Archetype: project_delivery (Bắt buộc theo ADR 0041)
+  archetype: "project_delivery"
+  
+  # Bundle Type: "Thẩm tra thiết kế" | "Kiểm định" | "Thiết kế" | "BIM" | "Phần mềm" | "Tác vụ Admin" | "Pháp điển"
+  type: "Thẩm tra thiết kế"
+  
+  # Mode: "consulting" (Tư vấn xây dựng / Thẩm tra) | "software" (Phần mềm)
+  mode: "consulting"
+  
+  # Đường dẫn Hub cục bộ (Để đồng bộ xuôi kỹ năng & workflows)
+  hub_path: "D:/GitHubProjects/ccba-agent-platform"
+
+# 2. ĐỊNH DANH NHÂN SỰ & PHÂN CÔNG VAI TRÒ (Organizational Identity - IDOP 15 Roles)
+organizational_identity:
+  owner_name: "Chu Vũ"
+  owner_email: "chuvu@ibst-bim.vn"
+  department: "PHONG_BIM_DU_AN"       # PHONG_BIM_DU_AN | PHONG_BIM_THIET_KE | PHONG_RD_HTQT | PHONG_TV_KD_HCM
+  seat_role: "CHU_TRI_HOP_DONG_PM"    # CHU_TRI_HOP_DONG_PM | CHU_TRI_BO_MON | KY_SU_THUC_THI
+
+# 3. QUẢN TRỊ CHẤT LƯỢNG & THẨM QUYỀN PHÊ DUYỆT (QC Governance)
+qc_governance:
+  # Cấp độ thẩm tra tối đa được phép:
+  # LEVEL_1_TECHNICAL_CHECK (Chuyên viên) | LEVEL_2_MANAGEMENT_APPROVAL (Chủ trì bộ môn) | LEVEL_3_DEPARTMENT_REVIEW (Trưởng phòng) | LEVEL_5_FINAL_APPROVAL (Ban Giám đốc)
+  authorized_qc_level: "LEVEL_3_DEPARTMENT_REVIEW"
+  can_approve_iso_documents: true
+  enable_quad_view_vision: true       # Bật chế độ thẩm tra bản vẽ 4 góc nhìn (Quad-view Vision PCCC)
+
+# 4. HỆ THỐNG QUẢN LÝ CÔNG VIỆC (Issue Tracker)
+issue_tracker: "local"                # Project Delivery Spoke mặc định dùng Local Markdown (.md/knowledge/issues/)
+
+# 5. TIÊU CHUẨN & QUY CHUẨN ÁP DỤNG (Standards & Regulatory Baseline)
+standards_applied:
+  - id: "135/2025/QH15"
+    title: "Luật Xây dựng 2025"
+    effective_date: "2026-07-01"
+  - id: "105/2025/NĐ-CP"
+    title: "Nghị định 105/2025/NĐ-CP về Quản lý chất lượng, thi công và nghiệm thu"
+  - id: "QCVN 06:2022/BXD"
+    title: "Quy chuẩn kỹ thuật quốc gia về An toàn cháy cho nhà và công trình"
+  - id: "Sửa đổi 1:2023 QCVN 06:2022"
+    title: "Sửa đổi 1:2023 Quy chuẩn kỹ thuật quốc gia về An toàn cháy"
+  - id: "TCVN 3890:2023"
+    title: "Phòng cháy chữa cháy — Phương tiện phòng cháy và chữa cháy cho nhà và công trình"
+  - id: "ISO 19650-1/2:2018"
+    title: "Tổ chức và số hóa thông tin về công trình xây dựng (BIM)"
+
+# 6. CẤU TRÚC THƯ MỤC CDE & BÀN GIAO (Common Data Environment)
+cde_structure:
+  root: "CDE"
+  folders:
+    - "01_KienTruc"
+    - "02_KetCau"
+    - "03_MEP"
+    - "04_PCCC"
+    - "05_BaoCaoThietKe"
+    - "06_HoSoNghiemThu"
+
+# 7. CƠ CHẾ ĐỆM & TÁI PHÁT BẤT BIẾN (Local Staging Queue - ADR 0043)
+idop_staging:
+  enabled: true
+  staged_directory: ".md/idop_staged"
+  target_sharepoint_site: "https://ibstbim.sharepoint.com/sites/CCBA-IDOP"
+  auto_generate_pgv_receipt: true
