@@ -1,7 +1,7 @@
 ---
 name: spoke-adopter
 description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield Spokes) vào CCBA Platform mà không phá hủy cấu trúc dữ liệu cũ.
-argument-hint: "[--spoke <path>] [--dry-run] [--type <project_type>] [--mode <mode>]"
+argument-hint: "[--spoke <path>] [--dry-run] [--archetype <archetype>] [--type <project_type>] [--mode <mode>]"
 disable-model-invocation: true
 category: management
 keywords: [spoke, adopt, brownfield, onboarding, migration, schema-merge, hub-and-spoke]
@@ -43,10 +43,10 @@ Khi người dùng đồng ý, chạy lệnh tiếp nhận chính thức:
 python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke]
 ```
 
-### Bước 3: Tùy Biến Thể Loại & Mode (Tùy Chọn)
-Nếu muốn chỉ định rõ loại hình dự án và chế độ vận hành:
+### Bước 3: Tùy Biến Thể Loại, Chế Độ & Archetype (Tùy Chọn)
+Nếu muốn chỉ định rõ loại hình dự án, chế độ vận hành hoặc Archetype:
 ```powershell
-python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke] --type "Phần mềm" --mode "hybrid"
+python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke] --archetype "knowledge_corpus" --type "Pháp điển" --mode "software"
 ```
 
 ---

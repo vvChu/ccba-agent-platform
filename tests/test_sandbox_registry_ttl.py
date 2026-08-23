@@ -3,6 +3,8 @@
 import datetime
 from pathlib import Path
 
+from typing import Any
+
 import pytest
 import yaml
 from scripts.spoke.session_cleanup import sweep_inactive_sandboxes
@@ -10,7 +12,7 @@ from scripts.spoke.spoke_synchronizer import SpokeRegistrar, sync_all_spokes
 
 
 @pytest.fixture
-def mock_hub_and_spokes(tmp_path: Path):
+def mock_hub_and_spokes(tmp_path: Path) -> tuple[Path, Path, Path]:
     """Setup mock Hub and two Spokes (1 Delivery, 1 Sandbox)."""
     hub = tmp_path / "hub"
     hub.mkdir()
@@ -52,7 +54,7 @@ def mock_hub_and_spokes(tmp_path: Path):
     return hub, delivery, sandbox
 
 
-def test_spoke_registrar_extracts_sandbox_flags(mock_hub_and_spokes):
+def test_spoke_registrar_extracts_sandbox_flags(mock_hub_and_spokes: tuple[Path, Path, Path]) -> None:
     """Verify SpokeRegistrar extracts sandbox flag and owner email."""
     hub, delivery, sandbox = mock_hub_and_spokes
     registrar = SpokeRegistrar()
@@ -64,8 +66,23 @@ def test_spoke_registrar_extracts_sandbox_flags(mock_hub_and_spokes):
     delivery_info = registrar.build_spoke_info(delivery, hub, '2026-04-dh-viet-nhat', 'Thẩm tra thiết kế')
     assert delivery_info.get("is_sandbox") is False
 
+    # Specialized extension (e.g. Tooling Plugin / Research Lab) without sandbox flag should NOT be sandbox
+    plugin_ctx = {
+        "project": {
+            "name": "revit-bim-addon",
+            "archetype": "specialized_extension",
+            "sub_type": "tooling_plugin",
+        }
+    }
+    plugin = delivery.parent / "revit-bim-addon"
+    plugin.mkdir(exist_ok=True)
+    (plugin / ".md").mkdir(exist_ok=True)
+    (plugin / ".md" / "workspace_context.yaml").write_text(yaml.safe_dump(plugin_ctx), encoding="utf-8")
+    plugin_info = registrar.build_spoke_info(plugin, hub, 'revit-bim-addon', 'Phần mềm')
+    assert plugin_info.get("is_sandbox") is False
 
-def test_sweep_inactive_sandboxes(mock_hub_and_spokes):
+
+def test_sweep_inactive_sandboxes(mock_hub_and_spokes: tuple[Path, Path, Path]) -> None:
     """Verify sweeping sandboxes older than 60 days."""
     hub, _, sandbox = mock_hub_and_spokes
     old_date = (datetime.datetime.now() - datetime.timedelta(days=65)).isoformat()
@@ -97,7 +114,7 @@ def test_sweep_inactive_sandboxes(mock_hub_and_spokes):
     assert "active-sandbox" not in swept
 
 
-def test_sync_all_spokes_filters_sandbox_by_default(mock_hub_and_spokes, monkeypatch):
+def test_sync_all_spokes_filters_sandbox_by_default(mock_hub_and_spokes: tuple[Path, Path, Path], monkeypatch: Any) -> None:
     """Verify batch sync skips sandboxes by default and includes them with flag."""
     hub, delivery, sandbox = mock_hub_and_spokes
 
@@ -112,10 +129,10 @@ def test_sync_all_spokes_filters_sandbox_by_default(mock_hub_and_spokes, monkeyp
     synced_spokes = []
 
     class MockSynchronizer:
-        def __init__(self, path):
+        def __init__(self, path: Any) -> None:
             self.path = path
 
-        def sync(self, **kwargs):
+        def sync(self, **kwargs: Any) -> int:
             synced_spokes.append(self.path)
             return 0
 

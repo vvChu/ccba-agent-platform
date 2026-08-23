@@ -5,6 +5,7 @@ applies_to:
   - "Thẩm tra thiết kế"
   - "Thiết kế"
   - "Kiểm định"
+  - "BIM"
   - "Tác vụ Admin"
   - "Pháp điển"
 bundle: "_core"

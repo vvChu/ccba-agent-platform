@@ -5,7 +5,9 @@ applies_to:
   - "Thẩm tra thiết kế"
   - "Thiết kế"
   - "Kiểm định"
+  - "BIM"
   - "Tác vụ Admin"
+  - "Pháp điển"
 bundle: "_core"
 disable-model-invocation: true
 ---
@@ -41,6 +43,9 @@ Workflow này tự động hóa việc thiết lập một không gian làm vi�
    - `Thẩm tra thiết kế` $\rightarrow$ mode: `delivery`, qc_mode: `third-party`
    - `Thiết kế` $\rightarrow$ mode: `delivery`, qc_mode: `internal`
    - `Kiểm định` $\rightarrow$ mode: `delivery`, qc_mode: `assessment`
+   - `BIM` $\rightarrow$ mode: `delivery`, qc_mode: `internal`
+   - `Tác vụ Admin` $\rightarrow$ mode: `admin`, qc_mode: `null`
+   - `Pháp điển` $\rightarrow$ mode: `software`, qc_mode: `legal`
 4. **Khởi tạo tệp `.md/workspace_context.yaml`:**
 
 #### Mẫu A: Spoke Dự Án Kỹ Thuật (`project_delivery`)
@@ -83,10 +88,6 @@ idop_tasks:
     - pgv_code: "PGV-2026-08-014"
       task_name: "Nghiên cứu tối ưu hóa RAG pháp điển PCCC"
       max_advance_rate: 0.70                   # Hạn mức tạm ứng tối đa 70% theo Điều 17
-ai_preferences:
-  gateway_endpoint: "http://100.83.192.30:8090/v1"
-  default_chat_model: "gemini-3.7-flash"
-  reasoning_model: "gemini-3.7-flash-high"
 guardrails:
   sandbox_mode: true
   prevent_direct_production_publish: true     # Hồ sơ chính thức phải kiểm soát 5 cấp theo Điều 13
@@ -96,48 +97,41 @@ must_read:
     - path: d:/idop-ccba-way/.md/governance_constitution/03_ccba_charter_2026.md
       why: "Quy chế Tổ chức và Hoạt động CCBA 2026"
 do_not_touch: [.env, "*.pfx", "*.key"]
-acknowledgment_required: true
-acknowledgment_format: "Xin chào [owner_name] ([seat_role] thuộc [department]). Sẵn sàng hỗ trợ các nhiệm vụ PGV!"
 ```
+
+> [!NOTE]
+> **Vòng đời Spoke Cá Nhân (ADR 0046):**
+> 1. **TTL 60 ngày:** Sandbox không hoạt động > 60 ngày sẽ dọn dẹp bởi `sweep_inactive_sandboxes()`.
+> 2. **Thủy ấn & QC:** Mọi file tự động mang watermark `[CCBA SANDBOX DRAFT]`, giới hạn QC Cấp 1.
+> 3. **Bàn giao PGV:** Dùng [`/ccba-promote-sandbox`](ccba-promote-sandbox.md) để chuyển giao sang dự án chính thức.
 
 ---
 
 ## 🔄 Bước 2: Đồng Bộ Kỹ Năng & Đăng Ký Spoke (Single-Engine Sync)
 
-Agent xác định đường dẫn Hub (`hub_path`) và chạy Deep Seam `SpokeSynchronizer`:
+Agent chạy Deep Seam `SpokeSynchronizer`:
 ```powershell
 python "[hub_path]\scripts\sync_spoke.py" --spoke .
 ```
-
-*Động cơ sẽ tự động:*
-- Tạo cấu trúc thư mục tri thức `.md/` chuẩn theo mode.
-- Đọc `workspace_context.yaml` để chọn bundle kỹ năng phù hợp từ `catalog.yaml`.
-- Bơm các skills/workflows chuẩn vào `.agents/skills/` và `.agents/workflows/`.
-- Đồng bộ hiến pháp `.agents/AGENTS.md` và sao chép bộ rào chắn test (`conftest.py`, `safe_pytest.py`).
-- Đăng ký Spoke với khóa mã hóa RSA 2048-bit vào Hub Registry.
+*Tự động: tạo `.md/`, chọn bundle từ `catalog.yaml`, bơm skills/workflows, đồng bộ `AGENTS.md`, đăng ký RSA 2048-bit vào Hub Registry.*
 
 ---
 
 ## 📦 Bước 3: Thiết Lập Python Packages & Spoke Leakage Guard (ADR 0044, ADR 0045)
 
-Đối với các dự án có Python (`is_python_project = True`), khởi tạo môi trường liên kết:
+Đối với dự án có Python (`is_python_project = True`), khởi tạo môi trường liên kết:
 ```powershell
 python "[hub_path]\scripts\spoke\spoke_bootstrap.py" --spoke .
 ```
-
-*Động cơ sẽ tự động:*
-- Phân tích và sinh `requirements-hub.txt` kết nối editable packages (`ccba-ai`, `ccba-harness`, `ccba-legal-intel`...).
-- Tự động cấu hình `.gitignore` cách ly `requirements-hub.txt` và rào chắn rò rỉ `.md/teach/`, `.tmp/`, `.out-of-scope/`.
+*Tự động: sinh `requirements-hub.txt` kết nối editable packages (`ccba-ai`, `ccba-harness`...), cấu hình `.gitignore` cách ly.*
 
 ---
 
 ## 🔒 Bước 4: Cài Đặt Bảo Mật Maskara & Hoàn Tất
 
-1. **Cài đặt Git Hook bảo mật:** Tự động tạo pre-commit hook trong `.git/hooks/` gọi Maskara quét chặn lộ API keys.
+1. **Cài đặt Git Hook:** Tự động tạo pre-commit hook trong `.git/hooks/` gọi Maskara quét chặn lộ API keys.
 2. **Xác nhận Onboarding (Global Rule 4):**
-   Agent in câu chào mừng:
-   > *"Tôi đã khởi tạo thành công Spoke `[tên_dự_án]` (Archetype: `[archetype]`, Type: `[type]`). Toàn bộ kỹ năng, rào chắn an toàn và môi trường đã sẵn sàng!"*
+   > *"Tôi đã khởi tạo thành công Spoke `[tên_dự_án]` (Archetype: `[archetype]`, Type: `[type]`). Sẵn sàng làm việc!"*
 
 ---
-
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

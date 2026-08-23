@@ -202,11 +202,9 @@ class SpokeRegistrar:
                     ctx = yaml.safe_load(f) or {}
                     proj = ctx.get("project", {})
                     sub_type = proj.get("sub_type", "")
-                    archetype = proj.get("archetype", "")
                     guardrails = ctx.get("guardrails", {})
                     if (
                         sub_type == "personal_sandbox"
-                        or archetype == "specialized_extension"
                         or guardrails.get("sandbox_mode") is True
                     ):
                         is_sandbox = True

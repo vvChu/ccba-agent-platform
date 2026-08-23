@@ -2,6 +2,12 @@
 description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ phát triển phần mềm (cấu hình issue tracker, nhãn triage, domain docs)
 applies_to:
   - "Phần mềm"
+  - "Thẩm tra thiết kế"
+  - "Thiết kế"
+  - "Kiểm định"
+  - "BIM"
+  - "Tác vụ Admin"
+  - "Pháp điển"
 bundle: "_core"
 disable-model-invocation: true
 ---

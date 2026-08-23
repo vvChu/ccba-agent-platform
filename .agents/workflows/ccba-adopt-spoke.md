@@ -5,6 +5,7 @@ applies_to:
   - "Thẩm tra thiết kế"
   - "Thiết kế"
   - "Kiểm định"
+  - "BIM"
   - "Tác vụ Admin"
   - "Pháp điển"
 bundle: "_core"
@@ -30,9 +31,14 @@ Trình bày kết quả ma trận đánh giá cho người dùng:
 * Các tệp tin được bảo vệ (AGENTS.md, datamodel, specs).
 
 ### 2. Thực Hiện Tiếp Nhận & Hợp Nhất Cấu Hình An Toàn
-Sau khi người dùng đồng ý, Agent thực thi tiếp nhận:
+Sau khi người dùng đồng ý, Agent thực thi tiếp nhận (tự động nhận diện stack):
 ```powershell
 python [hub_path]\scripts\adopt_spoke.py --spoke .
+```
+
+*Tùy chọn chỉ định tường minh cấu hình (nếu muốn ghi đè auto-detect):*
+```powershell
+python [hub_path]\scripts\adopt_spoke.py --spoke . --archetype knowledge_corpus --type "Pháp điển" --mode software
 ```
 
 Quá trình này sẽ tự động:

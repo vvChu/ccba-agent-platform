@@ -37,11 +37,16 @@ Tóm tắt kết quả trinh sát và đưa ra cấu hình đề xuất cho ngư
 - **Nếu chưa có cấu hình**: Thực hiện phỏng vấn tương tác:
 
   **Câu A — Issue tracker**:
-  > *Lựa chọn 1 (Recommended)*: Đề xuất mặc định thông minh dựa trên `archetype` ([ADR 0041](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)) và `git remote`:
+  > *Lựa chọn 1 (Recommended)*: Đề xuất mặc định thông minh dựa trên `archetype` ([ADR 0041](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)), `sub_type` ([ADR 0046](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md)) và `git remote`:
   > - Nếu `archetype == "project_delivery"` hoặc dự án không có remote Git: **Local markdown** (Lưu dưới `.md/knowledge/issues/`).
-  > - Nếu `archetype` là `platform_hub` / `specialized_extension` và có remote GitHub: **GitHub Issues** (yêu cầu `gh` CLI).
+  > - Nếu `archetype == "enterprise_governance"`: **Local markdown** (Lưu dưới `.md/knowledge/issues/` kết hợp IDOP Governance).
+  > - Nếu `archetype == "knowledge_corpus"`: **GitHub Issues** (nếu có remote Git) hoặc **Local markdown** (nếu offline).
+  > - Nếu `archetype == "specialized_extension"`:
+  >   * Spoke Cá Nhân (`sub_type: personal_sandbox` - ADR 0046): Mặc định **Local markdown** (`.md/knowledge/issues/` hoặc liên kết `idop_tasks.active_pgv_list`), tránh tạo issue công khai cho nghiên cứu cá nhân.
+  >   * Spoke Tiện ích / R&D (`tooling_plugin`, `research_lab`) có remote GitHub: **GitHub Issues** (yêu cầu `gh` CLI).
+  > - Nếu `archetype == "platform_hub"` và có remote GitHub: **GitHub Issues** (yêu cầu `gh` CLI).
   > - Nếu remote chứa `gitlab.com`: **GitLab Issues** (yêu cầu `glab` CLI).
-  - **Local markdown** — Lưu issue thành các file md dưới `.md/knowledge/issues/` (phù hợp dự án tư vấn hiện trường, chạy offline hoặc solo).
+  - **Local markdown** — Lưu issue thành các file md dưới `.md/knowledge/issues/` (phù hợp dự án tư vấn hiện trường, sandbox cá nhân, chạy offline hoặc solo).
   - **GitHub** — Sử dụng GitHub Issues (yêu cầu `gh` CLI).
   - **GitLab** — Sử dụng GitLab Issues (yêu cầu `glab` CLI).
   - **Khác** — Nhận mô tả quy trình dạng văn bản tự do từ người dùng.
