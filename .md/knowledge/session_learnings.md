@@ -625,11 +625,26 @@
   - *Zero-Deletion & Parse-Protection Invariants:* `ZeroDeletionGuard` bẫy diff để ngăn chặn AI xóa bỏ bất kỳ tri thức cũ nào (chỉ cho phép gắn thẻ `[DEPRECATED]`) và bảo vệ 100% các khối ghi chú viết tay `<!-- DEVELOPER-NOTES-START -->` ... `<!-- DEVELOPER-NOTES-END -->`.
   - *HitL PR Ratchet & Telegram Alert:* Tiến trình qua đêm lúc 00:00 trên Server Spark tự động tạo branch `docs/auto-refactor-YYYYMMDD`, mở PR trên GitHub kèm lệnh duyệt 1-chạm `gh pr merge --squash` và gửi báo cáo tóm tắt 3 dòng tới Telegram của Kỹ sư.
 
+#### P8.10. Project Delivery Spoke Non-Remote-Git SOP & ccba-spoke CLI Staging Engine (WF-01, WF-03, WF-04)
+* **Nguyên tắc:** Các dự án tư vấn sản xuất hồ sơ thực tế (`project_delivery`) vận hành trên **OneDrive của CCBA**, không sử dụng Git remote để triệt tiêu rủi ro rò rỉ hồ sơ mật và tránh xung đột tệp nhị phân đồ họa (Revit `.rvt`, AutoCAD `.dwg`, scan PDF).
+* **Giải pháp:** Kỹ sư sử dụng tiện ích dòng lệnh `ccba-spoke` (`ccba-spoke status`, `ccba-spoke sync`, `ccba-spoke stage`, `ccba-spoke flush`):
+  - *AI Pre-Submission Gate:* Tự động quét và chặn ngay các vi phạm Hard-Floor (viện dẫn văn bản hết hiệu lực như NĐ 06/2021, sai mã dự án).
+  - *Local-First Staging Queue:* Tạo biên nhận PGV JSON (`PGV-<timestamp>-<task_id>.json`) với trạng thái `STAGED_LOCAL` lưu tại `.md/idop_staged/`.
+  - *Idempotent Replay:* Khi PM duyệt hoặc khi có kết nối mạng, lệnh `ccba-spoke flush` đẩy bản ghi lên 58 SharePoint Lists IDOP và cập nhật trạng thái `SYNCED_SHAREPOINT`.
+
+#### P8.11. AI Gateway 3-Tier Quota Matrix & Graceful Local-GPU Auto-Fallback on Spark Server (WF-02)
+* **Nguyên tắc:** Cân bằng giữa tự do sáng tạo trong Personal Sandbox và kiểm soát ngân sách đám mây bằng Ma trận 3 tầng:
+  - *Tier 1 (Personal Sandbox):* Không giới hạn Local GPU (vLLM Qwen 35B FP8 trên Server Spark DGX); Capped $5/tháng Cloud (~50k tokens/ngày).
+  - *Tier 2 (Project Delivery & Governance):* Phân bổ theo ngân sách dự án ($50-$200/dự án); cấp quyền Full Multimodal Vision Quad-view PCCC.
+  - *Tier 3 (Platform Hub & Nightly Daemon):* Dynamic Budget $10/đêm, ưu tiên chạy 00:00-05:00 kết hợp Circuit Breaker.
+  - *Graceful Fallback Invariant:* Khi cạn quota Cloud hoặc API ngoài gặp lỗi 429/503, Gateway tự động giáng cấp ngầm về Qwen 35B Local GPU mà không làm gián đoạn hay crash tiến trình của Kỹ sư.
+
 ### ⚠️ Anti-Patterns (Cần Tránh)
 * **AP8.1. Bypassing Tier 1 Hard-Floor Gate:** Cho phép xuất hồ sơ trình Viện IBST khi vẫn còn lỗi sai số học dòng tiền hoặc viện dẫn luật hết hiệu lực.
 * **AP8.2. Direct Heavy Binary Upload to SharePoint:** Upload trực tiếp file mô hình Revit 3D hoặc scan nặng vào SharePoint List làm cạn kiệt dung lượng Tenant 2TB thay vì đưa sang 5TB Master OneDrive.
 * **AP8.3. Running Production Daemon without Mock Sandbox Isolation:** Chạy các bài test đánh giá kỹ năng ban đêm mà không cô lập biến môi trường `IDOP_ENV=DEV`, gây nghẽn và fail test khi SharePoint bảo trì.
 * **AP8.4. Ungrounded Knowledge Document Refactoring:** Cho phép AI tự do sửa đổi tài liệu kiến trúc hoặc session learnings mà không có AST Code-Grounding và Zero-Deletion guardrails bảo vệ, dẫn đến mất mát bài học lịch sử và sinh ảo giác (hallucinations).
+* **AP8.5. Forcing Git Remote onto Production Delivery Spokes:** Ép buộc các Spoke dự án hiện trường phải tạo kho Git remote công khai hoặc mở PR trên GitHub, gây nguy cơ rò rỉ hồ sơ khách hàng và làm phình to kho Git với các tệp CAD/Revit nặng.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
