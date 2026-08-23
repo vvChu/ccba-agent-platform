@@ -4,7 +4,7 @@
 # Regenerate via: python scripts/governance/compile_catalog.py
 # =============================================================================
 
-hub_path: D:\GitHubProjects\ccba-agent-platform
+hub_path: .
 hub_repo: https://github.com/vvChu/ccba-agent-platform
 notebook_ids:
   _core: nb-mock-3

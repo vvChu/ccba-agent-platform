@@ -36,9 +36,7 @@ def sandbox_workspace(tmp_path: Path) -> Path:
             "sandbox_mode": True,
         },
     }
-    (md_dir / "workspace_context.yaml").write_text(
-        yaml.safe_dump(context), encoding="utf-8"
-    )
+    (md_dir / "workspace_context.yaml").write_text(yaml.safe_dump(context), encoding="utf-8")
 
     output_dir = ws / "output"
     output_dir.mkdir()
@@ -63,9 +61,7 @@ def target_delivery_project(tmp_path: Path) -> Path:
             "type": "Thẩm tra thiết kế",
         }
     }
-    (md_dir / "workspace_context.yaml").write_text(
-        yaml.safe_dump(context), encoding="utf-8"
-    )
+    (md_dir / "workspace_context.yaml").write_text(yaml.safe_dump(context), encoding="utf-8")
     return target
 
 
@@ -81,9 +77,7 @@ def test_promoter_blocks_non_sandbox_source(tmp_path: Path, target_delivery_proj
             "archetype": "project_delivery",
         }
     }
-    (md_dir / "workspace_context.yaml").write_text(
-        yaml.safe_dump(context), encoding="utf-8"
-    )
+    (md_dir / "workspace_context.yaml").write_text(yaml.safe_dump(context), encoding="utf-8")
 
     with pytest.raises(ValueError, match="personal_sandbox"):
         SandboxPromoter(sandbox_root=invalid_ws)

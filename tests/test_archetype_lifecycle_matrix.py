@@ -39,10 +39,18 @@ def mock_hub_root(tmp_path: Path) -> Path:
     hub.mkdir(parents=True)
 
     # Copy actual catalog.yaml
-    actual_catalog = Path(__file__).resolve().parent.parent / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
+    actual_catalog = (
+        Path(__file__).resolve().parent.parent
+        / ".agents"
+        / "skills"
+        / "platform-loader"
+        / "catalog.yaml"
+    )
     target_catalog_dir = hub / ".agents" / "skills" / "platform-loader"
     target_catalog_dir.mkdir(parents=True)
-    target_catalog_dir.joinpath("catalog.yaml").write_text(actual_catalog.read_text(encoding="utf-8"), encoding="utf-8")
+    target_catalog_dir.joinpath("catalog.yaml").write_text(
+        actual_catalog.read_text(encoding="utf-8"), encoding="utf-8"
+    )
 
     # Create dummy workflows and resources dirs
     (hub / ".agents" / "workflows" / "resources").mkdir(parents=True)
@@ -85,7 +93,9 @@ def test_archetype_bundle_matrix_lifecycle(
     # 3. Test SpokeSynchronizer Dry-Run
     synchronizer = SpokeSynchronizer(str(spoke_dir))
     exit_code = synchronizer.sync(dry_run=True, force=True)
-    assert exit_code == 0, f"Synchronizer failed for {archetype} / {bundle_type} with exit code {exit_code}"
+    assert exit_code == 0, (
+        f"Synchronizer failed for {archetype} / {bundle_type} with exit code {exit_code}"
+    )
 
 
 def test_detect_spoke_stack_knowledge_corpus(tmp_path: Path) -> None:

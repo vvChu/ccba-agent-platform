@@ -134,14 +134,17 @@ def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
     workflows = compile_workflows(hub_root)
 
     catalog: dict[str, Any] = {
-        "hub_path": base_data.get("hub_path", str(hub_root)),
+        "hub_path": base_data.get("hub_path", "."),
         "hub_repo": base_data.get("hub_repo", "https://github.com/vvChu/ccba-agent-platform"),
-        "notebook_ids": base_data.get("notebook_ids", {
-            "_core": "nb-mock-3",
-            "_software": "nb-mock-software",
-            "_qc": "nb-mock-qc",
-            "_consulting": "nb-mock-consulting",
-        }),
+        "notebook_ids": base_data.get(
+            "notebook_ids",
+            {
+                "_core": "nb-mock-3",
+                "_software": "nb-mock-software",
+                "_qc": "nb-mock-qc",
+                "_consulting": "nb-mock-consulting",
+            },
+        ),
         "bundles": base_data.get("bundles", {}),
         "skills": skills,
         "workflows": workflows,
@@ -154,12 +157,14 @@ def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
 def generate_catalog_yaml(hub_root: Path = HUB_ROOT) -> str:
     """Generate cleanly formatted YAML string for catalog.yaml."""
     data = compile_catalog_dict(hub_root)
-    yaml_str = yaml.safe_dump(
-        data,
-        allow_unicode=True,
-        sort_keys=False,
-        default_flow_style=False,
-        indent=2,
+    yaml_str: str = str(
+        yaml.safe_dump(
+            data,
+            allow_unicode=True,
+            sort_keys=False,
+            default_flow_style=False,
+            indent=2,
+        )
     )
     header = (
         "# =============================================================================\n"
@@ -241,9 +246,15 @@ def main(argv: list[str] | None = None) -> int:
             print("[OK] [Catalog Compiler] catalog.yaml is 100% in-sync with frontmatters.")
             return 0
         else:
-            print("[ERROR] [Catalog Compiler] catalog.yaml is OUT OF SYNC with frontmatters:", file=sys.stderr)
+            print(
+                "[ERROR] [Catalog Compiler] catalog.yaml is OUT OF SYNC with frontmatters:",
+                file=sys.stderr,
+            )
             print(f"  {msg}", file=sys.stderr)
-            print("\n[INFO] Run 'python scripts/governance/compile_catalog.py' to regenerate catalog.yaml.", file=sys.stderr)
+            print(
+                "\n[INFO] Run 'python scripts/governance/compile_catalog.py' to regenerate catalog.yaml.",
+                file=sys.stderr,
+            )
             return 1
 
     compiled_yaml = generate_catalog_yaml(HUB_ROOT)
@@ -255,7 +266,9 @@ def main(argv: list[str] | None = None) -> int:
     OUTPUT_CATALOG_PATH.write_text(compiled_yaml, encoding="utf-8")
     skills_count = len(compile_skills(HUB_ROOT))
     wfs_count = len(compile_workflows(HUB_ROOT))
-    print(f"[OK] [Catalog Compiler] Compiled catalog.yaml successfully ({skills_count} skills, {wfs_count} workflows).")
+    print(
+        f"[OK] [Catalog Compiler] Compiled catalog.yaml successfully ({skills_count} skills, {wfs_count} workflows)."
+    )
     return 0
 
 

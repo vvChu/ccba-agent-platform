@@ -43,6 +43,7 @@ def test_platform_loader_workflows_exist() -> None:
     """Verify that every workflow registered in catalog.yaml exists in .agents/workflows/."""
     catalog_path = HUB_ROOT / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
     import yaml
+
     data = yaml.safe_load(catalog_path.read_text(encoding="utf-8")) or {}
     workflows = data.get("workflows", [])
 

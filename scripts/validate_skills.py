@@ -22,9 +22,15 @@ def main() -> None:
     # Automated Catalog Sync Check (ADR 0047)
     in_sync, msg = check_catalog_in_sync(project_root)
     if not in_sync:
-        print("\n[ERROR] [Catalog Compiler] catalog.yaml is OUT OF SYNC with frontmatters:", file=sys.stderr)
+        print(
+            "\n[ERROR] [Catalog Compiler] catalog.yaml is OUT OF SYNC with frontmatters:",
+            file=sys.stderr,
+        )
         print(f"  {msg}", file=sys.stderr)
-        print("\n[INFO] Run 'python scripts/governance/compile_catalog.py' to regenerate catalog.yaml.", file=sys.stderr)
+        print(
+            "\n[INFO] Run 'python scripts/governance/compile_catalog.py' to regenerate catalog.yaml.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     sys.exit(0)

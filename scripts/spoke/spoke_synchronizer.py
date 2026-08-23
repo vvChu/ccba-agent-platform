@@ -203,10 +203,7 @@ class SpokeRegistrar:
                     proj = ctx.get("project", {})
                     sub_type = proj.get("sub_type", "")
                     guardrails = ctx.get("guardrails", {})
-                    if (
-                        sub_type == "personal_sandbox"
-                        or guardrails.get("sandbox_mode") is True
-                    ):
+                    if sub_type == "personal_sandbox" or guardrails.get("sandbox_mode") is True:
                         is_sandbox = True
                     identity = ctx.get("organizational_identity", {})
                     owner_email = identity.get("owner_email", "")

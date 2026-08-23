@@ -55,9 +55,8 @@ class SandboxPromoter:
         sub_type = project.get("sub_type", "")
         archetype = project.get("archetype", "")
 
-        is_sandbox = (
-            sub_type == "personal_sandbox"
-            or self.context_data.get("guardrails", {}).get("sandbox_mode", False)
+        is_sandbox = sub_type == "personal_sandbox" or self.context_data.get("guardrails", {}).get(
+            "sandbox_mode", False
         )
         if not is_sandbox and archetype != "specialized_extension":
             raise ValueError(
@@ -176,9 +175,7 @@ class SandboxPromoter:
             dry_run=dry_run,
         )
 
-        msg = (
-            f"Successfully promoted {len(promoted_files)} file(s) to '{target_spoke.name}'."
-        )
+        msg = f"Successfully promoted {len(promoted_files)} file(s) to '{target_spoke.name}'."
         if dry_run:
             msg = f"[DRY-RUN] Would promote {len(promoted_files)} file(s) to '{target_spoke.name}'."
 

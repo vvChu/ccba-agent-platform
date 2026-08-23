@@ -25,9 +25,7 @@ def valid_sandbox_workspace(tmp_path: Path) -> Path:
             "can_approve_iso_documents": False,
         },
     }
-    (ws / ".md" / "workspace_context.yaml").write_text(
-        yaml.safe_dump(ctx), encoding="utf-8"
-    )
+    (ws / ".md" / "workspace_context.yaml").write_text(yaml.safe_dump(ctx), encoding="utf-8")
     (ws / "output").mkdir()
     (ws / "output" / "report.md").write_text(
         f"{WATERMARK_HEADER}\n\n# Nội dung thẩm tra", encoding="utf-8"
@@ -58,9 +56,7 @@ def test_sandbox_auditor_flags_exceeded_qc_level(tmp_path: Path):
             "authorized_qc_level": "LEVEL_3_DEPARTMENT_REVIEW",
         },
     }
-    (ws / ".md" / "workspace_context.yaml").write_text(
-        yaml.safe_dump(ctx), encoding="utf-8"
-    )
+    (ws / ".md" / "workspace_context.yaml").write_text(yaml.safe_dump(ctx), encoding="utf-8")
 
     auditor = SandboxAuditor(ws)
     report = auditor.audit()
@@ -93,9 +89,7 @@ def test_sandbox_auditor_skips_non_sandbox_workspaces(tmp_path: Path):
             "authorized_qc_level": "LEVEL_5_FINAL_APPROVAL",
         },
     }
-    (ws / ".md" / "workspace_context.yaml").write_text(
-        yaml.safe_dump(ctx), encoding="utf-8"
-    )
+    (ws / ".md" / "workspace_context.yaml").write_text(yaml.safe_dump(ctx), encoding="utf-8")
     (ws / "output").mkdir()
     (ws / "output" / "final.md").write_text("# Final document", encoding="utf-8")
 

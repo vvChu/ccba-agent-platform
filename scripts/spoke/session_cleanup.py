@@ -134,11 +134,11 @@ def load_project_mode(root_dir: Path) -> str:
             if data and isinstance(data, dict):
                 proj = data.get("project", {})
                 if isinstance(proj, dict):
-                    mode = proj.get("mode")
+                    mode = str(proj.get("mode") or "")
                     if mode in ("software", "delivery", "hybrid"):
                         return mode
                     # Auto-inference based on type
-                    proj_type = proj.get("type", "")
+                    proj_type = str(proj.get("type") or "")
                     if proj_type == "Phần mềm":
                         return "software"
     except Exception:
@@ -423,7 +423,9 @@ def sweep_inactive_sandboxes(
             if age_days > max_age_days:
                 sp_name = sp.get("name", "Unnamed Sandbox")
                 swept_names.append(sp_name)
-                print(f"  [SANDBOX SWEEP] Found inactive sandbox '{sp_name}' ({age_days} days inactive).")
+                print(
+                    f"  [SANDBOX SWEEP] Found inactive sandbox '{sp_name}' ({age_days} days inactive)."
+                )
         except Exception:
             continue
 
@@ -432,8 +434,7 @@ def sweep_inactive_sandboxes(
             with open(decrypted_cache, encoding="utf-8") as f:
                 cache_data = yaml.safe_load(f) or {"spokes": []}
             cache_data["spokes"] = [
-                s for s in cache_data.get("spokes", [])
-                if s.get("name") not in swept_names
+                s for s in cache_data.get("spokes", []) if s.get("name") not in swept_names
             ]
             with open(decrypted_cache, "w", encoding="utf-8") as f:
                 yaml.safe_dump(cache_data, f, allow_unicode=True)
@@ -459,10 +460,9 @@ def main() -> None:
 
     # Fix stdout encoding to UTF-8 on Windows if supported
     if sys.platform == "win32":
-        try:
-            sys.stdout.reconfigure(encoding="utf-8")
-        except AttributeError:
-            pass
+        reconfigure_fn = getattr(sys.stdout, "reconfigure", None)
+        if callable(reconfigure_fn):
+            reconfigure_fn(encoding="utf-8")
 
     print("==================================================")
     mode_str = "EXECUTE" if args.execute else "PREVIEW (DRY-RUN)"

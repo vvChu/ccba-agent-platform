@@ -53,16 +53,20 @@ def mock_hub_and_spokes(tmp_path: Path) -> tuple[Path, Path, Path]:
     return hub, delivery, sandbox
 
 
-def test_spoke_registrar_extracts_sandbox_flags(mock_hub_and_spokes: tuple[Path, Path, Path]) -> None:
+def test_spoke_registrar_extracts_sandbox_flags(
+    mock_hub_and_spokes: tuple[Path, Path, Path],
+) -> None:
     """Verify SpokeRegistrar extracts sandbox flag and owner email."""
     hub, delivery, sandbox = mock_hub_and_spokes
     registrar = SpokeRegistrar()
-    info = registrar.build_spoke_info(sandbox, hub, 'chuvu-sandbox', 'Nghiên cứu')
+    info = registrar.build_spoke_info(sandbox, hub, "chuvu-sandbox", "Nghiên cứu")
 
     assert info["is_sandbox"] is True
     assert info["owner_email"] == "chuvu@ibst-bim.vn"
 
-    delivery_info = registrar.build_spoke_info(delivery, hub, '2026-04-dh-viet-nhat', 'Thẩm tra thiết kế')
+    delivery_info = registrar.build_spoke_info(
+        delivery, hub, "2026-04-dh-viet-nhat", "Thẩm tra thiết kế"
+    )
     assert delivery_info.get("is_sandbox") is False
 
     # Specialized extension (e.g. Tooling Plugin / Research Lab) without sandbox flag should NOT be sandbox
@@ -76,8 +80,10 @@ def test_spoke_registrar_extracts_sandbox_flags(mock_hub_and_spokes: tuple[Path,
     plugin = delivery.parent / "revit-bim-addon"
     plugin.mkdir(exist_ok=True)
     (plugin / ".md").mkdir(exist_ok=True)
-    (plugin / ".md" / "workspace_context.yaml").write_text(yaml.safe_dump(plugin_ctx), encoding="utf-8")
-    plugin_info = registrar.build_spoke_info(plugin, hub, 'revit-bim-addon', 'Phần mềm')
+    (plugin / ".md" / "workspace_context.yaml").write_text(
+        yaml.safe_dump(plugin_ctx), encoding="utf-8"
+    )
+    plugin_info = registrar.build_spoke_info(plugin, hub, "revit-bim-addon", "Phần mềm")
     assert plugin_info.get("is_sandbox") is False
 
 
@@ -113,7 +119,9 @@ def test_sweep_inactive_sandboxes(mock_hub_and_spokes: tuple[Path, Path, Path]) 
     assert "active-sandbox" not in swept
 
 
-def test_sync_all_spokes_filters_sandbox_by_default(mock_hub_and_spokes: tuple[Path, Path, Path], monkeypatch: Any) -> None:
+def test_sync_all_spokes_filters_sandbox_by_default(
+    mock_hub_and_spokes: tuple[Path, Path, Path], monkeypatch: Any
+) -> None:
     """Verify batch sync skips sandboxes by default and includes them with flag."""
     hub, delivery, sandbox = mock_hub_and_spokes
 
@@ -123,6 +131,7 @@ def test_sync_all_spokes_filters_sandbox_by_default(mock_hub_and_spokes: tuple[P
     ]
 
     import scripts.spoke.decrypt_spoke_registry as dec_mod
+
     monkeypatch.setattr(dec_mod, "get_registered_spokes", lambda hub_root: mock_spokes)
 
     synced_spokes = []
@@ -136,6 +145,7 @@ def test_sync_all_spokes_filters_sandbox_by_default(mock_hub_and_spokes: tuple[P
             return 0
 
     import scripts.spoke.spoke_synchronizer as sync_mod
+
     monkeypatch.setattr(sync_mod, "SpokeSynchronizer", MockSynchronizer)
 
     # 1. Default (include_sandboxes=False)
@@ -149,4 +159,3 @@ def test_sync_all_spokes_filters_sandbox_by_default(mock_hub_and_spokes: tuple[P
     sync_all_spokes(hub_root=hub, include_sandboxes=True, dry_run=True)
     assert str(delivery) in synced_spokes
     assert str(sandbox) in synced_spokes
-

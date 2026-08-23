@@ -83,7 +83,11 @@ class SandboxAuditor(BaseAuditor):
     def _audit_watermarks(self, issues: list[AuditIssue]) -> int:
         """Verify that deliverables in output folders contain draft watermark header."""
         scanned = 0
-        output_dirs = [self.project_root / "output", self.project_root / "deliverables", self.project_root / "reports"]
+        output_dirs = [
+            self.project_root / "output",
+            self.project_root / "deliverables",
+            self.project_root / "reports",
+        ]
         for out_dir in output_dirs:
             if not out_dir.exists():
                 continue

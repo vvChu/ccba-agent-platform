@@ -132,9 +132,7 @@ def merge_workspace_context(
     merged_data = dict(existing_data)  # Preserve all original keys
 
     # Additive 'project' block
-    current_proj: dict[str, Any] = (
-        proj_val if isinstance(proj_val, dict) else {}
-    )
+    current_proj: dict[str, Any] = proj_val if isinstance(proj_val, dict) else {}
     merged_data["project"] = {
         "name": str(project_name),
         "archetype": current_proj.get("archetype", archetype),
