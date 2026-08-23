@@ -8,6 +8,7 @@ from .manifest_generator import (
     ManifestGenerator,
 )
 from .patch_manifest_schema import (
+    DefectSeverity,
     DocMode,
     PatchAction,
     PatchItem,
@@ -21,6 +22,7 @@ from .patcher import (
 
 __all__ = [
     "DocMode",
+    "DefectSeverity",
     "PatchAction",
     "PatchItem",
     "PatchManifest",
