@@ -25,7 +25,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   │   ├── ai-gateway-sdk/            ←   Kết nối AI Gateway (Đa mô hình local GPU + cloud)
 │   │   └── platform-loader/           ←   Bootstrap + service routing
 │   │
-│   ├── workflows/                     ← Automated workflows (<!-- WORKFLOW_COUNT_START -->63<!-- WORKFLOW_COUNT_END --> workflows)
+│   ├── workflows/                     ← Automated workflows (<!-- WORKFLOW_COUNT_START -->64<!-- WORKFLOW_COUNT_END --> workflows)
 │   │   ├── ccba-prepare-seminar.md
 │   │   ├── ccba-update-legal-registry.md
 │   │   ├── ccba-session-retrospective.md
