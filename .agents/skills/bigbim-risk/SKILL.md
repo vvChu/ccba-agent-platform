@@ -4,7 +4,7 @@ description: Phát hiện "Mâu thuẫn thông tin" (Information Conflict) phi h
   bước phối hợp thông tin V2 - Coordination, vượt ngoài giới hạn Clash Detection truyền
   thống.
 applies_to:
-- Quản lý thông tin
+- BIM
 - Thẩm tra thiết kế
 bundle: _bim
 layer: _bim

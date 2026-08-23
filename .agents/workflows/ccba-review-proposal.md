@@ -1,9 +1,9 @@
 ---
-description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Spoke Leakage Guard, Supervised Self-Healing và Đồng bộ Catalog Hậu Merge (ADR 0045)
+description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Spoke Leakage
+  Guard, Supervised Self-Healing và Đồng bộ Catalog Hậu Merge (ADR 0045)
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Quản trị hệ thống"
+- Tác vụ Admin
+- Phần mềm
 disable-model-invocation: true
 ---
 # Workflow: Review Proposal (Thẩm Định Đề Xuất Spoke Lên Hub — ADR 0045)

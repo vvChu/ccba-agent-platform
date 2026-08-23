@@ -3,9 +3,8 @@ name: bigbim-governance
 description: Guardrails quản trị thông tin BIGBIM. Cưỡng chế tuân thủ Hiến pháp Sợi
   Chỉ Vàng, rào chắn Sợi Chỉ Đỏ và quy chuẩn định danh Unique ID từ giai đoạn A0.
 applies_to:
-- Quản lý thông tin
-- Thẩm tra thiết kế
-- Kiểm định
+- BIM
+- Tác vụ Admin
 bundle: _bim
 layer: _bim
 ---

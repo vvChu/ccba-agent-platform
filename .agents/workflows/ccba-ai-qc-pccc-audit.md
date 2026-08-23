@@ -1,9 +1,10 @@
 ---
-description: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ chế Semantic Map-Reduce.
+description: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông
+  qua cơ chế Semantic Map-Reduce.
 applies_to:
-  - "Quản lý chất lượng"
-  - "Thẩm tra thiết kế"
-bundle: "_qc"
+- Thẩm tra thiết kế
+- Thiết kế
+bundle: _qc
 disable-model-invocation: true
 ---
 # Workflow: Thẩm Tra Thiết Kế PCCC Map-Reduce (/ccba-ai-qc-pccc-audit)
