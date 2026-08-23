@@ -1,8 +1,8 @@
 ---
 name: legal-advisor
-description: "Chuyên gia Tư vấn & Giải đáp Pháp lý Xây dựng: Làm rõ câu hỏi mơ hồ qua cơ chế Phỏng vấn Thích ứng (Adaptive Diagnostic Interview), áp dụng 4 Khung Mẫu Tương tác Động theo ngữ cảnh, và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực."
+description: "Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.2."
 argument-hint: "Nội dung câu hỏi pháp lý hoặc tình huống dự án cần tư vấn?"
-bundle: "_core"
+bundle: _consulting
 disable-model-invocation: false
 category: legal
 keywords: [tu van phap ly, giai dap phap luat, quy chuan xay dung, hoi dap quy pham, legal opinion, tham dinh du an, ho so cap phep, nghiem thu cong trinh, pccc, luat xay dung 2025]

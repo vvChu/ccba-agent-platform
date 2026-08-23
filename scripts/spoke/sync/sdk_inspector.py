@@ -22,11 +22,19 @@ class TestGuardrailCopier:
         self.project_type = project_type
 
     def copy_if_needed(self, dry_run: bool = False) -> None:
-        """Copy conftest.py and safe_pytest.py if Spoke is a software project."""
-        if (self.spoke_root / "pyproject.toml").exists() or self.project_type == "Phần mềm":
-            hub_conftest = self.hub_root / "conftest.py"
-            hub_safe_pytest = self.hub_root / "scripts" / "safe_pytest.py"
+        """Copy conftest.py, safe_pytest.py, and pre-commit guardrails if Spoke is a Python project."""
+        is_python = (
+            self.project_type in ("Phần mềm", "Pháp điển")
+            or (self.spoke_root / "pyproject.toml").exists()
+            or (self.spoke_root / "requirements.txt").exists()
+            or (self.spoke_root / ".venv").exists()
+        )
 
+        if is_python:
+            spoke_scripts_dir = self.spoke_root / "scripts"
+
+            # 1. conftest.py
+            hub_conftest = self.hub_root / "conftest.py"
             dest_conftest = self.spoke_root / "conftest.py"
             if hub_conftest.exists() and hub_conftest.resolve() != dest_conftest.resolve():
                 if dry_run:
@@ -35,8 +43,9 @@ class TestGuardrailCopier:
                     shutil.copy2(hub_conftest, dest_conftest)
                     print("  - Copied test guardrail: conftest.py")
 
+            # 2. safe_pytest.py
+            hub_safe_pytest = self.hub_root / "scripts" / "safe_pytest.py"
             if hub_safe_pytest.exists():
-                spoke_scripts_dir = self.spoke_root / "scripts"
                 dest_safe_pytest = spoke_scripts_dir / "safe_pytest.py"
                 if hub_safe_pytest.resolve() != dest_safe_pytest.resolve():
                     if dry_run:
@@ -45,6 +54,30 @@ class TestGuardrailCopier:
                         spoke_scripts_dir.mkdir(parents=True, exist_ok=True)
                         shutil.copy2(hub_safe_pytest, dest_safe_pytest)
                         print("  - Copied test wrapper CLI: scripts/safe_pytest.py")
+
+            # 3. check_hub_import_depth.py (ADR 0044 §7)
+            hub_import_depth = self.hub_root / "scripts" / "spoke" / "check_hub_import_depth.py"
+            if hub_import_depth.exists():
+                dest_import_depth = spoke_scripts_dir / "check_hub_import_depth.py"
+                if hub_import_depth.resolve() != dest_import_depth.resolve():
+                    if dry_run:
+                        print("  - [DRY-RUN] Would copy guardrail: scripts/check_hub_import_depth.py")
+                    else:
+                        spoke_scripts_dir.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(hub_import_depth, dest_import_depth)
+                        print("  - Copied guardrail: scripts/check_hub_import_depth.py")
+
+            # 4. check_spoke_cleanliness.py (ADR 0044 / Issue #215)
+            hub_cleanliness = self.hub_root / "scripts" / "spoke" / "check_spoke_cleanliness.py"
+            if hub_cleanliness.exists():
+                dest_cleanliness = spoke_scripts_dir / "check_spoke_cleanliness.py"
+                if hub_cleanliness.resolve() != dest_cleanliness.resolve():
+                    if dry_run:
+                        print("  - [DRY-RUN] Would copy guardrail: scripts/check_spoke_cleanliness.py")
+                    else:
+                        spoke_scripts_dir.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(hub_cleanliness, dest_cleanliness)
+                        print("  - Copied guardrail: scripts/check_spoke_cleanliness.py")
 
 
 class SharedSdkInspector:
