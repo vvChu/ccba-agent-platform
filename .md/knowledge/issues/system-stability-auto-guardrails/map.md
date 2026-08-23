@@ -12,11 +12,11 @@ Nền tảng CCBA Agent Platform tự động duy trì sự ổn định tuyệt
 ---
 
 ## 🟢 3. Quyết định đã chốt (Decisions so far)
-- [x] **[Thêm Singleton Lock vào run_harness_evals.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/run_harness_evals.py#L12-L46)**: Đã tích hợp hàm `ensure_single_instance()` tự động phát hiện và thu hồi (terminate) tiến trình trùng lặp/treo từ trước qua `psutil` hoặc `wmic`.
-- [x] **[Sửa Zombie Cleanup trong session_cleanup.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/session_cleanup.py#L17)**: Đã bổ sung import `time` và hoàn thiện hàm `clean_zombies()` thu hồi tiến trình mồ côi > 15 phút.
-- [x] **[Cưỡng chế Mặc định Scoped Evaluation](file:///d:/GitHubProjects/ccba-agent-platform/scripts/run_harness_evals.py#L73)**: Đã thiết lập mặc định chạy theo git diff (file bị sửa đổi) để tối ưu hiệu suất, tránh ngốn 100% CPU.
-- [x] **[Tự động hóa Pre-Eval Process Health Check](file:///d:/GitHubProjects/ccba-agent-platform/scripts/run_harness_evals.py#L12-L26)**: Kiểm tra dung lượng đĩa trống (< 2GB sẽ đưa ra cảnh báo) trước khi khởi chạy CI Gates.
-- [x] **[Cập nhật Hiến pháp AGENTS.md & Workflows Standard](file:///d:/GitHubProjects/ccba-agent-platform/.agents/AGENTS.md#L61)**: Đã đóng gói quy tắc Anti-Duplicate Background Runner vào `AGENTS.md` và `eval-gate/SKILL.md`.
+- [x] **[Thêm Singleton Lock vào run_harness_evals.py](../../../../scripts/run_harness_evals.py#L12-L46)**: Đã tích hợp hàm `ensure_single_instance()` tự động phát hiện và thu hồi (terminate) tiến trình trùng lặp/treo từ trước qua `psutil` hoặc `wmic`.
+- [x] **[Sửa Zombie Cleanup trong session_cleanup.py](../../../../scripts/session_cleanup.py#L17)**: Đã bổ sung import `time` và hoàn thiện hàm `clean_zombies()` thu hồi tiến trình mồ côi > 15 phút.
+- [x] **[Cưỡng chế Mặc định Scoped Evaluation](../../../../scripts/run_harness_evals.py#L73)**: Đã thiết lập mặc định chạy theo git diff (file bị sửa đổi) để tối ưu hiệu suất, tránh ngốn 100% CPU.
+- [x] **[Tự động hóa Pre-Eval Process Health Check](../../../../scripts/run_harness_evals.py#L12-L26)**: Kiểm tra dung lượng đĩa trống (< 2GB sẽ đưa ra cảnh báo) trước khi khởi chạy CI Gates.
+- [x] **[Cập nhật Hiến pháp AGENTS.md & Workflows Standard](../../../../.agents/AGENTS.md#L61)**: Đã đóng gói quy tắc Anti-Duplicate Background Runner vào `AGENTS.md` và `eval-gate/SKILL.md`.
 
 ---
 

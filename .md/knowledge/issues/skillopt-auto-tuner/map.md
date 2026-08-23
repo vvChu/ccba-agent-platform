@@ -18,30 +18,30 @@ Tích hợp thành công cờ `--auto-tune` vào workflow `/ccba-skills-eval`, c
 
 ## 🟢 Quyết định đã chốt (Decisions so far)
 
-1. [Tập trung xây dựng Skill Auto-Tuner](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0023-skill-auto-tuner-integration-via-skillopt.md#1-ph%E1%BA%A1m-vi-%E1%BB%A9ng-d%E1%BB%A5ng-t%E1%BA%ADp-trung-x%C3%A2y-d%E1%BB%B1ng-ccba-skill-auto-tuner): Tự động hóa việc biên soạn `SKILL.md` mà không can thiệp trọng số LLM (Frozen Weights). *(Ghi nhận tại ADR 0023)*.
-2. [Chiến lược Benchmark Hỗn hợp](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0023-skill-auto-tuner-integration-via-skillopt.md#2-chi%E1%BA%BFn-l%C6%B0%E1%BB%A3c-benchmark-h%E1%BB%97n-h%E1%BB%A3p-hybrid-benchmark-strategy): Dùng Synthetic Tasks (sinh tự động qua AI Gateway) cho vòng Rollout và Real Benchmark Logs cho Validation Gate. *(Ghi nhận tại ADR 0023)*.
-3. [Giao diện CLI Seam `--auto-tune`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0023-skill-auto-tuner-integration-via-skillopt.md#3-giao-di%E1%BB%87n-%C4%91i%E1%BB%81u-khi%E1%BB%83n-cli-seam-m%E1%BB%9F-r%E1%BB%99ng-ccba-skills-eval-b%E1%BA%B1ng-c%E1%BB%9D--auto-tune): Mở rộng `/ccba-skills-eval` bằng cờ `--auto-tune` thay vì tạo workflow riêng lẻ mới. *(Ghi nhận tại ADR 0023)*.
+1. [Tập trung xây dựng Skill Auto-Tuner](../../../../docs/adr/0023-skill-auto-tuner-integration-via-skillopt.md#1-ph%E1%BA%A1m-vi-%E1%BB%A9ng-d%E1%BB%A5ng-t%E1%BA%ADp-trung-x%C3%A2y-d%E1%BB%B1ng-ccba-skill-auto-tuner): Tự động hóa việc biên soạn `SKILL.md` mà không can thiệp trọng số LLM (Frozen Weights). *(Ghi nhận tại ADR 0023)*.
+2. [Chiến lược Benchmark Hỗn hợp](../../../../docs/adr/0023-skill-auto-tuner-integration-via-skillopt.md#2-chi%E1%BA%BFn-l%C6%B0%E1%BB%A3c-benchmark-h%E1%BB%97n-h%E1%BB%A3p-hybrid-benchmark-strategy): Dùng Synthetic Tasks (sinh tự động qua AI Gateway) cho vòng Rollout và Real Benchmark Logs cho Validation Gate. *(Ghi nhận tại ADR 0023)*.
+3. [Giao diện CLI Seam `--auto-tune`](../../../../docs/adr/0023-skill-auto-tuner-integration-via-skillopt.md#3-giao-di%E1%BB%87n-%C4%91i%E1%BB%81u-khi%E1%BB%83n-cli-seam-m%E1%BB%9F-r%E1%BB%99ng-ccba-skills-eval-b%E1%BA%B1ng-c%E1%BB%9D--auto-tune): Mở rộng `/ccba-skills-eval` bằng cờ `--auto-tune` thay vì tạo workflow riêng lẻ mới. *(Ghi nhận tại ADR 0023)*.
 
 ---
 
 ## 🧭 Biên giới Công việc & Tickets (Frontier & Open Tickets)
 
-### 🔹 Ticket 1 [AFK]: [Nghiên cứu Optimizer Prompt Pattern cho SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skillopt-auto-tuner/tickets/01-optimizer-prompt-pattern.md)
+### 🔹 Ticket 1 [AFK]: [Nghiên cứu Optimizer Prompt Pattern cho SKILL.md](tickets/01-optimizer-prompt-pattern.md)
 * **Loại tác vụ**: Research [AFK]
 * **Mục tiêu**: Thiết kế prompt chuẩn cho Optimizer Model (bước Edit) để chỉ đưa ra các chỉnh sửa văn bản dạng Bounded Edits (sửa/thêm/bớt câu hướng dẫn) mà bảo toàn tuyệt đối phần YAML Frontmatter của `SKILL.md`.
 * **Trạng thái**: Open (Unblocked)
 
-### 🔹 Ticket 2 [AFK]: [Thiết kế Synthetic Task Generator via AI Gateway](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skillopt-auto-tuner/tickets/02-synthetic-task-generator.md)
+### 🔹 Ticket 2 [AFK]: [Thiết kế Synthetic Task Generator via AI Gateway](tickets/02-synthetic-task-generator.md)
 * **Loại tác vụ**: Research [AFK]
 * **Mục tiêu**: Xây dựng thuật toán đọc `SKILL.md` và `CONTEXT.md` để tự động sinh 5-10 kịch bản thử nghiệm edge-case đa dạng làm đầu vào cho giai đoạn Rollout.
 * **Trạng thái**: Open (Unblocked)
 
-### 🔹 Ticket 3 [AFK]: [Thiết kế Validation Gate & Metrics Scorer](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skillopt-auto-tuner/tickets/03-validation-gate-scorer.md)
+### 🔹 Ticket 3 [AFK]: [Thiết kế Validation Gate & Metrics Scorer](tickets/03-validation-gate-scorer.md)
 * **Loại tác vụ**: Research [AFK]
 * **Mục tiêu**: Xây dựng bộ chấm điểm (Scorer) đối soát trajectory của Agent với Real Benchmark Logs, thiết lập ngưỡng điểm chấp nhận để tránh Prompt Drift.
 * **Trạng thái**: Open (Unblocked)
 
-### 🔹 Ticket 4 [HITL]: [Tích hợp CLI Flag --auto-tune vào ccba-skills-eval](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skillopt-auto-tuner/tickets/04-cli-seam-integration.md)
+### 🔹 Ticket 4 [HITL]: [Tích hợp CLI Flag --auto-tune vào ccba-skills-eval](tickets/04-cli-seam-integration.md)
 * **Loại tác vụ**: Task [HITL]
 * **Mục tiêu**: Cập nhật file spec `/ccba-skills-eval` và script điều khiển `eval-gate` để nối liền chu trình 4 bước khi người dùng truyền cờ `--auto-tune`.
 * **Phụ thuộc**: Blocked by Ticket 1, 2, 3.

@@ -1,4 +1,4 @@
-# Ticket #01: [Tự động bỏ câu hỏi Triage khi thiếu Skill Triage](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/ccba-platform-setup-optimizations/01-smart-skipping-triage.md)
+# Ticket #01: [Tự động bỏ câu hỏi Triage khi thiếu Skill Triage](01-smart-skipping-triage.md)
 
 - **Mã số**: `01-smart-skipping-triage`
 - **Loại Ticket**: `Research [AFK]`

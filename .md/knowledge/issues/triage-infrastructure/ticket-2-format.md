@@ -29,5 +29,5 @@ Thiết lập khuôn mẫu (template) và định dạng lưu trữ cho các iss
 
 ## 📝 Kết quả thực hiện (2026-07-19)
 - Đã lựa chọn định dạng **Markdown kết hợp Frontmatter YAML** để lưu trữ issues ngoại tuyến. Định dạng này giúp con người dễ dàng tương tác qua git/IDE, đồng thời Agent có thể parse metadata bằng thư viện YAML tiêu chuẩn và đọc mô tả/brief trực tiếp bằng định dạng Markdown.
-- Đã xuất bản mẫu issue chuẩn tại [template_issue.md](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/template_issue.md).
+- Đã xuất bản mẫu issue chuẩn tại [template_issue.md](../../../../triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/template_issue.md).
 

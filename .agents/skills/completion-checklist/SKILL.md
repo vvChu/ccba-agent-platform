@@ -82,7 +82,7 @@ Checklist master được phân định căn cứ pháp lý theo mốc thời gi
 - **Thông tư 34/2026/TT-BXD** (Có hiệu lực từ 01/07/2026) — Quy định về phân cấp công trình xây dựng.
 
 ### 2. Áp dụng tra cứu chuyển tiếp (Công trình hoàn thành / nghiệm thu trước 01/07/2026):
-- **Văn bản hợp nhất 19/VBHN-BXD (25/03/2026)** — Hợp nhất Nghị định 06/2021/NĐ-CP và các Nghị định sửa đổi (NĐ 35/2023, NĐ 175/2024, NĐ 14/2026). Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình.
+- **Văn bản hợp nhất 19/VBHN-BXD (25/03/2026)** — Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình (kế thừa Nghị định 105/2025/NĐ-CP).
 
 ## Output Formats
 

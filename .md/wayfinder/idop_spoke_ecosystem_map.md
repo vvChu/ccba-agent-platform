@@ -2,9 +2,9 @@
 
 > **Tham chiếu nền tảng**:
 > - [ADR 0041: Hub-Spoke Ecosystem Taxonomy & 4 Core Archetypes](../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)
-> - [ADR 0042: Tri-Repo Sync & Tiered AI Pre-Submission Gate](../../docs/adr/0042-tri-repo-server-sync-and-pre-submission-gate.md)
+> - [ADR 0042: Tri-Repo Sync & Tiered AI Pre-Submission Gate](../../docs/adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md)
 > - [ADR 0043: Decoupled Resilience & IDOP Local Staging Queue](../../docs/adr/0043-idop-active-dev-resilience-and-fallback.md)
-> - [ADR 0044: Standard Editable Package Bootstrap](../../docs/adr/0044-standard-editable-package-bootstrap.md)
+> - [ADR 0044: Standard Editable Package Bootstrap](../../docs/adr/0044-spoke-hub-package-bootstrap-standard.md)
 > - Ubiquitous Language: [CONTEXT.md](../../CONTEXT.md)
 
 ---

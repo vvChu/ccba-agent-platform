@@ -1,6 +1,6 @@
-# Ticket 2: [Bổ sung Phân loại Ảo Virtual Tag _document trong catalog.yaml](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/document-skills-refinement/tickets/02-catalog-virtual-tagging.md)
+# Ticket 2: [Bổ sung Phân loại Ảo Virtual Tag _document trong catalog.yaml](02-catalog-virtual-tagging.md)
 
-* **Thuộc bản đồ**: [Document Skills Refinement Map](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/document-skills-refinement/map.md)
+* **Thuộc bản đồ**: [Document Skills Refinement Map](../map.md)
 * **Loại tác vụ**: Research / Config [AFK]
 * **Người thực hiện (Assignee)**: Unassigned
 * **Trạng thái**: Open (Unblocked)

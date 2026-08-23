@@ -88,5 +88,5 @@ Xây dựng bộ bọc thực thi an toàn **Safe Execution Sandbox Wrapper** (`
 
 ## Further Notes
 
-- Kế thừa trực tiếp cấu trúc từ Wayfinder Map tại [map.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/safe-execution-sandbox/map.md).
-- Tuân thủ nghiêm ngặt Hiến pháp CCBA tại [AGENTS.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/AGENTS.md).
+- Kế thừa trực tiếp cấu trúc từ Wayfinder Map tại [map.md](../issues/safe-execution-sandbox/map.md).
+- Tuân thủ nghiêm ngặt Hiến pháp CCBA tại [AGENTS.md](../../../.agents/AGENTS.md).

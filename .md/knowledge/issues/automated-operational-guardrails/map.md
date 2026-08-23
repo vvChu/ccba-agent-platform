@@ -22,8 +22,8 @@ Tự động hóa 100% việc thực thi kiểm thử an toàn (Scoped pytest + 
 
 ## 📋 Quyết định đã chốt (Decisions so far)
 
-1. **[Thống nhất Kiến trúc Tự động hóa 4 Tầng](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/automated-operational-guardrails/map.md#thống-nhất-kiến-trúc-tự-động-hóa-4-tầng)** — Kết hợp Constitutional Guardrails (Layer 1) + Workflow Rules + Pytest Hook (`conftest.py`) + Safe Wrapper CLI (`safe_pytest.py`).
-2. **[Kế thừa Nền tảng Detached Runner](file:///d:/GitHubProjects/ccba-agent-platform/scripts/safe_runner.py)** — Tái sử dụng `safe_runner.py` (151 LOC) đã được chứng minh độ ổn định trong `issue-wayfinder-cancelled-execution`.
+1. **[Thống nhất Kiến trúc Tự động hóa 4 Tầng](map.md#thống-nhất-kiến-trúc-tự-động-hóa-4-tầng)** — Kết hợp Constitutional Guardrails (Layer 1) + Workflow Rules + Pytest Hook (`conftest.py`) + Safe Wrapper CLI (`safe_pytest.py`).
+2. **[Kế thừa Nền tảng Detached Runner](../../../../scripts/safe_runner.py)** — Tái sử dụng `safe_runner.py` (151 LOC) đã được chứng minh độ ổn định trong `issue-wayfinder-cancelled-execution`.
 
 ---
 

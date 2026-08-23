@@ -1,7 +1,7 @@
 # Danh sách Ticket Chi Tiết: Triển Khai Tầng 5 (Production Log Mining & Auto-Tuning Evals)
 
 **Mã bản đồ**: `issue-5-layer-eval-log-mining`  
-**Đường dẫn bản đồ**: [map.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/5-layer-eval-log-mining/map.md)  
+**Đường dẫn bản đồ**: [map.md](map.md)  
 
 ---
 

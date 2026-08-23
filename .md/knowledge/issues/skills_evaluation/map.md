@@ -16,9 +16,9 @@ Xây dựng thành công bộ khung đánh giá (Evaluation Framework) chuẩn c
 ---
 
 ## 🤝 Quyết định đã chốt (Decisions so far)
-- **[Chốt 3 kỹ năng thí điểm](file:///d:/GitHubProjects/ccba-agent-platform/.md/projects/NC_Dont_Ship_Skills_Without_Evals/session_document.md):** Thống nhất triển khai thí điểm Evals cho `copywriting`, `completion-checklist`, và `ccba-ai-qc-pccc-audit` (Thông qua Brainstorm Session ngày 2026-07-20).
-- **[Xây dựng thành công Core Eval Runner](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/eval-gate/scripts/eval_runner.py):** Đã code xong công cụ runner CLI Python hỗ trợ Regex Asserts và LLM Judge.
-- **[Hoàn thành bộ Test Cases](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/eval-gate/test_cases/):** Thiết lập xong các tệp test cases JSON độc lập cho 3 kỹ năng thí điểm.
+- **[Chốt 3 kỹ năng thí điểm](../../../projects/NC_Dont_Ship_Skills_Without_Evals/session_document.md):** Thống nhất triển khai thí điểm Evals cho `copywriting`, `completion-checklist`, và `ccba-ai-qc-pccc-audit` (Thông qua Brainstorm Session ngày 2026-07-20).
+- **[Xây dựng thành công Core Eval Runner](../../../../.agents/skills/eval-gate/scripts/eval_runner.py):** Đã code xong công cụ runner CLI Python hỗ trợ Regex Asserts và LLM Judge.
+- **[Hoàn thành bộ Test Cases](../../../../.agents/skills/eval-gate/test_cases):** Thiết lập xong các tệp test cases JSON độc lập cho 3 kỹ năng thí điểm.
 
 ---
 
@@ -35,7 +35,7 @@ Xây dựng thành công bộ khung đánh giá (Evaluation Framework) chuẩn c
 
 ## 🎫 Frontier Tickets (Vé Biên giới - Có thể thực hiện ngay)
 
-### 1. `[Ticket #01: Xây dựng Core Eval Runner (eval_runner.py)](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/eval-gate/scripts/eval_runner.py)`
+### 1. `[Ticket #01: Xây dựng Core Eval Runner (eval_runner.py)](../../../../.agents/skills/eval-gate/scripts/eval_runner.py)`
 - **Loại:** Task [AFK]
 - **Trạng thái:** Đã hoàn thành (Done)
 - **Mô tả:** Viết script Python nhận file JSON test cases, gọi API mock Agent cô lập, thực hiện đối sánh kết quả bằng Regex và LLM-as-a-Judge, tính toán tỷ lệ Pass/Fail qua nhiều lần thử.

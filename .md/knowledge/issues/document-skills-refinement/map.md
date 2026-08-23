@@ -26,17 +26,17 @@ Tối ưu hóa khả năng định tuyến (routing) và làm rõ mối quan h�
 
 ## 🧭 Biên giới Công việc & Tickets (Frontier & Open Tickets)
 
-### 🔹 Ticket 1 [AFK]: [Cập nhật Frontmatter & Master-Skill Relationships vào SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/document-skills-refinement/tickets/01-update-skill-metadata.md)
+### 🔹 Ticket 1 [AFK]: [Cập nhật Frontmatter & Master-Skill Relationships vào SKILL.md](tickets/01-update-skill-metadata.md)
 * **Loại tác vụ**: Research / Docs [AFK]
 * **Mục tiêu**: Bổ sung trường metadata `master_skill` hoặc `sub_skills` vào YAML Frontmatter và cập nhật phần mô tả trong `SKILL.md` của các skill xử lý văn bản.
 * **Trạng thái**: Open (Unblocked)
 
-### 🔹 Ticket 2 [AFK]: [Bổ sung Phân loại Ảo Virtual Tag _document trong catalog.yaml](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/document-skills-refinement/tickets/02-catalog-virtual-tagging.md)
+### 🔹 Ticket 2 [AFK]: [Bổ sung Phân loại Ảo Virtual Tag _document trong catalog.yaml](tickets/02-catalog-virtual-tagging.md)
 * **Loại tác vụ**: Research / Config [AFK]
 * **Mục tiêu**: Bổ sung tag `_document` hoặc `_writing` vào `catalog.yaml` để hỗ trợ lọc nhanh danh sách skill xử lý văn bản mà không làm xáo trộn các bundles `_core`, `_qc`, `_consulting` hiện tại.
 * **Trạng thái**: Open (Unblocked)
 
-### 🔹 Ticket 3 [AFK]: [Cập nhật Hướng dẫn Định tuyến Routing trong platform-loader](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/document-skills-refinement/tickets/03-update-platform-loader-routing.md)
+### 🔹 Ticket 3 [AFK]: [Cập nhật Hướng dẫn Định tuyến Routing trong platform-loader](tickets/03-update-platform-loader-routing.md)
 * **Loại tác vụ**: Docs [AFK]
 * **Mục tiêu**: Cập nhật chỉ dẫn nạp skill trong `platform-loader/SKILL.md` để Agent ưu tiên kích hoạt Master Skill trước khi gọi các Sub-skill công cụ bên dưới.
 * **Trạng thái**: Open (Blocked by Ticket 1, 2)

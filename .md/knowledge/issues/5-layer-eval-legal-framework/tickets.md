@@ -1,7 +1,7 @@
 # Danh sách Ticket Chi Tiết: Khung Phòng Vệ 5 Tầng AI Skills Evals & Thống Nhất Ngôn Ngữ Pháp Lý
 
 **Mã bản đồ**: `issue-5-layer-eval-legal-framework`  
-**Đường dẫn bản đồ**: [map.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/5-layer-eval-legal-framework/map.md)  
+**Đường dẫn bản đồ**: [map.md](map.md)  
 
 ---
 

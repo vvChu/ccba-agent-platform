@@ -13,10 +13,10 @@ Kế hoạch này phác thảo cách trích xuất và tích hợp chọn lọc 
 
 ### Thành phần Core & Hooks
 
-#### [NEW] [brand_enforcement.py](file:///D:/GitHubProjects/ccba-agent-platform/scripts/hooks/brand_enforcement.py)
+#### [NEW] [brand_enforcement.py](../../../scripts/hooks/brand_enforcement.py)
 *   **Mục đích**: Một hook chạy ở sự kiện `pre-tool` hoặc `post-tool` kiểm tra các nội dung văn bản (markdown, txt) được tạo ra xem có tuân thủ các quy tắc thương hiệu cốt lõi (ví dụ: viết đúng tên dự án `ccba-agent-platform`, không dùng từ cấm, giữ tông giọng chuyên nghiệp).
 
-#### [NEW] [seo_audit.py](file:///D:/GitHubProjects/ccba-agent-platform/scripts/seo_audit.py)
+#### [NEW] [seo_audit.py](../../../scripts/seo_audit.py)
 *   **Mục đích**: Công cụ CLI chạy độc lập hoặc tích hợp để phân tích kỹ thuật SEO của các tệp HTML/Markdown trong dự án (kiểm tra heading `<h1>`, độ dài tiêu đề, mô tả meta, thẻ `alt` của hình ảnh).
 
 ---

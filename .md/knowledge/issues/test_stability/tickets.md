@@ -1,7 +1,7 @@
 # Danh sách Tickets: Cô lập & Ổn định hóa Hệ thống Kiểm thử (Test Isolation & Stability)
 
-Tài liệu spec tham chiếu: [Spec: Cô lập & Ổn định hóa Hệ thống Kiểm thử](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/specs/spec-test-isolation-and-stability.md)  
-Bản đồ Wayfinder: [Wayfinder Map](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/test_stability/map.md)
+Tài liệu spec tham chiếu: [Spec: Cô lập & Ổn định hóa Hệ thống Kiểm thử](../../specs/spec-test-isolation-and-stability.md)  
+Bản đồ Wayfinder: [Wayfinder Map](map.md)
 
 👉 **Nguyên tắc**: Chỉ thực hiện các ticket nằm ở **Biên giới (Frontier)** — là những ticket không bị chặn hoặc tất cả blockers của nó đã ở trạng thái `[x]` hoàn thành.
 

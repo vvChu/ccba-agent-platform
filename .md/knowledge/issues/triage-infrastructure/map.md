@@ -20,9 +20,9 @@ Hạ tầng Triage được xây dựng hoàn chỉnh và sẵn sàng vận hàn
 ---
 
 ## 🤝 Quyết định đã chốt (Decisions so far)
-- **Quyết định #1 [labels.yaml](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/labels.yaml):** Thống nhất bộ nhãn chuẩn gồm 7 nhãn phục vụ quy trình sàng lọc và phân vai xử lý sự cố.
-- **Quyết định #2 [template_issue.md](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/template_issue.md):** Thiết kế định dạng issue cục bộ dạng Markdown kết hợp Frontmatter YAML giúp lưu trữ metadata và nội dung dễ dàng.
-- **Quyết định #3 [sync_issues.py](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/sync_issues.py):** Phát triển script Python đồng bộ hóa issues từ GitHub API thông qua `gh` CLI về lưu trữ cục bộ.
+- **Quyết định #1 [labels.yaml](../../../../triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/labels.yaml):** Thống nhất bộ nhãn chuẩn gồm 7 nhãn phục vụ quy trình sàng lọc và phân vai xử lý sự cố.
+- **Quyết định #2 [template_issue.md](../../../../triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/template_issue.md):** Thiết kế định dạng issue cục bộ dạng Markdown kết hợp Frontmatter YAML giúp lưu trữ metadata và nội dung dễ dàng.
+- **Quyết định #3 [sync_issues.py](../../../../triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/sync_issues.py):** Phát triển script Python đồng bộ hóa issues từ GitHub API thông qua `gh` CLI về lưu trữ cục bộ.
 
 ---
 
@@ -39,14 +39,14 @@ Hạ tầng Triage được xây dựng hoàn chỉnh và sẵn sàng vận hàn
 
 ## 🎫 Các Ticket ở Biên giới (Frontier Tickets)
 
-### 1. [Ticket #1: Khảo sát & Thống nhất Bộ Nhãn Chuẩn](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/ticket-1-labels.md) [AFK] — **Đã đóng (Closed)**
+### 1. [Ticket #1: Khảo sát & Thống nhất Bộ Nhãn Chuẩn](../../../../triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/ticket-1-labels.md) [AFK] — **Đã đóng (Closed)**
 - **Mục tiêu:** Thống nhất danh sách tên nhãn, màu sắc và mô tả chi tiết cho quy trình Triage của CCBA (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix, v.v.).
 - **Đầu ra:** File đặc tả nhãn `labels.yaml` để có thể import tự động bằng `gh label`.
 
-### 2. [Ticket #2: Thiết kế Định dạng File Issue Cục bộ](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/ticket-2-format.md) [AFK] — **Đã đóng (Closed)**
+### 2. [Ticket #2: Thiết kế Định dạng File Issue Cục bộ](../../../../triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/ticket-2-format.md) [AFK] — **Đã đóng (Closed)**
 - **Mục tiêu:** Xác định cấu trúc file issue cục bộ trong `.md/knowledge/issues/` (Frontmatter YAML kết hợp nội dung Markdown hay thuần JSON). Đảm bảo Agent dễ dàng đọc hiểu và cập nhật.
 - **Đầu ra:** File mẫu `template_issue.md`.
 
-### 3. [Ticket #3: Thử nghiệm Cơ chế Đồng bộ bằng gh CLI](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/ticket-3-sync.md) [HITL] — **Đã đóng (Closed)**
+### 3. [Ticket #3: Thử nghiệm Cơ chế Đồng bộ bằng gh CLI](../../../../triage-ccba-issues/.md/knowledge/issues/triage-infrastructure/ticket-3-sync.md) [HITL] — **Đã đóng (Closed)**
 - **Mục tiêu:** Viết script Powershell hoặc Python ngắn gọn để kéo các issue hiện có trên GitHub (nếu có) về thư mục cục bộ dưới định dạng đã thiết kế ở Ticket #2.
 - **Đầu ra:** Script `sync_issues.ps1` hoặc `sync_issues.py` chạy thử nghiệm thành công.

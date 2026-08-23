@@ -33,17 +33,17 @@ Xây dựng thành công gói tính năng **Milestone 2** cho gói dịch vụ [
 
 ## 🚩 4. Danh Sách Ticket Tại Biên Giới (Frontier Tickets)
 
-Chi tiết nội dung nghiệm thu được theo dõi tại [tickets.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-milestone2/tickets.md):
+Chi tiết nội dung nghiệm thu được theo dõi tại [tickets.md](tickets.md):
 
-* ✅ **[Ticket 1: Core AST Parser & Patch Schema](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-milestone2/tickets.md#ticket-1-core-ast-parser--patch-schema-definition)** `[DONE]` `[AFK]`
+* ✅ **[Ticket 1: Core AST Parser & Patch Schema](tickets.md#ticket-1-core-ast-parser--patch-schema-definition)** `[DONE]` `[AFK]`
   * *Mục tiêu:* Triển khai `ASTParser` chuyển Markdown thành cây AST Nodes (`#D12-K2-Pa`) và định nghĩa Schema `delta_patch.yaml`.
-* ✅ **[Ticket 2: AI Gateway Delta Patch Generator](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-milestone2/tickets.md#ticket-2-ai-gateway-delta-patch-generator)** `[DONE]` `[AFK]`
+* ✅ **[Ticket 2: AI Gateway Delta Patch Generator](tickets.md#ticket-2-ai-gateway-delta-patch-generator)** `[DONE]` `[AFK]`
   * *Mục tiêu:* Xây dựng module sinh patch qua `ai.chat()` với Article-Scoped Chunking và Double-Pass Alignment Verification.
-* ✅ **[Ticket 3: Visual Diff Exporter & VBHN Merger Engine](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-milestone2/tickets.md#ticket-3-visual-diff-exporter--vbhn-merger-engine)** `[DONE]` `[AFK]`
+* ✅ **[Ticket 3: Visual Diff Exporter & VBHN Merger Engine](tickets.md#ticket-3-visual-diff-exporter--vbhn-merger-engine)** `[DONE]` `[AFK]`
   * *Mục tiêu:* Áp dụng patch lên cây AST và xuất file `VBHN_{slug}.md` kèm Visual Diff Markdown (`+` bổ sung, `~~` bãi bỏ).
-* ✅ **[Ticket 4: Telegram VIP Alert & CAPTCHA Handler](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-milestone2/tickets.md#ticket-4-telegram-vip-alert--captcha-handler)** `[DONE]` `[AFK]`
+* ✅ **[Ticket 4: Telegram VIP Alert & CAPTCHA Handler](tickets.md#ticket-4-telegram-vip-alert--captcha-handler)** `[DONE]` `[AFK]`
   * *Mục tiêu:* Phát hiện rào chắn CAPTCHA/VIP Expiry và gửi Webhook Telegram khẩn cấp.
-* ✅ **[Ticket 5: Hybrid RAG Integration & End-to-End Test Suite](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-milestone2/tickets.md#ticket-5-hybrid-rag-integration--end-to-end-test-suite)** `[DONE]` `[AFK]`
+* ✅ **[Ticket 5: Hybrid RAG Integration & End-to-End Test Suite](tickets.md#ticket-5-hybrid-rag-integration--end-to-end-test-suite)** `[DONE]` `[AFK]`
   * *Mục tiêu:* Nạp kho VBPL hợp nhất vào `hybrid-rag-search` và viết unit tests kiểm chứng 100% pass.
 
 ---

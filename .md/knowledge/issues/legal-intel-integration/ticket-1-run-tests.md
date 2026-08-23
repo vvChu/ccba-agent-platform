@@ -2,7 +2,7 @@
 
 - **Loại:** Task [AFK]
 - **Trạng thái:** OPEN
-- **Bản đồ:** [Wayfinder Map](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/legal-intel-integration/map.md)
+- **Bản đồ:** [Wayfinder Map](map.md)
 
 ## Mô Tả Tác Vụ
 Chạy kiểm thử cho package `packages/ccba-legal-intel/tests` trực tiếp từng file test đơn lập thay vì unscoped pytest để đảm bảo không bị dính timeout hoặc server restart interrupt.

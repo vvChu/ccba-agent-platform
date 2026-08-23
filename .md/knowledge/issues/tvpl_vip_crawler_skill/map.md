@@ -23,22 +23,22 @@ Xây dựng Kỹ năng chính thức **`tvpl-vip-crawler`** và Workflow Slash C
 
 ## 📑 3. QUYẾT ĐỊNH ĐÃ CHỐT (DECISIONS SO FAR)
 
-1. **[Quyết định Kiến trúc Chrome Profile](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/ccba_legal/crawler.py):** Sử dụng profile Chrome cố định tại `.md/data/chrome_vip_profile` để lưu trữ Session Cookie VIP vĩnh viễn, tránh việc đăng nhập lại nhiều lần gây cảnh báo đa thiết bị.
-2. **[Quyết định Đóng gói OKF Bundle](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-legal-intel/SKILL.md):** Văn bản tải về từ TVPL phải được tách tự động thành `metadata.yaml`, `concept.md` (toàn văn), `guiding_docs/` (văn bản sửa đổi/hướng dẫn) và `index.md`.
+1. **[Quyết định Kiến trúc Chrome Profile](../../../../packages/ccba-legal-intel/ccba_legal/crawler.py):** Sử dụng profile Chrome cố định tại `.md/data/chrome_vip_profile` để lưu trữ Session Cookie VIP vĩnh viễn, tránh việc đăng nhập lại nhiều lần gây cảnh báo đa thiết bị.
+2. **[Quyết định Đóng gói OKF Bundle](../../../../.agents/skills/ccba-legal-intel/SKILL.md):** Văn bản tải về từ TVPL phải được tách tự động thành `metadata.yaml`, `concept.md` (toàn văn), `guiding_docs/` (văn bản sửa đổi/hướng dẫn) và `index.md`.
 
 ---
 
 ## 🚀 4. BIÊN GIỚI TICKET CẦN GIẢI QUYẾT (FRONTIER TICKETS)
 
-### [Ticket 01: CDP Session & Anti-Cloudflare Lock Architecture](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/tvpl_vip_crawler_skill/ticket_01_cdp_session.md) `[Research/AFK]`
+### [Ticket 01: CDP Session & Anti-Cloudflare Lock Architecture](ticket_01_cdp_session.md) `[Research/AFK]`
 - **Mục tiêu:** Thiết kế module `scripts/tvpl_session_manager.py` quản lý khởi động Chrome CDP ẩn danh với `--user-data-dir=.md/data/chrome_vip_profile`, tự động bypass Cloudflare challenge và kiểm tra trạng thái cookie VIP.
 - **Blocked by:** Không.
 
-### [Ticket 02: TVPL Download DOM Selector Engine & Fallback Parser](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/tvpl_vip_crawler_skill/ticket_02_dom_selector.md) `[Research/AFK]`
+### [Ticket 02: TVPL Download DOM Selector Engine & Fallback Parser](ticket_02_dom_selector.md) `[Research/AFK]`
 - **Mục tiêu:** Xây dựng thuật toán định vị link tải về `.docx` chính xác 100% cho mọi loại VBPL trên TVPL (Luật, Nghị định, Thông tư, Quy chuẩn QCVN), loại bỏ hoàn toàn đứt đoạn link hoặc redirect nhầm ID.
 - **Blocked by:** Ticket 01.
 
-### [Ticket 03: Đóng gói Skill `tvpl-vip-crawler` bằng `/ccba-build-skill`](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/tvpl_vip_crawler_skill/ticket_03_build_skill.md) `[Task/HITL]`
+### [Ticket 03: Đóng gói Skill `tvpl-vip-crawler` bằng `/ccba-build-skill`](ticket_03_build_skill.md) `[Task/HITL]`
 - **Mục tiêu:** Đóng gói toàn bộ logic vào `.agents/skills/tvpl-vip-crawler/SKILL.md`, script `scripts/tvpl_vip_crawler.py`, workflow `.agents/workflows/ccba-tvpl-vip-crawler.md` và kiểm định qua `validate_docs.py`.
 - **Blocked by:** Ticket 01, Ticket 02.
 

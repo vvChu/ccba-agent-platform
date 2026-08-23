@@ -1,6 +1,6 @@
-# Ticket 4: [Tích hợp CLI Flag --auto-tune vào ccba-skills-eval](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skillopt-auto-tuner/tickets/04-cli-seam-integration.md)
+# Ticket 4: [Tích hợp CLI Flag --auto-tune vào ccba-skills-eval](04-cli-seam-integration.md)
 
-* **Thuộc bản đồ**: [CCBA Skill Auto-Tuner Map](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/skillopt-auto-tuner/map.md)
+* **Thuộc bản đồ**: [CCBA Skill Auto-Tuner Map](../map.md)
 * **Loại tác vụ**: Task [HITL]
 * **Người thực hiện (Assignee)**: Unassigned
 * **Trạng thái**: Open (Blocked by Ticket 1, 2, 3)

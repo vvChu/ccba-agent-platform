@@ -60,4 +60,4 @@ Thiết lập hệ thống kiểm thử cô lập đa lớp (Multi-layer Isolate
 ## Further Notes
 
 - Kế hoạch triển khai kỹ thuật chi tiết đã được đăng ký tại [implementation_plan.md](file:///C:/Users/chuvu/.gemini/antigravity/brain/853f878b-db1e-4e7b-9274-0218dfc84c9a/implementation_plan.md).
-- Bản đồ Wayfinder tương ứng được lưu tại [.md/knowledge/issues/test_stability/map.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/test_stability/map.md).
+- Bản đồ Wayfinder tương ứng được lưu tại [.md/knowledge/issues/test_stability/map.md](../issues/test_stability/map.md).

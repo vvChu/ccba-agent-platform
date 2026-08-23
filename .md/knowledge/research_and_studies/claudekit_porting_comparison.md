@@ -17,8 +17,8 @@ Dưới đây là báo cáo so sánh, đánh giá tính tương thích và đề
 | --- | --- | --- | --- |
 | **1. Hook System** | Hệ thống hook Node.js (`SessionStart`, `PreToolUse`, v.v.) cấu hình qua `settings.json`. Enforce naming convention bằng JS. | Chốt chặn Python (`scripts/hooks/brand_enforcement.py`) kết hợp với hook runner đơn giản. | **Đã hoàn thành**: Phù hợp 100% với kiến trúc gọn nhẹ (KISS). Không cần chuyển dịch Node.js hooks phức tạp. |
 | **2. State Persistence** | Lưu trạng thái qua `plan.md` (bảng Kanban) và tệp `latest.md` xoay vòng. Dùng CLI `ck plan` để ghi nhận trạng thái. | Lưu trạng thái qua `task.md` (Markdown checklists) và `implementation_plan.md` / `walkthrough.md`. | **Đã hoàn thành**: Checklists đơn giản có tính ổn định cao hơn trên Windows, tránh được lỗi phân tích cú pháp bảng. |
-| **3. Document Recalc** | Tích hợp macro gỡ lỗi Excel (`xlsx/recalc.py`) dùng LibreOffice. | Tích hợp [xlsx_recalc.py](file:///D:/GitHubProjects/ccba-agent-platform/packages/ccba-pdf-prep/src/ccba_pdf_prep/document_skills/xlsx_recalc.py) với cơ chế fallback tự động sang `openpyxl`. | **Đã hoàn thành**: Đã gia cố khối ngoại lệ an toàn phòng ngừa lỗi phân quyền trên Windows. |
-| **4. MCP Server** | Expose toàn bộ các tool của 87+ skills cho Claude qua giao thức MCP. | Bộ MCP Server cục bộ [mcp_server.py](file:///D:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/mcp_server.py) dùng cho tra cứu VBPL và AI Gateway. | **Đang phát triển**: Đã expose thành công các công cụ tra cứu luật. Log kết nối được đẩy ra tệp riêng. |
+| **3. Document Recalc** | Tích hợp macro gỡ lỗi Excel (`xlsx/recalc.py`) dùng LibreOffice. | Tích hợp [xlsx_recalc.py](../../../packages/ccba-pdf-prep/src/ccba_pdf_prep/document_skills/xlsx_recalc.py) với cơ chế fallback tự động sang `openpyxl`. | **Đã hoàn thành**: Đã gia cố khối ngoại lệ an toàn phòng ngừa lỗi phân quyền trên Windows. |
+| **4. MCP Server** | Expose toàn bộ các tool của 87+ skills cho Claude qua giao thức MCP. | Bộ MCP Server cục bộ [mcp_server.py](../../../packages/ccba-ai/src/ccba_ai/mcp_server.py) dùng cho tra cứu VBPL và AI Gateway. | **Đang phát triển**: Đã expose thành công các công cụ tra cứu luật. Log kết nối được đẩy ra tệp riêng. |
 | **5. Multi-Agent Coor.** | Các Agent chuyên biệt phối hợp thông qua `TaskList` API và `SendMessage`. | Bộ điều phối multi-agent qua `team_coordinator.py`. | **Đã hoàn thành**: Điều phối đồng bộ dựa trên luồng file-based task an toàn. |
 
 ---
@@ -31,7 +31,7 @@ Dưới đây là báo cáo so sánh, đánh giá tính tương thích và đề
 
 ### Q2: Cơ chế tự động gỡ lỗi (`mock-debugger`) có cần thiết kế phức tạp như của ClaudeKit?
 *   **Phản biện**: Không cần. Thay vì tạo ra các sub-agent riêng biệt để phân tích mã lỗi, việc viết một script Python gọn nhẹ kết nối trực tiếp với AI Gateway là tối ưu nhất cho hiệu năng và độ ổn định trên Windows.
-*   **Giải pháp**: Chúng ta đã triển khai thành công [mock_debugger.py](file:///D:/GitHubProjects/ccba-agent-platform/scripts/mock_debugger.py) theo hướng tối giản này.
+*   **Giải pháp**: Chúng ta đã triển khai thành công [mock_debugger.py](../../../scripts/mock_debugger.py) theo hướng tối giản này.
 
 ### Q3: Có nên sử dụng cơ sở dữ liệu Vector DB cho MCP Server tra cứu luật không?
 *   **Phản biện**: Trong giai đoạn đầu, lượng văn bản luật xây dựng Việt Nam còn ít, việc duy trì một Vector Database (như Chroma/Qdrant) chạy ngầm sẽ tiêu tốn tài nguyên và tăng độ phức tạp cài đặt.

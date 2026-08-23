@@ -21,7 +21,7 @@ Workflow `/ccba-brainstorm` tuân thủ đầy đủ các chuẩn chất lượn
   - [x] Dòng 20: absolute link → `resources/brainstorm_topics.yaml`
   - [x] Dòng 36: absolute link → `../../../input_documents/`
 - **Trạng thái:** ✅ Hoàn tất
-- **File:** [ccba-brainstorm.md](file:///C:/Users/chuvu/.gemini/antigravity/worktrees/ccba-agent-platform/research-ccba-skill-evaluation/.agents/workflows/ccba-brainstorm.md)
+- **File:** [ccba-brainstorm.md](../../../../research-ccba-skill-evaluation/.agents/workflows/ccba-brainstorm.md)
 - **Blocked by:** Không (Frontier ✅)
 
 ---

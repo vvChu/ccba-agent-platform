@@ -1,4 +1,4 @@
-# Ticket #03: [Chuẩn hóa Recommended-First UX cho toàn bộ Phỏng vấn](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/ccba-platform-setup-optimizations/03-recommended-first-ux.md)
+# Ticket #03: [Chuẩn hóa Recommended-First UX cho toàn bộ Phỏng vấn](03-recommended-first-ux.md)
 
 - **Mã số**: `03-recommended-first-ux`
 - **Loại Ticket**: `Task [AFK]`

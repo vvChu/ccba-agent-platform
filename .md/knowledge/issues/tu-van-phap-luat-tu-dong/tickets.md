@@ -1,6 +1,6 @@
 # Danh sách Tickets: Khung Quy Trình Tư Vấn Pháp Lý Tự Động CCBA
 
-Tài liệu phân rã các công việc phát triển theo dạng lát cắt dọc (tracer bullets) dựa trên Spec [spec-tu-van-phap-luat-tu-dong.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/specs/spec-tu-van-phap-luat-tu-dong.md).
+Tài liệu phân rã các công việc phát triển theo dạng lát cắt dọc (tracer bullets) dựa trên Spec [spec-tu-van-phap-luat-tu-dong.md](../../specs/spec-tu-van-phap-luat-tu-dong.md).
 
 👉 Nguyên tắc: Chỉ thực hiện các ticket nằm ở Biên giới (Frontier) - là những ticket không bị chặn hoặc tất cả blockers của nó đã ở trạng thái [x] hoàn thành.
 

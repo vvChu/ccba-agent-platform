@@ -1,6 +1,6 @@
-# Ticket 1: [Cập nhật Frontmatter & Master-Skill Relationships vào SKILL.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/document-skills-refinement/tickets/01-update-skill-metadata.md)
+# Ticket 1: [Cập nhật Frontmatter & Master-Skill Relationships vào SKILL.md](01-update-skill-metadata.md)
 
-* **Thuộc bản đồ**: [Document Skills Refinement Map](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/issues/document-skills-refinement/map.md)
+* **Thuộc bản đồ**: [Document Skills Refinement Map](../map.md)
 * **Loại tác vụ**: Research / Docs [AFK]
 * **Người thực hiện (Assignee)**: Unassigned
 * **Trạng thái**: Open (Unblocked)
