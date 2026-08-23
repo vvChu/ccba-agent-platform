@@ -46,6 +46,7 @@ from .crawler import (
     download_three_tier,
     get_crawled_doc_data,
     get_tvpl_credentials,
+    get_tvpl_metadata,
     sleep_with_jitter,
     trigger_download,
 )
@@ -103,6 +104,8 @@ __all__ = [
     "TVPLCrawlFailedException",
     "sleep_with_jitter",
     "get_tvpl_credentials",
+    "get_tvpl_metadata",
+    "download_three_tier",
     "Cleaners",
     "ChromeCDP",
     "MockChromeCDP",
