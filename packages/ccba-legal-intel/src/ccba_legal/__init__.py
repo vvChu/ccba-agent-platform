@@ -87,6 +87,7 @@ from .registry import (
     search_legal_registry,
 )
 from .sync import LegalSyncEngine
+from .validator import validate_template_and_table_integrity
 from .vbhn_engine import MergedLegalDocument, VBHNEngine
 from .vbhn_merger import VBHNMerger
 from .visual_parity import (
@@ -165,4 +166,5 @@ __all__ = [
     "format_all_qcvn_md_tables",
     "normalize_clause_numbers",
     "classify_and_extract_tables",
+    "validate_template_and_table_integrity",
 ]

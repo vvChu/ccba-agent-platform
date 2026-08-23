@@ -133,10 +133,14 @@ def normalize_docx_markdown(md_text: str) -> str:
         flags=re.IGNORECASE,
     )
     md_text = re.sub(
-        r"^#*\s*(PHỤ LỤC\s+[A-I]\b[^\n]*)", r"## \1", md_text, flags=re.MULTILINE | re.IGNORECASE
-    )
-    md_text = re.sub(
         r"__Bảng\s+([A-Z0-9]+(?:\.[0-9]+)?)\s*[-–:]\s*([^_]+)__", r"### Bảng \1 - \2", md_text
+    )
+
+    # Prevent lazy list continuation: Ensure empty line before sub-clauses following bullet items
+    md_text = re.sub(
+        r"(\n\s*[-+*]\s+[^\n]+)\n(\s*(?:\d+\.\d+|\d+\.\d+\.\d+|Điều\s+\d+|Khoản\s+\d+|Mục\s+[IVXLCDM0-9]+)\b)",
+        r"\1\n\n\2",
+        md_text,
     )
     md_text = re.sub(r"__((?:[1-7]|[A-I])\.\d+\.\d+\.\d+)\.?\s*([^_]+)__", r"##### \1 \2", md_text)
     md_text = re.sub(r"__((?:[1-7]|[A-I])\.\d+\.\d+)\.?\s*([^_]+)__", r"#### \1 \2", md_text)
@@ -194,10 +198,10 @@ def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[
     """3-Tier Semantic Table Classifier according to ADR 0021."""
     try:
         from docx import Document
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "Gói 'python-docx' chưa được cài đặt. Vui lòng cài đặt qua 'pip install python-docx' để bóc tách bảng DOCX."
-        )
+        ) from err
 
     doc = Document(str(docx_path))
     tables_dir = bundle_dir / "tables"
@@ -320,10 +324,10 @@ def process_vbpl_bundle_okf_v22(
 
     try:
         import mammoth
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "Gói 'mammoth' chưa được cài đặt. Vui lòng cài đặt qua 'pip install mammoth' để chuyển đổi DOCX sang Markdown."
-        )
+        ) from err
 
     with open(docx_path, "rb") as f:
         result = mammoth.convert_to_markdown(f)
@@ -759,10 +763,10 @@ def convert_docx_to_okf_bundle(
         target_md_path = target_bundle_dir / output_filename
         try:
             import mammoth
-        except ImportError:
+        except ImportError as err:
             raise ImportError(
                 "Gói 'mammoth' chưa được cài đặt. Vui lòng cài đặt qua 'pip install mammoth' để chuyển đổi DOCX sang Markdown."
-            )
+            ) from err
 
         with open(docx_path, "rb") as docx_file:
             result = mammoth.convert_to_markdown(docx_file)
