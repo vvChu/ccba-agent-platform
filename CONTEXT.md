@@ -348,3 +348,16 @@ Bài kiểm thử tự động trên Hub (`test_idop_schema_compatibility.py`) b
 
 **Zero-Config Dual-Mode Auth (ADR 0043)**:
 Cơ chế tự động chuyển đổi giữa chế độ Mock Sandbox (`IDOP_ENV=DEV` - không cần mật khẩu/chứng chỉ) và chế độ Production (`IDOP_ENV=PROD` - xác thực qua `.pfx`), giúp kỹ sư mới và CI runner chạy thử nghiệm tức thì mà không cần xin cấp quyền.
+
+**Personal Sandbox Spoke (Spoke Cá Nhân — ADR 0046)**:
+Không gian làm việc, nghiên cứu và thử nghiệm cá nhân của từng kỹ sư, chuyên gia thuộc phân hệ `specialized_extension` (`sub_type: personal_sandbox`), được cách ly bằng chế độ sandbox và tự động kế thừa toàn bộ AI Gateway, Skills và Security Hooks từ Hub.
+
+**CCBA Charter 2026 Accountability Seats (11 Ghế Giải Trình — ADR 0046)**:
+Mô hình quản trị nhân sự theo Sơ đồ Trách nhiệm Giải trình (Phụ lục 01 Quy chế CCBA 2026) gồm 11 Ghế chức năng (`GIAM_DOC`, `PHO_GIAM_DOC`, `CO_VAN_PHAP_LY_QA`, `TRUONG_PHONG_TONG_HOP`, `PHU_TRACH_KE_TOAN`, `TRUONG_PHONG_RD_HTQT`, `IDOP_LEAD`, `TRUONG_PHONG_BIM_THIET_KE`, `TRUONG_PHONG_BIM_DU_AN`, `CHU_TRI_HOP_DONG_PM`, `CHU_TRI_BO_MON`, `KY_SU_THUC_THI`) gắn liền với 5 Phòng Ban chức năng.
+
+**5-Level QC Gate (Quy Trình Kiểm Soát Chất Lượng 05 Cấp — ADR 0046)**:
+Quy trình rà soát và phê duyệt hồ sơ dịch vụ kỹ thuật 5 cấp theo Điều 13 Quy chế CCBA 2026 (Cấp 1: Kiểm soát Kỹ thuật nội bộ $\rightarrow$ Cấp 2: Phê duyệt Quản trị DA $\rightarrow$ Cấp 3: Kiểm soát Lãnh đạo Phòng $\rightarrow$ Cấp 4: Thẩm định Pháp lý & QA $\rightarrow$ Cấp 5: Phê duyệt Lãnh đạo và Phát hành).
+
+**Sandbox Draft Watermark & Promotion Protocol (ADR 0046)**:
+Cơ chế tự động chèn thủy ấn `[CCBA SANDBOX DRAFT]` cho mọi báo cáo tạo ra từ Spoke cá nhân, khóa cứng trần phê duyệt ở Cấp 1, và quy trình chuyển giao 3 bước (Cleanse $\rightarrow$ Target Ingestion $\rightarrow$ PGV Staging) khi hoàn thành bàn giao sang Spoke Dự Án chính thức.
+

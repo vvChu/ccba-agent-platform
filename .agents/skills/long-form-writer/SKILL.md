@@ -9,6 +9,12 @@ applies_to:
 - Kiểm định
 bundle: _software
 disable-model-invocation: true
+triggers:
+- tài liệu dài
+- long-form
+- whitepaper
+- quy chế
+- regulations
 ---
 # Long-Form Writer Skill
 

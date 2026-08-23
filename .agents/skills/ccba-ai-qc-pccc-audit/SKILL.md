@@ -1,12 +1,18 @@
 ---
 name: ccba-ai-qc-pccc-audit
-description: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ chế Semantic Map-Reduce.
+description: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông
+  qua cơ chế Semantic Map-Reduce.
 applies_to:
-  - "Quản lý chất lượng"
-  - "Thẩm tra thiết kế"
-bundle: "_qc"
+- Thẩm tra thiết kế
+- Thiết kế
+bundle: _qc
+triggers:
+- pccc audit
+- semantic map-reduce
+- thẩm tra PCCC
+- thiết bị chữa cháy
+- báo cháy
 ---
-
 # CCBA AI QC PCCC Audit
 
 Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo và gộp kết quả đánh giá kỹ thuật đối với hồ sơ PCCC lớn, giúp khắc phục giới hạn context window của LLM và hiện tượng sinh ảo giác.

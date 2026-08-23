@@ -1,12 +1,20 @@
 ---
 name: File Stability Guard
-description: Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước thực tế thay vì time.sleep() — dành cho Google Drive, OneDrive, SharePoint.
+description: Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước
+  thực tế thay vì time.sleep() — dành cho Google Drive, OneDrive, SharePoint.
 applies_to:
-  - "Phần mềm"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Kiểm định
+bundle: _core
+triggers:
+- file stability
+- cloud sync
+- watchdog
+- race condition
+- google drive sync
+- onedrive sync
+- file incomplete
 ---
-
 # File Stability Guard
 
 Pattern phát hiện **file đã sync xong** trước khi pipeline xử lý. Giải quyết triệt để lớp lỗi **Cloud Sync Race Condition** mà `time.sleep()` không thể giải quyết.

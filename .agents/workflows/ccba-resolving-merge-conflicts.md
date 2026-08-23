@@ -1,9 +1,15 @@
 ---
 description: Giải quyết xung đột Git merge/rebase hiện tại một cách an toàn.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-resolving-merge-conflicts
+triggers:
+- resolving-merge-conflicts
+- merge conflicts
+- xung đột merge
+- rebase
 ---
 # Workflow: Giải Quyết Xung Đột Git (/ccba-resolving-merge-conflicts)
 

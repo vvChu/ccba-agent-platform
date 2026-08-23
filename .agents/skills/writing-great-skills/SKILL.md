@@ -1,9 +1,15 @@
 ---
 name: writing-great-skills
-description: Tài liệu cẩm nang hướng dẫn kỹ sư thiết kế và viết các file SKILL.md đạt tiêu chuẩn chất lượng cao.
+description: Tài liệu cẩm nang hướng dẫn kỹ sư thiết kế và viết các file SKILL.md
+  đạt tiêu chuẩn chất lượng cao.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- writing-great-skills
+- viết skill
+- quy chuẩn skill
+- tạo skill mới
 ---
-
 # Cẩm nang Viết Kỹ năng chất lượng cao (Writing Great Skills)
 
 Một kỹ năng (Skill) được tạo ra nhằm thiết lập tính nhất quán (determinism) từ một hệ thống xác suất (stochastic system). **Tính khả đoán (Predictability)** — việc Agent thực hiện đúng cùng một *quy trình* (process) trong mọi lần chạy, chứ không phải sinh ra cùng một output — là phẩm chất cốt lõi; mọi nguyên tắc dưới đây đều phục vụ mục đích đó.
@@ -68,7 +74,7 @@ Nội dung của một kỹ năng được xây dựng từ hai thành phần: *
 1.  **Độ dài mô tả frontmatter:** Trường `description` của các kỹ năng kích hoạt bởi mô hình (model-invoked, không cấu hình `disable-model-invocation: true`) bắt buộc phải súc tích và có độ dài tối đa là **180 ký tự**.
 2.  **Tiêu chí hoàn thành:** Mọi bước hướng dẫn quy trình (dưới các tiêu đề `Process` hoặc `Quy trình`) phải có một dòng bắt đầu bằng `Tiêu chí hoàn thành:` hoặc `Completion Criterion:` chỉ rõ trạng thái hoàn thành định lượng.
 3.  **Liên kết tương đối (Relative links):** Mọi dẫn chiếu sang tệp tin khác trong cùng kỹ năng hoặc workspace phải sử dụng relative link hoạt động được, không dùng link tuyệt đối (absolute link) trừ phi đó là tài liệu web ngoài.
-4.  **Đăng ký Slash Command:** Khi tạo skill mới có thuộc tính `user-invocable: true`, bắt buộc phải tạo workflow wrapper mỏng tương ứng tại thư mục `.agents/workflows/` bắt đầu bằng tiền tố `ccba-` và đăng ký vào [catalog.yaml](../platform-loader/catalog.yaml).
+4.  **Đăng ký Slash Command & Tự Động Biên Dịch Catalog (ADR 0047):** Khi tạo skill mới có thuộc tính `user-invocable: true`, bắt buộc phải tạo workflow wrapper mỏng tương ứng tại thư mục `.agents/workflows/` bắt đầu bằng tiền tố `ccba-`, khai báo đầy đủ YAML frontmatter (`description`, `bundle`, `triggers`, `applies_to`) và chạy `python scripts/governance/compile_catalog.py` để tự động biên dịch `catalog.yaml`.
 5.  **Attribution (Ghi nhận nguồn gốc):** Khi skill hoặc nhánh được thích ứng từ nguồn bên ngoài, bắt buộc phải ghi blockquote attribution ngay dưới tiêu đề nhánh/skill, bao gồm: tên nguồn, tác giả, loại giấy phép. Ví dụ: `> Nguồn gốc: Thích ứng từ skill-name của Author (License Type).`
 
 ---

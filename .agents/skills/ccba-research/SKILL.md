@@ -10,6 +10,13 @@ keywords:
 - citations
 disable-model-invocation: true
 bundle: _software
+triggers:
+- research
+- nghiên cứu
+- tìm hiểu
+- tra cứu
+- citations
+- ccba-research
 ---
 # 📚 Kỹ năng: ccba-research (Nghiên Cứu Chạy Ngầm)
 

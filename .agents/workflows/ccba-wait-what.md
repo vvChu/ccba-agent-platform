@@ -1,9 +1,16 @@
 ---
-description: Dừng lại và giải thích lại tin nhắn trước bằng ngôn ngữ tiếng Việt đơn giản.
+description: Dừng lại và giải thích lại tin nhắn trước bằng ngôn ngữ tiếng Việt đơn
+  giản.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-wait-what
+triggers:
+- wait-what
+- wait what
+- giải thích lại
+- chưa hiểu
 ---
 # Workflow: Giải Thích Lại Bằng Ngôn Ngữ Đơn Giản (/ccba-wait-what)
 

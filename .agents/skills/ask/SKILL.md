@@ -1,9 +1,16 @@
 ---
 name: ask
-description: Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu cầu phát triển.
+description: Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu cầu
+  phát triển.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- ask
+- tư vấn
+- định hướng
+- luồng công việc
+- bản đồ kỹ năng
 ---
-
 # Bản đồ Định hướng Kỹ năng Nền tảng (CCBA Ask Guide)
 
 Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nhà phát triển để lựa chọn đúng Slash Command hoặc Kỹ năng (Skill) phù hợp nhất với trạng thái công việc hiện tại.

@@ -1,12 +1,34 @@
 ---
 name: spoke-adopter
-description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield Spokes) vào CCBA Platform mà không phá hủy cấu trúc dữ liệu cũ.
-argument-hint: "[--spoke <path>] [--dry-run] [--type <project_type>] [--mode <mode>]"
+description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield
+  Spokes) vào CCBA Platform mà không phá hủy cấu trúc dữ liệu cũ.
+argument-hint: '[--spoke <path>] [--dry-run] [--archetype <archetype>] [--type <project_type>]
+  [--mode <mode>]'
 disable-model-invocation: true
 category: management
-keywords: [spoke, adopt, brownfield, onboarding, migration, schema-merge, hub-and-spoke]
+keywords:
+- spoke
+- adopt
+- brownfield
+- onboarding
+- migration
+- schema-merge
+- hub-and-spoke
+bundle: _core
+triggers:
+- spoke
+- adopt
+- brownfield
+- onboarding
+- migration
+- schema-merge
+- hub-and-spoke
+- adopt spoke
+- tiếp nhận dự án
+- onboard spoke
+- kết nối dự án cũ
+- adopt-spoke
 ---
-
 # Kỹ Năng Tiếp Nhận Spoke Hiện Hữu (Brownfield Spoke Adopter)
 
 Kỹ năng này chịu trách nhiệm đánh giá hiện trạng, phân tích rủi ro và thực hiện tiếp nhận thích ứng (Adaptive Non-Destructive Onboarding) cho các codebase đã có sẵn vào mạng lưới CCBA Agent Platform.
@@ -43,10 +65,10 @@ Khi người dùng đồng ý, chạy lệnh tiếp nhận chính thức:
 python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke]
 ```
 
-### Bước 3: Tùy Biến Thể Loại & Mode (Tùy Chọn)
-Nếu muốn chỉ định rõ loại hình dự án và chế độ vận hành:
+### Bước 3: Tùy Biến Thể Loại, Chế Độ & Archetype (Tùy Chọn)
+Nếu muốn chỉ định rõ loại hình dự án, chế độ vận hành hoặc Archetype:
 ```powershell
-python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke] --type "Phần mềm" --mode "hybrid"
+python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke] --archetype "knowledge_corpus" --type "Pháp điển" --mode "software"
 ```
 
 ---
@@ -55,7 +77,7 @@ python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke] --type "Phần m�
 * **Deep Seam Engine:** `scripts/spoke/spoke_adopter.py`
 * **CLI Command:** `python scripts/adopt_spoke.py`
 * **Slash Command:** `/ccba-adopt-spoke`
-* **ADR Quy Chuẩn:** [`docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md)
+* **ADR Quy Chuẩn:** [`docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md`](../../../docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md)
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

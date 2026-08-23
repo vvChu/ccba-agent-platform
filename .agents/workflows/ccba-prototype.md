@@ -1,8 +1,15 @@
 ---
 name: ccba-prototype
 command: /ccba-prototype
-description: Khởi động quy trình xây dựng mẫu thử code thô (Logic hoặc UI) để giải quyết vấn đề thiết kế mờ mịt.
+description: Khởi động quy trình xây dựng mẫu thử code thô (Logic hoặc UI) để giải
+  quyết vấn đề thiết kế mờ mịt.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- prototype
+- mẫu thử
+- test thô
+- ccba-prototype
 ---
 # Workflow: Dựng Mẫu Thử Nhanh (/ccba-prototype)
 

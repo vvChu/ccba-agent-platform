@@ -46,7 +46,7 @@ def main() -> None:
         "--type",
         dest="project_type",
         default=None,
-        help="Explicit CCBA project type ('Phần mềm', 'Thiết kế', 'Thẩm tra thiết kế', 'Kiểm định', 'Tác vụ Admin').",
+        help="Explicit CCBA project type ('Phần mềm', 'Thiết kế', 'Thẩm tra thiết kế', 'Kiểm định', 'BIM', 'Tác vụ Admin', 'Pháp điển').",
     )
     parser.add_argument(
         "--mode",

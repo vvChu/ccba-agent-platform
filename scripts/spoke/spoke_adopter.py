@@ -83,11 +83,12 @@ def detect_spoke_stack(spoke_root: Path) -> tuple[str, str, str]:
         spoke_root / ".md" / "legal_docs"
     ).exists():
         stacks.append("Construction Consulting / Knowledge Base")
-        default_type = "Thẩm tra thiết kế"
         if (spoke_root / "bundles").exists() or (spoke_root / "OKF").exists():
             default_archetype = "knowledge_corpus"
+            default_type = "Pháp điển"
         else:
             default_archetype = "project_delivery"
+            default_type = "Thẩm tra thiết kế"
 
     if not stacks:
         stacks.append("Generic Project")
@@ -119,8 +120,9 @@ def merge_workspace_context(
 
     # 2. Extract project name
     project_name = existing_data.get("project_name")
-    if not project_name and isinstance(existing_data.get("project"), dict):
-        project_name = existing_data.get("project").get("name")
+    proj_val = existing_data.get("project")
+    if not project_name and isinstance(proj_val, dict):
+        project_name = proj_val.get("name")
     if not project_name:
         project_name = (
             ctx_path.parent.parent.name if ctx_path.parent.name == ".md" else ctx_path.parent.name
@@ -130,9 +132,7 @@ def merge_workspace_context(
     merged_data = dict(existing_data)  # Preserve all original keys
 
     # Additive 'project' block
-    current_proj = (
-        merged_data.get("project") if isinstance(merged_data.get("project"), dict) else {}
-    )
+    current_proj: dict[str, Any] = proj_val if isinstance(proj_val, dict) else {}
     merged_data["project"] = {
         "name": str(project_name),
         "archetype": current_proj.get("archetype", archetype),
@@ -238,12 +238,12 @@ class SpokeAdopter:
         if report.existing_context_data:
             existing_type = report.existing_context_data.get("project_type")
             existing_archetype = report.existing_context_data.get("archetype")
-            if isinstance(report.existing_context_data.get("project"), dict):
-                proj_dict = report.existing_context_data.get("project")
+            proj_data = report.existing_context_data.get("project")
+            if isinstance(proj_data, dict):
                 if not existing_type:
-                    existing_type = proj_dict.get("type")
+                    existing_type = proj_data.get("type")
                 if not existing_archetype:
-                    existing_archetype = proj_dict.get("archetype")
+                    existing_archetype = proj_data.get("archetype")
             if existing_type:
                 report.suggested_project_type = str(existing_type)
             if existing_archetype:
@@ -369,7 +369,7 @@ exit 0
 
         # Step 3: Synchronize Skills & Workflows Bundle safely
         print(f"\n[Adopt] Synchronizing skills for '{chosen_type}'...")
-        sync_engine = SpokeSynchronizer(self.spoke_root)
+        sync_engine = SpokeSynchronizer(str(self.spoke_root))
         sync_engine.sync()
 
         # Step 4: Register to Hub Registry

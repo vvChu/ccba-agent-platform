@@ -1,9 +1,16 @@
 ---
-description: Phỏng vấn dồn dập người dùng từng câu một để stress-test kế hoạch hoặc thiết kế.
+description: Phỏng vấn dồn dập người dùng từng câu một để stress-test kế hoạch hoặc
+  thiết kế.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-grilling
+triggers:
+- grill
+- grilling
+- phỏng vấn
+- stress test
 ---
 # Workflow: Phỏng Vấn Dồn Dập (/ccba-grilling)
 

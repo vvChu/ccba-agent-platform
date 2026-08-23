@@ -18,6 +18,18 @@ metadata:
   version: 3.0.0
 disable-model-invocation: true
 bundle: _software
+triggers:
+- Playwright
+- Vitest
+- k6
+- e2e
+- load-testing
+- web-testing
+- playwright
+- UI test
+- e2e test
+- browser automation
+- vitest
 ---
 # Web Testing Skill
 

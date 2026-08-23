@@ -40,6 +40,7 @@ from .duplication_auditor import (
 from .env_auditor import EnvAuditor
 from .link_auditor import LinkAuditor
 from .registry_auditor import RegistryAuditor
+from .sandbox_auditor import SandboxAuditor
 from .skill_auditor import SkillAuditor
 from .wiki_health_linter import WikiHealthLinter
 
@@ -53,6 +54,7 @@ __all__ = [
     "EnvAuditor",
     "LinkAuditor",
     "RegistryAuditor",
+    "SandboxAuditor",
     "SkillAuditor",
     "WikiHealthLinter",
     "run_docs_validation_cli",

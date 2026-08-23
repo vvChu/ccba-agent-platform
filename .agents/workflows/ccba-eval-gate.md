@@ -1,6 +1,14 @@
 ---
-description: Chạy kiểm định tự động qua CI Gates và kích hoạt vòng lặp tự sửa lỗi (Self-Healing).
+description: Chạy kiểm định tự động qua CI Gates và kích hoạt vòng lặp tự sửa lỗi
+  (Self-Healing).
 disable-model-invocation: true
+bundle: _core
+command: /ccba-eval-gate
+triggers:
+- eval gate
+- kiểm chứng
+- self-healing
+- run gate
 ---
 # Lệnh /ccba-eval-gate
 

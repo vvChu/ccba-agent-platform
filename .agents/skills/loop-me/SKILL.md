@@ -1,10 +1,15 @@
 ---
 name: loop-me
-description: Grill me about specs for the workflows I want to build, within this workspace. Adapted for CCBA Information Governance.
+description: Grill me about specs for the workflows I want to build, within this workspace.
+  Adapted for CCBA Information Governance.
 disable-model-invocation: true
-argument-hint: "A workflow to design, or nothing to go find one"
+argument-hint: A workflow to design, or nothing to go find one
+bundle: _core
+triggers:
+- loop-me
+- loop me
+- thiết kế chu trình
 ---
-
 # Loop-Me: Thiết kế chu trình lặp của Người dùng
 
 Chạy một phiên `/ccba-grilling` trạng thái với kết quả đầu ra duy nhất là đặc tả **workflow** tự động hóa. Áp dụng kỷ luật phỏng vấn Socrates — hỏi từng câu hỏi một, đi kèm một phương án trả lời khuyến nghị — nhằm làm rõ mục tiêu và các thuật ngữ chu trình dưới đây.

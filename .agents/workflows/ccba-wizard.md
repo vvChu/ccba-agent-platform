@@ -1,9 +1,14 @@
 ---
 description: Tạo bash script wizard hướng dẫn quy trình cài đặt/thiết lập thủ công.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-wizard
+triggers:
+- wizard
+- setup wizard
+- tạo script
 ---
 # Workflow: Tạo Script Setup Wizard (/ccba-wizard)
 

@@ -1,9 +1,17 @@
 ---
 description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, PowerPoint, PDF)
 applies_to:
-  - "Phần mềm"
-bundle: "_software"
+- Phần mềm
+bundle: _software
 disable-model-invocation: true
+command: /ccba-xu-ly-van-phong
+triggers:
+- xu-ly-van-phong
+- xử lý văn phòng
+- word
+- excel
+- powerpoint
+- pdf
 ---
 # Workflow: Xử lý Văn phòng (/ccba-xu-ly-van-phong)
 

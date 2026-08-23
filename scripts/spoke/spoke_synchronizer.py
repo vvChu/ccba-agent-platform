@@ -181,6 +181,46 @@ class CatalogMerger:
 class SpokeRegistrar:
     """Encrypted Registration Engine for registering Spokes to Hub."""
 
+    def build_spoke_info(
+        self,
+        spoke_root: Path,
+        hub_root: Path,
+        project_name: str,
+        project_type: str,
+    ) -> dict[str, Any]:
+        """Build standardized spoke metadata dict for registration."""
+        context_file = spoke_root / ".md" / "workspace_context.yaml"
+        if not context_file.exists():
+            context_file = spoke_root / ".agents" / "workspace_context.yaml"
+
+        is_sandbox = False
+        owner_email = ""
+
+        if context_file.exists():
+            try:
+                with open(context_file, encoding="utf-8") as f:
+                    ctx = yaml.safe_load(f) or {}
+                    proj = ctx.get("project", {})
+                    sub_type = proj.get("sub_type", "")
+                    guardrails = ctx.get("guardrails", {})
+                    if sub_type == "personal_sandbox" or guardrails.get("sandbox_mode") is True:
+                        is_sandbox = True
+                    identity = ctx.get("organizational_identity", {})
+                    owner_email = identity.get("owner_email", "")
+            except Exception:
+                pass
+
+        info: dict[str, Any] = {
+            "name": project_name,
+            "path": str(spoke_root.resolve()),
+            "project_type": project_type,
+            "last_sync": datetime.now().isoformat(),
+            "is_sandbox": is_sandbox,
+        }
+        if owner_email:
+            info["owner_email"] = owner_email
+        return info
+
     def register(
         self,
         spoke_root: Path,
@@ -216,12 +256,7 @@ class SpokeRegistrar:
                 print("[Registry] Warning: Public key is not RSA key.", file=sys.stderr)
                 return
 
-            spoke_info = {
-                "name": project_name,
-                "path": str(spoke_root.resolve()),
-                "project_type": project_type,
-                "last_sync": datetime.now().isoformat(),
-            }
+            spoke_info = self.build_spoke_info(spoke_root, hub_root, project_name, project_type)
             spoke_yaml = yaml.dump(spoke_info, allow_unicode=True)
 
             encrypted_bytes = public_key.encrypt(
@@ -1165,12 +1200,16 @@ def sync_all_spokes(
     force: bool = False,
     backup: bool = True,
     check_git: bool = True,
+    include_sandboxes: bool = False,
 ) -> int:
     """Batch synchronize all registered active Spokes found in Hub Registry."""
     root = hub_root or Path(__file__).resolve().parents[2]
     from scripts.spoke.decrypt_spoke_registry import get_registered_spokes
 
     spokes = get_registered_spokes(hub_root=root)
+    if not include_sandboxes:
+        spokes = [s for s in spokes if not s.get("is_sandbox", False)]
+
     if not spokes:
         print("[BatchSync] Warning: No registered Spokes found in Hub Registry.", file=sys.stderr)
         return 1

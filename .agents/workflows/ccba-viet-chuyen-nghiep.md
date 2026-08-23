@@ -1,9 +1,15 @@
 ---
 description: Viết tiếng Việt chuyên nghiệp — nhà xuất bản AI
 applies_to:
-  - "Phần mềm"
-bundle: "_software"
+- Phần mềm
+bundle: _software
 disable-model-invocation: true
+command: /ccba-viet-chuyen-nghiep
+triggers:
+- viet-chuyen-nghiep
+- viết tiếng việt
+- chuyên nghiệp
+- nhà xuất bản
 ---
 # Workflow: Viết tiếng Việt chuyên nghiệp (/ccba-viet-chuyen-nghiep)
 

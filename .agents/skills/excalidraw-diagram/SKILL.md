@@ -1,18 +1,22 @@
 ---
 name: excalidraw-diagram
-description: "Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian và excalidraw.com."
+description: Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian
+  và excalidraw.com.
 disable-model-invocation: true
 applies_to:
-  - "Diagram"
-  - "Excalidraw"
-  - "Visualization"
-  - "Architecture"
-  - "Sơ đồ"
-  - "Flowchart"
-  - "Obsidian"
-bundle: "_core"
+- Phần mềm
+- Thiết kế
+- Tác vụ Admin
+bundle: _core
+keywords:
+- Diagram
+- Excalidraw
+- Visualization
+- Architecture
+- Sơ đồ
+- Flowchart
+- Obsidian
 ---
-
 # Excalidraw Diagram Skill
 
 Skill này tạo ra file Excalidraw JSON **đẹp, chuyên nghiệp và có chiều sâu** — không chỉ là các hộp và mũi tên thông thường.

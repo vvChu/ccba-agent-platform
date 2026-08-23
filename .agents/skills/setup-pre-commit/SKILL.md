@@ -1,9 +1,15 @@
 ---
 name: setup-pre-commit
-description: Set up Python pre-commit framework with Ruff, MyPy, PyMarkdown, and local CCBA validators (validate_docs, validate_skills). Incorporates Maskara pre-commit hook. Run once before first commit.
+description: Set up Python pre-commit framework with Ruff, MyPy, PyMarkdown, and local
+  CCBA validators (validate_docs, validate_skills). Incorporates Maskara pre-commit
+  hook. Run once before first commit.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- setup-pre-commit
+- setup pre-commit
+- git hooks
 ---
-
 # Setup Python Pre-Commit Hooks
 
 Scaffold the project-level Git pre-commit hooks for a CCBA Spoke or Hub project using Python's `pre-commit` framework:

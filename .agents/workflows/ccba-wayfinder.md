@@ -1,9 +1,14 @@
 ---
 description: Vạch bản đồ giải quyết các bài toán mù mờ (foggy problems).
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-wayfinder
+triggers:
+- wayfinder
+- bài toán mơ hồ
+- foggy
 ---
 # Workflow: Wayfinder Vạch Đường (/ccba-wayfinder)
 

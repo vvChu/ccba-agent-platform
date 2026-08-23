@@ -4,6 +4,12 @@ description: Guardrails to block or request explicit user permission before exec
   dangerous git operations (force push, hard reset, clean, etc.) via terminal.
 disable-model-invocation: true
 bundle: _software
+triggers:
+- git-guardrails
+- git guardrails
+- git
+- guardrails
+- safety
 ---
 # Setup Git Guardrails
 

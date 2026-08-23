@@ -1,9 +1,15 @@
 ---
 description: Viết code theo quy trình Test-Driven Development (Red-Green-Refactor).
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-tdd
+triggers:
+- tdd
+- test-driven
+- red-green-refactor
+- unit test
 ---
 # Workflow: Test-Driven Development (/ccba-tdd)
 

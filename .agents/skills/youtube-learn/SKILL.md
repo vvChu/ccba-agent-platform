@@ -1,10 +1,18 @@
 ---
 name: youtube-learn
-description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề và hình ảnh slide học thuật từ các video YouTube/bài giảng.
+description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề và
+  hình ảnh slide học thuật từ các video YouTube/bài giảng.
 disable-model-invocation: true
 user-invocable: true
+bundle: _core
+triggers:
+- youtube-learn
+- youtube learn
+- bóc tách phụ đề
+- slide học thuật
+- youtube
+- belief archaeology
 ---
-
 # 🧠 Kỹ năng: youtube-learn (Belief Archaeology)
 
 Kỹ năng này chịu trách nhiệm phân tích sâu các video bài giảng, hội thảo (YouTube hoặc tệp video ngoài) để bóc tách toàn bộ phụ đề và các khung hình chứa slide tri thức học thuật độc nhất (không giới hạn số lượng), từ đó tổng hợp kiến thức bài học và "khảo cổ" thế giới quan, giả định ngầm của diễn giả.

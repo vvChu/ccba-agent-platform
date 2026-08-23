@@ -9,6 +9,12 @@ keywords:
 - sanity-check
 disable-model-invocation: true
 bundle: _software
+triggers:
+- prototype
+- mẫu thử
+- test thô
+- sanity-check
+- ccba-prototype
 ---
 # 🚀 Kỹ năng: ccba-prototype (Xây Dựng Mẫu Thử Nhanh)
 
