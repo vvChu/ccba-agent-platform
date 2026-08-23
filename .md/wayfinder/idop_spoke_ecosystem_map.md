@@ -80,11 +80,16 @@ graph TD
   - Sử dụng tệp mẫu [`templates/workspace_context.delivery.yaml`](../../templates/workspace_context.delivery.yaml) và tài liệu SOP [`docs/sop/project_delivery_spoke_setup.md`](../../docs/sop/project_delivery_spoke_setup.md).
   - Tự động kế thừa toàn bộ quy trình thẩm tra chuyên sâu (`/workflow_pccc_cdt_tuthamdinh`, `/ccba-ai-qc-pccc-audit`) từ Hub.
 
+- **[Đã chốt - 2026-08-23] Giao Thức Nộp Hồ Sơ IDOP Hybrid & Phân Cấp 2 Tầng (`[WF-01]`)**:
+  - Tương tác: Agent tự động gợi ý nộp sau khi hoàn thành Workflow, kết hợp lệnh CLI tường minh `ccba idop submit --file ... --task-id ...`.
+  - Phân cấp: Kỹ sư stage hồ sơ vào `.md/idop_staged/` (AI Pre-Submission Gate tự động kiểm tra); PM / Chủ trì hợp đồng xác nhận nộp chính thức.
+  - Phản hồi: Lỗi vi phạm Tier 1 Hard-Floor được hiển thị tức thì tại Chat/Terminal và chặn tạo biên nhận nộp.
+
 ---
 
 ## 4. Sương mù Chiến trận / Chưa xác định rõ (Not yet specified)
 
-- **Sương mù 1 (Giao diện Kỹ sư Nộp Hồ sơ IDOP)**: Chưa thống nhất hình thức tương tác tối ưu cho Kỹ sư khi muốn đẩy báo cáo/tiến độ từ Spoke dự án vào SharePoint IDOP (dùng lệnh CLI `ccba idop push`, hay kéo thả file vào thư mục watcher `.md/idop_staged/`, hay form web). *(Giải quyết tại `[WF-01]`)*.
+*(Hiện tại toàn bộ 3 sương mù ban đầu đã được làm sáng tỏ qua các ticket `[WF-01]`, `[WF-02]`, `[WF-03]`)*.
 
 ---
 
@@ -101,36 +106,27 @@ graph TD
 ```mermaid
 graph LR
     subgraph Done ["✅ ĐÃ HOÀN THÀNH (Done)"]
+        T01["[WF-01] Giao diện Kỹ sư Nộp Hồ sơ IDOP<br/><i>(HITL / Grilling)</i>"]
         T02["[WF-02] Ma trận Cấp Quota AI Gateway<br/><i>(AFK / Research)</i>"]
         T03["[WF-03] SOP Khởi tạo Project Delivery Spoke<br/><i>(AFK / Task)</i>"]
     end
 
     subgraph Frontier ["🎯 BIÊN GIỚI (Frontier - Unblocked)"]
-        T01["[WF-01] Giao diện Kỹ sư Nộp Hồ sơ IDOP<br/><i>(HITL / Grilling)</i>"]
-    end
-    
-    subgraph Blocked ["⏳ BỊ CHẶN (Blocked)"]
         T04["[WF-04] Đóng gói CLI Tool <code>ccba-spoke</code><br/><i>(AFK / Task)</i>"]
     end
-
-    T01 -.->|"Quyết định giao thức"| T04
 ```
 
 ### 🎯 Các Ticket ở Biên giới (Frontier - Ready to Work)
 
-1. **`[WF-01]` [HITL / Grilling] [Giao diện Tương tác Nộp Hồ sơ IDOP cho Kỹ sư](tickets/wf_01_idop_submission_interface.md)**
-   - **Loại**: `Grilling` (Chất vấn Socrates với Kỹ sư trưởng)
-   - **Mục tiêu**: Làm rõ hành vi người dùng mong muốn nhất: Kỹ sư muốn chạy lệnh CLI dòng lệnh (`ccba idop submit --file ...`), hay để Agent tự động quét và đẩy ngầm khi hoàn thành task, hay kéo thả file vào thư mục đệm `.md/idop_staged/`?
-   - **Trạng thái**: `OPEN` (Frontier)
-
-### ⏳ Các Ticket Bị Chặn (Blocked)
-
-2. **`[WF-04]` [AFK / Task] [Đóng gói Tiện ích CLI `ccba-spoke` Hỗ trợ Kỹ sư Thao tác Staging và Đồng bộ](tickets/wf_04_ccba_spoke_cli.md)**
-   - **Loại**: `Task` (Triển khai code trong `packages/ccba-core` hoặc script standalone)
-   - **Bị chặn bởi**: `[WF-01]` (Cần chốt giao diện tương tác trước khi viết code CLI)
-   - **Trạng thái**: `BLOCKED`
+1. **`[WF-04]` [AFK / Task] [Đóng gói Tiện ích CLI `ccba-spoke` Hỗ trợ Kỹ sư Thao tác Staging và Đồng bộ](tickets/wf_04_ccba_spoke_cli.md)**
+   - **Loại**: `Task` (Triển khai code trong `scripts/spoke/` và CLI entrypoint `ccba idop submit`)
+   - **Mục tiêu**: Đóng gói lệnh CLI `ccba idop submit` hỗ trợ stage hồ sơ, kiểm tra rào chắn AI Pre-Submission Gate, tạo PGV receipt JSON và đẩy vào `.md/idop_staged/`.
+   - **Trạng thái**: `OPEN` (Frontier - Unblocked by `[WF-01]`)
 
 ### ✅ Các Ticket Đã Đóng (Closed)
+
+2. **`[WF-01]` [HITL / Grilling] [Giao diện Tương tác Nộp Hồ sơ IDOP cho Kỹ sư](tickets/wf_01_idop_submission_interface.md)**
+   - **Trạng thái**: `CLOSED` (Chốt Hybrid Workflow + CLI, Phân cấp 2 tầng)
 
 3. **`[WF-02]` [AFK / Research] [Ma trận Cấp phát Quota & Routing Rule cho AI Gateway Server Spark](tickets/wf_02_ai_gateway_quota_matrix.md)**
    - **Trạng thái**: `CLOSED` (Xem báo cáo tại [`ai_gateway_quota_matrix_and_routing_architecture.md`](../knowledge/research_and_studies/ai_gateway_quota_matrix_and_routing_architecture.md))

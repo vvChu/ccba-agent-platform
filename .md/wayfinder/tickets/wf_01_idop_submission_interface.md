@@ -2,8 +2,8 @@
 
 > **Thuộc bản đồ**: [🗺️ Bản đồ Định hướng IDOP Hub-Spoke Ecosystem](../idop_spoke_ecosystem_map.md)  
 > **Loại ticket**: `HITL / Grilling`  
-> **Trạng thái**: `OPEN` (Frontier)  
-> **Assignee**: *Chưa gán*
+> **Trạng thái**: `CLOSED` (Đã hoàn thành)  
+> **Assignee**: *AI Platform Engineering & Kỹ sư Trưởng*
 
 ---
 
@@ -11,24 +11,25 @@
 
 Trong hệ sinh thái IDOP CCBA, các Kỹ sư thực hiện công việc thẩm tra, lập mô hình BIM hoặc xuất báo cáo kỹ thuật tại Spoke dự án (trên OneDrive) hoặc Spoke cá nhân. Khi hoàn thành một mốc công việc (hoặc cần cập nhật WBS/PGV), dữ liệu cần được ghi nhận vào hệ thống 58 SharePoint Lists và 5TB Master OneDrive.
 
-Tuy nhiên, chúng ta chưa chốt **phương thức tương tác tiện lợi và tự nhiên nhất** cho Kỹ sư:
-- **Phương án A (CLI Command-driven)**: Kỹ sư (hoặc Agent theo lệnh của Kỹ sư) chạy lệnh CLI tường minh, ví dụ: `ccba idop submit --file report.md --task-id PGV-2026-001`.
-- **Phương án B (Agent Auto-Detection & Workflow Hook)**: Khi Kỹ sư chạy các workflow như `/ccba-run-qc-pipeline` hoặc `/ccba-completion-checklist`, Agent tự động hỏi Kỹ sư: *"Bạn có muốn nộp báo cáo này vào IDOP không?"* và tự đóng gói JSON AST đẩy qua `IDOPBridge`.
-- **Phương án C (Directory Watcher / File Drop)**: Kỹ sư chỉ cần copy file thành phẩm vào thư mục `.md/idop_staged/ready_to_push/`, một daemon hoặc tool chạy ngầm sẽ tự động quét và sync.
-
 ---
 
-## 2. Câu hỏi Chất vấn Cốt lõi (Grilling Questions)
+## 2. Quyết Định Đã Chốt Qua Phỏng Vấn (Grilling Decisions)
 
-1. *Kỹ sư tại CCBA chủ yếu tương tác qua IDE (Gemini CLI / Antigravity / Cursor) hay tương tác trực tiếp qua file Explorer / Word / Excel?*
-2. *Khi nộp hồ sơ, ai là người ký duyệt mốc: Kỹ sư tự nộp hay Chủ trì bộ môn / PM duyệt trước khi sync lên SharePoint?*
-3. *Nếu xảy ra xung đột hoặc lỗi validation (Tier 1 Hard-Floor: ví dụ mã dự án không khớp hoặc sai lệch dòng tiền), Kỹ sư muốn nhận phản hồi ngay lập tức trên Terminal / Chat hay qua email cảnh báo M365?*
+1. **Phương thức Tương tác Chính: Hybrid Workflow + CLI**:
+   - Agent tự động đề xuất nộp sau khi Kỹ sư chạy xong các Workflow thẩm tra/nghiệm thu (ví dụ `/ccba-ai-qc-pccc-audit`, `/completion-checklist`).
+   - Cung cấp thêm bộ lệnh CLI tường minh `ccba idop submit --file ... --task-id ...` cho Kỹ sư chủ động thao tác.
+2. **Quy trình Ký duyệt Phân cấp 2 Tầng**:
+   - **Tầng 1 (Kỹ sư Thực thi)**: Stage hồ sơ vào `.md/idop_staged/` và vượt qua bộ kiểm tra tự động AI Pre-Submission Gate.
+   - **Tầng 2 (Chủ trì Hợp đồng / PM)**: Xác nhận lệnh nộp chính thức để đẩy bản ghi và tài liệu lên SharePoint IDOP của CCBA.
+3. **Cơ chế Phản hồi Vi phạm: Tức thì tại Chat/Terminal**:
+   - Khi hồ sơ vi phạm Tier 1 Hard-Floor (mã dự án không khớp, viện dẫn luật hết hiệu lực, sai lệch dòng tiền số học), hệ thống lập tức hiển thị bảng lỗi chi tiết tại Terminal/Chat và chặn tạo biên bản nộp.
 
 ---
 
 ## 3. Tiêu chí Hoàn thành (Completion Criteria)
 
-- [ ] Phỏng vấn xong với Kỹ sư trưởng / Product Owner.
-- [ ] Chốt giao thức tương tác chuẩn (Phương án A, B, C hoặc Hybrid).
-- [ ] Cập nhật kết quả vào mục *Decisions so far* trên Bản đồ Wayfinder.
-- [ ] Unblock Ticket `[WF-04]`.
+- [x] Phỏng vấn xong với Kỹ sư trưởng / Product Owner.
+- [x] Chốt giao thức tương tác chuẩn (Hybrid Workflow + CLI).
+- [x] Cập nhật kết quả vào mục *Decisions so far* trên Bản đồ Wayfinder.
+- [x] Unblock Ticket `[WF-04]`.
+
