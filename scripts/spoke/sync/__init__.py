@@ -27,9 +27,11 @@ from .base import (
 from .catalog import CatalogMerger
 from .cli import run_spoke_sync_cli
 from .coordinator import (
+    PROJECT_TYPE_ALIASES,
     SpokeSyncEngine,
     SpokeSynchronizer,
     list_project_backups,
+    resolve_canonical_project_type,
     rollback_project,
     sync_all_spokes,
     sync_project,
@@ -49,6 +51,8 @@ __all__ = [
     "GitWorkingTreeGuard",
     "SpokeBackupManager",
     "HubNotFoundError",
+    "PROJECT_TYPE_ALIASES",
+    "resolve_canonical_project_type",
     "sync_project",
     "sync_all_spokes",
     "rollback_project",

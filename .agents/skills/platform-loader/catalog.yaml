@@ -596,6 +596,24 @@ skills:
   - báo cáo trực quan
   - refactor mã nguồn
   skill_path: .agents/skills/improve-codebase-architecture/SKILL.md
+- name: legal-advisor
+  bundle: _core
+  description: 'Chuyên gia Tư vấn & Giải đáp Pháp lý Xây dựng: Làm rõ câu hỏi mơ hồ
+    qua cơ chế Phỏng vấn Thích ứng (Adaptive Diagnostic Interview), áp dụng 4 Khung
+    Mẫu Tương tác Động theo ngữ cảnh, và xuất Phiếu Ý kiến Pháp lý (Legal Opinion)
+    chuẩn mực.'
+  triggers:
+  - tu van phap ly
+  - giai dap phap luat
+  - quy chuan xay dung
+  - hoi dap quy pham
+  - legal opinion
+  - tham dinh du an
+  - ho so cap phep
+  - nghiem thu cong trinh
+  - pccc
+  - luat xay dung 2025
+  skill_path: .agents/skills/legal-advisor/SKILL.md
 - name: legal-document-tracker
   bundle: _consulting
   description: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine
@@ -1267,6 +1285,15 @@ workflows:
   - vòng lặp tri thức
   - trinh sát thảo luận hoạch định
   workflow_path: .agents/workflows/ccba-knowledge-loop.md
+- name: ccba-legal-advisor
+  bundle: _core
+  command: /ccba-legal-advisor
+  description: 'Tư vấn & Giải đáp Pháp lý Xây dựng: Tự động phân tích câu hỏi mơ hồ,
+    phỏng vấn làm rõ thích ứng, truy xuất tri thức OKF v2.2 và xuất Phiếu Ý kiến Pháp
+    lý (Legal Opinion) chuẩn mực. Kích hoạt khi người dùng hỏi các câu hỏi về cấp
+    phép xây dựng, PCCC, nghiệm thu, đấu thầu, hoặc xin tư vấn pháp lý công trình.'
+  triggers: []
+  workflow_path: .agents/workflows/ccba-legal-advisor.md
 - name: ccba-legal-intel
   bundle: _consulting
   command: /ccba-legal-intel

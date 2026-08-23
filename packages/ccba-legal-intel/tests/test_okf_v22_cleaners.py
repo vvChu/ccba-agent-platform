@@ -1,6 +1,5 @@
 """Tests for OKF v2.2 Cleaners and Scoped Noise Strippers on Hub."""
 
-import pytest
 from ccba_legal.cleaners import Cleaners
 
 

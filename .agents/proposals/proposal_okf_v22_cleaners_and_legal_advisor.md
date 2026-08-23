@@ -1,3 +1,18 @@
+---
+proposal_id: "2026-08-23_okf_v22_cleaners_and_legal_advisor"
+type: "skill"
+name: "okf-v22-cleaners-and-legal-advisor"
+status: "open"
+priority: "Cao"
+proposed_by_project: "ccba-legal-knowledge"
+proposed_by_archetype: "knowledge_corpus"
+proposed_date: "2026-08-23"
+applies_to:
+  - "Phần mềm"
+  - "Thẩm tra thiết kế"
+  - "Pháp điển"
+---
+
 # 🏛️ Đề Xuất Đóng Góp Ngược: OKF v2.2 Scoped Noise Strippers & Legal Advisor Skill
 
 > **Mã đề xuất:** `RFC-2026-08-OKF-V22-ADVISOR`  

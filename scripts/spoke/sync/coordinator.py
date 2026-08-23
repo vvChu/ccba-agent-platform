@@ -5,6 +5,7 @@ Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 
 from __future__ import annotations
 
+import difflib
 import os
 import shutil
 import subprocess
@@ -17,6 +18,127 @@ from .base import HubNotFoundError, are_dirs_identical, are_files_identical, loa
 from .discovery import HubDiscoverer
 from .registry import SpokeRegistrar
 from .sdk_inspector import SharedSdkInspector, TestGuardrailCopier
+
+# =============================================================================
+# PROJECT TYPE SYNONYMS & ALIAS MAPPING
+# =============================================================================
+PROJECT_TYPE_ALIASES: dict[str, str] = {
+    # Pháp điển
+    "kho tri thức pháp lý": "Pháp điển",
+    "kho tri thức pháp lý & quy chuẩn": "Pháp điển",
+    "kho tri thuc phap ly": "Pháp điển",
+    "kho tri thuc phap ly & quy chuan": "Pháp điển",
+    "pháp lý & quy chuẩn": "Pháp điển",
+    "phap ly & quy chuan": "Pháp điển",
+    "pháp lý": "Pháp điển",
+    "phap ly": "Pháp điển",
+    "tri thức pháp lý": "Pháp điển",
+    "tri thuc phap ly": "Pháp điển",
+    "legal knowledge": "Pháp điển",
+    "knowledge_corpus": "Pháp điển",
+    "legal": "Pháp điển",
+    "pháp điển": "Pháp điển",
+    "phap dien": "Pháp điển",
+    # Phần mềm
+    "software": "Phần mềm",
+    "phần mềm": "Phần mềm",
+    "phan mem": "Phần mềm",
+    "tooling": "Phần mềm",
+    "development": "Phần mềm",
+    "phần mềm & công cụ": "Phần mềm",
+    "phan mem & cong cu": "Phần mềm",
+    # Thẩm tra thiết kế
+    "thẩm tra": "Thẩm tra thiết kế",
+    "tham tra": "Thẩm tra thiết kế",
+    "tư vấn & thẩm tra": "Thẩm tra thiết kế",
+    "tu van & tham tra": "Thẩm tra thiết kế",
+    "tư vấn thẩm tra": "Thẩm tra thiết kế",
+    "tu van tham tra": "Thẩm tra thiết kế",
+    "thẩm tra thiết kế": "Thẩm tra thiết kế",
+    "tham tra thiet ke": "Thẩm tra thiết kế",
+    "design review": "Thẩm tra thiết kế",
+    "qc": "Thẩm tra thiết kế",
+    "thẩm tra pccc": "Thẩm tra thiết kế",
+    "thẩm tra mep": "Thẩm tra thiết kế",
+    # Thiết kế
+    "design": "Thiết kế",
+    "thiết kế": "Thiết kế",
+    "thiet ke": "Thiết kế",
+    "thiết kế kỹ thuật": "Thiết kế",
+    # Kiểm định
+    "kiểm định chất lượng": "Kiểm định",
+    "kiem dinh chat luong": "Kiểm định",
+    "kiểm định": "Kiểm định",
+    "kiem dinh": "Kiểm định",
+    "assessment": "Kiểm định",
+    "kiểm định công trình": "Kiểm định",
+    # BIM
+    "bim": "BIM",
+    "bim modeling": "BIM",
+    "bim consulting": "BIM",
+    "tư vấn bim": "BIM",
+    "tu van bim": "BIM",
+    # Tác vụ Admin
+    "admin": "Tác vụ Admin",
+    "tác vụ admin": "Tác vụ Admin",
+    "tac vu admin": "Tác vụ Admin",
+    "tác vụ hành chính": "Tác vụ Admin",
+    "tac vu hanh chinh": "Tác vụ Admin",
+    "hành chính": "Tác vụ Admin",
+    "hanh chinh": "Tác vụ Admin",
+    "enterprise_governance": "Tác vụ Admin",
+}
+
+
+def resolve_canonical_project_type(
+    raw_type: str, bundle_defs: dict[str, Any]
+) -> tuple[str | None, str | None]:
+    """Resolves a raw project type string into a canonical registered catalog enum.
+
+    Args:
+        raw_type: The raw string from workspace_context.yaml.
+        bundle_defs: Dictionary of registered bundles from catalog.yaml.
+
+    Returns:
+        tuple[canonical_type, note_or_suggestion]:
+        - (canonical_type, None): Exact match found.
+        - (canonical_type, note): Resolved via alias or case correction.
+        - (None, suggestion): Unresolved type with "Did you mean '...'?" or None.
+    """
+    if not raw_type:
+        return None, "Loại dự án (project_type) bị trống."
+
+    cleaned = raw_type.strip()
+    if not cleaned:
+        return None, "Loại dự án (project_type) bị trống."
+
+    # 1. Exact match with registered bundle keys
+    if cleaned in bundle_defs:
+        return cleaned, None
+
+    # 2. Case-insensitive exact match with registered bundle keys
+    for k in bundle_defs:
+        if k.lower() == cleaned.lower():
+            return k, f"Đã tự động chuẩn hóa chữ hoa/thường: '{raw_type}' -> '{k}'"
+
+    # 3. Alias / Synonyms match
+    lower_cleaned = cleaned.lower()
+    if lower_cleaned in PROJECT_TYPE_ALIASES:
+        canonical = PROJECT_TYPE_ALIASES[lower_cleaned]
+        if canonical in bundle_defs:
+            return canonical, f"Đã tự động ánh xạ bí danh (Alias): '{raw_type}' -> '{canonical}'"
+
+    # 4. Fuzzy match using difflib
+    pool = list(bundle_defs.keys()) + list(PROJECT_TYPE_ALIASES.keys())
+    matches = difflib.get_close_matches(lower_cleaned, pool, n=1, cutoff=0.45)
+    if matches:
+        matched_candidate = matches[0]
+        suggested = PROJECT_TYPE_ALIASES.get(matched_candidate, matched_candidate)
+        if suggested not in bundle_defs and matched_candidate in bundle_defs:
+            suggested = matched_candidate
+        return None, f"Có phải ý bạn là: '{suggested}'?"
+
+    return None, None
 
 
 class SpokeSynchronizer:
@@ -153,18 +275,25 @@ class SpokeSynchronizer:
             )
             return 1
 
-        mode_banner = " [DRY-RUN MODE]" if dry_run else ""
-        print(f"Project Type: {project_type}{mode_banner}")
-
         bundle_defs = catalog.get("bundles", {})
-        if project_type not in bundle_defs:
+        canonical_type, note = resolve_canonical_project_type(project_type, bundle_defs)
+        if not canonical_type:
             available_types = ", ".join(bundle_defs.keys())
             print(
                 f"[Sync] Error: Project type '{project_type}' is not registered in catalog.yaml.",
                 file=sys.stderr,
             )
+            if note:
+                print(f"[Sync] 💡 {note}", file=sys.stderr)
             print(f"[Sync] Registered types: {available_types}", file=sys.stderr)
             return 1
+
+        if note:
+            print(f"[Sync] ℹ️  {note}")
+
+        project_type = canonical_type
+        mode_banner = " [DRY-RUN MODE]" if dry_run else ""
+        print(f"Project Type: {project_type}{mode_banner}")
 
         required_bundles = bundle_defs[project_type]
         print(f"Required Bundles: {required_bundles}")
