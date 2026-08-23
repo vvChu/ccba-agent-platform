@@ -50,6 +50,15 @@ from .crawler import (
     sleep_with_jitter,
     trigger_download,
 )
+from .docx_converter import (
+    classify_and_extract_tables,
+    convert_docx_to_okf_bundle,
+    detect_document_pipeline,
+    format_all_qcvn_md_tables,
+    normalize_clause_numbers,
+    normalize_docx_markdown,
+    process_vbpl_bundle_okf_v22,
+)
 from .gold_standard import (
     DocProfile,
     GoldStandardProcessor,
@@ -146,4 +155,12 @@ __all__ = [
     "normalize_notes_and_lists",
     "inject_semantic_anchors",
     "generate_bundle_ast_and_qa",
+    # === DOCX Conversion & Classification ===
+    "convert_docx_to_okf_bundle",
+    "process_vbpl_bundle_okf_v22",
+    "detect_document_pipeline",
+    "normalize_docx_markdown",
+    "format_all_qcvn_md_tables",
+    "normalize_clause_numbers",
+    "classify_and_extract_tables",
 ]

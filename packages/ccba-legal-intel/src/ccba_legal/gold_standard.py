@@ -484,3 +484,49 @@ class GoldStandardProcessor:
             "clauses_count": len(clauses),
             "qa_count": len(qa_benchmark),
         }
+
+
+def process_okf_bundle(bundle_dir: Path, doc_type: str | None = None) -> dict[str, Any]:
+    """Compatibility wrapper for GoldStandardProcessor.process_bundle."""
+    return GoldStandardProcessor.process_bundle(bundle_dir, doc_type=doc_type)
+
+
+def generate_clauses_ast(text: str) -> list[dict[str, Any]]:
+    """Extract AST clauses list from anchored Markdown text."""
+    anchor_pattern = re.compile(r'<a\s+(?:id|name)="([^"]+)"')
+    lines = text.splitlines()
+    clauses: list[dict[str, Any]] = []
+    seen: set[str] = set()
+
+    for idx, line in enumerate(lines, 1):
+        m = anchor_pattern.search(line)
+        if m:
+            anc_id = m.group(1)
+            if anc_id in seen:
+                continue
+            seen.add(anc_id)
+            title = re.sub(r"<[^>]+>", "", line).strip("# *").strip()
+            if not title and idx < len(lines):
+                for next_line in lines[idx:idx+3]:
+                    clean_next = re.sub(r"<[^>]+>", "", next_line).strip("# *").strip()
+                    if clean_next:
+                        title = clean_next
+                        break
+            clauses.append({
+                "clause_id": anc_id,
+                "anchor": anc_id,
+                "title": title,
+                "line_start": idx,
+                "line_end": idx,
+            })
+    return clauses
+
+
+def extract_tables_and_formulas(text: str) -> dict[str, Any]:
+    """Extract tables and formula references from text."""
+    tables = re.findall(r"###\s*Bảng\s+([A-Z0-9\.\-]+)\s*[-–:]\s*([^\n]+)", text)
+    formulas = re.findall(r"\(([A-Z0-9\.\-]+)\)\s*$", text, re.MULTILINE)
+    return {
+        "tables": [{"table_id": t[0], "title": t[1]} for t in tables],
+        "formulas": formulas,
+    }
