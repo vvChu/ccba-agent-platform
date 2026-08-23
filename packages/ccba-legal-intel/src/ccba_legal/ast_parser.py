@@ -2,41 +2,9 @@
 
 import re
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any
 
-
-class PatchAction(str, Enum):
-    """Actions applicable to an AST node during patching."""
-
-    REPLACE = "REPLACE"
-    INSERT_AFTER = "INSERT_AFTER"
-    INSERT_BEFORE = "INSERT_BEFORE"
-    ABROGATE = "ABROGATE"
-    SUSPEND = "SUSPEND"
-
-
-@dataclass
-class ASTNode:
-    """Represents a node in a legal document Abstract Syntax Tree."""
-
-    node_id: str
-    node_type: str  # "part", "chapter", "section", "article", "clause", "point"
-    title: str = ""
-    content: str = ""
-    children: list["ASTNode"] = field(default_factory=list)
-    parent_id: str | None = None
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert ASTNode tree to dictionary."""
-        return {
-            "node_id": self.node_id,
-            "node_type": self.node_type,
-            "title": self.title,
-            "content": self.content,
-            "parent_id": self.parent_id,
-            "children": [c.to_dict() for c in self.children],
-        }
+from .models import ASTNode, PatchAction
 
 
 @dataclass
