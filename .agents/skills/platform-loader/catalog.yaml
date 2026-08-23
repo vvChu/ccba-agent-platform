@@ -26,6 +26,9 @@ bundles:
   Tác vụ Admin:
   - _core
   - _consulting
+  Pháp điển:
+  - _core
+  - _software
 skills:
 - name: platform-loader
   bundle: _core
