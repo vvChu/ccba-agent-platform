@@ -1,14 +1,19 @@
 ---
 name: platform-loader
-description: Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn bộ skills, workflows, và rules.
+description: Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết
+  toàn bộ skills, workflows, và rules.
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
+triggers:
+- platform
+- bootstrap
+- load skills
+- danh sách lệnh
 ---
-
 # CCBA Platform Loader
 
 > **Vai trò**: Đây là điểm khởi đầu duy nhất cho Agent để truy cập toàn bộ dịch vụ của CCBA Platform.

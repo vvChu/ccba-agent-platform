@@ -1,9 +1,17 @@
 ---
 name: docs-validator
-description: Chạy kiểm định tài liệu Markdown chống ảo ảnh (hallucinations), broken links và cấu hình thiếu.
+description: Chạy kiểm định tài liệu Markdown chống ảo ảnh (hallucinations), broken
+  links và cấu hình thiếu.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- docs-validator
+- validate docs
+- kiểm định tài liệu
+- check docs
+- broken link
+- validate markdown
 ---
-
 # Linter Gate: Docs Validator
 
 Sử dụng kỹ năng này để chạy linter tài liệu tĩnh và tự động sửa các lỗi liên kết, ký hiệu ảo giác so với codebase thực tế.

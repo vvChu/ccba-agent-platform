@@ -1,13 +1,23 @@
 ---
 name: Hybrid RAG Search
-description: Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) + RRF Fusion. Đúc rút từ VvC Ground Truth pipeline — độ chính xác cao hơn pure BM25 đơn thuần 20x.
+description: Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) + RRF
+  Fusion. Đúc rút từ VvC Ground Truth pipeline — độ chính xác cao hơn pure BM25 đơn
+  thuần 20x.
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Kiểm định
+bundle: _core
+triggers:
+- hybrid rag
+- bm25
+- embedding search
+- rrf
+- semantic search
+- retrieval
+- context search
+- document search
 ---
-
 # Hybrid RAG Search
 
 Tìm kiếm ngữ nghĩa kết hợp **BM25 (keyword precision)** + **Embedding (semantic recall)** + **Reciprocal Rank Fusion**. Vượt qua giới hạn của pure BM25 (bỏ sót ngữ nghĩa) và pure embedding (bỏ sót từ khóa chuyên ngành).

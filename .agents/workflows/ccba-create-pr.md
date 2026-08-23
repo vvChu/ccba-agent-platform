@@ -1,9 +1,14 @@
 ---
 description: Push code hiện tại và tạo Pull Request tự động
 applies_to:
-  - "Phần mềm"
-bundle: "_software"
+- Phần mềm
+bundle: _software
 disable-model-invocation: true
+command: /ccba-create-pr
+triggers:
+- create PR
+- pull request
+- tạo PR
 ---
 # Workflow: Create Pull Request
 

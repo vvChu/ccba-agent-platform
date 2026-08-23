@@ -17,6 +17,16 @@ metadata:
   version: 2.0.0
 disable-model-invocation: true
 bundle: _software
+triggers:
+- review
+- quality
+- verification
+- reliability
+- code-review
+- rà soát code
+- check code
+- review commit
+- review pr
 ---
 # Quy trình Rà soát Chất lượng Code (Code Review)
 

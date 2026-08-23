@@ -1,11 +1,16 @@
 ---
 description: Chuẩn bị nội dung cho buổi seminar/thảo luận nội bộ CCBA
 applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_consulting"
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _consulting
 disable-model-invocation: true
+command: /ccba-prepare-seminar
+triggers:
+- chuẩn bị seminar
+- buổi thảo luận
+- prepare seminar
 ---
 # Workflow: Prepare Seminar (/ccba-prepare-seminar)
 

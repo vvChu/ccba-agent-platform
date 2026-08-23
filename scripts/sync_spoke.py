@@ -43,6 +43,11 @@ def main() -> None:
         help="Batch synchronize all registered Spokes from Hub Registry.",
     )
     parser.add_argument(
+        "--include-sandboxes",
+        action="store_true",
+        help="Include personal sandboxes in batch synchronization (default: False).",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Preview changes without modifying any files on disk.",
@@ -102,6 +107,7 @@ def main() -> None:
                     dry_run=True,
                     force=args.force,
                     backup=not args.no_backup,
+                    include_sandboxes=args.include_sandboxes,
                 )
             )
         elif args.apply:
@@ -111,6 +117,7 @@ def main() -> None:
                     dry_run=False,
                     force=args.force,
                     backup=not args.no_backup,
+                    include_sandboxes=args.include_sandboxes,
                 )
             )
         else:
@@ -122,6 +129,7 @@ def main() -> None:
                 dry_run=True,
                 force=args.force,
                 backup=not args.no_backup,
+                include_sandboxes=args.include_sandboxes,
             )
             if preview_code != 0:
                 sys.exit(preview_code)
@@ -138,6 +146,7 @@ def main() -> None:
                                 dry_run=False,
                                 force=args.force,
                                 backup=not args.no_backup,
+                                include_sandboxes=args.include_sandboxes,
                             )
                         )
                     else:

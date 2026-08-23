@@ -42,6 +42,53 @@ class TVPLCrawlFailedException(Exception):
     pass
 
 
+def sleep_with_jitter(base_sec: float, jitter_min: float = 0.5, jitter_max: float = 2.0) -> float:
+    """Sleep for base_sec + uniform random jitter to prevent static bot timing fingerprint."""
+    jitter = random.uniform(jitter_min, jitter_max)
+    total = max(0.1, base_sec + jitter)
+    time.sleep(total)
+    return total
+
+
+class TVPLRateLimiter:
+    """Rate limiter with request cap, randomized delays, and session quotas to protect TVPL VIP access."""
+
+    def __init__(
+        self,
+        max_requests_per_session: int = 10,
+        min_request_interval_sec: float = 3.0,
+    ) -> None:
+        self.max_requests_per_session = max_requests_per_session
+        self.min_request_interval_sec = min_request_interval_sec
+        self.session_request_count = 0
+        self.last_request_time = 0.0
+
+    def check_and_throttle(self) -> None:
+        """Enforce rate limits, interval spacing, and session caps before each request."""
+        if self.session_request_count >= self.max_requests_per_session:
+            raise TVPLCrawlFailedException(
+                f"Rate limit exceeded: Session request cap ({self.max_requests_per_session}) reached. "
+                "Please wait or restart session to prevent TVPL VIP account throttling."
+            )
+
+        elapsed = time.time() - self.last_request_time
+        if self.last_request_time > 0 and elapsed < self.min_request_interval_sec:
+            wait_time = self.min_request_interval_sec - elapsed + random.uniform(0.5, 2.0)
+            time.sleep(wait_time)
+
+        self.session_request_count += 1
+        self.last_request_time = time.time()
+        log_session_audit(
+            "RateLimiter",
+            f"Request #{self.session_request_count}/{self.max_requests_per_session} dispatched.",
+        )
+
+    def reset_session(self) -> None:
+        """Reset session request counter."""
+        self.session_request_count = 0
+        self.last_request_time = 0.0
+
+
 class LegalDocProvider:
     """Abstract base provider for fetching legal documents."""
 
@@ -74,20 +121,27 @@ class MockLegalDocProvider(LegalDocProvider):
 
 
 class TVPLCrawlerEngine:
-    """Orchestrator for executing legal document crawl operations under session lock."""
+    """Orchestrator for executing legal document crawl operations under session lock and rate limits."""
 
     def __init__(
-        self, provider: LegalDocProvider | None = None, mutex: TVPLSessionMutex | None = None
+        self,
+        provider: LegalDocProvider | None = None,
+        mutex: TVPLSessionMutex | None = None,
+        rate_limiter: TVPLRateLimiter | None = None,
     ) -> None:
         self.provider = provider or MockLegalDocProvider()
         self.mutex = mutex or TVPLSessionMutex()
+        self.rate_limiter = rate_limiter or TVPLRateLimiter()
 
     def fetch_doc(self, doc_id_or_url: str) -> dict[str, Any]:
-        """Fetch legal document under mutex lock."""
+        """Fetch legal document under mutex lock and rate limiting."""
         with self.mutex:
+            self.rate_limiter.check_and_throttle()
             try:
                 return self.provider.fetch_doc(doc_id_or_url)
             except Exception as e:
+                if isinstance(e, TVPLCrawlFailedException):
+                    raise
                 raise TVPLCrawlFailedException(f"Crawl failed for {doc_id_or_url}: {e}") from e
 
 
@@ -98,7 +152,7 @@ TVPLVIPCrawler = TVPLCrawlerEngine
 class TVPLCrawler:
     """Unified Deep Seam Facade for TVPL Legal Document Crawling.
 
-    Encapsulates CookieVault, TVPLSessionMutex, HTTP Engine, and CDP VIP Browser.
+    Encapsulates CookieVault, TVPLSessionMutex, TVPLRateLimiter, HTTP Engine, and CDP VIP Browser.
     """
 
     def __init__(
@@ -106,10 +160,14 @@ class TVPLCrawler:
         cookie_vault: CookieVault | None = None,
         session_mutex: TVPLSessionMutex | None = None,
         provider: LegalDocProvider | None = None,
+        rate_limiter: TVPLRateLimiter | None = None,
     ) -> None:
         self.cookie_vault = cookie_vault or CookieVault()
         self.mutex = session_mutex or TVPLSessionMutex()
-        self.engine = TVPLCrawlerEngine(provider=provider, mutex=self.mutex)
+        self.rate_limiter = rate_limiter or TVPLRateLimiter()
+        self.engine = TVPLCrawlerEngine(
+            provider=provider, mutex=self.mutex, rate_limiter=self.rate_limiter
+        )
 
     def fetch_document(
         self, doc_url_or_id: str, download_attachments: bool = True
@@ -220,9 +278,8 @@ class ChromeCDP:
         try:
             self.ws.send(json.dumps(payload))
             self.ws.recv()
-            # Wait a brief moment to let the browser start loading the new page
-            # so that readyState of the old page isn't mistakenly read as complete.
-            time.sleep(1.5)
+            # Wait a brief jittered moment to let browser start loading new page
+            sleep_with_jitter(1.5, 0.3, 1.2)
         except Exception as e:
             raise ChromeCDPError(f"Failed to trigger navigation: {e}") from e
 
@@ -236,7 +293,7 @@ class ChromeCDP:
                     return
             except ChromeCDPError:
                 pass
-            time.sleep(0.5)
+            time.sleep(0.3)
         raise ChromeCDPError("Timeout waiting for page readyState 'complete'.")
 
     def handle_cloudflare(self) -> None:
@@ -253,7 +310,7 @@ class ChromeCDP:
             print("[LegalIntel] Cloudflare Challenge detected! PAUSED.")
             print("[LegalIntel] PLEASE MANUALLY SOLVE THE CAPTCHA IN THE OPEN CHROME WINDOW.")
             while is_blocked:
-                time.sleep(2)
+                sleep_with_jitter(2.0, 0.5, 1.5)
                 try:
                     is_blocked = self.evaluate_js(check_expr)
                 except ChromeCDPError:
@@ -263,12 +320,10 @@ class ChromeCDP:
 
     def handle_login(self) -> bool:
         """Detect login popup, fill in credentials, submit, handle multi-session warning, and return True if login was attempted."""
-        username = os.environ.get("TVPL_USERNAME")
-        password = os.environ.get("TVPL_PASSWORD")
-        if not username or not password:
-            print(
-                "  [Login] Missing TVPL_USERNAME or TVPL_PASSWORD env variable. Cannot perform auto-login."
-            )
+        try:
+            username, password = get_tvpl_credentials()
+        except OSError as e:
+            print(f"  [Login] {e}")
             return False
 
         js = """
@@ -297,7 +352,7 @@ class ChromeCDP:
         res = self.evaluate_js(js)
         if "Attempted login" in str(res):
             print("  [Login] Found login popup, autofilling credentials and submitting...")
-            time.sleep(3)  # Wait for login action to trigger warning or reload
+            sleep_with_jitter(3.0, 0.5, 1.5)  # Wait for login action to trigger warning or reload
 
             # Check for multi-session login warning popup
             warning_js = """
@@ -316,9 +371,9 @@ class ChromeCDP:
             warn_res = self.evaluate_js(warning_js)
             print(f"  [Login Warning Check] Result: {warn_res}")
             if "Clicked Dong y" in str(warn_res):
-                time.sleep(4)  # Wait for page reload after warning confirmation
+                sleep_with_jitter(4.0, 0.5, 1.5)  # Wait for page reload after warning confirmation
             else:
-                time.sleep(2)  # Wait for standard reload
+                sleep_with_jitter(2.0, 0.5, 1.0)  # Wait for standard reload
 
             return True
         return False
@@ -583,7 +638,7 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> bool
     if "No download" in str(res):
         return False
 
-    time.sleep(2)
+    sleep_with_jitter(2.0, 0.5, 1.5)
     # Check if login is required
     if cdp.handle_login():
         print("  [Action] Login submitted after click, waiting for reload...")
@@ -971,7 +1026,7 @@ def get_tvpl_metadata(
     cdp.navigate(luoc_do_url)
     cdp.wait_ready()
     cdp.handle_cloudflare()
-    time.sleep(2.0)
+    sleep_with_jitter(2.0, 0.5, 1.5)
 
     mapping = relation_map if relation_map is not None else load_relation_synonyms()
     mapping_json = json.dumps(mapping, ensure_ascii=False)
@@ -1065,7 +1120,12 @@ def check_vip_session_health(session: requests.Session) -> bool:
 
 
 def get_tvpl_credentials() -> tuple[str, str]:
-    """Retrieve TVPL credentials from environment variables or .env file."""
+    """Retrieve TVPL credentials from environment variables or .env file.
+
+    Raises:
+        EnvironmentError: If TVPL_USERNAME or TVPL_PASSWORD are not found in environment
+            variables or local .env file. Hardcoded fallback credentials are strictly forbidden.
+    """
     env_file = resolve_project_root() / ".env"
     username = os.getenv("TVPL_USERNAME")
     password = os.getenv("TVPL_PASSWORD")
@@ -1078,4 +1138,10 @@ def get_tvpl_credentials() -> tuple[str, str]:
             elif line.startswith("TVPL_PASSWORD="):
                 password = line.split("=", 1)[1].strip().strip('"').strip("'")
 
-    return username or "vuvanchu119", password or "ccba@ibst"
+    if not username or not password:
+        raise OSError(
+            "TVPL VIP credentials not configured. Please set TVPL_USERNAME and "
+            "TVPL_PASSWORD in environment variables or .env file."
+        )
+
+    return username, password

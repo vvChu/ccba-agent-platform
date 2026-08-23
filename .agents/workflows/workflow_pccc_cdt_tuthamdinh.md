@@ -1,12 +1,18 @@
 ---
 name: workflow_pccc_cdt_tuthamdinh
-description: Quy trình Hỗ trợ Chủ đầu tư Tự thẩm định toàn bộ thiết kế PCCC (theo Luật 55/2024 & NĐ 105/2025)
+description: Quy trình Hỗ trợ Chủ đầu tư Tự thẩm định toàn bộ thiết kế PCCC (theo
+  Luật 55/2024 & NĐ 105/2025)
 applies_to:
-  - "Quản lý chất lượng"
-  - "Thẩm tra thiết kế"
-  - "PCCC"
-bundle: "_qc"
+- Thẩm tra thiết kế
+- Thiết kế
+bundle: _qc
 disable-model-invocation: true
+command: /workflow_pccc_cdt_tuthamdinh
+triggers:
+- tự thẩm định
+- cdt tự thẩm định
+- luật 55/2024
+- NĐ 105/2025
 ---
 # Quy trình Tư vấn Hỗ trợ Chủ đầu tư Tự thẩm định toàn bộ thiết kế PCCC
 

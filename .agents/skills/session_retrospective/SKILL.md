@@ -1,14 +1,31 @@
 ---
 name: session_retrospective
-description: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa kỹ năng trực tiếp, kích hoạt Governance Gate và dọn dẹp workspace.
+description: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa
+  kỹ năng trực tiếp, kích hoạt Governance Gate và dọn dẹp workspace.
 disable-model-invocation: true
 category: workflow
-keywords: [retrospective, session learnings, skill evolution, governance gate, tổng kết phiên, bài học kinh nghiệm, kiểm định quản trị]
+keywords:
+- retrospective
+- session learnings
+- skill evolution
+- governance gate
+- tổng kết phiên
+- bài học kinh nghiệm
+- kiểm định quản trị
 metadata:
   author: CCBA
-  version: "1.2.0"
+  version: 1.2.0
+bundle: _core
+triggers:
+- retrospective
+- session learnings
+- skill evolution
+- governance gate
+- tổng kết phiên
+- bài học kinh nghiệm
+- kiểm định quản trị
+- session_retrospective
 ---
-
 # Quy trình Tổng kết Phiên làm việc (Session Retrospective)
 
 Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:

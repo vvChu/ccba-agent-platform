@@ -1,9 +1,15 @@
 ---
 name: review_skill
-description: Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn viết skill của CCBA.
+description: Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn viết
+  skill của CCBA.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- review-skill
+- audit-skill
+- review_skill
+- kiểm định skill
 ---
-
 # Kỹ năng Rà soát và Tối ưu hóa Skill (Review Skill)
 
 Kỹ năng này thực hiện quy trình đánh giá tĩnh (static) và ngữ nghĩa (semantic) của một tệp tin `SKILL.md` để đảm bảo tính khả đoán (predictability), độ súc tích (pruning) và tuân thủ các quy tắc chất lượng của CCBA.

@@ -1,15 +1,25 @@
 ---
 name: API Circuit Breaker
-description: Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch pipelines. Tránh quota exhaustion, cascade failures, và infinite retry loops khi gọi AI Gateway hàng loạt.
-version: "1.2.0"
+description: Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch
+  pipelines. Tránh quota exhaustion, cascade failures, và infinite retry loops khi
+  gọi AI Gateway hàng loạt.
+version: 1.2.0
 applies_to:
-  - "Phần mềm"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Kiểm định
+bundle: _core
 dependencies:
-  - "ai-gateway-sdk"
+- ai-gateway-sdk
+triggers:
+- circuit breaker
+- rate limit
+- rpm
+- throttle
+- batch api
+- api protection
+- quota
+- retry
 ---
-
 # API Circuit Breaker
 
 Rate limiter + Circuit Breaker 3-trạng-thái cho LLM API calls. Thiết kế cho các pipeline gọi AI Gateway **hàng loạt** (batch QC, wiki healing, domain enrichment).

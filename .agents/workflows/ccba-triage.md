@@ -1,9 +1,16 @@
 ---
 description: Điều phối và sàng lọc Issues/PRs qua các trạng thái và viết brief.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-triage
+triggers:
+- triage
+- sàng lọc
+- phân loại
+- incident
+- bug triage
 ---
 # Workflow: Điều phối và Sàng lọc Sự cố (/ccba-triage)
 

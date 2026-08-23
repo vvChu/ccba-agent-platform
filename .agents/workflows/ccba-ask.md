@@ -1,9 +1,15 @@
 ---
 description: Hướng dẫn định tuyến/tư vấn chọn kỹ năng hoặc workflow phù hợp.
 applies_to:
-  - "Phần mềm"
-bundle: "_core"
+- Phần mềm
+bundle: _core
 disable-model-invocation: true
+command: /ccba-ask
+triggers:
+- ask
+- tư vấn
+- định hướng
+- bản đồ kỹ năng
 ---
 # Workflow: Hướng dẫn Định hướng Kỹ năng (/ccba-ask)
 

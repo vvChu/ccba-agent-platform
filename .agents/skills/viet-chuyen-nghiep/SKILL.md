@@ -4,6 +4,13 @@ description: Viết tiếng Việt chuyên nghiệp — nhà xuất bản AI. H�
   biên tập, và xuất bản nội dung chuẩn phong cách.
 disable-model-invocation: true
 bundle: _software
+triggers:
+- viet-chuyen-nghiep
+- viết tiếng việt
+- chuyên nghiệp
+- soạn thảo
+- viết chuẩn
+- tiếng việt chuyên nghiệp
 ---
 # Nhà Xuất Bản AI — v3.0
 

@@ -1,13 +1,23 @@
 ---
 name: academic_writing
-description: Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa học theo chuẩn quốc tế (IMRAD, CARS model).
+description: Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa
+  học theo chuẩn quốc tế (IMRAD, CARS model).
 role: master_skill
 disable-model-invocation: true
 user-invocable: true
-when_to_use: "Invoke when the user wants to brainstorm, draft, outline, or revise a scientific research paper, journal article, or seminar presentation."
-keywords: [academic writing, viết bài báo, nghiên cứu khoa học, IMRAD, CARS, Swales, Yale, thesis]
+when_to_use: Invoke when the user wants to brainstorm, draft, outline, or revise a
+  scientific research paper, journal article, or seminar presentation.
+keywords:
+- academic writing
+- viết bài báo
+- nghiên cứu khoa học
+- IMRAD
+- CARS
+- Swales
+- Yale
+- thesis
+bundle: _core
 ---
-
 # Academic Writing Skill & Guidelines
 
 > **Vai trò**: Chuyên gia Biên soạn & Phản biện Học thuật Cấp cao của CCBA.

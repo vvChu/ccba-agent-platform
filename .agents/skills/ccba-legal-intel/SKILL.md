@@ -4,6 +4,13 @@ description: Autonomous legal intelligence agent to crawl, diff, and generate co
   checklists from Vietnamese legal documents.
 bundle: _consulting
 layer: _consulting
+triggers:
+- ccba-legal-intel
+- crawl law
+- diff law
+- legal checklist
+- thuvienphapluat
+- TVPL
 ---
 # Skill: CCBA Legal Intelligence Crawler & Packager (`ccba-legal-intel`)
 

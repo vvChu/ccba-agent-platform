@@ -438,9 +438,12 @@ class GoldStandardProcessor:
         annexes_dir = bundle_dir / "annexes"
         annex_files = sorted(annexes_dir.glob("*.md")) if annexes_dir.exists() else []
 
+        profile = get_doc_profile(doc_type)
         for md_path in core_files + annex_files:
             raw_text = md_path.read_text(encoding="utf-8")
             norm_text = normalize_notes_and_lists(raw_text)
+            if '<a id="' not in norm_text:
+                norm_text = inject_semantic_anchors(norm_text, profile)
             if norm_text != raw_text:
                 md_path.write_text(norm_text, encoding="utf-8")
 

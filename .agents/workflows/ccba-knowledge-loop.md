@@ -1,7 +1,14 @@
 ---
 name: ccba-knowledge-loop
-description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm → Wayfinder → Exec)
+description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm
+  → Wayfinder → Exec)
 disable-model-invocation: true
+bundle: _core
+command: /ccba-knowledge-loop
+triggers:
+- knowledge-loop
+- vòng lặp tri thức
+- trinh sát thảo luận hoạch định
 ---
 # Quy trình Vòng lặp Tri thức & Định hướng (/ccba-knowledge-loop)
 

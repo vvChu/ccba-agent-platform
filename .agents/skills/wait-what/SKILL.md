@@ -1,14 +1,31 @@
 ---
 name: wait-what
-description: Dừng lại. Ý ở tin nhắn trước chưa được hiểu rõ — hãy giải thích lại bằng ngôn ngữ đơn giản.
+description: Dừng lại. Ý ở tin nhắn trước chưa được hiểu rõ — hãy giải thích lại bằng
+  ngôn ngữ đơn giản.
 disable-model-invocation: true
 category: productivity
-keywords: [wait-what, re-pitch, explain, simplify, context, glossary]
+keywords:
+- wait-what
+- re-pitch
+- explain
+- simplify
+- context
+- glossary
 metadata:
   author: CCBA
-  version: "1.0.0"
+  version: 1.0.0
+bundle: _core
+triggers:
+- wait-what
+- re-pitch
+- explain
+- simplify
+- context
+- glossary
+- wait what
+- giải thích lại
+- chưa hiểu
 ---
-
 # Kỹ năng: Giải Thích Lại Bằng Ngôn Ngữ Đơn Giản (Wait-What)
 
 > Nguồn gốc: Thích ứng từ `wait-what` của Matt Pocock (MIT License).

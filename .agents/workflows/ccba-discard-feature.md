@@ -1,9 +1,14 @@
 ---
 description: Hủy bỏ branch hiện tại, xóa cả local và remote
 applies_to:
-  - "Phần mềm"
-bundle: "_software"
+- Phần mềm
+bundle: _software
 disable-model-invocation: true
+command: /ccba-discard-feature
+triggers:
+- discard
+- hủy branch
+- xóa branch
 ---
 # Workflow: Discard Feature (Hủy bỏ Branch)
 

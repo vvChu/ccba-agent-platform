@@ -1,9 +1,16 @@
 ---
 name: ccba-build-skill
-description: Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói sinh Skill mới đạt chuẩn CCBA.
+description: Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói
+  sinh Skill mới đạt chuẩn CCBA.
 user-invocable: true
-keywords: [build-skill, create-skill, research, notebooklm]
+keywords:
+- build-skill
+- create-skill
+- research
+- notebooklm
 disable-model-invocation: true
+bundle: _core
+command: /ccba-build-skill
 ---
 # Workflow: Xây Dựng Kỹ Năng & Quy Trình Chuẩn (/ccba-build-skill)
 

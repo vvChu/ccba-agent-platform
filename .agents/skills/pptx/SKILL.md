@@ -1,19 +1,33 @@
 ---
 name: pptx
-description: "Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao bằng HTML conversion hoặc OOXML."
+description: Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao
+  bằng HTML conversion hoặc OOXML.
 role: sub_skill
 master_skill: xu-ly-van-phong
 disable-model-invocation: true
 user-invocable: true
-when_to_use: "Invoke for presentation deck creation, edits, or extraction."
+when_to_use: Invoke for presentation deck creation, edits, or extraction.
 category: multimedia
-keywords: [pptx, powerpoint, slides, office]
+keywords:
+- pptx
+- powerpoint
+- slides
+- office
 license: Proprietary. LICENSE.txt has complete terms
 metadata:
   author: claudekit
-  version: "1.0.0"
+  version: 1.0.0
+bundle: _core
+triggers:
+- pptx
+- powerpoint
+- slides
+- office
+- slide
+- create slide
+- html2pptx
+- slide layout
 ---
-
 # PPTX creation, editing, and analysis
 
 ## Overview

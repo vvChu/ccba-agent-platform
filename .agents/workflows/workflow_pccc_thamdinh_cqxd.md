@@ -1,12 +1,17 @@
 ---
 name: workflow_pccc_thamdinh_cqxd
-description: Quy trình Thẩm định/Thẩm tra PCCC phần Kiến trúc & Kiểm soát khói nộp Cơ quan chuyên môn về xây dựng (theo Luật 55/2024 & NĐ 105/2025)
+description: Quy trình Thẩm định/Thẩm tra PCCC phần Kiến trúc & Kiểm soát khói nộp
+  Cơ quan chuyên môn về xây dựng (theo Luật 55/2024 & NĐ 105/2025)
 applies_to:
-  - "Quản lý chất lượng"
-  - "Thẩm tra thiết kế"
-  - "PCCC"
-bundle: "_qc"
+- Thẩm tra thiết kế
+- Thiết kế
+bundle: _qc
 disable-model-invocation: true
+command: /workflow_pccc_thamdinh_cqxd
+triggers:
+- thẩm định cơ quan xây dựng
+- kiến trúc pccc
+- kiểm soát khói
 ---
 # Quy trình Thẩm định/Thẩm tra PCCC phần Kiến trúc & Kiểm soát khói (CQCMVXD)
 

@@ -1,12 +1,19 @@
 ---
-description: Kết nối tự động với NotebookLM để import YouTube/tài liệu, trích xuất tóm tắt, RAG query hoặc tạo Audio Overview.
+description: Kết nối tự động với NotebookLM để import YouTube/tài liệu, trích xuất
+  tóm tắt, RAG query hoặc tạo Audio Overview.
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
 disable-model-invocation: true
+command: /ccba-notebooklm
+triggers:
+- notebooklm
+- rag query
+- audio overview
+- podcast
 ---
 # Workflow: NotebookLM Connector (/ccba-notebooklm)
 

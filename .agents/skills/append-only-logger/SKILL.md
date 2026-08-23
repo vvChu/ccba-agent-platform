@@ -1,15 +1,24 @@
 ---
 name: Append-Only Logger
-description: Thread-safe, append-only logging pattern cho Python pipeline multi-daemon. Tránh race condition và encoding corruption khi nhiều process ghi cùng lúc vào shared log file.
-version: "1.1.0"
+description: Thread-safe, append-only logging pattern cho Python pipeline multi-daemon.
+  Tránh race condition và encoding corruption khi nhiều process ghi cùng lúc vào shared
+  log file.
+version: 1.1.0
 applies_to:
-  - "Phần mềm"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Kiểm định
+bundle: _core
 dependencies:
-  - "ai-gateway-sdk"
+- ai-gateway-sdk
+triggers:
+- logging
+- logger
+- log file
+- thread safe
+- daemon log
+- pipeline log
+- append log
 ---
-
 # Append-Only Logger
 
 Thread-safe logging pattern cho các pipeline chạy nhiều daemon/process đồng thời. Thay thế pattern **read → regex → rewrite** (dễ corrupt) bằng **pure append** với thread lock.

@@ -1,9 +1,16 @@
 ---
 name: teach
-description: Hỗ trợ giảng dạy và đào tạo kiến thức tương tác, lưu trữ lộ trình và bài học trong thư mục chuyên biệt.
+description: Hỗ trợ giảng dạy và đào tạo kiến thức tương tác, lưu trữ lộ trình và
+  bài học trong thư mục chuyên biệt.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- teach
+- giảng dạy
+- đào tạo
+- lesson
+- bài học
 ---
-
 # Kỹ năng Đào tạo & Giảng dạy Tương tác (Teach)
 
 Kỹ năng này thiết lập một không gian học tập tương tác (Teaching Workspace) được cô lập, cho phép tự động sinh bài giảng, theo dõi lịch sử ôn tập và tổng kết tiến trình học tập của cán bộ nhân viên hoặc đối tác.

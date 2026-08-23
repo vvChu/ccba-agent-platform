@@ -1,14 +1,21 @@
 ---
 name: maskara-privacy
-description: "Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords, private keys) trong files/logs và cài đặt guardrails bảo mật."
+description: Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords,
+  private keys) trong files/logs và cài đặt guardrails bảo mật.
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
+triggers:
+- maskara
+- privacy
+- redact
+- scan secret
+- leak
+- che giấu key
 ---
-
 # Maskara Privacy - Bảo mật thông tin nhạy cảm CCBA
 
 > **Vai trò**: Đây là kỹ năng bảo mật cốt lõi giúp phát hiện và che giấu (redact) các thông tin nhạy cảm (OpenAI API key, Google API key, AWS keys, JWT, Database URLs, Private key...) trong logs và files của dự án trước khi commit hoặc chia sẻ.

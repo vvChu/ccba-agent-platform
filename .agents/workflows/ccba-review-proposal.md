@@ -1,9 +1,9 @@
 ---
-description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Spoke Leakage Guard, Supervised Self-Healing và Đồng bộ Catalog Hậu Merge (ADR 0045)
+description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Spoke Leakage
+  Guard, Supervised Self-Healing và Đồng bộ Catalog Hậu Merge (ADR 0045)
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Quản trị hệ thống"
+- Tác vụ Admin
+- Phần mềm
 disable-model-invocation: true
 ---
 # Workflow: Review Proposal (Thẩm Định Đề Xuất Spoke Lên Hub — ADR 0045)
@@ -92,7 +92,7 @@ python scripts/governance/check_spoke_leakage.py
    ```
 4. **Quản trị Vòng đời Hậu Merge (Post-Merge Governance):**
    - **Cập nhật Proposal Header:** Đổi `status: "open"` $\rightarrow$ `status: "merged"`, ghi nhận `merged_commit` hash và `merged_date`.
-   - **Đăng ký Hệ Sinh Thái:** Kiểm tra và đăng ký tool/skill mới vào `catalog.yaml` (`.agents/skills/_core/platform-loader/catalog.yaml`) và bảng Service Modules tại `PLATFORM.md`.
+   - **Đăng ký Hệ Sinh Thái (ADR 0047):** Chạy `python scripts/governance/compile_catalog.py` để tự động cập nhật `catalog.yaml` từ frontmatter của skill/workflow mới và cập nhật bảng Service Modules tại `PLATFORM.md`.
    - **Gợi ý Spoke Sync:** Thông báo danh sách Spoke downstream nên chạy `/ccba-update-spoke` để nạp tính năng mới.
 
 ---
