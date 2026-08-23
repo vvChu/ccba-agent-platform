@@ -2,8 +2,9 @@
 
 > **Thuộc bản đồ**: [🗺️ Bản đồ Định hướng IDOP Hub-Spoke Ecosystem](../idop_spoke_ecosystem_map.md)  
 > **Loại ticket**: `AFK / Research`  
-> **Trạng thái**: `OPEN` (Frontier)  
-> **Assignee**: *Chưa gán*
+> **Trạng thái**: `CLOSED` (Đã hoàn thành)  
+> **Tài liệu nghiên cứu chi tiết**: [ai_gateway_quota_matrix_and_routing_architecture.md](../../knowledge/research_and_studies/ai_gateway_quota_matrix_and_routing_architecture.md)  
+> **Assignee**: *AI Platform Engineering*
 
 ---
 
@@ -11,32 +12,26 @@
 
 AI Gateway trên Server Spark (`100.83.192.30:8090/v1`) là cổng kết nối duy nhất cho toàn bộ hệ sinh thái CCBA:
 - Tích hợp 22 models bao gồm:
-  - Local GPU models: `qwen-local-primary` (Qwen 3.5 35B FP8 - chạy trên GPU của Spark Server), `reasoning-gemma`, v.v.
-  - Cloud Frontier models: Gemini 2.5 / 1.5 Pro, Claude Sonnet 3.5 / Opus, GPT-4o, DeepSeek R1/V3.
+  - Local GPU models: `qwen-local-primary` (Qwen 35B FP8 - chạy trên GPU của Spark Server), `reasoning-gemma`, v.v.
+  - Cloud Frontier models: Gemini 3.7 / 2.5 Pro & Flash, Claude Sonnet 4.6, Claude Haiku 4.5.
 - Mạng lưới truy cập: Kết nối bảo mật qua Tailscale VPN.
-
-Cần thiết kế ma trận phân quyền, phân bổ hạn mức (Rate Limiter / Token Bucket / Quota per User) và chính sách Virtual Keys để:
-1. Cho phép Personal Sandbox Spokes sử dụng không giới hạn các model Local GPU.
-2. Kiểm soát ngân sách cho các model Cloud cao cấp khi chạy thẩm tra chuyên sâu hoặc Auto-Tuner.
 
 ---
 
-## 2. Nhiệm vụ Nghiên cứu
+## 2. Kết Quả Nghiên Cứu Đạt Được
 
-1. **Khảo sát cấu hình LiteLLM trên Server Spark**:
-   - Xác định cơ chế Virtual Key và Team Quota trong LiteLLM.
-   - Kiểm tra các Alias định tuyến hiện có (`ocr-primary`, `ocr-fallback`, `rag-core`, `qwen-local-primary`).
-2. **Xây dựng Ma trận Phân quyền & Hạn mức (Tiered Quota Matrix)**:
-   - *Tier Free/Dev (Personal Sandbox)*: Không giới hạn Local GPU, giới hạn 50k tokens/ngày cho Cloud models.
-   - *Tier Project Delivery (Spoke Dự án)*: Đầy đủ quyền gọi Multimodal Vision (Quad-view PCCC QC) và Gemini 1.5 Pro cho hồ sơ lớn.
-   - *Tier Hub Engineering / Auto-Tuner*: Cấp quyền batch processing qua API Circuit Breaker.
-3. **Đóng gói tài liệu cấu hình**:
-   - Xuất file khuyến nghị cấu hình LiteLLM `config.yaml` và hướng dẫn tích hợp vào `.env` của Kỹ sư.
+1. **Ma Trận Cấp Phát 3 Tầng**:
+   - **Tier 1 (Personal Sandbox)**: Không giới hạn Local GPU; Capped \$5/tháng Cloud (~50k tokens/ngày); Tự động giáng cấp (Graceful Fallback) về Qwen 35B khi cạn quota Cloud.
+   - **Tier 2 (Project Delivery & Governance)**: Phân bổ theo Hợp đồng (\$50-\$200/dự án); Cấp quyền Multimodal Vision Quad-view PCCC.
+   - **Tier 3 (Platform Hub & Nightly Daemon)**: Dynamic Pool \$10/đêm, ưu tiên chạy 00:00-05:00 kết hợp Circuit Breaker.
+2. **Khuyến Nghị Cấu Hình LiteLLM (`config.yaml`)**:
+   - Đã biên soạn đầy đủ đặc tả `config.yaml` gồm `router_settings`, `fallbacks`, `model_list` và `team_list` tại [ai_gateway_quota_matrix_and_routing_architecture.md](../../knowledge/research_and_studies/ai_gateway_quota_matrix_and_routing_architecture.md).
 
 ---
 
 ## 3. Tiêu chí Hoàn thành (Completion Criteria)
 
-- [ ] Lập bảng ma trận phân quyền 3 Tier kèm routing fallback logic.
-- [ ] Soạn thảo bản tóm tắt khuyến nghị cấu hình LiteLLM.
-- [ ] Cập nhật kết quả vào mục *Decisions so far* trên Bản đồ Wayfinder.
+- [x] Lập bảng ma trận phân quyền 3 Tier kèm routing fallback logic.
+- [x] Soạn thảo bản tóm tắt khuyến nghị cấu hình LiteLLM.
+- [x] Cập nhật kết quả vào mục *Decisions so far* trên Bản đồ Wayfinder.
+

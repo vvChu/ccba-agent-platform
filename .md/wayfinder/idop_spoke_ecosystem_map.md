@@ -70,14 +70,18 @@ graph TD
   Kỹ sư được phép khởi tạo Spoke cá nhân cục bộ để ghi chú, học tập và chạy thử nghiệm AI, hưởng thụ hạ tầng AI Gateway từ Server Spark, nhưng tuyệt đối không đăng ký vào `spoke_registry.yaml` trên GitHub của Hub.
 - **[Đã chốt - 2026-08-22] Cơ chế Đệm & Tái phát Bất biến (ADR 0043)**:
   Tích hợp `IDOPBridge` với Local Staging Queue tại `.md/idop_staged/` đảm bảo khả năng Zero-Downtime khi MS 365 bảo trì hoặc khi kỹ sư làm việc offline.
+- **[Đã chốt - 2026-08-23] Ma Trận Cấp Phát Quota 3 Tầng & Graceful Auto-Fallback (`[WF-02]`)**:
+  - Personal Sandbox (`Tier 1`): Không giới hạn Local GPU (vLLM Qwen 35B / reasoning-gemma); Capped $5/tháng Cloud (~50k tokens/ngày). Tự động giáng cấp (Graceful Fallback) về Qwen 35B khi cạn quota Cloud mà không làm đứt gãy tiến trình.
+  - Project Delivery (`Tier 2`): Phân bổ theo ngân sách dự án ($50-$200/dự án); cấp quyền Full Multimodal Vision Quad-view.
+  - Platform Hub & Daemon (`Tier 3`): Dynamic Budget $10/đêm, ưu tiên chạy 00:00-05:00 kết hợp Circuit Breaker.
+  - Chi tiết tại: [`ai_gateway_quota_matrix_and_routing_architecture.md`](../knowledge/research_and_studies/ai_gateway_quota_matrix_and_routing_architecture.md).
 
 ---
 
 ## 4. Sương mù Chiến trận / Chưa xác định rõ (Not yet specified)
 
-- **Sương mù 1 (Giao diện Kỹ sư Nộp Hồ sơ IDOP)**: Chưa thống nhất hình thức tương tác tối ưu cho Kỹ sư khi muốn đẩy báo cáo/tiến độ từ Spoke dự án vào SharePoint IDOP (dùng lệnh CLI `ccba idop push`, hay kéo thả file vào thư mục watcher `.md/idop_staged/`, hay form web).
-- **Sương mù 2 (Ma trận Cấp phát Quota & Routing Policy)**: Chưa quy chuẩn cách phân bổ Virtual Keys và hạn mức Token cho các kỹ sư/phòng ban để tránh tình trạng cạn kiệt Quota trên AI Gateway Server Spark.
-- **Sương mù 3 (SOP Khởi tạo & Vận hành Delivery Spoke)**: Chưa có tài liệu hướng dẫn từng bước ngắn gọn để PM dự án thiết lập thư mục Spoke trên OneDrive và liên kết với Hub.
+- **Sương mù 1 (Giao diện Kỹ sư Nộp Hồ sơ IDOP)**: Chưa thống nhất hình thức tương tác tối ưu cho Kỹ sư khi muốn đẩy báo cáo/tiến độ từ Spoke dự án vào SharePoint IDOP (dùng lệnh CLI `ccba idop push`, hay kéo thả file vào thư mục watcher `.md/idop_staged/`, hay form web). *(Giải quyết tại `[WF-01]`)*.
+- **Sương mù 2 (SOP Khởi tạo & Vận hành Delivery Spoke)**: Chưa có tài liệu hướng dẫn từng bước ngắn gọn để PM dự án thiết lập thư mục Spoke trên OneDrive và liên kết với Hub. *(Giải quyết tại `[WF-03]`)*.
 
 ---
 
@@ -93,9 +97,12 @@ graph TD
 
 ```mermaid
 graph LR
+    subgraph Done ["✅ ĐÃ HOÀN THÀNH (Done)"]
+        T02["[WF-02] Ma trận Cấp Quota AI Gateway<br/><i>(AFK / Research)</i>"]
+    end
+
     subgraph Frontier ["🎯 BIÊN GIỚI (Frontier - Unblocked)"]
         T01["[WF-01] Giao diện Kỹ sư Nộp Hồ sơ IDOP<br/><i>(HITL / Grilling)</i>"]
-        T02["[WF-02] Ma trận Cấp Quota AI Gateway<br/><i>(AFK / Research)</i>"]
         T03["[WF-03] SOP Khởi tạo Project Delivery Spoke<br/><i>(AFK / Task)</i>"]
     end
     
@@ -113,22 +120,22 @@ graph LR
    - **Mục tiêu**: Làm rõ hành vi người dùng mong muốn nhất: Kỹ sư muốn chạy lệnh CLI dòng lệnh (`ccba idop submit --file ...`), hay để Agent tự động quét và đẩy ngầm khi hoàn thành task, hay kéo thả file vào thư mục đệm `.md/idop_staged/`?
    - **Trạng thái**: `OPEN` (Frontier)
 
-2. **`[WF-02]` [AFK / Research] [Ma trận Cấp phát Quota & Routing Rule cho AI Gateway Server Spark](tickets/wf_02_ai_gateway_quota_matrix.md)**
-   - **Loại**: `Research` (Nghiên cứu cấu hình LiteLLM & Tailscale)
-   - **Mục tiêu**: Khảo sát năng lực 22 models trên LiteLLM Server Spark (`100.83.192.30:8090`), thiết lập bảng quy tắc phân luồng: model nào chạy local GPU (miễn phí, không giới hạn), model nào chạy cloud (áp dụng Token Bucket / Quota per Engineer), và cấu trúc Virtual Key.
-   - **Trạng thái**: `OPEN` (Frontier)
-
-3. **`[WF-03]` [AFK / Task] [Bộ Quy Chuẩn & SOP Khởi Tạo Project Delivery Spoke trên OneDrive](tickets/wf_03_project_delivery_spoke_sop.md)**
+2. **`[WF-03]` [AFK / Task] [Bộ Quy Chuẩn & SOP Khởi Tạo Project Delivery Spoke trên OneDrive](tickets/wf_03_project_delivery_spoke_sop.md)**
    - **Loại**: `Task` (Biên soạn tài liệu SOP & template)
    - **Mục tiêu**: Xây dựng mẫu cấu hình `workspace_context.yaml` cho Spoke dự án (Archetype `project_delivery`), kịch bản đồng bộ xuôi `.agents/workflows/` mà không tạo kho Git remote.
    - **Trạng thái**: `OPEN` (Frontier)
 
 ### ⏳ Các Ticket Bị Chặn (Blocked)
 
-4. **`[WF-04]` [AFK / Task] [Đóng gói Tiện ích CLI `ccba-spoke` Hỗ trợ Kỹ sư Thao tác Staging và Đồng bộ](tickets/wf_04_ccba_spoke_cli.md)**
+3. **`[WF-04]` [AFK / Task] [Đóng gói Tiện ích CLI `ccba-spoke` Hỗ trợ Kỹ sư Thao tác Staging và Đồng bộ](tickets/wf_04_ccba_spoke_cli.md)**
    - **Loại**: `Task` (Triển khai code trong `packages/ccba-core` hoặc script standalone)
    - **Bị chặn bởi**: `[WF-01]` (Cần chốt giao diện tương tác trước khi viết code CLI)
    - **Trạng thái**: `BLOCKED`
+
+### ✅ Các Ticket Đã Đóng (Closed)
+
+4. **`[WF-02]` [AFK / Research] [Ma trận Cấp phát Quota & Routing Rule cho AI Gateway Server Spark](tickets/wf_02_ai_gateway_quota_matrix.md)**
+   - **Trạng thái**: `CLOSED` (Xem báo cáo tại [`ai_gateway_quota_matrix_and_routing_architecture.md`](../knowledge/research_and_studies/ai_gateway_quota_matrix_and_routing_architecture.md))
 
 ---
 
