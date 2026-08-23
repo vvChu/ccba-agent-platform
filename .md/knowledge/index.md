@@ -52,6 +52,7 @@
 - [research_and_studies/power_platform_skills_comparison.md](research_and_studies/power_platform_skills_comparison.md): Đánh giá tích hợp Microsoft Power Platform.
 - [research_and_studies/research-platform-init-setup-sync.md](research_and_studies/research-platform-init-setup-sync.md): Nghiên cứu cơ chế khởi tạo và đồng bộ Hub-Spoke.
 - [research_and_studies/port_recommendations.md](research_and_studies/port_recommendations.md): Danh mục chi tiết đề xuất porting.
+- [research_and_studies/ai_gateway_quota_matrix_and_routing_architecture.md](research_and_studies/ai_gateway_quota_matrix_and_routing_architecture.md): Ma trận Quota và Kiến trúc Định tuyến AI Gateway Server Spark.
 
 ---
 
