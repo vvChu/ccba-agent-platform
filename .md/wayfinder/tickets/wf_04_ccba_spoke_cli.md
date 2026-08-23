@@ -2,9 +2,8 @@
 
 > **Thuộc bản đồ**: [🗺️ Bản đồ Định hướng IDOP Hub-Spoke Ecosystem](../idop_spoke_ecosystem_map.md)  
 > **Loại ticket**: `AFK / Task`  
-> **Trạng thái**: `BLOCKED`  
-> **Bị chặn bởi**: [Ticket WF-01](wf_01_idop_submission_interface.md)  
-> **Assignee**: *Chưa gán*
+> **Trạng thái**: `OPEN` (Frontier)  
+> **Assignee**: *AI Platform Engineering*
 
 ---
 
