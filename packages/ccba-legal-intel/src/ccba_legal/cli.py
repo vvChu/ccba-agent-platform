@@ -71,6 +71,12 @@ def build_parser() -> argparse.ArgumentParser:
     convert_parser.add_argument(
         "-r", "--registry", type=Path, default=None, help="Path to legal_registry.yaml"
     )
+    convert_parser.add_argument(
+        "--archetype",
+        type=str,
+        default=None,
+        help="Force specific document archetype (VBPL_ADMIN, TECHNICAL_TCVN, TECHNICAL_QCVN, CIRCULAR_COST_NORM)",
+    )
 
     # 3. Process Subcommand
     process_parser = subparsers.add_parser(
@@ -112,20 +118,23 @@ def handle_fetch(args: argparse.Namespace) -> int:
     print("=================================================================")
     print(f"🎯 Target: {args.target}")
 
-    try:
-        username, password = get_tvpl_credentials()
-        print("🔐 Authenticating with TVPL VIP credentials from environment...")
-    except OSError as e:
-        print(f"❌ Authentication Error: {e}")
-        return 1
-
     out_dir = args.output_dir or Path(".md/extracted_docs/tvpl_downloads")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    crawler = TVPLCrawler(username=username, password=password)
-    result = download_three_tier(crawler, args.target, out_dir)
-    print(f"Result: {result}")
-    return 0 if result.get("status") in ("success", "downloaded") else 1
+    try:
+        username, password = get_tvpl_credentials()
+        print("🔐 Authenticating with TVPL VIP credentials from environment...")
+    except OSError:
+        print("ℹ️ No TVPL credentials found in environment. Proceeding with public/cache lookup...")
+
+    crawler = TVPLCrawler()
+    try:
+        result = crawler.fetch_document(args.target)
+        print(f"Result: {result}")
+        return 0
+    except Exception as e:
+        print(f"❌ Fetch Error: {e}")
+        return 1
 
 
 def handle_convert(args: argparse.Namespace) -> int:
@@ -142,6 +151,7 @@ def handle_convert(args: argparse.Namespace) -> int:
         output_filename=args.output_filename,
         doc_type=args.doc_type,
         registry_file=args.registry,
+        archetype=args.archetype,
     )
     print("\n[COMPLETE OKF BUNDLE RESULT]:", json.dumps(res, indent=2, ensure_ascii=False))
     return 0 if res.get("status") == "success" else 1
