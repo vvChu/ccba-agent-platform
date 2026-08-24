@@ -8,7 +8,9 @@ Public Deep Seams:
     Cleaners                — OCR cleanup, DOCX table parsing, Markdown conversion.
     GoldStandardProcessor   — OKF v2.2 Gold standard normalizer, footnote & AST/QA generator.
     VisualParityAuditor     — CI Gate 4 visual & footnote formatting auditor.
+    AIVisionFormulaHarvester — ADR 0031: Bóc tách công thức toán học từ ảnh sang KaTeX.
 """
+
 
 from .appendices import AppendixSplitter, roman_to_decimal
 from .ast_parser import (
@@ -94,6 +96,12 @@ from .visual_parity import (
     VisualParityAuditor,
     audit_visual_parity,
 )
+from .formula_harvester import (
+    extract_latex_from_image,
+    harvest_docx_formula_images,
+    harvest_pdf_formula_images,
+    is_formula_image,
+)
 
 __all__ = [
     # === Core Deep Seams (Public Interface) ===
@@ -167,4 +175,9 @@ __all__ = [
     "normalize_clause_numbers",
     "classify_and_extract_tables",
     "validate_template_and_table_integrity",
+    # === Formula Harvesting & Vision OCR (ADR 0031) ===
+    "extract_latex_from_image",
+    "harvest_docx_formula_images",
+    "harvest_pdf_formula_images",
+    "is_formula_image",
 ]
