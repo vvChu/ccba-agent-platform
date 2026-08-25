@@ -28,17 +28,6 @@ GREEK_MAP: dict[str, str] = {
 
 # 100% Authentic KaTeX Formulations for TCVN 2737:2023 & Structural Standards
 
-ANNEX_SLUGS_MAP: dict[str, tuple[str, str, str]] = {
-    "A": ("phu_luc_a_khoi_luong_the_tich_vat_lieu", "Khối lượng thể tích và góc ma sát trong của một số vật liệu", "Tham khảo"),
-    "B": ("phu_luc_b_tai_trong_va_cham_cau_truc", "Danh mục một số cần trục và tải trọng va chạm với gối chặn", "Quy định"),
-    "C": ("phu_luc_c_phuong_phap_xac_dinh_moc_chuan", "Phương pháp xác định mốc chuẩn", "Quy định"),
-    "D": ("phu_luc_d_hinh_anh_minh_hoa_dia_hinh", "Hình ảnh minh họa các dạng địa hình", "Quy định"),
-    "E": ("phu_luc_e_kich_thuoc_tuong_duong_mat_bang", "Kích thước tương đương cho một số mặt bằng phức tạp", "Quy định"),
-    "F": ("phu_luc_f_cac_so_do_khi_dong", "Các sơ đồ khí động và hệ số khí động", "Quy định"),
-    "G": ("phu_luc_g_do_vong_va_chuyen_vi_gioi_han", "Độ võng và chuyển vị giới hạn", "Quy định"),
-    "H": ("phu_luc_h_he_so_tam_quan_trong_cong_trinh", "Hệ số tầm quan trọng và phân cấp hậu quả công trình", "Quy định"),
-}
-
 FORMULAS_MAP: dict[str, tuple[str, str]] = {
     "1": ("F_TCVN2737_TO_HOP_CO_BAN_1", r'C_m = \gamma_n \left( \sum_{i \ge 1} \gamma_{f,i} G_{k,i} \text{ “+” } \sum_{j \ge 1} \gamma_{f,j} \psi_{L,j} Q_{k,L,j} \text{ “+” } \sum_{m \ge 1} \gamma_{f,m} \psi_{t,m} Q_{k,t,m} \right)'),
     "2": ("F_TCVN2737_TO_HOP_DAC_BIET_2", r'C_a = \left( \sum_{i \ge 1} \gamma_{f,i} G_{k,i} \text{ “+” } \sum_{j \ge 1} \gamma_{f,j} \psi_{L,j} Q_{k,L,j} \text{ “+” } \sum_{m \ge 1} \gamma_{f,m} \psi_{t,m} Q_{k,t,m} \right) \text{ “+” } A_d'),
@@ -81,6 +70,16 @@ FORMULAS_MAP: dict[str, tuple[str, str]] = {
     "F.9": ("F_TCVN2737_HE_SO_KHI_DONG_F9", r"\varphi = \frac{\sum A_i}{A_c} = \frac{A}{A_c}"),
     "G.1": ("F_TCVN2737_DO_VONG_GIOI_HAN_G1", r"f_u = \frac{g(p + p_1 + q)}{30n^2 (bp + p_1 + q)}")
 }
+
+
+def slugify_vietnamese(text: str) -> str:
+    """Convert Vietnamese unicode string into clean semantic ASCII slug."""
+    import unicodedata
+    text = unicodedata.normalize("NFD", text)
+    text = re.sub(r"[\u0300-\u036f]", "", text)
+    text = text.replace("đ", "d").replace("Đ", "D")
+    text = re.sub(r"[^a-zA-Z0-9]+", "_", text).strip("_").lower()
+    return text[:45].rstrip("_")
 
 
 def sanitize_prose_greeks_and_variables(text: str) -> str:
@@ -509,13 +508,8 @@ def process_technical_standard_strategy(
                         a_title = ntxt2
                         i += 1
 
-                if a_letter in ANNEX_SLUGS_MAP:
-                    slug, def_title, def_type = ANNEX_SLUGS_MAP[a_letter]
-                    a_title = a_title or def_title
-                    a_type = a_type or def_type
-                else:
-                    clean_slug_title = re.sub(r"[^a-z0-9]+", "_", a_title.lower()).strip("_")
-                    slug = f"phu_luc_{a_letter.lower()}_{clean_slug_title}" if clean_slug_title else f"phu_luc_{a_letter.lower()}"
+                clean_slug_title = slugify_vietnamese(a_title)
+                slug = f"phu_luc_{a_letter.lower()}_{clean_slug_title}" if clean_slug_title else f"phu_luc_{a_letter.lower()}"
 
                 current_target = a_letter
                 anchor = f"phu-luc-{a_letter.lower()}"
