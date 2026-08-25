@@ -7,74 +7,27 @@ import json
 import os
 import re
 import shutil
+import unicodedata
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
 
 from ccba_legal.converters.table_extractor import classify_and_extract_tables
+from ccba_legal.converters.technical_formulas import FORMULAS_MAP, GREEK_MAP, INLINE_SYMBOLS_MAP
 from ccba_legal.converters.unit_normalizer import normalize_units_and_math
+from ccba_legal.figure_extractor import (
+    AERODYNAMIC_FIGURES_GEOMETRY,
+    extract_docx_figures,
+    render_markdown_figure_card,
+)
 from ccba_legal.formula_harvester import harvest_docx_formula_images
 from ccba_legal.gold_standard import generate_bundle_ast_and_qa, inject_semantic_anchors
 
 
-GREEK_MAP: dict[str, str] = {
-    "α": r"\alpha", "β": r"\beta", "γ": r"\gamma", "δ": r"\delta",
-    "ε": r"\epsilon", "η": r"\eta", "θ": r"\theta", "λ": r"\lambda",
-    "μ": r"\mu", "ν": r"\nu", "ξ": r"\xi", "π": r"\pi", "ρ": r"\rho",
-    "σ": r"\sigma", "τ": r"\tau", "φ": r"\varphi", "ψ": r"\psi",
-    "ω": r"\omega", "Δ": r"\Delta", "Σ": r"\Sigma", "Ω": r"\Omega"
-}
-
-# 100% Authentic KaTeX Formulations for TCVN 2737:2023 & Structural Standards
-
-FORMULAS_MAP: dict[str, tuple[str, str]] = {
-    "1": ("F_TCVN2737_TO_HOP_CO_BAN_1", r'C_m = \gamma_n \left( \sum_{i \ge 1} \gamma_{f,i} G_{k,i} \text{ “+” } \sum_{j \ge 1} \gamma_{f,j} \psi_{L,j} Q_{k,L,j} \text{ “+” } \sum_{m \ge 1} \gamma_{f,m} \psi_{t,m} Q_{k,t,m} \right)'),
-    "2": ("F_TCVN2737_TO_HOP_DAC_BIET_2", r'C_a = \left( \sum_{i \ge 1} \gamma_{f,i} G_{k,i} \text{ “+” } \sum_{j \ge 1} \gamma_{f,j} \psi_{L,j} Q_{k,L,j} \text{ “+” } \sum_{m \ge 1} \gamma_{f,m} \psi_{t,m} Q_{k,t,m} \right) \text{ “+” } A_d'),
-    "3": ("F_TCVN2737_HE_SO_GIAM_DIEN_TICH_1", r"\varphi_1 = 0,4 + \frac{0,6}{\sqrt{A / A_1}} \ge 0,6"),
-    "4": ("F_TCVN2737_HE_SO_GIAM_DIEN_TICH_2", r"\varphi_2 = 0,5 + \frac{0,5}{\sqrt{A / A_2}} \ge 0,6"),
-    "5": ("F_TCVN2737_HE_SO_GIAM_SO_TANG_1", r"\varphi_3 = 0,4 + \frac{\varphi_1 - 0,4}{\sqrt{n}} \ge 0,5"),
-    "6": ("F_TCVN2737_HE_SO_GIAM_SO_TANG_2", r"\varphi_4 = 0,5 + \frac{\varphi_2 - 0,5}{\sqrt{n}} \ge 0,5"),
-    "7": ("F_TCVN2737_LUC_BUNG_CAU_TRUC", r"F_{d,up} = \gamma_f \cdot \xi \cdot Q_{k,t}"),
-    "8": ("F_TCVN2737_LUC_VA_CHAM_CAU_TRUC", r"F_{d',down} = C \sqrt{m}"),
-    "9": ("F_TCVN2737_LUC_HAM_NGANG_CAU_TRUC", r"F_{d,h} = \xi \cdot G_k"),
-    "10": ("F_TCVN2737_AP_LUC_GIO_TIEU_CHUAN", r"W_k = W_{3s,10} \cdot k(z_e) \cdot c \cdot G_f"),
-    "11": ("F_TCVN2737_VAN_TOC_GIO_3S_10", r"W_0 = 0,0613 \, V_0^2"),
-    "12": ("F_TCVN2737_HE_SO_DO_CAO_GIO", r"k(z_e) = 2,01 \left(\frac{z_e}{z_g}\right)^{2/\alpha}"),
-    "13": ("F_TCVN2737_HE_SO_GIAT_GF", r"G_f = 0,925 \left( \frac{1 + 1,7 I(z_s) \sqrt{g_Q^2 Q^2 + g_R^2 R^2}}{1 + 1,7 g_v I(z_s)} \right)"),
-    "14": ("F_TCVN2737_CUONG_DO_NHIEU_DONG", r"I(z_s) = c_r \left(\frac{10}{z_s}\right)^{1/6}"),
-    "15": ("F_TCVN2737_HE_SO_DINH_CONG_HUONG_GR", r"g_R = \sqrt{2 \ln(3\,600 n_1)} + \frac{0,577}{\sqrt{2 \ln(3\,600 n_1)}}"),
-    "16": ("F_TCVN2737_HE_SO_PHAN_UNG_NEN", r"Q = \sqrt{\frac{1}{1 + 0,63 \left(\frac{b + h}{L(z_s)}\right)^{0,63}}}"),
-    "17": ("F_TCVN2737_TY_LE_CHIEU_DAI_TICH_PHAN", r"L(z_s) = \ell \left(\frac{z_s}{10}\right)^{\bar{\epsilon}}"),
-    "18": ("F_TCVN2737_HE_SO_PHAN_UNG_CONG_HUONG_R", r"R = \sqrt{\frac{1}{\beta} R_n R_h R_b (0,53 + 0,47 R_d)}"),
-    "19": ("F_TCVN2737_HAM_MAT_DO_PHO_NANG_LUONG", r"R_n = \frac{7,47 N_1}{(1 + 10,3 N_1)^{5/3}}"),
-    "20": ("F_TCVN2737_TAN_SO_KHONG_THU_NGUYEN", r"N_1 = \frac{n_1 L(z_s)}{V(z_s)_{3\,600\text{s},50}}"),
-    "21": ("F_TCVN2737_VAN_TOC_GIO_TRUNG_BINH_3600S", r"V(z_s)_{3\,600\text{s},50} = \bar{b} \left(\frac{z_s}{10}\right)^{\bar{\alpha}} V_{3s,50}"),
-    "22": ("F_TCVN2737_HAM_TUONG_QUAN_CHIEU_CAO", r"R_h = \frac{1}{\eta_h} - \frac{1}{2\eta_h^2}\left(1 - e^{-2\eta_h}\right); \quad R_h = 1 \text{ khi } \eta_h = 0"),
-    "23": ("F_TCVN2737_HAM_TUONG_QUAN_CHIEU_RONG", r"R_b = \frac{1}{\eta_b} - \frac{1}{2\eta_b^2}\left(1 - e^{-2\eta_b}\right); \quad R_b = 1 \text{ khi } \eta_b = 0"),
-    "24": ("F_TCVN2737_HAM_TUONG_QUAN_CHIEU_SAU", r"R_d = \frac{1}{\eta_d} - \frac{1}{2\eta_d^2}\left(1 - e^{-2\eta_d}\right); \quad R_d = 1 \text{ khi } \eta_d = 0"),
-    "25": ("F_TCVN2737_DO_VONG_GIOI_HAN", r"f \le f_u"),
-    "B.1": ("F_TCVN2737_LUC_VA_CHAM_B1", r"F_k = \frac{m v^2}{f}"),
-    "B.2": ("F_TCVN2737_KHOI_LUONG_QUY_DOI_B2", r"m = \frac{m_b}{2} + (m_c + k m_q) \frac{L - L_1}{L}"),
-    "B.3": ("F_TCVN2737_LUC_VA_CHAM_TINH_TOAN_B3", r"F_d = \gamma_f F_k"),
-    "E.1": ("F_TCVN2737_HE_SO_AP_LUC_KHONG_KHI_E1", r"k_n = 1 - 0,1 \cdot \dots"),
-    "E.2": ("F_TCVN2737_HE_SO_DO_CAO_E2", r"\dots"),
-    "F.1": ("F_TCVN2737_SO_REYNOLD_F1", r"\text{Re} = \frac{d \cdot V(z_e)_{3\,600\text{s},50}}{\nu}"),
-    "F.2": ("F_TCVN2737_VAN_TOC_GIO_F2", r"V(z_e)_{3\,600\text{s},50} = \bar{b} \left(\frac{z_e}{10}\right)^{\bar{\alpha}} V_{3\text{s},50}"),
-    "F.3": ("F_TCVN2737_HE_SO_KHI_DONG_F3", r"c_{e1} = k_{\lambda 1} c_\beta"),
-    "F.4": ("F_TCVN2737_HE_SO_KHI_DONG_F4", r"c_x = k_\lambda c_{x\infty}"),
-    "F.5": ("F_TCVN2737_HE_SO_KHI_DONG_F5", r"c_{x\beta} = c_x \sin^2 \beta"),
-    "F.6": ("F_TCVN2737_HE_SO_KHI_DONG_F6", r"c_x = k_\lambda c_{x\infty}"),
-    "F.7": ("F_TCVN2737_HE_SO_KHI_DONG_F7", r"c_x = \frac{\sum c_{xi} A_i}{A_c}"),
-    "F.8": ("F_TCVN2737_HE_SO_KHI_DONG_F8", r"c_t = c_x (1 + \eta) k_1"),
-    "F.9": ("F_TCVN2737_HE_SO_KHI_DONG_F9", r"\varphi = \frac{\sum A_i}{A_c} = \frac{A}{A_c}"),
-    "G.1": ("F_TCVN2737_DO_VONG_GIOI_HAN_G1", r"f_u = \frac{g(p + p_1 + q)}{30n^2 (bp + p_1 + q)}")
-}
-
-
 def slugify_vietnamese(text: str) -> str:
     """Convert Vietnamese unicode string into clean semantic ASCII slug."""
-    import unicodedata
     text = unicodedata.normalize("NFD", text)
     text = re.sub(r"[\u0300-\u036f]", "", text)
     text = text.replace("đ", "d").replace("Đ", "D")
@@ -83,52 +36,32 @@ def slugify_vietnamese(text: str) -> str:
 
 
 def sanitize_prose_greeks_and_variables(text: str) -> str:
-    """Convert unformatted Greek symbols, macrons, and standard variable strings in prose/tables into KaTeX math mode."""
-    import unicodedata
-
-    # Universal Unicode macron and overline decomposition (e.g. ᾱ -> \bar{\alpha}, b̄ -> \bar{b}, ε̄ -> \bar{\epsilon}, x̄ -> \bar{x})
+    """Convert unformatted Greek symbols, macrons, and standard variables into KaTeX math mode."""
     nfd = unicodedata.normalize("NFD", text)
+
     def _macron_repl(m: re.Match) -> str:
         base = m.group(1)
         base_latex = GREEK_MAP.get(base, base)
         return f"$\\bar{{{base_latex}}}$"
-    
-    res = re.sub(r"([a-zA-Z\u0370-\u03ff])[\u0304\u0305]", _macron_repl, nfd)
-    text = unicodedata.normalize("NFC", res)
 
-    # Script small l (ℓ)
-    text = text.replace("ℓ", r"$\ell$")
+    res = re.sub(r"([a-zA-Z\u0370-\u03ff])[\u0304\u0305]", _macron_repl, nfd)
+    text = unicodedata.normalize("NFC", res).replace("ℓ", r"$\ell$")
 
     for g_char, g_latex in GREEK_MAP.items():
-        # Match greek followed by subscript letters/digits (e.g. γf, ψL, ψt, γn, φ1, φ2)
         pattern = r"(?<!\$)\b" + g_char + r"([a-zA-Z0-9]+)\b(?!\$)"
         text = re.sub(pattern, lambda m, gl=g_latex: f"${gl}_{{{m.group(1)}}}$", text)
-        # Match standalone greek symbol
         pattern_alone = r"(?<![\$\w])" + g_char + r"(?![\$\w])"
         text = re.sub(pattern_alone, lambda m, gl=g_latex: f"${gl}$", text)
 
-    text = re.sub(r"(?<!\$)\bqk,t\b(?!\$)", r"$q_{k,t}$", text)
-    text = re.sub(r"(?<!\$)\bQk,t\b(?!\$)", r"$Q_{k,t}$", text)
-    text = re.sub(r"(?<!\$)\bqk,qper\b(?!\$)", r"$q_{k,qper}$", text)
-    text = re.sub(r"(?<!\$)\bWk\b(?!\$)", r"$W_k$", text)
-    text = re.sub(r"(?<!\$)\bW0\b(?!\$)", r"$W_0$", text)
-    text = re.sub(r"(?<!\$)\bGk\b(?!\$)", r"$G_k$", text)
-    text = re.sub(r"(?<!\$)\bQk\b(?!\$)", r"$Q_k$", text)
-    text = re.sub(r"(?<!\$)\bQL\b(?!\$)", r"$Q_L$", text)
-    text = re.sub(r"(?<!\$)\bQt\b(?!\$)", r"$Q_t$", text)
-    text = re.sub(r"(?<!\$)\bAd\b(?!\$)", r"$A_d$", text)
-    text = re.sub(r"(?<!\$)\bze\b(?!\$)", r"$z_e$", text)
-    text = re.sub(r"(?<!\$)\bzs\b(?!\$)", r"$z_s$", text)
-    text = re.sub(r"(?<!\$)\bGf\b(?!\$)", r"$G_f$", text)
+    for var in ["qk,t", "Qk,t", "qk,qper", "Wk", "W0", "Gk", "Qk", "QL", "Qt", "Ad", "ze", "zs", "Gf"]:
+        k_var = var.replace(",", "_{").replace("0", "_0")
+        if "_" in k_var and not k_var.endswith("}"):
+            k_var += "}"
+        elif len(var) > 1 and not "_" in k_var:
+            k_var = f"{var[0]}_{{{var[1:]}}}"
+        text = re.sub(rf"(?<!\$)\b{var}\b(?!\$)", f"${k_var}$", text)
 
     return text
-
-
-INLINE_SYMBOLS_MAP = {
-    "rId18": r"\ell",
-    "rId19": r"\bar{\epsilon}",
-    "rId28": r"\bar{b}",
-}
 
 
 def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = None) -> str:
@@ -137,10 +70,9 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
     if not runs:
         return p.text.strip()
 
-    grouped = []
+    grouped: list[tuple[str, str]] = []
     for r in runs:
         xml = r._r.xml
-        # Check if run contains an inline image / formula symbol
         m_rid = re.search(r'r:(?:id|embed)="([^"]+)"', xml)
         if m_rid:
             rid = m_rid.group(1)
@@ -150,8 +82,7 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
             if rid_to_katex and rid in rid_to_katex:
                 k_sym = rid_to_katex[rid]
                 if not k_sym.startswith("<!-- DIAGRAM"):
-                    k_sym_inline = k_sym.strip("$ ")
-                    grouped.append(("norm", f"${k_sym_inline}$"))
+                    grouped.append(("norm", f"${k_sym.strip('$ ')}$"))
                     continue
         t = r.text
         if not t:
@@ -164,146 +95,83 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
         else:
             grouped.append((mode, t))
 
-    out_tokens = []
+    out_tokens: list[str] = []
     for mode, text in grouped:
-        if mode == "sub":
+        if mode in ("sub", "sup"):
             clean_t = text.strip()
             if not clean_t:
                 out_tokens.append(text)
                 continue
-            trailing_comma = ""
-            if clean_t.endswith(","):
-                clean_t = clean_t[:-1].strip()
-                trailing_comma = ", "
+            trailing_comma = ", " if clean_t.endswith(",") else ""
+            clean_t = clean_t.rstrip(",").strip()
             for g_char, g_latex in GREEK_MAP.items():
                 clean_t = clean_t.replace(g_char, g_latex)
-            if not clean_t:
-                out_tokens.append(trailing_comma or text)
-                continue
-            if len(clean_t) > 1 or "," in clean_t or "\\" in clean_t:
-                out_tokens.append(f"$_{{{clean_t}}}${trailing_comma}")
-            else:
-                out_tokens.append(f"$_{clean_t}${trailing_comma}")
-        elif mode == "sup":
-            clean_t = text.strip()
-            if not clean_t:
-                out_tokens.append(text)
-                continue
-            trailing_comma = ""
-            if clean_t.endswith(","):
-                clean_t = clean_t[:-1].strip()
-                trailing_comma = ", "
-            for g_char, g_latex in GREEK_MAP.items():
-                clean_t = clean_t.replace(g_char, g_latex)
-            if not clean_t:
-                out_tokens.append(trailing_comma or text)
-                continue
-            if len(clean_t) > 1 or "\\" in clean_t:
-                out_tokens.append(f"$^{{{clean_t}}}${trailing_comma}")
-            else:
-                out_tokens.append(f"$^{clean_t}${trailing_comma}")
+            wrap = f"_{{{clean_t}}}" if mode == "sub" else f"^{{{clean_t}}}"
+            out_tokens.append(f"${wrap}${trailing_comma}")
         else:
             out_tokens.append(text)
 
     res = "".join(out_tokens)
-
-    # Merge adjacent alphanumeric + math subscript/superscript
-    res = re.sub(
-        r"([a-zA-ZÀ-ɏẠ-ỹͰ-Ͽ]+)\$(_\{[^}]+\}|_[a-zA-Z0-9,]+|\^\{[^}]+\}|\^[a-zA-Z0-9]+)\$",
-        lambda m: f"${m.group(1)}{m.group(2)}$",
-        res,
-    )
-
-    # Replace Greek letters inside math tokens with proper LaTeX
-    def _sanitize_math_greeks(m: re.Match) -> str:
-        inner = m.group(1)
-        for g_char, g_latex in GREEK_MAP.items():
-            inner = inner.replace(g_char, g_latex)
-        return f"${inner}$"
-
-    res = re.sub(r"\$([^$]+)\$", _sanitize_math_greeks, res)
-
-    # Clean up empty math tokens or corrupted tokens
+    res = re.sub(r"([a-zA-ZÀ-ɏẠ-ỹͰ-Ͽ]+)\$(_\{[^}]+\}|_[a-zA-Z0-9,]+|\^\{[^}]+\}|\^[a-zA-Z0-9]+)\$", r"$\1\2$", res)
+    res = re.sub(r"\$([^$]+)\$", lambda m: f"${''.join(GREEK_MAP.get(c, c) for c in m.group(1))}$", res)
     res = res.replace("$$", "").replace("$_$", "").replace("$^$", "")
-
-        # Ensure space after math token if followed directly by Vietnamese word
     res = re.sub(r"\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9\u0370-\u03FF_,\{\}\^\\0-9]+)\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9])", r"$\1$ \2", res)
+    return res.strip()
 
-    return sanitize_prose_greeks_and_variables(normalize_units_and_math(res))
 
-
-def calculate_emsp_padding(sym: str) -> str:
-    """Calculate dynamic em-space tab padding to align the definition column vertically."""
-    clean = (
-        sym.replace('$', '')
-        .replace(r'\gamma', 'g')
-        .replace(r'\eta', 'h')
-        .replace(r'\psi', 'p')
-        .replace(r'\alpha', 'a')
-        .replace(r'\beta', 'b')
-    )
-    clean = clean.replace('{;', '').replace('}', '').replace('_', '')
-    vis_len = len(clean.strip())
+def calculate_emsp_padding(vis_len: int) -> str:
+    """Calculate accurate typography &emsp; padding based on symbol visual width."""
     if vis_len <= 1:
+        return '&emsp;&emsp;&emsp;&emsp;&emsp;'
+    elif vis_len <= 2:
         return '&emsp;&emsp;&emsp;&emsp;'
     elif vis_len <= 3:
         return '&emsp;&emsp;&emsp;'
     elif vis_len <= 5:
         return '&emsp;&emsp;'
-    else:
-        return '&emsp;'
+    return '&emsp;'
 
 
 def format_symbol_cell_runs(cell: Any) -> str:
     """Format Section 3.2 docx symbol cells into exact KaTeX math variables."""
-    grouped = []
+    grouped: list[tuple[str, str]] = []
     for p in cell.paragraphs:
         for r in p.runs:
             t = r.text
             if not t:
                 continue
-            xml = r._r.xml
-            is_sub = "subscript" in xml or (r.font.subscript is True)
-            is_sup = "superscript" in xml or (r.font.superscript is True)
+            is_sub = "subscript" in r._r.xml or (r.font.subscript is True)
+            is_sup = "superscript" in r._r.xml or (r.font.superscript is True)
             mode = "sub" if is_sub else ("sup" if is_sup else "norm")
             if grouped and grouped[-1][0] == mode:
                 grouped[-1] = (mode, grouped[-1][1] + t)
             else:
                 grouped.append((mode, t))
 
-    parts = []
+    parts: list[str] = []
     for mode, text in grouped:
         t_mapped = text
         for g_char, g_latex in GREEK_MAP.items():
-            if g_char in t_mapped:
-                t_mapped = t_mapped.replace(g_char, g_latex)
+            t_mapped = t_mapped.replace(g_char, g_latex)
+        clean_t = text.strip()
         if mode == "sub":
-            clean_t = text.strip()
-            if len(clean_t) > 1 or "," in clean_t:
-                parts.append(f"_{{{clean_t}}}")
-            else:
-                parts.append(f"_{clean_t}")
+            parts.append(f"_{{{clean_t}}}")
         elif mode == "sup":
-            clean_t = text.strip()
-            if len(clean_t) > 1:
-                parts.append(f"^{{{clean_t}}}")
-            else:
-                parts.append(f"^{clean_t}")
+            parts.append(f"^{{{clean_t}}}")
         else:
             parts.append(t_mapped)
-    raw_sym = "".join(parts).strip()
-    return f"${raw_sym}$"
+    return f"${''.join(parts).strip()}$"
 
 
 def render_table_markdown(table: Any, rid_to_katex: dict[str, str] | None = None) -> tuple[str, list[str], list[list[str]]]:
     """Render a docx Table object as a GitHub Flavored Markdown table with smart column alignment and footnote extraction."""
-    grid = []
-    footnotes = []
+    grid: list[list[str]] = []
+    footnotes: list[str] = []
 
     for row in table.rows:
-        row_rendered = []
+        row_rendered: list[str] = []
         for cell in row.cells:
-            cell_p_rendered = []
+            cell_p_rendered: list[str] = []
             for p in cell.paragraphs:
                 p_r = render_paragraph_with_runs(p, rid_to_katex=rid_to_katex)
                 if p_r:
@@ -314,8 +182,7 @@ def render_table_markdown(table: Any, rid_to_katex: dict[str, str] | None = None
                     cell_p_rendered.append(p_r)
             row_rendered.append("<br>".join(cell_p_rendered))
 
-        # Deduplicate horizontal spans
-        clean_row = []
+        clean_row: list[str] = []
         for val in row_rendered:
             if not clean_row or val != clean_row[-1]:
                 clean_row.append(val)
@@ -323,522 +190,366 @@ def render_table_markdown(table: Any, rid_to_katex: dict[str, str] | None = None
         if not clean_row or not any(clean_row):
             continue
 
-        # Extract Footnotes (ADR 0030)
         first_cell = clean_row[0].strip()
         if re.match(r"^(?:<br>)*\s*(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)", first_cell, re.IGNORECASE):
             fn_text = "<br>".join([c for c in clean_row if c.strip()])
             fn_clean = re.sub(r"^(?:<br>)*\s*(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*", "", fn_text, flags=re.IGNORECASE).strip()
-            fn_prefix = "**CHÚ THÍCH:**"
-            m_fn_num = re.match(r"^(?:<br>)*\s*(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)", fn_text, re.IGNORECASE)
-            if m_fn_num and m_fn_num.group(1):
-                fn_prefix = f"**CHÚ THÍCH {m_fn_num.group(1)}:**"
-            footnotes.append(f"{fn_prefix} {fn_clean}")
+            footnotes.append(f"**CHÚ THÍCH:** {fn_clean}")
             continue
 
         grid.append(clean_row)
 
     if not grid:
-        return "", footnotes, []
+        return ("", footnotes, [])
 
     max_cols = max(len(r) for r in grid)
-    norm_grid = [r + [""] * (max_cols - len(r)) for r in grid]
+    normalized_grid: list[list[str]] = [r + [""] * (max_cols - len(r)) for r in grid]
 
-    # Calculate column alignments (Text -> :---, Numbers/Codes -> :---:)
-    alignments = []
-    for col_idx in range(max_cols):
-        vals = [r[col_idx].strip() for r in norm_grid[1:] if r[col_idx].strip()]
-        if not vals:
-            alignments.append(":---")
-            continue
-        num_count = sum(1 for v in vals if re.match(r"^[-–—+]?\s*\$?\s*[0-9]+(?:[\.,][0-9]+)?\s*\$?$", v))
-        if num_count / len(vals) >= 0.5:
-            alignments.append(":---:")
-        else:
-            alignments.append(":---")
+    alignments: list[str] = []
+    for c_idx in range(max_cols):
+        vals = [r[c_idx] for r in normalized_grid[1:] if r[c_idx].strip()]
+        is_num = all(re.match(r"^[0-9\.,\-\+\s%±]+$", v.replace("<br>", " ")) for v in vals) if vals else False
+        alignments.append(":---:" if is_num else ":---")
 
-    lines = []
-    lines.append("| " + " | ".join(norm_grid[0]) + " |")
-    lines.append("| " + " | ".join(alignments) + " |")
-    for r in norm_grid[1:]:
+    lines: list[str] = ["| " + " | ".join(normalized_grid[0]) + " |", "| " + " | ".join(alignments) + " |"]
+    for r in normalized_grid[1:]:
         lines.append("| " + " | ".join(r) + " |")
 
-    md_table = "\n".join(lines) + "\n\n"
-    return md_table, footnotes, norm_grid
+    return ("\n".join(lines) + "\n\n", footnotes, normalized_grid)
 
 
+@dataclass
+class StandardConversionContext:
+    """State machine container for technical standard conversions."""
+    bundle_dir: Path
+    output_filename: str | None
+    rid_to_katex: dict[str, str] = field(default_factory=dict)
+    body_md_parts: list[str] = field(default_factory=list)
+    annex_buffers: dict[str, dict[str, Any]] = field(default_factory=dict)
+    current_target: str = "main"
+    last_table_caption: str = ""
+    last_table_caption_num: str = ""
+    in_trong_do: bool = False
+    tables_extracted: list[dict[str, Any]] = field(default_factory=list)
 
-def process_technical_standard_strategy(
-    docx_path: Path,
-    bundle_dir: Path,
-    registry_file: Path,
-    doc_meta: dict[str, Any],
-    output_filename: str | None = None,
-) -> dict[str, Any]:
-    """Native Technical Standard (TCVN / QCVN) Strategy Converter with Integrated Deep Seam."""
-    import docx
-    import docx.oxml
-    import docx.oxml.text.paragraph
-    import docx.oxml.table
-
-    doc = docx.Document(str(docx_path))
-    templates_dir = bundle_dir / "templates"
-    templates_dir.mkdir(parents=True, exist_ok=True)
-    tables_dir = bundle_dir / "tables"
-    csv_dir = tables_dir / "csv"
-    json_dir = tables_dir / "json"
-    csv_dir.mkdir(parents=True, exist_ok=True)
-    json_dir.mkdir(parents=True, exist_ok=True)
-    figures_dir = bundle_dir / "figures"
-    figures_dir.mkdir(parents=True, exist_ok=True)
-
-    from ccba_legal.figure_extractor import extract_docx_figures
-    try:
-        extract_docx_figures(docx_path, figures_dir)
-    except Exception:
-        pass
-
-    spoke_root = bundle_dir.parents[2] if len(bundle_dir.parents) >= 3 else bundle_dir.parent
-    cache_dir = spoke_root / ".md" / "cache" / "formula_vision"
-    skip_vision = os.environ.get("AI_SKIP_VISION", "").strip() == "1"
-
-    rid_to_katex: dict = harvest_docx_formula_images(
-        docx_path, cache_dir=cache_dir, skip_vision=skip_vision
-    )
-
-    blocks = []
-    for child in doc.element.body.iterchildren():
-        if isinstance(child, docx.oxml.text.paragraph.CT_P):
-            blocks.append(("p", docx.text.paragraph.Paragraph(child, doc)))
-        elif isinstance(child, docx.oxml.table.CT_Tbl):
-            blocks.append(("tbl", docx.table.Table(child, doc)))
-
-    body_md_parts: list[str] = []
-    annex_buffers: dict[str, dict[str, Any]] = {}
-    current_target = "main"
-
-    def emit(chunk: str) -> None:
-        if current_target == "main":
-            body_md_parts.append(chunk)
+    def emit(self, chunk: str) -> None:
+        """Emit a markdown chunk to either the main body buffer or the active modular annex buffer."""
+        if self.current_target == "main":
+            self.body_md_parts.append(chunk)
         else:
-            annex_buffers[current_target]["parts"].append(chunk)
+            self.annex_buffers[self.current_target]["parts"].append(chunk)
 
-    tables_extracted: list[dict[str, Any]] = []
 
-    # ADR 0030: Find exact start of real normative body
-    start_idx = 0
+def _extract_document_blocks(doc: Any) -> list[tuple[str, Any]]:
+    """Traverse DOCX body elements in exact XML document order."""
+    from docx.table import Table
+    from docx.text.paragraph import Paragraph
+
+    blocks: list[tuple[str, Any]] = []
+    for child in doc.element.body:
+        if child.tag.endswith("p"):
+            blocks.append(("p", Paragraph(child, doc)))
+        elif child.tag.endswith("tbl"):
+            blocks.append(("tbl", Table(child, doc)))
+    return blocks
+
+
+def _find_normative_start_index(blocks: list[tuple[str, Any]]) -> int:
+    """Locate the exact start index of the normative body."""
     for idx, (b_type, obj) in enumerate(blocks):
         if b_type == "p":
             txt = obj.text.strip().upper()
-            if "1  PHẠM VI ÁP DỤNG" in txt or "1. PHẠM VI ÁP DỤNG" in txt or "1 PHẠM VI ÁP DỤNG" in txt or "1  QUY ĐỊNH CHUNG" in txt:
-                start_idx = idx
-                break
+            if any(k in txt for k in ["1  PHẠM VI ÁP DỤNG", "1. PHẠM VI ÁP DỤNG", "1 PHẠM VI ÁP DỤNG", "1  QUY ĐỊNH CHUNG"]):
+                return idx
+    return 0
 
-    i = start_idx
-    last_table_caption = ""
-    last_table_caption_num = ""
-    in_trong_do = False
 
-    while i < len(blocks):
-        b_type, obj = blocks[i]
-        if b_type == "p":
-            text = obj.text.strip()
-            if not text:
-                xml_str = obj._element.xml
-                for rid, katex in rid_to_katex.items():
-                    if rid in xml_str and not katex.startswith("<!-- DIAGRAM"):
-                        emit(f"\n{katex}\n")
-                        break
+def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[str, Any]], i: int) -> int:
+    """Parse a single paragraph block and emit corresponding markdown structure."""
+    obj = blocks[i][1]
+    text = obj.text.strip()
+    if not text:
+        return i + 1
+
+    # 1. Table Caption
+    m_tbl = re.match(r"^(?:Bảng|BẢNG)\s+([0-9A-Za-z\.\-]+)\s*[-–—:]\s*(.+)$", text)
+    if m_tbl:
+        ctx.last_table_caption_num = m_tbl.group(1)
+        cap_rendered = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
+        clean_cap = re.sub(r"^(?:Bảng|BẢNG)\s+[0-9A-Za-z\.\-]+\s*[-–—:]\s*", "", cap_rendered).strip()
+        ctx.last_table_caption = f"Bảng {ctx.last_table_caption_num} - {clean_cap}"
+        ctx.in_trong_do = False
+        return i + 1
+
+    # 2. Formula Heading
+    m_f_head = re.match(r"^\(([0-9A-Za-z\.]+)\)$", text)
+    if m_f_head:
+        f_tag = m_f_head.group(1)
+        f_slug = f_tag.lower().replace(".", "_")
+        fid, f_latex = FORMULAS_MAP.get(f_tag, (f"F_TCVN2737_FORMULA_{f_slug.upper()}", f"\text{{Formula }} ({f_tag})"))
+        ctx.emit(f'\n<a id="formula-{f_slug}"></a>\n$${f_latex} \tag{{{f_tag}}}$$\n<!-- formula_id: "{fid}" -->\n\n')
+        ctx.in_trong_do = False
+        return i + 1
+
+    # 3. Figure Card
+    m_fig = re.match(r"^(?:Hình|HÌNH)\s+([0-9A-Za-z\.\-]+)\s*[-–—:]\s*(.+)$", text)
+    if m_fig:
+        fig_num = m_fig.group(1)
+        fig_title = m_fig.group(2).strip()
+        fig_slug = fig_num.lower().replace(".", "_")
+        anchor = f"hinh-{fig_slug}"
+        fig_entry = {
+            "tag": fig_num, "title": fig_title, "anchor": anchor,
+            "image_relpath": f"figures/images/hinh_{fig_slug}.png",
+            "geometry_rules": AERODYNAMIC_FIGURES_GEOMETRY.get(fig_num, {})
+        }
+        ctx.emit(render_markdown_figure_card(fig_entry))
+        ctx.in_trong_do = False
+        return i + 1
+
+    # 4. Annex Heading
+    m_annex = re.match(r"^(?:Phụ\s+lục|PHỤ\s+LỤC)\s+([A-Z])(?:\s*\(([^)]+)\))?(?:\s*[-–—:]\s*(.+))?$", text, re.IGNORECASE)
+    if m_annex:
+        a_letter = m_annex.group(1).upper()
+        a_type = (m_annex.group(2) or "").strip()
+        a_title = (m_annex.group(3) or "").strip()
+        if not a_type and i + 1 < len(blocks) and blocks[i + 1][0] == "p":
+            ntxt = blocks[i + 1][1].text.strip()
+            if ntxt.startswith("(") and ntxt.endswith(")"):
+                a_type = ntxt.strip("() ").capitalize()
                 i += 1
-                continue
-
-            if text.lower() in ["trong đó:", "trong đó", "trong do:", "trong do", "với:", "với", "voi:", "voi"]:
-                emit(f"{text}\n\n")
-                in_trong_do = True
+        if not a_title and i + 1 < len(blocks) and blocks[i + 1][0] == "p":
+            ntxt2 = blocks[i + 1][1].text.strip()
+            if not re.match(r"^[0-9A-Z]+\.", ntxt2) and not ntxt2.startswith(("Bảng", "Hình", "Phụ lục", "PHỤ LỤC")):
+                a_title = ntxt2
                 i += 1
-                continue
 
-            if "Lời nói đầu" in text or "MỤC LỤC" in text:
-                i += 1
-                continue
+        clean_title_slug = slugify_vietnamese(a_title)
+        slug = f"phu_luc_{a_letter.lower()}_{clean_title_slug}" if clean_title_slug else f"phu_luc_{a_letter.lower()}"
+        ctx.current_target = a_letter
+        anchor = f"phu-luc-{a_letter.lower()}"
+        hdr = f"## PHỤ LỤC {a_letter}" + (f"  ({a_type})" if a_type else "") + (f"  {a_title.upper()}" if a_title else "")
+        ctx.annex_buffers[a_letter] = {
+            "slug": slug, "title": a_title, "type": a_type or "Quy định",
+            "anchor": anchor, "parts": [f'\n<a id="{anchor}"></a>\n{hdr}\n\n']
+        }
+        ctx.in_trong_do = False
+        return i + 1
 
-            # Table Caption check
-            m_tbl = re.match(r"^(?:Bảng|Table)\s+([0-9A-Za-z\.\-]+)(?:\s*[-–—:]\s*(.+))?$", text, re.IGNORECASE)
-            if m_tbl:
-                last_table_caption = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
-                last_table_caption_num = m_tbl.group(1)
-                in_trong_do = False
-                i += 1
-                continue
-            
-            # Figure Captions (ADR 0030 / Tri-Layer Multimodal Figures)
-            m_fig = re.match(r"^(?:Hình|HÌNH|Figure)\s+([0-9A-Za-z\.\-]+)(?:\s*[-–—:]\s*(.+))?$", text, re.IGNORECASE)
-            if m_fig:
-                fig_num = m_fig.group(1).strip()
-                fig_title = (m_fig.group(2) or "").strip()
-                fig_slug = fig_num.lower().replace('.', '_').replace('-', '_').strip()
-                anchor = f"hinh-{fig_slug}"
-                img_relpath = f"figures/images/hinh_{fig_slug}.png"
-                from ccba_legal.figure_extractor import AERODYNAMIC_FIGURES_GEOMETRY, render_markdown_figure_card
-                fig_entry = {
-                    "tag": fig_num,
-                    "title": fig_title,
-                    "anchor": anchor,
-                    "image_relpath": img_relpath,
-                    "geometry_rules": AERODYNAMIC_FIGURES_GEOMETRY.get(fig_num, {})
-                }
-                emit(render_markdown_figure_card(fig_entry))
-                in_trong_do = False
-                i += 1
-                continue
+    # 5. Section Heading (1 to 99)
+    m_sec = re.match(r"^([1-9][0-9]?)\s+([^\n]+)", text)
+    if m_sec and not m_sec.group(2).startswith(("-", "–", "—", ":")) and len(m_sec.group(2)) < 120 and not m_sec.group(2).lower().startswith(("đối với", "khi", "lấy", "tính", "theo", "như")):
+        sec_num = m_sec.group(1)
+        sec_rendered = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
+        sec_title = re.sub(rf"^{re.escape(sec_num)}\s+", "", sec_rendered).strip()
+        ctx.emit(f'\n<a id="muc-{sec_num}"></a>\n## {sec_num}  {sec_title.upper()}\n\n')
+        ctx.in_trong_do = False
+        return i + 1
 
-            # Annex Headings (Generalized Pattern 3 / Modular Annex Split - ADR 0021 & ADR 0030)
-            m_annex = re.match(r"^(?:Phụ\s+lục|PHỤ\s+LỤC)\s+([A-Z])(?:\s*\(([^)]+)\))?(?:\s*[-–—:]\s*(.+))?$", text, re.IGNORECASE)
-            if m_annex:
-                a_letter = m_annex.group(1).upper()
-                a_type = (m_annex.group(2) or "").strip()
-                a_title = (m_annex.group(3) or "").strip()
-                if not a_type and i + 1 < len(blocks) and blocks[i + 1][0] == "p":
-                    ntxt = blocks[i + 1][1].text.strip()
-                    if ntxt.startswith("(") and ntxt.endswith(")"):
-                        a_type = ntxt.strip("() ").capitalize()
-                        i += 1
-                if not a_title and i + 1 < len(blocks) and blocks[i + 1][0] == "p":
-                    ntxt2 = blocks[i + 1][1].text.strip()
-                    if not re.match(r"^[0-9A-Z]+\.", ntxt2) and not ntxt2.startswith(("Bảng", "Hình", "Phụ lục", "PHỤ LỤC")):
-                        a_title = ntxt2
-                        i += 1
+    # 6. Clause Heading (e.g. 1.1, 10.2.1, F.1, G.2.1)
+    m_clause = re.match(r"^([A-Z]|[1-9][0-9]?)\.([0-9]+(?:\.[0-9]+)*)\s+([^\n]+)", text)
+    if m_clause:
+        cl_num = f"{m_clause.group(1)}.{m_clause.group(2)}"
+        cl_rendered = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
+        cl_title = re.sub(rf"^{re.escape(cl_num)}\s+", "", cl_rendered).strip()
+        anchor = f"muc-{cl_num.lower().replace('.', '-')}"
+        ctx.emit(f'\n<a id="{anchor}"></a>\n### {cl_num}  {cl_title}\n\n')
+        ctx.in_trong_do = False
+        return i + 1
 
-                clean_slug_title = slugify_vietnamese(a_title)
-                slug = f"phu_luc_{a_letter.lower()}_{clean_slug_title}" if clean_slug_title else f"phu_luc_{a_letter.lower()}"
+    # 7. Technical Notes
+    if re.match(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)", text, re.IGNORECASE):
+        note_clean = re.sub(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*", "", text, flags=re.IGNORECASE).strip()
+        m_num = re.search(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)", text, re.IGNORECASE)
+        prefix = f"**CHÚ THÍCH {m_num.group(1)}:**" if m_num and m_num.group(1) else "**CHÚ THÍCH:**"
+        rendered_note = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
+        rendered_note_clean = re.sub(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*", "", rendered_note, flags=re.IGNORECASE).strip()
+        ctx.emit(f"{prefix} {rendered_note_clean}\n\n")
+        ctx.in_trong_do = False
+        return i + 1
 
-                current_target = a_letter
-                anchor = f"phu-luc-{a_letter.lower()}"
-                hdr = f"## PHỤ LỤC {a_letter}"
-                if a_type:
-                    hdr += f"  ({a_type})"
-                if a_title:
-                    hdr += f"  {a_title.upper()}"
+    # 8. Variable Glossary / Prose
+    rendered_p = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
+    if rendered_p.startswith(("trong đó:", "Trong đó:", "trong đó", "Trong đó")):
+        ctx.in_trong_do = True
+        ctx.emit(f"{rendered_p}\n\n")
+    elif ctx.in_trong_do:
+        if rendered_p.startswith(("- ", "– ", "— ", "+ ", "• ")):
+            ctx.emit(f"&nbsp;&nbsp;&nbsp;&nbsp;{rendered_p}\n\n")
+        elif re.match(r"^[a-zA-Z0-9\$]", rendered_p) and len(rendered_p) > 2:
+            ctx.emit(f"&nbsp;&nbsp;&nbsp;&nbsp;\- {rendered_p}\n\n")
+        else:
+            ctx.in_trong_do = False
+            ctx.emit(f"{rendered_p}\n\n")
+    else:
+        ctx.emit(f"{rendered_p}\n\n")
 
-                annex_buffers[a_letter] = {
-                    "slug": slug,
-                    "title": a_title,
-                    "type": a_type or "Quy định",
-                    "anchor": anchor,
-                    "parts": [f'\n<a id="{anchor}"></a>\n{hdr}\n\n']
-                }
-                in_trong_do = False
-                i += 1
-                continue
+    return i + 1
 
-            # Section Headings (Universal 1 to 99)
-            m_sec = re.match(r"^([1-9][0-9]?)\s+([^\n]+)", text)
-            if m_sec and not m_sec.group(2).startswith(("-", "–", "—", ":")) and len(m_sec.group(2)) < 120 and not m_sec.group(2).lower().startswith(("đối với", "khi", "lấy", "tính", "theo", "như")):
-                sec_num = m_sec.group(1)
-                sec_rendered = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
-                sec_title = re.sub(rf"^{re.escape(sec_num)}\s+", "", sec_rendered).strip()
-                anchor = f"muc-{sec_num}"
-                emit(f'\n<a id="{anchor}"></a>\n## {sec_num}  {sec_title.upper()}\n\n')
-                in_trong_do = False
-                i += 1
-                continue
 
-            # Technical Notes (Generalized Pattern 4)
-            m_note = re.match(r"^(?:CHÚ THÍCH|Chú thích)\s*([0-9]+)?\s*[:–-]\s*(.+)$", text)
-            if m_note:
-                n_num = m_note.group(1)
-                prefix = f"**CHÚ THÍCH {n_num}:**" if n_num else "**CHÚ THÍCH:**"
-                rend_note = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
-                rend_note = re.sub(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*", "", rend_note, flags=re.IGNORECASE).strip()
-                emit(f"{prefix} {rend_note}\n\n")
-                in_trong_do = False
-                i += 1
-                continue
+def _process_table_block(ctx: StandardConversionContext, tbl: Any, i: int) -> None:
+    """Parse a docx table block, checking for formula frames and exporting tables to CSV/JSON."""
+    # 1. Formula Frame Check
+    all_row_formulas: list[tuple[str, Any]] = []
+    for r in tbl.rows:
+        r_texts = [c.text.strip() for c in r.cells]
+        f_tag = next((m.group(1) for t in r_texts if (m := re.match(r"^\(([0-9A-Za-z\.]+)\)$", t))), None)
+        if f_tag:
+            all_row_formulas.append((f_tag, r))
 
-            # Technical Figures (ADR 0030 / Tri-Layer Multimodal Figures)
-            m_fig = re.match(r"^Hình\s+([A-H]\.[0-9]+[a-z]?|[0-9]+)\s*[-–—]\s*(.+)$", text)
-            if m_fig:
-                fig_tag = m_fig.group(1).strip()
-                fig_title = m_fig.group(2).strip()
-                slug = fig_tag.lower().replace(".", "_")
-                anchor = f"hinh-{slug}"
-                img_relpath = f"figures/images/hinh_{slug}.png"
-                from ccba_legal.figure_extractor import AERODYNAMIC_FIGURES_GEOMETRY, render_markdown_figure_card
-                fig_entry = {
-                    "tag": fig_tag,
-                    "title": fig_title,
-                    "anchor": anchor,
-                    "image_relpath": img_relpath,
-                    "geometry_rules": AERODYNAMIC_FIGURES_GEOMETRY.get(fig_tag, {})
-                }
-                emit(render_markdown_figure_card(fig_entry))
-                in_trong_do = False
-                i += 1
-                continue
-
-            # Definition Headings
-            m_def = re.match(r"^(1\.3\.[0-9]+|3\.[0-9]+)\s+([^\n]+)", text)
-            if m_def:
-                def_num, def_title = m_def.group(1), m_def.group(2)
-                anchor = f"muc-{def_num.replace('.', '-')}"
-                emit(f'\n<a id="{anchor}"></a>\n#### {def_num}  {def_title}\n\n')
-                i += 1
-                continue
-
-            m_def_alone = re.match(r"^(1\.3\.[0-9]+|3\.[0-9]+)$", text)
-            if m_def_alone:
-                def_num = m_def_alone.group(1)
-                anchor = f"muc-{def_num.replace('.', '-')}"
-                if i + 1 < len(blocks) and blocks[i + 1][0] == "p":
-                    next_t = blocks[i + 1][1].text.strip()
-                    emit(f'\n<a id="{anchor}"></a>\n#### {def_num}  {next_t}\n\n')
-                    i += 2
-                    continue
-                else:
-                    emit(f'\n<a id="{anchor}"></a>\n#### {def_num}\n\n')
-                    i += 1
-                    continue
-
-            if re.match(r"^[a-z]\)\s+", text):
-                in_trong_do = False
-
-            # Clauses (Universal Main Body 1.1... to Annexes A.1..., B.2.1...)
-            m_cl = re.match(r"^([A-Z]|[1-9][0-9]?)\.([0-9]+(?:\.[0-9]+)*)\s+([^\n]+)", text)
-            if m_cl:
-                cl_num = f"{m_cl.group(1)}.{m_cl.group(2)}"
-                cl_rendered = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
-                cl_title = re.sub(rf"^{re.escape(m_cl.group(1))}\.{re.escape(m_cl.group(2))}\s+", "", cl_rendered).strip()
-                anchor = f"muc-{cl_num.lower().replace('.', '-')}"
-                emit(f'\n<a id="{anchor}"></a>\n### {cl_num}  {cl_title}\n\n')
-                in_trong_do = False
-                i += 1
-                continue
-
-            # Preserved lists (ADR 0029)
-            if text.startswith(("+ ", "+")):
-                emit(f"&nbsp;&nbsp;\\+ {text.lstrip('+ ').strip()}\n")
-                i += 1
-                continue
-            if text.startswith(("- ", "• ", "– ", "— ", "-")):
-                emit(f"\\- {text.lstrip('-•–— ').strip()}\n")
-                i += 1
-                continue
-
-            # Generalized Unnumbered Display Equations Detection (ADR 0030)
-            rendered_p = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
-            prev_t = blocks[i - 1][1].text.strip() if i > 0 and blocks[i - 1][0] == "p" else ""
-            next_t = blocks[i + 1][1].text.strip() if i + 1 < len(blocks) and blocks[i + 1][0] == "p" else ""
-            
-            is_context_eq = (
-                prev_t.endswith("như sau:")
-                or prev_t.endswith("như sau")
-                or next_t.lower().startswith("trong đó:")
-                or next_t.lower().startswith("trong đó")
-            )
-            is_pure_eq_syntax = (
-                "=" in text
-                and (";" in text or re.search(r"=\s*[0-9\.\,]+", text))
-                and not any(w in text.lower() for w in ["đối với", "khi", "xác định theo", "nêu trong", "áp dụng", "quy định"])
-            )
-            if is_context_eq and is_pure_eq_syntax:
-                clean_eq = rendered_p.replace("$", "").replace("...", "\\dots").replace("…", "\\dots")
-                clean_eq = re.sub(r";\s*", r"; \\quad ", clean_eq)
-                emit(f"\n$$\n{clean_eq}\n$$\n\n")
-                in_trong_do = False
-                i += 1
-                continue
-
-            # Run-aware paragraph rendering with smart glossary detection
-            is_glossary = (
-                rendered_p.startswith(("$", "ký hiệu", "các đại lượng", "\\-"))
-                or bool(re.match(r"^\s*[0-9]+(?:[\.,][0-9]+)?\s*[-–—]\s*", rendered_p))
-                or " là " in rendered_p
-                or " tính bằng " in rendered_p
-                or " xác định theo " in rendered_p
-                or " lấy bằng " in rendered_p
-                or " phụ thuộc vào " in rendered_p
-                or rendered_p.endswith(";")
-            )
-            if in_trong_do and is_glossary:
-                emit(f"&nbsp;&nbsp;&nbsp;&nbsp;{rendered_p}\n\n")
+    if all_row_formulas and len(all_row_formulas) == len(tbl.rows):
+        for f_tag, r in all_row_formulas:
+            f_slug = f_tag.lower().replace(".", "_")
+            if f_tag in FORMULAS_MAP:
+                fid, f_latex = FORMULAS_MAP[f_tag]
             else:
-                in_trong_do = False
-                emit(f"{rendered_p}\n\n")
-            i += 1
+                fid = f"F_TCVN2737_FORMULA_{f_slug.upper()}"
+                raw_f = next((render_paragraph_with_runs(c.paragraphs[0], rid_to_katex=ctx.rid_to_katex) if c.paragraphs else c.text.strip() for c in r.cells if c.text.strip() and not re.match(r"^\([0-9A-Za-z\.]+\)$", c.text.strip())), f"\text{{Formula }} ({f_tag})")
+                f_latex = raw_f.strip("$ ")
+            ctx.emit(f'\n<a id="formula-{f_slug}"></a>\n$${f_latex} \tag{{{f_tag}}}$$\n<!-- formula_id: "{fid}" -->\n\n')
+        ctx.in_trong_do = False
+        return
 
-        elif b_type == "tbl":
-            tbl = obj
-            rows_cnt = len(tbl.rows)
-            cols_cnt = len(tbl.columns)
-            cell_texts = [c.text.strip() for r in tbl.rows for c in r.cells]
+    # 2. Normative or Layout Table
+    is_captioned = bool(ctx.last_table_caption)
+    if is_captioned:
+        t_num = ctx.last_table_caption_num
+        t_cap = ctx.last_table_caption
+        ctx.last_table_caption = ""
+        ctx.last_table_caption_num = ""
+        ctx.in_trong_do = False
+        t_slug = f"bang_{int(t_num):02d}" if t_num.isdigit() else f"bang_{t_num.lower().replace('.', '_').replace('-', '_')}"
+        tbl_anchor = f"bang-{t_slug.replace('_', '-')}"
+        ctx.emit(f'\n<a id="{tbl_anchor}"></a>\n### {t_cap}\n\n')
+    else:
+        t_num, t_cap = "", ""
+        t_slug = f"layout_tbl_{i:03d}"
 
-            # 1. Formula Frame Check (Universal Single & Multi-Row ADR 0030 / ADR 0031)
-            all_row_formulas = []
-            for r in tbl.rows:
-                r_texts = [c.text.strip() for c in r.cells]
-                f_tag = None
-                for t in r_texts:
-                    m_f = re.match(r"^\(([0-9A-Za-z\.]+)\)$", t)
-                    if m_f:
-                        f_tag = m_f.group(1)
-                        break
-                if f_tag:
-                    all_row_formulas.append((f_tag, r))
+    md_tbl_str, tbl_footnotes, raw_grid = render_table_markdown(tbl, rid_to_katex=ctx.rid_to_katex)
+    ctx.emit(md_tbl_str)
+    for fn in tbl_footnotes:
+        ctx.emit(f"{fn}\n\n")
 
-            if all_row_formulas and len(all_row_formulas) == len(tbl.rows):
-                for f_tag, r in all_row_formulas:
-                    f_slug = f_tag.lower().replace(".", "_")
-                    if f_tag in FORMULAS_MAP:
-                        fid, f_latex = FORMULAS_MAP[f_tag]
-                    else:
-                        fid = f"F_TCVN2737_FORMULA_{f_slug.upper()}"
-                        raw_f = ""
-                        for c in r.cells:
-                            ct = c.text.strip()
-                            if ct and not re.match(r"^\([0-9A-Za-z\.]+\)$", ct):
-                                raw_f = render_paragraph_with_runs(c.paragraphs[0], rid_to_katex=rid_to_katex) if c.paragraphs else ct
-                                break
-                            elif not ct and c.paragraphs:
-                                for p in c.paragraphs:
-                                    for run in p.runs:
-                                        m_rid = re.search(r'r:(?:id|embed)="([^"]+)"', run._r.xml)
-                                        if m_rid and rid_to_katex and m_rid.group(1) in rid_to_katex:
-                                            raw_f = rid_to_katex[m_rid.group(1)].strip("$ ")
-                                            break
-                                    if raw_f:
-                                        break
-                        f_latex = raw_f.replace("$", "").replace("·", r" \cdot ")
-                    emit(f'\n<a id="formula-{f_slug}"></a>\n\n$$\n{f_latex} \\tag{{{f_tag}}}\n$$\n\n<!-- formula_id: "{fid}" -->\n\n')
+    # 3. Export CSV / JSON for captioned tables
+    if is_captioned and raw_grid:
+        tables_dir = ctx.bundle_dir / "tables"
+        csv_dir = tables_dir / "csv"
+        json_dir = tables_dir / "json"
+        csv_dir.mkdir(parents=True, exist_ok=True)
+        json_dir.mkdir(parents=True, exist_ok=True)
 
-                if "24" in [ft for ft, _ in all_row_formulas]:
-                    emit('\n$$\n\\text{với: } \\eta_h = 4,6 \\frac{n_1 h}{V(z_s)_{3\\,600\\text{s},50}}; \\quad \\eta_b = 4,6 \\frac{n_1 b}{V(z_s)_{3\\,600\\text{s},50}}; \\quad \\eta_d = 15,4 \\frac{n_1 d}{V(z_s)_{3\\,600\\text{s},50}};\n$$\n\n')
-                in_trong_do = False
-                i += 1
-                continue
+        with open(csv_dir / f"{t_slug}.csv", "w", encoding="utf-8-sig", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerows(raw_grid)
 
-            # 2. Symbol glossary table check (Mục 3.2)
-            prev_context = "".join(body_md_parts[-3:]).lower()
-            if "ký hiệu chính sau" in prev_context or "3.2  ký hiệu" in prev_context:
-                for row in tbl.rows:
-                    if len(row.cells) >= 2:
-                        sym = format_symbol_cell_runs(row.cells[0])
-                        desc = render_paragraph_with_runs(row.cells[1].paragraphs[0], rid_to_katex=rid_to_katex) if row.cells[1].paragraphs else row.cells[1].text.strip()
-                        desc = desc.replace("qk,qper = η · qk,t", "$q_{k,qper} = \\eta \\cdot q_{k,t}$")
-                        desc = desc.replace("($q_{k,qper}$ = η · $q_{k,t}$)", "($q_{k,qper} = \\eta \\cdot q_{k,t}$)")
-                        pad = calculate_emsp_padding(sym)
-                        emit(f"&nbsp;&nbsp;&nbsp;&nbsp;**{sym}**{pad}{desc}\n\n")
-                i += 1
-                continue
+        headers = [re.sub(r"<[^>]+>", "", h).strip() for h in raw_grid[0]]
+        json_rows: list[dict[str, Any]] = []
+        for r_idx, row in enumerate(raw_grid[1:], 1):
+            row_dict: dict[str, Any] = {"_row_id": r_idx}
+            for c_idx, val in enumerate(row):
+                key = headers[c_idx] if c_idx < len(headers) and headers[c_idx] else f"col_{c_idx+1}"
+                row_dict[key] = re.sub(r"<[^>]+>", "", val).strip()
+            json_rows.append(row_dict)
 
-            # 3. Normative Table with Smart Alignment & Footnote Extraction (ADR 0030)
-            is_captioned_table = bool(last_table_caption)
-            if is_captioned_table:
-                t_num = last_table_caption_num
-                t_cap = last_table_caption
-                last_table_caption = ""
-                last_table_caption_num = ""
-                in_trong_do = False
-                if t_num.isdigit():
-                    t_slug = f"bang_{int(t_num):02d}"
-                else:
-                    t_slug = f"bang_{t_num.lower().replace('.', '_').replace('-', '_')}"
-                anchor = f"bang-{t_slug.replace('_', '-')}"
-                emit(f'\n<a id="{anchor}"></a>\n### {t_cap}\n\n')
-            else:
-                # Uncaptioned layout table / Case matrix (e.g. Clause 10.2.4b cases or figure legends)
-                t_num = ""
-                t_cap = ""
-                t_slug = f"layout_tbl_{i:03d}"
+        with open(json_dir / f"{t_slug}.json", "w", encoding="utf-8") as f:
+            json.dump({"table_id": t_slug, "table_number": t_num, "table_title": t_cap, "rows": json_rows}, f, ensure_ascii=False, indent=2)
 
-            md_tbl_str, tbl_footnotes, raw_grid = render_table_markdown(tbl)
-            if is_captioned_table and t_slug == "bang_10":
-                # Ensure high-precision headers for Bảng 10
-                raw_grid[0] = ["Dạng địa hình", "$c_r$", r"$\ell$, m", r"$\bar{\epsilon}$", r"$\bar{b}$", r"$\bar{\alpha}$"]
-                alignments = [":---", ":---:", ":---:", ":---:", ":---:", ":---:"]
-                lines = []
-                lines.append("| " + " | ".join(raw_grid[0]) + " |")
-                lines.append("| " + " | ".join(alignments) + " |")
-                for r in raw_grid[1:]:
-                    lines.append("| " + " | ".join(r) + " |")
-                md_tbl_str = "\n".join(lines) + "\n\n"
+        ctx.tables_extracted.append({"table_id": t_slug, "table_number": t_num, "title": t_cap, "csv_file": f"tables/csv/{t_slug}.csv", "json_file": f"tables/json/{t_slug}.json"})
 
-            emit(md_tbl_str)
 
-            if tbl_footnotes:
-                emit("\n".join(tbl_footnotes) + "\n\n")
-
-            if is_captioned_table and raw_grid:
-                csv_path = csv_dir / f"{t_slug}.csv"
-                with open(csv_path, "w", encoding="utf-8", newline="") as f:
-                    writer = csv.writer(f)
-                    writer.writerows(raw_grid)
-
-                json_path = json_dir / f"{t_slug}.json"
-                headers = raw_grid[0]
-                rows_data = [dict(zip(headers, r)) for r in raw_grid[1:]]
-                json_path.write_text(json.dumps(rows_data, ensure_ascii=False, indent=2), encoding="utf-8")
-
-                tables_extracted.append({
-                    "table_id": t_slug,
-                    "title": t_cap,
-                    "number": t_num,
-                    "csv_path": f"tables/csv/{csv_path.name}",
-                    "json_path": f"tables/json/{json_path.name}",
-                    "rows_count": len(raw_grid),
-                    "status": "active"
-                })
-            i += 1
-
-    (tables_dir / "tables_catalog.json").write_text(json.dumps(tables_extracted, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    # Modular Annexes Export (ADR 0021 & ADR 0029 & ADR 0030)
-    if annex_buffers:
-        annexes_dir = bundle_dir / "annexes"
+def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> Path:
+    """Export modular annex files, 2D navigation matrix, tables catalog, and AST index."""
+    # 1. Export Annexes
+    if ctx.annex_buffers:
+        annexes_dir = ctx.bundle_dir / "annexes"
         annexes_dir.mkdir(parents=True, exist_ok=True)
-        nav_rows = []
-        for a_letter, a_info in annex_buffers.items():
-            annex_slug = a_info["slug"]
-            annex_title = a_info["title"]
-            annex_type = a_info["type"]
-            annex_anchor = a_info["anchor"]
-            annex_md = "".join(a_info["parts"])
-            annex_md = annex_md.replace("figures/images/", "../figures/images/").replace("tables/", "../tables/")
+        nav_rows: list[str] = []
+        for a_letter, a_info in ctx.annex_buffers.items():
+            annex_slug, annex_title, annex_type, annex_anchor = a_info["slug"], a_info["title"], a_info["type"], a_info["anchor"]
+            annex_md = "".join(a_info["parts"]).replace("figures/images/", "../figures/images/").replace("tables/", "../tables/")
             (annexes_dir / f"{annex_slug}.md").write_text(annex_md, encoding="utf-8")
             nav_rows.append(f"| **Phụ lục {a_letter}** | {annex_title} | {annex_type} | [📑 **Xem Phụ lục**](annexes/{annex_slug}.md#{annex_anchor}) |")
 
         nav_matrix = [
             "\n---\n",
-            f"## 📑 DANH MỤC PHỤ LỤC KỸ THUẬT CHUYÊN ĐỀ (MODULAR ANNEXES)\n\nToàn bộ {len(annex_buffers)} Phụ lục kỹ thuật chuyên đề đã được module hóa thành các tệp độc lập nhằm tối ưu hóa tra cứu và thẩm tra thiết kế (ADR 0021 & ADR 0030):\n",
+            f"## 📑 DANH MỤC PHỤ LỤC KỸ THUẬT CHUYÊN ĐỀ (MODULAR ANNEXES)\n\nToàn bộ {len(ctx.annex_buffers)} Phụ lục kỹ thuật chuyên đề đã được module hóa thành các tệp độc lập nhằm tối ưu hóa tra cứu và thẩm tra thiết kế (ADR 0021 & ADR 0030):\n",
             "| Ký hiệu | Tên Phụ Lục | Tính chất | Liên kết Tập tin |",
             "| :---: | :--- | :---: | :---: |"
         ]
         nav_matrix.extend(nav_rows)
-        nav_matrix.append(f"\n---\n\n## 📊 HỆ THỐNG TRA CỨU BẢNG & SƠ ĐỒ KỸ THUẬT\n\n- **Tra cứu {len(tables_extracted)} Bảng Số Liệu:** Tra cứu chi tiết dạng CSV/JSON tại [Thư mục Bảng Số Liệu](tables/README.md).\n- **Tra cứu Sơ Đồ Hình Vẽ:** Tra cứu ảnh nét cao và đặc tả phân vùng tại [Danh Mục Sơ Đồ Khí Động](figures/figures_catalog.yaml).\n\n")
-        body_md_parts.append("\n".join(nav_matrix))
+        nav_matrix.append(f"\n---\n\n## 📊 HỆ THỐNG TRA CỨU BẢNG & SƠ ĐỒ KỸ THUẬT\n\n- **Tra cứu {len(ctx.tables_extracted)} Bảng Số Liệu:** Tra cứu chi tiết dạng CSV/JSON tại [Thư mục Bảng Số Liệu](tables/README.md).\n- **Tra cứu Sơ Đồ Hình Vẽ:** Tra cứu ảnh nét cao và đặc tả phân vùng tại [Danh Mục Sơ Đồ Khí Động](figures/figures_catalog.yaml).\n\n")
+        ctx.body_md_parts.append("\n".join(nav_matrix))
 
-    out_name = output_filename or f"{bundle_dir.name}.md"
-    target_md_path = bundle_dir / out_name
-    final_md = "".join(body_md_parts)
-    target_md_path.write_text(final_md, encoding="utf-8")
+    # 2. Write Primary Markdown
+    out_name = ctx.output_filename or f"{ctx.bundle_dir.name}.md"
+    target_md_path = ctx.bundle_dir / out_name
+    target_md_path.write_text("".join(ctx.body_md_parts), encoding="utf-8")
 
-    # Generate AST & QA Benchmark
-    doc_title = doc_meta.get("title", f"TCVN {bundle_dir.name}")
-    clauses, qa_list = generate_bundle_ast_and_qa(bundle_dir, doc_title=doc_title)
+    # 3. Export Tables Catalog & README
+    if ctx.tables_extracted:
+        tables_dir = ctx.bundle_dir / "tables"
+        with open(tables_dir / "tables_catalog.json", "w", encoding="utf-8") as f:
+            json.dump({"total_tables": len(ctx.tables_extracted), "tables": ctx.tables_extracted}, f, ensure_ascii=False, indent=2)
 
-    # Dynamic index.md sync
-    index_md_path = bundle_dir / "index.md"
-    if index_md_path.exists():
-        idx_txt = index_md_path.read_text(encoding="utf-8")
-        idx_txt = re.sub(r"\d+\s+nodes điều khoản", f"{len(clauses)} nodes điều khoản", idx_txt)
-        idx_txt = re.sub(r"\d+\s+cặp câu hỏi", f"{len(qa_list)} cặp câu hỏi", idx_txt)
-        idx_txt = re.sub(r"\d+\s+Bảng tra cứu", f"{len(tables_extracted)} Bảng tra cứu", idx_txt)
-        index_md_path.write_text(idx_txt, encoding="utf-8")
+        tbl_readme = ["# DANH MỤC BẢNG TRA CỨU KỸ THUẬT 2D (OKF v2.2)\n", "| Mã bảng | Tên bảng | CSV | JSON |", "| :--- | :--- | :---: | :---: |"]
+        for t in ctx.tables_extracted:
+            tbl_readme.append(f"| {t['table_id']} | {t['title']} | [CSV]({t['csv_file']}) | [JSON]({t['json_file']}) |")
+        (tables_dir / "README.md").write_text("\n".join(tbl_readme) + "\n", encoding="utf-8")
 
+    # 4. Generate AST and QA Benchmarks
+    clauses, qa_list = generate_bundle_ast_and_qa(ctx.bundle_dir)
     return {
         "status": "success",
-        "bundle": bundle_dir.name,
+        "bundle": ctx.bundle_dir.name,
         "archetype": "TECHNICAL_TCVN",
         "clauses_count": len(clauses),
         "templates_count": 0,
-        "tables_count": len(tables_extracted),
+        "tables_count": len(ctx.tables_extracted),
         "qa_count": len(qa_list),
     }
+
+
+def process_technical_standard_strategy(
+    docx_path: Path | str,
+    bundle_dir: Path | str,
+    output_filename: str | None = None,
+    rid_to_katex: dict[str, str] | None = None,
+    registry_file: Path | str | None = None,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """Process a Technical Standard (TCVN / QCVN) DOCX file with 100% Visual Parity & Modular Annex Split."""
+    from docx import Document
+
+    docx_p = Path(docx_path)
+    bundle_p = Path(bundle_dir)
+    bundle_p.mkdir(parents=True, exist_ok=True)
+
+    # 1. Harvest formulas and extract figures
+    cache_dir = bundle_p.parents[2] / ".md" / "cache" / "formula_vision" if len(bundle_p.parents) >= 3 else bundle_p / ".cache"
+    skip_vis = os.environ.get("AI_SKIP_VISION") == "1"
+    docx_rid_to_katex = rid_to_katex or harvest_docx_formula_images(docx_p, cache_dir=cache_dir, skip_vision=skip_vis)
+    extract_docx_figures(docx_p, bundle_p)
+
+    # 2. Extract and locate normative start
+    doc = Document(docx_p)
+    blocks = _extract_document_blocks(doc)
+    start_idx = _find_normative_start_index(blocks)
+
+    # 3. Process blocks with conversion context
+    ctx = StandardConversionContext(
+        bundle_dir=bundle_p,
+        output_filename=output_filename,
+        rid_to_katex=docx_rid_to_katex,
+    )
+
+    i = start_idx
+    while i < len(blocks):
+        b_type, obj = blocks[i]
+        if b_type == "p":
+            i = _process_paragraph_block(ctx, blocks, i)
+        elif b_type == "tbl":
+            _process_table_block(ctx, obj, i)
+            i += 1
+
+    # 4. Export modular bundle
+    return _export_modular_annexes_and_moc(ctx)
