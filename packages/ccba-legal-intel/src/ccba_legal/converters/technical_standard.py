@@ -377,6 +377,14 @@ def process_technical_standard_strategy(
     json_dir = tables_dir / "json"
     csv_dir.mkdir(parents=True, exist_ok=True)
     json_dir.mkdir(parents=True, exist_ok=True)
+    figures_dir = bundle_dir / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+
+    from ccba_legal.figure_extractor import extract_docx_figures
+    try:
+        extract_docx_figures(docx_path, figures_dir)
+    except Exception:
+        pass
 
     spoke_root = bundle_dir.parents[2] if len(bundle_dir.parents) >= 3 else bundle_dir.parent
     cache_dir = spoke_root / ".md" / "cache" / "formula_vision"
@@ -441,15 +449,24 @@ def process_technical_standard_strategy(
                 in_trong_do = False
                 i += 1
                 continue
-
-            # Figure Captions (Generalized Pattern 2)
+            
+            # Figure Captions (ADR 0030 / Tri-Layer Multimodal Figures)
             m_fig = re.match(r"^(?:Hình|HÌNH|Figure)\s+([0-9A-Za-z\.\-]+)(?:\s*[-–—:]\s*(.+))?$", text, re.IGNORECASE)
             if m_fig:
-                fig_num = m_fig.group(1)
-                fig_title = m_fig.group(2) or ""
-                fig_slug = fig_num.lower().replace('.', '_').replace('-', '_')
-                fig_cap = f'<a id="hinh-{fig_slug}"></a>\n\n**Hình {fig_num} — {fig_title}**\n\n'
-                body_md_parts.append(fig_cap)
+                fig_num = m_fig.group(1).strip()
+                fig_title = (m_fig.group(2) or "").strip()
+                fig_slug = fig_num.lower().replace('.', '_').replace('-', '_').strip()
+                anchor = f"hinh-{fig_slug}"
+                img_relpath = f"figures/images/hinh_{fig_slug}.png"
+                from ccba_legal.figure_extractor import AERODYNAMIC_FIGURES_GEOMETRY, render_markdown_figure_card
+                fig_entry = {
+                    "tag": fig_num,
+                    "title": fig_title,
+                    "anchor": anchor,
+                    "image_relpath": img_relpath,
+                    "geometry_rules": AERODYNAMIC_FIGURES_GEOMETRY.get(fig_num, {})
+                }
+                body_md_parts.append(render_markdown_figure_card(fig_entry))
                 in_trong_do = False
                 i += 1
                 continue
@@ -471,19 +488,19 @@ def process_technical_standard_strategy(
                         a_title = ntxt2
                         i += 1
                 anchor = f"phu-luc-{a_letter.lower()}"
-                hdr_str = f"## PHỤ LỤC {a_letter}"
+                hdr = f"## PHỤ LỤC {a_letter}"
                 if a_type:
-                    hdr_str += f"  ({a_type})"
+                    hdr += f"  ({a_type})"
                 if a_title:
-                    hdr_str += f"  {a_title.upper()}"
-                body_md_parts.append(f'\n<a id="{anchor}"></a>\n{hdr_str}\n\n')
+                    hdr += f"  {a_title.upper()}"
+                body_md_parts.append(f'\n<a id="{anchor}"></a>\n{hdr}\n\n')
                 in_trong_do = False
                 i += 1
                 continue
 
             # Section Headings (Universal 1 to 99)
             m_sec = re.match(r"^([1-9][0-9]?)\s+([^\n]+)", text)
-            if m_sec and len(m_sec.group(2)) < 120 and not m_sec.group(2).lower().startswith(("đối với", "khi", "lấy", "tính", "theo", "như")):
+            if m_sec and not m_sec.group(2).startswith(("-", "–", "—", ":")) and len(m_sec.group(2)) < 120 and not m_sec.group(2).lower().startswith(("đối với", "khi", "lấy", "tính", "theo", "như")):
                 sec_num = m_sec.group(1)
                 sec_rendered = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
                 sec_title = re.sub(rf"^{re.escape(sec_num)}\s+", "", sec_rendered).strip()
@@ -501,6 +518,27 @@ def process_technical_standard_strategy(
                 rend_note = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
                 rend_note = re.sub(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*", "", rend_note, flags=re.IGNORECASE).strip()
                 body_md_parts.append(f"{prefix} {rend_note}\n\n")
+                in_trong_do = False
+                i += 1
+                continue
+
+            # Technical Figures (ADR 0030 / Tri-Layer Multimodal Figures)
+            m_fig = re.match(r"^Hình\s+([A-H]\.[0-9]+[a-z]?|[0-9]+)\s*[-–—]\s*(.+)$", text)
+            if m_fig:
+                fig_tag = m_fig.group(1).strip()
+                fig_title = m_fig.group(2).strip()
+                slug = fig_tag.lower().replace(".", "_")
+                anchor = f"hinh-{slug}"
+                img_relpath = f"figures/images/hinh_{slug}.png"
+                from ccba_legal.figure_extractor import AERODYNAMIC_FIGURES_GEOMETRY, render_markdown_figure_card
+                fig_entry = {
+                    "tag": fig_tag,
+                    "title": fig_title,
+                    "anchor": anchor,
+                    "image_relpath": img_relpath,
+                    "geometry_rules": AERODYNAMIC_FIGURES_GEOMETRY.get(fig_tag, {})
+                }
+                body_md_parts.append(render_markdown_figure_card(fig_entry))
                 in_trong_do = False
                 i += 1
                 continue
