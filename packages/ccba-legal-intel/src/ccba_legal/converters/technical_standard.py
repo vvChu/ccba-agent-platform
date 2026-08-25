@@ -52,7 +52,22 @@ FORMULAS_MAP: dict[str, tuple[str, str]] = {
     "22": ("F_TCVN2737_HAM_TUONG_QUAN_CHIEU_CAO", r"R_h = \frac{1}{\eta_h} - \frac{1}{2\eta_h^2}\left(1 - e^{-2\eta_h}\right); \quad R_h = 1 \text{ khi } \eta_h = 0"),
     "23": ("F_TCVN2737_HAM_TUONG_QUAN_CHIEU_RONG", r"R_b = \frac{1}{\eta_b} - \frac{1}{2\eta_b^2}\left(1 - e^{-2\eta_b}\right); \quad R_b = 1 \text{ khi } \eta_b = 0"),
     "24": ("F_TCVN2737_HAM_TUONG_QUAN_CHIEU_SAU", r"R_d = \frac{1}{\eta_d} - \frac{1}{2\eta_d^2}\left(1 - e^{-2\eta_d}\right); \quad R_d = 1 \text{ khi } \eta_d = 0"),
-    "25": ("F_TCVN2737_DO_VONG_GIOI_HAN", r"f \le f_u")
+    "25": ("F_TCVN2737_DO_VONG_GIOI_HAN", r"f \le f_u"),
+    "B.1": ("F_TCVN2737_LUC_VA_CHAM_B1", r"F_k = \frac{m v^2}{f}"),
+    "B.2": ("F_TCVN2737_KHOI_LUONG_QUY_DOI_B2", r"m = \frac{m_b}{2} + (m_c + k m_q) \frac{L - L_1}{L}"),
+    "B.3": ("F_TCVN2737_LUC_VA_CHAM_TINH_TOAN_B3", r"F_d = \gamma_f F_k"),
+    "E.1": ("F_TCVN2737_HE_SO_AP_LUC_KHONG_KHI_E1", r"k_n = 1 - 0,1 \cdot \dots"),
+    "E.2": ("F_TCVN2737_HE_SO_DO_CAO_E2", r"\dots"),
+    "F.1": ("F_TCVN2737_SO_REYNOLD_F1", r"\text{Re} = \frac{d \cdot V(z_e)_{3\,600\text{s},50}}{\nu}"),
+    "F.2": ("F_TCVN2737_VAN_TOC_GIO_F2", r"V(z_e)_{3\,600\text{s},50} = \bar{b} \left(\frac{z_e}{10}\right)^{\bar{\alpha}} V_{3\text{s},50}"),
+    "F.3": ("F_TCVN2737_HE_SO_KHI_DONG_F3", r"c_{e1} = k_{\lambda 1} c_\beta"),
+    "F.4": ("F_TCVN2737_HE_SO_KHI_DONG_F4", r"c_x = k_\lambda c_{x\infty}"),
+    "F.5": ("F_TCVN2737_HE_SO_KHI_DONG_F5", r"c_{x\beta} = c_x \sin^2 \beta"),
+    "F.6": ("F_TCVN2737_HE_SO_KHI_DONG_F6", r"c_x = k_\lambda c_{x\infty}"),
+    "F.7": ("F_TCVN2737_HE_SO_KHI_DONG_F7", r"c_x = \frac{\sum c_{xi} A_i}{A_c}"),
+    "F.8": ("F_TCVN2737_HE_SO_KHI_DONG_F8", r"c_t = c_x (1 + \eta) k_1"),
+    "F.9": ("F_TCVN2737_HE_SO_KHI_DONG_F9", r"\varphi = \frac{\sum A_i}{A_c} = \frac{A}{A_c}"),
+    "G.1": ("F_TCVN2737_DO_VONG_GIOI_HAN_G1", r"f_u = \frac{g(p + p_1 + q)}{30n^2 (bp + p_1 + q)}")
 }
 
 
@@ -516,13 +531,13 @@ def process_technical_standard_strategy(
             if re.match(r"^[a-z]\)\s+", text):
                 in_trong_do = False
 
-            # Clauses
-            m_cl = re.match(r"^([1-9]|10)\.([0-9]+(?:\.[0-9]+)*)\s+([^\n]+)", text)
+            # Clauses (Main Body 1.1... to Annexes A.1..., B.2.1...)
+            m_cl = re.match(r"^([A-Z]|[1-9]|10)\.([0-9]+(?:\.[0-9]+)*)\s+([^\n]+)", text)
             if m_cl:
                 cl_num = f"{m_cl.group(1)}.{m_cl.group(2)}"
                 cl_rendered = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
                 cl_title = re.sub(rf"^{re.escape(m_cl.group(1))}\.{re.escape(m_cl.group(2))}\s+", "", cl_rendered).strip()
-                anchor = f"muc-{cl_num.replace('.', '-')}"
+                anchor = f"muc-{cl_num.lower().replace('.', '-')}"
                 body_md_parts.append(f'\n<a id="{anchor}"></a>\n### {cl_num}  {cl_title}\n\n')
                 in_trong_do = False
                 i += 1
@@ -565,8 +580,10 @@ def process_technical_standard_strategy(
             # Run-aware paragraph rendering with smart glossary detection
             is_glossary = (
                 rendered_p.startswith(("$", "ký hiệu", "các đại lượng", "\\-"))
-                or bool(re.match(r"^\s*[0-9]+[\.,][0-9]+\s*[-–—]\s*", rendered_p))
+                or bool(re.match(r"^\s*[0-9]+(?:[\.,][0-9]+)?\s*[-–—]\s*", rendered_p))
                 or " là " in rendered_p
+                or " tính bằng " in rendered_p
+                or " xác định theo " in rendered_p
                 or rendered_p.endswith(";")
             )
             if in_trong_do and is_glossary:
@@ -615,6 +632,7 @@ def process_technical_standard_strategy(
 
                 if "24" in [ft for ft, _ in all_row_formulas]:
                     body_md_parts.append('\n$$\n\\text{với: } \\eta_h = 4,6 \\frac{n_1 h}{V(z_s)_{3\\,600\\text{s},50}}; \\quad \\eta_b = 4,6 \\frac{n_1 b}{V(z_s)_{3\\,600\\text{s},50}}; \\quad \\eta_d = 15,4 \\frac{n_1 d}{V(z_s)_{3\\,600\\text{s},50}};\n$$\n\n')
+                in_trong_do = False
                 i += 1
                 continue
 
