@@ -44,7 +44,7 @@ FORMULAS_MAP: dict[str, tuple[str, str]] = {
     "14": ("F_TCVN2737_CUONG_DO_NHIEU_DONG", r"I(z_s) = c_r \left(\frac{10}{z_s}\right)^{1/6}"),
     "15": ("F_TCVN2737_HE_SO_DINH_CONG_HUONG_GR", r"g_R = \sqrt{2 \ln(3\,600 n_1)} + \frac{0,577}{\sqrt{2 \ln(3\,600 n_1)}}"),
     "16": ("F_TCVN2737_HE_SO_PHAN_UNG_NEN", r"Q = \sqrt{\frac{1}{1 + 0,63 \left(\frac{b + h}{L(z_s)}\right)^{0,63}}}"),
-    "17": ("F_TCVN2737_TY_LE_CHIEU_DAI_TICH_PHAN", r"L(z_s) = \ell \left(\frac{z_s}{10}\right)^{\bar{\alpha}}"),
+    "17": ("F_TCVN2737_TY_LE_CHIEU_DAI_TICH_PHAN", r"L(z_s) = \ell \left(\frac{z_s}{10}\right)^{\bar{\epsilon}}"),
     "18": ("F_TCVN2737_HE_SO_PHAN_UNG_CONG_HUONG_R", r"R = \sqrt{\frac{1}{\beta} R_n R_h R_b (0,53 + 0,47 R_d)}"),
     "19": ("F_TCVN2737_HAM_MAT_DO_PHO_NANG_LUONG", r"R_n = \frac{7,47 N_1}{(1 + 10,3 N_1)^{5/3}}"),
     "20": ("F_TCVN2737_TAN_SO_KHONG_THU_NGUYEN", r"N_1 = \frac{n_1 L(z_s)}{V(z_s)_{3\,600\text{s},50}}"),
@@ -62,7 +62,7 @@ def sanitize_prose_greeks_and_variables(text: str) -> str:
     text = text.replace("hệ số  và ᾱ", r"hệ số $\bar{b}$ và $\bar{\alpha}$")
     text = text.replace("hệ số và ᾱ", r"hệ số $\bar{b}$ và $\bar{\alpha}$")
     text = text.replace("ᾱ", r"$\bar{\alpha}$")
-    text = re.sub(r"^\s*và\s+là các hệ số", lambda m: r"$\ell$ và $\bar{\alpha}$ là các hệ số", text)
+    text = re.sub(r"^\s*và\s+là các hệ số", lambda m: r"$\ell$ và $\bar{\epsilon}$ là các hệ số", text)
 
     for g_char, g_latex in GREEK_MAP.items():
         # Match greek followed by subscript letters/digits (e.g. γf, ψL, ψt, γn, φ1, φ2)
@@ -626,7 +626,7 @@ def process_technical_standard_strategy(
             md_tbl_str, tbl_footnotes, raw_grid = render_table_markdown(tbl)
             if is_captioned_table and t_slug == "bang_10":
                 # Ensure high-precision headers for Bảng 10
-                raw_grid[0] = ["Dạng địa hình", "$c_r$", r"$\ell$, m", r"$\bar{\alpha}$", r"$\bar{b}$", r"$\alpha$"]
+                raw_grid[0] = ["Dạng địa hình", "$c_r$", r"$\ell$, m", r"$\bar{\epsilon}$", r"$\bar{b}$", r"$\bar{\alpha}$"]
                 alignments = [":---", ":---:", ":---:", ":---:", ":---:", ":---:"]
                 lines = []
                 lines.append("| " + " | ".join(raw_grid[0]) + " |")
