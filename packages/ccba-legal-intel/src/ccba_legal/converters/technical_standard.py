@@ -574,23 +574,24 @@ def process_technical_standard_strategy(
                 continue
 
             # 3. Normative Table with Smart Alignment & Footnote Extraction (ADR 0030)
-            if last_table_caption:
+            is_captioned_table = bool(last_table_caption)
+            if is_captioned_table:
                 t_num = last_table_caption_num
                 t_cap = last_table_caption
                 last_table_caption = ""
                 last_table_caption_num = ""
                 in_trong_do = False
+                if t_num.isdigit():
+                    t_slug = f"bang_{int(t_num):02d}"
+                else:
+                    t_slug = f"bang_{t_num.lower().replace('.', '_').replace('-', '_')}"
+                anchor = f"bang-{t_slug.replace('_', '-')}"
+                body_md_parts.append(f'\n<a id="{anchor}"></a>\n### {t_cap}\n\n')
             else:
-                t_num = f"raw_{len(tables_extracted)+1:02d}"
-                t_cap = f"Bảng {t_num}"
-
-            if t_num.isdigit():
-                t_slug = f"bang_{int(t_num):02d}"
-            else:
-                t_slug = f"bang_{t_num.lower().replace('.', '_').replace('-', '_')}"
-
-            anchor = f"bang-{t_slug.replace('_', '-')}"
-            body_md_parts.append(f'\n<a id="{anchor}"></a>\n### {t_cap}\n\n')
+                # Uncaptioned layout table / Case matrix (e.g. Clause 10.2.4b cases or figure legends)
+                t_num = ""
+                t_cap = ""
+                t_slug = f"layout_tbl_{i:03d}"
 
             md_tbl_str, tbl_footnotes, raw_grid = render_table_markdown(tbl)
             body_md_parts.append(md_tbl_str)
@@ -598,7 +599,7 @@ def process_technical_standard_strategy(
             if tbl_footnotes:
                 body_md_parts.append("\n".join(tbl_footnotes) + "\n\n")
 
-            if raw_grid:
+            if is_captioned_table and raw_grid:
                 csv_path = csv_dir / f"{t_slug}.csv"
                 with open(csv_path, "w", encoding="utf-8", newline="") as f:
                     writer = csv.writer(f)
