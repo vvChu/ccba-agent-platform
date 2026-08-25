@@ -138,6 +138,9 @@ def render_paragraph_with_runs(p: Any) -> str:
     # Clean up empty math tokens or corrupted tokens
     res = res.replace("$$", "").replace("$_$", "").replace("$^$", "")
 
+        # Ensure space after math token if followed directly by Vietnamese word
+    res = re.sub(r"\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9\u0370-\u03FF_,\{\}\^\\0-9]+)\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9])", r"$\1$ \2", res)
+
     return normalize_units_and_math(res)
 
 
@@ -404,7 +407,8 @@ def process_technical_standard_strategy(
             m_cl = re.match(r"^([1-9]|10)\.([0-9]+(?:\.[0-9]+)*)\s+([^\n]+)", text)
             if m_cl:
                 cl_num = f"{m_cl.group(1)}.{m_cl.group(2)}"
-                cl_title = m_cl.group(3)
+                cl_rendered = render_paragraph_with_runs(obj)
+                cl_title = re.sub(rf"^{re.escape(m_cl.group(1))}\.{re.escape(m_cl.group(2))}\s+", "", cl_rendered).strip()
                 anchor = f"muc-{cl_num.replace('.', '-')}"
                 body_md_parts.append(f'\n<a id="{anchor}"></a>\n### {cl_num}  {cl_title}\n\n')
                 in_trong_do = False
@@ -421,11 +425,31 @@ def process_technical_standard_strategy(
                 i += 1
                 continue
 
-            # Run-aware paragraph rendering
+            # Unnumbered multi-variable display equations (e.g. Clauses 6.3, 6.4, 6.5)
             rendered_p = render_paragraph_with_runs(obj)
-            if in_trong_do:
+            is_unnum_eq = (
+                "=" in text
+                and any(sym in text for sym in ["ψL,1", "ψt,1", "ψt,2", "ze ="])
+                and not any(w in text.lower() for w in ["khi", "xác định", "được", "phải", "nêu trong"])
+            )
+            if is_unnum_eq:
+                clean_eq = rendered_p.replace("$", "").replace("...", "\\dots").replace("…", "\\dots")
+                clean_eq = re.sub(r";\s*", r"; \\quad ", clean_eq)
+                body_md_parts.append(f"\n$$\n{clean_eq}\n$$\n\n")
+                in_trong_do = False
+                i += 1
+                continue
+
+            # Run-aware paragraph rendering with smart glossary detection
+            is_glossary = (
+                rendered_p.startswith(("$", "ký hiệu", "các đại lượng", "\\-"))
+                or " là " in rendered_p
+                or rendered_p.endswith(";")
+            )
+            if in_trong_do and is_glossary:
                 body_md_parts.append(f"&nbsp;&nbsp;&nbsp;&nbsp;{rendered_p}\n\n")
             else:
+                in_trong_do = False
                 body_md_parts.append(f"{rendered_p}\n\n")
             i += 1
 
