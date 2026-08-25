@@ -103,9 +103,44 @@ def _validate_katex(result: str) -> bool:
     return (
         s.startswith("$$")
         and s.endswith("$$")
-        and len(s) > 6
+        and len(s) > 4
         and "\n\n" not in s
     )
+
+
+def _clean_and_extract_katex(raw: str) -> str | None:
+    """Trich xuat va lam sach cong thuc KaTeX $$...$$ tu chuoi AI raw."""
+    if not raw:
+        return None
+    s = raw.strip()
+
+    # 1. Tim block $$...$$ hoan chinh (bao gom ca truong hop AI kem loi thoai)
+    m = re.search(r"\$\$(.+?)\$\$", s, re.DOTALL)
+    if m:
+        content = m.group(1).strip()
+        if content and len(content) > 1 and "\n\n" not in content:
+            return f"$${content}$$"
+
+    # 2. Truong hop bat dau bang $$ nhung bi thieu $$ o cuoi do cat token
+    if s.startswith("$$") and not s.endswith("$$"):
+        content = s[2:].strip()
+        content = re.sub(r"[`'\"]+$", "", content).strip()
+        if content and len(content) > 1 and "\n\n" not in content:
+            return f"$${content}$$"
+
+    # 3. Truong hop dung inline $...$
+    m_inline = re.search(r"(?<!\$)\$([^\$\n]+)\$(?!\$)", s)
+    if m_inline:
+        content = m_inline.group(1).strip()
+        if content and len(content) > 1:
+            return f"$${content}$$"
+
+    # 4. Truong hop chuoi toan hoc thuan khong chua dau do
+    if re.match(r"^[A-Za-z0-9_\\\{\}\(\)\+\-\*\/\=\,\.\s\^\_]+$", s) and ("=" in s or "\\" in s or "^" in s or "_" in s):
+        if "\n\n" not in s and len(s) > 2:
+            return f"$${s}$$"
+
+    return None
 
 
 def _call_vision_api(img_bytes: bytes, prompt: str) -> str:
@@ -180,20 +215,20 @@ def extract_latex_from_image(
     if skip_vision:
         return f"<!-- FORMULA_PLACEHOLDER: {sha256[:8]} -->"
 
-    # Buoc 3: Goi AI Vision voi retry (Fix 3: few-shot prompt + strict fallback)
+    # Buoc 3: Goi AI Vision voi retry + regex post-processor
     prompts = [_VISION_PROMPT, _VISION_PROMPT_STRICT]
     for attempt, prompt in enumerate(prompts):
         try:
             raw = _call_vision_api(img_bytes, prompt)
-            result = raw.strip()
-            if _validate_katex(result):
+            cleaned = _clean_and_extract_katex(raw)
+            if cleaned and _validate_katex(cleaned):
                 if cache_dir is not None:
-                    _write_cache(cache_dir, sha256, result)
-                logger.info("Formula extracted (attempt %d): %s", attempt + 1, result[:60])
-                return result
+                    _write_cache(cache_dir, sha256, cleaned)
+                logger.info("Formula extracted (attempt %d): %s", attempt + 1, cleaned[:60])
+                return cleaned
             logger.warning(
                 "Vision attempt %d invalid format (sha256=%s): %s",
-                attempt + 1, sha256[:8], result[:80],
+                attempt + 1, sha256[:8], raw.strip()[:80],
             )
         except Exception as exc:
             logger.warning("Vision attempt %d error (sha256=%s): %s", attempt + 1, sha256[:8], exc)
@@ -238,6 +273,8 @@ def harvest_docx_formula_images(
 
     ns_v = "urn:schemas-microsoft-com:vml"
     ns_r = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    ns_a = "http://schemas.openxmlformats.org/drawingml/2006/main"
+    ns_wp = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
 
     with zipfile.ZipFile(docx_path, "r") as z:
         rels_xml = z.read("word/_rels/document.xml.rels")
@@ -259,6 +296,7 @@ def harvest_docx_formula_images(
         rid_to_katex: dict[str, str] = {}
 
         for p_idx, para in enumerate(paragraphs):
+            # 1. Check legacy VML shapes (v:shape)
             for shape in para.findall(f".//{{{ns_v}}}shape"):
                 img_el = shape.find(f"{{{ns_v}}}imagedata")
                 if img_el is None:
@@ -270,6 +308,38 @@ def harvest_docx_formula_images(
                 style_str = shape.attrib.get("style", "")
                 height_pt = _parse_pt(style_str, "height")
                 width_pt = _parse_pt(style_str, "width")
+                surrounding = _get_surrounding_text(paragraphs, p_idx, window=3)
+
+                if not is_formula_image(height_pt, width_pt, surrounding):
+                    rid_to_katex[rid] = f"<!-- DIAGRAM: {r_map[rid]} -->"
+                    continue
+
+                media_path = r_map[rid]
+                if media_path not in media_files:
+                    continue
+
+                img_bytes = z.read(media_path)
+                katex = extract_latex_from_image(img_bytes, cache_dir=cache_dir, skip_vision=skip_vision)
+                rid_to_katex[rid] = katex
+
+            # 2. Check modern DrawingML (w:drawing)
+            for drawing in para.findall(".//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}drawing"):
+                blip = drawing.find(f".//{{{ns_a}}}blip")
+                if blip is None:
+                    continue
+                rid = blip.attrib.get(f"{{{ns_r}}}embed")
+                if not rid or rid not in r_map or rid in rid_to_katex:
+                    continue
+
+                extent = drawing.find(f".//{{{ns_wp}}}extent")
+                height_pt = 9999.0
+                width_pt = 9999.0
+                if extent is not None:
+                    cx = float(extent.attrib.get("cx", 0))
+                    cy = float(extent.attrib.get("cy", 0))
+                    width_pt = cx / 12700.0
+                    height_pt = cy / 12700.0
+
                 surrounding = _get_surrounding_text(paragraphs, p_idx, window=3)
 
                 if not is_formula_image(height_pt, width_pt, surrounding):

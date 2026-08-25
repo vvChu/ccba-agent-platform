@@ -49,6 +49,7 @@ from .crawler import (
     get_tvpl_metadata,
     sleep_with_jitter,
     trigger_download,
+    verify_tvpl_vip_status,
 )
 from .docx_converter import (
     classify_and_extract_tables,
@@ -58,6 +59,10 @@ from .docx_converter import (
     normalize_clause_numbers,
     normalize_docx_markdown,
     process_vbpl_bundle_okf_v22,
+)
+from .formatter import (
+    OKFStructureProcessor,
+    extract_parent_metadata,
 )
 from .gold_standard import (
     DocProfile,
@@ -114,6 +119,8 @@ __all__ = [
     "LegislativeConsolidator",
     "ManifestGenerator",
     "OKFBundlePackager",
+    "OKFStructureProcessor",
+    "extract_parent_metadata",
     "AppendixSplitter",
     "ASTParser",
     "DualModeASTParser",
