@@ -355,10 +355,12 @@ def process_technical_standard_strategy(
                 i += 1
                 continue
 
-            # Section Headings
+            # Section Headings (Universal Typography)
             m_sec = re.match(r"^([1-9]|10)\s+([^\n]+)", text)
             if m_sec:
-                sec_num, sec_title = m_sec.group(1), m_sec.group(2)
+                sec_num = m_sec.group(1)
+                sec_rendered = render_paragraph_with_runs(obj)
+                sec_title = re.sub(rf"^{re.escape(sec_num)}\s+", "", sec_rendered).strip()
                 anchor = f"muc-{sec_num}"
                 body_md_parts.append(f'\n<a id="{anchor}"></a>\n## {sec_num}  {sec_title.upper()}\n\n')
                 in_trong_do = False
@@ -425,14 +427,23 @@ def process_technical_standard_strategy(
                 i += 1
                 continue
 
-            # Unnumbered multi-variable display equations (e.g. Clauses 6.3, 6.4, 6.5)
+            # Generalized Unnumbered Display Equations Detection (ADR 0030)
             rendered_p = render_paragraph_with_runs(obj)
-            is_unnum_eq = (
-                "=" in text
-                and any(sym in text for sym in ["ψL,1", "ψt,1", "ψt,2", "ze ="])
-                and not any(w in text.lower() for w in ["khi", "xác định", "được", "phải", "nêu trong"])
+            prev_t = blocks[i - 1][1].text.strip() if i > 0 and blocks[i - 1][0] == "p" else ""
+            next_t = blocks[i + 1][1].text.strip() if i + 1 < len(blocks) and blocks[i + 1][0] == "p" else ""
+            
+            is_context_eq = (
+                prev_t.endswith("như sau:")
+                or prev_t.endswith("như sau")
+                or next_t.lower().startswith("trong đó:")
+                or next_t.lower().startswith("trong đó")
             )
-            if is_unnum_eq:
+            is_pure_eq_syntax = (
+                "=" in text
+                and (";" in text or re.search(r"=\s*[0-9\.\,]+", text))
+                and not any(w in text.lower() for w in ["đối với", "khi", "xác định theo", "nêu trong", "áp dụng", "quy định"])
+            )
+            if is_context_eq and is_pure_eq_syntax:
                 clean_eq = rendered_p.replace("$", "").replace("...", "\\dots").replace("…", "\\dots")
                 clean_eq = re.sub(r";\s*", r"; \\quad ", clean_eq)
                 body_md_parts.append(f"\n$$\n{clean_eq}\n$$\n\n")
