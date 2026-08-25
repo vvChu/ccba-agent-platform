@@ -13,7 +13,6 @@ from ccba_legal.converters import (
     classify_and_extract_tables,
     detect_document_pipeline,
     extract_legal_basis_graph,
-    format_all_qcvn_md_tables,
     normalize_clause_numbers,
     normalize_docx_markdown,
     normalize_units_and_math,
@@ -32,7 +31,6 @@ __all__ = [
     "normalize_clause_numbers",
     "normalize_docx_markdown",
     "normalize_units_and_math",
-    "format_all_qcvn_md_tables",
     "extract_legal_basis_graph",
 ]
 

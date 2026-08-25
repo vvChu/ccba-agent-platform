@@ -7,7 +7,7 @@ import re
 
 def normalize_units_and_math(t_str: str) -> str:
     """Auto-converts raw unit strings with exponents into proper LaTeX notation."""
-    if "m2" in t_str or "m3" in t_str or "kg/m3" in t_str or "daN/m2" in t_str or "kN/m2" in t_str:
+    if any(k in t_str for k in ["m2", "m3", "kg/m3", "daN/m2", "kN/m2"]):
         t_str = re.sub(r"\bdaN/m2\b", r"$\\text{daN/m}^2$", t_str)
         t_str = re.sub(r"\bdaN/m3\b", r"$\\text{daN/m}^3$", t_str)
         t_str = re.sub(r"\bkg/m3\b", r"$\\text{kg/m}^3$", t_str)
@@ -20,10 +20,9 @@ def normalize_units_and_math(t_str: str) -> str:
 
 def normalize_clause_numbers(text: str) -> str:
     """Bold all clause numbers (**1.**, **2.**) to prevent CommonMark ordered list indentation."""
-    lines = text.splitlines()
-    processed: list[str] = []
     clause_re = re.compile(r"^(?:\*\*(\d+)\.\*\*|(\d+)\.)\s+([^\n]+)")
-    for line in lines:
+    processed: list[str] = []
+    for line in text.splitlines():
         stripped = line.strip()
         m = clause_re.match(stripped)
         if m:
@@ -38,16 +37,10 @@ def normalize_clause_numbers(text: str) -> str:
 def normalize_docx_markdown(md_text: str) -> str:
     """Normalize raw Mammoth output markdown."""
     md_text = re.sub(r'<a id="[^"]+"></a>', "", md_text)
-    md_text = (
+    return (
         md_text.replace(r"\.", ".")
         .replace(r"\-", "-")
         .replace(r"\_", "_")
         .replace(r"\(", "(")
         .replace(r"\)", ")")
     )
-    return md_text
-
-
-def format_all_qcvn_md_tables(md_path: Path) -> int:
-    """Scan and convert table blocks in md_path to 2D GFM Pipe Tables."""
-    return 0
