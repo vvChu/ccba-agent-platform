@@ -631,6 +631,15 @@ def process_technical_standard_strategy(
     doc_title = doc_meta.get("title", f"TCVN {bundle_dir.name}")
     clauses, qa_list = generate_bundle_ast_and_qa(bundle_dir, doc_title=doc_title)
 
+    # Dynamic index.md sync
+    index_md_path = bundle_dir / "index.md"
+    if index_md_path.exists():
+        idx_txt = index_md_path.read_text(encoding="utf-8")
+        idx_txt = re.sub(r"\d+\s+nodes điều khoản", f"{len(clauses)} nodes điều khoản", idx_txt)
+        idx_txt = re.sub(r"\d+\s+cặp câu hỏi", f"{len(qa_list)} cặp câu hỏi", idx_txt)
+        idx_txt = re.sub(r"\d+\s+Bảng tra cứu", f"{len(tables_extracted)} Bảng tra cứu", idx_txt)
+        index_md_path.write_text(idx_txt, encoding="utf-8")
+
     return {
         "status": "success",
         "bundle": bundle_dir.name,
