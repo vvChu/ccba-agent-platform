@@ -21,15 +21,12 @@ pytestmark = [pytest.mark.fast, pytest.mark.unit]
 def test_get_tvpl_credentials_raises_when_missing() -> None:
     """Verify get_tvpl_credentials strictly raises EnvironmentError when no env vars/files exist."""
     with patch.dict(os.environ, {}, clear=True):
-        # Ensure TVPL_USERNAME and TVPL_PASSWORD are not set
         os.environ.pop("TVPL_USERNAME", None)
         os.environ.pop("TVPL_PASSWORD", None)
 
-        with patch("ccba_legal.crawler.resolve_project_root") as mock_root:
-            mock_path = mock_root.return_value / ".env"
-            with patch.object(mock_path, "exists", return_value=False):
-                with pytest.raises(EnvironmentError, match="TVPL VIP credentials not configured"):
-                    get_tvpl_credentials()
+        with patch("pathlib.Path.exists", return_value=False):
+            with pytest.raises(EnvironmentError, match="TVPL VIP credentials not configured"):
+                get_tvpl_credentials()
 
 
 def test_get_tvpl_credentials_success_from_env() -> None:
