@@ -80,18 +80,40 @@ def render_paragraph_with_runs(p: Any) -> str:
     for mode, text in grouped:
         if mode == "sub":
             clean_t = text.strip()
+            if not clean_t:
+                out_tokens.append(text)
+                continue
+            trailing_comma = ""
+            if clean_t.endswith(","):
+                clean_t = clean_t[:-1].strip()
+                trailing_comma = ", "
             for g_char, g_latex in GREEK_MAP.items():
                 clean_t = clean_t.replace(g_char, g_latex)
+            if not clean_t:
+                out_tokens.append(trailing_comma or text)
+                continue
             if len(clean_t) > 1 or "," in clean_t or "\\" in clean_t:
-                out_tokens.append(f"$_{{{clean_t}}}$")
+                out_tokens.append(f"$_{{{clean_t}}}${trailing_comma}")
             else:
-                out_tokens.append(f"$_{clean_t}$")
+                out_tokens.append(f"$_{clean_t}${trailing_comma}")
         elif mode == "sup":
             clean_t = text.strip()
-            if len(clean_t) > 1:
-                out_tokens.append(f"$^{{{clean_t}}}$")
+            if not clean_t:
+                out_tokens.append(text)
+                continue
+            trailing_comma = ""
+            if clean_t.endswith(","):
+                clean_t = clean_t[:-1].strip()
+                trailing_comma = ", "
+            for g_char, g_latex in GREEK_MAP.items():
+                clean_t = clean_t.replace(g_char, g_latex)
+            if not clean_t:
+                out_tokens.append(trailing_comma or text)
+                continue
+            if len(clean_t) > 1 or "\\" in clean_t:
+                out_tokens.append(f"$^{{{clean_t}}}${trailing_comma}")
             else:
-                out_tokens.append(f"$^{clean_t}$")
+                out_tokens.append(f"$^{clean_t}${trailing_comma}")
         else:
             out_tokens.append(text)
 
@@ -99,13 +121,10 @@ def render_paragraph_with_runs(p: Any) -> str:
 
     # Merge adjacent alphanumeric + math subscript/superscript
     res = re.sub(
-        r"([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9\u0370-\u03FF]+)\$(_\{[^}]+\}|_[a-zA-Z0-9,]+|\^\{[^}]+\}|\^[a-zA-Z0-9]+)\$",
+        r"([a-zA-ZÀ-ɏẠ-ỹͰ-Ͽ]+)\$(_\{[^}]+\}|_[a-zA-Z0-9,]+|\^\{[^}]+\}|\^[a-zA-Z0-9]+)\$",
         lambda m: f"${m.group(1)}{m.group(2)}$",
         res,
     )
-
-    # Merge consecutive math tokens
-    res = re.sub(r"\$([^$]+)\$\s*\$([^$]+)\$", r"$ $", res)
 
     # Replace Greek letters inside math tokens with proper LaTeX
     def _sanitize_math_greeks(m: re.Match) -> str:
@@ -115,6 +134,9 @@ def render_paragraph_with_runs(p: Any) -> str:
         return f"${inner}$"
 
     res = re.sub(r"\$([^$]+)\$", _sanitize_math_greeks, res)
+
+    # Clean up empty math tokens or corrupted tokens
+    res = res.replace("$$", "").replace("$_$", "").replace("$^$", "")
 
     return normalize_units_and_math(res)
 
