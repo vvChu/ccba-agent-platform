@@ -481,9 +481,9 @@ def process_technical_standard_strategy(
                 i += 1
                 continue
 
-            # Section Headings (Universal Typography)
-            m_sec = re.match(r"^([1-9]|10)\s+([^\n]+)", text)
-            if m_sec:
+            # Section Headings (Universal 1 to 99)
+            m_sec = re.match(r"^([1-9][0-9]?)\s+([^\n]+)", text)
+            if m_sec and len(m_sec.group(2)) < 120 and not m_sec.group(2).lower().startswith(("đối với", "khi", "lấy", "tính", "theo", "như")):
                 sec_num = m_sec.group(1)
                 sec_rendered = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
                 sec_title = re.sub(rf"^{re.escape(sec_num)}\s+", "", sec_rendered).strip()
@@ -531,8 +531,8 @@ def process_technical_standard_strategy(
             if re.match(r"^[a-z]\)\s+", text):
                 in_trong_do = False
 
-            # Clauses (Main Body 1.1... to Annexes A.1..., B.2.1...)
-            m_cl = re.match(r"^([A-Z]|[1-9]|10)\.([0-9]+(?:\.[0-9]+)*)\s+([^\n]+)", text)
+            # Clauses (Universal Main Body 1.1... to Annexes A.1..., B.2.1...)
+            m_cl = re.match(r"^([A-Z]|[1-9][0-9]?)\.([0-9]+(?:\.[0-9]+)*)\s+([^\n]+)", text)
             if m_cl:
                 cl_num = f"{m_cl.group(1)}.{m_cl.group(2)}"
                 cl_rendered = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
@@ -584,6 +584,8 @@ def process_technical_standard_strategy(
                 or " là " in rendered_p
                 or " tính bằng " in rendered_p
                 or " xác định theo " in rendered_p
+                or " lấy bằng " in rendered_p
+                or " phụ thuộc vào " in rendered_p
                 or rendered_p.endswith(";")
             )
             if in_trong_do and is_glossary:
@@ -625,8 +627,15 @@ def process_technical_standard_strategy(
                             if ct and not re.match(r"^\([0-9A-Za-z\.]+\)$", ct):
                                 raw_f = render_paragraph_with_runs(c.paragraphs[0], rid_to_katex=rid_to_katex) if c.paragraphs else ct
                                 break
-                        if raw_f:
-                            break
+                            elif not ct and c.paragraphs:
+                                for p in c.paragraphs:
+                                    for run in p.runs:
+                                        m_rid = re.search(r'r:(?:id|embed)="([^"]+)"', run._r.xml)
+                                        if m_rid and rid_to_katex and m_rid.group(1) in rid_to_katex:
+                                            raw_f = rid_to_katex[m_rid.group(1)].strip("$ ")
+                                            break
+                                    if raw_f:
+                                        break
                         f_latex = raw_f.replace("$", "").replace("·", r" \cdot ")
                     body_md_parts.append(f'\n<a id="formula-{f_slug}"></a>\n\n$$\n{f_latex} \\tag{{{f_tag}}}\n$$\n\n<!-- formula_id: "{fid}" -->\n\n')
 
