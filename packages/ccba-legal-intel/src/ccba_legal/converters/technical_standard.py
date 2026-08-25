@@ -27,6 +27,18 @@ GREEK_MAP: dict[str, str] = {
 }
 
 # 100% Authentic KaTeX Formulations for TCVN 2737:2023 & Structural Standards
+
+ANNEX_SLUGS_MAP: dict[str, tuple[str, str, str]] = {
+    "A": ("phu_luc_a_khoi_luong_the_tich_vat_lieu", "Khối lượng thể tích và góc ma sát trong của một số vật liệu", "Tham khảo"),
+    "B": ("phu_luc_b_tai_trong_va_cham_cau_truc", "Danh mục một số cần trục và tải trọng va chạm với gối chặn", "Quy định"),
+    "C": ("phu_luc_c_phuong_phap_xac_dinh_moc_chuan", "Phương pháp xác định mốc chuẩn", "Quy định"),
+    "D": ("phu_luc_d_hinh_anh_minh_hoa_dia_hinh", "Hình ảnh minh họa các dạng địa hình", "Quy định"),
+    "E": ("phu_luc_e_kich_thuoc_tuong_duong_mat_bang", "Kích thước tương đương cho một số mặt bằng phức tạp", "Quy định"),
+    "F": ("phu_luc_f_cac_so_do_khi_dong", "Các sơ đồ khí động và hệ số khí động", "Quy định"),
+    "G": ("phu_luc_g_do_vong_va_chuyen_vi_gioi_han", "Độ võng và chuyển vị giới hạn", "Quy định"),
+    "H": ("phu_luc_h_he_so_tam_quan_trong_cong_trinh", "Hệ số tầm quan trọng và phân cấp hậu quả công trình", "Quy định"),
+}
+
 FORMULAS_MAP: dict[str, tuple[str, str]] = {
     "1": ("F_TCVN2737_TO_HOP_CO_BAN_1", r'C_m = \gamma_n \left( \sum_{i \ge 1} \gamma_{f,i} G_{k,i} \text{ “+” } \sum_{j \ge 1} \gamma_{f,j} \psi_{L,j} Q_{k,L,j} \text{ “+” } \sum_{m \ge 1} \gamma_{f,m} \psi_{t,m} Q_{k,t,m} \right)'),
     "2": ("F_TCVN2737_TO_HOP_DAC_BIET_2", r'C_a = \left( \sum_{i \ge 1} \gamma_{f,i} G_{k,i} \text{ “+” } \sum_{j \ge 1} \gamma_{f,j} \psi_{L,j} Q_{k,L,j} \text{ “+” } \sum_{m \ge 1} \gamma_{f,m} \psi_{t,m} Q_{k,t,m} \right) \text{ “+” } A_d'),
@@ -402,6 +414,15 @@ def process_technical_standard_strategy(
             blocks.append(("tbl", docx.table.Table(child, doc)))
 
     body_md_parts: list[str] = []
+    annex_buffers: dict[str, dict[str, Any]] = {}
+    current_target = "main"
+
+    def emit(chunk: str) -> None:
+        if current_target == "main":
+            body_md_parts.append(chunk)
+        else:
+            annex_buffers[current_target]["parts"].append(chunk)
+
     tables_extracted: list[dict[str, Any]] = []
 
     # ADR 0030: Find exact start of real normative body
@@ -426,13 +447,13 @@ def process_technical_standard_strategy(
                 xml_str = obj._element.xml
                 for rid, katex in rid_to_katex.items():
                     if rid in xml_str and not katex.startswith("<!-- DIAGRAM"):
-                        body_md_parts.append(f"\n{katex}\n")
+                        emit(f"\n{katex}\n")
                         break
                 i += 1
                 continue
 
             if text.lower() in ["trong đó:", "trong đó", "trong do:", "trong do", "với:", "với", "voi:", "voi"]:
-                body_md_parts.append(f"{text}\n\n")
+                emit(f"{text}\n\n")
                 in_trong_do = True
                 i += 1
                 continue
@@ -466,12 +487,12 @@ def process_technical_standard_strategy(
                     "image_relpath": img_relpath,
                     "geometry_rules": AERODYNAMIC_FIGURES_GEOMETRY.get(fig_num, {})
                 }
-                body_md_parts.append(render_markdown_figure_card(fig_entry))
+                emit(render_markdown_figure_card(fig_entry))
                 in_trong_do = False
                 i += 1
                 continue
 
-            # Annex Headings (Generalized Pattern 3)
+            # Annex Headings (Generalized Pattern 3 / Modular Annex Split - ADR 0021 & ADR 0030)
             m_annex = re.match(r"^(?:Phụ\s+lục|PHỤ\s+LỤC)\s+([A-Z])(?:\s*\(([^)]+)\))?(?:\s*[-–—:]\s*(.+))?$", text, re.IGNORECASE)
             if m_annex:
                 a_letter = m_annex.group(1).upper()
@@ -487,13 +508,30 @@ def process_technical_standard_strategy(
                     if not re.match(r"^[0-9A-Z]+\.", ntxt2) and not ntxt2.startswith(("Bảng", "Hình", "Phụ lục", "PHỤ LỤC")):
                         a_title = ntxt2
                         i += 1
+
+                if a_letter in ANNEX_SLUGS_MAP:
+                    slug, def_title, def_type = ANNEX_SLUGS_MAP[a_letter]
+                    a_title = a_title or def_title
+                    a_type = a_type or def_type
+                else:
+                    clean_slug_title = re.sub(r"[^a-z0-9]+", "_", a_title.lower()).strip("_")
+                    slug = f"phu_luc_{a_letter.lower()}_{clean_slug_title}" if clean_slug_title else f"phu_luc_{a_letter.lower()}"
+
+                current_target = a_letter
                 anchor = f"phu-luc-{a_letter.lower()}"
                 hdr = f"## PHỤ LỤC {a_letter}"
                 if a_type:
                     hdr += f"  ({a_type})"
                 if a_title:
                     hdr += f"  {a_title.upper()}"
-                body_md_parts.append(f'\n<a id="{anchor}"></a>\n{hdr}\n\n')
+
+                annex_buffers[a_letter] = {
+                    "slug": slug,
+                    "title": a_title,
+                    "type": a_type or "Quy định",
+                    "anchor": anchor,
+                    "parts": [f'\n<a id="{anchor}"></a>\n{hdr}\n\n']
+                }
                 in_trong_do = False
                 i += 1
                 continue
@@ -505,7 +543,7 @@ def process_technical_standard_strategy(
                 sec_rendered = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
                 sec_title = re.sub(rf"^{re.escape(sec_num)}\s+", "", sec_rendered).strip()
                 anchor = f"muc-{sec_num}"
-                body_md_parts.append(f'\n<a id="{anchor}"></a>\n## {sec_num}  {sec_title.upper()}\n\n')
+                emit(f'\n<a id="{anchor}"></a>\n## {sec_num}  {sec_title.upper()}\n\n')
                 in_trong_do = False
                 i += 1
                 continue
@@ -517,7 +555,7 @@ def process_technical_standard_strategy(
                 prefix = f"**CHÚ THÍCH {n_num}:**" if n_num else "**CHÚ THÍCH:**"
                 rend_note = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
                 rend_note = re.sub(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*", "", rend_note, flags=re.IGNORECASE).strip()
-                body_md_parts.append(f"{prefix} {rend_note}\n\n")
+                emit(f"{prefix} {rend_note}\n\n")
                 in_trong_do = False
                 i += 1
                 continue
@@ -538,7 +576,7 @@ def process_technical_standard_strategy(
                     "image_relpath": img_relpath,
                     "geometry_rules": AERODYNAMIC_FIGURES_GEOMETRY.get(fig_tag, {})
                 }
-                body_md_parts.append(render_markdown_figure_card(fig_entry))
+                emit(render_markdown_figure_card(fig_entry))
                 in_trong_do = False
                 i += 1
                 continue
@@ -548,7 +586,7 @@ def process_technical_standard_strategy(
             if m_def:
                 def_num, def_title = m_def.group(1), m_def.group(2)
                 anchor = f"muc-{def_num.replace('.', '-')}"
-                body_md_parts.append(f'\n<a id="{anchor}"></a>\n#### {def_num}  {def_title}\n\n')
+                emit(f'\n<a id="{anchor}"></a>\n#### {def_num}  {def_title}\n\n')
                 i += 1
                 continue
 
@@ -558,11 +596,11 @@ def process_technical_standard_strategy(
                 anchor = f"muc-{def_num.replace('.', '-')}"
                 if i + 1 < len(blocks) and blocks[i + 1][0] == "p":
                     next_t = blocks[i + 1][1].text.strip()
-                    body_md_parts.append(f'\n<a id="{anchor}"></a>\n#### {def_num}  {next_t}\n\n')
+                    emit(f'\n<a id="{anchor}"></a>\n#### {def_num}  {next_t}\n\n')
                     i += 2
                     continue
                 else:
-                    body_md_parts.append(f'\n<a id="{anchor}"></a>\n#### {def_num}\n\n')
+                    emit(f'\n<a id="{anchor}"></a>\n#### {def_num}\n\n')
                     i += 1
                     continue
 
@@ -576,18 +614,18 @@ def process_technical_standard_strategy(
                 cl_rendered = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
                 cl_title = re.sub(rf"^{re.escape(m_cl.group(1))}\.{re.escape(m_cl.group(2))}\s+", "", cl_rendered).strip()
                 anchor = f"muc-{cl_num.lower().replace('.', '-')}"
-                body_md_parts.append(f'\n<a id="{anchor}"></a>\n### {cl_num}  {cl_title}\n\n')
+                emit(f'\n<a id="{anchor}"></a>\n### {cl_num}  {cl_title}\n\n')
                 in_trong_do = False
                 i += 1
                 continue
 
             # Preserved lists (ADR 0029)
             if text.startswith(("+ ", "+")):
-                body_md_parts.append(f"&nbsp;&nbsp;\\+ {text.lstrip('+ ').strip()}\n")
+                emit(f"&nbsp;&nbsp;\\+ {text.lstrip('+ ').strip()}\n")
                 i += 1
                 continue
             if text.startswith(("- ", "• ", "– ", "— ", "-")):
-                body_md_parts.append(f"\\- {text.lstrip('-•–— ').strip()}\n")
+                emit(f"\\- {text.lstrip('-•–— ').strip()}\n")
                 i += 1
                 continue
 
@@ -610,7 +648,7 @@ def process_technical_standard_strategy(
             if is_context_eq and is_pure_eq_syntax:
                 clean_eq = rendered_p.replace("$", "").replace("...", "\\dots").replace("…", "\\dots")
                 clean_eq = re.sub(r";\s*", r"; \\quad ", clean_eq)
-                body_md_parts.append(f"\n$$\n{clean_eq}\n$$\n\n")
+                emit(f"\n$$\n{clean_eq}\n$$\n\n")
                 in_trong_do = False
                 i += 1
                 continue
@@ -627,10 +665,10 @@ def process_technical_standard_strategy(
                 or rendered_p.endswith(";")
             )
             if in_trong_do and is_glossary:
-                body_md_parts.append(f"&nbsp;&nbsp;&nbsp;&nbsp;{rendered_p}\n\n")
+                emit(f"&nbsp;&nbsp;&nbsp;&nbsp;{rendered_p}\n\n")
             else:
                 in_trong_do = False
-                body_md_parts.append(f"{rendered_p}\n\n")
+                emit(f"{rendered_p}\n\n")
             i += 1
 
         elif b_type == "tbl":
@@ -675,10 +713,10 @@ def process_technical_standard_strategy(
                                     if raw_f:
                                         break
                         f_latex = raw_f.replace("$", "").replace("·", r" \cdot ")
-                    body_md_parts.append(f'\n<a id="formula-{f_slug}"></a>\n\n$$\n{f_latex} \\tag{{{f_tag}}}\n$$\n\n<!-- formula_id: "{fid}" -->\n\n')
+                    emit(f'\n<a id="formula-{f_slug}"></a>\n\n$$\n{f_latex} \\tag{{{f_tag}}}\n$$\n\n<!-- formula_id: "{fid}" -->\n\n')
 
                 if "24" in [ft for ft, _ in all_row_formulas]:
-                    body_md_parts.append('\n$$\n\\text{với: } \\eta_h = 4,6 \\frac{n_1 h}{V(z_s)_{3\\,600\\text{s},50}}; \\quad \\eta_b = 4,6 \\frac{n_1 b}{V(z_s)_{3\\,600\\text{s},50}}; \\quad \\eta_d = 15,4 \\frac{n_1 d}{V(z_s)_{3\\,600\\text{s},50}};\n$$\n\n')
+                    emit('\n$$\n\\text{với: } \\eta_h = 4,6 \\frac{n_1 h}{V(z_s)_{3\\,600\\text{s},50}}; \\quad \\eta_b = 4,6 \\frac{n_1 b}{V(z_s)_{3\\,600\\text{s},50}}; \\quad \\eta_d = 15,4 \\frac{n_1 d}{V(z_s)_{3\\,600\\text{s},50}};\n$$\n\n')
                 in_trong_do = False
                 i += 1
                 continue
@@ -693,7 +731,7 @@ def process_technical_standard_strategy(
                         desc = desc.replace("qk,qper = η · qk,t", "$q_{k,qper} = \\eta \\cdot q_{k,t}$")
                         desc = desc.replace("($q_{k,qper}$ = η · $q_{k,t}$)", "($q_{k,qper} = \\eta \\cdot q_{k,t}$)")
                         pad = calculate_emsp_padding(sym)
-                        body_md_parts.append(f"&nbsp;&nbsp;&nbsp;&nbsp;**{sym}**{pad}{desc}\n\n")
+                        emit(f"&nbsp;&nbsp;&nbsp;&nbsp;**{sym}**{pad}{desc}\n\n")
                 i += 1
                 continue
 
@@ -710,7 +748,7 @@ def process_technical_standard_strategy(
                 else:
                     t_slug = f"bang_{t_num.lower().replace('.', '_').replace('-', '_')}"
                 anchor = f"bang-{t_slug.replace('_', '-')}"
-                body_md_parts.append(f'\n<a id="{anchor}"></a>\n### {t_cap}\n\n')
+                emit(f'\n<a id="{anchor}"></a>\n### {t_cap}\n\n')
             else:
                 # Uncaptioned layout table / Case matrix (e.g. Clause 10.2.4b cases or figure legends)
                 t_num = ""
@@ -729,10 +767,10 @@ def process_technical_standard_strategy(
                     lines.append("| " + " | ".join(r) + " |")
                 md_tbl_str = "\n".join(lines) + "\n\n"
 
-            body_md_parts.append(md_tbl_str)
+            emit(md_tbl_str)
 
             if tbl_footnotes:
-                body_md_parts.append("\n".join(tbl_footnotes) + "\n\n")
+                emit("\n".join(tbl_footnotes) + "\n\n")
 
             if is_captioned_table and raw_grid:
                 csv_path = csv_dir / f"{t_slug}.csv"
@@ -757,6 +795,31 @@ def process_technical_standard_strategy(
             i += 1
 
     (tables_dir / "tables_catalog.json").write_text(json.dumps(tables_extracted, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # Modular Annexes Export (ADR 0021 & ADR 0029 & ADR 0030)
+    if annex_buffers:
+        annexes_dir = bundle_dir / "annexes"
+        annexes_dir.mkdir(parents=True, exist_ok=True)
+        nav_rows = []
+        for a_letter, a_info in annex_buffers.items():
+            annex_slug = a_info["slug"]
+            annex_title = a_info["title"]
+            annex_type = a_info["type"]
+            annex_anchor = a_info["anchor"]
+            annex_md = "".join(a_info["parts"])
+            annex_md = annex_md.replace("figures/images/", "../figures/images/").replace("tables/", "../tables/")
+            (annexes_dir / f"{annex_slug}.md").write_text(annex_md, encoding="utf-8")
+            nav_rows.append(f"| **Phụ lục {a_letter}** | {annex_title} | {annex_type} | [📑 **Xem Phụ lục**](annexes/{annex_slug}.md#{annex_anchor}) |")
+
+        nav_matrix = [
+            "\n---\n",
+            f"## 📑 DANH MỤC PHỤ LỤC KỸ THUẬT CHUYÊN ĐỀ (MODULAR ANNEXES)\n\nToàn bộ {len(annex_buffers)} Phụ lục kỹ thuật chuyên đề đã được module hóa thành các tệp độc lập nhằm tối ưu hóa tra cứu và thẩm tra thiết kế (ADR 0021 & ADR 0030):\n",
+            "| Ký hiệu | Tên Phụ Lục | Tính chất | Liên kết Tập tin |",
+            "| :---: | :--- | :---: | :---: |"
+        ]
+        nav_matrix.extend(nav_rows)
+        nav_matrix.append(f"\n---\n\n## 📊 HỆ THỐNG TRA CỨU BẢNG & SƠ ĐỒ KỸ THUẬT\n\n- **Tra cứu {len(tables_extracted)} Bảng Số Liệu:** Tra cứu chi tiết dạng CSV/JSON tại [Thư mục Bảng Số Liệu](tables/README.md).\n- **Tra cứu Sơ Đồ Hình Vẽ:** Tra cứu ảnh nét cao và đặc tả phân vùng tại [Danh Mục Sơ Đồ Khí Động](figures/figures_catalog.yaml).\n\n")
+        body_md_parts.append("\n".join(nav_matrix))
 
     out_name = output_filename or f"{bundle_dir.name}.md"
     target_md_path = bundle_dir / out_name
