@@ -56,6 +56,31 @@ FORMULAS_MAP: dict[str, tuple[str, str]] = {
 }
 
 
+def sanitize_prose_greeks_and_variables(text: str) -> str:
+    """Convert unformatted Greek symbols and standard variable strings in prose/tables into KaTeX math mode."""
+    for g_char, g_latex in GREEK_MAP.items():
+        # Match greek followed by subscript letters/digits (e.g. γf, ψL, ψt, γn, φ1, φ2)
+        text = re.sub(rf"(?<!\$){g_char}([a-zA-Z0-9]+)(?!\$)", lambda m, gl=g_latex: f"${gl}_{{{m.group(1)}}}$", text)
+        # Match standalone greek symbol
+        text = re.sub(rf"(?<![\$\w]){g_char}(?![\$\w])", lambda m, gl=g_latex: f"${gl}$", text)
+
+    text = re.sub(r"(?<!\$)qk,t(?!\$)", r"$q_{k,t}$", text)
+    text = re.sub(r"(?<!\$)Qk,t(?!\$)", r"$Q_{k,t}$", text)
+    text = re.sub(r"(?<!\$)qk,qper(?!\$)", r"$q_{k,qper}$", text)
+    text = re.sub(r"(?<!\$)Wk(?!\$)", r"$W_k$", text)
+    text = re.sub(r"(?<!\$)W0(?!\$)", r"$W_0$", text)
+    text = re.sub(r"(?<!\$)Gk(?!\$)", r"$G_k$", text)
+    text = re.sub(r"(?<!\$)Qk(?!\$)", r"$Q_k$", text)
+    text = re.sub(r"(?<!\$)QL(?!\$)", r"$Q_L$", text)
+    text = re.sub(r"(?<!\$)Qt(?!\$)", r"$Q_t$", text)
+    text = re.sub(r"(?<!\$)Ad(?!\$)", r"$A_d$", text)
+    text = re.sub(r"(?<!\$)ze(?!\$)", r"$z_e$", text)
+    text = re.sub(r"(?<!\$)zs(?!\$)", r"$z_s$", text)
+    text = re.sub(r"(?<!\$)Gf(?!\$)", r"$G_f$", text)
+
+    return text
+
+
 def render_paragraph_with_runs(p: Any) -> str:
     """Render a docx paragraph while preserving sub/superscripts as clean KaTeX tokens."""
     runs = p.runs
@@ -141,7 +166,7 @@ def render_paragraph_with_runs(p: Any) -> str:
         # Ensure space after math token if followed directly by Vietnamese word
     res = re.sub(r"\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9\u0370-\u03FF_,\{\}\^\\0-9]+)\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9])", r"$\1$ \2", res)
 
-    return normalize_units_and_math(res)
+    return sanitize_prose_greeks_and_variables(normalize_units_and_math(res))
 
 
 def calculate_emsp_padding(sym: str) -> str:
@@ -207,27 +232,76 @@ def format_symbol_cell_runs(cell: Any) -> str:
     return f"${raw_sym}$"
 
 
-def render_table_markdown(table: Any) -> str:
-    """Render a docx Table object as a GitHub Flavored Markdown table."""
+def render_table_markdown(table: Any) -> tuple[str, list[str], list[list[str]]]:
+    """Render a docx Table object as a GitHub Flavored Markdown table with smart column alignment and footnote extraction."""
     grid = []
+    footnotes = []
+
     for row in table.rows:
-        row_cells = [c.text.strip().replace("\n", " ") for c in row.cells]
-        clean_cells = []
-        for cell_val in row_cells:
-            if not clean_cells or cell_val != clean_cells[-1]:
-                clean_cells.append(cell_val)
-        if clean_cells:
-            grid.append(clean_cells)
+        row_rendered = []
+        for cell in row.cells:
+            cell_p_rendered = []
+            for p in cell.paragraphs:
+                p_r = render_paragraph_with_runs(p)
+                if p_r:
+                    if p_r.startswith(("- ", "– ", "— ", "• ")):
+                        p_r = "&nbsp;&nbsp;\- " + p_r.lstrip("-–—• ")
+                    elif p_r.startswith(("+ ", "+")):
+                        p_r = "&nbsp;&nbsp;&nbsp;&nbsp;\+ " + p_r.lstrip("+ ")
+                    cell_p_rendered.append(p_r)
+            row_rendered.append("<br>".join(cell_p_rendered))
+
+        # Deduplicate horizontal spans
+        clean_row = []
+        for val in row_rendered:
+            if not clean_row or val != clean_row[-1]:
+                clean_row.append(val)
+
+        if not clean_row or not any(clean_row):
+            continue
+
+        # Extract Footnotes (ADR 0030)
+        first_cell = clean_row[0].strip()
+        if re.match(r"^(?:<br>)*\s*(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)", first_cell, re.IGNORECASE):
+            fn_text = "<br>".join([c for c in clean_row if c.strip()])
+            fn_clean = re.sub(r"^(?:<br>)*\s*(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*", "", fn_text, flags=re.IGNORECASE).strip()
+            fn_prefix = "**CHÚ THÍCH:**"
+            m_fn_num = re.match(r"^(?:<br>)*\s*(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)", fn_text, re.IGNORECASE)
+            if m_fn_num and m_fn_num.group(1):
+                fn_prefix = f"**CHÚ THÍCH {m_fn_num.group(1)}:**"
+            footnotes.append(f"{fn_prefix} {fn_clean}")
+            continue
+
+        grid.append(clean_row)
+
     if not grid:
-        return ""
+        return "", footnotes, []
+
     max_cols = max(len(r) for r in grid)
     norm_grid = [r + [""] * (max_cols - len(r)) for r in grid]
+
+    # Calculate column alignments (Text -> :---, Numbers/Codes -> :---:)
+    alignments = []
+    for col_idx in range(max_cols):
+        vals = [r[col_idx].strip() for r in norm_grid[1:] if r[col_idx].strip()]
+        if not vals:
+            alignments.append(":---")
+            continue
+        num_count = sum(1 for v in vals if re.match(r"^[-–—+]?\s*\$?\s*[0-9]+(?:[\.,][0-9]+)?\s*\$?$", v))
+        if num_count / len(vals) >= 0.5:
+            alignments.append(":---:")
+        else:
+            alignments.append(":---")
+
     lines = []
     lines.append("| " + " | ".join(norm_grid[0]) + " |")
-    lines.append("| " + " | ".join([":---:"] * max_cols) + " |")
+    lines.append("| " + " | ".join(alignments) + " |")
     for r in norm_grid[1:]:
         lines.append("| " + " | ".join(r) + " |")
-    return "\n".join(lines) + "\n"
+
+    md_table = "\n".join(lines) + "\n\n"
+    return md_table, footnotes, norm_grid
+
 
 
 def process_technical_standard_strategy(
@@ -310,7 +384,7 @@ def process_technical_standard_strategy(
             # Table Caption check
             m_tbl = re.match(r"^(?:Bảng|Table)\s+([0-9A-Za-z\.\-]+)(?:\s*[-–—:]\s*(.+))?$", text, re.IGNORECASE)
             if m_tbl:
-                last_table_caption = text
+                last_table_caption = render_paragraph_with_runs(obj)
                 last_table_caption_num = m_tbl.group(1)
                 in_trong_do = False
                 i += 1
@@ -499,7 +573,7 @@ def process_technical_standard_strategy(
                 i += 1
                 continue
 
-            # 3. Normative Table
+            # 3. Normative Table with Smart Alignment & Footnote Extraction (ADR 0030)
             if last_table_caption:
                 t_num = last_table_caption_num
                 t_cap = last_table_caption
@@ -517,20 +591,22 @@ def process_technical_standard_strategy(
 
             anchor = f"bang-{t_slug.replace('_', '-')}"
             body_md_parts.append(f'\n<a id="{anchor}"></a>\n### {t_cap}\n\n')
-            body_md_parts.append(render_table_markdown(tbl))
 
-            grid = []
-            for row in tbl.rows:
-                grid.append([c.text.strip().replace("\n", " ") for c in row.cells])
-            if grid:
+            md_tbl_str, tbl_footnotes, raw_grid = render_table_markdown(tbl)
+            body_md_parts.append(md_tbl_str)
+
+            if tbl_footnotes:
+                body_md_parts.append("\n".join(tbl_footnotes) + "\n\n")
+
+            if raw_grid:
                 csv_path = csv_dir / f"{t_slug}.csv"
                 with open(csv_path, "w", encoding="utf-8", newline="") as f:
                     writer = csv.writer(f)
-                    writer.writerows(grid)
-                
+                    writer.writerows(raw_grid)
+
                 json_path = json_dir / f"{t_slug}.json"
-                headers = grid[0]
-                rows_data = [dict(zip(headers, r)) for r in grid[1:]]
+                headers = raw_grid[0]
+                rows_data = [dict(zip(headers, r)) for r in raw_grid[1:]]
                 json_path.write_text(json.dumps(rows_data, ensure_ascii=False, indent=2), encoding="utf-8")
 
                 tables_extracted.append({
@@ -539,7 +615,7 @@ def process_technical_standard_strategy(
                     "number": t_num,
                     "csv_path": f"tables/csv/{csv_path.name}",
                     "json_path": f"tables/json/{json_path.name}",
-                    "rows_count": len(grid),
+                    "rows_count": len(raw_grid),
                     "status": "active"
                 })
             i += 1
