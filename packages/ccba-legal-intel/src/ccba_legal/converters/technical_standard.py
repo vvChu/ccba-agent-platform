@@ -57,26 +57,34 @@ FORMULAS_MAP: dict[str, tuple[str, str]] = {
 
 
 def sanitize_prose_greeks_and_variables(text: str) -> str:
-    """Convert unformatted Greek symbols and standard variable strings in prose/tables into KaTeX math mode."""
+    """Convert unformatted Greek symbols, macrons, and standard variable strings in prose/tables into KaTeX math mode."""
+    # Specific missing math runs in OpenXML
+    text = text.replace("hệ số  và ᾱ", r"hệ số $\bar{b}$ và $\bar{\alpha}$")
+    text = text.replace("hệ số và ᾱ", r"hệ số $\bar{b}$ và $\bar{\alpha}$")
+    text = text.replace("ᾱ", r"$\bar{\alpha}$")
+    text = re.sub(r"^\s*và\s+là các hệ số", lambda m: r"$\ell$ và $\bar{\alpha}$ là các hệ số", text)
+
     for g_char, g_latex in GREEK_MAP.items():
         # Match greek followed by subscript letters/digits (e.g. γf, ψL, ψt, γn, φ1, φ2)
-        text = re.sub(rf"(?<!\$){g_char}([a-zA-Z0-9]+)(?!\$)", lambda m, gl=g_latex: f"${gl}_{{{m.group(1)}}}$", text)
+        pattern = r"(?<!\$)\b" + g_char + r"([a-zA-Z0-9]+)\b(?!\$)"
+        text = re.sub(pattern, lambda m, gl=g_latex: f"${gl}_{{{m.group(1)}}}$", text)
         # Match standalone greek symbol
-        text = re.sub(rf"(?<![\$\w]){g_char}(?![\$\w])", lambda m, gl=g_latex: f"${gl}$", text)
+        pattern_alone = r"(?<![\$\w])" + g_char + r"(?![\$\w])"
+        text = re.sub(pattern_alone, lambda m, gl=g_latex: f"${gl}$", text)
 
-    text = re.sub(r"(?<!\$)qk,t(?!\$)", r"$q_{k,t}$", text)
-    text = re.sub(r"(?<!\$)Qk,t(?!\$)", r"$Q_{k,t}$", text)
-    text = re.sub(r"(?<!\$)qk,qper(?!\$)", r"$q_{k,qper}$", text)
-    text = re.sub(r"(?<!\$)Wk(?!\$)", r"$W_k$", text)
-    text = re.sub(r"(?<!\$)W0(?!\$)", r"$W_0$", text)
-    text = re.sub(r"(?<!\$)Gk(?!\$)", r"$G_k$", text)
-    text = re.sub(r"(?<!\$)Qk(?!\$)", r"$Q_k$", text)
-    text = re.sub(r"(?<!\$)QL(?!\$)", r"$Q_L$", text)
-    text = re.sub(r"(?<!\$)Qt(?!\$)", r"$Q_t$", text)
-    text = re.sub(r"(?<!\$)Ad(?!\$)", r"$A_d$", text)
-    text = re.sub(r"(?<!\$)ze(?!\$)", r"$z_e$", text)
-    text = re.sub(r"(?<!\$)zs(?!\$)", r"$z_s$", text)
-    text = re.sub(r"(?<!\$)Gf(?!\$)", r"$G_f$", text)
+    text = re.sub(r"(?<!\$)\bqk,t\b(?!\$)", r"$q_{k,t}$", text)
+    text = re.sub(r"(?<!\$)\bQk,t\b(?!\$)", r"$Q_{k,t}$", text)
+    text = re.sub(r"(?<!\$)\bqk,qper\b(?!\$)", r"$q_{k,qper}$", text)
+    text = re.sub(r"(?<!\$)\bWk\b(?!\$)", r"$W_k$", text)
+    text = re.sub(r"(?<!\$)\bW0\b(?!\$)", r"$W_0$", text)
+    text = re.sub(r"(?<!\$)\bGk\b(?!\$)", r"$G_k$", text)
+    text = re.sub(r"(?<!\$)\bQk\b(?!\$)", r"$Q_k$", text)
+    text = re.sub(r"(?<!\$)\bQL\b(?!\$)", r"$Q_L$", text)
+    text = re.sub(r"(?<!\$)\bQt\b(?!\$)", r"$Q_t$", text)
+    text = re.sub(r"(?<!\$)\bAd\b(?!\$)", r"$A_d$", text)
+    text = re.sub(r"(?<!\$)\bze\b(?!\$)", r"$z_e$", text)
+    text = re.sub(r"(?<!\$)\bzs\b(?!\$)", r"$z_s$", text)
+    text = re.sub(r"(?<!\$)\bGf\b(?!\$)", r"$G_f$", text)
 
     return text
 
@@ -371,8 +379,8 @@ def process_technical_standard_strategy(
                 i += 1
                 continue
 
-            if text.lower() == "trong đó:" or text.lower() == "trong đó":
-                body_md_parts.append("trong đó:\n\n")
+            if text.lower() in ["trong đó:", "trong đó", "trong do:", "trong do", "với:", "với", "voi:", "voi"]:
+                body_md_parts.append(f"{text}\n\n")
                 in_trong_do = True
                 i += 1
                 continue
@@ -528,6 +536,7 @@ def process_technical_standard_strategy(
             # Run-aware paragraph rendering with smart glossary detection
             is_glossary = (
                 rendered_p.startswith(("$", "ký hiệu", "các đại lượng", "\\-"))
+                or bool(re.match(r"^\s*[0-9]+[\.,][0-9]+\s*[-–—]\s*", rendered_p))
                 or " là " in rendered_p
                 or rendered_p.endswith(";")
             )
@@ -544,18 +553,39 @@ def process_technical_standard_strategy(
             cols_cnt = len(tbl.columns)
             cell_texts = [c.text.strip() for r in tbl.rows for c in r.cells]
 
-            # 1. Formula frame check (ADR 0030 / ADR 0031)
-            formula_num = None
-            for t in cell_texts:
-                m_f = re.match(r"^\((\d+)\)$", t)
-                if m_f:
-                    formula_num = m_f.group(1)
-                    break
+            # 1. Formula Frame Check (Universal Single & Multi-Row ADR 0030 / ADR 0031)
+            all_row_formulas = []
+            for r in tbl.rows:
+                r_texts = [c.text.strip() for c in r.cells]
+                f_tag = None
+                for t in r_texts:
+                    m_f = re.match(r"^\(([0-9A-Za-z\.]+)\)$", t)
+                    if m_f:
+                        f_tag = m_f.group(1)
+                        break
+                if f_tag:
+                    all_row_formulas.append((f_tag, r))
 
-            if formula_num and rows_cnt <= 2:
-                if formula_num in FORMULAS_MAP:
-                    fid, f_latex = FORMULAS_MAP[formula_num]
-                    body_md_parts.append(f'\n<a id="formula-{formula_num}"></a>\n\n$$\n{f_latex} \\tag{{{formula_num}}}\n$$\n\n<!-- formula_id: "{fid}" -->\n\n')
+            if all_row_formulas and len(all_row_formulas) == len(tbl.rows):
+                for f_tag, r in all_row_formulas:
+                    f_slug = f_tag.lower().replace(".", "_")
+                    if f_tag in FORMULAS_MAP:
+                        fid, f_latex = FORMULAS_MAP[f_tag]
+                    else:
+                        fid = f"F_TCVN2737_FORMULA_{f_slug.upper()}"
+                        raw_f = ""
+                        for c in r.cells:
+                            ct = c.text.strip()
+                            if ct and not re.match(r"^\([0-9A-Za-z\.]+\)$", ct):
+                                raw_f = render_paragraph_with_runs(c.paragraphs[0]) if c.paragraphs else ct
+                                break
+                        if raw_f:
+                            break
+                        f_latex = raw_f.replace("$", "").replace("·", r" \cdot ")
+                    body_md_parts.append(f'\n<a id="formula-{f_slug}"></a>\n\n$$\n{f_latex} \\tag{{{f_tag}}}\n$$\n\n<!-- formula_id: "{fid}" -->\n\n')
+
+                if "24" in [ft for ft, _ in all_row_formulas]:
+                    body_md_parts.append('\n$$\n\\text{với: } \\eta_h = 4,6 \\frac{n_1 h}{V(z_s)_{3\\,600\\text{s},50}}; \\quad \\eta_b = 4,6 \\frac{n_1 b}{V(z_s)_{3\\,600\\text{s},50}}; \\quad \\eta_d = 15,4 \\frac{n_1 d}{V(z_s)_{3\\,600\\text{s},50}};\n$$\n\n')
                 i += 1
                 continue
 
@@ -594,6 +624,17 @@ def process_technical_standard_strategy(
                 t_slug = f"layout_tbl_{i:03d}"
 
             md_tbl_str, tbl_footnotes, raw_grid = render_table_markdown(tbl)
+            if is_captioned_table and t_slug == "bang_10":
+                # Ensure high-precision headers for Bảng 10
+                raw_grid[0] = ["Dạng địa hình", "$c_r$", r"$\ell$, m", r"$\bar{\alpha}$", r"$\bar{b}$", r"$\alpha$"]
+                alignments = [":---", ":---:", ":---:", ":---:", ":---:", ":---:"]
+                lines = []
+                lines.append("| " + " | ".join(raw_grid[0]) + " |")
+                lines.append("| " + " | ".join(alignments) + " |")
+                for r in raw_grid[1:]:
+                    lines.append("| " + " | ".join(r) + " |")
+                md_tbl_str = "\n".join(lines) + "\n\n"
+
             body_md_parts.append(md_tbl_str)
 
             if tbl_footnotes:
