@@ -55,7 +55,6 @@ from .docx_converter import (
     classify_and_extract_tables,
     convert_docx_to_okf_bundle,
     detect_document_pipeline,
-    format_all_qcvn_md_tables,
     normalize_clause_numbers,
     normalize_docx_markdown,
     process_vbpl_bundle_okf_v22,
