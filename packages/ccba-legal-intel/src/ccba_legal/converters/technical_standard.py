@@ -526,9 +526,10 @@ def process_technical_standard_strategy(
 
     # 1. Harvest formulas and extract figures
     cache_dir = bundle_p.parents[2] / ".md" / "cache" / "formula_vision" if len(bundle_p.parents) >= 3 else bundle_p / ".cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
     skip_vis = os.environ.get("AI_SKIP_VISION") == "1"
     docx_rid_to_katex = rid_to_katex or harvest_docx_formula_images(docx_p, cache_dir=cache_dir, skip_vision=skip_vis)
-    extract_docx_figures(docx_p, bundle_p)
+    extract_docx_figures(docx_p, bundle_p / "figures")
 
     # 2. Extract and locate normative start
     doc = Document(docx_p)

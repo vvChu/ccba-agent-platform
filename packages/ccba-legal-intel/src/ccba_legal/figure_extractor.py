@@ -95,7 +95,8 @@ def extract_docx_figures(
     """Extract all technical figures from DOCX and build OKF figures catalog."""
     docx_p = Path(docx_path)
     out_p = Path(output_dir)
-    images_dir = out_p / "images"
+    figures_dir = out_p if out_p.name == "figures" else out_p / "figures"
+    images_dir = figures_dir / "images"
     images_dir.mkdir(parents=True, exist_ok=True)
 
     doc = Document(docx_p)
