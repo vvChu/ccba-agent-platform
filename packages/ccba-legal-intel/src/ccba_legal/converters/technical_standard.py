@@ -58,11 +58,20 @@ FORMULAS_MAP: dict[str, tuple[str, str]] = {
 
 def sanitize_prose_greeks_and_variables(text: str) -> str:
     """Convert unformatted Greek symbols, macrons, and standard variable strings in prose/tables into KaTeX math mode."""
-    # Specific missing math runs in OpenXML
-    text = text.replace("hệ số  và ᾱ", r"hệ số $\bar{b}$ và $\bar{\alpha}$")
-    text = text.replace("hệ số và ᾱ", r"hệ số $\bar{b}$ và $\bar{\alpha}$")
-    text = text.replace("ᾱ", r"$\bar{\alpha}$")
-    text = re.sub(r"^\s*và\s+là các hệ số", lambda m: r"$\ell$ và $\bar{\epsilon}$ là các hệ số", text)
+    import unicodedata
+
+    # Universal Unicode macron and overline decomposition (e.g. ᾱ -> \bar{\alpha}, b̄ -> \bar{b}, ε̄ -> \bar{\epsilon}, x̄ -> \bar{x})
+    nfd = unicodedata.normalize("NFD", text)
+    def _macron_repl(m: re.Match) -> str:
+        base = m.group(1)
+        base_latex = GREEK_MAP.get(base, base)
+        return f"$\\bar{{{base_latex}}}$"
+    
+    res = re.sub(r"([a-zA-Z\u0370-\u03ff])[\u0304\u0305]", _macron_repl, nfd)
+    text = unicodedata.normalize("NFC", res)
+
+    # Script small l (ℓ)
+    text = text.replace("ℓ", r"$\ell$")
 
     for g_char, g_latex in GREEK_MAP.items():
         # Match greek followed by subscript letters/digits (e.g. γf, ψL, ψt, γn, φ1, φ2)
@@ -89,18 +98,38 @@ def sanitize_prose_greeks_and_variables(text: str) -> str:
     return text
 
 
-def render_paragraph_with_runs(p: Any) -> str:
-    """Render a docx paragraph while preserving sub/superscripts as clean KaTeX tokens."""
+INLINE_SYMBOLS_MAP = {
+    "rId18": r"\ell",
+    "rId19": r"\bar{\epsilon}",
+    "rId28": r"\bar{b}",
+}
+
+
+def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = None) -> str:
+    """Render a docx paragraph while preserving sub/superscripts and resolving inline image symbols as clean KaTeX tokens."""
     runs = p.runs
     if not runs:
         return p.text.strip()
 
     grouped = []
     for r in runs:
+        xml = r._r.xml
+        # Check if run contains an inline image / formula symbol
+        m_rid = re.search(r'r:(?:id|embed)="([^"]+)"', xml)
+        if m_rid:
+            rid = m_rid.group(1)
+            if rid in INLINE_SYMBOLS_MAP:
+                grouped.append(("norm", f"${INLINE_SYMBOLS_MAP[rid]}$"))
+                continue
+            if rid_to_katex and rid in rid_to_katex:
+                k_sym = rid_to_katex[rid]
+                if not k_sym.startswith("<!-- DIAGRAM"):
+                    k_sym_inline = k_sym.strip("$ ")
+                    grouped.append(("norm", f"${k_sym_inline}$"))
+                    continue
         t = r.text
         if not t:
             continue
-        xml = r._r.xml
         is_sub = "subscript" in xml or (r.font.subscript is True)
         is_sup = "superscript" in xml or (r.font.superscript is True)
         mode = "sub" if is_sub else ("sup" if is_sup else "norm")
@@ -240,7 +269,7 @@ def format_symbol_cell_runs(cell: Any) -> str:
     return f"${raw_sym}$"
 
 
-def render_table_markdown(table: Any) -> tuple[str, list[str], list[list[str]]]:
+def render_table_markdown(table: Any, rid_to_katex: dict[str, str] | None = None) -> tuple[str, list[str], list[list[str]]]:
     """Render a docx Table object as a GitHub Flavored Markdown table with smart column alignment and footnote extraction."""
     grid = []
     footnotes = []
@@ -250,7 +279,7 @@ def render_table_markdown(table: Any) -> tuple[str, list[str], list[list[str]]]:
         for cell in row.cells:
             cell_p_rendered = []
             for p in cell.paragraphs:
-                p_r = render_paragraph_with_runs(p)
+                p_r = render_paragraph_with_runs(p, rid_to_katex=rid_to_katex)
                 if p_r:
                     if p_r.startswith(("- ", "– ", "— ", "• ")):
                         p_r = "&nbsp;&nbsp;\- " + p_r.lstrip("-–—• ")
@@ -392,7 +421,7 @@ def process_technical_standard_strategy(
             # Table Caption check
             m_tbl = re.match(r"^(?:Bảng|Table)\s+([0-9A-Za-z\.\-]+)(?:\s*[-–—:]\s*(.+))?$", text, re.IGNORECASE)
             if m_tbl:
-                last_table_caption = render_paragraph_with_runs(obj)
+                last_table_caption = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
                 last_table_caption_num = m_tbl.group(1)
                 in_trong_do = False
                 i += 1
@@ -441,7 +470,7 @@ def process_technical_standard_strategy(
             m_sec = re.match(r"^([1-9]|10)\s+([^\n]+)", text)
             if m_sec:
                 sec_num = m_sec.group(1)
-                sec_rendered = render_paragraph_with_runs(obj)
+                sec_rendered = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
                 sec_title = re.sub(rf"^{re.escape(sec_num)}\s+", "", sec_rendered).strip()
                 anchor = f"muc-{sec_num}"
                 body_md_parts.append(f'\n<a id="{anchor}"></a>\n## {sec_num}  {sec_title.upper()}\n\n')
@@ -454,7 +483,7 @@ def process_technical_standard_strategy(
             if m_note:
                 n_num = m_note.group(1)
                 prefix = f"**CHÚ THÍCH {n_num}:**" if n_num else "**CHÚ THÍCH:**"
-                rend_note = render_paragraph_with_runs(obj)
+                rend_note = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
                 rend_note = re.sub(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*", "", rend_note, flags=re.IGNORECASE).strip()
                 body_md_parts.append(f"{prefix} {rend_note}\n\n")
                 in_trong_do = False
@@ -491,7 +520,7 @@ def process_technical_standard_strategy(
             m_cl = re.match(r"^([1-9]|10)\.([0-9]+(?:\.[0-9]+)*)\s+([^\n]+)", text)
             if m_cl:
                 cl_num = f"{m_cl.group(1)}.{m_cl.group(2)}"
-                cl_rendered = render_paragraph_with_runs(obj)
+                cl_rendered = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
                 cl_title = re.sub(rf"^{re.escape(m_cl.group(1))}\.{re.escape(m_cl.group(2))}\s+", "", cl_rendered).strip()
                 anchor = f"muc-{cl_num.replace('.', '-')}"
                 body_md_parts.append(f'\n<a id="{anchor}"></a>\n### {cl_num}  {cl_title}\n\n')
@@ -510,7 +539,7 @@ def process_technical_standard_strategy(
                 continue
 
             # Generalized Unnumbered Display Equations Detection (ADR 0030)
-            rendered_p = render_paragraph_with_runs(obj)
+            rendered_p = render_paragraph_with_runs(obj, rid_to_katex=rid_to_katex)
             prev_t = blocks[i - 1][1].text.strip() if i > 0 and blocks[i - 1][0] == "p" else ""
             next_t = blocks[i + 1][1].text.strip() if i + 1 < len(blocks) and blocks[i + 1][0] == "p" else ""
             
@@ -577,7 +606,7 @@ def process_technical_standard_strategy(
                         for c in r.cells:
                             ct = c.text.strip()
                             if ct and not re.match(r"^\([0-9A-Za-z\.]+\)$", ct):
-                                raw_f = render_paragraph_with_runs(c.paragraphs[0]) if c.paragraphs else ct
+                                raw_f = render_paragraph_with_runs(c.paragraphs[0], rid_to_katex=rid_to_katex) if c.paragraphs else ct
                                 break
                         if raw_f:
                             break
@@ -595,7 +624,7 @@ def process_technical_standard_strategy(
                 for row in tbl.rows:
                     if len(row.cells) >= 2:
                         sym = format_symbol_cell_runs(row.cells[0])
-                        desc = render_paragraph_with_runs(row.cells[1].paragraphs[0]) if row.cells[1].paragraphs else row.cells[1].text.strip()
+                        desc = render_paragraph_with_runs(row.cells[1].paragraphs[0], rid_to_katex=rid_to_katex) if row.cells[1].paragraphs else row.cells[1].text.strip()
                         desc = desc.replace("qk,qper = η · qk,t", "$q_{k,qper} = \\eta \\cdot q_{k,t}$")
                         desc = desc.replace("($q_{k,qper}$ = η · $q_{k,t}$)", "($q_{k,qper} = \\eta \\cdot q_{k,t}$)")
                         pad = calculate_emsp_padding(sym)

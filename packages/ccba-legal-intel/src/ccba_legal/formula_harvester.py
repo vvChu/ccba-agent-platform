@@ -68,8 +68,10 @@ def is_formula_image(height_pt: float, width_pt: float, surrounding_text: str) -
     Returns:
         True neu anh la cong thuc toan hoc; False neu la so do/hinh ve ky thuat.
     """
-    # Fix 1: Heuristic kep — kich thuoc nho VA khong phai hinh toan trang
-    is_small = height_pt <= 60.0 and width_pt <= 380.0
+    # Inline math symbols (e.g. \ell, \bar{\epsilon}, \bar{b})
+    if height_pt <= 30.0 and width_pt <= 100.0:
+        return True
+    is_small = height_pt <= 80.0 and width_pt <= 400.0
     has_context = any(kw in surrounding_text for kw in _FORMULA_CONTEXT_KEYWORDS)
     return is_small and has_context
 
