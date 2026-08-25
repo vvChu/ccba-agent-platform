@@ -22,32 +22,41 @@ Kỹ năng này hướng dẫn Agent tự động thực hiện quy trình cào 
 
 ### 1.1. Rào cản Bảo mật & Quản lý Thông tin xác thực
 *   **Không hardcode credentials**: Đọc thông tin tài khoản TVPL thông qua biến môi trường hệ thống hoặc file `.env` (`TVPL_USERNAME`, `TVPL_PASSWORD`). Báo lỗi nếu thiếu.
+*   **Persistent Chromium VIP Profile (ADR 0031)**: Sử dụng hồ sơ trình duyệt chuyên dụng độc lập tại `~/.gemini/antigravity/chrome_vip`. Khi bắt đầu phiên làm việc hoặc khi session hết hạn, chạy lệnh tương tác:
+    ```bash
+    python -m ccba_legal login
+    ```
+    Đăng nhập tài khoản TVPL Pro 1 lần duy nhất để lưu cookie phiên bền vững cho toàn bộ các lệnh cào tự động sau đó.
 
-### 1.2. Rào cản Đường dẫn Hệ thống (Windows MAX_PATH Prevention)
+### 1.2. Ma Trận Ưu Tiên Tải Dữ Liệu TVPL VIP (ADR 0031)
+1. **Tier 1 — VIP Digital Vector Searchable PDF (`part=-100` / `#ctl00_Content_ThongTinVB_filePDFHyperLink`)**: Mỏ neo Pháp lý Tối thượng Cấp 1 (100% thân văn bản + toàn bộ phụ lục số hóa & bảng tra cứu).
+2. **Tier 2 — VIP OpenXML Word Document (`part=-1&docx=1` / `#ctl00_Content_ThongTinVB_vietnameseHyperLink_Docx`)**: Nguồn Dữ Liệu Gốc Vàng (Gold Source Input) để nạp vào `docx_converter.py` chuyển đổi sang OKF v2.2.
+3. **Tier 3 — Gazette Scan PDF (`part=0` / `#ctl00_Content_ThongTinVB_pdfHyperLink`)**: Fallback dự phòng khi văn bản chưa có bản PDF số hóa riêng.
+
+### 1.3. Rào cản Đường dẫn Hệ thống (Windows MAX_PATH Prevention)
 *   **Giới hạn độ dài Slug**: Để tránh lỗi `FileNotFoundError` khi ghi các tệp phụ lục nằm sâu trên Windows, hàm `sanitize_slug` **bắt buộc** phải giới hạn độ dài slug tối đa là **60 ký tự**.
 
-### 1.3. Quy chuẩn Tích hợp OKF Bundle Lồng nhau (Parent-Child Flat Architecture)
-*   **Luật gốc (Parent Law)**: Lưu tại `\.md\legal_docs\<law_slug>\`
-*   **Văn bản hướng dẫn (Guiding Decrees/Circulars)**: Lưu phẳng bên trong:
-    *   Tệp gốc và markdown: `\.md\legal_docs\<law_slug>\guiding_docs\<guiding_slug>.docx` (và `.md`)
-    *   Tệp phụ lục phân tách: `\.md\legal_docs\<law_slug>\guiding_docs\appendices\<guiding_slug>-phu_luc_xx.md`
-*   **Đăng ký Registry**: Cập nhật `file_path` và `markdown_path` trong `legal_registry.yaml`.
+### 1.4. Quy chuẩn Tích hợp OKF Bundle Lồng nhau (Parent-Child Flat Architecture)
+*   **Luật gốc (Parent Law)**: Lưu tại `legal_docs/01_vbpl/<law_slug>/`
+*   **Văn bản hướng dẫn (Guiding Decrees/Circulars)**: Lưu phẳng bên trong `legal_docs/01_vbpl/<doc_slug>/`
+*   **Đăng ký Registry**: Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256` và `sha256` trong `legal_registry.yaml`.
 
-### 1.4. Đặc Tả Gói Tri Thức Hợp Nhất OKF Bundle v2.0 (ADR 0038)
+### 1.5. Đặc Tả Gói Tri Thức Hợp Nhất OKF Bundle v2.2 (ADR 0021 & ADR 0031)
 Mỗi văn bản quy phạm pháp luật khi đóng gói thành công **bắt buộc** phải tuân thủ cấu trúc bundle độc lập qua Deep Seam `OKFBundlePackager`:
 ```text
 legal_docs/<category_prefix>/<document_slug>/
-├── metadata.yaml               # Metadata độc lập (SSOT cấp bundle, loại bỏ YAML frontmatter khỏi .md)
-├── <document_slug>.md          # Nội dung Markdown thuần sạch 100%
-├── clauses.json                # Danh mục AST phẳng (tra cứu O(1), có node_type và parent_id)
-├── qa_benchmark.json           # Tập dữ liệu đối chuẩn Ground-Truth QA (5 trường hỗ trợ RAG Gate)
-├── index.md                    # Mục lục điều hướng nội bộ
-└── tables/                     # Thư mục chứa bảng dữ liệu trích xuất
-    ├── json/                   # JSON ma trận 2D
-    └── csv/                    # CSV UTF-8 with BOM
+├── metadata.yaml               # Metadata độc lập (SSOT cấp bundle, lưu pdf_sha256 và legal_basis)
+├── <document_slug>.md          # Nội dung Markdown thuần sạch 100% (Pure Normative Body)
+├── <document_slug>.pdf         # Mỏ neo PDF Công báo / PDF số hóa toàn văn (Anchor of Trust)
+├── templates/                  # Thư mục biểu mẫu nguyên tử (Atomic Form Templates)
+│   └── phu_luc_xx/mau_yy_...md
+├── tables/                     # Thư mục chứa bảng dữ liệu tra cứu
+│   ├── json/                   # JSON ma trận 2D
+│   └── csv/                    # CSV UTF-8 with BOM
+└── index.md                    # Mục lục điều hướng nội bộ
 ```
-* **Quy chuẩn `qa_benchmark.json` (5 trường bắt buộc):** `question`, `answer`, `anchor`, `citation`, `ground_truth_context`.
-* **Cơ chế Khớp nối Hub-Spoke:** Tương thích 100% hai chiều giữa Hub (`OKFBundlePackager`) và Spoke (`gold_standard_processor.py`).
+* **Quy chuẩn `metadata.yaml`:** Chứa `id`, `document_number`, `type`, `issued_date`, `effective_date`, `pdf_sha256`, `pdf_status: verified`.
+* **Cơ chế Khớp nối Hub-Spoke:** Tương thích 100% hai chiều giữa Hub (`packages/ccba-legal-intel`) và Spoke (`legal_registry.yaml`).
 
 ---
 
@@ -71,34 +80,41 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
 
 ## 3. Hướng dẫn Vận hành Quy trình 5 Bước
 
-1. **Kiểm tra Cấu hình & Môi trường**:
-   - Đảm bảo biến môi trường `TVPL_USERNAME` và `TVPL_PASSWORD` đã sẵn sàng trong file `.env`.
-   - **Tiêu chí hoàn thành:** Xác nhận tài khoản VIP TVPL sẵn sàng trước khi thực thi cào.
+1. **Khởi Tạo Phiên TVPL VIP (Persistent Session)**:
+   ```bash
+   python -m ccba_legal login
+   ```
+   Đăng nhập tài khoản VIP 1 lần duy nhất để lưu cookie phiên.
 
-2. **Thu thập Dữ liệu qua Deep Seam (`TVPLCrawler`)**:
-   - Kích hoạt Facade `TVPLCrawler` để tải nội dung văn bản và tệp tin đính kèm `.docx` tự động dưới sự bảo vệ của Mutex Lock:
-     ```python
-     from ccba_legal import TVPLCrawler
+2. **Thu thập Dữ liệu qua CLI (`fetch` / `batch-fetch`)**:
+   ```bash
+   python -m ccba_legal fetch "<TVPL_URL_OR_ID>"
+   ```
+   Tự động tải về bản PDF số hóa VIP (`part=-100`) và bản Word `.docx` (`part=-1&docx=1`).
 
-     crawler = TVPLCrawler()
-     doc = crawler.fetch_document(url_or_id)
-     ```
-     Hoặc qua CLI:
-     ```bash
-     python scripts/legal/tvpl_vip_crawler.py "<TVPL_URL>"
-     ```
-   - **Tiêu chí hoàn thành:** Văn bản HTML/Markdown và tệp đính kèm được tải về thành công vào thư mục đích.
+3. **Chuyển đổi sang OKF v2.2 Bundle**:
+   ```bash
+   python -m ccba_legal convert ".md/extracted_docs/<doc_slug>/<doc_slug>.docx" "legal_docs/<category>/<doc_slug>"
+   ```
 
-3. **Phân rã Phụ lục & Chuẩn hóa Liên kết**:
-   - Kích hoạt module phân tách biểu mẫu phụ lục và gọi `relative-link-patcher` để tự động chuẩn hóa liên kết phụ lục trỏ về `./appendices/`, đồng thời cập nhật mục lục `index.md`.
-   - **Tiêu chí hoàn thành:** Toàn bộ phụ lục được phân rã thành tệp riêng và liên kết tương đối trong văn bản chính hoạt động chính xác.
+4. **Hợp nhất Văn bản Sửa đổi (VBHN Engine - nếu có)**:
+   ```bash
+   python -m ccba_legal consolidate -m "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" -b "legal_docs/<category>/<doc_slug>/<doc_slug>.md" -o "legal_docs/<category>/<doc_slug>"
+   ```
 
-4. **Đăng ký Cục bộ (Local Registry) & Dọn dẹp**:
-   - Thêm bản ghi metadata vào `.md/data/legal_registry.yaml`.
-   - Cập nhật trạng thái `superseded` cho các văn bản cũ bị thay thế dựa trên quan hệ `replaced_docs`.
-   - Ghi nhận đường dẫn tệp gốc vào `.md/data/sources_registry.yaml`.
-   - **Tiêu chí hoàn thành:** Các tệp registry được cập nhật đồng bộ và chính xác.
+5. **Kiểm Định Định Dạng & Liên Kết (Visual Parity & Cross-Link Linter)**:
+   ```bash
+   python -m ccba_legal lint "legal_docs/<category>/<doc_slug>"
+   ```
 
-5. **Báo cáo Kết quả**:
-   - In ra sơ đồ cây thư mục OKF Bundle đã được tạo và hiển thị tóm tắt metadata văn bản vừa nạp.
-   - **Tiêu chí hoàn thành:** Hiển thị cấu trúc OKF Bundle hoàn chỉnh trong tin nhắn phản hồi cho người dùng.
+6. **Trích xuất AST & Tập Dữ Liệu Đối Chuẩn (QA Benchmark)**:
+   ```bash
+   python -m ccba_legal process "legal_docs/<category>/<doc_slug>"
+   ```
+
+7. **Đăng ký Sổ Bộ & Kiểm Định CI Gates Spoke (Zero-Tolerance)**:
+   ```powershell
+   python scripts/lint_visual_parity.py
+   python scripts/validate_legal_spoke.py
+   python scripts/verify_all_docs_against_pdf.py
+   ```
