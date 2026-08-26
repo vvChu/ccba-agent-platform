@@ -51,7 +51,7 @@ Với mỗi file, phân loại:
 
 1. **Xác định vị trí đích trong Hub:** Thuật toán thuộc Converter nào? Engine nào? Package nào trong `packages/ccba-*/src/`?
 2. **Áp dụng 5 Cổng Phản Biện** từ `improve-codebase-architecture`:
-   - **Cổng 1 (Glue vs Domain):** Tỷ lệ $\\ge 70\%$ Glue Code $\\rightarrow$ KHÔNG nhúng vào lõi Seam.
+   - **Cổng 1 (Glue vs Domain):** Tỷ lệ $\ge 70\%$ Glue Code $\rightarrow$ KHÔNG nhúng vào lõi Seam.
    - **Cổng 2 (Hard Caller Gate):** Đếm số callers thực tế và xác minh implementation.
    - **Cổng 3 (SDK Signatures):** Kiểm tra signature tương thích với hệ thống hiện có.
    - **Cổng 4 (Unique Naming):** Đảm bảo symbol name không xung đột toàn cục.
@@ -100,13 +100,13 @@ Với mỗi file, phân loại:
 1. **Lưu trữ ghi chú R&D** vào `.md/archive/` theo chuẩn ADR 0033.
 2. **Cập nhật `session_learnings.md`** với bài học rút ra từ quá trình tốt nghiệp (pattern mới phát hiện, edge case, v.v.).
 3. **Commit & Branching Policy (Tránh xung đột bảo vệ nhánh):**
-   - **Khi có `--issue [ID]` hoặc chuẩn bị mở PR:** Tạo nhánh đề xuất trên Hub:
-     ```powershell
-     git checkout main && git pull origin main && git checkout -b proposal/issue-[ID]
-     ```
+   - **Khi có `--issue [ID]`:** Tạo nhánh đề xuất trên Hub `proposal/issue-[ID]`.
+   - **Khi KHÔNG có `--issue`:** Đánh giá Scope:
+     * 🟢 **Thay đổi lớn** ($\ge 100$ dòng / module mới) $\rightarrow$ Gợi ý tự động tạo Issue trên Hub để gắn mã theo dõi và ghi nhận Changelog.
+     * ⚪ **Thay đổi nhỏ** ($< 100$ dòng / vá lỗi nội bộ) $\rightarrow$ Tạo nhánh `proposal/[feature-name]` hoặc commit trực tiếp nếu là local refactor.
    - **Commit theo chuẩn Git:**
-     - Hub: `refactor(scope): consolidate R&D [feature] into Deep Seam (Closes #[ID])`
+     - Hub: `refactor(scope): consolidate R&D [feature] into Deep Seam${ISSUE_ID:+ (Closes #[ISSUE_ID])}`
      - Spoke: `chore(scope): delegate [feature] to core package ccba_legal`
 4. **Chuyển giao trạng thái tiếp theo (Seamless Handoff):**
-   - Khi sẵn sàng mở PR chính thức: Kích hoạt ngay `/ccba-contribute-to-hub --issue [ID]` để tạo hồ sơ Proposal và tự động theo dõi CI Tích Xanh.
+   - Khi sẵn sàng mở PR chính thức: Kích hoạt ngay `/ccba-contribute-to-hub` (kèm `--issue [ID]` nếu có) để tạo hồ sơ Proposal và tự động theo dõi CI Tích Xanh.
    - Nếu thay đổi ảnh hưởng đến kiến trúc nền tảng $\rightarrow$ Đề xuất ghi nhận ADR mới.
