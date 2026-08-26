@@ -95,11 +95,18 @@ Với mỗi file, phân loại:
 
 ---
 
-## 📦 Bước 5: Lưu Trữ & Đóng Vòng
+## 📦 Bước 5: Lưu Trữ, Nhánh Git & Đóng Vòng
 
 1. **Lưu trữ ghi chú R&D** vào `.md/archive/` theo chuẩn ADR 0033.
 2. **Cập nhật `session_learnings.md`** với bài học rút ra từ quá trình tốt nghiệp (pattern mới phát hiện, edge case, v.v.).
-3. **Commit theo chuẩn Git:**
-   - Hub: `refactor(scope): consolidate R&D [feature] into Deep Seam`
-   - Spoke: `chore(scope): remove obsolete patch script [name]`
-4. Nếu thay đổi ảnh hưởng đến kiến trúc nền tảng $\\rightarrow$ Đề xuất ghi nhận ADR mới.
+3. **Commit & Branching Policy (Tránh xung đột bảo vệ nhánh):**
+   - **Khi có `--issue [ID]` hoặc chuẩn bị mở PR:** Tạo nhánh đề xuất trên Hub:
+     ```powershell
+     git checkout main && git pull origin main && git checkout -b proposal/issue-[ID]
+     ```
+   - **Commit theo chuẩn Git:**
+     - Hub: `refactor(scope): consolidate R&D [feature] into Deep Seam (Closes #[ID])`
+     - Spoke: `chore(scope): delegate [feature] to core package ccba_legal`
+4. **Chuyển giao trạng thái tiếp theo (Seamless Handoff):**
+   - Khi sẵn sàng mở PR chính thức: Kích hoạt ngay `/ccba-contribute-to-hub --issue [ID]` để tạo hồ sơ Proposal và tự động theo dõi CI Tích Xanh.
+   - Nếu thay đổi ảnh hưởng đến kiến trúc nền tảng $\rightarrow$ Đề xuất ghi nhận ADR mới.
