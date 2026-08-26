@@ -22,13 +22,15 @@ Quy trình chuẩn hóa để đóng gói mã nguồn, tests, proposal và mở 
 
 ---
 
-## 📋 Bước 1: Thu thập Thông tin & Mã Nguồn Đóng Gói
-Ghi nhận đầy đủ 6 thông tin cốt lõi:
-1. **Loại đề xuất:** `tool` (Package trong `packages/`), `skill` (`.agents/skills/`), `workflow` (`.agents/workflows/`), hoặc `rules`.
-2. **Tên đề xuất:** Dạng kebab-case (ví dụ: `legislative-consolidator-okf-v2`).
-3. **Mô tả & Vấn đề giải quyết:** Nỗi đau thực tế đã giải quyết tại Spoke.
-4. **Mã nguồn & Tests:** File code và file test tại Spoke đã pass $100\%$ kiểm thử cục bộ.
-5. **Dự án áp dụng & Mức độ ưu tiên:** Bộ môn áp dụng và "Cao" / "Trung bình" / "Thấp".
+## 📋 Bước 1: Thu thập Thông tin, Liên Kết Issue & Cổng Kiểm Lọc R&D
+Ghi nhận đầy đủ thông tin cốt lõi:
+1. **Liên kết Issue:** Tham số `--issue [ID]` (nếu xuất phát từ `/ccba-issue-to-hub`).
+2. **Loại đề xuất:** `tool` (Package trong `packages/`), `skill` (`.agents/skills/`), `workflow` (`.agents/workflows/`), hoặc `rules`.
+3. **Tên đề xuất:** Dạng kebab-case (ví dụ: `modernize-annex-engine-okf-v23`).
+4. **Mô tả & Vấn đề giải quyết:** Nỗi đau thực tế đã giải quyết tại Spoke.
+5. **Cổng Kiểm Lọc R&D (Graduation Pre-Flight Gate):**
+   - Đảm bảo mã nguồn đã được làm sạch qua `/ccba-graduate-rd` (loại bỏ 100% `print`, đường dẫn hardcoded, rác tạm; có đủ Type Hints & Docstrings Google style).
+   - Test suite cục bộ trong `packages/[pkg]/tests/` phải đạt **100% PASS** trước khi tạo Proposal.
 
 ---
 
@@ -44,7 +46,8 @@ Trước khi tạo mới, Agent **bắt buộc** kiểm tra hệ sinh thái Hub:
 Thực thi tại thư mục Hub (`hub_path`):
 1. **Đồng bộ nhánh & Khóa bảo vệ nhánh (Pre-Commit Branch Assertion):**
    ```bash
-   git checkout main && git pull origin main && git checkout -b proposal/[tên-đề-xuất]
+   BRANCH_NAME="proposal/${ISSUE_ID:+issue-${ISSUE_ID}-}${PROPOSAL_NAME}"
+   git checkout main && git pull origin main && git checkout -b "$BRANCH_NAME"
    [ "$(git branch --show-current)" = "main" ] && { echo "❌ Lỗi: Đang ở main!"; exit 1; }
    ```
 2. **Đóng gói Mã nguồn & Tests vào Package tương ứng:**
@@ -61,6 +64,7 @@ Thực thi tại thư mục Hub (`hub_path`):
    name: "[tên-đề-xuất]"
    status: "open"
    priority: "Cao"
+   related_issue: "#[ISSUE_ID]" # Liên kết Issue nếu có
    proposed_by_project: "[tên-spoke]"
    proposed_by_archetype: "knowledge_corpus"
    proposed_date: "YYYY-MM-DD"
@@ -70,17 +74,18 @@ Thực thi tại thư mục Hub (`hub_path`):
 4. **Leakage Guard & Push:**
    ```bash
    python scripts/governance/check_spoke_leakage.py
-   git add -A && git commit -m "feat([scope]): add [tên-đề-xuất] and proposal" && git push origin proposal/[tên-đề-xuất]
+   git add -A && git commit -m "feat([scope]): add [tên-đề-xuất] and proposal" && git push origin "$BRANCH_NAME"
    ```
 
 ---
 
-## 🚀 Bước 4: Mở GitHub Pull Request (PR Flow)
-- **Tự động qua GitHub CLI:**
+## 🚀 Bước 4: Mở GitHub Pull Request (PR Flow Tự Đóng Issue)
+- **Tự động qua GitHub CLI (Tự động gắn mã Closes #[ISSUE_ID]):**
   ```bash
-  gh pr create --title "feat([scope]): add [tên-đề-xuất]" --body "Automated proposal submission." --base main --head proposal/[tên-đề-xuất]
+  PR_BODY="Automated proposal submission from Spoke [tên-spoke].${ISSUE_ID:+ Closes #${ISSUE_ID}}"
+  gh pr create --title "feat([scope]): add [tên-đề-xuất]" --body "$PR_BODY" --base main --head "$BRANCH_NAME"
   ```
-- **Thủ công:** Truy cập `[PR-creation-URL]/pull/new/proposal/[tên-đề-xuất]`.
+- **Thủ công:** Truy cập `[PR-creation-URL]/pull/new/[BRANCH_NAME]`.
 
 ---
 
