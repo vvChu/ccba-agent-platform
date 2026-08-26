@@ -81,6 +81,21 @@ def lint_document(md_path: Path) -> list[str]:
         if re.search(r"<(?:table|thead|tbody|tr|th|td)\b", stripped, re.IGNORECASE):
             errors.append(f"Line {idx}: UNCLEAN_HTML_TABLE: Unclean raw HTML table tag found: '{stripped}'")
 
+        # 9. Check squashed notes with <br> tag (ADR 0030)
+        if re.search(r"<br>\s*(?:\*\*)?CHÚ THÍCH", stripped, re.IGNORECASE):
+            errors.append(f"Line {idx}: SQUASHED_NOTE_BR: Squashed footnote using <br> tag: '{stripped[:70]}'")
+
+    # 10. Check monotonic footnote numbering sequence (ADR 0030)
+    chunks = re.split(r"(?=\n#{1,4}\s+|\n<a id=)", text)
+    for chunk in chunks:
+        labels = [m.group(1).upper() for m in re.finditer(r"\b(CHÚ THÍCH(?:\s+\d+)?):", chunk, re.IGNORECASE)]
+        if labels:
+            has_note_2 = any("CHÚ THÍCH 2" in l for l in labels)
+            has_note_1 = any("CHÚ THÍCH 1" in l for l in labels)
+            has_unnum_note = any(l == "CHÚ THÍCH" for l in labels)
+            if has_note_2 and has_unnum_note and not has_note_1:
+                errors.append("MISSING_NOTE_1: Unnumbered 'CHÚ THÍCH' found in section where 'CHÚ THÍCH 2' exists. Must use 'CHÚ THÍCH 1:'.")
+
     return errors
 
 
