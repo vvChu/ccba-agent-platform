@@ -24,7 +24,11 @@ Quy trình chuẩn hóa để đóng gói mã nguồn, tests, proposal và mở 
 
 ## 📋 Bước 1: Thu thập Thông tin, Liên Kết Issue & Cổng Kiểm Lọc R&D
 Ghi nhận đầy đủ thông tin cốt lõi:
-1. **Liên kết Issue:** Tham số `--issue [ID]` (nếu xuất phát từ `/ccba-issue-to-hub`).
+1. **Liên kết Issue & Cổng Tự Động Phân Loại Scope (Smart Scope-Aware Issue Gate):**
+   - **Nếu có `--issue [ID]`:** Kế thừa trực tiếp mã Issue để liên kết và đóng tự động (`Closes #[ID]`).
+   - **Nếu KHÔNG có `--issue`:** Agent tự động đánh giá quy mô thay đổi:
+     * 🟢 **Quy mô Lớn (Major Scope):** Thêm module/deep seam mới trong `packages/`, cập nhật kiến trúc (ADR), hoặc thay đổi $\ge 100$ dòng code / $\ge 3$ files $\rightarrow$ **Agent chủ động gợi ý/tự động tạo 1 GitHub Issue** trên Hub để ghi nhận Changelog, Ký ức dài hạn (Traceability) và gắn vào PR.
+     * ⚪ **Quy mô Nhỏ / Nội bộ (Minor Scope):** Vá lỗi nhỏ, sửa typo, cập nhật docstring, refactor nội bộ $< 100$ dòng $\rightarrow$ **Bỏ qua tạo Issue** để tránh làm rác Issue Tracker, mở PR trực tiếp.
 2. **Loại đề xuất:** `tool` (Package trong `packages/`), `skill` (`.agents/skills/`), `workflow` (`.agents/workflows/`), hoặc `rules`.
 3. **Tên đề xuất:** Dạng kebab-case (ví dụ: `modernize-annex-engine-okf-v23`).
 4. **Mô tả & Vấn đề giải quyết:** Nỗi đau thực tế đã giải quyết tại Spoke.
