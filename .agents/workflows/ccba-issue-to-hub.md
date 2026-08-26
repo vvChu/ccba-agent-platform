@@ -94,9 +94,9 @@ Cung cấp toàn bộ nội dung markdown đã định dạng kèm đường d�
 ### Bước 5: Báo Cáo & Hướng Dẫn Vòng Đời Tiếp Theo
 Sau khi tạo thành công, Agent gửi phản hồi tổng kết:
 1. **Mã số & Link Issue:** Ví dụ `#209 - https://github.com/vvChu/ccba-agent-platform/issues/209`.
-2. **Hướng dẫn phát triển tiếp:**
-   - Khi sẵn sàng lập trình: Tạo feature branch bằng `/ccba-new-feature #[ISSUE_ID]`.
-   - Khi hoàn thành code và tests tại Spoke: Đóng gói và mở PR lên Hub bằng `/ccba-contribute-to-hub`.
+2. **Hướng dẫn chu trình khép kín tiếp theo:**
+   - Khi có prototype/script nháp tại Spoke $\to$ Tốt nghiệp mã nguồn: `/ccba-graduate-rd --issue #[ISSUE_ID]`
+   - Khi mở PR chính thức lên Hub $\to$ Đóng gói & mở PR: `/ccba-contribute-to-hub --issue #[ISSUE_ID]` (Tự động gắn mã `Closes #[ISSUE_ID]`).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
