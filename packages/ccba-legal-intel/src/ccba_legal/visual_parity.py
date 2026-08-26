@@ -1,12 +1,14 @@
-"""CCBA Legal Knowledge — Visual & Footnote Parity CI Gate (Gate 4).
+"""CCBA Legal Knowledge — Visual & Footnote Parity CI Gate (Gate 4 & ADR 0029/0030).
 
 Audits all Markdown documents in legal_docs/ for:
 1. Double bullets (- -  or * * ).
-2. Trapped table footnotes inside table cells (| _1) ... |).
-3. Concatenated inline dashes inside notes (: - ...; - ...).
-4. Raw unformatted table superscripts (REI 60 1) instead of <sup>1)</sup>).
-5. Consecutive/redundant _CHÚ THÍCH:_ headers.
+2. Consecutive/redundant _CHÚ THÍCH:_ headers.
+3. Trapped table footnotes inside table cells (| _1) ... |).
+4. Concatenated inline dashes inside notes (: - ...; - ...).
+5. Raw unformatted table superscripts (REI 60 1) instead of <sup>1)</sup>).
 6. Unbulleted technical classification codes (LT, BC, SK, ĐT, K0..3).
+7. Redundant bullet before footnote header (- **CHÚ THÍCH:).
+8. Raw uncleaned HTML table tags (<table>, <tr>, <td>).
 """
 
 from __future__ import annotations
@@ -14,6 +16,72 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from typing import Any
+
+
+def lint_document(md_path: Path) -> list[str]:
+    """Lint a single Markdown file for visual formatting and layout parity issues."""
+    errors: list[str] = []
+    try:
+        text = md_path.read_text(encoding="utf-8")
+    except Exception as exc:
+        return [f"Cannot read file: {exc}"]
+
+    lines = text.splitlines()
+
+    for idx, line in enumerate(lines, 1):
+        stripped = line.strip()
+
+        # 1. Check double bullets
+        if re.match(r"^\s*[-*]\s+[-*]\s+", line):
+            errors.append(f"Line {idx}: DOUBLE_BULLET: '{stripped}'")
+
+        # 2. Check consecutive _CHÚ THÍCH:_ headers
+        if stripped == "_CHÚ THÍCH:_" and idx < len(lines):
+            next_lines = [
+                lines[j].strip()
+                for j in range(idx, min(len(lines), idx + 3))
+                if lines[j].strip()
+            ]
+            if len(next_lines) > 0 and next_lines[0] == "_CHÚ THÍCH:_":
+                errors.append(f"Line {idx}: DUPLICATE_NOTE_HEADER: Consecutive _CHÚ THÍCH:_")
+
+        # 3. Check trapped table footnotes in table rows
+        if line.startswith("|") and re.search(
+            r"\|\s*(_[1-9]\)|_CHÚ THÍCH|_GHI CHÚ|_Đối với)", line
+        ):
+            errors.append(f"Line {idx}: TRAPPED_TABLE_FOOTNOTE: '{stripped[:70]}...'")
+
+        # 4. Check concatenated inline dashes inside notes
+        if re.search(
+            r"(?:như sau|điều kiện sau|sau đây|bao gồm):\s*-\s+.*?[;.]\s*-\s+",
+            stripped,
+            re.IGNORECASE,
+        ):
+            errors.append(f"Line {idx}: CONCATENATED_INLINE_DASHES: '{stripped[:80]}...'")
+
+        # 5. Check for unformatted in-table superscripts (e.g. REI 60 1) )
+        if stripped.startswith("|") and stripped.endswith("|"):
+            raw_sup = re.findall(
+                r"\b([A-Z]{1,4}\s*\d+|\d+)\s+([1-9]\))(?!<|/sup)",
+                stripped,
+            )
+            if raw_sup:
+                errors.append(f"Line {idx}: RAW_TABLE_SUPERSCRIPT: {raw_sup} in '{stripped[:60]}...'")
+
+        # 6. Check for unbulleted standard classification codes
+        if re.match(r"^(LT[1-4]|BC[1-3]|SK[1-3]|ĐT[1-4]|Ch[1-4]|K[0-3])\s+\(", stripped):
+            errors.append(f"Line {idx}: UNBULLETED_CLASSIFICATION: '{stripped[:50]}'")
+
+        # 7. Check redundant bullet before CHÚ THÍCH / GHI CHÚ header
+        if re.match(r"^[-*+]\s+(?:\*\*)?(?:CHÚ THÍCH|GHI CHÚ|Chú thích|Ghi chú)\s*\d*[:\.]?", stripped):
+            if re.search(r"^[-*+]\s+(?:\*\*)?CHÚ THÍCH\s+\d+:", stripped):
+                errors.append(f"Line {idx}: REDUNDANT_NOTE_BULLET: Redundant bullet before footnote header: '{stripped}'")
+
+        # 8. Check raw HTML table tags
+        if re.search(r"<(?:table|thead|tbody|tr|th|td)\b", stripped, re.IGNORECASE):
+            errors.append(f"Line {idx}: UNCLEAN_HTML_TABLE: Unclean raw HTML table tag found: '{stripped}'")
+
+    return errors
 
 
 class VisualParityAuditor:
@@ -46,71 +114,10 @@ class VisualParityAuditor:
                 if self.legal_docs_root in md_path.parents
                 else md_path.name
             )
-            content = md_path.read_text(encoding="utf-8")
-            lines = content.splitlines()
 
-            # 1. Check double bullets
-            for idx, line in enumerate(lines, 1):
-                if re.match(r"^\s*[-*]\s+[-*]\s+", line):
-                    critical_issues.append(f"[{rel_path}:L{idx}] DOUBLE_BULLET: {line.strip()}")
-
-            # 2. Check consecutive _CHÚ THÍCH:_ headers
-            for idx, line in enumerate(lines, 1):
-                if line.strip() == "_CHÚ THÍCH:_" and idx < len(lines):
-                    next_lines = [
-                        lines[j].strip()
-                        for j in range(idx, min(len(lines), idx + 3))
-                        if lines[j].strip()
-                    ]
-                    if len(next_lines) > 0 and next_lines[0] == "_CHÚ THÍCH:_":
-                        critical_issues.append(
-                            f"[{rel_path}:L{idx}] DUPLICATE_NOTE_HEADER: Consecutive _CHÚ THÍCH:_"
-                        )
-
-            # 3. Check trapped table footnotes in table rows
-            for idx, line in enumerate(lines, 1):
-                if line.startswith("|") and re.search(
-                    r"\|\s*(_[1-9]\)|_CHÚ THÍCH|_GHI CHÚ|_Đối với)", line
-                ):
-                    critical_issues.append(
-                        f"[{rel_path}:L{idx}] TRAPPED_TABLE_FOOTNOTE: {line.strip()[:70]}..."
-                    )
-
-            # 4. Check concatenated inline dashes inside notes
-            for idx, line in enumerate(lines, 1):
-                stripped = line.strip()
-                if re.search(
-                    r"(?:như sau|điều kiện sau|sau đây|bao gồm):\s*-\s+.*?[;.]\s*-\s+",
-                    stripped,
-                    re.IGNORECASE,
-                ):
-                    critical_issues.append(
-                        f"[{rel_path}:L{idx}] CONCATENATED_INLINE_DASHES: {stripped[:80]}..."
-                    )
-
-            # 5. Check for unformatted in-table superscripts (e.g. REI 60 1) )
-            for idx, line in enumerate(lines, 1):
-                stripped = line.strip()
-                if stripped.startswith("|") and stripped.endswith("|"):
-                    raw_sup = re.findall(
-                        r"\b([A-Z]{1,4}\s*\d+|\d+)\s+([1-9]\))(?!<|/sup)",
-                        stripped,
-                    )
-                    if raw_sup:
-                        critical_issues.append(
-                            f"[{rel_path}:L{idx}] RAW_TABLE_SUPERSCRIPT: {raw_sup} in {stripped[:60]}..."
-                        )
-
-            # 6. Check for unbulleted standard classification codes
-            for idx, line in enumerate(lines, 1):
-                st = line.strip()
-                if re.match(
-                    r"^(LT[1-4]|BC[1-3]|SK[1-3]|ĐT[1-4]|Ch[1-4]|K[0-3])\s+\(",
-                    st,
-                ):
-                    critical_issues.append(
-                        f"[{rel_path}:L{idx}] UNBULLETED_CLASSIFICATION: {st[:50]}"
-                    )
+            file_errors = lint_document(md_path)
+            for err in file_errors:
+                critical_issues.append(f"[{rel_path}] {err}")
 
         passed = len(critical_issues) == 0
         return {
