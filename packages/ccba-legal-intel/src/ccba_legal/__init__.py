@@ -99,6 +99,12 @@ from .vbhn_merger import VBHNMerger
 from .visual_parity import (
     VisualParityAuditor,
     audit_visual_parity,
+    lint_document,
+)
+from .figure_extractor import (
+    AERODYNAMIC_FIGURES_GEOMETRY,
+    extract_technical_figures,
+    render_markdown_figure_card,
 )
 from .formula_harvester import (
     extract_latex_from_image,
@@ -139,6 +145,7 @@ __all__ = [
     "GoldStandardProcessor",
     "VisualParityAuditor",
     "audit_visual_parity",
+    "lint_document",
     # === Core DTOs & Domain Models ===
     "ASTNode",
     "DeltaPatch",
@@ -181,6 +188,10 @@ __all__ = [
     "normalize_clause_numbers",
     "classify_and_extract_tables",
     "validate_template_and_table_integrity",
+    # === Technical Figure Extraction & Centered Cards (ADR 0030 / ADR 0034) ===
+    "extract_technical_figures",
+    "render_markdown_figure_card",
+    "AERODYNAMIC_FIGURES_GEOMETRY",
     # === Formula Harvesting & Vision OCR (ADR 0031) ===
     "extract_latex_from_image",
     "harvest_docx_formula_images",

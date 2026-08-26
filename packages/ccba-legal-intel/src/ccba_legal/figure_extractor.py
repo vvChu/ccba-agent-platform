@@ -190,8 +190,8 @@ def render_markdown_figure_card(fig_entry: dict[str, Any]) -> str:
 
     lines: list[str] = [
         f'\n<a id="{anchor}"></a>\n',
-        f'![Hình {tag}]({img_path})\n',
-        f'**Hình {tag} — {title}**\n'
+        f'<p align="center">\n\n![Hình {tag}]({img_path})\n\n</p>\n',
+        f'<p align="center"><strong>Hình {tag} — {title}</strong></p>\n'
     ]
 
     if geom:
@@ -211,3 +211,8 @@ def render_markdown_figure_card(fig_entry: dict[str, Any]) -> str:
         lines.append("\n".join(callout_lines) + "\n")
 
     return "\n".join(lines) + "\n"
+
+
+# Public Alias
+extract_technical_figures = extract_docx_figures
+
