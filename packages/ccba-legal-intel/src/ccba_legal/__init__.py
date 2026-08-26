@@ -112,8 +112,17 @@ from .formula_harvester import (
     harvest_pdf_formula_images,
     is_formula_image,
 )
+from .modernize import (
+    FigureAutoCompositor,
+    MathEquationConverter,
+    TableMatrixBuilder,
+)
 
 __all__ = [
+    # === Modernize Annex Primitives (OKF v2.3) ===
+    "FigureAutoCompositor",
+    "TableMatrixBuilder",
+    "MathEquationConverter",
     # === Core Deep Seams (Public Interface) ===
     "LegalIntelPipeline",
     "LegalProcessor",
