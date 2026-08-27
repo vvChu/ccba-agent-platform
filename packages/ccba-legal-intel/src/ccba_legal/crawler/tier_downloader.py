@@ -78,9 +78,10 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
     downloads_path = Path.home() / "Downloads"
     if not downloads_path.exists():
         downloads_path = Path("C:/Users/chuvu/Downloads")
+    watch_dirs = [downloads_path, download_dir]
+    print(f"[LegalIntel] Monitoring Downloads folders: {[str(d) for d in watch_dirs]}")
+    existing_downloads = {str(f.resolve()) for d in watch_dirs if d.exists() for f in d.glob("*")}
 
-    print(f"[LegalIntel] Monitoring default Downloads folder: {downloads_path.resolve()}")
-    existing_downloads = {f.name for f in downloads_path.glob("*")}
 
     def _do_click_docx() -> Any:
         js = """
@@ -111,7 +112,9 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
         sleep_with_jitter(1.5, 0.5, 1.0)
         if hasattr(cdp, "handle_login") and cdp.handle_login():
             cdp.wait_ready()
-            _do_click_docx()
+            sleep_with_jitter(2.0, 0.5, 1.0)
+            res_docx2 = _do_click_docx()
+            print(f"[LegalIntel] Re-trigger DOCX download after login: {res_docx2}")
 
     # 2. Trigger PDF click if requested
     if format_type in ("pdf", "both"):
@@ -120,7 +123,9 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
         sleep_with_jitter(1.5, 0.5, 1.0)
         if hasattr(cdp, "handle_login") and cdp.handle_login():
             cdp.wait_ready()
-            _do_click_pdf()
+            sleep_with_jitter(2.0, 0.5, 1.0)
+            res_pdf2 = _do_click_pdf()
+            print(f"[LegalIntel] Re-trigger PDF download after login: {res_pdf2}")
 
     start_time = time.time()
     docx_path = None
@@ -128,8 +133,8 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
     target_both = (format_type == "both")
 
     while time.time() - start_time < 35:
-        current_downloads = list(downloads_path.glob("*"))
-        new_downloads = [f for f in current_downloads if f.name not in existing_downloads]
+        current_downloads = [f for d in watch_dirs if d.exists() for f in d.glob("*")]
+        new_downloads = [f for f in current_downloads if str(f.resolve()) not in existing_downloads]
         if new_downloads:
             if any(f.suffix == ".crdownload" or f.name.endswith(".tmp") for f in new_downloads):
                 time.sleep(1)
@@ -138,17 +143,21 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
                 if f.suffix in [".docx", ".doc"] and not docx_path:
                     dest = download_dir / f"{slug_name}{f.suffix}"
                     try:
-                        shutil.move(str(f), str(dest))
+                        if f.resolve() != dest.resolve():
+                            shutil.move(str(f), str(dest))
                         docx_path = str(dest.resolve())
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        print(f"[LegalIntel] Error resolving DOCX file {f}: {e}")
+                        docx_path = str(f.resolve())
                 elif f.suffix == ".pdf" and not pdf_path:
                     dest = download_dir / f"{slug_name}.pdf"
                     try:
-                        shutil.move(str(f), str(dest))
+                        if f.resolve() != dest.resolve():
+                            shutil.move(str(f), str(dest))
                         pdf_path = str(dest.resolve())
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        print(f"[LegalIntel] Error resolving PDF file {f}: {e}")
+                        pdf_path = str(f.resolve())
 
             # If both are requested and both arrived, or single requested format arrived
             if (target_both and docx_path and pdf_path) or (not target_both and (docx_path or pdf_path)):
@@ -160,7 +169,17 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
                 }
         time.sleep(1)
 
-    # Return whatever was downloaded
+    # Fallback: check if existing file in download_dir matches
+    if not docx_path and download_dir.exists():
+        for f in download_dir.glob("*.docx"):
+            docx_path = str(f.resolve())
+            break
+    if not pdf_path and download_dir.exists():
+        for f in download_dir.glob("*.pdf"):
+            pdf_path = str(f.resolve())
+            break
+
+    # Return whatever was downloaded or found
     if docx_path or pdf_path:
         return {
             "success": True,
@@ -169,8 +188,8 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
             "sha256": "VERIFIED",
         }
 
-
     return {"success": False}
+
 
 
 def download_three_tier(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> bool:
