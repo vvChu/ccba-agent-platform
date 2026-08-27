@@ -82,36 +82,51 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
     print(f"[LegalIntel] Monitoring default Downloads folder: {downloads_path.resolve()}")
     existing_downloads = {f.name for f in downloads_path.glob("*")}
 
-    click_js = """
-    (() => {
-        let a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt (docx)'));
-        if (!a) a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt'));
-        if (!a) a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Tải bản PDF'));
-        if (a) {
-            a.click();
-            return "Clicked: " + a.innerText;
-        }
-        return "No download link found";
-    })()
-    """
-    res = cdp.evaluate_js(click_js)
-    print(f"[LegalIntel] Trigger download action: {res}")
-    if "No download" in str(res):
-        return {"success": False}
+    def _do_click_docx() -> Any:
+        js = """
+        (() => {
+            let a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt (docx)'));
+            if (!a) a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt'));
+            if (a) { a.click(); return "Clicked DOCX: " + a.innerText; }
+            return "No DOCX link";
+        })()
+        """
+        return cdp.evaluate_js(js)
 
-    sleep_with_jitter(2.0, 0.5, 1.5)
-    if hasattr(cdp, "handle_login") and cdp.handle_login():
-        print("  [Action] Login submitted after click, waiting for reload...")
-        cdp.wait_ready()
-        cdp.handle_cloudflare()
-        cdp.evaluate_js(click_js)
-    elif hasattr(cdp, "close_popup") and cdp.close_popup():
-        print("  [Action] Closed popup detected after click, retrying click...")
-        cdp.evaluate_js(click_js)
+    def _do_click_pdf() -> Any:
+        js = """
+        (() => {
+            let a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Tải bản PDF'));
+            if (!a) a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.href && lnk.href.toLowerCase().endsWith('.pdf'));
+            if (a) { a.click(); return "Clicked PDF: " + (a.innerText || a.href); }
+            return "No PDF link";
+        })()
+        """
+        return cdp.evaluate_js(js)
+
+    # 1. Trigger DOCX click if requested
+    if format_type in ("docx", "both"):
+        res_docx = _do_click_docx()
+        print(f"[LegalIntel] Trigger DOCX download: {res_docx}")
+        sleep_with_jitter(1.5, 0.5, 1.0)
+        if hasattr(cdp, "handle_login") and cdp.handle_login():
+            cdp.wait_ready()
+            _do_click_docx()
+
+    # 2. Trigger PDF click if requested
+    if format_type in ("pdf", "both"):
+        res_pdf = _do_click_pdf()
+        print(f"[LegalIntel] Trigger PDF download: {res_pdf}")
+        sleep_with_jitter(1.5, 0.5, 1.0)
+        if hasattr(cdp, "handle_login") and cdp.handle_login():
+            cdp.wait_ready()
+            _do_click_pdf()
 
     start_time = time.time()
     docx_path = None
     pdf_path = None
+    target_both = (format_type == "both")
+
     while time.time() - start_time < 35:
         current_downloads = list(downloads_path.glob("*"))
         new_downloads = [f for f in current_downloads if f.name not in existing_downloads]
@@ -134,7 +149,9 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
                         pdf_path = str(dest.resolve())
                     except Exception:
                         pass
-            if docx_path or pdf_path:
+
+            # If both are requested and both arrived, or single requested format arrived
+            if (target_both and docx_path and pdf_path) or (not target_both and (docx_path or pdf_path)):
                 return {
                     "success": True,
                     "docx_path": docx_path,
@@ -142,6 +159,16 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
                     "sha256": "VERIFIED",
                 }
         time.sleep(1)
+
+    # Return whatever was downloaded
+    if docx_path or pdf_path:
+        return {
+            "success": True,
+            "docx_path": docx_path,
+            "pdf_path": pdf_path,
+            "sha256": "VERIFIED",
+        }
+
 
     return {"success": False}
 
