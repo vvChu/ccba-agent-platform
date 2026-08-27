@@ -73,7 +73,14 @@ def load_relation_synonyms(project_root: Path | None = None) -> dict[str, str]:
     return _load_relation_synonyms(proj_root_fn())
 
 
-def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_type: str = "both", download_attachments: bool = True) -> Any:
+def trigger_download(
+    cdp: ChromeCDP,
+    download_dir: Path,
+    slug_name: str,
+    format_type: str = "both",
+    download_attachments: bool = True,
+    doc_url: str = "",
+) -> Any:
     """Trigger download click, handle popups/login/warnings, and relocate the downloaded file."""
     downloads_path = Path.home() / "Downloads"
     if not downloads_path.exists():
@@ -97,8 +104,17 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
     def _do_click_pdf() -> Any:
         js = """
         (() => {
-            let a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Tải bản PDF'));
-            if (!a) a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.href && lnk.href.toLowerCase().endsWith('.pdf'));
+            let a = Array.from(document.querySelectorAll('a')).find(lnk => {
+                let t = (lnk.innerText || '').toLowerCase();
+                let h = (lnk.href || '').toLowerCase();
+                return t.includes('tải bản pdf') || t.includes('tải văn bản gốc') || h.includes('part=-100') || h.includes('part=0');
+            });
+            if (!a) {
+                a = Array.from(document.querySelectorAll('a')).find(lnk => {
+                    let h = (lnk.href || '').toLowerCase();
+                    return h.endsWith('.pdf') || h.includes('.pdf?');
+                });
+            }
             if (a) { a.click(); return "Clicked PDF: " + (a.innerText || a.href); }
             return "No PDF link";
         })()
@@ -118,6 +134,16 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
 
     # 2. Trigger PDF click if requested
     if format_type in ("pdf", "both"):
+        # TVPL keeps PDF downloads inside tab=7
+        target_base = doc_url or cdp.evaluate_js("window.location.href") or ""
+        if target_base and "thuvienphapluat.vn" in str(target_base):
+            base_url = str(target_base).split("?")[0]
+            tab7_url = f"{base_url}?tab=7"
+            print(f"[LegalIntel] Navigating to tab=7 (Tải về) for PDF: {tab7_url}")
+            cdp.navigate(tab7_url)
+            cdp.wait_ready()
+            sleep_with_jitter(2.0, 0.5, 1.0)
+
         res_pdf = _do_click_pdf()
         print(f"[LegalIntel] Trigger PDF download: {res_pdf}")
         sleep_with_jitter(1.5, 0.5, 1.0)
@@ -126,6 +152,9 @@ def trigger_download(cdp: ChromeCDP, download_dir: Path, slug_name: str, format_
             sleep_with_jitter(2.0, 0.5, 1.0)
             res_pdf2 = _do_click_pdf()
             print(f"[LegalIntel] Re-trigger PDF download after login: {res_pdf2}")
+
+
+
 
     start_time = time.time()
     docx_path = None
