@@ -81,7 +81,7 @@ def trigger_download(
     download_attachments: bool = True,
     doc_url: str = "",
 ) -> Any:
-    """Trigger download click, handle popups/login/warnings, and relocate the downloaded file."""
+    """Trigger multi-asset download via Single-Door tab=7 architecture and relocate downloaded files."""
     downloads_path = Path.home() / "Downloads"
     if not downloads_path.exists():
         downloads_path = Path("C:/Users/chuvu/Downloads")
@@ -89,14 +89,30 @@ def trigger_download(
     print(f"[LegalIntel] Monitoring Downloads folders: {[str(d) for d in watch_dirs]}")
     existing_downloads = {str(f.resolve()) for d in watch_dirs if d.exists() for f in d.glob("*")}
 
+    # 1. Single-Door: Navigate directly to tab=7 (Tải về)
+    target_base = doc_url or cdp.evaluate_js("window.location.href") or ""
+    if target_base and "thuvienphapluat.vn" in str(target_base):
+        base_url = str(target_base).split("?")[0]
+        tab7_url = f"{base_url}?tab=7"
+        print(f"[LegalIntel] [Single-Door tab=7] Navigating directly to: {tab7_url}")
+        cdp.navigate(tab7_url)
+        cdp.wait_ready()
+        sleep_with_jitter(2.0, 0.5, 1.0)
+        if hasattr(cdp, "handle_login") and cdp.handle_login():
+            cdp.wait_ready()
+            sleep_with_jitter(2.0, 0.5, 1.0)
 
     def _do_click_docx() -> Any:
         js = """
         (() => {
-            let a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt (docx)'));
-            if (!a) a = Array.from(document.querySelectorAll('a')).find(lnk => lnk.innerText && lnk.innerText.includes('Văn bản tiếng Việt'));
-            if (a) { a.click(); return "Clicked DOCX: " + a.innerText; }
-            return "No DOCX link";
+            let a = Array.from(document.querySelectorAll('a')).find(lnk => {
+                let t = (lnk.innerText || '').toLowerCase();
+                let h = (lnk.href || '').toLowerCase();
+                return (t.includes('tiếng việt (docx)') || t.includes('tải văn bản tiếng việt') || h.includes('docx=1')) &&
+                       !t.includes('tiếng anh');
+            });
+            if (a) { a.click(); return "Clicked DOCX: " + (a.innerText || a.href); }
+            return "No DOCX link in tab=7";
         })()
         """
         return cdp.evaluate_js(js)
@@ -116,42 +132,23 @@ def trigger_download(
                 });
             }
             if (a) { a.click(); return "Clicked PDF: " + (a.innerText || a.href); }
-            return "No PDF link";
+            return "No PDF link in tab=7";
         })()
         """
         return cdp.evaluate_js(js)
 
-    # 1. Trigger DOCX click if requested
+    # 2. Trigger DOCX click if requested
     if format_type in ("docx", "both"):
         res_docx = _do_click_docx()
         print(f"[LegalIntel] Trigger DOCX download: {res_docx}")
-        sleep_with_jitter(1.5, 0.5, 1.0)
-        if hasattr(cdp, "handle_login") and cdp.handle_login():
-            cdp.wait_ready()
-            sleep_with_jitter(2.0, 0.5, 1.0)
-            res_docx2 = _do_click_docx()
-            print(f"[LegalIntel] Re-trigger DOCX download after login: {res_docx2}")
+        sleep_with_jitter(2.0, 0.5, 1.0)
 
-    # 2. Trigger PDF click if requested
+    # 3. Trigger PDF click if requested
     if format_type in ("pdf", "both"):
-        # TVPL keeps PDF downloads inside tab=7
-        target_base = doc_url or cdp.evaluate_js("window.location.href") or ""
-        if target_base and "thuvienphapluat.vn" in str(target_base):
-            base_url = str(target_base).split("?")[0]
-            tab7_url = f"{base_url}?tab=7"
-            print(f"[LegalIntel] Navigating to tab=7 (Tải về) for PDF: {tab7_url}")
-            cdp.navigate(tab7_url)
-            cdp.wait_ready()
-            sleep_with_jitter(2.0, 0.5, 1.0)
-
         res_pdf = _do_click_pdf()
         print(f"[LegalIntel] Trigger PDF download: {res_pdf}")
-        sleep_with_jitter(1.5, 0.5, 1.0)
-        if hasattr(cdp, "handle_login") and cdp.handle_login():
-            cdp.wait_ready()
-            sleep_with_jitter(2.0, 0.5, 1.0)
-            res_pdf2 = _do_click_pdf()
-            print(f"[LegalIntel] Re-trigger PDF download after login: {res_pdf2}")
+        sleep_with_jitter(2.0, 0.5, 1.0)
+
 
 
 
