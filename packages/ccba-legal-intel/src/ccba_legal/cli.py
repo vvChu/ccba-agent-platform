@@ -364,12 +364,20 @@ def handle_ingest(args: argparse.Namespace) -> int:
     pdf_path = Path(fetch_res["pdf_path"]) if fetch_res.get("pdf_path") else None
     doc_slug = docx_path.stem.lower().replace("-", "_")
 
-    # 2. Determine target bundle directory
+    # 2. Determine target bundle directory & create mandatory sources/ (OKF v2.4)
     base_out = args.output_dir or Path("legal_docs")
     target_bundle = base_out / args.category / doc_slug
     target_bundle.mkdir(parents=True, exist_ok=True)
 
+    sources_dir = target_bundle / "sources"
+    sources_dir.mkdir(parents=True, exist_ok=True)
+    if docx_path.exists():
+        shutil.copy2(docx_path, sources_dir / docx_path.name)
+    if pdf_path and pdf_path.exists():
+        shutil.copy2(pdf_path, sources_dir / pdf_path.name)
+
     # 3. Google Drive Vault Upload (if requested or available)
+
     if args.upload_drive:
         print("\n>>> [2/5] Uploading binary assets to Google Drive Vault (ADR 0035)...")
         try:
