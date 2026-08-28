@@ -94,11 +94,14 @@ from .registry import (
 )
 from .provenance import (
     check_structure_alignment,
+    compute_docx_to_markdown_parity,
     compute_text_parity,
     extract_docx_data,
     extract_pdf_data,
     find_bundle_assets,
     normalize_text,
+    verify_bundle_docx_vs_markdown,
+    verify_docx_against_markdown,
     verify_docx_against_pdf,
 )
 from .sync import LegalSyncEngine
@@ -215,8 +218,11 @@ __all__ = [
     "harvest_docx_formula_images",
     "harvest_pdf_formula_images",
     "is_formula_image",
-    # === Ingestion Provenance & Verification (Gate 0 / ADR 0016) ===
+    # === Ingestion Provenance & Verification (Gate 0 / Gate 11 / ADR 0016) ===
     "verify_docx_against_pdf",
+    "verify_docx_against_markdown",
+    "verify_bundle_docx_vs_markdown",
+    "compute_docx_to_markdown_parity",
     "find_bundle_assets",
     "extract_docx_data",
     "extract_pdf_data",
