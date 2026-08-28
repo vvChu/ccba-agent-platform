@@ -85,18 +85,34 @@ def lint_document(md_path: Path) -> list[str]:
         if re.search(r"<br>\s*(?:\*\*)?CHÚ THÍCH", stripped, re.IGNORECASE):
             errors.append(f"Line {idx}: SQUASHED_NOTE_BR: Squashed footnote using <br> tag: '{stripped[:70]}'")
 
+        # 10. Check unclosed or broken markdown table rows (ADR 0030)
+        if stripped.startswith("|") and not stripped.endswith("|"):
+            errors.append(f"Line {idx}: BROKEN_TABLE_ROW: Table row does not end with '|': '{stripped[:70]}'")
+        if re.match(r"^\|(?:\s*:?-+:?\s*\|)+$", stripped):
+            prev = lines[idx - 2].strip() if idx >= 2 else ""
+            if not (prev.startswith("|") and prev.endswith("|")):
+                errors.append(f"Line {idx}: INVALID_TABLE_HEADER: Table separator preceded by invalid header: '{prev[:70]}'")
+
+
     # 10. Check monotonic footnote numbering sequence (ADR 0030)
-    chunks = re.split(r"(?=\n#{1,4}\s+|\n<a id=)", text)
-    for chunk in chunks:
-        labels = [m.group(1).upper() for m in re.finditer(r"\b(CHÚ THÍCH(?:\s+\d+)?):", chunk, re.IGNORECASE)]
-        if labels:
-            has_note_2 = any("CHÚ THÍCH 2" in l for l in labels)
-            has_note_1 = any("CHÚ THÍCH 1" in l for l in labels)
-            has_unnum_note = any(l == "CHÚ THÍCH" for l in labels)
-            if has_note_2 and has_unnum_note and not has_note_1:
-                errors.append("MISSING_NOTE_1: Unnumbered 'CHÚ THÍCH' found in section where 'CHÚ THÍCH 2' exists. Must use 'CHÚ THÍCH 1:'.")
+    is_amendment = "sua_doi" in md_path.stem.lower() or "sources" in md_path.parts
+    if not is_amendment:
+        chunks = re.split(r"(?=\n#{1,4}\s+|\n<a id=)", text)
+        for chunk in chunks:
+            # Match plain, italic (_CHÚ THÍCH:_), bold (**CHÚ THÍCH:**) markers
+            labels = [
+                re.sub(r"[_*]", "", m.group(1)).strip().upper()
+                for m in re.finditer(r"(?:^|[^a-zA-Z0-9])([_*]*(?:CHÚ THÍCH|Chú thích)(?:\s+\d+)?[_*]*):", chunk, re.IGNORECASE)
+            ]
+            if labels:
+                has_note_2 = any("CHÚ THÍCH 2" in l for l in labels)
+                has_note_1 = any("CHÚ THÍCH 1" in l for l in labels)
+                if has_note_2 and not has_note_1:
+                    errors.append("MISSING_NOTE_1: Missing 'CHÚ THÍCH 1:' in section where 'CHÚ THÍCH 2:' exists.")
 
     return errors
+
+
 
 
 class VisualParityAuditor:
