@@ -33,7 +33,7 @@ Agent chạy kiểm tra trước (Dry-Run) để lập báo cáo hiện trạng:
 python [hub_path]\scripts\adopt_spoke.py --spoke . --dry-run
 ```
 Trình bày kết quả ma trận đánh giá cho người dùng:
-* Stack công nghệ phát hiện (PowerShell/SharePoint, Python, Node.js, BIM CAD...).
+* Stack công nghệ phát hiện (PowerShell/SharePoint, Python, Node.js, BIM CAD, OKF v2.4 Legal Corpus qua `legal_docs/` & `legal_registry.yaml`...).
 * Đề xuất Archetype theo [ADR 0041](../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md) (`project_delivery`, `enterprise_governance`, `knowledge_corpus`, `specialized_extension`).
 * Tình trạng Git repository và tệp `workspace_context.yaml`.
 * Các tệp tin được bảo vệ (AGENTS.md, datamodel, specs).
