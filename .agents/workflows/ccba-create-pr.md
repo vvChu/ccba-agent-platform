@@ -43,12 +43,17 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
 ## Bước 1: Kiểm định Chất lượng Local CI Eval Gates (Shift-Left Gate)
 
 1. Kích hoạt toàn bộ hệ thống kiểm thử tự động và kiểm định tài liệu tại local TRƯỚC KHI đẩy code:
-   ```bash
-   .venv\Scripts\python scripts/run_harness_evals.py
-   ```
+   * **Tại Hub Platform:**
+     ```bash
+     python scripts/eval/run_harness_evals.py
+     ```
+   * **Tại Spoke (Pháp điển / Knowledge Corpus):**
+     ```bash
+     python scripts/validate_legal_spoke.py
+     ```
 2. **Quy tắc chặn lỗi tại nguồn:**
-   - Nếu `run_harness_evals.py` trả về `PASS 100%`: Mã nguồn đạt chuẩn, tiếp tục Bước 2.
-   - Nếu có Gate bị `FAIL` hoặc phát hiện Architecture Drift: Tạm dừng workflow, yêu cầu Agent/người dùng sửa lỗi tại local (hoặc chạy `python scripts/update_arch_stats.py`) và commit lại trước khi đẩy mã nguồn.
+   - Nếu kiểm thử trả về `PASS 100%`: Mã nguồn đạt chuẩn, tiếp tục Bước 2.
+   - Nếu có Gate bị `FAIL` hoặc phát hiện Architecture Drift: Tạm dừng workflow, yêu cầu Agent/người dùng sửa lỗi tại local và commit lại trước khi đẩy mã nguồn.
 
 ## Bước 2: Kiểm tra trạng thái và Push code lên remote
 

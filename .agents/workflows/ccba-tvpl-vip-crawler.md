@@ -22,15 +22,15 @@ Agent tiếp nhận lệnh bắt buộc phải thực thi theo các bước sau:
    - Đọc hướng dẫn tại [SKILL.md](../skills/tvpl-vip-crawler/SKILL.md).
    - Xác nhận tài khoản VIP `TVPL_USERNAME` và `TVPL_PASSWORD` sẵn sàng tại `.env`.
 
-2. **Kích hoạt Deep Seam TVPLCrawler Trực tiếp**:
-   - Thực thi lệnh cào tự động qua Facade:
+2. **Kích hoạt Deep Seam TVPLCrawler Trực tiếp (Giao thức Một Cửa `tab=7`)**:
+   - Thực thi lệnh cào và nạp văn bản tự động qua CLI:
      ```bash
-     python scripts/legal/tvpl_vip_crawler.py "<đường-dẫn-url-hoặc-tên-văn-bản-tvpl>"
+     python -m ccba_legal ingest "<đường-dẫn-url-hoặc-tên-văn-bản-tvpl>" --category <01_vbpl|02_qcvn|03_tcvn> --upload-drive
      ```
 
 3. **Cấu trúc hóa OKF Bundle & Kiểm tra Kết quả**:
-   - Kiểm tra kết quả đóng gói tại `.md/legal_docs/<slug>/`.
-   - Báo cáo kết quả đóng gói thành công bao gồm các tệp `metadata.yaml`, `concept.md`, `index.md`.
+   - Kiểm tra kết quả đóng gói tại `legal_docs/<category>/<slug>/`.
+   - Báo cáo kết quả đóng gói thành công bao gồm các tệp `metadata.yaml`, `index.md`, `clauses.json`, `qa_benchmark.json`, và 4 ngăn kéo chuyên biệt.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

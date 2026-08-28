@@ -85,36 +85,44 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
    python -m ccba_legal login
    ```
    Đăng nhập tài khoản VIP 1 lần duy nhất để lưu cookie phiên.
+   * **Tiêu chí hoàn thành:** Lưu cookie phiên VIP thành công tại `~/.ccba/tvpl_session.json`.
 
 2. **Thu thập Dữ liệu qua CLI (`fetch` / `batch-fetch`)**:
    ```bash
    python -m ccba_legal fetch "<TVPL_URL_OR_ID>"
    ```
    Tự động tải về bản PDF số hóa VIP (`part=-100`) và bản Word `.docx` (`part=-1&docx=1`).
+   * **Tiêu chí hoàn thành:** Tải trọn vẹn tài sản PDF Công báo và DOCX về thư mục `sources/`.
 
-3. **Chuyển đổi sang OKF v2.2 Bundle**:
+3. **Chuyển đổi sang OKF v2.4 Bundle**:
    ```bash
    python -m ccba_legal convert ".md/extracted_docs/<doc_slug>/<doc_slug>.docx" "legal_docs/<category>/<doc_slug>"
    ```
+   * **Tiêu chí hoàn thành:** Tạo thành công thân văn bản `.md`, 4 ngăn kéo chuyên biệt và `metadata.yaml`.
 
 4. **Hợp nhất Văn bản Sửa đổi (VBHN Engine - nếu có)**:
    ```bash
-   python -m ccba_legal consolidate -m "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" -b "legal_docs/<category>/<doc_slug>/<doc_slug>.md" -o "legal_docs/<category>/<doc_slug>"
+   python -m ccba_legal consolidate -m "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" -b "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" -o "legal_docs/<category>/<doc_slug>"
    ```
+   * **Tiêu chí hoàn thành:** Sinh tệp văn bản hợp nhất và ma trận so sánh `bang_so_sanh_thay_doi.md`.
 
 5. **Kiểm Định Định Dạng & Liên Kết (Visual Parity & Cross-Link Linter)**:
    ```bash
    python -m ccba_legal lint "legal_docs/<category>/<doc_slug>"
    ```
+   * **Tiêu chí hoàn thành:** Vượt qua kiểm định Visual Parity $100\%$ không lỗi cú pháp bảng biểu.
 
 6. **Trích xuất AST & Tập Dữ Liệu Đối Chuẩn (QA Benchmark)**:
    ```bash
    python -m ccba_legal process "legal_docs/<category>/<doc_slug>"
    ```
+   * **Tiêu chí hoàn thành:** Sinh cây điều khoản `clauses.json` và bộ câu hỏi `qa_benchmark.json`.
 
 7. **Đăng ký Sổ Bộ & Kiểm Định CI Gates Spoke (Zero-Tolerance)**:
    ```powershell
-   python scripts/lint_visual_parity.py
+   # 1. Đối soát xuất xứ nguồn gốc Gate 0
+   python scripts/verify_docx_against_pdf.py
+   # 2. Kiểm định toàn diện 10 Cổng Master Spoke CI Validator
    python scripts/validate_legal_spoke.py
-   python scripts/verify_all_docs_against_pdf.py
    ```
+   * **Tiêu chí hoàn thành:** Vượt qua toàn bộ 10 Cổng Master Validator với 0 Errors và 0 Warnings.

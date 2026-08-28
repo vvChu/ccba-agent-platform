@@ -44,7 +44,7 @@ Khi lệnh này được kích hoạt, Agent thực hiện theo quy trình sau:
 ### Bước 3: Chạy Script Đồng bộ
 Thực thi lệnh Python đồng bộ với Notebook ID đã xác định:
 ```bash
-python scripts/legal_sync.py --notebook-id <notebook_id> [--use-drive] [--drive-folder <folder_id>] [--download-pdf]
+python scripts/sync_notebooklm_knowledge.py --notebook-id <notebook_id> [--upload-drive]
 ```
 
 ## Tiêu chí Hoàn thành (Completion Criteria)
