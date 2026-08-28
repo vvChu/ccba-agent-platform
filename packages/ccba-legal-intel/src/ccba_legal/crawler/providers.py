@@ -173,8 +173,15 @@ class TVPLVIPDocProvider(LegalDocProvider):
             slug = _derive_doc_slug(doc_number, doc_type, url)
             doc_out_dir = self.output_dir / slug
             doc_out_dir.mkdir(parents=True, exist_ok=True)
-            cdp.set_download_behavior(doc_out_dir)
-            download_res = trigger_download(cdp, download_dir=doc_out_dir, slug_name=slug, format_type="both", download_attachments=True)
+            download_res = trigger_download(
+                cdp,
+                download_dir=doc_out_dir,
+                slug_name=slug,
+                format_type="both",
+                download_attachments=True,
+                doc_url=url,
+            )
+
             return {
                 "title": title,
                 "url": url,
