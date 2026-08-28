@@ -255,6 +255,19 @@ skills:
   - quy định nộp BIM
   - bắt buộc BIM
   skill_path: .agents/skills/bigbim-vbpl-digest/SKILL.md
+- name: ccba-adr-lifecycle
+  bundle: _governance
+  description: Autonomous lifecycle governance for Architecture Decision Records (ADRs)
+    - Scaffolding, status cascading, Living Traceability Matrix compilation, and CI
+    parity validation.
+  triggers:
+  - ccba-adr-lifecycle
+  - tao adr
+  - cap nhat adr
+  - adr sync
+  - adr lifecycle
+  - manage adr
+  skill_path: .agents/skills/ccba-adr-lifecycle/SKILL.md
 - name: ccba-ai-pdf-preprocessor
   bundle: _qc
   description: 'Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking)
@@ -295,6 +308,17 @@ skills:
   - thiết bị chữa cháy
   - báo cháy
   skill_path: .agents/skills/ccba-ai-qc-pccc-audit/SKILL.md
+- name: ccba-legal-ingest
+  bundle: _consulting
+  description: Autonomous 7-step legal document acquisition, OKF v2.2 conversion,
+    VBHN consolidation, and zero-tolerance CI verification workflow.
+  triggers:
+  - ccba-legal-ingest
+  - nap van ban
+  - thu thap van ban
+  - harvest legal doc
+  - ingest law
+  skill_path: .agents/skills/ccba-legal-ingest/SKILL.md
 - name: ccba-legal-intel
   bundle: _consulting
   description: Autonomous legal intelligence agent to crawl, diff, and generate compliance
@@ -1038,6 +1062,17 @@ workflows:
   - onboard spoke
   - tiếp nhận dự án có sẵn
   workflow_path: .agents/workflows/ccba-adopt-spoke.md
+- name: ccba-adr-lifecycle
+  bundle: _governance
+  command: /ccba-adr-lifecycle
+  description: Workflow quản trị toàn diện vòng đời quyết định kiến trúc ADR
+  triggers:
+  - ccba-adr-lifecycle
+  - tao adr
+  - cap nhat adr
+  - adr sync
+  - adr lifecycle
+  workflow_path: .agents/workflows/ccba-adr-lifecycle.md
 - name: ccba-ai-qc-pccc-audit
   bundle: _qc
   command: /ccba-ai-qc-pccc-audit
@@ -1196,6 +1231,20 @@ workflows:
   - git
   - guardrails
   workflow_path: .agents/workflows/ccba-git-guardrails.md
+- name: ccba-graduate-rd
+  bundle: _core
+  command: /ccba-graduate-rd
+  description: Quy trình cưỡng chế chuyển hóa mã nguồn R&D / Scratch Script thành
+    Deep Seam Production trong Hub Platform.
+  triggers:
+  - graduate
+  - tốt nghiệp
+  - hợp nhất vào hub
+  - consolidate
+  - deep seam
+  - chuyển scratch vào production
+  - ccba-graduate-rd
+  workflow_path: .agents/workflows/ccba-graduate-rd.md
 - name: ccba-grill-with-docs
   bundle: _core
   command: /ccba-grill-with-docs
@@ -1293,6 +1342,17 @@ workflows:
     phép xây dựng, PCCC, nghiệm thu, đấu thầu, hoặc xin tư vấn pháp lý công trình.'
   triggers: []
   workflow_path: .agents/workflows/ccba-legal-advisor.md
+- name: ccba-legal-ingest
+  bundle: _consulting
+  command: /ccba-legal-ingest
+  description: Workflow tự động hóa toàn trình 7 bước nạp văn bản pháp lý OKF v2.2
+  triggers:
+  - ccba-legal-ingest
+  - nap van ban
+  - thu thap van ban
+  - harvest legal doc
+  - ingest law
+  workflow_path: .agents/workflows/ccba-legal-ingest.md
 - name: ccba-legal-intel
   bundle: _consulting
   command: /ccba-legal-intel
