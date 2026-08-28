@@ -92,6 +92,15 @@ from .registry import (
     load_legal_registry,
     search_legal_registry,
 )
+from .provenance import (
+    check_structure_alignment,
+    compute_text_parity,
+    extract_docx_data,
+    extract_pdf_data,
+    find_bundle_assets,
+    normalize_text,
+    verify_docx_against_pdf,
+)
 from .sync import LegalSyncEngine
 from .validator import validate_template_and_table_integrity
 from .vbhn_engine import MergedLegalDocument, VBHNEngine
@@ -206,4 +215,12 @@ __all__ = [
     "harvest_docx_formula_images",
     "harvest_pdf_formula_images",
     "is_formula_image",
+    # === Ingestion Provenance & Verification (Gate 0 / ADR 0016) ===
+    "verify_docx_against_pdf",
+    "find_bundle_assets",
+    "extract_docx_data",
+    "extract_pdf_data",
+    "check_structure_alignment",
+    "compute_text_parity",
+    "normalize_text",
 ]

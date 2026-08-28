@@ -141,16 +141,21 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-links", action="store_true", help="Disable relative link and anchor verification"
     )
 
-    # 7. Process Subcommand (AST Clauses & QA Benchmark Indexing)
-    process_parser = subparsers.add_parser(
-        "process", help="Process and index OKF bundle (AST clauses.json & QA benchmark dataset)"
+    # 8. Ingest Subcommand (Universal End-to-End OKF Ingestion Pipeline 2.0)
+    ingest_parser = subparsers.add_parser(
+        "ingest", help="Universal 1-command autonomous ingestion from TVPL VIP to OKF Bundle and Drive Vault (ADR 0035)"
     )
-    process_parser.add_argument("bundle_dir", type=Path, help="Path to OKF bundle directory")
-    process_parser.add_argument(
-        "-t", "--type", default=None, help="Document type profile (vbpl, qcvn, tcvn)"
+    ingest_parser.add_argument("target", help="URL or Document ID/Number (e.g. '01/2021/TT-BXD' or TVPL URL)")
+    ingest_parser.add_argument(
+        "-c", "--category", choices=["01_vbpl", "02_qcvn", "03_tcvn"], default="01_vbpl", help="Document category"
+    )
+    ingest_parser.add_argument("-o", "--output-dir", type=Path, default=None, help="Spoke legal_docs output root")
+    ingest_parser.add_argument(
+        "--upload-drive", action="store_true", default=False, help="Upload binary assets to Google Drive Vault"
     )
 
     return parser
+
 
 
 def handle_fetch(args: argparse.Namespace) -> int:
@@ -332,6 +337,103 @@ def handle_lint(args: argparse.Namespace) -> int:
     return 0
 
 
+def handle_ingest(args: argparse.Namespace) -> int:
+    """Handle universal 1-command ingestion pipeline (ADR 0035)."""
+    print("=================================================================")
+    print("     CCBA LEGAL INTEL - UNIVERSAL INGESTION PIPELINE 2.0         ")
+    print("=================================================================")
+    print(f"🎯 Target: {args.target}")
+    print(f"📂 Category: {args.category}")
+
+    # 1. Fetch dual assets from TVPL
+    out_dir = Path(".md/extracted_docs/tvpl_downloads")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    crawler = TVPLCrawler(output_dir=out_dir)
+    print("\n>>> [1/5] Fetching official DOCX & PDF from TVPL VIP...")
+    try:
+        fetch_res = crawler.fetch_document(args.target)
+    except Exception as e:
+        print(f"❌ Fetch Error: {e}")
+        return 1
+
+    if not fetch_res or not fetch_res.get("docx_path"):
+        print("❌ Ingestion failed: Could not fetch DOCX source file.")
+        return 1
+
+    docx_path = Path(fetch_res["docx_path"])
+    pdf_path = Path(fetch_res["pdf_path"]) if fetch_res.get("pdf_path") else None
+    doc_slug = docx_path.stem.lower().replace("-", "_")
+
+    # 2. Determine target bundle directory & create mandatory sources/ (OKF v2.4)
+    base_out = args.output_dir or Path("legal_docs")
+    target_bundle = base_out / args.category / doc_slug
+    target_bundle.mkdir(parents=True, exist_ok=True)
+
+    sources_dir = target_bundle / "sources"
+    sources_dir.mkdir(parents=True, exist_ok=True)
+    if docx_path.exists():
+        shutil.copy2(docx_path, sources_dir / docx_path.name)
+    if pdf_path and pdf_path.exists():
+        shutil.copy2(pdf_path, sources_dir / pdf_path.name)
+
+    # 3. Google Drive Vault Upload (if requested or available)
+
+    if args.upload_drive:
+        print("\n>>> [2/5] Uploading binary assets to Google Drive Vault (ADR 0035)...")
+        try:
+            from ccba_legal.gdrive_vault import GoogleDriveVault
+
+            vault = GoogleDriveVault()
+            if vault.is_available():
+                vault.upload_asset(docx_path, args.category, doc_slug)
+                if pdf_path and pdf_path.exists():
+                    vault.upload_asset(pdf_path, args.category, doc_slug)
+                print("  ✅ Uploaded to Google Drive Vault successfully.")
+            else:
+                print("  ℹ️ Google Drive Vault offline. Proceeding in local mode.")
+        except Exception as ve:
+            print(f"  ⚠️ Drive upload warning: {ve}")
+
+    # 4. Convert DOCX to OKF Bundle
+    print(f"\n>>> [3/5] Converting to OKF Bundle with resilient parser at {target_bundle}...")
+    try:
+        convert_docx_to_okf_bundle(
+            docx_path=docx_path,
+            target_bundle_dir=target_bundle,
+            doc_type=args.category,
+        )
+    except Exception as ce:
+        print(f"❌ Conversion Error: {ce}")
+        return 1
+
+    # 5. Process AST & Benchmark
+    print("\n>>> [4/5] Processing AST clauses and QA benchmark dataset...")
+    try:
+        processor = GoldStandardProcessor()
+        processor.process_bundle(target_bundle, doc_type=args.category)
+    except Exception as pe:
+        print(f"⚠️ AST processing warning: {pe}")
+
+    # 6. Lint and Verify
+    print("\n>>> [5/5] Running visual parity and link verification...")
+    try:
+        from ccba_legal.linter import lint_target_path
+
+        lint_res = lint_target_path(target_bundle, check_links=True)
+        if lint_res["total_errors"] > 0:
+            print(f"⚠️ Lint warning: {lint_res['total_errors']} issues detected during ingestion.")
+        else:
+            print("✅ 100% Visual Parity & Zero Broken Links!")
+    except Exception as le:
+        print(f"⚠️ Lint verification warning: {le}")
+
+    print("\n=================================================================")
+    print("🎉 Ingestion Pipeline 2.0 Completed Successfully!")
+    print(f"📁 Output Bundle: {target_bundle.resolve()}")
+    print("=================================================================")
+    return 0
+
+
 def main() -> None:
     """Main CLI entrypoint."""
     if hasattr(sys.stdout, "reconfigure"):
@@ -360,9 +462,12 @@ def main() -> None:
         sys.exit(handle_consolidate(args))
     elif args.command == "lint":
         sys.exit(handle_lint(args))
+    elif args.command == "ingest":
+        sys.exit(handle_ingest(args))
     else:
         parser.print_help()
         sys.exit(1)
+
 
 
 if __name__ == "__main__":

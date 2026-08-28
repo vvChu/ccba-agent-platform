@@ -167,10 +167,16 @@ def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[
 
         grid: list[list[str]] = []
         for row in table.rows:
-            row_cells = [c.text.strip().replace("\n", " ") for c in row.cells]
-            clean_cells = [val for idx, val in enumerate(row_cells) if idx == 0 or val != row_cells[idx - 1]]
+            clean_cells: list[str] = []
+            row_seen_tc: set[Any] = set()
+            for c in row.cells:
+                tc_elem = getattr(c, "_tc", id(c))
+                if tc_elem not in row_seen_tc:
+                    row_seen_tc.add(tc_elem)
+                    clean_cells.append(c.text.strip().replace("\n", " "))
             if clean_cells:
                 grid.append(clean_cells)
+
 
         if not grid:
             continue

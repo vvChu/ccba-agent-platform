@@ -151,8 +151,8 @@ class ChromeCDP:
                 pass
             time.sleep(0.5)
 
-    def handle_cloudflare(self) -> None:
-        """Check for Cloudflare bot challenge and pause for user completion if found."""
+    def handle_cloudflare(self, auto_wait_sec: int = 7) -> None:
+        """Check for Cloudflare bot challenge, wait for silent auto-resolution, and bring window to front only if manual action is needed."""
         check_expr = """
         !!(document.title.includes("Cloudflare") ||
            document.title.includes("Just a moment") ||
@@ -162,16 +162,35 @@ class ChromeCDP:
         """
         is_blocked = self.evaluate_js(check_expr)
         if is_blocked:
-            print("[LegalIntel] Cloudflare Challenge detected! PAUSED.")
-            print("[LegalIntel] PLEASE MANUALLY SOLVE THE CAPTCHA IN THE OPEN CHROME WINDOW.")
+            print("[LegalIntel] Cloudflare verification in progress (auto-verifying in background)...")
+            start_time = time.time()
+            # Phase 1: Grace period for Chrome to auto-pass Cloudflare verification silently
+            while time.time() - start_time < auto_wait_sec:
+                sleep_with_jitter(1.0, 0.2, 0.4)
+                try:
+                    is_blocked = self.evaluate_js(check_expr)
+                    if not is_blocked:
+                        print("[LegalIntel] Cloudflare auto-verified successfully! Resuming...")
+                        self.wait_ready()
+                        return
+                except ChromeCDPError:
+                    pass
+
+            # Phase 2: If still blocked after grace period, bring window to front for manual click
+            try:
+                self.send_command("Page.bringToFront", {})
+            except Exception:
+                pass
+            print("[LegalIntel] Cloudflare requires manual confirmation. Chrome window brought to foreground.")
             while is_blocked:
-                sleep_with_jitter(2.0, 0.5, 1.5)
+                sleep_with_jitter(2.0, 0.5, 1.0)
                 try:
                     is_blocked = self.evaluate_js(check_expr)
                 except ChromeCDPError:
                     is_blocked = True
             print("[LegalIntel] Challenge solved! Resuming execution...")
             self.wait_ready()
+
 
     def set_download_behavior(self, download_path: Path | str) -> bool:
         """Configure Chrome CDP to allow downloading directly into a specific folder."""

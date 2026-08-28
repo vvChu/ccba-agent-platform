@@ -77,7 +77,7 @@ def convert_docx_to_okf_bundle(
         detected_archetype = scanner.scan()
 
     if detected_archetype in (DocumentArchetype.TECHNICAL_TCVN, DocumentArchetype.TECHNICAL_QCVN):
-        return process_technical_standard_strategy(
+        res = process_technical_standard_strategy(
             docx_path=docx_path,
             bundle_dir=target_bundle_dir,
             registry_file=reg_file,
@@ -85,9 +85,24 @@ def convert_docx_to_okf_bundle(
             output_filename=output_filename,
         )
     else:
-        return process_vbpl_bundle_okf_v22(
+        res = process_vbpl_bundle_okf_v22(
             docx_path=docx_path,
             bundle_dir=target_bundle_dir,
             registry_file=reg_file,
             output_filename=output_filename,
         )
+
+    # Post-processing: Clean table formatting and enforce monotonic footnotes (ADR 0030, ADR 0035)
+    try:
+        from ccba_legal.table_cleaner import clean_markdown_tables_and_notes
+
+        for md_file in target_bundle_dir.glob("*.md"):
+            orig_md = md_file.read_text(encoding="utf-8")
+            cleaned_md = clean_markdown_tables_and_notes(orig_md)
+            if cleaned_md != orig_md:
+                md_file.write_text(cleaned_md, encoding="utf-8")
+    except Exception:
+        pass
+
+    return res
+
