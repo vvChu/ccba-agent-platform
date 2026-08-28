@@ -78,12 +78,20 @@ def detect_spoke_stack(spoke_root: Path) -> tuple[str, str, str]:
         default_type = "Thiết kế"
         default_archetype = "project_delivery"
 
-    # Construction Consulting / Legal / QC
-    if (spoke_root / ".md" / "extracted_docs").exists() or (
-        spoke_root / ".md" / "legal_docs"
-    ).exists():
+    # Construction Consulting / Legal / QC / OKF v2.4 Knowledge Corpus
+    if (
+        (spoke_root / "legal_docs").exists()
+        or (spoke_root / "legal_registry.yaml").exists()
+        or (spoke_root / ".md" / "extracted_docs").exists()
+        or (spoke_root / ".md" / "legal_docs").exists()
+    ):
         stacks.append("Construction Consulting / Knowledge Base")
-        if (spoke_root / "bundles").exists() or (spoke_root / "OKF").exists():
+        if (
+            (spoke_root / "legal_docs").exists()
+            or (spoke_root / "legal_registry.yaml").exists()
+            or (spoke_root / "bundles").exists()
+            or (spoke_root / "OKF").exists()
+        ):
             default_archetype = "knowledge_corpus"
             default_type = "Pháp điển"
         else:
