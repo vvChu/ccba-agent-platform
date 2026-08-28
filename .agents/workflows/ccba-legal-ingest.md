@@ -76,9 +76,9 @@ triggers:
 * Ghi nhận `bundle_path`, `pdf_path`, `pdf_sha256` và `pdf_status: verified` vào `legal_registry.yaml`.
 * Chạy bộ cổng kiểm thử tự động của Spoke:
   ```powershell
-  python scripts/lint_visual_parity.py
+  # 1. Đối soát xuất xứ nguồn gốc Gate 0
+  python scripts/verify_docx_against_pdf.py
+  # 2. Kiểm định toàn diện 10 Cổng Master Spoke CI Validator
   python scripts/validate_legal_spoke.py
-  python scripts/verify_all_docs_against_pdf.py
-  python scripts/validate_adr_parity.py
   ```
 * Báo cáo kết quả nghiệm thu cho người dùng.

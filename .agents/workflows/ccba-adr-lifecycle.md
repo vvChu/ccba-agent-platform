@@ -38,13 +38,13 @@ Agent lắng nghe yêu cầu của người dùng để chọn 1 trong 3 nhánh 
 * Kiểm tra các tài liệu hoặc skills đang phụ thuộc vào ADR cũ để phát cảnh báo.
 
 #### Khi Đồng Bộ & Kiểm Định (Nhánh C):
-* Chạy lệnh biên dịch:
+* Chạy lệnh biên dịch Living ADR Matrix:
   ```powershell
-  python scripts/sync_adr_matrix.py
+  python scripts/sync_hub_adr_matrix.py
   ```
-* Chạy cổng kiểm định:
+* Chạy cổng kiểm định ADR:
   ```powershell
-  python scripts/validate_adr_parity.py
+  python -m pytest tests/governance/test_adr.py
   ```
 
 ---
