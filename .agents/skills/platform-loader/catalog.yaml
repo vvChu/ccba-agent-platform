@@ -319,6 +319,14 @@ skills:
   - harvest legal doc
   - ingest law
   skill_path: .agents/skills/ccba-legal-ingest/SKILL.md
+  package_path: packages/ccba-legal-intel
+  cli_commands:
+  - convert: "python -m ccba_legal convert <docx_path> <bundle_dir> (Chuyển đổi DOCX sang OKF Bundle nguyên văn 100% Deterministic AST)"
+  - fetch: "python -m ccba_legal fetch <target> (Tải bản DOCX + PDF từ TVPL VIP)"
+  - ingest: "python -m ccba_legal ingest <target> (Quy trình nạp tự động 1 lệnh toàn trình)"
+  - process: "python -m ccba_legal process <bundle_dir> (Trích xuất AST clauses và sinh QA benchmark)"
+  - consolidate: "python -m ccba_legal consolidate (Hợp nhất văn bản sửa đổi VBHN)"
+  - lint: "python -m ccba_legal lint <bundle_dir> (Kiểm định visual parity và liên kết)"
 - name: ccba-legal-intel
   bundle: _consulting
   description: Autonomous legal intelligence agent to crawl, diff, and generate compliance
@@ -331,6 +339,7 @@ skills:
   - thuvienphapluat
   - TVPL
   skill_path: .agents/skills/ccba-legal-intel/SKILL.md
+  package_path: packages/ccba-legal-intel
 - name: ccba-prototype
   bundle: _software
   description: Xây dựng mẫu thử thô (throwaway prototype) để trả lời câu hỏi thiết
