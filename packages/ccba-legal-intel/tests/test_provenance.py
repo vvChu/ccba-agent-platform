@@ -1,5 +1,6 @@
 # Unit tests for Ingestion Provenance & Cross-Verification (Gate 0)
 from __future__ import annotations
+
 import unittest
 
 from ccba_legal.provenance import (
@@ -7,6 +8,7 @@ from ccba_legal.provenance import (
     compute_text_parity,
     normalize_text,
 )
+
 
 class TestProvenanceEngine(unittest.TestCase):
     def test_normalize_text(self) -> None:

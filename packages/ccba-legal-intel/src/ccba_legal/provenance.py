@@ -13,7 +13,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import fitz  # PyMuPDF
 from docx import Document
@@ -33,11 +33,11 @@ def normalize_text(text: str) -> str:
     return text.strip().lower()
 
 
-def find_bundle_assets(root_dir: Path, bundle_dir: Path) -> Tuple[Optional[Path], Optional[Path]]:
+def find_bundle_assets(root_dir: Path, bundle_dir: Path) -> tuple[Path | None, Path | None]:
     """Locates matching .docx and .pdf files for a given bundle directory."""
     slug = bundle_dir.name
-    pdf_path: Optional[Path] = None
-    docx_path: Optional[Path] = None
+    pdf_path: Path | None = None
+    docx_path: Path | None = None
 
     # Search PDF locations
     pdf_candidates = [
@@ -62,14 +62,14 @@ def find_bundle_assets(root_dir: Path, bundle_dir: Path) -> Tuple[Optional[Path]
     return pdf_path, docx_path
 
 
-def extract_docx_data(docx_path: Path) -> Tuple[List[str], int, str]:
+def extract_docx_data(docx_path: Path) -> tuple[list[str], int, str]:
     """Reads paragraphs, tables count, and text from DOCX."""
     doc = Document(str(docx_path))
     docx_paras = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
     return docx_paras, len(doc.tables), "\n".join(docx_paras)
 
 
-def extract_pdf_data(pdf_path: Path) -> Tuple[int, str]:
+def extract_pdf_data(pdf_path: Path) -> tuple[int, str]:
     """Extracts page count and full text from PDF."""
     pdf_doc = fitz.open(str(pdf_path))
     pages = len(pdf_doc)
@@ -78,7 +78,7 @@ def extract_pdf_data(pdf_path: Path) -> Tuple[int, str]:
     return pages, text
 
 
-def check_structure_alignment(pdf_text: str, docx_paras: List[str]) -> Dict[str, Any]:
+def check_structure_alignment(pdf_text: str, docx_paras: list[str]) -> dict[str, Any]:
     """Extracts articles/chapters from PDF & DOCX and calculates match parity."""
     dieu_pattern = re.compile(r"^Điều\s+(\d+)\b", re.IGNORECASE)
     docx_dieu_set = {int(m.group(1)) for p in docx_paras if (m := dieu_pattern.match(p))}
@@ -87,18 +87,18 @@ def check_structure_alignment(pdf_text: str, docx_paras: List[str]) -> Dict[str,
     pdf_dieu_set = {int(x) for x in pdf_dieu_matches if 1 <= int(x) <= 300}
 
     chapter_pattern = re.compile(r"(?:^|\n)\s*Chương\s+([IVXLCDM0-9]+)", re.IGNORECASE)
-    pdf_chapters = sorted(list(set(re.findall(chapter_pattern, pdf_text))))
-    docx_chapters = sorted(list(set(re.findall(chapter_pattern, "\n".join(docx_paras)))))
+    pdf_chapters = sorted(set(re.findall(chapter_pattern, pdf_text)))
+    docx_chapters = sorted(set(re.findall(chapter_pattern, "\n".join(docx_paras))))
 
     pl_pattern = re.compile(r"(?:^|\n)\s*Phụ lục\s+([IVXLCDM0-9]+)", re.IGNORECASE)
-    pdf_pls = sorted(list(set(re.findall(pl_pattern, pdf_text))))
-    docx_pls = sorted(list(set(re.findall(pl_pattern, "\n".join(docx_paras)))))
+    pdf_pls = sorted(set(re.findall(pl_pattern, pdf_text)))
+    docx_pls = sorted(set(re.findall(pl_pattern, "\n".join(docx_paras))))
 
     return {
         "docx_dieu_count": len(docx_dieu_set),
         "pdf_dieu_count": len(pdf_dieu_set),
-        "missing_in_docx": sorted(list(pdf_dieu_set - docx_dieu_set)),
-        "missing_in_pdf": sorted(list(docx_dieu_set - pdf_dieu_set)),
+        "missing_in_docx": sorted(pdf_dieu_set - docx_dieu_set),
+        "missing_in_pdf": sorted(docx_dieu_set - pdf_dieu_set),
         "chapters_pdf": pdf_chapters,
         "chapters_docx": docx_chapters,
         "appendices_pdf": pdf_pls,
@@ -106,7 +106,7 @@ def check_structure_alignment(pdf_text: str, docx_paras: List[str]) -> Dict[str,
     }
 
 
-def compute_text_parity(pdf_text: str, docx_paras: List[str]) -> float:
+def compute_text_parity(pdf_text: str, docx_paras: list[str]) -> float:
     """Calculates text parity score by sampling paragraphs (>40 chars)."""
     clean_pdf = normalize_text(pdf_text)
     if not clean_pdf or len(clean_pdf) < 200:
@@ -123,8 +123,8 @@ def compute_text_parity(pdf_text: str, docx_paras: List[str]) -> float:
 
 
 def verify_bundle_docx_vs_pdf(
-    root_dir: Path, bundle_dir: Path, doc_entry: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    root_dir: Path, bundle_dir: Path, doc_entry: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """Audits provenance between DOCX source and official PDF for any bundle."""
     slug = bundle_dir.name
     pdf_path, docx_path = find_bundle_assets(root_dir, bundle_dir)
@@ -170,7 +170,7 @@ def verify_bundle_docx_vs_pdf(
     }
 
 
-def verify_nd207_docx_vs_pdf(root_dir: Path) -> Dict[str, Any]:
+def verify_nd207_docx_vs_pdf(root_dir: Path) -> dict[str, Any]:
     """Backward compatibility facade for Decree 207 verification."""
     bundle_dir = root_dir / "legal_docs" / "01_vbpl" / "nghi_dinh_207_2026_nd_cp"
     return verify_bundle_docx_vs_pdf(root_dir, bundle_dir)
@@ -194,7 +194,7 @@ def main() -> int:
     print("      CCBA UNIVERSAL GATE 0: DOCX vs PDF PROVENANCE AUDIT        ")
     print("=================================================================")
 
-    target_bundles: List[Path] = []
+    target_bundles: list[Path] = []
     if args.bundle:
         for cat in ["01_vbpl", "02_qcvn", "03_tcvn"]:
             candidate = legal_docs / cat / args.bundle
