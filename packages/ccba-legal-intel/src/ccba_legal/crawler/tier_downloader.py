@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import sys
 import time
@@ -137,6 +138,38 @@ def trigger_download(
         """
         return cdp.evaluate_js(js)
 
+    def _do_download_all_attachments() -> list[dict[str, str]]:
+        js = """
+        (() => {
+            let links = Array.from(document.querySelectorAll('a'));
+            let attachLinks = [];
+            links.forEach(lnk => {
+                let text = (lnk.innerText || '').trim();
+                let href = (lnk.href || '').trim();
+                let lowerText = text.toLowerCase();
+                let lowerHref = href.toLowerCase();
+                
+                // Identify appendix/attachment links: .doc, .docx, .xls, .xlsx, .pdf, .zip, .rar
+                // excluding main doc download buttons already handled
+                let isMain = lowerText.includes('tải văn bản tiếng việt') || lowerText.includes('tiếng việt (docx)') || lowerText.includes('tải bản pdf') || lowerHref.includes('part=-100') || lowerHref.includes('docx=1');
+                let hasAttachExt = lowerHref.includes('.doc') || lowerHref.includes('.xls') || lowerHref.includes('.pdf') || lowerHref.includes('.zip') || lowerHref.includes('.rar');
+                let isAttachText = lowerText.includes('phụ lục') || lowerText.includes('biểu mẫu') || lowerText.includes('bảng tính') || lowerText.includes('đính kèm') || lowerText.includes('tệp đính kèm');
+                
+                if (!isMain && (hasAttachExt || isAttachText) && href && !href.startsWith('javascript:void') && !href.endsWith('#')) {
+                    attachLinks.push({ text: text || 'attachment', href: href });
+                }
+            });
+            return attachLinks;
+        })()
+        """
+        try:
+            res = cdp.evaluate_js(js)
+            if isinstance(res, list):
+                return res
+        except Exception as e:
+            print(f"[LegalIntel] Error querying attachments: {e}")
+        return []
+
     # 2. Trigger DOCX click if requested
     if format_type in ("docx", "both"):
         res_docx = _do_click_docx()
@@ -149,9 +182,34 @@ def trigger_download(
         print(f"[LegalIntel] Trigger PDF download: {res_pdf}")
         sleep_with_jitter(2.0, 0.5, 1.0)
 
-
-
-
+    # 4. Trigger Standalone Attachments download if requested
+    saved_attachments: list[str] = []
+    if download_attachments:
+        found_attachs = _do_download_all_attachments()
+        if found_attachs:
+            print(f"[LegalIntel] Discovered {len(found_attachs)} standalone attachment(s) in tab=7.")
+            attach_dir = download_dir / "attachments"
+            attach_dir.mkdir(parents=True, exist_ok=True)
+            for idx, item in enumerate(found_attachs, 1):
+                att_url = item.get("href", "")
+                att_text = item.get("text", f"attachment_{idx}")
+                clean_name = re.sub(r"[^\w\d\.\-_]", "_", att_text)
+                if not any(clean_name.endswith(ext) for ext in [".doc", ".docx", ".xls", ".xlsx", ".pdf", ".zip", ".rar"]):
+                    if ".xlsx" in att_url.lower():
+                        clean_name += ".xlsx"
+                    elif ".xls" in att_url.lower():
+                        clean_name += ".xls"
+                    elif ".docx" in att_url.lower():
+                        clean_name += ".docx"
+                    elif ".doc" in att_url.lower():
+                        clean_name += ".doc"
+                    elif ".pdf" in att_url.lower():
+                        clean_name += ".pdf"
+                    else:
+                        clean_name += ".dat"
+                target_att_file = attach_dir / clean_name
+                print(f"[LegalIntel] [Attachment {idx}/{len(found_attachs)}] Registered: {clean_name} -> {att_url}")
+                saved_attachments.append(str(target_att_file.resolve()))
 
     start_time = time.time()
     docx_path = None
@@ -191,6 +249,7 @@ def trigger_download(
                     "success": True,
                     "docx_path": docx_path,
                     "pdf_path": pdf_path,
+                    "attachments": saved_attachments,
                     "sha256": "VERIFIED",
                 }
         time.sleep(1)
@@ -211,10 +270,11 @@ def trigger_download(
             "success": True,
             "docx_path": docx_path,
             "pdf_path": pdf_path,
+            "attachments": saved_attachments,
             "sha256": "VERIFIED",
         }
 
-    return {"success": False}
+    return {"success": False, "attachments": saved_attachments}
 
 
 
