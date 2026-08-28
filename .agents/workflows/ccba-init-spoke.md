@@ -102,7 +102,7 @@ project:
   mode: "software"
   qc_mode: "legal"
   hub_path: "D:/GitHubProjects/ccba-agent-platform"
-  description: "Kho Tri thức Pháp điển & Quy chuẩn Xây dựng Quốc gia (OKF v2.2)"
+  description: "Kho Tri thức Pháp điển & Quy chuẩn Xây dựng Quốc gia (OKF v2.4 Universal Agent-Centric)"
 hub_packages: [ccba-legal-intel, ccba-notebooklm]
 must_read:
   always: [{path: .md/GLOSSARY.md, why: "Thuật ngữ pháp lý chuẩn hóa"}]
@@ -112,10 +112,10 @@ acknowledgment_format: "Tôi đã đọc workspace_context.yaml. Đây là Spoke
 ```
 
 > [!NOTE]
-> **Quy chuẩn Spoke Tri thức (ADR 0044 & Issue #215):**
-> 1. **Script Budget:** Duy trì $\le 15$ core scripts trong `scripts/`. Script one-off chuyển vào `.md/archive/legacy_scripts/`.
-> 2. **Thin Wrappers:** Tái sử dụng `ccba_legal` và `ccba_ai` từ Hub qua `spoke_bootstrap.py`.
-> 3. **Cleanliness Gate:** Pre-commit hook `check_spoke_cleanliness.py` tự động kiểm soát script budget.
+> **Quy chuẩn Spoke Tri thức (ADR 0036, ADR 0044 & Issue #215):**
+> 1. **Cấu trúc OKF v2.4 Universal (ADR 0036):** Bắt buộc có ngăn kéo `sources/` (chứa PDF/DOCX gốc) và 4 ngăn chuyên biệt (`tables/`, `figures/`, `annexes/`, `templates/`). Tuyệt đối cấm để thư mục `templates/` rỗng.
+> 2. **Gate 0 Ingestion Provenance (ADR 0016):** Tự động đối soát cấu trúc và Text Parity giữa DOCX và PDF Công báo qua `ccba_legal.provenance`.
+> 3. **Script Budget & Cleanliness (ADR 0044):** Duy trì $\le 15$ core scripts trong `scripts/`. Tái sử dụng `ccba_legal` và `ccba_ai` từ Hub qua `spoke_bootstrap.py`. Chặn wrapper thừa qua `check_spoke_cleanliness.py`.
 
 ---
 

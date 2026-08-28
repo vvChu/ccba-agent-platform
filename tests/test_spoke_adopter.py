@@ -41,6 +41,16 @@ def test_detect_spoke_stack_python(temp_spoke: Path):
     assert default_archetype == "specialized_extension"
 
 
+def test_detect_spoke_stack_knowledge_corpus(temp_spoke: Path):
+    """Detects OKF v2.4 Knowledge Corpus with legal_docs and legal_registry.yaml."""
+    (temp_spoke / "legal_docs").mkdir(parents=True, exist_ok=True)
+    (temp_spoke / "legal_registry.yaml").write_text("documents: []", encoding="utf-8")
+    stack, default_type, default_archetype = detect_spoke_stack(temp_spoke)
+    assert "Knowledge Base" in stack
+    assert default_type == "Pháp điển"
+    assert default_archetype == "knowledge_corpus"
+
+
 def test_discovery_report_on_mature_spoke(temp_spoke: Path):
     """Generates detailed 3-tier discovery report for mature spoke."""
     # Setup mock git
