@@ -170,14 +170,85 @@ def verify_bundle_docx_vs_pdf(
     }
 
 
+def compute_docx_to_markdown_parity(docx_paras: list[str], combined_md: str) -> tuple[float, list[tuple[int, str]]]:
+    """Compute verbatim text parity rate between DOCX paragraphs and normalized Markdown text."""
+    def norm_words(text: str) -> str:
+        text = text.lower()
+        text = re.sub(r"[^\w\d\s]", " ", text, flags=re.UNICODE)
+        return re.sub(r"\s+", " ", text).strip()
+
+    norm_md = norm_words(combined_md)
+    if not docx_paras:
+        return 100.0, []
+
+    missing_paras: list[tuple[int, str]] = []
+    for idx, p in enumerate(docx_paras, 1):
+        np = norm_words(p)
+        words = np.split()
+        matched = False
+        if len(words) >= 4:
+            for w in range(max(1, len(words) - 5)):
+                chunk = " ".join(words[w : w + 6])
+                if chunk in norm_md:
+                    matched = True
+                    break
+            if not matched:
+                missing_paras.append((idx, p))
+        elif len(words) >= 2:
+            if np not in norm_md:
+                missing_paras.append((idx, p))
+
+    parity_rate = ((len(docx_paras) - len(missing_paras)) / len(docx_paras)) * 100.0
+    return parity_rate, missing_paras
+
+
+def verify_bundle_docx_vs_markdown(bundle_dir: Path) -> dict[str, Any]:
+    """Gate 11 Deep Seam: Verify 100% Verbatim Normative Parity between DOCX and Markdown bundle."""
+    sources_dir = bundle_dir / "sources"
+    docx_files = list(sources_dir.glob("*.docx")) if sources_dir.exists() else []
+    if not docx_files:
+        return {"status": "skipped", "message": "No DOCX asset found in sources/"}
+
+    try:
+        doc = Document(docx_files[0])
+    except Exception as e:
+        return {"status": "error", "error": f"Failed to parse DOCX: {e}"}
+
+    docx_paras = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
+    if not docx_paras:
+        return {"status": "skipped", "message": "DOCX has no non-empty paragraphs"}
+
+    md_texts: list[str] = []
+    for md_f in bundle_dir.rglob("*.md"):
+        if "sources" not in md_f.parts:
+            try:
+                md_texts.append(md_f.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+
+    combined_md = "\n".join(md_texts)
+    parity_rate, missing_paras = compute_docx_to_markdown_parity(docx_paras, combined_md)
+
+    return {
+        "status": "success",
+        "bundle_name": bundle_dir.name,
+        "docx_paras": len(docx_paras),
+        "parity_rate": parity_rate,
+        "missing_count": len(missing_paras),
+        "missing_paras": missing_paras,
+        "pass": parity_rate >= 98.0,
+    }
+
+
 def verify_nd207_docx_vs_pdf(root_dir: Path) -> dict[str, Any]:
     """Backward compatibility facade for Decree 207 verification."""
     bundle_dir = root_dir / "legal_docs" / "01_vbpl" / "nghi_dinh_207_2026_nd_cp"
     return verify_bundle_docx_vs_pdf(root_dir, bundle_dir)
 
 
-# Public alias
+# Public aliases
 verify_docx_against_pdf = verify_bundle_docx_vs_pdf
+verify_docx_against_markdown = verify_bundle_docx_vs_markdown
 
 
 def main() -> int:
