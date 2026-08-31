@@ -167,9 +167,10 @@ def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[
     rendered_p = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
 
     # 1. Formula Handler
-    res_f = handle_formula_block(ctx, text, obj, rendered_p, i)
+    res_f = handle_formula_block(ctx, blocks, i, text, obj, rendered_p)
     if res_f is not None:
         return res_f
+
 
     # 2. Structural Headings & Notes Handler
     res_h = handle_structural_heading(ctx, blocks, i, text, rendered_p, obj)
