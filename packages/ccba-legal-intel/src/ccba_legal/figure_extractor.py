@@ -165,6 +165,9 @@ def extract_docx_figures(
     catalog_entries: list[dict[str, Any]] = []
     cards_dir = figures_dir / "cards"
     cards_dir.mkdir(parents=True, exist_ok=True)
+    images_dir = figures_dir / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
+
 
     with zipfile.ZipFile(docx_p) as z:
         media_list = sorted([f for f in z.namelist() if f.startswith("word/media/")])

@@ -162,7 +162,44 @@ def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[
     obj = blocks[i][1]
     text = obj.text.strip()
     if not text:
+        # Check if the empty paragraph contains standalone formula images/drawings (e.g. MathType equations)
+        xml = obj._element.xml
+        rids = re.findall(r'r:(?:id|embed)="([^"]+)"', xml)
+        if rids:
+            for rid in rids:
+                if rid in ctx.formula_overrides:
+                    val = ctx.formula_overrides[rid]
+                    if isinstance(val, tuple):
+                        fid, f_latex = val[0], val[1]
+                    elif isinstance(val, dict):
+                        fid = val.get("formula_id", f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}")
+                        f_latex = val.get("latex", "")
+                    else:
+                        fid = f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}"
+                        f_latex = str(val)
+                    f_latex = f_latex.strip()
+                    if f_latex.startswith("<!--"):
+                        ctx.emit(f'\n{f_latex}\n\n')
+                        ctx.state_mgr.reset()
+                        return i + 1
+                    if f_latex.startswith("$$") and f_latex.endswith("$$"):
+                        f_latex = f_latex[2:-2].strip()
+                    ctx.emit(f'\n$${f_latex}$$\n<!-- formula_id: "{fid}" -->\n\n')
+                    ctx.state_mgr.reset()
+                    return i + 1
+                elif ctx.rid_to_katex and rid in ctx.rid_to_katex:
+                    raw_k = ctx.rid_to_katex[rid].strip()
+                    if raw_k.startswith("<!-- DIAGRAM"):
+                        ctx.emit(f'\n{raw_k}\n\n')
+                        ctx.state_mgr.reset()
+                        return i + 1
+                    fid = f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}"
+                    f_latex = raw_k[2:-2].strip() if (raw_k.startswith("$$") and raw_k.endswith("$$")) else raw_k
+                    ctx.emit(f'\n$${f_latex}$$\n<!-- formula_id: "{fid}" -->\n\n')
+                    ctx.state_mgr.reset()
+                    return i + 1
         return i + 1
+
 
     rendered_p = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
 
