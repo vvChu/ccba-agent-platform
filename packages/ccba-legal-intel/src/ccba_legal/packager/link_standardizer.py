@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import csv
-from dataclasses import dataclass
 import json
 import re
 import shutil
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from ccba_legal.packager.bundle_writer import write_logs_and_index
 from ccba_legal.packager.slug_utils import sanitize_slug
@@ -136,12 +137,12 @@ def integrate_tables(arg1: Path | str, arg2: Any = None) -> list[ExtractedTable]
                     with open(csv_path, "w", encoding="utf-8", newline="") as f:
                         writer = csv.writer(f)
                         writer.writerows(matrix)
-                    
+
                     json_path = json_dir / f"{t_id}.json"
                     headers = matrix[0]
                     rows = [dict(zip(headers, r)) for r in matrix[1:]]
                     json_path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
-                    
+
                     extracted_tables.append(ExtractedTable(
                         table_id=t_id,
                         rows=len(matrix),

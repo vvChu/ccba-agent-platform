@@ -41,21 +41,26 @@ Kỹ năng này hướng dẫn Agent tự động thực hiện quy trình cào 
 *   **Văn bản hướng dẫn (Guiding Decrees/Circulars)**: Lưu phẳng bên trong `legal_docs/01_vbpl/<doc_slug>/`
 *   **Đăng ký Registry**: Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256` và `sha256` trong `legal_registry.yaml`.
 
-### 1.5. Đặc Tả Gói Tri Thức Hợp Nhất OKF Bundle v2.2 (ADR 0021 & ADR 0031)
-Mỗi văn bản quy phạm pháp luật khi đóng gói thành công **bắt buộc** phải tuân thủ cấu trúc bundle độc lập qua Deep Seam `OKFBundlePackager`:
+### 1.5. Đặc Tả Gói Tri Thức Hợp Nhất OKF Bundle v2.4 Universal (ADR 0021, ADR 0034, ADR 0036, ADR 0037)
+Mỗi văn bản quy phạm pháp luật khi đóng gói thành công **bắt buộc** phải tuân thủ cấu trúc bundle độc lập với 4 ngăn kéo và Universal `sources/`:
 ```text
 legal_docs/<category_prefix>/<document_slug>/
-├── metadata.yaml               # Metadata độc lập (SSOT cấp bundle, lưu pdf_sha256 và legal_basis)
-├── <document_slug>.md          # Nội dung Markdown thuần sạch 100% (Pure Normative Body)
-├── <document_slug>.pdf         # Mỏ neo PDF Công báo / PDF số hóa toàn văn (Anchor of Trust)
+├── metadata.yaml               # Metadata độc lập (SSOT cấp bundle, lưu pdf_sha256 và source_assets)
+├── <document_slug>.md          # Nội dung Markdown thuần sạch 100% nguyên văn (ADR 0037)
+├── clauses.json                # Cây điều khoản AST & severity rating
+├── index.md                    # Mục lục điều hướng nội bộ 2D
+├── sources/                    # Universal sources invariant: chứa bản gốc .docx và .pdf
+│   ├── <document_slug>.docx
+│   └── <document_slug>.pdf
 ├── templates/                  # Thư mục biểu mẫu nguyên tử (Atomic Form Templates)
 │   └── phu_luc_xx/mau_yy_...md
-├── tables/                     # Thư mục chứa bảng dữ liệu tra cứu
+├── tables/                     # Thư mục chứa bảng dữ liệu tra cứu 2D
 │   ├── json/                   # JSON ma trận 2D
 │   └── csv/                    # CSV UTF-8 with BOM
-└── index.md                    # Mục lục điều hướng nội bộ
+├── figures/                    # Thẻ thị giác tính toán tham số hóa (cards/)
+└── annexes/                    # Phụ lục kỹ thuật quy phạm (Technical Normative Annexes)
 ```
-* **Quy chuẩn `metadata.yaml`:** Chứa `id`, `document_number`, `type`, `issued_date`, `effective_date`, `pdf_sha256`, `pdf_status: verified`.
+* **Quy chuẩn `metadata.yaml`:** Chứa `id`, `document_number`, `type`, `issued_date`, `effective_date`, `pdf_sha256`, `pdf_status: verified`, khối `source_assets`.
 * **Cơ chế Khớp nối Hub-Spoke:** Tương thích 100% hai chiều giữa Hub (`packages/ccba-legal-intel`) và Spoke (`legal_registry.yaml`).
 
 ---
@@ -78,51 +83,48 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
 
 ---
 
-## 3. Hướng dẫn Vận hành Quy trình 5 Bước
+## 3. Hướng dẫn Vận hành Quy trình Chuẩn Hóa Văn Bản
 
-1. **Khởi Tạo Phiên TVPL VIP (Persistent Session)**:
+1. **Khởi Tạo Phiên TVPL VIP (Persistent Session - ADR 0031)**:
    ```bash
    python -m ccba_legal login
    ```
-   Đăng nhập tài khoản VIP 1 lần duy nhất để lưu cookie phiên.
-   * **Tiêu chí hoàn thành:** Lưu cookie phiên VIP thành công tại `~/.ccba/tvpl_session.json`.
+   Đăng nhập tài khoản VIP 1 lần duy nhất để lưu cookie phiên tại `~/.gemini/antigravity/chrome_vip`.
+   * **Tiêu chí hoàn thành:** Chrome DevTools Protocol khởi chạy thành công và lưu cookie phiên xác thực hợp lệ.
 
-2. **Thu thập Dữ liệu qua CLI (`fetch` / `batch-fetch`)**:
+2. **Nạp Tự Động 1 Lệnh Toàn Trình (Happy Path - ADR 0035)**:
    ```bash
-   python -m ccba_legal fetch "<TVPL_URL_OR_ID>"
+   python -m ccba_legal ingest "<TVPL_URL>" --category <01_vbpl|02_qcvn|03_tcvn> --upload-drive
    ```
-   Tự động tải về bản PDF số hóa VIP (`part=-100`) và bản Word `.docx` (`part=-1&docx=1`).
-   * **Tiêu chí hoàn thành:** Tải trọn vẹn tài sản PDF Công báo và DOCX về thư mục `sources/`.
+   Tự động tải bản PDF số hóa VIP (`part=-100`) và bản Word `.docx`, chuyển đổi sang OKF v2.4 Bundle, đồng bộ lên Google Drive Vault `CCBA_Legal_Vault` và Google NotebookLM.
+   * **Tiêu chí hoàn thành:** Bundle OKF v2.4 được sinh tự động và đồng bộ lên Google Drive Vault cùng NotebookLM.
 
-3. **Chuyển đổi sang OKF v2.4 Bundle**:
+   *Hoặc tải riêng lẻ từng văn bản:*
    ```bash
-   python -m ccba_legal convert ".md/extracted_docs/<doc_slug>/<doc_slug>.docx" "legal_docs/<category>/<doc_slug>"
+   python -m ccba_legal fetch "<TVPL_URL>" --category <01_vbpl|02_qcvn|03_tcvn>
    ```
-   * **Tiêu chí hoàn thành:** Tạo thành công thân văn bản `.md`, 4 ngăn kéo chuyên biệt và `metadata.yaml`.
+
+3. **Chuyển đổi Thủ công sang OKF v2.4 Bundle (Zero-LLM Deterministic AST)**:
+   ```bash
+   python -m ccba_legal convert --docx-path "legal_docs/<category>/<doc_slug>/sources/<doc_slug>.docx" --target-bundle-dir "legal_docs/<category>/<doc_slug>"
+   ```
+   * **Tiêu chí hoàn thành:** Tạo thành công thân văn bản `.md`, 4 ngăn kéo chuyên biệt (`tables/`, `figures/`, `annexes/`, `templates/`), `clauses.json` và `metadata.yaml`.
 
 4. **Hợp nhất Văn bản Sửa đổi (VBHN Engine - nếu có)**:
    ```bash
    python -m ccba_legal consolidate -m "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" -b "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" -o "legal_docs/<category>/<doc_slug>"
    ```
-   * **Tiêu chí hoàn thành:** Sinh tệp văn bản hợp nhất và ma trận so sánh `bang_so_sanh_thay_doi.md`.
+   * **Tiêu chí hoàn thành:** Sinh tệp văn bản hợp nhất và ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md`.
 
-5. **Kiểm Định Định Dạng & Liên Kết (Visual Parity & Cross-Link Linter)**:
+5. **Đồng Bộ Dữ Liệu Pháp Lý Về Spoke (1-Click Legal Sync - ADR 0050)**:
    ```bash
-   python -m ccba_legal lint "legal_docs/<category>/<doc_slug>"
+   python -m ccba_legal sync --pull-latest [-o legal_docs] [--doc <doc_id>]
    ```
-   * **Tiêu chí hoàn thành:** Vượt qua kiểm định Visual Parity $100\%$ không lỗi cú pháp bảng biểu.
+   Tự động kéo các OKF v2.4 bundles đạt chuẩn từ kho tri thức gốc `ccba-legal-knowledge` (hoặc Cloud Legal Vault) và thực hiện Non-Destructive Additive Merge cho `legal_registry.yaml` tại Spoke.
+   * **Tiêu chí hoàn thành:** Toàn bộ gói văn bản OKF v2.4 chuẩn được sao chép về Spoke và `legal_registry.yaml` được cập nhật bảo toàn.
 
-6. **Trích xuất AST & Tập Dữ Liệu Đối Chuẩn (QA Benchmark)**:
-   ```bash
-   python -m ccba_legal process "legal_docs/<category>/<doc_slug>"
-   ```
-   * **Tiêu chí hoàn thành:** Sinh cây điều khoản `clauses.json` và bộ câu hỏi `qa_benchmark.json`.
-
-7. **Đăng ký Sổ Bộ & Kiểm Định CI Gates Spoke (Zero-Tolerance)**:
+6. **Kiểm Định Master CI Gates Spoke (1-Command Automation)**:
    ```powershell
-   # 1. Đối soát xuất xứ nguồn gốc Gate 0
-   python scripts/verify_docx_against_pdf.py
-   # 2. Kiểm định toàn diện 10 Cổng Master Spoke CI Validator
    python scripts/validate_legal_spoke.py
    ```
-   * **Tiêu chí hoàn thành:** Vượt qua toàn bộ 10 Cổng Master Validator với 0 Errors và 0 Warnings.
+   * **Tiêu chí hoàn thành:** Vượt qua toàn bộ 11 Cổng Master Validator với 0 Errors và 0 Warnings (Gate 11 Verbatim Parity $\ge 98.0\%$).

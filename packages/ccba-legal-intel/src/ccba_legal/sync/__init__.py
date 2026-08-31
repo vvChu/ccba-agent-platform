@@ -1,4 +1,4 @@
-"""Modular Sync package for CCBA Legal Intelligence Platform."""
+"""Modular Sync package for CCBA Legal Intelligence Platform (ADR 0050)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from .drive_uploader import (
     get_drive_service,
     upload_to_google_drive,
 )
-from .engine import DEFAULT_DRIVE_FOLDER, LegalSyncEngine
+from .engine import DEFAULT_DRIVE_FOLDER, LegalSyncEngine, sync_legal_assets
 from .notebooklm_sync import sync_registry_to_notebooklm
 from .utils import (
     calculate_md5,
@@ -32,4 +32,5 @@ __all__ = [
     "download_via_cdp_or_client",
     "sync_registry_to_notebooklm",
     "LegalSyncEngine",
+    "sync_legal_assets",
 ]

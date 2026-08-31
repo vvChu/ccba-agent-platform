@@ -8,7 +8,6 @@ import shutil
 import time
 import zipfile
 from pathlib import Path
-from typing import Any
 
 from ccba_legal.cdp import ChromeCDP, HeadlessEnvironmentError, _check_is_headless
 from ccba_legal.registry import resolve_project_root

@@ -107,7 +107,7 @@ class CookieVault:
         if not self.vault_path.exists():
             return []
         try:
-            with open(self.vault_path, "r", encoding="utf-8") as f:
+            with open(self.vault_path, encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             return []

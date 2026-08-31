@@ -7,10 +7,9 @@ linking them immutably with Git repositories via SHA-256 and Web View URLs.
 from __future__ import annotations
 
 import hashlib
-import io
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -39,13 +38,13 @@ def compute_file_sha256(file_path: Path | str) -> str:
 class GoogleDriveVault:
     """Multi-tier Google Drive Vault Client for Legal Knowledge Repository."""
 
-    def __init__(self, credentials_path: Optional[Path | str] = None) -> None:
+    def __init__(self, credentials_path: Path | str | None = None) -> None:
         self.credentials_path = Path(credentials_path) if credentials_path else None
-        self._service: Optional[Any] = None
-        self._root_folder_id: Optional[str] = None
+        self._service: Any | None = None
+        self._root_folder_id: str | None = None
 
     @property
-    def service(self) -> Optional[Any]:
+    def service(self) -> Any | None:
         """Lazy-initialize Google Drive API v3 Service."""
         if self._service is None:
             self._service = self._init_drive_service()
@@ -59,14 +58,14 @@ class GoogleDriveVault:
             logger.debug(f"Google Drive Vault unavailable: {e}")
             return False
 
-    def _init_drive_service(self) -> Optional[Any]:
+    def _init_drive_service(self) -> Any | None:
         """Initialize Google Drive Service with multi-tier credentials resolution."""
         import os
         try:
+            import google.auth
             from google.oauth2 import service_account
             from google.oauth2.credentials import Credentials
             from googleapiclient.discovery import build
-            import google.auth
         except ImportError:
             logger.warning("google-api-python-client or google-auth not installed.")
             return None
@@ -100,7 +99,7 @@ class GoogleDriveVault:
         return None
 
 
-    def get_or_create_folder(self, folder_name: str, parent_id: Optional[str] = None) -> Optional[str]:
+    def get_or_create_folder(self, folder_name: str, parent_id: str | None = None) -> str | None:
         """Get existing folder ID by name or create a new one under parent_id."""
         if not self.service:
             return None
@@ -139,7 +138,7 @@ class GoogleDriveVault:
             logger.error(f"Error getting/creating folder '{folder_name}': {e}")
             return None
 
-    def ensure_vault_structure(self, category: str, doc_slug: str) -> Optional[str]:
+    def ensure_vault_structure(self, category: str, doc_slug: str) -> str | None:
         """Ensure full directory hierarchy exists: CCBA_Legal_Vault/<category>/<doc_slug>/."""
         import os
         if not self.service:
@@ -167,7 +166,7 @@ class GoogleDriveVault:
         doc_slug: str,
         make_public_read: bool = True,
         convert_to_gdoc: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Upload a local PDF or DOCX file to the Google Drive Vault.
         
         If convert_to_gdoc is True, Word files (.docx/.doc) are automatically converted
@@ -231,7 +230,7 @@ class GoogleDriveVault:
                 ).execute()
             else:
                 # Create new file (with auto-conversion to Google Docs if word doc)
-                file_metadata: Dict[str, Any] = {
+                file_metadata: dict[str, Any] = {
                     "name": target_name,
                     "parents": [target_folder_id],
                 }
@@ -279,7 +278,7 @@ class GoogleDriveVault:
                 "status": f"upload_error: {e}",
             }
 
-    def download_asset(self, file_id: str, dest_path: Path | str) -> Optional[Path]:
+    def download_asset(self, file_id: str, dest_path: Path | str) -> Path | None:
         """Download an asset from Google Drive Vault to local path."""
         if not self.service:
             return None

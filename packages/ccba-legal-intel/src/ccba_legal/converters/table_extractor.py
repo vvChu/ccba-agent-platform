@@ -125,10 +125,10 @@ def _export_table_files(
 
 def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[str, Any]]:
     """3-Tier Semantic Table Classifier according to ADR 0021 & ADR 0028."""
-    from docx import Document
     import docx.oxml
-    import docx.oxml.text.paragraph
     import docx.oxml.table
+    import docx.oxml.text.paragraph
+    from docx import Document
 
     doc = Document(str(docx_path))
     tables_dir = bundle_dir / "tables"

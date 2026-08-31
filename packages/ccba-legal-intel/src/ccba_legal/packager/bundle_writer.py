@@ -6,6 +6,7 @@ import json
 import time
 from pathlib import Path
 from typing import Any
+
 import yaml
 
 from ccba_legal.packager.slug_utils import sanitize_slug
@@ -154,7 +155,7 @@ def package_bundle_v2(
     (bundle_dir / "metadata.yaml").write_text(yaml.safe_dump(meta_dict, allow_unicode=True, sort_keys=False), encoding="utf-8")
     primary_file = bundle_dir / f"{bundle_slug}.md"
     primary_file.write_text(content, encoding="utf-8")
-    
+
     # Generate AST clauses.json
     generate_clauses_json(content, bundle_dir)
 

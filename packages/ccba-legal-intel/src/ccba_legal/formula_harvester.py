@@ -18,8 +18,8 @@ import hashlib
 import json
 import logging
 import re
-import time
 import tempfile
+import time
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -30,50 +30,66 @@ _FORMULA_CONTEXT_KEYWORDS = (
     "theo cong thuc",
     "theo c\u00f4ng th\u1ee9c",
     "Trong \u0111\u00f3:",
+    "trong \u0111\u00f3:",
     "\u0111\u01b0\u1ee3c x\u00e1c \u0111\u1ecbnh",
     "\u0111\u01b0\u1ee3c t\u00ednh theo",
     "t\u00ednh theo c\u00f4ng th\u1ee9c",
     "x\u00e1c \u0111\u1ecbnh theo",
     "theo bi\u1ec3u th\u1ee9c",
-)
-
-_VISION_PROMPT = (
-    "Chuy\u1ec3n \u0111\u1ed5i h\u00ecnh \u1ea3nh c\u00f4ng th\u1ee9c to\u00e1n h\u1ecdc k\u1ef9 thu\u1eadt n\u00e0y sang m\u00e3 LaTeX KaTeX ch\u00ednh x\u00e1c 100%.\n\n"
-    "Quy t\u1eafc b\u1eaft bu\u1ed9c:\n"
-    "- B\u1ea3o t\u1ed3n nguy\u00ean v\u1eb9n: k\u00fd t\u1ef1 Hy L\u1ea1p (\\u03c4\u2192\\\\tau, \\u03bc\u2192\\\\mu, \\u03b6\u2192\\\\zeta, \\u03b3\u2192\\\\gamma), "
-    "ph\u00e2n s\u1ed1 (\\\\frac{}{}), c\u0103n b\u1eadc hai (\\\\sqrt{}), ch\u1ec9 s\u1ed1 d\u01b0\u1edbi (_{...}), s\u1ed1 m\u0169 (^{...}).\n"
-    "- \u0110\u01a1n v\u1ecb \u0111o l\u01b0\u1eddng b\u1ecdc trong \\\\text{...} (v\u00ed d\u1ee5: \\\\text{m/s}, \\\\text{MPa}).\n"
-    "- Ch\u1ec9 s\u1ed1 d\u01b0\u1edbi ti\u1ebfng Vi\u1ec7t b\u1ecdc trong \\\\text{...} (v\u00ed d\u1ee5: P_{\\\\text{D\\u0110}1}, P_{\\\\text{CB2}}).\n"
-    "- Ch\u1ec9 tr\u1ea3 v\u1ec1 DUY NH\u1ea4T 1 d\u00f2ng b\u1eaft \u0111\u1ea7u b\u1eb1ng $$ v\u00e0 k\u1ebft th\u00fac b\u1eb1ng $$, KH\u00d4NG c\u00f3 b\u1ea5t k\u1ef3 v\u0103n b\u1ea3n n\u00e0o kh\u00e1c.\n\n"
-    "V\u00ed d\u1ee5 \u0111\u1ea7u ra h\u1ee3p l\u1ec7:\n"
-    "$$q_1 = 10 \\\\cdot K \\\\cdot \\\\sqrt{P}$$\n"
-    "$$N = \\\\frac{V \\\\cdot a}{q \\\\cdot K \\\\cdot \\\\tau}$$"
-)
-
-_VISION_PROMPT_STRICT = (
-    "Convert this math formula image to LaTeX. "
-    "Return ONLY 1 line in the format $$FORMULA$$. "
-    "No other text allowed before or after the $$ delimiters."
+    "c\u00e1c c\u00f4ng th\u1ee9c",
+    "c\u00f4ng th\u1ee9c sau",
+    "\u1ee9ng su\u1ea5t",
+    "bi\u1ebfn d\u1ea1ng",
+    "quan h\u1ec7",
+    "khi \u0111\u00f3",
+    "khi",
+    "\u0111i\u1ec1u ki\u1ec7n",
 )
 
 
-def is_formula_image(height_pt: float, width_pt: float, surrounding_text: str) -> bool:
+def is_formula_image(
+    height_pt: float,
+    width_pt: float,
+    surrounding_text: str,
+    forward_text: str = "",
+) -> bool:
     """Phan loai anh nhung: cong thuc toan hoc hay so do ky thuat.
 
     Args:
         height_pt: Chieu cao anh tinh bang point (pt).
         width_pt: Chieu rong anh tinh bang point (pt).
-        surrounding_text: Van ban xung quanh doan chua anh.
+        surrounding_text: Van ban xung quanh doan chua anh (truoc va sau).
+        forward_text: Van ban ngay sau doan chua anh de kiem tra chu thich hinh.
 
     Returns:
         True neu anh la cong thuc toan hoc; False neu la so do/hinh ve ky thuat.
     """
-    # Inline math symbols (e.g. \ell, \bar{\epsilon}, \bar{b})
-    if height_pt <= 30.0 and width_pt <= 100.0:
+    # 1. Inline math symbols (e.g. \ell, \bar{\epsilon}, \bar{b})
+    if height_pt <= 35.0 and width_pt <= 120.0:
         return True
-    is_small = height_pt <= 80.0 and width_pt <= 400.0
-    has_context = any(kw in surrounding_text for kw in _FORMULA_CONTEXT_KEYWORDS)
-    return is_small and has_context
+
+    # Check if this is an actual diagram/figure (accompanied by figure caption or CHÚ DẪN immediately following)
+    caption_check_text = forward_text if forward_text else surrounding_text
+    has_figure_caption = bool(re.search(r"^(?:Hình|HÌNH)\s+[0-9A-Z]+(?:\.[0-9]+)*\s*[-–—:]", caption_check_text, re.MULTILINE))
+    has_chu_dan = bool(re.search(r"\b(?:CHÚ\s+DẪN|Chú\s+dẫn)\b", caption_check_text))
+    if (has_figure_caption or has_chu_dan) and height_pt > 75.0:
+        return False
+
+    has_context = any(kw.lower() in surrounding_text.lower() for kw in _FORMULA_CONTEXT_KEYWORDS)
+
+    # 2. Multi-line stacked formula blocks with mathematical context
+    if height_pt <= 320.0 and width_pt <= 650.0 and has_context:
+        return True
+
+    # 3. Compact single-line formula without explicit context
+    if height_pt <= 75.0 and width_pt <= 450.0:
+        return True
+
+    return False
+
+
+
+
 
 
 def _compute_sha256(data: bytes) -> str:
@@ -99,70 +115,100 @@ def _write_cache(cache_dir: Path, sha256: str, katex: str) -> None:
     )
 
 
+_VISION_PROMPT = (
+    "Chuyển đổi hình ảnh công thức toán học kỹ thuật này sang mã LaTeX KaTeX chính xác 100%.\n\n"
+    "Quy tắc bắt buộc:\n"
+    "- BẮT BUỘC giữ lại số hiệu công thức ở góc phải ảnh nếu có dưới dạng \\tag{...} hoặc \\qquad (...) (ví dụ: \\tag{120} hoặc \\qquad (120)).\n"
+    "- Bảo tồn nguyên vẹn: ký tự Hy Lạp (\\tau, \\mu, \\zeta, \\gamma, \\varepsilon, \\sigma, \\sigma_{b1}, \\Delta\\sigma), "
+    "phân số (\\frac{}{}), căn bậc hai (\\sqrt{}), chỉ số dưới (_{...}), số mũ (^{...}).\n"
+    "- Nếu ảnh chứa nhiều dòng công thức hoặc hệ công thức, dùng \\begin{aligned} ... \\end{aligned} hoặc nhiều dòng riêng biệt, và gắn số hiệu \\qquad (...) hoặc \\tag{...} cho từng dòng nếu ảnh có số hiệu riêng cho từng dòng.\n"
+    "- Đơn vị đo lường bọc trong \\text{...} (ví dụ: \\text{m/s}, \\text{MPa}).\n"
+    "- Chỉ số dưới tiếng Việt bọc trong \\text{...} (ví dụ: P_{\\text{DĐ}1}, P_{\\text{CB2}}).\n"
+    "- Chỉ trả về duy nhất khối công thức bắt đầu bằng $$ và kết thúc bằng $$, không có bất kỳ văn bản giải thích nào khác.\n\n"
+    "Ví dụ đầu ra hợp lệ:\n"
+    "$$q_1 = 10 \\cdot K \\cdot \\sqrt{P} \\tag{1}$$\n"
+    "$$\\begin{aligned} \\sigma_b &= E_b \\varepsilon_b \\qquad (8) \\\\ \\sigma_b &= R_b \\qquad (10) \\end{aligned}$$"
+)
+
+_VISION_PROMPT_STRICT = (
+    "Convert this math formula image to LaTeX. "
+    "Return ONLY 1 block in the format $$FORMULA$$. "
+    "No other text allowed before or after the $$ delimiters."
+)
+
+
 def _validate_katex(result: str) -> bool:
-    """Kiem tra output co dung format $$...$$ khong."""
+    """Kiem tra output co dung format $$...$$ va cu phap LaTeX hop le (can bang dau ngoac)."""
     s = result.strip()
-    return (
-        s.startswith("$$")
-        and s.endswith("$$")
-        and len(s) > 4
-        and "\n\n" not in s
-    )
+    if not (s.startswith("$$") and s.endswith("$$") and len(s) > 4):
+        return False
+    # 1. Bat buoc can bang dau ngoac nhon {...}
+    if s.count("{") != s.count("}"):
+        return False
+    # 2. Bat buoc can bang cac moi truong \\begin{...} va \\end{...}
+    begins = len(re.findall(r"\\begin\{([^}]+)\}", s))
+    ends = len(re.findall(r"\\end\{([^}]+)\}", s))
+    if begins != ends:
+        return False
+    return True
 
 
-def _clean_and_extract_katex(raw: str) -> str | None:
-    """Trich xuat va lam sach cong thuc KaTeX $$...$$ tu chuoi AI raw."""
-    if not raw:
-        return None
-    s = raw.strip()
 
-    # 1. Tim block $$...$$ hoan chinh (bao gom ca truong hop AI kem loi thoai)
-    m = re.search(r"\$\$(.+?)\$\$", s, re.DOTALL)
+def _clean_and_extract_katex(raw: str) -> str:
+    """Lam sach va trích xuất duy nhất khối $$...$$ từ chuỗi raw model trả về."""
+    # 1. Tim block $$...$$ dau tien
+    m = re.search(r"\$\$(.*?)\$\$", raw, re.DOTALL)
     if m:
         content = m.group(1).strip()
-        if content and len(content) > 1 and "\n\n" not in content:
-            return f"$${content}$$"
+        return f"$${content}$$"
 
-    # 2. Truong hop bat dau bang $$ nhung bi thieu $$ o cuoi do cat token
-    if s.startswith("$$") and not s.endswith("$$"):
-        content = s[2:].strip()
-        content = re.sub(r"[`'\"]+$", "", content).strip()
-        if content and len(content) > 1 and "\n\n" not in content:
-            return f"$${content}$$"
+    # 2. Fallback: markdown code block ```latex ... ```
+    m_code = re.search(r"```(?:latex|katex|math)?\s*(.*?)\s*```", raw, re.DOTALL)
+    if m_code:
+        content = m_code.group(1).strip().strip("$")
+        return f"$${content}$$"
 
-    # 3. Truong hop dung inline $...$
-    m_inline = re.search(r"(?<!\$)\$([^\$\n]+)\$(?!\$)", s)
+    # 3. Fallback: inline $...$
+    m_inline = re.search(r"\$([^$]+)\$", raw)
     if m_inline:
         content = m_inline.group(1).strip()
-        if content and len(content) > 1:
-            return f"$${content}$$"
+        return f"$${content}$$"
 
-    # 4. Truong hop chuoi toan hoc thuan khong chua dau do
-    if re.match(r"^[A-Za-z0-9_\\\{\}\(\)\+\-\*\/\=\,\.\s\^\_]+$", s) and ("=" in s or "\\" in s or "^" in s or "_" in s):
-        if "\n\n" not in s and len(s) > 2:
-            return f"$${s}$$"
-
-    return None
+    # 4. Fallback: toàn bộ chuỗi (sau khi strip)
+    clean = raw.strip().strip("`$").strip()
+    return f"$${clean}$$"
 
 
-def _call_vision_api(img_bytes: bytes, prompt: str) -> str:
-    """Goi AI Gateway Vision API de nhan dien cong thuc toan hoc.
+
+
+def _call_vision_model(img_bytes: bytes, prompt: str) -> str:
+    """Goi AI Gateway de chuyen doi anh cong thuc sang LaTeX.
 
     Args:
-        img_bytes: Binary cua anh cong thuc (PNG/JPEG).
+        img_bytes: Binary cua anh cong thuc (PNG/JPEG/WMF/EMF).
         prompt: Prompt huong dan model.
 
     Returns:
         Chuoi tra ve tu model (chua validate).
     """
-    from ccba_ai import ai, ModelArchetype
+    import io
 
-    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-        tmp.write(img_bytes)
-        tmp_path = Path(tmp.name)
+    from PIL import Image
+
+    from ccba_ai import ModelArchetype, ai
 
     try:
-        b64_img = ai.encode_image(str(tmp_path), max_pixels=512, quality=95)
+        pil_img = Image.open(io.BytesIO(img_bytes))
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+            pil_img.convert("RGB").save(tmp.name, format="PNG")
+            tmp_path = Path(tmp.name)
+    except Exception:
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+            tmp.write(img_bytes)
+            tmp_path = Path(tmp.name)
+
+    try:
+        b64_img = ai.encode_image(str(tmp_path), max_pixels=1024, quality=95)
     finally:
         try:
             tmp_path.unlink()
@@ -179,7 +225,6 @@ def _call_vision_api(img_bytes: bytes, prompt: str) -> str:
         }
     ]
 
-    # Fix 2: max_tokens=1024 de tranh truncation
     return ai.chat_multi(
         messages,
         model=ModelArchetype.STANDARD,
@@ -221,8 +266,9 @@ def extract_latex_from_image(
     prompts = [_VISION_PROMPT, _VISION_PROMPT_STRICT]
     for attempt, prompt in enumerate(prompts):
         try:
-            raw = _call_vision_api(img_bytes, prompt)
+            raw = _call_vision_model(img_bytes, prompt)
             cleaned = _clean_and_extract_katex(raw)
+
             if cleaned and _validate_katex(cleaned):
                 if cache_dir is not None:
                     _write_cache(cache_dir, sha256, cleaned)
@@ -256,6 +302,14 @@ def _get_surrounding_text(paragraphs: list[Any], center: int, window: int = 3) -
     return " ".join(parts)
 
 
+def _get_forward_caption_text(paragraphs: list[Any], center: int, window: int = 2) -> str:
+    parts: list[str] = []
+    for idx in range(center + 1, min(len(paragraphs), center + window + 1)):
+        txt = "".join(el.text or "" for el in paragraphs[idx].iter() if el.tag.endswith("}t"))
+        parts.append(txt.strip())
+    return "\n".join(parts)
+
+
 def harvest_docx_formula_images(
     docx_path: Path,
     cache_dir: Path | None = None,
@@ -287,15 +341,74 @@ def harvest_docx_formula_images(
             target = rel.attrib.get("Target", "")
             if rid and "media/" in target:
                 r_map[rid] = "word/" + target.replace("../", "")
-
         media_files = set(f for f in z.namelist() if f.startswith("word/media/"))
+
         doc_xml = z.read("word/document.xml")
         doc_tree = ET.fromstring(doc_xml)
         paragraphs = doc_tree.findall(
             ".//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p"
         )
 
+        fig_overrides_file = docx_path.parent.parent / "figures_override.yaml"
+        if not fig_overrides_file.exists():
+            fig_overrides_file = docx_path.parent / "figures_override.yaml"
+        override_figures_media: dict[str, tuple[str, str]] = {}
+        if fig_overrides_file.exists():
+            try:
+                import yaml
+                f_data = yaml.safe_load(fig_overrides_file.read_text(encoding="utf-8"))
+                if isinstance(f_data, dict):
+                    for f_tag, f_val in f_data.items():
+                        if isinstance(f_val, dict) and "media" in f_val:
+                            m_p = f_val["media"].replace("../", "")
+                            if not m_p.startswith("word/"):
+                                m_p = f"word/{m_p}"
+                            f_slug = str(f_tag).lower().replace(".", "_").replace("-", "_")
+                            f_title = f_val.get("title", f"Sơ đồ / Hình {f_tag}")
+                            override_figures_media[m_p] = (f_slug, f_title)
+            except Exception:
+                pass
+
+        form_overrides_file = docx_path.parent.parent / "formulas_override.yaml"
+        if not form_overrides_file.exists():
+            form_overrides_file = docx_path.parent / "formulas_override.yaml"
+        override_formulas: dict[str, str] = {}
+        if form_overrides_file.exists():
+            try:
+                import yaml
+                form_data = yaml.safe_load(form_overrides_file.read_text(encoding="utf-8"))
+                if isinstance(form_data, dict):
+                    for k_id, k_val in form_data.items():
+                        if isinstance(k_val, dict):
+                            l_val = k_val.get("latex", "").strip()
+                            f_id = k_val.get("formula_id", "")
+
+                            # If latex already contains $$ delimiters, strip them
+                            if l_val.startswith("$$") and l_val.endswith("$$"):
+                                l_val = l_val[2:-2].strip()
+
+                            # Determine proper tag: never use 'rId...' as tag
+                            has_tag = "\\tag" in l_val or "\\qquad" in l_val or "\\hfill" in l_val
+                            if not has_tag:
+                                if not str(k_id).lower().startswith("rid"):
+                                    tag_to_use = str(k_id)
+                                elif f_id and "FORMULA_" in f_id:
+                                    tag_to_use = f_id.split("FORMULA_")[-1].replace("_", ".")
+                                else:
+                                    tag_to_use = None
+
+                                if tag_to_use:
+                                    l_val = f"{l_val} \\tag{{{tag_to_use}}}"
+
+                            override_formulas[str(k_id)] = f"$${l_val}$$\n<!-- formula_id: \"{f_id}\" -->" if f_id else f"$${l_val}$$"
+                        elif isinstance(k_val, str):
+                            override_formulas[str(k_id)] = k_val
+            except Exception:
+                pass
+
         rid_to_katex: dict[str, str] = {}
+
+
 
         for p_idx, para in enumerate(paragraphs):
             # 1. Check legacy VML shapes (v:shape)
@@ -307,12 +420,26 @@ def harvest_docx_formula_images(
                 if not rid or rid not in r_map:
                     continue
 
+                media_path = r_map[rid]
+                if media_path in override_figures_media:
+                    f_slug, f_title = override_figures_media[media_path]
+                    rid_to_katex[rid] = f"<!-- FIGURE: hinh_{f_slug}|{f_title} -->"
+                    continue
+
+                if rid in override_formulas:
+                    rid_to_katex[rid] = override_formulas[rid]
+                    continue
+                if media_path in override_formulas:
+                    rid_to_katex[rid] = override_formulas[media_path]
+                    continue
+
                 style_str = shape.attrib.get("style", "")
                 height_pt = _parse_pt(style_str, "height")
                 width_pt = _parse_pt(style_str, "width")
                 surrounding = _get_surrounding_text(paragraphs, p_idx, window=3)
+                forward_txt = _get_forward_caption_text(paragraphs, p_idx, window=2)
 
-                if not is_formula_image(height_pt, width_pt, surrounding):
+                if not is_formula_image(height_pt, width_pt, surrounding, forward_text=forward_txt):
                     rid_to_katex[rid] = f"<!-- DIAGRAM: {r_map[rid]} -->"
                     continue
 
@@ -333,6 +460,19 @@ def harvest_docx_formula_images(
                 if not rid or rid not in r_map or rid in rid_to_katex:
                     continue
 
+                media_path = r_map[rid]
+                if media_path in override_figures_media:
+                    f_slug, f_title = override_figures_media[media_path]
+                    rid_to_katex[rid] = f"<!-- FIGURE: hinh_{f_slug}|{f_title} -->"
+                    continue
+
+                if rid in override_formulas:
+                    rid_to_katex[rid] = override_formulas[rid]
+                    continue
+                if media_path in override_formulas:
+                    rid_to_katex[rid] = override_formulas[media_path]
+                    continue
+
                 extent = drawing.find(f".//{{{ns_wp}}}extent")
                 height_pt = 9999.0
                 width_pt = 9999.0
@@ -343,8 +483,9 @@ def harvest_docx_formula_images(
                     height_pt = cy / 12700.0
 
                 surrounding = _get_surrounding_text(paragraphs, p_idx, window=3)
+                forward_txt = _get_forward_caption_text(paragraphs, p_idx, window=2)
 
-                if not is_formula_image(height_pt, width_pt, surrounding):
+                if not is_formula_image(height_pt, width_pt, surrounding, forward_text=forward_txt):
                     rid_to_katex[rid] = f"<!-- DIAGRAM: {r_map[rid]} -->"
                     continue
 
@@ -355,6 +496,7 @@ def harvest_docx_formula_images(
                 img_bytes = z.read(media_path)
                 katex = extract_latex_from_image(img_bytes, cache_dir=cache_dir, skip_vision=skip_vision)
                 rid_to_katex[rid] = katex
+
 
     return rid_to_katex
 

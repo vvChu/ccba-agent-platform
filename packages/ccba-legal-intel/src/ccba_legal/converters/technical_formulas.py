@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+from typing import Any
+
+import yaml
+
 GREEK_MAP: dict[str, str] = {
     "α": r"\alpha", "β": r"\beta", "γ": r"\gamma", "δ": r"\delta",
     "ε": r"\epsilon", "η": r"\eta", "θ": r"\theta", "λ": r"\lambda",
@@ -15,6 +20,23 @@ INLINE_SYMBOLS_MAP: dict[str, str] = {
     "rId19": r"\bar{\epsilon}",
     "rId28": r"\bar{b}",
 }
+
+MATH_OPERATORS_MAP: dict[str, str] = {
+    "≤": r"\le",
+    "≥": r"\ge",
+    "≠": r"\ne",
+    "≈": r"\approx",
+    "±": r"\pm",
+    "∓": r"\mp",
+    "×": r"\times",
+    "·": r"\cdot",
+    "÷": r"\div",
+    "∞": r"\infty",
+    "→": r"\to",
+    "ℓ": r"\ell",
+}
+
+AERODYNAMIC_FIGURES_GEOMETRY: dict[str, dict[str, Any]] = {}
 
 FORMULAS_MAP: dict[str, tuple[str, str]] = {
     "1": ("F_TCVN2737_TO_HOP_CO_BAN_1", r'C_m = \gamma_n \left( \sum_{i \ge 1} \gamma_{f,i} G_{k,i} \text{ “+” } \sum_{j \ge 1} \gamma_{f,j} \psi_{L,j} Q_{k,L,j} \text{ “+” } \sum_{m \ge 1} \gamma_{f,m} \psi_{t,m} Q_{k,t,m} \right)'),
@@ -58,3 +80,31 @@ FORMULAS_MAP: dict[str, tuple[str, str]] = {
     "F.9": ("F_TCVN2737_HE_SO_KHI_DONG_F9", r"\varphi = \frac{\sum A_i}{A_c} = \frac{A}{A_c}"),
     "G.1": ("F_TCVN2737_DO_VONG_GIOI_HAN_G1", r"f_u = \frac{g(p + p_1 + q)}{30n^2 (bp + p_1 + q)}"),
 }
+
+
+def load_bundle_formula_overrides(bundle_dir: Path) -> dict[str, tuple[str, str]]:
+    """Load bundle-level formula overrides from `formulas_override.yaml` if present."""
+    override_file = bundle_dir / "formulas_override.yaml"
+    if not override_file.exists():
+        return {}
+
+    try:
+        data = yaml.safe_load(override_file.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return {}
+
+        res: dict[str, tuple[str, str]] = {}
+        for tag, val in data.items():
+            str_tag = str(tag)
+            if isinstance(val, dict):
+                fid = val.get("formula_id", f"F_OVERRIDE_{str_tag.upper()}")
+                latex = val.get("latex", "")
+                res[str_tag] = (fid, latex)
+            elif isinstance(val, tuple) and len(val) == 2:
+                res[str_tag] = (str(val[0]), str(val[1]))
+            elif isinstance(val, str):
+                res[str_tag] = (f"F_OVERRIDE_{str_tag.upper()}", val)
+        return res
+    except Exception:
+        return {}
+

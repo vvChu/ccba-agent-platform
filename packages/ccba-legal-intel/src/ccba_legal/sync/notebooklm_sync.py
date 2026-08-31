@@ -10,7 +10,11 @@ from typing import Any
 import yaml
 
 from ccba_legal.sync.cdp_discovery import download_via_cdp_or_client, search_thuvienphapluat_via_cdp
-from ccba_legal.sync.drive_uploader import clean_google_drive_folder, get_drive_service, upload_to_google_drive
+from ccba_legal.sync.drive_uploader import (
+    clean_google_drive_folder,
+    get_drive_service,
+    upload_to_google_drive,
+)
 from ccba_legal.sync.utils import calculate_sha256
 
 

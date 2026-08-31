@@ -62,6 +62,77 @@ class MockLegalDocProvider(LegalDocProvider):
         ]
 
 
+def resolve_tvpl_url(cdp: ChromeCDP, query: str) -> str:
+    """Resolve document query (doc_number, title, or partial string) to exact TVPL URL (Tier 1-3)."""
+    if query.startswith("http://") or query.startswith("https://"):
+        return query
+
+    query_clean = query.strip()
+    print(f"[TVPLVIPDocProvider] Resolving TVPL URL for '{query_clean}'...")
+
+    # Tier 2: TVPL Unified Search (covers /van-ban/ and /TCVN/)
+    search_keywords = [query_clean]
+    if ":" in query_clean:
+        search_keywords.append(query_clean.replace(":", " "))
+    if "-" in query_clean:
+        search_keywords.append(query_clean.replace("-", " "))
+
+    for kw in search_keywords:
+        enc = urllib.parse.quote(kw)
+        s_url = f"https://thuvienphapluat.vn/page/tim-van-ban.aspx?keyword={enc}&match=False&area=0"
+        cdp.navigate(s_url)
+        cdp.wait_ready()
+        cdp.handle_cloudflare()
+
+        find_js = f"""
+        (() => {{
+            let matches = [];
+            let q_lower = "{kw.lower()}".replace(/[^a-z0-9]/g, '');
+            document.querySelectorAll('a[href*="/van-ban/"], a[href*="/TCVN/"]').forEach(a => {{
+                let href = a.href;
+                let txt = (a.innerText || a.textContent || '').trim();
+                let combined = (txt + ' ' + href).toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (txt.length > 5 && combined.includes(q_lower)) {{
+                    matches.push({{title: txt, url: href.split('?')[0].split('#')[0]}});
+                }}
+            }});
+            return matches;
+        }})()
+        """
+        matches = cdp.evaluate_js(find_js) or []
+        if matches:
+            resolved = matches[0]["url"]
+            print(f"[TVPLVIPDocProvider] Tier 2 match found: [{matches[0]['title']}] -> {resolved}")
+            return resolved
+
+    # Tier 3: Search Engine Fallback via CDP (Google site search)
+    print("[TVPLVIPDocProvider] Tier 2 yielded 0 matches. Engaging Tier 3 Google search fallback...")
+    g_query = urllib.parse.quote(f'site:thuvienphapluat.vn "{query_clean}"')
+    cdp.navigate(f"https://www.google.com/search?q={g_query}")
+    cdp.wait_ready()
+
+    g_js = """
+    (() => {
+        let links = [];
+        document.querySelectorAll('a').forEach(a => {
+            let h = a.href;
+            if (h.includes('thuvienphapluat.vn/') && (h.includes('/van-ban/') || h.includes('/TCVN/')) && h.endsWith('.aspx')) {
+                links.push(h.split('?')[0].split('#')[0]);
+            }
+        });
+        return links;
+    })()
+    """
+    g_links = cdp.evaluate_js(g_js) or []
+    if g_links:
+        resolved = g_links[0]
+        print(f"[TVPLVIPDocProvider] Tier 3 Google fallback matched: {resolved}")
+        return resolved
+
+    print("[TVPLVIPDocProvider] [WARNING] Multi-tier resolution failed. Falling back to default URL structure.")
+    return f"https://thuvienphapluat.vn/van-ban/{query_clean}.aspx"
+
+
 class TVPLVIPDocProvider(LegalDocProvider):
     """Live VIP provider connecting via Chrome CDP to fetch metadata, full text, DOCX, and PDF."""
 
@@ -165,7 +236,10 @@ class TVPLVIPDocProvider(LegalDocProvider):
             self._ensure_logged_in(cdp)
             if not verify_tvpl_vip_status(cdp):
                 print("[TVPLVIPDocProvider] [WARNING] VIP Pro session is not active.")
-            url = doc_id_or_url if doc_id_or_url.startswith("http") else f"https://thuvienphapluat.vn/van-ban/{doc_id_or_url}.aspx"
+
+            # Resolve URL dynamically (Multi-tier resolution)
+            url = resolve_tvpl_url(cdp, doc_id_or_url)
+
             metadata = get_tvpl_metadata(cdp, url)
             title, body_text, links = get_crawled_doc_data(cdp, url)
             doc_number = metadata.get("document_number") or ""
@@ -209,7 +283,7 @@ class TVPLVIPDocProvider(LegalDocProvider):
             cdp.close()
 
     def search(self, query: str, max_results: int = 10) -> list[dict[str, Any]]:
-        """Search legal documents on TVPL via Chrome CDP."""
+        """Search legal documents on TVPL via Chrome CDP (both VBPL and TCVN)."""
         cdp = ChromeCDP(port=self.port)
         pages = cdp.get_pages()
         if not pages:
@@ -220,7 +294,7 @@ class TVPLVIPDocProvider(LegalDocProvider):
         cdp.connect_tab(ws_url)
         try:
             encoded_query = urllib.parse.quote(query)
-            search_url = f"https://thuvienphapluat.vn/tim-van-ban.aspx?keyword={encoded_query}"
+            search_url = f"https://thuvienphapluat.vn/page/tim-van-ban.aspx?keyword={encoded_query}&match=False&area=0"
             cdp.navigate(search_url)
             cdp.wait_ready()
             cdp.handle_cloudflare()
@@ -228,11 +302,11 @@ class TVPLVIPDocProvider(LegalDocProvider):
             (() => {{
                 let items = Array.from(document.querySelectorAll('.results-item, .item-doc, .content-item'));
                 if (items.length === 0) {{
-                    items = Array.from(document.querySelectorAll('a[href*="/van-ban/"]'));
+                    items = Array.from(document.querySelectorAll('a[href*="/van-ban/"], a[href*="/TCVN/"]'));
                 }}
                 return items.slice(0, {max_results}).map(item => {{
-                    let a = item.tagName === 'A' ? item : item.querySelector('a[href*="/van-ban/"]');
-                    if (!a) return null;
+                    let a = (item.tagName === 'A') ? item : (item.querySelector('a[href*="/van-ban/"], a[href*="/TCVN/"]') || item.querySelector('a'));
+                    if (!a || !a.href || (!a.href.includes('/van-ban/') && !a.href.includes('/TCVN/'))) return null;
                     return {{
                         title: a.innerText.trim(),
                         url: a.href.split('?')[0].split('#')[0]
@@ -244,3 +318,4 @@ class TVPLVIPDocProvider(LegalDocProvider):
             return results
         finally:
             cdp.close()
+

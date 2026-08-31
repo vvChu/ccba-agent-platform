@@ -1,6 +1,6 @@
 ---
 name: ccba-legal-ingest
-description: Autonomous 7-step legal document acquisition, OKF v2.2 conversion, VBHN consolidation, and zero-tolerance CI verification workflow.
+description: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation, and 11-Gate CI verification workflow.
 bundle: _consulting
 layer: _consulting
 triggers:
@@ -15,90 +15,79 @@ conforms_to:
 - "ADR-0029"
 - "ADR-0030"
 - "ADR-0031"
+- "ADR-0034"
+- "ADR-0035"
+- "ADR-0036"
+- "ADR-0037"
 ---
 # Skill: CCBA Legal Ingest Workflow (`ccba-legal-ingest`)
 
-Quy trình tự động hóa 7 bước thu thập, chuyển đổi sang tiêu chuẩn OKF v2.2 Native-First, hợp nhất VBHN và kiểm định CI không dung thứ cho bất kỳ Luật, Nghị định, Thông tư, QCVN hoặc TCVN mới.
+Quy trình tự động hóa thu thập, chuyển đổi sang tiêu chuẩn **OKF v2.4 Universal Agent-Centric (ADR 0034 - ADR 0037)**, hợp nhất VBHN và kiểm định qua **11 Cổng Master CI Gate** không dung thứ cho bất kỳ Luật, Nghị định, Thông tư, QCVN hoặc TCVN mới.
 
 ---
 
-## 🏛️ Quy Trình 7 Bước Tự Động Hóa Toàn Trình (The Universal Ingest Loop)
+## 🏛️ Quy Trình Chuẩn Hóa Văn Bản Mới (Universal OKF v2.4 Pipeline)
 
-Khi tiếp nhận yêu cầu nạp hoặc cập nhật một văn bản pháp lý mới, Agent **bắt buộc** thực hiện tuần tự 7 bước:
+Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện theo quy trình chuẩn:
 
 ```
-[1. Pre-flight Check] ──► [2. 3-Tier Crawl] ──► [3. OKF v2.2 Convert] ──► [4. VBHN Consolidate]
-                                                                                  │
-[7. CI Gate Enactment] ◄── [6. AST Indexing] ◄── [5. OKF Linting Gate] ◄──────────┘
+[Bước 0: Thu thập & Xác thực] ──► [Bước 1: OKF v2.4 Convert] ──► [Bước 2: VBHN Consolidation] ──► [Bước 3: 1-Command Master CI]
+ (ingest --upload-drive)          (Zero-LLM Verbatim AST)         (Nếu có văn bản sửa đổi)          (validate_legal_spoke.py)
 ```
 
 ---
 
-### Bước 1: Kiểm Tra Phiên Đăng Nhập VIP (Pre-flight VIP Guard)
-* Kiểm tra phiên VIP Pro bằng `python -m ccba_legal login --check` hoặc micro-probe.
-* Nếu chưa đăng nhập, kích hoạt lệnh:
+### Bước 0: Thu Thập & Xác Thực Nguồn Gốc (Giao thức "Một Cửa `tab=7`" - ADR 0035, ADR 0036)
+
+* **Kịch bản 1 — Nạp tự động 1 lệnh toàn trình (Happy Path):**
   ```powershell
-  python -m ccba_legal login
+  python -m ccba_legal ingest "<tvpl_url>" --category <01_vbpl|02_qcvn|03_tcvn> --upload-drive
   ```
-  *(Đăng nhập 1 lần duy nhất tại cửa sổ Chromium mở ra trên cổng 9222)*.
+  *(Tự động tải DOCX Gold Source + PDF Công báo số hóa vào `sources/`, chuyển đổi sang OKF v2.4 Bundle, đồng bộ lên Google Drive Vault `CCBA_Legal_Vault` và sinh Native Google Docs cho NotebookLM)*.
+
+* **Kịch bản 2 — Tiếp nhận thủ công / Fallback khi cào bị lỗi:**
+  Nếu việc cào tự động gặp trở ngại (Cloudflare/Captcha), Agent giải quyết cục bộ bằng script CDP/thủ công để đưa đúng 2 tệp `.docx` và `.pdf` vào `legal_docs/<category>/<doc_slug>/sources/`. **Sau khi có file, BẮT BUỘC thực thi Bước 1 bằng lệnh `convert` — TUYỆT ĐỐI CẤM tự viết file Markdown bằng LLM.**
+
+* **Kịch bản 3 — Làm mới / Thay thế file scan mờ bằng bản nét (Force Refresh):**
+  Chạy lệnh tải đè bản đẹp vào `sources/` rồi chuyển sang Bước 1:
+  ```powershell
+  python -m ccba_legal fetch "<tvpl_url>" -o "legal_docs/<category>/<doc_slug>/sources"
+  ```
 
 ---
 
-### Bước 2: Thu Thập Văn Bản 3 Tầng (3-Tier Acquisition)
-* Thực thi lệnh thu thập trực tiếp qua CLI Hub:
+### Bước 1: Chuyển Đổi Sang OKF v2.4 Bundle (Zero-LLM Deterministic AST - ADR 0037)
+
+* Thực thi lệnh chuyển đổi trích xuất nguyên văn $100\%$ từ DOCX gốc:
   ```powershell
-  python -m ccba_legal fetch "<url_hoac_so_hieu_van_ban>"
+  python -m ccba_legal convert --docx-path "legal_docs/<category>/<doc_slug>/sources/<doc_slug>.docx" --target-bundle-dir "legal_docs/<category>/<doc_slug>"
   ```
-* **Mục tiêu đạt được:** Tự động lưu bản VIP Digital Vector PDF (`part=-100`) và bản Word gốc (`part=-1&docx=1`) vào `.md/extracted_docs/<slug>/`.
+* **Quy chuẩn bất biến (Core Invariants):**
+  - Thân văn bản Markdown trích xuất xác định $1:1$ từ DOCX (cấm LLM rewrite).
+  - Phân tách rạch ròi 4 ngăn kéo: `tables/`, `figures/`, `annexes/`, `templates/`.
+  - Toàn bộ file gốc DOCX + PDF nằm trong `sources/`.
+  - Tự động sinh cây điều khoản AST `clauses.json` và bộ câu hỏi `qa_benchmark.json`.
 
 ---
 
-### Bước 3: Chuyển Đổi Sang OKF v2.2 Bundle (Universal Conversion)
-* Thực thi lệnh chuyển đổi phân rã thân văn bản và biểu mẫu nguyên tử:
-  ```powershell
-  python -m ccba_legal convert ".md/extracted_docs/<doc_slug>/<doc_slug>.docx" "legal_docs/<category>/<doc_slug>"
-  ```
-* **Tiêu chuẩn cấu trúc:**
-  - Thân văn bản thuần khiết $100\%$ không chứa rác layout hành chính.
-  - Phụ lục biểu mẫu tách thành `templates/phu_luc_xx/mau_yy_...md`.
-  - Bảng tra cứu tách vào `tables/`.
+### Bước 2: Hợp Nhất Văn Bản Sửa Đổi (VBHN Engine — nếu có)
 
----
-
-### Bước 4: Hợp Nhất Văn Bản Sửa Đổi (VBHN Engine — nếu có)
 * Nếu văn bản có sửa đổi/bổ sung, thực thi lệnh hợp nhất AST:
   ```powershell
   python -m ccba_legal consolidate `
     --manifest "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" `
-    --base "legal_docs/<category>/<doc_slug>/<doc_slug>.md" `
+    --base "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" `
     --output "legal_docs/<category>/<doc_slug>"
   ```
+* Bắt buộc sinh ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md` tại gốc bundle (ADR 0036).
 
 ---
 
-### Bước 5: Kiểm Định Định Dạng & Liên Kết (OKF Linting Gate)
-* Kiểm tra thoát ký tự `\- `, `&nbsp;&nbsp;\+ ` và $100\%$ tính toàn vẹn liên kết:
-  ```powershell
-  python -m ccba_legal lint "legal_docs/<category>/<doc_slug>"
-  ```
+### Bước 3: Đăng Ký Sổ Bộ & Nghiệm Thu Master CI Gate (1-Command Automation)
 
----
-
-### Bước 6: Trích Xuất AST & Tập Dữ Liệu Đối Chuẩn (AST & QA Benchmark)
-* Trích xuất cây cú pháp và sinh tập kiểm thử QA RAG:
-  ```powershell
-  python -m ccba_legal process "legal_docs/<category>/<doc_slug>"
-  ```
-
----
-
-### Bước 7: Đăng Ký Sổ Bộ & Nghiệm Thu CI Gates (Enactment & Registry Sync)
-* Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256` vào `legal_registry.yaml`.
-* Chạy bộ cổng kiểm thử không dung thứ của Spoke:
-  ```powershell
-  python scripts/lint_visual_parity.py
-  python scripts/validate_legal_spoke.py
-  python scripts/verify_all_docs_against_pdf.py
-  python scripts/validate_adr_parity.py
-  ```
-* **Tiêu chuẩn hoàn thành:** `0 Errors, 0 Warnings, 100% PDF SHA-256 Match`.
+1. Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256`, `pdf_status: verified` và khối `source_assets` vào `legal_registry.yaml`.
+2. Chạy bộ kiểm định 11 Cổng Master Spoke CI Validator:
+   ```powershell
+   python scripts/validate_legal_spoke.py
+   ```
+3. **Tiêu chuẩn nghiệm thu:** `0 Errors, 0 Warnings, 100% Visual Parity, 100% Verbatim Match (Gate 11 >= 98.0%), 100% PDF SHA-256 Match`.

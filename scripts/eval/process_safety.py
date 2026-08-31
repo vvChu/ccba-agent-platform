@@ -34,7 +34,7 @@ def ensure_single_instance(script_keyword: str) -> None:
     parent_pid = getattr(os, "getppid", lambda: None)()
 
     try:
-        import psutil  # type: ignore[import-untyped]
+        import psutil
 
         for proc in psutil.process_iter(["pid", "name", "cmdline"]):
             try:
@@ -102,13 +102,7 @@ def kill_process_tree(pid: int) -> None:
 
 
 def get_venv_python(project_root: Path) -> str:
-    """Trả về đường dẫn tới python trong .venv nếu có, fallback sys.executable."""
-    venv_win = project_root / ".venv" / "Scripts" / "python.exe"
-    if venv_win.exists():
-        return str(venv_win)
-    venv_nix = project_root / ".venv" / "bin" / "python"
-    if venv_nix.exists():
-        return str(venv_nix)
+    """Trả về đường dẫn tới python interpreter hiện hành (chứa đầy đủ công cụ linter/tester)."""
     return sys.executable
 
 

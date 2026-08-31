@@ -41,8 +41,8 @@ class FullDocStructuralScanner:
         except Exception:
             return DocumentArchetype.VBPL_ADMIN
 
-        total_p = len(doc.paragraphs)
         decimal_sec_count = 0
+
         admin_article_count = 0
         norm_code_count = 0
 
