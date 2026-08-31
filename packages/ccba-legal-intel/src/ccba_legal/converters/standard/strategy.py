@@ -131,12 +131,16 @@ class StandardConversionContext:
     state_mgr: HierarchyStateManager = field(default_factory=HierarchyStateManager)
     formula_overrides: dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def active_parts(self) -> list[str]:
+        """Return the active markdown parts buffer."""
+        if self.current_target == "main":
+            return self.body_md_parts
+        return self.annex_buffers[self.current_target]["parts"]
+
     def emit(self, chunk: str) -> None:
         """Emit a markdown chunk to either the main body buffer or the active modular annex buffer."""
-        if self.current_target == "main":
-            self.body_md_parts.append(chunk)
-        else:
-            self.annex_buffers[self.current_target]["parts"].append(chunk)
+        self.active_parts.append(chunk)
 
 
 def _extract_document_blocks(doc: Any) -> list[tuple[str, Any]]:
