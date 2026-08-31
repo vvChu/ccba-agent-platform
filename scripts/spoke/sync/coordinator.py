@@ -145,6 +145,63 @@ def resolve_canonical_project_type(
     return None, None
 
 
+def merge_agents_constitution(hub_text: str, spoke_text: str) -> str:
+    """Merge Hub constitution into Spoke AGENTS.md while preserving custom Spoke sections.
+
+    Args:
+        hub_text: Content of Hub's AGENTS.md (canonical constitution).
+        spoke_text: Content of Spoke's existing AGENTS.md.
+
+    Returns:
+        Merged content containing Hub's updated constitution and preserving any
+        custom sections (e.g., '## Agent skills', '## Custom Rules') present in Spoke.
+    """
+    if not spoke_text.strip():
+        return hub_text
+    if not hub_text.strip():
+        return spoke_text
+
+    def split_into_sections(text: str) -> list[tuple[str, str]]:
+        lines = text.splitlines(keepends=True)
+        sections: list[tuple[str, str]] = []
+        current_heading = ""
+        current_lines: list[str] = []
+
+        for line in lines:
+            if line.startswith("## "):
+                if current_lines or current_heading:
+                    sections.append((current_heading, "".join(current_lines)))
+                    current_lines = []
+                current_heading = line.strip()
+                current_lines.append(line)
+            else:
+                current_lines.append(line)
+
+        if current_lines or current_heading:
+            sections.append((current_heading, "".join(current_lines)))
+
+        return sections
+
+    hub_sections = split_into_sections(hub_text)
+    spoke_sections = split_into_sections(spoke_text)
+
+    hub_headings = {h for h, _ in hub_sections if h}
+
+    # Find custom spoke sections not present in hub
+    custom_spoke_sections: list[str] = []
+    for heading, content in spoke_sections:
+        if heading and heading not in hub_headings:
+            custom_spoke_sections.append(content.rstrip())
+
+    # Build merged output
+    base_merged = hub_text.rstrip()
+    if custom_spoke_sections:
+        custom_block = "\n\n".join(custom_spoke_sections)
+        return f"{base_merged}\n\n{custom_block}\n"
+
+    return f"{base_merged}\n"
+
+
 class SpokeSynchronizer:
     """Deep Engine managing Spoke workspace synchronization with non-destructive selective merge."""
 
@@ -244,17 +301,24 @@ class SpokeSynchronizer:
             )
             return 1
 
-        # Copy constitution AGENTS.md
+        # Merge constitution AGENTS.md
         hub_agents_md = hub_root / ".agents" / "AGENTS.md"
         spoke_agents_md = spoke_agents_dir / "AGENTS.md"
-        if hub_agents_md.exists():
+        if hub_agents_md.exists() and hub_agents_md.resolve() != spoke_agents_md.resolve():
+            hub_content = hub_agents_md.read_text(encoding="utf-8")
+            if spoke_agents_md.exists():
+                spoke_content = spoke_agents_md.read_text(encoding="utf-8")
+                merged_content = merge_agents_constitution(hub_content, spoke_content)
+            else:
+                merged_content = hub_content
+
             if dry_run:
                 print(
-                    f"[Sync] [DRY-RUN] Would copy constitutional rules -> {spoke_agents_md.relative_to(spoke_root)}"
+                    f"[Sync] [DRY-RUN] Would sync constitutional rules -> {spoke_agents_md.relative_to(spoke_root)}"
                 )
             else:
                 spoke_agents_dir.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(hub_agents_md, spoke_agents_md)
+                spoke_agents_md.write_text(merged_content, encoding="utf-8")
 
         if dry_run:
             print("\n=== [DRY-RUN] On-Demand Sync Simulation Completed ===")
@@ -270,6 +334,7 @@ class SpokeSynchronizer:
         project_type: str,
         project_name: str,
         dry_run: bool = False,
+        additional_bundles: list[str] | None = None,
     ) -> int:
         """Full synchronization with Non-Destructive Selective Merge."""
         if not project_type:
@@ -299,7 +364,30 @@ class SpokeSynchronizer:
         mode_banner = " [DRY-RUN MODE]" if dry_run else ""
         print(f"Project Type: {project_type}{mode_banner}")
 
-        required_bundles = bundle_defs[project_type]
+        required_bundles = list(bundle_defs[project_type])
+        if additional_bundles:
+            for add_b in additional_bundles:
+                add_b_str = str(add_b).strip()
+                if not add_b_str:
+                    continue
+                if add_b_str.startswith("_"):
+                    if add_b_str not in required_bundles:
+                        required_bundles.append(add_b_str)
+                elif add_b_str in bundle_defs:
+                    for b_item in bundle_defs[add_b_str]:
+                        if b_item not in required_bundles:
+                            required_bundles.append(b_item)
+                else:
+                    canon, _ = resolve_canonical_project_type(add_b_str, bundle_defs)
+                    if canon and canon in bundle_defs:
+                        for b_item in bundle_defs[canon]:
+                            if b_item not in required_bundles:
+                                required_bundles.append(b_item)
+                    elif add_b_str not in required_bundles:
+                        required_bundles.append(add_b_str)
+
+            print(f"Additional Bundles: {additional_bundles}")
+
         print(f"Required Bundles: {required_bundles}")
 
         spoke_agents_dir = spoke_root / ".agents"
@@ -480,16 +568,21 @@ class SpokeSynchronizer:
                     dest.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(src, dest)
 
-        # 3. Copy AGENTS.md
+        # 3. Non-Destructive Merge AGENTS.md
         hub_agents_md = hub_root / ".agents" / "AGENTS.md"
         spoke_agents_md = spoke_agents_dir / "AGENTS.md"
         if hub_agents_md.exists() and hub_agents_md.resolve() != spoke_agents_md.resolve():
+            hub_content = hub_agents_md.read_text(encoding="utf-8")
             if not spoke_agents_md.exists():
                 rule_status = "NEW"
-            elif are_files_identical(hub_agents_md, spoke_agents_md):
-                rule_status = "UNCHANGED"
+                merged_content = hub_content
             else:
-                rule_status = "UPDATED"
+                spoke_content = spoke_agents_md.read_text(encoding="utf-8")
+                merged_content = merge_agents_constitution(hub_content, spoke_content)
+                if merged_content == spoke_content:
+                    rule_status = "UNCHANGED"
+                else:
+                    rule_status = "UPDATED"
 
             actions.append(
                 {
@@ -501,7 +594,7 @@ class SpokeSynchronizer:
             )
             if not dry_run and rule_status in ("NEW", "UPDATED"):
                 spoke_agents_dir.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(hub_agents_md, spoke_agents_md)
+                spoke_agents_md.write_text(merged_content, encoding="utf-8")
 
         # 4. Test guardrails
         TestGuardrailCopier(spoke_root, hub_root, project_type).copy_if_needed(dry_run=dry_run)
@@ -627,6 +720,19 @@ class SpokeSynchronizer:
         else:
             project_type = str(project_type_val).strip()
 
+        # Extract additional_bundles
+        raw_add_bundles = context.get("additional_bundles")
+        if not raw_add_bundles:
+            proj_dict = context.get("project")
+            if isinstance(proj_dict, dict):
+                raw_add_bundles = proj_dict.get("additional_bundles")
+
+        additional_bundles: list[str] = []
+        if isinstance(raw_add_bundles, list):
+            additional_bundles = [str(b).strip() for b in raw_add_bundles if str(b).strip()]
+        elif isinstance(raw_add_bundles, str) and raw_add_bundles.strip():
+            additional_bundles = [raw_add_bundles.strip()]
+
         if self.hub_root and self.hub_root.exists():
             hub_root = self.hub_root
         else:
@@ -695,6 +801,7 @@ class SpokeSynchronizer:
                 project_type,
                 project_name,
                 dry_run=dry_run,
+                additional_bundles=additional_bundles,
             )
 
     def sync(
