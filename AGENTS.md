@@ -8,6 +8,8 @@ The CCBA Agent Services Platform is a framework to develop and coordinate AI age
 - **Reuse-First Gate**: Check `catalog.yaml` before writing any new utility. Document reuse decision in implementation plans.
 - **Session Learnings Bootstrap**: Read `.md/knowledge/session_learnings.md` at the start of Planning Mode or SDLC Loop to load established patterns.
 - **Automation-First Quality**: All code changes MUST pass automated `ruff check` and `mypy` static validation before completion.
+- **Virtual Hub Fallback**: In Spoke mode, if a referenced skill is not physically present in `.\.agents\skills\`, the Agent MUST transparently read the skill definition directly from `[hub_path]\.agents\skills\<skill_name>\SKILL.md`.
+- **Constitution Preservation**: Synchronization engines (`sync_spoke.py`) MUST perform Non-Destructive Section Merge, preserving all custom sections (e.g. `## Agent skills`, Issue Tracker, Domain Docs) in Spoke `AGENTS.md`.
 
 ## Progressive Disclosure
 

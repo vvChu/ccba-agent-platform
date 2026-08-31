@@ -1,6 +1,13 @@
 ---
 description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Spoke Leakage
   Guard, Supervised Self-Healing và Đồng bộ Catalog Hậu Merge (ADR 0045)
+bundle: _core
+command: /ccba-review-proposal
+triggers:
+  - review proposal
+  - thẩm định pr
+  - duyệt đề xuất
+  - review-proposal
 applies_to:
 - Tác vụ Admin
 - Phần mềm

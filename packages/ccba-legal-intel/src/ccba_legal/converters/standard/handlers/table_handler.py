@@ -8,6 +8,8 @@ import json
 import re
 from typing import Any
 
+from ccba_legal.converters.standard.models import HierarchyState
+
 
 def render_table_markdown(table: Any, rid_to_katex: dict[str, str] | None = None) -> tuple[str, list[str], list[list[str]]]:
     """Render a docx Table object as a GitHub Flavored Markdown table with smart column alignment and footnote extraction."""
@@ -165,7 +167,8 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
                 f_latex = f_latex[2:-2].strip()
             tag_suffix = "" if ("\\tag" in f_latex or "\\qquad" in f_latex) else f" \\tag{{{f_tag}}}"
             ctx.emit(f'\n<a id="formula-{f_slug}"></a>\n$${f_latex}{tag_suffix}$$\n<!-- formula_id: "{fid}" -->\n\n')
-        ctx.state_mgr.reset()
+        if ctx.state_mgr.state != HierarchyState.IN_TRONG_DO:
+            ctx.state_mgr.reset()
         return
 
 

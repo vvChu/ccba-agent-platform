@@ -92,7 +92,7 @@ def mock_spoke(tmp_path: Path, mock_hub: Path) -> Path:
     return spoke_dir
 
 
-def test_dry_run_does_not_modify_files(mock_spoke: Path, mock_hub: Path):
+def test_dry_run_does_not_modify_files(mock_spoke: Path, mock_hub: Path) -> None:
     """Verifies that --dry-run performs a simulation without creating or modifying any files."""
     synchronizer = SpokeSynchronizer(str(mock_spoke))
     result = synchronizer.sync(dry_run=True)
@@ -104,7 +104,7 @@ def test_dry_run_does_not_modify_files(mock_spoke: Path, mock_hub: Path):
     assert not (spoke_agents_dir / "skills" / "core-skill").exists()
 
 
-def test_selective_merge_preserves_custom_spoke_workflows(mock_spoke: Path, mock_hub: Path):
+def test_selective_merge_preserves_custom_spoke_workflows(mock_spoke: Path, mock_hub: Path) -> None:
     """Verifies that non-destructive sync preserves custom internal Spoke workflows."""
     spoke_wf_dir = mock_spoke / ".agents" / "workflows"
     spoke_wf_dir.mkdir(parents=True, exist_ok=True)
@@ -126,7 +126,7 @@ def test_selective_merge_preserves_custom_spoke_workflows(mock_spoke: Path, mock
     assert custom_wf_file.read_text(encoding="utf-8") == "# My Custom Internal Workflow"
 
 
-def test_selective_merge_updates_modified_hub_workflows(mock_spoke: Path, mock_hub: Path):
+def test_selective_merge_updates_modified_hub_workflows(mock_spoke: Path, mock_hub: Path) -> None:
     """Verifies that outdated Hub workflows at Spoke are correctly updated with new content."""
     spoke_wf_dir = mock_spoke / ".agents" / "workflows"
     spoke_wf_dir.mkdir(parents=True, exist_ok=True)
@@ -143,7 +143,7 @@ def test_selective_merge_updates_modified_hub_workflows(mock_spoke: Path, mock_h
     assert core_wf_file.read_text(encoding="utf-8") == "# Core Workflow v2.0"
 
 
-def test_sync_single_item_on_demand(mock_spoke: Path, mock_hub: Path):
+def test_sync_single_item_on_demand(mock_spoke: Path, mock_hub: Path) -> None:
     """Verifies on-demand sync of a single skill."""
     synchronizer = SpokeSynchronizer(str(mock_spoke))
 
@@ -160,7 +160,7 @@ def test_sync_single_item_on_demand(mock_spoke: Path, mock_hub: Path):
     assert not (mock_spoke / ".agents" / "skills" / "core-skill").exists()
 
 
-def test_sync_creates_backup_snapshot(mock_spoke: Path, mock_hub: Path):
+def test_sync_creates_backup_snapshot(mock_spoke: Path, mock_hub: Path) -> None:
     """Verifies that actual sync automatically creates a snapshot backup of .agents/."""
     spoke_agents_dir = mock_spoke / ".agents"
     spoke_agents_dir.mkdir(parents=True, exist_ok=True)
@@ -179,7 +179,7 @@ def test_sync_creates_backup_snapshot(mock_spoke: Path, mock_hub: Path):
 
 def test_sync_blocks_on_dirty_working_tree_unless_forced(
     mock_spoke: Path, mock_hub: Path, monkeypatch: pytest.MonkeyPatch
-):
+) -> None:
     """Verifies that sync blocks execution on dirty git working tree unless force=True."""
     from scripts.spoke.spoke_synchronizer import GitWorkingTreeGuard
 
@@ -201,7 +201,7 @@ def test_sync_blocks_on_dirty_working_tree_unless_forced(
     assert res_forced == 0
 
 
-def test_rollback_restores_previous_agents_state(mock_spoke: Path, mock_hub: Path):
+def test_rollback_restores_previous_agents_state(mock_spoke: Path, mock_hub: Path) -> None:
     """Verifies that rollback() restores the .agents directory from the snapshot."""
     spoke_wf_dir = mock_spoke / ".agents" / "workflows"
     spoke_wf_dir.mkdir(parents=True, exist_ok=True)
@@ -221,3 +221,110 @@ def test_rollback_restores_previous_agents_state(mock_spoke: Path, mock_hub: Pat
     rollback_ok = synchronizer.rollback()
     assert rollback_ok is True
     assert custom_wf.read_text(encoding="utf-8") == "# Initial Custom Doc"
+
+
+def test_merge_agents_constitution_preserves_custom_sections() -> None:
+    """Verifies that merge_agents_constitution keeps Hub updates and retains Spoke custom sections."""
+    from scripts.spoke.sync.coordinator import merge_agents_constitution
+
+    hub_text = """# CCBA Agent Services Platform — Layer 1 Constitution
+
+## Core Invariants
+- Hub vs Spoke
+- Session Learnings Bootstrap
+- Virtual Hub Fallback
+
+## Progressive Disclosure
+- Rules and ADRs
+"""
+
+    spoke_text = """# CCBA Agent Services Platform — Layer 1 Constitution
+
+## Core Invariants
+- Old Core Invariants
+
+## Progressive Disclosure
+- Old Rules
+
+## Agent skills
+- Issue tracker: GitHub Issues
+- Triage labels: needs-triage, ready-for-agent
+
+## Project Custom Constraints
+- Do not modify production db directly
+"""
+
+    merged = merge_agents_constitution(hub_text, spoke_text)
+
+    # Must contain updated Hub Core Invariants
+    assert "Virtual Hub Fallback" in merged
+    # Must preserve Spoke custom sections
+    assert "## Agent skills" in merged
+    assert "- Issue tracker: GitHub Issues" in merged
+    assert "## Project Custom Constraints" in merged
+    assert "- Do not modify production db directly" in merged
+
+
+def test_sync_preserves_spoke_agents_md_custom_sections(mock_spoke: Path, mock_hub: Path) -> None:
+    """Verifies that sync preserves custom sections in spoke's AGENTS.md."""
+    spoke_agents_dir = mock_spoke / ".agents"
+    spoke_agents_dir.mkdir(parents=True, exist_ok=True)
+    spoke_agents_md = spoke_agents_dir / "AGENTS.md"
+
+    spoke_custom_content = """# Old Header
+
+## Core Invariants
+- Old invariant
+
+## Agent skills
+- Tracker: custom tracker config
+"""
+    spoke_agents_md.write_text(spoke_custom_content, encoding="utf-8")
+
+    synchronizer = SpokeSynchronizer(str(mock_spoke))
+    result = synchronizer.sync(dry_run=False)
+
+    assert result == 0
+    updated_content = spoke_agents_md.read_text(encoding="utf-8")
+    assert "# Hub Constitution" in updated_content
+    assert "## Agent skills" in updated_content
+    assert "- Tracker: custom tracker config" in updated_content
+
+
+def test_sync_with_additional_bundles(mock_spoke: Path, mock_hub: Path) -> None:
+    """Verifies that additional_bundles in workspace_context.yaml syncs extra bundles."""
+    # Add consulting skill & workflow to mock_hub
+    agents_dir = mock_hub / ".agents"
+    consulting_skill_dir = agents_dir / "skills" / "consulting-skill"
+    consulting_skill_dir.mkdir(parents=True, exist_ok=True)
+    (consulting_skill_dir / "SKILL.md").write_text("# Consulting Skill Content", encoding="utf-8")
+
+    # Update catalog.yaml in mock_hub
+    catalog_path = agents_dir / "skills" / "platform-loader" / "catalog.yaml"
+    catalog_data = yaml.safe_load(catalog_path.read_text(encoding="utf-8"))
+    catalog_data["skills"].append(
+        {
+            "name": "consulting-skill",
+            "bundle": "_consulting",
+            "skill_path": ".agents/skills/consulting-skill/SKILL.md",
+        }
+    )
+    with open(catalog_path, "w", encoding="utf-8") as f:
+        yaml.safe_dump(catalog_data, f)
+
+    # Configure Spoke with additional_bundles: [_consulting]
+    context_file = mock_spoke / ".md" / "workspace_context.yaml"
+    context_data = yaml.safe_load(context_file.read_text(encoding="utf-8"))
+    context_data["additional_bundles"] = ["_consulting"]
+    with open(context_file, "w", encoding="utf-8") as f:
+        yaml.safe_dump(context_data, f)
+
+    synchronizer = SpokeSynchronizer(str(mock_spoke))
+    result = synchronizer.sync(dry_run=False)
+
+    assert result == 0
+    # Should have synced core, software AND consulting skill
+    assert (mock_spoke / ".agents" / "skills" / "core-skill" / "SKILL.md").exists()
+    assert (mock_spoke / ".agents" / "skills" / "software-skill" / "SKILL.md").exists()
+    assert (mock_spoke / ".agents" / "skills" / "consulting-skill" / "SKILL.md").exists()
+
