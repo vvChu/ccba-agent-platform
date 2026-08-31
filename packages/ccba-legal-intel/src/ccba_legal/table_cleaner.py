@@ -7,7 +7,6 @@ and non-monotonic footnote sequencing in OKF Markdown conversions.
 from __future__ import annotations
 
 import re
-from typing import List
 
 
 def flatten_table_headers(markdown_text: str) -> str:
@@ -16,12 +15,12 @@ def flatten_table_headers(markdown_text: str) -> str:
     Removes interior newlines (\\r, \\n) from table header lines before the separator row.
     """
     lines = markdown_text.splitlines()
-    output_lines: List[str] = []
+    output_lines: list[str] = []
     i = 0
     while i < len(lines):
         line = lines[i]
         stripped = line.strip()
-        
+
         # Check if the next line is a markdown table separator: | :--- | :--- | ... |
         if i + 1 < len(lines) and re.match(r"^\|(?:\s*:?-+:?\s*\|)+$", lines[i + 1].strip()):
             # The current line `line` is the table header.
@@ -73,7 +72,7 @@ def enforce_monotonic_footnotes(markdown_text: str) -> str:
 
     # 2. Chunk-based verification across section headers
     chunks = re.split(r"(?=\n#{1,4}\s+|\n<a id=)", new_text)
-    fixed_chunks: List[str] = []
+    fixed_chunks: list[str] = []
     for chunk in chunks:
         labels = [
             re.sub(r"[_*]", "", m.group(1)).strip().upper()

@@ -8,8 +8,8 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-from docx import Document
 import yaml
+from docx import Document
 
 AERODYNAMIC_FIGURES_GEOMETRY: dict[str, dict[str, Any]] = {
     "C.1": {
@@ -216,6 +216,7 @@ def extract_docx_figures(
                                                 sub_cap = nxt_txt
                                                 break
                                         import io
+
                                         from PIL import Image, ImageDraw, ImageFont
                                         sub_img = Image.open(io.BytesIO(z.read(full_m_p)))
                                         if sub_img.width >= 120 and sub_img.height >= 60:
@@ -344,7 +345,7 @@ def render_markdown_figure_card(fig_entry: dict[str, Any]) -> str:
         if "related_tables" in geom:
             table_links = [f'[{t}](#bang-bang-{t.lower().replace(".", "-")})' for t in geom["related_tables"]]
             callout_lines.append(f'> \\- **Bảng tra liên kết:** {", ".join(table_links)}')
-        
+
         lines.append("\n".join(callout_lines) + "\n")
 
     return "\n".join(lines) + "\n"

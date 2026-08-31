@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import re
 import shutil
 import sys
@@ -11,7 +10,8 @@ from pathlib import Path
 from typing import Any
 
 from ccba_legal.cdp import ChromeCDP, HeadlessEnvironmentError, _check_is_headless
-from ccba_legal.registry import load_relation_synonyms as _load_relation_synonyms, resolve_project_root
+from ccba_legal.registry import load_relation_synonyms as _load_relation_synonyms
+from ccba_legal.registry import resolve_project_root
 from ccba_legal.session import sleep_with_jitter
 from ccba_legal.storage import (
     _check_aws_s3,
@@ -106,17 +106,33 @@ def trigger_download(
     def _do_click_docx() -> Any:
         js = """
         (() => {
-            let a = Array.from(document.querySelectorAll('a')).find(lnk => {
+            let all_links = Array.from(document.querySelectorAll('a'));
+            // 1. Prioritize explicit DOCX (id includes 'docx', text includes '(docx)', or href contains 'docx=1')
+            let a_docx = all_links.find(lnk => {
                 let t = (lnk.innerText || '').toLowerCase();
                 let h = (lnk.href || '').toLowerCase();
-                return (t.includes('tiếng việt (docx)') || t.includes('tải văn bản tiếng việt') || h.includes('docx=1')) &&
-                       !t.includes('tiếng anh');
+                let id = (lnk.id || '').toLowerCase();
+                return (id.includes('docx') || t.includes('(docx)') || h.includes('docx=1')) && !t.includes('tiếng anh');
             });
-            if (a) { a.click(); return "Clicked DOCX: " + (a.innerText || a.href); }
-            return "No DOCX link in tab=7";
+            if (a_docx) {
+                a_docx.click();
+                return "Clicked DOCX: " + (a_docx.innerText || a_docx.href);
+            }
+            // 2. Fallback to generic Word link
+            let a_doc = all_links.find(lnk => {
+                let t = (lnk.innerText || '').toLowerCase();
+                let h = (lnk.href || '').toLowerCase();
+                return (t.includes('tiếng việt') || t.includes('tải văn bản')) && (h.includes('download.aspx') || h.includes('part=')) && !t.includes('tiếng anh') && !t.includes('pdf');
+            });
+            if (a_doc) {
+                a_doc.click();
+                return "Clicked DOC (Fallback): " + (a_doc.innerText || a_doc.href);
+            }
+            return "No DOCX/DOC link in tab=7";
         })()
         """
         return cdp.evaluate_js(js)
+
 
     def _do_click_pdf() -> Any:
         js = """
@@ -224,14 +240,23 @@ def trigger_download(
                 time.sleep(1)
                 continue
             for f in new_downloads:
-                if f.suffix in [".docx", ".doc"] and not docx_path:
-                    dest = download_dir / f"{slug_name}{f.suffix}"
+                if f.suffix == ".docx":
+                    dest = download_dir / f"{slug_name}.docx"
                     try:
                         if f.resolve() != dest.resolve():
                             shutil.move(str(f), str(dest))
                         docx_path = str(dest.resolve())
                     except Exception as e:
                         print(f"[LegalIntel] Error resolving DOCX file {f}: {e}")
+                        docx_path = str(f.resolve())
+                elif f.suffix == ".doc" and (not docx_path or not docx_path.endswith(".docx")):
+                    dest = download_dir / f"{slug_name}.doc"
+                    try:
+                        if f.resolve() != dest.resolve():
+                            shutil.move(str(f), str(dest))
+                        docx_path = str(dest.resolve())
+                    except Exception as e:
+                        print(f"[LegalIntel] Error resolving DOC file {f}: {e}")
                         docx_path = str(f.resolve())
                 elif f.suffix == ".pdf" and not pdf_path:
                     dest = download_dir / f"{slug_name}.pdf"
@@ -244,7 +269,7 @@ def trigger_download(
                         pdf_path = str(f.resolve())
 
             # If both are requested and both arrived, or single requested format arrived
-            if (target_both and docx_path and pdf_path) or (not target_both and (docx_path or pdf_path)):
+            if (target_both and docx_path and docx_path.endswith(".docx") and pdf_path) or (not target_both and (docx_path or pdf_path)):
                 return {
                     "success": True,
                     "docx_path": docx_path,
@@ -255,14 +280,19 @@ def trigger_download(
         time.sleep(1)
 
     # Fallback: check if existing file in download_dir matches
-    if not docx_path and download_dir.exists():
+    if download_dir.exists():
         for f in download_dir.glob("*.docx"):
             docx_path = str(f.resolve())
             break
-    if not pdf_path and download_dir.exists():
-        for f in download_dir.glob("*.pdf"):
-            pdf_path = str(f.resolve())
-            break
+        if not docx_path:
+            for f in download_dir.glob("*.doc"):
+                docx_path = str(f.resolve())
+                break
+        if not pdf_path:
+            for f in download_dir.glob("*.pdf"):
+                pdf_path = str(f.resolve())
+                break
+
 
     # Return whatever was downloaded or found
     if docx_path or pdf_path:

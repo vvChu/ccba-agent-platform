@@ -10,7 +10,6 @@ from ccba_legal.sync.cdp_discovery import (
     search_thuvienphapluat_via_cdp,
 )
 from ccba_legal.sync.drive_uploader import (
-    GOOGLE_API_AVAILABLE,
     _import_google_api,
     clean_google_drive_folder,
     get_drive_service,
@@ -23,7 +22,6 @@ from ccba_legal.sync.notebooklm_sync import (
 from ccba_legal.sync.utils import (
     calculate_md5,
     calculate_sha256,
-    ensure_chrome_debug_port,
     is_port_open,
 )
 

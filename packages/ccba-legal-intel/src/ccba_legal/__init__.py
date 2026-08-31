@@ -29,6 +29,10 @@ from .consolidator import (
     PatchManifest,
     load_manifest,
 )
+from .converters import (
+    load_bundle_formula_overrides,
+    omml_to_latex,
+)
 from .coordinator import (
     LegalIntelPipeline,
     LegalProcessor,
@@ -59,9 +63,21 @@ from .docx_converter import (
     normalize_docx_markdown,
     process_vbpl_bundle_okf_v22,
 )
+from .figure_extractor import (
+    extract_docx_figures,
+    extract_technical_figures,
+    load_bundle_figures_overrides,
+    render_markdown_figure_card,
+)
 from .formatter import (
     OKFStructureProcessor,
     extract_parent_metadata,
+)
+from .formula_harvester import (
+    extract_latex_from_image,
+    harvest_docx_formula_images,
+    harvest_pdf_formula_images,
+    is_formula_image,
 )
 from .gold_standard import (
     DocProfile,
@@ -85,13 +101,12 @@ from .models import (
     ASTNode,
     PatchAction,
 )
-from .packager import OKFBundlePackager
-from .registry import (
-    LegalRegistryManager,
-    format_citation,
-    load_legal_registry,
-    search_legal_registry,
+from .modernize import (
+    FigureAutoCompositor,
+    MathEquationConverter,
+    TableMatrixBuilder,
 )
+from .packager import OKFBundlePackager
 from .provenance import (
     check_structure_alignment,
     compute_docx_to_markdown_parity,
@@ -104,6 +119,12 @@ from .provenance import (
     verify_docx_against_markdown,
     verify_docx_against_pdf,
 )
+from .registry import (
+    LegalRegistryManager,
+    format_citation,
+    load_legal_registry,
+    search_legal_registry,
+)
 from .sync import LegalSyncEngine
 from .validator import validate_template_and_table_integrity
 from .vbhn_engine import MergedLegalDocument, VBHNEngine
@@ -112,22 +133,6 @@ from .visual_parity import (
     VisualParityAuditor,
     audit_visual_parity,
     lint_document,
-)
-from .figure_extractor import (
-    AERODYNAMIC_FIGURES_GEOMETRY,
-    extract_technical_figures,
-    render_markdown_figure_card,
-)
-from .formula_harvester import (
-    extract_latex_from_image,
-    harvest_docx_formula_images,
-    harvest_pdf_formula_images,
-    is_formula_image,
-)
-from .modernize import (
-    FigureAutoCompositor,
-    MathEquationConverter,
-    TableMatrixBuilder,
 )
 
 __all__ = [
@@ -210,14 +215,18 @@ __all__ = [
     "classify_and_extract_tables",
     "validate_template_and_table_integrity",
     # === Technical Figure Extraction & Centered Cards (ADR 0030 / ADR 0034) ===
+    "extract_docx_figures",
     "extract_technical_figures",
     "render_markdown_figure_card",
-    "AERODYNAMIC_FIGURES_GEOMETRY",
-    # === Formula Harvesting & Vision OCR (ADR 0031) ===
+    "load_bundle_figures_overrides",
+    # === Formula Harvesting & OMML (ADR 0030 / ADR 0031) ===
+    "omml_to_latex",
+    "load_bundle_formula_overrides",
     "extract_latex_from_image",
     "harvest_docx_formula_images",
     "harvest_pdf_formula_images",
     "is_formula_image",
+
     # === Ingestion Provenance & Verification (Gate 0 / Gate 11 / ADR 0016) ===
     "verify_docx_against_pdf",
     "verify_docx_against_markdown",

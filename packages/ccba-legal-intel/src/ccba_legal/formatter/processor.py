@@ -8,7 +8,6 @@ from typing import Any
 
 from ccba_legal.formatter.chunker import generate_chunks
 from ccba_legal.formatter.metadata import (
-    extract_parent_metadata,
     inject_anchors,
 )
 from ccba_legal.formatter.splitter import (

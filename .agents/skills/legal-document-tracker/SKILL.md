@@ -37,7 +37,7 @@ Skill hỗ trợ theo dõi, phân tích và so sánh các Văn bản Pháp luậ
 
 | File | Mô tả |
 |------|--------|
-| `resources/legal_registry.yaml` | Danh mục VBPL đang theo dõi kèm metadata |
+| `legal_registry.yaml` | **Root SSOT**: Danh mục 34+ VBPL/QCVN/TCVN đang theo dõi kèm metadata chuẩn OKF v2.4 |
 | `resources/comparison_table.md` | Template bảng so sánh VBPL cũ ↔ mới |
 | `resources/impact_report.md` | Template báo cáo tác động thay đổi lên CCBA |
 | `resources/notebooklm_prompts.md` | Prompt mẫu cho NotebookLM theo use case |
@@ -46,23 +46,31 @@ Skill hỗ trợ theo dõi, phân tích và so sánh các Văn bản Pháp luậ
 
 ## How to Use
 
-### 1. Cập nhật Registry VBPL
+### 1. Cập nhật Registry VBPL (`legal_registry.yaml`)
 
-Đọc file `resources/legal_registry.yaml` để nắm danh mục hiện tại. Khi cần cập nhật:
-1. **Thêm VBPL mới**: Thêm entry mới vào `documents` với đầy đủ metadata
-2. **Thay đổi trạng thái**: Cập nhật `status` (`draft` $\rightarrow$ `enacted` $\rightarrow$ `current` $\rightarrow$ `superseded` $\rightarrow$ `expired`)
-3. **Đánh dấu thay thế**: Set `replaces` và `replaced_by` khi có VBPL mới thay thế
+Đọc file `legal_registry.yaml` tại Root Spoke để nắm danh mục hiện tại. Khi cần cập nhật:
+1. **Thêm VBPL/QCVN/TCVN mới**: Thêm entry mới vào nhóm tương ứng (`laws:`, `standards:`) với đầy đủ `bundle_path`, `pdf_path`, `pdf_sha256`, `pdf_status: verified` và khối `source_assets`.
+2. **Thay đổi trạng thái**: Cập nhật `status` (`draft` $\rightarrow$ `active` $\rightarrow$ `superseded` $\rightarrow$ `expired`).
+3. **Đánh dấu thay thế / hướng dẫn**: Khai báo rõ ràng trong `relations:` (`replaces:`, `guided_by:`).
 
-### 2. Tạo Bảng So Sánh & Hợp Nhất VBPL (`VBHNEngine`)
+### 2. Tạo Bảng So Sánh & Hợp Nhất VBPL (`VBHNEngine` CLI)
 
-Khi có VBPL mới sửa đổi, thay thế VBPL cũ:
+Khi có văn bản sửa đổi bổ sung:
 
-1. Kích hoạt Deep Seam `VBHNEngine` để phân tích cây AST và tạo bảng so sánh Điều/Khoản tự động:
+1. Thực thi lệnh hợp nhất AST và sinh ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md` (ADR 0036):
+   ```powershell
+   python -m ccba_legal consolidate `
+     --manifest "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" `
+     --base "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" `
+     --output "legal_docs/<category>/<doc_slug>"
+   ```
+2. Hoặc sử dụng Python API qua Deep Seam `LegislativeConsolidator`:
    ```python
-   from ccba_legal import VBHNEngine
+   from ccba_legal import LegislativeConsolidator
 
-   engine = VBHNEngine()
-   # So sánh và xuất diff tự động giữa 2 phiên bản
+   consolidator = LegislativeConsolidator.from_manifest_file("patch_manifest.yaml")
+   res = consolidator.consolidate("base.md", "output_dir")
+   ```
    diff_report = engine.generate_diff(
        base_doc_path="path/to/old_doc.md",
        amending_doc_path="path/to/new_doc.md"

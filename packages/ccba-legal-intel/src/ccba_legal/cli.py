@@ -11,11 +11,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
 from pathlib import Path
 
 from ccba_legal.consolidator import LegislativeConsolidator
-from ccba_legal.crawler import TVPLCrawler, download_three_tier, get_tvpl_credentials
+from ccba_legal.crawler import TVPLCrawler, get_tvpl_credentials
 from ccba_legal.docx_converter import convert_docx_to_okf_bundle
 from ccba_legal.gold_standard import GoldStandardProcessor
 

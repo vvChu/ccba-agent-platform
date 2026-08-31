@@ -27,9 +27,20 @@ def lint_document(md_path: Path) -> list[str]:
         return [f"Cannot read file: {exc}"]
 
     lines = text.splitlines()
+    in_display_math = False
 
     for idx, line in enumerate(lines, 1):
         stripped = line.strip()
+
+        if stripped.startswith("$$") and stripped.endswith("$$") and len(stripped) > 2:
+            pass
+        elif "$$" in stripped:
+            in_display_math = not in_display_math
+            continue
+
+        if in_display_math:
+            continue
+
 
         # 1. Check double bullets
         if re.match(r"^\s*[-*]\s+[-*]\s+", line):
@@ -105,10 +116,11 @@ def lint_document(md_path: Path) -> list[str]:
                 for m in re.finditer(r"(?:^|[^a-zA-Z0-9])([_*]*(?:CHÚ THÍCH|Chú thích)(?:\s+\d+)?[_*]*):", chunk, re.IGNORECASE)
             ]
             if labels:
-                has_note_2 = any("CHÚ THÍCH 2" in l for l in labels)
-                has_note_1 = any("CHÚ THÍCH 1" in l for l in labels)
+                has_note_2 = any("CHÚ THÍCH 2" in lbl for lbl in labels)
+                has_note_1 = any("CHÚ THÍCH 1" in lbl for lbl in labels)
                 if has_note_2 and not has_note_1:
                     errors.append("MISSING_NOTE_1: Missing 'CHÚ THÍCH 1:' in section where 'CHÚ THÍCH 2:' exists.")
+
 
     return errors
 
