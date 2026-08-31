@@ -104,6 +104,11 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
     res = "".join(out_tokens)
     res = re.sub(r"([a-zA-ZÀ-ɏẠ-ỹͰ-Ͽ]+)\$(_\{[^}]+\}|_[a-zA-Z0-9,]+|\^\{[^}]+\}|\^[a-zA-Z0-9]+)\$", r"$\1\2$", res)
     res = re.sub(r"\$([^$]+)\$", lambda m: f"${''.join(GREEK_MAP.get(c, c) for c in m.group(1))}$", res)
+    # Heal orphaned strain subscripts like $_{b}$, $_{b1}$, $_{s}$
+    res = re.sub(r"\$(_\{b[0-9]*\})\$", r"$\\varepsilon\1$", res)
+    res = re.sub(r"\$(_\{s[0-9]*\})\$", r"$\\varepsilon\1$", res)
+    res = re.sub(r"([0-9])\s*≤\s*(_\{[^}]+\})", r"\1 ≤ $\\varepsilon\2$", res)
+    res = re.sub(r"([0-9])\s*<=\s*(_\{[^}]+\})", r"\1 <= $\\varepsilon\2$", res)
     res = res.replace("$$", "").replace("$_$", "").replace("$^$", "")
     res = re.sub(r"\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9\u0370-\u03FF_,\{\}\^\\0-9]+)\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9])", r"$\1$ \2", res)
     return res.strip()
@@ -189,7 +194,7 @@ def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[
                     return i + 1
                 elif ctx.rid_to_katex and rid in ctx.rid_to_katex:
                     raw_k = ctx.rid_to_katex[rid].strip()
-                    if raw_k.startswith("<!-- DIAGRAM"):
+                    if raw_k.startswith("<!--"):
                         ctx.emit(f'\n{raw_k}\n\n')
                         ctx.state_mgr.reset()
                         return i + 1

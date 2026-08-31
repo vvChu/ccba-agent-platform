@@ -100,9 +100,13 @@ def clean_formula_latex(raw_f: str) -> str:
     for op, repl in ops.items():
         f = f.replace(op, repl)
 
-    greek_cmds = r"\\(?:alpha|beta|gamma|delta|epsilon|eta|theta|lambda|mu|nu|xi|pi|rho|sigma|tau|varphi|psi|omega|Delta|Sigma|Omega|le|ge|ne|approx|pm|times|cdot|div|dots)"
-    f = re.sub(rf"({greek_cmds})([a-zA-Z0-9])", r"\1 \2", f)
-    f = re.sub(rf"([a-zA-Z0-9])({greek_cmds})", r"\1 \2", f)
+    greek_cmds = r"\\(?:alpha|beta|gamma|delta|epsilon|varepsilon|eta|theta|lambda|mu|nu|xi|pi|rho|sigma|tau|varphi|psi|omega|Delta|Sigma|Omega)"
+    f = re.sub(rf"({greek_cmds})([0-9])", r"\1 \2", f)
+    # Restore any broken left/right/le/ge
+    f = re.sub(r"\\le\s+ft\b", r"\\left", f)
+    f = re.sub(r"\\le\s+q\b", r"\\le", f)
+    f = re.sub(r"\\ge\s+q\b", r"\\ge", f)
+    f = re.sub(r"\\ge\s+t\b", r"\\ge", f)
     return re.sub(r"\s+", " ", f).strip()
 
 
