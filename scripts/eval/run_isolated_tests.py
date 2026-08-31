@@ -221,7 +221,11 @@ def main() -> None:
         )
         sys.exit(1)
 
-    effective_timeout = 10 if args.fast and args.timeout == 60 else args.timeout
+    effective_timeout = (
+        300
+        if args.stress and args.timeout == 60
+        else (10 if args.fast and args.timeout == 60 else args.timeout)
+    )
 
     if args.all:
         mode_str = " (⚡ FAST MODE <2s SLA)" if args.fast else ""

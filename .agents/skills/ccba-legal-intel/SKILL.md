@@ -90,18 +90,19 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
    python -m ccba_legal login
    ```
    Đăng nhập tài khoản VIP 1 lần duy nhất để lưu cookie phiên tại `~/.gemini/antigravity/chrome_vip`.
+   * **Tiêu chí hoàn thành:** Chrome DevTools Protocol khởi chạy thành công và lưu cookie phiên xác thực hợp lệ.
 
 2. **Nạp Tự Động 1 Lệnh Toàn Trình (Happy Path - ADR 0035)**:
    ```bash
    python -m ccba_legal ingest "<TVPL_URL>" --category <01_vbpl|02_qcvn|03_tcvn> --upload-drive
    ```
    Tự động tải bản PDF số hóa VIP (`part=-100`) và bản Word `.docx`, chuyển đổi sang OKF v2.4 Bundle, đồng bộ lên Google Drive Vault `CCBA_Legal_Vault` và Google NotebookLM.
+   * **Tiêu chí hoàn thành:** Bundle OKF v2.4 được sinh tự động và đồng bộ lên Google Drive Vault cùng NotebookLM.
 
    *Hoặc tải riêng lẻ từng văn bản:*
    ```bash
    python -m ccba_legal fetch "<TVPL_URL>" --category <01_vbpl|02_qcvn|03_tcvn>
    ```
-
 
 3. **Chuyển đổi Thủ công sang OKF v2.4 Bundle (Zero-LLM Deterministic AST)**:
    ```bash
@@ -120,6 +121,7 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
    python -m ccba_legal sync --pull-latest [-o legal_docs] [--doc <doc_id>]
    ```
    Tự động kéo các OKF v2.4 bundles đạt chuẩn từ kho tri thức gốc `ccba-legal-knowledge` (hoặc Cloud Legal Vault) và thực hiện Non-Destructive Additive Merge cho `legal_registry.yaml` tại Spoke.
+   * **Tiêu chí hoàn thành:** Toàn bộ gói văn bản OKF v2.4 chuẩn được sao chép về Spoke và `legal_registry.yaml` được cập nhật bảo toàn.
 
 6. **Kiểm Định Master CI Gates Spoke (1-Command Automation)**:
    ```powershell
