@@ -25,6 +25,12 @@ INLINE_SYMBOLS_MAP: dict[str, str] = {
     "rId108": r"\frac{s_{w,\max}}{h_0}",
     "rId109": r"\frac{s_{w,\max}}{h_0}",
     "rId110": r"\frac{s_{w,\max}}{h_0}",
+    "rId123": r"\frac{q_{sw,1} Z_1}{R_s A_{s,1}}",
+    "rId124": r"\frac{q_{sw,1} Z_1}{R_s A_{s,1}}",
+    "rId125": r"\frac{q_{sw,1} Z_1}{R_s A_{s,1}}",
+    "rId126": r"\frac{q_{sw,1} Z_1}{R_s A_{s,1}}",
+    "rId127": r"\frac{q_{sw,1} Z_1}{R_s A_{s,1}}",
+    "rId131": r"\frac{q_{sw,1} Z_1}{R_s A_{s,1}}",
 }
 
 MATH_OPERATORS_MAP: dict[str, str] = {

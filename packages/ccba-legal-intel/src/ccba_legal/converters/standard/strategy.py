@@ -19,6 +19,7 @@ from ccba_legal.converters.standard.handlers.list_handler import handle_list_and
 from ccba_legal.converters.standard.handlers.table_handler import (
     handle_table_block,
 )
+from ccba_legal.converters.standard.models import HierarchyState
 from ccba_legal.converters.standard.state_manager import HierarchyStateManager
 from ccba_legal.converters.technical_formulas import (
     GREEK_MAP,
@@ -111,7 +112,7 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
     res = re.sub(r"([0-9])\s*≤\s*(_\{[^}]+\})", r"\1 ≤ $\\varepsilon\2$", res)
     res = re.sub(r"([0-9])\s*<=\s*(_\{[^}]+\})", r"\1 <= $\\varepsilon\2$", res)
     res = res.replace("$$", "").replace("$_$", "").replace("$^$", "")
-    res = re.sub(r"\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9\u0370-\u03FF_,\{\}\^\\0-9]+)\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9])", r"$\1$ \2", res)
+    res = re.sub(r"\$([^$]+)\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9])", r"$\1$ \2", res)
     return res.strip()
 
 
@@ -216,7 +217,8 @@ def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[
                     if f_latex.startswith("$$") and f_latex.endswith("$$"):
                         f_latex = f_latex[2:-2].strip()
                     ctx.emit(f'\n$${f_latex}$$\n<!-- formula_id: "{fid}" -->\n\n')
-                    ctx.state_mgr.reset()
+                    if ctx.state_mgr.state != HierarchyState.IN_TRONG_DO:
+                        ctx.state_mgr.reset()
                     return i + 1
                 elif ctx.rid_to_katex and rid in ctx.rid_to_katex:
                     raw_k = ctx.rid_to_katex[rid].strip()
@@ -229,7 +231,8 @@ def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[
                     fid = f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}"
                     f_latex = raw_k[2:-2].strip() if (raw_k.startswith("$$") and raw_k.endswith("$$")) else raw_k
                     ctx.emit(f'\n$${f_latex}$$\n<!-- formula_id: "{fid}" -->\n\n')
-                    ctx.state_mgr.reset()
+                    if ctx.state_mgr.state != HierarchyState.IN_TRONG_DO:
+                        ctx.state_mgr.reset()
                     return i + 1
         return i + 1
 
