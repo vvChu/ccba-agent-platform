@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -39,7 +40,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     # 1. Login Subcommand (Session Initialization & Persistence)
     login_parser = subparsers.add_parser(
-        "login", help="Launch interactive Chromium browser with persistent TVPL VIP Profile on port 9222"
+        "login",
+        help="Launch interactive Chromium browser with persistent TVPL VIP Profile on port 9222",
     )
     login_parser.add_argument(
         "--port", "-p", type=int, default=9222, help="Debugging port (default: 9222)"
@@ -53,7 +55,8 @@ def build_parser() -> argparse.ArgumentParser:
         "fetch", help="Crawl and download VIP Digital PDF and DOCX from TVPL"
     )
     fetch_parser.add_argument(
-        "target", help="URL or Document ID/Number (e.g. '02/2022/TT-BXD' or 'https://thuvienphapluat.vn/...')"
+        "target",
+        help="URL or Document ID/Number (e.g. '02/2022/TT-BXD' or 'https://thuvienphapluat.vn/...')",
     )
     fetch_parser.add_argument(
         "--output-dir",
@@ -86,7 +89,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     # 4. Convert Subcommand (OKF v2.2 Bundle Generation)
     convert_parser = subparsers.add_parser(
-        "convert", help="Convert official .docx to OKF v2.2 Knowledge Bundle (Markdown + Atomic Templates)"
+        "convert",
+        help="Convert official .docx to OKF v2.2 Knowledge Bundle (Markdown + Atomic Templates)",
     )
     convert_parser.add_argument("docx_path", type=Path, help="Path to input .docx file")
     convert_parser.add_argument(
@@ -135,28 +139,103 @@ def build_parser() -> argparse.ArgumentParser:
 
     # 6. Lint Subcommand (Visual Parity & Cross-Link Verification)
     lint_parser = subparsers.add_parser(
-        "lint", help="Lint OKF Markdown bundles for visual parity & link integrity (ADR 0029 & ADR 0030)"
+        "lint",
+        help="Lint OKF Markdown bundles for visual parity & link integrity (ADR 0029 & ADR 0030)",
     )
-    lint_parser.add_argument("target_path", type=Path, help="Path to markdown file or OKF bundle directory")
+    lint_parser.add_argument(
+        "target_path", type=Path, help="Path to markdown file or OKF bundle directory"
+    )
     lint_parser.add_argument(
         "--no-links", action="store_true", help="Disable relative link and anchor verification"
     )
 
+    # 7. Sync Subcommand (Automated Spoke OKF Sync & Cloud Vault - ADR 0050)
+    sync_parser = subparsers.add_parser(
+        "sync",
+        help="Synchronize OKF v2.4 legal bundles to Spoke or Google Drive/NotebookLM (ADR 0050)",
+    )
+    sync_parser.add_argument(
+        "--pull-latest",
+        action="store_true",
+        default=False,
+        help="Pull latest OKF bundles and merge registry into local Spoke",
+    )
+    sync_parser.add_argument(
+        "-o",
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Target legal_docs output directory (default: legal_docs)",
+    )
+    sync_parser.add_argument(
+        "--doc", type=str, default=None, help="Specific document ID or number to sync"
+    )
+    sync_parser.add_argument(
+        "--source-corpus",
+        type=Path,
+        default=None,
+        help="Explicit path to ccba-legal-knowledge repository",
+    )
+    sync_parser.add_argument(
+        "--to-notebooklm",
+        action="store_true",
+        default=False,
+        help="Sync local registry to Google NotebookLM",
+    )
+    sync_parser.add_argument(
+        "--notebook-id", type=str, default=None, help="Target NotebookLM Notebook ID"
+    )
+    sync_parser.add_argument(
+        "--use-drive",
+        action="store_true",
+        default=False,
+        help="Use Google Drive intermediary for NotebookLM sync",
+    )
+    sync_parser.add_argument(
+        "--drive-folder",
+        type=str,
+        default="1b9vm_1KQ8Fg8Crr1Q-i2xmE62UIHy-_2",
+        help="Google Drive folder ID",
+    )
+    sync_parser.add_argument(
+        "--download-pdf",
+        action="store_true",
+        default=False,
+        help="Download temporary PDFs before uploading to Drive",
+    )
+    sync_parser.add_argument(
+        "--clean-drive",
+        action="store_true",
+        default=False,
+        help="Clean Google Drive folder before sync",
+    )
+
     # 8. Ingest Subcommand (Universal End-to-End OKF Ingestion Pipeline 2.0)
     ingest_parser = subparsers.add_parser(
-        "ingest", help="Universal 1-command autonomous ingestion from TVPL VIP to OKF Bundle and Drive Vault (ADR 0035)"
+        "ingest",
+        help="Universal 1-command autonomous ingestion from TVPL VIP to OKF Bundle and Drive Vault (ADR 0035)",
     )
-    ingest_parser.add_argument("target", help="URL or Document ID/Number (e.g. '01/2021/TT-BXD' or TVPL URL)")
     ingest_parser.add_argument(
-        "-c", "--category", choices=["01_vbpl", "02_qcvn", "03_tcvn"], default="01_vbpl", help="Document category"
+        "target", help="URL or Document ID/Number (e.g. '01/2021/TT-BXD' or TVPL URL)"
     )
-    ingest_parser.add_argument("-o", "--output-dir", type=Path, default=None, help="Spoke legal_docs output root")
     ingest_parser.add_argument(
-        "--upload-drive", action="store_true", default=False, help="Upload binary assets to Google Drive Vault"
+        "-c",
+        "--category",
+        choices=["01_vbpl", "02_qcvn", "03_tcvn"],
+        default="01_vbpl",
+        help="Document category",
+    )
+    ingest_parser.add_argument(
+        "-o", "--output-dir", type=Path, default=None, help="Spoke legal_docs output root"
+    )
+    ingest_parser.add_argument(
+        "--upload-drive",
+        action="store_true",
+        default=False,
+        help="Upload binary assets to Google Drive Vault",
     )
 
     return parser
-
 
 
 def handle_fetch(args: argparse.Namespace) -> int:
@@ -236,6 +315,8 @@ def handle_consolidate(args: argparse.Namespace) -> int:
     if res.errors:
         print(f"Errors: {res.errors}")
         return 1
+
+
 def handle_batch_fetch(args: argparse.Namespace) -> int:
     """Handle batch-fetch subcommand."""
     print("=================================================================")
@@ -294,14 +375,16 @@ def handle_login(args: argparse.Namespace) -> int:
     print("=================================================================")
 
     try:
-        subprocess.Popen([
-            str(browser_exe),
-            f"--remote-debugging-port={port}",
-            f"--user-data-dir={user_data}",
-            "--no-first-run",
-            "--no-default-browser-check",
-            args.url,
-        ])
+        subprocess.Popen(
+            [
+                str(browser_exe),
+                f"--remote-debugging-port={port}",
+                f"--user-data-dir={user_data}",
+                "--no-first-run",
+                "--no-default-browser-check",
+                args.url,
+            ]
+        )
         return 0
     except Exception as e:
         print(f"❌ Failed to launch browser: {e}")
@@ -435,6 +518,86 @@ def handle_ingest(args: argparse.Namespace) -> int:
     return 0
 
 
+def handle_sync(args: argparse.Namespace) -> int:
+    """Handle sync subcommand (ADR 0050)."""
+    print("=================================================================")
+    print("     CCBA LEGAL INTEL - AUTOMATED LEGAL KNOWLEDGE SYNC           ")
+    print("=================================================================")
+
+    from ccba_legal.sync import LegalSyncEngine
+
+    engine = LegalSyncEngine()
+
+    if args.to_notebooklm or args.notebook_id:
+        import asyncio
+
+        notebook_id = args.notebook_id or os.environ.get("NOTEBOOKLM_NOTEBOOK_ID")
+        if not notebook_id:
+            print(
+                "[Error] Thiếu Notebook ID. Cung cấp qua --notebook-id hoặc biến NOTEBOOKLM_NOTEBOOK_ID."
+            )
+            return 1
+
+        reg_p = (
+            Path(args.registry)
+            if hasattr(args, "registry") and args.registry
+            else Path(".md/data/legal_registry.yaml")
+        )
+        sources_p = Path(".md/data/sources_registry.yaml")
+
+        print(f"🔄 Syncing registry {reg_p} to NotebookLM {notebook_id}...")
+        try:
+            asyncio.run(
+                engine.sync_registry_to_notebooklm(
+                    registry_path=reg_p,
+                    sources_reg_path=sources_p,
+                    notebook_id=notebook_id,
+                    use_drive=args.use_drive,
+                    drive_folder_id=args.drive_folder,
+                    download_pdf=args.download_pdf,
+                    clean_drive=args.clean_drive,
+                )
+            )
+            print("✅ Cloud NotebookLM Sync Completed Successfully!")
+            return 0
+        except Exception as e:
+            print(f"❌ Cloud Sync Error: {e}")
+            return 1
+
+    # Spoke Pull Mode (Tier 1 Local Corpus -> Tier 2 Cloud Vault)
+    print("📥 Pulling latest OKF v2.4 legal bundles into Spoke...")
+    doc_ids = [args.doc] if args.doc else None
+    res = engine.pull_latest_okf_bundles(
+        target_dir=args.output_dir,
+        doc_ids=doc_ids,
+        source_corpus_dir=args.source_corpus,
+        update_registry=True,
+    )
+
+    print("-----------------------------------------------------------------")
+    print(f"Status          : {res.get('status')}")
+    print(f"Distribution Tier: {res.get('tier')}")
+    if res.get("source"):
+        print(f"Source Corpus   : {res.get('source')}")
+    print(f"Target Directory: {res.get('target')}")
+    print(f"Bundles Synced  : {len(res.get('bundles_synced', []))}")
+    for b in res.get("bundles_synced", []):
+        print(f"  - {b}")
+    reg_res = res.get("registry_merge", {})
+    if reg_res:
+        print(
+            f"Registry Merge  : Updated={reg_res.get('updated', 0)}, Added={reg_res.get('added', 0)}"
+        )
+    print("-----------------------------------------------------------------")
+
+    if res.get("status") in {"success", "fallback_cloud_vault"}:
+        print("✅ 1-Click Legal Sync Completed Successfully!")
+        return 0
+    else:
+        print(f"❌ Sync failed: {res.get('message', 'Unknown error')}")
+        return 1
+
+
 def main() -> None:
     """Main CLI entrypoint."""
     if hasattr(sys.stdout, "reconfigure"):
@@ -463,12 +626,13 @@ def main() -> None:
         sys.exit(handle_consolidate(args))
     elif args.command == "lint":
         sys.exit(handle_lint(args))
+    elif args.command == "sync":
+        sys.exit(handle_sync(args))
     elif args.command == "ingest":
         sys.exit(handle_ingest(args))
     else:
         parser.print_help()
         sys.exit(1)
-
 
 
 if __name__ == "__main__":

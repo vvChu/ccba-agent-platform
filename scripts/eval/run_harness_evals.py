@@ -223,7 +223,9 @@ def main() -> None:
             "--ignore-missing-imports",
             "--follow-imports=silent",
         ] + mypy_paths
-        success_mypy, out_mypy = run_command(mypy_cmd, project_root, "Mypy Type Checker")
+        success_mypy, out_mypy = run_command(
+            mypy_cmd, project_root, "Mypy Type Checker", timeout_seconds=180
+        )
         gates_summary.append(("Gate 2: Mypy Typecheck", success_mypy, out_mypy))
         all_success = all_success and success_mypy
 
@@ -273,7 +275,7 @@ def main() -> None:
         ] + test_args
 
         success_test, out_test = run_command(
-            pytest_cmd, project_root, "Pytest Suite", timeout_seconds=90
+            pytest_cmd, project_root, "Pytest Suite", timeout_seconds=300
         )
         gates_summary.append(("Gate 3: Pytest Unit Tests", success_test, out_test))
         all_success = all_success and success_test

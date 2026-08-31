@@ -11,7 +11,6 @@ Public Deep Seams:
     AIVisionFormulaHarvester — ADR 0031: Bóc tách công thức toán học từ ảnh sang KaTeX.
 """
 
-
 from .appendices import AppendixSplitter, roman_to_decimal
 from .ast_parser import (
     ASTParser,
@@ -99,7 +98,10 @@ from .grounding import (
 )
 from .models import (
     ASTNode,
+    LegalDocStatus,
+    LegalLifecycleInfo,
     PatchAction,
+    normalize_doc_status,
 )
 from .modernize import (
     FigureAutoCompositor,
@@ -122,10 +124,12 @@ from .provenance import (
 from .registry import (
     LegalRegistryManager,
     format_citation,
+    get_lifecycle,
     load_legal_registry,
+    query,
     search_legal_registry,
 )
-from .sync import LegalSyncEngine
+from .sync import LegalSyncEngine, sync_legal_assets
 from .validator import validate_template_and_table_integrity
 from .vbhn_engine import MergedLegalDocument, VBHNEngine
 from .vbhn_merger import VBHNMerger
@@ -177,6 +181,9 @@ __all__ = [
     "DeltaPatch",
     "DeltaPatchItem",
     "PatchAction",
+    "LegalDocStatus",
+    "LegalLifecycleInfo",
+    "normalize_doc_status",
     "PatchManifest",
     "PatchItem",
     "DocMode",
@@ -184,11 +191,15 @@ __all__ = [
     "MergedLegalDocument",
     "DocProfile",
     # === Essential Public Helpers & Guards ===
+    "verify_tvpl_vip_status",
     "verify_legal_grounding",
     "format_grounded_response",
     "format_citation",
     "load_legal_registry",
     "search_legal_registry",
+    "get_lifecycle",
+    "query",
+    "sync_legal_assets",
     "load_manifest",
     "roman_to_decimal",
     "TVPLSessionMutex",
@@ -226,7 +237,6 @@ __all__ = [
     "harvest_docx_formula_images",
     "harvest_pdf_formula_images",
     "is_formula_image",
-
     # === Ingestion Provenance & Verification (Gate 0 / Gate 11 / ADR 0016) ===
     "verify_docx_against_pdf",
     "verify_docx_against_markdown",

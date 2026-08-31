@@ -115,7 +115,13 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
    ```
    * **Tiêu chí hoàn thành:** Sinh tệp văn bản hợp nhất và ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md`.
 
-5. **Kiểm Định Master CI Gates Spoke (1-Command Automation)**:
+5. **Đồng Bộ Dữ Liệu Pháp Lý Về Spoke (1-Click Legal Sync - ADR 0050)**:
+   ```bash
+   python -m ccba_legal sync --pull-latest [-o legal_docs] [--doc <doc_id>]
+   ```
+   Tự động kéo các OKF v2.4 bundles đạt chuẩn từ kho tri thức gốc `ccba-legal-knowledge` (hoặc Cloud Legal Vault) và thực hiện Non-Destructive Additive Merge cho `legal_registry.yaml` tại Spoke.
+
+6. **Kiểm Định Master CI Gates Spoke (1-Command Automation)**:
    ```powershell
    python scripts/validate_legal_spoke.py
    ```

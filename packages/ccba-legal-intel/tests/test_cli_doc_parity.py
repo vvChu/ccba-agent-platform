@@ -5,6 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 from pathlib import Path
+
 import pytest
 
 from ccba_legal.cli import build_parser
@@ -15,9 +16,7 @@ pytestmark = [pytest.mark.fast, pytest.mark.unit]
 def test_cli_parser_subcommands_have_help() -> None:
     """Verify every registered subcommand in ccba-legal CLI has explicit help descriptions."""
     parser = build_parser()
-    subparsers_action = next(
-        action for action in parser._actions if action.dest == "command"
-    )
+    subparsers_action = next(action for action in parser._actions if action.dest == "command")
     choices = subparsers_action.choices  # dict of command_name -> subparser
     assert len(choices) >= 6, f"Expected at least 6 subcommands, found {len(choices)}"
 
@@ -42,12 +41,6 @@ def test_cli_help_execution_zero_exit_code() -> None:
 
 def test_cli_subcommands_documented_in_skill_md() -> None:
     """Verify every subcommand in CLI is documented in SKILL.md to guarantee zero documentation drift."""
-    parser = build_parser()
-    subparsers_action = next(
-        action for action in parser._actions if action.dest == "command"
-    )
-    choices = subparsers_action.choices
-
     # Candidate SKILL.md paths
     candidate_paths = [
         Path.cwd() / ".agents" / "skills" / "ccba-legal-intel" / "SKILL.md",
@@ -66,7 +59,7 @@ def test_cli_subcommands_documented_in_skill_md() -> None:
     skill_text = skill_file.read_text(encoding="utf-8")
 
     # Verify each core command is mentioned in SKILL.md
-    for cmd in ["login", "fetch", "convert", "consolidate"]:
+    for cmd in ["login", "fetch", "convert", "consolidate", "sync"]:
         assert f"python -m ccba_legal {cmd}" in skill_text or f"`{cmd}`" in skill_text, (
             f"Command '{cmd}' is registered in cli.py but missing from SKILL.md ({skill_file})!"
         )
