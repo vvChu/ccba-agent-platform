@@ -38,7 +38,11 @@ from .coordinator import (
 )
 from .discovery import HubDiscoverer
 from .registry import SpokeRegistrar
-from .sdk_inspector import SharedSdkInspector, TestGuardrailCopier
+from .sdk_inspector import (
+    LegalKnowledgeSyncOrchestrator,
+    SharedSdkInspector,
+    TestGuardrailCopier,
+)
 
 __all__ = [
     "SpokeSynchronizer",
@@ -48,6 +52,7 @@ __all__ = [
     "SpokeRegistrar",
     "TestGuardrailCopier",
     "SharedSdkInspector",
+    "LegalKnowledgeSyncOrchestrator",
     "GitWorkingTreeGuard",
     "SpokeBackupManager",
     "HubNotFoundError",
