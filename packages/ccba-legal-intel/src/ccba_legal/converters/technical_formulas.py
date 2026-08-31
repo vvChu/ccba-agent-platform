@@ -86,14 +86,14 @@ def load_bundle_formula_overrides(bundle_dir: Path) -> dict[str, tuple[str, str]
     """Load bundle-level formula overrides from `formulas_override.yaml` if present."""
     override_file = bundle_dir / "formulas_override.yaml"
     if not override_file.exists():
-        return dict(FORMULAS_MAP)
+        return {}
 
     try:
         data = yaml.safe_load(override_file.read_text(encoding="utf-8"))
         if not isinstance(data, dict):
-            return dict(FORMULAS_MAP)
+            return {}
 
-        res: dict[str, tuple[str, str]] = dict(FORMULAS_MAP)
+        res: dict[str, tuple[str, str]] = {}
         for tag, val in data.items():
             str_tag = str(tag)
             if isinstance(val, dict):
@@ -106,4 +106,5 @@ def load_bundle_formula_overrides(bundle_dir: Path) -> dict[str, tuple[str, str]
                 res[str_tag] = (f"F_OVERRIDE_{str_tag.upper()}", val)
         return res
     except Exception:
-        return dict(FORMULAS_MAP)
+        return {}
+
