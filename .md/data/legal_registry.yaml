@@ -5,7 +5,9 @@ decrees:
   id: ND-207-2026
   issued_date: '2026-06-15'
   short_name: NĐ 207/2026
-  status: current
+  status: ACTIVE
+  supersedes:
+  - 06/2021/NĐ-CP
   title: Nghị định 207/2026/NĐ-CP về quản lý chất lượng thi công xây dựng
   topics:
   - quality_management
@@ -84,7 +86,9 @@ decrees:
   id: ND-217-2026
   issued_date: '2026-06-25'
   short_name: NĐ 217/2026
-  status: current
+  status: ACTIVE
+  supersedes:
+  - 15/2021/NĐ-CP
   title: Nghị định 217/2026/NĐ-CP về quản lý hoạt động xây dựng
   topics:
   - project_management
@@ -133,51 +137,14 @@ decrees:
   key_appendices:
   - 'Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình'
   local_files: []
-  notes: Văn bản chính về QLCL đang áp dụng
-  replaced_by: ND-QLCL-2026
+  notes: Hết hiệu lực từ 01/07/2026, thay thế bởi NĐ 207/2026/NĐ-CP
+  replaced_by: ND-207-2026
+  superseded_by: 207/2026/NĐ-CP
+  superseded_date: '2026-07-01'
   short_name: NĐ 06/2021
   source_url: https://vanban.chinhphu.vn/
-  status: current
+  status: SUPERSEDED
   title: Nghị định 06/2021/NĐ-CP về QLCL, thi công XD và bảo trì CTXD
-  topics:
-  - quality_management
-  - construction
-  - maintenance
-- amends: ND-06-2021
-  effective_date: '2023-06-20'
-  id: ND-35-2023
-  issued_date: '2023-06-20'
-  short_name: NĐ 35/2023
-  status: current
-  title: Nghị định 35/2023/NĐ-CP sửa đổi bổ sung NĐ 06/2021
-  topics:
-  - quality_management
-  - construction
-- download_url: https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-207-2026-ND-CP-huong-dan-Luat-Xay-dung-quan-ly-chat-luong-thi-cong-xay-dung-701883.aspx
-  effective_date: null
-  expected_submission: 2026-04
-  id: ND-QLCL-2026
-  issued_date: null
-  local_files:
-  - files:
-    - 01. NỘI DUNG TRUYỀN THÔNG ND QLCL.docx
-    - 02. Dự thảo Tờ trình NĐ QLCL 19.3.pdf
-    - 03.01.Du thao ND-QLCL 2026 ra soat 20-3 lay y kien.pdf
-    - 03.02. Phu luc Du thao ND-QLCL 2026 ra soat 20-3 -lay y kien .pdf
-    - 04. BC RA SOAT VBQPPL QD Dang Dieu uoc QT (20260319).pdf
-    - 05. Bang so sanh ND moi va ND cu.pdf
-    - 06. BC Danh gia tac dong thu tuc hanh chinh NDQLCL2026.pdf
-    - CV lấy ý kiến dự thảo NĐ QLCL.pdf
-    path: BIM_VBPL/2026/Dự thảo NĐQLCL2026 lấy ý kiến/
-  monitor_url: https://moc.gov.vn/
-  notes: 'Bộ Xây dựng đang lấy ý kiến. File "05. Bang so sanh ND moi va ND cu.pdf"
-    chứa bảng so sánh chi tiết. Dự kiến trình Chính phủ tháng 4/2026.
-
-    '
-  replaces: ND-06-2021
-  short_name: Dự thảo NĐ QLCL 2026
-  status: draft
-  title: Dự thảo Nghị định QLCL thay thế NĐ 06/2021
   topics:
   - quality_management
   - construction
@@ -185,74 +152,43 @@ decrees:
 - effective_date: '2021-03-03'
   id: ND-15-2021
   issued_date: '2021-03-03'
+  notes: Hết hiệu lực từ 01/07/2026, thay thế bởi NĐ 217/2026/NĐ-CP
   short_name: NĐ 15/2021
-  status: current
+  status: SUPERSEDED
+  superseded_by: 217/2026/NĐ-CP
+  superseded_date: '2026-07-01'
   title: Nghị định 15/2021/NĐ-CP về quản lý dự án đầu tư xây dựng
   topics:
   - project_management
   - construction_investment
-- effective_date: '2022-01-28'
-  id: ND-16-2022
-  issued_date: '2022-01-28'
-  notes: Chế tài xử phạt khi không lập hồ sơ hoàn thành công trình
-  short_name: NĐ 16/2022
-  status: current
-  title: Nghị định 16/2022/NĐ-CP về xử phạt VPHC trong xây dựng
+- effective_date: '2025-07-01'
+  id: ND-105-2025
+  issued_date: '2025-05-15'
+  short_name: NĐ 105/2025
+  status: ACTIVE
+  supersedes:
+  - 136/2020/NĐ-CP
+  - 50/2024/NĐ-CP
+  title: Nghị định 105/2025/NĐ-CP quy định chi tiết thi hành Luật Phòng cháy, chữa
+    cháy và cứu nạn, cứu hộ
   topics:
-  - penalties
-  - construction
-- amends: ND-06-2021
-  effective_date: '2024-12-31'
-  id: ND-175-2024
-  issued_date: '2024-12-31'
-  short_name: NĐ 175/2024
-  status: current
-  title: Nghị định 175/2024/NĐ-CP sửa đổi bổ sung NĐ 06/2021
-  topics:
-  - quality_management
-  - construction
-- amends: ND-06-2021
-  effective_date: '2026-01-15'
-  id: ND-14-2026
-  issued_date: '2026-01-15'
-  notes: Sửa đổi mới nhất, đã được hợp nhất vào VBHN 19/VBHN-BXD
-  short_name: NĐ 14/2026
-  status: current
-  title: Nghị định 14/2026/NĐ-CP sửa đổi bổ sung NĐ 06/2021
-  topics:
-  - quality_management
-  - construction
-- consolidates:
-  - ND-06-2021
-  - ND-35-2023
-  - ND-175-2024
-  - ND-14-2026
-  effective_date: '2026-03-25'
-  id: VBHN-19-2026
-  issued_date: '2026-03-25'
-  notes: 'Bản hợp nhất mới nhất về QLCL.  Sử dụng bản này để tra cứu trong giai đoạn
-    chuyển tiếp  trước khi NĐ QLCL 2026 chính thức có hiệu lực.
-
-    '
-  short_name: VBHN 19/2026
-  source_url: https://moc.gov.vn/
-  status: current
-  title: Văn bản hợp nhất 19/VBHN-BXD (25/03/2026)
-  topics:
-  - quality_management
-  - construction
-  - maintenance
+  - fire_safety
+  - pccc
+  - mep
+  document_number: 105/2025/NĐ-CP
+  issued_by: Chính phủ
 laws:
 - amendments:
   - Luật sửa đổi bổ sung 2020 (62/2020/QH14)
   effective_date: '2015-01-01'
   id: LXD-2014
   issued_date: '2014-06-18'
-  notes: Đang áp dụng đến 30/06/2026
+  notes: Hết hiệu lực từ 01/07/2026, thay thế bởi Luật Xây dựng 2025 (135/2025/QH15)
   replaced_by: LXD-2025
+  superseded_by: 135/2025/QH15
   short_name: Luật XD 2014
   source_url: https://vanban.chinhphu.vn/
-  status: current
+  status: SUPERSEDED
   superseded_date: '2026-07-01'
   title: Luật Xây dựng 2014 (50/2014/QH13)
   topics:
@@ -264,14 +200,14 @@ laws:
   file_path: .md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/luat_xay_dung_2025_so_135_2025_qh15.docx
   id: LXD-2025
   issued_date: '2025-12-10'
-  notes: 'Thông qua bởi QH khóa XV.  Một số quy định có hiệu lực từ 01/01/2026. Cần
-    7 Nghị định + 4 Thông tư hướng dẫn.
-
-    '
+  notes: Thông qua bởi QH khóa XV. Có hiệu lực từ 01/07/2026. Thay thế Luật XD 2014.
   replaces: LXD-2014
+  supersedes:
+  - 50/2014/QH13
+  - 62/2020/QH14
   short_name: Luật XD 2025
   source_url: https://vanban.chinhphu.vn/
-  status: enacted
+  status: ACTIVE
   title: Luật Xây dựng 2025 (135/2025/QH15)
   topics:
   - construction
@@ -279,6 +215,21 @@ laws:
   - project_management
   - investment
   document_number: 135/2025/QH15
+  issued_by: Quốc hội
+- effective_date: '2025-07-01'
+  id: LPCCC-2024
+  issued_date: '2024-11-29'
+  short_name: Luật PCCC 2024
+  status: ACTIVE
+  supersedes:
+  - 27/2001/QH10
+  - 40/2013/QH13
+  title: Luật Phòng cháy, chữa cháy và cứu nạn, cứu hộ 2024 (55/2024/QH15)
+  topics:
+  - fire_safety
+  - pccc
+  - inspection
+  document_number: 55/2024/QH15
   issued_by: Quốc hội
 - effective_date: '2020-01-01'
   id: LDT-2019
@@ -312,7 +263,8 @@ circulars:
   issued_date: '2026-06-26'
   short_name: TT 37/2026
   status: current
-  title: Thông tư 37/2026/TT-BXD phương pháp xác định định mức dự toán và các chỉ tiêu kinh tế kỹ thuật
+  title: Thông tư 37/2026/TT-BXD phương pháp xác định định mức dự toán và các chỉ
+    tiêu kinh tế kỹ thuật
   topics:
   - construction
   - cost_management
@@ -326,7 +278,8 @@ circulars:
   issued_date: '2026-06-30'
   short_name: TT 101/2026
   status: current
-  title: Thông tư 101/2026/TT-BQP hướng dẫn Luật Xây dựng thuộc phạm vi quản lý của Bộ Quốc phòng
+  title: Thông tư 101/2026/TT-BQP hướng dẫn Luật Xây dựng thuộc phạm vi quản lý của
+    Bộ Quốc phòng
   topics:
   - construction
   - defense

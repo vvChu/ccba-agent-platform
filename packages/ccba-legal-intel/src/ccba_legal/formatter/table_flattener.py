@@ -7,6 +7,7 @@ import io
 import json
 from pathlib import Path
 from typing import Any
+
 from bs4 import BeautifulSoup
 
 

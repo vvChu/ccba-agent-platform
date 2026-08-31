@@ -27,7 +27,7 @@ from ccba_legal import (
 )
 
 
-def run_vbhn_demo() -> MergedLegalDocument:
+def run_vbhn_demo(output_path: Path | str | None = None) -> MergedLegalDocument:
     """Executes a multi-stage VBHN consolidation demo simulating ND 06/2021 -> ND 35/2023 -> ND 175/2024 -> ND 14/2026."""
     print("=" * 70)
     print("🏛️ THÍ NGHIỆM 2: CHẠY THỬ BỘ MÁY HỢP NHẤT VĂN BẢN (VBHN DELTA PATCH)")
@@ -113,9 +113,18 @@ Nghị định này quy định chi tiết một số nội dung về quản lý
     )
     engine = VBHNEngine()
 
-    out_dir = Path("d:/GitHubProjects/ccba-agent-platform/.md")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out_file = out_dir / "VBHN_ND06_2026_demo.md"
+    # Mock Data Isolation Guard (ADR 0050): output to isolated fixtures directory
+    if output_path:
+        out_file = Path(output_path)
+    else:
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        fixtures_dir = (
+            repo_root / "packages" / "ccba-legal-intel" / "tests" / "fixtures" / "mock_vbhn"
+        )
+        fixtures_dir.mkdir(parents=True, exist_ok=True)
+        out_file = fixtures_dir / "VBHN_ND06_2026_demo.md"
+
+    out_file.parent.mkdir(parents=True, exist_ok=True)
 
     result = engine.merge_documents(
         base_doc=base_text,
@@ -150,4 +159,11 @@ Nghị định này quy định chi tiết một số nội dung về quản lý
 
 
 if __name__ == "__main__":
-    run_vbhn_demo()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Demo VBHN Delta Patch Engine (ADR 0050)")
+    parser.add_argument(
+        "--output", "-o", type=str, default=None, help="Custom output path for demo markdown"
+    )
+    args = parser.parse_args()
+    run_vbhn_demo(output_path=args.output)

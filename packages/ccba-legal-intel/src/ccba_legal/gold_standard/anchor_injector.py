@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+
 from ccba_legal.gold_standard.profiles import DocProfile, get_doc_profile
 from ccba_legal.gold_standard.sanitizers import strip_existing_anchors
 

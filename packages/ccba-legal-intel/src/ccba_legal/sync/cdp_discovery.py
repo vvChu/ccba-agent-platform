@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import urllib.parse
 from pathlib import Path
-from typing import Any
 
 from ccba_legal.sync.utils import ensure_chrome_debug_port
 

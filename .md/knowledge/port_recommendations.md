@@ -290,6 +290,21 @@ Báo cáo tự động đánh giá các tính năng mới từ thượng nguồn
     *   Tích hợp với file-stability-guard để đảm bảo tính nhất quán của tệp tin đầu ra.
     *   Viết tài liệu hướng dẫn sử dụng theo chuẩn ADR-0040 cho người dùng cuối.
 > ⚡ **Lệnh kích hoạt Port 1-Click:** `/ccba-xia https://github.com/mattpocock/skills writing-beats --port`
+---
+
+### 🟢 [RECOMMEND PORT] Skill: `retro` (Score: 85/100) — Tier 3
+*   **Kho chứa nguồn**: `mattpocock-skills` (https://github.com/mattpocock/skills)
+*   **Bản quyền**: `MIT License (Tự do sử dụng)`
+*   **Phân tầng đề xuất (ADR-0040)**: `Tier 3` (Bundle: `_core`, `disable-model-invocation: true`)
+*   **Đánh giá tương thích Python**: Rất cao. Kỹ năng này chủ yếu dựa trên logic phân tích văn bản và workflow điều phối, không phụ thuộc vào thư viện bên thứ ba đặc thù, dễ dàng tích hợp vào hệ thống file-based của Monorepo.
+*   **Lý do**: Kỹ năng 'retro' cung cấp khung tư duy (framework) quan trọng cho việc cải tiến quy trình làm việc của agent. Vì nó dựa trên việc phân tích session logs và tư vấn người dùng, việc đặt ở Tier 3 với 'disable-model-invocation: true' là phù hợp nhất để tránh tiêu tốn token không cần thiết khi agent tự chạy retro. Nó bổ trợ tốt cho 'session_retrospective' hiện có bằng cách cung cấp các hạng mục đánh giá cụ thể (Navigation, Tool economy, v.v.).
+*   **Các bước triển khai**:
+    *   Tạo mới module 'retro' trong thư mục _core/skills/retro.
+    *   Chuyển đổi nội dung SKILL.md thành định dạng tài liệu nội bộ của ccba-agent-platform.
+    *   Tích hợp với hệ thống log hiện tại của 'session_retrospective' để đảm bảo tính nhất quán về dữ liệu.
+    *   Cập nhật README của bundle _core để làm rõ sự khác biệt giữa 'retro' (phân tích quy trình) và 'session_retrospective' (tổng kết nội dung).
+    *   Thiết lập cơ chế kiểm tra (sanity check) để đảm bảo không xung đột với các chỉ dẫn trong AGENTS.md hiện tại.
+> ⚡ **Lệnh kích hoạt Port 1-Click:** `/ccba-xia https://github.com/mattpocock/skills retro --port`
 <!-- AUTO-GENERATED-END -->
 
 <!-- DEVELOPER-NOTES-START -->

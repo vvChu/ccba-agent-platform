@@ -318,6 +318,18 @@ The image filtering logic that rejects frames consisting only of the speaker's f
 **Constitution-Driven Traceability Matrix (Ma Trận Truy Vết Dẫn Dắt Bởi Thể Chế)**:
 Mô hình cấu trúc dữ liệu (`cross_references.yaml`) ánh xạ 2 chiều chính xác 100% giữa từng Đặc tả Kỹ thuật (Spec/User Story/AC) với từng Điều/Khoản/Phụ lục trong các văn bản quy chế pháp lý và tài liệu thiết kế hệ thống, đảm bảo tính giải trình và khả năng kiểm toán toàn diện.
 
+**Hybrid Two-Tier Legal Sync (Cơ Chế Phân Phối Dữ Liệu Pháp Lý 2 Tầng — ADR 0050)**:
+Cơ chế 1-lệnh (`python -m ccba_legal sync --pull-latest`) cho phép Spoke Dự án tự động kéo các gói tri thức OKF v2.4 chuẩn: Ưu tiên quét thư mục `ccba-legal-knowledge/legal_docs` cục bộ lân cận trên máy (Tier 1 - Offline tốc độ cao) và fallback tự động sang Cloud Legal Vault (Tier 2).
+
+**LegalDocStatus Lifecycle Enum (Hệ Thống Enum Vòng Đời Văn Bản Pháp Lý — ADR 0050)**:
+Chuẩn phân loại trạng thái hiệu lực động (`LegalDocStatus.ACTIVE`, `LegalDocStatus.SUPERSEDED`, `LegalDocStatus.PARTIALLY_AMENDED`, `LegalDocStatus.PENDING_EFFECTIVE`, `LegalDocStatus.DRAFT`) trong `ccba_legal.models` tích hợp cơ chế tự động gắn banner cảnh báo pháp lý và gợi ý văn bản thay thế khi Agent tra cứu văn bản cũ.
+
+**Mock Data Isolation Guard (Rào Chắn Cách Ly Dữ Liệu Thử Nghiệm — ADR 0050)**:
+Quy chuẩn và bài kiểm thử CI cưỡng chế chuyển toàn bộ output của các script demo/test vào `tests/fixtures/mock_*/`, tuyệt đối ngăn chặn file dữ liệu giả định làm ô nhiễm thư mục `.md/` hoặc không gian tri thức thật của Spoke.
+
+**Non-Destructive Additive Registry Merge (Hòa Trộn Danh Mục Pháp Lý Bảo Toàn — ADR 0050)**:
+Chiến lược hòa trộn `legal_registry.yaml` khi đồng bộ: tự động sao lưu bản `.bak`, cập nhật trạng thái vòng đời SSOT cho các văn bản chuẩn và bảo tồn 100% các ghi chú, phân loại riêng của Spoke Dự án.
+
 ---
 
 ## 6. Quản Trị Doanh Nghiệp IDOP & Cổng Giao Tiếp Viện IBST (ADR 0042, 0043)

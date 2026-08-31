@@ -10,6 +10,83 @@ from enum import Enum
 from typing import Any
 
 
+class LegalDocStatus(str, Enum):
+    """Canonical lifecycle validity status for legal documents (ADR 0050)."""
+
+    ACTIVE = "ACTIVE"
+    SUPERSEDED = "SUPERSEDED"
+    PARTIALLY_AMENDED = "PARTIALLY_AMENDED"
+    PENDING_EFFECTIVE = "PENDING_EFFECTIVE"
+    DRAFT = "DRAFT"
+
+
+def normalize_doc_status(raw_status: str | None) -> LegalDocStatus:
+    """Normalize raw/legacy status string into canonical LegalDocStatus enum.
+
+    Handles legacy string values like 'current', 'enacted', 'superseded', 'expired', 'draft'.
+    """
+    if not raw_status:
+        return LegalDocStatus.ACTIVE
+
+    s = raw_status.strip().upper()
+    if s in {"ACTIVE", "CURRENT", "ENACTED", "IN_FORCE", "VALID", "HIỆU LỰC", "HIEU_LUC"}:
+        return LegalDocStatus.ACTIVE
+    if s in {"SUPERSEDED", "EXPIRED", "REPEALED", "ABROGATED", "HẾT HIỆU LỰC", "HET_HIEU_LUC"}:
+        return LegalDocStatus.SUPERSEDED
+    if s in {"PARTIALLY_AMENDED", "AMENDED", "SỬA ĐỔI BỔ SUNG", "SUA_DOI"}:
+        return LegalDocStatus.PARTIALLY_AMENDED
+    if s in {"PENDING_EFFECTIVE", "PENDING", "NOT_YET_IN_FORCE", "CHƯA HIỆU LỰC"}:
+        return LegalDocStatus.PENDING_EFFECTIVE
+    if s in {"DRAFT", "DỰ THẢO", "DU_THAO"}:
+        return LegalDocStatus.DRAFT
+
+    return LegalDocStatus.ACTIVE
+
+
+@dataclass
+class LegalLifecycleInfo:
+    """Encapsulates document lifecycle status, validity dates, relationships and warnings (ADR 0050)."""
+
+    doc_id: str
+    document_number: str = ""
+    title: str = ""
+    short_name: str = ""
+    status: LegalDocStatus = LegalDocStatus.ACTIVE
+    effective_date: str | None = None
+    superseded_date: str | None = None
+    supersedes: list[str] = field(default_factory=list)
+    superseded_by: str | None = None
+    amended_by: list[str] = field(default_factory=list)
+    guiding_docs: list[str] = field(default_factory=list)
+    warning: str | None = None
+    suggested_replacement: dict[str, Any] | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary representation."""
+        res: dict[str, Any] = {
+            "doc_id": self.doc_id,
+            "document_number": self.document_number,
+            "title": self.title,
+            "short_name": self.short_name,
+            "status": self.status.value,
+        }
+        if self.effective_date:
+            res["effective_date"] = self.effective_date
+        if self.superseded_date:
+            res["superseded_date"] = self.superseded_date
+        if self.supersedes:
+            res["supersedes"] = self.supersedes
+        if self.superseded_by:
+            res["superseded_by"] = self.superseded_by
+        if self.amended_by:
+            res["amended_by"] = self.amended_by
+        if self.guiding_docs:
+            res["guiding_docs"] = self.guiding_docs
+        res["warning"] = self.warning
+        res["suggested_replacement"] = self.suggested_replacement
+        return res
+
+
 class PatchAction(str, Enum):
     """Canonical actions applicable to AST nodes during patching adhering to OKF v2.0."""
 
@@ -101,6 +178,9 @@ class ASTNode:
 
 
 __all__ = [
+    "LegalDocStatus",
+    "LegalLifecycleInfo",
+    "normalize_doc_status",
     "PatchAction",
     "ASTNode",
 ]
