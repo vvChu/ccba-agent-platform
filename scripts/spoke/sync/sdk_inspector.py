@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -61,7 +62,9 @@ class TestGuardrailCopier:
                 dest_import_depth = spoke_scripts_dir / "check_hub_import_depth.py"
                 if hub_import_depth.resolve() != dest_import_depth.resolve():
                     if dry_run:
-                        print("  - [DRY-RUN] Would copy guardrail: scripts/check_hub_import_depth.py")
+                        print(
+                            "  - [DRY-RUN] Would copy guardrail: scripts/check_hub_import_depth.py"
+                        )
                     else:
                         spoke_scripts_dir.mkdir(parents=True, exist_ok=True)
                         shutil.copy2(hub_import_depth, dest_import_depth)
@@ -73,11 +76,14 @@ class TestGuardrailCopier:
                 dest_cleanliness = spoke_scripts_dir / "check_spoke_cleanliness.py"
                 if hub_cleanliness.resolve() != dest_cleanliness.resolve():
                     if dry_run:
-                        print("  - [DRY-RUN] Would copy guardrail: scripts/check_spoke_cleanliness.py")
+                        print(
+                            "  - [DRY-RUN] Would copy guardrail: scripts/check_spoke_cleanliness.py"
+                        )
                     else:
                         spoke_scripts_dir.mkdir(parents=True, exist_ok=True)
                         shutil.copy2(hub_cleanliness, dest_cleanliness)
                         print("  - Copied guardrail: scripts/check_spoke_cleanliness.py")
+
 
 class SharedSdkInspector:
     """Zero-latency static file inspector for Hub shared packages in Spoke virtual environments (ADR 0044)."""
@@ -198,3 +204,78 @@ class SharedSdkInspector:
             if pkg_path.exists():
                 commands.append(f'pip install -e "{pkg_path}"')
         return commands
+
+
+class LegalKnowledgeSyncOrchestrator:
+    """Orchestrates automatic legal data synchronization for legal-related Spokes (ADR 0050)."""
+
+    LEGAL_PROJECT_TYPES = {
+        "Pháp điển",
+        "Thẩm tra thiết kế",
+        "Kiểm định",
+        "Tư vấn pháp lý",
+        "PCCC",
+    }
+
+    def __init__(self, spoke_root: Path, hub_root: Path, project_type: str) -> None:
+        self.spoke_root = spoke_root
+        self.hub_root = hub_root
+        self.project_type = project_type
+
+    def is_legal_related_spoke(self) -> bool:
+        """Determines if the target Spoke requires legal knowledge bundle synchronization."""
+        if self.project_type in self.LEGAL_PROJECT_TYPES:
+            return True
+        if (self.spoke_root / "legal_registry.yaml").exists():
+            return True
+        if (self.spoke_root / ".md" / "data" / "legal_registry.yaml").exists():
+            return True
+        if (self.spoke_root / "legal_docs").exists():
+            return True
+        return False
+
+    def sync_or_advise(self, dry_run: bool = False) -> dict[str, Any]:
+        """Executes automatic Two-Tier Legal Sync for legal Spokes or emits zero-bloat advisory.
+
+        Returns:
+            Dict containing action taken and status report.
+        """
+        if self.is_legal_related_spoke():
+            print("\n📚 [Legal Sync] Tự động đồng bộ Tri thức Pháp lý (ADR 0050):")
+            if dry_run:
+                print(
+                    "   - [DRY-RUN] Sẽ kiểm tra và kéo gói OKF v2.4 chuẩn cùng sáp nhập legal_registry.yaml"
+                )
+                return {"is_legal": True, "dry_run": True, "status": "simulated"}
+
+            try:
+                # Add packages/ccba-legal-intel/src to sys.path if not present
+                import sys
+
+                legal_pkg_path = self.hub_root / "packages" / "ccba-legal-intel" / "src"
+                if legal_pkg_path.exists() and str(legal_pkg_path) not in sys.path:
+                    sys.path.insert(0, str(legal_pkg_path))
+
+                from ccba_legal.sync import sync_legal_assets  # type: ignore[import-untyped]
+
+                res = sync_legal_assets(target_spoke=self.spoke_root, pull_latest=True)
+                if res.get("status") == "success":
+                    copied = res.get("copied_docs", 0)
+                    msg = res.get("message", "Đồng bộ thành công")
+                    print(f"   ✅ {msg} ({copied} gói văn bản đã đồng bộ).")
+                else:
+                    print(f"   ℹ️ {res.get('message', 'Không có dữ liệu mới.')}")
+                return {"is_legal": True, "dry_run": False, "result": res}
+            except Exception as e:
+                print(f"   ⚠️ Không thể nạp trực tiếp module sync: {e}")
+                print("   Khuyến nghị chạy: python -m ccba_legal sync --pull-latest")
+                return {"is_legal": True, "dry_run": False, "error": str(e)}
+        else:
+            print("\n💡 [Khuyến nghị Tri thức Pháp lý (Zero-Bloat)]:")
+            print(
+                f"   Spoke hiện tại thuộc phân hệ '{self.project_type or 'Chung'}', không bắt buộc tải trước toàn bộ kho văn bản OKF v2.4 (tiết kiệm dung lượng đĩa)."
+            )
+            print(
+                "   Khi cần tra cứu văn bản cụ thể, hãy dùng lệnh On-Demand: 'python -m ccba_legal sync --doc <doc_id>' hoặc tra cứu RAG qua AI Gateway."
+            )
+            return {"is_legal": False, "dry_run": dry_run, "status": "advised_zero_bloat"}

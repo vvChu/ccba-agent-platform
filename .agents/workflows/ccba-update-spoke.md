@@ -123,16 +123,42 @@ python [hub_path]\scripts\sync_spoke.py --spoke . --rollback
 
 ---
 
+### ⚖️ Chế độ 6: Đồng Bộ Tri Thức Pháp Lý Chuẩn OKF v2.4 (Two-Tier Legal Sync — ADR 0050)
+
+Cơ chế phân luồng dữ liệu thông minh giúp đồng bộ tri thức pháp luật chuẩn hóa mà không làm phình dung lượng của các Spoke không liên quan:
+
+#### 1. 🟢 Tự động đồng bộ cho các Spoke liên quan:
+* **Đối tượng áp dụng:** Các Spoke thuộc phân hệ `Pháp điển`, `Thẩm tra thiết kế`, `Kiểm định`, `PCCC`, `Tư vấn pháp lý` hoặc dự án có thư mục `legal_docs/` / `legal_registry.yaml`.
+* **Hành vi tự động:** Lệnh `sync_spoke.py` tự động kích hoạt `LegalKnowledgeSyncOrchestrator` để:
+  - Quét và sao chép các gói văn bản OKF v2.4 chuẩn từ `ccba-legal-knowledge` (Tier 1 Offline siêu tốc) hoặc Google Drive Vault (Tier 2 Cloud).
+  - Tự động sao lưu bản `.bak` và thực hiện **Non-Destructive Additive Registry Merge** cho `legal_registry.yaml` (bảo toàn 100% các ghi chú và trường dữ liệu tùy biến riêng của Spoke).
+* **Lệnh kích hoạt độc lập hoặc ép buộc đồng bộ:**
+  ```powershell
+  python -m ccba_legal sync --pull-latest
+  ```
+
+#### 2. 💡 Khuyến nghị Zero-Bloat cho các Spoke còn lại (Phần mềm, BIM, Admin):
+* **Nguyên tắc:** Hệ thống **mặc định bỏ qua** việc tải toàn bộ kho văn bản luật hàng chục GB để đảm bảo Spoke luôn tinh gọn và khởi động siêu tốc.
+* **Tra cứu On-Demand khi cần:** Khi dự án phần mềm hoặc BIM cần tra cứu một văn bản quy chuẩn cụ thể, kỹ sư chỉ cần kéo riêng văn bản đó:
+  ```powershell
+  # Tải lẻ 1 văn bản cụ thể:
+  python -m ccba_legal sync --doc <doc_id>    # Ví dụ: --doc LXD-2025 hoặc --doc ND-207-2026
+  ```
+* **Hoặc tra cứu qua AI Gateway:** Sử dụng `ccba-ai` để truy vấn ngữ nghĩa (RAG) trực tiếp qua endpoint LiteLLM trên Server Spark mà không cần lưu file cục bộ.
+
+---
+
 ## 📋 Báo Cáo Kết Quả & Dọn Dẹp:
-1. **Tổng kết đồng bộ:** Báo cáo chi tiết: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
-2. **Snapshot sao lưu:** Hiển thị đường dẫn bản sao lưu đã tạo (ví dụ: `.md/backups/agents_backup_<timestamp>/`).
-3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (ADR 0044 §7):** Cập nhật guardrail scripts từ Hub:
+1. **Tổng kết đồng bộ kỹ năng:** Báo cáo chi tiết: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
+2. **Tổng kết tri thức pháp lý (ADR 0050):** Hiển thị số lượng gói OKF v2.4 đã đồng bộ hoặc khuyến nghị Zero-Bloat tương ứng.
+3. **Snapshot sao lưu:** Hiển thị đường dẫn bản sao lưu đã tạo (ví dụ: `.md/backups/agents_backup_<timestamp>/`).
+4. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (ADR 0044 §7):** Cập nhật guardrail scripts từ Hub:
    ```powershell
    Copy-Item "$hub\scripts\spoke\check_hub_import_depth.py" -Destination ".\scripts\check_hub_import_depth.py" -Force
    Copy-Item "$hub\scripts\spoke\check_spoke_cleanliness.py" -Destination ".\scripts\check_spoke_cleanliness.py" -Force
    ```
-4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python .\scripts\check_spoke_cleanliness.py`.
-5. **Rà soát Kỹ năng Mồ côi:** Dọn dẹp các kỹ năng không còn nằm trong `catalog.yaml`.
-6. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Nếu Spoke vừa đóng góp tool, chạy `pip install -e "[hub_path]\packages\[pkg]"` và chạy bộ test cục bộ (ví dụ: `python scripts\validate_legal_spoke.py`) để đảm bảo không gãy chức năng.
-7. **Kiểm tra sức khỏe tổng thể:** Chạy `python scripts\ccba_platform_cli.py spoke-status` để xác nhận trạng thái xanh.
+5. **Kiểm tra Script Budget & Cleanliness:** Chạy `python .\scripts\check_spoke_cleanliness.py`.
+6. **Rà soát Kỹ năng Mồ côi:** Dọn dẹp các kỹ năng không còn nằm trong `catalog.yaml`.
+7. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Nếu Spoke vừa đóng góp tool, chạy `pip install -e "[hub_path]\packages\[pkg]"` và chạy bộ test cục bộ (ví dụ: `python scripts\validate_legal_spoke.py`) để đảm bảo không gãy chức năng.
+8. **Kiểm tra sức khỏe tổng thể:** Chạy `python scripts\ccba_platform_cli.py spoke-status` để xác nhận trạng thái xanh.
 
