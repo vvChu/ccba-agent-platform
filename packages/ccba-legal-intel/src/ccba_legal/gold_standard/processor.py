@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
+
 import yaml
 
 from ccba_legal.gold_standard.anchor_injector import inject_semantic_anchors

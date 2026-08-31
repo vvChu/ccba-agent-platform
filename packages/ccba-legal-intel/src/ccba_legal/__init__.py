@@ -11,7 +11,6 @@ Public Deep Seams:
     AIVisionFormulaHarvester — ADR 0031: Bóc tách công thức toán học từ ảnh sang KaTeX.
 """
 
-
 from .appendices import AppendixSplitter, roman_to_decimal
 from .ast_parser import (
     ASTParser,
@@ -28,6 +27,10 @@ from .consolidator import (
     PatchItem,
     PatchManifest,
     load_manifest,
+)
+from .converters import (
+    load_bundle_formula_overrides,
+    omml_to_latex,
 )
 from .coordinator import (
     LegalIntelPipeline,
@@ -59,9 +62,21 @@ from .docx_converter import (
     normalize_docx_markdown,
     process_vbpl_bundle_okf_v22,
 )
+from .figure_extractor import (
+    extract_docx_figures,
+    extract_technical_figures,
+    load_bundle_figures_overrides,
+    render_markdown_figure_card,
+)
 from .formatter import (
     OKFStructureProcessor,
     extract_parent_metadata,
+)
+from .formula_harvester import (
+    extract_latex_from_image,
+    harvest_docx_formula_images,
+    harvest_pdf_formula_images,
+    is_formula_image,
 )
 from .gold_standard import (
     DocProfile,
@@ -83,15 +98,17 @@ from .grounding import (
 )
 from .models import (
     ASTNode,
+    LegalDocStatus,
+    LegalLifecycleInfo,
     PatchAction,
+    normalize_doc_status,
+)
+from .modernize import (
+    FigureAutoCompositor,
+    MathEquationConverter,
+    TableMatrixBuilder,
 )
 from .packager import OKFBundlePackager
-from .registry import (
-    LegalRegistryManager,
-    format_citation,
-    load_legal_registry,
-    search_legal_registry,
-)
 from .provenance import (
     check_structure_alignment,
     compute_docx_to_markdown_parity,
@@ -104,7 +121,15 @@ from .provenance import (
     verify_docx_against_markdown,
     verify_docx_against_pdf,
 )
-from .sync import LegalSyncEngine
+from .registry import (
+    LegalRegistryManager,
+    format_citation,
+    get_lifecycle,
+    load_legal_registry,
+    query,
+    search_legal_registry,
+)
+from .sync import LegalSyncEngine, sync_legal_assets
 from .validator import validate_template_and_table_integrity
 from .vbhn_engine import MergedLegalDocument, VBHNEngine
 from .vbhn_merger import VBHNMerger
@@ -112,22 +137,6 @@ from .visual_parity import (
     VisualParityAuditor,
     audit_visual_parity,
     lint_document,
-)
-from .figure_extractor import (
-    AERODYNAMIC_FIGURES_GEOMETRY,
-    extract_technical_figures,
-    render_markdown_figure_card,
-)
-from .formula_harvester import (
-    extract_latex_from_image,
-    harvest_docx_formula_images,
-    harvest_pdf_formula_images,
-    is_formula_image,
-)
-from .modernize import (
-    FigureAutoCompositor,
-    MathEquationConverter,
-    TableMatrixBuilder,
 )
 
 __all__ = [
@@ -172,6 +181,9 @@ __all__ = [
     "DeltaPatch",
     "DeltaPatchItem",
     "PatchAction",
+    "LegalDocStatus",
+    "LegalLifecycleInfo",
+    "normalize_doc_status",
     "PatchManifest",
     "PatchItem",
     "DocMode",
@@ -179,11 +191,15 @@ __all__ = [
     "MergedLegalDocument",
     "DocProfile",
     # === Essential Public Helpers & Guards ===
+    "verify_tvpl_vip_status",
     "verify_legal_grounding",
     "format_grounded_response",
     "format_citation",
     "load_legal_registry",
     "search_legal_registry",
+    "get_lifecycle",
+    "query",
+    "sync_legal_assets",
     "load_manifest",
     "roman_to_decimal",
     "TVPLSessionMutex",
@@ -210,10 +226,13 @@ __all__ = [
     "classify_and_extract_tables",
     "validate_template_and_table_integrity",
     # === Technical Figure Extraction & Centered Cards (ADR 0030 / ADR 0034) ===
+    "extract_docx_figures",
     "extract_technical_figures",
     "render_markdown_figure_card",
-    "AERODYNAMIC_FIGURES_GEOMETRY",
-    # === Formula Harvesting & Vision OCR (ADR 0031) ===
+    "load_bundle_figures_overrides",
+    # === Formula Harvesting & OMML (ADR 0030 / ADR 0031) ===
+    "omml_to_latex",
+    "load_bundle_formula_overrides",
     "extract_latex_from_image",
     "harvest_docx_formula_images",
     "harvest_pdf_formula_images",

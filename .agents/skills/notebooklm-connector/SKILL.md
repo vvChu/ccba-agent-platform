@@ -36,27 +36,28 @@ Kỹ năng này dẫn dắt Agent tương tác tự động với Google Noteboo
 
 ---
 
-### Bước 1: Kiểm tra Môi trường và Xác thực (Auth Check)
+### Bước 1: Kiểm tra Môi trường và Xác thực (Auth Check & Tri-Tier Vault - ADR 0035)
 
-1.  Kiểm tra xem thư viện `notebooklm` có import được trong Python không. Nếu chưa có, dừng lại và yêu cầu người dùng chạy lệnh:
-    `pip install notebooklm-py`
+1.  Kiểm tra xem thư viện `notebooklm` có import được trong Python không (`pip install notebooklm-py`).
 2.  Kiểm tra phương thức xác thực:
-    *   **Môi trường headless / chạy ngầm (CI/CD):** Đảm bảo đã cấu hình biến môi trường `NOTEBOOKLM_SESSION_COOKIE` hoặc `NOTEBOOKLM_COOKIES_JSON` trong tệp `.env`. Script helper sẽ tự động chuyển đổi và inject cookie vào Playwright storage tạm.
-    *   **Môi trường desktop cục bộ:** Nếu chưa cấu hình cookie, chạy helper script để tự động tải cấu hình lưu sẵn trên hệ thống:
-        `python scripts/notebooklm_helper.py check-auth`
-3.  Nếu gặp lỗi Authentication:
-    *   Agent **bắt buộc** dừng tiến trình.
-    *   Hướng dẫn người dùng chạy lệnh đăng nhập một lần trên trình duyệt để cập nhật session cookie:
-        `python -m notebooklm login`
-    *   Sau khi người dùng đăng nhập xong, chạy lại bước kiểm tra để tiếp tục.
+    *   Chạy lệnh đăng nhập phiên VIP/Google trên hệ thống:
+        `python -m notebooklm login` (hoặc `python -m ccba_legal login`).
+3.  **Đồng bộ Tri thức lên Cloud Vault & NotebookLM (ADR 0023, ADR 0035):**
+    *   Chạy script đồng bộ danh mục 308+ tài sản RAG chuẩn hóa:
+        ```powershell
+        python scripts/sync_notebooklm_knowledge.py --notebook-id <notebook_id>
+        # Hoặc qua CLI facade:
+        python scripts/spoke_cli.py sync-notebooklm --notebook-id <notebook_id>
+        ```
+    *   Khi nạp văn bản mới bằng `python -m ccba_legal ingest ... --upload-drive`, các file Word gốc được tự động đẩy lên Google Drive Vault `CCBA_Legal_Vault` và chuyển đổi sang Native Google Docs sẵn sàng nạp 1-click vào NotebookLM.
 
 ---
 
 ### Bước 2: Quét Bảo mật thông qua Maskara Gate
 
-Trước khi tải tài liệu cục bộ lên đám mây của Google, Agent **bắt buộc** phải chạy quét bảo mật qua `scripts/maskara.py`:
-1.  **Phát hiện API Keys/Tokens nhạy cảm:** Nếu phát hiện các token OpenAI, Anthropic, Google, hoặc GitHub, tiến trình tải lên sẽ bị chặn đứng lập tức để tránh lộ lọt thông tin.
-2.  **Khử PII & Database URL:** Nếu phát hiện số điện thoại, email hoặc URL cơ sở dữ liệu, script sẽ tự động che giấu (redact) thông tin nhạy cảm và xuất một bản copy làm sạch tạm thời tại `.md/scratch/redacted/` để upload. Tệp tạm này sẽ bị xóa ngay sau khi nạp nguồn thành công.
+Trước khi tải tài liệu cục bộ lên đám mây của Google, Agent **bắt buộc** phải chạy quét bảo mật:
+1.  **Phát hiện API Keys/Tokens nhạy cảm:** Chặn đứng lập tức nếu phát hiện các token OpenAI, Anthropic, Google, hoặc GitHub.
+2.  **Khử PII & Database URL:** Tự động che giấu (redact) thông tin nhạy cảm trước khi đồng bộ.
 
 ---
 

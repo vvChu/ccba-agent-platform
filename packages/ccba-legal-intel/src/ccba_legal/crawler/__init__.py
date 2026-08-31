@@ -9,7 +9,8 @@ from ccba_legal.cdp import (
     MockChromeCDP,
     _check_is_headless,
 )
-from ccba_legal.registry import load_relation_synonyms as _load_relation_synonyms, resolve_project_root
+from ccba_legal.registry import load_relation_synonyms as _load_relation_synonyms
+from ccba_legal.registry import resolve_project_root
 from ccba_legal.session import (
     CookieVault,
     TVPLCrawlFailedException,

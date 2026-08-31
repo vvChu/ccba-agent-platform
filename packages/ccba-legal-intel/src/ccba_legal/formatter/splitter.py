@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+
 from ccba_legal.formatter.metadata import extract_parent_metadata
 
 
