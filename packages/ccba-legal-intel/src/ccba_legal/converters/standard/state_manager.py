@@ -64,8 +64,9 @@ class HierarchyStateManager:
 
             # Auto-exit triggers: Lead-in phrases, conditional statements, non-variable definitions
             if not text.startswith(("-", "–", "—", "+", "•")) and any(rendered_p.startswith(w) for w in [
-                "Cho phép", "Đối với", "Trường hợp", "Khi", "Nếu", "Các mô men", "Giá trị", "Chiều cao",
-                "Tính toán", "Trong các", "Tại các", "Theo đó", "Với các"
+                "Cho phép", "Đối với", "Trường hợp", "Khi", "Nếu", "Các mô men", "Các đại lượng", "Giá trị", "Chiều cao",
+                "Tính toán", "Trong các", "Tại các", "Theo đó", "Với các", "Cần tiến hành", "Cốt thép", "Bê tông", "Quy tắc",
+                "Tỉ số", "Tỷ số", "Lực", "Mô men", "Độ bền", "Độ võng", "Điều kiện"
             ]):
                 self.reset()
                 return LineFormattingAction(action_type=LineActionType.EMIT_DIRECT, content=rendered_p)

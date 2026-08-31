@@ -310,8 +310,8 @@ skills:
   skill_path: .agents/skills/ccba-ai-qc-pccc-audit/SKILL.md
 - name: ccba-legal-ingest
   bundle: _consulting
-  description: Autonomous 7-step legal document acquisition, OKF v2.2 conversion,
-    VBHN consolidation, and zero-tolerance CI verification workflow.
+  description: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation,
+    and 11-Gate CI verification workflow.
   triggers:
   - ccba-legal-ingest
   - nap van ban
@@ -319,14 +319,6 @@ skills:
   - harvest legal doc
   - ingest law
   skill_path: .agents/skills/ccba-legal-ingest/SKILL.md
-  package_path: packages/ccba-legal-intel
-  cli_commands:
-  - convert: "python -m ccba_legal convert <docx_path> <bundle_dir> (Chuyển đổi DOCX sang OKF Bundle nguyên văn 100% Deterministic AST)"
-  - fetch: "python -m ccba_legal fetch <target> (Tải bản DOCX + PDF từ TVPL VIP)"
-  - ingest: "python -m ccba_legal ingest <target> (Quy trình nạp tự động 1 lệnh toàn trình)"
-  - process: "python -m ccba_legal process <bundle_dir> (Trích xuất AST clauses và sinh QA benchmark)"
-  - consolidate: "python -m ccba_legal consolidate (Hợp nhất văn bản sửa đổi VBHN)"
-  - lint: "python -m ccba_legal lint <bundle_dir> (Kiểm định visual parity và liên kết)"
 - name: ccba-legal-intel
   bundle: _consulting
   description: Autonomous legal intelligence agent to crawl, diff, and generate compliance
@@ -339,7 +331,6 @@ skills:
   - thuvienphapluat
   - TVPL
   skill_path: .agents/skills/ccba-legal-intel/SKILL.md
-  package_path: packages/ccba-legal-intel
 - name: ccba-prototype
   bundle: _software
   description: Xây dựng mẫu thử thô (throwaway prototype) để trả lời câu hỏi thiết
@@ -1343,13 +1334,18 @@ workflows:
   - trinh sát thảo luận hoạch định
   workflow_path: .agents/workflows/ccba-knowledge-loop.md
 - name: ccba-legal-advisor
-  bundle: _core
+  bundle: _consulting
   command: /ccba-legal-advisor
   description: 'Tư vấn & Giải đáp Pháp lý Xây dựng: Tự động phân tích câu hỏi mơ hồ,
     phỏng vấn làm rõ thích ứng, truy xuất tri thức OKF v2.2 và xuất Phiếu Ý kiến Pháp
     lý (Legal Opinion) chuẩn mực. Kích hoạt khi người dùng hỏi các câu hỏi về cấp
     phép xây dựng, PCCC, nghiệm thu, đấu thầu, hoặc xin tư vấn pháp lý công trình.'
-  triggers: []
+  triggers:
+  - legal-advisor
+  - tư vấn pháp lý
+  - giải đáp pháp lý
+  - ý kiến pháp lý
+  - legal opinion
   workflow_path: .agents/workflows/ccba-legal-advisor.md
 - name: ccba-legal-ingest
   bundle: _consulting
@@ -1474,7 +1470,11 @@ workflows:
   command: /ccba-review-proposal
   description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Spoke Leakage
     Guard, Supervised Self-Healing và Đồng bộ Catalog Hậu Merge (ADR 0045)
-  triggers: []
+  triggers:
+  - review proposal
+  - thẩm định pr
+  - duyệt đề xuất
+  - review-proposal
   workflow_path: .agents/workflows/ccba-review-proposal.md
 - name: ccba-review-skill
   bundle: _core

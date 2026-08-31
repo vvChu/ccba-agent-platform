@@ -256,9 +256,12 @@ class LegalKnowledgeSyncOrchestrator:
                 if legal_pkg_path.exists() and str(legal_pkg_path) not in sys.path:
                     sys.path.insert(0, str(legal_pkg_path))
 
-                from ccba_legal.sync import sync_legal_assets  # type: ignore[import-untyped]
+                from ccba_legal.sync import sync_legal_assets
 
-                res = sync_legal_assets(target_spoke=self.spoke_root, pull_latest=True)
+                res = sync_legal_assets(
+                    target_dir=self.spoke_root / ".md" / "legal_docs",
+                    project_root=self.spoke_root,
+                )
                 if res.get("status") == "success":
                     copied = res.get("copied_docs", 0)
                     msg = res.get("message", "Đồng bộ thành công")

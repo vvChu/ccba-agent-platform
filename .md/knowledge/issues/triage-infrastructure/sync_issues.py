@@ -14,7 +14,7 @@ def run_command(cmd: list[str]) -> str | None:
         The command's stdout stripped of whitespace, or None if failed.
     """
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", check=True)
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         print(f"Error executing {' '.join(cmd)}: {e.stderr}", file=sys.stderr)

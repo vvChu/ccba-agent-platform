@@ -7,6 +7,7 @@ import re
 from typing import Any
 
 from ccba_legal.converters.omml import omml_to_latex
+from ccba_legal.converters.standard.models import HierarchyState
 
 
 def extract_math_expression(obj: Any, ctx: Any, fallback_tag: str) -> tuple[str, str]:
@@ -101,7 +102,8 @@ def handle_formula_block(
                     f_latex = f_latex[2:-2].strip()
                 tag_suffix = "" if ("\\tag" in f_latex or "\\qquad" in f_latex) else f" \\tag{{{f_tag}}}"
                 ctx.emit(f'\n<a id="formula-{f_slug}"></a>\n$${f_latex}{tag_suffix}$$\n<!-- formula_id: "{fid}" -->\n\n')
-                ctx.state_mgr.reset()
+                if ctx.state_mgr.state != HierarchyState.IN_TRONG_DO:
+                    ctx.state_mgr.reset()
                 return i + 2
 
     # 3. Standalone Formula Tag (e.g. (1), (2.1), (A.1))
@@ -115,7 +117,8 @@ def handle_formula_block(
             f_latex = f_latex[2:-2].strip()
         tag_suffix = "" if ("\\tag" in f_latex or "\\qquad" in f_latex) else f" \\tag{{{f_tag}}}"
         ctx.emit(f'\n<a id="formula-{f_slug}"></a>\n$${f_latex}{tag_suffix}$$\n<!-- formula_id: "{fid}" -->\n\n')
-        ctx.state_mgr.reset()
+        if ctx.state_mgr.state != HierarchyState.IN_TRONG_DO:
+            ctx.state_mgr.reset()
         return i + 1
 
     return None
