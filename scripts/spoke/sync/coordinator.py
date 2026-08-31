@@ -17,7 +17,11 @@ from .backup import GitWorkingTreeGuard, SpokeBackupManager
 from .base import HubNotFoundError, are_dirs_identical, are_files_identical, load_yaml, safe_remove
 from .discovery import HubDiscoverer
 from .registry import SpokeRegistrar
-from .sdk_inspector import SharedSdkInspector, TestGuardrailCopier
+from .sdk_inspector import (
+    LegalKnowledgeSyncOrchestrator,
+    SharedSdkInspector,
+    TestGuardrailCopier,
+)
 
 # =============================================================================
 # PROJECT TYPE SYNONYMS & ALIAS MAPPING
@@ -537,6 +541,11 @@ class SpokeSynchronizer:
             print("   Để sử dụng AI Gateway hoặc Office Processing dùng chung từ Hub:")
             for cmd in sdk_recs:
                 print(f"   -> {cmd}")
+
+        # 8. Automatic Legal Knowledge Sync & Zero-Bloat Advisory (ADR 0050)
+        LegalKnowledgeSyncOrchestrator(spoke_root, hub_root, project_type).sync_or_advise(
+            dry_run=dry_run
+        )
 
         if dry_run:
             print("\n[DRY-RUN] Quá trình mô phỏng hoàn tất. 0 tệp tin nào bị sửa đổi trên đĩa.")

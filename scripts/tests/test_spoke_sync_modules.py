@@ -117,6 +117,8 @@ def test_resolve_canonical_project_type():
     can, err = resolve_canonical_project_type("", bundle_defs)
     assert can is None
     assert "bị trống" in err
+
+
 def test_hub_discoverer_success_and_not_found(tmp_path: Path):
     """Test HubDiscoverer resolution and HubNotFoundError."""
     spoke_root = tmp_path / "spoke"
@@ -219,7 +221,9 @@ def test_coordinator_alias_and_delegates(tmp_path: Path):
     spoke_root = tmp_path / "spoke"
     spoke_root.mkdir()
     (spoke_root / ".agents").mkdir()
-    (spoke_root / ".agents" / "workspace_context.yaml").write_text("project_name: Test\n", encoding="utf-8")
+    (spoke_root / ".agents" / "workspace_context.yaml").write_text(
+        "project_name: Test\n", encoding="utf-8"
+    )
 
     engine = SpokeSynchronizer(spoke_root)
     assert engine.spoke_root.resolve() == spoke_root.resolve()
@@ -233,3 +237,33 @@ def test_cli_runner_help(capsys):
     with pytest.raises(SystemExit) as exc_info:
         run_spoke_sync_cli(["--help"])
     assert exc_info.value.code == 0
+
+
+def test_legal_knowledge_sync_orchestrator(tmp_path: Path):
+    """Test LegalKnowledgeSyncOrchestrator identification and advisory behavior."""
+    from scripts.spoke.sync import LegalKnowledgeSyncOrchestrator
+
+    # 1. Non-legal spoke (Software)
+    software_spoke = tmp_path / "software_spoke"
+    software_spoke.mkdir()
+    orch_soft = LegalKnowledgeSyncOrchestrator(software_spoke, tmp_path, "Phần mềm")
+    assert orch_soft.is_legal_related_spoke() is False
+    res_soft = orch_soft.sync_or_advise(dry_run=True)
+    assert res_soft["is_legal"] is False
+    assert res_soft["status"] == "advised_zero_bloat"
+
+    # 2. Legal spoke (Pháp điển by project type)
+    legal_spoke = tmp_path / "legal_spoke"
+    legal_spoke.mkdir()
+    orch_legal = LegalKnowledgeSyncOrchestrator(legal_spoke, tmp_path, "Pháp điển")
+    assert orch_legal.is_legal_related_spoke() is True
+    res_legal = orch_legal.sync_or_advise(dry_run=True)
+    assert res_legal["is_legal"] is True
+    assert res_legal["dry_run"] is True
+
+    # 3. Spoke with legal_registry.yaml
+    custom_spoke = tmp_path / "custom_spoke"
+    custom_spoke.mkdir()
+    (custom_spoke / "legal_registry.yaml").write_text("documents: []\n", encoding="utf-8")
+    orch_custom = LegalKnowledgeSyncOrchestrator(custom_spoke, tmp_path, "BIM")
+    assert orch_custom.is_legal_related_spoke() is True
