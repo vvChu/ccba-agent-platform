@@ -82,6 +82,30 @@ def render_table_markdown(table: Any, rid_to_katex: dict[str, str] | None = None
     return ("\n".join(lines) + "\n\n", footnotes, normalized_grid)
 
 
+def clean_formula_latex(raw_f: str) -> str:
+    """Sanitize formula expressions by stripping unescaped inner dollars and standardizing operators."""
+    f = raw_f.replace("$$", "").replace("$", " ").strip()
+    ops = {
+        "≤": r" \le ",
+        "≥": r" \ge ",
+        "≠": r" \ne ",
+        "≈": r" \approx ",
+        "±": r" \pm ",
+        "∓": r" \mp ",
+        "×": r" \times ",
+        "·": r" \cdot ",
+        "÷": r" \div ",
+        "…": r" \dots ",
+    }
+    for op, repl in ops.items():
+        f = f.replace(op, repl)
+
+    greek_cmds = r"\\(?:alpha|beta|gamma|delta|epsilon|eta|theta|lambda|mu|nu|xi|pi|rho|sigma|tau|varphi|psi|omega|Delta|Sigma|Omega|le|ge|ne|approx|pm|times|cdot|div|dots)"
+    f = re.sub(rf"({greek_cmds})([a-zA-Z0-9])", r"\1 \2", f)
+    f = re.sub(rf"([a-zA-Z0-9])({greek_cmds})", r"\1 \2", f)
+    return re.sub(r"\s+", " ", f).strip()
+
+
 def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
     """Parse a docx table block, checking for formula frames and exporting tables to CSV/JSON."""
     from ccba_legal.converters.standard.strategy import render_paragraph_with_runs
@@ -97,6 +121,10 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
     if all_row_formulas and len(all_row_formulas) == len(tbl.rows):
         for f_tag, r in all_row_formulas:
             f_slug = f_tag.lower().replace(".", "_")
+            cell_rids: list[str] = []
+            for c in r.cells:
+                cell_rids.extend(re.findall(r'r:(?:id|embed)="([^"]+)"', c._element.xml))
+
             if f_tag in ctx.formula_overrides:
                 val = ctx.formula_overrides[f_tag]
                 if isinstance(val, tuple):
@@ -107,10 +135,26 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
                 else:
                     fid = f"F_{ctx.bundle_dir.name.upper()}_FORMULA_{f_slug.upper()}"
                     f_latex = str(val)
+            elif any(rid in ctx.formula_overrides for rid in cell_rids):
+                matched_rid = next(rid for rid in cell_rids if rid in ctx.formula_overrides)
+                val = ctx.formula_overrides[matched_rid]
+                if isinstance(val, tuple):
+                    fid, f_latex = val[0], val[1]
+                elif isinstance(val, dict):
+                    fid = val.get("formula_id", f"F_{ctx.bundle_dir.name.upper()}_FORMULA_{f_slug.upper()}")
+                    f_latex = val.get("latex", "")
+                else:
+                    fid = f"F_{ctx.bundle_dir.name.upper()}_FORMULA_{f_slug.upper()}"
+                    f_latex = str(val)
             else:
                 fid = f"F_{ctx.bundle_dir.name.upper()}_FORMULA_{f_slug.upper()}"
-                raw_f = next((render_paragraph_with_runs(c.paragraphs[0], rid_to_katex=ctx.rid_to_katex) if c.paragraphs else c.text.strip() for c in r.cells if c.text.strip() and not re.match(r"^\([0-9A-Za-z\.]+\)$", c.text.strip())), f"\\text{{Formula }} ({f_tag})")
-                f_latex = raw_f.strip("$ ")
+                raw_f = next((render_paragraph_with_runs(c.paragraphs[0], rid_to_katex=ctx.rid_to_katex) if c.paragraphs else c.text.strip() for c in r.cells if c.text.strip() and not re.match(r"^\([0-9A-Za-z\.]+\)$", c.text.strip())), None)
+                if not raw_f:
+                    for rid in cell_rids:
+                        if ctx.rid_to_katex and rid in ctx.rid_to_katex:
+                            raw_f = ctx.rid_to_katex[rid]
+                            break
+                f_latex = clean_formula_latex(raw_f) if raw_f else f"\\text{{Formula }} ({f_tag})"
 
             f_latex = f_latex.strip()
             if f_latex.startswith("$$") and f_latex.endswith("$$"):
@@ -119,6 +163,7 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
             ctx.emit(f'\n<a id="formula-{f_slug}"></a>\n$${f_latex}{tag_suffix}$$\n<!-- formula_id: "{fid}" -->\n\n')
         ctx.state_mgr.reset()
         return
+
 
     # 2. Normative or Layout Table
     is_captioned = bool(ctx.last_table_caption)
