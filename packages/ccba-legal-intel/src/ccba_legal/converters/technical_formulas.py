@@ -19,6 +19,12 @@ INLINE_SYMBOLS_MAP: dict[str, str] = {
     "rId18": r"\ell",
     "rId19": r"\bar{\epsilon}",
     "rId28": r"\bar{b}",
+    "rId105": r"\frac{s_w}{h_0}",
+    "rId106": r"\frac{s_w}{h_0}",
+    "rId107": r"\frac{s_{w,\max}}{h_0}",
+    "rId108": r"\frac{s_{w,\max}}{h_0}",
+    "rId109": r"\frac{s_{w,\max}}{h_0}",
+    "rId110": r"\frac{s_{w,\max}}{h_0}",
 }
 
 MATH_OPERATORS_MAP: dict[str, str] = {
