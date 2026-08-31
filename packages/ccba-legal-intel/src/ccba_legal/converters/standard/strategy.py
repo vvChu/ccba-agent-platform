@@ -27,6 +27,7 @@ from ccba_legal.converters.technical_formulas import (
 )
 from ccba_legal.figure_extractor import (
     extract_docx_figures,
+    render_markdown_figure_card,
 )
 from ccba_legal.formula_harvester import harvest_docx_formula_images
 from ccba_legal.gold_standard import generate_bundle_ast_and_qa
@@ -162,6 +163,25 @@ def _find_normative_start_index(blocks: list[tuple[str, Any]]) -> int:
     return 0
 
 
+def _emit_figure_or_comment(ctx: StandardConversionContext, comment_str: str) -> None:
+    """Render figure card from HTML comment if matching FIGURE format, else emit raw comment."""
+    m_fig = re.match(r"^<!--\s*FIGURE:\s*([^|]+)\|(.*)-->$", comment_str.strip())
+    if m_fig:
+        fig_slug = m_fig.group(1).strip()
+        fig_title = m_fig.group(2).strip().rstrip("-").strip()
+        fig_num = fig_slug.replace("hinh_", "").replace("_", ".").upper()
+        fig_entry = {
+            "tag": fig_num,
+            "title": fig_title,
+            "anchor": fig_slug.replace("_", "-"),
+            "image_relpath": f"figures/images/{fig_slug}.png",
+            "geometry_rules": {},
+        }
+        ctx.emit(render_markdown_figure_card(fig_entry))
+    else:
+        ctx.emit(f"\n{comment_str}\n\n")
+
+
 def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[str, Any]], i: int) -> int:
     """Dispatches a single paragraph block to the specialized handlers."""
     obj = blocks[i][1]
@@ -183,8 +203,10 @@ def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[
                         fid = f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}"
                         f_latex = str(val)
                     f_latex = f_latex.strip()
+                    if not f_latex:
+                        return i + 1
                     if f_latex.startswith("<!--"):
-                        ctx.emit(f'\n{f_latex}\n\n')
+                        _emit_figure_or_comment(ctx, f_latex)
                         ctx.state_mgr.reset()
                         return i + 1
                     if f_latex.startswith("$$") and f_latex.endswith("$$"):
@@ -194,8 +216,10 @@ def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[
                     return i + 1
                 elif ctx.rid_to_katex and rid in ctx.rid_to_katex:
                     raw_k = ctx.rid_to_katex[rid].strip()
+                    if not raw_k:
+                        return i + 1
                     if raw_k.startswith("<!--"):
-                        ctx.emit(f'\n{raw_k}\n\n')
+                        _emit_figure_or_comment(ctx, raw_k)
                         ctx.state_mgr.reset()
                         return i + 1
                     fid = f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}"
