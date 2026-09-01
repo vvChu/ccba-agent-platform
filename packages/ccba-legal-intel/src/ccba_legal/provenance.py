@@ -190,7 +190,10 @@ def compute_docx_to_markdown_parity(docx_paras: list[str], combined_md: str) -> 
         for k, v in _GREEK_LATEX_TO_UNICODE.items():
             text = text.replace(k, v)
         text = re.sub(r"\\text\{([^}]+)\}", r"\1", text)
-        text = re.sub(r"\\(?:sqrt|frac|times|le|ge|cdot|quad|qquad|dots|left|right)", " ", text)
+        text = re.sub(r"\\(?:sqrt|frac|times|le|ge|cdot|quad|qquad|dots|left|right|pm|approx|sim|over)", " ", text)
+        text = re.sub(r"&nbsp;", " ", text)
+        text = re.sub(r"&#\d+;|&[a-zA-Z]+;", " ", text)
+        text = re.sub(r"</?[a-zA-Z][^>]*>", " ", text)
         text = re.sub(r"[_\{\}\$]", "", text)
         text = re.sub(r"(\d+)\s*([a-zα-ω]+)", r"\1 \2", text)
         text = re.sub(r"[^\w\d\s]", " ", text, flags=re.UNICODE)
@@ -233,15 +236,33 @@ def verify_bundle_docx_vs_markdown(bundle_dir: Path) -> dict[str, Any]:
     except Exception as e:
         return {"status": "error", "error": f"Failed to parse DOCX: {e}"}
 
-    docx_paras = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
-    if not docx_paras:
+    docx_paras_raw = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
+    if not docx_paras_raw:
         return {"status": "skipped", "message": "DOCX has no non-empty paragraphs"}
+
+    # Exclude non-normative TOC section at the end of DOCX
+    docx_paras: list[str] = []
+    in_toc = False
+    for p_text in docx_paras_raw:
+        if p_text.strip().upper() in ["MỤC LỤC", "TABLE OF CONTENTS"]:
+            in_toc = True
+            continue
+        if not in_toc:
+            docx_paras.append(p_text)
 
     md_texts: list[str] = []
     for md_f in bundle_dir.rglob("*.md"):
         if "sources" not in md_f.parts:
             try:
                 md_texts.append(md_f.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+
+    tables_dir = bundle_dir / "tables"
+    if tables_dir.exists():
+        for csv_f in tables_dir.glob("*.csv"):
+            try:
+                md_texts.append(csv_f.read_text(encoding="utf-8"))
             except Exception:
                 pass
 
