@@ -55,7 +55,14 @@ class HierarchyStateManager:
             self.reset()
             return LineFormattingAction(action_type=LineActionType.EMIT_DIRECT, content=rendered_p)
 
-        # 2. State: IN_TRONG_DO (Variable explanation list)
+        # 2. Trigger: Start of 'trong đó:' / 'với:' block
+        if text.lower().startswith(("trong đó:", "với:", "ở đây:")) or text.lower() in ("trong đó", "với"):
+            self.state = HierarchyState.IN_TRONG_DO
+            self.in_lettered_parent = False
+            self.in_bullet_category = False
+            return LineFormattingAction(action_type=LineActionType.EMIT_DIRECT, content=rendered_p)
+
+        # 3. State: IN_TRONG_DO (Variable explanation list)
         if self.state == HierarchyState.IN_TRONG_DO:
             # Bulleted item under 'trong đó:'
             if rendered_p.startswith(("- ", "– ", "— ", "+ ", "• ")):
@@ -63,11 +70,14 @@ class HierarchyStateManager:
                 return LineFormattingAction(action_type=LineActionType.EMIT_IN_TRONG_DO, content=clean_b)
 
             # Auto-exit triggers: Lead-in phrases, conditional statements, non-variable definitions
-            if not text.startswith(("-", "–", "—", "+", "•")) and any(rendered_p.startswith(w) for w in [
-                "Cho phép", "Đối với", "Trường hợp", "Khi", "Nếu", "Các mô men", "Các đại lượng", "Giá trị", "Chiều cao",
-                "Tính toán", "Trong các", "Tại các", "Theo đó", "Với các", "Cần tiến hành", "Cốt thép", "Bê tông", "Quy tắc",
-                "Tỉ số", "Tỷ số", "Lực", "Mô men", "Độ bền", "Độ võng", "Điều kiện"
-            ]):
+            if not text.startswith(("-", "–", "—", "+", "•")) and (
+                any(rendered_p.startswith(w) for w in [
+                    "Cho phép", "Đối với", "Trường hợp", "Khi", "Nếu", "Các mô men", "Các đại lượng", "Giá trị", "Chiều cao",
+                    "Tính toán", "Trong các", "Tại các", "Theo đó", "Với các", "Cần tiến hành", "Cốt thép", "Bê tông", "Quy tắc",
+                    "Tỉ số", "Tỷ số", "Để xác định", "Để ", "Độ bền", "Độ võng", "Điều kiện"
+                ])
+                or re.match(r"^(?:Mô men|Lực)\s+.*?\s+(?:do|được|lấy|khi|theo|tính)\s+", rendered_p)
+            ):
                 self.reset()
                 return LineFormattingAction(action_type=LineActionType.EMIT_DIRECT, content=rendered_p)
 
@@ -81,13 +91,6 @@ class HierarchyStateManager:
                 return LineFormattingAction(action_type=LineActionType.EMIT_IN_TRONG_DO, content=clean_b)
 
             self.reset()
-
-        # 3. Trigger: Start of 'trong đó:' block
-        if text.lower().startswith(("trong đó:", "với:", "ở đây:")):
-            self.state = HierarchyState.IN_TRONG_DO
-            self.in_lettered_parent = False
-            self.in_bullet_category = False
-            return LineFormattingAction(action_type=LineActionType.EMIT_DIRECT, content=rendered_p)
 
         # 4. Lettered Clause (a), b), c)...)
         m_let = re.match(r"^([a-z])\)\s*(.+)$", text)

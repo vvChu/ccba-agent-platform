@@ -196,13 +196,24 @@ def extract_docx_figures(
                         data = z.read(media_path)
                         out_img_path.write_bytes(data)
                 elif f_idx >= 0:
-                    prev_idx = fig_items[i - 1]["p_idx"] if i > 0 and fig_items[i - 1]["p_idx"] >= 0 else max(0, f_idx - 15)
-                    search_start = max(prev_idx + 1, f_idx - 6)
+                    prev_idx = fig_items[i - 1]["p_idx"] if i > 0 and fig_items[i - 1]["p_idx"] >= 0 else max(0, f_idx - 35)
+                    search_start = max(prev_idx + 1, f_idx - 30)
 
-                    # Search bounded range before f_idx
+                    # Check if there is a (kết thúc) continuation paragraph after f_idx
+                    search_end = f_idx
+                    for next_idx in range(f_idx + 1, min(f_idx + 6, len(doc.paragraphs))):
+                        nxt_p = doc.paragraphs[next_idx].text.strip()
+                        if re.match(rf"^(?:Hình|HÌNH)\s+{re.escape(f_tag)}\s*\((?:kết\s+thúc|tiếp\s+theo)\)", nxt_p, re.IGNORECASE):
+                            search_end = next_idx + 1
+                            break
+
+                    # Search bounded range for figure diagrams
                     found_media: list[str] = []
                     sub_items: list[tuple[Any, str]] = []
-                    for k in range(search_start, f_idx):
+                    import io
+                    from PIL import Image, ImageDraw, ImageFont
+
+                    for k in range(search_start, search_end):
                         pk = doc.paragraphs[k]
                         m_rids = re.findall(r'r:(?:id|embed)="([^"]+)"', pk._element.xml)
                         for rid in m_rids:
@@ -218,9 +229,6 @@ def extract_docx_figures(
                                             if re.match(r"^[a-z]\)\s*", nxt_txt):
                                                 sub_cap = nxt_txt
                                                 break
-                                        import io
-
-                                        from PIL import Image, ImageDraw, ImageFont
                                         sub_img = Image.open(io.BytesIO(z.read(full_m_p)))
                                         if sub_img.width >= 120 and sub_img.height >= 60:
                                             sub_items.append((sub_img, sub_cap))
@@ -257,10 +265,16 @@ def extract_docx_figures(
                                 curr_y += 28
                         comp.save(out_img_path, "PNG")
                     elif found_media:
-                        media_path = f"word/{found_media[-1]}"
-                        if media_path in z.namelist():
-                            data = z.read(media_path)
-                            out_img_path.write_bytes(data)
+                        best_media = found_media[-1]
+                        for m_cand in reversed(found_media):
+                            full_m_cand = f"word/{m_cand}"
+                            if full_m_cand in z.namelist():
+                                img_cand = Image.open(io.BytesIO(z.read(full_m_cand)))
+                                if img_cand.width >= 120 and img_cand.height >= 60:
+                                    best_media = m_cand
+                                    break
+                        data = z.read(f"word/{best_media}")
+                        out_img_path.write_bytes(data)
                     elif i < len(media_list):
                         data = z.read(media_list[i])
                         out_img_path.write_bytes(data)

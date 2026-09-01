@@ -14,7 +14,17 @@ def handle_figure_card(
     text: str,
     i: int,
 ) -> int | None:
-    """Handle Figure Card triggers (e.g. Hình 1 - ...)."""
+    """Handle Figure Card triggers (e.g. Hình 1 - ..., Hình 15 (kết thúc))."""
+    # 1. Multi-part figure continuation/end marker: Hình X (kết thúc)
+    m_fig_end = re.match(r"^(?:Hình|HÌNH)\s+([0-9A-Za-z\.\-]+)\s*\((kết\s+thúc|tiếp\s+theo)\)", text, re.IGNORECASE)
+    if m_fig_end:
+        fig_num = m_fig_end.group(1)
+        suffix = m_fig_end.group(2).strip()
+        ctx.emit(f'<p align="center"><strong>Hình {fig_num} ({suffix})</strong></p>\n\n')
+        ctx.state_mgr.reset()
+        return i + 1
+
+    # 2. Main Figure Card
     m_fig = re.match(r"^(?:Hình|HÌNH)\s+([0-9A-Za-z\.\-]+)\s*[-–—:]\s*(.+)$", text)
     if m_fig:
         fig_num = m_fig.group(1)
@@ -31,12 +41,11 @@ def handle_figure_card(
             if not last or last.startswith("<!--"):
                 parts_buf.pop()
                 continue
-            if (
-                "CHÚ DẪN" in last
-                or "CHÚ THÍCH" in last
-                or re.match(r"^[0-9A-Za-z\.'\-]+\s*[-–—:]", last)
-                or last.startswith("&nbsp;&nbsp;\\-")
-            ):
+            if "CHÚ DẪN" in last or "CHÚ THÍCH" in last:
+                chudan_parts.insert(0, parts_buf.pop())
+                # Stop immediately after popping the CHÚ DẪN / CHÚ THÍCH header!
+                break
+            elif re.match(r"^[0-9A-Za-z\.'\-]+\s*[-–—:]", last):
                 chudan_parts.insert(0, parts_buf.pop())
             else:
                 break
