@@ -34,38 +34,29 @@ Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm đị
 
 ---
 
-## 🛡️ Bước 2: Kích Hoạt Rào Chắn Rò Rỉ Spoke (Spoke Leakage Guard)
+## 🛡️ Bước 2: Kích Hoạt 3 Worker Thẩm Định Song Song (Parallel Review Gate)
 
-Chạy công cụ kiểm định rò rỉ tự động để đảm bảo không có tài sản cục bộ nào của Spoke lọt vào Hub:
-```bash
-python scripts/governance/check_spoke_leakage.py
-```
+Agent điều phối 3 luồng kiểm tra song song (mô phỏng mô hình Worker của Boost):
 
-**Các chốt chặn bắt buộc (Zero Tolerance):**
-- ❌ Không chứa thư mục nháp/học tập của Spoke: `.md/teach/`, `.tmp/`, `.out-of-scope/`, cache.
-- ❌ Không chứa đường dẫn tuyệt đối dạng Windows (`D:\...`, `C:\Users\...`) trong mã nguồn mới.
-- ❌ Tệp proposal bắt buộc có đủ 4 trường metadata: `proposal_id`, `type`, `status`, `name`.
+1. **Worker 1 — Spoke Leakage & Privacy Guard:**
+   - Chạy rào chắn rò rỉ và quét Maskara credentials:
+     ```bash
+     python scripts/governance/check_spoke_leakage.py
+     ```
+   - *Chốt chặn (Zero Tolerance):* Không chứa `.md/teach/`, `.tmp/`, cache, đường dẫn tuyệt đối Windows `D:\...`. Tệp proposal bắt buộc có đủ 4 trường metadata (`proposal_id`, `type`, `status`, `name`).
 
-*Nếu phát hiện vi phạm:* Agent tự động loại bỏ các tệp vi phạm khỏi PR branch trước khi tiếp tục.
-
----
-
-## 🧩 Bước 3: Thẩm Định Kiến Trúc Deep Seams & Kiểm Thử Độc Lập
-
-1. **Kiểm tra ranh giới Module Sâu (Deep Seams Enforcement):**
-   - Mã nguồn nghiệp vụ bắt buộc nằm gọn trong `packages/[package-name]/src/`.
-   - Các entry point công khai bắt buộc được khai báo trong `__all__` tại `packages/[package-name]/src/__init__.py`.
-   - Không được export bừa bãi các hàm helper nội bộ (`_helper.py`).
-2. **Xác thực Bộ Kiểm thử Tự động:**
-   - Chạy toàn bộ test suite của package liên quan:
+2. **Worker 2 — Deep Seams & Scoped Tests Verification:**
+   - Kiểm tra ranh giới Module Sâu: Mã nguồn nghiệp vụ nằm gọn trong `packages/[pkg]/src/`, entry points công khai khai báo trong `__all__` tại `__init__.py`.
+   - Chạy kiểm thử tự động và linter:
      ```bash
      uv run pytest packages/[package-name]/tests
-     ```
-   - Chạy linter và format code:
-     ```bash
      uv run ruff check packages/[package-name]
      ```
-   - Tiêu chí: $100\%$ Passed, 0 errors, 0 warnings.
+   - *Tiêu chí:* $100\%$ Passed, 0 errors, 0 warnings.
+
+3. **Worker 3 — Proposal Lifecycle & Catalog Governance (ADR 0047):**
+   - Soát chiếu metadata frontmatter của skill/workflow mới đề xuất.
+   - Kiểm tra tính tương thích của `catalog.yaml` và Traceability Matrix.
 
 ---
 

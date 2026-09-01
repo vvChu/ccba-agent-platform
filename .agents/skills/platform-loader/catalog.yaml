@@ -345,7 +345,8 @@ skills:
 - name: ccba-research
   bundle: _software
   description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với
-    các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm.
+    các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ
+    trợ Dual-Agent Adversarial).
   triggers:
   - research
   - nghiên cứu
@@ -353,6 +354,7 @@ skills:
   - tra cứu
   - citations
   - ccba-research
+  - adversarial research
   skill_path: .agents/skills/ccba-research/SKILL.md
 - name: ccba-setup-skills
   bundle: _core
