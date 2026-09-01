@@ -380,7 +380,9 @@ def harvest_docx_formula_images(
                     for k_id, k_val in form_data.items():
                         if isinstance(k_val, dict):
                             l_val = k_val.get("latex", "").strip()
-                                                     # Determine proper tag: never use 'rId...' as tag
+                            f_id = k_val.get("formula_id", "")
+
+                            # Determine proper tag: never use 'rId...' as tag
                             has_tag = "\\tag" in l_val or "\\qquad" in l_val or "\\hfill" in l_val
                             is_multiline_env = any(env in l_val for env in ("aligned", "cases", "gather", "matrix", "split"))
                             if not has_tag and not is_multiline_env:

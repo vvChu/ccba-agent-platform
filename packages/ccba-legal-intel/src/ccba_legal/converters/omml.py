@@ -313,12 +313,12 @@ def _format_delimiter(del_chr: str, is_left: bool) -> str:
         return r"\left." if is_left else r"\right."
 
     del_map = {
-        "(": r"\left(" if is_left else r"\right)",
-        ")": r"\left(" if is_left else r"\right)",
-        "[": r"\left[" if is_left else r"\right]",
-        "]": r"\left[" if is_left else r"\right]",
-        "{": r"\left\{" if is_left else r"\right\}",
-        "}": r"\left\{" if is_left else r"\right\}",
+        "(": r"\left(" if is_left else r"\right(",
+        ")": r"\left)" if is_left else r"\right)",
+        "[": r"\left[" if is_left else r"\right[",
+        "]": r"\left]" if is_left else r"\right]",
+        "{": r"\left\{" if is_left else r"\right\{",
+        "}": r"\left\}" if is_left else r"\right\}",
         "|": r"\left|" if is_left else r"\right|",
         "‖": r"\left\|" if is_left else r"\right\|",
     }

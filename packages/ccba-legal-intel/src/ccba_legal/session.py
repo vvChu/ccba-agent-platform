@@ -256,3 +256,47 @@ def verify_tvpl_vip_status(cdp: Any) -> bool:
     except Exception as e:
         log_session_audit("VIPStatusCheck", f"Error evaluating status: {e}")
         return False
+
+
+def get_browser_executable_path() -> str | None:
+    """Discover browser executable path across common Windows, macOS, and Linux locations."""
+    import shutil
+
+    # 1. Check environment variables
+    env_browser = os.environ.get("CHROME_PATH") or os.environ.get("BROWSER_PATH")
+    if env_browser and os.path.exists(env_browser):
+        return env_browser
+
+    # 2. Check PATH
+    for cmd in ["google-chrome", "chrome", "chromium", "brave", "msedge"]:
+        path = shutil.which(cmd)
+        if path:
+            return path
+
+    # 3. Standard Windows locations
+    candidates = [
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe"),
+    ]
+
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+
+    # 4. Standard macOS locations
+    mac_candidates = [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+        "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    ]
+    for p in mac_candidates:
+        if os.path.exists(p):
+            return p
+
+    return None

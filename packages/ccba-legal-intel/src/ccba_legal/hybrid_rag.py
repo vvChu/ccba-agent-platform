@@ -31,6 +31,12 @@ class LegalHybridRAG:
         scores: list[tuple[str, float]] = []
         doc_count = len(self.corpus)
 
+        # Pre-compute IDF for query tokens once (O(Q * D) instead of O(Q * D^2))
+        query_idf: dict[str, float] = {}
+        for token in query_tokens:
+            docs_containing = sum(1 for tokens in self.tokenized_corpus.values() if token in tokens)
+            query_idf[token] = math.log((doc_count + 1) / (docs_containing + 1)) + 1.0
+
         for doc_id, doc_tokens in self.tokenized_corpus.items():
             if not doc_tokens:
                 continue
@@ -43,12 +49,7 @@ class LegalHybridRAG:
                 if token in doc_token_set:
                     # Term frequency
                     tf = doc_tokens.count(token) / doc_len
-                    # IDF approximation
-                    docs_containing = sum(
-                        1 for tokens in self.tokenized_corpus.values() if token in tokens
-                    )
-                    idf = math.log((doc_count + 1) / (docs_containing + 1)) + 1.0
-                    score += tf * idf
+                    score += tf * query_idf[token]
 
             if score > 0:
                 scores.append((doc_id, score))

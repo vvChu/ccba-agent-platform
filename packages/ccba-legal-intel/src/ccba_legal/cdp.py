@@ -51,13 +51,15 @@ class ChromeCDP:
             resp.raise_for_status()
             return [t for t in resp.json() if t.get("type") == "page"]
         except Exception:
-            chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-            if os.path.exists(chrome_path):
+            from ccba_legal.session import get_browser_executable_path
+
+            browser_path = get_browser_executable_path()
+            if browser_path and os.path.exists(browser_path):
                 user_data = os.path.expanduser("~/.gemini/antigravity/chrome_vip")
                 os.makedirs(user_data, exist_ok=True)
                 import subprocess
                 subprocess.Popen([
-                    chrome_path,
+                    browser_path,
                     f"--remote-debugging-port={self.port}",
                     f"--user-data-dir={user_data}",
                     "--no-first-run",

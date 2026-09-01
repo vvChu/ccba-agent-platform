@@ -267,6 +267,8 @@ def _process_table_block(ctx: StandardConversionContext, table_obj: Any, i: int)
 def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str, Any]:
     """Export modular annex files, 2D navigation matrix, tables catalog, and AST index."""
     # 1. Export Annexes
+    from ccba_legal.table_cleaner import clean_markdown_tables_and_notes
+
     if ctx.annex_buffers:
         annexes_dir = ctx.bundle_dir / "annexes"
         annexes_dir.mkdir(parents=True, exist_ok=True)
@@ -274,6 +276,7 @@ def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str,
         for a_letter, a_info in ctx.annex_buffers.items():
             annex_slug, annex_title, annex_type, annex_anchor = a_info["slug"], a_info["title"], a_info["type"], a_info["anchor"]
             annex_md = "".join(a_info["parts"]).replace("figures/images/", "../figures/images/").replace("tables/", "../tables/")
+            annex_md = clean_markdown_tables_and_notes(annex_md)
             (annexes_dir / f"{annex_slug}.md").write_text(annex_md, encoding="utf-8")
             nav_rows.append(f"| **Phụ lục {a_letter}** | {annex_title} | {annex_type} | [📑 **Xem Phụ lục**](annexes/{annex_slug}.md#{annex_anchor}) |")
 
@@ -290,7 +293,8 @@ def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str,
     # 2. Write Primary Markdown
     out_name = ctx.output_filename or f"{ctx.bundle_dir.name}.md"
     target_md_path = ctx.bundle_dir / out_name
-    target_md_path.write_text("".join(ctx.body_md_parts), encoding="utf-8")
+    final_body_md = clean_markdown_tables_and_notes("".join(ctx.body_md_parts))
+    target_md_path.write_text(final_body_md, encoding="utf-8")
 
     # 3. Export Tables Catalog & README
     if ctx.tables_extracted:

@@ -186,6 +186,8 @@ def process_vbpl_bundle_okf_v22(
         cleaned_md, templates_dir, doc_meta.get("document_number", bundle_dir.name)
     )
     body_anchored = _build_pure_normative_body(pure_body_raw)
+    from ccba_legal.table_cleaner import clean_markdown_tables_and_notes
+    body_anchored = clean_markdown_tables_and_notes(body_anchored)
 
     target_md_filename = output_filename or f"{bundle_dir.name}.md"
     (bundle_dir / target_md_filename).write_text(body_anchored, encoding="utf-8")
