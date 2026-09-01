@@ -233,7 +233,16 @@ def extract_docx_figures(
                                         if sub_img.width >= 120 and sub_img.height >= 60:
                                             sub_items.append((sub_img, sub_cap))
 
+                    # Only stitch sub_items if they are true sub-figures (have a/b sub-captions)
+                    # or if this is a multi-part figure with (kết thúc) where all images are large diagrams
+                    should_stitch = False
                     if len(sub_items) > 1:
+                        has_sub_caps = any(cap for _, cap in sub_items if cap)
+                        is_multi_page = (search_end > f_idx) and all(img.height >= 120 for img, _ in sub_items)
+                        if has_sub_caps or is_multi_page:
+                            should_stitch = True
+
+                    if should_stitch:
                         try:
                             font_bold = ImageFont.truetype("arialbd.ttf", 13)
                         except Exception:
@@ -265,14 +274,18 @@ def extract_docx_figures(
                                 curr_y += 28
                         comp.save(out_img_path, "PNG")
                     elif found_media:
+                        # Pick the diagram image (highest area and height)
                         best_media = found_media[-1]
+                        best_area = 0
                         for m_cand in reversed(found_media):
                             full_m_cand = f"word/{m_cand}"
                             if full_m_cand in z.namelist():
                                 img_cand = Image.open(io.BytesIO(z.read(full_m_cand)))
-                                if img_cand.width >= 120 and img_cand.height >= 60:
-                                    best_media = m_cand
-                                    break
+                                if img_cand.width >= 120 and img_cand.height >= 80:
+                                    area = img_cand.width * img_cand.height
+                                    if area > best_area:
+                                        best_area = area
+                                        best_media = m_cand
                         data = z.read(f"word/{best_media}")
                         out_img_path.write_bytes(data)
                     elif i < len(media_list):
