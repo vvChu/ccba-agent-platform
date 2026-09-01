@@ -228,11 +228,27 @@ def build_parser() -> argparse.ArgumentParser:
     ingest_parser.add_argument(
         "-o", "--output-dir", type=Path, default=None, help="Spoke legal_docs output root"
     )
-    ingest_parser.add_argument(
-        "--upload-drive",
+    # 10. Clean Images Subcommand (Zero-Orphan Figure Pruner - ADR 0036)
+    clean_parser = subparsers.add_parser(
+        "clean-images",
+        help="Scan and prune unreferenced orphan figure images from legal bundle (ADR 0036)",
+    )
+    clean_parser.add_argument(
+        "bundle_path",
+        type=Path,
+        nargs="?",
+        default=None,
+        help="Path to specific legal bundle directory",
+    )
+    clean_parser.add_argument(
+        "--all",
         action="store_true",
-        default=False,
-        help="Upload binary assets to Google Drive Vault",
+        help="Scan all legal bundles in repository",
+    )
+    clean_parser.add_argument(
+        "--prune",
+        action="store_true",
+        help="Permanently delete unreferenced orphan images (default: dry-run report)",
     )
 
     return parser
@@ -598,6 +614,60 @@ def handle_sync(args: argparse.Namespace) -> int:
         return 1
 
 
+def handle_clean_images(args: argparse.Namespace) -> int:
+    """Handle clean-images subcommand (ADR 0036)."""
+    from ccba_legal.figure_extractor import scan_and_prune_orphan_figures
+
+    print("=================================================================")
+    print("     CCBA LEGAL INTEL - ORPHANED FIGURE IMAGES CLEANER           ")
+    print("=================================================================")
+
+    target_bundles: list[Path] = []
+    if args.bundle_path:
+        target_bundles.append(args.bundle_path)
+    elif args.all:
+        legal_docs = Path("legal_docs")
+        if legal_docs.exists():
+            for cat in ["01_vbpl", "02_qcvn", "03_tcvn"]:
+                cat_dir = legal_docs / cat
+                if cat_dir.exists():
+                    for b in cat_dir.iterdir():
+                        if b.is_dir() and not b.name.startswith("."):
+                            target_bundles.append(b)
+    else:
+        print("⚠️ Vui lòng chỉ định đường dẫn bundle hoặc dùng cờ --all")
+        return 1
+
+    total_orphans = 0
+    total_pruned_bytes = 0
+
+    for b in target_bundles:
+        res = scan_and_prune_orphan_figures(b, prune=args.prune)
+        orphans = res.get("orphaned", [])
+        if orphans:
+            total_orphans += len(orphans)
+            total_pruned_bytes += res.get("pruned_bytes", 0)
+            action_str = f"Đã xóa {res['pruned_count']} tệp ({res['pruned_bytes'] / 1024 / 1024:.2f} MB)" if args.prune else f"Phát hiện {len(orphans)} tệp rác (chạy với --prune để xóa)"
+            print(f"📁 [{b.name}]: {action_str}")
+            for img_name in orphans[:5]:
+                print(f"   • {img_name}")
+            if len(orphans) > 5:
+                print(f"   ... và {len(orphans) - 5} tệp khác")
+        else:
+            if args.bundle_path:
+                print(f"✅ [{b.name}]: Thư mục figures/images hoàn toàn sạch sẽ (0 tệp rác).")
+
+    print("=================================================================")
+    if total_orphans == 0:
+        print("🎉 Toàn bộ các gói tri thức đều đạt chuẩn 100% Zero-Orphan Figures!")
+    else:
+        if args.prune:
+            print(f"✨ Đã dọn dẹp thành công {total_orphans} tệp ảnh mồ côi ({total_pruned_bytes / 1024 / 1024:.2f} MB)!")
+        else:
+            print(f"⚠️ Tổng cộng phát hiện {total_orphans} tệp ảnh mồ côi. Chạy lại với cờ `--prune` để dọn dẹp.")
+    return 0
+
+
 def main() -> None:
     """Main CLI entrypoint."""
     if hasattr(sys.stdout, "reconfigure"):
@@ -630,6 +700,8 @@ def main() -> None:
         sys.exit(handle_sync(args))
     elif args.command == "ingest":
         sys.exit(handle_ingest(args))
+    elif args.command == "clean-images":
+        sys.exit(handle_clean_images(args))
     else:
         parser.print_help()
         sys.exit(1)

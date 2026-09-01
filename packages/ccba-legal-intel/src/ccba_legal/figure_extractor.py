@@ -275,6 +275,9 @@ def extract_docx_figures(
     with open(catalog_path, "w", encoding="utf-8") as f:
         yaml.dump(manifest, f, allow_unicode=True, sort_keys=False, indent=2)
 
+    # 4. Auto-prune orphaned extraction artifacts (Zero-Orphan Policy - ADR 0036)
+    scan_and_prune_orphan_figures(bundle_dir, prune=True)
+
     return manifest
 
 
@@ -311,6 +314,79 @@ def render_markdown_figure_card(fig_entry: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def scan_and_prune_orphan_figures(bundle_dir: Path, prune: bool = False) -> dict[str, Any]:
+    """Scan figures/images in bundle and identify/prune unreferenced orphan images (ADR 0036)."""
+    figures_dir = bundle_dir / "figures"
+    images_dir = figures_dir / "images"
+    if not images_dir.exists():
+        return {"active": [], "orphaned": [], "pruned_count": 0, "pruned_bytes": 0, "total_files": 0}
+
+    all_images = sorted(list(images_dir.glob("*.*")))
+    disk_names = {img.name: img for img in all_images}
+
+    referenced: set[str] = set()
+
+    # 1. In Markdown files
+    for md_f in list(bundle_dir.rglob("*.md")):
+        if "sources" not in md_f.parts:
+            try:
+                txt = md_f.read_text(encoding="utf-8")
+                for m in re.findall(r"!\[[^\]]*\]\([^)]*images/([^)\s]+)\)", txt):
+                    referenced.add(Path(m).name)
+            except Exception:
+                pass
+
+    # 2. In cards/*.json and cards/*.md
+    cards_dir = figures_dir / "cards"
+    if cards_dir.exists():
+        for card_f in list(cards_dir.glob("*.json")) + list(cards_dir.glob("*.md")):
+            try:
+                txt = card_f.read_text(encoding="utf-8")
+                for m in re.findall(r'"image":\s*"([^"]+)"', txt):
+                    referenced.add(Path(m).name)
+                for m in re.findall(r"!\[[^\]]*\]\([^)]*images/([^)\s]+)\)", txt):
+                    referenced.add(Path(m).name)
+            except Exception:
+                pass
+
+    # 3. In catalogs
+    for cat_f in [bundle_dir / "figures_override.yaml", figures_dir / "figures_catalog.yaml"]:
+        if cat_f.exists():
+            try:
+                txt = cat_f.read_text(encoding="utf-8")
+                for m in re.findall(r"image_path:\s*\"?([^\s\"]+)\"?", txt):
+                    referenced.add(Path(m).name)
+                for m in re.findall(r"image_relpath:\s*\"?([^\s\"]+)\"?", txt):
+                    referenced.add(Path(m).name)
+            except Exception:
+                pass
+
+    active = sorted(list(referenced.intersection(disk_names.keys())))
+    orphaned = sorted(list(disk_names.keys() - referenced))
+    pruned_count = 0
+    pruned_bytes = 0
+
+    if prune and orphaned:
+        for name in orphaned:
+            p = disk_names[name]
+            pruned_bytes += p.stat().st_size
+            try:
+                p.unlink()
+                pruned_count += 1
+            except Exception:
+                pass
+
+    return {
+        "active": active,
+        "orphaned": orphaned,
+        "pruned_count": pruned_count,
+        "pruned_bytes": pruned_bytes,
+        "total_files": len(all_images),
+    }
+
+
 # Public Alias
 extract_technical_figures = extract_docx_figures
+prune_orphaned_figures = scan_and_prune_orphan_figures
+
 
