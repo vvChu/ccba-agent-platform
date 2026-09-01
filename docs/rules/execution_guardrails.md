@@ -22,9 +22,13 @@
 
 ---
 
-## 3. TDD Retry Cap (Giới hạn Vòng lặp Sửa lỗi)
+## 3. TDD Retry Cap & Early Escalation (Giới Hạn Vòng Lặp & Điểm Cắt Lỗi)
 - Trong vòng lặp Red→Green→Refactor (TDD) hoặc edit→test, Agent chỉ được lặp lại tối đa **5 vòng** cho cùng một seam hoặc test file.
-- Nếu sau 5 vòng test vẫn fail, Agent phải dừng lại, commit Work-In-Progress (WIP), ghi nhận các blockers chưa giải quyết được, và xin chỉ thị từ người dùng — tuyệt đối không tiếp tục lặp cho đến khi cạn context budget.
+- **Quy tắc Cắt Lỗi Sớm (Early Escalation tại vòng 3):**
+  - Nếu sau **3 vòng test liên tiếp** vẫn không pass do lỗi logic sâu, race condition, hoặc xung đột đa file: Agent **bắt buộc dừng thử mù**, không được tiếp tục đoán mò cách sửa.
+  - Agent phải lập tức đóng gói **Deep Problem Brief** (gồm: Triệu chứng lỗi, Giả thuyết đã thử nhưng sai, Các code seams liên quan, Log lỗi then chốt).
+- **Hành động tại vòng 5 (Hard Stop):**
+  - Nếu chạm mốc 5 vòng, Agent dừng ngay lập tức, commit Work-In-Progress (WIP), xuất Deep Problem Brief và kích hoạt **Boost Escalation Gate** (Mục 9) — tuyệt đối không lặp tiếp làm cạn kiệt ngân sách ngữ cảnh.
 
 ---
 
@@ -55,3 +59,29 @@
 ## 8. 2-Tier Test Speed Compliance
 - Mọi tệp kiểm thử đơn vị (Unit Test) mới viết bắt buộc phải chạy dưới 2.0 giây.
 - Các tệp test tích hợp mạng, Chromium CDP, hoặc LLM latency nặng bắt buộc phải được dán decorator `@pytest.mark.slow` hoặc `@pytest.mark.stress` để tự động loại trừ khỏi vòng lặp kiểm thử nhanh hàng ngày (`-m "not slow"`).
+
+---
+
+## 9. Boost Deep Reasoning Protocol & Escalation Gate
+- Khi xử lý các bài toán kỹ thuật có độ phức tạp cao vượt quá khả năng xử lý của vòng lặp đơn lẻ (Single-turn ReAct), Agent và Kỹ sư CCBA áp dụng quy chuẩn **Boost Deep Reasoning**:
+  - **Trường hợp kích hoạt:**
+    1. **Concurrency & Race Conditions:** Xung đột tiến trình nền, mutex lock (`TVPLSessionMutex`), pipeline đa tiến trình (VvC Second Brain daemons, IDOP staging sync).
+    2. **Polyglot Monorepo Deep Refactoring:** Tái cấu trúc hoặc trích xuất Deep Seams qua nhiều package Python/TypeScript đồng thời.
+    3. **Thẩm định Pháp lý & Xung đột Quy chuẩn Đa ngành:** Xử lý các điều khoản chồng chéo, xung đột ranh giới thẩm quyền (Luật 55/2024, NĐ 105/2025, QCVN 06, TCVN 3890).
+    4. **Bế tắc TDD (Chạm ngưỡng 3–5 vòng test fail):** Khi TDD Retry Cap bị kích hoạt.
+  - **Quy chuẩn Đóng Gói Deep Problem Brief:**
+    Khi kích hoạt Escalation Gate, Agent phải tổng hợp tệp hoặc thông điệp chuẩn mực:
+    ```markdown
+    ### 🔬 Deep Problem Brief
+    - **Vấn đề cốt lõi (Failure Manifest):** [Mô tả ngắn gọn lỗi kỹ thuật/test fail]
+    - **Các giả thuyết đã kiểm chứng & Thất bại (Tested Hypotheses):** [Liệt kê 2-3 cách sửa đã thử và lý do fail]
+    - **Vùng ảnh hưởng (Seams Involved):** [Danh sách files / classes / functions liên quan]
+    - **Logs / Error Trace:** [Trích đoạn log lỗi then chốt]
+    - **Khuyến nghị hành động:** [Đề xuất người dùng kích hoạt `/boost` kèm brief này để chạy chu trình suy luận đa tác nhân]
+    ```
+  - **Rào chắn An Toàn Đa Tác Nhân (Two-Layer Sub-Agent Guardrail — ADR 0035):**
+    Khi quy trình CCBA tự động mô phỏng hoặc khởi tạo các subagents chạy ngầm theo mô hình 3 pha của Boost (Strategy $\rightarrow$ Parallel Workers $\rightarrow$ Synthesis):
+    1. **Giới hạn Độ sâu (Depth Limit = 1):** Nghiêm cấm subagent spawn thêm subagent con để chống bùng nổ đệ quy.
+    2. **Giới hạn Công cụ (Tool Scoping):** Subagents chỉ được cấp quyền công cụ đọc (`view_file`, `grep_search`, `read_resource`) và chạy kiểm thử cô lập (`run_command` scoped test), tuyệt đối không cấp quyền chỉnh sửa file hoặc lệnh Git nguy hiểm.
+    3. **Giới hạn Số Lượng (Max Workers):** Tối đa 3 subagents chạy song song trong một phiên điều tra/nghiên cứu.
+

@@ -253,6 +253,15 @@ The parsing algorithm in `validate_skills.py` that tracks Markdown heading level
 **Exclusion Headers**:
 A set of common static headings (such as "Lưu ý", "Tham chiếu") that temporarily disable step-validation checking to prevent false positives.
 
+**Boost Escalation Gate (Cổng Leo Thang Boost)**:
+Quy chuẩn chuyển giao và leo thang bài toán kỹ thuật từ vòng lặp TDD bế tắc ($\ge 3$ vòng fail liên tiếp) hoặc các ca bẫy đa tiến trình/đa package sang chu trình suy luận đa tác nhân (`/boost`), ngăn chặn triệt để hành vi đoán mò và tiêu hao ngữ cảnh vô ích.
+
+**Deep Problem Brief (Hồ Sơ Vấn Đề Chuyên Sâu)**:
+Bản đóng gói thông tin kỹ thuật tiêu chuẩn hóa (Failure Manifest, Tested Hypotheses, Code Seams, Error Logs, Actionable Recommendations) do Agent tự động biên soạn khi kích hoạt Boost Escalation Gate để cung cấp ngữ cảnh cô đọng cho quy trình suy luận sâu.
+
+**Three-Phase Reasoning Hierarchy (Hệ Phân Cấp Suy Luận 3 Pha)**:
+Mô hình kiến trúc đa tác nhân phỏng theo Antigravity Boost: Pha 1 (Goal & Strategy Formulation - Orchestrator phân rã bài toán), Pha 2 (Parallel Execution & Verification - Các Subagents chuyên biệt kiểm chứng đa giả thuyết độc lập kèm rào chắn Two-Layer Guardrail), và Pha 3 (Synthesis & Solution Delivery - Hợp nhất giải pháp và phản biện chéo).
+
 ---
 
 ## 5. Pháp Điển Xây Dựng, VBHN & Xử Lý Tài Liệu
