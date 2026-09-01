@@ -103,6 +103,7 @@ def extract_docx_figures(
                 target_file.write_bytes(z.read(media_path))
 
         if fig_items:
+            consumed_media: set[str] = set()
             for i, item in enumerate(fig_items):
                 f_idx = item["p_idx"]
                 f_tag = item["tag"]
@@ -118,8 +119,9 @@ def extract_docx_figures(
                     if media_path in z.namelist():
                         data = z.read(media_path)
                         out_img_path.write_bytes(data)
+                        consumed_media.add(media_path.replace("word/", ""))
                 elif f_idx >= 0:
-                    prev_idx = fig_items[i - 1]["p_idx"] if i > 0 and fig_items[i - 1]["p_idx"] >= 0 else max(0, f_idx - 35)
+                    prev_idx = fig_items[i - 1].get("search_end", fig_items[i - 1]["p_idx"]) if i > 0 and fig_items[i - 1]["p_idx"] >= 0 else max(0, f_idx - 35)
                     search_start = max(prev_idx + 1, f_idx - 30)
 
                     # Check if there is a (kết thúc) continuation paragraph after f_idx
@@ -129,6 +131,8 @@ def extract_docx_figures(
                         if re.match(rf"^(?:Hình|HÌNH)\s+{re.escape(f_tag)}\s*\((?:kết\s+thúc|tiếp\s+theo)\)", nxt_p, re.IGNORECASE):
                             search_end = next_idx + 1
                             break
+
+                    item["search_end"] = search_end
 
                     # Search bounded range for figure diagrams
                     found_media: list[str] = []
@@ -142,7 +146,7 @@ def extract_docx_figures(
                         for rid in m_rids:
                             if rid in rels:
                                 target = rels[rid].target_ref
-                                if target.startswith("media/image") and target not in found_media:
+                                if target.startswith("media/image") and target not in found_media and target not in consumed_media:
                                     found_media.append(target)
                                     full_m_p = f"word/{target}"
                                     if full_m_p in z.namelist() and not target.endswith(".wmf"):
@@ -166,6 +170,8 @@ def extract_docx_figures(
                             should_stitch = True
 
                     if should_stitch:
+                        for m_t in found_media:
+                            consumed_media.add(m_t)
                         try:
                             font_bold = ImageFont.truetype("arialbd.ttf", 13)
                         except Exception:
@@ -211,6 +217,7 @@ def extract_docx_figures(
                                         best_media = m_cand
                         data = z.read(f"word/{best_media}")
                         out_img_path.write_bytes(data)
+                        consumed_media.add(best_media)
                     elif i < len(media_list):
                         data = z.read(media_list[i])
                         out_img_path.write_bytes(data)
