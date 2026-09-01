@@ -369,6 +369,19 @@ skills:
   - setup-skills
   - ccba-setup-skills
   skill_path: .agents/skills/ccba-setup-skills/SKILL.md
+- name: ccba-teamwork
+  bundle: _core
+  description: Điều phối đa tác nhân dài hạn (Teamwork Multi-Agent Framework) theo
+    4 giai đoạn và 3 vai trò tối giản (Orchestrator, Workers, Auditor), cưỡng chế
+    Workers Read-Only Sandbox và kiểm toán phân vùng tệp hậu hợp nhất.
+  triggers:
+  - teamwork
+  - ccba-teamwork
+  - điều phối nhóm
+  - multi-agent
+  - team sheet
+  - parallel execution
+  skill_path: .agents/skills/ccba-teamwork/SKILL.md
 - name: ccba-xia
   bundle: _software
   description: Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository
@@ -1592,6 +1605,19 @@ workflows:
   - học tập
   - .md/teach/
   workflow_path: .agents/workflows/ccba-teach.md
+- name: ccba-teamwork
+  bundle: _core
+  command: /ccba-teamwork
+  description: Khởi động quy trình điều phối đa tác nhân dài hạn (Teamwork Multi-Agent
+    Framework) theo mô hình 3 vai trò, lập Team Sheet và điều phối các đợt thực thi
+    song song.
+  triggers:
+  - teamwork
+  - ccba-teamwork
+  - điều phối nhóm
+  - multi-agent
+  - team sheet
+  workflow_path: .agents/workflows/ccba-teamwork.md
 - name: ccba-to-questionnaire
   bundle: _core
   command: /ccba-to-questionnaire

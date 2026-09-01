@@ -6,7 +6,7 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 
 ---
 
-## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0048)
+## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0053)
 
 | Mã ADR | Tiêu đề | Trạng thái |
 | :--- | :--- | :---: |
@@ -52,7 +52,8 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 | [ADR 0046](0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md) | Personal Sandbox Spoke Lifecycle, Registry TTL, and CCBA Charter 2026 Alignment | ✅ ACCEPTED |
 | [ADR 0047](0047-catalog-manifest-compiler-and-frontmatter-ssot.md) | Catalog Manifest Compiler & Frontmatter Single Source of Truth (SSOT) | ✅ ACCEPTED |
 | [ADR 0048](0048-tvpl-vip-digital-pdf-priority-and-session-engine.md) | TVPL VIP Digital PDF Priority & Persistent Chrome Profile Session Engine | ✅ ACCEPTED |
-| [ADR 0049](0049-okf-v2-4-universal-agent-centric-specification-and-cloud-vault.md) | OKF v2.4 Universal Agent-Centric Specification & Cloud Legal Vault | ✅ ACCEPTED |
-| [ADR 0050](0050-automated-legal-sync-and-mock-data-isolation.md) | Automated Legal Sync, LegalDocStatus Lifecycle Enum & Mock Data Isolation Guard | ✅ ACCEPTED |
+| [ADR 0049](0049-okf-v2-4-universal-agent-centric-specification-and-cloud-vault.md) | OKF v2.4 Universal Agent-Centric Specification & Multi-Asset Cloud Vault | ✅ ACCEPTED |
+| [ADR 0050](0050-automated-legal-sync-and-mock-data-isolation.md) | Automated Legal Sync Pipeline & Mock Data Isolation for Spokes | ✅ ACCEPTED |
 | [ADR 0051](0051-hub-spoke-sync-hardening-constitution-preservation-and-virtual-fallback.md) | Hub-Spoke Sync Hardening, Constitution Preservation & Virtual Hub Fallback | ✅ ACCEPTED |
 | [ADR 0052](0052-boost-deep-reasoning-protocol-and-escalation-gate.md) | Boost Deep Reasoning Protocol, Early Escalation & Multi-Agent Hierarchy | ✅ ACCEPTED |
+| [ADR 0053](0053-teamwork-multi-agent-orchestration-framework.md) | Teamwork Multi-Agent Orchestration Framework & Exclusive Seam Protocol | ✅ ACCEPTED |

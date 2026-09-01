@@ -85,3 +85,28 @@
     2. **Giới hạn Công cụ (Tool Scoping):** Subagents chỉ được cấp quyền công cụ đọc (`view_file`, `grep_search`, `read_resource`) và chạy kiểm thử cô lập (`run_command` scoped test), tuyệt đối không cấp quyền chỉnh sửa file hoặc lệnh Git nguy hiểm.
     3. **Giới hạn Số Lượng (Max Workers):** Tối đa 3 subagents chạy song song trong một phiên điều tra/nghiên cứu.
 
+---
+
+## 10. Teamwork Orchestration Protocol (Quy Chuẩn Điều Phối Đa Tác Nhân Dài Hạn)
+- Khi triển khai các dự án quy mô lớn đòi hỏi phân rã đa seams (Monorepo refactoring, thẩm tra thiết kế 4 bộ môn, nạp kho pháp điển hàng loạt), Platform áp dụng khung **Teamwork Framework** (lấy cảm hứng từ Antigravity `/teamwork-preview` và ADR 0053):
+  - **Mô hình 3 Vai Trò Tối Giản (KISS Hierarchy):**
+    1. **Orchestrator (Nhạc Trưởng):** Chịu trách nhiệm toàn trình (phỏng vấn, lập `team_sheet.md`, dispatch workers, điều phối, tổng hợp kết quả, ghi file chính thức và commit Git). Duy nhất Orchestrator có quyền ghi đè codebase.
+    2. **Workers (Tác Nhân Thực Thi):** Chạy song song độc lập. Tuân thủ nghiêm ngặt **Two-Layer Guardrail (ADR 0035)**: Chỉ có quyền đọc và chạy test scoped; xuất kết quả phân tích/code draft dưới dạng artifact text vào thư mục sandbox cô lập (`.system_generated/scratch/worker_{N}/`).
+    3. **Success Auditor (Kiểm Định Nghiệm Thu):** Độc lập chạy kiểm thử scoped, quét an toàn Maskara, và thực hiện kiểm toán phân vùng file.
+  - **Giới Hạn Tác Nhân & Chiến Lược Phân Đợt (Worker Cap & Batching Strategy):**
+    - Tối đa **3 workers** chạy đồng thời trong cùng một thời điểm.
+    - Nếu dự án có nhiều hơn 3 seams/milestones độc lập, Orchestrator **bắt buộc phân đợt** (Batching): chạy tối đa 3 workers/batch, chờ batch hoàn tất rồi mới dispatch batch tiếp theo.
+  - **Kiểm Toán Phân Vùng Hậu Hợp Nhất (Post-Merge Diff Audit):**
+    - Sau mỗi milestone, trước khi hợp nhất, Auditor hoặc Orchestrator phải đối chiếu `git diff --name-only` với danh sách file scope đã khai báo trong `team_sheet.md`.
+    - Mọi tệp tin bị sửa đổi nằm ngoài phạm vi seam được phân quyền phải bị gắn cờ cảnh báo rò rỉ seam (Seam Boundary Leakage) để Orchestrator xử lý trước khi commit.
+  - **Rào Chắn Quá Giờ & Cơ Chế Khôi Phục (Worker Timeout & Fallback Protocol):**
+    - Mỗi worker có thời hạn tối đa là **10 phút** cho một tác vụ subagent.
+    - Nếu worker không phản hồi hoặc gặp lỗi suy thoái ngữ cảnh (`invalid_args` / Context Exhaustion): Orchestrator đánh dấu milestone là `INCOMPLETE`, trích xuất log trung gian và chọn 1 trong 2 nhánh:
+      - *Nhánh A:* Khởi động lại với Worker mới kèm prompt thu hẹp phạm vi.
+      - *Nhánh B:* Nếu lỗi do bế tắc logic sâu, đóng gói Deep Problem Brief và kích hoạt `/boost` (Escalation UP).
+  - **Phân Định Ranh Giới `/boost` vs `/ccba-teamwork`:**
+    - **`/boost` (Escalation UP):** Xử lý sự cố kỹ thuật bế tắc, phân tích sâu lỗi logic/concurrency đơn lẻ trong phạm vi 1 session.
+    - **`/ccba-teamwork` (Coordination OUT):** Điều phối phân rã dự án quy mô lớn thành nhiều workstreams độc lập chạy song song qua nhiều milestones.
+    - **Kết hợp:** Trong phiên Teamwork, nếu một Worker gặp sự cố logic bế tắc tại seam của mình, Orchestrator có thể kích hoạt Boost Escalation Gate để xử lý triệt để seam đó trước khi tiếp tục chu trình Teamwork.
+
+

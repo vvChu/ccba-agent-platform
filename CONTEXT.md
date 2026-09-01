@@ -262,6 +262,18 @@ Bản đóng gói thông tin kỹ thuật tiêu chuẩn hóa (Failure Manifest, 
 **Three-Phase Reasoning Hierarchy (Hệ Phân Cấp Suy Luận 3 Pha)**:
 Mô hình kiến trúc đa tác nhân phỏng theo Antigravity Boost: Pha 1 (Goal & Strategy Formulation - Orchestrator phân rã bài toán), Pha 2 (Parallel Execution & Verification - Các Subagents chuyên biệt kiểm chứng đa giả thuyết độc lập kèm rào chắn Two-Layer Guardrail), và Pha 3 (Synthesis & Solution Delivery - Hợp nhất giải pháp và phản biện chéo).
 
+**Team Sheet (Bản Phân Bổ Đội Ngũ)**:
+Tệp tin tài liệu hóa `.agents/teams/[project]_team_sheet.md` trong Teamwork Framework gồm 2 lớp cấu trúc phân tách rõ ràng: Lớp 1 - Accountability Mapping (ánh xạ 11 Ghế trách nhiệm giải trình của CCBA Charter 2026 với các milestones nghiệm thu của con người) và Lớp 2 - Worker Assignments (danh sách động các AI Subagents, phạm vi file/seam độc quyền, tiêu chí nghiệm thu và chính sách timeout).
+
+**Exclusive Seam Ownership (Phân Quyền Seam Độc Quyền)**:
+Nguyên tắc phân định ranh giới trong Teamwork: Mỗi Worker Subagent chỉ được cấp quyền đọc và phân tích các tệp tin trong phạm vi seam được Orchestrator chỉ định tường minh trong prompt dispatch. Mọi sản phẩm trung gian được xuất ra thư mục sandbox cô lập (`.system_generated/scratch/worker_{N}/`) và duy nhất Orchestrator có quyền tổng hợp, ghi file chính thức lên codebase nhằm ngăn chặn race condition và conflict ghi đè.
+
+**Post-Merge Diff Audit (Kiểm Toán Phân Vùng Hậu Hợp Nhất)**:
+Cơ chế kiểm định độc lập do Success Auditor hoặc Orchestrator thực thi sau mỗi milestone bằng cách so khớp danh sách tệp thay đổi thực tế (`git diff --name-only`) với danh sách file scope đã phân quyền trong `team_sheet.md`, chủ động chặn đứng nguy cơ rò rỉ ranh giới module (Seam Boundary Leakage).
+
+**Teamwork Session (Phiên Điều Phối Đa Tác Nhân)**:
+Quy trình điều phối đa tác nhân dài hạn (/ccba-teamwork) chia làm 4 giai đoạn (Interview $\rightarrow$ Team Sheet $\rightarrow$ Parallel Milestone Execution $\rightarrow$ Success Audit) phục vụ xử lý các dự án quy mô lớn phân rã đa luồng công việc song song, phân biệt với quy trình /boost (suy luận sâu ngắn hạn tập trung giải quyết bế tắc kỹ thuật).
+
 ---
 
 ## 5. Pháp Điển Xây Dựng, VBHN & Xử Lý Tài Liệu
