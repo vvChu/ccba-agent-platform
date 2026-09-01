@@ -182,25 +182,25 @@ def extract_docx_figures(
                         text_widths = [dummy_draw.textbbox((0, 0), cap, font=font_bold)[2] - dummy_draw.textbbox((0, 0), cap, font=font_bold)[0] for _, cap in sub_items if cap]
                         max_img_w = max(img.width for img, _ in sub_items)
                         max_txt_w = max(text_widths) if text_widths else 0
-                        canvas_w = max(max_img_w, max_txt_w) + 60
+                        canvas_w = max(max_img_w, max_txt_w, 660) + 80
 
-                        total_h = 15
+                        total_h = 20
                         for img, cap in sub_items:
-                            total_h += img.height + (35 if cap else 15)
+                            total_h += img.height + (40 if cap else 20)
 
                         comp = Image.new("RGB", (canvas_w, total_h), color=(255, 255, 255))
                         draw = ImageDraw.Draw(comp)
-                        curr_y = 15
+                        curr_y = 20
                         for img, cap in sub_items:
                             offset_x = (canvas_w - img.width) // 2
                             comp.paste(img, (offset_x, curr_y))
-                            curr_y += img.height + 6
+                            curr_y += img.height + 8
                             if cap:
                                 bbox = draw.textbbox((0, 0), cap, font=font_bold)
                                 cap_w = bbox[2] - bbox[0]
-                                tx = max(10, (canvas_w - cap_w) // 2)
+                                tx = max(15, (canvas_w - cap_w) // 2)
                                 draw.text((tx, curr_y), cap, fill=(0, 0, 0), font=font_bold)
-                                curr_y += 28
+                                curr_y += 32
                         comp.save(out_img_path, "PNG")
                     elif found_media:
                         # Pick the diagram image (highest area and height)

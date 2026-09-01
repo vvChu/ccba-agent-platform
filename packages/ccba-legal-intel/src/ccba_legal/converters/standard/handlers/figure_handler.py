@@ -6,7 +6,18 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from ccba_legal.figure_extractor import render_markdown_figure_card
+
+def normalize_katex_in_title(title: str) -> str:
+    """Normalize HTML subscripts and math symbols in figure/table titles to KaTeX."""
+    title = re.sub(r"c<sub>e</sub>", r"$c_e$", title, flags=re.IGNORECASE)
+    title = re.sub(r"c<sub>x</sub>", r"$c_x$", title, flags=re.IGNORECASE)
+    title = re.sub(r"c<sub>(?:β|\\beta)</sub>", r"$c_\\beta$", title, flags=re.IGNORECASE)
+    title = re.sub(r"c<sub>(?:x∞|x\\infty)</sub>", r"$c_{x\\infty}$", title, flags=re.IGNORECASE)
+    title = re.sub(r"k<sub>(?:λ|\\lambda)</sub>", r"$k_\\lambda$", title, flags=re.IGNORECASE)
+    title = re.sub(r"k<sub>([0-9A-Za-z]+)</sub>", r"$k_{\1}$", title)
+    title = re.sub(r"z<sub>([0-9A-Za-z]+)</sub>", r"$z_{\1}$", title)
+    title = re.sub(r"([A-Za-z])<sub>([0-9A-Za-z]+)</sub>", r"$\1_{\2}$", title)
+    return title
 
 
 def handle_figure_card(
@@ -28,12 +39,12 @@ def handle_figure_card(
     m_fig = re.match(r"^(?:Hình|HÌNH)\s+([0-9A-Za-z\.\-]+)\s*[-–—:]\s*(.+)$", text)
     if m_fig:
         fig_num = m_fig.group(1)
-        fig_title = m_fig.group(2).strip()
-        fig_slug = fig_num.lower().replace(".", "_")
+        fig_title = normalize_katex_in_title(m_fig.group(2).strip())
+        fig_slug = fig_num.lower().replace(".", "_").replace("-", "_")
         anchor = f"hinh-{fig_slug}"
         img_path = f"figures/images/hinh_{fig_slug}.png"
 
-        # Extract preceding CHÚ DẪN / CHÚ THÍCH blocks to place them below the image
+        # Extract ALL preceding CHÚ DẪN / CHÚ THÍCH blocks to place them cleanly below the image
         chudan_parts: list[str] = []
         parts_buf = getattr(ctx, "active_parts", getattr(ctx, "body_md_parts", []))
         while parts_buf:
@@ -41,11 +52,13 @@ def handle_figure_card(
             if not last or last.startswith("<!--"):
                 parts_buf.pop()
                 continue
-            if "CHÚ DẪN" in last or "CHÚ THÍCH" in last:
+            if (
+                "CHÚ DẪN" in last
+                or "CHÚ THÍCH" in last
+                or re.match(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|CHÚ\s+DẪN)", last, re.IGNORECASE)
+            ):
                 chudan_parts.insert(0, parts_buf.pop())
-                # Stop immediately after popping the CHÚ DẪN / CHÚ THÍCH header!
-                break
-            elif re.match(r"^[0-9A-Za-z\.'\-]+\s*[-–—:]", last):
+            elif re.match(r"^(?:[0-9A-Za-z\.'\-]+\s*[-–—:]|[\-–—•]\s+|\(?[0-9]+\)?\s*[-–—:])", last):
                 chudan_parts.insert(0, parts_buf.pop())
             else:
                 break
