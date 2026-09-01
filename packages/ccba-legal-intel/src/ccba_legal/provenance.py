@@ -26,10 +26,23 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 
+_GREEK_LATEX_TO_UNICODE = {
+    r"\alpha": "α", r"\beta": "β", r"\gamma": "γ", r"\delta": "δ",
+    r"\epsilon": "ε", r"\varepsilon": "ε", r"\zeta": "ζ", r"\eta": "η",
+    r"\theta": "θ", r"\vartheta": "θ", r"\iota": "ι", r"\kappa": "κ",
+    r"\lambda": "λ", r"\mu": "μ", r"\nu": "ν", r"\xi": "ξ",
+    r"\pi": "π", r"\rho": "ρ", r"\sigma": "σ", r"\tau": "τ",
+    r"\upsilon": "υ", r"\phi": "φ", r"\varphi": "φ", r"\chi": "χ",
+    r"\psi": "ψ", r"\omega": "ω", r"\dots": "...", r"\cdot": "·",
+}
+
+
 def normalize_text(text: str) -> str:
     """Clean and normalize whitespace and special punctuation for comparison."""
+    for k, v in _GREEK_LATEX_TO_UNICODE.items():
+        text = text.replace(k, v)
     text = re.sub(r"\s+", " ", text)
-    text = re.sub(r"[_*#`><\"“”\'\(\)\[\]–—\-\.\,\:\;\!]", "", text)
+    text = re.sub(r"[_*#`><\"“”\'\(\)\[\]–—\-\.\,\:\;\!\$\\\/\=]", "", text)
     return text.strip().lower()
 
 
@@ -174,6 +187,12 @@ def compute_docx_to_markdown_parity(docx_paras: list[str], combined_md: str) -> 
     """Compute verbatim text parity rate between DOCX paragraphs and normalized Markdown text."""
     def norm_words(text: str) -> str:
         text = text.lower()
+        for k, v in _GREEK_LATEX_TO_UNICODE.items():
+            text = text.replace(k, v)
+        text = re.sub(r"\\text\{([^}]+)\}", r"\1", text)
+        text = re.sub(r"\\(?:sqrt|frac|times|le|ge|cdot|quad|qquad|dots|left|right)", " ", text)
+        text = re.sub(r"[_\{\}\$]", "", text)
+        text = re.sub(r"(\d+)\s*([a-zα-ω]+)", r"\1 \2", text)
         text = re.sub(r"[^\w\d\s]", " ", text, flags=re.UNICODE)
         return re.sub(r"\s+", " ", text).strip()
 
