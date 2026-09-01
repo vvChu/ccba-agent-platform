@@ -123,6 +123,40 @@ def _export_table_files(
     }
 
 
+def resolve_hierarchical_headers(grid: list[list[str]]) -> tuple[list[list[str]], list[str]]:
+    """Combine multi-row table headers (e.g. category spans) into structured single-row headers."""
+    if not grid:
+        return grid, []
+    if len(grid) < 2:
+        return grid, grid[0]
+
+    max_w = max(len(r) for r in grid)
+    row0 = grid[0] + [""] * (max_w - len(grid[0]))
+    row1 = grid[1] + [""] * (max_w - len(grid[1]))
+
+    has_subheaders = False
+    for c in range(max_w):
+        if c > 0 and row0[c] == row0[c - 1] and row1[c] != row1[c - 1]:
+            has_subheaders = True
+            break
+
+    if has_subheaders:
+        combined_header = []
+        for c in range(max_w):
+            h0 = row0[c].strip()
+            h1 = row1[c].strip()
+            if h0 and h1 and h0 != h1 and h1 not in ("—", "-", ""):
+                combined_header.append(f"{h0} — {h1}")
+            else:
+                combined_header.append(h0 or h1 or f"col_{c + 1}")
+        norm_grid = [combined_header] + [r + [""] * (max_w - len(r)) for r in grid[2:]]
+        return norm_grid, combined_header
+
+    headers = [c or f"col_{i + 1}" for i, c in enumerate(row0)]
+    norm_grid = [r + [""] * (max_w - len(r)) for r in grid]
+    return norm_grid, headers
+
+
 def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[str, Any]]:
     """3-Tier Semantic Table Classifier according to ADR 0021 & ADR 0028."""
     import docx.oxml
@@ -167,22 +201,16 @@ def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[
 
         grid: list[list[str]] = []
         for row in table.rows:
-            clean_cells: list[str] = []
-            row_seen_tc: set[Any] = set()
-            for c in row.cells:
-                tc_elem = getattr(c, "_tc", id(c))
-                if tc_elem not in row_seen_tc:
-                    row_seen_tc.add(tc_elem)
-                    clean_cells.append(c.text.strip().replace("\n", " "))
-            if clean_cells:
+            clean_cells = [c.text.strip().replace("\n", " ") for c in row.cells]
+            if clean_cells and any(clean_cells):
                 grid.append(clean_cells)
-
 
         if not grid:
             continue
 
+        norm_grid, headers = resolve_hierarchical_headers(grid)
         table_slug = f"bang_{int(caption_num):02d}" if caption_num and caption_num.isdigit() else (f"bang_{caption_num.replace('.', '_')}" if caption_num else f"bang_{table_counter:02d}")
         footnotes = _harvest_table_footnotes(blocks, block_idx)
-        extracted_tables.append(_export_table_files(grid, grid[0], footnotes, table_slug, csv_dir, json_dir, bundle_dir))
+        extracted_tables.append(_export_table_files(norm_grid, headers, footnotes, table_slug, csv_dir, json_dir, bundle_dir))
 
     return extracted_tables

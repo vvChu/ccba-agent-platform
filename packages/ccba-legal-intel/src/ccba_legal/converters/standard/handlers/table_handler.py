@@ -11,6 +11,34 @@ from typing import Any
 from ccba_legal.converters.standard.models import HierarchyState
 
 
+def resolve_hierarchical_headers(grid: list[list[str]]) -> list[list[str]]:
+    """Combine multi-row table headers (e.g. category spans) into structured single-row headers."""
+    if len(grid) < 2:
+        return grid
+
+    row0 = grid[0]
+    row1 = grid[1]
+
+    # Check if row0 has merged spans where row1 has distinct sub-values
+    has_subheaders = False
+    for c in range(len(row0)):
+        if c > 0 and row0[c] == row0[c - 1] and row1[c] != row1[c - 1]:
+            has_subheaders = True
+            break
+
+    if has_subheaders:
+        combined_header = []
+        for c in range(len(row0)):
+            h0 = row0[c].strip()
+            h1 = row1[c].strip()
+            if h0 and h1 and h0 != h1 and h1 not in ("—", "-", ""):
+                combined_header.append(f"{h0} — {h1}")
+            else:
+                combined_header.append(h0 or h1)
+        return [combined_header] + grid[2:]
+    return grid
+
+
 def render_table_markdown(table: Any, rid_to_katex: dict[str, str] | None = None) -> tuple[str, list[str], list[list[str]]]:
     """Render a docx Table object as a GitHub Flavored Markdown table with smart column alignment and footnote extraction."""
     from ccba_legal.converters.standard.strategy import render_paragraph_with_runs
@@ -34,17 +62,12 @@ def render_table_markdown(table: Any, rid_to_katex: dict[str, str] | None = None
             clean_cell = re.sub(r"[\r\n]+", "<br>", clean_cell).strip()
             row_rendered.append(clean_cell)
 
-        clean_row: list[str] = []
-        for val in row_rendered:
-            if not clean_row or val != clean_row[-1]:
-                clean_row.append(val)
-
-        if not clean_row or not any(clean_row):
+        if not row_rendered or not any(row_rendered):
             continue
 
-        first_cell = clean_row[0].strip()
+        first_cell = row_rendered[0].strip()
         if re.match(r"^(?:<br>)*\s*(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)", first_cell, re.IGNORECASE):
-            combined_fn = "<br>".join([c for c in clean_row if c.strip()])
+            combined_fn = "<br>".join([c for c in row_rendered if c.strip()])
             fn_parts = [p.strip() for p in re.split(r"<br\s*/?>", combined_fn) if p.strip()]
             has_explicit_numbered = any(re.search(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*[2-9]", p, re.IGNORECASE) for p in fn_parts)
 
@@ -63,10 +86,13 @@ def render_table_markdown(table: Any, rid_to_katex: dict[str, str] | None = None
                 footnotes.append(f"{pfx} {fn_clean}")
             continue
 
-        grid.append(clean_row)
+        grid.append(row_rendered)
 
     if not grid:
         return ("", footnotes, [])
+
+    # Resolve hierarchical 2-tier headers without dropping columns
+    grid = resolve_hierarchical_headers(grid)
 
     max_cols = max(len(r) for r in grid)
     normalized_grid: list[list[str]] = [[re.sub(r"[\r\n]+", "<br>", c).strip() for c in r] + [""] * (max_cols - len(r)) for r in grid]
