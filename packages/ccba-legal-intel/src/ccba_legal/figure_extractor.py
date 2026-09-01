@@ -333,6 +333,8 @@ def scan_and_prune_orphan_figures(bundle_dir: Path, prune: bool = False) -> dict
                 txt = md_f.read_text(encoding="utf-8")
                 for m in re.findall(r"!\[[^\]]*\]\([^)]*images/([^)\s]+)\)", txt):
                     referenced.add(Path(m).name)
+                for m in re.findall(r"<img\b[^>]*src=[\"'][^\"']*images/([^\"'\s>]+)[\"']", txt, re.IGNORECASE):
+                    referenced.add(Path(m).name)
             except Exception:
                 pass
 
