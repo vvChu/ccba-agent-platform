@@ -1452,7 +1452,7 @@ workflows:
 - name: ccba-release-feature
   bundle: _core
   command: /ccba-release-feature
-  description: Merge PR, cleanup branch và cập nhật walkthrough
+  description: Merge PR, cleanup branch, auto-close local issues và cập nhật walkthrough
   triggers:
   - release
   - merge PR
