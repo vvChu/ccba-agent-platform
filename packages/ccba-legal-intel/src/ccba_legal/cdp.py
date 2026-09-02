@@ -45,11 +45,21 @@ class ChromeCDP:
         self.ws: websocket.WebSocket | None = None
 
     def get_pages(self) -> list[dict[str, Any]]:
-        """List all open page targets in Chrome, auto-launching instance if needed."""
+        """List all open page targets in Chrome, auto-launching instance or creating new tab if needed."""
         try:
             resp = requests.get(f"{self.base_url}/json", timeout=3)
             resp.raise_for_status()
-            return [t for t in resp.json() if t.get("type") == "page"]
+            pages = [t for t in resp.json() if t.get("type") == "page"]
+            if not pages:
+                try:
+                    new_tab = requests.put(
+                        f"{self.base_url}/json/new?https://thuvienphapluat.vn", timeout=3
+                    )
+                    if new_tab.ok:
+                        pages = [new_tab.json()]
+                except Exception:
+                    pass
+            return pages
         except Exception:
             from ccba_legal.session import get_browser_executable_path
 
