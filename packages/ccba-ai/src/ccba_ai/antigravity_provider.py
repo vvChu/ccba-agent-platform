@@ -379,6 +379,8 @@ class AntigravityCLIProvider:
         kwargs: dict[str, Any] = {}
         if sys.platform == "win32":
             kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        else:
+            kwargs["start_new_session"] = True
 
         proc = await asyncio.create_subprocess_exec(
             *cmd,

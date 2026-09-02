@@ -133,7 +133,16 @@ class AIClient:
                 self.timeout = 60.0
 
         self.mock_mode = mock_mode if mock_mode is not None else is_mock_mode_enabled()
-        self.mock_provider = mock_provider or MockProvider()
+        if mock_provider is not None:
+            self.mock_provider = mock_provider
+        elif (
+            fallback_router is not None
+            and getattr(fallback_router, "mock_provider", None) is not None
+        ):
+            self.mock_provider = fallback_router.mock_provider
+        else:
+            self.mock_provider = MockProvider()
+
         self.fallback_router = fallback_router or TieredFallbackRouter(
             mock_provider=self.mock_provider,
             enable_fallback=enable_failover,
@@ -587,7 +596,16 @@ class AsyncAIClient:
                 self.timeout = 60.0
 
         self.mock_mode = mock_mode if mock_mode is not None else is_mock_mode_enabled()
-        self.mock_provider = mock_provider or MockProvider()
+        if mock_provider is not None:
+            self.mock_provider = mock_provider
+        elif (
+            fallback_router is not None
+            and getattr(fallback_router, "mock_provider", None) is not None
+        ):
+            self.mock_provider = fallback_router.mock_provider
+        else:
+            self.mock_provider = MockProvider()
+
         self.fallback_router = fallback_router or TieredFallbackRouter(
             mock_provider=self.mock_provider,
             enable_fallback=enable_failover,

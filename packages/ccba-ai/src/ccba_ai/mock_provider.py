@@ -324,7 +324,17 @@ class MockProvider:
             return self._default_response
 
         # 3. Check JSON request in prompt -> Return valid JSON
-        if any(kw in prompt_lower for kw in ("json", "output_format=json", "return a json", "{")):
+        if any(
+            kw in prompt_lower
+            for kw in (
+                "json",
+                "output_format=json",
+                "return a json",
+                "format: json",
+                "json schema",
+                "as json",
+            )
+        ):
             return json.dumps(
                 {
                     "status": "success",

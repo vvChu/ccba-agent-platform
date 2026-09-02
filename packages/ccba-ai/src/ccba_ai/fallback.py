@@ -176,7 +176,7 @@ class TieredFallbackRouter:
             return self.mock_provider.sync_client
 
         endpoint = provider_cfg.get("endpoint", "") if provider_cfg else ""
-        cache_key = f"{tier.value}_{endpoint}"
+        cache_key = f"{tier.value}_{endpoint}_{timeout}"
         if cache_key not in self._sync_clients:
             if provider_cfg:
                 self._sync_clients[cache_key] = OpenAI(
@@ -194,7 +194,7 @@ class TieredFallbackRouter:
             return self.mock_provider.async_client
 
         endpoint = provider_cfg.get("endpoint", "") if provider_cfg else ""
-        cache_key = f"{tier.value}_{endpoint}"
+        cache_key = f"{tier.value}_{endpoint}_{timeout}"
         if cache_key not in self._async_clients:
             if provider_cfg:
                 self._async_clients[cache_key] = AsyncOpenAI(
@@ -251,8 +251,6 @@ class TieredFallbackRouter:
                         f"[ccba-ai] Failing over to Tier 2 ({tier2_cfg['provider']}: {mapped_model})..."
                     )
                     res = fallback_fn_builder(client, mapped_model)
-                    if circuit_breaker:
-                        circuit_breaker.record_success()
                     return res
                 except Exception as t2_exc:
                     logger.warning(f"[ccba-ai] Tier 2 ({tier2_cfg['provider']}) failed: {t2_exc}")
@@ -267,8 +265,6 @@ class TieredFallbackRouter:
                         "WARNING: ~30-40s latency expected."
                     )
                     res = fallback_fn_builder(agy.sync_client, mapped_model)
-                    if circuit_breaker:
-                        circuit_breaker.record_success()
                     return res
                 except Exception as t3_exc:
                     logger.warning(f"[ccba-ai] Tier 3 (Antigravity CLI) failed: {t3_exc}")
@@ -285,8 +281,6 @@ class TieredFallbackRouter:
                         f"[ccba-ai] Failing over to Tier 4 (Local Ollama: {mapped_model})..."
                     )
                     res = fallback_fn_builder(client, mapped_model)
-                    if circuit_breaker:
-                        circuit_breaker.record_success()
                     return res
                 except Exception as t4_exc:
                     logger.warning(f"[ccba-ai] Tier 4 (Local Ollama) failed: {t4_exc}")
@@ -340,8 +334,6 @@ class TieredFallbackRouter:
                         f"[ccba-ai] Failing over to Tier 2 ({tier2_cfg['provider']}: {mapped_model})..."
                     )
                     res = await fallback_coro_builder(client, mapped_model)
-                    if circuit_breaker:
-                        circuit_breaker.record_success()
                     return res
                 except Exception as t2_exc:
                     logger.warning(
@@ -358,8 +350,6 @@ class TieredFallbackRouter:
                         "WARNING: ~30-40s latency expected."
                     )
                     res = await fallback_coro_builder(agy.async_client, mapped_model)
-                    if circuit_breaker:
-                        circuit_breaker.record_success()
                     return res
                 except Exception as t3_exc:
                     logger.warning(f"[ccba-ai] Tier 3 (Antigravity CLI) async failed: {t3_exc}")
@@ -376,8 +366,6 @@ class TieredFallbackRouter:
                         f"[ccba-ai] Failing over to Tier 4 (Local Ollama: {mapped_model})..."
                     )
                     res = await fallback_coro_builder(client, mapped_model)
-                    if circuit_breaker:
-                        circuit_breaker.record_success()
                     return res
                 except Exception as t4_exc:
                     logger.warning(f"[ccba-ai] Tier 4 (Local Ollama) async failed: {t4_exc}")
