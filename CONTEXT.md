@@ -253,6 +253,36 @@ The parsing algorithm in `validate_skills.py` that tracks Markdown heading level
 **Exclusion Headers**:
 A set of common static headings (such as "Lưu ý", "Tham chiếu") that temporarily disable step-validation checking to prevent false positives.
 
+**Boost Escalation Gate (Cổng Leo Thang Boost)**:
+Quy chuẩn chuyển giao và leo thang bài toán kỹ thuật từ vòng lặp TDD bế tắc ($\ge 3$ vòng fail liên tiếp) hoặc các ca bẫy đa tiến trình/đa package sang chu trình suy luận đa tác nhân (`/boost`), ngăn chặn triệt để hành vi đoán mò và tiêu hao ngữ cảnh vô ích.
+
+**Deep Problem Brief (Hồ Sơ Vấn Đề Chuyên Sâu)**:
+Bản đóng gói thông tin kỹ thuật tiêu chuẩn hóa (Failure Manifest, Tested Hypotheses, Code Seams, Error Logs, Actionable Recommendations) do Agent tự động biên soạn khi kích hoạt Boost Escalation Gate để cung cấp ngữ cảnh cô đọng cho quy trình suy luận sâu.
+
+**Three-Phase Reasoning Hierarchy (Hệ Phân Cấp Suy Luận 3 Pha)**:
+Mô hình kiến trúc đa tác nhân phỏng theo Antigravity Boost: Pha 1 (Goal & Strategy Formulation - Orchestrator phân rã bài toán), Pha 2 (Parallel Execution & Verification - Các Subagents chuyên biệt kiểm chứng đa giả thuyết độc lập kèm rào chắn Two-Layer Guardrail), và Pha 3 (Synthesis & Solution Delivery - Hợp nhất giải pháp và phản biện chéo).
+
+**Team Sheet (Bản Phân Bổ Đội Ngũ)**:
+Tệp tin tài liệu hóa `.agents/teams/[project]_team_sheet.md` trong Teamwork Framework gồm 2 lớp cấu trúc phân tách rõ ràng: Lớp 1 - Accountability Mapping (ánh xạ 11 Ghế trách nhiệm giải trình của CCBA Charter 2026 với các milestones nghiệm thu của con người) và Lớp 2 - Worker Assignments (danh sách động các AI Subagents, phạm vi file/seam độc quyền, tiêu chí nghiệm thu và chính sách timeout).
+
+**Exclusive Seam Ownership (Phân Quyền Seam Độc Quyền)**:
+Nguyên tắc phân định ranh giới trong Teamwork: Mỗi Worker Subagent chỉ được cấp quyền đọc và phân tích các tệp tin trong phạm vi seam được Orchestrator chỉ định tường minh trong prompt dispatch. Mọi sản phẩm trung gian được xuất ra thư mục sandbox cô lập (`.system_generated/scratch/worker_{N}/`) và duy nhất Orchestrator có quyền tổng hợp, ghi file chính thức lên codebase nhằm ngăn chặn race condition và conflict ghi đè.
+
+**Post-Merge Diff Audit (Kiểm Toán Phân Vùng Hậu Hợp Nhất)**:
+Cơ chế kiểm định độc lập do Success Auditor hoặc Orchestrator thực thi sau mỗi milestone bằng cách so khớp danh sách tệp thay đổi thực tế (`git diff --name-only`) với danh sách file scope đã phân quyền trong `team_sheet.md`, chủ động chặn đứng nguy cơ rò rỉ ranh giới module (Seam Boundary Leakage).
+
+**Teamwork Session (Phiên Điều Phối Đa Tác Nhân)**:
+Quy trình điều phối đa tác nhân dài hạn (/ccba-teamwork) chia làm 4 giai đoạn (Interview $\rightarrow$ Team Sheet $\rightarrow$ Parallel Milestone Execution $\rightarrow$ Success Audit) phục vụ xử lý các dự án quy mô lớn phân rã đa luồng công việc song song, phân biệt với quy trình /boost (suy luận sâu ngắn hạn tập trung giải quyết bế tắc kỹ thuật).
+
+**Antigravity Lifecycle Hooks (Móc Vòng Đời Antigravity)**:
+Cơ chế `hooks.json` của Antigravity Platform cho phép chạy các lệnh shell tại các sự kiện vòng đời (PreToolUse, PostToolUse, PreInvocation, Stop) để kiểm soát, chặn hoặc tiêm ngữ cảnh vào Agent. Giao tiếp qua stdin/stdout JSON camelCase.
+
+**Hook Bridge Adapter (Bộ Chuyển Đổi Móc)**:
+Adapter Layer mỏng tại `scripts/hooks/antigravity_hook_bridge.py` dịch giữa Antigravity stdin/stdout I/O (camelCase, decision string) và CCBA HookCoordinator (snake_case, exit_code int). Không chứa business logic — chỉ là lớp dịch schema.
+
+**Fail-Safe Hook Protocol (Giao Thức Móc Dự Phòng An Toàn)**:
+Nguyên tắc thiết kế: Mọi ngoại lệ trong hook bridge đều fallback về `{"decision": "allow"}`, không bao giờ làm gián đoạn trải nghiệm IDE. Đảm bảo hooks không trở thành single point of failure.
+
 ---
 
 ## 5. Pháp Điển Xây Dựng, VBHN & Xử Lý Tài Liệu

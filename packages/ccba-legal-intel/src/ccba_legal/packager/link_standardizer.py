@@ -18,6 +18,7 @@ from ccba_legal.packager.slug_utils import sanitize_slug
 @dataclass
 class ExtractedTable:
     """Represents an extracted table with attribute-accessible properties."""
+
     table_id: str
     rows: int = 0
     cols: int = 0
@@ -30,10 +31,20 @@ def standardize_bundle_links(bundle_dir: Path) -> None:
         content = md_file.read_text(encoding="utf-8")
         original = content
         # Standardize relative paths with or without leading ../ or ./
-        content = re.sub(r"\[([^\]]+)\]\((?:\.\./|\./)?guiding_docs/([^\)]+)\)", r"[\1](/guiding_docs/\2)", content)
-        content = re.sub(r"\[([^\]]+)\]\((?:\.\./|\./)?appendices/([^\)]+)\)", r"[\1](/appendices/\2)", content)
-        content = re.sub(r"\[([^\]]+)\]\((?:\.\./|\./)?sections/([^\)]+)\)", r"[\1](/sections/\2)", content)
-        content = re.sub(r"\[([^\]]+)\]\((?:\.\./|\./)?(index\.md|full_text\.md)\)", r"[\1](/\2)", content)
+        content = re.sub(
+            r"\[([^\]]+)\]\((?:\.\./|\./)?guiding_docs/([^\)]+)\)",
+            r"[\1](/guiding_docs/\2)",
+            content,
+        )
+        content = re.sub(
+            r"\[([^\]]+)\]\((?:\.\./|\./)?appendices/([^\)]+)\)", r"[\1](/appendices/\2)", content
+        )
+        content = re.sub(
+            r"\[([^\]]+)\]\((?:\.\./|\./)?sections/([^\)]+)\)", r"[\1](/sections/\2)", content
+        )
+        content = re.sub(
+            r"\[([^\]]+)\]\((?:\.\./|\./)?(index\.md|full_text\.md)\)", r"[\1](/\2)", content
+        )
         if content != original:
             md_file.write_text(content, encoding="utf-8")
             print(f"[OKF Packager] Standardized relative links in {md_file.name}")
@@ -110,6 +121,7 @@ def integrate_tables(arg1: Path | str, arg2: Any = None) -> list[ExtractedTable]
 
         try:
             from docx import Document
+
             doc = Document(str(docx_file))
             extracted_tables = []
 
@@ -140,14 +152,18 @@ def integrate_tables(arg1: Path | str, arg2: Any = None) -> list[ExtractedTable]
 
                     json_path = json_dir / f"{t_id}.json"
                     headers = matrix[0]
-                    rows = [dict(zip(headers, r)) for r in matrix[1:]]
-                    json_path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+                    rows = [dict(zip(headers, r, strict=False)) for r in matrix[1:]]
+                    json_path.write_text(
+                        json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8"
+                    )
 
-                    extracted_tables.append(ExtractedTable(
-                        table_id=t_id,
-                        rows=len(matrix),
-                        cols=len(matrix[0]) if matrix else 0,
-                    ))
+                    extracted_tables.append(
+                        ExtractedTable(
+                            table_id=t_id,
+                            rows=len(matrix),
+                            cols=len(matrix[0]) if matrix else 0,
+                        )
+                    )
             return extracted_tables
         except Exception as e:
             print(f"[integrate_tables] Error extracting docx tables: {e}")
@@ -162,5 +178,7 @@ def integrate_tables(arg1: Path | str, arg2: Any = None) -> list[ExtractedTable]
         if "csv" in t:
             (tables_dir / f"{t_id}.csv").write_text(t["csv"], encoding="utf-8")
         if "json" in t:
-            (tables_dir / f"{t_id}.json").write_text(json.dumps(t["json"], ensure_ascii=False, indent=2), encoding="utf-8")
+            (tables_dir / f"{t_id}.json").write_text(
+                json.dumps(t["json"], ensure_ascii=False, indent=2), encoding="utf-8"
+            )
     return None

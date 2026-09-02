@@ -20,12 +20,16 @@ from ccba_legal.storage import (
 )
 
 
-def _check_tier_1_local_and_cache(download_dir: Path, slug_name: str, extensions: list[str]) -> bool:
+def _check_tier_1_local_and_cache(
+    download_dir: Path, slug_name: str, extensions: list[str]
+) -> bool:
     """Check target folder and local cache folder for the file."""
     for ext in extensions:
         target_path = download_dir / f"{slug_name}{ext}"
         if target_path.exists() and target_path.stat().st_size > 0:
-            print(f"[download_three_tier] [Tier 1] File already exists in target folder: {target_path}")
+            print(
+                f"[download_three_tier] [Tier 1] File already exists in target folder: {target_path}"
+            )
             return True
 
     mod = sys.modules.get("ccba_legal.crawler", sys.modules[__name__])
@@ -39,7 +43,9 @@ def _check_tier_1_local_and_cache(download_dir: Path, slug_name: str, extensions
             dest_path = download_dir / f"{slug_name}{ext}"
             try:
                 shutil.copy2(cache_path, dest_path)
-                print(f"[download_three_tier] [Tier 1] Restored from cache folder: {cache_path} -> {dest_path}")
+                print(
+                    f"[download_three_tier] [Tier 1] Restored from cache folder: {cache_path} -> {dest_path}"
+                )
                 return True
             except Exception as e:
                 print(f"[download_three_tier] [Tier 1] Error copying from cache folder: {e}")
@@ -133,7 +139,6 @@ def trigger_download(
         """
         return cdp.evaluate_js(js)
 
-
     def _do_click_pdf() -> Any:
         js = """
         (() => {
@@ -164,13 +169,13 @@ def trigger_download(
                 let href = (lnk.href || '').trim();
                 let lowerText = text.toLowerCase();
                 let lowerHref = href.toLowerCase();
-                
+
                 // Identify appendix/attachment links: .doc, .docx, .xls, .xlsx, .pdf, .zip, .rar
                 // excluding main doc download buttons already handled
                 let isMain = lowerText.includes('tải văn bản tiếng việt') || lowerText.includes('tiếng việt (docx)') || lowerText.includes('tải bản pdf') || lowerHref.includes('part=-100') || lowerHref.includes('docx=1');
                 let hasAttachExt = lowerHref.includes('.doc') || lowerHref.includes('.xls') || lowerHref.includes('.pdf') || lowerHref.includes('.zip') || lowerHref.includes('.rar');
                 let isAttachText = lowerText.includes('phụ lục') || lowerText.includes('biểu mẫu') || lowerText.includes('bảng tính') || lowerText.includes('đính kèm') || lowerText.includes('tệp đính kèm');
-                
+
                 if (!isMain && (hasAttachExt || isAttachText) && href && !href.startsWith('javascript:void') && !href.endsWith('#')) {
                     attachLinks.push({ text: text || 'attachment', href: href });
                 }
@@ -203,14 +208,19 @@ def trigger_download(
     if download_attachments:
         found_attachs = _do_download_all_attachments()
         if found_attachs:
-            print(f"[LegalIntel] Discovered {len(found_attachs)} standalone attachment(s) in tab=7.")
+            print(
+                f"[LegalIntel] Discovered {len(found_attachs)} standalone attachment(s) in tab=7."
+            )
             attach_dir = download_dir / "attachments"
             attach_dir.mkdir(parents=True, exist_ok=True)
             for idx, item in enumerate(found_attachs, 1):
                 att_url = item.get("href", "")
                 att_text = item.get("text", f"attachment_{idx}")
                 clean_name = re.sub(r"[^\w\d\.\-_]", "_", att_text)
-                if not any(clean_name.endswith(ext) for ext in [".doc", ".docx", ".xls", ".xlsx", ".pdf", ".zip", ".rar"]):
+                if not any(
+                    clean_name.endswith(ext)
+                    for ext in [".doc", ".docx", ".xls", ".xlsx", ".pdf", ".zip", ".rar"]
+                ):
                     if ".xlsx" in att_url.lower():
                         clean_name += ".xlsx"
                     elif ".xls" in att_url.lower():
@@ -224,13 +234,15 @@ def trigger_download(
                     else:
                         clean_name += ".dat"
                 target_att_file = attach_dir / clean_name
-                print(f"[LegalIntel] [Attachment {idx}/{len(found_attachs)}] Registered: {clean_name} -> {att_url}")
+                print(
+                    f"[LegalIntel] [Attachment {idx}/{len(found_attachs)}] Registered: {clean_name} -> {att_url}"
+                )
                 saved_attachments.append(str(target_att_file.resolve()))
 
     start_time = time.time()
     docx_path = None
     pdf_path = None
-    target_both = (format_type == "both")
+    target_both = format_type == "both"
 
     while time.time() - start_time < 35:
         current_downloads = [f for d in watch_dirs if d.exists() for f in d.glob("*")]
@@ -269,7 +281,9 @@ def trigger_download(
                         pdf_path = str(f.resolve())
 
             # If both are requested and both arrived, or single requested format arrived
-            if (target_both and docx_path and docx_path.endswith(".docx") and pdf_path) or (not target_both and (docx_path or pdf_path)):
+            if (target_both and docx_path and docx_path.endswith(".docx") and pdf_path) or (
+                not target_both and (docx_path or pdf_path)
+            ):
                 return {
                     "success": True,
                     "docx_path": docx_path,
@@ -293,7 +307,6 @@ def trigger_download(
                 pdf_path = str(f.resolve())
                 break
 
-
     # Return whatever was downloaded or found
     if docx_path or pdf_path:
         return {
@@ -305,7 +318,6 @@ def trigger_download(
         }
 
     return {"success": False, "attachments": saved_attachments}
-
 
 
 def download_three_tier(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> bool:
@@ -335,7 +347,9 @@ def download_three_tier(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> b
             f"Blocked: Headless/CI-CD environment detected. Cannot download '{slug_name}' from TVPL."
         )
 
-    print(f"[download_three_tier] [Tier 3] Fallback to direct Chrome CDP crawl for '{slug_name}'...")
+    print(
+        f"[download_three_tier] [Tier 3] Fallback to direct Chrome CDP crawl for '{slug_name}'..."
+    )
     trig_fn = getattr(mod, "trigger_download", trigger_download)
     res = trig_fn(cdp, download_dir, slug_name)
     success = res.get("success", False) if isinstance(res, dict) else bool(res)

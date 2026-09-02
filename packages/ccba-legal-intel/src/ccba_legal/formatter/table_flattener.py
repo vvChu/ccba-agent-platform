@@ -78,7 +78,7 @@ def grid_to_json(grid: list[list[str]]) -> str:
     rows = []
     for row_vals in grid[1:]:
         row_dict = {}
-        for h, val in zip(headers, row_vals):
+        for h, val in zip(headers, row_vals, strict=False):
             if h:
                 row_dict[h] = val
         rows.append(row_dict)

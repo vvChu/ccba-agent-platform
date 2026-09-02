@@ -22,9 +22,13 @@
 
 ---
 
-## 3. TDD Retry Cap (Giới hạn Vòng lặp Sửa lỗi)
+## 3. TDD Retry Cap & Early Escalation (Giới Hạn Vòng Lặp & Điểm Cắt Lỗi)
 - Trong vòng lặp Red→Green→Refactor (TDD) hoặc edit→test, Agent chỉ được lặp lại tối đa **5 vòng** cho cùng một seam hoặc test file.
-- Nếu sau 5 vòng test vẫn fail, Agent phải dừng lại, commit Work-In-Progress (WIP), ghi nhận các blockers chưa giải quyết được, và xin chỉ thị từ người dùng — tuyệt đối không tiếp tục lặp cho đến khi cạn context budget.
+- **Quy tắc Cắt Lỗi Sớm (Early Escalation tại vòng 3):**
+  - Nếu sau **3 vòng test liên tiếp** vẫn không pass do lỗi logic sâu, race condition, hoặc xung đột đa file: Agent **bắt buộc dừng thử mù**, không được tiếp tục đoán mò cách sửa.
+  - Agent phải lập tức đóng gói **Deep Problem Brief** (gồm: Triệu chứng lỗi, Giả thuyết đã thử nhưng sai, Các code seams liên quan, Log lỗi then chốt).
+- **Hành động tại vòng 5 (Hard Stop):**
+  - Nếu chạm mốc 5 vòng, Agent dừng ngay lập tức, commit Work-In-Progress (WIP), xuất Deep Problem Brief và kích hoạt **Boost Escalation Gate** (Mục 9) — tuyệt đối không lặp tiếp làm cạn kiệt ngân sách ngữ cảnh.
 
 ---
 
@@ -55,3 +59,63 @@
 ## 8. 2-Tier Test Speed Compliance
 - Mọi tệp kiểm thử đơn vị (Unit Test) mới viết bắt buộc phải chạy dưới 2.0 giây.
 - Các tệp test tích hợp mạng, Chromium CDP, hoặc LLM latency nặng bắt buộc phải được dán decorator `@pytest.mark.slow` hoặc `@pytest.mark.stress` để tự động loại trừ khỏi vòng lặp kiểm thử nhanh hàng ngày (`-m "not slow"`).
+
+---
+
+## 9. Boost Deep Reasoning Protocol & Escalation Gate
+- Khi xử lý các bài toán kỹ thuật có độ phức tạp cao vượt quá khả năng xử lý của vòng lặp đơn lẻ (Single-turn ReAct), Agent và Kỹ sư CCBA áp dụng quy chuẩn **Boost Deep Reasoning**:
+  - **Trường hợp kích hoạt:**
+    1. **Concurrency & Race Conditions:** Xung đột tiến trình nền, mutex lock (`TVPLSessionMutex`), pipeline đa tiến trình (VvC Second Brain daemons, IDOP staging sync).
+    2. **Polyglot Monorepo Deep Refactoring:** Tái cấu trúc hoặc trích xuất Deep Seams qua nhiều package Python/TypeScript đồng thời.
+    3. **Thẩm định Pháp lý & Xung đột Quy chuẩn Đa ngành:** Xử lý các điều khoản chồng chéo, xung đột ranh giới thẩm quyền (Luật 55/2024, NĐ 105/2025, QCVN 06, TCVN 3890).
+    4. **Bế tắc TDD (Chạm ngưỡng 3–5 vòng test fail):** Khi TDD Retry Cap bị kích hoạt.
+  - **Quy chuẩn Đóng Gói Deep Problem Brief:**
+    Khi kích hoạt Escalation Gate, Agent phải tổng hợp tệp hoặc thông điệp chuẩn mực:
+    ```markdown
+    ### 🔬 Deep Problem Brief
+    - **Vấn đề cốt lõi (Failure Manifest):** [Mô tả ngắn gọn lỗi kỹ thuật/test fail]
+    - **Các giả thuyết đã kiểm chứng & Thất bại (Tested Hypotheses):** [Liệt kê 2-3 cách sửa đã thử và lý do fail]
+    - **Vùng ảnh hưởng (Seams Involved):** [Danh sách files / classes / functions liên quan]
+    - **Logs / Error Trace:** [Trích đoạn log lỗi then chốt]
+    - **Khuyến nghị hành động:** [Đề xuất người dùng kích hoạt `/boost` kèm brief này để chạy chu trình suy luận đa tác nhân]
+    ```
+  - **Rào chắn An Toàn Đa Tác Nhân (Two-Layer Sub-Agent Guardrail — ADR 0035):**
+    Khi quy trình CCBA tự động mô phỏng hoặc khởi tạo các subagents chạy ngầm theo mô hình 3 pha của Boost (Strategy $\rightarrow$ Parallel Workers $\rightarrow$ Synthesis):
+    1. **Giới hạn Độ sâu (Depth Limit = 1):** Nghiêm cấm subagent spawn thêm subagent con để chống bùng nổ đệ quy.
+    2. **Giới hạn Công cụ (Tool Scoping):** Subagents chỉ được cấp quyền công cụ đọc (`view_file`, `grep_search`, `read_resource`) và chạy kiểm thử cô lập (`run_command` scoped test), tuyệt đối không cấp quyền chỉnh sửa file hoặc lệnh Git nguy hiểm.
+    3. **Giới hạn Số Lượng (Max Workers):** Tối đa 3 subagents chạy song song trong một phiên điều tra/nghiên cứu.
+
+---
+
+## 10. Teamwork Orchestration Protocol (Quy Chuẩn Điều Phối Đa Tác Nhân Dài Hạn)
+- Khi triển khai các dự án quy mô lớn đòi hỏi phân rã đa seams (Monorepo refactoring, thẩm tra thiết kế 4 bộ môn, nạp kho pháp điển hàng loạt), Platform áp dụng khung **Teamwork Framework** (lấy cảm hứng từ Antigravity `/teamwork-preview` và ADR 0053):
+  - **Mô hình 3 Vai Trò Tối Giản (KISS Hierarchy):**
+    1. **Orchestrator (Nhạc Trưởng):** Chịu trách nhiệm toàn trình (phỏng vấn, lập `team_sheet.md`, dispatch workers, điều phối, tổng hợp kết quả, ghi file chính thức và commit Git). Duy nhất Orchestrator có quyền ghi đè codebase.
+    2. **Workers (Tác Nhân Thực Thi):** Chạy song song độc lập. Tuân thủ nghiêm ngặt **Two-Layer Guardrail (ADR 0035)**: Chỉ có quyền đọc và chạy test scoped; xuất kết quả phân tích/code draft dưới dạng artifact text vào thư mục sandbox cô lập (`.system_generated/scratch/worker_{N}/`).
+    3. **Success Auditor (Kiểm Định Nghiệm Thu):** Độc lập chạy kiểm thử scoped, quét an toàn Maskara, và thực hiện kiểm toán phân vùng file.
+  - **Giới Hạn Tác Nhân & Chiến Lược Phân Đợt (Worker Cap & Batching Strategy):**
+    - Tối đa **3 workers** chạy đồng thời trong cùng một thời điểm.
+    - Nếu dự án có nhiều hơn 3 seams/milestones độc lập, Orchestrator **bắt buộc phân đợt** (Batching): chạy tối đa 3 workers/batch, chờ batch hoàn tất rồi mới dispatch batch tiếp theo.
+  - **Kiểm Toán Phân Vùng Hậu Hợp Nhất (Post-Merge Diff Audit):**
+    - Sau mỗi milestone, trước khi hợp nhất, Auditor hoặc Orchestrator phải đối chiếu `git diff --name-only` với danh sách file scope đã khai báo trong `team_sheet.md`.
+    - Mọi tệp tin bị sửa đổi nằm ngoài phạm vi seam được phân quyền phải bị gắn cờ cảnh báo rò rỉ seam (Seam Boundary Leakage) để Orchestrator xử lý trước khi commit.
+  - **Rào Chắn Quá Giờ & Cơ Chế Khôi Phục (Worker Timeout & Fallback Protocol):**
+    - Mỗi worker có thời hạn tối đa là **10 phút** cho một tác vụ subagent.
+    - Nếu worker không phản hồi hoặc gặp lỗi suy thoái ngữ cảnh (`invalid_args` / Context Exhaustion): Orchestrator đánh dấu milestone là `INCOMPLETE`, trích xuất log trung gian và chọn 1 trong 2 nhánh:
+      - *Nhánh A:* Khởi động lại với Worker mới kèm prompt thu hẹp phạm vi.
+      - *Nhánh B:* Nếu lỗi do bế tắc logic sâu, đóng gói Deep Problem Brief và kích hoạt `/boost` (Escalation UP).
+  - **Phân Định Ranh Giới `/boost` vs `/ccba-teamwork`:**
+    - **`/boost` (Escalation UP):** Xử lý sự cố kỹ thuật bế tắc, phân tích sâu lỗi logic/concurrency đơn lẻ trong phạm vi 1 session.
+    - **`/ccba-teamwork` (Coordination OUT):** Điều phối phân rã dự án quy mô lớn thành nhiều workstreams độc lập chạy song song qua nhiều milestones.
+    - **Kết hợp:** Trong phiên Teamwork, nếu một Worker gặp sự cố logic bế tắc tại seam của mình, Orchestrator có thể kích hoạt Boost Escalation Gate để xử lý triệt để seam đó trước khi tiếp tục chu trình Teamwork.
+
+---
+
+## 11. Antigravity Lifecycle Hooks Policy (Chính Sách Móc Vòng Đời Antigravity) — ADR 0054
+- Platform tích hợp **Antigravity Lifecycle Hooks** (`hooks.json`) theo kiến trúc Adapter Bridge (ADR 0054):
+  - **Bridge = Adapter Layer Mỏng:** File `scripts/hooks/antigravity_hook_bridge.py` chỉ dịch schema giữa Antigravity stdin/stdout (camelCase) và CCBA `HookCoordinator` (snake_case). Không chứa business logic chặn/quét.
+  - **Schema Translation:** `toolCall.name` → `tool`, `toolCall.args` (object) → `args` (JSON string), `exit_code` (0/1/2) → `decision` (allow/ask/deny).
+  - **Phase 1:** Chỉ bật `PreToolUse` trên matcher `run_command|write_to_file|replace_file_content|multi_replace_file_content`.
+  - **Hiệu năng:** Tổng subprocess overhead ~200-500ms trên Windows (Python startup), logic-only < 15ms. Hooks chạy đồng bộ, chặn agent loop.
+  - **Fail-Safe Default:** Mọi ngoại lệ không mong muốn trong bridge đều fallback về `{"decision": "allow"}` — không bao giờ làm gián đoạn IDE.
+  - **Hai Entry Point:** CLI `hook_runner.py` (offline/CI) và Antigravity `hooks.json` (IDE) cùng dẫn về `HookCoordinator` với cùng 7 hooks.

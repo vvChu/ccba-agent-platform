@@ -11,7 +11,37 @@ from typing import Any
 from ccba_legal.converters.standard.models import HierarchyState
 
 
-def render_table_markdown(table: Any, rid_to_katex: dict[str, str] | None = None) -> tuple[str, list[str], list[list[str]]]:
+def resolve_hierarchical_headers(grid: list[list[str]]) -> list[list[str]]:
+    """Combine multi-row table headers (e.g. category spans) into structured single-row headers."""
+    if len(grid) < 2:
+        return grid
+
+    row0 = grid[0]
+    row1 = grid[1]
+
+    # Check if row0 has merged spans where row1 has distinct sub-values
+    has_subheaders = False
+    for c in range(len(row0)):
+        if c > 0 and row0[c] == row0[c - 1] and row1[c] != row1[c - 1]:
+            has_subheaders = True
+            break
+
+    if has_subheaders:
+        combined_header = []
+        for c in range(len(row0)):
+            h0 = row0[c].strip()
+            h1 = row1[c].strip()
+            if h0 and h1 and h0 != h1 and h1 not in ("—", "-", ""):
+                combined_header.append(f"{h0} — {h1}")
+            else:
+                combined_header.append(h0 or h1)
+        return [combined_header] + grid[2:]
+    return grid
+
+
+def render_table_markdown(
+    table: Any, rid_to_katex: dict[str, str] | None = None
+) -> tuple[str, list[str], list[list[str]]]:
     """Render a docx Table object as a GitHub Flavored Markdown table with smart column alignment and footnote extraction."""
     from ccba_legal.converters.standard.strategy import render_paragraph_with_runs
 
@@ -34,24 +64,31 @@ def render_table_markdown(table: Any, rid_to_katex: dict[str, str] | None = None
             clean_cell = re.sub(r"[\r\n]+", "<br>", clean_cell).strip()
             row_rendered.append(clean_cell)
 
-        clean_row: list[str] = []
-        for val in row_rendered:
-            if not clean_row or val != clean_row[-1]:
-                clean_row.append(val)
-
-        if not clean_row or not any(clean_row):
+        if not row_rendered or not any(row_rendered):
             continue
 
-        first_cell = clean_row[0].strip()
-        if re.match(r"^(?:<br>)*\s*(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)", first_cell, re.IGNORECASE):
-            combined_fn = "<br>".join([c for c in clean_row if c.strip()])
+        first_cell = row_rendered[0].strip()
+        if re.match(
+            r"^(?:<br>)*\s*(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)", first_cell, re.IGNORECASE
+        ):
+            combined_fn = "<br>".join([c for c in row_rendered if c.strip()])
             fn_parts = [p.strip() for p in re.split(r"<br\s*/?>", combined_fn) if p.strip()]
-            has_explicit_numbered = any(re.search(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*[2-9]", p, re.IGNORECASE) for p in fn_parts)
+            has_explicit_numbered = any(
+                re.search(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*[2-9]", p, re.IGNORECASE)
+                for p in fn_parts
+            )
 
             for idx, fn_p in enumerate(fn_parts):
-                fn_clean = re.sub(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*", "", fn_p, flags=re.IGNORECASE).strip()
+                fn_clean = re.sub(
+                    r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*",
+                    "",
+                    fn_p,
+                    flags=re.IGNORECASE,
+                ).strip()
                 fn_clean = re.sub(r"^\*\*\s*", "", fn_clean).strip()
-                m_num = re.search(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)", fn_p, flags=re.IGNORECASE)
+                m_num = re.search(
+                    r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)", fn_p, flags=re.IGNORECASE
+                )
                 if m_num and m_num.group(1):
                     pfx = f"**CHÚ THÍCH {m_num.group(1)}:**"
                 elif has_explicit_numbered and idx == 0:
@@ -63,21 +100,34 @@ def render_table_markdown(table: Any, rid_to_katex: dict[str, str] | None = None
                 footnotes.append(f"{pfx} {fn_clean}")
             continue
 
-        grid.append(clean_row)
+        grid.append(row_rendered)
 
     if not grid:
         return ("", footnotes, [])
 
+    # Resolve hierarchical 2-tier headers without dropping columns
+    grid = resolve_hierarchical_headers(grid)
+
     max_cols = max(len(r) for r in grid)
-    normalized_grid: list[list[str]] = [[re.sub(r"[\r\n]+", "<br>", c).strip() for c in r] + [""] * (max_cols - len(r)) for r in grid]
+    normalized_grid: list[list[str]] = [
+        [re.sub(r"[\r\n]+", "<br>", c).strip() for c in r] + [""] * (max_cols - len(r))
+        for r in grid
+    ]
 
     alignments: list[str] = []
     for c_idx in range(max_cols):
         vals = [r[c_idx] for r in normalized_grid[1:] if r[c_idx].strip()]
-        is_num = all(re.match(r"^[0-9\.,\-\+\s%±]+$", v.replace("<br>", " ")) for v in vals) if vals else False
+        is_num = (
+            all(re.match(r"^[0-9\.,\-\+\s%±]+$", v.replace("<br>", " ")) for v in vals)
+            if vals
+            else False
+        )
         alignments.append(":---:" if is_num else ":---")
 
-    lines: list[str] = ["| " + " | ".join(normalized_grid[0]) + " |", "| " + " | ".join(alignments) + " |"]
+    lines: list[str] = [
+        "| " + " | ".join(normalized_grid[0]) + " |",
+        "| " + " | ".join(alignments) + " |",
+    ]
     for r in normalized_grid[1:]:
         lines.append("| " + " | ".join(r) + " |")
 
@@ -120,7 +170,9 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
     all_row_formulas: list[tuple[str, Any]] = []
     for r in tbl.rows:
         r_texts = [c.text.strip() for c in r.cells]
-        f_tag = next((m.group(1) for t in r_texts if (m := re.match(r"^\(([0-9A-Za-z\.]+)\)$", t))), None)
+        f_tag = next(
+            (m.group(1) for t in r_texts if (m := re.match(r"^\(([0-9A-Za-z\.]+)\)$", t))), None
+        )
         if f_tag:
             all_row_formulas.append((f_tag, r))
 
@@ -136,7 +188,9 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
                 if isinstance(val, tuple):
                     fid, f_latex = val[0], val[1]
                 elif isinstance(val, dict):
-                    fid = val.get("formula_id", f"F_{ctx.bundle_dir.name.upper()}_FORMULA_{f_slug.upper()}")
+                    fid = val.get(
+                        "formula_id", f"F_{ctx.bundle_dir.name.upper()}_FORMULA_{f_slug.upper()}"
+                    )
                     f_latex = val.get("latex", "")
                 else:
                     fid = f"F_{ctx.bundle_dir.name.upper()}_FORMULA_{f_slug.upper()}"
@@ -147,14 +201,25 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
                 if isinstance(val, tuple):
                     fid, f_latex = val[0], val[1]
                 elif isinstance(val, dict):
-                    fid = val.get("formula_id", f"F_{ctx.bundle_dir.name.upper()}_FORMULA_{f_slug.upper()}")
+                    fid = val.get(
+                        "formula_id", f"F_{ctx.bundle_dir.name.upper()}_FORMULA_{f_slug.upper()}"
+                    )
                     f_latex = val.get("latex", "")
                 else:
                     fid = f"F_{ctx.bundle_dir.name.upper()}_FORMULA_{f_slug.upper()}"
                     f_latex = str(val)
             else:
                 fid = f"F_{ctx.bundle_dir.name.upper()}_FORMULA_{f_slug.upper()}"
-                raw_f = next((render_paragraph_with_runs(c.paragraphs[0], rid_to_katex=ctx.rid_to_katex) if c.paragraphs else c.text.strip() for c in r.cells if c.text.strip() and not re.match(r"^\([0-9A-Za-z\.]+\)$", c.text.strip())), None)
+                raw_f = next(
+                    (
+                        render_paragraph_with_runs(c.paragraphs[0], rid_to_katex=ctx.rid_to_katex)
+                        if c.paragraphs
+                        else c.text.strip()
+                        for c in r.cells
+                        if c.text.strip() and not re.match(r"^\([0-9A-Za-z\.]+\)$", c.text.strip())
+                    ),
+                    None,
+                )
                 if not raw_f:
                     for rid in cell_rids:
                         if ctx.rid_to_katex and rid in ctx.rid_to_katex:
@@ -165,12 +230,15 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
             f_latex = f_latex.strip()
             if f_latex.startswith("$$") and f_latex.endswith("$$"):
                 f_latex = f_latex[2:-2].strip()
-            tag_suffix = "" if ("\\tag" in f_latex or "\\qquad" in f_latex) else f" \\tag{{{f_tag}}}"
-            ctx.emit(f'\n<a id="formula-{f_slug}"></a>\n$${f_latex}{tag_suffix}$$\n<!-- formula_id: "{fid}" -->\n\n')
+            tag_suffix = (
+                "" if ("\\tag" in f_latex or "\\qquad" in f_latex) else f" \\tag{{{f_tag}}}"
+            )
+            ctx.emit(
+                f'\n<a id="formula-{f_slug}"></a>\n$${f_latex}{tag_suffix}$$\n<!-- formula_id: "{fid}" -->\n\n'
+            )
         if ctx.state_mgr.state != HierarchyState.IN_TRONG_DO:
             ctx.state_mgr.reset()
         return
-
 
     # 2. Normative or Layout Table
     is_captioned = bool(ctx.last_table_caption)
@@ -180,7 +248,11 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
         ctx.last_table_caption = None
         ctx.last_table_caption_num = None
         ctx.state_mgr.reset()
-        t_slug = f"bang_{int(t_num):02d}" if t_num.isdigit() else f"bang_{t_num.lower().replace('.', '_').replace('-', '_')}"
+        t_slug = (
+            f"bang_{int(t_num):02d}"
+            if t_num.isdigit()
+            else f"bang_{t_num.lower().replace('.', '_').replace('-', '_')}"
+        )
         tbl_anchor = f"bang-{t_slug.replace('_', '-')}"
         ctx.emit(f'\n<a id="{tbl_anchor}"></a>\n### {t_cap}\n\n')
     else:
@@ -209,11 +281,33 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
         for r_idx, row in enumerate(raw_grid[1:], 1):
             row_dict: dict[str, Any] = {"_row_id": r_idx}
             for c_idx, val in enumerate(row):
-                key = headers[c_idx] if c_idx < len(headers) and headers[c_idx] else f"col_{c_idx+1}"
+                key = (
+                    headers[c_idx]
+                    if c_idx < len(headers) and headers[c_idx]
+                    else f"col_{c_idx + 1}"
+                )
                 row_dict[key] = re.sub(r"<[^>]+>", "", val).strip()
             json_rows.append(row_dict)
 
         with open(json_dir / f"{t_slug}.json", "w", encoding="utf-8") as f:
-            json.dump({"table_id": t_slug, "table_number": t_num, "table_title": t_cap, "rows": json_rows}, f, ensure_ascii=False, indent=2)
+            json.dump(
+                {
+                    "table_id": t_slug,
+                    "table_number": t_num,
+                    "table_title": t_cap,
+                    "rows": json_rows,
+                },
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
 
-        ctx.tables_extracted.append({"table_id": t_slug, "table_number": t_num, "title": t_cap, "csv_file": f"tables/csv/{t_slug}.csv", "json_file": f"tables/json/{t_slug}.json"})
+        ctx.tables_extracted.append(
+            {
+                "table_id": t_slug,
+                "table_number": t_num,
+                "title": t_cap,
+                "csv_file": f"tables/csv/{t_slug}.csv",
+                "json_file": f"tables/json/{t_slug}.json",
+            }
+        )

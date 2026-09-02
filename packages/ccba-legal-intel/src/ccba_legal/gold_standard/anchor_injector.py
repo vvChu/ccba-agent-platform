@@ -8,7 +8,9 @@ from ccba_legal.gold_standard.profiles import DocProfile, get_doc_profile
 from ccba_legal.gold_standard.sanitizers import strip_existing_anchors
 
 
-def inject_semantic_anchors(text: str, profile: DocProfile | str | None = None, archetype: str | None = None) -> str:
+def inject_semantic_anchors(
+    text: str, profile: DocProfile | str | None = None, archetype: str | None = None
+) -> str:
     """Inject hidden inline semantic anchors into Markdown text (idempotent)."""
     if isinstance(profile, str) or profile is None:
         p_name = profile or archetype or "vbpl"

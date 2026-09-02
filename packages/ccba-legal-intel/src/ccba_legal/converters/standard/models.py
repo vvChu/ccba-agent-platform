@@ -18,6 +18,7 @@ DocumentBlock = tuple[DocumentBlockType, Paragraph | Table]
 
 class HierarchyState(Enum):
     """Hierarchy State Machine states for Standard Documents."""
+
     BODY_TEXT = auto()
     IN_TRONG_DO = auto()
     IN_LETTERED_LIST = auto()
@@ -29,6 +30,7 @@ class HierarchyState(Enum):
 @dataclass
 class StandardConversionConfig:
     """Configuration options for standard conversion."""
+
     bundle_dir: Path
     output_filename: str | None = None
     rid_to_katex: dict[str, str] = field(default_factory=dict)
@@ -40,6 +42,7 @@ class StandardConversionConfig:
 @dataclass
 class ConversionMetrics:
     """Metrics recorded during document conversion."""
+
     total_paragraphs: int = 0
     total_tables: int = 0
     clauses_count: int = 0

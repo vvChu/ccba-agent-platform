@@ -79,9 +79,16 @@ def split_concept_appendices(file_path: Path) -> list[str]:
         app_content = frontmatter + "\n".join(app_lines).strip() + "\n"
         app_path.write_text(app_content, encoding="utf-8")
         appendix_links.append(f"- [{full_label}: {title}](appendices/{app_filename})")
-    new_parent_content = "\n".join(main_body_lines).strip() + "\n\n## DANH SÁCH PHỤ LỤC ĐÍNH KÈM\n\n" + "\n".join(appendix_links) + "\n"
+    new_parent_content = (
+        "\n".join(main_body_lines).strip()
+        + "\n\n## DANH SÁCH PHỤ LỤC ĐÍNH KÈM\n\n"
+        + "\n".join(appendix_links)
+        + "\n"
+    )
     file_path.write_text(new_parent_content, encoding="utf-8")
-    return [f"appendices/{parent_slug}-phu_luc_{f'{roman_to_decimal(m[2]):02d}'}.md" for m in matches]
+    return [
+        f"appendices/{parent_slug}-phu_luc_{f'{roman_to_decimal(m[2]):02d}'}.md" for m in matches
+    ]
 
 
 def split_by_chapters(content: str, sections_dir: Path) -> None:

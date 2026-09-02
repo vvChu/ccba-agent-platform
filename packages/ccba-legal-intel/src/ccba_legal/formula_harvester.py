@@ -18,7 +18,6 @@ import hashlib
 import json
 import logging
 import re
-import tempfile
 import time
 import zipfile
 from pathlib import Path
@@ -36,6 +35,12 @@ _FORMULA_CONTEXT_KEYWORDS = (
     "t\u00ednh theo c\u00f4ng th\u1ee9c",
     "x\u00e1c \u0111\u1ecbnh theo",
     "theo bi\u1ec3u th\u1ee9c",
+    "bi\u1ec3u th\u1ee9c",
+    "ph\u01b0\u01a1ng tr\u00ecnh",
+    "h\u1ec7 th\u1ee9c",
+    "h\u1ec7 s\u1ed1",
+    "t\u1ec9 s\u1ed1",
+    "t\u1ef7 s\u1ed1",
     "c\u00e1c c\u00f4ng th\u1ee9c",
     "c\u00f4ng th\u1ee9c sau",
     "\u1ee9ng su\u1ea5t",
@@ -70,7 +75,11 @@ def is_formula_image(
 
     # Check if this is an actual diagram/figure (accompanied by figure caption or CHÚ DẪN immediately following)
     caption_check_text = forward_text if forward_text else surrounding_text
-    has_figure_caption = bool(re.search(r"^(?:Hình|HÌNH)\s+[0-9A-Z]+(?:\.[0-9]+)*\s*[-–—:]", caption_check_text, re.MULTILINE))
+    has_figure_caption = bool(
+        re.search(
+            r"^(?:Hình|HÌNH)\s+[0-9A-Z]+(?:\.[0-9]+)*\s*[-–—:]", caption_check_text, re.MULTILINE
+        )
+    )
     has_chu_dan = bool(re.search(r"\b(?:CHÚ\s+DẪN|Chú\s+dẫn)\b", caption_check_text))
     if (has_figure_caption or has_chu_dan) and height_pt > 75.0:
         return False
@@ -86,10 +95,6 @@ def is_formula_image(
         return True
 
     return False
-
-
-
-
 
 
 def _compute_sha256(data: bytes) -> str:
@@ -153,7 +158,6 @@ def _validate_katex(result: str) -> bool:
     return True
 
 
-
 def _clean_and_extract_katex(raw: str) -> str:
     """Lam sach va trích xuất duy nhất khối $$...$$ từ chuỗi raw model trả về."""
     # 1. Tim block $$...$$ dau tien
@@ -179,8 +183,6 @@ def _clean_and_extract_katex(raw: str) -> str:
     return f"$${clean}$$"
 
 
-
-
 def _call_vision_model(img_bytes: bytes, prompt: str) -> str:
     """Goi AI Gateway de chuyen doi anh cong thuc sang LaTeX.
 
@@ -191,6 +193,7 @@ def _call_vision_model(img_bytes: bytes, prompt: str) -> str:
     Returns:
         Chuoi tra ve tu model (chua validate).
     """
+    import base64
     import io
 
     from PIL import Image
@@ -199,21 +202,13 @@ def _call_vision_model(img_bytes: bytes, prompt: str) -> str:
 
     try:
         pil_img = Image.open(io.BytesIO(img_bytes))
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-            pil_img.convert("RGB").save(tmp.name, format="PNG")
-            tmp_path = Path(tmp.name)
+        if pil_img.mode != "RGB":
+            pil_img = pil_img.convert("RGB")
+        buf = io.BytesIO()
+        pil_img.save(buf, format="PNG", optimize=True)
+        b64_img = base64.b64encode(buf.getvalue()).decode("utf-8")
     except Exception:
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-            tmp.write(img_bytes)
-            tmp_path = Path(tmp.name)
-
-    try:
-        b64_img = ai.encode_image(str(tmp_path), max_pixels=1024, quality=95)
-    finally:
-        try:
-            tmp_path.unlink()
-        except Exception:
-            pass
+        b64_img = base64.b64encode(img_bytes).decode("utf-8")
 
     messages = [
         {
@@ -276,7 +271,9 @@ def extract_latex_from_image(
                 return cleaned
             logger.warning(
                 "Vision attempt %d invalid format (sha256=%s): %s",
-                attempt + 1, sha256[:8], raw.strip()[:80],
+                attempt + 1,
+                sha256[:8],
+                raw.strip()[:80],
             )
         except Exception as exc:
             logger.warning("Vision attempt %d error (sha256=%s): %s", attempt + 1, sha256[:8], exc)
@@ -341,7 +338,7 @@ def harvest_docx_formula_images(
             target = rel.attrib.get("Target", "")
             if rid and "media/" in target:
                 r_map[rid] = "word/" + target.replace("../", "")
-        media_files = set(f for f in z.namelist() if f.startswith("word/media/"))
+        media_files = {f for f in z.namelist() if f.startswith("word/media/")}
 
         doc_xml = z.read("word/document.xml")
         doc_tree = ET.fromstring(doc_xml)
@@ -356,6 +353,7 @@ def harvest_docx_formula_images(
         if fig_overrides_file.exists():
             try:
                 import yaml
+
                 f_data = yaml.safe_load(fig_overrides_file.read_text(encoding="utf-8"))
                 if isinstance(f_data, dict):
                     for f_tag, f_val in f_data.items():
@@ -376,6 +374,7 @@ def harvest_docx_formula_images(
         if form_overrides_file.exists():
             try:
                 import yaml
+
                 form_data = yaml.safe_load(form_overrides_file.read_text(encoding="utf-8"))
                 if isinstance(form_data, dict):
                     for k_id, k_val in form_data.items():
@@ -383,13 +382,13 @@ def harvest_docx_formula_images(
                             l_val = k_val.get("latex", "").strip()
                             f_id = k_val.get("formula_id", "")
 
-                            # If latex already contains $$ delimiters, strip them
-                            if l_val.startswith("$$") and l_val.endswith("$$"):
-                                l_val = l_val[2:-2].strip()
-
                             # Determine proper tag: never use 'rId...' as tag
                             has_tag = "\\tag" in l_val or "\\qquad" in l_val or "\\hfill" in l_val
-                            if not has_tag:
+                            is_multiline_env = any(
+                                env in l_val
+                                for env in ("aligned", "cases", "gather", "matrix", "split")
+                            )
+                            if not has_tag and not is_multiline_env:
                                 if not str(k_id).lower().startswith("rid"):
                                     tag_to_use = str(k_id)
                                 elif f_id and "FORMULA_" in f_id:
@@ -400,15 +399,20 @@ def harvest_docx_formula_images(
                                 if tag_to_use:
                                     l_val = f"{l_val} \\tag{{{tag_to_use}}}"
 
-                            override_formulas[str(k_id)] = f"$${l_val}$$\n<!-- formula_id: \"{f_id}\" -->" if f_id else f"$${l_val}$$"
+                            override_formulas[str(k_id)] = (
+                                f'$${l_val}$$\n<!-- formula_id: "{f_id}" -->'
+                                if f_id
+                                else f"$${l_val}$$"
+                            )
                         elif isinstance(k_val, str):
                             override_formulas[str(k_id)] = k_val
             except Exception:
                 pass
 
+        import concurrent.futures
+
         rid_to_katex: dict[str, str] = {}
-
-
+        pending_rids: dict[str, bytes] = {}
 
         for p_idx, para in enumerate(paragraphs):
             # 1. Check legacy VML shapes (v:shape)
@@ -448,16 +452,24 @@ def harvest_docx_formula_images(
                     continue
 
                 img_bytes = z.read(media_path)
-                katex = extract_latex_from_image(img_bytes, cache_dir=cache_dir, skip_vision=skip_vision)
-                rid_to_katex[rid] = katex
+                sha256 = _compute_sha256(img_bytes)
+                cached = _read_cache(cache_dir, sha256) if cache_dir is not None else None
+                if cached is not None:
+                    rid_to_katex[rid] = cached
+                elif skip_vision:
+                    rid_to_katex[rid] = f"<!-- FORMULA_PLACEHOLDER: {sha256[:8]} -->"
+                else:
+                    pending_rids[rid] = img_bytes
 
             # 2. Check modern DrawingML (w:drawing)
-            for drawing in para.findall(".//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}drawing"):
+            for drawing in para.findall(
+                ".//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}drawing"
+            ):
                 blip = drawing.find(f".//{{{ns_a}}}blip")
                 if blip is None:
                     continue
                 rid = blip.attrib.get(f"{{{ns_r}}}embed")
-                if not rid or rid not in r_map or rid in rid_to_katex:
+                if not rid or rid not in r_map or rid in rid_to_katex or rid in pending_rids:
                     continue
 
                 media_path = r_map[rid]
@@ -494,11 +506,43 @@ def harvest_docx_formula_images(
                     continue
 
                 img_bytes = z.read(media_path)
-                katex = extract_latex_from_image(img_bytes, cache_dir=cache_dir, skip_vision=skip_vision)
-                rid_to_katex[rid] = katex
+                sha256 = _compute_sha256(img_bytes)
+                cached = _read_cache(cache_dir, sha256) if cache_dir is not None else None
+                if cached is not None:
+                    rid_to_katex[rid] = cached
+                elif skip_vision:
+                    rid_to_katex[rid] = f"<!-- FORMULA_PLACEHOLDER: {sha256[:8]} -->"
+                else:
+                    pending_rids[rid] = img_bytes
 
+        # Concurrently process pending formula images if any
+        if pending_rids:
+            unique_shas: dict[str, bytes] = {}
+            for _r_id, b_data in pending_rids.items():
+                sha = _compute_sha256(b_data)
+                unique_shas[sha] = b_data
 
-    return rid_to_katex
+            sha_to_katex: dict[str, str] = {}
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=min(6, len(unique_shas))
+            ) as executor:
+                future_to_sha = {
+                    executor.submit(extract_latex_from_image, b_data, cache_dir, False): sha
+                    for sha, b_data in unique_shas.items()
+                }
+                for future in concurrent.futures.as_completed(future_to_sha):
+                    sha = future_to_sha[future]
+                    try:
+                        sha_to_katex[sha] = future.result()
+                    except Exception as exc:
+                        logger.error("Concurrent extraction error (sha=%s): %s", sha[:8], exc)
+                        sha_to_katex[sha] = f"<!-- FORMULA_ERROR: {sha[:8]} -->"
+
+            for r_id, b_data in pending_rids.items():
+                sha = _compute_sha256(b_data)
+                rid_to_katex[r_id] = sha_to_katex.get(sha, f"<!-- FORMULA_ERROR: {sha[:8]} -->")
+
+        return rid_to_katex
 
 
 def harvest_pdf_formula_images(
@@ -530,18 +574,33 @@ def harvest_pdf_formula_images(
             for img_meta in page.get_images():
                 xref, w_px, h_px = img_meta[0], img_meta[2], img_meta[3]
                 if h_px > 80 or w_px > 600:
-                    results.append({"page_num": pg_idx + 1, "xref": xref,
-                                    "width_px": w_px, "height_px": h_px,
-                                    "katex": f"<!-- DIAGRAM_PDF: page={pg_idx+1} xref={xref} -->"})
+                    results.append(
+                        {
+                            "page_num": pg_idx + 1,
+                            "xref": xref,
+                            "width_px": w_px,
+                            "height_px": h_px,
+                            "katex": f"<!-- DIAGRAM_PDF: page={pg_idx + 1} xref={xref} -->",
+                        }
+                    )
                     continue
                 try:
                     img_bytes = doc.extract_image(xref)["image"]
                 except Exception as exc:
                     logger.warning("Extract image xref=%d failed: %s", xref, exc)
                     continue
-                katex = extract_latex_from_image(img_bytes, cache_dir=cache_dir, skip_vision=skip_vision)
-                results.append({"page_num": pg_idx + 1, "xref": xref,
-                                 "width_px": w_px, "height_px": h_px, "katex": katex})
+                katex = extract_latex_from_image(
+                    img_bytes, cache_dir=cache_dir, skip_vision=skip_vision
+                )
+                results.append(
+                    {
+                        "page_num": pg_idx + 1,
+                        "xref": xref,
+                        "width_px": w_px,
+                        "height_px": h_px,
+                        "katex": katex,
+                    }
+                )
     finally:
         doc.close()
     return results

@@ -84,6 +84,7 @@ def download_via_cdp_or_client(url: str, dest_path: Path) -> bool:
 
     try:
         import urllib.request
+
         print(f"[Urllib] Tải trực tiếp từ URL: {url}")
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
