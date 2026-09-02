@@ -5,6 +5,7 @@ Validates discovery, catalog merge, registry, backup, sdk inspector, coordinator
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
@@ -248,6 +249,7 @@ def test_legal_knowledge_sync_orchestrator(tmp_path: Path):
     software_spoke.mkdir()
     orch_soft = LegalKnowledgeSyncOrchestrator(software_spoke, tmp_path, "Phần mềm")
     assert orch_soft.is_legal_related_spoke() is False
+    assert orch_soft.is_master_legal_corpus() is False
     res_soft = orch_soft.sync_or_advise(dry_run=True)
     assert res_soft["is_legal"] is False
     assert res_soft["status"] == "advised_zero_bloat"
@@ -257,6 +259,7 @@ def test_legal_knowledge_sync_orchestrator(tmp_path: Path):
     legal_spoke.mkdir()
     orch_legal = LegalKnowledgeSyncOrchestrator(legal_spoke, tmp_path, "Pháp điển")
     assert orch_legal.is_legal_related_spoke() is True
+    assert orch_legal.is_master_legal_corpus() is False
     res_legal = orch_legal.sync_or_advise(dry_run=True)
     assert res_legal["is_legal"] is True
     assert res_legal["dry_run"] is True
@@ -267,3 +270,89 @@ def test_legal_knowledge_sync_orchestrator(tmp_path: Path):
     (custom_spoke / "legal_registry.yaml").write_text("documents: []\n", encoding="utf-8")
     orch_custom = LegalKnowledgeSyncOrchestrator(custom_spoke, tmp_path, "BIM")
     assert orch_custom.is_legal_related_spoke() is True
+
+    # 4. Master Legal Corpus Self-Loop Guard (ADR 0036 & ADR 0050)
+    master_spoke = tmp_path / "ccba-legal-knowledge"
+    master_spoke.mkdir()
+    (master_spoke / "legal_docs").mkdir()
+    (master_spoke / "legal_registry.yaml").write_text("documents: []\n", encoding="utf-8")
+    orch_master = LegalKnowledgeSyncOrchestrator(master_spoke, tmp_path, "Pháp điển")
+    assert orch_master.is_master_legal_corpus() is True
+    res_master = orch_master.sync_or_advise(dry_run=False)
+    assert res_master["is_master"] is True
+    assert res_master["status"] == "master_corpus_preserved"
+    assert not (master_spoke / ".md" / "legal_docs").exists()
+
+    # 5. Master Legal Corpus identified via workspace_context.yaml archetype
+    archetype_spoke = tmp_path / "archetype_corpus"
+    archetype_spoke.mkdir()
+    (archetype_spoke / ".md").mkdir()
+    (archetype_spoke / ".md" / "workspace_context.yaml").write_text(
+        "project:\n  archetype: knowledge_corpus\n", encoding="utf-8"
+    )
+    orch_archetype = LegalKnowledgeSyncOrchestrator(archetype_spoke, tmp_path, "Pháp điển")
+    assert orch_archetype.is_master_legal_corpus() is True
+
+
+def test_spoke_sync_bootstrap_flag(tmp_path: Path):
+    """Test SpokeSynchronizer integration with bootstrap parameter."""
+    spoke_root = tmp_path / "test_spoke"
+    spoke_root.mkdir()
+    (spoke_root / ".agents").mkdir()
+    (spoke_root / ".agents" / "workspace_context.yaml").write_text(
+        "project:\n  name: TestBootstrap\n  type: Phần mềm\n", encoding="utf-8"
+    )
+
+    hub_root = tmp_path / "mock_hub"
+    cat_dir = hub_root / ".agents" / "skills" / "platform-loader"
+    cat_dir.mkdir(parents=True)
+    (cat_dir / "catalog.yaml").write_text(
+        "bundles:\n  Phần mềm: [_core]\nskills: []\nworkflows: []\n", encoding="utf-8"
+    )
+
+    engine = SpokeSynchronizer(spoke_root=spoke_root, hub_root=hub_root)
+    # Test dry-run with bootstrap=True
+    code = engine.sync(dry_run=True, check_git=False, bootstrap=True)
+    assert code == 0
+
+
+def test_check_hub_import_depth_excludes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Test check_hub_import_depth exclusions (.agents, .md, .venv) in single file and directory scan."""
+    from scripts.spoke.check_hub_import_depth import main, scan_file
+
+    # 1. File with violation
+    bad_py = tmp_path / "bad.py"
+    bad_py.write_text("from ccba_legal.crawler.chrome_cdp import something\n", encoding="utf-8")
+    violations = scan_file(bad_py)
+    assert len(violations) == 1
+
+    # 2. File with top-level import (compliant)
+    good_py = tmp_path / "good.py"
+    good_py.write_text("from ccba_legal import ChromeCDP\n", encoding="utf-8")
+    violations_good = scan_file(good_py)
+    assert len(violations_good) == 0
+
+    # 3. Directory scan with excluded folders containing deep imports
+    mock_spoke = tmp_path / "mock_spoke"
+    mock_spoke.mkdir()
+    (mock_spoke / "src").mkdir()
+    (mock_spoke / "src" / "app.py").write_text("from ccba_ai import ai\n", encoding="utf-8")
+
+    # Put violations inside excluded folders (.agents, .md, .venv)
+    for excluded in [".agents", ".md", ".venv"]:
+        ex_dir = mock_spoke / excluded
+        ex_dir.mkdir()
+        (ex_dir / "deep.py").write_text(
+            "from ccba_legal.crawler.chrome_cdp import helper\n", encoding="utf-8"
+        )
+
+    monkeypatch.setattr(sys, "argv", ["check_hub_import_depth.py", "--path", str(mock_spoke)])
+    exit_code = main()
+    assert exit_code == 0
+
+    # If violation added in src/, directory scan must detect it and return 1
+    (mock_spoke / "src" / "bad.py").write_text(
+        "from ccba_legal.crawler.chrome_cdp import helper\n", encoding="utf-8"
+    )
+    exit_code_bad = main()
+    assert exit_code_bad == 1

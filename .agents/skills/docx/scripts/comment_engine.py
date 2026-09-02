@@ -6,13 +6,12 @@ Delegates core implementation to the `ccba_ooxml.docx.comment_engine` deep modul
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-_PKG_SRC = Path(__file__).resolve().parents[4] / "packages" / "ccba-ooxml" / "src"
-if _PKG_SRC.exists() and str(_PKG_SRC) not in sys.path:
-    sys.path.insert(0, str(_PKG_SRC))
-
-from ccba_ooxml.docx.comment_engine import TEMPLATE_DIR, CommentEngine
+try:
+    from ccba_ooxml.docx.comment_engine import TEMPLATE_DIR, CommentEngine
+except ImportError as e:
+    raise ImportError(
+        "Package 'ccba-ooxml' chưa được cài đặt trong môi trường ảo. "
+        "Vui lòng chạy: python scripts/spoke/spoke_bootstrap.py (hoặc pip install -e packages/ccba-ooxml)"
+    ) from e
 
 __all__ = ["CommentEngine", "TEMPLATE_DIR"]
