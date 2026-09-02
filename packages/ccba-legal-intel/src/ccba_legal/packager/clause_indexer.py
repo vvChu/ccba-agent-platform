@@ -8,10 +8,18 @@ from pathlib import Path
 from typing import Any
 
 
-def generate_clauses_json(bundle_or_text: Path | str, output_dir: Path | None = None) -> list[dict[str, Any]] | Path:
+def generate_clauses_json(
+    bundle_or_text: Path | str, output_dir: Path | None = None
+) -> list[dict[str, Any]] | Path:
     """Generate structured clauses.json containing atomic clause-level metadata or AST."""
-    if isinstance(bundle_or_text, str) or (isinstance(bundle_or_text, Path) and not bundle_or_text.is_dir() and output_dir is not None):
-        content = bundle_or_text if isinstance(bundle_or_text, str) else bundle_or_text.read_text(encoding="utf-8")
+    if isinstance(bundle_or_text, str) or (
+        isinstance(bundle_or_text, Path) and not bundle_or_text.is_dir() and output_dir is not None
+    ):
+        content = (
+            bundle_or_text
+            if isinstance(bundle_or_text, str)
+            else bundle_or_text.read_text(encoding="utf-8")
+        )
         out_dir = output_dir or Path(".")
         lines = content.splitlines()
         clauses: list[dict[str, Any]] = []
@@ -25,7 +33,9 @@ def generate_clauses_json(bundle_or_text: Path | str, output_dir: Path | None = 
             stripped = line.strip()
 
             # Chapter: # Chương I hoặc ## Chương I
-            m_chap = re.match(r"^#+\s*(Chương\s+([IVXLCDM0-9]+)[\.:\s-]*.*)$", stripped, re.IGNORECASE)
+            m_chap = re.match(
+                r"^#+\s*(Chương\s+([IVXLCDM0-9]+)[\.:\s-]*.*)$", stripped, re.IGNORECASE
+            )
             if m_chap:
                 roman = m_chap.group(2).lower()
                 c_id = f"chuong-{roman}"
@@ -33,14 +43,16 @@ def generate_clauses_json(bundle_or_text: Path | str, output_dir: Path | None = 
                 current_section = None
                 current_article = None
                 current_clause = None
-                clauses.append({
-                    "clause_id": c_id,
-                    "title": m_chap.group(1).strip(),
-                    "node_type": "chapter",
-                    "parent_id": None,
-                    "line_start": idx,
-                    "line_end": idx,
-                })
+                clauses.append(
+                    {
+                        "clause_id": c_id,
+                        "title": m_chap.group(1).strip(),
+                        "node_type": "chapter",
+                        "parent_id": None,
+                        "line_start": idx,
+                        "line_end": idx,
+                    }
+                )
                 continue
 
             # Section: ### Mục 1
@@ -51,14 +63,16 @@ def generate_clauses_json(bundle_or_text: Path | str, output_dir: Path | None = 
                 current_section = s_id
                 current_article = None
                 current_clause = None
-                clauses.append({
-                    "clause_id": s_id,
-                    "title": m_sec.group(1).strip(),
-                    "node_type": "section",
-                    "parent_id": current_chapter,
-                    "line_start": idx,
-                    "line_end": idx,
-                })
+                clauses.append(
+                    {
+                        "clause_id": s_id,
+                        "title": m_sec.group(1).strip(),
+                        "node_type": "section",
+                        "parent_id": current_chapter,
+                        "line_start": idx,
+                        "line_end": idx,
+                    }
+                )
                 continue
 
             # Article: ### Điều 1. Phạm vi
@@ -69,14 +83,16 @@ def generate_clauses_json(bundle_or_text: Path | str, output_dir: Path | None = 
                 current_article = a_id
                 current_clause = None
                 parent = current_section or current_chapter
-                clauses.append({
-                    "clause_id": a_id,
-                    "title": m_art.group(1).strip(),
-                    "node_type": "article",
-                    "parent_id": parent,
-                    "line_start": idx,
-                    "line_end": idx,
-                })
+                clauses.append(
+                    {
+                        "clause_id": a_id,
+                        "title": m_art.group(1).strip(),
+                        "node_type": "article",
+                        "parent_id": parent,
+                        "line_start": idx,
+                        "line_end": idx,
+                    }
+                )
                 continue
 
             # Clause: 1. Nội dung
@@ -85,14 +101,16 @@ def generate_clauses_json(bundle_or_text: Path | str, output_dir: Path | None = 
                 k_num = m_k.group(1)
                 k_id = f"{current_article}-khoan-{k_num}"
                 current_clause = k_id
-                clauses.append({
-                    "clause_id": k_id,
-                    "title": f"Khoản {k_num}",
-                    "node_type": "clause",
-                    "parent_id": current_article,
-                    "line_start": idx,
-                    "line_end": idx,
-                })
+                clauses.append(
+                    {
+                        "clause_id": k_id,
+                        "title": f"Khoản {k_num}",
+                        "node_type": "clause",
+                        "parent_id": current_article,
+                        "line_start": idx,
+                        "line_end": idx,
+                    }
+                )
                 continue
 
             # Point: a) Điểm
@@ -100,14 +118,16 @@ def generate_clauses_json(bundle_or_text: Path | str, output_dir: Path | None = 
             if m_pt and current_clause:
                 pt_char = m_pt.group(1).lower()
                 p_id = f"{current_clause}-diem-{pt_char}"
-                clauses.append({
-                    "clause_id": p_id,
-                    "title": f"Điểm {pt_char}",
-                    "node_type": "point",
-                    "parent_id": current_clause,
-                    "line_start": idx,
-                    "line_end": idx,
-                })
+                clauses.append(
+                    {
+                        "clause_id": p_id,
+                        "title": f"Điểm {pt_char}",
+                        "node_type": "point",
+                        "parent_id": current_clause,
+                        "line_start": idx,
+                        "line_end": idx,
+                    }
+                )
                 continue
 
         out_file = out_dir / "clauses.json"
@@ -118,7 +138,14 @@ def generate_clauses_json(bundle_or_text: Path | str, output_dir: Path | None = 
     md_files = list(bundle_dir.glob("*.md"))
     primary_md = None
     for f in md_files:
-        if f.name not in ["index.md", "log.md", "dead_ends.md", "compliance_checklist.md", "diff_report.md", "relationship_chart.md"]:
+        if f.name not in [
+            "index.md",
+            "log.md",
+            "dead_ends.md",
+            "compliance_checklist.md",
+            "diff_report.md",
+            "relationship_chart.md",
+        ]:
             primary_md = f
             break
 
@@ -145,7 +172,9 @@ def write_qa_benchmark(bundle_or_qa: Any, target_dir: Path | None = None) -> Pat
             raise ValueError(f"QA item at index {idx} must be a dict.")
         for field in required_fields:
             if not item.get(field):
-                raise ValueError(f"QA item at index {idx} has missing or empty required fields: '{field}'")
+                raise ValueError(
+                    f"QA item at index {idx} has missing or empty required fields: '{field}'"
+                )
 
     qa_path = out_dir / "qa_benchmark.json"
     qa_path.write_text(json.dumps(qa_pairs, ensure_ascii=False, indent=2), encoding="utf-8")

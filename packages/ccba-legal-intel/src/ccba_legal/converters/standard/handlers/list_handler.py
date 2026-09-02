@@ -24,7 +24,11 @@ def handle_list_and_paragraph(
         is_subfig_caption = False
         for next_idx in range(i + 1, min(i + 5, len(blocks))):
             next_b_type, next_obj = blocks[next_idx]
-            if next_b_type == "p" and hasattr(next_obj, "text") and re.match(r"^(?:Hình|HÌNH)\s+[0-9A-Za-z\.\-]+", next_obj.text.strip()):
+            if (
+                next_b_type == "p"
+                and hasattr(next_obj, "text")
+                and re.match(r"^(?:Hình|HÌNH)\s+[0-9A-Za-z\.\-]+", next_obj.text.strip())
+            ):
                 is_subfig_caption = True
                 break
         if is_subfig_caption:

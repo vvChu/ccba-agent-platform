@@ -106,7 +106,9 @@ def resolve_tvpl_url(cdp: ChromeCDP, query: str) -> str:
             return resolved
 
     # Tier 3: Search Engine Fallback via CDP (Google site search)
-    print("[TVPLVIPDocProvider] Tier 2 yielded 0 matches. Engaging Tier 3 Google search fallback...")
+    print(
+        "[TVPLVIPDocProvider] Tier 2 yielded 0 matches. Engaging Tier 3 Google search fallback..."
+    )
     g_query = urllib.parse.quote(f'site:thuvienphapluat.vn "{query_clean}"')
     cdp.navigate(f"https://www.google.com/search?q={g_query}")
     cdp.wait_ready()
@@ -129,7 +131,9 @@ def resolve_tvpl_url(cdp: ChromeCDP, query: str) -> str:
         print(f"[TVPLVIPDocProvider] Tier 3 Google fallback matched: {resolved}")
         return resolved
 
-    print("[TVPLVIPDocProvider] [WARNING] Multi-tier resolution failed. Falling back to default URL structure.")
+    print(
+        "[TVPLVIPDocProvider] [WARNING] Multi-tier resolution failed. Falling back to default URL structure."
+    )
     return f"https://thuvienphapluat.vn/van-ban/{query_clean}.aspx"
 
 
@@ -318,4 +322,3 @@ class TVPLVIPDocProvider(LegalDocProvider):
             return results
         finally:
             cdp.close()
-

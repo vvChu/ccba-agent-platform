@@ -45,7 +45,21 @@ def sanitize_prose_greeks_and_variables(text: str) -> str:
         pattern_alone = r"(?<![\$\w])" + g_char + r"(?![\$\w])"
         text = re.sub(pattern_alone, lambda m, gl=g_latex: f"${gl}$", text)
 
-    for var in ["qk,t", "Qk,t", "qk,qper", "Wk", "W0", "Gk", "Qk", "QL", "Qt", "Ad", "ze", "zs", "Gf"]:
+    for var in [
+        "qk,t",
+        "Qk,t",
+        "qk,qper",
+        "Wk",
+        "W0",
+        "Gk",
+        "Qk",
+        "QL",
+        "Qt",
+        "Ad",
+        "ze",
+        "zs",
+        "Gf",
+    ]:
         k_var = var.replace(",", "_{").replace("0", "_0")
         if "_" in k_var and not k_var.endswith("}"):
             k_var += "}"
@@ -104,8 +118,14 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
             out_tokens.append(text)
 
     res = "".join(out_tokens)
-    res = re.sub(r"([a-zA-ZÀ-ɏẠ-ỹͰ-Ͽ]+)\$(_\{[^}]+\}|_[a-zA-Z0-9,]+|\^\{[^}]+\}|\^[a-zA-Z0-9]+)\$", r"$\1\2$", res)
-    res = re.sub(r"\$([^$]+)\$", lambda m: f"${''.join(GREEK_MAP.get(c, c) for c in m.group(1))}$", res)
+    res = re.sub(
+        r"([a-zA-ZÀ-ɏẠ-ỹͰ-Ͽ]+)\$(_\{[^}]+\}|_[a-zA-Z0-9,]+|\^\{[^}]+\}|\^[a-zA-Z0-9]+)\$",
+        r"$\1\2$",
+        res,
+    )
+    res = re.sub(
+        r"\$([^$]+)\$", lambda m: f"${''.join(GREEK_MAP.get(c, c) for c in m.group(1))}$", res
+    )
     # Heal orphaned strain subscripts like $_{b}$, $_{b1}$, $_{s}$
     res = re.sub(r"\$(_\{b[0-9]*\})\$", r"$\\varepsilon\1$", res)
     res = re.sub(r"\$(_\{s[0-9]*\})\$", r"$\\varepsilon\1$", res)
@@ -119,6 +139,7 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
 @dataclass
 class StandardConversionContext:
     """State machine container for technical standard conversions."""
+
     bundle_dir: Path
     output_filename: str | None
     rid_to_katex: dict[str, str] = field(default_factory=dict)
@@ -163,7 +184,15 @@ def _find_normative_start_index(blocks: list[tuple[str, Any]]) -> int:
     for idx, (b_type, obj) in enumerate(blocks):
         if b_type == "p":
             txt = obj.text.strip().upper()
-            if any(k in txt for k in ["1  PHẠM VI ÁP DỤNG", "1. PHẠM VI ÁP DỤNG", "1 PHẠM VI ÁP DỤNG", "1  QUY ĐỊNH CHUNG"]):
+            if any(
+                k in txt
+                for k in [
+                    "1  PHẠM VI ÁP DỤNG",
+                    "1. PHẠM VI ÁP DỤNG",
+                    "1 PHẠM VI ÁP DỤNG",
+                    "1  QUY ĐỊNH CHUNG",
+                ]
+            ):
                 return idx
     return 0
 
@@ -187,7 +216,9 @@ def _emit_figure_or_comment(ctx: StandardConversionContext, comment_str: str) ->
         ctx.emit(f"\n{comment_str}\n\n")
 
 
-def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[str, Any]], i: int) -> int:
+def _process_paragraph_block(
+    ctx: StandardConversionContext, blocks: list[tuple[str, Any]], i: int
+) -> int:
     """Dispatches a single paragraph block to the specialized handlers."""
     obj = blocks[i][1]
     text = obj.text.strip()
@@ -202,7 +233,9 @@ def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[
                     if isinstance(val, tuple):
                         fid, f_latex = val[0], val[1]
                     elif isinstance(val, dict):
-                        fid = val.get("formula_id", f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}")
+                        fid = val.get(
+                            "formula_id", f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}"
+                        )
                         f_latex = val.get("latex", "")
                     else:
                         fid = f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}"
@@ -229,13 +262,16 @@ def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[
                         ctx.state_mgr.reset()
                         return i + 1
                     fid = f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}"
-                    f_latex = raw_k[2:-2].strip() if (raw_k.startswith("$$") and raw_k.endswith("$$")) else raw_k
+                    f_latex = (
+                        raw_k[2:-2].strip()
+                        if (raw_k.startswith("$$") and raw_k.endswith("$$"))
+                        else raw_k
+                    )
                     ctx.emit(f'\n$${f_latex}$$\n<!-- formula_id: "{fid}" -->\n\n')
                     if ctx.state_mgr.state != HierarchyState.IN_TRONG_DO:
                         ctx.state_mgr.reset()
                     return i + 1
         return i + 1
-
 
     rendered_p = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
 
@@ -243,7 +279,6 @@ def _process_paragraph_block(ctx: StandardConversionContext, blocks: list[tuple[
     res_f = handle_formula_block(ctx, blocks, i, text, obj, rendered_p)
     if res_f is not None:
         return res_f
-
 
     # 2. Structural Headings & Notes Handler
     res_h = handle_structural_heading(ctx, blocks, i, text, rendered_p, obj)
@@ -267,15 +302,29 @@ def _process_table_block(ctx: StandardConversionContext, table_obj: Any, i: int)
 def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str, Any]:
     """Export modular annex files, 2D navigation matrix, tables catalog, and AST index."""
     # 1. Export Annexes
+    from ccba_legal.table_cleaner import clean_markdown_tables_and_notes
+
     if ctx.annex_buffers:
         annexes_dir = ctx.bundle_dir / "annexes"
         annexes_dir.mkdir(parents=True, exist_ok=True)
         nav_rows: list[str] = []
         for a_letter, a_info in ctx.annex_buffers.items():
-            annex_slug, annex_title, annex_type, annex_anchor = a_info["slug"], a_info["title"], a_info["type"], a_info["anchor"]
-            annex_md = "".join(a_info["parts"]).replace("figures/images/", "../figures/images/").replace("tables/", "../tables/")
+            annex_slug, annex_title, annex_type, annex_anchor = (
+                a_info["slug"],
+                a_info["title"],
+                a_info["type"],
+                a_info["anchor"],
+            )
+            annex_md = (
+                "".join(a_info["parts"])
+                .replace("figures/images/", "../figures/images/")
+                .replace("tables/", "../tables/")
+            )
+            annex_md = clean_markdown_tables_and_notes(annex_md)
             (annexes_dir / f"{annex_slug}.md").write_text(annex_md, encoding="utf-8")
-            nav_rows.append(f"| **Phụ lục {a_letter}** | {annex_title} | {annex_type} | [📑 **Xem Phụ lục**](annexes/{annex_slug}.md#{annex_anchor}) |")
+            nav_rows.append(
+                f"| **Phụ lục {a_letter}** | {annex_title} | {annex_type} | [📑 **Xem Phụ lục**](annexes/{annex_slug}.md#{annex_anchor}) |"
+            )
 
         nav_matrix = [
             "\n---\n",
@@ -284,23 +333,37 @@ def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str,
             "| :---: | :--- | :---: | :---: |",
         ]
         nav_matrix.extend(nav_rows)
-        nav_matrix.append(f"\n---\n\n## 📊 HỆ THỐNG TRA CỨU BẢNG & SƠ ĐỒ KỸ THUẬT\n\n- **Tra cứu {len(ctx.tables_extracted)} Bảng Số Liệu:** Tra cứu chi tiết dạng CSV/JSON tại [Thư mục Bảng Số Liệu](tables/README.md).\n- **Tra cứu Sơ Đồ Hình Vẽ:** Tra cứu ảnh nét cao và đặc tả phân vùng tại [Danh Mục Sơ Đồ Khí Động](figures/figures_catalog.yaml).\n\n")
+        nav_matrix.append(
+            f"\n---\n\n## 📊 HỆ THỐNG TRA CỨU BẢNG & SƠ ĐỒ KỸ THUẬT\n\n- **Tra cứu {len(ctx.tables_extracted)} Bảng Số Liệu:** Tra cứu chi tiết dạng CSV/JSON tại [Thư mục Bảng Số Liệu](tables/README.md).\n- **Tra cứu Sơ Đồ Hình Vẽ:** Tra cứu ảnh nét cao và đặc tả phân vùng tại [Danh Mục Sơ Đồ Khí Động](figures/figures_catalog.yaml).\n\n"
+        )
         ctx.body_md_parts.append("\n".join(nav_matrix))
 
     # 2. Write Primary Markdown
     out_name = ctx.output_filename or f"{ctx.bundle_dir.name}.md"
     target_md_path = ctx.bundle_dir / out_name
-    target_md_path.write_text("".join(ctx.body_md_parts), encoding="utf-8")
+    final_body_md = clean_markdown_tables_and_notes("".join(ctx.body_md_parts))
+    target_md_path.write_text(final_body_md, encoding="utf-8")
 
     # 3. Export Tables Catalog & README
     if ctx.tables_extracted:
         tables_dir = ctx.bundle_dir / "tables"
         with open(tables_dir / "tables_catalog.json", "w", encoding="utf-8") as f:
-            json.dump({"total_tables": len(ctx.tables_extracted), "tables": ctx.tables_extracted}, f, ensure_ascii=False, indent=2)
+            json.dump(
+                {"total_tables": len(ctx.tables_extracted), "tables": ctx.tables_extracted},
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
 
-        tbl_readme = ["# DANH MỤC BẢNG TRA CỨU KỸ THUẬT 2D (OKF v2.2)\n", "| Mã bảng | Tên bảng | CSV | JSON |", "| :--- | :--- | :---: | :---: |"]
+        tbl_readme = [
+            "# DANH MỤC BẢNG TRA CỨU KỸ THUẬT 2D (OKF v2.2)\n",
+            "| Mã bảng | Tên bảng | CSV | JSON |",
+            "| :--- | :--- | :---: | :---: |",
+        ]
         for t in ctx.tables_extracted:
-            tbl_readme.append(f"| {t['table_id']} | {t['title']} | [CSV]({t['csv_file']}) | [JSON]({t['json_file']}) |")
+            tbl_readme.append(
+                f"| {t['table_id']} | {t['title']} | [CSV]({t['csv_file']}) | [JSON]({t['json_file']}) |"
+            )
         (tables_dir / "README.md").write_text("\n".join(tbl_readme) + "\n", encoding="utf-8")
 
     # 4. Generate AST and QA Benchmarks
@@ -330,10 +393,16 @@ def process_technical_standard_strategy(
     bundle_p.mkdir(parents=True, exist_ok=True)
 
     # 1. Harvest formulas and extract figures
-    cache_dir = bundle_p.parents[2] / ".md" / "cache" / "formula_vision" if len(bundle_p.parents) >= 3 else bundle_p / ".cache"
+    cache_dir = (
+        bundle_p.parents[2] / ".md" / "cache" / "formula_vision"
+        if len(bundle_p.parents) >= 3
+        else bundle_p / ".cache"
+    )
     cache_dir.mkdir(parents=True, exist_ok=True)
     skip_vis = os.environ.get("AI_SKIP_VISION") == "1"
-    docx_rid_to_katex = rid_to_katex or harvest_docx_formula_images(docx_p, cache_dir=cache_dir, skip_vision=skip_vis)
+    docx_rid_to_katex = rid_to_katex or harvest_docx_formula_images(
+        docx_p, cache_dir=cache_dir, skip_vision=skip_vis
+    )
     extract_docx_figures(docx_p, bundle_p / "figures")
 
     # 2. Extract and locate normative start

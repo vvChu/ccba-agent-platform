@@ -10,22 +10,47 @@ from pathlib import Path
 from typing import Any
 
 LAYOUT_KEYWORDS = [
-    "cộng hòa xã hội chủ nghĩa", "độc lập - tự do", "nơi nhận:",
-    "tm. chính phủ", "kt. thủ tướng", "phó thủ tướng", "bộ trưởng",
-    "chủ tịch ủy ban", "ký, ghi rõ họ tên", "ký, đóng dấu", "lưu: vt",
+    "cộng hòa xã hội chủ nghĩa",
+    "độc lập - tự do",
+    "nơi nhận:",
+    "tm. chính phủ",
+    "kt. thủ tướng",
+    "phó thủ tướng",
+    "bộ trưởng",
+    "chủ tịch ủy ban",
+    "ký, ghi rõ họ tên",
+    "ký, đóng dấu",
+    "lưu: vt",
 ]
 
 NORMATIVE_KEYWORDS = [
-    "nguy cơ", "phân loại", "phụ lục", "quy định", "mã hiệu", "định mức",
-    "công năng", "tải trọng", "chi phí", "áp lực", "lưu lượng", "khoảng cách",
-    "nhiệt độ", "cường độ", "đơn vị", "đường kính", "loại ống", "bội số",
+    "nguy cơ",
+    "phân loại",
+    "phụ lục",
+    "quy định",
+    "mã hiệu",
+    "định mức",
+    "công năng",
+    "tải trọng",
+    "chi phí",
+    "áp lực",
+    "lưu lượng",
+    "khoảng cách",
+    "nhiệt độ",
+    "cường độ",
+    "đơn vị",
+    "đường kính",
+    "loại ống",
+    "bội số",
 ]
 
 
 def _is_admin_layout_table(text: str, rows: int, cols: int) -> bool:
     """Detect whether a small table is administrative header or signature block."""
     if rows <= 3 and cols <= 2:
-        if any(k in text for k in LAYOUT_KEYWORDS) and not any(k in text for k in NORMATIVE_KEYWORDS):
+        if any(k in text for k in LAYOUT_KEYWORDS) and not any(
+            k in text for k in NORMATIVE_KEYWORDS
+        ):
             return True
     return False
 
@@ -41,25 +66,38 @@ def _is_formula_frame_table(table: Any, rows: int, cols: int) -> bool:
     return False
 
 
-def _find_preceding_caption(blocks: list[tuple[str, Any]], block_idx: int) -> tuple[str | None, str | None]:
+def _find_preceding_caption(
+    blocks: list[tuple[str, Any]], block_idx: int
+) -> tuple[str | None, str | None]:
     """Look backwards 1-4 paragraphs to find a table caption ('Bảng X - ...')."""
     for prev_idx in range(block_idx - 1, max(-1, block_idx - 4), -1):
         if blocks[prev_idx][0] == "p":
             p_txt = blocks[prev_idx][1].text.strip()
             if not p_txt:
                 continue
-            m_cap = re.match(r"^(?:Bảng|Table)\s+([0-9A-Za-z\.\-]+)(?:\s*[-–—:]\s*(.+))?", p_txt, re.IGNORECASE)
+            m_cap = re.match(
+                r"^(?:Bảng|Table)\s+([0-9A-Za-z\.\-]+)(?:\s*[-–—:]\s*(.+))?", p_txt, re.IGNORECASE
+            )
             if m_cap:
                 return (m_cap.group(1), p_txt)
             break
     return (None, None)
 
 
-def _is_glossary_table(blocks: list[tuple[str, Any]], block_idx: int, cols: int, caption_num: str | None) -> bool:
+def _is_glossary_table(
+    blocks: list[tuple[str, Any]], block_idx: int, cols: int, caption_num: str | None
+) -> bool:
     """Detect 2-column symbol and abbreviation tables."""
     if cols == 2 and not caption_num:
-        prev_context = " ".join(blocks[p_i][1].text.lower() for p_i in range(max(0, block_idx - 3), block_idx) if blocks[p_i][0] == "p")
-        if any(k in prev_context for k in ["ký hiệu", "chữ viết tắt", "từ viết tắt", "symbols", "abbreviations"]):
+        prev_context = " ".join(
+            blocks[p_i][1].text.lower()
+            for p_i in range(max(0, block_idx - 3), block_idx)
+            if blocks[p_i][0] == "p"
+        )
+        if any(
+            k in prev_context
+            for k in ["ký hiệu", "chữ viết tắt", "từ viết tắt", "symbols", "abbreviations"]
+        ):
             return True
     return False
 
@@ -76,7 +114,9 @@ def _harvest_table_footnotes(blocks: list[tuple[str, Any]], block_idx: int) -> l
         if not p_text:
             next_idx += 1
             continue
-        if p_text.startswith(("CHÚ THÍCH", "GHI CHÚ", "Chú dẫn")) or (footnotes and p_text.startswith("-")):
+        if p_text.startswith(("CHÚ THÍCH", "GHI CHÚ", "Chú dẫn")) or (
+            footnotes and p_text.startswith("-")
+        ):
             footnotes.append(p_text)
             next_idx += 1
         else:
@@ -107,11 +147,28 @@ def _export_table_files(
     records: list[dict[str, Any]] = []
     if len(grid) > 1:
         for r in grid[1:]:
-            records.append({headers[c_idx] or f"col_{c_idx + 1}": r[c_idx] if c_idx < len(r) else "" for c_idx in range(len(headers))})
+            records.append(
+                {
+                    headers[c_idx] or f"col_{c_idx + 1}": r[c_idx] if c_idx < len(r) else ""
+                    for c_idx in range(len(headers))
+                }
+            )
 
     json_file = json_dir / f"{table_slug}.json"
     with open(json_file, "w", encoding="utf-8") as f:
-        json.dump({"table_id": table_slug, "rows_count": len(grid), "columns_count": len(headers), "headers": headers, "records": records, "footnotes": footnotes}, f, ensure_ascii=False, indent=2)
+        json.dump(
+            {
+                "table_id": table_slug,
+                "rows_count": len(grid),
+                "columns_count": len(headers),
+                "headers": headers,
+                "records": records,
+                "footnotes": footnotes,
+            },
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
 
     return {
         "table_id": table_slug,
@@ -121,6 +178,40 @@ def _export_table_files(
         "csv": str(csv_file.relative_to(bundle_dir)),
         "json": str(json_file.relative_to(bundle_dir)),
     }
+
+
+def resolve_hierarchical_headers(grid: list[list[str]]) -> tuple[list[list[str]], list[str]]:
+    """Combine multi-row table headers (e.g. category spans) into structured single-row headers."""
+    if not grid:
+        return grid, []
+    if len(grid) < 2:
+        return grid, grid[0]
+
+    max_w = max(len(r) for r in grid)
+    row0 = grid[0] + [""] * (max_w - len(grid[0]))
+    row1 = grid[1] + [""] * (max_w - len(grid[1]))
+
+    has_subheaders = False
+    for c in range(max_w):
+        if c > 0 and row0[c] == row0[c - 1] and row1[c] != row1[c - 1]:
+            has_subheaders = True
+            break
+
+    if has_subheaders:
+        combined_header = []
+        for c in range(max_w):
+            h0 = row0[c].strip()
+            h1 = row1[c].strip()
+            if h0 and h1 and h0 != h1 and h1 not in ("—", "-", ""):
+                combined_header.append(f"{h0} — {h1}")
+            else:
+                combined_header.append(h0 or h1 or f"col_{c + 1}")
+        norm_grid = [combined_header] + [r + [""] * (max_w - len(r)) for r in grid[2:]]
+        return norm_grid, combined_header
+
+    headers = [c or f"col_{i + 1}" for i, c in enumerate(row0)]
+    norm_grid = [r + [""] * (max_w - len(r)) for r in grid]
+    return norm_grid, headers
 
 
 def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[str, Any]]:
@@ -158,7 +249,9 @@ def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[
         rows_cnt, cols_cnt = len(table.rows), len(table.columns)
         table_text = " ".join(c.text.lower() for row in table.rows for c in row.cells)
 
-        if _is_admin_layout_table(table_text, rows_cnt, cols_cnt) or _is_formula_frame_table(table, rows_cnt, cols_cnt):
+        if _is_admin_layout_table(table_text, rows_cnt, cols_cnt) or _is_formula_frame_table(
+            table, rows_cnt, cols_cnt
+        ):
             continue
 
         caption_num, caption_title = _find_preceding_caption(blocks, block_idx)
@@ -167,22 +260,28 @@ def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[
 
         grid: list[list[str]] = []
         for row in table.rows:
-            clean_cells: list[str] = []
-            row_seen_tc: set[Any] = set()
-            for c in row.cells:
-                tc_elem = getattr(c, "_tc", id(c))
-                if tc_elem not in row_seen_tc:
-                    row_seen_tc.add(tc_elem)
-                    clean_cells.append(c.text.strip().replace("\n", " "))
-            if clean_cells:
+            clean_cells = [c.text.strip().replace("\n", " ") for c in row.cells]
+            if clean_cells and any(clean_cells):
                 grid.append(clean_cells)
-
 
         if not grid:
             continue
 
-        table_slug = f"bang_{int(caption_num):02d}" if caption_num and caption_num.isdigit() else (f"bang_{caption_num.replace('.', '_')}" if caption_num else f"bang_{table_counter:02d}")
+        norm_grid, headers = resolve_hierarchical_headers(grid)
+        table_slug = (
+            f"bang_{int(caption_num):02d}"
+            if caption_num and caption_num.isdigit()
+            else (
+                f"bang_{caption_num.replace('.', '_')}"
+                if caption_num
+                else f"bang_{table_counter:02d}"
+            )
+        )
         footnotes = _harvest_table_footnotes(blocks, block_idx)
-        extracted_tables.append(_export_table_files(grid, grid[0], footnotes, table_slug, csv_dir, json_dir, bundle_dir))
+        extracted_tables.append(
+            _export_table_files(
+                norm_grid, headers, footnotes, table_slug, csv_dir, json_dir, bundle_dir
+            )
+        )
 
     return extracted_tables

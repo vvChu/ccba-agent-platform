@@ -41,12 +41,14 @@ def generate_chunks(content: str, bundle_dir: Path) -> None:
             and (curr_words + p_words / 2 > target_size or curr_words + p_words > 400)
         ):
             c_text = "\n\n".join(curr_chunk)
-            chunks.append({
-                "chunk_id": idx,
-                "content": c_text,
-                "word_count": curr_words,
-                "token_count": monitor.get_context_token_count([c_text]),
-            })
+            chunks.append(
+                {
+                    "chunk_id": idx,
+                    "content": c_text,
+                    "word_count": curr_words,
+                    "token_count": monitor.get_context_token_count([c_text]),
+                }
+            )
             idx += 1
             curr_chunk, curr_words = [p], p_words
         else:
@@ -59,10 +61,14 @@ def generate_chunks(content: str, bundle_dir: Path) -> None:
             chunks[-1]["word_count"] += curr_words
             chunks[-1]["token_count"] = monitor.get_context_token_count([chunks[-1]["content"]])
         else:
-            chunks.append({
-                "chunk_id": idx,
-                "content": c_text,
-                "word_count": curr_words,
-                "token_count": monitor.get_context_token_count([c_text]),
-            })
-    (bundle_dir / "chunks.json").write_text(json.dumps(chunks, ensure_ascii=False, indent=2), encoding="utf-8")
+            chunks.append(
+                {
+                    "chunk_id": idx,
+                    "content": c_text,
+                    "word_count": curr_words,
+                    "token_count": monitor.get_context_token_count([c_text]),
+                }
+            )
+    (bundle_dir / "chunks.json").write_text(
+        json.dumps(chunks, ensure_ascii=False, indent=2), encoding="utf-8"
+    )

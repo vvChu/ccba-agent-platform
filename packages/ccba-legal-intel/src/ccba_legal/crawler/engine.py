@@ -75,7 +75,9 @@ class TVPLCrawler:
 
     def search(self, query: str, max_results: int = 10) -> list[dict[str, Any]]:
         """Search legal documents with offline test fallback."""
-        if hasattr(self.engine.provider, "search") and not isinstance(self.engine.provider, TVPLVIPDocProvider):
+        if hasattr(self.engine.provider, "search") and not isinstance(
+            self.engine.provider, TVPLVIPDocProvider
+        ):
             res = self.engine.provider.search(query, max_results)
             if res:
                 return res

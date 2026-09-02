@@ -112,7 +112,9 @@ class SandboxAuditor(BaseAuditor):
         context = self._load_context()
 
         if not self._is_sandbox(context):
-            return GovernanceAuditReport(issues=[], total_issues=0, has_hard_errors=False, scanned_files=0)
+            return GovernanceAuditReport(
+                issues=[], total_issues=0, has_hard_errors=False, scanned_files=0
+            )
 
         self._audit_qc_cap(context, issues)
         scanned = self._audit_watermarks(issues)

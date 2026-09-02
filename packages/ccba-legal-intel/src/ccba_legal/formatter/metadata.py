@@ -49,16 +49,26 @@ def inject_anchors(text: str) -> str:
         elif current_dieu and khoan_pattern.match(line):
             m = khoan_pattern.match(line)
             current_khoan = m.group(2)
-            line = m.group(1) + f'<a id="d{current_dieu}k{current_khoan}"></a>' + line[len(m.group(1)):]
+            line = (
+                m.group(1)
+                + f'<a id="d{current_dieu}k{current_khoan}"></a>'
+                + line[len(m.group(1)) :]
+            )
         elif current_dieu and current_khoan and diem_pattern.match(line):
             m = diem_pattern.match(line)
             diem_char = m.group(2).lower()
-            line = m.group(1) + f'<a id="d{current_dieu}k{current_khoan}d{diem_char}"></a>' + line[len(m.group(1)):]
+            line = (
+                m.group(1)
+                + f'<a id="d{current_dieu}k{current_khoan}d{diem_char}"></a>'
+                + line[len(m.group(1)) :]
+            )
         output_lines.append(line)
     return "\n".join(output_lines)
 
 
-def inject_warning_block(markdown_content: str, target_anchor: str, amendment_source: str, source_doc_path: str) -> str:
+def inject_warning_block(
+    markdown_content: str, target_anchor: str, amendment_source: str, source_doc_path: str
+) -> str:
     """Inject a markdown warning block immediately after the line containing target_anchor."""
     lines = markdown_content.splitlines()
     anchor_pattern = f'id="{target_anchor}"'
@@ -70,7 +80,11 @@ def inject_warning_block(markdown_content: str, target_anchor: str, amendment_so
     if target_idx == -1:
         return markdown_content
     doc_title = amendment_source
-    match = re.match(r"^(Điều\s+\d+(?:\s+Khoản\s+\d+)?(?:\s+Điểm\s+[a-zA-ZđĐ])?)\s+(.*)$", amendment_source, re.IGNORECASE)
+    match = re.match(
+        r"^(Điều\s+\d+(?:\s+Khoản\s+\d+)?(?:\s+Điểm\s+[a-zA-ZđĐ])?)\s+(.*)$",
+        amendment_source,
+        re.IGNORECASE,
+    )
     if match:
         doc_title = match.group(2).strip()
     warning_text = f"> [!WARNING] Khoản này đã bị sửa đổi/bổ sung bởi {amendment_source}. Xem nội dung mới tại [{doc_title}]({source_doc_path})."
@@ -78,7 +92,9 @@ def inject_warning_block(markdown_content: str, target_anchor: str, amendment_so
     for offset in range(1, 4):
         if target_idx + offset < len(lines):
             check_line = lines[target_idx + offset]
-            if "[!WARNING]" in check_line and (source_doc_path in check_line or amendment_source in check_line):
+            if "[!WARNING]" in check_line and (
+                source_doc_path in check_line or amendment_source in check_line
+            ):
                 already_exists = True
                 break
     if not already_exists:

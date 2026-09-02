@@ -130,17 +130,7 @@ class ASTParser:
             if point_match and current_clause:
                 point_char = point_match.group(1).lower()
                 point_text = line_str
-                node_id = (
-                    f"{current_clause.node_id}-P{point_char.upper()}a"
-                    if point_char == "a"
-                    else f"{current_clause.node_id}-P{point_char}"
-                )
-                if point_char == "a":
-                    node_id = f"{current_clause.node_id}-Pa"
-                elif point_char == "b":
-                    node_id = f"{current_clause.node_id}-Pb"
-                elif point_char == "c":
-                    node_id = f"{current_clause.node_id}-Pc"
+                node_id = f"{current_clause.node_id}-P{point_char}"
 
                 point_node = ASTNode(
                     node_id=node_id,

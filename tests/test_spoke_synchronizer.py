@@ -327,4 +327,3 @@ def test_sync_with_additional_bundles(mock_spoke: Path, mock_hub: Path) -> None:
     assert (mock_spoke / ".agents" / "skills" / "core-skill" / "SKILL.md").exists()
     assert (mock_spoke / ".agents" / "skills" / "software-skill" / "SKILL.md").exists()
     assert (mock_spoke / ".agents" / "skills" / "consulting-skill" / "SKILL.md").exists()
-

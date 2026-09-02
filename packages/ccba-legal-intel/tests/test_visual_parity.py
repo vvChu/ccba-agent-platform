@@ -65,4 +65,3 @@ def test_visual_parity_detects_errors(tmp_path: Path) -> None:
     res = auditor.audit()
     assert res["passed"] is False
     assert res["critical_errors_count"] >= 3
-

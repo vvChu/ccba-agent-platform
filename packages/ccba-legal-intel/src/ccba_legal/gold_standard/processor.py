@@ -27,7 +27,8 @@ class GoldStandardProcessor:
             }
 
         core_files = [
-            f for f in bundle_dir.glob("*.md")
+            f
+            for f in bundle_dir.glob("*.md")
             if f.name not in ("index.md", "dead_ends.md", "log.md")
         ]
         annexes_dir = bundle_dir / "annexes"

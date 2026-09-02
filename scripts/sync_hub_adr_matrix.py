@@ -17,7 +17,9 @@ def parse_adr_file(adr_path: Path) -> dict[str, Any]:
     content = adr_path.read_text(encoding="utf-8")
 
     # Extract ID and Title from H1
-    h1_match = re.search(r"^#\s*ADR\s*0*([0-9]+)[:\s-]+(.*)$", content, re.MULTILINE | re.IGNORECASE)
+    h1_match = re.search(
+        r"^#\s*ADR\s*0*([0-9]+)[:\s-]+(.*)$", content, re.MULTILINE | re.IGNORECASE
+    )
     if h1_match:
         adr_num = int(h1_match.group(1))
         adr_title = h1_match.group(2).strip()
@@ -32,7 +34,9 @@ def parse_adr_file(adr_path: Path) -> dict[str, Any]:
 
     # Extract Status
     status = "ACCEPTED"
-    status_match = re.search(r"##\s*1\.\s*Trạng Thái\s*\(Status\)\s*\n\s*\*\*([A-Z_]+)", content, re.IGNORECASE)
+    status_match = re.search(
+        r"##\s*1\.\s*Trạng Thái\s*\(Status\)\s*\n\s*\*\*([A-Z_]+)", content, re.IGNORECASE
+    )
     if status_match:
         status = status_match.group(1).upper()
     elif "DEPRECATED" in content[:400]:
@@ -70,7 +74,9 @@ def compile_hub_adr_readme(adr_list: list[dict[str, Any]], target_file: Path) ->
 
     for adr in adr_list:
         status_icon = "✅ ACCEPTED" if adr["status"] == "ACCEPTED" else f"⚠️ {adr['status']}"
-        lines.append(f"| [ADR {adr['num_str']}]({adr['filename']}) | {adr['title']} | {status_icon} |")
+        lines.append(
+            f"| [ADR {adr['num_str']}]({adr['filename']}) | {adr['title']} | {status_icon} |"
+        )
 
     lines.append("")
     new_content = "\n".join(lines).strip() + "\n"
@@ -93,7 +99,9 @@ def main() -> None:
 
     readme_path = adr_dir / "README.md"
     compile_hub_adr_readme(adr_list, readme_path)
-    print(f"[sync_hub_adr_matrix] Successfully compiled: {readme_path.relative_to(root_dir)} ({len(adr_list)} ADRs)")
+    print(
+        f"[sync_hub_adr_matrix] Successfully compiled: {readme_path.relative_to(root_dir)} ({len(adr_list)} ADRs)"
+    )
 
 
 if __name__ == "__main__":

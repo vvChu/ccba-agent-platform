@@ -40,8 +40,14 @@ def _wait_for_file(
             if target_f.exists() and target_f.stat().st_size > 0:
                 return True
         for f in target_dir.glob("*"):
-            if f.suffix in extensions and not f.name.endswith(".crdownload") and not f.name.endswith(".tmp"):
-                if f.stat().st_mtime >= min_mtime or time.time() - f.stat().st_mtime < (timeout_sec + 5):
+            if (
+                f.suffix in extensions
+                and not f.name.endswith(".crdownload")
+                and not f.name.endswith(".tmp")
+            ):
+                if f.stat().st_mtime >= min_mtime or time.time() - f.stat().st_mtime < (
+                    timeout_sec + 5
+                ):
                     dest = target_dir / f"{slug_name}{f.suffix}"
                     if f != dest:
                         try:
@@ -51,8 +57,14 @@ def _wait_for_file(
                     return True
         if fallback_dir.exists():
             for f in fallback_dir.glob("*"):
-                if f.suffix in extensions and not f.name.endswith(".crdownload") and not f.name.endswith(".tmp"):
-                    if (f.stat().st_mtime >= min_mtime) or (f.name not in existing_fallback and time.time() - f.stat().st_mtime < 30):
+                if (
+                    f.suffix in extensions
+                    and not f.name.endswith(".crdownload")
+                    and not f.name.endswith(".tmp")
+                ):
+                    if (f.stat().st_mtime >= min_mtime) or (
+                        f.name not in existing_fallback and time.time() - f.stat().st_mtime < 30
+                    ):
                         dest = target_dir / f"{slug_name}{f.suffix}"
                         try:
                             shutil.move(str(f), str(dest))
@@ -96,9 +108,15 @@ def _download_attached_packages(
         print(f"[LegalIntel] Error triggering attachments: {e}")
 
     downloaded = []
-    candidates = list(attach_dir.glob("*")) + (list(fallback_dir.glob("*.zip")) if fallback_dir.exists() else [])
+    candidates = list(attach_dir.glob("*")) + (
+        list(fallback_dir.glob("*.zip")) if fallback_dir.exists() else []
+    )
     for f in candidates:
-        if f.suffix in (".zip", ".rar", ".xlsx", ".docx", ".doc") and not f.name.endswith(".crdownload") and not f.name.endswith(".tmp"):
+        if (
+            f.suffix in (".zip", ".rar", ".xlsx", ".docx", ".doc")
+            and not f.name.endswith(".crdownload")
+            and not f.name.endswith(".tmp")
+        ):
             if time.time() - f.stat().st_mtime < 30:
                 dest = attach_dir / f.name
                 if f != dest:

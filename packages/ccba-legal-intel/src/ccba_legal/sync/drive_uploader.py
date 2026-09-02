@@ -81,9 +81,7 @@ def get_drive_service() -> Any:
             print("[Drive Info] Thử fallback sang kiểm tra ADC mặc định...")
 
     # 2. Fallback to ADC
-    credentials, _project = google_auth.default(
-        scopes=["https://www.googleapis.com/auth/drive"]
-    )
+    credentials, _project = google_auth.default(scopes=["https://www.googleapis.com/auth/drive"])
     return build("drive", "v3", credentials=credentials)
 
 
@@ -126,9 +124,7 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
             local_mime = "application/pdf"
             google_mime = "application/pdf"
         elif ext in [".docx", ".doc"]:
-            local_mime = (
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            )
+            local_mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             google_mime = "application/vnd.google-apps.document"
         elif ext in [".xlsx", ".xls"]:
             local_mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -162,9 +158,7 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
                     print(f"[Drive Share Warning] Không thể set public: {share_err}")
                 return str(existing_id)
 
-            print(
-                f"[Drive Update] Tệp '{target_name}' đã thay đổi. Ghi đè file_id: {existing_id}"
-            )
+            print(f"[Drive Update] Tệp '{target_name}' đã thay đổi. Ghi đè file_id: {existing_id}")
             media = MediaFileUpload(str(file_path), mimetype=local_mime, resumable=True)
             file_metadata: dict[str, Any] = {}
             if google_mime:
@@ -189,9 +183,7 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
             file_metadata_new["mimeType"] = google_mime
         media = MediaFileUpload(str(file_path), mimetype=local_mime, resumable=True)
         file = (
-            service.files()
-            .create(body=file_metadata_new, media_body=media, fields="id")
-            .execute()
+            service.files().create(body=file_metadata_new, media_body=media, fields="id").execute()
         )
         file_id = file.get("id")
         try:

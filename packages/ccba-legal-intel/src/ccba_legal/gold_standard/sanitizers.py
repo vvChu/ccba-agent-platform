@@ -64,7 +64,10 @@ def clean_table_footnotes_and_superscripts(text: str) -> str:
         extracted_footnotes: list[str] = []
         cleaned_t_lines: list[str] = []
         for line in t_lines:
-            trapped_match = re.search(r"\|\s*(_[1-9]\)|_CHÚ THÍCH|_GHI CHÚ|_Đối với|_Ghi chú|_Không yêu cầu|_Nếu không|_Cho phép)(.*?)\|\s*$", line)
+            trapped_match = re.search(
+                r"\|\s*(_[1-9]\)|_CHÚ THÍCH|_GHI CHÚ|_Đối với|_Ghi chú|_Không yêu cầu|_Nếu không|_Cho phép)(.*?)\|\s*$",
+                line,
+            )
             if trapped_match:
                 note_text = trapped_match.group(1) + trapped_match.group(2)
                 line = line[: trapped_match.start()] + "|"
@@ -81,8 +84,10 @@ def clean_table_footnotes_and_superscripts(text: str) -> str:
                         extracted_footnotes.append(p)
                 if line.replace("|", "").strip() == "":
                     continue
+
             def _superscript_marker(m: re.Match) -> str:
                 return f"<sup>{m.group(1)}</sup>"
+
             line = re.sub(r"\s*([1-9]\))(?=\s*(?:\||$))", _superscript_marker, line)
             cleaned_t_lines.append(line)
         res = cleaned_t_lines
@@ -125,13 +130,32 @@ def normalize_notes_and_lists(text: str) -> str:
             stripped = re.sub(r"^([-*]\s+)+", "- ", stripped)
         cleaned_bullet_lines.append(stripped if not line.startswith("  ") else line)
     text = "\n".join(cleaned_bullet_lines)
-    text = re.sub(r'(####\s*<a id="muc-1-4-9"[^\n]+\n+Chiều cao PCCC của nhà[^\n]+\n+)\s*(Bằng khoảng cách lớn nhất[^\n]+)\n+\s*(Bằng một nửa tổng khoảng cách[^\n]+)', r"\1- \2\n\n- \3", text)
-    text = re.sub(r"(_?CHÚ THÍCH:\s*Các yếu tố nguy hiểm cháy[^\n]+)\n+\s*[-*]?\s*2\.\s*(luồng nhiệt[^\n]+)", r"_CHÚ THÍCH: Các yếu tố nguy hiểm cháy: 1) ngọn lửa và tia lửa, 2) \2_", text, flags=re.IGNORECASE)
+    text = re.sub(
+        r'(####\s*<a id="muc-1-4-9"[^\n]+\n+Chiều cao PCCC của nhà[^\n]+\n+)\s*(Bằng khoảng cách lớn nhất[^\n]+)\n+\s*(Bằng một nửa tổng khoảng cách[^\n]+)',
+        r"\1- \2\n\n- \3",
+        text,
+    )
+    text = re.sub(
+        r"(_?CHÚ THÍCH:\s*Các yếu tố nguy hiểm cháy[^\n]+)\n+\s*[-*]?\s*2\.\s*(luồng nhiệt[^\n]+)",
+        r"_CHÚ THÍCH: Các yếu tố nguy hiểm cháy: 1) ngọn lửa và tia lửa, 2) \2_",
+        text,
+        flags=re.IGNORECASE,
+    )
     text = re.sub(r"(?m)^\s*_CHÚ THÍCH:_\s*\n+(?=\s*-\s+\*\*CHÚ THÍCH\s+[2-9])", "", text)
-    text = re.sub(r"(\n-\s+\*\*CHÚ THÍCH\s+\d+:?\*\*[^\n]+\n+)\s*_CHÚ THÍCH:_\n+(?=-\s+\*\*CHÚ THÍCH)", r"\1", text)
+    text = re.sub(
+        r"(\n-\s+\*\*CHÚ THÍCH\s+\d+:?\*\*[^\n]+\n+)\s*_CHÚ THÍCH:_\n+(?=-\s+\*\*CHÚ THÍCH)",
+        r"\1",
+        text,
+    )
+
     def _fix_codes(match: re.Match) -> str:
         return f"- {match.group(1).strip()}"
-    text = re.sub(r"(?m)^(?!\s*[-*])\s*((?:LT[1-4]|Ch[1-4]|BC[1-3]|SK[1-3]|ĐT[1-4]|CV[0-5]|K[0-3])\s*\([^\n]+)", _fix_codes, text)
+
+    text = re.sub(
+        r"(?m)^(?!\s*[-*])\s*((?:LT[1-4]|Ch[1-4]|BC[1-3]|SK[1-3]|ĐT[1-4]|CV[0-5]|K[0-3])\s*\([^\n]+)",
+        _fix_codes,
+        text,
+    )
     lines = text.splitlines()
     processed_lines: list[str] = []
     in_note = False
