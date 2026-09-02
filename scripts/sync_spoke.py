@@ -59,6 +59,12 @@ def main() -> None:
         help="Apply synchronization changes directly to disk without interactive confirmation.",
     )
     parser.add_argument(
+        "--bootstrap",
+        "-b",
+        action="store_true",
+        help="Automatically bootstrap and link Hub packages in editable mode (ADR 0044).",
+    )
+    parser.add_argument(
         "--force",
         "--ignore-dirty",
         action="store_true",
@@ -108,6 +114,7 @@ def main() -> None:
                     force=args.force,
                     backup=not args.no_backup,
                     include_sandboxes=args.include_sandboxes,
+                    bootstrap=args.bootstrap,
                 )
             )
         elif args.apply:
@@ -118,6 +125,7 @@ def main() -> None:
                     force=args.force,
                     backup=not args.no_backup,
                     include_sandboxes=args.include_sandboxes,
+                    bootstrap=args.bootstrap,
                 )
             )
         else:
@@ -130,6 +138,7 @@ def main() -> None:
                 force=args.force,
                 backup=not args.no_backup,
                 include_sandboxes=args.include_sandboxes,
+                bootstrap=args.bootstrap,
             )
             if preview_code != 0:
                 sys.exit(preview_code)
@@ -147,6 +156,7 @@ def main() -> None:
                                 force=args.force,
                                 backup=not args.no_backup,
                                 include_sandboxes=args.include_sandboxes,
+                                bootstrap=args.bootstrap,
                             )
                         )
                     else:
@@ -173,6 +183,7 @@ def main() -> None:
                     dry_run=True,
                     force=args.force,
                     backup=not args.no_backup,
+                    bootstrap=args.bootstrap,
                 )
             )
         elif args.apply:
@@ -183,6 +194,7 @@ def main() -> None:
                     dry_run=False,
                     force=args.force,
                     backup=not args.no_backup,
+                    bootstrap=args.bootstrap,
                 )
             )
         else:
@@ -194,6 +206,7 @@ def main() -> None:
                 dry_run=True,
                 force=args.force,
                 backup=not args.no_backup,
+                bootstrap=args.bootstrap,
             )
             if preview_code != 0:
                 sys.exit(preview_code)
@@ -212,6 +225,7 @@ def main() -> None:
                                 dry_run=False,
                                 force=args.force,
                                 backup=not args.no_backup,
+                                bootstrap=args.bootstrap,
                             )
                         )
                     else:

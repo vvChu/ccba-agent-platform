@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from ccba_harness.evals.models import EvalItemResult, EvalReport, ScoreResult
+from ccba_harness import EvalItemResult, EvalReport, ScoreResult
 from scripts.eval.git_ratchet_tuner import GitRatchetTuner, RatchetConfig
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]

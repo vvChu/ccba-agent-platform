@@ -27,9 +27,14 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "packages" / "ccba-ai" / "src"))
 sys.path.insert(0, str(project_root / "packages" / "ccba-harness" / "src"))
 
-from ccba_harness.evals.models import EvalItem, EvalReport
-from ccba_harness.evals.runner import EvalRunner
-from ccba_harness.evals.scorers import BaseScorer, LengthBoundsScorer, RegexScorer
+from ccba_harness import (
+    BaseScorer,
+    EvalItem,
+    EvalReport,
+    EvalRunner,
+    LengthBoundsScorer,
+    RegexScorer,
+)
 
 
 @dataclass
@@ -276,6 +281,7 @@ class GitRatchetTuner:
         # Grounded task execution taking into account current prompt content
         def mock_agent_task(item: EvalItem) -> str:
             prompt = str(item.input_prompt)
+            prompt_l = prompt.lower()
 
             # Check if prompt content has legal guidance and hard floor guardrails
             has_legal_grounding = "Nghị định" in content or "Luật" in content or "VBHN" in content
@@ -500,7 +506,6 @@ class GitRatchetTuner:
                     "mc d800",
                 ]
             ):
-                prompt_l = prompt.lower()
                 has_bim_grounding = "Uniclass" in content or "ISO 12006-2" in content
                 has_bim_naming = "ISO 19650" in content or "IFC Alignment" in content
                 has_digital_memory = "Trí Nhớ Số" in content or "Digital Memory" in content

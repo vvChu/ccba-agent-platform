@@ -222,6 +222,48 @@ class LegalKnowledgeSyncOrchestrator:
         self.hub_root = hub_root
         self.project_type = project_type
 
+    def is_master_legal_corpus(self) -> bool:
+        """Determines if the target Spoke is the Master Legal Corpus itself (ADR 0036/0050)."""
+        if self.spoke_root.name.lower() == "ccba-legal-knowledge":
+            return True
+
+        # Check workspace_context.yaml for archetype == 'knowledge_corpus' or mode == 'knowledge'
+        for ctx_dir in [self.spoke_root / ".agents", self.spoke_root / ".md"]:
+            ctx_file = ctx_dir / "workspace_context.yaml"
+            if ctx_file.exists():
+                try:
+                    data = yaml.safe_load(ctx_file.read_text(encoding="utf-8")) or {}
+                    proj = data.get("project", {})
+                    if isinstance(proj, dict):
+                        if (
+                            proj.get("archetype") == "knowledge_corpus"
+                            or proj.get("mode") == "knowledge"
+                            or proj.get("name") == "ccba-legal-knowledge"
+                        ):
+                            return True
+                except Exception:
+                    pass
+
+        # Check if legal_docs exists in spoke root AND legal_registry exists at root
+        if (self.spoke_root / "legal_docs").exists() and (
+            (self.spoke_root / "legal_registry.yaml").exists()
+            or (self.spoke_root / ".md" / "data" / "legal_registry.yaml").exists()
+        ):
+            pyproject = self.spoke_root / "pyproject.toml"
+            if pyproject.exists():
+                try:
+                    if "ccba-legal-knowledge" in pyproject.read_text(encoding="utf-8"):
+                        return True
+                except Exception:
+                    pass
+            if (
+                self.project_type == "Pháp điển"
+                and not (self.spoke_root / ".md" / "legal_docs").exists()
+            ):
+                return True
+
+        return False
+
     def is_legal_related_spoke(self) -> bool:
         """Determines if the target Spoke requires legal knowledge bundle synchronization."""
         if self.project_type in self.LEGAL_PROJECT_TYPES:
@@ -240,6 +282,20 @@ class LegalKnowledgeSyncOrchestrator:
         Returns:
             Dict containing action taken and status report.
         """
+        if self.is_master_legal_corpus():
+            print(
+                "\n📚 [Legal Sync] Spoke hiện tại là Master Legal Corpus ('ccba-legal-knowledge')."
+            )
+            print(
+                "   🛡️ Bảo tồn cấu trúc dữ liệu nguyên bản, bỏ qua sao chép nội bộ (ADR 0036 & ADR 0050)."
+            )
+            return {
+                "is_legal": True,
+                "is_master": True,
+                "dry_run": dry_run,
+                "status": "master_corpus_preserved",
+            }
+
         if self.is_legal_related_spoke():
             print("\n📚 [Legal Sync] Tự động đồng bộ Tri thức Pháp lý (ADR 0050):")
             if dry_run:
