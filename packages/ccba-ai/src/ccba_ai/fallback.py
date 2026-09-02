@@ -281,7 +281,9 @@ class TieredFallbackRouter:
                     client = self.get_sync_client(
                         TierType.TIER4_OLLAMA, timeout=min(timeout, 30.0), provider_cfg=tier4_cfg
                     )
-                    logger.info(f"[ccba-ai] Failing over to Tier 4 (Local Ollama: {mapped_model})...")
+                    logger.info(
+                        f"[ccba-ai] Failing over to Tier 4 (Local Ollama: {mapped_model})..."
+                    )
                     res = fallback_fn_builder(client, mapped_model)
                     if circuit_breaker:
                         circuit_breaker.record_success()
@@ -291,7 +293,9 @@ class TieredFallbackRouter:
 
             # --- Try Tier 5 (Mock Provider Fallback if enabled) ---
             if self.enable_mock_fallback and fallback_fn_builder:
-                logger.info("[ccba-ai] All live tiers exhausted. Failing over to Tier 5 (Mock Provider)...")
+                logger.info(
+                    "[ccba-ai] All live tiers exhausted. Failing over to Tier 5 (Mock Provider)..."
+                )
                 return fallback_fn_builder(self.mock_provider.sync_client, model)
 
             # Re-raise original primary error if all failovers failed
@@ -340,7 +344,9 @@ class TieredFallbackRouter:
                         circuit_breaker.record_success()
                     return res
                 except Exception as t2_exc:
-                    logger.warning(f"[ccba-ai] Tier 2 ({tier2_cfg['provider']}) async failed: {t2_exc}")
+                    logger.warning(
+                        f"[ccba-ai] Tier 2 ({tier2_cfg['provider']}) async failed: {t2_exc}"
+                    )
 
             # --- Try Tier 3 (Antigravity CLI Bridge) ---
             agy = self._get_agy_provider()
@@ -366,7 +372,9 @@ class TieredFallbackRouter:
                     client = self.get_async_client(
                         TierType.TIER4_OLLAMA, timeout=min(timeout, 30.0), provider_cfg=tier4_cfg
                     )
-                    logger.info(f"[ccba-ai] Failing over to Tier 4 (Local Ollama: {mapped_model})...")
+                    logger.info(
+                        f"[ccba-ai] Failing over to Tier 4 (Local Ollama: {mapped_model})..."
+                    )
                     res = await fallback_coro_builder(client, mapped_model)
                     if circuit_breaker:
                         circuit_breaker.record_success()
@@ -376,7 +384,9 @@ class TieredFallbackRouter:
 
             # --- Try Tier 5 (Mock Provider Fallback if enabled) ---
             if self.enable_mock_fallback and fallback_coro_builder:
-                logger.info("[ccba-ai] All live tiers exhausted. Failing over to Tier 5 (Mock Provider)...")
+                logger.info(
+                    "[ccba-ai] All live tiers exhausted. Failing over to Tier 5 (Mock Provider)..."
+                )
                 return await fallback_coro_builder(self.mock_provider.async_client, model)
 
             # Re-raise original primary error if all failovers failed

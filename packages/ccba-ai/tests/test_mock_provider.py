@@ -31,6 +31,7 @@ def test_mock_provider_pattern_matching():
 def test_mock_provider_json_auto_detection():
     """Test MockProvider generates valid JSON when requested in prompt."""
     import json
+
     provider = MockProvider()
 
     resp = provider.generate_response("Trích xuất thông tin dưới dạng JSON:")

@@ -338,8 +338,12 @@ class TestAIClientRetry:
         """Test chat raises exception if retries are exhausted."""
         router = TieredFallbackRouter(enable_fallback=False, mock_mode=False)
         client = AIClient(
-            base_url="http://fake:1/v1", api_key="fake", max_retries=2, retry_delay=0.01,
-            fallback_router=router, mock_mode=False,
+            base_url="http://fake:1/v1",
+            api_key="fake",
+            max_retries=2,
+            retry_delay=0.01,
+            fallback_router=router,
+            mock_mode=False,
         )
 
         with patch.object(
@@ -359,8 +363,11 @@ class TestAIClientRetry:
 
         router = TieredFallbackRouter(enable_fallback=False, mock_mode=False)
         client = AIClient(
-            base_url="http://fake:1/v1", api_key="fake", circuit_breaker=cb,
-            fallback_router=router, mock_mode=False,
+            base_url="http://fake:1/v1",
+            api_key="fake",
+            circuit_breaker=cb,
+            fallback_router=router,
+            mock_mode=False,
         )
 
         with patch.object(client._client.chat.completions, "create") as mock_create:

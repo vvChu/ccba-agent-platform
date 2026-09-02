@@ -221,8 +221,11 @@ async def test_async_client_chat_fast_fails_when_circuit_breaker_open():
 
     router = TieredFallbackRouter(enable_fallback=False, mock_mode=False)
     client = AsyncAIClient(
-        base_url="http://test-gateway/v1", api_key="mock-key", circuit_breaker=cb,
-        fallback_router=router, mock_mode=False,
+        base_url="http://test-gateway/v1",
+        api_key="mock-key",
+        circuit_breaker=cb,
+        fallback_router=router,
+        mock_mode=False,
     )
 
     with patch.object(

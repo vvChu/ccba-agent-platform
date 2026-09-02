@@ -17,15 +17,28 @@ def test_map_model_for_tier():
 
     # Tier 4 Ollama
     with patch.dict("os.environ", {"OLLAMA_MODEL": "custom-ollama:latest"}):
-        assert map_model_for_tier("gemini-3.7-flash", TierType.TIER4_OLLAMA) == "custom-ollama:latest"
+        assert (
+            map_model_for_tier("gemini-3.7-flash", TierType.TIER4_OLLAMA) == "custom-ollama:latest"
+        )
 
     # Tier 2 Cloud (Gemini)
-    assert map_model_for_tier("gemini-3.7-flash", TierType.TIER2_CLOUD, "gemini") == "gemini-2.5-flash"
-    assert map_model_for_tier("gemini-3.7-flash-high", TierType.TIER2_CLOUD, "gemini") == "gemini-2.5-pro"
+    assert (
+        map_model_for_tier("gemini-3.7-flash", TierType.TIER2_CLOUD, "gemini") == "gemini-2.5-flash"
+    )
+    assert (
+        map_model_for_tier("gemini-3.7-flash-high", TierType.TIER2_CLOUD, "gemini")
+        == "gemini-2.5-pro"
+    )
 
     # Tier 2 Cloud (Groq)
-    assert map_model_for_tier("gemini-3.7-flash", TierType.TIER2_CLOUD, "groq") == "llama-3.3-70b-versatile"
-    assert map_model_for_tier("deepseek-r1", TierType.TIER2_CLOUD, "groq") == "deepseek-r1-distill-llama-70b"
+    assert (
+        map_model_for_tier("gemini-3.7-flash", TierType.TIER2_CLOUD, "groq")
+        == "llama-3.3-70b-versatile"
+    )
+    assert (
+        map_model_for_tier("deepseek-r1", TierType.TIER2_CLOUD, "groq")
+        == "deepseek-r1-distill-llama-70b"
+    )
 
     # Tier 2 Cloud (OpenAI)
     assert map_model_for_tier("gemini-3.7-flash", TierType.TIER2_CLOUD, "openai") == "gpt-4o-mini"

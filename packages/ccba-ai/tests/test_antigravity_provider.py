@@ -65,12 +65,14 @@ class TestParseNdjsonResponse:
 
     def test_parse_result_event(self) -> None:
         """Should extract response from 'result' event."""
-        ndjson = "\n".join([
-            '{"event":"init","conversation_id":"abc123"}',
-            '{"event":"step_update","step_update":{"step_index":0,"state":"DONE","step_type":"user_input"}}',
-            '{"event":"step_update","step_update":{"step_index":1,"state":"DONE","step_type":"agent_response","text_delta":"1 + 1 = 2\\n"}}',
-            '{"event":"result","result":{"response":"1 + 1 = 2\\n","duration_seconds":34.22,"usage":{"input_tokens":26507,"output_tokens":91,"total_tokens":26598}}}',
-        ])
+        ndjson = "\n".join(
+            [
+                '{"event":"init","conversation_id":"abc123"}',
+                '{"event":"step_update","step_update":{"step_index":0,"state":"DONE","step_type":"user_input"}}',
+                '{"event":"step_update","step_update":{"step_index":1,"state":"DONE","step_type":"agent_response","text_delta":"1 + 1 = 2\\n"}}',
+                '{"event":"result","result":{"response":"1 + 1 = 2\\n","duration_seconds":34.22,"usage":{"input_tokens":26507,"output_tokens":91,"total_tokens":26598}}}',
+            ]
+        )
         text, usage = parse_ndjson_response(ndjson)
         assert text == "1 + 1 = 2"
         assert usage.prompt_tokens == 26507
@@ -79,11 +81,13 @@ class TestParseNdjsonResponse:
 
     def test_fallback_to_text_delta(self) -> None:
         """Should concatenate text_delta if no result event found."""
-        ndjson = "\n".join([
-            '{"event":"init","conversation_id":"abc"}',
-            '{"event":"step_update","step_update":{"step_type":"agent_response","text_delta":"Hello "}}',
-            '{"event":"step_update","step_update":{"step_type":"agent_response","text_delta":"world"}}',
-        ])
+        ndjson = "\n".join(
+            [
+                '{"event":"init","conversation_id":"abc"}',
+                '{"event":"step_update","step_update":{"step_type":"agent_response","text_delta":"Hello "}}',
+                '{"event":"step_update","step_update":{"step_type":"agent_response","text_delta":"world"}}',
+            ]
+        )
         text, usage = parse_ndjson_response(ndjson)
         assert text == "Hello world"
         assert usage.prompt_tokens == 0  # No usage data available
@@ -96,10 +100,12 @@ class TestParseNdjsonResponse:
 
     def test_malformed_json_lines_skipped(self) -> None:
         """Should skip malformed JSON lines and still extract valid response."""
-        ndjson = "\n".join([
-            "not-json-at-all",
-            '{"event":"result","result":{"response":"OK","usage":{}}}',
-        ])
+        ndjson = "\n".join(
+            [
+                "not-json-at-all",
+                '{"event":"result","result":{"response":"OK","usage":{}}}',
+            ]
+        )
         text, usage = parse_ndjson_response(ndjson)
         assert text == "OK"
 
@@ -141,13 +147,15 @@ class TestAntigravityCLIProvider:
 
     def test_chat_success(self) -> None:
         """Should parse subprocess output and return response text."""
-        ndjson_output = json.dumps({
-            "event": "result",
-            "result": {
-                "response": "The answer is 42.\n",
-                "usage": {"input_tokens": 100, "output_tokens": 10, "total_tokens": 110},
-            },
-        })
+        ndjson_output = json.dumps(
+            {
+                "event": "result",
+                "result": {
+                    "response": "The answer is 42.\n",
+                    "usage": {"input_tokens": 100, "output_tokens": 10, "total_tokens": 110},
+                },
+            }
+        )
 
         mock_result = MagicMock()
         mock_result.returncode = 0
@@ -197,13 +205,15 @@ class TestAgySyncAdapter:
 
     def test_adapter_interface_chain(self) -> None:
         """Should support client.chat.completions.create() chain."""
-        ndjson_output = json.dumps({
-            "event": "result",
-            "result": {
-                "response": "Mocked response",
-                "usage": {"input_tokens": 50, "output_tokens": 5, "total_tokens": 55},
-            },
-        })
+        ndjson_output = json.dumps(
+            {
+                "event": "result",
+                "result": {
+                    "response": "Mocked response",
+                    "usage": {"input_tokens": 50, "output_tokens": 5, "total_tokens": 55},
+                },
+            }
+        )
 
         mock_result = MagicMock()
         mock_result.returncode = 0
@@ -242,20 +252,20 @@ class TestAgyAsyncProvider:
     @pytest.mark.asyncio
     async def test_chat_async_success(self) -> None:
         """Should parse async subprocess output."""
-        ndjson_output = json.dumps({
-            "event": "result",
-            "result": {
-                "response": "Async answer\n",
-                "usage": {"input_tokens": 200, "output_tokens": 20, "total_tokens": 220},
-            },
-        })
+        ndjson_output = json.dumps(
+            {
+                "event": "result",
+                "result": {
+                    "response": "Async answer\n",
+                    "usage": {"input_tokens": 200, "output_tokens": 20, "total_tokens": 220},
+                },
+            }
+        )
 
         mock_proc = MagicMock()
         mock_proc.pid = 12345
         mock_proc.returncode = 0
-        mock_proc.communicate = MagicMock(
-            return_value=(ndjson_output.encode("utf-8"), b"")
-        )
+        mock_proc.communicate = MagicMock(return_value=(ndjson_output.encode("utf-8"), b""))
 
         # Make communicate awaitable
 

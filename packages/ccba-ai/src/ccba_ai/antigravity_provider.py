@@ -322,8 +322,7 @@ class AntigravityCLIProvider:
         cmd = self._build_command(prompt, effective_model)
 
         logger.info(
-            f"[ccba-ai] Antigravity CLI call: model={effective_model}, "
-            f"timeout={effective_timeout}s"
+            f"[ccba-ai] Antigravity CLI call: model={effective_model}, timeout={effective_timeout}s"
         )
 
         try:
@@ -336,9 +335,7 @@ class AntigravityCLIProvider:
                 # shell=False (default) — NO shell injection risk
             )
         except subprocess.TimeoutExpired:
-            logger.warning(
-                f"[ccba-ai] Antigravity CLI timed out after {effective_timeout}s"
-            )
+            logger.warning(f"[ccba-ai] Antigravity CLI timed out after {effective_timeout}s")
             raise
 
         if result.returncode != 0:
@@ -347,8 +344,7 @@ class AntigravityCLIProvider:
                 f"{result.stderr[:500]}"
             )
             raise RuntimeError(
-                f"Antigravity CLI failed (exit {result.returncode}): "
-                f"{result.stderr[:200]}"
+                f"Antigravity CLI failed (exit {result.returncode}): {result.stderr[:200]}"
             )
 
         return parse_ndjson_response(result.stdout)
@@ -378,9 +374,7 @@ class AntigravityCLIProvider:
 
         cmd = self._build_command(prompt, effective_model)
 
-        logger.info(
-            f"[ccba-ai] Antigravity CLI async call: model={effective_model}"
-        )
+        logger.info(f"[ccba-ai] Antigravity CLI async call: model={effective_model}")
 
         kwargs: dict[str, Any] = {}
         if sys.platform == "win32":
@@ -407,10 +401,7 @@ class AntigravityCLIProvider:
         stderr = stderr_bytes.decode("utf-8", errors="replace")
 
         if proc.returncode != 0:
-            raise RuntimeError(
-                f"Antigravity CLI failed (exit {proc.returncode}): "
-                f"{stderr[:200]}"
-            )
+            raise RuntimeError(f"Antigravity CLI failed (exit {proc.returncode}): {stderr[:200]}")
 
         return parse_ndjson_response(stdout)
 

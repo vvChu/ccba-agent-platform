@@ -3,7 +3,7 @@
 * **Loại Ticket:** `Task [AFK]`
 * **Assignee:** Unassigned
 * **Trạng thái:** 🟢 Ready
-* **Bản đồ trực thuộc:** [Hệ Sinh Thái CLI & Tự Động Hoá Agentic](file:///d:/GitHubProjects/ccba-agent-platform/.md/wayfinder/cli-and-agent-automation-ecosystem/map.md)
+* **Bản đồ trực thuộc:** [Hệ Sinh Thái CLI & Tự Động Hoá Agentic](../map.md)
 
 ---
 

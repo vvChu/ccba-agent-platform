@@ -117,14 +117,11 @@ class MockCompletions:
             usage=MockUsage(
                 prompt_tokens=max(1, len(last_content.split())),
                 completion_tokens=max(1, len(response_text.split())),
-                total_tokens=max(1, len(last_content.split()))
-                + max(1, len(response_text.split())),
+                total_tokens=max(1, len(last_content.split())) + max(1, len(response_text.split())),
             ),
         )
 
-    def _stream_generator(
-        self, text: str, model: str
-    ) -> Generator[MockStreamChunk, None, None]:
+    def _stream_generator(self, text: str, model: str) -> Generator[MockStreamChunk, None, None]:
         words = text.split(" ")
         for i, word in enumerate(words):
             chunk_text = word if i == len(words) - 1 else word + " "
@@ -165,8 +162,7 @@ class AsyncMockCompletions:
             usage=MockUsage(
                 prompt_tokens=max(1, len(last_content.split())),
                 completion_tokens=max(1, len(response_text.split())),
-                total_tokens=max(1, len(last_content.split()))
-                + max(1, len(response_text.split())),
+                total_tokens=max(1, len(last_content.split())) + max(1, len(response_text.split())),
             ),
         )
 

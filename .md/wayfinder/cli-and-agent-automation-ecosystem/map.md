@@ -22,9 +22,9 @@ Thiết lập và chuẩn hoá toàn diện **Mô hình Kiềng 3 Chân (Tri-Tie
 
 ## ✅ 3. Quyết Định Đã Chốt (Decisions So Far)
 
-* [x] **[ADR 0055: Multi-Tier Failover Matrix & Mock Provider](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0055-ccba-ai-multi-tier-failover-and-mock-provider.md)**: Triển khai 4 tầng chuyển vùng dự phòng và Mock Engine in-memory cho `ccba-ai`, đạt 94/94 unit tests passed.
-* [x] **[Lựa chọn Antigravity CLI (`agy`) thay thế Gemini CLI](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0055-ccba-ai-multi-tier-failover-and-mock-provider.md)**: `agy` khởi động tức thì (<15ms), đồng bộ 100% với `AGENTS.md`, custom skills `.agents/skills/`, hỗ trợ cả Gemini 3.7 và Claude Sonnet 4.6 Thinking.
-* [x] **[Lựa chọn Copilot CLI (`gh copilot`) làm Terminal Helper](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0055-ccba-ai-multi-tier-failover-and-mock-provider.md)**: Tận dụng tài khoản GitHub `vvChu` để tra cứu cú pháp PowerShell/Git nhanh chóng.
+* [x] **[ADR 0055: Multi-Tier Failover Matrix & Mock Provider](../../../docs/adr/0055-ccba-ai-multi-tier-failover-and-mock-provider.md)**: Triển khai 4 tầng chuyển vùng dự phòng và Mock Engine in-memory cho `ccba-ai`, đạt 94/94 unit tests passed.
+* [x] **[Lựa chọn Antigravity CLI (`agy`) thay thế Gemini CLI](../../../docs/adr/0055-ccba-ai-multi-tier-failover-and-mock-provider.md)**: `agy` khởi động tức thì (<15ms), đồng bộ 100% với `AGENTS.md`, custom skills `.agents/skills/`, hỗ trợ cả Gemini 3.7 và Claude Sonnet 4.6 Thinking.
+* [x] **[Lựa chọn Copilot CLI (`gh copilot`) làm Terminal Helper](../../../docs/adr/0055-ccba-ai-multi-tier-failover-and-mock-provider.md)**: Tận dụng tài khoản GitHub `vvChu` để tra cứu cú pháp PowerShell/Git nhanh chóng.
 
 ---
 
@@ -34,10 +34,10 @@ Các ticket mở, sắc nét, không bị chặn và sẵn sàng thực thi:
 
 | Mã Ticket | Tên Ticket | Loại | Trạng thái |
 | :--- | :--- | :--- | :--- |
-| **T01** | [Đóng gói Shell Aliases & Terminal Helpers cho `agy` và `gh copilot`](file:///d:/GitHubProjects/ccba-agent-platform/.md/wayfinder/cli-and-agent-automation-ecosystem/tickets/01_shell_aliases_and_dev_helpers.md) | `Prototype [HITL]` | 🟢 Ready |
-| **T02** | [Xây dựng Pre-commit AI Guardrail kiểm soát Security & AGENTS.md](file:///d:/GitHubProjects/ccba-agent-platform/.md/wayfinder/cli-and-agent-automation-ecosystem/tickets/02_pre_commit_ai_guardrail.md) | `Task [AFK]` | 🟢 Ready |
-| **T03** | [Thiết lập Autonomous Docs & Deadlink Maintenance Daemon](file:///d:/GitHubProjects/ccba-agent-platform/.md/wayfinder/cli-and-agent-automation-ecosystem/tickets/03_autonomous_maintenance_daemon.md) | `Task [AFK]` | 🟢 Ready |
-| **T04** | [Thử nghiệm MCP Server Chaining từ Antigravity CLI](file:///d:/GitHubProjects/ccba-agent-platform/.md/wayfinder/cli-and-agent-automation-ecosystem/tickets/04_mcp_chaining_on_cli.md) | `Prototype [HITL]` | 🟢 Ready |
+| **T01** | [Đóng gói Shell Aliases & Terminal Helpers cho `agy` và `gh copilot`](./tickets/01_shell_aliases_and_dev_helpers.md) | `Prototype [HITL]` | 🟢 Ready |
+| **T02** | [Xây dựng Pre-commit AI Guardrail kiểm soát Security & AGENTS.md](./tickets/02_pre_commit_ai_guardrail.md) | `Task [AFK]` | 🟢 Ready |
+| **T03** | [Thiết lập Autonomous Docs & Deadlink Maintenance Daemon](./tickets/03_autonomous_maintenance_daemon.md) | `Task [AFK]` | 🟢 Ready |
+| **T04** | [Thử nghiệm MCP Server Chaining từ Antigravity CLI](./tickets/04_mcp_chaining_on_cli.md) | `Prototype [HITL]` | 🟢 Ready |
 
 ---
 
