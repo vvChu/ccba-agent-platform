@@ -1,6 +1,5 @@
 ---
-description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Spoke Leakage
-  Guard, Supervised Self-Healing và Đồng bộ Catalog Hậu Merge (ADR 0045)
+description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered Review (Fast/Boost), Spoke Leakage Guard, Copilot Guard và Đồng bộ Catalog Hậu Merge (ADR 0045, ADR 0047)
 bundle: _core
 command: /ccba-review-proposal
 triggers:
@@ -8,31 +7,36 @@ triggers:
   - thẩm định pr
   - duyệt đề xuất
   - review-proposal
+  - review proposal boost
+  - deep review proposal
 applies_to:
 - Tác vụ Admin
 - Phần mềm
 disable-model-invocation: true
 ---
-# Workflow: Review Proposal (Thẩm Định Đề Xuất Spoke Lên Hub — ADR 0045)
+# Workflow: Review Proposal (Thẩm Định Đề Xuất Spoke Lên Hub — ADR 0045 & ADR 0047)
 
-Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm định, làm sạch, tự sửa lỗi có kiểm soát và hợp nhất an toàn các đề xuất (Pull Requests) từ các dự án Spoke vào Hub Monorepo.
+Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm định, làm sạch, tự sửa lỗi có kiểm soát và hợp nhất an toàn các đề xuất (Pull Requests) từ các dự án Spoke vào Hub Monorepo với cơ chế **Phân Cấp Thích Ứng (Adaptive Tiered Review)**.
 
 ---
 
-## 📋 Bước 1: Tiếp Nhận & Khởi Tạo Môi Trường (Pre-flight Sync & Intake)
+## 📋 Bước 1: Tiếp Nhận, Phân Tuyến & Khởi Tạo (Pre-flight Sync & Tier Selection)
 
 1. **Đồng bộ Base Branch (Pre-flight Sync Gate):**
    - Đảm bảo nhánh `main` local sạch và được đồng bộ với upstream trước khi thẩm định:
      ```bash
      git checkout main && git pull origin main
      ```
-2. **Xác định PR mục tiêu:**
-   - Nếu người dùng cung cấp mã PR: Sử dụng trực tiếp `#PR_NUMBER` (ví dụ: `/ccba-review-proposal 207` hoặc `/ccba-review-proposal 227`).
-   - Nếu không chỉ định: Tự động quét danh sách các PR đề xuất đang mở:
+2. **Xác định PR mục tiêu & Tùy chọn Chế độ Review:**
+   - Cú pháp chuẩn: `/ccba-review-proposal <PR_NUMBER> [--boost | --deep]`
+   - Nếu không chỉ định PR: Tự động quét danh sách các PR đang mở:
      ```bash
      gh pr list --state open
      ```
-3. **Khảo sát tệp Proposal:**
+3. **Phân Tuyến Thích Ứng (Adaptive Review Tier):**
+   - **Tier 1 — Fast Deterministic Review (Mặc định):** Áp dụng cho PR scoped thông thường ($< 400$ LOC, đóng gói trong 1 package). Chạy bộ 3 Deterministic Workers tự động ($< 15$ giây).
+   - **Tier 2 — Boost / Multi-Agent Deep Review:** Tự động kích hoạt khi có cờ `--boost` / `--deep` HOẶC PR thay đổi gói core `_core`, sửa đổi $> 400$ LOC. Ủy quyền cho subagents `DeepInvestigator` và `DeepCoder` thực hiện Double-Pass Adversarial Review và kiểm tra Threat Model.
+4. **Khảo sát tệp Proposal:**
    - Kiểm tra tệp ghi nhận tại `.agents/proposals/[YYYY-MM-DD]_[name].md`.
    - Đọc YAML frontmatter (`proposal_id`, `type`, `proposed_by_project`, `priority`).
    - Đọc tóm tắt kiến trúc và mục tiêu nghiệp vụ mà Spoke đã giải quyết.
@@ -41,9 +45,9 @@ Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm đị
 
 ## 🛡️ Bước 2: Kích Hoạt 3 Worker Thẩm Định Song Song (Parallel Review Gate)
 
-Agent điều phối 3 luồng kiểm tra song song (mô phỏng mô hình Worker của Boost):
+Điều phối 3 luồng kiểm tra song song (tự động chạy script hoặc phân bổ Subagents tương ứng theo Tier):
 
-1. **Worker 1 — Spoke Leakage & Privacy Guard:**
+1. **Worker 1 — Spoke Leakage & Privacy Guard (ADR 0045):**
    - Chạy rào chắn rò rỉ và quét Maskara credentials:
      ```bash
      python scripts/governance/check_spoke_leakage.py
@@ -65,27 +69,34 @@ Agent điều phối 3 luồng kiểm tra song song (mô phỏng mô hình Worke
 
 ---
 
-## 🤖 Bước 4: Bóc Tách Nhận Xét Copilot & CI Checks Status
+## 🤖 Bước 3: Bóc Tách Nhận Xét Copilot & CI Checks Status (Race-Condition Guard)
 
 1. **Kiểm tra trạng thái GitHub Actions CI:**
    ```bash
    gh pr checks <PR_NUMBER>
    ```
-2. **Bóc tách nhận xét kỹ thuật từ GitHub Copilot:**
+2. **Chốt chặn Review Requests của Copilot (Chống Race Condition Merge Sớm):**
+   - Đảm bảo Copilot đã hoàn tất nộp bài review trước khi đọc comment:
+     ```bash
+     gh pr view <PR_NUMBER> --json reviewRequests,reviews --jq '{pending: [.reviewRequests[]?.login], reviewed: [.reviews[]?.user.login]}'
+     ```
+   - Nếu `pending` còn chứa `copilot-pull-request-reviewer`, Agent tạm dừng chờ Copilot hoàn tất.
+3. **Bóc tách nhận xét kỹ thuật từ GitHub Copilot:**
    ```bash
    gh api repos/:owner/:repo/pulls/<PR_NUMBER>/comments --jq ".[] | {path: .path, line: .line, body: .body}"
    ```
-3. **Phân loại nhận xét:**
-   - *Lỗi kỹ thuật rõ ràng (Invalid regex, unhandled exception, syntax typo)*: Chuyển sang Bước 5 để tự động khắc phục.
-   - *Góp ý thiết kế / Tài liệu*: Báo cáo Maintainer xem xét.
+4. **Phân loại nhận xét:**
+   - *Lỗi kỹ thuật rõ ràng / Đường dẫn vi phạm:* Chuyển sang Bước 4 để tự động khắc phục (Self-Healing).
+   - *Góp ý thiết kế / Tài liệu:* Báo cáo Maintainer xem xét.
 
 ---
 
-## 🛠️ Bước 5: Tự Sửa Lỗi Có Giám Sát (Supervised Self-Healing) & Hợp Nhất
+## 🛠️ Bước 4: Tự Sửa Lỗi Có Giám Sát (Supervised Self-Healing) & Hợp Nhất
 
 1. **Khắc phục lỗi tự động trên Branch:**
-   - Áp dụng các bản vá sửa regex, docstring conflict hoặc format.
+   - Áp dụng các bản vá sửa regex, docstring conflict, link tuyệt đối hoặc format mã nguồn.
    - Chạy lại `pytest` và `ruff check` để xác minh xanh $100\%$.
+   - Push bản vá lên nhánh PR: `git push origin <branch_name>`.
 2. **Trình bày Diff cho Maintainer Phê Duyệt:**
    - Tóm tắt các điểm đã sửa và trình bày cho Maintainer bấm xác nhận.
 3. **Hợp nhất vào nhánh `main` (Squash Merge):**
@@ -93,10 +104,20 @@ Agent điều phối 3 luồng kiểm tra song song (mô phỏng mô hình Worke
    gh pr merge <PR_NUMBER> --squash --delete-branch
    git checkout main && git pull origin main
    ```
-4. **Quản trị Vòng đời Hậu Merge (Post-Merge Governance):**
-   - **Cập nhật Proposal Header:** Đổi `status: "open"` $\rightarrow$ `status: "merged"`, ghi nhận `merged_commit` hash và `merged_date`.
-   - **Đăng ký Hệ Sinh Thái (ADR 0047):** Chạy `python scripts/governance/compile_catalog.py` để tự động cập nhật `catalog.yaml` từ frontmatter của skill/workflow mới và cập nhật bảng Service Modules tại `PLATFORM.md`.
-   - **Gợi ý Spoke Sync (Closed-Loop Sync):** Thông báo cho Spoke đề xuất kích hoạt **Bước 7 của `/ccba-contribute-to-hub`** (hoặc `/ccba-update-spoke`) để nạp tính năng mới và hoàn tất đóng vòng.
+
+---
+
+## 🏛️ Bước 5: Quản Trị Vòng Đời Hậu Merge (Post-Merge Governance)
+
+1. **Cập nhật Proposal Header:**
+   - Mở tệp `.agents/proposals/[YYYY-MM-DD]_[name].md`, đổi `status: "open"` $\rightarrow$ `status: "merged"`, ghi nhận `merged_commit` hash và `merged_date`.
+2. **Đăng ký Hệ Sinh Thái (ADR 0047):**
+   - Tự động tái biên dịch Catalog SSoT:
+     ```bash
+     python scripts/governance/compile_catalog.py
+     ```
+3. **Gợi ý Spoke Sync (Closed-Loop Sync):**
+   - Thông báo cho Spoke đề xuất kích hoạt **Bước 7 của `/ccba-contribute-to-hub`** (hoặc `/ccba-update-spoke`) để nạp tính năng mới và hoàn tất đóng vòng.
 
 ---
 

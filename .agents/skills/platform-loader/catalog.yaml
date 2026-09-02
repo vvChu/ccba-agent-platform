@@ -1483,13 +1483,16 @@ workflows:
 - name: ccba-review-proposal
   bundle: _core
   command: /ccba-review-proposal
-  description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Spoke Leakage
-    Guard, Supervised Self-Healing và Đồng bộ Catalog Hậu Merge (ADR 0045)
+  description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered
+    Review (Fast/Boost), Spoke Leakage Guard, Copilot Guard và Đồng bộ Catalog Hậu
+    Merge (ADR 0045, ADR 0047)
   triggers:
   - review proposal
   - thẩm định pr
   - duyệt đề xuất
   - review-proposal
+  - review proposal boost
+  - deep review proposal
   workflow_path: .agents/workflows/ccba-review-proposal.md
 - name: ccba-review-skill
   bundle: _core
