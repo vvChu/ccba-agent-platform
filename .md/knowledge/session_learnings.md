@@ -51,3 +51,20 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
   - `.\.md\backups\`: Lưu trữ các bản sao lưu config (`.bak_*`).
   - `.\.md\data\`: Lưu trữ session locks, caches và audit logs.
 
+---
+
+## 6. Workflow Routing: `/ccba-new-feature` là Entry Point Duy Nhất Khi Có Issue ID
+
+- **Quy tắc:** Khi đã xác định được Issue ID cần triển khai (ví dụ từ `/ccba-ask`, `/ccba-triage`, hoặc backlog review), **luôn đề xuất** `/ccba-new-feature #<id>` làm hành động tiếp theo.
+- **KHÔNG BAO GIỜ** đề xuất `/ccba-implement`, `/ccba-to-spec`, hay `/ccba-to-tickets` làm entry point — đây là các bước con bên trong luồng `/ccba-new-feature`.
+- **Lý do:** `/ccba-new-feature` bao trọn 8 bước lifecycle chuẩn (Factory Model):
+  1. Pre-flight check & `git pull`
+  2. Dọn branch cũ đã merge
+  3. Bóc tách Issue (GitHub CLI hoặc Offline Fallback)
+  4. Tạo branch chuẩn `feat/issue-<id>-*`
+  5. Planning Mode (Triage Fast-Path + Reuse Assessment)
+  6. Factory Model hand-off (route sang `/ccba-implement`, `/boost`, hoặc `/ccba-teamwork`)
+  7. Coding & Verification (Quality Gates)
+  8. Walkthrough & PR
+
+  Nhảy thẳng vào `/ccba-implement` = bỏ qua 7 bước chuẩn bị.
