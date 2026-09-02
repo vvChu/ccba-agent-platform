@@ -213,13 +213,19 @@ async def test_async_client_chat_retries_on_connection_error():
 async def test_async_client_chat_fast_fails_when_circuit_breaker_open():
     """AsyncAIClient.chat() should fail immediately with CircuitBreakerOpenError."""
     from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
+    from ccba_ai.fallback import TieredFallbackRouter
 
     cb = CircuitBreaker(failure_threshold=1, recovery_timeout=60.0)
     cb.record_failure()
     assert cb.allow_request() is False
 
+    router = TieredFallbackRouter(enable_fallback=False, mock_mode=False)
     client = AsyncAIClient(
-        base_url="http://test-gateway/v1", api_key="mock-key", circuit_breaker=cb
+        base_url="http://test-gateway/v1",
+        api_key="mock-key",
+        circuit_breaker=cb,
+        fallback_router=router,
+        mock_mode=False,
     )
 
     with patch.object(
