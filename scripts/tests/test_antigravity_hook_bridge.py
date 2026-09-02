@@ -15,8 +15,6 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
-import pytest
-
 # Ensure project root is importable
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
@@ -24,13 +22,11 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 from scripts.hooks.antigravity_hook_bridge import (
     _EXIT_CODE_TO_DECISION,
-    _read_stdin,
     _result_to_stdout,
     _stdin_to_context,
     main,
 )
-from scripts.hooks.base import HookContext, HookResult
-
+from scripts.hooks.base import HookResult
 
 # ---------------------------------------------------------------------------
 # Schema Translation Tests
@@ -208,13 +204,15 @@ class TestMainIntegration:
 
     def test_safe_command_allowed(self) -> None:
         """A safe command like 'pytest' should be allowed."""
-        stdin_json = json.dumps({
-            "toolCall": {
-                "name": "run_command",
-                "args": {"CommandLine": "pytest -v"},
-            },
-            "conversationId": "test-safe",
-        })
+        stdin_json = json.dumps(
+            {
+                "toolCall": {
+                    "name": "run_command",
+                    "args": {"CommandLine": "pytest -v"},
+                },
+                "conversationId": "test-safe",
+            }
+        )
         stdout = self._run_main_with_stdin(stdin_json)
         result = json.loads(stdout)
 
@@ -236,9 +234,11 @@ class TestMainIntegration:
 
     def test_output_is_valid_json(self) -> None:
         """Output must always be valid JSON."""
-        stdin_json = json.dumps({
-            "toolCall": {"name": "run_command", "args": {"CommandLine": "echo hi"}},
-        })
+        stdin_json = json.dumps(
+            {
+                "toolCall": {"name": "run_command", "args": {"CommandLine": "echo hi"}},
+            }
+        )
         stdout = self._run_main_with_stdin(stdin_json)
 
         # Should not raise
@@ -247,12 +247,14 @@ class TestMainIntegration:
 
     def test_sensitive_file_access_blocked(self) -> None:
         """Accessing .env file should be blocked by PrivacyHook."""
-        stdin_json = json.dumps({
-            "toolCall": {
-                "name": "view_file",
-                "args": {"AbsolutePath": "/workspace/.env"},
-            },
-        })
+        stdin_json = json.dumps(
+            {
+                "toolCall": {
+                    "name": "view_file",
+                    "args": {"AbsolutePath": "/workspace/.env"},
+                },
+            }
+        )
         stdout = self._run_main_with_stdin(stdin_json)
         result = json.loads(stdout)
 
@@ -261,12 +263,14 @@ class TestMainIntegration:
 
     def test_node_modules_path_blocked(self) -> None:
         """Accessing node_modules should be blocked by ScoutBlockHook."""
-        stdin_json = json.dumps({
-            "toolCall": {
-                "name": "view_file",
-                "args": {"AbsolutePath": "/workspace/node_modules/pkg/index.js"},
-            },
-        })
+        stdin_json = json.dumps(
+            {
+                "toolCall": {
+                    "name": "view_file",
+                    "args": {"AbsolutePath": "/workspace/node_modules/pkg/index.js"},
+                },
+            }
+        )
         stdout = self._run_main_with_stdin(stdin_json)
         result = json.loads(stdout)
 

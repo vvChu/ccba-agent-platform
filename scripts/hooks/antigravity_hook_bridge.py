@@ -33,9 +33,9 @@ from scripts.hooks.coordinator import get_default_coordinator
 
 # Pre-computed decision mapping: CCBA exit_code → Antigravity decision string
 _EXIT_CODE_TO_DECISION: dict[int, str] = {
-    0: "allow",   # PASS
-    1: "ask",     # WARNING → prompt user
-    2: "deny",    # BLOCK
+    0: "allow",  # PASS
+    1: "ask",  # WARNING → prompt user
+    2: "deny",  # BLOCK
 }
 
 
@@ -175,13 +175,16 @@ def main() -> None:
         # Restore stdout in case of error
         sys.stdout = real_stdout
         # Fail-safe: NEVER block the IDE on unexpected errors
-        real_stdout.write(json.dumps({
-            "decision": "allow",
-            "reason": f"Hook bridge fail-safe: {exc}",
-        }))
+        real_stdout.write(
+            json.dumps(
+                {
+                    "decision": "allow",
+                    "reason": f"Hook bridge fail-safe: {exc}",
+                }
+            )
+        )
         real_stdout.flush()
 
 
 if __name__ == "__main__":
     main()
-
