@@ -216,7 +216,7 @@ async def verify_scenario_5_async_chat() -> None:
 def verify_scenario_6_privacy_guard() -> None:
     """Scenario 6: Privacy Guard Interceptor & Secret Protection."""
     print("\n--- Scenario 6: Privacy Guard Outbound Protection ---")
-    from ccba_ai.hooks.privacy_guard import PrivacyGuardHook
+    from ccba_ai import PrivacyGuardHook
 
     hook = PrivacyGuardHook()
     test_leak_prompt = "Đây là API key của tôi: AIzaSyTestKey1234567890abcdefghijklmn"

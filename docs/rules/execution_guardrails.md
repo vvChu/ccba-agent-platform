@@ -119,3 +119,18 @@
   - **Hiệu năng:** Tổng subprocess overhead ~200-500ms trên Windows (Python startup), logic-only < 15ms. Hooks chạy đồng bộ, chặn agent loop.
   - **Fail-Safe Default:** Mọi ngoại lệ không mong muốn trong bridge đều fallback về `{"decision": "allow"}` — không bao giờ làm gián đoạn IDE.
   - **Hai Entry Point:** CLI `hook_runner.py` (offline/CI) và Antigravity `hooks.json` (IDE) cùng dẫn về `HookCoordinator` với cùng 7 hooks.
+
+---
+
+## 12. Safe GitHub CLI File-Based Input Invariant (Quy Chuẩn Nhập Dữ Liệu Qua File cho GitHub CLI)
+- Khi gọi các lệnh GitHub CLI (`gh issue comment`, `gh issue create`, `gh pr create`, `gh pr comment`) có nội dung nhiều dòng, Markdown phức tạp, mã nguồn hoặc ký tự đặc biệt:
+  - **Nghiêm cấm:** Truyền trực tiếp chuỗi nội dung qua tham số dòng lệnh `--body "..."` (dễ gây lỗi escape ký tự, vượt quá độ dài dòng lệnh hệ điều hành và bị pre-tool security hook chặn).
+  - **Bắt buộc (File-First Pattern):**
+    1. Ghi nội dung cần đăng vào tệp tạm thời trong thư mục `.md/scratch/` (ví dụ: `.md/scratch/comment_<id>.md` hoặc `.md/scratch/pr_body.md`).
+    2. Sử dụng cờ `-F` hoặc `--body-file` để truyền đường dẫn tệp tin:
+       ```bash
+       gh issue comment <issue_id> -F .md/scratch/comment_<issue_id>.md
+       gh pr create --title "..." -F .md/scratch/pr_body.md
+       ```
+    3. Mẫu này đảm bảo bảo toàn 100% mã hóa UTF-8, định dạng Markdown, bảng biểu và không bao giờ bị bộ lọc an toàn command-line từ chối.
+
