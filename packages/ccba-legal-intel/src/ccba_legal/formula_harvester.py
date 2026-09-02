@@ -338,7 +338,7 @@ def harvest_docx_formula_images(
             target = rel.attrib.get("Target", "")
             if rid and "media/" in target:
                 r_map[rid] = "word/" + target.replace("../", "")
-        media_files = set(f for f in z.namelist() if f.startswith("word/media/"))
+        media_files = {f for f in z.namelist() if f.startswith("word/media/")}
 
         doc_xml = z.read("word/document.xml")
         doc_tree = ET.fromstring(doc_xml)
@@ -518,7 +518,7 @@ def harvest_docx_formula_images(
         # Concurrently process pending formula images if any
         if pending_rids:
             unique_shas: dict[str, bytes] = {}
-            for r_id, b_data in pending_rids.items():
+            for _r_id, b_data in pending_rids.items():
                 sha = _compute_sha256(b_data)
                 unique_shas[sha] = b_data
 

@@ -91,7 +91,7 @@ def test_orphan_figure_scanner_detects_html_img_tags(tmp_path: Path):
     md_content = """
     # Tiêu chuẩn
     ![Hình 1](figures/images/hinh_01.png)
-    
+
     | Sơ đồ | Giá trị |
     | <img src="figures/images/in_cell_diagram.png" width="90"> | 1,0 |
     """

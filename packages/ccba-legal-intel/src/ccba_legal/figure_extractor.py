@@ -349,7 +349,7 @@ def scan_and_prune_orphan_figures(bundle_dir: Path, prune: bool = False) -> dict
             "total_files": 0,
         }
 
-    all_images = sorted(list(images_dir.glob("*.*")))
+    all_images = sorted(images_dir.glob("*.*"))
     disk_names = {img.name: img for img in all_images}
 
     referenced: set[str] = set()
@@ -393,8 +393,8 @@ def scan_and_prune_orphan_figures(bundle_dir: Path, prune: bool = False) -> dict
             except Exception:
                 pass
 
-    active = sorted(list(referenced.intersection(disk_names.keys())))
-    orphaned = sorted(list(disk_names.keys() - referenced))
+    active = sorted(referenced.intersection(disk_names.keys()))
+    orphaned = sorted(disk_names.keys() - referenced)
     pruned_count = 0
     pruned_bytes = 0
 

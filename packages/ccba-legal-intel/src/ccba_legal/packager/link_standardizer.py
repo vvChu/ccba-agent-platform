@@ -152,7 +152,7 @@ def integrate_tables(arg1: Path | str, arg2: Any = None) -> list[ExtractedTable]
 
                     json_path = json_dir / f"{t_id}.json"
                     headers = matrix[0]
-                    rows = [dict(zip(headers, r)) for r in matrix[1:]]
+                    rows = [dict(zip(headers, r, strict=False)) for r in matrix[1:]]
                     json_path.write_text(
                         json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8"
                     )

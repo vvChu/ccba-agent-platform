@@ -25,7 +25,7 @@ def flatten_table_headers(markdown_text: str) -> str:
         if i + 1 < len(lines) and re.match(r"^\|(?:\s*:?-+:?\s*\|)+$", lines[i + 1].strip()):
             # The current line `line` is the table header.
             # If the header itself was broken across previous lines or contains unclosed row, merge it.
-            header_parts = [stripped]
+            # header_parts = [stripped]
             # Check backwards if previous lines were broken header fragments
             # Usually in docx conversions, header is on 1 line or immediately broken into 2 lines
             # Check if current line starts with | but doesn't end with |

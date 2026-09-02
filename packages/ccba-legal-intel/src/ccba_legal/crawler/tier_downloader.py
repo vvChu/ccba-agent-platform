@@ -169,13 +169,13 @@ def trigger_download(
                 let href = (lnk.href || '').trim();
                 let lowerText = text.toLowerCase();
                 let lowerHref = href.toLowerCase();
-                
+
                 // Identify appendix/attachment links: .doc, .docx, .xls, .xlsx, .pdf, .zip, .rar
                 // excluding main doc download buttons already handled
                 let isMain = lowerText.includes('tải văn bản tiếng việt') || lowerText.includes('tiếng việt (docx)') || lowerText.includes('tải bản pdf') || lowerHref.includes('part=-100') || lowerHref.includes('docx=1');
                 let hasAttachExt = lowerHref.includes('.doc') || lowerHref.includes('.xls') || lowerHref.includes('.pdf') || lowerHref.includes('.zip') || lowerHref.includes('.rar');
                 let isAttachText = lowerText.includes('phụ lục') || lowerText.includes('biểu mẫu') || lowerText.includes('bảng tính') || lowerText.includes('đính kèm') || lowerText.includes('tệp đính kèm');
-                
+
                 if (!isMain && (hasAttachExt || isAttachText) && href && !href.startsWith('javascript:void') && !href.endsWith('#')) {
                     attachLinks.push({ text: text || 'attachment', href: href });
                 }

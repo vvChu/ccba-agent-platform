@@ -47,7 +47,7 @@ def lint_bundle_links(bundle_dir: Path) -> list[str]:
 
     for rel_key, text in file_contents.items():
         links = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", text)
-        for link_text, target in links:
+        for _link_text, target in links:
             target_clean = target.strip()
             if target_clean.startswith("http://") or target_clean.startswith("https://"):
                 continue

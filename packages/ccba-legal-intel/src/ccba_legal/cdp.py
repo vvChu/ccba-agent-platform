@@ -79,8 +79,8 @@ class ChromeCDP:
                         f"Failed to connect to Chrome on port {self.port} after launch: {e}"
                     ) from e
             raise ChromeCDPError(
-                f"Chrome not found at {chrome_path} to auto-launch on port {self.port}"
-            )
+                f"Chrome or compatible browser not found to auto-launch on port {self.port}"
+            ) from None
 
     def connect_tab(self, ws_url: str) -> None:
         """Connect to a specific tab via WebSockets with safe timeout."""
