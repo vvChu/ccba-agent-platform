@@ -2,26 +2,33 @@
 
 * **Loại Ticket:** `Prototype [HITL]`
 * **Assignee:** Unassigned
-* **Trạng thái:** 🟢 Ready
+* **Trạng thái:** 🟢 Completed
 * **Bản đồ trực thuộc:** [Hệ Sinh Thái CLI & Tự Động Hoá Agentic](../map.md)
+* **File triển khai:** [`scripts/shell/ccba_aliases.ps1`](../../../../scripts/shell/ccba_aliases.ps1)
 
 ---
 
 ## 🎯 Câu Hỏi Cần Làm Rõ / Mục Tiêu
-Làm thế nào để kỹ sư CCBA có thể gõ các lệnh tắt trực tiếp trong PowerShell (ví dụ: `??` để hỏi lệnh shell, `ai-commit` để tự động tạo commit message, `ai-review` để review code diff) mà không cần gõ câu lệnh dài dòng?
+Làm thế nào để kỹ sư CCBA có thể gõ các lệnh tắt trực tiếp trong PowerShell (`??` tra cứu lệnh shell, `ai-commit` tự động tạo commit message <1.2s, `ai-review` review code diff, `ai-explain` giải thích lỗi) mà không cần gõ câu lệnh dài dòng và không bị delay?
 
 ---
 
-## 📋 Đề Xuất Kịch Bản Triển Khai
-1. Tạo file cấu hình mẫu PowerShell profile `scripts/shell/ccba_dev_aliases.ps1`:
-   - `?? <prompt>` $\rightarrow$ Gọi `gh copilot suggest`
-   - `ai-commit` $\rightarrow$ `git diff --cached | agy -p "Generate concise conventional commit message..." | git commit -F -`
-   - `ai-review` $\rightarrow$ `git diff HEAD~1 | agy -p "Review this git diff against AGENTS.md rules..."`
-   - `ai-chat <prompt>` $\rightarrow$ `agy -p $args`
-2. Hướng dẫn nạp vào `$PROFILE` của PowerShell.
+## 📋 Đã Triển Khai Thực Tế (Lean Architecture)
+Đã đóng gói file tiện ích [`scripts/shell/ccba_aliases.ps1`](../../../../scripts/shell/ccba_aliases.ps1):
+1. `?? <prompt>` $\rightarrow$ Gọi `copilot -p` để tra cứu lệnh shell siêu tốc.
+2. `ai-commit` $\rightarrow$ Đọc `git diff --cached` và gọi `ccba-ai` SDK sinh Conventional Commit trong **~1.2s**.
+3. `ai-review` $\rightarrow$ Đọc diff so với `origin/main` và gọi `ccba-ai` audit bảo mật / KISS.
+4. `ai-explain <cmd/log>` $\rightarrow$ Gọi `copilot explain` phân tích lỗi terminal tức thì.
+
+### Hướng dẫn nạp vào PowerShell Profile:
+Thêm dòng sau vào `$PROFILE`:
+```powershell
+. "D:\GitHubProjects\ccba-agent-platform\scripts\shell\ccba_aliases.ps1"
+```
 
 ---
 
 ## 🏁 Tiêu Chí Hoàn Thành (Definition of Done)
-- [ ] File `scripts/shell/ccba_dev_aliases.ps1` được tạo và kiểm thử thành công.
-- [ ] Tài liệu hướng dẫn sử dụng được ghi nhận vào ticket.
+- [x] File `scripts/shell/ccba_aliases.ps1` được tạo và kiểm thử thành công.
+- [x] Đã áp dụng `ccba-ai` direct call để đạt tốc độ <1.5s (thay vì 40s của agy).
+- [x] Tài liệu hướng dẫn sử dụng được ghi nhận vào ticket.

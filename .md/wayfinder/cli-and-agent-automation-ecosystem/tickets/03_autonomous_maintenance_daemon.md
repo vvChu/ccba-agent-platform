@@ -2,25 +2,17 @@
 
 * **Loại Ticket:** `Task [AFK]`
 * **Assignee:** Unassigned
-* **Trạng thái:** 🟢 Ready
+* **Trạng thái:** ⛔ Cancelled (Đóng do Trùng lặp & Rủi ro Hallucination)
 * **Bản đồ trực thuộc:** [Hệ Sinh Thái CLI & Tự Động Hoá Agentic](../map.md)
 
 ---
 
-## 🎯 Câu Hỏi Cần Làm Rõ / Mục Tiêu
-Làm thế nào để thiết lập một cron script/task scheduler tự động chạy ngầm hàng ngày sử dụng `agy --dangerously-skip-permissions` để quét tài liệu Markdown out-of-date, kiểm tra broken links, và tự động tạo Pull Request bảo trì định kỳ?
+## 🎯 Lý Do Hủy Bỏ (Adversarial Review Findings)
+1. **Trùng lặp công cụ:** Hệ thống đã có sẵn [`validate_docs.py`](../../../../scripts/validate_docs.py), [`update_arch_stats.py`](../../../../scripts/update_arch_stats.py), và `compile_catalog.py` tự động cập nhật metrics và kiểm tra tính toàn vẹn 100% trong quy trình CI.
+2. **Rủi ro vận hành (Hallucination):** Chạy LLM daemon ngầm tự sửa docs và auto-create PR bằng `--dangerously-skip-permissions` dễ tạo PR rác, sửa sai các quy chuẩn và anchor links trong `docs/adr/`.
+3. **Cơ chế HITL ưu việt hơn:** Các tài liệu kiến trúc yêu cầu Human-In-The-Loop review qua Planning Mode (Quy tắc Toàn cục #4).
 
 ---
 
-## 📋 Đề Xuất Kịch Bản Triển Khai
-1. Xây dựng kịch bản `scripts/cron/run_daily_repo_maintenance.ps1`:
-   - Kiểm tra `validate_docs.py` và `validate_cross_references.py`.
-   - Sử dụng `agy -p "Review and align docs with new package exports..."`.
-   - Nếu có file thay đổi: tự tạo branch `chore/auto-docs-sync-<date>` và tạo PR bằng `gh pr create`.
-2. Hướng dẫn cấu hình Windows Task Scheduler hoặc cron job.
-
----
-
-## 🏁 Tiêu Chí Hoàn Thành (Definition of Done)
-- [ ] Kịch bản `run_daily_repo_maintenance.ps1` hoàn thiện.
-- [ ] Kiểm thử chạy dry-run thành công.
+## 🏁 Kết Luận
+Không phát triển daemon ngầm. Tiếp tục duy trì cơ chế Shift-Left CI Eval Gates sẵn có.
