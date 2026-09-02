@@ -5,6 +5,7 @@ Validates discovery, catalog merge, registry, backup, sdk inspector, coordinator
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
@@ -315,18 +316,43 @@ def test_spoke_sync_bootstrap_flag(tmp_path: Path):
     assert code == 0
 
 
-def test_check_hub_import_depth_excludes(tmp_path: Path):
-    """Test check_hub_import_depth exclusions (.agents, .md, .venv)."""
-    from scripts.spoke.check_hub_import_depth import scan_file
+def test_check_hub_import_depth_excludes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Test check_hub_import_depth exclusions (.agents, .md, .venv) in single file and directory scan."""
+    from scripts.spoke.check_hub_import_depth import main, scan_file
 
-    # File with violation
+    # 1. File with violation
     bad_py = tmp_path / "bad.py"
     bad_py.write_text("from ccba_legal.crawler.chrome_cdp import something\n", encoding="utf-8")
     violations = scan_file(bad_py)
     assert len(violations) == 1
 
-    # File with top-level import (compliant)
+    # 2. File with top-level import (compliant)
     good_py = tmp_path / "good.py"
     good_py.write_text("from ccba_legal import ChromeCDP\n", encoding="utf-8")
     violations_good = scan_file(good_py)
     assert len(violations_good) == 0
+
+    # 3. Directory scan with excluded folders containing deep imports
+    mock_spoke = tmp_path / "mock_spoke"
+    mock_spoke.mkdir()
+    (mock_spoke / "src").mkdir()
+    (mock_spoke / "src" / "app.py").write_text("from ccba_ai import ai\n", encoding="utf-8")
+
+    # Put violations inside excluded folders (.agents, .md, .venv)
+    for excluded in [".agents", ".md", ".venv"]:
+        ex_dir = mock_spoke / excluded
+        ex_dir.mkdir()
+        (ex_dir / "deep.py").write_text(
+            "from ccba_legal.crawler.chrome_cdp import helper\n", encoding="utf-8"
+        )
+
+    monkeypatch.setattr(sys, "argv", ["check_hub_import_depth.py", "--path", str(mock_spoke)])
+    exit_code = main()
+    assert exit_code == 0
+
+    # If violation added in src/, directory scan must detect it and return 1
+    (mock_spoke / "src" / "bad.py").write_text(
+        "from ccba_legal.crawler.chrome_cdp import helper\n", encoding="utf-8"
+    )
+    exit_code_bad = main()
+    assert exit_code_bad == 1

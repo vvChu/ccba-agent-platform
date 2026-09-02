@@ -11,7 +11,7 @@ try:
 except ImportError as e:
     raise ImportError(
         "Package 'ccba-ooxml' chưa được cài đặt trong môi trường ảo. "
-        "Vui lòng chạy: python scripts/spoke_bootstrap.py (hoặc pip install -e packages/ccba-ooxml)"
+        "Vui lòng chạy: python scripts/spoke/spoke_bootstrap.py (hoặc pip install -e packages/ccba-ooxml)"
     ) from e
 
 __all__ = ["CommentEngine", "TEMPLATE_DIR"]

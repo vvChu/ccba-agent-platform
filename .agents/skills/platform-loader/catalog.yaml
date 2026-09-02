@@ -1450,7 +1450,7 @@ workflows:
   - ccba-prototype
   workflow_path: .agents/workflows/ccba-prototype.md
 - name: ccba-release-feature
-  bundle: _software
+  bundle: _core
   command: /ccba-release-feature
   description: Merge PR, cleanup branch và cập nhật walkthrough
   triggers:

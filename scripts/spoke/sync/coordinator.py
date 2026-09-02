@@ -635,9 +635,17 @@ class SpokeSynchronizer:
 
                 print("\n🚀 [1-Click Bootstrap] Tự động liên kết Hub Packages (ADR 0044):")
                 bootstrapper = SpokeBootstrapper(spoke_root, hub_root)
-                bootstrapper.bootstrap(dry_run=dry_run, force=force)
+                boot_code = bootstrapper.bootstrap(dry_run=dry_run, force=force)
+                if boot_code != 0 and not dry_run:
+                    print(
+                        f"  ❌ Quá trình bootstrap thất bại với mã lỗi {boot_code}.",
+                        file=sys.stderr,
+                    )
+                    return boot_code
             except Exception as e:
                 print(f"  ⚠️ Lỗi khi thực hiện bootstrap: {e}", file=sys.stderr)
+                if not dry_run:
+                    return 1
         else:
             sdk_inspector = SharedSdkInspector(spoke_root, hub_root, project_type)
             sdk_recs = sdk_inspector.get_recommendations()
