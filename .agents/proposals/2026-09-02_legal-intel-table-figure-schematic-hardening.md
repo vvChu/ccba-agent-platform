@@ -25,9 +25,9 @@ Trong quá trình số hóa các tiêu chuẩn kỹ thuật phức tạp (TCVN 2
 ---
 
 ## 2. Giải Pháp Triển Khai Trên Hub (Implementation Details)
-Đã hoàn thiện và tôi luyện các module cốt lõi trong package [`packages/ccba-legal-intel`](file:///D:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel):
+Đã hoàn thiện và tôi luyện các module cốt lõi trong package [`packages/ccba-legal-intel`](../../packages/ccba-legal-intel):
 1. **Bộ Phân Giải Tiêu Đề Đa Tầng (`resolve_hierarchical_headers`):**
-   - Tích hợp trong [`table_handler.py`](file:///D:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/src/ccba_legal/converters/standard/handlers/table_handler.py) và [`table_extractor.py`](file:///D:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/src/ccba_legal/converters/table_extractor.py).
+   - Tích hợp trong [`table_handler.py`](../../packages/ccba-legal-intel/src/ccba_legal/converters/standard/handlers/table_handler.py) và [`table_extractor.py`](../../packages/ccba-legal-intel/src/ccba_legal/converters/table_extractor.py).
    - Bảo toàn $100\%$ số cột lưới vật lý và tự động ghép nối tiêu đề cha - con (`Parent — Child`).
 2. **Quét và Bảo Tồn Hình Ảnh Nhúng Ô (`scan_and_prune_orphan_figures`):**
    - Bổ sung nhận diện thẻ HTML `<img src="...">` trong các bảng biểu Markdown để tránh quét nhầm thành ảnh mồ côi (Zero Orphaned Figures Policy).
@@ -41,7 +41,7 @@ Trong quá trình số hóa các tiêu chuẩn kỹ thuật phức tạp (TCVN 2
 ---
 
 ## 3. Kiểm Thử & Nghiệm Thu (Verification & QA)
-- **Unit Tests Hub:** Bổ sung [`tests/test_table_figure_hardening.py`](file:///D:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/tests/test_table_figure_hardening.py) với 5/5 unit tests pass $100\%$.
+- **Unit Tests Hub:** Bổ sung [`tests/test_table_figure_hardening.py`](../../packages/ccba-legal-intel/tests/test_table_figure_hardening.py) với 5/5 unit tests pass $100\%$.
 - **Toàn Bộ Test Suite Hub:** 187/187 tests pass $100\%$.
 - **Spoke Master CI Gate:** Vượt qua $11/11$ Master CI Gates trên toàn bộ $37$ văn bản tại `ccba-legal-knowledge` ($0$ Errors, $0$ Critical Warnings).
 - **Linter & Code Hygiene:** Đạt tiêu chuẩn ruff format & check.

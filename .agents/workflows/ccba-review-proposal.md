@@ -19,15 +19,20 @@ Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm đị
 
 ---
 
-## 📋 Bước 1: Tiếp Nhận & Khảo Sát Đề Xuất (Intake & Survey)
+## 📋 Bước 1: Tiếp Nhận & Khởi Tạo Môi Trường (Pre-flight Sync & Intake)
 
-1. **Xác định PR mục tiêu:**
-   - Nếu người dùng cung cấp mã PR: Sử dụng trực tiếp `#PR_NUMBER` (ví dụ: `/ccba-review-proposal 207`).
+1. **Đồng bộ Base Branch (Pre-flight Sync Gate):**
+   - Đảm bảo nhánh `main` local sạch và được đồng bộ với upstream trước khi thẩm định:
+     ```bash
+     git checkout main && git pull origin main
+     ```
+2. **Xác định PR mục tiêu:**
+   - Nếu người dùng cung cấp mã PR: Sử dụng trực tiếp `#PR_NUMBER` (ví dụ: `/ccba-review-proposal 207` hoặc `/ccba-review-proposal 227`).
    - Nếu không chỉ định: Tự động quét danh sách các PR đề xuất đang mở:
      ```bash
      gh pr list --state open
      ```
-2. **Khảo sát tệp Proposal:**
+3. **Khảo sát tệp Proposal:**
    - Kiểm tra tệp ghi nhận tại `.agents/proposals/[YYYY-MM-DD]_[name].md`.
    - Đọc YAML frontmatter (`proposal_id`, `type`, `proposed_by_project`, `priority`).
    - Đọc tóm tắt kiến trúc và mục tiêu nghiệp vụ mà Spoke đã giải quyết.

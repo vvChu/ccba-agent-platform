@@ -1249,8 +1249,8 @@ workflows:
 - name: ccba-graduate-rd
   bundle: _core
   command: /ccba-graduate-rd
-  description: Quy trình cưỡng chế chuyển hóa mã nguồn R&D / Scratch Script thành
-    Deep Seam Production trong Hub Platform.
+  description: Quy trình cưỡng chế chuyển hóa mã nguồn R&D thành Deep Seam Production,
+    tích hợp /boost, /teamwork và mở PR tự động.
   triggers:
   - graduate
   - tốt nghiệp
