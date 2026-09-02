@@ -1,7 +1,7 @@
 ---
 description: Merge PR, cleanup branch, auto-close local issues và cập nhật walkthrough
 applies_to:
-- _all
+- Phần mềm
 bundle: _core
 disable-model-invocation: true
 command: /ccba-release-feature

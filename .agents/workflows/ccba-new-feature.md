@@ -1,7 +1,7 @@
 ---
 description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session sạch (Factory Model)
 applies_to:
-- Tất cả
+- Phần mềm
 bundle: _core
 disable-model-invocation: true
 command: /ccba-new-feature
