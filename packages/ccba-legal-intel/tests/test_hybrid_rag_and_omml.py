@@ -1,6 +1,6 @@
 """Unit tests for LegalHybridRAG and OMML Delimiters."""
 
-from ccba_legal.converters.omml import _format_delimiter, omml_to_latex
+from ccba_legal.converters.omml import _format_delimiter
 from ccba_legal.hybrid_rag import LegalHybridRAG
 
 

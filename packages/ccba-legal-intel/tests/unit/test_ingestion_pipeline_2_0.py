@@ -5,7 +5,6 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-import pytest
 from ccba_legal.gdrive_vault import GoogleDriveVault, compute_file_sha256
 from ccba_legal.table_cleaner import (
     clean_markdown_tables_and_notes,
@@ -24,7 +23,10 @@ def test_flatten_table_headers() -> None:
 | Cấp đô thị | 1. Đường cao tốc đô thị | 4 800 - 8 000 | 0,4 - 0,25 |
 """
     cleaned = flatten_table_headers(broken_table)
-    assert "| Cấp đường | Loại đường | Khoảng cách hai đường (m) | Mật độ đường (km/$km^{2}$) |" in cleaned
+    assert (
+        "| Cấp đường | Loại đường | Khoảng cách hai đường (m) | Mật độ đường (km/$km^{2}$) |"
+        in cleaned
+    )
     assert "| :--- | :--- | :--- | :---: |" in cleaned
 
 

@@ -27,13 +27,34 @@ if hasattr(sys.stdout, "reconfigure"):
 
 
 _GREEK_LATEX_TO_UNICODE = {
-    r"\alpha": "α", r"\beta": "β", r"\gamma": "γ", r"\delta": "δ",
-    r"\epsilon": "ε", r"\varepsilon": "ε", r"\zeta": "ζ", r"\eta": "η",
-    r"\theta": "θ", r"\vartheta": "θ", r"\iota": "ι", r"\kappa": "κ",
-    r"\lambda": "λ", r"\mu": "μ", r"\nu": "ν", r"\xi": "ξ",
-    r"\pi": "π", r"\rho": "ρ", r"\sigma": "σ", r"\tau": "τ",
-    r"\upsilon": "υ", r"\phi": "φ", r"\varphi": "φ", r"\chi": "χ",
-    r"\psi": "ψ", r"\omega": "ω", r"\dots": "...", r"\cdot": "·",
+    r"\alpha": "α",
+    r"\beta": "β",
+    r"\gamma": "γ",
+    r"\delta": "δ",
+    r"\epsilon": "ε",
+    r"\varepsilon": "ε",
+    r"\zeta": "ζ",
+    r"\eta": "η",
+    r"\theta": "θ",
+    r"\vartheta": "θ",
+    r"\iota": "ι",
+    r"\kappa": "κ",
+    r"\lambda": "λ",
+    r"\mu": "μ",
+    r"\nu": "ν",
+    r"\xi": "ξ",
+    r"\pi": "π",
+    r"\rho": "ρ",
+    r"\sigma": "σ",
+    r"\tau": "τ",
+    r"\upsilon": "υ",
+    r"\phi": "φ",
+    r"\varphi": "φ",
+    r"\chi": "χ",
+    r"\psi": "ψ",
+    r"\omega": "ω",
+    r"\dots": "...",
+    r"\cdot": "·",
 }
 
 
@@ -53,10 +74,14 @@ def find_bundle_assets(root_dir: Path, bundle_dir: Path) -> tuple[Path | None, P
     docx_path: Path | None = None
 
     # Search PDF locations
-    pdf_candidates = [
-        bundle_dir / f"{slug}.pdf",
-        bundle_dir / "sources" / f"{slug}.pdf",
-    ] + list(bundle_dir.glob("*.pdf")) + list((bundle_dir / "sources").glob("*.pdf") if (bundle_dir / "sources").exists() else [])
+    pdf_candidates = (
+        [
+            bundle_dir / f"{slug}.pdf",
+            bundle_dir / "sources" / f"{slug}.pdf",
+        ]
+        + list(bundle_dir.glob("*.pdf"))
+        + list((bundle_dir / "sources").glob("*.pdf") if (bundle_dir / "sources").exists() else [])
+    )
     for p in pdf_candidates:
         if p.exists() and p.is_file():
             pdf_path = p
@@ -65,8 +90,10 @@ def find_bundle_assets(root_dir: Path, bundle_dir: Path) -> tuple[Path | None, P
     # Search DOCX locations
     extracted_dir = root_dir / ".md" / "extracted_docs" / slug
     docx_candidates = (
-        list(extracted_dir.glob("*.docx")) if extracted_dir.exists() else []
-    ) + list(bundle_dir.glob("*.docx")) + list((bundle_dir / "sources").glob("*.docx") if (bundle_dir / "sources").exists() else [])
+        (list(extracted_dir.glob("*.docx")) if extracted_dir.exists() else [])
+        + list(bundle_dir.glob("*.docx"))
+        + list((bundle_dir / "sources").glob("*.docx") if (bundle_dir / "sources").exists() else [])
+    )
     for d in docx_candidates:
         if d.exists() and d.is_file():
             docx_path = d
@@ -162,7 +189,7 @@ def verify_bundle_docx_vs_pdf(
     else:
         doc_num = doc_entry.get("document_number", "") if doc_entry else ""
         num_match = (normalize_text(doc_num) in normalize_text(pdf_full_text)) if doc_num else True
-        overall_pass = (len(struct["missing_in_docx"]) == 0 and parity_rate >= 70.0 and num_match)
+        overall_pass = len(struct["missing_in_docx"]) == 0 and parity_rate >= 70.0 and num_match
 
     return {
         "doc_id": slug,
@@ -183,14 +210,21 @@ def verify_bundle_docx_vs_pdf(
     }
 
 
-def compute_docx_to_markdown_parity(docx_paras: list[str], combined_md: str) -> tuple[float, list[tuple[int, str]]]:
+def compute_docx_to_markdown_parity(
+    docx_paras: list[str], combined_md: str
+) -> tuple[float, list[tuple[int, str]]]:
     """Compute verbatim text parity rate between DOCX paragraphs and normalized Markdown text."""
+
     def norm_words(text: str) -> str:
         text = text.lower()
         for k, v in _GREEK_LATEX_TO_UNICODE.items():
             text = text.replace(k, v)
         text = re.sub(r"\\text\{([^}]+)\}", r"\1", text)
-        text = re.sub(r"\\(?:sqrt|frac|times|le|ge|cdot|quad|qquad|dots|left|right|pm|approx|sim|over)", " ", text)
+        text = re.sub(
+            r"\\(?:sqrt|frac|times|le|ge|cdot|quad|qquad|dots|left|right|pm|approx|sim|over)",
+            " ",
+            text,
+        )
         text = re.sub(r"&nbsp;", " ", text)
         text = re.sub(r"&#\d+;|&[a-zA-Z]+;", " ", text)
         text = re.sub(r"</?[a-zA-Z][^>]*>", " ", text)
@@ -293,9 +327,15 @@ verify_docx_against_markdown = verify_bundle_docx_vs_markdown
 
 def main() -> int:
     """CLI runner for Universal Gate 0 Ingestion Provenance."""
-    parser = argparse.ArgumentParser(description="CCBA Universal Gate 0: DOCX vs PDF Provenance Audit")
-    parser.add_argument("-b", "--bundle", type=str, default=None, help="Specific bundle slug to audit")
-    parser.add_argument("--all", action="store_true", help="Audit all discoverable bundles with DOCX+PDF assets")
+    parser = argparse.ArgumentParser(
+        description="CCBA Universal Gate 0: DOCX vs PDF Provenance Audit"
+    )
+    parser.add_argument(
+        "-b", "--bundle", type=str, default=None, help="Specific bundle slug to audit"
+    )
+    parser.add_argument(
+        "--all", action="store_true", help="Audit all discoverable bundles with DOCX+PDF assets"
+    )
     args = parser.parse_args()
 
     root_dir = Path(__file__).resolve().parent.parent
@@ -337,7 +377,9 @@ def main() -> int:
             continue
 
         status_str = "✅ PASS" if res["overall_pass"] else "❌ FAIL"
-        print(f"• [{b.name[:35]:<35}] | PDF: {res['pdf_pages']:<3} trang | DOCX: {res['docx_paras']:<4} đoạn | Parity: {res['text_parity_rate']:.1f}% | {status_str}")
+        print(
+            f"• [{b.name[:35]:<35}] | PDF: {res['pdf_pages']:<3} trang | DOCX: {res['docx_paras']:<4} đoạn | Parity: {res['text_parity_rate']:.1f}% | {status_str}"
+        )
         if not res["overall_pass"]:
             all_passed = False
             if res["missing_in_docx"]:
@@ -354,4 +396,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

@@ -60,7 +60,10 @@ def convert_docx_to_okf_bundle(
                 if isinstance(v, list):
                     all_items.extend(v)
             for item in all_items:
-                if item.get("id") == target_bundle_dir.name or item.get("document_number") == target_bundle_dir.name:
+                if (
+                    item.get("id") == target_bundle_dir.name
+                    or item.get("document_number") == target_bundle_dir.name
+                ):
                     doc_meta = item
                     break
 
@@ -91,4 +94,3 @@ def convert_docx_to_okf_bundle(
             registry_file=reg_file,
             output_filename=output_filename,
         )
-

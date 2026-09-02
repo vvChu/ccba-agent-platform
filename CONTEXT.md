@@ -274,6 +274,15 @@ Cơ chế kiểm định độc lập do Success Auditor hoặc Orchestrator th�
 **Teamwork Session (Phiên Điều Phối Đa Tác Nhân)**:
 Quy trình điều phối đa tác nhân dài hạn (/ccba-teamwork) chia làm 4 giai đoạn (Interview $\rightarrow$ Team Sheet $\rightarrow$ Parallel Milestone Execution $\rightarrow$ Success Audit) phục vụ xử lý các dự án quy mô lớn phân rã đa luồng công việc song song, phân biệt với quy trình /boost (suy luận sâu ngắn hạn tập trung giải quyết bế tắc kỹ thuật).
 
+**Antigravity Lifecycle Hooks (Móc Vòng Đời Antigravity)**:
+Cơ chế `hooks.json` của Antigravity Platform cho phép chạy các lệnh shell tại các sự kiện vòng đời (PreToolUse, PostToolUse, PreInvocation, Stop) để kiểm soát, chặn hoặc tiêm ngữ cảnh vào Agent. Giao tiếp qua stdin/stdout JSON camelCase.
+
+**Hook Bridge Adapter (Bộ Chuyển Đổi Móc)**:
+Adapter Layer mỏng tại `scripts/hooks/antigravity_hook_bridge.py` dịch giữa Antigravity stdin/stdout I/O (camelCase, decision string) và CCBA HookCoordinator (snake_case, exit_code int). Không chứa business logic — chỉ là lớp dịch schema.
+
+**Fail-Safe Hook Protocol (Giao Thức Móc Dự Phòng An Toàn)**:
+Nguyên tắc thiết kế: Mọi ngoại lệ trong hook bridge đều fallback về `{"decision": "allow"}`, không bao giờ làm gián đoạn trải nghiệm IDE. Đảm bảo hooks không trở thành single point of failure.
+
 ---
 
 ## 5. Pháp Điển Xây Dựng, VBHN & Xử Lý Tài Liệu

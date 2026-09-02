@@ -6,7 +6,7 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 
 ---
 
-## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0053)
+## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0054)
 
 | Mã ADR | Tiêu đề | Trạng thái |
 | :--- | :--- | :---: |
@@ -57,3 +57,4 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 | [ADR 0051](0051-hub-spoke-sync-hardening-constitution-preservation-and-virtual-fallback.md) | Hub-Spoke Sync Hardening, Constitution Preservation & Virtual Hub Fallback | ✅ ACCEPTED |
 | [ADR 0052](0052-boost-deep-reasoning-protocol-and-escalation-gate.md) | Boost Deep Reasoning Protocol, Early Escalation & Multi-Agent Hierarchy | ✅ ACCEPTED |
 | [ADR 0053](0053-teamwork-multi-agent-orchestration-framework.md) | Teamwork Multi-Agent Orchestration Framework & Exclusive Seam Protocol | ✅ ACCEPTED |
+| [ADR 0054](0054-antigravity-lifecycle-hooks-and-security-bridge.md) | Antigravity Lifecycle Hooks & Security Bridge — Adapter Bridge Architecture | ✅ ACCEPTED |

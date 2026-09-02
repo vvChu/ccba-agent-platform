@@ -18,7 +18,6 @@ import hashlib
 import json
 import logging
 import re
-import tempfile
 import time
 import zipfile
 from pathlib import Path
@@ -76,7 +75,11 @@ def is_formula_image(
 
     # Check if this is an actual diagram/figure (accompanied by figure caption or CHÚ DẪN immediately following)
     caption_check_text = forward_text if forward_text else surrounding_text
-    has_figure_caption = bool(re.search(r"^(?:Hình|HÌNH)\s+[0-9A-Z]+(?:\.[0-9]+)*\s*[-–—:]", caption_check_text, re.MULTILINE))
+    has_figure_caption = bool(
+        re.search(
+            r"^(?:Hình|HÌNH)\s+[0-9A-Z]+(?:\.[0-9]+)*\s*[-–—:]", caption_check_text, re.MULTILINE
+        )
+    )
     has_chu_dan = bool(re.search(r"\b(?:CHÚ\s+DẪN|Chú\s+dẫn)\b", caption_check_text))
     if (has_figure_caption or has_chu_dan) and height_pt > 75.0:
         return False
@@ -92,10 +95,6 @@ def is_formula_image(
         return True
 
     return False
-
-
-
-
 
 
 def _compute_sha256(data: bytes) -> str:
@@ -159,7 +158,6 @@ def _validate_katex(result: str) -> bool:
     return True
 
 
-
 def _clean_and_extract_katex(raw: str) -> str:
     """Lam sach va trích xuất duy nhất khối $$...$$ từ chuỗi raw model trả về."""
     # 1. Tim block $$...$$ dau tien
@@ -183,8 +181,6 @@ def _clean_and_extract_katex(raw: str) -> str:
     # 4. Fallback: toàn bộ chuỗi (sau khi strip)
     clean = raw.strip().strip("`$").strip()
     return f"$${clean}$$"
-
-
 
 
 def _call_vision_model(img_bytes: bytes, prompt: str) -> str:
@@ -275,7 +271,9 @@ def extract_latex_from_image(
                 return cleaned
             logger.warning(
                 "Vision attempt %d invalid format (sha256=%s): %s",
-                attempt + 1, sha256[:8], raw.strip()[:80],
+                attempt + 1,
+                sha256[:8],
+                raw.strip()[:80],
             )
         except Exception as exc:
             logger.warning("Vision attempt %d error (sha256=%s): %s", attempt + 1, sha256[:8], exc)
@@ -355,6 +353,7 @@ def harvest_docx_formula_images(
         if fig_overrides_file.exists():
             try:
                 import yaml
+
                 f_data = yaml.safe_load(fig_overrides_file.read_text(encoding="utf-8"))
                 if isinstance(f_data, dict):
                     for f_tag, f_val in f_data.items():
@@ -375,6 +374,7 @@ def harvest_docx_formula_images(
         if form_overrides_file.exists():
             try:
                 import yaml
+
                 form_data = yaml.safe_load(form_overrides_file.read_text(encoding="utf-8"))
                 if isinstance(form_data, dict):
                     for k_id, k_val in form_data.items():
@@ -384,7 +384,10 @@ def harvest_docx_formula_images(
 
                             # Determine proper tag: never use 'rId...' as tag
                             has_tag = "\\tag" in l_val or "\\qquad" in l_val or "\\hfill" in l_val
-                            is_multiline_env = any(env in l_val for env in ("aligned", "cases", "gather", "matrix", "split"))
+                            is_multiline_env = any(
+                                env in l_val
+                                for env in ("aligned", "cases", "gather", "matrix", "split")
+                            )
                             if not has_tag and not is_multiline_env:
                                 if not str(k_id).lower().startswith("rid"):
                                     tag_to_use = str(k_id)
@@ -396,7 +399,11 @@ def harvest_docx_formula_images(
                                 if tag_to_use:
                                     l_val = f"{l_val} \\tag{{{tag_to_use}}}"
 
-                            override_formulas[str(k_id)] = f"$${l_val}$$\n<!-- formula_id: \"{f_id}\" -->" if f_id else f"$${l_val}$$"
+                            override_formulas[str(k_id)] = (
+                                f'$${l_val}$$\n<!-- formula_id: "{f_id}" -->'
+                                if f_id
+                                else f"$${l_val}$$"
+                            )
                         elif isinstance(k_val, str):
                             override_formulas[str(k_id)] = k_val
             except Exception:
@@ -455,7 +462,9 @@ def harvest_docx_formula_images(
                     pending_rids[rid] = img_bytes
 
             # 2. Check modern DrawingML (w:drawing)
-            for drawing in para.findall(".//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}drawing"):
+            for drawing in para.findall(
+                ".//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}drawing"
+            ):
                 blip = drawing.find(f".//{{{ns_a}}}blip")
                 if blip is None:
                     continue
@@ -514,7 +523,9 @@ def harvest_docx_formula_images(
                 unique_shas[sha] = b_data
 
             sha_to_katex: dict[str, str] = {}
-            with concurrent.futures.ThreadPoolExecutor(max_workers=min(6, len(unique_shas))) as executor:
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=min(6, len(unique_shas))
+            ) as executor:
                 future_to_sha = {
                     executor.submit(extract_latex_from_image, b_data, cache_dir, False): sha
                     for sha, b_data in unique_shas.items()
@@ -563,18 +574,33 @@ def harvest_pdf_formula_images(
             for img_meta in page.get_images():
                 xref, w_px, h_px = img_meta[0], img_meta[2], img_meta[3]
                 if h_px > 80 or w_px > 600:
-                    results.append({"page_num": pg_idx + 1, "xref": xref,
-                                    "width_px": w_px, "height_px": h_px,
-                                    "katex": f"<!-- DIAGRAM_PDF: page={pg_idx+1} xref={xref} -->"})
+                    results.append(
+                        {
+                            "page_num": pg_idx + 1,
+                            "xref": xref,
+                            "width_px": w_px,
+                            "height_px": h_px,
+                            "katex": f"<!-- DIAGRAM_PDF: page={pg_idx + 1} xref={xref} -->",
+                        }
+                    )
                     continue
                 try:
                     img_bytes = doc.extract_image(xref)["image"]
                 except Exception as exc:
                     logger.warning("Extract image xref=%d failed: %s", xref, exc)
                     continue
-                katex = extract_latex_from_image(img_bytes, cache_dir=cache_dir, skip_vision=skip_vision)
-                results.append({"page_num": pg_idx + 1, "xref": xref,
-                                 "width_px": w_px, "height_px": h_px, "katex": katex})
+                katex = extract_latex_from_image(
+                    img_bytes, cache_dir=cache_dir, skip_vision=skip_vision
+                )
+                results.append(
+                    {
+                        "page_num": pg_idx + 1,
+                        "xref": xref,
+                        "width_px": w_px,
+                        "height_px": h_px,
+                        "katex": katex,
+                    }
+                )
     finally:
         doc.close()
     return results

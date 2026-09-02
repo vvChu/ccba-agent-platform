@@ -21,9 +21,7 @@ def lint_markdown_file(md_path: Path) -> list[str]:
             r"^[-*+]\s+(?:\*\*)?(?:CHÚ THÍCH|GHI CHÚ|Chú thích|Ghi chú)\s*\d*[:\.]?", stripped
         ):
             if re.search(r"^[-*+]\s+(?:\*\*)?CHÚ THÍCH\s+\d+:", stripped):
-                errors.append(
-                    f"Line {idx}: Redundant bullet before footnote header: '{stripped}'"
-                )
+                errors.append(f"Line {idx}: Redundant bullet before footnote header: '{stripped}'")
 
         # 2. Check raw HTML table tags (unless exempted)
         if re.search(r"<(?:table|thead|tbody|tr|th|td)\b", stripped, re.IGNORECASE):
@@ -122,9 +120,7 @@ def lint_target_path(target_path: Path, check_links: bool = True) -> dict[str, A
             link_errs = lint_bundle_links(target_path)
             if link_errs:
                 result["link_errors"] += len(link_errs)
-                result["details"].append(
-                    {"file": str(target_path), "link_errors": link_errs}
-                )
+                result["details"].append({"file": str(target_path), "link_errors": link_errs})
 
     result["total_errors"] = result["format_errors"] + result["link_errors"]
     return result

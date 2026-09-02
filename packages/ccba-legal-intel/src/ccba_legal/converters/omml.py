@@ -16,21 +16,21 @@ W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
 # Map of common OMML accent characters to LaTeX accents
 ACCENT_MAP: dict[str, str] = {
-    "\u0302": r"\hat",     # Comb hat
+    "\u0302": r"\hat",  # Comb hat
     "^": r"\hat",
     "\u0300": r"\grave",
     "\u0301": r"\acute",
     "\u0303": r"\tilde",
     "~": r"\tilde",
-    "\u0304": r"\bar",      # Comb macron
-    "\u00af": r"\bar",      # Macron
-    "\u0305": r"\bar",      # Overline
+    "\u0304": r"\bar",  # Comb macron
+    "\u00af": r"\bar",  # Macron
+    "\u0305": r"\bar",  # Overline
     "\u0306": r"\breve",
-    "\u0307": r"\dot",      # Comb dot
-    "\u0308": r"\ddot",     # Comb diaeresis
+    "\u0307": r"\dot",  # Comb dot
+    "\u0308": r"\ddot",  # Comb diaeresis
     "\u20db": r"\dddot",
     "\u030a": r"\mathring",
-    "\u20d7": r"\vec",      # Comb right arrow above
+    "\u20d7": r"\vec",  # Comb right arrow above
     "\u2192": r"\vec",
 }
 
@@ -65,10 +65,34 @@ MATH_SYMBOLS_MAP: dict[str, str] = {
 
 # Standard math functions in LaTeX
 STANDARD_FUNCTIONS = {
-    "sin", "cos", "tan", "cot", "sec", "csc",
-    "arcsin", "arccos", "arctan", "sinh", "cosh", "tanh",
-    "exp", "ln", "log", "lg", "lim", "max", "min", "inf", "sup",
-    "det", "dim", "gcd", "hom", "ker", "deg", "arg"
+    "sin",
+    "cos",
+    "tan",
+    "cot",
+    "sec",
+    "csc",
+    "arcsin",
+    "arccos",
+    "arctan",
+    "sinh",
+    "cosh",
+    "tanh",
+    "exp",
+    "ln",
+    "log",
+    "lg",
+    "lim",
+    "max",
+    "min",
+    "inf",
+    "sup",
+    "det",
+    "dim",
+    "gcd",
+    "hom",
+    "ker",
+    "deg",
+    "arg",
 }
 
 

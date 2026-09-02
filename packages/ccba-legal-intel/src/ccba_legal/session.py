@@ -116,9 +116,7 @@ class CookieVault:
         """Return dict mapping cookie name to value for thuvienphapluat.vn."""
         cookies = self.load_cookies()
         return {
-            c["name"]: c["value"]
-            for c in cookies
-            if "thuvienphapluat.vn" in c.get("domain", "")
+            c["name"]: c["value"] for c in cookies if "thuvienphapluat.vn" in c.get("domain", "")
         }
 
     def save_cookies_from_cdp(self, cdp: Any) -> bool:
@@ -202,6 +200,7 @@ def get_tvpl_credentials() -> tuple[str, str]:
     if ws_ctx.exists():
         try:
             import yaml
+
             with open(ws_ctx, encoding="utf-8") as f:
                 ctx_data = yaml.safe_load(f) or {}
             hub_path_str = ctx_data.get("hub_path")

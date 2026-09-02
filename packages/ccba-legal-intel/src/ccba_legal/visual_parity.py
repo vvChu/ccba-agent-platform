@@ -41,7 +41,6 @@ def lint_document(md_path: Path) -> list[str]:
         if in_display_math:
             continue
 
-
         # 1. Check double bullets
         if re.match(r"^\s*[-*]\s+[-*]\s+", line):
             errors.append(f"Line {idx}: DOUBLE_BULLET: '{stripped}'")
@@ -49,9 +48,7 @@ def lint_document(md_path: Path) -> list[str]:
         # 2. Check consecutive _CHÚ THÍCH:_ headers
         if stripped == "_CHÚ THÍCH:_" and idx < len(lines):
             next_lines = [
-                lines[j].strip()
-                for j in range(idx, min(len(lines), idx + 3))
-                if lines[j].strip()
+                lines[j].strip() for j in range(idx, min(len(lines), idx + 3)) if lines[j].strip()
             ]
             if len(next_lines) > 0 and next_lines[0] == "_CHÚ THÍCH:_":
                 errors.append(f"Line {idx}: DUPLICATE_NOTE_HEADER: Consecutive _CHÚ THÍCH:_")
@@ -77,33 +74,46 @@ def lint_document(md_path: Path) -> list[str]:
                 stripped,
             )
             if raw_sup:
-                errors.append(f"Line {idx}: RAW_TABLE_SUPERSCRIPT: {raw_sup} in '{stripped[:60]}...'")
+                errors.append(
+                    f"Line {idx}: RAW_TABLE_SUPERSCRIPT: {raw_sup} in '{stripped[:60]}...'"
+                )
 
         # 6. Check for unbulleted standard classification codes
         if re.match(r"^(LT[1-4]|BC[1-3]|SK[1-3]|ĐT[1-4]|Ch[1-4]|K[0-3])\s+\(", stripped):
             errors.append(f"Line {idx}: UNBULLETED_CLASSIFICATION: '{stripped[:50]}'")
 
         # 7. Check redundant bullet before CHÚ THÍCH / GHI CHÚ header
-        if re.match(r"^[-*+]\s+(?:\*\*)?(?:CHÚ THÍCH|GHI CHÚ|Chú thích|Ghi chú)\s*\d*[:\.]?", stripped):
+        if re.match(
+            r"^[-*+]\s+(?:\*\*)?(?:CHÚ THÍCH|GHI CHÚ|Chú thích|Ghi chú)\s*\d*[:\.]?", stripped
+        ):
             if re.search(r"^[-*+]\s+(?:\*\*)?CHÚ THÍCH\s+\d+:", stripped):
-                errors.append(f"Line {idx}: REDUNDANT_NOTE_BULLET: Redundant bullet before footnote header: '{stripped}'")
+                errors.append(
+                    f"Line {idx}: REDUNDANT_NOTE_BULLET: Redundant bullet before footnote header: '{stripped}'"
+                )
 
         # 8. Check raw HTML table tags
         if re.search(r"<(?:table|thead|tbody|tr|th|td)\b", stripped, re.IGNORECASE):
-            errors.append(f"Line {idx}: UNCLEAN_HTML_TABLE: Unclean raw HTML table tag found: '{stripped}'")
+            errors.append(
+                f"Line {idx}: UNCLEAN_HTML_TABLE: Unclean raw HTML table tag found: '{stripped}'"
+            )
 
         # 9. Check squashed notes with <br> tag (ADR 0030)
         if re.search(r"<br>\s*(?:\*\*)?CHÚ THÍCH", stripped, re.IGNORECASE):
-            errors.append(f"Line {idx}: SQUASHED_NOTE_BR: Squashed footnote using <br> tag: '{stripped[:70]}'")
+            errors.append(
+                f"Line {idx}: SQUASHED_NOTE_BR: Squashed footnote using <br> tag: '{stripped[:70]}'"
+            )
 
         # 10. Check unclosed or broken markdown table rows (ADR 0030)
         if stripped.startswith("|") and not stripped.endswith("|"):
-            errors.append(f"Line {idx}: BROKEN_TABLE_ROW: Table row does not end with '|': '{stripped[:70]}'")
+            errors.append(
+                f"Line {idx}: BROKEN_TABLE_ROW: Table row does not end with '|': '{stripped[:70]}'"
+            )
         if re.match(r"^\|(?:\s*:?-+:?\s*\|)+$", stripped):
             prev = lines[idx - 2].strip() if idx >= 2 else ""
             if not (prev.startswith("|") and prev.endswith("|")):
-                errors.append(f"Line {idx}: INVALID_TABLE_HEADER: Table separator preceded by invalid header: '{prev[:70]}'")
-
+                errors.append(
+                    f"Line {idx}: INVALID_TABLE_HEADER: Table separator preceded by invalid header: '{prev[:70]}'"
+                )
 
     # 10. Check monotonic footnote numbering sequence (ADR 0030)
     is_amendment = "sua_doi" in md_path.stem.lower() or "sources" in md_path.parts
@@ -113,18 +123,21 @@ def lint_document(md_path: Path) -> list[str]:
             # Match plain, italic (_CHÚ THÍCH:_), bold (**CHÚ THÍCH:**) markers
             labels = [
                 re.sub(r"[_*]", "", m.group(1)).strip().upper()
-                for m in re.finditer(r"(?:^|[^a-zA-Z0-9])([_*]*(?:CHÚ THÍCH|Chú thích)(?:\s+\d+)?[_*]*):", chunk, re.IGNORECASE)
+                for m in re.finditer(
+                    r"(?:^|[^a-zA-Z0-9])([_*]*(?:CHÚ THÍCH|Chú thích)(?:\s+\d+)?[_*]*):",
+                    chunk,
+                    re.IGNORECASE,
+                )
             ]
             if labels:
                 has_note_2 = any("CHÚ THÍCH 2" in lbl for lbl in labels)
                 has_note_1 = any("CHÚ THÍCH 1" in lbl for lbl in labels)
                 if has_note_2 and not has_note_1:
-                    errors.append("MISSING_NOTE_1: Missing 'CHÚ THÍCH 1:' in section where 'CHÚ THÍCH 2:' exists.")
-
+                    errors.append(
+                        "MISSING_NOTE_1: Missing 'CHÚ THÍCH 1:' in section where 'CHÚ THÍCH 2:' exists."
+                    )
 
     return errors
-
-
 
 
 class VisualParityAuditor:

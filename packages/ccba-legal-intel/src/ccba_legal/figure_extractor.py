@@ -11,6 +11,7 @@ from typing import Any
 import yaml
 from docx import Document
 
+
 def load_bundle_figures_overrides(bundle_dir: Path) -> dict[str, dict[str, Any]]:
     """Load bundle-level figure metadata overrides from `figures_override.yaml` if present."""
     override_file = bundle_dir / "figures_override.yaml"
@@ -24,9 +25,7 @@ def load_bundle_figures_overrides(bundle_dir: Path) -> dict[str, dict[str, Any]]
 
 
 def extract_docx_figures(
-    docx_path: str | Path,
-    output_dir: str | Path,
-    standard_name: str | None = None
+    docx_path: str | Path, output_dir: str | Path, standard_name: str | None = None
 ) -> dict[str, Any]:
     """Extract all technical figures from DOCX and build OKF figures catalog."""
     docx_p = Path(docx_path)
@@ -50,26 +49,30 @@ def extract_docx_figures(
         if m:
             fig_tag = m.group(1).strip()
             fig_title = m.group(2).strip()
-            fig_items.append({
-                "p_idx": idx,
-                "tag": fig_tag,
-                "title": fig_title,
-                "slug": fig_tag.lower().replace(".", "_").replace("-", "_")
-            })
+            fig_items.append(
+                {
+                    "p_idx": idx,
+                    "tag": fig_tag,
+                    "title": fig_title,
+                    "slug": fig_tag.lower().replace(".", "_").replace("-", "_"),
+                }
+            )
 
     existing_tags = {item["tag"] for item in fig_items}
     for o_tag, o_val in fig_overrides.items():
         str_tag = str(o_tag)
         if str_tag not in existing_tags and isinstance(o_val, dict) and "title" in o_val:
             f_slug = str_tag.lower().replace(".", "_").replace("-", "_")
-            fig_items.append({
-                "p_idx": o_val.get("p_idx", -1),
-                "tag": str_tag,
-                "title": o_val["title"],
-                "slug": f_slug,
-                "media": o_val.get("media"),
-                "annex": o_val.get("annex", "MAIN"),
-            })
+            fig_items.append(
+                {
+                    "p_idx": o_val.get("p_idx", -1),
+                    "tag": str_tag,
+                    "title": o_val["title"],
+                    "slug": f_slug,
+                    "media": o_val.get("media"),
+                    "annex": o_val.get("annex", "MAIN"),
+                }
+            )
 
     def _fig_sort_key(item: dict[str, Any]) -> tuple[int, int, str]:
         t = item["tag"]
@@ -90,7 +93,6 @@ def extract_docx_figures(
     cards_dir.mkdir(parents=True, exist_ok=True)
     images_dir = figures_dir / "images"
     images_dir.mkdir(parents=True, exist_ok=True)
-
 
     with zipfile.ZipFile(docx_p) as z:
         media_list = sorted([f for f in z.namelist() if f.startswith("word/media/")])
@@ -121,14 +123,22 @@ def extract_docx_figures(
                         out_img_path.write_bytes(data)
                         consumed_media.add(media_path.replace("word/", ""))
                 elif f_idx >= 0:
-                    prev_idx = fig_items[i - 1].get("search_end", fig_items[i - 1]["p_idx"]) if i > 0 and fig_items[i - 1]["p_idx"] >= 0 else max(0, f_idx - 35)
+                    prev_idx = (
+                        fig_items[i - 1].get("search_end", fig_items[i - 1]["p_idx"])
+                        if i > 0 and fig_items[i - 1]["p_idx"] >= 0
+                        else max(0, f_idx - 35)
+                    )
                     search_start = max(prev_idx + 1, f_idx - 30)
 
                     # Check if there is a (kết thúc) continuation paragraph after f_idx
                     search_end = f_idx
                     for next_idx in range(f_idx + 1, min(f_idx + 6, len(doc.paragraphs))):
                         nxt_p = doc.paragraphs[next_idx].text.strip()
-                        if re.match(rf"^(?:Hình|HÌNH)\s+{re.escape(f_tag)}\s*\((?:kết\s+thúc|tiếp\s+theo)\)", nxt_p, re.IGNORECASE):
+                        if re.match(
+                            rf"^(?:Hình|HÌNH)\s+{re.escape(f_tag)}\s*\((?:kết\s+thúc|tiếp\s+theo)\)",
+                            nxt_p,
+                            re.IGNORECASE,
+                        ):
                             search_end = next_idx + 1
                             break
 
@@ -138,6 +148,7 @@ def extract_docx_figures(
                     found_media: list[str] = []
                     sub_items: list[tuple[Any, str]] = []
                     import io
+
                     from PIL import Image, ImageDraw, ImageFont
 
                     for k in range(search_start, search_end):
@@ -146,7 +157,11 @@ def extract_docx_figures(
                         for rid in m_rids:
                             if rid in rels:
                                 target = rels[rid].target_ref
-                                if target.startswith("media/image") and target not in found_media and target not in consumed_media:
+                                if (
+                                    target.startswith("media/image")
+                                    and target not in found_media
+                                    and target not in consumed_media
+                                ):
                                     found_media.append(target)
                                     full_m_p = f"word/{target}"
                                     if full_m_p in z.namelist() and not target.endswith(".wmf"):
@@ -165,7 +180,9 @@ def extract_docx_figures(
                     should_stitch = False
                     if len(sub_items) > 1:
                         has_sub_caps = any(cap for _, cap in sub_items if cap)
-                        is_multi_page = (search_end > f_idx) and all(img.height >= 120 for img, _ in sub_items)
+                        is_multi_page = (search_end > f_idx) and all(
+                            img.height >= 120 for img, _ in sub_items
+                        )
                         if has_sub_caps or is_multi_page:
                             should_stitch = True
 
@@ -179,7 +196,12 @@ def extract_docx_figures(
 
                         dummy_img = Image.new("RGB", (1, 1))
                         dummy_draw = ImageDraw.Draw(dummy_img)
-                        text_widths = [dummy_draw.textbbox((0, 0), cap, font=font_bold)[2] - dummy_draw.textbbox((0, 0), cap, font=font_bold)[0] for _, cap in sub_items if cap]
+                        text_widths = [
+                            dummy_draw.textbbox((0, 0), cap, font=font_bold)[2]
+                            - dummy_draw.textbbox((0, 0), cap, font=font_bold)[0]
+                            for _, cap in sub_items
+                            if cap
+                        ]
                         max_img_w = max(img.width for img, _ in sub_items)
                         max_txt_w = max(text_widths) if text_widths else 0
                         canvas_w = max(max_img_w, max_txt_w, 660) + 80
@@ -222,8 +244,6 @@ def extract_docx_figures(
                         data = z.read(media_list[i])
                         out_img_path.write_bytes(data)
 
-
-
                 # Build metadata
                 annex = item.get("annex") or (f_tag[0] if f_tag[0].isalpha() else "MAIN")
                 geom = fig_overrides.get(f_tag, {})
@@ -237,7 +257,7 @@ def extract_docx_figures(
                     "annex": annex,
                     "anchor": f"hinh-{f_slug}",
                     "image_relpath": f"figures/images/{out_filename}",
-                    "has_image": out_img_path.exists()
+                    "has_image": out_img_path.exists(),
                 }
                 if geom:
                     entry["geometry_rules"] = geom
@@ -259,7 +279,7 @@ def extract_docx_figures(
                     "annex": "MAIN",
                     "anchor": f"hinh-{idx}",
                     "image_relpath": f"figures/images/{out_filename}",
-                    "has_image": True
+                    "has_image": True,
                 }
                 catalog_entries.append(entry)
                 card_content = render_markdown_figure_card(entry)
@@ -269,7 +289,7 @@ def extract_docx_figures(
     manifest = {
         "standard": std_name,
         "total_figures": len(catalog_entries),
-        "figures": catalog_entries
+        "figures": catalog_entries,
     }
     catalog_path = figures_dir / "figures_catalog.yaml"
     with open(catalog_path, "w", encoding="utf-8") as f:
@@ -292,22 +312,24 @@ def render_markdown_figure_card(fig_entry: dict[str, Any]) -> str:
     lines: list[str] = [
         f'\n<a id="{anchor}"></a>\n',
         f'<p align="center">\n\n![Hình {tag}]({img_path})\n\n</p>\n',
-        f'<p align="center"><strong>Hình {tag} — {title}</strong></p>\n'
+        f'<p align="center"><strong>Hình {tag} — {title}</strong></p>\n',
     ]
 
     if geom:
         callout_lines = ["> [!NOTE]", "> **Đặc tả Hình học & Tham chiếu Khí động:**"]
         if "description" in geom:
-            callout_lines.append(f'> \\- **Phạm vi:** {geom["description"]}')
+            callout_lines.append(f"> \\- **Phạm vi:** {geom['description']}")
         if "parameters" in geom:
-            callout_lines.append(f'> \\- **Thông số cơ sở:** {", ".join(geom["parameters"])}')
+            callout_lines.append(f"> \\- **Thông số cơ sở:** {', '.join(geom['parameters'])}")
         if "zones" in geom:
             callout_lines.append("> \\- **Phân vùng khí động:**")
             for z in geom["zones"]:
-                callout_lines.append(f'> &nbsp;&nbsp;+ {z}')
+                callout_lines.append(f"> &nbsp;&nbsp;+ {z}")
         if "related_tables" in geom:
-            table_links = [f'[{t}](#bang-bang-{t.lower().replace(".", "-")})' for t in geom["related_tables"]]
-            callout_lines.append(f'> \\- **Bảng tra liên kết:** {", ".join(table_links)}')
+            table_links = [
+                f"[{t}](#bang-bang-{t.lower().replace('.', '-')})" for t in geom["related_tables"]
+            ]
+            callout_lines.append(f"> \\- **Bảng tra liên kết:** {', '.join(table_links)}")
 
         lines.append("\n".join(callout_lines) + "\n")
 
@@ -319,7 +341,13 @@ def scan_and_prune_orphan_figures(bundle_dir: Path, prune: bool = False) -> dict
     figures_dir = bundle_dir / "figures"
     images_dir = figures_dir / "images"
     if not images_dir.exists():
-        return {"active": [], "orphaned": [], "pruned_count": 0, "pruned_bytes": 0, "total_files": 0}
+        return {
+            "active": [],
+            "orphaned": [],
+            "pruned_count": 0,
+            "pruned_bytes": 0,
+            "total_files": 0,
+        }
 
     all_images = sorted(list(images_dir.glob("*.*")))
     disk_names = {img.name: img for img in all_images}
@@ -333,7 +361,9 @@ def scan_and_prune_orphan_figures(bundle_dir: Path, prune: bool = False) -> dict
                 txt = md_f.read_text(encoding="utf-8")
                 for m in re.findall(r"!\[[^\]]*\]\([^)]*images/([^)\s]+)\)", txt):
                     referenced.add(Path(m).name)
-                for m in re.findall(r"<img\b[^>]*src=[\"'][^\"']*images/([^\"'\s>]+)[\"']", txt, re.IGNORECASE):
+                for m in re.findall(
+                    r"<img\b[^>]*src=[\"'][^\"']*images/([^\"'\s>]+)[\"']", txt, re.IGNORECASE
+                ):
                     referenced.add(Path(m).name)
             except Exception:
                 pass
@@ -390,5 +420,3 @@ def scan_and_prune_orphan_figures(bundle_dir: Path, prune: bool = False) -> dict
 # Public Alias
 extract_technical_figures = extract_docx_figures
 prune_orphaned_figures = scan_and_prune_orphan_figures
-
-

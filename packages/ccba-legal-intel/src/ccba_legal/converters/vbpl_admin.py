@@ -14,22 +14,42 @@ from ccba_legal.converters.unit_normalizer import normalize_clause_numbers
 from ccba_legal.gold_standard import generate_bundle_ast_and_qa, inject_semantic_anchors
 
 
-def extract_legal_basis_graph(raw_text: str, registry_lookup: dict[str, str]) -> list[dict[str, str]]:
+def extract_legal_basis_graph(
+    raw_text: str, registry_lookup: dict[str, str]
+) -> list[dict[str, str]]:
     """Extract legal basis citations and resolve to canonical doc_ids."""
     basis_list: list[dict[str, str]] = []
-    pattern = re.compile(r"căn\s+cứ\s+([^;\n\.]+?)(?:số\s+([\d\w\-/]+))?(?:\s+đã\s+được\s+sửa\s+đổi[^;\n\.]*)?[;\n\.]", re.IGNORECASE)
+    pattern = re.compile(
+        r"căn\s+cứ\s+([^;\n\.]+?)(?:số\s+([\d\w\-/]+))?(?:\s+đã\s+được\s+sửa\s+đổi[^;\n\.]*)?[;\n\.]",
+        re.IGNORECASE,
+    )
     for match in pattern.finditer(raw_text[:4000]):
-        title_clean = re.sub(r"^căn\s+cứ\s+", "", match.group(0).strip(" ;.\r\n*"), flags=re.IGNORECASE).strip()
-        title_clean = re.sub(r"<[^>]+>", "", title_clean).replace("*", "").replace("\\", "").replace("_", "").strip()
-        if not any(k in title_clean.lower() for k in ["luật", "nghị định", "pháp lệnh", "nghị quyết", "thông tư"]):
+        title_clean = re.sub(
+            r"^căn\s+cứ\s+", "", match.group(0).strip(" ;.\r\n*"), flags=re.IGNORECASE
+        ).strip()
+        title_clean = (
+            re.sub(r"<[^>]+>", "", title_clean)
+            .replace("*", "")
+            .replace("\\", "")
+            .replace("_", "")
+            .strip()
+        )
+        if not any(
+            k in title_clean.lower()
+            for k in ["luật", "nghị định", "pháp lệnh", "nghị quyết", "thông tư"]
+        ):
             continue
         doc_num = match.group(2) if match.group(2) else ""
-        doc_id = registry_lookup.get(doc_num, re.sub(r"[^\w\d]+", "_", title_clean.lower()).strip("_")[:50])
+        doc_id = registry_lookup.get(
+            doc_num, re.sub(r"[^\w\d]+", "_", title_clean.lower()).strip("_")[:50]
+        )
         basis_list.append({"doc_id": doc_id, "title": title_clean})
     return basis_list
 
 
-def _load_registry_metadata(registry_file: Path, bundle_name: str) -> tuple[dict[str, str], dict[str, Any]]:
+def _load_registry_metadata(
+    registry_file: Path, bundle_name: str
+) -> tuple[dict[str, str], dict[str, Any]]:
     """Load lookup map and specific metadata for target document from legal_registry.yaml."""
     reg_lookup: dict[str, str] = {}
     doc_registry_meta: dict[str, Any] = {}
@@ -52,12 +72,22 @@ def _load_registry_metadata(registry_file: Path, bundle_name: str) -> tuple[dict
 def _convert_docx_to_clean_markdown(docx_path: Path) -> str:
     """Convert docx to raw markdown via Mammoth and clean escaping artifacts."""
     import mammoth
+
     with open(docx_path, "rb") as f:
         raw_md = mammoth.convert_to_markdown(f).value
-    return re.sub(r'<a id="[^"]+"></a>', "", raw_md).replace(r"\.", ".").replace(r"\-", "-").replace(r"\_", "_").replace(r"\(", "(").replace(r"\)", ")")
+    return (
+        re.sub(r'<a id="[^"]+"></a>', "", raw_md)
+        .replace(r"\.", ".")
+        .replace(r"\-", "-")
+        .replace(r"\_", "_")
+        .replace(r"\(", "(")
+        .replace(r"\)", ")")
+    )
 
 
-def _export_single_template(form_text: str, roman_num: str, f_num: str, doc_num_str: str, sub_dir: Path) -> Path:
+def _export_single_template(
+    form_text: str, roman_num: str, f_num: str, doc_num_str: str, sub_dir: Path
+) -> Path:
     """Export an individual atomic form template markdown file."""
     first_few_lines = form_text.splitlines()[:5]
     f_title = f"Biểu mẫu số {f_num}"
@@ -73,9 +103,15 @@ def _export_single_template(form_text: str, roman_num: str, f_num: str, doc_num_
     return form_file
 
 
-def _extract_and_export_templates(cleaned_md: str, templates_dir: Path, doc_num_str: str) -> tuple[str, list[Path]]:
+def _extract_and_export_templates(
+    cleaned_md: str, templates_dir: Path, doc_num_str: str
+) -> tuple[str, list[Path]]:
     """Split administrative appendices into atomic templates in templates/ directory."""
-    app_matches = list(re.finditer(r"(?:^|\n)#*\s*__?\s*PHỤ LỤC\s+([IVXLCDM0-9]+)__?\s*([^\n]*)", cleaned_md, re.IGNORECASE))
+    app_matches = list(
+        re.finditer(
+            r"(?:^|\n)#*\s*__?\s*PHỤ LỤC\s+([IVXLCDM0-9]+)__?\s*([^\n]*)", cleaned_md, re.IGNORECASE
+        )
+    )
     created_templates: list[Path] = []
 
     for idx, match in enumerate(app_matches):
@@ -93,8 +129,14 @@ def _extract_and_export_templates(cleaned_md: str, templates_dir: Path, doc_num_
             sub_dir = templates_dir / f"phu_luc_{roman_num.lower()}"
             sub_dir.mkdir(parents=True, exist_ok=True)
             for f_idx, (f_num, f_start) in enumerate(sorted_forms):
-                f_end = sorted_forms[f_idx + 1][1] if f_idx + 1 < len(sorted_forms) else len(app_full_text)
-                form_file = _export_single_template(app_full_text[f_start:f_end].strip(), roman_num, f_num, doc_num_str, sub_dir)
+                f_end = (
+                    sorted_forms[f_idx + 1][1]
+                    if f_idx + 1 < len(sorted_forms)
+                    else len(app_full_text)
+                )
+                form_file = _export_single_template(
+                    app_full_text[f_start:f_end].strip(), roman_num, f_num, doc_num_str, sub_dir
+                )
                 created_templates.append(form_file)
         else:
             app_file = templates_dir / f"phu_luc_{roman_num.lower()}.md"
@@ -108,7 +150,12 @@ def _extract_and_export_templates(cleaned_md: str, templates_dir: Path, doc_num_
 
 def _build_pure_normative_body(pure_body_raw: str) -> str:
     """Strip administrative preamble headers and apply strict bullet indentation formatting."""
-    pure_body = re.sub(r"^(?:[\s\S]*?)(#+\s*__?\s*Chương\s+[IVXLCDM0-9]+|#+\s*__?\s*Điều\s+1\b)", r"\1", pure_body_raw, flags=re.IGNORECASE)
+    pure_body = re.sub(
+        r"^(?:[\s\S]*?)(#+\s*__?\s*Chương\s+[IVXLCDM0-9]+|#+\s*__?\s*Điều\s+1\b)",
+        r"\1",
+        pure_body_raw,
+        flags=re.IGNORECASE,
+    )
     pure_body = normalize_clause_numbers(pure_body)
     pure_body = re.sub(r"(\n\s*\+\s+[^\n]+)", r"&nbsp;&nbsp;\1", pure_body)
     pure_body = re.sub(r"&nbsp;&nbsp;\n\s*\+\s+", r"\n&nbsp;&nbsp;\\+ ", pure_body)
@@ -135,10 +182,18 @@ def _write_bundle_metadata_and_index(
     pdf_sha256 = doc_meta.get("pdf_sha256", "UNVERIFIED")
 
     metadata_obj = {
-        "id": bundle_dir.name, "document_number": doc_num, "type": doc_meta.get("type", "Nghị định"),
-        "title": doc_title, "status": "effective", "effective_date": effective_date,
-        "signer": signer, "pdf_path": pdf_path, "pdf_sha256": pdf_sha256, "pdf_status": "verified",
-        "legal_basis": legal_basis, "replaces": doc_meta.get("relations", {}).get("replaces", []),
+        "id": bundle_dir.name,
+        "document_number": doc_num,
+        "type": doc_meta.get("type", "Nghị định"),
+        "title": doc_title,
+        "status": "effective",
+        "effective_date": effective_date,
+        "signer": signer,
+        "pdf_path": pdf_path,
+        "pdf_sha256": pdf_sha256,
+        "pdf_status": "verified",
+        "legal_basis": legal_basis,
+        "replaces": doc_meta.get("relations", {}).get("replaces", []),
     }
     with open(bundle_dir / "metadata.yaml", "w", encoding="utf-8") as f:
         yaml.dump(metadata_obj, f, allow_unicode=True, sort_keys=False, indent=2)
@@ -187,6 +242,7 @@ def process_vbpl_bundle_okf_v22(
     )
     body_anchored = _build_pure_normative_body(pure_body_raw)
     from ccba_legal.table_cleaner import clean_markdown_tables_and_notes
+
     body_anchored = clean_markdown_tables_and_notes(body_anchored)
 
     target_md_filename = output_filename or f"{bundle_dir.name}.md"

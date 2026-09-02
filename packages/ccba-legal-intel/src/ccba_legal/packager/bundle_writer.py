@@ -82,7 +82,9 @@ def write_logs_and_index_v2(bundle_dir: Path, bundle_slug: str, metadata: dict[s
     title = metadata.get("title", bundle_slug)
     doc_type = metadata.get("type", "Document")
 
-    log_content = f"# OKF v2.0 Processing Log\n\n- [{timestamp}] Bundle initialized for {bundle_slug}\n"
+    log_content = (
+        f"# OKF v2.0 Processing Log\n\n- [{timestamp}] Bundle initialized for {bundle_slug}\n"
+    )
     (bundle_dir / "log.md").write_text(log_content, encoding="utf-8")
 
     index_content = f"# OKF Bundle: {title}\n\n## Metadata\n- **Type**: {doc_type}\n- **ID**: {bundle_slug}\n- **Generated**: {timestamp}\n\n## Contents\n- [{bundle_slug}.md](./{bundle_slug}.md) — Canonical Document Body\n- [metadata.yaml](./metadata.yaml) — Standalone Machine Metadata\n- [clauses.json](./clauses.json) — Structured AST Nodes\n- [qa_benchmark.json](./qa_benchmark.json) — QA Benchmark Ground Truth\n"
@@ -113,9 +115,19 @@ def package_bundle(root_dir: Path, doc_id: str, content: str, metadata: dict[str
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
     meta_yaml_path = bundle_dir / "metadata.yaml"
-    meta_yaml_path.write_text(yaml.safe_dump(meta_dict, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    meta_yaml_path.write_text(
+        yaml.safe_dump(meta_dict, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
 
-    write_concept(root_dir=root_dir, relative_path=f"{bundle_slug}/{bundle_slug}.md", concept_type=doc_type, title=title, description=f"Raw text for {doc_id}", content=content, resource_uri=metadata.get("source_url", ""))
+    write_concept(
+        root_dir=root_dir,
+        relative_path=f"{bundle_slug}/{bundle_slug}.md",
+        concept_type=doc_type,
+        title=title,
+        description=f"Raw text for {doc_id}",
+        content=content,
+        resource_uri=metadata.get("source_url", ""),
+    )
     write_logs_and_index(bundle_dir, bundle_slug, [])
     return bundle_dir
 
@@ -152,7 +164,9 @@ def package_bundle_v2(
         "sha256": metadata.get("sha256", ""),
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
-    (bundle_dir / "metadata.yaml").write_text(yaml.safe_dump(meta_dict, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    (bundle_dir / "metadata.yaml").write_text(
+        yaml.safe_dump(meta_dict, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
     primary_file = bundle_dir / f"{bundle_slug}.md"
     primary_file.write_text(content, encoding="utf-8")
 
@@ -161,7 +175,9 @@ def package_bundle_v2(
 
     # Save QA Benchmark if provided
     if qa_items:
-        (bundle_dir / "qa_benchmark.json").write_text(json.dumps(qa_items, ensure_ascii=False, indent=2), encoding="utf-8")
+        (bundle_dir / "qa_benchmark.json").write_text(
+            json.dumps(qa_items, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
     else:
         (bundle_dir / "qa_benchmark.json").write_text("[]", encoding="utf-8")
 

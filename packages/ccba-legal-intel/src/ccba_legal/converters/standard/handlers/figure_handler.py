@@ -27,7 +27,9 @@ def handle_figure_card(
 ) -> int | None:
     """Handle Figure Card triggers (e.g. Hình 1 - ..., Hình 15 (kết thúc))."""
     # 1. Multi-part figure continuation/end marker: Hình X (kết thúc)
-    m_fig_end = re.match(r"^(?:Hình|HÌNH)\s+([0-9A-Za-z\.\-]+)\s*\((kết\s+thúc|tiếp\s+theo)\)", text, re.IGNORECASE)
+    m_fig_end = re.match(
+        r"^(?:Hình|HÌNH)\s+([0-9A-Za-z\.\-]+)\s*\((kết\s+thúc|tiếp\s+theo)\)", text, re.IGNORECASE
+    )
     if m_fig_end:
         fig_num = m_fig_end.group(1)
         suffix = m_fig_end.group(2).strip()
@@ -58,7 +60,9 @@ def handle_figure_card(
                 or re.match(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|CHÚ\s+DẪN)", last, re.IGNORECASE)
             ):
                 chudan_parts.insert(0, parts_buf.pop())
-            elif re.match(r"^(?:[0-9A-Za-z\.'\-]+\s*[-–—:]|[\-–—•]\s+|\(?[0-9]+\)?\s*[-–—:])", last):
+            elif re.match(
+                r"^(?:[0-9A-Za-z\.'\-]+\s*[-–—:]|[\-–—•]\s+|\(?[0-9]+\)?\s*[-–—:])", last
+            ):
                 chudan_parts.insert(0, parts_buf.pop())
             else:
                 break
@@ -69,7 +73,9 @@ def handle_figure_card(
                 parts_buf.append(p)
             chudan_parts = []
 
-        ctx.emit(f'\n<a id="{anchor}"></a>\n\n<p align="center">\n\n![Hình {fig_num}]({img_path})\n\n</p>\n\n')
+        ctx.emit(
+            f'\n<a id="{anchor}"></a>\n\n<p align="center">\n\n![Hình {fig_num}]({img_path})\n\n</p>\n\n'
+        )
 
         if chudan_parts:
             for p in chudan_parts:

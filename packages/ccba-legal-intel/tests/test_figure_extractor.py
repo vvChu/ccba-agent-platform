@@ -1,6 +1,7 @@
 """Unit tests for Technical Figure Extractor and Markdown Figure Cards (ADR 0030 / ADR 0034)."""
 
 from pathlib import Path
+
 from ccba_legal.figure_extractor import (
     load_bundle_figures_overrides,
     render_markdown_figure_card,
@@ -16,8 +17,8 @@ def test_render_markdown_figure_card_basic() -> None:
     }
 
     card_md = render_markdown_figure_card(fig_entry)
-    assert "<a id=\"hinh-e_1\"></a>" in card_md
-    assert "<p align=\"center\">" in card_md
+    assert '<a id="hinh-e_1"></a>' in card_md
+    assert '<p align="center">' in card_md
     assert "![Hình E.1](figures/images/hinh_e_1.png)" in card_md
     assert "<strong>Hình E.1 — Kich thuoc tuong duong cho cac mat bang phuc tap</strong>" in card_md
 
@@ -38,7 +39,7 @@ def test_render_markdown_figure_card_with_geometry() -> None:
     }
 
     card_md = render_markdown_figure_card(fig_entry)
-    assert "<p align=\"center\">" in card_md
+    assert '<p align="center">' in card_md
     assert "> [!NOTE]" in card_md
     assert "> **Đặc tả Hình học & Tham chiếu Khí động:**" in card_md
     assert "Vùng A" in card_md
@@ -54,4 +55,3 @@ def test_load_bundle_figures_overrides(tmp_path: Path) -> None:
     res = load_bundle_figures_overrides(bundle_dir)
     assert "F.1" in res
     assert res["F.1"]["title"] == "Test Figure"
-

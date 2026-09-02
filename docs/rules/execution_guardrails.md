@@ -109,4 +109,13 @@
     - **`/ccba-teamwork` (Coordination OUT):** Điều phối phân rã dự án quy mô lớn thành nhiều workstreams độc lập chạy song song qua nhiều milestones.
     - **Kết hợp:** Trong phiên Teamwork, nếu một Worker gặp sự cố logic bế tắc tại seam của mình, Orchestrator có thể kích hoạt Boost Escalation Gate để xử lý triệt để seam đó trước khi tiếp tục chu trình Teamwork.
 
+---
 
+## 11. Antigravity Lifecycle Hooks Policy (Chính Sách Móc Vòng Đời Antigravity) — ADR 0054
+- Platform tích hợp **Antigravity Lifecycle Hooks** (`hooks.json`) theo kiến trúc Adapter Bridge (ADR 0054):
+  - **Bridge = Adapter Layer Mỏng:** File `scripts/hooks/antigravity_hook_bridge.py` chỉ dịch schema giữa Antigravity stdin/stdout (camelCase) và CCBA `HookCoordinator` (snake_case). Không chứa business logic chặn/quét.
+  - **Schema Translation:** `toolCall.name` → `tool`, `toolCall.args` (object) → `args` (JSON string), `exit_code` (0/1/2) → `decision` (allow/ask/deny).
+  - **Phase 1:** Chỉ bật `PreToolUse` trên matcher `run_command|write_to_file|replace_file_content|multi_replace_file_content`.
+  - **Hiệu năng:** Tổng subprocess overhead ~200-500ms trên Windows (Python startup), logic-only < 15ms. Hooks chạy đồng bộ, chặn agent loop.
+  - **Fail-Safe Default:** Mọi ngoại lệ không mong muốn trong bridge đều fallback về `{"decision": "allow"}` — không bao giờ làm gián đoạn IDE.
+  - **Hai Entry Point:** CLI `hook_runner.py` (offline/CI) và Antigravity `hooks.json` (IDE) cùng dẫn về `HookCoordinator` với cùng 7 hooks.

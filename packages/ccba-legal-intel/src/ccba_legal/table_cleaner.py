@@ -11,7 +11,7 @@ import re
 
 def flatten_table_headers(markdown_text: str) -> str:
     """Flatten multiline cells within table headers and ensure each table row is intact.
-    
+
     Removes interior newlines (\\r, \\n) from table header lines before the separator row.
     """
     lines = markdown_text.splitlines()
@@ -53,14 +53,14 @@ def flatten_table_headers(markdown_text: str) -> str:
 
 def enforce_monotonic_footnotes(markdown_text: str) -> str:
     """Ensure that all multi-part footnotes strictly follow monotonic numbering (CHÚ THÍCH 1, 2...).
-    
+
     If a section or table note has 'CHÚ THÍCH 2:' but the preceding note is unnumbered,
     this automatically prefixes it with '**CHÚ THÍCH 1:**'.
     """
     # 1. Pattern matching: _CHÚ THÍCH:_\n\n<content_1>\n\n**CHÚ THÍCH 2:**
     pattern = re.compile(
         r"(_CHÚ THÍCH:_\s*\n+)(?!\s*\*\*CHÚ THÍCH 1:\*\*)([^\n]+)(\s*\n+\s*\*\*CHÚ THÍCH 2:\*\*)",
-        re.MULTILINE
+        re.MULTILINE,
     )
 
     def replacer(m: re.Match[str]) -> str:
@@ -76,20 +76,24 @@ def enforce_monotonic_footnotes(markdown_text: str) -> str:
     for chunk in chunks:
         labels = [
             re.sub(r"[_*]", "", m.group(1)).strip().upper()
-            for m in re.finditer(r"(?:^|[^a-zA-Z0-9])([_*]*(?:CHÚ THÍCH|Chú thích)(?:\s+\d+)?[_*]*):", chunk, re.IGNORECASE)
+            for m in re.finditer(
+                r"(?:^|[^a-zA-Z0-9])([_*]*(?:CHÚ THÍCH|Chú thích)(?:\s+\d+)?[_*]*):",
+                chunk,
+                re.IGNORECASE,
+            )
         ]
         if "CHÚ THÍCH 2" in labels and "CHÚ THÍCH 1" not in labels:
             chunk = re.sub(
                 r"(_CHÚ THÍCH:_\s*\n+)(?!\s*\*\*CHÚ THÍCH 1:\*\*)([^\n]+)",
                 r"_CHÚ THÍCH:_\n\n**CHÚ THÍCH 1:** \2",
                 chunk,
-                count=1
+                count=1,
             )
             chunk = re.sub(
                 r"(?:\*\*)?(?:CHÚ THÍCH|Chú thích)(?:\*\*)?:\s*([^\n]+)",
                 r"_CHÚ THÍCH:_\n\n**CHÚ THÍCH 1:** \1",
                 chunk,
-                count=1
+                count=1,
             )
         fixed_chunks.append(chunk)
 

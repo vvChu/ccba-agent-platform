@@ -56,7 +56,10 @@ class HierarchyStateManager:
             return LineFormattingAction(action_type=LineActionType.EMIT_DIRECT, content=rendered_p)
 
         # 2. Trigger: Start of 'trong đó:' / 'với:' block
-        if text.lower().startswith(("trong đó:", "với:", "ở đây:")) or text.lower() in ("trong đó", "với"):
+        if text.lower().startswith(("trong đó:", "với:", "ở đây:")) or text.lower() in (
+            "trong đó",
+            "với",
+        ):
             self.state = HierarchyState.IN_TRONG_DO
             self.in_lettered_parent = False
             self.in_bullet_category = False
@@ -67,28 +70,59 @@ class HierarchyStateManager:
             # Bulleted item under 'trong đó:'
             if rendered_p.startswith(("- ", "– ", "— ", "+ ", "• ")):
                 clean_b = re.sub(r"^[-–—+•]\s*", "", rendered_p).strip()
-                return LineFormattingAction(action_type=LineActionType.EMIT_IN_TRONG_DO, content=clean_b)
+                return LineFormattingAction(
+                    action_type=LineActionType.EMIT_IN_TRONG_DO, content=clean_b
+                )
 
             # Auto-exit triggers: Lead-in phrases, conditional statements, non-variable definitions
             if not text.startswith(("-", "–", "—", "+", "•")) and (
-                any(rendered_p.startswith(w) for w in [
-                    "Cho phép", "Đối với", "Trường hợp", "Khi", "Nếu", "Các mô men", "Các đại lượng", "Giá trị", "Chiều cao",
-                    "Tính toán", "Trong các", "Tại các", "Theo đó", "Với các", "Cần tiến hành", "Cốt thép", "Bê tông", "Quy tắc",
-                    "Tỉ số", "Tỷ số", "Để xác định", "Để ", "Độ bền", "Độ võng", "Điều kiện"
-                ])
+                any(
+                    rendered_p.startswith(w)
+                    for w in [
+                        "Cho phép",
+                        "Đối với",
+                        "Trường hợp",
+                        "Khi",
+                        "Nếu",
+                        "Các mô men",
+                        "Các đại lượng",
+                        "Giá trị",
+                        "Chiều cao",
+                        "Tính toán",
+                        "Trong các",
+                        "Tại các",
+                        "Theo đó",
+                        "Với các",
+                        "Cần tiến hành",
+                        "Cốt thép",
+                        "Bê tông",
+                        "Quy tắc",
+                        "Tỉ số",
+                        "Tỷ số",
+                        "Để xác định",
+                        "Để ",
+                        "Độ bền",
+                        "Độ võng",
+                        "Điều kiện",
+                    ]
+                )
                 or re.match(r"^(?:Mô men|Lực)\s+.*?\s+(?:do|được|lấy|khi|theo|tính)\s+", rendered_p)
             ):
                 self.reset()
-                return LineFormattingAction(action_type=LineActionType.EMIT_DIRECT, content=rendered_p)
+                return LineFormattingAction(
+                    action_type=LineActionType.EMIT_DIRECT, content=rendered_p
+                )
 
             # Unbulleted item defining a variable
             if len(rendered_p) > 1 and not rendered_p.startswith(("#", "<a id=")):
                 clean_b = rendered_p
                 for g_c, g_l in GREEK_MAP.items():
                     if clean_b.startswith(g_c + " ") or clean_b.startswith(g_c + "\t"):
-                        clean_b = f"${g_l}$ " + clean_b[len(g_c):].strip()
+                        clean_b = f"${g_l}$ " + clean_b[len(g_c) :].strip()
                         break
-                return LineFormattingAction(action_type=LineActionType.EMIT_IN_TRONG_DO, content=clean_b)
+                return LineFormattingAction(
+                    action_type=LineActionType.EMIT_IN_TRONG_DO, content=clean_b
+                )
 
             self.reset()
 
@@ -103,16 +137,16 @@ class HierarchyStateManager:
                 content = m_let_r.group(2).lstrip("-–— ").strip()
                 self.in_lettered_parent = content.endswith(":")
                 return LineFormattingAction(
-                    action_type=LineActionType.EMIT_LETTERED,
-                    content=content,
-                    letter=letter
+                    action_type=LineActionType.EMIT_LETTERED, content=content, letter=letter
                 )
 
         # 5. Sub-item under lettered clause
         if self.state == HierarchyState.IN_LETTERED_LIST and self.in_lettered_parent:
             if text.startswith(("-", "–", "—", "+", "•")):
                 clean_child = re.sub(r"^[-–—•+]\s*", "", rendered_p).strip()
-                return LineFormattingAction(action_type=LineActionType.EMIT_LETTERED_CHILD, content=clean_child)
+                return LineFormattingAction(
+                    action_type=LineActionType.EMIT_LETTERED_CHILD, content=clean_child
+                )
 
         # 6. Top-level bullet list
         if text.startswith(("- ", "– ", "— ", "• ", "-")):
@@ -126,7 +160,9 @@ class HierarchyStateManager:
         if self.state == HierarchyState.IN_BULLET_LIST and self.in_bullet_category:
             if text.startswith(("+", "–", "—", "-")):
                 clean_child = re.sub(r"^[-–—+•]\s*", "", rendered_p).strip()
-                return LineFormattingAction(action_type=LineActionType.EMIT_IN_TRONG_DO, content=clean_child)
+                return LineFormattingAction(
+                    action_type=LineActionType.EMIT_IN_TRONG_DO, content=clean_child
+                )
             self.in_bullet_category = False
 
         # 8. Plain body text

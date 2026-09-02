@@ -1,6 +1,7 @@
 """Unit tests for AIVisionFormulaHarvester (ADR 0031 / ADR 0038)."""
 
 from pathlib import Path
+
 from ccba_legal.formula_harvester import (
     _clean_and_extract_katex,
     _compute_sha256,
@@ -20,7 +21,10 @@ def test_is_formula_image_classification() -> None:
     assert is_formula_image(45.0, 200.0, "xác định theo biểu thức") is True
 
     # 3. Diagram with caption should be rejected
-    assert is_formula_image(150.0, 300.0, "Sơ đồ bố trí", forward_text="Hình 1 - Sơ đồ mặt bằng") is False
+    assert (
+        is_formula_image(150.0, 300.0, "Sơ đồ bố trí", forward_text="Hình 1 - Sơ đồ mặt bằng")
+        is False
+    )
 
     # 4. Diagram with CHÚ DẪN should be rejected
     assert is_formula_image(120.0, 250.0, "Mặt cắt", forward_text="CHÚ DẪN:\n1 - Cột") is False

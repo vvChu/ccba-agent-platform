@@ -647,7 +647,11 @@ def handle_clean_images(args: argparse.Namespace) -> int:
         if orphans:
             total_orphans += len(orphans)
             total_pruned_bytes += res.get("pruned_bytes", 0)
-            action_str = f"Đã xóa {res['pruned_count']} tệp ({res['pruned_bytes'] / 1024 / 1024:.2f} MB)" if args.prune else f"Phát hiện {len(orphans)} tệp rác (chạy với --prune để xóa)"
+            action_str = (
+                f"Đã xóa {res['pruned_count']} tệp ({res['pruned_bytes'] / 1024 / 1024:.2f} MB)"
+                if args.prune
+                else f"Phát hiện {len(orphans)} tệp rác (chạy với --prune để xóa)"
+            )
             print(f"📁 [{b.name}]: {action_str}")
             for img_name in orphans[:5]:
                 print(f"   • {img_name}")
@@ -662,9 +666,13 @@ def handle_clean_images(args: argparse.Namespace) -> int:
         print("🎉 Toàn bộ các gói tri thức đều đạt chuẩn 100% Zero-Orphan Figures!")
     else:
         if args.prune:
-            print(f"✨ Đã dọn dẹp thành công {total_orphans} tệp ảnh mồ côi ({total_pruned_bytes / 1024 / 1024:.2f} MB)!")
+            print(
+                f"✨ Đã dọn dẹp thành công {total_orphans} tệp ảnh mồ côi ({total_pruned_bytes / 1024 / 1024:.2f} MB)!"
+            )
         else:
-            print(f"⚠️ Tổng cộng phát hiện {total_orphans} tệp ảnh mồ côi. Chạy lại với cờ `--prune` để dọn dẹp.")
+            print(
+                f"⚠️ Tổng cộng phát hiện {total_orphans} tệp ảnh mồ côi. Chạy lại với cờ `--prune` để dọn dẹp."
+            )
     return 0
 
 
