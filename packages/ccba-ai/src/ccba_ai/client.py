@@ -1,7 +1,7 @@
 import asyncio
 import os
 import time
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from pathlib import Path
 from typing import Any
 
@@ -27,12 +27,12 @@ def _is_retryable_exception(exc: Exception) -> bool:
 
 
 def _retry_sync(
-    fn,
+    fn: Callable[[], Any],
     max_retries: int = 3,
     initial_delay: float = 1.0,
     backoff_factor: float = 2.0,
     circuit_breaker: CircuitBreaker | None = None,
-):
+) -> Any:
     if circuit_breaker is not None:
         circuit_breaker.check_allowed()
 
@@ -55,12 +55,12 @@ def _retry_sync(
 
 
 async def _retry_async(
-    coro_fn,
+    coro_fn: Callable[[], Any],
     max_retries: int = 3,
     initial_delay: float = 1.0,
     backoff_factor: float = 2.0,
     circuit_breaker: CircuitBreaker | None = None,
-):
+) -> Any:
     if circuit_breaker is not None:
         circuit_breaker.check_allowed()
 
@@ -361,7 +361,7 @@ class AIClient:
 
     def chat_multi(
         self,
-        messages: list[dict],
+        messages: list[dict[str, Any]],
         *,
         model: str | None = None,
         max_tokens: int = 2048,
@@ -430,6 +430,7 @@ class AIClient:
         Returns:
             Sorted list of unique model ID strings.
         """
+
         def _call(client_inst: Any, m: str) -> Any:
             return client_inst.models.list()
 
@@ -528,8 +529,8 @@ class AIClient:
 
             from PIL import Image, ImageOps
 
-            img = Image.open(path)
-            img = ImageOps.exif_transpose(img)  # Auto-orient
+            raw_img = Image.open(path)
+            img: Any = ImageOps.exif_transpose(raw_img)  # Auto-orient
             img.thumbnail((max_pixels, max_pixels), Image.Resampling.LANCZOS)
 
             if img.mode in ("RGBA", "P"):
@@ -550,7 +551,9 @@ class AIClient:
             pass
 
     def __repr__(self) -> str:
-        return f"AIClient(url={getattr(self._client, 'base_url', 'mock')}, model={self.default_model})"
+        return (
+            f"AIClient(url={getattr(self._client, 'base_url', 'mock')}, model={self.default_model})"
+        )
 
 
 class AsyncAIClient:
@@ -812,7 +815,7 @@ class AsyncAIClient:
 
     async def chat_multi(
         self,
-        messages: list[dict],
+        messages: list[dict[str, Any]],
         *,
         model: str | None = None,
         max_tokens: int = 2048,
@@ -869,6 +872,7 @@ class AsyncAIClient:
         Returns:
             Sorted list of unique model ID strings.
         """
+
         async def _call(client_inst: Any, m: str) -> Any:
             return await client_inst.models.list()
 

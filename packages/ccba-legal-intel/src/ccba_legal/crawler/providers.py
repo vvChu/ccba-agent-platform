@@ -104,11 +104,15 @@ def resolve_tvpl_url(cdp: ChromeCDP, query: str) -> str:
         """
         g_match = cdp.evaluate_js(g_js)
         if g_match and isinstance(g_match, dict) and g_match.get("url"):
-            resolved = g_match["url"]
-            print(f"[TVPLVIPDocProvider] Tier 1 Google match found: [{g_match.get('title', '')}] -> {resolved}")
+            resolved = str(g_match["url"])
+            print(
+                f"[TVPLVIPDocProvider] Tier 1 Google match found: [{g_match.get('title', '')}] -> {resolved}"
+            )
             return resolved
     except Exception as e:
-        print(f"[TVPLVIPDocProvider] Tier 1 Google search encountered error: {e}. Falling back to Tier 2...")
+        print(
+            f"[TVPLVIPDocProvider] Tier 1 Google search encountered error: {e}. Falling back to Tier 2..."
+        )
 
     # =========================================================================
     # Tier 2: TVPL Unified Search Fallback (covers /van-ban/ and /TCVN/)
@@ -145,8 +149,10 @@ def resolve_tvpl_url(cdp: ChromeCDP, query: str) -> str:
         """
         match = cdp.evaluate_js(find_js)
         if match and isinstance(match, dict) and match.get("url"):
-            resolved = match["url"]
-            print(f"[TVPLVIPDocProvider] Tier 2 TVPL match found: [{match.get('title', '')}] -> {resolved}")
+            resolved = str(match["url"])
+            print(
+                f"[TVPLVIPDocProvider] Tier 2 TVPL match found: [{match.get('title', '')}] -> {resolved}"
+            )
             return resolved
 
     print(
