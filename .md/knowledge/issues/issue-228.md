@@ -1,13 +1,16 @@
 ---
 id: 228
 title: "fix(sync): spoke sync robustness, master corpus self-loop guard, utf-8 linter & 1-click bootstrap"
-state: "ready-for-agent"
+state: "closed"
+status: "closed"
 labels:
   - "bug"
-  - "ready-for-agent"
-assignee: "none"
+  - "resolved"
+assignee: "vvChu"
 created_at: "2026-09-02T06:20:30Z"
-updated_at: "2026-09-02T06:40:00Z"
+updated_at: "2026-09-02T08:00:00Z"
+closed_at: "2026-09-02T08:00:00Z"
+resolution_pr: "https://github.com/vvChu/ccba-agent-platform/pull/233"
 ---
 
 # 📖 Mô tả (Description)
