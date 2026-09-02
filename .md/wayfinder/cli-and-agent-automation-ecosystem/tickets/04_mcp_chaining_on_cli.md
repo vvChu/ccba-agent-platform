@@ -2,23 +2,16 @@
 
 * **Loại Ticket:** `Prototype [HITL]`
 * **Assignee:** Unassigned
-* **Trạng thái:** 🟢 Ready
+* **Trạng thái:** ⛔ Cancelled (Đóng do Tính năng Mặc định Native)
 * **Bản đồ trực thuộc:** [Hệ Sinh Thái CLI & Tự Động Hoá Agentic](../map.md)
 
 ---
 
-## 🎯 Câu Hỏi Cần Làm Rõ / Mục Tiêu
-Làm thế nào để kết nối và gọi các MCP Tools (PostgreSQL, BigQuery, Playwright Browser, GitHub Tracker) trực tiếp từ dòng lệnh `agy -p "..."` phục vụ việc debug và kiểm thử tự động?
+## 🎯 Lý Do Hủy Bỏ (Adversarial Review Findings)
+1. **Tính năng Native có sẵn:** Antigravity CLI (`agy`) và Copilot CLI (`copilot`) tự động nạp 100% các MCP Servers từ `~/.gemini/antigravity/mcp/` và `.agents/mcp/` mà không cần viết thêm bất kỳ glue code hay wrapper nào.
+2. **Tài liệu đã đầy đủ:** Đã có tài liệu chuẩn trong skill `antigravity-guide` và package `packages/ccba-ai/src/ccba_ai/mcp_server.py`.
 
 ---
 
-## 📋 Đề Xuất Kịch Bản Triển Khai
-1. Kiểm tra cấu hình MCP Servers trong `~/.gemini/antigravity/mcp/`.
-2. Kiểm thử câu lệnh: `agy -p "List files in directory using filesystem MCP..."`.
-3. Ghi nhận playbook hướng dẫn lập trình viên sử dụng MCP từ dòng lệnh vào `docs/playbooks/mcp_cli_guide.md`.
-
----
-
-## 🏁 Tiêu Chí Hoàn Thành (Definition of Done)
-- [ ] Xác nhận `agy mcp list` hiển thị đầy đủ MCP servers khả dụng.
-- [ ] Ghi nhận playbook hướng dẫn sử dụng MCP trên CLI.
+## 🏁 Kết Luận
+Không tạo thêm tài liệu trùng lặp. Các kỹ sư chỉ cần sử dụng `agy -p` hoặc `copilot` bình thường.

@@ -34,10 +34,10 @@ Các ticket mở, sắc nét, không bị chặn và sẵn sàng thực thi:
 
 | Mã Ticket | Tên Ticket | Loại | Trạng thái |
 | :--- | :--- | :--- | :--- |
-| **T01** | [Đóng gói Shell Aliases & Terminal Helpers cho `agy` và `gh copilot`](./tickets/01_shell_aliases_and_dev_helpers.md) | `Prototype [HITL]` | 🟢 Ready |
-| **T02** | [Xây dựng Pre-commit AI Guardrail kiểm soát Security & AGENTS.md](./tickets/02_pre_commit_ai_guardrail.md) | `Task [AFK]` | 🟢 Ready |
-| **T03** | [Thiết lập Autonomous Docs & Deadlink Maintenance Daemon](./tickets/03_autonomous_maintenance_daemon.md) | `Task [AFK]` | 🟢 Ready |
-| **T04** | [Thử nghiệm MCP Server Chaining từ Antigravity CLI](./tickets/04_mcp_chaining_on_cli.md) | `Prototype [HITL]` | 🟢 Ready |
+| **T01** | [Đóng gói PowerShell Productivity Suite (`ccba_aliases.ps1`)](./tickets/01_shell_aliases_and_dev_helpers.md) | `Prototype [HITL]` | 🟢 **Completed** |
+| **T02** | [Pre-commit AI Guardrail (Đã có Maskara Hook)](./tickets/02_pre_commit_ai_guardrail.md) | `Task [AFK]` | ⛔ **Cancelled** (Duplicate) |
+| **T03** | [Autonomous Docs Maintenance (Đã có CI Gates)](./tickets/03_autonomous_maintenance_daemon.md) | `Task [AFK]` | ⛔ **Cancelled** (Duplicate) |
+| **T04** | [MCP Chaining từ CLI (Tính năng mặc định Native)](./tickets/04_mcp_chaining_on_cli.md) | `Prototype [HITL]` | ⛔ **Cancelled** (Native) |
 
 ---
 

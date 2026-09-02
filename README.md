@@ -76,6 +76,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   ├── spoke/                         ←   Spoke governance, adoption & synchronization engines
 │   ├── governance/                    ←   Unified Governance & Cross-Reference validation
 │   ├── hooks/                         ←   Git hooks & guards (privacy, naming, simplify)
+│   ├── shell/                         ←   Developer PowerShell & Bash productivity aliases
 │   ├── tests/                         ←   Unit test suites cho Hub tools
 │   ├── adopt_spoke.py                 ←   Brownfield Spoke Adoption CLI Delegate
 │   ├── validate_cross_references.py   ←   Constitution Cross-Reference Matrix Validator
