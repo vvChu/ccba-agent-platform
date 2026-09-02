@@ -20,6 +20,12 @@ Agent Brief là tài liệu mô tả yêu cầu công việc được đăng t�
 4. **Xác định rõ giới hạn phạm vi (Explicit scope boundaries):**
    - Liệt kê cụ thể những tính năng/thành phần nằm ngoài phạm vi thực hiện (Out of scope) để tránh Agent tự phát sinh code thừa.
 
+5. **Định tuyến thực thi phù hợp (Smart Execution Routing):**
+   - Đánh giá độ phức tạp kỹ thuật và quy mô thay đổi để khuyến nghị phương thức thực thi tối ưu cho kỹ sư hoặc Agent tiếp theo:
+     - 🟢 **`/ccba-implement` (hoặc Solo mode)**: Dành cho bug/tính năng rõ ràng, gọn nhẹ trong 1–2 files hoặc thay đổi cục bộ.
+     - 🟣 **`/boost`**: Dành cho các lỗi logic thuật toán phức tạp, sai số sâu, hoặc tác vụ điều tra root-cause đa tầng cần suy luận chuyên sâu.
+     - 🔵 **`/teamwork-preview` hoặc `/ccba-teamwork`**: Dành cho các Epic/Feature quy mô lớn, tái cấu trúc đa bộ môn/monorepo cần phân tách Seams độc lập và dispatch song song nhiều subagents.
+
 ---
 
 ## Mẫu Agent Brief tiêu chuẩn (Template)
@@ -46,6 +52,13 @@ Agent Brief là tài liệu mô tả yêu cầu công việc được đăng t�
 
 ### Phạm vi loại trừ (Out of scope)
 - Các thành phần không được sửa đổi trong ticket này.
+
+### Đề xuất chế độ thực thi (Recommended Execution Strategy)
+- **Mức độ phức tạp**: [Thấp / Gọn nhẹ | Trung bình | Phức tạp / Đa bộ môn]
+- **Khuyến nghị thực thi**:
+  - `[ ]` 🟢 **Standard** (`/ccba-implement`): Triển khai tuần tự, scoped tests.
+  - `[ ]` 🟣 **Deep Reasoning** (`/boost`): Điều tra chuyên sâu root-cause / phản biện đa vòng.
+  - `[ ]` 🔵 **Multi-Agent Orchestration** (`/ccba-teamwork` hoặc `/teamwork-preview`): Phân rã Seams và chạy đa tác nhân song song.
 ```
 
 ---

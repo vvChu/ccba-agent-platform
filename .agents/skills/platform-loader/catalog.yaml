@@ -1397,7 +1397,7 @@ workflows:
   - thiết kế chu trình
   workflow_path: .agents/workflows/ccba-loop-me.md
 - name: ccba-new-feature
-  bundle: _software
+  bundle: _core
   command: /ccba-new-feature
   description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session
     sạch (Factory Model)

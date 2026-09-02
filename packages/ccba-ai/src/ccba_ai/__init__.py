@@ -20,6 +20,7 @@ from ccba_ai import services
 from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError, CircuitState
 from ccba_ai.client import AIClient, AsyncAIClient
 from ccba_ai.exceptions import CCBABaseException, CCBAErrorCode, format_error_json
+from ccba_ai.hooks.privacy_guard import PrivacyGuardHook
 from ccba_ai.llm_utils import LLMParseError, parse_llm_json, strip_think_tags
 from ccba_ai.models import (
     AuditFinding,
@@ -107,7 +108,8 @@ __all__ = [
     "QCReporterEngine",
     # Services
     "services",
-    # Resilience & Circuit Breaker
+    # Resilience & Circuit Breaker & Hooks
+    "PrivacyGuardHook",
     "CircuitBreaker",
     "CircuitState",
     "CircuitBreakerOpenError",

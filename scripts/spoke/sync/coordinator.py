@@ -335,6 +335,8 @@ class SpokeSynchronizer:
         project_name: str,
         dry_run: bool = False,
         additional_bundles: list[str] | None = None,
+        bootstrap: bool = False,
+        force: bool = False,
     ) -> int:
         """Full synchronization with Non-Destructive Selective Merge."""
         if not project_type:
@@ -626,14 +628,27 @@ class SpokeSynchronizer:
             f"Tổng kết: {new_count} mới, {updated_count} cập nhật, {unchanged_count} không đổi, {preserved_count} giữ nguyên nội bộ."
         )
 
-        # 7. Zero-Latency Shared Python SDKs Inspection
-        sdk_inspector = SharedSdkInspector(spoke_root, hub_root, project_type)
-        sdk_recs = sdk_inspector.get_recommendations()
-        if sdk_recs:
-            print("\n💡 Gợi ý Shared SDKs cho Spoke Python:")
-            print("   Để sử dụng AI Gateway hoặc Office Processing dùng chung từ Hub:")
-            for cmd in sdk_recs:
-                print(f"   -> {cmd}")
+        # 7. Zero-Latency Shared Python SDKs Inspection & 1-Click Bootstrap
+        if bootstrap:
+            try:
+                from scripts.spoke.spoke_bootstrap import SpokeBootstrapper
+
+                print("\n🚀 [1-Click Bootstrap] Tự động liên kết Hub Packages (ADR 0044):")
+                bootstrapper = SpokeBootstrapper(spoke_root, hub_root)
+                bootstrapper.bootstrap(dry_run=dry_run, force=force)
+            except Exception as e:
+                print(f"  ⚠️ Lỗi khi thực hiện bootstrap: {e}", file=sys.stderr)
+        else:
+            sdk_inspector = SharedSdkInspector(spoke_root, hub_root, project_type)
+            sdk_recs = sdk_inspector.get_recommendations()
+            if sdk_recs:
+                print("\n💡 Gợi ý Shared SDKs cho Spoke Python:")
+                print("   Để sử dụng AI Gateway hoặc Office Processing dùng chung từ Hub:")
+                for cmd in sdk_recs:
+                    print(f"   -> {cmd}")
+                print(
+                    "   💡 Mẹo: Chạy 'python scripts/sync_spoke.py --bootstrap' để tự động cài đặt 1-chạm."
+                )
 
         # 8. Automatic Legal Knowledge Sync & Zero-Bloat Advisory (ADR 0050)
         LegalKnowledgeSyncOrchestrator(spoke_root, hub_root, project_type).sync_or_advise(
@@ -654,6 +669,7 @@ class SpokeSynchronizer:
         backup: bool = True,
         check_git: bool = True,
         only: str | None = None,
+        bootstrap: bool = False,
     ) -> int:
         """Main entrypoint for Spoke synchronization."""
         mode_str = " [DRY-RUN]" if dry_run else ""
@@ -802,6 +818,8 @@ class SpokeSynchronizer:
                 project_name,
                 dry_run=dry_run,
                 additional_bundles=additional_bundles,
+                bootstrap=bootstrap,
+                force=force,
             )
 
     def sync(
@@ -812,6 +830,7 @@ class SpokeSynchronizer:
         backup: bool = True,
         check_git: bool = True,
         only: str | None = None,
+        bootstrap: bool = False,
     ) -> int:
         """Deep Seam entry point for syncing spoke bundle."""
         return self.sync_spoke_bundle(
@@ -821,6 +840,7 @@ class SpokeSynchronizer:
             backup=backup,
             check_git=check_git,
             only=only,
+            bootstrap=bootstrap,
         )
 
     def rollback(self, backup_path: Path | None = None) -> bool:
@@ -853,6 +873,7 @@ def sync_project(
     force: bool = False,
     backup: bool = True,
     check_git: bool = True,
+    bootstrap: bool = False,
 ) -> int:
     """Helper procedural delegate for spoke synchronization."""
     engine = _get_synchronizer_cls()(str(spoke_path))
@@ -862,6 +883,7 @@ def sync_project(
         force=force,
         backup=backup,
         check_git=check_git,
+        bootstrap=bootstrap,
     )
 
 
@@ -888,6 +910,7 @@ def sync_all_spokes(
     backup: bool = True,
     check_git: bool = True,
     include_sandboxes: bool = False,
+    bootstrap: bool = False,
 ) -> int:
     """Batch synchronize all registered active Spokes found in Hub Registry."""
     root = hub_root or Path(__file__).resolve().parents[3]
@@ -932,6 +955,7 @@ def sync_all_spokes(
                 force=force,
                 backup=backup,
                 check_git=check_git,
+                bootstrap=bootstrap,
             )
             status = "SUCCESS" if res == 0 else "FAILED"
             results.append({"name": sp_name, "path": sp_path, "status": status, "code": res})

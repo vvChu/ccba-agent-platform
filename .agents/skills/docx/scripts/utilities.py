@@ -6,18 +6,17 @@ Delegates core implementation to the `ccba_ooxml.docx.utilities` deep module.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-_PKG_SRC = Path(__file__).resolve().parents[4] / "packages" / "ccba-ooxml" / "src"
-if _PKG_SRC.exists() and str(_PKG_SRC) not in sys.path:
-    sys.path.insert(0, str(_PKG_SRC))
-
-from ccba_ooxml.docx.utilities import (
-    XMLEditor,
-    _create_line_tracking_parser,
-    _generate_hex_id,
-    _generate_rsid,
-)
+try:
+    from ccba_ooxml.docx.utilities import (
+        XMLEditor,
+        _create_line_tracking_parser,
+        _generate_hex_id,
+        _generate_rsid,
+    )
+except ImportError as e:
+    raise ImportError(
+        "Package 'ccba-ooxml' chưa được cài đặt trong môi trường ảo. "
+        "Vui lòng chạy: python scripts/spoke_bootstrap.py (hoặc pip install -e packages/ccba-ooxml)"
+    ) from e
 
 __all__ = ["XMLEditor", "_create_line_tracking_parser", "_generate_hex_id", "_generate_rsid"]
