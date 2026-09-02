@@ -3,12 +3,15 @@ import os
 import time
 from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
+from typing import Any
 
 from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI, OpenAI
 
 from ccba_ai.circuit_breaker import CircuitBreaker
+from ccba_ai.fallback import TieredFallbackRouter, is_mock_mode_enabled
 from ccba_ai.hooks import PrivacyGuardHook
 from ccba_ai.llm_utils import strip_think_tags
+from ccba_ai.mock_provider import MockProvider
 from ccba_ai.models import ChatResult, ChatUsage
 from ccba_ai.routing import resolve_max_tokens
 
@@ -100,7 +103,7 @@ def _find_and_load_env() -> None:
 
 
 class AIClient:
-    """Lightweight AI Gateway client — wraps OpenAI SDK for unified access."""
+    """Lightweight AI Gateway client — wraps OpenAI SDK with multi-tier failover and mock support."""
 
     def __init__(
         self,
@@ -111,6 +114,10 @@ class AIClient:
         max_retries: int = 3,
         retry_delay: float = 1.0,
         circuit_breaker: CircuitBreaker | None = None,
+        fallback_router: TieredFallbackRouter | None = None,
+        enable_failover: bool = True,
+        mock_mode: bool | None = None,
+        mock_provider: MockProvider | None = None,
     ):
         try:
             _find_and_load_env()
@@ -124,6 +131,14 @@ class AIClient:
                 self.timeout = float(os.environ.get("AI_GATEWAY_TIMEOUT", "60.0"))
             except ValueError:
                 self.timeout = 60.0
+
+        self.mock_mode = mock_mode if mock_mode is not None else is_mock_mode_enabled()
+        self.mock_provider = mock_provider or MockProvider()
+        self.fallback_router = fallback_router or TieredFallbackRouter(
+            mock_provider=self.mock_provider,
+            enable_fallback=enable_failover,
+            mock_mode=self.mock_mode,
+        )
 
         self._client = OpenAI(
             base_url=base_url or os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1"),
@@ -173,16 +188,28 @@ class AIClient:
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
 
-        response = _retry_sync(
-            lambda: self._client.chat.completions.create(
-                model=target_model,
+        def _call(client_inst: Any, m: str) -> Any:
+            return client_inst.chat.completions.create(
+                model=m,
                 messages=messages,
                 max_tokens=effective_max_tokens,
                 temperature=temperature,
-            ),
-            max_retries=self.max_retries,
-            initial_delay=self.retry_delay,
+            )
+
+        def _primary_call() -> Any:
+            return _retry_sync(
+                lambda: _call(self._client, target_model),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
+            )
+
+        response = self.fallback_router.execute_sync(
+            _primary_call,
+            model=target_model,
+            timeout=self.timeout,
             circuit_breaker=self.circuit_breaker,
+            fallback_fn_builder=_call,
         )
         response_text = response.choices[0].message.content or ""
         self.privacy_guard.check_content(response_text)
@@ -224,17 +251,29 @@ class AIClient:
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
 
-        start_time = time.perf_counter()
-        response = _retry_sync(
-            lambda: self._client.chat.completions.create(
-                model=target_model,
+        def _call(client_inst: Any, m: str) -> Any:
+            return client_inst.chat.completions.create(
+                model=m,
                 messages=messages,
                 max_tokens=effective_max_tokens,
                 temperature=temperature,
-            ),
-            max_retries=self.max_retries,
-            initial_delay=self.retry_delay,
+            )
+
+        def _primary_call() -> Any:
+            return _retry_sync(
+                lambda: _call(self._client, target_model),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
+            )
+
+        start_time = time.perf_counter()
+        response = self.fallback_router.execute_sync(
+            _primary_call,
+            model=target_model,
+            timeout=self.timeout,
             circuit_breaker=self.circuit_breaker,
+            fallback_fn_builder=_call,
         )
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
@@ -288,17 +327,31 @@ class AIClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": message})
 
-        response = _retry_sync(
-            lambda: self._client.chat.completions.create(
-                model=model or self.default_model,
+        target_model = model or self.default_model
+
+        def _call(client_inst: Any, m: str) -> Any:
+            return client_inst.chat.completions.create(
+                model=m,
                 messages=messages,
                 max_tokens=max_tokens,
                 temperature=temperature,
                 stream=True,
-            ),
-            max_retries=self.max_retries,
-            initial_delay=self.retry_delay,
+            )
+
+        def _primary_call() -> Any:
+            return _retry_sync(
+                lambda: _call(self._client, target_model),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
+            )
+
+        response = self.fallback_router.execute_sync(
+            _primary_call,
+            model=target_model,
+            timeout=self.timeout,
             circuit_breaker=self.circuit_breaker,
+            fallback_fn_builder=_call,
         )
         for chunk in response:
             content = chunk.choices[0].delta.content
@@ -337,8 +390,7 @@ class AIClient:
             target_model, max_tokens, baseline_default=2048, reasoning_allocation=16384
         )
 
-        create_kwargs = {
-            "model": target_model,
+        create_kwargs: dict[str, Any] = {
             "messages": messages,
             "max_tokens": effective_max_tokens,
             "temperature": temperature,
@@ -346,11 +398,25 @@ class AIClient:
         if timeout is not None:
             create_kwargs["timeout"] = timeout
 
-        response = _retry_sync(
-            lambda: self._client.chat.completions.create(**create_kwargs),
-            max_retries=self.max_retries,
-            initial_delay=self.retry_delay,
+        def _call(client_inst: Any, m: str) -> Any:
+            kwargs = dict(create_kwargs)
+            kwargs["model"] = m
+            return client_inst.chat.completions.create(**kwargs)
+
+        def _primary_call() -> Any:
+            return _retry_sync(
+                lambda: _call(self._client, target_model),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
+            )
+
+        response = self.fallback_router.execute_sync(
+            _primary_call,
+            model=target_model,
+            timeout=timeout or self.timeout,
             circuit_breaker=self.circuit_breaker,
+            fallback_fn_builder=_call,
         )
         response_text = response.choices[0].message.content or ""
         self.privacy_guard.check_content(response_text)
@@ -364,11 +430,23 @@ class AIClient:
         Returns:
             Sorted list of unique model ID strings.
         """
-        result = _retry_sync(
-            lambda: self._client.models.list(),
-            max_retries=self.max_retries,
-            initial_delay=self.retry_delay,
+        def _call(client_inst: Any, m: str) -> Any:
+            return client_inst.models.list()
+
+        def _primary_call() -> Any:
+            return _retry_sync(
+                lambda: self._client.models.list(),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
+            )
+
+        result = self.fallback_router.execute_sync(
+            _primary_call,
+            model=self.default_model,
+            timeout=self.timeout,
             circuit_breaker=self.circuit_breaker,
+            fallback_fn_builder=_call,
         )
         return sorted({m.id for m in result.data})
 
@@ -396,19 +474,31 @@ class AIClient:
         if not path.exists():
             raise FileNotFoundError(f"Audio file '{audio_path}' not found.")
 
-        with open(path, "rb") as f:
-            response = _retry_sync(
-                lambda: self._client.audio.transcriptions.create(
-                    model=model,
+        def _call(client_inst: Any, m: str) -> Any:
+            with open(path, "rb") as f:
+                return client_inst.audio.transcriptions.create(
+                    model=m,
                     file=f,
                     language=language,
                     response_format="text",
-                ),
+                )
+
+        def _primary_call() -> Any:
+            return _retry_sync(
+                lambda: _call(self._client, model),
                 max_retries=self.max_retries,
                 initial_delay=self.retry_delay,
                 circuit_breaker=self.circuit_breaker,
             )
-            return str(response).strip()
+
+        response = self.fallback_router.execute_sync(
+            _primary_call,
+            model=model,
+            timeout=self.timeout,
+            circuit_breaker=self.circuit_breaker,
+            fallback_fn_builder=_call,
+        )
+        return str(response).strip()
 
     def encode_image(
         self,
@@ -460,11 +550,11 @@ class AIClient:
             pass
 
     def __repr__(self) -> str:
-        return f"AIClient(url={self._client.base_url}, model={self.default_model})"
+        return f"AIClient(url={getattr(self._client, 'base_url', 'mock')}, model={self.default_model})"
 
 
 class AsyncAIClient:
-    """Async Lightweight AI Gateway client — wraps AsyncOpenAI SDK for unified access."""
+    """Async Lightweight AI Gateway client — wraps AsyncOpenAI SDK with multi-tier failover and mock support."""
 
     def __init__(
         self,
@@ -475,6 +565,10 @@ class AsyncAIClient:
         max_retries: int = 3,
         retry_delay: float = 1.0,
         circuit_breaker: CircuitBreaker | None = None,
+        fallback_router: TieredFallbackRouter | None = None,
+        enable_failover: bool = True,
+        mock_mode: bool | None = None,
+        mock_provider: MockProvider | None = None,
     ):
         try:
             _find_and_load_env()
@@ -488,6 +582,14 @@ class AsyncAIClient:
                 self.timeout = float(os.environ.get("AI_GATEWAY_TIMEOUT", "60.0"))
             except ValueError:
                 self.timeout = 60.0
+
+        self.mock_mode = mock_mode if mock_mode is not None else is_mock_mode_enabled()
+        self.mock_provider = mock_provider or MockProvider()
+        self.fallback_router = fallback_router or TieredFallbackRouter(
+            mock_provider=self.mock_provider,
+            enable_fallback=enable_failover,
+            mock_mode=self.mock_mode,
+        )
 
         self._client = AsyncOpenAI(
             base_url=base_url or os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1"),
@@ -537,16 +639,28 @@ class AsyncAIClient:
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
 
-        response = await _retry_async(
-            lambda: self._client.chat.completions.create(
-                model=target_model,
+        async def _call(client_inst: Any, m: str) -> Any:
+            return await client_inst.chat.completions.create(
+                model=m,
                 messages=messages,
                 max_tokens=effective_max_tokens,
                 temperature=temperature,
-            ),
-            max_retries=self.max_retries,
-            initial_delay=self.retry_delay,
+            )
+
+        async def _primary_call() -> Any:
+            return await _retry_async(
+                lambda: _call(self._client, target_model),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
+            )
+
+        response = await self.fallback_router.execute_async(
+            _primary_call,
+            model=target_model,
+            timeout=self.timeout,
             circuit_breaker=self.circuit_breaker,
+            fallback_coro_builder=_call,
         )
         response_text = response.choices[0].message.content or ""
         self.privacy_guard.check_content(response_text)
@@ -588,17 +702,29 @@ class AsyncAIClient:
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
 
-        start_time = time.perf_counter()
-        response = await _retry_async(
-            lambda: self._client.chat.completions.create(
-                model=target_model,
+        async def _call(client_inst: Any, m: str) -> Any:
+            return await client_inst.chat.completions.create(
+                model=m,
                 messages=messages,
                 max_tokens=effective_max_tokens,
                 temperature=temperature,
-            ),
-            max_retries=self.max_retries,
-            initial_delay=self.retry_delay,
+            )
+
+        async def _primary_call() -> Any:
+            return await _retry_async(
+                lambda: _call(self._client, target_model),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
+            )
+
+        start_time = time.perf_counter()
+        response = await self.fallback_router.execute_async(
+            _primary_call,
+            model=target_model,
+            timeout=self.timeout,
             circuit_breaker=self.circuit_breaker,
+            fallback_coro_builder=_call,
         )
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
@@ -652,17 +778,31 @@ class AsyncAIClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": message})
 
-        response = await _retry_async(
-            lambda: self._client.chat.completions.create(
-                model=model or self.default_model,
+        target_model = model or self.default_model
+
+        async def _call(client_inst: Any, m: str) -> Any:
+            return await client_inst.chat.completions.create(
+                model=m,
                 messages=messages,
                 max_tokens=max_tokens,
                 temperature=temperature,
                 stream=True,
-            ),
-            max_retries=self.max_retries,
-            initial_delay=self.retry_delay,
+            )
+
+        async def _primary_call() -> Any:
+            return await _retry_async(
+                lambda: _call(self._client, target_model),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
+            )
+
+        response = await self.fallback_router.execute_async(
+            _primary_call,
+            model=target_model,
+            timeout=self.timeout,
             circuit_breaker=self.circuit_breaker,
+            fallback_coro_builder=_call,
         )
         async for chunk in response:
             content = chunk.choices[0].delta.content
@@ -689,8 +829,7 @@ class AsyncAIClient:
             target_model, max_tokens, baseline_default=2048, reasoning_allocation=16384
         )
 
-        create_kwargs = {
-            "model": target_model,
+        create_kwargs: dict[str, Any] = {
             "messages": messages,
             "max_tokens": effective_max_tokens,
             "temperature": temperature,
@@ -698,11 +837,25 @@ class AsyncAIClient:
         if timeout is not None:
             create_kwargs["timeout"] = timeout
 
-        response = await _retry_async(
-            lambda: self._client.chat.completions.create(**create_kwargs),
-            max_retries=self.max_retries,
-            initial_delay=self.retry_delay,
+        async def _call(client_inst: Any, m: str) -> Any:
+            kwargs = dict(create_kwargs)
+            kwargs["model"] = m
+            return await client_inst.chat.completions.create(**kwargs)
+
+        async def _primary_call() -> Any:
+            return await _retry_async(
+                lambda: _call(self._client, target_model),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
+            )
+
+        response = await self.fallback_router.execute_async(
+            _primary_call,
+            model=target_model,
+            timeout=timeout or self.timeout,
             circuit_breaker=self.circuit_breaker,
+            fallback_coro_builder=_call,
         )
         response_text = response.choices[0].message.content or ""
         self.privacy_guard.check_content(response_text)
@@ -716,11 +869,23 @@ class AsyncAIClient:
         Returns:
             Sorted list of unique model ID strings.
         """
-        result = await _retry_async(
-            lambda: self._client.models.list(),
-            max_retries=self.max_retries,
-            initial_delay=self.retry_delay,
+        async def _call(client_inst: Any, m: str) -> Any:
+            return await client_inst.models.list()
+
+        async def _primary_call() -> Any:
+            return await _retry_async(
+                lambda: self._client.models.list(),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
+            )
+
+        result = await self.fallback_router.execute_async(
+            _primary_call,
+            model=self.default_model,
+            timeout=self.timeout,
             circuit_breaker=self.circuit_breaker,
+            fallback_coro_builder=_call,
         )
         return sorted({m.id for m in result.data})
 
@@ -736,4 +901,4 @@ class AsyncAIClient:
         await self.aclose()
 
     def __repr__(self) -> str:
-        return f"AsyncAIClient(url={self._client.base_url}, model={self.default_model})"
+        return f"AsyncAIClient(url={getattr(self._client, 'base_url', 'mock')}, model={self.default_model})"

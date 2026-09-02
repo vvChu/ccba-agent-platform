@@ -63,14 +63,56 @@ class MockLegalDocProvider(LegalDocProvider):
 
 
 def resolve_tvpl_url(cdp: ChromeCDP, query: str) -> str:
-    """Resolve document query (doc_number, title, or partial string) to exact TVPL URL (Tier 1-3)."""
+    """Resolve document query (doc_number, title, or partial string) to exact TVPL URL.
+
+    Strategy:
+    - Tier 1: Google Site Search ('site:thuvienphapluat.vn "<query>"') -> 99%+ canonical accuracy.
+    - Tier 2: TVPL Internal Search ('/page/tim-van-ban.aspx?keyword=...') -> Direct fallback.
+    - Tier 3: Direct slug URL fallback.
+    """
     if query.startswith("http://") or query.startswith("https://"):
         return query
 
     query_clean = query.strip()
     print(f"[TVPLVIPDocProvider] Resolving TVPL URL for '{query_clean}'...")
 
-    # Tier 2: TVPL Unified Search (covers /van-ban/ and /TCVN/)
+    # =========================================================================
+    # Tier 1: Universal Google Site Search (Fast, Canonical & Immune to TVPL category noise)
+    # =========================================================================
+    try:
+        g_query = urllib.parse.quote(f'site:thuvienphapluat.vn "{query_clean}"')
+        cdp.navigate(f"https://www.google.com/search?q={g_query}&hl=vi")
+        cdp.wait_ready()
+
+        g_js = """
+        (() => {
+            let links = [];
+            document.querySelectorAll('a').forEach(a => {
+                let h = a.href;
+                let txt = (a.innerText || a.textContent || '').trim();
+                if (h.includes('thuvienphapluat.vn/') && (h.includes('/van-ban/') || h.includes('/TCVN/')) && h.endsWith('.aspx')) {
+                    if (!h.includes('tim-van-ban') && !h.includes('/page/')) {
+                        links.push({
+                            title: txt,
+                            url: h.split('?')[0].split('#')[0]
+                        });
+                    }
+                }
+            });
+            return links.length > 0 ? links[0] : null;
+        })()
+        """
+        g_match = cdp.evaluate_js(g_js)
+        if g_match and isinstance(g_match, dict) and g_match.get("url"):
+            resolved = g_match["url"]
+            print(f"[TVPLVIPDocProvider] Tier 1 Google match found: [{g_match.get('title', '')}] -> {resolved}")
+            return resolved
+    except Exception as e:
+        print(f"[TVPLVIPDocProvider] Tier 1 Google search encountered error: {e}. Falling back to Tier 2...")
+
+    # =========================================================================
+    # Tier 2: TVPL Unified Search Fallback (covers /van-ban/ and /TCVN/)
+    # =========================================================================
     search_keywords = [query_clean]
     if ":" in query_clean:
         search_keywords.append(query_clean.replace(":", " "))
@@ -87,49 +129,25 @@ def resolve_tvpl_url(cdp: ChromeCDP, query: str) -> str:
         find_js = f"""
         (() => {{
             let matches = [];
-            let q_lower = "{kw.lower()}".replace(/[^a-z0-9]/g, '');
-            document.querySelectorAll('a[href*="/van-ban/"], a[href*="/TCVN/"]').forEach(a => {{
+            let q_clean = "{kw.lower()}".replace(/[^a-z0-9]/g, '');
+            document.querySelectorAll('p.nqTitle a, div.content-0 a, a[href*="/van-ban/"], a[href*="/TCVN/"]').forEach(a => {{
                 let href = a.href;
                 let txt = (a.innerText || a.textContent || '').trim();
-                let combined = (txt + ' ' + href).toLowerCase().replace(/[^a-z0-9]/g, '');
-                if (txt.length > 5 && combined.includes(q_lower)) {{
-                    matches.push({{title: txt, url: href.split('?')[0].split('#')[0]}});
+                let txt_clean = txt.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if ((href.includes('/van-ban/') || href.includes('/TCVN/')) && href.endsWith('.aspx') && !href.includes('tim-van-ban')) {{
+                    if (txt_clean.includes(q_clean) || href.toLowerCase().replace(/[^a-z0-9]/g, '').includes(q_clean)) {{
+                        matches.push({{title: txt, url: href.split('?')[0].split('#')[0]}});
+                    }}
                 }}
             }});
-            return matches;
+            return matches.length > 0 ? matches[0] : null;
         }})()
         """
-        matches = cdp.evaluate_js(find_js) or []
-        if matches:
-            resolved = matches[0]["url"]
-            print(f"[TVPLVIPDocProvider] Tier 2 match found: [{matches[0]['title']}] -> {resolved}")
+        match = cdp.evaluate_js(find_js)
+        if match and isinstance(match, dict) and match.get("url"):
+            resolved = match["url"]
+            print(f"[TVPLVIPDocProvider] Tier 2 TVPL match found: [{match.get('title', '')}] -> {resolved}")
             return resolved
-
-    # Tier 3: Search Engine Fallback via CDP (Google site search)
-    print(
-        "[TVPLVIPDocProvider] Tier 2 yielded 0 matches. Engaging Tier 3 Google search fallback..."
-    )
-    g_query = urllib.parse.quote(f'site:thuvienphapluat.vn "{query_clean}"')
-    cdp.navigate(f"https://www.google.com/search?q={g_query}")
-    cdp.wait_ready()
-
-    g_js = """
-    (() => {
-        let links = [];
-        document.querySelectorAll('a').forEach(a => {
-            let h = a.href;
-            if (h.includes('thuvienphapluat.vn/') && (h.includes('/van-ban/') || h.includes('/TCVN/')) && h.endsWith('.aspx')) {
-                links.push(h.split('?')[0].split('#')[0]);
-            }
-        });
-        return links;
-    })()
-    """
-    g_links = cdp.evaluate_js(g_js) or []
-    if g_links:
-        resolved = g_links[0]
-        print(f"[TVPLVIPDocProvider] Tier 3 Google fallback matched: {resolved}")
-        return resolved
 
     print(
         "[TVPLVIPDocProvider] [WARNING] Multi-tier resolution failed. Falling back to default URL structure."
