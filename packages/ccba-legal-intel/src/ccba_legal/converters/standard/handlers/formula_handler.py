@@ -28,7 +28,9 @@ def extract_math_expression(obj: Any, ctx: Any, fallback_tag: str) -> tuple[str,
     m_omml = re.search(r"<m:oMath[^>]*>(.*?)</m:oMath>", p_xml, re.DOTALL)
     if m_omml:
         try:
-            latex = omml_to_latex(f"<m:oMath xmlns:m=\"http://schemas.openxmlformats.org/officeDocument/2006/math\">{m_omml.group(1)}</m:oMath>")
+            latex = omml_to_latex(
+                f'<m:oMath xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">{m_omml.group(1)}</m:oMath>'
+            )
             if latex:
                 return formula_id, latex
         except Exception:
@@ -60,9 +62,30 @@ def handle_formula_block(
         has_drawings = "w:drawing" in p_xml or "v:imagedata" in p_xml or "v:shape" in p_xml
         if has_drawings and rendered_p:
             if rendered_p.startswith("$$"):
-                has_math_op = any(op in rendered_p for op in ["=", "\\le", "\\ge", "<", ">", "\\approx", "\\sum", "\\int", "\\frac", "\\pm", "\\times", "\\cdot", "\\partial", "\\sqrt"])
+                has_math_op = any(
+                    op in rendered_p
+                    for op in [
+                        "=",
+                        "\\le",
+                        "\\ge",
+                        "<",
+                        ">",
+                        "\\approx",
+                        "\\sum",
+                        "\\int",
+                        "\\frac",
+                        "\\pm",
+                        "\\times",
+                        "\\cdot",
+                        "\\partial",
+                        "\\sqrt",
+                    ]
+                )
                 if has_math_op:
-                    m_f_tag = re.search(r"(?:\\tag\{([0-9A-Za-z\.]+)\}|\\qquad\s*\(([0-9A-Za-z\.]+)\)|\(([0-9]{1,3}|[A-Z]\.[0-9]{1,2})\))", rendered_p)
+                    m_f_tag = re.search(
+                        r"(?:\\tag\{([0-9A-Za-z\.]+)\}|\\qquad\s*\(([0-9A-Za-z\.]+)\)|\(([0-9]{1,3}|[A-Z]\.[0-9]{1,2})\))",
+                        rendered_p,
+                    )
                     if m_f_tag and not rendered_p.startswith("<a id="):
                         tag_val = m_f_tag.group(1) or m_f_tag.group(2) or m_f_tag.group(3)
                         tag_slug = tag_val.lower().replace(".", "_")
@@ -100,8 +123,12 @@ def handle_formula_block(
                 f_latex = f_latex.strip()
                 if f_latex.startswith("$$") and f_latex.endswith("$$"):
                     f_latex = f_latex[2:-2].strip()
-                tag_suffix = "" if ("\\tag" in f_latex or "\\qquad" in f_latex) else f" \\tag{{{f_tag}}}"
-                ctx.emit(f'\n<a id="formula-{f_slug}"></a>\n$${f_latex}{tag_suffix}$$\n<!-- formula_id: "{fid}" -->\n\n')
+                tag_suffix = (
+                    "" if ("\\tag" in f_latex or "\\qquad" in f_latex) else f" \\tag{{{f_tag}}}"
+                )
+                ctx.emit(
+                    f'\n<a id="formula-{f_slug}"></a>\n$${f_latex}{tag_suffix}$$\n<!-- formula_id: "{fid}" -->\n\n'
+                )
                 if ctx.state_mgr.state != HierarchyState.IN_TRONG_DO:
                     ctx.state_mgr.reset()
                 return i + 2
@@ -116,7 +143,9 @@ def handle_formula_block(
         if f_latex.startswith("$$") and f_latex.endswith("$$"):
             f_latex = f_latex[2:-2].strip()
         tag_suffix = "" if ("\\tag" in f_latex or "\\qquad" in f_latex) else f" \\tag{{{f_tag}}}"
-        ctx.emit(f'\n<a id="formula-{f_slug}"></a>\n$${f_latex}{tag_suffix}$$\n<!-- formula_id: "{fid}" -->\n\n')
+        ctx.emit(
+            f'\n<a id="formula-{f_slug}"></a>\n$${f_latex}{tag_suffix}$$\n<!-- formula_id: "{fid}" -->\n\n'
+        )
         if ctx.state_mgr.state != HierarchyState.IN_TRONG_DO:
             ctx.state_mgr.reset()
         return i + 1

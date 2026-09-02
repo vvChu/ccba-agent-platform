@@ -22,6 +22,7 @@ def _import_notebooklm_client() -> Any:
     """Lazy import ccba_notebooklm.get_client (optional [cloud] dependency)."""
     try:
         from ccba_notebooklm import get_client
+
         return get_client
     except ImportError:
         return None
@@ -66,7 +67,9 @@ async def sync_registry_to_notebooklm(
     """Execute the full sync pipeline from local registry to NotebookLM Cloud."""
     get_client = _import_notebooklm_client()
     if get_client is None:
-        print("[Error] ccba-notebooklm chưa được cài đặt. Chạy: pip install ccba-legal-intel[cloud]")
+        print(
+            "[Error] ccba-notebooklm chưa được cài đặt. Chạy: pip install ccba-legal-intel[cloud]"
+        )
         return
 
     if not registry_path.exists():
@@ -96,10 +99,7 @@ async def sync_registry_to_notebooklm(
             cloud_source_map: dict[str, list[str]] = defaultdict(list)
             for s in cloud_sources:
                 norm_title = (
-                    s.title.lower()
-                    .replace(".docx", "")
-                    .replace(".pdf", "")
-                    .replace(".xlsx", "")
+                    s.title.lower().replace(".docx", "").replace(".pdf", "").replace(".xlsx", "")
                 )
                 cloud_source_map[norm_title].append(s.id)
             print(f"[Cloud State] Phát hiện {len(cloud_sources)} nguồn trên Cloud.")
@@ -175,7 +175,9 @@ async def sync_registry_to_notebooklm(
 
                 if not drive_file_id:
                     if not download_url:
-                        discovered, changed = auto_discover_doc_url(doc_key, doc_meta, registry_data)
+                        discovered, changed = auto_discover_doc_url(
+                            doc_key, doc_meta, registry_data
+                        )
                         download_url = discovered or ""
                         registry_changed = registry_changed or changed
 
@@ -190,7 +192,9 @@ async def sync_registry_to_notebooklm(
 
                         success = download_via_cdp_or_client(download_url, temp_pdf_path)
                         if success and temp_pdf_path.exists():
-                            drive_file_id = upload_to_google_drive(temp_pdf_path, drive_folder_id, pdf_filename)
+                            drive_file_id = upload_to_google_drive(
+                                temp_pdf_path, drive_folder_id, pdf_filename
+                            )
                             try:
                                 os.remove(temp_pdf_path)
                             except Exception as e:
@@ -208,7 +212,9 @@ async def sync_registry_to_notebooklm(
                 if not file_path.exists():
                     print(f"[File Verification] Thiếu file cục bộ cho {doc_key}: {file_path}")
                     if not download_url:
-                        discovered, changed = auto_discover_doc_url(doc_key, doc_meta, registry_data)
+                        discovered, changed = auto_discover_doc_url(
+                            doc_key, doc_meta, registry_data
+                        )
                         download_url = discovered or ""
                         registry_changed = registry_changed or changed
 
@@ -226,7 +232,9 @@ async def sync_registry_to_notebooklm(
                 target_filename = standard_filename
 
                 if use_drive:
-                    drive_file_id = upload_to_google_drive(actual_file_path, drive_folder_id, target_filename)
+                    drive_file_id = upload_to_google_drive(
+                        actual_file_path, drive_folder_id, target_filename
+                    )
 
             local_sha = calculate_sha256(actual_file_path)
             cache_key = str(actual_file_path.resolve()) + ("_pdf" if is_pdf_flow else "")
@@ -234,7 +242,12 @@ async def sync_registry_to_notebooklm(
             cached_source_id = cache_info.get("source_id", "")
             cached_sha = cache_info.get("sha256", "")
 
-            norm_target = target_filename.lower().replace(".docx", "").replace(".pdf", "").replace(".xlsx", "")
+            norm_target = (
+                target_filename.lower()
+                .replace(".docx", "")
+                .replace(".pdf", "")
+                .replace(".xlsx", "")
+            )
             cloud_ids = cloud_source_map.get(norm_target, [])
             cloud_id_by_title = None
 
@@ -271,7 +284,11 @@ async def sync_registry_to_notebooklm(
                 try:
                     if drive_file_id:
                         try:
-                            mime_type = "application/pdf" if is_pdf_flow else "application/vnd.google-apps.document"
+                            mime_type = (
+                                "application/pdf"
+                                if is_pdf_flow
+                                else "application/vnd.google-apps.document"
+                            )
                             source = await client.sources.add_drive(
                                 notebook_id=notebook_id,
                                 file_id=drive_file_id,
@@ -280,20 +297,28 @@ async def sync_registry_to_notebooklm(
                                 wait=True,
                             )
                             source_id_to_use = source.id
-                            print(f"[Upload Success] '{target_filename}' qua Drive → ID: {source_id_to_use}")
+                            print(
+                                f"[Upload Success] '{target_filename}' qua Drive → ID: {source_id_to_use}"
+                            )
                         except Exception as drive_err:
                             print(f"[Drive RAG Warning] Nạp qua Drive thất bại: {drive_err}")
                             if actual_file_path.exists():
                                 print(f"[Fallback] Nạp trực tiếp: {actual_file_path.name}...")
-                                source = await client.sources.add_file(notebook_id, str(actual_file_path))
+                                source = await client.sources.add_file(
+                                    notebook_id, str(actual_file_path)
+                                )
                                 source_id_to_use = source.id
-                                print(f"[Upload Success] '{target_filename}' trực tiếp → ID: {source_id_to_use}")
+                                print(
+                                    f"[Upload Success] '{target_filename}' trực tiếp → ID: {source_id_to_use}"
+                                )
                             else:
                                 raise drive_err
                     else:
                         source = await client.sources.add_file(notebook_id, str(actual_file_path))
                         source_id_to_use = source.id
-                        print(f"[Upload Success] '{target_filename}' trực tiếp → ID: {source_id_to_use}")
+                        print(
+                            f"[Upload Success] '{target_filename}' trực tiếp → ID: {source_id_to_use}"
+                        )
                 except Exception as e:
                     print(f"[Error] Nạp nguồn thất bại '{target_filename}': {e}")
                     continue

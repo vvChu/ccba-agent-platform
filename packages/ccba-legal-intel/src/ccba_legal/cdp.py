@@ -51,27 +51,36 @@ class ChromeCDP:
             resp.raise_for_status()
             return [t for t in resp.json() if t.get("type") == "page"]
         except Exception:
-            chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-            if os.path.exists(chrome_path):
+            from ccba_legal.session import get_browser_executable_path
+
+            browser_path = get_browser_executable_path()
+            if browser_path and os.path.exists(browser_path):
                 user_data = os.path.expanduser("~/.gemini/antigravity/chrome_vip")
                 os.makedirs(user_data, exist_ok=True)
                 import subprocess
-                subprocess.Popen([
-                    chrome_path,
-                    f"--remote-debugging-port={self.port}",
-                    f"--user-data-dir={user_data}",
-                    "--no-first-run",
-                    "--no-default-browser-check",
-                    "https://thuvienphapluat.vn"
-                ])
+
+                subprocess.Popen(
+                    [
+                        browser_path,
+                        f"--remote-debugging-port={self.port}",
+                        f"--user-data-dir={user_data}",
+                        "--no-first-run",
+                        "--no-default-browser-check",
+                        "https://thuvienphapluat.vn",
+                    ]
+                )
                 time.sleep(3.0)
                 try:
                     resp = requests.get(f"{self.base_url}/json", timeout=5)
                     resp.raise_for_status()
                     return [t for t in resp.json() if t.get("type") == "page"]
                 except Exception as e:
-                    raise ChromeCDPError(f"Failed to connect to Chrome on port {self.port} after launch: {e}") from e
-            raise ChromeCDPError(f"Chrome not found at {chrome_path} to auto-launch on port {self.port}")
+                    raise ChromeCDPError(
+                        f"Failed to connect to Chrome on port {self.port} after launch: {e}"
+                    ) from e
+            raise ChromeCDPError(
+                f"Chrome or compatible browser not found to auto-launch on port {self.port}"
+            ) from None
 
     def connect_tab(self, ws_url: str) -> None:
         """Connect to a specific tab via WebSockets with safe timeout."""
@@ -162,7 +171,9 @@ class ChromeCDP:
         """
         is_blocked = self.evaluate_js(check_expr)
         if is_blocked:
-            print("[LegalIntel] Cloudflare verification in progress (auto-verifying in background)...")
+            print(
+                "[LegalIntel] Cloudflare verification in progress (auto-verifying in background)..."
+            )
             start_time = time.time()
             # Phase 1: Grace period for Chrome to auto-pass Cloudflare verification silently
             while time.time() - start_time < auto_wait_sec:
@@ -181,7 +192,9 @@ class ChromeCDP:
                 self.send_command("Page.bringToFront", {})
             except Exception:
                 pass
-            print("[LegalIntel] Cloudflare requires manual confirmation. Chrome window brought to foreground.")
+            print(
+                "[LegalIntel] Cloudflare requires manual confirmation. Chrome window brought to foreground."
+            )
             while is_blocked:
                 sleep_with_jitter(2.0, 0.5, 1.0)
                 try:
@@ -190,7 +203,6 @@ class ChromeCDP:
                     is_blocked = True
             print("[LegalIntel] Challenge solved! Resuming execution...")
             self.wait_ready()
-
 
     def set_download_behavior(self, download_path: Path | str) -> bool:
         """Configure Chrome CDP to allow downloading directly into a specific folder."""

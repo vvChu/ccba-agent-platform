@@ -20,7 +20,9 @@ def generate_bundle_ast_and_qa(
         target_bundle = target_bundle.parent
     out_dir = output_dir or target_bundle
     core_files = [
-        f for f in target_bundle.glob("*.md") if f.name not in ("index.md", "dead_ends.md", "log.md")
+        f
+        for f in target_bundle.glob("*.md")
+        if f.name not in ("index.md", "dead_ends.md", "log.md")
     ]
     annexes_dir = target_bundle / "annexes"
     annex_files = sorted(annexes_dir.glob("*.md")) if annexes_dir.exists() else []
@@ -54,7 +56,10 @@ def generate_bundle_ast_and_qa(
                 if not clean_title and idx < len(lines):
                     clean_title = re.sub(r"<[^>]+>", "", lines[idx]).strip("# *").strip()
                 jurisdiction = "CQXD"
-                if any(k in anc_id.lower() for k in ["chua-chay", "cuu-nan", "cap-nuoc", "muc-5", "muc-6", "phu-luc-i"]):
+                if any(
+                    k in anc_id.lower()
+                    for k in ["chua-chay", "cuu-nan", "cap-nuoc", "muc-5", "muc-6", "phu-luc-i"]
+                ):
                     jurisdiction = "CONG_AN"
                 clause_item: dict[str, Any] = {
                     "clause_id": anc_id,
@@ -68,16 +73,22 @@ def generate_bundle_ast_and_qa(
                 if cong_bao_number:
                     clause_item["cong_bao_number"] = cong_bao_number
                 clauses.append(clause_item)
-                qa_list.append({
-                    "question": f"Quy định tại {clean_title} của {title_prefix} là gì?",
-                    "answer": f"Xem chi tiết nội dung quy chuẩn tại {clean_title} ({rel_path}#{anc_id}).",
-                    "anchor": anc_id,
-                    "source_file": rel_path,
-                    "jurisdiction": jurisdiction,
-                })
+                qa_list.append(
+                    {
+                        "question": f"Quy định tại {clean_title} của {title_prefix} là gì?",
+                        "answer": f"Xem chi tiết nội dung quy chuẩn tại {clean_title} ({rel_path}#{anc_id}).",
+                        "anchor": anc_id,
+                        "source_file": rel_path,
+                        "jurisdiction": jurisdiction,
+                    }
+                )
     if out_dir.exists():
-        (out_dir / "clauses.json").write_text(json.dumps(clauses, ensure_ascii=False, indent=2), encoding="utf-8")
-        (out_dir / "qa_benchmark.json").write_text(json.dumps(qa_list, ensure_ascii=False, indent=2), encoding="utf-8")
+        (out_dir / "clauses.json").write_text(
+            json.dumps(clauses, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        (out_dir / "qa_benchmark.json").write_text(
+            json.dumps(qa_list, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
     return clauses, qa_list
 
 
@@ -101,13 +112,15 @@ def generate_clauses_ast(text: str) -> list[dict[str, Any]]:
                     if clean_next:
                         title = clean_next
                         break
-            clauses.append({
-                "clause_id": anc_id,
-                "anchor": anc_id,
-                "title": title,
-                "line_start": idx,
-                "line_end": idx,
-            })
+            clauses.append(
+                {
+                    "clause_id": anc_id,
+                    "anchor": anc_id,
+                    "title": title,
+                    "line_start": idx,
+                    "line_end": idx,
+                }
+            )
     return clauses
 
 

@@ -61,6 +61,7 @@ class GoogleDriveVault:
     def _init_drive_service(self) -> Any | None:
         """Initialize Google Drive Service with multi-tier credentials resolution."""
         import os
+
         try:
             import google.auth
             from google.oauth2 import service_account
@@ -80,14 +81,17 @@ class GoogleDriveVault:
                 logger.warning(f"Failed to load drive_token.json at {token_file}: {e}")
 
         # 2. Try Service Account Key (for Shared Drives and Server Automation)
-        sa_file = self.credentials_path or Path(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", DEFAULT_SA_PATH))
+        sa_file = self.credentials_path or Path(
+            os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", DEFAULT_SA_PATH)
+        )
         if sa_file and Path(sa_file).exists():
             try:
-                creds = service_account.Credentials.from_service_account_file(str(sa_file), scopes=SCOPES)
+                creds = service_account.Credentials.from_service_account_file(
+                    str(sa_file), scopes=SCOPES
+                )
                 return build("drive", "v3", credentials=creds, cache_discovery=False)
             except Exception as e:
                 logger.warning(f"Failed to load Service Account at {sa_file}: {e}")
-
 
         # 3. Try Application Default Credentials (ADC) with Drive Scope
         try:
@@ -97,7 +101,6 @@ class GoogleDriveVault:
             logger.debug(f"ADC with Drive scope failed: {e}")
 
         return None
-
 
     def get_or_create_folder(self, folder_name: str, parent_id: str | None = None) -> str | None:
         """Get existing folder ID by name or create a new one under parent_id."""
@@ -109,13 +112,17 @@ class GoogleDriveVault:
             query += f" and '{parent_id}' in parents"
 
         try:
-            response = self.service.files().list(
-                q=query,
-                spaces="drive",
-                fields="files(id, name)",
-                supportsAllDrives=True,
-                includeItemsFromAllDrives=True,
-            ).execute()
+            response = (
+                self.service.files()
+                .list(
+                    q=query,
+                    spaces="drive",
+                    fields="files(id, name)",
+                    supportsAllDrives=True,
+                    includeItemsFromAllDrives=True,
+                )
+                .execute()
+            )
             files = response.get("files", [])
             if files:
                 return files[0]["id"]
@@ -128,11 +135,15 @@ class GoogleDriveVault:
             if parent_id:
                 file_metadata["parents"] = [parent_id]
 
-            folder = self.service.files().create(
-                body=file_metadata,
-                fields="id",
-                supportsAllDrives=True,
-            ).execute()
+            folder = (
+                self.service.files()
+                .create(
+                    body=file_metadata,
+                    fields="id",
+                    supportsAllDrives=True,
+                )
+                .execute()
+            )
             return folder.get("id")
         except Exception as e:
             logger.error(f"Error getting/creating folder '{folder_name}': {e}")
@@ -141,6 +152,7 @@ class GoogleDriveVault:
     def ensure_vault_structure(self, category: str, doc_slug: str) -> str | None:
         """Ensure full directory hierarchy exists: CCBA_Legal_Vault/<category>/<doc_slug>/."""
         import os
+
         if not self.service:
             return None
 
@@ -168,7 +180,7 @@ class GoogleDriveVault:
         convert_to_gdoc: bool = True,
     ) -> dict[str, Any]:
         """Upload a local PDF or DOCX file to the Google Drive Vault.
-        
+
         If convert_to_gdoc is True, Word files (.docx/.doc) are automatically converted
         into native Google Docs format for seamless Google NotebookLM ingestion.
         """
@@ -211,17 +223,23 @@ class GoogleDriveVault:
 
             # Check if file already exists in folder
             q = f"name = '{target_name}' and '{target_folder_id}' in parents and trashed = false"
-            res = self.service.files().list(
-                q=q,
-                fields="files(id, webViewLink)",
-                supportsAllDrives=True,
-                includeItemsFromAllDrives=True,
-            ).execute()
+            res = (
+                self.service.files()
+                .list(
+                    q=q,
+                    fields="files(id, webViewLink)",
+                    supportsAllDrives=True,
+                    includeItemsFromAllDrives=True,
+                )
+                .execute()
+            )
             files = res.get("files", [])
 
             if files:
                 file_id = files[0]["id"]
-                view_url = files[0].get("webViewLink", f"https://drive.google.com/file/d/{file_id}/view")
+                view_url = files[0].get(
+                    "webViewLink", f"https://drive.google.com/file/d/{file_id}/view"
+                )
                 media = MediaFileUpload(str(path), mimetype=source_mime, resumable=True)
                 self.service.files().update(
                     fileId=file_id,
@@ -238,14 +256,20 @@ class GoogleDriveVault:
                     file_metadata["mimeType"] = "application/vnd.google-apps.document"
 
                 media = MediaFileUpload(str(path), mimetype=source_mime, resumable=True)
-                created = self.service.files().create(
-                    body=file_metadata,
-                    media_body=media,
-                    fields="id, webViewLink",
-                    supportsAllDrives=True,
-                ).execute()
+                created = (
+                    self.service.files()
+                    .create(
+                        body=file_metadata,
+                        media_body=media,
+                        fields="id, webViewLink",
+                        supportsAllDrives=True,
+                    )
+                    .execute()
+                )
                 file_id = created.get("id")
-                view_url = created.get("webViewLink", f"https://drive.google.com/file/d/{file_id}/view")
+                view_url = created.get(
+                    "webViewLink", f"https://drive.google.com/file/d/{file_id}/view"
+                )
 
                 if make_public_read and file_id:
                     try:
@@ -256,8 +280,6 @@ class GoogleDriveVault:
                         ).execute()
                     except Exception as pe:
                         logger.debug(f"Could not set public read permission: {pe}")
-
-
 
             return {
                 "sha256": sha256,

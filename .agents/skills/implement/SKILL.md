@@ -12,12 +12,15 @@ Implement the work described by the user in the spec or tickets.
 
 Use `/ccba-tdd` where possible, at pre-agreed seams.
 
-## Context Budget Management
-
+## Context Budget Management & Early Escalation
+ 
 To prevent context exhaustion (which causes misleading "User cancelled agent execution" errors):
-
+ 
 1. **Scoped Tests Only**: Always run pytest on individual test files (`python scripts/safe_pytest.py -f tests/test_specific.py`), never on entire directories.
-2. **Loop Budget**: Maximum **5 edit→test cycles** per seam/test file. If a test still fails after 5 attempts, stop, commit WIP, document blockers, and ask the user for guidance.
+2. **Loop Budget & Early Escalation**:
+   - Maximum **5 edit→test cycles** per seam/test file.
+   - **Early Escalation (Cycle 3)**: If test still fails after **3 attempts** due to deep logic errors, concurrency, or multi-file dependencies, STOP blind guessing. Formulate a **Deep Problem Brief** (Failure Manifest, Tested Hypotheses, Code Seams, Error Logs).
+   - **Hard Stop (Cycle 5)**: If 5 attempts fail, stop immediately, commit WIP, and activate **Boost Escalation Gate** (recommend the user run `/boost [brief]` for deep multi-agent reasoning).
 3. **Full Suite — Once at the End**: Run the complete test suite only **once** at the very end, preferably via `python scripts/safe_pytest.py --allow-unscoped` to detach from the daemon process.
 4. **Invalid Args Signal**: If you encounter `invalid tool call (invalid_args)` errors twice in a row, stop immediately — context budget is nearly depleted. Commit WIP and inform the user.
 

@@ -1,6 +1,7 @@
 """Unit tests for Modernize Annex Engine (ccba_legal.modernize)."""
 
 from pathlib import Path
+
 from PIL import Image
 
 from ccba_legal.modernize import (

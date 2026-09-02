@@ -9,11 +9,12 @@ from pathlib import Path
 
 class DocumentArchetype(str, Enum):
     """Document Archetypes in Vietnamese Construction Legal & Technical Repository."""
-    VBPL_ADMIN = "VBPL_ADMIN"                     # Luật, Nghị định, Quyết định TTg
-    CIRCULAR_COST_NORM = "CIRCULAR_COST_NORM"     # Thông tư Định mức, Đơn giá, Suất vốn
-    TECHNICAL_QCVN = "TECHNICAL_QCVN"             # Quy chuẩn kỹ thuật quốc gia
-    TECHNICAL_TCVN = "TECHNICAL_TCVN"             # Tiêu chuẩn quốc gia / cơ sở
-    INTERNATIONAL_ISO = "INTERNATIONAL_ISO"       # Tiêu chuẩn quốc tế (ISO, BS EN)
+
+    VBPL_ADMIN = "VBPL_ADMIN"  # Luật, Nghị định, Quyết định TTg
+    CIRCULAR_COST_NORM = "CIRCULAR_COST_NORM"  # Thông tư Định mức, Đơn giá, Suất vốn
+    TECHNICAL_QCVN = "TECHNICAL_QCVN"  # Quy chuẩn kỹ thuật quốc gia
+    TECHNICAL_TCVN = "TECHNICAL_TCVN"  # Tiêu chuẩn quốc gia / cơ sở
+    INTERNATIONAL_ISO = "INTERNATIONAL_ISO"  # Tiêu chuẩn quốc tế (ISO, BS EN)
 
 
 class FullDocStructuralScanner:
@@ -37,6 +38,7 @@ class FullDocStructuralScanner:
         # 2. Deep XML traversal scan
         try:
             from docx import Document
+
             doc = Document(str(self.docx_path))
         except Exception:
             return DocumentArchetype.VBPL_ADMIN
@@ -80,4 +82,8 @@ def detect_document_pipeline(
         doc_type_str=doc_type or "",
     )
     arch = scanner.scan()
-    return "qcvn" if arch in (DocumentArchetype.TECHNICAL_TCVN, DocumentArchetype.TECHNICAL_QCVN) else "vbpl"
+    return (
+        "qcvn"
+        if arch in (DocumentArchetype.TECHNICAL_TCVN, DocumentArchetype.TECHNICAL_QCVN)
+        else "vbpl"
+    )

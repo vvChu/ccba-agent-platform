@@ -9,8 +9,6 @@ from ccba_legal.cdp import (
     MockChromeCDP,
     _check_is_headless,
 )
-from ccba_legal.registry import load_relation_synonyms as _load_relation_synonyms
-from ccba_legal.registry import resolve_project_root
 from ccba_legal.session import (
     CookieVault,
     TVPLCrawlFailedException,
@@ -22,15 +20,7 @@ from ccba_legal.session import (
     sleep_with_jitter,
     verify_tvpl_vip_status,
 )
-from ccba_legal.storage import (
-    _check_aws_s3,
-    _check_google_drive,
-    _check_shared_drive,
-)
 from ccba_legal.tvpl_parser import (
-    _derive_doc_slug,
-    _extract_gazette_metadata,
-    _parse_tvpl_date,
     get_crawled_doc_data,
     get_tvpl_metadata,
 )

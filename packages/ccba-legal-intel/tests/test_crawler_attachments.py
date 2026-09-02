@@ -1,8 +1,9 @@
 """Unit tests for crawler multi-attachment discovery and download."""
 
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock
+
+import pytest
 
 from ccba_legal.crawler.tier_downloader import trigger_download
 
@@ -11,12 +12,18 @@ from ccba_legal.crawler.tier_downloader import trigger_download
 def test_trigger_download_discovers_attachments(tmp_path: Path):
     """Test that trigger_download discovers and registers tab=7 standalone attachments."""
     mock_cdp = MagicMock()
-    
+
     def mock_eval(js: str):
         if "hasAttachExt" in js or "attachLinks" in js:
             return [
-                {"text": "Phụ lục 1 Bảng tính định mức.xlsx", "href": "https://files.tvpl.vn/att1.xlsx"},
-                {"text": "Mẫu số 02 Tờ trình đề nghị.docx", "href": "https://files.tvpl.vn/att2.docx"},
+                {
+                    "text": "Phụ lục 1 Bảng tính định mức.xlsx",
+                    "href": "https://files.tvpl.vn/att1.xlsx",
+                },
+                {
+                    "text": "Mẫu số 02 Tờ trình đề nghị.docx",
+                    "href": "https://files.tvpl.vn/att2.docx",
+                },
             ]
         if "window.location.href" in js:
             return "https://thuvienphapluat.vn/van-ban/Xay-dung/test-doc-12345.aspx?tab=7"

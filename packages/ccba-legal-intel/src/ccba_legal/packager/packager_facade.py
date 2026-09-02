@@ -46,9 +46,18 @@ class OKFBundlePackager:
         """Create and structure an OKF bundle for a document."""
         return package_bundle(self.root_dir, doc_id, content, metadata)
 
-    def package_bundle_v2(self, doc_id: str, content: str, metadata: dict[str, Any], qa_items: list[dict[str, Any]] | None = None, **kwargs: Any) -> Path:
+    def package_bundle_v2(
+        self,
+        doc_id: str,
+        content: str,
+        metadata: dict[str, Any],
+        qa_items: list[dict[str, Any]] | None = None,
+        **kwargs: Any,
+    ) -> Path:
         """Create a strictly flat, zero-redundancy OKF v2.0 bundle."""
-        return package_bundle_v2(self.root_dir, doc_id, content, metadata, qa_items=qa_items, **kwargs)
+        return package_bundle_v2(
+            self.root_dir, doc_id, content, metadata, qa_items=qa_items, **kwargs
+        )
 
     def write_concept(
         self,
@@ -60,17 +69,29 @@ class OKFBundlePackager:
         resource_uri: str = "",
     ) -> None:
         """Write a concept file with valid OKF YAML frontmatter."""
-        write_concept(self.root_dir, relative_path, concept_type, title, description, content, resource_uri)
+        write_concept(
+            self.root_dir, relative_path, concept_type, title, description, content, resource_uri
+        )
 
     def organize_bundle_structure(self, bundle_slug: str, guiding_files: list[str]) -> None:
         """Move generated primary and guiding files into an isolated OKF Bundle directory."""
-        organize_bundle_structure(root_dir=self.root_dir, bundle_slug=bundle_slug, guiding_files=guiding_files, formula_standardizer=self.formula_standardizer, amendment_processor=self.amendment_processor)
+        organize_bundle_structure(
+            root_dir=self.root_dir,
+            bundle_slug=bundle_slug,
+            guiding_files=guiding_files,
+            formula_standardizer=self.formula_standardizer,
+            amendment_processor=self.amendment_processor,
+        )
 
-    def _write_logs_and_index(self, bundle_dir: Path, bundle_slug: str, guiding_files: list[str]) -> None:
+    def _write_logs_and_index(
+        self, bundle_dir: Path, bundle_slug: str, guiding_files: list[str]
+    ) -> None:
         """Create and update index.md, log.md, and dead_ends.md in the root of the OKF Bundle."""
         write_logs_and_index(bundle_dir, bundle_slug, guiding_files)
 
-    def _write_logs_and_index_v2(self, bundle_dir: Path, bundle_slug: str, metadata: dict[str, Any]) -> None:
+    def _write_logs_and_index_v2(
+        self, bundle_dir: Path, bundle_slug: str, metadata: dict[str, Any]
+    ) -> None:
         """Write lightweight OKF v2.0 index and logs."""
         write_logs_and_index_v2(bundle_dir, bundle_slug, metadata)
 

@@ -156,7 +156,9 @@ def decrypt_registry(hub_root: Path | None = None) -> None:
         spoke_path = s_info.get("path")
         s_id = s_info.get("spoke_id")
         if not spoke_path or not os.path.exists(str(spoke_path)):
-            print(f"⚠️ Phát hiện Spoke '{s_info.get('name')}' không tồn tại vật lý tại: {spoke_path}")
+            print(
+                f"⚠️ Phát hiện Spoke '{s_info.get('name')}' không tồn tại vật lý tại: {spoke_path}"
+            )
             print(f" -> Tiến hành gỡ bỏ Spoke ID {str(s_id)[:8]} khỏi Registry...")
             pruned_spoke_ids.append(s_id)
         else:

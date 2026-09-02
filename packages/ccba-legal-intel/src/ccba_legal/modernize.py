@@ -52,7 +52,11 @@ class FigureAutoCompositor:
                 composite.paste(img, (curr_x, y_pos))
                 if panel_labels and idx < len(panel_labels):
                     label = panel_labels[idx]
-                    draw.text((curr_x + 5, y_pos - 15 if y_pos >= 15 else y_pos + 5), label, fill=(0, 0, 0))
+                    draw.text(
+                        (curr_x + 5, y_pos - 15 if y_pos >= 15 else y_pos + 5),
+                        label,
+                        fill=(0, 0, 0),
+                    )
                 curr_x += img.width + padding
 
         elif layout == "grid" and len(images) >= 4:
@@ -82,7 +86,9 @@ class FigureAutoCompositor:
             # Vertical layout (default)
             max_width = max(img.width for img in images) + padding * 2
             label_extra = 25 if panel_labels else 0
-            total_height = sum(img.height + label_extra for img in images) + padding * (len(images) + 1)
+            total_height = sum(img.height + label_extra for img in images) + padding * (
+                len(images) + 1
+            )
             composite = Image.new("RGB", (max_width, total_height), color=bg_color)
             draw = ImageDraw.Draw(composite)
 
@@ -135,7 +141,11 @@ class TableMatrixBuilder:
                 continue
 
             first_val = clean_row[0]
-            if re.match(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|GHI\s+CHÚ|Chú\s+thích|Ghi\s+chú)", first_val, re.IGNORECASE):
+            if re.match(
+                r"^(?:\*\*)?(?:CHÚ\s+THÍCH|GHI\s+CHÚ|Chú\s+thích|Ghi\s+chú)",
+                first_val,
+                re.IGNORECASE,
+            ):
                 note_text = " ".join([c for c in clean_row if c.strip()])
                 note_clean = re.sub(
                     r"^(?:\*\*)?(?:CHÚ\s+THÍCH|GHI\s+CHÚ|Chú\s+thích|Ghi\s+chú)\s*(?:\d+)?\s*[:–-]\s*(?:\*\*)?",
@@ -162,7 +172,11 @@ class TableMatrixBuilder:
 
         table_lines: list[str] = []
         if caption or table_num:
-            tag = f"**{table_num} — {caption}**" if table_num and caption else f"**{table_num or caption}**"
+            tag = (
+                f"**{table_num} — {caption}**"
+                if table_num and caption
+                else f"**{table_num or caption}**"
+            )
             table_lines.append(tag + "\n")
 
         table_lines.append("| " + " | ".join(padded_grid[0]) + " |")

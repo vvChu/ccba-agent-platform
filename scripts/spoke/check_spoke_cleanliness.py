@@ -46,12 +46,12 @@ EPHEMERAL_PREFIXES = (
 )
 
 # Patterns detecting anti-patterns or duplicated hub functionality
-SYS_PATH_HACK_PATTERN = re.compile(r"sys\.path\.(?:insert|append)\s*\(\s*0?\s*,\s*.*hub", re.IGNORECASE)
+SYS_PATH_HACK_PATTERN = re.compile(
+    r"sys\.path\.(?:insert|append)\s*\(\s*0?\s*,\s*.*hub", re.IGNORECASE
+)
 
 
-def check_script_count(
-    scripts_dir: Path, max_scripts: int = 15
-) -> tuple[list[Path], list[Path]]:
+def check_script_count(scripts_dir: Path, max_scripts: int = 15) -> tuple[list[Path], list[Path]]:
     """Checks the number of top-level scripts in the scripts/ folder.
 
     Returns:

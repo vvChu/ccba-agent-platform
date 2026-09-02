@@ -58,9 +58,7 @@ def test_hub_script_references_exist_on_disk() -> None:
 
             actual_file = HUB_ROOT / clean_rel
             if not actual_file.exists():
-                errors.append(
-                    f"Workflow '{wf.name}' references non-existent script: {clean_rel}"
-                )
+                errors.append(f"Workflow '{wf.name}' references non-existent script: {clean_rel}")
 
     assert not errors, "Detected broken script references in workflows:\n" + "\n".join(errors)
 
@@ -87,9 +85,7 @@ def test_python_module_invocations_match_packages() -> None:
         content = wf.read_text(encoding="utf-8")
         for mod in module_pattern.findall(content):
             if mod not in registered_modules:
-                errors.append(
-                    f"Workflow '{wf.name}' invokes unregistered module: python -m {mod}"
-                )
+                errors.append(f"Workflow '{wf.name}' invokes unregistered module: python -m {mod}")
 
     assert not errors, "Detected invalid python -m module calls:\n" + "\n".join(errors)
 

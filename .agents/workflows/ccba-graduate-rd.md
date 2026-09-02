@@ -1,74 +1,56 @@
 ---
-description: >-
-  Quy trình cưỡng chế chuyển hóa mã nguồn R&D / Scratch Script
-  thành Deep Seam Production trong Hub Platform.
+description: Quy trình cưỡng chế chuyển hóa mã nguồn R&D thành Deep Seam Production, tích hợp /boost, /teamwork và mở PR tự động.
 applies_to:
-  - Phần mềm
-  - Kiểm định
+- Phần mềm
+- Kiểm định
+- Thẩm tra thiết kế
 bundle: _core
 disable-model-invocation: true
 command: /ccba-graduate-rd
 triggers:
-  - graduate
-  - tốt nghiệp
-  - hợp nhất vào hub
-  - consolidate
-  - deep seam
-  - chuyển scratch vào production
-  - ccba-graduate-rd
+- graduate
+- tốt nghiệp
+- hợp nhất vào hub
+- consolidate
+- deep seam
+- chuyển scratch vào production
+- ccba-graduate-rd
 ---
-# Workflow: Tốt Nghiệp R&D → Deep Seam Production (/ccba-graduate-rd)
+# Workflow: Tốt Nghiệp R&D → Deep Seam Production & Auto-PR (/ccba-graduate-rd)
 
-Quy trình cưỡng chế 5 bước chuyển hóa mã nguồn thử nghiệm (scratch script, prototype, patch script) thành module Production chuẩn mực trong Hub Platform (`packages/ccba-*/src/`).
+Quy trình tự động hóa toàn trình 7 bước (Full-Cycle Autonomous Pipeline) chuyển hóa mã nguồn thử nghiệm (scratch script, prototype) thành module Production chuẩn mực trong Hub (`packages/ccba-*/src/`), tự động đóng gói Proposal, tạo Pull Request và tự làm xanh CI (Self-Healing Dual-Gate).
 
 > [!CAUTION]
-> **3 Bất Biến Tuyệt Đối (Invariants):**
-> 1. **Không để script vá tồn tại qua phiên:** Mọi scratch script phải nằm trong `.md/scratch/` hoặc artifacts `brain/*/scratch/`, tuyệt đối cấm commit vào `scripts/` của Spoke mà không qua quy trình này.
-> 2. **Upstream Promotion bắt buộc:** Khi scratch script chứng minh hiệu quả → Bắt buộc refactor logic vào Hub `packages/` trong **cùng phiên**.
-> 3. **1-Pass Clean Run bắt buộc:** Sau hợp nhất, xóa scratch script và chạy lại lệnh gốc từ đầu vào ban đầu để chứng minh lõi tự xử lý hoàn hảo.
+> **3 Bất Biến Tuyệt Đối (Core Invariants):**
+> 1. **Không để script vá tồn tại qua phiên:** Mọi scratch script nằm trong `brain/*/scratch/` hoặc `.md/scratch/`, cấm commit vào `scripts/` Spoke.
+> 2. **Upstream Promotion bắt buộc:** Khi scratch script chứng minh hiệu quả → Bắt buộc refactor vào Hub `packages/` trong cùng phiên.
+> 3. **1-Pass Clean Run & 100% CI Green:** Xóa script vá, chạy lại lệnh gốc và nghiệm thu toàn bộ CI Gates đạt 100% Tích Xanh.
 
 ---
 
 ## 📋 Bước 1: Kiểm Kê & Phân Loại R&D Artifacts
-
-Quét và liệt kê toàn bộ scratch scripts / prototype files liên quan:
-- Thư mục `brain/*/scratch/` (artifacts phiên hiện tại)
-- Thư mục `.md/scratch/` (scratch workspace)
-- Thư mục `scripts/` (kiểm tra xem có script vá ngoại lệ nào không)
-
-Với mỗi file, phân loại:
-
-| Loại | Hành động |
-| :--- | :--- |
-| **Thuật toán cốt lõi** (regex, parser, classifier, KaTeX) | → Bước 2: Bóc tách & Nhúng vào Deep Seam |
-| **Glue code** (CLI wrapper, `print`, `tempfile`, argparser) | → Bỏ qua, không nhúng vào lõi |
-| **Dữ liệu mẫu / fixture** | → Bước 3: Chuyển thành test fixture |
-| **Báo cáo / ghi chú** | → `.md/archive/` theo chuẩn ADR 0033 |
+Quét và phân loại toàn bộ files trong `brain/*/scratch/`, `.md/scratch/` và `scripts/`:
+* **Thuật toán cốt lõi** (regex, parser, classifier, KaTeX): → Bước 2 nhúng Deep Seam.
+* **Glue code** (CLI wrapper, `print`, `tempfile`): → Loại bỏ, không nhúng vào lõi.
+* **Dữ liệu mẫu / fixture**: → Bước 3 chuyển thành test fixture.
+* **Báo cáo / ghi chú**: → Lưu vào `.md/archive/` theo chuẩn ADR 0033.
 
 ---
 
-## 🔧 Bước 2: Bóc Tách Thuật Toán & Nhúng Vào Deep Seam
-
-1. **Xác định vị trí đích trong Hub:** Thuật toán thuộc Converter nào? Engine nào? Package nào trong `packages/ccba-*/src/`?
-2. **Áp dụng 5 Cổng Phản Biện** từ `improve-codebase-architecture`:
-   - **Cổng 1 (Glue vs Domain):** Tỷ lệ $\ge 70\%$ Glue Code $\rightarrow$ KHÔNG nhúng vào lõi Seam.
-   - **Cổng 2 (Hard Caller Gate):** Đếm số callers thực tế và xác minh implementation.
-   - **Cổng 3 (SDK Signatures):** Kiểm tra signature tương thích với hệ thống hiện có.
-   - **Cổng 4 (Unique Naming):** Đảm bảo symbol name không xung đột toàn cục.
-   - **Cổng 5 (Measurable Friction):** Bằng chứng lỗi runtime hoặc số đo benchmark thực tế.
-3. **Refactor & Nhúng Lõi:**
-   - Loại bỏ mọi `print`, `sys.path.insert`, `tempfile`, hardcoded paths.
-   - Thêm type hints đầy đủ (parameters + return types).
-   - Thêm docstring Google style cho mọi public function/class.
-   - Khai báo rõ ràng trong `__init__.py` / `__all__` nếu là public interface của Deep Seam.
+## 🔧 Bước 2: Bóc Tách & Nhúng Lõi Deep Seam (Giao thức /boost)
+Áp dụng cơ chế **Deep Reasoning** (`DeepCoder`) và **5 Cổng Phản Biện** (`improve-codebase-architecture`):
+1. **Cổng 1 (Glue vs Domain):** Tỷ lệ $\ge 70\%$ Glue Code $ightarrow$ KHÔNG nhúng vào lõi Seam.
+2. **Cổng 2 (Hard Caller Gate):** Đếm số callers thực tế và xác minh implementation.
+3. **Cổng 3 (SDK Signatures):** Kiểm tra signature tương thích kiến trúc hiện có.
+4. **Cổng 4 (Unique Naming):** Đảm bảo symbol name không xung đột toàn cục.
+5. **Cổng 5 (Measurable Friction):** Bằng chứng lỗi runtime hoặc benchmark thực tế.
+*Refactor chuẩn mực:* Loại bỏ hardcoded paths, thêm type hints và Google docstrings đầy đủ.
 
 ---
 
-## 🧪 Bước 3: Xây Dựng Test Harness
-
-1. Chuyển đổi dữ liệu mẫu từ phiên R&D thành **test fixtures** trong `packages/ccba-*/tests/fixtures/` hoặc test inputs.
-2. Viết **ít nhất 1 unit test** cho mỗi hàm public / feature mới đã nhúng.
-3. Chạy test suite đầy đủ của package:
+## 🧪 Bước 3: Xây Dựng Test Suite (Double-Pass Adversarial Review)
+1. Tạo test fixtures trong `packages/ccba-*/tests/` từ dữ liệu thực tế của phiên R&D.
+2. Viết unit tests độc lập và chạy kiểm thử tự phản biện (Self-Adversarial):
    ```powershell
    python -m pytest packages/ccba-*/tests/ -v
    ```
@@ -76,37 +58,45 @@ Với mỗi file, phân loại:
 
 ---
 
-## 🔁 Bước 4: Kiểm Chứng 1-Pass Clean Run
-
-Đây là bước **cốt lõi nhất** — chứng minh lõi nền tảng tự xử lý hoàn hảo:
-
-1. **Xóa scratch script gốc** (file `.py` trong `scripts/` hoặc `scratch/`).
-2. **Chạy lại lệnh gốc từ đầu vào ban đầu:**
-   ```powershell
-   # Ví dụ với bộ chuyển đổi TCVN:
-   python -m ccba_legal convert "ten_van_ban.docx" "legal_docs/03_tcvn/ten_van_ban"
-   ```
-3. **So sánh output:** Kết quả phải **tương đương hoặc tốt hơn** so với khi chạy script vá bên ngoài.
-4. **Chạy Master CI Gate:**
+## 🔁 Bước 4: Kiểm Chứng 1-Pass Clean Run & Spoke CI
+1. Xóa các scratch scripts cục bộ.
+2. Chạy lại lệnh gốc từ đầu vào ban đầu (ví dụ: `python -m ccba_legal convert "ten_doc.docx" "legal_docs/..."`).
+3. Chạy Master CI Gate của Spoke:
    ```powershell
    python scripts/validate_legal_spoke.py
    ```
-   *Tiêu chuẩn:* `0 Errors, 0 Warnings, 100% Pass`.
+   *Tiêu chuẩn:* `0 Errors, 0 Critical Warnings, 100% Pass`.
 
 ---
 
-## 📦 Bước 5: Lưu Trữ, Nhánh Git & Đóng Vòng
+## 📦 Bước 5: Đóng Gói Proposal & Khởi Tạo Branch
+Thực thi tại thư mục Hub (`hub_path`):
+1. **Khởi tạo branch đề xuất (ADR 0045):**
+   ```bash
+   BRANCH_NAME="proposal/${ISSUE_ID:+issue-${ISSUE_ID}-}${PROPOSAL_NAME}"
+   git checkout main && git pull origin main && git checkout -b "$BRANCH_NAME"
+   ```
+2. **Định dạng & Cập nhật Thống kê Kiến trúc:**
+   ```bash
+   python -m ruff check --fix . && python -m ruff format . && python scripts/update_arch_stats.py
+   ```
+3. **Soạn thảo Proposal File (`.agents/proposals/YYYY-MM-DD_[proposal-name].md`):** Ghi nhận đầy đủ Context, Implementation và Verification.
+4. **Leakage Guard & Push:** Chạy `python scripts/governance/check_spoke_leakage.py` và `git push origin "$BRANCH_NAME"`.
 
-1. **Lưu trữ ghi chú R&D** vào `.md/archive/` theo chuẩn ADR 0033.
-2. **Cập nhật `session_learnings.md`** với bài học rút ra từ quá trình tốt nghiệp (pattern mới phát hiện, edge case, v.v.).
-3. **Commit & Branching Policy (Tránh xung đột bảo vệ nhánh):**
-   - **Khi có `--issue [ID]`:** Tạo nhánh đề xuất trên Hub `proposal/issue-[ID]`.
-   - **Khi KHÔNG có `--issue`:** Đánh giá Scope:
-     * 🟢 **Thay đổi lớn** ($\ge 100$ dòng / module mới) $\rightarrow$ Gợi ý tự động tạo Issue trên Hub để gắn mã theo dõi và ghi nhận Changelog.
-     * ⚪ **Thay đổi nhỏ** ($< 100$ dòng / vá lỗi nội bộ) $\rightarrow$ Tạo nhánh `proposal/[feature-name]` hoặc commit trực tiếp nếu là local refactor.
-   - **Commit theo chuẩn Git:**
-     - Hub: `refactor(scope): consolidate R&D [feature] into Deep Seam${ISSUE_ID:+ (Closes #[ISSUE_ID])}`
-     - Spoke: `chore(scope): delegate [feature] to core package ccba_legal`
-4. **Chuyển giao trạng thái tiếp theo (Seamless Handoff):**
-   - Khi sẵn sàng mở PR chính thức: Kích hoạt ngay `/ccba-contribute-to-hub` (kèm `--issue [ID]` nếu có) để tạo hồ sơ Proposal và tự động theo dõi CI Tích Xanh.
-   - Nếu thay đổi ảnh hưởng đến kiến trúc nền tảng $\rightarrow$ Đề xuất ghi nhận ADR mới.
+---
+
+## 🚀 Bước 6: Mở GitHub Pull Request & Vòng Lặp Self-Healing CI Dual-Gate
+1. **Mở Pull Request qua GitHub CLI:**
+   ```bash
+   gh pr create --title "feat([scope]): [tên-đề-xuất]" --body "$PR_BODY" --base main --head "$BRANCH_NAME"
+   ```
+2. **Vòng lặp Dừng chờ & Tự làm xanh CI (Teamwork Autonomous CI Guard):**
+   - Lắng nghe trạng thái qua `gh pr checks <PR_NUMBER>`.
+   - Nếu CI Fail: Đọc log qua `gh run view <RUN_ID> --log-failed` $ightarrow$ Tự động phân tích và sinh bản vá $ightarrow$ Commit & push bản vá.
+   - Lặp lại đến khi **100% CI Checks Tích Xanh** (`validate`, `scan`, `test matrix`, `lint`).
+
+---
+
+## 🔄 Bước 7: Báo Cáo & Closed-Loop Spoke Sync
+1. Báo cáo URL Pull Request, trạng thái CI Tích Xanh và tóm tắt tính năng cho Maintainer.
+2. Sẵn sàng cho lệnh `/ccba-review-proposal [PR_NUMBER]` hoặc đồng bộ downstream khi PR được merge.
