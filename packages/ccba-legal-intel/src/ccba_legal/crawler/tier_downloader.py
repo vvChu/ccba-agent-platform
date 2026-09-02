@@ -96,6 +96,12 @@ def trigger_download(
     print(f"[LegalIntel] Monitoring Downloads folders: {[str(d) for d in watch_dirs]}")
     existing_downloads = {str(f.resolve()) for d in watch_dirs if d.exists() for f in d.glob("*")}
 
+    # Configure Chrome download behavior to allow automatic downloads
+    try:
+        cdp.set_download_behavior(download_dir)
+    except Exception:
+        pass
+
     # 1. Single-Door: Navigate directly to tab=7 (Tải về)
     target_base = doc_url or cdp.evaluate_js("window.location.href") or ""
     if target_base and "thuvienphapluat.vn" in str(target_base):

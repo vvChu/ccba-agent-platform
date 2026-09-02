@@ -3,6 +3,7 @@ CCBA AI Gateway Client
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endpoint (tự động khám phá qua ai.models()).
+Tích hợp Multi-Tier Failover (Spark -> Cloud Direct -> Antigravity CLI -> Local Ollama -> Mock Provider).
 
 Quick Start:
     from ccba_ai import ai
@@ -17,11 +18,19 @@ Quick Start:
 """
 
 from ccba_ai import services
+from ccba_ai.antigravity_provider import AntigravityCLIProvider
 from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError, CircuitState
 from ccba_ai.client import AIClient, AsyncAIClient
 from ccba_ai.exceptions import CCBABaseException, CCBAErrorCode, format_error_json
+from ccba_ai.fallback import (
+    TieredFallbackRouter,
+    TierType,
+    is_mock_mode_enabled,
+    map_model_for_tier,
+)
 from ccba_ai.hooks.privacy_guard import PrivacyGuardHook
 from ccba_ai.llm_utils import LLMParseError, parse_llm_json, strip_think_tags
+from ccba_ai.mock_provider import MockProvider
 from ccba_ai.models import (
     AuditFinding,
     AuditReport,
@@ -75,11 +84,17 @@ __all__ = [
     "models",
     "transcribe",
     "encode_image",
-    # Routing & Archetypes
+    # Routing & Archetypes & Fallback
     "ModelArchetype",
     "choose_model",
     "is_reasoning_model",
     "resolve_max_tokens",
+    "TierType",
+    "TieredFallbackRouter",
+    "map_model_for_tier",
+    "is_mock_mode_enabled",
+    "MockProvider",
+    "AntigravityCLIProvider",
     # Utilities & Prompting
     "strip_think_tags",
     "parse_llm_json",
@@ -118,4 +133,4 @@ __all__ = [
     "CCBABaseException",
     "format_error_json",
 ]
-__version__ = "1.0.0"
+__version__ = "1.2.0"
