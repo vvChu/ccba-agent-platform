@@ -88,7 +88,10 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
             if rid_to_katex and rid in rid_to_katex:
                 k_sym = rid_to_katex[rid]
                 if not k_sym.startswith("<!-- DIAGRAM"):
-                    grouped.append(("norm", f"${k_sym.strip('$ ')}$"))
+                    clean_k = k_sym.strip("$ ")
+                    if "<!--" in clean_k:
+                        clean_k = clean_k.split("<!--")[0].strip("$ \n\r")
+                    grouped.append(("norm", f"${clean_k}$"))
                     continue
         t = r.text
         if not t:

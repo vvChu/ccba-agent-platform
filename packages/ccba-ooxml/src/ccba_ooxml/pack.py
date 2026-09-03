@@ -86,8 +86,9 @@ def pack_document(input_dir, output_file, validate=False):
     return True
 
 
-def validate_document(doc_path):
+def validate_document(doc_path: str | Path) -> bool:
     """Validate document by converting to HTML with soffice."""
+    doc_path = Path(doc_path)
     # Determine the correct filter based on file extension
     match doc_path.suffix.lower():
         case ".docx":

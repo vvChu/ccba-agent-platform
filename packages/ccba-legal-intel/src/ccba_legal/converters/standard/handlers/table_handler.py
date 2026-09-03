@@ -71,8 +71,25 @@ def render_table_markdown(
         if re.match(
             r"^(?:<br>)*\s*(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)", first_cell, re.IGNORECASE
         ):
-            combined_fn = "<br>".join([c for c in row_rendered if c.strip()])
-            fn_parts = [p.strip() for p in re.split(r"<br\s*/?>", combined_fn) if p.strip()]
+            # Deduplicate identical merged cells across columns (gridSpan)
+            unique_cells: list[str] = []
+            for c in row_rendered:
+                c_str = c.strip()
+                if c_str and c_str not in unique_cells:
+                    unique_cells.append(c_str)
+            combined_fn = "<br>".join(unique_cells)
+            raw_parts = [p.strip() for p in re.split(r"<br\s*/?>", combined_fn) if p.strip()]
+            fn_parts: list[str] = []
+            for p in raw_parts:
+                p_clean = re.sub(
+                    r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*",
+                    "",
+                    p,
+                    flags=re.IGNORECASE,
+                ).strip()
+                p_clean = re.sub(r"^\*\*\s*", "", p_clean).strip()
+                if p_clean and p not in fn_parts:
+                    fn_parts.append(p)
             has_explicit_numbered = any(
                 re.search(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*[2-9]", p, re.IGNORECASE)
                 for p in fn_parts
