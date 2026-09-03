@@ -18,6 +18,7 @@
 
 ## 📜 2. Quy Chuẩn & Phương Pháp Luận Nghiệp Vụ (Domain Guidelines & Standards)
 
+- [ccba_brand_identity_guidelines.md](ccba_brand_identity_guidelines.md): **[MỚI]** Quy chuẩn Nhận diện Thương hiệu CCBA (ver 3.4) — Hệ thống màu WCAG AAA, Responsive Logo, Typography 2 tầng và Slogan.
 - [guidelines/domain_success_criteria_rubrics.md](guidelines/domain_success_criteria_rubrics.md): **[MỚI]** Quy chuẩn Tiêu chí Thành công & Barem điểm Rubrics Định lượng Đa miền (QC PCCC 40/30/20/10, Pháp điển VBHN 35/35/20/10, Viết Học thuật 35/25/25/15).
 - [guidelines/phuong_phap_luan_lap_trinh_agentic.md](guidelines/phuong_phap_luan_lap_trinh_agentic.md): Cẩm nang phương pháp luận lập trình Agentic AI thực chiến.
 - [guidelines/CCBA_ADM_QD_006_Rev00_BoNhiemMEP.md](guidelines/CCBA_ADM_QD_006_Rev00_BoNhiemMEP.md): Quyết định bổ nhiệm nhân sự phụ trách bộ môn MEP.
@@ -39,6 +40,9 @@
 
 ## 🔬 4. Nghiên Cứu Chuyên Sâu & Phân Tích Upstream (Research & Studies)
 
+- [research_and_studies/research-brand-refinements.md](research_and_studies/research-brand-refinements.md): **[MỚI]** Báo cáo Đánh giá & Tinh chỉnh Bộ Nhận diện Thương hiệu CCBA (ver 3.3 $\rightarrow$ ver 3.4).
+- [research_and_studies/research-minimalist-slide-design.md](research_and_studies/research-minimalist-slide-design.md): **[MỚI]** Nghiên cứu Kiến trúc Trình chiếu Tối giản Thụy Sĩ (Swiss Minimalist Presentation System).
+- [research_and_studies/research-storytelling-with-you-patterns.md](research_and_studies/research-storytelling-with-you-patterns.md): **[MỚI]** Báo cáo Nghiên cứu & Ứng dụng "Storytelling With You" (Cole Nussbaumer Knaflic).
 - [research_and_studies/codebase_summary.md](research_and_studies/codebase_summary.md): Báo cáo tóm tắt kiến trúc codebase CCBA.
 - [research_and_studies/vibe_coding_sdlc_analysis.md](research_and_studies/vibe_coding_sdlc_analysis.md): Phân tích quy trình phát triển phần mềm theo định hướng AI-first.
 - [research_and_studies/thuvienphapluat_structure_analysis.md](research_and_studies/thuvienphapluat_structure_analysis.md): Phân tích cấu trúc dữ liệu và API của Thư Viện Pháp Luật (TVPL).

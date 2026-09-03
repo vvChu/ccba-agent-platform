@@ -228,6 +228,18 @@ def build_parser() -> argparse.ArgumentParser:
     ingest_parser.add_argument(
         "-o", "--output-dir", type=Path, default=None, help="Spoke legal_docs output root"
     )
+    ingest_parser.add_argument(
+        "--upload-drive",
+        action="store_true",
+        default=False,
+        help="Upload binary assets to Google Drive Vault (ADR 0035)",
+    )
+    ingest_parser.add_argument(
+        "-s",
+        "--slug",
+        default=None,
+        help="Explicit OKF bundle directory slug (e.g. 'qcvn_09_2017_bxd')",
+    )
     # 10. Clean Images Subcommand (Zero-Orphan Figure Pruner - ADR 0036)
     clean_parser = subparsers.add_parser(
         "clean-images",
@@ -462,7 +474,7 @@ def handle_ingest(args: argparse.Namespace) -> int:
 
     docx_path = Path(fetch_res["docx_path"])
     pdf_path = Path(fetch_res["pdf_path"]) if fetch_res.get("pdf_path") else None
-    doc_slug = docx_path.stem.lower().replace("-", "_")
+    doc_slug = args.slug if args.slug else docx_path.stem.lower().replace("-", "_")
 
     # 2. Determine target bundle directory & create mandatory sources/ (OKF v2.4)
     base_out = args.output_dir or Path("legal_docs")
@@ -471,10 +483,16 @@ def handle_ingest(args: argparse.Namespace) -> int:
 
     sources_dir = target_bundle / "sources"
     sources_dir.mkdir(parents=True, exist_ok=True)
+    target_docx = sources_dir / (f"{doc_slug}.docx" if args.slug else docx_path.name)
+    target_pdf = sources_dir / (
+        f"{doc_slug}.pdf"
+        if (args.slug and pdf_path)
+        else (pdf_path.name if pdf_path else "doc.pdf")
+    )
     if docx_path.exists():
-        shutil.copy2(docx_path, sources_dir / docx_path.name)
+        shutil.copy2(docx_path, target_docx)
     if pdf_path and pdf_path.exists():
-        shutil.copy2(pdf_path, sources_dir / pdf_path.name)
+        shutil.copy2(pdf_path, target_pdf)
 
     # 3. Google Drive Vault Upload (if requested or available)
 
@@ -485,9 +503,9 @@ def handle_ingest(args: argparse.Namespace) -> int:
 
             vault = GoogleDriveVault()
             if vault.is_available():
-                vault.upload_asset(docx_path, args.category, doc_slug)
+                vault.upload_asset(target_docx, args.category, doc_slug)
                 if pdf_path and pdf_path.exists():
-                    vault.upload_asset(pdf_path, args.category, doc_slug)
+                    vault.upload_asset(target_pdf, args.category, doc_slug)
                 print("  ✅ Uploaded to Google Drive Vault successfully.")
             else:
                 print("  ℹ️ Google Drive Vault offline. Proceeding in local mode.")
@@ -498,7 +516,7 @@ def handle_ingest(args: argparse.Namespace) -> int:
     print(f"\n>>> [3/5] Converting to OKF Bundle with resilient parser at {target_bundle}...")
     try:
         convert_docx_to_okf_bundle(
-            docx_path=docx_path,
+            docx_path=target_docx,
             target_bundle_dir=target_bundle,
             doc_type=args.category,
         )

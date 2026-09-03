@@ -29,6 +29,7 @@ ALLOWLIST_SCRIPTS = {
     "check_claudekit_updates.py",
     "spoke_bootstrap.py",
     "spoke_bootstrap.ps1",
+    "setup_pre_commit.py",
     "sync.py",
 }
 

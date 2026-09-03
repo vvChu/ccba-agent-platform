@@ -18,6 +18,15 @@ from .docx import (
     suggest_paragraph,
 )
 from .pack import pack_document, validate_document
+from .pptx import (
+    CardItem,
+    CCBAPresentationTheme,
+    DeckBuilder,
+    MarkdownDeckParser,
+    SlideSpec,
+    SlideType,
+    build_presentation_from_markdown,
+)
 from .tables import (
     StructuredTable,
     TableReconstructor,
@@ -51,4 +60,12 @@ __all__ = [
     "TableReconstructor",
     "make_descriptive_table_slug",
     "vietnamese_to_ascii",
+    # PowerPoint presentation builder (Deep Seam)
+    "DeckBuilder",
+    "MarkdownDeckParser",
+    "SlideSpec",
+    "SlideType",
+    "CardItem",
+    "build_presentation_from_markdown",
+    "CCBAPresentationTheme",
 ]
