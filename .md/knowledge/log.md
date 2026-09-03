@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-03] [synthesize] | Hoàn Tất Triển Khai Presentation Builder Swiss Minimalist & Storytelling With You (#230, PR #235)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-research, /ccba-implement, /ccba-release-feature & /session_retrospective)
+- **Affected Files**: `packages/ccba-ooxml/`, `packages/ccba-legal-intel/`, `.agents/skills/seminar-builder/`, `.md/knowledge/ccba_brand_identity_guidelines.md`, `.md/knowledge/research_and_studies/`, `.md/seminars/2026/demo_seminar_nd217_luatxd2025.*`, `.md/knowledge/issues/issue-230.md`
+- **Summary**: Hoàn tất PR #235 giải quyết Issue #230: (1) Xây dựng Deep Seam `ccba_ooxml.pptx` gồm `MarkdownDeckParser` và `DeckBuilder` hỗ trợ đầy đủ các Layouts Swiss Minimalist (12-column grid, 60/40 Split, Bento Grid) và Cole Knaflic Storytelling archetypes (Big Idea, Visual Agenda, Process Stepper, Quote); (2) Ban hành Quy chuẩn Nhận diện Thương hiệu CCBA v3.4 (`ccba_brand_identity_guidelines.md`) với Design Tokens tương phản WCAG 2.1 AA; (3) Tích hợp CLI `python -m ccba_ooxml build-deck` và cập nhật skill `seminar-builder`; (4) Đồng bộ hóa toàn diện 100% dữ liệu sang **Luật Xây dựng 2025** và **Nghị định 217/2026/NĐ-CP**; (5) Vượt qua 100% 6/6 checks GitHub Actions CI và 223/223 unit tests.
+
+---
+
 ## [2026-08-23] [synthesize] | Thẩm Định & Hợp Nhất Đề Xuất PR #216 (OKF v2.2 Table & Direct Form Extractor) & PR #215/217 (ADR 0045)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-review-proposal & /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-legal-intel/`, `scripts/spoke/sync/`, `.agents/proposals/`, `.agents/skills/platform-loader/catalog.yaml`, `.agents/skills/legal-advisor/`, `scripts/tests/`

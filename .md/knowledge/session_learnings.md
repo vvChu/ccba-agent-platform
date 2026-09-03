@@ -100,3 +100,18 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
      - Bổ sung `-s / --slug` vào `ingest_parser`. Khi có cờ `--slug`, CLI tự động đồng bộ tên thư mục bundle, tên file DOCX và PDF nguồn sang `<slug>.docx` và `<slug>.pdf`.
   4. **Query Sanitization & Turnstile Bypass (`providers.py`):**
      - Chuẩn hóa query thay thế `/`, `:`, `-` bằng dấu cách (`quote_plus`), tự động gọi `cdp.handle_cloudflare()` chờ và giải phóng Turnstile challenge.
+
+---
+
+## 8. Swiss Minimalist & Storytelling Presentation Builder (`ccba-ooxml.pptx`)
+
+- **Core Pattern P8.1 — Hai Giai Đoạn Phân Tách (Markdown AST $\rightarrow$ SlideSpec $\rightarrow$ PPTX Render):**
+  - **Pha 1 (`MarkdownDeckParser`):** Phân tích AST từ Markdown tiêu chuẩn (Frontmatter, badging `[TAG]`, split columns `::: split`, native pipe tables, callout cards `> [!NOTE]`, Cole Knaflic archetypes `::: big-idea`, `::: agenda`, `::: steps`, `::: quote`) thành cấu trúc trung gian trừu tượng `SlideSpec`.
+  - **Pha 2 (`DeckBuilder`):** Ánh xạ `SlideSpec` sang các shape và textbox của `python-pptx` với hệ lưới 12 cột (12-column grid system), tự động căn chỉnh khoảng trắng (Negative Space / Breathing Room) và phân cấp Typography cực hạn (Display Title 36-40pt Bold, KPI Hero Number 48-60pt Bold, Body Text 14-16pt Regular).
+- **Core Pattern P8.2 — Design Tokens & High-Contrast Swiss Color Palette:**
+  - Chuẩn hóa toàn bộ màu sắc, kích thước và phông chữ qua dataclass `CCBAPresentationTheme` (Primary Navy `#363883`, Accent Red `#DA251C`, Cyan `#0093DD`, Surface `#F4F6F9`, Text `#1A202C`).
+  - **Rào chắn WCAG 2.1 AA:** Tuyệt đối không phủ màu nền tối toàn slide gây chói/mờ trên máy chiếu công trường. Sử dụng màu nhận diện CCBA như **Surgical Accent Colors** (chấm tag 6px, thanh bar mảnh 2px, số KPI nổi bật).
+- **Core Pattern P8.3 — Safe Dynamic JavaScript DOM Selectors:**
+  - Luôn sử dụng `json.dumps(selector)` khi nhúng selector vào template JavaScript sinh động (`document.querySelector(${json.dumps(s)})`), chống hoàn toàn lỗi cú pháp vỡ chuỗi khi selector chứa dấu nháy đơn (`input[placeholder*='Tên đăng nhập']`).
+- **Core Pattern P8.4 — Strict Markdown Table Delimiter Detection:**
+  - Nhận diện bảng Markdown thông qua cặp dòng tiêu đề + dòng phân cách cú pháp (`| :--- |`), ngăn ngừa ngộ nhận các dòng văn xuôi có ký tự `|` thành bảng dữ liệu.

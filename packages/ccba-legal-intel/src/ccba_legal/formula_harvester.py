@@ -23,6 +23,8 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+from ccba_legal.converters.mtef_parser import decode_ole_mathtype
+
 logger = logging.getLogger(__name__)
 
 _FORMULA_CONTEXT_KEYWORDS = (
@@ -328,6 +330,7 @@ def harvest_docx_formula_images(
     ns_r = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
     ns_a = "http://schemas.openxmlformats.org/drawingml/2006/main"
     ns_wp = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+    ns_w = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
     with zipfile.ZipFile(docx_path, "r") as z:
         rels_xml = z.read("word/_rels/document.xml.rels")
@@ -336,7 +339,7 @@ def harvest_docx_formula_images(
         for rel in rels_tree:
             rid = rel.attrib.get("Id")
             target = rel.attrib.get("Target", "")
-            if rid and "media/" in target:
+            if rid and ("media/" in target or "embeddings/" in target):
                 r_map[rid] = "word/" + target.replace("../", "")
         media_files = {f for f in z.namelist() if f.startswith("word/media/")}
 
@@ -414,6 +417,18 @@ def harvest_docx_formula_images(
         rid_to_katex: dict[str, str] = {}
         pending_rids: dict[str, bytes] = {}
 
+        # Build image_rid -> ole_rid mapping from <w:object> (ADR 0040)
+        ns_o = "urn:schemas-microsoft-com:office:office"
+        image_rid_to_ole_rid: dict[str, str] = {}
+        for obj_el in doc_tree.findall(f".//{{{ns_w}}}object"):
+            img_el = obj_el.find(f".//{{{ns_v}}}imagedata")
+            ole_el = obj_el.find(f".//{{{ns_o}}}OLEObject")
+            if img_el is not None and ole_el is not None:
+                img_rid = img_el.attrib.get(f"{{{ns_r}}}id")
+                ole_rid = ole_el.attrib.get(f"{{{ns_r}}}id")
+                if img_rid and ole_rid:
+                    image_rid_to_ole_rid[img_rid] = ole_rid
+
         for p_idx, para in enumerate(paragraphs):
             # 1. Check legacy VML shapes (v:shape)
             for shape in para.findall(f".//{{{ns_v}}}shape"):
@@ -436,6 +451,23 @@ def harvest_docx_formula_images(
                 if media_path in override_formulas:
                     rid_to_katex[rid] = override_formulas[media_path]
                     continue
+
+                # Tier 1 (ADR 0040): Deterministic MathType MTEF Binary decoding
+                if rid in image_rid_to_ole_rid:
+                    ole_rid = image_rid_to_ole_rid[rid]
+                    if ole_rid in r_map:
+                        ole_path = r_map[ole_rid]
+                        if ole_path in z.namelist():
+                            ole_bytes = z.read(ole_path)
+                            mtef_latex = decode_ole_mathtype(ole_bytes)
+                            if mtef_latex:
+                                rid_to_katex[rid] = f"$${mtef_latex}$$"
+                                logger.info(
+                                    "Decoded formula for rid=%s via Tier 1 MTEF parser: %s",
+                                    rid,
+                                    mtef_latex[:40],
+                                )
+                                continue
 
                 style_str = shape.attrib.get("style", "")
                 height_pt = _parse_pt(style_str, "height")
