@@ -11,32 +11,113 @@ from typing import Any
 from ccba_legal.converters.standard.models import HierarchyState
 
 
+def escape_table_pipes(text: str) -> str:
+    """Escape pipe '|' symbols in cell text to prevent breaking Markdown table columns."""
+    if "|" not in text:
+        return text
+
+    def _rep_math(m: re.Match[str]) -> str:
+        content = m.group(1)
+        content = re.sub(r"(?<!\\)\|", r"\\vert ", content)
+        return f"${content}$"
+
+    res = re.sub(r"\$([^$]+)\$", _rep_math, text)
+    res = re.sub(r"(?<!\\)\|", r"\|", res)
+    return res
+
+
+def build_composite_headers(header_rows: list[list[str]]) -> list[str]:
+    """Combine multi-row table headers (2 to 4 tiers) into single composite headers."""
+    if not header_rows:
+        return []
+    cols_count = len(header_rows[0])
+    composite: list[str] = []
+    for c in range(cols_count):
+        tokens: list[str] = []
+        for r in range(len(header_rows)):
+            val = re.sub(r"<[^>]+>", "", header_rows[r][c]).strip()
+            if not val or val in ("—", "-"):
+                continue
+            if not tokens or tokens[-1] != val:
+                tokens.append(val)
+        composite.append(" — ".join(tokens) if tokens else f"col_{c + 1}")
+    return composite
+
+
 def resolve_hierarchical_headers(grid: list[list[str]]) -> list[list[str]]:
     """Combine multi-row table headers (e.g. category spans) into structured single-row headers."""
     if len(grid) < 2:
         return grid
 
-    row0 = grid[0]
-    row1 = grid[1]
+    max_h = min(4, len(grid))
+    header_rows_count = 1
 
-    # Check if row0 has merged spans where row1 has distinct sub-values
-    has_subheaders = False
-    for c in range(len(row0)):
-        if c > 0 and row0[c] == row0[c - 1] and row1[c] != row1[c - 1]:
-            has_subheaders = True
+    for r_idx in range(1, max_h):
+        prev_row = grid[r_idx - 1]
+        curr_row = grid[r_idx]
+
+        has_subheaders = False
+        for c in range(len(prev_row)):
+            if c > 0 and prev_row[c] and prev_row[c] == prev_row[c - 1] and curr_row[c] != curr_row[c - 1]:
+                has_subheaders = True
+                break
+
+        non_empty = [c.strip() for c in curr_row if c.strip()]
+        is_category_partition = len(set(non_empty)) == 1 and len(non_empty) > 1
+
+        if has_subheaders and not is_category_partition:
+            numeric_count = sum(1 for t in non_empty if re.match(r"^[0-9\.,\-\+±%]+$", t.replace(" ", "")))
+            if non_empty and numeric_count / len(non_empty) > 0.5:
+                break
+            header_rows_count = r_idx + 1
+        else:
             break
 
-    if has_subheaders:
-        combined_header = []
-        for c in range(len(row0)):
-            h0 = row0[c].strip()
-            h1 = row1[c].strip()
-            if h0 and h1 and h0 != h1 and h1 not in ("—", "-", ""):
-                combined_header.append(f"{h0} — {h1}")
-            else:
-                combined_header.append(h0 or h1)
-        return [combined_header] + grid[2:]
+    if header_rows_count > 1:
+        header_rows = grid[:header_rows_count]
+        combined_header = build_composite_headers(header_rows)
+        return [combined_header] + grid[header_rows_count:]
+
     return grid
+
+
+def detect_table_archetype(
+    rows_count: int,
+    cols_count: int,
+    text: str = "",
+    is_formula_frame: bool = False,
+    is_captioned: bool = False,
+    header_rows_count: int = 1,
+    has_images: bool = False,
+    has_footnotes: bool = False,
+) -> str:
+    """Classify table into 1 of 6 Table Archetypes according to ADR 0041."""
+    lower_t = text.lower()
+    if is_formula_frame:
+        return "BORDERLESS_LAYOUT"
+    if rows_count <= 3 and cols_count <= 2 and not is_captioned:
+        admin_keywords = [
+            "cộng hòa xã hội chủ nghĩa",
+            "độc lập - tự do",
+            "độc lập tự do",
+            "nơi nhận:",
+            "ký, ghi rõ họ tên",
+            "ký, đóng dấu",
+            "thủ trưởng đơn vị",
+        ]
+        if any(k in lower_t for k in admin_keywords):
+            return "BORDERLESS_LAYOUT"
+    if not is_captioned and any(
+        k in lower_t for k in ["[ ]", "☐", "biên bản", "phiếu kiểm tra", "mẫu số", "chức vụ của người ký"]
+    ):
+        return "ADMIN_FORM"
+    if has_images or "<img" in lower_t:
+        return "IN_CELL_MULTIMODAL"
+    if header_rows_count > 1:
+        return "HIERARCHICAL_GRID"
+    if has_footnotes or "chú thích" in lower_t:
+        return "FOOTNOTE_RICH"
+    return "FLAT_MATRIX"
 
 
 def render_table_markdown(
@@ -62,6 +143,7 @@ def render_table_markdown(
                     cell_p_rendered.append(p_r)
             clean_cell = "<br>".join(cell_p_rendered)
             clean_cell = re.sub(r"[\r\n]+", "<br>", clean_cell).strip()
+            clean_cell = escape_table_pipes(clean_cell)
             row_rendered.append(clean_cell)
 
         if not row_rendered or not any(row_rendered):
@@ -362,6 +444,17 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
         csv_dir.mkdir(parents=True, exist_ok=True)
         json_dir.mkdir(parents=True, exist_ok=True)
 
+        table_text = " ".join(c.text.lower() for row in tbl.rows for c in row.cells)
+        has_images = any("<img" in c or "figures/" in c for row in raw_grid for c in row)
+        archetype = detect_table_archetype(
+            rows_count=len(tbl.rows),
+            cols_count=len(raw_grid[0]) if raw_grid else 1,
+            text=f"{t_cap} {table_text}",
+            is_captioned=is_captioned,
+            has_images=has_images,
+            has_footnotes=bool(tbl_footnotes),
+        )
+
         with open(csv_dir / f"{t_slug}.csv", "w", encoding="utf-8-sig", newline="") as f:
             writer = csv.writer(f)
             writer.writerows(raw_grid)
@@ -379,13 +472,24 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
                 row_dict[key] = re.sub(r"<[^>]+>", "", val).strip()
             json_rows.append(row_dict)
 
+        parsed_footnotes: dict[str, str] = {}
+        for fn in tbl_footnotes:
+            m_sym = re.search(r"(\([0-9\*\+a-zA-Z]+\)|\[[0-9\*\+a-zA-Z]+\])", fn)
+            if m_sym:
+                parsed_footnotes[m_sym.group(1)] = fn.strip()
+            else:
+                parsed_footnotes[f"fn_{len(parsed_footnotes) + 1}"] = fn.strip()
+
         with open(json_dir / f"{t_slug}.json", "w", encoding="utf-8") as f:
             json.dump(
                 {
                     "table_id": t_slug,
                     "table_number": t_num,
                     "table_title": t_cap,
+                    "archetype": archetype,
+                    "headers": headers,
                     "rows": json_rows,
+                    "footnotes": parsed_footnotes or tbl_footnotes,
                 },
                 f,
                 ensure_ascii=False,
@@ -397,6 +501,7 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
                 "table_id": t_slug,
                 "table_number": t_num,
                 "title": t_cap,
+                "archetype": archetype,
                 "csv_file": f"tables/csv/{t_slug}.csv",
                 "json_file": f"tables/json/{t_slug}.json",
             }
