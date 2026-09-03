@@ -106,8 +106,7 @@ def parse_cfbf(data: bytes) -> dict[str, bytes]:
     root = entries[0]
     root_start = struct.unpack("<I", root[116:120])[0]
     mini_stream = b"".join(
-        data[512 + s * sector_size : 512 + (s + 1) * sector_size]
-        for s in get_chain(root_start)
+        data[512 + s * sector_size : 512 + (s + 1) * sector_size] for s in get_chain(root_start)
     )
 
     mini_fat: list[int] = []
@@ -144,8 +143,7 @@ def parse_cfbf(data: bytes) -> dict[str, bytes]:
             )[:size]
         else:
             s_bytes = b"".join(
-                data[512 + s * sector_size : 512 + (s + 1) * sector_size]
-                for s in get_chain(start)
+                data[512 + s * sector_size : 512 + (s + 1) * sector_size] for s in get_chain(start)
             )[:size]
         streams[name] = s_bytes
 
