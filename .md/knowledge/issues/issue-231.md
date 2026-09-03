@@ -1,13 +1,16 @@
 ---
 id: 231
 title: "feat(adr): tiered traceability matrix preserving spoke local domain decisions"
-state: "ready-for-agent"
+state: "closed"
+status: "closed"
 labels:
   - "enhancement"
-  - "ready-for-agent"
-assignee: "none"
+  - "closed"
+assignee: "vvChu"
 created_at: "2026-09-02T06:27:52Z"
-updated_at: "2026-09-02T06:40:00Z"
+updated_at: "2026-09-03T12:35:00Z"
+closed_at: "2026-09-03T12:35:00Z"
+resolution_pr: "https://github.com/vvChu/ccba-agent-platform/pull/236"
 ---
 
 # 📖 Mô tả (Description)
@@ -28,9 +31,9 @@ Nâng cấp cơ chế biên dịch ma trận truy vết trong `scripts/sync_hub_
 ---
 
 ### 3. Tiêu chí nghiệm thu (Acceptance Criteria):
-- [ ] `sync_hub_adr_matrix.py` tự động nhận diện và bảo toàn 100% các ADR cục bộ tại Spoke.
-- [ ] Không làm mất các bảng đối soát và quy chuẩn đặc thù của Spoke trong `TRACEABILITY_MATRIX.md`.
-- [ ] Tích hợp vào CI Gate `validate_legal_spoke.py` (Gate 10) và các Spoke validators khác.
+- [x] `sync_hub_adr_matrix.py` tự động nhận diện và bảo toàn 100% các ADR cục bộ tại Spoke.
+- [x] Không làm mất các bảng đối soát và quy chuẩn đặc thù của Spoke trong `TRACEABILITY_MATRIX.md`.
+- [x] Tích hợp vào CI Gate `validate_legal_spoke.py` (Gate 10) và các Spoke validators khác.
 
 ---
 *Được đề xuất tự động từ Spoke `ccba-legal-knowledge` qua workflow `/ccba-issue-to-hub`.*
