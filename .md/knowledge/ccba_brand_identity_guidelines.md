@@ -14,9 +14,9 @@
 
 | Tên màu | HEX (Digital) | RGB (Screen) | CMYK (In ấn Offset/Laser) | Pantone Spot | Ý nghĩa & Gắn kết CCBA WAY |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Đỏ IBST** (*IBST Red*) | `#DA251C` | `(218, 37, 28)` | `C:0 / M:98 / Y:100 / K:5` | **Pantone 485 C** | Năng lượng, Tiên phong. Giai đoạn 1 (BD/Sales). Tinh thần **TỐI ƯU & ĐỔI MỚI**. Kết cấu (`STR`). |
-| **Xanh Đậm CCBA** (*Dark Blue*) | `#363883` | `(54, 56, 131)` | `C:95 / M:90 / Y:20 / K:10` | **Pantone 2745 C**| Tin cậy, Chuyên nghiệp. Giai đoạn 2 (Delivery). Tinh thần **CHUYÊN NGHIỆP & TIN CẬY**. Kiến trúc (`ARC`). |
-| **Xanh Dương Sáng** (*BIM Bright Blue*) | `#0093DD` | `(0, 147, 221)` | `C:80 / M:30 / Y:0 / K:0` | **Pantone 299 C** | Công nghệ BIM, Hợp tác. Giai đoạn 3 (Closure/Review). Tinh thần **ĐỔI MỚI & TRÁCH NHIỆM**. Cơ điện (`MEP`). |
+| **Đỏ IBST** (*IBST Red*) | `#DA251C` | `(218, 37, 28)` | `C:0 / M:98 / Y:100 / K:5` | **Pantone 485 C** | Năng lượng, Tiên phong. Giai đoạn 1 (BD/Sales). Tinh thần **TỐI ƯU & ĐỔI MỚI**. Kết cấu (**STR**). |
+| **Xanh Đậm CCBA** (*Dark Blue*) | `#363883` | `(54, 56, 131)` | `C:95 / M:90 / Y:20 / K:10` | **Pantone 2745 C**| Tin cậy, Chuyên nghiệp. Giai đoạn 2 (Delivery). Tinh thần **CHUYÊN NGHIỆP & TIN CẬY**. Kiến trúc (**ARC**). |
+| **Xanh Dương Sáng** (*BIM Bright Blue*) | `#0093DD` | `(0, 147, 221)` | `C:80 / M:30 / Y:0 / K:0` | **Pantone 299 C** | Công nghệ BIM, Hợp tác. Giai đoạn 3 (Closure/Review). Tinh thần **ĐỔI MỚI & TRÁCH NHIỆM**. Cơ điện (**MEP**). |
 | **Xanh Dương TT** (*Primary UI Blue*) | `#005A9C` | `(0, 90, 156)` | `C:98 / M:65 / Y:15 / K:2` | **Pantone 7686 C**| Cân bằng, công nghệ. Tiêu đề phụ, đường viền bảng. |
 
 ### 1.2. Rào chắn Tương phản Bắt buộc (WCAG 2.1 AA/AAA Enforced Text-Background Matrix)
@@ -60,10 +60,10 @@
 
 2. **Lớp 2 — Môi trường Tài liệu Office Giao nộp (PowerPoint `.pptx`, Word `.docx`)**:
    - Để ngăn ngừa 100% rủi ro lệch khung chữ (Metric Incompatibility) và tràn slide khi mở trên máy tính đối tác chưa cài font Inter:
-     - **Tiêu đề (Headings)**: **`Segoe UI Semibold` / `Segoe UI Bold`**
-     - **Thân bài (Body Text)**: **`Segoe UI Regular`**
-     - **Trích dẫn**: **`Georgia Italic`**
-   - *Lưu ý*: Khi bắt buộc dùng `Inter` trong file `.pptx`, cấu hình tùy chọn **Embed TrueType Fonts** trong file PowerPoint trước khi phát hành.
+     - **Tiêu đề (Headings)**: **Segoe UI Semibold** / **Segoe UI Bold**
+     - **Thân bài (Body Text)**: **Segoe UI Regular**
+     - **Trích dẫn**: **Georgia Italic**
+   - *Lưu ý*: Khi bắt buộc dùng **Inter** trong file `.pptx`, cấu hình tùy chọn **Embed TrueType Fonts** trong file PowerPoint trước khi phát hành.
 
 ---
 
@@ -83,9 +83,9 @@
 
 ## 4. Slogan Chuẩn & Phối Màu 3 Từ
 
-- **Khẩu hiệu**: **`Smarter Faster Better`** (*"Thông minh hơn - Nhanh hơn - Tốt hơn"*).
+- **Khẩu hiệu**: **Smarter Faster Better** (*"Thông minh hơn - Nhanh hơn - Tốt hơn"*).
 - **Quy tắc phối màu từng từ**:
-  - `Smarter` $\rightarrow$ **`#363883`** (Xanh Đậm CCBA — Tri thức, giải pháp thông minh, AI)
-  - `Faster` $\rightarrow$ **`#DA251C`** (Đỏ IBST — Tốc độ, quy trình tinh gọn, tự động hóa)
-  - `Better` $\rightarrow$ **`#0093DD`** (Xanh Dương Sáng — Chất lượng vượt trội, đổi mới bền vững)
+  - **Smarter** $\rightarrow$ **`#363883`** (Xanh Đậm CCBA — Tri thức, giải pháp thông minh, AI)
+  - **Faster** $\rightarrow$ **`#DA251C`** (Đỏ IBST — Tốc độ, quy trình tinh gọn, tự động hóa)
+  - **Better** $\rightarrow$ **`#0093DD`** (Xanh Dương Sáng — Chất lượng vượt trội, đổi mới bền vững)
 - **Vị trí**: Chân trang slide thuyết trình (footer), bìa báo cáo kỹ thuật, chữ ký email.

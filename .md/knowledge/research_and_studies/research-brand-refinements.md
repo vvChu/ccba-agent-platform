@@ -14,7 +14,7 @@ Quy chuẩn Nhận diện Thương hiệu CCBA (ver 3.3) sở hữu nền tảng
 Tuy nhiên, qua kết quả kiểm định phản biện kỹ thuật độc lập (Adversarial Audit), tài liệu ver 3.3 còn bộc lộ **5 điểm nghẽn thực tế** khi áp dụng vào môi trường số và tài liệu giao nộp:
 1. **Vi phạm độ tương phản WCAG 2.1 AA**: Cặp màu chữ Slate Dark `#2C3E50` trên nền Xanh Đậm `#363883` có tỷ lệ tương phản chỉ **1.08:1** (chữ vô hình), và chữ Trắng trên nền Xanh Dương Sáng `#0093DD` chỉ đạt **3.38:1** (dưới ngưỡng chuẩn 4.5:1).
 2. **Rủi ro người dùng mù màu (CVD)**: Việc phân biệt Kết cấu (Đỏ `#DA251C`) và Đạt/Pass (Xanh lá `#28A745`) thuần bằng màu sắc gây nhầm lẫn nghiêm trọng cho ~8% nam giới mắc chứng khiếm sắc giác (Deuteranopia/Protanopia).
-3. **Lệch khung chữ (Metric Incompatibility) khi trình chiếu Office**: Font chính `Inter` không có sẵn trên Windows tiêu chuẩn của khách hàng, khi mở slide `.pptx` hoặc `.docx` trên máy không cài font sẽ bị ép nhảy sang `Calibri`/`Arial`, làm dài dòng từ 12-18% và vỡ bố cục slide.
+3. **Lệch khung chữ (Metric Incompatibility) khi trình chiếu Office**: Font chính **Inter** không có sẵn trên Windows tiêu chuẩn của khách hàng, khi mở slide `.pptx` hoặc `.docx` trên máy không cài font sẽ bị ép nhảy sang **Calibri**/**Arial**, làm dài dòng từ 12-18% và vỡ bố cục slide.
 4. **Suy giảm chất lượng Logo ở kích thước siêu nhỏ**: Các nét elip và chữ "IBST" nhỏ bị nhòe mờ khi thu về kích thước favicon (16px / 32px).
 5. **Lệch màu in ấn (Gamut Mismatch)**: Xanh Dương Sáng `#0093DD` nằm ngoài dải màu CMYK tiêu chuẩn, dẫn đến hiện tượng xỉn màu khi in báo cáo năng lực / thuyết minh.
 
@@ -73,10 +73,10 @@ Báo cáo đề xuất giải pháp nâng cấp toàn diện lên **Bộ Quy chu
   - Cơ điện: `[MEP]` + `#0093DD` (Nét chấm bi Dotted).
 
 ### 3.3. Chiến lược Typography 2 Tầng (Digital vs Universal Office)
-- **Tầng 1 (Digital Web, Web Dashboards, PDF Export)**: Sử dụng font chuẩn `Inter` (Body) + `Montserrat` (Heading) qua webfont nhúng.
+- **Tầng 1 (Digital Web, Web Dashboards, PDF Export)**: Sử dụng font chuẩn **Inter** (Body) + **Montserrat** (Heading) qua webfont nhúng.
 - **Tầng 2 (PowerPoint .pptx, Word .docx giao nộp cho khách hàng)**:
-  - Khuyến nghị sử dụng bộ font hệ thống toàn cầu của Microsoft: **`Segoe UI`** (Heading & Body) và **`Georgia Italic`** (Trích dẫn). Bộ font này giữ đúng 100% tỷ lệ dòng trên mọi máy tính Windows mà không bị lỗi nhảy trang hay tràn slide.
-  - Khi cần sử dụng `Inter` trong file `.pptx`, bắt buộc bật tùy chọn `Embed TrueType Fonts` trước khi gửi.
+  - Khuyến nghị sử dụng bộ font hệ thống toàn cầu của Microsoft: **Segoe UI** (Heading & Body) và **Georgia Italic** (Trích dẫn). Bộ font này giữ đúng 100% tỷ lệ dòng trên mọi máy tính Windows mà không bị lỗi nhảy trang hay tràn slide.
+  - Khi cần sử dụng **Inter** trong file `.pptx`, bắt buộc bật tùy chọn **Embed TrueType Fonts** trước khi gửi.
 
 ### 3.4. Hệ thống Logo Thích ứng 3 Cấp (Responsive Logo Family)
 - **Master Logo ($\ge 128\text{px}$)**: Phiên bản đầy đủ (Bìa báo cáo, backdrop, trang mở đầu).

@@ -69,7 +69,9 @@ def main() -> None:
         "unpack",
         help="Unpack a .docx/.pptx/.xlsx file into an XML directory",
     )
-    unpack_parser.add_argument("input_file", type=str, help="Source Office file (.docx/.pptx/.xlsx)")
+    unpack_parser.add_argument(
+        "input_file", type=str, help="Source Office file (.docx/.pptx/.xlsx)"
+    )
     unpack_parser.add_argument("output_dir", type=str, help="Target extraction directory")
 
     # Subcommand: validate
@@ -78,7 +80,9 @@ def main() -> None:
         help="Validate XML well-formedness and schema compliance for an unpacked directory",
     )
     val_parser.add_argument("input_dir", type=str, help="Unpacked XML directory")
-    val_parser.add_argument("--original", type=str, default=None, help="Path to original file for comparison")
+    val_parser.add_argument(
+        "--original", type=str, default=None, help="Path to original file for comparison"
+    )
 
     args = parser.parse_args()
 
@@ -110,8 +114,8 @@ def main() -> None:
         sys.exit(0 if success else 1)
 
     elif args.command == "unpack":
-        success = unpack_document(args.input_file, args.output_dir)
-        sys.exit(0 if success else 1)
+        unpack_document(args.input_file, args.output_dir)
+        sys.exit(0)
 
     elif args.command == "validate":
         if args.original:

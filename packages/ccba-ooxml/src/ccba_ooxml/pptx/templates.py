@@ -23,35 +23,35 @@ from pptx.util import Inches, Pt
 # =============================================================================
 
 # Core Brand Colors
-COLOR_IBST_RED = RGBColor(218, 37, 28)       # #DA251C - Energy, Pioneering, Structure (STR)
-COLOR_CCBA_DARK_BLUE = RGBColor(54, 56, 131) # #363883 - Professional, Trust, Architecture (ARC)
-COLOR_BIM_BRIGHT_BLUE = RGBColor(0, 147, 221)# #0093DD - Innovation, Tech, MEP (MEP)
-COLOR_PRIMARY_UI_BLUE = RGBColor(0, 90, 156) # #005A9C - Secondary UI, Borders
+COLOR_IBST_RED = RGBColor(218, 37, 28)  # #DA251C - Energy, Pioneering, Structure (STR)
+COLOR_CCBA_DARK_BLUE = RGBColor(54, 56, 131)  # #363883 - Professional, Trust, Architecture (ARC)
+COLOR_BIM_BRIGHT_BLUE = RGBColor(0, 147, 221)  # #0093DD - Innovation, Tech, MEP (MEP)
+COLOR_PRIMARY_UI_BLUE = RGBColor(0, 90, 156)  # #005A9C - Secondary UI, Borders
 
 # Functional & Status Colors
-COLOR_TEAL_AI = RGBColor(23, 162, 184)       # #17A2B8 - AI Copilot, Automation
-COLOR_AMBER_ORANGE = RGBColor(211, 84, 0)    # #D35400 - Review, Sign-off
+COLOR_TEAL_AI = RGBColor(23, 162, 184)  # #17A2B8 - AI Copilot, Automation
+COLOR_AMBER_ORANGE = RGBColor(211, 84, 0)  # #D35400 - Review, Sign-off
 COLOR_SUCCESS_GREEN = RGBColor(40, 167, 69)  # #28A745 - Pass Gate, Verified
-COLOR_WARNING_YELLOW = RGBColor(242, 200, 17)# #F2C811 - Warning, Attention
+COLOR_WARNING_YELLOW = RGBColor(242, 200, 17)  # #F2C811 - Warning, Attention
 
 # Neutrals & Swiss Slate Palette (WCAG 2.1 AAA Tested >= 10:1 Contrast)
-COLOR_TEXT_DISPLAY = RGBColor(15, 23, 42)    # #0F172A - Slate 900 (Display Titles)
-COLOR_TEXT_PRIMARY = RGBColor(30, 41, 59)    # #1E293B - Slate 800 (Main Headings & Numbers)
-COLOR_TEXT_BODY = RGBColor(51, 65, 85)       # #334155 - Slate 700 (Body text & Bullets)
-COLOR_TEXT_MUTED = RGBColor(100, 116, 139)   # #64748B - Slate 500 (Subtitles, Table Headers)
-COLOR_TEXT_WHITE = RGBColor(255, 255, 255)   # #FFFFFF - Pure White
+COLOR_TEXT_DISPLAY = RGBColor(15, 23, 42)  # #0F172A - Slate 900 (Display Titles)
+COLOR_TEXT_PRIMARY = RGBColor(30, 41, 59)  # #1E293B - Slate 800 (Main Headings & Numbers)
+COLOR_TEXT_BODY = RGBColor(51, 65, 85)  # #334155 - Slate 700 (Body text & Bullets)
+COLOR_TEXT_MUTED = RGBColor(100, 116, 139)  # #64748B - Slate 500 (Subtitles, Table Headers)
+COLOR_TEXT_WHITE = RGBColor(255, 255, 255)  # #FFFFFF - Pure White
 COLOR_TEXT_DARK_NAVY = RGBColor(11, 27, 61)  # #0B1B3D - Enforced dark text on cyan
-COLOR_TEXT_BLACK = RGBColor(26, 32, 44)      # #1A202C - Enforced text on yellow
+COLOR_TEXT_BLACK = RGBColor(26, 32, 44)  # #1A202C - Enforced text on yellow
 
 # Background & Surface Colors (Scandinavian / Swiss Minimalist)
-COLOR_BG_WHITE = RGBColor(255, 255, 255)     # #FFFFFF - Pure Canvas
-COLOR_BG_LIGHT = RGBColor(248, 250, 252)     # #F8FAFC - Card Surface Light
-COLOR_BG_MUTED = RGBColor(241, 245, 249)     # #F1F5F9 - Alternate Card / Table Row
-COLOR_CAPSULE_BG = RGBColor(238, 242, 255)   # #EEF2FF - Soft Indigo Capsule
+COLOR_BG_WHITE = RGBColor(255, 255, 255)  # #FFFFFF - Pure Canvas
+COLOR_BG_LIGHT = RGBColor(248, 250, 252)  # #F8FAFC - Card Surface Light
+COLOR_BG_MUTED = RGBColor(241, 245, 249)  # #F1F5F9 - Alternate Card / Table Row
+COLOR_CAPSULE_BG = RGBColor(238, 242, 255)  # #EEF2FF - Soft Indigo Capsule
 
 # Borders
 COLOR_CARD_BORDER_HAIRLINE = RGBColor(226, 232, 240)  # #E2E8F0 - 0.75pt Hairline divider
-COLOR_CARD_BORDER_SOLID = RGBColor(203, 213, 225)     # #CBD5E1 - 1.0pt Solid Card border
+COLOR_CARD_BORDER_SOLID = RGBColor(203, 213, 225)  # #CBD5E1 - 1.0pt Solid Card border
 COLOR_CARD_BORDER = COLOR_CARD_BORDER_SOLID
 
 COLOR_TABLE_HEADER = COLOR_CCBA_DARK_BLUE
@@ -92,6 +92,7 @@ def get_logo_asset_path(filename: str = "logo_ccba_full.png") -> Path | None:
 # =============================================================================
 # 3. PRESENTATION THEME CONFIGURATION
 # =============================================================================
+
 
 @dataclass
 class CCBAPresentationTheme:

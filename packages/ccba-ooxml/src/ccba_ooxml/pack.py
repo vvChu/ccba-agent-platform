@@ -17,7 +17,7 @@ from pathlib import Path
 import defusedxml.minidom
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Pack a directory into an Office file")
     parser.add_argument("input_directory", help="Unpacked Office document directory")
     parser.add_argument("output_file", help="Output Office file (.docx/.pptx/.xlsx)")
@@ -41,7 +41,7 @@ def main():
         sys.exit(f"Error: {e}")
 
 
-def pack_document(input_dir, output_file, validate=False):
+def pack_document(input_dir: str | Path, output_file: str | Path, validate: bool = False) -> bool:
     """Pack a directory into an Office file (.docx/.pptx/.xlsx).
 
     Args:
@@ -130,7 +130,7 @@ def validate_document(doc_path: str | Path) -> bool:
             return False
 
 
-def condense_xml(xml_file):
+def condense_xml(xml_file: str | Path) -> None:
     """Strip unnecessary whitespace and remove comments."""
     with open(xml_file, encoding="utf-8") as f:
         dom = defusedxml.minidom.parse(f)

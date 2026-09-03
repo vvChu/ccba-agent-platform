@@ -484,7 +484,11 @@ def handle_ingest(args: argparse.Namespace) -> int:
     sources_dir = target_bundle / "sources"
     sources_dir.mkdir(parents=True, exist_ok=True)
     target_docx = sources_dir / (f"{doc_slug}.docx" if args.slug else docx_path.name)
-    target_pdf = sources_dir / (f"{doc_slug}.pdf" if (args.slug and pdf_path) else (pdf_path.name if pdf_path else "doc.pdf"))
+    target_pdf = sources_dir / (
+        f"{doc_slug}.pdf"
+        if (args.slug and pdf_path)
+        else (pdf_path.name if pdf_path else "doc.pdf")
+    )
     if docx_path.exists():
         shutil.copy2(docx_path, target_docx)
     if pdf_path and pdf_path.exists():

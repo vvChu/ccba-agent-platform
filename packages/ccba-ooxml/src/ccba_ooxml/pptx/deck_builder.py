@@ -47,6 +47,7 @@ from .templates import (
 # 1. SLIDE SPECIFICATION AST (DATA TRANSFER OBJECTS)
 # =============================================================================
 
+
 class SlideType(str, Enum):
     """Supported slide archetype layouts."""
 
@@ -57,9 +58,9 @@ class SlideType(str, Enum):
     CARDS = "cards"
     SECTION = "section"
     BIG_IDEA = "big_idea"  # Storytelling: Executive Core Message
-    STEPS = "steps"        # Storytelling: Horizontal Process Stepper
-    AGENDA = "agenda"      # Storytelling: Visual Navigation with Active Highlight
-    QUOTE = "quote"        # Storytelling: Field Evidence & Executive Quote
+    STEPS = "steps"  # Storytelling: Horizontal Process Stepper
+    AGENDA = "agenda"  # Storytelling: Visual Navigation with Active Highlight
+    QUOTE = "quote"  # Storytelling: Field Evidence & Executive Quote
 
 
 @dataclass
@@ -99,6 +100,7 @@ class SlideSpec:
 # =============================================================================
 # 2. MARKDOWN DECK PARSER
 # =============================================================================
+
 
 class MarkdownDeckParser:
     """Parses markdown text into a sequence of SlideSpec AST nodes."""
@@ -243,7 +245,13 @@ class MarkdownDeckParser:
 
             # Speaker Notes
             if l_strip.startswith("<!-- notes:") or l_strip.startswith("> **Speaker Notes:**"):
-                notes += l_strip.replace("<!-- notes:", "").replace("-->", "").replace("> **Speaker Notes:**", "").strip() + " "
+                notes += (
+                    l_strip.replace("<!-- notes:", "")
+                    .replace("-->", "")
+                    .replace("> **Speaker Notes:**", "")
+                    .strip()
+                    + " "
+                )
                 continue
 
             # Directive blocks
@@ -284,27 +292,47 @@ class MarkdownDeckParser:
                     big_idea_lines.append(l_strip)
                 continue
             elif in_quote:
-                if l_strip.startswith("👤") or l_strip.startswith("author:") or l_strip.startswith("--"):
-                    quote_author = l_strip.replace("👤", "").replace("author:", "").replace("--", "").strip()
+                if (
+                    l_strip.startswith("👤")
+                    or l_strip.startswith("author:")
+                    or l_strip.startswith("--")
+                ):
+                    quote_author = (
+                        l_strip.replace("👤", "").replace("author:", "").replace("--", "").strip()
+                    )
                 elif l_strip:
                     quote_lines.append(l_strip)
                 continue
             elif in_steps:
-                if l_strip.startswith("- ") or l_strip.startswith("* ") or re.match(r"^\d+\.\s*", l_strip):
+                if (
+                    l_strip.startswith("- ")
+                    or l_strip.startswith("* ")
+                    or re.match(r"^\d+\.\s*", l_strip)
+                ):
                     cleaned = re.sub(r"^(?:[-*]|\d+\.)\s*", "", l_strip)
                     steps.append(cleaned)
                 continue
             elif in_agenda:
-                if l_strip.startswith("- ") or l_strip.startswith("* ") or re.match(r"^\d+\.\s*", l_strip):
+                if (
+                    l_strip.startswith("- ")
+                    or l_strip.startswith("* ")
+                    or re.match(r"^\d+\.\s*", l_strip)
+                ):
                     cleaned = re.sub(r"^(?:[-*]|\d+\.)\s*", "", l_strip)
                     steps.append(cleaned)
                 continue
 
             # Callout card headers
-            callout_match = re.match(r"^>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION|INFO|ARCH|STRUCT|MEP|AI)\]\s*(.*)$", l_strip, re.IGNORECASE)
+            callout_match = re.match(
+                r"^>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION|INFO|ARCH|STRUCT|MEP|AI)\]\s*(.*)$",
+                l_strip,
+                re.IGNORECASE,
+            )
             if callout_match:
                 if in_callout and current_card_title:
-                    cards.append(CardItem(current_card_title, "\n".join(current_card_body), current_kind))
+                    cards.append(
+                        CardItem(current_card_title, "\n".join(current_card_body), current_kind)
+                    )
                     current_card_body = []
 
                 in_callout = True
@@ -332,7 +360,9 @@ class MarkdownDeckParser:
                 elif l_strip == "":
                     continue
                 else:
-                    cards.append(CardItem(current_card_title, "\n".join(current_card_body), current_kind))
+                    cards.append(
+                        CardItem(current_card_title, "\n".join(current_card_body), current_kind)
+                    )
                     in_callout = False
                     current_card_body = []
 
@@ -360,7 +390,11 @@ class MarkdownDeckParser:
                     subtitle = l_strip[4:].strip()
                 elif l_strip.startswith("- ") or l_strip.startswith("* "):
                     bullets.append(l_strip[2:].strip())
-                elif l_strip.startswith("1. ") or l_strip.startswith("2. ") or l_strip.startswith("3. "):
+                elif (
+                    l_strip.startswith("1. ")
+                    or l_strip.startswith("2. ")
+                    or l_strip.startswith("3. ")
+                ):
                     bullets.append(l_strip[3:].strip())
                 elif l_strip.startswith("👤 ") and not quote_author:
                     quote_author = l_strip.replace("👤 ", "").strip()
@@ -437,6 +471,7 @@ class MarkdownDeckParser:
 # =============================================================================
 # 3. DECK BUILDER ENGINE (MINIMALIST SWISS ARCHITECTURE)
 # =============================================================================
+
 
 class DeckBuilder:
     """High-level builder converting SlideSpec AST into minimalist Swiss PowerPoint decks."""
@@ -563,12 +598,16 @@ class DeckBuilder:
         b1.fill.fore_color.rgb = COLOR_IBST_RED
         b1.line.fill.background()
 
-        b2 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, canvas_left + bar_w, accent_top, bar_w, bar_h)
+        b2 = slide.shapes.add_shape(
+            MSO_SHAPE.RECTANGLE, canvas_left + bar_w, accent_top, bar_w, bar_h
+        )
         b2.fill.solid()
         b2.fill.fore_color.rgb = COLOR_CCBA_DARK_BLUE
         b2.line.fill.background()
 
-        b3 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, canvas_left + bar_w * 2, accent_top, bar_w, bar_h)
+        b3 = slide.shapes.add_shape(
+            MSO_SHAPE.RECTANGLE, canvas_left + bar_w * 2, accent_top, bar_w, bar_h
+        )
         b3.fill.solid()
         b3.fill.fore_color.rgb = COLOR_BIM_BRIGHT_BLUE
         b3.line.fill.background()
@@ -643,7 +682,9 @@ class DeckBuilder:
         total_slides: int,
     ) -> None:
         """Render 'The Big Idea' Strategic Message Slide (Cole Knaflic Pattern)."""
-        self.theme.add_header(slide, spec.title, spec.badge or "THÔNG ĐIỆP CHIẾN LƯỢC", spec.subtitle)
+        self.theme.add_header(
+            slide, spec.title, spec.badge or "THÔNG ĐIỆP CHIẾN LƯỢC", spec.subtitle
+        )
         self.theme.add_footer(slide, slide_num, total_slides)
 
         canvas_left = Inches(0.85)
@@ -748,7 +789,12 @@ class DeckBuilder:
         gap = Inches(0.3)
         step_w = (total_width - gap * (step_count - 1)) / step_count
 
-        step_colors = [COLOR_CCBA_DARK_BLUE, COLOR_BIM_BRIGHT_BLUE, COLOR_TEAL_AI, COLOR_SUCCESS_GREEN]
+        step_colors = [
+            COLOR_CCBA_DARK_BLUE,
+            COLOR_BIM_BRIGHT_BLUE,
+            COLOR_TEAL_AI,
+            COLOR_SUCCESS_GREEN,
+        ]
 
         for i, step_item in enumerate(steps_data[:step_count]):
             c_left = canvas_left + i * (step_w + gap)
@@ -776,7 +822,7 @@ class DeckBuilder:
             ntf = num_box.text_frame
             ntf.margin_left = ntf.margin_right = ntf.margin_top = ntf.margin_bottom = Inches(0)
             np = ntf.paragraphs[0]
-            np.text = f"BƯỚC 0{i+1}"
+            np.text = f"BƯỚC 0{i + 1}"
             np.font.name = self.theme.font_family
             np.font.size = Pt(11)
             np.font.bold = True
@@ -847,7 +893,7 @@ class DeckBuilder:
 
         for i, item_text in enumerate(items[:item_count]):
             c_left = canvas_left + i * (c_width + gap)
-            is_active = (i == active_idx)
+            is_active = i == active_idx
 
             bg_c = COLOR_BG_WHITE if is_active else COLOR_BG_LIGHT
             border_c = COLOR_CCBA_DARK_BLUE if is_active else COLOR_CARD_BORDER_SOLID
@@ -1120,7 +1166,9 @@ class DeckBuilder:
             rp.font.name = self.theme.font_family
             rp.font.size = Pt(13.5)
             rp.font.color.rgb = COLOR_TEXT_PRIMARY
-            rp.font.bold = True if ("60%" in bullet or "100%" in bullet or "Tự động" in bullet) else False
+            rp.font.bold = (
+                True if ("60%" in bullet or "100%" in bullet or "Tự động" in bullet) else False
+            )
             rp.space_after = Pt(8)
 
     def _render_table_slide(
@@ -1187,7 +1235,9 @@ class DeckBuilder:
         cols_count = max(len(table_data.headers), table_data.cols_count, 1)
         tbl_height = Inches(0.42) * rows_count
 
-        table_shape = slide.shapes.add_table(rows_count, cols_count, canvas_left, tbl_top, total_width, tbl_height)
+        table_shape = slide.shapes.add_table(
+            rows_count, cols_count, canvas_left, tbl_top, total_width, tbl_height
+        )
         tbl = table_shape.table
 
         # Format Headers (Navy #363883 + Pure White Text)
@@ -1209,7 +1259,7 @@ class DeckBuilder:
         # Format Rows (Zebra Striping)
         for r_idx, row_data in enumerate(table_data.rows):
             row_num = r_idx + 1
-            is_summary_row = (r_idx == len(table_data.rows) - 1)
+            is_summary_row = r_idx == len(table_data.rows) - 1
             bg = COLOR_BG_MUTED if (r_idx % 2 == 1 or is_summary_row) else COLOR_BG_WHITE
 
             for c_idx, cell_value in enumerate(row_data):
@@ -1290,7 +1340,9 @@ class DeckBuilder:
             )
             c1_tf = c1_box.text_frame
             c1_tf.word_wrap = True
-            c1_tf.margin_left = c1_tf.margin_right = c1_tf.margin_top = c1_tf.margin_bottom = Inches(0)
+            c1_tf.margin_left = c1_tf.margin_right = c1_tf.margin_top = c1_tf.margin_bottom = (
+                Inches(0)
+            )
 
             p1_h = c1_tf.paragraphs[0]
             p1_h.text = f"🏛️  {c1.title}"
@@ -1336,7 +1388,9 @@ class DeckBuilder:
             )
             c2_tf = c2_box.text_frame
             c2_tf.word_wrap = True
-            c2_tf.margin_left = c2_tf.margin_right = c2_tf.margin_top = c2_tf.margin_bottom = Inches(0)
+            c2_tf.margin_left = c2_tf.margin_right = c2_tf.margin_top = c2_tf.margin_bottom = (
+                Inches(0)
+            )
 
             p2_h = c2_tf.paragraphs[0]
             p2_h.text = f"🏗️  {c2.title}"
@@ -1380,7 +1434,9 @@ class DeckBuilder:
             )
             c3_tf = c3_box.text_frame
             c3_tf.word_wrap = True
-            c3_tf.margin_left = c3_tf.margin_right = c3_tf.margin_top = c3_tf.margin_bottom = Inches(0)
+            c3_tf.margin_left = c3_tf.margin_right = c3_tf.margin_top = c3_tf.margin_bottom = (
+                Inches(0)
+            )
 
             p3_h = c3_tf.paragraphs[0]
             p3_h.text = f"⚙️  {c3.title}"

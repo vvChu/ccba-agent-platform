@@ -239,7 +239,9 @@ def verify_tvpl_vip_status(cdp: Any) -> bool:
     """Verify if the connected Chrome CDP session has an active TVPL VIP Pro login."""
     from ccba_legal.crawler.selectors import TVPLSelectors
 
-    labels_check = " || ".join(f"document.querySelector('{s}') !== null" for s in TVPLSelectors.USER_LABELS)
+    labels_check = " || ".join(
+        f"document.querySelector('{s}') !== null" for s in TVPLSelectors.USER_LABELS
+    )
     js = f"""
     (() => {{
         let txt = document.body ? document.body.innerText : '';

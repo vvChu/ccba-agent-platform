@@ -224,7 +224,9 @@ class ChromeCDP:
             if resp.ok:
                 browser_ws = resp.json().get("webSocketDebuggerUrl")
                 if browser_ws:
-                    ws_b = websocket.create_connection(browser_ws, suppress_origin=True, timeout=5.0)
+                    ws_b = websocket.create_connection(
+                        browser_ws, suppress_origin=True, timeout=5.0
+                    )
                     cmd = {
                         "id": random.randint(1, 100000),
                         "method": "Browser.setDownloadBehavior",

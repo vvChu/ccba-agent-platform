@@ -67,7 +67,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   ├── ccba-harness/                  ←   Testing harness, evals engine, singleton locks & process monitors
 │   ├── ccba-ai/                       ←   AI Gateway SDK, 5-tier failover matrix & deterministic mock engine
 │   ├── ccba-maskara/                  ←   Secret detection, PII redaction & privacy guard
-│   ├── ccba-ooxml/                    ←   OOXML validation, Word DOM & Excel macro calculation
+│   ├── ccba-ooxml/                    ←   OOXML presentation builder (Swiss Minimalist & Storytelling), Word DOM & Excel macro calculation
 │   ├── ccba-pdf-prep/                 ←   PDF Vision Preprocessor (tiling, title-block, chunks)
 │   ├── ccba-notebooklm/               ←   Google NotebookLM wrapper & Mock client
 │   ├── ccba-legal-intel/              ←   Legal intelligence connectors, OKF v2.2 GoldStandardProcessor & VisualParityAuditor
@@ -101,7 +101,7 @@ Toàn bộ các gói dịch vụ nằm trong thư mục `packages/` được thi
 | **`ccba-harness`** | Testing harness, Evals Engine đa tiêu chí (Code & LLM Rubrics), Singleton Process Locks, giám sát tệp tin và tiến trình an toàn. | `pip install -e "packages/ccba-harness"` |
 | **`ccba-ai`** | AI Gateway SDK — Kết nối 50+ models qua 1 endpoint, tích hợp 5-tier failover matrix (Spark -> Cloud Direct -> Antigravity CLI -> Local Ollama -> Mock Provider) và Circuit Breaker. | `pip install -e "packages/ccba-ai"` |
 | **`ccba-maskara`** | Quét và che giấu (redact) thông tin nhạy cảm (API Keys, PII) trong log/tệp trước khi commit. | `pip install -e "packages/ccba-maskara"` |
-| **`ccba-ooxml`** | Thao tác DOM file Office (.docx, .pptx), bóc tách và tái dựng cấu trúc bảng phức tạp (`TableReconstructor`), kiểm định tính toàn vẹn XML và tính toán công thức Excel (`recalc_xlsx`). | `pip install -e "packages/ccba-ooxml"` |
+| **`ccba-ooxml`** | Thao tác DOM file Office (.docx, .pptx), sinh slide PowerPoint tự động chuẩn Swiss Minimalist & Storytelling With You (`DeckBuilder`), bóc tách và tái dựng cấu trúc bảng phức tạp (`TableReconstructor`), kiểm định tính toàn vẹn XML và tính toán công thức Excel (`recalc_xlsx`). | `pip install -e "packages/ccba-ooxml"` |
 | **`ccba-pdf-prep`** | Tiền xử lý PDF cho AI Vision: Phân mảnh thông minh (Tiling), bóc tách khung tên bản vẽ, chia nhỏ chunks. | `pip install -e "packages/ccba-pdf-prep"` |
 | **`ccba-notebooklm`** | Tích hợp Google NotebookLM Cloud RAG, sinh Audio Overview, hỗ trợ Mock Client chạy test offline. | `pip install -e "packages/ccba-notebooklm"` |
 | **`ccba-legal-intel`** | Pipeline tự động hóa TVPL VIP, đóng gói bộ chuẩn OKF Bundle v2.2 (`OKFBundlePackager`, `GoldStandardProcessor`), kiểm định Visual Parity Gate 4, bóc tách phụ lục, AST diffing và hợp nhất Văn Bản Hợp Nhất (VBHN). | `pip install -e "packages/ccba-legal-intel"` |
