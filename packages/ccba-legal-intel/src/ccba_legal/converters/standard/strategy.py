@@ -123,9 +123,13 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
             clean_t = clean_t.rstrip(",").strip()
             for g_char, g_latex in GREEK_MAP.items():
                 clean_t = clean_t.replace(g_char, g_latex)
-            wrap = f"_{{{clean_t}}}" if mode == "sub" else f"^{{{clean_t}}}"
-            trailing_space = " " if text.endswith(" ") else ""
-            out_tokens.append(f"${wrap}${trailing_comma}{trailing_space}")
+            if mode == "sup" and re.match(r"^(\*+|\([0-9\*\+a-zA-Z]+\)|[0-9]+[)\.])$", clean_t):
+                trailing_space = " " if text.endswith(" ") else ""
+                out_tokens.append(f"<sup>{clean_t}</sup>{trailing_comma}{trailing_space}")
+            else:
+                wrap = f"_{{{clean_t}}}" if mode == "sub" else f"^{{{clean_t}}}"
+                trailing_space = " " if text.endswith(" ") else ""
+                out_tokens.append(f"${wrap}${trailing_comma}{trailing_space}")
         else:
             out_tokens.append(text)
 
@@ -144,6 +148,19 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
     res = re.sub(r"([0-9])\s*≤\s*(_\{[^}]+\})", r"\1 ≤ $\\varepsilon\2$", res)
     res = re.sub(r"([0-9])\s*<=\s*(_\{[^}]+\})", r"\1 <= $\\varepsilon\2$", res)
     res = res.replace("$$", "").replace("$_$", "").replace("$^$", "")
+
+    # Normalize degrees Celsius and degrees angle from Word superscript '0' or 'o':
+    # e.g. 40$^{0}$ C -> 40 °C, 49$^{0}$ C -> 49 °C, ± 22,5$^{0}$ -> ± 22,5°
+    res = re.sub(r"(\d+(?:[,\.]\d+)?)\s*(?:\$\^\{[0oO]\}\$|<sup>[0oO]</sup>)\s*C\b", r"\1 °C", res)
+    res = re.sub(r"(\d+(?:[,\.]\d+)?)\s*(?:\$\^\{[0oO]\}\$|<sup>[0oO]</sup>)", r"\1°", res)
+
+    # Normalize Emin formula in technical standards (e.g. Bảng 2.7 QCVN 09)
+    res = re.sub(
+        r"\bEmin\s*=\s*([0-9\.,\s\+\-\*\/]+)\$V\^\{([^}]+)\}\$\s*(\([A-Za-z]+\))?",
+        r"$E_{\\min} = \1V^{\2}$ \3",
+        res,
+    )
+
     res = re.sub(r"\$([\\a-zA-Z0-9][^$]*?)\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9])", r"$\1$ \2", res)
     return res.strip()
 
