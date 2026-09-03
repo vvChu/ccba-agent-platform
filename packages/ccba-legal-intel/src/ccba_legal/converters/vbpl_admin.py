@@ -7,11 +7,16 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import mammoth
 import yaml
 
 from ccba_legal.converters.table_extractor import classify_and_extract_tables
-from ccba_legal.converters.unit_normalizer import normalize_clause_numbers
+from ccba_legal.converters.unit_normalizer import (
+    normalize_clause_numbers,
+    normalize_docx_markdown,
+)
 from ccba_legal.gold_standard import generate_bundle_ast_and_qa, inject_semantic_anchors
+from ccba_legal.table_cleaner import clean_markdown_tables_and_notes
 
 
 def extract_legal_basis_graph(
@@ -40,6 +45,10 @@ def extract_legal_basis_graph(
         ):
             continue
         doc_num = match.group(2) if match.group(2) else ""
+        if not doc_num:
+            m_num = re.search(r"số\s+([\d\w\-/]+)", title_clean, re.IGNORECASE)
+            if m_num:
+                doc_num = m_num.group(1)
         doc_id = registry_lookup.get(
             doc_num, re.sub(r"[^\w\d]+", "_", title_clean.lower()).strip("_")[:50]
         )
@@ -71,18 +80,10 @@ def _load_registry_metadata(
 
 def _convert_docx_to_clean_markdown(docx_path: Path) -> str:
     """Convert docx to raw markdown via Mammoth and clean escaping artifacts."""
-    import mammoth
-
     with open(docx_path, "rb") as f:
         raw_md = mammoth.convert_to_markdown(f).value
-    return (
-        re.sub(r'<a id="[^"]+"></a>', "", raw_md)
-        .replace(r"\.", ".")
-        .replace(r"\-", "-")
-        .replace(r"\_", "_")
-        .replace(r"\(", "(")
-        .replace(r"\)", ")")
-    )
+    cleaned = re.sub(r'<a id="[^"]+"></a>', "", raw_md)
+    return normalize_docx_markdown(cleaned)
 
 
 def _export_single_template(
@@ -123,7 +124,15 @@ def _extract_and_export_templates(
 
         pattern = re.compile(r"(?:^|\n)#*\s*__?\s*Mẫu\s+số\s+(\d+[a-zA-Z]?)[.\s_]*", re.IGNORECASE)
         form_positions = {m.group(1).zfill(2): m.start() for m in pattern.finditer(app_full_text)}
-        sorted_forms = sorted(form_positions.items(), key=lambda x: int(x[0]))
+
+        def _form_sort_key(item: tuple[str, int]) -> tuple[int, str]:
+            tag = item[0]
+            m_digits = re.match(r"^(\d+)(.*)$", tag)
+            if m_digits:
+                return (int(m_digits.group(1)), m_digits.group(2))
+            return (999, tag)
+
+        sorted_forms = sorted(form_positions.items(), key=_form_sort_key)
 
         if len(sorted_forms) >= 2:
             sub_dir = templates_dir / f"phu_luc_{roman_num.lower()}"
@@ -198,7 +207,7 @@ def _write_bundle_metadata_and_index(
     with open(bundle_dir / "metadata.yaml", "w", encoding="utf-8") as f:
         yaml.dump(metadata_obj, f, allow_unicode=True, sort_keys=False, indent=2)
 
-    index_md = f"""# Gói Tri Thức Pháp Lý OKF v2.2: {doc_num}
+    index_md = f"""# Gói Tri Thức Pháp Lý OKF v2.4: {doc_num}
 
 > [!NOTE]
 > **Văn bản:** {doc_title}
@@ -208,9 +217,9 @@ def _write_bundle_metadata_and_index(
 
 ---
 
-## 📑 Danh Mục Thành Phần Gói Tri Thức (OKF v2.2 Bundle)
+## 📑 Danh Mục Thành Phần Gói Tri Thức (OKF v2.4 Universal Bundle)
 
-- [Toàn văn Quy phạm (Markdown OKF v2.2)](./{target_md_name}) — Thân văn bản quy phạm thuần khiết có gắn thẻ neo `#dieu-X`.
+- [Toàn văn Quy phạm (Markdown OKF v2.4)](./{target_md_name}) — Thân văn bản quy phạm thuần khiết có gắn thẻ neo `#dieu-X`.
 - [Metadata Pháp lý & Đồ thị (YAML)](./metadata.yaml) — Đặc tả thuộc tính và cây đồ thị `legal_basis`.
 - [Cây Cú Pháp Điều Khoản (AST Clauses JSON)](./clauses.json) — {clauses_cnt} nodes điều khoản phục vụ AI QC & RAG.
 - [Bộ Đánh Giá Độ Chính Xác (QA Benchmark)](./qa_benchmark.json) — {qa_cnt} cặp câu hỏi - câu trả lời đối soát.
@@ -241,8 +250,6 @@ def process_vbpl_bundle_okf_v22(
         cleaned_md, templates_dir, doc_meta.get("document_number", bundle_dir.name)
     )
     body_anchored = _build_pure_normative_body(pure_body_raw)
-    from ccba_legal.table_cleaner import clean_markdown_tables_and_notes
-
     body_anchored = clean_markdown_tables_and_notes(body_anchored)
 
     target_md_filename = output_filename or f"{bundle_dir.name}.md"
