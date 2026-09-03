@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-03] [adr] | Phát Hành Two-Tier ADR Traceability Matrix & Hardened Type Safety (#231, PR #236)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /ccba-create-pr, /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `scripts/sync_hub_adr_matrix.py`, `tests/governance/test_sync_adr_matrix.py`, `docs/adr/TRACEABILITY_MATRIX.md`, `docs/adr/README.md`, `.agents/skills/ccba-adr-lifecycle/SKILL.md`, `packages/ccba-legal-intel/`, `pyproject.toml`, `.md/knowledge/issues/issue-231.md`
+- **Summary**: Hoàn tất PR #236 giải quyết Issue #231: (1) Nâng cấp `sync_hub_adr_matrix.py` hiện thực hóa kiến trúc Ma Trận Hai Tầng (Two-Tier Model): Tier 1 (Platform Constitution 55 ADRs Hub kèm Living Skill Radar) và Tier 2 (Domain-Specific ADRs Spoke), bảo toàn 100% quyết định kiến trúc cục bộ tại Spoke mà không gây xung đột số hiệu (ID Collision); (2) Tích hợp cơ chế Non-Destructive Section Preservation cho các bảng đối soát và ghi chú tùy biến; (3) Bổ sung cờ `--check` (CI Gate mode) và `--dry-run`; (4) Tiếp thu 100% khuyến nghị từ GitHub Copilot Review: chuẩn hóa regex trạng thái đa biến thể, lọc bỏ tệp non-ADR, chống lặp số thứ tự chú thích bảng, và gỡ bỏ hoàn toàn suppression mypy bao quát (`ignore_errors = true`) để đạt chuẩn kiểm định kiểu tĩnh nghiêm ngặt; (5) Vượt qua toàn bộ 6/6 checks GitHub Actions CI và 164/164 tests trong Pre-release Gate.
+
+---
+
 ## [2026-09-03] [synthesize] | Hoàn Tất Triển Khai Presentation Builder Swiss Minimalist & Storytelling With You (#230, PR #235)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-research, /ccba-implement, /ccba-release-feature & /session_retrospective)
 - **Affected Files**: `packages/ccba-ooxml/`, `packages/ccba-legal-intel/`, `.agents/skills/seminar-builder/`, `.md/knowledge/ccba_brand_identity_guidelines.md`, `.md/knowledge/research_and_studies/`, `.md/seminars/2026/demo_seminar_nd217_luatxd2025.*`, `.md/knowledge/issues/issue-230.md`
