@@ -77,11 +77,16 @@ Căn cứ Nghị định số 15/2021/NĐ-CP ngày 03 tháng 3 năm 2021 của C
 
 
 def test_vbpl_bundle_exports_backward_compatibility():
-    """Verify that both process_vbpl_bundle_okf_v24 and legacy process_vbpl_bundle_okf_v22 are exported and identical."""
+    """Verify that SSoT constants and both canonical and legacy functions are exported and identical."""
+    from ccba_legal.constants import CURRENT_OKF_SPEC, CURRENT_OKF_VERSION
     from ccba_legal.converters.vbpl_admin import (
+        process_vbpl_bundle,
         process_vbpl_bundle_okf_v22,
         process_vbpl_bundle_okf_v24,
     )
 
-    assert callable(process_vbpl_bundle_okf_v24)
-    assert process_vbpl_bundle_okf_v22 is process_vbpl_bundle_okf_v24
+    assert CURRENT_OKF_VERSION == "2.4"
+    assert "v2.4" in CURRENT_OKF_SPEC
+    assert callable(process_vbpl_bundle)
+    assert process_vbpl_bundle_okf_v24 is process_vbpl_bundle
+    assert process_vbpl_bundle_okf_v22 is process_vbpl_bundle

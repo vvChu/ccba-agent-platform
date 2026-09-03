@@ -19,6 +19,7 @@ from .unit_normalizer import (
 )
 from .vbpl_admin import (
     extract_legal_basis_graph,
+    process_vbpl_bundle,
     process_vbpl_bundle_okf_v22,
     process_vbpl_bundle_okf_v24,
 )
@@ -29,6 +30,7 @@ __all__ = [
     "detect_document_pipeline",
     "classify_and_extract_tables",
     "process_technical_standard_strategy",
+    "process_vbpl_bundle",
     "process_vbpl_bundle_okf_v22",
     "process_vbpl_bundle_okf_v24",
     "normalize_clause_numbers",

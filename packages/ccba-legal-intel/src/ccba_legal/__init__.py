@@ -28,6 +28,11 @@ from .consolidator import (
     PatchManifest,
     load_manifest,
 )
+from .constants import (
+    CURRENT_OKF_SCHEMA_URI,
+    CURRENT_OKF_SPEC,
+    CURRENT_OKF_VERSION,
+)
 from .converters import (
     load_bundle_formula_overrides,
     omml_to_latex,
@@ -60,6 +65,7 @@ from .docx_converter import (
     detect_document_pipeline,
     normalize_clause_numbers,
     normalize_docx_markdown,
+    process_vbpl_bundle,
     process_vbpl_bundle_okf_v22,
     process_vbpl_bundle_okf_v24,
 )
@@ -217,8 +223,13 @@ __all__ = [
     "normalize_notes_and_lists",
     "inject_semantic_anchors",
     "generate_bundle_ast_and_qa",
+    # === OKF Specification & Constants ===
+    "CURRENT_OKF_VERSION",
+    "CURRENT_OKF_SPEC",
+    "CURRENT_OKF_SCHEMA_URI",
     # === DOCX Conversion & Classification ===
     "convert_docx_to_okf_bundle",
+    "process_vbpl_bundle",
     "process_vbpl_bundle_okf_v22",
     "process_vbpl_bundle_okf_v24",
     "detect_document_pipeline",

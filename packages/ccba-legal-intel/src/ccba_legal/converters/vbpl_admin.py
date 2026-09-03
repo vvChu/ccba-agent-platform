@@ -10,6 +10,7 @@ from typing import Any
 import mammoth
 import yaml
 
+from ccba_legal.constants import CURRENT_OKF_SPEC
 from ccba_legal.converters.table_extractor import classify_and_extract_tables
 from ccba_legal.converters.unit_normalizer import (
     normalize_clause_numbers,
@@ -207,7 +208,7 @@ def _write_bundle_metadata_and_index(
     with open(bundle_dir / "metadata.yaml", "w", encoding="utf-8") as f:
         yaml.dump(metadata_obj, f, allow_unicode=True, sort_keys=False, indent=2)
 
-    index_md = f"""# Gói Tri Thức Pháp Lý OKF v2.4: {doc_num}
+    index_md = f"""# Gói Tri Thức Pháp Lý OKF {CURRENT_OKF_SPEC}: {doc_num}
 
 > [!NOTE]
 > **Văn bản:** {doc_title}
@@ -217,9 +218,9 @@ def _write_bundle_metadata_and_index(
 
 ---
 
-## 📑 Danh Mục Thành Phần Gói Tri Thức (OKF v2.4 Universal Bundle)
+## 📑 Danh Mục Thành Phần Gói Tri Thức (OKF {CURRENT_OKF_SPEC} Bundle)
 
-- [Toàn văn Quy phạm (Markdown OKF v2.4)](./{target_md_name}) — Thân văn bản quy phạm thuần khiết có gắn thẻ neo `#dieu-X`.
+- [Toàn văn Quy phạm (Markdown OKF {CURRENT_OKF_SPEC})](./{target_md_name}) — Thân văn bản quy phạm thuần khiết có gắn thẻ neo `#dieu-X`.
 - [Metadata Pháp lý & Đồ thị (YAML)](./metadata.yaml) — Đặc tả thuộc tính và cây đồ thị `legal_basis`.
 - [Cây Cú Pháp Điều Khoản (AST Clauses JSON)](./clauses.json) — {clauses_cnt} nodes điều khoản phục vụ AI QC & RAG.
 - [Bộ Đánh Giá Độ Chính Xác (QA Benchmark)](./qa_benchmark.json) — {qa_cnt} cặp câu hỏi - câu trả lời đối soát.
@@ -229,13 +230,14 @@ def _write_bundle_metadata_and_index(
     (bundle_dir / "index.md").write_text(index_md, encoding="utf-8")
 
 
-def process_vbpl_bundle_okf_v24(
+def process_vbpl_bundle(
     docx_path: Path,
     bundle_dir: Path,
     registry_file: Path,
     output_filename: str | None = None,
+    spec_version: str = CURRENT_OKF_SPEC,
 ) -> dict[str, Any]:
-    """Complete OKF v2.4 Universal Transformation Pipeline for Decrees and Laws."""
+    """Complete OKF Transformation Pipeline for Decrees, Circulars and Laws."""
     bundle_dir.mkdir(parents=True, exist_ok=True)
     templates_dir = bundle_dir / "templates"
     if templates_dir.exists():
@@ -273,6 +275,7 @@ def process_vbpl_bundle_okf_v24(
         "status": "success",
         "bundle": bundle_dir.name,
         "archetype": "VBPL_ADMIN",
+        "spec_version": spec_version,
         "clauses_count": len(clauses),
         "templates_count": len(created_templates),
         "tables_count": len(extracted_tables),
@@ -280,5 +283,6 @@ def process_vbpl_bundle_okf_v24(
     }
 
 
-# Backward compatibility alias for ADR 0021 legacy callers
-process_vbpl_bundle_okf_v22 = process_vbpl_bundle_okf_v24
+# Backward compatibility aliases for versioned function callers (ADR 0021, ADR 0036)
+process_vbpl_bundle_okf_v24 = process_vbpl_bundle
+process_vbpl_bundle_okf_v22 = process_vbpl_bundle
