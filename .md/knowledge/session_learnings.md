@@ -115,3 +115,30 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
   - Luôn sử dụng `json.dumps(selector)` khi nhúng selector vào template JavaScript sinh động (`document.querySelector(${json.dumps(s)})`), chống hoàn toàn lỗi cú pháp vỡ chuỗi khi selector chứa dấu nháy đơn (`input[placeholder*='Tên đăng nhập']`).
 - **Core Pattern P8.4 — Strict Markdown Table Delimiter Detection:**
   - Nhận diện bảng Markdown thông qua cặp dòng tiêu đề + dòng phân cách cú pháp (`| :--- |`), ngăn ngừa ngộ nhận các dòng văn xuôi có ký tự `|` thành bảng dữ liệu.
+
+---
+
+## 9. Two-Tier Traceability Matrix, Status Regex & Type-Safety Hardening (ADR 0037, ADR 0051)
+
+- **Core Pattern P9.1 — Hai Tầng Phân Tách Ma Trận Truy Vết Kiến Trúc (Two-Tier Traceability Matrix):**
+  - **Vấn đề giải quyết:** Khi Hub chạy công cụ biên dịch `sync_hub_adr_matrix.py` qua Spoke, việc ghi đè bảng ma trận đơn nguyên (monolithic table) dẫn đến mất mát các ADR nghiệp vụ nội bộ tại Spoke hoặc gây xung đột số hiệu (ID Collision) khi cả Hub và Spoke cùng dùng dải số `0001+` (ví dụ Hub có ADR 0001 về Skill Steps, còn Spoke `ccba-legal-knowledge` có ADR 0001 về VBHN Dual-Track Provenance).
+  - **Kiến trúc Hai Tầng (Two-Tier Model):**
+    - **Tier 1 — Platform Constitution (Hub ADRs):** Danh mục 55 ADRs của nền tảng, gắn liên kết chuẩn mực trỏ tới Hub repository trên GitHub kèm Living Skill Radar quét tự động cross-references (`SKILL.md`, `AGENTS.md`, `workflows/`, `CONTEXT.md`).
+    - **Tier 2 — Domain-Specific Architecture Decisions (Spoke ADRs):** Quét cục bộ thư mục `docs/adr/` của Spoke, hiển thị dưới dạng bảng riêng biệt với liên kết tương đối nội bộ Spoke (`0001-*.md`).
+  - **Bảo Toàn Bất Biến (Non-Destructive Section Preservation):** Tự động nhận diện thẻ `<!-- CUSTOM_SECTIONS_START -->` ... `<!-- CUSTOM_SECTIONS_END -->` hoặc các đề mục `## ` tùy chỉnh ngoài danh mục auto-generated để bảo toàn 100% các bảng đối soát và ghi chú miền nghiệp vụ riêng của Spoke.
+  - **Cổng Kiểm Định CI Parity (`--check`):** Hỗ trợ chế độ dry-run và check mode trả về mã thoát `0/1` kèm unified diff để tích hợp vào CI/CD chống Documentation Drift.
+
+- **Core Pattern P9.2 — Comprehensive ADR Status Regex & Non-ADR File Exclusion:**
+  - **Status Regex Parity:** ADR markdown thực tế có thể sử dụng nhiều biến thể trạng thái khác nhau: frontmatter YAML (`status: accepted`), đề mục H2 (`## 1. Trạng Thái (Status)\n**ACCEPTED**`), hoặc danh sách gạch đầu dòng (`* **Status:** Accepted`, `- **Status:** Accepted`). Regex bắt trạng thái phải bao quát tiền tố list marker `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*` thay vì chỉ tìm `\*\*Status:\*`.
+  - **Non-ADR File Filter:** Trong thư mục `docs/adr/`, các tệp markdown phụ trợ (như `notes.md`, `guidelines.md`, `template.md`) phải được lọc bỏ qua điều kiện `[a for a in adr_list if a["num"] > 0]`, ngăn ngừa ngộ nhận thành ADR và sinh ra dải số hiệu `0000` giả mạo.
+
+- **Core Pattern P9.3 — Strict Mypy Overrides: Narrowing over Blanket Suppression (Anti-Pattern AP9.1):**
+  - **Anti-Pattern AP9.1 (Blanket Ignore Errors Suppression):** Dùng `[[tool.mypy.overrides]] module = ["package.*"] ignore_errors = true` trong `pyproject.toml` để vượt qua CI tạm thời là một anti-pattern nguy hiểm làm suy yếu hệ thống type-safety của toàn bộ monorepo.
+  - **Chuẩn Hóa Type Annotations Tận Gốc:** Thay vì vô hiệu hóa kiểm tra kiểu, lập trình viên bắt buộc phải:
+    1. Ép kiểu tường minh cho các hàm nhị phân và I/O (ví dụ `int(val)` từ `struct.unpack`, `Document(str(path))` từ docx).
+    2. Định kiểu tường minh cho biến font (`font_bold: Any`) và dictionary cấu trúc (`fig_entry: dict[str, Any]`).
+    3. Thay thế lambdas không định kiểu bằng named helper functions có type hints.
+    4. Chỉ cấu hình `ignore_missing_imports = true` cho các thư viện bên ngoài chưa có type stubs (`docx.*`, `PIL.*`).
+
+- **Core Pattern P9.4 — Deduplicated Numeric Normalization in Legal Table Footnotes:**
+  - Khi chuẩn hóa chú thích bảng từ Word DOCX, nếu văn bản gốc vừa có `has_explicit_numbered` (nhận diện tiền tố số như `1) ` hoặc `1. `) vừa được gán lại nhãn chuẩn `**CHÚ THÍCH 1:**`, việc không bóc tách tiền tố số cũ sẽ gây lặp số thứ tự: `**CHÚ THÍCH 1:** 1) Nội dung`. Bắt buộc phải áp dụng bước làm sạch `re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()` sau khi làm sạch từ khóa `CHÚ THÍCH`.

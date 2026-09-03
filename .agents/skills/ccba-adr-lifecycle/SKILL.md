@@ -12,7 +12,11 @@ triggers:
 - manage adr
 conforms_to:
 - "ADR-0032"
+- "ADR-0037"
 - "ADR-0047"
+- "ADR-0051"
+metadata:
+  version: 1.1.0
 ---
 # Skill: Quản Trị Vòng Đời Quyết Định Kiến Trúc (`ccba-adr-lifecycle`)
 
