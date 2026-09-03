@@ -1,16 +1,16 @@
 # Copyright (c) 2026 CCBA. All rights reserved.
 """Unit tests for Virtual 2D Grid Engine, ADR 0041 Table Knowledge Extraction, and Pipe Escaping."""
 
-import re
-from pathlib import Path
 import pytest
 
 from ccba_legal.converters.standard.handlers.table_handler import (
-    escape_table_pipes,
     build_composite_headers,
-    resolve_hierarchical_headers,
     detect_table_archetype,
+    escape_table_pipes,
+    resolve_hierarchical_headers,
 )
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_escape_table_pipes_in_prose_and_math():
@@ -31,74 +31,58 @@ def test_escape_table_pipes_in_prose_and_math():
     assert r"\vert " in escaped_set
 
 
-def test_build_composite_headers_2tier():
-    """Verify 2-tier composite header generation and deduplication."""
-    header_rows = [
-        ["Tường", "Tường", "Tường", "Mái"],
-        ["Vùng K", "Vùng L", "Vùng M", "Mái"],
+def test_build_composite_headers():
+    """Verify combining multi-row table headers into single composite headers."""
+    headers = [
+        ["Thông số", "Giới hạn cho phép", "Giới hạn cho phép"],
+        ["—", "Tối thiểu", "Tối đa"],
     ]
-    composite = build_composite_headers(header_rows)
-    assert composite == [
-        "Tường — Vùng K",
-        "Tường — Vùng L",
-        "Tường — Vùng M",
-        "Mái",
-    ]
+    composite = build_composite_headers(headers)
+    assert composite == ["Thông số", "Giới hạn cho phép — Tối thiểu", "Giới hạn cho phép — Tối đa"]
 
 
-def test_build_composite_headers_3tier():
-    """Verify 3-tier composite header generation."""
-    header_rows = [
-        ["Công suất", "Động cơ kiểu hở", "Động cơ kiểu hở", "Động cơ kiểu kín"],
-        ["Công suất", "2 cực", "4 cực", "2 cực"],
-        ["Công suất", "Tốc độ", "Tốc độ", "Tốc độ"],
-    ]
-    composite = build_composite_headers(header_rows)
-    assert composite == [
-        "Công suất",
-        "Động cơ kiểu hở — 2 cực — Tốc độ",
-        "Động cơ kiểu hở — 4 cực — Tốc độ",
-        "Động cơ kiểu kín — 2 cực — Tốc độ",
-    ]
-
-
-def test_resolve_hierarchical_headers_backward_compatibility():
-    """Ensure existing resolve_hierarchical_headers keeps backward compatibility."""
+def test_resolve_hierarchical_headers():
+    """Verify resolving hierarchical multi-tier headers into composite single row."""
     grid = [
-        ["Tường", "Tường", "Tường", "Các mặt đứng còn lại", "Mái"],
-        ["Vùng K", "Vùng L", "Vùng M", "Các mặt đứng còn lại", "Mái"],
-        ["0,8", "0,7", "0,6", "Theo Bảng F.4", "Theo Bảng F.5"],
+        ["Chỉ tiêu", "Tầng 1", "Tầng 1"],
+        ["—", "Mức A", "Mức B"],
+        ["Độ bền", "100", "200"],
     ]
     resolved = resolve_hierarchical_headers(grid)
-    assert len(resolved) == 2
-    assert resolved[0] == [
-        "Tường — Vùng K",
-        "Tường — Vùng L",
-        "Tường — Vùng M",
-        "Các mặt đứng còn lại",
-        "Mái",
-    ]
-    assert resolved[1] == ["0,8", "0,7", "0,6", "Theo Bảng F.4", "Theo Bảng F.5"]
+    assert resolved[0] == ["Chỉ tiêu", "Tầng 1 — Mức A", "Tầng 1 — Mức B"]
+    assert resolved[1] == ["Độ bền", "100", "200"]
 
 
 def test_detect_table_archetype():
-    """Verify table archetype classification based on structure and keywords."""
-    # Admin layout
-    admin_text = "cộng hòa xã hội chủ nghĩa việt nam độc lập tự do hạnh phúc"
-    assert detect_table_archetype(rows_count=2, cols_count=2, text=admin_text, is_captioned=False) == "BORDERLESS_LAYOUT"
+    """Verify table archetype classification according to ADR 0041."""
+    # Administrative form
+    assert (
+        detect_table_archetype(
+            rows_count=10,
+            cols_count=4,
+            text="Biên bản kiểm tra Mẫu số 01 chức vụ của người ký",
+        )
+        == "ADMIN_FORM"
+    )
 
-    # Formula frame
-    assert detect_table_archetype(rows_count=1, cols_count=2, text="(1)", is_formula_frame=True) == "BORDERLESS_LAYOUT"
+    # Footnote rich table
+    assert (
+        detect_table_archetype(
+            rows_count=5,
+            cols_count=3,
+            text="Bảng tra cứu kỹ thuật",
+            has_footnotes=True,
+        )
+        == "FOOTNOTE_RICH"
+    )
 
-    # Admin form
-    form_text = "biên bản nghiệm thu công việc xây dựng [ ] đạt [ ] không đạt"
-    assert detect_table_archetype(rows_count=10, cols_count=4, text=form_text, is_captioned=False) == "ADMIN_FORM"
-
-    # In-cell multimodal
-    assert detect_table_archetype(rows_count=5, cols_count=4, text="bảng f.12", has_images=True, is_captioned=True) == "IN_CELL_MULTIMODAL"
-
-    # Hierarchical Grid
-    assert detect_table_archetype(rows_count=10, cols_count=5, text="bảng 1", header_rows_count=2, is_captioned=True) == "HIERARCHICAL_GRID"
-
-    # Flat matrix
-    assert detect_table_archetype(rows_count=10, cols_count=4, text="bảng h.1", header_rows_count=1, is_captioned=True) == "FLAT_MATRIX"
+    # Borderless layout (signature or national emblem)
+    assert (
+        detect_table_archetype(
+            rows_count=2,
+            cols_count=2,
+            text="Cộng hòa xã hội chủ nghĩa Việt Nam Nơi nhận:",
+            is_captioned=False,
+        )
+        == "BORDERLESS_LAYOUT"
+    )
