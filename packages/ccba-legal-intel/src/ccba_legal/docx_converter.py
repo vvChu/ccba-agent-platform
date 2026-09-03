@@ -18,6 +18,7 @@ from ccba_legal.converters import (
     normalize_units_and_math,
     process_technical_standard_strategy,
     process_vbpl_bundle_okf_v22,
+    process_vbpl_bundle_okf_v24,
 )
 
 __all__ = [
@@ -28,6 +29,7 @@ __all__ = [
     "classify_and_extract_tables",
     "process_technical_standard_strategy",
     "process_vbpl_bundle_okf_v22",
+    "process_vbpl_bundle_okf_v24",
     "normalize_clause_numbers",
     "normalize_docx_markdown",
     "normalize_units_and_math",
@@ -88,7 +90,7 @@ def convert_docx_to_okf_bundle(
             output_filename=output_filename,
         )
     else:
-        return process_vbpl_bundle_okf_v22(
+        return process_vbpl_bundle_okf_v24(
             docx_path=docx_path,
             bundle_dir=target_bundle_dir,
             registry_file=reg_file,

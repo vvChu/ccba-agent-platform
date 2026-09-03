@@ -61,6 +61,7 @@ from .docx_converter import (
     normalize_clause_numbers,
     normalize_docx_markdown,
     process_vbpl_bundle_okf_v22,
+    process_vbpl_bundle_okf_v24,
 )
 from .figure_extractor import (
     extract_docx_figures,
@@ -219,6 +220,7 @@ __all__ = [
     # === DOCX Conversion & Classification ===
     "convert_docx_to_okf_bundle",
     "process_vbpl_bundle_okf_v22",
+    "process_vbpl_bundle_okf_v24",
     "detect_document_pipeline",
     "normalize_docx_markdown",
     "format_all_qcvn_md_tables",

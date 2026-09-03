@@ -1,4 +1,4 @@
-"""Complete OKF v2.2 Transformation Pipeline for Decrees, Circulars and Laws (ADR 0021)."""
+"""Complete OKF v2.4 Universal Transformation Pipeline for Decrees, Circulars and Laws (ADR 0021, ADR 0034, ADR 0036)."""
 
 from __future__ import annotations
 
@@ -229,13 +229,13 @@ def _write_bundle_metadata_and_index(
     (bundle_dir / "index.md").write_text(index_md, encoding="utf-8")
 
 
-def process_vbpl_bundle_okf_v22(
+def process_vbpl_bundle_okf_v24(
     docx_path: Path,
     bundle_dir: Path,
     registry_file: Path,
     output_filename: str | None = None,
 ) -> dict[str, Any]:
-    """Complete OKF v2.2 Transformation Pipeline for Decrees and Laws."""
+    """Complete OKF v2.4 Universal Transformation Pipeline for Decrees and Laws."""
     bundle_dir.mkdir(parents=True, exist_ok=True)
     templates_dir = bundle_dir / "templates"
     if templates_dir.exists():
@@ -278,3 +278,7 @@ def process_vbpl_bundle_okf_v22(
         "tables_count": len(extracted_tables),
         "qa_count": len(qa_benchmark),
     }
+
+
+# Backward compatibility alias for ADR 0021 legacy callers
+process_vbpl_bundle_okf_v22 = process_vbpl_bundle_okf_v24

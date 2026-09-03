@@ -74,3 +74,14 @@ Căn cứ Nghị định số 15/2021/NĐ-CP ngày 03 tháng 3 năm 2021 của C
     doc_ids = [item["doc_id"] for item in graph]
     assert "luat_50_2014_qh13" in doc_ids
     assert "nghi_dinh_15_2021_nd_cp" in doc_ids
+
+
+def test_vbpl_bundle_exports_backward_compatibility():
+    """Verify that both process_vbpl_bundle_okf_v24 and legacy process_vbpl_bundle_okf_v22 are exported and identical."""
+    from ccba_legal.converters.vbpl_admin import (
+        process_vbpl_bundle_okf_v22,
+        process_vbpl_bundle_okf_v24,
+    )
+
+    assert callable(process_vbpl_bundle_okf_v24)
+    assert process_vbpl_bundle_okf_v22 is process_vbpl_bundle_okf_v24
