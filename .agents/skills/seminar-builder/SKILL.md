@@ -7,6 +7,9 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _consulting
+metadata:
+  author: CCBA
+  version: 1.1.0
 triggers:
 - seminar
 - đào tạo
