@@ -116,7 +116,8 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
             for g_char, g_latex in GREEK_MAP.items():
                 clean_t = clean_t.replace(g_char, g_latex)
             wrap = f"_{{{clean_t}}}" if mode == "sub" else f"^{{{clean_t}}}"
-            out_tokens.append(f"${wrap}${trailing_comma}")
+            trailing_space = " " if text.endswith(" ") else ""
+            out_tokens.append(f"${wrap}${trailing_comma}{trailing_space}")
         else:
             out_tokens.append(text)
 
@@ -135,7 +136,7 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
     res = re.sub(r"([0-9])\s*≤\s*(_\{[^}]+\})", r"\1 ≤ $\\varepsilon\2$", res)
     res = re.sub(r"([0-9])\s*<=\s*(_\{[^}]+\})", r"\1 <= $\\varepsilon\2$", res)
     res = res.replace("$$", "").replace("$_$", "").replace("$^$", "")
-    res = re.sub(r"\$([^$]+)\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9])", r"$\1$ \2", res)
+    res = re.sub(r"\$([\\a-zA-Z0-9][^$]*?)\$([a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9])", r"$\1$ \2", res)
     return res.strip()
 
 

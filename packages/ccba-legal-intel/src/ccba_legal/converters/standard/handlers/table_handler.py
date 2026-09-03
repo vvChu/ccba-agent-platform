@@ -93,30 +93,63 @@ def render_table_markdown(
                     seen_clean.add(p_clean)
                     fn_parts.append(p)
             has_explicit_numbered = any(
-                re.search(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*[2-9]", p, re.IGNORECASE)
+                re.search(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*[1-9]", p, re.IGNORECASE)
+                or re.match(r"^[0-9]+[)\.]\s+", p)
                 for p in fn_parts
             )
 
-            for idx, fn_p in enumerate(fn_parts):
-                fn_clean = re.sub(
-                    r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*",
-                    "",
-                    fn_p,
-                    flags=re.IGNORECASE,
-                ).strip()
-                fn_clean = re.sub(r"^\*\*\s*", "", fn_clean).strip()
-                m_num = re.search(
-                    r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)", fn_p, flags=re.IGNORECASE
-                )
-                if m_num and m_num.group(1):
-                    pfx = f"**CHÚ THÍCH {m_num.group(1)}:**"
-                elif has_explicit_numbered and idx == 0:
-                    pfx = "**CHÚ THÍCH 1:**"
-                elif len(fn_parts) > 1 and not has_explicit_numbered:
-                    pfx = f"**CHÚ THÍCH {idx + 1}:**"
+            if has_explicit_numbered:
+                for idx, fn_p in enumerate(fn_parts):
+                    fn_clean = re.sub(
+                        r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*",
+                        "",
+                        fn_p,
+                        flags=re.IGNORECASE,
+                    ).strip()
+                    fn_clean = re.sub(r"^\*\*\s*", "", fn_clean).strip()
+                    m_num = re.search(
+                        r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)", fn_p, flags=re.IGNORECASE
+                    )
+                    if m_num and m_num.group(1):
+                        pfx = f"**CHÚ THÍCH {m_num.group(1)}:**"
+                    elif idx == 0:
+                        pfx = "**CHÚ THÍCH 1:**"
+                    else:
+                        pfx = f"**CHÚ THÍCH {idx + 1}:**"
+                    footnotes.append(f"{pfx} {fn_clean}")
+            else:
+                if len(fn_parts) == 1:
+                    fn_clean = re.sub(
+                        r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*[:–-]\s*(?:\*\*)?\s*",
+                        "",
+                        fn_parts[0],
+                        flags=re.IGNORECASE,
+                    ).strip()
+                    fn_clean = re.sub(r"^\*\*\s*", "", fn_clean).strip()
+                    footnotes.append(f"**CHÚ THÍCH:** {fn_clean}")
                 else:
-                    pfx = "**CHÚ THÍCH:**"
-                footnotes.append(f"{pfx} {fn_clean}")
+                    block_lines: list[str] = ["**CHÚ THÍCH:**"]
+                    for fn_p in fn_parts:
+                        fn_clean = re.sub(
+                            r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*[:–-]\s*(?:\*\*)?\s*",
+                            "",
+                            fn_p,
+                            flags=re.IGNORECASE,
+                        ).strip()
+                        fn_clean = re.sub(r"^\*\*\s*", "", fn_clean).strip()
+                        if not fn_clean:
+                            continue
+                        if fn_clean.startswith(("- ", "– ", "— ", "• ")) or fn_clean.startswith("&nbsp;&nbsp;\\- "):
+                            b_txt = fn_clean.replace("&nbsp;&nbsp;\\- ", "").lstrip("-–—• ")
+                            block_lines.append(f"&nbsp;&nbsp;\\- {b_txt}")
+                        elif fn_clean.startswith("$$") or (fn_clean.startswith("$") and fn_clean.endswith("$") and len(fn_clean) > 10):
+                            f_txt = fn_clean.strip()
+                            if f_txt.startswith("$") and not f_txt.startswith("$$") and f_txt.endswith("$") and not f_txt.endswith("$$"):
+                                f_txt = f"$${f_txt[1:-1]}$$"
+                            block_lines.append(f_txt)
+                        else:
+                            block_lines.append(fn_clean)
+                    footnotes.append("\n\n".join(block_lines))
             continue
 
         grid.append(row_rendered)
