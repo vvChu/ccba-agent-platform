@@ -108,7 +108,9 @@ def render_table_markdown(
                     ).strip()
                     fn_clean = re.sub(r"^\*\*\s*", "", fn_clean).strip()
                     m_num = re.search(
-                        r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)", fn_p, flags=re.IGNORECASE
+                        r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)",
+                        fn_p,
+                        flags=re.IGNORECASE,
                     )
                     if m_num and m_num.group(1):
                         pfx = f"**CHÚ THÍCH {m_num.group(1)}:**"
@@ -139,12 +141,23 @@ def render_table_markdown(
                         fn_clean = re.sub(r"^\*\*\s*", "", fn_clean).strip()
                         if not fn_clean:
                             continue
-                        if fn_clean.startswith(("- ", "– ", "— ", "• ")) or fn_clean.startswith("&nbsp;&nbsp;\\- "):
+                        if fn_clean.startswith(("- ", "– ", "— ", "• ")) or fn_clean.startswith(
+                            "&nbsp;&nbsp;\\- "
+                        ):
                             b_txt = fn_clean.replace("&nbsp;&nbsp;\\- ", "").lstrip("-–—• ")
                             block_lines.append(f"&nbsp;&nbsp;\\- {b_txt}")
-                        elif fn_clean.startswith("$$") or (fn_clean.startswith("$") and fn_clean.endswith("$") and len(fn_clean) > 10):
+                        elif fn_clean.startswith("$$") or (
+                            fn_clean.startswith("$")
+                            and fn_clean.endswith("$")
+                            and len(fn_clean) > 10
+                        ):
                             f_txt = fn_clean.strip()
-                            if f_txt.startswith("$") and not f_txt.startswith("$$") and f_txt.endswith("$") and not f_txt.endswith("$$"):
+                            if (
+                                f_txt.startswith("$")
+                                and not f_txt.startswith("$$")
+                                and f_txt.endswith("$")
+                                and not f_txt.endswith("$$")
+                            ):
                                 f_txt = f"$${f_txt[1:-1]}$$"
                             block_lines.append(f_txt)
                         else:
