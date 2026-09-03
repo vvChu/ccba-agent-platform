@@ -138,11 +138,6 @@ def _export_table_files(
     with open(csv_file, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(grid)
-        if footnotes:
-            writer.writerow([])
-            writer.writerow(["--- GHI CHÚ / CHÚ THÍCH ---"])
-            for fn in footnotes:
-                writer.writerow([fn])
 
     records: list[dict[str, Any]] = []
     if len(grid) > 1:
