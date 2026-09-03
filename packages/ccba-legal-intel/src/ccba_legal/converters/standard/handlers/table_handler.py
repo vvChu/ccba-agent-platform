@@ -452,7 +452,8 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
     md_tbl_str, tbl_footnotes, raw_grid = render_table_markdown(tbl, rid_to_katex=ctx.rid_to_katex)
     ctx.emit(md_tbl_str)
     for fn in tbl_footnotes:
-        ctx.emit(f"{fn}\n\n")
+        bq_lines = [f"> {line}" if line.strip() else ">" for line in fn.splitlines()]
+        ctx.emit("\n".join(bq_lines) + "\n\n")
     ctx.state_mgr.reset()
 
     # 3. Export CSV / JSON for captioned tables
