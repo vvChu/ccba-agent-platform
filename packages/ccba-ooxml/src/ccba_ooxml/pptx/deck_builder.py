@@ -218,12 +218,10 @@ class MarkdownDeckParser:
 
         content_lines = lines[idx:]
 
-        # Check for Tables
-        table_lines = [raw_line for raw_line in content_lines if "|" in raw_line]
-        if len(table_lines) >= 2:
-            table = cls._parse_markdown_table(table_lines)
-            if table:
-                slide_type = SlideType.TABLE
+        # Check for Tables (strict pipe table format with header separator)
+        table = cls._parse_markdown_table(content_lines)
+        if table:
+            slide_type = SlideType.TABLE
 
         # Check for Alert / Callout Cards (e.g. '> [!NOTE] Căn cứ pháp lý')
         in_callout = False
@@ -440,22 +438,41 @@ class MarkdownDeckParser:
     @classmethod
     def _parse_markdown_table(cls, lines: list[str]) -> StructuredTable | None:
         """Parse pipe table lines into a StructuredTable object."""
-        if len(lines) < 2:
-            return None
+        table_lines: list[str] = []
+        in_table = False
 
-        headers: list[str] = []
-        rows: list[list[str]] = []
+        for i, line in enumerate(lines):
+            l_strip = line.strip()
+            if not l_strip or not ("|" in l_strip):
+                if in_table:
+                    break
+                continue
 
-        for idx, line in enumerate(lines):
-            cells = [c.strip() for c in line.strip("|").split("|")]
-            if idx == 0:
-                headers = cells
-            elif idx == 1 and all(set(c).issubset({"-", ":", " "}) for c in cells):
+            # Check if next line is a valid separator row or if already in table
+            if not in_table:
+                if i + 1 < len(lines):
+                    next_line = lines[i + 1].strip()
+                    cells_sep = [c.strip() for c in next_line.strip("|").split("|")]
+                    if cells_sep and all(c and set(c).issubset({"-", ":", " "}) for c in cells_sep):
+                        in_table = True
+                        table_lines.append(l_strip)
                 continue
             else:
-                rows.append(cells)
+                table_lines.append(l_strip)
 
-        if not headers:
+        if len(table_lines) < 2:
+            return None
+
+        headers: list[str] = [c.strip() for c in table_lines[0].strip("|").split("|")]
+        rows: list[list[str]] = []
+
+        for idx, line in enumerate(table_lines[1:], start=1):
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            if idx == 1 and all(set(c).issubset({"-", ":", " "}) for c in cells):
+                continue
+            rows.append(cells)
+
+        if not headers or not rows:
             return None
 
         return StructuredTable(

@@ -36,13 +36,13 @@ author: "KTS. Nguyễn Văn A"
 date: "02/09/2026"
 ---
 
-# [QUY CHUẨN] Tổng Quan Nghị Định 175/2024
+# [QUY CHUẨN] Tổng Quan Nghị Định 217/2026
 ### Quy định bắt buộc áp dụng BIM
-- Quy định lộ trình áp dụng BIM cho công trình cấp I và đặc biệt.
+- Quy định lộ trình áp dụng BIM theo Luật Xây dựng 2025.
 - Yêu cầu bàn giao mô hình định dạng IFC và CDE chuẩn ISO 19650.
 - Trách nhiệm của Chủ đầu tư và Tư vấn Thẩm tra.
 
-<!-- notes: Diễn giải kỹ về thời hạn áp dụng từ 01/01/2025 -->
+<!-- notes: Diễn giải kỹ về thời hạn áp dụng từ 01/07/2026 -->
 """
     specs = MarkdownDeckParser.parse_markdown(md)
     assert len(specs) == 2
@@ -59,7 +59,7 @@ date: "02/09/2026"
     slide1 = specs[1]
     assert slide1.slide_type == SlideType.STANDARD
     assert slide1.badge == "QUY CHUẨN"
-    assert "Tổng Quan Nghị Định 175/2024" in slide1.title
+    assert "Tổng Quan Nghị Định 217/2026" in slide1.title
     assert slide1.subtitle == "Quy định bắt buộc áp dụng BIM"
     assert len(slide1.bullets) == 3
     assert "Diễn giải kỹ" in slide1.notes
@@ -334,7 +334,7 @@ title: "Storytelling Test Deck"
 ::: big-idea
 Kiểm soát mô hình BIM đa chiều là điều kiện tiên quyết để triệt tiêu 100% va chạm trước khi đổ bê tông.
 :::
-- Bối cảnh: Nghị định 175/2024
+- Bối cảnh: Luật Xây dựng 2025 & Nghị định 217/2026/NĐ-CP
 - Rủi ro: Phát sinh chi phí đục phá dầm
 - Hành động: Triển khai Quad-View Vision từ bước A0
 
@@ -354,7 +354,7 @@ Kiểm soát mô hình BIM đa chiều là điều kiện tiên quyết để tr
 # [CHƯƠNG TRÌNH] Khung Thảo Luận
 
 ::: agenda active=2
-- 01. Căn cứ Pháp lý NĐ 175
+- 01. Căn cứ Pháp lý NĐ 217/2026
 - 02. Quy trình Thẩm tra CCBA WAY
 - 03. Phân tích Dữ liệu Va chạm
 - 04. Kế hoạch Nghiệm thu

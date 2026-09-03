@@ -80,6 +80,7 @@ def render_table_markdown(
             combined_fn = "<br>".join(unique_cells)
             raw_parts = [p.strip() for p in re.split(r"<br\s*/?>", combined_fn) if p.strip()]
             fn_parts: list[str] = []
+            seen_clean: set[str] = set()
             for p in raw_parts:
                 p_clean = re.sub(
                     r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*",
@@ -88,7 +89,8 @@ def render_table_markdown(
                     flags=re.IGNORECASE,
                 ).strip()
                 p_clean = re.sub(r"^\*\*\s*", "", p_clean).strip()
-                if p_clean and p not in fn_parts:
+                if p_clean and p_clean not in seen_clean:
+                    seen_clean.add(p_clean)
                     fn_parts.append(p)
             has_explicit_numbered = any(
                 re.search(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*[2-9]", p, re.IGNORECASE)

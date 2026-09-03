@@ -89,6 +89,10 @@ def pack_document(input_dir: str | Path, output_file: str | Path, validate: bool
 def validate_document(doc_path: str | Path) -> bool:
     """Validate document by converting to HTML with soffice."""
     doc_path = Path(doc_path)
+    if not doc_path.exists() or not doc_path.is_file():
+        print(f"Validation error: '{doc_path}' is not a valid file.", file=sys.stderr)
+        return False
+
     # Determine the correct filter based on file extension
     match doc_path.suffix.lower():
         case ".docx":
@@ -97,6 +101,12 @@ def validate_document(doc_path: str | Path) -> bool:
             filter_name = "html:impress_html_Export"
         case ".xlsx":
             filter_name = "html:HTML (StarCalc)"
+        case _:
+            print(
+                f"Validation error: Unsupported file type '{doc_path.suffix}'. Supported: .docx, .pptx, .xlsx",
+                file=sys.stderr,
+            )
+            return False
 
     with tempfile.TemporaryDirectory() as temp_dir:
         try:

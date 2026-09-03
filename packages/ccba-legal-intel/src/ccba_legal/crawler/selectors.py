@@ -69,18 +69,30 @@ class TVPLSelectors:
     @classmethod
     def get_user_js_query(cls) -> str:
         """Construct JS expression checking for active VIP user label."""
-        selectors_js = " || ".join(f"document.querySelector('{s}')" for s in cls.USER_LABELS)
+        import json
+
+        selectors_js = " || ".join(
+            f"document.querySelector({json.dumps(s)})" for s in cls.USER_LABELS
+        )
         return f"({selectors_js})"
 
     @classmethod
     def get_login_inputs_js(cls) -> str:
         """Construct JS expression selecting username, password, and login button."""
-        u_js = " || ".join(f"document.querySelector('{s}')" for s in cls.USERNAME_SELECTORS)
-        p_js = " || ".join(f"document.querySelector('{s}')" for s in cls.PASSWORD_SELECTORS)
-        b_js = " || ".join(f"document.querySelector('{s}')" for s in cls.LOGIN_BUTTON_SELECTORS)
-        btn_query = "input[type=\\'button\\'], input[type=\\'submit\\'], button"
+        import json
+
+        u_js = " || ".join(
+            f"document.querySelector({json.dumps(s)})" for s in cls.USERNAME_SELECTORS
+        )
+        p_js = " || ".join(
+            f"document.querySelector({json.dumps(s)})" for s in cls.PASSWORD_SELECTORS
+        )
+        b_js = " || ".join(
+            f"document.querySelector({json.dumps(s)})" for s in cls.LOGIN_BUTTON_SELECTORS
+        )
+        btn_query = json.dumps("input[type='button'], input[type='submit'], button")
         return (
             f"let user = {u_js};\n"
             f"let pass = {p_js};\n"
-            f"let login_btn = {b_js} || Array.from(document.querySelectorAll('{btn_query}')).find(b => (b.value && b.value.includes('Đăng nhập')) || (b.innerText && b.innerText.includes('Đăng nhập')));"
+            f"let login_btn = {b_js} || Array.from(document.querySelectorAll({btn_query})).find(b => (b.value && b.value.includes('Đăng nhập')) || (b.innerText && b.innerText.includes('Đăng nhập')));"
         )

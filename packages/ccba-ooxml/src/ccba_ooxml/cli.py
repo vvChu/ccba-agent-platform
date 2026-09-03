@@ -77,11 +77,16 @@ def main() -> None:
     # Subcommand: validate
     val_parser = subparsers.add_parser(
         "validate",
-        help="Validate XML well-formedness and schema compliance for an unpacked directory",
+        help="Validate an Office file or unpacked XML directory",
     )
-    val_parser.add_argument("input_dir", type=str, help="Unpacked XML directory")
     val_parser.add_argument(
-        "--original", type=str, default=None, help="Path to original file for comparison"
+        "target", type=str, help="Path to Office file (.docx/.pptx/.xlsx) or unpacked XML directory"
+    )
+    val_parser.add_argument(
+        "--original",
+        type=str,
+        default=None,
+        help="Path to original file for schema comparison (required when target is a directory)",
     )
 
     args = parser.parse_args()
@@ -118,11 +123,21 @@ def main() -> None:
         sys.exit(0)
 
     elif args.command == "validate":
-        if args.original:
-            validator = OOXMLValidator(args.input_dir, args.original)
+        target = Path(args.target)
+        if target.is_file():
+            success = validate_document(target)
+        elif target.is_dir():
+            if not args.original:
+                print(
+                    "Error: --original <original_file> is required when validating an unpacked directory.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            validator = OOXMLValidator(str(target), args.original)
             success = validator.validate()
         else:
-            success = validate_document(args.input_dir)
+            print(f"Error: Target path '{args.target}' does not exist.", file=sys.stderr)
+            sys.exit(1)
         sys.exit(0 if success else 1)
 
 
