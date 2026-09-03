@@ -127,6 +127,24 @@ def render_table_markdown(
     # Resolve hierarchical 2-tier headers without dropping columns
     grid = resolve_hierarchical_headers(grid)
 
+    # Deduplicate full-width category/subheader rows spanning all columns
+    cleaned_grid: list[list[str]] = []
+    for r_idx, r in enumerate(grid):
+        non_empty = [c.strip() for c in r if c.strip()]
+        if (
+            r_idx > 0
+            and len(r) > 1
+            and non_empty
+            and len(set(non_empty)) == 1
+            and len(r) == len(non_empty)
+        ):
+            first_c = non_empty[0]
+            cat_text = f"**{first_c}**" if not first_c.startswith("**") else first_c
+            cleaned_grid.append([cat_text] + [""] * (len(r) - 1))
+        else:
+            cleaned_grid.append(r)
+    grid = cleaned_grid
+
     max_cols = max(len(r) for r in grid)
     normalized_grid: list[list[str]] = [
         [re.sub(r"[\r\n]+", "<br>", c).strip() for c in r] + [""] * (max_cols - len(r))
@@ -282,6 +300,7 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
     ctx.emit(md_tbl_str)
     for fn in tbl_footnotes:
         ctx.emit(f"{fn}\n\n")
+    ctx.state_mgr.reset()
 
     # 3. Export CSV / JSON for captioned tables
     if is_captioned and raw_grid:
