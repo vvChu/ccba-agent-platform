@@ -453,6 +453,12 @@ def harvest_docx_formula_images(
 
                 img_bytes = z.read(media_path)
                 sha256 = _compute_sha256(img_bytes)
+                if sha256[:8] in override_formulas:
+                    rid_to_katex[rid] = override_formulas[sha256[:8]]
+                    continue
+                if sha256 in override_formulas:
+                    rid_to_katex[rid] = override_formulas[sha256]
+                    continue
                 cached = _read_cache(cache_dir, sha256) if cache_dir is not None else None
                 if cached is not None:
                     rid_to_katex[rid] = cached
@@ -507,6 +513,12 @@ def harvest_docx_formula_images(
 
                 img_bytes = z.read(media_path)
                 sha256 = _compute_sha256(img_bytes)
+                if sha256[:8] in override_formulas:
+                    rid_to_katex[rid] = override_formulas[sha256[:8]]
+                    continue
+                if sha256 in override_formulas:
+                    rid_to_katex[rid] = override_formulas[sha256]
+                    continue
                 cached = _read_cache(cache_dir, sha256) if cache_dir is not None else None
                 if cached is not None:
                     rid_to_katex[rid] = cached

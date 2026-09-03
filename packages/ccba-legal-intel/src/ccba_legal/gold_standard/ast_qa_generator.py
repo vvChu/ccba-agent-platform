@@ -19,6 +19,17 @@ def generate_bundle_ast_and_qa(
     if not target_bundle.is_dir() and target_bundle.is_file():
         target_bundle = target_bundle.parent
     out_dir = output_dir or target_bundle
+    if not cong_bao_number:
+        meta_file = target_bundle / "metadata.yaml"
+        if meta_file.exists():
+            try:
+                import yaml
+
+                m_data = yaml.safe_load(meta_file.read_text(encoding="utf-8"))
+                if isinstance(m_data, dict) and m_data.get("cong_bao_number"):
+                    cong_bao_number = m_data["cong_bao_number"]
+            except Exception:
+                pass
     core_files = [
         f
         for f in target_bundle.glob("*.md")

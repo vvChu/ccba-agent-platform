@@ -88,7 +88,10 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
             if rid_to_katex and rid in rid_to_katex:
                 k_sym = rid_to_katex[rid]
                 if not k_sym.startswith("<!-- DIAGRAM"):
-                    grouped.append(("norm", f"${k_sym.strip('$ ')}$"))
+                    clean_k = k_sym.strip("$ ")
+                    if "<!--" in clean_k:
+                        clean_k = clean_k.split("<!--")[0].strip("$ \n\r")
+                    grouped.append(("norm", f"${clean_k}$"))
                     continue
         t = r.text
         if not t:
@@ -152,6 +155,7 @@ class StandardConversionContext:
     tables_extracted: list[dict[str, Any]] = field(default_factory=list)
     state_mgr: HierarchyStateManager = field(default_factory=HierarchyStateManager)
     formula_overrides: dict[str, Any] = field(default_factory=dict)
+    doc_meta: dict[str, Any] = field(default_factory=dict)
 
     @property
     def active_parts(self) -> list[str]:
@@ -179,22 +183,70 @@ def _extract_document_blocks(doc: Any) -> list[tuple[str, Any]]:
     return blocks
 
 
-def _find_normative_start_index(blocks: list[tuple[str, Any]]) -> int:
-    """Locate the exact start index of the normative body."""
-    for idx, (b_type, obj) in enumerate(blocks):
+def _find_standard_header_start_index(blocks: list[tuple[str, Any]]) -> int:
+    """Find the index where the actual Standard/Quy chuẩn technical document begins,
+    skipping any preceding administrative Circular (Thông tư ban hành) wrapper."""
+    first_few_texts: list[str] = []
+    for b_type, obj in blocks[:15]:
         if b_type == "p":
-            txt = obj.text.strip().upper()
-            if any(
-                k in txt
-                for k in [
-                    "1  PHẠM VI ÁP DỤNG",
-                    "1. PHẠM VI ÁP DỤNG",
-                    "1 PHẠM VI ÁP DỤNG",
-                    "1  QUY ĐỊNH CHUNG",
-                ]
+            first_few_texts.append(obj.text.strip())
+        elif b_type == "tbl":
+            first_few_texts.append(" ".join(cell.text for cell in obj.rows[0].cells))
+    combined_header = " ".join(first_few_texts).upper()
+    has_circular_wrapper = any(
+        k in combined_header
+        for k in [
+            "THÔNG TƯ",
+            "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM",
+            "BAN HÀNH KÈM THEO THÔNG TƯ",
+            "CĂN CỨ NGHỊ ĐỊNH",
+        ]
+    )
+    if not has_circular_wrapper:
+        return 0
+
+    for idx, (b_type, obj) in enumerate(blocks):
+        if idx == 0:
+            continue
+        if b_type == "p":
+            t = obj.text.strip().upper()
+            if (
+                re.match(r"^(?:QCVN|TCVN)\s+[0-9]+", t)
+                or t
+                in (
+                    "TIÊU CHUẨN QUỐC GIA",
+                    "QUY CHUẨN KỸ THUẬT QUỐC GIA",
+                )
+                or t.startswith("QUY CHUẨN KỸ THUẬT QUỐC GIA")
             ):
                 return idx
     return 0
+
+
+def _find_normative_start_index(blocks: list[tuple[str, Any]], start_from: int = 0) -> int:
+    """Locate the exact start index of the normative body (Section 1)."""
+    in_toc = False
+    for idx in range(start_from, len(blocks)):
+        b_type, obj = blocks[idx]
+        if b_type == "p":
+            txt = obj.text.strip().upper()
+            if txt in ("MỤC LỤC", "## MỤC LỤC"):
+                in_toc = True
+                continue
+            if in_toc and txt.startswith("LỜI NÓI ĐẦU"):
+                in_toc = False
+            if in_toc:
+                continue
+            if re.match(r"^1[\.\s]+(?:QUY ĐỊNH CHUNG|PHẠM VI ÁP DỤNG)\b", txt):
+                return idx
+
+    for idx in range(start_from, len(blocks)):
+        b_type, obj = blocks[idx]
+        if b_type == "p":
+            txt = obj.text.strip().upper()
+            if re.match(r"^1[\.\s]+(?:QUY ĐỊNH CHUNG|PHẠM VI ÁP DỤNG)\b", txt):
+                return idx
+    return start_from
 
 
 def _emit_figure_or_comment(ctx: StandardConversionContext, comment_str: str) -> None:
@@ -342,6 +394,9 @@ def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str,
     out_name = ctx.output_filename or f"{ctx.bundle_dir.name}.md"
     target_md_path = ctx.bundle_dir / out_name
     final_body_md = clean_markdown_tables_and_notes("".join(ctx.body_md_parts))
+    if not final_body_md.strip().startswith("---"):
+        frontmatter = _build_frontmatter_yaml(ctx.bundle_dir, ctx.doc_meta)
+        final_body_md = frontmatter + final_body_md
     target_md_path.write_text(final_body_md, encoding="utf-8")
 
     # 3. Export Tables Catalog & README
@@ -379,12 +434,98 @@ def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str,
     }
 
 
+def _build_frontmatter_yaml(bundle_dir: Path, doc_meta: dict[str, Any] | None = None) -> str:
+    """Build standard OKF v2.4 YAML frontmatter for technical standard/QCVN document."""
+    meta_file = bundle_dir / "metadata.yaml"
+    m_data: dict[str, Any] = {}
+    if meta_file.exists():
+        try:
+            import yaml
+
+            loaded = yaml.safe_load(meta_file.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                m_data = loaded
+        except Exception:
+            pass
+    if doc_meta:
+        for k, v in doc_meta.items():
+            if k not in m_data or not m_data[k]:
+                m_data[k] = v
+
+    doc_id = m_data.get("id", bundle_dir.name)
+    doc_num = m_data.get("document_number", bundle_dir.name.replace("_", " ").upper())
+    title = m_data.get("title", f"{doc_num} — {doc_id}")
+    issued_by = m_data.get("issued_by", "Bộ Xây dựng")
+    signer = m_data.get("signer", "")
+    issued_date = m_data.get("issued_date", "")
+    effective_date = m_data.get("effective_date", "")
+    status = m_data.get("status", "active")
+    cong_bao = m_data.get("cong_bao_number", "Đang cập nhật")
+    pdf_path = m_data.get("pdf_path", f"./sources/{bundle_dir.name}.pdf")
+    pdf_name = Path(pdf_path).name
+    pdf_sha = m_data.get("pdf_sha256", "")
+
+    replaces = (
+        m_data.get("relations", {}).get("replaces", [])
+        if isinstance(m_data.get("relations"), dict)
+        else m_data.get("replaces", [])
+    )
+
+    fm_dict: dict[str, Any] = {
+        "okf_version": "2.4",
+        "type": "technical_standard_qcvn"
+        if "qcvn" in bundle_dir.name.lower()
+        else "technical_standard_tcvn",
+        "title": title,
+        "description": title,
+        "tags": [
+            "qcvn" if "qcvn" in bundle_dir.name.lower() else "tcvn",
+            "quy_chuan_ky_thuat" if "qcvn" in bundle_dir.name.lower() else "tieu_chuan_ky_thuat",
+        ],
+        "timestamp": "2026-08-26T00:00:00Z",
+        "resource": f"legal_docs/02_qcvn/{bundle_dir.name}/{bundle_dir.name}.md"
+        if "qcvn" in bundle_dir.name.lower()
+        else f"legal_docs/03_tcvn/{bundle_dir.name}/{bundle_dir.name}.md",
+        "id": doc_id,
+        "doc_id": doc_id,
+        "document_number": doc_num,
+        "document_type": m_data.get("type", "Quy chuẩn kỹ thuật quốc gia"),
+        "issued_by": issued_by,
+        "signer": signer,
+        "issued_date": str(issued_date),
+        "effective_date": str(effective_date),
+        "status": status,
+        "pdf_anchor": {
+            "path": f"./sources/{pdf_name}",
+            "sha256": pdf_sha,
+            "cong_bao_number": cong_bao,
+        },
+    }
+    if replaces:
+        fm_dict["relations"] = {"replaces": replaces}
+    fm_dict["artifacts"] = {
+        "tables_dir": "./tables/",
+        "tables_catalog": "./tables/tables_catalog.json",
+        "benchmark_file": "./qa_benchmark.json",
+        "figures_dir": "./figures/",
+    }
+
+    import yaml
+
+    return (
+        "---\n"
+        + yaml.dump(fm_dict, allow_unicode=True, sort_keys=False, indent=2).strip()
+        + "\n---\n\n"
+    )
+
+
 def process_technical_standard_strategy(
     docx_path: Path | str,
     bundle_dir: Path | str,
     output_filename: str | None = None,
     rid_to_katex: dict[str, str] | None = None,
     registry_file: Path | str | None = None,
+    doc_meta: dict[str, Any] | None = None,
     **kwargs: Any,
 ) -> dict[str, Any]:
     """Process a Technical Standard (TCVN / QCVN) DOCX file with 100% Visual Parity & Modular Annex Split."""
@@ -408,7 +549,8 @@ def process_technical_standard_strategy(
     # 2. Extract and locate normative start
     doc = Document(docx_p)
     blocks = _extract_document_blocks(doc)
-    start_idx = _find_normative_start_index(blocks)
+    std_start_idx = _find_standard_header_start_index(blocks)
+    start_idx = _find_normative_start_index(blocks, start_from=std_start_idx)
 
     # 3. Process blocks with conversion context
     ctx = StandardConversionContext(
@@ -416,26 +558,29 @@ def process_technical_standard_strategy(
         output_filename=output_filename,
         rid_to_katex=docx_rid_to_katex,
         formula_overrides=load_bundle_formula_overrides(bundle_p),
+        doc_meta=doc_meta or kwargs.get("doc_meta") or {},
     )
 
-    if start_idx > 0:
+    if start_idx > std_start_idx:
         preamble_parts: list[str] = []
-        for p_idx in range(start_idx):
+        for p_idx in range(std_start_idx, start_idx):
             b_type, obj = blocks[p_idx]
             if b_type == "p":
                 t = obj.text.strip()
                 if t:
                     rendered_t = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
-                    if t.upper() == "TIÊU CHUẨN QUỐC GIA":
+                    if t.upper() in ("TIÊU CHUẨN QUỐC GIA", "QUY CHUẨN KỸ THUẬT QUỐC GIA"):
                         preamble_parts.append(f"# {rendered_t}\n\n")
                     elif re.match(r"^(?:TCVN|QCVN)", t, re.IGNORECASE):
-                        preamble_parts.append(f"## {rendered_t}\n\n")
+                        preamble_parts.append(f"**{rendered_t}**\n\n")
                     elif t.lower().startswith("lời nói đầu"):
-                        preamble_parts.append(f"#### {rendered_t}\n\n")
+                        preamble_parts.append(f"## {rendered_t}\n\n")
+                    elif t.lower().startswith("mục lục"):
+                        preamble_parts.append(f"## {rendered_t}\n\n")
                     else:
                         preamble_parts.append(f"{rendered_t}\n\n")
         if preamble_parts:
-            ctx.body_md_parts.append("".join(preamble_parts) + "---\n\n")
+            ctx.body_md_parts.append("".join(preamble_parts) + "\n---\n\n")
 
     i = start_idx
 

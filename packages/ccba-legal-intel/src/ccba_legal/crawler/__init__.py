@@ -38,6 +38,7 @@ from .providers import (
     MockLegalDocProvider,
     TVPLVIPDocProvider,
 )
+from .selectors import TVPLSelectors
 from .tier_downloader import (
     _cache_downloaded_file,
     _check_tier_1_local_and_cache,
@@ -47,6 +48,7 @@ from .tier_downloader import (
 )
 
 __all__ = [
+    "TVPLSelectors",
     "LegalDocProvider",
     "MockLegalDocProvider",
     "TVPLVIPDocProvider",

@@ -71,8 +71,27 @@ def render_table_markdown(
         if re.match(
             r"^(?:<br>)*\s*(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)", first_cell, re.IGNORECASE
         ):
-            combined_fn = "<br>".join([c for c in row_rendered if c.strip()])
-            fn_parts = [p.strip() for p in re.split(r"<br\s*/?>", combined_fn) if p.strip()]
+            # Deduplicate identical merged cells across columns (gridSpan)
+            unique_cells: list[str] = []
+            for c in row_rendered:
+                c_str = c.strip()
+                if c_str and c_str not in unique_cells:
+                    unique_cells.append(c_str)
+            combined_fn = "<br>".join(unique_cells)
+            raw_parts = [p.strip() for p in re.split(r"<br\s*/?>", combined_fn) if p.strip()]
+            fn_parts: list[str] = []
+            seen_clean: set[str] = set()
+            for p in raw_parts:
+                p_clean = re.sub(
+                    r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*",
+                    "",
+                    p,
+                    flags=re.IGNORECASE,
+                ).strip()
+                p_clean = re.sub(r"^\*\*\s*", "", p_clean).strip()
+                if p_clean and p_clean not in seen_clean:
+                    seen_clean.add(p_clean)
+                    fn_parts.append(p)
             has_explicit_numbered = any(
                 re.search(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*[2-9]", p, re.IGNORECASE)
                 for p in fn_parts
@@ -107,6 +126,24 @@ def render_table_markdown(
 
     # Resolve hierarchical 2-tier headers without dropping columns
     grid = resolve_hierarchical_headers(grid)
+
+    # Deduplicate full-width category/subheader rows spanning all columns
+    cleaned_grid: list[list[str]] = []
+    for r_idx, r in enumerate(grid):
+        non_empty = [c.strip() for c in r if c.strip()]
+        if (
+            r_idx > 0
+            and len(r) > 1
+            and non_empty
+            and len(set(non_empty)) == 1
+            and len(r) == len(non_empty)
+        ):
+            first_c = non_empty[0]
+            cat_text = f"**{first_c}**" if not first_c.startswith("**") else first_c
+            cleaned_grid.append([cat_text] + [""] * (len(r) - 1))
+        else:
+            cleaned_grid.append(r)
+    grid = cleaned_grid
 
     max_cols = max(len(r) for r in grid)
     normalized_grid: list[list[str]] = [
@@ -263,6 +300,7 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
     ctx.emit(md_tbl_str)
     for fn in tbl_footnotes:
         ctx.emit(f"{fn}\n\n")
+    ctx.state_mgr.reset()
 
     # 3. Export CSV / JSON for captioned tables
     if is_captioned and raw_grid:

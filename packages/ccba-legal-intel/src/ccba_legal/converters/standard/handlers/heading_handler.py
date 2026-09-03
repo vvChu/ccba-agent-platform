@@ -46,7 +46,7 @@ def handle_structural_heading(
 
     # 2. Annex Heading
     m_annex = re.match(
-        r"^(?:Phụ\s+lục|PHỤ\s+LỤC)\s+([A-Z])(?:\s*\(([^)]+)\))?(?:\s*[-–—:]\s*(.+))?$",
+        r"^(?:Phụ\s+lục|PHỤ\s+LỤC)\s+([A-Za-z0-9]+|[IVXLCDM]+)(?:\s*[\.\-–—:])?(?:\s*\(([^)]+)\))?(?:\s*[\.\-–—:])?\s*(.*)$",
         text,
         re.IGNORECASE,
     )
@@ -54,6 +54,14 @@ def handle_structural_heading(
         a_letter = m_annex.group(1).upper()
         a_type = (m_annex.group(2) or "").strip()
         a_title = (m_annex.group(3) or "").strip()
+        m_trailing_type = re.search(
+            r"\((Tham khảo|Quy định|tham khảo|quy định)\)\s*$", a_title, re.IGNORECASE
+        )
+        if m_trailing_type:
+            if not a_type:
+                a_type = m_trailing_type.group(1).capitalize()
+            a_title = a_title[: m_trailing_type.start()].strip()
+
         if not a_type and i + 1 < len(blocks) and blocks[i + 1][0] == "p":
             ntxt = blocks[i + 1][1].text.strip()
             if ntxt.startswith("(") and ntxt.endswith(")"):
@@ -67,6 +75,15 @@ def handle_structural_heading(
                 a_title = ntxt2
                 i += 1
 
+        # Standardize subscripts and KaTeX in annex title
+        clean_title = a_title
+        clean_title = re.sub(r"\bR0\b", "$R_0$", clean_title)
+        clean_title = re.sub(r"\bRa\b", "$R_a$", clean_title)
+        clean_title = re.sub(
+            r"\(\s*m2[\.\s]*K/W\s*\)", r"($m^2$.K/W)", clean_title, flags=re.IGNORECASE
+        )
+        clean_title = re.sub(r"\bm2\b", r"$m^2$", clean_title)
+
         clean_title_slug = slugify_vietnamese(a_title)
         slug = (
             f"phu_luc_{a_letter.lower()}_{clean_title_slug}"
@@ -77,12 +94,12 @@ def handle_structural_heading(
         anchor = f"phu-luc-{a_letter.lower()}"
         hdr = (
             f"## PHỤ LỤC {a_letter}"
-            + (f"  ({a_type})" if a_type else "")
-            + (f"  {a_title.upper()}" if a_title else "")
+            + (f" ({a_type})" if a_type else "")
+            + (f" — {clean_title}" if clean_title else "")
         )
         ctx.annex_buffers[a_letter] = {
             "slug": slug,
-            "title": a_title,
+            "title": clean_title,
             "type": a_type or "Quy định",
             "anchor": anchor,
             "parts": [f'\n<a id="{anchor}"></a>\n{hdr}\n\n'],
@@ -90,18 +107,30 @@ def handle_structural_heading(
         ctx.state_mgr.reset()
         return i + 1
 
-    # 3. Section Heading (1 to 99)
+    # 3. Standard Footnotes (e.g. 1 $^{1}$ TCVN... or $^{1}$ TCVN...)
+    if rendered_p.startswith(("$^{", "^")) or re.match(r"^[0-9]+\s+(?:TCVN|QCVN|ISO)\b", text):
+        ctx.emit(f"\n- {rendered_p}\n\n")
+        ctx.state_mgr.reset()
+        return i + 1
+
+    # 4. Section Heading (1 to 99)
     m_sec = re.match(r"^([1-9][0-9]?)\s+([^\n]+)", text)
     if (
         m_sec
-        and not m_sec.group(2).startswith(("-", "–", "—", ":"))
+        and not m_sec.group(2).startswith(("-", "–", "—", ":", "$^", "^"))
+        and not re.match(r"^(?:TCVN|QCVN|ISO)\b", m_sec.group(2).strip())
         and len(m_sec.group(2)) < 120
         and not m_sec.group(2).lower().startswith(("đối với", "khi", "lấy", "tính", "theo", "như"))
     ):
         sec_num = m_sec.group(1)
         sec_rendered = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
         sec_title = re.sub(rf"^{re.escape(sec_num)}\s+", "", sec_rendered).strip()
-        ctx.emit(f'\n<a id="muc-{sec_num}"></a>\n## {sec_num}  {sec_title.upper()}\n\n')
+        anchor_id = (
+            f"phu-luc-{ctx.current_target.lower()}-muc-{sec_num}"
+            if ctx.current_target != "main"
+            else f"muc-{sec_num}"
+        )
+        ctx.emit(f'\n<a id="{anchor_id}"></a>\n## {sec_num}  {sec_title.upper()}\n\n')
         ctx.state_mgr.reset()
         return i + 1
 

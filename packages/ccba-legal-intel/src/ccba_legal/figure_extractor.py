@@ -266,24 +266,8 @@ def extract_docx_figures(
                 card_content = render_markdown_figure_card(entry)
                 (cards_dir / f"hinh_{f_slug}.md").write_text(card_content, encoding="utf-8")
         else:
-            for idx, media_path in enumerate(media_list, 1):
-                ext = Path(media_path).suffix or ".png"
-                out_filename = f"hinh_{idx}{ext}"
-                out_img_path = images_dir / out_filename
-                data = z.read(media_path)
-                out_img_path.write_bytes(data)
-                entry = {
-                    "figure_id": f"FIG_{idx}",
-                    "tag": str(idx),
-                    "title": f"Hình {idx}",
-                    "annex": "MAIN",
-                    "anchor": f"hinh-{idx}",
-                    "image_relpath": f"figures/images/{out_filename}",
-                    "has_image": True,
-                }
-                catalog_entries.append(entry)
-                card_content = render_markdown_figure_card(entry)
-                (cards_dir / f"hinh_{idx}.md").write_text(card_content, encoding="utf-8")
+            # Document has no captioned figures. Do not fabricate uncaptioned media as numbered figure cards.
+            pass
 
     # 3. Write figures_catalog.yaml
     manifest = {
