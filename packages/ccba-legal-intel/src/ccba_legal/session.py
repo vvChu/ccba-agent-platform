@@ -237,15 +237,17 @@ def get_tvpl_credentials() -> tuple[str, str]:
 
 def verify_tvpl_vip_status(cdp: Any) -> bool:
     """Verify if the connected Chrome CDP session has an active TVPL VIP Pro login."""
-    js = """
-    (() => {
+    from ccba_legal.crawler.selectors import TVPLSelectors
+
+    labels_check = f"{TVPLSelectors.get_user_js_query()} !== null"
+    js = f"""
+    (() => {{
         let txt = document.body ? document.body.innerText : '';
         let has_user = txt.includes('Tài khoản :') ||
                        txt.includes('vuvanchu119') ||
-                       document.querySelector('#ctl00_Header_lblTenDangNhap') !== null ||
-                       document.querySelector('a[href*="thong-tin-ca-nhan"]') !== null;
+                       {labels_check};
         return has_user ? 'VIP_PRO_ACTIVE' : 'GUEST';
-    })()
+    }})()
     """
     try:
         status = cdp.evaluate_js(js)

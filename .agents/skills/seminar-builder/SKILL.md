@@ -50,7 +50,29 @@ Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/T
    - Sử dụng các callouts (`> [!IMPORTANT]`) cho các lưu ý đặc thù về công tác chuẩn bị.
 5. **Tiêu chí hoàn thành:** Bản thảo Agenda hiển thị rõ ràng phần Prerequisites, Introduced Concepts và bảng timeline chi tiết trình người dùng duyệt trước khi xuất bản file chính thức.
 
-### 2. Tạo Monthly Recap
+### 2. Xuất Bản Slide Thuyết Trình PowerPoint (.pptx) Tự Động
+Từ bản thảo Outline/Agenda Markdown đã duyệt, tự động biên dịch sang tệp trình chiếu PowerPoint chuẩn nhận diện thương hiệu CCBA ver 3.4 kết hợp phong cách **Swiss Minimalist & Storytelling With You** (Cole Nussbaumer Knaflic) qua Deep Seam `ccba_ooxml.pptx`:
+
+```bash
+python -m ccba_ooxml build-deck path/to/outline.md --output path/to/seminar.pptx --aspect-ratio 16:9
+```
+Hoặc gọi trực tiếp trong Python:
+```python
+from ccba_ooxml import build_presentation_from_markdown
+
+build_presentation_from_markdown("outline.md", "seminar.pptx")
+```
+- **Hỗ trợ đầy đủ các Archetypes Bố Cục Đỉnh Cao**:
+  - **Cover Hero Slide**: Eyebrow Capsule `[TRUNG TÂM CCBA — VIỆN IBST]`, Tiêu đề Display 34pt, thanh 3 màu và Logo IBST BIM độ nét cao.
+  - **The Big Idea (`::: big-idea`)**: Khẩu hiệu chiến lược kèm 3 thẻ cột trụ (Bối cảnh, Rủi ro, Hành động).
+  - **Visual Agenda (`::: agenda active=N`)**: Lộ trình 4 chặng tự động highlight phần đang nói kèm badge Navy `ĐANG TRÌNH BÀY`.
+  - **Horizontal Process Stepper (`::: steps`)**: Quy trình 4 bước ngang `01` $\rightarrow$ `02` $\rightarrow$ `03` $\rightarrow$ `04` trực quan.
+  - **Split 60/40 Comparison (`::: split`)**: Cột trái bối cảnh cũ 38% (`#F8FAFC`) vs Cột phải CCBA WAY đột phá 58% (viền Cyan `#0093DD`).
+  - **Swiss Clean Table + Hero KPI Cards**: 3 Thẻ số liệu lớn đặt trên bảng dữ liệu không viền dọc.
+  - **Asymmetric Bento Grid (`> [!ARCH]`, `> [!STRUCT]`, `> [!MEP]`)**: Thẻ Hero 54% bên trái + 2 Thẻ phụ 43% xếp chồng bên phải.
+  - **Field Evidence Quote (`::: quote`)**: Thẻ trích dẫn lời chứng thực thực tế từ Chủ đầu tư / Ban QLDA.
+
+### 3. Tạo Monthly Recap
 1. Hỏi user đường dẫn đến tài liệu các buổi seminar trong tháng.
 2. Đọc các file seminar (PDF, PPTX).
 3. Tổng hợp theo template `templates/monthly_recap.md` để ghi nhận các Key takeaways, Action items và các chủ đề cần follow-up.

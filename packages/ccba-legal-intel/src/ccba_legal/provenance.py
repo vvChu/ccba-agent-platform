@@ -274,13 +274,42 @@ def verify_bundle_docx_vs_markdown(bundle_dir: Path) -> dict[str, Any]:
     if not docx_paras_raw:
         return {"status": "skipped", "message": "DOCX has no non-empty paragraphs"}
 
-    # Exclude non-normative TOC section at the end of DOCX
+    # Exclude administrative circular wrapper if present before technical regulation (ADR 0021)
+    has_circular = any(
+        k in p.upper()
+        for p in docx_paras_raw[:15]
+        for k in ["THÔNG TƯ", "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", "BAN HÀNH KÈM THEO THÔNG TƯ"]
+    )
+    start_idx = 0
+    if has_circular:
+        for idx, p in enumerate(docx_paras_raw):
+            if idx == 0:
+                continue
+            if (
+                re.match(r"^(?:QCVN|TCVN)\s+[0-9]+", p.strip().upper())
+                or p.strip().upper()
+                in (
+                    "TIÊU CHUẨN QUỐC GIA",
+                    "QUY CHUẨN KỸ THUẬT QUỐC GIA",
+                )
+                or p.strip().upper().startswith("QUY CHUẨN KỸ THUẬT QUỐC GIA")
+            ):
+                start_idx = idx
+                break
+
     docx_paras: list[str] = []
     in_toc = False
-    for p_text in docx_paras_raw:
+    for p_text in docx_paras_raw[start_idx:]:
         if p_text.strip().upper() in ["MỤC LỤC", "TABLE OF CONTENTS"]:
             in_toc = True
             continue
+        if in_toc and (
+            p_text.strip().lower().startswith("lời nói đầu")
+            or re.match(
+                r"^1[\.\s]+(?:QUY ĐỊNH CHUNG|PHẠM VI ÁP DỤNG)\b", p_text.strip(), re.IGNORECASE
+            )
+        ):
+            in_toc = False
         if not in_toc:
             docx_paras.append(p_text)
 

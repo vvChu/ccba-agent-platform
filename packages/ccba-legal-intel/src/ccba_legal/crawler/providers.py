@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import urllib.parse
 from pathlib import Path
 from typing import Any
 
 from ccba_legal.cdp import ChromeCDP
+from ccba_legal.crawler.selectors import TVPLSelectors
 from ccba_legal.crawler.tier_downloader import trigger_download
 from ccba_legal.session import (
     TVPLCrawlFailedException,
@@ -118,28 +120,30 @@ def resolve_tvpl_url(cdp: ChromeCDP, query: str) -> str:
     # Tier 2: TVPL Unified Search Fallback (covers /van-ban/ and /TCVN/)
     # =========================================================================
     search_keywords = [query_clean]
-    if ":" in query_clean:
-        search_keywords.append(query_clean.replace(":", " "))
-    if "-" in query_clean:
-        search_keywords.append(query_clean.replace("-", " "))
+    clean_no_punct = query_clean.replace("/", " ").replace(":", " ").replace("-", " ")
+    if clean_no_punct != query_clean:
+        search_keywords.append(clean_no_punct)
 
     for kw in search_keywords:
-        enc = urllib.parse.quote(kw)
-        s_url = f"https://thuvienphapluat.vn/page/tim-van-ban.aspx?keyword={enc}&match=False&area=0"
+        safe_kw = kw.replace("/", " ").replace(":", " ")
+        enc = urllib.parse.quote_plus(safe_kw)
+        s_url = f"https://thuvienphapluat.vn/page/tim-van-ban.aspx?keyword={enc}"
         cdp.navigate(s_url)
         cdp.wait_ready()
         cdp.handle_cloudflare()
+        sleep_with_jitter(2.5, 0.5, 1.0)
 
         find_js = f"""
         (() => {{
             let matches = [];
-            let q_clean = "{kw.lower()}".replace(/[^a-z0-9]/g, '');
+            let q_clean = "{safe_kw.lower()}".replace(/[^a-z0-9]/g, '');
             document.querySelectorAll('p.nqTitle a, div.content-0 a, a[href*="/van-ban/"], a[href*="/TCVN/"]').forEach(a => {{
                 let href = a.href;
                 let txt = (a.innerText || a.textContent || '').trim();
                 let txt_clean = txt.toLowerCase().replace(/[^a-z0-9]/g, '');
+                let href_clean = href.toLowerCase().replace(/[^a-z0-9]/g, '');
                 if ((href.includes('/van-ban/') || href.includes('/TCVN/')) && href.endsWith('.aspx') && !href.includes('tim-van-ban')) {{
-                    if (txt_clean.includes(q_clean) || href.toLowerCase().replace(/[^a-z0-9]/g, '').includes(q_clean)) {{
+                    if (txt_clean.includes(q_clean) || href_clean.includes(q_clean)) {{
                         matches.push({{title: txt, url: href.split('?')[0].split('#')[0]}});
                     }}
                 }}
@@ -156,7 +160,7 @@ def resolve_tvpl_url(cdp: ChromeCDP, query: str) -> str:
             return resolved
 
     print(
-        "[TVPLVIPDocProvider] [WARNING] Multi-tier resolution failed. Falling back to default URL structure."
+        f"[TVPLVIPDocProvider] [WARNING] Multi-tier resolution could not find exact match for '{query_clean}'."
     )
     return f"https://thuvienphapluat.vn/van-ban/{query_clean}.aspx"
 
@@ -175,16 +179,15 @@ class TVPLVIPDocProvider(LegalDocProvider):
         except OSError:
             return
 
-        check_login_js = """
-        (() => {
-            let user_lbl = document.querySelector('#ctl00_Header_lblTenDangNhap') ||
-                           document.querySelector('.user-name') ||
-                           document.querySelector('a[href*="thong-tin-ca-nhan"]');
-            if (user_lbl && user_lbl.innerText.trim().length > 0) {
+        user_query_js = TVPLSelectors.get_user_js_query()
+        check_login_js = f"""
+        (() => {{
+            let user_lbl = {user_query_js};
+            if (user_lbl && user_lbl.innerText.trim().length > 0) {{
                 return user_lbl.innerText.trim();
-            }
+            }}
             return null;
-        })()
+        }})()
         """
         user = cdp.evaluate_js(check_login_js)
         if user:
@@ -192,23 +195,18 @@ class TVPLVIPDocProvider(LegalDocProvider):
             return
 
         print(f"[TVPLVIPDocProvider] Logging in as: {username[:3]}***...")
+        inputs_js = TVPLSelectors.get_login_inputs_js()
         login_js = f"""
         (() => {{
-            let u = document.querySelector('#usernameTextBox') ||
-                    document.querySelector('#txtUserName') ||
-                    document.querySelector('input[placeholder*="Tên đăng nhập"]');
-            let p = document.querySelector('#passwordTextBox') ||
-                    document.querySelector('#txtPassword') ||
-                    document.querySelector('input[placeholder*="Mật khẩu"]');
-            let btn = document.querySelector('#loginButton') ||
-                       document.querySelector('#btLogin') ||
-                       document.querySelector('input[value="Đăng nhập"]');
-            if (u && p && btn) {{
-                u.value = "{username}";
-                p.value = "{password}";
-                u.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                p.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                btn.click();
+            {inputs_js}
+            if (user && pass && login_btn) {{
+                user.value = "{username}";
+                pass.value = "{password}";
+                user.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                user.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                pass.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                pass.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                login_btn.click();
                 return "Submitted login";
             }}
             return "Login inputs not found";
@@ -225,23 +223,25 @@ class TVPLVIPDocProvider(LegalDocProvider):
         cdp.wait_ready()
         cdp.handle_cloudflare()
 
-        confirm_js = """
-        (() => {
+        confirm_kw_js = json.dumps(TVPLSelectors.CONFIRM_KEYWORDS)
+        confirm_js = f"""
+        (() => {{
+            let keywords = {confirm_kw_js};
             let btns = Array.from(document.querySelectorAll('.ui-dialog-buttonpane button, .ui-dialog-buttonset button, input[type="button"], button'));
-            let dong_y = btns.find(b => {
+            let dong_y = btns.find(b => {{
                 let txt = (b.innerText || b.value || '').trim().toLowerCase();
-                return txt.includes('đồng ý') || txt.includes('tiếp tục') || txt.includes('dong y');
-            });
-            if (dong_y) {
+                return keywords.some(kw => txt.includes(kw));
+            }});
+            if (dong_y) {{
                 dong_y.click();
                 return 'Clicked: ' + (dong_y.innerText || dong_y.value);
-            }
-            if (typeof ContinueLogin === 'function') {
+            }}
+            if (typeof ContinueLogin === 'function') {{
                 ContinueLogin();
                 return 'Called ContinueLogin()';
-            }
+            }}
             return 'No multi-session warning';
-        })()
+        }})()
         """
         res_conf = cdp.evaluate_js(confirm_js)
         print(f"[TVPLVIPDocProvider] Multi-session confirmation: {res_conf}")

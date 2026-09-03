@@ -12,6 +12,7 @@ from typing import Any
 import requests
 import websocket
 
+from ccba_legal.crawler.selectors import TVPLSelectors
 from ccba_legal.session import get_tvpl_credentials, sleep_with_jitter
 
 
@@ -217,6 +218,27 @@ class ChromeCDP:
     def set_download_behavior(self, download_path: Path | str) -> bool:
         """Configure Chrome CDP to allow downloading directly into a specific folder."""
         p = str(Path(download_path).resolve())
+        # Try Browser Target first for modern Chrome versions
+        try:
+            resp = requests.get(f"{self.base_url}/json/version", timeout=3)
+            if resp.ok:
+                browser_ws = resp.json().get("webSocketDebuggerUrl")
+                if browser_ws:
+                    ws_b = websocket.create_connection(
+                        browser_ws, suppress_origin=True, timeout=5.0
+                    )
+                    cmd = {
+                        "id": random.randint(1, 100000),
+                        "method": "Browser.setDownloadBehavior",
+                        "params": {"behavior": "allow", "downloadPath": p, "eventsEnabled": True},
+                    }
+                    ws_b.send(json.dumps(cmd))
+                    ws_b.recv()
+                    ws_b.close()
+                    return True
+        except Exception:
+            pass
+
         try:
             self.send_command(
                 "Browser.setDownloadBehavior",
@@ -241,46 +263,42 @@ class ChromeCDP:
             print(f"  [Login] {e}")
             return False
 
-        js = """
-        (() => {
-            let tb = document.querySelector('#TB_window');
-            if (!tb || tb.style.display === 'none') return "No popup";
-
-            let inputs = Array.from(tb.querySelectorAll('input'));
-            let text_inputs = inputs.filter(i => i.type === 'text');
-            let pass_inputs = inputs.filter(i => i.type === 'password');
-            let buttons = Array.from(tb.querySelectorAll('input[type="submit"], input[type="button"], button'));
-
-            let user = text_inputs[0];
-            let pass = pass_inputs[0];
-            let login_btn = buttons.find(b => (b.value && b.value.includes('Đăng nhập')) || (b.innerText && b.innerText.includes('Đăng nhập')));
-
-            if (user && pass && login_btn) {
+        inputs_js = TVPLSelectors.get_login_inputs_js()
+        js = f"""
+        (() => {{
+            {inputs_js}
+            if (user && pass && login_btn) {{
                 user.value = "__USERNAME__";
                 pass.value = "__PASSWORD__";
+                user.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                user.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                pass.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                pass.dispatchEvent(new Event('change', {{ bubbles: true }}));
                 login_btn.click();
                 return "Attempted login click";
-            }
+            }}
             return "Inputs not found";
-        })()
+        }})()
         """.replace("__USERNAME__", username).replace("__PASSWORD__", password)
         res = self.evaluate_js(js)
         if "Attempted login" in str(res):
             print("  [Login] Found login popup, autofilling credentials and submitting...")
             sleep_with_jitter(3.0, 0.5, 1.5)
 
-            warning_js = """
-            (() => {
-                let agree_btn = Array.from(document.querySelectorAll('input, button, a')).find(el => {
-                    let txt = el.value || el.innerText || "";
-                    return txt.trim().toLowerCase() === 'đồng ý';
-                });
-                if (agree_btn) {
+            confirm_kw_js = json.dumps(TVPLSelectors.CONFIRM_KEYWORDS)
+            warning_js = f"""
+            (() => {{
+                let keywords = {confirm_kw_js};
+                let agree_btn = Array.from(document.querySelectorAll('input, button, a')).find(el => {{
+                    let txt = (el.value || el.innerText || "").trim().toLowerCase();
+                    return keywords.some(kw => txt.includes(kw));
+                }});
+                if (agree_btn) {{
                     agree_btn.click();
                     return "Clicked Dong y";
-                }
+                }}
                 return "No warning popup";
-            })()
+            }})()
             """
             warn_res = self.evaluate_js(warning_js)
             print(f"  [Login Warning Check] Result: {warn_res}")

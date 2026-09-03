@@ -44,6 +44,8 @@ htmlcov/
 .env
 .env.local
 .md/backups/
+**/.md/backups/
+*.bak*
 
 # OS
 .DS_Store
