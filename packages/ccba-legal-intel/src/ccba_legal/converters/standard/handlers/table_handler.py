@@ -9,6 +9,7 @@ import re
 from typing import Any
 
 from ccba_legal.converters.standard.models import HierarchyState
+from ccba_legal.converters.standard.sanitizers import render_paragraph_with_runs
 
 
 def escape_table_pipes(text: str) -> str:
@@ -126,8 +127,6 @@ def render_table_markdown(
     table: Any, rid_to_katex: dict[str, str] | None = None
 ) -> tuple[str, list[str], list[list[str]]]:
     """Render a docx Table object as a GitHub Flavored Markdown table with smart column alignment and footnote extraction."""
-    from ccba_legal.converters.standard.strategy import render_paragraph_with_runs
-
     grid: list[list[str]] = []
     footnotes: list[str] = []
 
@@ -354,8 +353,6 @@ def clean_formula_latex(raw_f: str) -> str:
 
 def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
     """Parse a docx table block, checking for formula frames and exporting tables to CSV/JSON."""
-    from ccba_legal.converters.standard.strategy import render_paragraph_with_runs
-
     # 1. Formula Frame Check
     all_row_formulas: list[tuple[str, Any]] = []
     for r in tbl.rows:
