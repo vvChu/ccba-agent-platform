@@ -443,7 +443,7 @@ class MarkdownDeckParser:
 
         for i, line in enumerate(lines):
             l_strip = line.strip()
-            if not l_strip or not ("|" in l_strip):
+            if not l_strip or "|" not in l_strip:
                 if in_table:
                     break
                 continue
