@@ -71,28 +71,31 @@ Mô tả chi tiết giải pháp kỹ thuật, cấu trúc mô-đun, và các qu
 
 ---
 
-### Bước 3: Tái Biên Dịch Mục Lục & Ma Trận Truy Xuất (Traceability Sync)
-Chạy script đồng bộ tự động:
-* **Tại Spoke:**
-  ```powershell
-  python scripts/sync_adr_matrix.py
-  ```
-* **Tại Hub:**
+### Bước 3: Tái Biên Dịch Mục Lục & Ma Trận Truy Xuất (Two-Tier Traceability Sync)
+Chạy script đồng bộ tự động theo cơ chế **Hai Tầng (Two-Tier Architecture Matrix — ADR 0037, ADR 0051)**:
+* **Tại Hub (Platform Mode):**
   ```powershell
   python scripts/sync_hub_adr_matrix.py
   ```
-* **Kết quả tự động cập nhật:**
   - Tái tạo bảng mục lục `docs/adr/README.md`.
-  - Quét toàn bộ `SKILL.md`, `AGENTS.md`, `CONTEXT.md`, `session_learnings.md` để tái sinh `docs/adr/TRACEABILITY_MATRIX.md`.
+  - Quét radar toàn bộ `SKILL.md`, `AGENTS.md`, `CONTEXT.md`, `session_learnings.md` để biên dịch `docs/adr/TRACEABILITY_MATRIX.md`.
+
+* **Tại Spoke (Two-Tier Preservation Mode):**
+  ```powershell
+  python [hub_path]/scripts/sync_hub_adr_matrix.py --spoke-dir .
+  ```
+  - **Tier 1 (Platform Constitution):** Giữ nguyên và liên kết 100% ADRs dùng chung từ Hub.
+  - **Tier 2 (Domain-Specific Decisions):** Tự động phát hiện và bảo toàn các ADRs nghiệp vụ cục bộ của Spoke trong `## 🌐 Tier 2 — Domain-Specific Architecture Decisions`.
+  - **Non-Destructive Preservation:** Bảo lưu nguyên vẹn các bảng đối soát và ghi chú tùy biến của Spoke trong `TRACEABILITY_MATRIX.md`.
 
 ---
 
 ### Bước 4: Kiểm Định Khóa Cổng CI (Zero-Tolerance Parity Gate)
-Thực thi kiểm định:
+Thực thi kiểm định chống lệch pha (Documentation & Traceability Drift):
 ```powershell
-python scripts/validate_adr_parity.py
+python scripts/sync_hub_adr_matrix.py --check
 ```
 * **Tiêu chuẩn nghiệm thu:**
   - 0 Duplicate numbers hoặc Numbering gaps.
   - 0 Broken ADR links trong toàn bộ codebase.
-  - 100% Khớp nối giữa các file ADR và bảng mục lục.
+  - 100% Khớp nối giữa các file ADR, bảng mục lục `README.md` và `TRACEABILITY_MATRIX.md`.
