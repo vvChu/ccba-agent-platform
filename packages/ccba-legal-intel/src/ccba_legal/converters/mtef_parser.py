@@ -173,7 +173,7 @@ class MTEFParser:
         if self.pos + 2 <= len(self.data):
             val = struct.unpack("<H", self.data[self.pos : self.pos + 2])[0]
             self.pos += 2
-            return val
+            return int(val)
         return -1
 
     def parse(self) -> str:

@@ -112,6 +112,12 @@ def render_table_markdown(
                         fn_p,
                         flags=re.IGNORECASE,
                     )
+                    if not m_num:
+                        m_num = re.match(r"^([0-9]+)[)\.]\s*", fn_p)
+
+                    # Strip list-style numeric prefixes like "1) " or "1. " to prevent duplication
+                    fn_clean = re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()
+
                     if m_num and m_num.group(1):
                         pfx = f"**CHÚ THÍCH {m_num.group(1)}:**"
                     elif idx == 0:

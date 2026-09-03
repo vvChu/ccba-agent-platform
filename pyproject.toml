@@ -93,13 +93,9 @@ mypy_path = ["packages/mdconverter/src", "packages/ccba-ai/src", "packages/ccba-
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["llama_index.*", "google.generativeai.*", "tenacity.*", "yt_dlp.*", "ccba_ai.*", "ccba_pdf_prep.*", "fitz.*", "ccba_ooxml.*", "pptx.*"]
+module = ["llama_index.*", "google.generativeai.*", "tenacity.*", "yt_dlp.*", "ccba_ai.*", "ccba_pdf_prep.*", "fitz.*", "ccba_ooxml.*", "pptx.*", "docx.*", "PIL.*"]
 ignore_missing_imports = true
 disallow_untyped_calls = false
-
-[[tool.mypy.overrides]]
-module = ["ccba_legal.*"]
-ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = ["mdconverter.providers.gemini"]

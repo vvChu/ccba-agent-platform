@@ -41,9 +41,17 @@ def sanitize_prose_greeks_and_variables(text: str) -> str:
 
     for g_char, g_latex in GREEK_MAP.items():
         pattern = r"(?<!\$)\b" + g_char + r"([a-zA-Z0-9]+)\b(?!\$)"
-        text = re.sub(pattern, lambda m, gl=g_latex: f"${gl}_{{{m.group(1)}}}$", text)
+
+        def _sub_greek_sub(m: re.Match[str], gl: str = g_latex) -> str:
+            return f"${gl}_{{{m.group(1)}}}$"
+
+        text = re.sub(pattern, _sub_greek_sub, text)
         pattern_alone = r"(?<![\$\w])" + g_char + r"(?![\$\w])"
-        text = re.sub(pattern_alone, lambda m, gl=g_latex: f"${gl}$", text)
+
+        def _sub_greek_alone(m: re.Match[str], gl: str = g_latex) -> str:
+            return f"${gl}$"
+
+        text = re.sub(pattern_alone, _sub_greek_alone, text)
 
     for var in [
         "qk,t",
@@ -74,7 +82,7 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
     """Render a docx paragraph while preserving sub/superscripts and resolving inline image symbols as clean KaTeX tokens."""
     runs = p.runs
     if not runs:
-        return p.text.strip()
+        return str(p.text).strip()
 
     grouped: list[tuple[str, str]] = []
     for r in runs:
@@ -163,7 +171,8 @@ class StandardConversionContext:
         """Return the active markdown parts buffer."""
         if self.current_target == "main":
             return self.body_md_parts
-        return self.annex_buffers[self.current_target]["parts"]
+        parts: list[str] = self.annex_buffers[self.current_target]["parts"]
+        return parts
 
     def emit(self, chunk: str) -> None:
         """Emit a markdown chunk to either the main body buffer or the active modular annex buffer."""
@@ -257,7 +266,7 @@ def _emit_figure_or_comment(ctx: StandardConversionContext, comment_str: str) ->
         fig_slug = m_fig.group(1).strip()
         fig_title = m_fig.group(2).strip().rstrip("-").strip()
         fig_num = fig_slug.replace("hinh_", "").replace("_", ".").upper()
-        fig_entry = {
+        fig_entry: dict[str, Any] = {
             "tag": fig_num,
             "title": fig_title,
             "anchor": fig_slug.replace("_", "-"),
@@ -548,7 +557,7 @@ def process_technical_standard_strategy(
     extract_docx_figures(docx_p, bundle_p / "figures")
 
     # 2. Extract and locate normative start
-    doc = Document(docx_p)
+    doc = Document(str(docx_p))
     blocks = _extract_document_blocks(doc)
     std_start_idx = _find_standard_header_start_index(blocks)
     start_idx = _find_normative_start_index(blocks, start_from=std_start_idx)

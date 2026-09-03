@@ -38,7 +38,7 @@ def extract_docx_figures(
     fig_overrides = load_bundle_figures_overrides(bundle_dir)
     std_name = standard_name or docx_p.stem.upper().replace("_", " ")
 
-    doc = Document(docx_p)
+    doc = Document(str(docx_p))
     rels = doc.part.rels
 
     # 1. Identify all Figure captions
@@ -189,6 +189,7 @@ def extract_docx_figures(
                     if should_stitch:
                         for m_t in found_media:
                             consumed_media.add(m_t)
+                        font_bold: Any
                         try:
                             font_bold = ImageFont.truetype("arialbd.ttf", 13)
                         except Exception:

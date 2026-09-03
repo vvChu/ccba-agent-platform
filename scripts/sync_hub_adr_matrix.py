@@ -110,7 +110,7 @@ def parse_adr_file(adr_path: Path) -> dict[str, Any]:
     else:
         # Check standard markdown patterns
         status_match = re.search(
-            r"(?:##\s*(?:1\.\s*)?Trạng Thái\s*\(Status\)|\*\*\s*Status:\s*\*)\s*\n?\s*\*\*?([A-Za-z_ ]+)",
+            r"(?:##\s*(?:1\.\s*)?Trạng Thái\s*\(Status\)|\*?\s*\*\*\s*Status:\s*\*\*|\*?\s*\*\*\s*Trạng Thái\s*\(Status\)\s*\*\*|##\s*Status)\s*\n?\s*\*?\*?([A-Za-z_ ]+)",
             content,
             re.IGNORECASE,
         )
@@ -526,6 +526,7 @@ def load_adrs_from_dir(adr_dir: Path) -> list[dict[str, Any]]:
         [f for f in adr_dir.glob("*.md") if f.name not in ("README.md", "TRACEABILITY_MATRIX.md")]
     )
     adr_list = [parse_adr_file(f) for f in adr_files]
+    adr_list = [a for a in adr_list if a["num"] > 0]
     adr_list.sort(key=lambda x: x["num"])
     return adr_list
 
