@@ -888,8 +888,8 @@ skills:
   skill_path: .agents/skills/teach/SKILL.md
 - name: to-questionnaire
   bundle: _core
-  description: Chuyển đổi một quyết định chưa có đủ thông tin thành Bảng hỏi (Questionnaire)
-    dạng Markdown để gửi cho đối tác/chuyên gia điền bất đồng bộ.
+  description: Hệ thống Khảo sát & Thu thập Quyết định Đa kênh Tương tác (Dual-Track
+    Questionnaire Engine v2.0)
   triggers:
   - questionnaire
   - async
@@ -901,6 +901,8 @@ skills:
   - bảng hỏi
   - async interview
   - discovery questionnaire
+  - dual-track questionnaire
+  - phiếu lấy ý kiến
   skill_path: .agents/skills/to-questionnaire/SKILL.md
 - name: to-spec
   bundle: _core
@@ -1365,7 +1367,8 @@ workflows:
 - name: ccba-legal-ingest
   bundle: _consulting
   command: /ccba-legal-ingest
-  description: Workflow tự động hóa toàn trình 7 bước nạp văn bản pháp lý OKF v2.2
+  description: Workflow tự động hóa toàn trình nạp văn bản pháp lý OKF v2.4 Universal
+    Agent-Centric
   triggers:
   - ccba-legal-ingest
   - nap van ban
@@ -1624,13 +1627,15 @@ workflows:
 - name: ccba-to-questionnaire
   bundle: _core
   command: /ccba-to-questionnaire
-  description: Chuyển đổi một quyết định chưa có đủ thông tin thành Bảng hỏi (Questionnaire)
-    bất đồng bộ.
+  description: Hệ thống Khảo sát & Thu thập Quyết định Đa kênh Tương tác (Dual-Track
+    Questionnaire Engine v2.0)
   triggers:
   - to-questionnaire
   - questionnaire
   - bảng hỏi
   - async questionnaire
+  - dual-track questionnaire
+  - phiếu lấy ý kiến
   workflow_path: .agents/workflows/ccba-to-questionnaire.md
 - name: ccba-to-spec
   bundle: _core

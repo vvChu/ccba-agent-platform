@@ -1,6 +1,5 @@
 ---
-description: Chuyển đổi một quyết định chưa có đủ thông tin thành Bảng hỏi (Questionnaire)
-  bất đồng bộ.
+description: Hệ thống Khảo sát & Thu thập Quyết định Đa kênh Tương tác (Dual-Track Questionnaire Engine v2.0)
 applies_to:
 - Phần mềm
 - Thẩm tra thiết kế
@@ -15,7 +14,56 @@ triggers:
 - questionnaire
 - bảng hỏi
 - async questionnaire
+- dual-track questionnaire
+- phiếu lấy ý kiến
 ---
-# Workflow: Tạo Bảng Hỏi Bất Đồng Bộ (/ccba-to-questionnaire)
+# Workflow: Hệ Thống Bảng Hỏi Đa Kênh Tương Tác (/ccba-to-questionnaire)
 
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `to-questionnaire` tại [SKILL.md](../skills/to-questionnaire/SKILL.md) để bắt đầu quy trình phỏng vấn 2 bước và soạn thảo Bảng hỏi Markdown.
+Quy trình tự động hóa khảo sát và thu thập quyết định kỹ thuật bất đồng bộ từ các bên liên quan (Chủ đầu tư, Tư vấn thiết kế, Ban QLDA, Kỹ sư MEP/PCCC) hoặc soạn thảo đề xuất nền tảng Hub (Platform Track) thông qua **Dual-Track Questionnaire Engine v2.0**.
+
+---
+
+## 📋 Các Chế Độ & Cú Pháp Sử Dụng
+
+### 1. Khởi tạo Bảng hỏi Mới (Mặc định)
+```bash
+/ccba-to-questionnaire
+```
+Agent nạp kỹ năng `to-questionnaire` tại [SKILL.md](../skills/to-questionnaire/SKILL.md), tiến hành:
+1. Xác định phân luồng: **Platform Track** (Spoke ➔ Hub RFC) hay **Delivery Track** (Dự án ➔ Đối tác).
+2. Phỏng vấn ngắn gọn làm rõ đối tượng gửi và thông tin cần thu về.
+3. Soạn thảo file Markdown chuẩn v2.0 tại `.md/knowledge/questionnaires/to-questionnaire-<slug>.md` với khung trắc nghiệm 3 tầng giả định A/B/C/D kèm trade-off tóm tắt.
+
+### 2. Phân Luồng Chuyên Biệt
+- **Platform Track (Đề xuất nền tảng Hub):**
+  ```bash
+  /ccba-to-questionnaire --track platform
+  ```
+  Tự động đóng gói nội dung thành RFC Proposal và chuyển tiếp sang workflow [`/ccba-issue-to-hub`](ccba-issue-to-hub.md) để mở GitHub Issue.
+- **Delivery Track (Bài toán dự án công trường):**
+  ```bash
+  /ccba-to-questionnaire --track delivery
+  ```
+  Tập trung vào thông số thiết kế, quy chuẩn QCVN và tự động kích hoạt bộ xuất bản đa kênh.
+
+### 3. Xuất Bản Đa Kênh (Omni-Format Export)
+```bash
+python scripts/questionnaire_engine.py <file.md> --format all
+# Hoặc xuất riêng lẻ: --format docx / --format html / --format chat / --format email
+```
+- **Word `.docx`**: Biểu mẫu Phiếu lấy ý kiến CCBA có format trang trọng, bảng chọn checkbox Unicode và khung phê duyệt 3 bên.
+- **Web Landing Page**: Form HTML độc lập 100% offline, lưu LocalStorage, thanh phản hồi nhanh và mã QR.
+- **Micro Chat**: Đoạn tóm tắt <15 dòng cho Zalo/Teams.
+- **Email Table**: Bảng so sánh HTML chuẩn inline styling.
+
+### 4. Chu Trình Nạp Hai Chiều & Bàn Giao (`--reply`)
+Khi nhận được phản hồi từ đối tác, nạp kết quả để cập nhật Markdown AST và chuyển sang trạng thái `RESOLVED`:
+```bash
+python scripts/questionnaire_engine.py <file.md> --reply "1A, 2B, 3C" --resolved-by "Đại diện Chủ đầu tư"
+```
+Sau khi nạp thành công:
+- Tự động kích hoạt [`/ccba-to-spec`](../skills/to-spec/SKILL.md) để chuyển hóa quyết định thành PRD / Đặc tả kỹ thuật.
+- Hoặc kích hoạt [`/ccba-to-tickets`](../skills/to-tickets/SKILL.md) để phân rã nhiệm vụ phát triển.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
