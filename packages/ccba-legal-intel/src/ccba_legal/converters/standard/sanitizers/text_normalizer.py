@@ -64,7 +64,9 @@ def heal_orphaned_strains(text: str) -> str:
 def normalize_degrees_and_angles(text: str) -> str:
     """Normalize degrees Celsius and angles from Word superscript '0' or 'o' to Unicode."""
     # e.g. 40$^{0}$ C -> 40 °C, 49$^{0}$ C -> 49 °C
-    text = re.sub(r"(\d+(?:[,\.]\d+)?)\s*(?:\$\^\{[0oO]\}\$|<sup>[0oO]</sup>)\s*C\b", r"\1 °C", text)
+    text = re.sub(
+        r"(\d+(?:[,\.]\d+)?)\s*(?:\$\^\{[0oO]\}\$|<sup>[0oO]</sup>)\s*C\b", r"\1 °C", text
+    )
     # e.g. ± 22,5$^{0}$ -> ± 22,5°
     text = re.sub(r"(\d+(?:[,\.]\d+)?)\s*(?:\$\^\{[0oO]\}\$|<sup>[0oO]</sup>)", r"\1°", text)
     return text

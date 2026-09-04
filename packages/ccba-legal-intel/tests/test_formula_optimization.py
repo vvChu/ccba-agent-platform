@@ -43,7 +43,9 @@ def test_omml_single_pass_equivalence():
 
     for inp, expected in test_inputs:
         res = _format_math_text(inp)
-        assert res.strip() == expected.strip(), f"Mismatch for '{inp}': got '{res}', expected '{expected}'"
+        assert res.strip() == expected.strip(), (
+            f"Mismatch for '{inp}': got '{res}', expected '{expected}'"
+        )
 
 
 def test_bundle_formula_overrides_caching(tmp_path: Path):

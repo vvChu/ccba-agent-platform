@@ -101,8 +101,11 @@ class FederatedLegalEngine:
                     clauses = json.load(f)
 
                 md_files = [
-                    p for p in bundle_dir.glob("*.md")
-                    if not p.name.startswith("dead_ends") and p.name != "index.md" and p.name != "log.md"
+                    p
+                    for p in bundle_dir.glob("*.md")
+                    if not p.name.startswith("dead_ends")
+                    and p.name != "index.md"
+                    and p.name != "log.md"
                 ]
                 if not md_files:
                     continue
@@ -121,16 +124,18 @@ class FederatedLegalEngine:
                     if not text:
                         text = clause.get("title", "")
 
-                    self._chunks.append({
-                        "clause_id": clause.get("clause_id", ""),
-                        "document_id": doc_id,
-                        "article_num": clause.get("title", ""),
-                        "title": clause.get("title", ""),
-                        "text": text,
-                        "citation_url": citation_url,
-                        "status": doc_status,
-                        "domain": meta.get("category", ""),
-                    })
+                    self._chunks.append(
+                        {
+                            "clause_id": clause.get("clause_id", ""),
+                            "document_id": doc_id,
+                            "article_num": clause.get("title", ""),
+                            "title": clause.get("title", ""),
+                            "text": text,
+                            "citation_url": citation_url,
+                            "status": doc_status,
+                            "domain": meta.get("category", ""),
+                        }
+                    )
                     all_text += text
             except Exception as e:
                 logger.error("Error loading bundle %s: %s", bundle_dir, e)
@@ -140,7 +145,7 @@ class FederatedLegalEngine:
     def _tokenize(self, text: str) -> list[str]:
         """Tokenize text into unigrams and bigrams."""
         tokens = text.lower().split()
-        bigrams = [f"{tokens[i]}_{tokens[i+1]}" for i in range(len(tokens)-1)]
+        bigrams = [f"{tokens[i]}_{tokens[i + 1]}" for i in range(len(tokens) - 1)]
         return tokens + bigrams
 
     def _build_bm25_index(self) -> None:
@@ -211,7 +216,9 @@ class FederatedLegalEngine:
         except Exception:
             return []
 
-    def _rrf_fusion(self, *ranked_lists: list[tuple[int, float]], k: int = 60) -> list[tuple[int, float]]:
+    def _rrf_fusion(
+        self, *ranked_lists: list[tuple[int, float]], k: int = 60
+    ) -> list[tuple[int, float]]:
         """Reciprocal Rank Fusion."""
         from collections import defaultdict
 
@@ -224,7 +231,9 @@ class FederatedLegalEngine:
         fused = list(rrf_scores.items())
         return sorted(fused, key=lambda x: x[1], reverse=True)
 
-    def query(self, query_text: str, domain: str | None = None, top_k: int = 5) -> list[dict[str, Any]]:
+    def query(
+        self, query_text: str, domain: str | None = None, top_k: int = 5
+    ) -> list[dict[str, Any]]:
         """Query the ground-truth engine."""
         if not self._chunks:
             return []
@@ -240,16 +249,18 @@ class FederatedLegalEngine:
             if domain and chunk.get("domain") != domain:
                 continue
 
-            results.append({
-                "clause_id": chunk.get("clause_id", ""),
-                "document_id": chunk.get("document_id", ""),
-                "article_num": chunk.get("title", ""),
-                "title": chunk.get("title", ""),
-                "text_snippet": chunk.get("text", "")[:500],
-                "confidence_score": round(score, 4),
-                "citation_url": chunk.get("citation_url", ""),
-                "status": chunk.get("status", "unknown"),
-            })
+            results.append(
+                {
+                    "clause_id": chunk.get("clause_id", ""),
+                    "document_id": chunk.get("document_id", ""),
+                    "article_num": chunk.get("title", ""),
+                    "title": chunk.get("title", ""),
+                    "text_snippet": chunk.get("text", "")[:500],
+                    "confidence_score": round(score, 4),
+                    "citation_url": chunk.get("citation_url", ""),
+                    "status": chunk.get("status", "unknown"),
+                }
+            )
 
             if len(results) >= top_k:
                 break

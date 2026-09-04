@@ -108,9 +108,7 @@ def write_logs_and_index_v2(bundle_dir: Path, bundle_slug: str, metadata: dict[s
     title = metadata.get("title", bundle_slug)
     doc_type = metadata.get("type", "Document")
 
-    log_content = (
-        f"# OKF {CURRENT_OKF_SPEC} Processing Log\n\n- [{now_utc}] Bundle initialized for {bundle_slug}\n"
-    )
+    log_content = f"# OKF {CURRENT_OKF_SPEC} Processing Log\n\n- [{now_utc}] Bundle initialized for {bundle_slug}\n"
     (bundle_dir / "log.md").write_text(log_content, encoding="utf-8")
 
     lines = [

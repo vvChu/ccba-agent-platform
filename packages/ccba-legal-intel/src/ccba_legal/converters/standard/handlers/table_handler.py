@@ -62,7 +62,12 @@ def resolve_hierarchical_headers(grid: list[list[str]]) -> list[list[str]]:
 
         has_subheaders = False
         for c in range(len(prev_row)):
-            if c > 0 and prev_row[c] and prev_row[c] == prev_row[c - 1] and curr_row[c] != curr_row[c - 1]:
+            if (
+                c > 0
+                and prev_row[c]
+                and prev_row[c] == prev_row[c - 1]
+                and curr_row[c] != curr_row[c - 1]
+            ):
                 has_subheaders = True
                 break
 
@@ -111,7 +116,8 @@ def detect_table_archetype(
         if any(k in lower_t for k in admin_keywords):
             return "BORDERLESS_LAYOUT"
     if not is_captioned and any(
-        k in lower_t for k in ["[ ]", "☐", "biên bản", "phiếu kiểm tra", "mẫu số", "chức vụ của người ký"]
+        k in lower_t
+        for k in ["[ ]", "☐", "biên bản", "phiếu kiểm tra", "mẫu số", "chức vụ của người ký"]
     ):
         return "ADMIN_FORM"
     if has_images or "<img" in lower_t:
@@ -178,13 +184,14 @@ def render_table_markdown(
                 # Normalize 40$^{0}$ C -> 40 °C
                 p_clean = re.sub(r"(\d+)\$\^\{0\}\$\s*C\b", r"\1 °C", p_clean)
 
-                is_bullet = bool(re.match(r"^(?:[-–—•\+]|\(\*+\)|\([0-9a-zA-Z]+\)|[0-9]+[)\.])\s*", p_clean))
+                is_bullet = bool(
+                    re.match(r"^(?:[-–—•\+]|\(\*+\)|\([0-9a-zA-Z]+\)|[0-9]+[)\.])\s*", p_clean)
+                )
                 if fn_parts and not is_bullet:
                     last_txt = fn_parts[-1].strip()
-                    if (
-                        last_txt.endswith(("≤", "≥", "=", "<", ">", ",", ":", "-", "–", "—", "với", "là"))
-                        or re.match(r"^[0-9\.,]+", p_clean)
-                    ):
+                    if last_txt.endswith(
+                        ("≤", "≥", "=", "<", ">", ",", ":", "-", "–", "—", "với", "là")
+                    ) or re.match(r"^[0-9\.,]+", p_clean):
                         fn_parts[-1] = f"{last_txt} {p_clean}"
                         continue
 

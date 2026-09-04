@@ -16,6 +16,7 @@ import yaml
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture()
 def sample_bundle(tmp_path: Path) -> Path:
     """Create a minimal OKF v2.4 bundle for testing."""
@@ -32,9 +33,7 @@ def sample_bundle(tmp_path: Path) -> Path:
         "category": "PCCC",
         "sha256": "abc123",
     }
-    (bundle / "metadata.yaml").write_text(
-        yaml.dump(meta, allow_unicode=True), encoding="utf-8"
-    )
+    (bundle / "metadata.yaml").write_text(yaml.dump(meta, allow_unicode=True), encoding="utf-8")
 
     # clauses.json
     clauses = [
@@ -66,9 +65,7 @@ def sample_bundle(tmp_path: Path) -> Path:
         "Đơn đề nghị thẩm duyệt thiết kế về PCCC.\n"
         "Bản sao giấy chứng nhận đăng ký kinh doanh.\n"
     )
-    (bundle / "nghi_dinh_105_2025_nd_cp.md").write_text(
-        md_content, encoding="utf-8"
-    )
+    (bundle / "nghi_dinh_105_2025_nd_cp.md").write_text(md_content, encoding="utf-8")
 
     return bundle
 
@@ -107,8 +104,14 @@ class TestFederatedLegalEngine:
         assert len(results) > 0
 
         required_keys = {
-            "clause_id", "document_id", "article_num", "title",
-            "text_snippet", "confidence_score", "citation_url", "status",
+            "clause_id",
+            "document_id",
+            "article_num",
+            "title",
+            "text_snippet",
+            "confidence_score",
+            "citation_url",
+            "status",
         }
         for result in results:
             assert required_keys.issubset(result.keys()), (
@@ -162,7 +165,9 @@ class TestFederatedLegalEngine:
         """Dynamic import skip should work when ccba-legal-intel is absent."""
         # Simulate ImportError for ccba_legal
 
-        original_import = __builtins__.__import__ if hasattr(__builtins__, '__import__') else __import__
+        original_import = (
+            __builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__
+        )
 
         def mock_import(name: str, *args: Any, **kwargs: Any) -> Any:
             if name.startswith("ccba_legal"):
@@ -172,6 +177,9 @@ class TestFederatedLegalEngine:
         # Verify the try/except pattern exists and handles ImportError gracefully
         # We just confirm the tool registration code is syntactically valid
         import ccba_ai.mcp_server as mcp_mod  # noqa: F401
+
         # If we get here without error, the module loaded successfully
         assert True
+
+
 """Test suite for Federated Legal Ground-Truth Query Engine (Issue #232)."""

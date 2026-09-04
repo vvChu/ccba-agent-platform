@@ -357,7 +357,9 @@ def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str,
             m_data["converter_version"] = CURRENT_CONVERTER_VERSION
             m_data["schema_uri"] = CURRENT_OKF_SCHEMA_URI
             m_data["extracted_at"] = datetime.now(timezone.utc).isoformat()
-            meta_path.write_text(yaml.dump(m_data, allow_unicode=True, sort_keys=False, indent=2), encoding="utf-8")
+            meta_path.write_text(
+                yaml.dump(m_data, allow_unicode=True, sort_keys=False, indent=2), encoding="utf-8"
+            )
         except Exception:
             pass
     return {

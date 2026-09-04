@@ -114,7 +114,9 @@ d &= e + f
 $$
 """
     block = re.findall(r"\$\$([\s\S]*?)\$\$", invalid_tag_md)[0]
-    has_tag_in_aligned = "\\begin{aligned}" in block and bool(re.search(r"\\tag\s*\{[^}]*\}", block))
+    has_tag_in_aligned = "\\begin{aligned}" in block and bool(
+        re.search(r"\\tag\s*\{[^}]*\}", block)
+    )
     assert has_tag_in_aligned is True
 
     # 3. Embedded HTML comment inside $$
@@ -273,6 +275,7 @@ def test_subsystem_schema_versions():
     assert sample_figures_catalog["schema_version"] == "2.4"
     assert len(sample_figures_catalog["figures"]) == 1
 
+
 def test_figure_extractor_raster_whitelist_and_zero_wmf(tmp_path: Path):
     """Test Zero-WMF Guard: Only raster media files are extracted, stray .wmf/.emf are ignored (ADR 0040)."""
     import zipfile
@@ -320,10 +323,13 @@ def test_gate_12_zero_byte_image_detection(tmp_path: Path):
     bundle_name = "test_doc"
 
     if not empty_img.exists():
-        errors.append(f"Missing Figure Image [{bundle_name}]: Figure '{tag}' references non-existent image '{img_rel}'")
+        errors.append(
+            f"Missing Figure Image [{bundle_name}]: Figure '{tag}' references non-existent image '{img_rel}'"
+        )
     elif empty_img.stat().st_size == 0:
-        errors.append(f"Zero-Byte Figure Image [{bundle_name}]: Figure '{tag}' references empty/corrupted image '{img_rel}' (0 bytes) (ADR 0040).")
+        errors.append(
+            f"Zero-Byte Figure Image [{bundle_name}]: Figure '{tag}' references empty/corrupted image '{img_rel}' (0 bytes) (ADR 0040)."
+        )
 
     assert len(errors) == 1
     assert "Zero-Byte Figure Image" in errors[0]
-
