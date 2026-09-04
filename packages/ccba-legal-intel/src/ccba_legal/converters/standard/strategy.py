@@ -7,11 +7,17 @@ import json
 import os
 import re
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from docx import Document
 
+from ccba_legal.constants import (
+    CURRENT_CONVERTER_VERSION,
+    CURRENT_OKF_SCHEMA_URI,
+    CURRENT_OKF_SPEC,
+)
 from ccba_legal.converters.standard.handlers.figure_handler import handle_figure_card
 from ccba_legal.converters.standard.handlers.formula_handler import handle_formula_block
 from ccba_legal.converters.standard.handlers.heading_handler import handle_structural_heading
@@ -320,7 +326,7 @@ def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str,
             )
 
         tbl_readme = [
-            "# DANH MỤC BẢNG TRA CỨU KỸ THUẬT 2D (OKF v2.2)\n",
+            f"# DANH MỤC BẢNG TRA CỨU KỸ THUẬT 2D (OKF {CURRENT_OKF_SPEC})\n",
             "| Mã bảng | Tên bảng | CSV | JSON |",
             "| :--- | :--- | :---: | :---: |",
         ]
@@ -332,6 +338,21 @@ def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str,
 
     # 4. Generate AST and QA Benchmarks
     clauses, qa_list = generate_bundle_ast_and_qa(ctx.bundle_dir)
+
+    # 5. Attest OKF Provenance & Converter Version into metadata.yaml
+    meta_path = ctx.bundle_dir / "metadata.yaml"
+    if meta_path.exists():
+        try:
+            import yaml
+
+            m_data = yaml.safe_load(meta_path.read_text(encoding="utf-8")) or {}
+            m_data["okf_spec"] = CURRENT_OKF_SPEC
+            m_data["converter_version"] = CURRENT_CONVERTER_VERSION
+            m_data["schema_uri"] = CURRENT_OKF_SCHEMA_URI
+            m_data["extracted_at"] = datetime.now(timezone.utc).isoformat()
+            meta_path.write_text(yaml.dump(m_data, allow_unicode=True, sort_keys=False, indent=2), encoding="utf-8")
+        except Exception:
+            pass
     return {
         "status": "success",
         "bundle": ctx.bundle_dir.name,

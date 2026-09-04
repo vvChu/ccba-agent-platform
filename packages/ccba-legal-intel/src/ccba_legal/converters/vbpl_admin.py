@@ -4,13 +4,18 @@ from __future__ import annotations
 
 import re
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import mammoth
 import yaml
 
-from ccba_legal.constants import CURRENT_OKF_SPEC
+from ccba_legal.constants import (
+    CURRENT_CONVERTER_VERSION,
+    CURRENT_OKF_SCHEMA_URI,
+    CURRENT_OKF_SPEC,
+)
 from ccba_legal.converters.table_extractor import classify_and_extract_tables
 from ccba_legal.converters.unit_normalizer import (
     normalize_clause_numbers,
@@ -182,6 +187,7 @@ def _write_bundle_metadata_and_index(
     qa_cnt: int,
     templates_cnt: int,
     tables_cnt: int,
+    spec_version: str = CURRENT_OKF_SPEC,
 ) -> None:
     """Write metadata.yaml and human-readable index.md for the OKF bundle."""
     doc_num = doc_meta.get("document_number", bundle_dir.name.upper())
@@ -204,6 +210,10 @@ def _write_bundle_metadata_and_index(
         "pdf_status": "verified",
         "legal_basis": legal_basis,
         "replaces": doc_meta.get("relations", {}).get("replaces", []),
+        "okf_spec": spec_version,
+        "converter_version": CURRENT_CONVERTER_VERSION,
+        "schema_uri": CURRENT_OKF_SCHEMA_URI,
+        "extracted_at": datetime.now(timezone.utc).isoformat(),
     }
     with open(bundle_dir / "metadata.yaml", "w", encoding="utf-8") as f:
         yaml.dump(metadata_obj, f, allow_unicode=True, sort_keys=False, indent=2)
@@ -269,6 +279,7 @@ def process_vbpl_bundle(
         qa_cnt=len(qa_benchmark),
         templates_cnt=len(created_templates),
         tables_cnt=len(extracted_tables),
+        spec_version=spec_version,
     )
 
     return {

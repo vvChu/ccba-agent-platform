@@ -9,6 +9,7 @@ from typing import Any
 
 import yaml
 
+from ccba_legal.constants import CURRENT_OKF_SPEC
 from ccba_legal.packager.slug_utils import sanitize_slug
 
 
@@ -83,11 +84,11 @@ def write_logs_and_index_v2(bundle_dir: Path, bundle_slug: str, metadata: dict[s
     doc_type = metadata.get("type", "Document")
 
     log_content = (
-        f"# OKF v2.0 Processing Log\n\n- [{timestamp}] Bundle initialized for {bundle_slug}\n"
+        f"# OKF {CURRENT_OKF_SPEC} Processing Log\n\n- [{timestamp}] Bundle initialized for {bundle_slug}\n"
     )
     (bundle_dir / "log.md").write_text(log_content, encoding="utf-8")
 
-    index_content = f"# OKF Bundle: {title}\n\n## Metadata\n- **Type**: {doc_type}\n- **ID**: {bundle_slug}\n- **Generated**: {timestamp}\n\n## Contents\n- [{bundle_slug}.md](./{bundle_slug}.md) — Canonical Document Body\n- [metadata.yaml](./metadata.yaml) — Standalone Machine Metadata\n- [clauses.json](./clauses.json) — Structured AST Nodes\n- [qa_benchmark.json](./qa_benchmark.json) — QA Benchmark Ground Truth\n"
+    index_content = f"# Gói Tri Thức OKF {CURRENT_OKF_SPEC}: {title}\n\n## Metadata\n- **Type**: {doc_type}\n- **ID**: {bundle_slug}\n- **Generated**: {timestamp}\n\n## Contents\n- [{bundle_slug}.md](./{bundle_slug}.md) — Canonical Document Body\n- [metadata.yaml](./metadata.yaml) — Standalone Machine Metadata\n- [clauses.json](./clauses.json) — Structured AST Nodes\n- [qa_benchmark.json](./qa_benchmark.json) — QA Benchmark Ground Truth\n"
     (bundle_dir / "index.md").write_text(index_content, encoding="utf-8")
 
 

@@ -29,6 +29,7 @@ from .consolidator import (
     load_manifest,
 )
 from .constants import (
+    CURRENT_CONVERTER_VERSION,
     CURRENT_OKF_SCHEMA_URI,
     CURRENT_OKF_SPEC,
     CURRENT_OKF_VERSION,
@@ -227,6 +228,7 @@ __all__ = [
     "CURRENT_OKF_VERSION",
     "CURRENT_OKF_SPEC",
     "CURRENT_OKF_SCHEMA_URI",
+    "CURRENT_CONVERTER_VERSION",
     # === DOCX Conversion & Classification ===
     "convert_docx_to_okf_bundle",
     "process_vbpl_bundle",
