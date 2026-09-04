@@ -142,3 +142,21 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
 
 - **Core Pattern P9.4 — Deduplicated Numeric Normalization in Legal Table Footnotes:**
   - Khi chuẩn hóa chú thích bảng từ Word DOCX, nếu văn bản gốc vừa có `has_explicit_numbered` (nhận diện tiền tố số như `1) ` hoặc `1. `) vừa được gán lại nhãn chuẩn `**CHÚ THÍCH 1:**`, việc không bóc tách tiền tố số cũ sẽ gây lặp số thứ tự: `**CHÚ THÍCH 1:** 1) Nội dung`. Bắt buộc phải áp dụng bước làm sạch `re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()` sau khi làm sạch từ khóa `CHÚ THÍCH`.
+
+---
+
+## 10. Federated RAG & ADR-Compliant Dynamic Import (Issue #232)
+
+- **Core Pattern P10.1 — Tier 0 ← Tier 1 Dynamic Import via try/except ImportError:**
+  - Khi package Tier 0 (`ccba-ai`) cần dùng chức năng từ Tier 1 (`ccba-legal-intel`), sử dụng `try: from ccba_legal.xxx import yyy; except ImportError: pass` tại module level. Tool MCP chỉ đăng ký khi dependency thực sự có mặt. Áp dụng trong `mcp_server.py` để đăng ký `query_legal_ground_truth` mà không tạo hard dependency (ADR 0044).
+
+- **Core Pattern P10.2 — CI Docs Validator: Portable Links & Orphan Knowledge Gate:**
+  - **Anti-Pattern AP10.1 (Non-portable `file:///` absolute links):** Tất cả links trong `.md/knowledge/` phải dùng repo-relative path (`../../../docs/adr/xxx.md`) thay vì `file:///d:/GitHubProjects/...`. CI `validate_docs.py` chặn hard error trên Linux runner.
+  - **Anti-Pattern AP10.2 (Orphan Knowledge Notes):** File mới trong `.md/knowledge/` mà chưa đăng ký trong `index.md` sẽ fail `test_wiki_health_linter_real_workspace`. Luôn thêm entry vào `index.md` khi tạo knowledge file.
+  - **Anti-Pattern AP10.3 (conversation:// links in committed docs):** URI scheme `conversation://` là local-only cho Antigravity IDE. Không bao giờ commit vào repo — thay bằng plain text.
+
+- **Core Pattern P10.3 — Module-Level Singleton Cache cho MCP Latency:**
+  - Hàm convenience `query_ground_truth()` ban đầu tạo `FederatedLegalEngine()` mới mỗi lần gọi — mỗi lần rebuild BM25 index. Copilot Review phát hiện → chuyển sang `_cached_engine` singleton tại module level. Pattern: `global _cached_engine; if _cached_engine is None: _cached_engine = Engine(...)`.
+
+- **Core Pattern P10.4 — Embedding Cache Freshness via SHA-256 Sidecar:**
+  - Cache `embeddings.npy` chỉ kiểm tra `len(matrix) == len(chunks)` dẫn đến stale cache khi corpus thay đổi mà giữ nguyên số chunk. Fix: lưu `.sha256` sidecar file cùng thư mục, validate hash trước khi load cache.
