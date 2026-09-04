@@ -56,7 +56,8 @@ class FederatedLegalEngine:
         env_paths = os.environ.get("CCBA_LEGAL_CORPUS_PATH")
         if env_paths:
             separator = ";" if os.name == "nt" else ":"
-            return [Path(p) for p in env_paths.split(separator) if p.strip()]
+            raw = [Path(p) for p in env_paths.split(separator) if p.strip()]
+            return self._expand_bundle_dirs(raw)
 
         if self._corpus_paths:
             return self._expand_bundle_dirs(self._corpus_paths)
@@ -171,7 +172,9 @@ class FederatedLegalEngine:
 
             if cache_path and cache_path.exists():
                 matrix = np.load(str(cache_path))
-                if len(matrix) == len(self._chunks):
+                hash_path = cache_path.with_suffix(".sha256")
+                cached_hash = hash_path.read_text().strip() if hash_path.exists() else ""
+                if len(matrix) == len(self._chunks) and cached_hash == self._corpus_hash:
                     self._embedding_matrix = matrix
                     return
 
@@ -181,6 +184,7 @@ class FederatedLegalEngine:
 
             if cache_path:
                 np.save(str(cache_path), self._embedding_matrix)
+                cache_path.with_suffix(".sha256").write_text(self._corpus_hash)
         except Exception as e:
             logger.error("Error building embeddings: %s", e)
             self._embedding_matrix = None
@@ -268,12 +272,18 @@ class FederatedLegalEngine:
         return results
 
 
+_cached_engine: FederatedLegalEngine | None = None
+
+
 def query_ground_truth(
     query: str,
     domain: str | None = None,
     top_k: int = 5,
 ) -> list[dict[str, Any]]:
     """High-level API for federated legal ground-truth search.
+
+    Uses a module-level cached engine to avoid rebuilding BM25 index
+    on every call (Copilot review: latency optimization).
 
     Args:
         query: Query text.
@@ -283,8 +293,10 @@ def query_ground_truth(
     Returns:
         List of result dictionaries.
     """
-    engine = FederatedLegalEngine(embedding_enabled=False)
-    return engine.query(query, domain=domain, top_k=top_k)
+    global _cached_engine  # noqa: PLW0603
+    if _cached_engine is None:
+        _cached_engine = FederatedLegalEngine(embedding_enabled=False)
+    return _cached_engine.query(query, domain=domain, top_k=top_k)
 
 
 __all__ = ["FederatedLegalEngine", "query_ground_truth"]

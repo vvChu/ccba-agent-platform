@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
 
 import pytest
 import yaml
@@ -162,24 +161,10 @@ class TestFederatedLegalEngine:
         assert any("dieu-10" == r["clause_id"] for r in results)
 
     def test_mcp_tool_dynamic_import(self) -> None:
-        """Dynamic import skip should work when ccba-legal-intel is absent."""
-        # Simulate ImportError for ccba_legal
-
-        original_import = (
-            __builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__
-        )
-
-        def mock_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name.startswith("ccba_legal"):
-                raise ImportError(f"Mocked: {name}")
-            return original_import(name, *args, **kwargs)
-
+        """MCP server module loads successfully with ccba-legal-intel present."""
         # Verify the try/except pattern exists and handles ImportError gracefully
         # We just confirm the tool registration code is syntactically valid
         import ccba_ai.mcp_server as mcp_mod  # noqa: F401
 
         # If we get here without error, the module loaded successfully
         assert True
-
-
-"""Test suite for Federated Legal Ground-Truth Query Engine (Issue #232)."""
