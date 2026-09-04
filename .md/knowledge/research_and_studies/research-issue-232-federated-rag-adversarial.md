@@ -1,8 +1,8 @@
 # Báo cáo Nghiên cứu: Phản biện Kép cho Implementation Plan Issue #232
 
 > **Phương pháp:** Dual-Agent Adversarial (ADR 0035)
-> **Subagent A:** [Solution Explorer & Proponent](conversation://0eeb8f85-8d69-48d3-a41a-9f167a2e1c2f)
-> **Subagent B:** [Risk & Boundary Challenger](conversation://88fb1d3e-de7e-4b40-89c3-89d9978c67ea)
+> **Subagent A:** Solution Explorer & Proponent
+> **Subagent B:** Risk & Boundary Challenger
 > **Ngày:** 2026-09-04
 
 ---
@@ -83,7 +83,7 @@ SAU (Kiến trúc sửa đổi — Tuân thủ ADR 0044):
 
 ### Điều chỉnh 3: Configurable Corpus Path
 - `FederatedLegalEngine.__init__()` nhận `corpus_paths: list[Path]`.
-- Hỗ trợ biến `CCBA_LEGAL_CORPUS_PATH`. Corpus rỗng → trả kết quả trống, không crash.
+- Hỗ trợ cấu hình đường dẫn corpus qua biến môi trường. Corpus rỗng → trả kết quả trống, không crash.
 
 ### Điều chỉnh 4: Bigram Enhancement cho Tokenizer
 - Giữ `text.lower().split()` (KISS). Bổ sung bigram: `["phòng", "cháy", "phòng_cháy"]`.
@@ -99,12 +99,12 @@ SAU (Kiến trúc sửa đổi — Tuân thủ ADR 0044):
 
 | Nguồn | Phát hiện |
 |:-------|:----------|
-| [ADR 0044](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0044-spoke-hub-package-bootstrap-standard.md) | Tier 0/1/2 boundary rules |
-| [ADR 0010](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0010-skills-integration-and-rag-boundaries.md) | HITL guardrail for RAG |
-| [ADR 0049](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0049-okf-v2-4-universal-agent-centric-specification-and-cloud-vault.md) | OKF v2.4 bundle structure |
-| [hybrid_rag.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/src/ccba_legal/hybrid_rag.py) | BM25 tokenizer analysis |
-| [client.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/client.py) | AIClient API surface |
-| [registry.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/src/ccba_legal/registry.py) | Corpus discovery via registry |
+| [ADR 0044](../../../docs/adr/0044-spoke-hub-package-bootstrap-standard.md) | Tier 0/1/2 boundary rules |
+| [ADR 0010](../../../docs/adr/0010-skills-integration-and-rag-boundaries.md) | HITL guardrail for RAG |
+| [ADR 0049](../../../docs/adr/0049-okf-v2-4-universal-agent-centric-specification-and-cloud-vault.md) | OKF v2.4 bundle structure |
+| [hybrid_rag.py](../../../packages/ccba-legal-intel/src/ccba_legal/hybrid_rag.py) | BM25 tokenizer analysis |
+| [client.py](../../../packages/ccba-ai/src/ccba_ai/client.py) | AIClient API surface |
+| [registry.py](../../../packages/ccba-legal-intel/src/ccba_legal/registry.py) | Corpus discovery via registry |
 
 ---
 
