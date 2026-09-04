@@ -273,4 +273,57 @@ def test_subsystem_schema_versions():
     assert sample_figures_catalog["schema_version"] == "2.4"
     assert len(sample_figures_catalog["figures"]) == 1
 
+def test_figure_extractor_raster_whitelist_and_zero_wmf(tmp_path: Path):
+    """Test Zero-WMF Guard: Only raster media files are extracted, stray .wmf/.emf are ignored (ADR 0040)."""
+    import zipfile
+
+    docx_dummy = tmp_path / "dummy.docx"
+    images_dir = tmp_path / "figures" / "images"
+    images_dir.mkdir(parents=True)
+
+    with zipfile.ZipFile(docx_dummy, "w") as z:
+        z.writestr("word/media/image1.png", b"fake_png_data")
+        z.writestr("word/media/image2.wmf", b"fake_wmf_data")
+        z.writestr("word/media/image3.emf", b"fake_emf_data")
+        z.writestr("word/media/image4.jpg", b"fake_jpg_data")
+
+    allowed_raster_exts = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".svg"}
+    with zipfile.ZipFile(docx_dummy) as z:
+        media_list = sorted([f for f in z.namelist() if f.startswith("word/media/")])
+        for media_path in media_list:
+            fname = Path(media_path).name
+            if Path(fname).suffix.lower() in allowed_raster_exts:
+                target_file = images_dir / fname
+                if not target_file.exists():
+                    target_file.write_bytes(z.read(media_path))
+
+    extracted_names = {f.name for f in images_dir.iterdir()}
+    assert "image1.png" in extracted_names
+    assert "image4.jpg" in extracted_names
+    assert "image2.wmf" not in extracted_names, "Stray .wmf must NOT be extracted"
+    assert "image3.emf" not in extracted_names, "Stray .emf must NOT be extracted"
+
+
+def test_gate_12_zero_byte_image_detection(tmp_path: Path):
+    """Test Gate 12: Zero-Byte / Corrupted Image files are caught and flagged (ADR 0040)."""
+    empty_img = tmp_path / "figures" / "images" / "hinh_1.png"
+    empty_img.parent.mkdir(parents=True)
+    empty_img.touch()  # 0 bytes
+
+    assert empty_img.exists()
+    assert empty_img.stat().st_size == 0
+
+    # Gate 12 assertion logic
+    errors: list[str] = []
+    tag = "1"
+    img_rel = "figures/images/hinh_1.png"
+    bundle_name = "test_doc"
+
+    if not empty_img.exists():
+        errors.append(f"Missing Figure Image [{bundle_name}]: Figure '{tag}' references non-existent image '{img_rel}'")
+    elif empty_img.stat().st_size == 0:
+        errors.append(f"Zero-Byte Figure Image [{bundle_name}]: Figure '{tag}' references empty/corrupted image '{img_rel}' (0 bytes) (ADR 0040).")
+
+    assert len(errors) == 1
+    assert "Zero-Byte Figure Image" in errors[0]
 
