@@ -11,6 +11,11 @@ from typing import Any
 import yaml
 from docx import Document
 
+from ccba_legal.constants import (
+    CURRENT_OKF_SPEC,
+    FIGURES_CATALOG_SCHEMA_VERSION,
+)
+
 
 def load_bundle_figures_overrides(bundle_dir: Path) -> dict[str, dict[str, Any]]:
     """Load bundle-level figure metadata overrides from `figures_override.yaml` if present."""
@@ -97,12 +102,14 @@ def extract_docx_figures(
     with zipfile.ZipFile(docx_p) as z:
         media_list = sorted([f for f in z.namelist() if f.startswith("word/media/")])
 
-        # Unconditionally extract all media files so any inline diagram image is present
+        # Extract raster media files only (protecting against stray .wmf/.emf binaries)
+        allowed_raster_exts = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".svg"}
         for media_path in media_list:
             fname = Path(media_path).name
-            target_file = images_dir / fname
-            if not target_file.exists():
-                target_file.write_bytes(z.read(media_path))
+            if Path(fname).suffix.lower() in allowed_raster_exts:
+                target_file = images_dir / fname
+                if not target_file.exists():
+                    target_file.write_bytes(z.read(media_path))
 
         if fig_items:
             consumed_media: set[str] = set()
@@ -189,10 +196,20 @@ def extract_docx_figures(
                     if should_stitch:
                         for m_t in found_media:
                             consumed_media.add(m_t)
-                        font_bold: Any
-                        try:
-                            font_bold = ImageFont.truetype("arialbd.ttf", 13)
-                        except Exception:
+                        font_bold: Any = None
+                        for font_candidate in (
+                            "arialbd.ttf",
+                            "DejaVuSans-Bold.ttf",
+                            "LiberationSans-Bold.ttf",
+                            "FreeSansBold.ttf",
+                            "arial.ttf",
+                        ):
+                            try:
+                                font_bold = ImageFont.truetype(font_candidate, 13)
+                                break
+                            except Exception:
+                                continue
+                        if font_bold is None:
                             font_bold = ImageFont.load_default()
 
                         dummy_img = Image.new("RGB", (1, 1))
@@ -272,6 +289,8 @@ def extract_docx_figures(
 
     # 3. Write figures_catalog.yaml
     manifest = {
+        "schema_version": FIGURES_CATALOG_SCHEMA_VERSION,
+        "okf_spec": CURRENT_OKF_SPEC,
         "standard": std_name,
         "total_figures": len(catalog_entries),
         "figures": catalog_entries,

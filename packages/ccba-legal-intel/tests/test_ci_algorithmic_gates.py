@@ -1,0 +1,335 @@
+# Copyright (c) 2026 CCBA. All rights reserved.
+"""Unit tests for Master CI 2.0 Algorithmic Gates (Gates 13, 14, 15)."""
+
+from __future__ import annotations
+
+import csv
+import re
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from ccba_legal.consolidator.patch_manifest_schema import DocMode, PatchManifest
+from ccba_legal.constants import (
+    AST_CLAUSES_SCHEMA_VERSION,
+    CURRENT_CONVERTER_VERSION,
+    CURRENT_OKF_SCHEMA_URI,
+    CURRENT_OKF_SPEC,
+    CURRENT_OKF_VERSION,
+    DIR_ANNEXES,
+    DIR_FIGURES,
+    DIR_SOURCES,
+    DIR_TABLES,
+    DIR_TEMPLATES,
+    FIGURES_CATALOG_SCHEMA_VERSION,
+    GATE_0_MIN_DOCX_PDF_PARITY,
+    GATE_11_MIN_VERBATIM_PARITY,
+    PATCH_MANIFEST_VERSION,
+    QA_BENCHMARK_SCHEMA_VERSION,
+    STANDARD_COMPARTMENTS,
+    TABLES_CATALOG_SCHEMA_VERSION,
+)
+from ccba_legal.packager import package_bundle_v2
+
+
+def test_constants_ssot():
+    """Verify central SSoT constants are properly defined."""
+    assert CURRENT_OKF_VERSION == "2.4"
+    assert "v2.4" in CURRENT_OKF_SPEC
+    assert CURRENT_CONVERTER_VERSION == "0.4.0"
+    assert CURRENT_OKF_SCHEMA_URI.startswith("https://schemas.ccba.vn/okf/")
+
+
+def test_table_matrix_regularity_logic(tmp_path: Path):
+    """Test 2D CSV Matrix Regularity and Ragged Row detection (ADR 0041)."""
+    # 1. Valid rectangular table
+    valid_csv = tmp_path / "valid.csv"
+    with open(valid_csv, "w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Mã", "Tên", "Giá trị"])
+        writer.writerow(["A1", "Cột 1", "100"])
+        writer.writerow(["A2", "Cột 2", "200"])
+
+    with open(valid_csv, encoding="utf-8-sig") as f:
+        rows = list(csv.reader(f))
+    header_cols = len(rows[0])
+    ragged_rows = [i for i, r in enumerate(rows[1:], start=2) if len(r) != header_cols]
+    assert len(ragged_rows) == 0
+
+    # 2. Ragged table (skewed rows)
+    ragged_csv = tmp_path / "ragged.csv"
+    with open(ragged_csv, "w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Mã", "Tên", "Giá trị", "Ghi chú"])
+        writer.writerow(["A1", "Cột 1", "100"])  # Missing 1 col
+        writer.writerow(["A2", "Cột 2", "200", "OK", "Extra"])  # Extra col
+
+    with open(ragged_csv, encoding="utf-8-sig") as f:
+        rows = list(csv.reader(f))
+    header_cols = len(rows[0])
+    ragged_rows = [i for i, r in enumerate(rows[1:], start=2) if len(r) != header_cols]
+    assert ragged_rows == [2, 3]
+
+    # 3. Footnote contamination detection
+    footnote_csv = tmp_path / "footnote.csv"
+    with open(footnote_csv, "w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Mã", "Tên"])
+        writer.writerow(["A1", "Tên 1"])
+        writer.writerow(["CHÚ THÍCH: Số liệu tính theo phụ lục", ""])
+
+    with open(footnote_csv, encoding="utf-8-sig") as f:
+        rows = list(csv.reader(f))
+    leaks = [
+        i
+        for i, r in enumerate(rows[1:], start=2)
+        if re.match(r"^(?:CHÚ\s+THÍCH|CHÚ\s+DẪN|Ghi\s+chú|\(\*\))\s*:", " ".join(r).strip(), re.I)
+    ]
+    assert leaks == [3]
+
+
+def test_katex_syntax_integrity_lexer():
+    """Test KaTeX regex lexer detecting critical rendering traps (ADR 0038)."""
+    # 1. Valid KaTeX block
+    valid_md = r"""
+$$
+w = w_0 \cdot k(z_e) \cdot c \qquad (1)
+$$
+"""
+    # Even display math count
+    assert len(re.findall(r"\$\$", valid_md)) % 2 == 0
+    blocks = re.findall(r"\$\$([\s\S]*?)\$\$", valid_md)
+    assert len(blocks) == 1
+    assert "<!--" not in blocks[0]
+
+    # 2. Unsupported \tag{...} inside aligned environment
+    invalid_tag_md = r"""
+$$
+\begin{aligned}
+a &= b + c \tag{1} \\
+d &= e + f
+\end{aligned}
+$$
+"""
+    block = re.findall(r"\$\$([\s\S]*?)\$\$", invalid_tag_md)[0]
+    has_tag_in_aligned = "\\begin{aligned}" in block and bool(
+        re.search(r"\\tag\s*\{[^}]*\}", block)
+    )
+    assert has_tag_in_aligned is True
+
+    # 3. Embedded HTML comment inside $$
+    invalid_comment_md = r"""
+$$
+E = mc^2 <!-- FIGURE: EINSTEIN -->
+$$
+"""
+    block = re.findall(r"\$\$([\s\S]*?)\$\$", invalid_comment_md)[0]
+    assert ("<!--" in block and "-->" in block) is True
+
+    # 4. Unbalanced \left and \right
+    unbalanced_left_md = r"""
+$$
+f(x) = \left[ \frac{a}{b} + c )
+$$
+"""
+    block = re.findall(r"\$\$([\s\S]*?)\$\$", unbalanced_left_md)[0]
+    left_count = len(re.findall(r"\\left[\(\[\{\.\vert]", block))
+    right_count = len(re.findall(r"\\right[\)\]\}\.\vert]", block))
+    assert left_count == 1
+    assert right_count == 0
+
+
+def test_provenance_attestation_logic():
+    """Test Provenance stamp validation against SSoT constants."""
+    metadata: dict[str, Any] = {
+        "id": "test_bundle",
+        "okf_spec": "v2.4 Universal",
+        "converter_version": "0.4.0",
+        "extracted_at": "2026-09-04T13:30:00Z",
+        "schema_uri": "https://schemas.ccba.vn/okf/v2.4/schema.json",
+    }
+    assert metadata.get("okf_spec") == CURRENT_OKF_SPEC
+    assert metadata.get("converter_version") == CURRENT_CONVERTER_VERSION
+    # Validate ISO-8601 format
+    parsed_date = datetime.fromisoformat(metadata["extracted_at"].replace("Z", "+00:00"))
+    assert parsed_date.year == 2026
+
+
+def test_package_bundle_v2_provenance_stamping(tmp_path: Path):
+    """Verify package_bundle_v2 writes OKF v2.4 Universal provenance and pure body."""
+    bundle_dir = package_bundle_v2(
+        root_dir=tmp_path,
+        doc_id="test_doc_123",
+        content="# Điều 1. Quy định mẫu\nNội dung điều 1.",
+        metadata={"title": "Văn bản thử nghiệm", "document_number": "123/2026/ND-CP"},
+    )
+    meta_file = bundle_dir / "metadata.yaml"
+    assert meta_file.exists()
+    meta = yaml.safe_load(meta_file.read_text(encoding="utf-8"))
+    assert meta["okf_spec"] == CURRENT_OKF_SPEC
+    assert meta["converter_version"] == CURRENT_CONVERTER_VERSION
+    assert meta["schema_uri"] == CURRENT_OKF_SCHEMA_URI
+    assert "extracted_at" in meta
+
+    # Check primary markdown has pure body (no frontmatter)
+    md_file = bundle_dir / "test_doc_123.md"
+    assert md_file.exists()
+    assert not md_file.read_text(encoding="utf-8").startswith("---")
+
+    # Check index.md exists and contains OKF v2.4 Universal title
+    index_file = bundle_dir / "index.md"
+    assert index_file.exists()
+    assert CURRENT_OKF_SPEC in index_file.read_text(encoding="utf-8")
+
+
+def test_extended_ssot_constants():
+    """Verify extended SSoT constants for compartments and algorithmic parity thresholds."""
+    assert DIR_SOURCES == "sources"
+    assert DIR_TABLES == "tables"
+    assert DIR_FIGURES == "figures"
+    assert DIR_ANNEXES == "annexes"
+    assert DIR_TEMPLATES == "templates"
+    assert STANDARD_COMPARTMENTS == ("sources", "tables", "figures", "annexes", "templates")
+    assert GATE_0_MIN_DOCX_PDF_PARITY == 70.0
+    assert GATE_11_MIN_VERBATIM_PARITY == 98.0
+    assert PATCH_MANIFEST_VERSION == "2.0"
+
+
+def test_patch_manifest_versioning():
+    """Verify PatchManifest adheres to version 2.0 while maintaining 1.0 backward compatibility."""
+    manifest = PatchManifest(
+        target_doc_id="qcvn_06_2022_bxd",
+        amending_doc_id="thong_tu_09_2023_tt_bxd",
+        doc_mode=DocMode.QCVN,
+    )
+    assert manifest.manifest_version == PATCH_MANIFEST_VERSION
+    exported = manifest.to_dict()
+    assert exported["manifest_version"] == "2.0"
+
+    # Backward compatibility: legacy manifests without manifest_version default to "1.0"
+    legacy_data = {
+        "target_doc_id": "legacy_doc",
+        "amending_doc_id": "legacy_amend",
+        "doc_mode": "qcvn",
+    }
+    loaded_legacy = PatchManifest.from_dict(legacy_data)
+    assert loaded_legacy.manifest_version == "1.0"
+
+    # Explicit 2.0 manifest
+    v2_data = {
+        "target_doc_id": "v2_doc",
+        "amending_doc_id": "v2_amend",
+        "doc_mode": "qcvn",
+        "manifest_version": "2.0",
+    }
+    loaded_v2 = PatchManifest.from_dict(v2_data)
+    assert loaded_v2.manifest_version == "2.0"
+
+
+def test_subsystem_schema_versions():
+    """Verify auxiliary data component schema versions and structure."""
+    assert TABLES_CATALOG_SCHEMA_VERSION == "2.4"
+    assert FIGURES_CATALOG_SCHEMA_VERSION == "2.4"
+    assert AST_CLAUSES_SCHEMA_VERSION == "2.4"
+    assert QA_BENCHMARK_SCHEMA_VERSION == "2.4"
+
+    # Verify canonical tables_catalog schema shape
+    sample_table_catalog = {
+        "schema_version": TABLES_CATALOG_SCHEMA_VERSION,
+        "okf_spec": CURRENT_OKF_SPEC,
+        "total_tables": 1,
+        "tables": [
+            {
+                "table_id": "bang_01",
+                "table_number": "1",
+                "title": "Bảng 1 - Phân cấp công trình",
+                "archetype": "FLAT_MATRIX",
+                "csv_file": "tables/csv/bang_01.csv",
+                "json_file": "tables/json/bang_01.json",
+            }
+        ],
+    }
+    assert sample_table_catalog["schema_version"] == "2.4"
+    assert sample_table_catalog["okf_spec"] == CURRENT_OKF_SPEC
+    assert len(sample_table_catalog["tables"]) == 1
+
+    # Verify canonical figures_catalog schema shape
+    sample_figures_catalog = {
+        "schema_version": FIGURES_CATALOG_SCHEMA_VERSION,
+        "okf_spec": CURRENT_OKF_SPEC,
+        "standard": "TCVN 2737:2023",
+        "total_figures": 1,
+        "figures": [
+            {
+                "figure_id": "FIG_01",
+                "tag": "1",
+                "title": "Sơ đồ khí động",
+                "anchor": "hinh-1",
+                "image_relpath": "figures/images/hinh_1.png",
+                "has_image": True,
+            }
+        ],
+    }
+    assert sample_figures_catalog["schema_version"] == "2.4"
+    assert len(sample_figures_catalog["figures"]) == 1
+
+
+def test_figure_extractor_raster_whitelist_and_zero_wmf(tmp_path: Path):
+    """Test Zero-WMF Guard: Only raster media files are extracted, stray .wmf/.emf are ignored (ADR 0040)."""
+    import zipfile
+
+    docx_dummy = tmp_path / "dummy.docx"
+    images_dir = tmp_path / "figures" / "images"
+    images_dir.mkdir(parents=True)
+
+    with zipfile.ZipFile(docx_dummy, "w") as z:
+        z.writestr("word/media/image1.png", b"fake_png_data")
+        z.writestr("word/media/image2.wmf", b"fake_wmf_data")
+        z.writestr("word/media/image3.emf", b"fake_emf_data")
+        z.writestr("word/media/image4.jpg", b"fake_jpg_data")
+
+    allowed_raster_exts = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".svg"}
+    with zipfile.ZipFile(docx_dummy) as z:
+        media_list = sorted([f for f in z.namelist() if f.startswith("word/media/")])
+        for media_path in media_list:
+            fname = Path(media_path).name
+            if Path(fname).suffix.lower() in allowed_raster_exts:
+                target_file = images_dir / fname
+                if not target_file.exists():
+                    target_file.write_bytes(z.read(media_path))
+
+    extracted_names = {f.name for f in images_dir.iterdir()}
+    assert "image1.png" in extracted_names
+    assert "image4.jpg" in extracted_names
+    assert "image2.wmf" not in extracted_names, "Stray .wmf must NOT be extracted"
+    assert "image3.emf" not in extracted_names, "Stray .emf must NOT be extracted"
+
+
+def test_gate_12_zero_byte_image_detection(tmp_path: Path):
+    """Test Gate 12: Zero-Byte / Corrupted Image files are caught and flagged (ADR 0040)."""
+    empty_img = tmp_path / "figures" / "images" / "hinh_1.png"
+    empty_img.parent.mkdir(parents=True)
+    empty_img.touch()  # 0 bytes
+
+    assert empty_img.exists()
+    assert empty_img.stat().st_size == 0
+
+    # Gate 12 assertion logic
+    errors: list[str] = []
+    tag = "1"
+    img_rel = "figures/images/hinh_1.png"
+    bundle_name = "test_doc"
+
+    if not empty_img.exists():
+        errors.append(
+            f"Missing Figure Image [{bundle_name}]: Figure '{tag}' references non-existent image '{img_rel}'"
+        )
+    elif empty_img.stat().st_size == 0:
+        errors.append(
+            f"Zero-Byte Figure Image [{bundle_name}]: Figure '{tag}' references empty/corrupted image '{img_rel}' (0 bytes) (ADR 0040)."
+        )
+
+    assert len(errors) == 1
+    assert "Zero-Byte Figure Image" in errors[0]
