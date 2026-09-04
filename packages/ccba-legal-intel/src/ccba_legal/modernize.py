@@ -1,4 +1,4 @@
-"""CCBA Modernize Annex Engine — Auto-Compositor, Table Matrix Builder & Math Converter (OKF v2.3 / ADR 0034).
+"""CCBA Modernize Annex Engine — Auto-Compositor, Table Matrix Builder & Math Converter (OKF v2.4 Universal / ADR 0034 & ADR 0036).
 
 Provides core primitives for:
 1. Composite Figures: Merging multi-panel sub-figures into a unified centered white-RGB composite image.

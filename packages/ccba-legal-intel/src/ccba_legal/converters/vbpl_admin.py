@@ -1,17 +1,31 @@
-"""Complete OKF v2.2 Transformation Pipeline for Decrees, Circulars and Laws (ADR 0021)."""
+"""Complete OKF v2.4 Universal Transformation Pipeline for Decrees, Circulars and Laws (ADR 0021, ADR 0034, ADR 0036)."""
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import mammoth
 import yaml
 
+from ccba_legal.constants import (
+    CURRENT_CONVERTER_VERSION,
+    CURRENT_OKF_SCHEMA_URI,
+    CURRENT_OKF_SPEC,
+    DIR_TABLES,
+    TABLES_CATALOG_SCHEMA_VERSION,
+)
 from ccba_legal.converters.table_extractor import classify_and_extract_tables
-from ccba_legal.converters.unit_normalizer import normalize_clause_numbers
+from ccba_legal.converters.unit_normalizer import (
+    normalize_clause_numbers,
+    normalize_docx_markdown,
+)
 from ccba_legal.gold_standard import generate_bundle_ast_and_qa, inject_semantic_anchors
+from ccba_legal.table_cleaner import clean_markdown_tables_and_notes
 
 
 def extract_legal_basis_graph(
@@ -40,6 +54,10 @@ def extract_legal_basis_graph(
         ):
             continue
         doc_num = match.group(2) if match.group(2) else ""
+        if not doc_num:
+            m_num = re.search(r"số\s+([\d\w\-/]+)", title_clean, re.IGNORECASE)
+            if m_num:
+                doc_num = m_num.group(1)
         doc_id = registry_lookup.get(
             doc_num, re.sub(r"[^\w\d]+", "_", title_clean.lower()).strip("_")[:50]
         )
@@ -71,18 +89,10 @@ def _load_registry_metadata(
 
 def _convert_docx_to_clean_markdown(docx_path: Path) -> str:
     """Convert docx to raw markdown via Mammoth and clean escaping artifacts."""
-    import mammoth
-
     with open(docx_path, "rb") as f:
         raw_md = mammoth.convert_to_markdown(f).value
-    return (
-        re.sub(r'<a id="[^"]+"></a>', "", raw_md)
-        .replace(r"\.", ".")
-        .replace(r"\-", "-")
-        .replace(r"\_", "_")
-        .replace(r"\(", "(")
-        .replace(r"\)", ")")
-    )
+    cleaned = re.sub(r'<a id="[^"]+"></a>', "", raw_md)
+    return normalize_docx_markdown(cleaned)
 
 
 def _export_single_template(
@@ -123,7 +133,15 @@ def _extract_and_export_templates(
 
         pattern = re.compile(r"(?:^|\n)#*\s*__?\s*Mẫu\s+số\s+(\d+[a-zA-Z]?)[.\s_]*", re.IGNORECASE)
         form_positions = {m.group(1).zfill(2): m.start() for m in pattern.finditer(app_full_text)}
-        sorted_forms = sorted(form_positions.items(), key=lambda x: int(x[0]))
+
+        def _form_sort_key(item: tuple[str, int]) -> tuple[int, str]:
+            tag = item[0]
+            m_digits = re.match(r"^(\d+)(.*)$", tag)
+            if m_digits:
+                return (int(m_digits.group(1)), m_digits.group(2))
+            return (999, tag)
+
+        sorted_forms = sorted(form_positions.items(), key=_form_sort_key)
 
         if len(sorted_forms) >= 2:
             sub_dir = templates_dir / f"phu_luc_{roman_num.lower()}"
@@ -172,6 +190,7 @@ def _write_bundle_metadata_and_index(
     qa_cnt: int,
     templates_cnt: int,
     tables_cnt: int,
+    spec_version: str = CURRENT_OKF_SPEC,
 ) -> None:
     """Write metadata.yaml and human-readable index.md for the OKF bundle."""
     doc_num = doc_meta.get("document_number", bundle_dir.name.upper())
@@ -194,11 +213,15 @@ def _write_bundle_metadata_and_index(
         "pdf_status": "verified",
         "legal_basis": legal_basis,
         "replaces": doc_meta.get("relations", {}).get("replaces", []),
+        "okf_spec": spec_version,
+        "converter_version": CURRENT_CONVERTER_VERSION,
+        "schema_uri": CURRENT_OKF_SCHEMA_URI,
+        "extracted_at": datetime.now(timezone.utc).isoformat(),
     }
     with open(bundle_dir / "metadata.yaml", "w", encoding="utf-8") as f:
         yaml.dump(metadata_obj, f, allow_unicode=True, sort_keys=False, indent=2)
 
-    index_md = f"""# Gói Tri Thức Pháp Lý OKF v2.2: {doc_num}
+    index_md = f"""# Gói Tri Thức Pháp Lý OKF {CURRENT_OKF_SPEC}: {doc_num}
 
 > [!NOTE]
 > **Văn bản:** {doc_title}
@@ -208,9 +231,9 @@ def _write_bundle_metadata_and_index(
 
 ---
 
-## 📑 Danh Mục Thành Phần Gói Tri Thức (OKF v2.2 Bundle)
+## 📑 Danh Mục Thành Phần Gói Tri Thức (OKF {CURRENT_OKF_SPEC} Bundle)
 
-- [Toàn văn Quy phạm (Markdown OKF v2.2)](./{target_md_name}) — Thân văn bản quy phạm thuần khiết có gắn thẻ neo `#dieu-X`.
+- [Toàn văn Quy phạm (Markdown OKF {CURRENT_OKF_SPEC})](./{target_md_name}) — Thân văn bản quy phạm thuần khiết có gắn thẻ neo `#dieu-X`.
 - [Metadata Pháp lý & Đồ thị (YAML)](./metadata.yaml) — Đặc tả thuộc tính và cây đồ thị `legal_basis`.
 - [Cây Cú Pháp Điều Khoản (AST Clauses JSON)](./clauses.json) — {clauses_cnt} nodes điều khoản phục vụ AI QC & RAG.
 - [Bộ Đánh Giá Độ Chính Xác (QA Benchmark)](./qa_benchmark.json) — {qa_cnt} cặp câu hỏi - câu trả lời đối soát.
@@ -220,13 +243,14 @@ def _write_bundle_metadata_and_index(
     (bundle_dir / "index.md").write_text(index_md, encoding="utf-8")
 
 
-def process_vbpl_bundle_okf_v22(
+def process_vbpl_bundle(
     docx_path: Path,
     bundle_dir: Path,
     registry_file: Path,
     output_filename: str | None = None,
+    spec_version: str = CURRENT_OKF_SPEC,
 ) -> dict[str, Any]:
-    """Complete OKF v2.2 Transformation Pipeline for Decrees and Laws."""
+    """Complete OKF Transformation Pipeline for Decrees, Circulars and Laws."""
     bundle_dir.mkdir(parents=True, exist_ok=True)
     templates_dir = bundle_dir / "templates"
     if templates_dir.exists():
@@ -236,13 +260,25 @@ def process_vbpl_bundle_okf_v22(
     reg_lookup, doc_meta = _load_registry_metadata(registry_file, bundle_dir.name)
     cleaned_md = _convert_docx_to_clean_markdown(docx_path)
     extracted_tables = classify_and_extract_tables(docx_path, bundle_dir)
+    if extracted_tables:
+        tables_dir = bundle_dir / DIR_TABLES
+        with open(tables_dir / "tables_catalog.json", "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "schema_version": TABLES_CATALOG_SCHEMA_VERSION,
+                    "okf_spec": CURRENT_OKF_SPEC,
+                    "total_tables": len(extracted_tables),
+                    "tables": extracted_tables,
+                },
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
 
     pure_body_raw, created_templates = _extract_and_export_templates(
         cleaned_md, templates_dir, doc_meta.get("document_number", bundle_dir.name)
     )
     body_anchored = _build_pure_normative_body(pure_body_raw)
-    from ccba_legal.table_cleaner import clean_markdown_tables_and_notes
-
     body_anchored = clean_markdown_tables_and_notes(body_anchored)
 
     target_md_filename = output_filename or f"{bundle_dir.name}.md"
@@ -260,14 +296,21 @@ def process_vbpl_bundle_okf_v22(
         qa_cnt=len(qa_benchmark),
         templates_cnt=len(created_templates),
         tables_cnt=len(extracted_tables),
+        spec_version=spec_version,
     )
 
     return {
         "status": "success",
         "bundle": bundle_dir.name,
         "archetype": "VBPL_ADMIN",
+        "spec_version": spec_version,
         "clauses_count": len(clauses),
         "templates_count": len(created_templates),
         "tables_count": len(extracted_tables),
         "qa_count": len(qa_benchmark),
     }
+
+
+# Backward compatibility aliases for versioned function callers (ADR 0021, ADR 0036)
+process_vbpl_bundle_okf_v24 = process_vbpl_bundle
+process_vbpl_bundle_okf_v22 = process_vbpl_bundle

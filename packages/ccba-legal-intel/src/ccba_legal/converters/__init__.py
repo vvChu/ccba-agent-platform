@@ -17,7 +17,12 @@ from .unit_normalizer import (
     normalize_docx_markdown,
     normalize_units_and_math,
 )
-from .vbpl_admin import extract_legal_basis_graph, process_vbpl_bundle_okf_v22
+from .vbpl_admin import (
+    extract_legal_basis_graph,
+    process_vbpl_bundle,
+    process_vbpl_bundle_okf_v22,
+    process_vbpl_bundle_okf_v24,
+)
 
 __all__ = [
     "DocumentArchetype",
@@ -25,7 +30,9 @@ __all__ = [
     "detect_document_pipeline",
     "classify_and_extract_tables",
     "process_technical_standard_strategy",
+    "process_vbpl_bundle",
     "process_vbpl_bundle_okf_v22",
+    "process_vbpl_bundle_okf_v24",
     "normalize_clause_numbers",
     "normalize_docx_markdown",
     "normalize_units_and_math",
