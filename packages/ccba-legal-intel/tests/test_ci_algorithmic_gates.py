@@ -11,11 +11,21 @@ from typing import Any
 
 import yaml
 
+from ccba_legal.consolidator.patch_manifest_schema import DocMode, PatchManifest
 from ccba_legal.constants import (
     CURRENT_CONVERTER_VERSION,
     CURRENT_OKF_SCHEMA_URI,
     CURRENT_OKF_SPEC,
     CURRENT_OKF_VERSION,
+    DIR_ANNEXES,
+    DIR_FIGURES,
+    DIR_SOURCES,
+    DIR_TABLES,
+    DIR_TEMPLATES,
+    GATE_0_MIN_DOCX_PDF_PARITY,
+    GATE_11_MIN_VERBATIM_PARITY,
+    PATCH_MANIFEST_VERSION,
+    STANDARD_COMPARTMENTS,
 )
 from ccba_legal.packager import package_bundle_v2
 
@@ -166,3 +176,48 @@ def test_package_bundle_v2_provenance_stamping(tmp_path: Path):
     index_file = bundle_dir / "index.md"
     assert index_file.exists()
     assert CURRENT_OKF_SPEC in index_file.read_text(encoding="utf-8")
+
+
+def test_extended_ssot_constants():
+    """Verify extended SSoT constants for compartments and algorithmic parity thresholds."""
+    assert DIR_SOURCES == "sources"
+    assert DIR_TABLES == "tables"
+    assert DIR_FIGURES == "figures"
+    assert DIR_ANNEXES == "annexes"
+    assert DIR_TEMPLATES == "templates"
+    assert STANDARD_COMPARTMENTS == ("sources", "tables", "figures", "annexes", "templates")
+    assert GATE_0_MIN_DOCX_PDF_PARITY == 70.0
+    assert GATE_11_MIN_VERBATIM_PARITY == 98.0
+    assert PATCH_MANIFEST_VERSION == "2.0"
+
+
+def test_patch_manifest_versioning():
+    """Verify PatchManifest adheres to version 2.0 while maintaining 1.0 backward compatibility."""
+    manifest = PatchManifest(
+        target_doc_id="qcvn_06_2022_bxd",
+        amending_doc_id="thong_tu_09_2023_tt_bxd",
+        doc_mode=DocMode.QCVN,
+    )
+    assert manifest.manifest_version == PATCH_MANIFEST_VERSION
+    exported = manifest.to_dict()
+    assert exported["manifest_version"] == "2.0"
+
+    # Backward compatibility: legacy manifests without manifest_version default to "1.0"
+    legacy_data = {
+        "target_doc_id": "legacy_doc",
+        "amending_doc_id": "legacy_amend",
+        "doc_mode": "qcvn",
+    }
+    loaded_legacy = PatchManifest.from_dict(legacy_data)
+    assert loaded_legacy.manifest_version == "1.0"
+
+    # Explicit 2.0 manifest
+    v2_data = {
+        "target_doc_id": "v2_doc",
+        "amending_doc_id": "v2_amend",
+        "doc_mode": "qcvn",
+        "manifest_version": "2.0",
+    }
+    loaded_v2 = PatchManifest.from_dict(v2_data)
+    assert loaded_v2.manifest_version == "2.0"
+

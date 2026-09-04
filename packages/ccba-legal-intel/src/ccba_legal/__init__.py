@@ -33,6 +33,15 @@ from .constants import (
     CURRENT_OKF_SCHEMA_URI,
     CURRENT_OKF_SPEC,
     CURRENT_OKF_VERSION,
+    DIR_ANNEXES,
+    DIR_FIGURES,
+    DIR_SOURCES,
+    DIR_TABLES,
+    DIR_TEMPLATES,
+    GATE_0_MIN_DOCX_PDF_PARITY,
+    GATE_11_MIN_VERBATIM_PARITY,
+    PATCH_MANIFEST_VERSION,
+    STANDARD_COMPARTMENTS,
 )
 from .converters import (
     load_bundle_formula_overrides,
@@ -70,6 +79,7 @@ from .docx_converter import (
     process_vbpl_bundle_okf_v22,
     process_vbpl_bundle_okf_v24,
 )
+from .federated_rag import FederatedLegalEngine, query_ground_truth
 from .figure_extractor import (
     extract_docx_figures,
     extract_technical_figures,
@@ -160,6 +170,8 @@ __all__ = [
     "LegalRegistryManager",
     "LegalGroundingGate",
     "LegislativeConsolidator",
+    "FederatedLegalEngine",
+    "query_ground_truth",
     "ManifestGenerator",
     "OKFBundlePackager",
     "OKFStructureProcessor",
@@ -229,6 +241,15 @@ __all__ = [
     "CURRENT_OKF_SPEC",
     "CURRENT_OKF_SCHEMA_URI",
     "CURRENT_CONVERTER_VERSION",
+    "DIR_SOURCES",
+    "DIR_TABLES",
+    "DIR_FIGURES",
+    "DIR_ANNEXES",
+    "DIR_TEMPLATES",
+    "STANDARD_COMPARTMENTS",
+    "GATE_0_MIN_DOCX_PDF_PARITY",
+    "GATE_11_MIN_VERBATIM_PARITY",
+    "PATCH_MANIFEST_VERSION",
     # === DOCX Conversion & Classification ===
     "convert_docx_to_okf_bundle",
     "process_vbpl_bundle",
