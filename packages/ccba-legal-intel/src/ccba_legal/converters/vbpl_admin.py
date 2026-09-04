@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 from datetime import datetime, timezone
@@ -15,6 +16,8 @@ from ccba_legal.constants import (
     CURRENT_CONVERTER_VERSION,
     CURRENT_OKF_SCHEMA_URI,
     CURRENT_OKF_SPEC,
+    DIR_TABLES,
+    TABLES_CATALOG_SCHEMA_VERSION,
 )
 from ccba_legal.converters.table_extractor import classify_and_extract_tables
 from ccba_legal.converters.unit_normalizer import (
@@ -257,6 +260,20 @@ def process_vbpl_bundle(
     reg_lookup, doc_meta = _load_registry_metadata(registry_file, bundle_dir.name)
     cleaned_md = _convert_docx_to_clean_markdown(docx_path)
     extracted_tables = classify_and_extract_tables(docx_path, bundle_dir)
+    if extracted_tables:
+        tables_dir = bundle_dir / DIR_TABLES
+        with open(tables_dir / "tables_catalog.json", "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "schema_version": TABLES_CATALOG_SCHEMA_VERSION,
+                    "okf_spec": CURRENT_OKF_SPEC,
+                    "total_tables": len(extracted_tables),
+                    "tables": extracted_tables,
+                },
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
 
     pure_body_raw, created_templates = _extract_and_export_templates(
         cleaned_md, templates_dir, doc_meta.get("document_number", bundle_dir.name)

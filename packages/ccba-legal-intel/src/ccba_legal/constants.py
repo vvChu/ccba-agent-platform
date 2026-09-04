@@ -30,4 +30,11 @@ GATE_11_MIN_VERBATIM_PARITY: float = 98.0
 # VBHN Legislative Consolidation Specifications
 PATCH_MANIFEST_VERSION: str = "2.0"
 
+# Auxiliary Data Component Schema Specifications (ADR 0036, ADR 0041)
+TABLES_CATALOG_SCHEMA_VERSION: str = "2.4"
+FIGURES_CATALOG_SCHEMA_VERSION: str = "2.4"
+AST_CLAUSES_SCHEMA_VERSION: str = "2.4"
+QA_BENCHMARK_SCHEMA_VERSION: str = "2.4"
+
+
 

@@ -29,6 +29,7 @@ from .consolidator import (
     load_manifest,
 )
 from .constants import (
+    AST_CLAUSES_SCHEMA_VERSION,
     CURRENT_CONVERTER_VERSION,
     CURRENT_OKF_SCHEMA_URI,
     CURRENT_OKF_SPEC,
@@ -38,10 +39,13 @@ from .constants import (
     DIR_SOURCES,
     DIR_TABLES,
     DIR_TEMPLATES,
+    FIGURES_CATALOG_SCHEMA_VERSION,
     GATE_0_MIN_DOCX_PDF_PARITY,
     GATE_11_MIN_VERBATIM_PARITY,
     PATCH_MANIFEST_VERSION,
+    QA_BENCHMARK_SCHEMA_VERSION,
     STANDARD_COMPARTMENTS,
+    TABLES_CATALOG_SCHEMA_VERSION,
 )
 from .converters import (
     load_bundle_formula_overrides,
@@ -250,6 +254,10 @@ __all__ = [
     "GATE_0_MIN_DOCX_PDF_PARITY",
     "GATE_11_MIN_VERBATIM_PARITY",
     "PATCH_MANIFEST_VERSION",
+    "TABLES_CATALOG_SCHEMA_VERSION",
+    "FIGURES_CATALOG_SCHEMA_VERSION",
+    "AST_CLAUSES_SCHEMA_VERSION",
+    "QA_BENCHMARK_SCHEMA_VERSION",
     # === DOCX Conversion & Classification ===
     "convert_docx_to_okf_bundle",
     "process_vbpl_bundle",

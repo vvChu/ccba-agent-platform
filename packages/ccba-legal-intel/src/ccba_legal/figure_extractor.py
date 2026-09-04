@@ -11,6 +11,11 @@ from typing import Any
 import yaml
 from docx import Document
 
+from ccba_legal.constants import (
+    CURRENT_OKF_SPEC,
+    FIGURES_CATALOG_SCHEMA_VERSION,
+)
+
 
 def load_bundle_figures_overrides(bundle_dir: Path) -> dict[str, dict[str, Any]]:
     """Load bundle-level figure metadata overrides from `figures_override.yaml` if present."""
@@ -272,6 +277,8 @@ def extract_docx_figures(
 
     # 3. Write figures_catalog.yaml
     manifest = {
+        "schema_version": FIGURES_CATALOG_SCHEMA_VERSION,
+        "okf_spec": CURRENT_OKF_SPEC,
         "standard": std_name,
         "total_figures": len(catalog_entries),
         "figures": catalog_entries,

@@ -13,6 +13,7 @@ import yaml
 
 from ccba_legal.consolidator.patch_manifest_schema import DocMode, PatchManifest
 from ccba_legal.constants import (
+    AST_CLAUSES_SCHEMA_VERSION,
     CURRENT_CONVERTER_VERSION,
     CURRENT_OKF_SCHEMA_URI,
     CURRENT_OKF_SPEC,
@@ -22,10 +23,13 @@ from ccba_legal.constants import (
     DIR_SOURCES,
     DIR_TABLES,
     DIR_TEMPLATES,
+    FIGURES_CATALOG_SCHEMA_VERSION,
     GATE_0_MIN_DOCX_PDF_PARITY,
     GATE_11_MIN_VERBATIM_PARITY,
     PATCH_MANIFEST_VERSION,
+    QA_BENCHMARK_SCHEMA_VERSION,
     STANDARD_COMPARTMENTS,
+    TABLES_CATALOG_SCHEMA_VERSION,
 )
 from ccba_legal.packager import package_bundle_v2
 
@@ -220,4 +224,53 @@ def test_patch_manifest_versioning():
     }
     loaded_v2 = PatchManifest.from_dict(v2_data)
     assert loaded_v2.manifest_version == "2.0"
+
+
+def test_subsystem_schema_versions():
+    """Verify auxiliary data component schema versions and structure."""
+    assert TABLES_CATALOG_SCHEMA_VERSION == "2.4"
+    assert FIGURES_CATALOG_SCHEMA_VERSION == "2.4"
+    assert AST_CLAUSES_SCHEMA_VERSION == "2.4"
+    assert QA_BENCHMARK_SCHEMA_VERSION == "2.4"
+
+    # Verify canonical tables_catalog schema shape
+    sample_table_catalog = {
+        "schema_version": TABLES_CATALOG_SCHEMA_VERSION,
+        "okf_spec": CURRENT_OKF_SPEC,
+        "total_tables": 1,
+        "tables": [
+            {
+                "table_id": "bang_01",
+                "table_number": "1",
+                "title": "Bảng 1 - Phân cấp công trình",
+                "archetype": "FLAT_MATRIX",
+                "csv_file": "tables/csv/bang_01.csv",
+                "json_file": "tables/json/bang_01.json",
+            }
+        ],
+    }
+    assert sample_table_catalog["schema_version"] == "2.4"
+    assert sample_table_catalog["okf_spec"] == CURRENT_OKF_SPEC
+    assert len(sample_table_catalog["tables"]) == 1
+
+    # Verify canonical figures_catalog schema shape
+    sample_figures_catalog = {
+        "schema_version": FIGURES_CATALOG_SCHEMA_VERSION,
+        "okf_spec": CURRENT_OKF_SPEC,
+        "standard": "TCVN 2737:2023",
+        "total_figures": 1,
+        "figures": [
+            {
+                "figure_id": "FIG_01",
+                "tag": "1",
+                "title": "Sơ đồ khí động",
+                "anchor": "hinh-1",
+                "image_relpath": "figures/images/hinh_1.png",
+                "has_image": True,
+            }
+        ],
+    }
+    assert sample_figures_catalog["schema_version"] == "2.4"
+    assert len(sample_figures_catalog["figures"]) == 1
+
 

@@ -17,6 +17,8 @@ from ccba_legal.constants import (
     CURRENT_CONVERTER_VERSION,
     CURRENT_OKF_SCHEMA_URI,
     CURRENT_OKF_SPEC,
+    DIR_TABLES,
+    TABLES_CATALOG_SCHEMA_VERSION,
 )
 from ccba_legal.converters.standard.handlers.figure_handler import handle_figure_card
 from ccba_legal.converters.standard.handlers.formula_handler import handle_formula_block
@@ -316,10 +318,15 @@ def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str,
 
     # 3. Export Tables Catalog & README
     if ctx.tables_extracted:
-        tables_dir = ctx.bundle_dir / "tables"
+        tables_dir = ctx.bundle_dir / DIR_TABLES
         with open(tables_dir / "tables_catalog.json", "w", encoding="utf-8") as f:
             json.dump(
-                {"total_tables": len(ctx.tables_extracted), "tables": ctx.tables_extracted},
+                {
+                    "schema_version": TABLES_CATALOG_SCHEMA_VERSION,
+                    "okf_spec": CURRENT_OKF_SPEC,
+                    "total_tables": len(ctx.tables_extracted),
+                    "tables": ctx.tables_extracted,
+                },
                 f,
                 ensure_ascii=False,
                 indent=2,
