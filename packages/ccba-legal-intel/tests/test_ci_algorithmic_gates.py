@@ -9,12 +9,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from ccba_legal.constants import (
     CURRENT_CONVERTER_VERSION,
     CURRENT_OKF_SCHEMA_URI,
     CURRENT_OKF_SPEC,
     CURRENT_OKF_VERSION,
 )
+from ccba_legal.packager import package_bundle_v2
 
 
 def test_constants_ssot():
@@ -136,3 +139,30 @@ def test_provenance_attestation_logic():
     # Validate ISO-8601 format
     parsed_date = datetime.fromisoformat(metadata["extracted_at"].replace("Z", "+00:00"))
     assert parsed_date.year == 2026
+
+
+def test_package_bundle_v2_provenance_stamping(tmp_path: Path):
+    """Verify package_bundle_v2 writes OKF v2.4 Universal provenance and pure body."""
+    bundle_dir = package_bundle_v2(
+        root_dir=tmp_path,
+        doc_id="test_doc_123",
+        content="# Điều 1. Quy định mẫu\nNội dung điều 1.",
+        metadata={"title": "Văn bản thử nghiệm", "document_number": "123/2026/ND-CP"},
+    )
+    meta_file = bundle_dir / "metadata.yaml"
+    assert meta_file.exists()
+    meta = yaml.safe_load(meta_file.read_text(encoding="utf-8"))
+    assert meta["okf_spec"] == CURRENT_OKF_SPEC
+    assert meta["converter_version"] == CURRENT_CONVERTER_VERSION
+    assert meta["schema_uri"] == CURRENT_OKF_SCHEMA_URI
+    assert "extracted_at" in meta
+
+    # Check primary markdown has pure body (no frontmatter)
+    md_file = bundle_dir / "test_doc_123.md"
+    assert md_file.exists()
+    assert not md_file.read_text(encoding="utf-8").startswith("---")
+
+    # Check index.md exists and contains OKF v2.4 Universal title
+    index_file = bundle_dir / "index.md"
+    assert index_file.exists()
+    assert CURRENT_OKF_SPEC in index_file.read_text(encoding="utf-8")

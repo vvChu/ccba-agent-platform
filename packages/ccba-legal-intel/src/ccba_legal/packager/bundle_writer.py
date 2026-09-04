@@ -4,12 +4,18 @@ from __future__ import annotations
 
 import json
 import time
+import warnings
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-from ccba_legal.constants import CURRENT_OKF_SPEC
+from ccba_legal.constants import (
+    CURRENT_CONVERTER_VERSION,
+    CURRENT_OKF_SCHEMA_URI,
+    CURRENT_OKF_SPEC,
+)
 from ccba_legal.packager.slug_utils import sanitize_slug
 
 
@@ -22,7 +28,17 @@ def write_concept(
     content: str,
     resource_uri: str = "",
 ) -> None:
-    """Write a concept file with valid OKF YAML frontmatter."""
+    """Write a concept file with valid OKF YAML frontmatter.
+
+    .. deprecated:: OKF v2.0+
+       Embedded frontmatter in Markdown violates Gate 6 (Pure Normative Body).
+       Metadata must be stored in standalone metadata.yaml.
+    """
+    warnings.warn(
+        "write_concept is deprecated in OKF v2.4 Universal. Frontmatter in .md violates Gate 6.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     dest_path = root_dir / relative_path
     dest_path.parent.mkdir(parents=True, exist_ok=True)
     timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -43,7 +59,16 @@ def write_concept(
 
 
 def write_logs_and_index(bundle_dir: Path, bundle_slug: str, guiding_files: list[str]) -> None:
-    """Create and update index.md, log.md, and dead_ends.md in the root of the OKF Bundle."""
+    """Create and update index.md, log.md, and dead_ends.md in the root of the OKF Bundle.
+
+    .. deprecated:: OKF v2.0+
+       Use write_logs_and_index_v2 for OKF v2.4 Universal bundles.
+    """
+    warnings.warn(
+        "write_logs_and_index is deprecated. Use write_logs_and_index_v2.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     log_path = bundle_dir / "log.md"
     timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     log_content = f"# Processing Log for {bundle_slug}\n\n- [{timestamp}] Bundle generated and organized into legal_docs/{bundle_slug}\n"
@@ -78,22 +103,65 @@ def write_logs_and_index(bundle_dir: Path, bundle_slug: str, guiding_files: list
 
 
 def write_logs_and_index_v2(bundle_dir: Path, bundle_slug: str, metadata: dict[str, Any]) -> None:
-    """Write lightweight OKF v2.0 index and logs."""
-    timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    """Write lightweight OKF index conforming to ADR 0036."""
+    now_utc = datetime.now(timezone.utc).isoformat()
     title = metadata.get("title", bundle_slug)
     doc_type = metadata.get("type", "Document")
 
     log_content = (
-        f"# OKF {CURRENT_OKF_SPEC} Processing Log\n\n- [{timestamp}] Bundle initialized for {bundle_slug}\n"
+        f"# OKF {CURRENT_OKF_SPEC} Processing Log\n\n- [{now_utc}] Bundle initialized for {bundle_slug}\n"
     )
     (bundle_dir / "log.md").write_text(log_content, encoding="utf-8")
 
-    index_content = f"# Gói Tri Thức OKF {CURRENT_OKF_SPEC}: {title}\n\n## Metadata\n- **Type**: {doc_type}\n- **ID**: {bundle_slug}\n- **Generated**: {timestamp}\n\n## Contents\n- [{bundle_slug}.md](./{bundle_slug}.md) — Canonical Document Body\n- [metadata.yaml](./metadata.yaml) — Standalone Machine Metadata\n- [clauses.json](./clauses.json) — Structured AST Nodes\n- [qa_benchmark.json](./qa_benchmark.json) — QA Benchmark Ground Truth\n"
+    lines = [
+        f"# Gói Tri Thức OKF {CURRENT_OKF_SPEC}: {title}\n",
+        "## Metadata",
+        f"- **Type**: {doc_type}",
+        f"- **ID**: {bundle_slug}",
+        f"- **Generated**: {now_utc}\n",
+        "## Contents",
+        f"- [{bundle_slug}.md](./{bundle_slug}.md) — Thân văn bản quy phạm nguyên văn",
+        "- [metadata.yaml](./metadata.yaml) — Standalone Machine Metadata",
+        "- [clauses.json](./clauses.json) — Cây cú pháp điều khoản AST",
+        "- [qa_benchmark.json](./qa_benchmark.json) — Bộ câu hỏi kiểm thử QA Ground Truth",
+    ]
+
+    # ADR 0036 Compartment awareness
+    compartments = [
+        ("tables", "tables/README.md", "Bảng tra cứu số liệu kỹ thuật 2D"),
+        ("figures", "figures/figures_catalog.yaml", "Thẻ thị giác sơ đồ hình học / khí động"),
+        ("annexes", "annexes", "Phụ lục quy chuẩn kỹ thuật"),
+        ("templates", "templates", "Biểu mẫu hành chính nguyên tử"),
+        ("sources", "sources", "Tài liệu nguồn PDF Công báo & DOCX"),
+    ]
+    detected_compartments = []
+    for folder, entry, desc in compartments:
+        target = bundle_dir / folder
+        if target.exists() and any(target.iterdir()):
+            if (bundle_dir / entry).exists():
+                detected_compartments.append(f"- [{folder}/](./{entry}) — {desc}")
+            else:
+                detected_compartments.append(f"- [{folder}/](./{folder}/) — {desc}")
+
+    if detected_compartments:
+        lines.append("\n## Ngăn Kéo Chuyên Biệt (ADR 0036)")
+        lines.extend(detected_compartments)
+
+    index_content = "\n".join(lines) + "\n"
     (bundle_dir / "index.md").write_text(index_content, encoding="utf-8")
 
 
 def package_bundle(root_dir: Path, doc_id: str, content: str, metadata: dict[str, Any]) -> Path:
-    """Create and structure an OKF bundle for a document."""
+    """Create and structure an OKF bundle for a document.
+
+    .. deprecated:: OKF v2.0+
+       Use package_bundle_v2 or ccba_legal.converters.convert_docx_to_okf_bundle.
+    """
+    warnings.warn(
+        "package_bundle (v1) is deprecated. Use package_bundle_v2 or convert_docx_to_okf_bundle.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     bundle_slug = sanitize_slug(doc_id)
     bundle_dir = root_dir / bundle_slug
     bundle_dir.mkdir(parents=True, exist_ok=True)
@@ -141,7 +209,7 @@ def package_bundle_v2(
     qa_items: list[dict[str, Any]] | None = None,
     **kwargs: Any,
 ) -> Path:
-    """Create a strictly flat, zero-redundancy OKF v2.0 bundle."""
+    """Create a strictly flat, zero-redundancy OKF v2.4 Universal bundle with provenance stamping."""
     from ccba_legal.packager.clause_indexer import generate_clauses_json
 
     bundle_slug = sanitize_slug(doc_id)
@@ -164,6 +232,10 @@ def package_bundle_v2(
         "source_url": metadata.get("source_url", ""),
         "sha256": metadata.get("sha256", ""),
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "okf_spec": CURRENT_OKF_SPEC,
+        "converter_version": CURRENT_CONVERTER_VERSION,
+        "schema_uri": CURRENT_OKF_SCHEMA_URI,
+        "extracted_at": datetime.now(timezone.utc).isoformat(),
     }
     (bundle_dir / "metadata.yaml").write_text(
         yaml.safe_dump(meta_dict, allow_unicode=True, sort_keys=False), encoding="utf-8"
