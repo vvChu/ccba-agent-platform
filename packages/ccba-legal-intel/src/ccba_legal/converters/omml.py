@@ -63,6 +63,14 @@ MATH_SYMBOLS_MAP: dict[str, str] = {
     "ℓ": r"\ell",
 }
 
+_ALL_MATH_REPLACEMENTS: dict[str, str] = {
+    **{k: f"{v} " for k, v in GREEK_MAP.items()},
+    **{k: f" {v} " for k, v in MATH_SYMBOLS_MAP.items()},
+}
+_MATH_TOKEN_PATTERN: re.Pattern[str] = re.compile(
+    "|".join(re.escape(k) for k in sorted(_ALL_MATH_REPLACEMENTS.keys(), key=len, reverse=True))
+)
+
 # Standard math functions in LaTeX
 STANDARD_FUNCTIONS = {
     "sin",
@@ -313,22 +321,12 @@ def _convert_node(node: ET.Element) -> str:
 
 
 def _format_math_text(text: str) -> str:
-    """Format raw math text string into KaTeX-safe tokens."""
+    """Format raw math text string into KaTeX-safe tokens using single-pass regex replacement."""
     if not text:
         return ""
 
-    out = text
-    # Replace Greek letters
-    for g_char, g_latex in GREEK_MAP.items():
-        out = out.replace(g_char, f"{g_latex} ")
-
-    # Replace Math operators
-    for op_char, op_latex in MATH_SYMBOLS_MAP.items():
-        out = out.replace(op_char, f" {op_latex} ")
-
-    # Normalize double spaces
-    out = re.sub(r"\s+", " ", out)
-    return out
+    out = _MATH_TOKEN_PATTERN.sub(lambda m: _ALL_MATH_REPLACEMENTS[m.group(0)], text)
+    return re.sub(r"\s+", " ", out)
 
 
 def _format_delimiter(del_chr: str, is_left: bool) -> str:

@@ -9,6 +9,7 @@ import re
 from typing import Any
 
 from ccba_legal.converters.standard.models import HierarchyState
+from ccba_legal.converters.standard.sanitizers import render_paragraph_with_runs
 
 
 def escape_table_pipes(text: str) -> str:
@@ -49,25 +50,32 @@ def resolve_hierarchical_headers(grid: list[list[str]]) -> list[list[str]]:
     if len(grid) < 2:
         return grid
 
-    max_h = min(4, len(grid))
+    max_h = min(5, len(grid))
     header_rows_count = 1
 
     for r_idx in range(1, max_h):
         prev_row = grid[r_idx - 1]
         curr_row = grid[r_idx]
 
+        # Check if Col 0 is a continuation of the header stub label
+        c0_same = bool(curr_row[0].strip() and curr_row[0].strip() == prev_row[0].strip())
+
         has_subheaders = False
         for c in range(len(prev_row)):
-            if c > 0 and prev_row[c] and prev_row[c] == prev_row[c - 1] and curr_row[c] != curr_row[c - 1]:
+            if (
+                c > 0
+                and prev_row[c]
+                and prev_row[c] == prev_row[c - 1]
+                and curr_row[c] != curr_row[c - 1]
+            ):
                 has_subheaders = True
                 break
 
         non_empty = [c.strip() for c in curr_row if c.strip()]
         is_category_partition = len(set(non_empty)) == 1 and len(non_empty) > 1
 
-        if has_subheaders and not is_category_partition:
-            numeric_count = sum(1 for t in non_empty if re.match(r"^[0-9\.,\-\+±%]+$", t.replace(" ", "")))
-            if non_empty and numeric_count / len(non_empty) > 0.5:
+        if (has_subheaders or c0_same) and not is_category_partition:
+            if not c0_same and re.match(r"^[0-9\.,\-\+±%]+$", curr_row[0].strip().replace(" ", "")):
                 break
             header_rows_count = r_idx + 1
         else:
@@ -108,7 +116,8 @@ def detect_table_archetype(
         if any(k in lower_t for k in admin_keywords):
             return "BORDERLESS_LAYOUT"
     if not is_captioned and any(
-        k in lower_t for k in ["[ ]", "☐", "biên bản", "phiếu kiểm tra", "mẫu số", "chức vụ của người ký"]
+        k in lower_t
+        for k in ["[ ]", "☐", "biên bản", "phiếu kiểm tra", "mẫu số", "chức vụ của người ký"]
     ):
         return "ADMIN_FORM"
     if has_images or "<img" in lower_t:
@@ -124,8 +133,6 @@ def render_table_markdown(
     table: Any, rid_to_katex: dict[str, str] | None = None
 ) -> tuple[str, list[str], list[list[str]]]:
     """Render a docx Table object as a GitHub Flavored Markdown table with smart column alignment and footnote extraction."""
-    from ccba_legal.converters.standard.strategy import render_paragraph_with_runs
-
     grid: list[list[str]] = []
     footnotes: list[str] = []
 
@@ -171,9 +178,26 @@ def render_table_markdown(
                     flags=re.IGNORECASE,
                 ).strip()
                 p_clean = re.sub(r"^\*\*\s*", "", p_clean).strip()
+                if not p_clean:
+                    continue
+
+                # Normalize 40$^{0}$ C -> 40 °C
+                p_clean = re.sub(r"(\d+)\$\^\{0\}\$\s*C\b", r"\1 °C", p_clean)
+
+                is_bullet = bool(
+                    re.match(r"^(?:[-–—•\+]|\(\*+\)|\([0-9a-zA-Z]+\)|[0-9]+[)\.])\s*", p_clean)
+                )
+                if fn_parts and not is_bullet:
+                    last_txt = fn_parts[-1].strip()
+                    if last_txt.endswith(
+                        ("≤", "≥", "=", "<", ">", ",", ":", "-", "–", "—", "với", "là")
+                    ) or re.match(r"^[0-9\.,]+", p_clean):
+                        fn_parts[-1] = f"{last_txt} {p_clean}"
+                        continue
+
                 if p_clean and p_clean not in seen_clean:
                     seen_clean.add(p_clean)
-                    fn_parts.append(p)
+                    fn_parts.append(p_clean)
             has_explicit_numbered = any(
                 re.search(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*[1-9]", p, re.IGNORECASE)
                 or re.match(r"^[0-9]+[)\.]\s+", p)
@@ -249,7 +273,8 @@ def render_table_markdown(
                                 f_txt = f"$${f_txt[1:-1]}$$"
                             block_lines.append(f_txt)
                         else:
-                            block_lines.append(fn_clean)
+                            b_txt = fn_clean.lstrip("-–—• ")
+                            block_lines.append(f"&nbsp;&nbsp;\\- {b_txt}")
                     footnotes.append("\n\n".join(block_lines))
             continue
 
@@ -335,8 +360,6 @@ def clean_formula_latex(raw_f: str) -> str:
 
 def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
     """Parse a docx table block, checking for formula frames and exporting tables to CSV/JSON."""
-    from ccba_legal.converters.standard.strategy import render_paragraph_with_runs
-
     # 1. Formula Frame Check
     all_row_formulas: list[tuple[str, Any]] = []
     for r in tbl.rows:
@@ -433,7 +456,8 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
     md_tbl_str, tbl_footnotes, raw_grid = render_table_markdown(tbl, rid_to_katex=ctx.rid_to_katex)
     ctx.emit(md_tbl_str)
     for fn in tbl_footnotes:
-        ctx.emit(f"{fn}\n\n")
+        bq_lines = [f"> {line}" if line.strip() else ">" for line in fn.splitlines()]
+        ctx.emit("\n".join(bq_lines) + "\n\n")
     ctx.state_mgr.reset()
 
     # 3. Export CSV / JSON for captioned tables
@@ -469,7 +493,9 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
                     if c_idx < len(headers) and headers[c_idx]
                     else f"col_{c_idx + 1}"
                 )
-                row_dict[key] = re.sub(r"<[^>]+>", "", val).strip()
+                clean_val = re.sub(r"<br\s*/?>", "\n", val)
+                clean_val = re.sub(r"<[^>]+>", "", clean_val).strip()
+                row_dict[key] = clean_val
             json_rows.append(row_dict)
 
         parsed_footnotes: dict[str, str] = {}

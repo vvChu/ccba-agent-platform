@@ -391,6 +391,42 @@ async def convert_document(file_path: str, output_dir: str | None = None) -> dic
         return {"status": "error", "message": str(e)}
 
 
+# =============================================================================
+# Conditional Legal RAG Tool — ADR 0044 (Tier 0 ← Tier 1 dynamic import)
+# Only registered when ccba-legal-intel is installed.
+# =============================================================================
+try:
+    from ccba_legal.federated_rag import query_ground_truth as _query_gt
+
+    @mcp.tool()
+    @privacy_protected
+    def query_legal_ground_truth(
+        query: str,
+        domain: str | None = None,
+        top_k: int = 5,
+    ) -> str:
+        """Tra cứu read-only kho tri thức pháp lý OKF v2.4 (HITL — ADR 0010).
+
+        Tool này chỉ trả về kết quả tra cứu. Không tự động kích hoạt
+        hành động tiếp theo. Khi cần đối chiếu sâu, hãy đề xuất
+        lệnh /ccba-research cho người dùng xác nhận.
+
+        Args:
+            query: Câu truy vấn pháp lý (ví dụ: "thẩm định PCCC").
+            domain: Bộ lọc lĩnh vực (ví dụ: "PCCC", "xây dựng").
+            top_k: Số lượng kết quả tối đa trả về.
+
+        Returns:
+            Kết quả tra cứu dạng JSON string.
+        """
+        import json as _json
+
+        results = _query_gt(query, domain=domain, top_k=top_k)
+        return _json.dumps(results, ensure_ascii=False, indent=2)
+except ImportError:
+    pass  # ccba-legal-intel not installed — tool not registered
+
+
 def _configure_utf8_streams() -> None:
     """Configure UTF-8 output streams on Windows.
 

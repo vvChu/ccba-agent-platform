@@ -18,6 +18,11 @@ from typing import Any
 import fitz  # PyMuPDF
 from docx import Document
 
+from ccba_legal.constants import (
+    GATE_0_MIN_DOCX_PDF_PARITY,
+    GATE_11_MIN_VERBATIM_PARITY,
+)
+
 # Suppress PyMuPDF internal warnings
 fitz.TOOLS.mupdf_display_errors(False)
 
@@ -189,7 +194,11 @@ def verify_bundle_docx_vs_pdf(
     else:
         doc_num = doc_entry.get("document_number", "") if doc_entry else ""
         num_match = (normalize_text(doc_num) in normalize_text(pdf_full_text)) if doc_num else True
-        overall_pass = len(struct["missing_in_docx"]) == 0 and parity_rate >= 70.0 and num_match
+        overall_pass = (
+            len(struct["missing_in_docx"]) == 0
+            and parity_rate >= GATE_0_MIN_DOCX_PDF_PARITY
+            and num_match
+        )
 
     return {
         "doc_id": slug,
@@ -339,7 +348,7 @@ def verify_bundle_docx_vs_markdown(bundle_dir: Path) -> dict[str, Any]:
         "parity_rate": parity_rate,
         "missing_count": len(missing_paras),
         "missing_paras": missing_paras,
-        "pass": parity_rate >= 98.0,
+        "pass": parity_rate >= GATE_11_MIN_VERBATIM_PARITY,
     }
 
 

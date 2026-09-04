@@ -7,6 +7,8 @@ from typing import Any
 
 import yaml
 
+from ccba_legal.constants import PATCH_MANIFEST_VERSION
+
 
 class DocMode(str, Enum):
     """Document hierarchy mode for AST parsing."""
@@ -121,6 +123,7 @@ class PatchManifest:
     effective_date: str = ""
     default_cong_bao_number: str = "373/2026"
     default_jurisdiction: str = "CQXD"
+    manifest_version: str = PATCH_MANIFEST_VERSION
     patches: list[PatchItem] = field(default_factory=list)
 
     @classmethod
@@ -143,11 +146,13 @@ class PatchManifest:
             effective_date=str(data.get("effective_date", "")),
             default_cong_bao_number=str(data.get("default_cong_bao_number", "373/2026")),
             default_jurisdiction=str(data.get("default_jurisdiction", "CQXD")),
+            manifest_version=str(data.get("manifest_version", "1.0")),
             patches=patches,
         )
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "manifest_version": self.manifest_version,
             "target_doc_id": self.target_doc_id,
             "amending_doc_id": self.amending_doc_id,
             "doc_mode": self.doc_mode.value,
