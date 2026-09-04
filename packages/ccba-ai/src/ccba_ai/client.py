@@ -510,6 +510,43 @@ class AIClient:
         )
         return str(response).strip()
 
+    def embed(
+        self, texts: str | list[str], *, model: str = "text-embedding-3-small"
+    ) -> list[list[float]]:
+        """Embed a text or list of texts via the AI Gateway.
+
+        Args:
+            texts: A string or list of strings to embed.
+            model: Embedding model to use on the gateway.
+
+        Returns:
+            A list of embedding vectors (one for each input string).
+        """
+        text_list = [texts] if isinstance(texts, str) else texts
+
+        if self.mock_mode:
+            return [[0.0] * 384 for _ in text_list]
+
+        def _call(client_inst: Any, m: str) -> Any:
+            return client_inst.embeddings.create(model=m, input=text_list)
+
+        def _primary_call() -> Any:
+            return _retry_sync(
+                lambda: _call(self._client, model),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
+            )
+
+        response = self.fallback_router.execute_sync(
+            _primary_call,
+            model=model,
+            timeout=self.timeout,
+            circuit_breaker=self.circuit_breaker,
+            fallback_fn_builder=_call,
+        )
+        return [item.embedding for item in response.data]
+
     def encode_image(
         self,
         image_path: str | Path,
