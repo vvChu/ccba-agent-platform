@@ -13,7 +13,7 @@ Quy trình thao tác chuẩn (SOP) này hướng dẫn chi tiết các bước t
 
 ### 🏛️ Các Nguyên Tắc Bất Biến (Core Invariants):
 1. **Không Sử Dụng Git Remote**: Dự án tư vấn sản xuất hồ sơ thực tế chứa các tệp nhạy cảm của khách hàng và các tệp đồ họa dung lượng lớn (Revit `.rvt`, AutoCAD `.dwg`, PDF scan). Tuyệt đối **không** tạo kho Git remote công khai hoặc đẩy lên GitHub.
-2. **Đồng Bộ Xuôi 1 Chiều (Downstream Sync)**: Spoke dự án kế thừa 100% Kỹ năng (`.agents/skills/`) và Quy trình (`.agents/workflows/`) từ Central Hub (`ccba-agent-platform`) thông qua công cụ đồng bộ cục bộ.
+2. **Đồng Bộ Xuôi 1 Chiều (Downstream Sync)**: Spoke dự án kế thừa 100% Kỹ năng (`.agents/skills/`) từ Central Hub (`ccba-agent-platform`) thông qua công cụ đồng bộ cục bộ.
 3. **Local-First IDOP Staging**: Toàn bộ biên bản, báo cáo thẩm tra và kết quả kiểm định được lưu tạm thời vào hàng đợi `.md/idop_staged/` trước khi đồng bộ lên 58 SharePoint Lists và CDE Master.
 
 ---
@@ -82,8 +82,8 @@ python scripts/adopt_spoke.py `
 
 Lệnh này sẽ tự động:
 1. Đọc tệp `.md/workspace_context.yaml`.
-2. Tạo thư mục `.agents/workflows/` và `.agents/skills/` trong Spoke dự án.
-3. Sao chép các workflows thẩm tra chuyên dụng (`workflow_pccc_cdt_tuthamdinh.md`, `ccba-ai-qc-pccc-audit.md`, `ccba-completion-checklist.md`).
+2. Khởi tạo cấu trúc `.agents/skills/` trong Spoke dự án.
+3. Đồng bộ các kỹ năng thẩm tra chuyên dụng (`ccba-pccc-cdt-tuthamdinh`, `ccba-ai-qc-pccc-audit`, `ccba-completion-checklist`).
 4. Cài đặt các hook bảo vệ và rào chắn an toàn dữ liệu.
 
 ---

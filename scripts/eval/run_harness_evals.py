@@ -203,7 +203,7 @@ def main() -> None:
         mypy_paths = [
             "packages/mdconverter/src/mdconverter",
             "scripts/eval/run_harness_evals.py",
-            ".agents/skills/youtube-learn/scripts/visual_extractor.py",
+            ".agents/skills/ccba-youtube-learn/scripts/visual_extractor.py",
         ]
 
     else:

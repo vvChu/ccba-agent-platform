@@ -76,10 +76,10 @@ def test_mock_delivery_spoke_adoption_and_sync(tmp_path: Path):
     )
     assert status == 0
 
-    # Verify workflows were copied
-    spoke_workflows = spoke_dir / ".agents" / "workflows"
-    assert spoke_workflows.exists()
-    assert (spoke_workflows / "workflow_pccc_cdt_tuthamdinh.md").exists()
+    # Verify skills were copied
+    spoke_skills = spoke_dir / ".agents" / "skills"
+    assert spoke_skills.exists()
+    assert (spoke_skills / "ccba-pccc-cdt-tuthamdinh" / "SKILL.md").exists()
 
     # Verify Spoke Registrar identifies this as a non-sandbox project delivery spoke
     spoke_info = SpokeRegistrar().build_spoke_info(

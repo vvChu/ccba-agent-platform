@@ -20,16 +20,16 @@ import yaml
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-WORKFLOWS_DIR = REPO_ROOT / ".agents" / "workflows"
+SKILLS_DIR = REPO_ROOT / ".agents" / "skills"
 CATALOG_FILE = REPO_ROOT / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
 
 
 def test_ccba_issue_to_hub_workflow_structure() -> None:
-    """Verify /ccba-issue-to-hub workflow structure and commands."""
-    wf_path = WORKFLOWS_DIR / "ccba-issue-to-hub.md"
-    assert wf_path.exists(), "ccba-issue-to-hub.md must exist"
+    """Verify /ccba-issue-to-hub skill structure and commands."""
+    skill_path = SKILLS_DIR / "ccba-issue-to-hub" / "SKILL.md"
+    assert skill_path.exists(), "ccba-issue-to-hub SKILL.md must exist"
 
-    content = wf_path.read_text(encoding="utf-8")
+    content = skill_path.read_text(encoding="utf-8")
     assert "disable-model-invocation: true" in content
     assert "gh issue create" in content
     assert "gh issue list" in content
@@ -37,11 +37,11 @@ def test_ccba_issue_to_hub_workflow_structure() -> None:
 
 
 def test_ccba_contribute_to_hub_workflow_structure() -> None:
-    """Verify /ccba-contribute-to-hub workflow structure and commands."""
-    wf_path = WORKFLOWS_DIR / "ccba-contribute-to-hub.md"
-    assert wf_path.exists(), "ccba-contribute-to-hub.md must exist"
+    """Verify /ccba-contribute-to-hub skill structure and commands."""
+    skill_path = SKILLS_DIR / "ccba-contribute-to-hub" / "SKILL.md"
+    assert skill_path.exists(), "ccba-contribute-to-hub SKILL.md must exist"
 
-    content = wf_path.read_text(encoding="utf-8")
+    content = skill_path.read_text(encoding="utf-8")
     assert "disable-model-invocation: true" in content
     assert "check_spoke_leakage.py" in content
     assert "gh pr create" in content
@@ -50,36 +50,36 @@ def test_ccba_contribute_to_hub_workflow_structure() -> None:
 
 def test_ccba_propose_to_hub_alias_structure() -> None:
     """Verify /ccba-propose-to-hub acts as backward-compatible alias."""
-    wf_path = WORKFLOWS_DIR / "ccba-propose-to-hub.md"
-    assert wf_path.exists(), "ccba-propose-to-hub.md must exist"
+    skill_path = SKILLS_DIR / "ccba-propose-to-hub" / "SKILL.md"
+    assert skill_path.exists(), "ccba-propose-to-hub SKILL.md must exist"
 
-    content = wf_path.read_text(encoding="utf-8")
+    content = skill_path.read_text(encoding="utf-8")
     assert "disable-model-invocation: true" in content
     assert "ccba-contribute-to-hub" in content
 
 
 def test_ccba_new_feature_workflow_structure() -> None:
     """Verify /ccba-new-feature uses correct eval path and gh issue view auto-parsing."""
-    wf_path = WORKFLOWS_DIR / "ccba-new-feature.md"
-    assert wf_path.exists(), "ccba-new-feature.md must exist"
+    skill_path = SKILLS_DIR / "ccba-new-feature" / "SKILL.md"
+    assert skill_path.exists(), "ccba-new-feature SKILL.md must exist"
 
-    content = wf_path.read_text(encoding="utf-8")
+    content = skill_path.read_text(encoding="utf-8")
     assert "scripts/eval/run_harness_evals.py" in content
     assert "gh issue view" in content
 
 
 def test_catalog_registers_upstream_workflows() -> None:
-    """Verify catalog.yaml properly registers upstream contribution workflows."""
+    """Verify catalog.yaml properly registers upstream contribution skills."""
     assert CATALOG_FILE.exists(), "catalog.yaml must exist"
     data = yaml.safe_load(CATALOG_FILE.read_text(encoding="utf-8"))
 
-    workflows = {w["name"]: w for w in data.get("workflows", [])}
-    assert "ccba-issue-to-hub" in workflows
-    assert "ccba-contribute-to-hub" in workflows
-    assert "propose-to-hub" in workflows
+    skills = {s["name"]: s for s in data.get("skills", [])}
+    assert "ccba-issue-to-hub" in skills
+    assert "ccba-contribute-to-hub" in skills
+    assert "ccba-propose-to-hub" in skills
 
     # Verify paths exist on disk
-    for wf_name in ["ccba-issue-to-hub", "ccba-contribute-to-hub", "propose-to-hub"]:
-        wf_entry = workflows[wf_name]
-        wf_file = REPO_ROOT / wf_entry["workflow_path"]
-        assert wf_file.exists(), f"Workflow file for {wf_name} must exist at {wf_file}"
+    for skill_name in ["ccba-issue-to-hub", "ccba-contribute-to-hub", "ccba-propose-to-hub"]:
+        skill_entry = skills[skill_name]
+        skill_file = REPO_ROOT / skill_entry["skill_path"]
+        assert skill_file.exists(), f"Skill file for {skill_name} must exist at {skill_file}"

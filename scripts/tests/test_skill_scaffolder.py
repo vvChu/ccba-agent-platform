@@ -81,7 +81,7 @@ def get_parser():
         )
         self.assertEqual(res, 0)
 
-        skill_dir = skills_dir / "sample-converter"
+        skill_dir = skills_dir / "ccba-sample-converter"
         skill_file = skill_dir / "SKILL.md"
         cli_spec_file = skill_dir / "cli_spec.yaml"
         workflow_file = workflows_dir / "ccba-sample-converter.md"

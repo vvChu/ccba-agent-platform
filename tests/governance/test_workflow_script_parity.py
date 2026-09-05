@@ -33,43 +33,57 @@ SPOKE_SPECIFIC_SCRIPTS = {
 }
 
 
-def test_all_workflows_exist_and_are_readable() -> None:
-    """Verify workflows directory is populated and valid."""
-    workflow_files = list(WORKFLOWS_DIR.glob("*.md"))
-    assert len(workflow_files) >= 50, f"Expected >= 50 workflows, found {len(workflow_files)}"
+def get_target_documents() -> list[Path]:
+    """Collect all active skill definitions and workflow markdown files."""
+    skills = list(SKILLS_DIR.glob("**/SKILL.md"))
+    workflows = list(WORKFLOWS_DIR.glob("*.md"))
+    return skills + workflows
+
+
+def test_all_skills_and_workflows_exist_and_are_readable() -> None:
+    """Verify skills and workflows directories are populated and valid."""
+    target_files = get_target_documents()
+    assert len(target_files) >= 90, f"Expected >= 90 skills/workflows, found {len(target_files)}"
+    for tf in target_files:
+        assert tf.stat().st_size > 50, f"Target file '{tf}' is unexpectedly small or empty"
 
 
 def test_hub_script_references_exist_on_disk() -> None:
-    """Verify every script referenced with [hub_path] or at Hub root exists in Hub repo."""
+    """Verify every script referenced with [hub_path] or at Hub root exists in Hub repo or skill."""
     hub_script_pattern = re.compile(
         r"(?:\[hub_path\][\\/]|python\s+)(scripts[\\/][a-zA-Z0-9_\-\\\/\.]+\.py)"
     )
 
-    workflow_files = list(WORKFLOWS_DIR.glob("*.md"))
+    target_files = get_target_documents()
     errors: list[str] = []
 
-    for wf in workflow_files:
-        content = wf.read_text(encoding="utf-8")
+    for tf in target_files:
+        content = tf.read_text(encoding="utf-8")
         for match in hub_script_pattern.findall(content):
             clean_rel = match.replace("\\", "/")
             # If it's a known spoke-level script run inside a spoke workspace, allow it
             if clean_rel in SPOKE_SPECIFIC_SCRIPTS:
                 continue
 
-            actual_file = HUB_ROOT / clean_rel
-            if not actual_file.exists():
-                errors.append(f"Workflow '{wf.name}' references non-existent script: {clean_rel}")
+            actual_hub_file = HUB_ROOT / clean_rel
+            actual_local_file = tf.parent / clean_rel
+            if not actual_hub_file.exists() and not actual_local_file.exists():
+                errors.append(
+                    f"File '{tf.relative_to(HUB_ROOT)}' references non-existent script: {clean_rel}"
+                )
 
-    assert not errors, "Detected broken script references in workflows:\n" + "\n".join(errors)
+    assert not errors, "Detected broken script references in skills/workflows:\n" + "\n".join(
+        errors
+    )
 
 
 def test_python_module_invocations_match_packages() -> None:
-    """Verify python -m <package> in workflows references real packages in packages/."""
+    """Verify python -m <package> in skills/workflows references real packages in packages/."""
     module_pattern = re.compile(r"python\s+-m\s+([a-zA-Z0-9_]+)")
-    workflow_files = list(WORKFLOWS_DIR.glob("*.md"))
+    target_files = get_target_documents()
 
     # Discover registered package module names
-    registered_modules = {"pytest", "ruff", "venv", "pip", "unittest"}
+    registered_modules = {"pytest", "ruff", "venv", "pip", "unittest", "notebooklm", "markitdown"}
     for pkg in PACKAGES_DIR.iterdir():
         if pkg.is_dir():
             src_dir = pkg / "src"
@@ -81,23 +95,25 @@ def test_python_module_invocations_match_packages() -> None:
                 registered_modules.add(pkg.name.replace("-", "_"))
 
     errors: list[str] = []
-    for wf in workflow_files:
-        content = wf.read_text(encoding="utf-8")
+    for tf in target_files:
+        content = tf.read_text(encoding="utf-8")
         for mod in module_pattern.findall(content):
             if mod not in registered_modules:
-                errors.append(f"Workflow '{wf.name}' invokes unregistered module: python -m {mod}")
+                errors.append(
+                    f"File '{tf.relative_to(HUB_ROOT)}' invokes unregistered module: python -m {mod}"
+                )
 
     assert not errors, "Detected invalid python -m module calls:\n" + "\n".join(errors)
 
 
-def test_workflow_relative_links_resolve() -> None:
-    """Verify relative file links inside workflow markdown files exist."""
+def test_workflow_and_skill_relative_links_resolve() -> None:
+    """Verify relative file links inside skills and workflow markdown files exist."""
     link_pattern = re.compile(r"\[.*?\]\(([^\)]+)\)")
-    workflow_files = list(WORKFLOWS_DIR.glob("*.md"))
+    target_files = get_target_documents()
 
     errors: list[str] = []
-    for wf in workflow_files:
-        content = wf.read_text(encoding="utf-8")
+    for tf in target_files:
+        content = tf.read_text(encoding="utf-8")
         for target in link_pattern.findall(content):
             # Ignore URL schemes, anchors, or variable/wildcard placeholders
             if (
@@ -105,10 +121,14 @@ def test_workflow_relative_links_resolve() -> None:
                 or target.startswith("https://")
                 or target.startswith("#")
                 or target.startswith("conversation:")
+                or target.startswith("mailto:")
+                or target.startswith("file://")
                 or "[" in target
                 or "<" in target
                 or ">" in target
-                or target.startswith("file://")
+                or "{" in target
+                or "..." in target
+                or "*" in target
             ):
                 continue
             # Strip anchors from file target
@@ -116,10 +136,10 @@ def test_workflow_relative_links_resolve() -> None:
             if not clean_target:
                 continue
 
-            resolved_path = (wf.parent / clean_target).resolve()
+            resolved_path = (tf.parent / clean_target).resolve()
             if not resolved_path.exists():
                 errors.append(
-                    f"Workflow '{wf.name}' contains broken relative link: {target} -> {resolved_path}"
+                    f"File '{tf.relative_to(HUB_ROOT)}' contains broken relative link: {target} -> {resolved_path}"
                 )
 
-    assert not errors, "Detected broken relative links in workflows:\n" + "\n".join(errors)
+    assert not errors, "Detected broken relative links in skills/workflows:\n" + "\n".join(errors)

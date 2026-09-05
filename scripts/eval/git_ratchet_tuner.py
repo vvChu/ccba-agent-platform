@@ -932,7 +932,7 @@ def main() -> int:
         target_path = (
             Path(args.target)
             if args.target
-            else (project_root / ".agents" / "skills" / "copywriting" / "SKILL.md")
+            else (project_root / ".agents" / "skills" / "ccba-copywriting" / "SKILL.md")
         )
         ds_path = Path(args.dataset) if args.dataset else None
         config = RatchetConfig(

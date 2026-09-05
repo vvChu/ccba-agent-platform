@@ -1,0 +1,94 @@
+# Cấu hình danh mục chủ đề Brainstorming mặc định của CCBA Platform
+# Hỗ trợ mở rộng: Thêm chủ đề mới bằng cách tạo tệp đè tại .md/knowledge/brainstorm_topics.yaml
+
+topics:
+  - topic_id: "legal"
+    display_name: "Pháp lý & VBPL"
+    keywords:
+      - "luật"
+      - "nghị định"
+      - "thông tư"
+      - "quy chuẩn"
+      - "tiêu chuẩn"
+      - "pháp lý"
+      - "hiệu lực"
+      - "tcvn"
+      - "qcvn"
+    required_skills:
+      - "docx"
+      - "pdf"
+      - "legal-document-tracker"
+      - "ccba-research"
+    guidelines:
+      - "Kiểm tra kỹ số hiệu, điều khoản, ngày ban hành và ngày có hiệu lực chính thức của văn bản pháp lý."
+      - "Đối chiếu xem có văn bản nào mới thay thế hoặc đang ở trạng thái dự thảo không (tuân thủ quy định giai đoạn chuyển tiếp)."
+      - "Lập bảng so sánh tác động giữa văn bản cũ và văn bản mới nếu có sự thay đổi điều khoản."
+
+  - topic_id: "pccc_mep"
+    display_name: "Cơ điện & An toàn PCCC"
+    keywords:
+      - "pccc"
+      - "phòng cháy"
+      - "chữa cháy"
+      - "mep"
+      - "cơ điện"
+      - "bản vẽ"
+      - "thiết bị"
+      - "cảm biến"
+      - "khói"
+    required_skills:
+      - "pdf"
+      - "ccba-ai-qc-pccc-audit"
+      - "ccba-ai-qc"
+      - "ccba-research"
+    guidelines:
+      - "Quét danh mục bản vẽ MEP để tìm kiếm sơ đồ nguyên lý hệ thống báo cháy, chữa cháy."
+      - "Đối chiếu vị trí đầu báo khói, đầu phun sprinkler với thiết kế kiến trúc/trần thạch cao để tìm lỗi xung đột (clash detection phi hình học)."
+      - "Xác định các tiêu chuẩn PCCC áp dụng cho công trình (TCVN 3890, QCVN 06)."
+
+  - topic_id: "bim_arch"
+    display_name: "Kiến trúc & Phối hợp BIM"
+    keywords:
+      - "bim"
+      - "kiến trúc"
+      - "phối hợp"
+      - "uniclass"
+      - "room naming"
+      - "không gian"
+      - "vật liệu"
+      - "ifc"
+    required_skills:
+      - "bigbim-classification"
+      - "bigbim-rase"
+      - "bigbim-risk"
+      - "excalidraw-diagram"
+      - "ccba-prototype"
+    guidelines:
+      - "Kiểm tra quy chuẩn định danh duy nhất (Unique ID) cho cấu kiện từ giai đoạn A0."
+      - "Đối chiếu việc phân loại không gian vật tư, vật liệu theo hệ thống Uniclass 200 (PM/En)."
+      - "Phân tích RASE (Requirement, Applicability, Selection, Exception) dựa trên sơ đồ dữ liệu IFC."
+
+  - topic_id: "software"
+    display_name: "Phần mềm & Tự động hóa Agentic"
+    keywords:
+      - "phần mềm"
+      - "code"
+      - "api"
+      - "sdk"
+      - "python"
+      - "javascript"
+      - "git"
+      - "test"
+      - "pytest"
+      - "playwright"
+    required_skills:
+      - "code-review"
+      - "web-testing"
+      - "api-circuit-breaker"
+      - "append-only-logger"
+      - "ccba-research"
+      - "ccba-prototype"
+    guidelines:
+      - "Tuân thủ tiêu chuẩn chất lượng KISS (Keep It Simple, Stupid) và ưu tiên composition over inheritance."
+      - "Rà soát lỗi bảo mật (OWASP Top 10), rò rỉ API keys, thông tin nhạy cảm."
+      - "Viết test suite tự động và tích hợp type hints, docstring Google style."

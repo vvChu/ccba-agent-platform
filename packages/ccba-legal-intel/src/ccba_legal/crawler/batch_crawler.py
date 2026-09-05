@@ -14,11 +14,34 @@ class TVPLBatchCrawler:
 
     def __init__(
         self,
-        crawler_engine: TVPLCrawlerEngine | None = None,
+        crawler_engine: TVPLCrawlerEngine | Any | None = None,
         registry_path: Path | None = None,
+        output_dir: Path | None = None,
     ) -> None:
-        self.engine = crawler_engine or TVPLCrawlerEngine()
+        if isinstance(crawler_engine, (Path, str)):
+            if output_dir is None:
+                output_dir = Path(crawler_engine)
+            crawler_engine = None
+
+        if output_dir is not None:
+            self.output_dir = Path(output_dir)
+        elif hasattr(crawler_engine, "output_dir"):
+            self.output_dir = Path(crawler_engine.output_dir)
+        elif hasattr(getattr(crawler_engine, "provider", None), "output_dir"):
+            self.output_dir = Path(crawler_engine.provider.output_dir)
+        else:
+            self.output_dir = Path(".md/extracted_docs")
+
         self.registry_path = registry_path or Path("legal_registry.yaml")
+        from ccba_legal.crawler.engine import TVPLCrawler
+
+        if crawler_engine is not None:
+            if isinstance(crawler_engine, TVPLCrawler):
+                self.engine = crawler_engine.engine
+            else:
+                self.engine = crawler_engine
+        else:
+            self.engine = TVPLCrawler(output_dir=self.output_dir).engine
 
     def crawl_hierarchy(
         self,
@@ -39,7 +62,14 @@ class TVPLBatchCrawler:
             visited.add(current_id)
             print(f"[TVPLBatchCrawler] Crawling (depth {depth}): {current_id}")
             try:
-                doc_data = self.engine.fetch_doc(current_id)
+                if hasattr(self.engine, "fetch_doc"):
+                    doc_data = self.engine.fetch_doc(current_id)
+                elif hasattr(self.engine, "fetch_document"):
+                    doc_data = self.engine.fetch_document(current_id)
+                else:
+                    raise AttributeError(
+                        f"Crawler engine {type(self.engine)} has neither fetch_doc nor fetch_document"
+                    )
                 doc_slug = doc_data.get("slug", current_id)
                 crawled_docs[doc_slug] = doc_data
                 if reg_mgr:
