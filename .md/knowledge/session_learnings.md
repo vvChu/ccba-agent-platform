@@ -201,3 +201,16 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
 - **Core Pattern P12.3 — Test File Exemption from Structural Architecture Drift:**
   - **Vấn đề:** Bộ kiểm tra độ trôi dạt kiến trúc (`drift_auditor.py`) theo dõi các thư mục cốt lõi (`packages/`, `scripts/`, `skills/`). Khi một nhà phát triển thêm mới hoặc xóa bỏ một bài unit test độc lập trong `scripts/tests/`, linter kích hoạt lỗi `Structural drift detected` và yêu cầu cập nhật các tài liệu kiến trúc cấp cao (`README.md`, `PLATFORM.md`), gây ra cảnh báo giả (false-positive).
   - **Giải pháp:** Thêm điều kiện miễn trừ `not filepath.startswith("scripts/tests/")` trong logic phát hiện thay đổi cấu trúc của `drift_auditor.py`, phân định ranh giới rõ ràng giữa thay đổi kiến trúc hệ thống và bổ sung ca kiểm thử phần mềm.
+
+---
+
+## 13. Hub-Spoke Command & Argument Parity Invariant
+
+- **Core Pattern P13.1 — Unified CLI & Multi-Engine Argument Alignment:**
+  - **Vấn đề:** Khi hệ thống cung cấp nhiều cách thức kích hoạt cùng một tác vụ (ví dụ: `scripts/ccba_platform_cli.py sync-spoke` vs `scripts/sync_spoke.py` vs slash commands `/ccba-update-spoke`), nếu các cờ tham số (`--apply`, `--force`, `--bootstrap`, `--include-sandboxes`, `--archetype`) không được truyền đồng nhất ở cả parser và delegate layers, người dùng hoặc Agent sẽ gặp lỗi không đồng bộ hành vi giữa các entrypoints.
+  - **Giải pháp:** Thiết lập sự đồng nhất 100% giữa CLI parser của Spoke Sync engine (`scripts/spoke/sync/cli.py`), Unified Platform CLI (`scripts/ccba_platform_cli.py`) và các file hướng dẫn kỹ năng (`SKILL.md`). Bổ sung ca kiểm thử tham số CLI tự động (`test_ccba_platform_cli_arguments`, `test_run_spoke_sync_cli_with_bootstrap`) trong CI để ngăn chặn regression.
+
+- **Core Pattern P13.2 — Phantom Directory Prevention in Zero-Workflow Era:**
+  - **Vấn đề:** Sau khi di dời toàn bộ workflows sang kỹ năng (`workflows: 0`), logic đồng bộ cũ trong `coordinator.py` vẫn gọi `spoke_workflows_dir.mkdir(parents=True, exist_ok=True)` vô điều kiện, làm tự sinh thư mục rỗng `.agents/workflows/` tại các Spoke mới.
+  - **Giải pháp:** Chỉ tạo thư mục workflows khi `wfs_to_sync` có tệp cần đồng bộ (`if not dry_run and wfs_to_sync:`). Nếu Spoke đã có sẵn thư mục này từ trước, hệ thống quét và chuyển đổi sang `.md.bak` với nhãn `DEPRECATED_MIGRATED_TO_SKILL`. Nếu Spoke mới tinh, hoàn toàn không tạo thư mục thừa.
+
