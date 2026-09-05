@@ -107,12 +107,15 @@ claudekit-engineer/
 !.agents/skills/
 !.agents/proposals/
 !.agents/rules/
+!.agents/resources/
+!.agents/templates/
 !.agents/AGENTS.md
 
 # Loại trừ các dữ liệu động, log, credentials bên trong các thư mục chính quy này
 .agents/**/*.log
 .agents/**/*.json
 !.agents/skills/eval-gate/test_cases/*.json
+!.agents/skills/ccba-eval-gate/test_cases/*.json
 .agents/**/*.env
 .agents/**/__pycache__/
 .agents/**/*.pyc

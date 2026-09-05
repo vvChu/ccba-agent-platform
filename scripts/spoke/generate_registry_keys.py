@@ -5,13 +5,13 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 # Cấu hình đường dẫn
-PUBLIC_KEY_PATH = ".agents/workflows/resources/registry_public_key.pem"
+PUBLIC_KEY_PATH = ".agents/resources/registry_public_key.pem"
 # Lưu khóa bí mật ngoài codebase
 PRIVATE_KEY_DIR = os.path.expanduser(r"~\.gemini\antigravity\keys")
 PRIVATE_KEY_PATH = os.path.join(PRIVATE_KEY_DIR, "registry_private_key.pem")
 
 
-def generate_keys():
+def generate_keys() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         try:
             sys.stdout.reconfigure(encoding="utf-8")
