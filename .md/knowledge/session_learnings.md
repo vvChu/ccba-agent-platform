@@ -160,3 +160,23 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
 
 - **Core Pattern P10.4 — Embedding Cache Freshness via SHA-256 Sidecar:**
   - Cache `embeddings.npy` chỉ kiểm tra `len(matrix) == len(chunks)` dẫn đến stale cache khi corpus thay đổi mà giữ nguyên số chunk. Fix: lưu `.sha256` sidecar file cùng thư mục, validate hash trước khi load cache.
+
+---
+
+## 11. Workflows-to-Skills Migration, Namespace Standardization & Spoke Hygiene (ADR 0056)
+
+- **Core Pattern P11.1 — False-Positive OKF Discrimination in Document & Link Linters:**
+  - **Vấn đề:** Các linter markdown (`link_auditor.py`) khi kiểm tra schema OKF có thể bị false-positive nếu chỉ dựa vào sự xuất hiện của các trường frontmatter phổ biến như `status:` hoặc `timestamp:`, dẫn đến việc các tài liệu kỹ thuật, bảng hỏi discovery hay ADRs bị ép vào bộ quy tắc kiểm tra văn bản pháp quy (bắt buộc `type: Law/Decree/Circular...`).
+  - **Giải pháp:** Siết chặt điều kiện nhận diện OKF: Chỉ kích hoạt kiểm tra OKF khi tệp nằm trong thư mục `legal_docs` hoặc chứa các trường định danh pháp quy đặc thù (`document_number`, `parent_document`, hoặc `type` thuộc danh sách loại hình VBPL).
+
+- **Core Pattern P11.2 — Windows Packaging Distribution Metadata Scan Timeout:**
+  - **Vấn đề:** Khi `googleapiclient` hoặc `google.api_core` được nạp lần đầu trong tiến trình Python trên Windows, cơ chế `check_python_version()` gọi `importlib.metadata.packages_distributions()`. Hàm này duyệt đệ quy qua toàn bộ cây thư mục `AppData\Roaming\Python\...` để kiểm tra `os.stat()`, có thể mất từ 15-30 giây và kích hoạt `pytest-timeout` nếu timeout mặc định được cấu hình là 30s.
+  - **Giải pháp:** Đối với các integration tests có liên quan đến cloud SDKs hoặc Spoke init bundle, cần thiết lập timeout chuyên biệt (`-o timeout=60` hoặc `@pytest.mark.timeout(60)`) để tránh ngắt luồng giả mạo trong môi trường máy phát triển Windows.
+
+- **Core Pattern P11.3 — Prefix-Stripping Mapping in Scaffolding & Synchronizer:**
+  - **Vấn đề:** Khi thư mục kỹ năng mang tiền tố tổ chức `ccba-<name>` (ví dụ `ccba-maskara`), các mã nguồn hỗ trợ tại `scripts/` hoặc thư viện vẫn giữ nguyên tên gốc (`scripts/maskara.py`). Nếu scaffolder chỉ tìm kiếm theo tên kỹ năng đầy đủ sẽ gây lỗi gãy liên kết (Broken Script Reference).
+  - **Giải pháp:** `skill_generator.py` và `coordinator.py` bắt buộc phải triển khai cơ chế bóc tách tiền tố (`name_no_prefix = name.removeprefix('ccba-').removeprefix('bigbim-')`) để tìm kiếm song song cả tên có tiền tố và không có tiền tố trong danh sách ứng viên (candidate scripts).
+
+- **Core Pattern P11.4 — Two-Way Forwarding Aliases & Automated Legacy Archival:**
+  - **Vấn đề:** Khi đổi tên kỹ năng trên Hub, các trạm Spoke nếu chỉ sao chép thư mục mới sẽ bị hiện tượng Zombie Bloat (tồn tại song song cả thư mục cũ và mới, cùng các tệp `.agents/workflows/*.md` lỗi thời).
+  - **Giải pháp:** Triển khai bảng `SKILL_DEPRECATION_ALIASES` 2 chiều trong synchronizer (`coordinator.py`). Trong quá trình đồng bộ, Hub chủ động quét và xóa thư mục cũ tại Spoke, đồng thời đổi tên các file `.md` trong `.agents/workflows/` thành `.md.bak` (gắn nhãn `DEPRECATED_MIGRATED_TO_SKILL`), đảm bảo Spoke luôn sạch sẽ và chỉ sử dụng kỹ năng chuẩn.

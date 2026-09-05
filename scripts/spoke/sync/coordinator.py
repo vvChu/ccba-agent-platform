@@ -24,6 +24,120 @@ from .sdk_inspector import (
 )
 
 # =============================================================================
+# SKILL DEPRECATION & NAMESPACE ALIASES (ADR-0040 & ADR-0051)
+# =============================================================================
+SKILL_DEPRECATION_ALIASES: dict[str, str] = {
+    "academic_writing": "ccba-academic-writing",
+    "ai-gateway-sdk": "ccba-ai-gateway-sdk",
+    "api-circuit-breaker": "ccba-api-circuit-breaker",
+    "append-only-logger": "ccba-append-only-logger",
+    "architecture-sync": "ccba-architecture-sync",
+    "ask": "ccba-ask",
+    "code-review": "ccba-code-review",
+    "codebase-design": "ccba-codebase-design",
+    "completion-checklist": "ccba-completion-checklist",
+    "copywriting": "ccba-copywriting",
+    "design": "ccba-design",
+    "diagnosing-bugs": "ccba-diagnosing-bugs",
+    "docs-validator": "ccba-docs-validator",
+    "docs_manager": "ccba-docs-manager",
+    "docx": "ccba-docx",
+    "domain-modeling": "ccba-domain-modeling",
+    "eval-gate": "ccba-eval-gate",
+    "excalidraw-diagram": "ccba-excalidraw-diagram",
+    "file-stability-guard": "ccba-file-stability-guard",
+    "git-guardrails": "ccba-git-guardrails",
+    "grilling": "ccba-grilling",
+    "handoff": "ccba-handoff",
+    "hybrid-rag-search": "ccba-hybrid-rag-search",
+    "implement": "ccba-implement",
+    "improve-codebase-architecture": "ccba-improve-codebase-architecture",
+    "legal-advisor": "ccba-legal-advisor",
+    "legal-document-tracker": "ccba-legal-document-tracker",
+    "llm-pipeline-patterns": "ccba-llm-pipeline-patterns",
+    "long-form-writer": "ccba-long-form-writer",
+    "loop-me": "ccba-loop-me",
+    "markdown-processing": "ccba-markdown-document-processing",
+    "maskara": "ccba-maskara",
+    "mock-debugger": "ccba-mock-debugger",
+    "notebooklm-connector": "ccba-notebooklm-connector",
+    "pptx": "ccba-pptx",
+    "resolving-merge-conflicts": "ccba-resolving-merge-conflicts",
+    "review_skill": "ccba-review-skill",
+    "seminar-builder": "ccba-seminar-builder",
+    "sequential-thinking": "ccba-sequential-thinking",
+    "session_retrospective": "ccba-session-retrospective",
+    "setup-pre-commit": "ccba-setup-pre-commit",
+    "setup-ts-deep-modules": "ccba-setup-ts-deep-modules",
+    "sharepoint-iac": "ccba-sharepoint-iac",
+    "spoke-adopter": "ccba-spoke-adopter",
+    "sync-upstream": "ccba-sync-upstream",
+    "tdd": "ccba-tdd",
+    "teach": "ccba-teach",
+    "to-questionnaire": "ccba-to-questionnaire",
+    "to-spec": "ccba-to-spec",
+    "to-tickets": "ccba-to-tickets",
+    "triage": "ccba-triage",
+    "tvpl-vip-crawler": "ccba-tvpl-vip-crawler",
+    "viet-chuyen-nghiep": "ccba-viet-chuyen-nghiep",
+    "wait-what": "ccba-wait-what",
+    "wayfinder": "ccba-wayfinder",
+    "web-testing": "ccba-web-testing",
+    "wizard": "ccba-wizard",
+    "writing-great-skills": "ccba-writing-great-skills",
+    "xia": "ccba-xia",
+    "xu-ly-van-phong": "ccba-xu-ly-van-phong",
+    "youtube-learn": "ccba-youtube-learn",
+    # Legacy Workflows -> Modern Skills Aliases (ADR-0040 & ADR-0051)
+    "adopt-spoke": "ccba-spoke-adopter",
+    "ccba-adopt-spoke": "ccba-spoke-adopter",
+    "convert-markdown": "ccba-markdown-document-processing",
+    "ccba-convert-markdown": "ccba-markdown-document-processing",
+    "prepare-seminar": "ccba-seminar-builder",
+    "ccba-prepare-seminar": "ccba-seminar-builder",
+    "run-qc-pipeline": "ccba-ai-qc",
+    "ccba-run-qc-pipeline": "ccba-ai-qc",
+    "notebooklm": "ccba-notebooklm-connector",
+    "ccba-notebooklm": "ccba-notebooklm-connector",
+    "docs": "ccba-docs-manager",
+    "ccba-docs": "ccba-docs-manager",
+    "extract-style": "ccba-copywriting",
+    "ccba-extract-style": "ccba-copywriting",
+    "grill-with-docs": "ccba-grilling",
+    "ccba-grill-with-docs": "ccba-grilling",
+    "init-spoke": "ccba-init-spoke",
+    "update-spoke": "ccba-update-spoke",
+    "new-feature": "ccba-new-feature",
+    "create-pr": "ccba-create-pr",
+    "release-feature": "ccba-release-feature",
+    "propose-to-hub": "ccba-propose-to-hub",
+    "contribute-to-hub": "ccba-contribute-to-hub",
+    "issue-to-hub": "ccba-issue-to-hub",
+    "session-retrospective": "ccba-session-retrospective",
+    "setup-skills": "ccba-setup-skills",
+    "promote-sandbox": "ccba-promote-sandbox",
+    "skills-eval": "ccba-skills-eval",
+    "discard-feature": "ccba-discard-feature",
+    "graduate-rd": "ccba-graduate-rd",
+    "update-legal-registry": "ccba-update-legal-registry",
+    "server-deploy": "ccba-server-deploy",
+    "review-proposal": "ccba-review-proposal",
+    "knowledge-loop": "ccba-knowledge-loop",
+    "autoresearch": "ccba-autoresearch",
+    "brainstorm": "ccba-brainstorm",
+    "build-skill": "ccba-build-skill",
+    "pccc-cdt-tuthamdinh": "ccba-pccc-cdt-tuthamdinh",
+    "workflow_pccc_cdt_tuthamdinh": "ccba-pccc-cdt-tuthamdinh",
+    "workflow-pccc-cdt-tuthamdinh": "ccba-pccc-cdt-tuthamdinh",
+    "pccc-thamdinh-congan": "ccba-pccc-thamdinh-congan",
+    "workflow_pccc_thamdinh_congan": "ccba-pccc-thamdinh-congan",
+    "workflow-pccc-thamdinh-congan": "ccba-pccc-thamdinh-congan",
+    "pccc-thamdinh-cqxd": "ccba-pccc-thamdinh-cqxd",
+    "workflow_pccc_thamdinh_cqxd": "ccba-pccc-thamdinh-cqxd",
+    "workflow-pccc-thamdinh-cqxd": "ccba-pccc-thamdinh-cqxd",
+}
+
+# =============================================================================
 # PROJECT TYPE SYNONYMS & ALIAS MAPPING
 # =============================================================================
 PROJECT_TYPE_ALIASES: dict[str, str] = {
@@ -224,6 +338,11 @@ class SpokeSynchronizer:
         dry_run: bool = False,
     ) -> int:
         """On-Demand synchronization for a single skill or workflow."""
+        canonical_item = SKILL_DEPRECATION_ALIASES.get(sync_item, sync_item)
+        if canonical_item != sync_item:
+            print(f"  [Alias Redirect] '{sync_item}' -> '{canonical_item}' (ADR-0040 Namespace)")
+            sync_item = canonical_item
+
         mode_str = " [DRY-RUN]" if dry_run else ""
         print(f"Mode: On-Demand Synchronization for '{sync_item}'{mode_str}")
         spoke_agents_dir = spoke_root / ".agents"
@@ -440,14 +559,27 @@ class SpokeSynchronizer:
         if spoke_skills_dir.exists():
             for existing_skill in spoke_skills_dir.iterdir():
                 if existing_skill.is_dir() and existing_skill.name not in synced_skill_folders:
-                    actions.append(
-                        {
-                            "type": "Skill",
-                            "name": existing_skill.name,
-                            "status": "PRESERVED",
-                            "path": str(existing_skill.relative_to(spoke_root)),
-                        }
-                    )
+                    replacement = SKILL_DEPRECATION_ALIASES.get(existing_skill.name)
+                    if replacement and replacement in synced_skill_folders:
+                        actions.append(
+                            {
+                                "type": "Skill",
+                                "name": existing_skill.name,
+                                "status": "DEPRECATED_REPLACED",
+                                "path": str(existing_skill.relative_to(spoke_root)),
+                            }
+                        )
+                        if not dry_run:
+                            safe_remove(existing_skill)
+                    else:
+                        actions.append(
+                            {
+                                "type": "Skill",
+                                "name": existing_skill.name,
+                                "status": "PRESERVED",
+                                "path": str(existing_skill.relative_to(spoke_root)),
+                            }
+                        )
 
         for sk in skills_to_sync:
             src = sk["src_dir"]
@@ -509,14 +641,45 @@ class SpokeSynchronizer:
         if spoke_workflows_dir.exists():
             for existing_wf in spoke_workflows_dir.iterdir():
                 if existing_wf.is_file() and existing_wf.name not in synced_wf_filenames:
-                    actions.append(
-                        {
-                            "type": "Workflow",
-                            "name": existing_wf.stem,
-                            "status": "PRESERVED",
-                            "path": str(existing_wf.relative_to(spoke_root)),
-                        }
+                    stem = existing_wf.stem
+                    clean_name = stem.replace("ccba-", "")
+                    replacement = (
+                        SKILL_DEPRECATION_ALIASES.get(stem)
+                        or SKILL_DEPRECATION_ALIASES.get(clean_name)
+                        or (
+                            f"ccba-{clean_name}"
+                            if f"ccba-{clean_name}" in synced_skill_folders
+                            else None
+                        )
+                        or (stem if stem in synced_skill_folders else None)
                     )
+                    if (
+                        existing_wf.suffix == ".md"
+                        and replacement
+                        and replacement in synced_skill_folders
+                    ):
+                        actions.append(
+                            {
+                                "type": "Workflow",
+                                "name": existing_wf.stem,
+                                "status": "DEPRECATED_MIGRATED_TO_SKILL",
+                                "path": str(existing_wf.relative_to(spoke_root)),
+                            }
+                        )
+                        if not dry_run:
+                            bak_path = existing_wf.with_suffix(".md.bak")
+                            if bak_path.exists():
+                                safe_remove(bak_path)
+                            existing_wf.rename(bak_path)
+                    else:
+                        actions.append(
+                            {
+                                "type": "Workflow",
+                                "name": existing_wf.stem,
+                                "status": "PRESERVED",
+                                "path": str(existing_wf.relative_to(spoke_root)),
+                            }
+                        )
 
         for wf in wfs_to_sync:
             src = wf["src_file"]
@@ -609,6 +772,7 @@ class SpokeSynchronizer:
         updated_count = sum(1 for a in actions if a["status"] == "UPDATED")
         unchanged_count = sum(1 for a in actions if a["status"] == "UNCHANGED")
         preserved_count = sum(1 for a in actions if a["status"] == "PRESERVED")
+        deprecated_count = sum(1 for a in actions if a["status"] == "DEPRECATED_REPLACED")
 
         print("\n" + "=" * 90)
         print(f" CCBA SPOKE SYNC REPORT — {'[DRY-RUN SIMULATION]' if dry_run else '[EXECUTION]'}")
@@ -621,11 +785,12 @@ class SpokeSynchronizer:
                 "UPDATED": "🔄 UPDATED",
                 "UNCHANGED": "⚪ UNCHANGED",
                 "PRESERVED": "🛡️ PRESERVED",
+                "DEPRECATED_REPLACED": "🗑️ DEPRECATED",
             }.get(act["status"], act["status"])
             print(f"{act['type']:<10} | {act['name']:<30} | {status_symbol:<12} | {act['path']}")
         print("-" * 90)
         print(
-            f"Tổng kết: {new_count} mới, {updated_count} cập nhật, {unchanged_count} không đổi, {preserved_count} giữ nguyên nội bộ."
+            f"Tổng kết: {new_count} mới, {updated_count} cập nhật, {unchanged_count} không đổi, {deprecated_count} dọn dẹp cũ, {preserved_count} giữ nguyên nội bộ."
         )
 
         # 7. Zero-Latency Shared Python SDKs Inspection & 1-Click Bootstrap

@@ -53,7 +53,8 @@ def test_catalog_has_standard_bundles(catalog_bundles: set[str]) -> None:
 def test_all_workflows_applies_to_match_catalog_bundles(catalog_bundles: set[str]) -> None:
     """Scan every workflow file and verify all applies_to items exist in catalog.yaml bundles."""
     workflow_files = list(WORKFLOWS_DIR.glob("*.md"))
-    assert len(workflow_files) > 0, "No workflow files found to test"
+    if not workflow_files:
+        pytest.skip("All workflows migrated to skills (.agents/skills/*/SKILL.md)")
 
     errors: list[str] = []
 

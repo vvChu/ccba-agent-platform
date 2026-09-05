@@ -89,6 +89,45 @@ def main() -> None:
         help="Path to original file for schema comparison (required when target is a directory)",
     )
 
+    # Subcommand: questionnaire
+    q_parser = subparsers.add_parser(
+        "questionnaire",
+        help="Manage, render, and resolve CCBA Questionnaires (.docx, .html, .chat, .email)",
+    )
+    q_parser.add_argument("input", type=str, help="Path to input questionnaire markdown (.md) file")
+    q_parser.add_argument(
+        "-f",
+        "--format",
+        choices=["all", "docx", "html", "chat", "email"],
+        default="all",
+        help="Output format to render (default: all)",
+    )
+    q_parser.add_argument(
+        "-o",
+        "--output-dir",
+        type=str,
+        default=None,
+        help="Directory to save rendered outputs (default: same directory as input file)",
+    )
+    q_parser.add_argument(
+        "--reply",
+        type=str,
+        default=None,
+        help="Apply reply string to resolve questionnaire (e.g. '1A, 2B, 3C')",
+    )
+    q_parser.add_argument(
+        "--resolved-by",
+        type=str,
+        default="Chủ đầu tư / Ban QLDA",
+        help="Name or title of approver for decision log",
+    )
+    q_parser.add_argument(
+        "--base-url",
+        type=str,
+        default="",
+        help="Optional server base URL for web hosting and QR code",
+    )
+
     args = parser.parse_args()
 
     if not args.command:
@@ -139,6 +178,71 @@ def main() -> None:
             print(f"Error: Target path '{args.target}' does not exist.", file=sys.stderr)
             sys.exit(1)
         sys.exit(0 if success else 1)
+
+    elif args.command == "questionnaire":
+        from .questionnaire import (
+            QuestionnaireEngine,
+            parse_questionnaire_markdown,
+            render_chat_snippet,
+            render_email_table,
+            render_questionnaire_docx,
+            render_questionnaire_html,
+        )
+
+        input_p = Path(args.input)
+        if not input_p.exists():
+            print(
+                f"Error: Input questionnaire file '{args.input}' does not exist.", file=sys.stderr
+            )
+            sys.exit(1)
+
+        # Handle --reply if provided
+        if args.reply:
+            try:
+                mod_path = QuestionnaireEngine.reply(
+                    source_file=input_p,
+                    reply_str=args.reply,
+                    resolved_by=args.resolved_by,
+                )
+                print(
+                    f"SUCCESS: Applied reply '{args.reply}' and updated status to RESOLVED in '{mod_path}'"
+                )
+            except Exception as e:
+                print(f"Error applying reply: {e}", file=sys.stderr)
+                sys.exit(1)
+
+        # Handle export / rendering
+        if args.format == "all":
+            results = QuestionnaireEngine.export_all(
+                source=input_p,
+                output_dir=args.output_dir,
+                base_url=args.base_url,
+            )
+            print(f"SUCCESS: Exported all formats for '{input_p.name}':")
+            for fmt, p in results.items():
+                print(f"  - [{fmt.upper()}]: {p}")
+        else:
+            data = parse_questionnaire_markdown(input_p)
+            out_dir = Path(args.output_dir) if args.output_dir else input_p.parent
+            out_dir.mkdir(parents=True, exist_ok=True)
+            stem = input_p.stem
+
+            if args.format == "docx":
+                target = out_dir / f"{stem}.docx"
+                render_questionnaire_docx(data, target)
+                print(f"SUCCESS: Generated DOCX at '{target}'")
+            elif args.format == "html":
+                target = out_dir / f"{stem}.html"
+                render_questionnaire_html(data, target, base_url=args.base_url)
+                print(f"SUCCESS: Generated HTML Form at '{target}'")
+            elif args.format == "chat":
+                target = out_dir / f"{stem}.chat.txt"
+                target.write_text(render_chat_snippet(data), encoding="utf-8")
+                print(f"SUCCESS: Generated Chat snippet at '{target}'")
+            elif args.format == "email":
+                target = out_dir / f"{stem}.email.html"
+                target.write_text(render_email_table(data), encoding="utf-8")
+                print(f"SUCCESS: Generated Email table at '{target}'")
 
 
 if __name__ == "__main__":

@@ -75,7 +75,11 @@ class DriftAuditor(BaseAuditor):
 
             structural_change = False
             arch_doc_updated = False
-            arch_docs = {"README.md", "PLATFORM.md", ".agents/skills/architecture-sync/SKILL.md"}
+            arch_docs = {
+                "README.md",
+                "PLATFORM.md",
+                ".agents/skills/ccba-architecture-sync/SKILL.md",
+            }
             tracked_prefixes = ("packages/", "scripts/", ".agents/skills/", ".agents/workflows/")
 
             for line in changes:
@@ -111,7 +115,7 @@ class DriftAuditor(BaseAuditor):
 
             if structural_change and not arch_doc_updated:
                 drift_errors.append(
-                    "Structural drift detected: You added/deleted/renamed files in core directories (packages, scripts, skills, workflows) but did not update Architecture Docs (README.md, PLATFORM.md, architecture-sync). Run 'python scripts/update_arch_stats.py' and commit."
+                    "Structural drift detected: You added/deleted/renamed files in core directories (packages, scripts, skills, workflows) but did not update Architecture Docs (README.md, PLATFORM.md, ccba-architecture-sync). Run 'python scripts/update_arch_stats.py' and commit."
                 )
         except Exception:
             pass

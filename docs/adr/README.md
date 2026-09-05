@@ -6,7 +6,7 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 
 ---
 
-## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0055)
+## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0056)
 
 | Mã ADR | Tiêu đề | Trạng thái |
 | :--- | :--- | :---: |
@@ -59,3 +59,4 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 | [ADR 0053](0053-teamwork-multi-agent-orchestration-framework.md) | Teamwork Multi-Agent Orchestration Framework & Exclusive Seam Protocol | ✅ ACCEPTED |
 | [ADR 0054](0054-antigravity-lifecycle-hooks-and-security-bridge.md) | Antigravity Lifecycle Hooks & Security Bridge — Adapter Bridge Architecture | ✅ ACCEPTED |
 | [ADR 0055](0055-ccba-ai-multi-tier-failover-and-mock-provider.md) | CCBA AI Multi-Tier Failover Matrix, Antigravity CLI Bridge, Local Ollama & Offline Mock Provider | ✅ ACCEPTED |
+| [ADR 0056](0056-migrate-legacy-workflows-to-skills-and-standardize-ccba-namespace.md) | Migration of Legacy Workflows to Modern Skills and Direct CCBA Namespace Standardization | ✅ ACCEPTED |

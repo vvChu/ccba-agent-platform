@@ -24,6 +24,7 @@
 - [guidelines/CCBA_ADM_QD_006_Rev00_BoNhiemMEP.md](guidelines/CCBA_ADM_QD_006_Rev00_BoNhiemMEP.md): Quyết định bổ nhiệm nhân sự phụ trách bộ môn MEP.
 - [guidelines/CCBA_RD_VBPL_004_Rev00-ND_30_2020_CongTacVanThu.md](guidelines/CCBA_RD_VBPL_004_Rev00-ND_30_2020_CongTacVanThu.md): Hướng dẫn công tác văn thư theo Nghị định 30/2020/NĐ-CP.
 - [guidelines/CCBA_SOP_001_Rev00-Brainstorming_Workflow.md](guidelines/CCBA_SOP_001_Rev00-Brainstorming_Workflow.md): Quy trình thao tác chuẩn cho phiên Brainstorming.
+- [questionnaires/to-questionnaire-sample-pccc.md](questionnaires/to-questionnaire-sample-pccc.md): Bảng câu hỏi mẫu Discovery thẩm tra PCCC đa bộ môn.
 
 ---
 
@@ -40,6 +41,7 @@
 
 ## 🔬 4. Nghiên Cứu Chuyên Sâu & Phân Tích Upstream (Research & Studies)
 
+- [research_and_studies/research-rename-skills-vs-alias.md](research_and_studies/research-rename-skills-vs-alias.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện: Đổi tên trực tiếp Skills sang namespace ccba-* vs Cơ chế Alias.
 - [research_and_studies/research-brand-refinements.md](research_and_studies/research-brand-refinements.md): **[MỚI]** Báo cáo Đánh giá & Tinh chỉnh Bộ Nhận diện Thương hiệu CCBA (ver 3.3 $\rightarrow$ ver 3.4).
 - [research_and_studies/research-minimalist-slide-design.md](research_and_studies/research-minimalist-slide-design.md): **[MỚI]** Nghiên cứu Kiến trúc Trình chiếu Tối giản Thụy Sĩ (Swiss Minimalist Presentation System).
 - [research_and_studies/research-storytelling-with-you-patterns.md](research_and_studies/research-storytelling-with-you-patterns.md): **[MỚI]** Báo cáo Nghiên cứu & Ứng dụng "Storytelling With You" (Cole Nussbaumer Knaflic).

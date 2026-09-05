@@ -227,16 +227,22 @@ class LinkAuditor(BaseAuditor):
         if content.strip().startswith("---"):
             frontmatter, _ = self.parse_frontmatter(content)
             if frontmatter and isinstance(frontmatter, dict):
-                okf_fields = {
-                    "type",
-                    "resource",
-                    "status",
-                    "document_number",
-                    "timestamp",
-                    "parent_document",
-                    "uniclass",
+                okf_keywords = {
+                    "Law",
+                    "Decree",
+                    "Circular",
+                    "Standard",
+                    "Appendix",
+                    "Section",
+                    "Consolidated Document",
+                    "Guiding Document",
                 }
-                if any(field in frontmatter for field in okf_fields):
+                if (
+                    "legal_docs" in parts
+                    or "document_number" in frontmatter
+                    or "parent_document" in frontmatter
+                    or frontmatter.get("type") in okf_keywords
+                ):
                     is_okf = True
                     if not bundle_root:
                         bundle_root = filepath.parent

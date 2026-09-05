@@ -100,17 +100,39 @@ class ChromeCDP:
         except Exception as e:
             raise ChromeCDPError(f"Failed to connect to tab WebSocket: {e}") from e
 
-    def send_command(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
+    def send_command(
+        self, method: str, params: dict[str, Any], timeout: float = 15.0
+    ) -> dict[str, Any]:
         """Send a generic CDP command and return the response payload with timeout handling."""
         if not self.ws:
             raise ChromeCDPError("No active WebSocket connection.")
-        payload = {"id": random.randint(1, 100000), "method": method, "params": params}
+        req_id = random.randint(1, 1000000)
+        payload = {"id": req_id, "method": method, "params": params}
+        start_time = time.time()
         try:
             self.ws.send(json.dumps(payload))
-            resp = self.ws.recv()
-            return json.loads(resp)  # type: ignore[no-any-return]
-        except websocket.WebSocketTimeoutException:
+            while time.time() - start_time < timeout:
+                remaining = max(0.1, timeout - (time.time() - start_time))
+                self.ws.settimeout(remaining)
+                try:
+                    resp = self.ws.recv()
+                except (websocket.WebSocketTimeoutException, TimeoutError):
+                    break
+                if not resp:
+                    continue
+                try:
+                    data = json.loads(resp)
+                except Exception:
+                    continue
+                if isinstance(data, dict) and data.get("id") == req_id:
+                    return data
             return {"result": {"value": None}}
+        except (websocket.WebSocketTimeoutException, TimeoutError):
+            return {"result": {"value": None}}
+        except websocket.WebSocketConnectionClosedException as e:
+            raise ChromeCDPError(
+                f"WebSocket connection closed while sending CDP command {method}: {e}"
+            ) from e
         except Exception as e:
             raise ChromeCDPError(f"Failed to send CDP command {method}: {e}") from e
 
@@ -118,42 +140,29 @@ class ChromeCDP:
         """Evaluate a JavaScript expression in the connected tab."""
         if not self.ws:
             raise ChromeCDPError("No active WebSocket connection.")
-        payload = {
-            "id": random.randint(1, 100000),
-            "method": "Runtime.evaluate",
-            "params": {"expression": expression, "returnByValue": True},
-        }
-        try:
-            self.ws.send(json.dumps(payload))
-            resp = self.ws.recv()
-            data = json.loads(resp)
+        data = self.send_command(
+            "Runtime.evaluate",
+            {"expression": expression, "returnByValue": True},
+        )
+        result_data = data.get("result", {})
+        if "exceptionDetails" in result_data:
+            exc = result_data["exceptionDetails"]
+            raise ChromeCDPError(f"JS Exception: {exc.get('text')} - {exc.get('exception', {})}")
 
-            result_data = data.get("result", {})
-            if "exceptionDetails" in result_data:
-                exc = result_data["exceptionDetails"]
-                raise ChromeCDPError(
-                    f"JS Exception: {exc.get('text')} - {exc.get('exception', {})}"
-                )
-
-            return result_data.get("result", {}).get("value")
-        except (websocket.WebSocketTimeoutException, websocket.WebSocketConnectionClosedException):
-            return None
-        except Exception as e:
-            raise ChromeCDPError(f"Failed to evaluate JS: {e}") from e
+        return result_data.get("result", {}).get("value")
 
     def navigate(self, url: str) -> None:
         """Navigate to a URL and wait for the page to be ready."""
         if not self.ws:
             raise ChromeCDPError("No active WebSocket connection.")
-        payload = {
-            "id": random.randint(1, 100000),
-            "method": "Page.navigate",
-            "params": {"url": url},
-        }
         try:
-            self.ws.send(json.dumps(payload))
-            self.ws.recv()
+            self.send_command("Page.navigate", {"url": url})
             sleep_with_jitter(1.5, 0.3, 1.2)
+        except ChromeCDPError as e:
+            if "WebSocket connection closed" in str(e):
+                sleep_with_jitter(1.5, 0.3, 1.2)
+            else:
+                raise
         except (websocket.WebSocketTimeoutException, websocket.WebSocketConnectionClosedException):
             sleep_with_jitter(1.5, 0.3, 1.2)
         except Exception as e:
@@ -233,27 +242,36 @@ class ChromeCDP:
                         "params": {"behavior": "allow", "downloadPath": p, "eventsEnabled": True},
                     }
                     ws_b.send(json.dumps(cmd))
-                    ws_b.recv()
+                    raw_b = ws_b.recv()
                     ws_b.close()
-                    return True
+                    if raw_b:
+                        data_b = json.loads(raw_b)
+                        if "error" not in data_b:
+                            return True
         except Exception:
             pass
 
         try:
-            self.send_command(
+            res = self.send_command(
                 "Browser.setDownloadBehavior",
                 {"behavior": "allow", "downloadPath": p, "eventsEnabled": True},
             )
-            return True
-        except Exception:
-            try:
-                self.send_command(
-                    "Page.setDownloadBehavior",
-                    {"behavior": "allow", "downloadPath": p},
-                )
+            if "error" not in res:
                 return True
-            except Exception:
-                return False
+        except Exception:
+            pass
+
+        try:
+            res = self.send_command(
+                "Page.setDownloadBehavior",
+                {"behavior": "allow", "downloadPath": p},
+            )
+            if "error" not in res:
+                return True
+        except Exception:
+            pass
+
+        return False
 
     def handle_login(self) -> bool:
         """Detect login popup, fill in credentials, submit, handle multi-session warning, and return True if login was attempted."""
@@ -387,10 +405,15 @@ class MockChromeCDP(ChromeCDP):
     def connect_tab(self, ws_url: str) -> None:
         self.connected = True
 
-    def send_command(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
+    def send_command(
+        self, method: str, params: dict[str, Any], timeout: float = 15.0
+    ) -> dict[str, Any]:
         if not self.connected:
             raise ChromeCDPError("No active WebSocket connection.")
         return {"result": {"value": True}}
+
+    def set_download_behavior(self, download_path: Path | str) -> bool:
+        return True
 
     def set_mock_js_response(self, expression: str, value: Any) -> None:
         self.mock_js_responses[expression] = value

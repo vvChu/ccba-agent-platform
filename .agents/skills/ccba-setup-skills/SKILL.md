@@ -15,7 +15,7 @@ triggers:
 ---
 # Kỹ năng Thiết Lập Cấu Hình Phát Triển (Setup CCBA Skills)
 
-Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát triển phần mềm khác (`triage`, `to-tickets`, `to-spec`, `tdd`, `improve-codebase-architecture`, v.v.) hoạt động chính xác:
+Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát triển phần mềm khác (`ccba-triage`, `ccba-to-tickets`, `ccba-to-spec`, `ccba-tdd`, `ccba-improve-codebase-architecture`, v.v.) hoạt động chính xác:
 
 - **Issue tracker** — Nơi theo dõi công việc (GitHub, GitLab, hoặc Local Markdown lưu offline).
 - **Triage labels** — Từ vựng nhãn tương ứng với 5 vai trò trạng thái của triage.
@@ -35,7 +35,7 @@ Quét dự án hiện tại để nhận diện trạng thái ban đầu:
 - Kiểm tra sự tồn tại của file hiến pháp `.agents/AGENTS.md` hoặc `AGENTS.md`.
 - Kiểm tra sự tồn tại của `CONTEXT.md` / `CONTEXT-MAP.md` ở thư mục gốc hoặc `.md/knowledge/`.
 - Kiểm tra sự tồn tại của thư mục cấu hình đích `.md/knowledge/agents/`.
-- **Kiểm tra Kỹ năng Triage (Multi-tier Detection)**: Quét qua 3 cấp: (1) Thư mục `.agents/skills/triage/` hoặc `.agents/skills/ccba-triage/`, (2) Đăng ký trong `catalog.yaml`, (3) Danh sách Kỹ năng khả dụng trong ngữ cảnh. Thiết lập cờ `triage_installed = true` nếu tìm thấy; ngược lại `triage_installed = false`.
+- **Kiểm tra Kỹ năng Triage (Multi-tier Detection)**: Quét qua 3 cấp: (1) Thư mục `.agents/skills/ccba-triage/` hoặc `.agents/skills/triage/`, (2) Đăng ký trong `catalog.yaml`, (3) Danh sách Kỹ năng khả dụng trong ngữ cảnh. Thiết lập cờ `triage_installed = true` nếu tìm thấy; ngược lại `triage_installed = false`.
 - **Kiểm tra Tín hiệu Monorepo (Monorepo Inference)**: Kiểm tra file `pnpm-workspace.yaml`, trường `workspaces` trong `package.json`, hoặc sự tồn tại của `CONTEXT-MAP.md`. Thiết lập cờ `is_monorepo = true` nếu phát hiện; ngược lại `is_monorepo = false`.
 
 ### 2. Gợi ý cấu hình & Phỏng vấn (Present findings and ask)

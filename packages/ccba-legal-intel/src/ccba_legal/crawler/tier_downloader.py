@@ -82,6 +82,33 @@ def load_relation_synonyms(project_root: Path | None = None) -> dict[str, str]:
     return _load_relation_synonyms(proj_root_fn())
 
 
+def _wait_for_download(
+    watch_dirs: list[Path],
+    existing_downloads: set[str],
+    expected_exts: list[str],
+    timeout: float = 30.0,
+) -> Path | None:
+    """Wait for newly downloaded file matching expected_exts with size > 0 and no .crdownload."""
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        current_downloads = [f for d in watch_dirs if d.exists() for f in d.glob("*")]
+        new_downloads = [f for f in current_downloads if str(f.resolve()) not in existing_downloads]
+        if new_downloads:
+            # Check if any new file is currently downloading
+            if any(f.suffix == ".crdownload" or f.name.endswith(".tmp") for f in new_downloads):
+                time.sleep(0.5)
+                continue
+            for f in new_downloads:
+                if any(f.name.lower().endswith(ext) for ext in expected_exts):
+                    try:
+                        if f.is_file() and f.stat().st_size > 0:
+                            return f
+                    except OSError:
+                        pass
+        time.sleep(0.5)
+    return None
+
+
 def trigger_download(
     cdp: ChromeCDP,
     download_dir: Path,
@@ -96,7 +123,6 @@ def trigger_download(
         downloads_path = Path("C:/Users/chuvu/Downloads")
     watch_dirs = [downloads_path, download_dir]
     print(f"[LegalIntel] Monitoring Downloads folders: {[str(d) for d in watch_dirs]}")
-    existing_downloads = {str(f.resolve()) for d in watch_dirs if d.exists() for f in d.glob("*")}
 
     # Configure Chrome download behavior to allow automatic downloads
     try:
@@ -116,31 +142,51 @@ def trigger_download(
         if hasattr(cdp, "handle_login") and cdp.handle_login():
             cdp.wait_ready()
             sleep_with_jitter(2.0, 0.5, 1.0)
+            current_href = str(cdp.evaluate_js("window.location.href") or "")
+            if "tab=7" not in current_href:
+                print(f"[LegalIntel] Re-navigating to tab=7 after login: {tab7_url}")
+                cdp.navigate(tab7_url)
+                cdp.wait_ready()
+                sleep_with_jitter(2.0, 0.5, 1.0)
+
+    # Re-apply download behavior on active page after navigation/login
+    try:
+        cdp.set_download_behavior(download_dir)
+    except Exception:
+        pass
 
     def _do_click_docx() -> Any:
         js = """
         (() => {
             let all_links = Array.from(document.querySelectorAll('a'));
-            // 1. Prioritize explicit DOCX (id includes 'docx', text includes '(docx)', or href contains 'docx=1')
+            // 1. Prioritize explicit DOCX (id includes 'docx' or 'vietnamesehyperlink_docx', text includes '(docx)', or href contains 'docx=1')
             let a_docx = all_links.find(lnk => {
                 let t = (lnk.innerText || '').toLowerCase();
                 let h = (lnk.href || '').toLowerCase();
                 let id = (lnk.id || '').toLowerCase();
-                return (id.includes('docx') || t.includes('(docx)') || h.includes('docx=1')) && !t.includes('tiếng anh');
+                return (id.includes('docx') || id.includes('vietnamesehyperlink_docx') || t.includes('(docx)') || h.includes('docx=1')) && !t.includes('tiếng anh');
             });
-            if (a_docx) {
-                a_docx.click();
-                return "Clicked DOCX: " + (a_docx.innerText || a_docx.href);
+            if (!a_docx) {
+                // 2. Fallback to generic Word link
+                a_docx = all_links.find(lnk => {
+                    let t = (lnk.innerText || '').toLowerCase();
+                    let h = (lnk.href || '').toLowerCase();
+                    return (t.includes('tiếng việt') || (t.includes('tải') && t.includes('văn bản'))) && (h.includes('download.aspx') || h.includes('part=')) && !t.includes('tiếng anh') && !t.includes('pdf');
+                });
             }
-            // 2. Fallback to generic Word link
-            let a_doc = all_links.find(lnk => {
-                let t = (lnk.innerText || '').toLowerCase();
-                let h = (lnk.href || '').toLowerCase();
-                return (t.includes('tiếng việt') || t.includes('tải văn bản')) && (h.includes('download.aspx') || h.includes('part=')) && !t.includes('tiếng anh') && !t.includes('pdf');
-            });
-            if (a_doc) {
-                a_doc.click();
-                return "Clicked DOC (Fallback): " + (a_doc.innerText || a_doc.href);
+            if (a_docx) {
+                let href_val = (a_docx.getAttribute('href') || a_docx.href || '').trim();
+                if (href_val.toLowerCase().startsWith('javascript:')) {
+                    let jsCode = decodeURIComponent(href_val.replace(/^javascript:/i, ''));
+                    try {
+                        eval(jsCode);
+                    } catch (e) {
+                        a_docx.click();
+                    }
+                } else {
+                    a_docx.click();
+                }
+                return "Clicked DOCX: " + (a_docx.innerText || a_docx.href);
             }
             return "No DOCX/DOC link in tab=7";
         })()
@@ -150,18 +196,33 @@ def trigger_download(
     def _do_click_pdf() -> Any:
         js = """
         (() => {
-            let a = Array.from(document.querySelectorAll('a')).find(lnk => {
+            let all_links = Array.from(document.querySelectorAll('a'));
+            let a = all_links.find(lnk => {
                 let t = (lnk.innerText || '').toLowerCase();
                 let h = (lnk.href || '').toLowerCase();
-                return t.includes('tải bản pdf') || t.includes('tải văn bản gốc') || h.includes('part=-100') || h.includes('part=0');
+                let id = (lnk.id || '').toLowerCase();
+                return id.includes('vietnamesehyperlink_pdf') || (t.includes('tải') && t.includes('bản pdf')) || (t.includes('tải') && t.includes('văn bản gốc')) || h.includes('part=-100') || h.includes('part=0');
             });
             if (!a) {
-                a = Array.from(document.querySelectorAll('a')).find(lnk => {
+                a = all_links.find(lnk => {
                     let h = (lnk.href || '').toLowerCase();
                     return h.endsWith('.pdf') || h.includes('.pdf?');
                 });
             }
-            if (a) { a.click(); return "Clicked PDF: " + (a.innerText || a.href); }
+            if (a) {
+                let href_val = (a.getAttribute('href') || a.href || '').trim();
+                if (href_val.toLowerCase().startsWith('javascript:')) {
+                    let jsCode = decodeURIComponent(href_val.replace(/^javascript:/i, ''));
+                    try {
+                        eval(jsCode);
+                    } catch (e) {
+                        a.click();
+                    }
+                } else {
+                    a.click();
+                }
+                return "Clicked PDF: " + (a.innerText || a.href);
+            }
             return "No PDF link in tab=7";
         })()
         """
@@ -201,19 +262,7 @@ def trigger_download(
             print(f"[LegalIntel] Error querying attachments: {e}")
         return []
 
-    # 2. Trigger DOCX click if requested
-    if format_type in ("docx", "both"):
-        res_docx = _do_click_docx()
-        print(f"[LegalIntel] Trigger DOCX download: {res_docx}")
-        sleep_with_jitter(2.0, 0.5, 1.0)
-
-    # 3. Trigger PDF click if requested
-    if format_type in ("pdf", "both"):
-        res_pdf = _do_click_pdf()
-        print(f"[LegalIntel] Trigger PDF download: {res_pdf}")
-        sleep_with_jitter(2.0, 0.5, 1.0)
-
-    # 4. Trigger Standalone Attachments download if requested
+    # 2. Trigger Standalone Attachments download if requested
     saved_attachments: list[str] = []
     if download_attachments:
         found_attachs = _do_download_all_attachments()
@@ -249,75 +298,181 @@ def trigger_download(
                 )
                 saved_attachments.append(str(target_att_file.resolve()))
 
-    start_time = time.time()
-    docx_path = None
-    pdf_path = None
-    target_both = format_type == "both"
+    # 3. Pre-flight Inspection: Scan DOM tab=7 for available formats
+    preflight_js = """
+    (() => {
+        let all_links = Array.from(document.querySelectorAll('a'));
+        let a_docx = all_links.find(lnk => {
+            let t = (lnk.innerText || '').toLowerCase();
+            let h = (lnk.href || '').toLowerCase();
+            let id = (lnk.id || '').toLowerCase();
+            return (id.includes('docx') || id.includes('vietnamesehyperlink_docx') || t.includes('(docx)') || h.includes('docx' + '=1')) && !t.includes('tiếng anh');
+        });
+        if (!a_docx) {
+            a_docx = all_links.find(lnk => {
+                let t = (lnk.innerText || '').toLowerCase();
+                let h = (lnk.href || '').toLowerCase();
+                return (t.includes('tiếng việt') || (t.includes('tải') && t.includes('văn bản'))) && (h.includes('download.aspx') || h.includes('part=')) && !t.includes('tiếng anh') && !t.includes('pdf');
+            });
+        }
+        let a_pdf = all_links.find(lnk => {
+            let t = (lnk.innerText || '').toLowerCase();
+            let h = (lnk.href || '').toLowerCase();
+            let id = (lnk.id || '').toLowerCase();
+            return id.includes('vietnamesehyperlink_pdf') || (t.includes('tải') && t.includes('bản pdf')) || (t.includes('tải') && t.includes('văn bản gốc')) || h.includes('part' + '=-100') || h.includes('part=0');
+        });
+        if (!a_pdf) {
+            a_pdf = all_links.find(lnk => {
+                let h = (lnk.href || '').toLowerCase();
+                return h.endsWith('.pdf') || h.includes('.pdf?');
+            });
+        }
+        return {
+            has_docx: Boolean(a_docx),
+            has_pdf: Boolean(a_pdf)
+        };
+    })()
+    """
+    preflight_res = cdp.evaluate_js(preflight_js)
+    if isinstance(preflight_res, dict):
+        has_docx = bool(preflight_res.get("has_docx", False))
+        has_pdf = bool(preflight_res.get("has_pdf", False))
+    elif isinstance(preflight_res, str) and preflight_res:
+        has_docx = "docx" in preflight_res.lower()
+        has_pdf = "pdf" in preflight_res.lower()
+    else:
+        has_docx = True
+        has_pdf = True
 
-    while time.time() - start_time < 35:
-        current_downloads = [f for d in watch_dirs if d.exists() for f in d.glob("*")]
-        new_downloads = [f for f in current_downloads if str(f.resolve()) not in existing_downloads]
-        if new_downloads:
-            if any(f.suffix == ".crdownload" or f.name.endswith(".tmp") for f in new_downloads):
-                time.sleep(1)
-                continue
-            for f in new_downloads:
-                if f.suffix == ".docx":
-                    dest = download_dir / f"{slug_name}.docx"
+    print(
+        f"[LegalIntel] [Pre-flight Inspection] Available in tab=7: DOCX={has_docx}, PDF={has_pdf}"
+    )
+
+    # Fast-fail if requested format is not available
+    if format_type == "docx" and not has_docx:
+        print(
+            f"[LegalIntel] [Fast-Fail] Requested format 'docx' not found in tab=7 for '{slug_name}'."
+        )
+        return {
+            "success": False,
+            "docx_path": None,
+            "pdf_path": None,
+            "attachments": saved_attachments,
+            "error": "DOCX not available in tab=7",
+        }
+    if format_type == "pdf" and not has_pdf:
+        print(
+            f"[LegalIntel] [Fast-Fail] Requested format 'pdf' not found in tab=7 for '{slug_name}'."
+        )
+        return {
+            "success": False,
+            "docx_path": None,
+            "pdf_path": None,
+            "attachments": saved_attachments,
+            "error": "PDF not available in tab=7",
+        }
+    if format_type == "both" and not has_docx and not has_pdf:
+        print(f"[LegalIntel] [Fast-Fail] Neither DOCX nor PDF found in tab=7 for '{slug_name}'.")
+        return {
+            "success": False,
+            "docx_path": None,
+            "pdf_path": None,
+            "attachments": saved_attachments,
+            "error": "Neither DOCX nor PDF available in tab=7",
+        }
+
+    # Sequential Barrier Downloader
+    need_docx = format_type in ("docx", "both") and has_docx
+    need_pdf = format_type in ("pdf", "both") and has_pdf
+    docx_path: str | None = None
+    pdf_path: str | None = None
+
+    # Phase 1: Trigger DOCX PostBack & Wait for completion
+    if need_docx:
+        existing_before_docx = {
+            str(f.resolve()) for d in watch_dirs if d.exists() for f in d.glob("*")
+        }
+        res_docx = _do_click_docx()
+        print(f"[LegalIntel] [Phase 1] Trigger DOCX postback: {res_docx}")
+        if res_docx and not str(res_docx).startswith("No "):
+            downloaded_docx = _wait_for_download(
+                watch_dirs, existing_before_docx, [".docx", ".doc"], timeout=30.0
+            )
+            if downloaded_docx:
+                dest_ext = downloaded_docx.suffix or ".docx"
+                dest = download_dir / f"{slug_name}{dest_ext}"
+                for _attempt in range(3):
                     try:
-                        if f.resolve() != dest.resolve():
-                            shutil.move(str(f), str(dest))
+                        if downloaded_docx.resolve() != dest.resolve():
+                            shutil.move(str(downloaded_docx), str(dest))
                         docx_path = str(dest.resolve())
+                        break
                     except Exception as e:
-                        print(f"[LegalIntel] Error resolving DOCX file {f}: {e}")
-                        docx_path = str(f.resolve())
-                elif f.suffix == ".doc" and (not docx_path or not docx_path.endswith(".docx")):
-                    dest = download_dir / f"{slug_name}.doc"
+                        if _attempt < 2:
+                            time.sleep(0.5)
+                            continue
+                        print(f"[LegalIntel] Error resolving DOCX file {downloaded_docx}: {e}")
+                        docx_path = str(downloaded_docx.resolve())
+                print(f"[LegalIntel] [Phase 1] DOCX successfully acquired: {docx_path}")
+            else:
+                print("[LegalIntel] [Phase 1] DOCX download timed out after 30s.")
+        else:
+            print("[LegalIntel] [Phase 1] Could not trigger DOCX click.")
+
+    # Phase 2: Cooldown 2s to release ASP.NET Stream
+    if need_docx and need_pdf:
+        print("[LegalIntel] [Phase 2] ASP.NET Stream cooldown (2.0s)...")
+        time.sleep(2.0)
+
+    # Phase 3: Trigger PDF PostBack & Wait for completion
+    if need_pdf:
+        existing_before_pdf = {
+            str(f.resolve()) for d in watch_dirs if d.exists() for f in d.glob("*")
+        }
+        res_pdf = _do_click_pdf()
+        print(f"[LegalIntel] [Phase 3] Trigger PDF postback: {res_pdf}")
+        if res_pdf and not str(res_pdf).startswith("No "):
+            downloaded_pdf = _wait_for_download(
+                watch_dirs, existing_before_pdf, [".pdf"], timeout=30.0
+            )
+            if downloaded_pdf:
+                dest = download_dir / f"{slug_name}.pdf"
+                for _attempt in range(3):
                     try:
-                        if f.resolve() != dest.resolve():
-                            shutil.move(str(f), str(dest))
-                        docx_path = str(dest.resolve())
-                    except Exception as e:
-                        print(f"[LegalIntel] Error resolving DOC file {f}: {e}")
-                        docx_path = str(f.resolve())
-                elif f.suffix == ".pdf" and not pdf_path:
-                    dest = download_dir / f"{slug_name}.pdf"
-                    try:
-                        if f.resolve() != dest.resolve():
-                            shutil.move(str(f), str(dest))
+                        if downloaded_pdf.resolve() != dest.resolve():
+                            shutil.move(str(downloaded_pdf), str(dest))
                         pdf_path = str(dest.resolve())
+                        break
                     except Exception as e:
-                        print(f"[LegalIntel] Error resolving PDF file {f}: {e}")
-                        pdf_path = str(f.resolve())
+                        if _attempt < 2:
+                            time.sleep(0.5)
+                            continue
+                        print(f"[LegalIntel] Error resolving PDF file {downloaded_pdf}: {e}")
+                        pdf_path = str(downloaded_pdf.resolve())
+                print(f"[LegalIntel] [Phase 3] PDF successfully acquired: {pdf_path}")
+            else:
+                print("[LegalIntel] [Phase 3] PDF download timed out after 30s.")
+        else:
+            print("[LegalIntel] [Phase 3] Could not trigger PDF click.")
 
-            # If both are requested and both arrived, or single requested format arrived
-            if (target_both and docx_path and docx_path.endswith(".docx") and pdf_path) or (
-                not target_both and (docx_path or pdf_path)
-            ):
-                return {
-                    "success": True,
-                    "docx_path": docx_path,
-                    "pdf_path": pdf_path,
-                    "attachments": saved_attachments,
-                    "sha256": "VERIFIED",
-                }
-        time.sleep(1)
-
-    # Fallback: check if existing file in download_dir matches
-    if download_dir.exists():
-        for f in download_dir.glob("*.docx"):
-            docx_path = str(f.resolve())
-            break
-        if not docx_path:
-            for f in download_dir.glob("*.doc"):
+    # Fallback check if file already exists in download_dir
+    if not docx_path and download_dir.exists():
+        for f in download_dir.glob(f"{slug_name}.docx"):
+            if f.stat().st_size > 0:
                 docx_path = str(f.resolve())
                 break
-        if not pdf_path:
-            for f in download_dir.glob("*.pdf"):
+        if not docx_path:
+            for f in download_dir.glob(f"{slug_name}.doc"):
+                if f.stat().st_size > 0:
+                    docx_path = str(f.resolve())
+                    break
+
+    if not pdf_path and download_dir.exists():
+        for f in download_dir.glob(f"{slug_name}.pdf"):
+            if f.stat().st_size > 0:
                 pdf_path = str(f.resolve())
                 break
 
-    # Return whatever was downloaded or found
     if docx_path or pdf_path:
         return {
             "success": True,
@@ -327,7 +482,12 @@ def trigger_download(
             "sha256": "VERIFIED",
         }
 
-    return {"success": False, "attachments": saved_attachments}
+    return {
+        "success": False,
+        "docx_path": docx_path,
+        "pdf_path": pdf_path,
+        "attachments": saved_attachments,
+    }
 
 
 def download_three_tier(cdp: ChromeCDP, download_dir: Path, slug_name: str) -> bool:

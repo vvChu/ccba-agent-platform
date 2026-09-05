@@ -46,7 +46,7 @@ def test_discover_skills_and_datasets() -> None:
 
     assert len(discovered) > 0
     skill_names = [d["skill_name"] for d in discovered]
-    assert "academic_writing" in skill_names
+    assert "ccba-academic-writing" in skill_names
     assert "ccba-legal-intel" in skill_names
 
 
