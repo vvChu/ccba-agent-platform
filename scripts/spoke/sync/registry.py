@@ -82,9 +82,7 @@ class SpokeRegistrar:
             )
             return
 
-        public_key_path = (
-            hub_root / ".agents" / "resources" / "registry_public_key.pem"
-        )
+        public_key_path = hub_root / ".agents" / "resources" / "registry_public_key.pem"
         if not public_key_path.exists():
             legacy_path = (
                 hub_root / ".agents" / "workflows" / "resources" / "registry_public_key.pem"

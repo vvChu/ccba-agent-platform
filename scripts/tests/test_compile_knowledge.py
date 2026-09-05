@@ -75,8 +75,12 @@ def test_compile_workflows_archived_fallback() -> None:
         workflows_dir.mkdir()
 
         # Create dummy archived workflow files
-        (workflows_dir / "ccba-legacy-wf1.md.bak").write_text("content of legacy wf 1", encoding="utf-8")
-        (workflows_dir / "ccba-legacy-wf2.md.bak").write_text("content of legacy wf 2", encoding="utf-8")
+        (workflows_dir / "ccba-legacy-wf1.md.bak").write_text(
+            "content of legacy wf 1", encoding="utf-8"
+        )
+        (workflows_dir / "ccba-legacy-wf2.md.bak").write_text(
+            "content of legacy wf 2", encoding="utf-8"
+        )
 
         output_file = temp_path / "workflows_compiled.md"
 

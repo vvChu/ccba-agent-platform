@@ -99,8 +99,7 @@ class DriftAuditor(BaseAuditor):
                     or status == "??"
                 ):
                     if filepath == "pyproject.toml" or (
-                        filepath.startswith(tracked_prefixes)
-                        and not filepath.endswith(".md.bak")
+                        filepath.startswith(tracked_prefixes) and not filepath.endswith(".md.bak")
                     ):
                         structural_change = True
 
