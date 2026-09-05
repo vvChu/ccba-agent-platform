@@ -27,8 +27,9 @@ def test_agents_md_has_scoped_test_guardrail() -> None:
 
 def test_eval_gate_skill_has_scoped_test_guidance() -> None:
     """Verify that eval-gate SKILL.md provides scoped test path guidance."""
-    eval_gate_md = Path("d:/GitHubProjects/ccba-agent-platform/.agents/skills/eval-gate/SKILL.md")
-    assert eval_gate_md.exists(), "eval-gate/SKILL.md must exist"
+    root = Path(__file__).resolve().parent.parent
+    eval_gate_md = root / ".agents/skills/ccba-eval-gate/SKILL.md"
+    assert eval_gate_md.exists(), "ccba-eval-gate/SKILL.md must exist"
     content = eval_gate_md.read_text(encoding="utf-8")
 
     assert "khoanh vùng" in content.lower() or "scoped" in content.lower(), (

@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from ccba_legal.registry import (
+from ccba_legal.registry import (  # type: ignore[import-untyped]
     format_citation,
     load_legal_registry,
     search_legal_registry,
@@ -27,7 +27,7 @@ def main() -> None:
         if hasattr(sys.stdout, "reconfigure"):
             sys.stdout.reconfigure(encoding="utf-8")
 
-    default_path = Path(".agents/skills/legal-document-tracker/resources/legal_registry.yaml")
+    default_path = Path(".agents/skills/ccba-legal-document-tracker/resources/legal_registry.yaml")
     data = load_legal_registry(default_path)
     print(f"✅ Loaded legal registry with metadata: {data.get('metadata')}")
     results = search_legal_registry("PCCC", registry_path=default_path, top_k=2)

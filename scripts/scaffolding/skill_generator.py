@@ -318,7 +318,12 @@ def write_skill_markdown(output_path: Path, skill_name: str, docstring: str) -> 
     content = f"""---
 name: {skill_name}
 description: {desc}
+user-invocable: true
 disable-model-invocation: true
+command: /{skill_name}
+triggers:
+- {skill_name.replace("ccba-", "")}
+- {skill_name}
 ---
 
 # Kỹ năng {skill_name}
@@ -419,7 +424,12 @@ def create_skill_from_script(
         print(f"ERROR: Tệp tin script '{script_path_str}' không tồn tại.", file=sys.stderr)
         return 1
 
-    name = skill_name or script_p.stem.replace("_helper", "").replace("_", "-")
+    raw_name = skill_name or script_p.stem.replace("_helper", "").replace("_", "-")
+    if not raw_name.startswith("ccba-") and not raw_name.startswith("bigbim-"):
+        name = f"ccba-{raw_name}"
+    else:
+        name = raw_name
+
     base_skills = skills_base_dir or (Path(".agents") / "skills")
     base_workflows = workflows_base_dir or (Path(".agents") / "workflows")
 
@@ -447,12 +457,12 @@ def create_skill_from_script(
     write_cli_spec(skill_dir / "cli_spec.yaml", commands)
     write_skill_markdown(skill_dir / "SKILL.md", name, docstring)
 
-    workflow_path = base_workflows / f"ccba-{name}.md"
+    workflow_path = base_workflows / f"{name}.md"
     write_workflow_router(workflow_path, name, commands)
 
     print(f"\nSUCCESS: Tạo Skill '{name}' thành công!")
     print(f"👉 Thư mục skill: {skill_dir.resolve()}")
-    print(f"👉 Lệnh Slash Command: /ccba-{name}\n")
+    print(f"👉 Lệnh Slash Command: /{name}\n")
     return 0
 
 
@@ -476,13 +486,20 @@ def sync_all_skills(skills_base_dir: Path | None = None) -> int:
             continue
 
         name_snake = folder.name.replace("-", "_")
+        name_no_prefix = folder.name.replace("ccba-", "").replace("bigbim-", "").replace("-", "_")
         candidates = [
             Path("scripts") / f"{name_snake}.py",
+            Path("scripts") / f"{name_no_prefix}.py",
             Path("scripts") / f"{name_snake}_helper.py",
+            Path("scripts") / f"{name_no_prefix}_helper.py",
             Path("scripts") / "scaffolding" / f"{name_snake}.py",
+            Path("scripts") / "scaffolding" / f"{name_no_prefix}.py",
             Path("scripts") / "governance" / f"{name_snake}.py",
+            Path("scripts") / "governance" / f"{name_no_prefix}.py",
             Path("scripts") / "legal" / f"{name_snake}.py",
+            Path("scripts") / "legal" / f"{name_no_prefix}.py",
             Path("scripts") / "security" / f"{name_snake}.py",
+            Path("scripts") / "security" / f"{name_no_prefix}.py",
         ]
 
         target_script = next((c for c in candidates if c.exists()), None)
