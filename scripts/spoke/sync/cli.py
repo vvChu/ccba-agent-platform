@@ -66,6 +66,12 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
         help="Ignore uncommitted changes warning and proceed with sync.",
     )
     parser.add_argument(
+        "--bootstrap",
+        "-b",
+        action="store_true",
+        help="Automatically bootstrap Python packages and virtual environment after sync.",
+    )
+    parser.add_argument(
         "--no-backup",
         action="store_true",
         help="Disable automatic snapshot backup of .agents/ directory.",
@@ -107,6 +113,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 force=args.force,
                 backup=not args.no_backup,
                 include_sandboxes=args.include_sandboxes,
+                bootstrap=args.bootstrap,
             )
         elif args.apply:
             return sync_all_spokes(
@@ -115,6 +122,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 force=args.force,
                 backup=not args.no_backup,
                 include_sandboxes=args.include_sandboxes,
+                bootstrap=args.bootstrap,
             )
         else:
             print(
@@ -126,6 +134,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 force=args.force,
                 backup=not args.no_backup,
                 include_sandboxes=args.include_sandboxes,
+                bootstrap=False,
             )
             if preview_code != 0:
                 return preview_code
@@ -142,6 +151,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                             force=args.force,
                             backup=not args.no_backup,
                             include_sandboxes=args.include_sandboxes,
+                            bootstrap=args.bootstrap,
                         )
                     else:
                         print(
@@ -166,6 +176,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 dry_run=True,
                 force=args.force,
                 backup=not args.no_backup,
+                bootstrap=args.bootstrap,
             )
         elif args.apply:
             return sync_project(
@@ -174,6 +185,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 dry_run=False,
                 force=args.force,
                 backup=not args.no_backup,
+                bootstrap=args.bootstrap,
             )
         else:
             # Phase 1: Preview simulation
@@ -184,6 +196,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 dry_run=True,
                 force=args.force,
                 backup=not args.no_backup,
+                bootstrap=False,
             )
             if preview_code != 0:
                 return preview_code
@@ -201,6 +214,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                             dry_run=False,
                             force=args.force,
                             backup=not args.no_backup,
+                            bootstrap=args.bootstrap,
                         )
                     else:
                         print(

@@ -84,17 +84,11 @@ class SpokeRegistrar:
 
         public_key_path = hub_root / ".agents" / "resources" / "registry_public_key.pem"
         if not public_key_path.exists():
-            legacy_path = (
-                hub_root / ".agents" / "workflows" / "resources" / "registry_public_key.pem"
+            print(
+                f"[Registry] Warning: Hub registry public key not found at '{public_key_path}'. Skipping Spoke registration.",
+                file=sys.stderr,
             )
-            if legacy_path.exists():
-                public_key_path = legacy_path
-            else:
-                print(
-                    f"[Registry] Warning: Hub registry public key not found at '{public_key_path}' or legacy path '{legacy_path}'. Skipping Spoke registration.",
-                    file=sys.stderr,
-                )
-                return
+            return
 
         if dry_run:
             print(

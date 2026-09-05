@@ -634,7 +634,7 @@ class SpokeSynchronizer:
                     shutil.copytree(src, dest, dirs_exist_ok=True)
 
         # 2. Process Workflows (Non-Destructive Selective Merge)
-        if not dry_run:
+        if not dry_run and wfs_to_sync:
             spoke_workflows_dir.mkdir(parents=True, exist_ok=True)
 
         synced_wf_filenames = {wf["filename"] for wf in wfs_to_sync}
