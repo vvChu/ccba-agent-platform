@@ -1,6 +1,6 @@
 # Ranh giới Giai đoạn Context (Phase Boundaries Guide)
 
-Một **giai đoạn (Phase)** là một khối công việc độc lập trong một phiên làm việc của Agent — như giai đoạn phỏng vấn (`/ccba-grill-with-docs`), giai đoạn soạn spec (`/ccba-to-spec`), giai đoạn bẻ ticket (`/ccba-to-tickets`), hoặc giai đoạn lập trình (`/ccba-implement`).
+Một **giai đoạn (Phase)** là một khối công việc độc lập trong một phiên làm việc của Agent — như giai đoạn phỏng vấn (`/ccba-grilling`), giai đoạn soạn spec (`/ccba-to-spec`), giai đoạn bẻ ticket (`/ccba-to-tickets`), hoặc giai đoạn lập trình (`/ccba-implement`).
 
 **Ranh giới giai đoạn (Phase Boundary)** là điểm giao giữa hai giai đoạn. Đây là điểm duy nhất để ra quyết định quản lý Context Budget. Tuyệt đối không thực hiện dọn dẹp hay nén context giữa chừng (mid-phase) vì sẽ làm Agent mất mạch suy nghĩ.
 
@@ -24,7 +24,7 @@ Khi đứng tại ranh giới giai đoạn, hãy duyệt cây quyết định t�
 
 ### 1. Bạn có thể tiếp tục (Continue) trong phiên này không?
 - **ĐIỀU KIỆN**: Giai đoạn tiếp theo bắt buộc phải dùng phiên làm việc này làm **Nguồn Gốc (Primary Source)**, HOẶC Context Budget còn đủ dung lượng trong vùng thông minh **Smart Zone** (~150k tokens) cho giai đoạn tiếp theo.
-- *Ví dụ*: Chuyển từ phỏng vấn (`/ccba-grill-with-docs`) sang bẻ spec (`/ccba-to-spec`) và bẻ ticket (`/ccba-to-tickets`) nên nằm trong **1 phiên duy nhất** để giữ nguyên lý do thiết kế ban đầu.
+- *Ví dụ*: Chuyển từ phỏng vấn (`/ccba-grilling`) sang bẻ spec (`/ccba-to-spec`) và bẻ ticket (`/ccba-to-tickets`) nên nằm trong **1 phiên duy nhất** để giữ nguyên lý do thiết kế ban đầu.
 - **Tiếp tục (Continue)** là phương án 0đ (không mất chi phí, không làm mất mát thông tin), hãy ưu tiên chọn trước tiên.
 
 ### 2. Context hiện tại có hoàn toàn không liên quan đến giai đoạn tiếp theo?

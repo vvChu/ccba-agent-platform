@@ -121,7 +121,7 @@ Mô tả hành vi end-to-end từ góc nhìn người dùng sau khi ticket này 
 
 Tránh đưa các đoạn code cụ thể hoặc đường dẫn file cứng vào ticket vì chúng sẽ nhanh bị lỗi thời. Ngoại lệ: Nếu mẫu thử (prototype) tạo ra các đoạn code định nghĩa cấu trúc dữ liệu, state machine hoặc schema quan trọng, có thể chèn phiên bản rút gọn vào ticket.
 
-Thực hiện từng ticket một theo biên giới frontier bằng kỹ năng `/implement` và nhớ dọn sạch context (clear context) giữa mỗi ticket để tránh ô nhiễm ngữ cảnh.
+Thực hiện từng ticket một theo biên giới frontier bằng kỹ năng `/ccba-implement` và nhớ dọn sạch context (clear context) giữa mỗi ticket để tránh ô nhiễm ngữ cảnh.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

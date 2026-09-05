@@ -50,11 +50,11 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
 - Ghi nhận các Core Patterns (P) và Anti-Patterns (AP) mới vào [`.md/knowledge/session_learnings.md`](../../../.md/knowledge/session_learnings.md).
 - Ghi nhận nhật ký dòng thời gian vào [`.md/knowledge/log.md`](../../../.md/knowledge/log.md) theo chuẩn `## [YYYY-MM-DD] [operation] | Title` nếu phiên làm việc có nạp/sửa đổi/ban hành tài liệu mới.
 - Cập nhật mục lục danh mục [`.md/knowledge/index.md`](../../../.md/knowledge/index.md) nếu có thêm tệp tài liệu mới.
-- Giữ nguyên cấu trúc phân loại theo Trụ Cột, sử dụng đúng bộ từ vựng thiết kế Deep Modules (`/codebase-design`).
+- Giữ nguyên cấu trúc phân loại theo Trụ Cột, sử dụng đúng bộ từ vựng thiết kế Deep Modules (`/ccba-codebase-design`).
 - **Tiêu chí hoàn thành:** Tệp `session_learnings.md` và `log.md` được cập nhật gọn gàng, định dạng Markdown chuẩn, không tạo orphan notes.
 
 ### 3. Tiến hóa Kỹ năng Trực tiếp (Direct Skill Evolution Loop)
-- **Nguyên tắc "Học đi đôi với Hành":** Không dừng lại ở việc ghi nhận thụ động vào `session_learnings.md`. Nếu bài học ở Bước 2 chỉ ra một quy trình trong `SKILL.md` (như `improve-codebase-architecture`, `code-review`, `tvpl-vip-crawler`...) còn thiếu rào chắn hoặc gây sai lệch:
+- **Nguyên tắc "Học đi đôi với Hành":** Không dừng lại ở việc ghi nhận thụ động vào `session_learnings.md`. Nếu bài học ở Bước 2 chỉ ra một quy trình trong `SKILL.md` (như `ccba-improve-codebase-architecture`, `ccba-code-review`, `ccba-tvpl-vip-crawler`...) còn thiếu rào chắn hoặc gây sai lệch:
   * **Bổ sung bước rà soát cụ thể:** Đưa các câu hỏi tự phản biện (Pre-Proposal Self-Check) hoặc rào chắn kỹ thuật vào quy trình của Skill tương ứng.
   * **Bắt buộc có Tiêu chí hoàn thành (Exit Criteria):** Mọi bước rà soát mới thêm vào Skill phải có tiêu chí đo lường rõ ràng (ví dụ: bảng xác nhận ✅/❌ 4 dòng, tỷ lệ phục hồi, mã thoát CLI).
   * **Bump Version:** Cập nhật version trong frontmatter của tệp `SKILL.md` được sửa đổi (ví dụ: `1.1.0` $\rightarrow$ `1.2.0`).

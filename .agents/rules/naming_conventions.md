@@ -6,15 +6,15 @@
 * **Tài liệu VBPL (do CCBA tổng hợp):** `CCBA_RD_VBPL_NNN_RevXX-ShortName.{ext}`
   *(ví dụ: CCBA_RD_VBPL_003_Rev00-ND_06_2021.docx)*
 * **Thư mục và file của AI Agent:** 
-  - Skills: `lowercase_with_underscores` hoặc `kebab-case` (folders & file names).
-  - Workflows: `kebab-case.md`.
+  - Skills: Thư mục kebab-case với tiền tố `ccba-` (ví dụ: `ccba-handoff/`, ngoại trừ 5 skills `bigbim-*` và bootstrap skill `platform-loader`).
   - YAML data: `lowercase_with_underscores.yaml`.
   - Templates: `lowercase_with_underscores.md`.
 
-## 2. Quy tắc đăng ký Slash Command cho Kỹ năng (Skills)
-Khi chuyển dịch (porting) hoặc tạo mới các kỹ năng có thuộc tính `user-invocable: true` từ thượng nguồn (hoặc khi nguồn dùng slash command để kích hoạt), Agent bắt buộc phải đăng ký thành Slash Command chính thức bằng cách tạo một file workflow mỏng tại thư mục `.agents/workflows/`.
-- Tên file workflow và Slash Command phải bắt đầu bằng tiền tố `ccba-` (ví dụ: `ccba-handoff.md` tạo lệnh `/ccba-handoff`).
-- Nội dung file workflow chỉ được chứa mô tả frontmatter tiếng Việt ngắn gọn và một dòng lệnh hướng dẫn Agent nạp trực tiếp file `SKILL.md` tương ứng để thực thi.
+## 2. Quy tắc đăng ký Slash Command cho Kỹ năng (Skills) — ADR-0056
+Kể từ ADR-0056, toàn bộ quy trình tự động hóa đã được hợp nhất thành Dynamic Agent Skills native trên Google Antigravity:
+- Slash Command được đăng ký trực tiếp trong YAML Frontmatter của `SKILL.md` thông qua trường `command: /{skill_name}` kèm `user-invocable: true`.
+- **Quy chuẩn định danh:** Tên kỹ năng và Slash Command bắt buộc phải bắt đầu bằng tiền tố `ccba-` (ví dụ: `name: ccba-handoff`, `command: /ccba-handoff`), ngoại trừ 5 kỹ năng đặc thù `bigbim-*` và `platform-loader`.
+- **Rào chắn chống ô nhiễm:** **TUYỆT ĐỐI KHÔNG** tạo thêm file wrapper/router tại thư mục `.agents/workflows/`. Thư mục này chỉ dùng để lưu trữ lịch sử (`*.md.bak`) phục vụ Spoke sync và không chứa bất kỳ active `.md` nào.
 
 ## 3. Quy định quản lý và phân loại thư mục tri thức `.md/` (Project Root)
 Để duy trì tính ngăn nắp của Knowledge Base dự án, Agent **bắt buộc** phải phân loại các tệp được tạo ra/sửa đổi vào đúng các thư mục con chức năng sau trong `.md/`:
