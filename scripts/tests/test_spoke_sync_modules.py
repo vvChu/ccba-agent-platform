@@ -356,3 +356,60 @@ def test_check_hub_import_depth_excludes(tmp_path: Path, monkeypatch: pytest.Mon
     )
     exit_code_bad = main()
     assert exit_code_bad == 1
+
+
+def test_run_spoke_sync_cli_with_bootstrap(tmp_path: Path):
+    """Test run_spoke_sync_cli accepts --bootstrap and passes it to sync_project."""
+    with patch("scripts.spoke.sync.cli.sync_project") as mock_sync:
+        mock_sync.return_value = 0
+        code = run_spoke_sync_cli(["--spoke", str(tmp_path), "--apply", "--bootstrap"])
+        assert code == 0
+        mock_sync.assert_called_once_with(
+            str(tmp_path),
+            None,
+            dry_run=False,
+            force=False,
+            backup=True,
+            bootstrap=True,
+        )
+
+
+def test_ccba_platform_cli_arguments():
+    """Test ccba_platform_cli argument parser supports new flags."""
+    from scripts.ccba_platform_cli import build_parser
+
+    parser = build_parser()
+
+    # Test adopt-spoke --archetype
+    adopt_args = parser.parse_args(["adopt-spoke", "--archetype", "knowledge_corpus"])
+    assert adopt_args.archetype == "knowledge_corpus"
+
+    # Test sync-spoke flags
+    sync_args = parser.parse_args(
+        [
+            "sync-spoke",
+            "--apply",
+            "--bootstrap",
+            "--force",
+            "--include-sandboxes",
+        ]
+    )
+    assert sync_args.apply is True
+    assert sync_args.bootstrap is True
+    assert sync_args.force is True
+    assert sync_args.include_sandboxes is True
+
+
+def test_spoke_registrar_missing_key_behavior(tmp_path: Path, capsys):
+    """Test SpokeRegistrar handles missing registry public key gracefully without legacy path."""
+    hub_root = tmp_path / "mock_hub"
+    hub_root.mkdir()
+    (hub_root / ".agents" / "resources").mkdir(parents=True)
+    # Note: no registry_public_key.pem created
+
+    registrar = SpokeRegistrar()
+    registrar.register(tmp_path, hub_root, "TestSpoke", "Phần mềm")
+
+    captured = capsys.readouterr()
+    assert "Hub registry public key not found" in captured.err
+    assert "legacy path" not in captured.err
