@@ -39,8 +39,10 @@ class ArchStatsUpdater:
             )
 
         workflow_count = 0
+        archived_workflow_count = 0
         if self.workflows_dir.exists():
             workflow_count = sum(1 for p in self.workflows_dir.glob("*.md"))
+            archived_workflow_count = sum(1 for p in self.workflows_dir.glob("*.md.bak"))
 
         package_count = 0
         if self.packages_dir.exists():
@@ -51,6 +53,7 @@ class ArchStatsUpdater:
         return {
             "SKILL_COUNT": str(skill_count),
             "WORKFLOW_COUNT": str(workflow_count),
+            "ARCHIVED_WORKFLOW_COUNT": str(archived_workflow_count),
             "PACKAGE_COUNT": str(package_count),
         }
 
