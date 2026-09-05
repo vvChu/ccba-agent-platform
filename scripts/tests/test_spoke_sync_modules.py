@@ -399,6 +399,12 @@ def test_ccba_platform_cli_arguments():
     assert sync_args.force is True
     assert sync_args.include_sandboxes is True
 
+    # Test doc-audit flags
+    doc_args = parser.parse_args(["doc-audit", "--fix", "--changed", "--root", "."])
+    assert doc_args.fix is True
+    assert doc_args.changed is True
+    assert doc_args.root == "."
+
 
 def test_spoke_registrar_missing_key_behavior(tmp_path: Path, capsys):
     """Test SpokeRegistrar handles missing registry public key gracefully without legacy path."""
