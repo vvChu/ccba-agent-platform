@@ -17,6 +17,8 @@ _PACKAGE_SRC = Path(__file__).resolve().parent.parent / "packages" / "ccba-maska
 if _PACKAGE_SRC.exists() and str(_PACKAGE_SRC) not in sys.path:
     sys.path.insert(0, str(_PACKAGE_SRC))
 
+from typing import Any
+
 from ccba_maskara import (
     MaskaraScanner,
     apply_raw_redactions,
@@ -25,18 +27,25 @@ from ccba_maskara import (
     is_binary,
     redact_secrets_in_text,
 )
-from ccba_maskara._locator import (
-    AGENT_ALIASES,
-    AGENT_SPECS,
-    get_default_roots,
-    normalize_agent_name,
-    resolve_targets,
-)
-from ccba_maskara._redactor import BACKUP_DIR
-from ccba_maskara._rules import REGEX_PATTERNS, SAFE_STRINGS
 from ccba_maskara.cli import main, run_cli
 
-# Re-export convenience aliases for any legacy external callers
+
+def normalize_agent_name(name: str) -> str:
+    """Normalize agent name to canonical form (backward-compatibility wrapper)."""
+    return MaskaraScanner().normalize_agent_name(name)
+
+
+def get_default_roots(dot_dir: str, app_name: str, xdg_name: str) -> list[Path]:
+    """Resolve default search roots (backward-compatibility wrapper)."""
+    return MaskaraScanner().get_default_roots(dot_dir, app_name, xdg_name)
+
+
+def resolve_targets(agent_name: str, custom_root: str | None = None) -> list[dict[str, Any]]:
+    """Resolve target files and directories for scanning (backward-compatibility wrapper)."""
+    return MaskaraScanner().resolve_targets(agent_name, custom_root)
+
+
+# Re-export public seam and CLI runners for external callers
 __all__ = [
     "MaskaraScanner",
     "detect_secrets_in_text",
@@ -49,11 +58,6 @@ __all__ = [
     "resolve_targets",
     "main",
     "run_cli",
-    "REGEX_PATTERNS",
-    "SAFE_STRINGS",
-    "AGENT_SPECS",
-    "AGENT_ALIASES",
-    "BACKUP_DIR",
 ]
 
 if __name__ == "__main__":

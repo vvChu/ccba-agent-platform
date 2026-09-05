@@ -1,54 +1,53 @@
-# Walkthrough — PR #242: Copilot Review Remediations & Release Gate Hardening
+# Walkthrough — PR #244: Architecture Review Improvements, Seam Hardening & Platform Skills Evolution
 
-Gói cập nhật này xử lý triệt để toàn bộ các phản biện kỹ thuật của GitHub Copilot trên các PR #240, #241 và PR #242, đồng thời nâng cấp toàn diện công cụ Release Gate Audit (`audit_pr_comments.py`) để ngăn chặn việc merge sớm khi Copilot còn khuyến nghị thay đổi.
+Gói cập nhật này hoàn tất 3 ứng viên tái cấu trúc kiến trúc (Spoke Sync Delegate, Maskara Seam Hardening, Legal Demo Scripts Archive) cùng với kỹ năng mới `ccba-show-me` và vá lỗi bộ chuyển đổi văn bản pháp lý. Đồng thời xử lý triệt để toàn bộ các phản biện kỹ thuật của GitHub Copilot trên PR #244.
 
 ---
 
-## 1. Bảng Đối Soát & Khắc Phục Ý Kiến Review Của GitHub Copilot
+## 1. Bảng Đối Soát & Khắc Phục Ý Kiến Review Của GitHub Copilot (PR #244)
 
-| Nguồn | Tệp tin / ID Bình luận | Vấn đề Copilot chỉ ra | Đánh giá | Trạng thái xử lý trong PR #242 |
+| Nguồn | Tệp tin / ID Bình luận | Vấn đề Copilot chỉ ra | Đánh giá | Trạng thái xử lý trong PR #244 |
 | :--- | :--- | :--- | :--- | :--- |
-| **PR #240** | `scripts/spoke/upstream_evaluator.py:212` | Khi chuẩn hóa tên (ví dụ `ask` khớp với `ccba-ask`), thông báo duplicate ghi `Kỹ năng 'ask' đã tồn tại` gây khó hiểu cho dev. | **VALID** | Đã sửa: Báo rõ `Kỹ năng '{skill_name}' (khớp với '{matched_skill}') đã tồn tại sẵn...` (Commit `79362a4b`). |
-| **PR #240** | `.agents/skills/ccba-eval-gate/program_template.md:11` (ID `3940102548`) | Đường dẫn trỏ tới `eval_ccba_legal_intel.json` không tồn tại; tệp thực tế là `eval_legal_intel.json`. | **VALID** | Đã sửa đường dẫn thành `.agents/skills/ccba-eval-gate/test_cases/eval_legal_intel.json` (Commit `79362a4b`). |
-| **PR #240** | `CONTRIBUTING.md:60` (ID `3940102558`) | Hướng dẫn vị trí kỹ năng chỉ ghi `ccba-*`, bỏ sót `bigbim-*` và `platform-loader`. | **VALID** | Đã cập nhật mở rộng mô tả bao gồm `ccba-*`, `bigbim-*`, và `platform-loader` (Commit `79362a4b`). |
-| **PR #241** | `scripts/governance/skill_auditor.py:112` (ID `3940156105`) | Kiểm tra Namespace Purity dùng `startswith` với `platform-loader` khiến các biến thể như `platform-loader-fake` bị lọt lưới. | **VALID** | Đã sửa thành: `name.startswith(("ccba-", "bigbim-")) or name == "platform-loader"` kèm unit tests chặn `platform-loader-*` (Commit `79362a4b`). |
-| **PR #241** | `scripts/spoke/sync/registry.py:95` (ID `3940156122`) | Khi không tìm thấy public key ở cả vị trí mới và cũ, hàm âm thầm `return` mà không ghi log ra stderr. | **VALID** | Đã bổ sung `print(..., file=sys.stderr)` thông báo rõ ràng (Commit `79362a4b`). |
-| **PR #241** | `.agents/workflows/ccba-brainstorm.md.bak:28,64` | Tệp lưu trữ workflow vẫn trỏ link chết tới `resources/brainstorm_topics.yaml` và `resources/brainstorm_techniques.md`. | **VALID** | Đã cập nhật trỏ sang `../skills/ccba-brainstorm/resources/` và tái biên dịch `workflows_compiled.md` (Commit `79362a4b`). |
-| **PR #242** | `scripts/validation/audit_pr_comments.py:86` (ID `3940211533`) | `fetch_inline_comments()` hardcode repo `vvChu/ccba-agent-platform` và không phân trang (`--paginate`). | **VALID** | Đã sửa: Dùng `repos/:owner/:repo/pulls/{pr_number}/comments` và cờ `--paginate` (Commit `1cc69481`). |
-| **PR #242** | `scripts/validation/audit_pr_comments.py:199` (ID `3940211552`) | `audit_pull_request()` bỏ sót kiểm tra top-level PR conversation comments từ Copilot. | **VALID** | Đã bổ sung bước 4 quét toàn bộ PR-level conversation comments (Commit `1cc69481`). |
-| **PR #242** | Review Summary `PRR_kwDOQzfV088AAAABMTjDAw` | `### 🟡 Changes recommended` về 2 điểm trên của `audit_pr_comments.py`. | **VALID** | Đã giải quyết triệt để 100% qua commit `1cc69481` và bổ sung unit test `test_audit_pr_comments.py` (8/8 tests pass). |
+| **PR #244** | Review Summary `PRR_kwDOQzfV088AAAABMV_Udg` | `### 🟡 Changes recommended` về liên kết tương đối và tính tương thích ngược của facade `scripts/maskara.py`. | **VALID** | Đã xử lý triệt để qua các commit `4e2aba6d` và `1291573d`. Toàn bộ test suites pass 100%. |
+| **PR #244** | `.agents/skills/ccba-markdown-document-processing/SKILL.md` (ID `3942341571`) | Liên kết tương đối trỏ tới `packages/mdconverter` bị thiếu cấp thư mục (`../../packages/mdconverter` trỏ tới `.agents/packages/...` không tồn tại). | **VALID** | Đã sửa thành `../../../packages/mdconverter` (Commit `4e2aba6d`). Test `test_workflow_and_skill_relative_links_resolve` đã pass. |
+| **PR #244** | `scripts/maskara.py:33` (ID `3942341550`) | Các hàm helper `normalize_agent_name`, `get_default_roots`, `resolve_targets` bị bỏ khỏi facade re-export, có thể gây breaking change nếu có external caller. | **VALID** | Đã khôi phục các hàm dưới dạng thin wrapper gọi `MaskaraScanner` methods (Commit `1291573d`), bảo toàn backward compatibility mà không import private submodules. |
 
 ---
 
-## 2. Nâng Cấp Bộ Công Cụ Release Gate (`audit_pr_comments.py`)
+## 2. Các Thay Đổi Kiến Trúc Cốt Lõi Đã Triển Khai
 
-1. **Quét đa tầng (Multi-tier Audit)**:
-   - **Tầng 1 (Review Requests)**: Phát hiện `copilot-pull-request-reviewer` đang được yêu cầu review (trạng thái Pending) $\rightarrow$ Trả về exit code 2, bắt buộc chờ.
-   - **Tầng 2 (PR Reviews)**: Đọc chính xác `author.login` (schema GitHub CLI), phát hiện `### 🟡 Changes recommended` hoặc trạng thái `CHANGES_REQUESTED` trong review body $\rightarrow$ Trả về exit code 1, chặn đứng merge sớm.
-   - **Tầng 3 (Inline Diff Comments)**: Quét toàn bộ inline comments trên mã nguồn qua endpoint `repos/:owner/:repo/pulls/{pr_number}/comments` kèm `--paginate`.
-   - **Tầng 4 (PR Conversation Comments)**: Quét các bình luận thảo luận chung của PR.
-2. **Hỗ trợ CLI linh hoạt**: Hỗ trợ truyền `--pr <number>` hoặc đối số vị trí để dễ dàng kiểm định bất kỳ PR nào.
-3. **Bộ Unit Test độc lập (`scripts/tests/test_audit_pr_comments.py`)**: 8 bài kiểm thử chuyên sâu bao phủ toàn bộ các kịch bản: nhận diện bot, pending review, review changes recommended, inline comments, conversation comments, và phân trang API.
+1. **Ứng viên 1 — Đồng nhất Hóa Seam Đồng Bộ Spoke (`scripts/sync_spoke.py`)**:
+   - Thay thế 249 dòng code lặp bằng Thin Forwarding Delegate gọi `scripts.spoke.sync.cli.run_spoke_sync_cli`.
+   - Re-export đầy đủ các procedural functions cho external callers.
+   - Thêm test case `test_sync_spoke_delegate_parity()` bảo chứng tính tương thích.
+
+2. **Ứng viên 2 — Làm Sâu Seam `ccba_maskara` & Gỡ Bỏ Bypass AST (`scripts/maskara.py`)**:
+   - Chấm dứt hoàn toàn việc import vào các submodule private (`_locator`, `_redactor`, `_rules`).
+   - Re-export public seam chuẩn và các thin wrapper an toàn cho backward-compatibility.
+   - Xóa bỏ ngoại lệ hardcoded `maskara.py` trong `check_dependency_contracts.py`.
+   - Thêm marker PEP 561 `py.typed` và khóa chặn hồi quy `test_scripts_maskara_strict_seam_compliance()`.
+
+3. **Ứng viên 3 — Lưu Trữ Scripts Demo Lịch Sử (`scripts/legal/archive/`)**:
+   - Di chuyển an toàn 3 script demo mồ côi vào `scripts/legal/archive/` (bảo toàn lịch sử Git).
+   - Bảo lưu facade `scripts/legal/tvpl_table_engine.py` cho `tests/test_legal_table_engine.py`.
+   - Cập nhật linter AST loại trừ thư mục `archive`.
+
+4. **Kỹ năng Mới & Cải Tiến Bộ Chuyển Đổi**:
+   - Bổ sung kỹ năng [`.agents/skills/ccba-show-me/SKILL.md`](.agents/skills/ccba-show-me/SKILL.md) và đăng ký vào `catalog.yaml`.
+   - Cải tiến nhận diện heading phụ lục trong `packages/ccba-legal-intel/src/ccba_legal/converters/standard/handlers/heading_handler.py`.
+   - Cập nhật architecture stats markers trong `README.md` và `PLATFORM.md`.
 
 ---
 
-## 3. Tinh Chỉnh Rào Chắn Kiến Trúc (`drift_auditor.py`)
-
-- Cập nhật `drift_auditor.py`: Miễn trừ thư mục kiểm thử `scripts/tests/` khỏi việc kích hoạt cảnh báo cấu trúc (`structural_change`), giúp các PR bổ sung unit test độc lập không bị chặn sai bởi gate kiểm tra tài liệu kiến trúc.
-- Đồng bộ hóa tài liệu nhạy cảm kiến trúc: Cập nhật `.agents/skills/ccba-architecture-sync/SKILL.md` ghi nhận công cụ `audit_pr_comments.py`.
-
----
-
-## 4. Kết quả Kiểm định Toàn trình
+## 3. Kết Quả Kiểm Định Toàn Trình (Verification Results)
 
 | Kiểm định | Lệnh thực thi | Kết quả |
 | :--- | :--- | :--- |
-| **Audit PR Comments Unit Tests** | `python -m pytest scripts/tests/test_audit_pr_comments.py -v` | ✅ PASS (8/8 tests, 0.17s) |
-| **Governance Sub-Auditors Tests** | `python -m pytest scripts/tests/test_governance_sub_auditors.py -v` | ✅ PASS (13/13 tests, 0.58s) |
-| **Upstream Evaluator Tests** | `python -m pytest scripts/tests/test_upstream_evaluator.py -v` | ✅ PASS (4/4 tests) |
-| **Scripts Suite (186 tests)** | `python -m pytest scripts/tests/` | ✅ PASS (186 passed in 67s) |
-| **Documentation Check** | `python scripts/validate_docs.py . --src scripts,packages --changed` | ✅ PASS (0 issues detected) |
-| **Skill Validation Gate** | `python scripts/validate_skills.py` | ✅ PASS (99/99 skills đạt chuẩn) |
+| **Pre-release Isolated Tests** | `python scripts/eval/run_isolated_tests.py --all --stress` | ✅ PASS (10/10 targets pass, 170 unit tests pass) |
+| **Workflow & Skill Parity** | `python scripts/safe_pytest.py -f tests/governance/test_workflow_script_parity.py` | ✅ PASS (4/4 tests pass) |
+| **AST Dependency Contracts** | `python scripts/governance/check_dependency_contracts.py` | ✅ PASS (328 files scanned, 0 violations) |
+| **Maskara Unit Tests** | `python scripts/safe_pytest.py -f scripts/tests/test_maskara.py` | ✅ PASS (6/6 tests pass) |
+| **Spoke Sync Tests** | `python scripts/safe_pytest.py -f scripts/tests/test_spoke_sync_modules.py` | ✅ PASS (16/16 tests pass) |
 | **Static Code Quality** | `python -m ruff check scripts/ && python -m ruff format --check scripts/` | ✅ PASS (All checks passed) |
-| **Type Checking** | `python -m mypy ...` | ✅ PASS (Success: no issues found) |
-| **GitHub Actions CI (PR #242)** | 6 Jobs (Lint Markdown, Validate Docs, Scan, Py3.10, Py3.11, Py3.12) | ✅ PASS (100% Green) |
+| **Type Checking** | `python -m mypy scripts/maskara.py scripts/sync_spoke.py` | ✅ PASS (Success: no issues found) |
+| **GitHub Actions CI (PR #244)** | 6 Jobs (Lint Markdown, Validate Docs, Scan, Py3.10, Py3.11, Py3.12) | ✅ PASS (100% Green) |

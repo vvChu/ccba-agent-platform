@@ -52,3 +52,17 @@ def reconstruct_simple_table(lines: list[str]) -> list[str]:
 ```bash
 python -m mdconverter.cli process-table --file [đường_dẫn_tệp_markdown] --docx [đường_dẫn_tệp_docx_gốc]
 ```
+
+
+---
+
+## 4. Rào Chắn Phân Tách 2 Vùng Chú Thích (Dual-Zone Decoupling Engine — ADR 0041)
+
+Khi bảng có cả chú thích theo ô và chú thích giải nghĩa chung (như Bảng 2 QCVN 10:2025/BCA):
+1. **Phân tách 2 vùng độc lập:**
+   * **Vùng 1 (Cell Footnotes):** Các dòng `(1) ...`, `(2) ...` đặt ngay dưới bảng Markdown, không có header `CHÚ THÍCH:`.
+   * **Vùng 2 (General Legend):** Khối giải thích ký hiệu chung, mở đầu bằng `**CHÚ THÍCH:**`, mỗi gạch đầu dòng dùng thụt lề cấp 1 `&nbsp;&nbsp;\- `.
+2. **Gán nhãn ngữ nghĩa cho ô gộp ngang (`gridSpan`):**
+   * Hàng gộp ngang toàn bộ phân nhóm bắt buộc có nhãn `*(Áp dụng chung)*` (Markdown) / `Áp dụng chung` (CSV/JSON).
+3. **Chuẩn hóa chân mỏ neo Heuristic (`<sup>` Normalization):**
+   * Tự động nhận diện các mẫu `+(\d+)`, `++(\d+)`, `Từ(\d+)` để bọc thẻ `<sup>(\d+)</sup>` khi Word/PDF scan bị mất thuộc tính run `superscript`.

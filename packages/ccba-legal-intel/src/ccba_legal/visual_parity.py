@@ -5,10 +5,14 @@ Audits all Markdown documents in legal_docs/ for:
 2. Consecutive/redundant _CHÚ THÍCH:_ headers.
 3. Trapped table footnotes inside table cells (| _1) ... |).
 4. Concatenated inline dashes inside notes (: - ...; - ...).
-5. Raw unformatted table superscripts (REI 60 1) instead of <sup>1)</sup>).
+5. Raw unformatted table superscripts (REI 60 1) or rating symbols +(1) instead of <sup>(1)</sup>).
 6. Unbulleted technical classification codes (LT, BC, SK, ĐT, K0..3).
 7. Redundant bullet before footnote header (- **CHÚ THÍCH:).
 8. Raw uncleaned HTML table tags (<table>, <tr>, <td>).
+9. Squashed notes with <br> tag.
+10. Broken markdown table rows.
+11. Monotonic footnote numbering sequence.
+12. Inverted footnote hierarchy (Cell footnotes placed under general CHÚ THÍCH legend).
 """
 
 from __future__ import annotations
@@ -67,7 +71,7 @@ def lint_document(md_path: Path) -> list[str]:
         ):
             errors.append(f"Line {idx}: CONCATENATED_INLINE_DASHES: '{stripped[:80]}...'")
 
-        # 5. Check for unformatted in-table superscripts (e.g. REI 60 1) )
+        # 5. Check for unformatted in-table superscripts (e.g. REI 60 1) or rating symbols +(1) )
         if stripped.startswith("|") and stripped.endswith("|"):
             raw_sup = re.findall(
                 r"\b([A-Z]{1,4}\s*\d+|\d+)\s+([1-9]\))(?!<|/sup)",
@@ -76,6 +80,14 @@ def lint_document(md_path: Path) -> list[str]:
             if raw_sup:
                 errors.append(
                     f"Line {idx}: RAW_TABLE_SUPERSCRIPT: {raw_sup} in '{stripped[:60]}...'"
+                )
+            raw_plus_sup = re.findall(
+                r"(?:^|\||,)\s*(\+{1,3})\s*(\([1-9]\))(?:\s*(?:\||,|\s|$))",
+                stripped,
+            )
+            if raw_plus_sup:
+                errors.append(
+                    f"Line {idx}: RAW_TABLE_SUPERSCRIPT: {raw_plus_sup} in '{stripped[:60]}...'"
                 )
 
         # 6. Check for unbulleted standard classification codes
@@ -136,6 +148,26 @@ def lint_document(md_path: Path) -> list[str]:
                     errors.append(
                         "MISSING_NOTE_1: Missing 'CHÚ THÍCH 1:' in section where 'CHÚ THÍCH 2:' exists."
                     )
+
+            # 11. Check inverted footnote hierarchy (Dual-Zone Hierarchy Inversion - ADR 0030 / Session Learning 44)
+            has_legend = bool(re.search(r"Dấu\s+[“\"\'\+\-]", chunk, re.IGNORECASE))
+            if has_legend:
+                has_cell_fn = bool(
+                    re.search(r"(?:^|\n)\s*(?:&nbsp;&nbsp;\\?-|\-)?\s*\(?[1-9]\)\s+[A-ZÀ-Ỹ]", chunk)
+                )
+                if has_cell_fn:
+                    note_hdr = re.search(
+                        r"(?:^|\n)(?:\*\*|__)?(?:CHÚ THÍCH|GHI CHÚ|Chú thích|Ghi chú)(?:\*\*|__)?[:\.]?",
+                        chunk,
+                    )
+                    cell_fn = re.search(
+                        r"(?:^|\n)\s*(?:&nbsp;&nbsp;\\?-|\-)?\s*\(?[1-9]\)\s+[A-ZÀ-Ỹ]",
+                        chunk,
+                    )
+                    if note_hdr and cell_fn and note_hdr.start() < cell_fn.start():
+                        errors.append(
+                            "INVERTED_FOOTNOTE_HIERARCHY: Cell footnotes (1) placed under CHÚ THÍCH header alongside general legend (Dấu “...). Cell footnotes must precede CHÚ THÍCH."
+                        )
 
     return errors
 

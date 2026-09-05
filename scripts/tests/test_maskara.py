@@ -56,3 +56,12 @@ class TestMaskaraScanner(unittest.TestCase):
 
             exit_code = self.scanner.run_cli(["scan", "--root", tmpdir])
             self.assertEqual(exit_code, 0)
+
+    def test_backward_compatibility_wrappers(self) -> None:
+        from maskara import get_default_roots, normalize_agent_name, resolve_targets
+
+        self.assertEqual(normalize_agent_name("antigravity"), "antigravity")
+        roots = get_default_roots(".gemini", "antigravity", "gemini")
+        self.assertIsInstance(roots, list)
+        targets = resolve_targets("antigravity")
+        self.assertIsInstance(targets, list)

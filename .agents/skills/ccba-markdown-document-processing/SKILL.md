@@ -5,6 +5,7 @@ description: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ 
 role: master_skill
 layer: _core
 bundle: _core
+version: 1.1.0
 invocation: model_invoked
 deep_seam: ConversionPipeline
 applies_to:
@@ -71,6 +72,28 @@ Khi nhận được yêu cầu xử lý chuyển đổi tài liệu, hãy tuân 
      * Tinh chỉnh tiêu đề form bằng Prompt $\rightarrow$ Xem [form_cleaner.md](references/form_cleaner.md)
      * Vá lại liên kết tương đối $\rightarrow$ Xem [link_patcher.md](references/link_patcher.md)
    - **Tiêu chí hoàn thành:** Toàn bộ nội dung văn bản đạt chuẩn định dạng Markdown CCBA, không còn placeholder rác hoặc liên kết đứt gãy.
+
+---
+
+## 3. Rào Chắn Bóc Tách Phụ Lục Kỹ Thuật (Flexible Annex Header & Zero-Dropped Annex — ADR 0036)
+
+Khi xử lý văn bản có phụ lục kỹ thuật (như QCVN, TCVN):
+1. **Khử Tiền Tố Markdown Trước Khi Khớp Regex:**
+   * Tiêu đề Phụ lục trong file DOCX hoặc Markdown trung gian có thể có tiền tố `## PHỤ LỤC A` hoặc `**PHỤ LỤC A**`. Parser bắt buộc phải khử sạch tiền tố:
+     ```python
+     clean_candidate = re.sub(r"^[#*_>\s\-]+", "", text).strip()
+     ```
+     trước khi so khớp regex `^(?:Phụ\s+lục|PHỤ\s+LỤC)\s+([A-Z0-9]+)`.
+2. **Quy Chuẩn Bóc Tách Độc Lập 100% (`annexes/`):**
+   * Tuyệt đối không để phụ lục dồn ứ vào thân văn bản chính (`main_body`).
+   * Mỗi phụ lục quy phạm phải được tách thành một tệp riêng biệt `legal_docs/<category>/<doc_slug>/annexes/phu_luc_[a-z]_*.md`.
+   * Tạo tệp `annexes/README.md` và liên kết 2 chiều với `index.md`.
+3. **Tiêu chí hoàn thành (Exit Criteria):**
+   | Tiêu chí | Trạng thái | Yêu cầu kiểm tra |
+   | :--- | :---: | :--- |
+   | Annex Decoupling | ✅/❌ | 100% phụ lục được tách vào `annexes/` |
+   | Pure Normative Body | ✅/❌ | Thân văn bản chính sạch 100% nội dung phụ lục |
+   | Two-Way Links | ✅/❌ | `index.md` và `annexes/README.md` liên kết khớp 100% |
 
 ---
 

@@ -44,10 +44,11 @@ def handle_structural_heading(
         ctx.state_mgr.reset()
         return i + 1
 
-    # 2. Annex Heading
+    # 2. Annex Heading (strip leading markdown symbols/whitespace)
+    clean_annex_candidate = re.sub(r"^[#*_>\s\-]+", "", text).strip()
     m_annex = re.match(
         r"^(?:Phụ\s+lục|PHỤ\s+LỤC)\s+([A-Za-z0-9]+|[IVXLCDM]+)(?:\s*[\.\-–—:])?(?:\s*\(([^)]+)\))?(?:\s*[\.\-–—:])?\s*(.*)$",
-        text,
+        clean_annex_candidate,
         re.IGNORECASE,
     )
     if m_annex:
