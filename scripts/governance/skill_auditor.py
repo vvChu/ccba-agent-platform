@@ -98,6 +98,18 @@ class SkillAuditor(BaseAuditor):
                     file_path=str(file_path),
                 )
             )
+        else:
+            allowed_prefixes = ("ccba-", "bigbim-", "platform-loader")
+            if not name.startswith(allowed_prefixes):
+                issues.append(
+                    AuditIssue(
+                        1,
+                        str(file_path),
+                        f"Skill name '{name}' violates ADR-0056 namespace rules. Must start with 'ccba-' (or 'bigbim-', 'platform-loader')",
+                        category="INVALID_NAMESPACE",
+                        file_path=str(file_path),
+                    )
+                )
         if not description or not isinstance(description, str):
             issues.append(
                 AuditIssue(

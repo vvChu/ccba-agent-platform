@@ -77,14 +77,14 @@ class TestGovernanceSubAuditors(unittest.TestCase):
     def test_skill_auditor_frontmatter_and_criteria(self) -> None:
         """Test SkillAuditor validating frontmatter and missing step criteria."""
         auditor = SkillAuditor(project_root=self.root)
-        skill_dir = self.root / ".agents" / "skills" / "my-skill"
+        skill_dir = self.root / ".agents" / "skills" / "ccba-my-skill"
         skill_dir.mkdir(parents=True)
         skill_md = skill_dir / "SKILL.md"
 
         # Missing completion criteria in workflow steps
         skill_md.write_text(
             """---
-name: my-skill
+name: ccba-my-skill
 description: Short description
 ---
 
@@ -104,7 +104,7 @@ description: Short description
         # Add valid completion criterion
         skill_md.write_text(
             """---
-name: my-skill
+name: ccba-my-skill
 description: Short description
 ---
 
@@ -128,7 +128,7 @@ description: Short description
 
         skill_file.write_text(
             f"""---
-name: long-skill
+name: ccba-long-skill
 description: {long_desc}
 ---
 # Long Skill
@@ -142,7 +142,7 @@ description: {long_desc}
         # If disable-model-invocation: true, no limit error
         skill_file.write_text(
             f"""---
-name: long-skill
+name: ccba-long-skill
 description: {long_desc}
 disable-model-invocation: true
 ---
@@ -152,6 +152,41 @@ disable-model-invocation: true
         )
         issues = auditor.audit_skill(skill_file)
         self.assertFalse(any("exceeds 180 character limit" in i.message for i in issues))
+
+    def test_skill_auditor_namespace_purity(self) -> None:
+        """Test SkillAuditor enforcing ADR-0056 namespace purity gate."""
+        auditor = SkillAuditor(project_root=self.root)
+        skill_file = self.root / "SKILL.md"
+
+        # Invalid namespace
+        skill_file.write_text(
+            """---
+name: unapproved-legacy-skill
+description: Valid description
+---
+# Test
+""",
+            encoding="utf-8",
+        )
+        issues = auditor.audit_skill(skill_file)
+        self.assertTrue(any(i.category == "INVALID_NAMESPACE" for i in issues))
+
+        # Valid namespaces: ccba-*, bigbim-*, platform-loader
+        for valid_name in ["ccba-valid-skill", "bigbim-test", "platform-loader"]:
+            skill_file.write_text(
+                f"""---
+name: {valid_name}
+description: Valid description
+---
+# Test
+""",
+                encoding="utf-8",
+            )
+            issues = auditor.audit_skill(skill_file)
+            self.assertFalse(
+                any(i.category == "INVALID_NAMESPACE" for i in issues),
+                f"Valid name {valid_name} unexpectedly failed namespace purity",
+            )
 
     def test_registry_auditor_orphan_scan(self) -> None:
         """Test RegistryAuditor scanning orphan files in bundle."""
