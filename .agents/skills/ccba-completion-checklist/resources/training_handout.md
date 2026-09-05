@@ -23,7 +23,7 @@ Sau buổi tập huấn, học viên có khả năng:
 ### Phần 1: Tổng quan (15 phút)
 
 #### 1.1. Căn cứ pháp lý
-- Nghị định 06/2021/NĐ-CP — Phụ lục VIb
+- Nghị định 06/2021/NĐ-CP (được thay thế bởi NĐ 105/2025/NĐ-CP) — Phụ lục VIb
 - Nghị định 35/2023/NĐ-CP (sửa đổi)
 - Luật Xây dựng 2025 (hiệu lực 01/07/2026)
 
