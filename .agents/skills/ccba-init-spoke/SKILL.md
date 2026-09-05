@@ -18,8 +18,8 @@ triggers:
 - setup project
 - khởi tạo dự án
 ---
-# Workflow: Khởi Tạo CCBA Spoke Workspace (/ccba-init-spoke)
-Workflow này tự động hóa việc thiết lập không gian làm việc dự án mới theo chuẩn **CCBA Hub-and-Spoke** (ADR 0041, ADR 0044) và **Global Rules**.
+# Kỹ Năng: Khởi Tạo CCBA Spoke Workspace (/ccba-init-spoke)
+Kỹ năng này tự động hóa việc thiết lập không gian làm việc dự án mới theo chuẩn **CCBA Hub-and-Spoke** (ADR 0041, ADR 0044) và **Global Rules**.
 
 ---
 
@@ -127,7 +127,13 @@ Agent chạy Deep Seam `SpokeSynchronizer`:
 ```powershell
 python "[hub_path]\scripts\sync_spoke.py" --spoke .
 ```
-*Tự động: tạo `.md/`, chọn bundle từ `catalog.yaml`, bơm skills/workflows, đồng bộ `AGENTS.md`, đăng ký RSA 2048-bit vào Hub Registry.*
+*Tự động: tạo `.md/`, chọn bundle từ `catalog.yaml`, bơm kỹ năng, đồng bộ `AGENTS.md`, đăng ký RSA 2048-bit vào Hub Registry.*
+
+> [!TIP]
+> Bạn có thể gộp Bước 2 & Bước 3 với cờ `--bootstrap` (`-b`):
+> ```powershell
+> python "[hub_path]\scripts\sync_spoke.py" --spoke . --apply --bootstrap
+> ```
 
 ---
 

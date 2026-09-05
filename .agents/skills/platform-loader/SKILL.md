@@ -1,13 +1,14 @@
 ---
 name: platform-loader
 description: Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết
-  toàn bộ skills, workflows, và rules.
+  toàn bộ skills và rules.
 applies_to:
 - Phần mềm
 - Thẩm tra thiết kế
 - Thiết kế
 - Kiểm định
 bundle: _core
+command: /platform-loader
 triggers:
 - platform
 - bootstrap
@@ -23,7 +24,7 @@ triggers:
 
 ## Service Catalog (Source of Truth)
 
-Toàn bộ thông tin về trigger keywords, đường dẫn (paths) và phân loại nghiệp vụ của Skills/Workflows được định nghĩa duy nhất tại:
+Toàn bộ thông tin về trigger keywords, đường dẫn (paths) và phân loại nghiệp vụ của Skills được định nghĩa duy nhất tại:
 ```text
 .agents/skills/platform-loader/catalog.yaml
 ```
@@ -38,16 +39,15 @@ Khi nhận yêu cầu từ người dùng, Agent thực hiện theo logic sau:
 ### 1. Phân tích Trigger Keywords
 Đọc `catalog.yaml`. Đối chiếu request của người dùng với các `triggers` trong catalog:
 - Khớp skill $\rightarrow$ Đọc `skill_path` (`SKILL.md`) tương ứng để nạp kỹ năng.
-- Khớp workflow $\rightarrow$ Đọc `workflow_path` tương ứng để chạy workflow.
-- Khớp cả hai $\rightarrow$ Nạp cả skill và workflow.
+- Nếu skill chưa có ở Spoke $\rightarrow$ Xem mục 3 (Lazy Loading Sync) hoặc áp dụng Virtual Hub Fallback.
 
 ### 2. Tự động áp dụng Rules
-- Nếu kết quả đầu ra nhân danh CCBA $\rightarrow$ Nạp `rules/ccba_identity.md`.
-- Nếu liên quan đến pháp luật hoặc văn bản pháp lý $\rightarrow$ Nạp `rules/compliance.md`.
-- Nếu tạo tệp tin hoặc thư mục mới $\rightarrow$ Nạp `rules/naming_conventions.md`.
+- Nếu kết quả đầu ra nhân danh CCBA $\rightarrow$ Nạp `.agents/rules/ccba_identity.md`.
+- Nếu liên quan đến pháp luật hoặc văn bản pháp lý $\rightarrow$ Nạp `.agents/rules/legal_compliance.md`.
+- Nếu tạo tệp tin hoặc thư mục mới $\rightarrow$ Nạp `.agents/rules/naming_conventions.md`.
 
 ### 3. Đồng bộ bổ sung kỹ năng (Lazy Loading Sync)
-Khi Agent đang hoạt động tại Spoke và phát hiện yêu cầu cần sử dụng một skill/workflow có sẵn trên Hub nhưng chưa được đồng bộ cục bộ về Spoke:
+Khi Agent đang hoạt động tại Spoke và phát hiện yêu cầu cần sử dụng một skill có sẵn trên Hub nhưng chưa được đồng bộ cục bộ về Spoke:
 1. Tra cứu `catalog.yaml` để tìm tên skill cần thiết.
 2. Xin phép người dùng cài đặt bổ sung: *"Tôi cần tải bổ sung kỹ năng [tên-skill] từ Hub về Spoke để xử lý, bạn có đồng ý không?"*
 3. Sau khi được đồng ý, xác định đường dẫn Hub (`hub_path`) từ `workspace_context.yaml` hoặc biến môi trường `CCBA_HUB_PATH` (mặc định sử dụng repository chung) và thực thi lệnh đồng bộ:
@@ -59,8 +59,8 @@ Khi Agent đang hoạt động tại Spoke và phát hiện yêu cầu cần s�
 ### 4. Quy tắc Định tuyến Xử lý Văn bản (Master vs Sub-Skill Routing)
 Đối với các yêu cầu xử lý văn bản, tài liệu, hoặc file văn phòng:
 - **Ưu tiên nạp Master Skill**:
-  - Thao tác tệp Office (Word, Excel, PPT, PDF) $\rightarrow$ Nạp Master Skill `xu-ly-van-phong`.
-  - Chuẩn hóa Markdown / PDF $\rightarrow$ Nạp Master Skill `markdown-document-processing`.
-  - Soạn thảo hành chính / đề xuất thầu $\rightarrow$ Nạp Master Skill `copywriting`.
-  - Viết bài báo khoa học $\rightarrow$ Nạp Master Skill `academic_writing`.
-- **Nạp Sub-Skill / Utility khi cần thiết**: Chỉ nạp trực tiếp sub-skills (`docx`, `pptx`, `table-reconstructor`, `form-template-cleaner`, `relative-link-patcher`) khi cần xử lý thao tác vi mô hoặc khi được Master Skill chỉ định.
+  - Thao tác tệp Office (Word, Excel, PPT, PDF) $\rightarrow$ Nạp Master Skill `ccba-xu-ly-van-phong`.
+  - Chuẩn hóa Markdown / PDF $\rightarrow$ Nạp Master Skill `ccba-markdown-document-processing`.
+  - Soạn thảo hành chính / đề xuất thầu $\rightarrow$ Nạp Master Skill `ccba-copywriting`.
+  - Viết bài báo khoa học $\rightarrow$ Nạp Master Skill `ccba-academic-writing`.
+- **Nạp Sub-Skill / Utility khi cần thiết**: Nạp trực tiếp sub-skills (`ccba-docx`, `ccba-pptx`) khi cần xử lý thao tác vi mô. Đối với các tác vụ tái cấu trúc bảng, dọn dẹp template biểu mẫu, sửa liên kết tương đối, tham khảo tài liệu kỹ thuật Tier 2 trong `.agents/skills/ccba-markdown-document-processing/references/`.

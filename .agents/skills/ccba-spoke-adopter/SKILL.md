@@ -5,6 +5,7 @@ description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase
 argument-hint: '[--spoke <path>] [--dry-run] [--archetype <archetype>] [--type <project_type>]
   [--mode <mode>]'
 disable-model-invocation: true
+command: /ccba-spoke-adopter
 category: management
 keywords:
 - spoke
@@ -56,19 +57,28 @@ Kỹ năng này chịu trách nhiệm đánh giá hiện trạng, phân tích r�
 ### Bước 1: Khởi Chạy Đánh Giá Hiện Trạng (Dry-Run Preview)
 Chạy lệnh kiểm tra và in ma trận đánh giá 3 tầng:
 ```powershell
+# Chạy từ Hub:
 python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke] --dry-run
+# Hoặc chạy trực tiếp tại Spoke:
+python "[hub_path]\scripts\adopt_spoke.py" --spoke . --dry-run
 ```
 
 ### Bước 2: Thực Hiện Tiếp Nhận & Hợp Nhất Cấu Hình
 Khi người dùng đồng ý, chạy lệnh tiếp nhận chính thức:
 ```powershell
+# Chạy từ Hub:
 python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke]
+# Hoặc chạy trực tiếp tại Spoke:
+python "[hub_path]\scripts\adopt_spoke.py" --spoke .
 ```
 
 ### Bước 3: Tùy Biến Thể Loại, Chế Độ & Archetype (Tùy Chọn)
 Nếu muốn chỉ định rõ loại hình dự án, chế độ vận hành hoặc Archetype:
 ```powershell
+# Chạy từ Hub:
 python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke] --archetype "knowledge_corpus" --type "Pháp điển" --mode "software"
+# Hoặc chạy trực tiếp tại Spoke:
+python "[hub_path]\scripts\adopt_spoke.py" --spoke . --archetype "knowledge_corpus" --type "Pháp điển" --mode "software"
 ```
 
 ---

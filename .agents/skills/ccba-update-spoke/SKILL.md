@@ -1,7 +1,7 @@
 ---
 name: ccba-update-spoke
 
-description: Đồng bộ hóa các kỹ năng, quy trình và cập nhật phiên bản giữa Hub và các Spoke (đơn lẻ hoặc hàng loạt)
+description: Đồng bộ hóa các kỹ năng và cập nhật phiên bản giữa Hub và các Spoke (đơn lẻ hoặc hàng loạt)
 applies_to:
 - Phần mềm
 - Thẩm tra thiết kế
@@ -26,17 +26,17 @@ triggers:
 ---
 # Cập Nhật & Đồng Bộ Hóa CCBA Spoke Workspace (/ccba-update-spoke)
 
-Workflow này đồng bộ hóa các bản cập nhật mới nhất (kịch bản lệnh, kỹ năng, hiến pháp `AGENTS.md`, rào chắn test) từ **CCBA Agent Platform (Hub)** sang các dự án **Spoke**, hỗ trợ đồng bộ đơn lẻ, tải On-Demand và đồng bộ hàng loạt.
+Kỹ năng này đồng bộ hóa các bản cập nhật mới nhất (kịch bản lệnh, kỹ năng, hiến pháp `AGENTS.md`, rào chắn test) từ **CCBA Agent Platform (Hub)** sang các dự án **Spoke**, hỗ trợ đồng bộ đơn lẻ, tải On-Demand và đồng bộ hàng loạt.
 Quy trình áp dụng cơ chế **Safe-by-Default** 2 pha (Two-Phase Execution), bảo vệ Git working tree và tự động tạo snapshot sao lưu để có thể hoàn tác tức thì.
 
 ---
 
 ## 🛡️ Nguyên Tắc Safe-by-Default (Mặc định An toàn):
 1. **Pha 1 (Xem trước Preview):** Lệnh mặc định luôn chạy mô phỏng trước, phân loại và in bảng kiểm tra 4 trạng thái tệp:
-   - `🟢 NEW`: Kỹ năng/quy trình mới từ Hub chưa có tại Spoke.
-   - `🔄 UPDATED`: Kỹ năng/quy trình đã có sự thay đổi từ Hub.
+   - `🟢 NEW`: Kỹ năng mới từ Hub chưa có tại Spoke.
+   - `🔄 UPDATED`: Kỹ năng đã có sự thay đổi từ Hub.
    - `⚪ UNCHANGED`: Tệp hoàn toàn trùng khớp, không cần cập nhật.
-   - `🛡️ PRESERVED`: Kỹ năng/quy trình tùy biến nội bộ của Spoke, được bảo toàn 100%.
+   - `🛡️ PRESERVED`: Kỹ năng tùy biến nội bộ của Spoke, được bảo toàn 100%.
 2. **Pha 2 (Xác nhận Thực thi):** Người dùng xác nhận `[y/N]` để áp dụng, hoặc truyền cờ `--apply` / `-y`.
 3. **Git Working Tree Guard:** Tự động kiểm tra `git status`. Nếu thư mục `.agents/` có uncommitted changes, hệ thống cảnh báo và yêu cầu commit/stash trước khi sync (hoặc dùng `--force`).
 4. **Snapshot Backup & Rollback:** Tự động sao lưu thư mục `.agents/` vào `.md/backups/agents_backup_<timestamp>/` trước khi sửa đổi, cho phép hoàn tác qua cờ `--rollback`.
@@ -45,7 +45,7 @@ Quy trình áp dụng cơ chế **Safe-by-Default** 2 pha (Two-Phase Execution),
 
 ## 🎯 Khi Nào Dùng:
 1. **Tại Hub:** Kiểm tra độ trễ phiên bản hoặc đồng bộ 1 chạm cho tất cả các Spoke kết nối (`--all`).
-2. **Tại Spoke:** Cập nhật toàn bộ Skills/Workflows của dự án hiện tại theo đúng nghiệp vụ (`project_type`).
+2. **Tại Spoke:** Cập nhật toàn bộ Skills của dự án hiện tại theo đúng nghiệp vụ (`project_type`).
 3. **Tại Spoke (On-Demand):** Tải nhanh kỹ năng còn thiếu trên Hub (Lazy Loading).
 4. **Khi Cần Hoàn Tác:** Khôi phục trạng thái `.agents/` trước lần đồng bộ gần nhất (`--rollback`).
 5. **Đóng Vòng Hậu Hợp Nhất:** Khi PR đóng góp từ Spoke vừa được merge vào Hub (Bước 7 của `/ccba-contribute-to-hub`).
@@ -75,9 +75,11 @@ python [hub_path]\scripts\sync_spoke.py --spoke .
 # Áp dụng ngay (Non-interactive / CI) hoặc Bỏ qua cảnh báo uncommitted:
 python [hub_path]\scripts\sync_spoke.py --spoke . --apply
 python [hub_path]\scripts\sync_spoke.py --spoke . --apply --force
+# Đồng bộ nạp sẵn (Preload bootstrap skills & packages):
+python [hub_path]\scripts\sync_spoke.py --spoke . --apply --bootstrap
 ```
 
-### ⚡ Chế độ 4: Tải Bổ Sung Kỹ Năng / Workflow Cụ Thể (On-Demand)
+### ⚡ Chế độ 4: Tải Bổ Sung Kỹ Năng Cụ Thể (On-Demand)
 ```powershell
 python [hub_path]\scripts\sync_spoke.py --spoke . --sync-item [tên-kỹ-năng] --apply
 ```
@@ -103,5 +105,5 @@ python [hub_path]\scripts\sync_spoke.py --spoke . --rollback
    Copy-Item "$hub\scripts\spoke\check_spoke_cleanliness.py" -Destination ".\scripts\check_spoke_cleanliness.py" -Force
    ```
 4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python .\scripts\check_spoke_cleanliness.py`.
-5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "[hub_path]\packages\[pkg]"` và chạy test cục bộ (`python scripts\validate_legal_spoke.py`).
-6. **Kiểm tra sức khỏe tổng thể:** Chạy `python scripts\ccba_platform_cli.py spoke-status` xác nhận trạng thái xanh.
+5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "[hub_path]\packages\[pkg]"` và chạy test cục bộ (ví dụ: `pytest` hoặc `python scripts\validate_legal_spoke.py` đối với Spoke Pháp điển).
+6. **Kiểm tra sức khỏe tổng thể:** Chạy `ccba-spoke status` (hoặc `python "[hub_path]\scripts\ccba_platform_cli.py" spoke-status`) xác nhận trạng thái xanh.
