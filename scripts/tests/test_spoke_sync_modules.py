@@ -419,3 +419,41 @@ def test_spoke_registrar_missing_key_behavior(tmp_path: Path, capsys):
     captured = capsys.readouterr()
     assert "Hub registry public key not found" in captured.err
     assert "legacy path" not in captured.err
+
+
+def test_sync_spoke_delegate_parity() -> None:
+    """Test scripts/sync_spoke.py thin delegate contract and CLI parity."""
+    import subprocess
+    import sys
+
+    from scripts import sync_spoke
+    from scripts.spoke.sync import (
+        list_project_backups,
+        rollback_project,
+        sync_all_spokes,
+        sync_project,
+    )
+    from scripts.spoke.sync.cli import run_spoke_sync_cli
+
+    # 1. Import and symbol parity
+    assert sync_spoke.sync_project is sync_project
+    assert sync_spoke.sync_all_spokes is sync_all_spokes
+    assert sync_spoke.list_project_backups is list_project_backups
+    assert sync_spoke.rollback_project is rollback_project
+    assert sync_spoke.run_spoke_sync_cli is run_spoke_sync_cli
+
+    # 2. In-process CLI delegate call
+    with pytest.raises(SystemExit) as exc_info:
+        sync_spoke.main(["--help"])
+    assert exc_info.value.code == 0
+
+    # 3. Subprocess CLI smoke test
+    script_path = Path(__file__).resolve().parents[2] / "scripts" / "sync_spoke.py"
+    cmd = [sys.executable, str(script_path), "--help"]
+    res = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+    assert res.returncode == 0
+    assert "CCBA Spoke Synchronizer (Safe-by-Default)" in res.stdout
+    assert "--spoke" in res.stdout
+    assert "--bootstrap" in res.stdout
+    assert "--dry-run" in res.stdout
+    assert "--apply" in res.stdout
