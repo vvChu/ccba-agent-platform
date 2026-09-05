@@ -3,6 +3,7 @@ name: ccba-legal-ingest
 description: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation, and 11-Gate CI verification workflow.
 bundle: _consulting
 layer: _consulting
+version: 1.2.0
 triggers:
 - ccba-legal-ingest
 - nap van ban
@@ -19,10 +20,14 @@ conforms_to:
 - "ADR-0035"
 - "ADR-0036"
 - "ADR-0037"
+- "ADR-0038"
+- "ADR-0039"
+- "ADR-0040"
+- "ADR-0041"
 ---
 # Skill: CCBA Legal Ingest Workflow (`ccba-legal-ingest`)
 
-Quy trình tự động hóa thu thập, chuyển đổi sang tiêu chuẩn **OKF v2.4 Universal Agent-Centric (ADR 0034 - ADR 0037)**, hợp nhất VBHN và kiểm định qua **11 Cổng Master CI Gate** không dung thứ cho bất kỳ Luật, Nghị định, Thông tư, QCVN hoặc TCVN mới.
+Quy trình tự động hóa thu thập, chuyển đổi sang tiêu chuẩn **OKF v2.4 Universal Agent-Centric (ADR 0034 - ADR 0041)**, hợp nhất VBHN và kiểm định qua **15 Cổng Master CI Gate** không dung thứ cho bất kỳ Luật, Nghị định, Thông tư, QCVN hoặc TCVN mới.
 
 ---
 
@@ -31,8 +36,8 @@ Quy trình tự động hóa thu thập, chuyển đổi sang tiêu chuẩn **OK
 Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện theo quy trình chuẩn:
 
 ```
-[Bước 0: Thu thập & Xác thực] ──► [Bước 1: OKF v2.4 Convert] ──► [Bước 2: VBHN Consolidation] ──► [Bước 3: 1-Command Master CI]
- (ingest --upload-drive)          (Zero-LLM Verbatim AST)         (Nếu có văn bản sửa đổi)          (validate_legal_spoke.py)
+[Bước 0: Thu thập & Xác thực] ──► [Bước 1: OKF v2.4 Convert] ──► [Bước 1.5: Đối Soát Ground Truth] ──► [Bước 2: VBHN Consolidation] ──► [Bước 3: 1-Command Master CI]
+ (ingest --upload-drive)          (Zero-LLM Verbatim AST)         (Zero-Prune Invariant)             (Nếu có văn bản sửa đổi)          (validate_legal_spoke.py)
 ```
 
 ---
@@ -70,6 +75,29 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
 
 ---
 
+### Bước 1.5: Đối Soát Toàn Vẹn Số Lượng Đối Tượng (Ground Truth Reconciliation & Zero-Prune Invariant)
+
+Trước khi chuyển sang bước kiểm định hoặc kết luận hoàn thành, Agent **bắt buộc** thực hiện:
+
+1. **Đối soát số lượng Bảng (Table Reconciliation):**
+   * Đếm tổng số bảng thực tế trong tệp DOCX gốc: `total_doc_tables = len(doc.tables)`.
+   * So sánh với số lượng bảng trong `tables/csv/` và `tables_catalog.json`.
+   * Nếu có sự chênh lệch: **Nghiêm cấm** Agent tự ý xóa các tệp CSV/JSON bị coi là "mồ côi" (`clean_orphan_tables.py`). Agent bắt buộc phải tìm nguyên nhân (do bảng bị ngắt trang hay parser bỏ sót) để trích xuất đầy đủ 100%.
+2. **Đối soát số lượng Phụ lục (Annex Reconciliation):**
+   * Đối chiếu danh mục Phụ lục trong mục lục văn bản gốc (PDF/DOCX) với số lượng tệp `.md` trong `annexes/`.
+   * Tuyệt đối không để xảy ra trường hợp Phụ lục bị dồn vào thân văn bản chính.
+3. **Đối soát Sơ đồ Đồ họa (Multimodal Figure Fallback):**
+   * Nếu `figures/` ghi nhận 0 hình nhưng văn bản quy chuẩn có sơ đồ (như Hình H.1, Hình H.2 trong QCVN 10:2025/BCA), bắt buộc kiểm tra các trang PDF để trích xuất vector raster $\ge 300\text{ DPI}$.
+4. **Tiêu chí hoàn thành (Exit Criteria):**
+   | Tiêu chí | Trạng thái | Yêu cầu kiểm tra |
+   | :--- | :---: | :--- |
+   | Zero-Prune Invariant | ✅/❌ | Không xóa bảng/hình mồ côi khi chưa đối soát gốc |
+   | Table Count Match | ✅/❌ | Số bảng `tables_catalog.json` khớp 100% bảng kỹ thuật gốc |
+   | Annex Count Match | ✅/❌ | Số file trong `annexes/` khớp 100% phụ lục ban hành |
+   | Multimodal Check | ✅/❌ | Đủ 100% sơ đồ đồ họa từ PDF/DOCX |
+
+---
+
 ### Bước 2: Hợp Nhất Văn Bản Sửa Đổi (VBHN Engine — nếu có)
 
 * Nếu văn bản có sửa đổi/bổ sung, thực thi lệnh hợp nhất AST:
@@ -86,7 +114,7 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
 ### Bước 3: Đăng Ký Sổ Bộ & Nghiệm Thu Master CI Gate (1-Command Automation)
 
 1. Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256`, `pdf_status: verified` và khối `source_assets` vào `legal_registry.yaml`.
-2. Chạy bộ kiểm định 11 Cổng Master Spoke CI Validator:
+2. Chạy bộ kiểm định 15 Cổng Master Spoke CI Validator:
    ```powershell
    python scripts/validate_legal_spoke.py
    ```
