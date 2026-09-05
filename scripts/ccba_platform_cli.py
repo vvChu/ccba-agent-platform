@@ -390,6 +390,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--fix", action="store_true", help="Auto-fix trivial link and formatting issues"
     )
     doc_audit_p.add_argument("--root", default=None, help="Custom project root directory")
+    doc_audit_p.add_argument(
+        "--changed", action="store_true", help="Only validate markdown files changed in git"
+    )
 
     # validate-cross-ref
     cross_p = subparsers.add_parser(
@@ -474,8 +477,14 @@ def main() -> int:
         from scripts.doc_auditor import DocumentAuditor
 
         auditor = DocumentAuditor(project_root=Path(args.root) if args.root else _ROOT_DIR)
-        report = auditor.audit_all()
-        return 0 if not report.has_errors else 1
+        cli_args: list[str] = []
+        if args.fix:
+            cli_args.append("--fix")
+        if args.changed:
+            cli_args.append("--changed")
+        if args.root:
+            cli_args.extend(["--root", str(args.root)])
+        return auditor.run_docs_validation_cli(cli_args)
 
     elif args.command == "validate-cross-ref":
         from scripts.governance.cross_ref_validator import validate_cross_references
