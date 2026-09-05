@@ -116,4 +116,3 @@ def test_scripts_maskara_strict_seam_compliance() -> None:
         f"Expected 0 violations in scripts/maskara.py, but found {len(violations)}:\n"
         + "\n".join(violation_details)
     )
-

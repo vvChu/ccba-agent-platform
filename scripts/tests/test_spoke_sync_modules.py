@@ -457,4 +457,3 @@ def test_sync_spoke_delegate_parity() -> None:
     assert "--bootstrap" in res.stdout
     assert "--dry-run" in res.stdout
     assert "--apply" in res.stdout
-
