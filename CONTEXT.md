@@ -30,7 +30,7 @@ The CCBA Agent Services Platform is a framework to develop and coordinate AI age
 
 ### Phân Loại 5 Spoke Archetypes (ADR 0041)
 1. **Platform Hub (`platform_hub`)**:
-   Tổng hành dinh công nghệ, lưu trữ 73+ Skills/Workflows, Deep Seam Packages Python, hệ thống Auto-Tuner và Quality Gates (`ccba-agent-platform`).
+   Tổng hành dinh công nghệ, lưu trữ 99 Skills (và 69 Archived Workflows), Deep Seam Packages Python, hệ thống Auto-Tuner và Quality Gates (`ccba-agent-platform`).
 2. **Enterprise Governance Spoke (`enterprise_governance`)**:
    Hệ điều hành doanh nghiệp & Quản trị nội bộ ("The CCBA Way"): Quy chế QCTK 2815, Phân bổ dòng tiền 3 tầng, Phiếu giao việc PGV, 15 Vai trò chuẩn hóa, 58 SharePoint lists (`IDOP-CCBA-WAY`).
 3. **Knowledge Corpus Spoke (`knowledge_corpus`)**:
@@ -64,7 +64,7 @@ The Integrated Digital Operations Platform of CCBA, serving as the physical runt
 The process where Functional Spokes package and propose local skills or workflows back to the central Hub via Pull Requests and validation gates.
 
 **Downstream Sync (Vòng đồng bộ xuôi)**:
-The process where Project Spokes synchronize and update their local `.agents/workflows/` and git-ignored `.agents/skills/` from the Hub.
+The process where Project Spokes synchronize and update their local .agents/skills/ from the Hub.
 
 **Dynamic Knowledge Pointer (Con Trỏ Tri Thức Động)**:
 Mẫu hình chia sẻ tri thức giữa Hub và Spoke thông qua khai báo đường dẫn phân giải động trong `catalog.yaml` thay vì sao chép nội dung tệp tin, duy trì nguyên tắc Một Nguồn Sự Thật Duy Nhất (Single Source of Truth) và loại bỏ hoàn toàn nguy cơ trùng lặp dữ liệu.
@@ -127,20 +127,20 @@ Mô hình phân loại nội dung trong cửa sổ ngữ cảnh (context window)
 _Avoid_: Context budget, token limit (quá chung)
 
 **Master Skill (Kỹ Năng Toàn Trình)**:
-Kỹ năng cấp cao đóng vai trò nhạc trưởng điều phối một hoặc nhiều Deep Seams (ví dụ: `markdown-document-processing`, `ccba-legal-intel`, `ccba-ai-qc-audit`), cung cấp khả năng tự động nhận diện tác vụ đầu cuối (Model-Invoked) và dẫn xuất chi tiết sang các Progressive References.
+Kỹ năng cấp cao đóng vai trò nhạc trưởng điều phối một hoặc nhiều Deep Seams (ví dụ: `ccba-markdown-document-processing`, `ccba-legal-intel`, `ccba-ai-qc`), cung cấp khả năng tự động nhận diện tác vụ đầu cuối (Model-Invoked) và dẫn xuất chi tiết sang các Progressive References.
 
 **Progressive Reference (Tài Liệu Tham Chiếu Bộc Lộ Dần)**:
 Tài liệu hướng dẫn kỹ thuật chi tiết hoặc SOP chuyên biệt được lưu trữ trong thư mục `references/*.md` của một Master Skill, chỉ được AI Agent nạp khi cần xử lý các ca biên đặc thù, giúp giữ cho tệp `SKILL.md` chính luôn gọn gàng và không làm ô nhiễm context.
 
 **Reference Skill vs Driver Skill (Phân định Kỹ năng Tham chiếu & Kỹ năng Hành động)**:
-Mô hình phân loại kỹ năng của Platform: Reference Skill (`codebase-design`, `domain-modeling`) chỉ đóng vai trò từ vựng và tiêu chuẩn gốc, áp dụng quy tắc dừng cứng khi gọi độc lập; trong khi Driver Skill (`implement`, `improve-codebase-architecture`, `grill-with-docs`) sở hữu quy trình lặp và điểm kết thúc rõ ràng.
+Mô hình phân loại kỹ năng của Platform: Reference Skill (`ccba-codebase-design`, `ccba-domain-modeling`) chỉ đóng vai trò từ vựng và tiêu chuẩn gốc, áp dụng quy tắc dừng cứng khi gọi độc lập; trong khi Driver Skill (`ccba-implement`, `ccba-improve-codebase-architecture`, `ccba-grilling`) sở hữu quy trình lặp và điểm kết thúc rõ ràng.
 
 **Skill**:
 A structured set of agent guidelines, scripts, and completion criteria defined in a `SKILL.md` file.
 _Avoid_: Tool, plugin
 
 **Workflow**:
-A markdown script registered as a Slash Command that directs agent actions sequentially.
+A sequential agent execution script. Under ADR-0056, all legacy standalone workflows have been unified into modern Agent Skills with `disable-model-invocation: true`, and slash commands are registered directly in skill YAML frontmatters. Legacy workflows are preserved as `*.md.bak` for historical reference.
 _Avoid_: Scenario, command line script
 
 **Bundle**:
@@ -152,7 +152,7 @@ Tài liệu mô tả yêu cầu thiết kế, hành vi và seam kỹ thuật chi
 _Avoid_: PRD, Product Requirement Document, Bản yêu cầu sản phẩm
 
 **User Loops (Chu trình Người dùng)**:
-Các mô thức hoặc hoạt động lặp đi lặp lại hàng ngày/hàng tuần của người dùng, được định nghĩa qua `loop-me` và tài liệu hóa trong `.md/knowledge/user_loops.md` trước khi tự động hóa thành workflow chính thức.
+Các mô thức hoặc hoạt động lặp đi lặp lại hàng ngày/hàng tuần của người dùng, được định nghĩa qua `ccba-loop-me` và tài liệu hóa trong `.md/knowledge/user_loops.md` trước khi tự động hóa thành workflow chính thức.
 
 **Cohesive Topic Folder (Thư mục Đề tài Chuyên biệt)**:
 A directory structure under `.md/projects/[Ten_De_Tai]/` that contains all raw assets, transcripts, notes, drafts, and compiled Word documents belonging to a single R&D or writing project, preventing file fragmentation.

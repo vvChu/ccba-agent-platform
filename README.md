@@ -17,7 +17,7 @@ CCBA Agent Services Platform vận hành theo kiến trúc **Hub-and-Spoke**:
                               ┌─────────────────────────────────────────┐
                               │            CCBA HUB (Bộ Não)             │
                               │  ├── Hiến pháp AGENTS.md (Layer 1)      │
-                              │  ├── 83 Kỹ năng (Skills) & 57 Workflows │
+                              │  ├── 99 Kỹ năng (Skills) & 69 Archived  │
                               │  ├── 8 Service Packages (ccba-*)        │
                               │  └── Spoke Synchronizer Engine          │
                               └────────────────────┬────────────────────┘
@@ -32,7 +32,7 @@ CCBA Agent Services Platform vận hành theo kiến trúc **Hub-and-Spoke**:
        └───────────────────────┘       └───────────────────────┘       └───────────────────────┘
 ```
 
-- **CCBA Hub (`ccba-agent-platform`)**: Repository trung tâm lưu trữ toàn bộ tài sản trí tuệ chung, bao gồm Hiến pháp tối cao [`AGENTS.md`](.agents/AGENTS.md), 83 kỹ năng AI, 57 workflows, 8 gói thư viện lõi và công cụ điều phối đồng bộ.
+- **CCBA Hub (`ccba-agent-platform`)**: Repository trung tâm lưu trữ toàn bộ tài sản trí tuệ chung, bao gồm Hiến pháp tối cao [`AGENTS.md`](.agents/AGENTS.md), 99 kỹ năng AI (và 69 workflows được lưu trữ/hợp nhất theo ADR-0056), 8 gói thư viện lõi và công cụ điều phối đồng bộ.
 - **Dự Án Con (Spokes)**: Các repositories chuyên biệt (như `ccba-legal-knowledge`, `ccba-qc-web-app`, các dự án thẩm tra công trình cụ thể). Spoke kế thừa toàn bộ năng lực AI của Hub thông qua cơ chế **Reuse-First Gate** và công cụ đồng bộ **`sync_spoke.py`**.
 
 ---
@@ -241,19 +241,19 @@ Hệ thống chuẩn hóa chu trình đóng góp 2 chiều:
 
 ---
 
-## ⚡ Workflows & Slash Commands Thường Dùng
+## ⚡ Kỹ Năng & Slash Commands Thường Dùng
 
 | Lệnh Slash | Mô tả Nghiệp vụ |
 | :--- | :--- |
 | **`/ccba-init-spoke`** | Khởi tạo dự án Spoke mới đạt chuẩn kiến trúc CCBA Hub-and-Spoke. |
-| **`/ccba-update-spoke`** | Cập nhật các kỹ năng, workflows và test guardrails mới nhất từ Hub về Spoke. |
+| **`/ccba-update-spoke`** | Cập nhật các kỹ năng và test guardrails mới nhất từ Hub về Spoke. |
 | **`/ccba-issue-to-hub`** | Soạn thảo RFC và tạo GitHub Issue đề xuất ý tưởng/tính năng mới lên Hub. |
 | **`/ccba-contribute-to-hub`** | Đóng gói mã nguồn, tests và mở Pull Request lên Hub kèm Self-Healing CI. |
 | **`/ccba-ai-qc-pccc-audit`** | Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) qua Semantic Map-Reduce. |
-| **`/ccba-convert-markdown`** | Chuyển đổi PDF/Word sang Markdown cấu trúc cao bằng `mdconverter`. |
+| **`/ccba-markdown-document-processing`** (Alias: `/ccba-convert-markdown`) | Chuyển đổi PDF/Word sang Markdown cấu trúc cao bằng `mdconverter`. |
 | **`/ccba-improve-codebase-architecture`** | Quét module nông, sinh sơ đồ Mermaid trực quan và thực hiện Grilling loop làm sâu module. |
 | **`/ccba-legal-intel`** | Tư vấn, tra cứu và so sánh đối chiếu văn bản pháp luật xây dựng Việt Nam. |
-| **`/ccba-notebooklm`** | Kết nối Google NotebookLM để thực hiện RAG query và tạo Audio Overview podcast. |
+| **`/ccba-notebooklm-connector`** (Alias: `/ccba-notebooklm`) | Kết nối Google NotebookLM để thực hiện RAG query và tạo Audio Overview podcast. |
 | **`/ccba-session-retrospective`** | Tổng kết tri thức cuối phiên làm việc, tiến hóa kỹ năng và kích hoạt Governance Gate. |
 | **`/ccba-implement`** | Triển khai lập trình khép kín: TDD $\rightarrow$ Eval Gate $\rightarrow$ Code Review $\rightarrow$ Commit. |
 | **`/ccba-create-pr`** | Chạy kiểm định CI nội bộ và tạo Pull Request tự động lên GitHub. |

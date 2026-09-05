@@ -1,15 +1,677 @@
-# Skill: academic_writing
+# Skill: bigbim-classification
 
 ---
-name: academic_writing
-description: Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa học theo chuẩn quốc tế (IMRAD, CARS model).
+name: bigbim-classification
+description: Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass
+  200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
+applies_to:
+- BIM
+- Thiết kế
+bundle: _bim
+layer: _bim
+triggers:
+- phân loại
+- naming convention
+- room naming
+- uniclass
+- ISO 22274
+- ISO 21511
+- ISO 12006-2
+- Trí Nhớ Số
+- Digital Memory
+- ifc alignment
+- gis
+- SL_table
+- En_table
+---
+# BIGBIM Classification & Naming Skill
+
+> **Vai trò**: Chuyên gia Kiến trúc thông tin & Phân loại học tối cao của BIGBIM.
+> **Sứ mệnh**: Định hình "Trí Nhớ Số" (Digital Memory) cho mọi tài sản xây dựng, chuyển hóa các mô hình BIM từ chi phí trung gian thành tài sản dài hạn có khả năng kế thừa xuyên suốt vòng đời. Tự động hóa quá trình phân loại cấu kiện, đặt tên phòng phi tuyến tính (Dân dụng) và phân vùng tuyến tính định vị địa lý (Hạ tầng).
+
+---
+
+## 📚 BIGBIM Method KB — Tài liệu tham chiếu
+
+> Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
+
+| Article | Đường dẫn tham chiếu (dưới `[bigbim_method_path]/.md/`) | Nội dung cốt lõi |
+|:--------|:---------------------------------------------------------|:----------------|
+| `uniclass-ss.md` | `knowledge/bigbim-classification/uniclass-ss.md` | Ss Systems — bảng phân loại, mapping BIM object types |
+| `uniclass-en.md` | `knowledge/bigbim-classification/uniclass-en.md` | En Entities — phân loại công trình theo loại hình |
+| `uniclass-pr.md` | `knowledge/bigbim-classification/uniclass-pr.md` | Pr Products — sản phẩm, catalog, NBS lookup guide |
+| `ifc-entity-guide.md` | `knowledge/bigbim-classification/ifc-entity-guide.md` | IFC4X3 entity hierarchy, spatial structure rules |
+| `naming-convention.md` | `knowledge/bigbim-classification/naming-convention.md` | File naming, discipline codes, revision codes |
+
+**KB Root:** `[bigbim_method_path]/.md/`  
+**Master Index:** `knowledge/INDEX.md` (dưới KB Root)
+
+---
+
+## Hub & Execution Context
+
+*   **Skill Path**: `.agents/skills/bigbim-classification/SKILL.md`
+*   **Trigger Keywords**: `phân loại`, `naming convention`, `room naming`, `uniclass`, `ISO 22274`, `ISO 21511`, `ISO 12006-2`, `Trí Nhớ Số`, `Digital Memory`, `ifc alignment`, `gis`, SL_table, En_table, PM_80
+
+---
+
+## 🛠️ Tri thức Kỹ thuật Lõi (Classification Foundation)
+
+Khi thực hiện phân loại cấu kiện hoặc thiết lập quy ước đặt tên (Naming Convention), Agent **bắt buộc** phải tuân thủ nghiêm ngặt hệ thống lý thuyết của **BBH-Classification**:
+
+### 1. Tích hợp 3 tiêu chuẩn ISO nền tảng
+*   **ISO 22274:2013 (Nguyên lý thiết kế):** Đảm bảo hệ thống phân loại có tính logic chặt chẽ, các nhánh phân loại độc lập, không chồng chéo và có khả năng mở rộng không giới hạn khi bổ sung công nghệ mới.
+*   **ISO 21511:2021 (Cấu trúc WBS):** Cấu trúc phân rã công việc (Work Breakdown Structure) để phân chia thực thể phức tạp thành các phân vị có thể quản lý được về mặt tiến độ và chi phí.
+*   **ISO 12006-2:2015 (Framework đối tượng):** Phân chia vòng đời đối tượng xây dựng thành 4 lớp cốt lõi:
+    *   *Resources (Nguồn lực):* Vật liệu, nhân công, thiết bị.
+    *   *Processes (Quy trình):* Các công việc, hoạt động thi công/vận hành.
+    *   *Results (Kết quả):* Các thực thể/sản phẩm hoàn thành (Complexes, Entities, Spaces, Elements).
+    *   *Properties (Thuộc tính):* Đặc tính kỹ thuật, kích thước, hiệu suất.
+
+### 2. Cấu trúc bảng Uniclass phân cấp
+Agent thực hiện phân loại theo mô hình phân tầng từ vĩ mô đến vi mô của Uniclass:
+$$\text{Co (Complexes)} \rightarrow \text{En (Entities)} \rightarrow \text{SL (Spaces/locations)} \rightarrow \text{EF (Elements)} \rightarrow \text{Ss (Systems)} \rightarrow \text{Pr (Products)}$$
+
+---
+
+## ⚙️ Quy trình thực thi của AI Agent (Execution Logic)
+
+Khi nhận yêu cầu phân loại hoặc đặt tên từ người dùng, Agent thực hiện chính xác theo quy trình sau:
+
+### Nhánh 1: Phân loại Không gian Dân dụng (Building - Phi tuyến tính)
+Áp dụng cho các công trình dân dụng, tòa nhà (En_25_70_47):
+1.  **Phân cấp không gian:** Phân rã không gian theo mô hình 3 cấp:
+    $$\text{Tầng (Floor)} \rightarrow \text{Vùng chức năng (Zone)} \rightarrow \text{Phòng độc lập (Room)}$$
+2.  **Chuẩn hóa đặt tên phòng (ISO 19650 Room Naming):**
+    *   Sử dụng bảng **Uniclass SL (Spaces/locations)** để tra cứu mã chức năng không gian.
+    *   Quy ước đặt tên Container Thông tin (Information Container - IC) phòng:
+        $$\text{[Mã_Dự_Án]}-\text{[Mã_Tòa_Nhà]}-\text{[Tầng]}-\text{[Mã_SL_Uniclass]}-\text{[Số_Thứ_Tự]}$$
+        *Ví dụ:* `HLB-B1-L02-SL_25_10_72-005` (Phòng đọc sách số 5 tại Tầng 2 tòa nhà HUELIB).
+
+### Nhánh 2: Phân loại Không gian Hạ tầng (Infrastructure - Tuyến tính)
+Áp dụng cho các công trình hạ tầng giao thông, cầu đường, đê kè:
+1.  **Tọa độ địa lý & Định vị tuyến (GIS & IFC Alignment):**
+    *   Không gian không được chia theo tầng mà phải chia dọc theo tuyến chính của dự án dựa trên tọa độ thực địa GIS và lý trình **IFC Alignment**.
+2.  **Quy ước định vị phân cấp:**
+    $$\text{Tuyến (Alignment)} \rightarrow \text{Lý trình (km/m)} \rightarrow \text{Nút giao/Phân đoạn} \rightarrow \text{Cấu kiện vật lý (Nhịp, Trụ, Dầm)}$$
+    *   *Quy ước đặt tên:*
+        $$\text{[Tên_Tuyến]}-\text{KM[Lý_Trình]}-\text{[Phân_Phân_Đoạn]}-\text{[Mã_EF_Uniclass]}$$
+        *Ví dụ:* `Tuyen_NH1-KM012_500-NVD1-EF_20_10` (Hệ kết cấu móng tại lý trình km 12+500 của tuyến Quốc lộ 1).
+
+
+### Nhánh 3: Tự động hóa phân loại bằng AI (AI-based Semantic Auto-Classification)
+Áp dụng khi cần phân loại hàng loạt cấu kiện phi cấu trúc hoặc tên không chuẩn hóa:
+1.  **Trích xuất thuộc tính IFC (ifcopenshell):** Quét mô hình để trích xuất cả thông tin hình học và metadata thô (Family Name, Material, Description).
+2.  **Tiền xử lý & Sửa lỗi chính tả (Typo Normalization):**
+    *   Thực hiện làm sạch dữ liệu và sửa các lỗi chính tả thô tiếng Việt (ví dụ: mất dấu, sai diacritics) trước khi vector hóa để tránh làm lệch vector embedding.
+3.  **Xử lý ngữ nghĩa sâu (BERT/LLM Embeddings):** Chuyển đổi mô tả thô sang vector embedding để nắm bắt ngữ nghĩa thay vì so khớp từ khóa chính xác.
+4.  **Dự đoán mã Uniclass (ISO 12006-2 Alignment):**
+    *   Phân loại sang các bảng Uniclass tương ứng.
+    *   *Mục tiêu độ chính xác (F1-Score):* Đạt trên 90% đối với cấu kiện Kiến trúc (Architectural); trên 80% đối với các thiết bị MEP chuyên sâu (do MEP có độ viết tắt cao và ít từ ngữ cảnh).
+
+---
+
+## 📝 Định dạng đầu ra bắt buộc (Output Template)
+
+Kết quả phân loại phải được trả về dưới dạng bảng Markdown kèm theo định dạng JSON cấu trúc:
+
+```json
+[
+  {
+    "classification_id": "CLASS-001",
+    "project_type": "Building",
+    "uniclass_code": "SL_25_10_72",
+    "uniclass_table": "Spaces/locations (SL)",
+    "title_vi": "Không gian đọc sách công cộng",
+    "standard_mapping": {
+      "iso_12006": "Result",
+      "iso_19650_naming": "HLB-B1-L02-SL_25_10_72-005",
+      "wbs_level": "Level 4 - Room Space"
+    },
+    "metadata": {
+      "building_ref": "En_25_70_47",
+      "floor": "L02",
+      "zone": "Public Area"
+    }
+  }
+]
+```
+
+## 7. Rào Chắn Phân Định Bẫy Red-Team & Chuẩn Hóa Lỗi Viết Tắt
+* **Bẫy Hộp Kỹ Thuật (Hybrid Enclosure):** Phân loại vỏ hộp bao che là `EF_25_10` (Kiến trúc Result), chứa các hệ thống MEP con `Ss` bên trong.
+* **Bẫy Viết Tắt (Slang Normalization):** Tự động chuẩn hóa `btct` -> Bê tông cốt thép (`EF_20_20`), `san T3` -> `L03`.
+* **Bẫy Hai Góc Nhìn (Result vs Resource):** Bóc tách rõ `EF_25_30` (Mô hình BIM Object Result) vs `Pr_30_59_24` (Mua sắm BOQ Resource) bảo tồn Trí Nhớ Số.
+* **Bẫy Khoang Đệm Ngăn Cháy (Airlock Buffer):** Bắt buộc phân loại là `SL_25_30_70` (Không gian đệm an toàn/Air-lock).
+* **Định danh Tuyến Hạ tầng IFC Alignment & ISO 19650:** Định danh cấu trúc không gian Spatial Structure và Trí Nhớ Số dọc tim tuyến (KM).
+
+---
+
+# Skill: bigbim-governance
+
+---
+name: bigbim-governance
+description: Guardrails quản trị thông tin BIGBIM. Cưỡng chế tuân thủ Hiến pháp Sợi
+  Chỉ Vàng, rào chắn Sợi Chỉ Đỏ và quy chuẩn định danh Unique ID từ giai đoạn A0.
+applies_to:
+- BIM
+- Tác vụ Admin
+bundle: _bim
+layer: _bim
+triggers:
+- sợi chỉ vàng
+- sợi chỉ đỏ
+- unique id
+- governance-core
+- golden thread
+- red thread
+- eir matrix
+- air matrix
+- RK_50_40_35
+- RK_10_70_04
+- RK_50_40_45
+- RK_50_60_28
+---
+# BIGBIM Governance Core Guardrails Skill
+
+> **Vai trò**: Vệ binh Quản trị Thông tin (Guardian of Zettelkasten & AIM) tối cao của BIGBIM.
+> **Sứ mệnh**: Cưỡng chế các rào chắn kỹ thuật (Infra Guardrails) nhằm đảm bảo tính toàn vẹn dài hạn của thông tin tài sản, triệt tiêu 4 rủi ro thông tin cốt lõi, và bảo đảm tính nhất quán truy nguyên 3 chiều (Bản vẽ $\leftrightarrow$ FM vật lý $\leftrightarrow$ Biển hiệu thực tế).
+
+---
+
+## 📚 BIGBIM Method KB — Tài liệu tham chiếu
+
+> Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
+
+| Article | Nội dung cốt lõi |
+|:--------|:----------------|
+| `[bbp-lifecycle.md](https://example.com/bigbim-governance/bbp-lifecycle.md)` | BBP A0→C2, RIBA mapping, deliverables từng giai đoạn |
+| `[v-gates.md](https://example.com/bigbim-governance/v-gates.md)` | 7 Verification Gates — tiêu chí go/no-go, checklist |
+| `[cde-workflow.md](https://example.com/bigbim-governance/cde-workflow.md)` | CDE 4 states, naming convention, access control |
+| `[unique-id.md](https://example.com/bigbim-governance/unique-id.md)` | Sợi Chỉ Đỏ — UniqueID syntax, RK codes, 4 RKs |
+| `[midp-guide.md](https://example.com/bigbim-governance/midp-guide.md)` | MIDP structure, thời điểm nộp, TIDP vs MIDP |
+
+**KB Root:** `[bigbim_method_path]/.md/`  
+**Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
+
+---
+
+## Hub & Execution Context
+
+*   **Skill Path**: `.agents/skills/bigbim-governance/SKILL.md`
+*   **Trigger Keywords**: `sợi chỉ vàng`, `sợi chỉ đỏ`, `unique id`, `governance-core`, `golden thread`, `red thread`, `eir matrix`, `air matrix`, `RK_50_40_35`, `RK_10_70_04`, `RK_50_40_45`, `RK_50_60_28`, `ST2`, `ISO 19650-5`
+
+---
+
+## ⚙️ Quy trình thực thi của AI Agent (Execution Logic)
+
+Khi nhận tài liệu, bản vẽ, hoặc yêu cầu phê duyệt/đối soát thông tin dự án, Agent phải **bắt buộc** áp dụng 3 trụ cột rào chắn kỹ thuật sau đây:
+
+### Trụ cột 1: Kiểm duyệt "Sợi Chỉ Vàng" (Golden Thread Verification)
+Bảo đảm mọi tài sản số được quản trị theo mô hình dài hạn tầm nhìn 75 năm (`PM_80`), chống đứt gãy thông tin qua các thế hệ.
+
+1.  **Phân cấp Bảo mật (ISO 19650-5):**
+    *   Mọi thông tin tài sản phải được phân loại và gán thẻ an ninh thông tin đạt cấp độ **ST2** (Security Level 2) theo chuẩn ISO 19650-5.
+2.  **Tính Bất biến & Nhật ký Thay đổi (Change Log):**
+    *   Nghiêm cấm tự ý thay đổi cấu trúc thông tin của hệ thống nếu không có sự đồng thuận bằng văn bản của HUELIB-Board.
+    *   Mọi sự thay đổi (dù là nhỏ nhất) phải được lưu vết JIT trong bảng Change Log của tài liệu cấu hình `governance-core.md`.
+3.  **Điều kiện Chuyển giao Thế hệ Quả (Đoạn Đò-3):**
+    *   Kiểm tra xem dữ liệu bàn giao đã đảm bảo tính kế thừa khi chuyển giao quyền lực quản trị vận hành hay chưa. Nếu thiếu các ICT protocol chuẩn để tích hợp vào LMS (Learning Management System), bắt buộc phải từ chối phê duyệt để tránh lỗi *LMS vendor lock-in*.
+
+### Trụ cột 2: Quét Rào chắn "Sợi Chỉ Đỏ" (Red Thread Risk Audit)
+Agent phải phân tích văn bản/hồ sơ để phát hiện và cảnh báo chính xác **4 mã rủi ro thông tin chuẩn hóa**. Tuyệt đối không được dùng mô tả tự do:
+
+*   **⚠️ RK_50_40_35 — No-Risk (Rủi ro vắng mặt):**
+    *   *Điều kiện kích hoạt:* Có tài sản thông tin phát hành hoặc bàn giao tại pha vận hành (`C2`) nhưng thiếu định danh cụ thể của cá nhân/bộ phận tiếp nhận thông tin hoặc không khớp với sơ đồ tổ chức vận hành.
+*   **⚠️ RK_10_70_04 — Time-Risk (Rủi ro trễ hạn):**
+    *   *Điều kiện kích hoạt:* Dự án chuẩn bị bàn giao hoặc nghiệm thu kỹ thuật (`C1`) nhưng Ban quản trị chưa hoàn tất việc chuẩn bị đội ngũ FM (Facility Management) hoặc quy trình tự vận hành.
+*   **⚠️ RK_50_40_45 — Do-Risk (Rủi ro thực thi):**
+    *   *Điều kiện kích hoạt:* Tài liệu định nghĩa thông tin không tuân thủ cấu trúc dữ liệu IFC, thiếu các ICT protocol đồng bộ, hoặc thiết lập thông số vượt ngoài ngưỡng tới hạn (critical threshold).
+*   **⚠️ RK_50_60_28 — Use-Risk (Rủi ro vận hành):**
+    *   *Điều kiện kích hoạt:* Thiếu Mô hình Thông tin Tài sản (AIM) hoàn thiện hoặc thiếu các cơ chế kiểm tra chéo, dẫn đến nguy cơ đứt gãy "Trí Nhớ Số" của tòa nhà thư viện (`En_25_70_47`).
+
+### Trụ cột 3: Cưỡng chế Unique ID Bất biến & Đối soát 3 Chiều
+Bảo toàn khả năng truy nguyên số-vật lý thông qua mã định danh duy nhất xuyên suốt vòng đời tài sản.
+
+1.  **Gán ID từ pha khởi đầu BBP-A0:**
+    *   Tất cả tài sản vật lý và số phải được cấp và khóa Unique ID bất biến ngay từ pha ý tưởng và thiết kế sơ bộ (`BBP-A0`). Không được phép đổi ID khi chuyển sang các pha sau (`A1` đến `C2`).
+2.  **Đối soát 3 chiều (3-Way Traceability Check):**
+    *   Agent thực hiện kiểm tra chéo tính đồng nhất thông tin của Unique ID trên 3 phương tiện:
+        $$\text{Unique ID trên Bản vẽ Thiết kế} \equiv \text{Unique ID trong Hệ thống FM (AIM)} \equiv \text{Mã Unique ID ghi trên Biển hiệu thực tế tại công trình}$$
+    *   Nếu có bất kỳ sự sai lệch nào về mặt ký tự hoặc trạng thái $\rightarrow$ Đánh dấu **Không Đạt** và yêu cầu hiệu chỉnh.
+
+---
+
+## 📝 Quy trình Cảnh báo & Định dạng Đầu ra (Output Template)
+
+Khi thực hiện Audit hồ sơ, Agent phải xuất báo cáo theo mẫu dưới đây:
+
+### 📑 BÁO CÁO KIỂM DUYỆT GOVERNANCE
+
+#### 1. Bảng đánh giá Sợi Chỉ Vàng (Golden Thread Audit)
+*   **Mã tài liệu kiểm duyệt:** [Mã hồ sơ]
+*   **Cấp độ an ninh thông tin:** ST2 [Đạt / Không Đạt - Lý do]
+*   **Change Log Traceability:** [Đạt / Không Đạt - Nêu rõ lịch sử thay đổi đã được ghi nhận hay chưa]
+*   **Đoạn Đò-3 Compliance:** [Đạt / Không Đạt - Đánh giá rủi ro LMS vendor lock-in]
+
+#### 2. Kết quả Quét Sợi Chỉ Đỏ (Red Thread Risk Matrix)
+| Mã Rủi Ro | Trạng thái phát hiện | Mô tả chi tiết lỗ hổng thông tin | Mức độ nghiêm trọng | Biện pháp giảm thiểu yêu cầu |
+| :--- | :--- | :--- | :--- | :--- |
+| **RK_50_40_35** | [Phát hiện / Không] | [Ghi rõ nếu thiếu người nhận bàn giao ở C2] | [Cao / Trung bình / Thấp] | [Hành động khắc phục cụ thể] |
+| **RK_10_70_04** | [Phát hiện / Không] | [Ghi rõ nếu thiếu đội FM ở mốc C1] | [Cao / Trung bình / Thấp] | [Hành động khắc phục cụ thể] |
+| **RK_50_40_45** | [Phát hiện / Không] | [Ghi rõ lỗi sai cấu trúc dữ liệu hoặc ICT protocol] | [Cao / Trung bình / Thấp] | [Hành động khắc phục cụ thể] |
+| **RK_50_60_28** | [Phát hiện / Không] | [Ghi rõ nguy cơ đứt gãy AIM hoặc mất Trí Nhớ Số] | [Cao / Trung bình / Thấp] | [Hành động khắc phục cụ thể] |
+
+#### 3. Đối soát 3 Chiều Unique ID
+*   **Tổng số ID kiểm tra:** [Số lượng]
+*   **Tỷ lệ khớp 3 chiều:** [X%] (Bản vẽ $\leftrightarrow$ AIM $\leftrightarrow$ Thực tế)
+*   **Danh sách ID sai lệch (nếu có):**
+    *   `[Mã ID]`: [Mô tả chi tiết sai lệch, ví dụ: "Trực quan thực tế ghi ID-105 nhưng AIM ghi ID-105-A"]
+
+#### 4. KẾT LUẬN CHUNG
+*   **Trạng thái phê duyệt:** [PHÊ DUYỆT / TỪ CHỐI / PHÊ DUYỆT CÓ ĐIỀU KIỆN]
+*   **Lý do chính:** [Tóm tắt ngắn gọn 1-2 câu]
+
+
+---
+
+# Skill: bigbim-rase
+
+---
+name: bigbim-rase
+description: Tự động phân tích RASE (Requirement, Applicability, Selection, Exception)
+  cho dự án BIM dựa trên sơ đồ dữ liệu IFC4X3 và bộ Quantity Take-Off (Qto_xxx).
+applies_to:
+- BIM
+- Thẩm tra thiết kế
+bundle: _bim
+layer: _bim
+triggers:
+- rase
+- phân tích rase
+- ifc property
+- pset map
+- IFC4X3
+- Qto_SpaceBaseQuantities
+- Qto_WallBaseQuantities
+---
+# BIGBIM RASE Analyzer Skill
+
+> **Vai trò**: Chuyên gia Phân tích & Kiểm duyệt RASE tối cao của BIGBIM.
+> **Sứ mệnh**: Tự động hóa quá trình phân tích yêu cầu kỹ thuật (Requirements), đối chiếu đối tượng áp dụng (Applicability), lựa chọn thuộc tính IFC tương ứng (Selection), và loại trừ ngoại lệ (Exception) theo chuẩn dữ liệu **IFC4X3** và bộ Quantity Take-Off (`Qto_xxx`).
+
+---
+
+## 📚 BIGBIM Method KB — Tài liệu tham chiếu
+
+> Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
+
+| Article | Nội dung cốt lõi |
+|:--------|:----------------|
+| `[air-guide.md](https://example.com/bigbim-rase/air-guide.md)` | AIR structure, 20 requirements, mapping AIR→IFC Psets |
+| `[oir-guide.md](https://example.com/bigbim-rase/oir-guide.md)` | OIR framework, 12 objectives, OIR→AIR traceability |
+| `[ifc-pset-map.md](https://example.com/bigbim-rase/ifc-pset-map.md)` | Bảng ánh xạ IFC4X3 Psets đầy đủ theo AIR categories |
+| `[ids-validation.md](https://example.com/bigbim-rase/ids-validation.md)` | IDS buildingSMART, validation workflow, template |
+| `[chunks/ISO_19650_VN/](https://example.com/chunks/ISO_19650_VN/)` | ISO 19650-1/2/3 chunks — tra điều khoản cụ thể |
+
+**KB Root:** `[bigbim_method_path]/.md/`  
+**Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
+
+---
+
+## Hub & Execution Context
+
+*   **Skill Path**: `.agents/skills/bigbim-rase/SKILL.md`
+*   **Trigger Keywords**: `rase`, `phân tích rase`, `ifc property`, `pset map`, `IFC4X3`, `Qto_SpaceBaseQuantities`, `Qto_WallBaseQuantities`, `IfcPropertySet`, `IfcObject`, `IfcRelDefinesByProperties`
+
+---
+
+## 🛠️ Tri thức Kỹ thuật Lõi (IFC4X3 Property Mapping)
+
+Khi thực hiện phân tích thuộc tính IFC, Agent **bắt buộc** phải tuân thủ nghiêm ngặt mô hình quan hệ dữ liệu của schema **ISO 16739-1:2024 (IFC4X3)**:
+
+### 1. Cơ chế gán Property Set (`IfcPropertySet` $\rightarrow$ `IfcObject`)
+AI Agent không được phép gán thuộc tính trực tiếp vào đối tượng vật lý. Mọi thuộc tính phải được nhóm lại trong một `IfcPropertySet` (Pset) và liên kết với thực thể `IfcObject` thông qua đối tượng quan hệ trung gian **`IfcRelDefinesByProperties`**:
+
+```
+[IfcPropertySet] ──(gán bởi)──> [IfcRelDefinesByProperties] ──(trỏ tới)──> [IfcObject]
+```
+
+*   **Pset Yêu cầu:** `Pset_SpaceOccupancyRequirement` (Quy định các yêu cầu sử dụng không gian).
+*   **Pset Kỹ thuật chuyên ngành:** Các Pset được phân loại cụ thể theo bảng RASE: Comfort, Energy, Lab.
+
+### 2. Định nghĩa Dữ liệu Khối lượng (Quantity Take-Off - Qto)
+Đối với các thông số khối lượng hình học thực tế, Agent phải sử dụng Resource Schemas nằm dưới phân vùng `IFC_11_8_Resource_definition_data_schemas`:
+*   **Khối lượng Không gian:** Sử dụng bộ thuộc tính `Qto_SpaceBaseQuantities` (Diện tích sàn, thể tích không gian, diện tích tường bao quanh...).
+*   **Khối lượng Cấu kiện:** Sử dụng các bộ tương ứng như `Qto_WallBaseQuantities` cho tường, `Qto_SlabBaseQuantities` cho sàn.
+
+---
+
+## ⚙️ Quy trình thực thi của AI Agent (Execution Logic)
+
+Khi nhận yêu cầu phân tích RASE hoặc thiết lập bản đồ thuộc tính Pset từ người dùng, Agent thực hiện chính xác theo 4 bước sau:
+
+### Bước 1: Trích xuất Dữ liệu đầu vào
+1.  Đọc văn bản yêu cầu kỹ thuật hoặc quy chuẩn thiết kế đầu vào (ví dụ: Quy chuẩn tiện nghi nhiệt, tiết kiệm năng lượng).
+2.  Xác định các thông số/chỉ số kỹ thuật cần kiểm soát.
+
+### Bước 2: Phân tích RASE cấu trúc
+Phân rã văn bản kỹ thuật thành 4 tầng logic của ma trận RASE:
+
+*   **R - Requirement (Yêu cầu):** Chỉ số/Thông số kỹ thuật tối thiểu hoặc tối đa bắt buộc phải đạt được (ví dụ: *"Nhiệt độ phòng Lab phải duy trì ở mức 22°C"* $\rightarrow$ Yêu cầu nhiệt độ = 22).
+*   **A - Applicability (Khả năng áp dụng):** Thực thể IFC cụ thể chịu sự điều chỉnh của yêu cầu này (ví dụ: `IfcSpace` có kiểu chức năng là `LABORATORY`).
+*   **S - Selection (Lựa chọn thuộc tính):** Khai báo chính xác thuộc tính IFC4X3 sẽ lưu trữ thông số này. 
+    *   *Ví dụ:* Thuộc tính `TargetTemperature` nằm trong `Pset_SpaceOccupancyRequirement` gán vào `IfcSpace` thông qua `IfcRelDefinesByProperties`.
+*   **E - Exception (Ngoại lệ):** Các điều kiện loại trừ không cần áp dụng quy tắc (ví dụ: *"Không áp dụng cho phòng kho phụ trợ hoặc không gian đệm"* $\rightarrow$ Ngoại trừ `IfcSpace` có thuộc tính `SpaceUsage` = `STORAGE`).
+
+### Bước 3: Ánh xạ Property Set & Quantity Map (Pset Mapping)
+Thiết lập bảng ánh xạ thuộc tính theo cấu trúc chuẩn:
+
+| Khái niệm RASE | Thực thể IFC4X3 | Property Set (Pset) | Tên thuộc tính IFC | Kiểu dữ liệu | Bộ Qto liên quan |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Tiện nghi Nhiệt độ | `IfcSpace` | `Pset_SpaceOccupancyRequirement` | `TargetTemperature` | `IfcThermodynamicTemperatureMeasure` | - |
+| Thể tích thông gió | `IfcSpace` | `Pset_SpaceAirQualityRequirements` | `FreshAirFlowRate` | `IfcVolumetricFlowRateMeasure` | `Qto_SpaceBaseQuantities.GrossVolume` |
+
+### Bước 4: Kiểm duyệt chất lượng (Quality Assurance)
+Trước khi trả kết quả, Agent tự đối chiếu với 2 nguyên tắc quản trị tối cao của BIGBIM:
+1.  **Sợi chỉ Đỏ (Red Thread):** Thông tin RASE đã đáp ứng đầy đủ các tiêu chuẩn kỹ thuật cốt lõi tối thiểu chưa?
+2.  **Sợi chỉ Vàng (Golden Thread):** Các thuộc tính gán vào mô hình đã có Unique ID liên kết đồng nhất từ giai đoạn `BBP-A0` để bảo đảm khả năng cập nhật "Trí Nhớ Số" chưa?
+
+---
+
+## 📝 Định dạng đầu ra bắt buộc (Output Template)
+
+Kết quả phân tích RASE phải được trả về dưới dạng bảng Markdown sạch sẽ kèm theo định dạng JSON cấu trúc để nạp vào cơ sở dữ liệu:
+
+```json
+[
+  {
+    "requirement_code": "RASE-REQ-001",
+    "concept_name": "Tiện nghi nhiệt phòng Lab",
+    "requirement": "Nhiệt độ duy trì 22°C (sai số ±1°C)",
+    "applicability": "IfcSpace[SpaceType='LABORATORY']",
+    "selection": {
+      "property_set": "Pset_SpaceOccupancyRequirement",
+      "property_name": "TargetTemperature",
+      "data_type": "IfcThermodynamicTemperatureMeasure",
+      "relation": "IfcRelDefinesByProperties"
+    },
+    "exception": "IfcSpace[SpaceUsage='STORAGE']"
+  }
+]
+```
+
+
+---
+
+# Skill: bigbim-risk
+
+---
+name: bigbim-risk
+description: Phát hiện "Mâu thuẫn thông tin" (Information Conflict) phi hình học tại
+  bước phối hợp thông tin V2 - Coordination, vượt ngoài giới hạn Clash Detection truyền
+  thống.
+applies_to:
+- BIM
+- Thẩm tra thiết kế
+bundle: _bim
+layer: _bim
+triggers:
+- mâu thuẫn thông tin
+- information conflict
+- rủi ro thông tin
+- V2 coordination
+- clash audit
+- gap detection
+- va chạm vật lý
+- không gian lắp đặt
+- không gian bảo trì
+---
+# BIGBIM Risk & Information Conflict Audit Skill
+
+> **Vai trò**: Chuyên gia Quét Rủi ro & Tối ưu hóa Phối hợp Thông tin (AEC Coordination Auditor) tối cao của BIGBIM.
+> **Sứ mệnh**: Triệt tiêu các "mâu thuẫn thông tin" phi hình học, lấp đầy các khoảng trống dữ liệu vô hình nằm giữa các giai đoạn vòng đời dự án, bảo vệ tính nhất quán của mô hình AIM trước khi bàn giao.
+
+---
+
+## 📚 BIGBIM Method KB — Tài liệu tham chiếu
+
+> Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
+
+| Article | Nội dung cốt lõi |
+|:--------|:----------------|
+| `risk-register.md` | `[bigbim_method_path]/.md/knowledge/bigbim-risk/risk-register.md` | Risk Register format, scoring matrix, BIGBIM risk IDs |
+| `risk-categories.md` | `[bigbim_method_path]/.md/knowledge/bigbim-risk/risk-categories.md` | 5 risk categories — Information, Geometry, Process, Legal, Asset |
+| `v-gates.md` | `[bigbim_method_path]/.md/knowledge/bigbim-governance/v-gates.md` | V2 Coordination Gate — go/no-go criteria cho clash audit |
+| `ifc-pset-map.md` | `[bigbim_method_path]/.md/knowledge/bigbim-rase/ifc-pset-map.md` | IFC property mapping — context cho information conflict detection |
+
+**KB Root:** `[bigbim_method_path]/.md/`  
+**Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
+
+---
+
+## Hub & Execution Context
+
+*   **Skill Path**: `.agents/skills/bigbim-risk/SKILL.md`
+*   **Trigger Keywords**: `mâu thuẫn thông tin`, `information conflict`, `rủi ro thông tin`, `V2 coordination`, `clash audit`, `gap detection`, `va chạm vật lý`, `không gian lắp đặt`, `không gian bảo trì`
+
+---
+
+## 🛠️ Tri thức Kỹ thuật Lõi (Information Conflict Framework)
+
+Khi thực hiện kiểm duyệt chéo hoặc thẩm tra hồ sơ phối hợp, Agent **bắt buộc** phải phân biệt rõ ràng hai tư duy kiểm soát chất lượng dưới đây:
+
+### 1. Phân biệt Clash Detection và Mâu thuẫn thông tin (Information Conflict)
+*   **Clash Detection truyền thống (Level 1 va chạm):** Chỉ quét các va chạm hình học (geometry clash) hữu hình bằng mắt thường hoặc bằng thuật toán giao cắt 3D (ví dụ: đường ống đi xuyên qua dầm mà không có lỗ mở).
+*   **Mâu thuẫn thông tin BIGBIM (Level 2 & Logic):** Nhắm đến các **khoảng trống vô hình (gaps)** giữa các lớp dữ liệu kỹ thuật và điều kiện vật lý thực tế tại bước phối hợp **`V2 - Coordination`**. Những mâu thuẫn này không hề hiển thị va chạm trên mô hình 3D nhưng lại gây ra lỗi nghiêm trọng khi thi công thực tế.
+
+### 2. Hai nhóm mâu thuẫn thông tin chính
+
+#### Nhóm A: Mâu thuẫn không gian và thời gian
+*   **Cấp độ 1 (Va chạm vật lý):** Hai thành phần kỹ thuật chiếm giữ cùng một tọa độ không gian tại cùng một thời điểm.
+*   **Cấp độ 2 (Thiếu không gian thao tác/lắp đặt):** Trên mô hình 3D, hai thành phần kỹ thuật hoàn toàn đứng độc lập và cách nhau một khoảng (không hề có va chạm hình học). Tuy nhiên, **khoảng hở thực tế không đủ điều kiện kỹ thuật** để nhân công đưa tay/dụng cụ vào thực hiện lắp đặt, hoặc không đủ không gian mở cửa tủ điện, vận hành, bảo trì thiết bị sau này.
+
+#### Nhóm B: Mâu thuẫn Logic Thuộc tính (Attribute logic conflict)
+*   Sự không nhất quán về mặt dữ liệu phi hình học giữa các giai đoạn của vòng đời thông tin **BBP**.
+*   *Ví dụ điển hình:* Thông số công suất thiết bị thiết kế ở giai đoạn `BBP-B1` xung đột hoặc không khớp với mã hiệu sản phẩm mua sắm được phê duyệt ở giai đoạn `BBP-B2`, hoặc Unique ID của thiết bị bị thay đổi cấu trúc khi đi qua các pha.
+
+---
+
+## ⚙️ Quy trình thực thi của AI Agent (Execution Logic)
+
+Khi nhận hồ sơ phối hợp thiết kế (AEC Coordination Matrix) hoặc mô hình thông tin, Agent thực hiện chính xác theo 4 bước sau:
+
+### Bước 1: Quét Va chạm Vật lý (Level 1 Geometry Clash)
+*   Xác định các giao cắt hình học trực tiếp giữa các bộ môn (Kiến trúc, Kết cấu, Cơ điện MEP, PCCC).
+*   Ghi nhận tọa độ, hệ thống liên quan và Unique ID của các cấu kiện xung đột.
+
+### Bước 2: Quét Thiếu Không gian lắp đặt/thao tác (Level 2 Non-Geometric Gaps)
+*   Đối soát khoảng cách an toàn (clearance distance) xung quanh các thiết bị lớn (máy bơm, tủ điện, AHU, máy chiller).
+*   *Quy tắc kiểm duyệt:*
+    *   Tủ điện: Mặt trước bắt buộc phải có không gian trống $\ge 900\text{mm}$ để mở cửa tủ và thao tác.
+    *   Đường ống kỹ thuật trần: Khoảng cách trống tối thiểu đến dầm/sàn bê tông $\ge 150\text{mm}$ phục vụ nhân công luồn tay siết đai ốc.
+    *   Nếu khoảng cách này bị vi phạm mặc dù mô hình 3D báo "Không va chạm" $\rightarrow$ Đánh dấu lỗi **Mâu thuẫn thông tin Level 2**.
+
+### Bước 3: Đối soát logic thuộc tính (BBP Phase Consistency Check)
+*   So sánh bảng dữ liệu thiết bị (Equipment Schedule) giữa bản vẽ thiết kế (`BBP-B1`) và danh mục mua sắm vật tư thực tế (`BBP-B2`).
+*   Kiểm tra xem Unique ID gán từ `BBP-A0` có bị thay đổi cấu trúc ký tự hay không.
+*   Nếu có sự không nhất quán $\rightarrow$ Đánh dấu lỗi **Mâu thuẫn logic thuộc tính**.
+
+### Bước 4: Đánh giá tác động và Đề xuất giải pháp
+*   Phân tích hậu quả nếu không xử lý mâu thuẫn (chậm tiến độ, tăng chi phí sửa chữa, hay gián đoạn vận hành).
+*   Đề xuất giải pháp cụ thể (Ví dụ: dịch chuyển cao độ ống gió, điều chỉnh kích thước lỗ mở rầm, hoặc chuẩn hóa lại mã sản phẩm mua sắm).
+
+---
+
+## 📝 Định dạng đầu ra bắt buộc (Output Template)
+
+Kết quả phân tích mâu thuẫn phải được trả về dưới dạng bảng Markdown sạch sẽ kèm theo định dạng JSON cấu trúc để nạp vào cơ sở dữ liệu dự án:
+
+```json
+[
+  {
+    "conflict_id": "INF-CON-001",
+    "conflict_type": "Level 2 Space Gap",
+    "phase_origin": "V2 - Coordination",
+    "description": "Thiếu không gian mở cửa tủ điện phòng kỹ thuật. Trên mô hình 3D không va chạm với ống gió trần, nhưng khoảng hở mặt trước tủ chỉ đạt 450mm (yêu cầu tối thiểu 900mm).",
+    "impact": "Nhân viên FM không thể mở hết cửa tủ điện để thực hiện bảo trì, vi phạm tiêu chuẩn an toàn vận hành.",
+    "entities_involved": [
+      {
+        "entity_type": "IfcDistributionFlowElement",
+        "unique_id": "HLB-EQ-EL-045",
+        "role": "Tủ điện phân phối"
+      },
+      {
+        "entity_type": "IfcDuctSegment",
+        "unique_id": "HLB-MEP-HVAC-908",
+        "role": "Ống gió hồi trần"
+      }
+    ],
+    "proposed_mitigation": "Dịch chuyển tủ điện sang phải 500mm hoặc nâng cao độ ống gió lên thêm 150mm để giải phóng không gian thao tác."
+  }
+]
+```
+
+
+---
+
+# Skill: bigbim-vbpl-digest
+
+---
+name: bigbim-vbpl-digest
+description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024,
+  ISO 19650-1/2/3/5, QCVN liên quan.
+applies_to:
+- BIM
+- Pháp điển
+- Thẩm tra thiết kế
+bundle: _bim
+layer: _bim
+triggers:
+- NĐ 175
+- nghị định BIM
+- Nghị định 175
+- điều khoản BIM
+- ISO 19650
+- luật xây dựng BIM
+- pháp lý BIM
+- quy định nộp BIM
+- bắt buộc BIM
+---
+# BIGBIM VBPL Digest Skill
+
+> **Vai trò**: Chuyên gia Pháp lý BIM — tra cứu điều khoản, tóm tắt yêu cầu, giải thích nghĩa vụ theo VBPL hiện hành.
+> **Sứ mệnh**: Trả lời câu hỏi "quy định nào yêu cầu X?" và "điều Y của NĐ/ISO nói gì?" một cách chính xác, có trích dẫn.
+
+---
+
+## 📚 BIGBIM Method KB — Nguồn dữ liệu
+
+> Skill này **TRA CỨU TRỰC TIẾP** từ chunks của tài liệu gốc:
+
+| Nguồn | Layer | Path |
+|:------|:------|:-----|
+| NĐ 175/2024 — 111 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/VBPL_BIM_VN/175_2024_ND-CP_*/` |
+| ISO 19650-1 — 15 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/1-AP01-*/` |
+| ISO 19650-2 — 12 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/2-AP01-*/` |
+| ISO 19650-3 — 12 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/3-AP01-*/` |
+| ISO 19650-5 — 15 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/5-AP01-*/` |
+| Chunk Master Index | Layer 2 | `[bigbim_method_path]/.md/chunks/INDEX.md` |
+
+**Workflow tra cứu:**
+1. Đọc `chunks/INDEX.md` để xác định nguồn phù hợp
+2. Đọc `00_CHUNK_INDEX.md` trong folder nguồn để locate chunk
+3. Đọc chunk cụ thể → trích dẫn điều khoản chính xác
+4. Cross-reference với KB articles Layer 3 nếu cần synthesis
+
+---
+
+## Hub & Execution Context
+
+*   **Skill Path**: `.agents/skills/bigbim-vbpl-digest/SKILL.md`
+*   **Trigger Keywords**: `NĐ 175`, `nghị định BIM`, `Nghị định 175`, `điều khoản BIM`, `ISO 19650`, `điều`, `khoản`, `luật xây dựng BIM`, `pháp lý BIM`, `quy định nộp BIM`, `bắt buộc BIM`, `thời điểm nộp`
+
+---
+
+## 🎯 Quy trình thực thi của AI Agent
+
+### Bước 1 — Phân tích câu hỏi
+
+Xác định:
+- **Nguồn**: NĐ 175 hay ISO 19650-1/2/3/5?
+- **Loại query**: Tra điều khoản cụ thể (số điều/khoản) hay tìm theo chủ đề?
+- **Output format**: Trích dẫn nguyên văn, tóm tắt, hay so sánh?
+
+### Bước 2 — Locate chunk
+
+```
+Nếu NĐ 175:
+  → chunks/VBPL_BIM_VN/175_2024_ND-CP_.../00_CHUNK_INDEX.md
+  → Tìm chunk theo keyword trong heading column
+
+Nếu ISO 19650:
+  → chunks/ISO_19650_VN/<phần>/00_CHUNK_INDEX.md
+  → Tìm theo section number (VD: "5.6 Tiến trình")
+```
+
+### Bước 3 — Đọc và tổng hợp
+
+- Đọc chunk liên quan (1-3 chunks tối đa)
+- Trích dẫn nguyên văn có số điều/khoản
+- Nêu rõ nghĩa vụ áp dụng cho ai, khi nào
+
+### Bước 4 — Output format chuẩn
+
+```markdown
+## Câu trả lời
+
+**Nguồn**: NĐ 175/2024-NĐ-CP, Điều X, Khoản Y
+**Nguyên văn**: "..."
+
+**Tóm tắt**: [2-3 câu]
+
+**Áp dụng cho**: [đối tượng]
+**Thời điểm**: [khi nào bắt buộc]
+```
+
+---
+
+## 📋 Mapping Chủ đề → Nguồn
+
+| Chủ đề | Nguồn chính | Chunks tham khảo |
+|:-------|:-----------|:----------------|
+| BIM bắt buộc từ khi nào | NĐ 175 Điều 8 | chunk_01–05 |
+| Yêu cầu nộp mô hình BIM | NĐ 175 Chương III | chunk_20–35 |
+| CDE, EIR, AIR | ISO 19650-2 Section 4-5 | chunk_04–09 |
+| Vận hành AIM | ISO 19650-3 Section 5 | chunk_06–12 |
+| Phân loại bảo mật thông tin | ISO 19650-5 Section 4-7 | chunk_06–10 |
+| Giấy phép xây dựng + BIM | NĐ 175 Chương VI | chunk_50–65 |
+| Nghiệm thu, hoàn công + BIM | NĐ 175 Chương VIII | chunk_80–95 |
+
+
+---
+
+# Skill: ccba-academic-writing
+
+---
+name: ccba-academic-writing
+description: Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa
+  học theo chuẩn quốc tế (IMRAD, CARS model).
 role: master_skill
 disable-model-invocation: true
 user-invocable: true
-when_to_use: "Invoke when the user wants to brainstorm, draft, outline, or revise a scientific research paper, journal article, or seminar presentation."
-keywords: [academic writing, viết bài báo, nghiên cứu khoa học, IMRAD, CARS, Swales, Yale, thesis]
+when_to_use: Invoke when the user wants to brainstorm, draft, outline, or revise a
+  scientific research paper, journal article, or seminar presentation.
+keywords:
+- academic writing
+- viết bài báo
+- nghiên cứu khoa học
+- IMRAD
+- CARS
+- Swales
+- Yale
+- thesis
+bundle: _core
 ---
-
 # Academic Writing Skill & Guidelines
 
 > **Vai trò**: Chuyên gia Biên soạn & Phản biện Học thuật Cấp cao của CCBA.
@@ -89,22 +751,150 @@ Khi người dùng kích hoạt kỹ năng, Agent thực hiện theo các bướ
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
 
+## 7. Chuẩn Hóa Trích Dẫn APA 7th & Khối Mã BibTeX Song Hành
+* Mọi tài liệu tham khảo trong bài báo bắt buộc phải trình bày song hành dưới 2 định dạng:
+  - Định dạng trích dẫn văn bản chuẩn **APA 7th Edition** (Author, Year, Title, Journal, DOI).
+  - Khối mã **BibTeX** chuẩn hóa để các nhà nghiên cứu có thể trích xuất trực tiếp vào LaTeX/Overleaf.
 
 ---
 
-# Skill: ai-gateway-sdk
+# Skill: ccba-adr-lifecycle
 
 ---
-name: AI Gateway SDK
-description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endpoint. Bao gồm Python package ccba-ai.
+name: ccba-adr-lifecycle
+description: Autonomous lifecycle governance for Architecture Decision Records (ADRs) - Scaffolding, status cascading, Living Traceability Matrix compilation, and CI parity validation.
+bundle: _governance
+layer: _governance
+triggers:
+- ccba-adr-lifecycle
+- tao adr
+- cap nhat adr
+- adr sync
+- adr lifecycle
+- manage adr
+conforms_to:
+- "ADR-0032"
+- "ADR-0037"
+- "ADR-0047"
+- "ADR-0051"
+metadata:
+  version: 1.1.0
+---
+# Skill: Quản Trị Vòng Đời Quyết Định Kiến Trúc (`ccba-adr-lifecycle`)
+
+Kỹ năng này hướng dẫn Agent tự động quản trị toàn bộ vòng đời của các **Quyết định Kiến trúc (ADR)** trên nền tảng CCBA Platform (cả Hub và Spoke): Từ khởi tạo ADR mới, lan truyền trạng thái thay thế (`SUPERSEDED`), tự động biên dịch bảng mục lục `README.md`, tự động quét radar cập nhật `TRACEABILITY_MATRIX.md`, và chạy cổng kiểm định chống lệch pha tài liệu.
+
+---
+
+## 🏛️ Vòng Đời 4 Bước Của Một Quyết Định Kiến Trúc (The ADR Loop)
+
+```
+[1. Khởi tạo Scaffold] ──► [2. Soạn Thảo & Review] ──► [3. Biên Dịch Matrix] ──► [4. Kiểm Định CI Gate]
+```
+
+---
+
+### Bước 1: Khởi Tạo ADR Mới (Scaffolding)
+Khi người dùng hoặc Agent đề xuất một quyết định kiến trúc mới:
+1. Đọc thư mục `docs/adr/` để lấy số thứ tự lớn nhất tiếp theo (ví dụ: `0034`).
+2. Tạo file `docs/adr/00XX-<slug-name>.md` với cấu trúc chuẩn:
+
+```markdown
+---
+id: "ADR-00XX"
+title: "Tiêu Đề Quyết Định Kiến Trúc"
+status: "ACCEPTED"               # ACCEPTED | SUPERSEDED | DEPRECATED
+date: "YYYY-MM-DD"
+pillar: "Trụ Cột Liên Quan"     # Trụ cột 1, 2 hoặc 3
+supersedes: []                  # Danh sách ADR cũ bị thay thế (ví dụ: ["ADR-0010"])
+---
+# ADR 00XX: Tiêu Đề Quyết Định Kiến Trúc
+
+## 1. Trạng Thái (Status)
+**ACCEPTED & ADOPTED** (YYYY-MM-DD)
+
+## 2. Bối Cảnh (Context)
+Mô tả vấn đề, bất cập hiện tại và lý do cần đưa ra quyết định này.
+
+## 3. Quyết Định Thiết Kế (Decision)
+Mô tả chi tiết giải pháp kỹ thuật, cấu trúc mô-đun, và các quy tắc bất biến (Core Invariants).
+
+## 4. Hệ Quả & Lợi Ích (Consequences)
+- Lợi ích mang lại.
+- Tác động đến các kỹ năng và workflow hiện có.
+```
+
+---
+
+### Bước 2: Lan Truyền Trạng Thái Thay Thế (Status Cascading)
+* Nếu ADR mới có trường `supersedes: ["ADR-00YY"]`:
+  1. Mở file `docs/adr/00YY-*.md`.
+  2. Cập nhật trạng thái thành:
+     ```markdown
+     ## 1. Trạng Thái (Status)
+     **SUPERSEDED by [ADR 00XX](00XX-....md)** (YYYY-MM-DD)
+     ```
+
+---
+
+### Bước 3: Tái Biên Dịch Mục Lục & Ma Trận Truy Xuất (Two-Tier Traceability Sync)
+Chạy script đồng bộ tự động theo cơ chế **Hai Tầng (Two-Tier Architecture Matrix — ADR 0037, ADR 0051)**:
+* **Tại Hub (Platform Mode):**
+  ```powershell
+  python scripts/sync_hub_adr_matrix.py
+  ```
+  - Tái tạo bảng mục lục `docs/adr/README.md`.
+  - Quét radar toàn bộ `SKILL.md`, `AGENTS.md`, `CONTEXT.md`, `session_learnings.md` để biên dịch `docs/adr/TRACEABILITY_MATRIX.md`.
+
+* **Tại Spoke (Two-Tier Preservation Mode):**
+  ```powershell
+  python [hub_path]/scripts/sync_hub_adr_matrix.py --spoke-dir .
+  ```
+  - **Tier 1 (Platform Constitution):** Giữ nguyên và liên kết 100% ADRs dùng chung từ Hub.
+  - **Tier 2 (Domain-Specific Decisions):** Tự động phát hiện và bảo toàn các ADRs nghiệp vụ cục bộ của Spoke trong `## 🌐 Tier 2 — Domain-Specific Architecture Decisions`.
+  - **Non-Destructive Preservation:** Bảo lưu nguyên vẹn các bảng đối soát và ghi chú tùy biến của Spoke trong `TRACEABILITY_MATRIX.md`.
+
+---
+
+### Bước 4: Kiểm Định Khóa Cổng CI (Zero-Tolerance Parity Gate)
+Thực thi kiểm định chống lệch pha (Documentation & Traceability Drift):
+```powershell
+python scripts/sync_hub_adr_matrix.py --check
+```
+* **Tiêu chuẩn nghiệm thu:**
+  - 0 Duplicate numbers hoặc Numbering gaps.
+  - 0 Broken ADR links trong toàn bộ codebase.
+  - 100% Khớp nối giữa các file ADR, bảng mục lục `README.md` và `TRACEABILITY_MATRIX.md`.
+
+
+---
+
+# Skill: ccba-ai-gateway-sdk
+
+---
+name: ccba-ai-gateway-sdk
+description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud),
+  1 endpoint. Bao gồm Python package ccba-ai.
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
+triggers:
+- ai
+- llm
+- model
+- gateway
+- chat
+- inference
+- DGX
+- vLLM
+- Qwen
+- Claude
+- Gemini
+package_path: packages/ccba-ai
 ---
-
 # AI Gateway SDK
 
 Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoint duy nhất cung cấp đa dạng mô hình (50+ models/aliases thời gian thực qua `ai.models()`) — từ Qwen 35B chạy local GPU đến Claude 4.6, Gemini 3.7 Flash trên cloud.
@@ -230,6 +1020,45 @@ print(f"Latency: {res.latency_ms} ms")
 
 # 4. Định tuyến tự động theo task
 model_name = choose_model("ocr")  # ocr-primary
+```
+
+---
+
+## 📦 Prompt Engineering & Evaluator-Optimizer Loop
+
+SDK `ccba-ai` cung cấp sẵn các module hỗ trợ kỹ thuật Prompting nâng cao (Technique 15 & Anthropic Best Practices):
+
+### 1. XML Prompt Envelopes (`xml_envelope`, `parse_xml_tags`)
+Đóng gói tài liệu, chỉ thị và ngữ cảnh vào các thẻ XML để phân định ranh giới ngữ cảnh rõ ràng và triệt tiêu prompt injection:
+
+```python
+from ccba_ai import ai, xml_envelope, parse_xml_tags
+
+# Bọc có cấu trúc
+envelope_prompt = xml_envelope({
+    "instructions": "Soạn thảo văn bản thẩm tra PCCC theo chuẩn Nghị định 105/2025",
+    "context": {"decree": "105/2025/NĐ-CP", "standard": "QCVN 06:2022/BXD"},
+    "documents": ["Nội dung thuyết minh thiết kế công trình..."],
+})
+
+response = ai.chat(envelope_prompt, model="claude-sonnet-4-6")
+tags = parse_xml_tags(response)
+print(tags.get("answer", response))
+```
+
+### 2. Evaluator-Optimizer Feedback Loop (`evaluator_optimizer_loop`)
+Vòng lặp tự động sửa lỗi giữa Generator $\leftrightarrow$ Evaluator:
+
+```python
+from ccba_ai import ai, evaluator_optimizer_loop
+
+result = evaluator_optimizer_loop(
+    generator_fn=lambda fb: ai.chat(f"Soạn thảo tài liệu. Phản hồi vòng trước: {fb}"),
+    evaluator_fn=lambda draft: (95.0, "Đạt") if "105/2025" in draft else (60.0, "Bổ sung viện dẫn NĐ 105/2025"),
+    max_iterations=3,
+    pass_score=85.0,
+)
+print(f"Hoàn tất: {result.passed} trong {result.iterations} vòng. Điểm: {result.score}")
 ```
 
 ---
@@ -432,26 +1261,314 @@ def remove_ocr_artifacts(text: str) -> str:
 ## Files liên quan
 
 - **Package**: `packages/ccba-ai/` — pip install để dùng `from ccba_ai import ai`
-- **Env template**: `.agents/skills/ai-gateway-sdk/.env.ai-gateway`
+- **Env template**: `.agents/skills/ccba-ai-gateway-sdk/.env.ai-gateway`
 - **Server docs**: Xem thêm tại `AI_Gateway/playbooks/` (archived)
 
 
 ---
 
-# Skill: api-circuit-breaker
+# Skill: ccba-ai-pdf-preprocessor
 
 ---
-name: API Circuit Breaker
-description: Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch pipelines. Tránh quota exhaustion, cascade failures, và infinite retry loops khi gọi AI Gateway hàng loạt.
-version: "1.2.0"
+name: ccba-ai-pdf-preprocessor
+description: 'Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking)
+  và Tiling cho AI Vision.'
 applies_to:
-  - "Phần mềm"
-  - "Kiểm định"
-bundle: "_core"
-dependencies:
-  - "ai-gateway-sdk"
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _qc
+triggers:
+- pdf
+- preprocessor
+- chunk
+- tiling
+- bản vẽ
+- scan
+---
+# CCBA AI PDF Preprocessor
+
+Skill này cung cấp các công cụ chuyên dụng để chuẩn bị tài liệu PDF trước khi gửi đến AI Gateway. Giúp giải quyết các lỗi `Payload Too Large`, lỗi trích xuất trên bản scan mờ, và tối ưu hóa chi tiết cho bản vẽ kỹ thuật.
+
+## Vai trò
+Đây là "bộ lọc" trung tâm cho toàn bộ platform. Bất kỳ Agent nào cần đọc PDF phức tạp (>30 trang hoặc có bản vẽ) đều nên sử dụng skill này.
+
 ---
 
+## Cài đặt
+```bash
+pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-pdf-prep"
+```
+
+---
+
+## Các tính năng chính
+
+### 1. PDF Analyzer & Segmenter
+Phân tích cấu trúc file để biết trang nào là Text số, trang nào là Scan (ảnh), và trang nào là Bản vẽ (oversized).
+
+```python
+from ccba_pdf_prep import PDFAnalyzer
+
+analyzer = PDFAnalyzer()
+report = analyzer.analyze("path/to/document.pdf")
+
+# Lấy các đoạn trang cùng loại để định tuyến model
+segments = report.get_segments()
+for seg in segments:
+    print(f"Pages {seg.start_page}-{seg.end_page}: {seg.page_type}")
+```
+
+### 2. Intelligent Chunker
+Chia nhỏ PDF thành các khối nhỏ (mặc định 20 trang) để tránh lỗi Gateway Timeout hoặc Payload limit.
+
+```python
+from ccba_pdf_prep import split_pdf, get_blind_chunks
+from pathlib import Path
+
+source = Path("large_file.pdf")
+ranges = get_blind_chunks(total_pages=100, chunk_size=20)
+chunk_paths = split_pdf(source, ranges, output_temp_dir=Path("./temp"))
+```
+
+### 3. Vision Optimizer (Tiling)
+Dành riêng cho **Bản vẽ kỹ thuật (A0-A3)**. Thay vì resize ảnh làm mờ nét vẽ, skill này sẽ "xẻ" bản vẽ thành các mảnh (tiles) độ phân giải cao để AI Vision có thể đọc rõ từng con số, ghi chú.
+
+```python
+from ccba_pdf_prep.vision import VisionOptimizer
+from pathlib import Path
+
+# Xẻ trang 1 của bản vẽ thành các tile 1024x1024 ở 300 DPI
+tiles = VisionOptimizer.tile_page(
+    pdf_path=Path("drawing.pdf"),
+    page_num=0,
+    output_dir=Path("./tiles"),
+    dpi=300,
+    tile_size_px=1024
+)
+```
+
+---
+
+## Khi nào nên dùng?
+- **File > 30 trang**: Dùng `get_blind_chunks` để xử lý song song.
+- **Hybrid PDF (Text + Scan)**: Dùng `get_segments` để chọn model Qwen cho text và Gemini OCR cho scan.
+- **Bản vẽ kỹ thuật**: Dùng `VisionOptimizer` để bóc tách thông tin QC bản vẽ.
+
+---
+
+## Liên kết
+- **Source**: `packages/ccba-pdf-prep/`
+- **Dependencies**: `fitz` (PyMuPDF), `pypdf`.
+
+
+---
+
+# Skill: ccba-ai-qc
+
+---
+name: ccba-ai-qc
+description: Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế đa
+  bộ môn (Discovery, Quad-View Vision, Heat Map Report) qua Deep Seam QCAuditPipeline.
+applies_to:
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _qc
+category: engineering
+keywords:
+- qc
+- audit
+- quad-view
+- discovery
+- reporter
+- collision-check
+- qcauditpipeline
+metadata:
+  author: CCBA
+  version: 2.0.0
+triggers:
+- qc
+- audit
+- quad-view
+- discovery
+- reporter
+- collision-check
+- qcauditpipeline
+- ccba-ai-qc
+- qc pipeline
+- multi-discipline audit
+- heat map report
+---
+# Master Deep Skill: Kiểm Soát Chất Lượng Thiết Kế Đa Bộ Môn (`ccba-ai-qc`)
+
+Kỹ năng này là cổng điều phối thống nhất cho toàn bộ quy trình kiểm soát chất lượng (QC) và phát hiện xung đột bản vẽ thiết kế đa bộ môn (Kiến trúc, Kết cấu, MEP, PCCC) thông qua Deep Seam **`QCAuditPipeline`** ([`packages/ccba-ai`](../../../packages/ccba-ai)).
+
+---
+
+## Kiến Trúc 3 Pha & Bộc Lộ Dần (Progressive Disclosure)
+
+Quy trình thẩm tra chất lượng hoạt động khép kín qua 3 pha chính. Để xem chi tiết hướng dẫn vận hành và thuật toán từng pha, tham khảo tài liệu tương ứng trong `references/`:
+
+```mermaid
+flowchart LR
+    P1["Pha 1: Discovery<br/>(Ma trận Phối hợp)"] --> P2["Pha 2: Vision Audit<br/>(Quad-View Multi-Discipline)"]
+    P2 --> P3["Pha 3: Reporter<br/>(Heat Map & Báo cáo Kỹ thuật)"]
+
+    P1 -.-> R1["[references/discovery.md](references/discovery.md)"]
+    P2 -.-> R2["[references/batch_orchestrator.md](references/batch_orchestrator.md)<br/>[references/integrated_audit.md](references/integrated_audit.md)"]
+    P3 -.-> R3["[references/reporter.md](references/reporter.md)"]
+```
+
+1. **Pha 1 — Nhận diện Cấu trúc & Lập Ma trận Phối hợp (Discovery):**  
+   Bóc tách SheetNo, tầng (Level), khu vực (Zone) từ tệp PDF hồ sơ và sinh `Coordination_Matrix.csv`.  
+   👉 Xem chi tiết tại [references/discovery.md](references/discovery.md).
+
+2. **Pha 2 — Điều phối Hàng chờ & Đối soát Quad-View AI Vision (Audit):**  
+   Ghép ảnh collage 2x2 bốn bộ môn và gọi AI Vision cào lỗi đụng độ kỹ thuật với cơ chế fallback khung ảnh trắng.  
+   👉 Xem chi tiết tại [references/batch_orchestrator.md](references/batch_orchestrator.md) và [references/integrated_audit.md](references/integrated_audit.md).
+
+3. **Pha 3 — Biên tập Báo cáo Kỹ thuật & Heat Map Rủi ro (Reporter):**  
+   Tổng hợp kết quả cào lỗi thành báo cáo Markdown/Docx hoàn chỉnh kèm biểu đồ Heat Map rủi ro (High/Medium/Low).  
+   👉 Xem chi tiết tại [references/reporter.md](references/reporter.md).
+
+---
+
+## Quy Trình Vận Hành Thống Nhất (Execution Process)
+
+### Bước 1: Xác Định Ngữ Cảnh Dự Án (Target Context)
+- Đọc tệp cấu hình `.md/workspace_context.yaml` để lấy đường dẫn thư mục dự án (`project_dir`).
+- Đảm bảo thư mục đầu ra `.md/extracts/audit_batch/` sẵn sàng.
+- **Tiêu chí hoàn thành:** Xác định duy nhất một thư mục dự án đích hợp lệ và kiểm tra thư mục này tồn tại cục bộ.
+
+### Bước 2: Kích Hoạt Deep Seam `QCAuditPipeline`
+- Thực thi toàn trình qua Python API của package `ccba_ai`:
+  ```python
+  import asyncio
+  from ccba_ai import QCAuditPipeline
+
+  pipeline = QCAuditPipeline()
+  summary = asyncio.run(pipeline.run_audit(
+      project_dir="[target_project]",
+      output_dir="[target_project]/.md/extracts/audit_batch"
+  ))
+  print(f"Audit completed: {summary.total_findings} findings across {summary.total_levels} levels.")
+  ```
+- Hoặc thực thi qua CLI:
+  ```powershell
+  python -m ccba_ai.cli run-qc --project "[target_project]" --out-dir "[target_project]/.md/extracts/audit_batch"
+  ```
+- **Tiêu chí hoàn thành:** Pipeline chạy hoàn tất không có lỗi hệ thống, sinh ra tệp `Coordination_Matrix.csv` và báo cáo `BATCH_QC_Report_Auto.md` tại thư mục đầu ra.
+
+### Bước 3: Đối Soát & Trình Bày Báo Cáo
+- Mở và đọc nội dung báo cáo tại `[target_project]/.md/extracts/audit_batch/BATCH_QC_Report_Auto.md`.
+- Trích xuất bảng Heat Map rủi ro và các lỗi nghiêm trọng (High Risk) hiển thị trực tiếp cho Kỹ sư duyệt.
+- **Tiêu chí hoàn thành:** Bảng Heat Map và danh sách điểm nghẽn kỹ thuật được hiển thị rõ ràng trên giao diện chat cho người dùng kiểm tra.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+## 4. Quy Chuẩn Đóng Gói Phản Hồi & Thẻ Cấu Trúc XML
+* Mọi kết quả tra cứu và phân tích pháp lý bắt buộc phải được đóng gói qua cấu trúc thẻ:
+  - `<legal_context>`: Tóm tắt bối cảnh và văn bản quy phạm pháp luật áp dụng (Luật, Nghị định, Thông tư).
+  - `<legal_citation>`: Viện dẫn chính xác Điều, Khoản, Điểm kèm trích dẫn nguyên văn.
+  - `<compliance_verdict>`: Kết luận tuân thủ pháp luật và khuyến nghị chuyên môn.
+* Đảm bảo không phát sinh disclaimer từ chối đối với các yêu cầu hợp lệ trong lĩnh vực xây dựng.
+
+---
+
+# Skill: ccba-ai-qc-pccc-audit
+
+---
+name: ccba-ai-qc-pccc-audit
+description: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông
+  qua cơ chế Semantic Map-Reduce.
+applies_to:
+- Thẩm tra thiết kế
+- Thiết kế
+bundle: _qc
+triggers:
+- pccc audit
+- semantic map-reduce
+- thẩm tra PCCC
+- thiết bị chữa cháy
+- báo cháy
+---
+# CCBA AI QC PCCC Audit
+
+Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo và gộp kết quả đánh giá kỹ thuật đối với hồ sơ PCCC lớn, giúp khắc phục giới hạn context window của LLM và hiện tượng sinh ảo giác.
+
+---
+
+## 🔍 Điều kiện Áp dụng
+
+### Khi nào sử dụng (When to use)
+- Sử dụng khi người dùng yêu cầu thẩm tra thiết kế phòng cháy chữa cháy (PCCC), hệ thống cơ điện (MEP), hoặc kiến trúc thoát nạn của công trình xây dựng.
+- Sử dụng để đối chiếu, kiểm tra sự tuân thủ quy chuẩn xây dựng Việt Nam (như QCVN 06, TCVN 3890, TCVN 2622).
+
+### Khi nào KHÔNG sử dụng (When NOT to use)
+- Tuyệt đối **KHÔNG** áp dụng kỹ năng này và **KHÔNG** nhắc đến các quy chuẩn PCCC (QCVN 06, TCVN 3890, TCVN 2622) khi người dùng hỏi các câu hỏi thông thường không liên quan đến thẩm tra PCCC (ví dụ: lập trình phần mềm, lắp đặt thiết bị gia dụng đơn giản, viết email công việc, giải toán...).
+- Đối với các yêu cầu không thuộc phạm vi thẩm tra PCCC, hãy trả lời trực tiếp và ngắn gọn theo đúng chủ đề người dùng yêu cầu.
+
+---
+
+## Quy trình Map-Reduce
+
+- **Map 1 (Legal & Specs):** Đánh giá thuyết minh PCCC dựa trên quy chuẩn QCVN 06:2022/BXD, TCVN 3890:2023 và phản hồi của PC07.
+- **Map 2 (MEP Water):** So sánh chéo thông số thiết bị chữa cháy giữa bản vẽ MEP và thuyết minh.
+- **Map 3 (MEP Alarm vs Arch):** So sánh sơ đồ báo cháy và bản vẽ kiến trúc (vị trí đầu báo, đèn sự cố, lối thoát nạn).
+- **Reduce:** Tổng hợp các lỗi phát hiện được, loại bỏ trùng lặp và xuất thành báo cáo Markdown hoàn chỉnh theo mẫu PC13 (NĐ 105/2025/NĐ-CP).
+- **Ràng buộc đối soát đệ quy (ADR 0010):** Đối với các lỗi nghi vấn vi phạm quy chuẩn (như QCVN 06 hoặc TCVN 3890), Agent **không tự động** kích hoạt research. Hãy đề xuất người dùng chạy `/ccba-research [tên_quy_chuẩn]` để đối soát chéo dưới nền nhằm kiểm soát chi phí API.
+
+---
+
+## Hướng dẫn Vận hành
+
+### 1. Điều kiện tiền quyết
+Toàn bộ tài liệu PDF phải được chạy qua `ccba-ai-pdf-preprocessor` để chuyển đổi sang định dạng văn bản `.md`.
+
+### 2. Lệnh chạy script:
+Xác định đường dẫn Hub (`hub_path`) và chạy lệnh:
+```bash
+python "[hub_path]/.agents/skills/ccba-ai-qc-pccc-audit/scripts/audit_engine.py" \
+    --tm "đường/dẫn/đến/thuyet_minh.md" \
+    --arch "đường/dẫn/đến/kien_truc.md" \
+    --mep "đường/dẫn/đến/mep.md" \
+    --gopy "đường/dẫn/đến/pc07.md" \
+    --model "qwen-local-primary" \
+    --out "Bao_Cao_Tham_Dinh_PCCC.md"
+```
+*(Nếu không có văn bản góp ý của PC07, truyền một chuỗi rỗng `--gopy ""`)*
+
+
+---
+
+# Skill: ccba-api-circuit-breaker
+
+---
+name: ccba-api-circuit-breaker
+description: Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch
+  pipelines. Tránh quota exhaustion, cascade failures, và infinite retry loops khi
+  gọi AI Gateway hàng loạt.
+version: 1.2.0
+applies_to:
+- Phần mềm
+- Kiểm định
+bundle: _core
+dependencies:
+- ccba-ai-gateway-sdk
+triggers:
+- circuit breaker
+- rate limit
+- rpm
+- throttle
+- batch api
+- api protection
+- quota
+- retry
+---
 # API Circuit Breaker
 
 Rate limiter + Circuit Breaker 3-trạng-thái cho LLM API calls. Thiết kế cho các pipeline gọi AI Gateway **hàng loạt** (batch QC, wiki healing, domain enrichment).
@@ -561,20 +1678,29 @@ for item in items:
 
 ---
 
-# Skill: append-only-logger
+# Skill: ccba-append-only-logger
 
 ---
-name: Append-Only Logger
-description: Thread-safe, append-only logging pattern cho Python pipeline multi-daemon. Tránh race condition và encoding corruption khi nhiều process ghi cùng lúc vào shared log file.
-version: "1.1.0"
+name: ccba-append-only-logger
+description: Thread-safe, append-only logging pattern cho Python pipeline multi-daemon.
+  Tránh race condition và encoding corruption khi nhiều process ghi cùng lúc vào shared
+  log file.
+version: 1.1.0
 applies_to:
-  - "Phần mềm"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Kiểm định
+bundle: _core
 dependencies:
-  - "ai-gateway-sdk"
+- ccba-ai-gateway-sdk
+triggers:
+- logging
+- logger
+- log file
+- thread safe
+- daemon log
+- pipeline log
+- append log
 ---
-
 # Append-Only Logger
 
 Thread-safe logging pattern cho các pipeline chạy nhiều daemon/process đồng thời. Thay thế pattern **read → regex → rewrite** (dễ corrupt) bằng **pure append** với thread lock.
@@ -670,14 +1796,23 @@ logging.basicConfig(
 
 ---
 
-# Skill: architecture-sync
+# Skill: ccba-architecture-sync
 
 ---
-name: architecture-sync
-description: Đồng bộ hóa toàn bộ tài liệu kiến trúc sau khi refactor codebase — bao phủ 4 tầng tài liệu nhạy cảm.
+name: ccba-architecture-sync
+description: Đồng bộ hóa toàn bộ tài liệu kiến trúc sau khi refactor codebase — bao
+  phủ 4 tầng tài liệu nhạy cảm.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- ccba-architecture-sync
+- đồng bộ hiến pháp
+- đồng bộ kiến trúc
+- architecture
+- sync
+- cập nhật tài liệu kiến trúc
+- refactor docs
 ---
-
 # Constitution Sync: Architecture Synchronizer
 
 Đồng bộ hóa toàn bộ tài liệu kiến trúc và hướng dẫn vận hành của hệ thống sau khi refactor cấu trúc thư mục hoặc thay đổi thiết kế module.
@@ -712,7 +1847,7 @@ disable-model-invocation: true
 | `.pre-commit-config.yaml` | Hook scripts, đường dẫn cấu hình |
 | `PROJECT.md` | Active project code layout, interface contracts |
 | Skills chứa CLI: `platform-loader`, `ai-gateway-sdk`, `docs-validator`, `docs_manager`, `setup-pre-commit`, `eval-gate`, `xu-ly-van-phong` | Đường dẫn `scripts/`, `templates/`, import paths |
-| Workflows chứa paths: `ccba-init-spoke`, `ccba-propose-to-hub`, `ccba-update-spoke`, `ccba-build-skill`, `ccba-release-feature` | Đường dẫn Hub/Spoke, script commands |
+| Workflows chứa paths: `ccba-init-spoke`, `ccba-issue-to-hub`, `ccba-contribute-to-hub`, `ccba-propose-to-hub`, `ccba-update-spoke`, `ccba-build-skill`, `ccba-release-feature` | Đường dẫn Hub/Spoke, script commands |
 | Rules chứa paths: `naming_conventions`, `release_gate` | Cấu trúc `.md/`, đường dẫn scripts |
 
 ### Tier 3 — Kiểm tra khi có thay đổi kiến trúc lớn (rename module, xóa package)
@@ -760,7 +1895,7 @@ Nếu phát hiện sai lệch → ghi nhận và cập nhật ở Bước 3.
 4. **`CONTRIBUTING.md`**: Cập nhật hướng dẫn cài đặt và bảng workflows.
 5. **`copilot-instructions.md`**: Cập nhật bảng packages, import paths, tham chiếu chéo.
 6. **`ci.yml`**: Cập nhật đường dẫn packages, script commands.
-7. **`catalog.yaml`**: Cập nhật `skill_path` / `workflow_path` nếu rename.
+7. **`catalog.yaml`**: Chạy `python scripts/governance/compile_catalog.py` để tự động tái tạo manifest từ frontmatters (ADR 0047).
 8. **`pyproject.toml`**: Cập nhật entry points, workspace members nếu thêm/bớt package.
 
 **Tier 2 (khi ảnh hưởng):**
@@ -798,14 +1933,21 @@ python scripts/validate_docs.py . --changed
 
 ---
 
-# Skill: ask
+# Skill: ccba-ask
 
 ---
-name: ask
-description: Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu cầu phát triển.
+name: ccba-ask
+description: Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu cầu
+  phát triển.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- ccba-ask
+- tư vấn
+- định hướng
+- luồng công việc
+- bản đồ kỹ năng
 ---
-
 # Bản đồ Định hướng Kỹ năng Nền tảng (CCBA Ask Guide)
 
 Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nhà phát triển để lựa chọn đúng Slash Command hoặc Kỹ năng (Skill) phù hợp nhất với trạng thái công việc hiện tại.
@@ -820,13 +1962,13 @@ Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nh
 
 Đây là lộ trình chuẩn nhất của mọi yêu cầu phát triển tính năng mới trong Platform:
 
-1. **Làm sắc nét ý tưởng:** Gọi `/ccba-grill-with-docs` để phỏng vấn sâu rộng và ghi nhận tri thức dự án vào `CONTEXT.md` và các bản ghi quyết định kiến trúc (ADRs).
+1. **Làm sắc nét ý tưởng:** Gọi `/ccba-grilling` để phỏng vấn sâu rộng và ghi nhận tri thức dự án vào `CONTEXT.md` và các bản ghi quyết định kiến trúc (ADRs).
 2. **Rẽ nhánh — prototype hay spec:**
    - Nếu cần kiểm chứng giao diện/hành vi trực quan: Chạy `/ccba-handoff` ➔ mở phiên `/ccba-prototype` ➔ `/ccba-handoff` kết quả trở lại.
    - Nếu là build nhiều phiên: Chạy `/ccba-to-spec` để tổng hợp thành Đặc tả Kỹ thuật.
 3. **Phân rã tác vụ công việc:** Gọi `/ccba-to-tickets` để bẻ nhỏ Spec thành các ticket độc lập dạng lát cắt dọc (Tracer-bullet vertical slices).
 4. **Triển khai lập trình (TDD):** Mở cửa sổ Agent sạch và chạy `/ccba-implement` (hoặc `/ccba-tdd`) để hiện thực hóa từng ticket độc lập.
-5. **Kiểm soát chất lượng (QC):** Chạy `/ccba-run-qc-pipeline` để quét chất lượng và rà soát lỗi đa bộ môn.
+5. **Kiểm soát chất lượng (QC):** Chạy `/ccba-ai-qc` để quét chất lượng và rà soát lỗi đa bộ môn.
 6. **Bàn giao cuối phiên làm việc:** Chạy `/ccba-session-retrospective` (hoặc `/ccba-handoff`) để dọn dẹp môi trường và tổng hợp tri thức bàn giao.
 
 > [!TIP]
@@ -837,7 +1979,7 @@ Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nh
 ## Các luồng bổ trợ (On-ramps & Upkeep)
 
 *   **Tiếp nhận yêu cầu thô / Báo lỗi từ bên ngoài:** Chạy `/ccba-triage` để phân loại trạng thái, lọc trùng lặp với `.out-of-scope/` và soạn thảo Agent Brief.
-*   **Xử lý lỗi hóc búa / Regression:** Sử dụng kỹ năng `diagnosing-bugs` để xây dựng vòng phản hồi nhanh và viết test hồi quy trước khi vá lỗi.
+*   **Xử lý lỗi hóc búa / Regression:** Sử dụng kỹ năng `ccba-diagnosing-bugs` để xây dựng vòng phản hồi nhanh và viết test hồi quy trước khi vá lỗi.
 *   **Upkeep kiến trúc hệ thống:** Chạy `/ccba-improve-codebase-architecture` để phát hiện các module nông và deepening cấu trúc code.
 *   **Không gian học tập:** Chạy `/ccba-teach` để khởi động không gian bài giảng/nghiên cứu trong thư mục ẩn `.md/teach/`.
 
@@ -863,1438 +2005,314 @@ Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nh
 
 ---
 
-# Skill: ask-matt
+# Skill: ccba-autoresearch
 
 ---
-name: ask-matt
-description: Ask which skill or flow fits your situation. A router over the skills in this repo.
+name: ccba-autoresearch
+
+description: Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet
+  Auto-Tuner) lấy cảm hứng từ karpathy/autoresearch.
 disable-model-invocation: true
+bundle: _core
+command: /ccba-autoresearch
+triggers:
+- autoresearch
+- auto-research
+- git ratchet
+- ratchet
+- auto tune
+- auto-tune
+- tối ưu qua đêm
+- tối ưu prompt tự động
+---
+# Lệnh /ccba-autoresearch
+
+Khi nhận được lệnh này từ người dùng, Agent sẽ tự động nạp và thực thi công cụ tối ưu hóa tự động **Git-Ratchet Auto-Tuner** (`scripts/eval/git_ratchet_tuner.py`).
+
 ---
 
-# Ask Matt
+## 🛠️ Hướng dẫn thực thi các bước
 
-You don't remember every skill, so ask.
+### Bước 1: Kiểm tra hoặc Tạo tệp `program.md`
+Agent kiểm tra xem thư mục gốc đã có tệp `program.md` chưa:
+- Nếu chưa có, copy mẫu từ [`.agents/skills/ccba-eval-gate/program_template.md`](../ccba-eval-gate/program_template.md) vào `program.md` và điều chỉnh `Target File` theo yêu cầu của người dùng.
 
-A **flow** is a path through the skills. Most paths run along one **main flow**, and two **on-ramps** merge onto it. Everything else is standalone, or a vocabulary layer that runs underneath.
+### Bước 2: Kích hoạt Git-Ratchet Auto-Tuner
+Chạy lệnh CLI sau tại thư mục gốc của dự án:
+```bash
+# Chạy tối ưu hóa theo đặc tả trong program.md (có Git commit tự động)
+python scripts/eval/git_ratchet_tuner.py --program program.md
 
-## The main flow: idea → ship
+# Chạy thử nghiệm an toàn không commit git (Dry-run mode)
+python scripts/eval/git_ratchet_tuner.py --program program.md --dry-run-git
 
-The route most work travels. You have an idea and want it built.
+# Chạy tối ưu một kỹ năng trực tiếp qua CLI
+python scripts/eval/git_ratchet_tuner.py --target .agents/skills/ccba-copywriting/SKILL.md --max-trials 10 --target-score 90.0
+```
 
-1. **`/ccba-grill-with-docs`** — sharpen the idea by interview. Start here when you **have a codebase**: it's stateful, retaining what it learns in `CONTEXT.md` and ADRs. (No codebase? Use `/ccba-grilling` — see Standalone. Both run the same `/grilling` primitive; `grill-with-docs` is the one that leaves a paper trail.)
-2. **Branch — can you settle every question in conversation?** If a question needs a runnable answer (state, business logic, a UI you have to see), detour through a prototype, bridged by **`/ccba-handoff`** in both directions (see Crossing sessions):
-   - **`/ccba-handoff`** out, then open a fresh session against that file,
-   - **`/ccba-prototype`** to answer the question with throwaway code,
-   - **`/ccba-handoff`** back what you learned, and reference it from the original idea thread.
-3. **Branch — is this a multi-session build?**
-   - **Yes** → **`/ccba-to-spec`** (turn the thread into a spec), then **`/ccba-to-tickets`** to split it into tracer-bullet tickets, each declaring its **blocking edges**. On a local tracker that's one file per ticket under `.md/knowledge/issues/`, worked blockers-first by hand; on a real tracker the edges become native blocking links, so any ticket whose blockers are done can be grabbed — kick off **`/ccba-implement`** per ticket, **clearing context between each one**.
-   - **No** → **`/ccba-implement`** right here, in the same context window.
+### Bước 3: Đánh giá Báo cáo Ratchet
+- Đọc bảng tổng kết:
+  * Điểm số cải thiện: `Start Score` $\rightarrow$ `Final Score`.
+  * Số commits thành công được lưu lại (`kept_commits`).
+  * Số lần tự động rollback khi không đạt điểm (`reverted_trials`).
+- Báo cáo kết quả rõ ràng và hiển thị `git log` tóm tắt các cải tiến đã đạt được.
 
-   Either way, **`/ccba-implement`** builds each issue by driving **`/ccba-tdd`** internally — one red-green slice at a time — then closes out by running **`/ccba-code-review`**, a two-axis review (Standards + Spec) of the diff, before committing. Reach for **`/ccba-tdd`** on its own when you just want to build a concrete behaviour test-first without a full spec, and **`/ccba-code-review`** on its own whenever you want to review a branch or PR against a fixed point.
-
-### Context hygiene
-
-Keep steps 1–3 in **one unbroken context window** — don't compact or clear until after `/ccba-to-tickets` — so the grilling, spec, and tickets all build on the same thinking. Each `/ccba-implement` then starts fresh, working from the ticket.
-
-The limit on this is the **[smart zone](https://www.aihero.dev/ai-coding-dictionary/smart-zone)**: the window (~120k tokens on state-of-the-art models) within which the model still reasons sharply. If a session approaches it before `/ccba-to-tickets`, don't push on degraded — `/ccba-handoff` and continue in a fresh thread.
-
-## On-ramps
-
-A starting situation that generates work, then merges onto the main flow.
-
-- **Bugs and requests piling up** → **`/ccba-triage`**. It moves issues through triage roles and produces agent-ready issues, which **`/ccba-implement`** later picks up.
-
-  Triage is only for issues **you didn't create** — bug reports, incoming feature requests, anything that arrives raw. Tickets that `/ccba-to-tickets` produced are already agent-ready, so **don't triage them**.
-
-- **Something's broken** → **`/ccba-diagnose`** (uses skill `diagnosing-bugs`). For the hard ones: the bug that resists a first glance, the intermittent flake, the regression that crept in between two known-good states. It refuses to theorise until it has a **tight feedback loop** — one command that already goes red on *this* bug — then fixes with a regression test. Its post-mortem hands off to **`/ccba-improve-codebase-architecture`** when the real finding is that there's no good seam to lock the bug down.
-
-- **A huge, foggy effort — a greenfield project or a huge feature build, too big for one session** → **`/ccba-wayfinder`**. When the way from here to the destination isn't visible yet, it charts a **shared map** of investigation tickets on the issue tracker and resolves them one at a time — producing **decisions, not deliverables** — until the fog is pushed back and the way is clear. Then it merges onto the main flow at **`/ccba-to-spec`** (or, if the effort turned out small enough, straight to **`/ccba-implement`**). Where **`/ccba-grill-with-docs`** sharpens an idea you can hold in one session, wayfinder is for the idea you can't.
-
-## Codebase health
-
-Not feature work — upkeep.
-
-- **`/ccba-improve-codebase-architecture`** — run whenever you have a spare moment to keep the codebase good for agents to operate in. It surfaces **deepening opportunities**; picking one _generates an idea_ you can take into the main flow at `/ccba-grill-with-docs`. It's the survey that finds the candidates; **`/ccba-codebase-design`** (below) is the bench you design the chosen one on.
-
-## Vocabulary underneath
-
-Two model-invoked references that run *beneath* the other skills — each the single source of truth for its vocabulary. Reach for them directly when the **words**, not the process, are the problem; or let the skills above pull them in.
-
-- **`/ccba-domain-modeling`** — sharpen the project's *domain* language: challenge a fuzzy term, resolve an overloaded word ("account" doing three jobs), record a hard-to-reverse decision as an ADR. It's the active discipline `/ccba-grill-with-docs` drives to keep `CONTEXT.md` a clean glossary.
-- **`/ccba-codebase-design`** (uses skill `codebase-design`) — the deep-module vocabulary (module, interface, depth, seam, adapter, leverage, locality) for designing a module's *shape*: a lot of behaviour behind a small interface at a clean seam. `/ccba-tdd` and `/ccba-improve-codebase-architecture` both speak it.
-
-## Crossing sessions
-
-- **`/ccba-handoff`** — when a thread is full or you need to branch off (e.g. into a `/ccba-prototype` session), this compacts the conversation into a markdown file. You don't continue in place — you **open a new session and reference that file** to carry the context across. It's the bridge between context windows, in either direction. Use it when you want a **fresh session** but need the **current conversation preserved**.
-- **`/compact`** (built-in) — stay in the **same conversation**, letting the earlier turns be summarized. Use it at **intentional breaks between phases**, when you don't mind losing the verbatim history. Don't compact mid-phase — the agent can lose its way. `/ccba-handoff` forks; `/compact` continues.
-
-## Standalone
-
-Off the main flow entirely.
-
-- **`/ccba-grilling`** — the same relentless interview as `/ccba-grill-with-docs`, but for when you have **no codebase**. Stateless: it saves nothing locally, builds no `CONTEXT.md`. Reach for it to sharpen any plan or design that doesn't live in a repo.
-- **`/ccba-prototype`** — a small, throwaway program that answers one design question: does this state model feel right, or what should this UI look like. Throwaway from day one — keep the answer, delete the code. It's the detour in step 2 of the main flow, but reach for it any time a design question is hard to settle on paper.
-- **`/ccba-research`** — delegate reading legwork to a **background agent**: it investigates a question against **primary sources**, then leaves a cited Markdown file in the repo. Keep working while it reads. The file it produces is something to take *into* the main flow at `/ccba-grill-with-docs` — research feeds the thinking, it doesn't replace it.
-- **`/ccba-teach`** — learn a concept over multiple sessions, using the current directory as a stateful workspace.
-- **`/ccba-writing-great-skills`** (uses skill `writing-great-skills`) — reference for writing and editing skills well.
-
-## Precondition
-
-**`/setup-matt-pocock-skills`** (or local `/ccba-setup-skills`) — run before your first engineering flow to configure the issue tracker, triage labels, and doc layout the other skills assume. Custom issue trackers also work.
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 
 ---
 
-# Skill: bigbim-classification
+# Skill: ccba-brainstorm
 
 ---
-name: bigbim-classification
-description: Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass 200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
+name: ccba-brainstorm
+
+description: Khởi động phiên thảo luận ý tưởng và chuẩn bị tài liệu đầu vào tại input_documents/
+command: /ccba-brainstorm [-- <topic_id>]
 applies_to:
-  - "Quản lý thông tin"
-  - "Thiết kế"
-  - "Thẩm tra thiết kế"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
+disable-model-invocation: true
+triggers:
+- brainstorm
+- ý tưởng
+- nạp tài liệu
+- thảo luận
+- đầu vào
 ---
+# CCBA Brainstorming & Ingestion Workflow
 
-# BIGBIM Classification & Naming Skill
+> **Nguồn gốc:** Cấu trúc tương tác luân phiên (Hybrid Rhythm, Deferred Judgment, Party Mode) được học hỏi từ nguyên tắc của `brainstorm-coach` bởi Lưu Trọng Hiếu (License: All Rights Reserved - Adapted patterns only).
 
-> **Vai trò**: Chuyên gia Kiến trúc thông tin & Phân loại học tối cao của BIGBIM.
-> **Sứ mệnh**: Định hình "Trí Nhớ Số" (Digital Memory) cho mọi tài sản xây dựng, chuyển hóa các mô hình BIM từ chi phí trung gian thành tài sản dài hạn có khả năng kế thừa xuyên suốt vòng đời. Tự động hóa quá trình phân loại cấu kiện, đặt tên phòng phi tuyến tính (Dân dụng) và phân vùng tuyến tính định vị địa lý (Hạ tầng).
+Workflow này giúp khởi chạy một phiên thảo luận ý tưởng, tự động quét và phân loại tài liệu đầu vào tại thư mục nháp `input_documents/`, đồng thời kích hoạt các hướng dẫn phân tích đặc thù theo từng chủ đề nghiệp vụ.
 
----
+## Các bước thực hiện của Agent
 
-## 📚 BIGBIM Method KB — Tài liệu tham chiếu
+### 1. Đọc cấu hình và Xử lý tham số (Config & Routing)
+Agent bắt buộc phải đọc và gộp cấu hình các chủ đề từ hai nguồn:
+1. **Mặc định từ Hub:** Đọc cấu hình mặc định tại [brainstorm_topics.yaml](resources/brainstorm_topics.yaml).
+2. **Cục bộ từ Spoke:** Kiểm tra sự tồn tại của tệp cấu hình cục bộ tại `.md/knowledge/brainstorm_topics.yaml`. Nếu có, đọc và gộp (merge) với cấu hình mặc định (tập tin cục bộ được phép ghi đè các chủ đề trùng `topic_id` hoặc khai báo thêm chủ đề mới).
 
-> Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
+**Xử lý tham số Bypass:** Agent phân tích câu lệnh kích hoạt để phát hiện tham số truyền sau ký tự `--`:
+* **Nếu có tham số trùng khớp `topic_id`:** Bypass — lập tức di chuyển sang **Bước 3** để nạp Kỹ năng và chuyển đổi tài liệu, bỏ qua Bước 2 (Quét) và Menu chọn.
+* **Nếu tham số không trùng khớp:** In cảnh báo `⚠️ Chủ đề '[tham-so]' không tồn tại trong cấu hình.` và chuyển sang **Bước 2**.
+* **Nếu không có tham số:** Chạy tiếp **Bước 2** thông thường.
 
-| Article | Đường dẫn tham chiếu (dưới `[bigbim_method_path]/.md/`) | Nội dung cốt lõi |
-|:--------|:---------------------------------------------------------|:----------------|
-| `uniclass-ss.md` | `knowledge/bigbim-classification/uniclass-ss.md` | Ss Systems — bảng phân loại, mapping BIM object types |
-| `uniclass-en.md` | `knowledge/bigbim-classification/uniclass-en.md` | En Entities — phân loại công trình theo loại hình |
-| `uniclass-pr.md` | `knowledge/bigbim-classification/uniclass-pr.md` | Pr Products — sản phẩm, catalog, NBS lookup guide |
-| `ifc-entity-guide.md` | `knowledge/bigbim-classification/ifc-entity-guide.md` | IFC4X3 entity hierarchy, spatial structure rules |
-| `naming-convention.md` | `knowledge/bigbim-classification/naming-convention.md` | File naming, discipline codes, revision codes |
-
-**KB Root:** `[bigbim_method_path]/.md/`  
-**Master Index:** `knowledge/INDEX.md` (dưới KB Root)
-
----
-
-## Hub & Execution Context
-
-*   **Skill Path**: `.agents/skills/bigbim-classification/SKILL.md`
-*   **Trigger Keywords**: `phân loại`, `naming convention`, `room naming`, `uniclass`, `ISO 22274`, `ISO 21511`, `ISO 12006-2`, `Trí Nhớ Số`, `Digital Memory`, `ifc alignment`, `gis`, SL_table, En_table, PM_80
-
----
-
-## 🛠️ Tri thức Kỹ thuật Lõi (Classification Foundation)
-
-Khi thực hiện phân loại cấu kiện hoặc thiết lập quy ước đặt tên (Naming Convention), Agent **bắt buộc** phải tuân thủ nghiêm ngặt hệ thống lý thuyết của **BBH-Classification**:
-
-### 1. Tích hợp 3 tiêu chuẩn ISO nền tảng
-*   **ISO 22274:2013 (Nguyên lý thiết kế):** Đảm bảo hệ thống phân loại có tính logic chặt chẽ, các nhánh phân loại độc lập, không chồng chéo và có khả năng mở rộng không giới hạn khi bổ sung công nghệ mới.
-*   **ISO 21511:2021 (Cấu trúc WBS):** Cấu trúc phân rã công việc (Work Breakdown Structure) để phân chia thực thể phức tạp thành các phân vị có thể quản lý được về mặt tiến độ và chi phí.
-*   **ISO 12006-2:2015 (Framework đối tượng):** Phân chia vòng đời đối tượng xây dựng thành 4 lớp cốt lõi:
-    *   *Resources (Nguồn lực):* Vật liệu, nhân công, thiết bị.
-    *   *Processes (Quy trình):* Các công việc, hoạt động thi công/vận hành.
-    *   *Results (Kết quả):* Các thực thể/sản phẩm hoàn thành (Complexes, Entities, Spaces, Elements).
-    *   *Properties (Thuộc tính):* Đặc tính kỹ thuật, kích thước, hiệu suất.
-
-### 2. Cấu trúc bảng Uniclass phân cấp
-Agent thực hiện phân loại theo mô hình phân tầng từ vĩ mô đến vi mô của Uniclass:
-$$\text{Co (Complexes)} \rightarrow \text{En (Entities)} \rightarrow \text{SL (Spaces/locations)} \rightarrow \text{EF (Elements)} \rightarrow \text{Ss (Systems)} \rightarrow \text{Pr (Products)}$$
+*Tiêu chí hoàn thành:* Agent đã nạp cấu hình từ ít nhất một nguồn, in ra cấu trúc các chủ đề khả dụng, và quyết định rẽ nhánh chính xác.
 
 ---
 
-## ⚙️ Quy trình thực thi của AI Agent (Execution Logic)
+### 2. Quét tài liệu và Chọn chủ đề (Scan & Select)
+Quét toàn bộ danh sách tệp tin nằm trong thư mục [input_documents/](../../../input_documents/):
+* In bảng danh sách tệp tin phát hiện được kèm dung lượng (KB/MB).
+* Đọc lướt nội dung (skimming) và so khớp từ khóa của các tệp với danh sách `keywords` của các chủ đề trong cấu hình để tự động đề xuất chủ đề phù hợp nhất.
+* Hiển thị danh sách tất cả các chủ đề khả dụng cho người dùng lựa chọn. Chờ người dùng xác nhận chủ đề hoặc yêu cầu đổi sang chủ đề khác.
 
-Khi nhận yêu cầu phân loại hoặc đặt tên từ người dùng, Agent thực hiện chính xác theo quy trình sau:
-
-### Nhánh 1: Phân loại Không gian Dân dụng (Building - Phi tuyến tính)
-Áp dụng cho các công trình dân dụng, tòa nhà (En_25_70_47):
-1.  **Phân cấp không gian:** Phân rã không gian theo mô hình 3 cấp:
-    $$\text{Tầng (Floor)} \rightarrow \text{Vùng chức năng (Zone)} \rightarrow \text{Phòng độc lập (Room)}$$
-2.  **Chuẩn hóa đặt tên phòng (ISO 19650 Room Naming):**
-    *   Sử dụng bảng **Uniclass SL (Spaces/locations)** để tra cứu mã chức năng không gian.
-    *   Quy ước đặt tên Container Thông tin (Information Container - IC) phòng:
-        $$\text{[Mã_Dự_Án]}-\text{[Mã_Tòa_Nhà]}-\text{[Tầng]}-\text{[Mã_SL_Uniclass]}-\text{[Số_Thứ_Tự]}$$
-        *Ví dụ:* `HLB-B1-L02-SL_25_10_72-005` (Phòng đọc sách số 5 tại Tầng 2 tòa nhà HUELIB).
-
-### Nhánh 2: Phân loại Không gian Hạ tầng (Infrastructure - Tuyến tính)
-Áp dụng cho các công trình hạ tầng giao thông, cầu đường, đê kè:
-1.  **Tọa độ địa lý & Định vị tuyến (GIS & IFC Alignment):**
-    *   Không gian không được chia theo tầng mà phải chia dọc theo tuyến chính của dự án dựa trên tọa độ thực địa GIS và lý trình **IFC Alignment**.
-2.  **Quy ước định vị phân cấp:**
-    $$\text{Tuyến (Alignment)} \rightarrow \text{Lý trình (km/m)} \rightarrow \text{Nút giao/Phân đoạn} \rightarrow \text{Cấu kiện vật lý (Nhịp, Trụ, Dầm)}$$
-    *   *Quy ước đặt tên:*
-        $$\text{[Tên_Tuyến]}-\text{KM[Lý_Trình]}-\text{[Phân_Phân_Đoạn]}-\text{[Mã_EF_Uniclass]}$$
-        *Ví dụ:* `Tuyen_NH1-KM012_500-NVD1-EF_20_10` (Hệ kết cấu móng tại lý trình km 12+500 của tuyến Quốc lộ 1).
-
-
-### Nhánh 3: Tự động hóa phân loại bằng AI (AI-based Semantic Auto-Classification)
-Áp dụng khi cần phân loại hàng loạt cấu kiện phi cấu trúc hoặc tên không chuẩn hóa:
-1.  **Trích xuất thuộc tính IFC (ifcopenshell):** Quét mô hình để trích xuất cả thông tin hình học và metadata thô (Family Name, Material, Description).
-2.  **Tiền xử lý & Sửa lỗi chính tả (Typo Normalization):**
-    *   Thực hiện làm sạch dữ liệu và sửa các lỗi chính tả thô tiếng Việt (ví dụ: mất dấu, sai diacritics) trước khi vector hóa để tránh làm lệch vector embedding.
-3.  **Xử lý ngữ nghĩa sâu (BERT/LLM Embeddings):** Chuyển đổi mô tả thô sang vector embedding để nắm bắt ngữ nghĩa thay vì so khớp từ khóa chính xác.
-4.  **Dự đoán mã Uniclass (ISO 12006-2 Alignment):**
-    *   Phân loại sang các bảng Uniclass tương ứng.
-    *   *Mục tiêu độ chính xác (F1-Score):* Đạt trên 90% đối với cấu kiện Kiến trúc (Architectural); trên 80% đối với các thiết bị MEP chuyên sâu (do MEP có độ viết tắt cao và ít từ ngữ cảnh).
+*Tiêu chí hoàn thành:* Người dùng đã phản hồi lựa chọn chủ đề từ danh sách và Agent đã xác nhận chủ đề được kích hoạt.
 
 ---
 
-## 📝 Định dạng đầu ra bắt buộc (Output Template)
+### 3. Chuyển đổi định dạng và Nạp Kỹ năng (Ingestion & Skill Activation)
+Sau khi chủ đề được xác nhận, Agent tiến hành:
+1. **Chuyển đổi tài liệu:** Chuyển đổi theo quy trình `/ccba-markdown-document-processing` — tham khảo kỹ năng [`ccba-markdown-document-processing`](../ccba-markdown-document-processing/SKILL.md) cho quy tắc routing theo `project.mode`.
+   * Đối với các tệp nhẹ `< 5MB` (`.docx`, `.txt`): Tự động chuyển đổi sang Markdown.
+   * Đối với các tệp nặng `> 5MB` (PDF bản vẽ, Excel lớn): In cảnh báo, lập bảng tóm tắt metadata và chỉ convert chi tiết khi thảo luận đi sâu vào tệp đó.
+2. **Nạp Kỹ năng:** Nạp toàn bộ các kỹ năng nghiệp vụ được chỉ định trong thuộc tính `required_skills` của chủ đề được chọn.
 
-Kết quả phân loại phải được trả về dưới dạng bảng Markdown kèm theo định dạng JSON cấu trúc:
+*Tiêu chí hoàn thành:* Toàn bộ các tệp nhẹ đã được chuyển đổi sang Markdown, và các kỹ năng nghiệp vụ tương ứng đã được nạp thành công.
 
-```json
-[
-  {
-    "classification_id": "CLASS-001",
-    "project_type": "Building",
-    "uniclass_code": "SL_25_10_72",
-    "uniclass_table": "Spaces/locations (SL)",
-    "title_vi": "Không gian đọc sách công cộng",
-    "standard_mapping": {
-      "iso_12006": "Result",
-      "iso_19650_naming": "HLB-B1-L02-SL_25_10_72-005",
-      "wbs_level": "Level 4 - Room Space"
-    },
-    "metadata": {
-      "building_ref": "En_25_70_47",
-      "floor": "L02",
-      "zone": "Public Area"
-    }
-  }
-]
-```
+---
+
+### 4. Áp dụng Guidelines và Khởi động Brainstorming
+In ra danh sách các chỉ dẫn thảo luận đặc thù (`guidelines`) của chủ đề đã chọn, sau đó bắt đầu phiên trao đổi hai chiều tuân thủ các quy tắc tương tác dưới đây.
+
+*   **Gợi ý kỹ thuật:** Tham khảo [brainstorm_techniques.md](resources/brainstorm_techniques.md) để đề xuất kỹ thuật brainstorm phù hợp với chủ đề (SCAMPER, Reversal, Question Storming, v.v.). Để người dùng chọn hoặc đề xuất 1-2 technique kèm lý do.
+
+**Quy tắc tương tác (Hybrid Rhythm):** Mỗi vòng brainstorm tuân thủ 4 nhịp:
+1. **Prompt** — Agent đặt **đúng 1 câu hỏi** mở liên quan đến chủ đề. Luôn hỏi duy nhất 1 câu mỗi lượt để kích thích sự sáng tạo.
+2. **User first** — Chờ người dùng trả lời. Bắt buộc giữ **nguyên văn** (verbatim) mọi câu chữ của người dùng với tag `(user)`.
+3. **AI Build** — Agent bổ sung 2-4 ý tưởng mới với tag `(AI)`, xây dựng trên ý tưởng người dùng vừa nêu (yes-and), không thay thế.
+4. **Return floor** — Kết thúc bằng **đúng 1 câu hỏi tiếp theo** để trả quyền điều khiển về người dùng.
+
+*   **Deferred Judgment:** Trong giai đoạn phát tán ý tưởng, Agent chỉ đóng vai trò ghi nhận và mở rộng ý tưởng; bảo lưu toàn bộ việc đánh giá tính khả thi và xếp hạng cho đến giai đoạn Tổng hợp (mọi ý tưởng được ghi nhận bình đẳng).
+*   **Energy Checkpoint:** Sau mỗi 3-4 vòng trao đổi, Agent chủ động hỏi: tiếp tục hướng hiện tại, đổi góc nhìn/kỹ thuật, hay chuyển sang tổng hợp kết quả?
+*   **Nghiên cứu bổ sung:** Khi phát sinh nhu cầu nghiên cứu chuyên sâu (tài liệu lớn, API bên thứ ba, so sánh VBPL), kích hoạt `/ccba-research` chạy song song.
+
+*Tiêu chí hoàn thành:* Các chỉ dẫn và quy tắc tương tác đã hiển thị đầy đủ, phiên brainstorming đã bắt đầu với vòng Hybrid Rhythm đầu tiên (Agent đặt câu hỏi mở đầu tiên).
+
+---
+
+### 5. Tổng hợp và Ghi nhận Phiên (Convergence & Session Document)
+Khi người dùng yêu cầu tổng hợp (hoặc sau Energy Checkpoint chọn "tổng hợp"), Agent chuyển sang giai đoạn convergence:
+1. **Nhóm phân loại:** Gom các ý tưởng đã thu thập thành 3-5 nhóm chủ đề tự nhiên.
+2. **Xếp hạng:** Yêu cầu người dùng chọn 3-5 ý tưởng ưu tiên nhất. Agent không tự xếp hạng thay.
+3. **Action items:** Chuyển các ý tưởng được chọn thành bước hành động cụ thể.
+4. **Session Document:** Tạo artifact Markdown trong thư mục workspace hiện tại ghi nhận toàn bộ phiên với cấu trúc:
+   - **Intake:** Chủ đề, ràng buộc, ngày tháng
+   - **Ý tưởng phát tán:** Liệt kê mọi ý tưởng với tag `(user)` hoặc `(AI)`, giữ nguyên văn
+   - **Nhóm phân loại:** Bảng phân nhóm
+   - **Ưu tiên:** Top ý tưởng được chọn
+   - **Action items:** Bước tiếp theo
+
+*Tiêu chí hoàn thành:* Artifact Session Document đã được tạo và hiển thị cho người dùng.
+
+---
+
+### 6. Party Mode (Tùy chọn — Multi-role Ideation)
+Khi người dùng yêu cầu "nhiều góc nhìn", "phản biện ý tưởng", hoặc "party mode", Agent chuyển sang chế độ brainstorm đa vai:
+1. Tạo 2-3 persona ảo phù hợp với chủ đề (ví dụ: khách hàng, đối thủ cạnh tranh, kỹ sư skeptic, nhà đầu tư).
+2. Mỗi vòng: Agent phát biểu từ góc nhìn của từng persona, gắn tag rõ ràng (ví dụ: `(Khách hàng)`, `(Skeptic)`).
+3. Người dùng vẫn giữ vai trò chính — persona bổ sung góc nhìn, không thay thế.
+4. Kết thúc Party Mode khi người dùng yêu cầu hoặc sau Energy Checkpoint.
+
+> **Phân biệt với `/ccba-grilling`:** Party Mode sinh ý tưởng từ nhiều góc nhìn. Grilling stress-test một kế hoạch đã có. Mục đích khác nhau.
+
+*Tiêu chí hoàn thành:* Ít nhất 2 persona đã phát biểu và ý tưởng được ghi nhận vào Session Document, hoặc người dùng yêu cầu dừng/chuyển giai đoạn.
+
+---
+
+## Tiêu chí hoàn thành (Completion Criteria)
+
+*   [x] Config đã nạp và chủ đề đã được xác nhận.
+*   [x] Tài liệu đầu vào đã chuyển đổi Markdown (nếu có).
+*   [x] Guidelines và quy tắc Hybrid Rhythm đã hiển thị, phiên brainstorming đã bắt đầu.
+*   [x] Khi kết thúc phiên: Session Document artifact đã được tạo với đầy đủ ý tưởng tagged `(user)` / `(AI)`.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
 
 
 ---
 
-# Skill: bigbim-governance
+# Skill: ccba-build-skill
 
 ---
-name: bigbim-governance
-description: Guardrails quản trị thông tin BIGBIM. Cưỡng chế tuân thủ Hiến pháp Sợi Chỉ Vàng, rào chắn Sợi Chỉ Đỏ và quy chuẩn định danh Unique ID từ giai đoạn A0.
-applies_to:
-  - "Quản lý thông tin"
-  - "Thẩm tra thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+name: ccba-build-skill
+description: Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói
+  sinh Skill mới đạt chuẩn CCBA.
+user-invocable: true
+keywords:
+- build-skill
+- create-skill
+- research
+- notebooklm
+disable-model-invocation: true
+bundle: _core
+command: /ccba-build-skill
 ---
+# Workflow: Xây Dựng Kỹ Năng & Quy Trình Chuẩn (/ccba-build-skill)
 
-# BIGBIM Governance Core Guardrails Skill
+Khi người dùng kích hoạt lệnh này dưới dạng:
+`/ccba-build-skill <danh-sách-nguồn-hoặc-thư-mục> [--name <tên-skill>]`
 
-> **Vai trò**: Vệ binh Quản trị Thông tin (Guardian of Zettelkasten & AIM) tối cao của BIGBIM.
-> **Sứ mệnh**: Cưỡng chế các rào chắn kỹ thuật (Infra Guardrails) nhằm đảm bảo tính toàn vẹn dài hạn của thông tin tài sản, triệt tiêu 4 rủi ro thông tin cốt lõi, và bảo đảm tính nhất quán truy nguyên 3 chiều (Bản vẽ $\leftrightarrow$ FM vật lý $\leftrightarrow$ Biển hiệu thực tế).
-
----
-
-## 📚 BIGBIM Method KB — Tài liệu tham chiếu
-
-> Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
-
-| Article | Nội dung cốt lõi |
-|:--------|:----------------|
-| `[bbp-lifecycle.md](https://example.com/bigbim-governance/bbp-lifecycle.md)` | BBP A0→C2, RIBA mapping, deliverables từng giai đoạn |
-| `[v-gates.md](https://example.com/bigbim-governance/v-gates.md)` | 7 Verification Gates — tiêu chí go/no-go, checklist |
-| `[cde-workflow.md](https://example.com/bigbim-governance/cde-workflow.md)` | CDE 4 states, naming convention, access control |
-| `[unique-id.md](https://example.com/bigbim-governance/unique-id.md)` | Sợi Chỉ Đỏ — UniqueID syntax, RK codes, 4 RKs |
-| `[midp-guide.md](https://example.com/bigbim-governance/midp-guide.md)` | MIDP structure, thời điểm nộp, TIDP vs MIDP |
-
-**KB Root:** `[bigbim_method_path]/.md/`  
-**Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
+Agent tiếp nhận lệnh bắt buộc phải tự động thực thi chuỗi tác vụ sau:
 
 ---
 
-## Hub & Execution Context
-
-*   **Skill Path**: `.agents/skills/bigbim-governance/SKILL.md`
-*   **Trigger Keywords**: `sợi chỉ vàng`, `sợi chỉ đỏ`, `unique id`, `governance-core`, `golden thread`, `red thread`, `eir matrix`, `air matrix`, `RK_50_40_35`, `RK_10_70_04`, `RK_50_40_45`, `RK_50_60_28`, `ST2`, `ISO 19650-5`
-
----
-
-## ⚙️ Quy trình thực thi của AI Agent (Execution Logic)
-
-Khi nhận tài liệu, bản vẽ, hoặc yêu cầu phê duyệt/đối soát thông tin dự án, Agent phải **bắt buộc** áp dụng 3 trụ cột rào chắn kỹ thuật sau đây:
-
-### Trụ cột 1: Kiểm duyệt "Sợi Chỉ Vàng" (Golden Thread Verification)
-Bảo đảm mọi tài sản số được quản trị theo mô hình dài hạn tầm nhìn 75 năm (`PM_80`), chống đứt gãy thông tin qua các thế hệ.
-
-1.  **Phân cấp Bảo mật (ISO 19650-5):**
-    *   Mọi thông tin tài sản phải được phân loại và gán thẻ an ninh thông tin đạt cấp độ **ST2** (Security Level 2) theo chuẩn ISO 19650-5.
-2.  **Tính Bất biến & Nhật ký Thay đổi (Change Log):**
-    *   Nghiêm cấm tự ý thay đổi cấu trúc thông tin của hệ thống nếu không có sự đồng thuận bằng văn bản của HUELIB-Board.
-    *   Mọi sự thay đổi (dù là nhỏ nhất) phải được lưu vết JIT trong bảng Change Log của tài liệu cấu hình `governance-core.md`.
-3.  **Điều kiện Chuyển giao Thế hệ Quả (Đoạn Đò-3):**
-    *   Kiểm tra xem dữ liệu bàn giao đã đảm bảo tính kế thừa khi chuyển giao quyền lực quản trị vận hành hay chưa. Nếu thiếu các ICT protocol chuẩn để tích hợp vào LMS (Learning Management System), bắt buộc phải từ chối phê duyệt để tránh lỗi *LMS vendor lock-in*.
-
-### Trụ cột 2: Quét Rào chắn "Sợi Chỉ Đỏ" (Red Thread Risk Audit)
-Agent phải phân tích văn bản/hồ sơ để phát hiện và cảnh báo chính xác **4 mã rủi ro thông tin chuẩn hóa**. Tuyệt đối không được dùng mô tả tự do:
-
-*   **⚠️ RK_50_40_35 — No-Risk (Rủi ro vắng mặt):**
-    *   *Điều kiện kích hoạt:* Có tài sản thông tin phát hành hoặc bàn giao tại pha vận hành (`C2`) nhưng thiếu định danh cụ thể của cá nhân/bộ phận tiếp nhận thông tin hoặc không khớp với sơ đồ tổ chức vận hành.
-*   **⚠️ RK_10_70_04 — Time-Risk (Rủi ro trễ hạn):**
-    *   *Điều kiện kích hoạt:* Dự án chuẩn bị bàn giao hoặc nghiệm thu kỹ thuật (`C1`) nhưng Ban quản trị chưa hoàn tất việc chuẩn bị đội ngũ FM (Facility Management) hoặc quy trình tự vận hành.
-*   **⚠️ RK_50_40_45 — Do-Risk (Rủi ro thực thi):**
-    *   *Điều kiện kích hoạt:* Tài liệu định nghĩa thông tin không tuân thủ cấu trúc dữ liệu IFC, thiếu các ICT protocol đồng bộ, hoặc thiết lập thông số vượt ngoài ngưỡng tới hạn (critical threshold).
-*   **⚠️ RK_50_60_28 — Use-Risk (Rủi ro vận hành):**
-    *   *Điều kiện kích hoạt:* Thiếu Mô hình Thông tin Tài sản (AIM) hoàn thiện hoặc thiếu các cơ chế kiểm tra chéo, dẫn đến nguy cơ đứt gãy "Trí Nhớ Số" của tòa nhà thư viện (`En_25_70_47`).
-
-### Trụ cột 3: Cưỡng chế Unique ID Bất biến & Đối soát 3 Chiều
-Bảo toàn khả năng truy nguyên số-vật lý thông qua mã định danh duy nhất xuyên suốt vòng đời tài sản.
-
-1.  **Gán ID từ pha khởi đầu BBP-A0:**
-    *   Tất cả tài sản vật lý và số phải được cấp và khóa Unique ID bất biến ngay từ pha ý tưởng và thiết kế sơ bộ (`BBP-A0`). Không được phép đổi ID khi chuyển sang các pha sau (`A1` đến `C2`).
-2.  **Đối soát 3 chiều (3-Way Traceability Check):**
-    *   Agent thực hiện kiểm tra chéo tính đồng nhất thông tin của Unique ID trên 3 phương tiện:
-        $$\text{Unique ID trên Bản vẽ Thiết kế} \equiv \text{Unique ID trong Hệ thống FM (AIM)} \equiv \text{Mã Unique ID ghi trên Biển hiệu thực tế tại công trình}$$
-    *   Nếu có bất kỳ sự sai lệch nào về mặt ký tự hoặc trạng thái $\rightarrow$ Đánh dấu **Không Đạt** và yêu cầu hiệu chỉnh.
+## 🛡️ 1. Quét Bảo Mật & Nạp Nguồn
+- Đọc danh sách nguồn tài liệu được cung cấp (tệp tin cục bộ, URL hoặc video).
+- Chạy quét bảo mật qua `scripts/maskara.py` đối với các tệp tin cục bộ để tránh lộ khóa API.
+- Nạp nguồn vào Google NotebookLM thông qua CLI helper (`scripts/notebooklm_cli.py`).
 
 ---
 
-## 📝 Quy trình Cảnh báo & Định dạng Đầu ra (Output Template)
-
-Khi thực hiện Audit hồ sơ, Agent phải xuất báo cáo theo mẫu dưới đây:
-
-### 📑 BÁO CÁO KIỂM DUYỆT GOVERNANCE
-
-#### 1. Bảng đánh giá Sợi Chỉ Vàng (Golden Thread Audit)
-*   **Mã tài liệu kiểm duyệt:** [Mã hồ sơ]
-*   **Cấp độ an ninh thông tin:** ST2 [Đạt / Không Đạt - Lý do]
-*   **Change Log Traceability:** [Đạt / Không Đạt - Nêu rõ lịch sử thay đổi đã được ghi nhận hay chưa]
-*   **Đoạn Đò-3 Compliance:** [Đạt / Không Đạt - Đánh giá rủi ro LMS vendor lock-in]
-
-#### 2. Kết quả Quét Sợi Chỉ Đỏ (Red Thread Risk Matrix)
-| Mã Rủi Ro | Trạng thái phát hiện | Mô tả chi tiết lỗ hổng thông tin | Mức độ nghiêm trọng | Biện pháp giảm thiểu yêu cầu |
-| :--- | :--- | :--- | :--- | :--- |
-| **RK_50_40_35** | [Phát hiện / Không] | [Ghi rõ nếu thiếu người nhận bàn giao ở C2] | [Cao / Trung bình / Thấp] | [Hành động khắc phục cụ thể] |
-| **RK_10_70_04** | [Phát hiện / Không] | [Ghi rõ nếu thiếu đội FM ở mốc C1] | [Cao / Trung bình / Thấp] | [Hành động khắc phục cụ thể] |
-| **RK_50_40_45** | [Phát hiện / Không] | [Ghi rõ lỗi sai cấu trúc dữ liệu hoặc ICT protocol] | [Cao / Trung bình / Thấp] | [Hành động khắc phục cụ thể] |
-| **RK_50_60_28** | [Phát hiện / Không] | [Ghi rõ nguy cơ đứt gãy AIM hoặc mất Trí Nhớ Số] | [Cao / Trung bình / Thấp] | [Hành động khắc phục cụ thể] |
-
-#### 3. Đối soát 3 Chiều Unique ID
-*   **Tổng số ID kiểm tra:** [Số lượng]
-*   **Tỷ lệ khớp 3 chiều:** [X%] (Bản vẽ $\leftrightarrow$ AIM $\leftrightarrow$ Thực tế)
-*   **Danh sách ID sai lệch (nếu có):**
-    *   `[Mã ID]`: [Mô tả chi tiết sai lệch, ví dụ: "Trực quan thực tế ghi ID-105 nhưng AIM ghi ID-105-A"]
-
-#### 4. KẾT LUẬN CHUNG
-*   **Trạng thái phê duyệt:** [PHÊ DUYỆT / TỪ CHỐI / PHÊ DUYỆT CÓ ĐIỀU KIỆN]
-*   **Lý do chính:** [Tóm tắt ngắn gọn 1-2 câu]
-
+## 📚 2. Chưng Cất Tri Thức
+- Chạy lệnh sinh `study-guide` hoặc `report` của CLI helper để kết xuất cẩm nang tri thức tổng hợp Markdown sạch vào `.md/knowledge/`.
+- Đọc tệp cẩm nang này để nắm rõ toàn bộ logic, patterns và API của công cụ cần tạo skill.
 
 ---
 
-# Skill: bigbim-rase
-
----
-name: bigbim-rase
-description: Tự động phân tích RASE (Requirement, Applicability, Selection, Exception) cho dự án BIM dựa trên sơ đồ dữ liệu IFC4X3 và bộ Quantity Take-Off (Qto_xxx).
-applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Quản lý thông tin"
-bundle: "_core"
----
-
-# BIGBIM RASE Analyzer Skill
-
-> **Vai trò**: Chuyên gia Phân tích & Kiểm duyệt RASE tối cao của BIGBIM.
-> **Sứ mệnh**: Tự động hóa quá trình phân tích yêu cầu kỹ thuật (Requirements), đối chiếu đối tượng áp dụng (Applicability), lựa chọn thuộc tính IFC tương ứng (Selection), và loại trừ ngoại lệ (Exception) theo chuẩn dữ liệu **IFC4X3** và bộ Quantity Take-Off (`Qto_xxx`).
-
----
-
-## 📚 BIGBIM Method KB — Tài liệu tham chiếu
-
-> Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
-
-| Article | Nội dung cốt lõi |
-|:--------|:----------------|
-| `[air-guide.md](https://example.com/bigbim-rase/air-guide.md)` | AIR structure, 20 requirements, mapping AIR→IFC Psets |
-| `[oir-guide.md](https://example.com/bigbim-rase/oir-guide.md)` | OIR framework, 12 objectives, OIR→AIR traceability |
-| `[ifc-pset-map.md](https://example.com/bigbim-rase/ifc-pset-map.md)` | Bảng ánh xạ IFC4X3 Psets đầy đủ theo AIR categories |
-| `[ids-validation.md](https://example.com/bigbim-rase/ids-validation.md)` | IDS buildingSMART, validation workflow, template |
-| `[chunks/ISO_19650_VN/](https://example.com/chunks/ISO_19650_VN/)` | ISO 19650-1/2/3 chunks — tra điều khoản cụ thể |
-
-**KB Root:** `[bigbim_method_path]/.md/`  
-**Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
-
----
-
-## Hub & Execution Context
-
-*   **Skill Path**: `.agents/skills/bigbim-rase/SKILL.md`
-*   **Trigger Keywords**: `rase`, `phân tích rase`, `ifc property`, `pset map`, `IFC4X3`, `Qto_SpaceBaseQuantities`, `Qto_WallBaseQuantities`, `IfcPropertySet`, `IfcObject`, `IfcRelDefinesByProperties`
-
----
-
-## 🛠️ Tri thức Kỹ thuật Lõi (IFC4X3 Property Mapping)
-
-Khi thực hiện phân tích thuộc tính IFC, Agent **bắt buộc** phải tuân thủ nghiêm ngặt mô hình quan hệ dữ liệu của schema **ISO 16739-1:2024 (IFC4X3)**:
-
-### 1. Cơ chế gán Property Set (`IfcPropertySet` $\rightarrow$ `IfcObject`)
-AI Agent không được phép gán thuộc tính trực tiếp vào đối tượng vật lý. Mọi thuộc tính phải được nhóm lại trong một `IfcPropertySet` (Pset) và liên kết với thực thể `IfcObject` thông qua đối tượng quan hệ trung gian **`IfcRelDefinesByProperties`**:
-
-```
-[IfcPropertySet] ──(gán bởi)──> [IfcRelDefinesByProperties] ──(trỏ tới)──> [IfcObject]
-```
-
-*   **Pset Yêu cầu:** `Pset_SpaceOccupancyRequirement` (Quy định các yêu cầu sử dụng không gian).
-*   **Pset Kỹ thuật chuyên ngành:** Các Pset được phân loại cụ thể theo bảng RASE: Comfort, Energy, Lab.
-
-### 2. Định nghĩa Dữ liệu Khối lượng (Quantity Take-Off - Qto)
-Đối với các thông số khối lượng hình học thực tế, Agent phải sử dụng Resource Schemas nằm dưới phân vùng `IFC_11_8_Resource_definition_data_schemas`:
-*   **Khối lượng Không gian:** Sử dụng bộ thuộc tính `Qto_SpaceBaseQuantities` (Diện tích sàn, thể tích không gian, diện tích tường bao quanh...).
-*   **Khối lượng Cấu kiện:** Sử dụng các bộ tương ứng như `Qto_WallBaseQuantities` cho tường, `Qto_SlabBaseQuantities` cho sàn.
-
----
-
-## ⚙️ Quy trình thực thi của AI Agent (Execution Logic)
-
-Khi nhận yêu cầu phân tích RASE hoặc thiết lập bản đồ thuộc tính Pset từ người dùng, Agent thực hiện chính xác theo 4 bước sau:
-
-### Bước 1: Trích xuất Dữ liệu đầu vào
-1.  Đọc văn bản yêu cầu kỹ thuật hoặc quy chuẩn thiết kế đầu vào (ví dụ: Quy chuẩn tiện nghi nhiệt, tiết kiệm năng lượng).
-2.  Xác định các thông số/chỉ số kỹ thuật cần kiểm soát.
-
-### Bước 2: Phân tích RASE cấu trúc
-Phân rã văn bản kỹ thuật thành 4 tầng logic của ma trận RASE:
-
-*   **R - Requirement (Yêu cầu):** Chỉ số/Thông số kỹ thuật tối thiểu hoặc tối đa bắt buộc phải đạt được (ví dụ: *"Nhiệt độ phòng Lab phải duy trì ở mức 22°C"* $\rightarrow$ Yêu cầu nhiệt độ = 22).
-*   **A - Applicability (Khả năng áp dụng):** Thực thể IFC cụ thể chịu sự điều chỉnh của yêu cầu này (ví dụ: `IfcSpace` có kiểu chức năng là `LABORATORY`).
-*   **S - Selection (Lựa chọn thuộc tính):** Khai báo chính xác thuộc tính IFC4X3 sẽ lưu trữ thông số này. 
-    *   *Ví dụ:* Thuộc tính `TargetTemperature` nằm trong `Pset_SpaceOccupancyRequirement` gán vào `IfcSpace` thông qua `IfcRelDefinesByProperties`.
-*   **E - Exception (Ngoại lệ):** Các điều kiện loại trừ không cần áp dụng quy tắc (ví dụ: *"Không áp dụng cho phòng kho phụ trợ hoặc không gian đệm"* $\rightarrow$ Ngoại trừ `IfcSpace` có thuộc tính `SpaceUsage` = `STORAGE`).
-
-### Bước 3: Ánh xạ Property Set & Quantity Map (Pset Mapping)
-Thiết lập bảng ánh xạ thuộc tính theo cấu trúc chuẩn:
-
-| Khái niệm RASE | Thực thể IFC4X3 | Property Set (Pset) | Tên thuộc tính IFC | Kiểu dữ liệu | Bộ Qto liên quan |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| Tiện nghi Nhiệt độ | `IfcSpace` | `Pset_SpaceOccupancyRequirement` | `TargetTemperature` | `IfcThermodynamicTemperatureMeasure` | - |
-| Thể tích thông gió | `IfcSpace` | `Pset_SpaceAirQualityRequirements` | `FreshAirFlowRate` | `IfcVolumetricFlowRateMeasure` | `Qto_SpaceBaseQuantities.GrossVolume` |
-
-### Bước 4: Kiểm duyệt chất lượng (Quality Assurance)
-Trước khi trả kết quả, Agent tự đối chiếu với 2 nguyên tắc quản trị tối cao của BIGBIM:
-1.  **Sợi chỉ Đỏ (Red Thread):** Thông tin RASE đã đáp ứng đầy đủ các tiêu chuẩn kỹ thuật cốt lõi tối thiểu chưa?
-2.  **Sợi chỉ Vàng (Golden Thread):** Các thuộc tính gán vào mô hình đã có Unique ID liên kết đồng nhất từ giai đoạn `BBP-A0` để bảo đảm khả năng cập nhật "Trí Nhớ Số" chưa?
-
----
-
-## 📝 Định dạng đầu ra bắt buộc (Output Template)
-
-Kết quả phân tích RASE phải được trả về dưới dạng bảng Markdown sạch sẽ kèm theo định dạng JSON cấu trúc để nạp vào cơ sở dữ liệu:
-
-```json
-[
-  {
-    "requirement_code": "RASE-REQ-001",
-    "concept_name": "Tiện nghi nhiệt phòng Lab",
-    "requirement": "Nhiệt độ duy trì 22°C (sai số ±1°C)",
-    "applicability": "IfcSpace[SpaceType='LABORATORY']",
-    "selection": {
-      "property_set": "Pset_SpaceOccupancyRequirement",
-      "property_name": "TargetTemperature",
-      "data_type": "IfcThermodynamicTemperatureMeasure",
-      "relation": "IfcRelDefinesByProperties"
-    },
-    "exception": "IfcSpace[SpaceUsage='STORAGE']"
-  }
-]
-```
-
-
----
-
-# Skill: bigbim-risk
-
----
-name: bigbim-risk
-description: Phát hiện "Mâu thuẫn thông tin" (Information Conflict) phi hình học tại bước phối hợp thông tin V2 - Coordination, vượt ngoài giới hạn Clash Detection truyền thống.
-applies_to:
-  - "Quản lý thông tin"
-  - "Thẩm tra thiết kế"
-bundle: "_core"
----
-
-# BIGBIM Risk & Information Conflict Audit Skill
-
-> **Vai trò**: Chuyên gia Quét Rủi ro & Tối ưu hóa Phối hợp Thông tin (AEC Coordination Auditor) tối cao của BIGBIM.
-> **Sứ mệnh**: Triệt tiêu các "mâu thuẫn thông tin" phi hình học, lấp đầy các khoảng trống dữ liệu vô hình nằm giữa các giai đoạn vòng đời dự án, bảo vệ tính nhất quán của mô hình AIM trước khi bàn giao.
-
----
-
-## 📚 BIGBIM Method KB — Tài liệu tham chiếu
-
-> Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
-
-| Article | Nội dung cốt lõi |
-|:--------|:----------------|
-| `risk-register.md` | `[bigbim_method_path]/.md/knowledge/bigbim-risk/risk-register.md` | Risk Register format, scoring matrix, BIGBIM risk IDs |
-| `risk-categories.md` | `[bigbim_method_path]/.md/knowledge/bigbim-risk/risk-categories.md` | 5 risk categories — Information, Geometry, Process, Legal, Asset |
-| `v-gates.md` | `[bigbim_method_path]/.md/knowledge/bigbim-governance/v-gates.md` | V2 Coordination Gate — go/no-go criteria cho clash audit |
-| `ifc-pset-map.md` | `[bigbim_method_path]/.md/knowledge/bigbim-rase/ifc-pset-map.md` | IFC property mapping — context cho information conflict detection |
-
-**KB Root:** `[bigbim_method_path]/.md/`  
-**Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
-
----
-
-## Hub & Execution Context
-
-*   **Skill Path**: `.agents/skills/bigbim-risk/SKILL.md`
-*   **Trigger Keywords**: `mâu thuẫn thông tin`, `information conflict`, `rủi ro thông tin`, `V2 coordination`, `clash audit`, `gap detection`, `va chạm vật lý`, `không gian lắp đặt`, `không gian bảo trì`
-
----
-
-## 🛠️ Tri thức Kỹ thuật Lõi (Information Conflict Framework)
-
-Khi thực hiện kiểm duyệt chéo hoặc thẩm tra hồ sơ phối hợp, Agent **bắt buộc** phải phân biệt rõ ràng hai tư duy kiểm soát chất lượng dưới đây:
-
-### 1. Phân biệt Clash Detection và Mâu thuẫn thông tin (Information Conflict)
-*   **Clash Detection truyền thống (Level 1 va chạm):** Chỉ quét các va chạm hình học (geometry clash) hữu hình bằng mắt thường hoặc bằng thuật toán giao cắt 3D (ví dụ: đường ống đi xuyên qua dầm mà không có lỗ mở).
-*   **Mâu thuẫn thông tin BIGBIM (Level 2 & Logic):** Nhắm đến các **khoảng trống vô hình (gaps)** giữa các lớp dữ liệu kỹ thuật và điều kiện vật lý thực tế tại bước phối hợp **`V2 - Coordination`**. Những mâu thuẫn này không hề hiển thị va chạm trên mô hình 3D nhưng lại gây ra lỗi nghiêm trọng khi thi công thực tế.
-
-### 2. Hai nhóm mâu thuẫn thông tin chính
-
-#### Nhóm A: Mâu thuẫn không gian và thời gian
-*   **Cấp độ 1 (Va chạm vật lý):** Hai thành phần kỹ thuật chiếm giữ cùng một tọa độ không gian tại cùng một thời điểm.
-*   **Cấp độ 2 (Thiếu không gian thao tác/lắp đặt):** Trên mô hình 3D, hai thành phần kỹ thuật hoàn toàn đứng độc lập và cách nhau một khoảng (không hề có va chạm hình học). Tuy nhiên, **khoảng hở thực tế không đủ điều kiện kỹ thuật** để nhân công đưa tay/dụng cụ vào thực hiện lắp đặt, hoặc không đủ không gian mở cửa tủ điện, vận hành, bảo trì thiết bị sau này.
-
-#### Nhóm B: Mâu thuẫn Logic Thuộc tính (Attribute logic conflict)
-*   Sự không nhất quán về mặt dữ liệu phi hình học giữa các giai đoạn của vòng đời thông tin **BBP**.
-*   *Ví dụ điển hình:* Thông số công suất thiết bị thiết kế ở giai đoạn `BBP-B1` xung đột hoặc không khớp với mã hiệu sản phẩm mua sắm được phê duyệt ở giai đoạn `BBP-B2`, hoặc Unique ID của thiết bị bị thay đổi cấu trúc khi đi qua các pha.
-
----
-
-## ⚙️ Quy trình thực thi của AI Agent (Execution Logic)
-
-Khi nhận hồ sơ phối hợp thiết kế (AEC Coordination Matrix) hoặc mô hình thông tin, Agent thực hiện chính xác theo 4 bước sau:
-
-### Bước 1: Quét Va chạm Vật lý (Level 1 Geometry Clash)
-*   Xác định các giao cắt hình học trực tiếp giữa các bộ môn (Kiến trúc, Kết cấu, Cơ điện MEP, PCCC).
-*   Ghi nhận tọa độ, hệ thống liên quan và Unique ID của các cấu kiện xung đột.
-
-### Bước 2: Quét Thiếu Không gian lắp đặt/thao tác (Level 2 Non-Geometric Gaps)
-*   Đối soát khoảng cách an toàn (clearance distance) xung quanh các thiết bị lớn (máy bơm, tủ điện, AHU, máy chiller).
-*   *Quy tắc kiểm duyệt:*
-    *   Tủ điện: Mặt trước bắt buộc phải có không gian trống $\ge 900\text{mm}$ để mở cửa tủ và thao tác.
-    *   Đường ống kỹ thuật trần: Khoảng cách trống tối thiểu đến dầm/sàn bê tông $\ge 150\text{mm}$ phục vụ nhân công luồn tay siết đai ốc.
-    *   Nếu khoảng cách này bị vi phạm mặc dù mô hình 3D báo "Không va chạm" $\rightarrow$ Đánh dấu lỗi **Mâu thuẫn thông tin Level 2**.
-
-### Bước 3: Đối soát logic thuộc tính (BBP Phase Consistency Check)
-*   So sánh bảng dữ liệu thiết bị (Equipment Schedule) giữa bản vẽ thiết kế (`BBP-B1`) và danh mục mua sắm vật tư thực tế (`BBP-B2`).
-*   Kiểm tra xem Unique ID gán từ `BBP-A0` có bị thay đổi cấu trúc ký tự hay không.
-*   Nếu có sự không nhất quán $\rightarrow$ Đánh dấu lỗi **Mâu thuẫn logic thuộc tính**.
-
-### Bước 4: Đánh giá tác động và Đề xuất giải pháp
-*   Phân tích hậu quả nếu không xử lý mâu thuẫn (chậm tiến độ, tăng chi phí sửa chữa, hay gián đoạn vận hành).
-*   Đề xuất giải pháp cụ thể (Ví dụ: dịch chuyển cao độ ống gió, điều chỉnh kích thước lỗ mở rầm, hoặc chuẩn hóa lại mã sản phẩm mua sắm).
-
----
-
-## 📝 Định dạng đầu ra bắt buộc (Output Template)
-
-Kết quả phân tích mâu thuẫn phải được trả về dưới dạng bảng Markdown sạch sẽ kèm theo định dạng JSON cấu trúc để nạp vào cơ sở dữ liệu dự án:
-
-```json
-[
-  {
-    "conflict_id": "INF-CON-001",
-    "conflict_type": "Level 2 Space Gap",
-    "phase_origin": "V2 - Coordination",
-    "description": "Thiếu không gian mở cửa tủ điện phòng kỹ thuật. Trên mô hình 3D không va chạm với ống gió trần, nhưng khoảng hở mặt trước tủ chỉ đạt 450mm (yêu cầu tối thiểu 900mm).",
-    "impact": "Nhân viên FM không thể mở hết cửa tủ điện để thực hiện bảo trì, vi phạm tiêu chuẩn an toàn vận hành.",
-    "entities_involved": [
-      {
-        "entity_type": "IfcDistributionFlowElement",
-        "unique_id": "HLB-EQ-EL-045",
-        "role": "Tủ điện phân phối"
-      },
-      {
-        "entity_type": "IfcDuctSegment",
-        "unique_id": "HLB-MEP-HVAC-908",
-        "role": "Ống gió hồi trần"
-      }
-    ],
-    "proposed_mitigation": "Dịch chuyển tủ điện sang phải 500mm hoặc nâng cao độ ống gió lên thêm 150mm để giải phóng không gian thao tác."
-  }
-]
-```
-
-
----
-
-# Skill: bigbim-vbpl-digest
-
----
-name: bigbim-vbpl-digest
-description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024, ISO 19650-1/2/3/5, QCVN liên quan.
-applies_to:
-  - "Quản lý thông tin"
-  - "Tư vấn pháp luật xây dựng"
-  - "BIM Execution"
-bundle: "_core"
----
-
-# BIGBIM VBPL Digest Skill
-
-> **Vai trò**: Chuyên gia Pháp lý BIM — tra cứu điều khoản, tóm tắt yêu cầu, giải thích nghĩa vụ theo VBPL hiện hành.
-> **Sứ mệnh**: Trả lời câu hỏi "quy định nào yêu cầu X?" và "điều Y của NĐ/ISO nói gì?" một cách chính xác, có trích dẫn.
-
----
-
-## 📚 BIGBIM Method KB — Nguồn dữ liệu
-
-> Skill này **TRA CỨU TRỰC TIẾP** từ chunks của tài liệu gốc:
-
-| Nguồn | Layer | Path |
-|:------|:------|:-----|
-| NĐ 175/2024 — 111 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/VBPL_BIM_VN/175_2024_ND-CP_*/` |
-| ISO 19650-1 — 15 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/1-AP01-*/` |
-| ISO 19650-2 — 12 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/2-AP01-*/` |
-| ISO 19650-3 — 12 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/3-AP01-*/` |
-| ISO 19650-5 — 15 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/5-AP01-*/` |
-| Chunk Master Index | Layer 2 | `[bigbim_method_path]/.md/chunks/INDEX.md` |
-
-**Workflow tra cứu:**
-1. Đọc `chunks/INDEX.md` để xác định nguồn phù hợp
-2. Đọc `00_CHUNK_INDEX.md` trong folder nguồn để locate chunk
-3. Đọc chunk cụ thể → trích dẫn điều khoản chính xác
-4. Cross-reference với KB articles Layer 3 nếu cần synthesis
-
----
-
-## Hub & Execution Context
-
-*   **Skill Path**: `.agents/skills/bigbim-vbpl-digest/SKILL.md`
-*   **Trigger Keywords**: `NĐ 175`, `nghị định BIM`, `Nghị định 175`, `điều khoản BIM`, `ISO 19650`, `điều`, `khoản`, `luật xây dựng BIM`, `pháp lý BIM`, `quy định nộp BIM`, `bắt buộc BIM`, `thời điểm nộp`
-
----
-
-## 🎯 Quy trình thực thi của AI Agent
-
-### Bước 1 — Phân tích câu hỏi
-
-Xác định:
-- **Nguồn**: NĐ 175 hay ISO 19650-1/2/3/5?
-- **Loại query**: Tra điều khoản cụ thể (số điều/khoản) hay tìm theo chủ đề?
-- **Output format**: Trích dẫn nguyên văn, tóm tắt, hay so sánh?
-
-### Bước 2 — Locate chunk
-
-```
-Nếu NĐ 175:
-  → chunks/VBPL_BIM_VN/175_2024_ND-CP_.../00_CHUNK_INDEX.md
-  → Tìm chunk theo keyword trong heading column
-
-Nếu ISO 19650:
-  → chunks/ISO_19650_VN/<phần>/00_CHUNK_INDEX.md
-  → Tìm theo section number (VD: "5.6 Tiến trình")
-```
-
-### Bước 3 — Đọc và tổng hợp
-
-- Đọc chunk liên quan (1-3 chunks tối đa)
-- Trích dẫn nguyên văn có số điều/khoản
-- Nêu rõ nghĩa vụ áp dụng cho ai, khi nào
-
-### Bước 4 — Output format chuẩn
+## 🧩 3. Khởi Tạo Cấu Trúc SKILL.md Đạt Chuẩn (ADR 0001, ADR 0040)
+Tạo thư mục tại `.agents/skills/ccba-<tên_skill_dạng_kebab_case>/SKILL.md` theo đúng bộ khung chuẩn:
 
 ```markdown
-## Câu trả lời
-
-**Nguồn**: NĐ 175/2024-NĐ-CP, Điều X, Khoản Y
-**Nguyên văn**: "..."
-
-**Tóm tắt**: [2-3 câu]
-
-**Áp dụng cho**: [đối tượng]
-**Thời điểm**: [khi nào bắt buộc]
-```
-
 ---
-
-## 📋 Mapping Chủ đề → Nguồn
-
-| Chủ đề | Nguồn chính | Chunks tham khảo |
-|:-------|:-----------|:----------------|
-| BIM bắt buộc từ khi nào | NĐ 175 Điều 8 | chunk_01–05 |
-| Yêu cầu nộp mô hình BIM | NĐ 175 Chương III | chunk_20–35 |
-| CDE, EIR, AIR | ISO 19650-2 Section 4-5 | chunk_04–09 |
-| Vận hành AIM | ISO 19650-3 Section 5 | chunk_06–12 |
-| Phân loại bảo mật thông tin | ISO 19650-5 Section 4-7 | chunk_06–10 |
-| Giấy phép xây dựng + BIM | NĐ 175 Chương VI | chunk_50–65 |
-| Nghiệm thu, hoàn công + BIM | NĐ 175 Chương VIII | chunk_80–95 |
-
-
+name: ccba-<tên-skill-kebab-case>
+description: <Mô tả ngắn gọn súc tích <= 180 ký tự>
+bundle: _core # _core | _software | _qc | _consulting | _bim
+disable-model-invocation: true # true cho ritual/tool skills, false nếu là master deep skill
 ---
+# <Tên Kỹ Năng In Hoa>
 
-# Skill: ccba-ai-pdf-preprocessor
-
----
-name: ccba-ai-pdf-preprocessor
-description: "Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking) và Tiling cho AI Vision."
-applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_qc"
----
-
-# CCBA AI PDF Preprocessor
-
-Skill này cung cấp các công cụ chuyên dụng để chuẩn bị tài liệu PDF trước khi gửi đến AI Gateway. Giúp giải quyết các lỗi `Payload Too Large`, lỗi trích xuất trên bản scan mờ, và tối ưu hóa chi tiết cho bản vẽ kỹ thuật.
-
-## Vai trò
-Đây là "bộ lọc" trung tâm cho toàn bộ platform. Bất kỳ Agent nào cần đọc PDF phức tạp (>30 trang hoặc có bản vẽ) đều nên sử dụng skill này.
-
----
-
-## Cài đặt
-```bash
-pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-pdf-prep"
-```
-
----
-
-## Các tính năng chính
-
-### 1. PDF Analyzer & Segmenter
-Phân tích cấu trúc file để biết trang nào là Text số, trang nào là Scan (ảnh), và trang nào là Bản vẽ (oversized).
-
-```python
-from ccba_pdf_prep import PDFAnalyzer
-
-analyzer = PDFAnalyzer()
-report = analyzer.analyze("path/to/document.pdf")
-
-# Lấy các đoạn trang cùng loại để định tuyến model
-segments = report.get_segments()
-for seg in segments:
-    print(f"Pages {seg.start_page}-{seg.end_page}: {seg.page_type}")
-```
-
-### 2. Intelligent Chunker
-Chia nhỏ PDF thành các khối nhỏ (mặc định 20 trang) để tránh lỗi Gateway Timeout hoặc Payload limit.
-
-```python
-from ccba_pdf_prep import split_pdf, get_blind_chunks
-from pathlib import Path
-
-source = Path("large_file.pdf")
-ranges = get_blind_chunks(total_pages=100, chunk_size=20)
-chunk_paths = split_pdf(source, ranges, output_temp_dir=Path("./temp"))
-```
-
-### 3. Vision Optimizer (Tiling)
-Dành riêng cho **Bản vẽ kỹ thuật (A0-A3)**. Thay vì resize ảnh làm mờ nét vẽ, skill này sẽ "xẻ" bản vẽ thành các mảnh (tiles) độ phân giải cao để AI Vision có thể đọc rõ từng con số, ghi chú.
-
-```python
-from ccba_pdf_prep.vision import VisionOptimizer
-from pathlib import Path
-
-# Xẻ trang 1 của bản vẽ thành các tile 1024x1024 ở 300 DPI
-tiles = VisionOptimizer.tile_page(
-    pdf_path=Path("drawing.pdf"),
-    page_num=0,
-    output_dir=Path("./tiles"),
-    dpi=300,
-    tile_size_px=1024
-)
-```
-
----
-
-## Khi nào nên dùng?
-- **File > 30 trang**: Dùng `get_blind_chunks` để xử lý song song.
-- **Hybrid PDF (Text + Scan)**: Dùng `get_segments` để chọn model Qwen cho text và Gemini OCR cho scan.
-- **Bản vẽ kỹ thuật**: Dùng `VisionOptimizer` để bóc tách thông tin QC bản vẽ.
-
----
-
-## Liên kết
-- **Source**: `packages/ccba-pdf-prep/`
-- **Dependencies**: `fitz` (PyMuPDF), `pypdf`.
-
-
----
-
-# Skill: ccba-ai-qc-batch-orchestrator
-
----
-name: CCBA AI QC Batch Orchestrator
-description: Điều phối quá trình quét Audit chất lượng hồ sơ thiết kế (QC) đa bộ môn (Arch, KC, MEP, PCCC) trên quy mô lớn, thao tác hàng loạt qua file Coordination Matrix.
-applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_qc"
----
-
-# CCBA AI QC Batch Orchestrator
-
-**Batch Orchestrator** tự động hóa dây chuyền kiểm soát chất lượng (QC Workflow) khi có nhiều danh mục hồ sơ hoặc nhiều tầng kỹ thuật cần kiểm tra. Lớp này điều phối song song các cuộc gọi AI để kiểm tra xung đột đa bộ môn (Multidisciplinary Audit), giúp tiết kiệm 90% thời gian chạy máy.
-
----
-
-## Hướng dẫn sử dụng
-
-Dữ liệu đầu vào của Orchestrator dựa trên file ma trận `Coordination_Matrix.csv` được sinh tự động bởi skill `ccba-ai-qc-discovery`.
-
-### Lệnh chạy:
-```bash
-python .agents/skills/ccba-ai-qc-batch-orchestrator/scripts/orchestrator.py --project-dir "[project_dir]" --matrix ".md/extracts/discovery/Project_Coordination_Matrix.csv" --concurrency 4
-```
-
----
-
-## Kiến trúc Hoạt động (Internal Logic)
-
-1. **Parser Module:** Phân tích cột `NormalizedLevel` và danh sách các tệp tin bản vẽ tương ứng trong `Coordination_Matrix.csv`.
-2. **Missing Document Handler:** Nếu một cấu kiện bị thiếu sheet, hoặc không tìm thấy trang thực tế thì tự động sinh ra một khung ảnh trắng `blank.png` làm fallback để tránh ngắt quãng pipeline.
-3. **Async Batcher:** Quản lý hàng chờ tác vụ (Task Queue), thực thi song song các cuộc gọi Quad-View (L01, L02...) lên AI Gateway.
-   - **Parallel Sub-agent Dispatch (ADR 0010):** Để tối ưu hóa thời gian chạy hàng loạt các tác vụ quét nặng, Orchestrator được cấu hình để spawn song song các subagents `ccba-research` chạy độc lập dưới nền cho từng dòng bản vẽ (Tầng/Zone) trong Coordination Matrix, sau đó thu thập kết quả để biên soạn báo cáo chung.
-4. **Integration Handoff:** Chuyển kết quả phân tích JSON về cho `IDOPReporter` để biên soạn thành báo cáo Markdown/Docx hoàn chỉnh.
-
-
----
-
-# Skill: ccba-ai-qc-discovery
-
----
-name: ccba-ai-qc-discovery
-description: Tự động quét hồ sơ PDF, nhận diện cấu trúc bản vẽ, tìm mục lục và xây dựng Ma trận Phối hợp (Coordination Matrix).
-applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_qc"
----
-
-# CCBA AI QC Discovery Skill
-
-Skill này tự động phân tích cấu trúc của bộ hồ sơ bản vẽ thiết kế, trích xuất mã bản vẽ (SheetNo) và phân loại theo tầng (Level) hoặc khu vực (Zone) để lập bản đồ dữ liệu cho dự án.
-
----
-
-## Tiêu chí hoàn thành (Completion Criteria)
-
-Tác vụ Discovery được coi là hoàn thành thành công khi và chỉ khi:
-- [ ] Đã quét qua danh mục bản vẽ và tạo thành công tệp tin ma trận phối hợp tại đường dẫn:
-  `[target_project]/.md/extracts/discovery/Coordination_Matrix.csv`
-- [ ] Tệp tin `Coordination_Matrix.csv` không rỗng và chứa đầy đủ các cột dữ liệu tối thiểu: `Level`, `NormalizedLevel`, `ArchitecturalSheet`, `StructuralSheet`, `MEPSheet`, `FireProtectionSheet`.
-
----
-
-## Hướng dẫn Vận hành
-
-### 1. Quét tìm mục lục
-Luôn ưu tiên đọc và phân tích 10 trang đầu của tệp PDF hồ sơ để tìm mục lục bản vẽ trước khi thực hiện cào dữ liệu toàn bộ tệp.
-
-### 2. Xử lý PDF dạng quét (Scanned PDF)
-NẾU bản vẽ ở dạng scan không có text layer $\rightarrow$ Bắt buộc kích hoạt chế độ `ocr-primary` trên AI Gateway để nhận diện chữ.
-
-### 3. Công cụ thực thi
-Chạy tập lệnh cào dữ liệu:
-```bash
-python .agents/skills/ccba-ai-qc-discovery/scripts/discovery_engine.py --target "[target_project]"
-```
-
-
----
-
-# Skill: ccba-ai-qc-integrated-audit
-
----
-name: ccba-ai-qc-integrated-audit
-description: Sử dụng AI Vision để đối soát đồng thời 4 bộ môn (Arch-KC-MEP-PCCC) qua hình ảnh Quad-View.
-applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_qc"
----
-
-# CCBA AI QC Integrated Audit Skill
-
-Skill này thực hiện kiểm tra xung đột đa bộ môn (Multi-disciplinary Clash Check) thông qua AI Vision đối với hình ảnh collage ghép từ 4 bản vẽ (Kiến trúc, Kết cấu, MEP, PCCC) trên cùng một cao độ/tầng.
-
----
-
-## Tiêu chí hoàn thành (Completion Criteria)
-
-1. **Tìm kiếm & Trích xuất Bản vẽ:**
-   - **Xác nhận:** Đã định vị và trích xuất thành công 4 tệp tin ảnh bản vẽ tương ứng của tầng được chỉ định dựa trên dữ liệu ma trận.
-2. **Ghép ảnh Quad-View:**
-   - **Xác nhận:** Sinh thành công tệp ảnh collage `quad_view.png` với bố cục lưới 2x2 rõ nét.
-3. **Phân tích AI:**
-   - **Xác nhận:** Nhận được phản hồi HTTP 200 từ AI Gateway sử dụng model hỗ trợ vision để cào lỗi thiết kế.
-4. **Lưu trữ kết quả:**
-   - **Xác nhận:** Kết quả phân tích (findings) được lưu trữ thành công dưới dạng JSON hoặc Markdown vào thư mục `.md/extracts/audit_batch/`.
-
----
-
-## Công cụ thực thi
-
-Quy trình ghép ảnh và điều phối AI Vision được xử lý qua script:
-```text
-.agents/skills/ccba-ai-qc-integrated-audit/scripts/semantic_audit_engine.py
-```
-
-
----
-
-# Skill: ccba-ai-qc-pccc-audit
-
----
-name: ccba-ai-qc-pccc-audit
-description: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ chế Semantic Map-Reduce.
-applies_to:
-  - "Quản lý chất lượng"
-  - "Thẩm tra thiết kế"
-bundle: "_qc"
----
-
-# CCBA AI QC PCCC Audit
-
-Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo và gộp kết quả đánh giá kỹ thuật đối với hồ sơ PCCC lớn, giúp khắc phục giới hạn context window của LLM và hiện tượng sinh ảo giác.
-
----
-
-## 🔍 Điều kiện Áp dụng
-
-### Khi nào sử dụng (When to use)
-- Sử dụng khi người dùng yêu cầu thẩm tra thiết kế phòng cháy chữa cháy (PCCC), hệ thống cơ điện (MEP), hoặc kiến trúc thoát nạn của công trình xây dựng.
-- Sử dụng để đối chiếu, kiểm tra sự tuân thủ quy chuẩn xây dựng Việt Nam (như QCVN 06, TCVN 3890, TCVN 2622).
-
-### Khi nào KHÔNG sử dụng (When NOT to use)
-- Tuyệt đối **KHÔNG** áp dụng kỹ năng này và **KHÔNG** nhắc đến các quy chuẩn PCCC (QCVN 06, TCVN 3890, TCVN 2622) khi người dùng hỏi các câu hỏi thông thường không liên quan đến thẩm tra PCCC (ví dụ: lập trình phần mềm, lắp đặt thiết bị gia dụng đơn giản, viết email công việc, giải toán...).
-- Đối với các yêu cầu không thuộc phạm vi thẩm tra PCCC, hãy trả lời trực tiếp và ngắn gọn theo đúng chủ đề người dùng yêu cầu.
-
----
-
-## Quy trình Map-Reduce
-
-- **Map 1 (Legal & Specs):** Đánh giá thuyết minh PCCC dựa trên quy chuẩn QCVN 06:2022/BXD, TCVN 3890:2023 và phản hồi của PC07.
-- **Map 2 (MEP Water):** So sánh chéo thông số thiết bị chữa cháy giữa bản vẽ MEP và thuyết minh.
-- **Map 3 (MEP Alarm vs Arch):** So sánh sơ đồ báo cháy và bản vẽ kiến trúc (vị trí đầu báo, đèn sự cố, lối thoát nạn).
-- **Reduce:** Tổng hợp các lỗi phát hiện được, loại bỏ trùng lặp và xuất thành báo cáo Markdown hoàn chỉnh theo mẫu PC13 (NĐ 105/2025/NĐ-CP).
-- **Ràng buộc đối soát đệ quy (ADR 0010):** Đối với các lỗi nghi vấn vi phạm quy chuẩn (như QCVN 06 hoặc TCVN 3890), Agent **không tự động** kích hoạt research. Hãy đề xuất người dùng chạy `/ccba-research [tên_quy_chuẩn]` để đối soát chéo dưới nền nhằm kiểm soát chi phí API.
-
----
-
-## Hướng dẫn Vận hành
-
-### 1. Điều kiện tiền quyết
-Toàn bộ tài liệu PDF phải được chạy qua `ccba-ai-pdf-preprocessor` để chuyển đổi sang định dạng văn bản `.md`.
-
-### 2. Lệnh chạy script:
-Xác định đường dẫn Hub (`hub_path`) và chạy lệnh:
-```bash
-python "[hub_path]/.agents/skills/ccba-ai-qc-pccc-audit/scripts/audit_engine.py" \
-    --tm "đường/dẫn/đến/thuyet_minh.md" \
-    --arch "đường/dẫn/đến/kien_truc.md" \
-    --mep "đường/dẫn/đến/mep.md" \
-    --gopy "đường/dẫn/đến/pc07.md" \
-    --model "qwen-local-primary" \
-    --out "Bao_Cao_Tham_Dinh_PCCC.md"
-```
-*(Nếu không có văn bản góp ý của PC07, truyền một chuỗi rỗng `--gopy ""`)*
-
-
----
-
-# Skill: ccba-ai-qc-pipeline-orch
-
----
-name: ccba-ai-qc-pipeline-orch
-description: Tự động chạy toàn trình chuỗi kiểm soát chất lượng (QC) đa bộ môn (Discovery -> Orchestrator -> Báo cáo).
-disable-model-invocation: true
-category: utilities
-keywords: [qc, pipeline, orchestrator, automatic-audit]
-metadata:
-  author: CCBA
-  version: "1.1.0"
----
-
-# Quy trình Chạy QC Pipeline Tự động (Run QC Pipeline)
-
-Kỹ năng này điều phối việc thực thi toàn trình chuỗi kiểm soát chất lượng hồ sơ thiết kế bản vẽ qua 3 giai đoạn: Nhận diện cấu trúc, Quét xung đột đồng thời, và Xuất báo cáo tổng hợp.
-
-## Các bước thực hiện:
-
-1. **Xác định thư mục dự án mục tiêu (Target Project Check)**:
-   - Đọc tệp cấu hình `.md/workspace_context.yaml` để lấy đường dẫn dự án (`target_project`).
-   - Nếu có nhiều đường dẫn dự án đang hoạt động, yêu cầu người dùng chỉ định.
-   - **Tiêu chí hoàn thành:** Xác định duy nhất một đường dẫn thư mục dự án đích hợp lệ và kiểm tra thư mục này có tồn tại cục bộ.
-
-2. **Kích hoạt chuỗi QC Pipeline (Pipeline Execution)**:
-   - Xác định đường dẫn Hub (`hub_path`) từ biến môi trường `CCBA_HUB_PATH` hoặc cấu hình Spoke.
-   - Thực thi tuần tự hai lệnh sau:
-     * **Discovery Engine** (Bóc tách PDF bản vẽ và sinh ma trận phối hợp):
-       ```bash
-       python "[hub_path]/.agents/skills/ccba-ai-qc-discovery/scripts/discovery_engine.py" --target "[target_project]"
-       ```
-     * **Batch Orchestrator** (Quét xung đột đa bộ môn theo ma trận):
-       ```bash
-       python "[hub_path]/.agents/skills/ccba-ai-qc-batch-orchestrator/scripts/orchestrator.py" --project-dir "[target_project]" --matrix "[target_project]/.md/extracts/discovery/Coordination_Matrix.csv" --out-dir "[target_project]/.md/extracts/audit_batch" --model "gemini-3.1-pro-low"
-       ```
-   - **Tiêu chí hoàn thành:** Cả hai lệnh chạy thành công không có lỗi hệ thống, sinh ra tệp ma trận và kết quả quét tại thư mục đầu ra đích.
-
-3. **Trình bày Báo cáo Tổng hợp (Report Review)**:
-   - Truy cập và đọc tệp báo cáo tổng hợp tại:
-     `[target_project]/.md/extracts/audit_batch/BATCH_QC_Report_Auto.md`
-   - Sử dụng `view_file` trích xuất 50 dòng đầu tiên (chứa bảng Heat Map đánh giá rủi ro) và hiển thị trực tiếp trong cuộc hội thoại để Kỹ sư xem xét.
-   - **Tiêu chí hoàn thành:** Bảng Heat Map rủi ro từ báo cáo được hiển thị rõ ràng trên giao diện chat cho người dùng kiểm tra.
-
-## Tiêu chuẩn Thực thi (Best Practices)
-
-- **Định danh đường dẫn:** Luôn sử dụng dấu ngoặc kép bọc quanh các biến đường dẫn (`[hub_path]`, `[target_project]`) để tránh lỗi khoảng trắng trên hệ thống Windows.
-- **Xử lý lỗi:** Nếu lệnh Discovery hoặc Orchestrator bị lỗi, dừng ngay pipeline và in chi tiết mã lỗi để Kỹ sư xử lý.
-
----
-*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-
-*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
-
-
----
-
-# Skill: ccba-ai-qc-reporter
-
----
-name: ccba-ai-qc-reporter
-description: Tổng hợp dữ liệu từ quá trình Discovery và Audit thành báo cáo kỹ thuật chính quy.
-applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_qc"
----
-
-# CCBA AI QC Reporter
-
-Reporter chịu trách nhiệm tổng hợp các kết quả Audit thô từ AI (JSON/Markdown lẻ) thành một báo cáo Đường găng Kỹ thuật (Technical Critical Path Report) hoàn chỉnh phục vụ quản trị dự án.
-
----
-
-## Tiêu chí hoàn thành (Completion Criteria)
-
-Tác vụ sinh báo cáo được coi là hoàn thành thành công khi và chỉ khi:
-- [ ] Đã sinh tệp báo cáo tổng hợp Markdown tại:
-  `[target_project]/.md/extracts/audit_batch/BATCH_QC_Report_Auto.md`
-- [ ] Tệp báo cáo chứa đầy đủ các phân đoạn chính quy: bảng Heat Map rủi ro tổng hợp (High/Medium/Low), danh sách chi tiết lỗi đụng độ kỹ thuật có liên kết ảnh minh chứng, và các đề xuất/kiến nghị hành động.
-
----
-
-## Công cụ thực thi
-
-Quy trình biên tập và tổng hợp báo cáo được xử lý qua script:
-```text
-.agents/skills/ccba-ai-qc-reporter/scripts/reporter_engine.py
-```
-
-
----
-
-# Skill: ccba-legal-intel
-
----
-name: ccba-legal-intel
-description: Autonomous legal intelligence agent to crawl, diff, and generate compliance checklists from Vietnamese legal documents.
----
-
-# Skill: CCBA Legal Intelligence Crawler & Packager (`ccba-legal-intel`)
-
-Kỹ năng này hướng dẫn Agent tự động thực hiện quy trình kết nối Chrome CDP, cào dữ liệu từ Thư viện Pháp luật (TVPL), phân tích đóng gói thành cấu trúc OKF Bundle lồng nhau, phân rã phụ lục, vá liên kết tương đối và đăng ký văn bản mới vào cơ sở tri thức cục bộ.
-
----
-
-## 1. Quy chuẩn & Rào cản Kỹ thuật (Technical Guardrails)
-
-Để đảm bảo crawler chạy ổn định, bảo mật và tương thích tốt trên môi trường Windows/Linux, Agent bắt buộc phải tuân thủ nghiêm ngặt các quy tắc sau:
-
-### 1.1. Rào cản Bảo mật & Quản lý Thông tin xác thực
-*   **Không hardcode credentials**: Tuyệt đối không lưu tài khoản và mật khẩu trực tiếp trong mã nguồn.
-*   **Cơ chế đọc cấu hình**: Đọc thông tin tài khoản TVPL thông qua biến môi trường hệ thống hoặc file `.env`:
-    *   `TVPL_USERNAME`: Tài khoản đăng nhập TVPL.
-    *   `TVPL_PASSWORD`: Mật khẩu đăng nhập TVPL.
-    *   *Yêu cầu*: Báo lỗi và dừng quy trình nếu các biến môi trường này chưa được cấu hình (không sử dụng cơ chế fallback mặc định trong repo).
-
-
-### 1.2. Rào cản Đường dẫn Hệ thống (Windows MAX_PATH Prevention)
-*   **Giới hạn độ dài Slug**: Để tránh lỗi `FileNotFoundError` khi ghi các tệp phụ lục nằm sâu trên hệ thống Windows (giới hạn 260 ký tự), hàm `sanitize_slug` của packager **bắt buộc** phải giới hạn độ dài slug tối đa là **60 ký tự**.
-*   **Cắt chuỗi an toàn**:
-    ```python
-    if len(text) > 60:
-        text = text[:60].rstrip("_")
-    ```
-
-### 1.3. Quy chuẩn Tích hợp OKF Bundle Lồng nhau (Parent-Child Flat Architecture)
-Văn bản pháp lý xây dựng Việt Nam được tổ chức theo mối quan hệ Phân cấp (Luật $\rightarrow$ Nghị định $\rightarrow$ Thông tư).
-*   **Luật gốc (Parent Law)**: Được đóng gói thành thư mục OKF độc lập tại gốc thư mục:
-    `\.md\legal_docs\<law_slug>\`
-*   **Văn bản hướng dẫn (Guiding Decrees/Circulars)**: Không tạo thư mục bundle cấp cao nhất riêng biệt. Tất cả các văn bản hướng dẫn ban hành kèm theo Luật **bắt buộc** phải được lưu trữ phẳng bên trong:
-    *   Tệp tin gốc và markdown: `\.md\legal_docs\<law_slug>\guiding_docs\<guiding_slug>.docx` (và `.md`)
-    *   Tệp phụ lục phân tách: `\.md\legal_docs\<law_slug>\guiding_docs\appendices\<guiding_slug>-phu_luc_xx.md`
-*   **Đăng ký Registry**: Cập nhật chính xác `file_path` và `markdown_path` trong `legal_registry.yaml` và `sources_registry.yaml` trỏ về đúng thư mục lồng này.
-
----
-
-## 2. Cấu trúc DOM & Thuật toán Trích xuất Lược đồ TVPL
-
-Khi thực hiện cào dữ liệu, Agent cần áp dụng các selector và thuật toán chuẩn hóa sau:
-
-### 2.1. Cấu trúc DOM Nội dung Văn bản
-*   **Tiêu đề**: `document.title`
-*   **Nội dung chính**: `#divContentDoc` (ưu tiên hàng đầu), `.content1`, `.contentDoc` (fallback).
-*   **Khử nhiễu**: Luôn gọi `cdp.handle_login()` và `cdp.close_popup()` trước khi trích xuất text để tránh bị các popup che khuất hoặc giới hạn toàn văn văn bản trực tuyến.
-*   **Sửa lỗi Race Condition**: Sau lệnh `Page.navigate`, bắt buộc phải đợi `1.5 giây` để trình duyệt thực sự chuyển trạng thái tải trang trước khi gọi lệnh `wait_ready()`.
-
-### 2.2. Ánh xạ Đồ thị Quan hệ Lược đồ (11 nhóm quan hệ)
-Khi cào trang Lược đồ (`Tab=LuocDo` hoặc `#tab4`), so khớp các tiêu đề mối quan hệ của TVPL theo bảng sau:
-
-| Tiêu đề tiếng Việt trên TVPL | Khóa ánh xạ của CCBA | Ý nghĩa |
-| :--- | :--- | :--- |
-| Văn bản bị sửa đổi bổ sung | `amends_docs` | Văn bản hiện tại bổ sung/sửa đổi cho các văn bản này |
-| Văn bản bị thay thế | `replaced_docs` | Văn bản hiện tại thay thế cho các văn bản cũ này |
-| Văn bản được dẫn chiếu | `referenced_docs` | Các văn bản được trích dẫn nội dung bên trong |
-| Văn bản được căn cứ | `basis_docs` | Căn cứ pháp lý để ban hành văn bản hiện tại |
-| Văn bản được hướng dẫn | `guided_docs` | Các văn bản cấp trên được văn bản này hướng dẫn |
-| Văn bản được hợp nhất | `consolidated_docs` | Các văn bản thành phần tạo nên văn bản hợp nhất này |
-| Văn bản hướng dẫn | `guiding_docs` | Các Nghị định, Thông tư chi tiết hóa văn bản này |
-| Văn bản hợp nhất | `consolidations` | Bản Văn bản Hợp nhất (VBHN) chính thức chứa văn bản này |
-| Văn bản sửa đổi bổ sung | `amended_by_docs` | Các văn bản mới sửa đổi/bổ sung một phần văn bản này |
-| Văn bản thay thế | `replaced_by_docs` | Văn bản mới thay thế hoàn toàn văn bản này |
-| Văn bản liên quan cùng nội dung | `related_docs` | Các văn bản liên quan cùng nội dung |
-
-*   **Chuẩn hóa so khớp**: Do TVPL có thể dùng tiêu đề có hoặc không có dấu phẩy (ví dụ: *Văn bản bị sửa đổi, bổ sung*), JavaScript kiểm tra **bắt buộc** phải loại bỏ toàn bộ dấu phẩy và khoảng trắng thừa trước khi so khớp:
-    ```javascript
-    let txt = (el.innerText || "").replace(/,/g, '').replace(/\s+/g, ' ').trim();
-    return txt.startsWith(key);
-    ```
-
----
-
-## 3. Hướng dẫn Vận hành Quy trình 5 Bước
-
-### Bước 1: Kiểm tra kết nối Chrome CDP (Cổng 9222)
-1. Tự động kiểm tra và mở trình duyệt Google Chrome ở chế độ debug port 9222.
-2. Nếu thất bại, yêu cầu người dùng khởi động thủ công:
-   ```bash
-   chrome.exe --remote-debugging-port=9222 --user-data-dir="C:\temp\chrome_dev"
-   ```
-
-### Bước 2: Chạy Quy trình Cào dữ liệu chênh lệch (Delta-only)
--  **Sử dụng subagent nghiên cứu (ADR 0010):** Đối với các văn bản pháp lý gốc có dung lượng cực lớn (ví dụ: Luật đất đai, Luật xây dựng, các Nghị định > 100 trang), Agent chính nên đề xuất người dùng spawn subagent `ccba-research` chạy ngầm để thực hiện legwork cào dữ liệu và phân tích cấu trúc ban đầu, tránh làm đơ/block phiên làm việc chính hoặc gây tràn bộ nhớ ngữ cảnh.
--  **Tra cứu trước (Pre-crawl scoping)**: Đối chiếu URL hoặc số hiệu văn bản cần cào với `legal_registry.yaml`.
--  **Rẽ nhánh thực thi**:
-    *   **Trường hợp đã tồn tại văn bản gốc**: Bỏ qua cào văn bản chính. Chỉ cào bổ sung các văn bản hướng dẫn/sửa đổi mới ban hành xuất hiện trên trang Lược đồ chưa có trong `guiding_docs/`.
-    *   **Trường hợp cào mới hoàn toàn**: Chạy lệnh cào đầy đủ:
-        ```bash
-        python scripts/legal_intelligence.py --url "<TVPL_URL>" --extract-related --download-source
-        ```
--  **Tải tệp Docx**: Chạy ngầm tiến trình giám sát thư mục `Downloads` để bắt file `.crdownload` và tự động di dời về đúng thư mục bundle đích.
-
-### Bước 3: Phân rã phụ lục & Vá liên kết
-1. Chạy script phân rã các biểu mẫu đính kèm:
-   ```bash
-   python scripts/split_appendices.py
-   ```
-2. Gọi Kỹ năng `relative-link-patcher` để tự động dò tìm và chuẩn hóa liên kết phụ lục lỗi trong tệp Markdown chính trỏ về thư mục `appendices/`, đồng thời tự động cập nhật tệp mục lục `index.md`.
-
-### Bước 4: Đăng ký cục bộ (Local Registry) & Dọn dẹp
--  Thêm bản ghi metadata (ID, tiêu đề, ngày ban hành/hiệu lực, trạng thái...) vào [legal_registry.yaml](../../../.md/data/legal_registry.yaml).
--  **Cập nhật quan hệ thay thế**: Đối chiếu quan hệ thay thế (ví dụ: khóa `replaced_docs` trong đồ thị quan hệ lược đồ) để tìm các văn bản bị thay thế bởi văn bản mới. Cập nhật trạng thái của các văn bản cũ này thành `status: superseded` trong `legal_registry.yaml` để duy trì tính chính xác của Registry.
--  Đồng bộ hóa file `legal_registry.yaml` sang thư mục tài nguyên của kỹ năng [.agents/skills/legal-document-tracker/resources/](../legal-document-tracker/resources/).
--  Tính toán SHA-256 của tệp gốc `.docx` và đăng ký đường dẫn vật lý vào [sources_registry.yaml](../../../.md/data/sources_registry.yaml).
--  **Dọn dẹp rác lồng nhau**: Xóa bỏ các thư mục rác tạm thời phát sinh do lỗi cào hoặc redirect lồng dưới `guiding_docs/` (ví dụ: `guiding_docs/extracted_docs` hoặc `guiding_docs/legal_docs`).
-
-### Bước 5: Báo cáo kết quả
-In ra sơ đồ cấu trúc OKF Bundle đã được tích hợp phẳng và các registry được cập nhật.
-
----
-*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-
-*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
-
-
----
-
-# Skill: ccba-prototype
-
----
-name: ccba-prototype
-description: Xây dựng mẫu thử thô (throwaway prototype) để trả lời câu hỏi thiết kế (Logic hoặc UI) trước khi triển khai chính thức.
-keywords: [prototype, mẫu thử, test thô, sanity-check]
----
-
-# 🚀 Kỹ năng: ccba-prototype (Xây Dựng Mẫu Thử Nhanh)
-
-Mẫu thử (prototype) là **mã nguồn thô viết nhanh, chỉ dùng một lần (throwaway code) để trả lời một câu hỏi thiết kế cụ thể**. Mục tiêu của mẫu thử không phải là sản phẩm hoàn thiện, mà là để kiểm chứng ý tưởng nhanh nhất và sau đó xóa bỏ hoặc hấp thụ.
-
----
-
-## 📋 Tiêu chí hoàn thành (Completion Criteria)
-Kỹ năng chỉ được coi là hoàn thành khi đáp ứng các điều kiện sau:
-1.  Xác định rõ câu hỏi thiết kế cần trả lời.
-2.  Viết mã nguồn thô và chạy thành công trên máy (không viết unit test, không tối ưu cấu trúc).
-3.  In hoặc hiển thị rõ ràng các trạng thái thay đổi để người dùng đánh giá.
-4.  Lưu trữ báo cáo/kết luận mẫu thử (`NOTES.md`) vào thư mục tri thức dự án:
-    `.md/knowledge/issues/[feature_name]/prototypes/`
-5.  Xóa bỏ hoàn toàn mã nguồn thô (TUI shell hoặc router/switcher thử nghiệm) sau khi câu hỏi thiết kế đã được giải đáp hoặc hấp thụ.
-
----
-
-## 🛠️ Quy trình thực hiện
-
-### Bước 1: Xác định câu hỏi thiết kế cần trả lời
-Đọc kỹ yêu cầu của người dùng để xác định loại câu hỏi thiết kế:
-- **"Logic / State machine này có chạy đúng trong trường hợp X rồi đến Y không?"** $\rightarrow$ Chọn nhánh **Logic Prototype** (Xem tài liệu chi tiết tại [LOGIC.md](./LOGIC.md)).
-- **"Bố cục giao diện này hiển thị như thế nào, phương án nào tối ưu hơn?"** $\rightarrow$ Chọn nhánh **UI Prototype** (Xem tài liệu chi tiết tại [UI.md](./UI.md)).
-
-*Lưu ý:* Phải ghi rõ câu hỏi này dưới dạng 1 đoạn văn ngắn ở đầu file mã nguồn của mẫu thử hoặc trong file `README.md` tạm của mẫu thử.
-
-### Bước 2: Tuân thủ các nguyên tắc thiết kế mẫu thử thô (Throwaway Rules)
-1.  **Throwaway từ ngày đầu tiên:** Đặt tên file/thư mục có chứa chữ `prototype` để người đọc sau biết đây không phải code sản xuất. Không commit code thô này vào nhánh chính mà không có sự đồng ý của người dùng.
-2.  **Khởi chạy bằng 1 lệnh duy nhất:** Định nghĩa lệnh chạy trong task runner hiện tại của dự án (ví dụ: `npm run dev:proto`, `python path/to/proto.py`, v.v.) để người dùng dễ dàng kiểm thử.
-3.  **Không phụ thuộc database thực tế (No Persistence):** Trạng thái chỉ lưu trên bộ nhớ (in-memory state). Nếu bắt buộc phải dùng DB, hãy dùng file SQLite tạm hoặc file text tạm với nhãn rõ ràng: `PROTOTYPE_WIPE_ME.db`.
-4.  **Bỏ qua tối ưu hóa:** Không viết unit tests, không xử lý lỗi ngoại lệ phức tạp, không viết code trừu tượng. Mục tiêu duy nhất là làm cho mẫu thử **chạy được nhanh nhất**.
-5.  **Hiển thị trạng thái rõ ràng:** Với mỗi action (trong logic) hoặc mỗi lần chuyển đổi variant (trong UI), phải in hoặc hiển thị toàn bộ trạng thái hiện tại lên màn hình để dễ theo dõi.
-
-### Bước 3: Thu hoạch và dọn dẹp (Absorb or Delete)
-Khi mẫu thử đã trả lời được câu hỏi thiết kế:
-- Ghi nhận quyết định thiết kế vào commit message, ADR (Architectural Decision Record) hoặc file `NOTES.md` nằm trong thư mục `.md/knowledge/issues/[feature_name]/prototypes/`.
-- **Dọn dẹp sạch sẽ**: 
-  - Nếu là Logic: Xóa bỏ TUI shell thô, chỉ copy module logic thuần túy (reducer/pure functions) vào codebase thật và viết code chuẩn chỉ.
-  - Nếu là UI: Xóa bỏ switcher tạm và các variant bị loại; chỉ giữ lại variant chiến thắng và refactor nó theo chuẩn chất lượng của dự án.
-
----
-*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-
-*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
-
-
----
-
-# Skill: ccba-research
-
----
-name: ccba-research
-description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm.
-keywords: [research, nghiên cứu, tìm hiểu, tra cứu, citations]
----
-
-# 📚 Kỹ năng: ccba-research (Nghiên Cứu Chạy Ngầm)
-
-Kỹ năng này hướng dẫn Agent cách khởi chạy một **background subagent** (`research` subagent) để thực hiện các cuộc điều tra tài liệu, thu thập thông tin facts từ các API, mã nguồn hoặc Văn bản Pháp luật (VBPL) song song dưới nền. Điều này giúp Agent chính tiếp tục làm việc mà không bị block và giảm thiểu token bloating cho cuộc hội thoại chính.
-
----
-
-## 📋 Tiêu chí hoàn thành (Completion Criteria)
-
-Kỹ năng chỉ được coi là hoàn thành khi đáp ứng các điều kiện sau:
-1. Khởi chạy thành công subagent `research` chạy ngầm qua `invoke_subagent`.
-2. Subagent tuân thủ **Rào chắn Ngân sách Tìm kiếm (Search Budget Cap)**: Tối đa 5 lượt tra cứu/tìm kiếm (max 5 tool calls) trong 1 phiên.
-3. Subagent thu thập thông tin trực tiếp từ **các nguồn sơ cấp đáng tin cậy** (tài liệu chính thức, source code dự án, API gốc, VBPL hiện hành) và áp dụng **Kiểm chứng Nguồn tin Chéo (Cross-Reference Validation)** với tài liệu trong vòng 12 tháng gần nhất hoặc văn bản quy phạm hiện hành.
-4. Kết quả nghiên cứu được xuất ra tệp Markdown theo **Mẫu Báo cáo Kỹ thuật 5 phần chuẩn hóa**, có trích dẫn nguồn (citations) rõ ràng.
-5. Tệp báo cáo được lưu trữ linh hoạt tại:
-   - Mặc định: `.md/knowledge/research_and_studies/research-[slug].md`
-   - Trong ngữ cảnh Wayfinder/Issue: `.md/knowledge/issues/[feature_name]/research-[slug].md`
-
----
-
-## 🛠️ Quy trình thực hiện (3 Bước)
-
-### Bước 1: Xác định câu hỏi nghiên cứu & Nguồn sơ cấp
-Xác định rõ câu hỏi nghiên cứu của người dùng và các nguồn tài liệu gốc cần đọc (ví dụ: file luật trong `.md/legal_docs/`, API docs của bên thứ ba, codebase hiện tại).
-*Tiêu chí hoàn thành:* Agent đã ghi nhận danh sách các câu hỏi nghiên cứu cốt lõi cùng đường dẫn các tệp nguồn sơ cấp tương ứng.
-
-### Bước 2: Khởi chạy Subagent chạy ngầm kèm Prompt Chuẩn hóa
-Sử dụng công cụ `invoke_subagent` để spawn một subagent thuộc loại `research` với prompt mô tả chi tiết:
-- **Role**: `Codebase Researcher` hoặc `Legal Analyst` tùy thuộc vào nội dung nghiên cứu.
-- **Prompt bắt buộc bao gồm các rào chắn**:
-  1. **Search Budget Cap**: Giới hạn tối đa **5 tool calls** tra cứu/tìm kiếm. Suy nghĩ kỹ trước mỗi lượt gọi tool để đi thẳng vào trọng tâm.
-  2. **Cross-Reference Validation**: Đánh giá tính thời sự (recency), đối chiếu chéo nhiều nguồn độc lập, nêu rõ điểm đồng thuận vs mâu thuẫn.
-  3. **Đường dẫn lưu trữ (Dynamic Path)**:
-     - Tổng quát: `.md/knowledge/research_and_studies/research-[slug].md`
-     - Trong ngữ cảnh Issue: `.md/knowledge/issues/[feature_name]/research-[slug].md`
-  4. **Áp dụng Mẫu Báo cáo Kỹ thuật 5 phần**:
-
-```markdown
-# Báo cáo Nghiên cứu: [Tên Chủ Đề]
-
-## 1. Tóm tắt Thực thi (Executive Summary)
-[Tóm tắt 2-3 đoạn về phát hiện cốt lõi và các đề xuất hành động chính]
-
-## 2. Kết quả Nghiên cứu Chi tiết (Key Findings)
-- **Tổng quan & Xu hướng**: [Mô tả chi tiết kỹ thuật/pháp lý, phiên bản, độ chín]
-- **Quy chuẩn Tốt nhất (Best Practices)**: [Các khuyến nghị kỹ thuật/quy trình tốt nhất]
-- **Bẫy thường gặp (Common Pitfalls)**: [Các rủi ro, bẫy thiết kế và phương án khắc phục]
-- **Bảo mật & Hiệu năng**: [Nếu áp dụng]
-
-## 3. Khuyến nghị Triển khai (Implementation Recommendations)
-- [Các bước hành động ngắn gọn, khả thi để áp dụng vào hệ thống CCBA]
-
-## 4. Tài liệu Tham chiếu & Citations (References & Citations)
-- [Bảng hoặc danh sách chứa liên kết/nguồn trích dẫn sơ cấp rõ ràng]
-
-## 5. Câu hỏi chưa làm rõ (Unresolved Questions)
-- [Nêu rõ các câu hỏi, giả định mầm hoặc điểm mù chưa thể xác nhận, nếu có]
-```
-
-*Tiêu chí hoàn thành:* Agent chính nhận được ID phiên làm việc (Conversation ID) của subagent và ghi nhận trạng thái khởi chạy thành công dưới nền.
-
-### Bước 3: Tiếp tục công việc chính & Hấp thụ kết quả
-Trong khi subagent chạy ngầm đang đọc tài liệu và viết báo cáo, Agent chính tiếp tục trao đổi hoặc thực hiện các task khác với người dùng.
-Khi nhận được thông báo subagent đã hoàn thành:
-- Đọc file báo cáo Markdown mà subagent vừa tạo ra.
-- Trình bày tóm tắt kết quả nghiên cứu và trỏ người dùng tới liên kết file báo cáo click được.
-*Tiêu chí hoàn thành:* Báo cáo Markdown từ subagent được Agent chính nạp vào ngữ cảnh, trích xuất tóm tắt và hiển thị liên kết truy cập trực tiếp cho người dùng.
-
----
-
-*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-
-*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
-
-
----
-
-# Skill: ccba-setup-skills
-
----
-name: ccba-setup-skills
-description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu hình issue tracker, nhãn phân loại (triage), và bố cục tài liệu tri thức (Domain Docs). Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
-disable-model-invocation: true
----
-
-# Kỹ năng Thiết Lập Cấu Hình Phát Triển (Setup CCBA Skills)
-
-Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát triển phần mềm khác (`triage`, `to-tickets`, `to-spec`, `tdd`, `improve-codebase-architecture`, v.v.) hoạt động chính xác:
-
-- **Issue tracker** — Nơi theo dõi công việc (GitHub, GitLab, hoặc Local Markdown lưu offline).
-- **Triage labels** — Từ vựng nhãn tương ứng với 5 vai trò trạng thái của triage.
-- **Domain docs** — Cấu trúc tài liệu miền tri thức (`CONTEXT.md` và ADRs).
-
-Đây là kỹ năng tương tác và tự động hóa. Agent sẽ trinh sát trước, đưa ra gợi ý, xác nhận với người dùng rồi tiến hành ghi cấu hình.
-
----
+<Mô tả mục đích và vai trò của kỹ năng>
 
 ## Quy trình thực hiện (Process)
 
-### 1. Trinh sát (Explore)
+1. **Bước 1: <Tiêu đề bước>**
+   - <Hướng dẫn thao tác 1>
+   - <Hướng dẫn thao tác 2>
+   **Tiêu chí hoàn thành:** <Kết quả cụ thể cần đạt được ở bước này>
 
-Quét dự án hiện tại để nhận diện trạng thái ban đầu:
-- Chạy lệnh `git remote get-url origin` hoặc `git remote -v` để nhận diện repo có sử dụng GitHub, GitLab hay không.
-- Đọc file `.md/workspace_context.yaml` tại thư mục gốc để xem đã có cấu hình `issue_tracker` hoặc các cấu hình khác chưa.
-- Kiểm tra sự tồn tại của file hiến pháp `.agents/AGENTS.md` hoặc `AGENTS.md`.
-- Kiểm tra sự tồn tại của `CONTEXT.md` / `CONTEXT-MAP.md` ở thư mục gốc hoặc `.md/knowledge/`.
-- Kiểm tra sự tồn tại của thư mục cấu hình đích `.md/knowledge/agents/`.
-- **Kiểm tra Kỹ năng Triage (Multi-tier Detection)**: Quét qua 3 cấp: (1) Thư mục `.agents/skills/triage/` hoặc `.agents/skills/ccba-triage/`, (2) Đăng ký trong `catalog.yaml`, (3) Danh sách Kỹ năng khả dụng trong ngữ cảnh. Thiết lập cờ `triage_installed = true` nếu tìm thấy; ngược lại `triage_installed = false`.
-- **Kiểm tra Tín hiệu Monorepo (Monorepo Inference)**: Kiểm tra file `pnpm-workspace.yaml`, trường `workspaces` trong `package.json`, hoặc sự tồn tại của `CONTEXT-MAP.md`. Thiết lập cờ `is_monorepo = true` nếu phát hiện; ngược lại `is_monorepo = false`.
-
-### 2. Gợi ý cấu hình & Phỏng vấn (Present findings and ask)
-
-Tóm tắt kết quả trinh sát và đưa ra cấu hình đề xuất cho người dùng (luôn áp dụng **Recommended-First UX** — đưa câu trả lời đề xuất tốt nhất lên Lựa chọn 1 để người dùng xác nhận bằng Phím Enter hoặc `1`):
-
-- **Nếu đã có cấu hình trong `workspace_context.yaml`**: Hiển thị cấu hình hiện tại và đề xuất dùng tiếp cấu hình này (bỏ qua phỏng vấn từng bước).
-- **Nếu chưa có cấu hình**: Thực hiện phỏng vấn tương tác:
-
-  **Câu A — Issue tracker**:
-  > *Lựa chọn 1 (Recommended)*: Đề xuất mặc định dựa trên `git remote` (Ví dụ: **GitHub Issues** nếu remote chứa `github.com`, **GitLab Issues** nếu remote chứa `gitlab.com`, hoặc **Local Markdown** nếu chạy offline/chưa có remote).
-  - **GitHub** — Sử dụng GitHub Issues (yêu cầu `gh` CLI).
-  - **GitLab** — Sử dụng GitLab Issues (yêu cầu `glab` CLI).
-  - **Local markdown** — Lưu issue thành các file md dưới `.md/knowledge/issues/` (phù hợp chạy offline hoặc dự án solo).
-  - **Khác** — Nhận mô tả quy trình dạng văn bản tự do từ người dùng.
-  
-  Nếu chọn GitHub/GitLab, hỏi thêm:
-  - *Xem PR như yêu cầu tính năng?* (yes / no - Mặc định: **no**).
-
-  **Câu B — Nhãn Triage (Smart Skipping)**:
-  > ⚡ **Smart Skipping Rule**: Nếu bước Trinh sát xác định `triage_installed = false`, **BỎ QUA TOÀN BỘ CÂU B NÀY** và thông báo ngầm: *"Đã tự động bỏ qua cấu hình Nhãn Triage do dự án không sử dụng kỹ năng Triage."*
-
-  Nếu `triage_installed = true`, thực hiện phỏng vấn cấu hình ánh xạ cho 5 vai trò nhãn triage:
-  - Lựa chọn 1 (Recommended): **Giữ nguyên 5 nhãn mặc định** (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`).
-  - Lựa chọn 2: Nhận ghi đè nhãn từ người dùng.
-
-  **Câu C — Cấu trúc tài liệu miền (Monorepo Inference)**:
-  > ⚡ **Monorepo Inference Rule**: Nếu bước Trinh sát xác định `is_monorepo = false`, **TỰ ĐỘNG CHỐT Single-context** (`CONTEXT.md` duy nhất tại root) mà không bắt người dùng phỏng vấn thủ công.
-
-  Chỉ khi `is_monorepo = true`, mới hỏi phỏng vấn chọn cấu trúc:
-  - **Single-context** (Recommended) — 1 file `CONTEXT.md` và `docs/adr/` ở root.
-  - **Multi-context** — Có file `CONTEXT-MAP.md` dẫn tới nhiều folder con chứa `CONTEXT.md` riêng.
-
-### 3. Xác nhận (Confirm)
-
-Hiển thị cho người dùng xem bản nháp của:
-- Khối cấu hình `## Agent skills` sẽ được ghi vào file `.agents/AGENTS.md` (hoặc `AGENTS.md` ở root). (Bao gồm tiểu mục `### Triage labels` chỉ khi `triage_installed = true`).
-- Nội dung chi tiết của các file sẽ được tạo ra tại `.md/knowledge/agents/`:
-  - `issue_tracker.md`
-  - `triage_labels.md` (chỉ khi `triage_installed = true`)
-  - `domain.md`
-
-### 4. Ghi cấu hình (Write)
-
-**Bước A: Cập nhật Hiến pháp**:
-- Xác định file ghi hiến pháp: Ưu tiên `.agents/AGENTS.md`, sau đó đến `AGENTS.md` ở root.
-- Cập nhật (hoặc thêm mới) block `## Agent skills` vào file đó:
-  ```markdown
-  ## Agent skills
-
-  ### Issue tracker
-
-  [Tóm tắt ngắn gọn tracker và trạng thái PR]. Xem `.md/knowledge/agents/issue_tracker.md`.
-
-  ### Triage labels (chỉ có khi triage_installed = true)
-
-  [Tóm tắt ngắn gọn nhãn triage]. Xem `.md/knowledge/agents/triage_labels.md`.
-
-  ### Domain docs
-
-  [Tóm tắt ngắn gọn bố cục]. Xem `.md/knowledge/agents/domain.md`.
-  ```
-
-**Bước B: Cập nhật `workspace_context.yaml`**:
-- Ghi nhận hoặc cập nhật trường `project.issue_tracker` trong file `.md/workspace_context.yaml` (ví dụ: `github`, `gitlab` hoặc `local_markdown`).
-
-**Bước C: Tạo các file chỉ dẫn chi tiết**:
-Tạo thư mục `.md/knowledge/agents/` (nếu chưa có) và ghi các file cấu hình chi tiết:
-- Hướng dẫn Issue Tracker: Lấy từ `issue-tracker-github.md`, `issue-tracker-gitlab.md`, hoặc `issue-tracker-local.md`.
-- Hướng dẫn nhãn Triage: Lấy từ `triage-labels.md` (chỉ tạo khi `triage_installed = true`).
-- Hướng dẫn Domain: Lấy từ `domain.md`.
-
-### 5. Hoàn tất (Done)
-
-Thông báo cho người dùng việc thiết lập đã hoàn thành. Nhắc nhở người dùng rằng họ có thể chỉnh sửa trực tiếp các file trong `.md/knowledge/agents/` sau này để thay đổi cấu hình, không cần chạy lại lệnh setup trừ khi muốn thay đổi hoàn toàn Issue Tracker.
+2. **Bước 2: <Tiêu đề bước>**
+   - <Hướng dẫn thao tác 1>
+   **Tiêu chí hoàn thành:** <Kết quả cụ thể cần đạt được ở bước này>
+```
 
 ---
+
+## ⚡ 4. Kích Hoạt Slash Command Native & Biên Dịch Catalog (ADR 0047)
+Mọi kỹ năng mang định danh `ccba-<tên-lệnh>` trong `name:` đều tự động trở thành Slash Command hạng nhất (`/ccba-<tên-lệnh>`) trong IDE Antigravity mà không cần tạo tệp wrapper trong `.agents/workflows/`:
+- Khai báo `disable-model-invocation: true` nếu là lệnh điều phối/quy trình thủ tục (0-token system prompt).
+- Khai báo `triggers:` và `keywords:` để hỗ trợ cả gợi ý tự động lẫn gõ lệnh tường minh.
+- Chạy lệnh biên dịch catalog để tự động cập nhật hệ thống:
+```bash
+python scripts/governance/compile_catalog.py
+```
+
+---
+
+## ✅ 5. Kiểm Định Chất Lượng Tự Động (CI Hard Gates)
+Chạy toàn bộ bộ công cụ kiểm định để xác nhận đạt chuẩn 100% trước khi bàn giao:
+```bash
+python scripts/validate_skills.py
+python scripts/governance/drift_auditor.py
+```
+
+---
+
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
-*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
-
 
 ---
 
-# Skill: code-review
+# Skill: ccba-code-review
 
 ---
-name: code-review
-description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells) và Spec (Spec/Requirements).
+name: ccba-code-review
+description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells)
+  và Spec (Spec/Requirements).
 user-invocable: true
-when_to_use: "Dùng khi người dùng muốn đánh giá chất lượng của một PR, một commit, hoặc các thay đổi chưa commit (--pending)."
+when_to_use: Dùng khi người dùng muốn đánh giá chất lượng của một PR, một commit,
+  hoặc các thay đổi chưa commit (--pending).
 category: utilities
-keywords: [review, quality, verification, reliability]
-argument-hint: "[#PR | COMMIT | --pending | codebase [parallel]]"
+keywords:
+- review
+- quality
+- verification
+- reliability
+argument-hint: '[#PR | COMMIT | --pending | codebase [parallel]]'
 metadata:
   author: CCBA
-  version: "2.0.0"
+  version: 2.0.0
+disable-model-invocation: true
+bundle: _software
+triggers:
+- review
+- quality
+- verification
+- reliability
+- ccba-code-review
+- rà soát code
+- check code
+- review commit
+- review pr
 ---
-
 # Quy trình Rà soát Chất lượng Code (Code Review)
 
 Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn đối chiếu giữa `HEAD` hiện tại và một điểm mốc (fixed point) được chỉ định trên hai trục độc lập: **Standards** (Quy chuẩn code) và **Spec** (Đặc tả nghiệp vụ). 
@@ -2319,10 +2337,12 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
 - **Tiêu chí hoàn thành:** Xác định đầy đủ các tệp tài liệu tiêu chuẩn hiện hành của repo để nạp vào prompt cho sub-agent.
 
 ### 4. Gọi song song hai Sub-agents (Spawn sub-agents in parallel)
-- Spawn đồng thời 2 sub-agents (sử dụng subagent `self`):
-  - **Standards Sub-agent Prompt:** Nhận Git Diff + danh sách tiêu chuẩn + 12 smells. Yêu cầu chỉ ra các vi phạm quy chuẩn và smell kèm trích dẫn dòng code.
-  - **Spec Sub-agent Prompt:** Nhận Git Diff + nội dung Spec. Yêu cầu chỉ ra các điểm thiếu hụt tính năng so với yêu cầu hoặc scope creep dư thừa.
-- **Tiêu chí hoàn thành:** Khởi chạy thành công 2 sub-agents chạy song song và nhận lại đầy đủ 2 báo cáo phân tích độc lập (Standards Report và Spec Report).
+- Áp dụng **Rào Chắn Kép (Two-Layer Sub-Agent Guardrail)**:
+  - Bắt buộc chèn chỉ dẫn cấm ủy thác vào prompt của cả hai sub-agents: `"CRITICAL CONSTRAINT: You are a dedicated review sub-agent. Do NOT invoke /code-review, do NOT spawn any child sub-agents, and do NOT propose bash execution. Perform this review directly using read-only tools and output your structured report immediately."`
+- Spawn đồng thời 2 sub-agents (sử dụng subagent `self` hoặc `research` với công cụ chỉ đọc):
+  - **Standards Sub-agent Prompt:** Nhận Git Diff + danh sách tiêu chuẩn + 12 smells + chỉ dẫn cấm ủy thác. Yêu cầu chỉ ra các vi phạm quy chuẩn và smell kèm trích dẫn dòng code.
+  - **Spec Sub-agent Prompt:** Nhận Git Diff + nội dung Spec + chỉ dẫn cấm ủy thác. Yêu cầu chỉ ra các điểm thiếu hụt tính năng so với yêu cầu hoặc scope creep dư thừa.
+- **Tiêu chí hoàn thành:** Khởi chạy thành công 2 sub-agents chạy song song và nhận lại đầy đủ 2 báo cáo phân tích độc lập (Standards Report và Spec Report) mà không phát sinh đệ quy sub-agent.
 
 ### 5. Tổng hợp báo cáo (Aggregate Findings)
 - Tổng hợp kết quả từ hai sub-agents dưới dạng báo cáo rõ ràng với hai tiêu đề `## Standards` and `## Spec`.
@@ -2347,14 +2367,40 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
 
 ---
 
-# Skill: codebase-design
+# Skill: ccba-codebase-design
 
 ---
-name: codebase-design
-description: Shared vocabulary for designing deep modules (locality, depth, leverage, seams) to improve testability and code quality.
+name: ccba-codebase-design
+description: Shared vocabulary for designing deep modules (locality, depth, leverage,
+  seams) to improve testability and code quality. Reference skill.
+disable-model-invocation: true
+category: engineering
+keywords:
+- ccba-codebase-design
+- deep-module
+- seam
+- interface
+- adapter
+- leverage
+- locality
+bundle: _core
+triggers:
+- ccba-codebase-design
+- deep-module
+- seam
+- interface
+- adapter
+- leverage
+- locality
+- codebase design
+- deep module
+- module sâu
+- software design
 ---
-
 # Codebase Design
+
+> **Loại Kỹ Năng:** **Reference Skill (Kỹ Năng Tham Chiếu & Từ Điển Chuẩn Mực)**  
+> **Quy Tắc Dừng Cứng (Hard Stopping Rule):** Kỹ năng này không phải là Driver Workflow tự hành. Khi được gọi độc lập mà không chỉ định rõ module mục tiêu, Agent chỉ hiển thị bộ từ vựng và dừng lại để định hướng sang Driver Skills phù hợp (`/ccba-improve-codebase-architecture`, `/ccba-implement`, `/ccba-grilling`).
 
 Design **deep modules**: a lot of behaviour behind a small interface, placed at a clean seam, testable through that interface. Use this language and these principles wherever code is being designed or restructured. The aim is leverage for callers, locality for maintainers, and testability for everyone.
 
@@ -2467,17 +2513,25 @@ Good interfaces make testing natural:
 
 ---
 
-# Skill: completion-checklist
+# Skill: ccba-completion-checklist
 
 ---
-name: completion-checklist
-description: Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện hành. Hỗ trợ xuất Markdown và Word (.docx).
+name: ccba-completion-checklist
+description: Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện hành.
+  Hỗ trợ xuất Markdown và Word (.docx).
 applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-bundle: "_consulting"
+- Thẩm tra thiết kế
+- Thiết kế
+bundle: _consulting
+triggers:
+- hồ sơ hoàn thành
+- HSHT
+- completion
+- checklist
+- danh mục hồ sơ
+- nghiệm thu
+- hoàn công
 ---
-
 # Completion Checklist Generator
 
 Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Trình** (Construction Completion Document Checklist) theo quy định VBPL hiện hành, phục vụ kỹ sư giám sát tại CCBA.
@@ -2545,7 +2599,7 @@ Checklist master được phân định căn cứ pháp lý theo mốc thời gi
 - **Thông tư 34/2026/TT-BXD** (Có hiệu lực từ 01/07/2026) — Quy định về phân cấp công trình xây dựng.
 
 ### 2. Áp dụng tra cứu chuyển tiếp (Công trình hoàn thành / nghiệm thu trước 01/07/2026):
-- **Văn bản hợp nhất 19/VBHN-BXD (25/03/2026)** — Hợp nhất Nghị định 06/2021/NĐ-CP và các Nghị định sửa đổi (NĐ 35/2023, NĐ 175/2024, NĐ 14/2026). Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình.
+- **Văn bản hợp nhất 19/VBHN-BXD (25/03/2026)** — Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình (kế thừa Nghị định 105/2025/NĐ-CP).
 
 ## Output Formats
 
@@ -2561,25 +2615,168 @@ Checklist master được phân định căn cứ pháp lý theo mốc thời gi
 
 ---
 
-# Skill: copywriting
+# Skill: ccba-contribute-to-hub
 
 ---
-name: copywriting
-description: Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa và áp dụng các công thức viết thuyết phục (AIDA, PAS).
+name: ccba-contribute-to-hub
+
+description: Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
+applies_to:
+  - Phần mềm
+  - Thẩm tra thiết kế
+  - Thiết kế
+  - Kiểm định
+bundle: _core
+disable-model-invocation: true
+command: /ccba-contribute-to-hub
+triggers:
+  - contribute
+  - contribute to hub
+  - đóng góp mã nguồn
+  - tạo pr lên hub
+  - mở proposal
+  - ccba-contribute-to-hub
+---
+# Workflow: Contribute to Hub (Đóng Góp Mã Nguồn Ngược Lên Hub Chuẩn OKF v2.0)
+
+Quy trình chuẩn hóa để đóng gói mã nguồn, tests, proposal và mở GitHub Pull Request (PR) kèm hoàn tất thẩm định tự động từ Spoke lên Platform Hub (`ccba-agent-platform`). *(Alias: `/ccba-propose-to-hub`)*
+
+---
+
+## 📋 Bước 1: Thu thập Thông tin, Liên Kết Issue & Cổng Kiểm Lọc R&D
+Ghi nhận đầy đủ thông tin cốt lõi:
+1. **Liên kết Issue & Cổng Tự Động Phân Loại Scope (Smart Scope-Aware Issue Gate):**
+   - **Nếu có `--issue [ID]`:** Kế thừa trực tiếp mã Issue để liên kết và đóng tự động (`Closes #[ID]`).
+   - **Nếu KHÔNG có `--issue`:** Agent tự động đánh giá quy mô thay đổi:
+     * 🟢 **Quy mô Lớn (Major Scope):** Thêm module/deep seam mới trong `packages/`, cập nhật kiến trúc (ADR), hoặc thay đổi $\ge 100$ dòng code / $\ge 3$ files $\rightarrow$ **Agent chủ động gợi ý/tự động tạo 1 GitHub Issue** trên Hub để ghi nhận Changelog, Ký ức dài hạn (Traceability) và gắn vào PR.
+     * ⚪ **Quy mô Nhỏ / Nội bộ (Minor Scope):** Vá lỗi nhỏ, sửa typo, cập nhật docstring, refactor nội bộ $< 100$ dòng $\rightarrow$ **Bỏ qua tạo Issue** để tránh làm rác Issue Tracker, mở PR trực tiếp.
+2. **Loại đề xuất:** `tool` (Package trong `packages/`), `skill` (`.agents/skills/`), `workflow` (`.agents/workflows/`), hoặc `rules`.
+3. **Tên đề xuất:** Dạng kebab-case (ví dụ: `modernize-annex-engine-okf-v23`).
+4. **Mô tả & Vấn đề giải quyết:** Nỗi đau thực tế đã giải quyết tại Spoke.
+5. **Cổng Kiểm Lọc R&D (Graduation Pre-Flight Gate):**
+   - Đảm bảo mã nguồn đã được làm sạch qua `/ccba-graduate-rd` (loại bỏ 100% `print`, đường dẫn hardcoded, rác tạm; có đủ Type Hints & Docstrings Google style).
+   - Test suite cục bộ trong `packages/[pkg]/tests/` phải đạt **100% PASS** trước khi tạo Proposal.
+
+---
+
+## 🔍 Bước 2: Kiểm tra Trùng lặp (Duplicate Detection)
+Trước khi tạo mới, Agent **bắt buộc** kiểm tra hệ sinh thái Hub:
+1. Đọc `.md/workspace_context.yaml` để lấy `hub_path`.
+2. Đọc `<hub_path>/.agents/skills/platform-loader/catalog.yaml`, `packages/`, `<hub_path>/.agents/AGENTS.md`, `PLATFORM.md`.
+*Nếu phát hiện đã tồn tại thành phần tương tự:* Đề xuất nâng cấp/mở rộng thay vì tạo mới trùng lặp.
+
+---
+
+## 📦 Bước 3: Đóng Gói Mã Nguồn & Tạo Proposal Trên Branch Mới
+Thực thi tại thư mục Hub (`hub_path`):
+1. **Đồng bộ nhánh & Khóa bảo vệ nhánh (Pre-Commit Branch Assertion):**
+   ```bash
+   BRANCH_NAME="proposal/${ISSUE_ID:+issue-${ISSUE_ID}-}${PROPOSAL_NAME}"
+   git checkout main && git pull origin main && git checkout -b "$BRANCH_NAME"
+   [ "$(git branch --show-current)" = "main" ] && { echo "❌ Lỗi: Đang ở main!"; exit 1; }
+   ```
+2. **Đóng gói Mã nguồn & Tests vào Package tương ứng:**
+   - Code: `packages/[pkg]/src/[submodule]/`, Public Deep Seam: `packages/[pkg]/src/__init__.py`, Tests: `packages/[pkg]/tests/`.
+   - Format, linting & cập nhật kiến trúc:
+     ```bash
+     python -m ruff check --fix packages/[pkg]/ && python -m ruff format packages/[pkg]/ && python scripts/update_arch_stats.py
+     ```
+3. **Ghi nhận tệp Proposal (`.agents/proposals/[YYYY-MM-DD]_[tên-đề-xuất].md` - ADR 0045):**
+   ```yaml
+   ---
+   proposal_id: "[YYYY-MM-DD]_[tên-đề-xuất]"
+   type: "tool" # "tool" | "skill" | "workflow" | "rules"
+   name: "[tên-đề-xuất]"
+   status: "open"
+   priority: "Cao"
+   related_issue: "#[ISSUE_ID]" # Liên kết Issue nếu có
+   proposed_by_project: "[tên-spoke]"
+   proposed_by_archetype: "knowledge_corpus"
+   proposed_date: "YYYY-MM-DD"
+   applies_to: ["Phần mềm", "Thẩm tra thiết kế"]
+   ---
+   ```
+4. **Leakage Guard & Push:**
+   ```bash
+   python scripts/governance/check_spoke_leakage.py
+   git add -A && git commit -m "feat([scope]): add [tên-đề-xuất] and proposal" && git push origin "$BRANCH_NAME"
+   ```
+
+---
+
+## 🚀 Bước 4: Mở GitHub Pull Request (PR Flow Tự Đóng Issue)
+- **Tự động qua GitHub CLI (Tự động gắn mã Closes #[ISSUE_ID]):**
+  ```bash
+  PR_BODY="Automated proposal submission from Spoke [tên-spoke].${ISSUE_ID:+ Closes #${ISSUE_ID}}"
+  gh pr create --title "feat([scope]): add [tên-đề-xuất]" --body "$PR_BODY" --base main --head "$BRANCH_NAME"
+  ```
+- **Thủ công:** Truy cập `[PR-creation-URL]/pull/new/[BRANCH_NAME]`.
+
+---
+
+## 🔄 Bước 5: Vòng Lặp Dừng Chờ & Tự Làm Xanh CI (Self-Healing Loop)
+
+> [!IMPORTANT]
+> **Tuyệt đối không kết thúc quy trình ngay sau khi mở PR.** Agent phải đồng hành cho đến khi $100\%$ CI Tích Xanh.
+
+1. **Dừng chờ động (Grace Period):** Dùng `schedule` hẹn giờ kiểm tra: PR nhỏ (<100 dòng) `45s`, PR vừa (100-500 dòng) `60s-90s`, PR lớn (>500 dòng) `90s-180s`.
+2. **Kiểm tra song song 2 cổng (Dual-Gate):**
+   - CI Status: `gh pr checks <PR_NUMBER>`
+   - Copilot Review: `gh pr view <PR_NUMBER> --json reviews,comments --jq '.reviews[] | select(.author.login=="copilot-pull-request-reviewer")'`
+3. **Tự khắc phục (Self-Healing Action):**
+   - Nếu CI Fail: Đọc log qua `gh run view <RUN_ID> --log-failed` $\rightarrow$ Sửa lỗi $\rightarrow$ Commit & push bản vá.
+   - Nếu Copilot góp ý: Refactor code đối soát với chuẩn CCBA $\rightarrow$ Commit & push.
+   - Tiêu chí: Lặp lại đến khi `gh pr checks <PR_NUMBER>` pass 100%.
+
+---
+
+## ✅ Bước 6: Báo Cáo Hoàn Tất & Sẵn Sàng Merge
+Tổng hợp báo cáo: Link PR, kết quả CI, tóm tắt góp ý đã sửa, và thông báo Maintainer kích hoạt `/ccba-review-proposal [PR_NUMBER]`.
+
+---
+
+## 🔄 Bước 7: Vòng Khép Kín Hậu Hợp Nhất (Closed-Loop Spoke Sync Gate)
+Sau khi PR được Squash Merge vào Hub `main`, thực thi chu trình 4 bước đóng vòng tại Spoke:
+1. **Xác nhận Hợp nhất:** `gh pr view <PR_NUMBER> --json state,mergedAt --jq '.state'` (phải là `MERGED`).
+2. **Đồng bộ Downstream:** Chạy `/ccba-update-spoke` hoặc `python [hub_path]\scripts\sync_spoke.py --spoke . --apply`.
+3. **Tái cài đặt Editable Package:** `pip install -e "[hub_path]\packages\[package-name]"` (nếu là `tool`).
+4. **Hồi quy & Dọn dẹp:** Chạy kiểm thử Spoke (`python scripts\validate_legal_spoke.py`), xóa branch `git branch -D proposal/[tên-đề-xuất]`, và ghi log vào `.md/knowledge/session_learnings.md`.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+---
+
+# Skill: ccba-copywriting
+
+---
+name: ccba-copywriting
+description: Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa
+  và áp dụng các công thức viết thuyết phục (AIDA, PAS).
 role: master_skill
 sub_skills:
-  - form-template-cleaner
-  - viet-chuyen-nghiep
-argument-hint: "[loại-văn-bản-theo-mẫu] [ngữ-cảnh]"
+- form-template-cleaner
+- ccba-viet-chuyen-nghiep
+argument-hint: '[loại-văn-bản-theo-mẫu] [ngữ-cảnh]'
 license: MIT
 metadata:
   author: claudekit
-  version: "1.0.0"
+  version: 1.0.0
+disable-model-invocation: true
+bundle: _software
+triggers:
+- ccba-copywriting
+- viết thầu
+- soạn thầu
+- hồ sơ đề xuất
+- văn phong thầu
+- viết thuyết phục
+- marketing admin
 ---
-
 # Kỹ năng Soạn thảo Văn bản theo Mẫu chuẩn (Copywriting)
 
-Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, quyết định, công văn, hợp đồng, tờ trình...) theo biểu mẫu chuẩn lưu tại kỹ năng `xu-ly-van-phong` (thư mục `/.agents/skills/xu-ly-van-phong/templates/`).
+Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, quyết định, công văn, hợp đồng, tờ trình...) theo biểu mẫu chuẩn lưu tại kỹ năng `xu-ly-van-phong` (thư mục `/.agents/skills/ccba-xu-ly-van-phong/templates/`).
 
 ## Khi nào sử dụng
 
@@ -2588,12 +2785,12 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 
 ## Luồng dữ liệu (Data Flow)
 
-`[Mẫu hiện trạng thô] -> [/ccba-extract-style] -> [/.agents/skills/xu-ly-van-phong/templates/] -> [copywriting (điền thông tin)] -> [Tài liệu hoàn thiện]`
+`[Mẫu hiện trạng thô] -> [/ccba-extract-style] -> [/.agents/skills/ccba-xu-ly-van-phong/templates/] -> [copywriting (điền thông tin)] -> [Tài liệu hoàn thiện]`
 
 ## Quy trình Sinh tài liệu (Process)
 
 1. **Nạp biểu mẫu chuẩn**:
-   - Đọc thư mục `/.agents/skills/xu-ly-van-phong/templates/` để tải tệp template tương ứng với yêu cầu soạn thảo (áp dụng cho văn bản hành chính, thầu, hợp đồng).
+   - Đọc thư mục `/.agents/skills/ccba-xu-ly-van-phong/templates/` để tải tệp template tương ứng với yêu cầu soạn thảo (áp dụng cho văn bản hành chính, thầu, hợp đồng).
    - Đối với các yêu cầu thuộc lĩnh vực văn bản hành chính/thầu: Tuyệt đối không tự suy đoán cấu trúc hoặc tự tạo khung nếu chưa có tệp template tương ứng. Nếu không có tệp khớp, báo cáo lỗi và dừng lại.
    - **NGOẠI LỆ QUAN TRỌNG (Xử lý yêu cầu ngoài luồng):** Nếu yêu cầu của người dùng rõ ràng không thuộc phạm vi văn bản hành chính/thầu/hợp đồng (ví dụ: yêu cầu viết mã code lập trình như Python `def quicksort`, giải toán, hoặc trả lời câu hỏi chung), Agent **tuyệt đối không được báo lỗi thiếu biểu mẫu**. Thay vào đó, Agent phải bỏ qua quy tắc tìm kiếm template và **trực tiếp thực hiện yêu cầu đó** (ví dụ: xuất trực tiếp đoạn code được yêu cầu).
    - **Tiêu chí hoàn thành:** Xác định đúng đường dẫn tệp template phù hợp đối với văn bản hành chính. Hoặc, trả về trực tiếp kết quả (code, câu trả lời) đối với các yêu cầu ngoài luồng mà không bị chặn bởi quy tắc template.
@@ -2631,22 +2828,149 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 
 ---
 
-# Skill: design
+# Skill: ccba-create-pr
 
 ---
-name: design
-description: "Design brand identity, logos, banners, and visual assets. Use for brand systems, design tokens, corporate identity programs. Not for UI code patterns."
+name: ccba-create-pr
+
+description: Push code hiện tại và tạo Pull Request tự động
+applies_to:
+- Phần mềm
+bundle: _software
+disable-model-invocation: true
+command: /ccba-create-pr
+triggers:
+- create PR
+- pull request
+- tạo PR
+---
+# Workflow: Create Pull Request
+
+Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request siêu tốc.
+
+## Bước 0: Main Branch Guard (Tự động phát hiện & sửa sai)
+
+1. Lấy tên branch hiện hành:
+   ```bash
+   git branch --show-current
+   ```
+2. **Nếu đang ở `main`**: Kiểm tra xem có commits chưa push không:
+   ```bash
+   git log origin/main..main --oneline
+   ```
+3. **Nếu có commits chưa push trên `main`** → Tự động tạo feature branch retroactively:
+   a. Phân tích commit messages để suy ra loại công việc (`feat`, `fix`, `docs`, `refactor`, `chore`) và mô tả ngắn gọn.
+   b. Đề xuất tên branch (ví dụ: `feat/architecture-sync-enforcement`) và xin xác nhận người dùng.
+   c. Sau khi được đồng ý, thực hiện:
+      ```bash
+      # Tạo feature branch tại vị trí hiện tại (giữ nguyên commits)
+      git branch [ten_branch]
+      # Reset main về origin (xóa commits khỏi main)
+      git reset --hard origin/main
+      # Chuyển sang feature branch
+      git checkout [ten_branch]
+      ```
+   d. Thông báo: *"Đã tự động tạo branch `[ten_branch]` từ N commits trên main. Main đã được reset về origin."*
+4. **Nếu không có commits chưa push trên `main`** → Báo lỗi: *"Không có thay đổi nào trên main để tạo PR. Hãy tạo feature branch và commit trước."* Dừng workflow.
+5. **Nếu đã ở feature branch** → Bỏ qua bước này, tiếp tục Bước 1.
+
+## Bước 1: Kiểm định Chất lượng Local CI Eval Gates (Shift-Left Gate)
+
+1. Kích hoạt toàn bộ hệ thống kiểm thử tự động và kiểm định tài liệu tại local TRƯỚC KHI đẩy code:
+   * **Tại Hub Platform:**
+     ```bash
+     python scripts/eval/run_harness_evals.py
+     ```
+   * **Tại Spoke (Pháp điển / Knowledge Corpus):**
+     ```bash
+     python scripts/validate_legal_spoke.py
+     ```
+2. **Quy tắc chặn lỗi tại nguồn:**
+   - Nếu kiểm thử trả về `PASS 100%`: Mã nguồn đạt chuẩn, tiếp tục Bước 2.
+   - Nếu có Gate bị `FAIL` hoặc phát hiện Architecture Drift: Tạm dừng workflow, yêu cầu Agent/người dùng sửa lỗi tại local và commit lại trước khi đẩy mã nguồn.
+
+## Bước 2: Kiểm tra trạng thái và Push code lên remote
+
+1. Kiểm tra trạng thái làm việc (working tree):
+   ```bash
+   git status --porcelain
+   ```
+   *Lưu ý:* Đảm bảo không còn thay đổi chưa commit.
+2. Lấy tên branch hiện hành:
+   ```bash
+   git branch --show-current
+   ```
+3. Đẩy branch lên origin và thiết lập upstream:
+   ```bash
+   git push -u origin [current_branch]
+   ```
+
+## Bước 3: Khởi tạo Pull Request
+
+1. Kiểm tra xem GitHub CLI (`gh`) có hoạt động không:
+   ```bash
+   gh auth status
+   ```
+2. Nếu `gh` đã đăng nhập:
+   - Tự động lấy danh sách 5 commit gần nhất để làm nội dung mô tả:
+     ```bash
+     git log -n 5 --pretty=format:"- %s"
+     ```
+   - Tự động tạo PR bằng dòng lệnh (thay thế tiêu đề dựa trên tên branch và body bằng mô tả commit):
+     ```bash
+     gh pr create --title "[Feature/Fix Title]" --body "[Commit List Description]" --base main --head [current_branch]
+     ```
+3. Nếu `gh` chưa đăng nhập:
+   - Sử dụng `browser_subagent` mở link tạo PR động:
+     - URL: Lấy từ `git remote get-url origin` chuyển thành dạng URL Pull Request.
+     - Tiêu đề: Lấy từ tên branch (bỏ prefix `feature/`, `fix/`, viết hoa chữ cái đầu).
+     - Nội dung: Tóm tắt từ 5 commit gần nhất (`git log -n 5 --pretty=format:"- %s"`).
+
+## Bước 4: Thông báo kết quả
+
+1. Trình bày đường dẫn PR, trạng thái kiểm thử CI và tiến trình yêu cầu review (Review Requests) cho người dùng.
+2. Nhắc nhở người dùng: "PR đã được khởi tạo. GitHub Actions CI và GitHub Copilot Review đang chạy ngầm. Hãy gọi `/ccba-release-feature` khi CI đã xanh và Copilot đã hoàn tất lượt review để đối soát và merge."
+
+
+---
+
+# Skill: ccba-design
+
+---
+name: ccba-design
+description: Design brand identity, logos, banners, and visual assets. Use for brand
+  systems, design tokens, corporate identity programs. Not for UI code patterns.
 user-invocable: true
-when_to_use: "Invoke for brand systems and visual identity, not UI code."
+when_to_use: Invoke for brand systems and visual identity, not UI code.
 category: frontend
-keywords: [brand, logo, CIP, banners, identity]
-argument-hint: "[design-type] [context]"
+keywords:
+- brand
+- logo
+- CIP
+- banners
+- identity
+argument-hint: '[design-type] [context]'
 license: MIT
 metadata:
   author: claudekit
-  version: "2.1.0"
+  version: 2.1.0
+bundle: _consulting
+layer: _consulting
+disable-model-invocation: true
+triggers:
+- brand
+- logo
+- CIP
+- banners
+- identity
+- ccba-design
+- logo design
+- slide design
+- banner design
+- cip mockup
+- ckm:design
+- mockup
 ---
-
 # Design
 
 Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social photos, icons.
@@ -2956,13 +3280,21 @@ pip install google-genai pillow
 
 ---
 
-# Skill: diagnosing-bugs
+# Skill: ccba-diagnosing-bugs
 
 ---
-name: diagnosing-bugs
-description: Diagnosis loop for hard bugs and performance regressions. Use when the user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
+name: ccba-diagnosing-bugs
+description: Diagnosis loop for hard bugs and performance regressions. Use when the
+  user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
+disable-model-invocation: true
+bundle: _software
+triggers:
+- diagnose bugs
+- chẩn đoán lỗi
+- fix bug
+- debug
+- regression
 ---
-
 # Diagnosing Bugs
 
 A discipline for hard bugs. Skip phases only when explicitly justified.
@@ -3091,19 +3423,157 @@ Required before declaring done:
 - [ ] Throwaway prototypes deleted (or moved to a clearly-marked debug location)
 - [ ] The hypothesis that turned out correct is stated in the commit / PR message — so the next debugger learns
 
-**Then ask: what would have prevented this bug?** If the answer involves architectural change (no good test seam, tangled callers, hidden coupling) hand off to the `/improve-codebase-architecture` skill with the specifics. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.
+**Then ask: what would have prevented this bug?** If the answer involves architectural change (no good test seam, tangled callers, hidden coupling) hand off to the `/ccba-improve-codebase-architecture` skill with the specifics. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.
 
 
 ---
 
-# Skill: docs-validator
+# Skill: ccba-discard-feature
 
 ---
-name: docs-validator
-description: Chạy kiểm định tài liệu Markdown chống ảo ảnh (hallucinations), broken links và cấu hình thiếu.
+name: ccba-discard-feature
+
+description: Hủy bỏ branch hiện tại, xóa cả local và remote
+applies_to:
+- Phần mềm
+bundle: _software
 disable-model-invocation: true
+command: /ccba-discard-feature
+triggers:
+- discard
+- hủy branch
+- xóa branch
+---
+# Workflow: Discard Feature (Hủy bỏ Branch)
+
+Quy trình xóa bỏ an toàn một branch thử nghiệm không sử dụng nữa.
+
+## Bước 1: Xác nhận an toàn
+
+1. Lấy tên branch hiện hành:
+   ```bash
+   git branch --show-current
+   ```
+2. Cảnh báo rõ ràng cho người dùng trước khi xóa vĩnh viễn và yêu cầu xác nhận (`yes/no`). Nếu từ chối, dừng thực hiện ngay lập tức.
+
+## Bước 2: Quay về Main và Dọn dẹp
+
+1. Chuyển ngữ cảnh về branch `main`:
+   ```bash
+   git checkout main
+   ```
+2. Xóa branch trên remote (nếu có):
+   ```bash
+   git push origin --delete [discard_branch]
+   ```
+   *(Nếu xảy ra lỗi do remote branch không tồn tại, bỏ qua và tiếp tục)*
+3. Xóa branch cục bộ:
+   ```bash
+   git branch -D [discard_branch]
+   ```
+
+## Bước 3: Thông báo hoàn tất
+
+1. Báo cáo trạng thái hoàn tất:
+   - 🗑️ Đã hủy bỏ branch thành công.
+   - 🔙 Đã quay về branch `main` an toàn.
+
+
 ---
 
+# Skill: ccba-docs-manager
+
+---
+name: ccba-docs-manager
+description: Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
+applies_to:
+- Phần mềm
+bundle: _software
+disable-model-invocation: true
+triggers:
+- ccba-docs-manager
+- quản lý tài liệu
+- document manager
+- docs
+---
+# Kỹ năng: Quản lý Tài liệu Kỹ thuật (Docs Manager)
+
+Kỹ năng này đóng vai trò là một **Technical Writer QA** chuyên biệt, chịu trách nhiệm duy trì tính nhất quán, bảo mật và chính xác của tài liệu kỹ thuật so với thực tế mã nguồn (codebase).
+
+Agent **bắt buộc** phải thực thi theo đúng quy trình 5 pha sau đây:
+
+---
+
+## 🛠️ Quy trình thực thi 5 pha
+
+### Pha 1: Đóng gói Codebase (Scouting & Pack)
+1.  Đóng gói toàn bộ codebase hiện tại thành một tệp XML tạm thời:
+    ```bash
+    python scripts/security/repomix_pack.py --source . --output .md/scratch/repomix-output.xml
+    ```
+2.  Đọc cấu trúc và metadata từ tệp XML vừa tạo để hiểu cấu trúc codebase hiện tại.
+
+### Pha 2: Kiểm soát Bảo mật (Verify Secrets)
+1.  Chạy công cụ bảo mật quét và che giấu (redact) secrets trực tiếp trên file XML đóng gói:
+    ```bash
+    python scripts/maskara.py redact
+    ```
+    *(Hệ thống đã được vá lỗi XML Bypass để đảm bảo quét sạch secrets trong tệp XML)*.
+2.  Nếu phát hiện rò rỉ secrets nghiêm trọng (như mật khẩu Database dạng raw), **dừng ngay tiến trình** và báo cáo lỗi cho người dùng.
+
+### Pha 3: Sao lưu & Cập nhật Tài liệu (Backup & Update)
+1.  **Sao lưu bảo vệ dữ liệu (Backup Gate)**: Trước khi cập nhật hoặc phân rã bất kỳ tệp tài liệu nào, **bắt buộc** phải sao lưu toàn bộ các tệp tài liệu kỹ thuật mục tiêu (bao gồm cả phân vùng `.md/knowledge/` và các tài liệu tri thức gốc `README.md`, `PLATFORM.md`, `CONTRIBUTING.md`, `SECURITY.md`) vào thư mục tạm `.md/scratch/backups/`.
+2.  **Khởi tạo Baseline (Lần chạy đầu tiên)**:
+    - Nếu dự án chưa có `.md/knowledge/codebase_summary.md`:
+    - Chia nhỏ codebase thành các phân vùng module chính.
+    - Gọi song song **tối đa 3-5 subagents** để nghiên cứu sâu và lập báo cáo tóm tắt cho từng module.
+    - Hợp nhất các báo cáo này để xây dựng tài liệu baseline.
+3.  **Cập nhật tài liệu kỹ thuật**:
+    - Kế thừa các biểu mẫu chuẩn từ Hub tại `.agents/templates/` (ví dụ: `project_overview_pdr_template.md`).
+    - Ghi nhận tài liệu kỹ thuật **tập trung vào phân vùng `.md/knowledge/`** để tuân thủ nguyên tắc ngăn nắp của Knowledge Base dự án.
+    - **Đồng bộ tài liệu tri thức gốc**: Đối chiếu cấu trúc codebase thực tế (các packages và tệp tin) với sơ đồ thư mục và hướng dẫn trong `README.md`, `PLATFORM.md`, và `CONTRIBUTING.md`. Nếu phát hiện không đồng bộ (thêm/bớt package, đổi tên thư mục AI hoặc thay đổi Slash Commands), **bắt buộc** phải cập nhật lại sơ đồ và bảng hướng dẫn trong các tài liệu gốc này.
+4.  **Quản lý kích thước (Size Limit 800 LOC)**:
+    - Nếu tệp tài liệu nào vượt quá 800 dòng (LOC), chủ động phân rã nó thành tệp `index.md` dẫn hướng và các tệp con nằm trong thư mục con tương ứng (ví dụ: `.md/knowledge/system_architecture/`).
+    - Gọi kỹ năng **`ccba-relative-link-patcher`** để tự động vá và chuẩn hóa các liên kết tương đối bị ảnh hưởng.
+
+### Pha 4: Kiểm định Tài liệu chống Ảo ảnh (Validate)
+1.  Chạy script kiểm định tài liệu chính thức cho cả các tệp tài liệu tri thức gốc và các tài liệu thay đổi:
+    ```bash
+    python scripts/validate_docs.py . --src src,packages,scripts --changed
+    ```
+2.  **Quy trình Rollback**: Nếu kiểm định phát hiện lỗi liên kết hỏng (`Exit 1`) và Agent không thể tự động sửa lỗi sau 3 lượt thử, Agent **bắt buộc** phải:
+    - Khôi phục lại các tệp tài liệu gốc từ thư mục `.md/scratch/backups/`.
+    - Xóa bỏ hoàn toàn các tệp tin modular con bị lỗi.
+    - Thông báo lỗi chi tiết cho người dùng và dừng tiến trình.
+
+### Pha 5: Dọn dẹp Tài nguyên Tạm thời (Cleanup)
+1.  Xóa hoàn toàn tệp tin tạm `.md/scratch/repomix-output.xml`.
+2.  Báo cáo danh sách các tài liệu đã được cập nhật thành công kèm theo kết quả kiểm định `validate_docs.py`.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+
+---
+
+# Skill: ccba-docs-validator
+
+---
+name: ccba-docs-validator
+description: Chạy kiểm định tài liệu Markdown chống ảo ảnh (hallucinations), broken
+  links và cấu hình thiếu.
+disable-model-invocation: true
+bundle: _core
+triggers:
+- ccba-docs-validator
+- validate docs
+- kiểm định tài liệu
+- check docs
+- broken link
+- validate markdown
+---
 # Linter Gate: Docs Validator
 
 Sử dụng kỹ năng này để chạy linter tài liệu tĩnh và tự động sửa các lỗi liên kết, ký hiệu ảo giác so với codebase thực tế.
@@ -3135,96 +3605,40 @@ Khi báo cáo kiểm định trả về cảnh báo, thực hiện sửa đổi 
 
 ---
 
-# Skill: docs_manager
+# Skill: ccba-docx
 
 ---
-name: docs_manager
-description: Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
-applies_to:
-  - "Phần mềm"
-bundle: "_core"
----
-
-# Kỹ năng: Quản lý Tài liệu Kỹ thuật (Docs Manager)
-
-Kỹ năng này đóng vai trò là một **Technical Writer QA** chuyên biệt, chịu trách nhiệm duy trì tính nhất quán, bảo mật và chính xác của tài liệu kỹ thuật so với thực tế mã nguồn (codebase).
-
-Agent **bắt buộc** phải thực thi theo đúng quy trình 5 pha sau đây:
-
----
-
-## 🛠️ Quy trình thực thi 5 pha
-
-### Pha 1: Đóng gói Codebase (Scouting & Pack)
-1.  Đóng gói toàn bộ codebase hiện tại thành một tệp XML tạm thời:
-    ```bash
-    python scripts/repomix_pack.py --source . --output .md/scratch/repomix-output.xml
-    ```
-2.  Đọc cấu trúc và metadata từ tệp XML vừa tạo để hiểu cấu trúc codebase hiện tại.
-
-### Pha 2: Kiểm soát Bảo mật (Verify Secrets)
-1.  Chạy công cụ bảo mật quét và che giấu (redact) secrets trực tiếp trên file XML đóng gói:
-    ```bash
-    python scripts/maskara.py redact
-    ```
-    *(Hệ thống đã được vá lỗi XML Bypass để đảm bảo quét sạch secrets trong tệp XML)*.
-2.  Nếu phát hiện rò rỉ secrets nghiêm trọng (như mật khẩu Database dạng raw), **dừng ngay tiến trình** và báo cáo lỗi cho người dùng.
-
-### Pha 3: Sao lưu & Cập nhật Tài liệu (Backup & Update)
-1.  **Sao lưu bảo vệ dữ liệu (Backup Gate)**: Trước khi cập nhật hoặc phân rã bất kỳ tệp tài liệu nào, **bắt buộc** phải sao lưu toàn bộ các tệp tài liệu kỹ thuật mục tiêu (bao gồm cả phân vùng `.md/knowledge/` và các tài liệu tri thức gốc `README.md`, `PLATFORM.md`, `CONTRIBUTING.md`, `SECURITY.md`) vào thư mục tạm `.md/scratch/backups/`.
-2.  **Khởi tạo Baseline (Lần chạy đầu tiên)**:
-    - Nếu dự án chưa có `.md/knowledge/codebase_summary.md`:
-    - Chia nhỏ codebase thành các phân vùng module chính.
-    - Gọi song song **tối đa 3-5 subagents** để nghiên cứu sâu và lập báo cáo tóm tắt cho từng module.
-    - Hợp nhất các báo cáo này để xây dựng tài liệu baseline.
-3.  **Cập nhật tài liệu kỹ thuật**:
-    - Kế thừa các biểu mẫu chuẩn từ Hub tại `.agents/templates/` (ví dụ: `project_overview_pdr_template.md`).
-    - Ghi nhận tài liệu kỹ thuật **tập trung vào phân vùng `.md/knowledge/`** để tuân thủ nguyên tắc ngăn nắp của Knowledge Base dự án.
-    - **Đồng bộ tài liệu tri thức gốc**: Đối chiếu cấu trúc codebase thực tế (các packages và tệp tin) với sơ đồ thư mục và hướng dẫn trong `README.md`, `PLATFORM.md`, và `CONTRIBUTING.md`. Nếu phát hiện không đồng bộ (thêm/bớt package, đổi tên thư mục AI hoặc thay đổi Slash Commands), **bắt buộc** phải cập nhật lại sơ đồ và bảng hướng dẫn trong các tài liệu gốc này.
-4.  **Quản lý kích thước (Size Limit 800 LOC)**:
-    - Nếu tệp tài liệu nào vượt quá 800 dòng (LOC), chủ động phân rã nó thành tệp `index.md` dẫn hướng và các tệp con nằm trong thư mục con tương ứng (ví dụ: `.md/knowledge/system_architecture/`).
-    - Gọi kỹ năng **`relative-link-patcher`** để tự động vá và chuẩn hóa các liên kết tương đối bị ảnh hưởng.
-
-### Pha 4: Kiểm định Tài liệu chống Ảo ảnh (Validate)
-1.  Chạy script kiểm định tài liệu chính thức cho cả các tệp tài liệu tri thức gốc và các tài liệu thay đổi:
-    ```bash
-    python scripts/validate_docs.py . --src src,packages,scripts --changed
-    ```
-2.  **Quy trình Rollback**: Nếu kiểm định phát hiện lỗi liên kết hỏng (`Exit 1`) và Agent không thể tự động sửa lỗi sau 3 lượt thử, Agent **bắt buộc** phải:
-    - Khôi phục lại các tệp tài liệu gốc từ thư mục `.md/scratch/backups/`.
-    - Xóa bỏ hoàn toàn các tệp tin modular con bị lỗi.
-    - Thông báo lỗi chi tiết cho người dùng và dừng tiến trình.
-
-### Pha 5: Dọn dẹp Tài nguyên Tạm thời (Cleanup)
-1.  Xóa hoàn toàn tệp tin tạm `.md/scratch/repomix-output.xml`.
-2.  Báo cáo danh sách các tài liệu đã được cập nhật thành công kèm theo kết quả kiểm định `validate_docs.py`.
-
----
-*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-
-*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
-
-
----
-
-# Skill: docx
-
----
-name: docx
-description: "Công cụ xử lý Word (.docx): tạo mới, chỉnh sửa OOXML, thêm tracked changes & comments."
+name: ccba-docx
+description: 'Công cụ xử lý Word (.docx): tạo mới, chỉnh sửa OOXML, thêm tracked changes
+  & comments.'
 role: sub_skill
 master_skill: xu-ly-van-phong
 disable-model-invocation: true
 user-invocable: true
-when_to_use: "Invoke for Word document creation, edits, or extraction."
+when_to_use: Invoke for Word document creation, edits, or extraction.
 category: multimedia
-keywords: [docx, word, document, office]
+keywords:
+- ccba-docx
+- word
+- document
+- office
 license: Proprietary. LICENSE.txt has complete terms
 metadata:
   author: claudekit
-  version: "1.0.0"
+  version: 1.0.0
+bundle: _core
+triggers:
+- ccba-docx
+- word
+- document
+- office
+- ooxml
+- unpack docx
+- pack docx
+- tracked changes
+- Word document
+- excel xml
 ---
-
 # DOCX creation, editing, and analysis
 
 ## Overview
@@ -3432,13 +3846,21 @@ Required dependencies (install if not available):
 
 ---
 
-# Skill: domain-modeling
+# Skill: ccba-domain-modeling
 
 ---
-name: domain-modeling
-description: Build, refine, and maintain the project's domain model, ubiquitous language, and record architectural decisions (ADRs).
+name: ccba-domain-modeling
+description: Build, refine, and maintain the project's domain model, ubiquitous language,
+  and record architectural decisions (ADRs).
+disable-model-invocation: true
+bundle: _software
+triggers:
+- ccba-domain-modeling
+- domain model
+- modeling
+- ubiquitous language
+- adr
 ---
-
 # Domain Modeling
 
 Actively build and sharpen the project's domain model as you design. This is the *active* discipline — challenging terms, inventing edge-case scenarios, and writing the glossary and decisions down the moment they crystallise. (Merely *reading* `CONTEXT.md` for vocabulary is not this skill — that's a one-line habit any skill can do. This skill is for when you're changing the model, not just consuming it.)
@@ -3512,16 +3934,25 @@ If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](
 
 ---
 
-# Skill: eval-gate
+# Skill: ccba-eval-gate
 
 ---
-name: eval-gate
-description: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động sửa lỗi (Self-Healing Loop).
+name: ccba-eval-gate
+description: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động sửa
+  lỗi (Self-Healing Loop).
+disable-model-invocation: true
+bundle: _software
+triggers:
+- eval gate
+- kiểm chứng
+- sửa lỗi tự động
+- self-healing
+- check code
+- run gate
 ---
-
 # 🛡️ Kỹ năng: eval-gate (Tự kiểm chứng & Sửa lỗi)
 
-Kỹ năng này bọc script `scripts/run_harness_evals.py` và chịu trách nhiệm bảo vệ codebase khỏi các lỗi cú pháp, kiểu dữ liệu, test cases thất bại hoặc tài liệu bị ảo ảnh.
+Kỹ năng này bọc script [`scripts/eval/run_harness_evals.py`](../../../scripts/eval/run_harness_evals.py), tích hợp framework [`ccba_harness.evals`](../../../packages/ccba-harness/AGENTS.md) và chịu trách nhiệm bảo vệ codebase khỏi các lỗi cú pháp, kiểu dữ liệu, test cases thất bại, phá vỡ hợp đồng Seam, hoặc tài liệu bị ảo ảnh.
 
 ---
 
@@ -3531,13 +3962,16 @@ Kỹ năng này bọc script `scripts/run_harness_evals.py` và chịu trách nh
 Kích hoạt chạy script điều phối chính ngầm qua Wrapper an toàn với `WaitMsBeforeAsync: 1000`:
 ```bash
 # Kích hoạt CI Gates toàn bộ qua Safe Execution Sandbox Wrapper:
-.venv\Scripts\python.exe scripts/run_safe_eval_wrapper.py --cmd ".venv\Scripts\python.exe scripts/run_harness_evals.py" --timeout 90
+python scripts/eval/run_safe_eval_wrapper.py --cmd "python scripts/eval/run_harness_evals.py" --timeout 90
 
 # KHOANH VÙNG TEST (Scoped Test Execution): Chạy file test cụ thể bằng Wrapper an toàn
-python scripts/safe_pytest.py -f tests/test_agent_execution_guardrails.py
+python scripts/safe_pytest.py -f scripts/tests/test_wiki_health_linter.py
+
+# Khai phá lỗi từ production log và tự động sinh test cases (Eval Flywheel)
+python scripts/eval/log_eval_miner.py --skill [tên-skill] --auto-inject
 
 # Tự động tối ưu hóa SKILL.md với Skill Auto-Tuner (SkillOpt loop)
-python .agents/skills/eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3
+python .agents/skills/ccba-eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3
 ```
 *(Lưu ý: Luôn gọi `run_safe_eval_wrapper.py` với `WaitMsBeforeAsync` $\le 2000$ms để đẩy lệnh xuống Background Task. Wrapper tự động ngắt nếu vượt quá timeout và ghi log cô lập tại `.md/scratch/eval_runs/run_<timestamp>.log`).*
 
@@ -3559,23 +3993,27 @@ Nếu phát hiện Gate bị thất bại:
 
 ---
 
-# Skill: excalidraw-diagram
+# Skill: ccba-excalidraw-diagram
 
 ---
-name: excalidraw-diagram
-description: "Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian và excalidraw.com."
+name: ccba-excalidraw-diagram
+description: Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian
+  và excalidraw.com.
 disable-model-invocation: true
 applies_to:
-  - "Diagram"
-  - "Excalidraw"
-  - "Visualization"
-  - "Architecture"
-  - "Sơ đồ"
-  - "Flowchart"
-  - "Obsidian"
-bundle: "_core"
+- Phần mềm
+- Thiết kế
+- Tác vụ Admin
+bundle: _core
+keywords:
+- Diagram
+- Excalidraw
+- Visualization
+- Architecture
+- Sơ đồ
+- Flowchart
+- Obsidian
 ---
-
 # Excalidraw Diagram Skill
 
 Skill này tạo ra file Excalidraw JSON **đẹp, chuyên nghiệp và có chiều sâu** — không chỉ là các hộp và mũi tên thông thường.
@@ -4018,17 +4456,25 @@ tags: [excalidraw]
 
 ---
 
-# Skill: file-stability-guard
+# Skill: ccba-file-stability-guard
 
 ---
-name: File Stability Guard
-description: Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước thực tế thay vì time.sleep() — dành cho Google Drive, OneDrive, SharePoint.
+name: ccba-file-stability-guard
+description: Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước
+  thực tế thay vì time.sleep() — dành cho Google Drive, OneDrive, SharePoint.
 applies_to:
-  - "Phần mềm"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Kiểm định
+bundle: _core
+triggers:
+- file stability
+- cloud sync
+- watchdog
+- race condition
+- google drive sync
+- onedrive sync
+- file incomplete
 ---
-
 # File Stability Guard
 
 Pattern phát hiện **file đã sync xong** trước khi pipeline xử lý. Giải quyết triệt để lớp lỗi **Cloud Sync Race Condition** mà `time.sleep()` không thể giải quyết.
@@ -4168,65 +4614,21 @@ D:\VvC_Notes\scripts\daemon.py  →  hàm _is_file_stable()
 
 ---
 
-# Skill: form-template-cleaner
+# Skill: ccba-git-guardrails
 
 ---
-name: form-template-cleaner
-description: Sub-skill làm sạch biểu mẫu và tự động khôi phục tiêu đề biểu mẫu bị lỗi placeholder (dấu chấm lửng) bằng AI Gateway.
-role: sub_skill
-master_skill: markdown-document-processing
-applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+name: ccba-git-guardrails
+description: Guardrails to block or request explicit user permission before executing
+  dangerous git operations (force push, hard reset, clean, etc.) via terminal.
+disable-model-invocation: true
+bundle: _software
+triggers:
+- ccba-git-guardrails
+- git guardrails
+- git
+- guardrails
+- safety
 ---
-
-# Sub-skill: Form Template Cleaner
-
-Kỹ năng này xử lý các biểu mẫu (tờ trình, mẫu biên bản, báo cáo) bị lỗi nhận nhầm dòng placeholder chứa dấu chấm lửng/nét đứt làm tiêu đề.
-
-## Lệnh CLI Tự động
-Để tự động quét dọn và khôi phục tiêu đề biểu mẫu bằng AI:
-```bash
-python -m mdconverter.cli clean-form --file [đường_dẫn_tệp_markdown]
-```
-
-## SOP Xử lý bằng Prompt (AI-assisted Recovery)
-Khi chạy CLI hoặc khi muốn viết script Python tùy chỉnh gọi AI Gateway để khôi phục tiêu đề:
-
-1. **Nhận dạng lỗi:**
-   * Phần frontmatter `title` hoặc tiêu đề chính `#` ở dòng đầu của tệp có các ký tự placeholder như `............`, `.......(1).......`, `___`.
-2. **Thu thập dữ liệu ngữ cảnh:**
-   * Trích xuất 20 dòng đầu tiên của tệp Markdown để làm thông tin đầu vào.
-3. **Mẫu Prompt gọi AI Gateway (`ccba-ai`):**
-   ```python
-   from ccba_ai import ai
-   
-   prompt = f"""
-   Phân tích 20 dòng đầu của biểu mẫu pháp luật Việt Nam sau đây và suy luận ra tiêu đề chính thức của biểu mẫu đó.
-   Tiêu đề biểu mẫu thường là dòng chữ viết hoa nổi bật (ví dụ: THÔNG BÁO KHỞI CÔNG..., ĐƠN ĐỀ NGHỊ CẤP PHÉP..., BÁO CÁO KẾT QUẢ...).
-   Bỏ qua các dòng placeholder chấm lửng như "........", "............(1)............", "Kính gửi: ...".
-   Chỉ trả về duy nhất chuỗi tiêu đề chính thức, không thêm bất kỳ văn bản giải thích nào khác.
-   Nội dung 20 dòng đầu:
-   {context_lines}
-   """
-   extracted_title = ai.chat(prompt)
-   ```
-4. **Cập nhật:**
-   * Đè tiêu đề chuẩn `extracted_title` vào trường `title` của frontmatter và vào dòng tiêu đề `#` của tệp.
-
-
----
-
-# Skill: git-guardrails
-
----
-name: git-guardrails
-description: Guardrails to block or request explicit user permission before executing dangerous git operations (force push, hard reset, clean, etc.) via terminal.
----
-
 # Setup Git Guardrails
 
 Establish runtime guardrails to intercept and prevent the Agent from executing dangerous or destructive Git operations automatically.
@@ -4252,15 +4654,153 @@ The following commands are classified as destructive/dangerous:
 
 ---
 
-# Skill: grilling
+# Skill: ccba-graduate-rd
 
 ---
-name: grilling
-description: Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy chuẩn (Grill with Docs), hoặc hội tụ UI qua prototype trực quan.
+name: ccba-graduate-rd
+
+description: Quy trình cưỡng chế chuyển hóa mã nguồn R&D thành Deep Seam Production, tích hợp /boost, /teamwork và mở PR tự động.
+applies_to:
+- Phần mềm
+- Kiểm định
+- Thẩm tra thiết kế
+bundle: _core
+disable-model-invocation: true
+command: /ccba-graduate-rd
+triggers:
+- graduate
+- tốt nghiệp
+- hợp nhất vào hub
+- consolidate
+- deep seam
+- chuyển scratch vào production
+- ccba-graduate-rd
+---
+# Workflow: Tốt Nghiệp R&D → Deep Seam Production & Auto-PR (/ccba-graduate-rd)
+
+Quy trình tự động hóa toàn trình 7 bước (Full-Cycle Autonomous Pipeline) chuyển hóa mã nguồn thử nghiệm (scratch script, prototype) thành module Production chuẩn mực trong Hub (`packages/ccba-*/src/`), tự động đóng gói Proposal, tạo Pull Request và tự làm xanh CI (Self-Healing Dual-Gate).
+
+> [!CAUTION]
+> **3 Bất Biến Tuyệt Đối (Core Invariants):**
+> 1. **Không để script vá tồn tại qua phiên:** Mọi scratch script nằm trong `brain/*/scratch/` hoặc `.md/scratch/`, cấm commit vào `scripts/` Spoke.
+> 2. **Upstream Promotion bắt buộc:** Khi scratch script chứng minh hiệu quả → Bắt buộc refactor vào Hub `packages/` trong cùng phiên.
+> 3. **1-Pass Clean Run & 100% CI Green:** Xóa script vá, chạy lại lệnh gốc và nghiệm thu toàn bộ CI Gates đạt 100% Tích Xanh.
+
+---
+
+## 📋 Bước 1: Kiểm Kê & Phân Loại R&D Artifacts
+Quét và phân loại toàn bộ files trong `brain/*/scratch/`, `.md/scratch/` và `scripts/`:
+* **Thuật toán cốt lõi** (regex, parser, classifier, KaTeX): → Bước 2 nhúng Deep Seam.
+* **Glue code** (CLI wrapper, `print`, `tempfile`): → Loại bỏ, không nhúng vào lõi.
+* **Dữ liệu mẫu / fixture**: → Bước 3 chuyển thành test fixture.
+* **Báo cáo / ghi chú**: → Lưu vào `.md/archive/` theo chuẩn ADR 0033.
+
+---
+
+## 🔧 Bước 2: Bóc Tách & Nhúng Lõi Deep Seam (Giao thức /boost)
+Áp dụng cơ chế **Deep Reasoning** (`DeepCoder`) và **5 Cổng Phản Biện** (`improve-codebase-architecture`):
+1. **Cổng 1 (Glue vs Domain):** Tỷ lệ $\ge 70\%$ Glue Code $
+ightarrow$ KHÔNG nhúng vào lõi Seam.
+2. **Cổng 2 (Hard Caller Gate):** Đếm số callers thực tế và xác minh implementation.
+3. **Cổng 3 (SDK Signatures):** Kiểm tra signature tương thích kiến trúc hiện có.
+4. **Cổng 4 (Unique Naming):** Đảm bảo symbol name không xung đột toàn cục.
+5. **Cổng 5 (Measurable Friction):** Bằng chứng lỗi runtime hoặc benchmark thực tế.
+*Refactor chuẩn mực:* Loại bỏ hardcoded paths, thêm type hints và Google docstrings đầy đủ.
+
+---
+
+## 🧪 Bước 3: Xây Dựng Test Suite (Double-Pass Adversarial Review)
+1. Tạo test fixtures trong `packages/ccba-*/tests/` từ dữ liệu thực tế của phiên R&D.
+2. Viết unit tests độc lập và chạy kiểm thử tự phản biện (Self-Adversarial):
+   ```powershell
+   python -m pytest packages/ccba-*/tests/ -v
+   ```
+   *Tiêu chuẩn:* **100% tests passed, 0 failures**.
+
+---
+
+## 🔁 Bước 4: Kiểm Chứng 1-Pass Clean Run & Spoke CI
+1. Xóa các scratch scripts cục bộ.
+2. Chạy lại lệnh gốc từ đầu vào ban đầu (ví dụ: `python -m ccba_legal convert "ten_doc.docx" "legal_docs/..."`).
+3. Chạy Master CI Gate của Spoke:
+   ```powershell
+   python scripts/validate_legal_spoke.py
+   ```
+   *Tiêu chuẩn:* `0 Errors, 0 Critical Warnings, 100% Pass`.
+
+---
+
+## 📦 Bước 5: Đóng Gói Proposal & Khởi Tạo Branch
+Thực thi tại thư mục Hub (`hub_path`):
+1. **Khởi tạo branch đề xuất (ADR 0045):**
+   ```bash
+   BRANCH_NAME="proposal/${ISSUE_ID:+issue-${ISSUE_ID}-}${PROPOSAL_NAME}"
+   git checkout main && git pull origin main && git checkout -b "$BRANCH_NAME"
+   ```
+2. **Định dạng & Cập nhật Thống kê Kiến trúc:**
+   ```bash
+   python -m ruff check --fix . && python -m ruff format . && python scripts/update_arch_stats.py
+   ```
+3. **Soạn thảo Proposal File (`.agents/proposals/YYYY-MM-DD_[proposal-name].md`):** Ghi nhận đầy đủ Context, Implementation và Verification.
+4. **Leakage Guard & Push:** Chạy `python scripts/governance/check_spoke_leakage.py` và `git push origin "$BRANCH_NAME"`.
+
+---
+
+## 🚀 Bước 6: Mở GitHub Pull Request & Vòng Lặp Self-Healing CI Dual-Gate
+1. **Mở Pull Request qua GitHub CLI:**
+   ```bash
+   gh pr create --title "feat([scope]): [tên-đề-xuất]" --body "$PR_BODY" --base main --head "$BRANCH_NAME"
+   ```
+2. **Vòng lặp Dừng chờ & Tự làm xanh CI (Teamwork Autonomous CI Guard):**
+   - Lắng nghe trạng thái qua `gh pr checks <PR_NUMBER>`.
+   - Nếu CI Fail: Đọc log qua `gh run view <RUN_ID> --log-failed` $
+ightarrow$ Tự động phân tích và sinh bản vá $
+ightarrow$ Commit & push bản vá.
+   - Lặp lại đến khi **100% CI Checks Tích Xanh** (`validate`, `scan`, `test matrix`, `lint`).
+
+---
+
+## 🔄 Bước 7: Báo Cáo & Closed-Loop Spoke Sync
+1. Báo cáo URL Pull Request, trạng thái CI Tích Xanh và tóm tắt tính năng cho Maintainer.
+2. Sẵn sàng cho lệnh `/ccba-review-proposal [PR_NUMBER]` hoặc đồng bộ downstream khi PR được merge.
+
+
+---
+
+# Skill: ccba-grilling
+
+---
+name: ccba-grilling
+description: Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy
+  chuẩn (Grill with Docs), hoặc hội tụ UI qua prototype trực quan.
 user-invocable: true
-keywords: [grill, stress-test, phỏng vấn, chất vấn, đối chiếu, prototype, UI, frontend, visual]
+keywords:
+- grill
+- stress-test
+- phỏng vấn
+- chất vấn
+- đối chiếu
+- prototype
+- UI
+- frontend
+- visual
+disable-model-invocation: true
+bundle: _software
+triggers:
+- grill
+- stress-test
+- phỏng vấn
+- chất vấn
+- đối chiếu
+- prototype
+- UI
+- frontend
+- visual
+- ccba-grilling
+- hỏi xoáy
+- stress test
+- kiểm chứng kế hoạch
 ---
-
 # Grilling (Phỏng Vấn Dồn Dập & Đối Chiếu Quy Chuẩn)
 
 Kỹ năng này bắt buộc Agent phải chạy một vòng lặp phỏng vấn Socrates dồn dập (Grilling Loop) để stress-test kế hoạch thiết kế của người dùng hoặc đối chiếu tính tuân thủ của kế hoạch đó với các quy chuẩn tài liệu được chỉ định.
@@ -4335,40 +4875,117 @@ Sử dụng khi người dùng muốn hội tụ về một thiết kế giao di
 
 ---
 
-# Skill: handoff
+# Skill: ccba-handoff
 
 ---
-name: handoff
-description: Compact the current conversation into a handoff document for another agent to pick up.
-argument-hint: "What will the next session be used for?"
+name: ccba-handoff
+description: Đóng gói và tổng hợp phiên làm việc hiện tại thành tài liệu Handoff chuẩn
+  mực để Agent tiếp theo tiếp quản liền mạch.
+argument-hint: Mục tiêu hoặc nhiệm vụ trọng tâm cho phiên làm việc tiếp theo?
+bundle: _core
 disable-model-invocation: true
+metadata:
+  author: CCBA
+  version: 2.0.0
+triggers:
+- ccba-handoff
+- đóng gói phiên
+- transfer context
+- chuyển tiếp
+---
+# 🤝 Kỹ Năng: Handoff Phiên Làm Việc (`handoff`)
+
+Kỹ năng này chịu trách nhiệm nén toàn bộ ngữ cảnh, quyết định kiến trúc, tiến độ công việc và trạng thái môi trường của phiên hiện tại thành một tài liệu bàn giao chuẩn mực tại `.md/scratch/handoffs/handoff-<timestamp>.md`.
+
+Mục tiêu tối thượng là giúp **Agent ở phiên làm việc tiếp theo nắm bắt 100% ngữ cảnh trong 30 giây** mà không cần đọc lại toàn bộ hàng nghìn dòng lịch sử trò chuyện.
+
 ---
 
-Write a handoff document summarising the current conversation so a fresh agent can continue the work. Save to the project scratch directory: `.md/scratch/handoffs/handoff-<timestamp>.md`. Create the directory if it does not exist. Ensure local `.gitignore` ignores this directory so it is not pushed to git remote.
+## 📋 Tiêu Chí Hoàn Thành (Completion Criteria)
+- [x] Tạo thành công tệp bàn giao tại: `.md/scratch/handoffs/handoff-<YYYY-MM-DD-HHMMSS>.md`.
+- [x] Thư mục `.md/scratch/` đã được cấu hình trong `.gitignore` (không đẩy dữ liệu nháp lên remote).
+- [x] Tài liệu tuân thủ đầy đủ **Cấu trúc 5 Phần Tiêu chuẩn CCBA**.
+- [x] Đã che giấu (redact) 100% API keys, tokens, mật khẩu qua chuẩn Maskara.
 
-Include a "suggested skills" section in the document, which suggests skills that the agent should invoke.
+---
 
-Do not duplicate content already captured in other artifacts (specs, plans, ADRs, issues, commits, diffs). Reference them by path or URL instead.
+## 📐 Cấu Trúc Tài Liệu Handoff 5 Phần Chuẩn CCBA
 
-Redact any sensitive information, such as API keys, passwords, or personally identifiable information.
+Tài liệu bàn giao bắt buộc phải tuân theo cấu trúc sau:
 
-If the user passed arguments, treat them as a description of what the next session will focus on and tailor the doc accordingly.
+```markdown
+# 🤝 CCBA Platform Session Continuation Summary
+
+> **Timestamp:** <YYYY-MM-DDTHH:MM:SS+07:00>  
+> **Repository:** <owner/repo> (Hub / Spoke)  
+> **Active Branch:** <branch_name> (commit `<hash>`)  
+> **Target Base:** `main` (commit `<hash>`)  
+
+---
+
+## 1. Outstanding User Requests (Nhiệm vụ còn dang dở & Yêu cầu người dùng)
+- **Danh sách yêu cầu mở:** Liệt kê theo thứ tự ưu tiên (P1, P2, P3).
+- **Phân loại giai đoạn:** PLANNING / IMPLEMENTATION / VERIFICATION / REVIEW.
+- **Ngữ cảnh bổ sung:** Trích dẫn nguyên văn câu lệnh hoặc định hướng của người dùng.
+
+---
+
+## 2. User Knowledge & Core Directives (Quyết định cốt lõi của Người dùng)
+- Các quyết định kiến trúc hoặc giới hạn do người dùng trực tiếp phê duyệt.
+- Danh sách các giả định đã được xác nhận hoặc bị bác bỏ.
+
+---
+
+## 3. Work Accomplished (Các công việc đã hoàn thành)
+- Danh sách các tính năng, refactor, bug fixes đã thực hiện kèm danh sách files thay đổi.
+- Các commits và PRs liên quan (kèm mã commit SHA).
+
+---
+
+## 4. Model Knowledge & Architecture Discoveries (Tri thức & Phát hiện mới)
+- Các invariants, CI gates, patterns mới phát hiện trong codebase.
+- Các cảnh báo hoặc cạm bẫy kỹ thuật cần lưu ý.
+
+---
+
+## 5. Current Work & Immediate Next Steps (Kế hoạch hành động cho Agent tiếp theo)
+- **Nhiệm vụ thực hiện ngay lập tức:** Mô tả chi tiết 1-3 bước hành động cụ thể.
+- **Tài liệu tham khảo bắt buộc:** Danh sách các tệp SKILL.md, ADR, spec cần đọc trước khi code.
+- **Lệnh kiểm thử xác minh:** Các lệnh CLI / Pytest để kiểm tra lại trước khi bắt đầu.
+```
+
+---
+
+## 🔒 Quy Tắc An Toàn & Bảo Mật
+1. **Không trùng lặp tài liệu tĩnh:** Không sao chép lại toàn bộ nội dung của các file spec, ADR hay kế hoạch lớn; thay vào đó hãy sử dụng liên kết Markdown dẫn tới file đó.
+2. **Khử lộ lọt dữ liệu:** Tuyệt đối không lưu API Key, bí mật hay thông tin nhạy cảm vào file handoff.
+3. **Cá nhân hóa theo tham số:** Nếu người dùng truyền thêm tham số (argument) khi gọi lệnh (ví dụ: `/ccba-handoff chuẩn bị seminar PCCC`), hãy tập trung phần `Immediate Next Steps` vào đúng chủ đề đó.
 
 
 ---
 
-# Skill: hybrid-rag-search
+# Skill: ccba-hybrid-rag-search
 
 ---
-name: Hybrid RAG Search
-description: Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) + RRF Fusion. Đúc rút từ VvC Ground Truth pipeline — độ chính xác cao hơn pure BM25 đơn thuần 20x.
+name: ccba-hybrid-rag-search
+description: Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) + RRF
+  Fusion. Đúc rút từ VvC Ground Truth pipeline — độ chính xác cao hơn pure BM25 đơn
+  thuần 20x.
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Kiểm định
+bundle: _core
+triggers:
+- hybrid rag
+- bm25
+- embedding search
+- rrf
+- semantic search
+- retrieval
+- context search
+- document search
 ---
-
 # Hybrid RAG Search
 
 Tìm kiếm ngữ nghĩa kết hợp **BM25 (keyword precision)** + **Embedding (semantic recall)** + **Reciprocal Rank Fusion**. Vượt qua giới hạn của pure BM25 (bỏ sót ngữ nghĩa) và pure embedding (bỏ sót từ khóa chuyên ngành).
@@ -4553,7 +5170,7 @@ def hybrid_search_with_fallback(query, corpus, bm25_index, embedding_matrix=None
 | Use case | Corpus | Scoping |
 |---|---|---|
 | `legal-document-tracker` | Toàn bộ text VBPL (NĐ, TT) | Theo loại văn bản, năm ban hành |
-| `ccba-ai-qc-discovery` | Standard clauses, requirements | Theo bộ môn (PCCC, KC, MEP) |
+| `ccba-ai-qc` | Standard clauses, requirements | Theo bộ môn (PCCC, KC, MEP) |
 | `ccba-ai-qc-pccc-audit` | QCVN 06, TCVN 7568, NĐ 105 | Theo điều khoản, loại yêu cầu |
 | `seminar-builder` | Vault concepts, past seminars | Theo domain/topic |
 
@@ -4606,24 +5223,31 @@ D:\VvC_Notes\scripts\services\rag_search.py
 
 ---
 
-# Skill: implement
+# Skill: ccba-implement
 
 ---
-name: implement
-description: "Implement a piece of work based on a spec or set of tickets."
+name: ccba-implement
+description: Implement a piece of work based on a spec or set of tickets.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- ccba-implement
+- ccba-implement spec
+- ccba-implement ticket
 ---
-
 Implement the work described by the user in the spec or tickets.
 
 Use `/ccba-tdd` where possible, at pre-agreed seams.
 
-## Context Budget Management
-
+## Context Budget Management & Early Escalation
+ 
 To prevent context exhaustion (which causes misleading "User cancelled agent execution" errors):
-
+ 
 1. **Scoped Tests Only**: Always run pytest on individual test files (`python scripts/safe_pytest.py -f tests/test_specific.py`), never on entire directories.
-2. **Loop Budget**: Maximum **5 edit→test cycles** per seam/test file. If a test still fails after 5 attempts, stop, commit WIP, document blockers, and ask the user for guidance.
+2. **Loop Budget & Early Escalation**:
+   - Maximum **5 edit→test cycles** per seam/test file.
+   - **Early Escalation (Cycle 3)**: If test still fails after **3 attempts** due to deep logic errors, concurrency, or multi-file dependencies, STOP blind guessing. Formulate a **Deep Problem Brief** (Failure Manifest, Tested Hypotheses, Code Seams, Error Logs).
+   - **Hard Stop (Cycle 5)**: If 5 attempts fail, stop immediately, commit WIP, and activate **Boost Escalation Gate** (recommend the user run `/boost [brief]` for deep multi-agent reasoning).
 3. **Full Suite — Once at the End**: Run the complete test suite only **once** at the very end, preferably via `python scripts/safe_pytest.py --allow-unscoped` to detach from the daemon process.
 4. **Invalid Args Signal**: If you encounter `invalid tool call (invalid_args)` errors twice in a row, stop immediately — context budget is nearly depleted. Commit WIP and inform the user.
 
@@ -4641,51 +5265,90 @@ Commit your work to the current branch.
 
 ---
 
-# Skill: improve-codebase-architecture
+# Skill: ccba-improve-codebase-architecture
 
 ---
-name: improve-codebase-architecture
-description: Quét codebase tìm kiếm cơ hội làm sâu module, xuất báo cáo trực quan dưới dạng HTML, và thực hiện grilling để chốt phương án cải tiến.
+name: ccba-improve-codebase-architecture
+description: Quét codebase tìm kiếm cơ hội làm sâu module, xuất báo cáo trực quan
+  dưới dạng HTML, và thực hiện grilling để chốt phương án cải tiến.
 disable-model-invocation: true
 category: engineering
-keywords: [architecture, design, deep-module, refactor, visual-report, cải tiến kiến trúc, module sâu, báo cáo trực quan, refactor mã nguồn]
+keywords:
+- architecture
+- ccba-design
+- deep-module
+- refactor
+- visual-report
+- cải tiến kiến trúc
+- module sâu
+- báo cáo trực quan
+- refactor mã nguồn
 metadata:
   author: CCBA
-  version: "1.2.0"
+  version: 1.5.0
+bundle: _core
 ---
-
 # Cải tiến Kiến trúc Mã nguồn (Improve Codebase Architecture)
 
-Kỹ năng này giúp phát hiện các điểm nghẽn kiến trúc và đề xuất **Cơ hội làm sâu module (Deepening Opportunities)** — các hoạt động refactor giúp chuyển đổi các module nông (shallow modules) thành các module sâu (deep modules). Mục tiêu tối thượng là tăng khả năng kiểm thử (testability) và tính dễ định hướng cho AI (AI-navigability).
+Kỹ năng này giúp phát hiện các điểm nghẽn kiến trúc thực tế và đề xuất **Cơ hội làm sâu module (Deepening Opportunities)** — các hoạt động refactor giúp chuyển đổi các module nông (shallow modules) thành các module sâu (deep modules), đồng thời loại bỏ nợ kỹ thuật tồn dư (symbol collisions, import drift, legacy scripts). Mục tiêu tối thượng là tăng khả năng kiểm thử (testability) và tính dễ định hướng cho AI (AI-navigability).
 
 Quy trình này được định hướng bởi domain model của dự án và xây dựng trên bộ từ vựng thiết kế phần mềm thống nhất:
-- Sử dụng chính xác các thuật ngữ từ kỹ năng `/codebase-design` (**module**, **interface**, **depth**, **seam**, **adapter**, **leverage**, **locality**) và các nguyên lý đi kèm (phép thử xóa bỏ - deletion test, "interface là bề mặt kiểm thử", "một adapter = seam giả thuyết, hai adapter = seam thực tế"). Tuyệt đối không dùng lệch sang các từ "component", "service", "API" hoặc "boundary".
+- Sử dụng chính xác các thuật ngữ từ kỹ năng `/ccba-codebase-design` (**module**, **interface**, **depth**, **seam**, **adapter**, **leverage**, **locality**) và các nguyên lý đi kèm (phép thử xóa bỏ - deletion test, "interface là bề mặt kiểm thử", "một adapter = seam giả thuyết, hai adapter = seam thực tế"). Tuyệt đối không dùng lệch sang các từ "component", "service", "API" hoặc "boundary".
 - Ngôn ngữ domain trong `CONTEXT.md` cung cấp tên gọi chuẩn cho các seam; các tài liệu ADR trong thư mục `.md/knowledge/` ghi nhận các quyết định kiến trúc đã chốt mà quy trình này không được tự ý lật lại.
 
 ---
 
 ## Quy trình Thực hiện (Process)
 
-### 1. Khám phá (Explore)
+### 1. Khám phá & Quét Thực Chiến (Explore & Ground-Truth Sweep)
 - Đọc bảng thuật ngữ domain (`CONTEXT.md`) và bất kỳ tài liệu quyết định thiết kế (ADRs) liên quan đến phân vùng mã nguồn chuẩn bị tác động.
-- Sử dụng subagent thuộc kiểu `Explore` để quét codebase một cách tự nhiên. Ghi chép lại các điểm gây cản trở lập trình (architectural friction):
-  * Nơi nào muốn hiểu một khái niệm nghiệp vụ lại phải nhảy qua nhảy lại giữa quá nhiều module nhỏ?
-  * Nơi nào chứa các module **nông (shallow)** — giao diện interface phức tạp gần bằng phần code triển khai bên trong?
-  * Nơi nào các hàm thuần túy (pure functions) bị bóc tách ra chỉ để phục vụ viết unit test, trong khi lỗi thực tế lại nằm ở cách gọi chúng (thiếu **locality**)?
-  * Nơi nào các module có coupling chặt chẽ và bị rò rỉ logic qua các seam của chúng?
-  * Phân vùng nào đang thiếu kiểm thử hoặc cực kỳ khó viết unit test với giao diện hiện tại?
+- Sử dụng subagent thuộc kiểu `Explore` để quét codebase một cách tự nhiên. Ghi chép lại các điểm gây cản trở lập trình thực tế (architectural friction):
+  * **Xung đột Định danh Toàn Cục (Cross-Package Symbol Collision - P6.21):** Quét phát hiện các class/function/module có tên trùng lặp giữa các package khác nhau nhưng thực hiện nghiệp vụ khác nhau (như `TableReconstructor` vs `AppendixExtractor`).
+  * **Xâm phạm Ranh giới Seam (Private Submodule Import Violation - P6.16, P6.17):** Nơi code bên ngoài package vượt qua `__init__.py` public interface để import trực tiếp vào file private `_internal.py` hoặc submodule lõi (`from ccba_pkg._core import ...`). *Lưu ý:* Absolute import hợp lệ bên trong cùng một package (`from pkg.core import X` trong `pkg/cli/cmd.py`) theo PEP 328 **không phải** là import drift.
+  * **Script Dùng Một Lần Tồn Dư (Legacy One-off Scripts):** Các script di trú ticket cũ (`execute_ticket*.py`) nằm rải rác trong các thư mục vận hành thay vì được lưu trữ tại `.md/knowledge/archive/`.
+  * **Module Nông Thực Sự (True Shallow Modules):** Nơi nào giao diện interface phức tạp gần bằng phần code triển khai bên trong?
+  * **Logic Bị Phân Mảnh (Scattered Domain Logic):** Nơi nào muốn hiểu một khái niệm nghiệp vụ lại phải nhảy qua nhảy lại giữa quá nhiều module nhỏ?
+  * **Thiếu Kiểm Thử / Khó Viết Unit Test:** Phân vùng nào đang thiếu kiểm thử hoặc cực kỳ khó viết unit test với giao diện hiện tại?
+  * **Vi phạm Hợp Đồng Phụ Thuộc (Dependency Contract Violations - P6.16):** Nếu dự án có bộ quét AST hợp đồng (`check_dependency_contracts.py` hoặc `.importlinter`), chạy trước và ghi nhận kết quả. Các vi phạm `PrivateSubmoduleSeamViolation`, `FoundationLeafPurityViolation`, `LeafIndependenceViolation` là ứng viên friction sẵn có.
 - Áp dụng **phép thử xóa bỏ (deletion test)** đối với các module nghi ngờ bị nông: Nếu xóa module đó đi thì độ phức tạp sẽ tập trung lại một chỗ hay chỉ bị dịch chuyển sang chỗ khác? Nếu câu trả lời là "tập trung lại một chỗ", đó chính là seam tốt cần làm sâu.
-- **Tiêu chí hoàn thành:** Lập danh sách ghi nhận được ít nhất 2 vùng module bị nông hoặc coupling cao, kèm kết quả phép thử xóa bỏ (deletion test) cho mỗi vùng.
+- **Tiêu chí hoàn thành:** Lập danh sách thô các vùng module bị nông, coupling cao hoặc chứa nợ kỹ thuật thực tế.
 
-### 1.5. Tự Phản Biện Trước Đề Xuất (Pre-Proposal Adversarial Self-Check)
-Trước khi tổng hợp các ứng viên vào Báo cáo HTML hoặc Implementation Plan, Agent **bắt buộc** phải tự chạy rà soát 4 câu hỏi phản biện (theo Rule #8):
-1. **Kiểm chứng SDK/Dependency:** Các phương thức/class định tích hợp (ví dụ: `ccba_ai`, `httpx`) có thực sự hỗ trợ kiểu dữ liệu cần thiết (multimodal bytes, headers, async stream) và có signature khớp với mã nguồn thực tế không? (Bắt buộc `grep`/`view_file` mã nguồn package, không suy đoán).
-2. **Caller Justification Gate (KISS):** Lớp Seam mới định tạo có caller/consumer thực tế nào mới cần đến không? Đã có Deep Seam nào tương đương tồn tại chưa (ví dụ: `ConversionPipeline`)? Nếu đã có, nghiêm cấm tạo wrapper nông mới (như `MarkdownConverter`).
-3. **Phân biệt Boilerplate vs Domain Orchestration:** Khi đề xuất tinh gọn script, script đó có chứa logic nghiệp vụ đặc thù (routing, taxonomy, mutex, popups) không? Nếu có, phải đưa logic vào package lõi trước, viết test đầy đủ rồi mới tinh gọn script thành Thin CLI Delegate.
-4. **Submodule Verification:** Các submodule/class định import (`ccba_legal.formatter`, `cleaners`, v.v.) có thực sự tồn tại và sẵn sàng sử dụng trong package đích không?
-- **Tiêu chí hoàn thành:** Mỗi ứng viên đề xuất phải có 4 dòng tự xác nhận (✅/❌) cho 4 câu hỏi trên trong ghi chú nội bộ trước khi đưa vào báo cáo HTML hoặc Implementation Plan. Ứng viên nào có bất kỳ ❌ nào phải được điều chỉnh hoặc loại bỏ.
+### 2. Vòng Bắn Hạ & 5 Cổng Phản Biện Kèm Bằng Chứng (Adversarial Shoot-Down & 5 Evidence-Backed Gates)
 
-### 2. Trình bày Báo cáo dưới dạng HTML (Present candidates as an HTML report)
+*Quy tắc bất biến:* **Tuyệt đối không đưa các phỏng đoán hoặc heuristic chưa kiểm chứng vào Báo cáo HTML.** Trước khi chuyển sang bước dựng báo cáo, Agent **bắt buộc** phải thực thi vòng bắn hạ tích hợp sẵn 5 cổng phản biện đối với từng ứng viên thô. Mỗi cổng yêu cầu **bằng chứng thực địa (Hard Evidence)** — không chấp nhận dấu tích ✅ tự khai:
+
+1. **Cổng 1: Phân biệt Glue Code vs Domain Logic (Rule P6.20):**
+   * **Hành động bắt buộc:** Đọc trực tiếp từng dòng (`view_file`) của hàm/module định bóc tách. Đếm tỷ lệ dòng `subprocess/tempfile/argparse/print` so với dòng thuật toán nghiệp vụ.
+   * **Dẫn chứng ghi vào báo cáo:** Tệp, phạm vi dòng, tỷ lệ phần trăm Glue vs Domain.
+   * *Rào chắn:* Nếu $\ge 70\%$ là Glue Code $\rightarrow$ Giữ nguyên tại CLI script, không bọc thành Seam lõi. **Loại bỏ ứng viên.**
+
+2. **Cổng 2: Đếm Số Caller & Xác Minh Implementation (Hard Caller Gate - Rule P6.5, P6.22):**
+   * **Hành động bắt buộc:** Chạy `grep_search` đếm callers thực tế. Sau đó **mở mã nguồn** (`view_file`) của **từng caller** để xác minh caller đang *tự viết lại logic* hay *đã import từ Deep Seam SSOT*.
+   * **Dẫn chứng ghi vào báo cáo:** Danh sách `file:line` của từng caller kèm đánh giá "tự triển khai" hoặc "import SSOT".
+   * *Rào chắn:* Nếu caller đã import SSOT chuẩn $\rightarrow$ **Xác định là False Positive, loại bỏ 100%.** Nếu Caller $= 1$ (không phức tạp domain) $\rightarrow$ Xếp loại `Speculative / Low ROI`.
+
+3. **Cổng 3: Kiểm chứng SDK & Dependency Signatures:**
+   * **Hành động bắt buộc:** Các phương thức/class định tích hợp có signature khớp với mã nguồn thực tế không? `grep`/`view_file` mã nguồn package, không suy đoán.
+   * **Dẫn chứng ghi vào báo cáo:** Signature thực tế trích xuất từ `packages/.../core.py`.
+
+4. **Cổng 4: Bất Biến Định Danh Duy Nhất (Cross-Package Unique Naming - Rule P6.21):**
+   * **Hành động bắt buộc:** `grep_search` xác nhận symbol name mới chưa từng tồn tại ở bất kỳ package nào khác.
+   * **Dẫn chứng ghi vào báo cáo:** Kết quả `grep_search` (0 matches = đạt).
+
+5. **Cổng 5: Bằng Chứng Cản Trở Đo Lường Được (Measurable Friction - Not Theoretical):**
+   * **Hành động bắt buộc:**
+     - Nếu liên quan hiệu năng: Chạy 1 lệnh benchmark (`time.perf_counter()` hoặc `Measure-Command`) để lấy số đo thực tế `[đo thực tế: X ms]`. Khi phát hiện điểm nghẽn duyệt file/I/O: luôn kiểm tra xem lệnh quét có đang duyệt vào các thư mục rác (`node_modules`, `.md`, `.git`, `.venv`) hay không trước khi kết luận thuật toán bị chậm.
+     - Nếu liên quan lỗi runtime: Trích xuất traceback hoặc log crash cụ thể (ví dụ: `UnicodeEncodeError charmap CP1252`).
+     - Nếu chỉ mang tính thẩm mỹ mà có rủi ro gãy vỡ $\rightarrow$ Ghi nhận ADR và Hoãn lại (Defer under KISS). **Loại bỏ ứng viên.**
+   * **Dẫn chứng ghi vào báo cáo:** Số đo benchmark hoặc traceback lỗi cụ thể.
+
+**Đào Thải & Ghi Nhận:**
+- **Rào chắn cứng:** Số ứng viên đưa vào Báo cáo HTML **KHÔNG ĐƯỢC VƯỢT QUÁ 3**. Nếu sau Vòng Bắn Hạ vẫn còn >3 ứng viên đạt chuẩn, xếp hạng theo ROI (Callers $\times$ Measurable Friction) và loại bỏ các ứng viên xếp cuối cho đến khi $\le 3$.
+- **Ghi nhận ứng viên bị loại (Eliminated Candidate Record — BẮT BUỘC):** Đối với **mỗi** ứng viên bị bắn hạ hoặc bị loại do vượt ngưỡng 3, Agent **bắt buộc** ghi lại một dòng ngắn gọn gồm: tên ứng viên, cổng nào bắn hạ (hoặc "ROI thấp hơn"), lý do 1 câu. Danh sách này được đính kèm vào phần cuối Báo cáo HTML (mục *"Ứng viên đã loại"*) để các đợt quét kiến trúc sau không lặp lại cùng đề xuất. Nếu lý do loại bỏ là một quyết định kiến trúc nền tảng quan trọng $\rightarrow$ Đề xuất ghi nhận thành ADR.
+
+**Tiêu chí hoàn thành:** Toàn bộ $\le 3$ ứng viên đưa vào HTML đều có bảng 5 Cổng đính kèm dẫn chứng `file:line` và số liệu đo thực tế. Phần **"Ứng viên đã loại"** trong HTML **không được để trống** — nếu không có ứng viên nào bị loại, ghi rõ "Không có ứng viên bị loại trong đợt quét này".
+
+### 3. Trình bày Báo cáo dưới dạng HTML (Present candidates as an HTML report)
 - Viết một file HTML đơn lẻ (single-file) vào thư mục tạm của dự án: `.md/scratch/architecture-review/architecture-review-<timestamp>.html` (tự động tạo thư mục nếu chưa tồn tại).
 - Kích hoạt mở tệp tin báo cáo bằng trình duyệt mặc định trên hệ thống Windows của kỹ sư thông qua lệnh:
   ```powershell
@@ -4696,24 +5359,31 @@ Trước khi tổng hợp các ứng viên vào Báo cáo HTML hoặc Implementa
   * Sử dụng **Tailwind CSS qua CDN** để dàn trang và **Mermaid JS qua CDN** để vẽ sơ đồ trực quan (quan hệ call graphs, dependencies, sequences).
   * *Lưu ý Offline:* Đính kèm một dòng thông báo nổi bật ở đầu trang: *"Báo cáo này yêu cầu kết nối Internet để tải các tài nguyên đồ họa trực tuyến (Mermaid & Tailwind CSS)"*.
   * Sử dụng kết hợp CSS/SVG tự chế cho các phần visual dạng editorial (biểu đồ khối lượng, mặt cắt cấu trúc, animation đóng/mở).
+  * **Giới hạn cứng:** Báo cáo chỉ hiển thị **tối đa 3 ứng viên** đã vượt qua Vòng Bắn Hạ (Bước 2). Vi phạm giới hạn này khiến báo cáo không đạt Tiêu chí hoàn thành.
   * Mỗi ứng viên cải tiến phải có hình ảnh so sánh **trước/sau (Before/After)** trực quan.
 - Mỗi ứng viên đề xuất (card) phải hiển thị đủ:
-  * **Files:** Các tệp tin/module liên quan.
-  * **Problem:** Lý do kiến trúc hiện tại gây cản trở/friction.
-  * **Solution:** Mô tả bằng văn xuôi giải pháp thay đổi.
+  * **Files:** Các tệp tin/module liên quan kèm dòng code cụ thể.
+  * **Problem:** Lý do kiến trúc hiện tại gây cản trở/friction đo lường được (kèm số đo benchmark thực tế).
+  * **Solution:** Mô tả bằng văn xuôi giải pháp thay đổi (ưu tiên Re-export / KISS trước khi tạo Seam).
   * **Benefits:** Giải thích dưới góc độ tăng tính locality, leverage và cách cải thiện bộ test.
   * **Before / After diagram:** Sơ đồ side-by-side minh họa trực quan việc làm sâu module.
-  * **Recommendation strength:** Đánh giá mức độ đề xuất (`Strong` | `Worth exploring` | `Speculative`) dưới dạng badge màu.
-- Kết thúc báo cáo bằng phần **Đề xuất hàng đầu (Top recommendation)** để chỉ rõ ứng viên nên xử lý đầu tiên kèm lý do.
-- **Tiêu chí hoàn thành:** Báo cáo HTML được ghi thành công vào thư mục tạm `.md/scratch/`, mở được trên trình duyệt mặc định mà không gặp lỗi CLI, hiển thị đầy đủ các thẻ ứng viên và sơ đồ Before/After.
+  * **Adversarial Gate Evidence:** Bảng dẫn chứng 5 Cổng phản biện (Callers count thực tế kèm `file:line`, SDK signature, Unique Naming, Real friction).
+  * **Recommendation strength:** Đánh giá mức độ đề xuất chính xác theo 5 Cổng:
+    - `Strong`: $\ge 2$ callers thực tế (đã xác minh implementation) + Domain Orchestration phức tạp + Bằng chứng đo lường cải thiện rõ rệt.
+    - `Worth exploring`: Housekeeping/Cleanup (giải quyết symbol collisions, import drift, dọn dẹp scripts).
+    - `Speculative`: 1 caller, hoặc Glue Code thuần túy (ADR + Defer under KISS).
+- Kết thúc báo cáo bằng:
+  * **Đề xuất hàng đầu (Top recommendation)** để chỉ rõ ứng viên nên xử lý đầu tiên kèm lý do.
+  * **Danh sách ứng viên đã loại (Eliminated Candidates):** Bảng gồm tên ứng viên, cổng bắn hạ, lý do 1 câu. Đây là bộ nhớ cho các đợt quét tương lai.
+- **Tiêu chí hoàn thành:** Báo cáo HTML được ghi thành công vào thư mục tạm `.md/scratch/`, mở được trên trình duyệt mặc định mà không gặp lỗi CLI, hiển thị đầy đủ các thẻ ứng viên, sơ đồ Before/After, và danh sách ứng viên bị loại.
 
-### 3. Vòng lặp Chất vấn (Grilling loop)
-- Sau khi người dùng chọn một ứng viên cải tiến, kích hoạt kỹ năng `/grilling` để tiến hành phỏng vấn sâu với Kỹ sư về: các ràng buộc (constraints), dependency, cấu trúc của module được làm sâu, logic nằm sau seam, và các test case được bảo toàn.
+### 4. Vòng lặp Chất vấn (Grilling loop)
+- Sau khi người dùng chọn một ứng viên cải tiến, kích hoạt kỹ năng `/ccba-grilling` để tiến hành phỏng vấn sâu với Kỹ sư về: các ràng buộc (constraints), dependency, cấu trúc của module được làm sâu, logic nằm sau seam, và các test case được bảo toàn.
 - Cập nhật domain model và tài liệu tri thức song song:
   * Nếu đặt tên module làm sâu theo một khái niệm mới chưa có trong `CONTEXT.md` $\rightarrow$ Thêm thuật ngữ đó vào `CONTEXT.md`.
   * Nếu làm sắc nét thêm một thuật ngữ mập mờ $\rightarrow$ Cập nhật định nghĩa trực tiếp vào `CONTEXT.md`.
   * Nếu người dùng từ chối đề xuất vì một lý do kỹ thuật nền tảng quan trọng $\rightarrow$ Đề xuất ghi nhận thành tài liệu ADR trong thư mục `.md/knowledge/` để tránh các đợt quét sau đề xuất lại trùng lặp.
-  * Nếu muốn so sánh các thiết kế interface khác nhau cho module sâu $\rightarrow$ Kích hoạt kỹ năng `/codebase-design` và chạy cơ chế parallel sub-agent (thiết kế hai phương án độc lập để đối chiếu).
+  * Nếu muốn so sánh các thiết kế interface khác nhau cho module sâu $\rightarrow$ Kích hoạt kỹ năng `/ccba-codebase-design` và chạy cơ chế parallel sub-agent (thiết kế hai phương án độc lập để đối chiếu).
   * **Đề xuất dựng mẫu thử nhanh (ADR 0010):** Sau khi thống nhất phương án triển khai, nếu việc refactor ảnh hưởng trực tiếp đến **Core Platform (Hub)** (ví dụ: sửa đổi core services, metadata registry, database schema chung), Agent bắt buộc phải đề xuất hoặc kích hoạt `/ccba-prototype` (nhánh Logic/UI) để dựng nhanh mô phỏng hoạt động trước khi code thật. Đối với các Spoke apps hoặc hàm nghiệp vụ độc lập, Agent đề xuất viết code trực tiếp và chạy suite kiểm thử để tối ưu thời gian.
 - **Tiêu chí hoàn thành:** Phiên chất vấn grilling kết thúc, thống nhất được phương án triển khai cụ thể, và các tài liệu tri thức (`CONTEXT.md`, ADRs) được cập nhật đồng bộ.
 
@@ -4725,121 +5395,815 @@ Trước khi tổng hợp các ứng viên vào Báo cáo HTML hoặc Implementa
 
 ---
 
-# Skill: legal-document-tracker
+# Skill: ccba-init-spoke
 
 ---
-name: legal-document-tracker
-description: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam. Duy trì registry, tạo bảng so sánh, báo cáo tác động và tích hợp NotebookLM.
+name: ccba-init-spoke
+
+description: Khởi tạo một dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform
 applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_consulting"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+- BIM
+- Tác vụ Admin
+- Pháp điển
+bundle: _core
+disable-model-invocation: true
+command: /ccba-init-spoke
+triggers:
+- init spoke
+- setup project
+- khởi tạo dự án
+---
+# Workflow: Khởi Tạo CCBA Spoke Workspace (/ccba-init-spoke)
+Workflow này tự động hóa việc thiết lập không gian làm việc dự án mới theo chuẩn **CCBA Hub-and-Spoke** (ADR 0041, ADR 0044) và **Global Rules**.
+
 ---
 
+## 🛡️ Bước 0: Rào Chắn An Toàn Dự Án Hiện Hữu (Brownfield Safety Guard)
+> [!CAUTION]
+> Nếu thư mục hiện tại **đã có sẵn mã nguồn hoặc cấu hình cũ** (có `workspace_context.yaml`, `.md/`, `.agents/`):
+> - **TUYỆT ĐỐI KHÔNG** chạy tiếp `/ccba-init-spoke` để tránh ghi đè dữ liệu!
+> - Hãy chuyển sang lệnh: **`/ccba-spoke-adopter`** để tự động tiếp nhận an toàn và bảo tồn 100% dữ liệu cũ.
+
+---
+
+## 📋 Bước 1: Khảo Sát & Tạo Cấu Hình `workspace_context.yaml`
+
+1. **Lấy tên dự án:** Lấy tên thư mục hiện tại làm `project.name`.
+2. **Xác định Archetype ([ADR 0041](../../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)):**
+   - `project_delivery` (Dự án tư vấn, thiết kế, thẩm tra công trình thực tế)
+   - `enterprise_governance` (Hệ điều hành quản trị nội bộ / IDOP-CCBA-WAY)
+   - `knowledge_corpus` (Kho tri thức pháp điển quốc gia OKF v2.0 / ccba-legal-knowledge)
+   - `specialized_extension` (Khung mở rộng chuyên biệt):
+     * `sub_type: personal_sandbox` (Không gian nghiên cứu, thử nghiệm & làm việc cá nhân theo Quy chế CCBA 2026)
+     * `sub_type: research_lab` (Viện R&D, bài báo khoa học)
+     * `sub_type: tooling_plugin` (Phát triển Add-in CAD/BIM)
+     * `sub_type: client_portal` (Cổng Khách hàng Extranet)
+3. **Xác định Loại dự án (`type` & `mode`):**
+   - `Phần mềm` $\rightarrow$ mode: `software`, qc_mode: `null`
+   - `Thẩm tra thiết kế` $\rightarrow$ mode: `delivery`, qc_mode: `third-party`
+   - `Thiết kế` $\rightarrow$ mode: `delivery`, qc_mode: `internal`
+   - `Kiểm định` $\rightarrow$ mode: `delivery`, qc_mode: `assessment`
+   - `BIM` $\rightarrow$ mode: `delivery`, qc_mode: `internal`
+   - `Tác vụ Admin` $\rightarrow$ mode: `admin`, qc_mode: `null`
+   - `Pháp điển` $\rightarrow$ mode: `software`, qc_mode: `legal`
+4. **Khởi tạo tệp `.md/workspace_context.yaml`:**
+
+#### Mẫu A: Spoke Dự Án Kỹ Thuật (`project_delivery`)
+```yaml
+project:
+  name: "2026-04-dh-viet-nhat"
+  archetype: "project_delivery"
+  type: "Thẩm tra thiết kế"
+  mode: "delivery"
+  qc_mode: "third-party"
+  hub_path: "D:/GitHubProjects/ccba-agent-platform"
+  description: "Dự án Thẩm tra Thiết kế PCCC & MEP Công trình ĐH Việt Nhật"
+must_read:
+  always: [{path: .md/GLOSSARY.md, why: "Thuật ngữ chuẩn hóa dự án"}]
+do_not_touch: [.env]
+acknowledgment_required: true
+acknowledgment_format: "Tôi đã đọc workspace_context.yaml. Đây là Spoke Dự Án '[project_name]'. Sẵn sàng làm việc!"
+```
+
+#### Mẫu B: Spoke Cá Nhân (`specialized_extension` / `personal_sandbox` — Quy chế 2026)
+```yaml
+project:
+  name: "chuvu-sandbox"
+  archetype: "specialized_extension"
+  sub_type: "personal_sandbox"
+  hub_path: "D:/GitHubProjects/ccba-agent-platform"
+  description: "Không gian nghiên cứu & làm việc cá nhân theo Quy chế CCBA 2026"
+organizational_identity:
+  owner_name: "Chu Vũ"
+  owner_email: "chuvu@ibst-bim.vn"
+  department: "PHONG_RD_HTQT"
+  seat_role: "IDOP_LEAD"
+qc_governance:
+  authorized_qc_level: "LEVEL_1_TECHNICAL_CHECK"
+  can_sign_off_technical: true
+guardrails:
+  sandbox_mode: true
+  prevent_direct_production_publish: true
+  upstream_proposal_target: "main"
+must_read:
+  always: [{path: d:/idop-ccba-way/.md/governance_constitution/03_ccba_charter_2026.md, why: "Quy chế 2026"}]
+do_not_touch: [.env, "*.pfx", "*.key"]
+```
+
+#### Mẫu C: Spoke Kho Tri Thức Pháp Điển (`knowledge_corpus` / `Pháp điển`)
+```yaml
+project:
+  name: "ccba-legal-knowledge"
+  archetype: "knowledge_corpus"
+  type: "Pháp điển"
+  mode: "software"
+  qc_mode: "legal"
+  hub_path: "D:/GitHubProjects/ccba-agent-platform"
+  description: "Kho Tri thức Pháp điển & Quy chuẩn Xây dựng Quốc gia (OKF v2.4 Universal Agent-Centric)"
+hub_packages: [ccba-legal-intel, ccba-notebooklm]
+must_read:
+  always: [{path: .md/GLOSSARY.md, why: "Thuật ngữ pháp lý chuẩn hóa"}]
+do_not_touch: [.env]
+acknowledgment_required: true
+acknowledgment_format: "Tôi đã đọc workspace_context.yaml. Đây là Spoke Kho Tri Thức '[project_name]'. Sẵn sàng làm việc!"
+```
+
+> [!NOTE]
+> **Quy chuẩn Spoke Tri thức (ADR 0036, ADR 0044 & Issue #215):**
+> 1. **Cấu trúc OKF v2.4 Universal (ADR 0036):** Bắt buộc có ngăn kéo `sources/` (chứa PDF/DOCX gốc) và 4 ngăn chuyên biệt (`tables/`, `figures/`, `annexes/`, `templates/`). Tuyệt đối cấm để thư mục `templates/` rỗng.
+> 2. **Gate 0 Ingestion Provenance (ADR 0016):** Tự động đối soát cấu trúc và Text Parity giữa DOCX và PDF Công báo qua `ccba_legal.provenance`.
+> 3. **Script Budget & Cleanliness (ADR 0044):** Duy trì $\le 15$ core scripts trong `scripts/`. Tái sử dụng `ccba_legal` và `ccba_ai` từ Hub qua `spoke_bootstrap.py`. Chặn wrapper thừa qua `check_spoke_cleanliness.py`.
+
+---
+
+## 🔄 Bước 2: Đồng Bộ Kỹ Năng & Đăng Ký Spoke (Single-Engine Sync)
+
+Agent chạy Deep Seam `SpokeSynchronizer`:
+```powershell
+python "[hub_path]\scripts\sync_spoke.py" --spoke .
+```
+*Tự động: tạo `.md/`, chọn bundle từ `catalog.yaml`, bơm skills/workflows, đồng bộ `AGENTS.md`, đăng ký RSA 2048-bit vào Hub Registry.*
+
+---
+
+## 📦 Bước 3: Thiết Lập Python Packages & Spoke Leakage Guard (ADR 0044, ADR 0045)
+
+Đối với dự án có Python (`is_python_project = True`), khởi tạo môi trường liên kết:
+```powershell
+python "[hub_path]\scripts\spoke\spoke_bootstrap.py" --spoke .
+```
+*Tự động: sinh `requirements-hub.txt` kết nối editable packages (`ccba-ai`, `ccba-harness`...), cấu hình `.gitignore` cách ly.*
+
+---
+
+## 🔒 Bước 4: Cài Đặt Bảo Mật Maskara & Hoàn Tất
+
+1. **Cài đặt Git Hook:** Tự động tạo pre-commit hook trong `.git/hooks/` gọi Maskara quét chặn lộ API keys.
+2. **Xác nhận Onboarding (Global Rule 4):**
+   > *"Tôi đã khởi tạo thành công Spoke `[tên_dự_án]` (Archetype: `[archetype]`, Type: `[type]`). Sẵn sàng làm việc!"*
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+---
+
+# Skill: ccba-issue-to-hub
+
+---
+name: ccba-issue-to-hub
+
+description: Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ
+  Spoke lên Hub dưới dạng GitHub Issue
+applies_to:
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
+disable-model-invocation: true
+command: /ccba-issue-to-hub
+triggers:
+- issue to hub
+- đề xuất ý tưởng
+- rfc
+- tạo issue
+- feature request
+- ccba-issue-to-hub
+---
+# Workflow: Đề Xuất Ý Tưởng & Tính Năng Lên Hub (/ccba-issue-to-hub)
+
+Quy trình tự động hóa bóc tách ngữ cảnh thảo luận tại dự án Spoke, biên soạn bản đề xuất cải tiến (**RFC Proposal**) chuẩn chỉnh và tạo GitHub Issue trực tiếp lên repository trung tâm CCBA Hub (`ccba-agent-platform`).
+
+---
+
+## 🎯 Mục Đích & Vai Trò
+- **Giai đoạn Ý tưởng (Idea & RFC Phase):** Khi phát hiện bài toán mới, nhu cầu cải tiến công cụ, chuẩn hóa quy trình hoặc phát hiện lỗi ở cấp nền tảng nhưng chưa cần đóng gói mã nguồn ngay.
+- **Tính đối xứng:** Là bước đi trước của `/ccba-contribute-to-hub` (đóng gói code & mở PR) trong chu trình đóng góp ngược (Upstream Contribution Loop).
+
+---
+
+## 📋 Các Bước Thực Hiện:
+
+### Bước 1: Trích xuất Ngữ cảnh & Đánh giá Nhu cầu
+Agent thu thập thông tin từ ngữ cảnh hội thoại hiện tại hoặc tài liệu tại Spoke:
+1. **Loại đề xuất:** `feat` (tính năng/kỹ năng mới), `fix` (sửa lỗi nền tảng), `refactor` (tối ưu kiến trúc/deep seams), `docs` (chuẩn hóa tài liệu/hiến pháp).
+2. **Tiêu đề ngắn gọn:** Dưới 10 từ theo định dạng `type(scope): mô tả ngắn`.
+3. **Nỗi đau thực tế (Pain Point):** Vấn đề cụ thể gặp phải tại dự án Spoke hiện tại.
+4. **Giải pháp kỹ thuật dự kiến:** Ý tưởng module, skill, workflow, rules, hoặc API contract cần bổ sung trên Hub.
+
+---
+
+### Bước 2: Kiểm tra Trùng lặp trên Hub
+Trước khi tạo Issue mới, Agent chủ động kiểm tra xem vấn đề đã được ghi nhận hoặc giải quyết trên Hub hay chưa:
+1. **Kiểm tra Issues hiện có:**
+   ```bash
+   gh issue list --repo vvChu/ccba-agent-platform --limit 30
+   ```
+2. **Kiểm tra Catalog Hub:**
+   Đọc tệp `catalog.yaml` (qua đường dẫn `hub_path` trong `.md/workspace_context.yaml` nếu có) để xác nhận kỹ năng/công cụ tương tự chưa tồn tại.
+
+*Nếu phát hiện đã có Issue tương tự:* Gợi ý người dùng bổ sung thảo luận vào Issue cũ thay vì tạo mới.
+
+---
+
+### Bước 3: Soạn Thảo Bản Đề Xuất (RFC Proposal Body)
+Soạn thảo nội dung Issue theo cấu trúc chuẩn CCBA RFC:
+
+```markdown
+### 1. Bối cảnh & Vấn đề (Context & Problem):
+- Mô tả thực trạng và lý do phát sinh nhu cầu từ dự án Spoke.
+- Tác động tiêu cực nếu không xử lý (Token OpEx, lỗi dữ liệu, thiếu tính năng).
+
+### 2. Đề xuất giải pháp (RFC Proposal):
+- Kiến trúc / Kỹ năng / Package / Workflow dự kiến triển khai trên Hub.
+- Phân tích tính tương thích và khả năng tái sử dụng cho các Spokes khác.
+
+### 3. Tiêu chí nghiệm thu (Acceptance Criteria):
+- [ ] Tiêu chí 1 (Code / Package / Seam)
+- [ ] Tiêu chí 2 (Workflow / Skills Catalog)
+- [ ] Tiêu chí 3 (Tài liệu Hiến pháp & Tests)
+
+---
+*Được đề xuất tự động từ Spoke `[tên-spoke]` qua workflow `/ccba-issue-to-hub`.*
+```
+
+Agent trình bày bản thảo cho người dùng xem và xác nhận trước khi gửi.
+
+---
+
+### Bước 4: Mở GitHub Issue Trực Tiếp Trên Hub Repo
+Thực thi tạo Issue thông qua GitHub CLI:
+
+```bash
+gh issue create --repo vvChu/ccba-agent-platform --title "[Tiêu đề]" --body "[Nội dung RFC]"
+```
+
+*Trường hợp không có kết nối `gh` CLI hoặc thiếu token:*
+Cung cấp toàn bộ nội dung markdown đã định dạng kèm đường dẫn tạo issue thủ công:
+👉 `https://github.com/vvChu/ccba-agent-platform/issues/new`
+
+---
+
+### Bước 5: Báo Cáo & Hướng Dẫn Vòng Đời Tiếp Theo
+Sau khi tạo thành công, Agent gửi phản hồi tổng kết:
+1. **Mã số & Link Issue:** Ví dụ `#209 - https://github.com/vvChu/ccba-agent-platform/issues/209`.
+2. **Hướng dẫn chu trình khép kín tiếp theo:**
+   - Khi có prototype/script nháp tại Spoke $\to$ Tốt nghiệp mã nguồn: `/ccba-graduate-rd --issue #[ISSUE_ID]`
+   - Khi mở PR chính thức lên Hub $\to$ Đóng gói & mở PR: `/ccba-contribute-to-hub --issue #[ISSUE_ID]` (Tự động gắn mã `Closes #[ISSUE_ID]`).
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+---
+
+# Skill: ccba-knowledge-loop
+
+---
+name: ccba-knowledge-loop
+description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm
+  → Wayfinder → Exec)
+disable-model-invocation: true
+bundle: _core
+command: /ccba-knowledge-loop
+triggers:
+- knowledge-loop
+- vòng lặp tri thức
+- trinh sát thảo luận hoạch định
+---
+# Quy trình Vòng lặp Tri thức & Định hướng (/ccba-knowledge-loop)
+
+Quy trình này hướng dẫn Agent cách kết hợp đồng bộ 4 kỹ năng cốt lõi của CCBA Agent Services Platform: [YouTube-Learn](../ccba-youtube-learn/SKILL.md) (Trinh sát tri thức video), [Research](../ccba-research/SKILL.md) (Nghiên cứu ngầm), [Brainstorm](../ccba-brainstorm/SKILL.md) (Hội chẩn giải pháp) và [Wayfinder](../ccba-wayfinder/SKILL.md) (Lập lộ trình) để giải quyết một bài toán kỹ thuật/nghiệp vụ lớn và mơ hồ (Foggy Problem) mà không gây block phiên làm việc hoặc làm tràn ngữ cảnh (token bloating).
+
+---
+
+## 📋 Tiêu chí hoàn thành (Completion Criteria)
+
+Quy trình chỉ được coi là thực thi thành công khi đáp ứng:
+1. [x] Đã trinh sát và ingest tri thức nền tảng (Video/VBPL/Code) vào Knowledge Base của dự án.
+2. [x] Đã tổ chức brainstorm để thống nhất giải pháp thô và tạo Session Document chứa các Action Items.
+3. [x] Đã lập Bản đồ định hướng (`map.md`) thông qua Wayfinder với Điểm đích (Destination) và các Frontier Tickets.
+4. [x] Các ticket Research được giao cho subagent chạy ngầm tự động và cập nhật kết quả ngược lại bản đồ tuần tự.
+
+---
+
+## 🛠️ Hướng dẫn thực thi các Phase
+
+### Phase 1: Trinh sát & Thu thập Tri thức Sơ cấp (Reconnaissance)
+Khi đối mặt với yêu cầu mới hoặc vùng tri thức chưa được định hình rõ ràng:
+1. **Bóc tách video/bài giảng:** Agent chạy [/ccba-youtube-learn](../ccba-youtube-learn/SKILL.md) trên các video hướng dẫn của chuyên gia, webinar công nghệ hoặc seminar tập huấn liên quan để thu thập tri thức thực hành và các slide tĩnh.
+   * *Đầu ra:* `notes_concept_[video_id].md` và thế giới quan `notes_worldview_[video_id].md`.
+2. **Nghiên cứu ngầm tài liệu sơ cấp:** Agent chính kích hoạt [/ccba-research](../ccba-research/SKILL.md) để spawn subagent chạy ngầm quét các văn bản pháp lý (VBPL), API docs của bên thứ ba, hoặc cấu trúc code hiện có.
+   * *Đầu ra:* File báo cáo `.md/knowledge/research_and_studies/research_[chủ_đề]_[timestamp].md`.
+3. **Đọc và nạp ngữ cảnh:** Agent chính nạp các tài liệu được sinh ra ở trên vào thư mục tri thức nháp của dự án để chuẩn bị làm ngữ cảnh cho Phase tiếp theo.
+
+Tiêu chí hoàn thành: Toàn bộ tài liệu bóc tách từ video (`notes_concept_[video_id].md`) và báo cáo nghiên cứu ngầm (`research_[chủ_đề]_[timestamp].md`) hiện diện đầy đủ trong thư mục dự án và được nạp vào ngữ cảnh của Agent chính.
+
+---
+
+### Phase 2: Hội chẩn & Sáng tạo Phương án (Brainstorming)
+Sau khi có dữ liệu trinh sát, Agent cùng User thống nhất phương án triển khai thô:
+1. **Nạp tri thức:** Kích hoạt [/ccba-brainstorm](../ccba-brainstorm/SKILL.md). Đảm bảo các ghi chú và báo cáo nghiên cứu ở Phase 1 nằm trong thư mục `input_documents/` để làm nền tảng tri thức.
+2. **Hybrid Rhythm:** Thực hiện thảo luận hai chiều tuân thủ nghiêm ngặt 4 nhịp:
+   * **Prompt:** Agent đặt đúng 1 câu hỏi mở.
+   * **User first:** Chờ user trả lời, giữ nguyên văn với tag `(user)`.
+   * **AI Build:** AI bổ sung 2-4 ý tưởng mới với tag `(AI)` xây dựng trên ý tưởng của user (Yes-and).
+   * **Return floor:** Trả quyền điều khiển kèm đúng 1 câu hỏi mở tiếp theo.
+3. **Party Mode (Phản biện đa vai):** Kích hoạt Party Mode. Sử dụng thông tin từ tệp `notes_worldview.md` của diễn giả ở Phase 1 để tạo Persona ảo phản biện sắc nét các điểm yếu của phương án (ví dụ: *Persona "Kỹ sư Skeptic"* phản biện về tính khả thi, *Persona "Cảnh sát PCCC"* phản biện về tính pháp lý).
+4. **Hội tụ:** Gom nhóm ý tưởng, nhờ user xếp hạng và ghi nhận Session Document chứa các **Action Items**.
+
+Tiêu chí hoàn thành: Người dùng đã xếp hạng các ý tưởng ưu tiên và Agent đã tạo thành công tệp Session Document ghi nhận Action Items trong thư mục dự án.
+
+---
+
+### Phase 3: Hoạch định & Thiết lập Bản đồ (Wayfinder Mapping)
+Tổ chức các Action Items rời rạc thành một lộ trình có cấu trúc:
+1. **Thiết lập bản đồ:** Kích hoạt [/ccba-wayfinder](../ccba-wayfinder/SKILL.md) để khởi tạo bản đồ định hướng tại `.md/knowledge/issues/<feature>/map.md`.
+2. **Cấu trúc bản đồ:**
+   * **Điểm đích (Destination):** Xác định rõ tiêu chí nghiệm thu hoàn thành của bài toán.
+   * **Frontier Tickets:** Các ticket mở, sẵn sàng thực thi ngay và độc lập với các ticket khác. Phân loại rõ: *Research [AFK]*, *Prototype [HITL]*, *Grilling [HITL]*, *Task [HITL/AFK]*.
+   * **Sương mù chiến trận / Chưa xác định rõ (Not yet specified):** Chỉ ghi nhận các vùng thông tin và quyết định đã rõ ràng; các phần chưa thể nhìn thấy sẽ được giữ lại trong mục này dưới dạng ghi chú phác thảo cho đến khi đủ thông tin unblock.
+3. **Tham chiếu theo tên:** Mọi ticket đều phải có tên gọi và link Markdown cụ thể (Ví dụ: `[Đóng gói Mutex Lock](../ccba-wayfinder/SKILL.md)`).
+
+Tiêu chí hoàn thành: Bản đồ định hướng `map.md` được khởi tạo với mục Điểm đích (Destination) rõ ràng và ít nhất một Frontier ticket được tạo lập.
+
+---
+
+### Phase 4: Vận hành Thực thi Song song & Đóng gói Quyết định
+Giải quyết các Frontier Tickets và mở rộng bản đồ:
+1. **Phân phối AFK:** Với các ticket thuộc loại **Research [AFK]**, Agent chính kích hoạt [/ccba-research](../ccba-research/SKILL.md) để spawn subagent chạy ngầm xử lý, đồng thời tiếp tục nhận các yêu cầu khác từ người dùng trong khi subagent đang chạy.
+2. **Tự động cập nhật:** Khi subagent nghiên cứu hoàn thành và xuất báo cáo (xác nhận file báo cáo thực sự tồn tại), Agent chính hấp thụ kết quả, đóng (close) ticket tương ứng, cập nhật vào mục **Quyết định đã chốt (Decisions so far)** trên bản đồ.
+3. **Mở rộng biên giới:** Dựa trên kết quả vừa chốt, chuyển đổi các vùng mờ trong mục *Not yet specified* thành các ticket Frontier mới.
+4. **Giải quyết vùng mờ đột xuất:** Nếu biên giới bản đồ gặp sương mù quá dày không thể tự quyết, Agent đề xuất chạy một phiên [/ccba-brainstorm](../ccba-brainstorm/SKILL.md) mini với User để thống nhất hướng đi tiếp theo.
+
+Tiêu chí hoàn thành: Mọi ticket trên bản đồ được chuyển sang trạng thái đóng (closed), không còn Frontier ticket nào chưa giải quyết và lộ trình đạt tới Điểm đích hoàn toàn.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+
+---
+
+# Skill: ccba-legal-advisor
+
+---
+name: ccba-legal-advisor
+description: "Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.2."
+argument-hint: "Nội dung câu hỏi pháp lý hoặc tình huống dự án cần tư vấn?"
+bundle: _consulting
+disable-model-invocation: false
+category: legal
+keywords: [tu van phap ly, giai dap phap luat, quy chuan xay dung, hoi dap quy pham, legal opinion, tham dinh du an, ho so cap phep, nghiem thu cong trinh, pccc, luat xay dung 2025]
+metadata:
+  author: CCBA
+  version: "1.0.0"
+---
+
+# 🏛️ Kỹ Năng: Tư Vấn & Giải Đáp Pháp Lý Xây Dựng (`legal-advisor`)
+
+Kỹ năng này chịu trách nhiệm biến mọi câu hỏi pháp lý ban đầu (dù mơ hồ, thiếu thông tin hay phức tạp) thành **Phiếu Ý Kiến Pháp Lý Chuẩn Mực (CCBA Standard Legal Opinion)** có trích dẫn điều khoản chính xác từ cây tri thức OKF v2.2.
+
+---
+
+## 🧭 Quy Trình Vận Hành 4 Bước (Process)
+
+### Bước 1: Tiếp Nhận & Phân Loại Độ Phức Tạp (Intake & Ambiguity Classification)
+Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi vào một trong 3 cấp độ:
+* **Cấp độ 1 (Câu hỏi tra cứu trực diện / Khái niệm chung):** Đã đủ thông tin hoặc chỉ hỏi định nghĩa $\rightarrow$ Chuyển thẳng sang Bước 3 (Fast-track, không hỏi lại).
+* **Cấp độ 2 (Câu hỏi dự án đơn mục tiêu nhưng thiếu 1–2 tham số cốt lõi):** Ví dụ thiếu chiều cao, diện tích, hoặc cấp công trình $\rightarrow$ Kích hoạt phỏng vấn ngắn 1 lượt.
+* **Cấp độ 3 (Dự án tổ hợp phức tạp / Vướng mắc tranh chấp / Điều khoản chuyển tiếp):** Kích hoạt cơ chế Phỏng vấn Thích ứng Nhiều Nấc (Adaptive Diagnostic Depth).
+
+---
+
+### Bước 2: Phỏng Vấn Làm Rõ Thích Ứng (Adaptive Diagnostic Interviewing)
+* **Nguyên tắc linh hoạt (Không giới hạn cứng):** Số lượng câu hỏi làm rõ phụ thuộc vào độ phức tạp của bài toán, nhưng **mỗi lượt hỏi tối đa 1–2 câu** để tránh làm người dùng mệt mỏi.
+* **Luôn kèm phương án chọn nhanh (A/B/C):** Đưa ra các gợi ý cụ thể để người dùng chỉ cần chọn hoặc gõ 1 chữ cái.
+* **Lối thoát giả định:** Ở mỗi lượt hỏi, luôn cung cấp phương án *"Nếu chưa có số liệu, hãy trả lời theo 2 kịch bản giả định phổ biến nhất"*.
+* **Gợi ý 4 Khung Mẫu Tương Tác Động (Dynamic Interaction Archetypes):**
+  1. *[Mẫu 1 — Thẩm định tham số]:* Kiểm tra thông số kỹ thuật cụ thể của công trình (Bậc chịu lửa, số thang, tải trọng...).
+  2. *[Mẫu 2 — Đối chiếu chuyển tiếp]:* So sánh quy định cũ vs mới để bảo vệ quyền lợi không hồi tố.
+  3. *[Mẫu 3 — Bảng Ma trận Checklist]:* Xuất bảng đối soát đa cột phục vụ báo cáo thẩm tra kỹ thuật.
+  4. *[Mẫu 4 — Bóc tách Biểu mẫu & Thủ tục]:* Hướng dẫn hồ sơ cấp phép xây dựng hoặc nghiệm thu hoàn công.
+
+---
+
+### Bước 3: Truy Xuất Tri Thức Pháp Lý OKF v2.2 (AST & Table Retrieval)
+* Truy xuất cây điều khoản AST `clauses.json` và văn bản thuần khiết `<slug>.md` của 26 gói văn bản.
+* Đọc các bảng tra cứu kỹ thuật 2D trong `tables/csv/*.csv` và các biểu mẫu nguyên tử trong `templates/`.
+* Áp dụng **ADR 0024 (Dual-Track Provenance)**: Luôn trích dẫn nội dung hợp nhất kèm Footnote thông tư sửa đổi ban hành.
+
+---
+
+### Bước 4: Trình Bày Theo Chuẩn Form "Phiếu Giải Đáp Pháp Lý CCBA"
+Mọi câu trả lời cuối cùng bắt buộc phải được định dạng theo cấu trúc 4 phần sau:
+
+```markdown
+# 🏛️ PHIẾU GIẢI ĐÁP PHÁP LÝ & QUY CHUẨN XÂY DỰNG (CCBA LEGAL OPINION)
+
+## 1. 📌 Tóm Tắt Bối Cảnh & Vấn Đề Pháp Lý
+- Loại công trình & Nhóm công năng: [Ví dụ: Khách sạn 12 tầng, F1.2]
+- Thông số kỹ thuật cốt lõi: [Chiều cao PCCC, diện tích sàn, cấp công trình...]
+- Yêu cầu pháp lý cần giải quyết: [Câu hỏi trọng tâm]
+
+## 2. ⚡ Kết Luận Pháp Lý Trọng Tâm (Executive Summary)
+- [Khẳng định dứt khoát: BẮT BUỘC / ĐƯỢC MIỄN / ĐẠT CHUẨN / CẦN ĐIỀU CHỈNH]
+- Thẩm quyền giải quyết (Sở Xây dựng / Cảnh sát PCCC / Chủ đầu tư tự duyệt).
+
+## 3. 🔍 Căn Cứ Pháp Lý & Ma Trận Đối Chiếu Chi Tiết
+| STT | Tiêu Chí / Nội Dung | Quy Định Pháp Luật Bắt Buộc | Điều Khoản / Bảng Trích Dẫn | Đánh Giá Áp Dụng |
+| :---: | :--- | :--- | :--- | :---: |
+| 1 | ... | ... | [Điều ... Luật Xây dựng 2025](...) | 🟢 Đạt / 🔴 Chưa đạt |
+| 2 | ... | ... | [Bảng ... QCVN 06:2022](...) | ... |
+
+## 4. ⚠️ Khuyến Nghị Kỹ Thuật & Cảnh Báo Rủi Ro (Actionable Advice)
+- **Hồ sơ / Biểu mẫu cần chuẩn bị:** [Đính kèm biểu mẫu từ templates/]
+- **Rủi ro cần phòng tránh:** [Lưu ý về PCCC, điều khoản chuyển tiếp, chế tài phạt...]
+```
+
+---
+
+## 📋 Tiêu Chí Nghiệm Thu (Completion Criteria)
+- [x] Phát hiện chính xác câu hỏi mơ hồ và kích hoạt phỏng vấn thích ứng hoặc Fast-track.
+- [x] Lồng ghép linh hoạt 4 Khung Mẫu Tương Tác Động theo đúng bối cảnh của người dùng.
+- [x] Định dạng đầu ra tuân thủ 100% Cấu trúc 4 phần của Phiếu Giải Đáp Pháp Lý CCBA.
+- [x] Trích dẫn đúng 100% Điều khoản, Phụ lục và Bảng số liệu từ kho tri thức OKF v2.2.
+
+
+---
+
+# Skill: ccba-legal-document-tracker
+
+---
+name: ccba-legal-document-tracker
+description: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine
+  và Registry.
+applies_to:
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _consulting
+triggers:
+- VBPL
+- pháp luật
+- legal
+- registry
+- nghị định
+- thông tư
+- văn bản pháp luật
+- luật xây dựng
+---
 # Legal Document Tracker
 
-Skill hỗ trợ theo dõi, phân tích và so sánh các Văn bản Pháp luật (VBPL) liên quan đến quản lý chất lượng công trình xây dựng tại Việt Nam.
+Skill hỗ trợ theo dõi, phân tích và so sánh các Văn bản Pháp luật (VBPL) liên quan đến quản lý chất lượng công trình xây dựng tại Việt Nam kết hợp Deep Seam **`VBHNEngine`** ([`packages/ccba-legal-intel`](../../../packages/ccba-legal-intel)).
+
+---
 
 ## When to Use
 
 - Cần **cập nhật danh mục VBPL** đang theo dõi (thêm mới, thay đổi trạng thái)
-- Cần **so sánh VBPL cũ ↔ mới** (VD: NĐ 06/2021 vs dự thảo NĐ QLCL 2026)
+- Cần **so sánh VBPL cũ ↔ mới** (VD: NĐ 06/2021 vs dự thảo NĐ QLCL 2026) qua AST diff tự động
+- Cần **hợp nhất văn bản pháp luật** (Luật gốc + các Nghị định sửa đổi bổ sung)
 - Cần **đánh giá tác động** của VBPL mới lên quy trình CCBA
 - Cần **hướng dẫn NotebookLM** để đọc nhanh VBPL hoặc soạn thảo công văn
-- User nói: "cập nhật VBPL", "so sánh nghị định", "tác động luật mới", "tổng hợp pháp luật"
+
+---
 
 ## Key Files
 
 | File | Mô tả |
 |------|--------|
-| `resources/legal_registry.yaml` | Danh mục VBPL đang theo dõi kèm metadata |
+| `legal_registry.yaml` | **Root SSOT**: Danh mục 34+ VBPL/QCVN/TCVN đang theo dõi kèm metadata chuẩn OKF v2.4 |
 | `resources/comparison_table.md` | Template bảng so sánh VBPL cũ ↔ mới |
 | `resources/impact_report.md` | Template báo cáo tác động thay đổi lên CCBA |
 | `resources/notebooklm_prompts.md` | Prompt mẫu cho NotebookLM theo use case |
 
+---
+
 ## How to Use
 
-### 1. Cập nhật Registry VBPL
+### 1. Cập nhật Registry VBPL (`legal_registry.yaml`)
 
-Đọc file `resources/legal_registry.yaml` to nắm danh mục hiện tại. Khi cần cập nhật:
+Đọc file `legal_registry.yaml` tại Root Spoke để nắm danh mục hiện tại. Khi cần cập nhật:
+1. **Thêm VBPL/QCVN/TCVN mới**: Thêm entry mới vào nhóm tương ứng (`laws:`, `standards:`) với đầy đủ `bundle_path`, `pdf_path`, `pdf_sha256`, `pdf_status: verified` và khối `source_assets`.
+2. **Thay đổi trạng thái**: Cập nhật `status` (`draft` $\rightarrow$ `active` $\rightarrow$ `superseded` $\rightarrow$ `expired`).
+3. **Đánh dấu thay thế / hướng dẫn**: Khai báo rõ ràng trong `relations:` (`replaces:`, `guided_by:`).
 
-1. **Thêm VBPL mới**: Thêm entry mới vào `documents` với đầy đủ metadata
-2. **Thay đổi trạng thái**: Cập nhật `status` (draft → enacted → superseded)
-3. **Đánh dấu thay thế**: Set `replaces` và `replaced_by` khi có VBPL mới thay thế
+### 2. Tạo Bảng So Sánh & Hợp Nhất VBPL (`VBHNEngine` CLI)
 
-Các status hợp lệ:
-- `draft` — Đang dự thảo, lấy ý kiến
-- `enacted` — Đã ban hành, có hiệu lực
-- `current` — Đang áp dụng
-- `superseded` — Đã bị thay thế bởi VBPL mới
-- `expired` — Hết hiệu lực
+Khi có văn bản sửa đổi bổ sung:
 
-### 2. Tạo bảng so sánh VBPL
+1. Thực thi lệnh hợp nhất AST và sinh ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md` (ADR 0036):
+   ```powershell
+   python -m ccba_legal consolidate `
+     --manifest "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" `
+     --base "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" `
+     --output "legal_docs/<category>/<doc_slug>"
+   ```
+2. Hoặc sử dụng Python API qua Deep Seam `LegislativeConsolidator`:
+   ```python
+   from ccba_legal import LegislativeConsolidator
 
-Khi có VBPL mới thay thế VBPL cũ:
-
-1. Đọc template `resources/comparison_table.md`
-2. Đọc nội dung VBPL cũ và VBPL mới (từ markdown files hoặc PDF)
-3. Điền bảng so sánh theo từng chương/điều/khoản
-4. Highlight các thay đổi quan trọng ảnh hưởng đến QLCL
-5. Xuất file vào thư mục tài liệu nguồn của user
+   consolidator = LegislativeConsolidator.from_manifest_file("patch_manifest.yaml")
+   res = consolidator.consolidate("base.md", "output_dir")
+   ```
+   diff_report = engine.generate_diff(
+       base_doc_path="path/to/old_doc.md",
+       amending_doc_path="path/to/new_doc.md"
+   )
+   # Hoặc hợp nhất văn bản thành VBHN hoàn chỉnh:
+   # vbhn_result = engine.consolidate(base_ast, [patch1, patch2])
+   ```
+2. Đọc kết quả diff được chuẩn hóa theo từng chương/điều/khoản (tự động so khớp `D1` $\leftrightarrow$ `dieu-1`).
+3. Điền các đánh giá chuyên môn vào template `resources/comparison_table.md`.
+4. Xuất file vào thư mục tài liệu đích của dự án.
 
 ### 3. Tạo Impact Report
 
 Khi cần đánh giá tác động:
-
-1. Đọc template `resources/impact_report.md`
-2. Xác định các quy trình CCBA bị ảnh hưởng
-3. Phân loại tác động: Cao / Trung bình / Thấp
-4. Đề xuất hành động cần thiết (cập nhật quy trình, đào tạo, v.v.)
-5. Xuất file Markdown và Word (.docx)
+1. Đọc template `resources/impact_report.md`.
+2. Xác định các quy trình CCBA bị ảnh hưởng.
+3. Phân loại tác động: Cao / Trung bình / Thấp.
+4. Đề xuất hành động cần thiết (cập nhật quy trình, đào tạo).
+5. Xuất file Markdown và Word (.docx).
 
 ### 4. Hướng dẫn NotebookLM
 
 Đọc `resources/notebooklm_prompts.md` để lấy prompt mẫu cho các use case:
-- Đọc nhanh VBPL → trích xuất điểm chính
+- Đọc nhanh VBPL $\rightarrow$ trích xuất điểm chính
 - Soạn thảo công văn dựa trên VBPL
-- Soạn thư kỹ thuật (technical letter)
 - So sánh 2 văn bản trong cùng notebook
 
-## Source Documents
-
-Tài liệu nguồn được lưu trữ tại thư mục đồng bộ OneDrive chung của dự án (được định vị qua cấu hình môi trường hoặc trỏ cục bộ theo thư mục `.md/legal_docs/BIM_VBPL`):
-```text
-[Mạng_OneDrive_CCBA]/04_Cập_nhật_kiến_thức/BIM_VBPL/
-```
-
-Cấu trúc:
-- `.md/legal_docs/BIM_VBPL/2026/` — Tài liệu năm 2026
-  - `Dự thảo NĐQLCL2026 lấy ý kiến/` — Dự thảo NĐ QLCL mới
-  - `CCBA_RD_SEMINAR_003_*` — Tài liệu seminar
-
-## Dependencies
-
-- `python-docx` (cho xuất Word)
-- Web search (cho cập nhật VBPL mới từ moc.gov.vn)
+---
 
 ## ⚠️ Disclaimer
 
-Skill này tạo **tài liệu phân tích VBPL**, KHÔNG phải tư vấn pháp lý.
-Luôn cần chuyên gia pháp lý xác nhận trước khi áp dụng vào dự án thực.
+Skill này tạo **tài liệu phân tích VBPL**, KHÔNG phải tư vấn pháp lý. Luôn cần chuyên gia pháp lý xác nhận trước khi áp dụng vào dự án thực.
 
 
 ---
 
-# Skill: llm-pipeline-patterns
+# Skill: ccba-legal-ingest
 
 ---
-name: LLM Pipeline Patterns
-description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đúc rút từ VvC LLM OS (v5.1→v8.7, 2026).
+name: ccba-legal-ingest
+description: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation, and 11-Gate CI verification workflow.
+bundle: _consulting
+layer: _consulting
+triggers:
+- ccba-legal-ingest
+- nap van ban
+- thu thap van ban
+- harvest legal doc
+- ingest law
+conforms_to:
+- "ADR-0016"
+- "ADR-0021"
+- "ADR-0029"
+- "ADR-0030"
+- "ADR-0031"
+- "ADR-0034"
+- "ADR-0035"
+- "ADR-0036"
+- "ADR-0037"
+---
+# Skill: CCBA Legal Ingest Workflow (`ccba-legal-ingest`)
+
+Quy trình tự động hóa thu thập, chuyển đổi sang tiêu chuẩn **OKF v2.4 Universal Agent-Centric (ADR 0034 - ADR 0037)**, hợp nhất VBHN và kiểm định qua **11 Cổng Master CI Gate** không dung thứ cho bất kỳ Luật, Nghị định, Thông tư, QCVN hoặc TCVN mới.
+
+---
+
+## 🏛️ Quy Trình Chuẩn Hóa Văn Bản Mới (Universal OKF v2.4 Pipeline)
+
+Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện theo quy trình chuẩn:
+
+```
+[Bước 0: Thu thập & Xác thực] ──► [Bước 1: OKF v2.4 Convert] ──► [Bước 2: VBHN Consolidation] ──► [Bước 3: 1-Command Master CI]
+ (ingest --upload-drive)          (Zero-LLM Verbatim AST)         (Nếu có văn bản sửa đổi)          (validate_legal_spoke.py)
+```
+
+---
+
+### Bước 0: Thu Thập & Xác Thực Nguồn Gốc (Giao thức "Một Cửa `tab=7`" - ADR 0035, ADR 0036)
+
+* **Kịch bản 1 — Nạp tự động 1 lệnh toàn trình (Happy Path):**
+  ```powershell
+  python -m ccba_legal ingest "<tvpl_url>" --category <01_vbpl|02_qcvn|03_tcvn> --upload-drive
+  ```
+  *(Tự động tải DOCX Gold Source + PDF Công báo số hóa vào `sources/`, chuyển đổi sang OKF v2.4 Bundle, đồng bộ lên Google Drive Vault `CCBA_Legal_Vault` và sinh Native Google Docs cho NotebookLM)*.
+
+* **Kịch bản 2 — Tiếp nhận thủ công / Fallback khi cào bị lỗi:**
+  Nếu việc cào tự động gặp trở ngại (Cloudflare/Captcha), Agent giải quyết cục bộ bằng script CDP/thủ công để đưa đúng 2 tệp `.docx` và `.pdf` vào `legal_docs/<category>/<doc_slug>/sources/`. **Sau khi có file, BẮT BUỘC thực thi Bước 1 bằng lệnh `convert` — TUYỆT ĐỐI CẤM tự viết file Markdown bằng LLM.**
+
+* **Kịch bản 3 — Làm mới / Thay thế file scan mờ bằng bản nét (Force Refresh):**
+  Chạy lệnh tải đè bản đẹp vào `sources/` rồi chuyển sang Bước 1:
+  ```powershell
+  python -m ccba_legal fetch "<tvpl_url>" -o "legal_docs/<category>/<doc_slug>/sources"
+  ```
+
+---
+
+### Bước 1: Chuyển Đổi Sang OKF v2.4 Bundle (Zero-LLM Deterministic AST - ADR 0037)
+
+* Thực thi lệnh chuyển đổi trích xuất nguyên văn $100\%$ từ DOCX gốc:
+  ```powershell
+  python -m ccba_legal convert --docx-path "legal_docs/<category>/<doc_slug>/sources/<doc_slug>.docx" --target-bundle-dir "legal_docs/<category>/<doc_slug>"
+  ```
+* **Quy chuẩn bất biến (Core Invariants):**
+  - Thân văn bản Markdown trích xuất xác định $1:1$ từ DOCX (cấm LLM rewrite).
+  - Phân tách rạch ròi 4 ngăn kéo: `tables/`, `figures/`, `annexes/`, `templates/`.
+  - Toàn bộ file gốc DOCX + PDF nằm trong `sources/`.
+  - Tự động sinh cây điều khoản AST `clauses.json` và bộ câu hỏi `qa_benchmark.json`.
+
+---
+
+### Bước 2: Hợp Nhất Văn Bản Sửa Đổi (VBHN Engine — nếu có)
+
+* Nếu văn bản có sửa đổi/bổ sung, thực thi lệnh hợp nhất AST:
+  ```powershell
+  python -m ccba_legal consolidate `
+    --manifest "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" `
+    --base "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" `
+    --output "legal_docs/<category>/<doc_slug>"
+  ```
+* Bắt buộc sinh ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md` tại gốc bundle (ADR 0036).
+
+---
+
+### Bước 3: Đăng Ký Sổ Bộ & Nghiệm Thu Master CI Gate (1-Command Automation)
+
+1. Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256`, `pdf_status: verified` và khối `source_assets` vào `legal_registry.yaml`.
+2. Chạy bộ kiểm định 11 Cổng Master Spoke CI Validator:
+   ```powershell
+   python scripts/validate_legal_spoke.py
+   ```
+3. **Tiêu chuẩn nghiệm thu:** `0 Errors, 0 Warnings, 100% Visual Parity, 100% Verbatim Match (Gate 11 >= 98.0%), 100% PDF SHA-256 Match`.
+
+
+---
+
+# Skill: ccba-legal-intel
+
+---
+name: ccba-legal-intel
+description: Autonomous legal intelligence agent to crawl, diff, and generate compliance
+  checklists from Vietnamese legal documents.
+bundle: _consulting
+layer: _consulting
+triggers:
+- ccba-legal-intel
+- crawl law
+- diff law
+- legal checklist
+- thuvienphapluat
+- TVPL
+---
+# Skill: CCBA Legal Intelligence Crawler & Packager (`ccba-legal-intel`)
+
+Kỹ năng này hướng dẫn Agent tự động thực hiện quy trình cào dữ liệu từ Thư viện Pháp luật (TVPL) qua Deep Seam **`TVPLCrawler`** ([`packages/ccba-legal-intel`](../../../packages/ccba-legal-intel)), phân tích đóng gói thành cấu trúc OKF Bundle lồng nhau, phân rã phụ lục, vá liên kết tương đối và đăng ký văn bản mới vào cơ sở tri thức cục bộ.
+
+---
+
+## 1. Quy chuẩn & Rào cản Kỹ thuật (Technical Guardrails)
+
+### 1.1. Rào cản Bảo mật & Quản lý Thông tin xác thực
+*   **Không hardcode credentials**: Đọc thông tin tài khoản TVPL thông qua biến môi trường hệ thống hoặc file `.env` (`TVPL_USERNAME`, `TVPL_PASSWORD`). Báo lỗi nếu thiếu.
+*   **Persistent Chromium VIP Profile (ADR 0031)**: Sử dụng hồ sơ trình duyệt chuyên dụng độc lập tại `~/.gemini/antigravity/chrome_vip`. Khi bắt đầu phiên làm việc hoặc khi session hết hạn, chạy lệnh tương tác:
+    ```bash
+    python -m ccba_legal login
+    ```
+    Đăng nhập tài khoản TVPL Pro 1 lần duy nhất để lưu cookie phiên bền vững cho toàn bộ các lệnh cào tự động sau đó.
+
+### 1.2. Ma Trận Ưu Tiên Tải Dữ Liệu TVPL VIP (ADR 0031)
+1. **Tier 1 — VIP Digital Vector Searchable PDF (`part=-100` / `#ctl00_Content_ThongTinVB_filePDFHyperLink`)**: Mỏ neo Pháp lý Tối thượng Cấp 1 (100% thân văn bản + toàn bộ phụ lục số hóa & bảng tra cứu).
+2. **Tier 2 — VIP OpenXML Word Document (`part=-1&docx=1` / `#ctl00_Content_ThongTinVB_vietnameseHyperLink_Docx`)**: Nguồn Dữ Liệu Gốc Vàng (Gold Source Input) để nạp vào `docx_converter.py` chuyển đổi sang OKF v2.2.
+3. **Tier 3 — Gazette Scan PDF (`part=0` / `#ctl00_Content_ThongTinVB_pdfHyperLink`)**: Fallback dự phòng khi văn bản chưa có bản PDF số hóa riêng.
+
+### 1.3. Rào cản Đường dẫn Hệ thống (Windows MAX_PATH Prevention)
+*   **Giới hạn độ dài Slug**: Để tránh lỗi `FileNotFoundError` khi ghi các tệp phụ lục nằm sâu trên Windows, hàm `sanitize_slug` **bắt buộc** phải giới hạn độ dài slug tối đa là **60 ký tự**.
+
+### 1.4. Quy chuẩn Tích hợp OKF Bundle Lồng nhau (Parent-Child Flat Architecture)
+*   **Luật gốc (Parent Law)**: Lưu tại `legal_docs/01_vbpl/<law_slug>/`
+*   **Văn bản hướng dẫn (Guiding Decrees/Circulars)**: Lưu phẳng bên trong `legal_docs/01_vbpl/<doc_slug>/`
+*   **Đăng ký Registry**: Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256` và `sha256` trong `legal_registry.yaml`.
+
+### 1.5. Đặc Tả Gói Tri Thức Hợp Nhất OKF Bundle v2.4 Universal (ADR 0021, ADR 0034, ADR 0036, ADR 0037)
+Mỗi văn bản quy phạm pháp luật khi đóng gói thành công **bắt buộc** phải tuân thủ cấu trúc bundle độc lập với 4 ngăn kéo và Universal `sources/`:
+```text
+legal_docs/<category_prefix>/<document_slug>/
+├── metadata.yaml               # Metadata độc lập (SSOT cấp bundle, lưu pdf_sha256 và source_assets)
+├── <document_slug>.md          # Nội dung Markdown thuần sạch 100% nguyên văn (ADR 0037)
+├── clauses.json                # Cây điều khoản AST & severity rating
+├── index.md                    # Mục lục điều hướng nội bộ 2D
+├── sources/                    # Universal sources invariant: chứa bản gốc .docx và .pdf
+│   ├── <document_slug>.docx
+│   └── <document_slug>.pdf
+├── templates/                  # Thư mục biểu mẫu nguyên tử (Atomic Form Templates)
+│   └── phu_luc_xx/mau_yy_...md
+├── tables/                     # Thư mục chứa bảng dữ liệu tra cứu 2D
+│   ├── json/                   # JSON ma trận 2D
+│   └── csv/                    # CSV UTF-8 with BOM
+├── figures/                    # Thẻ thị giác tính toán tham số hóa (cards/)
+└── annexes/                    # Phụ lục kỹ thuật quy phạm (Technical Normative Annexes)
+```
+* **Quy chuẩn `metadata.yaml`:** Chứa `id`, `document_number`, `type`, `issued_date`, `effective_date`, `pdf_sha256`, `pdf_status: verified`, khối `source_assets`.
+* **Cơ chế Khớp nối Hub-Spoke:** Tương thích 100% hai chiều giữa Hub (`packages/ccba-legal-intel`) và Spoke (`legal_registry.yaml`).
+
+---
+
+
+## 2. Ánh xạ Đồ thị Quan hệ Lược đồ (11 nhóm quan hệ)
+
+Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối quan hệ của TVPL:
+- `amends_docs`: Văn bản bị sửa đổi bổ sung
+- `replaced_docs`: Văn bản bị thay thế
+- `referenced_docs`: Văn bản được dẫn chiếu
+- `basis_docs`: Văn bản được căn cứ
+- `guided_docs`: Văn bản được hướng dẫn
+- `consolidated_docs`: Văn bản được hợp nhất
+- `guiding_docs`: Văn bản hướng dẫn
+- `consolidations`: Văn bản hợp nhất (VBHN)
+- `amended_by_docs`: Văn bản sửa đổi bổ sung
+- `replaced_by_docs`: Văn bản thay thế
+- `related_docs`: Văn bản liên quan cùng nội dung
+
+---
+
+## 3. Hướng dẫn Vận hành Quy trình Chuẩn Hóa Văn Bản
+
+1. **Khởi Tạo Phiên TVPL VIP (Persistent Session - ADR 0031)**:
+   ```bash
+   python -m ccba_legal login
+   ```
+   Đăng nhập tài khoản VIP 1 lần duy nhất để lưu cookie phiên tại `~/.gemini/antigravity/chrome_vip`.
+   * **Tiêu chí hoàn thành:** Chrome DevTools Protocol khởi chạy thành công và lưu cookie phiên xác thực hợp lệ.
+
+2. **Nạp Tự Động 1 Lệnh Toàn Trình (Happy Path - ADR 0035)**:
+   ```bash
+   python -m ccba_legal ingest "<TVPL_URL>" --category <01_vbpl|02_qcvn|03_tcvn> --upload-drive
+   ```
+   Tự động tải bản PDF số hóa VIP (`part=-100`) và bản Word `.docx`, chuyển đổi sang OKF v2.4 Bundle, đồng bộ lên Google Drive Vault `CCBA_Legal_Vault` và Google NotebookLM.
+   * **Tiêu chí hoàn thành:** Bundle OKF v2.4 được sinh tự động và đồng bộ lên Google Drive Vault cùng NotebookLM.
+
+   *Hoặc tải riêng lẻ từng văn bản:*
+   ```bash
+   python -m ccba_legal fetch "<TVPL_URL>" --category <01_vbpl|02_qcvn|03_tcvn>
+   ```
+
+3. **Chuyển đổi Thủ công sang OKF v2.4 Bundle (Zero-LLM Deterministic AST)**:
+   ```bash
+   python -m ccba_legal convert --docx-path "legal_docs/<category>/<doc_slug>/sources/<doc_slug>.docx" --target-bundle-dir "legal_docs/<category>/<doc_slug>"
+   ```
+   * **Tiêu chí hoàn thành:** Tạo thành công thân văn bản `.md`, 4 ngăn kéo chuyên biệt (`tables/`, `figures/`, `annexes/`, `templates/`), `clauses.json` và `metadata.yaml`.
+
+4. **Hợp nhất Văn bản Sửa đổi (VBHN Engine - nếu có)**:
+   ```bash
+   python -m ccba_legal consolidate -m "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" -b "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" -o "legal_docs/<category>/<doc_slug>"
+   ```
+   * **Tiêu chí hoàn thành:** Sinh tệp văn bản hợp nhất và ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md`.
+
+5. **Đồng Bộ Dữ Liệu Pháp Lý Về Spoke (1-Click Legal Sync - ADR 0050)**:
+   ```bash
+   python -m ccba_legal sync --pull-latest [-o legal_docs] [--doc <doc_id>]
+   ```
+   Tự động kéo các OKF v2.4 bundles đạt chuẩn từ kho tri thức gốc `ccba-legal-knowledge` (hoặc Cloud Legal Vault) và thực hiện Non-Destructive Additive Merge cho `legal_registry.yaml` tại Spoke.
+   * **Tiêu chí hoàn thành:** Toàn bộ gói văn bản OKF v2.4 chuẩn được sao chép về Spoke và `legal_registry.yaml` được cập nhật bảo toàn.
+
+6. **Kiểm Định Master CI Gates Spoke (1-Command Automation)**:
+   ```powershell
+   python scripts/validate_legal_spoke.py
+   ```
+   * **Tiêu chí hoàn thành:** Vượt qua toàn bộ 11 Cổng Master Validator với 0 Errors và 0 Warnings (Gate 11 Verbatim Parity $\ge 98.0\%$).
+
+
+---
+
+# Skill: ccba-llm-pipeline-patterns
+
+---
+name: ccba-llm-pipeline-patterns
+description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
+  Đúc rút từ VvC LLM OS (v5.1→v8.7, 2026).
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Kiểm định
+bundle: _core
+triggers:
+- llm pipeline
+- pipeline patterns
+- 2-pass
+- ground truth
+- rag pipeline
+- synthesis pipeline
+- self-correction
 ---
-
 # LLM Pipeline Patterns
 
 Pattern library cho các pipeline LLM multi-stage — đúc rút từ thực tế vận hành **VvC LLM OS** (v5.1 → v8.7, 2026). Mỗi pattern đều có ít nhất 1 incident thực tế chứng minh sự cần thiết.
@@ -5083,19 +6447,26 @@ sys.stdout.reconfigure(encoding='utf-8')  # phải gọi TRƯỚC logging.basicC
 
 ---
 
-# Skill: long-form-writer
+# Skill: ccba-long-form-writer
 
 ---
-name: long-form-writer
-description: Generates long-form documentation (2000+ words) by actively managing LLM context to bypass output limits. Ideal for regulations, whitepapers, or manuals.
+name: ccba-long-form-writer
+description: Generates long-form documentation (2000+ words) by actively managing
+  LLM context to bypass output limits. Ideal for regulations, whitepapers, or manuals.
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _software
+disable-model-invocation: true
+triggers:
+- tài liệu dài
+- long-form
+- whitepaper
+- quy chế
+- regulations
 ---
-
 # Long-Form Writer Skill
 
 This skill allows Antigravity to generate "super-long" content that exceeds standard output token limits. It uses a Python script (`scripts/generate.py`) that implements a "Chain of Continuation" loop, forcing the model to write deeply about specific sections without summarizing.
@@ -5115,7 +6486,7 @@ This skill allows Antigravity to generate "super-long" content that exceeds stan
     Use `run_command` to execute the generation script.
 
     ```powershell
-    python [hub_path]/.agents/skills/long-form-writer/scripts/generate.py --prompt "YOUR_DETAILED_PROMPT" --output "absolute/path/to/output.docx" --cycles 3
+    python [hub_path]/.agents/skills/ccba-long-form-writer/scripts/generate.py --prompt "YOUR_DETAILED_PROMPT" --output "absolute/path/to/output.docx" --cycles 3
     ```
 
     - `--prompt`: The detailed instructions for the content.
@@ -5134,15 +6505,20 @@ This skill allows Antigravity to generate "super-long" content that exceeds stan
 
 ---
 
-# Skill: loop-me
+# Skill: ccba-loop-me
 
 ---
-name: loop-me
-description: Grill me about specs for the workflows I want to build, within this workspace. Adapted for CCBA Information Governance.
+name: ccba-loop-me
+description: Grill me about specs for the workflows I want to build, within this workspace.
+  Adapted for CCBA Information Governance.
 disable-model-invocation: true
-argument-hint: "A workflow to design, or nothing to go find one"
+argument-hint: A workflow to design, or nothing to go find one
+bundle: _core
+triggers:
+- ccba-loop-me
+- loop me
+- thiết kế chu trình
 ---
-
 # Loop-Me: Thiết kế chu trình lặp của Người dùng
 
 Chạy một phiên `/ccba-grilling` trạng thái với kết quả đầu ra duy nhất là đặc tả **workflow** tự động hóa. Áp dụng kỷ luật phỏng vấn Socrates — hỏi từng câu hỏi một, đi kèm một phương án trả lời khuyến nghị — nhằm làm rõ mục tiêu và các thuật ngữ chu trình dưới đây.
@@ -5154,17 +6530,19 @@ Tạo mới, sửa đổi hoặc xóa bỏ các đặc tả workflow tùy thuộ
 Để tuân thủ hiến pháp CCBA, skill này bắt buộc phải ghi nhận thông tin theo các đường dẫn sau:
 
 - **Ghi chú thô & Thuật ngữ**: Ghi nhận vào `.md/knowledge/user_loops.md` (thay vì `NOTES.md` ở root). Hãy phỏng vấn người dùng về các công cụ họ dùng, kênh thông tin họ xử lý và thuật ngữ đặc thù của họ. Làm sắc nét các từ khóa mơ hồ thành các từ khóa chuẩn hóa.
-- **Tệp Đặc tả Workflow**: Sinh trực tiếp vào thư mục [.agents/workflows/](../../workflows/) (thay vì `workflows/` ở root) dưới dạng tệp Markdown tiêu chuẩn của CCBA, mang định dạng tên `ccba-<slug>.md`.
+- **Tệp Đặc tả Kỹ năng Chu trình (Loop Skill)**: Sinh trực tiếp vào thư mục [.agents/skills/ccba-<slug>/SKILL.md](../) (chuẩn Antigravity Skill) mang định dạng tên `ccba-<slug>`.
 
-## Metadata của Workflow CCBA
-Mọi tệp workflow được tạo ra bắt buộc phải có frontmatter YAML chuẩn sau:
+## Metadata của Kỹ năng Chu trình CCBA
+Mọi tệp `SKILL.md` chu trình được tạo ra bắt buộc phải có frontmatter YAML chuẩn sau:
 
 ```yaml
 ---
-description: [Mô tả ngắn gọn chức năng của lệnh]
-applies_to:
-  - "Phần mềm"     # Hoặc "Tư vấn", "Quy trình" tùy bộ môn
-bundle: "_core"     # Hoặc tên bundle tương ứng (_qc, _consulting...)
+name: ccba-[slug]
+description: [Mô tả ngắn gọn chức năng của lệnh <= 180 ký tự]
+bundle: "_core"     # Hoặc tên bundle tương ứng (_qc, _consulting, _software...)
+disable-model-invocation: true
+triggers:
+  - ccba-[slug]
 ---
 ```
 
@@ -5188,76 +6566,112 @@ Một đặc tả workflow được coi là hoàn thành khi một agent triển
 
 ---
 
-# Skill: markdown-processing
+# Skill: ccba-markdown-document-processing
 
 ---
-name: markdown-document-processing
-description: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ file Word/PDF.
+name: ccba-markdown-document-processing
+description: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep
+  Seam ConversionPipeline.
 role: master_skill
-sub_skills:
-  - table-reconstructor
-  - form-template-cleaner
-  - relative-link-patcher
+layer: _core
+bundle: _core
+invocation: model_invoked
+deep_seam: ConversionPipeline
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+triggers:
+- markdown
+- xử lý markdown
+- chuẩn hóa markdown
+- document processing
 ---
-
 # Master Skill: Markdown Document Processing
 
-Kỹ năng này điều phối toàn bộ quy trình chuyển đổi, làm sạch và chuẩn hóa tài liệu Markdown trong CCBA Agent Services Platform. Khi gặp các tài liệu bị lỗi định dạng (vỡ bảng, placeholder sai tiêu đề, đứt gãy liên kết tương đối), Agent sử dụng Kỹ năng này để điều động các sub-skill tương ứng xử lý.
+Kỹ năng này điều phối toàn bộ quy trình chuyển đổi, làm sạch và chuẩn hóa tài liệu Markdown trong CCBA Agent Services Platform thông qua Deep Seam **`ConversionPipeline`** ([`packages/mdconverter`](../../../packages/mdconverter)).
 
-## Kiến trúc Kỹ năng & Triggers
+---
 
-Quy trình xử lý Markdown được phân rã thành 5 Sub-skills:
+## Kiến trúc Deep Seam & Hậu xử lý Tự động
+
+`ConversionPipeline` đóng gói trọn gói quá trình chuyển đổi thô và 3 giai đoạn hậu xử lý tự động trong một lệnh duy nhất:
 
 ```mermaid
 graph TD
-    Master[Master Skill: markdown-document-processing] --> Sub1[Sub-skill: layout-segmenter]
-    Master --> Sub2[Sub-skill: table-reconstructor]
-    Master --> Sub3[Sub-skill: vn-legal-normalizer]
-    Master --> Sub4[Sub-skill: form-template-cleaner]
-    Master --> Sub5[Sub-skill: relative-link-patcher]
+    Input[File Word / PDF] --> Pipeline[ConversionPipeline / CLI convert]
+    subgraph Integrated Post-Processors
+        Pipeline --> PP1[TableReconstructor: Dựng lại bảng vỡ]
+        PP1 --> PP2[FormTemplateCleaner: Khôi phục tiêu đề form]
+        PP2 --> PP3[RelativeLinkPatcher: Vá liên kết ./appendices/]
+    end
+    Pipeline --> Output[Tài liệu Markdown chuẩn hóa]
 ```
 
-1. **`layout-segmenter`** ( triggers: `pdf preprocessor`, `chunk`, `layout` )
-2. **`table-reconstructor`** ( triggers: `process-table`, `vỡ bảng`, `lệch cột` )
-3. **`vn-legal-normalizer`** ( triggers: `vn-legal`, `pháp luật`, `chuẩn hóa văn bản` )
-4. **`form-template-cleaner`** ( triggers: `clean-form`, `biểu mẫu`, `placeholder`, `lỗi tiêu đề` )
-5. **`relative-link-patcher`** ( triggers: `patch-links`, `liên kết tương đối`, `mục lục index` )
+1. **`table-reconstructor`**: Tự động nhận diện và ghép lại các bảng bị vỡ dọc/lệch cột (Xem chi tiết tại [table_reconstruction.md](references/table_reconstruction.md)).
+2. **`form-template-cleaner`**: Tự động khôi phục tiêu đề biểu mẫu bị lỗi placeholder (Xem chi tiết tại [form_cleaner.md](references/form_cleaner.md)).
+3. **`relative-link-patcher`**: Tự động chuẩn hóa liên kết phụ lục `./appendices/` và đồng bộ `index.md` (Xem chi tiết tại [link_patcher.md](references/link_patcher.md)).
+
+---
 
 ## Hướng dẫn Vận hành Chung cho Agent
 
-Khi nhận được yêu cầu xử lý tài liệu, hãy tuân thủ quy trình sau:
-1. **Bước 1: Chuyển đổi thô (CLI):** Chạy `/convert-markdown [file_path]` để thực hiện convert toàn bộ tài liệu từ file Word/PDF.
-2. **Bước 2: Đánh giá chất lượng:** Kiểm tra xem file `.md` đầu ra có bị dính lỗi vỡ bảng hoặc lỗi placeholder tiêu đề biểu mẫu không.
-3. **Bước 3: Gọi Sub-skills sửa lỗi:**
-   * Nếu có bảng biểu bị vỡ dọc $\rightarrow$ Gọi Sub-skill `table-reconstructor` để chạy lệnh `process-table`.
-   * Nếu có biểu mẫu bị dính dấu chấm lửng/placeholder làm tiêu đề $\rightarrow$ Gọi Sub-skill `form-template-cleaner` để chạy lệnh `clean-form`.
-   * Nếu các link tương đối chưa chuẩn $\rightarrow$ Gọi Sub-skill `relative-link-patcher` để chạy lệnh `patch-links`.
+Khi nhận được yêu cầu xử lý chuyển đổi tài liệu, hãy tuân thủ quy trình sau:
+
+1. **Chuyển đổi toàn diện qua Deep Seam (All-in-One Pass)**:
+   - Sử dụng Python API hoặc CLI để chuyển đổi tài liệu. Hệ thống tự động kích hoạt toàn bộ các post-processors làm sạch bảng, biểu mẫu và vá liên kết tương đối:
+     ```python
+     from mdconverter import ConversionPipeline
+
+     pipeline = ConversionPipeline()
+     result = pipeline.convert("path/to/document.docx")
+     # Hoặc với async pipeline:
+     # result = await ConversionPipeline.process_file("path/to/document.docx")
+     ```
+     Hoặc qua CLI:
+     ```bash
+     python -m mdconverter.cli convert "path/to/document.docx"
+     ```
+   - **Tiêu chí hoàn thành:** Tệp `.md` đầu ra được tạo thành công, bảng biểu nguyên vẹn, tiêu đề biểu mẫu chuẩn xác và các liên kết phụ lục hợp lệ.
+
+2. **Kiểm tra chất lượng & Can thiệp chuyên biệt (Chỉ khi cần)**:
+   - Đọc lướt tệp `.md` đầu ra để xác nhận chất lượng. Trong trường hợp đặc thù cần tinh chỉnh riêng lẻ từng cấu phần, tham chiếu tài liệu chuyên sâu:
+     * Tinh chỉnh bảng thủ công $\rightarrow$ Xem [table_reconstruction.md](references/table_reconstruction.md)
+     * Tinh chỉnh tiêu đề form bằng Prompt $\rightarrow$ Xem [form_cleaner.md](references/form_cleaner.md)
+     * Vá lại liên kết tương đối $\rightarrow$ Xem [link_patcher.md](references/link_patcher.md)
+   - **Tiêu chí hoàn thành:** Toàn bộ nội dung văn bản đạt chuẩn định dạng Markdown CCBA, không còn placeholder rác hoặc liên kết đứt gãy.
+
+---
 
 ## 🛑 Điều cấm & Quy tắc rào chắn (Negative Constraints)
+
+- **Không tự phân mảnh quy trình**: Tránh việc gọi lần lượt từng script phụ nếu đã có thể xử lý trọn gói bằng `ConversionPipeline`.
 - **Tuyệt đối không sử dụng dấu chấm lửng (`...`)**: Trong tất cả câu trả lời, ví dụ minh họa hoặc tài liệu Markdown xuất ra, không bao giờ dùng ba dấu chấm lửng `...` để viết tắt hoặc làm ví dụ. Hãy tự viết đầy đủ chi tiết hoặc tự sinh văn bản mẫu cụ thể.
 
 
 ---
 
-# Skill: maskara
+# Skill: ccba-maskara
 
 ---
-name: maskara-privacy
-description: "Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords, private keys) trong files/logs và cài đặt guardrails bảo mật."
+name: ccba-maskara
+description: Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords,
+  private keys) trong files/logs và cài đặt guardrails bảo mật.
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
+triggers:
+- ccba-maskara
+- privacy
+- redact
+- scan secret
+- leak
+- che giấu key
 ---
-
 # Maskara Privacy - Bảo mật thông tin nhạy cảm CCBA
 
 > **Vai trò**: Đây là kỹ năng bảo mật cốt lõi giúp phát hiện và che giấu (redact) các thông tin nhạy cảm (OpenAI API key, Google API key, AWS keys, JWT, Database URLs, Private key...) trong logs và files của dự án trước khi commit hoặc chia sẻ.
@@ -5332,13 +6746,21 @@ Khi làm việc trong dự án có xử lý credentials, Agent **BẮT BUỘC** 
 
 ---
 
-# Skill: mock-debugger
+# Skill: ccba-mock-debugger
 
 ---
-name: mock-debugger
-description: Automated debugger and self-healing trace analyzer. Runs scripts, captures tracebacks, and provides root cause analysis and code patch suggestions via AI.
+name: ccba-mock-debugger
+description: Automated debugger and self-healing trace analyzer. Runs scripts, captures
+  tracebacks, and provides root cause analysis and code patch suggestions via AI.
+disable-model-invocation: true
+bundle: _software
+triggers:
+- debug
+- ccba-mock-debugger
+- sửa lỗi
+- self-healing
+- gỡ lỗi
 ---
-
 # Mock Debugger (`mock-debugger`)
 
 Kích hoạt bộ tự động gỡ lỗi và tự phục hồi mã nguồn Python (Self-Healing Debugger).
@@ -5348,7 +6770,7 @@ Kích hoạt bộ tự động gỡ lỗi và tự phục hồi mã nguồn Pyth
 Khi chạy thử nghiệm mã nguồn Python bị lỗi crash hoặc gặp lỗi logic:
 1. Chạy gỡ lỗi và phân tích vết traceback:
    ```bash
-   python scripts/mock_debugger.py path/to/failing_script.py [arguments]
+   python scripts/security/mock_debugger.py path/to/failing_script.py [arguments]
    ```
 2. AI sẽ tự động phân tích và đưa ra:
    * Nguyên nhân lỗi (RCA).
@@ -5358,21 +6780,152 @@ Khi chạy thử nghiệm mã nguồn Python bị lỗi crash hoặc gặp lỗi
 
 ---
 
-# Skill: notebooklm-connector
+# Skill: ccba-new-feature
 
 ---
-name: notebooklm-connector
-description: Interact with Google NotebookLM to import YouTube, URLs, PDFs, and Drive docs, perform RAG query, generate Audio Overview, and handle auth, polling, and retry loops.
+name: ccba-new-feature
+
+description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session sạch (Factory Model)
+applies_to:
+- Phần mềm
+bundle: _core
+disable-model-invocation: true
+command: /ccba-new-feature
+triggers:
+- new feature
+- feature mới
+- tạo branch
+---
+# Kỹ năng: Tạo Feature Branch Mới & Phân Tách Session (Factory Model)
+
+Quy trình tự động hóa dọn dẹp các branch cũ, khởi tạo branch tính năng mới và cưỡng chế áp dụng mô hình Nhà máy (**The Factory Model**) tách biệt giữa **Planning** và **Coding** để tối ưu hóa chi phí Token (OpEx) và ngăn ngừa lỗi mã nguồn.
+
+## Hướng Dẫn Thực Hiện:
+
+### Bước 1: Chuẩn bị môi trường & Pre-Flight Check
+- **Kiểm tra trạng thái Working Tree:**
+  ```bash
+  git status --short
+  ```
+  *Nếu có uncommitted changes dở dang, yêu cầu `git commit` hoặc `git stash` trước khi chuyển nhánh.*
+- **Quay về branch `main` và kéo code mới nhất:**
+  ```bash
+  git checkout main && git pull origin main
+  ```
+
+### Bước 2: Dọn dẹp các branch cũ đã merge
+Dọn dẹp các branch cục bộ đã được tích hợp vào `main` (hỗ trợ cả merge thông thường và dọn dẹp prune):
+- **Windows PowerShell:**
+  ```powershell
+  git fetch -p
+  git branch --merged main | Where-Object { $_ -notmatch 'main' -and $_ -notmatch '^\*' } | ForEach-Object { git branch -d $_.Trim() }
+  ```
+- **Bash (Linux / macOS / Git Bash):**
+  ```bash
+  git fetch -p
+  git branch --merged main | grep -vE '^\*|main$' | xargs -r git branch -d
+  ```
+
+### Bước 3: Thu thập thông tin & Bóc tách Issue tự động (Hỗ trợ Offline Fallback)
+- **Trường hợp 1 (Có mã Issue, ví dụ `/ccba-new-feature #228`):**
+  - Agent ưu tiên gọi GitHub CLI để trích xuất thông tin:
+    ```bash
+    gh issue view <issue_id> --json title,body,labels
+    ```
+  - **Offline / Local Fallback:** Nếu mất mạng hoặc `gh` chưa đăng nhập, Agent tự động đọc tệp cục bộ `.md/knowledge/issues/issue-<issue_id>.md`.
+  - **Nhận diện tự động:**
+    - Tự động nhận diện loại công việc từ tiêu đề hoặc labels: `feat(...)` $\rightarrow$ `feat`, `fix(...)` $\rightarrow$ `fix`, `docs(...)` $\rightarrow$ `docs`, `refactor(...)` $\rightarrow$ `refactor`.
+    - Tự động trích xuất nội dung **Agent Brief** (nếu đã qua `/ccba-triage`) để chuyển thẳng sang Bước 6.
+    - Tự động đề xuất tên branch ở Bước 4 mà **không cần hỏi lại người dùng**.
+- **Trường hợp 2 (Không cung cấp mã Issue):**
+  Hỏi người dùng lần lượt các thông tin:
+  - Loại công việc cần thực hiện: `feat` (tính năng mới), `fix` (sửa lỗi), `docs` (tài liệu), `refactor` (cải tiến cấu trúc), hoặc `experiment` (thử nghiệm).
+  - Mô tả ngắn gọn tính năng (3-5 từ).
+
+### Bước 4: Đề xuất tên branch chuẩn định danh
+Dựa trên thông tin thu thập được, đề xuất tên branch theo định dạng chuẩn CCBA có gắn mã Issue:
+- `feat/issue-<id>-<ten-ngan-gon>` (hoặc `feat/<ten-tinh-nang>` nếu không có issue)
+- `fix/issue-<id>-<ten-loi>` (hoặc `fix/<ten-loi>` nếu không có issue)
+- `docs/issue-<id>-<ten-tai-lieu>`
+- `refactor/issue-<id>-<ten-module>`
+- `experiment/<ten-thu-nghiem>`
+
+*Quy tắc đặt tên branch:* Viết thường hoàn toàn (lowercase), sử dụng dấu gạch ngang `-` thay cho khoảng trắng, ngắn gọn, có thể truy vết ngược về Issue.
+
+### Bước 5: Khởi tạo branch mới
+Sau khi chốt tên branch, tạo và chuyển sang branch mới:
+```bash
+git checkout -b [ten_branch_da_chot]
+```
+
+### Bước 6: Lập kế hoạch thiết kế (Planning Phase — Triage Fast-Path & Socrates Grill)
+Agent **bắt buộc** phải chuyển sang **Planning Mode**, tuyệt đối không được viết code ở bước này:
+- **Triage Fast-Path (Smart Skipping):**
+  - Nếu Issue đã có sẵn **Agent Brief** chuẩn từ `/ccba-triage`: Agent tự động nạp yêu cầu, bỏ qua các câu hỏi phỏng vấn cơ bản và chỉ chất vấn 1-2 câu kiến trúc cốt lõi nếu thực sự cần thiết.
+  - Nếu chưa có Agent Brief: Kích hoạt `/ccba-grilling` để phỏng vấn người dùng và stress-test các giả định.
+- **Soạn thảo Kế hoạch Triển khai (`implementation_plan.md`):**
+  - Bắt buộc có mục `## Đánh giá khả năng tái sử dụng (Reuse Assessment)` tra cứu `catalog.yaml` (ADR 0047).
+  - Xác định rõ các Deep Seams (khớp nối) và Scoped Verification Plan.
+- **Phê duyệt:** Đợi người dùng nhấn **Proceed** phê duyệt bản kế hoạch.
+
+### Bước 7: Bàn giao cô lập ngữ cảnh (Factory Model Hand-off & Smart Routing)
+Sau khi bản kế hoạch được duyệt, để ngăn ngừa phình to ngữ cảnh hội thoại (Context Rot) và giảm OpEx:
+- **Định tuyến thực thi (Execution Routing):** Đọc khuyến nghị từ Agent Brief:
+  - 🟢 **Standard** (`/ccba-implement`): Mở session chat mới sạch sẽ và gọi `/ccba-implement`.
+  - 🟣 **Deep Reasoning** (`/boost`): Kích hoạt điều tra chuyên sâu cho logic thuật toán phức tạp.
+  - 🔵 **Multi-Agent Orchestration** (`/ccba-teamwork` hoặc `invoke_subagent`): Phân rã Seams và chạy đa tác nhân song song.
+
+### Bước 8: Lập trình, Kiểm chứng & Tự sửa lỗi (Coding & Verification Phase)
+Coding Agent thực hiện nhiệm vụ:
+- Khởi tạo danh mục theo dõi `task.md`.
+- Viết mã nguồn tương thích, áp dụng type hints và docstring chuẩn Google/CCBA.
+- **Thực thi Cổng Kiểm định Tự động (Automation-First Quality Gates):**
+  - `python scripts/safe_pytest.py -f tests/test_xxx.py` (chạy scoped test an toàn).
+  - `ruff check packages/ scripts/ tests/` (linter & format).
+  - `mypy packages/ scripts/` (static type checker).
+  - `python scripts/spoke/check_hub_import_depth.py` & `check_spoke_cleanliness.py` (ADR 0044).
+  - `python scripts/eval/run_harness_evals.py` (hoặc `/ccba-eval-gate`).
+- Nếu phát hiện linter hoặc type check báo lỗi, tự động kích hoạt **Self-Healing Loop** tối đa 3 lần.
+- Khi tất cả các Gates đều vượt qua thành công (PASS), bàn giao kết quả qua tệp `walkthrough.md` cho người dùng nghiệm thu trước khi tạo PR (`/ccba-create-pr`).
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+---
+
+# Skill: ccba-notebooklm-connector
+
+---
+name: ccba-notebooklm-connector
+description: Interact with Google NotebookLM to import YouTube, URLs, PDFs, and Drive
+  docs, perform RAG query, generate Audio Overview, and handle auth, polling, and
+  retry loops.
 user-invocable: true
-when_to_use: Dùng khi cần trích xuất tóm tắt, truy vấn RAG, hoặc sinh các tài liệu cấu trúc (Podcast, Quiz, Slides, Mind Map, Infographic, Video, v.v.) từ các tài liệu lớn, cũng như quản trị Notebooks và Sources trên Cloud.
+when_to_use: Dùng khi cần trích xuất tóm tắt, truy vấn RAG, hoặc sinh các tài liệu
+  cấu trúc (Podcast, Quiz, Slides, Mind Map, Infographic, Video, v.v.) từ các tài
+  liệu lớn, cũng như quản trị Notebooks và Sources trên Cloud.
 category: dev-tools
-keywords: [notebooklm, rag, summary, youtube, audio, podcast, quiz, slides, mindmap, infographic, admin]
-argument-hint: "<source-path-or-url> [--extract|--query|--audio|--quiz|--slides|--mindmap|--infographic|--study-guide|--data-table|--flashcards|--report|--video|--list-notebooks|--delete-notebook|--share-notebook|--list-sources|--delete-source] [args]"
+keywords:
+- notebooklm
+- rag
+- summary
+- youtube
+- audio
+- podcast
+- quiz
+- slides
+- mindmap
+- infographic
+- admin
+argument-hint: <source-path-or-url> [--extract|--query|--audio|--quiz|--slides|--mindmap|--infographic|--study-guide|--data-table|--flashcards|--report|--video|--list-notebooks|--delete-notebook|--share-notebook|--list-sources|--delete-source]
+  [args]
 metadata:
   author: CCBA
   version: 1.3.0
+bundle: _core
+layer: _core
 ---
-
 # NotebookLM Connector
 
 Kỹ năng này dẫn dắt Agent tương tác tự động với Google NotebookLM thông qua thư viện `notebooklm-py` để trích xuất tri thức, RAG query cô lập, sinh các tài liệu cấu trúc (Structured Artifacts) và quản trị Notebooks/Sources.
@@ -5381,27 +6934,28 @@ Kỹ năng này dẫn dắt Agent tương tác tự động với Google Noteboo
 
 ---
 
-### Bước 1: Kiểm tra Môi trường và Xác thực (Auth Check)
+### Bước 1: Kiểm tra Môi trường và Xác thực (Auth Check & Tri-Tier Vault - ADR 0035)
 
-1.  Kiểm tra xem thư viện `notebooklm` có import được trong Python không. Nếu chưa có, dừng lại và yêu cầu người dùng chạy lệnh:
-    `pip install notebooklm-py`
+1.  Kiểm tra xem thư viện `notebooklm` có import được trong Python không (`pip install notebooklm-py`).
 2.  Kiểm tra phương thức xác thực:
-    *   **Môi trường headless / chạy ngầm (CI/CD):** Đảm bảo đã cấu hình biến môi trường `NOTEBOOKLM_SESSION_COOKIE` hoặc `NOTEBOOKLM_COOKIES_JSON` trong tệp `.env`. Script helper sẽ tự động chuyển đổi và inject cookie vào Playwright storage tạm.
-    *   **Môi trường desktop cục bộ:** Nếu chưa cấu hình cookie, chạy helper script để tự động tải cấu hình lưu sẵn trên hệ thống:
-        `python scripts/notebooklm_helper.py check-auth`
-3.  Nếu gặp lỗi Authentication:
-    *   Agent **bắt buộc** dừng tiến trình.
-    *   Hướng dẫn người dùng chạy lệnh đăng nhập một lần trên trình duyệt để cập nhật session cookie:
-        `python -m notebooklm login`
-    *   Sau khi người dùng đăng nhập xong, chạy lại bước kiểm tra để tiếp tục.
+    *   Chạy lệnh đăng nhập phiên VIP/Google trên hệ thống:
+        `python -m notebooklm login` (hoặc `python -m ccba_legal login`).
+3.  **Đồng bộ Tri thức lên Cloud Vault & NotebookLM (ADR 0023, ADR 0035):**
+    *   Chạy script đồng bộ danh mục 308+ tài sản RAG chuẩn hóa:
+        ```powershell
+        python scripts/sync_notebooklm_knowledge.py --notebook-id <notebook_id>
+        # Hoặc qua CLI facade:
+        python scripts/spoke/spoke_cli.py sync-notebooklm --notebook-id <notebook_id>
+        ```
+    *   Khi nạp văn bản mới bằng `python -m ccba_legal ingest ... --upload-drive`, các file Word gốc được tự động đẩy lên Google Drive Vault `CCBA_Legal_Vault` và chuyển đổi sang Native Google Docs sẵn sàng nạp 1-click vào NotebookLM.
 
 ---
 
 ### Bước 2: Quét Bảo mật thông qua Maskara Gate
 
-Trước khi tải tài liệu cục bộ lên đám mây của Google, Agent **bắt buộc** phải chạy quét bảo mật qua `scripts/maskara.py`:
-1.  **Phát hiện API Keys/Tokens nhạy cảm:** Nếu phát hiện các token OpenAI, Anthropic, Google, hoặc GitHub, tiến trình tải lên sẽ bị chặn đứng lập tức để tránh lộ lọt thông tin.
-2.  **Khử PII & Database URL:** Nếu phát hiện số điện thoại, email hoặc URL cơ sở dữ liệu, script sẽ tự động che giấu (redact) thông tin nhạy cảm và xuất một bản copy làm sạch tạm thời tại `.md/scratch/redacted/` để upload. Tệp tạm này sẽ bị xóa ngay sau khi nạp nguồn thành công.
+Trước khi tải tài liệu cục bộ lên đám mây của Google, Agent **bắt buộc** phải chạy quét bảo mật:
+1.  **Phát hiện API Keys/Tokens nhạy cảm:** Chặn đứng lập tức nếu phát hiện các token OpenAI, Anthropic, Google, hoặc GitHub.
+2.  **Khử PII & Database URL:** Tự động che giấu (redact) thông tin nhạy cảm trước khi đồng bộ.
 
 ---
 
@@ -5419,30 +6973,30 @@ Trước khi tải tài liệu cục bộ lên đám mây của Google, Agent **
 Tùy theo tham số chế độ người dùng yêu cầu, thực thi subcommand tương ứng:
 
 #### A. Nhóm sinh Tri thức cấu trúc (Structured Artifacts)
-*   **Extract (Tóm tắt Markdown)**: `python scripts/notebooklm_helper.py extract --source "<source>" --output ".md/extracted_docs/summaries/"`
-*   **Query (RAG hỏi đáp)**: `python scripts/notebooklm_helper.py query --source "<source>" --prompt "<câu-hỏi>"`
-*   **Audio (Podcast MP3)**: `python scripts/notebooklm_helper.py audio --source "<source>"`
-*   **Quiz (Trắc nghiệm JSON)**: `python scripts/notebooklm_helper.py quiz --source "<source>"`
-*   **Slides (Slide thuyết trình PDF)**: `python scripts/notebooklm_helper.py slides --source "<source>"`
-*   **Mind Map (Sơ đồ tư duy JSON)**: `python scripts/notebooklm_helper.py mindmap --source "<source>"`
-*   **Infographic (Infographic PDF)**: `python scripts/notebooklm_helper.py infographic --source "<source>"`
-*   **Study Guide (PDF)**: `python scripts/notebooklm_helper.py study-guide --source "<source>"`
-*   **Data Table (Bảng trích xuất CSV)**: `python scripts/notebooklm_helper.py data-table --source "<source>" --instructions "<chỉ-dẫn>"`
-*   **Flashcards (JSON)**: `python scripts/notebooklm_helper.py flashcards --source "<source>"`
-*   **Report (Markdown)**: `python scripts/notebooklm_helper.py report --source "<source>" --format briefing_doc`
-*   **Video (MP4)**: `python scripts/notebooklm_helper.py video --source "<source>" --format explainer`
+*   **Extract (Tóm tắt Markdown)**: `python -m ccba_notebooklm extract --source "<source>" --output ".md/extracted_docs/summaries/"`
+*   **Query (RAG hỏi đáp)**: `python -m ccba_notebooklm query --source "<source>" --prompt "<câu-hỏi>"`
+*   **Audio (Podcast MP3)**: `python -m ccba_notebooklm audio --source "<source>"`
+*   **Quiz (Trắc nghiệm JSON)**: `python -m ccba_notebooklm quiz --source "<source>"`
+*   **Slides (Slide thuyết trình PDF)**: `python -m ccba_notebooklm slides --source "<source>"`
+*   **Mind Map (Sơ đồ tư duy JSON)**: `python -m ccba_notebooklm mindmap --source "<source>"`
+*   **Infographic (Infographic PDF)**: `python -m ccba_notebooklm infographic --source "<source>"`
+*   **Study Guide (PDF)**: `python -m ccba_notebooklm study-guide --source "<source>"`
+*   **Data Table (Bảng trích xuất CSV)**: `python -m ccba_notebooklm data-table --source "<source>" --instructions "<chỉ-dẫn>"`
+*   **Flashcards (JSON)**: `python -m ccba_notebooklm flashcards --source "<source>"`
+*   **Report (Markdown)**: `python -m ccba_notebooklm report --source "<source>" --format briefing_doc`
+*   **Video (MP4)**: `python -m ccba_notebooklm video --source "<source>" --format explainer`
 
 #### B. Nhóm quản trị Sổ tay & Nguồn (CRUD Admin)
 *   **List Notebooks (Liệt kê Notebooks)**:
-    `python scripts/notebooklm_helper.py list-notebooks`
+    `python -m ccba_notebooklm list-notebooks`
 *   **Delete Notebook (Xóa Notebook)**:
-    `python scripts/notebooklm_helper.py delete-notebook --notebook-id "<id>"`
+    `python -m ccba_notebooklm delete-notebook --notebook-id "<id>"`
 *   **Share Notebook (Chia sẻ & Lấy Share URL)**:
-    `python scripts/notebooklm_helper.py share-notebook [--notebook-id "<id>"]`
+    `python -m ccba_notebooklm share-notebook [--notebook-id "<id>"]`
 *   **List Sources (Liệt kê các nguồn trong Notebook)**:
-    `python scripts/notebooklm_helper.py list-sources [--notebook-id "<id>"]`
+    `python -m ccba_notebooklm list-sources [--notebook-id "<id>"]`
 *   **Delete Source (Xóa nguồn trong Notebook)**:
-    `python scripts/notebooklm_helper.py delete-source --source-id "<id>" [--notebook-id "<id>"]`
+    `python -m ccba_notebooklm delete-source --source-id "<id>" [--notebook-id "<id>"]`
 
 ---
 
@@ -5460,91 +7014,218 @@ Tùy theo tham số chế độ người dùng yêu cầu, thực thi subcommand
 
 ---
 
-# Skill: platform-loader
+# Skill: ccba-pccc-cdt-tuthamdinh
 
 ---
-name: platform-loader
-description: Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn bộ skills, workflows, và rules.
+name: ccba-pccc-cdt-tuthamdinh
+description: Quy trình Hỗ trợ Chủ đầu tư Tự thẩm định toàn bộ thiết kế PCCC (theo
+  Luật 55/2024 & NĐ 105/2025)
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Thẩm tra thiết kế
+- Thiết kế
+bundle: _qc
+disable-model-invocation: true
+command: /workflow_pccc_cdt_tuthamdinh
+triggers:
+- tự thẩm định
+- cdt tự thẩm định
+- luật 55/2024
+- NĐ 105/2025
 ---
+# Quy trình Tư vấn Hỗ trợ Chủ đầu tư Tự thẩm định toàn bộ thiết kế PCCC
 
-# CCBA Platform Loader
+Căn cứ điểm đ khoản 1 Điều 17 Luật PCCC số 55/2024/QH15 và khoản 1 Điều 8 Nghị định số 105/2025/NĐ-CP, đối với các công trình không thuộc thẩm quyền thẩm định của Cơ quan chuyên môn về xây dựng và Cơ quan Công an, **Chủ đầu tư / Chủ sở hữu công trình có trách nhiệm tự tổ chức thẩm định thiết kế về PCCC**.
 
-> **Vai trò**: Đây là điểm khởi đầu duy nhất cho Agent để truy cập toàn bộ dịch vụ của CCBA Platform.
-> Đọc file này MỘT LẦN khi bắt đầu phiên để xác định tài nguyên khả dụng và route task chính xác.
+Quy trình này hướng dẫn cách sử dụng CCBA AI Agent để hỗ trợ Chủ đầu tư thực hiện nhiệm vụ rà soát toàn diện và xuất Mẫu PC13 theo đúng quy định pháp luật.
 
----
+## 1. Nội dung Tự thẩm định (Full Audit)
 
-## Service Catalog (Source of Truth)
+Chủ đầu tư phải tự chịu trách nhiệm trước pháp luật về việc thẩm định đầy đủ 07 nội dung (từ điểm a đến điểm g khoản 1 Điều 16 Luật 55/2024/QH15):
+*   **Phần Kiến trúc & Thụ động:**
+    *   [a] Khoảng cách phỏng cháy, chữa cháy.
+    *   [b] Đường bộ, bãi đỗ xe, khoảng trống phục vụ PCCC.
+    *   [c] Giải pháp thoát nạn.
+    *   [d] Bậc chịu lửa, giải pháp ngăn cháy, chống cháy lan.
+    *   [đ] Giải pháp chống khói.
+*   **Phần Chủ động & Hệ thống điện:**
+    *   [e] Hệ thống điện phục vụ phòng cháy và chữa cháy.
+    *   [g] Phương tiện, hệ thống phòng cháy và chữa cháy.
 
-Toàn bộ thông tin về trigger keywords, đường dẫn (paths) và phân loại nghiệp vụ của Skills/Workflows được định nghĩa duy nhất tại:
-```text
-.agents/skills/platform-loader/catalog.yaml
-```
-Agent bắt buộc phải đọc trực tiếp tệp `catalog.yaml` để lấy cấu hình mới nhất, không tự suy đoán hoặc sử dụng danh sách cũ.
+## 2. Trình tự thực hiện bằng CCBA Semantic Audit Engine
 
----
+Thay vì phải rà soát thủ công một lượng lớn bản vẽ Kiến trúc, Điện, Nước và Thuyết minh, Chủ đầu tư/Tư vấn QLDA áp dụng phương pháp Map-Reduce của CCBA:
 
-## Routing Instructions
+**Bước 1: Chuẩn bị Hồ sơ (Data Ingestion)**
+Tập hợp toàn bộ Thuyết minh tính toán, Bản vẽ Kiến trúc PCCC và Bản vẽ MEP PCCC vào một thư mục chung.
 
-Khi nhận yêu cầu từ người dùng, Agent thực hiện theo logic sau:
+**Bước 2: Phân tách Gói Dữ Liệu (Map)**
+*   Gói 1 (Legal & Specs): Thuyết minh tổng hợp + Quy chuẩn áp dụng.
+*   Gói 2 (MEP Water): Mặt bằng bơm, bể nước, vách tường, Sprinkler + Thuyết minh.
+*   Gói 3 (MEP Alarm vs Arch): Mặt bằng Kiến trúc + Báo cháy + Điện PCCC.
 
-### 1. Phân tích Trigger Keywords
-Đọc `catalog.yaml`. Đối chiếu request của người dùng với các `triggers` trong catalog:
-- Khớp skill $\rightarrow$ Đọc `skill_path` (`SKILL.md`) tương ứng để nạp kỹ năng.
-- Khớp workflow $\rightarrow$ Đọc `workflow_path` tương ứng để chạy workflow.
-- Khớp cả hai $\rightarrow$ Nạp cả skill và workflow.
+**Bước 3: Chạy Engine Đánh Giá (Reduce)**
+*   Sử dụng Local LLM (qwen-local-primary) chạy tuần tự qua các Gói dữ liệu để so sánh chéo, phát hiện xung đột và lỗi sai thông số.
+*   Cross-check tự động với cơ sở dữ liệu TCVN 3890:2023, TCVN 5738:2021, TCVN 7336:2021 và QCVN 06:2022/BXD.
 
-### 2. Tự động áp dụng Rules
-- Nếu kết quả đầu ra nhân danh CCBA $\rightarrow$ Nạp `rules/ccba_identity.md`.
-- Nếu liên quan đến pháp luật hoặc văn bản pháp lý $\rightarrow$ Nạp `rules/compliance.md`.
-- Nếu tạo tệp tin hoặc thư mục mới $\rightarrow$ Nạp `rules/naming_conventions.md`.
-
-### 3. Đồng bộ bổ sung kỹ năng (Lazy Loading Sync)
-Khi Agent đang hoạt động tại Spoke và phát hiện yêu cầu cần sử dụng một skill/workflow có sẵn trên Hub nhưng chưa được đồng bộ cục bộ về Spoke:
-1. Tra cứu `catalog.yaml` để tìm tên skill cần thiết.
-2. Xin phép người dùng cài đặt bổ sung: *"Tôi cần tải bổ sung kỹ năng [tên-skill] từ Hub về Spoke để xử lý, bạn có đồng ý không?"*
-3. Sau khi được đồng ý, xác định đường dẫn Hub (`hub_path`) từ `workspace_context.yaml` hoặc biến môi trường `CCBA_HUB_PATH` (mặc định sử dụng repository chung) và thực thi lệnh đồng bộ:
-   ```bash
-   python [hub_path]/scripts/sync_spoke.py --spoke . --sync-item <tên-skill>
-   ```
-4. Sau khi đồng bộ thành công, Agent tự động nạp kỹ năng mới qua cơ chế Auto-Discovery và tiếp tục thực hiện công việc.
-
-### 4. Quy tắc Định tuyến Xử lý Văn bản (Master vs Sub-Skill Routing)
-Đối với các yêu cầu xử lý văn bản, tài liệu, hoặc file văn phòng:
-- **Ưu tiên nạp Master Skill**:
-  - Thao tác tệp Office (Word, Excel, PPT, PDF) $\rightarrow$ Nạp Master Skill `xu-ly-van-phong`.
-  - Chuẩn hóa Markdown / PDF $\rightarrow$ Nạp Master Skill `markdown-document-processing`.
-  - Soạn thảo hành chính / đề xuất thầu $\rightarrow$ Nạp Master Skill `copywriting`.
-  - Viết bài báo khoa học $\rightarrow$ Nạp Master Skill `academic_writing`.
-- **Nạp Sub-Skill / Utility khi cần thiết**: Chỉ nạp trực tiếp sub-skills (`docx`, `pptx`, `table-reconstructor`, `form-template-cleaner`, `relative-link-patcher`) khi cần xử lý thao tác vi mô hoặc khi được Master Skill chỉ định.
+**Bước 4: Trích xuất Báo cáo Thẩm định (PC13)**
+*   Hệ thống tổng hợp các Findings (Lỗi) và xuất ra Báo cáo Đánh giá Chất lượng Hồ sơ.
+*   Sử dụng kết quả này làm cơ sở để phát hành **Văn bản kết quả thẩm định thiết kế về phòng cháy, chữa cháy** (Mẫu số PC13 ban hành kèm theo Nghị định số 105/2025/NĐ-CP). Chủ đầu tư ký và lưu hồ sơ theo quy định.
 
 
 ---
 
-# Skill: pptx
+# Skill: ccba-pccc-thamdinh-congan
 
 ---
-name: pptx
-description: "Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao bằng HTML conversion hoặc OOXML."
+name: ccba-pccc-thamdinh-congan
+description: Quy trình Thẩm định thiết kế PCCC phần Hệ thống Cơ điện (MEP) nộp Cơ
+  quan Công an (PC07)
+applies_to:
+- Thẩm tra thiết kế
+- Thiết kế
+bundle: _qc
+disable-model-invocation: true
+command: /workflow_pccc_thamdinh_congan
+triggers:
+- thẩm định công an
+- mep pccc
+- pc07
+---
+# Quy trình Thẩm định thiết kế PCCC phần Hệ thống MEP (Cơ quan Công an)
+
+Căn cứ theo điểm c khoản 1 Điều 17 Luật PCCC số 55/2024/QH15 và Nghị định số 105/2025/NĐ-CP, Cơ quan Công an (Cục/Phòng Cảnh sát PCCC - PC07) thực hiện thẩm định chuyên biệt đối với phần Hệ thống chủ động và Hệ thống điện PCCC.
+
+## 1. Thẩm quyền và Nội dung thẩm định (Phần Cơ điện - Chủ động)
+
+Nội dung do Cơ quan Công an thẩm định tập trung vào điểm e, g khoản 1 Điều 16 Luật 55/2024/QH15:
+*   **[e] Hệ thống điện PCCC:** Hệ thống cáp cấp nguồn cho bơm chữa cháy, quạt hút khói/tăng áp, thang máy chữa cháy, chiếu sáng sự cố, tiếp địa.
+*   **[g] Phương tiện & Hệ thống báo/chữa cháy:**
+    *   Hệ thống báo cháy tự động (khói, nhiệt, chuông, còi, tủ trung tâm).
+    *   Hệ thống chữa cháy (vách tường, Sprinkler tự động, màng ngăn Drencher, khí/bọt).
+    *   Phương tiện chữa cháy xách tay (bình chữa cháy).
+
+## 2. Danh mục Hồ sơ trình Thẩm định
+
+Để nộp Cơ quan Công an thẩm định (Mẫu PC11 theo NĐ 105/2025), hồ sơ thiết kế MEP cần bao gồm:
+1.  **Hệ thống Báo cháy:**
+    *   Sơ đồ nguyên lý toàn hệ thống.
+    *   Mặt bằng bố trí đầu báo, nút nhấn, còi đèn, dây cáp từng tầng.
+    *   Chi tiết lắp đặt thiết bị.
+2.  **Hệ thống Chữa cháy:**
+    *   Sơ đồ không gian (Isometric) / Sơ đồ nguyên lý cấp nước chữa cháy.
+    *   Mặt bằng bố trí đầu phun Sprinkler, họng nước vách tường, bình chữa cháy.
+    *   Chi tiết trạm bơm chữa cháy (bố trí bơm, tủ điện, ống hút/đẩy, dung tích bể ngầm).
+3.  **Hệ thống Điện PCCC:**
+    *   Sơ đồ nguyên lý cấp nguồn riêng biệt cho tải PCCC.
+    *   Chi tiết cáp chống cháy (FR), tuyến cáp đi an toàn.
+4.  **Thuyết minh tính toán:**
+    *   Thuyết minh tính toán thủy lực mạng lưới cấp nước PCCC.
+    *   Tính toán dung lượng ắc quy dự phòng cho tủ trung tâm báo cháy.
+
+## 3. Trình tự thực hiện (Dành cho Agent/Kỹ sư)
+
+Sử dụng CCBA Agent Platform để audit lỗi thiết kế MEP trước khi nộp PC07:
+
+1.  **Thu thập dữ liệu MEP:** Chuyển đổi Thuyết minh MEP PCCC và Bản vẽ MEP PCCC sang Markdown/Vector.
+2.  **Kích hoạt AI Audit:** Gọi module Semantic Map-Reduce Audit cho:
+    *   "Package 2: MEP Water vs Specs" (Đồng bộ số liệu bơm, bể nước).
+    *   "Package 3: MEP Alarm vs Arch" (Đồng bộ vị trí báo cháy, vùng phủ, trần giả).
+3.  **Kiểm soát rủi ro điển hình (Common Pitfalls):**
+    *   Kiểm tra sự lệch pha giữa Thuyết minh (vd: tính toán 45m3) và Bản vẽ (vd: bể 54m3).
+    *   Đảm bảo việc trích dẫn đúng quy chuẩn cấp điện (QCVN 12:2014/BXD).
+4.  **Hoàn thiện:** Sửa lỗi thiết kế và in Hồ sơ xin Thẩm duyệt thiết kế PCCC nộp Cơ quan Công an.
+
+
+---
+
+# Skill: ccba-pccc-thamdinh-cqxd
+
+---
+name: ccba-pccc-thamdinh-cqxd
+description: Quy trình Thẩm định/Thẩm tra PCCC phần Kiến trúc & Kiểm soát khói nộp
+  Cơ quan chuyên môn về xây dựng (theo Luật 55/2024 & NĐ 105/2025)
+applies_to:
+- Thẩm tra thiết kế
+- Thiết kế
+bundle: _qc
+disable-model-invocation: true
+command: /workflow_pccc_thamdinh_cqxd
+triggers:
+- thẩm định cơ quan xây dựng
+- kiến trúc pccc
+- kiểm soát khói
+---
+# Quy trình Thẩm định/Thẩm tra PCCC phần Kiến trúc & Kiểm soát khói (CQCMVXD)
+
+Quy trình này áp dụng cơ chế lồng ghép thẩm định thiết kế xây dựng và thẩm định thiết kế PCCC theo quy định tại Điều 16, Điều 17 Luật PCCC số 55/2024/QH15 và Nghị định số 105/2025/NĐ-CP. Việc thẩm định do Cơ quan chuyên môn về xây dựng (CQCMVXD) chủ trì, có thể có sự tham gia của Tổ chức Tư vấn Thẩm tra độc lập (như CCBA).
+
+## 1. Thẩm quyền và Nội dung thẩm định (Phần Kiến trúc - Thụ động)
+
+Căn cứ vào điểm a, b, c, d, đ khoản 1 Điều 16 Luật 55/2024/QH15, nội dung thẩm định bao gồm:
+*   **[a] Khoảng cách an toàn PCCC:** Khoảng cách giữa các công trình, hạng mục công trình, đường ranh giới khu đất.
+*   **[b] Giao thông & Bãi đỗ xe:** Đường bộ, bãi đỗ xe cứu hỏa, vị trí và lối tiếp cận phục vụ chữa cháy.
+*   **[c] Lối thoát nạn:** Hành lang, đường thoát nạn, thang bộ, thang máy chữa cháy, lối ra khẩn cấp, gian lánh nạn.
+*   **[d] Bậc chịu lửa & Ngăn cháy lan:** Giới hạn chịu lửa cấu kiện, giải pháp phân chia khoang cháy, bố trí mặt bằng công năng, chèn bịt chống cháy (Firestopping).
+*   **[đ] Kiểm soát khói:** Phương án thoát khói (tự nhiên/cơ học), cấp khí bảo vệ (tăng áp) buồng thang bộ, giếng thang máy.
+
+## 2. Danh mục Hồ sơ trình Thẩm định
+
+Để đáp ứng quy định kiểm tra, Hồ sơ Thiết kế cần chuẩn bị:
+1.  **Tổng mặt bằng công trình:** Thể hiện rõ khoảng cách, đường giao thông, bãi đỗ xe PCCC.
+2.  **Mặt bằng Kiến trúc PCCC các tầng:** Thể hiện lối thoát nạn, phân chia khoang cháy, cửa chống cháy.
+3.  **Chi tiết cấu tạo:** Thang thoát nạn, thang máy PCCC, vách/trần chịu lửa, chèn bịt kỹ thuật.
+4.  **Bản vẽ Hệ thống thông gió:** Mặt bằng/sơ đồ nguyên lý tăng áp buồng thang, hút khói hành lang/tầng hầm.
+5.  **Thuyết minh tính toán:**
+    *   Bảng thống kê giới hạn chịu lửa cấu kiện (REI/EI).
+    *   Bảng tính toán thoát nạn (chiều rộng cửa, chiều dài quãng đường).
+    *   Thuyết minh tính toán hệ thống kiểm soát khói.
+
+## 3. Trình tự thực hiện (Dành cho Agent/Kỹ sư)
+
+Sử dụng CCBA Agent Platform để chạy kiểm tra (Audit) trước khi nộp hồ sơ:
+
+1.  **Thu thập dữ liệu:** Trích xuất toàn bộ Thuyết minh PCCC và Bản vẽ Kiến trúc/Thông gió HVAC sang định dạng Markdown.
+2.  **Kích hoạt AI Audit:** Gọi lệnh chạy module Semantic Map-Reduce Audit cho "Package 1: Legal & Architecture".
+3.  **Cross-check Pháp lý:**
+    *   Đối chiếu số liệu với QCVN 06:2022/BXD.
+    *   Kiểm tra tính nhất quán giữa Bản vẽ mặt bằng và Thuyết minh.
+4.  **Xuất báo cáo:** Chuyển kết quả Audit thành Phụ lục Báo cáo Thẩm tra Thiết kế, đóng dấu tư vấn và đệ trình lên Cơ quan chuyên môn về xây dựng cùng hồ sơ TKXD triển khai sau TKCS.
+
+
+---
+
+# Skill: ccba-pptx
+
+---
+name: ccba-pptx
+description: Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao
+  bằng HTML conversion hoặc OOXML.
 role: sub_skill
 master_skill: xu-ly-van-phong
 disable-model-invocation: true
 user-invocable: true
-when_to_use: "Invoke for presentation deck creation, edits, or extraction."
+when_to_use: Invoke for presentation deck creation, edits, or extraction.
 category: multimedia
-keywords: [pptx, powerpoint, slides, office]
+keywords:
+- ccba-pptx
+- powerpoint
+- slides
+- office
 license: Proprietary. LICENSE.txt has complete terms
 metadata:
   author: claudekit
-  version: "1.0.0"
+  version: 1.0.0
+bundle: _core
+triggers:
+- ccba-pptx
+- powerpoint
+- slides
+- office
+- slide
+- create slide
+- html2pptx
+- slide layout
 ---
-
 # PPTX creation, editing, and analysis
 
 ## Overview
@@ -6042,48 +7723,464 @@ Required dependencies (should already be installed):
 
 ---
 
-# Skill: relative-link-patcher
+# Skill: ccba-promote-sandbox
 
 ---
-name: relative-link-patcher
-description: Sub-skill tự động sửa và chuẩn hóa các liên kết tương đối của phụ lục (tiền tố ./appendices/) trong file Markdown chính và đồng bộ mục lục index.md.
-role: sub_skill
-master_skill: markdown-document-processing
+name: ccba-promote-sandbox
+
+description: Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc
+  Hub (ADR 0046)
 applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+- Tác vụ Admin
+bundle: _core
+disable-model-invocation: true
+command: /ccba-promote-sandbox
+triggers:
+- promote sandbox
+- bàn giao sandbox
+- thăng cấp sản phẩm
+- nghiệm thu pgv
+- pgv handover
+---
+# Workflow: Thăng Cấp & Bàn Giao Sản Phẩm Từ Sandbox (/ccba-promote-sandbox)
+
+Workflow này hướng dẫn kỹ sư thực hiện quy trình thăng cấp bàn giao 3 bước để chuyển giao sản phẩm nghiên cứu, bản tính hoặc báo cáo từ **Spoke Cá Nhân (`personal_sandbox`)** sang **Spoke Dự Án chính thức (`project_delivery`)** hoặc đề xuất lên Hub theo **ADR 0046** và **Quy chế CCBA 2026**.
+
 ---
 
-# Sub-skill: Relative Link Patcher
+## 🛡️ Bước 1: Khảo Sát & Xác Thực Môi Trường Nguồn
 
-Kỹ năng này chịu trách nhiệm sửa chữa các liên kết đứt gãy và đồng bộ cấu trúc thư mục liên kết tương đối giữa các tệp nghị định chính và các tệp phụ lục.
+1. Agent đọc tệp `.md/workspace_context.yaml` tại thư mục hiện tại.
+2. **Kiểm tra điều kiện tiên quyết:**
+   - Workspace phải được cấu hình là Spoke Cá Nhân (`sub_type: personal_sandbox` hoặc `guardrails.sandbox_mode: true`).
+   - Nếu không phải sandbox, Agent thông báo:
+     > *"Thư mục hiện tại không phải là Spoke Cá Nhân. Quy trình này chỉ áp dụng cho môi trường sandbox."*
 
-## Lệnh CLI Tự động
-Để quét và tự động chuẩn hóa liên kết phụ lục:
-```bash
-python -m mdconverter.cli patch-links --file [đường_dẫn_tệp_markdown]
+---
+
+## 📋 Bước 2: Xác Định Sản Phẩm & Dự Án Đích
+
+Agent hỗ trợ kỹ sư xác định các tham số bàn giao:
+
+1. **Danh sách tệp bàn giao (`--files`):**
+   - Quét các tệp hoàn thiện trong `output/`, `specs/`, `scripts/` (ví dụ: `output/pccc_audit_report.md`).
+2. **Đường dẫn Spoke Dự Án đích (`--target`):**
+   - Đường dẫn thư mục của Spoke Dự Án thụ hưởng (ví dụ: `D:/GitHubProjects/2026-04-dh-viet-nhat`).
+   - *Nếu là công cụ/script dùng chung:* Hướng dẫn kỹ sư sử dụng lệnh `/ccba-propose-to-hub` thay thế.
+3. **Mã Phiếu Giao Việc (`--pgv`):**
+   - Mã PGV được phân công trên IDOP (ví dụ: `PGV-2026-08-014`).
+
+---
+
+## ⚙️ Bước 3: Thực Thi Thăng Cấp 3 Bước (Single-Command Promotion)
+
+Agent xác định đường dẫn Hub (`hub_path`) và thực thi lệnh thăng cấp:
+
+```powershell
+python "[hub_path]\scripts\promote_sandbox.py" --target "[duong_dan_spoke_dich]" --files [danh_sach_tep] --pgv "[ma_pgv]"
 ```
 
-## SOP Quy tắc đặt liên kết (SOP Rules)
-Khi sửa đổi liên kết thủ công hoặc bằng mã nguồn, luôn tuân thủ:
-1. **Tiền tố chuẩn:** Các liên kết phụ lục tại tệp nghị định chính phải bắt đầu bằng `./appendices/` thay vì `appendices/` hoặc đường dẫn tuyệt đối `file:///`.
-   * *Đúng:* `./appendices/nghi_dinh_217-phu_luc_01.md`
-   * *Sai:* `appendices/nghi_dinh_217-phu_luc_01.md`
-2. **Đồng bộ Index:** Khi có phụ lục mới được thêm vào hoặc đổi tên, phải đồng bộ ngay sang tệp mục lục chính [index.md](../../../.md/legal_docs/luat_xay_dung_2025_so_135_2025_qh15/index.md) và phân nhóm theo đúng Nghị định cha.
+*Động cơ `SandboxPromoter` sẽ tự động thực hiện tuần tự:*
+1. **Pha 1 (Cleanse & Validate):** Rà soát và gỡ bỏ hoàn toàn thủy ấn `[CCBA SANDBOX DRAFT]` để chuẩn hóa thành phẩm.
+2. **Pha 2 (Target Ingestion):** Sao chép tệp sạch sang Spoke Dự Án đích, tự động tạo thư mục cha và tính mã băm SHA-256 bất biến.
+3. **Pha 3 (PGV Sign-off Staging):** Tạo biên nhận `.md/idop_staged/pgv_handover_[pgv]_[timestamp].json` lưu trữ thông tin kỹ sư (`owner_name`, `seat_role`) và commit SHA để phục vụ nghiệm thu trên SharePoint IDOP.
+
+---
+
+## 🎯 Bước 4: Hướng Dẫn Nghiệm Thu & Giải Ngân Tầng 3 (Điều 17 Quy Chế 2026)
+
+Agent in báo cáo xác nhận thành công:
+> ✅ **Đã bàn giao thành công `[so_tep]` tệp sang Spoke `[ten_du_an_dich]`.**
+> 📋 **Biên nhận nghiệm thu IDOP:** `[duong_dan_receipt]`
+> 
+> 💡 **Bước tiếp theo:** Vui lòng thông báo cho Chủ nhiệm Hợp đồng (`CHU_TRI_HOP_DONG_PM`) hoặc Trưởng phòng chuyên môn để thực hiện kiểm tra Cấp 2 và phê duyệt nghiệm thu Phiếu Giao Việc `[ma_pgv]` trên hệ thống IDOP.
+
+---
+
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*\n
+
+---
+
+# Skill: ccba-propose-to-hub
+
+---
+name: ccba-propose-to-hub
+description: '[Alias tương thích ngược của /ccba-contribute-to-hub] Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub'
+applies_to:
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
+disable-model-invocation: true
+command: /ccba-propose-to-hub
+triggers:
+- đề xuất
+- tích hợp Hub
+- contribution
+- propose
+- skill mới
+---
+# Workflow: Propose to Hub (Alias -> /ccba-contribute-to-hub)
+
+> [!NOTE]
+> **Định tuyến chuẩn hóa:** Kỹ năng này là Alias tương thích ngược (Backward Compatibility) của [`/ccba-contribute-to-hub`](../ccba-contribute-to-hub/SKILL.md).
+> - Để đề xuất **Ý tưởng / RFC / Báo lỗi**, sử dụng: [`/ccba-issue-to-hub`](../ccba-issue-to-hub/SKILL.md).
+> - Để đóng gói **Mã nguồn / Tests / Mở PR**, sử dụng: [`/ccba-contribute-to-hub`](../ccba-contribute-to-hub/SKILL.md).
+
+---
+
+## Quy Trình Thực Thi:
+Vui lòng tham khảo chi tiết toàn bộ các bước tại [`ccba-contribute-to-hub`](../ccba-contribute-to-hub/SKILL.md):
+1. **Bước 1:** Thu thập thông tin & Mã nguồn đóng gói.
+2. **Bước 2:** Kiểm tra trùng lặp trên Hub (`catalog.yaml`, `packages/`).
+3. **Bước 3:** Đóng gói mã nguồn & Tạo file proposal chuẩn ADR-0045 trên branch mới.
+4. **Bước 4:** Mở GitHub Pull Request (`gh pr create`).
+5. **Bước 5:** Vòng lặp dừng chờ bất đồng bộ & Tự làm xanh CI (Self-Healing Loop).
+6. **Bước 6:** Báo cáo hoàn tất & Sẵn sàng cho Maintainer thẩm định (`/ccba-review-proposal`).
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 
 ---
 
-# Skill: resolving-merge-conflicts
+# Skill: ccba-prototype
 
 ---
-name: resolving-merge-conflicts
+name: ccba-prototype
+description: Xây dựng mẫu thử thô (throwaway prototype) để trả lời câu hỏi thiết kế
+  (Logic hoặc UI) trước khi triển khai chính thức.
+keywords:
+- prototype
+- mẫu thử
+- test thô
+- sanity-check
+disable-model-invocation: true
+bundle: _software
+triggers:
+- prototype
+- mẫu thử
+- test thô
+- sanity-check
+- ccba-prototype
+---
+# 🚀 Kỹ năng: ccba-prototype (Xây Dựng Mẫu Thử Nhanh)
+
+Mẫu thử (prototype) là **mã nguồn thô viết nhanh, chỉ dùng một lần (throwaway code) để trả lời một câu hỏi thiết kế cụ thể**. Mục tiêu của mẫu thử không phải là sản phẩm hoàn thiện, mà là để kiểm chứng ý tưởng nhanh nhất và sau đó xóa bỏ hoặc hấp thụ.
+
+---
+
+## 📋 Tiêu chí hoàn thành (Completion Criteria)
+Kỹ năng chỉ được coi là hoàn thành khi đáp ứng các điều kiện sau:
+1.  Xác định rõ câu hỏi thiết kế cần trả lời.
+2.  Viết mã nguồn thô và chạy thành công trên máy (không viết unit test, không tối ưu cấu trúc).
+3.  In hoặc hiển thị rõ ràng các trạng thái thay đổi để người dùng đánh giá.
+4.  Lưu trữ báo cáo/kết luận mẫu thử (`NOTES.md`) vào thư mục tri thức dự án:
+    `.md/knowledge/issues/[feature_name]/prototypes/`
+5.  Xóa bỏ hoàn toàn mã nguồn thô (TUI shell hoặc router/switcher thử nghiệm) sau khi câu hỏi thiết kế đã được giải đáp hoặc hấp thụ.
+
+---
+
+## 🛠️ Quy trình thực hiện
+
+### Bước 1: Xác định câu hỏi thiết kế cần trả lời
+Đọc kỹ yêu cầu của người dùng để xác định loại câu hỏi thiết kế:
+- **"Logic / State machine này có chạy đúng trong trường hợp X rồi đến Y không?"** $\rightarrow$ Chọn nhánh **Logic Prototype** (Xem tài liệu chi tiết tại [LOGIC.md](./LOGIC.md)).
+- **"Bố cục giao diện này hiển thị như thế nào, phương án nào tối ưu hơn?"** $\rightarrow$ Chọn nhánh **UI Prototype** (Xem tài liệu chi tiết tại [UI.md](./UI.md)).
+
+*Lưu ý:* Phải ghi rõ câu hỏi này dưới dạng 1 đoạn văn ngắn ở đầu file mã nguồn của mẫu thử hoặc trong file `README.md` tạm của mẫu thử.
+
+### Bước 2: Tuân thủ các nguyên tắc thiết kế mẫu thử thô (Throwaway Rules)
+1.  **Throwaway từ ngày đầu tiên:** Đặt tên file/thư mục có chứa chữ `prototype` để người đọc sau biết đây không phải code sản xuất. Không commit code thô này vào nhánh chính mà không có sự đồng ý của người dùng.
+2.  **Khởi chạy bằng 1 lệnh duy nhất:** Định nghĩa lệnh chạy trong task runner hiện tại của dự án (ví dụ: `npm run dev:proto`, `python path/to/proto.py`, v.v.) để người dùng dễ dàng kiểm thử.
+3.  **Không phụ thuộc database thực tế (No Persistence):** Trạng thái chỉ lưu trên bộ nhớ (in-memory state). Nếu bắt buộc phải dùng DB, hãy dùng file SQLite tạm hoặc file text tạm với nhãn rõ ràng: `PROTOTYPE_WIPE_ME.db`.
+4.  **Bỏ qua tối ưu hóa:** Không viết unit tests, không xử lý lỗi ngoại lệ phức tạp, không viết code trừu tượng. Mục tiêu duy nhất là làm cho mẫu thử **chạy được nhanh nhất**.
+5.  **Hiển thị trạng thái rõ ràng:** Với mỗi action (trong logic) hoặc mỗi lần chuyển đổi variant (trong UI), phải in hoặc hiển thị toàn bộ trạng thái hiện tại lên màn hình để dễ theo dõi.
+
+### Bước 3: Thu hoạch và dọn dẹp (Absorb or Delete)
+Khi mẫu thử đã trả lời được câu hỏi thiết kế:
+- Ghi nhận quyết định thiết kế vào commit message, ADR (Architectural Decision Record) hoặc file `NOTES.md` nằm trong thư mục `.md/knowledge/issues/[feature_name]/prototypes/`.
+- **Dọn dẹp sạch sẽ**: 
+  - Nếu là Logic: Xóa bỏ TUI shell thô, chỉ copy module logic thuần túy (reducer/pure functions) vào codebase thật và viết code chuẩn chỉ.
+  - Nếu là UI: Xóa bỏ switcher tạm và các variant bị loại; chỉ giữ lại variant chiến thắng và refactor nó theo chuẩn chất lượng của dự án.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+
+---
+
+# Skill: ccba-release-feature
+
+---
+name: ccba-release-feature
+
+description: Merge PR, cleanup branch, auto-close local issues và cập nhật walkthrough
+applies_to:
+- Phần mềm
+bundle: _core
+disable-model-invocation: true
+command: /ccba-release-feature
+triggers:
+- release
+- merge PR
+- phát hành
+---
+# Workflow: Release Feature
+
+Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot Review, tự động đóng issue và dọn dẹp môi trường.
+
+## Bước 0: Thực thi Kiểm thử Toàn diện Slow Integration Tests (Pre-release Gate)
+
+*Quy tắc bắt buộc:* Trước khi thực hiện merge PR, Agent **bắt buộc phải chạy kiểm thử toàn bộ tập test `slow` và `stress`** để đảm bảo các bài test cào mạng/tích hợp không bị hỏng ngầm (test decay):
+
+1. **Kiểm tra môi trường hiện tại (Hub vs Spoke):**
+   - **Tại Hub Platform (`ccba-agent-platform`):**
+     ```bash
+     python scripts/eval/run_isolated_tests.py --all --stress
+     ```
+   - **Tại Spoke (Pháp điển / Knowledge Corpus / Specialized Spokes):**
+     ```bash
+     # Nếu spoke có script kiểm định chuyên sâu:
+     python scripts/validate_legal_spoke.py
+     # hoặc chạy toàn bộ test cô lập cục bộ:
+     python scripts/eval/run_isolated_tests.py --all
+     ```
+2. Nếu có bài test nào thất bại, Agent **phải dừng quy trình release ngay lập tức** để tiến hành sửa lỗi trước khi tiếp tục.
+
+---
+
+## Bước 1: Đối soát bình luận và Merge PR trên GitHub
+
+1. **Lấy thông tin PR và Branch hiện hành (Platform-Agnostic):**
+   ```bash
+   git branch --show-current
+   gh pr view --json number,title,state,headRefName
+   ```
+
+2. **Kiểm tra xác thực GitHub CLI (`gh`):**
+   ```bash
+   gh auth status
+   ```
+
+3. **Kiểm tra trạng thái GitHub Actions CI:**
+   ```bash
+   gh pr checks
+   ```
+   - *Rào chắn Zero-Polling CI:* 
+     - Nếu các checks đang ở trạng thái `pending`, Agent có thể khởi chạy `gh pr checks --watch` rồi **lập tức dừng gọi công cụ (End Turn)** để hệ thống đánh thức qua cơ chế *Reactive Wakeup* khi CI xanh.
+     - **Tuyệt đối nghiêm cấm** chạy vòng lặp gọi `manage_task status` liên tiếp nhiều lần để thăm dò task `--watch`.
+
+4. **Chốt chặn Review Requests của Copilot (Chống Race Condition Merge Sớm):**
+   - Trước khi đọc comments, Agent **bắt buộc phải kiểm tra xem Copilot đã nộp bài review xong hay chưa**:
+     ```bash
+     gh pr view --json reviewRequests,reviews --jq '{pending: [.reviewRequests[]?.login], reviewed: [.reviews[]?.user.login]}'
+     ```
+   - *Quy tắc bắt buộc:*
+     - Nếu danh sách `pending` chứa `copilot-pull-request-reviewer` (hoặc bot review) HOẶC Copilot chưa xuất hiện trong `reviewed` (nếu PR vừa tạo chưa quá 2 phút): Có nghĩa là Copilot **vẫn đang phân tích và chưa Submit Review**. Agent **tuyệt đối không được merge ngay**, mà phải dừng lượt hoặc chờ Copilot hoàn tất nộp bài.
+     - Chỉ khi Copilot đã hoàn tất lượt review và nộp bài vào `reviews` (hoặc không có review pending), Agent mới chuyển sang bước 5.
+
+5. **Thực hiện đối soát bình luận của Copilot trên PR:**
+   ```bash
+   gh pr view --json comments,reviews --jq '.comments[] | {id: .id, path: .path, line: .line, body: .body}'
+   ```
+   - Hoặc kiểm tra chi tiết các inline review comments:
+     ```bash
+     gh api repos/:owner/:repo/pulls/$(gh pr view --json number --jq .number)/comments --jq '.[] | {id: .id, path: .path, line: .line, body: .body}'
+     ```
+   - Nếu phát hiện bất kỳ bình luận nào của Copilot, Agent phải tạm dừng quy trình merge, đánh giá và thực hiện chỉnh sửa mã nguồn cục bộ, commit & push cập nhật, và cập nhật `walkthrough.md` trước khi tiếp tục.
+   - Nếu phát hiện các góp ý hợp lý (VALID) chưa sửa, hoặc các góp ý không hợp lý chưa được giải trình trong `walkthrough.md`, Agent phải giải trình hoặc sửa lỗi cục bộ và push cập nhật trước khi merge.
+
+6. **Tiến hành Merge khi 100% điều kiện đạt chuẩn:**
+   - Nếu `gh` đã đăng nhập, CI pass (100% xanh) và Copilot review đã xử lý xong: Thực hiện merge và xóa remote branch tự động (sử dụng Squash and Merge để giữ lịch sử nhánh main tinh gọn):
+     ```bash
+     gh pr merge --squash --delete-branch
+     ```
+   - *Tùy chọn Auto-Merge:* Nếu CI vẫn đang chạy nốt những giây cuối, có thể kích hoạt cờ tự động merge:
+     ```bash
+     gh pr merge --squash --delete-branch --auto
+     ```
+   - Nếu `gh` chưa đăng nhập: Sử dụng `browser_subagent` truy cập trang PR, chờ CI và Review hoàn tất rồi chọn **Squash and merge** -> **Confirm squash and merge** -> **Delete branch**.
+
+---
+
+## Bước 2: Cập nhật Lịch sử Thay đổi (Walkthrough)
+
+1. Lấy danh sách các commit của feature branch hiện tại (so sánh với `origin/main`) **trước khi** chuyển nhánh:
+   ```bash
+   git log origin/main..HEAD --oneline
+   ```
+2. Cập nhật nội dung tóm tắt thay đổi và kết quả nghiệm thu vào tệp tin `walkthrough.md`.
+
+---
+
+## Bước 3: Sync Local Codebase, Auto-Close Local Issue & Dọn dẹp
+
+1. Kiểm tra trạng thái làm việc (working tree) để đảm bảo không có file nào bị dơ (uncommitted changes):
+   ```bash
+   git status --porcelain
+   ```
+   *Lưu ý:* Nếu có thay đổi chưa commit, hãy commit hoặc stash trước khi chuyển nhánh.
+
+2. Quay về branch `main` và kéo code mới nhất:
+   ```bash
+   git checkout main && git pull origin main
+   ```
+
+3. Xóa branch feature cục bộ an toàn:
+   ```bash
+   git branch -D [feature_branch_name]
+   ```
+
+4. **Tự động đóng Issue Cục bộ (Offline Knowledge Base Mirror):**
+   - Nếu PR giải quyết một issue cụ thể (ví dụ `#228`), kiểm tra tệp tin tương ứng tại `.md/knowledge/issues/issue-XXX.md`.
+   - Cập nhật trường trạng thái trong metadata: `status: closed` (hoặc `state: closed`) kèm ghi chú liên kết PR đã merge.
+
+---
+
+## Bước 4: Thông báo hoàn tất
+
+1. Báo cáo trạng thái hoàn tất rõ ràng:
+   - ✅ Feature đã được tích hợp thành công vào `main`.
+   - 🗑️ Branch cục bộ và remote đã được dọn dẹp sạch sẽ.
+   - 📌 Issue liên quan đã được đóng (trên GitHub và CSDL cục bộ).
+   - 📝 Lịch sử thay đổi `walkthrough.md` đã được lưu trữ hoàn tất.
+
+
+---
+
+# Skill: ccba-research
+
+---
+name: ccba-research
+description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với
+  các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ trợ Dual-Agent Adversarial).
+keywords:
+- research
+- nghiên cứu
+- tìm hiểu
+- tra cứu
+- citations
+- adversarial
+- deep-investigation
+disable-model-invocation: true
+bundle: _software
+triggers:
+- research
+- nghiên cứu
+- tìm hiểu
+- tra cứu
+- citations
+- ccba-research
+- adversarial research
+---
+# 📚 Kỹ năng: ccba-research (Nghiên Cứu Chạy Ngầm & Phản Biện Đa Tác Nhân)
+
+Kỹ năng này hướng dẫn Agent cách khởi chạy **background subagents** (`research` subagents) để thực hiện các cuộc điều tra tài liệu, thu thập thông tin facts từ các API, mã nguồn hoặc Văn bản Pháp luật (VBPL) song song dưới nền theo **Kiến trúc Suy luận 3 Pha (Three-Phase Reasoning Hierarchy)**. Điều này giúp Agent chính tiếp tục làm việc mà không bị block và loại bỏ nguy cơ ô nhiễm ngữ cảnh (context bloating).
+
+---
+
+## 📋 Tiêu chí hoàn thành (Completion Criteria)
+
+Kỹ năng chỉ được coi là hoàn thành khi đáp ứng các điều kiện sau:
+1. Khởi chạy thành công subagent `research` chạy ngầm qua `invoke_subagent` (chế độ Đơn tác nhân hoặc Phản biện Kép).
+2. Subagent tuân thủ **Rào chắn Ngân sách Tìm kiếm (Search Budget Cap)**: Tối đa 5 lượt tra cứu/tìm kiếm (max 5 tool calls) trong 1 phiên.
+3. Subagent thu thập thông tin trực tiếp từ **các nguồn sơ cấp đáng tin cậy** (tài liệu chính thức, source code dự án, API gốc, VBPL hiện hành) và áp dụng **Kiểm chứng Nguồn tin Chéo (Cross-Reference Validation)**.
+4. Tuân thủ nghiêm ngặt **Two-Layer Sub-Agent Guardrail (ADR 0035)**: Độ sâu `depth_limit = 1`, chỉ cấp quyền công cụ đọc (`view_file`, `grep_search`, `read_resource`), tối đa 2 subagents song song.
+5. Kết quả nghiên cứu được xuất ra tệp Markdown theo **Mẫu Báo cáo Kỹ thuật 5 phần chuẩn hóa**, có trích dẫn nguồn (citations) rõ ràng.
+6. Tệp báo cáo được lưu trữ linh hoạt tại:
+   - Mặc định: `.md/knowledge/research_and_studies/research-[slug].md`
+   - Trong ngữ cảnh Wayfinder/Issue: `.md/knowledge/issues/[feature_name]/research-[slug].md`
+
+---
+
+## 🛠️ Quy trình thực hiện (3 Pha Chuẩn Boost)
+
+### Pha 1: Phân Rã Bài Toán & Lựa Chọn Chế Độ (Goal & Strategy Formulation)
+Xác định câu hỏi nghiên cứu của người dùng và lựa chọn chế độ thực thi:
+- **Chế độ Chuẩn (Standard Single Subagent):** Dành cho tra cứu tài liệu, API specs, tóm tắt thư viện thông thường.
+- **Chế độ Phản biện Kép (Dual-Agent Adversarial Pattern):** Kích hoạt khi nghiên cứu quyết định kiến trúc lớn (ADR), tái cấu trúc module phức tạp, hoặc giải quyết xung đột văn bản pháp luật/quy chuẩn.
+
+*Tiêu chí hoàn thành:* Xác định rõ phạm vi câu hỏi và nguồn sơ cấp cần đối chiếu.
+
+---
+
+### Pha 2: Thực Thi Độc Lập Chạy Ngầm (Parallel Multi-Agent Execution)
+
+#### Trường Hợp A — Chế độ Chuẩn (Single Subagent)
+Sử dụng `invoke_subagent` khởi chạy 1 subagent `research` với Search Budget Cap (5 tool calls) và Mẫu báo cáo 5 phần.
+
+#### Trường Hợp B — Chế độ Phản Biện Kép (Dual-Agent Adversarial)
+Sử dụng `invoke_subagent` khởi chạy đồng thời **2 subagents độc lập**:
+1. **Subagent A (`Solution Explorer / Proponent`):**
+   - Nhiệm vụ: Khảo sát giải pháp tối ưu, code patterns mẫu, best practices kỹ thuật và các ưu điểm nổi bật.
+   - Budget: Max 5 tool calls.
+2. **Subagent B (`Risk & Boundary Challenger`):**
+   - Nhiệm vụ: Rà soát rủi ro bảo mật (Maskara), vi phạm ranh giới Deep Seams (ADR 0035), breaking changes, và các trường hợp biên (edge cases).
+   - Budget: Max 5 tool calls.
+
+---
+
+### Pha 3: Hợp Nhất, Phản Biện & Xuất Báo Cáo (Synthesis & Delivery)
+Khi các subagents hoàn tất và gửi thông báo hoàn thành (Reactive Wakeup):
+- Agent chính đọc báo cáo và tổng hợp ma trận đánh giá: **Giá trị × Độ phức tạp × Rủi ro × KISS**.
+- Trình bày tệp Markdown chuẩn 5 phần:
+
+```markdown
+# Báo cáo Nghiên cứu: [Tên Chủ Đề]
+
+## 1. Tóm tắt Thực thi (Executive Summary)
+[Tóm tắt 2-3 đoạn về phát hiện cốt lõi và các đề xuất hành động chính]
+
+## 2. Kết quả Nghiên cứu Chi tiết (Key Findings)
+- **Tổng quan & Xu hướng**: [Mô tả chi tiết kỹ thuật/pháp lý, phiên bản, độ chín]
+- **Quy chuẩn Tốt nhất (Best Practices)**: [Các khuyến nghị kỹ thuật/quy trình tốt nhất]
+- **Bẫy thường gặp & Rủi ro (Adversarial Risks & Common Pitfalls)**: [Các rủi ro, bẫy thiết kế và phương án khắc phục từ Challenger]
+- **Bảo mật & Hiệu năng**: [Đánh giá ranh giới Maskara và Deep Seams]
+
+## 3. Khuyến nghị Triển khai (Implementation Recommendations)
+- [Các bước hành động ngắn gọn, khả thi để áp dụng vào hệ thống CCBA]
+
+## 4. Tài liệu Tham chiếu & Citations (References & Citations)
+- [Bảng hoặc danh sách chứa liên kết/nguồn trích dẫn sơ cấp rõ ràng]
+
+## 5. Câu hỏi chưa làm rõ (Unresolved Questions)
+- [Nêu rõ các câu hỏi, giả định mầm hoặc điểm mù chưa thể xác nhận, nếu có]
+```
+
+*Tiêu chí hoàn thành:* Báo cáo Markdown được lưu tại đúng đường dẫn và hiển thị liên kết truy cập trực tiếp cho người dùng.
+
+---
+
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+
+
+---
+
+# Skill: ccba-resolving-merge-conflicts
+
+---
+name: ccba-resolving-merge-conflicts
 description: Use when you need to resolve an in-progress git merge/rebase conflict.
+disable-model-invocation: true
+bundle: _software
+triggers:
+- ccba-resolving-merge-conflicts
+- merge conflicts
+- xung đột git
+- resolve conflicts
+- git conflict
 ---
-
 1. **See the current state** of the merge/rebase. Check git history, and the conflicting files.
 
 2. **Find the primary sources** for each conflict. Understand deeply why each change was made, and what the original intent was. Read the commit messages, check the PRs, check original issues/tickets.
@@ -6097,14 +8194,152 @@ description: Use when you need to resolve an in-progress git merge/rebase confli
 
 ---
 
-# Skill: review_skill
+# Skill: ccba-review-proposal
 
 ---
-name: review_skill
-description: Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn viết skill của CCBA.
+name: ccba-review-proposal
+
+description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered Review (Fast/Boost), Spoke Leakage Guard, Copilot Guard và Đồng bộ Catalog Hậu Merge (ADR 0045, ADR 0047)
+bundle: _core
+command: /ccba-review-proposal
+triggers:
+  - review proposal
+  - thẩm định pr
+  - duyệt đề xuất
+  - review-proposal
+  - review proposal boost
+  - deep review proposal
+applies_to:
+- Tác vụ Admin
+- Phần mềm
 disable-model-invocation: true
 ---
+# Workflow: Review Proposal (Thẩm Định Đề Xuất Spoke Lên Hub — ADR 0045 & ADR 0047)
 
+Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm định, làm sạch, tự sửa lỗi có kiểm soát và hợp nhất an toàn các đề xuất (Pull Requests) từ các dự án Spoke vào Hub Monorepo với cơ chế **Phân Cấp Thích Ứng (Adaptive Tiered Review)**.
+
+---
+
+## 📋 Bước 1: Tiếp Nhận, Phân Tuyến & Khởi Tạo (Pre-flight Sync & Tier Selection)
+
+1. **Đồng bộ Base Branch (Pre-flight Sync Gate):**
+   - Đảm bảo nhánh `main` local sạch và được đồng bộ với upstream trước khi thẩm định:
+     ```bash
+     git checkout main && git pull origin main
+     ```
+2. **Xác định PR mục tiêu & Tùy chọn Chế độ Review:**
+   - Cú pháp chuẩn: `/ccba-review-proposal <PR_NUMBER> [--boost | --deep]`
+   - Nếu không chỉ định PR: Tự động quét danh sách các PR đang mở:
+     ```bash
+     gh pr list --state open
+     ```
+3. **Phân Tuyến Thích Ứng (Adaptive Review Tier):**
+   - **Tier 1 — Fast Deterministic Review (Mặc định):** Áp dụng cho PR scoped thông thường ($< 400$ LOC, đóng gói trong 1 package). Chạy bộ 3 Deterministic Workers tự động ($< 15$ giây).
+   - **Tier 2 — Boost / Multi-Agent Deep Review:** Tự động kích hoạt khi có cờ `--boost` / `--deep` HOẶC PR thay đổi gói core `_core`, sửa đổi $> 400$ LOC. Ủy quyền cho subagents `DeepInvestigator` và `DeepCoder` thực hiện Double-Pass Adversarial Review và kiểm tra Threat Model.
+4. **Khảo sát tệp Proposal:**
+   - Kiểm tra tệp ghi nhận tại `.agents/proposals/[YYYY-MM-DD]_[name].md`.
+   - Đọc YAML frontmatter (`proposal_id`, `type`, `proposed_by_project`, `priority`).
+   - Đọc tóm tắt kiến trúc và mục tiêu nghiệp vụ mà Spoke đã giải quyết.
+
+---
+
+## 🛡️ Bước 2: Kích Hoạt 3 Worker Thẩm Định Song Song (Parallel Review Gate)
+
+Điều phối 3 luồng kiểm tra song song (tự động chạy script hoặc phân bổ Subagents tương ứng theo Tier):
+
+1. **Worker 1 — Spoke Leakage & Privacy Guard (ADR 0045):**
+   - Chạy rào chắn rò rỉ và quét Maskara credentials:
+     ```bash
+     python scripts/governance/check_spoke_leakage.py
+     ```
+   - *Chốt chặn (Zero Tolerance):* Không chứa `.md/teach/`, `.tmp/`, cache, đường dẫn tuyệt đối Windows `D:\...`. Tệp proposal bắt buộc có đủ 4 trường metadata (`proposal_id`, `type`, `status`, `name`).
+
+2. **Worker 2 — Deep Seams & Scoped Tests Verification:**
+   - Kiểm tra ranh giới Module Sâu: Mã nguồn nghiệp vụ nằm gọn trong `packages/[pkg]/src/`, entry points công khai khai báo trong `__all__` tại `__init__.py`.
+   - Chạy kiểm thử tự động và linter:
+     ```bash
+     uv run pytest packages/[package-name]/tests
+     uv run ruff check packages/[package-name]
+     ```
+   - *Tiêu chí:* $100\%$ Passed, 0 errors, 0 warnings.
+
+3. **Worker 3 — Proposal Lifecycle & Catalog Governance (ADR 0047):**
+   - Soát chiếu metadata frontmatter của skill/workflow mới đề xuất.
+   - Kiểm tra tính tương thích của `catalog.yaml` và Traceability Matrix.
+
+---
+
+## 🤖 Bước 3: Bóc Tách Nhận Xét Copilot & CI Checks Status (Race-Condition Guard)
+
+1. **Kiểm tra trạng thái GitHub Actions CI:**
+   ```bash
+   gh pr checks <PR_NUMBER>
+   ```
+2. **Chốt chặn Review Requests của Copilot (Chống Race Condition Merge Sớm):**
+   - Đảm bảo Copilot đã hoàn tất nộp bài review trước khi đọc comment:
+     ```bash
+     gh pr view <PR_NUMBER> --json reviewRequests,reviews --jq '{pending: [.reviewRequests[]?.login], reviewed: [.reviews[]?.user.login]}'
+     ```
+   - Nếu `pending` còn chứa `copilot-pull-request-reviewer`, Agent tạm dừng chờ Copilot hoàn tất.
+3. **Bóc tách nhận xét kỹ thuật từ GitHub Copilot:**
+   ```bash
+   gh api repos/:owner/:repo/pulls/<PR_NUMBER>/comments --jq ".[] | {path: .path, line: .line, body: .body}"
+   ```
+4. **Phân loại nhận xét:**
+   - *Lỗi kỹ thuật rõ ràng / Đường dẫn vi phạm:* Chuyển sang Bước 4 để tự động khắc phục (Self-Healing).
+   - *Góp ý thiết kế / Tài liệu:* Báo cáo Maintainer xem xét.
+
+---
+
+## 🛠️ Bước 4: Tự Sửa Lỗi Có Giám Sát (Supervised Self-Healing) & Hợp Nhất
+
+1. **Khắc phục lỗi tự động trên Branch:**
+   - Áp dụng các bản vá sửa regex, docstring conflict, link tuyệt đối hoặc format mã nguồn.
+   - Chạy lại `pytest` và `ruff check` để xác minh xanh $100\%$.
+   - Push bản vá lên nhánh PR: `git push origin <branch_name>`.
+2. **Trình bày Diff cho Maintainer Phê Duyệt:**
+   - Tóm tắt các điểm đã sửa và trình bày cho Maintainer bấm xác nhận.
+3. **Hợp nhất vào nhánh `main` (Squash Merge):**
+   ```bash
+   gh pr merge <PR_NUMBER> --squash --delete-branch
+   git checkout main && git pull origin main
+   ```
+
+---
+
+## 🏛️ Bước 5: Quản Trị Vòng Đời Hậu Merge (Post-Merge Governance)
+
+1. **Cập nhật Proposal Header:**
+   - Mở tệp `.agents/proposals/[YYYY-MM-DD]_[name].md`, đổi `status: "open"` $\rightarrow$ `status: "merged"`, ghi nhận `merged_commit` hash và `merged_date`.
+2. **Đăng ký Hệ Sinh Thái (ADR 0047):**
+   - Tự động tái biên dịch Catalog SSoT:
+     ```bash
+     python scripts/governance/compile_catalog.py
+     ```
+3. **Gợi ý Spoke Sync (Closed-Loop Sync):**
+   - Thông báo cho Spoke đề xuất kích hoạt **Bước 7 của `/ccba-contribute-to-hub`** (hoặc `/ccba-update-spoke`) để nạp tính năng mới và hoàn tất đóng vòng.
+
+---
+
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+---
+
+# Skill: ccba-review-skill
+
+---
+name: ccba-review-skill
+description: Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn viết
+  skill của CCBA.
+disable-model-invocation: true
+bundle: _core
+triggers:
+- review-skill
+- audit-skill
+- ccba-review-skill
+- kiểm định skill
+---
 # Kỹ năng Rà soát và Tối ưu hóa Skill (Review Skill)
 
 Kỹ năng này thực hiện quy trình đánh giá tĩnh (static) và ngữ nghĩa (semantic) của một tệp tin `SKILL.md` để đảm bảo tính khả đoán (predictability), độ súc tích (pruning) và tuân thủ các quy tắc chất lượng của CCBA.
@@ -6115,7 +8350,7 @@ Kỹ năng này thực hiện quy trình đánh giá tĩnh (static) và ngữ ng
 
 1.  **Thu thập và phân tích tài liệu đầu vào:**
     - Sử dụng `view_file` để đọc tệp tin `SKILL.md` cần đánh giá.
-    - Sử dụng `view_file` để nạp cẩm nang chất lượng kỹ năng tại [writing-great-skills](../writing-great-skills/SKILL.md). Nếu cần tra cứu định nghĩa chính xác của các failure modes, tham khảo [GLOSSARY.md](../writing-great-skills/GLOSSARY.md).
+    - Sử dụng `view_file` để nạp cẩm nang chất lượng kỹ năng tại [writing-great-skills](../ccba-writing-great-skills/SKILL.md). Nếu cần tra cứu định nghĩa chính xác của các failure modes, tham khảo [GLOSSARY.md](../ccba-writing-great-skills/GLOSSARY.md).
     - **Phân loại skill:** Nếu file không chứa tiêu đề `## Quy trình`, `## Process` hoặc các bước đánh số tuần tự rõ ràng, ghi nhận đây là **skill all-reference** (thuần tham chiếu). Bước 2 sẽ bỏ qua kiểm tra Completion Criterion nhưng vẫn thực hiện đầy đủ các kiểm tra linter còn lại. Bước 3 Semantic Audit vẫn áp dụng đầy đủ.
     - **Tiêu chí hoàn thành:** Nội dung của cả tệp tin đích và cẩm nang chuẩn được nạp đầy đủ vào ngữ cảnh Agent, và skill đã được phân loại (có steps / all-reference).
 
@@ -6123,7 +8358,7 @@ Kỹ năng này thực hiện quy trình đánh giá tĩnh (static) và ngữ ng
     - Kiểm tra độ dài mô tả `description` trong frontmatter (đối với kỹ năng model-invoked, bắt buộc dưới **180 ký tự**).
     - Kiểm tra xem mọi bước hướng dẫn trong các phần quy trình (dưới tiêu đề `Process` hoặc `Quy trình`) có chứa dòng `Tiêu chí hoàn thành:` hoặc `Completion Criterion:` hay chưa. Khi skill có nhiều nhánh (branches), kiểm tra Completion Criterion cho từng nhánh chứa steps.
     - Kiểm tra tính hợp lệ của các liên kết tương đối (relative links), phát hiện các đường dẫn tuyệt đối hoặc link hỏng.
-    - Kiểm tra skill có `user-invocable: true` phải có workflow wrapper tương ứng tại `.agents/workflows/` bắt đầu bằng tiền tố `ccba-`.
+    - Kiểm tra định danh skill trong frontmatter: thuộc tính `name:` phải tuân thủ chuẩn namespace tổ chức bắt đầu bằng tiền tố `ccba-` (hoặc `bigbim-` đối với kỹ năng BIM). Không tạo file wrapper tại `.agents/workflows/` do Antigravity hỗ trợ Slash Command Native trực tiếp từ `SKILL.md`.
     - Kiểm tra skill hoặc nhánh thích ứng từ nguồn bên ngoài phải có blockquote attribution (tên nguồn, tác giả, loại giấy phép).
     - **Tiêu chí hoàn thành:** Lập danh sách cụ thể các điểm vi phạm quy chuẩn linter tĩnh kèm vị trí dòng. Nếu skill là all-reference, ghi rõ đã bỏ qua kiểm tra Completion Criterion.
 
@@ -6158,18 +8393,28 @@ Kỹ năng này thực hiện quy trình đánh giá tĩnh (static) và ngữ ng
 
 ---
 
-# Skill: seminar-builder
+# Skill: ccba-seminar-builder
 
 ---
-name: seminar-builder
-description: Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda, outline, và archive nội dung các buổi thảo luận.
+name: ccba-seminar-builder
+description: Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda, outline,
+  và archive nội dung các buổi thảo luận.
 applies_to:
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_consulting"
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _consulting
+metadata:
+  author: CCBA
+  version: 1.1.0
+triggers:
+- seminar
+- đào tạo
+- training
+- recap
+- agenda
+- buổi thảo luận
 ---
-
 # Seminar Content Builder
 
 Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/Training nội bộ của CCBA.
@@ -6205,7 +8450,29 @@ Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/T
    - Sử dụng các callouts (`> [!IMPORTANT]`) cho các lưu ý đặc thù về công tác chuẩn bị.
 5. **Tiêu chí hoàn thành:** Bản thảo Agenda hiển thị rõ ràng phần Prerequisites, Introduced Concepts và bảng timeline chi tiết trình người dùng duyệt trước khi xuất bản file chính thức.
 
-### 2. Tạo Monthly Recap
+### 2. Xuất Bản Slide Thuyết Trình PowerPoint (.pptx) Tự Động
+Từ bản thảo Outline/Agenda Markdown đã duyệt, tự động biên dịch sang tệp trình chiếu PowerPoint chuẩn nhận diện thương hiệu CCBA ver 3.4 kết hợp phong cách **Swiss Minimalist & Storytelling With You** (Cole Nussbaumer Knaflic) qua Deep Seam `ccba_ooxml.pptx`:
+
+```bash
+python -m ccba_ooxml build-deck path/to/outline.md --output path/to/seminar.pptx --aspect-ratio 16:9
+```
+Hoặc gọi trực tiếp trong Python:
+```python
+from ccba_ooxml import build_presentation_from_markdown
+
+build_presentation_from_markdown("outline.md", "seminar.pptx")
+```
+- **Hỗ trợ đầy đủ các Archetypes Bố Cục Đỉnh Cao**:
+  - **Cover Hero Slide**: Eyebrow Capsule `[TRUNG TÂM CCBA — VIỆN IBST]`, Tiêu đề Display 34pt, thanh 3 màu và Logo IBST BIM độ nét cao.
+  - **The Big Idea (`::: big-idea`)**: Khẩu hiệu chiến lược kèm 3 thẻ cột trụ (Bối cảnh, Rủi ro, Hành động).
+  - **Visual Agenda (`::: agenda active=N`)**: Lộ trình 4 chặng tự động highlight phần đang nói kèm badge Navy `ĐANG TRÌNH BÀY`.
+  - **Horizontal Process Stepper (`::: steps`)**: Quy trình 4 bước ngang `01` $\rightarrow$ `02` $\rightarrow$ `03` $\rightarrow$ `04` trực quan.
+  - **Split 60/40 Comparison (`::: split`)**: Cột trái bối cảnh cũ 38% (`#F8FAFC`) vs Cột phải CCBA WAY đột phá 58% (viền Cyan `#0093DD`).
+  - **Swiss Clean Table + Hero KPI Cards**: 3 Thẻ số liệu lớn đặt trên bảng dữ liệu không viền dọc.
+  - **Asymmetric Bento Grid (`> [!ARCH]`, `> [!STRUCT]`, `> [!MEP]`)**: Thẻ Hero 54% bên trái + 2 Thẻ phụ 43% xếp chồng bên phải.
+  - **Field Evidence Quote (`::: quote`)**: Thẻ trích dẫn lời chứng thực thực tế từ Chủ đầu tư / Ban QLDA.
+
+### 3. Tạo Monthly Recap
 1. Hỏi user đường dẫn đến tài liệu các buổi seminar trong tháng.
 2. Đọc các file seminar (PDF, PPTX).
 3. Tổng hợp theo template `templates/monthly_recap.md` để ghi nhận các Key takeaways, Action items và các chủ đề cần follow-up.
@@ -6234,22 +8501,39 @@ Tài liệu seminar lưu tại: `.md/seminars/` (tuyệt đối không lưu rả
 
 ---
 
-# Skill: sequential-thinking
+# Skill: ccba-sequential-thinking
 
 ---
-name: ck:sequential-thinking
-description: Áp dụng phương pháp phân tích suy nghĩ tuần tự từng bước cho các vấn đề phức tạp. Hỗ trợ rẽ nhánh giả thuyết, cập nhật và chỉnh sửa nhận định cũ.
+name: ccba-sequential-thinking
+description: Áp dụng phương pháp phân tích suy nghĩ tuần tự từng bước cho các vấn
+  đề phức tạp. Hỗ trợ rẽ nhánh giả thuyết, cập nhật và chỉnh sửa nhận định cũ.
 user-invocable: true
-when_to_use: "Dùng khi cần phân rã bài toán phức tạp, phân tích pháp lý hoặc gỡ lỗi nhiều bước."
+when_to_use: Dùng khi cần phân rã bài toán phức tạp, phân tích pháp lý hoặc gỡ lỗi
+  nhiều bước.
 category: utilities
-keywords: [reasoning, step-by-step, analysis]
+keywords:
+- reasoning
+- step-by-step
+- analysis
 license: MIT
-argument-hint: "[vấn đề cần phân tích]"
+argument-hint: '[vấn đề cần phân tích]'
 metadata:
   author: claudekit
-  version: "1.0.0"
+  version: 1.0.0
+bundle: _core
+layer: _core
+disable-model-invocation: true
+triggers:
+- reasoning
+- step-by-step
+- analysis
+- ccba-sequential-thinking
+- suy nghĩ tuần tự
+- lập luận từng bước
+- rẽ nhánh suy nghĩ
+- thought-history
+- thought
 ---
-
 # Sequential Thinking (Suy nghĩ tuần tự)
 
 Phương pháp phân rã và giải quyết vấn đề thông qua chuỗi suy nghĩ có cấu trúc, linh hoạt điều chỉnh và tự kiểm chứng.
@@ -6315,19 +8599,65 @@ Thought 7/9 [VERIFICATION]: [Kết quả kiểm thử thực tế]
 
 ---
 
-# Skill: session_retrospective
+# Skill: ccba-server-deploy
 
 ---
-name: session_retrospective
-description: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa kỹ năng trực tiếp, kích hoạt Governance Gate và dọn dẹp workspace.
+name: ccba-server-deploy
+
+description: Tự động triển khai và cấu hình nền tảng CCBA Agent Platform trên Server
+  Spark
+applies_to:
+- Tác vụ Admin
+- Phần mềm
+bundle: _core
+disable-model-invocation: true
+---
+# Workflow: Tự Động Triển Khai Nền Tảng Trên Server Spark (/ccba-server-deploy)
+
+Khi người dùng kích hoạt lệnh này, Agent hãy đọc và thực thi chỉ dẫn triển khai tự động theo tài liệu [server_spark_agent_instructions.md](../../../docs/playbooks/server_spark_agent_instructions.md).
+
+---
+
+## Các bước thực hiện:
+1. **Khảo sát môi trường:** Kiểm tra Python 3.10+, Git, Tailscale VPN và LiteLLM Gateway (`:8090`).
+2. **Khởi tạo thư mục:** Clone `ccba-agent-platform` và `ccba-legal-knowledge` nằm ngang hàng tại `~/ccba/`.
+3. **Cài đặt packages:** Thiết lập Virtualenv và cài đặt editable packages (`ccba-ai`, `ccba-harness`, `ccba-legal-intel`).
+4. **Cấu hình Cron:** Đăng ký lịch chạy `run_nightly_tuner.sh` lúc `0 0 * * *` (nửa đêm hàng ngày).
+5. **Kiểm thử khép kín:** Chạy dry-run `nightly_tuner_daemon.py` và báo cáo kết quả cho người dùng.
+
+
+---
+
+# Skill: ccba-session-retrospective
+
+---
+name: ccba-session-retrospective
+description: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa
+  kỹ năng trực tiếp, kích hoạt Governance Gate và dọn dẹp workspace.
 disable-model-invocation: true
 category: workflow
-keywords: [retrospective, session learnings, skill evolution, governance gate, tổng kết phiên, bài học kinh nghiệm, kiểm định quản trị]
+keywords:
+- retrospective
+- session learnings
+- skill evolution
+- governance gate
+- tổng kết phiên
+- bài học kinh nghiệm
+- kiểm định quản trị
 metadata:
   author: CCBA
-  version: "1.2.0"
+  version: 1.2.0
+bundle: _core
+triggers:
+- retrospective
+- session learnings
+- skill evolution
+- governance gate
+- tổng kết phiên
+- bài học kinh nghiệm
+- kiểm định quản trị
+- ccba-session-retrospective
 ---
-
 # Quy trình Tổng kết Phiên làm việc (Session Retrospective)
 
 Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
@@ -6348,13 +8678,15 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   * **Độ Chuẩn xác Định danh (Naming Precision):** Đặt tên Core Patterns / Anti-Patterns phản ánh đúng bản chất kỹ thuật (ví dụ: *Embedded Domain Logic* thay vì *Undocumented Domain Logic*).
 - **Tiêu chí hoàn thành:** Lập danh sách tri thức mới kèm dẫn chứng cụ thể từ codebase (tên class, tên module, mã lỗi) và phân loại chuẩn vào đúng Trụ Cột.
 
-### 2. Cập nhật Knowledge Base Hệ thống
+### 2. Cập nhật Knowledge Base Hệ thống & Mutation Log
 - Ghi nhận các Core Patterns (P) và Anti-Patterns (AP) mới vào [`.md/knowledge/session_learnings.md`](../../../.md/knowledge/session_learnings.md).
-- Giữ nguyên cấu trúc phân loại theo Trụ Cột, sử dụng đúng bộ từ vựng thiết kế Deep Modules (`/codebase-design`).
-- **Tiêu chí hoàn thành:** Tệp `session_learnings.md` được cập nhật gọn gàng, định dạng Markdown chuẩn, không làm hỏng mục lục.
+- Ghi nhận nhật ký dòng thời gian vào [`.md/knowledge/log.md`](../../../.md/knowledge/log.md) theo chuẩn `## [YYYY-MM-DD] [operation] | Title` nếu phiên làm việc có nạp/sửa đổi/ban hành tài liệu mới.
+- Cập nhật mục lục danh mục [`.md/knowledge/index.md`](../../../.md/knowledge/index.md) nếu có thêm tệp tài liệu mới.
+- Giữ nguyên cấu trúc phân loại theo Trụ Cột, sử dụng đúng bộ từ vựng thiết kế Deep Modules (`/ccba-codebase-design`).
+- **Tiêu chí hoàn thành:** Tệp `session_learnings.md` và `log.md` được cập nhật gọn gàng, định dạng Markdown chuẩn, không tạo orphan notes.
 
 ### 3. Tiến hóa Kỹ năng Trực tiếp (Direct Skill Evolution Loop)
-- **Nguyên tắc "Học đi đôi với Hành":** Không dừng lại ở việc ghi nhận thụ động vào `session_learnings.md`. Nếu bài học ở Bước 2 chỉ ra một quy trình trong `SKILL.md` (như `improve-codebase-architecture`, `code-review`, `tvpl-vip-crawler`...) còn thiếu rào chắn hoặc gây sai lệch:
+- **Nguyên tắc "Học đi đôi với Hành":** Không dừng lại ở việc ghi nhận thụ động vào `session_learnings.md`. Nếu bài học ở Bước 2 chỉ ra một quy trình trong `SKILL.md` (như `ccba-improve-codebase-architecture`, `ccba-code-review`, `ccba-tvpl-vip-crawler`...) còn thiếu rào chắn hoặc gây sai lệch:
   * **Bổ sung bước rà soát cụ thể:** Đưa các câu hỏi tự phản biện (Pre-Proposal Self-Check) hoặc rào chắn kỹ thuật vào quy trình của Skill tương ứng.
   * **Bắt buộc có Tiêu chí hoàn thành (Exit Criteria):** Mọi bước rà soát mới thêm vào Skill phải có tiêu chí đo lường rõ ràng (ví dụ: bảng xác nhận ✅/❌ 4 dòng, tỷ lệ phục hồi, mã thoát CLI).
   * **Bump Version:** Cập nhật version trong frontmatter của tệp `SKILL.md` được sửa đổi (ví dụ: `1.1.0` $\rightarrow$ `1.2.0`).
@@ -6362,21 +8694,25 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
 - **Tiêu chí hoàn thành:** Danh sách đề xuất được hiển thị cho người dùng; các `SKILL.md` được người dùng phê duyệt đã được cập nhật hoàn chỉnh và nhất quán.
 
 ### 4. Rào chắn Kiểm định Quản trị & Đồng bộ (Governance & Drift Gate)
-Trước khi kết thúc phiên, Agent **bắt buộc** phải chạy bộ 3 lệnh kiểm tra tự động:
+Trước khi kết thúc phiên, Agent **bắt buộc** phải chạy bộ 4 lệnh kiểm tra tự động:
 1. **Kiểm tra tính hợp lệ của Skills:**
    ```bash
    python scripts/validate_skills.py
    ```
-2. **Kiểm tra Tài liệu, Biến môi trường & Architecture Drift:**
+2. **Kiểm tra Sức khỏe LLM-Wiki Knowledge Hub:**
+   ```bash
+   python scripts/governance/wiki_health_linter.py
+   ```
+3. **Kiểm tra Tài liệu, Biến môi trường & Architecture Drift:**
    ```bash
    python scripts/validate_docs.py
    ```
    *Nếu phát hiện cảnh báo Structural Drift hoặc thiếu biến môi trường, Agent phải cập nhật ngay `README.md`, `PLATFORM.md`, và `.env.example` trước khi tiếp tục.*
-3. **Kiểm tra Test Suite cục bộ:**
+4. **Kiểm tra Test Suite cục bộ:**
    ```bash
    pytest -m "not slow" tests/
    ```
-- **Tiêu chí hoàn thành:** Cả 3 lệnh kiểm định đều chạy thành công (Exit code 0). Lưu ý: `validate_docs.py` có thể trả về Exit code 0 kèm cảnh báo `[WARN]` (ví dụ: code refs trong ADR chưa triển khai) — đây là chấp nhận được. Chỉ khi Exit code 1 (`[ERROR]` — hard errors như architecture drift hoặc broken links) mới phải sửa trước khi tiếp tục.
+- **Tiêu chí hoàn thành:** Cả 4 lệnh kiểm định đều chạy thành công (Exit code 0). Lưu ý: `validate_docs.py` có thể trả về Exit code 0 kèm cảnh báo `[WARN]` (ví dụ: code refs trong ADR chưa triển khai) — đây là chấp nhận được. Chỉ khi Exit code 1 (`[ERROR]` — hard errors như architecture drift hoặc broken links) mới phải sửa trước khi tiếp tục.
 
 ### 5. Dọn dẹp Workspace & Trạng thái Git Sạch sẽ
 - **Dọn dẹp tệp tạm:** Xóa bỏ các file debug nháp, log tạm, hoặc script một lần trong `.md/scratch/` không có giá trị lưu trữ lâu dài.
@@ -6400,136 +8736,20 @@ Xuất báo cáo tổng kết ra màn hình chat theo định dạng:
 
 ---
 
-# Skill: setup-matt-pocock-skills
+# Skill: ccba-setup-pre-commit
 
 ---
-name: setup-matt-pocock-skills
-description: Configure this repo for the engineering skills — set up its issue tracker, triage label vocabulary, and domain doc layout. Run once before first use of the other engineering skills.
+name: ccba-setup-pre-commit
+description: Set up Python pre-commit framework with Ruff, MyPy, PyMarkdown, and local
+  CCBA validators (validate_docs, validate_skills). Incorporates Maskara pre-commit
+  hook. Run once before first commit.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- ccba-setup-pre-commit
+- setup pre-commit
+- git hooks
 ---
-
-# Setup Matt Pocock's Skills
-
-Scaffold the per-repo configuration that the engineering skills assume:
-
-- **Issue tracker** — where issues live (GitHub by default; local markdown is also supported out of the box)
-- **Triage labels** — the strings used for the five canonical triage roles
-- **Domain docs** — where `CONTEXT.md` and ADRs live, and the consumer rules for reading them
-
-This is a prompt-driven skill, not a deterministic script. Explore, present what you found, confirm with the user, then write.
-
-## Process
-
-### 1. Explore
-
-Look at the current repo to understand its starting state. Read whatever exists; don't assume:
-
-- `git remote -v` and `.git/config` — is this a GitHub repo? Which one?
-- `AGENTS.md` and `CLAUDE.md` at the repo root — does either exist? Is there already an `## Agent skills` section in either?
-- `CONTEXT.md` and `CONTEXT-MAP.md` at the repo root
-- `docs/adr/` and any `src/*/docs/adr/` directories
-- `docs/agents/` — does this skill's prior output already exist?
-- `.scratch/` — sign that a local-markdown issue tracker convention is already in use
-- Is the `triage` skill installed? (a `triage` skill folder alongside this one, or `triage` in your available skills.) This decides whether Section B runs at all.
-- Monorepo signals — a `pnpm-workspace.yaml`, a `workspaces` field in `package.json`, or a populated `packages/*` with its own `src/`. Present only in a genuinely large multi-package repo; their absence means single-context, which is almost every repo.
-
-### 2. Present findings and ask
-
-Summarise what's present and what's missing. Then take the sections in order — one section, one answer, then the next.
-
-Lead each section with the recommended answer so the user can accept it in a word. Give a one-line explainer only when the choice genuinely branches; skip the section entirely when exploration already settled it (Section B when `triage` isn't installed, Section C when there's no monorepo).
-
-**Section A — Issue tracker.**
-
-> Explainer: The "issue tracker" is where issues live for this repo. Skills like `to-tickets`, `triage`, `to-spec`, and `qa` read from and write to it — they need to know whether to call `gh issue create`, write a markdown file under `.scratch/`, or follow some other workflow you describe. Pick the place you actually track work for this repo.
-
-Default posture: these skills were designed for GitHub. If a `git remote` points at GitHub, propose that. If a `git remote` points at GitLab (`gitlab.com` or a self-hosted host), propose GitLab. Otherwise (or if the user prefers), offer:
-
-- **GitHub** — issues live in the repo's GitHub Issues (uses the `gh` CLI)
-- **GitLab** — issues live in the repo's GitLab Issues (uses the [`glab`](https://gitlab.com/gitlab-org/cli) CLI)
-- **Local markdown** — issues live as files under `.scratch/<feature-slug>/` in this repo (good for solo projects or repos without a remote)
-- **Other** (Jira, Linear, etc.) — ask the user to describe the workflow in one paragraph; the skill will record it as freeform prose
-
-Record the choice in `docs/agents/issue-tracker.md`. The GitHub and GitLab templates carry a "PRs as a request surface" flag, defaulted **off** — leave it off and don't raise it; a user who wants external PRs in the triage queue can flip the flag in the file later.
-
-**Section B — Triage label vocabulary.** Skip this section entirely if the `triage` skill isn't installed (exploration told you) — an uninstalled skill needs no labels.
-
-If it is installed, ask exactly one question:
-
-> Do you want to keep the default triage labels? (recommended: **yes**)
-
-The defaults are the five canonical roles, each label string equal to its name: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. On **yes**, write them as-is. Only if the user says no — usually because their tracker already uses other names (e.g. `bug:triage` for `needs-triage`) — collect the overrides so `triage` applies existing labels instead of creating duplicates.
-
-**Section C — Domain docs.** Default to **single-context** — one `CONTEXT.md` + `docs/adr/` at the repo root. This fits almost every repo; write it without asking.
-
-Offer **multi-context** — a root `CONTEXT-MAP.md` pointing to per-context `CONTEXT.md` files — only when exploration found monorepo signals. Then confirm which layout they want.
-
-### 3. Confirm and edit
-
-Show the user a draft of:
-
-- The `## Agent skills` block to add to whichever of `CLAUDE.md` / `AGENTS.md` is being edited (see step 4 for selection rules)
-- The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, and `docs/agents/triage-labels.md` (the last only when `triage` is installed)
-
-Let them edit before writing.
-
-### 4. Write
-
-**Pick the file to edit:**
-
-- If `CLAUDE.md` exists, edit it.
-- Else if `AGENTS.md` exists, edit it.
-- If neither exists, ask the user which one to create — don't pick for them.
-
-Never create `AGENTS.md` when `CLAUDE.md` already exists (or vice versa) — always edit the one that's already there.
-
-If an `## Agent skills` block already exists in the chosen file, update its contents in-place rather than appending a duplicate. Don't overwrite user edits to the surrounding sections.
-
-The block:
-
-```markdown
-## Agent skills
-
-### Issue tracker
-
-[one-line summary of where issues are tracked]. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-[one-line summary of the label vocabulary]. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-[one-line summary of layout — "single-context" or "multi-context"]. See `docs/agents/domain.md`.
-```
-
-Include the `### Triage labels` sub-block, and write `docs/agents/triage-labels.md`, only when `triage` is installed and Section B ran. When it isn't, both are omitted.
-
-Then write the docs files using the seed templates in this skill folder as a starting point:
-
-- [issue-tracker-github.md](./issue-tracker-github.md) — GitHub issue tracker
-- [issue-tracker-gitlab.md](./issue-tracker-gitlab.md) — GitLab issue tracker
-- [issue-tracker-local.md](./issue-tracker-local.md) — local-markdown issue tracker
-- [triage-labels.md](./triage-labels.md) — label mapping (only if `triage` is installed)
-- [domain.md](./domain.md) — domain doc consumer rules + layout
-
-For "other" issue trackers, write `docs/agents/issue-tracker.md` from scratch using the user's description.
-
-### 5. Done
-
-Tell the user the setup is complete and which engineering skills will now read from these files. Mention they can edit `docs/agents/*.md` directly later — re-running this skill is only necessary if they want to switch issue trackers or restart from scratch.
-
-
----
-
-# Skill: setup-pre-commit
-
----
-name: setup-pre-commit
-description: Set up Python pre-commit framework with Ruff, MyPy, PyMarkdown, and local CCBA validators (validate_docs, validate_skills). Incorporates Maskara pre-commit hook. Run once before first commit.
-disable-model-invocation: true
----
-
 # Setup Python Pre-Commit Hooks
 
 Scaffold the project-level Git pre-commit hooks for a CCBA Spoke or Hub project using Python's `pre-commit` framework:
@@ -6575,19 +8795,157 @@ Check that `.pre-commit-config.yaml` exists, and commit it with message `chore: 
 
 ---
 
-# Skill: setup-ts-deep-modules
+# Skill: ccba-setup-skills
 
 ---
-name: setup-ts-deep-modules
-description: Wire dependency-cruiser into a TypeScript repo so each package is a deep module — implementation hidden in subfolders, reachable only through its entry-point files. User-invoked.
+name: ccba-setup-skills
+description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu hình
+  issue tracker, nhãn phân loại (triage), và bố cục tài liệu tri thức (Domain Docs).
+  Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- setup skills
+- thiết lập cấu hình
+- cấu hình tracker
+- cấu hình nhãn
+- setup-skills
+- ccba-setup-skills
+---
+# Kỹ năng Thiết Lập Cấu Hình Phát Triển (Setup CCBA Skills)
+
+Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát triển phần mềm khác (`ccba-triage`, `ccba-to-tickets`, `ccba-to-spec`, `ccba-tdd`, `ccba-improve-codebase-architecture`, v.v.) hoạt động chính xác:
+
+- **Issue tracker** — Nơi theo dõi công việc (GitHub, GitLab, hoặc Local Markdown lưu offline).
+- **Triage labels** — Từ vựng nhãn tương ứng với 5 vai trò trạng thái của triage.
+- **Domain docs** — Cấu trúc tài liệu miền tri thức (`CONTEXT.md` và ADRs).
+
+Đây là kỹ năng tương tác và tự động hóa. Agent sẽ trinh sát trước, đưa ra gợi ý, xác nhận với người dùng rồi tiến hành ghi cấu hình.
+
 ---
 
+## Quy trình thực hiện (Process)
+
+### 1. Trinh sát (Explore)
+
+Quét dự án hiện tại để nhận diện trạng thái ban đầu:
+- Chạy lệnh `git remote get-url origin` hoặc `git remote -v` để nhận diện repo có sử dụng GitHub, GitLab hay không.
+- Đọc file `.md/workspace_context.yaml` tại thư mục gốc để xem đã có cấu hình `archetype` ([ADR 0041](../../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)), `issue_tracker` hoặc các cấu hình khác chưa.
+- Kiểm tra sự tồn tại của file hiến pháp `.agents/AGENTS.md` hoặc `AGENTS.md`.
+- Kiểm tra sự tồn tại của `CONTEXT.md` / `CONTEXT-MAP.md` ở thư mục gốc hoặc `.md/knowledge/`.
+- Kiểm tra sự tồn tại của thư mục cấu hình đích `.md/knowledge/agents/`.
+- **Kiểm tra Kỹ năng Triage (Multi-tier Detection)**: Quét qua 3 cấp: (1) Thư mục `.agents/skills/ccba-triage/` hoặc `.agents/skills/triage/`, (2) Đăng ký trong `catalog.yaml`, (3) Danh sách Kỹ năng khả dụng trong ngữ cảnh. Thiết lập cờ `triage_installed = true` nếu tìm thấy; ngược lại `triage_installed = false`.
+- **Kiểm tra Tín hiệu Monorepo (Monorepo Inference)**: Kiểm tra file `pnpm-workspace.yaml`, trường `workspaces` trong `package.json`, hoặc sự tồn tại của `CONTEXT-MAP.md`. Thiết lập cờ `is_monorepo = true` nếu phát hiện; ngược lại `is_monorepo = false`.
+
+### 2. Gợi ý cấu hình & Phỏng vấn (Present findings and ask)
+
+Tóm tắt kết quả trinh sát và đưa ra cấu hình đề xuất cho người dùng (luôn áp dụng **Recommended-First UX** — đưa câu trả lời đề xuất tốt nhất lên Lựa chọn 1 để người dùng xác nhận bằng Phím Enter hoặc `1`):
+
+- **Nếu đã có cấu hình trong `workspace_context.yaml`**: Hiển thị cấu hình hiện tại và đề xuất dùng tiếp cấu hình này (bỏ qua phỏng vấn từng bước).
+- **Nếu chưa có cấu hình**: Thực hiện phỏng vấn tương tác:
+
+  **Câu A — Issue tracker**:
+  > *Lựa chọn 1 (Recommended)*: Đề xuất mặc định thông minh dựa trên `archetype` ([ADR 0041](../../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)), `sub_type` ([ADR 0046](../../../docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md)) và `git remote`:
+  > - Nếu `archetype == "project_delivery"` hoặc dự án không có remote Git: **Local markdown** (Lưu dưới `.md/knowledge/issues/`).
+  > - Nếu `archetype == "enterprise_governance"`: **Local markdown** (Lưu dưới `.md/knowledge/issues/` kết hợp IDOP Governance).
+  > - Nếu `archetype == "knowledge_corpus"`: **GitHub Issues** (nếu có remote Git) hoặc **Local markdown** (nếu offline).
+  > - Nếu `archetype == "specialized_extension"`:
+  >   * Spoke Cá Nhân (`sub_type: personal_sandbox` - ADR 0046): Mặc định **Local markdown** (`.md/knowledge/issues/` hoặc liên kết `idop_tasks.active_pgv_list`), tránh tạo issue công khai cho nghiên cứu cá nhân.
+  >   * Spoke Tiện ích / R&D (`tooling_plugin`, `research_lab`) có remote GitHub: **GitHub Issues** (yêu cầu `gh` CLI).
+  > - Nếu `archetype == "platform_hub"` và có remote GitHub: **GitHub Issues** (yêu cầu `gh` CLI).
+  > - Nếu remote chứa `gitlab.com`: **GitLab Issues** (yêu cầu `glab` CLI).
+  - **Local markdown** — Lưu issue thành các file md dưới `.md/knowledge/issues/` (phù hợp dự án tư vấn hiện trường, sandbox cá nhân, chạy offline hoặc solo).
+  - **GitHub** — Sử dụng GitHub Issues (yêu cầu `gh` CLI).
+  - **GitLab** — Sử dụng GitLab Issues (yêu cầu `glab` CLI).
+  - **Khác** — Nhận mô tả quy trình dạng văn bản tự do từ người dùng.
+  
+  Nếu chọn GitHub/GitLab, hỏi thêm:
+  - *Xem PR như yêu cầu tính năng?* (yes / no - Mặc định: **no**).
+
+  **Câu B — Nhãn Triage (Smart Skipping)**:
+  > ⚡ **Smart Skipping Rule**: Nếu bước Trinh sát xác định `triage_installed = false`, **BỎ QUA TOÀN BỘ CÂU B NÀY** và thông báo ngầm: *"Đã tự động bỏ qua cấu hình Nhãn Triage do dự án không sử dụng kỹ năng Triage."*
+
+  Nếu `triage_installed = true`, thực hiện phỏng vấn cấu hình ánh xạ cho 5 vai trò nhãn triage:
+  - Lựa chọn 1 (Recommended): **Giữ nguyên 5 nhãn mặc định** (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`).
+  - Lựa chọn 2: Nhận ghi đè nhãn từ người dùng.
+
+  **Câu C — Cấu trúc tài liệu miền (Monorepo Inference)**:
+  > ⚡ **Monorepo Inference Rule**: Nếu bước Trinh sát xác định `is_monorepo = false`, **TỰ ĐỘNG CHỐT Single-context** (`CONTEXT.md` duy nhất tại root) mà không bắt người dùng phỏng vấn thủ công.
+
+  Chỉ khi `is_monorepo = true`, mới hỏi phỏng vấn chọn cấu trúc:
+  - **Single-context** (Recommended) — 1 file `CONTEXT.md` và `docs/adr/` ở root.
+  - **Multi-context** — Có file `CONTEXT-MAP.md` dẫn tới nhiều folder con chứa `CONTEXT.md` riêng.
+
+### 3. Xác nhận (Confirm)
+
+Hiển thị cho người dùng xem bản nháp của:
+- Khối cấu hình `## Agent skills` sẽ được ghi vào file `.agents/AGENTS.md` (hoặc `AGENTS.md` ở root). (Bao gồm tiểu mục `### Triage labels` chỉ khi `triage_installed = true`).
+- Nội dung chi tiết của các file sẽ được tạo ra tại `.md/knowledge/agents/`:
+  - `issue_tracker.md`
+  - `triage_labels.md` (chỉ khi `triage_installed = true`)
+  - `domain.md`
+
+### 4. Ghi cấu hình (Write)
+
+**Bước A: Cập nhật Hiến pháp**:
+- Xác định file ghi hiến pháp: Ưu tiên `.agents/AGENTS.md`, sau đó đến `AGENTS.md` ở root.
+- Cập nhật (hoặc thêm mới) block `## Agent skills` vào file đó:
+  ```markdown
+  ## Agent skills
+
+  ### Issue tracker
+
+  [Tóm tắt ngắn gọn tracker và trạng thái PR]. Xem `.md/knowledge/agents/issue_tracker.md`.
+
+  ### Triage labels (chỉ có khi triage_installed = true)
+
+  [Tóm tắt ngắn gọn nhãn triage]. Xem `.md/knowledge/agents/triage_labels.md`.
+
+  ### Domain docs
+
+  [Tóm tắt ngắn gọn bố cục]. Xem `.md/knowledge/agents/domain.md`.
+  ```
+
+**Bước B: Cập nhật `workspace_context.yaml`**:
+- Ghi nhận hoặc cập nhật trường `project.issue_tracker` trong file `.md/workspace_context.yaml` (ví dụ: `github`, `gitlab` hoặc `local_markdown`).
+
+**Bước C: Tạo các file chỉ dẫn chi tiết**:
+Tạo thư mục `.md/knowledge/agents/` (nếu chưa có) và ghi các file cấu hình chi tiết:
+- Hướng dẫn Issue Tracker: Lấy từ `issue-tracker-github.md`, `issue-tracker-gitlab.md`, hoặc `issue-tracker-local.md`.
+- Hướng dẫn nhãn Triage: Lấy từ `triage-labels.md` (chỉ tạo khi `triage_installed = true`).
+- Hướng dẫn Domain: Lấy từ `domain.md`.
+
+### 5. Hoàn tất (Done)
+
+Thông báo cho người dùng việc thiết lập đã hoàn thành. Nhắc nhở người dùng rằng họ có thể chỉnh sửa trực tiếp các file trong `.md/knowledge/agents/` sau này để thay đổi cấu hình, không cần chạy lại lệnh setup trừ khi muốn thay đổi hoàn toàn Issue Tracker.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+
+---
+
+# Skill: ccba-setup-ts-deep-modules
+
+---
+name: ccba-setup-ts-deep-modules
+description: Wire dependency-cruiser into a TypeScript repo so each package is a deep
+  module — implementation hidden in subfolders, reachable only through its entry-point
+  files. User-invoked.
+disable-model-invocation: true
+bundle: _core
+triggers:
+- ccba-setup-ts-deep-modules
+- setup ts deep modules
+- dependency-cruiser
+---
 # Setup TS Deep Modules
 
 Make every package in this repo a **deep module**: a lot of behaviour behind a small interface. A package's public surface is its **entry points** — the files at the package root — and everything in its subfolders is hidden. This skill installs [dependency-cruiser](https://github.com/sverweij/dependency-cruiser) and the rules that make the entry points the only way in, then proves the rules bite.
 
-For the vocabulary (deep module, interface, seam, depth), run the `/codebase-design` skill — use its language throughout.
+For the vocabulary (deep module, interface, seam, depth), run the `/ccba-codebase-design` skill — use its language throughout.
 
 ## The shape this enforces
 
@@ -6676,47 +9034,352 @@ Then add a **context pointer** to it from the repo's agent-instructions file —
 
 ---
 
-# Skill: sync-upstream
+# Skill: ccba-sharepoint-iac
 
 ---
-name: sync-upstream
-description: Kiểm tra cập nhật và đồng bộ tri thức từ các repository claudekit và mattpocock thượng nguồn.
+name: ccba-sharepoint-iac
+description: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code).
+  Hướng dẫn thiết kế JSON schema, kiểm định Lookups/Taxonomy và triển khai bằng PnP
+  PowerShell.
+disable-model-invocation: true
+metadata:
+  version: v1.0
+  publisher: CCBA
+bundle: _software
+triggers:
+- ccba-sharepoint-iac
+- sharepoint iac
+- sharepoint schema
+- pnp powershell
+- m365 iac
+- datamodel sharepoint
+---
+# Kỹ Năng: SharePoint & M365 Infrastructure-as-Code (`sharepoint-iac`)
+
+Kỹ năng này hướng dẫn AI Agent thiết kế, kiểm định và triển khai hạ tầng dữ liệu trên SharePoint Online (Microsoft 365) bằng phương pháp **Infrastructure-as-Code (IaC)** chuẩn hóa của CCBA Platform.
+
+---
+
+## 🎯 1. Nguyên Tắc Thiết Kế Cốt Lõi (Core Principles)
+
+1. **Metadata-First Architecture (<5GB List Quota)**:
+   - Các SharePoint Lists chỉ lưu trữ Text, Numbers, Dates, Lookups, Managed Metadata (Taxonomy) và Hyperlinks.
+   - Tuyệt đối không đính kèm tệp binary trực tiếp vào List Items để bảo vệ 2TB Tenant Quota. Mọi tệp tin scan/PDF/bản vẽ phải được phân luồng sang thư mục chuyên dụng (hoặc 5TB Master OneDrive).
+2. **Quy ước Đặt tên Cột Chuẩn Hóa**:
+   - `InternalName`: Bắt buộc dùng **PascalCase** không dấu, không khoảng trắng (Ví dụ: `ContractCode`, `GrossAmount`, `PrimaryContractGroup`).
+   - `DisplayName`: Tiếng Việt chuẩn có dấu (Ví dụ: `Mã Hợp đồng`, `Giá trị trước VAT`).
+3. **Lookup Constraints**:
+   - Luôn khai báo `Behavior: "restrict"` để đảm bảo tính toàn vẹn dữ liệu tham chiếu (Foreign Key Integrity).
+
+---
+
+## 📋 2. Cấu Trúc JSON Schema Chuẩn Cho SharePoint List
+
+Mỗi List được lưu thành một tệp JSON trong `datamodel/sharepoint/lists/<domain>/<list_name>.json`:
+
+```json
+{
+  "$schema": "datamodel/sharepoint/schemas/sp-list.schema.json",
+  "ListName": "Contracts",
+  "Description": "Quản lý Hợp đồng Kinh tế CCBA / IBST",
+  "Columns": [
+    {
+      "Name": "ContractCode",
+      "Type": "Text",
+      "Required": true,
+      "DisplayName": "Mã hợp đồng"
+    },
+    {
+      "Name": "CustomerId",
+      "Type": "Lookup",
+      "Lookup": {
+        "List": "Customers",
+        "Field": "ID",
+        "Behavior": "restrict"
+      },
+      "DisplayName": "Khách hàng"
+    },
+    {
+      "Name": "PrimaryContractGroup",
+      "Type": "ManagedMetadata",
+      "TermSet": {
+        "Group": "CCBA Taxonomy",
+        "Name": "CCBA_NhomHopDongKT"
+      },
+      "DisplayName": "Nhóm HĐKT chính"
+    },
+    {
+      "Name": "GrossAmount",
+      "Type": "Number",
+      "DisplayName": "Tổng giá trị (VND)"
+    }
+  ]
+}
+```
+
+---
+
+## 🛠️ 3. Quy Trình Kiểm Định & Triển Khai (Deployment Workflow)
+
+Khi làm việc trên một Spoke có SharePoint IaC (như `idop-ccba-way`):
+
+1. **Bước 1: Validate Schema Trước Khi Deploy**:
+   ```powershell
+   # Kiểm tra tính hợp lệ cú pháp JSON, Lookup references và Naming conventions
+   .\idop.ps1 validate datamodel
+   ```
+   * **Tiêu chí hoàn thành:** Lệnh `.\idop.ps1 validate datamodel` trả về kết quả 100% hợp lệ không có lỗi cú pháp hoặc trường tham chiếu thiếu.
+
+2. **Bước 2: Triển Khai Thử Nghiệm (DryRun)**:
+   ```powershell
+   # Quét sự khác biệt (diff) giữa JSON Schema và SharePoint Online thật
+   .\idop.ps1 deploy lists -Environment IDOP -DryRun
+   ```
+   * **Tiêu chí hoàn thành:** Báo cáo diff hiển thị danh sách các trường thay đổi dự kiến mà không gặp lỗi kết nối hay quyền truy cập.
+
+3. **Bước 3: Triển Khai Thật (Full Deployment)**:
+   ```powershell
+   # Đồng bộ cấu trúc vào môi trường production
+   .\idop.ps1 deploy lists -Environment IDOP -Full
+   ```
+   * **Tiêu chí hoàn thành:** Toàn bộ SharePoint Lists và Managed Metadata được provisioning thành công trên SharePoint Online.
+
+---
+
+## 🔍 4. Checklist Rà Soát Chất Lượng (Quality Gate)
+
+- [ ] Tên tệp tin JSON trùng khớp với tên bảng `ListName`.
+- [ ] Mọi trường Managed Metadata đều có Term Set tồn tại trong Term Store.
+- [ ] Không có trường nhị phân (Attachment/Binary) trong schema list.
+- [ ] Toàn bộ lookup fields đều tham chiếu đến các bảng đã được định nghĩa.
+
+
+---
+
+# Skill: ccba-skills-eval
+
+---
+name: ccba-skills-eval
+
+description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) cho các kỹ năng AI
+  trong CCBA Platform.
+disable-model-invocation: true
+bundle: _core
+command: /ccba-skills-eval
+triggers:
+- skills-eval
+- eval-skills
+- kiểm thử kỹ năng
+- chạy evals
+---
+# Lệnh /ccba-skills-eval
+
+Khi nhận được lệnh này từ người dùng, Agent sẽ tự động nạp và thực thi công cụ kiểm định chất lượng (Evaluations) cho các kỹ năng AI.
+
+---
+
+## 🛠️ Hướng dẫn thực thi các bước
+
+### Bước 1: Xác định phạm vi kiểm thử
+Agent phân tích yêu cầu của người dùng để xác định tham số:
+- **Kiểm thử một kỹ năng cụ thể:** Nếu người dùng yêu cầu kiểm tra một kỹ năng (ví dụ: `/ccba-skills-eval ccba-copywriting` hoặc viết gọn `copywriting`), xác lập tham số `--skill ccba-copywriting`.
+- **Kiểm thử toàn bộ:** Nếu người dùng chỉ gõ lệnh chung `/ccba-skills-eval`, mặc định chạy cho tất cả kỹ năng bằng cách bỏ trống `--skill` hoặc đặt `--skill all`.
+- **Số lần chạy thử:** Mặc định chạy 3 lần thử (`--trials 3`) để đo độ tin cậy. Nếu người dùng cần chạy nhanh để kiểm tra lỗi cú pháp, có thể đặt `--trials 1`.
+
+### Bước 2: Kích hoạt Core Eval Runner & Harness Engine
+Chạy lệnh CLI sau tại thư mục gốc của dự án:
+```bash
+# Kiểm thử một kỹ năng cụ thể qua ccba_harness Multi-Scorer Engine
+python .agents/skills/ccba-eval-gate/scripts/eval_runner.py --skill [tên-skill] --trials 3
+
+# Tự động tối ưu hóa SKILL.md (Skill Auto-Tuner via SkillOpt loop)
+python .agents/skills/ccba-eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3
+
+# Khai phá lỗi từ transcript log thực chiến và tự động sinh test cases
+python scripts/eval/log_eval_miner.py --skill [tên-skill] --auto-inject
+
+# Kiểm thử toàn bộ các kỹ năng AI
+python .agents/skills/ccba-eval-gate/scripts/eval_runner.py --trials 3
+```
+
+### Bước 3: Đánh giá Đa chiều theo Barem Rubrics & Rào chắn Điểm Liệt
+- **Bộ Tiêu chí Định lượng & Rubrics:** Đối chiếu kết quả với Quy chuẩn tại [`.md/knowledge/guidelines/domain_success_criteria_rubrics.md`](../../../.md/knowledge/guidelines/domain_success_criteria_rubrics.md):
+  * **Code-Based Assertions (< 1ms):** ExactMatch, RegexMatch, JsonSchemaMatch, LengthBounds.
+  * **Model-Based Rubrics (Likert 1–5):** Anthropic Prompt Structure (`<rubric>`, `<answer>`, `<thinking>`, `<score>`).
+  * **Rào chắn Điểm Liệt (Hard Floor):** Nếu vi phạm tiêu chí cốt lõi (False Negative PCCC, sai hiệu lực văn bản luật, bịa trích dẫn), bài thi bị đánh rớt ngay lập tức (Score = 0.0%) bất kể các tiêu chí phụ.
+- **Chế độ Auto-Tuner (`--auto-tune`):** 
+  Core Eval Runner sẽ tự động điều phối chu trình 4 bước (**Rollout -> Reflect -> Edit -> Validate**). LLM Optimizer sẽ đề xuất chỉnh sửa văn bản `SKILL.md` và kiểm chứng qua Cổng **Validation Gate** để loại bỏ hiện tượng **Prompt Drift** trước khi cập nhật.
+- **Nếu tất cả các test cases đạt PASS (exit code = 0):** Báo cáo kết quả thành công cho người dùng.
+- **Nếu có test case bị FAILED (exit code = 1):**
+  1. Đọc chi tiết lỗi so khớp (Regex mismatch hoặc LLM Judge feedback) được in trong output log.
+  2. Xác định xem lỗi do mô hình suy giảm hiệu năng (regression), lỗi placeholders, hay lỗi over-triggering.
+  3. Thực hiện sửa đổi và bổ sung chỉ thị trực tiếp vào tệp `SKILL.md` của kỹ năng bị lỗi đó để khắc phục (tương tự như cách sửa lỗi over-triggering bằng When to Use / When NOT to Use).
+  4. Chạy lại kiểm thử (tối đa lặp lại 3 lần). Nếu sau 3 lần vẫn lỗi, hãy báo cáo cụ thể cho người dùng để nhận chỉ thị.
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+---
+
+# Skill: ccba-spoke-adopter
+
+---
+name: ccba-spoke-adopter
+description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield
+  Spokes) vào CCBA Platform mà không phá hủy cấu trúc dữ liệu cũ.
+argument-hint: '[--spoke <path>] [--dry-run] [--archetype <archetype>] [--type <project_type>]
+  [--mode <mode>]'
+disable-model-invocation: true
+category: management
+keywords:
+- spoke
+- adopt
+- brownfield
+- onboarding
+- migration
+- schema-merge
+- hub-and-spoke
+bundle: _core
+triggers:
+- spoke
+- adopt
+- brownfield
+- onboarding
+- migration
+- schema-merge
+- hub-and-spoke
+- adopt spoke
+- tiếp nhận dự án
+- onboard spoke
+- kết nối dự án cũ
+- adopt-spoke
+---
+# Kỹ Năng Tiếp Nhận Spoke Hiện Hữu (Brownfield Spoke Adopter)
+
+Kỹ năng này chịu trách nhiệm đánh giá hiện trạng, phân tích rủi ro và thực hiện tiếp nhận thích ứng (Adaptive Non-Destructive Onboarding) cho các codebase đã có sẵn vào mạng lưới CCBA Agent Platform.
+
+---
+
+## 1. Nguyên Tắc Cốt Lõi: Bảo Tồn Tuyệt Đối (Zero Data Loss)
+
+1. **Additive Merge (Chỉ thêm, không xóa):** Khi cập nhật `workspace_context.yaml`, giữ nguyên 100% tất cả các trường cấu hình cũ của Spoke (`document_groups`, `custom_milestones`, `databases`, `reading_sequences`).
+2. **Tự Động Sao Lưu:** Luôn tạo bản sao lưu `workspace_context.yaml.bak_<timestamp>` trước khi thực hiện hợp nhất.
+3. **Bảo Vệ Hiến Pháp Riêng:** Giữ nguyên các tệp `AGENTS.md` và `CLAUDE.md` đã được tùy biến sâu của Spoke, không ghi đè bằng template chung.
+4. **Cài Đặt Rào Chắn An Toàn (Maskara):** Tự động cài đặt Git Pre-commit Hook để bảo vệ khóa API và tài khoản bí mật.
+
+---
+
+## 2. Quy Trình Vận Hành 4 Bước
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│  1. DISCOVERY   │ ──► │  2. RISK MATRIX  │ ──► │ 3. ADDITIVE MERGE│ ──► │  4. SAFE SYNC    │
+│  Quét Stack/Git │     │  Cảnh báo rủi ro │     │ Sao lưu & Hợp nhất│    │ Bơm Kỹ năng & Reg│
+└─────────────────┘     └──────────────────┘     └──────────────────┘     └──────────────────┘
+```
+
+### Bước 1: Khởi Chạy Đánh Giá Hiện Trạng (Dry-Run Preview)
+Chạy lệnh kiểm tra và in ma trận đánh giá 3 tầng:
+```powershell
+python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke] --dry-run
+```
+
+### Bước 2: Thực Hiện Tiếp Nhận & Hợp Nhất Cấu Hình
+Khi người dùng đồng ý, chạy lệnh tiếp nhận chính thức:
+```powershell
+python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke]
+```
+
+### Bước 3: Tùy Biến Thể Loại, Chế Độ & Archetype (Tùy Chọn)
+Nếu muốn chỉ định rõ loại hình dự án, chế độ vận hành hoặc Archetype:
+```powershell
+python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke] --archetype "knowledge_corpus" --type "Pháp điển" --mode "software"
+```
+
+---
+
+## 3. Tích Hợp Hệ Thống
+* **Deep Seam Engine:** `scripts/spoke/spoke_adopter.py`
+* **CLI Command:** `python scripts/adopt_spoke.py`
+* **Slash Command:** `/ccba-spoke-adopter` (Alias: `/ccba-adopt-spoke`)
+* **ADR Quy Chuẩn:** [`docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md`](../../../docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md)
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+---
+
+# Skill: ccba-sync-upstream
+
+---
+name: ccba-sync-upstream
+description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0040 Radar)
+  kết hợp kích hoạt 1-Click Port qua /ccba-xia.
 disable-model-invocation: true
 category: utilities
-keywords: [sync, upstream, update, porting]
+keywords:
+- sync
+- upstream
+- update
+- porting
+- radar
+- ccba-xia
 metadata:
   author: CCBA
-  version: "1.1.0"
+  version: 2.0.0
+bundle: _core
+triggers:
+- sync
+- upstream
+- update
+- porting
+- radar
+- ccba-xia
+- sync upstream
+- đồng bộ tri thức
+- claudekit
+- mattpocock
+- check update
+---
+# Kỹ năng: Radar Thượng Nguồn & Cầu Nối Porting (Upstream Radar & Handshake)
+
+Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho chứa thượng nguồn (được cấu hình linh hoạt tại [`.md/knowledge/upstream_sources.yaml`](../../../.md/knowledge/upstream_sources.yaml)), kiểm tra bản quyền, thẩm tra tính năng mới theo **Thể chế ADR-0040 (Kim tự tháp 3 Tầng)** qua AI Gateway và tự động sinh lệnh **1-Click Porting** với `/ccba-xia`.
+
 ---
 
-# Kỹ năng: Đồng bộ hóa Thượng nguồn (Upstream Sync)
+## Quy trình 3 Nhịp (Process)
 
-Kỹ năng này thực hiện việc kiểm tra, tải về các bản cập nhật mới từ các kho chứa thượng nguồn (`claudekit-engineer`, `claudekit-marketing`, và `mattpocock/skills`) trên remote GitHub, tiến hành phân tích sự thay đổi bằng AI Gateway để tự động cập nhật báo cáo khuyến nghị di chuyển tính năng.
-
-## Quy trình Thực hiện (Process)
-
-### 1. Đồng bộ hóa mã nguồn Upstream
-- Chạy script Python để tự động clone/fetch các repository thượng nguồn về thư mục tạm cục bộ `.md/scratch/repos/` ở chế độ kiểm tra:
+### Nhịp 1: Trinh sát & Radar Cập nhật (Recon & Diff Radar)
+- Chạy script Python để tự động clone/fetch các kho chứa thượng nguồn về `.md/scratch/repos/` ở chế độ kiểm tra:
   ```powershell
-  python scripts/check_claudekit_updates.py --check-only
+  python scripts/spoke/check_claudekit_updates.py --check-only
   ```
-- **Tiêu chí hoàn thành:** Script chạy thành công với exit code 0. Toàn bộ mã nguồn các repo đích được cập nhật đầy đủ và in ra danh sách các cập nhật có sẵn kèm các SHA tương ứng.
-- **Cơ chế tự chữa lành (Self-Healing):** Nếu script thất bại do lỗi Git corruption (chỉ số index lỗi) hoặc lỗi đường truyền mạng ngắt quãng, Agent phải thực hiện xóa sạch thư mục tạm tương ứng `.md/scratch/repos/<repo-name>` và chạy lại lệnh để clone mới (Clean Clone). Nếu vẫn lỗi sau 2 lần thử, báo cáo lại người dùng.
+- **Kiểm tra Bản quyền (License Audit):** Tự động phân loại giấy phép repo nguồn (PERMISSIVE, COPYLEFT, PROPRIETARY, UNKNOWN).
+- **Tiêu chí hoàn thành:** Script chạy thành công với exit code 0. Toàn bộ kho nguồn được cập nhật, in ra danh sách thay đổi và SHA tương ứng.
+- **Cơ chế tự chữa lành (Self-Healing):** Nếu gặp lỗi Git index corruption hoặc đứt kết nối mạng, Agent xóa sạch thư mục `.md/scratch/repos/<repo-name>` và tiến hành Clean Clone lại.
 
-### 2. Nghiên cứu và Phân tích Khuyến nghị
-- Liệt kê danh sách các tệp tin mới/nâng cấp được phát hiện bằng cách so sánh hiệu số giữa Local SHA và Remote SHA (ví dụ chạy lệnh: `git diff --name-only <local-sha>..<remote-sha>` trên repository tương ứng) và trình bày ngắn gọn cho người dùng.
-- Hỏi ý kiến người dùng trước khi thực thi quét sâu: *"Tôi tìm thấy N file mới. Bạn có muốn phân tích chi tiết bằng AI Gateway để cập nhật báo cáo khuyến nghị không?"*
-- Nếu người dùng đồng ý, chạy script phân tích cấu trúc của các repository thượng nguồn bằng AI Gateway mà không kèm flag `--check-only`:
+### Nhịp 2: Thẩm tra Thể chế ADR-0040 (Constitutional Evaluation)
+- Hỏi ý kiến người dùng trước khi quét sâu bằng AI: *"Tôi tìm thấy N file mới. Bạn có muốn kích hoạt AI Gateway thẩm tra theo thể chế ADR-0040 để cập nhật báo cáo khuyến nghị không?"*
+- Nếu người dùng đồng ý, chạy script thẩm tra toàn diện:
   ```powershell
-  python scripts/check_claudekit_updates.py
+  python scripts/spoke/check_claudekit_updates.py
   ```
-- **Tiêu chí hoàn thành:** Script chạy hoàn tất, tự động gọi trình đánh giá cập nhật dữ liệu mới vào vùng được chỉ định tại tệp báo cáo khuyến nghị.
+- **Tiêu chí phân tầng của AI Gateway:**
+  * **Zero-Duplicate Check:** Đối chiếu với 77 skills hiện có trong `catalog.yaml`.
+  * **Phân tầng Kim tự tháp:** Đề xuất rõ ràng: **Tier 1 (Master Deep Skill)**, **Tier 2 (Progressive Reference)** hay **Tier 3 (User Workflow)**.
+  * **Đánh giá tương thích:** Khả năng chuyển đổi từ TS/Node sang chuẩn Python Monorepo (`ruff`, `mypy`, `pytest`).
+- **Tiêu chí hoàn thành:** Báo cáo [port_recommendations.md](../../../.md/knowledge/port_recommendations.md) được cập nhật và bảo vệ nguyên vẹn vùng ghi chú của kỹ sư (`Parse-Protection`).
 
-### 3. Đối soát và Trình bày Kết quả (Parse-Protection)
-- Đọc nội dung tệp tin báo cáo khuyến nghị tại [port_recommendations.md](../../../.md/knowledge/port_recommendations.md).
-- **Quy tắc bảo vệ dữ liệu (Parse-Protection):** Chỉ ghi đè dữ liệu phân tích tự động vào khu vực đánh dấu `<!-- AUTO-GENERATED-START -->...<!-- AUTO-GENERATED-END -->`. Tuyệt đối giữ nguyên vẹn khu vực ghi chú thủ công của kỹ sư tại `<!-- DEVELOPER-NOTES-START -->...<!-- DEVELOPER-NOTES-END -->`.
-- Trình bày tóm tắt kết quả phân tích cập nhật cho người dùng.
-- **Tiêu chí hoàn thành:** Bảng tóm tắt kết quả hiển thị chính xác trên chat và tệp `port_recommendations.md` được ghi nhận cập nhật mà không làm mất mát vùng ghi chú thủ công của kỹ sư.
+### Nhịp 3: Chuyển giao Kiểm soát sang `/ccba-xia` (1-Click Port Handshake)
+- Đọc nội dung cập nhật tại `port_recommendations.md` và trình bày tóm tắt cho người dùng.
+- Hiển thị cú pháp gọi lệnh `/ccba-xia` tương ứng với từng kỹ năng được khuyến nghị, ví dụ:
+  ```text
+  /ccba-xia https://github.com/mattpocock/skills <skill-name> --compare
+  ```
+- Kỹ sư kích hoạt lệnh `/ccba-xia` để khởi chạy quy trình 6 Pha (đặc biệt là Hard Gate Pha 4 chống hallucination).
+- **Tiêu chí hoàn thành:** Người dùng nhận được bảng khuyến nghị kèm liên kết lệnh 1-Click Porting rõ ràng.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -6726,84 +9389,27 @@ Kỹ năng này thực hiện việc kiểm tra, tải về các bản cập nh�
 
 ---
 
-# Skill: table-reconstructor
+# Skill: ccba-tdd
 
 ---
-name: table-reconstructor
-description: Sub-skill dựng lại các bảng biểu Markdown bị vỡ dọc hoặc lệch cột bằng file đối chiếu .docx hoặc thuật toán Python.
-role: sub_skill
-master_skill: markdown-document-processing
-applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Thiết kế"
-  - "Kiểm định"
-bundle: "_core"
----
-
-# Sub-skill: Table Reconstructor
-
-Kỹ năng này chịu trách nhiệm phục hồi nguyên trạng hệ thống bảng biểu bị vỡ dọc hoặc mất cấu trúc hàng/cột trong quá trình chuyển đổi Markdown.
-
-## Lệnh CLI Tự động
-Sử dụng lệnh CLI sau khi có file Word `.docx` gốc để đối chiếu:
-```bash
-python -m mdconverter.cli process-table --file [đường_dẫn_tệp_markdown] --docx [đường_dẫn_tệp_docx_gốc]
-```
-
-## SOP Xử lý Thủ công (Khi không có file .docx gốc)
-Nếu không có tệp `.docx` gốc để đối chiếu, Agent bắt buộc phải viết script Python hoặc dùng Regex để gộp các dòng bị vỡ dọc dựa trên ký tự tab `\t`:
-
-1. **Nhận dạng mẫu vỡ:**
-   * Một hàng gồm các cột $A, B, C$ bị tách thành:
-     ```
-     Dòng n: A
-     Dòng n+1: (trống)
-     Dòng n+2: \t B
-     Dòng n+3: (trống)
-     Dòng n+4: \t C
-     ```
-2. **Quy tắc gộp:**
-   * Loại bỏ các dòng trống dư thừa.
-   * Gộp các dòng text có dấu tab thụt lề liền kề thành một hàng Markdown duy nhất:
-     `| A | B | C |`
-3. **Mẫu script Python xử lý thô nhanh (KISS):**
-   ```python
-   def reconstruct_simple_table(lines):
-       reconstructed = []
-       current_row = []
-       for line in lines:
-           clean = line.strip()
-           if not clean:
-               continue
-           if line.startswith('\t') or len(line) - len(line.lstrip()) >= 2:
-               current_row.append(clean)
-           else:
-               if current_row:
-                   reconstructed.append("| " + " | ".join(current_row) + " |")
-               current_row = [clean]
-       if current_row:
-           reconstructed.append("| " + " | ".join(current_row) + " |")
-       return reconstructed
-   ```
-
-
----
-
-# Skill: tdd
-
----
-name: tdd
-description: Phát triển hướng kiểm thử (Red-Green-Refactor) giúp tạo mã nguồn ổn định, tin cậy thông qua các giao diện công khai (seams).
+name: ccba-tdd
+description: Phát triển hướng kiểm thử (Red-Green-Refactor) giúp tạo mã nguồn ổn định,
+  tin cậy thông qua các giao diện công khai (seams).
 user-invocable: true
-when_to_use: "Dùng khi người dùng yêu cầu phát triển tính năng mới hoặc sửa lỗi bằng phương pháp viết test trước (test-first)."
+when_to_use: Dùng khi người dùng yêu cầu phát triển tính năng mới hoặc sửa lỗi bằng
+  phương pháp viết test trước (test-first).
 category: utilities
-keywords: [tdd, test, refactor, quality]
+keywords:
+- ccba-tdd
+- test
+- refactor
+- quality
 metadata:
   author: CCBA
-  version: "1.1.0"
+  version: 1.1.0
+disable-model-invocation: true
+bundle: _software
 ---
-
 # Quy trình Phát triển Hướng Kiểm thử (Test-Driven Development)
 
 TDD là chu kỳ lặp Red → Green → Refactor. Kỹ năng này cung cấp quy trình và tiêu chuẩn để chu kỳ đó tạo ra những bộ test chất lượng cao, dễ bảo trì và bám sát ngôn ngữ nghiệp vụ của dự án.
@@ -6863,14 +9469,21 @@ Hỏi người dùng: *"Giao diện công khai là gì, và chúng ta nên kiể
 
 ---
 
-# Skill: teach
+# Skill: ccba-teach
 
 ---
-name: teach
-description: Hỗ trợ giảng dạy và đào tạo kiến thức tương tác, lưu trữ lộ trình và bài học trong thư mục chuyên biệt.
+name: ccba-teach
+description: Hỗ trợ giảng dạy và đào tạo kiến thức tương tác, lưu trữ lộ trình và
+  bài học trong thư mục chuyên biệt.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- ccba-teach
+- giảng dạy
+- đào tạo
+- lesson
+- bài học
 ---
-
 # Kỹ năng Đào tạo & Giảng dạy Tương tác (Teach)
 
 Kỹ năng này thiết lập một không gian học tập tương tác (Teaching Workspace) được cô lập, cho phép tự động sinh bài giảng, theo dõi lịch sử ôn tập và tổng kết tiến trình học tập của cán bộ nhân viên hoặc đối tác.
@@ -6922,92 +9535,348 @@ Kỹ năng này thiết lập một không gian học tập tương tác (Teachi
 
 ---
 
-# Skill: to-questionnaire
+# Skill: ccba-teamwork
 
 ---
-name: to-questionnaire
-description: Chuyển đổi một quyết định chưa có đủ thông tin thành Bảng hỏi (Questionnaire) dạng Markdown để gửi cho đối tác/chuyên gia điền bất đồng bộ.
+name: ccba-teamwork
+description: Điều phối đa tác nhân dài hạn (Teamwork Multi-Agent Framework) theo 4 giai đoạn và 3 vai trò tối giản (Orchestrator, Workers, Auditor), cưỡng chế Workers Read-Only Sandbox và kiểm toán phân vùng tệp hậu hợp nhất.
+keywords:
+- teamwork
+- ccba-teamwork
+- điều phối nhóm
+- multi-agent
+- team sheet
+- parallel milestones
+- seam ownership
+disable-model-invocation: true
+bundle: _core
+triggers:
+- teamwork
+- ccba-teamwork
+- điều phối nhóm
+- multi-agent
+- team sheet
+- parallel execution
+---
+# 👥 Kỹ năng: ccba-teamwork (Điều Phối Đa Tác Nhân Dài Hạn)
+
+Kỹ năng này hướng dẫn Agent đóng vai trò **Project Orchestrator** để điều phối các tác vụ kỹ thuật và dự án quy mô lớn (Monorepo refactoring, thẩm tra thiết kế 4 bộ môn, nạp kho pháp điển hàng loạt) theo **Teamwork Multi-Agent Framework** (lấy cảm hứng từ Antigravity `/teamwork-preview` và ADR 0053).
+
+Khung làm việc này đảm bảo loại bỏ triệt để hiện tượng xung đột mã nguồn (merge conflicts), bảo vệ ngân sách ngữ cảnh (context budget) và duy trì sự phân tách rõ ràng giữa thẩm quyền con người (Accountability) và năng lực AI (Worker Assignments).
+
+---
+
+## 🏛️ Mô Hình 3 Vai Trò Tối Giản (KISS Hierarchy)
+
+```mermaid
+graph TB
+    User["👤 Kỹ sư CCBA"] --> Orchestrator
+    
+    subgraph TeamworkSession["Teamwork Session"]
+        Orchestrator["🎯 Orchestrator\n(Explore + Coordinate + Monitor)"]
+        Orchestrator --> W1["⚙️ Worker 1\n(Read-Only + Scratch Output)"]
+        Orchestrator --> W2["⚙️ Worker 2\n(Read-Only + Scratch Output)"]
+        Orchestrator --> W3["⚙️ Worker 3\n(Read-Only + Scratch Output)"]
+        W1 --> Auditor["🔍 Success Auditor\n(Test Suite + Maskara + Diff Audit)"]
+        W2 --> Auditor
+        W3 --> Auditor
+        Auditor --> Orchestrator
+    end
+    
+    Orchestrator -->|"Ghi file chính thức & Commit\n(Duy nhất Orchestrator)"| Codebase["📁 Codebase"]
+```
+
+1. **🎯 Orchestrator (Nhạc Trưởng — Agent Chính):**
+   - Phỏng vấn người dùng, xác định mục tiêu và ranh giới Non-Goals.
+   - Biên soạn `team_sheet.md` và thực hiện File-path Pre-Check.
+   - Điều phối workers theo batch (tối đa 3 workers/batch).
+   - **Duy nhất Orchestrator** có quyền đọc kết quả scratch, tổng hợp, ghi file chính thức và commit Git.
+2. **⚙️ Workers (Tác Nhân Thực Thi — Subagents):**
+   - Thực thi độc lập và song song dưới nền.
+   - **Tuân thủ Two-Layer Guardrail (ADR 0035):** Chỉ có quyền đọc (`view_file`, `grep_search`, `read_resource`) và chạy scoped test cô lập; tuyệt đối không ghi đè codebase.
+   - Xuất toàn bộ code draft, báo cáo phân tích vào thư mục sandbox cô lập: `.system_generated/scratch/worker_{N}/`.
+3. **🔍 Success Auditor (Kiểm Định Nghiệm Thu):**
+   - Độc lập chạy scoped test suite (runtime < 2.0s).
+   - Quét rò rỉ secrets và Spoke artifacts bằng Maskara.
+   - Thực hiện **Post-Merge Diff Audit** đối chiếu `git diff --name-only` với phạm vi file scope được cấp.
+
+---
+
+## 📋 Tiêu Chí Hoàn Thành (Completion Criteria)
+
+Kỹ năng hoàn thành khi:
+1. Đã phỏng vấn và tạo tệp `.agents/teams/[project]_team_sheet.md` đầy đủ 2 lớp: **Accountability Mapping** (11 Ghế CCBA Charter 2026) và **Worker Assignments** (AI Subagents).
+2. Toàn bộ Workers được dispatch tuân thủ **Worker Cap** (tối đa 3 workers đồng thời) và **Exclusive Seam Ownership** (chỉ đọc files trong scope).
+3. Các tệp trung gian của Workers được lưu gọn trong `.system_generated/scratch/worker_{N}/`, không vứt rải rác ngoài root.
+4. Orchestrator hoàn thành việc tổng hợp, ghi file chính thức và vượt qua **Success Auditor Gate**:
+   - 100% Scoped Unit Tests pass.
+   - Spoke Leakage Guard & Maskara exit code 0.
+   - Post-Merge Diff Audit xác nhận không có file ngoài phạm vi seam bị can thiệp.
+   - Catalog SSOT được biên dịch lại đồng bộ (`compile_catalog.py`).
+
+---
+
+## 🛠️ Quy Trình Thực Hiện 4 Giai Đoạn
+
+### Giai Đoạn 1: Phỏng Vấn Mục Tiêu & Cấu Trúc Đội Ngũ (Structured Interview)
+Orchestrator làm rõ yêu cầu với kỹ sư:
+1. **Mục tiêu cốt lõi:** Đầu ra cụ thể cần đạt là gì?
+2. **Ranh giới Non-Goals:** Những phần nào dứt khoát không chạm vào trong đợt này?
+3. **Phân rã Seams:** Có bao nhiêu luồng công việc / modules độc lập?
+4. **Phân quyền Phê duyệt (Accountability Mapping):** Lựa chọn các Ghế trong 11 Ghế CCBA Charter 2026 chịu trách nhiệm nghiệm thu các mốc bàn giao:
+   - `TRUONG_PHONG_RD_HTQT` / `TRUONG_PHONG_BIM_THIET_KE` / `TRUONG_PHONG_BIM_DU_AN`
+   - `CHU_TRI_HOP_DONG_PM` / `CHU_TRI_BO_MON` / `KY_SU_THUC_THI`
+   - `CO_VAN_PHAP_LY_QA` / `IDOP_LEAD` / `GIAM_DOC`
+
+---
+
+### Giai Đoạn 2: Khởi Tạo Team Sheet (Team Sheet Generation)
+1. Đọc template mẫu tại [team_sheet_template.md](resources/team_sheet_template.md).
+2. Tạo tệp `.agents/teams/[project_slug]_team_sheet.md`.
+3. **File-path Pre-Check:** Orchestrator liệt kê danh sách tệp tin cụ thể cho từng Worker trong Lớp 2 (Worker Assignments).
+4. Phân chia các batches nếu tổng số workers $> 3$.
+
+---
+
+### Giai Đoạn 3: Thực Thi Song Song Độc Quyền (Parallel Milestone Execution)
+1. **Dispatch Batch:**
+   - Khởi chạy các Worker subagents (tối đa 3 workers/batch) qua `invoke_subagent` hoặc công cụ điều phối nền tảng.
+   - Prompt của từng Worker **bắt buộc** chứa:
+     - Danh sách file được phép đọc (Exclusive File Scope).
+     - Chỉ thị ghi kết quả nháp vào `.system_generated/scratch/worker_{N}/output.md`.
+     - Tiêu chí nghiệm thu cụ thể (Acceptance Criteria).
+2. **Worker Timeout & Fallback (10 Phút):**
+   - Nếu Worker không hoàn thành sau 10 phút hoặc cạn ngân sách token:
+     - Đánh dấu milestone là `INCOMPLETE`.
+     - Trích xuất log trung gian từ scratch.
+     - Quyết định: Dispatch Worker mới với prompt hẹp hơn HOẶC nếu lỗi logic sâu $\rightarrow$ đóng gói Deep Problem Brief và kích hoạt `/boost` (Escalation UP).
+3. **Tổng Hợp Bởi Orchestrator:**
+   - Sau khi các workers trong batch hoàn tất, Orchestrator đọc các tệp output từ `.system_generated/scratch/worker_{N}/`.
+   - Orchestrator thực hiện ghi mã nguồn chính thức vào codebase.
+   - Thực hiện commit Git theo từng logical unit: `feat(scope): ...` hoặc `refactor(scope): ...`.
+
+---
+
+### Giai Đoạn 4: Cổng Kiểm Định Nghiệm Thu (Success Auditor Gate)
+Auditor hoặc Orchestrator thực hiện chuỗi kiểm định tự động:
+1. **Kiểm tra Unit Tests:**
+   ```powershell
+   python -m pytest [target_tests]
+   ```
+2. **Kiểm tra An toàn Maskara & Rò rỉ Spoke:**
+   ```powershell
+   python scripts/governance/check_spoke_leakage.py
+   ```
+3. **Post-Merge Diff Audit:**
+   ```powershell
+   git diff --name-only HEAD~1
+   ```
+   *Đối chiếu danh sách file bị sửa đổi với file scope trong `team_sheet.md`.*
+4. **Biên dịch Catalog SSOT:**
+   ```powershell
+   python scripts/governance/compile_catalog.py
+   ```
+5. **Cập nhật trạng thái:** Cập nhật `team_sheet.md` sang `COMPLETED` và tóm tắt nghiệm thu cho người dùng.
+
+---
+
+## ⚠️ Rào Chắn An Toàn Bắt Buộc
+
+1. **Cấm Subagent Ghi File:** Tuyệt đối không cấp quyền chỉnh sửa file hoặc lệnh Git cho Worker subagents. Chỉ xuất ra scratch.
+2. **Không Vượt Quá Worker Cap (Max 3):** Luôn chia batch nếu $> 3$ workers để chống cạn kiệt CPU/RAM và context window.
+3. **Phân Biệt Rõ `/boost` vs `/ccba-teamwork`:**
+   - Dùng `/boost` khi gặp bài toán bế tắc kỹ thuật đơn lẻ (suy luận sâu).
+   - Dùng `/ccba-teamwork` khi dự án cần phân rã nhiều việc độc lập (điều phối rộng).
+
+
+---
+
+# Skill: ccba-to-questionnaire
+
+---
+name: ccba-to-questionnaire
+description: Hệ thống Khảo sát & Thu thập Quyết định Đa kênh Tương tác (Dual-Track Questionnaire Engine v2.0)
+bundle: _core
 disable-model-invocation: true
 category: productivity
-keywords: [questionnaire, async, interview, discovery, decision, handoff]
+keywords:
+- questionnaire
+- async
+- interview
+- discovery
+- decision
+- ccba-handoff
+- dual-track
+- rfc
+- delivery
 metadata:
   author: CCBA
-  version: "1.0.0"
+  version: 2.0.0
+triggers:
+- questionnaire
+- async
+- interview
+- discovery
+- decision
+- ccba-handoff
+- ccba-to-questionnaire
+- bảng hỏi
+- async interview
+- discovery questionnaire
+- dual-track questionnaire
+- phiếu lấy ý kiến
 ---
+# Kỹ năng: Hệ Thống Bảng Hỏi Đa Kênh Tương Tác (Dual-Track Questionnaire Engine v2.0)
 
-# Kỹ năng: Tạo Bảng Hỏi Bất Đồng Bộ (To Questionnaire)
+Kỹ năng này chuyển hóa một bài toán, quyết định kỹ thuật hoặc nhu cầu cải tiến chưa đủ thông tin thành **Bảng hỏi Đa kênh Tương tác (Dual-Track Questionnaire)**. Không chỉ dừng lại ở tệp Markdown tĩnh, Engine v2.0 hỗ trợ phân luồng ngữ cảnh (Platform vs Delivery), gợi ý khung trắc nghiệm 3 tầng thông minh (Pre-filled Hypotheses Matrix), xuất bản tức thời sang 4 định dạng phổ thông (Word `.docx`, Web HTML Form độc lập, Micro Chat, Email Table) và hỗ trợ chu trình nạp kết quả hai chiều `--reply` khép kín.
 
-Kỹ năng này giúp biến một bài toán hoặc quyết định mà người dùng không thể tự trả lời một mình thành một **Bảng hỏi (Questionnaire)** dạng Markdown. Tệp này có thể gửi cho người khác điền bất đồng bộ (async) hoặc dùng làm tài liệu thảo luận trong cuộc họp.
-
-Nguyên tắc cốt lõi: **"Grill the send, not the subject"** — Chỉ phỏng vấn người dùng về *đối tượng gửi và thông tin cần thu về* (những gì người dùng luôn biết), từ đó đặt ra các câu hỏi nhằm khỏa lấp khoảng trống thông tin (*gap*) giữa người nhận và nhu cầu của người dùng.
-
----
-
-## Quy trình Thực hiện (3 Bước)
-
-### 1. Người nhận là ai? (Who is it going to?)
-Trong một lượt trao đổi duy nhất, hãy làm rõ:
-- Vai trò, chuyên môn của người nhận (recipient's role & expertise).
-- Mối quan hệ giữa người nhận và người dùng.
-- *Mục đích:* Xác định văn phong, giọng điệu và lượng ngữ cảnh (context) cần đưa vào bảng hỏi.
-
-### 2. Cần thu về những gì? (What do you need back?)
-Trong một lượt trao đổi duy nhất, xác định:
-- Danh sách các quyết định hoặc sự thật cụ thể mà người dùng chưa thể tự chốt và cần người nhận giải đáp.
-- *Mục đích:* Lập danh sách kết quả đầu ra cụ thể mà người dùng cần nhận được sau khi thu thập xong bảng hỏi.
-
-### 3. Soạn thảo Bảng hỏi (Write the questionnaire)
-Dựa trên khoảng trống thông tin từ Bước 1 và 2, soạn thảo tệp bảng hỏi theo cấu trúc chuẩn dưới đây:
-- Ghi tệp ra đường dẫn: `to-questionnaire-<slug>.md` (slug lấy từ chủ đề) tại thư mục hiện tại hoặc `.md/knowledge/` tùy ngữ cảnh.
-- Đảm bảo mọi điểm cần thu về ở Bước 2 đều được bao phủ bởi ít nhất một câu hỏi cụ thể.
+Nguyên tắc cốt lõi: **"Grill the send, not the subject"** & **"Pre-fill the choices, eliminate decision paralysis"** — Làm rõ người nhận và thông tin cần thu về, đồng thời chủ động phác thảo sẵn các phương án đánh đổi để người nhận chỉ cần 30 giây đưa ra quyết định.
 
 ---
 
-## Cấu trúc Tài liệu (Document Structure)
+## 🧭 1. Phân Luồng Ngữ Cảnh Kép (Dual-Track Context Routing)
 
-Đặt câu hỏi theo thứ tự **quan trọng nhất lên trước** (vì làm việc bất đồng bộ có thể chỉ có 1 lượt phản hồi). Nhóm các câu hỏi theo từng chủ đề `##` nếu có nhiều hơn 4-5 câu hỏi.
+Trước khi soạn thảo bảng hỏi, Agent chủ động xác định hoặc hỏi người dùng phân luồng:
+
+```mermaid
+graph TD
+    Start["Nhận diện Khoảng trống Thông tin"] --> Router{"Xác định Ngữ cảnh?"}
+    Router -->|"Đề xuất / Báo lỗi Nền tảng Hub"| Track1["Track 1: Platform Track (Spoke ➔ Hub)"]
+    Router -->|"Thông số Dự án / TVTK / CĐT"| Track2["Track 2: Delivery Track (Dự án ➔ Đối tác)"]
+    Track1 --> RFC["Soạn RFC Proposal & Kích hoạt /ccba-issue-to-hub"]
+    Track2 --> Matrix["Khung trắc nghiệm 3 tầng A/B/C/D & Xuất bản đa kênh"]
+```
+
+1. **Track 1: Platform Track (Spoke ➔ Hub RFCs)**:
+   - *Mục đích:* Dành cho thắc mắc kiến trúc, đề xuất tính năng mới, chuẩn hóa quy trình, hoặc báo lỗi nền tảng.
+   - *Hành động:* Tự động đóng gói các câu hỏi thành bản đề xuất cải tiến chuẩn CCBA RFC và tích hợp trực tiếp với workflow [`/ccba-issue-to-hub`](../ccba-issue-to-hub/SKILL.md) để mở GitHub Issue lên repository trung tâm (`ccba-agent-platform`).
+2. **Track 2: Delivery Track (Spoke Dự án ➔ Đối tác / CĐT / TVTK)**:
+   - *Mục đích:* Dành cho làm rõ thông số thiết kế, PCCC, MEP, kết cấu, quy chuẩn QCVN, và nghiệm thu hồ sơ hoàn thành (HSHT).
+   - *Hành động:* Áp dụng khung trắc nghiệm 3 tầng giả định và xuất bản đồng thời sang Word `.docx`, Web HTML Form, Micro Chat và Email Table.
+
+---
+
+## 🎯 2. Khung Trắc Nghiệm 3 Tầng Giả Định (Pre-filled Hypotheses Matrix)
+
+Thay vì đặt câu hỏi mở trống trơn (`> [Nhập câu trả lời tại đây]`), Agent **bắt buộc** phải đề xuất sẵn 3 phương án lựa chọn kèm 1 dòng tóm tắt đánh đổi (Trade-off: Chi phí - Tiến độ - Rủi ro - Quy chuẩn):
+
+- **Phương án A (⭐ Chuẩn mực / Khuyến nghị CCBA)**: Giải pháp tối ưu kỹ thuật, tuân thủ nghiêm ngặt tiêu chuẩn hiện hành, tính ổn định cao nhất.
+- **Phương án B (Nhanh gọn / Tối giản - Quick-Win)**: Chi phí thấp nhất hoặc thời gian thi công/triển khai nhanh nhất, đánh đổi một phần tiện ích thứ cấp.
+- **Phương án C (Mở rộng dài hạn - Scalable)**: Giải pháp dự phòng phát triển tương lai hoặc công nghệ tiên tiến, chấp nhận CAPEX ban đầu cao hơn.
+- **Phương án D (Tùy chỉnh / Ý kiến khác)**: Luôn dành một phương án để người nhận điền giải pháp riêng nếu muốn.
+
+> [!NOTE]
+> **Tương thích ngược (v1.0 Backward Compatibility):** Với các câu hỏi thu thập dữ liệu thô (ví dụ: *"Tải trọng sàn tầng mái là bao nhiêu kN/m²?"*) không thể gán phương án trắc nghiệm, Agent sử dụng loại câu hỏi mở `OPEN_ENDED`. Hệ thống sẽ tự động vẽ khung ghi chú trên Word và render thẻ `<textarea>` trên Web Form.
+
+---
+
+## 📦 3. Bộ Xuất Bản Đa Kênh (Omni-Format Adapters)
+
+Tất cả bảng hỏi sau khi được tạo tại `.md/knowledge/questionnaires/to-questionnaire-<slug>.md` có thể được xuất bản tự động qua CLI:
+
+```bash
+# Xuất tất cả các định dạng (.docx, .html, .chat.txt, .email.html)
+python scripts/questionnaire_engine.py <file.md> --format all
+
+# Hoặc qua công cụ CCBA OOXML
+ccba-ooxml questionnaire <file.md> --format all
+```
+
+1. **Word `.docx` (`docx_renderer.py`)**:
+   - Biểu mẫu "Phiếu Lấy Ý Kiến Thiết Kế & Phối Hợp Kỹ Thuật" trang trọng chuẩn CCBA.
+   - Bảng thông tin Metadata 2 cột, bảng trắc nghiệm với checkbox Unicode `☐`/`☑`, huy hiệu `⭐ Khuyến nghị CCBA`, và khung ký duyệt 3 bên (CCBA - TVTK - CĐT).
+2. **Web Landing Page độc lập (`html_renderer.py`)**:
+   - Tệp HTML đơn tệp, 100% offline, zero-dependency, bảo vệ chống XSS và Content Security Policy.
+   - Giao diện hiện đại, tự động lưu tiến trình vào `localStorage`, thanh phản hồi nhanh thời gian thực kèm nút 1-click clipboard copy.
+   - Tích hợp mã QR phản hồi để quét nhanh sang điện thoại gửi Zalo/SMS.
+3. **Micro Chat Snippet (`chat_renderer.py`)**:
+   - Bản tóm tắt siêu ngắn (<15 dòng) tối ưu cho Zalo, Viber, Microsoft Teams di động.
+4. **Email HTML Table (`email_renderer.py`)**:
+   - Bảng so sánh inline styling chuẩn mực, tương thích hoàn toàn Outlook, Gmail, Apple Mail.
+
+---
+
+## 🔄 4. Chu Trình Nạp Hai Chiều Khép Kín (`--reply`)
+
+Khi đối tác phản hồi kết quả (qua Zalo, Email hoặc Web form), kỹ sư hoặc Agent thực hiện nạp kết quả:
+
+```bash
+python scripts/questionnaire_engine.py <file.md> --reply "1A, 2B, 3C" --resolved-by "Chủ đầu tư Masterise"
+```
+
+**Quy trình xử lý tự động của Engine:**
+1. **Validation & Idempotency:** Kiểm tra phương án hợp lệ theo từng câu hỏi, tự động uncheck phương án cũ trước khi đánh dấu `- [x]` vào phương án mới.
+2. **Cập nhật Metadata:** Chuyển trạng thái sang `status: "RESOLVED"`.
+3. **Ghi nhận Quyết định (Decision Log):** Bổ sung mục `## Nhật ký Quyết định (Decision Log)` ở cuối file Markdown làm căn cứ pháp lý truy vết.
+4. **Bàn giao quy trình tiếp theo (Workflow Hand-off):**
+   - Kích hoạt kỹ năng [`/ccba-to-spec`](../ccba-to-spec/SKILL.md) để chuyển hóa quyết định thành PRD / Đặc tả kỹ thuật.
+   - Kích hoạt [`/ccba-to-tickets`](../ccba-to-tickets/SKILL.md) để phân rã nhiệm vụ phát triển.
+
+---
+
+## 📝 5. Cấu Trúc Tài Liệu Chuẩn (Markdown Schema v2.0)
 
 ```markdown
-# <Tiêu đề Bảng hỏi>
+---
+title: "BẢNG HỎI LẤY Ý KIẾN THIẾT KẾ & PHỐI HỢP KỸ THUẬT"
+track: "delivery"
+status: "PENDING"
+doc_code: "CCBA-QST-2026-01"
+---
+# BẢNG HỎI LẤY Ý KIẾN THIẾT KẾ: <Tên Vấn Đề>
 
 **Mục đích:** Lý do bảng hỏi này tồn tại và quyết định phụ thuộc vào nó.
-**Người gửi:** <Người dùng> — **Người nhận:** <Đối tác/Chuyên gia> — **Mục đích sử dụng phản hồi:** <Nơi phản hồi sẽ được xử lý>
+**Người gửi:** <Đơn vị gửi> — **Người nhận:** <Đối tác / CĐT / TVTK>
+**Dự án:** <Tên Dự án> — **Thời hạn:** <YYYY-MM-DD>
 
 ## Ngữ cảnh (Context)
-Một đoạn văn ngắn định hướng cho người nhận (người chưa nằm trong luồng suy nghĩ của người dùng). Đủ để trả lời tốt, không viết quá dài.
+Đoạn văn ngắn (2-3 câu) giải thích bối cảnh kỹ thuật cho người nhận.
 
 ## Hướng dẫn Trả lời (How to answer)
-Thời hạn và mức độ nỗ lực ước tính. Phản hồi một phần hoặc "Tôi chưa rõ" vẫn rất có giá trị — hãy đánh dấu bất kỳ điểm nào chưa chắc chắn thay vì bỏ qua.
+Thời hạn và mức độ nỗ lực ước tính. Quý đối tác vui lòng chọn 1 phương án cho mỗi câu hỏi bên dưới hoặc phản hồi cú pháp nhanh (ví dụ: `1A, 2B, 3C`).
 
 ## <Chủ đề 1>
-Mỗi chủ đề là một mục `##`. Bên dưới là các câu hỏi, ưu tiên câu hỏi quan trọng nhất lên đầu. Mỗi câu hỏi chỉ chứa MỘT ý duy nhất — không dùng câu hỏi kép — kèm khung nhập phản hồi bên dưới:
+### Câu hỏi 1: <Nội dung vấn đề kỹ thuật cần quyết định>
+> **Tại sao cần quyết định:** Giải thích ngắn gọn tại sao câu hỏi này quyết định đến giải pháp / quy chuẩn áp dụng.
 
-### <Nội dung câu hỏi cụ thể?>
-*Tại sao điều này quan trọng: giải thích ngắn gọn tại sao câu hỏi này quyết định đến giải pháp.*
-
-> [Nhập câu trả lời tại đây]
+- [ ] **Phương án A (⭐ Khuyến nghị)**: <Mô tả giải pháp chuẩn mực>
+  * Trade-off: <Ưu điểm nổi bật và đánh đổi về chi phí/tiến độ>
+- [ ] **Phương án B**: <Mô tả giải pháp nhanh gọn / tối giản>
+  * Trade-off: <Đánh đổi chi phí thấp nhất nhưng tiện ích giới hạn>
+- [ ] **Phương án C**: <Mô tả giải pháp mở rộng dài hạn>
+  * Trade-off: <Đầu tư lớn hơn nhưng bền vững>
+- [ ] **Phương án D**: Phương án khác của Tư vấn thiết kế
+  * Trade-off: Do TVTK bảo vệ giải pháp.
 
 ## Ý kiến khác (Anything else?)
-Câu hỏi mở cuối cùng: Còn điều gì chúng tôi chưa hỏi mà ông/bà nghĩ chúng tôi cần biết không?
+Quý đối tác vui lòng ghi chú thêm nếu có yêu cầu đặc thù khác chưa được đề cập.
 ```
 
 ---
+
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 
 ---
 
-# Skill: to-spec
+# Skill: ccba-to-spec
 
 ---
-name: to-spec
-description: Turn the current conversation into a spec and publish it to the project issue tracker — no interview, just synthesis of what you've already discussed.
+name: ccba-to-spec
+description: Turn the current conversation into a spec and publish it to the project
+  issue tracker — no interview, just synthesis of what you've already discussed.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- ccba-to-spec
+- spec
+- soạn spec
+- tạo spec
+- đặc tả kỹ thuật
 ---
-
 This skill takes the current conversation context and codebase understanding and produces a spec (you may know this document as a PRD). Do NOT interview the user — just synthesize what you already know.
 
-The issue tracker and triage label vocabulary should have been provided to you — run `/ccba-setup-skills` or `/setup-matt-pocock-skills` if not.
+The issue tracker and triage label vocabulary should have been provided to you — run `/ccba-setup-skills` if not.
 
 ## Process
 
@@ -7080,14 +9949,22 @@ Any further notes about the feature.
 
 ---
 
-# Skill: to-tickets
+# Skill: ccba-to-tickets
 
 ---
-name: to-tickets
-description: Phân rã một kế hoạch, spec hoặc hội thoại hiện tại thành các ticket phát triển dạng lát cắt dọc (tracer-bullet slices), xác định rõ ràng mối quan hệ chặn (blocking edges) và đăng tải lên công cụ theo dõi (Issue Tracker) đã cấu hình.
+name: ccba-to-tickets
+description: Phân rã một kế hoạch, spec hoặc hội thoại hiện tại thành các ticket phát
+  triển dạng lát cắt dọc (tracer-bullet slices), xác định rõ ràng mối quan hệ chặn
+  (blocking edges) và đăng tải lên công cụ theo dõi (Issue Tracker) đã cấu hình.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- ccba-to-tickets
+- ticket
+- bẻ nhỏ
+- phân rã
+- issues
 ---
-
 # Kỹ năng Phân Rã Công Việc thành Tickets (To Tickets)
 
 Phân rã một kế hoạch, đặc tả yêu cầu (spec), hoặc nội dung thảo luận hiện tại thành một bộ các **ticket** công việc độc lập. Mỗi ticket đại diện cho một lát cắt dọc (vertical slice) và khai báo rõ ràng các ticket con/mối nối **chặn** (block) nó.
@@ -7197,7 +10074,7 @@ Mô tả hành vi end-to-end từ góc nhìn người dùng sau khi ticket này 
 
 Tránh đưa các đoạn code cụ thể hoặc đường dẫn file cứng vào ticket vì chúng sẽ nhanh bị lỗi thời. Ngoại lệ: Nếu mẫu thử (prototype) tạo ra các đoạn code định nghĩa cấu trúc dữ liệu, state machine hoặc schema quan trọng, có thể chèn phiên bản rút gọn vào ticket.
 
-Thực hiện từng ticket một theo biên giới frontier bằng kỹ năng `/implement` và nhớ dọn sạch context (clear context) giữa mỗi ticket để tránh ô nhiễm ngữ cảnh.
+Thực hiện từng ticket một theo biên giới frontier bằng kỹ năng `/ccba-implement` và nhớ dọn sạch context (clear context) giữa mỗi ticket để tránh ô nhiễm ngữ cảnh.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -7207,14 +10084,21 @@ Thực hiện từng ticket một theo biên giới frontier bằng kỹ năng `
 
 ---
 
-# Skill: triage
+# Skill: ccba-triage
 
 ---
-name: triage
-description: Sàng lọc sự cố và yêu cầu (Issues/PRs) qua các trạng thái phân loại và soạn thảo brief cho Agent.
+name: ccba-triage
+description: Sàng lọc sự cố và yêu cầu (Issues/PRs) qua các trạng thái phân loại và
+  soạn thảo brief cho Agent.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- ccba-triage
+- sàng lọc
+- phân loại
+- incident
+- bug triage
 ---
-
 # Quy trình Sàng lọc Sự cố và Yêu cầu (Triage)
 
 Kỹ năng này giúp điều phối và sàng lọc các sự cố hoặc yêu cầu tính năng mới (Issues/PRs) trên Issue Tracker (hoặc danh sách file cục bộ), chuyển đổi trạng thái của chúng qua các phân vai kiểm soát chất lượng, và soạn thảo tài liệu tóm tắt kỹ thuật (Agent Brief) cho phiên làm việc tiếp theo.
@@ -7257,10 +10141,12 @@ Kỹ năng này giúp điều phối và sàng lọc các sự cố hoặc yêu 
    - **Tiêu chí hoàn thành:** Ghi nhận báo cáo xác thực chi tiết (lỗi tái lập thành công hay thất bại, kèm đường dẫn dòng code gây lỗi).
 
 4. **Áp dụng kết quả điều phối:**
-   - Cập nhật nhãn trạng thái tương ứng. 
-   - Nếu chuyển sang `ready-for-agent`, bắt buộc đăng tải Agent Brief theo cấu trúc chuẩn tại [AGENT-BRIEF.md](./references/AGENT-BRIEF.md). 
+   - Cập nhật nhãn trạng thái tương ứng qua GitHub CLI hoặc cập nhật tệp cục bộ.
+   - Nếu chuyển sang `ready-for-agent`, bắt buộc đăng tải Agent Brief theo cấu trúc chuẩn tại [AGENT-BRIEF.md](./references/AGENT-BRIEF.md), bao gồm việc đánh giá độ phức tạp và đề xuất định tuyến thực thi phù hợp (`/ccba-implement`, `/boost`, hoặc `/ccba-teamwork` / `/teamwork-preview`).
+   - **Quy chuẩn đăng tải bình luận an toàn (Safe Input Invariant):** Khi đăng tải Agent Brief hoặc bình luận lên GitHub qua `gh issue comment`, bắt buộc ghi nội dung vào tệp tạm thời trong `.md/scratch/comment_<id>.md` và dùng cờ `-F` (`gh issue comment <id> -F .md/scratch/comment_<id>.md`) thay vì truyền chuỗi trực tiếp qua `--body "..."` để bảo toàn định dạng và tránh bị bộ lọc command-line chặn.
    - Nếu chuyển sang `wontfix` do bị từ chối, cập nhật lý do và lưu trữ khái niệm vào thư mục `.out-of-scope/` (hoặc thư mục cục bộ `.md/knowledge/out-of-scope/`) theo tài liệu hướng dẫn [OUT-OF-SCOPE.md](./references/OUT-OF-SCOPE.md).
-   - **Tiêu chí hoàn thành:** Trạng thái sự cố được cập nhật thành công, bổ sung Agent Brief hoặc tài liệu lưu trữ từ chối tương ứng.
+   - **Tiêu chí hoàn thành:** Trạng thái sự cố được cập nhật thành công, bổ sung Agent Brief (kèm đề xuất thực thi) hoặc tài liệu lưu trữ từ chối tương ứng.
+
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -7270,73 +10156,262 @@ Kỹ năng này giúp điều phối và sàng lọc các sự cố hoặc yêu 
 
 ---
 
-# Skill: tvpl-vip-crawler
+# Skill: ccba-tvpl-vip-crawler
 
 ---
-name: tvpl-vip-crawler
-description: Kỹ năng tự động kết nối tài khoản VIP Thư viện Pháp luật, xử lý Cloudflare/Popups, bảo vệ VIP Session (CookieVault), khôi phục bảng biểu và đóng gói OKF Bundle.
+name: ccba-tvpl-vip-crawler
+description: Kỹ năng tự động cào và đóng gói văn bản pháp luật VIP TVPL qua Deep Seam
+  TVPLCrawler (tự động CookieVault & Mutex).
+disable-model-invocation: true
+bundle: _software
+triggers:
+- ccba-tvpl-vip-crawler
+- tvpl vip crawler
+- cào thư viện pháp luật
+- tvpl vip
+- vip crawler
 ---
-
 # Kỹ Năng Cào & Đóng Gói Văn Bản VIP Thư Viện Pháp Luật (`tvpl-vip-crawler`)
 
-Kỹ năng này chịu trách nhiệm tự động hóa toàn bộ quy trình thu thập, đăng nhập tài khoản VIP Thư viện Pháp luật, duy trì session Chrome CDP cố định tại `.md/data/chrome_vip_profile`, vượt các rào chắn kiểm tra Cloudflare Security, tự động gia hạn session cookie qua `CookieVault` và đóng gói văn bản pháp lý thành bộ chuẩn **OKF (Open Knowledge Format) Bundle**.
+Kỹ năng này điều phối quy trình thu thập, đăng nhập tài khoản VIP Thư viện Pháp luật, tự động quản lý cookie qua `CookieVault`, bảo vệ phiên làm việc bằng `TVPLSessionMutex`, vượt các rào chắn kiểm tra Cloudflare/Popups và đóng gói văn bản pháp lý thành bộ chuẩn **OKF (Open Knowledge Format) Bundle** thông qua Deep Seam **`TVPLCrawler`** ([`packages/ccba-legal-intel`](../../../packages/ccba-legal-intel)).
 
 ---
 
-## 🛠️ Hướng Dẫn Sử Dụng & Luồng Thực Thi
+## 🛠️ Hướng Dẫn Vận Hành & Luồng Thực Thi
 
-### 1. Cấu Hình Tài Khoản VIP (`.env`)
-Đảm bảo các biến môi trường sau đã được khai báo tại tệp `.env` của dự án:
-```env
-TVPL_USERNAME=vuvanchu119
-TVPL_PASSWORD=ccba@ibst
-DRIVE_FOLDER_ID=1b9vm_1KQ8Fg8Crr1Q-i2xmE62UIHy-_2
-```
+1. **Khởi Tạo & Quản Lý Phiên VIP (Persistent Chromium VIP Session - ADR 0031)**:
+   - Đăng nhập phiên VIP một lần duy nhất qua lệnh CLI:
+     ```powershell
+     python -m ccba_legal login
+     ```
+   - Hệ thống tự động mở Chromium/Edge trên cổng `9222`, lưu profile phiên làm việc tại `~/.gemini/antigravity/chrome_vip`. Toàn bộ các lệnh fetch/ingest tiếp theo sẽ tự động kế thừa phiên VIP này.
 
-### 2. Kích Hoạt Lệnh Cào Văn Bản
-Chạy script tự động hóa với đường dẫn URL văn bản cần cào từ TVPL:
+2. **Kích hoạt Lệnh Thu Thập Văn Bản 3 Tầng (3-Tier Acquisition)**:
+   - **Cách 1: Thu thập đơn lẻ tải cả DOCX và VIP Digital Vector PDF:**
+     ```powershell
+     python -m ccba_legal fetch "https://thuvienphapluat.vn/van-ban/..."
+     ```
+   - **Cách 2: Nạp tự động 1 lệnh toàn trình (Giao thức "Một Cửa `tab=7`" - ADR 0035, ADR 0036):**
+     ```powershell
+     python -m ccba_legal ingest "https://thuvienphapluat.vn/van-ban/..." --category 01_vbpl --upload-drive
+     ```
+   - **Tiêu chí hoàn thành:** Tải trọn vẹn bản Word gốc `.docx` (Gold Source) và PDF Công báo số hóa `.pdf` vào `legal_docs/<category>/<doc_slug>/sources/`.
+
+3. **Cấu trúc Bundle Chuẩn OKF v2.4 Universal Agent-Centric (ADR 0036)**:
+   - File tải về và bóc tách được lưu vào cấu trúc chuẩn:
+     ```text
+     legal_docs/<category>/<doc_slug>/
+     ├── <doc_slug>.md          <-- Thân văn bản Markdown nguyên văn 100% (ADR 0037)
+     ├── metadata.yaml          <-- RAG Metadata, quan hệ pháp lý & source_assets
+     ├── clauses.json           <-- Cây điều khoản AST & severity rating
+     ├── index.md               <-- Mục lục điều hướng 2D & anchor links
+     ├── sources/               <-- Universal sources invariant: .docx, .pdf gốc
+     ├── tables/                <-- Bảng số liệu 2D (CSV, JSON, catalog)
+     ├── figures/               <-- Thẻ thị giác tính toán tham số hóa (cards/)
+     ├── annexes/               <-- Phụ lục kỹ thuật quy phạm
+     └── templates/             <-- Biểu mẫu hành chính nguyên tử (mau_*.md)
+     ```
+
+---
+
+## 🔒 Cơ Chế Tự Động Trong Deep Seam (`TVPLCrawler`)
+
+1. **Persistent Session Engine:** Profile Chromium độc lập tại `~/.gemini/antigravity/chrome_vip` bảo vệ phiên VIP Pro lâu dài.
+2. **Khóa Mutex An Toàn (`TVPLSessionMutex`):** Tự động khóa và giải phóng lock file kèm nhịp Jitter Delay tránh bị khóa IP/tài khoản VIP.
+3. **Multi-tier Fallback:** Tự động chuyển đổi giữa HTTP Crawler tốc độ cao và Chrome CDP Browser khi gặp Cloudflare/Anti-bot.
+4. **Tri-Tier Cloud Vault (ADR 0035):** Tích hợp cờ `--upload-drive` tự động đồng bộ tài sản nhị phân lên Google Drive Vault `CCBA_Legal_Vault` và sinh Native Google Docs cho Google NotebookLM.
+
+
+---
+
+# Skill: ccba-update-legal-registry
+
+---
+name: ccba-update-legal-registry
+description: Tự động đồng bộ các thay đổi pháp lý từ legal_registry.yaml lên Google
+  NotebookLM (hỗ trợ lưu trữ qua Google Drive chung).
+disable-model-invocation: true
+keywords:
+- legal
+- sync
+- update
+- notebooklm
+- drive
+bundle: _consulting
+command: /ccba-update-legal-registry
+triggers:
+- legal
+- sync
+- update
+- notebooklm
+- drive
+- cập nhật VBPL
+- legal update
+- update registry
+- văn bản mới
+---
+# Lệnh Slash Command `/ccba-update-legal-registry`
+
+Đồng bộ hóa tự động tri thức pháp luật xây dựng (VBPL) từ máy cục bộ lên Google NotebookLM Cloud RAG.
+
+## Các Bước thực thi của Agent
+
+Khi lệnh này được kích hoạt, Agent thực hiện theo quy trình sau:
+
+### Bước 1: Tra cứu Notebook ID (Context Lookup)
+1. Đọc tệp cấu hình cục bộ tại `.md/workspace_context.yaml` để tìm giá trị `notebook_id`.
+2. Nếu không tìm thấy hoặc tệp không tồn tại, kiểm tra biến môi trường hệ thống `NOTEBOOKLM_ID`. Chỉ hỏi người dùng làm phương án dự phòng cuối cùng nếu cả hai nguồn đều trống.
+
+### Bước 2: Kiểm tra môi trường & Cấp quyền
+1. Xác nhận sự tồn tại của biến cookie `NOTEBOOKLM_SESSION_COOKIE` hoặc tệp cấu hình `NOTEBOOKLM_COOKIES_JSON` trong môi trường hệ thống.
+2. Nếu người dùng chỉ định đồng bộ qua Google Drive (`--use-drive`), kiểm tra xác thực Google Drive qua Application Default Credentials (ADC):
+   ```bash
+   gcloud auth application-default login --scopes="https://www.googleapis.com/auth/drive"
+   ```
+
+### Bước 3: Chạy Script Đồng bộ
+Thực thi lệnh Python đồng bộ với Notebook ID đã xác định:
 ```bash
-python scripts/tvpl_vip_crawler.py "https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Thong-tu-06-2022-TT-BXD-Quy-chuan-QCVN-06-2022-BXD-An-toan-chay-cho-nha-va-cong-trinh-544059.aspx"
+python scripts/sync_notebooklm_knowledge.py --notebook-id <notebook_id> [--upload-drive]
 ```
 
+## Tiêu chí Hoàn thành (Completion Criteria)
+- **Kiểm chứng thành công**: Script chạy trả về mã thoát `Exit Code 0` (hoặc thông báo `Sync completed successfully` trên console output).
+- **Attribution & Disclaimer**: Kết quả đầu ra hiển thị bảng thống kê số lượng nguồn được nạp mới/xóa bỏ, đồng thời bắt buộc đính kèm dòng bản quyền CCBA và Disclaimer pháp lý ở cuối tệp/tin nhắn phản hồi.
+- **Xử lý lỗi**: Nếu gặp lỗi xác thực cookie (401/403) hoặc lỗi kết nối, in rõ thông báo lỗi chi tiết và hướng dẫn người dùng cập nhật lại Token môi trường thay vì im lặng kết thúc.
+
+
 ---
 
-## 📁 Cấu Trúc Kết Xuất OKF Bundle (`.md/legal_docs/<slug>/`)
+# Skill: ccba-update-spoke
 
-Mỗi văn bản cào về từ TVPL VIP sẽ được tự động cấu trúc hóa thành một thư mục OKF Bundle độc lập:
+---
+name: ccba-update-spoke
 
-```text
-.md/legal_docs/<slug>/
-├── metadata.yaml        <-- Định danh ID, tên văn bản, ngày hiệu lực & quan hệ pháp lý
-├── index.md            <-- Mục lục liên kết tương đối (Relative links)
-├── concept.md          <-- Toàn văn nội dung quy chuẩn / văn bản (Markdown)
-└── guiding_docs/       <-- Thư mục chứa các văn bản sửa đổi, bổ sung hoặc thông tư hướng dẫn
+description: Đồng bộ hóa các kỹ năng, quy trình và cập nhật phiên bản giữa Hub và các Spoke (đơn lẻ hoặc hàng loạt)
+applies_to:
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+- BIM
+- Tác vụ Admin
+- Pháp điển
+bundle: _core
+disable-model-invocation: true
+command: /ccba-update-spoke
+triggers:
+- update spoke
+- đồng bộ hub
+- lấy lệnh mới
+- cập nhật dự án
+- sync all
+- sync all spokes
+- đồng bộ toàn bộ spoke
+- spoke status
+- kiểm tra spoke
+---
+# Cập Nhật & Đồng Bộ Hóa CCBA Spoke Workspace (/ccba-update-spoke)
+
+Workflow này đồng bộ hóa các bản cập nhật mới nhất (kịch bản lệnh, kỹ năng, hiến pháp `AGENTS.md`, rào chắn test) từ **CCBA Agent Platform (Hub)** sang các dự án **Spoke**, hỗ trợ đồng bộ đơn lẻ, tải On-Demand và đồng bộ hàng loạt.
+Quy trình áp dụng cơ chế **Safe-by-Default** 2 pha (Two-Phase Execution), bảo vệ Git working tree và tự động tạo snapshot sao lưu để có thể hoàn tác tức thì.
+
+---
+
+## 🛡️ Nguyên Tắc Safe-by-Default (Mặc định An toàn):
+1. **Pha 1 (Xem trước Preview):** Lệnh mặc định luôn chạy mô phỏng trước, phân loại và in bảng kiểm tra 4 trạng thái tệp:
+   - `🟢 NEW`: Kỹ năng/quy trình mới từ Hub chưa có tại Spoke.
+   - `🔄 UPDATED`: Kỹ năng/quy trình đã có sự thay đổi từ Hub.
+   - `⚪ UNCHANGED`: Tệp hoàn toàn trùng khớp, không cần cập nhật.
+   - `🛡️ PRESERVED`: Kỹ năng/quy trình tùy biến nội bộ của Spoke, được bảo toàn 100%.
+2. **Pha 2 (Xác nhận Thực thi):** Người dùng xác nhận `[y/N]` để áp dụng, hoặc truyền cờ `--apply` / `-y`.
+3. **Git Working Tree Guard:** Tự động kiểm tra `git status`. Nếu thư mục `.agents/` có uncommitted changes, hệ thống cảnh báo và yêu cầu commit/stash trước khi sync (hoặc dùng `--force`).
+4. **Snapshot Backup & Rollback:** Tự động sao lưu thư mục `.agents/` vào `.md/backups/agents_backup_<timestamp>/` trước khi sửa đổi, cho phép hoàn tác qua cờ `--rollback`.
+
+---
+
+## 🎯 Khi Nào Dùng:
+1. **Tại Hub:** Kiểm tra độ trễ phiên bản hoặc đồng bộ 1 chạm cho tất cả các Spoke kết nối (`--all`).
+2. **Tại Spoke:** Cập nhật toàn bộ Skills/Workflows của dự án hiện tại theo đúng nghiệp vụ (`project_type`).
+3. **Tại Spoke (On-Demand):** Tải nhanh kỹ năng còn thiếu trên Hub (Lazy Loading).
+4. **Khi Cần Hoàn Tác:** Khôi phục trạng thái `.agents/` trước lần đồng bộ gần nhất (`--rollback`).
+5. **Đóng Vòng Hậu Hợp Nhất:** Khi PR đóng góp từ Spoke vừa được merge vào Hub (Bước 7 của `/ccba-contribute-to-hub`).
+
+---
+
+## 🛠️ Các Chế Độ Thực Hiện:
+
+### 📊 Chế độ 1: Kiểm Tra Trạng Thái Sức Khỏe & Độ Lệch Phiên Bản (Tại Hub)
+```powershell
+python scripts\ccba_platform_cli.py spoke-status
 ```
 
+### 🌐 Chế độ 2: Đồng Bộ Hàng Loạt Toàn Bộ Spoke Đang Đăng Ký (Từ Hub)
+```powershell
+# 1. Xem trước mô phỏng (Pha 1) | 2. Đồng bộ chính thức (Pha 2, bỏ qua sandbox):
+python scripts\sync_spoke.py --all --dry-run
+python scripts\sync_spoke.py --all --apply
+# 3. Đồng bộ bao gồm cả Spoke Cá Nhân (ADR 0046):
+python scripts\sync_spoke.py --all --apply --include-sandboxes
+```
+
+### 📁 Chế độ 3: Đồng Bộ Toàn Bộ Cho Spoke Hiện Tại (Tại Spoke)
+```powershell
+# Safe-by-Default (Hiện Preview -> Hỏi xác nhận [y/N]):
+python [hub_path]\scripts\sync_spoke.py --spoke .
+# Áp dụng ngay (Non-interactive / CI) hoặc Bỏ qua cảnh báo uncommitted:
+python [hub_path]\scripts\sync_spoke.py --spoke . --apply
+python [hub_path]\scripts\sync_spoke.py --spoke . --apply --force
+```
+
+### ⚡ Chế độ 4: Tải Bổ Sung Kỹ Năng / Workflow Cụ Thể (On-Demand)
+```powershell
+python [hub_path]\scripts\sync_spoke.py --spoke . --sync-item [tên-kỹ-năng] --apply
+```
+
+### ⏪ Chế độ 5: Hoàn Tác & Quản Lý Snapshot Sao Lưu (Rollback & Undo)
+```powershell
+python [hub_path]\scripts\sync_spoke.py --spoke . --list-backups
+python [hub_path]\scripts\sync_spoke.py --spoke . --rollback
+```
+
+### ⚖️ Chế độ 6: Đồng Bộ Tri Thức Pháp Lý Chuẩn OKF v2.4 (Two-Tier Legal Sync — ADR 0050)
+1. **🟢 Tự động đồng bộ cho Spoke liên quan (Pháp điển, Thẩm tra, Kiểm định, PCCC):** Quét và sao chép gói OKF v2.4 từ Tier 1 (Offline) hoặc Tier 2 (Cloud Drive Vault), thực hiện Non-Destructive Additive Registry Merge. Lệnh độc lập: `python -m ccba_legal sync --pull-latest`.
+2. **💡 Zero-Bloat cho Spoke còn lại (Phần mềm, BIM, Admin):** Mặc định bỏ qua để giữ repo tinh gọn. Khi cần tra cứu tải lẻ: `python -m ccba_legal sync --doc <doc_id>` hoặc truy vấn RAG qua `ccba-ai` trên LiteLLM Spark.
+
 ---
 
-## 🔒 Quy Tắc Bảo Mật & Duy Trì Session Chrome CDP
+## 📋 Báo Cáo Kết Quả & Dọn Dẹp:
+1. **Báo cáo đồng bộ:** Báo cáo chi tiết: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
+2. **Tổng kết tri thức pháp lý (ADR 0050):** Hiển thị số lượng gói OKF v2.4 đã đồng bộ.
+3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (ADR 0044 §7):**
+   ```powershell
+   Copy-Item "$hub\scripts\spoke\check_hub_import_depth.py" -Destination ".\scripts\check_hub_import_depth.py" -Force
+   Copy-Item "$hub\scripts\spoke\check_spoke_cleanliness.py" -Destination ".\scripts\check_spoke_cleanliness.py" -Force
+   ```
+4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python .\scripts\check_spoke_cleanliness.py`.
+5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "[hub_path]\packages\[pkg]"` và chạy test cục bộ (`python scripts\validate_legal_spoke.py`).
+6. **Kiểm tra sức khỏe tổng thể:** Chạy `python scripts\ccba_platform_cli.py spoke-status` xác nhận trạng thái xanh.
 
-1. **Kho Lưu Trữ Cookie Mã Hóa (`CookieVault`):**
-   Lưu trữ file cookie tại `.md/data/chrome_vip_profile/cookies.json` và nạp vào HTTP Session giúp giảm 90% tài nguyên và ẩn danh hoàn toàn.
-2. **Khóa Mutex Lock & Nhịp Jitter Queue (`TVPLSessionMutex`):**
-   Mọi quá trình kết nối đều được bảo vệ bởi `TVPLSessionMutex` với nhịp sinh học Jitter Delay $3.5\text{s} \rightarrow 7.2\text{s}$ tránh bị khóa IP/tài khoản VIP.
-3. **Kiểm Toán Session (`.md/data/tvpl_session_audit.log`):**
-   Ghi nhận minh bạch mọi mốc thời gian đăng nhập, vượt Cloudflare và lưu lượng cào tệp.
-
----
-*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-
-
----
-
-# Skill: viet-chuyen-nghiep
 
 ---
-name: viet-chuyen-nghiep
-description: Viết tiếng Việt chuyên nghiệp — nhà xuất bản AI. Hỗ trợ soạn thảo, review, biên tập, và xuất bản nội dung chuẩn phong cách.
----
 
+# Skill: ccba-viet-chuyen-nghiep
+
+---
+name: ccba-viet-chuyen-nghiep
+description: Viết tiếng Việt chuyên nghiệp — nhà xuất bản AI. Hỗ trợ soạn thảo, review,
+  biên tập, và xuất bản nội dung chuẩn phong cách.
+disable-model-invocation: true
+bundle: _software
+triggers:
+- ccba-viet-chuyen-nghiep
+- viết tiếng việt
+- chuyên nghiệp
+- soạn thảo
+- viết chuẩn
+- tiếng việt chuyên nghiệp
+---
 # Nhà Xuất Bản AI — v3.0
 
 ## ⚠️ Always Check (mọi output tiếng Việt)
@@ -7568,19 +10643,36 @@ Sắp xếp theo thứ tự pipeline: research → write → check → publish �
 
 ---
 
-# Skill: wait-what
+# Skill: ccba-wait-what
 
 ---
-name: wait-what
-description: Dừng lại. Ý ở tin nhắn trước chưa được hiểu rõ — hãy giải thích lại bằng ngôn ngữ đơn giản.
+name: ccba-wait-what
+description: Dừng lại. Ý ở tin nhắn trước chưa được hiểu rõ — hãy giải thích lại bằng
+  ngôn ngữ đơn giản.
 disable-model-invocation: true
 category: productivity
-keywords: [wait-what, re-pitch, explain, simplify, context, glossary]
+keywords:
+- ccba-wait-what
+- re-pitch
+- explain
+- simplify
+- context
+- glossary
 metadata:
   author: CCBA
-  version: "1.0.0"
+  version: 1.0.0
+bundle: _core
+triggers:
+- ccba-wait-what
+- re-pitch
+- explain
+- simplify
+- context
+- glossary
+- wait what
+- giải thích lại
+- chưa hiểu
 ---
-
 # Kỹ năng: Giải Thích Lại Bằng Ngôn Ngữ Đơn Giản (Wait-What)
 
 > Nguồn gốc: Thích ứng từ `wait-what` của Matt Pocock (MIT License).
@@ -7603,33 +10695,61 @@ Khi người dùng kích hoạt lệnh này, Agent ngay lập tức:
 
 ---
 
-# Skill: wayfinder
+# Skill: ccba-wayfinder
 
 ---
-name: wayfinder
-description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua danh sách các ticket công việc.
+name: ccba-wayfinder
+description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua
+  danh sách các ticket công việc.
+bundle: _core
 disable-model-invocation: true
+triggers:
+- ccba-wayfinder
+- vạch đường
+- bài toán mơ hồ
+- foggy
+- chia nhỏ bài toán
 ---
-
 # Kỹ năng Định hướng Giải quyết Bài toán Mơ hồ (Wayfinder)
 
-Kỹ năng này giúp thiết lập và vận hành Bản đồ định hướng (Wayfinding Map) để chia nhỏ một ý tưởng lớn, mơ hồ thành các ticket điều tra cụ thể, giải quyết từng vấn đề một cho đến khi lộ trình đến đích hoàn toàn rõ ràng.
+> **Nguồn gốc & Tham chiếu:** Kỹ năng được phát triển dựa trên mô hình *Wayfinder* của **Matt Pocock** (Latent Space interview: [The /wayfinder Skill: Navigating the “Fog of War” of Planning](https://www.latent.space/p/wayfinder-skill)) và được bản địa hóa, nâng cấp cho hệ sinh thái CCBA Agent Platform.
 
-## Nguyên tắc Hoạch định (Plan, don't do)
+Kỹ năng này giúp thiết lập và vận hành **Bản đồ định hướng (Wayfinding Map)** để chia nhỏ một ý tưởng lớn, mơ hồ thành các ticket điều tra cụ thể, giải quyết từng vấn đề một theo cơ chế *Sương mù chiến trận (Fog of War)* cho đến khi lộ trình đến đích hoàn toàn rõ ràng.
+
+---
+
+## 🧭 Phân Định Ranh Giới: `/ccba-grilling` vs `/ccba-wayfinder`
+
+* **Dùng `/ccba-grilling` (hoặc `/grill-me`):** Khi bài toán có thể giải quyết trọn vẹn trong **một phiên duy nhất (Single Session)**, lộ trình cơ bản đã thấy trước mắt, chỉ cần chất vấn Socrates để chốt chi tiết thiết kế.
+* **Dùng `/ccba-wayfinder`:** Khi con đường phía trước còn **hoàn toàn mờ mịt (Multi-session Fog of War)**, chưa biết bắt đầu từ đâu, cần chia nhỏ thành các phiên độc lập để nghiên cứu, thử nghiệm và giải mã dần dần.
+
+---
+
+## 🗣️ Ngôn Ngữ Dẫn Đường (Leading Words & Ubiquitous Language)
+
+Để tránh Agent bị ảo giác và nhầm lẫn ngữ cảnh, kỹ năng này quy chuẩn 3 thực thể dẫn đường chính xác:
+
+1. **`Map` (Bản đồ tổng thể):** Tệp tài liệu duy nhất lưu trữ toàn bộ trạng thái bài toán: các quyết định đã chốt, rìa biên giới, và các vùng còn nằm trong sương mù.
+2. **`Ticket` (Công việc cụ thể):** Một đơn vị câu hỏi sắc nét, được đóng gói độc lập để giao cho đúng một phiên làm việc.
+3. **`Session` (Phiên làm việc con):** Một phiên ~100K token giải quyết trọn vẹn 1 Ticket mà không làm ô nhiễm bộ nhớ của bản đồ tổng thể.
+
+---
+
+## 🎯 Nguyên tắc Hoạch định (Plan, don't do)
 
 Wayfinder mặc định là quá trình lập kế hoạch (planning): mỗi ticket nhằm giải quyết một quyết định, và bản đồ hoàn thành khi lộ trình đã hoàn toàn rõ ràng — không còn gì cần quyết định thêm trước khi bắt tay vào thực hiện dự án. Mong muốn nhảy vào viết code/triển khai trực tiếp thường là tín hiệu cho thấy bạn đã chạm đến biên giới của bản đồ và đã đến lúc bàn giao (handoff). Một dự án có thể ghi đè nguyên tắc này trong phần Ghi chú (Notes) của bản đồ (kết hợp cả thực thi và định hướng) — nhưng nếu không có ghi chú đó, hãy tập trung tạo ra các Quyết định (decisions) chứ không phải Thành phẩm (deliverables).
 
 ---
 
-## Nguyên tắc Tham chiếu theo Tên (Refer by name)
+## 🏷️ Nguyên tắc Tham chiếu theo Tên (Refer by name)
 
 Mỗi bản đồ và ticket đều có tên gọi cụ thể. Trong mọi báo cáo hoặc nhật ký giao tiếp, **bắt buộc** phải gọi tên đầy đủ của ticket (nhúng liên kết tương ứng) thay vì chỉ dùng số hiệu hoặc mã định danh (Ví dụ: dùng `[Đóng gói Mutex Lock](https://github.com/...)` hoặc link GitHub `#42` thay vì chỉ viết ngắn gọn).
 
 ---
 
-## Cấu trúc Bản đồ (The Map)
+## 🗺️ Cấu trúc Bản đồ (The Map)
 
-Bản đồ có thể lưu dưới dạng file Markdown cục bộ (mặc định tại `.md/knowledge/issues/<feature>/map.md`) hoặc dạng Issue trên Issue Tracker của kho lưu trữ (gắn nhãn `wayfinder:map`). Cấu trúc bản đồ gồm các phần chính:
+Bản đồ có thể lưu dưới dạng file Markdown cục bộ (mặc định tại `.md/wayfinder/<feature>/map.md` hoặc `.md/knowledge/issues/<feature>/map.md`) hoặc dạng Issue trên Issue Tracker của kho lưu trữ (gắn nhãn `wayfinder:map`). Cấu trúc bản đồ gồm các phần chính:
 
 1. **Điểm đích (Destination):** Mô tả cụ thể trạng thái hoàn thành của toàn bộ bài toán. Điểm đích này cố định phạm vi (scope) của bản đồ.
 2. **Ghi chú (Notes):** Các lưu ý đặc biệt, các kỹ năng bổ trợ cần nạp.
@@ -7640,57 +10760,75 @@ Bản đồ có thể lưu dưới dạng file Markdown cục bộ (mặc địn
 
 ---
 
-## Phân loại Ticket (Ticket Types)
+## 🎫 Phân loại Ticket (Ticket Types)
 
 Mỗi ticket con đại diện cho một câu hỏi cần làm rõ, tương ứng với một phiên làm việc khoảng 100K tokens của Agent. Mỗi ticket thuộc loại **HITL** (cộng tác trực tiếp với con người) hoặc **AFK** (Agent tự chủ thực hiện):
 
-*   **Research (Nghiên cứu) [AFK]:** Đọc tài liệu, API bên ngoài, hoặc tri thức cục bộ. Đầu ra là tệp Markdown tóm tắt. Dùng khi cần tri thức nằm ngoài codebase hiện tại.
-*   **Prototype (Mẫu thử) [HITL]:** Tạo nhanh một mẫu thử thô qua kỹ năng `/prototype` để phản hồi trực quan. Dùng khi câu hỏi cốt lõi là "giao diện trông như thế nào" hoặc "hành vi hoạt động ra sao".
-*   **Grilling (Chất vấn) [HITL]:** Phỏng vấn chuyên sâu từng câu hỏi một với Kỹ sư sử dụng kỹ năng `/ccba-grilling` và `/domain-modeling`.
-*   **Task (Tác vụ) [HITL hoặc AFK]:** Các công việc thực thi thủ công cần phải hoàn thành để unblock một quyết định (ví dụ: xin quyền truy cập, config tài khoản, dump dữ liệu mẫu). Đây là loại duy nhất thực thi hành động ("do") chứ không phải chốt quyết định ("decide"). Agent tự chạy (AFK) hoặc cung cấp checklist cụ thể cho người dùng (HITL).
+* **Research (Nghiên cứu) [AFK]:** Đọc tài liệu, API bên ngoài, hoặc tri thức cục bộ. Đầu ra là tệp Markdown tóm tắt. Dùng khi cần tri thức nằm ngoài codebase hiện tại.
+* **Prototype (Mẫu thử) [HITL]:** Tạo nhanh một mẫu thử thô qua kỹ năng `/ccba-prototype` để phản hồi trực quan. Dùng khi câu hỏi cốt lõi là "giao diện trông như thế nào" hoặc "hành vi hoạt động ra sao".
+* **Grilling (Chất vấn) [HITL]:** Phỏng vấn chuyên sâu từng câu hỏi một với Kỹ sư sử dụng kỹ năng `/ccba-grilling`.
+* **Task (Tác vụ) [HITL hoặc AFK]:** Các công việc thực thi thủ công cần phải hoàn thành để unblock một quyết định (ví dụ: xin quyền truy cập, config tài khoản, dump dữ liệu mẫu). Đây là loại duy nhất thực thi hành động ("do") chứ không phải chốt quyết định ("decide"). Agent tự chạy (AFK) hoặc cung cấp checklist cụ thể cho người dùng (HITL).
 
 ---
 
-## Quy trình Vận hành (Workflow)
+## 🔄 Quy trình Vận hành (Workflow)
 
 ### Bước 1: Khởi lập bản đồ (Chart the map)
 - Khi nhận yêu cầu mơ hồ, thực hiện phỏng vấn `/ccba-grilling` để xác định **Điểm đích (Destination)**.
-- Phác thảo bản đồ đầu tiên: Liệt kê các quyết định cần làm rõ, xác định các ticket unblocked ở biên giới (Frontier), đưa các phần chưa rõ ràng vào mục **Chưa xác định rõ (Not yet specified)**. **Nếu quá trình này không phát hiện vùng mờ (fog) nào** — lộ trình đến đích đã hoàn toàn rõ ràng — bạn không cần lập bản đồ Wayfinder. Hãy dừng lại và đề xuất thực hiện trực tiếp.
-- Tạo các ticket con unblocked. Nếu sử dụng tracker thật, hãy thiết lập liên kết chặn bản địa (native dependency) của tracker (ví dụ: native blocking của GitHub/GitLab). Chỉ fallback sang ghi văn bản `Blocked by: #ID` khi tracker không hỗ trợ.
+- Phác thảo bản đồ đầu tiên: Liệt kê các quyết định cần làm rõ, xác định các ticket unblocked ở biên giới (Frontier), đưa các phần chưa rõ ràng vào mục **Chưa xác định rõ (Not yet specified)**. **Nếu quá trình này không phát hiện vùng mờ (fog) nào** — lộ trình đến đích đã hoàn toàn rõ ràng — bạn không cần lập bản đồ Wayfinder. Hãy dừng lại và đề xuất thực hiện trực tiếp qua `/ccba-implement` hoặc `/ccba-tdd`.
+- Tạo các ticket con unblocked. Nếu sử dụng tracker thật, hãy thiết lập liên kết chặn bản địa (native dependency) của tracker (ví dụ: native blocking của GitHub/GitLab).
 - **Kích hoạt Sub-agent nghiên cứu song song (Parallel Research Dispatch):** Đối với các ticket loại `Research [AFK]` vừa khởi tạo tại Biên giới, Agent khởi chạy ngay sub-agent `/ccba-research` dưới nền để tự động thu thập tài liệu/API song song trong khi hoàn tất phác thảo bản đồ.
 - **Tiêu chí hoàn thành:** Đã phác thảo xong bản đồ Wayfinder đầu tiên với đầy đủ các mục (Destination, Notes, Decisions so far, Not yet specified, Out of scope), khởi tạo các ticket unblocked ở biên giới và kích hoạt sub-agent nghiên cứu ngầm nếu có.
 
 ### Bước 2: Thực thi giải quyết Ticket (Work through the map)
 - Chọn ticket unblocked đầu tiên ở **Biên giới (Frontier)** — là các ticket mở, chưa có assignee và không bị chặn bởi bất kỳ ticket mở nào khác.
-- **Đăng ký nhận việc (Claiming):** Bắt buộc tự gán mình làm Assignee trên ticket **trước khi làm bất kỳ việc gì** để các Agent chạy song song khác biết và bỏ qua. Ticket mở và không có assignee được coi là chưa được nhận.
+- **Đăng ký nhận việc (Claiming):** Bắt buộc tự gán mình làm Assignee trên ticket **trước khi làm bất kỳ việc gì** để các Agent chạy song song khác biết và bỏ qua.
 - Thực thi giải quyết ticket (chạy tối đa 1 ticket mỗi phiên).
 - Sau khi có câu trả lời: post bình luận chứa câu trả lời lên ticket, **đóng (close)** ticket, cập nhật kết quả vào mục **Quyết định đã chốt (Decisions so far)** trên bản đồ, đồng thời chuyển các phần sương mù đã rõ ràng ở mục *Not yet specified* thành các ticket unblocked mới.
 - **Tiêu chí hoàn thành:** Đã gán Assignee, giải quyết xong ticket chọn lựa, cập nhật kết quả vào mục Decisions so far và cập nhật các ticket mới trên bản đồ.
 
 ---
+
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
-*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
-
 
 ---
 
-# Skill: web-testing
+# Skill: ccba-web-testing
 
 ---
-name: web-testing
-description: Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y testing. Use for test automation, flakiness, Core Web Vitals, and cross-browser.
+name: ccba-web-testing
+description: Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y
+  testing. Use for test automation, flakiness, Core Web Vitals, and cross-browser.
 user-invocable: true
-when_to_use: "Invoke for browser, visual, load, or accessibility tests."
+when_to_use: Invoke for browser, visual, load, or accessibility tests.
 category: dev-tools
-keywords: [Playwright, Vitest, k6, e2e, load-testing]
+keywords:
+- Playwright
+- Vitest
+- k6
+- e2e
+- load-testing
 license: Apache-2.0
-argument-hint: "[test-type] [target]"
+argument-hint: '[test-type] [target]'
 metadata:
   author: claudekit
-  version: "3.0.0"
+  version: 3.0.0
+disable-model-invocation: true
+bundle: _software
+triggers:
+- Playwright
+- Vitest
+- k6
+- e2e
+- load-testing
+- ccba-web-testing
+- playwright
+- UI test
+- e2e test
+- browser automation
+- vitest
 ---
-
 # Web Testing Skill
 
 Comprehensive web testing: unit, integration, E2E, load, security, visual regression, accessibility.
@@ -7784,14 +10922,23 @@ jobs:
 
 ---
 
-# Skill: wizard
+# Skill: ccba-wizard
 
 ---
-name: wizard
-description: Generate an interactive bash wizard that walks a human through a manual procedure — third-party setup, a one-off migration, an A→B state transition — opening URLs, capturing values, confirming each step, and writing .env files and GitHub Actions secrets.
+name: ccba-wizard
+description: Generate an interactive bash wizard that walks a human through a manual
+  procedure — third-party setup, a one-off migration, an A→B state transition — opening
+  URLs, capturing values, confirming each step, and writing .env files and GitHub
+  Actions secrets.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- ccba-wizard
+- setup wizard
+- sinh script
+- cài đặt tự động
+- script setup
 ---
-
 # Wizard
 
 A **wizard** is a bash script that walks a human, step by step, through a manual procedure that's tedious to do by hand and tedious to re-explain to an AI every time. It opens each URL, says exactly what to click and copy, captures the values, writes them where they belong (`.env`, GitHub secrets), confirms at every stage, and shows how much is left. It might configure third-party services, run a one-off migration, or move the project from one state to another.
@@ -7835,14 +10982,20 @@ Hold the bar the template sets: open the URL before asking for its value, use `a
 
 ---
 
-# Skill: writing-great-skills
+# Skill: ccba-writing-great-skills
 
 ---
-name: writing-great-skills
-description: Tài liệu cẩm nang hướng dẫn kỹ sư thiết kế và viết các file SKILL.md đạt tiêu chuẩn chất lượng cao.
+name: ccba-writing-great-skills
+description: Tài liệu cẩm nang hướng dẫn kỹ sư thiết kế và viết các file SKILL.md
+  đạt tiêu chuẩn chất lượng cao.
 disable-model-invocation: true
+bundle: _core
+triggers:
+- ccba-writing-great-skills
+- viết skill
+- quy chuẩn skill
+- tạo skill mới
 ---
-
 # Cẩm nang Viết Kỹ năng chất lượng cao (Writing Great Skills)
 
 Một kỹ năng (Skill) được tạo ra nhằm thiết lập tính nhất quán (determinism) từ một hệ thống xác suất (stochastic system). **Tính khả đoán (Predictability)** — việc Agent thực hiện đúng cùng một *quy trình* (process) trong mọi lần chạy, chứ không phải sinh ra cùng một output — là phẩm chất cốt lõi; mọi nguyên tắc dưới đây đều phục vụ mục đích đó.
@@ -7907,7 +11060,7 @@ Nội dung của một kỹ năng được xây dựng từ hai thành phần: *
 1.  **Độ dài mô tả frontmatter:** Trường `description` của các kỹ năng kích hoạt bởi mô hình (model-invoked, không cấu hình `disable-model-invocation: true`) bắt buộc phải súc tích và có độ dài tối đa là **180 ký tự**.
 2.  **Tiêu chí hoàn thành:** Mọi bước hướng dẫn quy trình (dưới các tiêu đề `Process` hoặc `Quy trình`) phải có một dòng bắt đầu bằng `Tiêu chí hoàn thành:` hoặc `Completion Criterion:` chỉ rõ trạng thái hoàn thành định lượng.
 3.  **Liên kết tương đối (Relative links):** Mọi dẫn chiếu sang tệp tin khác trong cùng kỹ năng hoặc workspace phải sử dụng relative link hoạt động được, không dùng link tuyệt đối (absolute link) trừ phi đó là tài liệu web ngoài.
-4.  **Đăng ký Slash Command:** Khi tạo skill mới có thuộc tính `user-invocable: true`, bắt buộc phải tạo workflow wrapper mỏng tương ứng tại thư mục `.agents/workflows/` bắt đầu bằng tiền tố `ccba-` và đăng ký vào [catalog.yaml](../platform-loader/catalog.yaml).
+4.  **Định danh Namespace & Slash Command Native (ADR 0047):** Mọi kỹ năng CCBA phải đặt tên bắt đầu bằng tiền tố `ccba-*` (hoặc `bigbim-*` đối với kỹ năng BIM) trong thuộc tính `name:`. Thuộc tính `name:` này đóng vai trò là Slash Command native (`/ccba-...`) trong IDE Antigravity mà không cần tạo tệp wrapper trong `.agents/workflows/`. Sau khi tạo hoặc sửa skill, luôn chạy `python scripts/governance/compile_catalog.py` để tự động lập chỉ mục vào `catalog.yaml`.
 5.  **Attribution (Ghi nhận nguồn gốc):** Khi skill hoặc nhánh được thích ứng từ nguồn bên ngoài, bắt buộc phải ghi blockquote attribution ngay dưới tiêu đề nhánh/skill, bao gồm: tên nguồn, tác giả, loại giấy phép. Ví dụ: `> Nguồn gốc: Thích ứng từ skill-name của Author (License Type).`
 
 ---
@@ -7918,21 +11071,40 @@ Nội dung của một kỹ năng được xây dựng từ hai thành phần: *
 
 ---
 
-# Skill: xia
+# Skill: ccba-xia
 
 ---
 name: ccba-xia
-description: Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại.
+description: Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository
+  GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại.
 user-invocable: true
 when_to_use: Dùng khi cần port tính năng giữa các repository.
 category: dev-tools
-keywords: [port, extract, compare, feature, repo]
-argument-hint: "<github-url-or-owner/repo|local-path> [feature] [--compare|--copy-raw|--improve|--port] [--auto|--fast]"
+keywords:
+- port
+- extract
+- compare
+- feature
+- repo
+argument-hint: <github-url-or-owner/repo|local-path> [feature] [--compare|--copy-raw|--improve|--port]
+  [--auto|--fast]
 metadata:
   author: CCBA
   version: 2.0.0
+disable-model-invocation: true
+bundle: _software
+triggers:
+- port
+- extract
+- compare
+- feature
+- repo
+- ccba-xia
+- port from
+- copy from repo
+- clone feature
+- adapt from
 ---
-
 # Xia (Xỉa) - Kỹ năng Trích xuất & Chuyển dịch Tính năng
 
 Trích xuất, phân tích và port (chuyển dịch) các tính năng từ bất kỳ GitHub repository nào hoặc từ đường dẫn thư mục cục bộ vào dự án của bạn.
@@ -7971,10 +11143,10 @@ Tìm hiểu repo nguồn và định vị tính năng mục tiêu.
 1. Sử dụng lệnh git CLI để clone repository nguồn về thư mục tạm `.md/scratch/xia_sources/` trong workspace, luôn sử dụng cờ `--depth 1` (shallow clone) để giảm dung lượng và tránh kéo theo lịch sử commit không cần thiết. Nếu là đường dẫn thư mục cục bộ, quét trực tiếp mà không clone.
 2. Sử dụng các công cụ tìm kiếm và đọc thư mục (`list_dir`, `grep_search`) để đọc cấu trúc file và dependencies thực tế của dự án nguồn.
 3. Quét codebase cục bộ để ánh xạ kiến trúc, các tính năng tương đương và các điểm tích hợp.
-4. **License Check (Kiểm tra giấy phép):** Đọc file `LICENSE` (hoặc `LICENSE.md`, `COPYING`) ở thư mục gốc của repo nguồn và phân loại giấy phép:
-   - `PERMISSIVE` (MIT, Apache 2.0, BSD): Tiếp tục quy trình bình thường. Ghi nhận thông báo attribution vào kế hoạch triển khai.
-   - `COPYLEFT` (GPL, AGPL, LGPL): **Dừng ngay** và cảnh báo người dùng về rủi ro pháp lý. Chỉ được tiếp tục nếu người dùng xác nhận tường minh, hoặc chuyển sang chế độ `--compare`.
-   - `UNKNOWN/NONE`: **Dừng ngay**. Thông báo repo không có giấy phép rõ ràng (mặc định All Rights Reserved). Đề xuất chỉ dùng chế độ `--compare` để học hỏi kiến trúc mà không sao chép.
+4. **License Check (Kiểm tra giấy phép):** Đọc file LICENSE (hoặc LICENSE.md, COPYING) ở thư mục gốc của repo nguồn và phân loại giấy phép:
+   - PERMISSIVE (MIT, Apache 2.0, BSD): Tiếp tục quy trình bình thường. Ghi nhận thông báo attribution vào kế hoạch triển khai.
+   - COPYLEFT (GPL, AGPL, LGPL): **Dừng ngay** và cảnh báo người dùng về rủi ro pháp lý. Chỉ được tiếp tục nếu người dùng xác nhận tường minh, hoặc chuyển sang chế độ `--compare`.
+   - UNKNOWN/NONE: **Dừng ngay**. Thông báo repo không có giấy phép rõ ràng (mặc định All Rights Reserved). Đề xuất chỉ dùng chế độ `--compare` để học hỏi kiến trúc mà không sao chép.
 
 **Tiêu chí hoàn thành (Completion Criterion):**
 *   [x] Phải xuất ra cụ thể `source manifest` (đường dẫn repo, nhánh, commit SHA, `license_type`).
@@ -7988,14 +11160,14 @@ Tìm hiểu repo nguồn và định vị tính năng mục tiêu.
 Phân tách tính năng thành các lớp để ánh xạ sang Platform hiện tại, đồng thời đối sánh miền dữ liệu và thuật ngữ để đảm bảo tính nhất quán.
 
 **Các bước thực hiện:**
-1. **Hub Catalog Check (Kiểm tra tái sử dụng):** Trước khi tiến hành ánh xạ, Agent bắt buộc phải tra cứu `platform-loader/catalog.yaml` của Hub để kiểm tra sự tồn tại của các tool, skill hoặc workflow tương đương với tính năng cần port. Nếu phát hiện trùng lặp, Agent phải **nghiên cứu skill trùng lặp đó** (đọc SKILL.md của nó) để đánh giá chính xác mức độ bao phủ trước khi quyết định: kế thừa từ Hub, mở rộng skill hiện có, hoặc viết mới kèm lý do chi tiết.
+1. **Hub Catalog Check (Kiểm tra tái sử dụng):** Trước khi tiến hành ánh xạ, Agent bắt buộc phải tra cứu `.agents/skills/platform-loader/catalog.yaml` của Hub để kiểm tra sự tồn tại của các tool, skill hoặc workflow tương đương với tính năng cần port. Nếu phát hiện trùng lặp, Agent phải **nghiên cứu skill trùng lặp đó** (đọc SKILL.md của nó) để đánh giá chính xác mức độ bao phủ trước khi quyết định: kế thừa từ Hub, mở rộng skill hiện có, hoặc viết mới kèm lý do chi tiết.
 2. Kiểm kê thành phần: logic cốt lõi, trạng thái (state), dữ liệu, API surface, config, types, tests.
 3. Xây dựng ma trận dependency từ thành phần nguồn sang thành phần cục bộ tương đương, bao gồm cột **Reuse Assessment** ghi nhận kết quả Hub Catalog Check cho từng thành phần.
 4. **Domain Alignment:** Đối chiếu thuật ngữ nghiệp vụ (Domain Glossary) và kiểu dữ liệu (Data Schema / Type mapping) nguồn - đích.
 5. Xác định các vấn đề cắt ngang (cross-cutting concerns) như middleware, interceptors, listeners nằm ngoài folder tính năng.
 
 **Tiêu chí hoàn thành (Completion Criterion):**
-*   [x] Phải hoàn thành bảng ma trận dependency mapping phân loại rõ ràng từng thành phần nguồn sang trạng thái: `EXISTS` (đã có), `NEW` (cần tạo mới), `CONFLICT` (xung đột), hoặc `HUB-REUSE` (kế thừa từ Hub).
+*   [x] Phải hoàn thành bảng ma trận dependency mapping phân loại rõ ràng từng thành phần nguồn sang trạng thái: EXISTS (đã có), NEW (cần tạo mới), CONFLICT (xung đột), hoặc HUB-REUSE (kế thừa từ Hub).
 *   [x] Phải lập bảng đối chiếu ít nhất 3 kiểu dữ liệu cốt lõi hoặc thuật ngữ nghiệp vụ nguồn - Platform.
 *   [x] Phải hoàn thành Hub Catalog Check và ghi nhận kết quả vào cột Reuse Assessment.
 
@@ -8072,18 +11244,29 @@ Bàn giao kết quả phân tích và kế hoạch triển khai cho người dù
 
 ---
 
-# Skill: xu-ly-van-phong
+# Skill: ccba-xu-ly-van-phong
 
 ---
-name: xu-ly-van-phong
-description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo tiêu chuẩn cấu trúc & phối màu chuyên nghiệp hoặc Nghị định 30.
+name: ccba-xu-ly-van-phong
+description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo tiêu
+  chuẩn cấu trúc & phối màu chuyên nghiệp hoặc Nghị định 30.
 role: master_skill
 sub_skills:
-  - docx
-  - pptx
-  - markdown-document-processing
+- ccba-docx
+- ccba-pptx
+- ccba-markdown-document-processing
+disable-model-invocation: true
+bundle: _software
+triggers:
+- ccba-xu-ly-van-phong
+- xử lý văn phòng
+- word
+- excel
+- ccba-pptx
+- pdf
+- pdf to docx
+- office
 ---
-
 # Xử lý Văn phòng
 
 Skill xử lý mọi thao tác với file văn phòng. Được tổ chức theo kiến trúc **composable 4 tầng**:
@@ -8218,15 +11401,23 @@ Liên hệ: 0904.004.920
 
 ---
 
-# Skill: youtube-learn
+# Skill: ccba-youtube-learn
 
 ---
-name: youtube-learn
-description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề và hình ảnh slide học thuật từ các video YouTube/bài giảng.
+name: ccba-youtube-learn
+description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề và
+  hình ảnh slide học thuật từ các video YouTube/bài giảng.
 disable-model-invocation: true
 user-invocable: true
+bundle: _core
+triggers:
+- ccba-youtube-learn
+- youtube learn
+- bóc tách phụ đề
+- slide học thuật
+- youtube
+- belief archaeology
 ---
-
 # 🧠 Kỹ năng: youtube-learn (Belief Archaeology)
 
 Kỹ năng này chịu trách nhiệm phân tích sâu các video bài giảng, hội thảo (YouTube hoặc tệp video ngoài) để bóc tách toàn bộ phụ đề và các khung hình chứa slide tri thức học thuật độc nhất (không giới hạn số lượng), từ đó tổng hợp kiến thức bài học và "khảo cổ" thế giới quan, giả định ngầm của diễn giả.
@@ -8287,6 +11478,78 @@ Sử dụng LLM để phân tích toàn bộ Transcript và danh sách hình ả
 
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+
+---
+
+# Skill: platform-loader
+
+---
+name: platform-loader
+description: Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết
+  toàn bộ skills, workflows, và rules.
+applies_to:
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
+bundle: _core
+triggers:
+- platform
+- bootstrap
+- load skills
+- danh sách lệnh
+---
+# CCBA Platform Loader
+
+> **Vai trò**: Đây là điểm khởi đầu duy nhất cho Agent để truy cập toàn bộ dịch vụ của CCBA Platform.
+> Đọc file này MỘT LẦN khi bắt đầu phiên để xác định tài nguyên khả dụng và route task chính xác.
+
+---
+
+## Service Catalog (Source of Truth)
+
+Toàn bộ thông tin về trigger keywords, đường dẫn (paths) và phân loại nghiệp vụ của Skills/Workflows được định nghĩa duy nhất tại:
+```text
+.agents/skills/platform-loader/catalog.yaml
+```
+Agent bắt buộc phải đọc trực tiếp tệp `catalog.yaml` để lấy cấu hình mới nhất, không tự suy đoán hoặc sử dụng danh sách cũ.
+
+---
+
+## Routing Instructions
+
+Khi nhận yêu cầu từ người dùng, Agent thực hiện theo logic sau:
+
+### 1. Phân tích Trigger Keywords
+Đọc `catalog.yaml`. Đối chiếu request của người dùng với các `triggers` trong catalog:
+- Khớp skill $\rightarrow$ Đọc `skill_path` (`SKILL.md`) tương ứng để nạp kỹ năng.
+- Khớp workflow $\rightarrow$ Đọc `workflow_path` tương ứng để chạy workflow.
+- Khớp cả hai $\rightarrow$ Nạp cả skill và workflow.
+
+### 2. Tự động áp dụng Rules
+- Nếu kết quả đầu ra nhân danh CCBA $\rightarrow$ Nạp `rules/ccba_identity.md`.
+- Nếu liên quan đến pháp luật hoặc văn bản pháp lý $\rightarrow$ Nạp `rules/compliance.md`.
+- Nếu tạo tệp tin hoặc thư mục mới $\rightarrow$ Nạp `rules/naming_conventions.md`.
+
+### 3. Đồng bộ bổ sung kỹ năng (Lazy Loading Sync)
+Khi Agent đang hoạt động tại Spoke và phát hiện yêu cầu cần sử dụng một skill/workflow có sẵn trên Hub nhưng chưa được đồng bộ cục bộ về Spoke:
+1. Tra cứu `catalog.yaml` để tìm tên skill cần thiết.
+2. Xin phép người dùng cài đặt bổ sung: *"Tôi cần tải bổ sung kỹ năng [tên-skill] từ Hub về Spoke để xử lý, bạn có đồng ý không?"*
+3. Sau khi được đồng ý, xác định đường dẫn Hub (`hub_path`) từ `workspace_context.yaml` hoặc biến môi trường `CCBA_HUB_PATH` (mặc định sử dụng repository chung) và thực thi lệnh đồng bộ:
+   ```bash
+   python [hub_path]/scripts/sync_spoke.py --spoke . --sync-item <tên-skill>
+   ```
+4. Sau khi đồng bộ thành công, Agent tự động nạp kỹ năng mới qua cơ chế Auto-Discovery và tiếp tục thực hiện công việc.
+
+### 4. Quy tắc Định tuyến Xử lý Văn bản (Master vs Sub-Skill Routing)
+Đối với các yêu cầu xử lý văn bản, tài liệu, hoặc file văn phòng:
+- **Ưu tiên nạp Master Skill**:
+  - Thao tác tệp Office (Word, Excel, PPT, PDF) $\rightarrow$ Nạp Master Skill `xu-ly-van-phong`.
+  - Chuẩn hóa Markdown / PDF $\rightarrow$ Nạp Master Skill `markdown-document-processing`.
+  - Soạn thảo hành chính / đề xuất thầu $\rightarrow$ Nạp Master Skill `copywriting`.
+  - Viết bài báo khoa học $\rightarrow$ Nạp Master Skill `academic_writing`.
+- **Nạp Sub-Skill / Utility khi cần thiết**: Chỉ nạp trực tiếp sub-skills (`docx`, `pptx`, `table-reconstructor`, `form-template-cleaner`, `relative-link-patcher`) khi cần xử lý thao tác vi mô hoặc khi được Master Skill chỉ định.
 
 
 ---
