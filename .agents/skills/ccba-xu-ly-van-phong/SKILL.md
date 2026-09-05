@@ -6,7 +6,7 @@ role: master_skill
 sub_skills:
 - ccba-docx
 - ccba-pptx
-- markdown-document-processing
+- ccba-markdown-document-processing
 disable-model-invocation: true
 bundle: _software
 triggers:
