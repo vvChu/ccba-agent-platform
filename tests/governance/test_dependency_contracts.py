@@ -17,6 +17,7 @@ import pytest
 from scripts.governance.check_dependency_contracts import (
     DependencyASTVisitor,
     check_all_contracts,
+    scan_file_for_violations,
 )
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
@@ -100,3 +101,18 @@ import ccba_ooxml
 
     assert len(visitor.violations) == 1
     assert visitor.violations[0].rule_name == "LeafIndependenceViolation"
+
+
+def test_scripts_maskara_strict_seam_compliance() -> None:
+    """Verify that scripts/maskara.py satisfies 100% of dependency seam contracts with 0 violations."""
+    maskara_script = PROJECT_ROOT / "scripts" / "maskara.py"
+    packages_dir = PROJECT_ROOT / "packages"
+    violations = scan_file_for_violations(maskara_script, packages_dir)
+
+    violation_details = [
+        f"[{v.rule_name}] {v.file_path}:{v.line_number} -> {v.message}" for v in violations
+    ]
+    assert len(violations) == 0, (
+        f"Expected 0 violations in scripts/maskara.py, but found {len(violations)}:\n"
+        + "\n".join(violation_details)
+    )

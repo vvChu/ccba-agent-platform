@@ -40,7 +40,7 @@ skills:
 - name: platform-loader
   bundle: _core
   description: Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết
-    toàn bộ skills, workflows, và rules.
+    toàn bộ skills và rules.
   triggers:
   - platform
   - bootstrap
@@ -992,6 +992,21 @@ skills:
   - m365 iac
   - datamodel sharepoint
   skill_path: .agents/skills/ccba-sharepoint-iac/SKILL.md
+- name: ccba-show-me
+  bundle: _core
+  description: Trực quan hóa khái niệm, thuật toán, luồng dữ liệu và cấu trúc hệ thống
+    bằng sơ đồ tinh gọn, code-shape sketches hoặc HTML widget.
+  triggers:
+  - show me
+  - show-me
+  - minh họa
+  - trực quan hóa
+  - vẽ sơ đồ
+  - sơ đồ hóa
+  - visualize
+  - call tree
+  - ccba-show-me
+  skill_path: .agents/skills/ccba-show-me/SKILL.md
 - name: ccba-skills-eval
   bundle: _core
   description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) cho các kỹ năng AI
@@ -1152,8 +1167,8 @@ skills:
   skill_path: .agents/skills/ccba-update-legal-registry/SKILL.md
 - name: ccba-update-spoke
   bundle: _core
-  description: Đồng bộ hóa các kỹ năng, quy trình và cập nhật phiên bản giữa Hub và
-    các Spoke (đơn lẻ hoặc hàng loạt)
+  description: Đồng bộ hóa các kỹ năng và cập nhật phiên bản giữa Hub và các Spoke
+    (đơn lẻ hoặc hàng loạt)
   triggers:
   - update spoke
   - đồng bộ hub

@@ -192,10 +192,11 @@ def check_all_contracts(
         scripts_dir = project_root / "scripts"
         if scripts_dir.is_dir():
             for py_file in scripts_dir.glob("**/*.py"):
-                if "__pycache__" in py_file.parts or "tests" in py_file.parts:
-                    continue
-                # scripts/maskara.py is an intentional legacy re-export shim; exclude from strict seam checks
-                if py_file.name == "maskara.py":
+                if (
+                    "__pycache__" in py_file.parts
+                    or "tests" in py_file.parts
+                    or "archive" in py_file.parts
+                ):
                     continue
                 files_scanned += 1
                 file_violations = scan_file_for_violations(py_file, packages_dir)
