@@ -180,3 +180,24 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
 - **Core Pattern P11.4 — Two-Way Forwarding Aliases & Automated Legacy Archival:**
   - **Vấn đề:** Khi đổi tên kỹ năng trên Hub, các trạm Spoke nếu chỉ sao chép thư mục mới sẽ bị hiện tượng Zombie Bloat (tồn tại song song cả thư mục cũ và mới, cùng các tệp `.agents/workflows/*.md` lỗi thời).
   - **Giải pháp:** Triển khai bảng `SKILL_DEPRECATION_ALIASES` 2 chiều trong synchronizer (`coordinator.py`). Trong quá trình đồng bộ, Hub chủ động quét và xóa thư mục cũ tại Spoke, đồng thời đổi tên các file `.md` trong `.agents/workflows/` thành `.md.bak` (gắn nhãn `DEPRECATED_MIGRATED_TO_SKILL`), đảm bảo Spoke luôn sạch sẽ và chỉ sử dụng kỹ năng chuẩn.
+
+---
+
+## 12. GitHub Copilot Review Schema, Multi-Tier Release Gate Audit & Namespace Invariants
+
+- **Core Pattern P12.1 — Copilot Review Schema & State Gating Anti-Pattern:**
+  - **Vấn đề:** Trong GitHub CLI (`gh pr view --json reviews`), đối tượng reviewer sử dụng khóa `.author.login` thay vì `.user.login` (vốn là khóa của GitHub REST API). Ngoài ra, bot GitHub Copilot khi đưa ra các khuyến nghị sửa đổi quan trọng thường nộp bài với trạng thái `state: "COMMENTED"` và nhúng tiêu đề `### 🟡 Changes recommended` cùng các suppressed comments vào phần `body`, thay vì gán trạng thái chính thức *"CHANGES_REQUESTED"*. Nếu script release gate hoặc CI chỉ kiểm tra `state == "CHANGES_REQUESTED"` hoặc chỉ đọc inline diff comments (`pulls/{number}/comments`), toàn bộ các khuyến nghị của Copilot sẽ bị lọt lưới và PR bị merge sớm.
+  - **Giải pháp:** Xây dựng quy trình audit đa tầng (Multi-tier Audit) trong `scripts/validation/audit_pr_comments.py`:
+    1. Kiểm tra `reviewRequests` để phát hiện Copilot đang trong quá trình phân tích (trả về exit code 2, bắt buộc chờ).
+    2. Đọc chính xác `author.login` và quét `### 🟡 Changes recommended` / *"CHANGES_REQUESTED"* trong review `body` (trả về exit code 1 nếu chưa xử lý).
+    3. Quét toàn bộ inline comments thông qua endpoint `repos/:owner/:repo/pulls/{pr_number}/comments` có cờ `--paginate` để tránh sót trang.
+    4. Quét các bình luận hội thoại chung trên PR (`comments`).
+    5. Chỉ cho phép merge khi tất cả các điểm hợp lý đã được sửa đổi và kiểm thử, hoặc có giải trình chính thức trong `walkthrough.md`.
+
+- **Core Pattern P12.2 — Strict Whitelist vs Prefix Matching in Governance Linting:**
+  - **Vấn đề:** Khi định nghĩa các kỹ năng ngoại lệ (như `platform-loader`) bên cạnh các tiền tố chuẩn (`ccba-`, `bigbim-`), việc sử dụng chung hàm `name.startswith(("ccba-", "bigbim-", "platform-loader"))` khiến bất kỳ kỹ năng rác nào có tiền tố `platform-loader-*` (ví dụ `platform-loader-fake`) đều lọt qua CI Gate Namespace Purity.
+  - **Giải pháp:** Tách biệt rõ ràng giữa tiền tố và phần tử ngoại lệ đơn lẻ: `name.startswith(("ccba-", "bigbim-")) or name == "platform-loader"`. Bổ sung unit tests chặn triệt để các biến thể tiền tố ngoại lệ giả mạo.
+
+- **Core Pattern P12.3 — Test File Exemption from Structural Architecture Drift:**
+  - **Vấn đề:** Bộ kiểm tra độ trôi dạt kiến trúc (`drift_auditor.py`) theo dõi các thư mục cốt lõi (`packages/`, `scripts/`, `skills/`). Khi một nhà phát triển thêm mới hoặc xóa bỏ một bài unit test độc lập trong `scripts/tests/`, linter kích hoạt lỗi `Structural drift detected` và yêu cầu cập nhật các tài liệu kiến trúc cấp cao (`README.md`, `PLATFORM.md`), gây ra cảnh báo giả (false-positive).
+  - **Giải pháp:** Thêm điều kiện miễn trừ `not filepath.startswith("scripts/tests/")` trong logic phát hiện thay đổi cấu trúc của `drift_auditor.py`, phân định ranh giới rõ ràng giữa thay đổi kiến trúc hệ thống và bổ sung ca kiểm thử phần mềm.
