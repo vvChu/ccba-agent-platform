@@ -147,9 +147,7 @@ class ChromeCDP:
         result_data = data.get("result", {})
         if "exceptionDetails" in result_data:
             exc = result_data["exceptionDetails"]
-            raise ChromeCDPError(
-                f"JS Exception: {exc.get('text')} - {exc.get('exception', {})}"
-            )
+            raise ChromeCDPError(f"JS Exception: {exc.get('text')} - {exc.get('exception', {})}")
 
         return result_data.get("result", {}).get("value")
 

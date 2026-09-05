@@ -60,7 +60,7 @@ def render_questionnaire_html(
         if q.why_it_matters:
             why_html = (
                 f'<div class="why-box">📌 <strong>Tại sao quan trọng:</strong> '
-                f'{_esc(q.why_it_matters)}</div>'
+                f"{_esc(q.why_it_matters)}</div>"
             )
 
         if q.q_type == QuestionType.OPEN_ENDED or not q.options:
@@ -212,7 +212,7 @@ def render_questionnaire_html(
     </div>
 
     <form id="questionnaireForm">
-      {''.join(cards_html)}
+      {"".join(cards_html)}
       {notes_section}
     </form>
   </div>

@@ -60,7 +60,7 @@ class QuestionItem:
                 f"Option '{clean_key}' not found in Question {self.id}. Valid options: {valid_keys}"
             )
         for opt in self.options:
-            opt.is_selected = (opt.key.strip().upper() == clean_key)
+            opt.is_selected = opt.key.strip().upper() == clean_key
 
 
 @dataclass

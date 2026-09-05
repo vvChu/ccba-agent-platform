@@ -40,5 +40,7 @@ def render_chat_snippet(data: QuestionnaireData) -> str:
             lines.append("   " + " | ".join(opt_summaries))
 
     lines.append("─────────────────────────")
-    lines.append("👉 *Phản hồi nhanh:* Trả lời tin nhắn này với cú pháp ví dụ: `1A, 2B, 3C` để xác nhận.")
+    lines.append(
+        "👉 *Phản hồi nhanh:* Trả lời tin nhắn này với cú pháp ví dụ: `1A, 2B, 3C` để xác nhận."
+    )
     return "\n".join(lines)

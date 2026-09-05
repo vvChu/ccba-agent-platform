@@ -144,12 +144,14 @@ def test_docx_rendering_and_validation():
 
         # Validate that document opens cleanly in python-docx
         import docx
+
         doc = docx.Document(str(out_docx))
         assert len(doc.tables) >= 2
         assert len(doc.paragraphs) >= 3
 
         # Validate OOXML package integrity
         from ccba_ooxml.pack import validate_document
+
         assert validate_document(out_docx) is True
 
 
@@ -230,7 +232,7 @@ def test_apply_reply_idempotency_and_decision_log():
         )
         content_1 = test_file.read_text(encoding="utf-8")
 
-        assert "status: \"RESOLVED\"" in content_1 or "RESOLVED" in content_1
+        assert 'status: "RESOLVED"' in content_1 or "RESOLVED" in content_1
         assert "- [x] **Phương án A (⭐ Khuyến nghị)**: Đặt tại khoang kỹ thuật" in content_1
         assert "- [ ] **Phương án B**: Tách rời bể nước ngầm" in content_1
         assert "- [x] **Phương án B**: 1 nguồn điện lưới" in content_1

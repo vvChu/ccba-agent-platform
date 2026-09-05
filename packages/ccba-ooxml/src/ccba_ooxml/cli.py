@@ -191,7 +191,9 @@ def main() -> None:
 
         input_p = Path(args.input)
         if not input_p.exists():
-            print(f"Error: Input questionnaire file '{args.input}' does not exist.", file=sys.stderr)
+            print(
+                f"Error: Input questionnaire file '{args.input}' does not exist.", file=sys.stderr
+            )
             sys.exit(1)
 
         # Handle --reply if provided
@@ -202,7 +204,9 @@ def main() -> None:
                     reply_str=args.reply,
                     resolved_by=args.resolved_by,
                 )
-                print(f"SUCCESS: Applied reply '{args.reply}' and updated status to RESOLVED in '{mod_path}'")
+                print(
+                    f"SUCCESS: Applied reply '{args.reply}' and updated status to RESOLVED in '{mod_path}'"
+                )
             except Exception as e:
                 print(f"Error applying reply: {e}", file=sys.stderr)
                 sys.exit(1)

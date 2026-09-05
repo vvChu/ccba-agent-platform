@@ -73,7 +73,9 @@ def apply_questionnaire_reply(
     target_p = Path(output_file) if output_file else src_p
     replies = parse_reply_string(reply_str)
     if not replies:
-        raise ValueError(f"No valid question replies parsed from: '{reply_str}'. Expected format e.g. '1A, 2B'")
+        raise ValueError(
+            f"No valid question replies parsed from: '{reply_str}'. Expected format e.g. '1A, 2B'"
+        )
 
     # 1. Parse and validate against models
     data: QuestionnaireData = parse_questionnaire_markdown(src_p)
@@ -143,7 +145,7 @@ def apply_questionnaire_reply(
         if "trạng thái" in stripped.lower() and "pending" in stripped.lower():
             line = re.sub(r"PENDING", "RESOLVED", line, flags=re.IGNORECASE)
         elif stripped.startswith("status:") and "pending" in stripped.lower():
-            line = "status: \"RESOLVED\""
+            line = 'status: "RESOLVED"'
 
         new_lines.append(line)
 
@@ -168,13 +170,17 @@ def apply_questionnaire_reply(
             if opt:
                 opt_label = f" — {opt.label}"
         note_str = f" *(Ghi chú: {note})*" if note else ""
-        decision_log_lines.append(f"  * **Câu {qid} ({q_title})**: Phương án **[{opt_key}]**{opt_label}{note_str}")
+        decision_log_lines.append(
+            f"  * **Câu {qid} ({q_title})**: Phương án **[{opt_key}]**{opt_label}{note_str}"
+        )
 
-    decision_log_lines.extend([
-        "",
-        "> [!TIP]",
-        "> **Bàn giao quy trình tiếp theo:** Toàn bộ quyết định đã được chốt. Có thể nạp trực tiếp kết quả này vào kỹ năng `/ccba-to-spec` để sinh PRD/Đặc tả kỹ thuật hoặc chuyển sang `/ccba-to-tickets` để phân rã nhiệm vụ phát triển.",
-    ])
+    decision_log_lines.extend(
+        [
+            "",
+            "> [!TIP]",
+            "> **Bàn giao quy trình tiếp theo:** Toàn bộ quyết định đã được chốt. Có thể nạp trực tiếp kết quả này vào kỹ năng `/ccba-to-spec` để sinh PRD/Đặc tả kỹ thuật hoặc chuyển sang `/ccba-to-tickets` để phân rã nhiệm vụ phát triển.",
+        ]
+    )
 
     # Remove previous decision log if re-running
     joined_content = "\n".join(new_lines)

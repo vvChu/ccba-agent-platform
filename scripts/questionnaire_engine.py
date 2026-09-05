@@ -107,7 +107,9 @@ def main() -> None:
                 reply_str=args.reply,
                 resolved_by=args.resolved_by,
             )
-            print(f"SUCCESS: Applied reply '{args.reply}' and updated status to RESOLVED in '{mod_path}'")
+            print(
+                f"SUCCESS: Applied reply '{args.reply}' and updated status to RESOLVED in '{mod_path}'"
+            )
         except Exception as e:
             print(f"Error applying reply: {e}", file=sys.stderr)
             sys.exit(1)

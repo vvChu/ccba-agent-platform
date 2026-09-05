@@ -184,7 +184,12 @@ def test_trigger_download_sequential_barrier_cooldown(tmp_path: Path):
     def mock_eval(js):
         if "has_docx" in js and "has_pdf" in js:
             return {"has_docx": True, "has_pdf": True}
-        if "Clicked PDF" in js or "vietnamesehyperlink_pdf" in js or "bản pdf" in js or "a_pdf" in js:
+        if (
+            "Clicked PDF" in js
+            or "vietnamesehyperlink_pdf" in js
+            or "bản pdf" in js
+            or "a_pdf" in js
+        ):
             (tmp_path / "temp.pdf").write_bytes(b"%PDF-1.4")
             return "Clicked PDF"
         if "Clicked DOCX" in js or "docx" in js or "a_docx" in js:
@@ -283,9 +288,7 @@ def test_trigger_download_skips_wait_when_click_returns_no_link(tmp_path: Path):
 
     mock_cdp.evaluate_js.side_effect = mock_eval
 
-    with patch(
-        "ccba_legal.crawler.tier_downloader._wait_for_download"
-    ) as mock_wait:
+    with patch("ccba_legal.crawler.tier_downloader._wait_for_download") as mock_wait:
         res = trigger_download(
             cdp=mock_cdp,
             download_dir=tmp_path,

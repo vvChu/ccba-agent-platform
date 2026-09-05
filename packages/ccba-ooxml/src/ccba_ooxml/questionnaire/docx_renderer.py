@@ -97,9 +97,24 @@ def render_questionnaire_docx(data: QuestionnaireData, output_path: str | Path) 
     set_table_borders(meta_table, "E2E8F0")
 
     meta_rows = [
-        ("Dự án / Hạng mục:", meta.project_name or "(Chưa xác định)", "Bên phát hành:", meta.sender or "CCBA BIM/MEP"),
-        ("Mục đích lấy ý kiến:", meta.purpose or "Thống nhất phương án kỹ thuật", "Bên tiếp nhận:", meta.recipient or "Chủ đầu tư / TVTK"),
-        ("Thời hạn phản hồi:", meta.deadline or "Trong vòng 03 ngày làm việc", "Quyết định phê duyệt:", meta.resolved_by or "(Đang chờ phản hồi)"),
+        (
+            "Dự án / Hạng mục:",
+            meta.project_name or "(Chưa xác định)",
+            "Bên phát hành:",
+            meta.sender or "CCBA BIM/MEP",
+        ),
+        (
+            "Mục đích lấy ý kiến:",
+            meta.purpose or "Thống nhất phương án kỹ thuật",
+            "Bên tiếp nhận:",
+            meta.recipient or "Chủ đầu tư / TVTK",
+        ),
+        (
+            "Thời hạn phản hồi:",
+            meta.deadline or "Trong vòng 03 ngày làm việc",
+            "Quyết định phê duyệt:",
+            meta.resolved_by or "(Đang chờ phản hồi)",
+        ),
     ]
 
     for row_idx, (k1, v1, k2, v2) in enumerate(meta_rows):
@@ -187,7 +202,9 @@ def render_questionnaire_docx(data: QuestionnaireData, output_path: str | Path) 
             if q.freeform_reply:
                 p_opts.add_run(f"{q.freeform_reply}\n").font.size = Pt(9)
             else:
-                p_opts.add_run("\n\n......................................................................................\n").font.color.rgb = SLATE_GRAY
+                p_opts.add_run(
+                    "\n\n......................................................................................\n"
+                ).font.color.rgb = SLATE_GRAY
         else:
             for opt in q.options:
                 box = "☑" if opt.is_selected else "☐"
@@ -256,7 +273,9 @@ def render_questionnaire_docx(data: QuestionnaireData, output_path: str | Path) 
         c_body = sign_table.rows[1].cells[idx]
         p_b = c_body.paragraphs[0]
         p_b.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p_b.add_run("\n\n\n\nNgày ... tháng ... năm 2026\n(Ký và ghi rõ họ tên)").font.size = Pt(8.5)
+        p_b.add_run("\n\n\n\nNgày ... tháng ... năm 2026\n(Ký và ghi rõ họ tên)").font.size = Pt(
+            8.5
+        )
 
     doc.save(str(out_p))
     return out_p

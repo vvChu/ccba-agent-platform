@@ -68,9 +68,13 @@ def test_hub_script_references_exist_on_disk() -> None:
             actual_hub_file = HUB_ROOT / clean_rel
             actual_local_file = tf.parent / clean_rel
             if not actual_hub_file.exists() and not actual_local_file.exists():
-                errors.append(f"File '{tf.relative_to(HUB_ROOT)}' references non-existent script: {clean_rel}")
+                errors.append(
+                    f"File '{tf.relative_to(HUB_ROOT)}' references non-existent script: {clean_rel}"
+                )
 
-    assert not errors, "Detected broken script references in skills/workflows:\n" + "\n".join(errors)
+    assert not errors, "Detected broken script references in skills/workflows:\n" + "\n".join(
+        errors
+    )
 
 
 def test_python_module_invocations_match_packages() -> None:
@@ -95,7 +99,9 @@ def test_python_module_invocations_match_packages() -> None:
         content = tf.read_text(encoding="utf-8")
         for mod in module_pattern.findall(content):
             if mod not in registered_modules:
-                errors.append(f"File '{tf.relative_to(HUB_ROOT)}' invokes unregistered module: python -m {mod}")
+                errors.append(
+                    f"File '{tf.relative_to(HUB_ROOT)}' invokes unregistered module: python -m {mod}"
+                )
 
     assert not errors, "Detected invalid python -m module calls:\n" + "\n".join(errors)
 

@@ -75,7 +75,11 @@ class DriftAuditor(BaseAuditor):
 
             structural_change = False
             arch_doc_updated = False
-            arch_docs = {"README.md", "PLATFORM.md", ".agents/skills/ccba-architecture-sync/SKILL.md"}
+            arch_docs = {
+                "README.md",
+                "PLATFORM.md",
+                ".agents/skills/ccba-architecture-sync/SKILL.md",
+            }
             tracked_prefixes = ("packages/", "scripts/", ".agents/skills/", ".agents/workflows/")
 
             for line in changes:

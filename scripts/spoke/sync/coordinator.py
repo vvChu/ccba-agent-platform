@@ -646,10 +646,18 @@ class SpokeSynchronizer:
                     replacement = (
                         SKILL_DEPRECATION_ALIASES.get(stem)
                         or SKILL_DEPRECATION_ALIASES.get(clean_name)
-                        or (f"ccba-{clean_name}" if f"ccba-{clean_name}" in synced_skill_folders else None)
+                        or (
+                            f"ccba-{clean_name}"
+                            if f"ccba-{clean_name}" in synced_skill_folders
+                            else None
+                        )
                         or (stem if stem in synced_skill_folders else None)
                     )
-                    if existing_wf.suffix == ".md" and replacement and replacement in synced_skill_folders:
+                    if (
+                        existing_wf.suffix == ".md"
+                        and replacement
+                        and replacement in synced_skill_folders
+                    ):
                         actions.append(
                             {
                                 "type": "Workflow",

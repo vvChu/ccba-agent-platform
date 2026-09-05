@@ -41,13 +41,18 @@ def render_email_table(data: QuestionnaireData) -> str:
             for opt in q.options:
                 k_esc = html.escape(opt.key)
                 l_esc = html.escape(opt.label)
-                star = ' <span style="color:#0284c7;font-weight:bold;">(⭐ Khuyến nghị CCBA)</span>' if opt.is_recommended else ''
-                to_html = f'<div style="font-size:12px;color:#64748b;">↳ {html.escape(opt.trade_off)}</div>' if opt.trade_off else ''
+                star = (
+                    ' <span style="color:#0284c7;font-weight:bold;">(⭐ Khuyến nghị CCBA)</span>'
+                    if opt.is_recommended
+                    else ""
+                )
+                to_html = (
+                    f'<div style="font-size:12px;color:#64748b;">↳ {html.escape(opt.trade_off)}</div>'
+                    if opt.trade_off
+                    else ""
+                )
                 opts_items.append(
-                    f'<li style="margin-bottom:6px;">'
-                    f'<b>[{k_esc}]</b> {l_esc}{star}'
-                    f'{to_html}'
-                    f'</li>'
+                    f'<li style="margin-bottom:6px;"><b>[{k_esc}]</b> {l_esc}{star}{to_html}</li>'
                 )
             opts_html = f'<ul style="margin:0;padding-left:18px;">{"".join(opts_items)}</ul>'
 
@@ -79,7 +84,7 @@ def render_email_table(data: QuestionnaireData) -> str:
           </tr>
         </thead>
         <tbody>
-          {''.join(rows_html)}
+          {"".join(rows_html)}
         </tbody>
       </table>
       <div style="margin-top: 14px; padding: 12px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 13px;">

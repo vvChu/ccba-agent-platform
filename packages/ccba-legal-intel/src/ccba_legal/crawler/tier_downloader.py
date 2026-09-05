@@ -92,9 +92,7 @@ def _wait_for_download(
     start_time = time.time()
     while time.time() - start_time < timeout:
         current_downloads = [f for d in watch_dirs if d.exists() for f in d.glob("*")]
-        new_downloads = [
-            f for f in current_downloads if str(f.resolve()) not in existing_downloads
-        ]
+        new_downloads = [f for f in current_downloads if str(f.resolve()) not in existing_downloads]
         if new_downloads:
             # Check if any new file is currently downloading
             if any(f.suffix == ".crdownload" or f.name.endswith(".tmp") for f in new_downloads):
@@ -374,9 +372,7 @@ def trigger_download(
             "error": "PDF not available in tab=7",
         }
     if format_type == "both" and not has_docx and not has_pdf:
-        print(
-            f"[LegalIntel] [Fast-Fail] Neither DOCX nor PDF found in tab=7 for '{slug_name}'."
-        )
+        print(f"[LegalIntel] [Fast-Fail] Neither DOCX nor PDF found in tab=7 for '{slug_name}'.")
         return {
             "success": False,
             "docx_path": None,

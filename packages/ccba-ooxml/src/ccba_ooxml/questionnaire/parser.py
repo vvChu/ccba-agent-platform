@@ -204,7 +204,9 @@ def parse_questionnaire_markdown(source: str | Path) -> QuestionnaireData:
                 label_text = opt_match.group(5) or ""
 
                 opt_key = (opt_key1 or opt_key2 or "A").upper()
-                is_rec = "⭐" in tag_notes or "khuyến nghị" in tag_notes.lower() or "⭐" in label_text
+                is_rec = (
+                    "⭐" in tag_notes or "khuyến nghị" in tag_notes.lower() or "⭐" in label_text
+                )
 
                 clean_label = label_text.strip()
                 # Remove star or tag from label if repeated
