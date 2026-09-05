@@ -42,6 +42,7 @@ class TestUpstreamEvaluator(unittest.TestCase):
         self.assertIsInstance(result, dict)
         self.assertFalse(result.get("should_port", True))
         self.assertIn("IGNORE", result.get("reason", "").upper())
+        self.assertIn("khớp với 'ccba-ask'", result.get("reason", ""))
 
     def test_append_recommendation_parse_protection(self):
         """Test append_recommendation preserves developer notes section."""
