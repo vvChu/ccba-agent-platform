@@ -47,132 +47,6 @@ skills:
   - load skills
   - danh sách lệnh
   skill_path: .agents/skills/platform-loader/SKILL.md
-- name: AI Gateway SDK
-  bundle: _core
-  description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud),
-    1 endpoint. Bao gồm Python package ccba-ai.
-  triggers:
-  - ai
-  - llm
-  - model
-  - gateway
-  - chat
-  - inference
-  - DGX
-  - vLLM
-  - Qwen
-  - Claude
-  - Gemini
-  skill_path: .agents/skills/ai-gateway-sdk/SKILL.md
-  package_path: packages/ccba-ai
-- name: API Circuit Breaker
-  bundle: _core
-  description: Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch
-    pipelines. Tránh quota exhaustion, cascade failures, và infinite retry loops khi
-    gọi AI Gateway hàng loạt.
-  triggers:
-  - circuit breaker
-  - rate limit
-  - rpm
-  - throttle
-  - batch api
-  - api protection
-  - quota
-  - retry
-  skill_path: .agents/skills/api-circuit-breaker/SKILL.md
-- name: Append-Only Logger
-  bundle: _core
-  description: Thread-safe, append-only logging pattern cho Python pipeline multi-daemon.
-    Tránh race condition và encoding corruption khi nhiều process ghi cùng lúc vào
-    shared log file.
-  triggers:
-  - logging
-  - logger
-  - log file
-  - thread safe
-  - daemon log
-  - pipeline log
-  - append log
-  skill_path: .agents/skills/append-only-logger/SKILL.md
-- name: File Stability Guard
-  bundle: _core
-  description: Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước
-    thực tế thay vì time.sleep() — dành cho Google Drive, OneDrive, SharePoint.
-  triggers:
-  - file stability
-  - cloud sync
-  - watchdog
-  - race condition
-  - google drive sync
-  - onedrive sync
-  - file incomplete
-  skill_path: .agents/skills/file-stability-guard/SKILL.md
-- name: Hybrid RAG Search
-  bundle: _core
-  description: Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) +
-    RRF Fusion. Đúc rút từ VvC Ground Truth pipeline — độ chính xác cao hơn pure BM25
-    đơn thuần 20x.
-  triggers:
-  - hybrid rag
-  - bm25
-  - embedding search
-  - rrf
-  - semantic search
-  - retrieval
-  - context search
-  - document search
-  skill_path: .agents/skills/hybrid-rag-search/SKILL.md
-- name: LLM Pipeline Patterns
-  bundle: _core
-  description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
-    Đúc rút từ VvC LLM OS (v5.1→v8.7, 2026).
-  triggers:
-  - llm pipeline
-  - pipeline patterns
-  - 2-pass
-  - ground truth
-  - rag pipeline
-  - synthesis pipeline
-  - self-correction
-  skill_path: .agents/skills/llm-pipeline-patterns/SKILL.md
-- name: academic_writing
-  bundle: _core
-  description: Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa
-    học theo chuẩn quốc tế (IMRAD, CARS model).
-  triggers:
-  - academic writing
-  - viết bài báo
-  - nghiên cứu khoa học
-  - IMRAD
-  - CARS
-  - Swales
-  - Yale
-  - thesis
-  skill_path: .agents/skills/academic_writing/SKILL.md
-- name: architecture-sync
-  bundle: _core
-  description: Đồng bộ hóa toàn bộ tài liệu kiến trúc sau khi refactor codebase —
-    bao phủ 4 tầng tài liệu nhạy cảm.
-  triggers:
-  - architecture-sync
-  - đồng bộ hiến pháp
-  - đồng bộ kiến trúc
-  - architecture
-  - sync
-  - cập nhật tài liệu kiến trúc
-  - refactor docs
-  skill_path: .agents/skills/architecture-sync/SKILL.md
-- name: ask
-  bundle: _core
-  description: Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu
-    cầu phát triển.
-  triggers:
-  - ask
-  - tư vấn
-  - định hướng
-  - luồng công việc
-  - bản đồ kỹ năng
-  skill_path: .agents/skills/ask/SKILL.md
 - name: bigbim-classification
   bundle: _bim
   description: Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass
@@ -255,6 +129,20 @@ skills:
   - quy định nộp BIM
   - bắt buộc BIM
   skill_path: .agents/skills/bigbim-vbpl-digest/SKILL.md
+- name: ccba-academic-writing
+  bundle: _core
+  description: Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa
+    học theo chuẩn quốc tế (IMRAD, CARS model).
+  triggers:
+  - academic writing
+  - viết bài báo
+  - nghiên cứu khoa học
+  - IMRAD
+  - CARS
+  - Swales
+  - Yale
+  - thesis
+  skill_path: .agents/skills/ccba-academic-writing/SKILL.md
 - name: ccba-adr-lifecycle
   bundle: _governance
   description: Autonomous lifecycle governance for Architecture Decision Records (ADRs)
@@ -268,6 +156,24 @@ skills:
   - adr lifecycle
   - manage adr
   skill_path: .agents/skills/ccba-adr-lifecycle/SKILL.md
+- name: ccba-ai-gateway-sdk
+  bundle: _core
+  description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud),
+    1 endpoint. Bao gồm Python package ccba-ai.
+  triggers:
+  - ai
+  - llm
+  - model
+  - gateway
+  - chat
+  - inference
+  - DGX
+  - vLLM
+  - Qwen
+  - Claude
+  - Gemini
+  skill_path: .agents/skills/ccba-ai-gateway-sdk/SKILL.md
+  package_path: packages/ccba-ai
 - name: ccba-ai-pdf-preprocessor
   bundle: _qc
   description: 'Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking)
@@ -308,6 +214,445 @@ skills:
   - thiết bị chữa cháy
   - báo cháy
   skill_path: .agents/skills/ccba-ai-qc-pccc-audit/SKILL.md
+- name: ccba-api-circuit-breaker
+  bundle: _core
+  description: Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch
+    pipelines. Tránh quota exhaustion, cascade failures, và infinite retry loops khi
+    gọi AI Gateway hàng loạt.
+  triggers:
+  - circuit breaker
+  - rate limit
+  - rpm
+  - throttle
+  - batch api
+  - api protection
+  - quota
+  - retry
+  skill_path: .agents/skills/ccba-api-circuit-breaker/SKILL.md
+- name: ccba-append-only-logger
+  bundle: _core
+  description: Thread-safe, append-only logging pattern cho Python pipeline multi-daemon.
+    Tránh race condition và encoding corruption khi nhiều process ghi cùng lúc vào
+    shared log file.
+  triggers:
+  - logging
+  - logger
+  - log file
+  - thread safe
+  - daemon log
+  - pipeline log
+  - append log
+  skill_path: .agents/skills/ccba-append-only-logger/SKILL.md
+- name: ccba-architecture-sync
+  bundle: _core
+  description: Đồng bộ hóa toàn bộ tài liệu kiến trúc sau khi refactor codebase —
+    bao phủ 4 tầng tài liệu nhạy cảm.
+  triggers:
+  - ccba-architecture-sync
+  - đồng bộ hiến pháp
+  - đồng bộ kiến trúc
+  - architecture
+  - sync
+  - cập nhật tài liệu kiến trúc
+  - refactor docs
+  skill_path: .agents/skills/ccba-architecture-sync/SKILL.md
+- name: ccba-ask
+  bundle: _core
+  description: Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu
+    cầu phát triển.
+  triggers:
+  - ccba-ask
+  - tư vấn
+  - định hướng
+  - luồng công việc
+  - bản đồ kỹ năng
+  skill_path: .agents/skills/ccba-ask/SKILL.md
+- name: ccba-autoresearch
+  bundle: _core
+  description: Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet
+    Auto-Tuner) lấy cảm hứng từ karpathy/autoresearch.
+  triggers:
+  - autoresearch
+  - auto-research
+  - git ratchet
+  - ratchet
+  - auto tune
+  - auto-tune
+  - tối ưu qua đêm
+  - tối ưu prompt tự động
+  skill_path: .agents/skills/ccba-autoresearch/SKILL.md
+- name: ccba-brainstorm
+  bundle: _core
+  description: Khởi động phiên thảo luận ý tưởng và chuẩn bị tài liệu đầu vào tại
+    input_documents/
+  triggers:
+  - brainstorm
+  - ý tưởng
+  - nạp tài liệu
+  - thảo luận
+  - đầu vào
+  skill_path: .agents/skills/ccba-brainstorm/SKILL.md
+- name: ccba-build-skill
+  bundle: _core
+  description: Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói
+    sinh Skill mới đạt chuẩn CCBA.
+  triggers:
+  - build-skill
+  - create-skill
+  - research
+  - notebooklm
+  skill_path: .agents/skills/ccba-build-skill/SKILL.md
+- name: ccba-code-review
+  bundle: _software
+  description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells)
+    và Spec (Spec/Requirements).
+  triggers:
+  - review
+  - quality
+  - verification
+  - reliability
+  - ccba-code-review
+  - rà soát code
+  - check code
+  - review commit
+  - review pr
+  skill_path: .agents/skills/ccba-code-review/SKILL.md
+- name: ccba-codebase-design
+  bundle: _core
+  description: Shared vocabulary for designing deep modules (locality, depth, leverage,
+    seams) to improve testability and code quality. Reference skill.
+  triggers:
+  - ccba-codebase-design
+  - deep-module
+  - seam
+  - interface
+  - adapter
+  - leverage
+  - locality
+  - codebase design
+  - deep module
+  - module sâu
+  - software design
+  skill_path: .agents/skills/ccba-codebase-design/SKILL.md
+- name: ccba-completion-checklist
+  bundle: _consulting
+  description: Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện
+    hành. Hỗ trợ xuất Markdown và Word (.docx).
+  triggers:
+  - hồ sơ hoàn thành
+  - HSHT
+  - completion
+  - checklist
+  - danh mục hồ sơ
+  - nghiệm thu
+  - hoàn công
+  skill_path: .agents/skills/ccba-completion-checklist/SKILL.md
+- name: ccba-contribute-to-hub
+  bundle: _core
+  description: Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng
+    lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
+  triggers:
+  - contribute
+  - contribute to hub
+  - đóng góp mã nguồn
+  - tạo pr lên hub
+  - mở proposal
+  - ccba-contribute-to-hub
+  skill_path: .agents/skills/ccba-contribute-to-hub/SKILL.md
+- name: ccba-copywriting
+  bundle: _software
+  description: Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa
+    và áp dụng các công thức viết thuyết phục (AIDA, PAS).
+  triggers:
+  - ccba-copywriting
+  - viết thầu
+  - soạn thầu
+  - hồ sơ đề xuất
+  - văn phong thầu
+  - viết thuyết phục
+  - marketing admin
+  skill_path: .agents/skills/ccba-copywriting/SKILL.md
+- name: ccba-create-pr
+  bundle: _software
+  description: Push code hiện tại và tạo Pull Request tự động
+  triggers:
+  - create PR
+  - pull request
+  - tạo PR
+  skill_path: .agents/skills/ccba-create-pr/SKILL.md
+- name: ccba-design
+  bundle: _consulting
+  description: Design brand identity, logos, banners, and visual assets. Use for brand
+    systems, design tokens, corporate identity programs. Not for UI code patterns.
+  triggers:
+  - brand
+  - logo
+  - CIP
+  - banners
+  - identity
+  - ccba-design
+  - logo design
+  - slide design
+  - banner design
+  - cip mockup
+  - ckm:design
+  - mockup
+  skill_path: .agents/skills/ccba-design/SKILL.md
+- name: ccba-diagnosing-bugs
+  bundle: _software
+  description: Diagnosis loop for hard bugs and performance regressions. Use when
+    the user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
+  triggers:
+  - diagnose bugs
+  - chẩn đoán lỗi
+  - fix bug
+  - debug
+  - regression
+  skill_path: .agents/skills/ccba-diagnosing-bugs/SKILL.md
+- name: ccba-discard-feature
+  bundle: _software
+  description: Hủy bỏ branch hiện tại, xóa cả local và remote
+  triggers:
+  - discard
+  - hủy branch
+  - xóa branch
+  skill_path: .agents/skills/ccba-discard-feature/SKILL.md
+- name: ccba-docs-manager
+  bundle: _software
+  description: Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
+  triggers:
+  - ccba-docs-manager
+  - quản lý tài liệu
+  - document manager
+  - docs
+  skill_path: .agents/skills/ccba-docs-manager/SKILL.md
+- name: ccba-docs-validator
+  bundle: _core
+  description: Chạy kiểm định tài liệu Markdown chống ảo ảnh (hallucinations), broken
+    links và cấu hình thiếu.
+  triggers:
+  - ccba-docs-validator
+  - validate docs
+  - kiểm định tài liệu
+  - check docs
+  - broken link
+  - validate markdown
+  skill_path: .agents/skills/ccba-docs-validator/SKILL.md
+- name: ccba-docx
+  bundle: _core
+  description: 'Công cụ xử lý Word (.docx): tạo mới, chỉnh sửa OOXML, thêm tracked
+    changes & comments.'
+  triggers:
+  - ccba-docx
+  - word
+  - document
+  - office
+  - ooxml
+  - unpack docx
+  - pack docx
+  - tracked changes
+  - Word document
+  - excel xml
+  skill_path: .agents/skills/ccba-docx/SKILL.md
+- name: ccba-domain-modeling
+  bundle: _software
+  description: Build, refine, and maintain the project's domain model, ubiquitous
+    language, and record architectural decisions (ADRs).
+  triggers:
+  - ccba-domain-modeling
+  - domain model
+  - modeling
+  - ubiquitous language
+  - adr
+  skill_path: .agents/skills/ccba-domain-modeling/SKILL.md
+- name: ccba-eval-gate
+  bundle: _software
+  description: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động
+    sửa lỗi (Self-Healing Loop).
+  triggers:
+  - eval gate
+  - kiểm chứng
+  - sửa lỗi tự động
+  - self-healing
+  - check code
+  - run gate
+  skill_path: .agents/skills/ccba-eval-gate/SKILL.md
+- name: ccba-excalidraw-diagram
+  bundle: _core
+  description: Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian
+    và excalidraw.com.
+  triggers:
+  - Diagram
+  - Excalidraw
+  - Visualization
+  - Architecture
+  - Sơ đồ
+  - Flowchart
+  - Obsidian
+  skill_path: .agents/skills/ccba-excalidraw-diagram/SKILL.md
+- name: ccba-file-stability-guard
+  bundle: _core
+  description: Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước
+    thực tế thay vì time.sleep() — dành cho Google Drive, OneDrive, SharePoint.
+  triggers:
+  - file stability
+  - cloud sync
+  - watchdog
+  - race condition
+  - google drive sync
+  - onedrive sync
+  - file incomplete
+  skill_path: .agents/skills/ccba-file-stability-guard/SKILL.md
+- name: ccba-git-guardrails
+  bundle: _software
+  description: Guardrails to block or request explicit user permission before executing
+    dangerous git operations (force push, hard reset, clean, etc.) via terminal.
+  triggers:
+  - ccba-git-guardrails
+  - git guardrails
+  - git
+  - guardrails
+  - safety
+  skill_path: .agents/skills/ccba-git-guardrails/SKILL.md
+- name: ccba-graduate-rd
+  bundle: _core
+  description: Quy trình cưỡng chế chuyển hóa mã nguồn R&D thành Deep Seam Production,
+    tích hợp /boost, /teamwork và mở PR tự động.
+  triggers:
+  - graduate
+  - tốt nghiệp
+  - hợp nhất vào hub
+  - consolidate
+  - deep seam
+  - chuyển scratch vào production
+  - ccba-graduate-rd
+  skill_path: .agents/skills/ccba-graduate-rd/SKILL.md
+- name: ccba-grilling
+  bundle: _software
+  description: Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy
+    chuẩn (Grill with Docs), hoặc hội tụ UI qua prototype trực quan.
+  triggers:
+  - grill
+  - stress-test
+  - phỏng vấn
+  - chất vấn
+  - đối chiếu
+  - prototype
+  - UI
+  - frontend
+  - visual
+  - ccba-grilling
+  - hỏi xoáy
+  - stress test
+  - kiểm chứng kế hoạch
+  skill_path: .agents/skills/ccba-grilling/SKILL.md
+- name: ccba-handoff
+  bundle: _core
+  description: Đóng gói và tổng hợp phiên làm việc hiện tại thành tài liệu Handoff
+    chuẩn mực để Agent tiếp theo tiếp quản liền mạch.
+  triggers:
+  - ccba-handoff
+  - đóng gói phiên
+  - transfer context
+  - chuyển tiếp
+  skill_path: .agents/skills/ccba-handoff/SKILL.md
+- name: ccba-hybrid-rag-search
+  bundle: _core
+  description: Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) +
+    RRF Fusion. Đúc rút từ VvC Ground Truth pipeline — độ chính xác cao hơn pure BM25
+    đơn thuần 20x.
+  triggers:
+  - hybrid rag
+  - bm25
+  - embedding search
+  - rrf
+  - semantic search
+  - retrieval
+  - context search
+  - document search
+  skill_path: .agents/skills/ccba-hybrid-rag-search/SKILL.md
+- name: ccba-implement
+  bundle: _core
+  description: Implement a piece of work based on a spec or set of tickets.
+  triggers:
+  - ccba-implement
+  - ccba-implement spec
+  - ccba-implement ticket
+  skill_path: .agents/skills/ccba-implement/SKILL.md
+- name: ccba-improve-codebase-architecture
+  bundle: _core
+  description: Quét codebase tìm kiếm cơ hội làm sâu module, xuất báo cáo trực quan
+    dưới dạng HTML, và thực hiện grilling để chốt phương án cải tiến.
+  triggers:
+  - architecture
+  - ccba-design
+  - deep-module
+  - refactor
+  - visual-report
+  - cải tiến kiến trúc
+  - module sâu
+  - báo cáo trực quan
+  - refactor mã nguồn
+  skill_path: .agents/skills/ccba-improve-codebase-architecture/SKILL.md
+- name: ccba-init-spoke
+  bundle: _core
+  description: Khởi tạo một dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform
+  triggers:
+  - init spoke
+  - setup project
+  - khởi tạo dự án
+  skill_path: .agents/skills/ccba-init-spoke/SKILL.md
+- name: ccba-issue-to-hub
+  bundle: _core
+  description: Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ
+    Spoke lên Hub dưới dạng GitHub Issue
+  triggers:
+  - issue to hub
+  - đề xuất ý tưởng
+  - rfc
+  - tạo issue
+  - feature request
+  - ccba-issue-to-hub
+  skill_path: .agents/skills/ccba-issue-to-hub/SKILL.md
+- name: ccba-knowledge-loop
+  bundle: _core
+  description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm
+    → Wayfinder → Exec)
+  triggers:
+  - knowledge-loop
+  - vòng lặp tri thức
+  - trinh sát thảo luận hoạch định
+  skill_path: .agents/skills/ccba-knowledge-loop/SKILL.md
+- name: ccba-legal-advisor
+  bundle: _consulting
+  description: 'Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ
+    cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.2.'
+  triggers:
+  - tu van phap ly
+  - giai dap phap luat
+  - quy chuan xay dung
+  - hoi dap quy pham
+  - legal opinion
+  - tham dinh du an
+  - ho so cap phep
+  - nghiem thu cong trinh
+  - pccc
+  - luat xay dung 2025
+  skill_path: .agents/skills/ccba-legal-advisor/SKILL.md
+- name: ccba-legal-document-tracker
+  bundle: _consulting
+  description: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine
+    và Registry.
+  triggers:
+  - VBPL
+  - pháp luật
+  - legal
+  - registry
+  - nghị định
+  - thông tư
+  - văn bản pháp luật
+  - luật xây dựng
+  skill_path: .agents/skills/ccba-legal-document-tracker/SKILL.md
 - name: ccba-legal-ingest
   bundle: _consulting
   description: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation,
@@ -331,342 +676,20 @@ skills:
   - thuvienphapluat
   - TVPL
   skill_path: .agents/skills/ccba-legal-intel/SKILL.md
-- name: ccba-prototype
-  bundle: _software
-  description: Xây dựng mẫu thử thô (throwaway prototype) để trả lời câu hỏi thiết
-    kế (Logic hoặc UI) trước khi triển khai chính thức.
-  triggers:
-  - prototype
-  - mẫu thử
-  - test thô
-  - sanity-check
-  - ccba-prototype
-  skill_path: .agents/skills/ccba-prototype/SKILL.md
-- name: ccba-research
-  bundle: _software
-  description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với
-    các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ
-    trợ Dual-Agent Adversarial).
-  triggers:
-  - research
-  - nghiên cứu
-  - tìm hiểu
-  - tra cứu
-  - citations
-  - ccba-research
-  - adversarial research
-  skill_path: .agents/skills/ccba-research/SKILL.md
-- name: ccba-setup-skills
+- name: ccba-llm-pipeline-patterns
   bundle: _core
-  description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu
-    hình issue tracker, nhãn phân loại (triage), và bố cục tài liệu tri thức (Domain
-    Docs). Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
+  description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
+    Đúc rút từ VvC LLM OS (v5.1→v8.7, 2026).
   triggers:
-  - setup skills
-  - thiết lập cấu hình
-  - cấu hình tracker
-  - cấu hình nhãn
-  - setup-skills
-  - ccba-setup-skills
-  skill_path: .agents/skills/ccba-setup-skills/SKILL.md
-- name: ccba-teamwork
-  bundle: _core
-  description: Điều phối đa tác nhân dài hạn (Teamwork Multi-Agent Framework) theo
-    4 giai đoạn và 3 vai trò tối giản (Orchestrator, Workers, Auditor), cưỡng chế
-    Workers Read-Only Sandbox và kiểm toán phân vùng tệp hậu hợp nhất.
-  triggers:
-  - teamwork
-  - ccba-teamwork
-  - điều phối nhóm
-  - multi-agent
-  - team sheet
-  - parallel execution
-  skill_path: .agents/skills/ccba-teamwork/SKILL.md
-- name: ccba-xia
-  bundle: _software
-  description: Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository
-    GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại.
-  triggers:
-  - port
-  - extract
-  - compare
-  - feature
-  - repo
-  - xia
-  - port from
-  - copy from repo
-  - clone feature
-  - adapt from
-  skill_path: .agents/skills/xia/SKILL.md
-- name: ck:sequential-thinking
-  bundle: _core
-  description: Áp dụng phương pháp phân tích suy nghĩ tuần tự từng bước cho các vấn
-    đề phức tạp. Hỗ trợ rẽ nhánh giả thuyết, cập nhật và chỉnh sửa nhận định cũ.
-  triggers:
-  - reasoning
-  - step-by-step
-  - analysis
-  - sequential-thinking
-  - suy nghĩ tuần tự
-  - lập luận từng bước
-  - rẽ nhánh suy nghĩ
-  - thought-history
-  - thought
-  skill_path: .agents/skills/sequential-thinking/SKILL.md
-- name: code-review
-  bundle: _software
-  description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells)
-    và Spec (Spec/Requirements).
-  triggers:
-  - review
-  - quality
-  - verification
-  - reliability
-  - code-review
-  - rà soát code
-  - check code
-  - review commit
-  - review pr
-  skill_path: .agents/skills/code-review/SKILL.md
-- name: codebase-design
-  bundle: _core
-  description: Shared vocabulary for designing deep modules (locality, depth, leverage,
-    seams) to improve testability and code quality. Reference skill.
-  triggers:
-  - codebase-design
-  - deep-module
-  - seam
-  - interface
-  - adapter
-  - leverage
-  - locality
-  - codebase design
-  - deep module
-  - module sâu
-  - software design
-  skill_path: .agents/skills/codebase-design/SKILL.md
-- name: completion-checklist
-  bundle: _consulting
-  description: Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện
-    hành. Hỗ trợ xuất Markdown và Word (.docx).
-  triggers:
-  - hồ sơ hoàn thành
-  - HSHT
-  - completion
-  - checklist
-  - danh mục hồ sơ
-  - nghiệm thu
-  - hoàn công
-  skill_path: .agents/skills/completion-checklist/SKILL.md
-- name: copywriting
-  bundle: _software
-  description: Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa
-    và áp dụng các công thức viết thuyết phục (AIDA, PAS).
-  triggers:
-  - copywriting
-  - viết thầu
-  - soạn thầu
-  - hồ sơ đề xuất
-  - văn phong thầu
-  - viết thuyết phục
-  - marketing admin
-  skill_path: .agents/skills/copywriting/SKILL.md
-- name: design
-  bundle: _consulting
-  description: Design brand identity, logos, banners, and visual assets. Use for brand
-    systems, design tokens, corporate identity programs. Not for UI code patterns.
-  triggers:
-  - brand
-  - logo
-  - CIP
-  - banners
-  - identity
-  - design
-  - logo design
-  - slide design
-  - banner design
-  - cip mockup
-  - ckm:design
-  - mockup
-  skill_path: .agents/skills/design/SKILL.md
-- name: diagnosing-bugs
-  bundle: _software
-  description: Diagnosis loop for hard bugs and performance regressions. Use when
-    the user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
-  triggers:
-  - diagnose bugs
-  - chẩn đoán lỗi
-  - fix bug
-  - debug
-  - regression
-  skill_path: .agents/skills/diagnosing-bugs/SKILL.md
-- name: docs-validator
-  bundle: _core
-  description: Chạy kiểm định tài liệu Markdown chống ảo ảnh (hallucinations), broken
-    links và cấu hình thiếu.
-  triggers:
-  - docs-validator
-  - validate docs
-  - kiểm định tài liệu
-  - check docs
-  - broken link
-  - validate markdown
-  skill_path: .agents/skills/docs-validator/SKILL.md
-- name: docs_manager
-  bundle: _software
-  description: Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
-  triggers:
-  - docs_manager
-  - quản lý tài liệu
-  - document manager
-  - docs
-  skill_path: .agents/skills/docs_manager/SKILL.md
-- name: docx
-  bundle: _core
-  description: 'Công cụ xử lý Word (.docx): tạo mới, chỉnh sửa OOXML, thêm tracked
-    changes & comments.'
-  triggers:
-  - docx
-  - word
-  - document
-  - office
-  - ooxml
-  - unpack docx
-  - pack docx
-  - tracked changes
-  - Word document
-  - excel xml
-  skill_path: .agents/skills/docx/SKILL.md
-- name: domain-modeling
-  bundle: _software
-  description: Build, refine, and maintain the project's domain model, ubiquitous
-    language, and record architectural decisions (ADRs).
-  triggers:
-  - domain-modeling
-  - domain model
-  - modeling
-  - ubiquitous language
-  - adr
-  skill_path: .agents/skills/domain-modeling/SKILL.md
-- name: eval-gate
-  bundle: _software
-  description: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động
-    sửa lỗi (Self-Healing Loop).
-  triggers:
-  - eval gate
-  - kiểm chứng
-  - sửa lỗi tự động
-  - self-healing
-  - check code
-  - run gate
-  skill_path: .agents/skills/eval-gate/SKILL.md
-- name: excalidraw-diagram
-  bundle: _core
-  description: Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian
-    và excalidraw.com.
-  triggers:
-  - Diagram
-  - Excalidraw
-  - Visualization
-  - Architecture
-  - Sơ đồ
-  - Flowchart
-  - Obsidian
-  skill_path: .agents/skills/excalidraw-diagram/SKILL.md
-- name: git-guardrails
-  bundle: _software
-  description: Guardrails to block or request explicit user permission before executing
-    dangerous git operations (force push, hard reset, clean, etc.) via terminal.
-  triggers:
-  - git-guardrails
-  - git guardrails
-  - git
-  - guardrails
-  - safety
-  skill_path: .agents/skills/git-guardrails/SKILL.md
-- name: grilling
-  bundle: _software
-  description: Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy
-    chuẩn (Grill with Docs), hoặc hội tụ UI qua prototype trực quan.
-  triggers:
-  - grill
-  - stress-test
-  - phỏng vấn
-  - chất vấn
-  - đối chiếu
-  - prototype
-  - UI
-  - frontend
-  - visual
-  - grilling
-  - hỏi xoáy
-  - stress test
-  - kiểm chứng kế hoạch
-  skill_path: .agents/skills/grilling/SKILL.md
-- name: handoff
-  bundle: _core
-  description: Đóng gói và tổng hợp phiên làm việc hiện tại thành tài liệu Handoff
-    chuẩn mực để Agent tiếp theo tiếp quản liền mạch.
-  triggers:
-  - handoff
-  - đóng gói phiên
-  - transfer context
-  - chuyển tiếp
-  skill_path: .agents/skills/handoff/SKILL.md
-- name: implement
-  bundle: _core
-  description: Implement a piece of work based on a spec or set of tickets.
-  triggers:
-  - implement
-  - implement spec
-  - implement ticket
-  skill_path: .agents/skills/implement/SKILL.md
-- name: improve-codebase-architecture
-  bundle: _core
-  description: Quét codebase tìm kiếm cơ hội làm sâu module, xuất báo cáo trực quan
-    dưới dạng HTML, và thực hiện grilling để chốt phương án cải tiến.
-  triggers:
-  - architecture
-  - design
-  - deep-module
-  - refactor
-  - visual-report
-  - cải tiến kiến trúc
-  - module sâu
-  - báo cáo trực quan
-  - refactor mã nguồn
-  skill_path: .agents/skills/improve-codebase-architecture/SKILL.md
-- name: legal-advisor
-  bundle: _consulting
-  description: 'Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ
-    cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.2.'
-  triggers:
-  - tu van phap ly
-  - giai dap phap luat
-  - quy chuan xay dung
-  - hoi dap quy pham
-  - legal opinion
-  - tham dinh du an
-  - ho so cap phep
-  - nghiem thu cong trinh
-  - pccc
-  - luat xay dung 2025
-  skill_path: .agents/skills/legal-advisor/SKILL.md
-- name: legal-document-tracker
-  bundle: _consulting
-  description: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine
-    và Registry.
-  triggers:
-  - VBPL
-  - pháp luật
-  - legal
-  - registry
-  - nghị định
-  - thông tư
-  - văn bản pháp luật
-  - luật xây dựng
-  skill_path: .agents/skills/legal-document-tracker/SKILL.md
-- name: long-form-writer
+  - llm pipeline
+  - pipeline patterns
+  - 2-pass
+  - ground truth
+  - rag pipeline
+  - synthesis pipeline
+  - self-correction
+  skill_path: .agents/skills/ccba-llm-pipeline-patterns/SKILL.md
+- name: ccba-long-form-writer
   bundle: _software
   description: Generates long-form documentation (2000+ words) by actively managing
     LLM context to bypass output limits. Ideal for regulations, whitepapers, or manuals.
@@ -676,17 +699,17 @@ skills:
   - whitepaper
   - quy chế
   - regulations
-  skill_path: .agents/skills/long-form-writer/SKILL.md
-- name: loop-me
+  skill_path: .agents/skills/ccba-long-form-writer/SKILL.md
+- name: ccba-loop-me
   bundle: _core
   description: Grill me about specs for the workflows I want to build, within this
     workspace. Adapted for CCBA Information Governance.
   triggers:
-  - loop-me
+  - ccba-loop-me
   - loop me
   - thiết kế chu trình
-  skill_path: .agents/skills/loop-me/SKILL.md
-- name: markdown-document-processing
+  skill_path: .agents/skills/ccba-loop-me/SKILL.md
+- name: ccba-markdown-document-processing
   bundle: _core
   description: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua
     Deep Seam ConversionPipeline.
@@ -695,31 +718,40 @@ skills:
   - xử lý markdown
   - chuẩn hóa markdown
   - document processing
-  skill_path: .agents/skills/markdown-processing/SKILL.md
-- name: maskara-privacy
+  skill_path: .agents/skills/ccba-markdown-document-processing/SKILL.md
+- name: ccba-maskara
   bundle: _core
   description: Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords,
     private keys) trong files/logs và cài đặt guardrails bảo mật.
   triggers:
-  - maskara
+  - ccba-maskara
   - privacy
   - redact
   - scan secret
   - leak
   - che giấu key
-  skill_path: .agents/skills/maskara/SKILL.md
-- name: mock-debugger
+  skill_path: .agents/skills/ccba-maskara/SKILL.md
+- name: ccba-mock-debugger
   bundle: _software
   description: Automated debugger and self-healing trace analyzer. Runs scripts, captures
     tracebacks, and provides root cause analysis and code patch suggestions via AI.
   triggers:
   - debug
-  - mock-debugger
+  - ccba-mock-debugger
   - sửa lỗi
   - self-healing
   - gỡ lỗi
-  skill_path: .agents/skills/mock-debugger/SKILL.md
-- name: notebooklm-connector
+  skill_path: .agents/skills/ccba-mock-debugger/SKILL.md
+- name: ccba-new-feature
+  bundle: _core
+  description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session
+    sạch (Factory Model)
+  triggers:
+  - new feature
+  - feature mới
+  - tạo branch
+  skill_path: .agents/skills/ccba-new-feature/SKILL.md
+- name: ccba-notebooklm-connector
   bundle: _core
   description: Interact with Google NotebookLM to import YouTube, URLs, PDFs, and
     Drive docs, perform RAG query, generate Audio Overview, and handle auth, polling,
@@ -736,13 +768,41 @@ skills:
   - mindmap
   - infographic
   - admin
-  skill_path: .agents/skills/notebooklm-connector/SKILL.md
-- name: pptx
+  skill_path: .agents/skills/ccba-notebooklm-connector/SKILL.md
+- name: ccba-pccc-cdt-tuthamdinh
+  bundle: _qc
+  description: Quy trình Hỗ trợ Chủ đầu tư Tự thẩm định toàn bộ thiết kế PCCC (theo
+    Luật 55/2024 & NĐ 105/2025)
+  triggers:
+  - tự thẩm định
+  - cdt tự thẩm định
+  - luật 55/2024
+  - NĐ 105/2025
+  skill_path: .agents/skills/ccba-pccc-cdt-tuthamdinh/SKILL.md
+- name: ccba-pccc-thamdinh-congan
+  bundle: _qc
+  description: Quy trình Thẩm định thiết kế PCCC phần Hệ thống Cơ điện (MEP) nộp Cơ
+    quan Công an (PC07)
+  triggers:
+  - thẩm định công an
+  - mep pccc
+  - pc07
+  skill_path: .agents/skills/ccba-pccc-thamdinh-congan/SKILL.md
+- name: ccba-pccc-thamdinh-cqxd
+  bundle: _qc
+  description: Quy trình Thẩm định/Thẩm tra PCCC phần Kiến trúc & Kiểm soát khói nộp
+    Cơ quan chuyên môn về xây dựng (theo Luật 55/2024 & NĐ 105/2025)
+  triggers:
+  - thẩm định cơ quan xây dựng
+  - kiến trúc pccc
+  - kiểm soát khói
+  skill_path: .agents/skills/ccba-pccc-thamdinh-cqxd/SKILL.md
+- name: ccba-pptx
   bundle: _core
   description: Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao
     bằng HTML conversion hoặc OOXML.
   triggers:
-  - pptx
+  - ccba-pptx
   - powerpoint
   - slides
   - office
@@ -750,28 +810,96 @@ skills:
   - create slide
   - html2pptx
   - slide layout
-  skill_path: .agents/skills/pptx/SKILL.md
-- name: resolving-merge-conflicts
+  skill_path: .agents/skills/ccba-pptx/SKILL.md
+- name: ccba-promote-sandbox
+  bundle: _core
+  description: Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc
+    Hub (ADR 0046)
+  triggers:
+  - promote sandbox
+  - bàn giao sandbox
+  - thăng cấp sản phẩm
+  - nghiệm thu pgv
+  - pgv handover
+  skill_path: .agents/skills/ccba-promote-sandbox/SKILL.md
+- name: ccba-propose-to-hub
+  bundle: _core
+  description: '[Alias tương thích ngược của /ccba-contribute-to-hub] Đóng gói mã
+    nguồn, tests, proposal từ Spoke và mở PR lên Hub'
+  triggers:
+  - đề xuất
+  - tích hợp Hub
+  - contribution
+  - propose
+  - skill mới
+  skill_path: .agents/skills/ccba-propose-to-hub/SKILL.md
+- name: ccba-prototype
+  bundle: _software
+  description: Xây dựng mẫu thử thô (throwaway prototype) để trả lời câu hỏi thiết
+    kế (Logic hoặc UI) trước khi triển khai chính thức.
+  triggers:
+  - prototype
+  - mẫu thử
+  - test thô
+  - sanity-check
+  - ccba-prototype
+  skill_path: .agents/skills/ccba-prototype/SKILL.md
+- name: ccba-release-feature
+  bundle: _core
+  description: Merge PR, cleanup branch, auto-close local issues và cập nhật walkthrough
+  triggers:
+  - release
+  - merge PR
+  - phát hành
+  skill_path: .agents/skills/ccba-release-feature/SKILL.md
+- name: ccba-research
+  bundle: _software
+  description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với
+    các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ
+    trợ Dual-Agent Adversarial).
+  triggers:
+  - research
+  - nghiên cứu
+  - tìm hiểu
+  - tra cứu
+  - citations
+  - ccba-research
+  - adversarial research
+  skill_path: .agents/skills/ccba-research/SKILL.md
+- name: ccba-resolving-merge-conflicts
   bundle: _software
   description: Use when you need to resolve an in-progress git merge/rebase conflict.
   triggers:
-  - resolving-merge-conflicts
+  - ccba-resolving-merge-conflicts
   - merge conflicts
   - xung đột git
   - resolve conflicts
   - git conflict
-  skill_path: .agents/skills/resolving-merge-conflicts/SKILL.md
-- name: review_skill
+  skill_path: .agents/skills/ccba-resolving-merge-conflicts/SKILL.md
+- name: ccba-review-proposal
+  bundle: _core
+  description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered
+    Review (Fast/Boost), Spoke Leakage Guard, Copilot Guard và Đồng bộ Catalog Hậu
+    Merge (ADR 0045, ADR 0047)
+  triggers:
+  - review proposal
+  - thẩm định pr
+  - duyệt đề xuất
+  - review-proposal
+  - review proposal boost
+  - deep review proposal
+  skill_path: .agents/skills/ccba-review-proposal/SKILL.md
+- name: ccba-review-skill
   bundle: _core
   description: Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn
     viết skill của CCBA.
   triggers:
   - review-skill
   - audit-skill
-  - review_skill
+  - ccba-review-skill
   - kiểm định skill
-  skill_path: .agents/skills/review_skill/SKILL.md
-- name: seminar-builder
+  skill_path: .agents/skills/ccba-review-skill/SKILL.md
+- name: ccba-seminar-builder
   bundle: _consulting
   description: Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda,
     outline, và archive nội dung các buổi thảo luận.
@@ -782,8 +910,29 @@ skills:
   - recap
   - agenda
   - buổi thảo luận
-  skill_path: .agents/skills/seminar-builder/SKILL.md
-- name: session_retrospective
+  skill_path: .agents/skills/ccba-seminar-builder/SKILL.md
+- name: ccba-sequential-thinking
+  bundle: _core
+  description: Áp dụng phương pháp phân tích suy nghĩ tuần tự từng bước cho các vấn
+    đề phức tạp. Hỗ trợ rẽ nhánh giả thuyết, cập nhật và chỉnh sửa nhận định cũ.
+  triggers:
+  - reasoning
+  - step-by-step
+  - analysis
+  - ccba-sequential-thinking
+  - suy nghĩ tuần tự
+  - lập luận từng bước
+  - rẽ nhánh suy nghĩ
+  - thought-history
+  - thought
+  skill_path: .agents/skills/ccba-sequential-thinking/SKILL.md
+- name: ccba-server-deploy
+  bundle: _core
+  description: Tự động triển khai và cấu hình nền tảng CCBA Agent Platform trên Server
+    Spark
+  triggers: []
+  skill_path: .agents/skills/ccba-server-deploy/SKILL.md
+- name: ccba-session-retrospective
   bundle: _core
   description: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến
     hóa kỹ năng trực tiếp, kích hoạt Governance Gate và dọn dẹp workspace.
@@ -795,42 +944,65 @@ skills:
   - tổng kết phiên
   - bài học kinh nghiệm
   - kiểm định quản trị
-  - session_retrospective
-  skill_path: .agents/skills/session_retrospective/SKILL.md
-- name: setup-pre-commit
+  - ccba-session-retrospective
+  skill_path: .agents/skills/ccba-session-retrospective/SKILL.md
+- name: ccba-setup-pre-commit
   bundle: _core
   description: Set up Python pre-commit framework with Ruff, MyPy, PyMarkdown, and
     local CCBA validators (validate_docs, validate_skills). Incorporates Maskara pre-commit
     hook. Run once before first commit.
   triggers:
-  - setup-pre-commit
+  - ccba-setup-pre-commit
   - setup pre-commit
   - git hooks
-  skill_path: .agents/skills/setup-pre-commit/SKILL.md
-- name: setup-ts-deep-modules
+  skill_path: .agents/skills/ccba-setup-pre-commit/SKILL.md
+- name: ccba-setup-skills
+  bundle: _core
+  description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu
+    hình issue tracker, nhãn phân loại (triage), và bố cục tài liệu tri thức (Domain
+    Docs). Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
+  triggers:
+  - setup skills
+  - thiết lập cấu hình
+  - cấu hình tracker
+  - cấu hình nhãn
+  - setup-skills
+  - ccba-setup-skills
+  skill_path: .agents/skills/ccba-setup-skills/SKILL.md
+- name: ccba-setup-ts-deep-modules
   bundle: _core
   description: Wire dependency-cruiser into a TypeScript repo so each package is a
     deep module — implementation hidden in subfolders, reachable only through its
     entry-point files. User-invoked.
   triggers:
-  - setup-ts-deep-modules
+  - ccba-setup-ts-deep-modules
   - setup ts deep modules
   - dependency-cruiser
-  skill_path: .agents/skills/setup-ts-deep-modules/SKILL.md
-- name: sharepoint-iac
+  skill_path: .agents/skills/ccba-setup-ts-deep-modules/SKILL.md
+- name: ccba-sharepoint-iac
   bundle: _software
   description: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code).
     Hướng dẫn thiết kế JSON schema, kiểm định Lookups/Taxonomy và triển khai bằng
     PnP PowerShell.
   triggers:
-  - sharepoint-iac
+  - ccba-sharepoint-iac
   - sharepoint iac
   - sharepoint schema
   - pnp powershell
   - m365 iac
   - datamodel sharepoint
-  skill_path: .agents/skills/sharepoint-iac/SKILL.md
-- name: spoke-adopter
+  skill_path: .agents/skills/ccba-sharepoint-iac/SKILL.md
+- name: ccba-skills-eval
+  bundle: _core
+  description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) cho các kỹ năng AI
+    trong CCBA Platform.
+  triggers:
+  - skills-eval
+  - eval-skills
+  - kiểm thử kỹ năng
+  - chạy evals
+  skill_path: .agents/skills/ccba-skills-eval/SKILL.md
+- name: ccba-spoke-adopter
   bundle: _core
   description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield
     Spokes) vào CCBA Platform mà không phá hủy cấu trúc dữ liệu cũ.
@@ -847,8 +1019,8 @@ skills:
   - onboard spoke
   - kết nối dự án cũ
   - adopt-spoke
-  skill_path: .agents/skills/spoke-adopter/SKILL.md
-- name: sync-upstream
+  skill_path: .agents/skills/ccba-spoke-adopter/SKILL.md
+- name: ccba-sync-upstream
   bundle: _core
   description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0040 Radar)
     kết hợp kích hoạt 1-Click Port qua /ccba-xia.
@@ -858,35 +1030,48 @@ skills:
   - update
   - porting
   - radar
-  - xia
+  - ccba-xia
   - sync upstream
   - đồng bộ tri thức
   - claudekit
   - mattpocock
   - check update
-  skill_path: .agents/skills/sync-upstream/SKILL.md
-- name: tdd
+  skill_path: .agents/skills/ccba-sync-upstream/SKILL.md
+- name: ccba-tdd
   bundle: _software
   description: Phát triển hướng kiểm thử (Red-Green-Refactor) giúp tạo mã nguồn ổn
     định, tin cậy thông qua các giao diện công khai (seams).
   triggers:
-  - tdd
+  - ccba-tdd
   - test
   - refactor
   - quality
-  skill_path: .agents/skills/tdd/SKILL.md
-- name: teach
+  skill_path: .agents/skills/ccba-tdd/SKILL.md
+- name: ccba-teach
   bundle: _core
   description: Hỗ trợ giảng dạy và đào tạo kiến thức tương tác, lưu trữ lộ trình và
     bài học trong thư mục chuyên biệt.
   triggers:
-  - teach
+  - ccba-teach
   - giảng dạy
   - đào tạo
   - lesson
   - bài học
-  skill_path: .agents/skills/teach/SKILL.md
-- name: to-questionnaire
+  skill_path: .agents/skills/ccba-teach/SKILL.md
+- name: ccba-teamwork
+  bundle: _core
+  description: Điều phối đa tác nhân dài hạn (Teamwork Multi-Agent Framework) theo
+    4 giai đoạn và 3 vai trò tối giản (Orchestrator, Workers, Auditor), cưỡng chế
+    Workers Read-Only Sandbox và kiểm toán phân vùng tệp hậu hợp nhất.
+  triggers:
+  - teamwork
+  - ccba-teamwork
+  - điều phối nhóm
+  - multi-agent
+  - team sheet
+  - parallel execution
+  skill_path: .agents/skills/ccba-teamwork/SKILL.md
+- name: ccba-to-questionnaire
   bundle: _core
   description: Hệ thống Khảo sát & Thu thập Quyết định Đa kênh Tương tác (Dual-Track
     Questionnaire Engine v2.0)
@@ -896,794 +1081,62 @@ skills:
   - interview
   - discovery
   - decision
-  - handoff
-  - to-questionnaire
+  - ccba-handoff
+  - ccba-to-questionnaire
   - bảng hỏi
   - async interview
   - discovery questionnaire
   - dual-track questionnaire
   - phiếu lấy ý kiến
-  skill_path: .agents/skills/to-questionnaire/SKILL.md
-- name: to-spec
+  skill_path: .agents/skills/ccba-to-questionnaire/SKILL.md
+- name: ccba-to-spec
   bundle: _core
   description: Turn the current conversation into a spec and publish it to the project
     issue tracker — no interview, just synthesis of what you've already discussed.
   triggers:
-  - to-spec
+  - ccba-to-spec
   - spec
   - soạn spec
   - tạo spec
   - đặc tả kỹ thuật
-  skill_path: .agents/skills/to-spec/SKILL.md
-- name: to-tickets
+  skill_path: .agents/skills/ccba-to-spec/SKILL.md
+- name: ccba-to-tickets
   bundle: _core
   description: Phân rã một kế hoạch, spec hoặc hội thoại hiện tại thành các ticket
     phát triển dạng lát cắt dọc (tracer-bullet slices), xác định rõ ràng mối quan
     hệ chặn (blocking edges) và đăng tải lên công cụ theo dõi (Issue Tracker) đã cấu
     hình.
   triggers:
-  - to-tickets
+  - ccba-to-tickets
   - ticket
   - bẻ nhỏ
   - phân rã
   - issues
-  skill_path: .agents/skills/to-tickets/SKILL.md
-- name: triage
+  skill_path: .agents/skills/ccba-to-tickets/SKILL.md
+- name: ccba-triage
   bundle: _core
   description: Sàng lọc sự cố và yêu cầu (Issues/PRs) qua các trạng thái phân loại
     và soạn thảo brief cho Agent.
   triggers:
-  - triage
+  - ccba-triage
   - sàng lọc
   - phân loại
   - incident
   - bug triage
-  skill_path: .agents/skills/triage/SKILL.md
-- name: tvpl-vip-crawler
+  skill_path: .agents/skills/ccba-triage/SKILL.md
+- name: ccba-tvpl-vip-crawler
   bundle: _software
   description: Kỹ năng tự động cào và đóng gói văn bản pháp luật VIP TVPL qua Deep
     Seam TVPLCrawler (tự động CookieVault & Mutex).
   triggers:
-  - tvpl-vip-crawler
+  - ccba-tvpl-vip-crawler
   - tvpl vip crawler
   - cào thư viện pháp luật
   - tvpl vip
   - vip crawler
-  skill_path: .agents/skills/tvpl-vip-crawler/SKILL.md
-- name: viet-chuyen-nghiep
-  bundle: _software
-  description: Viết tiếng Việt chuyên nghiệp — nhà xuất bản AI. Hỗ trợ soạn thảo,
-    review, biên tập, và xuất bản nội dung chuẩn phong cách.
-  triggers:
-  - viet-chuyen-nghiep
-  - viết tiếng việt
-  - chuyên nghiệp
-  - soạn thảo
-  - viết chuẩn
-  - tiếng việt chuyên nghiệp
-  skill_path: .agents/skills/viet-chuyen-nghiep/SKILL.md
-- name: wait-what
-  bundle: _core
-  description: Dừng lại. Ý ở tin nhắn trước chưa được hiểu rõ — hãy giải thích lại
-    bằng ngôn ngữ đơn giản.
-  triggers:
-  - wait-what
-  - re-pitch
-  - explain
-  - simplify
-  - context
-  - glossary
-  - wait what
-  - giải thích lại
-  - chưa hiểu
-  skill_path: .agents/skills/wait-what/SKILL.md
-- name: wayfinder
-  bundle: _core
-  description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua
-    danh sách các ticket công việc.
-  triggers:
-  - wayfinder
-  - vạch đường
-  - bài toán mơ hồ
-  - foggy
-  - chia nhỏ bài toán
-  skill_path: .agents/skills/wayfinder/SKILL.md
-- name: web-testing
-  bundle: _software
-  description: Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y
-    testing. Use for test automation, flakiness, Core Web Vitals, and cross-browser.
-  triggers:
-  - Playwright
-  - Vitest
-  - k6
-  - e2e
-  - load-testing
-  - web-testing
-  - playwright
-  - UI test
-  - e2e test
-  - browser automation
-  - vitest
-  skill_path: .agents/skills/web-testing/SKILL.md
-- name: wizard
-  bundle: _core
-  description: Generate an interactive bash wizard that walks a human through a manual
-    procedure — third-party setup, a one-off migration, an A→B state transition —
-    opening URLs, capturing values, confirming each step, and writing .env files and
-    GitHub Actions secrets.
-  triggers:
-  - wizard
-  - setup wizard
-  - sinh script
-  - cài đặt tự động
-  - script setup
-  skill_path: .agents/skills/wizard/SKILL.md
-- name: writing-great-skills
-  bundle: _core
-  description: Tài liệu cẩm nang hướng dẫn kỹ sư thiết kế và viết các file SKILL.md
-    đạt tiêu chuẩn chất lượng cao.
-  triggers:
-  - writing-great-skills
-  - viết skill
-  - quy chuẩn skill
-  - tạo skill mới
-  skill_path: .agents/skills/writing-great-skills/SKILL.md
-- name: xu-ly-van-phong
-  bundle: _software
-  description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo
-    tiêu chuẩn cấu trúc & phối màu chuyên nghiệp hoặc Nghị định 30.
-  triggers:
-  - xu-ly-van-phong
-  - xử lý văn phòng
-  - word
-  - excel
-  - pptx
-  - pdf
-  - pdf to docx
-  - office
-  skill_path: .agents/skills/xu-ly-van-phong/SKILL.md
-- name: youtube-learn
-  bundle: _core
-  description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề
-    và hình ảnh slide học thuật từ các video YouTube/bài giảng.
-  triggers:
-  - youtube-learn
-  - youtube learn
-  - bóc tách phụ đề
-  - slide học thuật
-  - youtube
-  - belief archaeology
-  skill_path: .agents/skills/youtube-learn/SKILL.md
-workflows:
-- name: ccba-academic-writing
-  bundle: _core
-  command: /ccba-academic-writing
-  description: Hướng dẫn lập đề cương, viết bản thảo và tự động kiểm định văn phong
-    bài báo khoa học theo cấu trúc IMRAD.
-  triggers:
-  - academic writing
-  - viết bài báo
-  - nghiên cứu khoa học
-  - IMRAD
-  - CARS
-  workflow_path: .agents/workflows/ccba-academic-writing.md
-- name: ccba-adopt-spoke
-  bundle: _core
-  command: /ccba-adopt-spoke
-  description: Đánh giá hiện trạng và tiếp nhận an toàn một codebase hiện hữu (Brownfield)
-    vào mạng lưới CCBA Platform.
-  triggers:
-  - adopt-spoke
-  - adopt spoke
-  - tiếp nhận spoke
-  - onboard spoke
-  - tiếp nhận dự án có sẵn
-  workflow_path: .agents/workflows/ccba-adopt-spoke.md
-- name: ccba-adr-lifecycle
-  bundle: _governance
-  command: /ccba-adr-lifecycle
-  description: Workflow quản trị toàn diện vòng đời quyết định kiến trúc ADR
-  triggers:
-  - ccba-adr-lifecycle
-  - tao adr
-  - cap nhat adr
-  - adr sync
-  - adr lifecycle
-  workflow_path: .agents/workflows/ccba-adr-lifecycle.md
-- name: ccba-ai-qc-pccc-audit
-  bundle: _qc
-  command: /ccba-ai-qc-pccc-audit
-  description: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông
-    qua cơ chế Semantic Map-Reduce.
-  triggers:
-  - pccc audit command
-  - chạy kiểm tra PCCC
-  - run pccc audit
-  workflow_path: .agents/workflows/ccba-ai-qc-pccc-audit.md
-- name: ccba-ask
-  bundle: _core
-  command: /ccba-ask
-  description: Hướng dẫn định tuyến/tư vấn chọn kỹ năng hoặc workflow phù hợp.
-  triggers:
-  - ask
-  - tư vấn
-  - định hướng
-  - bản đồ kỹ năng
-  workflow_path: .agents/workflows/ccba-ask.md
-- name: ccba-autoresearch
-  bundle: _core
-  command: /ccba-autoresearch
-  description: Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet
-    Auto-Tuner) lấy cảm hứng từ karpathy/autoresearch.
-  triggers:
-  - autoresearch
-  - auto-research
-  - git ratchet
-  - ratchet
-  - auto tune
-  - auto-tune
-  - tối ưu qua đêm
-  - tối ưu prompt tự động
-  workflow_path: .agents/workflows/ccba-autoresearch.md
-- name: ccba-brainstorm
-  bundle: _core
-  command: /ccba-brainstorm [-- <topic_id>]
-  description: Khởi động phiên thảo luận ý tưởng và chuẩn bị tài liệu đầu vào tại
-    input_documents/
-  triggers:
-  - brainstorm
-  - ý tưởng
-  - nạp tài liệu
-  - thảo luận
-  - đầu vào
-  workflow_path: .agents/workflows/ccba-brainstorm.md
-- name: ccba-build-skill
-  bundle: _core
-  command: /ccba-build-skill
-  description: Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói
-    sinh Skill mới đạt chuẩn CCBA.
-  triggers:
-  - build-skill
-  - create-skill
-  - research
-  - notebooklm
-  workflow_path: .agents/workflows/ccba-build-skill.md
-- name: ccba-contribute-to-hub
-  bundle: _core
-  command: /ccba-contribute-to-hub
-  description: Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng
-    lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
-  triggers:
-  - contribute
-  - contribute to hub
-  - đóng góp mã nguồn
-  - tạo pr lên hub
-  - mở proposal
-  - ccba-contribute-to-hub
-  workflow_path: .agents/workflows/ccba-contribute-to-hub.md
-- name: ccba-convert-markdown
-  bundle: _core
-  command: /ccba-convert-markdown
-  description: Chuyển đổi tài liệu sang Markdown qua Deep Seam ConversionPipeline
-    (tự động xử lý bảng biểu, biểu mẫu, liên kết)
-  triggers:
-  - convert
-  - mdconverter
-  - chuyển đổi tài liệu
-  - pdf to markdown
-  workflow_path: .agents/workflows/ccba-convert-markdown.md
-- name: ccba-copywriting
-  bundle: _core
-  command: /ccba-copywriting
-  description: Soạn thảo văn bản hành chính/thương mại theo mẫu chuẩn đã thống nhất,
-    kế thừa trực tiếp nguồn dữ liệu biểu mẫu (templates) được chuẩn hóa.
-  triggers:
-  - copywriting
-  - viết thầu
-  - soạn thầu
-  - hồ sơ thầu
-  - viết thuyết phục
-  - marketing admin
-  workflow_path: .agents/workflows/ccba-copywriting.md
-- name: ccba-create-pr
-  bundle: _software
-  command: /ccba-create-pr
-  description: Push code hiện tại và tạo Pull Request tự động
-  triggers:
-  - create PR
-  - pull request
-  - tạo PR
-  workflow_path: .agents/workflows/ccba-create-pr.md
-- name: ccba-discard-feature
-  bundle: _software
-  command: /ccba-discard-feature
-  description: Hủy bỏ branch hiện tại, xóa cả local và remote
-  triggers:
-  - discard
-  - hủy branch
-  - xóa branch
-  workflow_path: .agents/workflows/ccba-discard-feature.md
-- name: ccba-docs
-  bundle: _core
-  command: /ccba-docs
-  description: Khởi động quy trình tự động cập nhật và kiểm định tài liệu kỹ thuật
-    của dự án.
-  triggers:
-  - /ccba-docs
-  - cập nhật tài liệu
-  - update docs
-  - docs
-  - validate docs
-  workflow_path: .agents/workflows/ccba-docs.md
-- name: ccba-eval-gate
-  bundle: _core
-  command: /ccba-eval-gate
-  description: Chạy kiểm định tự động qua CI Gates và kích hoạt vòng lặp tự sửa lỗi
-    (Self-Healing).
-  triggers:
-  - eval gate
-  - kiểm chứng
-  - self-healing
-  - run gate
-  workflow_path: .agents/workflows/ccba-eval-gate.md
-- name: ccba-extract-style
-  bundle: _core
-  command: /ccba-extract-style
-  description: Trích xuất và phân tích đặc trưng văn phong thầu/hành chính từ tài
-    liệu mẫu của CCBA, tự động dựng biểu mẫu (Template) có placeholders.
-  triggers:
-  - extract style
-  - trích xuất văn phong
-  - văn phong mẫu
-  - style thầu
-  - phong cách viết
-  workflow_path: .agents/workflows/ccba-extract-style.md
-- name: ccba-git-guardrails
-  bundle: _core
-  command: /ccba-git-guardrails
-  description: Thiết lập và kích hoạt rào chắn lệnh Git nguy hiểm của Agent.
-  triggers:
-  - git-guardrails
-  - git guardrails
-  - git
-  - guardrails
-  workflow_path: .agents/workflows/ccba-git-guardrails.md
-- name: ccba-graduate-rd
-  bundle: _core
-  command: /ccba-graduate-rd
-  description: Quy trình cưỡng chế chuyển hóa mã nguồn R&D thành Deep Seam Production,
-    tích hợp /boost, /teamwork và mở PR tự động.
-  triggers:
-  - graduate
-  - tốt nghiệp
-  - hợp nhất vào hub
-  - consolidate
-  - deep seam
-  - chuyển scratch vào production
-  - ccba-graduate-rd
-  workflow_path: .agents/workflows/ccba-graduate-rd.md
-- name: ccba-grill-with-docs
-  bundle: _core
-  command: /ccba-grill-with-docs
-  description: Phiên phỏng vấn Socrates dồn dập giúp làm sắc nét kế hoạch thiết kế
-    và tự động ghi nhận tệp thuật ngữ (CONTEXT.md) cùng quyết định kiến trúc (ADRs).
-  triggers:
-  - grill
-  - grilling
-  - phỏng vấn
-  - socrates
-  - context.md
-  - adrs
-  workflow_path: .agents/workflows/ccba-grill-with-docs.md
-- name: ccba-grilling
-  bundle: _core
-  command: /ccba-grilling
-  description: Phỏng vấn dồn dập người dùng từng câu một để stress-test kế hoạch hoặc
-    thiết kế.
-  triggers:
-  - grill
-  - grilling
-  - phỏng vấn
-  - stress test
-  workflow_path: .agents/workflows/ccba-grilling.md
-- name: ccba-handoff
-  bundle: _core
-  command: /ccba-handoff
-  description: Đóng gói phiên làm việc thành tài liệu handoff nhỏ gọn cho Agent tiếp
-    theo.
-  triggers:
-  - handoff
-  - đóng gói phiên
-  - transfer context
-  - bàn giao
-  workflow_path: .agents/workflows/ccba-handoff.md
-- name: ccba-implement
-  bundle: _core
-  command: /ccba-implement
-  description: Triển khai lập trình khép kín (TDD -> Eval Gate -> Code Review -> Commit
-    -> Walkthrough)
-  triggers:
-  - implement
-  - triển khai code
-  - lập trình tính năng
-  workflow_path: .agents/workflows/ccba-implement.md
-- name: ccba-improve-codebase-architecture
-  bundle: _core
-  command: /ccba-improve-codebase-architecture
-  description: Cải tiến kiến trúc codebase bằng cách quét phát hiện module nông và
-    đề xuất deepening.
-  triggers:
-  - improve architecture
-  - codebase architecture
-  - module nông
-  - refactor
-  workflow_path: .agents/workflows/ccba-improve-codebase-architecture.md
-- name: ccba-init-spoke
-  bundle: _core
-  command: /ccba-init-spoke
-  description: Khởi tạo một dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform
-  triggers:
-  - init spoke
-  - setup project
-  - khởi tạo dự án
-  workflow_path: .agents/workflows/ccba-init-spoke.md
-- name: ccba-issue-to-hub
-  bundle: _core
-  command: /ccba-issue-to-hub
-  description: Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ
-    Spoke lên Hub dưới dạng GitHub Issue
-  triggers:
-  - issue to hub
-  - đề xuất ý tưởng
-  - rfc
-  - tạo issue
-  - feature request
-  - ccba-issue-to-hub
-  workflow_path: .agents/workflows/ccba-issue-to-hub.md
-- name: ccba-knowledge-loop
-  bundle: _core
-  command: /ccba-knowledge-loop
-  description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm
-    → Wayfinder → Exec)
-  triggers:
-  - knowledge-loop
-  - vòng lặp tri thức
-  - trinh sát thảo luận hoạch định
-  workflow_path: .agents/workflows/ccba-knowledge-loop.md
-- name: ccba-legal-advisor
-  bundle: _consulting
-  command: /ccba-legal-advisor
-  description: 'Tư vấn & Giải đáp Pháp lý Xây dựng: Tự động phân tích câu hỏi mơ hồ,
-    phỏng vấn làm rõ thích ứng, truy xuất tri thức OKF v2.2 và xuất Phiếu Ý kiến Pháp
-    lý (Legal Opinion) chuẩn mực. Kích hoạt khi người dùng hỏi các câu hỏi về cấp
-    phép xây dựng, PCCC, nghiệm thu, đấu thầu, hoặc xin tư vấn pháp lý công trình.'
-  triggers:
-  - legal-advisor
-  - tư vấn pháp lý
-  - giải đáp pháp lý
-  - ý kiến pháp lý
-  - legal opinion
-  workflow_path: .agents/workflows/ccba-legal-advisor.md
-- name: ccba-legal-ingest
-  bundle: _consulting
-  command: /ccba-legal-ingest
-  description: Workflow tự động hóa toàn trình nạp văn bản pháp lý OKF v2.4 Universal
-    Agent-Centric
-  triggers:
-  - ccba-legal-ingest
-  - nap van ban
-  - thu thap van ban
-  - harvest legal doc
-  - ingest law
-  workflow_path: .agents/workflows/ccba-legal-ingest.md
-- name: ccba-legal-intel
-  bundle: _consulting
-  command: /ccba-legal-intel
-  description: Workflow tư vấn và rà soát pháp luật xây dựng Việt Nam với RAG và Grounding
-    Gate
-  triggers:
-  - ccba-legal-intel
-  - crawl law
-  - diff law
-  - legal checklist
-  - thuvienphapluat
-  - tvpl
-  workflow_path: .agents/workflows/ccba-legal-intel.md
-- name: ccba-loop-me
-  bundle: _core
-  command: /ccba-loop-me
-  description: Thiết kế chu trình lặp (Loops) trong công việc và biên soạn thành đặc
-    tả workflow mới.
-  triggers:
-  - loop-me
-  - loop me
-  - thiết kế chu trình
-  workflow_path: .agents/workflows/ccba-loop-me.md
-- name: ccba-new-feature
-  bundle: _core
-  command: /ccba-new-feature
-  description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session
-    sạch (Factory Model)
-  triggers:
-  - new feature
-  - feature mới
-  - tạo branch
-  workflow_path: .agents/workflows/ccba-new-feature.md
-- name: ccba-notebooklm
-  bundle: _core
-  command: /ccba-notebooklm
-  description: Kết nối tự động với NotebookLM để import YouTube/tài liệu, trích xuất
-    tóm tắt, RAG query hoặc tạo Audio Overview.
-  triggers:
-  - notebooklm
-  - rag query
-  - audio overview
-  - podcast
-  workflow_path: .agents/workflows/ccba-notebooklm.md
-- name: ccba-prepare-seminar
-  bundle: _consulting
-  command: /ccba-prepare-seminar
-  description: Chuẩn bị nội dung cho buổi seminar/thảo luận nội bộ CCBA
-  triggers:
-  - chuẩn bị seminar
-  - buổi thảo luận
-  - prepare seminar
-  workflow_path: .agents/workflows/ccba-prepare-seminar.md
-- name: ccba-promote-sandbox
-  bundle: _core
-  command: /ccba-promote-sandbox
-  description: Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc
-    Hub (ADR 0046)
-  triggers:
-  - promote sandbox
-  - bàn giao sandbox
-  - thăng cấp sản phẩm
-  - nghiệm thu pgv
-  - pgv handover
-  workflow_path: .agents/workflows/ccba-promote-sandbox.md
-- name: ccba-prototype
-  bundle: _core
-  command: /ccba-prototype
-  description: Khởi động quy trình xây dựng mẫu thử code thô (Logic hoặc UI) để giải
-    quyết vấn đề thiết kế mờ mịt.
-  triggers:
-  - prototype
-  - mẫu thử
-  - test thô
-  - ccba-prototype
-  workflow_path: .agents/workflows/ccba-prototype.md
-- name: ccba-release-feature
-  bundle: _core
-  command: /ccba-release-feature
-  description: Merge PR, cleanup branch, auto-close local issues và cập nhật walkthrough
-  triggers:
-  - release
-  - merge PR
-  - phát hành
-  workflow_path: .agents/workflows/ccba-release-feature.md
-- name: ccba-research
-  bundle: _core
-  command: /ccba-research
-  description: Khởi động subagent nghiên cứu chạy ngầm để tra cứu tài liệu, APIs,
-    source code hoặc VBPL song song dưới nền với rào chắn Search Budget Cap (5 tool
-    calls) và Mẫu báo cáo 5 phần chuẩn hóa.
-  triggers:
-  - research
-  - nghiên cứu
-  - tìm hiểu
-  - ccba-research
-  workflow_path: .agents/workflows/ccba-research.md
-- name: ccba-resolving-merge-conflicts
-  bundle: _core
-  command: /ccba-resolving-merge-conflicts
-  description: Giải quyết xung đột Git merge/rebase hiện tại một cách an toàn.
-  triggers:
-  - resolving-merge-conflicts
-  - merge conflicts
-  - xung đột merge
-  - rebase
-  workflow_path: .agents/workflows/ccba-resolving-merge-conflicts.md
-- name: ccba-review-proposal
-  bundle: _core
-  command: /ccba-review-proposal
-  description: Thẩm định toàn trình các PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered
-    Review (Fast/Boost), Spoke Leakage Guard, Copilot Guard và Đồng bộ Catalog Hậu
-    Merge (ADR 0045, ADR 0047)
-  triggers:
-  - review proposal
-  - thẩm định pr
-  - duyệt đề xuất
-  - review-proposal
-  - review proposal boost
-  - deep review proposal
-  workflow_path: .agents/workflows/ccba-review-proposal.md
-- name: ccba-review-skill
-  bundle: _core
-  command: /ccba-review-skill
-  description: Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn
-    viết skill của CCBA.
-  triggers:
-  - review-skill
-  - audit-skill
-  - review_skill
-  - kiểm định skill
-  workflow_path: .agents/workflows/ccba-review-skill.md
-- name: ccba-run-qc-pipeline
-  bundle: _qc
-  command: /ccba-run-qc-pipeline
-  description: Tự động chạy toàn trình chuỗi kiểm soát chất lượng (QC) đa bộ môn qua
-    Deep Seam QCAuditPipeline
-  triggers:
-  - qc pipeline
-  - run QC
-  - audit tự động
-  - kiểm tra hồ sơ
-  workflow_path: .agents/workflows/ccba-run-qc-pipeline.md
-- name: ccba-server-deploy
-  bundle: _core
-  command: /ccba-server-deploy
-  description: Tự động triển khai và cấu hình nền tảng CCBA Agent Platform trên Server
-    Spark
-  triggers: []
-  workflow_path: .agents/workflows/ccba-server-deploy.md
-- name: ccba-session-retrospective
-  bundle: _core
-  command: /ccba-session-retrospective
-  description: Session Knowledge Retrospective Workflow — Tự động tổng hợp tri thức
-    cuối phiên làm việc và dọn dẹp workspace.
-  triggers:
-  - retrospective
-  - cuối phiên
-  - tổng kết
-  - session learnings
-  workflow_path: .agents/workflows/ccba-session-retrospective.md
-- name: ccba-setup-pre-commit
-  bundle: _core
-  command: /ccba-setup-pre-commit
-  description: Thiết lập cấu hình pre-commit cho Python trong repository hiện tại.
-  triggers:
-  - setup-pre-commit
-  - setup precommit
-  - hooks python
-  workflow_path: .agents/workflows/ccba-setup-pre-commit.md
-- name: ccba-setup-skills
-  bundle: _core
-  command: /ccba-setup-skills
-  description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ phát triển phần
-    mềm (cấu hình issue tracker, nhãn triage, domain docs)
-  triggers:
-  - setup skills
-  - thiết lập cấu hình
-  - cấu hình tracker
-  - cấu hình nhãn
-  - setup-skills
-  - ccba-setup-skills
-  workflow_path: .agents/workflows/ccba-setup-skills.md
-- name: ccba-setup-ts-deep-modules
-  bundle: _core
-  command: /ccba-setup-ts-deep-modules
-  description: Thiết lập cấu hình Deep Modules cho TypeScript bằng dependency-cruiser.
-  triggers:
-  - setup-ts-deep-modules
-  - setup deep modules
-  - dependency cruiser ts
-  workflow_path: .agents/workflows/ccba-setup-ts-deep-modules.md
-- name: ccba-skills-eval
-  bundle: _core
-  command: /ccba-skills-eval
-  description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) cho các kỹ năng AI
-    trong CCBA Platform.
-  triggers:
-  - skills-eval
-  - eval-skills
-  - kiểm thử kỹ năng
-  - chạy evals
-  workflow_path: .agents/workflows/ccba-skills-eval.md
-- name: ccba-sync-upstream
-  bundle: _core
-  command: /ccba-sync-upstream
-  description: Kiểm tra cập nhật và đồng bộ tri thức từ ClaudeKit và MattPocock
-  triggers:
-  - sync upstream
-  - đồng bộ tri thức
-  - claudekit
-  - mattpocock
-  - check update
-  workflow_path: .agents/workflows/ccba-sync-upstream.md
-- name: ccba-tdd
-  bundle: _core
-  command: /ccba-tdd
-  description: Viết code theo quy trình Test-Driven Development (Red-Green-Refactor).
-  triggers:
-  - tdd
-  - test-driven
-  - red-green-refactor
-  - unit test
-  workflow_path: .agents/workflows/ccba-tdd.md
-- name: ccba-teach
-  bundle: _core
-  command: /ccba-teach
-  description: Khởi động không gian học tập và giảng dạy tương tác tại thư mục chuyên
-    biệt .md/teach/
-  triggers:
-  - teach
-  - đào tạo
-  - học tập
-  - .md/teach/
-  workflow_path: .agents/workflows/ccba-teach.md
-- name: ccba-teamwork
-  bundle: _core
-  command: /ccba-teamwork
-  description: Khởi động quy trình điều phối đa tác nhân dài hạn (Teamwork Multi-Agent
-    Framework) theo mô hình 3 vai trò, lập Team Sheet và điều phối các đợt thực thi
-    song song.
-  triggers:
-  - teamwork
-  - ccba-teamwork
-  - điều phối nhóm
-  - multi-agent
-  - team sheet
-  workflow_path: .agents/workflows/ccba-teamwork.md
-- name: ccba-to-questionnaire
-  bundle: _core
-  command: /ccba-to-questionnaire
-  description: Hệ thống Khảo sát & Thu thập Quyết định Đa kênh Tương tác (Dual-Track
-    Questionnaire Engine v2.0)
-  triggers:
-  - to-questionnaire
-  - questionnaire
-  - bảng hỏi
-  - async questionnaire
-  - dual-track questionnaire
-  - phiếu lấy ý kiến
-  workflow_path: .agents/workflows/ccba-to-questionnaire.md
-- name: ccba-to-spec
-  bundle: _core
-  command: /ccba-to-spec
-  description: Soạn thảo tài liệu Spec từ ngữ cảnh hiện tại.
-  triggers:
-  - spec
-  - to-spec
-  - soạn spec
-  - tạo spec
-  workflow_path: .agents/workflows/ccba-to-spec.md
-- name: ccba-to-tickets
-  bundle: _core
-  command: /ccba-to-tickets
-  description: Phân rã kế hoạch hoặc spec (Đặc tả) hiện tại thành các ticket phát
-    triển độc lập dạng lát cắt dọc (vertical slices)
-  triggers:
-  - to-tickets
-  - tickets
-  - bẻ ticket
-  - tạo ticket
-  workflow_path: .agents/workflows/ccba-to-tickets.md
-- name: ccba-triage
-  bundle: _core
-  command: /ccba-triage
-  description: Điều phối và sàng lọc Issues/PRs qua các trạng thái và viết brief.
-  triggers:
-  - triage
-  - sàng lọc
-  - phân loại
-  - incident
-  - bug triage
-  workflow_path: .agents/workflows/ccba-triage.md
-- name: ccba-tvpl-vip-crawler
-  bundle: _consulting
-  command: /ccba-tvpl-vip-crawler
-  description: Quy trình thực thi cào dữ liệu văn bản pháp luật VIP từ Thư viện Pháp
-    luật (TVPL) qua Deep Seam TVPLCrawler
-  triggers:
-  - tvpl-vip-crawler
-  - tvpl vip crawler
-  - cào thư viện pháp luật
-  - tvpl vip
-  - vip crawler
-  workflow_path: .agents/workflows/ccba-tvpl-vip-crawler.md
+  skill_path: .agents/skills/ccba-tvpl-vip-crawler/SKILL.md
 - name: ccba-update-legal-registry
   bundle: _consulting
-  command: /ccba-update-legal-registry
   description: Tự động đồng bộ các thay đổi pháp lý từ legal_registry.yaml lên Google
     NotebookLM (hỗ trợ lưu trữ qua Google Drive chung).
   triggers:
@@ -1696,10 +1149,9 @@ workflows:
   - legal update
   - update registry
   - văn bản mới
-  workflow_path: .agents/workflows/ccba-update-legal-registry.md
+  skill_path: .agents/skills/ccba-update-legal-registry/SKILL.md
 - name: ccba-update-spoke
   bundle: _core
-  command: /ccba-update-spoke
   description: Đồng bộ hóa các kỹ năng, quy trình và cập nhật phiên bản giữa Hub và
     các Spoke (đơn lẻ hoặc hàng loạt)
   triggers:
@@ -1712,124 +1164,128 @@ workflows:
   - đồng bộ toàn bộ spoke
   - spoke status
   - kiểm tra spoke
-  workflow_path: .agents/workflows/ccba-update-spoke.md
+  skill_path: .agents/skills/ccba-update-spoke/SKILL.md
 - name: ccba-viet-chuyen-nghiep
   bundle: _software
-  command: /ccba-viet-chuyen-nghiep
-  description: Viết tiếng Việt chuyên nghiệp — nhà xuất bản AI
+  description: Viết tiếng Việt chuyên nghiệp — nhà xuất bản AI. Hỗ trợ soạn thảo,
+    review, biên tập, và xuất bản nội dung chuẩn phong cách.
   triggers:
-  - viet-chuyen-nghiep
+  - ccba-viet-chuyen-nghiep
   - viết tiếng việt
   - chuyên nghiệp
-  - nhà xuất bản
-  workflow_path: .agents/workflows/ccba-viet-chuyen-nghiep.md
+  - soạn thảo
+  - viết chuẩn
+  - tiếng việt chuyên nghiệp
+  skill_path: .agents/skills/ccba-viet-chuyen-nghiep/SKILL.md
 - name: ccba-wait-what
   bundle: _core
-  command: /ccba-wait-what
-  description: Dừng lại và giải thích lại tin nhắn trước bằng ngôn ngữ tiếng Việt
-    đơn giản.
+  description: Dừng lại. Ý ở tin nhắn trước chưa được hiểu rõ — hãy giải thích lại
+    bằng ngôn ngữ đơn giản.
   triggers:
-  - wait-what
+  - ccba-wait-what
+  - re-pitch
+  - explain
+  - simplify
+  - context
+  - glossary
   - wait what
   - giải thích lại
   - chưa hiểu
-  workflow_path: .agents/workflows/ccba-wait-what.md
+  skill_path: .agents/skills/ccba-wait-what/SKILL.md
 - name: ccba-wayfinder
   bundle: _core
-  command: /ccba-wayfinder
-  description: Vạch bản đồ giải quyết các bài toán mù mờ (foggy problems).
+  description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua
+    danh sách các ticket công việc.
   triggers:
-  - wayfinder
+  - ccba-wayfinder
+  - vạch đường
   - bài toán mơ hồ
   - foggy
-  workflow_path: .agents/workflows/ccba-wayfinder.md
+  - chia nhỏ bài toán
+  skill_path: .agents/skills/ccba-wayfinder/SKILL.md
+- name: ccba-web-testing
+  bundle: _software
+  description: Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y
+    testing. Use for test automation, flakiness, Core Web Vitals, and cross-browser.
+  triggers:
+  - Playwright
+  - Vitest
+  - k6
+  - e2e
+  - load-testing
+  - ccba-web-testing
+  - playwright
+  - UI test
+  - e2e test
+  - browser automation
+  - vitest
+  skill_path: .agents/skills/ccba-web-testing/SKILL.md
 - name: ccba-wizard
   bundle: _core
-  command: /ccba-wizard
-  description: Tạo bash script wizard hướng dẫn quy trình cài đặt/thiết lập thủ công.
+  description: Generate an interactive bash wizard that walks a human through a manual
+    procedure — third-party setup, a one-off migration, an A→B state transition —
+    opening URLs, capturing values, confirming each step, and writing .env files and
+    GitHub Actions secrets.
   triggers:
-  - wizard
+  - ccba-wizard
   - setup wizard
-  - tạo script
-  workflow_path: .agents/workflows/ccba-wizard.md
-- name: ccba-xia
+  - sinh script
+  - cài đặt tự động
+  - script setup
+  skill_path: .agents/skills/ccba-wizard/SKILL.md
+- name: ccba-writing-great-skills
   bundle: _core
-  command: /ccba-xia
-  description: Trích xuất, so sánh, port hoặc thích ứng một tính năng từ một repository
-    GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại
+  description: Tài liệu cẩm nang hướng dẫn kỹ sư thiết kế và viết các file SKILL.md
+    đạt tiêu chuẩn chất lượng cao.
   triggers:
-  - xia
+  - ccba-writing-great-skills
+  - viết skill
+  - quy chuẩn skill
+  - tạo skill mới
+  skill_path: .agents/skills/ccba-writing-great-skills/SKILL.md
+- name: ccba-xia
+  bundle: _software
+  description: Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository
+    GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại.
+  triggers:
+  - port
+  - extract
+  - compare
+  - feature
+  - repo
+  - ccba-xia
   - port from
   - copy from repo
   - clone feature
   - adapt from
-  workflow_path: .agents/workflows/ccba-xia.md
+  skill_path: .agents/skills/ccba-xia/SKILL.md
 - name: ccba-xu-ly-van-phong
   bundle: _software
-  command: /ccba-xu-ly-van-phong
-  description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, PowerPoint, PDF)
+  description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo
+    tiêu chuẩn cấu trúc & phối màu chuyên nghiệp hoặc Nghị định 30.
   triggers:
-  - xu-ly-van-phong
+  - ccba-xu-ly-van-phong
   - xử lý văn phòng
   - word
   - excel
-  - powerpoint
+  - ccba-pptx
   - pdf
-  workflow_path: .agents/workflows/ccba-xu-ly-van-phong.md
+  - pdf to docx
+  - office
+  skill_path: .agents/skills/ccba-xu-ly-van-phong/SKILL.md
 - name: ccba-youtube-learn
   bundle: _core
-  command: /ccba-youtube-learn
-  description: Khảo cổ học Niềm tin (Belief Archaeology) từ video YouTube/bài giảng
-    học thuật.
+  description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề
+    và hình ảnh slide học thuật từ các video YouTube/bài giảng.
   triggers:
-  - youtube-learn
+  - ccba-youtube-learn
+  - youtube learn
+  - bóc tách phụ đề
+  - slide học thuật
   - youtube
-  - bóc tách
   - belief archaeology
-  workflow_path: .agents/workflows/ccba-youtube-learn.md
-- name: propose-to-hub
-  bundle: _core
-  command: /ccba-propose-to-hub
-  description: '[Alias tương thích ngược của /ccba-contribute-to-hub] Đóng gói mã
-    nguồn, tests, proposal từ Spoke và mở PR lên Hub'
-  triggers:
-  - đề xuất
-  - tích hợp Hub
-  - contribution
-  - propose
-  - skill mới
-  workflow_path: .agents/workflows/ccba-propose-to-hub.md
-- name: workflow_pccc_cdt_tuthamdinh
-  bundle: _qc
-  command: /workflow_pccc_cdt_tuthamdinh
-  description: Quy trình Hỗ trợ Chủ đầu tư Tự thẩm định toàn bộ thiết kế PCCC (theo
-    Luật 55/2024 & NĐ 105/2025)
-  triggers:
-  - tự thẩm định
-  - cdt tự thẩm định
-  - luật 55/2024
-  - NĐ 105/2025
-  workflow_path: .agents/workflows/workflow_pccc_cdt_tuthamdinh.md
-- name: workflow_pccc_thamdinh_congan
-  bundle: _qc
-  command: /workflow_pccc_thamdinh_congan
-  description: Quy trình Thẩm định thiết kế PCCC phần Hệ thống Cơ điện (MEP) nộp Cơ
-    quan Công an (PC07)
-  triggers:
-  - thẩm định công an
-  - mep pccc
-  - pc07
-  workflow_path: .agents/workflows/workflow_pccc_thamdinh_congan.md
-- name: workflow_pccc_thamdinh_cqxd
-  bundle: _qc
-  command: /workflow_pccc_thamdinh_cqxd
-  description: Quy trình Thẩm định/Thẩm tra PCCC phần Kiến trúc & Kiểm soát khói nộp
-    Cơ quan chuyên môn về xây dựng (theo Luật 55/2024 & NĐ 105/2025)
-  triggers:
-  - thẩm định cơ quan xây dựng
-  - kiến trúc pccc
-  - kiểm soát khói
-  workflow_path: .agents/workflows/workflow_pccc_thamdinh_cqxd.md
+  skill_path: .agents/skills/ccba-youtube-learn/SKILL.md
+workflows: []
 rules:
 - name: identity
   description: Brand, voice, phong cách giao tiếp CCBA

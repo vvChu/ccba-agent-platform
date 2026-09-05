@@ -111,18 +111,18 @@ class NightlyTunerDaemon:
         self.max_iterations_low = max_iterations_low
         self.max_iterations_perfect = max_iterations_perfect
         self.early_stopping_patience = early_stopping_patience
-        self.test_cases_dir = self.root / ".agents" / "skills" / "eval-gate" / "test_cases"
+        self.test_cases_dir = self.root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
         self.skills_dir = self.root / ".agents" / "skills"
 
     def discover_skills_and_datasets(self) -> list[dict[str, Any]]:
         """Maps discovered skills to their optimal evaluation datasets."""
         skill_dataset_map = {
-            "academic_writing": "eval_academic_writing.json",
+            "ccba-academic-writing": "eval_academic_writing.json",
             "ccba-legal-intel": "eval_legal_intel_redteam.json",
             "ccba-ai-qc-pccc-audit": "eval_pccc_audit_redteam.json",
             "bigbim-classification": "eval_bigbim_classification.json",
-            "completion-checklist": "eval_general_domain.json",
-            "legal-document-tracker": "eval_legal_intel.json",
+            "ccba-completion-checklist": "eval_general_domain.json",
+            "ccba-legal-document-tracker": "eval_legal_intel.json",
             "ccba-ai-qc": "eval_pccc_audit.json",
         }
 

@@ -8,7 +8,7 @@ from scripts.legal.legal_rag_indexer import (
     search_legal_registry,
 )
 
-REGISTRY_PATH = Path(".agents/skills/legal-document-tracker/resources/legal_registry.yaml")
+REGISTRY_PATH = Path(".agents/skills/ccba-legal-document-tracker/resources/legal_registry.yaml")
 
 
 def test_load_legal_registry_valid_yaml():

@@ -36,21 +36,21 @@ Các script được tham chiếu trực tiếp bởi tệp cấu hình của Sk
 
 | Script | Đường dẫn | Số tham chiếu | Vai trò & Nơi tham chiếu |
 | :--- | :--- | :---: | :--- |
-| `validate_docs.py` | `scripts/validate_docs.py` | 8 | Kiểm tra định dạng Markdown của tài liệu kỹ thuật ([AGENTS.md](../../.agents/AGENTS.md), `docs-validator/SKILL.md`) |
-| `maskara.py` | `scripts/maskara.py` | 5 | Quét và che giấu API keys/secrets ([init-spoke.md](../../.agents/workflows/ccba-init-spoke.md), `maskara/SKILL.md`) |
-| `sync_spoke.py` | `scripts/sync_spoke.py` | 2 | Đồng bộ dữ liệu Hub và Spoke (`platform-loader/SKILL.md`, `update-spoke.md`) |
-| `run_harness_evals.py` | `scripts/run_harness_evals.py` | 2 | Chạy kiểm tra tự động (`eval-gate/SKILL.md`, `new-feature.md`) |
-| `validate_skills.py` | `scripts/validate_skills.py` | 2 | Kiểm tra định dạng tệp tin `SKILL.md` (`writing-great-skills/SKILL.md`) |
-| `audit_pr_comments.py` | `scripts/audit_pr_comments.py` | 2 | Kiểm duyệt comments trên pull request (`release-feature.md`, `release_gate.md`) |
-| `check_claudekit_updates.py` | `scripts/spoke/check_claudekit_updates.py` | 1 | Đồng bộ cập nhật từ ClaudeKit (`sync-upstream/SKILL.md`) |
-| `upstream_evaluator.py` | `scripts/spoke/upstream_evaluator.py` | 1 | Engine hợp nhất đồng bộ và đánh AI tính năng thượng nguồn (`sync-upstream/SKILL.md`) |
+| `validate_docs.py` | `scripts/validate_docs.py` | 8 | Kiểm tra định dạng Markdown của tài liệu kỹ thuật ([AGENTS.md](../../.agents/AGENTS.md), `ccba-docs-validator/SKILL.md`) |
+| `maskara.py` | `scripts/maskara.py` | 5 | Quét và che giấu API keys/secrets ([ccba-init-spoke](../../.agents/skills/ccba-init-spoke/SKILL.md), `ccba-maskara/SKILL.md`) |
+| `sync_spoke.py` | `scripts/sync_spoke.py` | 2 | Đồng bộ dữ liệu Hub và Spoke (`platform-loader/SKILL.md`, `ccba-update-spoke/SKILL.md`) |
+| `run_harness_evals.py` | `scripts/run_harness_evals.py` | 2 | Chạy kiểm tra tự động (`ccba-eval-gate/SKILL.md`, `ccba-new-feature/SKILL.md`) |
+| `validate_skills.py` | `scripts/validate_skills.py` | 2 | Kiểm tra định dạng tệp tin `SKILL.md` (`ccba-writing-great-skills/SKILL.md`) |
+| `audit_pr_comments.py` | `scripts/audit_pr_comments.py` | 2 | Kiểm duyệt comments trên pull request (`ccba-release-feature/SKILL.md`) |
+| `check_claudekit_updates.py` | `scripts/spoke/check_claudekit_updates.py` | 1 | Đồng bộ cập nhật từ ClaudeKit (`ccba-sync-upstream/SKILL.md`) |
+| `upstream_evaluator.py` | `scripts/spoke/upstream_evaluator.py` | 1 | Engine hợp nhất đồng bộ và đánh AI tính năng thượng nguồn (`ccba-sync-upstream/SKILL.md`) |
 | `legal_intelligence.py` | `scripts/legal_intelligence.py` | 1 | Cào và xử lý văn bản pháp luật (`ccba-legal-intel/SKILL.md`) |
-| `legal_sync.py` | `scripts/legal_sync.py` | 1 | Đồng bộ văn bản lên NotebookLM (`update-legal-registry.md`) |
-| `mock_debugger.py` | `scripts/security/mock_debugger.py` | 1 | Trình giả lập debug lỗi (`mock-debugger/SKILL.md`) |
-| `notebooklm_helper.py` | `scripts/notebooklm_helper.py` | 1 | Helper kết nối RAG NotebookLM (`notebooklm-connector/SKILL.md`) |
-| `privacy_block.py` | `scripts/hooks/privacy_block.py` | 1 | Core filter của Maskara (`maskara/SKILL.md`) |
-| `repomix_pack.py` | `scripts/repomix_pack.py` | 1 | Đóng gói codebase cho LLMs (`docs_manager/SKILL.md`) |
-| `session_cleanup.py` | `scripts/session_cleanup.py` | 1 | Dọn dẹp branch/tài liệu sau phiên (`session_retrospective/SKILL.md`) |
+| `legal_sync.py` | `scripts/legal_sync.py` | 1 | Đồng bộ văn bản lên NotebookLM (`ccba-update-legal-registry/SKILL.md`) |
+| `mock_debugger.py` | `scripts/security/mock_debugger.py` | 1 | Trình giả lập debug lỗi (`ccba-mock-debugger/SKILL.md`) |
+| `notebooklm_helper.py` | `scripts/notebooklm_helper.py` | 1 | Helper kết nối RAG NotebookLM (`ccba-notebooklm-connector/SKILL.md`) |
+| `privacy_block.py` | `scripts/hooks/privacy_block.py` | 1 | Core filter của Maskara (`ccba-maskara/SKILL.md`) |
+| `repomix_pack.py` | `scripts/security/repomix_pack.py` | 1 | Đóng gói codebase cho LLMs (`ccba-docs-manager/SKILL.md`) |
+| `session_cleanup.py` | `scripts/session_cleanup.py` | 1 | Dọn dẹp branch/tài liệu sau phiên (`ccba-session-retrospective/SKILL.md`) |
 | `split_appendices.py` | `scripts/split_appendices.py` | 1 | Phân tách phụ lục văn bản pháp luật (`ccba-legal-intel/SKILL.md`) |
 
 ---
