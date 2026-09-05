@@ -56,7 +56,7 @@ Sử dụng Agent Skill: `/ccba-release-feature` để tự động merge và d�
 
 ## 🤖 Agent Skills & Slash Commands
 
-Dự án có sẵn các kỹ năng tự động hóa (trong `.agents/skills/ccba-*/SKILL.md`):
+Dự án có sẵn các kỹ năng tự động hóa (trong `.agents/skills/<skill-name>/SKILL.md` — bao gồm tiền tố `ccba-*`, `bigbim-*` và `platform-loader`):
 
 | Lệnh | Chức năng | Khi nào dùng? |
 | :--- | :--- | :--- |

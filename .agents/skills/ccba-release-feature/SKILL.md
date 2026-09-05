@@ -60,21 +60,20 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
 4. **Chốt chặn Review Requests của Copilot (Chống Race Condition Merge Sớm):**
    - Trước khi đọc comments, Agent **bắt buộc phải kiểm tra xem Copilot đã nộp bài review xong hay chưa**:
      ```bash
-     gh pr view --json reviewRequests,reviews --jq '{pending: [.reviewRequests[]?.login], reviewed: [.reviews[]?.user.login]}'
+     gh pr view --json reviewRequests,reviews --jq '{pending: [.reviewRequests[]?.login], reviewed: [.reviews[]?.author.login]}'
      ```
    - *Quy tắc bắt buộc:*
-     - Nếu danh sách `pending` chứa `copilot-pull-request-reviewer` (hoặc bot review) HOẶC Copilot chưa xuất hiện trong `reviewed` (nếu PR vừa tạo chưa quá 2 phút): Có nghĩa là Copilot **vẫn đang phân tích và chưa Submit Review**. Agent **tuyệt đối không được merge ngay**, mà phải dừng lượt hoặc chờ Copilot hoàn tất nộp bài.
+     - Nếu danh sách `pending` chứa `copilot-pull-request-reviewer` (hoặc bot review) HOẶC Copilot chưa xuất hiện trong `reviewed` (nếu PR vừa tạo chưa quá 2 phút): Có nghĩa là Copilot **vẫn đang phân tích và chưa Submit Review**. Agent **tuyệt đối không được merge ngay**, mà phải dừng lượt hoặc chờ Copilot hoàn tất nộp bài (dùng `schedule`).
      - Chỉ khi Copilot đã hoàn tất lượt review và nộp bài vào `reviews` (hoặc không có review pending), Agent mới chuyển sang bước 5.
 
-5. **Thực hiện đối soát bình luận của Copilot trên PR:**
+5. **Thực hiện đối soát bình luận & Review Body của Copilot trên PR (Hard Blocker):**
    ```bash
-   gh pr view --json comments,reviews --jq '.comments[] | {id: .id, path: .path, line: .line, body: .body}'
+   python scripts/validation/audit_pr_comments.py
    ```
-   - Hoặc kiểm tra chi tiết các inline review comments:
-     ```bash
-     gh api repos/:owner/:repo/pulls/$(gh pr view --json number --jq .number)/comments --jq '.[] | {id: .id, path: .path, line: .line, body: .body}'
-     ```
-   - Nếu phát hiện bất kỳ bình luận nào của Copilot, Agent phải tạm dừng quy trình merge, đánh giá và thực hiện chỉnh sửa mã nguồn cục bộ, commit & push cập nhật, và cập nhật `walkthrough.md` trước khi tiếp tục.
+   - Script tự động quét toàn bộ:
+     - `reviews`: Quét `author.login` và chặn đứng nếu có `### 🟡 Changes recommended` hoặc `state == CHANGES_REQUESTED`.
+     - `comments`: Quét inline comments trên các tệp thay đổi.
+   - Nếu script trả về exit code 1 (`[FAIL] Changes recommended`), Agent **tuyệt đối không được merge**. Phải đánh giá và thực hiện chỉnh sửa mã nguồn cục bộ, commit & push cập nhật, và cập nhật `walkthrough.md` trước khi tiếp tục.
    - Nếu phát hiện các góp ý hợp lý (VALID) chưa sửa, hoặc các góp ý không hợp lý chưa được giải trình trong `walkthrough.md`, Agent phải giải trình hoặc sửa lỗi cục bộ và push cập nhật trước khi merge.
 
 6. **Tiến hành Merge khi 100% điều kiện đạt chuẩn:**

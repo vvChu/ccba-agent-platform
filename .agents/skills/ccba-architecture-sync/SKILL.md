@@ -48,7 +48,7 @@ triggers:
 | `PROJECT.md` | Active project code layout, interface contracts |
 | Skills chứa CLI: `platform-loader`, `ccba-ai-gateway-sdk`, `ccba-docs-validator`, `ccba-docs-manager`, `ccba-setup-pre-commit`, `ccba-eval-gate`, `ccba-xu-ly-van-phong` | Đường dẫn `scripts/`, `templates/`, import paths |
 | Skills / Workflows chứa paths: `ccba-init-spoke`, `ccba-issue-to-hub`, `ccba-contribute-to-hub`, `ccba-propose-to-hub`, `ccba-update-spoke`, `ccba-build-skill`, `ccba-release-feature` | Đường dẫn Hub/Spoke, script commands |
-| Rules chứa paths: `naming_conventions`, `release_gate` | Cấu trúc `.md/`, đường dẫn scripts |
+| Rules chứa paths: `naming_conventions`, `release_gate` | Cấu trúc `.md/`, đường dẫn scripts (`audit_pr_comments.py`) |
 
 ### Tier 3 — Kiểm tra khi có thay đổi kiến trúc lớn (rename module, xóa package)
 
