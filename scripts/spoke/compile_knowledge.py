@@ -40,6 +40,10 @@ def compile_skills(skills_dir: Path, output_file: Path) -> None:
 def compile_workflows(workflows_dir: Path, output_file: Path) -> None:
     """Scan all workflow files and merge their contents.
 
+    Under ADR-0056, legacy workflows have been unified into modern skills with
+    `disable-model-invocation: true`. Archived workflows (*.md.bak) are documented
+    with an ADR-0056 migration notice.
+
     Args:
         workflows_dir: Path to the workflows root directory.
         output_file: Path to the compiled markdown output file.
@@ -49,15 +53,34 @@ def compile_workflows(workflows_dir: Path, output_file: Path) -> None:
         return
 
     output_content = []
-    # Sorted for deterministic output
-    for file_path in sorted(workflows_dir.glob("*.md")):
-        if not file_path.is_file():
-            continue
-        try:
-            content = file_path.read_text(encoding="utf-8")
-            output_content.append(f"# Workflow: {file_path.stem}\n\n{content}\n\n---\n")
-        except Exception as e:
-            print(f"Error reading workflow {file_path}: {e}", file=sys.stderr)
+    # 1. Scan active markdown files if any
+    md_files = sorted(workflows_dir.glob("*.md"))
+    if md_files:
+        for file_path in md_files:
+            if not file_path.is_file():
+                continue
+            try:
+                content = file_path.read_text(encoding="utf-8")
+                output_content.append(f"# Workflow: {file_path.stem}\n\n{content}\n\n---\n")
+            except Exception as e:
+                print(f"Error reading workflow {file_path}: {e}", file=sys.stderr)
+    else:
+        # 2. Fallback to archived workflows (*.md.bak) under ADR-0056
+        bak_files = sorted(workflows_dir.glob("*.md.bak"))
+        if bak_files:
+            output_content.append(
+                "# CCBA Workflows Registry (ADR-0056 Unified into Skills)\n\n"
+                f"> **Notice**: As per ADR-0056, all {len(bak_files)} legacy workflows have been upgraded "
+                "to modern Agent Skills in `.agents/skills/ccba-*/SKILL.md`.\n"
+                "> Active slash commands are registered directly in skill YAML frontmatters.\n\n---\n"
+            )
+            for file_path in bak_files:
+                stem = file_path.name[:-7] if file_path.name.endswith(".md.bak") else file_path.stem
+                try:
+                    content = file_path.read_text(encoding="utf-8")
+                    output_content.append(f"# Archived Workflow: {stem}\n\n{content}\n\n---\n")
+                except Exception as e:
+                    print(f"Error reading archived workflow {file_path}: {e}", file=sys.stderr)
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
     output_file.write_text("\n".join(output_content), encoding="utf-8")

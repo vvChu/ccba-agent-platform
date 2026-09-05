@@ -47,7 +47,7 @@ class TestDocumentAuditor(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = Path(tmpdir) / "SKILL.md"
             file_path.write_text(
-                "---\nname: my-skill\ndescription: Valid short description.\n---\n"
+                "---\nname: ccba-my-skill\ndescription: Valid short description.\n---\n"
                 "# Workflow\n1. Step 1\n**Completion Criterion:** Done",
                 encoding="utf-8",
             )
@@ -58,7 +58,7 @@ class TestDocumentAuditor(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = Path(tmpdir) / "SKILL.md"
             file_path.write_text(
-                "---\nname: my-skill\ndescription: Short description.\n---\n"
+                "---\nname: ccba-my-skill\ndescription: Short description.\n---\n"
                 "# Workflow\n1. Step without completion criterion",
                 encoding="utf-8",
             )
@@ -76,11 +76,11 @@ class TestDocumentAuditor(unittest.TestCase):
 
     def test_run_skills_validation_cli_success(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            skills_dir = Path(tmpdir) / "skills" / "my-skill"
+            skills_dir = Path(tmpdir) / "skills" / "ccba-my-skill"
             skills_dir.mkdir(parents=True)
             skill_file = skills_dir / "SKILL.md"
             skill_file.write_text(
-                "---\nname: my-skill\ndescription: Short description.\n---\n"
+                "---\nname: ccba-my-skill\ndescription: Short description.\n---\n"
                 "# Workflow\n1. Step 1\n**Completion Criterion:** Done",
                 encoding="utf-8",
             )

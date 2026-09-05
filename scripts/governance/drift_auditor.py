@@ -98,7 +98,9 @@ class DriftAuditor(BaseAuditor):
                     or status.startswith("R")
                     or status == "??"
                 ):
-                    if filepath == "pyproject.toml" or filepath.startswith(tracked_prefixes):
+                    if filepath == "pyproject.toml" or (
+                        filepath.startswith(tracked_prefixes) and not filepath.endswith(".md.bak")
+                    ):
                         structural_change = True
 
             # Also check if any commit in the current branch history updated arch_docs

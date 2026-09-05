@@ -46,8 +46,8 @@ triggers:
 | `.env.example` | Schema biến môi trường |
 | `.pre-commit-config.yaml` | Hook scripts, đường dẫn cấu hình |
 | `PROJECT.md` | Active project code layout, interface contracts |
-| Skills chứa CLI: `platform-loader`, `ai-gateway-sdk`, `docs-validator`, `docs_manager`, `setup-pre-commit`, `eval-gate`, `xu-ly-van-phong` | Đường dẫn `scripts/`, `templates/`, import paths |
-| Workflows chứa paths: `ccba-init-spoke`, `ccba-issue-to-hub`, `ccba-contribute-to-hub`, `ccba-propose-to-hub`, `ccba-update-spoke`, `ccba-build-skill`, `ccba-release-feature` | Đường dẫn Hub/Spoke, script commands |
+| Skills chứa CLI: `platform-loader`, `ccba-ai-gateway-sdk`, `ccba-docs-validator`, `ccba-docs-manager`, `ccba-setup-pre-commit`, `ccba-eval-gate`, `ccba-xu-ly-van-phong` | Đường dẫn `scripts/`, `templates/`, import paths |
+| Skills / Workflows chứa paths: `ccba-init-spoke`, `ccba-issue-to-hub`, `ccba-contribute-to-hub`, `ccba-propose-to-hub`, `ccba-update-spoke`, `ccba-build-skill`, `ccba-release-feature` | Đường dẫn Hub/Spoke, script commands |
 | Rules chứa paths: `naming_conventions`, `release_gate` | Cấu trúc `.md/`, đường dẫn scripts |
 
 ### Tier 3 — Kiểm tra khi có thay đổi kiến trúc lớn (rename module, xóa package)
@@ -72,7 +72,7 @@ triggers:
 2. Xác định phạm vi thay đổi: thêm/bớt/rename thư mục, module, package, script nào.
 3. Thu thập số liệu thống kê thực tế:
    - Đếm thư mục con trong `.agents/skills/` → số lượng skills thực tế
-   - Đếm file `.md` trong `.agents/workflows/` → số lượng workflows thực tế
+   - Đếm file `.md` trong `.agents/workflows/` → số lượng active workflows thực tế (hoặc `.md.bak` là archived workflows)
    - Đếm thư mục con trong `packages/` → số lượng packages thực tế
    - Đếm entries `skill_path` trong `catalog.yaml` → số lượng catalog entries
 
@@ -80,9 +80,9 @@ triggers:
 
 So sánh số liệu thực tế (Bước 1) với các con số hardcoded trong tài liệu. Các con số cần kiểm tra:
 - `"N skills"` — xuất hiện trong: `README.md`, `PLATFORM.md`, `CONTEXT.md`, `copilot-instructions.md`
-- `"N workflows"` — xuất hiện trong: `README.md`, `PLATFORM.md`
+- `"N workflows"` / `"0 workflows (69 archived)"` — xuất hiện trong: `README.md`, `PLATFORM.md`
 - `"N packages"` — xuất hiện trong: `PLATFORM.md`, `CONTRIBUTING.md`
-- `"N models"` — xuất hiện trong: `README.md`, `PLATFORM.md`, `ai-gateway-sdk/SKILL.md`
+- `"N models"` — xuất hiện trong: `README.md`, `PLATFORM.md`, `ccba-ai-gateway-sdk/SKILL.md`
 
 Nếu phát hiện sai lệch → ghi nhận và cập nhật ở Bước 3.
 

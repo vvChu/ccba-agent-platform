@@ -65,3 +65,34 @@ def test_compile_workflows() -> None:
         assert "# Workflow: ccba-wf2" in content
         assert "content of wf 2" in content
         assert "---" in content
+
+
+def test_compile_workflows_archived_fallback() -> None:
+    """Verify that compile_workflows falls back to *.md.bak files with ADR-0056 notice."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        workflows_dir = temp_path / "workflows"
+        workflows_dir.mkdir()
+
+        # Create dummy archived workflow files
+        (workflows_dir / "ccba-legacy-wf1.md.bak").write_text(
+            "content of legacy wf 1", encoding="utf-8"
+        )
+        (workflows_dir / "ccba-legacy-wf2.md.bak").write_text(
+            "content of legacy wf 2", encoding="utf-8"
+        )
+
+        output_file = temp_path / "workflows_compiled.md"
+
+        # Execute
+        compile_workflows(workflows_dir, output_file)
+
+        # Verify
+        assert output_file.exists()
+        content = output_file.read_text(encoding="utf-8")
+        assert "ADR-0056" in content
+        assert "# Archived Workflow: ccba-legacy-wf1" in content
+        assert "content of legacy wf 1" in content
+        assert "# Archived Workflow: ccba-legacy-wf2" in content
+        assert "content of legacy wf 2" in content
+        assert "---" in content
