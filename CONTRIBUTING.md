@@ -50,13 +50,13 @@ Sử dụng Agent Workflow: `/ccba-create-pr` để tạo nhanh.
 ---
 
 Sau khi merge, hãy xóa branch cũ.
-Sử dụng Agent Workflow: `/ccba-release-feature` để tự động merge và dọn dẹp.
+Sử dụng Agent Skill: `/ccba-release-feature` để tự động merge và dọn dẹp.
 
 ---
 
-## 🤖 Agent Workflows
+## 🤖 Agent Skills & Slash Commands
 
-Dự án có sẵn các workflow tự động hóa (trong `.agents/workflows/`):
+Dự án có sẵn các kỹ năng tự động hóa (trong `.agents/skills/ccba-*/SKILL.md`):
 
 | Lệnh | Chức năng | Khi nào dùng? |
 | :--- | :--- | :--- |

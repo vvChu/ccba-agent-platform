@@ -20,10 +20,13 @@ from typing import Any
 import yaml
 
 # Attempt importing AI Gateway
+ai: Any = None
 try:
-    from ccba_ai import ai
+    from ccba_ai import ai as _ai
+
+    ai = _ai
 except ImportError:
-    ai = None
+    pass
 
 
 PLATFORM_ROOT = Path(__file__).resolve().parents[2]
@@ -187,8 +190,20 @@ def call_ai_evaluation(
     """Evaluate a skill using AI Gateway under ADR-0040 (3-Tier Skill Hierarchy), with Rule-Based Fallback."""
     existing_skills, existing_workflows = get_existing_elements()
 
-    is_duplicate = skill_name in existing_skills or skill_name in existing_workflows
-    similar_skills = [s for s in existing_skills if skill_name in s or s in skill_name]
+    canonical_names = {skill_name}
+    if not skill_name.startswith(("ccba-", "bigbim-", "platform-loader")):
+        canonical_names.add(f"ccba-{skill_name}")
+    else:
+        clean = skill_name.removeprefix("ccba-").removeprefix("bigbim-")
+        if clean:
+            canonical_names.add(clean)
+
+    is_duplicate = any(
+        name in existing_skills or name in existing_workflows for name in canonical_names
+    )
+    similar_skills = [
+        s for s in existing_skills if any(name in s or s in name for name in canonical_names)
+    ]
 
     if is_duplicate:
         return {
@@ -247,7 +262,7 @@ def call_ai_evaluation(
             if clean_reply.endswith("```"):
                 clean_reply = clean_reply[:-3]
             clean_reply = clean_reply.strip()
-            result = json.loads(clean_reply)
+            result: dict[str, Any] = dict(json.loads(clean_reply))
             result["xia_command"] = generate_xia_command(
                 remote_url, skill_name, "--port" if result.get("should_port") else "--compare"
             )
@@ -285,7 +300,7 @@ def append_recommendation(
     result: dict[str, Any],
     remote_url: str = "",
     license_desc: str = "MIT License",
-):
+) -> None:
     """Write recommendation to port_recommendations.md using Parse-Protection markers."""
     try:
         if not RECOMMENDATIONS_FILE.parent.exists():
@@ -476,7 +491,7 @@ class UpstreamEvaluator:
 
     def evaluate_repo_diff(
         self, repo_path: Path, base_sha: str, head_sha: str, repo_type: str, remote_url: str
-    ):
+    ) -> None:
         """Run git diff and evaluate modified or new skills under ADR-0040."""
         if not repo_path.exists():
             return
@@ -531,7 +546,7 @@ class UpstreamEvaluator:
         except subprocess.SubprocessError as e:
             print(f"[Evaluator] Git diff error in '{repo_path}': {e}")
 
-    def check_and_evaluate_single(self, config: dict[str, Any], check_only: bool = False):
+    def check_and_evaluate_single(self, config: dict[str, Any], check_only: bool = False) -> None:
         """Check and evaluate a single repository config."""
         repo_type = config["type"]
         local_path: Path = config["local_path"]
@@ -592,7 +607,7 @@ class UpstreamEvaluator:
         else:
             print(f"[Upstream Check] {repo_type} is up-to-date.")
 
-    def sync_and_evaluate(self, check_only: bool = False):
+    def sync_and_evaluate(self, check_only: bool = False) -> None:
         """Run update checks across all configured repositories."""
         print("[Upstream Check] Running update checks across repositories...\n")
         for config in self.configs:
@@ -600,7 +615,7 @@ class UpstreamEvaluator:
         print("\n[Upstream Check] All update checks completed.")
 
 
-def main():
+def main() -> None:
     import argparse
 
     if sys.platform == "win32":
