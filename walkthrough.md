@@ -1,54 +1,54 @@
-# Walkthrough: Tái Cấu Trúc AGENTS.md theo Mô hình Progressive Disclosure
+# Walkthrough — PR #242: Copilot Review Remediations & Release Gate Hardening
 
-Đã hoàn thành tái cấu trúc toàn diện hệ thống chỉ dẫn của CCBA Platform dựa trên các quyết định từ phiên `/ccba-grill-with-docs` và chuẩn mực từ bài viết *"A Complete Guide To AGENTS.md"* của Matt Pocock.
-
----
-
-## 🎯 Các Hạng Mục Đã Thực Hiện
-
-### 1. Root Configuration & Cross-Agent Parity Bridge
-- **`AGENTS.md`**: Tinh gọn mỏ neo định vị Platform còn dưới 25 dòng (< 300 tokens), giữ các bất biến cốt lõi (Hub vs Spoke, Reuse-First Gate, Session Learnings, Automation Quality).
-- **`CLAUDE.md`**: Cầu nối tương thích chuẩn mực cho Claude Code tại thư mục gốc repository.
-- **`.agents/AGENTS.md`**: Đồng bộ cấu trúc tối giản với root `AGENTS.md`.
-
-### 2. Phân rã Quy chuẩn Chuyên biệt (`docs/rules/`)
-- **`docs/rules/execution_guardrails.md`**: 8 Execution Guardrails (Scoped Pytest, Anti-Polling, TDD Cap, Safe Process Termination, 2-Tier Test Speed).
-- **`docs/rules/git_conventions.md`**: Quy chuẩn branch naming, commit types, và atomic logical units.
-- **`docs/rules/code_quality.md`**: Automation-First quality gates, Deep Seams, KISS architecture.
-
-### 3. Phân tầng Monorepo (`packages/*/AGENTS.md`)
-Đã thiết lập 8 tệp `AGENTS.md` tinh gọn (3-6 dòng) xác định Public Deep Seams và scoped test commands:
-- `packages/ccba-ai/AGENTS.md`
-- `packages/ccba-harness/AGENTS.md`
-- `packages/ccba-legal-intel/AGENTS.md`
-- `packages/ccba-maskara/AGENTS.md`
-- `packages/ccba-notebooklm/AGENTS.md`
-- `packages/ccba-ooxml/AGENTS.md`
-- `packages/ccba-pdf-prep/AGENTS.md`
-- `packages/mdconverter/AGENTS.md`
-
-### 4. Ghi nhận Hồ sơ Kiến trúc & Thuật ngữ Miền
-- **5 ADRs mới**: ADR 0030, ADR 0031, ADR 0032, ADR 0033, ADR 0034 trong `docs/adr/`.
-- **8 Thuật ngữ chuẩn hóa** được bổ sung vào `CONTEXT.md`.
+Gói cập nhật này xử lý triệt để toàn bộ các phản biện kỹ thuật của GitHub Copilot trên các PR #240, #241 và PR #242, đồng thời nâng cấp toàn diện công cụ Release Gate Audit (`audit_pr_comments.py`) để ngăn chặn việc merge sớm khi Copilot còn khuyến nghị thay đổi.
 
 ---
 
-## 🤖 Giải Trình & Đối Soát Nhận Xét Của Copilot (PR #193)
+## 1. Bảng Đối Soát & Khắc Phục Ý Kiến Review Của GitHub Copilot
 
-Tất cả 6 nhận xét của Copilot đã được tiếp thu, đối soát trực tiếp với `__init__.py` của các packages và sửa lỗi trong commit `348fc4b`:
-
-- **Comment 3788190826** (`packages/ccba-harness/AGENTS.md`): Đã cập nhật import seams thành `HarnessEngine, HarnessGuard, FileMutexLock, HarnessLocal`.
-- **Comment 3788190838** (`packages/ccba-legal-intel/AGENTS.md`): Đã cập nhật import seams thành `LegalIntelPipeline, LegalProcessor, LegalSyncEngine, LegalRegistryManager, LegalGroundingGate`.
-- **Comment 3788190843** (`packages/ccba-notebooklm/AGENTS.md`): Đã cập nhật import seams thành `CCBANotebookLMClient, NotebookLMClient, get_client, query_rag, handle_artifact_flow, extract_and_summarize`.
-- **Comment 3788190852** (`packages/mdconverter/AGENTS.md`): Đã cập nhật import seams thành `ConversionPipeline, ConverterRegistry, BaseConverter, ConversionResult, get_settings`.
-- **Comment 3788190859** (`packages/ccba-maskara/AGENTS.md`): Đã cập nhật import seams thành `MaskaraScanner, detect_secrets_in_text, redact_secrets_in_text`.
-- **Comment 3788190865** (`packages/ccba-ooxml/AGENTS.md`): Đã cập nhật import seams thành `pack_document, unpack_document, validate_document, OOXMLWorkspace, recalc_xlsx, DocxDocument`.
+| Nguồn | Tệp tin / ID Bình luận | Vấn đề Copilot chỉ ra | Đánh giá | Trạng thái xử lý trong PR #242 |
+| :--- | :--- | :--- | :--- | :--- |
+| **PR #240** | `scripts/spoke/upstream_evaluator.py:212` | Khi chuẩn hóa tên (ví dụ `ask` khớp với `ccba-ask`), thông báo duplicate ghi `Kỹ năng 'ask' đã tồn tại` gây khó hiểu cho dev. | **VALID** | Đã sửa: Báo rõ `Kỹ năng '{skill_name}' (khớp với '{matched_skill}') đã tồn tại sẵn...` (Commit `79362a4b`). |
+| **PR #240** | `.agents/skills/ccba-eval-gate/program_template.md:11` (ID `3940102548`) | Đường dẫn trỏ tới `eval_ccba_legal_intel.json` không tồn tại; tệp thực tế là `eval_legal_intel.json`. | **VALID** | Đã sửa đường dẫn thành `.agents/skills/ccba-eval-gate/test_cases/eval_legal_intel.json` (Commit `79362a4b`). |
+| **PR #240** | `CONTRIBUTING.md:60` (ID `3940102558`) | Hướng dẫn vị trí kỹ năng chỉ ghi `ccba-*`, bỏ sót `bigbim-*` và `platform-loader`. | **VALID** | Đã cập nhật mở rộng mô tả bao gồm `ccba-*`, `bigbim-*`, và `platform-loader` (Commit `79362a4b`). |
+| **PR #241** | `scripts/governance/skill_auditor.py:112` (ID `3940156105`) | Kiểm tra Namespace Purity dùng `startswith` với `platform-loader` khiến các biến thể như `platform-loader-fake` bị lọt lưới. | **VALID** | Đã sửa thành: `name.startswith(("ccba-", "bigbim-")) or name == "platform-loader"` kèm unit tests chặn `platform-loader-*` (Commit `79362a4b`). |
+| **PR #241** | `scripts/spoke/sync/registry.py:95` (ID `3940156122`) | Khi không tìm thấy public key ở cả vị trí mới và cũ, hàm âm thầm `return` mà không ghi log ra stderr. | **VALID** | Đã bổ sung `print(..., file=sys.stderr)` thông báo rõ ràng (Commit `79362a4b`). |
+| **PR #241** | `.agents/workflows/ccba-brainstorm.md.bak:28,64` | Tệp lưu trữ workflow vẫn trỏ link chết tới `resources/brainstorm_topics.yaml` và `resources/brainstorm_techniques.md`. | **VALID** | Đã cập nhật trỏ sang `../skills/ccba-brainstorm/resources/` và tái biên dịch `workflows_compiled.md` (Commit `79362a4b`). |
+| **PR #242** | `scripts/validation/audit_pr_comments.py:86` (ID `3940211533`) | `fetch_inline_comments()` hardcode repo `vvChu/ccba-agent-platform` và không phân trang (`--paginate`). | **VALID** | Đã sửa: Dùng `repos/:owner/:repo/pulls/{pr_number}/comments` và cờ `--paginate` (Commit `1cc69481`). |
+| **PR #242** | `scripts/validation/audit_pr_comments.py:199` (ID `3940211552`) | `audit_pull_request()` bỏ sót kiểm tra top-level PR conversation comments từ Copilot. | **VALID** | Đã bổ sung bước 4 quét toàn bộ PR-level conversation comments (Commit `1cc69481`). |
+| **PR #242** | Review Summary `PRR_kwDOQzfV088AAAABMTjDAw` | `### 🟡 Changes recommended` về 2 điểm trên của `audit_pr_comments.py`. | **VALID** | Đã giải quyết triệt để 100% qua commit `1cc69481` và bổ sung unit test `test_audit_pr_comments.py` (8/8 tests pass). |
 
 ---
 
-## 🧪 Kết quả Kiểm chứng (Validation)
+## 2. Nâng Cấp Bộ Công Cụ Release Gate (`audit_pr_comments.py`)
 
-1. **Linter Static Verification**:
-   - `ruff check packages/` $\rightarrow$ **All checks passed!**
-2. **Comprehensive Test Suite**:
-   - `python scripts/eval/run_isolated_tests.py --all --stress` $\rightarrow$ **10/10 Targets Passed (100% Pass)**.
+1. **Quét đa tầng (Multi-tier Audit)**:
+   - **Tầng 1 (Review Requests)**: Phát hiện `copilot-pull-request-reviewer` đang được yêu cầu review (trạng thái Pending) $\rightarrow$ Trả về exit code 2, bắt buộc chờ.
+   - **Tầng 2 (PR Reviews)**: Đọc chính xác `author.login` (schema GitHub CLI), phát hiện `### 🟡 Changes recommended` hoặc trạng thái `CHANGES_REQUESTED` trong review body $\rightarrow$ Trả về exit code 1, chặn đứng merge sớm.
+   - **Tầng 3 (Inline Diff Comments)**: Quét toàn bộ inline comments trên mã nguồn qua endpoint `repos/:owner/:repo/pulls/{pr_number}/comments` kèm `--paginate`.
+   - **Tầng 4 (PR Conversation Comments)**: Quét các bình luận thảo luận chung của PR.
+2. **Hỗ trợ CLI linh hoạt**: Hỗ trợ truyền `--pr <number>` hoặc đối số vị trí để dễ dàng kiểm định bất kỳ PR nào.
+3. **Bộ Unit Test độc lập (`scripts/tests/test_audit_pr_comments.py`)**: 8 bài kiểm thử chuyên sâu bao phủ toàn bộ các kịch bản: nhận diện bot, pending review, review changes recommended, inline comments, conversation comments, và phân trang API.
+
+---
+
+## 3. Tinh Chỉnh Rào Chắn Kiến Trúc (`drift_auditor.py`)
+
+- Cập nhật `drift_auditor.py`: Miễn trừ thư mục kiểm thử `scripts/tests/` khỏi việc kích hoạt cảnh báo cấu trúc (`structural_change`), giúp các PR bổ sung unit test độc lập không bị chặn sai bởi gate kiểm tra tài liệu kiến trúc.
+- Đồng bộ hóa tài liệu nhạy cảm kiến trúc: Cập nhật `.agents/skills/ccba-architecture-sync/SKILL.md` ghi nhận công cụ `audit_pr_comments.py`.
+
+---
+
+## 4. Kết quả Kiểm định Toàn trình
+
+| Kiểm định | Lệnh thực thi | Kết quả |
+| :--- | :--- | :--- |
+| **Audit PR Comments Unit Tests** | `python -m pytest scripts/tests/test_audit_pr_comments.py -v` | ✅ PASS (8/8 tests, 0.17s) |
+| **Governance Sub-Auditors Tests** | `python -m pytest scripts/tests/test_governance_sub_auditors.py -v` | ✅ PASS (13/13 tests, 0.58s) |
+| **Upstream Evaluator Tests** | `python -m pytest scripts/tests/test_upstream_evaluator.py -v` | ✅ PASS (4/4 tests) |
+| **Scripts Suite (186 tests)** | `python -m pytest scripts/tests/` | ✅ PASS (186 passed in 67s) |
+| **Documentation Check** | `python scripts/validate_docs.py . --src scripts,packages --changed` | ✅ PASS (0 issues detected) |
+| **Skill Validation Gate** | `python scripts/validate_skills.py` | ✅ PASS (99/99 skills đạt chuẩn) |
+| **Static Code Quality** | `python -m ruff check scripts/ && python -m ruff format --check scripts/` | ✅ PASS (All checks passed) |
+| **Type Checking** | `python -m mypy ...` | ✅ PASS (Success: no issues found) |
+| **GitHub Actions CI (PR #242)** | 6 Jobs (Lint Markdown, Validate Docs, Scan, Py3.10, Py3.11, Py3.12) | ✅ PASS (100% Green) |
