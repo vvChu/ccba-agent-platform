@@ -1,13 +1,15 @@
 ---
 id: 226
 title: "feat(questionnaire): dual-track engine for upstream hub rfc and downstream multi-format project delivery"
-state: "ready-for-agent"
+state: "closed"
 labels:
   - "enhancement"
-  - "ready-for-agent"
-assignee: "none"
+  - "resolved"
+assignee: "vvChu"
 created_at: "2026-09-01T02:46:23Z"
-updated_at: "2026-09-01T03:15:00Z"
+updated_at: "2026-09-05T06:16:00Z"
+pr: 238
+pr_url: "https://github.com/vvChu/ccba-agent-platform/pull/238"
 ---
 
 # 📖 Mô tả (Description)
