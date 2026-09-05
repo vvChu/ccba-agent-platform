@@ -97,5 +97,5 @@ def redact_findings(scan_result: dict[str, Any], backup_dir: Path = BACKUP_DIR) 
             print(f"[Error] Failed to redact {path}: {e}", file=sys.stderr)
             total_skipped += 1
 
-    files_summary.sort(key=lambda x: x["path"])
+    files_summary.sort(key=lambda x: str(x["path"]))
     return {"files": files_summary, "replaced": total_replaced, "skipped": total_skipped}
