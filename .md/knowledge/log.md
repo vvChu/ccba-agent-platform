@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-05] [synthesize] | Chuẩn Hóa Namespace Kỹ Năng ADR-0056, Nâng Cấp Release Gate & Đồng Bộ CLI Toàn Trình (PR #240-#243)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /boost, /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `.agents/skills/`, `.agents/workflows/`, `.agents/resources/`, `scripts/governance/`, `scripts/spoke/`, `scripts/ccba_platform_cli.py`, `scripts/validation/audit_pr_comments.py`, `.md/knowledge/session_learnings.md`
+- **Summary**: Hoàn tất chuỗi PR #240, #241, #242, và #243: (1) Chuẩn hóa 61 kỹ năng sang namespace `ccba-*`, di dời toàn bộ 69 legacy workflows sang kỹ năng độc lập hoặc `.md.bak` theo ADR-0056, giải phóng hoàn toàn thư mục workflows và tái biên dịch `catalog.yaml` (99 skills, 0 workflows); (2) Khắc phục triệt để 8/8 phản biện kỹ thuật từ GitHub Copilot Review; (3) Nâng cấp bộ công cụ Release Gate `audit_pr_comments.py` quét 4 tầng (review requests, review bodies có `author.login` và `### 🟡 Changes recommended`, paginated inline comments, PR conversation comments) kèm 8 bài unit test độc lập; (4) Đồng nhất hóa 100% tham số và cờ CLI (`--apply`, `--bootstrap`, `--force`, `--include-sandboxes`, `--archetype`, `--changed`) giữa Unified Platform CLI `ccba_platform_cli.py`, Spoke Synchronizer `scripts/spoke/sync/cli.py` và 5 tài liệu kỹ năng điều phối; (5) Bổ sung Pattern 12 và Pattern 13 vào `session_learnings.md`, vượt qua 100% CI checks GitHub Actions và toàn bộ các bộ test suite.
+
+---
+
 ## [2026-09-03] [adr] | Phát Hành Two-Tier ADR Traceability Matrix & Hardened Type Safety (#231, PR #236)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /ccba-create-pr, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `scripts/sync_hub_adr_matrix.py`, `tests/governance/test_sync_adr_matrix.py`, `docs/adr/TRACEABILITY_MATRIX.md`, `docs/adr/README.md`, `.agents/skills/ccba-adr-lifecycle/SKILL.md`, `packages/ccba-legal-intel/`, `pyproject.toml`, `.md/knowledge/issues/issue-231.md`
