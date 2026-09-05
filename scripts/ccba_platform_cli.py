@@ -159,8 +159,10 @@ def execute_ingest_legal(
             print(f"  [Mocked] Generated sandbox .docx at {temp_docx_path}")
         else:
             try:
-                from ccba_legal.coordinator import LegalIntelPipeline
-                from ccba_legal.crawler import TVPLSessionMutex
+                from ccba_legal.coordinator import (
+                    LegalIntelPipeline,  # type: ignore[import-untyped]
+                )
+                from ccba_legal.crawler import TVPLSessionMutex  # type: ignore[import-untyped]
 
                 mutex = TVPLSessionMutex()
                 with mutex:
@@ -205,7 +207,7 @@ def execute_ingest_legal(
     if sync_cloud:
         print("\n[Cloud Sync] Triggering LegalSyncEngine to update NotebookLM...")
         try:
-            from ccba_legal.sync import LegalSyncEngine
+            from ccba_legal.sync import LegalSyncEngine  # type: ignore[import-untyped]
 
             _sync_engine = LegalSyncEngine()
             _ = _sync_engine
@@ -236,7 +238,7 @@ def display_spoke_health_dashboard(hub_root: Path | None = None) -> int:
     )
     if not spokes:
         print("  Không tìm thấy Spoke nào được đăng ký trong Hub Registry.")
-        print("  Gợi ý: Dùng '/ccba-init-spoke' hoặc '/ccba-adopt-spoke' để kết nối Spoke mới.")
+        print("  Gợi ý: Dùng '/ccba-init-spoke' hoặc '/ccba-spoke-adopter' để kết nối Spoke mới.")
         print(
             "=========================================================================================="
         )
@@ -292,6 +294,11 @@ def build_parser() -> argparse.ArgumentParser:
     adopt_p.add_argument(
         "spoke_path", nargs="?", default=".", help="Path to target spoke (default: current dir)"
     )
+    adopt_p.add_argument(
+        "--archetype",
+        default=None,
+        help="Explicit CCBA Spoke Archetype ('project_delivery', 'enterprise_governance', 'knowledge_corpus', 'specialized_extension')",
+    )
     adopt_p.add_argument("--type", dest="project_type", default=None, help="Explicit project type")
     adopt_p.add_argument("--mode", default=None, help="Execution mode (software/delivery/hybrid)")
     adopt_p.add_argument(
@@ -299,16 +306,38 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     # sync-spoke
-    sync_p = subparsers.add_parser("sync-spoke", help="Synchronize skills and workflows to a spoke")
+    sync_p = subparsers.add_parser("sync-spoke", help="Synchronize skills to a spoke")
     sync_p.add_argument(
         "spoke_path", nargs="?", default=".", help="Path to target spoke (default: current dir)"
     )
-    sync_p.add_argument("--sync-item", default=None, help="Specific skill/workflow name")
+    sync_p.add_argument("--sync-item", default=None, help="Specific skill name")
     sync_p.add_argument(
         "--all", action="store_true", help="Batch sync all registered Spokes in Hub Registry"
     )
     sync_p.add_argument(
         "--dry-run", action="store_true", help="Preview changes without modifying files"
+    )
+    sync_p.add_argument(
+        "--apply",
+        "-y",
+        action="store_true",
+        help="Apply synchronization changes directly to disk",
+    )
+    sync_p.add_argument(
+        "--force",
+        action="store_true",
+        help="Ignore uncommitted changes warning and proceed with sync",
+    )
+    sync_p.add_argument(
+        "--include-sandboxes",
+        action="store_true",
+        help="Include personal sandboxes in batch synchronization (default: False)",
+    )
+    sync_p.add_argument(
+        "--bootstrap",
+        "-b",
+        action="store_true",
+        help="Automatically bootstrap Python packages and virtual environment after sync",
     )
 
     # bootstrap-spoke (ADR 0044)
@@ -390,16 +419,21 @@ def main() -> int:
             dry_run=args.dry_run,
             project_type=args.project_type,
             mode=args.mode,
+            archetype=args.archetype,
         )
 
     elif args.command == "sync-spoke":
+        dry_run = not args.apply if not args.dry_run else True
         if args.all:
             from scripts.spoke import sync_all_spokes
 
             return sync_all_spokes(
                 hub_root=_ROOT_DIR,
                 sync_item=args.sync_item,
-                dry_run=args.dry_run,
+                dry_run=dry_run,
+                force=args.force,
+                include_sandboxes=args.include_sandboxes,
+                bootstrap=args.bootstrap,
             )
         else:
             from scripts.spoke import sync_project
@@ -407,7 +441,9 @@ def main() -> int:
             return sync_project(
                 spoke_path=args.spoke_path,
                 sync_item=args.sync_item,
-                dry_run=args.dry_run,
+                dry_run=dry_run,
+                force=args.force,
+                bootstrap=args.bootstrap,
             )
 
     elif args.command == "bootstrap-spoke":
@@ -442,11 +478,13 @@ def main() -> int:
         return 0 if not report.has_errors else 1
 
     elif args.command == "validate-cross-ref":
-        from scripts.governance.cross_ref_validator import CrossReferenceValidator
+        from scripts.governance.cross_ref_validator import validate_cross_references
 
-        validator = CrossReferenceValidator(matrix_path=Path(args.matrix), root_dir=_ROOT_DIR)
-        report = validator.validate(auto_fix=args.fix)
-        return 0 if not report.has_errors else 1
+        return validate_cross_references(
+            yaml_path=Path(args.matrix),
+            project_root=_ROOT_DIR,
+            auto_fix=args.fix,
+        )
 
     else:
         parser.print_help()
