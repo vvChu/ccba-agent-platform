@@ -158,18 +158,27 @@ disable-model-invocation: true
         auditor = SkillAuditor(project_root=self.root)
         skill_file = self.root / "SKILL.md"
 
-        # Invalid namespace
-        skill_file.write_text(
-            """---
-name: unapproved-legacy-skill
+        # Invalid namespaces: legacy skills and prefixed platform-loader-*
+        for invalid_name in [
+            "unapproved-legacy-skill",
+            "platform-loader-fake",
+            "platform-loader-something",
+            "ask",
+        ]:
+            skill_file.write_text(
+                f"""---
+name: {invalid_name}
 description: Valid description
 ---
 # Test
 """,
-            encoding="utf-8",
-        )
-        issues = auditor.audit_skill(skill_file)
-        self.assertTrue(any(i.category == "INVALID_NAMESPACE" for i in issues))
+                encoding="utf-8",
+            )
+            issues = auditor.audit_skill(skill_file)
+            self.assertTrue(
+                any(i.category == "INVALID_NAMESPACE" for i in issues),
+                f"Invalid name '{invalid_name}' was unexpectedly accepted",
+            )
 
         # Valid namespaces: ccba-*, bigbim-*, platform-loader
         for valid_name in ["ccba-valid-skill", "bigbim-test", "platform-loader"]:
