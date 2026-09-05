@@ -27,7 +27,7 @@ Workflow này tự động hóa việc thiết lập không gian làm việc d�
 > [!CAUTION]
 > Nếu thư mục hiện tại **đã có sẵn mã nguồn hoặc cấu hình cũ** (có `workspace_context.yaml`, `.md/`, `.agents/`):
 > - **TUYỆT ĐỐI KHÔNG** chạy tiếp `/ccba-init-spoke` để tránh ghi đè dữ liệu!
-> - Hãy chuyển sang lệnh: **`/ccba-adopt-spoke`** để tự động tiếp nhận an toàn và bảo tồn 100% dữ liệu cũ.
+> - Hãy chuyển sang lệnh: **`/ccba-spoke-adopter`** để tự động tiếp nhận an toàn và bảo tồn 100% dữ liệu cũ.
 
 ---
 

@@ -8,7 +8,7 @@ Cách các công cụ kỹ thuật tiêu thụ tài liệu nghiệp vụ/miền 
 - **`CONTEXT-MAP.md`** tại thư mục gốc (hoặc tại `.md/knowledge/CONTEXT-MAP.md`) nếu dự án có nhiều miền tri thức con — file này sẽ chỉ đường dẫn cụ thể đến từng file `CONTEXT.md` của từng bộ môn/module. Đọc các file liên quan đến nghiệp vụ cần làm việc.
 - **`docs/adr/`** — Đọc các tài liệu Quyết định Kiến trúc (ADRs) liên quan đến phần tính năng chuẩn bị code. Đối với monorepo/multi-context, kiểm tra thêm thư mục ADRs cục bộ của từng module con (ví dụ: `src/<context>/docs/adr/` hoặc `packages/<package>/docs/adr/`).
 
-Nếu các tệp tin này không tồn tại, **tiến hành một cách âm thầm**. Không báo lỗi, không tự ý đề xuất tạo mới chúng trước khi bắt đầu. Kỹ năng `/ccba-grill-with-docs` hoặc `/ccba-improve-codebase-architecture` sẽ kích hoạt việc tạo mới một cách lười biếng (lazy) khi các thuật ngữ hoặc quyết định kiến trúc thực sự được giải quyết.
+Nếu các tệp tin này không tồn tại, **tiến hành một cách âm thầm**. Không báo lỗi, không tự ý đề xuất tạo mới chúng trước khi bắt đầu. Kỹ năng `/ccba-grilling` hoặc `/ccba-improve-codebase-architecture` sẽ kích hoạt việc tạo mới một cách lười biếng (lazy) khi các thuật ngữ hoặc quyết định kiến trúc thực sự được giải quyết.
 
 ## Bố cục file mẫu
 
@@ -42,7 +42,7 @@ Dự án Đa miền tri thức (Multi-context):
 
 Khi xuất tài liệu, viết code, đặt tên biến, comment, đặt tên test case, hoặc viết Issue, bắt buộc phải dùng chính xác thuật ngữ đã được định nghĩa trong `CONTEXT.md`. Tuyệt đối không dùng các từ đồng nghĩa khác ngoài Glossary để tránh nhầm lẫn nghiệp vụ.
 
-Nếu khái niệm bạn cần chưa có trong Glossary, đó là dấu hiệu: Hoặc bạn đang tự chế ra ngôn ngữ mà dự án không sử dụng, hoặc đang có lỗ hổng tri thức cần cập nhật (hãy ghi chú lại để chạy `/ccba-grill-with-docs`).
+Nếu khái niệm bạn cần chưa có trong Glossary, đó là dấu hiệu: Hoặc bạn đang tự chế ra ngôn ngữ mà dự án không sử dụng, hoặc đang có lỗ hổng tri thức cần cập nhật (hãy ghi chú lại để chạy `/ccba-grilling`).
 
 ## Cảnh báo xung đột ADR
 

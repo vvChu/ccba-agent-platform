@@ -17,9 +17,9 @@ Mọi xử lý PDF chạy local, **không upload lên cloud** (bảo mật dữ 
 
 | Thao tác | Lệnh |
 |---|---|
-| Ghép | `python .agents/skills/xu-ly-van-phong/scripts/process_pdf.py merge --input f1.pdf f2.pdf --output out.pdf` |
-| Tách | `python .agents/skills/xu-ly-van-phong/scripts/process_pdf.py split --input in.pdf --pages 1-3,5 --output out.pdf` |
-| Trích text | `python .agents/skills/xu-ly-van-phong/scripts/process_pdf.py extract --input in.pdf --output text.txt` |
+| Ghép | `python .agents/skills/ccba-xu-ly-van-phong/scripts/process_pdf.py merge --input f1.pdf f2.pdf --output out.pdf` |
+| Tách | `python .agents/skills/ccba-xu-ly-van-phong/scripts/process_pdf.py split --input in.pdf --pages 1-3,5 --output out.pdf` |
+| Trích text | `python .agents/skills/ccba-xu-ly-van-phong/scripts/process_pdf.py extract --input in.pdf --output text.txt` |
 | Trích bảng | Dùng `pdfplumber` (tốt hơn pypdf cho bảng) |
 | Xoay trang | `pypdf` rotate |
 | Đặt mật khẩu | `pypdf` encrypt |
@@ -30,7 +30,7 @@ Mọi xử lý PDF chạy local, **không upload lên cloud** (bảo mật dữ 
 
 | Loại PDF | Phương pháp |
 |---|---|
-| PDF digital | Script `.agents/skills/xu-ly-van-phong/scripts/convert/convert_pdf_to_docx.py` (dùng `pdf2docx`) |
+| PDF digital | Script `.agents/skills/ccba-xu-ly-van-phong/scripts/convert/convert_pdf_to_docx.py` (dùng `pdf2docx`) |
 | PDF scan | Phân tích AI Vision → tái tạo cả cấu trúc + màu sắc → DOCX |
 
 Khi tái tạo từ PDF scan, cần phân tích đầy đủ:

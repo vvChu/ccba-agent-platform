@@ -25,13 +25,13 @@ Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nh
 
 Đây là lộ trình chuẩn nhất của mọi yêu cầu phát triển tính năng mới trong Platform:
 
-1. **Làm sắc nét ý tưởng:** Gọi `/ccba-grill-with-docs` để phỏng vấn sâu rộng và ghi nhận tri thức dự án vào `CONTEXT.md` và các bản ghi quyết định kiến trúc (ADRs).
+1. **Làm sắc nét ý tưởng:** Gọi `/ccba-grilling` để phỏng vấn sâu rộng và ghi nhận tri thức dự án vào `CONTEXT.md` và các bản ghi quyết định kiến trúc (ADRs).
 2. **Rẽ nhánh — prototype hay spec:**
    - Nếu cần kiểm chứng giao diện/hành vi trực quan: Chạy `/ccba-handoff` ➔ mở phiên `/ccba-prototype` ➔ `/ccba-handoff` kết quả trở lại.
    - Nếu là build nhiều phiên: Chạy `/ccba-to-spec` để tổng hợp thành Đặc tả Kỹ thuật.
 3. **Phân rã tác vụ công việc:** Gọi `/ccba-to-tickets` để bẻ nhỏ Spec thành các ticket độc lập dạng lát cắt dọc (Tracer-bullet vertical slices).
 4. **Triển khai lập trình (TDD):** Mở cửa sổ Agent sạch và chạy `/ccba-implement` (hoặc `/ccba-tdd`) để hiện thực hóa từng ticket độc lập.
-5. **Kiểm soát chất lượng (QC):** Chạy `/ccba-run-qc-pipeline` để quét chất lượng và rà soát lỗi đa bộ môn.
+5. **Kiểm soát chất lượng (QC):** Chạy `/ccba-ai-qc` để quét chất lượng và rà soát lỗi đa bộ môn.
 6. **Bàn giao cuối phiên làm việc:** Chạy `/ccba-session-retrospective` (hoặc `/ccba-handoff`) để dọn dẹp môi trường và tổng hợp tri thức bàn giao.
 
 > [!TIP]
@@ -42,7 +42,7 @@ Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nh
 ## Các luồng bổ trợ (On-ramps & Upkeep)
 
 *   **Tiếp nhận yêu cầu thô / Báo lỗi từ bên ngoài:** Chạy `/ccba-triage` để phân loại trạng thái, lọc trùng lặp với `.out-of-scope/` và soạn thảo Agent Brief.
-*   **Xử lý lỗi hóc búa / Regression:** Sử dụng kỹ năng `diagnosing-bugs` để xây dựng vòng phản hồi nhanh và viết test hồi quy trước khi vá lỗi.
+*   **Xử lý lỗi hóc búa / Regression:** Sử dụng kỹ năng `ccba-diagnosing-bugs` để xây dựng vòng phản hồi nhanh và viết test hồi quy trước khi vá lỗi.
 *   **Upkeep kiến trúc hệ thống:** Chạy `/ccba-improve-codebase-architecture` để phát hiện các module nông và deepening cấu trúc code.
 *   **Không gian học tập:** Chạy `/ccba-teach` để khởi động không gian bài giảng/nghiên cứu trong thư mục ẩn `.md/teach/`.
 

@@ -24,7 +24,7 @@ bundle: _core
 Kỹ năng này giúp phát hiện các điểm nghẽn kiến trúc thực tế và đề xuất **Cơ hội làm sâu module (Deepening Opportunities)** — các hoạt động refactor giúp chuyển đổi các module nông (shallow modules) thành các module sâu (deep modules), đồng thời loại bỏ nợ kỹ thuật tồn dư (symbol collisions, import drift, legacy scripts). Mục tiêu tối thượng là tăng khả năng kiểm thử (testability) và tính dễ định hướng cho AI (AI-navigability).
 
 Quy trình này được định hướng bởi domain model của dự án và xây dựng trên bộ từ vựng thiết kế phần mềm thống nhất:
-- Sử dụng chính xác các thuật ngữ từ kỹ năng `/codebase-design` (**module**, **interface**, **depth**, **seam**, **adapter**, **leverage**, **locality**) và các nguyên lý đi kèm (phép thử xóa bỏ - deletion test, "interface là bề mặt kiểm thử", "một adapter = seam giả thuyết, hai adapter = seam thực tế"). Tuyệt đối không dùng lệch sang các từ "component", "service", "API" hoặc "boundary".
+- Sử dụng chính xác các thuật ngữ từ kỹ năng `/ccba-codebase-design` (**module**, **interface**, **depth**, **seam**, **adapter**, **leverage**, **locality**) và các nguyên lý đi kèm (phép thử xóa bỏ - deletion test, "interface là bề mặt kiểm thử", "một adapter = seam giả thuyết, hai adapter = seam thực tế"). Tuyệt đối không dùng lệch sang các từ "component", "service", "API" hoặc "boundary".
 - Ngôn ngữ domain trong `CONTEXT.md` cung cấp tên gọi chuẩn cho các seam; các tài liệu ADR trong thư mục `.md/knowledge/` ghi nhận các quyết định kiến trúc đã chốt mà quy trình này không được tự ý lật lại.
 
 ---
@@ -109,12 +109,12 @@ Quy trình này được định hướng bởi domain model của dự án và 
 - **Tiêu chí hoàn thành:** Báo cáo HTML được ghi thành công vào thư mục tạm `.md/scratch/`, mở được trên trình duyệt mặc định mà không gặp lỗi CLI, hiển thị đầy đủ các thẻ ứng viên, sơ đồ Before/After, và danh sách ứng viên bị loại.
 
 ### 4. Vòng lặp Chất vấn (Grilling loop)
-- Sau khi người dùng chọn một ứng viên cải tiến, kích hoạt kỹ năng `/grilling` để tiến hành phỏng vấn sâu với Kỹ sư về: các ràng buộc (constraints), dependency, cấu trúc của module được làm sâu, logic nằm sau seam, và các test case được bảo toàn.
+- Sau khi người dùng chọn một ứng viên cải tiến, kích hoạt kỹ năng `/ccba-grilling` để tiến hành phỏng vấn sâu với Kỹ sư về: các ràng buộc (constraints), dependency, cấu trúc của module được làm sâu, logic nằm sau seam, và các test case được bảo toàn.
 - Cập nhật domain model và tài liệu tri thức song song:
   * Nếu đặt tên module làm sâu theo một khái niệm mới chưa có trong `CONTEXT.md` $\rightarrow$ Thêm thuật ngữ đó vào `CONTEXT.md`.
   * Nếu làm sắc nét thêm một thuật ngữ mập mờ $\rightarrow$ Cập nhật định nghĩa trực tiếp vào `CONTEXT.md`.
   * Nếu người dùng từ chối đề xuất vì một lý do kỹ thuật nền tảng quan trọng $\rightarrow$ Đề xuất ghi nhận thành tài liệu ADR trong thư mục `.md/knowledge/` để tránh các đợt quét sau đề xuất lại trùng lặp.
-  * Nếu muốn so sánh các thiết kế interface khác nhau cho module sâu $\rightarrow$ Kích hoạt kỹ năng `/codebase-design` và chạy cơ chế parallel sub-agent (thiết kế hai phương án độc lập để đối chiếu).
+  * Nếu muốn so sánh các thiết kế interface khác nhau cho module sâu $\rightarrow$ Kích hoạt kỹ năng `/ccba-codebase-design` và chạy cơ chế parallel sub-agent (thiết kế hai phương án độc lập để đối chiếu).
   * **Đề xuất dựng mẫu thử nhanh (ADR 0010):** Sau khi thống nhất phương án triển khai, nếu việc refactor ảnh hưởng trực tiếp đến **Core Platform (Hub)** (ví dụ: sửa đổi core services, metadata registry, database schema chung), Agent bắt buộc phải đề xuất hoặc kích hoạt `/ccba-prototype` (nhánh Logic/UI) để dựng nhanh mô phỏng hoạt động trước khi code thật. Đối với các Spoke apps hoặc hàm nghiệp vụ độc lập, Agent đề xuất viết code trực tiếp và chạy suite kiểm thử để tối ưu thời gian.
 - **Tiêu chí hoàn thành:** Phiên chất vấn grilling kết thúc, thống nhất được phương án triển khai cụ thể, và các tài liệu tri thức (`CONTEXT.md`, ADRs) được cập nhật đồng bộ.
 

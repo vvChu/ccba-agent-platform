@@ -36,6 +36,13 @@ class TestUpstreamEvaluator(unittest.TestCase):
         self.assertFalse(result.get("should_port", True))
         self.assertIn("IGNORE", result.get("reason", "").upper())
 
+    def test_call_ai_evaluation_duplicate_prefix_normalization(self):
+        """Test evaluation behavior when upstream skill name lacks ccba- prefix but local catalog has ccba-<name>."""
+        result = call_ai_evaluation("engineer", "ask", "description: test ask")
+        self.assertIsInstance(result, dict)
+        self.assertFalse(result.get("should_port", True))
+        self.assertIn("IGNORE", result.get("reason", "").upper())
+
     def test_append_recommendation_parse_protection(self):
         """Test append_recommendation preserves developer notes section."""
         tmp_dir = PLATFORM_ROOT / ".md" / "scratch" / "test_eval"
