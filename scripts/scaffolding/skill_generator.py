@@ -315,6 +315,11 @@ def write_skill_markdown(output_path: Path, skill_name: str, docstring: str) -> 
         else f"Tự động tương tác với công cụ {skill_name}."
     )
 
+    clean_trigger = skill_name.removeprefix("ccba-").removeprefix("bigbim-")
+    triggers_yaml = (
+        f"- {clean_trigger}\n- {skill_name}" if clean_trigger != skill_name else f"- {skill_name}"
+    )
+
     content = f"""---
 name: {skill_name}
 description: {desc}
@@ -322,8 +327,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /{skill_name}
 triggers:
-- {skill_name.replace("ccba-", "")}
-- {skill_name}
+{triggers_yaml}
 ---
 
 # Kỹ năng {skill_name}
@@ -377,17 +381,20 @@ def write_workflow_router(output_path: Path, skill_name: str, commands: dict[str
     subcmds = list(commands.keys())
     subcmd_str = f" [{'/'.join(subcmds)}]" if subcmds and subcmds != ["default"] else ""
 
+    wf_name = skill_name if skill_name.startswith(("ccba-", "bigbim-")) else f"ccba-{skill_name}"
+    clean_keyword = skill_name.removeprefix("ccba-").removeprefix("bigbim-")
+
     content = f"""---
-name: ccba-{skill_name}
-description: Kích hoạt nhanh kỹ năng {skill_name} với lệnh slash command /ccba-{skill_name}
+name: {wf_name}
+description: Kích hoạt nhanh kỹ năng {skill_name} với lệnh slash command /{wf_name}
 user-invocable: true
-keywords: [{skill_name}, auto-generated]
+keywords: [{clean_keyword}, auto-generated]
 ---
 
-# Quy trình thực thi Slash Command `/ccba-{skill_name}`
+# Quy trình thực thi Slash Command `/{wf_name}`
 
 Khi người dùng kích hoạt lệnh này dưới dạng:
-`/ccba-{skill_name}{subcmd_str} <các-tham-số>`
+`/{wf_name}{subcmd_str} <các-tham-số>`
 
 Agent tiếp nhận lệnh bắt buộc phải thực hiện tác vụ sau:
 
@@ -431,7 +438,6 @@ def create_skill_from_script(
         name = raw_name
 
     base_skills = skills_base_dir or (Path(".agents") / "skills")
-    base_workflows = workflows_base_dir or (Path(".agents") / "workflows")
 
     skill_dir = base_skills / name
     skill_dir.mkdir(parents=True, exist_ok=True)
@@ -457,8 +463,9 @@ def create_skill_from_script(
     write_cli_spec(skill_dir / "cli_spec.yaml", commands)
     write_skill_markdown(skill_dir / "SKILL.md", name, docstring)
 
-    workflow_path = base_workflows / f"{name}.md"
-    write_workflow_router(workflow_path, name, commands)
+    if workflows_base_dir is not None:
+        workflow_path = workflows_base_dir / f"{name}.md"
+        write_workflow_router(workflow_path, name, commands)
 
     print(f"\nSUCCESS: Tạo Skill '{name}' thành công!")
     print(f"👉 Thư mục skill: {skill_dir.resolve()}")
@@ -488,6 +495,8 @@ def sync_all_skills(skills_base_dir: Path | None = None) -> int:
         name_snake = folder.name.replace("-", "_")
         name_no_prefix = folder.name.replace("ccba-", "").replace("bigbim-", "").replace("-", "_")
         candidates = [
+            folder / "scripts" / f"{name_snake}.py",
+            folder / "scripts" / f"{name_no_prefix}.py",
             Path("scripts") / f"{name_snake}.py",
             Path("scripts") / f"{name_no_prefix}.py",
             Path("scripts") / f"{name_snake}_helper.py",
