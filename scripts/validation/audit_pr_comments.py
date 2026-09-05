@@ -76,13 +76,14 @@ def fetch_pr_overview(pr_number: int) -> dict[str, Any]:
 
 
 def fetch_inline_comments(pr_number: int) -> list[dict[str, Any]]:
-    """Fetch inline review comments for a Pull Request via GitHub API."""
+    """Fetch inline review comments for a Pull Request via GitHub API with pagination."""
     try:
         raw = run_command(
             [
                 "gh",
                 "api",
-                f"repos/vvChu/ccba-agent-platform/pulls/{pr_number}/comments",
+                "--paginate",
+                f"repos/:owner/:repo/pulls/{pr_number}/comments",
             ]
         )
         if raw:
@@ -190,12 +191,31 @@ def audit_pull_request(pr_number: int) -> tuple[int, dict[str, Any]]:
                 }
             )
 
-    if unaddressed_review_issues or unaddressed_inline:
+    # 4. Check PR-Level Conversation Comments
+    pr_comments = overview.get("comments", [])
+    copilot_pr_comments = [
+        c for c in pr_comments if is_copilot_user(c.get("author")) or is_copilot_user(c.get("user"))
+    ]
+
+    unaddressed_pr_comments: list[dict[str, Any]] = []
+    for c in copilot_pr_comments:
+        c_id = str(c.get("id", ""))
+        c_body = str(c.get("body", ""))
+        if not check_if_resolved_in_code_or_walkthrough(c_id, c_body[:30]):
+            unaddressed_pr_comments.append(
+                {
+                    "id": c_id,
+                    "body": c_body,
+                }
+            )
+
+    if unaddressed_review_issues or unaddressed_inline or unaddressed_pr_comments:
         return 1, {
             "status": "CHANGES_RECOMMENDED",
             "message": f"Copilot has recommended changes on PR #{pr_number} that must be resolved.",
             "review_issues": unaddressed_review_issues,
             "inline_issues": unaddressed_inline,
+            "pr_comment_issues": unaddressed_pr_comments,
         }
 
     return 0, {
@@ -203,6 +223,7 @@ def audit_pull_request(pr_number: int) -> tuple[int, dict[str, Any]]:
         "message": f"All Copilot reviews and comments on PR #{pr_number} are clean or resolved.",
         "reviews_count": len(copilot_reviews),
         "inline_comments_count": len(copilot_inline),
+        "pr_comments_count": len(copilot_pr_comments),
     }
 
 

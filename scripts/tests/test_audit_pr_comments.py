@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 from scripts.validation.audit_pr_comments import (
     audit_pull_request,
+    fetch_inline_comments,
     get_current_pr_number,
     is_copilot_user,
 )
@@ -106,6 +107,28 @@ class TestAuditPRComments(unittest.TestCase):
 
     @patch("scripts.validation.audit_pr_comments.fetch_inline_comments")
     @patch("scripts.validation.audit_pr_comments.fetch_pr_overview")
+    def test_audit_pull_request_pr_comments(self, mock_overview, mock_inline):
+        """Test that top-level conversation comments from Copilot trigger exit code 1."""
+        mock_overview.return_value = {
+            "reviewRequests": [],
+            "reviews": [],
+            "comments": [
+                {
+                    "id": "conv_123",
+                    "author": {"login": "copilot-pull-request-reviewer"},
+                    "body": "Please address this PR conversation note.",
+                }
+            ],
+        }
+        mock_inline.return_value = []
+
+        code, res = audit_pull_request(104)
+        self.assertEqual(code, 1)
+        self.assertEqual(res["status"], "CHANGES_RECOMMENDED")
+        self.assertEqual(len(res["pr_comment_issues"]), 1)
+
+    @patch("scripts.validation.audit_pr_comments.fetch_inline_comments")
+    @patch("scripts.validation.audit_pr_comments.fetch_pr_overview")
     def test_audit_pull_request_clean(self, mock_overview, mock_inline):
         """Test that clean Copilot review returns exit code 0."""
         mock_overview.return_value = {
@@ -125,6 +148,16 @@ class TestAuditPRComments(unittest.TestCase):
         code, res = audit_pull_request(103)
         self.assertEqual(code, 0)
         self.assertEqual(res["status"], "CLEAN")
+
+    @patch("scripts.validation.audit_pr_comments.run_command")
+    def test_fetch_inline_comments_pagination_and_placeholder(self, mock_run):
+        """Test that fetch_inline_comments uses repos/:owner/:repo and --paginate."""
+        mock_run.return_value = '[{"id": 1, "body": "test"}]'
+        comments = fetch_inline_comments(42)
+        self.assertEqual(len(comments), 1)
+        cmd_called = mock_run.call_args[0][0]
+        self.assertIn("--paginate", cmd_called)
+        self.assertIn("repos/:owner/:repo/pulls/42/comments", cmd_called)
 
 
 if __name__ == "__main__":
