@@ -198,14 +198,17 @@ def call_ai_evaluation(
         if clean:
             canonical_names.add(clean)
 
-    is_duplicate = any(
-        name in existing_skills or name in existing_workflows for name in canonical_names
+    matched_existing = next(
+        (name for name in canonical_names if name in existing_skills or name in existing_workflows),
+        None,
     )
+    is_duplicate = matched_existing is not None
     similar_skills = [
         s for s in existing_skills if any(name in s or s in name for name in canonical_names)
     ]
 
     if is_duplicate:
+        match_info = f" (khớp với '{matched_existing}')" if matched_existing != skill_name else ""
         return {
             "should_port": False,
             "score": 20,
@@ -214,7 +217,7 @@ def call_ai_evaluation(
             "disable_model_invocation": True,
             "parent_master_skill": None,
             "python_compatibility_assessment": "Đã tồn tại tương đương trên hệ thống.",
-            "reason": f"IGNORE (Đã tồn tại): Kỹ năng '{skill_name}' đã tồn tại sẵn trên local catalog.",
+            "reason": f"IGNORE (Đã tồn tại): Kỹ năng '{skill_name}'{match_info} đã tồn tại sẵn trên local catalog.",
             "actionable_steps": [
                 "So sánh tệp SKILL.md mới với phiên bản local",
                 "Cherry-pick cải tiến quy trình nếu cần thay vì port mới",

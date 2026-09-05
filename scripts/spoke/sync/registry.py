@@ -90,6 +90,10 @@ class SpokeRegistrar:
             if legacy_path.exists():
                 public_key_path = legacy_path
             else:
+                print(
+                    f"[Registry] Warning: Hub registry public key not found at '{public_key_path}' or legacy path '{legacy_path}'. Skipping Spoke registration.",
+                    file=sys.stderr,
+                )
                 return
 
         if dry_run:
