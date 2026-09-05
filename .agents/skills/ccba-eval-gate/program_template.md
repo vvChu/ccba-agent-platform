@@ -8,7 +8,7 @@
 - **Target File**: `.agents/skills/ccba-legal-intel/SKILL.md`
 - **Target Score**: 95.0%
 - **Max Iterations**: 10
-- **Dataset File**: `.agents/skills/eval-gate/test_cases/eval_ccba_legal_intel.json`
+- **Dataset File**: `.agents/skills/ccba-eval-gate/test_cases/eval_ccba_legal_intel.json`
 
 ---
 

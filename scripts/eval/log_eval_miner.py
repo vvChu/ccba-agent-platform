@@ -456,7 +456,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--output-dir",
-        default=".agents/skills/eval-gate/test_cases",
+        default=".agents/skills/ccba-eval-gate/test_cases",
         help="Thư mục xuất test_cases JSON",
     )
     parser.add_argument("--skill", help="Tên skill cụ thể cần nạp test cases mined")
