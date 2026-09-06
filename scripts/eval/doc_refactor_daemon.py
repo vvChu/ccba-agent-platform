@@ -12,17 +12,15 @@ from __future__ import annotations
 import argparse
 import ast
 import datetime
-import json
 import logging
-import os
 import re
 import subprocess
 import sys
-import urllib.parse
-import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from scripts.eval.telegram_alert import send_telegram_alert as emit_telegram_alert
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -375,9 +373,6 @@ class DocAutoEvolutionEngine:
 
     def send_telegram_alert(self, report: DocEvolutionReport) -> bool:
         """Dispatches an alert to Telegram channel via Bot API."""
-        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
-        chat_id = os.environ.get("TELEGRAM_CHAT_ID")
-
         message = (
             f"📚 *CCBA DOC AUTO-EVOLUTION REPORT* 📚\n"
             f"📅 *Thời gian:* `{report.timestamp}`\n"
@@ -393,25 +388,11 @@ class DocAutoEvolutionEngine:
         if report.pr_url:
             message += f"\n🔗 *Pull Request:* {report.pr_url}\n👉 _Bấm link trên để duyệt và merge 1-chạm._\n"
 
-        if not bot_token or not chat_id:
-            logger.info(f"📱 [Mock Telegram Notification Sent]:\n{message}")
-            return True
-
-        try:
-            api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-            payload = json.dumps(
-                {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
-            ).encode("utf-8")
-            req = urllib.request.Request(
-                api_url, data=payload, headers={"Content-Type": "application/json"}
-            )
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                if resp.status == 200:
-                    logger.info("✅ Đã gửi thông báo Telegram thành công.")
-                    return True
-        except Exception as e:
-            logger.warning(f"⚠️ Không thể gửi Telegram: {e}")
-        return False
+        return emit_telegram_alert(
+            message=message,
+            parse_mode="Markdown",
+            mock_fallback=True,
+        )
 
     def run_nightly_evolution(self, dry_run: bool = False) -> DocEvolutionReport:
         """Runs the complete nightly document evolution pipeline."""
