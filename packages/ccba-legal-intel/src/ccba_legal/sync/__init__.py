@@ -6,7 +6,9 @@ from .cdp_discovery import download_via_cdp_or_client, search_thuvienphapluat_vi
 from .drive_uploader import (
     GOOGLE_API_AVAILABLE,
     clean_google_drive_folder,
+    get_credentials_dir,
     get_drive_service,
+    migrate_drive_credentials,
     upload_to_google_drive,
 )
 from .engine import DEFAULT_DRIVE_FOLDER, LegalSyncEngine, sync_legal_assets
@@ -25,7 +27,9 @@ __all__ = [
     "is_port_open",
     "ensure_chrome_debug_port",
     "GOOGLE_API_AVAILABLE",
+    "get_credentials_dir",
     "get_drive_service",
+    "migrate_drive_credentials",
     "clean_google_drive_folder",
     "upload_to_google_drive",
     "search_thuvienphapluat_via_cdp",

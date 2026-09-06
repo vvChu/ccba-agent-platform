@@ -4,11 +4,18 @@ Giải quyết triệt để lỗi Google chặn truy cập (App Blocked) khi d�
 Tạo bởi CCBA.
 """
 
-import os
 import sys
 from pathlib import Path
 
 # Thêm path để import các thư viện
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+_LEGAL_PKG = _PROJECT_ROOT / "packages" / "ccba-legal-intel" / "src"
+if _LEGAL_PKG.exists() and str(_LEGAL_PKG) not in sys.path:
+    sys.path.insert(0, str(_LEGAL_PKG))
+
+from ccba_legal.sync import get_credentials_dir, migrate_drive_credentials
 
 try:
     from google_auth_oauthlib.flow import InstalledAppFlow
@@ -20,58 +27,8 @@ except ImportError:
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
-
-def get_credentials_dir() -> Path:
-    """Read credentials directory from environment variable or user home."""
-    env_dir = os.environ.get("CCBA_CREDENTIALS_DIR")
-    if env_dir:
-        return Path(env_dir)
-    return Path.home() / ".ccba" / "credentials"
-
-
-def migrate_old_credentials() -> None:
-    """Migrate client_secrets.json and drive_token.json from old .md/scratch/ paths to home folder."""
-    old_secrets = Path(".md/scratch/client_secrets.json")
-    old_token = Path(".md/scratch/drive_token.json")
-
-    target_dir = get_credentials_dir()
-
-    if old_secrets.exists() or old_token.exists():
-        target_dir.mkdir(parents=True, exist_ok=True)
-        print("🔄 Phát hiện credentials cũ ở .md/scratch/. Đang tự động di trú...")
-
-        if old_secrets.exists():
-            target_secrets = target_dir / "client_secrets.json"
-            if not target_secrets.exists():
-                try:
-                    import shutil
-
-                    shutil.move(str(old_secrets), str(target_secrets))
-                    print(f" -> Đã di chuyển client_secrets.json sang: {target_secrets}")
-                except Exception as e:
-                    print(f" -> Lỗi di chuyển client_secrets.json: {e}")
-            else:
-                try:
-                    old_secrets.unlink()
-                except Exception:
-                    pass
-
-        if old_token.exists():
-            target_token = target_dir / "drive_token.json"
-            if not target_token.exists():
-                try:
-                    import shutil
-
-                    shutil.move(str(old_token), str(target_token))
-                    print(f" -> Đã di chuyển drive_token.json sang: {target_token}")
-                except Exception as e:
-                    print(f" -> Lỗi di chuyển drive_token.json: {e}")
-            else:
-                try:
-                    old_token.unlink()
-                except Exception:
-                    pass
-
+# Backward-compatible alias
+migrate_old_credentials = migrate_drive_credentials
 
 CLIENT_SECRETS_PATH = get_credentials_dir() / "client_secrets.json"
 TOKEN_PATH = get_credentials_dir() / "drive_token.json"
@@ -124,7 +81,7 @@ def login_drive() -> None:
         return
 
     # Tự động di trú credentials cũ nếu có
-    migrate_old_credentials()
+    migrate_drive_credentials()
 
     # Kiểm tra xem file client_secrets.json có tồn tại không
     if not CLIENT_SECRETS_PATH.exists():
