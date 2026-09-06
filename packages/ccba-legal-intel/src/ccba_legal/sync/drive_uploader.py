@@ -33,6 +33,49 @@ def _import_google_api() -> tuple[bool, Any, Any, Any, Any, Any, Any]:
 GOOGLE_API_AVAILABLE, *_ = _import_google_api()
 
 
+def get_credentials_dir() -> Path:
+    """Read credentials directory from environment variable or user home."""
+    env_dir = os.environ.get("CCBA_CREDENTIALS_DIR")
+    if env_dir:
+        return Path(env_dir)
+    return Path.home() / ".ccba" / "credentials"
+
+
+def migrate_drive_credentials(target_dir: Path | None = None) -> None:
+    """Migrate legacy credentials from .md/scratch/ to credentials directory."""
+    dest_dir = target_dir or get_credentials_dir()
+    old_secrets = Path(".md/scratch/client_secrets.json")
+    old_token = Path(".md/scratch/drive_token.json")
+
+    if not (old_secrets.exists() or old_token.exists()):
+        return
+
+    try:
+        dest_dir.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        print(f"[Drive Warning] Không thể tạo thư mục credentials: {e}")
+        return
+
+    for old_file, target_name in [
+        (old_secrets, "client_secrets.json"),
+        (old_token, "drive_token.json"),
+    ]:
+        if not old_file.exists():
+            continue
+        target_file = dest_dir / target_name
+        if not target_file.exists():
+            try:
+                shutil.move(str(old_file), str(target_file))
+                print(f"[Drive Info] Tự động di trú {target_name} sang: {target_file}")
+            except Exception as e:
+                print(f"[Drive Warning] Lỗi di trú {target_name}: {e}")
+        else:
+            try:
+                old_file.unlink()
+            except Exception:
+                pass
+
+
 def get_drive_service() -> Any:
     """Initialize Drive API service using personal token or ADC fallback."""
     available, google_auth, Request, Credentials, build, HttpError, _ = _import_google_api()
@@ -43,28 +86,8 @@ def get_drive_service() -> Any:
         )
 
     # 1. Try personal token
-    old_token = Path(".md/scratch/drive_token.json")
-    token_dir = Path.home() / ".ccba" / "credentials"
-    env_dir = os.environ.get("CCBA_CREDENTIALS_DIR")
-    if env_dir:
-        token_dir = Path(env_dir)
-
-    token_path = token_dir / "drive_token.json"
-
-    if old_token.exists():
-        if not token_path.exists():
-            try:
-                token_dir.mkdir(parents=True, exist_ok=True)
-                shutil.move(str(old_token), str(token_path))
-                print(f"[Drive Info] Tự động di trú token cá nhân sang: {token_path}")
-            except Exception as e:
-                print(f"[Drive Warning] Lỗi di trú token: {e}")
-                token_path = old_token
-        else:
-            try:
-                old_token.unlink()
-            except Exception:
-                pass
+    migrate_drive_credentials()
+    token_path = get_credentials_dir() / "drive_token.json"
 
     if token_path.exists():
         try:
