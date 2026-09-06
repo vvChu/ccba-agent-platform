@@ -214,3 +214,19 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
   - **Vấn đề:** Sau khi di dời toàn bộ workflows sang kỹ năng (`workflows: 0`), logic đồng bộ cũ trong `coordinator.py` vẫn gọi `spoke_workflows_dir.mkdir(parents=True, exist_ok=True)` vô điều kiện, làm tự sinh thư mục rỗng `.agents/workflows/` tại các Spoke mới.
   - **Giải pháp:** Chỉ tạo thư mục workflows khi `wfs_to_sync` có tệp cần đồng bộ (`if not dry_run and wfs_to_sync:`). Nếu Spoke đã có sẵn thư mục này từ trước, hệ thống quét và chuyển đổi sang `.md.bak` với nhãn `DEPRECATED_MIGRATED_TO_SKILL`. Nếu Spoke mới tinh, hoàn toàn không tạo thư mục thừa.
 
+---
+
+## 14. Architecture Seam Hardening, Relative Link Resolution & Zero-Exemption AST Governance
+
+- **Core Pattern P14.1 — Relative Link Resolution Depth in Triple-Nested Skills:**
+  - **Vấn đề:** Khi một tài liệu kỹ năng nằm sâu 3 cấp thư mục (`.agents/skills/<skill-name>/SKILL.md`), nếu liên kết tương đối trỏ tới gói Monorepo chỉ sử dụng 2 cấp (`../../packages/<pkg>`), đường dẫn sẽ bị phân giải sai thành `.agents/packages/<pkg>` (không tồn tại), dẫn đến lỗi vỡ liên kết trong bài kiểm thử quản trị `tests/governance/test_workflow_script_parity.py` (`test_workflow_and_skill_relative_links_resolve`).
+  - **Giải pháp:** Bắt buộc sử dụng đúng 3 cấp lùi thư mục `../../../packages/<pkg>` khi tham chiếu từ các tệp `SKILL.md` hoặc tài liệu nằm trong thư mục con của `.agents/skills/`.
+
+- **Core Pattern P14.2 — Non-Breaking Facade Seam Hardening (Wrappers over Public Instances):**
+  - **Vấn đề:** Khi tái cấu trúc các tệp facade tại `scripts/` (ví dụ: `scripts/maskara.py`) để tuân thủ ranh giới gói và loại bỏ việc import vào các submodule private (`_locator`, `_redactor`), nếu lập trình viên xóa bỏ các hàm tiện ích (`normalize_agent_name`, `get_default_roots`, `resolve_targets`) khỏi `__all__`, điều này sẽ gây phá vỡ tương thích ngược (breaking change) cho các caller bên ngoài.
+  - **Giải pháp:** Không xóa hàm tiện ích và không import private module; thay vào đó, re-export chúng dưới dạng các thin wrappers gọi trực tiếp các phương thức public instance trên lớp dịch vụ chính (`MaskaraScanner().normalize_agent_name(...)`). Mô hình này vừa đảm bảo tương thích ngược 100% cho mọi caller cũ, vừa tuân thủ triệt để ranh giới Seam trong kiểm tra AST.
+
+- **Core Pattern P14.3 — Zero-Exemption AST Governance & Archive Directory Exclusion:**
+  - **Vấn đề:** Việc duy trì các ngoại lệ hardcoded dạng `if py_file.name == 'maskara.py': continue` trong bộ kiểm tra hợp đồng phụ thuộc (`check_dependency_contracts.py`) làm suy yếu tính nghiêm ngặt của CI và tạo tiền lệ xấu. Đồng thời, sự tồn tại của các script demo một lần trong thư mục hoạt động `scripts/` làm phân tán không gian tìm kiếm của AI Agent.
+  - **Giải pháp:** Di chuyển toàn bộ các script thử nghiệm lịch sử vào thư mục `archive/` (bảo toàn 100% lịch sử Git), đồng thời đưa `archive` vào whitelist loại trừ của AST linter. Gỡ bỏ hoàn toàn mọi bypass hardcoded theo tên file để đạt chuẩn Zero-Exemption trên toàn bộ 328+ tệp mã nguồn của monorepo.
+
