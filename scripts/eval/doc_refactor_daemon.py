@@ -20,6 +20,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+# Resolve project root
+project_root = Path(__file__).resolve().parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 from scripts.eval.telegram_alert import send_telegram_alert as emit_telegram_alert
 
 # Configure logging
@@ -36,11 +41,6 @@ if sys.platform.startswith("win"):
             reconfig_err(encoding="utf-8")
     except Exception:
         pass
-
-# Resolve project root
-project_root = Path(__file__).resolve().parent.parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
 
 
 @dataclass

@@ -19,17 +19,18 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+# Add project root and packages to sys.path
+project_root = Path(__file__).resolve().parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / "packages" / "ccba-ai" / "src"))
+sys.path.insert(0, str(project_root / "packages" / "ccba-harness" / "src"))
+
 from scripts.eval.telegram_alert import send_telegram_alert
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("ccba.eval.nightly")
-
-# Add project root and packages to sys.path
-project_root = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(project_root))
-sys.path.insert(0, str(project_root / "packages" / "ccba-ai" / "src"))
-sys.path.insert(0, str(project_root / "packages" / "ccba-harness" / "src"))
 
 # Auto-load .env if present
 try:

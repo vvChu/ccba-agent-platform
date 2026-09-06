@@ -7,6 +7,11 @@ import os
 import sys
 from pathlib import Path
 
+# Ensure project root is on sys.path for direct CLI execution
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from dotenv import load_dotenv
 
 from scripts.eval.telegram_alert import send_telegram_alert
@@ -24,7 +29,6 @@ if sys.platform.startswith("win"):
         pass
 
 # Auto-load environment variables
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
 env_path = PROJECT_ROOT / ".env"
 if env_path.exists():
     load_dotenv(dotenv_path=env_path)
@@ -53,7 +57,10 @@ def main() -> None:
         print("=================================================================")
         sys.exit(1)
 
-    masked_token = f"{bot_credential[:8]}...{bot_credential[-4:]}"
+    if len(bot_credential) > 12:
+        masked_token = f"{bot_credential[:8]}...{bot_credential[-4:]}"
+    else:
+        masked_token = "***"
     print("🔑 Trạng thái Token:", masked_token)
     print("💬 Kênh nhận tin:", chat_channel)
     print("📤 Đang gửi tin nhắn thử nghiệm qua Telegram Alert Seam...")

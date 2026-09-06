@@ -88,6 +88,10 @@ def get_drive_service() -> Any:
     # 1. Try personal token
     migrate_drive_credentials()
     token_path = get_credentials_dir() / "drive_token.json"
+    if not token_path.exists():
+        legacy_token = Path(".md/scratch/drive_token.json")
+        if legacy_token.exists():
+            token_path = legacy_token
 
     if token_path.exists():
         try:
