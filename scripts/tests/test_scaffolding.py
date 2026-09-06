@@ -18,7 +18,6 @@ from scripts.scaffolding import (
     run_repomix_pack,
 )
 from scripts.security.repomix_pack import run_repomix
-from scripts.security.update_arch_stats import get_counts, update_file
 
 
 class TestArchStatsUpdater(unittest.TestCase):
@@ -68,10 +67,11 @@ class TestArchStatsUpdater(unittest.TestCase):
             self.assertEqual(len(modified), 1)
             self.assertIn("SKILL_COUNT", counts)
 
-    def test_security_facade_backward_compatibility(self) -> None:
-        counts = get_counts()
-        self.assertIn("SKILL_COUNT", counts)
-        self.assertTrue(callable(update_file))
+    def test_root_facade_cli_entry_point(self) -> None:
+        """Verify scripts.update_arch_stats exposes a callable main entry point."""
+        import scripts.update_arch_stats as root_shim
+
+        self.assertTrue(callable(root_shim.main))
 
 
 class TestRepomixPackager(unittest.TestCase):
