@@ -56,7 +56,9 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   ├── maskara.py                     ←   Maskara Privacy Engine CLI
 │   ├── run_safe_eval_wrapper.py       ←   Safe Execution Sandbox (CI Gate wrapper)
 │   ├── run_isolated_tests.py          ←   Cross-package Test Isolation Runner
-│   └── validate_docs.py               ←   Documentation Accuracy Validator
+│   ├── update_arch_stats.py           ←   Architecture Metrics Updater CLI
+│   ├── validate_docs.py               ←   Documentation Accuracy Validator
+│   └── verify_telegram_alert.py       ←   Telegram Alert Verifier & Live Ping CLI
 │
 └── pyproject.toml                     ← Root workspace config (uv)
 ```
