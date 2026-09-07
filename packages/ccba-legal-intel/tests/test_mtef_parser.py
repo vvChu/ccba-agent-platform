@@ -88,6 +88,60 @@ def test_mtef_parser_subscript():
     assert result == "R_{0}"
 
 
+def test_mtef_parser_superscript():
+    """Test MTEFParser with superscript only (variation=0)."""
+    hdr = bytes([3, 1, 1, 3, 0])
+    # CHAR 'x'
+    char_x = bytes([0x02, 0x83, 0x78, 0x00])
+    # Superscript TMPL: selector=0x0F, variation=0x0000 (sup only)
+    sup_tmpl = bytes([0x03, 0x0F, 0x00, 0x00])
+    # Sup line: marker 0x0b, LINE 0x01, CHAR '2' (0x02, 0x88, 0x32, 0x00), END 0x00
+    sup_line = bytes([0x0B, 0x01, 0x02, 0x88, 0x32, 0x00, 0x00])
+    trailer = bytes([0x11, 0x00])
+
+    mtef = hdr + char_x + sup_tmpl + sup_line + trailer + bytes([0x00])
+    parser = MTEFParser(mtef)
+    result = parser.parse()
+    assert result == "x^{2}"
+
+
+def test_mtef_parser_sub_and_sup():
+    """Test MTEFParser with both subscript and superscript (variation=2)."""
+    hdr = bytes([3, 1, 1, 3, 0])
+    char_x = bytes([0x02, 0x83, 0x78, 0x00])
+    # SubSup TMPL: selector=0x0F, variation=0x0002 (both)
+    subsup_tmpl = bytes([0x03, 0x0F, 0x02, 0x00])
+    sub_line = bytes([0x0B, 0x01, 0x02, 0x88, 0x31, 0x00, 0x00])
+    sup_line = bytes([0x0B, 0x01, 0x02, 0x88, 0x32, 0x00, 0x00])
+    trailer = bytes([0x11, 0x00])
+
+    mtef = hdr + char_x + subsup_tmpl + sub_line + sup_line + trailer + bytes([0x00])
+    parser = MTEFParser(mtef)
+    result = parser.parse()
+    assert result == "x_{1}^{2}"
+
+
+def test_mtef_parser_brackets_cleanup():
+    """Test MTEFParser cleans empty parentheses and brackets correctly."""
+    hdr = bytes([3, 1, 1, 3, 0])
+    # Parentheses TMPL: selector=0x01
+    paren_tmpl = bytes([0x03, 0x01, 0x00, 0x00])
+    # Inside: LINE 0x01, CHAR 'y' (0x02, 0x83, 0x79, 0x00), END 0x00
+    body_line = bytes([0x01, 0x02, 0x83, 0x79, 0x00, 0x00])
+
+    mtef = hdr + paren_tmpl + body_line + bytes([0x00])
+    parser = MTEFParser(mtef)
+    result = parser.parse()
+    assert result == r"\left(y\right)"
+
+    # Empty parentheses should produce empty string instead of \left(\right)
+    empty_body_line = bytes([0x01, 0x00])
+    mtef_empty = hdr + paren_tmpl + empty_body_line + bytes([0x00])
+    parser_empty = MTEFParser(mtef_empty)
+    result_empty = parser_empty.parse()
+    assert result_empty == ""
+
+
 def test_mtef_parser_greek_symbols():
     """Test MTEFParser with Greek symbols (lambda, alpha)."""
     hdr = bytes([3, 1, 1, 3, 0])

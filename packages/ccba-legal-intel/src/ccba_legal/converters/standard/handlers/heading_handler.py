@@ -33,12 +33,14 @@ def handle_structural_heading(
     from ccba_legal.converters.standard.strategy import render_paragraph_with_runs
 
     # 1. Table Caption
-    m_tbl = re.match(r"^(?:Bảng|BẢNG)\s+([0-9A-Za-z\.\-]+)\s*[-–—:]\s*(.+)$", text)
+    m_tbl = re.match(
+        r"^(?:Bảng|BẢNG)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\s*[\.\-–—:]\s*(.+)$", text
+    )
     if m_tbl:
         ctx.last_table_caption_num = m_tbl.group(1)
         cap_rendered = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
         clean_cap = re.sub(
-            r"^(?:Bảng|BẢNG)\s+[0-9A-Za-z\.\-]+\s*[-–—:]\s*", "", cap_rendered
+            r"^(?:Bảng|BẢNG)\s+[0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*\s*[\.\-–—:]\s*", "", cap_rendered
         ).strip()
         ctx.last_table_caption = f"Bảng {ctx.last_table_caption_num} - {clean_cap}"
         ctx.state_mgr.reset()
@@ -47,7 +49,7 @@ def handle_structural_heading(
     # 2. Annex Heading (strip leading markdown symbols/whitespace)
     clean_annex_candidate = re.sub(r"^[#*_>\s\-]+", "", text).strip()
     m_annex = re.match(
-        r"^(?:Phụ\s+lục|PHỤ\s+LỤC)\s+([A-Za-z0-9]+|[IVXLCDM]+)(?:\s*[\.\-–—:])?(?:\s*\(([^)]+)\))?(?:\s*[\.\-–—:])?\s*(.*)$",
+        r"^(?:Phụ\s+lục|PHỤ\s+LỤC)\s+([A-Za-z0-9Đđ]+|[IVXLCDM]+)(?:\s*[\.\-–—:])?(?:\s*\(([^)]+)\))?(?:\s*[\.\-–—:])?\s*(.*)$",
         clean_annex_candidate,
         re.IGNORECASE,
     )
@@ -86,13 +88,14 @@ def handle_structural_heading(
         clean_title = re.sub(r"\bm2\b", r"$m^2$", clean_title)
 
         clean_title_slug = slugify_vietnamese(a_title)
+        letter_slug = "dd" if a_letter.upper() == "Đ" else slugify_vietnamese(a_letter).lower()
         slug = (
-            f"phu_luc_{a_letter.lower()}_{clean_title_slug}"
+            f"phu_luc_{letter_slug}_{clean_title_slug}"
             if clean_title_slug
-            else f"phu_luc_{a_letter.lower()}"
+            else f"phu_luc_{letter_slug}"
         )
         ctx.current_target = a_letter
-        anchor = f"phu-luc-{a_letter.lower()}"
+        anchor = f"phu-luc-{letter_slug}"
         hdr = (
             f"## PHỤ LỤC {a_letter}"
             + (f" ({a_type})" if a_type else "")

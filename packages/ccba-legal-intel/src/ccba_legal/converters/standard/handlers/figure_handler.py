@@ -28,7 +28,7 @@ def handle_figure_card(
     """Handle Figure Card triggers (e.g. Hình 1 - ..., Hình 15 (kết thúc))."""
     # 1. Multi-part figure continuation/end marker: Hình X (kết thúc)
     m_fig_end = re.match(
-        r"^(?:Hình|HÌNH)\s+([0-9A-Za-z\.\-]+)\s*\((kết\s+thúc|tiếp\s+theo)\)", text, re.IGNORECASE
+        r"^(?:Hình|HÌNH)\s+([0-9A-Za-zĐđ\.\-]+)\s*\((kết\s+thúc|tiếp\s+theo)\)", text, re.IGNORECASE
     )
     if m_fig_end:
         fig_num = m_fig_end.group(1)
@@ -38,11 +38,13 @@ def handle_figure_card(
         return i + 1
 
     # 2. Main Figure Card
-    m_fig = re.match(r"^(?:Hình|HÌNH)\s+([0-9A-Za-z\.\-]+)\s*[-–—:]\s*(.+)$", text)
+    m_fig = re.match(
+        r"^(?:Hình|HÌNH)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\s*[\.\-–—:]\s*(.+)$", text
+    )
     if m_fig:
         fig_num = m_fig.group(1)
         fig_title = normalize_katex_in_title(m_fig.group(2).strip())
-        fig_slug = fig_num.lower().replace(".", "_").replace("-", "_")
+        fig_slug = fig_num.lower().replace("đ", "dd").replace(".", "_").replace("-", "_")
         anchor = f"hinh-{fig_slug}"
         img_path = f"figures/images/hinh_{fig_slug}.png"
 
