@@ -27,6 +27,7 @@ Agent **bắt buộc** phải thực thi theo đúng quy trình 5 pha sau đây:
     python scripts/security/repomix_pack.py --source . --output .md/scratch/repomix-output.xml
     ```
 2.  Đọc cấu trúc và metadata từ tệp XML vừa tạo để hiểu cấu trúc codebase hiện tại.
+- **Tiêu chí hoàn thành:** Codebase được đóng gói thành công thành tệp XML tạm thời phục vụ phân tích.
 
 ### Pha 2: Kiểm soát Bảo mật (Verify Secrets)
 1.  Chạy công cụ bảo mật quét và che giấu (redact) secrets trực tiếp trên file XML đóng gói:
@@ -35,6 +36,7 @@ Agent **bắt buộc** phải thực thi theo đúng quy trình 5 pha sau đây:
     ```
     *(Hệ thống đã được vá lỗi XML Bypass để đảm bảo quét sạch secrets trong tệp XML)*.
 2.  Nếu phát hiện rò rỉ secrets nghiêm trọng (như mật khẩu Database dạng raw), **dừng ngay tiến trình** và báo cáo lỗi cho người dùng.
+- **Tiêu chí hoàn thành:** Tệp XML đóng gói được quét sạch secrets, không có rò rỉ thông tin nhạy cảm.
 
 ### Pha 3: Sao lưu & Cập nhật Tài liệu (Backup & Update)
 1.  **Sao lưu bảo vệ dữ liệu (Backup Gate)**: Trước khi cập nhật hoặc phân rã bất kỳ tệp tài liệu nào, **bắt buộc** phải sao lưu toàn bộ các tệp tài liệu kỹ thuật mục tiêu (bao gồm cả phân vùng `.md/knowledge/` và các tài liệu tri thức gốc `README.md`, `PLATFORM.md`, `CONTRIBUTING.md`, `SECURITY.md`) vào thư mục tạm `.md/scratch/backups/`.
@@ -50,6 +52,7 @@ Agent **bắt buộc** phải thực thi theo đúng quy trình 5 pha sau đây:
 4.  **Quản lý kích thước (Size Limit 800 LOC)**:
     - Nếu tệp tài liệu nào vượt quá 800 dòng (LOC), chủ động phân rã nó thành tệp `index.md` dẫn hướng và các tệp con nằm trong thư mục con tương ứng (ví dụ: `.md/knowledge/system_architecture/`).
     - Gọi kỹ năng **`ccba-relative-link-patcher`** để tự động vá và chuẩn hóa các liên kết tương đối bị ảnh hưởng.
+- **Tiêu chí hoàn thành:** Tài liệu kỹ thuật được sao lưu, cập nhật đầy đủ và đồng bộ với hiện trạng codebase mới nhất.
 
 ### Pha 4: Kiểm định Tài liệu chống Ảo ảnh (Validate)
 1.  Chạy script kiểm định tài liệu chính thức cho cả các tệp tài liệu tri thức gốc và các tài liệu thay đổi:
@@ -60,10 +63,12 @@ Agent **bắt buộc** phải thực thi theo đúng quy trình 5 pha sau đây:
     - Khôi phục lại các tệp tài liệu gốc từ thư mục `.md/scratch/backups/`.
     - Xóa bỏ hoàn toàn các tệp tin modular con bị lỗi.
     - Thông báo lỗi chi tiết cho người dùng và dừng tiến trình.
+- **Tiêu chí hoàn thành:** Lệnh `validate_docs.py` vượt qua với 0 lỗi broken links và 0 architecture drift.
 
 ### Pha 5: Dọn dẹp Tài nguyên Tạm thời (Cleanup)
 1.  Xóa hoàn toàn tệp tin tạm `.md/scratch/repomix-output.xml`.
 2.  Báo cáo danh sách các tài liệu đã được cập nhật thành công kèm theo kết quả kiểm định `validate_docs.py`.
+- **Tiêu chí hoàn thành:** Xóa sạch tệp XML tạm và báo cáo tóm tắt danh sách tài liệu đã cập nhật.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

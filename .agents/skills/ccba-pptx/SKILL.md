@@ -6,6 +6,7 @@ role: sub_skill
 master_skill: xu-ly-van-phong
 disable-model-invocation: true
 user-invocable: true
+command: /ccba-pptx
 when_to_use: Invoke for presentation deck creation, edits, or extraction.
 category: multimedia
 keywords:

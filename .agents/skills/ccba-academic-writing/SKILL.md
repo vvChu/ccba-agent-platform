@@ -5,6 +5,7 @@ description: Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài b�
 role: master_skill
 disable-model-invocation: true
 user-invocable: true
+command: /ccba-academic-writing
 when_to_use: Invoke when the user wants to brainstorm, draft, outline, or revise a
   scientific research paper, journal article, or seminar presentation.
 keywords:

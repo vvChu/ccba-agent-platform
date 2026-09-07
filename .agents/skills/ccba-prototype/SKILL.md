@@ -42,6 +42,8 @@ Kỹ năng chỉ được coi là hoàn thành khi đáp ứng các điều ki�
 
 *Lưu ý:* Phải ghi rõ câu hỏi này dưới dạng 1 đoạn văn ngắn ở đầu file mã nguồn của mẫu thử hoặc trong file `README.md` tạm của mẫu thử.
 
+**Tiêu chí hoàn thành:** Câu hỏi thiết kế được ghi rõ ràng ở đầu mã nguồn hoặc tài liệu tạm của mẫu thử.
+
 ### Bước 2: Tuân thủ các nguyên tắc thiết kế mẫu thử thô (Throwaway Rules)
 1.  **Throwaway từ ngày đầu tiên:** Đặt tên file/thư mục có chứa chữ `prototype` để người đọc sau biết đây không phải code sản xuất. Không commit code thô này vào nhánh chính mà không có sự đồng ý của người dùng.
 2.  **Khởi chạy bằng 1 lệnh duy nhất:** Định nghĩa lệnh chạy trong task runner hiện tại của dự án (ví dụ: `npm run dev:proto`, `python path/to/proto.py`, v.v.) để người dùng dễ dàng kiểm thử.
@@ -49,12 +51,16 @@ Kỹ năng chỉ được coi là hoàn thành khi đáp ứng các điều ki�
 4.  **Bỏ qua tối ưu hóa:** Không viết unit tests, không xử lý lỗi ngoại lệ phức tạp, không viết code trừu tượng. Mục tiêu duy nhất là làm cho mẫu thử **chạy được nhanh nhất**.
 5.  **Hiển thị trạng thái rõ ràng:** Với mỗi action (trong logic) hoặc mỗi lần chuyển đổi variant (trong UI), phải in hoặc hiển thị toàn bộ trạng thái hiện tại lên màn hình để dễ theo dõi.
 
+**Tiêu chí hoàn thành:** Mẫu thử chạy được nhanh bằng 1 lệnh duy nhất và tuân thủ các nguyên tắc throwaway.
+
 ### Bước 3: Thu hoạch và dọn dẹp (Absorb or Delete)
 Khi mẫu thử đã trả lời được câu hỏi thiết kế:
 - Ghi nhận quyết định thiết kế vào commit message, ADR (Architectural Decision Record) hoặc file `NOTES.md` nằm trong thư mục `.md/knowledge/issues/[feature_name]/prototypes/`.
 - **Dọn dẹp sạch sẽ**: 
   - Nếu là Logic: Xóa bỏ TUI shell thô, chỉ copy module logic thuần túy (reducer/pure functions) vào codebase thật và viết code chuẩn chỉ.
   - Nếu là UI: Xóa bỏ switcher tạm và các variant bị loại; chỉ giữ lại variant chiến thắng và refactor nó theo chuẩn chất lượng của dự án.
+
+**Tiêu chí hoàn thành:** Quyết định thiết kế được ghi nhận vào NOTES.md và mã nguồn thô tạm thời được dọn dẹp sạch sẽ.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

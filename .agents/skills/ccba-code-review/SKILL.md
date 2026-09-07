@@ -3,6 +3,7 @@ name: ccba-code-review
 description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells)
   và Spec (Spec/Requirements).
 user-invocable: true
+command: /ccba-code-review
 when_to_use: Dùng khi người dùng muốn đánh giá chất lượng của một PR, một commit,
   hoặc các thay đổi chưa commit (--pending).
 category: utilities

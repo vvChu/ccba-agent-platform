@@ -3,6 +3,7 @@ name: ccba-design
 description: Design brand identity, logos, banners, and visual assets. Use for brand
   systems, design tokens, corporate identity programs. Not for UI code patterns.
 user-invocable: true
+command: /ccba-design
 when_to_use: Invoke for brand systems and visual identity, not UI code.
 category: frontend
 keywords:
@@ -283,14 +284,20 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 ### Complete Brand Package
 
 1. **Logo** → `scripts/logo/generate.py` → Generate logo variants
+   - **Completion Criterion:** Logo variants generated and saved in the output directory.
 2. **CIP** → `scripts/cip/generate.py --logo ...` → Create deliverable mockups
+   - **Completion Criterion:** CIP mockups generated using the selected logo variant.
 3. **Presentation** → Load `references/slides-create.md` → Build pitch deck
+   - **Completion Criterion:** Presentation pitch deck created adhering to the brand guidelines.
 
 ### New Design System
 
 1. **Brand** (brand skill) → Define colors, typography, voice
+   - **Completion Criterion:** Core brand foundations established including color palette and typography.
 2. **Tokens** (design-system skill) → Create semantic token layers
+   - **Completion Criterion:** Semantic design tokens configured across scales.
 3. **Implement** (ui-styling skill) → Configure Tailwind, shadcn/ui
+   - **Completion Criterion:** Component styling rules implemented in Tailwind and component library.
 
 ## References
 

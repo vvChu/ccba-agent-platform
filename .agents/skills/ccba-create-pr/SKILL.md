@@ -41,6 +41,7 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
    d. Thông báo: *"Đã tự động tạo branch `[ten_branch]` từ N commits trên main. Main đã được reset về origin."*
 4. **Nếu không có commits chưa push trên `main`** → Báo lỗi: *"Không có thay đổi nào trên main để tạo PR. Hãy tạo feature branch và commit trước."* Dừng workflow.
 5. **Nếu đã ở feature branch** → Bỏ qua bước này, tiếp tục Bước 1.
+- **Tiêu chí hoàn thành:** Đảm bảo mã nguồn nằm trên đúng nhánh tính năng (feature branch), không commit trực tiếp trên `main`.
 
 ## Bước 1: Kiểm định Chất lượng Local CI Eval Gates (Shift-Left Gate)
 
@@ -56,6 +57,7 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
 2. **Quy tắc chặn lỗi tại nguồn:**
    - Nếu kiểm thử trả về `PASS 100%`: Mã nguồn đạt chuẩn, tiếp tục Bước 2.
    - Nếu có Gate bị `FAIL` hoặc phát hiện Architecture Drift: Tạm dừng workflow, yêu cầu Agent/người dùng sửa lỗi tại local và commit lại trước khi đẩy mã nguồn.
+- **Tiêu chí hoàn thành:** Toàn bộ các cổng kiểm định local CI và static tests đạt trạng thái PASS 100%.
 
 ## Bước 2: Kiểm tra trạng thái và Push code lên remote
 
@@ -72,6 +74,7 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
    ```bash
    git push -u origin [current_branch]
    ```
+- **Tiêu chí hoàn thành:** Nhánh làm việc sạch sẽ không còn uncommitted changes và code được đẩy thành công lên remote.
 
 ## Bước 3: Khởi tạo Pull Request
 
@@ -93,8 +96,11 @@ Quy trình tự động hóa đẩy mã nguồn và khởi tạo Pull Request si
      - URL: Lấy từ `git remote get-url origin` chuyển thành dạng URL Pull Request.
      - Tiêu đề: Lấy từ tên branch (bỏ prefix `feature/`, `fix/`, viết hoa chữ cái đầu).
      - Nội dung: Tóm tắt từ 5 commit gần nhất (`git log -n 5 --pretty=format:"- %s"`).
+- **Tiêu chí hoàn thành:** Pull Request được khởi tạo thành công trên GitHub với đầy đủ title, body và link PR.
 
 ## Bước 4: Thông báo kết quả
 
 1. Trình bày đường dẫn PR, trạng thái kiểm thử CI và tiến trình yêu cầu review (Review Requests) cho người dùng.
 2. Nhắc nhở người dùng: "PR đã được khởi tạo. GitHub Actions CI và GitHub Copilot Review đang chạy ngầm. Hãy gọi `/ccba-release-feature` khi CI đã xanh và Copilot đã hoàn tất lượt review để đối soát và merge."
+- **Tiêu chí hoàn thành:** Cung cấp đầy đủ đường dẫn PR và hướng dẫn các bước tiếp theo cho người dùng.
+

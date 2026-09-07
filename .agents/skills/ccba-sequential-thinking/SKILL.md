@@ -3,6 +3,7 @@ name: ccba-sequential-thinking
 description: Áp dụng phương pháp phân tích suy nghĩ tuần tự từng bước cho các vấn
   đề phức tạp. Hỗ trợ rẽ nhánh giả thuyết, cập nhật và chỉnh sửa nhận định cũ.
 user-invocable: true
+command: /ccba-sequential-thinking
 when_to_use: Dùng khi cần phân rã bài toán phức tạp, phân tích pháp lý hoặc gỡ lỗi
   nhiều bước.
 category: utilities

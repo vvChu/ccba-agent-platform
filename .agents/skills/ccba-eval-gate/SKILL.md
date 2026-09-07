@@ -36,10 +36,12 @@ python scripts/eval/log_eval_miner.py --skill [tên-skill] --auto-inject
 python .agents/skills/ccba-eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3
 ```
 *(Lưu ý: Luôn gọi `run_safe_eval_wrapper.py` với `WaitMsBeforeAsync` $\le 2000$ms để đẩy lệnh xuống Background Task. Wrapper tự động ngắt nếu vượt quá timeout và ghi log cô lập tại `.md/scratch/eval_runs/run_<timestamp>.log`).*
+- **Tiêu chí hoàn thành:** Kiểm định được kích hoạt qua wrapper an toàn và tạo log cô lập tại thư mục quy định.
 
 ### Bước 2: Đánh giá kết quả & Đọc file Chẩn đoán (`diagnostics.json`)
 *   **Nếu exit code = 0 (Tất cả Gate PASS):** Codebase sạch sẽ, file `.md/scratch/eval_runs/diagnostics.json` báo `status = PASS`.
 *   **Nếu exit code = 1 (Có Gate FAILED/TIMEOUT):** Đọc trực tiếp tệp chẩn đoán cấu trúc `.md/scratch/eval_runs/diagnostics.json` để lấy nguyên nhân gốc (`error_type`, `failed_gate`, `culprit_file`, `summary_traceback`).
+- **Tiêu chí hoàn thành:** Xác định chính xác trạng thái PASS hoặc bóc tách nguyên nhân gốc từ tệp chẩn đoán diagnostics.json.
 
 ### Bước 3: Vòng lặp tự chữa lỗi (Self-Healing Loop)
 Nếu phát hiện Gate bị thất bại:
@@ -48,6 +50,7 @@ Nếu phát hiện Gate bị thất bại:
 3.  Thực hiện sửa đổi trực tiếp lên file lỗi theo nguyên tắc **KISS** (chỉnh sửa nhỏ nhất để sửa lỗi, không refactor lan man).
 4.  Quay lại **Bước 1** để chạy lại kiểm tra qua `run_safe_eval_wrapper.py`.
 5.  **Giới hạn (Retry Cap):** Chỉ lặp lại tối đa **3 lần**. Nếu sau 3 lần vẫn không thể tự sửa thành công, hãy dừng lại, tóm tắt các lỗi gặp phải và xin chỉ thị từ người dùng.
+- **Tiêu chí hoàn thành:** Lỗi được khắc phục và kiểm định chạy lại thành công (hoặc dừng lại báo cáo sau tối đa 3 lần thử).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

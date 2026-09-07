@@ -49,10 +49,14 @@ Nội dung do Cơ quan Công an thẩm định tập trung vào điểm e, g kho
 Sử dụng CCBA Agent Platform để audit lỗi thiết kế MEP trước khi nộp PC07:
 
 1.  **Thu thập dữ liệu MEP:** Chuyển đổi Thuyết minh MEP PCCC và Bản vẽ MEP PCCC sang Markdown/Vector.
+    - **Tiêu chí hoàn thành:** Toàn bộ hồ sơ thuyết minh và bản vẽ MEP PCCC được chuyển đổi đầy đủ.
 2.  **Kích hoạt AI Audit:** Gọi module Semantic Map-Reduce Audit cho:
     *   "Package 2: MEP Water vs Specs" (Đồng bộ số liệu bơm, bể nước).
     *   "Package 3: MEP Alarm vs Arch" (Đồng bộ vị trí báo cháy, vùng phủ, trần giả).
+    - **Tiêu chí hoàn thành:** Hoàn thành audit song song hai gói kiểm tra với báo cáo mâu thuẫn chi tiết.
 3.  **Kiểm soát rủi ro điển hình (Common Pitfalls):**
     *   Kiểm tra sự lệch pha giữa Thuyết minh (vd: tính toán 45m3) và Bản vẽ (vd: bể 54m3).
     *   Đảm bảo việc trích dẫn đúng quy chuẩn cấp điện (QCVN 12:2014/BXD).
+    - **Tiêu chí hoàn thành:** Các rủi ro lệch pha và viện dẫn quy chuẩn được rà soát và xác nhận.
 4.  **Hoàn thiện:** Sửa lỗi thiết kế và in Hồ sơ xin Thẩm duyệt thiết kế PCCC nộp Cơ quan Công an.
+    - **Tiêu chí hoàn thành:** Hồ sơ thiết kế MEP PCCC hoàn thiện không còn lỗi mâu thuẫn, sẵn sàng nộp PC07.

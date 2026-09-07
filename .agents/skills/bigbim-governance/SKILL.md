@@ -61,11 +61,14 @@ Bảo đảm mọi tài sản số được quản trị theo mô hình dài h�
 
 1.  **Phân cấp Bảo mật (ISO 19650-5):**
     *   Mọi thông tin tài sản phải được phân loại và gán thẻ an ninh thông tin đạt cấp độ **ST2** (Security Level 2) theo chuẩn ISO 19650-5.
+    - **Tiêu chí hoàn thành:** Toàn bộ thông tin tài sản được gắn đúng thẻ bảo mật ST2 theo ISO 19650-5.
 2.  **Tính Bất biến & Nhật ký Thay đổi (Change Log):**
     *   Nghiêm cấm tự ý thay đổi cấu trúc thông tin của hệ thống nếu không có sự đồng thuận bằng văn bản của HUELIB-Board.
     *   Mọi sự thay đổi (dù là nhỏ nhất) phải được lưu vết JIT trong bảng Change Log của tài liệu cấu hình `governance-core.md`.
+    - **Tiêu chí hoàn thành:** Mọi thay đổi cấu trúc được ghi vết đầy đủ trong Change Log của `governance-core.md`.
 3.  **Điều kiện Chuyển giao Thế hệ Quả (Đoạn Đò-3):**
     *   Kiểm tra xem dữ liệu bàn giao đã đảm bảo tính kế thừa khi chuyển giao quyền lực quản trị vận hành hay chưa. Nếu thiếu các ICT protocol chuẩn để tích hợp vào LMS (Learning Management System), bắt buộc phải từ chối phê duyệt để tránh lỗi *LMS vendor lock-in*.
+    - **Tiêu chí hoàn thành:** Dữ liệu bàn giao đáp ứng đầy đủ ICT protocol tương thích LMS.
 
 ### Trụ cột 2: Quét Rào chắn "Sợi Chỉ Đỏ" (Red Thread Risk Audit)
 Agent phải phân tích văn bản/hồ sơ để phát hiện và cảnh báo chính xác **4 mã rủi ro thông tin chuẩn hóa**. Tuyệt đối không được dùng mô tả tự do:
@@ -84,10 +87,12 @@ Bảo toàn khả năng truy nguyên số-vật lý thông qua mã định danh 
 
 1.  **Gán ID từ pha khởi đầu BBP-A0:**
     *   Tất cả tài sản vật lý và số phải được cấp và khóa Unique ID bất biến ngay từ pha ý tưởng và thiết kế sơ bộ (`BBP-A0`). Không được phép đổi ID khi chuyển sang các pha sau (`A1` đến `C2`).
+    - **Tiêu chí hoàn thành:** Mọi tài sản vật lý và số được cấp mã Unique ID khóa bất biến từ pha BBP-A0.
 2.  **Đối soát 3 chiều (3-Way Traceability Check):**
     *   Agent thực hiện kiểm tra chéo tính đồng nhất thông tin của Unique ID trên 3 phương tiện:
         $$\text{Unique ID trên Bản vẽ Thiết kế} \equiv \text{Unique ID trong Hệ thống FM (AIM)} \equiv \text{Mã Unique ID ghi trên Biển hiệu thực tế tại công trình}$$
     *   Nếu có bất kỳ sự sai lệch nào về mặt ký tự hoặc trạng thái $\rightarrow$ Đánh dấu **Không Đạt** và yêu cầu hiệu chỉnh.
+    - **Tiêu chí hoàn thành:** Kiểm tra đối soát 3 chiều hoàn tất, đảm bảo khớp 100% mã Unique ID giữa thiết kế, hệ thống FM và biển hiệu thực tế.
 
 ---
 

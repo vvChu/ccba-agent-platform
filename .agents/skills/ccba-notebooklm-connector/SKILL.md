@@ -4,6 +4,7 @@ description: Interact with Google NotebookLM to import YouTube, URLs, PDFs, and 
   docs, perform RAG query, generate Audio Overview, and handle auth, polling, and
   retry loops.
 user-invocable: true
+command: /ccba-notebooklm-connector
 when_to_use: Dùng khi cần trích xuất tóm tắt, truy vấn RAG, hoặc sinh các tài liệu
   cấu trúc (Podcast, Quiz, Slides, Mind Map, Infographic, Video, v.v.) từ các tài
   liệu lớn, cũng như quản trị Notebooks và Sources trên Cloud.
@@ -50,6 +51,7 @@ Kỹ năng này dẫn dắt Agent tương tác tự động với Google Noteboo
         python scripts/spoke/spoke_cli.py sync-notebooklm --notebook-id <notebook_id>
         ```
     *   Khi nạp văn bản mới bằng `python -m ccba_legal ingest ... --upload-drive`, các file Word gốc được tự động đẩy lên Google Drive Vault `CCBA_Legal_Vault` và chuyển đổi sang Native Google Docs sẵn sàng nạp 1-click vào NotebookLM.
+- **Tiêu chí hoàn thành:** Môi trường thư viện sẵn sàng và phiên đăng nhập Google/NotebookLM được xác thực hợp lệ.
 
 ---
 
@@ -58,6 +60,7 @@ Kỹ năng này dẫn dắt Agent tương tác tự động với Google Noteboo
 Trước khi tải tài liệu cục bộ lên đám mây của Google, Agent **bắt buộc** phải chạy quét bảo mật:
 1.  **Phát hiện API Keys/Tokens nhạy cảm:** Chặn đứng lập tức nếu phát hiện các token OpenAI, Anthropic, Google, hoặc GitHub.
 2.  **Khử PII & Database URL:** Tự động che giấu (redact) thông tin nhạy cảm trước khi đồng bộ.
+- **Tiêu chí hoàn thành:** Quét sạch mọi API keys, tokens và thông tin nhạy cảm trước khi đồng bộ lên Cloud.
 
 ---
 
@@ -67,6 +70,7 @@ Trước khi tải tài liệu cục bộ lên đám mây của Google, Agent **
     *   Nếu phát hiện nội dung hoàn toàn trùng khớp, tái sử dụng `source_id` đã có để tiết kiệm quota và tài nguyên.
     *   Nếu phát hiện nội dung đã thay đổi, tự động xóa bản nguồn cũ trên Cloud trước rồi mới upload bản mới.
 2.  **Subscription Tier Quota Warn:** Tự động phát hiện dung lượng giới hạn dựa trên Subscription Tier của tài khoản (Free vs. Pro/Workspace). Nếu số nguồn trong Notebook vượt quá 90% quota, hệ thống sẽ tự động dọn dẹp các nguồn không còn liên kết cục bộ (Garbage Collection).
+- **Tiêu chí hoàn thành:** Mã băm SHA-256 được đối soát để tránh trùng lặp nguồn và quota notebook được kiểm soát an toàn.
 
 ---
 
@@ -99,6 +103,7 @@ Tùy theo tham số chế độ người dùng yêu cầu, thực thi subcommand
     `python -m ccba_notebooklm list-sources [--notebook-id "<id>"]`
 *   **Delete Source (Xóa nguồn trong Notebook)**:
     `python -m ccba_notebooklm delete-source --source-id "<id>" [--notebook-id "<id>"]`
+- **Tiêu chí hoàn thành:** Hoàn tất thực thi usecase chỉ định và xuất artifact đúng định dạng và thư mục quy định.
 
 ---
 

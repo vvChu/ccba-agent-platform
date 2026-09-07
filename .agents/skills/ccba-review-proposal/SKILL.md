@@ -45,6 +45,10 @@ Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm đị
 
 ---
 
+**Tiêu chí hoàn thành:** Nhánh main được đồng bộ, PR và tier review được xác định rõ ràng.
+
+---
+
 ## 🛡️ Bước 2: Kích Hoạt 3 Worker Thẩm Định Song Song (Parallel Review Gate)
 
 Điều phối 3 luồng kiểm tra song song (tự động chạy script hoặc phân bổ Subagents tương ứng theo Tier):
@@ -71,6 +75,10 @@ Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm đị
 
 ---
 
+**Tiêu chí hoàn thành:** Cả 3 worker hoàn thành kiểm tra với 100% checks đạt chuẩn.
+
+---
+
 ## 🤖 Bước 3: Bóc Tách Nhận Xét Copilot & CI Checks Status (Race-Condition Guard)
 
 1. **Kiểm tra trạng thái GitHub Actions CI:**
@@ -93,6 +101,10 @@ Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm đị
 
 ---
 
+**Tiêu chí hoàn thành:** Nhận xét từ Copilot và trạng thái CI được rà soát đầy đủ.
+
+---
+
 ## 🛠️ Bước 4: Tự Sửa Lỗi Có Giám Sát (Supervised Self-Healing) & Hợp Nhất
 
 1. **Khắc phục lỗi tự động trên Branch:**
@@ -106,6 +118,10 @@ Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm đị
    gh pr merge <PR_NUMBER> --squash --delete-branch
    git checkout main && git pull origin main
    ```
+
+---
+
+**Tiêu chí hoàn thành:** Các lỗi được khắc phục và PR được squash merge thành công.
 
 ---
 
@@ -124,3 +140,6 @@ Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm đị
 ---
 
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+**Tiêu chí hoàn thành:** Proposal cập nhật status merged, compile catalog thành công.

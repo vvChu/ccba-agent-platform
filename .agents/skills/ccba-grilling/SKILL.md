@@ -3,6 +3,7 @@ name: ccba-grilling
 description: Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy
   chuẩn (Grill with Docs), hoặc hội tụ UI qua prototype trực quan.
 user-invocable: true
+command: /ccba-grilling
 keywords:
 - grill
 - stress-test

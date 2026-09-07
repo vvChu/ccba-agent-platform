@@ -25,7 +25,7 @@ Workflow này giúp khởi chạy một phiên thảo luận ý tưởng, tự �
 
 ## Các bước thực hiện của Agent
 
-### 1. Đọc cấu hình và Xử lý tham số (Config & Routing)
+### Bước 1: Đọc cấu hình và Xử lý tham số (Config & Routing)
 Agent bắt buộc phải đọc và gộp cấu hình các chủ đề từ hai nguồn:
 1. **Mặc định từ Hub:** Đọc cấu hình mặc định tại [brainstorm_topics.yaml](resources/brainstorm_topics.yaml).
 2. **Cục bộ từ Spoke:** Kiểm tra sự tồn tại của tệp cấu hình cục bộ tại `.md/knowledge/brainstorm_topics.yaml`. Nếu có, đọc và gộp (merge) với cấu hình mặc định (tập tin cục bộ được phép ghi đè các chủ đề trùng `topic_id` hoặc khai báo thêm chủ đề mới).
@@ -35,32 +35,32 @@ Agent bắt buộc phải đọc và gộp cấu hình các chủ đề từ hai
 * **Nếu tham số không trùng khớp:** In cảnh báo `⚠️ Chủ đề '[tham-so]' không tồn tại trong cấu hình.` và chuyển sang **Bước 2**.
 * **Nếu không có tham số:** Chạy tiếp **Bước 2** thông thường.
 
-*Tiêu chí hoàn thành:* Agent đã nạp cấu hình từ ít nhất một nguồn, in ra cấu trúc các chủ đề khả dụng, và quyết định rẽ nhánh chính xác.
+- **Tiêu chí hoàn thành:** Agent đã nạp cấu hình từ ít nhất một nguồn, in ra cấu trúc các chủ đề khả dụng, và quyết định rẽ nhánh chính xác.
 
 ---
 
-### 2. Quét tài liệu và Chọn chủ đề (Scan & Select)
+### Bước 2: Quét tài liệu và Chọn chủ đề (Scan & Select)
 Quét toàn bộ danh sách tệp tin nằm trong thư mục [input_documents/](../../../input_documents/):
 * In bảng danh sách tệp tin phát hiện được kèm dung lượng (KB/MB).
 * Đọc lướt nội dung (skimming) và so khớp từ khóa của các tệp với danh sách `keywords` của các chủ đề trong cấu hình để tự động đề xuất chủ đề phù hợp nhất.
 * Hiển thị danh sách tất cả các chủ đề khả dụng cho người dùng lựa chọn. Chờ người dùng xác nhận chủ đề hoặc yêu cầu đổi sang chủ đề khác.
 
-*Tiêu chí hoàn thành:* Người dùng đã phản hồi lựa chọn chủ đề từ danh sách và Agent đã xác nhận chủ đề được kích hoạt.
+- **Tiêu chí hoàn thành:** Người dùng đã phản hồi lựa chọn chủ đề từ danh sách và Agent đã xác nhận chủ đề được kích hoạt.
 
 ---
 
-### 3. Chuyển đổi định dạng và Nạp Kỹ năng (Ingestion & Skill Activation)
+### Bước 3: Chuyển đổi định dạng và Nạp Kỹ năng (Ingestion & Skill Activation)
 Sau khi chủ đề được xác nhận, Agent tiến hành:
 1. **Chuyển đổi tài liệu:** Chuyển đổi theo quy trình `/ccba-markdown-document-processing` — tham khảo kỹ năng [`ccba-markdown-document-processing`](../ccba-markdown-document-processing/SKILL.md) cho quy tắc routing theo `project.mode`.
    * Đối với các tệp nhẹ `< 5MB` (`.docx`, `.txt`): Tự động chuyển đổi sang Markdown.
    * Đối với các tệp nặng `> 5MB` (PDF bản vẽ, Excel lớn): In cảnh báo, lập bảng tóm tắt metadata và chỉ convert chi tiết khi thảo luận đi sâu vào tệp đó.
 2. **Nạp Kỹ năng:** Nạp toàn bộ các kỹ năng nghiệp vụ được chỉ định trong thuộc tính `required_skills` của chủ đề được chọn.
 
-*Tiêu chí hoàn thành:* Toàn bộ các tệp nhẹ đã được chuyển đổi sang Markdown, và các kỹ năng nghiệp vụ tương ứng đã được nạp thành công.
+- **Tiêu chí hoàn thành:** Toàn bộ các tệp nhẹ đã được chuyển đổi sang Markdown, và các kỹ năng nghiệp vụ tương ứng đã được nạp thành công.
 
 ---
 
-### 4. Áp dụng Guidelines và Khởi động Brainstorming
+### Bước 4: Áp dụng Guidelines và Khởi động Brainstorming
 In ra danh sách các chỉ dẫn thảo luận đặc thù (`guidelines`) của chủ đề đã chọn, sau đó bắt đầu phiên trao đổi hai chiều tuân thủ các quy tắc tương tác dưới đây.
 
 *   **Gợi ý kỹ thuật:** Tham khảo [brainstorm_techniques.md](resources/brainstorm_techniques.md) để đề xuất kỹ thuật brainstorm phù hợp với chủ đề (SCAMPER, Reversal, Question Storming, v.v.). Để người dùng chọn hoặc đề xuất 1-2 technique kèm lý do.
@@ -75,11 +75,11 @@ In ra danh sách các chỉ dẫn thảo luận đặc thù (`guidelines`) của
 *   **Energy Checkpoint:** Sau mỗi 3-4 vòng trao đổi, Agent chủ động hỏi: tiếp tục hướng hiện tại, đổi góc nhìn/kỹ thuật, hay chuyển sang tổng hợp kết quả?
 *   **Nghiên cứu bổ sung:** Khi phát sinh nhu cầu nghiên cứu chuyên sâu (tài liệu lớn, API bên thứ ba, so sánh VBPL), kích hoạt `/ccba-research` chạy song song.
 
-*Tiêu chí hoàn thành:* Các chỉ dẫn và quy tắc tương tác đã hiển thị đầy đủ, phiên brainstorming đã bắt đầu với vòng Hybrid Rhythm đầu tiên (Agent đặt câu hỏi mở đầu tiên).
+- **Tiêu chí hoàn thành:** Các chỉ dẫn và quy tắc tương tác đã hiển thị đầy đủ, phiên brainstorming đã bắt đầu với vòng Hybrid Rhythm đầu tiên (Agent đặt câu hỏi mở đầu tiên).
 
 ---
 
-### 5. Tổng hợp và Ghi nhận Phiên (Convergence & Session Document)
+### Bước 5: Tổng hợp và Ghi nhận Phiên (Convergence & Session Document)
 Khi người dùng yêu cầu tổng hợp (hoặc sau Energy Checkpoint chọn "tổng hợp"), Agent chuyển sang giai đoạn convergence:
 1. **Nhóm phân loại:** Gom các ý tưởng đã thu thập thành 3-5 nhóm chủ đề tự nhiên.
 2. **Xếp hạng:** Yêu cầu người dùng chọn 3-5 ý tưởng ưu tiên nhất. Agent không tự xếp hạng thay.
@@ -91,11 +91,11 @@ Khi người dùng yêu cầu tổng hợp (hoặc sau Energy Checkpoint chọn 
    - **Ưu tiên:** Top ý tưởng được chọn
    - **Action items:** Bước tiếp theo
 
-*Tiêu chí hoàn thành:* Artifact Session Document đã được tạo và hiển thị cho người dùng.
+- **Tiêu chí hoàn thành:** Artifact Session Document đã được tạo và hiển thị cho người dùng.
 
 ---
 
-### 6. Party Mode (Tùy chọn — Multi-role Ideation)
+### Bước 6: Party Mode (Tùy chọn — Multi-role Ideation)
 Khi người dùng yêu cầu "nhiều góc nhìn", "phản biện ý tưởng", hoặc "party mode", Agent chuyển sang chế độ brainstorm đa vai:
 1. Tạo 2-3 persona ảo phù hợp với chủ đề (ví dụ: khách hàng, đối thủ cạnh tranh, kỹ sư skeptic, nhà đầu tư).
 2. Mỗi vòng: Agent phát biểu từ góc nhìn của từng persona, gắn tag rõ ràng (ví dụ: `(Khách hàng)`, `(Skeptic)`).
@@ -104,7 +104,7 @@ Khi người dùng yêu cầu "nhiều góc nhìn", "phản biện ý tưởng",
 
 > **Phân biệt với `/ccba-grilling`:** Party Mode sinh ý tưởng từ nhiều góc nhìn. Grilling stress-test một kế hoạch đã có. Mục đích khác nhau.
 
-*Tiêu chí hoàn thành:* Ít nhất 2 persona đã phát biểu và ý tưởng được ghi nhận vào Session Document, hoặc người dùng yêu cầu dừng/chuyển giai đoạn.
+- **Tiêu chí hoàn thành:** Ít nhất 2 persona đã phát biểu và ý tưởng được ghi nhận vào Session Document, hoặc người dùng yêu cầu dừng/chuyển giai đoạn.
 
 ---
 

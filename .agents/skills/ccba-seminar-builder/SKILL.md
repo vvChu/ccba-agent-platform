@@ -41,7 +41,7 @@ Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/T
 
 ## Quy trình Thực hiện (Process)
 
-### 1. Tạo Agenda & Outline Seminar
+### Bước 1: Tạo Agenda & Outline Seminar
 1. Hỏi user các thông tin cơ bản: Ngày giờ tổ chức, chủ đề chính, thời lượng dự kiến, người trình bày.
 2. Đọc tệp template `templates/agenda.md` để đảm bảo áp dụng đúng khung cấu trúc chuẩn của CCBA.
 3. Thiết lập cấu trúc tri thức theo nguyên tắc **Neo giữ Khái niệm (Concept Grounding)**:
@@ -53,7 +53,7 @@ Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/T
    - Sử dụng các callouts (`> [!IMPORTANT]`) cho các lưu ý đặc thù về công tác chuẩn bị.
 5. **Tiêu chí hoàn thành:** Bản thảo Agenda hiển thị rõ ràng phần Prerequisites, Introduced Concepts và bảng timeline chi tiết trình người dùng duyệt trước khi xuất bản file chính thức.
 
-### 2. Xuất Bản Slide Thuyết Trình PowerPoint (.pptx) Tự Động
+### Bước 2: Xuất Bản Slide Thuyết Trình PowerPoint (.pptx) Tự Động
 Từ bản thảo Outline/Agenda Markdown đã duyệt, tự động biên dịch sang tệp trình chiếu PowerPoint chuẩn nhận diện thương hiệu CCBA ver 3.4 kết hợp phong cách **Swiss Minimalist & Storytelling With You** (Cole Nussbaumer Knaflic) qua Deep Seam `ccba_ooxml.pptx`:
 
 ```bash
@@ -75,18 +75,20 @@ build_presentation_from_markdown("outline.md", "seminar.pptx")
   - **Asymmetric Bento Grid (`> [!ARCH]`, `> [!STRUCT]`, `> [!MEP]`)**: Thẻ Hero 54% bên trái + 2 Thẻ phụ 43% xếp chồng bên phải.
   - **Field Evidence Quote (`::: quote`)**: Thẻ trích dẫn lời chứng thực thực tế từ Chủ đầu tư / Ban QLDA.
 
-### 3. Tạo Monthly Recap
+**Tiêu chí hoàn thành:** Slide PowerPoint (.pptx) được biên dịch thành công từ outline markdown.
+
+### Bước 3: Tạo Monthly Recap
 1. Hỏi user đường dẫn đến tài liệu các buổi seminar trong tháng.
 2. Đọc các file seminar (PDF, PPTX).
 3. Tổng hợp theo template `templates/monthly_recap.md` để ghi nhận các Key takeaways, Action items và các chủ đề cần follow-up.
 4. **Tiêu chí hoàn thành:** Hoàn thiện bản tóm tắt tháng lưu trữ dạng Markdown tại thư mục quy định.
 
-### 3. Thông báo thay đổi lịch
+### Bước 4: Thông báo thay đổi lịch
 1. Đọc template `templates/notification.md`.
 2. Điền thông tin thay đổi (lịch cũ → mới, lý do).
 3. **Tiêu chí hoàn thành:** Xuất thông báo dạng văn bản hành chính hoàn chỉnh để gửi qua Zalo/Email.
 
-### 4. Archive Seminar
+### Bước 5: Archive Seminar
 1. Sau mỗi buổi seminar, lưu trữ tài liệu vào thư mục theo cấu trúc:
    ```
    .md/seminars/

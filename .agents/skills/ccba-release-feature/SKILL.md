@@ -36,6 +36,10 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
 
 ---
 
+**Tiêu chí hoàn thành:** 100% bài kiểm thử slow và stress đều vượt qua thành công.
+
+---
+
 ## Bước 1: Đối soát bình luận và Merge PR trên GitHub
 
 1. **Lấy thông tin PR và Branch hiện hành (Platform-Agnostic):**
@@ -89,6 +93,10 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
 
 ---
 
+**Tiêu chí hoàn thành:** CI 100% xanh, Copilot review giải quyết xong và PR đã merge thành công.
+
+---
+
 ## Bước 2: Cập nhật Lịch sử Thay đổi (Walkthrough)
 
 1. Lấy danh sách các commit của feature branch hiện tại (so sánh với `origin/main`) **trước khi** chuyển nhánh:
@@ -96,6 +104,10 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
    git log origin/main..HEAD --oneline
    ```
 2. Cập nhật nội dung tóm tắt thay đổi và kết quả nghiệm thu vào tệp tin `walkthrough.md`.
+
+---
+
+**Tiêu chí hoàn thành:** Tệp walkthrough.md được cập nhật đầy đủ tóm tắt thay đổi.
 
 ---
 
@@ -123,6 +135,10 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
 
 ---
 
+**Tiêu chí hoàn thành:** Nhánh main cục bộ đồng bộ, nhánh feature xóa và issue cục bộ closed.
+
+---
+
 ## Bước 4: Thông báo hoàn tất
 
 1. Báo cáo trạng thái hoàn tất rõ ràng:
@@ -130,3 +146,6 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
    - 🗑️ Branch cục bộ và remote đã được dọn dẹp sạch sẽ.
    - 📌 Issue liên quan đã được đóng (trên GitHub và CSDL cục bộ).
    - 📝 Lịch sử thay đổi `walkthrough.md` đã được lưu trữ hoàn tất.
+
+
+**Tiêu chí hoàn thành:** Toàn bộ trạng thái tích hợp, dọn dẹp và đóng issue được thông báo hoàn tất.

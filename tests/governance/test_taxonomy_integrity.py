@@ -157,3 +157,38 @@ def test_catalog_yaml_is_compiled_and_in_sync() -> None:
 
     in_sync, msg = check_catalog_in_sync(HUB_ROOT)
     assert in_sync, f"catalog.yaml is out of sync with frontmatters:\n{msg}"
+
+
+def test_all_skills_have_valid_bundle_field() -> None:
+    """Scan every skill file and verify 'bundle' exists and belongs to registered bundles (ADR 0041, ADR 0044)."""
+    from scripts.governance.skill_auditor import SkillAuditor
+
+    auditor = SkillAuditor(HUB_ROOT)
+    valid_bundles = auditor.get_valid_bundles()
+
+    skill_files = list(SKILLS_DIR.glob("**/SKILL.md"))
+    assert len(skill_files) > 0, "No skill files found to test"
+
+    errors: list[str] = []
+    for sf in skill_files:
+        content = sf.read_text(encoding="utf-8")
+        if not content.startswith("---"):
+            continue
+        parts = content.split("---", 2)
+        if len(parts) < 3:
+            continue
+        try:
+            fm: dict[str, Any] = yaml.safe_load(parts[1]) or {}
+        except Exception as e:
+            errors.append(f"{sf.relative_to(HUB_ROOT)}: Failed to parse YAML frontmatter: {e}")
+            continue
+
+        bundle = fm.get("bundle")
+        if not bundle:
+            errors.append(f"{sf.relative_to(HUB_ROOT)}: Missing required 'bundle' field in frontmatter")
+        elif str(bundle) not in valid_bundles:
+            errors.append(
+                f"{sf.relative_to(HUB_ROOT)}: Invalid bundle '{bundle}'. Must be one of: {sorted(valid_bundles)}"
+            )
+
+    assert not errors, "\n".join(errors)

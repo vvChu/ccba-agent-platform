@@ -58,6 +58,7 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
   ```powershell
   python -m ccba_legal fetch "<tvpl_url>" -o "legal_docs/<category>/<doc_slug>/sources"
   ```
+- **Tiêu chí hoàn thành:** Thu thập đầy đủ tệp DOCX gốc và PDF công báo số hóa vào thư mục `sources/`.
 
 ---
 
@@ -72,6 +73,7 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
   - Phân tách rạch ròi 4 ngăn kéo: `tables/`, `figures/`, `annexes/`, `templates/`.
   - Toàn bộ file gốc DOCX + PDF nằm trong `sources/`.
   - Tự động sinh cây điều khoản AST `clauses.json` và bộ câu hỏi `qa_benchmark.json`.
+- **Tiêu chí hoàn thành:** Tạo thành công bundle OKF v2.4 xác định nguyên văn 100% kèm đầy đủ các ngăn kéo và cây AST clauses.json.
 
 ---
 
@@ -88,7 +90,8 @@ Trước khi chuyển sang bước kiểm định hoặc kết luận hoàn thà
    * Tuyệt đối không để xảy ra trường hợp Phụ lục bị dồn vào thân văn bản chính.
 3. **Đối soát Sơ đồ Đồ họa (Multimodal Figure Fallback):**
    * Nếu `figures/` ghi nhận 0 hình nhưng văn bản quy chuẩn có sơ đồ (như Hình H.1, Hình H.2 trong QCVN 10:2025/BCA), bắt buộc kiểm tra các trang PDF để trích xuất vector raster $\ge 300\text{ DPI}$.
-4. **Tiêu chí hoàn thành (Exit Criteria):**
+
+- **Tiêu chí hoàn thành:**
    | Tiêu chí | Trạng thái | Yêu cầu kiểm tra |
    | :--- | :---: | :--- |
    | Zero-Prune Invariant | ✅/❌ | Không xóa bảng/hình mồ côi khi chưa đối soát gốc |
@@ -108,6 +111,7 @@ Trước khi chuyển sang bước kiểm định hoặc kết luận hoàn thà
     --output "legal_docs/<category>/<doc_slug>"
   ```
 * Bắt buộc sinh ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md` tại gốc bundle (ADR 0036).
+- **Tiêu chí hoàn thành:** Hợp nhất thành công các sửa đổi bổ sung và sinh ma trận so sánh thay đổi bang_so_sanh_thay_doi.md.
 
 ---
 
@@ -119,3 +123,5 @@ Trước khi chuyển sang bước kiểm định hoặc kết luận hoàn thà
    python scripts/validate_legal_spoke.py
    ```
 3. **Tiêu chuẩn nghiệm thu:** `0 Errors, 0 Warnings, 100% Visual Parity, 100% Verbatim Match (Gate 11 >= 98.0%), 100% PDF SHA-256 Match`.
+- **Tiêu chí hoàn thành:** Đăng ký sổ bộ thành công và toàn bộ 15 Cổng Master Spoke CI Validator đạt trạng thái Pass.
+

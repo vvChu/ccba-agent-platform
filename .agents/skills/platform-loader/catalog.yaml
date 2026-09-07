@@ -47,6 +47,7 @@ skills:
   - load skills
   - danh sách lệnh
   skill_path: .agents/skills/platform-loader/SKILL.md
+  command: /platform-loader
 - name: bigbim-classification
   bundle: _bim
   description: Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass
@@ -143,6 +144,7 @@ skills:
   - Yale
   - thesis
   skill_path: .agents/skills/ccba-academic-writing/SKILL.md
+  command: /ccba-academic-writing
 - name: ccba-adr-lifecycle
   bundle: _governance
   description: Autonomous lifecycle governance for Architecture Decision Records (ADRs)
@@ -281,6 +283,7 @@ skills:
   - tối ưu qua đêm
   - tối ưu prompt tự động
   skill_path: .agents/skills/ccba-autoresearch/SKILL.md
+  command: /ccba-autoresearch
 - name: ccba-brainstorm
   bundle: _core
   description: Khởi động phiên thảo luận ý tưởng và chuẩn bị tài liệu đầu vào tại
@@ -292,6 +295,7 @@ skills:
   - thảo luận
   - đầu vào
   skill_path: .agents/skills/ccba-brainstorm/SKILL.md
+  command: /ccba-brainstorm [-- <topic_id>]
 - name: ccba-build-skill
   bundle: _core
   description: Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói
@@ -302,6 +306,7 @@ skills:
   - research
   - notebooklm
   skill_path: .agents/skills/ccba-build-skill/SKILL.md
+  command: /ccba-build-skill
 - name: ccba-code-review
   bundle: _software
   description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells)
@@ -317,6 +322,7 @@ skills:
   - review commit
   - review pr
   skill_path: .agents/skills/ccba-code-review/SKILL.md
+  command: /ccba-code-review
 - name: ccba-codebase-design
   bundle: _core
   description: Shared vocabulary for designing deep modules (locality, depth, leverage,
@@ -359,6 +365,7 @@ skills:
   - mở proposal
   - ccba-contribute-to-hub
   skill_path: .agents/skills/ccba-contribute-to-hub/SKILL.md
+  command: /ccba-contribute-to-hub
 - name: ccba-copywriting
   bundle: _software
   description: Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa
@@ -380,6 +387,7 @@ skills:
   - pull request
   - tạo PR
   skill_path: .agents/skills/ccba-create-pr/SKILL.md
+  command: /ccba-create-pr
 - name: ccba-design
   bundle: _consulting
   description: Design brand identity, logos, banners, and visual assets. Use for brand
@@ -398,6 +406,7 @@ skills:
   - ckm:design
   - mockup
   skill_path: .agents/skills/ccba-design/SKILL.md
+  command: /ccba-design
 - name: ccba-diagnosing-bugs
   bundle: _software
   description: Diagnosis loop for hard bugs and performance regressions. Use when
@@ -417,6 +426,7 @@ skills:
   - hủy branch
   - xóa branch
   skill_path: .agents/skills/ccba-discard-feature/SKILL.md
+  command: /ccba-discard-feature
 - name: ccba-docs-manager
   bundle: _software
   description: Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
@@ -454,6 +464,7 @@ skills:
   - Word document
   - excel xml
   skill_path: .agents/skills/ccba-docx/SKILL.md
+  command: /ccba-docx
 - name: ccba-domain-modeling
   bundle: _software
   description: Build, refine, and maintain the project's domain model, ubiquitous
@@ -527,6 +538,7 @@ skills:
   - chuyển scratch vào production
   - ccba-graduate-rd
   skill_path: .agents/skills/ccba-graduate-rd/SKILL.md
+  command: /ccba-graduate-rd
 - name: ccba-grilling
   bundle: _software
   description: Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy
@@ -546,6 +558,7 @@ skills:
   - stress test
   - kiểm chứng kế hoạch
   skill_path: .agents/skills/ccba-grilling/SKILL.md
+  command: /ccba-grilling
 - name: ccba-handoff
   bundle: _core
   description: Đóng gói và tổng hợp phiên làm việc hiện tại thành tài liệu Handoff
@@ -602,6 +615,7 @@ skills:
   - setup project
   - khởi tạo dự án
   skill_path: .agents/skills/ccba-init-spoke/SKILL.md
+  command: /ccba-init-spoke
 - name: ccba-issue-to-hub
   bundle: _core
   description: Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ
@@ -614,6 +628,7 @@ skills:
   - feature request
   - ccba-issue-to-hub
   skill_path: .agents/skills/ccba-issue-to-hub/SKILL.md
+  command: /ccba-issue-to-hub
 - name: ccba-knowledge-loop
   bundle: _core
   description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm
@@ -623,6 +638,7 @@ skills:
   - vòng lặp tri thức
   - trinh sát thảo luận hoạch định
   skill_path: .agents/skills/ccba-knowledge-loop/SKILL.md
+  command: /ccba-knowledge-loop
 - name: ccba-legal-advisor
   bundle: _consulting
   description: 'Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ
@@ -751,6 +767,7 @@ skills:
   - feature mới
   - tạo branch
   skill_path: .agents/skills/ccba-new-feature/SKILL.md
+  command: /ccba-new-feature
 - name: ccba-notebooklm-connector
   bundle: _core
   description: Interact with Google NotebookLM to import YouTube, URLs, PDFs, and
@@ -769,6 +786,7 @@ skills:
   - infographic
   - admin
   skill_path: .agents/skills/ccba-notebooklm-connector/SKILL.md
+  command: /ccba-notebooklm-connector
 - name: ccba-pccc-cdt-tuthamdinh
   bundle: _qc
   description: Quy trình Hỗ trợ Chủ đầu tư Tự thẩm định toàn bộ thiết kế PCCC (theo
@@ -779,6 +797,7 @@ skills:
   - luật 55/2024
   - NĐ 105/2025
   skill_path: .agents/skills/ccba-pccc-cdt-tuthamdinh/SKILL.md
+  command: /workflow_pccc_cdt_tuthamdinh
 - name: ccba-pccc-thamdinh-congan
   bundle: _qc
   description: Quy trình Thẩm định thiết kế PCCC phần Hệ thống Cơ điện (MEP) nộp Cơ
@@ -788,6 +807,7 @@ skills:
   - mep pccc
   - pc07
   skill_path: .agents/skills/ccba-pccc-thamdinh-congan/SKILL.md
+  command: /workflow_pccc_thamdinh_congan
 - name: ccba-pccc-thamdinh-cqxd
   bundle: _qc
   description: Quy trình Thẩm định/Thẩm tra PCCC phần Kiến trúc & Kiểm soát khói nộp
@@ -797,6 +817,7 @@ skills:
   - kiến trúc pccc
   - kiểm soát khói
   skill_path: .agents/skills/ccba-pccc-thamdinh-cqxd/SKILL.md
+  command: /workflow_pccc_thamdinh_cqxd
 - name: ccba-pptx
   bundle: _core
   description: Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao
@@ -811,6 +832,7 @@ skills:
   - html2pptx
   - slide layout
   skill_path: .agents/skills/ccba-pptx/SKILL.md
+  command: /ccba-pptx
 - name: ccba-promote-sandbox
   bundle: _core
   description: Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc
@@ -822,6 +844,7 @@ skills:
   - nghiệm thu pgv
   - pgv handover
   skill_path: .agents/skills/ccba-promote-sandbox/SKILL.md
+  command: /ccba-promote-sandbox
 - name: ccba-propose-to-hub
   bundle: _core
   description: '[Alias tương thích ngược của /ccba-contribute-to-hub] Đóng gói mã
@@ -833,6 +856,7 @@ skills:
   - propose
   - skill mới
   skill_path: .agents/skills/ccba-propose-to-hub/SKILL.md
+  command: /ccba-propose-to-hub
 - name: ccba-prototype
   bundle: _software
   description: Xây dựng mẫu thử thô (throwaway prototype) để trả lời câu hỏi thiết
@@ -852,6 +876,7 @@ skills:
   - merge PR
   - phát hành
   skill_path: .agents/skills/ccba-release-feature/SKILL.md
+  command: /ccba-release-feature
 - name: ccba-research
   bundle: _software
   description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với
@@ -889,6 +914,7 @@ skills:
   - review proposal boost
   - deep review proposal
   skill_path: .agents/skills/ccba-review-proposal/SKILL.md
+  command: /ccba-review-proposal
 - name: ccba-review-skill
   bundle: _core
   description: Đánh giá chất lượng và tối ưu hóa tệp tin SKILL.md theo tiêu chuẩn
@@ -926,6 +952,7 @@ skills:
   - thought-history
   - thought
   skill_path: .agents/skills/ccba-sequential-thinking/SKILL.md
+  command: /ccba-sequential-thinking
 - name: ccba-server-deploy
   bundle: _core
   description: Tự động triển khai và cấu hình nền tảng CCBA Agent Platform trên Server
@@ -1007,6 +1034,7 @@ skills:
   - call tree
   - ccba-show-me
   skill_path: .agents/skills/ccba-show-me/SKILL.md
+  command: /ccba-show-me
 - name: ccba-skills-eval
   bundle: _core
   description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) cho các kỹ năng AI
@@ -1017,6 +1045,7 @@ skills:
   - kiểm thử kỹ năng
   - chạy evals
   skill_path: .agents/skills/ccba-skills-eval/SKILL.md
+  command: /ccba-skills-eval
 - name: ccba-spoke-adopter
   bundle: _core
   description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield
@@ -1035,6 +1064,7 @@ skills:
   - kết nối dự án cũ
   - adopt-spoke
   skill_path: .agents/skills/ccba-spoke-adopter/SKILL.md
+  command: /ccba-spoke-adopter
 - name: ccba-sync-upstream
   bundle: _core
   description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0040 Radar)
@@ -1062,6 +1092,7 @@ skills:
   - refactor
   - quality
   skill_path: .agents/skills/ccba-tdd/SKILL.md
+  command: /ccba-tdd
 - name: ccba-teach
   bundle: _core
   description: Hỗ trợ giảng dạy và đào tạo kiến thức tương tác, lưu trữ lộ trình và
@@ -1165,6 +1196,7 @@ skills:
   - update registry
   - văn bản mới
   skill_path: .agents/skills/ccba-update-legal-registry/SKILL.md
+  command: /ccba-update-legal-registry
 - name: ccba-update-spoke
   bundle: _core
   description: Đồng bộ hóa các kỹ năng và cập nhật phiên bản giữa Hub và các Spoke
@@ -1180,6 +1212,7 @@ skills:
   - spoke status
   - kiểm tra spoke
   skill_path: .agents/skills/ccba-update-spoke/SKILL.md
+  command: /ccba-update-spoke
 - name: ccba-viet-chuyen-nghiep
   bundle: _software
   description: Viết tiếng Việt chuyên nghiệp — nhà xuất bản AI. Hỗ trợ soạn thảo,
@@ -1235,6 +1268,7 @@ skills:
   - browser automation
   - vitest
   skill_path: .agents/skills/ccba-web-testing/SKILL.md
+  command: /ccba-web-testing
 - name: ccba-wizard
   bundle: _core
   description: Generate an interactive bash wizard that walks a human through a manual
@@ -1274,6 +1308,7 @@ skills:
   - clone feature
   - adapt from
   skill_path: .agents/skills/ccba-xia/SKILL.md
+  command: /ccba-xia
 - name: ccba-xu-ly-van-phong
   bundle: _software
   description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo
@@ -1300,6 +1335,7 @@ skills:
   - youtube
   - belief archaeology
   skill_path: .agents/skills/ccba-youtube-learn/SKILL.md
+  command: /ccba-youtube-learn
 workflows: []
 rules:
 - name: identity

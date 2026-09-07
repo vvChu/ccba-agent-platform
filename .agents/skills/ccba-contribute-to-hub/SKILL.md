@@ -37,6 +37,7 @@ Ghi nhận đầy đủ thông tin cốt lõi:
 5. **Cổng Kiểm Lọc R&D (Graduation Pre-Flight Gate):**
    - Đảm bảo mã nguồn đã được làm sạch qua `/ccba-graduate-rd` (loại bỏ 100% `print`, đường dẫn hardcoded, rác tạm; có đủ Type Hints & Docstrings Google style).
    - Test suite cục bộ trong `packages/[pkg]/tests/` phải đạt **100% PASS** trước khi tạo Proposal.
+- **Tiêu chí hoàn thành:** Thu thập đầy đủ thông tin scope, tên đề xuất, liên kết issue và đảm bảo code đã clean qua `/ccba-graduate-rd`.
 
 ---
 
@@ -45,6 +46,7 @@ Trước khi tạo mới, Agent **bắt buộc** kiểm tra hệ sinh thái Hub:
 1. Đọc `.md/workspace_context.yaml` để lấy `hub_path`.
 2. Đọc `<hub_path>/.agents/skills/platform-loader/catalog.yaml`, `packages/`, `<hub_path>/.agents/AGENTS.md`, `PLATFORM.md`.
 *Nếu phát hiện đã tồn tại thành phần tương tự:* Đề xuất nâng cấp/mở rộng thay vì tạo mới trùng lặp.
+- **Tiêu chí hoàn thành:** Xác nhận không trùng lặp chức năng với các skill, tool hiện hữu trong `catalog.yaml` và `PLATFORM.md`.
 
 ---
 
@@ -77,11 +79,15 @@ Thực thi tại thư mục Hub (`hub_path`):
    applies_to: ["Phần mềm", "Thẩm tra thiết kế"]
    ---
    ```
-4. **Leakage Guard & Push:**
+4. **Kiểm Định Cục Bộ, Leakage Guard & Push:**
+   Chạy đồng bộ catalog và kiểm định toàn bộ kỹ năng trước khi commit:
    ```bash
+   python scripts/governance/compile_catalog.py
+   python scripts/validate_skills.py
    python scripts/governance/check_spoke_leakage.py
    git add -A && git commit -m "feat([scope]): add [tên-đề-xuất] and proposal" && git push origin "$BRANCH_NAME"
    ```
+- **Tiêu chí hoàn thành:** Nhánh mới được tạo, mã nguồn đóng gói, proposal ghi nhận, catalog đồng bộ và pass toàn bộ `scripts/validate_skills.py` cùng `check_spoke_leakage.py`.
 
 ---
 
@@ -92,6 +98,7 @@ Thực thi tại thư mục Hub (`hub_path`):
   gh pr create --title "feat([scope]): add [tên-đề-xuất]" --body "$PR_BODY" --base main --head "$BRANCH_NAME"
   ```
 - **Thủ công:** Truy cập `[PR-creation-URL]/pull/new/[BRANCH_NAME]`.
+- **Tiêu chí hoàn thành:** Pull Request được mở thành công trên GitHub liên kết đúng branch và Issue ID.
 
 ---
 
@@ -108,11 +115,13 @@ Thực thi tại thư mục Hub (`hub_path`):
    - Nếu CI Fail: Đọc log qua `gh run view <RUN_ID> --log-failed` $\rightarrow$ Sửa lỗi $\rightarrow$ Commit & push bản vá.
    - Nếu Copilot góp ý: Refactor code đối soát với chuẩn CCBA $\rightarrow$ Commit & push.
    - Tiêu chí: Lặp lại đến khi `gh pr checks <PR_NUMBER>` pass 100%.
+- **Tiêu chí hoàn thành:** 100% CI Checks pass xanh và toàn bộ review của Copilot (nếu có) được giải quyết triệt để.
 
 ---
 
 ## ✅ Bước 6: Báo Cáo Hoàn Tất & Sẵn Sàng Merge
 Tổng hợp báo cáo: Link PR, kết quả CI, tóm tắt góp ý đã sửa, và thông báo Maintainer kích hoạt `/ccba-review-proposal [PR_NUMBER]`.
+- **Tiêu chí hoàn thành:** Báo cáo hoàn tất tổng hợp link PR và kích hoạt `/ccba-review-proposal`.
 
 ---
 
@@ -122,6 +131,7 @@ Sau khi PR được Squash Merge vào Hub `main`, thực thi chu trình 4 bướ
 2. **Đồng bộ Downstream:** Chạy `/ccba-update-spoke` hoặc `python [hub_path]\scripts\sync_spoke.py --spoke . --apply`.
 3. **Tái cài đặt Editable Package:** `pip install -e "[hub_path]\packages\[package-name]"` (nếu là `tool`).
 4. **Hồi quy & Dọn dẹp:** Chạy kiểm thử Spoke (`python scripts\validate_legal_spoke.py`), xóa branch `git branch -D proposal/[tên-đề-xuất]`, và ghi log vào `.md/knowledge/session_learnings.md`.
+- **Tiêu chí hoàn thành:** Nhánh feature được merge, Spoke downstream đồng bộ thành công và `session_learnings.md` được cập nhật.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
