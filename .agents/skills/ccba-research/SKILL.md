@@ -48,7 +48,7 @@ Xác định câu hỏi nghiên cứu của người dùng và lựa chọn ch�
 - **Chế độ Chuẩn (Standard Single Subagent):** Dành cho tra cứu tài liệu, API specs, tóm tắt thư viện thông thường.
 - **Chế độ Phản biện Kép (Dual-Agent Adversarial Pattern):** Kích hoạt khi nghiên cứu quyết định kiến trúc lớn (ADR), tái cấu trúc module phức tạp, hoặc giải quyết xung đột văn bản pháp luật/quy chuẩn.
 
-*Tiêu chí hoàn thành:* Xác định rõ phạm vi câu hỏi và nguồn sơ cấp cần đối chiếu.
+**Tiêu chí hoàn thành:** Xác định rõ phạm vi câu hỏi và nguồn sơ cấp cần đối chiếu.
 
 ---
 
@@ -65,6 +65,10 @@ Sử dụng `invoke_subagent` khởi chạy đồng thời **2 subagents độc 
 2. **Subagent B (`Risk & Boundary Challenger`):**
    - Nhiệm vụ: Rà soát rủi ro bảo mật (Maskara), vi phạm ranh giới Deep Seams (ADR 0035), breaking changes, và các trường hợp biên (edge cases).
    - Budget: Max 5 tool calls.
+
+---
+
+**Tiêu chí hoàn thành:** Hoàn thành khảo sát độc lập từ các subagent trong ngân sách tìm kiếm.
 
 ---
 
@@ -95,7 +99,7 @@ Khi các subagents hoàn tất và gửi thông báo hoàn thành (Reactive Wake
 - [Nêu rõ các câu hỏi, giả định mầm hoặc điểm mù chưa thể xác nhận, nếu có]
 ```
 
-*Tiêu chí hoàn thành:* Báo cáo Markdown được lưu tại đúng đường dẫn và hiển thị liên kết truy cập trực tiếp cho người dùng.
+**Tiêu chí hoàn thành:** Báo cáo Markdown được lưu tại đúng đường dẫn và hiển thị liên kết truy cập trực tiếp cho người dùng.
 
 ---
 
@@ -103,3 +107,6 @@ Khi các subagents hoàn tất và gửi thông báo hoàn thành (Reactive Wake
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
 
+
+
+**Tiêu chí hoàn thành:** Báo cáo nghiên cứu 5 phần được lưu vào tệp markdown theo đúng cấu trúc.

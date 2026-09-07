@@ -3,6 +3,7 @@ name: ccba-tdd
 description: Phát triển hướng kiểm thử (Red-Green-Refactor) giúp tạo mã nguồn ổn định,
   tin cậy thông qua các giao diện công khai (seams).
 user-invocable: true
+command: /ccba-tdd
 when_to_use: Dùng khi người dùng yêu cầu phát triển tính năng mới hoặc sửa lỗi bằng
   phương pháp viết test trước (test-first).
 category: utilities

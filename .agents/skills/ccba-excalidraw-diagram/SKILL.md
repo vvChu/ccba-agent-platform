@@ -49,6 +49,7 @@ Nguồn gốc: Dựa trên và mở rộng từ [excalidraw-diagram-skill](https
 - Diagramming hệ thống thực, protocol, hoặc kiến trúc
 - Dùng để giảng dạy hoặc thuyết trình
 - Cần evidence artifacts (code snippets, JSON examples, real data)
+- **Tiêu chí hoàn thành:** Xác định rõ đối tượng người xem và mức độ chi tiết (đơn giản hay kỹ thuật toàn diện) của diagram.
 
 ### Bước 1: Hiểu sâu nội dung
 
@@ -57,6 +58,7 @@ Với mỗi khái niệm, hỏi:
 - Mối quan hệ giữa các khái niệm là gì?
 - Luồng hoặc sự chuyển hóa cốt lõi là gì?
 - **Người xem cần THẤY gì để hiểu?**
+- **Tiêu chí hoàn thành:** Làm rõ bản chất chức năng, mối quan hệ và luồng chuyển hóa giữa các khái niệm.
 
 ### Bước 2: Map khái niệm sang Visual Pattern
 
@@ -70,22 +72,27 @@ Với mỗi khái niệm, hỏi:
 | Là trạng thái trừu tượng | **Cloud** (overlapping ellipses) |
 | Chuyển đổi input thành output | **Assembly line** (before → process → after) |
 | So sánh hai thứ | **Side-by-side** (song song với tương phản) |
+- **Tiêu chí hoàn thành:** Lựa chọn visual pattern phù hợp với ngữ nghĩa của từng khái niệm cụ thể.
 
 ### Bước 3: Đảm bảo sự đa dạng
 
 Với diagram nhiều khái niệm: **mỗi khái niệm chính phải dùng một visual pattern khác nhau**. Tuyệt đối không dùng lưới hộp đều nhau.
+- **Tiêu chí hoàn thành:** Đảm bảo bố cục phong phú, kết hợp đa dạng các pattern khác nhau thay vì lưới hộp đơn điệu.
 
 ### Bước 4: Phác thảo luồng
 
 Trước khi viết JSON, hãy trace mentally cách mắt di chuyển qua diagram. Phải có một "visual story" rõ ràng.
+- **Tiêu chí hoàn thành:** Luồng dẫn dắt thị giác (visual story) được thiết lập liền mạch từ điểm bắt đầu đến kết thúc.
 
 ### Bước 5: Generate JSON (từng section)
 
 **QUAN TRỌNG**: Với diagram lớn và toàn diện, **xây dựng JSON từng section một**. KHÔNG cố generate toàn bộ file trong một lần.
+- **Tiêu chí hoàn thành:** Cấu trúc JSON cho từng section được tạo thành công với tọa độ hình học chính xác.
 
 ### Bước 6: Tạo file và kiểm tra
 
 Sau khi generate JSON, tạo file `.excalidraw` với cấu trúc chuẩn (xem phần Format bên dưới).
+- **Tiêu chí hoàn thành:** File `.excalidraw` hợp lệ được tạo và hiển thị kiểm tra thành công.
 
 ---
 

@@ -62,6 +62,8 @@ Mô tả chi tiết giải pháp kỹ thuật, cấu trúc mô-đun, và các qu
 - Tác động đến các kỹ năng và workflow hiện có.
 ```
 
+**Tiêu chí hoàn thành:** Tệp ADR mới `docs/adr/00XX-<slug-name>.md` được tạo với đúng frontmatter và cấu trúc chuẩn.
+
 ---
 
 ### Bước 2: Lan Truyền Trạng Thái Thay Thế (Status Cascading)
@@ -72,6 +74,8 @@ Mô tả chi tiết giải pháp kỹ thuật, cấu trúc mô-đun, và các qu
      ## 1. Trạng Thái (Status)
      **SUPERSEDED by [ADR 00XX](00XX-....md)** (YYYY-MM-DD)
      ```
+
+**Tiêu chí hoàn thành:** Tất cả ADRs bị thay thế được cập nhật trạng thái `SUPERSEDED` chính xác.
 
 ---
 
@@ -92,6 +96,8 @@ Chạy script đồng bộ tự động theo cơ chế **Hai Tầng (Two-Tier Ar
   - **Tier 2 (Domain-Specific Decisions):** Tự động phát hiện và bảo toàn các ADRs nghiệp vụ cục bộ của Spoke trong `## 🌐 Tier 2 — Domain-Specific Architecture Decisions`.
   - **Non-Destructive Preservation:** Bảo lưu nguyên vẹn các bảng đối soát và ghi chú tùy biến của Spoke trong `TRACEABILITY_MATRIX.md`.
 
+**Tiêu chí hoàn thành:** `docs/adr/README.md` và `TRACEABILITY_MATRIX.md` được tái biên dịch đầy đủ mà không làm mất dữ liệu Spoke.
+
 ---
 
 ### Bước 4: Kiểm Định Khóa Cổng CI (Zero-Tolerance Parity Gate)
@@ -103,3 +109,5 @@ python scripts/sync_hub_adr_matrix.py --check
   - 0 Duplicate numbers hoặc Numbering gaps.
   - 0 Broken ADR links trong toàn bộ codebase.
   - 100% Khớp nối giữa các file ADR, bảng mục lục `README.md` và `TRACEABILITY_MATRIX.md`.
+
+**Tiêu chí hoàn thành:** Lệnh `python scripts/sync_hub_adr_matrix.py --check` thoát mã 0 với 0 lỗi parity.

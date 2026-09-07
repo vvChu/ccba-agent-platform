@@ -75,6 +75,7 @@ triggers:
    - Đếm file `.md` trong `.agents/workflows/` → số lượng active workflows thực tế (hoặc `.md.bak` là archived workflows)
    - Đếm thư mục con trong `packages/` → số lượng packages thực tế
    - Đếm entries `skill_path` trong `catalog.yaml` → số lượng catalog entries
+- **Tiêu chí hoàn thành:** Thu thập đầy đủ số liệu thống kê thực tế về skills, packages, workflows và catalog entries.
 
 ### Bước 2: Đối soát Số liệu Thống kê (Statistics Drift Detection)
 
@@ -85,6 +86,7 @@ So sánh số liệu thực tế (Bước 1) với các con số hardcoded trong
 - `"N models"` — xuất hiện trong: `README.md`, `PLATFORM.md`, `ccba-ai-gateway-sdk/SKILL.md`
 
 Nếu phát hiện sai lệch → ghi nhận và cập nhật ở Bước 3.
+- **Tiêu chí hoàn thành:** Lập danh sách sai lệch thống kê giữa hiện trạng thực tế và tài liệu.
 
 ### Bước 3: Đồng bộ hóa Tài liệu (Tiered Sync)
 
@@ -107,6 +109,7 @@ Nếu phát hiện sai lệch → ghi nhận và cập nhật ở Bước 3.
 
 **Tier 4 (re-generate):**
 - Chạy lại script compile nếu có thay đổi nội dung skills/workflows.
+- **Tiêu chí hoàn thành:** Đồng bộ hoàn tất các tài liệu Tier 1 và Tier 2 liên quan khớp cấu trúc codebase mới.
 
 ### Bước 4: Kiểm định Gác cổng (Linter Gate)
 
@@ -115,10 +118,12 @@ Chạy linter tài liệu tĩnh trên các file có thay đổi:
 python scripts/validate_docs.py . --changed
 ```
 - Nếu phát hiện lỗi, bắt buộc phải sửa đổi hoàn chỉnh trước khi lưu trữ.
+- **Tiêu chí hoàn thành:** Lệnh validate_docs.py chạy qua với 0 lỗi phát sinh.
 
 ### Bước 5: Lưu trữ Knowledge Item (KI)
 
 - Tạo artifact tóm tắt (ví dụ: `walkthrough.md`) ghi nhận các thay đổi kiến trúc chính để chuyển tiếp tri thức sang phiên làm việc sau.
+- **Tiêu chí hoàn thành:** Artifact walkthrough ghi nhận tóm tắt kiến trúc được tạo thành công.
 
 ---
 

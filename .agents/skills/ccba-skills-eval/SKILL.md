@@ -26,6 +26,8 @@ Agent phân tích yêu cầu của người dùng để xác định tham số:
 - **Kiểm thử toàn bộ:** Nếu người dùng chỉ gõ lệnh chung `/ccba-skills-eval`, mặc định chạy cho tất cả kỹ năng bằng cách bỏ trống `--skill` hoặc đặt `--skill all`.
 - **Số lần chạy thử:** Mặc định chạy 3 lần thử (`--trials 3`) để đo độ tin cậy. Nếu người dùng cần chạy nhanh để kiểm tra lỗi cú pháp, có thể đặt `--trials 1`.
 
+**Tiêu chí hoàn thành:** Xác định rõ kỹ năng mục tiêu và số lượt thử nghiệm.
+
 ### Bước 2: Kích hoạt Core Eval Runner & Harness Engine
 Chạy lệnh CLI sau tại thư mục gốc của dự án:
 ```bash
@@ -42,6 +44,8 @@ python scripts/eval/log_eval_miner.py --skill [tên-skill] --auto-inject
 python .agents/skills/ccba-eval-gate/scripts/eval_runner.py --trials 3
 ```
 
+**Tiêu chí hoàn thành:** Lệnh eval_runner.py được khởi chạy với đầy đủ tham số.
+
 ### Bước 3: Đánh giá Đa chiều theo Barem Rubrics & Rào chắn Điểm Liệt
 - **Bộ Tiêu chí Định lượng & Rubrics:** Đối chiếu kết quả với Quy chuẩn tại [`.md/knowledge/guidelines/domain_success_criteria_rubrics.md`](../../../.md/knowledge/guidelines/domain_success_criteria_rubrics.md):
   * **Code-Based Assertions (< 1ms):** ExactMatch, RegexMatch, JsonSchemaMatch, LengthBounds.
@@ -55,6 +59,8 @@ python .agents/skills/ccba-eval-gate/scripts/eval_runner.py --trials 3
   2. Xác định xem lỗi do mô hình suy giảm hiệu năng (regression), lỗi placeholders, hay lỗi over-triggering.
   3. Thực hiện sửa đổi và bổ sung chỉ thị trực tiếp vào tệp `SKILL.md` của kỹ năng bị lỗi đó để khắc phục (tương tự như cách sửa lỗi over-triggering bằng When to Use / When NOT to Use).
   4. Chạy lại kiểm thử (tối đa lặp lại 3 lần). Nếu sau 3 lần vẫn lỗi, hãy báo cáo cụ thể cho người dùng để nhận chỉ thị.
+
+**Tiêu chí hoàn thành:** Hoàn thành đánh giá rubric, không vi phạm điểm liệt.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

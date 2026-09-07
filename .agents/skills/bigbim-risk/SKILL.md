@@ -76,6 +76,7 @@ Khi nhận hồ sơ phối hợp thiết kế (AEC Coordination Matrix) hoặc m
 ### Bước 1: Quét Va chạm Vật lý (Level 1 Geometry Clash)
 *   Xác định các giao cắt hình học trực tiếp giữa các bộ môn (Kiến trúc, Kết cấu, Cơ điện MEP, PCCC).
 *   Ghi nhận tọa độ, hệ thống liên quan và Unique ID của các cấu kiện xung đột.
+- **Tiêu chí hoàn thành:** Bảng danh sách va chạm hình học Level 1 được ghi nhận đầy đủ tọa độ và Unique ID.
 
 ### Bước 2: Quét Thiếu Không gian lắp đặt/thao tác (Level 2 Non-Geometric Gaps)
 *   Đối soát khoảng cách an toàn (clearance distance) xung quanh các thiết bị lớn (máy bơm, tủ điện, AHU, máy chiller).
@@ -83,15 +84,18 @@ Khi nhận hồ sơ phối hợp thiết kế (AEC Coordination Matrix) hoặc m
     *   Tủ điện: Mặt trước bắt buộc phải có không gian trống $\ge 900\text{mm}$ để mở cửa tủ và thao tác.
     *   Đường ống kỹ thuật trần: Khoảng cách trống tối thiểu đến dầm/sàn bê tông $\ge 150\text{mm}$ phục vụ nhân công luồn tay siết đai ốc.
     *   Nếu khoảng cách này bị vi phạm mặc dù mô hình 3D báo "Không va chạm" $\rightarrow$ Đánh dấu lỗi **Mâu thuẫn thông tin Level 2**.
+- **Tiêu chí hoàn thành:** Xác định chính xác các điểm thiếu không gian thao tác/lắp đặt theo tiêu chuẩn khoảng hở.
 
 ### Bước 3: Đối soát logic thuộc tính (BBP Phase Consistency Check)
 *   So sánh bảng dữ liệu thiết bị (Equipment Schedule) giữa bản vẽ thiết kế (`BBP-B1`) và danh mục mua sắm vật tư thực tế (`BBP-B2`).
 *   Kiểm tra xem Unique ID gán từ `BBP-A0` có bị thay đổi cấu trúc ký tự hay không.
 *   Nếu có sự không nhất quán $\rightarrow$ Đánh dấu lỗi **Mâu thuẫn logic thuộc tính**.
+- **Tiêu chí hoàn thành:** Đối soát tính toàn vẹn thuộc tính và Unique ID giữa các pha thiết kế và mua sắm.
 
 ### Bước 4: Đánh giá tác động và Đề xuất giải pháp
 *   Phân tích hậu quả nếu không xử lý mâu thuẫn (chậm tiến độ, tăng chi phí sửa chữa, hay gián đoạn vận hành).
 *   Đề xuất giải pháp cụ thể (Ví dụ: dịch chuyển cao độ ống gió, điều chỉnh kích thước lỗ mở rầm, hoặc chuẩn hóa lại mã sản phẩm mua sắm).
+- **Tiêu chí hoàn thành:** Báo cáo đánh giá tác động kèm đề xuất phương án xử lý mâu thuẫn cụ thể cho từng vị trí.
 
 ---
 

@@ -80,32 +80,39 @@ Khi nhận yêu cầu phân loại hoặc đặt tên từ người dùng, Agent
 Áp dụng cho các công trình dân dụng, tòa nhà (En_25_70_47):
 1.  **Phân cấp không gian:** Phân rã không gian theo mô hình 3 cấp:
     $$\text{Tầng (Floor)} \rightarrow \text{Vùng chức năng (Zone)} \rightarrow \text{Phòng độc lập (Room)}$$
+    - **Tiêu chí hoàn thành:** Mô hình không gian được phân rã đầy đủ theo 3 cấp Tầng, Zone và Room.
 2.  **Chuẩn hóa đặt tên phòng (ISO 19650 Room Naming):**
     *   Sử dụng bảng **Uniclass SL (Spaces/locations)** để tra cứu mã chức năng không gian.
     *   Quy ước đặt tên Container Thông tin (Information Container - IC) phòng:
         $$\text{[Mã_Dự_Án]}-\text{[Mã_Tòa_Nhà]}-\text{[Tầng]}-\text{[Mã_SL_Uniclass]}-\text{[Số_Thứ_Tự]}$$
         *Ví dụ:* `HLB-B1-L02-SL_25_10_72-005` (Phòng đọc sách số 5 tại Tầng 2 tòa nhà HUELIB).
+    - **Tiêu chí hoàn thành:** Tên phòng tuân thủ đúng cú pháp ISO 19650 với mã Uniclass SL chính xác.
 
 ### Nhánh 2: Phân loại Không gian Hạ tầng (Infrastructure - Tuyến tính)
 Áp dụng cho các công trình hạ tầng giao thông, cầu đường, đê kè:
 1.  **Tọa độ địa lý & Định vị tuyến (GIS & IFC Alignment):**
     *   Không gian không được chia theo tầng mà phải chia dọc theo tuyến chính của dự án dựa trên tọa độ thực địa GIS và lý trình **IFC Alignment**.
+    - **Tiêu chí hoàn thành:** Tọa độ GIS và lý trình IFC Alignment được liên kết chính xác dọc tim tuyến.
 2.  **Quy ước định vị phân cấp:**
     $$\text{Tuyến (Alignment)} \rightarrow \text{Lý trình (km/m)} \rightarrow \text{Nút giao/Phân đoạn} \rightarrow \text{Cấu kiện vật lý (Nhịp, Trụ, Dầm)}$$
     *   *Quy ước đặt tên:*
         $$\text{[Tên_Tuyến]}-\text{KM[Lý_Trình]}-\text{[Phân_Phân_Đoạn]}-\text{[Mã_EF_Uniclass]}$$
         *Ví dụ:* `Tuyen_NH1-KM012_500-NVD1-EF_20_10` (Hệ kết cấu móng tại lý trình km 12+500 của tuyến Quốc lộ 1).
-
+    - **Tiêu chí hoàn thành:** Định danh phân cấp tuyến và mã EF Uniclass được gán đầy đủ.
 
 ### Nhánh 3: Tự động hóa phân loại bằng AI (AI-based Semantic Auto-Classification)
 Áp dụng khi cần phân loại hàng loạt cấu kiện phi cấu trúc hoặc tên không chuẩn hóa:
 1.  **Trích xuất thuộc tính IFC (ifcopenshell):** Quét mô hình để trích xuất cả thông tin hình học và metadata thô (Family Name, Material, Description).
+    - **Tiêu chí hoàn thành:** Trích xuất thành công tập dữ liệu thuộc tính IFC phục vụ vector hóa.
 2.  **Tiền xử lý & Sửa lỗi chính tả (Typo Normalization):**
     *   Thực hiện làm sạch dữ liệu và sửa các lỗi chính tả thô tiếng Việt (ví dụ: mất dấu, sai diacritics) trước khi vector hóa để tránh làm lệch vector embedding.
+    - **Tiêu chí hoàn thành:** Dữ liệu text được làm sạch và chuẩn hóa dấu tiếng Việt không còn lỗi chính tả thô.
 3.  **Xử lý ngữ nghĩa sâu (BERT/LLM Embeddings):** Chuyển đổi mô tả thô sang vector embedding để nắm bắt ngữ nghĩa thay vì so khớp từ khóa chính xác.
+    - **Tiêu chí hoàn thành:** Vector embedding ngữ nghĩa được tạo thành công cho từng mô tả cấu kiện.
 4.  **Dự đoán mã Uniclass (ISO 12006-2 Alignment):**
     *   Phân loại sang các bảng Uniclass tương ứng.
     *   *Mục tiêu độ chính xác (F1-Score):* Đạt trên 90% đối với cấu kiện Kiến trúc (Architectural); trên 80% đối với các thiết bị MEP chuyên sâu (do MEP có độ viết tắt cao và ít từ ngữ cảnh).
+    - **Tiêu chí hoàn thành:** Dự đoán hoàn tất mã Uniclass phù hợp và đạt ngưỡng F1-Score mục tiêu.
 
 ---
 

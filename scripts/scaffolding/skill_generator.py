@@ -17,6 +17,18 @@ import sys
 from pathlib import Path
 from typing import Any
 
+if sys.platform == "win32":
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+    if hasattr(sys.stderr, "reconfigure"):
+        try:
+            sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
 import yaml
 
 # Mock click if not installed to avoid import crashes
@@ -301,7 +313,12 @@ def write_cli_spec(output_path: Path, commands: dict[str, Any]) -> None:
     print(f"[Info] Đã ghi tệp đặc tả kỹ thuật: {output_path.resolve()}")
 
 
-def write_skill_markdown(output_path: Path, skill_name: str, docstring: str) -> None:
+def write_skill_markdown(
+    output_path: Path,
+    skill_name: str,
+    docstring: str,
+    bundle: str = "_software",
+) -> None:
     """Ghi tệp tin SKILL.md mẫu nghiệp vụ ban đầu (chỉ ghi nếu chưa có)."""
     if output_path.exists():
         print(
@@ -323,6 +340,7 @@ def write_skill_markdown(output_path: Path, skill_name: str, docstring: str) -> 
     content = f"""---
 name: {skill_name}
 description: {desc}
+bundle: {bundle}
 user-invocable: true
 disable-model-invocation: true
 command: /{skill_name}
@@ -338,27 +356,29 @@ triggers:
 
 ---
 
-### Bước 1: Khởi động và Xác thực
+### Bước 1: Khởi động và Xác thực (Initialization & Environment Verification)
 *   Kiểm tra sự tồn tại của script và nạp tham chiếu kỹ thuật tại file `cli_spec.yaml` cùng cấp.
+*   Xác minh các tham số và tùy chọn cấu hình môi trường thực thi trước khi gọi công cụ.
 *   **Tiêu chí hoàn thành:** Tệp script tồn tại và schema tham số được nạp thành công.
 
 ---
 
-### Bước 2: Bảo mật & Chốt chặn Maskara Gate
+### Bước 2: Bảo mật & Chốt chặn Maskara Gate (Security & Redaction Protocol)
 *   **BẮT BUỘC:** Nếu đầu vào có chứa tệp tin cục bộ, Agent phải chạy quét bảo mật qua `scripts/maskara.py` trước khi thực thi.
+*   Không được truyền khóa bí mật (API keys), mật khẩu hoặc thông tin nội bộ không được kiểm duyệt.
 *   **Tiêu chí hoàn thành:** Không còn khóa bí mật hoặc thông tin nhạy cảm rò rỉ.
 
 ---
 
-### Bước 3: Thực thi dòng lệnh (CLI Invocation)
+### Bước 3: Thực thi dòng lệnh (CLI Invocation & Error Interception)
 *   Đọc các tham số của người dùng, map tương ứng vào JSON Schema trong `cli_spec.yaml`.
-*   Gọi lệnh qua terminal và bắt lỗi (`stdout`/`stderr`).
+*   Gọi lệnh qua terminal và bắt lỗi (`stdout`/`stderr`), ghi nhận chi tiết mã trả về.
 *   **Tiêu chí hoàn thành:** Lệnh thực thi thành công với mã trả về 0.
 
 ---
 
-### Bước 4: Hậu xử lý & QC
-*   Định dạng đầu ra sạch sẽ.
+### Bước 4: Hậu xử lý & Báo cáo QC (Post-processing & Attribution)
+*   Định dạng đầu ra sạch sẽ, cấu trúc dữ liệu rõ ràng dễ tra cứu.
 *   Chèn dòng Attribution và Disclaimer của CCBA vào cuối tài liệu.
 *   **Tiêu chí hoàn thành:** Kết quả đầu ra được xác thực và trình bày rõ ràng.
 
@@ -424,6 +444,7 @@ def create_skill_from_script(
     skill_name: str | None = None,
     skills_base_dir: Path | None = None,
     workflows_base_dir: Path | None = None,
+    bundle: str = "_software",
 ) -> int:
     """Tạo mới cấu trúc Skill từ tệp Python script."""
     script_p = Path(script_path_str)
@@ -461,7 +482,7 @@ def create_skill_from_script(
             return 3
 
     write_cli_spec(skill_dir / "cli_spec.yaml", commands)
-    write_skill_markdown(skill_dir / "SKILL.md", name, docstring)
+    write_skill_markdown(skill_dir / "SKILL.md", name, docstring, bundle=bundle)
 
     if workflows_base_dir is not None:
         workflow_path = workflows_base_dir / f"{name}.md"

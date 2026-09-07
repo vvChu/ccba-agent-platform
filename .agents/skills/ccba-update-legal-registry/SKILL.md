@@ -34,6 +34,8 @@ Khi lệnh này được kích hoạt, Agent thực hiện theo quy trình sau:
 1. Đọc tệp cấu hình cục bộ tại `.md/workspace_context.yaml` để tìm giá trị `notebook_id`.
 2. Nếu không tìm thấy hoặc tệp không tồn tại, kiểm tra biến môi trường hệ thống `NOTEBOOKLM_ID`. Chỉ hỏi người dùng làm phương án dự phòng cuối cùng nếu cả hai nguồn đều trống.
 
+**Tiêu chí hoàn thành:** Xác định được Notebook ID hợp lệ.
+
 ### Bước 2: Kiểm tra môi trường & Cấp quyền
 1. Xác nhận sự tồn tại của biến cookie `NOTEBOOKLM_SESSION_COOKIE` hoặc tệp cấu hình `NOTEBOOKLM_COOKIES_JSON` trong môi trường hệ thống.
 2. Nếu người dùng chỉ định đồng bộ qua Google Drive (`--use-drive`), kiểm tra xác thực Google Drive qua Application Default Credentials (ADC):
@@ -41,11 +43,15 @@ Khi lệnh này được kích hoạt, Agent thực hiện theo quy trình sau:
    gcloud auth application-default login --scopes="https://www.googleapis.com/auth/drive"
    ```
 
+**Tiêu chí hoàn thành:** Xác nhận session cookie và quyền môi trường đầy đủ.
+
 ### Bước 3: Chạy Script Đồng bộ
 Thực thi lệnh Python đồng bộ với Notebook ID đã xác định:
 ```bash
 python scripts/sync_notebooklm_knowledge.py --notebook-id <notebook_id> [--upload-drive]
 ```
+
+**Tiêu chí hoàn thành:** Script sync chạy trả về Exit Code 0.
 
 ## Tiêu chí Hoàn thành (Completion Criteria)
 - **Kiểm chứng thành công**: Script chạy trả về mã thoát `Exit Code 0` (hoặc thông báo `Sync completed successfully` trên console output).

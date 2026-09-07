@@ -112,9 +112,9 @@ class DocumentAuditor(BaseAuditor):
     # Delegation methods for SkillAuditor
     # ---------------------------------------------------------------------------
 
-    def audit_skill(self, file_path: Path) -> list[AuditIssue]:
+    def audit_skill(self, file_path: Path, check_shallow: bool = False) -> list[AuditIssue]:
         """Audit a single SKILL.md file for CCBA compliance."""
-        return self.skill_auditor.audit_skill(file_path)
+        return self.skill_auditor.audit_skill(file_path, check_shallow=check_shallow)
 
     def audit_workspace_gates(self, skills_dir: Path | None = None) -> list[AuditIssue]:
         """Perform workspace-level Hard CI Gate checks across all skills (ADR-0040)."""

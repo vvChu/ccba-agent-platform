@@ -41,8 +41,14 @@ Tạo thư mục tại `.agents/skills/ccba-<tên_skill_dạng_kebab_case>/SKILL
 ---
 name: ccba-<tên-skill-kebab-case>
 description: <Mô tả ngắn gọn súc tích <= 180 ký tự>
+user-invocable: true # Bắt buộc true nếu là slash command / ritual do người dùng gọi
+disable-model-invocation: true # true cho ritual/tool skills (0-token prompt), false nếu là master deep skill
+command: /ccba-<tên-skill-kebab-case> # Bắt buộc có dòng command khớp với /{name} theo ADR-0056
+category: productivity # productivity | coding | testing | reasoning | documentation | governance
 bundle: _core # _core | _software | _qc | _consulting | _bim
-disable-model-invocation: true # true cho ritual/tool skills, false nếu là master deep skill
+triggers:
+- <trigger_1>
+- <trigger_2>
 ---
 # <Tên Kỹ Năng In Hoa>
 
@@ -62,8 +68,9 @@ disable-model-invocation: true # true cho ritual/tool skills, false nếu là ma
 
 ---
 
-## ⚡ 4. Kích Hoạt Slash Command Native & Biên Dịch Catalog (ADR 0047)
-Mọi kỹ năng mang định danh `ccba-<tên-lệnh>` trong `name:` đều tự động trở thành Slash Command hạng nhất (`/ccba-<tên-lệnh>`) trong IDE Antigravity mà không cần tạo tệp wrapper trong `.agents/workflows/`:
+## ⚡ 4. Kích Hoạt Slash Command Native & Biên Dịch Catalog (ADR 0047, ADR 0056)
+Mọi kỹ năng mang định danh `ccba-<tên-lệnh>` trong `name:` phục vụ người dùng gọi trực tiếp bắt buộc phải đăng ký đầy đủ Slash Command trong YAML frontmatter:
+- **Bắt buộc có `user-invocable: true`** và **`command: /ccba-<tên-lệnh>`** để IDE Antigravity hiển thị trên popup menu khi người dùng gõ `/`.
 - Khai báo `disable-model-invocation: true` nếu là lệnh điều phối/quy trình thủ tục (0-token system prompt).
 - Khai báo `triggers:` và `keywords:` để hỗ trợ cả gợi ý tự động lẫn gõ lệnh tường minh.
 - Chạy lệnh biên dịch catalog để tự động cập nhật hệ thống:

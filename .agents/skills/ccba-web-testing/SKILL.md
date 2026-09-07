@@ -3,6 +3,7 @@ name: ccba-web-testing
 description: Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y
   testing. Use for test automation, flakiness, Core Web Vitals, and cross-browser.
 user-invocable: true
+command: /ccba-web-testing
 when_to_use: Invoke for browser, visual, load, or accessibility tests.
 category: dev-tools
 keywords:

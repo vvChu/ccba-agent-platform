@@ -86,6 +86,7 @@ class TestGovernanceSubAuditors(unittest.TestCase):
             """---
 name: ccba-my-skill
 description: Short description
+bundle: _core
 ---
 
 # My Skill
@@ -106,6 +107,7 @@ description: Short description
             """---
 name: ccba-my-skill
 description: Short description
+bundle: _core
 ---
 
 # My Skill

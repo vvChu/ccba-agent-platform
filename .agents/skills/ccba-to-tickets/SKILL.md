@@ -22,17 +22,21 @@ Công cụ theo dõi công việc (Issue Tracker) và nhãn phân loại (Triage
 
 ## Quy trình thực hiện (Process)
 
-### 1. Thu thập ngữ cảnh (Gather context)
+### Bước 1: Thu thập ngữ cảnh (Gather context)
 
 Đọc toàn bộ ngữ cảnh cuộc hội thoại hiện tại. Nếu người dùng truyền vào một tham chiếu cụ thể (đường dẫn spec, mã số issue hoặc URL của ticket trên tracker) làm đối số, Agent tiến hành truy cập và đọc toàn bộ nội dung chi tiết cùng lịch sử bình luận của ticket đó.
 
-### 2. Khảo sát Codebase (Explore the codebase)
+**Tiêu chí hoàn thành:** Toàn bộ ngữ cảnh và spec được phân tích rõ ràng.
+
+### Bước 2: Khảo sát Codebase (Explore the codebase)
 
 Nếu chưa thực hiện khảo sát codebase, hãy chạy các công cụ quét để nắm được cấu trúc và trạng thái mã nguồn hiện tại. Tiêu đề và mô tả của ticket phải sử dụng đúng từ vựng trong Glossary (tài liệu miền tri thức `CONTEXT.md`) và tuân thủ các Quyết định Kiến trúc (ADRs) liên quan đến vùng code chuẩn bị chỉnh sửa.
 
 Hãy tích cực tìm kiếm các cơ hội để tái cấu trúc mã nguồn trước (pre-factoring) giúp việc triển khai nghiệp vụ sau này dễ dàng hơn: *"Dọn dẹp mặt bằng trước khi xây dựng"*.
 
-### 3. Phác thảo lát cắt dọc (Draft vertical slices)
+**Tiêu chí hoàn thành:** Khảo sát codebase hoàn tất và xác định cơ hội pre-factoring.
+
+### Bước 3: Phác thảo lát cắt dọc (Draft vertical slices)
 
 Chia nhỏ công việc thành các ticket theo nguyên lý **lát cắt dọc (tracer bullet)**:
 
@@ -53,7 +57,9 @@ Khi cần thực hiện một thay đổi cơ học nhưng có tầm ảnh hư�
 2. **Di chuyển (Migrate)**: Tạo các ticket nhỏ hơn theo từng directory/package để chuyển dần các call sites sang dùng code mới.
 3. **Thu hẹp (Contract)**: Sau khi không còn call site nào dùng code cũ, tạo ticket xóa bỏ hoàn toàn code cũ. Chiến lược này giúp giữ cho CI luôn xanh từ đầu đến cuối quy trình.
 
-### 4. Hỏi ý kiến người dùng (Quiz the user)
+**Tiêu chí hoàn thành:** Danh sách lát cắt dọc được phác thảo với quan hệ chặn đầy đủ.
+
+### Bước 4: Hỏi ý kiến người dùng (Quiz the user)
 
 Trình bày danh sách ticket đề xuất dưới dạng danh mục được đánh số. Với mỗi ticket, hiển thị rõ ràng:
 - **Tiêu đề (Title)**: Tên mô tả ngắn gọn, súc tích.
@@ -67,7 +73,9 @@ Hỏi người dùng:
 
 Lặp lại thảo luận cho đến khi người dùng đồng ý duyệt danh sách.
 
-### 5. Đăng tải lên Issue Tracker (Publish)
+**Tiêu chí hoàn thành:** Người dùng xác nhận và đồng ý duyệt danh sách ticket.
+
+### Bước 5: Đăng tải lên Issue Tracker (Publish)
 
 Đăng tải các ticket đã được duyệt lên tracker tương ứng theo cấu hình:
 
@@ -75,6 +83,8 @@ Lặp lại thảo luận cho đến khi người dùng đồng ý duyệt danh 
 - **Tracker thật (GitHub, GitLab...)**: Tạo các issue tương ứng trên tracker theo thứ tự phụ thuộc để lấy ID làm tham chiếu chặn. Áp dụng các mối quan hệ chặn bản địa của tracker (như Sub-issues hoặc Issue dependencies). Gắn nhãn `ready-for-agent` cho các ticket sẵn sàng để Agent AFK tự động vào nhận việc.
 
 Tuyệt đối không tự ý đóng hoặc sửa đổi issue cha (parent issue) khi chưa hoàn thành tất cả ticket con.
+
+**Tiêu chí hoàn thành:** Các ticket được đăng tải lên tracker hoặc lưu vào tickets.md.
 
 ---
 

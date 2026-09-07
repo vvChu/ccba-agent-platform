@@ -29,6 +29,8 @@ Kỹ năng này tự động hóa việc thiết lập không gian làm việc d
 > - **TUYỆT ĐỐI KHÔNG** chạy tiếp `/ccba-init-spoke` để tránh ghi đè dữ liệu!
 > - Hãy chuyển sang lệnh: **`/ccba-spoke-adopter`** để tự động tiếp nhận an toàn và bảo tồn 100% dữ liệu cũ.
 
+**Tiêu chí hoàn thành:** Kiểm tra thư mục hiện tại không có dữ liệu cũ cần bảo vệ hoặc chuyển hướng sang ccba-spoke-adopter.
+
 ---
 
 ## 📋 Bước 1: Khảo Sát & Tạo Cấu Hình `workspace_context.yaml`
@@ -119,6 +121,8 @@ acknowledgment_format: "Tôi đã đọc workspace_context.yaml. Đây là Spoke
 > 2. **Gate 0 Ingestion Provenance (ADR 0016):** Tự động đối soát cấu trúc và Text Parity giữa DOCX và PDF Công báo qua `ccba_legal.provenance`.
 > 3. **Script Budget & Cleanliness (ADR 0044):** Duy trì $\le 15$ core scripts trong `scripts/`. Tái sử dụng `ccba_legal` và `ccba_ai` từ Hub qua `spoke_bootstrap.py`. Chặn wrapper thừa qua `check_spoke_cleanliness.py`.
 
+**Tiêu chí hoàn thành:** Tệp `.md/workspace_context.yaml` được khởi tạo đúng archetype và cấu hình dự án.
+
 ---
 
 ## 🔄 Bước 2: Đồng Bộ Kỹ Năng & Đăng Ký Spoke (Single-Engine Sync)
@@ -135,6 +139,8 @@ python "[hub_path]\scripts\sync_spoke.py" --spoke .
 > python "[hub_path]\scripts\sync_spoke.py" --spoke . --apply --bootstrap
 > ```
 
+**Tiêu chí hoàn thành:** Chạy thành công `sync_spoke.py` để đồng bộ kỹ năng và đăng ký Spoke.
+
 ---
 
 ## 📦 Bước 3: Thiết Lập Python Packages & Spoke Leakage Guard (ADR 0044, ADR 0045)
@@ -145,6 +151,8 @@ python "[hub_path]\scripts\spoke\spoke_bootstrap.py" --spoke .
 ```
 *Tự động: sinh `requirements-hub.txt` kết nối editable packages (`ccba-ai`, `ccba-harness`...), cấu hình `.gitignore` cách ly.*
 
+**Tiêu chí hoàn thành:** Hoàn thành thiết lập môi trường Python liên kết và rào chắn cô lập Spoke.
+
 ---
 
 ## 🔒 Bước 4: Cài Đặt Bảo Mật Maskara & Hoàn Tất
@@ -152,6 +160,8 @@ python "[hub_path]\scripts\spoke\spoke_bootstrap.py" --spoke .
 1. **Cài đặt Git Hook:** Tự động tạo pre-commit hook trong `.git/hooks/` gọi Maskara quét chặn lộ API keys.
 2. **Xác nhận Onboarding (Global Rule 4):**
    > *"Tôi đã khởi tạo thành công Spoke `[tên_dự_án]` (Archetype: `[archetype]`, Type: `[type]`). Sẵn sàng làm việc!"*
+
+**Tiêu chí hoàn thành:** Cài đặt git hook quét Maskara và xuất thông báo xác nhận onboarding.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

@@ -18,6 +18,7 @@ from .base import (
     AuditReport,
     BaseAuditor,
     GovernanceAuditReport,
+    is_exclusion_header,
 )
 from .cli import (
     run_docs_validation_cli,
@@ -71,6 +72,7 @@ __all__ = [
     "LINK_RE",
     "STEP_LINE_RE",
     "WORKFLOW_HEADERS",
+    "is_exclusion_header",
     "CrossRefIssue",
     "CrossRefValidationReport",
     "CrossRefValidator",

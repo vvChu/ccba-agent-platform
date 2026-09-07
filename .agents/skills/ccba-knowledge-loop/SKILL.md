@@ -36,7 +36,7 @@ Khi đối mặt với yêu cầu mới hoặc vùng tri thức chưa được �
    * *Đầu ra:* File báo cáo `.md/knowledge/research_and_studies/research_[chủ_đề]_[timestamp].md`.
 3. **Đọc và nạp ngữ cảnh:** Agent chính nạp các tài liệu được sinh ra ở trên vào thư mục tri thức nháp của dự án để chuẩn bị làm ngữ cảnh cho Phase tiếp theo.
 
-Tiêu chí hoàn thành: Toàn bộ tài liệu bóc tách từ video (`notes_concept_[video_id].md`) và báo cáo nghiên cứu ngầm (`research_[chủ_đề]_[timestamp].md`) hiện diện đầy đủ trong thư mục dự án và được nạp vào ngữ cảnh của Agent chính.
+- **Tiêu chí hoàn thành:** Toàn bộ tài liệu bóc tách từ video (`notes_concept_[video_id].md`) và báo cáo nghiên cứu ngầm (`research_[chủ_đề]_[timestamp].md`) hiện diện đầy đủ trong thư mục dự án và được nạp vào ngữ cảnh của Agent chính.
 
 ---
 
@@ -51,7 +51,7 @@ Sau khi có dữ liệu trinh sát, Agent cùng User thống nhất phương án
 3. **Party Mode (Phản biện đa vai):** Kích hoạt Party Mode. Sử dụng thông tin từ tệp `notes_worldview.md` của diễn giả ở Phase 1 để tạo Persona ảo phản biện sắc nét các điểm yếu của phương án (ví dụ: *Persona "Kỹ sư Skeptic"* phản biện về tính khả thi, *Persona "Cảnh sát PCCC"* phản biện về tính pháp lý).
 4. **Hội tụ:** Gom nhóm ý tưởng, nhờ user xếp hạng và ghi nhận Session Document chứa các **Action Items**.
 
-Tiêu chí hoàn thành: Người dùng đã xếp hạng các ý tưởng ưu tiên và Agent đã tạo thành công tệp Session Document ghi nhận Action Items trong thư mục dự án.
+- **Tiêu chí hoàn thành:** Người dùng đã xếp hạng các ý tưởng ưu tiên và Agent đã tạo thành công tệp Session Document ghi nhận Action Items trong thư mục dự án.
 
 ---
 
@@ -64,7 +64,7 @@ Tổ chức các Action Items rời rạc thành một lộ trình có cấu tr�
    * **Sương mù chiến trận / Chưa xác định rõ (Not yet specified):** Chỉ ghi nhận các vùng thông tin và quyết định đã rõ ràng; các phần chưa thể nhìn thấy sẽ được giữ lại trong mục này dưới dạng ghi chú phác thảo cho đến khi đủ thông tin unblock.
 3. **Tham chiếu theo tên:** Mọi ticket đều phải có tên gọi và link Markdown cụ thể (Ví dụ: `[Đóng gói Mutex Lock](../ccba-wayfinder/SKILL.md)`).
 
-Tiêu chí hoàn thành: Bản đồ định hướng `map.md` được khởi tạo với mục Điểm đích (Destination) rõ ràng và ít nhất một Frontier ticket được tạo lập.
+- **Tiêu chí hoàn thành:** Bản đồ định hướng `map.md` được khởi tạo với mục Điểm đích (Destination) rõ ràng và ít nhất một Frontier ticket được tạo lập.
 
 ---
 
@@ -75,7 +75,7 @@ Giải quyết các Frontier Tickets và mở rộng bản đồ:
 3. **Mở rộng biên giới:** Dựa trên kết quả vừa chốt, chuyển đổi các vùng mờ trong mục *Not yet specified* thành các ticket Frontier mới.
 4. **Giải quyết vùng mờ đột xuất:** Nếu biên giới bản đồ gặp sương mù quá dày không thể tự quyết, Agent đề xuất chạy một phiên [/ccba-brainstorm](../ccba-brainstorm/SKILL.md) mini với User để thống nhất hướng đi tiếp theo.
 
-Tiêu chí hoàn thành: Mọi ticket trên bản đồ được chuyển sang trạng thái đóng (closed), không còn Frontier ticket nào chưa giải quyết và lộ trình đạt tới Điểm đích hoàn toàn.
+- **Tiêu chí hoàn thành:** Mọi ticket trên bản đồ được chuyển sang trạng thái đóng (closed), không còn Frontier ticket nào chưa giải quyết và lộ trình đạt tới Điểm đích hoàn toàn.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

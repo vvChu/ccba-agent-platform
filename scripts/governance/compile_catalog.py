@@ -73,6 +73,10 @@ def compile_skills(hub_root: Path = HUB_ROOT) -> list[dict[str, Any]]:
             "skill_path": skill_path,
         }
 
+        command = fm.get("command")
+        if command:
+            entry["command"] = str(command).strip()
+
         package_path = fm.get("package_path")
         if package_path:
             entry["package_path"] = str(package_path).replace("\\", "/")
@@ -195,11 +199,27 @@ def check_catalog_in_sync(hub_root: Path = HUB_ROOT) -> tuple[bool, str]:
 
     missing_skills = set(compiled_skills.keys()) - set(existing_skills.keys())
     if missing_skills:
-        diffs.append(f"Missing skills in catalog.yaml: {missing_skills}")
+        diffs.append(f"Missing skills in catalog.yaml: {sorted(missing_skills)}")
 
     extra_skills = set(existing_skills.keys()) - set(compiled_skills.keys())
     if extra_skills:
-        diffs.append(f"Orphaned skills in catalog.yaml: {extra_skills}")
+        diffs.append(f"Orphaned skills in catalog.yaml: {sorted(extra_skills)}")
+
+    # Deep diff on shared skills (description, triggers, bundle, command, etc.)
+    common_skills = sorted(set(compiled_skills.keys()) & set(existing_skills.keys()))
+    for s_name in common_skills:
+        cur = existing_skills[s_name]
+        comp = compiled_skills[s_name]
+        all_fields = sorted(set(cur.keys()) | set(comp.keys()))
+        for field in all_fields:
+            val_cur = cur.get(field)
+            val_comp = comp.get(field)
+            if val_cur != val_comp:
+                diffs.append(
+                    f"Skill '{s_name}' metadata drift in field '{field}':\n"
+                    f"  catalog.yaml: {val_cur!r}\n"
+                    f"  frontmatter:  {val_comp!r}"
+                )
 
     # Compare workflows
     existing_wfs = {w.get("name"): w for w in existing_data.get("workflows", [])}
@@ -207,11 +227,38 @@ def check_catalog_in_sync(hub_root: Path = HUB_ROOT) -> tuple[bool, str]:
 
     missing_wfs = set(compiled_wfs.keys()) - set(existing_wfs.keys())
     if missing_wfs:
-        diffs.append(f"Missing workflows in catalog.yaml: {missing_wfs}")
+        diffs.append(f"Missing workflows in catalog.yaml: {sorted(missing_wfs)}")
 
     extra_wfs = set(existing_wfs.keys()) - set(compiled_wfs.keys())
     if extra_wfs:
-        diffs.append(f"Orphaned workflows in catalog.yaml: {extra_wfs}")
+        diffs.append(f"Orphaned workflows in catalog.yaml: {sorted(extra_wfs)}")
+
+    # Deep diff on shared workflows
+    common_wfs = sorted(set(compiled_wfs.keys()) & set(existing_wfs.keys()))
+    for w_name in common_wfs:
+        cur = existing_wfs[w_name]
+        comp = compiled_wfs[w_name]
+        all_fields = sorted(set(cur.keys()) | set(comp.keys()))
+        for field in all_fields:
+            val_cur = cur.get(field)
+            val_comp = comp.get(field)
+            if val_cur != val_comp:
+                diffs.append(
+                    f"Workflow '{w_name}' metadata drift in field '{field}':\n"
+                    f"  catalog.yaml: {val_cur!r}\n"
+                    f"  frontmatter:  {val_comp!r}"
+                )
+
+    # Deep diff on base configuration (from catalog_base.yaml)
+    for base_field in ["hub_path", "hub_repo", "notebook_ids", "bundles", "rules", "knowledge"]:
+        cur_val = existing_data.get(base_field)
+        comp_val = compiled_data.get(base_field)
+        if cur_val != comp_val:
+            diffs.append(
+                f"Base config drift in field '{base_field}':\n"
+                f"  catalog.yaml:      {cur_val!r}\n"
+                f"  catalog_base.yaml: {comp_val!r}"
+            )
 
     if diffs:
         return False, "\n".join(diffs)
