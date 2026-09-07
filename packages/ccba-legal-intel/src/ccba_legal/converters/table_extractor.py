@@ -209,14 +209,18 @@ def resolve_hierarchical_headers(grid: list[list[str]]) -> tuple[list[list[str]]
     return norm_grid, headers
 
 
-def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[str, Any]]:
-    """3-Tier Semantic Table Classifier according to ADR 0021 & ADR 0028."""
+def classify_and_extract_tables(
+    docx_path: Path | str | Any, bundle_dir: Path
+) -> list[dict[str, Any]]:
+    """3-Tier Semantic Table Classifier according to ADR 0021, ADR 0028, and ADR 0041."""
     import docx.oxml
     import docx.oxml.table
     import docx.oxml.text.paragraph
     from docx import Document
 
-    doc = Document(str(docx_path))
+    if hasattr(docx_path, "seek"):
+        docx_path.seek(0)
+    doc = Document(docx_path if not isinstance(docx_path, Path) else str(docx_path))
     tables_dir = bundle_dir / "tables"
     csv_dir = tables_dir / "csv"
     json_dir = tables_dir / "json"
@@ -236,6 +240,8 @@ def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[
     extracted_tables: list[dict[str, Any]] = []
     table_counter = 0
 
+    W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+
     for block_idx, (b_type, obj) in enumerate(blocks):
         if b_type != "tbl":
             continue
@@ -253,11 +259,46 @@ def classify_and_extract_tables(docx_path: Path, bundle_dir: Path) -> list[dict[
         if _is_glossary_table(blocks, block_idx, cols_cnt, caption_num):
             continue
 
+        # Virtual 2D Grid extraction with tblGrid & vMerge forward-fill (ADR 0041)
+        tbl_element = table._element
+        grid_cols = tbl_element.xpath("./w:tblGrid/w:gridCol", namespaces={"w": W_NS})
+        num_grid_cols = len(grid_cols) if grid_cols else cols_cnt
+
         grid: list[list[str]] = []
-        for row in table.rows:
-            clean_cells = [c.text.strip().replace("\n", " ") for c in row.cells]
-            if clean_cells and any(clean_cells):
-                grid.append(clean_cells)
+        v_merge_col_values: dict[int, str] = {}
+
+        for tr in tbl_element.xpath("./w:tr", namespaces={"w": W_NS}):
+            row_cells: list[str] = []
+            c_idx = 0
+            for tc in tr.xpath("./w:tc", namespaces={"w": W_NS}):
+                span_nodes = tc.xpath("./w:tcPr/w:gridSpan/@w:val", namespaces={"w": W_NS})
+                grid_span = int(span_nodes[0]) if span_nodes and span_nodes[0].isdigit() else 1
+
+                vmerge_nodes = tc.xpath("./w:tcPr/w:vMerge", namespaces={"w": W_NS})
+                cell_text = "".join(tc.itertext()).strip().replace("\n", " ")
+
+                if vmerge_nodes:
+                    v_val = vmerge_nodes[0].get(f"{{{W_NS}}}val", "")
+                    if v_val == "restart":
+                        v_merge_col_values[c_idx] = cell_text
+                    else:
+                        cell_text = v_merge_col_values.get(c_idx, cell_text)
+                else:
+                    v_merge_col_values[c_idx] = cell_text
+
+                row_cells.append(cell_text)
+                for _ in range(1, grid_span):
+                    row_cells.append(cell_text)
+                c_idx += grid_span
+
+            if num_grid_cols > 0:
+                if len(row_cells) < num_grid_cols:
+                    row_cells.extend([""] * (num_grid_cols - len(row_cells)))
+                elif len(row_cells) > num_grid_cols:
+                    row_cells = row_cells[:num_grid_cols]
+
+            if row_cells and any(row_cells):
+                grid.append(row_cells)
 
         if not grid:
             continue
