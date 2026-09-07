@@ -266,18 +266,7 @@ class MTEFParser:
             return f"\\frac{{{num.strip()}}}{{{den.strip()}}}"
 
         elif selector == 0x0F:  # Subscript / Superscript
-            if variation == 1:  # Sub only
-                if self.peek_byte() in (1, 11):
-                    self.read_byte()
-                if self.peek_byte() == 1:
-                    self.read_byte()
-                sub = self.parse_line()
-                if self.peek_byte() == 0x11:
-                    self.read_byte()
-                    if self.peek_byte() == 0:
-                        self.read_byte()
-                return f"_{{{sub.strip()}}}"
-            elif variation == 2:  # Sup only
+            if variation == 0:  # Sup only (tmSUP in MTEF v3)
                 if self.peek_byte() in (1, 11):
                     self.read_byte()
                 if self.peek_byte() == 1:
@@ -287,8 +276,21 @@ class MTEFParser:
                     self.read_byte()
                     if self.peek_byte() == 0:
                         self.read_byte()
-                return f"^{{{sup.strip()}}}"
-            elif variation == 0:  # Both
+                clean_sup = sup.strip()
+                return f"^{{{clean_sup}}}" if clean_sup else ""
+            elif variation == 1:  # Sub only (tmSUB in MTEF v3)
+                if self.peek_byte() in (1, 11):
+                    self.read_byte()
+                if self.peek_byte() == 1:
+                    self.read_byte()
+                sub = self.parse_line()
+                if self.peek_byte() == 0x11:
+                    self.read_byte()
+                    if self.peek_byte() == 0:
+                        self.read_byte()
+                clean_sub = sub.strip()
+                return f"_{{{clean_sub}}}" if clean_sub else ""
+            elif variation == 2:  # Both (tmSUBSUP in MTEF v3)
                 if self.peek_byte() in (1, 11):
                     self.read_byte()
                 if self.peek_byte() == 1:
@@ -303,7 +305,9 @@ class MTEFParser:
                     self.read_byte()
                     if self.peek_byte() == 0:
                         self.read_byte()
-                return f"_{{{sub.strip()}}}^{{{sup.strip()}}}"
+                sub_str = f"_{{{sub.strip()}}}" if sub.strip() else ""
+                sup_str = f"^{{{sup.strip()}}}" if sup.strip() else ""
+                return f"{sub_str}{sup_str}"
 
         elif selector == 0x1D:  # Large Operator (Summation, Integral)
             if self.peek_byte() == 1:
@@ -354,7 +358,10 @@ class MTEFParser:
             body = self.parse_line()
             while self.peek_byte() == 0:
                 self.read_byte()
-            return f"\\left({body.strip()}\\right)"
+            clean_body = body.strip().replace("()", "")
+            if not clean_body or clean_body in (r"\left(\right)", r"\left[\right]"):
+                return ""
+            return f"\\left({clean_body}\\right)"
 
         elif selector == 0x02:  # Brackets
             if self.peek_byte() == 1:
@@ -362,7 +369,10 @@ class MTEFParser:
             body = self.parse_line()
             while self.peek_byte() == 0:
                 self.read_byte()
-            return f"\\left[{body.strip()}\\right]"
+            clean_body = body.strip().replace("[]", "")
+            if not clean_body or clean_body in (r"\left(\right)", r"\left[\right]"):
+                return ""
+            return f"\\left[{clean_body}\\right]"
 
         body = self.parse_line()
         return body
@@ -397,6 +407,16 @@ def decode_ole_mathtype(ole_bytes: bytes) -> str | None:
         mtef_data = eq_stream[hdr_size:]
         parser = MTEFParser(mtef_data)
         res = parser.parse()
+        if res:
+            res = (
+                res.replace(r"\left(\right)", "")
+                .replace(r"\left[\right]", "")
+                .replace("()", "")
+                .replace("[]", "")
+                .replace("^{}", "")
+                .replace("_{}", "")
+                .strip()
+            )
         return res if res else None
     except Exception as exc:
         logger.debug("MTEF decoding failed: %s", exc)

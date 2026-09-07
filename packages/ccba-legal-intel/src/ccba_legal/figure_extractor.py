@@ -29,6 +29,43 @@ def load_bundle_figures_overrides(bundle_dir: Path) -> dict[str, dict[str, Any]]
         return {}
 
 
+def parse_table_figures(tbl_el: Any) -> list[tuple[str, str]]:
+    """Extract (rId, sub_caption) pairs from a table layout element."""
+    rows = tbl_el.xpath(".//w:tr")
+    grid_cells: list[list[dict[str, Any]]] = []
+    for r in rows:
+        row_cells = []
+        for c in r.xpath(".//w:tc"):
+            rids = c.xpath(".//@r:embed | .//@r:id")
+            txt = " ".join("".join(c.itertext()).split())
+            row_cells.append({"rids": rids, "txt": txt})
+        grid_cells.append(row_cells)
+
+    extracted: list[tuple[str, str]] = []
+    num_rows = len(grid_cells)
+    for r_idx, row in enumerate(grid_cells):
+        for c_idx, cell in enumerate(row):
+            for rid in cell["rids"]:
+                cap = ""
+                m_cap = re.search(r"([a-z0-9đĐ]\s*[-–—\)]\s*[^;\n\r]+)", cell["txt"], re.IGNORECASE)
+                if m_cap:
+                    cap = m_cap.group(1).strip()
+                elif r_idx + 1 < num_rows and c_idx < len(grid_cells[r_idx + 1]):
+                    next_txt = grid_cells[r_idx + 1][c_idx]["txt"]
+                    m_next = re.search(r"([a-z0-9đĐ]\s*[-–—\)]\s*[^;\n\r]+)", next_txt, re.IGNORECASE)
+                    if m_next:
+                        cap = m_next.group(1).strip()
+                if cap:
+                    for k in (4, 3, 2):
+                        if len(cap) % k == 0:
+                            chunk = cap[: len(cap) // k]
+                            if chunk * k == cap:
+                                cap = chunk
+                                break
+                extracted.append((rid, cap))
+    return extracted
+
+
 def extract_docx_figures(
     docx_path: str | Path, output_dir: str | Path, standard_name: str | None = None
 ) -> dict[str, Any]:
@@ -45,12 +82,24 @@ def extract_docx_figures(
 
     doc = Document(str(docx_p))
     rels = doc.part.rels
+    body_elems = doc.element.body[:]
+
+    p_to_b: dict[int, int] = {}
+    p_counter = 0
+    for b_idx, el in enumerate(body_elems):
+        if el.tag.endswith("p"):
+            p_to_b[p_counter] = b_idx
+            p_counter += 1
 
     # 1. Identify all Figure captions
+    current_annex = "MAIN"
     fig_items: list[dict[str, Any]] = []
     for idx, p in enumerate(doc.paragraphs):
         text = p.text.strip()
-        m = re.match(r"^(?:Hình|HÌNH)\s+([A-Za-z0-9\.\-]+)\s*[-–—:]\s*(.+)$", text)
+        m_annex = re.search(r"PHỤ\s+LỤC\s+([A-Za-z0-9Đđ]+)", text, re.IGNORECASE)
+        if m_annex:
+            current_annex = m_annex.group(1).upper()
+        m = re.match(r"^(?:Hình|HÌNH)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\s*[\.\-–—:]\s*(.+)$", text)
         if m:
             fig_tag = m.group(1).strip()
             fig_title = m.group(2).strip()
@@ -59,7 +108,8 @@ def extract_docx_figures(
                     "p_idx": idx,
                     "tag": fig_tag,
                     "title": fig_title,
-                    "slug": fig_tag.lower().replace(".", "_").replace("-", "_"),
+                    "slug": fig_tag.lower().replace("đ", "dd").replace(".", "_").replace("-", "_"),
+                    "annex": current_annex,
                 }
             )
 
@@ -67,7 +117,7 @@ def extract_docx_figures(
     for o_tag, o_val in fig_overrides.items():
         str_tag = str(o_tag)
         if str_tag not in existing_tags and isinstance(o_val, dict) and "title" in o_val:
-            f_slug = str_tag.lower().replace(".", "_").replace("-", "_")
+            f_slug = str_tag.lower().replace("đ", "dd").replace(".", "_").replace("-", "_")
             fig_items.append(
                 {
                     "p_idx": o_val.get("p_idx", -1),
@@ -79,18 +129,7 @@ def extract_docx_figures(
                 }
             )
 
-    def _fig_sort_key(item: dict[str, Any]) -> tuple[int, int, str]:
-        t = item["tag"]
-        if t.isdigit():
-            return (0, int(t), "")
-        m_num = re.match(r"^([A-Za-z]+)\.?([0-9]+)?", t)
-        if m_num:
-            prefix = m_num.group(1)
-            num = int(m_num.group(2)) if m_num.group(2) else 0
-            return (1, num, prefix)
-        return (2, 0, t)
-
-    fig_items.sort(key=_fig_sort_key)
+    fig_items.sort(key=lambda x: (0 if x["p_idx"] >= 0 else 1, x["p_idx"], x["tag"]))
 
     # 2. Extract media images from docx zip
     catalog_entries: list[dict[str, Any]] = []
@@ -130,15 +169,16 @@ def extract_docx_figures(
                         out_img_path.write_bytes(data)
                         consumed_media.add(media_path.replace("word/", ""))
                 elif f_idx >= 0:
-                    prev_idx = (
-                        fig_items[i - 1].get("search_end", fig_items[i - 1]["p_idx"])
+                    b_f_idx = p_to_b.get(f_idx, f_idx)
+                    prev_b_idx = (
+                        fig_items[i - 1].get("search_end_b", p_to_b.get(fig_items[i - 1]["p_idx"], -1))
                         if i > 0 and fig_items[i - 1]["p_idx"] >= 0
-                        else max(0, f_idx - 35)
+                        else max(0, b_f_idx - 35)
                     )
-                    search_start = max(prev_idx + 1, f_idx - 30)
+                    search_start_b = max(prev_b_idx + 1, b_f_idx - 30)
 
                     # Check if there is a (kết thúc) continuation paragraph after f_idx
-                    search_end = f_idx
+                    search_end_b = b_f_idx
                     for next_idx in range(f_idx + 1, min(f_idx + 6, len(doc.paragraphs))):
                         nxt_p = doc.paragraphs[next_idx].text.strip()
                         if re.match(
@@ -146,55 +186,88 @@ def extract_docx_figures(
                             nxt_p,
                             re.IGNORECASE,
                         ):
-                            search_end = next_idx + 1
+                            search_end_b = p_to_b.get(next_idx, b_f_idx) + 1
                             break
 
-                    item["search_end"] = search_end
+                    item["search_end_b"] = search_end_b
 
-                    # Search bounded range for figure diagrams
+                    # Search bounded range for figure diagrams (both paragraphs and layout tables)
                     found_media: list[str] = []
-                    sub_items: list[tuple[Any, str]] = []
+                    sub_items: list[tuple[Any, str, str]] = []
                     import io
 
                     from PIL import Image, ImageDraw, ImageFont
 
-                    for k in range(search_start, search_end):
-                        pk = doc.paragraphs[k]
-                        m_rids = re.findall(r'r:(?:id|embed)="([^"]+)"', pk._element.xml)
-                        for rid in m_rids:
-                            if rid in rels:
-                                target = rels[rid].target_ref
-                                if (
-                                    target.startswith("media/image")
-                                    and target not in found_media
-                                    and target not in consumed_media
-                                ):
-                                    found_media.append(target)
-                                    full_m_p = f"word/{target}"
-                                    if full_m_p in z.namelist() and not target.endswith(".wmf"):
-                                        sub_cap = ""
-                                        for next_k in range(k + 1, min(k + 3, f_idx)):
-                                            nxt_txt = doc.paragraphs[next_k].text.strip()
-                                            if re.match(r"^[a-z]\)\s*", nxt_txt):
-                                                sub_cap = nxt_txt
-                                                break
-                                        sub_img = Image.open(io.BytesIO(z.read(full_m_p)))
-                                        if sub_img.width >= 120 and sub_img.height >= 60:
-                                            sub_items.append((sub_img, sub_cap))
+                    for b_k in range(search_start_b, search_end_b):
+                        el = body_elems[b_k]
+                        if el.tag.endswith("tbl"):
+                            tbl_figs = parse_table_figures(el)
+                            for rid, sub_cap in tbl_figs:
+                                if rid in rels:
+                                    target = rels[rid].target_ref
+                                    if (
+                                        target.startswith("media/image")
+                                        and target not in consumed_media
+                                        and Path(target).suffix.lower() in allowed_raster_exts
+                                    ):
+                                        full_m_p = f"word/{target}"
+                                        if full_m_p in z.namelist():
+                                            try:
+                                                sub_img = Image.open(io.BytesIO(z.read(full_m_p)))
+                                                if sub_img.width >= 100 and sub_img.height >= 50:
+                                                    sub_items.append((sub_img, sub_cap, target))
+                                                    found_media.append(target)
+                                            except Exception:
+                                                pass
+                        elif el.tag.endswith("p"):
+                            m_rids = re.findall(r'r:(?:id|embed)="([^"]+)"', el.xml)
+                            for rid in m_rids:
+                                if rid in rels:
+                                    target = rels[rid].target_ref
+                                    if (
+                                        target.startswith("media/image")
+                                        and target not in consumed_media
+                                        and Path(target).suffix.lower() in allowed_raster_exts
+                                    ):
+                                        full_m_p = f"word/{target}"
+                                        if full_m_p in z.namelist():
+                                            try:
+                                                sub_img = Image.open(io.BytesIO(z.read(full_m_p)))
+                                                if sub_img.width >= 100 and sub_img.height >= 50:
+                                                    sub_cap = ""
+                                                    for next_b in range(b_k + 1, min(b_k + 3, search_end_b)):
+                                                        nxt_el = body_elems[next_b]
+                                                        if nxt_el.tag.endswith("p"):
+                                                            nxt_txt = "".join(nxt_el.itertext()).strip()
+                                                            if (
+                                                                re.match(
+                                                                    r"^(?:[a-zđĐ]\s*[\)\.\-–—]|[0-9]+\))\s*",
+                                                                    nxt_txt,
+                                                                    re.IGNORECASE,
+                                                                )
+                                                                and len(nxt_txt) < 200
+                                                                and not re.match(r"^[0-9]+\.", nxt_txt)
+                                                            ):
+                                                                sub_cap = nxt_txt
+                                                                break
+                                                    sub_items.append((sub_img, sub_cap, target))
+                                                    found_media.append(target)
+                                            except Exception:
+                                                pass
 
                     # Only stitch sub_items if they are true sub-figures (have a/b sub-captions)
                     # or if this is a multi-part figure with (kết thúc) where all images are large diagrams
                     should_stitch = False
                     if len(sub_items) > 1:
-                        has_sub_caps = any(cap for _, cap in sub_items if cap)
-                        is_multi_page = (search_end > f_idx) and all(
-                            img.height >= 120 for img, _ in sub_items
+                        has_sub_caps = any(cap for _, cap, _ in sub_items if cap)
+                        is_multi_page = (search_end_b > b_f_idx) and all(
+                            img.height >= 120 for img, _, _ in sub_items
                         )
                         if has_sub_caps or is_multi_page:
                             should_stitch = True
 
                     if should_stitch:
-                        for m_t in found_media:
+                        for _, _, m_t in sub_items:
                             consumed_media.add(m_t)
                         font_bold: Any = None
                         for font_candidate in (
@@ -217,21 +290,21 @@ def extract_docx_figures(
                         text_widths = [
                             dummy_draw.textbbox((0, 0), cap, font=font_bold)[2]
                             - dummy_draw.textbbox((0, 0), cap, font=font_bold)[0]
-                            for _, cap in sub_items
+                            for _, cap, _ in sub_items
                             if cap
                         ]
-                        max_img_w = max(img.width for img, _ in sub_items)
+                        max_img_w = max(img.width for img, _, _ in sub_items)
                         max_txt_w = max(text_widths) if text_widths else 0
                         canvas_w = max(max_img_w, max_txt_w, 660) + 80
 
                         total_h = 20
-                        for img, cap in sub_items:
+                        for img, cap, _ in sub_items:
                             total_h += img.height + (40 if cap else 20)
 
                         comp = Image.new("RGB", (canvas_w, total_h), color=(255, 255, 255))
                         draw = ImageDraw.Draw(comp)
                         curr_y = 20
-                        for img, cap in sub_items:
+                        for img, cap, _ in sub_items:
                             offset_x = (canvas_w - img.width) // 2
                             comp.paste(img, (offset_x, curr_y))
                             curr_y += img.height + 8
@@ -242,34 +315,31 @@ def extract_docx_figures(
                                 draw.text((tx, curr_y), cap, fill=(0, 0, 0), font=font_bold)
                                 curr_y += 32
                         comp.save(out_img_path, "PNG")
-                    elif found_media:
-                        # Pick the diagram image (highest area and height)
-                        best_media = found_media[-1]
+                    elif sub_items:
+                        # Pick the diagram image (highest area)
+                        best_tgt = sub_items[-1][2]
                         best_area = 0
-                        for m_cand in reversed(found_media):
-                            full_m_cand = f"word/{m_cand}"
-                            if full_m_cand in z.namelist():
-                                img_cand = Image.open(io.BytesIO(z.read(full_m_cand)))
-                                if img_cand.width >= 120 and img_cand.height >= 80:
-                                    area = img_cand.width * img_cand.height
-                                    if area > best_area:
-                                        best_area = area
-                                        best_media = m_cand
-                        data = z.read(f"word/{best_media}")
-                        out_img_path.write_bytes(data)
-                        consumed_media.add(best_media)
-                    elif i < len(media_list):
-                        data = z.read(media_list[i])
-                        out_img_path.write_bytes(data)
+                        best_img = sub_items[-1][0]
+                        for img, _, tgt in sub_items:
+                            area = img.width * img.height
+                            if area > best_area:
+                                best_area = area
+                                best_tgt = tgt
+                                best_img = img
+                        if best_img.mode not in ("RGB", "RGBA"):
+                            best_img = best_img.convert("RGB")
+                        best_img.save(out_img_path, "PNG")
+                        consumed_media.add(best_tgt)
 
                 # Build metadata
-                annex = item.get("annex") or (f_tag[0] if f_tag[0].isalpha() else "MAIN")
+                annex = item.get("annex") if item.get("annex") != "MAIN" else (f_tag[0] if f_tag[0].isalpha() else "MAIN")
                 geom = fig_overrides.get(f_tag, {})
                 if isinstance(geom, dict) and "geometry_rules" in geom:
                     geom = geom["geometry_rules"]
 
                 entry: dict[str, Any] = {
                     "figure_id": f"FIG_{f_slug.upper()}",
+                    "slug": f_slug,
                     "tag": f_tag,
                     "title": f_title,
                     "annex": annex,

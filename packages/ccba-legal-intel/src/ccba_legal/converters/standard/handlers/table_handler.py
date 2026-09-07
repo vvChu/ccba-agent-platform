@@ -10,6 +10,7 @@ from typing import Any
 
 from ccba_legal.converters.standard.models import HierarchyState
 from ccba_legal.converters.standard.sanitizers import render_paragraph_with_runs
+from ccba_legal.converters.technical_formulas import GREEK_MAP
 
 
 def escape_table_pipes(text: str) -> str:
@@ -185,7 +186,7 @@ def render_table_markdown(
                 p_clean = re.sub(r"(\d+)\$\^\{0\}\$\s*C\b", r"\1 °C", p_clean)
 
                 is_bullet = bool(
-                    re.match(r"^(?:[-–—•\+]|\(\*+\)|\([0-9a-zA-Z]+\)|[0-9]+[)\.])\s*", p_clean)
+                    re.match(r"^(?:[-–—•\+]|\*+|\(\*+\)|\([0-9a-zA-Z]+\)|[0-9]+[)\.])\s*", p_clean)
                 )
                 if fn_parts and not is_bullet:
                     last_txt = fn_parts[-1].strip()
@@ -205,7 +206,9 @@ def render_table_markdown(
             )
 
             if has_explicit_numbered:
-                for idx, fn_p in enumerate(fn_parts):
+                bullet_lines: list[str] = []
+                numbered_lines: list[str] = []
+                for _idx, fn_p in enumerate(fn_parts):
                     fn_clean = re.sub(
                         r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*",
                         "",
@@ -213,6 +216,9 @@ def render_table_markdown(
                         flags=re.IGNORECASE,
                     ).strip()
                     fn_clean = re.sub(r"^\*\*\s*", "", fn_clean).strip()
+                    if not fn_clean:
+                        continue
+
                     m_num = re.search(
                         r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)",
                         fn_p,
@@ -221,16 +227,31 @@ def render_table_markdown(
                     if not m_num:
                         m_num = re.match(r"^([0-9]+)[)\.]\s*", fn_p)
 
-                    # Strip list-style numeric prefixes like "1) " or "1. " to prevent duplication
-                    fn_clean = re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()
+                    is_star_bullet = bool(
+                        re.match(r"^\*+\s*", fn_clean) or re.match(r"^\*+\s*", fn_p)
+                    )
 
-                    if m_num and m_num.group(1):
+                    if is_star_bullet and not m_num:
+                        bullet_lines.append(fn_clean)
+                    elif m_num and m_num.group(1):
+                        fn_clean = re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()
                         pfx = f"**CHÚ THÍCH {m_num.group(1)}:**"
-                    elif idx == 0:
-                        pfx = "**CHÚ THÍCH 1:**"
+                        numbered_lines.append(f"{pfx} {fn_clean}")
                     else:
-                        pfx = f"**CHÚ THÍCH {idx + 1}:**"
-                    footnotes.append(f"{pfx} {fn_clean}")
+                        fn_clean = re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()
+                        curr_num = len(numbered_lines) + 1
+                        pfx = f"**CHÚ THÍCH {curr_num}:**"
+                        numbered_lines.append(f"{pfx} {fn_clean}")
+
+                if bullet_lines:
+                    fn_block: list[str] = ["**CHÚ THÍCH:**"]
+                    for bl in bullet_lines:
+                        b_txt = bl.lstrip("*–—•- ").strip()
+                        fn_block.append(f"&nbsp;&nbsp;\\- {b_txt}")
+                    footnotes.append("\n".join(fn_block))
+
+                for nl in numbered_lines:
+                    footnotes.append(nl)
             else:
                 if len(fn_parts) == 1:
                     fn_clean = re.sub(
@@ -253,10 +274,10 @@ def render_table_markdown(
                         fn_clean = re.sub(r"^\*\*\s*", "", fn_clean).strip()
                         if not fn_clean:
                             continue
-                        if fn_clean.startswith(("- ", "– ", "— ", "• ")) or fn_clean.startswith(
+                        if fn_clean.startswith(("- ", "– ", "— ", "• ", "* ")) or fn_clean.startswith(
                             "&nbsp;&nbsp;\\- "
                         ):
-                            b_txt = fn_clean.replace("&nbsp;&nbsp;\\- ", "").lstrip("-–—• ")
+                            b_txt = fn_clean.replace("&nbsp;&nbsp;\\- ", "").lstrip("-–—•* ")
                             block_lines.append(f"&nbsp;&nbsp;\\- {b_txt}")
                         elif fn_clean.startswith("$$") or (
                             fn_clean.startswith("$")
@@ -273,7 +294,7 @@ def render_table_markdown(
                                 f_txt = f"$${f_txt[1:-1]}$$"
                             block_lines.append(f_txt)
                         else:
-                            b_txt = fn_clean.lstrip("-–—• ")
+                            b_txt = fn_clean.lstrip("-–—•* ")
                             block_lines.append(f"&nbsp;&nbsp;\\- {b_txt}")
                     footnotes.append("\n\n".join(block_lines))
             continue
@@ -333,9 +354,46 @@ def render_table_markdown(
 def clean_formula_latex(raw_f: str) -> str:
     """Sanitize formula expressions by stripping unescaped inner dollars and standardizing operators."""
     f = raw_f.replace("$$", "").replace("$", " ").strip()
+
+    def _rep_eq_frac(m: re.Match[str]) -> str:
+        num = m.group(1).strip()
+        den = m.group(2).strip()
+        if re.match(r"^[A-Z][a-z0-9]$", num):
+            num = f"{num[0]}_{num[1]}"
+        if re.match(r"^[A-Z][a-z0-9]$", den):
+            den = f"{den[0]}_{den[1]}"
+        for g_char, g_latex in GREEK_MAP.items():
+            def _rep_g_tbl(_m: re.Match[str], gl: str = g_latex) -> str:
+                return f"{gl} "
+            num = re.sub(rf"{re.escape(g_char)}(?=[a-zA-Z0-9])", _rep_g_tbl, num)
+            num = num.replace(g_char, g_latex)
+            den = re.sub(rf"{re.escape(g_char)}(?=[a-zA-Z0-9])", _rep_g_tbl, den)
+            den = den.replace(g_char, g_latex)
+        return f"\\frac{{{num}}}{{{den}}}"
+
+    def _rep_root(m: re.Match[str]) -> str:
+        content = m.group(1).strip()
+        if "," in content:
+            parts = [p.strip() for p in content.split(",", 1)]
+            if not parts[0]:
+                return f"\\sqrt{{{parts[1]}}}"
+            return f"\\sqrt[{parts[0]}]{{{parts[1]}}}"
+        return f"\\sqrt{{{content}}}"
+
+    for _ in range(5):
+        prev = f
+        f = re.sub(r"\\r\(([^()]+)\)", _rep_root, f, flags=re.IGNORECASE)
+        f = re.sub(r"(?:eq|EQ)?\s*\\f\(([^(),]+),([^(),]+)\)", _rep_eq_frac, f)
+        if f == prev:
+            break
+
+    f = re.sub(r"^(?:eq|EQ)\s+", "", f).strip()
+
     ops = {
         "≤": r" \le ",
         "≥": r" \ge ",
+        "<=": r" \le ",
+        ">=": r" \ge ",
         "≠": r" \ne ",
         "≈": r" \approx ",
         "±": r" \pm ",
@@ -365,14 +423,14 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
     for r in tbl.rows:
         r_texts = [c.text.strip() for c in r.cells]
         f_tag = next(
-            (m.group(1) for t in r_texts if (m := re.match(r"^\(([0-9A-Za-z\.]+)\)$", t))), None
+            (m.group(1) for t in r_texts if (m := re.match(r"^\(([0-9A-Za-zĐđ\.]+)\)$", t))), None
         )
         if f_tag:
             all_row_formulas.append((f_tag, r))
 
     if all_row_formulas and len(all_row_formulas) == len(tbl.rows):
         for f_tag, r in all_row_formulas:
-            f_slug = f_tag.lower().replace(".", "_")
+            f_slug = f_tag.lower().replace("đ", "dd").replace(".", "_")
             cell_rids: list[str] = []
             for c in r.cells:
                 cell_rids.extend(re.findall(r'r:(?:id|embed)="([^"]+)"', c._element.xml))
@@ -424,11 +482,10 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
             f_latex = f_latex.strip()
             if f_latex.startswith("$$") and f_latex.endswith("$$"):
                 f_latex = f_latex[2:-2].strip()
-            tag_suffix = (
-                "" if ("\\tag" in f_latex or "\\qquad" in f_latex) else f" \\tag{{{f_tag}}}"
-            )
+            f_latex = re.sub(r"\\tag\{[^}]+\}", "", f_latex).strip()
+            f_latex = re.sub(r"\\qquad\s*\([^)]+\)", "", f_latex).strip()
             ctx.emit(
-                f'\n<a id="formula-{f_slug}"></a>\n$${f_latex}{tag_suffix}$$\n<!-- formula_id: "{fid}" -->\n\n'
+                f'\n<a id="formula-{f_slug}"></a>\n$${f_latex} \\qquad ({f_tag})$$\n<!-- formula_id: "{fid}" -->\n\n'
             )
         if ctx.state_mgr.state != HierarchyState.IN_TRONG_DO:
             ctx.state_mgr.reset()
@@ -455,9 +512,12 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
 
     md_tbl_str, tbl_footnotes, raw_grid = render_table_markdown(tbl, rid_to_katex=ctx.rid_to_katex)
     ctx.emit(md_tbl_str)
-    for fn in tbl_footnotes:
-        bq_lines = [f"> {line}" if line.strip() else ">" for line in fn.splitlines()]
-        ctx.emit("\n".join(bq_lines) + "\n\n")
+    if tbl_footnotes:
+        bq_blocks: list[str] = []
+        for fn in tbl_footnotes:
+            lines = [f"> {line}" if line.strip() else ">" for line in fn.splitlines()]
+            bq_blocks.append("\n".join(lines))
+        ctx.emit("\n>\n".join(bq_blocks) + "\n\n")
     ctx.state_mgr.reset()
 
     # 3. Export CSV / JSON for captioned tables

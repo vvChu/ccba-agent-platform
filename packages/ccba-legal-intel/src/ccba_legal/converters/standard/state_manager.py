@@ -74,8 +74,12 @@ class HierarchyStateManager:
                     action_type=LineActionType.EMIT_IN_TRONG_DO, content=clean_b
                 )
 
-            # Auto-exit triggers: Lead-in phrases, conditional statements, non-variable definitions
-            if not text.startswith(("-", "–", "—", "+", "•")) and (
+            # Auto-exit triggers: Lettered clause (e.g. b), c), d)), numbered clause, or lead-in phrases
+            if re.match(r"^([a-zđ0-9])\)\s*", text, re.IGNORECASE) or re.match(
+                r"^[0-9]+(?:\.[0-9]+)*\s+", text
+            ):
+                self.reset()
+            elif not text.startswith(("-", "–", "—", "+", "•")) and (
                 any(
                     rendered_p.startswith(w)
                     for w in [
@@ -113,25 +117,26 @@ class HierarchyStateManager:
                     action_type=LineActionType.EMIT_DIRECT, content=rendered_p
                 )
 
-            # Unbulleted item defining a variable
-            if len(rendered_p) > 1 and not rendered_p.startswith(("#", "<a id=")):
-                clean_b = rendered_p
-                for g_c, g_l in GREEK_MAP.items():
-                    if clean_b.startswith(g_c + " ") or clean_b.startswith(g_c + "\t"):
-                        clean_b = f"${g_l}$ " + clean_b[len(g_c) :].strip()
-                        break
-                return LineFormattingAction(
-                    action_type=LineActionType.EMIT_IN_TRONG_DO, content=clean_b
-                )
+            if self.state == HierarchyState.IN_TRONG_DO:
+                # Unbulleted item defining a variable
+                if len(rendered_p) > 1 and not rendered_p.startswith(("#", "<a id=")):
+                    clean_b = rendered_p
+                    for g_c, g_l in GREEK_MAP.items():
+                        if clean_b.startswith(g_c + " ") or clean_b.startswith(g_c + "\t"):
+                            clean_b = f"${g_l}$ " + clean_b[len(g_c) :].strip()
+                            break
+                    return LineFormattingAction(
+                        action_type=LineActionType.EMIT_IN_TRONG_DO, content=clean_b
+                    )
 
-            self.reset()
+                self.reset()
 
         # 4. Lettered Clause (a), b), c)...)
-        m_let = re.match(r"^([a-z])\)\s*(.+)$", text)
+        m_let = re.match(r"^([a-zđ])\)\s*(.+)$", text, re.IGNORECASE)
         if m_let:
             self.state = HierarchyState.IN_LETTERED_LIST
             self.in_bullet_category = False
-            m_let_r = re.match(r"^([a-z])\)\s*(.+)$", rendered_p)
+            m_let_r = re.match(r"^([a-zđ])\)\s*(.+)$", rendered_p, re.IGNORECASE)
             if m_let_r:
                 letter = m_let_r.group(1)
                 content = m_let_r.group(2).lstrip("-–— ").strip()
