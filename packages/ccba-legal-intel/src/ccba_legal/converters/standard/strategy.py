@@ -9,7 +9,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, BinaryIO
 
 from docx import Document
 
@@ -465,6 +465,7 @@ def process_technical_standard_strategy(
     rid_to_katex: dict[str, str] | None = None,
     registry_file: Path | str | None = None,
     doc_meta: dict[str, Any] | None = None,
+    sanitized_stream: BinaryIO | None = None,
     **kwargs: Any,
 ) -> dict[str, Any]:
     """Process a Technical Standard (TCVN / QCVN) DOCX file with 100% Visual Parity & Modular Annex Split."""
@@ -485,8 +486,8 @@ def process_technical_standard_strategy(
     )
     extract_docx_figures(docx_p, bundle_p / "figures")
 
-    # 2. Extract and locate normative start
-    doc = Document(str(docx_p))
+    # 2. Extract and locate normative start (using sanitized stream if available - ADR 0042)
+    doc = Document(sanitized_stream if sanitized_stream is not None else str(docx_p))
     blocks = _extract_document_blocks(doc)
     std_start_idx = _find_standard_header_start_index(blocks)
     start_idx = _find_normative_start_index(blocks, start_from=std_start_idx)

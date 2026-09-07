@@ -9,6 +9,7 @@ import yaml
 
 from ccba_legal.converters import (
     DocumentArchetype,
+    DocxCanonicalSanitizer,
     FullDocStructuralScanner,
     classify_and_extract_tables,
     detect_document_pipeline,
@@ -24,6 +25,7 @@ from ccba_legal.converters import (
 
 __all__ = [
     "DocumentArchetype",
+    "DocxCanonicalSanitizer",
     "FullDocStructuralScanner",
     "convert_docx_to_okf_bundle",
     "detect_document_pipeline",
@@ -71,6 +73,10 @@ def convert_docx_to_okf_bundle(
                     doc_meta = item
                     break
 
+    # Phase 1: Canonical OpenXML DOM Pre-Sanitization (ADR 0042)
+    sanitizer = DocxCanonicalSanitizer()
+    sanitized_stream = sanitizer.sanitize(docx_path)
+
     # Determine archetype
     detected_archetype = DocumentArchetype.VBPL_ADMIN
     if archetype and archetype.upper() in DocumentArchetype.__members__:
@@ -90,6 +96,7 @@ def convert_docx_to_okf_bundle(
             registry_file=reg_file,
             doc_meta=doc_meta,
             output_filename=output_filename,
+            sanitized_stream=sanitized_stream,
         )
     else:
         return process_vbpl_bundle(
@@ -97,4 +104,5 @@ def convert_docx_to_okf_bundle(
             bundle_dir=target_bundle_dir,
             registry_file=reg_file,
             output_filename=output_filename,
+            sanitized_stream=sanitized_stream,
         )
