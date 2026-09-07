@@ -19,7 +19,7 @@ def handle_list_and_paragraph(
 ) -> int:
     """Handle lettered items, bullet lists, variable glossary, and regular paragraphs via State Manager."""
     # 1. Check if this is a sub-figure caption immediately preceding a Figure card (e.g. a) Lực dọc N... before Hình 8)
-    m_let = re.match(r"^([a-z])\)\s*(.+)$", text)
+    m_let = re.match(r"^([a-zđ])\)\s*(.+)$", text, re.IGNORECASE)
     if m_let and i + 4 < len(blocks):
         is_subfig_caption = False
         for next_idx in range(i + 1, min(i + 5, len(blocks))):
@@ -27,7 +27,7 @@ def handle_list_and_paragraph(
             if (
                 next_b_type == "p"
                 and hasattr(next_obj, "text")
-                and re.match(r"^(?:Hình|HÌNH)\s+[0-9A-Za-z\.\-]+", next_obj.text.strip())
+                and re.match(r"^(?:Hình|HÌNH)\s+[0-9A-Za-zĐđ\.\-]+", next_obj.text.strip())
             ):
                 is_subfig_caption = True
                 break

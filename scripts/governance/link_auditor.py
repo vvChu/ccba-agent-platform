@@ -242,6 +242,13 @@ class LinkAuditor(BaseAuditor):
                     or "document_number" in frontmatter
                     or "parent_document" in frontmatter
                     or frontmatter.get("type") in okf_keywords
+                    or (
+                        isinstance(frontmatter.get("type"), str)
+                        and any(
+                            k in frontmatter
+                            for k in ("resource", "status", "timestamp", "okf_version")
+                        )
+                    )
                 ):
                     is_okf = True
                     if not bundle_root:

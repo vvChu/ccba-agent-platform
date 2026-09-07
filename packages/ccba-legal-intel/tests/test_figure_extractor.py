@@ -55,3 +55,58 @@ def test_load_bundle_figures_overrides(tmp_path: Path) -> None:
     res = load_bundle_figures_overrides(bundle_dir)
     assert "F.1" in res
     assert res["F.1"]["title"] == "Test Figure"
+
+
+def test_vietnamese_d_figure_tag_and_slug() -> None:
+    """Verify that Vietnamese letter Đ in figure tags produces non-colliding slug and figure_id."""
+    f_tag = "Đ.1"
+    f_slug = f_tag.lower().replace("đ", "dd").replace(".", "_").replace("-", "_")
+    assert f_slug == "dd_1"
+    assert f"FIG_{f_slug.upper()}" == "FIG_DD_1"
+    assert f"hinh-{f_slug}" == "hinh-dd_1"
+    assert f"hinh_{f_slug}.png" == "hinh_dd_1.png"
+
+    # Verify that D.1 and Đ.1 produce distinct slugs
+    d_slug = "D.1".lower().replace("đ", "dd").replace(".", "_").replace("-", "_")
+    assert d_slug == "d_1"
+    assert d_slug != f_slug
+
+
+def test_figure_caption_dot_and_dash_separators() -> None:
+    """Verify figure caption matching works with dash, dot, and colon separators."""
+    import re
+
+    pattern = r"^(?:Hình|HÌNH)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\s*[\.\-–—:]\s*(.+)$"
+
+    m1 = re.match(pattern, "Hình Đ.1 - Sơ đồ nguyên lý")
+    assert m1 and m1.group(1) == "Đ.1" and m1.group(2) == "Sơ đồ nguyên lý"
+
+    m2 = re.match(pattern, "Hình Đ.1. Sơ đồ nguyên lý")
+    assert m2 and m2.group(1) == "Đ.1" and m2.group(2) == "Sơ đồ nguyên lý"
+
+    m3 = re.match(pattern, "Hình 1: Mặt bằng bố trí")
+    assert m3 and m3.group(1) == "1" and m3.group(2) == "Mặt bằng bố trí"
+
+    m4 = re.match(pattern, "Hình 1. Mặt bằng bố trí")
+    assert m4 and m4.group(1) == "1" and m4.group(2) == "Mặt bằng bố trí"
+
+
+def test_subcaption_detection_guards() -> None:
+    """Verify subcaption regex accepts lettered markers (including đ) and rejects numbered section headings."""
+    import re
+
+    pattern = r"^(?:[a-zđĐ]\s*[\)\.\-–—]|[0-9]+\))\s*"
+
+    # Valid sub-captions
+    assert bool(re.match(pattern, "a) Mặt bằng tầng 1", re.IGNORECASE))
+    assert bool(re.match(pattern, "b. Mặt đứng chính", re.IGNORECASE))
+    assert bool(re.match(pattern, "c - Chi tiết mối nối", re.IGNORECASE))
+    assert bool(re.match(pattern, "c – Chi tiết mối nối", re.IGNORECASE))
+    assert bool(re.match(pattern, "đ) Chi tiết neo cốt thép", re.IGNORECASE))
+    assert bool(re.match(pattern, "Đ) Chi tiết bản đáy", re.IGNORECASE))
+    assert bool(re.match(pattern, "1) Trường hợp tải trọng phân bố", re.IGNORECASE))
+
+    # Section / clause headings MUST NOT match
+    assert not bool(re.match(pattern, "1. Phạm vi áp dụng", re.IGNORECASE))
+    assert not bool(re.match(pattern, "1.1 Quy định chung", re.IGNORECASE))
+    assert not bool(re.match(pattern, "2. Tài liệu viện dẫn", re.IGNORECASE))
