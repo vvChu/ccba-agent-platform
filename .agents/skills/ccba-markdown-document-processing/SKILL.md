@@ -77,6 +77,14 @@ Khi nhận được yêu cầu xử lý chuyển đổi tài liệu, hãy tuân 
 
 ## 3. Rào Chắn Bóc Tách Phụ Lục Kỹ Thuật (Flexible Annex Header & Zero-Dropped Annex — ADR 0036)
 
+> [!WARNING] **Routing Guardrail — Cấm Sử Dụng `mdconverter` Cho Văn Bản Pháp Lý (`legal_docs/`):**
+> Tuyệt đối **KHÔNG** sử dụng `mdconverter` (hoặc `ConversionPipeline`) để chuyển đổi văn bản quy phạm pháp luật, tiêu chuẩn hay quy chuẩn trong thư mục `legal_docs/`.
+> Mọi văn bản thuộc `legal_docs/` bắt buộc phải được định tuyến qua kỹ năng **`ccba-legal-ingest`** / **`ccba-legal-intel`** bằng lệnh:
+> ```powershell
+> python -m ccba_legal convert --docx-path "legal_docs/<category>/<doc_slug>/sources/<doc_slug>.docx" --target-bundle-dir "legal_docs/<category>/<doc_slug>"
+> ```
+> Điều này đảm bảo văn bản được tiền xử lý chuẩn hóa DOM qua **`DocxCanonicalSanitizer`** (ADR 0042) và vượt qua **15 Cổng Master CI Validator** (ADR 0036 - ADR 0042).
+
 Khi xử lý văn bản có phụ lục kỹ thuật (như QCVN, TCVN):
 1. **Khử Tiền Tố Markdown Trước Khi Khớp Regex:**
    * Tiêu đề Phụ lục trong file DOCX hoặc Markdown trung gian có thể có tiền tố `## PHỤ LỤC A` hoặc `**PHỤ LỤC A**`. Parser bắt buộc phải khử sạch tiền tố:
