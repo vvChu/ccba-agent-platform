@@ -48,6 +48,7 @@ from governance import (
     LinkAuditor,
     RegistryAuditor,
     SkillAuditor,
+    is_exclusion_header,
     run_docs_validation_cli,
     run_skills_validation_cli,
 )
@@ -172,4 +173,5 @@ __all__ = [
     "IGNORE_ENV_VARS",
     "WORKFLOW_HEADERS",
     "EXCLUSION_HEADERS",
+    "is_exclusion_header",
 ]

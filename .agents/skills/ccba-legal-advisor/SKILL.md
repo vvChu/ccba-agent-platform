@@ -24,6 +24,7 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
 * **Cấp độ 1 (Câu hỏi tra cứu trực diện / Khái niệm chung):** Đã đủ thông tin hoặc chỉ hỏi định nghĩa $\rightarrow$ Chuyển thẳng sang Bước 3 (Fast-track, không hỏi lại).
 * **Cấp độ 2 (Câu hỏi dự án đơn mục tiêu nhưng thiếu 1–2 tham số cốt lõi):** Ví dụ thiếu chiều cao, diện tích, hoặc cấp công trình $\rightarrow$ Kích hoạt phỏng vấn ngắn 1 lượt.
 * **Cấp độ 3 (Dự án tổ hợp phức tạp / Vướng mắc tranh chấp / Điều khoản chuyển tiếp):** Kích hoạt cơ chế Phỏng vấn Thích ứng Nhiều Nấc (Adaptive Diagnostic Depth).
+- **Tiêu chí hoàn thành:** Phân loại chính xác cấp độ phức tạp của câu hỏi để định tuyến xử lý phù hợp.
 
 ---
 
@@ -36,6 +37,7 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
   2. *[Mẫu 2 — Đối chiếu chuyển tiếp]:* So sánh quy định cũ vs mới để bảo vệ quyền lợi không hồi tố.
   3. *[Mẫu 3 — Bảng Ma trận Checklist]:* Xuất bảng đối soát đa cột phục vụ báo cáo thẩm tra kỹ thuật.
   4. *[Mẫu 4 — Bóc tách Biểu mẫu & Thủ tục]:* Hướng dẫn hồ sơ cấp phép xây dựng hoặc nghiệm thu hoàn công.
+- **Tiêu chí hoàn thành:** Thu thập đủ dữ liệu đầu vào cần thiết thông qua phỏng vấn thích ứng kèm gợi ý lựa chọn.
 
 ---
 
@@ -43,6 +45,7 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
 * Truy xuất cây điều khoản AST `clauses.json` và văn bản thuần khiết `<slug>.md` của 26 gói văn bản.
 * Đọc các bảng tra cứu kỹ thuật 2D trong `tables/csv/*.csv` và các biểu mẫu nguyên tử trong `templates/`.
 * Áp dụng **ADR 0024 (Dual-Track Provenance)**: Luôn trích dẫn nội dung hợp nhất kèm Footnote thông tư sửa đổi ban hành.
+- **Tiêu chí hoàn thành:** Truy xuất chính xác điều khoản, bảng số liệu kỹ thuật và biểu mẫu liên quan từ kho tri thức OKF.
 
 ---
 
@@ -71,6 +74,7 @@ Mọi câu trả lời cuối cùng bắt buộc phải được định dạng 
 - **Hồ sơ / Biểu mẫu cần chuẩn bị:** [Đính kèm biểu mẫu từ templates/]
 - **Rủi ro cần phòng tránh:** [Lưu ý về PCCC, điều khoản chuyển tiếp, chế tài phạt...]
 ```
+- **Tiêu chí hoàn thành:** Xuất văn bản Phiếu Giải Đáp Pháp Lý CCBA chuẩn form 4 phần với đầy đủ căn cứ pháp lý và khuyến nghị.
 
 ---
 

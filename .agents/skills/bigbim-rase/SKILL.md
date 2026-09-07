@@ -75,6 +75,7 @@ Khi nhận yêu cầu phân tích RASE hoặc thiết lập bản đồ thuộc 
 ### Bước 1: Trích xuất Dữ liệu đầu vào
 1.  Đọc văn bản yêu cầu kỹ thuật hoặc quy chuẩn thiết kế đầu vào (ví dụ: Quy chuẩn tiện nghi nhiệt, tiết kiệm năng lượng).
 2.  Xác định các thông số/chỉ số kỹ thuật cần kiểm soát.
+- **Tiêu chí hoàn thành:** Xác định đầy đủ danh mục thông số kỹ thuật và điều kiện kiểm soát từ tài liệu đầu vào.
 
 ### Bước 2: Phân tích RASE cấu trúc
 Phân rã văn bản kỹ thuật thành 4 tầng logic của ma trận RASE:
@@ -84,6 +85,7 @@ Phân rã văn bản kỹ thuật thành 4 tầng logic của ma trận RASE:
 *   **S - Selection (Lựa chọn thuộc tính):** Khai báo chính xác thuộc tính IFC4X3 sẽ lưu trữ thông số này. 
     *   *Ví dụ:* Thuộc tính `TargetTemperature` nằm trong `Pset_SpaceOccupancyRequirement` gán vào `IfcSpace` thông qua `IfcRelDefinesByProperties`.
 *   **E - Exception (Ngoại lệ):** Các điều kiện loại trừ không cần áp dụng quy tắc (ví dụ: *"Không áp dụng cho phòng kho phụ trợ hoặc không gian đệm"* $\rightarrow$ Ngoại trừ `IfcSpace` có thuộc tính `SpaceUsage` = `STORAGE`).
+- **Tiêu chí hoàn thành:** Bóc tách chính xác 4 thành phần R-A-S-E cho từng yêu cầu kỹ thuật.
 
 ### Bước 3: Ánh xạ Property Set & Quantity Map (Pset Mapping)
 Thiết lập bảng ánh xạ thuộc tính theo cấu trúc chuẩn:
@@ -92,11 +94,13 @@ Thiết lập bảng ánh xạ thuộc tính theo cấu trúc chuẩn:
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Tiện nghi Nhiệt độ | `IfcSpace` | `Pset_SpaceOccupancyRequirement` | `TargetTemperature` | `IfcThermodynamicTemperatureMeasure` | - |
 | Thể tích thông gió | `IfcSpace` | `Pset_SpaceAirQualityRequirements` | `FreshAirFlowRate` | `IfcVolumetricFlowRateMeasure` | `Qto_SpaceBaseQuantities.GrossVolume` |
+- **Tiêu chí hoàn thành:** Bảng ánh xạ Pset và Qto tương ứng được thiết lập hoàn chỉnh theo chuẩn IFC4X3.
 
 ### Bước 4: Kiểm duyệt chất lượng (Quality Assurance)
 Trước khi trả kết quả, Agent tự đối chiếu với 2 nguyên tắc quản trị tối cao của BIGBIM:
 1.  **Sợi chỉ Đỏ (Red Thread):** Thông tin RASE đã đáp ứng đầy đủ các tiêu chuẩn kỹ thuật cốt lõi tối thiểu chưa?
 2.  **Sợi chỉ Vàng (Golden Thread):** Các thuộc tính gán vào mô hình đã có Unique ID liên kết đồng nhất từ giai đoạn `BBP-A0` để bảo đảm khả năng cập nhật "Trí Nhớ Số" chưa?
+- **Tiêu chí hoàn thành:** Hồ sơ RASE vượt qua kiểm duyệt Red Thread và Golden Thread, đảm bảo tính nhất quán Unique ID.
 
 ---
 

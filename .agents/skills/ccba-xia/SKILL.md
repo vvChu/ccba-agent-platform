@@ -3,6 +3,7 @@ name: ccba-xia
 description: Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository
   GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại.
 user-invocable: true
+command: /ccba-xia
 when_to_use: Dùng khi cần port tính năng giữa các repository.
 category: dev-tools
 keywords:
@@ -73,7 +74,7 @@ Tìm hiểu repo nguồn và định vị tính năng mục tiêu.
    - COPYLEFT (GPL, AGPL, LGPL): **Dừng ngay** và cảnh báo người dùng về rủi ro pháp lý. Chỉ được tiếp tục nếu người dùng xác nhận tường minh, hoặc chuyển sang chế độ `--compare`.
    - UNKNOWN/NONE: **Dừng ngay**. Thông báo repo không có giấy phép rõ ràng (mặc định All Rights Reserved). Đề xuất chỉ dùng chế độ `--compare` để học hỏi kiến trúc mà không sao chép.
 
-**Tiêu chí hoàn thành (Completion Criterion):**
+**Tiêu chí hoàn thành:**
 *   [x] Phải xuất ra cụ thể `source manifest` (đường dẫn repo, nhánh, commit SHA, `license_type`).
 *   [x] Phải lập danh sách `source map` liệt kê chính xác các file cốt lõi của tính năng nguồn và ít nhất 3 package dependencies thực tế của nó.
 *   [x] Phải hoàn thành License Check và ghi nhận `license_type` vào source manifest.
@@ -91,7 +92,7 @@ Phân tách tính năng thành các lớp để ánh xạ sang Platform hiện t
 4. **Domain Alignment:** Đối chiếu thuật ngữ nghiệp vụ (Domain Glossary) và kiểu dữ liệu (Data Schema / Type mapping) nguồn - đích.
 5. Xác định các vấn đề cắt ngang (cross-cutting concerns) như middleware, interceptors, listeners nằm ngoài folder tính năng.
 
-**Tiêu chí hoàn thành (Completion Criterion):**
+**Tiêu chí hoàn thành:**
 *   [x] Phải hoàn thành bảng ma trận dependency mapping phân loại rõ ràng từng thành phần nguồn sang trạng thái: EXISTS (đã có), NEW (cần tạo mới), CONFLICT (xung đột), hoặc HUB-REUSE (kế thừa từ Hub).
 *   [x] Phải lập bảng đối chiếu ít nhất 3 kiểu dữ liệu cốt lõi hoặc thuật ngữ nghiệp vụ nguồn - Platform.
 *   [x] Phải hoàn thành Hub Catalog Check và ghi nhận kết quả vào cột Reuse Assessment.
@@ -107,7 +108,7 @@ Hiểu rõ lý do tại sao mã nguồn chạy như vậy, chứ không chỉ l�
 2. Ánh xạ các biến môi trường, cờ cấu hình và công tắc runtime cần thiết để tính năng hoạt động.
 3. Phân tích thích ứng chuyên sâu theo chế độ chạy được chọn (xem chi tiết tại [MODES.md](MODES.md)).
 
-**Tiêu chí hoàn thành (Completion Criterion):**
+**Tiêu chí hoàn thành:**
 *   [x] Phải mô tả được ít nhất một luồng dữ liệu end-to-end hoàn chỉnh của tính năng.
 *   [x] Phải liệt kê đầy đủ danh sách các biến cấu hình (`.env`) bắt buộc của tính năng nguồn.
 
@@ -125,7 +126,7 @@ Sử dụng khung câu hỏi phản biện cốt lõi (Challenge Framework) đ�
 4. Thảo luận chi tiết về các bài toán đánh đổi kỹ thuật (KISS vs Complexity, Windows compatibility, v.v.).
 5. Trình bày Ma trận quyết định (Decision Matrix).
 
-**Tiêu chí hoàn thành (Completion Criterion):**
+**Tiêu chí hoàn thành:**
 *   [x] Phải in ra đầy đủ 5 câu hỏi phản biện (hoặc ≥3 câu self-challenge nếu `--fast`) và biên bản phỏng vấn Socratic kèm Ma trận quyết định.
 *   [x] Bắt buộc phải dừng lại và nhận được sự phê duyệt tường minh (bằng văn bản hoặc qua giao diện) từ người dùng trước khi chuyển sang Pha 5 (trừ khi chạy chế độ `--fast` hoặc `--auto`).
 
@@ -145,7 +146,7 @@ Soạn thảo kế hoạch triển khai chi tiết cho việc thích ứng và c
    - Chiến lược khôi phục (Rollback Strategy) nếu gặp lỗi.
 4. **Chế độ `--copy-raw`:** Mọi file được tạo bởi `--copy-raw` phải có comment header dạng: `# [XIA-COPY-RAW] Ported from <source-repo> @ <commit-sha>. Needs refactor to comply with Platform standards.` Agent bắt buộc phải tạo hoặc đề xuất một GitHub Issue dạng `chore(xia): refactor copied code from <repo> to Platform standards` với checklist cụ thể (naming, type hints, docstrings, error handling, function length).
 
-**Tiêu chí hoàn thành (Completion Criterion):**
+**Tiêu chí hoàn thành:**
 *   [x] Phải tạo hoặc cập nhật thành công file `implementation_plan.md` có đầy đủ thông tin source manifest, ma trận quyết định, kế hoạch test TDD và chiến lược khôi phục.
 *   [x] Mọi package dependency mới phải đã pass qua `scan_dependencies`.
 
@@ -161,7 +162,7 @@ Bàn giao kết quả phân tích và kế hoạch triển khai cho người dù
 3. Cung cấp đường dẫn file `implementation_plan.md` cho người dùng.
 4. **Next Step Recommendation:** In ra hướng dẫn bước tiếp theo cụ thể: *"Để bắt đầu triển khai, hãy chạy `/ccba-implement` với kế hoạch này."*
 
-**Tiêu chí hoàn thành (Completion Criterion):**
+**Tiêu chí hoàn thành:**
 *   [x] Bàn giao thành công báo cáo so sánh (chế độ `--compare`) hoặc kế hoạch triển khai (chế độ khác) bằng liên kết file click được.
 *   [x] Thư mục tạm `.md/scratch/xia_sources/` đã được xóa sạch.
 *   [x] Đã in Next Step Recommendation hướng dẫn người dùng chạy `/ccba-implement`.

@@ -31,7 +31,7 @@ Quy trình này được định hướng bởi domain model của dự án và 
 
 ## Quy trình Thực hiện (Process)
 
-### 1. Khám phá & Quét Thực Chiến (Explore & Ground-Truth Sweep)
+### Bước 1: Khám phá & Quét Thực Chiến (Explore & Ground-Truth Sweep)
 - Đọc bảng thuật ngữ domain (`CONTEXT.md`) và bất kỳ tài liệu quyết định thiết kế (ADRs) liên quan đến phân vùng mã nguồn chuẩn bị tác động.
 - Sử dụng subagent thuộc kiểu `Explore` để quét codebase một cách tự nhiên. Ghi chép lại các điểm gây cản trở lập trình thực tế (architectural friction):
   * **Xung đột Định danh Toàn Cục (Cross-Package Symbol Collision - P6.21):** Quét phát hiện các class/function/module có tên trùng lặp giữa các package khác nhau nhưng thực hiện nghiệp vụ khác nhau (như `TableReconstructor` vs `AppendixExtractor`).
@@ -44,7 +44,7 @@ Quy trình này được định hướng bởi domain model của dự án và 
 - Áp dụng **phép thử xóa bỏ (deletion test)** đối với các module nghi ngờ bị nông: Nếu xóa module đó đi thì độ phức tạp sẽ tập trung lại một chỗ hay chỉ bị dịch chuyển sang chỗ khác? Nếu câu trả lời là "tập trung lại một chỗ", đó chính là seam tốt cần làm sâu.
 - **Tiêu chí hoàn thành:** Lập danh sách thô các vùng module bị nông, coupling cao hoặc chứa nợ kỹ thuật thực tế.
 
-### 2. Vòng Bắn Hạ & 5 Cổng Phản Biện Kèm Bằng Chứng (Adversarial Shoot-Down & 5 Evidence-Backed Gates)
+### Bước 2: Vòng Bắn Hạ & 5 Cổng Phản Biện Kèm Bằng Chứng (Adversarial Shoot-Down & 5 Evidence-Backed Gates)
 
 *Quy tắc bất biến:* **Tuyệt đối không đưa các phỏng đoán hoặc heuristic chưa kiểm chứng vào Báo cáo HTML.** Trước khi chuyển sang bước dựng báo cáo, Agent **bắt buộc** phải thực thi vòng bắn hạ tích hợp sẵn 5 cổng phản biện đối với từng ứng viên thô. Mỗi cổng yêu cầu **bằng chứng thực địa (Hard Evidence)** — không chấp nhận dấu tích ✅ tự khai:
 
@@ -77,9 +77,9 @@ Quy trình này được định hướng bởi domain model của dự án và 
 - **Rào chắn cứng:** Số ứng viên đưa vào Báo cáo HTML **KHÔNG ĐƯỢC VƯỢT QUÁ 3**. Nếu sau Vòng Bắn Hạ vẫn còn >3 ứng viên đạt chuẩn, xếp hạng theo ROI (Callers $\times$ Measurable Friction) và loại bỏ các ứng viên xếp cuối cho đến khi $\le 3$.
 - **Ghi nhận ứng viên bị loại (Eliminated Candidate Record — BẮT BUỘC):** Đối với **mỗi** ứng viên bị bắn hạ hoặc bị loại do vượt ngưỡng 3, Agent **bắt buộc** ghi lại một dòng ngắn gọn gồm: tên ứng viên, cổng nào bắn hạ (hoặc "ROI thấp hơn"), lý do 1 câu. Danh sách này được đính kèm vào phần cuối Báo cáo HTML (mục *"Ứng viên đã loại"*) để các đợt quét kiến trúc sau không lặp lại cùng đề xuất. Nếu lý do loại bỏ là một quyết định kiến trúc nền tảng quan trọng $\rightarrow$ Đề xuất ghi nhận thành ADR.
 
-**Tiêu chí hoàn thành:** Toàn bộ $\le 3$ ứng viên đưa vào HTML đều có bảng 5 Cổng đính kèm dẫn chứng `file:line` và số liệu đo thực tế. Phần **"Ứng viên đã loại"** trong HTML **không được để trống** — nếu không có ứng viên nào bị loại, ghi rõ "Không có ứng viên bị loại trong đợt quét này".
+- **Tiêu chí hoàn thành:** Toàn bộ $\le 3$ ứng viên đưa vào HTML đều có bảng 5 Cổng đính kèm dẫn chứng `file:line` và số liệu đo thực tế. Phần **"Ứng viên đã loại"** trong HTML **không được để trống** — nếu không có ứng viên nào bị loại, ghi rõ "Không có ứng viên bị loại trong đợt quét này".
 
-### 3. Trình bày Báo cáo dưới dạng HTML (Present candidates as an HTML report)
+### Bước 3: Trình bày Báo cáo dưới dạng HTML (Present candidates as an HTML report)
 - Viết một file HTML đơn lẻ (single-file) vào thư mục tạm của dự án: `.md/scratch/architecture-review/architecture-review-<timestamp>.html` (tự động tạo thư mục nếu chưa tồn tại).
 - Kích hoạt mở tệp tin báo cáo bằng trình duyệt mặc định trên hệ thống Windows của kỹ sư thông qua lệnh:
   ```powershell
@@ -108,7 +108,7 @@ Quy trình này được định hướng bởi domain model của dự án và 
   * **Danh sách ứng viên đã loại (Eliminated Candidates):** Bảng gồm tên ứng viên, cổng bắn hạ, lý do 1 câu. Đây là bộ nhớ cho các đợt quét tương lai.
 - **Tiêu chí hoàn thành:** Báo cáo HTML được ghi thành công vào thư mục tạm `.md/scratch/`, mở được trên trình duyệt mặc định mà không gặp lỗi CLI, hiển thị đầy đủ các thẻ ứng viên, sơ đồ Before/After, và danh sách ứng viên bị loại.
 
-### 4. Vòng lặp Chất vấn (Grilling loop)
+### Bước 4: Vòng lặp Chất vấn (Grilling loop)
 - Sau khi người dùng chọn một ứng viên cải tiến, kích hoạt kỹ năng `/ccba-grilling` để tiến hành phỏng vấn sâu với Kỹ sư về: các ràng buộc (constraints), dependency, cấu trúc của module được làm sâu, logic nằm sau seam, và các test case được bảo toàn.
 - Cập nhật domain model và tài liệu tri thức song song:
   * Nếu đặt tên module làm sâu theo một khái niệm mới chưa có trong `CONTEXT.md` $\rightarrow$ Thêm thuật ngữ đó vào `CONTEXT.md`.

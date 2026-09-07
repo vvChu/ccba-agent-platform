@@ -295,10 +295,10 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
 
     parser = argparse.ArgumentParser(description="Validate CCBA Agent Skills.")
     parser.add_argument(
-        "skills_dir",
-        nargs="?",
-        default=".agents/skills",
-        help="Directory containing skills (default: .agents/skills)",
+        "paths",
+        nargs="*",
+        default=[],
+        help="Directories or SKILL.md files to validate (default: .agents/skills)",
     )
     parser.add_argument(
         "--file",
@@ -306,40 +306,104 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
         default=None,
         help="Validate a specific SKILL.md file instead of the whole directory",
     )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Treat warnings (e.g., shallow skills < 35 lines) as hard errors",
+    )
     args = parser.parse_args(args_list)
 
+    skills_files: list[Path] = []
+    has_explicit_targets = False
+
     if args.file:
+        has_explicit_targets = True
         target_path = Path(args.file)
         if not target_path.is_absolute():
             target_path = auditor.project_root / target_path
-        skills_files = [target_path] if target_path.exists() else []
-    else:
-        search_path = Path(args.skills_dir)
-        if not search_path.is_absolute():
-            search_path = auditor.project_root / search_path
-        skills_files = list(search_path.rglob("SKILL.md")) if search_path.exists() else []
+        skills_files.append(target_path)
+
+    if args.paths:
+        has_explicit_targets = True
+        for p_str in args.paths:
+            p = Path(p_str)
+            if not p.is_absolute():
+                p = auditor.project_root / p
+            if not p.exists():
+                skills_files.append(p)
+                continue
+            if p.is_file():
+                if p.name == "SKILL.md" or p.suffix == ".md":
+                    skills_files.append(p)
+            elif p.is_dir():
+                skills_files.extend(p.rglob("SKILL.md"))
+
+    if not has_explicit_targets:
+        default_dir = auditor.project_root / ".agents" / "skills"
+        if default_dir.exists():
+            skills_files = list(default_dir.rglob("SKILL.md"))
+
+    # Remove duplicates preserving order
+    seen: set[Path] = set()
+    unique_skills_files: list[Path] = []
+    for sf in skills_files:
+        try:
+            sf_res = sf.resolve()
+        except Exception:
+            sf_res = sf
+        if sf_res not in seen:
+            seen.add(sf_res)
+            unique_skills_files.append(sf)
+    skills_files = unique_skills_files
 
     if not skills_files:
+        if has_explicit_targets:
+            print("ERROR: No SKILL.md or workflow files found matching specified targets.", file=sys.stderr)
+            return 1
         print("No SKILL.md files found for validation.")
         return 0
 
     total_errors = 0
-    for skill_path in skills_files:
-        issues = auditor.audit_skill(skill_path)
+    total_warnings = 0
+    for target_path in skills_files:
+        is_workflow = (
+            target_path.is_relative_to(auditor.project_root / ".agents" / "workflows")
+            if target_path.is_relative_to(auditor.project_root)
+            else "workflows" in target_path.parts
+        )
+        if is_workflow:
+            issues = auditor.skill_auditor.audit_workflow(target_path)
+            error_prefix = "[WORKFLOW ERROR]"
+        else:
+            issues = auditor.audit_skill(target_path, check_shallow=True)
+            error_prefix = "[SKILL ERROR]"
+
         if issues:
             rel_path = (
-                skill_path.relative_to(auditor.project_root)
-                if skill_path.is_relative_to(auditor.project_root)
-                else skill_path
+                target_path.relative_to(auditor.project_root)
+                if target_path.is_relative_to(auditor.project_root)
+                else target_path
             )
-            print(f"\n\x1b[31m[SKILL ERROR]\x1b[0m {rel_path}:")
-            for issue_item in issues:
-                print(f"  Line {issue_item.line_number}: {issue_item.message}")
-                total_errors += 1
+            warnings = [i for i in issues if i.category.endswith("_WARNING")]
+            errors = [i for i in issues if not i.category.endswith("_WARNING")]
+
+            if warnings:
+                print(f"\n\x1b[33m[SKILL WARNING]\x1b[0m {rel_path}:")
+                for w in warnings:
+                    print(f"  Line {w.line_number}: {w.message}")
+                    total_warnings += 1
+                    if args.strict:
+                        total_errors += 1
+
+            if errors:
+                print(f"\n\x1b[31m{error_prefix}\x1b[0m {rel_path}:")
+                for issue_item in errors:
+                    print(f"  Line {issue_item.line_number}: {issue_item.message}")
+                    total_errors += 1
 
     # Validate all Workflows in .agents/workflows
     workflow_files = []
-    if not args.file:
+    if not has_explicit_targets:
         wf_dir = auditor.project_root / ".agents" / "workflows"
         if wf_dir.exists():
             workflow_files = list(wf_dir.glob("*.md"))
@@ -357,20 +421,34 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
                         total_errors += 1
 
     # Run Workspace Hard CI Gates (ADR-0040)
-    if not args.file and search_path.exists():
-        gate_issues = auditor.audit_workspace_gates(search_path)
-        if gate_issues:
+    skills_dir = auditor.project_root / ".agents" / "skills"
+    if skills_dir.exists():
+        gate_issues = auditor.audit_workspace_gates(skills_dir)
+        gate_warnings = [g for g in gate_issues if g.category.endswith("_WARNING")]
+        gate_errors = [g for g in gate_issues if not g.category.endswith("_WARNING")]
+
+        if gate_warnings:
+            print("\n\x1b[33m[WORKSPACE WARNING]\x1b[0m Workspace-level Warnings:")
+            for gw in gate_warnings:
+                print(f"  [{gw.category}] {gw.message}")
+                total_warnings += 1
+                if args.strict:
+                    total_errors += 1
+
+        if gate_errors:
             print("\n\x1b[31m[HARD CI GATE ERROR]\x1b[0m Workspace-level Skill Violations:")
-            for g_issue in gate_issues:
+            for g_issue in gate_errors:
                 print(f"  [{g_issue.category}] {g_issue.message}")
                 total_errors += 1
 
     if total_errors > 0:
-        print(f"\nValidation failed with {total_errors} error(s).")
+        warn_note = f" (and {total_warnings} warning(s))" if total_warnings else ""
+        print(f"\nValidation failed with {total_errors} error(s){warn_note}.")
         return 1
 
     wf_msg = f" and {len(workflow_files)} workflow file(s)" if workflow_files else ""
+    warn_msg = f" with {total_warnings} warning(s)" if total_warnings else ""
     print(
-        f"\x1b[32mSuccessfully validated {len(skills_files)} SKILL.md file(s){wf_msg} across all CI Gates.\x1b[0m"
+        f"\x1b[32mSuccessfully validated {len(skills_files)} SKILL.md file(s){wf_msg}{warn_msg} across all CI Gates.\x1b[0m"
     )
     return 0

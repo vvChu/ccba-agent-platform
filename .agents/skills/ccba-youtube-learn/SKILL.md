@@ -4,6 +4,7 @@ description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc t
   hình ảnh slide học thuật từ các video YouTube/bài giảng.
 disable-model-invocation: true
 user-invocable: true
+command: /ccba-youtube-learn
 bundle: _core
 triggers:
 - ccba-youtube-learn

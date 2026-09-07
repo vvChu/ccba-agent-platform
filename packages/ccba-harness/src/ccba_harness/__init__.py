@@ -35,6 +35,7 @@ from .evals import (
     ScoreResult,
 )
 from .orchestrator import EvalOrchestrator
+from .skill_validator import SkillAuditIssue, SkillValidator
 
 __all__ = [
     "HarnessEngine",
@@ -43,6 +44,8 @@ __all__ = [
     "HarnessState",
     "FileMutexLock",
     "EvalOrchestrator",
+    "SkillValidator",
+    "SkillAuditIssue",
     "EvalItem",
     "ScoreResult",
     "EvalItemResult",

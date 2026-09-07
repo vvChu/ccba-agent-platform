@@ -81,6 +81,8 @@ def search_bm25(
     return ranked[:top_k]
 ```
 
+**Tiêu chí hoàn thành:** BM25 index được khởi tạo và hàm `search_bm25` trả về danh sách xếp hạng theo TF-IDF.
+
 ### Bước 2: Embedding Search
 
 ```python
@@ -110,6 +112,8 @@ def search_embeddings(
     return ranked[:top_k]
 ```
 
+**Tiêu chí hoàn thành:** Vector embeddings được tính toán và hàm `search_embeddings` trả về danh sách xếp hạng theo cosine similarity.
+
 ### Bước 3: RRF Fusion
 
 ```python
@@ -132,6 +136,8 @@ def reciprocal_rank_fusion(
             rrf_scores[doc_idx] = rrf_scores.get(doc_idx, 0) + 1.0 / (rank + k)
     return sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
 ```
+
+**Tiêu chí hoàn thành:** Hàm `reciprocal_rank_fusion` hợp nhất các danh sách xếp hạng theo hằng số RRF chuẩn xác.
 
 ### Bước 4: Full Pipeline
 
@@ -158,6 +164,8 @@ def hybrid_search(
     # Stage 3: Return top-K text
     return [corpus[idx] for idx, _ in fused[:top_k]]
 ```
+
+**Tiêu chí hoàn thành:** Pipeline hybrid search trả về top-K đoạn văn bản phù hợp nhất từ corpus.
 
 ---
 

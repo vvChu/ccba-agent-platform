@@ -62,6 +62,7 @@ Xác định:
 - **Nguồn**: NĐ 175 hay ISO 19650-1/2/3/5?
 - **Loại query**: Tra điều khoản cụ thể (số điều/khoản) hay tìm theo chủ đề?
 - **Output format**: Trích dẫn nguyên văn, tóm tắt, hay so sánh?
+- **Tiêu chí hoàn thành:** Xác định rõ ràng nguồn văn bản, loại truy vấn và định dạng đầu ra mong muốn.
 
 ### Bước 2 — Locate chunk
 
@@ -74,12 +75,14 @@ Nếu ISO 19650:
   → chunks/ISO_19650_VN/<phần>/00_CHUNK_INDEX.md
   → Tìm theo section number (VD: "5.6 Tiến trình")
 ```
+- **Tiêu chí hoàn thành:** Định vị chính xác đường dẫn chunk chứa điều khoản hoặc nội dung liên quan.
 
 ### Bước 3 — Đọc và tổng hợp
 
 - Đọc chunk liên quan (1-3 chunks tối đa)
 - Trích dẫn nguyên văn có số điều/khoản
 - Nêu rõ nghĩa vụ áp dụng cho ai, khi nào
+- **Tiêu chí hoàn thành:** Đọc hiểu và trích xuất đúng điều khoản nguyên văn kèm đối tượng và phạm vi áp dụng.
 
 ### Bước 4 — Output format chuẩn
 
@@ -94,6 +97,7 @@ Nếu ISO 19650:
 **Áp dụng cho**: [đối tượng]
 **Thời điểm**: [khi nào bắt buộc]
 ```
+- **Tiêu chí hoàn thành:** Xuất kết quả giải đáp chuẩn format với đầy đủ nguồn, nguyên văn, tóm tắt và đối tượng áp dụng.
 
 ---
 

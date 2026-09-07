@@ -63,6 +63,8 @@ python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke] --dry-run
 python "[hub_path]\scripts\adopt_spoke.py" --spoke . --dry-run
 ```
 
+**Tiêu chí hoàn thành:** Ma trận đánh giá hiện trạng 3 tầng được in đầy đủ.
+
 ### Bước 2: Thực Hiện Tiếp Nhận & Hợp Nhất Cấu Hình
 Khi người dùng đồng ý, chạy lệnh tiếp nhận chính thức:
 ```powershell
@@ -72,6 +74,8 @@ python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke]
 python "[hub_path]\scripts\adopt_spoke.py" --spoke .
 ```
 
+**Tiêu chí hoàn thành:** Lệnh tiếp nhận chạy thành công và bảo tồn dữ liệu cũ.
+
 ### Bước 3: Tùy Biến Thể Loại, Chế Độ & Archetype (Tùy Chọn)
 Nếu muốn chỉ định rõ loại hình dự án, chế độ vận hành hoặc Archetype:
 ```powershell
@@ -80,6 +84,10 @@ python scripts/adopt_spoke.py --spoke [đường_dẫn_spoke] --archetype "knowl
 # Hoặc chạy trực tiếp tại Spoke:
 python "[hub_path]\scripts\adopt_spoke.py" --spoke . --archetype "knowledge_corpus" --type "Pháp điển" --mode "software"
 ```
+
+---
+
+**Tiêu chí hoàn thành:** Archetype và chế độ dự án được tùy biến chính xác.
 
 ---
 

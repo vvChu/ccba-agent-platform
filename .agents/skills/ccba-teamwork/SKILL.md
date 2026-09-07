@@ -91,11 +91,19 @@ Orchestrator làm rõ yêu cầu với kỹ sư:
 
 ---
 
+**Tiêu chí hoàn thành:** Xác định rõ mục tiêu, non-goals và phân quyền phê duyệt.
+
+---
+
 ### Giai Đoạn 2: Khởi Tạo Team Sheet (Team Sheet Generation)
 1. Đọc template mẫu tại [team_sheet_template.md](resources/team_sheet_template.md).
 2. Tạo tệp `.agents/teams/[project_slug]_team_sheet.md`.
 3. **File-path Pre-Check:** Orchestrator liệt kê danh sách tệp tin cụ thể cho từng Worker trong Lớp 2 (Worker Assignments).
 4. Phân chia các batches nếu tổng số workers $> 3$.
+
+---
+
+**Tiêu chí hoàn thành:** Tệp team_sheet.md được tạo với đầy đủ phân công worker.
 
 ---
 
@@ -115,6 +123,10 @@ Orchestrator làm rõ yêu cầu với kỹ sư:
    - Sau khi các workers trong batch hoàn tất, Orchestrator đọc các tệp output từ `.system_generated/scratch/worker_{N}/`.
    - Orchestrator thực hiện ghi mã nguồn chính thức vào codebase.
    - Thực hiện commit Git theo từng logical unit: `feat(scope): ...` hoặc `refactor(scope): ...`.
+
+---
+
+**Tiêu chí hoàn thành:** Các worker hoàn thành nhiệm vụ song song và orchestrator tổng hợp code.
 
 ---
 
@@ -138,6 +150,8 @@ Auditor hoặc Orchestrator thực hiện chuỗi kiểm định tự động:
    python scripts/governance/compile_catalog.py
    ```
 5. **Cập nhật trạng thái:** Cập nhật `team_sheet.md` sang `COMPLETED` và tóm tắt nghiệm thu cho người dùng.
+
+**Tiêu chí hoàn thành:** Cả 3 bước kiểm định (tests, maskara, diff audit) đều vượt qua thành công.
 
 ---
 

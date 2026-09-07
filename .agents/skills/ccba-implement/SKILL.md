@@ -8,29 +8,48 @@ triggers:
 - ccba-implement spec
 - ccba-implement ticket
 ---
-Implement the work described by the user in the spec or tickets.
+# Quy Trình Hiện Thực Hóa Tính Năng & Mã Nguồn (/ccba-implement)
 
-Use `/ccba-tdd` where possible, at pre-agreed seams.
+Quy trình chuẩn hóa triển khai mã nguồn dựa trên đặc tả kỹ thuật (spec) hoặc danh sách công việc (tickets), kết hợp phương pháp Test-Driven Development (TDD) và kiểm soát nghiêm ngặt ngân sách ngữ cảnh (Context Budget).
 
-## Context Budget Management & Early Escalation
- 
-To prevent context exhaustion (which causes misleading "User cancelled agent execution" errors):
- 
-1. **Scoped Tests Only**: Always run pytest on individual test files (`python scripts/safe_pytest.py -f tests/test_specific.py`), never on entire directories.
-2. **Loop Budget & Early Escalation**:
-   - Maximum **5 edit→test cycles** per seam/test file.
-   - **Early Escalation (Cycle 3)**: If test still fails after **3 attempts** due to deep logic errors, concurrency, or multi-file dependencies, STOP blind guessing. Formulate a **Deep Problem Brief** (Failure Manifest, Tested Hypotheses, Code Seams, Error Logs).
-   - **Hard Stop (Cycle 5)**: If 5 attempts fail, stop immediately, commit WIP, and activate **Boost Escalation Gate** (recommend the user run `/boost [brief]` for deep multi-agent reasoning).
-3. **Full Suite — Once at the End**: Run the complete test suite only **once** at the very end, preferably via `python scripts/safe_pytest.py --allow-unscoped` to detach from the daemon process.
-4. **Invalid Args Signal**: If you encounter `invalid tool call (invalid_args)` errors twice in a row, stop immediately — context budget is nearly depleted. Commit WIP and inform the user.
+## Quản trị ngân sách ngữ cảnh & Bậc thang leo thang (Context Budget & Escalation)
+1. **Chỉ chạy Scoped Tests:** Luôn chạy pytest trên từng tệp kiểm thử riêng lẻ (`python scripts/safe_pytest.py -f tests/test_specific.py`), không chạy toàn bộ thư mục trong chu kỳ phát triển.
+2. **Hạn mức chu kỳ (Loop Budget):** Tối đa 5 chu kỳ chỉnh sửa $\rightarrow$ kiểm thử cho mỗi seam.
+   - **Leo thang sớm (Chu kỳ 3):** Nếu test vẫn thất bại sau 3 lần do lỗi logic sâu, hãy dừng đoán mò và tổng hợp **Deep Problem Brief**.
+   - **Dừng cứng (Chu kỳ 5):** Dừng ngay lập tức, commit WIP và kích hoạt **Boost Escalation Gate** (`/boost [brief]`).
+3. **Bộ kiểm thử toàn diện:** Chỉ chạy toàn bộ test suite một lần duy nhất tại bước kết thúc công việc.
 
-## Completion Steps
+---
 
-Run typechecking regularly, single test files regularly, and the full test suite once at the end.
+## Các bước thực hiện
 
-Once done, use `/ccba-code-review` to review the work.
+### Bước 1: Phân tích đặc tả và thiết kế Deep Seams (Spec Breakdown)
+1. Đọc kỹ đặc tả hoặc danh sách ticket do người dùng cung cấp.
+2. Kiểm tra `catalog.yaml` để áp dụng nguyên tắc Reuse-First, tránh viết lại các tiện ích đã tồn tại.
+3. Xác định các Deep Seams cần sửa đổi hoặc tạo mới, vạch rõ phạm vi thay đổi (blast radius).
+- **Tiêu chí hoàn thành:** Bản tóm tắt yêu cầu, danh sách module bị tác động và các interfaces cần tuân thủ được xác lập rõ ràng.
 
-Before committing, check if any **structural changes** were made (new/renamed/deleted directories, packages, scripts, skills, or workflows). If yes, run `python scripts/update_arch_stats.py` to auto-update architecture metrics, and update `architecture-sync/SKILL.md` if necessary. CI will block your PR if you forget to do this.
+### Bước 2: Thiết lập kiểm thử dẫn dắt (TDD Seam Definition)
+1. Tạo hoặc cập nhật tệp kiểm thử chuyên biệt phản ánh đúng các tiêu chí nghiệm thu của spec.
+2. Viết các ca kiểm thử cho cả trường hợp bình thường (happy path) và các điều kiện biên (edge cases).
+3. Chạy kiểm thử ban đầu để xác nhận test thất bại đúng lý do mong đợi (Red phase).
+- **Tiêu chí hoàn thành:** Scoped unit test được viết hoàn tất và ghi nhận trạng thái Red ban đầu.
 
-Commit your work to the current branch.
+### Bước 3: Triển khai mã nguồn tối thiểu (KISS Implementation)
+1. Hiện thực hóa mã nguồn trong các file liên quan để làm các test case chuyển sang trạng thái Green.
+2. Tuân thủ chuẩn mực mã nguồn: Type hints đầy đủ, docstrings phong cách Google, hàm không vượt quá 50 dòng.
+3. Không tự ý thêm abstraction hoặc lớp trung gian nếu bài toán giải quyết được bằng 10-15 dòng code.
+- **Tiêu chí hoàn thành:** Toàn bộ scoped unit test chuyển sang trạng thái Green với mã nguồn đơn giản, mạch lạc.
 
+### Bước 4: Kiểm tra tĩnh và kiểm thử hồi quy (Static Checks & Regression)
+1. Chạy linter và format kiểm tra tuân thủ quy tắc: `ruff check` và `ruff format --check`.
+2. Kiểm tra an toàn kiểu tĩnh: `mypy` trên các tệp vừa sửa đổi.
+3. Chạy kiểm thử hồi quy cho các module lân cận để đảm bảo không gây tác dụng phụ.
+- **Tiêu chí hoàn thành:** Không còn lỗi static linting hay type error, toàn bộ bài kiểm thử hồi quy pass sạch sẽ.
+
+### Bước 5: Kiểm toán kiến trúc và đóng gói (Architecture Audit & Handover)
+1. Kiểm tra xem có thay đổi cấu trúc monorepo hay không (thêm/xóa/đổi tên thư mục, packages, scripts).
+2. Nếu có thay đổi cấu trúc, chạy `python scripts/update_arch_stats.py` để cập nhật số liệu kiến trúc tự động.
+3. Chạy lệnh `/ccba-code-review` để thực hiện phản biện đa chiều trước khi commit.
+4. Tạo git commit theo chuẩn Conventional Commits cục bộ.
+- **Tiêu chí hoàn thành:** Báo cáo kiểm toán kiến trúc cập nhật đầy đủ, mã nguồn được commit tại local và sẵn sàng bàn giao.

@@ -39,6 +39,7 @@ Agent thu thập thông tin từ ngữ cảnh hội thoại hiện tại hoặc 
 2. **Tiêu đề ngắn gọn:** Dưới 10 từ theo định dạng `type(scope): mô tả ngắn`.
 3. **Nỗi đau thực tế (Pain Point):** Vấn đề cụ thể gặp phải tại dự án Spoke hiện tại.
 4. **Giải pháp kỹ thuật dự kiến:** Ý tưởng module, skill, workflow, rules, hoặc API contract cần bổ sung trên Hub.
+- **Tiêu chí hoàn thành:** Thu thập đầy đủ ngữ cảnh bài toán, phạm vi đề xuất và giải pháp dự kiến.
 
 ---
 
@@ -52,6 +53,7 @@ Trước khi tạo Issue mới, Agent chủ động kiểm tra xem vấn đề �
    Đọc tệp `catalog.yaml` (qua đường dẫn `hub_path` trong `.md/workspace_context.yaml` nếu có) để xác nhận kỹ năng/công cụ tương tự chưa tồn tại.
 
 *Nếu phát hiện đã có Issue tương tự:* Gợi ý người dùng bổ sung thảo luận vào Issue cũ thay vì tạo mới.
+- **Tiêu chí hoàn thành:** Xác nhận tính độc nhất của đề xuất, không trùng lặp với các Issue hoặc tính năng đã có trên Hub.
 
 ---
 
@@ -77,6 +79,7 @@ Soạn thảo nội dung Issue theo cấu trúc chuẩn CCBA RFC:
 ```
 
 Agent trình bày bản thảo cho người dùng xem và xác nhận trước khi gửi.
+- **Tiêu chí hoàn thành:** Bản thảo RFC Issue hoàn chỉnh được người dùng phê duyệt trước khi gửi.
 
 ---
 
@@ -90,6 +93,7 @@ gh issue create --repo vvChu/ccba-agent-platform --title "[Tiêu đề]" --body 
 *Trường hợp không có kết nối `gh` CLI hoặc thiếu token:*
 Cung cấp toàn bộ nội dung markdown đã định dạng kèm đường dẫn tạo issue thủ công:
 👉 `https://github.com/vvChu/ccba-agent-platform/issues/new`
+- **Tiêu chí hoàn thành:** Issue được tạo thành công trên GitHub Hub repo với mã Issue cụ thể (hoặc cung cấp link tạo thủ công).
 
 ---
 
@@ -99,6 +103,7 @@ Sau khi tạo thành công, Agent gửi phản hồi tổng kết:
 2. **Hướng dẫn chu trình khép kín tiếp theo:**
    - Khi có prototype/script nháp tại Spoke $\to$ Tốt nghiệp mã nguồn: `/ccba-graduate-rd --issue #[ISSUE_ID]`
    - Khi mở PR chính thức lên Hub $\to$ Đóng gói & mở PR: `/ccba-contribute-to-hub --issue #[ISSUE_ID]` (Tự động gắn mã `Closes #[ISSUE_ID]`).
+- **Tiêu chí hoàn thành:** Hiển thị mã số Issue, link GitHub và hướng dẫn các bước tiếp theo của vòng đời đề xuất.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

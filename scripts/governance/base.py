@@ -16,7 +16,10 @@ FRONTMATTER_RE = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*\r?\n", re.DOTALL)
 CODE_REF_RE = re.compile(r"`([a-zA-Z_][a-zA-Z0-9_]*(?:\(\))?)`")
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 ENV_VAR_RE = re.compile(r"`([A-Z][A-Z0-9_]{2,})`|\$([A-Z][A-Z0-9_]{2,})")
-STEP_LINE_RE = re.compile(r"^\s*([0-9]+)\.\s+(.*)$")
+STEP_LINE_RE = re.compile(
+    r"^\s*(?:([0-9]+)\.\s+(.*)|#{1,6}\s+(?:[^\w\s]*\s*)?(?:bước|step|phase|pha|giai đoạn)\s*([0-9]+(?:\.[0-9]+)*|[ivxlcdm]+)(?:[:.\-—\s]+(.*)|$))",
+    re.IGNORECASE,
+)
 
 
 class AuditIssue(NamedTuple):
@@ -166,7 +169,21 @@ EXCLUSION_HEADERS: set[str] = {
     "overview",
     "chuẩn bị",
     "setup",
+    "tiêu chí hoàn thành",
+    "completion criteria",
+    "definition of done",
 }
+
+
+def is_exclusion_header(header_text: str) -> bool:
+    """Check if header is an exclusion header, ignoring step execution headers."""
+    if re.search(
+        r"(?:bước|step|phase|pha|giai đoạn)\s*(?:[0-9]+(?:\.[0-9]+)*|[ivxlcdm]+)",
+        header_text,
+        re.IGNORECASE,
+    ):
+        return False
+    return any(kw in header_text.lower() for kw in EXCLUSION_HEADERS)
 
 
 class BaseAuditor(ABC):

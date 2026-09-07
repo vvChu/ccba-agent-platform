@@ -7,7 +7,12 @@ name = "ccba-harness"
 version = "0.1.0"
 description = "CCBA Security and Operation Harness (Monkey-patching Guard)"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "pyyaml",
+]
+
+[project.scripts]
+ccba-harness = "ccba_harness.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ccba_harness"]

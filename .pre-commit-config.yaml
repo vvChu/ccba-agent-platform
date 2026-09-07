@@ -51,4 +51,5 @@ repos:
         entry: python scripts/validate_skills.py
         language: system
         types: [markdown]
+        files: ^\.agents/skills/
         pass_filenames: true

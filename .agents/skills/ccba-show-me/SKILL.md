@@ -3,6 +3,7 @@ name: ccba-show-me
 description: Trực quan hóa khái niệm, thuật toán, luồng dữ liệu và cấu trúc hệ thống bằng sơ đồ tinh gọn, code-shape sketches hoặc HTML widget.
 user-invocable: true
 disable-model-invocation: true
+command: /ccba-show-me
 category: productivity
 bundle: _core
 keywords:

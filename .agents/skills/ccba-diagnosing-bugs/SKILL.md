@@ -67,6 +67,8 @@ Phase 1 is done when the loop is **tight** and **red-capable**: you can name **o
 
 If you catch yourself reading code to build a theory before this command exists, **stop — jumping straight to a hypothesis is the exact failure this skill prevents.** No red-capable command, no Phase 2.
 
+**Completion Criterion:** A tight, red-capable command has been run at least once and reproduces the user's exact symptom.
+
 ## Phase 2 — Reproduce + minimise
 
 Run the loop. Watch it go red — the bug appears.
@@ -87,6 +89,8 @@ Done when **every remaining element is load-bearing** — removing any one of th
 
 Do not proceed until you have reproduced **and** minimised.
 
+**Completion Criterion:** Repro shrunk to minimal load-bearing scenario that reliably fails.
+
 ## Phase 3 — Hypothesise
 
 Generate **3–5 ranked hypotheses** before testing any of them. Single-hypothesis generation anchors on the first plausible idea.
@@ -98,6 +102,8 @@ Each hypothesis must be **falsifiable**: state the prediction it makes.
 If you cannot state the prediction, the hypothesis is a vibe — discard or sharpen it.
 
 **Show the ranked list to the user before testing.** They often have domain knowledge that re-ranks instantly ("we just deployed a change to #3"), or know hypotheses they've already ruled out. Cheap checkpoint, big time saver. Don't block on it — proceed with your ranking if the user is AFK.
+
+**Completion Criterion:** 3–5 ranked, falsifiable hypotheses generated and documented with explicit predictions.
 
 ## Phase 4 — Instrument
 
@@ -112,6 +118,8 @@ Tool preference:
 **Tag every debug log** with a unique prefix, e.g. `[DEBUG-a4f2]`. Cleanup at the end becomes a single grep. Untagged logs survive; tagged logs die.
 
 **Perf branch.** For performance regressions, logs are usually wrong. Instead: establish a baseline measurement (timing harness, `performance.now()`, profiler, query plan), then bisect. Measure first, fix second.
+
+**Completion Criterion:** Probes tagged with unique prefixes or baseline measurements captured for hypothesis testing.
 
 ## Phase 5 — Fix + regression test
 
@@ -129,6 +137,8 @@ If a correct seam exists:
 4. Watch it pass.
 5. Re-run the Phase 1 feedback loop against the original (un-minimised) scenario.
 
+**Completion Criterion:** Regression test passes and feedback loop verifies the fix against original scenario.
+
 ## Phase 6 — Cleanup + post-mortem
 
 Required before declaring done:
@@ -140,3 +150,5 @@ Required before declaring done:
 - [ ] The hypothesis that turned out correct is stated in the commit / PR message — so the next debugger learns
 
 **Then ask: what would have prevented this bug?** If the answer involves architectural change (no good test seam, tangled callers, hidden coupling) hand off to the `/ccba-improve-codebase-architecture` skill with the specifics. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.
+
+**Completion Criterion:** All debug instrumentation cleaned up, post-mortem documented, and prevention recommendations made.

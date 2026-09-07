@@ -48,6 +48,10 @@ Scan request → match keyword → xác định modules bắt buộc.
 
 ---
 
+**Tiêu chí hoàn thành:** Xác định đúng danh sách modules bắt buộc.
+
+---
+
 ## Bước 2: Đọc danh sách & Suy luận sâu
 
 **BẮT BUỘC** sau bước 1. Không được bỏ qua.
@@ -72,6 +76,10 @@ Từ kết quả 2a + 2b, lập danh sách modules cuối cùng. Nguyên tắc:
 - **Cần:** Thiếu module này thì output bị lỗi hoặc thiếu
 - **Đủ:** Thêm module nào nữa thì dư thừa, làm chậm
 - Nếu cần kỹ thuật viết cụ thể → tra `pattern-catalog` để chọn đúng pattern
+
+---
+
+**Tiêu chí hoàn thành:** Hoàn thành phân tích 5 câu hỏi và chốt danh sách modules.
 
 ---
 
@@ -155,6 +163,10 @@ Pipeline (song song + tuyến tính):
   [GATE] Draft 2 → SCAN pass? ✅
   PUBLISH → book format → Output
 ```
+
+---
+
+**Tiêu chí hoàn thành:** Thiết lập pipeline phù hợp với đầy đủ GATE checks.
 
 ---
 

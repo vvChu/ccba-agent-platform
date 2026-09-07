@@ -43,8 +43,12 @@ Căn cứ vào điểm a, b, c, d, đ khoản 1 Điều 16 Luật 55/2024/QH15, 
 Sử dụng CCBA Agent Platform để chạy kiểm tra (Audit) trước khi nộp hồ sơ:
 
 1.  **Thu thập dữ liệu:** Trích xuất toàn bộ Thuyết minh PCCC và Bản vẽ Kiến trúc/Thông gió HVAC sang định dạng Markdown.
+    - **Tiêu chí hoàn thành:** Dữ liệu Thuyết minh và Bản vẽ Kiến trúc/Thông gió HVAC được trích xuất hoàn tất.
 2.  **Kích hoạt AI Audit:** Gọi lệnh chạy module Semantic Map-Reduce Audit cho "Package 1: Legal & Architecture".
+    - **Tiêu chí hoàn thành:** Module Semantic Map-Reduce hoàn thành quét lỗi cho Gói 1.
 3.  **Cross-check Pháp lý:**
     *   Đối chiếu số liệu với QCVN 06:2022/BXD.
     *   Kiểm tra tính nhất quán giữa Bản vẽ mặt bằng và Thuyết minh.
+    - **Tiêu chí hoàn thành:** Hoàn thành đối soát tuân thủ QCVN 06 và tính nhất quán hồ sơ.
 4.  **Xuất báo cáo:** Chuyển kết quả Audit thành Phụ lục Báo cáo Thẩm tra Thiết kế, đóng dấu tư vấn và đệ trình lên Cơ quan chuyên môn về xây dựng cùng hồ sơ TKXD triển khai sau TKCS.
+    - **Tiêu chí hoàn thành:** Phụ lục Báo cáo Thẩm tra Thiết kế được xuất đầy đủ và sẵn sàng nộp.

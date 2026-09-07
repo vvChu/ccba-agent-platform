@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install pyyaml pydantic
+          pip install pyyaml pydantic pytest
           # Install ccba-ai editable for type check validation references
           pip install -e packages/ccba-harness
           pip install --no-deps -e packages/ccba-ai
@@ -48,6 +48,10 @@ jobs:
       - name: Run Skills & Workflows Quality Validator (ADR 0040)
         run: |
           python scripts/validate_skills.py
+
+      - name: Run Taxonomy & Governance Unit Tests (ADR 0041, ADR 0044)
+        run: |
+          pytest scripts/tests/test_doc_auditor.py tests/governance/test_taxonomy_integrity.py
 
       - name: Run Documentation Accuracy Validator
         run: |
