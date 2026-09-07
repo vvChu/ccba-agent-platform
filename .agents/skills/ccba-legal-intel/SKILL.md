@@ -11,6 +11,19 @@ triggers:
 - legal checklist
 - thuvienphapluat
 - TVPL
+conforms_to:
+- "ADR-0021"
+- "ADR-0031"
+- "ADR-0034"
+- "ADR-0035"
+- "ADR-0036"
+- "ADR-0037"
+- "ADR-0038"
+- "ADR-0039"
+- "ADR-0040"
+- "ADR-0041"
+- "ADR-0042"
+- "ADR-0050"
 ---
 # Skill: CCBA Legal Intelligence Crawler & Packager (`ccba-legal-intel`)
 
@@ -41,7 +54,7 @@ Kỹ năng này hướng dẫn Agent tự động thực hiện quy trình cào 
 *   **Văn bản hướng dẫn (Guiding Decrees/Circulars)**: Lưu phẳng bên trong `legal_docs/01_vbpl/<doc_slug>/`
 *   **Đăng ký Registry**: Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256` và `sha256` trong `legal_registry.yaml`.
 
-### 1.5. Đặc Tả Gói Tri Thức Hợp Nhất OKF Bundle v2.4 Universal (ADR 0021, ADR 0034, ADR 0036, ADR 0037)
+### 1.5. Đặc Tả Gói Tri Thức Hợp Nhất OKF Bundle v2.4 Universal (ADR 0021, ADR 0034, ADR 0036, ADR 0037, ADR 0041, ADR 0042)
 Mỗi văn bản quy phạm pháp luật khi đóng gói thành công **bắt buộc** phải tuân thủ cấu trúc bundle độc lập với 4 ngăn kéo và Universal `sources/`:
 ```text
 legal_docs/<category_prefix>/<document_slug>/
@@ -104,10 +117,11 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
    python -m ccba_legal fetch "<TVPL_URL>" --category <01_vbpl|02_qcvn|03_tcvn>
    ```
 
-3. **Chuyển đổi Thủ công sang OKF v2.4 Bundle (Zero-LLM Deterministic AST)**:
+3. **Chuyển đổi Thủ công sang OKF v2.4 Bundle (DocxCanonicalSanitizer & Zero-LLM Deterministic AST — ADR 0042)**:
    ```bash
    python -m ccba_legal convert --docx-path "legal_docs/<category>/<doc_slug>/sources/<doc_slug>.docx" --target-bundle-dir "legal_docs/<category>/<doc_slug>"
    ```
+   *(Thực thi tiền xử lý chuẩn hóa DOM in-memory qua `DocxCanonicalSanitizer`: gọt thuộc tính `w:rsid*`, gộp run phân mảnh Unicode NFC, tiêm `xml:space="preserve"`, unwrap bảng layout và thăng cấp heading trước khi bóc tách AST đa phương thức)*.
    * **Tiêu chí hoàn thành:** Tạo thành công thân văn bản `.md`, 4 ngăn kéo chuyên biệt (`tables/`, `figures/`, `annexes/`, `templates/`), `clauses.json` và `metadata.yaml`.
 
 4. **Hợp nhất Văn bản Sửa đổi (VBHN Engine - nếu có)**:
@@ -127,4 +141,4 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
    ```powershell
    python scripts/validate_legal_spoke.py
    ```
-   * **Tiêu chí hoàn thành:** Vượt qua toàn bộ 11 Cổng Master Validator với 0 Errors và 0 Warnings (Gate 11 Verbatim Parity $\ge 98.0\%$).
+   * **Tiêu chí hoàn thành:** Vượt qua toàn bộ 15 Cổng Master CI Validator với 0 Errors và 0 Warnings (Gate 11 Verbatim Parity $\ge 98.0\%$, Gate 13 Table Regularity, Gate 14 KaTeX Syntax).

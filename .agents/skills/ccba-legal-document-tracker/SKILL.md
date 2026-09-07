@@ -64,17 +64,18 @@ Khi có văn bản sửa đổi bổ sung:
      --base "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" `
      --output "legal_docs/<category>/<doc_slug>"
    ```
-2. Hoặc sử dụng Python API qua Deep Seam `LegislativeConsolidator`:
+   * **Hoặc sử dụng Python API qua Deep Seam `LegislativeConsolidator`:**
    ```python
    from ccba_legal import LegislativeConsolidator
 
    consolidator = LegislativeConsolidator.from_manifest_file("patch_manifest.yaml")
    res = consolidator.consolidate("base.md", "output_dir")
-   ```
-   diff_report = engine.generate_diff(
-       base_doc_path="path/to/old_doc.md",
-       amending_doc_path="path/to/new_doc.md"
-   )
+
+   # Hoặc sử dụng VBHNEngine để tạo báo cáo diff:
+   # diff_report = engine.generate_diff(
+   #     base_doc_path="path/to/old_doc.md",
+   #     amending_doc_path="path/to/new_doc.md"
+   # )
    # Hoặc hợp nhất văn bản thành VBHN hoàn chỉnh:
    # vbhn_result = engine.consolidate(base_ast, [patch1, patch2])
    ```
