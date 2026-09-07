@@ -9,6 +9,7 @@ Public Deep Seams:
     GoldStandardProcessor   — OKF v2.2 Gold standard normalizer, footnote & AST/QA generator.
     VisualParityAuditor     — CI Gate 4 visual & footnote formatting auditor.
     AIVisionFormulaHarvester — ADR 0031: Bóc tách công thức toán học từ ảnh sang KaTeX.
+    DocxCanonicalSanitizer  — ADR 0042: Canonical OpenXML Pre-Sanitizer & Hybrid Dual-Engine.
 """
 
 from .appendices import AppendixSplitter, roman_to_decimal
@@ -48,6 +49,7 @@ from .constants import (
     TABLES_CATALOG_SCHEMA_VERSION,
 )
 from .converters import (
+    DocxCanonicalSanitizer,
     load_bundle_formula_overrides,
     omml_to_latex,
 )
@@ -259,6 +261,7 @@ __all__ = [
     "AST_CLAUSES_SCHEMA_VERSION",
     "QA_BENCHMARK_SCHEMA_VERSION",
     # === DOCX Conversion & Classification ===
+    "DocxCanonicalSanitizer",
     "convert_docx_to_okf_bundle",
     "process_vbpl_bundle",
     "process_vbpl_bundle_okf_v22",

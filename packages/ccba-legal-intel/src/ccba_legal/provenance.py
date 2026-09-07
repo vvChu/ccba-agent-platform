@@ -332,7 +332,7 @@ def verify_bundle_docx_vs_markdown(bundle_dir: Path) -> dict[str, Any]:
 
     tables_dir = bundle_dir / "tables"
     if tables_dir.exists():
-        for csv_f in tables_dir.glob("*.csv"):
+        for csv_f in tables_dir.rglob("*.csv"):
             try:
                 md_texts.append(csv_f.read_text(encoding="utf-8"))
             except Exception:

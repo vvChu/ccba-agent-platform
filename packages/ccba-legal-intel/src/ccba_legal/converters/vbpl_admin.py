@@ -7,7 +7,7 @@ import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, BinaryIO
 
 import mammoth
 import yaml
@@ -87,10 +87,14 @@ def _load_registry_metadata(
     return (reg_lookup, doc_registry_meta)
 
 
-def _convert_docx_to_clean_markdown(docx_path: Path) -> str:
+def _convert_docx_to_clean_markdown(docx_input: Path | BinaryIO) -> str:
     """Convert docx to raw markdown via Mammoth and clean escaping artifacts."""
-    with open(docx_path, "rb") as f:
-        raw_md = mammoth.convert_to_markdown(f).value
+    if hasattr(docx_input, "read"):
+        docx_input.seek(0)
+        raw_md = mammoth.convert_to_markdown(docx_input).value
+    else:
+        with open(docx_input, "rb") as f:
+            raw_md = mammoth.convert_to_markdown(f).value
     cleaned = re.sub(r'<a id="[^"]+"></a>', "", raw_md)
     return normalize_docx_markdown(cleaned)
 
@@ -249,6 +253,7 @@ def process_vbpl_bundle(
     registry_file: Path,
     output_filename: str | None = None,
     spec_version: str = CURRENT_OKF_SPEC,
+    sanitized_stream: BinaryIO | None = None,
 ) -> dict[str, Any]:
     """Complete OKF Transformation Pipeline for Decrees, Circulars and Laws."""
     bundle_dir.mkdir(parents=True, exist_ok=True)
@@ -258,8 +263,9 @@ def process_vbpl_bundle(
     templates_dir.mkdir(parents=True, exist_ok=True)
 
     reg_lookup, doc_meta = _load_registry_metadata(registry_file, bundle_dir.name)
-    cleaned_md = _convert_docx_to_clean_markdown(docx_path)
-    extracted_tables = classify_and_extract_tables(docx_path, bundle_dir)
+    input_src: Path | BinaryIO = sanitized_stream if sanitized_stream is not None else docx_path
+    cleaned_md = _convert_docx_to_clean_markdown(input_src)
+    extracted_tables = classify_and_extract_tables(input_src, bundle_dir)
     if extracted_tables:
         tables_dir = bundle_dir / DIR_TABLES
         with open(tables_dir / "tables_catalog.json", "w", encoding="utf-8") as f:

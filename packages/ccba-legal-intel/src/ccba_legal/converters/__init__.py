@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .archetype_scanner import DocumentArchetype, FullDocStructuralScanner, detect_document_pipeline
+from .docx_sanitizer import DocxCanonicalSanitizer
 from .omml import omml_to_latex
 from .table_extractor import classify_and_extract_tables
 from .technical_formulas import (
@@ -26,6 +27,7 @@ from .vbpl_admin import (
 
 __all__ = [
     "DocumentArchetype",
+    "DocxCanonicalSanitizer",
     "FullDocStructuralScanner",
     "detect_document_pipeline",
     "classify_and_extract_tables",

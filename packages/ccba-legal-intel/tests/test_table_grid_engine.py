@@ -1,7 +1,6 @@
 # Copyright (c) 2026 CCBA. All rights reserved.
 """Unit tests for Virtual 2D Grid Engine, ADR 0041 Table Knowledge Extraction, and Pipe Escaping."""
 
-import pytest
 
 from ccba_legal.converters.standard.handlers.table_handler import (
     build_composite_headers,
@@ -9,8 +8,6 @@ from ccba_legal.converters.standard.handlers.table_handler import (
     escape_table_pipes,
     resolve_hierarchical_headers,
 )
-
-pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_escape_table_pipes_in_prose_and_math():
