@@ -432,7 +432,7 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
 
     # Run Workspace Hard CI Gates (ADR-0040)
     skills_dir = auditor.project_root / ".agents" / "skills"
-    if skills_dir.exists():
+    if skills_dir.exists() and not has_explicit_targets:
         gate_issues = auditor.audit_workspace_gates(skills_dir)
         gate_warnings = [g for g in gate_issues if g.category.endswith("_WARNING")]
         gate_errors = [g for g in gate_issues if not g.category.endswith("_WARNING")]

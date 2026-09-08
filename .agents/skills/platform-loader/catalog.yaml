@@ -642,7 +642,7 @@ skills:
 - name: ccba-legal-advisor
   bundle: _consulting
   description: 'Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ
-    cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.2.'
+    cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.4.'
   triggers:
   - tu van phap ly
   - giai dap phap luat

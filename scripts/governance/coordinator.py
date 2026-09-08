@@ -127,9 +127,11 @@ class DocumentAuditor(BaseAuditor):
         """Perform workspace-level Hard CI Gate checks across all skills (ADR-0040)."""
         return self.skill_auditor.audit_workspace_gates(skills_dir)
 
-    def _analyze_steps_completion_criteria(self, body: str) -> list[tuple[int, str]]:
+    def analyze_steps_completion_criteria(self, body: str) -> list[tuple[int, str]]:
         """Helper to scan workflow steps for Completion Criteria."""
-        return self.skill_auditor._analyze_steps_completion_criteria(body)
+        return self.skill_auditor.analyze_steps_completion_criteria(body)
+
+    _analyze_steps_completion_criteria = analyze_steps_completion_criteria
 
     def audit_workspace(self) -> dict[str, Any]:
         """Audit all documentation and skills in workspace."""
