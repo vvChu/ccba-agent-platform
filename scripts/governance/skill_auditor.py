@@ -33,14 +33,6 @@ class SkillAuditor(BaseAuditor):
         super().__init__(project_root)
         self._validator = SkillValidator(project_root=self.project_root)
 
-    @property
-    def _cached_valid_bundles(self) -> set[str] | None:
-        return self._validator._cached_valid_bundles
-
-    @_cached_valid_bundles.setter
-    def _cached_valid_bundles(self, value: set[str] | None) -> None:
-        self._validator._cached_valid_bundles = value
-
     def get_valid_bundles(self) -> set[str]:
         """Load valid bundles from catalog.yaml or fallback to known taxonomy."""
         return self._validator.get_valid_bundles()
@@ -64,9 +56,11 @@ class SkillAuditor(BaseAuditor):
             raw_issues = [i for i in raw_issues if i.category != "INSUFFICIENT_GPI_SCORE"]
         return [AuditIssue(*i) for i in raw_issues]
 
-    def _analyze_steps_completion_criteria(self, body: str) -> list[tuple[int, str]]:
+    def analyze_steps_completion_criteria(self, body: str) -> list[tuple[int, str]]:
         """Helper to scan workflow steps for Completion Criteria."""
-        return self._validator._analyze_steps_completion_criteria(body)
+        return self._validator.analyze_steps_completion_criteria(body)
+
+    _analyze_steps_completion_criteria = analyze_steps_completion_criteria
 
     def audit_workspace_gates(self, skills_dir: Path | None = None) -> list[AuditIssue]:
         """Perform workspace-level Hard CI Gate checks across all skills."""
