@@ -11,7 +11,8 @@
 
 Sau khi hoàn thành di trú 100% legacy workflows sang Agent Skills theo chuẩn hóa namespace ccba-* (ADR 0056), quy mô nền tảng đạt **100 Agent Skills**. Sự phát triển nhanh chóng này đặt ra ba thách thức kiến trúc mới:
 
-1. **Thế Lưỡng Nan Về Độ Phân Rã (The Granularity Dilemma):** Thiếu một tiêu chuẩn định lượng khách quan để xác định: *Khi nào một năng lực nên trở thành một Skill độc lập (.agents/skills/), khi nào nên là một tài liệu tham chiếu nạp tăng tiến (eferences/*.md), và khi nào bắt buộc phải là một hàm thuần túy trong package (packages/*/src/)*?
+1. **Thế Lưỡng Nan Về Độ Phân Rã (The Granularity Dilemma):** Thiếu một tiêu chuẩn định lượng khách quan để xác định: *Khi nào một năng lực nên trở thành một Skill độc lập (.agents/skills/), khi nào nên là một tài liệu tham chiếu nạp tăng tiến (
+eferences/*.md), và khi nào bắt buộc phải là một hàm thuần túy trong package (packages/*/src/)*?
 2. **Vùng Mù Kiểm Thử & Phình To Mã Nguồn (Script Bloat & Blind Spots):** Khảo sát hạm đội phát hiện 14 kỹ năng đang chứa tới **105 tệp tin với 35.680 dòng mã nguồn trong scripts/** (như parser Word/PDF, regex pháp lý, XML sanitizers) nằm ngoài phạm vi kiểm thử tự động của Monorepo packages và linter.
 3. **Bẫy Nhồi Nhét & Lệch Pha (Prompt Bloat & Package-Skill Desync):** Nhồi nhét quá nhiều hướng dẫn vi mô làm loãng ngân sách chú ý (Attention Dilution - Liu et al., TACL 2024), trong khi viết tay schema tham số trong SKILL.md dẫn tới nguy cơ lệch pha với mã nguồn backend (chiếm 35%–45% sự cố runtime trong các hệ thống tác tử công nghiệp).
 
@@ -23,7 +24,8 @@ Sau khi hoàn thành di trú 100% legacy workflows sang Agent Skills theo chuẩ
 
 ### 1. Kiến Trúc Monorepo 3 Tầng (3-Tier Agent Architecture)
 - **Tầng 1 — Deterministic Engines / Packages (packages/*/src):** Mã nguồn thuần Python/TypeScript, xử lý logic nặng, I/O, thuật toán xác định; kiểm thử 100% bằng Unit Tests trong CI; tuyệt đối không chứa prompt.
-- **Tầng 2 — Cognitive Interfaces (.agents/skills/ & eferences/*.md):** Các module nhận thức tự đóng gói theo chuẩn *Agent Skills Open Standard* (gentskills.io), kiểm soát chặt chẽ ngân sách chỉ dẫn qua cơ chế **Progressive Disclosure** (Khai mở tăng tiến).
+- **Tầng 2 — Cognitive Interfaces (.agents/skills/ & 
+eferences/*.md):** Các module nhận thức tự đóng gói theo chuẩn *Agent Skills Open Standard* (gentskills.io), kiểm soát chặt chẽ ngân sách chỉ dẫn qua cơ chế **Progressive Disclosure** (Khai mở tăng tiến).
 - **Tầng 3 — Composite Orchestrators (.agents/workflows/):** Đồ thị trạng thái (StateGraph) hoặc kiến trúc phân quyền hữu hạn (Single-Writer Protocol theo ADR 0053) điều phối quy trình đa tác tử.
 
 ### 2. Khung Quyết Định Phân Rã Hai Giai Đoạn (Two-Stage Framework)
@@ -34,6 +36,7 @@ Sau khi hoàn thành di trú 100% legacy workflows sang Agent Skills theo chuẩ
 
 #### Giai đoạn 2: Chỉ Số Phân Rã Kỹ Năng (Granularity & Placement Index - GPI)
 Áp dụng cho các năng lực nhận thức tại Tầng 2 để định tuyến:
+
 \mathbf{GPI} = (S \times 2.5) + (K \times 2.0) + (A \times 2.0) - (P \times 1.5)
 
 *Thang điểm 1.0 – 5.0:*
@@ -43,7 +46,8 @@ Sau khi hoàn thành di trú 100% legacy workflows sang Agent Skills theo chuẩ
 - **$ (Parent Domain Coupling):** Mức độ gắn kết với Master Skill sở hữu.
 
 *Quy tắc định tuyến:*
-- **$\text{GPI} < 12.0$ $\rightarrow$ Tier 2A (Progressive Reference):** Lưu trữ trong eferences/<name>.md của Master Skill sở hữu; nạp theo nhu cầu (iew_file), cấm tạo thư mục skill riêng.
+- **$\text{GPI} < 12.0$ $\rightarrow$ Tier 2A (Progressive Reference):** Lưu trữ trong 
+eferences/<name>.md của Master Skill sở hữu; nạp theo nhu cầu (iew_file), cấm tạo thư mục skill riêng.
 - **$\text{GPI} \ge 12.0$ $\rightarrow$ Tier 2B (Standalone Kernel Skill):** Đủ điều kiện tạo thư mục riêng trong .agents/skills/ccba-<name>/.
 *(Lưu ý: Các hệ số trọng số hiện là Provisional Heuristic Weights và sẽ được hiệu chuẩn bằng dữ liệu telemetry sau 1–2 quý vận hành).*
 
@@ -68,7 +72,8 @@ Sau khi hoàn thành di trú 100% legacy workflows sang Agent Skills theo chuẩ
 
 ### Positive
 - **Chuẩn Hóa Định Lượng:** Chấm dứt tranh cãi cảm tính về kích thước kỹ năng bằng công thức GPI đo lường được.
-- **Tối Ưu Ngân Sách Ngữ Cảnh:** Giảm thiểu lãng phí token nền nhờ đưa các micro-skills về eferences/*.md (chỉ đọc khi cần).
+- **Tối Ưu Ngân Sách Ngữ Cảnh:** Giảm thiểu lãng phí token nền nhờ đưa các micro-skills về 
+eferences/*.md (chỉ đọc khi cần).
 - **Loại Bỏ Vùng Mù Code:** Đưa toàn bộ logic nặng từ scripts/ về packages/ được bảo vệ bởi unit tests và type check.
 - **Bảo Toàn Trạm Vệ Tinh:** Quy chế ánh xạ SKILL_DEPRECATION_ALIASES loại trừ 100% nguy cơ Zombie Bloat tại Spoke.
 
