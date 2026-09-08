@@ -423,7 +423,7 @@ class SkillValidator:
         frontmatter_lines = len(match.group(0).splitlines())
         body = content[match.end() :]
 
-        step_errors = self._analyze_steps_completion_criteria(body)
+        step_errors = self.analyze_steps_completion_criteria(body)
         for line_offset, err_msg in step_errors:
             abs_line = line_offset + frontmatter_lines
             issues.append(
@@ -671,7 +671,7 @@ class SkillValidator:
         """Calculate Granularity & Placement Index (GPI)."""
         return calculate_gpi(s, k, a, p)
 
-    def _analyze_steps_completion_criteria(self, body: str) -> list[tuple[int, str]]:
+    def analyze_steps_completion_criteria(self, body: str) -> list[tuple[int, str]]:
         """Scan workflow steps in body for Completion Criteria."""
         errors: list[tuple[int, str]] = []
         lines = body.splitlines()
@@ -823,6 +823,8 @@ class SkillValidator:
                 )
 
         return errors
+
+    _analyze_steps_completion_criteria = analyze_steps_completion_criteria
 
     def audit_workflow(self, file_path: Path) -> list[SkillAuditIssue]:
         """Audit a single workflow file for CCBA compliance."""
