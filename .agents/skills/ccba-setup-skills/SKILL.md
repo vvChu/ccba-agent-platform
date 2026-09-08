@@ -5,6 +5,7 @@ description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ 
   Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
 disable-model-invocation: true
 bundle: _core
+gpi: {s: 3.5, k: 2.0, a: 2.0, p: 1.0}
 triggers:
 - setup skills
 - thiết lập cấu hình
@@ -20,6 +21,7 @@ Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát
 - **Issue tracker** — Nơi theo dõi công việc (GitHub, GitLab, hoặc Local Markdown lưu offline).
 - **Triage labels** — Từ vựng nhãn tương ứng với 5 vai trò trạng thái của triage.
 - **Domain docs** — Cấu trúc tài liệu miền tri thức (`CONTEXT.md` và ADRs).
+- **Skills Governance** — Thể chế quản trị kỹ năng 3 tầng và Khung Quyết Định Hai Giai Đoạn (ADR-0057 & RES-2026-ARCH-001 v1.2).
 
 Đây là kỹ năng tương tác và tự động hóa. Agent sẽ trinh sát trước, đưa ra gợi ý, xác nhận với người dùng rồi tiến hành ghi cấu hình.
 
@@ -37,6 +39,7 @@ Quét dự án hiện tại để nhận diện trạng thái ban đầu:
 - Kiểm tra sự tồn tại của thư mục cấu hình đích `.md/knowledge/agents/`.
 - **Kiểm tra Kỹ năng Triage (Multi-tier Detection)**: Quét qua 3 cấp: (1) Thư mục `.agents/skills/ccba-triage/` hoặc `.agents/skills/triage/`, (2) Đăng ký trong `catalog.yaml`, (3) Danh sách Kỹ năng khả dụng trong ngữ cảnh. Thiết lập cờ `triage_installed = true` nếu tìm thấy; ngược lại `triage_installed = false`.
 - **Kiểm tra Tín hiệu Monorepo (Monorepo Inference)**: Kiểm tra file `pnpm-workspace.yaml`, trường `workspaces` trong `package.json`, hoặc sự tồn tại của `CONTEXT-MAP.md`. Thiết lập cờ `is_monorepo = true` nếu phát hiện; ngược lại `is_monorepo = false`.
+- **Kiểm tra Môi trường Monorepo & Liên kết Hub**: Quét kiểm tra xem gói `packages/ccba-harness` đã được cài đặt dưới dạng editable (`pip list` hoặc import) chưa, và xác định liên kết Hub (`git remote get-url origin` hoặc đường dẫn Hub cục bộ) để kích hoạt cơ chế đồng bộ và bảo đảm năng lực kiểm định thể chế.
 
 ### 2. Gợi ý cấu hình & Phỏng vấn (Present findings and ask)
 
@@ -77,10 +80,14 @@ Tóm tắt kết quả trinh sát và đưa ra cấu hình đề xuất cho ngư
   - **Single-context** (Recommended) — 1 file `CONTEXT.md` và `docs/adr/` ở root.
   - **Multi-context** — Có file `CONTEXT-MAP.md` dẫn tới nhiều folder con chứa `CONTEXT.md` riêng.
 
+  **Câu D — Thể chế Quản trị Kỹ năng (Skills Governance)**:
+  > *Lựa chọn 1 (Recommended)*: **Kiến trúc 3 tầng chuẩn hóa ADR-0057** (`skills_governance: {architecture: "3-tier", enforce_gpi: true}`). Tự động kích hoạt kiểm định Cổng 0 (Determinism), Cổng 1 (Orchestration) và chặn Standalone Skills nếu $GPI < 12.0$.
+  > - Lựa chọn 2: Tùy chỉnh chế độ quản trị (chỉ áp dụng cho Spoke cá nhân hoặc sandbox nghiên cứu).
+
 ### 3. Xác nhận (Confirm)
 
 Hiển thị cho người dùng xem bản nháp của:
-- Khối cấu hình `## Agent skills` sẽ được ghi vào file `.agents/AGENTS.md` (hoặc `AGENTS.md` ở root). (Bao gồm tiểu mục `### Triage labels` chỉ khi `triage_installed = true`).
+- Khối cấu hình `## Agent skills` sẽ được ghi vào file `.agents/AGENTS.md` (hoặc `AGENTS.md` ở root). (Bao gồm tiểu mục `### Triage labels` chỉ khi `triage_installed = true`, và tiểu mục `### Skills Governance`).
 - Nội dung chi tiết của các file sẽ được tạo ra tại `.md/knowledge/agents/`:
   - `issue_tracker.md`
   - `triage_labels.md` (chỉ khi `triage_installed = true`)
@@ -105,10 +112,15 @@ Hiển thị cho người dùng xem bản nháp của:
   ### Domain docs
 
   [Tóm tắt ngắn gọn bố cục]. Xem `.md/knowledge/agents/domain.md`.
+
+  ### Skills Governance
+
+  Tuân thủ Khung Quyết Định Hai Giai Đoạn (ADR-0057 & RES-2026-ARCH-001 v1.2) với kiến trúc 3 tầng (Tier 1: Package Function, Tier 2A: Progressive Reference, Tier 2B: Standalone Kernel Skill, Tier 3: Composite Orchestrator). Mọi kỹ năng độc lập bắt buộc đạt $GPI \ge 12.0$ và vượt qua `python scripts/validate_skills.py --file <path> --enforce-gpi`.
   ```
 
 **Bước B: Cập nhật `workspace_context.yaml`**:
 - Ghi nhận hoặc cập nhật trường `project.issue_tracker` trong file `.md/workspace_context.yaml` (ví dụ: `github`, `gitlab` hoặc `local_markdown`).
+- Bổ sung chiều thiết lập "Skills Governance" và tự động ghi cấu hình `skills_governance: {architecture: "3-tier", enforce_gpi: true}` vào `.md/workspace_context.yaml`.
 
 **Bước C: Tạo các file chỉ dẫn chi tiết**:
 Tạo thư mục `.md/knowledge/agents/` (nếu chưa có) và ghi các file cấu hình chi tiết:

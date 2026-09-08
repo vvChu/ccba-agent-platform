@@ -1,6 +1,6 @@
 ---
 name: ccba-sync-upstream
-description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0040 Radar)
+description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0057 Radar)
   kết hợp kích hoạt 1-Click Port qua /ccba-xia.
 disable-model-invocation: true
 category: utilities
@@ -13,7 +13,7 @@ keywords:
 - ccba-xia
 metadata:
   author: CCBA
-  version: 2.0.0
+  version: 2.1.0
 bundle: _core
 triggers:
 - sync
@@ -30,7 +30,7 @@ triggers:
 ---
 # Kỹ năng: Radar Thượng Nguồn & Cầu Nối Porting (Upstream Radar & Handshake)
 
-Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho chứa thượng nguồn (được cấu hình linh hoạt tại [`.md/knowledge/upstream_sources.yaml`](../../../.md/knowledge/upstream_sources.yaml)), kiểm tra bản quyền, thẩm tra tính năng mới theo **Thể chế ADR-0040 (Kim tự tháp 3 Tầng)** qua AI Gateway và tự động sinh lệnh **1-Click Porting** với `/ccba-xia`.
+Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho chứa thượng nguồn (được cấu hình linh hoạt tại [`.md/knowledge/upstream_sources.yaml`](../../../.md/knowledge/upstream_sources.yaml)), kiểm tra bản quyền, thẩm tra tính năng mới theo **Thể chế ADR-0057 & RES-2026-ARCH-001 v1.2 (Khung Quyết Định Phân Rã Hai Giai Đoạn)** qua AI Gateway và tự động sinh lệnh **1-Click Porting** với `/ccba-xia`.
 
 ---
 
@@ -45,15 +45,18 @@ Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho 
 - **Tiêu chí hoàn thành:** Script chạy thành công với exit code 0. Toàn bộ kho nguồn được cập nhật, in ra danh sách thay đổi và SHA tương ứng.
 - **Cơ chế tự chữa lành (Self-Healing):** Nếu gặp lỗi Git index corruption hoặc đứt kết nối mạng, Agent xóa sạch thư mục `.md/scratch/repos/<repo-name>` và tiến hành Clean Clone lại.
 
-### Nhịp 2: Thẩm tra Thể chế ADR-0040 (Constitutional Evaluation)
-- Hỏi ý kiến người dùng trước khi quét sâu bằng AI: *"Tôi tìm thấy N file mới. Bạn có muốn kích hoạt AI Gateway thẩm tra theo thể chế ADR-0040 để cập nhật báo cáo khuyến nghị không?"*
+### Nhịp 2: Thẩm tra Thể chế ADR-0057 & RES-2026-ARCH-001 v1.2 (Constitutional Evaluation)
+- Hỏi ý kiến người dùng trước khi quét sâu bằng AI: *"Tôi tìm thấy N file mới. Bạn có muốn kích hoạt AI Gateway thẩm tra theo thể chế ADR-0057 (Khung Quyết Định Hai Giai Đoạn & Radar GPI) để cập nhật báo cáo khuyến nghị không?"*
 - Nếu người dùng đồng ý, chạy script thẩm tra toàn diện:
   ```powershell
   python scripts/spoke/check_claudekit_updates.py
   ```
 - **Tiêu chí phân tầng của AI Gateway:**
-  * **Zero-Duplicate Check:** Đối chiếu với 77 skills hiện có trong `catalog.yaml`.
-  * **Phân tầng Kim tự tháp:** Đề xuất rõ ràng: **Tier 1 (Master Deep Skill)**, **Tier 2 (Progressive Reference)** hay **Tier 3 (User Workflow)**.
+  * **Zero-Duplicate Check:** Đối chiếu với 100 skills hiện có trong `catalog.yaml`.
+  * **Khung Quyết Định Phân Rã Hai Giai Đoạn (ADR-0057):**
+    - Cổng 0 (Determinism Gate): Tác vụ xác định 100% -> **Tier 1: Package Function / Deep Seam** trong `packages/*/src/`.
+    - Cổng 1 (Orchestration Gate): Tác vụ đa tác tử/checkpoints/HITL -> **Tier 3: Composite Orchestrator** trong `.agents/workflows/`.
+    - Giai đoạn 2 (Chỉ số GPI): $GPI < 12.0$ -> **Tier 2A: Progressive Reference** trong `references/*.md`; $GPI \ge 12.0$ -> **Tier 2B: Standalone Kernel Skill** trong `.agents/skills/ccba-<name>/`.
   * **Đánh giá tương thích:** Khả năng chuyển đổi từ TS/Node sang chuẩn Python Monorepo (`ruff`, `mypy`, `pytest`).
 - **Tiêu chí hoàn thành:** Báo cáo [port_recommendations.md](../../../.md/knowledge/port_recommendations.md) được cập nhật và bảo vệ nguyên vẹn vùng ghi chú của kỹ sư (`Parse-Protection`).
 

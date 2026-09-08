@@ -25,8 +25,8 @@ def make_docx_bytes(document_xml_body: str) -> bytes:
         'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
         'xmlns:v="urn:schemas-microsoft-com:vml" '
         'xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">\n'
-        f'<w:body>{document_xml_body}</w:body>\n'
-        '</w:document>'
+        f"<w:body>{document_xml_body}</w:body>\n"
+        "</w:document>"
     )
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as z:
@@ -37,14 +37,14 @@ def make_docx_bytes(document_xml_body: str) -> bytes:
             b'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
             b'<Default Extension="xml" ContentType="application/xml"/>'
             b'<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
-            b'</Types>',
+            b"</Types>",
         )
         z.writestr(
             "_rels/.rels",
             b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             b'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
             b'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
-            b'</Relationships>',
+            b"</Relationships>",
         )
         z.writestr("word/document.xml", full_doc_xml.encode("utf-8"))
     return buf.getvalue()
@@ -64,11 +64,11 @@ def test_purge_rsid_and_proof_err():
         '<w:p w:rsidR="001A2B3C" w:rsidRPr="004D5E6F" w:rsidP="00789ABC">'
         '  <w:proofErr w:type="spellStart"/>'
         '  <w:r w:rsidR="001A2B3C">'
-        '    <w:t>Nội dung quy chuẩn</w:t>'
-        '  </w:r>'
+        "    <w:t>Nội dung quy chuẩn</w:t>"
+        "  </w:r>"
         '  <w:proofErr w:type="spellEnd"/>'
-        '  <w:lastRenderedPageBreak/>'
-        '</w:p>'
+        "  <w:lastRenderedPageBreak/>"
+        "</w:p>"
     )
     docx_bytes = make_docx_bytes(body)
     sanitizer = DocxCanonicalSanitizer()
@@ -86,20 +86,20 @@ def test_purge_rsid_and_proof_err():
 def test_run_consolidation_with_xml_space():
     """Verify merging 3 runs: 'Điều ', '1', ': Phạm vi' into single run with xml:space='preserve'."""
     body = (
-        '<w:p>'
-        '  <w:r>'
-        '    <w:rPr><w:b/></w:rPr>'
+        "<w:p>"
+        "  <w:r>"
+        "    <w:rPr><w:b/></w:rPr>"
         '    <w:t xml:space="preserve">Điều </w:t>'
-        '  </w:r>'
-        '  <w:r>'
-        '    <w:rPr><w:b/></w:rPr>'
-        '    <w:t>1</w:t>'
-        '  </w:r>'
-        '  <w:r>'
-        '    <w:rPr><w:b/></w:rPr>'
-        '    <w:t>: Phạm vi</w:t>'
-        '  </w:r>'
-        '</w:p>'
+        "  </w:r>"
+        "  <w:r>"
+        "    <w:rPr><w:b/></w:rPr>"
+        "    <w:t>1</w:t>"
+        "  </w:r>"
+        "  <w:r>"
+        "    <w:rPr><w:b/></w:rPr>"
+        "    <w:t>: Phạm vi</w:t>"
+        "  </w:r>"
+        "</w:p>"
     )
     docx_bytes = make_docx_bytes(body)
     sanitizer = DocxCanonicalSanitizer()
@@ -123,9 +123,7 @@ def test_unicode_nfc_normalization():
     assert unicodedata.is_normalized("NFD", nfd_text)
     assert not unicodedata.is_normalized("NFC", nfd_text)
 
-    body = (
-        f'<w:p><w:r><w:t>{nfd_text}</w:t></w:r></w:p>'
-    )
+    body = f"<w:p><w:r><w:t>{nfd_text}</w:t></w:r></w:p>"
     docx_bytes = make_docx_bytes(body)
     sanitizer = DocxCanonicalSanitizer()
     xml_out = get_sanitized_xml(sanitizer, docx_bytes)
@@ -139,21 +137,21 @@ def test_unicode_nfc_normalization():
 def test_whitelist_protection_for_mathtype_and_drawings():
     """Verify strict whitelist protection: w:object and w:drawing are never altered or removed."""
     body = (
-        '<w:p>'
-        '  <w:r>'
-        '    <w:t>Công thức tính:</w:t>'
-        '  </w:r>'
-        '  <w:r>'
-        '    <w:object>'
+        "<w:p>"
+        "  <w:r>"
+        "    <w:t>Công thức tính:</w:t>"
+        "  </w:r>"
+        "  <w:r>"
+        "    <w:object>"
         '      <v:shape id="_x0000_i1025"/>'
-        '    </w:object>'
-        '  </w:r>'
-        '  <w:r>'
-        '    <w:drawing>'
+        "    </w:object>"
+        "  </w:r>"
+        "  <w:r>"
+        "    <w:drawing>"
         '      <wp:inline><wp:extent cx="100" cy="100"/></wp:inline>'
-        '    </w:drawing>'
-        '  </w:r>'
-        '</w:p>'
+        "    </w:drawing>"
+        "  </w:r>"
+        "</w:p>"
     )
     docx_bytes = make_docx_bytes(body)
     sanitizer = DocxCanonicalSanitizer()
@@ -168,25 +166,25 @@ def test_whitelist_protection_for_mathtype_and_drawings():
 def test_unwrap_borderless_layout_table():
     """Verify that a borderless administrative table is unwrapped into flat paragraphs."""
     body = (
-        '<w:tbl>'
-        '  <w:tblPr>'
-        '    <w:tblBorders>'
+        "<w:tbl>"
+        "  <w:tblPr>"
+        "    <w:tblBorders>"
         '      <w:top w:val="none"/>'
         '      <w:left w:val="none"/>'
         '      <w:bottom w:val="none"/>'
         '      <w:right w:val="none"/>'
-        '    </w:tblBorders>'
-        '  </w:tblPr>'
-        '  <w:tr>'
-        '    <w:tc>'
-        '      <w:p><w:r><w:t>BỘ XÂY DỰNG</w:t></w:r></w:p>'
-        '    </w:tc>'
-        '    <w:tc>'
-        '      <w:p><w:r><w:t>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</w:t></w:r></w:p>'
-        '      <w:p><w:r><w:t>Độc lập - Tự do - Hạnh phúc</w:t></w:r></w:p>'
-        '    </w:tc>'
-        '  </w:tr>'
-        '</w:tbl>'
+        "    </w:tblBorders>"
+        "  </w:tblPr>"
+        "  <w:tr>"
+        "    <w:tc>"
+        "      <w:p><w:r><w:t>BỘ XÂY DỰNG</w:t></w:r></w:p>"
+        "    </w:tc>"
+        "    <w:tc>"
+        "      <w:p><w:r><w:t>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</w:t></w:r></w:p>"
+        "      <w:p><w:r><w:t>Độc lập - Tự do - Hạnh phúc</w:t></w:r></w:p>"
+        "    </w:tc>"
+        "  </w:tr>"
+        "</w:tbl>"
     )
     docx_bytes = make_docx_bytes(body)
     sanitizer = DocxCanonicalSanitizer()
@@ -206,7 +204,7 @@ def test_unwrap_borderless_layout_table():
 
 def test_in_memory_zero_disk_roundtrip(tmp_path):
     """Confirm that the entire sanitization roundtrip happens in-memory with zero disk temporary files."""
-    body = '<w:p><w:r><w:t>Kiểm tra in-memory</w:t></w:r></w:p>'
+    body = "<w:p><w:r><w:t>Kiểm tra in-memory</w:t></w:r></w:p>"
     docx_bytes = make_docx_bytes(body)
     input_io = io.BytesIO(docx_bytes)
 
@@ -229,18 +227,18 @@ def test_in_memory_zero_disk_roundtrip(tmp_path):
 def test_promote_structural_headings():
     """Verify that unstyled bold paragraphs matching legal heading patterns get standard w:pStyle."""
     body = (
-        '<w:p>'
-        '  <w:r>'
-        '    <w:rPr><w:b/></w:rPr>'
-        '    <w:t>Điều 1. Phạm vi điều chỉnh</w:t>'
-        '  </w:r>'
-        '</w:p>'
-        '<w:p>'
-        '  <w:r>'
-        '    <w:rPr><w:b/></w:rPr>'
-        '    <w:t>1.1.2 Quy chuẩn này áp dụng</w:t>'
-        '  </w:r>'
-        '</w:p>'
+        "<w:p>"
+        "  <w:r>"
+        "    <w:rPr><w:b/></w:rPr>"
+        "    <w:t>Điều 1. Phạm vi điều chỉnh</w:t>"
+        "  </w:r>"
+        "</w:p>"
+        "<w:p>"
+        "  <w:r>"
+        "    <w:rPr><w:b/></w:rPr>"
+        "    <w:t>1.1.2 Quy chuẩn này áp dụng</w:t>"
+        "  </w:r>"
+        "</w:p>"
     )
     docx_bytes = make_docx_bytes(body)
     sanitizer = DocxCanonicalSanitizer()
@@ -258,24 +256,24 @@ def test_promote_structural_headings():
 def test_unwrap_borderless_table_without_layout_keywords():
     """Verify that a borderless table with val='none' and NO administrative keywords is unwrapped."""
     body = (
-        '<w:tbl>'
-        '  <w:tblPr>'
-        '    <w:tblBorders>'
+        "<w:tbl>"
+        "  <w:tblPr>"
+        "    <w:tblBorders>"
         '      <w:top w:val="none"/>'
         '      <w:left w:val="none"/>'
         '      <w:bottom w:val="none"/>'
         '      <w:right w:val="none"/>'
-        '    </w:tblBorders>'
-        '  </w:tblPr>'
-        '  <w:tr>'
-        '    <w:tc>'
-        '      <w:p><w:r><w:t>Công thức F = m * a</w:t></w:r></w:p>'
-        '    </w:tc>'
-        '    <w:tc>'
-        '      <w:p><w:r><w:t>(1)</w:t></w:r></w:p>'
-        '    </w:tc>'
-        '  </w:tr>'
-        '</w:tbl>'
+        "    </w:tblBorders>"
+        "  </w:tblPr>"
+        "  <w:tr>"
+        "    <w:tc>"
+        "      <w:p><w:r><w:t>Công thức F = m * a</w:t></w:r></w:p>"
+        "    </w:tc>"
+        "    <w:tc>"
+        "      <w:p><w:r><w:t>(1)</w:t></w:r></w:p>"
+        "    </w:tc>"
+        "  </w:tr>"
+        "</w:tbl>"
     )
     docx_bytes = make_docx_bytes(body)
     sanitizer = DocxCanonicalSanitizer()
@@ -292,14 +290,7 @@ def test_unwrap_borderless_table_without_layout_keywords():
 
 def test_promote_top_level_section_heading():
     """Verify that top-level standard sections like '1. QUY ĐỊNH CHUNG' are promoted to Heading1."""
-    body = (
-        '<w:p>'
-        '  <w:r>'
-        '    <w:rPr><w:b/></w:rPr>'
-        '    <w:t>1. QUY ĐỊNH CHUNG</w:t>'
-        '  </w:r>'
-        '</w:p>'
-    )
+    body = "<w:p>  <w:r>    <w:rPr><w:b/></w:rPr>    <w:t>1. QUY ĐỊNH CHUNG</w:t>  </w:r></w:p>"
     docx_bytes = make_docx_bytes(body)
     sanitizer = DocxCanonicalSanitizer()
     xml_out = get_sanitized_xml(sanitizer, docx_bytes)
@@ -312,14 +303,7 @@ def test_promote_top_level_section_heading():
 
 def test_normalize_tabs_into_spaces():
     """Verify that w:tab elements in simple text runs are converted into spaces with xml:space='preserve'."""
-    body = (
-        '<w:p>'
-        '  <w:r>'
-        '    <w:tab/>'
-        '    <w:t>- Nội dung quy định</w:t>'
-        '  </w:r>'
-        '</w:p>'
-    )
+    body = "<w:p>  <w:r>    <w:tab/>    <w:t>- Nội dung quy định</w:t>  </w:r></w:p>"
     docx_bytes = make_docx_bytes(body)
     sanitizer = DocxCanonicalSanitizer()
     xml_out = get_sanitized_xml(sanitizer, docx_bytes)
@@ -331,4 +315,3 @@ def test_normalize_tabs_into_spaces():
     assert len(t_nodes) == 1
     assert t_nodes[0].text == "    - Nội dung quy định"
     assert t_nodes[0].attrib.get(f"{{{NAMESPACES['xml']}}}space") == "preserve"
-

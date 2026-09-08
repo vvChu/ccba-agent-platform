@@ -230,3 +230,22 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
   - **Vấn đề:** Việc duy trì các ngoại lệ hardcoded dạng `if py_file.name == 'maskara.py': continue` trong bộ kiểm tra hợp đồng phụ thuộc (`check_dependency_contracts.py`) làm suy yếu tính nghiêm ngặt của CI và tạo tiền lệ xấu. Đồng thời, sự tồn tại của các script demo một lần trong thư mục hoạt động `scripts/` làm phân tán không gian tìm kiếm của AI Agent.
   - **Giải pháp:** Di chuyển toàn bộ các script thử nghiệm lịch sử vào thư mục `archive/` (bảo toàn 100% lịch sử Git), đồng thời đưa `archive` vào whitelist loại trừ của AST linter. Gỡ bỏ hoàn toàn mọi bypass hardcoded theo tên file để đạt chuẩn Zero-Exemption trên toàn bộ 328+ tệp mã nguồn của monorepo.
 
+---
+
+## 15. Two-Stage Granularity Decision Framework, Fleet-Wide GPI Metric & Multi-Tier Skills Architecture (ADR 0057)
+
+- **Core Pattern P15.1 — Two-Stage Granularity Decision Framework & Mathematical GPI Index ($S, K, A, P$):**
+  - **Vấn đề:** Khi mở rộng kho kỹ năng (fleet of 100 skills), hệ thống đối mặt với tình thế lưỡng nan về độ mịn (Granularity Dilemma): nếu tạo quá nhiều micro-skills sẽ gây phân mảnh và tràn ngân sách token (Prompt Bloat / Lost-in-the-middle); ngược lại nếu gộp quá nhiều logic vào một skill sẽ biến thành "quả cầu bùn nhận thức" (Ball of Mud).
+  - **Giải pháp:** Thiết lập Khung Quyết Định Hai Giai Đoạn và chuẩn hóa chỉ số Granularity & Placement Index (GPI) trong `packages/ccba-harness` (ADR 0057):
+    + *Giai đoạn 1 (Structural Invariant Gates):* Cổng 0 (Determinism Gate) chặn đứng tác vụ thuần giải thuật (đưa xuống Tier 1 Package Function / Deep Seams); Cổng 1 (Orchestration Gate) chặn tác vụ đa luồng/StateGraph/HITL (đưa lên Tier 3 Composite Orchestrator).
+    + *Giai đoạn 2 (GPI Formula):* $\mathbf{GPI} = (S \times 2.5) + (K \times 2.0) + (A \times 2.0) - (P \times 1.5)$. Nếu $\text{GPI} < 12.0 \rightarrow$ Tier 2A (Progressive Reference trong `references/*.md`); Nếu $\text{GPI} \ge 12.0 \rightarrow$ Tier 2B (Standalone Kernel Skill trong `.agents/skills/ccba-<name>/`).
+
+- **Core Pattern P15.2 — Quản Trị Vùng Mù Scripts (Blind Spot Governance) qua Deep Seams:**
+  - **Vấn đề:** Quá trình audit hạm đội phát hiện 14 skills chứa tới 105 scripts phụ trợ với 35.680 LOC. Các scripts này nằm ngoài phạm vi kiểm định chất lượng monorepo nếu chỉ quét `packages/`, dẫn tới nguy cơ nợ kỹ thuật tiềm ẩn, trùng lặp mã nguồn và trôi dạt hợp đồng phụ thuộc.
+  - **Giải pháp:** Quy hoạch di dời các scripts phức tạp xuống packages tương ứng (`packages/ccba-legal-intel`, `packages/ccba-pdf-prep`, `packages/ccba-ai`...) thông qua giao diện hàm rõ ràng (Deep Seams). Mã nguồn trong `scripts/` của skill chỉ đóng vai trò thin adapter (10–30 LOC) gọi vào các Deep Seams này, bảo đảm 100% logic xác định đều được bảo vệ bởi unit test và linting tự động.
+
+- **Core Pattern P15.3 — Khắc Phục Lỗi Lồng Đường Dẫn Windows Node.js trong Plugin PreToolUse Hooks:**
+  - **Vấn đề:** Khi Antigravity IDE chạy trên Windows, cơ chế plugin telemetry hook tự động tạo cấu hình trong `hooks.json` với đường dẫn file bị bao bọc trong dấu ngoặc kép dạng `"C:\Users\...\bundle.js"`. Khi Node.js thực thi `path.isAbsolute(hookPath)`, ký tự ngoặc kép ở đầu khiến hàm trả về `false`, làm Node.js tự động ghép `pluginDir` vào phía trước thành `C:\...\plugins\<plugin>\"C:\...\bundle.js"`, gây lỗi `Cannot find module` và làm tê liệt toàn bộ tool calls trong môi trường agent.
+  - **Giải pháp:** Vô hiệu hóa file cấu hình `hooks.json` bằng nội dung rỗng `{}` và thiết lập thuộc tính bảo vệ tệp `IsReadOnly = $true` trên PowerShell. Biện pháp này ngăn chặn vĩnh viễn tiến trình nền của IDE tự ý ghi đè đường dẫn lỗi, phục hồi hoàn toàn khả năng gọi tool của Agent mà không ảnh hưởng tới luồng công việc.
+
+

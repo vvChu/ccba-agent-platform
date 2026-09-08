@@ -52,7 +52,9 @@ def parse_table_figures(tbl_el: Any) -> list[tuple[str, str]]:
                     cap = m_cap.group(1).strip()
                 elif r_idx + 1 < num_rows and c_idx < len(grid_cells[r_idx + 1]):
                     next_txt = grid_cells[r_idx + 1][c_idx]["txt"]
-                    m_next = re.search(r"([a-z0-9đĐ]\s*[-–—\)]\s*[^;\n\r]+)", next_txt, re.IGNORECASE)
+                    m_next = re.search(
+                        r"([a-z0-9đĐ]\s*[-–—\)]\s*[^;\n\r]+)", next_txt, re.IGNORECASE
+                    )
                     if m_next:
                         cap = m_next.group(1).strip()
                 if cap:
@@ -99,7 +101,9 @@ def extract_docx_figures(
         m_annex = re.search(r"PHỤ\s+LỤC\s+([A-Za-z0-9Đđ]+)", text, re.IGNORECASE)
         if m_annex:
             current_annex = m_annex.group(1).upper()
-        m = re.match(r"^(?:Hình|HÌNH)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\s*[\.\-–—:]\s*(.+)$", text)
+        m = re.match(
+            r"^(?:Hình|HÌNH)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\s*[\.\-–—:]\s*(.+)$", text
+        )
         if m:
             fig_tag = m.group(1).strip()
             fig_title = m.group(2).strip()
@@ -171,7 +175,9 @@ def extract_docx_figures(
                 elif f_idx >= 0:
                     b_f_idx = p_to_b.get(f_idx, f_idx)
                     prev_b_idx = (
-                        fig_items[i - 1].get("search_end_b", p_to_b.get(fig_items[i - 1]["p_idx"], -1))
+                        fig_items[i - 1].get(
+                            "search_end_b", p_to_b.get(fig_items[i - 1]["p_idx"], -1)
+                        )
                         if i > 0 and fig_items[i - 1]["p_idx"] >= 0
                         else max(0, b_f_idx - 35)
                     )
@@ -235,10 +241,14 @@ def extract_docx_figures(
                                                 sub_img = Image.open(io.BytesIO(z.read(full_m_p)))
                                                 if sub_img.width >= 100 and sub_img.height >= 50:
                                                     sub_cap = ""
-                                                    for next_b in range(b_k + 1, min(b_k + 3, search_end_b)):
+                                                    for next_b in range(
+                                                        b_k + 1, min(b_k + 3, search_end_b)
+                                                    ):
                                                         nxt_el = body_elems[next_b]
                                                         if nxt_el.tag.endswith("p"):
-                                                            nxt_txt = "".join(nxt_el.itertext()).strip()
+                                                            nxt_txt = "".join(
+                                                                nxt_el.itertext()
+                                                            ).strip()
                                                             if (
                                                                 re.match(
                                                                     r"^(?:[a-zđĐ]\s*[\)\.\-–—]|[0-9]+\))\s*",
@@ -246,7 +256,9 @@ def extract_docx_figures(
                                                                     re.IGNORECASE,
                                                                 )
                                                                 and len(nxt_txt) < 200
-                                                                and not re.match(r"^[0-9]+\.", nxt_txt)
+                                                                and not re.match(
+                                                                    r"^[0-9]+\.", nxt_txt
+                                                                )
                                                             ):
                                                                 sub_cap = nxt_txt
                                                                 break
@@ -332,7 +344,11 @@ def extract_docx_figures(
                         consumed_media.add(best_tgt)
 
                 # Build metadata
-                annex = item.get("annex") if item.get("annex") != "MAIN" else (f_tag[0] if f_tag[0].isalpha() else "MAIN")
+                annex = (
+                    item.get("annex")
+                    if item.get("annex") != "MAIN"
+                    else (f_tag[0] if f_tag[0].isalpha() else "MAIN")
+                )
                 geom = fig_overrides.get(f_tag, {})
                 if isinstance(geom, dict) and "geometry_rules" in geom:
                     geom = geom["geometry_rules"]

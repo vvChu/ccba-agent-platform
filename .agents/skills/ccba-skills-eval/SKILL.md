@@ -6,6 +6,11 @@ description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) 
 disable-model-invocation: true
 bundle: _core
 command: /ccba-skills-eval
+gpi:
+  s: 2.0
+  k: 1.0
+  a: 1.0
+  p: 4.0
 triggers:
 - skills-eval
 - eval-skills
@@ -32,19 +37,19 @@ Agent phân tích yêu cầu của người dùng để xác định tham số:
 Chạy lệnh CLI sau tại thư mục gốc của dự án:
 ```bash
 # Kiểm thử một kỹ năng cụ thể qua ccba_harness Multi-Scorer Engine
-python .agents/skills/ccba-eval-gate/scripts/eval_runner.py --skill [tên-skill] --trials 3
+python -m ccba_harness.cli eval --skill [tên-skill] --trials 3
 
 # Tự động tối ưu hóa SKILL.md (Skill Auto-Tuner via SkillOpt loop)
-python .agents/skills/ccba-eval-gate/scripts/eval_runner.py --skill [tên-skill] --auto-tune --max-iterations 3
+python -m ccba_harness.cli eval --skill [tên-skill] --auto-tune --trials 3
 
 # Khai phá lỗi từ transcript log thực chiến và tự động sinh test cases
 python scripts/eval/log_eval_miner.py --skill [tên-skill] --auto-inject
 
 # Kiểm thử toàn bộ các kỹ năng AI
-python .agents/skills/ccba-eval-gate/scripts/eval_runner.py --trials 3
+python -m ccba_harness.cli eval --trials 3
 ```
 
-**Tiêu chí hoàn thành:** Lệnh eval_runner.py được khởi chạy với đầy đủ tham số.
+**Tiêu chí hoàn thành:** Lệnh ccba-harness eval được khởi chạy với đầy đủ tham số.
 
 ### Bước 3: Đánh giá Đa chiều theo Barem Rubrics & Rào chắn Điểm Liệt
 - **Bộ Tiêu chí Định lượng & Rubrics:** Đối chiếu kết quả với Quy chuẩn tại [`.md/knowledge/guidelines/domain_success_criteria_rubrics.md`](../../../.md/knowledge/guidelines/domain_success_criteria_rubrics.md):

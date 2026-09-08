@@ -146,7 +146,9 @@ def _is_paragraph_bold(p: etree._Element) -> bool:
     runs = p.findall(QN_W_R)
     if not runs:
         return False
-    text_runs = [r for r in runs if r.find(QN_W_T) is not None and (r.find(QN_W_T).text or "").strip()]
+    text_runs = [
+        r for r in runs if r.find(QN_W_T) is not None and (r.find(QN_W_T).text or "").strip()
+    ]
     if not text_runs:
         return False
     return all(_is_run_bold(r) for r in text_runs)

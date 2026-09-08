@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-08] [adr] | Ban Hành ADR 0057: Two-Stage Granularity Decision Framework & Chỉ Số GPI (PR #244)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /boost, /teamwork-preview & /ccba-session-retrospective)
+- **Affected Files**: `docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md`, `docs/adr/README.md`, `docs/adr/TRACEABILITY_MATRIX.md`, `packages/ccba-harness/`, `.github/pull_request_template.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/blueprints/fleet_skills_3tier_migration_blueprint.md`, `.md/knowledge/research_and_studies/research-agent-architecture-packages-skills-orchestrators.md`
+- **Summary**: Hoàn tất nghiên cứu và triển khai toàn diện khuyến nghị kiến trúc từ Báo cáo RES-2026-ARCH-001 v1.2: (1) Ban hành chính thức ADR-0057 về Khung Quyết Định Phân Rã Hai Giai Đoạn (Cổng 0 Determinism Gate, Cổng 1 Orchestration Gate) và công thức tính toán chỉ số Granularity & Placement Index (GPI) phân tầng 4 cấp (Tier 1 Package Function, Tier 2A Progressive Reference, Tier 2B Standalone Kernel Skill, Tier 3 Composite Orchestrator); (2) Tích hợp trọn vẹn module `ccba_harness.gpi`, `SkillValidator` và CLI `ccba-harness evaluate-gpi` với 38 unit tests độc lập (100% pass); (3) Cập nhật PR template bắt buộc kiểm tra Cổng 0/1 và bảng điểm GPI; (4) Khảo sát và phân loại toàn diện 100/100 skills trong hạm đội và ban hành Bản kế hoạch di trú `BLUEPRINT-2026-SKILLS-001`; (5) Cập nhật Living ADR Traceability Matrix và bổ sung Chapter 15 vào `session_learnings.md`.
+
+---
+
 ## [2026-09-05] [synthesize] | Chuẩn Hóa Namespace Kỹ Năng ADR-0056, Nâng Cấp Release Gate & Đồng Bộ CLI Toàn Trình (PR #240-#243)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /boost, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `.agents/skills/`, `.agents/workflows/`, `.agents/resources/`, `scripts/governance/`, `scripts/spoke/`, `scripts/ccba_platform_cli.py`, `scripts/validation/audit_pr_comments.py`, `.md/knowledge/session_learnings.md`
