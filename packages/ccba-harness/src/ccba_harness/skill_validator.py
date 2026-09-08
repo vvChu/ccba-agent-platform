@@ -297,9 +297,7 @@ class SkillValidator:
                 )
             )
         else:
-            is_valid_namespace = (
-                name.startswith(("ccba-", "bigbim-")) or name == "platform-loader"
-            )
+            is_valid_namespace = name.startswith(("ccba-", "bigbim-")) or name == "platform-loader"
             if not is_valid_namespace:
                 issues.append(
                     SkillAuditIssue(
@@ -745,9 +743,7 @@ class SkillValidator:
                 while header_stack and header_stack[-1][0] >= level:
                     header_stack.pop()
 
-                in_exclusion_ancestor = any(
-                    is_exclusion_header(h[1]) for h in header_stack
-                )
+                in_exclusion_ancestor = any(is_exclusion_header(h[1]) for h in header_stack)
 
                 if is_workflow_keyword and not is_exclusion and not in_exclusion_ancestor:
                     is_workflow = True
@@ -955,9 +951,7 @@ class SkillValidator:
 
         return issues
 
-    def audit_workspace_gates(
-        self, skills_dir: Path | None = None
-    ) -> list[SkillAuditIssue]:
+    def audit_workspace_gates(self, skills_dir: Path | None = None) -> list[SkillAuditIssue]:
         """Perform workspace-level CI Gate checks across all skills."""
         issues: list[SkillAuditIssue] = []
         if skills_dir is None or skills_dir.is_file():

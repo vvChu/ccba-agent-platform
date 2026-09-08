@@ -123,7 +123,10 @@ def run_skill_validation_cli(
 
     if not skills_files:
         if has_explicit_targets:
-            print("ERROR: No SKILL.md or workflow files found matching specified targets.", file=sys.stderr)
+            print(
+                "ERROR: No SKILL.md or workflow files found matching specified targets.",
+                file=sys.stderr,
+            )
             return 1
         print("No SKILL.md files found for validation.")
         return 0
@@ -320,6 +323,7 @@ def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
         validator = SkillValidator()
         try:
             from .gpi import GPIMetrics
+
             override_metrics: GPIMetrics | None = None
             if None not in (args.s, args.k, args.a, args.p):
                 override_metrics = GPIMetrics(

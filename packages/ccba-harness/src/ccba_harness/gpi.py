@@ -63,7 +63,12 @@ class GPIMetrics:
                 raise TypeError(
                     f"Metric '{name}' must be numeric (int or float), got {type(val).__name__}"
                 )
-            if math.isnan(val) or math.isinf(val) or val < MIN_METRIC_SCORE or val > MAX_METRIC_SCORE:
+            if (
+                math.isnan(val)
+                or math.isinf(val)
+                or val < MIN_METRIC_SCORE
+                or val > MAX_METRIC_SCORE
+            ):
                 raise ValueError(
                     f"Metric '{name}' must be between {MIN_METRIC_SCORE} and "
                     f"{MAX_METRIC_SCORE}, got {val}"
@@ -127,7 +132,9 @@ class DecisionRequest:
             normalized = {str(k).lower(): v for k, v in self.gpi_metrics.items()}
             missing = [k for k in ("s", "k", "a", "p") if k not in normalized]
             if missing:
-                raise ValueError(f"gpi_metrics dictionary is missing required metric keys: {missing}")
+                raise ValueError(
+                    f"gpi_metrics dictionary is missing required metric keys: {missing}"
+                )
             self.gpi_metrics = GPIMetrics(
                 s=float(normalized["s"]),
                 k=float(normalized["k"]),

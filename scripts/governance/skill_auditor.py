@@ -45,18 +45,21 @@ class SkillAuditor(BaseAuditor):
         """Load valid bundles from catalog.yaml or fallback to known taxonomy."""
         return self._validator.get_valid_bundles()
 
-    def check_shallow_skill(
-        self, file_path: Path, content: str | None = None
-    ) -> list[AuditIssue]:
+    def check_shallow_skill(self, file_path: Path, content: str | None = None) -> list[AuditIssue]:
         """Verify that a skill has at least SHALLOW_SKILL_MIN_LINES content lines (ADR-0040)."""
         raw_issues = self._validator.check_shallow_skill(file_path, content)
         return [AuditIssue(*i) for i in raw_issues]
 
     def audit_skill(
-        self, file_path: Path, check_shallow: bool = False
+        self,
+        file_path: Path,
+        check_shallow: bool = False,
+        enforce_gpi: bool = False,
     ) -> list[AuditIssue]:
         """Audit a single SKILL.md or workflow file for CCBA compliance."""
-        raw_issues = self._validator.audit_skill(file_path, check_shallow=check_shallow)
+        raw_issues = self._validator.audit_skill(
+            file_path, check_shallow=check_shallow, enforce_gpi=enforce_gpi
+        )
         return [AuditIssue(*i) for i in raw_issues]
 
     def _analyze_steps_completion_criteria(self, body: str) -> list[tuple[int, str]]:

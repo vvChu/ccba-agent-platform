@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""skill_generator.py - Autonomous Skill & Workflow Scaffolder for CCBA Platform.
+"""skill_generator.py - Autonomous Skill Scaffolder for CCBA Platform.
 
 Parses script CLI interfaces (argparse / click / AST) to generate standardized
-CCBA Skills (SKILL.md, cli_spec.yaml, workflow routers).
+CCBA Skills (SKILL.md, cli_spec.yaml, references/*.md per ADR-0057).
 
 Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 """
@@ -31,14 +31,29 @@ if sys.platform == "win32":
 
 import yaml
 
+# Ensure project root and ccba-harness package are in sys.path
+_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+_HARNESS_SRC = _ROOT / "packages" / "ccba-harness" / "src"
+if _HARNESS_SRC.exists() and str(_HARNESS_SRC) not in sys.path:
+    sys.path.insert(0, str(_HARNESS_SRC))
+
+from ccba_harness.gpi import (
+    ArchitectureTier,
+    DecisionRequest,
+    GPIMetrics,
+    evaluate_two_stage_decision,
+)
+
 # Mock click if not installed to avoid import crashes
 try:
     import click
 
     HAS_CLICK = True
 except ImportError:
-    click = None  # type: ignore
     HAS_CLICK = False
+    click = None  # type: ignore[assignment]
 
 
 # ==========================================
@@ -318,6 +333,7 @@ def write_skill_markdown(
     skill_name: str,
     docstring: str,
     bundle: str = "_software",
+    gpi_metrics: GPIMetrics | None = None,
 ) -> None:
     """Ghi tệp tin SKILL.md mẫu nghiệp vụ ban đầu (chỉ ghi nếu chưa có)."""
     if output_path.exists():
@@ -337,6 +353,10 @@ def write_skill_markdown(
         f"- {clean_trigger}\n- {skill_name}" if clean_trigger != skill_name else f"- {skill_name}"
     )
 
+    gpi_block = ""
+    if gpi_metrics is not None:
+        gpi_block = f"\ngpi: {{s: {gpi_metrics.s}, k: {gpi_metrics.k}, a: {gpi_metrics.a}, p: {gpi_metrics.p}}}"
+
     content = f"""---
 name: {skill_name}
 description: {desc}
@@ -345,7 +365,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /{skill_name}
 triggers:
-{triggers_yaml}
+{triggers_yaml}{gpi_block}
 ---
 
 # Kỹ năng {skill_name}
@@ -393,45 +413,44 @@ triggers:
     print(f"[Info] Đã tạo file tri thức nghiệp vụ mẫu: {output_path.resolve()}")
 
 
-def write_workflow_router(output_path: Path, skill_name: str, commands: dict[str, Any]) -> None:
-    """Ghi file workflow mỏng đăng ký Slash Command (chỉ ghi nếu chưa có)."""
+def write_reference_markdown(
+    output_path: Path,
+    sub_name: str,
+    parent_skill: str,
+    docstring: str,
+    gpi_metrics: GPIMetrics,
+    gpi_score: float,
+    script_path: Path,
+) -> None:
+    """Ghi tệp Progressive Reference (Tier 2A) trong references/ của Master Skill."""
     if output_path.exists():
+        print(f"[Info] File reference đã tồn tại. Bỏ qua ghi đè: {output_path.resolve()}")
         return
 
-    subcmds = list(commands.keys())
-    subcmd_str = f" [{'/'.join(subcmds)}]" if subcmds and subcmds != ["default"] else ""
+    content = f"""# Progressive Reference: {sub_name}
 
-    wf_name = skill_name if skill_name.startswith(("ccba-", "bigbim-")) else f"ccba-{skill_name}"
-    clean_keyword = skill_name.removeprefix("ccba-").removeprefix("bigbim-")
+> Thuộc Master Skill [`{parent_skill}`](../SKILL.md).
 
-    content = f"""---
-name: {wf_name}
-description: Kích hoạt nhanh kỹ năng {skill_name} với lệnh slash command /{wf_name}
-user-invocable: true
-keywords: [{clean_keyword}, auto-generated]
----
+{docstring.strip() if docstring else f"Tài liệu hướng dẫn nghiệp vụ tham chiếu tăng tiến cho {sub_name}."}
 
-# Quy trình thực thi Slash Command `/{wf_name}`
+## 1. Thông Tin Định Tuyến Kiến Trúc (ADR-0057)
 
-Khi người dùng kích hoạt lệnh này dưới dạng:
-`/{wf_name}{subcmd_str} <các-tham-số>`
+- **Phân loại:** Tier 2A (Progressive Reference)
+- **Chỉ số GPI:** {gpi_score:.2f} (S={gpi_metrics.s}, K={gpi_metrics.k}, A={gpi_metrics.a}, P={gpi_metrics.p})
+- **Tệp nguồn:** `scripts/{script_path.name}`
 
-Agent tiếp nhận lệnh bắt buộc phải thực hiện tác vụ sau:
+## 2. Hướng Dẫn Vận Hành Cho Agent
 
-1.  **Nạp Kỹ năng**: Nạp trực tiếp file hướng dẫn nghiệp vụ tại [.agents/skills/{skill_name}/SKILL.md](../skills/{skill_name}/SKILL.md) và file tham số tại [.agents/skills/{skill_name}/cli_spec.yaml](../skills/{skill_name}/cli_spec.yaml) vào ngữ cảnh.
-    *   **Tiêu chí hoàn thành:** Nạp thành công tài liệu SKILL.md.
-2.  **Làm theo chỉ dẫn**: Thực thi đúng quy trình (Validate, Maskara, Terminal execution, QC) mô tả trong tệp tin `SKILL.md` đó để trả lời người dùng.
-    *   **Tiêu chí hoàn thành:** Hoàn thành quy trình và phản hồi kết quả.
+Agent chỉ nạp tài liệu này theo nguyên tắc **Progressive Disclosure** (khi thực sự cần năng lực chuyên biệt):
+`view_file` tới `.agents/skills/{parent_skill}/references/{sub_name}.md`.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-
-*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
 """
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(content)
-    print(f"[Info] Đã đăng ký Slash Command workflow: {output_path.resolve()}")
+    print(f"[Info] Đã tạo file Progressive Reference: {output_path.resolve()}")
 
 
 # ==========================================
@@ -445,21 +464,153 @@ def create_skill_from_script(
     skills_base_dir: Path | None = None,
     workflows_base_dir: Path | None = None,
     bundle: str = "_software",
+    is_deterministic: bool = False,
+    is_orchestrated: bool = False,
+    s: float | None = None,
+    k: float | None = None,
+    a: float | None = None,
+    p: float | None = None,
+    parent: str | None = None,
 ) -> int:
-    """Tạo mới cấu trúc Skill từ tệp Python script."""
+    """Tạo mới cấu trúc Skill hoặc Progressive Reference từ tệp Python script."""
     script_p = Path(script_path_str)
     if not script_p.exists():
         print(f"ERROR: Tệp tin script '{script_path_str}' không tồn tại.", file=sys.stderr)
         return 1
 
     raw_name = skill_name or script_p.stem.replace("_helper", "").replace("_", "-")
-    if not raw_name.startswith("ccba-") and not raw_name.startswith("bigbim-"):
+    if (
+        not raw_name.startswith("ccba-")
+        and not raw_name.startswith("bigbim-")
+        and raw_name != "platform-loader"
+    ):
         name = f"ccba-{raw_name}"
     else:
         name = raw_name
 
     base_skills = skills_base_dir or (Path(".agents") / "skills")
 
+    # Cổng 0: Determinism Gate
+    if is_deterministic:
+        request = DecisionRequest(name=name, is_deterministic=True, parent_skill=parent)
+        decision = evaluate_two_stage_decision(request)
+        print("\n[ERROR] Cổng 0 (Determinism Gate) từ chối tạo Skill phẳng:", file=sys.stderr)
+        print(f"👉 {decision.rationale}", file=sys.stderr)
+        print(
+            "👉 Hướng dẫn: Đưa logic vào 'packages/*/src/' thay vì tạo Skill phẳng độc lập.\n",
+            file=sys.stderr,
+        )
+        return 1
+
+    # Cổng 1: Orchestration Gate
+    if is_orchestrated:
+        request = DecisionRequest(name=name, is_orchestrated=True, parent_skill=parent)
+        decision = evaluate_two_stage_decision(request)
+        print("\n[ERROR] Cổng 1 (Orchestration Gate) từ chối tạo Skill phẳng:", file=sys.stderr)
+        print(f"👉 {decision.rationale}", file=sys.stderr)
+        print(
+            "👉 Hướng dẫn: Tạo workflow trong '.agents/workflows/' thay vì tạo Skill phẳng độc lập.\n",
+            file=sys.stderr,
+        )
+        return 1
+
+    # Stage 2: Đánh giá GPI
+    has_any_gpi = any(x is not None for x in (s, k, a, p))
+    has_all_gpi = all(x is not None for x in (s, k, a, p))
+
+    if parent is not None and not has_all_gpi:
+        print(
+            "ERROR: Khi chỉ định Master Skill sở hữu qua '--parent', bắt buộc phải cung cấp đầy đủ cả 4 chỉ số GPI: --s, --k, --a, --p.",
+            file=sys.stderr,
+        )
+        return 1
+
+    if has_any_gpi and not has_all_gpi:
+        print(
+            "ERROR: Khi đánh giá GPI, bắt buộc phải cung cấp đầy đủ cả 4 chỉ số: --s, --k, --a, --p.",
+            file=sys.stderr,
+        )
+        return 1
+
+    gpi_metrics: GPIMetrics | None = None
+    if has_all_gpi:
+        assert s is not None and k is not None and a is not None and p is not None
+        try:
+            gpi_metrics = GPIMetrics(s=float(s), k=float(k), a=float(a), p=float(p))
+        except (TypeError, ValueError) as err:
+            print(f"ERROR: Tham số GPI không hợp lệ: {err}", file=sys.stderr)
+            return 1
+
+        request = DecisionRequest(
+            name=name,
+            is_deterministic=False,
+            is_orchestrated=False,
+            gpi_metrics=gpi_metrics,
+            parent_skill=parent,
+        )
+        decision = evaluate_two_stage_decision(request)
+
+        # Nếu GPI < 12.0 (Tier 2A - Progressive Reference)
+        if decision.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE:
+            if not parent:
+                print(
+                    f"\n[ERROR] Chỉ số GPI ({decision.gpi_score:.2f}) < 12.0: Phân loại Tier 2A (Progressive Reference).\n"
+                    f"Từ chối tạo Skill độc lập tại .agents/skills/{name}/.\n"
+                    f"Vui lòng chỉ định Master Skill sở hữu thông qua tham số '--parent <master-skill>' để tạo 'references/<name>.md'.\n",
+                    file=sys.stderr,
+                )
+                return 1
+
+            parent_dir = base_skills / parent
+            if not parent_dir.is_dir():
+                parent_dir = base_skills / f"ccba-{parent}"
+            if not parent_dir.is_dir():
+                parent_dir = Path(parent)
+
+            if not parent_dir.is_dir():
+                print(
+                    f"\n[ERROR] Master Skill '{parent}' không tồn tại hoặc không phải là thư mục trong '{base_skills}'.\n"
+                    f"Không thể tạo 'references/<name>.md'. Vui lòng kiểm tra lại.\n",
+                    file=sys.stderr,
+                )
+                return 1
+
+            try:
+                _, _, docstring = inspect_via_dynamic_import(script_p)
+            except Exception:
+                try:
+                    _, _, docstring = inspect_via_static_ast(script_p)
+                except Exception as ex:
+                    print(f"ERROR: Phân tích script thất bại: {ex}", file=sys.stderr)
+                    return 3
+
+            ref_dir = parent_dir / "references"
+            ref_dir.mkdir(parents=True, exist_ok=True)
+            clean_sub_name = (
+                name.removeprefix("ccba-")
+                .removeprefix("bigbim-")
+                .removesuffix(".md")
+                .replace("_", "-")
+                .lower()
+            )
+            ref_file = ref_dir / f"{clean_sub_name}.md"
+
+            write_reference_markdown(
+                output_path=ref_file,
+                sub_name=clean_sub_name,
+                parent_skill=parent_dir.name,
+                docstring=docstring,
+                gpi_metrics=gpi_metrics,
+                gpi_score=decision.gpi_score or 0.0,
+                script_path=script_p,
+            )
+
+            print(f"\nSUCCESS: Đã tạo Progressive Reference (Tier 2A) tại '{ref_file.resolve()}'")
+            print(f"👉 Thuộc Master Skill: {parent_dir.name}")
+            print(f"👉 Chỉ số GPI: {decision.gpi_score:.2f} < 12.0\n")
+            return 0
+
+    # Nếu GPI >= 12.0 (hoặc không truyền metrics để giữ tương thích ngược) -> Tier 2B Standalone Kernel Skill
     skill_dir = base_skills / name
     skill_dir.mkdir(parents=True, exist_ok=True)
 
@@ -482,11 +633,9 @@ def create_skill_from_script(
             return 3
 
     write_cli_spec(skill_dir / "cli_spec.yaml", commands)
-    write_skill_markdown(skill_dir / "SKILL.md", name, docstring, bundle=bundle)
-
-    if workflows_base_dir is not None:
-        workflow_path = workflows_base_dir / f"{name}.md"
-        write_workflow_router(workflow_path, name, commands)
+    write_skill_markdown(
+        skill_dir / "SKILL.md", name, docstring, bundle=bundle, gpi_metrics=gpi_metrics
+    )
 
     print(f"\nSUCCESS: Tạo Skill '{name}' thành công!")
     print(f"👉 Thư mục skill: {skill_dir.resolve()}")
@@ -554,7 +703,7 @@ def sync_all_skills(skills_base_dir: Path | None = None) -> int:
     return 0 if fail_count == 0 else 3
 
 
-def main() -> int:
+def main(args_list: list[str] | None = None) -> int:
     """CLI entry point for skill scaffolder."""
     if sys.platform == "win32":
         if hasattr(sys.stdout, "reconfigure"):
@@ -569,15 +718,58 @@ def main() -> int:
                 pass
 
     parser = argparse.ArgumentParser(description="CCBA Autonomous Skill & Workflow Scaffolder")
-    parser.add_argument("--script", "-s", help="Đường dẫn file Python script nguồn")
+    parser.add_argument("--script", help="Đường dẫn file Python script nguồn")
     parser.add_argument(
         "--name", "-n", default=None, help="Tên Skill muốn tạo (mặc định theo tên script)"
+    )
+    parser.add_argument(
+        "--bundle",
+        default="_software",
+        choices=["_software", "_core", "_qc", "_consulting", "_bim"],
+        help="Taxonomy bundle phân loại kỹ năng (mặc định: _software)",
+    )
+    parser.add_argument(
+        "--deterministic",
+        action="store_true",
+        help="Cổng 0: Tác vụ giải quyết 100%% bằng giải thuật xác định (chuyển sang package)",
+    )
+    parser.add_argument(
+        "--orchestrated",
+        action="store_true",
+        help="Cổng 1: Tác vụ điều phối đa tác tử / HITL (chuyển sang workflow)",
+    )
+    parser.add_argument(
+        "--s", type=float, default=None, help="Chỉ số GPI - Reasoning Steps (1.0 - 5.0)"
+    )
+    parser.add_argument(
+        "--k",
+        type=float,
+        default=None,
+        help="Chỉ số GPI - Interface / Schema Complexity (1.0 - 5.0)",
+    )
+    parser.add_argument(
+        "--a",
+        type=float,
+        default=None,
+        help="Chỉ số GPI - Autonomous Model Invocation (1.0 - 5.0)",
+    )
+    parser.add_argument(
+        "--p",
+        type=float,
+        default=None,
+        help="Chỉ số GPI - Parent Domain Coupling (1.0 - 5.0)",
+    )
+    parser.add_argument(
+        "--parent",
+        type=str,
+        default=None,
+        help="Tên Master Skill sở hữu nếu phân loại Tier 2A (Progressive Reference)",
     )
     parser.add_argument(
         "--sync-all", action="store_true", help="Đồng bộ lại tất cả cli_spec.yaml từ scripts"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(args_list)
 
     if args.sync_all:
         return sync_all_skills()
@@ -586,7 +778,18 @@ def main() -> int:
         parser.print_help()
         return 1
 
-    return create_skill_from_script(args.script, args.name)
+    return create_skill_from_script(
+        script_path_str=args.script,
+        skill_name=args.name,
+        bundle=args.bundle,
+        is_deterministic=args.deterministic,
+        is_orchestrated=args.orchestrated,
+        s=args.s,
+        k=args.k,
+        a=args.a,
+        p=args.p,
+        parent=args.parent,
+    )
 
 
 if __name__ == "__main__":

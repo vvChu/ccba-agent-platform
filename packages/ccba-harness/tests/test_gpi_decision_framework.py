@@ -49,17 +49,19 @@ def _make_dummy_skill_md(
     if extra_frontmatter:
         for k, v in extra_frontmatter.items():
             lines.append(f"{k}: {v}")
-    lines.extend([
-        "---",
-        f"# {name.title()}",
-        "",
-        "## Quy trình thực hiện",
-        "### Bước 1: Khởi tạo",
-        "Nội dung bước 1.",
-        "- **Tiêu chí hoàn thành:** Sẵn sàng.",
-    ])
+    lines.extend(
+        [
+            "---",
+            f"# {name.title()}",
+            "",
+            "## Quy trình thực hiện",
+            "### Bước 1: Khởi tạo",
+            "Nội dung bước 1.",
+            "- **Tiêu chí hoàn thành:** Sẵn sàng.",
+        ]
+    )
     for i in range(extra_lines):
-        lines.append(f"Dòng nội dung bổ sung {i+1} để đáp ứng độ dài tối thiểu.")
+        lines.append(f"Dòng nội dung bổ sung {i + 1} để đáp ứng độ dài tối thiểu.")
     return "\n".join(lines)
 
 
@@ -332,13 +334,7 @@ def test_skill_validator_detects_insufficient_gpi_score() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         file_path = Path(tmpdir) / "SKILL.md"
         # s=1, k=1, a=1, p=4 -> GPI = 2.5 + 2.0 + 2.0 - 6.0 = 0.5 < 12.0
-        gpi_yaml = (
-            "\ngpi:\n"
-            "  s: 1\n"
-            "  k: 1\n"
-            "  a: 1\n"
-            "  p: 4"
-        )
+        gpi_yaml = "\ngpi:\n  s: 1\n  k: 1\n  a: 1\n  p: 4"
         lines = [
             "---",
             "name: ccba-sub-skill",
@@ -368,13 +364,7 @@ def test_skill_validator_accepts_compliant_gpi_score() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         file_path = Path(tmpdir) / "SKILL.md"
         # s=4, k=3, a=4, p=1 -> GPI = 22.5 >= 12.0
-        gpi_yaml = (
-            "\ngpi:\n"
-            "  s: 4\n"
-            "  k: 3\n"
-            "  a: 4\n"
-            "  p: 1"
-        )
+        gpi_yaml = "\ngpi:\n  s: 4\n  k: 3\n  a: 4\n  p: 1"
         lines = [
             "---",
             "name: ccba-good-skill",
@@ -486,14 +476,21 @@ def test_cli_evaluate_gpi_standalone_and_json() -> None:
     """CLI evaluates Stage 2 standalone skill with JSON format."""
     stdout_capture = io.StringIO()
     with patch("sys.stdout", stdout_capture):
-        code = run_evaluate_gpi_cli([
-            "--name", "legal-intel",
-            "--s", "4",
-            "--k", "3",
-            "--a", "4",
-            "--p", "1",
-            "--json",
-        ])
+        code = run_evaluate_gpi_cli(
+            [
+                "--name",
+                "legal-intel",
+                "--s",
+                "4",
+                "--k",
+                "3",
+                "--a",
+                "4",
+                "--p",
+                "1",
+                "--json",
+            ]
+        )
     assert code == 0
     payload = json.loads(stdout_capture.getvalue())
     assert payload["name"] == "legal-intel"
@@ -507,14 +504,22 @@ def test_cli_evaluate_gpi_progressive_reference() -> None:
     """CLI evaluates Stage 2 progressive reference (GPI < 12.0)."""
     stdout_capture = io.StringIO()
     with patch("sys.stdout", stdout_capture):
-        code = run_evaluate_gpi_cli([
-            "--name", "table-extractor",
-            "--s", "1",
-            "--k", "1",
-            "--a", "1",
-            "--p", "5",
-            "--parent", "ccba-markdown-document-processing",
-        ])
+        code = run_evaluate_gpi_cli(
+            [
+                "--name",
+                "table-extractor",
+                "--s",
+                "1",
+                "--k",
+                "1",
+                "--a",
+                "1",
+                "--p",
+                "5",
+                "--parent",
+                "ccba-markdown-document-processing",
+            ]
+        )
     assert code == 0
     output = stdout_capture.getvalue()
     assert "Tier 2A: Progressive Reference" in output
@@ -535,13 +540,20 @@ def test_cli_evaluate_gpi_invalid_metric_range_fails() -> None:
     """CLI returns error code 1 when a metric is outside [1, 5]."""
     stderr_capture = io.StringIO()
     with patch("sys.stderr", stderr_capture):
-        code = run_evaluate_gpi_cli([
-            "--name", "invalid-range",
-            "--s", "10",
-            "--k", "2",
-            "--a", "3",
-            "--p", "1",
-        ])
+        code = run_evaluate_gpi_cli(
+            [
+                "--name",
+                "invalid-range",
+                "--s",
+                "10",
+                "--k",
+                "2",
+                "--a",
+                "3",
+                "--p",
+                "1",
+            ]
+        )
     assert code == 1
     assert "Invalid GPI metric values" in stderr_capture.getvalue()
 
@@ -832,15 +844,20 @@ def test_cli_evaluate_gpi_file_with_metric_overrides() -> None:
 
         stdout_text = io.StringIO()
         with patch("sys.stdout", stdout_text):
-            code = run_evaluate_gpi_cli([
-                "--file", str(skill_file),
-                "--s", "4",
-                "--k", "3",
-                "--a", "4",
-                "--p", "1",
-            ])
+            code = run_evaluate_gpi_cli(
+                [
+                    "--file",
+                    str(skill_file),
+                    "--s",
+                    "4",
+                    "--k",
+                    "3",
+                    "--a",
+                    "4",
+                    "--p",
+                    "1",
+                ]
+            )
         assert code == 0
         assert "Tier 2B: Standalone Kernel Skill" in stdout_text.getvalue()
         assert "GPI Score       : 22.50" in stdout_text.getvalue()
-
-
