@@ -240,3 +240,94 @@ def test_get_remote_sha_with_custom_branch() -> None:
         sha = evaluator.get_remote_sha("https://github.com/test/repo", branch="feature-xyz")
         assert sha == "abc1234567890"
         assert any("refs/heads/feature-xyz" in c for c in calls)
+
+
+def test_call_ai_evaluation_ai_gateway_adr0057_flow() -> None:
+    """Verify AI Gateway response with ADR-0057 fields is evaluated by two-stage framework."""
+    import json
+    from unittest.mock import MagicMock
+
+    mock_ai = MagicMock()
+    mock_ai.chat.return_value = json.dumps({
+        "should_port": True,
+        "score": 92,
+        "is_deterministic": False,
+        "is_orchestrated": False,
+        "gpi_scores": {"s": 4.0, "k": 3.0, "a": 2.0, "p": 1.0},
+        "target_bundle": "_software",
+        "disable_model_invocation": False,
+        "parent_master_skill": None,
+        "python_compatibility_assessment": "High",
+        "reason": "Cognitive core skill",
+        "actionable_steps": ["Step 1", "Step 2"],
+    })
+
+    with patch("scripts.spoke.upstream_evaluator.ai", mock_ai):
+        with patch("scripts.spoke.upstream_evaluator.get_existing_elements", return_value=([], [])):
+            res = call_ai_evaluation(
+                "engineer", "cognitive-analyzer", "# Skill\n...", "https://github.com/test/repo"
+            )
+            assert res["should_port"] is True
+            # s=4, k=3, a=2, p=1 -> 4*2.5 + 3*2 + 2*2 - 1*1.5 = 10 + 6 + 4 - 1.5 = 18.5 >= 12.0 -> Tier 2B
+            assert "Tier 2B: Standalone Kernel Skill" in res["recommended_tier"]
+            assert res["decision_result"]["gpi_score"] == 18.5
+            assert res["decision_result"]["allow_standalone_skill"] is True
+
+
+def test_call_ai_evaluation_rule_based_fallback_deterministic() -> None:
+    """Verify deterministic skill name routes to Tier 1 under ADR-0057."""
+    with patch("scripts.spoke.upstream_evaluator.ai", None):
+        with patch("scripts.spoke.upstream_evaluator.get_existing_elements", return_value=([], [])):
+            res = call_ai_evaluation(
+                "engineer", "ast-parse-cleaner", "content", "https://github.com/test/repo"
+            )
+            assert res["should_port"] is True
+            assert "Tier 1: Package Function / Deep Seam" in res["recommended_tier"]
+            assert res["decision_result"]["allow_standalone_skill"] is False
+
+
+def test_call_ai_evaluation_rule_based_fallback_cognitive_tier2a() -> None:
+    """Verify cognitive sub-threshold skill name routes to Tier 2A under ADR-0057."""
+    with patch("scripts.spoke.upstream_evaluator.ai", None):
+        with patch("scripts.spoke.upstream_evaluator.get_existing_elements", return_value=([], [])):
+            res = call_ai_evaluation(
+                "engineer", "helper-assistant", "content", "https://github.com/test/repo"
+            )
+            assert res["should_port"] is True
+            assert "Tier 2A: Progressive Reference" in res["recommended_tier"]
+            assert res["decision_result"]["gpi_score"] == 5.0
+            assert res["decision_result"]["allow_standalone_skill"] is False
+
+
+def test_call_ai_evaluation_robust_json_parsing_with_preamble() -> None:
+    """Verify AI Gateway response wrapped in markdown block and text preamble parses correctly."""
+    import json
+    from unittest.mock import MagicMock
+
+    raw_data = {
+        "should_port": True,
+        "score": 88,
+        "is_deterministic": False,
+        "is_orchestrated": False,
+        "gpi_scores": {"s": 3.0, "k": 2.0, "a": 2.0, "p": 2.0},
+        "target_bundle": "_core",
+        "disable_model_invocation": True,
+        "parent_master_skill": None,
+        "python_compatibility_assessment": "Good",
+        "reason": "Review ritual",
+        "actionable_steps": ["Step 1"],
+    }
+    mock_response = f"Chào bạn, dưới đây là kết quả:\n```json\n{json.dumps(raw_data, indent=2)}\n```\nHy vọng hữu ích!"
+
+    mock_ai = MagicMock()
+    mock_ai.chat.return_value = mock_response
+
+    with patch("scripts.spoke.upstream_evaluator.ai", mock_ai):
+        with patch("scripts.spoke.upstream_evaluator.get_existing_elements", return_value=([], [])):
+            res = call_ai_evaluation(
+                "engineer", "review-tool", "# Skill\n...", "https://github.com/test/repo"
+            )
+            assert res["should_port"] is True
+            assert "Tier 2B: Standalone Kernel Skill" in res["recommended_tier"]
+            assert res["decision_result"]["gpi_score"] == 12.5
+

@@ -30,6 +30,15 @@ except ImportError:
 
 
 PLATFORM_ROOT = Path(__file__).resolve().parents[2]
+if str(PLATFORM_ROOT / "packages" / "ccba-harness" / "src") not in sys.path:
+    sys.path.insert(0, str(PLATFORM_ROOT / "packages" / "ccba-harness" / "src"))
+
+from ccba_harness.gpi import (
+    DecisionRequest,
+    GPIMetrics,
+    evaluate_two_stage_decision,
+)
+
 SOURCES_CONFIG_FILE = PLATFORM_ROOT / ".md" / "knowledge" / "upstream_sources.yaml"
 RECOMMENDATIONS_FILE = PLATFORM_ROOT / ".md" / "knowledge" / "port_recommendations.md"
 
@@ -187,7 +196,7 @@ def call_ai_evaluation(
     remote_url: str = "",
     license_type: str = "PERMISSIVE",
 ) -> dict[str, Any]:
-    """Evaluate a skill using AI Gateway under ADR-0040 (3-Tier Skill Hierarchy), with Rule-Based Fallback."""
+    """Evaluate a skill using AI Gateway under ADR-0057 & RES-2026-ARCH-001 (Two-Stage Decision Framework), with Rule-Based Fallback."""
     existing_skills, existing_workflows = get_existing_elements()
 
     canonical_names = {skill_name}
@@ -228,18 +237,24 @@ def call_ai_evaluation(
     if ai is not None:
         system_prompt = (
             "Bạn là Kiến trúc sư trưởng của ccba-agent-platform (Python Monorepo).\n"
-            "Nhiệm vụ: Đánh giá kỹ năng mới từ kho thượng nguồn theo thể chế ADR-0040 (Kim tự tháp 3 Tầng):\n"
-            "- Tier 1 (Master Deep Skill): model-invoked, logic dày, <= 10 skill/bundle.\n"
-            "- Tier 2 (Progressive Reference): tài liệu tham chiếu sâu nằm trong references/ của một Master Skill.\n"
-            "- Tier 3 (User Workflow): workflow thủ công của người dùng với 'disable-model-invocation: true'.\n\n"
+            "Nhiệm vụ: Đánh giá kỹ năng mới từ kho thượng nguồn theo thể chế ADR-0057 & RES-2026-ARCH-001 (Khung Quyết Định Phân Rã Hai Giai Đoạn):\n"
+            "- Cổng 0 (Determinism Gate): Tác vụ giải quyết 100% bằng giải thuật xác định (regex, AST parse, math, file I/O không cần LLM) -> is_deterministic: true.\n"
+            "- Cổng 1 (Orchestration Gate): Tác vụ điều phối nhiều tác tử song song, StateGraph checkpoints hoặc HITL -> is_orchestrated: true.\n"
+            "- Giai đoạn 2 (GPI): Đánh giá 4 chỉ số định lượng s, k, a, p (thang 1.0 - 5.0):\n"
+            "  * s (Reasoning Steps): số bước suy luận nhận thức của LLM.\n"
+            "  * k (Interface Complexity): độ phức tạp tham số và cấu trúc I/O.\n"
+            "  * a (Autonomous Invocation): mức độ cần Agent tự động triệu hồi.\n"
+            "  * p (Parent Coupling): mức độ gắn kết với Master Skill sở hữu.\n\n"
             "Hãy phân tích và trả về JSON thuần túy (không markdown block):\n"
             "{\n"
             '  "should_port": true/false,\n'
             '  "score": 0-100,\n'
-            '  "recommended_tier": "Tier 1" | "Tier 2" | "Tier 3" | "Reject",\n'
+            '  "is_deterministic": true/false,\n'
+            '  "is_orchestrated": true/false,\n'
+            '  "gpi_scores": {"s": 1.0-5.0, "k": 1.0-5.0, "a": 1.0-5.0, "p": 1.0-5.0},\n'
             '  "target_bundle": "_core" | "_software" | "_consulting" | "_qc" | "_bim",\n'
             '  "disable_model_invocation": true/false,\n'
-            '  "parent_master_skill": "tên master skill nếu là Tier 2 hoặc null",\n'
+            '  "parent_master_skill": "tên master skill nếu là Tier 2A hoặc null",\n'
             '  "python_compatibility_assessment": "Đánh giá mức độ phù hợp khi chuyển sang Python Monorepo",\n'
             '  "reason": "Tóm tắt lý do bằng tiếng Việt",\n'
             '  "actionable_steps": ["Bước 1...", "Bước 2..."]\n'
@@ -260,12 +275,47 @@ def call_ai_evaluation(
         try:
             reply = ai.chat(user_prompt, system=system_prompt)
             clean_reply = reply.strip()
-            if clean_reply.startswith("```json"):
-                clean_reply = clean_reply[7:]
-            if clean_reply.endswith("```"):
-                clean_reply = clean_reply[:-3]
-            clean_reply = clean_reply.strip()
-            result: dict[str, Any] = dict(json.loads(clean_reply))
+            match = re.search(r"(\{.*\})", clean_reply, re.DOTALL)
+            raw_json = match.group(1) if match else clean_reply
+            result: dict[str, Any] = dict(json.loads(raw_json))
+
+            # Run Two-Stage Decision Framework (ADR-0057)
+            gpi_metrics: GPIMetrics | None = None
+            raw_gpi = result.get("gpi_scores")
+            if isinstance(raw_gpi, dict):
+                try:
+                    gpi_metrics = GPIMetrics(
+                        s=float(raw_gpi.get("s", 3.0)),
+                        k=float(raw_gpi.get("k", 2.0)),
+                        a=float(raw_gpi.get("a", 2.0)),
+                        p=float(raw_gpi.get("p", 2.0)),
+                    )
+                except (TypeError, ValueError):
+                    gpi_metrics = None
+
+            is_det = bool(result.get("is_deterministic", False))
+            is_orch = bool(result.get("is_orchestrated", False))
+            if not is_det and not is_orch and gpi_metrics is None:
+                gpi_metrics = GPIMetrics(s=3.0, k=2.0, a=2.0, p=2.0)
+
+            parent_master = result.get("parent_master_skill")
+            req = DecisionRequest(
+                name=skill_name,
+                is_deterministic=is_det,
+                is_orchestrated=is_orch,
+                gpi_metrics=gpi_metrics,
+                parent_skill=parent_master,
+                description=content[:200],
+            )
+            decision = evaluate_two_stage_decision(req)
+            result["recommended_tier"] = decision.tier.value
+            result["decision_result"] = {
+                "tier": decision.tier.value,
+                "target_location": decision.target_location,
+                "rationale": decision.rationale,
+                "gpi_score": decision.gpi_score,
+                "allow_standalone_skill": decision.allow_standalone_skill,
+            }
             result["xia_command"] = generate_xia_command(
                 remote_url, skill_name, "--port" if result.get("should_port") else "--compare"
             )
@@ -273,25 +323,72 @@ def call_ai_evaluation(
         except Exception as e:
             print(f"[Evaluator] AI Gateway error: {e}. Switching to Rule-Based Fallback.")
 
-    # Rule-Based Fallback when AI Gateway is not available
+    # Rule-Based Fallback when AI Gateway is not available (ADR-0057 / RES-2026-ARCH-001)
     is_workflow_like = any(
         kw in skill_name for kw in ["workflow", "setup", "sync", "run", "to-", "create"]
     )
-    recommended_tier = (
-        "Tier 3 (User Workflow)" if is_workflow_like else "Tier 2 (Progressive Reference)"
+    is_deterministic = any(
+        kw in skill_name for kw in ["parse", "ast", "regex", "hash", "format", "clean"]
     )
+
+    if is_deterministic:
+        req = DecisionRequest(
+            name=skill_name,
+            is_deterministic=True,
+            is_orchestrated=False,
+            description=content[:200],
+        )
+    elif is_workflow_like:
+        req = DecisionRequest(
+            name=skill_name,
+            is_deterministic=False,
+            is_orchestrated=True,
+            description=content[:200],
+        )
+    else:
+        req = DecisionRequest(
+            name=skill_name,
+            is_deterministic=False,
+            is_orchestrated=False,
+            gpi_metrics=GPIMetrics(s=2.0, k=2.0, a=1.0, p=4.0),
+            parent_skill="codebase-design",
+            description=content[:200],
+        )
+
+    decision = evaluate_two_stage_decision(req)
+    recommended_tier = decision.tier.value
+
     return {
         "should_port": True,
         "score": 80,
+        "is_deterministic": req.is_deterministic,
+        "is_orchestrated": req.is_orchestrated,
+        "gpi_scores": (
+            {
+                "s": req.gpi_metrics.s,
+                "k": req.gpi_metrics.k,
+                "a": req.gpi_metrics.a,
+                "p": req.gpi_metrics.p,
+            }
+            if isinstance(req.gpi_metrics, GPIMetrics)
+            else None
+        ),
         "recommended_tier": recommended_tier,
         "target_bundle": "_software",
         "disable_model_invocation": True,
-        "parent_master_skill": "codebase-design" if not is_workflow_like else None,
+        "parent_master_skill": req.parent_skill,
         "python_compatibility_assessment": "Cần địa hóa sang môi trường Python / Ruff / PyTest.",
-        "reason": f"Kỹ năng mới chưa có trên catalog ({license_type}). Đề xuất đánh giá qua /ccba-xia.",
+        "reason": f"Kỹ năng mới chưa có trên catalog ({license_type}). Định tuyến: {decision.rationale}",
+        "decision_result": {
+            "tier": decision.tier.value,
+            "target_location": decision.target_location,
+            "rationale": decision.rationale,
+            "gpi_score": decision.gpi_score,
+            "allow_standalone_skill": decision.allow_standalone_skill,
+        },
         "actionable_steps": [
             f"Chạy lệnh `{generate_xia_command(remote_url, skill_name, '--compare')}` để trinh sát",
-            "Xem xét bóc tách thành Progressive Reference theo ADR-0040",
+            f"Định tuyến tới {decision.target_location} theo ADR-0057",
         ],
         "xia_command": generate_xia_command(remote_url, skill_name, "--compare"),
     }
@@ -310,7 +407,7 @@ def append_recommendation(
             RECOMMENDATIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
         header = (
-            "# 📋 Upstream Porting Recommendations (ADR-0040 Radar)\n\n"
+            "# 📋 Upstream Porting Recommendations (ADR-0057 & RES-2026-ARCH-001 Radar)\n\n"
             f"Báo cáo tự động đánh giá các tính năng mới từ thượng nguồn. Cập nhật ngày: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
         )
 
@@ -362,13 +459,18 @@ def append_recommendation(
             status_text = "RECOMMEND PORT"
             color = "🟢"
 
+        dec_res = result.get("decision_result")
+        gpi_info = ""
+        if dec_res and dec_res.get("gpi_score") is not None:
+            gpi_info = f" (GPI: {dec_res['gpi_score']:.2f})"
+
         item_md = f"""
 ---
 
-### {color} [{status_text}] Skill: `{skill_name}` (Score: {result.get("score", 0)}/100) — {tier}
+### {color} [{status_text}] Skill: `{skill_name}` (Score: {result.get("score", 0)}/100) — {tier}{gpi_info}
 *   **Kho chứa nguồn**: `{repo_type}` ({remote_url})
 *   **Bản quyền**: `{license_desc}`
-*   **Phân tầng đề xuất (ADR-0040)**: `{tier}` (Bundle: `{bundle}`, `disable-model-invocation: {str(disable_inv).lower()}`)
+*   **Phân tầng đề xuất (ADR-0057)**: `{tier}` (Bundle: `{bundle}`, `disable-model-invocation: {str(disable_inv).lower()}`)
 *   **Đánh giá tương thích Python**: {py_compat}
 *   **Lý do**: {result.get("reason", "Không có lý do chi tiết từ AI")}
 *   **Các bước triển khai**:
@@ -495,7 +597,7 @@ class UpstreamEvaluator:
     def evaluate_repo_diff(
         self, repo_path: Path, base_sha: str, head_sha: str, repo_type: str, remote_url: str
     ) -> None:
-        """Run git diff and evaluate modified or new skills under ADR-0040."""
+        """Run git diff and evaluate modified or new skills under ADR-0057 & RES-2026-ARCH-001."""
         if not repo_path.exists():
             return
 
@@ -603,7 +705,7 @@ class UpstreamEvaluator:
                 print("  - [Check-Only Mode] Skipping automated evaluator.\n")
                 return
 
-            print("  - Running Automated ADR-0040 Feature Evaluator...")
+            print("  - Running Automated ADR-0057 & RES-2026-ARCH-001 Feature Evaluator...")
             self.evaluate_repo_diff(local_path, local_sha, remote_sha, repo_type, remote_url)
             sha_file.write_text(remote_sha, encoding="utf-8")
             print(f"[Upstream Check] Successfully processed updates for {repo_type}.\n")
@@ -628,7 +730,7 @@ def main() -> None:
             sys.stderr.reconfigure(encoding="utf-8")
 
     parser = argparse.ArgumentParser(
-        description="CCBA Upstream Synchronization & Evaluation Engine (ADR-0040 Radar)"
+        description="CCBA Upstream Synchronization & Evaluation Engine (ADR-0057 & RES-2026-ARCH-001 Radar)"
     )
 
     parser.add_argument(

@@ -22,6 +22,7 @@ from ._guard import HarnessGuard
 from ._mutex import FileMutexLock
 from ._state import HarnessLocal, HarnessState
 from .evals import (
+    AutoItemScorer,
     BaseScorer,
     EvalItem,
     EvalItemResult,
@@ -33,6 +34,8 @@ from .evals import (
     LLMRubricScorer,
     RegexScorer,
     ScoreResult,
+    load_eval_dataset,
+    run_eval_pipeline,
 )
 from .gpi import (
     GPI_STANDALONE_THRESHOLD,
@@ -85,4 +88,7 @@ __all__ = [
     "JsonSchemaScorer",
     "LLMRubricScorer",
     "EvalRunner",
+    "AutoItemScorer",
+    "load_eval_dataset",
+    "run_eval_pipeline",
 ]

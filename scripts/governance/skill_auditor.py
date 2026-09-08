@@ -60,6 +60,8 @@ class SkillAuditor(BaseAuditor):
         raw_issues = self._validator.audit_skill(
             file_path, check_shallow=check_shallow, enforce_gpi=enforce_gpi
         )
+        if not enforce_gpi:
+            raw_issues = [i for i in raw_issues if i.category != "INSUFFICIENT_GPI_SCORE"]
         return [AuditIssue(*i) for i in raw_issues]
 
     def _analyze_steps_completion_criteria(self, body: str) -> list[tuple[int, str]]:

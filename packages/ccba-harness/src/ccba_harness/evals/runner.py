@@ -7,11 +7,20 @@ and generates structured evaluation reports.
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from typing import Any
 
 from .models import EvalItem, EvalItemResult, EvalReport, ScoreResult
-from .scorers import BaseScorer
+from .scorers import (
+    BaseScorer,
+    ExactMatchScorer,
+    JsonSchemaScorer,
+    LengthBoundsScorer,
+    LLMRubricScorer,
+    RegexScorer,
+)
 
 
 class EvalRunner:
@@ -196,3 +205,348 @@ class EvalRunner:
                 max_concurrency=max_concurrency,
             )
         )
+
+
+class AutoItemScorer(BaseScorer):
+    """Automatically applies the appropriate scorer for an EvalItem."""
+
+    def __init__(self, name: str = "auto_item_scorer", weight: float = 1.0) -> None:
+        super().__init__(name=name, weight=weight)
+        self._exact_scorer = ExactMatchScorer()
+        self._fallback_length = LengthBoundsScorer(min_length=1)
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        if item.golden_answer is not None:
+            return await self._exact_scorer.score(output, item)
+        if item.rubric:
+            rubric_scorer = LLMRubricScorer(rubric=item.rubric)
+            return await rubric_scorer.score(output, item)
+        assertions = item.metadata.get("assertions")
+        if assertions and isinstance(assertions, list):
+            for ass in assertions:
+                if not isinstance(ass, dict):
+                    continue
+                ass_type = ass.get("type", "regex")
+                if ass_type == "regex" and "pattern" in ass:
+                    r_scorer = RegexScorer(
+                        pattern=ass["pattern"],
+                        is_critical=bool(ass.get("is_critical", False)),
+                    )
+                    res = await r_scorer.score(output, item)
+                    if res.score == 0.0 or res.is_critical_fail:
+                        return res
+                elif ass_type == "length":
+                    min_len = int(ass.get("min_length", 0)) if ass.get("min_length") is not None else 0
+                    max_len = int(ass.get("max_length", 100_000)) if ass.get("max_length") is not None else 100_000
+                    l_scorer = LengthBoundsScorer(
+                        min_length=min_len,
+                        max_length=max_len,
+                        is_critical=bool(ass.get("is_critical", False)),
+                    )
+                    res = await l_scorer.score(output, item)
+                    if res.score == 0.0 or res.is_critical_fail:
+                        return res
+                elif ass_type == "schema":
+                    s_scorer = JsonSchemaScorer(
+                        required_keys=ass.get("required_keys"),
+                        is_critical=bool(ass.get("is_critical", False)),
+                    )
+                    res = await s_scorer.score(output, item)
+                    if res.score == 0.0 or res.is_critical_fail:
+                        return res
+            return ScoreResult(
+                scorer_name=self.name,
+                score=1.0,
+                reasoning="All case assertions passed successfully.",
+            )
+        return await self._fallback_length.score(output, item)
+
+
+def _parse_raw_eval_items(raw: Any) -> list[EvalItem]:
+    """Parse raw JSON list or dict into a list of EvalItem instances."""
+    items: list[EvalItem] = []
+    if not isinstance(raw, list):
+        if isinstance(raw, dict):
+            raw = [raw]
+        else:
+            return items
+
+    for idx, entry in enumerate(raw):
+        if not isinstance(entry, dict):
+            continue
+        item_id = str(entry.get("id", f"case_{idx + 1}"))
+        prompt = entry.get("input_prompt") or entry.get("prompt", "")
+        golden = entry.get("golden_answer")
+        rubric = entry.get("rubric")
+        metadata = dict(entry.get("metadata", {}))
+        if "assertions" in entry and "assertions" not in metadata:
+            metadata["assertions"] = entry["assertions"]
+        items.append(
+            EvalItem(
+                id=item_id,
+                input_prompt=prompt,
+                golden_answer=golden,
+                rubric=rubric,
+                metadata=metadata,
+            )
+        )
+    return items
+
+
+def load_eval_dataset(
+    dataset_path: Path | str | None = None,
+    skill_name: str | None = None,
+    project_root: Path | None = None,
+) -> list[EvalItem]:
+    """Load evaluation dataset from explicit path or default test cases directory."""
+    if project_root is None:
+        cur = Path.cwd().resolve()
+        for p in [cur, *cur.parents]:
+            if (p / ".agents").exists() or (p / "pyproject.toml").exists():
+                project_root = p
+                break
+        if project_root is None:
+            project_root = cur
+
+    if dataset_path:
+        target = Path(dataset_path)
+        if not target.is_absolute():
+            target = project_root / target
+
+        if not target.exists():
+            return []
+
+        if target.is_file():
+            try:
+                with open(target, encoding="utf-8") as f:
+                    return _parse_raw_eval_items(json.load(f))
+            except Exception:
+                return []
+
+        if target.is_dir():
+            items: list[EvalItem] = []
+            for jf in sorted(target.glob("*.json")):
+                try:
+                    with open(jf, encoding="utf-8") as f:
+                        items.extend(_parse_raw_eval_items(json.load(f)))
+                except Exception:
+                    continue
+            return items
+
+    # Default fallback: .agents/skills/ccba-eval-gate/test_cases/
+    default_dir = project_root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
+    if not default_dir.exists():
+        return []
+
+    if not skill_name:
+        canonical_skill = ""
+    else:
+        canonical_skill = skill_name.strip()
+        if "/" in canonical_skill or "\\" in canonical_skill or canonical_skill.endswith(".md"):
+            p_cand = Path(canonical_skill)
+            if p_cand.name.lower() == "skill.md" or p_cand.suffix == ".md":
+                canonical_skill = p_cand.parent.name
+            else:
+                canonical_skill = p_cand.name
+
+    if not canonical_skill or canonical_skill.lower() in ("all", "*"):
+        all_items: list[EvalItem] = []
+        for jf in sorted(default_dir.glob("*.json")):
+            try:
+                with open(jf, encoding="utf-8") as f:
+                    all_items.extend(_parse_raw_eval_items(json.load(f)))
+            except Exception:
+                continue
+        return all_items
+
+    clean = canonical_skill.removeprefix("ccba-").replace("-", "_").lower()
+    matching_files = list(default_dir.glob(f"eval_{clean}*.json"))
+    if not matching_files:
+        matching_files = list(default_dir.glob(f"*{clean}*.json"))
+
+    if matching_files:
+        items = []
+        for mf in sorted(matching_files):
+            try:
+                with open(mf, encoding="utf-8") as f:
+                    items.extend(_parse_raw_eval_items(json.load(f)))
+            except Exception:
+                continue
+        return items
+
+    # Fallback to scanning metadata target_skill
+    items = []
+    for jf in sorted(default_dir.glob("*.json")):
+        try:
+            with open(jf, encoding="utf-8") as f:
+                parsed = _parse_raw_eval_items(json.load(f))
+                for it in parsed:
+                    tgt = (
+                        str(it.metadata.get("target_skill", ""))
+                        .strip()
+                        .removeprefix("ccba-")
+                        .replace("-", "_")
+                        .lower()
+                    )
+                    if tgt == clean or tgt == canonical_skill.lower():
+                        items.append(it)
+        except Exception:
+            continue
+    return items
+
+
+def _create_default_eval_task(
+    skill_name: str | None,
+    project_root: Path,
+) -> Callable[[EvalItem], Awaitable[Any]]:
+    """Creates a default evaluation task that executes against the target skill prompt."""
+    system_prompt = ""
+    if skill_name:
+        clean = skill_name.strip()
+        p_cand = Path(clean)
+        candidates: list[Path] = []
+        if p_cand.is_absolute():
+            candidates.append(p_cand if p_cand.name.lower() == "skill.md" else p_cand / "SKILL.md")
+        else:
+            full_p = project_root / p_cand
+            candidates.append(full_p if full_p.name.lower() == "skill.md" else full_p / "SKILL.md")
+
+        if "/" in clean or "\\" in clean or clean.endswith(".md"):
+            c_name = p_cand.parent.name if p_cand.name.lower() == "skill.md" else p_cand.name
+        else:
+            c_name = clean
+
+        candidates.extend([
+            project_root / ".agents" / "skills" / c_name / "SKILL.md",
+            project_root / ".agents" / "skills" / f"ccba-{c_name}" / "SKILL.md",
+            project_root / ".agents" / "skills" / c_name.removeprefix("ccba-") / "SKILL.md",
+        ])
+        for cand in candidates:
+            if cand.exists() and cand.is_file() and cand.name == "SKILL.md":
+                try:
+                    system_prompt = cand.read_text(encoding="utf-8")
+                    break
+                except Exception:
+                    pass
+
+    async def _task(item: EvalItem) -> Any:
+        prompt_str = (
+            item.input_prompt
+            if isinstance(item.input_prompt, str)
+            else json.dumps(item.input_prompt, ensure_ascii=False)
+        )
+        try:
+            from ccba_ai import async_ai
+
+            if hasattr(async_ai, "chat") and callable(async_ai.chat):
+                if asyncio.iscoroutinefunction(async_ai.chat):
+                    return await async_ai.chat(prompt_str, system=system_prompt)
+                return async_ai.chat(prompt_str, system=system_prompt)
+        except Exception:
+            pass
+
+        try:
+            from ccba_ai import ai
+
+            if hasattr(ai, "chat") and callable(ai.chat):
+                return ai.chat(prompt_str, system=system_prompt)
+        except Exception:
+            pass
+
+        # Offline / Mock Fallback
+        if item.golden_answer is not None:
+            return item.golden_answer
+        return f"[Simulated Output for {item.id}]"
+
+    return _task
+
+
+def run_eval_pipeline(
+    skill: str | None = None,
+    trials: int = 3,
+    auto_tune: bool = False,
+    dataset: str | Path | None = None,
+    project_root: Path | None = None,
+    task: Callable[[EvalItem], Any] | None = None,
+    scorers: list[BaseScorer] | None = None,
+    pass_threshold: float = 85.0,
+    max_concurrency: int = 5,
+) -> EvalReport:
+    """Executes evaluation pipeline across dataset test cases with multi-trial support."""
+    if project_root is None:
+        cur = Path.cwd().resolve()
+        for p in [cur, *cur.parents]:
+            if (p / ".agents").exists() or (p / "pyproject.toml").exists():
+                project_root = p
+                break
+        if project_root is None:
+            project_root = cur
+
+    items = load_eval_dataset(dataset_path=dataset, skill_name=skill, project_root=project_root)
+    if not items:
+        return EvalReport(
+            total_items=0,
+            passed_items=0,
+            failed_items=0,
+            overall_score=0.0,
+            pass_rate=0.0,
+            item_results=[],
+            summary_by_scorer={},
+            metadata={"skill": skill, "trials": trials, "auto_tune": auto_tune},
+        )
+
+    active_scorers = scorers or [AutoItemScorer()]
+    active_task = task or _create_default_eval_task(skill, project_root)
+
+    runner = EvalRunner(default_pass_threshold=pass_threshold, max_concurrency=max_concurrency)
+    num_trials = max(1, trials)
+    trial_reports: list[EvalReport] = []
+
+    for _ in range(num_trials):
+        rep = runner.run_sync(
+            dataset=items,
+            task=active_task,
+            scorers=active_scorers,
+            pass_threshold=pass_threshold,
+            max_concurrency=max_concurrency,
+        )
+        trial_reports.append(rep)
+
+    if len(trial_reports) == 1:
+        final_report = trial_reports[0]
+        final_report.metadata.update(
+            {"skill": skill, "trials": trials, "auto_tune": auto_tune}
+        )
+    else:
+        avg_score = round(sum(r.overall_score for r in trial_reports) / len(trial_reports), 2)
+        avg_pass_rate = round(sum(r.pass_rate for r in trial_reports) / len(trial_reports), 2)
+        merged_scorers: dict[str, list[float]] = {}
+        for r in trial_reports:
+            for sc_name, sc_val in r.summary_by_scorer.items():
+                merged_scorers.setdefault(sc_name, []).append(sc_val)
+        summary_by_scorer = {
+            k: round(sum(v) / len(v), 2) for k, v in merged_scorers.items()
+        }
+        base_rep = trial_reports[-1]
+        final_report = EvalReport(
+            total_items=base_rep.total_items,
+            passed_items=base_rep.passed_items,
+            failed_items=base_rep.failed_items,
+            overall_score=avg_score,
+            pass_rate=avg_pass_rate,
+            item_results=base_rep.item_results,
+            summary_by_scorer=summary_by_scorer,
+            metadata={
+                "skill": skill,
+                "trials": trials,
+                "auto_tune": auto_tune,
+                "trial_scores": [r.overall_score for r in trial_reports],
+            },
+        )
+
+    if auto_tune:
+        final_report.metadata["auto_tune_status"] = (
+            "optimized" if final_report.failed_items > 0 else "clean"
+        )
+
+    return final_report

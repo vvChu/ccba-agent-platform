@@ -351,12 +351,16 @@ def test_skill_validator_detects_insufficient_gpi_score() -> None:
         file_path.write_text("\n".join(lines), encoding="utf-8")
 
         validator = SkillValidator(project_root=Path(tmpdir))
-        issues = validator.audit_skill(file_path)
+        issues = validator.audit_skill(file_path, enforce_gpi=True)
 
         assert any(i.category == "INSUFFICIENT_GPI_SCORE" for i in issues)
         gpi_issue = next(i for i in issues if i.category == "INSUFFICIENT_GPI_SCORE")
         assert "GPI 0.50 < 12.0" in gpi_issue.message
         assert "Tier 2A" in gpi_issue.message
+
+        # Verify that without enforce_gpi, sub-threshold GPI does not raise hard error
+        issues_no_enforce = validator.audit_skill(file_path, enforce_gpi=False)
+        assert not any(i.category == "INSUFFICIENT_GPI_SCORE" for i in issues_no_enforce)
 
 
 def test_skill_validator_accepts_compliant_gpi_score() -> None:

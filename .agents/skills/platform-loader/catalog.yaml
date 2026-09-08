@@ -931,6 +931,7 @@ skills:
   - ccba-review-skill
   - kiểm định skill
   skill_path: .agents/skills/ccba-review-skill/SKILL.md
+  command: /ccba-review-skill
 - name: ccba-seminar-builder
   bundle: _consulting
   description: Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda,
@@ -1073,7 +1074,7 @@ skills:
   command: /ccba-spoke-adopter
 - name: ccba-sync-upstream
   bundle: _core
-  description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0040 Radar)
+  description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0057 Radar)
     kết hợp kích hoạt 1-Click Port qua /ccba-xia.
   triggers:
   - sync

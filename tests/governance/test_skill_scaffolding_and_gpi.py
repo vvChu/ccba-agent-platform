@@ -540,3 +540,82 @@ def test_updated_phase1_skills_pass_enforce_gpi() -> None:
     assert len(issues_writing) == 0, (
         f"ccba-writing-great-skills issues: {[i.message for i in issues_writing]}"
     )
+
+
+def test_updated_phase2_skills_pass_enforce_gpi() -> None:
+    """Verify that ccba-review-skill passes --enforce-gpi validation."""
+    auditor = SkillAuditor(PROJECT_ROOT)
+
+    review_skill = PROJECT_ROOT / ".agents" / "skills" / "ccba-review-skill" / "SKILL.md"
+    assert review_skill.exists()
+    issues_review = auditor.audit_skill(review_skill, enforce_gpi=True)
+    assert len(issues_review) == 0, f"ccba-review-skill issues: {[i.message for i in issues_review]}"
+
+
+def test_ccba_review_skill_phase2_spec_contract() -> None:
+    """Verify ccba-review-skill contains all Phase 2 ADR-0057 contractual requirements."""
+    import yaml
+
+    file_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-review-skill" / "SKILL.md"
+    assert file_path.exists()
+    raw_text = file_path.read_text(encoding="utf-8")
+
+    # Frontmatter verification
+    parts = raw_text.split("---", 2)
+    assert len(parts) >= 3
+    fm = yaml.safe_load(parts[1])
+    assert fm.get("user-invocable") is True
+    assert fm.get("command") == "/ccba-review-skill"
+    gpi = fm.get("gpi", {})
+    assert float(gpi.get("s")) == 3.0
+    assert float(gpi.get("k")) == 2.0
+    assert float(gpi.get("a")) == 2.0
+    assert float(gpi.get("p")) == 2.0
+
+    calculated_gpi = (3.0 * 2.5) + (2.0 * 2.0) + (2.0 * 2.0) - (2.0 * 1.5)
+    assert calculated_gpi == 12.5 >= 12.0
+
+    # Content verification
+    body = parts[2]
+    assert "Cổng 0 (The Determinism Gate)" in body
+    assert "Cổng 1 (The Orchestration Gate)" in body
+    assert "python -m ccba_harness.cli evaluate-gpi --file <path-to-skill.md>" in body
+    assert "GPI < 12.0" in body
+    assert "Tier 2A" in body
+    assert "> 100 LOC" in body
+
+
+def test_ccba_skills_eval_phase2_spec_contract() -> None:
+    """Verify ccba-skills-eval contains all Phase 2 ADR-0057 contractual requirements."""
+    import yaml
+
+    file_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-skills-eval" / "SKILL.md"
+    assert file_path.exists()
+    raw_text = file_path.read_text(encoding="utf-8")
+
+    parts = raw_text.split("---", 2)
+    assert len(parts) >= 3
+    fm = yaml.safe_load(parts[1])
+    gpi = fm.get("gpi", {})
+    assert float(gpi.get("s")) == 2.0
+    assert float(gpi.get("k")) == 1.0
+    assert float(gpi.get("a")) == 1.0
+    assert float(gpi.get("p")) == 4.0
+
+    body = parts[2]
+    assert "python -m ccba_harness.cli eval --skill [tên-skill] --trials 3" in body
+
+
+def test_ccba_sync_upstream_phase2_spec_contract() -> None:
+    """Verify ccba-sync-upstream contains all Phase 2 ADR-0057 contractual requirements."""
+    file_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-sync-upstream" / "SKILL.md"
+    assert file_path.exists()
+    raw_text = file_path.read_text(encoding="utf-8")
+
+    assert "ADR-0057 & RES-2026-ARCH-001 v1.2" in raw_text
+    assert "100 skills" in raw_text
+    assert "Tier 1: Package Function" in raw_text
+    assert "Tier 2A: Progressive Reference" in raw_text
+    assert "Tier 2B: Standalone Kernel Skill" in raw_text
+    assert "Tier 3: Composite Orchestrator" in raw_text
+

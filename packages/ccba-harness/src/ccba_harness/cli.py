@@ -381,6 +381,179 @@ def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
     return 0
 
 
+def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
+    """CLI entry point for skill evaluation benchmarks (`ccba-harness eval`)."""
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            try:
+                sys.stdout.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+        if hasattr(sys.stderr, "reconfigure"):
+            try:
+                sys.stderr.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+
+    parser = argparse.ArgumentParser(
+        prog="ccba-harness eval",
+        description="Run evaluation benchmarks for skills (CCBA Evals Framework).",
+    )
+    parser.add_argument(
+        "--skill",
+        type=str,
+        default=None,
+        help="Name or path of skill to evaluate (e.g. copywriting or .agents/skills/ccba-copywriting)",
+    )
+    parser.add_argument(
+        "--trials",
+        type=int,
+        default=3,
+        help="Number of evaluation trials (default: 3)",
+    )
+    parser.add_argument(
+        "--auto-tune",
+        action="store_true",
+        help="Enable automatic prompt optimization via SkillOpt loop",
+    )
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default=None,
+        help="Path to test cases directory or JSON file",
+    )
+    parser.add_argument(
+        "--root",
+        type=str,
+        default=None,
+        help="Project workspace root (default: auto-detected)",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output result in JSON format",
+    )
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=85.0,
+        help="Passing score threshold percentage (default: 85.0)",
+    )
+
+    args = parser.parse_args(args_list)
+
+    if args.root:
+        root_path = Path(args.root).resolve()
+    else:
+        cur = Path.cwd().resolve()
+        root_path = cur
+        for p in [cur, *cur.parents]:
+            if (p / ".agents").exists() or (p / "pyproject.toml").exists():
+                root_path = p
+                break
+
+    from .evals.runner import run_eval_pipeline
+
+    dataset_target = args.dataset
+    if args.dataset:
+        d_path = Path(args.dataset)
+        if not d_path.is_absolute():
+            d_path = root_path / d_path
+        if not d_path.exists():
+            print(f"ERROR: Dataset path does not exist: {args.dataset}", file=sys.stderr)
+            return 1
+        dataset_target = str(d_path)
+
+    try:
+        report = run_eval_pipeline(
+            skill=args.skill,
+            trials=args.trials,
+            auto_tune=args.auto_tune,
+            dataset=dataset_target,
+            project_root=root_path,
+            pass_threshold=args.threshold,
+        )
+    except Exception as err:
+        print(f"ERROR: Evaluation pipeline failed: {err}", file=sys.stderr)
+        return 1
+
+    if report.total_items == 0:
+        err_msg = (
+            f"No evaluation test cases found for target skill: {args.skill}"
+            if args.skill
+            else (
+                f"No evaluation test cases found in dataset: {args.dataset}"
+                if args.dataset
+                else "No evaluation test cases found."
+            )
+        )
+        print(f"ERROR: {err_msg}", file=sys.stderr)
+        if args.json:
+            import json
+
+            data = {
+                "skill": args.skill,
+                "trials": args.trials,
+                "auto_tune": args.auto_tune,
+                "total_items": 0,
+                "passed_items": 0,
+                "failed_items": 0,
+                "overall_score": 0.0,
+                "pass_rate": 0.0,
+                "passed": False,
+                "summary_by_scorer": {},
+                "metadata": report.metadata,
+                "error": err_msg,
+            }
+            print(json.dumps(data, indent=2, ensure_ascii=False))
+        return 1
+
+    passed_all = (
+        report.total_items > 0
+        and report.pass_rate >= args.threshold
+        and report.failed_items == 0
+    )
+
+    if args.json:
+        import json
+
+        data = {
+            "skill": args.skill,
+            "trials": args.trials,
+            "auto_tune": args.auto_tune,
+            "total_items": report.total_items,
+            "passed_items": report.passed_items,
+            "failed_items": report.failed_items,
+            "overall_score": report.overall_score,
+            "pass_rate": report.pass_rate,
+            "passed": passed_all,
+            "summary_by_scorer": report.summary_by_scorer,
+            "metadata": report.metadata,
+        }
+        print(json.dumps(data, indent=2, ensure_ascii=False))
+    else:
+        print("=" * 60)
+        print("CCBA SKILL EVALUATION REPORT")
+        print(f"Target Skill     : {args.skill or 'ALL'}")
+        print(f"Evaluation Trials: {args.trials}")
+        print(f"Auto-Tune Mode   : {'ENABLED' if args.auto_tune else 'DISABLED'}")
+        print(f"Total Cases      : {report.total_items}")
+        print(f"Passed Cases     : {report.passed_items}")
+        print(f"Failed Cases     : {report.failed_items}")
+        print(f"Overall Score    : {report.overall_score:.2f}% (Threshold: {args.threshold:.2f}%)")
+        print(f"Pass Rate        : {report.pass_rate:.2f}%")
+        print(f"Status           : {'PASS' if passed_all else 'FAIL'}")
+        if report.summary_by_scorer:
+            print("Scorer Breakdown :")
+            for sc_name, sc_val in report.summary_by_scorer.items():
+                print(f"  - {sc_name}: {sc_val:.2f}%")
+        print("=" * 60)
+
+    if not passed_all:
+        return 1
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Main CLI entry point for ccba-harness."""
     if argv is None:
@@ -460,6 +633,52 @@ def main(argv: Sequence[str] | None = None) -> int:
     gpi_parser.add_argument("--parent", type=str, default=None, help="Parent/Master skill name")
     gpi_parser.add_argument("--json", action="store_true", help="Output result in JSON format")
 
+    # Subcommand: eval
+    eval_parser = subparsers.add_parser(
+        "eval",
+        help="Run evaluation benchmarks for skills (CCBA Evals Framework).",
+    )
+    eval_parser.add_argument(
+        "--skill",
+        type=str,
+        default=None,
+        help="Name or path of skill to evaluate",
+    )
+    eval_parser.add_argument(
+        "--trials",
+        type=int,
+        default=3,
+        help="Number of evaluation trials (default: 3)",
+    )
+    eval_parser.add_argument(
+        "--auto-tune",
+        action="store_true",
+        help="Enable automatic prompt optimization via SkillOpt loop",
+    )
+    eval_parser.add_argument(
+        "--dataset",
+        type=str,
+        default=None,
+        help="Path to test cases directory or JSON file",
+    )
+    eval_parser.add_argument(
+        "--root",
+        type=str,
+        default=None,
+        help="Project workspace root",
+    )
+    eval_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output result in JSON format",
+    )
+    eval_parser.add_argument(
+        "--threshold",
+        type=float,
+        default=85.0,
+        help="Passing score threshold percentage (default: 85.0)",
+    )
+
     if not argv:
         parser.print_help()
         return 0
@@ -472,12 +691,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     if argv[0] == "evaluate-gpi":
         return run_evaluate_gpi_cli(argv[1:])
 
+    # If first argument is eval, parse and run
+    if argv[0] == "eval":
+        return run_eval_cli(argv[1:])
+
     # Fallback to general parsing
     parsed = parser.parse_args(argv)
     if parsed.subcommand == "validate-skill":
         return run_skill_validation_cli(argv[1:])
     if parsed.subcommand == "evaluate-gpi":
         return run_evaluate_gpi_cli(argv[1:])
+    if parsed.subcommand == "eval":
+        return run_eval_cli(argv[1:])
 
     parser.print_help()
     return 0
