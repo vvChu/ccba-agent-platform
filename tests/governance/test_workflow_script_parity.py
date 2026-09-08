@@ -83,7 +83,16 @@ def test_python_module_invocations_match_packages() -> None:
     target_files = get_target_documents()
 
     # Discover registered package module names
-    registered_modules = {"pytest", "ruff", "mypy", "venv", "pip", "unittest", "notebooklm", "markitdown"}
+    registered_modules = {
+        "pytest",
+        "ruff",
+        "mypy",
+        "venv",
+        "pip",
+        "unittest",
+        "notebooklm",
+        "markitdown",
+    }
     for pkg in PACKAGES_DIR.iterdir():
         if pkg.is_dir():
             src_dir = pkg / "src"

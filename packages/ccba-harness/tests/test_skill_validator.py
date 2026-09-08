@@ -48,7 +48,7 @@ def _make_dummy_skill_content(
     lines.append("")
 
     for i in range(extra_lines):
-        lines.append(f"Dòng nội dung bổ sung số {i+1} để kiểm thử quy chuẩn độ dài.")
+        lines.append(f"Dòng nội dung bổ sung số {i + 1} để kiểm thử quy chuẩn độ dài.")
 
     return "\n".join(lines)
 
@@ -221,7 +221,9 @@ def test_shallow_skill_warning_gate() -> None:
         issues_shallow = validator.audit_skill(file_path, check_shallow=True)
         shallow_issues = [i for i in issues_shallow if i.category == "SHALLOW_SKILL_WARNING"]
         assert len(shallow_issues) == 1
-        assert f"< {SHALLOW_SKILL_MIN_LINES} lines minimum per ADR-0040" in shallow_issues[0].message
+        assert (
+            f"< {SHALLOW_SKILL_MIN_LINES} lines minimum per ADR-0040" in shallow_issues[0].message
+        )
 
         # Dedicated check_shallow_skill method
         issues_direct = validator.check_shallow_skill(file_path)
@@ -324,15 +326,11 @@ def test_cli_runner_nonexistent_targets() -> None:
         tmp_root = Path(tmpdir)
 
         # Non-existent file via --file
-        code_file = run_skill_validation_cli(
-            ["--file", "nonexistent.md", "--root", str(tmp_root)]
-        )
+        code_file = run_skill_validation_cli(["--file", "nonexistent.md", "--root", str(tmp_root)])
         assert code_file == 1
 
         # Non-existent file via positional arg
-        code_pos = run_skill_validation_cli(
-            ["nonexistent_pos.md", "--root", str(tmp_root)]
-        )
+        code_pos = run_skill_validation_cli(["nonexistent_pos.md", "--root", str(tmp_root)])
         assert code_pos == 1
 
 
@@ -404,4 +402,3 @@ def test_boolean_string_normalization() -> None:
         issues = validator.audit_skill(file_path)
         # Should flag description too long since disable-model-invocation is effectively false
         assert any(i.category == "DESCRIPTION_TOO_LONG" for i in issues)
-

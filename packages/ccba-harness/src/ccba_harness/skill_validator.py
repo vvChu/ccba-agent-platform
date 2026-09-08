@@ -548,7 +548,10 @@ class SkillValidator:
                             parent_skill=parent_skill,
                         )
                         decision = evaluate_two_stage_decision(req)
-                        if enforce_gpi and decision.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE:
+                        if (
+                            enforce_gpi
+                            and decision.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
+                        ):
                             score = decision.gpi_score or 0.0
                             issues.append(
                                 SkillAuditIssue(

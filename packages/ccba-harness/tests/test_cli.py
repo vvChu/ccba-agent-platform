@@ -48,7 +48,9 @@ def test_eval_cli_nonexistent_dataset(capsys: pytest.CaptureFixture[str]) -> Non
     assert "ERROR: Dataset path does not exist" in captured.err
 
 
-def test_eval_cli_custom_dataset_passing(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_eval_cli_custom_dataset_passing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Verify eval CLI passes when all test cases match golden answer."""
     dataset_file = tmp_path / "test_eval_cases.json"
     dataset_data = [
@@ -76,7 +78,9 @@ def test_eval_cli_custom_dataset_passing(tmp_path: Path, capsys: pytest.CaptureF
         assert res["trials"] == 2
 
 
-def test_eval_cli_custom_dataset_failing(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_eval_cli_custom_dataset_failing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Verify eval CLI fails (returns 1) when score is below threshold."""
     dataset_file = tmp_path / "test_eval_cases.json"
     dataset_data = [
@@ -87,7 +91,9 @@ def test_eval_cli_custom_dataset_failing(tmp_path: Path, capsys: pytest.CaptureF
     async def mock_failing_task(item: EvalItem) -> str:
         return "Wrong output"
 
-    with patch("ccba_harness.evals.runner._create_default_eval_task", return_value=mock_failing_task):
+    with patch(
+        "ccba_harness.evals.runner._create_default_eval_task", return_value=mock_failing_task
+    ):
         code = run_eval_cli(
             ["--dataset", str(dataset_file), "--trials", "1", "--threshold", "85.0"]
         )
@@ -98,7 +104,9 @@ def test_eval_cli_custom_dataset_failing(tmp_path: Path, capsys: pytest.CaptureF
         assert "Failed Cases     : 1" in captured.out
 
 
-def test_eval_cli_auto_tune_flag_recording(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_eval_cli_auto_tune_flag_recording(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Verify --auto-tune flag is recorded in report metadata."""
     dataset_file = tmp_path / "test_eval_cases.json"
     dataset_data = [
@@ -110,9 +118,7 @@ def test_eval_cli_auto_tune_flag_recording(tmp_path: Path, capsys: pytest.Captur
         return "Answer"
 
     with patch("ccba_harness.evals.runner._create_default_eval_task", return_value=mock_task):
-        code = run_eval_cli(
-            ["--dataset", str(dataset_file), "--auto-tune", "--json"]
-        )
+        code = run_eval_cli(["--dataset", str(dataset_file), "--auto-tune", "--json"])
         assert code == 0
         captured = capsys.readouterr()
         res = json.loads(captured.out)
@@ -197,7 +203,9 @@ def test_eval_cli_skill_path_resolution(tmp_path: Path, capsys: pytest.CaptureFi
 
     skill_dir = tmp_path / ".agents" / "skills" / "ccba-copywriting"
     skill_dir.mkdir(parents=True)
-    (skill_dir / "SKILL.md").write_text("---\nname: ccba-copywriting\n---\n# Copywriting", encoding="utf-8")
+    (skill_dir / "SKILL.md").write_text(
+        "---\nname: ccba-copywriting\n---\n# Copywriting", encoding="utf-8"
+    )
 
     async def mock_task(item: EvalItem) -> str:
         return "Answer 1"
@@ -222,7 +230,9 @@ def test_eval_cli_skill_path_resolution(tmp_path: Path, capsys: pytest.CaptureFi
         assert res_file["passed"] is True
 
 
-def test_eval_cli_empty_dataset_returns_failure(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_eval_cli_empty_dataset_returns_failure(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Verify that an empty dataset file returns exit code 1."""
     empty_file = tmp_path / "empty_cases.json"
     empty_file.write_text("[]", encoding="utf-8")

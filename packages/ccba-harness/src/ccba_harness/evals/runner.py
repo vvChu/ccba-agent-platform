@@ -236,8 +236,14 @@ class AutoItemScorer(BaseScorer):
                     if res.score == 0.0 or res.is_critical_fail:
                         return res
                 elif ass_type == "length":
-                    min_len = int(ass.get("min_length", 0)) if ass.get("min_length") is not None else 0
-                    max_len = int(ass.get("max_length", 100_000)) if ass.get("max_length") is not None else 100_000
+                    min_len = (
+                        int(ass.get("min_length", 0)) if ass.get("min_length") is not None else 0
+                    )
+                    max_len = (
+                        int(ass.get("max_length", 100_000))
+                        if ass.get("max_length") is not None
+                        else 100_000
+                    )
                     l_scorer = LengthBoundsScorer(
                         min_length=min_len,
                         max_length=max_len,
@@ -416,11 +422,13 @@ def _create_default_eval_task(
         else:
             c_name = clean
 
-        candidates.extend([
-            project_root / ".agents" / "skills" / c_name / "SKILL.md",
-            project_root / ".agents" / "skills" / f"ccba-{c_name}" / "SKILL.md",
-            project_root / ".agents" / "skills" / c_name.removeprefix("ccba-") / "SKILL.md",
-        ])
+        candidates.extend(
+            [
+                project_root / ".agents" / "skills" / c_name / "SKILL.md",
+                project_root / ".agents" / "skills" / f"ccba-{c_name}" / "SKILL.md",
+                project_root / ".agents" / "skills" / c_name.removeprefix("ccba-") / "SKILL.md",
+            ]
+        )
         for cand in candidates:
             if cand.exists() and cand.is_file() and cand.name == "SKILL.md":
                 try:
@@ -514,9 +522,7 @@ def run_eval_pipeline(
 
     if len(trial_reports) == 1:
         final_report = trial_reports[0]
-        final_report.metadata.update(
-            {"skill": skill, "trials": trials, "auto_tune": auto_tune}
-        )
+        final_report.metadata.update({"skill": skill, "trials": trials, "auto_tune": auto_tune})
     else:
         avg_score = round(sum(r.overall_score for r in trial_reports) / len(trial_reports), 2)
         avg_pass_rate = round(sum(r.pass_rate for r in trial_reports) / len(trial_reports), 2)
@@ -524,9 +530,7 @@ def run_eval_pipeline(
         for r in trial_reports:
             for sc_name, sc_val in r.summary_by_scorer.items():
                 merged_scorers.setdefault(sc_name, []).append(sc_val)
-        summary_by_scorer = {
-            k: round(sum(v) / len(v), 2) for k, v in merged_scorers.items()
-        }
+        summary_by_scorer = {k: round(sum(v) / len(v), 2) for k, v in merged_scorers.items()}
         base_rep = trial_reports[-1]
         final_report = EvalReport(
             total_items=base_rep.total_items,

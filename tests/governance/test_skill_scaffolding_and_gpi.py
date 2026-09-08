@@ -550,7 +550,9 @@ def test_updated_phase2_skills_pass_enforce_gpi() -> None:
     review_skill = PROJECT_ROOT / ".agents" / "skills" / "ccba-review-skill" / "SKILL.md"
     assert review_skill.exists()
     issues_review = auditor.audit_skill(review_skill, enforce_gpi=True)
-    assert len(issues_review) == 0, f"ccba-review-skill issues: {[i.message for i in issues_review]}"
+    assert len(issues_review) == 0, (
+        f"ccba-review-skill issues: {[i.message for i in issues_review]}"
+    )
 
 
 def test_ccba_review_skill_phase2_spec_contract() -> None:
@@ -643,7 +645,9 @@ def test_updated_phase3_skills_pass_enforce_gpi() -> None:
     repair_skill = PROJECT_ROOT / ".agents" / "skills" / "ccba-skill-repair" / "SKILL.md"
     assert repair_skill.exists()
     issues_repair = auditor.audit_skill(repair_skill, enforce_gpi=True)
-    assert len(issues_repair) == 0, f"ccba-skill-repair issues: {[i.message for i in issues_repair]}"
+    assert len(issues_repair) == 0, (
+        f"ccba-skill-repair issues: {[i.message for i in issues_repair]}"
+    )
 
 
 def test_ccba_xia_phase3_spec_contract() -> None:
@@ -826,5 +830,3 @@ def test_skill_repair_and_validator_handles_corrupted_yaml_edge_case(tmp_path: P
     issues = auditor.audit_skill(corrupted_skill, enforce_gpi=True)
     error_categories = [i.category for i in issues]
     assert "YAML_PARSE_ERROR" in error_categories
-
-

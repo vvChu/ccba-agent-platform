@@ -509,9 +509,7 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
         return 1
 
     passed_all = (
-        report.total_items > 0
-        and report.pass_rate >= args.threshold
-        and report.failed_items == 0
+        report.total_items > 0 and report.pass_rate >= args.threshold and report.failed_items == 0
     )
 
     if args.json:

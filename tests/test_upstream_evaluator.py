@@ -248,19 +248,21 @@ def test_call_ai_evaluation_ai_gateway_adr0057_flow() -> None:
     from unittest.mock import MagicMock
 
     mock_ai = MagicMock()
-    mock_ai.chat.return_value = json.dumps({
-        "should_port": True,
-        "score": 92,
-        "is_deterministic": False,
-        "is_orchestrated": False,
-        "gpi_scores": {"s": 4.0, "k": 3.0, "a": 2.0, "p": 1.0},
-        "target_bundle": "_software",
-        "disable_model_invocation": False,
-        "parent_master_skill": None,
-        "python_compatibility_assessment": "High",
-        "reason": "Cognitive core skill",
-        "actionable_steps": ["Step 1", "Step 2"],
-    })
+    mock_ai.chat.return_value = json.dumps(
+        {
+            "should_port": True,
+            "score": 92,
+            "is_deterministic": False,
+            "is_orchestrated": False,
+            "gpi_scores": {"s": 4.0, "k": 3.0, "a": 2.0, "p": 1.0},
+            "target_bundle": "_software",
+            "disable_model_invocation": False,
+            "parent_master_skill": None,
+            "python_compatibility_assessment": "High",
+            "reason": "Cognitive core skill",
+            "actionable_steps": ["Step 1", "Step 2"],
+        }
+    )
 
     with patch("scripts.spoke.upstream_evaluator.ai", mock_ai):
         with patch("scripts.spoke.upstream_evaluator.get_existing_elements", return_value=([], [])):
@@ -330,4 +332,3 @@ def test_call_ai_evaluation_robust_json_parsing_with_preamble() -> None:
             assert res["should_port"] is True
             assert "Tier 2B: Standalone Kernel Skill" in res["recommended_tier"]
             assert res["decision_result"]["gpi_score"] == 12.5
-
