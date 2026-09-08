@@ -115,6 +115,8 @@ SKILL_DEPRECATION_ALIASES: dict[str, str] = {
     "issue-to-hub": "ccba-issue-to-hub",
     "session-retrospective": "ccba-session-retrospective",
     "setup-skills": "ccba-setup-skills",
+    "skill-repair": "ccba-skill-repair",
+    "repair-skill": "ccba-skill-repair",
     "promote-sandbox": "ccba-promote-sandbox",
     "skills-eval": "ccba-skills-eval",
     "discard-feature": "ccba-discard-feature",
