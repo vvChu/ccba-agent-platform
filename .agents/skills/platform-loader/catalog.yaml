@@ -1042,6 +1042,18 @@ skills:
   - ccba-show-me
   skill_path: .agents/skills/ccba-show-me/SKILL.md
   command: /ccba-show-me
+- name: ccba-skill-repair
+  bundle: _core
+  description: Phục hồi và sửa chữa kỹ năng AI theo thể chế ADR-0057 và bộ kiểm định
+    ccba-harness.
+  triggers:
+  - skill-repair
+  - ccba-skill-repair
+  - sửa chữa skill
+  - phục hồi skill
+  - repair-skill
+  skill_path: .agents/skills/ccba-skill-repair/SKILL.md
+  command: /ccba-skill-repair
 - name: ccba-skills-eval
   bundle: _core
   description: Khởi chạy hệ thống kiểm thử tự động (Evaluations) cho các kỹ năng AI

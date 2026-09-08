@@ -14,7 +14,8 @@ Verifies:
    - Audit with enforce_gpi=False permits legacy skills without gpi frontmatter.
    - Audit with enforce_gpi=True flags missing or insufficient GPI.
    - CLI runner correctly wires --enforce-gpi flag.
-6. Real codebase skills updated in Phase 1 pass --enforce-gpi validation.
+6. Real codebase skills updated in Phase 1 & 2 pass --enforce-gpi validation.
+7. Real codebase skills and workspace constitution updated in Phase 3 pass --enforce-gpi and contractual specs.
 """
 
 from __future__ import annotations
@@ -618,4 +619,212 @@ def test_ccba_sync_upstream_phase2_spec_contract() -> None:
     assert "Tier 2A: Progressive Reference" in raw_text
     assert "Tier 2B: Standalone Kernel Skill" in raw_text
     assert "Tier 3: Composite Orchestrator" in raw_text
+
+
+# =====================================================================
+# 7. Real Codebase Skills & Constitution Updated in Phase 3
+# =====================================================================
+
+
+def test_updated_phase3_skills_pass_enforce_gpi() -> None:
+    """Verify that ccba-xia, ccba-setup-skills, and ccba-skill-repair pass --enforce-gpi."""
+    auditor = SkillAuditor(PROJECT_ROOT)
+
+    xia_skill = PROJECT_ROOT / ".agents" / "skills" / "ccba-xia" / "SKILL.md"
+    assert xia_skill.exists()
+    issues_xia = auditor.audit_skill(xia_skill, enforce_gpi=True)
+    assert len(issues_xia) == 0, f"ccba-xia issues: {[i.message for i in issues_xia]}"
+
+    setup_skill = PROJECT_ROOT / ".agents" / "skills" / "ccba-setup-skills" / "SKILL.md"
+    assert setup_skill.exists()
+    issues_setup = auditor.audit_skill(setup_skill, enforce_gpi=True)
+    assert len(issues_setup) == 0, f"ccba-setup-skills issues: {[i.message for i in issues_setup]}"
+
+    repair_skill = PROJECT_ROOT / ".agents" / "skills" / "ccba-skill-repair" / "SKILL.md"
+    assert repair_skill.exists()
+    issues_repair = auditor.audit_skill(repair_skill, enforce_gpi=True)
+    assert len(issues_repair) == 0, f"ccba-skill-repair issues: {[i.message for i in issues_repair]}"
+
+
+def test_ccba_xia_phase3_spec_contract() -> None:
+    """Verify ccba-xia contains all Phase 3 ADR-0057 contractual requirements."""
+    import yaml
+
+    file_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-xia" / "SKILL.md"
+    assert file_path.exists()
+    raw_text = file_path.read_text(encoding="utf-8")
+
+    # Frontmatter verification
+    parts = raw_text.split("---", 2)
+    assert len(parts) >= 3
+    fm = yaml.safe_load(parts[1])
+    assert fm.get("user-invocable") is True
+    assert fm.get("command") == "/ccba-xia"
+    gpi = fm.get("gpi", {})
+    assert float(gpi.get("s")) == 4.0
+    assert float(gpi.get("k")) == 3.0
+    assert float(gpi.get("a")) == 2.0
+    assert float(gpi.get("p")) == 1.0
+
+    calculated_gpi = (4.0 * 2.5) + (3.0 * 2.0) + (2.0 * 2.0) - (1.0 * 1.5)
+    assert calculated_gpi == 18.5 >= 12.0
+
+    # Content verification
+    body = parts[2]
+    # Pha 2: Cổng 0
+    assert "Cổng 0 (The Determinism Gate" in body
+    assert "packages/*/src/" in body
+    assert "Deep Seam" in body
+
+    # Pha 4: Challenge questions
+    assert "Chức năng này có phải là 100% thuật toán thuần túy cần đưa vào packages/ không?" in body
+    assert (
+        "Nếu là năng lực nhận thức, điểm GPI có đạt >= 12.0 không hay phải đóng gói thành Progressive Reference (Tier 2A) trong references/*.md của Master Skill?"
+        in body
+    )
+
+    # Pha 5: Plan
+    assert "Bảng điểm GPI định lượng" in body
+    assert "Tier 1: Package Function" in body
+    assert "Tier 2A: Progressive Reference" in body
+    assert "Tier 2B: Standalone Kernel Skill" in body
+    assert "Tier 3: Composite Orchestrator" in body
+    assert "pull_request_template.md" in body
+    assert "compile_catalog.py --check" in body
+    assert "check_dependency_contracts.py" in body
+
+
+def test_ccba_setup_skills_phase3_spec_contract() -> None:
+    """Verify ccba-setup-skills contains all Phase 3 ADR-0057 contractual requirements."""
+    import yaml
+
+    file_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-setup-skills" / "SKILL.md"
+    assert file_path.exists()
+    raw_text = file_path.read_text(encoding="utf-8")
+
+    parts = raw_text.split("---", 2)
+    assert len(parts) >= 3
+    fm = yaml.safe_load(parts[1])
+    assert fm.get("name") == "ccba-setup-skills"
+    assert fm.get("bundle") == "_core"
+    assert fm.get("disable-model-invocation") is True
+    assert "setup skills" in fm.get("triggers", [])
+
+    gpi = fm.get("gpi", {})
+    assert float(gpi.get("s")) == 3.5
+    assert float(gpi.get("k")) == 2.0
+    assert float(gpi.get("a")) == 2.0
+    assert float(gpi.get("p")) == 1.0
+
+    calculated_gpi = (3.5 * 2.5) + (2.0 * 2.0) + (2.0 * 2.0) - (1.0 * 1.5)
+    assert calculated_gpi == 15.25 >= 12.0
+
+    body = parts[2]
+    assert "packages/ccba-harness" in body
+    assert "editable" in body
+    assert "skills_governance" in body
+    assert 'architecture: "3-tier"' in body
+    assert "enforce_gpi: true" in body
+    assert "Câu D — Thể chế Quản trị Kỹ năng" in body
+    assert "### Skills Governance" in body
+
+
+def test_ccba_skill_repair_phase3_spec_contract() -> None:
+    """Verify ccba-skill-repair contains all Phase 3 ADR-0057 contractual requirements."""
+    import yaml
+
+    file_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-skill-repair" / "SKILL.md"
+    assert file_path.exists()
+    raw_text = file_path.read_text(encoding="utf-8")
+
+    parts = raw_text.split("---", 2)
+    assert len(parts) >= 3
+    fm = yaml.safe_load(parts[1])
+    assert fm.get("name") == "ccba-skill-repair"
+    assert fm.get("description") == (
+        "Phục hồi và sửa chữa kỹ năng AI theo thể chế ADR-0057 và bộ kiểm định ccba-harness."
+    )
+    assert fm.get("user-invocable") is True
+    assert fm.get("command") == "/ccba-skill-repair"
+    assert fm.get("bundle") == "_core"
+    assert fm.get("disable-model-invocation") is True
+    assert "skill-repair" in fm.get("triggers", [])
+    assert "ccba-skill-repair" in fm.get("triggers", [])
+
+    gpi = fm.get("gpi", {})
+    assert float(gpi.get("s")) == 3.0
+    assert float(gpi.get("k")) == 2.0
+    assert float(gpi.get("a")) == 1.0
+    assert float(gpi.get("p")) == 1.0
+
+    calculated_gpi = (3.0 * 2.5) + (2.0 * 2.0) + (1.0 * 2.0) - (1.0 * 1.5)
+    assert calculated_gpi == 12.0 >= 12.0
+
+    body = parts[2]
+    assert "Khảo sát hư hỏng & Linter Failure" in body
+    assert "YAML_PARSE_ERROR" in body
+    assert "Phân tích cấu trúc & Vá khối `gpi:`" in body
+    assert "Khôi phục liên kết, Tiêu chí hoàn thành & Xử lý Scripts" in body
+    assert "Kiểm định bắt buộc & Xác nhận tuân thủ" in body
+    assert "python scripts/validate_skills.py --file <path-to-skill> --enforce-gpi" in body
+    assert "python -m ccba_harness.cli evaluate-gpi --file <path-to-skill>" in body
+
+
+def test_workspace_constitution_phase3_invariants() -> None:
+    """Verify both AGENTS.md (root) and .agents/AGENTS.md enforce Skills Governance & Two-Stage Decision Framework."""
+    root_agents = PROJECT_ROOT / "AGENTS.md"
+    sub_agents = PROJECT_ROOT / ".agents" / "AGENTS.md"
+
+    assert root_agents.exists()
+    assert sub_agents.exists()
+
+    root_text = root_agents.read_text(encoding="utf-8")
+    sub_text = sub_agents.read_text(encoding="utf-8")
+
+    expected_invariant = (
+        "- **Skills Governance & Two-Stage Decision Framework**: Mọi kỹ năng mới hoặc sửa đổi thuộc "
+        "namespace ccba-* / bigbim-* phải tuân thủ Khung Quyết Định Hai Giai Đoạn (ADR-0057), "
+        "vượt qua Cổng 0 (Determinism) và Cổng 1 (Orchestration), đạt điểm GPI >= 12.0 mới được "
+        "tạo Standalone Kernel Skill (Tier 2B), và phải vượt qua "
+        "`python scripts/validate_skills.py --file <path> --enforce-gpi` trước khi hoàn tất "
+        "(áp dụng bắt buộc cho cả các tác vụ sửa chữa kỹ năng như /skill-repair)."
+    )
+
+    assert expected_invariant in root_text
+    assert expected_invariant in sub_text
+
+
+def test_ccba_skill_repair_registered_in_catalog() -> None:
+    """Verify that ccba-skill-repair is properly indexed in platform-loader catalog.yaml."""
+    import yaml
+
+    catalog_file = PROJECT_ROOT / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
+    assert catalog_file.exists()
+    data = yaml.safe_load(catalog_file.read_text(encoding="utf-8"))
+    skills = data.get("skills", [])
+    repair_entries = [s for s in skills if s.get("name") == "ccba-skill-repair"]
+    assert len(repair_entries) == 1, "ccba-skill-repair must have exactly 1 entry in catalog.yaml"
+    entry = repair_entries[0]
+    assert entry.get("bundle") == "_core"
+    assert entry.get("command") == "/ccba-skill-repair"
+    assert entry.get("skill_path") == ".agents/skills/ccba-skill-repair/SKILL.md"
+
+
+def test_skill_repair_and_validator_handles_corrupted_yaml_edge_case(tmp_path: Path) -> None:
+    """Probe edge case: Corrupted SKILL.md with malformed YAML syntax produces YAML_PARSE_ERROR gracefully."""
+    auditor = SkillAuditor(PROJECT_ROOT)
+    corrupted_skill = tmp_path / "SKILL.md"
+    corrupted_skill.write_text(
+        "---\n"
+        "name: ccba-corrupted\n"
+        "malformed_field: [unclosed_sequence\n"
+        "---\n"
+        "# Corrupted Skill\n"
+        "Body text\n",
+        encoding="utf-8",
+    )
+    issues = auditor.audit_skill(corrupted_skill, enforce_gpi=True)
+    error_categories = [i.category for i in issues]
+    assert "YAML_PARSE_ERROR" in error_categories
+
 
