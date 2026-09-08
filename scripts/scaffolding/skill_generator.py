@@ -427,6 +427,11 @@ def write_reference_markdown(
         print(f"[Info] File reference đã tồn tại. Bỏ qua ghi đè: {output_path.resolve()}")
         return
 
+    try:
+        src_display = script_path.resolve().relative_to(Path.cwd().resolve()).as_posix()
+    except (ValueError, RuntimeError):
+        src_display = script_path.as_posix() if isinstance(script_path, Path) else str(script_path)
+
     content = f"""# Progressive Reference: {sub_name}
 
 > Thuộc Master Skill [`{parent_skill}`](../SKILL.md).
@@ -437,7 +442,7 @@ def write_reference_markdown(
 
 - **Phân loại:** Tier 2A (Progressive Reference)
 - **Chỉ số GPI:** {gpi_score:.2f} (S={gpi_metrics.s}, K={gpi_metrics.k}, A={gpi_metrics.a}, P={gpi_metrics.p})
-- **Tệp nguồn:** `scripts/{script_path.name}`
+- **Tệp nguồn:** `{src_display}`
 
 ## 2. Hướng Dẫn Vận Hành Cho Agent
 

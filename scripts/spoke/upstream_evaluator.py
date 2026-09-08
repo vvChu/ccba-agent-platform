@@ -275,9 +275,25 @@ def call_ai_evaluation(
         try:
             reply = ai.chat(user_prompt, system=system_prompt)
             clean_reply = reply.strip()
-            match = re.search(r"(\{.*\})", clean_reply, re.DOTALL)
-            raw_json = match.group(1) if match else clean_reply
-            result: dict[str, Any] = dict(json.loads(raw_json))
+            # Robust JSON extraction: prefer markdown code block, then try parsing
+            json_block = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", clean_reply, re.DOTALL)
+            if json_block:
+                raw_json = json_block.group(1)
+            else:
+                match = re.search(r"(\{.*\})", clean_reply, re.DOTALL)
+                raw_json = match.group(1) if match else clean_reply
+            try:
+                result: dict[str, Any] = dict(json.loads(raw_json))
+            except json.JSONDecodeError:
+                # Fallback: scan for any valid JSON object within response
+                for sub_match in re.finditer(r"(\{.*?\})", clean_reply, re.DOTALL):
+                    try:
+                        result = dict(json.loads(sub_match.group(1)))
+                        break
+                    except json.JSONDecodeError:
+                        continue
+                else:
+                    raise
 
             # Run Two-Stage Decision Framework (ADR-0057)
             gpi_metrics: GPIMetrics | None = None
