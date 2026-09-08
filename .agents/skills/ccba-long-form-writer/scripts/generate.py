@@ -1,45 +1,26 @@
+# mypy: ignore-errors
 import argparse
 import os
 import time
 
-from docx import Document
-from docx.shared import Pt
 from openai import OpenAI
+
+from mdconverter.writer import save_markdown_to_docx
 
 # --- CONFIGURATION ---
 # Use Antigravity Env Vars if available
 PROXY_URL = os.getenv("ANTIGRAVITY_PROXY", "http://100.79.241.120:8045")
-# Ensure base_url ends in /v1 if using OpenAI client conventions
 if not PROXY_URL.endswith("/v1"):
     PROXY_URL += "/v1"
 
 API_KEY = os.getenv("ANTIGRAVITY_ACCESS_TOKEN", "sk-83d6b377249445638f597ae9ea4657e7")
-
 client = OpenAI(base_url=PROXY_URL, api_key=API_KEY)
 
 
-def save_to_docx(text, filename="Output_Gemini.docx"):
-    """Saves text to a .docx file with Vietnamese-friendly font settings."""
+def save_to_docx(text: str, filename: str = "Output_Gemini.docx") -> bool:
+    """Saves text to a .docx file via mdconverter.writer."""
     try:
-        doc = Document()
-        style = doc.styles["Normal"]
-        style.font.name = "Times New Roman"
-        style.font.size = Pt(12)
-
-        for line in text.split("\n"):
-            if line.startswith("# "):
-                doc.add_heading(line[2:], level=1)
-            elif line.startswith("## "):
-                doc.add_heading(line[3:], level=2)
-            elif line.startswith("### "):
-                doc.add_heading(line[4:], level=3)
-            else:
-                doc.add_paragraph(line)
-
-        # Ensure directory exists
-        os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
-
-        doc.save(filename)
+        save_markdown_to_docx(text, filename)
         print(f"\n--- Saved successfully to: {filename} ---")
         return True
     except Exception as e:

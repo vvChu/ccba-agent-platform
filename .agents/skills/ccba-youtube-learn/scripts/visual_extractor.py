@@ -25,52 +25,12 @@ except ImportError:
     PILImage = None  # type: ignore[assignment]
 
 
-def _compute_frame_hash(img_path: Path, size: int = 8) -> int:
-    """Compute average perceptual hash using pure PIL (no external deps)."""
-    if PILImage is None:
-        return 0
-    try:
-        img = PILImage.open(img_path).convert("L").resize((size, size), PILImage.Resampling.LANCZOS)
-        pixels = list(img.getdata())
-        if not pixels:
-            return 0
-        avg = sum(pixels) / len(pixels)
-        return sum(1 << i for i, px in enumerate(pixels) if px > avg)
-    except Exception:
-        return 0
-
-
-def _dedup_frames(frames: list[Path], threshold: int = 2) -> list[Path]:
-    """Remove near-duplicate frames using all-pairs perceptual hash comparison."""
-    if len(frames) <= 1 or PILImage is None:
-        return frames
-
-    unique = []
-    hashes = []
-
-    for f in frames:
-        if not f.exists():
-            continue
-        curr_hash = _compute_frame_hash(f)
-        if curr_hash == 0:
-            unique.append(f)
-            hashes.append(curr_hash)
-            continue
-
-        is_dup = False
-        for h in hashes:
-            if h == 0:
-                continue
-            dist = bin(curr_hash ^ h).count("1")
-            if dist < threshold:
-                is_dup = True
-                break
-
-        if not is_dup:
-            unique.append(f)
-            hashes.append(curr_hash)
-
-    return unique
+from ccba_pdf_prep.media import (
+    dedup_frames as _dedup_frames,
+)
+from ccba_pdf_prep.media import (
+    find_ffmpeg_bin as _find_ffmpeg_bin,
+)
 
 
 def _get_heatmap_peaks(
@@ -243,38 +203,6 @@ def _get_storyboard_frames(
             _logger.warning(f"Error cropping storyboard tile {tile_idx}: {e}")
 
     return static_frames
-
-
-def _find_ffmpeg_bin() -> str | None:
-    """Find system path to FFmpeg binary."""
-    ffmpeg_bin = shutil.which("ffmpeg")
-    if ffmpeg_bin:
-        return ffmpeg_bin
-
-    # Windows WinGet and common path fallbacks
-    fallbacks = [
-        Path("C:\\ffmpeg\\bin\\ffmpeg.exe"),
-        Path("C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe"),
-    ]
-
-    local_app_data = os.environ.get("LOCALAPPDATA")
-    if local_app_data:
-        pkg_dir = Path(local_app_data) / "Microsoft" / "WinGet" / "Packages"
-    else:
-        pkg_dir = Path.home() / "AppData" / "Local" / "Microsoft" / "WinGet" / "Packages"
-
-    if pkg_dir.exists():
-        try:
-            for fb in pkg_dir.glob("**/ffmpeg.exe"):
-                fallbacks.append(fb)
-        except Exception:
-            pass
-
-    for fb in fallbacks:
-        if fb.exists():
-            return str(fb)
-
-    return None
 
 
 def extract_video_visuals(
