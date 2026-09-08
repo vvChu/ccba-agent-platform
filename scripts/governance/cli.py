@@ -311,6 +311,11 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
         action="store_true",
         help="Treat warnings (e.g., shallow skills < 35 lines) as hard errors",
     )
+    parser.add_argument(
+        "--enforce-gpi",
+        action="store_true",
+        help="Enforce mandatory 'gpi' metrics block in skill frontmatter (ADR-0057)",
+    )
     args = parser.parse_args(args_list)
 
     skills_files: list[Path] = []
@@ -358,7 +363,10 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
 
     if not skills_files:
         if has_explicit_targets:
-            print("ERROR: No SKILL.md or workflow files found matching specified targets.", file=sys.stderr)
+            print(
+                "ERROR: No SKILL.md or workflow files found matching specified targets.",
+                file=sys.stderr,
+            )
             return 1
         print("No SKILL.md files found for validation.")
         return 0
@@ -375,7 +383,9 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
             issues = auditor.skill_auditor.audit_workflow(target_path)
             error_prefix = "[WORKFLOW ERROR]"
         else:
-            issues = auditor.audit_skill(target_path, check_shallow=True)
+            issues = auditor.audit_skill(
+                target_path, check_shallow=True, enforce_gpi=args.enforce_gpi
+            )
             error_prefix = "[SKILL ERROR]"
 
         if issues:

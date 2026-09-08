@@ -32,8 +32,10 @@ def parse_word_eq_field(instr: str) -> str:
         if re.match(r"^[A-Z][a-z0-9]$", den):
             den = f"{den[0]}_{den[1]}"
         for g_char, g_latex in GREEK_MAP.items():
+
             def _rep_g_frac(_m: re.Match[str], gl: str = g_latex) -> str:
                 return f"{gl} "
+
             num = re.sub(rf"{re.escape(g_char)}(?=[a-zA-Z0-9])", _rep_g_frac, num)
             num = num.replace(g_char, g_latex)
             den = re.sub(rf"{re.escape(g_char)}(?=[a-zA-Z0-9])", _rep_g_frac, den)
@@ -60,8 +62,10 @@ def parse_word_eq_field(instr: str) -> str:
             break
 
     for g_char, g_latex in GREEK_MAP.items():
+
         def _rep_g_rest(_m: re.Match[str], gl: str = g_latex) -> str:
             return f"{gl} "
+
         rest = re.sub(rf"{re.escape(g_char)}(?=[a-zA-Z0-9])", _rep_g_rest, rest)
         rest = rest.replace(g_char, g_latex)
 
@@ -202,8 +206,10 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
             trailing_comma = ", " if clean_t.endswith(",") else ""
             clean_t = clean_t.rstrip(",").strip()
             for g_char, g_latex in GREEK_MAP.items():
+
                 def _rep_g_run(_m: re.Match[str], gl: str = g_latex) -> str:
                     return f"{gl} "
+
                 clean_t = re.sub(
                     rf"{re.escape(g_char)}(?=[a-zA-Z0-9])",
                     _rep_g_run,
@@ -230,8 +236,10 @@ def render_paragraph_with_runs(p: Any, rid_to_katex: dict[str, str] | None = Non
     def _rep_greek_in_math(m: re.Match[str]) -> str:
         content = m.group(1)
         for g_char, g_latex in GREEK_MAP.items():
+
             def _rep_g_inner(_m: re.Match[str], gl: str = g_latex) -> str:
                 return f"{gl} "
+
             content = re.sub(
                 rf"{re.escape(g_char)}(?=[a-zA-Z0-9])",
                 _rep_g_inner,

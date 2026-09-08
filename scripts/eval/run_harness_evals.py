@@ -248,6 +248,15 @@ def main() -> None:
                     test_dir = project_root / "scripts" / "tests"
                     if test_dir.exists():
                         test_dirs.add(str(test_dir.relative_to(project_root)))
+                    if parts[1] in ("governance", "scaffolding"):
+                        gov_tests = project_root / "tests" / "governance"
+                        if gov_tests.exists():
+                            test_dirs.add(str(gov_tests.relative_to(project_root)))
+                elif len(parts) >= 2 and parts[0] == "tests":
+                    if parts[1] == "governance":
+                        test_dirs.add("tests/governance")
+                    else:
+                        test_dirs.add("tests")
 
             if test_dirs:
                 test_args = list(test_dirs)

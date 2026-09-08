@@ -185,7 +185,9 @@ def test_all_skills_have_valid_bundle_field() -> None:
 
         bundle = fm.get("bundle")
         if not bundle:
-            errors.append(f"{sf.relative_to(HUB_ROOT)}: Missing required 'bundle' field in frontmatter")
+            errors.append(
+                f"{sf.relative_to(HUB_ROOT)}: Missing required 'bundle' field in frontmatter"
+            )
         elif str(bundle) not in valid_bundles:
             errors.append(
                 f"{sf.relative_to(HUB_ROOT)}: Invalid bundle '{bundle}'. Must be one of: {sorted(valid_bundles)}"

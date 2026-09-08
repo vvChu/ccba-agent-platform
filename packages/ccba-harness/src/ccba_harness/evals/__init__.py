@@ -6,7 +6,7 @@ Provides local-first evaluation runners, code-based scorers, and model-based rub
 from __future__ import annotations
 
 from .models import EvalItem, EvalItemResult, EvalReport, ScoreResult
-from .runner import EvalRunner
+from .runner import AutoItemScorer, EvalRunner, load_eval_dataset, run_eval_pipeline
 from .scorers import (
     BaseScorer,
     ExactMatchScorer,
@@ -28,4 +28,7 @@ __all__ = [
     "JsonSchemaScorer",
     "LLMRubricScorer",
     "EvalRunner",
+    "AutoItemScorer",
+    "load_eval_dataset",
+    "run_eval_pipeline",
 ]

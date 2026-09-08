@@ -274,9 +274,9 @@ def render_table_markdown(
                         fn_clean = re.sub(r"^\*\*\s*", "", fn_clean).strip()
                         if not fn_clean:
                             continue
-                        if fn_clean.startswith(("- ", "– ", "— ", "• ", "* ")) or fn_clean.startswith(
-                            "&nbsp;&nbsp;\\- "
-                        ):
+                        if fn_clean.startswith(
+                            ("- ", "– ", "— ", "• ", "* ")
+                        ) or fn_clean.startswith("&nbsp;&nbsp;\\- "):
                             b_txt = fn_clean.replace("&nbsp;&nbsp;\\- ", "").lstrip("-–—•* ")
                             block_lines.append(f"&nbsp;&nbsp;\\- {b_txt}")
                         elif fn_clean.startswith("$$") or (
@@ -363,8 +363,10 @@ def clean_formula_latex(raw_f: str) -> str:
         if re.match(r"^[A-Z][a-z0-9]$", den):
             den = f"{den[0]}_{den[1]}"
         for g_char, g_latex in GREEK_MAP.items():
+
             def _rep_g_tbl(_m: re.Match[str], gl: str = g_latex) -> str:
                 return f"{gl} "
+
             num = re.sub(rf"{re.escape(g_char)}(?=[a-zA-Z0-9])", _rep_g_tbl, num)
             num = num.replace(g_char, g_latex)
             den = re.sub(rf"{re.escape(g_char)}(?=[a-zA-Z0-9])", _rep_g_tbl, den)

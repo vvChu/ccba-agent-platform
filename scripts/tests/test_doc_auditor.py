@@ -376,7 +376,9 @@ class TestDocumentAuditor(unittest.TestCase):
                 "",
             ]
             for i in range(30):
-                lines.append(f"Dòng hướng dẫn chi tiết số {i+1} nhằm đáp ứng tiêu chuẩn ADR-0040.")
+                lines.append(
+                    f"Dòng hướng dẫn chi tiết số {i + 1} nhằm đáp ứng tiêu chuẩn ADR-0040."
+                )
             file_path.write_text("\n".join(lines), encoding="utf-8")
 
             issues = self.auditor.audit_skill(file_path, check_shallow=True)
@@ -403,4 +405,3 @@ class TestDocumentAuditor(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

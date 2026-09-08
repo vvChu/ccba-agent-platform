@@ -9,6 +9,7 @@ triggers:
 - viết skill
 - quy chuẩn skill
 - tạo skill mới
+gpi: {s: 3.5, k: 2.0, a: 2.0, p: 1.0}
 ---
 # Cẩm nang Viết Kỹ năng chất lượng cao (Writing Great Skills)
 
@@ -78,6 +79,77 @@ Nội dung của một kỹ năng được xây dựng từ hai thành phần: *
 5.  **Attribution (Ghi nhận nguồn gốc):** Khi skill hoặc nhánh được thích ứng từ nguồn bên ngoài, bắt buộc phải ghi blockquote attribution ngay dưới tiêu đề nhánh/skill, bao gồm: tên nguồn, tác giả, loại giấy phép. Ví dụ: `> Nguồn gốc: Thích ứng từ skill-name của Author (License Type).`
 
 ---
+
+## 6. Kiến Trúc Monorepo 3 Tầng & Khung Quyết Định Phân Rã (ADR-0057)
+
+Để loại bỏ hoàn toàn tính cảm tính khi thiết kế năng lực mới, CCBA thiết lập chuẩn kiến trúc 3 tầng và Khung Quyết Định Hai Giai Đoạn (Two-Stage Decision Framework):
+
+### 6.1. Ba Tầng Kiến Trúc Monorepo
+1. **Tầng 1 — Deterministic Engines / Packages (`packages/*/src`):**
+   - Mã nguồn thuần Python/TypeScript giải quyết các bài toán có tính xác định tuyệt đối (deterministic): regex parsing, AST traversal, I/O nhị phân, thuật toán toán học.
+   - Kiểm thử tự động 100% bằng Unit Tests trong CI; tuyệt đối **không chứa prompt**.
+2. **Tầng 2 — Cognitive Interfaces (`.agents/skills/` & `references/*.md`):**
+   - Các module nhận thức tự đóng gói (self-contained) tuân thủ chuẩn mở *Agent Skills*.
+   - Phân cấp rõ ràng giữa **Standalone Kernel Skills** (Tier 2B) và **Progressive References** (Tier 2A).
+3. **Tầng 3 — Composite Orchestrators (`.agents/workflows/`):**
+   - Đồ thị trạng thái (StateGraph), quy trình phân quyền đa tác tử (Multi-Agent Coordination), hoặc các quy trình yêu cầu con người phê duyệt (Human-in-the-loop / HITL).
+
+### 6.2. Giai Đoạn 1: Hai Cổng Bất Biến (Structural Invariant Gates)
+- **Cổng 0 (Determinism Gate):** Nếu tác vụ giải quyết được 100% bằng giải thuật xác định $\rightarrow$ Bắt buộc triển khai tại Tầng 1 (`packages/*/src/`). Nghiêm cấm tạo Skill phẳng độc lập.
+- **Cổng 1 (Orchestration Gate):** Nếu tác vụ điều phối đa tác tử song song, yêu cầu StateGraph checkpoints hoặc cần HITL $\rightarrow$ Bắt buộc triển khai tại Tầng 3 (`.agents/workflows/`).
+
+### 6.3. Giai Đoạn 2: Chỉ Số Phân Rã Kỹ Năng (Granularity & Placement Index - GPI)
+Áp dụng cho các năng lực nhận thức tại Tầng 2:
+$$\mathbf{GPI} = (S \times 2.5) + (K \times 2.0) + (A \times 2.0) - (P \times 1.5)$$
+
+#### Bảng Barem Định Lượng Chi Tiết ($S, K, A, P \in [1.0, 5.0]$)
+
+| Chỉ số | Điểm 1.0 | Điểm 2.0 | Điểm 3.0 | Điểm 4.0 | Điểm 5.0 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **$S$ (Reasoning Steps)** | Thao tác cơ bản, xử lý văn bản thuần, 0-1 bước suy luận | Trích xuất thông tin đơn giản, tóm tắt trực tiếp 2-3 bước | Suy luận phân tích nhiều bước, đối chiếu ngữ cảnh 4-6 bước | Thẩm tra chéo đa chiều, tổng hợp lập luận phức tạp >6 bước | Thẩm định pháp lý/kiến trúc đa bộ môn, phản biện chuyên sâu |
+| **$K$ (Interface Complexity)** | 0 tham số hoặc chỉ 1 cờ boolean cơ bản | 1-2 tham số kiểu chuỗi/số đơn giản | 3-5 tham số có kiểm tra kiểu hoặc lựa chọn (enum) | Schema JSON/YAML phức tạp, cấu trúc lồng nhau (nested) | Schema động đa tầng, chuyển đổi dữ liệu đa định dạng phức hợp |
+| **$A$ (Autonomous Invocation)** | User Ritual thuần túy (`disable-model-invocation: true`) | Hiếm khi gọi tự động, chỉ kích hoạt khi có trigger rất hẹp | Thường xuyên được nạp tự động qua bộ định tuyến Agent | Thiết yếu cho chu trình giải quyết vấn đề tự động (Autonomous loop) | Core engine nền tảng, Agent bắt buộc phải nạp trong system prompt |
+| **$P$ (Parent Domain Coupling)** | Hoàn toàn độc lập, không gắn với Master Skill nào (Root skill) | Liên hệ lỏng lẻo với một miền chuyên môn | Phụ thuộc vào quy trình nghiệp vụ của một Master Skill | Gắn kết chặt chẽ vào vòng đời xử lý của Master Skill sở hữu | Là thành phần vi mô phụ trợ, không thể chạy độc lập ngoài Master Skill |
+
+*Lưu ý kiến trúc về trọng số $P$:* Vì $P$ đo lường mức độ gắn kết với Master Skill sở hữu, điểm $P$ càng cao thì năng lực càng nên được đóng gói bên trong Master Skill đó thay vì tách thành kỹ năng độc lập. Do đó, trọng số của $P$ mang dấu âm ($-1.5$). Ví dụ: một tài liệu tham chiếu phụ thuộc cao với $\{s: 2.0, k: 1.0, a: 1.0, p: 2.0\}$ sẽ có $GPI = 5.0 + 2.0 + 2.0 - 3.0 = 6.0 < 12.0$, được định tuyến chính xác về Tier 2A.
+
+#### Quy Tắc Định Tuyến Kiến Trúc
+- **$GPI < 12.0$ $\rightarrow$ Tier 2A (Progressive Reference):**
+  Lưu trữ dưới dạng tệp tham chiếu tăng tiến tại `.agents/skills/<parent-skill>/references/<name>.md`. Nạp vào ngữ cảnh qua lệnh `view_file` khi Agent thực sự cần đến. Tuyệt đối không tạo thư mục skill riêng.
+- **$GPI \ge 12.0$ $\rightarrow$ Tier 2B (Standalone Kernel Skill):**
+  Đủ điều kiện tạo thư mục kỹ năng độc lập tại `.agents/skills/ccba-<name>/SKILL.md` và bắt buộc chèn khối frontmatter `gpi:`.
+
+### 6.4. Đặc Tả Khối `gpi:` Bắt Buộc Trong YAML Frontmatter
+Mọi Standalone Kernel Skill (Tier 2B) bắt buộc phải khai báo khối `gpi:` định lượng trong YAML frontmatter:
+```yaml
+---
+name: ccba-my-kernel-skill
+description: Mô tả ngắn gọn súc tích <= 180 ký tự.
+bundle: _software
+user-invocable: true
+disable-model-invocation: true
+command: /ccba-my-kernel-skill
+gpi:
+  s: 3.5
+  k: 2.0
+  a: 2.0
+  p: 1.0
+---
+```
+*(Cũng hỗ trợ định dạng inline: `gpi: {s: 3.5, k: 2.0, a: 2.0, p: 1.0}`).*
+
+---
+
+## 7. Nguyên Tắc Chống Phình To Mã Nguồn (Script Bloat & Deep Seams)
+
+Nhằm loại bỏ hoàn toàn các "vùng mù kiểm thử" (blind spots) và hiện tượng phình to mã nguồn trong thư mục kỹ năng:
+1. **Nghiêm Cấm Script Bloat:** Tuyệt đối không đặt mã nguồn logic nặng, thuật toán phức tạp hoặc vượt quá **100 dòng mã (LOC)** vào thư mục `scripts/` của kỹ năng.
+2. **Đưa Logic Về Packages Monorepo:** Toàn bộ mã nguồn giải thuật xác định, thư viện phân tích cú pháp (DOCX/PDF/XML), xử lý regex và kiểm toán dữ liệu bắt buộc phải đóng gói thành các module chuẩn mực trong `packages/*/src/` và được bảo vệ 100% bởi unit test trong CI.
+3. **Mô Hình Thin Adapter:** Thư mục `scripts/` bên trong kỹ năng (nếu có) chỉ được đóng vai trò là các thin adapters (tối đa 10–30 LOC), chỉ làm nhiệm vụ nạp tham số CLI và gọi trực tiếp vào các **Deep Seams** của packages monorepo.
+
+---
+
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+

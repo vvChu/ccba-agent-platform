@@ -19,7 +19,17 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
+
+from .gpi import (
+    GPI_STANDALONE_THRESHOLD,
+    ArchitectureTier,
+    DecisionRequest,
+    DecisionResult,
+    GPIMetrics,
+    calculate_gpi,
+    evaluate_two_stage_decision,
+)
 
 try:
     import yaml
@@ -191,7 +201,10 @@ class SkillValidator:
         return issues
 
     def audit_skill(
-        self, file_path: Path, check_shallow: bool = False
+        self,
+        file_path: Path,
+        check_shallow: bool = False,
+        enforce_gpi: bool = False,
     ) -> list[SkillAuditIssue]:
         """Audit a single SKILL.md file for CCBA compliance."""
         issues: list[SkillAuditIssue] = []
@@ -284,9 +297,7 @@ class SkillValidator:
                 )
             )
         else:
-            is_valid_namespace = (
-                name.startswith(("ccba-", "bigbim-")) or name == "platform-loader"
-            )
+            is_valid_namespace = name.startswith(("ccba-", "bigbim-")) or name == "platform-loader"
             if not is_valid_namespace:
                 issues.append(
                     SkillAuditIssue(
@@ -405,6 +416,9 @@ class SkillValidator:
                     )
                 )
 
+        # Stage 1 and Stage 2: Two-Stage Granularity Decision & GPI validation
+        issues.extend(self._audit_granularity_and_gpi(file_path, name, meta, enforce_gpi))
+
         # Step completion criteria validation
         frontmatter_lines = len(match.group(0).splitlines())
         body = content[match.end() :]
@@ -427,6 +441,235 @@ class SkillValidator:
             issues.extend(self.check_shallow_skill(file_path, content))
 
         return issues
+
+    def _audit_granularity_and_gpi(
+        self,
+        file_path: Path,
+        name: str | None,
+        meta: dict[str, Any],
+        enforce_gpi: bool = False,
+    ) -> list[SkillAuditIssue]:
+        """Audit skill against Two-Stage Granularity Decision Framework (RES-2026-ARCH-001)."""
+        issues: list[SkillAuditIssue] = []
+        skill_name = name or file_path.parent.name
+
+        # Gate 0: Determinism Gate
+        is_deterministic = meta.get(
+            "is-deterministic",
+            meta.get("is_deterministic", meta.get("deterministic", False)),
+        )
+        if isinstance(is_deterministic, str):
+            is_deterministic = is_deterministic.lower() in ("true", "1", "yes")
+        if is_deterministic:
+            issues.append(
+                SkillAuditIssue(
+                    1,
+                    str(file_path),
+                    f"Skill '{skill_name}' violates Gate 0 (Determinism Gate): task can be solved 100% "
+                    f"deterministically (regex, AST parse, math, file I/O) and must be implemented as "
+                    f"Tier 1 (Package Function / Deep Seam in packages/*), not a standalone skill.",
+                    category="DETERMINISM_GATE_VIOLATION",
+                    file_path=str(file_path),
+                )
+            )
+
+        # Gate 1: Orchestration Gate
+        is_orchestrated = meta.get(
+            "is-orchestrated",
+            meta.get("is_orchestrated", meta.get("orchestrated", False)),
+        )
+        if isinstance(is_orchestrated, str):
+            is_orchestrated = is_orchestrated.lower() in ("true", "1", "yes")
+        if is_orchestrated:
+            issues.append(
+                SkillAuditIssue(
+                    1,
+                    str(file_path),
+                    f"Skill '{skill_name}' violates Gate 1 (Orchestration Gate): task coordinates "
+                    f"multiple agents, StateGraph checkpoints, or requires HITL approval, "
+                    f"and must be implemented as Tier 3 (Composite Orchestrator).",
+                    category="ORCHESTRATION_GATE_VIOLATION",
+                    file_path=str(file_path),
+                )
+            )
+
+        # Stage 2: Granularity & Placement Index (GPI)
+        # Stage 2 is only evaluated if Stage 1 invariant gates (Gate 0 and Gate 1) are traversed.
+        if is_deterministic or is_orchestrated:
+            return issues
+
+        gpi_data = meta.get("gpi") or meta.get("GPI")
+        if gpi_data is not None:
+            if not isinstance(gpi_data, dict):
+                issues.append(
+                    SkillAuditIssue(
+                        1,
+                        str(file_path),
+                        "Frontmatter 'gpi' field must be a dictionary containing s, k, a, p metrics.",
+                        category="INVALID_GPI_METRICS",
+                        file_path=str(file_path),
+                    )
+                )
+            else:
+                normalized_gpi = {str(k).lower(): v for k, v in gpi_data.items()}
+                missing_keys = [k for k in ("s", "k", "a", "p") if k not in normalized_gpi]
+                if missing_keys:
+                    issues.append(
+                        SkillAuditIssue(
+                            1,
+                            str(file_path),
+                            f"Frontmatter 'gpi' is missing required metric keys: {missing_keys}",
+                            category="INVALID_GPI_METRICS",
+                            file_path=str(file_path),
+                        )
+                    )
+                else:
+                    try:
+                        # Reject explicit booleans
+                        for m_key in ("s", "k", "a", "p"):
+                            raw_val = normalized_gpi[m_key]
+                            if isinstance(raw_val, bool):
+                                raise TypeError(
+                                    f"Metric '{m_key}' must be numeric (int or float), got bool"
+                                )
+
+                        metrics = GPIMetrics(
+                            s=float(normalized_gpi["s"]),
+                            k=float(normalized_gpi["k"]),
+                            a=float(normalized_gpi["a"]),
+                            p=float(normalized_gpi["p"]),
+                        )
+                        parent_skill = meta.get("parent-skill", meta.get("parent_skill"))
+                        req = DecisionRequest(
+                            name=skill_name,
+                            is_deterministic=False,
+                            is_orchestrated=False,
+                            gpi_metrics=metrics,
+                            parent_skill=parent_skill,
+                        )
+                        decision = evaluate_two_stage_decision(req)
+                        if (
+                            enforce_gpi
+                            and decision.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
+                        ):
+                            score = decision.gpi_score or 0.0
+                            issues.append(
+                                SkillAuditIssue(
+                                    1,
+                                    str(file_path),
+                                    f"Skill '{skill_name}' has GPI {score:.2f} < {GPI_STANDALONE_THRESHOLD} "
+                                    f"minimum threshold for Standalone Kernel Skill (Tier 2B). "
+                                    f"Must be placed in references/*.md of owning Master Skill as Tier 2A.",
+                                    category="INSUFFICIENT_GPI_SCORE",
+                                    file_path=str(file_path),
+                                )
+                            )
+                    except (TypeError, ValueError) as err:
+                        issues.append(
+                            SkillAuditIssue(
+                                1,
+                                str(file_path),
+                                f"Invalid GPI metric values in frontmatter: {err}",
+                                category="INVALID_GPI_METRICS",
+                                file_path=str(file_path),
+                            )
+                        )
+        elif enforce_gpi:
+            issues.append(
+                SkillAuditIssue(
+                    1,
+                    str(file_path),
+                    f"Skill '{skill_name}' is missing required 'gpi' metrics block under strict GPI enforcement.",
+                    category="MISSING_GPI_METRICS",
+                    file_path=str(file_path),
+                )
+            )
+
+        return issues
+
+    def evaluate_skill_file(
+        self,
+        file_path: Path,
+        override_metrics: GPIMetrics | None = None,
+        override_parent: str | None = None,
+    ) -> DecisionResult:
+        """Evaluate an existing SKILL.md file directly through the Two-Stage Decision Framework.
+
+        Args:
+            file_path: Path to the SKILL.md file.
+            override_metrics: Optional fallback/override GPIMetrics if not in frontmatter.
+            override_parent: Optional fallback/override parent skill name.
+
+        Returns:
+            DecisionResult: Architectural tier, target location, and rationale.
+
+        Raises:
+            FileNotFoundError: If the file does not exist.
+            ValueError: If YAML frontmatter is missing or invalid.
+        """
+        if not file_path.exists():
+            raise FileNotFoundError(f"Skill file does not exist: {file_path}")
+
+        content = file_path.read_text(encoding="utf-8")
+        match = FRONTMATTER_RE.match(content)
+        if not match:
+            raise ValueError(f"File '{file_path}' has no valid YAML frontmatter '---'")
+
+        if yaml is None:
+            raise RuntimeError("PyYAML package is required to parse skill frontmatter.")
+
+        meta = yaml.safe_load(match.group(1))
+        if not isinstance(meta, dict):
+            raise ValueError(f"Frontmatter in '{file_path}' is not a valid dictionary.")
+
+        skill_name = str(meta.get("name") or file_path.parent.name)
+
+        is_deterministic = meta.get(
+            "is-deterministic",
+            meta.get("is_deterministic", meta.get("deterministic", False)),
+        )
+        if isinstance(is_deterministic, str):
+            is_deterministic = is_deterministic.lower() in ("true", "1", "yes")
+
+        is_orchestrated = meta.get(
+            "is-orchestrated",
+            meta.get("is_orchestrated", meta.get("orchestrated", False)),
+        )
+        if isinstance(is_orchestrated, str):
+            is_orchestrated = is_orchestrated.lower() in ("true", "1", "yes")
+
+        parent_skill = override_parent or meta.get("parent-skill", meta.get("parent_skill"))
+        gpi_data = meta.get("gpi") or meta.get("GPI")
+        metrics: GPIMetrics | None = None
+        if gpi_data and isinstance(gpi_data, dict):
+            normalized_gpi = {str(k).lower(): v for k, v in gpi_data.items()}
+            if all(k in normalized_gpi for k in ("s", "k", "a", "p")):
+                metrics = GPIMetrics(
+                    s=float(normalized_gpi["s"]),
+                    k=float(normalized_gpi["k"]),
+                    a=float(normalized_gpi["a"]),
+                    p=float(normalized_gpi["p"]),
+                )
+        if metrics is None and override_metrics is not None:
+            metrics = override_metrics
+
+        request = DecisionRequest(
+            name=skill_name,
+            is_deterministic=bool(is_deterministic),
+            is_orchestrated=bool(is_orchestrated),
+            gpi_metrics=metrics,
+            parent_skill=parent_skill,
+            metadata={"file_path": str(file_path)},
+        )
+        return evaluate_two_stage_decision(request)
+
+    def evaluate_two_stage_decision(self, request: DecisionRequest) -> DecisionResult:
+        """Evaluate capability architecture placement using Two-Stage Decision Framework."""
+        return evaluate_two_stage_decision(request)
+
+    def calculate_gpi(self, s: float, k: float, a: float, p: float) -> float:
+        """Calculate Granularity & Placement Index (GPI)."""
+        return calculate_gpi(s, k, a, p)
 
     def _analyze_steps_completion_criteria(self, body: str) -> list[tuple[int, str]]:
         """Scan workflow steps in body for Completion Criteria."""
@@ -503,9 +746,7 @@ class SkillValidator:
                 while header_stack and header_stack[-1][0] >= level:
                     header_stack.pop()
 
-                in_exclusion_ancestor = any(
-                    is_exclusion_header(h[1]) for h in header_stack
-                )
+                in_exclusion_ancestor = any(is_exclusion_header(h[1]) for h in header_stack)
 
                 if is_workflow_keyword and not is_exclusion and not in_exclusion_ancestor:
                     is_workflow = True
@@ -713,9 +954,7 @@ class SkillValidator:
 
         return issues
 
-    def audit_workspace_gates(
-        self, skills_dir: Path | None = None
-    ) -> list[SkillAuditIssue]:
+    def audit_workspace_gates(self, skills_dir: Path | None = None) -> list[SkillAuditIssue]:
         """Perform workspace-level CI Gate checks across all skills."""
         issues: list[SkillAuditIssue] = []
         if skills_dir is None or skills_dir.is_file():

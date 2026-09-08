@@ -22,6 +22,7 @@ from ._guard import HarnessGuard
 from ._mutex import FileMutexLock
 from ._state import HarnessLocal, HarnessState
 from .evals import (
+    AutoItemScorer,
     BaseScorer,
     EvalItem,
     EvalItemResult,
@@ -33,6 +34,23 @@ from .evals import (
     LLMRubricScorer,
     RegexScorer,
     ScoreResult,
+    load_eval_dataset,
+    run_eval_pipeline,
+)
+from .gpi import (
+    GPI_STANDALONE_THRESHOLD,
+    MAX_METRIC_SCORE,
+    MIN_METRIC_SCORE,
+    WEIGHT_AUTONOMOUS_INVOCATION_A,
+    WEIGHT_INTERFACE_COMPLEXITY_K,
+    WEIGHT_PARENT_COUPLING_P,
+    WEIGHT_REASONING_STEPS_S,
+    ArchitectureTier,
+    DecisionRequest,
+    DecisionResult,
+    GPIMetrics,
+    calculate_gpi,
+    evaluate_two_stage_decision,
 )
 from .orchestrator import EvalOrchestrator
 from .skill_validator import SkillAuditIssue, SkillValidator
@@ -46,6 +64,19 @@ __all__ = [
     "EvalOrchestrator",
     "SkillValidator",
     "SkillAuditIssue",
+    "ArchitectureTier",
+    "GPIMetrics",
+    "DecisionRequest",
+    "DecisionResult",
+    "calculate_gpi",
+    "evaluate_two_stage_decision",
+    "GPI_STANDALONE_THRESHOLD",
+    "WEIGHT_REASONING_STEPS_S",
+    "WEIGHT_INTERFACE_COMPLEXITY_K",
+    "WEIGHT_AUTONOMOUS_INVOCATION_A",
+    "WEIGHT_PARENT_COUPLING_P",
+    "MIN_METRIC_SCORE",
+    "MAX_METRIC_SCORE",
     "EvalItem",
     "ScoreResult",
     "EvalItemResult",
@@ -57,4 +88,7 @@ __all__ = [
     "JsonSchemaScorer",
     "LLMRubricScorer",
     "EvalRunner",
+    "AutoItemScorer",
+    "load_eval_dataset",
+    "run_eval_pipeline",
 ]

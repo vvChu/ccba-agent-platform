@@ -41,6 +41,7 @@
 
 ## 🔬 4. Nghiên Cứu Chuyên Sâu & Phân Tích Upstream (Research & Studies)
 
+- [research_and_studies/research-agent-architecture-packages-skills-orchestrators.md](research_and_studies/research-agent-architecture-packages-skills-orchestrators.md): **[MỚI]** Báo cáo Nghiên cứu RES-2026-ARCH-001 v1.2: Kiến trúc Agent 3 Tầng, Khung Quyết Định Hai Giai Đoạn và Chỉ số Phân rã Kỹ năng (GPI).
 - [research_and_studies/research-rename-skills-vs-alias.md](research_and_studies/research-rename-skills-vs-alias.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện: Đổi tên trực tiếp Skills sang namespace ccba-* vs Cơ chế Alias.
 - [research_and_studies/research-brand-refinements.md](research_and_studies/research-brand-refinements.md): **[MỚI]** Báo cáo Đánh giá & Tinh chỉnh Bộ Nhận diện Thương hiệu CCBA (ver 3.3 $\rightarrow$ ver 3.4).
 - [research_and_studies/research-minimalist-slide-design.md](research_and_studies/research-minimalist-slide-design.md): **[MỚI]** Nghiên cứu Kiến trúc Trình chiếu Tối giản Thụy Sĩ (Swiss Minimalist Presentation System).
@@ -65,6 +66,7 @@
 
 ## 📋 5. Đặc Tả Kỹ Thuật & Lộ Trình Phát Triển (Specs & Roadmaps)
 
+- [blueprints/fleet_skills_3tier_migration_blueprint.md](blueprints/fleet_skills_3tier_migration_blueprint.md): **[MỚI]** Kế hoạch & Bản đồ Di trú Toàn diện 100 Agent Skills (BLUEPRINT-2026-SKILLS-001) theo Kiến trúc 3 Tầng và Khung Quyết Định Hai Giai Đoạn.
 - [specs_and_roadmaps/agentic_programming_roadmap.md](specs_and_roadmaps/agentic_programming_roadmap.md): Lộ trình phát triển hệ sinh thái lập trình Agentic.
 - [specs_and_roadmaps/auto_dev_loop_spec.md](specs_and_roadmaps/auto_dev_loop_spec.md): Đặc tả vòng lặp phát triển phần mềm tự động (Auto-Dev Loop).
 - [specs_and_roadmaps/legal_sync_pipeline_spec.md](specs_and_roadmaps/legal_sync_pipeline_spec.md): Đặc tả pipeline đồng bộ văn bản pháp luật tự động.
