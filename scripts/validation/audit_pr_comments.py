@@ -100,6 +100,7 @@ def check_if_resolved_in_code_or_walkthrough(identifier: str, snippet: str) -> b
     possible_paths = [
         Path.cwd() / "walkthrough.md",
         Path.cwd() / ".md" / "walkthrough.md",
+        Path.cwd() / ".md" / "knowledge" / "reports" / "walkthrough.md",
     ]
     for path in possible_paths:
         if path.exists():
