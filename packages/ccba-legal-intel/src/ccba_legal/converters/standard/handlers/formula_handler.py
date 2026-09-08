@@ -128,9 +128,13 @@ def handle_formula_block(
             if has_embedded_math:
                 _, f_latex = extract_math_expression(obj, ctx, f_tag)
             else:
-                clean_expr = re.sub(r"(?:\t|\s{2,})\(([0-9A-Za-zĐđ\.]+)\)\s*$", "", rendered_p).strip()
+                clean_expr = re.sub(
+                    r"(?:\t|\s{2,})\(([0-9A-Za-zĐđ\.]+)\)\s*$", "", rendered_p
+                ).strip()
                 f_latex = clean_formula_latex(clean_expr)
-                f_latex = re.sub(r"(?<=[0-9a-zA-Z\}\)])\s+x\s+(?=[0-9a-zA-Z\{\\])", r" \\times ", f_latex)
+                f_latex = re.sub(
+                    r"(?<=[0-9a-zA-Z\}\)])\s+x\s+(?=[0-9a-zA-Z\{\\])", r" \\times ", f_latex
+                )
                 if f_latex.startswith("và "):
                     f_latex = r"\text{và } " + f_latex[3:].strip()
 
@@ -156,10 +160,7 @@ def handle_formula_block(
         or "<o:OLEObject" in p_xml
         or "w:fldSimple" in p_xml
         or "w:instrText" in p_xml
-        or any(
-            rid in ctx.rid_to_katex
-            for rid in re.findall(r'r:(?:embed|id)="([^"]+)"', p_xml)
-        )
+        or any(rid in ctx.rid_to_katex for rid in re.findall(r'r:(?:embed|id)="([^"]+)"', p_xml))
     )
     if has_math and i + 1 < len(blocks):
         next_b_type, next_obj = blocks[i + 1]

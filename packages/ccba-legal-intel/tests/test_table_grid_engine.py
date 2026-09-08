@@ -1,7 +1,6 @@
 # Copyright (c) 2026 CCBA. All rights reserved.
 """Unit tests for Virtual 2D Grid Engine, ADR 0041 Table Knowledge Extraction, and Pipe Escaping."""
 
-
 from ccba_legal.converters.standard.handlers.table_handler import (
     build_composite_headers,
     detect_table_archetype,

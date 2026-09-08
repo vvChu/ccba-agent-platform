@@ -121,14 +121,14 @@ def test_render_paragraph_fld_simple_deduplication():
     mock_fld.get.return_value = r"eq \f(50,Ia)"
 
     r1 = MagicMock()
-    r1._r.xml = '<w:r><w:t>50</w:t></w:r>'
+    r1._r.xml = "<w:r><w:t>50</w:t></w:r>"
     r1._r.xpath.return_value = [mock_fld]
     r1.text = "50"
     r1.font.subscript = False
     r1.font.superscript = False
 
     r2 = MagicMock()
-    r2._r.xml = '<w:r><w:t>/Ia</w:t></w:r>'
+    r2._r.xml = "<w:r><w:t>/Ia</w:t></w:r>"
     r2._r.xpath.return_value = [mock_fld]
     r2.text = "/Ia"
     r2.font.subscript = False
