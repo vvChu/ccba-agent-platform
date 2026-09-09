@@ -10,7 +10,10 @@ triggers:
 - git
 - guardrails
 - safety
+- ccba-resolving-merge-conflicts
+- resolving-merge-conflicts
 ---
+
 # Thiết Lập Rào Chắn An Toàn Git (/ccba-git-guardrails)
 
 Thiết lập rào chắn bảo vệ trong thời gian chạy (Runtime Guardrails) nhằm ngăn chặn Agent tự ý thực thi các lệnh Git có tính chất hủy diệt hoặc làm mất mát dữ liệu uncommitted của người dùng.
@@ -51,3 +54,13 @@ Các câu lệnh sau bắt buộc phải có sự chấp thuận tường minh t
 3. Chạy lại `git status` hoặc `git log -n 1` để xác nhận kết quả sau khi lệnh hoàn tất.
 4. Ghi nhận nhật ký thao tác an toàn vào hệ thống theo dõi kiểm toán.
 - **Tiêu chí hoàn thành:** Lệnh được thực thi thành công, kết quả được xác minh và nhật ký kiểm toán ghi nhận đầy đủ.
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/merge_conflict_resolution.md` | Cẩm nang giải quyết xung đột mã nguồn Git merge an toàn |
+

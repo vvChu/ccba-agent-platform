@@ -1,23 +1,30 @@
 ---
 name: ccba-contribute-to-hub
-
-description: Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
+description: Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng
+  lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
 applies_to:
-  - Phần mềm
-  - Thẩm tra thiết kế
-  - Thiết kế
-  - Kiểm định
+- Phần mềm
+- Thẩm tra thiết kế
+- Thiết kế
+- Kiểm định
 bundle: _core
 disable-model-invocation: true
 command: /ccba-contribute-to-hub
 triggers:
-  - contribute
-  - contribute to hub
-  - đóng góp mã nguồn
-  - tạo pr lên hub
-  - mở proposal
-  - ccba-contribute-to-hub
+- contribute
+- contribute to hub
+- đóng góp mã nguồn
+- tạo pr lên hub
+- mở proposal
+- ccba-contribute-to-hub
+- ccba-propose-to-hub
+- propose-to-hub
+- ccba-create-pr
+- create-pr
+- ccba-review-proposal
+- review-proposal
 ---
+
 # Workflow: Contribute to Hub (Đóng Góp Mã Nguồn Ngược Lên Hub Chuẩn OKF v2.0)
 
 Quy trình chuẩn hóa để đóng gói mã nguồn, tests, proposal và mở GitHub Pull Request (PR) kèm hoàn tất thẩm định tự động từ Spoke lên Platform Hub (`ccba-agent-platform`). *(Alias: `/ccba-propose-to-hub`)*
@@ -135,3 +142,15 @@ Sau khi PR được Squash Merge vào Hub `main`, thực thi chu trình 4 bướ
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/propose_to_hub.md` | Quy trình đề xuất kỹ năng/tính năng mới từ Spoke lên Hub trung tâm |
+| `references/pull_request_guide.md` | Hướng dẫn kiểm tra chất lượng và tạo Pull Request chuẩn mực |
+| `references/proposal_review_sop.md` | Quy trình chuẩn SOP thẩm định các đề xuất Pull Request từ Spoke gửi lên Hub |
+

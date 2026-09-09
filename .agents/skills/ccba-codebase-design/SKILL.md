@@ -25,7 +25,10 @@ triggers:
 - deep module
 - module sâu
 - software design
+- ccba-improve-codebase-architecture
+- improve-codebase-architecture
 ---
+
 # Codebase Design
 
 > **Loại Kỹ Năng:** **Reference Skill (Kỹ Năng Tham Chiếu & Từ Điển Chuẩn Mực)**  
@@ -138,3 +141,13 @@ Good interfaces make testing natural:
 
 - **Deepening a cluster given its dependencies** — see [DEEPENING.md](DEEPENING.md): dependency categories, seam discipline, and replace-don't-layer testing.
 - **Exploring alternative interfaces** — see [DESIGN-IT-TWICE.md](DESIGN-IT-TWICE.md): spin up parallel sub-agents to design the interface several radically different ways, then compare on depth, locality, and seam placement.
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/codebase_refactor_guide.md` | Cẩm nang rà soát module sâu và tái cấu trúc kiến trúc mã nguồn |
+

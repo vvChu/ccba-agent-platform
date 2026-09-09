@@ -79,7 +79,10 @@ def test_mock_delivery_spoke_adoption_and_sync(tmp_path: Path):
     # Verify skills were copied
     spoke_skills = spoke_dir / ".agents" / "skills"
     assert spoke_skills.exists()
-    assert (spoke_skills / "ccba-pccc-cdt-tuthamdinh" / "SKILL.md").exists()
+    assert (spoke_skills / "ccba-ai-qc-pccc-audit" / "SKILL.md").exists()
+    assert (
+        spoke_skills / "ccba-ai-qc-pccc-audit" / "references" / "sop_cdt_tu_tham_dinh.md"
+    ).exists()
 
     # Verify Spoke Registrar identifies this as a non-sandbox project delivery spoke
     spoke_info = SpokeRegistrar().build_spoke_info(

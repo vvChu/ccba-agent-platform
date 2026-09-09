@@ -16,7 +16,10 @@ triggers:
 - thông tư
 - văn bản pháp luật
 - luật xây dựng
+- ccba-update-legal-registry
+- update-legal-registry
 ---
+
 # Legal Document Tracker
 
 Skill hỗ trợ theo dõi, phân tích và so sánh các Văn bản Pháp luật (VBPL) liên quan đến quản lý chất lượng công trình xây dựng tại Việt Nam kết hợp Deep Seam **`VBHNEngine`** ([`packages/ccba-legal-intel`](../../../packages/ccba-legal-intel)).
@@ -104,3 +107,13 @@ Khi cần đánh giá tác động:
 ## ⚠️ Disclaimer
 
 Skill này tạo **tài liệu phân tích VBPL**, KHÔNG phải tư vấn pháp lý. Luôn cần chuyên gia pháp lý xác nhận trước khi áp dụng vào dự án thực.
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/registry_sync_guide.md` | Quy trình đồng bộ định kỳ legal registry và cập nhật cơ sở dữ liệu văn bản pháp lý |
+

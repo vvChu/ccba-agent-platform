@@ -43,7 +43,7 @@ def get_target_documents() -> list[Path]:
 def test_all_skills_and_workflows_exist_and_are_readable() -> None:
     """Verify skills and workflows directories are populated and valid."""
     target_files = get_target_documents()
-    assert len(target_files) >= 90, f"Expected >= 90 skills/workflows, found {len(target_files)}"
+    assert len(target_files) >= 65, f"Expected >= 65 skills/workflows, found {len(target_files)}"
     for tf in target_files:
         assert tf.stat().st_size > 50, f"Target file '{tf}' is unexpectedly small or empty"
 

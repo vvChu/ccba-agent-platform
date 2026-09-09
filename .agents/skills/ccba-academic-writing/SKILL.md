@@ -18,7 +18,11 @@ keywords:
 - Yale
 - thesis
 bundle: _core
+triggers:
+- ccba-long-form-writer
+- long-form-writer
 ---
+
 # Academic Writing Skill & Guidelines
 
 > **Vai trò**: Chuyên gia Biên soạn & Phản biện Học thuật Cấp cao của CCBA.
@@ -102,3 +106,13 @@ Khi người dùng kích hoạt kỹ năng, Agent thực hiện theo các bướ
 * Mọi tài liệu tham khảo trong bài báo bắt buộc phải trình bày song hành dưới 2 định dạng:
   - Định dạng trích dẫn văn bản chuẩn **APA 7th Edition** (Author, Year, Title, Journal, DOI).
   - Khối mã **BibTeX** chuẩn hóa để các nhà nghiên cứu có thể trích xuất trực tiếp vào LaTeX/Overleaf.
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/long_form_chunking.md` | Kỹ thuật phân chia chương mục và viết bài học thuật dung lượng lớn |
+

@@ -7,7 +7,12 @@ triggers:
 - ccba-implement
 - ccba-implement spec
 - ccba-implement ticket
+- ccba-discard-feature
+- discard-feature
+- ccba-prototype
+- prototype
 ---
+
 # Quy Trình Hiện Thực Hóa Tính Năng & Mã Nguồn (/ccba-implement)
 
 Quy trình chuẩn hóa triển khai mã nguồn dựa trên đặc tả kỹ thuật (spec) hoặc danh sách công việc (tickets), kết hợp phương pháp Test-Driven Development (TDD) và kiểm soát nghiêm ngặt ngân sách ngữ cảnh (Context Budget).
@@ -53,3 +58,14 @@ Quy trình chuẩn hóa triển khai mã nguồn dựa trên đặc tả kỹ th
 3. Chạy lệnh `/ccba-code-review` để thực hiện phản biện đa chiều trước khi commit.
 4. Tạo git commit theo chuẩn Conventional Commits cục bộ.
 - **Tiêu chí hoàn thành:** Báo cáo kiểm toán kiến trúc cập nhật đầy đủ, mã nguồn được commit tại local và sẵn sàng bàn giao.
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/discard_feature_sop.md` | Quy trình chuẩn thao tác Git hủy bỏ tính năng an toàn |
+| `references/prototyping_patterns.md` | Mẫu hình tạo spike / prototype nhanh để kiểm chứng giải pháp kỹ thuật |
+
