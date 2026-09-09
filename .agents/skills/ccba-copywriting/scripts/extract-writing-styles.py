@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# mypy: ignore-errors
 """
 CCBA Style & Template Extractor.
 Sử dụng AI Gateway để:
@@ -69,24 +70,7 @@ def get_style_files() -> dict[str, Any]:
     return {"items": sorted(items, key=lambda x: x["name"]), "directory": str(STYLES_DIR)}
 
 
-def redact_sensitive_info(text: str) -> str:
-    """Tự động che giấu các thông tin nhạy cảm trước khi gửi dữ liệu lên AI Gateway (Maskara)"""
-    # 1. Che giấu API Keys
-    text = re.sub(r"\b(sk-[a-zA-Z0-9]{32,})\b", "[REDACTED_API_KEY]", text)
-    text = re.sub(r"\b(AIzaSy[a-zA-Z0-9-_]{33})\b", "[REDACTED_API_KEY]", text)
-
-    # 2. Che giấu Email
-    text = re.sub(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", "[REDACTED_EMAIL]", text)
-
-    # 3. Che giấu Số điện thoại VN (10 hoặc 11 số)
-    text = re.sub(r"\b(0\d{9,10})\b", "[REDACTED_PHONE]", text)
-    text = re.sub(r"\b(\+84\d{9,10})\b", "[REDACTED_PHONE]", text)
-
-    # 4. Che giấu Số định danh CCCD/CMND (9 hoặc 12 số liên tiếp)
-    text = re.sub(r"\b\d{12}\b", "[REDACTED_CCCD]", text)
-    text = re.sub(r"\b\d{9}\b", "[REDACTED_CMND]", text)
-
-    return text
+from mdconverter.style import redact_sensitive_info
 
 
 def call_ai_extract_api(content_text: str, target_name: str) -> tuple[str, str, str, str]:

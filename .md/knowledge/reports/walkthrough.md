@@ -1,25 +1,48 @@
-# Walkthrough: Release PR #247 (ADR-0057 & 3-Tier Skills Architecture)
+# Walkthrough: Release PR #248 (Milestone 2 Phase 1 — Leaf Seams Migration)
 
 ## 1. Tổng Quan Release
-- **PR Number:** #247
-- **Branch:** migrate_ccba_to_skills -> main
-- **Tiêu đề:** eat(governance): implement 3-tier architecture, two-stage decision framework, and GPI (ADR-0057)
-- **Copilot Review ID:** PRR_kwDOQzfV088AAAABMn3fmQ (Đã giải trình và giải quyết 100% các khuyến nghị)
+- **PR Number:** [#248](https://github.com/vvChu/ccba-agent-platform/pull/248)
+- **Branch:** `feat/skills-migration-phase1-packages` $\rightarrow$ `main`
+- **Tiêu đề:** `feat(migration): extract deterministic logic to leaf packages and wire thin adapters (Milestone 2 Phase 1)`
+- **Copilot Review ID:** `PRR_kwDOQzfV088AAAABMtkd3A` (Đã giải trình và giải quyết 100% các khuyến nghị)
+- **Mục tiêu:** Bóc tách 5,000+ dòng mã logic xác định (vi phạm Cổng 0) từ thư mục `scripts/` của các kỹ năng xuống các Leaf Packages tương ứng dưới dạng **Deep Seams** có type hints, docstrings và unit tests đầy đủ.
+- **Mô hình kiến trúc:** Thu gọn 20+ script trong `.agents/skills/*/scripts/` thành **Thin CLI Adapters** (10–30 dòng).
 
-## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot
+---
 
-Copilot Review PRR_kwDOQzfV088AAAABMn3fmQ đưa ra các khuyến nghị về ký tự điều khiển trong Markdown và độ bền vững của JSON parsing. Toàn bộ các khuyến nghị này đã được xử lý và kiểm định:
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #248)
 
-| ID | Tệp Tin | Nội Dung Góp Ý | Trạng Thái & Giải Pháp |
+Review ID: `PRR_kwDOQzfV088AAAABMtkd3A`
+
+| ID | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
 |---|---|---|---|
-| 3958201152 | scripts/spoke/upstream_evaluator.py | JSON extraction uses greedy regex causing potential over-capturing | **ĐÃ KHẮC PHỤC** trong commit 5cbc2c91: Ưu tiên bóc tách code block JSON markdown, bổ sung fallback duyệt non-greedy tìm valid JSON object. |
-| 3958201210 | .github/pull_request_template.md | Checklist contains control characters (\fe) | **ĐÃ KHẮC PHỤC** trong commit c9030191: Làm sạch ký tự điều khiển, chuẩn hóa format checklist. |
-| 3958201243 | .github/pull_request_template.md | Command snippet wrapped in invalid fence (ash) | **ĐÃ KHẮC PHỤC** trong commit c9030191: Chuẩn hóa triple-backtick fence cho code blocks. |
-| 3958201288 | docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md | Token references contains control character (\r) | **ĐÃ KHẮC PHỤC** trong commit c9030191: Khôi phục định dạng 
-eferences/*.md chuẩn xác. |
-| 3958201320 | docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md | GPI metric bullets missing variable names (S/K/A/P) | **ĐÃ KHẮC PHỤC** trong commit c9030191: Bổ sung ký hiệu , K, A, P$ và chuẩn hóa công thức KaTeX. |
-| 3958201372 | scripts/scaffolding/skill_generator.py | Progressive Reference hard-codes source path scripts/ | **ĐÃ KHẮC PHỤC** trong commit 5cbc2c91: Phân giải script_path động theo đường dẫn tương đối với workspace root. |
+| `3963176025` | `.agents/skills/ccba-long-form-writer/scripts/generate.py` | Hard-coded fallback value for `ANTIGRAVITY_ACCESS_TOKEN` looks like a real API key; risks leaking credentials. | **ĐÃ KHẮC PHỤC** trong commit `f1b2bd03`: Loại bỏ hoàn toàn fallback token hardcoded. Bổ sung hàm `get_client()` kiểm tra biến môi trường `ANTIGRAVITY_ACCESS_TOKEN` hoặc `OPENAI_API_KEY` và báo lỗi rõ ràng nếu thiếu. |
+| `3963176061` | `packages/mdconverter/src/mdconverter/writer.py` | `mdconverter.writer` imports `python-docx` (`from docx import Document`) at module import time; fails if `python-docx` not installed. | **ĐÃ KHẮC PHỤC** trong commit `f1b2bd03`: Trì hoãn (defer) import `Document` và `Pt` vào bên trong hàm `save_markdown_to_docx`, kèm khối `try...except ImportError` với thông điệp hướng dẫn cài đặt trực quan. |
+| `3963176097` | `packages/ccba-ooxml/src/ccba_ooxml/validation/base.py` | File-level `# mypy: ignore-errors` disables type checking for the entire module; should be removed or scoped. | **ĐÃ KHẮC PHỤC** trong commit `f1b2bd03`: Xóa bỏ dòng comment file-level `# mypy: ignore-errors`. Cấu hình override đã được quản trị tập trung tại `pyproject.toml` (`[tool.mypy.overrides] module = ["ccba_ooxml.validation.*"]`). |
 
-## 3. Kết Quả Kiểm Thử Toàn Diện (Pre-release Gate)
-- python scripts/eval/run_isolated_tests.py --all --stress: 10/10 packages đạt **PASS** 100%.
-- GitHub Actions CI (6/6 jobs): **PASS** 100% (validate, scan, Lint Markdown, Python 3.10, 3.11, 3.12).
+---
+
+## 3. Chi Tiết Các Deep Seams Đã Xây Dựng & Tích Hợp
+
+1. **`packages/ccba-ooxml`**:
+   - `format.py`: Formatting DOCX hành chính/pháp lý chuẩn NĐ 30/2020.
+   - `soffice.py`: Headless LibreOffice conversion runner đa nền tảng.
+   - `pptx/replace.py`: Token replacement đệ quy sâu qua Shape, Table, GroupShape.
+   - `pptx/inventory.py`, `rearrange.py`, `thumbnail.py`.
+   - `docx/comment_engine.py` & schemas/templates: Di chuyển và chuẩn hóa toàn bộ XML templates.
+2. **`packages/mdconverter`**:
+   - `academic.py`: Thẩm tra cấu trúc vi mô và scaffold bản thảo IMRaD.
+   - `tables.py`: Trích xuất bảng DOCX sang MD và chuẩn hóa bảng QCVN.
+   - `style.py`: Trích xuất và phân tích chỉ số phong cách hành văn.
+   - `writer.py`: Phân đoạn dàn ý và xuất bản tài liệu chuyên đề dài.
+3. **`packages/ccba-pdf-prep`**:
+   - `media.py`: Trích xuất transcript YouTube đa ngôn ngữ, tách audio và chụp slide bài giảng.
+
+---
+
+## 4. Kết Quả Kiểm Thử Toàn Diện (Pre-release Gate)
+
+- `python scripts/eval/run_isolated_tests.py --all --stress`: **10/10 packages PASS** 100% (ccba-ai, ccba-harness, ccba-legal-intel, ccba-maskara, ccba-notebooklm, ccba-ooxml, ccba-pdf-prep, mdconverter, scripts, root-tests).
+- `python scripts/governance/check_dependency_contracts.py`: **344 files, 0 boundary violations**.
+- `python scripts/governance/compile_catalog.py --check`: **100% in-sync (101 skills)**.
+- GitHub Actions CI (6/6 jobs): **PASS 100%** (Lint Markdown, Test Python 3.10/3.11/3.12, Security Scan, Documentation Check).

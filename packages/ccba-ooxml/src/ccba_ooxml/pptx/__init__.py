@@ -14,6 +14,17 @@ from .deck_builder import (
     SlideType,
     build_presentation_from_markdown,
 )
+from .inventory import (
+    ParagraphData,
+    PresentationInventory,
+    ShapeData,
+    extract_text_inventory,
+    get_inventory_as_dict,
+    pptx_inventory,
+    save_inventory,
+)
+from .rearrange import rearrange_presentation, rearrange_slides
+from .replace import apply_replacements, pptx_replace_text
 from .templates import (
     COLOR_AMBER_ORANGE,
     COLOR_BG_LIGHT,
@@ -41,6 +52,7 @@ from .templates import (
     CCBAPresentationTheme,
     get_logo_asset_path,
 )
+from .thumbnail import generate_thumbnails
 
 __all__ = [
     # Deck Builder
@@ -50,6 +62,20 @@ __all__ = [
     "SlideType",
     "CardItem",
     "build_presentation_from_markdown",
+    # Inventory & Inspection
+    "ParagraphData",
+    "ShapeData",
+    "PresentationInventory",
+    "extract_text_inventory",
+    "get_inventory_as_dict",
+    "pptx_inventory",
+    "save_inventory",
+    # Manipulation & Rendering
+    "apply_replacements",
+    "pptx_replace_text",
+    "rearrange_presentation",
+    "rearrange_slides",
+    "generate_thumbnails",
     # Theme & Tokens
     "CCBAPresentationTheme",
     "get_logo_asset_path",

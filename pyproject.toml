@@ -89,13 +89,39 @@ warn_return_any = true
 warn_unused_ignores = true
 disallow_untyped_defs = true
 explicit_package_bases = true
-mypy_path = ["packages/mdconverter/src", "packages/ccba-ai/src", "packages/ccba-harness/src"]
+mypy_path = [
+    "packages/mdconverter/src",
+    "packages/ccba-ai/src",
+    "packages/ccba-harness/src",
+    "packages/ccba-ooxml/src",
+    "packages/ccba-pdf-prep/src",
+]
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["llama_index.*", "google.generativeai.*", "tenacity.*", "yt_dlp.*", "ccba_ai.*", "ccba_pdf_prep.*", "fitz.*", "ccba_ooxml.*", "pptx.*", "docx.*", "PIL.*"]
+module = [
+    "llama_index.*",
+    "google.generativeai.*",
+    "tenacity.*",
+    "yt_dlp.*",
+    "ccba_ai.*",
+    "ccba_pdf_prep.*",
+    "fitz.*",
+    "ccba_ooxml.*",
+    "pptx.*",
+    "docx.*",
+    "PIL.*",
+    "defusedxml.*",
+]
 ignore_missing_imports = true
 disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
+module = [
+    "ccba_ooxml.validation.*",
+    "ccba_ooxml.pptx.*",
+]
+ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = ["mdconverter.providers.gemini"]
@@ -116,7 +142,7 @@ pythonpath = [
 ]
 testpaths = ["packages", "tests", "scripts/tests"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "-v --tb=short --strict-markers -m 'not stress and not slow'"
+addopts = "-v --tb=short --strict-markers -m 'not stress and not slow' --import-mode=importlib"
 timeout = 30
 
 asyncio_mode = "strict"

@@ -7,7 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from .document import Document
+from ccba_ooxml.docx import Document
+
+pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 @pytest.fixture
@@ -19,25 +21,6 @@ def mock_unpacked_docx():
         word_dir.mkdir(parents=True)
         rels_dir = word_dir / "_rels"
         rels_dir.mkdir()
-
-        # Create templates directory mock for peoples/comments Extended templates
-        templates_dir = Path(__file__).parent / "templates"
-        templates_dir.mkdir(exist_ok=True)
-
-        # Ensure people.xml template exists
-        people_tpl = templates_dir / "people.xml"
-        if not people_tpl.exists():
-            people_tpl.write_text(
-                '<?xml version="1.0" encoding="UTF-8"?><w15:people xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml"></w15:people>',
-                encoding="utf-8",
-            )
-
-        comments_tpl = templates_dir / "comments.xml"
-        if not comments_tpl.exists():
-            comments_tpl.write_text(
-                '<?xml version="1.0" encoding="UTF-8"?><w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"></w:comments>',
-                encoding="utf-8",
-            )
 
         # Create minimal required XMLs in the unpacked directory
         (temp_path / "[Content_Types].xml").write_text(
@@ -100,4 +83,4 @@ def test_tracked_changes_deletion(mock_unpacked_docx):
 
     doc_xml_content = doc["word/document.xml"].dom.toxml()
     assert "<w:del" in doc_xml_content
-    assert "delText" in doc_xml_content  # w:t converted to w:delText
+    assert "delText" in doc_xml_content
