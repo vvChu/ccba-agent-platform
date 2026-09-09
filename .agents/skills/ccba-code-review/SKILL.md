@@ -7,6 +7,11 @@ command: /ccba-code-review
 when_to_use: Dùng khi người dùng muốn đánh giá chất lượng của một PR, một commit,
   hoặc các thay đổi chưa commit (--pending).
 category: utilities
+gpi:
+  s: 4.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 keywords:
 - review
 - quality
@@ -73,7 +78,7 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
 ## Vị trí trong Luồng công việc (Workflow Position)
 
 - **Thường chạy sau:** `/ccba-tdd` (Rà soát sau khi code hướng kiểm thử).
-- **Thường chạy trước:** `/ccba-create-pr` (Push và tạo PR), `/ccba-release-feature` (Merge và đóng tính năng).
+- **Thường chạy trước:** `/ccba-contribute-to-hub` (Push và tạo PR), `/ccba-release-feature` (Merge và đóng tính năng).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

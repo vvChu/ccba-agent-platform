@@ -28,7 +28,7 @@ graph TD
 
 1. **Track 1: Platform Track (Spoke ➔ Hub RFCs)**:
    - *Mục đích:* Dành cho thắc mắc kiến trúc, đề xuất tính năng mới, chuẩn hóa quy trình, hoặc báo lỗi nền tảng.
-   - *Hành động:* Tự động đóng gói các câu hỏi thành bản đề xuất cải tiến chuẩn CCBA RFC và tích hợp trực tiếp với workflow [`/ccba-issue-to-hub`](../ccba-issue-to-hub/SKILL.md) để mở GitHub Issue lên repository trung tâm (`ccba-agent-platform`).
+   - *Hành động:* Tự động đóng gói các câu hỏi thành bản đề xuất cải tiến chuẩn CCBA RFC và tích hợp trực tiếp với workflow [`/ccba-issue-to-hub`](../../ccba-issue-to-hub/SKILL.md) để mở GitHub Issue lên repository trung tâm (`ccba-agent-platform`).
 2. **Track 2: Delivery Track (Spoke Dự án ➔ Đối tác / CĐT / TVTK)**:
    - *Mục đích:* Dành cho làm rõ thông số thiết kế, PCCC, MEP, kết cấu, quy chuẩn QCVN, và nghiệm thu hồ sơ hoàn thành (HSHT).
    - *Hành động:* Áp dụng khung trắc nghiệm 3 tầng giả định và xuất bản đồng thời sang Word `.docx`, Web HTML Form, Micro Chat và Email Table.
@@ -88,8 +88,8 @@ python scripts/questionnaire_engine.py <file.md> --reply "1A, 2B, 3C" --resolved
 2. **Cập nhật Metadata:** Chuyển trạng thái sang `status: "RESOLVED"`.
 3. **Ghi nhận Quyết định (Decision Log):** Bổ sung mục `## Nhật ký Quyết định (Decision Log)` ở cuối file Markdown làm căn cứ pháp lý truy vết.
 4. **Bàn giao quy trình tiếp theo (Workflow Hand-off):**
-   - Kích hoạt kỹ năng [`/ccba-to-spec`](../ccba-to-spec/SKILL.md) để chuyển hóa quyết định thành PRD / Đặc tả kỹ thuật.
-   - Kích hoạt [`/ccba-to-tickets`](../ccba-to-tickets/SKILL.md) để phân rã nhiệm vụ phát triển.
+   - Kích hoạt kỹ năng [`/ccba-to-spec`](../SKILL.md) để chuyển hóa quyết định thành PRD / Đặc tả kỹ thuật.
+   - Kích hoạt [`/ccba-to-spec`](../SKILL.md) để phân rã nhiệm vụ phát triển.
 
 ---
 

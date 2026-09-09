@@ -4,6 +4,13 @@ description: Lập bản đồ định hướng để giải quyết các bài t
   danh sách các ticket công việc.
 bundle: _core
 disable-model-invocation: true
+user-invocable: true
+command: /ccba-wayfinder
+gpi:
+  s: 4.0
+  k: 2.0
+  a: 1.0
+  p: 1.0
 triggers:
 - ccba-wayfinder
 - vạch đường
@@ -21,7 +28,7 @@ Kỹ năng này giúp thiết lập và vận hành **Bản đồ định hướ
 
 ## 🧭 Phân Định Ranh Giới: `/ccba-grilling` vs `/ccba-wayfinder`
 
-* **Dùng `/ccba-grilling` (hoặc `/grill-me`):** Khi bài toán có thể giải quyết trọn vẹn trong **một phiên duy nhất (Single Session)**, lộ trình cơ bản đã thấy trước mắt, chỉ cần chất vấn Socrates để chốt chi tiết thiết kế.
+* **Dùng `/ccba-grilling`:** Khi bài toán có thể giải quyết trọn vẹn trong **một phiên duy nhất (Single Session)**, lộ trình cơ bản đã thấy trước mắt, chỉ cần chất vấn Socrates để chốt chi tiết thiết kế.
 * **Dùng `/ccba-wayfinder`:** Khi con đường phía trước còn **hoàn toàn mờ mịt (Multi-session Fog of War)**, chưa biết bắt đầu từ đâu, cần chia nhỏ thành các phiên độc lập để nghiên cứu, thử nghiệm và giải mã dần dần.
 
 ---
@@ -66,7 +73,7 @@ Bản đồ có thể lưu dưới dạng file Markdown cục bộ (mặc địn
 Mỗi ticket con đại diện cho một câu hỏi cần làm rõ, tương ứng với một phiên làm việc khoảng 100K tokens của Agent. Mỗi ticket thuộc loại **HITL** (cộng tác trực tiếp với con người) hoặc **AFK** (Agent tự chủ thực hiện):
 
 * **Research (Nghiên cứu) [AFK]:** Đọc tài liệu, API bên ngoài, hoặc tri thức cục bộ. Đầu ra là tệp Markdown tóm tắt. Dùng khi cần tri thức nằm ngoài codebase hiện tại.
-* **Prototype (Mẫu thử) [HITL]:** Tạo nhanh một mẫu thử thô qua kỹ năng `/ccba-prototype` để phản hồi trực quan. Dùng khi câu hỏi cốt lõi là "giao diện trông như thế nào" hoặc "hành vi hoạt động ra sao".
+* **Prototype (Mẫu thử) [HITL]:** Tạo nhanh một mẫu thử thô qua kỹ năng `/ccba-implement` để phản hồi trực quan. Dùng khi câu hỏi cốt lõi là "giao diện trông như thế nào" hoặc "hành vi hoạt động ra sao".
 * **Grilling (Chất vấn) [HITL]:** Phỏng vấn chuyên sâu từng câu hỏi một với Kỹ sư sử dụng kỹ năng `/ccba-grilling`.
 * **Task (Tác vụ) [HITL hoặc AFK]:** Các công việc thực thi thủ công cần phải hoàn thành để unblock một quyết định (ví dụ: xin quyền truy cập, config tài khoản, dump dữ liệu mẫu). Đây là loại duy nhất thực thi hành động ("do") chứ không phải chốt quyết định ("decide"). Agent tự chạy (AFK) hoặc cung cấp checklist cụ thể cho người dùng (HITL).
 

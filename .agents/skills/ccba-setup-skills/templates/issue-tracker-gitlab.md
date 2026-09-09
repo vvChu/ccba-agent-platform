@@ -39,7 +39,7 @@ Các lỗi (bugs) và yêu cầu tính năng (Specs) của dự án này đượ
 
 ## Quản lý Merge Requests (MRs) như một nguồn yêu cầu
 
-**MRs là một request surface: no.** _(Chuyển thành `yes` nếu dự án của bạn chấp nhận MR từ cộng tác viên ngoài gửi đến như một yêu cầu tính năng cần phân loại; công cụ `/ccba-triage` sẽ đọc cờ này).*
+**MRs là một request surface: no.** _(Chuyển thành `yes` nếu dự án của bạn chấp nhận MR từ cộng tác viên ngoài gửi đến như một yêu cầu tính năng cần phân loại; quy trình triage trong `/ccba-issue-to-hub` sẽ đọc cờ này).*
 
 Khi được đặt là `yes`, các MR ngoài dự án sẽ được đưa vào quy trình triage giống như Issue, sử dụng các câu lệnh `glab mr` tương ứng:
 - **Đọc MR**: `glab mr view <number> --comments` và `glab mr diff <number>`.

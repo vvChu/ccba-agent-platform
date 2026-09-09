@@ -260,5 +260,18 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
   - **Vấn đề:** Các quy trình điều phối cấp cao (Tầng 3) vi phạm Cổng 1 (Orchestration Gate) do tính chất điều phối đa tác tử, chuyển trạng thái phức tạp hoặc cần con người duyệt (HITL). Nếu bộ kiểm định `SkillValidator` bắt buộc phải có khối `gpi: {s, k, a, p}`, điều này gây mâu thuẫn kiến trúc vì công thức GPI chỉ áp dụng để phân định giữa Tier 2A và Tier 2B.
   - **Giải pháp:** Cập nhật `SkillValidator` nhận diện `tier: orchestrator` và short-circuit hợp lệ tại Cổng 1 mà không yêu cầu khối `gpi:`. Đồng thời, bổ sung cơ chế kiểm toán tự động cưỡng chế Single-Writer Protocol (ADR-0053): bất kỳ Orchestrator nào có dấu hiệu điều phối subagents (`dispatch worker`, `spawn subagent`, `team_sheet`) bắt buộc phải cam kết quy tắc Orchestrator là thực thể duy nhất ghi codebase/logs, các workers phân rã chỉ đọc trong sandbox độc lập.
 
+---
+
+## 17. Slash Command Parity & Active Commands Verification Guardrail
+
+- **Core Pattern P17.1 — Phân định Tuyệt đối giữa Registered Slash Commands và Prompt-Driven / Reference Skills:**
+  - **Vấn đề:** Sau các đợt refactor hợp nhất kỹ năng (ADR-0057), một số micro-skills cũ (như `improve-codebase-architecture`) được chuyển thành tài liệu tham chiếu (`references/codebase_refactor_guide.md`) nằm trong Reference Skill `ccba-codebase-design`. Nếu Agent tiếp tục dùng cú pháp Slash Command (`/ccba-improve-codebase-architecture`) khi hướng dẫn người dùng, người dùng gõ `/` trong IDE sẽ không tìm thấy lệnh, gây đứt gãy trải nghiệm và mất niềm tin.
+  - **Giải pháp & Rào chắn Bất biến:**
+    1. **Kiểm tra SSOT trước khi đề xuất:** Trước khi giới thiệu bất kỳ lệnh nào dưới dạng `/ten-lenh`, Agent BẮT BUỘC đối chiếu với trường `command:` trong `catalog.yaml`.
+    2. **Quy ước hiển thị:**
+       - Đối với tính năng có `command: /...`: Được phép dùng cú pháp `/ten-lenh` (ví dụ: `/ccba-grilling`, `/ccba-implement`, `/ccba-new-feature`, `/ccba-codebase-design`).
+       - Đối với các tài liệu hướng dẫn nằm trong `references/*.md` (Tier 2A): Tuyệt đối KHÔNG gắn tiền tố `/`. Thay vào đó, hướng dẫn người dùng gọi Master Skill kết hợp nạp tài liệu tham chiếu tương ứng (ví dụ: *"Chạy `/ccba-codebase-design` và yêu cầu nạp cẩm nang `references/codebase_refactor_guide.md`"*).
+
+
 
 

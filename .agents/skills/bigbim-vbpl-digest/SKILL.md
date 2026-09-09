@@ -8,6 +8,11 @@ applies_to:
 - Thẩm tra thiết kế
 bundle: _bim
 layer: _bim
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 4.0
+  p: 1.0
 triggers:
 - NĐ 175
 - nghị định BIM

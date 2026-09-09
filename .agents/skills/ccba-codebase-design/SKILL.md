@@ -4,6 +4,13 @@ description: Shared vocabulary for designing deep modules (locality, depth, leve
   seams) to improve testability and code quality. Reference skill.
 disable-model-invocation: true
 category: engineering
+user-invocable: true
+command: /ccba-codebase-design
+gpi:
+  s: 4.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 keywords:
 - ccba-codebase-design
 - deep-module
@@ -32,7 +39,7 @@ triggers:
 # Codebase Design
 
 > **Loại Kỹ Năng:** **Reference Skill (Kỹ Năng Tham Chiếu & Từ Điển Chuẩn Mực)**  
-> **Quy Tắc Dừng Cứng (Hard Stopping Rule):** Kỹ năng này không phải là Driver Workflow tự hành. Khi được gọi độc lập mà không chỉ định rõ module mục tiêu, Agent chỉ hiển thị bộ từ vựng và dừng lại để định hướng sang Driver Skills phù hợp (`/ccba-improve-codebase-architecture`, `/ccba-implement`, `/ccba-grilling`).
+> **Quy Tắc Dừng Cứng (Hard Stopping Rule):** Kỹ năng này không phải là Driver Workflow tự hành. Khi được gọi độc lập mà không chỉ định rõ module mục tiêu, Agent chỉ hiển thị bộ từ vựng và dừng lại để định hướng sang Driver Skills phù hợp (`/ccba-codebase-design`, `/ccba-implement`, `/ccba-grilling`).
 
 Design **deep modules**: a lot of behaviour behind a small interface, placed at a clean seam, testable through that interface. Use this language and these principles wherever code is being designed or restructured. The aim is leverage for callers, locality for maintainers, and testability for everyone.
 

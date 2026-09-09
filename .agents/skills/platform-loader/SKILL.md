@@ -9,6 +9,12 @@ applies_to:
 - Kiểm định
 bundle: _core
 command: /platform-loader
+user-invocable: true
+gpi:
+  s: 2.0
+  k: 3.0
+  a: 4.0
+  p: 1.0
 triggers:
 - platform
 - bootstrap

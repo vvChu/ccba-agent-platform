@@ -48,7 +48,7 @@ Kỹ năng này giúp điều phối và sàng lọc các sự cố hoặc yêu 
 
 4. **Áp dụng kết quả điều phối:**
    - Cập nhật nhãn trạng thái tương ứng qua GitHub CLI hoặc cập nhật tệp cục bộ.
-   - Nếu chuyển sang `ready-for-agent`, bắt buộc đăng tải Agent Brief theo cấu trúc chuẩn tại [agent-brief.md](./agent-brief.md), bao gồm việc đánh giá độ phức tạp và đề xuất định tuyến thực thi phù hợp (`/ccba-implement`, `/boost`, hoặc `/ccba-teamwork` / `/teamwork-preview`).
+   - Nếu chuyển sang `ready-for-agent`, bắt buộc đăng tải Agent Brief theo cấu trúc chuẩn tại [agent-brief.md](./agent-brief.md), bao gồm việc đánh giá độ phức tạp và đề xuất định tuyến thực thi phù hợp (`/ccba-implement`, `/boost`, hoặc `/ccba-teamwork`).
    - **Quy chuẩn đăng tải bình luận an toàn (Safe Input Invariant):** Khi đăng tải Agent Brief hoặc bình luận lên GitHub qua `gh issue comment`, bắt buộc ghi nội dung vào tệp tạm thời trong `.md/scratch/comment_<id>.md` và dùng cờ `-F` (`gh issue comment <id> -F .md/scratch/comment_<id>.md`) thay vì truyền chuỗi trực tiếp qua `--body "..."` để bảo toàn định dạng và tránh bị bộ lọc command-line chặn.
    - Nếu chuyển sang `wontfix` do bị từ chối, cập nhật lý do và lưu trữ khái niệm vào thư mục `.out-of-scope/` (hoặc thư mục cục bộ `.md/knowledge/out-of-scope/`) theo tài liệu hướng dẫn [out-of-scope.md](./out-of-scope.md).
    - **Tiêu chí hoàn thành:** Trạng thái sự cố được cập nhật thành công, bổ sung Agent Brief (kèm đề xuất thực thi) hoặc tài liệu lưu trữ từ chối tương ứng.

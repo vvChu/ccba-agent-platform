@@ -9,6 +9,13 @@ sub_skills:
 - ccba-markdown-document-processing
 disable-model-invocation: true
 bundle: _software
+user-invocable: true
+command: /ccba-xu-ly-van-phong
+gpi:
+  s: 3.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 triggers:
 - ccba-xu-ly-van-phong
 - xử lý văn phòng

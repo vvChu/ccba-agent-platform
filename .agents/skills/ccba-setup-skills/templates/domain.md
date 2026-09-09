@@ -8,7 +8,7 @@ Cách các công cụ kỹ thuật tiêu thụ tài liệu nghiệp vụ/miền 
 - **`CONTEXT-MAP.md`** tại thư mục gốc (hoặc tại `.md/knowledge/CONTEXT-MAP.md`) nếu dự án có nhiều miền tri thức con — file này sẽ chỉ đường dẫn cụ thể đến từng file `CONTEXT.md` của từng bộ môn/module. Đọc các file liên quan đến nghiệp vụ cần làm việc.
 - **`docs/adr/`** — Đọc các tài liệu Quyết định Kiến trúc (ADRs) liên quan đến phần tính năng chuẩn bị code. Đối với monorepo/multi-context, kiểm tra thêm thư mục ADRs cục bộ của từng module con (ví dụ: `src/<context>/docs/adr/` hoặc `packages/<package>/docs/adr/`).
 
-Nếu các tệp tin này không tồn tại, **tiến hành một cách âm thầm**. Không báo lỗi, không tự ý đề xuất tạo mới chúng trước khi bắt đầu. Kỹ năng `/ccba-grilling` hoặc `/ccba-improve-codebase-architecture` sẽ kích hoạt việc tạo mới một cách lười biếng (lazy) khi các thuật ngữ hoặc quyết định kiến trúc thực sự được giải quyết.
+Nếu các tệp tin này không tồn tại, **tiến hành một cách âm thầm**. Không báo lỗi, không tự ý đề xuất tạo mới chúng trước khi bắt đầu. Kỹ năng `/ccba-grilling` hoặc `/ccba-codebase-design` sẽ kích hoạt việc tạo mới một cách lười biếng (lazy) khi các thuật ngữ hoặc quyết định kiến trúc thực sự được giải quyết.
 
 ## Bố cục file mẫu
 
