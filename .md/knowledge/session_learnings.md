@@ -248,4 +248,17 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
   - **Vấn đề:** Khi Antigravity IDE chạy trên Windows, cơ chế plugin telemetry hook tự động tạo cấu hình trong `hooks.json` với đường dẫn file bị bao bọc trong dấu ngoặc kép dạng `"C:\Users\...\bundle.js"`. Khi Node.js thực thi `path.isAbsolute(hookPath)`, ký tự ngoặc kép ở đầu khiến hàm trả về `false`, làm Node.js tự động ghép `pluginDir` vào phía trước thành `C:\...\plugins\<plugin>\"C:\...\bundle.js"`, gây lỗi `Cannot find module` và làm tê liệt toàn bộ tool calls trong môi trường agent.
   - **Giải pháp:** Vô hiệu hóa file cấu hình `hooks.json` bằng nội dung rỗng `{}` và thiết lập thuộc tính bảo vệ tệp `IsReadOnly = $true` trên PowerShell. Biện pháp này ngăn chặn vĩnh viễn tiến trình nền của IDE tự ý ghi đè đường dẫn lỗi, phục hồi hoàn toàn khả năng gọi tool của Agent mà không ảnh hưởng tới luồng công việc.
 
+---
+
+## 16. Fleet-Wide 3-Tier Skills Migration, Reference Harmonization & Single-Writer Orchestrators (BLUEPRINT-2026-SKILLS-001)
+
+- **Core Pattern P16.1 — Relative Link Depth Harmonization in Progressive References (4-Level Traversal):**
+  - **Vấn đề:** Khi một micro-skill được hợp nhất thành Progressive Reference trong thư mục `references/` của Master Skill (`.agents/skills/<master>/references/<ref>.md`), độ sâu đường dẫn tăng từ 3 lên 4 cấp so với repo root. Nếu giữ nguyên các liên kết tương đối cũ (`../../../docs/...`), validator sẽ báo lỗi Broken Link Error và chặn CI build trên GitHub Actions.
+  - **Giải pháp:** Khi tái định tuyến tài liệu sang `references/`, chuẩn hóa đường dẫn tương đối: các tài liệu trỏ ra ngoài repo root phải sử dụng 4 cấp lùi `../../../../`; các tài liệu bổ trợ đi kèm cùng được di dời sang `references/` phải chuyển sang liên kết đồng cấp `./<sibling>.md`. Tránh dùng markdown link trỏ tới các file artifact chỉ sinh ra khi chạy runtime (dùng cú pháp inline code thay thế).
+
+- **Core Pattern P16.2 — Short-Circuit Gate 1 for Composite Orchestrators & Single-Writer Protocol Enforcement:**
+  - **Vấn đề:** Các quy trình điều phối cấp cao (Tầng 3) vi phạm Cổng 1 (Orchestration Gate) do tính chất điều phối đa tác tử, chuyển trạng thái phức tạp hoặc cần con người duyệt (HITL). Nếu bộ kiểm định `SkillValidator` bắt buộc phải có khối `gpi: {s, k, a, p}`, điều này gây mâu thuẫn kiến trúc vì công thức GPI chỉ áp dụng để phân định giữa Tier 2A và Tier 2B.
+  - **Giải pháp:** Cập nhật `SkillValidator` nhận diện `tier: orchestrator` và short-circuit hợp lệ tại Cổng 1 mà không yêu cầu khối `gpi:`. Đồng thời, bổ sung cơ chế kiểm toán tự động cưỡng chế Single-Writer Protocol (ADR-0053): bất kỳ Orchestrator nào có dấu hiệu điều phối subagents (`dispatch worker`, `spawn subagent`, `team_sheet`) bắt buộc phải cam kết quy tắc Orchestrator là thực thể duy nhất ghi codebase/logs, các workers phân rã chỉ đọc trong sandbox độc lập.
+
+
 

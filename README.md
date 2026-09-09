@@ -48,7 +48,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   └── rules/                         ← Progressive Disclosure Rules (Guardrails, Git, Code Quality)
 ├── .agents/
 │   ├── AGENTS.md                      ← Layer 1 Constitution Mirror
-│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->67<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-08-15 -->
+│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->67<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-09-09 -->
 │   │   ├── ccba-ai-gateway-sdk/       ←   Kết nối AI Gateway (50+ models)
 │   │   ├── ccba-spoke-adopter/        ←   Tiếp nhận Brownfield Spoke an toàn
 │   │   ├── ccba-sharepoint-iac/       ←   SharePoint Lists Schema & IaC
@@ -56,7 +56,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   │   ├── ccba-completion-checklist/ ←   Quản lý HSHT công trình
 │   │   ├── ccba-ai-qc-pccc-audit/     ←   Thẩm tra thiết kế PCCC AI
 │   │   ├── ccba-codebase-design/      ←   Nguyên lý thiết kế Deep Modules
-│   │   └── ...                        ←   Và 90+ kỹ năng chuyên dụng khác
+│   │   └── ...                        ←   Và 59+ kỹ năng chuyên dụng khác
 │   ├── workflows/                     ← Workflows lưu trữ an toàn (.md.bak, hợp nhất vào skills)
 │   └── templates/                     ← Biểu mẫu hành chính & kỹ thuật dùng chung
 ├── .md/                               ← Central Knowledge Base
