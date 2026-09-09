@@ -49,6 +49,13 @@ Nội dung của một kỹ năng được xây dựng từ hai thành phần: *
 
 4.  **Nhánh xử lý (Branch):** Khi skill có nhiều nhánh xử lý (branches), mỗi nhánh được coi là một mini-process riêng biệt. Nếu nhánh chứa steps, mỗi nhánh phải có **Tiêu chí hoàn thành** riêng. Nếu nhánh phức tạp hoặc có nhiều tham số, tách chi tiết ra file sibling (ví dụ: `MODES.md`) theo Progressive Disclosure.
 
+### 3.1. Thiết kế Kỹ Năng Đa Chế Độ (Multi-Mode Skills) & Tiêu Chí Hoàn Thành Động
+Khi kỹ năng hỗ trợ nhiều chế độ chạy qua các cờ dòng lệnh (flags/modes được tách ra file sibling như `MODES.md`):
+- **Phân định rõ ràng đầu ra theo mode:** Scope và Pha kết thúc (Deliver) phải chỉ rõ sản phẩm đầu ra tương ứng với từng cờ (ví dụ: `--compare` xuất báo cáo so sánh; `--port`/`--improve` xuất kế hoạch triển khai).
+- **Tiêu chí hoàn thành đa nhánh:** Trong phần `Tiêu chí hoàn thành:`, bắt buộc phải có ít nhất một tiêu chí kiểm chứng việc Agent đã thực sự áp dụng logic phân tích chuyên sâu của mode được chọn từ file sibling, tránh việc chỉ kiểm chứng luồng mặc định dẫn tới lỗi Hoàn thành non.
+- **Khuyến nghị bước tiếp theo (Next Steps) động:** Hướng dẫn bước kế tiếp phải tương thích với mode thực thi (tránh ép người dùng chạy lệnh implement khi họ chỉ yêu cầu so sánh kiến trúc).
+- **Single Source of Truth cho quy tắc cấm cờ:** Các mệnh đề cấm kết hợp cờ (như cấm `--fast + --copy-raw`) phải được định nghĩa duy nhất một lần tại mục `Kết hợp không hợp lệ` trong file sibling, không sao chép lặp lại rải rác trong mô tả của từng cờ.
+
 ---
 
 ## 4. Các lỗi thường gặp (Failure Modes)
