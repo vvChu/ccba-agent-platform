@@ -15,7 +15,7 @@ Workflow này giúp khởi chạy một phiên thảo luận ý tưởng, tự �
 
 ### Bước 1: Đọc cấu hình và Xử lý tham số (Config & Routing)
 Agent bắt buộc phải đọc và gộp cấu hình các chủ đề từ hai nguồn:
-1. **Mặc định từ Hub:** Đọc cấu hình mặc định tại [brainstorm_topics.yaml](resources/brainstorm_topics.yaml).
+1. **Mặc định từ Hub:** Đọc cấu hình mặc định tại [brainstorm_topics.yaml](./brainstorm_topics.yaml).
 2. **Cục bộ từ Spoke:** Kiểm tra sự tồn tại của tệp cấu hình cục bộ tại `.md/knowledge/brainstorm_topics.yaml`. Nếu có, đọc và gộp (merge) với cấu hình mặc định (tập tin cục bộ được phép ghi đè các chủ đề trùng `topic_id` hoặc khai báo thêm chủ đề mới).
 
 **Xử lý tham số Bypass:** Agent phân tích câu lệnh kích hoạt để phát hiện tham số truyền sau ký tự `--`:
@@ -28,7 +28,7 @@ Agent bắt buộc phải đọc và gộp cấu hình các chủ đề từ hai
 ---
 
 ### Bước 2: Quét tài liệu và Chọn chủ đề (Scan & Select)
-Quét toàn bộ danh sách tệp tin nằm trong thư mục [input_documents/](../../../input_documents/):
+Quét toàn bộ danh sách tệp tin nằm trong thư mục `input_documents/`:
 * In bảng danh sách tệp tin phát hiện được kèm dung lượng (KB/MB).
 * Đọc lướt nội dung (skimming) và so khớp từ khóa của các tệp với danh sách `keywords` của các chủ đề trong cấu hình để tự động đề xuất chủ đề phù hợp nhất.
 * Hiển thị danh sách tất cả các chủ đề khả dụng cho người dùng lựa chọn. Chờ người dùng xác nhận chủ đề hoặc yêu cầu đổi sang chủ đề khác.
@@ -51,7 +51,7 @@ Sau khi chủ đề được xác nhận, Agent tiến hành:
 ### Bước 4: Áp dụng Guidelines và Khởi động Brainstorming
 In ra danh sách các chỉ dẫn thảo luận đặc thù (`guidelines`) của chủ đề đã chọn, sau đó bắt đầu phiên trao đổi hai chiều tuân thủ các quy tắc tương tác dưới đây.
 
-*   **Gợi ý kỹ thuật:** Tham khảo [brainstorm_techniques.md](resources/brainstorm_techniques.md) để đề xuất kỹ thuật brainstorm phù hợp với chủ đề (SCAMPER, Reversal, Question Storming, v.v.). Để người dùng chọn hoặc đề xuất 1-2 technique kèm lý do.
+*   **Gợi ý kỹ thuật:** Tham khảo [brainstorm_techniques.md](./brainstorm_techniques.md) để đề xuất kỹ thuật brainstorm phù hợp với chủ đề (SCAMPER, Reversal, Question Storming, v.v.). Để người dùng chọn hoặc đề xuất 1-2 technique kèm lý do.
 
 **Quy tắc tương tác (Hybrid Rhythm):** Mỗi vòng brainstorm tuân thủ 4 nhịp:
 1. **Prompt** — Agent đặt **đúng 1 câu hỏi** mở liên quan đến chủ đề. Luôn hỏi duy nhất 1 câu mỗi lượt để kích thích sự sáng tạo.

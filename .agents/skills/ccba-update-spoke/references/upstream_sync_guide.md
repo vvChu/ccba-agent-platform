@@ -35,7 +35,7 @@ Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho 
     - Cổng 1 (Orchestration Gate): Tác vụ đa tác tử/checkpoints/HITL -> **Tier 3: Composite Orchestrator** trong `.agents/workflows/`.
     - Giai đoạn 2 (Chỉ số GPI): $GPI < 12.0$ -> **Tier 2A: Progressive Reference** trong `references/*.md`; $GPI \ge 12.0$ -> **Tier 2B: Standalone Kernel Skill** trong `.agents/skills/ccba-<name>/`.
   * **Đánh giá tương thích:** Khả năng chuyển đổi từ TS/Node sang chuẩn Python Monorepo (`ruff`, `mypy`, `pytest`).
-- **Tiêu chí hoàn thành:** Báo cáo [port_recommendations.md](../../../.md/knowledge/port_recommendations.md) được cập nhật và bảo vệ nguyên vẹn vùng ghi chú của kỹ sư (`Parse-Protection`).
+- **Tiêu chí hoàn thành:** Báo cáo `.md/knowledge/port_recommendations.md` được cập nhật và bảo vệ nguyên vẹn vùng ghi chú của kỹ sư (`Parse-Protection`).
 
 ### Nhịp 3: Chuyển giao Kiểm soát sang `/ccba-xia` (1-Click Port Handshake)
 - Đọc nội dung cập nhật tại `port_recommendations.md` và trình bày tóm tắt cho người dùng.

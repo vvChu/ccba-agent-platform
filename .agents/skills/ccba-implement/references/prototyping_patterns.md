@@ -26,8 +26,8 @@ Kỹ năng chỉ được coi là hoàn thành khi đáp ứng các điều ki�
 
 ### Bước 1: Xác định câu hỏi thiết kế cần trả lời
 Đọc kỹ yêu cầu của người dùng để xác định loại câu hỏi thiết kế:
-- **"Logic / State machine này có chạy đúng trong trường hợp X rồi đến Y không?"** $\rightarrow$ Chọn nhánh **Logic Prototype** (Xem tài liệu chi tiết tại [LOGIC.md](./LOGIC.md)).
-- **"Bố cục giao diện này hiển thị như thế nào, phương án nào tối ưu hơn?"** $\rightarrow$ Chọn nhánh **UI Prototype** (Xem tài liệu chi tiết tại [UI.md](./UI.md)).
+- **"Logic / State machine này có chạy đúng trong trường hợp X rồi đến Y không?"** $\rightarrow$ Chọn nhánh **Logic Prototype** (Xem tài liệu chi tiết tại [prototype_logic.md](./prototype_logic.md)).
+- **"Bố cục giao diện này hiển thị như thế nào, phương án nào tối ưu hơn?"** $\rightarrow$ Chọn nhánh **UI Prototype** (Xem tài liệu chi tiết tại [prototype_ui.md](./prototype_ui.md)).
 
 *Lưu ý:* Phải ghi rõ câu hỏi này dưới dạng 1 đoạn văn ngắn ở đầu file mã nguồn của mẫu thử hoặc trong file `README.md` tạm của mẫu thử.
 

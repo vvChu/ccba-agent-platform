@@ -15,7 +15,7 @@ Kỹ năng này thực hiện quy trình đánh giá thể chế kiến trúc (A
 
 1.  **Thu thập và phân tích tài liệu đầu vào:**
     - Sử dụng `view_file` để đọc tệp tin `SKILL.md` cần đánh giá.
-    - Sử dụng `view_file` để nạp cẩm nang chất lượng kỹ năng tại [writing-great-skills](../ccba-writing-great-skills/SKILL.md). Nếu cần tra cứu định nghĩa chính xác của các failure modes, tham khảo [GLOSSARY.md](../ccba-writing-great-skills/GLOSSARY.md).
+    - Sử dụng `view_file` để nạp cẩm nang chất lượng kỹ năng tại [skill_authoring_guide.md](./skill_authoring_guide.md). Nếu cần tra cứu định nghĩa chính xác của các failure modes, tham khảo [skill_glossary.md](./skill_glossary.md).
     - **Phân loại skill:** Nếu file không chứa tiêu đề `## Quy trình`, `## Process` hoặc các bước đánh số tuần tự rõ ràng, ghi nhận đây là **skill all-reference** (thuần tham chiếu). Bước 2 sẽ bỏ qua kiểm tra Completion Criterion nhưng vẫn thực hiện đầy đủ các kiểm tra linter và thể chế còn lại. Bước 3 Semantic Audit vẫn áp dụng đầy đủ.
     - **Tiêu chí hoàn thành:** Nội dung của cả tệp tin đích và cẩm nang chuẩn được nạp đầy đủ vào ngữ cảnh Agent, và skill đã được phân loại (có steps / all-reference).
 

@@ -9,7 +9,7 @@
 
 Quy trình tự động hóa triển khai, cấu hình và giám sát sức khỏe nền tảng CCBA Agent Services Platform trên máy chủ tính toán Server Spark.
 
-Tài liệu tham chiếu chi tiết: [server_spark_agent_instructions.md](../../../docs/playbooks/server_spark_agent_instructions.md).
+Tài liệu tham chiếu chi tiết: [server_spark_agent_instructions.md](../../../../docs/playbooks/server_spark_agent_instructions.md).
 
 ## Yêu cầu tiên quyết (Prerequisites)
 - Quyền truy cập SSH vào Server Spark thông qua Tailscale VPN (`100.83.192.30`).

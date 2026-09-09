@@ -13,13 +13,13 @@ Kỹ năng này thiết lập một không gian học tập tương tác (Teachi
 
 Để bảo vệ cấu trúc codebase, toàn bộ các tệp tin của không gian học tập sẽ được lưu trữ cục bộ bên trong thư mục ẩn **`.md/teach/`**:
 
-- `.md/teach/MISSION.md`: Định nghĩa mục tiêu học tập cốt lõi của học viên. Định dạng theo [MISSION-FORMAT.md](./references/MISSION-FORMAT.md).
+- `.md/teach/MISSION.md`: Định nghĩa mục tiêu học tập cốt lõi của học viên. Định dạng theo [teach_mission-format.md](./teach_mission-format.md).
 - `.md/teach/PROGRESS.md`: Bản tóm tắt tiến trình học tập hợp nhất (Consolidated Progress) để Agent đọc nhanh và tránh Context Bloat.
-- `.md/teach/RESOURCES.md`: Danh mục tài nguyên, tài liệu tham khảo chính quy. Định dạng theo [RESOURCES-FORMAT.md](./references/RESOURCES-FORMAT.md).
+- `.md/teach/RESOURCES.md`: Danh mục tài nguyên, tài liệu tham khảo chính quy. Định dạng theo [teach_resources-format.md](./teach_resources-format.md).
 - `.md/teach/NOTES.md`: Nơi ghi nhận sở thích, thói quen và các lưu ý đặc biệt về học viên.
 - `.md/teach/lessons/`: Thư mục lưu trữ các bài học dưới dạng tệp HTML tĩnh (tên tệp: `0001-<dash-case-name>.html` tăng dần).
-- `.md/teach/reference/`: Thư mục lưu trữ các cheat sheets, cú pháp mẫu hay bảng tra cứu nhanh dạng HTML. Định dạng theo [GLOSSARY-FORMAT.md](./references/GLOSSARY-FORMAT.md).
-- `.md/teach/learning-records/`: Thư mục lưu trữ chi tiết nhật ký học tập (tên tệp: `0001-<dash-case-name>.md` tăng dần). Định dạng theo [LEARNING-RECORD-FORMAT.md](./references/LEARNING-RECORD-FORMAT.md).
+- `.md/teach/reference/`: Thư mục lưu trữ các cheat sheets, cú pháp mẫu hay bảng tra cứu nhanh dạng HTML. Định dạng theo [teach_glossary-format.md](./teach_glossary-format.md).
+- `.md/teach/learning-records/`: Thư mục lưu trữ chi tiết nhật ký học tập (tên tệp: `0001-<dash-case-name>.md` tăng dần). Định dạng theo [teach_learning-record-format.md](./teach_learning-record-format.md).
 - `.md/teach/assets/`: Các tài nguyên dùng chung (stylesheets CSS, mã script tương tác quiz...) được chia sẻ giữa các bài học HTML.
 
 ---

@@ -11,7 +11,7 @@ Một kỹ năng (Skill) được tạo ra nhằm thiết lập tính nhất qu�
 
 > **Lưu ý:** Skill này là tài liệu tham chiếu thuần túy (all-reference), không chứa bước quy trình (steps). Các mục đánh số dưới đây là quy tắc chất lượng, không phải hướng dẫn tuần tự.
 
-Các thuật ngữ in đậm được định nghĩa tại [GLOSSARY.md](GLOSSARY.md); vui lòng đối chiếu để nắm rõ ý nghĩa chi tiết.
+Các thuật ngữ in đậm được định nghĩa tại [skill_glossary.md](./skill_glossary.md); vui lòng đối chiếu để nắm rõ ý nghĩa chi tiết.
 
 ---
 
