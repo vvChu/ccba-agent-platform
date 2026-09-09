@@ -666,11 +666,17 @@ def test_ccba_xia_phase3_spec_contract() -> None:
     gpi = fm.get("gpi", {})
     assert float(gpi.get("s")) == 4.0
     assert float(gpi.get("k")) == 3.0
-    assert float(gpi.get("a")) == 2.0
+    assert float(gpi.get("a")) == 1.0
     assert float(gpi.get("p")) == 1.0
 
-    calculated_gpi = (4.0 * 2.5) + (3.0 * 2.0) + (2.0 * 2.0) - (1.0 * 1.5)
-    assert calculated_gpi == 18.5 >= 12.0
+    calculated_gpi = (4.0 * 2.5) + (3.0 * 2.0) + (1.0 * 2.0) - (1.0 * 1.5)
+    assert calculated_gpi == 16.5 >= 12.0
+
+    # Redundant keywords pruned in favor of triggers
+    assert "keywords" not in fm, "Redundant keywords should be pruned in favor of triggers"
+    assert "triggers" in fm
+    assert "port" in fm["triggers"]
+    assert "compare" in fm["triggers"]
 
     # Content verification
     body = parts[2]
@@ -678,6 +684,10 @@ def test_ccba_xia_phase3_spec_contract() -> None:
     assert "Cổng 0 (The Determinism Gate" in body
     assert "packages/*/src/" in body
     assert "Deep Seam" in body
+
+    # Pha 3: Analyze
+    assert "None required / Không yêu cầu" in body
+    assert "MODES.md" in body
 
     # Pha 4: Challenge questions
     assert "Chức năng này có phải là 100% thuật toán thuần túy cần đưa vào packages/ không?" in body
@@ -695,6 +705,26 @@ def test_ccba_xia_phase3_spec_contract() -> None:
     assert "pull_request_template.md" in body
     assert "compile_catalog.py --check" in body
     assert "check_dependency_contracts.py" in body
+
+    # Pha 6: Deliver
+    assert "/ccba-implement" in body
+    assert "architectural evaluation follow-up" in body
+
+
+def test_ccba_xia_modes_spec_contract() -> None:
+    """Verify ccba-xia MODES.md has no duplicate invalid combination warnings."""
+    modes_file = PROJECT_ROOT / ".agents" / "skills" / "ccba-xia" / "MODES.md"
+    assert modes_file.exists()
+    content = modes_file.read_text(encoding="utf-8")
+
+    # Assert single authoritative warning under 'Kết hợp không hợp lệ'
+    assert "## Kết hợp không hợp lệ (Invalid Combinations)" in content
+    assert "`--copy-raw` + `--fast`: **BỊ CẤM**" in content
+
+    # Ensure sections above do not contain duplicate inline warnings
+    modes_section = content.split("## Kết hợp không hợp lệ")[0]
+    assert "Không được kết hợp với `--fast`" not in modes_section
+    assert "Không được kết hợp với `--copy-raw`" not in modes_section
 
 
 def test_ccba_setup_skills_phase3_spec_contract() -> None:
