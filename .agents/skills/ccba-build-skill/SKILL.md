@@ -11,8 +11,18 @@ keywords:
 disable-model-invocation: true
 bundle: _core
 command: /ccba-build-skill
-gpi: {s: 3.0, k: 2.0, a: 2.0, p: 1.0}
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 2.0
+  p: 1.0
+triggers:
+- ccba-writing-great-skills
+- writing-great-skills
+- ccba-review-skill
+- review-skill
 ---
+
 # Workflow: Xây Dựng Kỹ Năng & Quy Trình Chuẩn (/ccba-build-skill)
 
 Khi người dùng kích hoạt lệnh này dưới dạng:
@@ -123,4 +133,14 @@ python scripts/governance/drift_auditor.py
 ---
 
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/skill_authoring_guide.md` | Cẩm nang hướng dẫn kỹ sư biên soạn tệp chỉ dẫn SKILL.md chuẩn mực |
+| `references/skill_review_checklist.md` | Bảng kiểm định chất lượng và tuân thủ thể chế ADR-0057 cho kỹ năng |
 

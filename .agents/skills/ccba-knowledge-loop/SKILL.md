@@ -2,6 +2,9 @@
 name: ccba-knowledge-loop
 description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm
   → Wayfinder → Exec)
+tier: orchestrator
+is-orchestrated: true
+user-invocable: true
 disable-model-invocation: true
 bundle: _core
 command: /ccba-knowledge-loop
@@ -12,7 +15,7 @@ triggers:
 ---
 # Quy trình Vòng lặp Tri thức & Định hướng (/ccba-knowledge-loop)
 
-Quy trình này hướng dẫn Agent cách kết hợp đồng bộ 4 kỹ năng cốt lõi của CCBA Agent Services Platform: [YouTube-Learn](../ccba-youtube-learn/SKILL.md) (Trinh sát tri thức video), [Research](../ccba-research/SKILL.md) (Nghiên cứu ngầm), [Brainstorm](../ccba-brainstorm/SKILL.md) (Hội chẩn giải pháp) và [Wayfinder](../ccba-wayfinder/SKILL.md) (Lập lộ trình) để giải quyết một bài toán kỹ thuật/nghiệp vụ lớn và mơ hồ (Foggy Problem) mà không gây block phiên làm việc hoặc làm tràn ngữ cảnh (token bloating).
+Quy trình này hướng dẫn Agent cách kết hợp đồng bộ 4 kỹ năng cốt lõi của CCBA Agent Services Platform: [YouTube-Learn](../ccba-youtube-learn/SKILL.md) (Trinh sát tri thức video), [Research](../ccba-research/SKILL.md) (Nghiên cứu ngầm), [Brainstorm](../ccba-ask/references/brainstorm_templates.md) (Hội chẩn giải pháp) và [Wayfinder](../ccba-wayfinder/SKILL.md) (Lập lộ trình) để giải quyết một bài toán kỹ thuật/nghiệp vụ lớn và mơ hồ (Foggy Problem) mà không gây block phiên làm việc hoặc làm tràn ngữ cảnh (token bloating).
 
 ---
 
@@ -23,6 +26,10 @@ Quy trình chỉ được coi là thực thi thành công khi đáp ứng:
 2. [x] Đã tổ chức brainstorm để thống nhất giải pháp thô và tạo Session Document chứa các Action Items.
 3. [x] Đã lập Bản đồ định hướng (`map.md`) thông qua Wayfinder với Điểm đích (Destination) và các Frontier Tickets.
 4. [x] Các ticket Research được giao cho subagent chạy ngầm tự động và cập nhật kết quả ngược lại bản đồ tuần tự.
+
+## 🔒 Giao thức Tác quyền Duy nhất (Single-Writer Protocol — ADR 0053)
+- **Tác tử Nhạc trưởng (Orchestrator):** Agent chính là thực thể duy nhất có quyền ghi nhận tài liệu chính thức vào Knowledge Base và cập nhật bản đồ định hướng `map.md`.
+- **Tác tử Nghiên cứu (Subagents):** Hoạt động ở chế độ Read-Only Sandbox, chỉ xuất kết quả nháp và báo cáo vào thư mục scratch (`.md/knowledge/research_and_studies/` hoặc `.system_generated/scratch/`). Tuyệt đối không can thiệp vào các tệp quy trình hoặc cấu hình hệ thống.
 
 ---
 
@@ -42,7 +49,7 @@ Khi đối mặt với yêu cầu mới hoặc vùng tri thức chưa được �
 
 ### Phase 2: Hội chẩn & Sáng tạo Phương án (Brainstorming)
 Sau khi có dữ liệu trinh sát, Agent cùng User thống nhất phương án triển khai thô:
-1. **Nạp tri thức:** Kích hoạt [/ccba-brainstorm](../ccba-brainstorm/SKILL.md). Đảm bảo các ghi chú và báo cáo nghiên cứu ở Phase 1 nằm trong thư mục `input_documents/` để làm nền tảng tri thức.
+1. **Nạp tri thức:** Kích hoạt [/ccba-ask (brainstorm)](../ccba-ask/references/brainstorm_templates.md). Đảm bảo các ghi chú và báo cáo nghiên cứu ở Phase 1 nằm trong thư mục `input_documents/` để làm nền tảng tri thức.
 2. **Hybrid Rhythm:** Thực hiện thảo luận hai chiều tuân thủ nghiêm ngặt 4 nhịp:
    * **Prompt:** Agent đặt đúng 1 câu hỏi mở.
    * **User first:** Chờ user trả lời, giữ nguyên văn với tag `(user)`.
@@ -73,7 +80,7 @@ Giải quyết các Frontier Tickets và mở rộng bản đồ:
 1. **Phân phối AFK:** Với các ticket thuộc loại **Research [AFK]**, Agent chính kích hoạt [/ccba-research](../ccba-research/SKILL.md) để spawn subagent chạy ngầm xử lý, đồng thời tiếp tục nhận các yêu cầu khác từ người dùng trong khi subagent đang chạy.
 2. **Tự động cập nhật:** Khi subagent nghiên cứu hoàn thành và xuất báo cáo (xác nhận file báo cáo thực sự tồn tại), Agent chính hấp thụ kết quả, đóng (close) ticket tương ứng, cập nhật vào mục **Quyết định đã chốt (Decisions so far)** trên bản đồ.
 3. **Mở rộng biên giới:** Dựa trên kết quả vừa chốt, chuyển đổi các vùng mờ trong mục *Not yet specified* thành các ticket Frontier mới.
-4. **Giải quyết vùng mờ đột xuất:** Nếu biên giới bản đồ gặp sương mù quá dày không thể tự quyết, Agent đề xuất chạy một phiên [/ccba-brainstorm](../ccba-brainstorm/SKILL.md) mini với User để thống nhất hướng đi tiếp theo.
+4. **Giải quyết vùng mờ đột xuất:** Nếu biên giới bản đồ gặp sương mù quá dày không thể tự quyết, Agent đề xuất chạy một phiên [/ccba-ask (brainstorm)](../ccba-ask/references/brainstorm_templates.md) mini với User để thống nhất hướng đi tiếp theo.
 
 - **Tiêu chí hoàn thành:** Mọi ticket trên bản đồ được chuyển sang trạng thái đóng (closed), không còn Frontier ticket nào chưa giải quyết và lộ trình đạt tới Điểm đích hoàn toàn.
 

@@ -1,7 +1,8 @@
 ---
 name: ccba-research
 description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với
-  các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ trợ Dual-Agent Adversarial).
+  các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ trợ
+  Dual-Agent Adversarial).
 keywords:
 - research
 - nghiên cứu
@@ -20,7 +21,10 @@ triggers:
 - citations
 - ccba-research
 - adversarial research
+- ccba-sequential-thinking
+- sequential-thinking
 ---
+
 # 📚 Kỹ năng: ccba-research (Nghiên Cứu Chạy Ngầm & Phản Biện Đa Tác Nhân)
 
 Kỹ năng này hướng dẫn Agent cách khởi chạy **background subagents** (`research` subagents) để thực hiện các cuộc điều tra tài liệu, thu thập thông tin facts từ các API, mã nguồn hoặc Văn bản Pháp luật (VBPL) song song dưới nền theo **Kiến trúc Suy luận 3 Pha (Three-Phase Reasoning Hierarchy)**. Điều này giúp Agent chính tiếp tục làm việc mà không bị block và loại bỏ nguy cơ ô nhiễm ngữ cảnh (context bloating).
@@ -110,3 +114,13 @@ Khi các subagents hoàn tất và gửi thông báo hoàn thành (Reactive Wake
 
 
 **Tiêu chí hoàn thành:** Báo cáo nghiên cứu 5 phần được lưu vào tệp markdown theo đúng cấu trúc.
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/sequential_thinking_method.md` | Phương pháp tư duy suy luận tuần tự nhiều bước (Sequential Thinking) |
+

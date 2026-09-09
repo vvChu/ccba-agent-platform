@@ -1,7 +1,7 @@
 ---
 name: ccba-update-spoke
-
-description: Đồng bộ hóa các kỹ năng và cập nhật phiên bản giữa Hub và các Spoke (đơn lẻ hoặc hàng loạt)
+description: Đồng bộ hóa các kỹ năng và cập nhật phiên bản giữa Hub và các Spoke (đơn
+  lẻ hoặc hàng loạt)
 applies_to:
 - Phần mềm
 - Thẩm tra thiết kế
@@ -13,6 +13,11 @@ applies_to:
 bundle: _core
 disable-model-invocation: true
 command: /ccba-update-spoke
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 2.0
+  p: 1.0
 triggers:
 - update spoke
 - đồng bộ hub
@@ -23,7 +28,10 @@ triggers:
 - đồng bộ toàn bộ spoke
 - spoke status
 - kiểm tra spoke
+- ccba-sync-upstream
+- sync-upstream
 ---
+
 # Cập Nhật & Đồng Bộ Hóa CCBA Spoke Workspace (/ccba-update-spoke)
 
 Kỹ năng này đồng bộ hóa các bản cập nhật mới nhất (kịch bản lệnh, kỹ năng, hiến pháp `AGENTS.md`, rào chắn test) từ **CCBA Agent Platform (Hub)** sang các dự án **Spoke**, hỗ trợ đồng bộ đơn lẻ, tải On-Demand và đồng bộ hàng loạt.
@@ -107,3 +115,13 @@ python [hub_path]\scripts\sync_spoke.py --spoke . --rollback
 4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python .\scripts\check_spoke_cleanliness.py`.
 5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "[hub_path]\packages\[pkg]"` và chạy test cục bộ (ví dụ: `pytest` hoặc `python scripts\validate_legal_spoke.py` đối với Spoke Pháp điển).
 6. **Kiểm tra sức khỏe tổng thể:** Chạy `ccba-spoke status` (hoặc `python "[hub_path]\scripts\ccba_platform_cli.py" spoke-status`) xác nhận trạng thái xanh.
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/upstream_sync_guide.md` | Hướng dẫn kiểm tra và kéo cập nhật tính năng mới từ Hub về dự án Spoke |
+

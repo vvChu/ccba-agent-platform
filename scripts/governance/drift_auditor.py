@@ -78,7 +78,8 @@ class DriftAuditor(BaseAuditor):
             arch_docs = {
                 "README.md",
                 "PLATFORM.md",
-                ".agents/skills/ccba-architecture-sync/SKILL.md",
+                ".agents/skills/ccba-adr-lifecycle/references/architecture_sync_guide.md",
+                ".agents/skills/ccba-adr-lifecycle/SKILL.md",
             }
             tracked_prefixes = ("packages/", "scripts/", ".agents/skills/", ".agents/workflows/")
 

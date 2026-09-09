@@ -7,6 +7,9 @@ applies_to:
 - Kiểm định
 - Thẩm tra thiết kế
 bundle: _core
+tier: orchestrator
+is-orchestrated: true
+user-invocable: true
 disable-model-invocation: true
 command: /ccba-graduate-rd
 triggers:

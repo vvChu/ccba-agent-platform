@@ -81,6 +81,10 @@ def compile_skills(hub_root: Path = HUB_ROOT) -> list[dict[str, Any]]:
         if package_path:
             entry["package_path"] = str(package_path).replace("\\", "/")
 
+        tier = fm.get("tier")
+        if tier:
+            entry["tier"] = str(tier).strip()
+
         compiled.append(entry)
 
     # Sort with platform-loader first, then alphabetically

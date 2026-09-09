@@ -474,24 +474,77 @@ class SkillValidator:
             )
 
         # Gate 1: Orchestration Gate
+        tier_val = str(meta.get("tier", "")).lower()
+        is_tier3_orchestrator = tier_val in (
+            "orchestrator",
+            "composite-orchestrator",
+            "tier 3",
+            "tier-3",
+        )
+
         is_orchestrated = meta.get(
             "is-orchestrated",
             meta.get("is_orchestrated", meta.get("orchestrated", False)),
         )
         if isinstance(is_orchestrated, str):
             is_orchestrated = is_orchestrated.lower() in ("true", "1", "yes")
-        if is_orchestrated:
+
+        if is_tier3_orchestrator:
+            is_orchestrated = True
+
+        if is_orchestrated and not is_tier3_orchestrator:
             issues.append(
                 SkillAuditIssue(
                     1,
                     str(file_path),
                     f"Skill '{skill_name}' violates Gate 1 (Orchestration Gate): task coordinates "
                     f"multiple agents, StateGraph checkpoints, or requires HITL approval, "
-                    f"and must be implemented as Tier 3 (Composite Orchestrator).",
+                    f"and must be implemented as Tier 3 (Composite Orchestrator) with 'tier: orchestrator'.",
                     category="ORCHESTRATION_GATE_VIOLATION",
                     file_path=str(file_path),
                 )
             )
+        elif is_tier3_orchestrator:
+            # Valid Tier 3 Composite Orchestrator
+            # Orchestrators bypass Stage 2 GPI calculation (RES-2026-ARCH-001 Section 6.2).
+            # Verify Single-Writer Protocol if multi-agent workflow
+            raw_content = file_path.read_text(encoding="utf-8").lower()
+            coordinates_subagents = any(
+                k in raw_content
+                for k in (
+                    "dispatch worker",
+                    "phân công worker",
+                    "worker subagent",
+                    "team_sheet",
+                    "spawn subagent",
+                    "giao cho subagent",
+                    "workers thực thi",
+                )
+            )
+            if coordinates_subagents:
+                has_single_writer = any(
+                    k in raw_content
+                    for k in (
+                        "single-writer",
+                        "single writer",
+                        "read-only",
+                        "read only",
+                        "duy nhất orchestrator",
+                        "duy nhất có quyền ghi",
+                        "scratch",
+                    )
+                )
+                if not has_single_writer:
+                    issues.append(
+                        SkillAuditIssue(
+                            1,
+                            str(file_path),
+                            f"Tier 3 Orchestrator '{skill_name}' coordinates workers/subagents but lacks "
+                            "Single-Writer Protocol (ADR-0053) specification (exclusive writer or read-only workers).",
+                            category="SINGLE_WRITER_PROTOCOL_VIOLATION",
+                            file_path=str(file_path),
+                        )
+                    )
 
         # Stage 2: Granularity & Placement Index (GPI)
         # Stage 2 is only evaluated if Stage 1 invariant gates (Gate 0 and Gate 1) are traversed.
@@ -590,6 +643,8 @@ class SkillValidator:
     def evaluate_skill_file(
         self,
         file_path: Path,
+        override_deterministic: bool | None = None,
+        override_orchestrated: bool | None = None,
         override_metrics: GPIMetrics | None = None,
         override_parent: str | None = None,
     ) -> DecisionResult:
@@ -597,6 +652,8 @@ class SkillValidator:
 
         Args:
             file_path: Path to the SKILL.md file.
+            override_deterministic: Optional override for Gate 0.
+            override_orchestrated: Optional override for Gate 1.
             override_metrics: Optional fallback/override GPIMetrics if not in frontmatter.
             override_parent: Optional fallback/override parent skill name.
 
@@ -630,6 +687,16 @@ class SkillValidator:
         )
         if isinstance(is_deterministic, str):
             is_deterministic = is_deterministic.lower() in ("true", "1", "yes")
+        if override_deterministic is not None:
+            is_deterministic = override_deterministic
+
+        tier_val = str(meta.get("tier", "")).lower()
+        is_tier3_orchestrator = tier_val in (
+            "orchestrator",
+            "composite-orchestrator",
+            "tier 3",
+            "tier-3",
+        )
 
         is_orchestrated = meta.get(
             "is-orchestrated",
@@ -637,6 +704,10 @@ class SkillValidator:
         )
         if isinstance(is_orchestrated, str):
             is_orchestrated = is_orchestrated.lower() in ("true", "1", "yes")
+        if is_tier3_orchestrator:
+            is_orchestrated = True
+        if override_orchestrated is not None:
+            is_orchestrated = override_orchestrated
 
         parent_skill = override_parent or meta.get("parent-skill", meta.get("parent_skill"))
         gpi_data = meta.get("gpi") or meta.get("GPI")

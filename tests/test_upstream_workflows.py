@@ -49,13 +49,13 @@ def test_ccba_contribute_to_hub_workflow_structure() -> None:
 
 
 def test_ccba_propose_to_hub_alias_structure() -> None:
-    """Verify /ccba-propose-to-hub acts as backward-compatible alias."""
-    skill_path = SKILLS_DIR / "ccba-propose-to-hub" / "SKILL.md"
-    assert skill_path.exists(), "ccba-propose-to-hub SKILL.md must exist"
+    """Verify propose-to-hub acts as backward-compatible reference in ccba-contribute-to-hub."""
+    ref_path = SKILLS_DIR / "ccba-contribute-to-hub" / "references" / "propose_to_hub.md"
+    assert ref_path.exists(), "propose_to_hub.md reference must exist"
 
-    content = skill_path.read_text(encoding="utf-8")
+    content = (SKILLS_DIR / "ccba-contribute-to-hub" / "SKILL.md").read_text(encoding="utf-8")
     assert "disable-model-invocation: true" in content
-    assert "ccba-contribute-to-hub" in content
+    assert "propose-to-hub" in content or "ccba-propose-to-hub" in content
 
 
 def test_ccba_new_feature_workflow_structure() -> None:
@@ -76,10 +76,9 @@ def test_catalog_registers_upstream_workflows() -> None:
     skills = {s["name"]: s for s in data.get("skills", [])}
     assert "ccba-issue-to-hub" in skills
     assert "ccba-contribute-to-hub" in skills
-    assert "ccba-propose-to-hub" in skills
 
     # Verify paths exist on disk
-    for skill_name in ["ccba-issue-to-hub", "ccba-contribute-to-hub", "ccba-propose-to-hub"]:
+    for skill_name in ["ccba-issue-to-hub", "ccba-contribute-to-hub"]:
         skill_entry = skills[skill_name]
         skill_file = REPO_ROOT / skill_entry["skill_path"]
         assert skill_file.exists(), f"Skill file for {skill_name} must exist at {skill_file}"

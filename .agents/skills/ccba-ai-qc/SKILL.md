@@ -7,6 +7,8 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _qc
+tier: orchestrator
+is-orchestrated: true
 category: engineering
 keywords:
 - qc

@@ -9,6 +9,10 @@ keywords:
 - team sheet
 - parallel milestones
 - seam ownership
+tier: orchestrator
+is-orchestrated: true
+user-invocable: true
+command: /ccba-teamwork
 disable-model-invocation: true
 bundle: _core
 triggers:

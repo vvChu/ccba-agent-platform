@@ -4,6 +4,11 @@ description: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự �
   lỗi (Self-Healing Loop).
 disable-model-invocation: true
 bundle: _software
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 2.0
+  p: 1.0
 triggers:
 - eval gate
 - kiểm chứng
@@ -11,7 +16,10 @@ triggers:
 - self-healing
 - check code
 - run gate
+- ccba-skills-eval
+- skills-eval
 ---
+
 # 🛡️ Kỹ năng: eval-gate (Tự kiểm chứng & Sửa lỗi)
 
 Kỹ năng này bọc script [`scripts/eval/run_harness_evals.py`](../../../scripts/eval/run_harness_evals.py), tích hợp framework [`ccba_harness.evals`](../../../packages/ccba-harness/AGENTS.md) và chịu trách nhiệm bảo vệ codebase khỏi các lỗi cú pháp, kiểu dữ liệu, test cases thất bại, phá vỡ hợp đồng Seam, hoặc tài liệu bị ảo ảnh.
@@ -54,3 +62,13 @@ Nếu phát hiện Gate bị thất bại:
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/evaluations_guide.md` | Hướng dẫn thiết lập bộ kiểm thử benchmark và đánh giá độ chính xác của kỹ năng |
+

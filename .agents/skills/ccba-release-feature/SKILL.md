@@ -5,6 +5,9 @@ description: Merge PR, cleanup branch, auto-close local issues và cập nhật 
 applies_to:
 - Phần mềm
 bundle: _core
+tier: orchestrator
+is-orchestrated: true
+user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 triggers:

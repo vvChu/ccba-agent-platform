@@ -17,7 +17,10 @@ triggers:
 - recap
 - agenda
 - buổi thảo luận
+- ccba-teach
+- teach
 ---
+
 # Seminar Content Builder
 
 Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/Training nội bộ của CCBA.
@@ -102,3 +105,13 @@ build_presentation_from_markdown("outline.md", "seminar.pptx")
 ## Source Documents
 
 Tài liệu seminar lưu tại: `.md/seminars/` (tuyệt đối không lưu rải rác ngoài Project Root).
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/interactive_teaching.md` | Mẫu hình giảng dạy tương tác trong các buổi seminar và đào tạo nội bộ |
+

@@ -5,6 +5,9 @@ description: Tạo feature branch mới với quy trình lập kế hoạch và 
 applies_to:
 - Phần mềm
 bundle: _core
+tier: orchestrator
+is-orchestrated: true
+user-invocable: true
 disable-model-invocation: true
 command: /ccba-new-feature
 triggers:

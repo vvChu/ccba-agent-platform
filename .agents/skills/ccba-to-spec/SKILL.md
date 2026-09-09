@@ -10,7 +10,12 @@ triggers:
 - soạn spec
 - tạo spec
 - đặc tả kỹ thuật
+- ccba-to-tickets
+- to-tickets
+- ccba-to-questionnaire
+- to-questionnaire
 ---
+
 This skill takes the current conversation context and codebase understanding and produces a spec (you may know this document as a PRD). Do NOT interview the user — just synthesize what you already know.
 
 The issue tracker and triage label vocabulary should have been provided to you — run `/ccba-setup-skills` if not.
@@ -82,3 +87,14 @@ A description of the things that are out of scope for this spec.
 Any further notes about the feature.
 
 </spec-template>
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/spec_decomposition.md` | Kỹ thuật phân rã tài liệu đặc tả thành danh mục nhiệm vụ (tickets) chi tiết |
+| `references/interactive_questionnaire.md` | Kỹ thuật xây dựng bảng khảo sát thu thập yêu cầu từ người dùng |
+
