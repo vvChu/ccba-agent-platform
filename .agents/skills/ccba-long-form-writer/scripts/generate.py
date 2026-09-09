@@ -13,8 +13,15 @@ PROXY_URL = os.getenv("ANTIGRAVITY_PROXY", "http://100.79.241.120:8045")
 if not PROXY_URL.endswith("/v1"):
     PROXY_URL += "/v1"
 
-API_KEY = os.getenv("ANTIGRAVITY_ACCESS_TOKEN", "sk-83d6b377249445638f597ae9ea4657e7")
-client = OpenAI(base_url=PROXY_URL, api_key=API_KEY)
+
+def get_client() -> OpenAI:
+    """Returns configured OpenAI client, verifying API key presence."""
+    api_key = os.getenv("ANTIGRAVITY_ACCESS_TOKEN") or os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError(
+            "API key required: set ANTIGRAVITY_ACCESS_TOKEN or OPENAI_API_KEY environment variable."
+        )
+    return OpenAI(base_url=PROXY_URL, api_key=api_key)
 
 
 def save_to_docx(text: str, filename: str = "Output_Gemini.docx") -> bool:
@@ -43,6 +50,7 @@ def generate_ultra_long_content(prompt, target_cycles=3, model_name="gemini-3-pr
     ]
 
     full_text = ""
+    client = get_client()
     print(f"--- Initializing content generation with {model_name} ---")
     print(f"--- Proxy: {PROXY_URL} ---")
 

@@ -1,4 +1,3 @@
-# mypy: ignore-errors
 """
 Base validator with common validation logic for document files.
 """

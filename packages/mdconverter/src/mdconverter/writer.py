@@ -12,9 +12,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-from docx import Document
-from docx.shared import Pt
-
 
 def chunk_outline_sections(outline_md: str) -> list[dict[str, Any]]:
     """Decompose an outline markdown into sequential chapter/section specs.
@@ -109,6 +106,15 @@ def save_markdown_to_docx(text: str, filename: Path | str = "output.docx") -> Pa
     """
     out_path = Path(filename)
     out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        from docx import Document
+        from docx.shared import Pt
+    except ImportError as exc:
+        raise ImportError(
+            "python-docx is required for DOCX export in mdconverter.writer. "
+            "Install it via: pip install python-docx"
+        ) from exc
 
     doc = Document()
     normal_style = doc.styles["Normal"]

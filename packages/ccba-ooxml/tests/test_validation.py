@@ -6,10 +6,13 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+import pytest
+
 from ccba_ooxml import unpack_document
 from ccba_ooxml.validation import OOXMLValidator
 
 
+@pytest.mark.slow
 def test_ooxml_validator_docx():
     """Verify that OOXMLValidator can validate a docx document."""
     with tempfile.TemporaryDirectory() as temp_dir:
