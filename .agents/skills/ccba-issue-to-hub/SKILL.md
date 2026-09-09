@@ -10,6 +10,12 @@ applies_to:
 bundle: _core
 disable-model-invocation: true
 command: /ccba-issue-to-hub
+user-invocable: true
+gpi:
+  s: 3.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 triggers:
 - issue to hub
 - đề xuất ý tưởng

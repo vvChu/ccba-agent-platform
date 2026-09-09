@@ -5,6 +5,13 @@ description: Autonomous lifecycle governance for Architecture Decision Records (
   parity validation.
 bundle: _governance
 layer: _governance
+user-invocable: true
+command: /ccba-adr-lifecycle
+gpi:
+  s: 4.0
+  k: 3.0
+  a: 4.0
+  p: 1.0
 triggers:
 - ccba-adr-lifecycle
 - tao adr
@@ -77,7 +84,7 @@ Mô tả chi tiết giải pháp kỹ thuật, cấu trúc mô-đun, và các qu
   2. Cập nhật trạng thái thành:
      ```markdown
      ## 1. Trạng Thái (Status)
-     **SUPERSEDED by [ADR 00XX](00XX-....md)** (YYYY-MM-DD)
+     **SUPERSEDED by `[ADR 00XX](<00XX-slug>.md)`** (YYYY-MM-DD)
      ```
 
 **Tiêu chí hoàn thành:** Tất cả ADRs bị thay thế được cập nhật trạng thái `SUPERSEDED` chính xác.

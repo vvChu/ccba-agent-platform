@@ -30,13 +30,20 @@ SPOKE_SPECIFIC_SCRIPTS = {
     "scripts/sync_notebooklm_knowledge.py",
     "scripts/check_spoke_cleanliness.py",
     "scripts/check_hub_import_depth.py",
+    "scripts/format/format_docx.py",
+    "scripts/convert/convert_pdf_to_docx.py",
+    "scripts/office/soffice.py",
+    "scripts/office/unpack.py",
+    "scripts/office/clone_text.py",
+    "scripts/office/pack.py",
+    "scripts/office/validate.py",
 }
 
 
 def get_target_documents() -> list[Path]:
-    """Collect all active skill definitions and workflow markdown files."""
-    skills = list(SKILLS_DIR.glob("**/SKILL.md"))
-    workflows = list(WORKFLOWS_DIR.glob("*.md"))
+    """Collect all active skill definitions, reference documents, and workflow markdown files."""
+    skills = sorted(SKILLS_DIR.rglob("*.md"))
+    workflows = sorted(WORKFLOWS_DIR.glob("*.md")) if WORKFLOWS_DIR.exists() else []
     return skills + workflows
 
 

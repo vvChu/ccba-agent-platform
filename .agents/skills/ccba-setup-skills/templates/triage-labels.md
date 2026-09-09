@@ -1,6 +1,6 @@
 # Nhãn Phân Loại Sự Cố & Nhiệm Vụ (Triage Labels)
 
-Các công cụ kỹ thuật (như `/ccba-triage`) hoạt động dựa trên 5 vai trò phân loại tiêu chuẩn. Bảng dưới đây ánh xạ các vai trò tiêu chuẩn đó sang nhãn thực tế được sử dụng trong tracker của dự án này.
+Các công cụ kỹ thuật (như quy trình triage trong `/ccba-issue-to-hub`) hoạt động dựa trên 5 vai trò phân loại tiêu chuẩn. Bảng dưới đây ánh xạ các vai trò tiêu chuẩn đó sang nhãn thực tế được sử dụng trong tracker của dự án này.
 
 | Vai trò tiêu chuẩn | Nhãn thực tế trong Tracker | Ý nghĩa nghiệp vụ |
 | :--- | :--- | :--- |

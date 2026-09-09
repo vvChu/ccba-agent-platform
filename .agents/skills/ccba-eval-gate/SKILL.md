@@ -9,6 +9,8 @@ gpi:
   k: 2.0
   a: 2.0
   p: 1.0
+user-invocable: true
+command: /ccba-eval-gate
 triggers:
 - eval gate
 - kiểm chứng

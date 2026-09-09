@@ -9,6 +9,11 @@ user-invocable: true
 command: /ccba-pptx
 when_to_use: Invoke for presentation deck creation, edits, or extraction.
 category: multimedia
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 1.0
+  p: 1.0
 keywords:
 - ccba-pptx
 - powerpoint

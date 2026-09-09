@@ -10,6 +10,8 @@ bundle: _qc
 tier: orchestrator
 is-orchestrated: true
 category: engineering
+user-invocable: true
+command: /ccba-ai-qc
 keywords:
 - qc
 - audit

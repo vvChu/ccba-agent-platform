@@ -6,6 +6,11 @@ user-invocable: true
 command: /ccba-design
 when_to_use: Invoke for brand systems and visual identity, not UI code.
 category: frontend
+gpi:
+  s: 4.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 keywords:
 - brand
 - logo

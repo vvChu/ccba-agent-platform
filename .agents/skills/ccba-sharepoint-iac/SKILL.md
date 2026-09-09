@@ -8,6 +8,13 @@ metadata:
   version: v1.0
   publisher: CCBA
 bundle: _software
+user-invocable: true
+command: /ccba-sharepoint-iac
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 1.0
+  p: 1.0
 triggers:
 - ccba-sharepoint-iac
 - sharepoint iac

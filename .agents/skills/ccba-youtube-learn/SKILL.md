@@ -6,6 +6,11 @@ disable-model-invocation: true
 user-invocable: true
 command: /ccba-youtube-learn
 bundle: _core
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 1.0
+  p: 1.0
 triggers:
 - ccba-youtube-learn
 - youtube learn

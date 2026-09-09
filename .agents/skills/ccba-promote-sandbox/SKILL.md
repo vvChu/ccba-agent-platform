@@ -12,6 +12,12 @@ applies_to:
 bundle: _core
 disable-model-invocation: true
 command: /ccba-promote-sandbox
+user-invocable: true
+gpi:
+  s: 3.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 triggers:
 - promote sandbox
 - bàn giao sandbox
@@ -45,7 +51,7 @@ Agent hỗ trợ kỹ sư xác định các tham số bàn giao:
    - Quét các tệp hoàn thiện trong `output/`, `specs/`, `scripts/` (ví dụ: `output/pccc_audit_report.md`).
 2. **Đường dẫn Spoke Dự Án đích (`--target`):**
    - Đường dẫn thư mục của Spoke Dự Án thụ hưởng (ví dụ: `D:/GitHubProjects/2026-04-dh-viet-nhat`).
-   - *Nếu là công cụ/script dùng chung:* Hướng dẫn kỹ sư sử dụng lệnh `/ccba-propose-to-hub` thay thế.
+   - *Nếu là công cụ/script dùng chung:* Hướng dẫn kỹ sư sử dụng lệnh `/ccba-contribute-to-hub` thay thế.
 3. **Mã Phiếu Giao Việc (`--pgv`):**
    - Mã PGV được phân công trên IDOP (ví dụ: `PGV-2026-08-014`).
 

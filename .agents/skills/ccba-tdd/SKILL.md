@@ -7,6 +7,11 @@ command: /ccba-tdd
 when_to_use: Dùng khi người dùng yêu cầu phát triển tính năng mới hoặc sửa lỗi bằng
   phương pháp viết test trước (test-first).
 category: utilities
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 1.0
+  p: 1.0
 keywords:
 - ccba-tdd
 - test

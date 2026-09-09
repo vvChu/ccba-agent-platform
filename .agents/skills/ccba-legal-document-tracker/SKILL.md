@@ -7,6 +7,13 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _consulting
+user-invocable: true
+command: /ccba-legal-document-tracker
+gpi:
+  s: 4.0
+  k: 3.0
+  a: 4.0
+  p: 1.0
 triggers:
 - VBPL
 - pháp luật

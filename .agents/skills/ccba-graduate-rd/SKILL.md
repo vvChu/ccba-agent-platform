@@ -110,6 +110,6 @@ Thực thi tại thư mục Hub (`hub_path`):
 
 ## 🔄 Bước 7: Báo Cáo & Closed-Loop Spoke Sync
 1. Báo cáo URL Pull Request, trạng thái CI Tích Xanh và tóm tắt tính năng cho Maintainer.
-2. Sẵn sàng cho lệnh `/ccba-review-proposal [PR_NUMBER]` hoặc đồng bộ downstream khi PR được merge.
+2. Sẵn sàng cho lệnh `/ccba-contribute-to-hub [PR_NUMBER]` hoặc đồng bộ downstream khi PR được merge.
 - **Tiêu chí hoàn thành:** Báo cáo hoàn tất gửi Maintainer kèm link PR và tóm tắt tính năng sẵn sàng review.
 

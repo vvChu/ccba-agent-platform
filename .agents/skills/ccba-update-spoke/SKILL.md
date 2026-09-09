@@ -18,6 +18,7 @@ gpi:
   k: 2.0
   a: 2.0
   p: 1.0
+user-invocable: true
 triggers:
 - update spoke
 - đồng bộ hub
