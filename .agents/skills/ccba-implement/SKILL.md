@@ -1,6 +1,10 @@
 ---
 name: ccba-implement
 description: Implement a piece of work based on a spec or set of tickets.
+tier: orchestrator
+is-orchestrated: true
+user-invocable: true
+command: /ccba-implement
 disable-model-invocation: true
 bundle: _core
 triggers:

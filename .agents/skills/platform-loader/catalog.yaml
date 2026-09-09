@@ -201,6 +201,7 @@ skills:
   - multi-discipline audit
   - heat map report
   skill_path: .agents/skills/ccba-ai-qc/SKILL.md
+  tier: orchestrator
 - name: ccba-ai-qc-pccc-audit
   bundle: _qc
   description: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông
@@ -277,6 +278,7 @@ skills:
   - tối ưu prompt tự động
   skill_path: .agents/skills/ccba-autoresearch/SKILL.md
   command: /ccba-autoresearch
+  tier: orchestrator
 - name: ccba-build-skill
   bundle: _core
   description: Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói
@@ -486,6 +488,7 @@ skills:
   - ccba-graduate-rd
   skill_path: .agents/skills/ccba-graduate-rd/SKILL.md
   command: /ccba-graduate-rd
+  tier: orchestrator
 - name: ccba-grilling
   bundle: _software
   description: Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy
@@ -545,6 +548,8 @@ skills:
   - ccba-prototype
   - prototype
   skill_path: .agents/skills/ccba-implement/SKILL.md
+  command: /ccba-implement
+  tier: orchestrator
 - name: ccba-init-spoke
   bundle: _core
   description: Khởi tạo một dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform
@@ -583,6 +588,7 @@ skills:
   - trinh sát thảo luận hoạch định
   skill_path: .agents/skills/ccba-knowledge-loop/SKILL.md
   command: /ccba-knowledge-loop
+  tier: orchestrator
 - name: ccba-legal-advisor
   bundle: _consulting
   description: 'Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ
@@ -689,6 +695,7 @@ skills:
   - tạo branch
   skill_path: .agents/skills/ccba-new-feature/SKILL.md
   command: /ccba-new-feature
+  tier: orchestrator
 - name: ccba-notebooklm-connector
   bundle: _core
   description: Interact with Google NotebookLM to import YouTube, URLs, PDFs, and
@@ -744,6 +751,7 @@ skills:
   - phát hành
   skill_path: .agents/skills/ccba-release-feature/SKILL.md
   command: /ccba-release-feature
+  tier: orchestrator
 - name: ccba-research
   bundle: _software
   description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với
@@ -849,6 +857,7 @@ skills:
   - adopt-spoke
   skill_path: .agents/skills/ccba-spoke-adopter/SKILL.md
   command: /ccba-spoke-adopter
+  tier: orchestrator
 - name: ccba-tdd
   bundle: _software
   description: Phát triển hướng kiểm thử (Red-Green-Refactor) giúp tạo mã nguồn ổn
@@ -873,6 +882,8 @@ skills:
   - team sheet
   - parallel execution
   skill_path: .agents/skills/ccba-teamwork/SKILL.md
+  command: /ccba-teamwork
+  tier: orchestrator
 - name: ccba-to-spec
   bundle: _core
   description: Turn the current conversation into a spec and publish it to the project

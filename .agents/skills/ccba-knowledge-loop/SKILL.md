@@ -2,6 +2,9 @@
 name: ccba-knowledge-loop
 description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm
   → Wayfinder → Exec)
+tier: orchestrator
+is-orchestrated: true
+user-invocable: true
 disable-model-invocation: true
 bundle: _core
 command: /ccba-knowledge-loop
@@ -23,6 +26,10 @@ Quy trình chỉ được coi là thực thi thành công khi đáp ứng:
 2. [x] Đã tổ chức brainstorm để thống nhất giải pháp thô và tạo Session Document chứa các Action Items.
 3. [x] Đã lập Bản đồ định hướng (`map.md`) thông qua Wayfinder với Điểm đích (Destination) và các Frontier Tickets.
 4. [x] Các ticket Research được giao cho subagent chạy ngầm tự động và cập nhật kết quả ngược lại bản đồ tuần tự.
+
+## 🔒 Giao thức Tác quyền Duy nhất (Single-Writer Protocol — ADR 0053)
+- **Tác tử Nhạc trưởng (Orchestrator):** Agent chính là thực thể duy nhất có quyền ghi nhận tài liệu chính thức vào Knowledge Base và cập nhật bản đồ định hướng `map.md`.
+- **Tác tử Nghiên cứu (Subagents):** Hoạt động ở chế độ Read-Only Sandbox, chỉ xuất kết quả nháp và báo cáo vào thư mục scratch (`.md/knowledge/research_and_studies/` hoặc `.system_generated/scratch/`). Tuyệt đối không can thiệp vào các tệp quy trình hoặc cấu hình hệ thống.
 
 ---
 

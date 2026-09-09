@@ -9,10 +9,10 @@ Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 
 from __future__ import annotations
 
-import os
 import shutil
 from pathlib import Path
 from typing import Any
+
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
