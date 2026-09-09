@@ -272,6 +272,14 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
        - Đối với tính năng có `command: /...`: Được phép dùng cú pháp `/ten-lenh` (ví dụ: `/ccba-grilling`, `/ccba-implement`, `/ccba-new-feature`, `/ccba-codebase-design`).
        - Đối với các tài liệu hướng dẫn nằm trong `references/*.md` (Tier 2A): Tuyệt đối KHÔNG gắn tiền tố `/`. Thay vào đó, hướng dẫn người dùng gọi Master Skill kết hợp nạp tài liệu tham chiếu tương ứng (ví dụ: *"Chạy `/ccba-codebase-design` và yêu cầu nạp cẩm nang `references/codebase_refactor_guide.md`"*).
 
+- **Core Pattern P17.2 — Hoàn Thiện Tiêu Chí Hoàn Thành Đa Nhánh (Multi-Mode Completion) & Khử Trùng Lặp Tham Chiếu:**
+  - **Vấn đề:** Khi một Skill có nhiều chế độ hoạt động (như `--compare`, `--port`, `--improve`, `--copy-raw`), tiêu chí hoàn thành trong `SKILL.md` thường chỉ được viết cứng cho luồng mặc định (`--port`), dẫn đến: (1) Lỗi Hoàn thành non (Agent không kiểm chứng việc phân tích sâu theo mode), (2) Khuyến nghị bước tiếp theo bị sai lệch (chế độ `--compare` chỉ cần so sánh kiến trúc nhưng lại ép chạy `/ccba-implement`). Đồng thời, các quy tắc kết hợp cờ dễ bị lặp lại nhiều nơi trong tài liệu tham chiếu (`MODES.md`).
+  - **Giải pháp & Rào chắn Bất biến:**
+    1. **Tiêu chí hoàn thành đa nhánh:** Mọi tiêu chí hoàn thành ở các pha phân tích và bàn giao phải có nhánh rẽ kiểm chứng tương ứng với cờ được gọi (dynamic next-step guidance).
+    2. **Single Source of Truth trong tài liệu tham chiếu:** Các quy tắc kết hợp (như cấm kết hợp cờ) chỉ được tuyên bố một lần duy nhất tại phần `Kết hợp không hợp lệ`, không rải rác lặp lại trong mô tả từng cờ riêng lẻ.
+    3. **Chuẩn hóa GPI cho User Rituals:** Các kỹ năng có `disable-model-invocation: true` phải khai báo đúng $A = 1.0$ theo barem định lượng chuẩn.
+    4. **Khóa hợp đồng bằng Unit Test:** Cài đặt các kiểm thử đặc thù trong `tests/governance/` để bảo đảm các rào chắn này không bị thoái hóa trong tương lai.
+
 
 
 
