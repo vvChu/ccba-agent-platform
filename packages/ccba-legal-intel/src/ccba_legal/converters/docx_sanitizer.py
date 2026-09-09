@@ -116,9 +116,9 @@ def _rpr_canonical(r: etree._Element) -> str:
     if rpr is None:
         return ""
     try:
-        return etree.tostring(rpr, method="c14n").decode("utf-8")
+        return str(etree.tostring(rpr, method="c14n").decode("utf-8"))
     except Exception:
-        return etree.tostring(rpr).decode("utf-8")
+        return str(etree.tostring(rpr).decode("utf-8"))
 
 
 def _is_run_bold(r: etree._Element) -> bool:
@@ -200,11 +200,13 @@ class DocxCanonicalSanitizer:
         self._normalize_whitespace_and_tabs(root)
         self._promote_structural_headings(root)
 
-        return etree.tostring(
-            root,
-            xml_declaration=True,
-            encoding="utf-8",
-            standalone="yes",
+        return bytes(
+            etree.tostring(
+                root,
+                xml_declaration=True,
+                encoding="utf-8",
+                standalone="yes",
+            )
         )
 
     def _purge_markup_and_consolidate_runs(self, root: etree._Element) -> None:

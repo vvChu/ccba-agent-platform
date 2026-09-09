@@ -1,6 +1,6 @@
 """CCBA OOXML Utilities.
 
-Shared library for packaging, unpackaging, validating, and DOM manipulating docx/pptx/xlsx documents.
+Shared library for packaging, unpackaging, validating, formatting, and DOM manipulating docx/pptx/xlsx documents.
 """
 
 from __future__ import annotations
@@ -17,16 +17,30 @@ from .docx import (
     suggest_deletion,
     suggest_paragraph,
 )
+from .format import FormattingProfile, convert_md_to_docx, format_docx
 from .pack import pack_document, validate_document
 from .pptx import (
     CardItem,
     CCBAPresentationTheme,
     DeckBuilder,
     MarkdownDeckParser,
+    ParagraphData,
+    PresentationInventory,
+    ShapeData,
     SlideSpec,
     SlideType,
+    apply_replacements,
     build_presentation_from_markdown,
+    extract_text_inventory,
+    generate_thumbnails,
+    get_inventory_as_dict,
+    pptx_inventory,
+    pptx_replace_text,
+    rearrange_presentation,
+    rearrange_slides,
+    save_inventory,
 )
+from .soffice import find_soffice_bin, get_soffice_env, run_soffice
 from .tables import (
     StructuredTable,
     TableReconstructor,
@@ -45,7 +59,7 @@ __all__ = [
     # Spreadsheet calculation
     "recalc_xlsx",
     "setup_libreoffice_macro",
-    # Docx DOM manipulation
+    # Docx DOM manipulation & tracking
     "DocxDocument",
     "Document",
     "DocxXMLEditor",
@@ -55,12 +69,20 @@ __all__ = [
     "revert_deletion",
     "suggest_paragraph",
     "suggest_deletion",
+    # Docx formatting & markdown conversion
+    "FormattingProfile",
+    "format_docx",
+    "convert_md_to_docx",
+    # LibreOffice runner
+    "run_soffice",
+    "find_soffice_bin",
+    "get_soffice_env",
     # Table extraction & reconstruction
     "StructuredTable",
     "TableReconstructor",
     "make_descriptive_table_slug",
     "vietnamese_to_ascii",
-    # PowerPoint presentation builder (Deep Seam)
+    # PowerPoint presentation builder & inspection (Deep Seams)
     "DeckBuilder",
     "MarkdownDeckParser",
     "SlideSpec",
@@ -68,4 +90,16 @@ __all__ = [
     "CardItem",
     "build_presentation_from_markdown",
     "CCBAPresentationTheme",
+    "ParagraphData",
+    "ShapeData",
+    "PresentationInventory",
+    "extract_text_inventory",
+    "get_inventory_as_dict",
+    "pptx_inventory",
+    "save_inventory",
+    "apply_replacements",
+    "pptx_replace_text",
+    "rearrange_presentation",
+    "rearrange_slides",
+    "generate_thumbnails",
 ]

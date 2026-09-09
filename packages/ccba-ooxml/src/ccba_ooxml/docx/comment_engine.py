@@ -15,18 +15,7 @@ if TYPE_CHECKING:
 
     from .document import DocxDocument, DocxXMLEditor
 
-_PRIMARY_TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
-if _PRIMARY_TEMPLATE_DIR.exists():
-    TEMPLATE_DIR = _PRIMARY_TEMPLATE_DIR
-else:
-    TEMPLATE_DIR = (
-        Path(__file__).resolve().parents[4]
-        / ".agents"
-        / "skills"
-        / "docx"
-        / "scripts"
-        / "templates"
-    )
+TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 
 
 class CommentEngine:

@@ -105,7 +105,10 @@ class BaseSchemaValidator:
         self.verbose = verbose
 
         # Set schemas directory
-        self.schemas_dir = Path(__file__).parent.parent.parent / "schemas"
+        pkg_schemas = Path(__file__).parent.parent / "schemas"
+        self.schemas_dir = (
+            pkg_schemas if pkg_schemas.exists() else Path(__file__).parent.parent.parent / "schemas"
+        )
 
         # Get all XML and .rels files
         patterns = ["*.xml", "*.rels"]
