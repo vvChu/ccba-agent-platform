@@ -18,7 +18,10 @@ triggers:
 - pdf
 - pdf to docx
 - office
+- ccba-docx
+- docx
 ---
+
 # Xử lý Văn phòng
 
 Skill xử lý mọi thao tác với file văn phòng. Được tổ chức theo kiến trúc **composable 4 tầng**:
@@ -149,3 +152,13 @@ Templates (mẫu khung nội dung) và Examples (file output tham chiếu) dùng
 **Nguyễn Duy Tùng**
 Tư vấn xây dựng Song sinh số Doanh nghiệp (EDT) & Lực lượng Lao động AI (AI Workforce)
 Liên hệ: 0904.004.920
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/docx_engine_guide.md` | Hướng dẫn chi tiết chèn nhận xét (comments) và theo dõi thay đổi (tracked changes) trong tài liệu Word |
+

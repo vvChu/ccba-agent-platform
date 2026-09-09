@@ -3,6 +3,9 @@ name: ccba-autoresearch
 
 description: Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet
   Auto-Tuner) lấy cảm hứng từ karpathy/autoresearch.
+tier: orchestrator
+is-orchestrated: true
+user-invocable: true
 disable-model-invocation: true
 bundle: _core
 command: /ccba-autoresearch

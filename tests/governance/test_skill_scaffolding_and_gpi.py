@@ -527,7 +527,7 @@ def test_run_skills_validation_cli_enforce_gpi(tmp_path: Path) -> None:
 
 
 def test_updated_phase1_skills_pass_enforce_gpi() -> None:
-    """Verify that ccba-build-skill and ccba-writing-great-skills pass --enforce-gpi."""
+    """Verify that ccba-build-skill passes --enforce-gpi and has skill_authoring_guide reference."""
     auditor = SkillAuditor(PROJECT_ROOT)
 
     build_skill = PROJECT_ROOT / ".agents" / "skills" / "ccba-build-skill" / "SKILL.md"
@@ -535,83 +535,82 @@ def test_updated_phase1_skills_pass_enforce_gpi() -> None:
     issues_build = auditor.audit_skill(build_skill, enforce_gpi=True)
     assert len(issues_build) == 0, f"ccba-build-skill issues: {[i.message for i in issues_build]}"
 
-    writing_skill = PROJECT_ROOT / ".agents" / "skills" / "ccba-writing-great-skills" / "SKILL.md"
-    assert writing_skill.exists()
-    issues_writing = auditor.audit_skill(writing_skill, enforce_gpi=True)
-    assert len(issues_writing) == 0, (
-        f"ccba-writing-great-skills issues: {[i.message for i in issues_writing]}"
+    authoring_ref = (
+        PROJECT_ROOT
+        / ".agents"
+        / "skills"
+        / "ccba-build-skill"
+        / "references"
+        / "skill_authoring_guide.md"
     )
+    assert authoring_ref.exists()
 
 
 def test_updated_phase2_skills_pass_enforce_gpi() -> None:
-    """Verify that ccba-review-skill passes --enforce-gpi validation."""
+    """Verify that ccba-eval-gate and ccba-update-spoke pass --enforce-gpi validation."""
     auditor = SkillAuditor(PROJECT_ROOT)
 
-    review_skill = PROJECT_ROOT / ".agents" / "skills" / "ccba-review-skill" / "SKILL.md"
-    assert review_skill.exists()
-    issues_review = auditor.audit_skill(review_skill, enforce_gpi=True)
-    assert len(issues_review) == 0, (
-        f"ccba-review-skill issues: {[i.message for i in issues_review]}"
+    eval_skill = PROJECT_ROOT / ".agents" / "skills" / "ccba-eval-gate" / "SKILL.md"
+    assert eval_skill.exists()
+    issues_eval = auditor.audit_skill(eval_skill, enforce_gpi=True)
+    assert len(issues_eval) == 0, f"ccba-eval-gate issues: {[i.message for i in issues_eval]}"
+
+    update_spoke_skill = PROJECT_ROOT / ".agents" / "skills" / "ccba-update-spoke" / "SKILL.md"
+    assert update_spoke_skill.exists()
+    issues_update = auditor.audit_skill(update_spoke_skill, enforce_gpi=True)
+    assert len(issues_update) == 0, (
+        f"ccba-update-spoke issues: {[i.message for i in issues_update]}"
     )
 
 
 def test_ccba_review_skill_phase2_spec_contract() -> None:
-    """Verify ccba-review-skill contains all Phase 2 ADR-0057 contractual requirements."""
-    import yaml
-
-    file_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-review-skill" / "SKILL.md"
+    """Verify skill_review_checklist.md contains all Phase 2 ADR-0057 contractual requirements."""
+    file_path = (
+        PROJECT_ROOT
+        / ".agents"
+        / "skills"
+        / "ccba-build-skill"
+        / "references"
+        / "skill_review_checklist.md"
+    )
     assert file_path.exists()
     raw_text = file_path.read_text(encoding="utf-8")
 
-    # Frontmatter verification
-    parts = raw_text.split("---", 2)
-    assert len(parts) >= 3
-    fm = yaml.safe_load(parts[1])
-    assert fm.get("user-invocable") is True
-    assert fm.get("command") == "/ccba-review-skill"
-    gpi = fm.get("gpi", {})
-    assert float(gpi.get("s")) == 3.0
-    assert float(gpi.get("k")) == 2.0
-    assert float(gpi.get("a")) == 2.0
-    assert float(gpi.get("p")) == 2.0
-
-    calculated_gpi = (3.0 * 2.5) + (2.0 * 2.0) + (2.0 * 2.0) - (2.0 * 1.5)
-    assert calculated_gpi == 12.5 >= 12.0
-
     # Content verification
-    body = parts[2]
-    assert "Cổng 0 (The Determinism Gate)" in body
-    assert "Cổng 1 (The Orchestration Gate)" in body
-    assert "python -m ccba_harness.cli evaluate-gpi --file <path-to-skill.md>" in body
-    assert "GPI < 12.0" in body
-    assert "Tier 2A" in body
-    assert "> 100 LOC" in body
+    assert "Cổng 0 (The Determinism Gate)" in raw_text
+    assert "Cổng 1 (The Orchestration Gate)" in raw_text
+    assert "python -m ccba_harness.cli evaluate-gpi --file <path-to-skill.md>" in raw_text
+    assert "GPI < 12.0" in raw_text
+    assert "Tier 2A" in raw_text
+    assert "> 100 LOC" in raw_text
 
 
 def test_ccba_skills_eval_phase2_spec_contract() -> None:
-    """Verify ccba-skills-eval contains all Phase 2 ADR-0057 contractual requirements."""
-    import yaml
-
-    file_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-skills-eval" / "SKILL.md"
+    """Verify evaluations_guide.md contains all Phase 2 ADR-0057 contractual requirements."""
+    file_path = (
+        PROJECT_ROOT
+        / ".agents"
+        / "skills"
+        / "ccba-eval-gate"
+        / "references"
+        / "evaluations_guide.md"
+    )
     assert file_path.exists()
     raw_text = file_path.read_text(encoding="utf-8")
 
-    parts = raw_text.split("---", 2)
-    assert len(parts) >= 3
-    fm = yaml.safe_load(parts[1])
-    gpi = fm.get("gpi", {})
-    assert float(gpi.get("s")) == 2.0
-    assert float(gpi.get("k")) == 1.0
-    assert float(gpi.get("a")) == 1.0
-    assert float(gpi.get("p")) == 4.0
-
-    body = parts[2]
-    assert "python -m ccba_harness.cli eval --skill [tên-skill] --trials 3" in body
+    assert "python -m ccba_harness.cli eval --skill [tên-skill] --trials 3" in raw_text
 
 
 def test_ccba_sync_upstream_phase2_spec_contract() -> None:
-    """Verify ccba-sync-upstream contains all Phase 2 ADR-0057 contractual requirements."""
-    file_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-sync-upstream" / "SKILL.md"
+    """Verify upstream_sync_guide.md contains all Phase 2 ADR-0057 contractual requirements."""
+    file_path = (
+        PROJECT_ROOT
+        / ".agents"
+        / "skills"
+        / "ccba-update-spoke"
+        / "references"
+        / "upstream_sync_guide.md"
+    )
     assert file_path.exists()
     raw_text = file_path.read_text(encoding="utf-8")
 

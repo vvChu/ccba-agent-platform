@@ -1,6 +1,5 @@
 ---
 name: ccba-issue-to-hub
-
 description: Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ
   Spoke lên Hub dưới dạng GitHub Issue
 applies_to:
@@ -18,7 +17,10 @@ triggers:
 - tạo issue
 - feature request
 - ccba-issue-to-hub
+- ccba-triage
+- triage
 ---
+
 # Workflow: Đề Xuất Ý Tưởng & Tính Năng Lên Hub (/ccba-issue-to-hub)
 
 Quy trình tự động hóa bóc tách ngữ cảnh thảo luận tại dự án Spoke, biên soạn bản đề xuất cải tiến (**RFC Proposal**) chuẩn chỉnh và tạo GitHub Issue trực tiếp lên repository trung tâm CCBA Hub (`ccba-agent-platform`).
@@ -107,3 +109,13 @@ Sau khi tạo thành công, Agent gửi phản hồi tổng kết:
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/issue_triage_flow.md` | Quy trình phân loại, gắn nhãn và sàng lọc sự cố kỹ thuật (issues) |
+

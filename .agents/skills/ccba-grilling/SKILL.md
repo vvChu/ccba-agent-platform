@@ -30,7 +30,10 @@ triggers:
 - hỏi xoáy
 - stress test
 - kiểm chứng kế hoạch
+- ccba-loop-me
+- loop-me
 ---
+
 # Grilling (Phỏng Vấn Dồn Dập & Đối Chiếu Quy Chuẩn)
 
 Kỹ năng này bắt buộc Agent phải chạy một vòng lặp phỏng vấn Socrates dồn dập (Grilling Loop) để stress-test kế hoạch thiết kế của người dùng hoặc đối chiếu tính tuân thủ của kế hoạch đó với các quy chuẩn tài liệu được chỉ định.
@@ -100,4 +103,13 @@ Sử dụng khi người dùng muốn hội tụ về một thiết kế giao di
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/workflow_looping.md` | Kỹ thuật phỏng vấn vòng lặp chuyên sâu nhằm khai thác tường tận yêu cầu quy trình |
 

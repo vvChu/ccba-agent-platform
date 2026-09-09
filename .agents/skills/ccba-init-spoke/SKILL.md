@@ -1,6 +1,5 @@
 ---
 name: ccba-init-spoke
-
 description: Khởi tạo một dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform
 applies_to:
 - Phần mềm
@@ -17,7 +16,12 @@ triggers:
 - init spoke
 - setup project
 - khởi tạo dự án
+- ccba-wizard
+- wizard
+- ccba-server-deploy
+- server-deploy
 ---
+
 # Kỹ Năng: Khởi Tạo CCBA Spoke Workspace (/ccba-init-spoke)
 Kỹ năng này tự động hóa việc thiết lập không gian làm việc dự án mới theo chuẩn **CCBA Hub-and-Spoke** (ADR 0041, ADR 0044) và **Global Rules**.
 
@@ -165,3 +169,14 @@ python "[hub_path]\scripts\spoke\spoke_bootstrap.py" --spoke .
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/interactive_wizard.md` | Kịch bản hướng dẫn tương tác từng bước khi khởi tạo dự án Spoke mới |
+| `references/server_deployment.md` | Hướng dẫn triển khai cấu hình server và hạ tầng phục vụ Agent |
+

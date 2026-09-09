@@ -21,7 +21,10 @@ triggers:
 - văn phong thầu
 - viết thuyết phục
 - marketing admin
+- ccba-viet-chuyen-nghiep
+- viet-chuyen-nghiep
 ---
+
 # Kỹ năng Soạn thảo Văn bản theo Mẫu chuẩn (Copywriting)
 
 Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, quyết định, công văn, hợp đồng, tờ trình...) theo biểu mẫu chuẩn lưu tại kỹ năng `xu-ly-van-phong` (thư mục `/.agents/skills/ccba-xu-ly-van-phong/templates/`).
@@ -73,3 +76,13 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/viet_chuyen_nghiep_rules.md` | Cẩm nang quy tắc ngữ pháp, văn phong chuyên nghiệp và kiểm tra chất lượng bài viết |
+

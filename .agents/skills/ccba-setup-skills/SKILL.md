@@ -5,7 +5,11 @@ description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ 
   Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
 disable-model-invocation: true
 bundle: _core
-gpi: {s: 3.5, k: 2.0, a: 2.0, p: 1.0}
+gpi:
+  s: 3.5
+  k: 2.0
+  a: 2.0
+  p: 1.0
 triggers:
 - setup skills
 - thiết lập cấu hình
@@ -13,7 +17,12 @@ triggers:
 - cấu hình nhãn
 - setup-skills
 - ccba-setup-skills
+- ccba-setup-pre-commit
+- setup-pre-commit
+- ccba-setup-ts-deep-modules
+- setup-ts-deep-modules
 ---
+
 # Kỹ năng Thiết Lập Cấu Hình Phát Triển (Setup CCBA Skills)
 
 Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát triển phần mềm khác (`ccba-triage`, `ccba-to-tickets`, `ccba-to-spec`, `ccba-tdd`, `ccba-improve-codebase-architecture`, v.v.) hoạt động chính xác:
@@ -136,3 +145,14 @@ Thông báo cho người dùng việc thiết lập đã hoàn thành. Nhắc nh
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/pre_commit_setup.md` | Hướng dẫn cấu hình pre-commit linter hooks và bảo vệ mã nguồn |
+| `references/ts_deep_modules.md` | Hướng dẫn thiết lập dependency-cruiser và kiểm soát ranh giới module sâu TypeScript |
+

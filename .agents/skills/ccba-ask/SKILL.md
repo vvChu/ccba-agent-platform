@@ -10,7 +10,12 @@ triggers:
 - định hướng
 - luồng công việc
 - bản đồ kỹ năng
+- ccba-wait-what
+- wait-what
+- ccba-brainstorm
+- brainstorm
 ---
+
 # Bản đồ Định hướng Kỹ năng Nền tảng (CCBA Ask Guide)
 
 Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nhà phát triển để lựa chọn đúng Slash Command hoặc Kỹ năng (Skill) phù hợp nhất với trạng thái công việc hiện tại.
@@ -64,3 +69,14 @@ Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nh
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/clarification_patterns.md` | Mẫu câu và kỹ thuật phỏng vấn làm rõ ngữ cảnh khi gặp yêu cầu mơ hồ |
+| `references/brainstorm_templates.md` | Khung mẫu câu hỏi định hướng tư duy và giải pháp sáng tạo |
+

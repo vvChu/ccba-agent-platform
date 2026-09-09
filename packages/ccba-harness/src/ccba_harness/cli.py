@@ -334,6 +334,8 @@ def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
                 )
             result = validator.evaluate_skill_file(
                 file_path,
+                override_deterministic=True if args.deterministic else None,
+                override_orchestrated=True if args.orchestrated else None,
                 override_metrics=override_metrics,
                 override_parent=args.parent,
             )
