@@ -1,11 +1,11 @@
 # CCBA Agent Services Platform — Fleet Skills 3-Tier Architecture Migration Blueprint & Zero-Bloat Roadmap
 
 > **Mã tài liệu:** `BLUEPRINT-2026-SKILLS-001`  
-> **Phiên bản:** `v1.0` (Chuẩn hóa toàn diện theo RES-2026-ARCH-001 v1.2, ADR 0021, ADR 0030, ADR 0040, ADR 0047, ADR 0051, ADR 0053, ADR 0056)  
+> **Phiên bản:** `v2.0` (ĐÃ THỰC THI & HOÀN TẤT 100% — ENACTED & COMPLETED, tích hợp PR #248, PR #249, ADR-0057)  
 > **Cơ quan ban hành:** Hội đồng Kiến trúc Nền tảng CCBA (Architecture Review Board — ARB)  
-> **Ngày ban hành:** 2026-09-07  
+> **Ngày ban hành:** 2026-09-07 | **Ngày hoàn tất thực thi:** 2026-09-09  
 > **Phạm vi hiệu lực:** Toàn bộ 100 Agent Skills, Packages Monorepo, Workflows tại Trung tâm (Hub) và các Trạm vệ tinh (Spokes)  
-> **Chế độ thực thi:** Kế hoạch Khảo sát & Di trú Không Phá Hủy (Non-Destructive Survey & Migration Planning)  
+> **Trạng thái thực thi:** ĐÃ BAN HÀNH & THỰC THI TOÀN DIỆN (ENACTED / COMPLETED)  
 > **Tài liệu tham chiếu SSOT:**  
 > - Báo cáo Kiến trúc Nền tảng: `RES-2026-ARCH-001 v1.2` (`research-agent-architecture-packages-skills-orchestrators.md`)  
 > - Module Tính toán GPI & Validator: `packages/ccba-harness/src/ccba_harness/gpi.py` và `skill_validator.py`  
@@ -34,11 +34,12 @@ Kiến trúc 3 tầng của CCBA được xây dựng dựa trên các nguyên t
 - **Nguyên tắc Bảo toàn Ngân sách Ngữ cảnh (Context Budget Preservation):** Cưỡng chế duy trì **0 token nền** cho 75 User Rituals thông qua cờ `disable-model-invocation: true`, và giới hạn trần không quá 10 model-invoked skills trong một bundle quản trị (ADR 0040).
 - **Nguyên tắc Triệt tiêu Rác Tồn đọng (Zero Zombie Bloat Guarantee):** Mọi sự chuyển dịch vị trí, sáp nhập micro-skill hay đóng gói package đều phải được đăng ký bí danh chuyển hướng trong `SKILL_DEPRECATION_ALIASES` tại `scripts/spoke/sync/coordinator.py`.
 
-### 1.3. Cam Kết An Toàn Tuyệt Đối Trong Giai Đoạn Lập Kế Hoạch (Read-Only Safety Invariant)
-Trong phạm vi của giai đoạn hiện tại:
-- Toàn bộ 100 tệp `SKILL.md` và các mã nguồn trong `.agents/skills/` được duy trì trạng thái **bảo toàn nguyên vẹn 100% (Read-Only)**.
-- Nghiêm cấm mọi hành vi tự ý xóa, di chuyển, đổi tên tệp vật lý hoặc thay đổi cấu trúc thư mục thực tế khi chưa có sự phê duyệt chính thức từ Hội đồng Kiến trúc (ARB) và Người dùng.
-- Blueprint này đóng vai trò là căn cứ kỹ thuật chuẩn tắc (SSOT) để chỉ đạo các đợt di trú vật lý có kiểm soát trong các Milestones tiếp theo.
+### 1.3. Lịch Sử Thực Thi & Nghiệm Thu Toàn Diện (Execution History & Milestone Verification)
+Toàn bộ các mục tiêu của Bản thiết kế di trú `BLUEPRINT-2026-SKILLS-001` đã được hoàn thành 100% và hợp nhất vào nhánh chính `main` của CCBA Platform:
+- **Milestone 2 (Phase 1 — Packages & Leaf Hardening):** Đã hoàn tất qua [PR #248](https://github.com/vvChu/ccba-agent-platform/pull/248) (commit `f204aa00`). Bóc tách 5.000+ LOC logic xác định sang 3 packages Monorepo (`ccba-ooxml`, `mdconverter`, `ccba-pdf-prep`) dưới dạng Deep Seams chuẩn mực.
+- **Milestone 3 (Phase 2 — Reference Harmonization & Anti-Zombie Bloat):** Đã hoàn tất qua [PR #249](https://github.com/vvChu/ccba-agent-platform/pull/249) (commit `a2ed1251`). Hợp nhất 34 micro-skills thành Progressive References (Tầng 2A) trong `references/*.md` của 24 Master Skills; cấu trúc Hub tinh gọn về chính xác 67 Standalone Kernel Skills ($GPI \ge 12.0$); đăng ký toàn bộ 34 bí danh chuyển hướng trong `SKILL_DEPRECATION_ALIASES` (`scripts/spoke/sync/coordinator.py`).
+- **Milestone 4 (Phase 3 — Composite Orchestrators & Single-Writer Protocol):** Đã hoàn tất qua [PR #249](https://github.com/vvChu/ccba-agent-platform/pull/249) (commit `a2ed1251`). Chuẩn hóa 9 Composite Orchestrators với `tier: orchestrator`, `is-orchestrated: true`, tuân thủ Single-Writer Protocol (ADR-0053).
+- **Hệ thống Kiểm thử Khép kín:** 10/10 packages đạt Pass trong `scripts/eval/run_isolated_tests.py --all --stress`; 208 unit tests đạt Pass 100%; toàn bộ hợp đồng phụ thuộc và catalog SSOT đạt 100% in-sync.
 
 ---
 
@@ -943,12 +944,13 @@ SKILL_DEPRECATION_ALIASES_3TIER: dict[str, str] = {
 }
 ```
 
-### 10.3. Ràng Buộc An Toàn Tuyệt Đối & Quy Trình Chuyển Giao
-1. **Ràng buộc Không Phá Hủy:** Trong toàn bộ quá trình lập kế hoạch và biên soạn Blueprint này, không có bất kỳ tệp tin vật lý nào trong `.agents/skills/` bị xóa, đổi tên hoặc di chuyển.
-2. **Quy trình Phê duyệt (RFC Approval Gate):** Việc thực thi các thay đổi vật lý sang Tầng 1 và Tầng 2A sẽ chỉ được triển khai khi người dùng và Hội đồng Kiến trúc chính thức phê duyệt tài liệu Blueprint này thông qua kế hoạch Milestone 2, 3 và 4.
-3. **Bảo chứng Chất lượng (Quality Verification):** Sau khi tài liệu Blueprint được biên dịch, toàn bộ hệ thống kiểm định của repository phải duy trì trạng thái 100% Pass:
-   - `pytest tests/ -q` (171 passed)
-   - `python scripts/governance/compile_catalog.py --check` ([OK] in-sync)
+### 10.3. Nghiệm Thu Thực Thi & Chuyển Giao Kiến Trúc Toàn Diện
+1. **Phê Duyệt & Thực Thi Hoàn Tất (RFC Enacted):** Hội đồng Kiến trúc Nền tảng (ARB) và Người dùng đã chính thức phê duyệt và hoàn tất chuyển đổi toàn bộ 100 kỹ năng của nền tảng theo Kiến Trúc Monorepo 3 Tầng qua Milestone 2 (PR #248), Milestone 3 và Milestone 4 (PR #249).
+2. **Triệt Tiêu Rác Tồn Đọng (Zero Zombie Bloat Guarantee):** Từ điển `SKILL_DEPRECATION_ALIASES` đã được đồng bộ vào `scripts/spoke/sync/coordinator.py`, bảo đảm 100% các trạm Spoke vệ tinh tự động loại bỏ các thư mục micro-skills cũ khi chạy `sync_spoke.py --apply`.
+3. **Bảo Chứng Chất Lượng Toàn Nền Tảng (Quality Verification):** Toàn bộ hệ thống kiểm định của repository duy trì trạng thái 100% Pass:
+   - `python scripts/eval/run_isolated_tests.py --all --stress` (10/10 packages PASS)
+   - `pytest tests/ -q` (208 passed, 1 skipped)
+   - `python scripts/governance/compile_catalog.py --check` ([OK] 100% in-sync)
    - `python scripts/governance/check_dependency_contracts.py` (100% compliant)
 
 ---
