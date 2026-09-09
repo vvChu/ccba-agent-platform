@@ -42,6 +42,33 @@ from .document_skills.pdf_forms import (
 from .document_skills.pdf_forms import (
     get_field_info as get_field_info,
 )
+from .media import (
+    compute_frame_hash as compute_frame_hash,
+)
+from .media import (
+    dedup_frames as dedup_frames,
+)
+from .media import (
+    extract_video_frames as extract_video_frames,
+)
+from .media import (
+    extract_youtube_video_id as extract_youtube_video_id,
+)
+from .media import (
+    fetch_youtube_transcript as fetch_youtube_transcript,
+)
+from .media import (
+    find_ffmpeg_bin as find_ffmpeg_bin,
+)
+from .media import (
+    format_lesson_notes as format_lesson_notes,
+)
+from .media import (
+    format_whisper_transcript as format_whisper_transcript,
+)
+from .media import (
+    group_transcript_segments as group_transcript_segments,
+)
 from .pipeline import (
     PDFProcessingError as PDFProcessingError,
 )
@@ -71,6 +98,16 @@ __all__ = [
     # === DOCUMENT SKILLS (standalone utilities for PDF forms) ===
     "get_field_info",
     "fill_pdf_fields",
+    # === MEDIA DEEP SEAMS (YouTube & Video extraction) ===
+    "extract_youtube_video_id",
+    "format_whisper_transcript",
+    "group_transcript_segments",
+    "fetch_youtube_transcript",
+    "compute_frame_hash",
+    "dedup_frames",
+    "find_ffmpeg_bin",
+    "extract_video_frames",
+    "format_lesson_notes",
 ]
 
 # ---------------------------------------------------------------------------

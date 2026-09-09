@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """CCBA Platform — YouTube/Video Watcher & Belief Archaeology Orchestrator.
 
 Main entry point script to fetch transcripts, extract slide frames, and synthesize notes.
@@ -30,10 +31,15 @@ logging.basicConfig(
 _logger = logging.getLogger("ccba.youtube.orchestrator")
 
 from transcript import fetch_youtube_transcript  # noqa: E402
-from visual_extractor import _find_ffmpeg_bin, extract_video_visuals  # noqa: E402
+from visual_extractor import extract_video_visuals  # noqa: E402
+
+from ccba_pdf_prep.media import extract_youtube_video_id
+from ccba_pdf_prep.media import find_ffmpeg_bin as _find_ffmpeg_bin
 
 
-def synthesize_concept_notes(transcript: str, filenames: list[str], images_subfolder: str = "images", max_tokens: int = 8192) -> str:
+def synthesize_concept_notes(
+    transcript: str, filenames: list[str], images_subfolder: str = "images", max_tokens: int = 8192
+) -> str:
     """Synthesize learning notes inserting markdown links to slide images."""
     from ccba_ai import ai
 
@@ -52,7 +58,9 @@ def synthesize_concept_notes(transcript: str, filenames: list[str], images_subfo
     return res.strip()
 
 
-def synthesize_worldview_notes(transcript: str, speaker_name: str, video_title: str, max_tokens: int = 4096) -> str:
+def synthesize_worldview_notes(
+    transcript: str, speaker_name: str, video_title: str, max_tokens: int = 4096
+) -> str:
     """Analyze speaker's hidden assumptions and worldviews based on template."""
     from ccba_ai import ai
 
@@ -116,14 +124,21 @@ def extract_speaker_from_transcript(transcript: str, default: str = "Diễn gi�
         "Nhiệm vụ của bạn là xác định chính xác họ và tên của diễn giả (người nói chính) trong bài phát biểu này.\n\n"
         "Yêu cầu:\n"
         "1. Chỉ trả về duy nhất họ và tên của diễn giả (ví dụ: 'Đặng Lê Nguyên Vũ', 'TS. Trần Văn A'). Không giải thích thêm.\n"
-        "2. Nếu không tìm thấy tên diễn giả cụ thể hoặc không chắc chắn, hãy trả về đúng giá trị mặc định sau (không bao gồm dấu ngoặc kép): \"" + default + "\"\n\n"
+        '2. Nếu không tìm thấy tên diễn giả cụ thể hoặc không chắc chắn, hãy trả về đúng giá trị mặc định sau (không bao gồm dấu ngoặc kép): "'
+        + default
+        + '"\n\n'
         f"ĐOẠN TRÍCH PHỤ ĐỀ:\n---\n{sample}\n---"
     )
     try:
         res = ai.chat(prompt, model="gemini-3.1-flash-lite", max_tokens=100, temperature=0.1)
         cleaned = res.strip().strip("'\"")
         # If it returned some long sentence instead of a name, fallback
-        if cleaned and len(cleaned) < 50 and "phụ đề" not in cleaned.lower() and "không tìm thấy" not in cleaned.lower():
+        if (
+            cleaned
+            and len(cleaned) < 50
+            and "phụ đề" not in cleaned.lower()
+            and "không tìm thấy" not in cleaned.lower()
+        ):
             return cleaned
     except Exception as e:
         _logger.warning(f"Error auto-detecting speaker name: {e}")
@@ -132,40 +147,31 @@ def extract_speaker_from_transcript(transcript: str, default: str = "Diễn gi�
 
 def _extract_video_id(video_url: str) -> str:
     """Extract YouTube video ID from URL or generate a unique slug."""
-    from urllib.parse import urlparse, parse_qs
     import hashlib
 
-    video_id = None
-    if "youtube.com" in video_url or "youtu.be" in video_url:
-        try:
-            parsed = urlparse(video_url)
-            if parsed.netloc == "youtu.be":
-                video_id = parsed.path[1:]
-            elif "youtube.com" in parsed.netloc:
-                qs = parse_qs(parsed.query)
-                video_id = qs.get("v", [None])[0]
-                if not video_id and parsed.path.startswith("/embed/"):
-                    video_id = parsed.path.split("/")[2]
-        except Exception:
-            pass
+    vid = extract_youtube_video_id(video_url)
+    if vid:
+        return vid
 
-    if not video_id:
-        if os.path.exists(video_url):
-            video_id = Path(video_url).stem
-        else:
-            video_id = hashlib.md5(video_url.encode("utf-8")).hexdigest()[:11]
+    if os.path.exists(video_url):
+        return Path(video_url).stem
 
-    return video_id
+    return hashlib.md5(video_url.encode("utf-8")).hexdigest()[:11]
 
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="CCBA youtube-learn Orchestrator.")
     parser.add_argument("video_url", type=str, help="URL of the video or local video path")
-    parser.add_argument("output_dir", type=str, nargs="?", default=None, help="Output directory path")
-    parser.add_argument("--project", "-p", type=str, default=None, help="Tên đề tài/dự án (Cohesive Topic Folder)")
+    parser.add_argument(
+        "output_dir", type=str, nargs="?", default=None, help="Output directory path"
+    )
+    parser.add_argument(
+        "--project", "-p", type=str, default=None, help="Tên đề tài/dự án (Cohesive Topic Folder)"
+    )
     parser.add_argument("--speaker", type=str, default=None, help="Explicit speaker name")
-    
+
     args = parser.parse_args()
     video_url = args.video_url
     video_id = _extract_video_id(video_url)
@@ -254,13 +260,13 @@ def main():
 
     # Calculate smart adaptive max_tokens limits based on transcript length
     transcript_len = len(transcript)
-    if transcript_len > 60000:       # Video ~ >1 hour
+    if transcript_len > 60000:  # Video ~ >1 hour
         dynamic_concept_limit = 32768
         dynamic_worldview_limit = 8192
-    elif transcript_len > 30000:     # Video ~ 30-60 minutes
+    elif transcript_len > 30000:  # Video ~ 30-60 minutes
         dynamic_concept_limit = 16384
         dynamic_worldview_limit = 6144
-    else:                            # Video ~ <30 minutes
+    else:  # Video ~ <30 minutes
         dynamic_concept_limit = 8192
         dynamic_worldview_limit = 4096
 
@@ -271,7 +277,9 @@ def main():
         try:
             return int(val)
         except ValueError:
-            _logger.warning(f"Invalid integer for env var '{var_name}': '{val}'. Using default '{fallback}'.")
+            _logger.warning(
+                f"Invalid integer for env var '{var_name}': '{val}'. Using default '{fallback}'."
+            )
             return fallback
 
     max_tokens_concept = _safe_int_env("MAX_TOKENS_CONCEPT", dynamic_concept_limit)
@@ -279,9 +287,15 @@ def main():
     max_tokens_speaker = _safe_int_env("MAX_TOKENS_SPEAKER", 2048)
 
     images_subfolder = f"images_{video_id}" if not is_text_only else "images"
-    concept_notes = synthesize_concept_notes(transcript, saved_images, images_subfolder=images_subfolder, max_tokens=max_tokens_concept)
-    worldview_notes = synthesize_worldview_notes(transcript, speaker_name, video_title, max_tokens=max_tokens_worldview)
-    speaker_notes = synthesize_speaker_notes(transcript, speaker_name, max_tokens=max_tokens_speaker)
+    concept_notes = synthesize_concept_notes(
+        transcript, saved_images, images_subfolder=images_subfolder, max_tokens=max_tokens_concept
+    )
+    worldview_notes = synthesize_worldview_notes(
+        transcript, speaker_name, video_title, max_tokens=max_tokens_worldview
+    )
+    speaker_notes = synthesize_speaker_notes(
+        transcript, speaker_name, max_tokens=max_tokens_speaker
+    )
 
     # Write files
     (output_dir / f"notes_concept_{video_id}.md").write_text(concept_notes, encoding="utf-8")

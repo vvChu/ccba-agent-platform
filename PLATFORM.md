@@ -17,7 +17,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │
 ├── .agents/                           ← AI Agent configurations
 │   ├── AGENTS.md                      ←   Layer 1 Constitution Mirror
-│   ├── skills/                        ←   Reusable AI skills (<!-- SKILL_COUNT_START -->100<!-- SKILL_COUNT_END --> skills)
+│   ├── skills/                        ←   Reusable AI skills (<!-- SKILL_COUNT_START -->101<!-- SKILL_COUNT_END --> skills)
 │   │   ├── ccba-legal-document-tracker/ ← Theo dõi VBPL
 │   │   ├── ccba-completion-checklist/ ←   HSHT công trình
 │   │   ├── ccba-seminar-builder/      ←   Chuẩn bị seminar
@@ -66,7 +66,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 
 ## Phân loại Kỹ năng (Skills Classification)
 
-Hệ thống kỹ năng (<!-- SKILL_COUNT_START -->100<!-- SKILL_COUNT_END --> skills) được phân làm hai loại chính dựa trên cơ chế kích hoạt và tương tác:
+Hệ thống kỹ năng (<!-- SKILL_COUNT_START -->101<!-- SKILL_COUNT_END --> skills) được phân làm hai loại chính dựa trên cơ chế kích hoạt và tương tác:
 
 ### 1. Kỹ năng kích hoạt bởi User (User-Invocable Skills)
 Là các kỹ năng nhận lệnh trực tiếp từ người dùng thông qua Slash Commands (`/ccba-*` hoặc `/bigbim-*`):
