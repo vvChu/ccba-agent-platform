@@ -16,7 +16,11 @@ keywords:
 - Sơ đồ
 - Flowchart
 - Obsidian
+triggers:
+- ccba-show-me
+- show-me
 ---
+
 # Excalidraw Diagram Skill
 
 Skill này tạo ra file Excalidraw JSON **đẹp, chuyên nghiệp và có chiều sâu** — không chỉ là các hộp và mũi tên thông thường.
@@ -462,3 +466,13 @@ tags: [excalidraw]
 - [ ] Mọi relationship có arrow/line?
 - [ ] Luồng thị giác rõ ràng?
 - [ ] Element quan trọng = lớn hơn/có nhiều whitespace hơn?
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/visual_concepts.md` | Hướng dẫn trực quan hóa giải thuật, sơ đồ dữ liệu qua Excalidraw |
+

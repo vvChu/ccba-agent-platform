@@ -4,6 +4,9 @@ description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase
   Spokes) vào CCBA Platform mà không phá hủy cấu trúc dữ liệu cũ.
 argument-hint: '[--spoke <path>] [--dry-run] [--archetype <archetype>] [--type <project_type>]
   [--mode <mode>]'
+tier: orchestrator
+is-orchestrated: true
+user-invocable: true
 disable-model-invocation: true
 command: /ccba-spoke-adopter
 category: management

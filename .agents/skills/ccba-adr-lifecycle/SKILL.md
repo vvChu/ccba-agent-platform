@@ -1,6 +1,8 @@
 ---
 name: ccba-adr-lifecycle
-description: Autonomous lifecycle governance for Architecture Decision Records (ADRs) - Scaffolding, status cascading, Living Traceability Matrix compilation, and CI parity validation.
+description: Autonomous lifecycle governance for Architecture Decision Records (ADRs)
+  - Scaffolding, status cascading, Living Traceability Matrix compilation, and CI
+  parity validation.
 bundle: _governance
 layer: _governance
 triggers:
@@ -10,14 +12,17 @@ triggers:
 - adr sync
 - adr lifecycle
 - manage adr
+- ccba-architecture-sync
+- architecture-sync
 conforms_to:
-- "ADR-0032"
-- "ADR-0037"
-- "ADR-0047"
-- "ADR-0051"
+- ADR-0032
+- ADR-0037
+- ADR-0047
+- ADR-0051
 metadata:
   version: 1.1.0
 ---
+
 # Skill: Quản Trị Vòng Đời Quyết Định Kiến Trúc (`ccba-adr-lifecycle`)
 
 Kỹ năng này hướng dẫn Agent tự động quản trị toàn bộ vòng đời của các **Quyết định Kiến trúc (ADR)** trên nền tảng CCBA Platform (cả Hub và Spoke): Từ khởi tạo ADR mới, lan truyền trạng thái thay thế (`SUPERSEDED`), tự động biên dịch bảng mục lục `README.md`, tự động quét radar cập nhật `TRACEABILITY_MATRIX.md`, và chạy cổng kiểm định chống lệch pha tài liệu.
@@ -111,3 +116,13 @@ python scripts/sync_hub_adr_matrix.py --check
   - 100% Khớp nối giữa các file ADR, bảng mục lục `README.md` và `TRACEABILITY_MATRIX.md`.
 
 **Tiêu chí hoàn thành:** Lệnh `python scripts/sync_hub_adr_matrix.py --check` thoát mã 0 với 0 lỗi parity.
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/architecture_sync_guide.md` | Quy trình đồng bộ tài liệu kiến trúc với ma trận ADR và bộ số liệu hệ thống |
+

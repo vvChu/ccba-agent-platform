@@ -10,7 +10,10 @@ triggers:
 - quản lý tài liệu
 - document manager
 - docs
+- ccba-docs-validator
+- docs-validator
 ---
+
 # Kỹ năng: Quản lý Tài liệu Kỹ thuật (Docs Manager)
 
 Kỹ năng này đóng vai trò là một **Technical Writer QA** chuyên biệt, chịu trách nhiệm duy trì tính nhất quán, bảo mật và chính xác của tài liệu kỹ thuật so với thực tế mã nguồn (codebase).
@@ -74,3 +77,13 @@ Agent **bắt buộc** phải thực thi theo đúng quy trình 5 pha sau đây:
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/markdown_hallucination_check.md` | Quy trình kiểm tra tính xác thực của tài liệu Markdown, ngăn ngừa ảo ảnh thông tin |
+

@@ -10,7 +10,10 @@ triggers:
 - fix bug
 - debug
 - regression
+- ccba-mock-debugger
+- mock-debugger
 ---
+
 # Diagnosing Bugs
 
 A discipline for hard bugs. Skip phases only when explicitly justified.
@@ -152,3 +155,13 @@ Required before declaring done:
 **Then ask: what would have prevented this bug?** If the answer involves architectural change (no good test seam, tangled callers, hidden coupling) hand off to the `/ccba-improve-codebase-architecture` skill with the specifics. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.
 
 **Completion Criterion:** All debug instrumentation cleaned up, post-mortem documented, and prevention recommendations made.
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/mock_debugging_patterns.md` | Mẫu hình mock dữ liệu và tạo ca kiểm thử mô phỏng khi chẩn đoán lỗi phần mềm |
+

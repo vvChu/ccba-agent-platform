@@ -12,7 +12,14 @@ triggers:
 - thẩm tra PCCC
 - thiết bị chữa cháy
 - báo cháy
+- ccba-pccc-cdt-tuthamdinh
+- pccc-cdt-tuthamdinh
+- ccba-pccc-thamdinh-congan
+- pccc-thamdinh-congan
+- ccba-pccc-thamdinh-cqxd
+- pccc-thamdinh-cqxd
 ---
+
 # CCBA AI QC PCCC Audit
 
 Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo và gộp kết quả đánh giá kỹ thuật đối với hồ sơ PCCC lớn, giúp khắc phục giới hạn context window của LLM và hiện tượng sinh ảo giác.
@@ -58,3 +65,15 @@ python "[hub_path]/.agents/skills/ccba-ai-qc-pccc-audit/scripts/audit_engine.py"
     --out "Bao_Cao_Tham_Dinh_PCCC.md"
 ```
 *(Nếu không có văn bản góp ý của PC07, truyền một chuỗi rỗng `--gopy ""`)*
+
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/sop_cdt_tu_tham_dinh.md` | Danh mục SOP tự thẩm tra hồ sơ thiết kế PCCC cho Chủ đầu tư |
+| `references/sop_tham_dinh_congan.md` | Danh mục SOP thẩm duyệt thiết kế PCCC với Cơ quan Công an PCCC |
+| `references/sop_tham_tra_cqxd.md` | Danh mục SOP thẩm tra quy chuẩn xây dựng và an toàn cháy với Sở Xây dựng |
+
