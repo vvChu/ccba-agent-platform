@@ -36,6 +36,7 @@ PACKAGE_TOPOLOGY_ORDER = [
     "ccba-harness",
     "ccba-ai",
     "ccba-legal-intel",
+    "ccba-qc-core",
     "ccba-ooxml",
     "ccba-pdf-prep",
     "mdconverter",
@@ -45,7 +46,7 @@ PACKAGE_TOPOLOGY_ORDER = [
 
 ARCHETYPE_TIER1_DEFAULTS = {
     "knowledge_corpus": ["ccba-legal-intel"],
-    "project_delivery": ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"],
+    "project_delivery": ["ccba-qc-core", "ccba-ooxml", "ccba-pdf-prep", "mdconverter"],
     "enterprise_governance": ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"],
 }
 
@@ -394,6 +395,7 @@ class SpokeBootstrapper:
             "ccba-harness": "import ccba_harness",
             "ccba-ai": "import ccba_ai; from ccba_ai import ai",
             "ccba-legal-intel": "import ccba_legal; from ccba_legal import LegalIntelPipeline",
+            "ccba-qc-core": "import ccba_qc_core",
             "ccba-ooxml": "import ccba_ooxml",
             "ccba-pdf-prep": "import ccba_pdf_prep",
             "mdconverter": "import mdconverter",
