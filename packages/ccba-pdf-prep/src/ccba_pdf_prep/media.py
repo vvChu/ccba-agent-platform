@@ -14,6 +14,7 @@ import re
 import shutil
 import subprocess
 import urllib.parse
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -348,6 +349,229 @@ def format_lesson_notes(
     return "\n".join(lines)
 
 
+def get_heatmap_peaks(
+    heatmap: list[dict[str, Any]],
+    duration_sec: float,
+    max_peaks: int = 10,
+    min_gap_sec: float = 15.0,
+) -> list[float]:
+    """Parse YouTube heatmap data and find timestamps of highest user engagement.
+
+    Args:
+        heatmap: List of heatmap entry dicts containing 'start_time', 'end_time', and 'value'.
+        duration_sec: Total duration of video in seconds.
+        max_peaks: Maximum number of peak timestamps to return (default: 10).
+        min_gap_sec: Minimum distance in seconds between consecutive peaks (default: 15.0).
+
+    Returns:
+        Sorted list of peak timestamps in seconds.
+    """
+    if not heatmap:
+        return []
+
+    valid_entries: list[tuple[float, float]] = []
+    for entry in heatmap:
+        start = float(entry.get("start_time", 0.0))
+        end = float(entry.get("end_time", 0.0))
+        val = entry.get("value")
+        if val is not None:
+            mid = start + (end - start) / 2.0
+            if 0.0 <= mid <= duration_sec:
+                valid_entries.append((float(val), mid))
+
+    valid_entries.sort(key=lambda x: x[0], reverse=True)
+
+    peaks: list[float] = []
+    for _val, ts in valid_entries:
+        if not any(abs(ts - p) < min_gap_sec for p in peaks):
+            peaks.append(ts)
+            if len(peaks) >= max_peaks:
+                break
+
+    return sorted(peaks)
+
+
+def get_target_timestamps(
+    duration_sec: float,
+    chapters: list[dict[str, Any]] | None = None,
+    heatmap: list[dict[str, Any]] | None = None,
+) -> list[float]:
+    """Calculate adaptive target timestamps for chapter-aware multi-sampling.
+
+    Args:
+        duration_sec: Video duration in seconds.
+        chapters: Optional list of chapter dicts with 'start_time' and 'end_time'.
+        heatmap: Optional YouTube engagement heatmap data.
+
+    Returns:
+        Sorted list of target timestamps in seconds with minimal 3s gap.
+    """
+    timestamps: list[float] = []
+    if chapters:
+        num_chapters = len(chapters)
+        if num_chapters <= 3:
+            p_factors = [0.15, 0.35, 0.55, 0.75, 0.95]
+        elif num_chapters <= 6:
+            p_factors = [0.20, 0.40, 0.60, 0.80, 0.95]
+        elif num_chapters <= 12:
+            p_factors = [0.25, 0.50, 0.75, 0.95]
+        else:
+            p_factors = [0.33, 0.66, 0.95]
+
+        for ch in chapters:
+            start = float(ch.get("start_time", 0.0))
+            end = float(ch.get("end_time", duration_sec))
+            if start < 0.0:
+                start = 0.0
+            if end > duration_sec:
+                end = duration_sec
+            if end <= start:
+                continue
+
+            for p in p_factors:
+                ts = start + (end - start) * p
+                if 0.0 <= ts <= duration_sec:
+                    timestamps.append(ts)
+    else:
+        # Fallback: dense coarse sampling
+        n_points = 25
+        step = duration_sec / (n_points + 1)
+        for i in range(1, n_points + 1):
+            ts = i * step
+            if 0.0 <= ts <= duration_sec:
+                timestamps.append(ts)
+
+    if heatmap:
+        peaks = get_heatmap_peaks(heatmap, duration_sec)
+        timestamps.extend(peaks)
+
+    timestamps = sorted(set(timestamps))
+    filtered_ts: list[float] = []
+    for ts in timestamps:
+        if not filtered_ts or ts - filtered_ts[-1] >= 3.0:
+            filtered_ts.append(ts)
+
+    return filtered_ts
+
+
+def download_grid_image(
+    url: str,
+    dest_path: Path,
+    timeout: int = 10,
+    max_retries: int = 3,
+) -> bool:
+    """Download storyboard grid image with exponential retry and User-Agent headers.
+
+    Args:
+        url: Image URL string.
+        dest_path: Destination path on local filesystem.
+        timeout: HTTP request timeout in seconds.
+        max_retries: Number of download retry attempts.
+
+    Returns:
+        True if download succeeded and file was written, False otherwise.
+    """
+    for attempt in range(1, max_retries + 1):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                dest_path.write_bytes(resp.read())
+            return True
+        except Exception as e:
+            _logger.warning(f"Download grid failed (Attempt {attempt}/{max_retries}): {e}")
+    return False
+
+
+def extract_storyboard_frames(
+    sb_spec: dict[str, Any],
+    tmp_dir: Path,
+    target_timestamps: list[float],
+    duration_sec: float,
+) -> list[Path]:
+    """Download storyboard grids and crop target timestamps into static frame files.
+
+    Args:
+        sb_spec: Storyboard specification dict (sb0/sb1/sb2 format).
+        tmp_dir: Directory for temporary grids and cropped frames.
+        target_timestamps: Timestamps to sample.
+        duration_sec: Total duration of the video.
+
+    Returns:
+        List of generated static frame Paths.
+    """
+    fragments = sb_spec.get("fragments") or []
+    if not fragments or PILImage is None:
+        return []
+
+    rows = int(sb_spec.get("rows") or 3)
+    columns = int(sb_spec.get("columns") or 3)
+    num_tiles = rows * columns
+    if num_tiles <= 0:
+        num_tiles = 9
+
+    fragment_duration = sb_spec.get("fragment_duration")
+    if not fragment_duration:
+        total_dur = sum(float(f.get("duration", 0.0)) for f in fragments)
+        if total_dur > 0:
+            fragment_duration = total_dur / len(fragments)
+        else:
+            fragment_duration = duration_sec / len(fragments) if fragments else 88.62
+    else:
+        fragment_duration = float(fragment_duration)
+
+    tile_duration = fragment_duration / num_tiles
+    grid_cache: dict[int, Any] = {}
+    static_frames: list[Path] = []
+
+    for i, ts in enumerate(target_timestamps):
+        frag_idx = int(ts // fragment_duration)
+        if frag_idx >= len(fragments):
+            frag_idx = len(fragments) - 1
+        if frag_idx < 0:
+            frag_idx = 0
+
+        tile_idx = int((ts % fragment_duration) // tile_duration)
+        if tile_idx >= num_tiles:
+            tile_idx = num_tiles - 1
+        if tile_idx < 0:
+            tile_idx = 0
+
+        grid_url = fragments[frag_idx].get("url")
+        if not grid_url:
+            continue
+
+        if frag_idx not in grid_cache:
+            grid_path = tmp_dir / f"grid_{frag_idx}.jpg"
+            if download_grid_image(grid_url, grid_path):
+                try:
+                    with PILImage.open(grid_path) as img:
+                        grid_cache[frag_idx] = img.copy()
+                except Exception as e:
+                    _logger.warning(f"Could not open grid image {frag_idx}: {e}")
+                    continue
+            else:
+                continue
+
+        grid_img = grid_cache[frag_idx]
+        w, h = grid_img.size
+        tile_w = w // columns
+        tile_h = h // rows
+
+        r = tile_idx // columns
+        c = tile_idx % columns
+        box = (c * tile_w, r * tile_h, (c + 1) * tile_w, (r + 1) * tile_h)
+
+        try:
+            tile = grid_img.crop(box)
+            out_path = tmp_dir / f"frame_static_{i:04d}.jpg"
+            tile.save(out_path, "JPEG")
+            static_frames.append(out_path)
+        except Exception as e:
+            _logger.warning(f"Error cropping storyboard tile {tile_idx}: {e}")
+
+    return static_frames
+
+
 __all__ = [
     "extract_youtube_video_id",
     "format_whisper_transcript",
@@ -358,4 +582,9 @@ __all__ = [
     "find_ffmpeg_bin",
     "extract_video_frames",
     "format_lesson_notes",
+    "get_heatmap_peaks",
+    "get_target_timestamps",
+    "download_grid_image",
+    "extract_storyboard_frames",
 ]
+
