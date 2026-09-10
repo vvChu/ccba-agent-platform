@@ -114,12 +114,26 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
     4. Stale / Drift Patch Rejection $\rightarrow$ Từ chối an toàn search blocks không khớp trong dry-run.
     5. High-Throughput Latency Benchmark $\rightarrow$ Đo lường phân tích va chạm 20 khối patch $< 50\text{ms}$.
   - Chuẩn hóa kỹ năng [`.agents/skills/ccba-teamwork/SKILL.md`](../../../../.agents/skills/ccba-teamwork/SKILL.md) cưỡng chế nguyên tắc No Pre-mutation và quy trình nghiệm thu bằng `apply_worker_patch.py` kết hợp ADR-0058 Hard Completion Lock.
+- **[Đã chốt - 2026-09-10] Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime (Ticket F4)**:
+  - Xây dựng module `packages/ccba-harness/src/ccba_harness/telemetry.py` thu thập, phân tích và chuẩn hóa mức tiêu thụ token/chi phí theo thời gian thực từ Antigravity transcript logs.
+  - Tích hợp CLI `ccba-harness telemetry scan / subagents` và script `scripts/governance/subagent_telemetry.py`.
+  - Bộ unit tests `tests/governance/test_subagent_telemetry.py` đạt 7/7 PASS.
+- **[Đã chốt - 2026-09-10] Tự động hóa Giám sát Chi phí & Token Telemetry vào CI/CD Gates (Ticket F5)**:
+  - Thể chế hóa Cổng Kiểm định Thứ 7 (Gate 7: Subagent Swarm Telemetry & Cost Control Gate) trong `scripts/eval/run_harness_evals.py` và `scripts/eval/eval_telemetry_gate.py`.
+  - Thiết lập ngân sách token trần và cảnh báo rò rỉ token cho các subagents chạy nền, đạt 100% PASS trên toàn bộ CI Eval Gates.
+- **[Đã chốt - 2026-09-10] Tích hợp Giao diện Dashboard Trực Quan Hóa Swarm Telemetry (Ticket F6)**:
+  - Xây dựng module `packages/ccba-harness/src/ccba_harness/dashboard.py` sinh Standalone HTML Dashboard với Pure SVG Charts (Token Stacked Bars, Timeline, Tool Frequency).
+  - Tích hợp CLI `ccba-harness telemetry dashboard`, xuất bản artifact và mirror `swarm_telemetry_dashboard.html`, đạt 8/8 unit tests PASS.
+- **[Đã chốt - 2026-09-10] Mở Rộng Hệ Thống Báo Cáo & Phân Tích Đa Dự Án (Ticket F7)**:
+  - Xây dựng module `packages/ccba-harness/src/ccba_harness/fleet.py` quét qua 5 Spokes đã đăng ký trong Hub theo Sanitized Telemetry Protocol (ADR-0046).
+  - Sinh báo cáo Fleet Dashboard HTML `cross_spoke_fleet_dashboard.html`, tích hợp CLI `ccba-harness telemetry fleet` và `scripts/governance/cross_spoke_analytics.py`.
+  - Hook tự động refresh telemetry trong `scripts/spoke/sync/coordinator.py`, đạt 7/7 unit tests PASS.
 
 ---
 
 ## 4. Các Ticket ở Biên giới (Frontier Unblocked Tickets)
 
-Toàn bộ 10 Frontier Tickets (P0, P1 và Phase 2) đã **HOÀN THÀNH 100%**. Hệ thống CI/CD Eval Gates và Swarm Telemetry Monitoring đã được tự động hóa hoàn toàn:
+Toàn bộ **11/11 Tickets (P0, P1, Phase 2 và Phase 3)** trên Bản đồ Wayfinder đã **HOÀN THÀNH 100%**. Hệ thống CI/CD Eval Gates, Swarm Single-Writer và Cross-Spoke Fleet Analytics đã đi vào hoạt động ổn định:
 
 ```mermaid
 flowchart TD
@@ -135,10 +149,11 @@ flowchart TD
         F4["[F4: Task HITL] Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime ✅"]
         F5["[F5: Task AFK] Tự động hóa Giám sát Chi phí & Token Telemetry vào CI/CD Gates ✅"]
         F6["[F6: Task HITL] Tích hợp Giao diện Dashboard Trực Quan Hóa Swarm Telemetry ✅"]
+        F7["[F7: Task HITL] Mở Rộng Hệ Thống Báo Cáo & Phân Tích Đa Dự Án (Cross-Spoke Analytics) ✅"]
     end
 
-    subgraph Frontier ["Biên Giới Mới Sẵn Sàng Nhận Việc (Unblocked Execution Frontier)"]
-        F7["[F7: Task HITL] Mở Rộng Hệ Thống Báo Cáo & Phân Tích Đa Dự Án (Cross-Spoke Analytics)"]
+    subgraph Frontier ["Biên Giới Sẵn Sàng Nhận Việc (Unblocked Execution Frontier)"]
+        DoneAll["Toàn bộ 11/11 Tickets trong Bản đồ Wayfinder Đã Hoàn Thành Xuất Sắc 🎉"]
     end
 
     T3 -.->|Đã Giải mã Sương mù| F1
@@ -148,6 +163,7 @@ flowchart TD
     F4 -.->|Đã Giải mã Sương mù| F5
     F5 -.->|Đã Giải mã Sương mù| F6
     F6 -.->|Đã Giải mã Sương mù| F7
+    F7 -.-> DoneAll
 ```
 
 ---
@@ -288,15 +304,29 @@ flowchart TD
   - Bộ kiểm thử độc lập [`tests/governance/test_telemetry_dashboard.py`](../../../../tests/governance/test_telemetry_dashboard.py) đạt 8/8 PASS.
 - **Phân loại**: `Task [HITL]` | **Ưu tiên**: P3.1 | **Trạng thái**: **Closed (Done) ✅**
 
+### Ticket F7: [Task/HITL] `[Mở Rộng Hệ Thống Báo Cáo & Phân Tích Đa Dự Án (Cross-Spoke Analytics)]` ✅
+- **Mục tiêu**: Xây dựng engine tổng hợp telemetry liên dự án (`CrossSpokeAnalyticsEngine`) quét qua toàn bộ 5 Spokes đã đăng ký trong Hub (`2026-04 DH Viet Nhat`, `IDOP-CCBA-WAY`, `ccba-legal-knowledge`, `Zalo_Bot_Free`, `VvC Second Brain`), tuyệt đối tuân thủ Sanitized Telemetry Protocol (ADR-0046), xây dựng giao diện Standalone HTML Fleet Dashboard (`cross_spoke_fleet_dashboard.html`) với Pure SVG Charts (so sánh Spoke tokens, phân bổ miền dự án, tần suất tools), zero-server, tích hợp CLI `cross_spoke_analytics.py` và `ccba-harness telemetry fleet`, tự động refresh qua `spoke_synchronizer.py sync`.
+- **Đầu ra thực tế**:
+  - Module [`packages/ccba-harness/src/ccba_harness/fleet.py`](../../../../packages/ccba-harness/src/ccba_harness/fleet.py) (`SpokeTelemetrySummary`, `FleetTelemetryReport`, `scan_spoke_telemetry`, `aggregate_fleet_telemetry`, `generate_fleet_dashboard_html`, `render_fleet_dashboard`).
+  - Tích hợp CLI subcommand `fleet` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../../packages/ccba-harness/src/ccba_harness/cli.py) (`ccba-harness telemetry fleet [--json] [--dashboard] [--out] [--title]`).
+  - Tiện ích CLI chuyên trách [`scripts/governance/cross_spoke_analytics.py`](../../../../scripts/governance/cross_spoke_analytics.py) (`scan`, `dashboard`, `export-spoke-summary`).
+  - Hook tự động refresh telemetry trong [`scripts/spoke/sync/coordinator.py`](../../../../scripts/spoke/sync/coordinator.py) khi chạy sync Spoke.
+  - Xuất bản tệp Fleet Dashboard thực tế cho 5 Spokes (15.5M tokens, \$2.41):
+    - Artifact: [`cross_spoke_fleet_dashboard.html`](file:///C:/Users/chuvu/.gemini/antigravity/brain/ea5a900e-41fd-4ae6-968a-e2e271e67e52/cross_spoke_fleet_dashboard.html)
+    - Mirror lưu trữ vĩnh viễn: [`.md/reports/cross_spoke_fleet_dashboard.html`](../../reports/cross_spoke_fleet_dashboard.html).
+  - Bộ kiểm thử độc lập [`tests/governance/test_cross_spoke_analytics.py`](../../../../tests/governance/test_cross_spoke_analytics.py) đạt 7/7 PASS (100%).
+- **Phân loại**: `Task [HITL]` | **Ưu tiên**: P3.2 | **Trạng thái**: **Closed (Done) ✅**
+
 ---
 
 ## 5. Sương mù Chiến trận / Chưa xác định rõ (Not yet specified - Fog of War)
 
-Khu vực lưu trữ các bài toán và hướng đi lớn tiếp theo:
-
-1. **[F7] Mở Rộng Hệ Thống Báo Cáo & Phân Tích Đa Dự Án (Cross-Spoke Analytics)**:
-   - *Phụ thuộc*: Nhu cầu tổng hợp chi phí token và telemetry qua nhiều Spoke Projects khác nhau về trung tâm Hub.
-   - *Vấn đề mờ*: Định dạng schema tổng hợp liên dự án và giao thức đồng bộ qua git submodule/spoke sync mà không vi phạm tính cô lập dữ liệu.
+Toàn bộ các bài toán trong Sương mù Chiến trận (F1 $\rightarrow$ F7) đã được giải mã và thực thi hoàn tất 100%!
+Các hướng đi mở rộng tương lai (Beyond Phase 3):
+1. **[Future/Phase 4] Tự động hóa Tối ưu Prompt & Token Pruning qua Telemetry Feedback Loop**:
+   - Sử dụng dữ liệu thống kê từ Fleet Analytics để nhận diện các prompts/skills tiêu tốn token bất thường và tự động đề xuất pruning.
+2. **[Future/Phase 4] Real-time Telemetry Streaming qua Server Spark WebSocket**:
+   - Mở rộng gateway streaming telemetry theo thời gian thực thay vì snapshot file-based sync.
 
 ---
 

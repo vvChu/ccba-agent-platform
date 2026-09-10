@@ -41,6 +41,14 @@ from .evals import (
     load_eval_dataset,
     run_eval_pipeline,
 )
+from .fleet import (
+    FleetTelemetryReport,
+    SpokeTelemetrySummary,
+    aggregate_fleet_telemetry,
+    generate_fleet_dashboard_html,
+    render_fleet_dashboard,
+    scan_spoke_telemetry,
+)
 from .gpi import (
     GPI_STANDALONE_THRESHOLD,
     MAX_METRIC_SCORE,
@@ -137,4 +145,10 @@ __all__ = [
     "audit_swarm_session",
     "generate_swarm_dashboard_html",
     "render_swarm_dashboard",
+    "SpokeTelemetrySummary",
+    "FleetTelemetryReport",
+    "scan_spoke_telemetry",
+    "aggregate_fleet_telemetry",
+    "generate_fleet_dashboard_html",
+    "render_fleet_dashboard",
 ]
