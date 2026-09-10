@@ -143,11 +143,9 @@ SKILL_DEPRECATION_ALIASES: dict[str, str] = {
     "brainstorm": "ccba-ask",
     "ccba-sequential-thinking": "ccba-research",
     "sequential-thinking": "ccba-research",
-    # --- Tier 1 Deterministic Utilities Consolidations ---
-    "ccba-tvpl-vip-crawler": "ccba-legal-intel",
-    "tvpl-vip-crawler": "ccba-legal-intel",
-    "ccba-sharepoint-iac": "ccba-codebase-design",
-    "sharepoint-iac": "ccba-codebase-design",
+    # --- Un-prefixed short names for Standalone Skills ---
+    "tvpl-vip-crawler": "ccba-tvpl-vip-crawler",
+    "sharepoint-iac": "ccba-sharepoint-iac",
     # Legacy Workflows -> Modern Skills Aliases (ADR-0040 & ADR-0051)
     "adopt-spoke": "ccba-spoke-adopter",
     "ccba-adopt-spoke": "ccba-spoke-adopter",

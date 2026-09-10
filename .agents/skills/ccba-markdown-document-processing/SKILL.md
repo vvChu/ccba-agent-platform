@@ -8,6 +8,7 @@ bundle: _core
 version: 1.1.0
 invocation: model_invoked
 deep_seam: ConversionPipeline
+package_path: packages/mdconverter
 applies_to:
 - Phần mềm
 - Thẩm tra thiết kế

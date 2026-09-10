@@ -33,6 +33,7 @@ metadata:
   version: 1.3.0
 bundle: _core
 layer: _core
+package_path: packages/ccba-notebooklm
 ---
 # NotebookLM Connector
 

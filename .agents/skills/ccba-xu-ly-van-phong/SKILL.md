@@ -3,8 +3,8 @@ name: ccba-xu-ly-van-phong
 description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo tiêu
   chuẩn cấu trúc & phối màu chuyên nghiệp hoặc Nghị định 30.
 role: master_skill
+package_path: packages/ccba-ooxml
 sub_skills:
-- ccba-docx
 - ccba-pptx
 - ccba-markdown-document-processing
 disable-model-invocation: true
