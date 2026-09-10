@@ -554,6 +554,145 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
     return 0
 
 
+def _parse_commands_from_file(file_path: Path) -> list[str]:
+    """Parse list of commands from a text or JSON file."""
+    import json
+
+    content = file_path.read_text(encoding="utf-8").strip()
+    commands: list[str] = []
+    if content.startswith("["):
+        try:
+            loaded = json.loads(content)
+            if isinstance(loaded, list):
+                commands.extend(str(item).strip() for item in loaded if item)
+        except Exception as err:
+            print(f"ERROR: Failed to parse JSON commands file: {err}", file=sys.stderr)
+            return []
+    else:
+        for line in content.splitlines():
+            cleaned = line.strip()
+            if cleaned and not cleaned.startswith("#"):
+                commands.append(cleaned)
+    return commands
+
+
+def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
+    """CLI entry point for deterministic patch verification (`ccba-harness verify-patch`)."""
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            try:
+                sys.stdout.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+        if hasattr(sys.stderr, "reconfigure"):
+            try:
+                sys.stderr.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+
+    parser = argparse.ArgumentParser(
+        prog="ccba-harness verify-patch",
+        description="Verify patches & code changes deterministically via CLI exit codes.",
+    )
+    parser.add_argument(
+        "pos_commands",
+        nargs="*",
+        default=[],
+        help="Command strings to execute sequentially",
+    )
+    parser.add_argument(
+        "-c",
+        "--cmd",
+        "--commands",
+        dest="commands",
+        nargs="+",
+        default=[],
+        help="Command string(s) to execute",
+    )
+    parser.add_argument(
+        "--file",
+        type=str,
+        default=None,
+        help="Path to a text or JSON file containing commands",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=60.0,
+        help="Per-command execution timeout in seconds (default: 60.0)",
+    )
+    parser.add_argument(
+        "--cwd",
+        type=str,
+        default=None,
+        help="Working directory for command execution",
+    )
+    parser.add_argument(
+        "--fail-fast",
+        action="store_true",
+        help="Stop on first failing command",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output full result in JSON format",
+    )
+    parser.add_argument(
+        "--report-file",
+        type=str,
+        default=None,
+        help="Write markdown or JSON verification report to path",
+    )
+
+    args = parser.parse_args(args_list)
+
+    commands_to_run: list[str] = []
+    if args.commands:
+        commands_to_run.extend(args.commands)
+    if args.pos_commands:
+        commands_to_run.extend(args.pos_commands)
+
+    if args.file:
+        f_path = Path(args.file)
+        if not f_path.exists():
+            print(f"ERROR: Commands file does not exist: {f_path}", file=sys.stderr)
+            return 1
+        parsed_cmds = _parse_commands_from_file(f_path)
+        commands_to_run.extend(parsed_cmds)
+
+    if not commands_to_run:
+        print("ERROR: No commands specified for verification.", file=sys.stderr)
+        return 1
+
+    from .verifier import verify_patch_execution
+
+    report = verify_patch_execution(
+        commands=commands_to_run,
+        cwd=Path(args.cwd).resolve() if args.cwd else None,
+        timeout=args.timeout,
+        fail_fast=args.fail_fast,
+    )
+
+    if args.report_file:
+        import json
+
+        rf_path = Path(args.report_file)
+        rf_path.parent.mkdir(parents=True, exist_ok=True)
+        if rf_path.suffix.lower() == ".json":
+            rf_path.write_text(json.dumps(report.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
+        else:
+            rf_path.write_text(report.to_markdown(), encoding="utf-8")
+
+    if args.json:
+        import json
+
+        print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
+    else:
+        print(report.to_markdown())
+
+    return 0 if report.all_passed else 1
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Main CLI entry point for ccba-harness."""
     if argv is None:
@@ -679,21 +818,74 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Passing score threshold percentage (default: 85.0)",
     )
 
+    # Subcommand: verify-patch
+    patch_parser = subparsers.add_parser(
+        "verify-patch",
+        help="Verify patches & code changes deterministically via CLI exit codes.",
+    )
+    patch_parser.add_argument(
+        "pos_commands",
+        nargs="*",
+        default=[],
+        help="Command strings to execute sequentially",
+    )
+    patch_parser.add_argument(
+        "-c",
+        "--cmd",
+        "--commands",
+        dest="commands",
+        nargs="+",
+        default=[],
+        help="Command string(s) to execute",
+    )
+    patch_parser.add_argument(
+        "--file",
+        type=str,
+        default=None,
+        help="Path to a text or JSON file containing commands",
+    )
+    patch_parser.add_argument(
+        "--timeout",
+        type=float,
+        default=60.0,
+        help="Per-command execution timeout in seconds (default: 60.0)",
+    )
+    patch_parser.add_argument(
+        "--cwd",
+        type=str,
+        default=None,
+        help="Working directory for command execution",
+    )
+    patch_parser.add_argument(
+        "--fail-fast",
+        action="store_true",
+        help="Stop on first failing command",
+    )
+    patch_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output full result in JSON format",
+    )
+    patch_parser.add_argument(
+        "--report-file",
+        type=str,
+        default=None,
+        help="Write markdown or JSON verification report to path",
+    )
+
     if not argv:
         parser.print_help()
         return 0
 
-    # If first argument is validate-skill, parse and run
+    # Fast dispatch for explicit subcommands
     if argv[0] == "validate-skill":
         return run_skill_validation_cli(argv[1:])
-
-    # If first argument is evaluate-gpi, parse and run
     if argv[0] == "evaluate-gpi":
         return run_evaluate_gpi_cli(argv[1:])
-
-    # If first argument is eval, parse and run
     if argv[0] == "eval":
         return run_eval_cli(argv[1:])
+    if argv[0] == "verify-patch":
+        return run_verify_patch_cli(argv[1:])
 
     # Fallback to general parsing
     parsed = parser.parse_args(argv)
@@ -703,6 +895,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_evaluate_gpi_cli(argv[1:])
     if parsed.subcommand == "eval":
         return run_eval_cli(argv[1:])
+    if parsed.subcommand == "verify-patch":
+        return run_verify_patch_cli(argv[1:])
 
     parser.print_help()
     return 0

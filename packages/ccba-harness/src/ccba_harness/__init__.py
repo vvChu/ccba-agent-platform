@@ -54,6 +54,7 @@ from .gpi import (
 )
 from .orchestrator import EvalOrchestrator
 from .skill_validator import SkillAuditIssue, SkillValidator
+from .verifier import CommandResult, PatchVerificationReport, verify_patch_execution
 
 __all__ = [
     "HarnessEngine",
@@ -64,6 +65,9 @@ __all__ = [
     "EvalOrchestrator",
     "SkillValidator",
     "SkillAuditIssue",
+    "CommandResult",
+    "PatchVerificationReport",
+    "verify_patch_execution",
     "ArchitectureTier",
     "GPIMetrics",
     "DecisionRequest",

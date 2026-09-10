@@ -69,6 +69,11 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
   - Nén tệp `session_learnings.md` từ **38,033 bytes (37.14 KB) về 8,761 bytes (8.56 KB)**, đạt mức giảm **77.0%** (tiết kiệm ~7,300 tokens cho mọi phiên Agent khởi tạo).
   - Bảo toàn 100% bản gốc lịch sử tại [`.md/knowledge/archive/session_learnings_history.md`](../../knowledge/archive/session_learnings_history.md).
   - Bộ kiểm thử `tests/governance/test_compact_session_learnings.py` đạt 7/7 PASS (100% test suite monorepo đạt 81 passed).
+- **[Đã chốt - 2026-09-10] Nâng cấp ccba-harness verify-patch với Exit-Code Gate (Ticket 2)**:
+  - Đóng gói module `packages/ccba-harness/src/ccba_harness/verifier.py` (`CommandResult`, `PatchVerificationReport`, `verify_patch_execution()`).
+  - Bổ sung subcommand CLI `ccba-harness verify-patch` với các flags: `-c / --cmd / --commands`, `--file`, `--timeout`, `--cwd`, `--json`, `--report-file`, `--fail-fast`.
+  - Bộ kiểm thử `packages/ccba-harness/tests/test_verify_patch.py` đạt 12/12 PASS (toàn bộ 141 tests trong `ccba-harness` đạt 100% PASS).
+  - Thiết lập rào chắn kiểm thử xác định khách quan, chặn đứng hoàn toàn Premature Completion & Self-Certification.
 
 ---
 
@@ -80,24 +85,24 @@ Dưới đây là các ticket mở, độc lập, không bị chặn bởi bất
 flowchart TD
     subgraph Done ["Đã Hoàn thành (Closed) ✅"]
         T1["[T1: Task AFK] Memory Compaction Engine cho session_learnings.md ✅"]
+        T2["[T2: Task AFK] Exit-Code Deterministic Verification Gate trong ccba-harness ✅"]
         T3["[T3: Research AFK] Ma trận Ánh xạ Di trú 52 Scripts ✅"]
     end
 
     subgraph Frontier ["Các Ticket ở Biên giới Sẵn sàng Nhận việc (Frontier Unblocked)"]
-        T2["[T2: Task AFK] Exit-Code Deterministic Verification Gate trong ccba-harness"]
         T4["[T4: Prototype HITL] Mẫu Giao thức Structured Diff Patch cho ccba-teamwork"]
         T5["[T5: Grilling HITL] Thiết kế Tích hợp Live State Artifacts & 11-Seat Charter"]
     end
 
     subgraph Fog ["Sương mù Chiến trận (Blocked / Fog of War)"]
         F1["[F1] Di trú 35 Core Scripts theo Ma trận (Đã unblock từ T3)"]
-        F2["[F2] Tích hợp Test Loop Tự động cho Toàn bộ 67 SKILL.md (Chờ T2)"]
+        F2["[F2] Tích hợp Test Loop Tự động cho Toàn bộ 67 SKILL.md (Đã unblock từ T2)"]
         F3["[F3] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine (Chờ T4)"]
         F4["[F4] Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime"]
     end
 
     T3 -.->|Đã Giải mã Sương mù| F1
-    T2 -.->|Unblocks| F2
+    T2 -.->|Đã Giải mã Sương mù| F2
     T4 -.->|Unblocks| F3
 ```
 
@@ -114,12 +119,13 @@ flowchart TD
 
 ---
 
-### Ticket 2: [Task/AFK] `[Nâng cấp ccba-harness verify-patch với Exit-Code Deterministic Verification Gate]`
-- **Mục tiêu**: Bổ sung hàm thực thi kiểm định xác định `verify_patch_execution()` vào `packages/ccba-harness/src/ccba_harness/skill_validator.py` và command CLI `ccba-harness verify-patch`. Công cụ này cho phép truyền vào danh sách lệnh (`pytest ...`, `ruff check ...`, `mypy ...`), tự động chạy trong subprocess cô lập, bắt exit code và trả về kết quả JSON chuẩn hóa kèm thông báo lỗi ngắn gọn nếu exit code $\ne 0$.
-- **Đầu ra kỳ vọng**:
-  - Tính năng `ccba-harness verify-patch` với các flags: `--commands`, `--json-report`, `--strict-exit-code`.
-  - Unit tests trong `packages/ccba-harness/tests/` bao phủ kịch bản Pass, Fail và Timeout.
-- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P0.2 | **Trạng thái**: **Ready to Claim**
+### Ticket 2: [Task/AFK] `[Nâng cấp ccba-harness verify-patch với Exit-Code Deterministic Verification Gate]` ✅
+- **Mục tiêu**: Bổ sung hàm thực thi kiểm định xác định `verify_patch_execution()` vào `packages/ccba-harness/src/ccba_harness/verifier.py` và command CLI `ccba-harness verify-patch`. Công cụ này cho phép truyền vào danh sách lệnh (`pytest ...`, `ruff check ...`, `mypy ...`), tự động chạy trong subprocess cô lập, bắt exit code và trả về kết quả JSON/Markdown chuẩn hóa kèm thông báo lỗi ngắn gọn nếu exit code $\ne 0$.
+- **Đầu ra thực tế**:
+  - Module [`packages/ccba-harness/src/ccba_harness/verifier.py`](../../../../packages/ccba-harness/src/ccba_harness/verifier.py) (`CommandResult`, `PatchVerificationReport`, `verify_patch_execution()`).
+  - Subcommand `ccba-harness verify-patch` với các flags: `-c / --cmd / --commands`, `--file`, `--timeout`, `--cwd`, `--json`, `--report-file`, `--fail-fast`.
+  - Bộ kiểm thử [`packages/ccba-harness/tests/test_verify_patch.py`](../../../../packages/ccba-harness/tests/test_verify_patch.py) đạt 12/12 PASS (100% pass trên toàn suite 141 tests).
+- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P0.2 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
 
