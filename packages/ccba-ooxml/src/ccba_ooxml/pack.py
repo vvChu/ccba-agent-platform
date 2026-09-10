@@ -1,14 +1,8 @@
-#!/usr/bin/env python3
-"""
-Tool to pack a directory into a .docx, .pptx, or .xlsx file with XML formatting undone.
+"""Tool to pack a directory into a .docx, .pptx, or .xlsx file with XML formatting undone."""
 
-Example usage:
-    python pack.py <input_directory> <office_file> [--force]
-"""
+from __future__ import annotations
 
-import argparse
 import shutil
-import subprocess
 import sys
 import tempfile
 import zipfile
@@ -16,29 +10,7 @@ from pathlib import Path
 
 import defusedxml.minidom
 
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Pack a directory into an Office file")
-    parser.add_argument("input_directory", help="Unpacked Office document directory")
-    parser.add_argument("output_file", help="Output Office file (.docx/.pptx/.xlsx)")
-    parser.add_argument("--force", action="store_true", help="Skip validation")
-    args = parser.parse_args()
-
-    try:
-        success = pack_document(args.input_directory, args.output_file, validate=not args.force)
-
-        # Show warning if validation was skipped
-        if args.force:
-            print("Warning: Skipped validation, file may be corrupt", file=sys.stderr)
-        # Exit with error if validation failed
-        elif not success:
-            print("Contents would produce a corrupt file.", file=sys.stderr)
-            print("Please validate XML before repacking.", file=sys.stderr)
-            print("Use --force to skip validation and pack anyway.", file=sys.stderr)
-            sys.exit(1)
-
-    except ValueError as e:
-        sys.exit(f"Error: {e}")
+from .soffice import validate_document
 
 
 def pack_document(input_dir: str | Path, output_file: str | Path, validate: bool = False) -> bool:
@@ -86,60 +58,6 @@ def pack_document(input_dir: str | Path, output_file: str | Path, validate: bool
     return True
 
 
-def validate_document(doc_path: str | Path) -> bool:
-    """Validate document by converting to HTML with soffice."""
-    doc_path = Path(doc_path)
-    if not doc_path.exists() or not doc_path.is_file():
-        print(f"Validation error: '{doc_path}' is not a valid file.", file=sys.stderr)
-        return False
-
-    # Determine the correct filter based on file extension
-    match doc_path.suffix.lower():
-        case ".docx":
-            filter_name = "html:HTML"
-        case ".pptx":
-            filter_name = "html:impress_html_Export"
-        case ".xlsx":
-            filter_name = "html:HTML (StarCalc)"
-        case _:
-            print(
-                f"Validation error: Unsupported file type '{doc_path.suffix}'. Supported: .docx, .pptx, .xlsx",
-                file=sys.stderr,
-            )
-            return False
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-        try:
-            result = subprocess.run(
-                [
-                    "soffice",
-                    "--headless",
-                    "--convert-to",
-                    filter_name,
-                    "--outdir",
-                    temp_dir,
-                    str(doc_path),
-                ],
-                capture_output=True,
-                timeout=10,
-                text=True,
-            )
-            if not (Path(temp_dir) / f"{doc_path.stem}.html").exists():
-                error_msg = result.stderr.strip() or "Document validation failed"
-                print(f"Validation error: {error_msg}", file=sys.stderr)
-                return False
-            return True
-        except FileNotFoundError:
-            print("Warning: soffice not found. Skipping validation.", file=sys.stderr)
-            return True
-        except subprocess.TimeoutExpired:
-            print("Validation error: Timeout during conversion", file=sys.stderr)
-            return False
-        except Exception as e:
-            print(f"Validation error: {e}", file=sys.stderr)
-            return False
-
-
 def condense_xml(xml_file: str | Path) -> None:
     """Strip unnecessary whitespace and remove comments."""
     with open(xml_file, encoding="utf-8") as f:
@@ -164,6 +82,5 @@ def condense_xml(xml_file: str | Path) -> None:
     with open(xml_file, "wb") as f:
         f.write(dom.toxml(encoding="UTF-8"))
 
+__all__ = ["condense_xml", "pack_document", "validate_document"]
 
-if __name__ == "__main__":
-    main()

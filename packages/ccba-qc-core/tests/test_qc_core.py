@@ -9,7 +9,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from ccba_ai import AuditFinding, AuditReport
+from ccba_ai import AuditFinding, AuditReport, AuditReportSummary
+from ccba_qc_core import QCAuditPipeline
 from ccba_qc_core.discovery import (
     DiscoveryEngine,
     ProjectBackbone,
@@ -235,3 +236,58 @@ def test_pccc_map_reduce_engine(tmp_path: Path) -> None:
         assert "NEEDS_REVIEW" in content
 
     asyncio.run(_run())
+
+
+def test_qc_audit_pipeline_orchestration(tmp_path: Path) -> None:
+    """Verify QCAuditPipeline coordinates discovery, audit, and reporter end-to-end."""
+    # Setup dummy project dir with a sample pdf
+    p_dir = tmp_path / "project_alpha"
+    p_dir.mkdir()
+    pdf_dummy = p_dir / "tang_01.pdf"
+    pdf_dummy.write_bytes(b"%PDF-1.4 dummy pdf content")
+
+    mock_discovery = AsyncMock()
+    mock_discovery.discover.return_value = ProjectBackbone(
+        project="project_alpha",
+        generated_at="2026-09-10",
+        total_files=1,
+        total_sheets=1,
+        sheets=[],
+    )
+
+    finding = AuditFinding(
+        category="Architecture",
+        location="Grid A-1",
+        description="Dam bi lech truc 50mm",
+        severity="high",
+    )
+    mock_report = AuditReport(
+        level="tang_01",
+        ai_model="gemini-3.7-flash",
+        findings=[finding],
+    )
+    mock_audit = AsyncMock()
+    mock_audit.run_multi_level_audit.return_value = [mock_report]
+
+    mock_reporter = ReporterEngine(project_name="project_alpha")
+
+    pipeline = QCAuditPipeline(
+        discovery_engine=mock_discovery,
+        audit_engine=mock_audit,
+        reporter_engine=mock_reporter,
+    )
+
+    out_dir = tmp_path / "qc_output"
+    summary = pipeline.run_audit_sync(
+        project_dir=p_dir,
+        output_dir=out_dir,
+    )
+
+    assert isinstance(summary, AuditReportSummary)
+    assert summary.project_name == "project_alpha"
+    assert summary.total_findings == 1
+    assert summary.high_severity_count == 1
+    assert len(summary.reports) == 1
+    assert summary.report_file is not None
+    assert summary.report_file.exists()
+

@@ -176,6 +176,67 @@ def extract_text_from_pdf(input_pdf: str | Path, output: str | Path | None = Non
     return full_text
 
 
+def split_pdf_chunks(
+    source: str | Path,
+    page_ranges: Sequence[tuple[int, int]],
+    output_temp_dir: str | Path,
+) -> list[Path]:
+    """Split PDF into multiple chunk files based on page ranges.
+
+    Args:
+        source: Path to source PDF file.
+        page_ranges: Sequence of (start_page, end_page) 0-indexed inclusive tuples.
+        output_temp_dir: Directory where chunk files should be written.
+
+    Returns:
+        List of generated chunk PDF file paths.
+    """
+    src_path = Path(source)
+    if not src_path.exists():
+        raise FileNotFoundError(f"Source PDF not found: {src_path}")
+    out_dir = Path(output_temp_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    reader = PdfReader(str(src_path))
+    chunk_paths: list[Path] = []
+
+    for i, (start, end) in enumerate(page_ranges):
+        start = max(0, start)
+        end = min(len(reader.pages) - 1, end)
+        if start > end:
+            continue
+
+        writer = PdfWriter()
+        for page_num in range(start, end + 1):
+            writer.add_page(reader.pages[page_num])
+
+        chunk_path = out_dir / f"{src_path.stem}_part{i + 1}.pdf"
+        with open(chunk_path, "wb") as f:
+            writer.write(f)
+        chunk_paths.append(chunk_path)
+    return chunk_paths
+
+
+def split_pdf(
+    source: str | Path,
+    pages_or_ranges: str | Sequence[int] | Sequence[tuple[int, int]],
+    output: str | Path,
+) -> Path | list[Path]:
+    """Unified PDF splitter supporting both single page-list extraction and chunk ranges.
+
+    If pages_or_ranges is a sequence of (start, end) tuples, delegates to split_pdf_chunks.
+    Otherwise delegates to split_pdf_pages.
+    """
+    if (
+        pages_or_ranges
+        and isinstance(pages_or_ranges, (list, tuple))
+        and isinstance(pages_or_ranges[0], tuple)
+    ):
+        return split_pdf_chunks(source, pages_or_ranges, output)  # type: ignore[arg-type]
+    elif not pages_or_ranges and isinstance(pages_or_ranges, (list, tuple)):
+        return split_pdf_chunks(source, [], output)
+    return split_pdf_pages(source, pages_or_ranges, output)  # type: ignore[arg-type]
+
+
 # Aliases for convenience & backward compatibility
-split_pdf = split_pdf_pages
 extract_text = extract_text_from_pdf
+
