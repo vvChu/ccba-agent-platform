@@ -21,6 +21,10 @@ from ._engine import HarnessEngine
 from ._guard import HarnessGuard
 from ._mutex import FileMutexLock
 from ._state import HarnessLocal, HarnessState
+from .dashboard import (
+    generate_swarm_dashboard_html,
+    render_swarm_dashboard,
+)
 from .evals import (
     AutoItemScorer,
     BaseScorer,
@@ -131,4 +135,6 @@ __all__ = [
     "analyze_subagent_transcript",
     "check_subagent_budget",
     "audit_swarm_session",
+    "generate_swarm_dashboard_html",
+    "render_swarm_dashboard",
 ]
