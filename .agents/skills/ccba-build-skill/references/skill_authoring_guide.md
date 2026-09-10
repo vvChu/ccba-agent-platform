@@ -56,6 +56,15 @@ Khi kỹ năng hỗ trợ nhiều chế độ chạy qua các cờ dòng lệnh 
 - **Khuyến nghị bước tiếp theo (Next Steps) động:** Hướng dẫn bước kế tiếp phải tương thích với mode thực thi (tránh ép người dùng chạy lệnh implement khi họ chỉ yêu cầu so sánh kiến trúc).
 - **Single Source of Truth cho quy tắc cấm cờ:** Các mệnh đề cấm kết hợp cờ (như cấm `--fast + --copy-raw`) phải được định nghĩa duy nhất một lần tại mục `Kết hợp không hợp lệ` trong file sibling, không sao chép lặp lại rải rác trong mô tả của từng cờ.
 
+### 3.2. Chuẩn Mực Kiểm Định Xác Định (Deterministic Verification Standards & ADR-0058 Hard Completion Lock)
+Để xóa bỏ hoàn toàn hiện tượng Hoàn thành non (Premature Completion) và Tự chứng nhận (Self-Certification), các kỹ năng phải áp dụng cơ chế kiểm thử máy tính khách quan:
+1. **Pha Hoàn tất / Nghiệm thu (Verification & Deliver Phase):** Mỗi kỹ năng có tác vụ can thiệp mã nguồn, tạo tài liệu hoặc thẩm tra kiến trúc bắt buộc phải gắn kết với công cụ `ccba-harness verify-patch` hoặc `verify-doc`.
+2. **Sử dụng Verification Presets Một Chạm:**
+   - Với kỹ năng lập trình / engineering (`ccba-implement`, `ccba-tdd`): Sử dụng `python -m ccba_harness verify-patch --preset code --target <package_or_dir>` để tự động chạy ruff, mypy, pytest.
+   - Với kỹ năng sinh tài liệu / tư vấn định tính (`ccba-legal-advisor`, `ccba-completion-checklist`): Sử dụng `python -m ccba_harness verify-patch --preset doc --target <file_path> --min-bytes <n> --required-headings "Heading 1,Heading 2"` để kiểm chứng sự tồn tại, dung lượng tối thiểu và đề mục chuẩn.
+   - Với kỹ năng xây dựng / sửa chữa skill (`ccba-build-skill`, `/skill-repair`): Sử dụng `python -m ccba_harness verify-patch --preset skill --target <skill_path>`.
+3. **Quy tắc Khóa Hoàn Thành Cứng (Hard Completion Lock):** Tiêu chí hoàn thành phải nêu rõ: Nếu có bất kỳ lệnh nào trả về Exit Code $\ne 0$, Agent bị cấm tuyệt đối tuyên bố hoàn thành hoặc đề xuất người dùng nghiệm thu. Bắt buộc kích hoạt Fix Loop hoặc dừng lại báo cáo lỗi kèm stderr snippet.
+
 ---
 
 ## 4. Các lỗi thường gặp (Failure Modes)
