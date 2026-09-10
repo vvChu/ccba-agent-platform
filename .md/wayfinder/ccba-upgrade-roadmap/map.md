@@ -25,6 +25,8 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
    - Các Worker Agents trong nhóm (`ccba-teamwork`) hoạt động theo nguyên tắc **No Pre-mutation**: tuyệt đối không ghi trực tiếp vào codebase. Toàn bộ đề xuất thay đổi được đóng gói dưới dạng **Unified Diff / Structured Patch** lưu tạm tại `.system_generated/scratch/`. **Lead Orchestrator** là thực thể duy nhất (Single-Writer) thẩm tra xung đột và thực hiện atomic patch.
 5. **Cộng Tác Dựa Trên Artifacts & Cổng Phê Duyệt Tương Tác (HITL Gates)**:
    - Mọi trạng thái làm việc phức tạp hoặc kế hoạch đa bước bắt buộc thể hiện qua **Native Antigravity Artifacts** (`RequestFeedback: true`), tích hợp trực tiếp với cơ chế phê duyệt của Hội đồng Thẩm định 11 Ghế CCBA Charter (ADR-0046).
+6. **Vận Hành Tự Chủ Doanh Nghiệp & Tối Ưu Hóa Chi Phí Thực Tế (Phase 4: Beyond Horizon)**:
+   - Tối ưu hóa chi phí token qua Prompt Density Index (PDI), di trú nốt 28 core scripts còn lại theo Cổng 0 ADR-0057, truyền phát telemetry trực tiếp theo thời gian thực tới Server Spark, và kích hoạt động cơ tự sửa lỗi (Autonomous Self-Healing Loop) khi gặp kiểm định thất bại.
 
 ---
 
@@ -133,11 +135,12 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
 
 ## 4. Các Ticket ở Biên giới (Frontier Unblocked Tickets)
 
-Toàn bộ **11/11 Tickets (P0, P1, Phase 2 và Phase 3)** trên Bản đồ Wayfinder đã **HOÀN THÀNH 100%**. Hệ thống CI/CD Eval Gates, Swarm Single-Writer và Cross-Spoke Fleet Analytics đã đi vào hoạt động ổn định:
+Toàn bộ **11/11 Tickets (P0, P1, Phase 2 và Phase 3)** trên Bản đồ Wayfinder đã **HOÀN THÀNH 100%**. 
+Hệ thống chính thức kích hoạt **Phase 4: Beyond Horizon — Vận Hành Tự Chủ Doanh Nghiệp (Autonomous Enterprise Operations)** với 4 Frontier Tickets mới:
 
 ```mermaid
 flowchart TD
-    subgraph Done ["Đã Hoàn thành (Closed 100%) 🎉"]
+    subgraph Done ["Đã Hoàn thành (Phase 0, 1, 2, 3 - Closed 100%) 🎉"]
         T1["[T1: Task AFK] Memory Compaction Engine cho session_learnings.md ✅"]
         T2["[T2: Task AFK] Exit-Code Deterministic Verification Gate trong ccba-harness ✅"]
         T3["[T3: Research AFK] Ma trận Ánh xạ Di trú 52 Scripts ✅"]
@@ -152,8 +155,11 @@ flowchart TD
         F7["[F7: Task HITL] Mở Rộng Hệ Thống Báo Cáo & Phân Tích Đa Dự Án (Cross-Spoke Analytics) ✅"]
     end
 
-    subgraph Frontier ["Biên Giới Sẵn Sàng Nhận Việc (Unblocked Execution Frontier)"]
-        DoneAll["Toàn bộ 11/11 Tickets trong Bản đồ Wayfinder Đã Hoàn Thành Xuất Sắc 🎉"]
+    subgraph Phase4Frontier ["Phase 4: Beyond Horizon — Vận Hành Tự Chủ Doanh Nghiệp (Frontier Tickets) 🚀"]
+        P4_1["[P4.1: Task AFK] Token Economy & Prompt Density Optimization Engine"]
+        P4_2["[P4.2: Task AFK] Di Trú 28 Core Scripts Về ccba-ooxml & ccba-pdf-prep"]
+        P4_3["[P4.3: Prototype HITL] Real-Time Telemetry Streaming Bridge qua Server Spark"]
+        P4_4["[P4.4: Task HITL] Autonomous Self-Healing & Closed-Loop CI Patch Engine"]
     end
 
     T3 -.->|Đã Giải mã Sương mù| F1
@@ -163,7 +169,11 @@ flowchart TD
     F4 -.->|Đã Giải mã Sương mù| F5
     F5 -.->|Đã Giải mã Sương mù| F6
     F6 -.->|Đã Giải mã Sương mù| F7
-    F7 -.-> DoneAll
+    F7 --> P4_1
+    F7 --> P4_2
+    F7 --> P4_3
+    P4_1 --> P4_4
+    P4_2 --> P4_4
 ```
 
 ---
@@ -319,14 +329,58 @@ flowchart TD
 
 ---
 
+### Ticket P4.1: [Task/AFK] `[Token Economy & Prompt Density Optimization Engine]` 🚀
+- **Mục tiêu**: Xây dựng module `packages/ccba-harness/src/ccba_harness/economy.py` và subcommand CLI `ccba-harness telemetry economy` nhằm khai thác dữ liệu từ `FleetTelemetryReport` và `SwarmTelemetryReport`.
+- **Chức năng & Đầu ra dự kiến**:
+  - Tính toán chỉ số **Prompt Density Index (PDI)** và **Token ROI** (tỷ lệ token tiêu hao trên số lượng artifacts, diff changes và test assertions vượt qua thành công).
+  - Phân tích và phát hiện các đoạn văn bản rườm rà (prompt overhead) trong các `SKILL.md` và System Prompts.
+  - Tự động sinh báo cáo Prompt Pruning Diff tại `.md/reports/prompt_economy_report.md` kèm các khuyến nghị tối ưu hóa chi phí có kiểm soát.
+  - Bộ unit test `tests/governance/test_telemetry_economy.py` đạt 100% PASS.
+- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P4.1 | **Trạng thái**: **Ready for Execution (Frontier)**
+
+---
+
+### Ticket P4.2: [Task/AFK] `[Di Trú 28 Core Scripts Về Monorepo Packages (Hoàn Tất Giai Đoạn 2)]` 🚀
+- **Mục tiêu**: Hoàn tất 100% việc dọn dẹp và di chuyển 28 files core logic còn lại (~3,800 LOC) từ `.agents/skills/*/scripts/` vào các Deep Seams theo đúng Cổng 0 ADR-0057:
+  - Di trú các XML runs helpers, redlines simplifies, validators từ `ccba-xu-ly-van-phong` (~2,300 LOC) vào `packages/ccba-ooxml`.
+  - Di trú PDF manipulation tools và media extraction từ `ccba-youtube-learn` vào `packages/ccba-pdf-prep`.
+  - Di trú `eval_runner.py` vào `packages/ccba-harness`.
+  - Chuyển đổi 100% các script trong các skill tương ứng thành Thin Adapters chuẩn mực (zero core logic bloat ngoài packages).
+  - Bộ unit tests trong từng package đạt $\ge 90\%$ test coverage.
+- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P4.2 | **Trạng thái**: **Ready for Execution (Frontier)**
+
+---
+
+### Ticket P4.3: [Prototype/HITL] `[Real-Time Telemetry Streaming Bridge qua Server Spark]` 🚀
+- **Mục tiêu**: Xây dựng cầu nối truyền phát dữ liệu đo lường thời gian thực (Real-time Telemetry Bridge) từ Antigravity Worktrees về máy chủ Spark (`100.83.192.30:8090`) qua Tailscale VPN.
+- **Chức năng & Đầu ra dự kiến**:
+  - Module `packages/ccba-harness/src/ccba_harness/streamer.py` với WebSocket / SSE client bất đồng bộ (`asyncio`).
+  - Phát sự kiện thời gian thực khi Subagent bắt đầu, gọi tool, tiêu thụ tokens theo turn, hoặc gặp sự cố.
+  - Thiết kế an toàn Offline-First & Graceful Degradation: Tự động fallback về file logging cục bộ nếu mất kết nối mạng, đảm bảo không bao giờ làm gián đoạn tác vụ agent.
+- **Phân loại**: `Prototype [HITL]` | **Ưu tiên**: P4.3 | **Trạng thái**: **Ready for Execution (Frontier)**
+
+---
+
+### Ticket P4.4: [Task/HITL] `[Autonomous Self-Healing & Closed-Loop CI Patch Engine]` 🚀
+- **Mục tiêu**: Xây dựng động cơ tự phục hồi mã nguồn (`SelfHealingEngine`) tích hợp vào `ccba-harness` và `apply_worker_patch.py`.
+- **Chức năng & Đầu ra dự kiến**:
+  - Khi chạy `run_harness_evals.py` hoặc `verify-patch` gặp thất bại (ví dụ: Ruff format error, broken markdown link, syntax mismatch, test assertion failure):
+  - Tự động trích xuất stack trace lỗi và ngữ cảnh tệp mã nguồn.
+  - Tạo patch sửa đổi trong sandbox ảo (virtual scratch patch).
+  - Chạy thẩm tra qua `verify-patch`. Nếu đạt Exit Code 0 $\rightarrow$ tự động áp dụng patch nguyên tử (Atomic Patch).
+  - Khóa an toàn: Max Iterations = 2, tự động hủy bỏ và rollback snapshot nếu không tự sửa được sau 2 lượt.
+- **Phân loại**: `Task [HITL]` | **Ưu tiên**: P4.4 | **Trạng thái**: **Ready for Execution (Frontier)**
+
+---
+
 ## 5. Sương mù Chiến trận / Chưa xác định rõ (Not yet specified - Fog of War)
 
-Toàn bộ các bài toán trong Sương mù Chiến trận (F1 $\rightarrow$ F7) đã được giải mã và thực thi hoàn tất 100%!
-Các hướng đi mở rộng tương lai (Beyond Phase 3):
-1. **[Future/Phase 4] Tự động hóa Tối ưu Prompt & Token Pruning qua Telemetry Feedback Loop**:
-   - Sử dụng dữ liệu thống kê từ Fleet Analytics để nhận diện các prompts/skills tiêu tốn token bất thường và tự động đề xuất pruning.
-2. **[Future/Phase 4] Real-time Telemetry Streaming qua Server Spark WebSocket**:
-   - Mở rộng gateway streaming telemetry theo thời gian thực thay vì snapshot file-based sync.
+Toàn bộ các bài toán trong Phase 3 và định hướng Phase 4 đã được giải mã và lên kế hoạch rõ ràng!
+Các hướng đi xa hơn ở chân trời tương lai (Beyond Phase 4):
+1. **[Future/Phase 5] Autonomous Cross-Spoke Orchestration via Service Mesh**:
+   - Khả năng để một Agent ở Spoke này triệu hồi hoặc ủy quyền công việc cho một Subagent chuyên trách ở Spoke khác một cách an toàn và bảo mật qua Hub Service Mesh.
+2. **[Future/Phase 5] Local Offline Embedding Model Caching & Hardware Acceleration on Server Spark**:
+   - Đưa mô hình embedding và reranking chạy 100% cục bộ trên GPU Spark với độ trễ $< 10\text{ms}$.
 
 ---
 
