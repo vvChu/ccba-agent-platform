@@ -17,9 +17,11 @@ from pathlib import Path
 import pytest
 from scripts.governance.apply_worker_patch import (
     PatchBlock,
+    SwarmExecutionReport,
     apply_atomic,
     detect_collisions,
     dry_run,
+    execute_swarm_patches,
     load_patches_from_directory,
     main,
     parse_patch_content,
@@ -302,3 +304,106 @@ def test_cli_execution_dry_run_and_apply(tmp_path: Path, monkeypatch: pytest.Mon
     )
     assert main() == 0
     assert target.read_text(encoding="utf-8") == "VERSION = 2\n"
+
+
+def test_execute_swarm_patches_success_and_metrics(tmp_path: Path) -> None:
+    """Verify execute_swarm_patches runs end-to-end and returns timings."""
+    target = tmp_path / "hello.py"
+    target.write_text("msg = 'hello'\n", encoding="utf-8")
+
+    patch = PatchBlock(
+        file_path="hello.py",
+        search_content="msg = 'hello'",
+        replace_content="msg = 'world'",
+        source_patch="worker_1",
+    )
+
+    report = execute_swarm_patches(
+        patches=[patch],
+        base_dir=tmp_path,
+        apply=True,
+        verify=False,
+    )
+    assert isinstance(report, SwarmExecutionReport)
+    assert report.success is True
+    assert report.patches_count == 1
+    assert report.applied_files == ["hello.py"]
+    assert report.semantic_conflict is False
+    assert report.rollback_performed is False
+    assert target.read_text(encoding="utf-8") == "msg = 'world'\n"
+    assert "total" in report.timings
+    assert "apply" in report.timings
+
+
+def test_execute_swarm_patches_semantic_conflict_auto_rollback(tmp_path: Path) -> None:
+    """Verify semantic conflict during verification triggers auto-rollback to initial snapshot."""
+    target = tmp_path / "calc.py"
+    target.write_text("def add(a, b): return a + b\n", encoding="utf-8")
+
+    patch = PatchBlock(
+        file_path="calc.py",
+        search_content="def add(a, b): return a + b",
+        replace_content="def add(a, b): return a - b",  # Breaks logic
+        source_patch="worker_bad",
+    )
+
+    # Verification command fails (non-zero exit code)
+    failing_cmd = f'"{sys.executable}" -c "raise RuntimeError(\'Intentional test failure\')"'
+
+    report = execute_swarm_patches(
+        patches=[patch],
+        base_dir=tmp_path,
+        apply=True,
+        verify=True,
+        verify_commands=[failing_cmd],
+    )
+    assert report.success is False
+    assert report.semantic_conflict is True
+    assert report.rollback_performed is True
+    assert len(report.verification_errors) >= 1
+    # Check that disk is restored to original clean state
+    assert target.read_text(encoding="utf-8") == "def add(a, b): return a + b\n"
+
+
+def test_cli_custom_verify_commands_and_json(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Verify CLI accepts custom verification commands and outputs valid JSON."""
+    target = tmp_path / "version.py"
+    target.write_text("V = 1\n", encoding="utf-8")
+
+    patch_file = tmp_path / "patch.txt"
+    patch_file.write_text(
+        "FILE: version.py\n<<<<<<< SEARCH\nV = 1\n=======\nV = 2\n>>>>>>> REPLACE\n",
+        encoding="utf-8",
+    )
+
+    passing_cmd = f'"{sys.executable}" -c "print(\'OK\')"'
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "apply_worker_patch.py",
+            "--patch",
+            str(patch_file),
+            "--base-dir",
+            str(tmp_path),
+            "--apply",
+            "-c",
+            passing_cmd,
+            "--json",
+            "--benchmark",
+        ],
+    )
+    capsys.readouterr()  # Clear buffer
+    exit_code = main()
+    assert exit_code == 0
+    assert target.read_text(encoding="utf-8") == "V = 2\n"
+
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    assert data["success"] is True
+    assert data["patches_count"] == 1
+    assert data["semantic_conflict"] is False
+
