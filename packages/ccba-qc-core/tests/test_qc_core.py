@@ -155,6 +155,7 @@ def test_quadview_parse_audit_response() -> None:
 
 def test_semantic_audit_engine() -> None:
     """Verify SemanticAuditEngine parses LLM response into AuditReport."""
+
     async def _run() -> None:
         mock_response = json.dumps(
             {
@@ -191,6 +192,7 @@ def test_semantic_audit_engine() -> None:
 
 def test_pccc_map_reduce_engine(tmp_path: Path) -> None:
     """Verify PcccMapReduceEngine executes full map reduce workflow with mock LLM."""
+
     async def _run() -> None:
         engine = PcccMapReduceEngine(ai_model="mock-pccc")
 

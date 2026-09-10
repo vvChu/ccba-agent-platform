@@ -191,11 +191,16 @@ def main() -> int:
         )
         if passed:
             print(f"[PASS] {msg}")
-            print(f"  Consumed: {metrics.total_tokens:,} tokens in {metrics.total_duration_sec:.1f}s")
+            print(
+                f"  Consumed: {metrics.total_tokens:,} tokens in {metrics.total_duration_sec:.1f}s"
+            )
             return 0
         else:
             print(f"[FAIL] Budget violation: {msg}", file=sys.stderr)
-            print(f"  Actual: {metrics.total_tokens:,} tokens in {metrics.total_duration_sec:.1f}s", file=sys.stderr)
+            print(
+                f"  Actual: {metrics.total_tokens:,} tokens in {metrics.total_duration_sec:.1f}s",
+                file=sys.stderr,
+            )
             return 1
 
     elif args.command == "export-otel":

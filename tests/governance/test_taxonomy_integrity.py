@@ -212,20 +212,15 @@ def test_zero_unregistered_slash_commands_in_skills_and_readme() -> None:
     for md_file in files_to_check:
         if not md_file.exists():
             continue
-        issues = validator.audit_slash_commands(
-            md_file, registered_commands=registered_commands
-        )
+        issues = validator.audit_slash_commands(md_file, registered_commands=registered_commands)
         for issue in issues:
             rel_file = (
-                md_file.relative_to(HUB_ROOT)
-                if md_file.is_relative_to(HUB_ROOT)
-                else md_file
+                md_file.relative_to(HUB_ROOT) if md_file.is_relative_to(HUB_ROOT) else md_file
             )
             errors.append(f"{rel_file} -> {issue}")
 
     assert not errors, (
-        f"Detected {len(errors)} unregistered slash command reference(s):\n"
-        + "\n".join(errors)
+        f"Detected {len(errors)} unregistered slash command reference(s):\n" + "\n".join(errors)
     )
 
 
@@ -234,9 +229,7 @@ def test_standalone_skills_catalog_parity() -> None:
     assert CATALOG_PATH.exists(), f"catalog.yaml not found at {CATALOG_PATH}"
     catalog_data = yaml.safe_load(CATALOG_PATH.read_text(encoding="utf-8")) or {}
     registered_skills = {
-        s["name"]: s
-        for s in catalog_data.get("skills", [])
-        if isinstance(s, dict) and "name" in s
+        s["name"]: s for s in catalog_data.get("skills", []) if isinstance(s, dict) and "name" in s
     }
 
     skill_files = sorted(SKILLS_DIR.glob("**/SKILL.md"))
@@ -287,8 +280,7 @@ def test_standalone_skills_catalog_parity() -> None:
         f"Expected at least 20 user-invocable skills, found {invocable_count}"
     )
     assert not errors, (
-        f"Found {len(errors)} standalone skills catalog parity error(s):\n"
-        + "\n".join(errors)
+        f"Found {len(errors)} standalone skills catalog parity error(s):\n" + "\n".join(errors)
     )
 
 

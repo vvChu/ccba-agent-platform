@@ -454,11 +454,20 @@ class OtelSpanExporter:
             "endTimeUnixNano": end_unix_nano,
             "attributes": [
                 {"key": "gen_ai.system", "value": {"stringValue": "antigravity"}},
-                {"key": "gen_ai.conversation.id", "value": {"stringValue": metrics.conversation_id}},
+                {
+                    "key": "gen_ai.conversation.id",
+                    "value": {"stringValue": metrics.conversation_id},
+                },
                 {"key": "gen_ai.usage.input_tokens", "value": {"intValue": metrics.prompt_tokens}},
-                {"key": "gen_ai.usage.output_tokens", "value": {"intValue": metrics.completion_tokens}},
+                {
+                    "key": "gen_ai.usage.output_tokens",
+                    "value": {"intValue": metrics.completion_tokens},
+                },
                 {"key": "gen_ai.usage.total_tokens", "value": {"intValue": metrics.total_tokens}},
-                {"key": "gen_ai.cost.usd", "value": {"doubleValue": round(metrics.estimated_cost_usd, 5)}},
+                {
+                    "key": "gen_ai.cost.usd",
+                    "value": {"doubleValue": round(metrics.estimated_cost_usd, 5)},
+                },
                 {"key": "gen_ai.turns.count", "value": {"intValue": metrics.turns_count}},
             ],
             "status": {"code": 1},  # STATUS_CODE_OK
@@ -483,7 +492,10 @@ class OtelSpanExporter:
                     {"key": "gen_ai.operation.name", "value": {"stringValue": "chat"}},
                     {"key": "gen_ai.request.model", "value": {"stringValue": metrics.model_name}},
                     {"key": "gen_ai.usage.input_tokens", "value": {"intValue": t.prompt_tokens}},
-                    {"key": "gen_ai.usage.output_tokens", "value": {"intValue": t.completion_tokens}},
+                    {
+                        "key": "gen_ai.usage.output_tokens",
+                        "value": {"intValue": t.completion_tokens},
+                    },
                 ],
                 "status": {"code": 1},
             }
@@ -514,7 +526,10 @@ class OtelSpanExporter:
                 {
                     "resource": {
                         "attributes": [
-                            {"key": "service.name", "value": {"stringValue": "ccba-agent-platform"}},
+                            {
+                                "key": "service.name",
+                                "value": {"stringValue": "ccba-agent-platform"},
+                            },
                             {"key": "service.version", "value": {"stringValue": "2.0.0"}},
                             {"key": "gen_ai.system", "value": {"stringValue": "antigravity"}},
                         ]
@@ -566,7 +581,11 @@ class SwarmSessionTelemetryReport:
             "| :--- | :---: | :---: | :---: | :---: | :---: |",
         ]
         for sub in self.subagents:
-            cid_display = sub.conversation_id[:12] + "..." if len(sub.conversation_id) > 12 else sub.conversation_id
+            cid_display = (
+                sub.conversation_id[:12] + "..."
+                if len(sub.conversation_id) > 12
+                else sub.conversation_id
+            )
             lines.append(
                 f"| `{cid_display}` | {sub.total_steps} | {sub.turns_count} | {sub.total_duration_sec:.1f}s | {sub.total_tokens:,} | ${sub.estimated_cost_usd:.4f} |"
             )
@@ -599,7 +618,11 @@ def find_spawned_subagent_ids(parent_log_or_id: str | Path) -> list[str]:
 
     for step, _offset in stream_transcript_steps(log_path):
         raw_str = json.dumps(step.raw_dict)
-        if "invoke_subagent" in raw_str or "conversationId" in raw_str or "conversation_id" in raw_str:
+        if (
+            "invoke_subagent" in raw_str
+            or "conversationId" in raw_str
+            or "conversation_id" in raw_str
+        ):
             for match in uuid_pattern.findall(raw_str):
                 m_lower = match.lower()
                 if m_lower not in found_ids and m_lower not in str(log_path).lower():
@@ -644,7 +667,10 @@ def audit_swarm_session(
     else:
         resolved = resolve_transcript_path(target)
         if resolved.exists():
-            if resolved.parent.name == "logs" and resolved.parent.parent.name == ".system_generated":
+            if (
+                resolved.parent.name == "logs"
+                and resolved.parent.parent.name == ".system_generated"
+            ):
                 parent_id = resolved.parent.parent.parent.name
             else:
                 parent_id = resolved.stem
@@ -702,4 +728,3 @@ def audit_swarm_session(
     if violations:
         return report, False, "; ".join(violations)
     return report, True, "Within swarm budget limits."
-

@@ -78,9 +78,7 @@ class PatchVerificationReport:
 
         for r in self.results:
             st = "PASS" if r.passed else ("TIMEOUT" if r.timed_out else "FAIL")
-            lines.append(
-                f"| {st} | {r.exit_code} | {r.duration_ms:.1f}ms | `{r.command}` |"
-            )
+            lines.append(f"| {st} | {r.exit_code} | {r.duration_ms:.1f}ms | `{r.command}` |")
 
         # Add error details if any failed
         failed_results = [r for r in self.results if not r.passed]
@@ -94,19 +92,23 @@ class PatchVerificationReport:
                 if f.error_message:
                     lines.append(f"- **Error:** {f.error_message}")
                 if f.stderr.strip():
-                    lines.extend([
-                        "- **Stderr Snippet:**",
-                        "```text",
-                        f.stderr.strip()[:1000],
-                        "```",
-                    ])
+                    lines.extend(
+                        [
+                            "- **Stderr Snippet:**",
+                            "```text",
+                            f.stderr.strip()[:1000],
+                            "```",
+                        ]
+                    )
                 elif f.stdout.strip():
-                    lines.extend([
-                        "- **Stdout Snippet:**",
-                        "```text",
-                        f.stdout.strip()[:1000],
-                        "```",
-                    ])
+                    lines.extend(
+                        [
+                            "- **Stdout Snippet:**",
+                            "```text",
+                            f.stdout.strip()[:1000],
+                            "```",
+                        ]
+                    )
                 lines.append("")
 
         return "\n".join(lines).strip() + "\n"
@@ -141,8 +143,16 @@ def _execute_single_command(
         )
     except subprocess.TimeoutExpired as exc:
         duration_ms = (time.perf_counter() - start_time) * 1000.0
-        stdout_text = exc.stdout if isinstance(exc.stdout, str) else (exc.stdout or b"").decode("utf-8", errors="replace")
-        stderr_text = exc.stderr if isinstance(exc.stderr, str) else (exc.stderr or b"").decode("utf-8", errors="replace")
+        stdout_text = (
+            exc.stdout
+            if isinstance(exc.stdout, str)
+            else (exc.stdout or b"").decode("utf-8", errors="replace")
+        )
+        stderr_text = (
+            exc.stderr
+            if isinstance(exc.stderr, str)
+            else (exc.stderr or b"").decode("utf-8", errors="replace")
+        )
         return CommandResult(
             command=command,
             exit_code=124,
@@ -286,8 +296,14 @@ def resolve_preset_commands(
         cmds: list[str] = []
         if target_str:
             t_path = Path(target_str)
-            src_str = (t_path / "src").as_posix() + "/" if (t_path / "src").exists() else t_path.as_posix()
-            tests_str = (t_path / "tests").as_posix() if (t_path / "tests").exists() else t_path.as_posix()
+            src_str = (
+                (t_path / "src").as_posix() + "/"
+                if (t_path / "src").exists()
+                else t_path.as_posix()
+            )
+            tests_str = (
+                (t_path / "tests").as_posix() if (t_path / "tests").exists() else t_path.as_posix()
+            )
             cmds.append(f"{python_exec} -m ruff check {t_path.as_posix()}")
             cmds.append(f"{python_exec} -m mypy {src_str} --follow-imports=silent")
             cmds.append(f"{python_exec} -m pytest {tests_str} -q")
@@ -311,7 +327,9 @@ def resolve_preset_commands(
         if target_str:
             t_path = Path(target_str)
             skill_file = (t_path / "SKILL.md").as_posix() if t_path.is_dir() else t_path.as_posix()
-            cmds.append(f"{python_exec} scripts/validate_skills.py --file {skill_file} --enforce-gpi")
+            cmds.append(
+                f"{python_exec} scripts/validate_skills.py --file {skill_file} --enforce-gpi"
+            )
         else:
             cmds.append(f"{python_exec} scripts/validate_skills.py --enforce-gpi")
         cmds.append(f"{python_exec} scripts/governance/compile_catalog.py --check")

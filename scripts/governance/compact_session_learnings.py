@@ -259,7 +259,10 @@ def run_compact(file_path: Path, archive_dir: Path, max_size_kb: float) -> int:
     print(f"  Saved:  {saved_bytes:,} bytes ({reduction_pct}% reduction)")
 
     if new_kb > max_size_kb:
-        print(f"[Warning] Compacted size ({new_kb} KB) still exceeds {max_size_kb} KB", file=sys.stderr)
+        print(
+            f"[Warning] Compacted size ({new_kb} KB) still exceeds {max_size_kb} KB",
+            file=sys.stderr,
+        )
         return 1
 
     return 0

@@ -37,7 +37,9 @@ def test_token_estimator_bilingual_and_json() -> None:
     assert 10 <= en_tokens <= 15
 
     # Vietnamese text with diacritics (~2.8 chars/token)
-    vi_text = "Hệ sinh thái kỹ năng của CCBA Agent Platform được thiết kế theo tiêu chuẩn công nghiệp."
+    vi_text = (
+        "Hệ sinh thái kỹ năng của CCBA Agent Platform được thiết kế theo tiêu chuẩn công nghiệp."
+    )
     vi_tokens = TokenEstimator.estimate_text(vi_text)
     assert 25 <= vi_tokens <= 38
 
@@ -229,7 +231,9 @@ def test_otel_span_exporter_compliance(tmp_path: Path) -> None:
     assert len(root["spanId"]) == 16
 
 
-def test_cli_telemetry_inspect_and_budget_check(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_cli_telemetry_inspect_and_budget_check(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Verify run_telemetry_cli executes inspect and budget-check subcommands."""
     log_file = tmp_path / "transcript.jsonl"
     log_file.write_text(
@@ -320,4 +324,3 @@ def test_swarm_telemetry_audit_and_cli(tmp_path: Path, capsys: pytest.CaptureFix
     assert code_fail == 1
     err = capsys.readouterr().err
     assert "[FAIL] Swarm budget violation" in err
-

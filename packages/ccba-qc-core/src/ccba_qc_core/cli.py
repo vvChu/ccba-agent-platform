@@ -66,7 +66,9 @@ def audit(
     mep: Path = typer.Option(..., "--mep", help="Bản vẽ Cơ điện (image hoặc PDF)"),
     pccc: Path = typer.Option(..., "--pccc", help="Bản vẽ PCCC (image hoặc PDF)"),
     level: str = typer.Option("L1", "--level", "-l", help="Tên tầng hoặc khu vực"),
-    output_dir: Path = typer.Option(Path("audit_output"), "--output-dir", "-o", help="Thư mục đầu ra"),
+    output_dir: Path = typer.Option(
+        Path("audit_output"), "--output-dir", "-o", help="Thư mục đầu ra"
+    ),
     ai_model: str = typer.Option("gemini-2.5-flash", "--model", "-m", help="AI Vision Model"),
 ) -> None:
     """Thực hiện đối soát Quad-View đa bộ môn cho một tầng."""
@@ -91,7 +93,9 @@ def batch(
 ) -> None:
     """Chạy quy trình thẩm tra toàn bộ ma trận phối hợp theo lô (Batch)."""
     orchestrator = QCBatchOrchestrator(project_dir, matrix_csv, out_dir)
-    console.print(f"[cyan]Bắt đầu chạy Batch QC Orchestrator cho dự án {project_dir.name}...[/cyan]")
+    console.print(
+        f"[cyan]Bắt đầu chạy Batch QC Orchestrator cho dự án {project_dir.name}...[/cyan]"
+    )
     asyncio.run(orchestrator.run_batch(ai_model=ai_model))
     console.print("[green]Hoàn thành thẩm tra theo lô.[/green]")
 
@@ -103,7 +107,9 @@ def pccc(
     mep: Path = typer.Option(..., "--mep", help="File MEP PCCC (Markdown)"),
     gopy: Path = typer.Option(None, "--gopy", help="File góp ý PC07 (nếu có)"),
     model: str = typer.Option("qwen-local-primary", "--model", "-m", help="Tên model LLM"),
-    out: Path = typer.Option(Path("PCCC_MapReduce_Report.md"), "--out", "-o", help="File báo cáo đầu ra"),
+    out: Path = typer.Option(
+        Path("PCCC_MapReduce_Report.md"), "--out", "-o", help="File báo cáo đầu ra"
+    ),
 ) -> None:
     """Thực hiện thẩm tra chuyên trách PCCC QCVN 06:2022 qua Map-Reduce."""
     thuyet_minh = tm.read_text(encoding="utf-8") if tm.exists() else ""
