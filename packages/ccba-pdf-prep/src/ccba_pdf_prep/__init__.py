@@ -42,6 +42,18 @@ from .document_skills.pdf_forms import (
 from .document_skills.pdf_forms import (
     get_field_info as get_field_info,
 )
+from .manipulation import (
+    extract_text_from_pdf as extract_text_from_pdf,
+)
+from .manipulation import (
+    merge_pdfs as merge_pdfs,
+)
+from .manipulation import (
+    parse_pages as parse_pages,
+)
+from .manipulation import (
+    split_pdf_pages as split_pdf_pages,
+)
 from .media import (
     compute_frame_hash as compute_frame_hash,
 )
@@ -98,6 +110,11 @@ __all__ = [
     # === DOCUMENT SKILLS (standalone utilities for PDF forms) ===
     "get_field_info",
     "fill_pdf_fields",
+    # === PDF MANIPULATION DEEP SEAMS (Merge, Split, Extract) ===
+    "merge_pdfs",
+    "split_pdf_pages",
+    "extract_text_from_pdf",
+    "parse_pages",
     # === MEDIA DEEP SEAMS (YouTube & Video extraction) ===
     "extract_youtube_video_id",
     "format_whisper_transcript",
