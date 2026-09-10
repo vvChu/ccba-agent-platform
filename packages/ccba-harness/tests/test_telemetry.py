@@ -265,3 +265,59 @@ def test_cli_telemetry_inspect_and_budget_check(tmp_path: Path, capsys: pytest.C
     assert exit_fail == 1
     captured_fail = capsys.readouterr()
     assert "[FAIL]" in captured_fail.err
+
+
+def test_swarm_telemetry_audit_and_cli(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Verify swarm session auditing across multiple subagents."""
+    from ccba_harness.telemetry import SwarmSessionTelemetryReport, audit_swarm_session
+
+    swarm_dir = tmp_path / "swarm_workspace"
+    sub1_dir = swarm_dir / "worker_1"
+    sub2_dir = swarm_dir / "worker_2"
+    sub1_dir.mkdir(parents=True)
+    sub2_dir.mkdir(parents=True)
+
+    step_sub1 = {
+        "step_index": 0,
+        "source": "USER_EXPLICIT",
+        "type": "USER_INPUT",
+        "status": "DONE",
+        "created_at": "2026-09-10T08:00:00Z",
+        "content": "Worker 1 task",
+    }
+    step_sub2 = {
+        "step_index": 0,
+        "source": "USER_EXPLICIT",
+        "type": "USER_INPUT",
+        "status": "DONE",
+        "created_at": "2026-09-10T08:00:00Z",
+        "content": "Worker 2 task with extended instructions",
+    }
+
+    (sub1_dir / "transcript.jsonl").write_text(json.dumps(step_sub1) + "\n", encoding="utf-8")
+    (sub2_dir / "transcript.jsonl").write_text(json.dumps(step_sub2) + "\n", encoding="utf-8")
+
+    # 1. Direct function test
+    report, passed, msg = audit_swarm_session(swarm_dir, max_swarm_tokens=100000)
+    assert isinstance(report, SwarmSessionTelemetryReport)
+    assert passed is True
+    assert report.total_subagents == 2
+    assert report.total_swarm_tokens > 0
+    assert "Swarm Multi-Agent Telemetry Report" in report.to_markdown()
+
+    # Fail test
+    _, fail_passed, fail_msg = audit_swarm_session(swarm_dir, max_swarm_tokens=10)
+    assert fail_passed is False
+    assert "Swarm token budget exceeded" in fail_msg
+
+    # 2. CLI test
+    code_pass = run_telemetry_cli(["audit-swarm", str(swarm_dir), "--json"])
+    assert code_pass == 0
+    data = json.loads(capsys.readouterr().out)
+    assert data["total_subagents"] == 2
+
+    code_fail = run_telemetry_cli(["audit-swarm", str(swarm_dir), "--max-swarm-tokens", "10"])
+    assert code_fail == 1
+    err = capsys.readouterr().err
+    assert "[FAIL] Swarm budget violation" in err
+

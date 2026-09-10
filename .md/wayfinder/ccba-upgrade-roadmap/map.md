@@ -119,7 +119,7 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
 
 ## 4. Các Ticket ở Biên giới (Frontier Unblocked Tickets)
 
-Toàn bộ 9 Frontier Tickets (P0, P1 và Phase 2) đã **HOÀN THÀNH 100%**. Hệ thống OpenTelemetry và Token Monitoring cho subagents đã vận hành chính xác:
+Toàn bộ 10 Frontier Tickets (P0, P1 và Phase 2) đã **HOÀN THÀNH 100%**. Hệ thống CI/CD Eval Gates và Swarm Telemetry Monitoring đã được tự động hóa hoàn toàn:
 
 ```mermaid
 flowchart TD
@@ -133,10 +133,11 @@ flowchart TD
         F2["[F2: Task AFK] Tích hợp verify-patch Loop Tự động cho 67 SKILL.md ✅"]
         F3["[F3: Task HITL] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine ✅"]
         F4["[F4: Task HITL] Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime ✅"]
+        F5["[F5: Task AFK] Tự động hóa Giám sát Chi phí & Token Telemetry vào CI/CD Gates ✅"]
     end
 
     subgraph Frontier ["Biên Giới Mới Sẵn Sàng Nhận Việc (Unblocked Execution Frontier)"]
-        F5["[F5: Task AFK] Tự động hóa Giám sát Chi phí & Token Telemetry vào CI/CD Gates"]
+        F6["[F6: Task HITL] Tích hợp Giao diện Dashboard Trực Quan Hóa Swarm Telemetry"]
     end
 
     T3 -.->|Đã Giải mã Sương mù| F1
@@ -144,6 +145,7 @@ flowchart TD
     T4 -.->|Đã Giải mã Sương mù| F3
     F3 -.->|Đã Giải mã Sương mù| F4
     F4 -.->|Đã Giải mã Sương mù| F5
+    F5 -.->|Đã Giải mã Sương mù| F6
 ```
 
 ---
@@ -259,13 +261,27 @@ flowchart TD
 
 ---
 
+### Ticket F5: [Task/AFK] `[Tự động hóa Giám sát Chi phí & Token Telemetry vào CI/CD Gates]` ✅
+- **Mục tiêu**: Tự động hóa việc giám sát runtime telemetry cho toàn bộ bầy tác tử (Swarm Multi-Agent Session) theo ADR-0030, mở rộng các verification presets `--preset telemetry` và `--preset ci` trong `ccba-harness verify-patch` (ADR-0058), đồng thời tích hợp toàn diện 7 cổng kiểm định (Linter, Formatter, Mypy, Pytest Suites, Docs, Skills Governance, ADR Traceability, Telemetry Budget) vào `scripts/eval/run_harness_evals.py` và `.github/workflows/ci.yml`.
+- **Đầu ra thực tế**:
+  - Module [`packages/ccba-harness/src/ccba_harness/telemetry.py`](../../../../packages/ccba-harness/src/ccba_harness/telemetry.py) (`SwarmSessionTelemetryReport`, `find_spawned_subagent_ids`, `audit_swarm_session`).
+  - Nâng cấp CLI [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../../packages/ccba-harness/src/ccba_harness/cli.py) và [`scripts/governance/subagent_telemetry.py`](../../../../scripts/governance/subagent_telemetry.py) với lệnh `audit-swarm`.
+  - Mở rộng [`packages/ccba-harness/src/ccba_harness/verifier.py`](../../../../packages/ccba-harness/src/ccba_harness/verifier.py) với presets `--preset telemetry` và `--preset ci`.
+  - Tích hợp 7 CI Gates vào [`scripts/eval/run_harness_evals.py`](../../../../scripts/eval/run_harness_evals.py) và cập nhật workflow [`.github/workflows/ci.yml`](../../../../.github/workflows/ci.yml).
+  - Bộ unit test [`packages/ccba-harness/tests/test_verify_patch.py`](../../../../packages/ccba-harness/tests/test_verify_patch.py) và [`packages/ccba-harness/tests/test_telemetry.py`](../../../../packages/ccba-harness/tests/test_telemetry.py) đạt 26/26 PASS.
+  - Bộ test tích hợp governance [`tests/governance/test_ci_telemetry_gate.py`](../../../../tests/governance/test_ci_telemetry_gate.py) đạt 4/4 PASS.
+  - Toàn bộ 5/5 rào chắn của `ccba-harness verify-patch --preset ci` đều đạt Exit Code 0.
+- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P2.3 | **Trạng thái**: **Closed (Done) ✅**
+
+---
+
 ## 5. Sương mù Chiến trận / Chưa xác định rõ (Not yet specified - Fog of War)
 
 Khu vực lưu trữ các bài toán và hướng đi lớn đã được thu hẹp sương mù:
 
-1. **[F5] Tự Động Hóa Giám Sát Chi Phí & Token Telemetry Vào CI/CD Gates**:
-   - *Phụ thuộc*: Tích hợp telemetry vào hook kết thúc phiên làm việc của Antigravity hoặc GitHub Actions.
-   - *Vấn đề mờ*: Làm sao tự động xuất OTLP Traces và gửi cảnh báo budget violation vào Slack/Discord webhook mà không làm tăng thời gian chờ của Lead Agent?
+1. **[F6] Tích Hợp Giao Diện Dashboard Trực Quan Hóa Swarm Telemetry**:
+   - *Phụ thuộc*: Nhu cầu hiển thị biểu đồ realtime token consumption & trace spans cho người dùng qua Web UI / Generative UI artifact.
+   - *Vấn đề mờ*: Làm sao stream live telemetry từ transcript log vào artifact tương tác mà không cần dev server nền?
 
 ---
 

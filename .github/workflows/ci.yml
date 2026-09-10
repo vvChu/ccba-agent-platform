@@ -32,6 +32,7 @@ jobs:
         run: |
           uv pip install ruff mypy pytest pytest-cov pyyaml requests pydantic pydantic-settings --system
           uv pip install -e "packages/ccba-harness" --system
+          uv pip install -e "packages/ccba-qc-core" --system
           uv pip install -e "packages/ccba-ai[dev]" --system
           uv pip install -e "packages/ccba-legal-intel[dev]" --system
           uv pip install -e "packages/ccba-notebooklm[dev]" --system
@@ -43,6 +44,11 @@ jobs:
         env:
           PYTHONPATH: .
         run: python scripts/eval/run_harness_evals.py --all
+
+      - name: Deterministic Hard Completion Lock (ADR-0058)
+        env:
+          PYTHONPATH: .
+        run: python -m ccba_harness verify-patch --preset ci
 
 
       - name: Upload coverage

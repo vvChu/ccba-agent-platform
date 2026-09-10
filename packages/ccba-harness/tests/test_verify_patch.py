@@ -295,6 +295,16 @@ def test_resolve_preset_commands() -> None:
     adr_cmds = resolve_preset_commands("adr")
     assert any("test_adr.py" in c for c in adr_cmds)
 
+    telemetry_cmds = resolve_preset_commands("telemetry", "sample_log.jsonl")
+    assert any("test_telemetry.py" in c for c in telemetry_cmds)
+    assert any("budget-check" in c for c in telemetry_cmds)
+
+    ci_cmds = resolve_preset_commands("ci")
+    assert any("ruff check" in c for c in ci_cmds)
+    assert any("validate_skills.py" in c for c in ci_cmds)
+    assert any("compile_catalog.py" in c for c in ci_cmds)
+    assert any("sync_hub_adr_matrix.py" in c for c in ci_cmds)
+
     with pytest.raises(ValueError, match="Unknown verification preset"):
         resolve_preset_commands("unknown_preset")
 

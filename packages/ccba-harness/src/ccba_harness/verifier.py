@@ -322,8 +322,27 @@ def resolve_preset_commands(
             f"{python_exec} -m pytest tests/governance/test_adr.py tests/governance/test_sync_adr_matrix.py -q",
         ]
 
+    if p == "telemetry":
+        cmds = [
+            f"{python_exec} -m pytest packages/ccba-harness/tests/test_telemetry.py tests/governance/test_subagent_telemetry.py -q",
+        ]
+        if target_str:
+            cmds.append(
+                f"{python_exec} scripts/governance/subagent_telemetry.py budget-check {Path(target_str).as_posix()} --max-tokens 5000000"
+            )
+        return cmds
+
+    if p == "ci":
+        return [
+            f"{python_exec} -m ruff check packages/ scripts/governance/ tests/governance/",
+            f"{python_exec} -m pytest packages/ccba-harness/tests/test_telemetry.py packages/ccba-harness/tests/test_verify_patch.py tests/governance/ -q",
+            f"{python_exec} scripts/validate_skills.py --enforce-gpi",
+            f"{python_exec} scripts/governance/compile_catalog.py --check",
+            f"{python_exec} scripts/sync_hub_adr_matrix.py --check",
+        ]
+
     raise ValueError(
-        f"Unknown verification preset: '{preset}'. Supported presets: 'code', 'doc', 'skill', 'adr'."
+        f"Unknown verification preset: '{preset}'. Supported presets: 'code', 'doc', 'skill', 'adr', 'telemetry', 'ci'."
     )
 
 
