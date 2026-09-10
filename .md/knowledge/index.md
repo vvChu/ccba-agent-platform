@@ -88,6 +88,7 @@
 
 ## 📊 6. Báo Cáo Kiểm Định, Chất Lượng & Đánh Giá (Audits & Reports)
 
+- [../dogfood/BAO_CAO_THAM_TRA_PCCC_KIEN_TRUC.md](../dogfood/BAO_CAO_THAM_TRA_PCCC_KIEN_TRUC.md): **[MỚI]** Báo Cáo Thẩm Tra Kỹ Thuật PCCC & Kiến Trúc Dự Án Thực Tế (Mẫu PC13) — Đợt Thực Chiến Liên Hoàn Dogfooding Swarm Map-Reduce.
 - [shallow_modules_audit.md](shallow_modules_audit.md): Báo cáo rà soát và đánh giá các module nông (Shallow Modules) trong toàn bộ codebase.
 - [reports/ccba_docs_evaluation_report.md](reports/ccba_docs_evaluation_report.md): Báo cáo đánh giá chất lượng hệ thống tài liệu CCBA.
 - [reports/drawing_comprehension_report.md](reports/drawing_comprehension_report.md): Báo cáo năng lực hiểu bản vẽ kỹ thuật của AI Vision.
