@@ -25,6 +25,8 @@
   - Regex bắt trạng thái ADR phải bao quát tiền tố list marker `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ file non-ADR (`notes.md`, `template.md`).
 - **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]**:
   - Tier 0 import Tier 1 dùng `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton cấp module; Cache Embedding `.npy` bắt buộc kiểm tra SHA-256 qua `.sha256` sidecar.
+- **RULE-1.7 [ADR 0046 — Sanitized Fleet Telemetry Protocol]**:
+  - Khi tổng hợp telemetry từ Spokes về Hub, tuyệt đối chỉ trích xuất dữ liệu đo lường phi định danh (`tokens`, `cost`, `tool_counts`, `status`). Cấm tuyệt đối thu thập prompt text, câu hỏi người dùng, hoặc dữ liệu khách hàng từ Spoke.
 
 ---
 
@@ -40,6 +42,8 @@
   - Tệp trong `.agents/skills/<skill>/SKILL.md` trỏ về package monorepo dùng 3 cấp lùi: `../../../packages/<pkg>`.
   - Tệp trong `references/<ref>.md` trỏ về root monorepo dùng 4 cấp lùi: `../../../../`.
   - CẤM TUYỆT ĐỐI commit đường dẫn `file:///` hoặc URI `conversation://` vào kho Git.
+- **RULE-2.5 [Windows Subprocess UTF-8 Encoding Standard]**:
+  - Trên Windows, `subprocess.run(..., text=True)` mặc định mã hóa theo code page `cp1252`. BẮT BUỘC truyền `encoding="utf-8", errors="replace"` chống lỗi `UnicodeDecodeError` khi đọc stdout có tiếng Việt, emoji, hoặc SVG box-drawing.
 
 ---
 
