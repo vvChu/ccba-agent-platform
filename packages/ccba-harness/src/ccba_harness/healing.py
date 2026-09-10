@@ -330,7 +330,7 @@ class SelfHealingEngine:
                         HealingAction(
                             action_type="COMMAND_AUTORUN",
                             description="Synchronize Architecture Decision Records matrix",
-                            command="python scripts/sync_hub_adr_matrix.py --write",
+                            command="python scripts/sync_hub_adr_matrix.py",
                         )
                     )
 

@@ -6,7 +6,7 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 
 ---
 
-## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0057)
+## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0058)
 
 | Mã ADR | Tiêu đề | Trạng thái |
 | :--- | :--- | :---: |
@@ -61,3 +61,4 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 | [ADR 0055](0055-ccba-ai-multi-tier-failover-and-mock-provider.md) | CCBA AI Multi-Tier Failover Matrix, Antigravity CLI Bridge, Local Ollama & Offline Mock Provider | ✅ ACCEPTED |
 | [ADR 0056](0056-migrate-legacy-workflows-to-skills-and-standardize-ccba-namespace.md) | Migration of Legacy Workflows to Modern Skills and Direct CCBA Namespace Standardization | ✅ ACCEPTED |
 | [ADR 0057](0057-two-stage-granularity-decision-framework-and-gpi.md) | Two-Stage Granularity Decision Framework, Granularity Placement Index (GPI), and 3-Tier Skills Architecture | ✅ ACCEPTED |
+| [ADR 0058](0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md) | Live Collaboration Artifacts, Workspace Mirroring, and CCBA Charter 11-Seat Review Alignment | ✅ ACCEPTED |
