@@ -483,19 +483,7 @@ def detect_environment(root_dir: Path) -> tuple[str, Path, Path | None]:
     Returns:
         Tuple of (mode: "hub" | "spoke", hub_path: Path, spoke_path: Path | None)
     """
-    # 1. Check workspace_context.yaml
-    ws_context = root_dir / ".md" / "workspace_context.yaml"
-    if ws_context.exists():
-        try:
-            cfg = yaml.safe_load(ws_context.read_text(encoding="utf-8"))
-            if isinstance(cfg, dict) and "hub_path" in cfg:
-                hub_val = Path(cfg["hub_path"])
-                if hub_val.resolve() != root_dir.resolve() and hub_val.exists():
-                    return "spoke", hub_val.resolve(), root_dir
-        except Exception:
-            pass
-
-    # 2. Check git remote
+    # 1. Primary Invariant (AGENTS.md): Identify via git remote get-url origin
     try:
         res = subprocess.run(
             ["git", "remote", "get-url", "origin"],
@@ -508,6 +496,21 @@ def detect_environment(root_dir: Path) -> tuple[str, Path, Path | None]:
             return "hub", root_dir, None
     except Exception:
         pass
+
+    # 2. Check workspace_context.yaml
+    ws_context = root_dir / ".md" / "workspace_context.yaml"
+    if ws_context.exists():
+        try:
+            cfg = yaml.safe_load(ws_context.read_text(encoding="utf-8"))
+            if isinstance(cfg, dict):
+                if cfg.get("project", {}).get("name") == "ccba-agent-platform":
+                    return "hub", root_dir, None
+                if "hub_path" in cfg:
+                    hub_val = Path(cfg["hub_path"])
+                    if hub_val.resolve() != root_dir.resolve() and hub_val.exists():
+                        return "spoke", hub_val.resolve(), root_dir
+        except Exception:
+            pass
 
     # 3. Check for core hub markers
     if (root_dir / "packages" / "ccba-ai").exists() and (

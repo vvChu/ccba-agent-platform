@@ -280,6 +280,27 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
     3. **Chuẩn hóa GPI cho User Rituals:** Các kỹ năng có `disable-model-invocation: true` phải khai báo đúng $A = 1.0$ theo barem định lượng chuẩn.
     4. **Khóa hợp đồng bằng Unit Test:** Cài đặt các kiểm thử đặc thù trong `tests/governance/` để bảo đảm các rào chắn này không bị thoái hóa trong tương lai.
 
+---
+
+## 18. Release v2.0-beyond-horizon, Fleet-Wide Spoke Synchronization & Swarm Map-Reduce Dogfooding
+
+- **Core Pattern P18.1 — Self-Healing Engine (ADR-0058) & Discrete Diagnostic Commands:**
+  - **Vấn đề:** Khi tích hợp `SelfHealingEngine` (`ccba_harness.self_heal`) vào quy trình tự động sửa lỗi qua `verify-patch --self-heal`, nếu danh sách lệnh kiểm thử được ghép thành một chuỗi duy nhất bằng toán tử shell `&&` (ví dụ `python -m ruff check ... && python -m ruff format --check ...`), engine chỉ bóc tách được chẩn đoán của lệnh đầu tiên trong chuỗi, khiến các lỗi format hoặc linter tiếp theo không được regex parser nhận diện và vá tự động.
+  - **Giải pháp:** Cung cấp mảng các lệnh kiểm thử độc lập (ví dụ `["python -m ruff check --fix <target>", "python -m ruff format <target>"]`). Engine sẽ thực thi tuần tự, trích xuất mã lỗi cụ thể (ví dụ F541 f-string without placeholders, I001 import order) và thực thi vòng lặp vá lỗi tự trị (đạt Exit code 0 trong 414.4ms ở ngay vòng 1).
+
+- **Core Pattern P18.2 — Single-Writer Protocol (ADR-0053) & Search-Replace PatchBlocks Atomic Merge:**
+  - **Vấn đề:** Khi nhiều subagents/workers chạy song song cùng phát hiện các lỗi thẩm tra PCCC/Kiến trúc và cố gắng ghi trực tiếp vào một tệp kết quả tập trung (`FINDINGS_REGISTRY.md`), xung đột race condition, đè dữ liệu hoặc hỏng định dạng là điều tất yếu.
+  - **Giải pháp:** Áp dụng triệt để Single-Writer Protocol: các workers trinh sát hoàn toàn độc lập trong chế độ Read-Only và chỉ xuất ra cấu trúc Search-Replace PatchBlocks có đính kèm SHA-256 hash và ngữ cảnh dòng code. Lead Orchestrator sử dụng `execute_swarm_patches` để thực hiện hợp nhất nguyên tử (atomic merge) vào tệp trung tâm (đạt 3.6ms latency với 0 collision và 0 rollback).
+
+- **Core Pattern P18.3 — Pre-Execution Legal Guardrail Chống Legacy Invariant Bias (RULE-3.1):**
+  - **Vấn đề:** Các mô hình ngôn ngữ lớn (LLMs) có xu hướng bị ảnh hưởng bởi tập dữ liệu đào tạo trước 2026, dễ tự động sinh ra các căn cứ pháp lý cũ đã hết hiệu lực tại Việt Nam (như NĐ 06/2021, NĐ 15/2021, NĐ 35/2023, NĐ 175/2024).
+  - **Giải pháp:** Thiết lập bộ lọc tiền xử lý (pre-execution filter) và chốt chặn xác thực bắt buộc trước khi xuất báo cáo thẩm tra kỹ thuật (ví dụ Mẫu PC13). Toàn bộ pipeline bắt buộc kiểm tra danh mục văn bản hiện hành (Luật Xây dựng 2025 số 135/2025/QH15, NĐ 207/2026/NĐ-CP, NĐ 217/2026/NĐ-CP, NĐ 105/2025/NĐ-CP). Bất kỳ trích dẫn nào nhắc đến NĐ 06/2021 hay NĐ 175/2024 đều bị từ chối và cảnh báo vi phạm RULE-3.1 ngay lập tức.
+
+- **Core Pattern P18.4 — AI Gateway Spark Server Auth & Fast-Inference Model Gating:**
+  - **Vấn đề:** Khi chạy Swarm Map-Reduce với nhiều workers song song, việc gọi trực tiếp các mô hình cục bộ nặng có thể dẫn đến thời gian chờ warmup lâu (60-120s), gây nghẽn hàng đợi kiểm định.
+  - **Giải pháp:** Kết nối tới LiteLLM Gateway trên Server Spark (`100.83.192.30:8090`) với header xác thực `Authorization: Bearer sk-spark-secure-key-2026`. Định tuyến linh hoạt: sử dụng `gemini-3.7-flash` làm mô hình phản hồi nhanh (< 1s cho các bước map-reduce trinh sát tài liệu) và dùng `qwen-local-primary` sau khi đã hoàn tất warmup GPU.
+
+
 
 
 
