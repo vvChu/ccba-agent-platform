@@ -21,6 +21,7 @@ HUB_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Ensure packages/ccba-harness/src is in sys.path
 try:
+    from ccba_harness.dashboard import render_swarm_dashboard
     from ccba_harness.telemetry import (
         OtelSpanExporter,
         analyze_subagent_transcript,
@@ -29,6 +30,7 @@ try:
     )
 except ImportError:
     sys.path.insert(0, str(HUB_ROOT / "packages" / "ccba-harness" / "src"))
+    from ccba_harness.dashboard import render_swarm_dashboard
     from ccba_harness.telemetry import (
         OtelSpanExporter,
         analyze_subagent_transcript,
@@ -139,7 +141,49 @@ def main() -> int:
         help="File path to save the Markdown or JSON report",
     )
 
+    # Subcommand: dashboard
+    dash_parser = subparsers.add_parser(
+        "dashboard", help="Generate interactive HTML Swarm Telemetry Dashboard"
+    )
+    dash_parser.add_argument(
+        "target",
+        type=str,
+        help="Parent conversation ID, transcript path, or directory containing subagents",
+    )
+    dash_parser.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="File path to save the HTML dashboard (default: .md/reports/swarm_telemetry_dashboard.html)",
+    )
+    dash_parser.add_argument(
+        "--title",
+        type=str,
+        default=None,
+        help="Custom dashboard title",
+    )
+
     args = parser.parse_args()
+
+    if args.command == "dashboard":
+        try:
+            out_file, report = render_swarm_dashboard(
+                args.target,
+                output_path=args.out,
+                title=args.title,
+            )
+            print(f"[Success] Generated Swarm Telemetry Dashboard at: {out_file.resolve()}")
+            print(f"  Parent Session: {report.parent_conversation_id}")
+            print(f"  Subagents: {report.total_subagents}")
+            print(f"  Total Tokens: {report.total_swarm_tokens:,}")
+            print(f"  Estimated Cost: ${report.total_cost_usd:.4f} USD")
+            return 0
+        except Exception as err:
+            print(
+                f"[Error] Failed to render dashboard for '{args.target}': {err}",
+                file=sys.stderr,
+            )
+            return 1
 
     if args.command == "audit-swarm":
         try:

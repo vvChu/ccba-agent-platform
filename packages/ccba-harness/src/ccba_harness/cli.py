@@ -857,9 +857,42 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
     p_swarm.add_argument("--json", action="store_true", help="Output raw JSON")
     p_swarm.add_argument("--out", type=str, default=None, help="Save markdown/json report to file")
 
+    # Subcommand: dashboard
+    p_dash = sub.add_parser("dashboard", help="Generate interactive HTML Swarm Telemetry Dashboard")
+    p_dash.add_argument("target", help="Parent conversation ID, transcript path, or directory")
+    p_dash.add_argument(
+        "--out",
+        type=str,
+        default=None,
+        help="Output HTML file path (default: .md/reports/swarm_telemetry_dashboard.html)",
+    )
+    p_dash.add_argument("--title", type=str, default=None, help="Custom dashboard title")
+
     args = parser.parse_args(argv)
 
     import json
+
+    if args.telemetry_cmd == "dashboard":
+        from .dashboard import render_swarm_dashboard
+
+        try:
+            out_path, report = render_swarm_dashboard(
+                args.target,
+                output_path=args.out,
+                title=args.title,
+            )
+            print(f"[Success] Generated Swarm Telemetry Dashboard at: {out_path.resolve()}")
+            print(f"  Parent Session: {report.parent_conversation_id}")
+            print(f"  Subagents: {report.total_subagents}")
+            print(f"  Total Tokens: {report.total_swarm_tokens:,}")
+            print(f"  Estimated Cost: ${report.total_cost_usd:.4f} USD")
+            return 0
+        except Exception as err:
+            print(
+                f"[Error] Failed to render dashboard for '{args.target}': {err}",
+                file=sys.stderr,
+            )
+            return 1
 
     if args.telemetry_cmd == "audit-swarm":
         try:

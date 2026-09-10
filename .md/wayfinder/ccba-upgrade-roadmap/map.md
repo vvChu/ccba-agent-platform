@@ -134,10 +134,11 @@ flowchart TD
         F3["[F3: Task HITL] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine ✅"]
         F4["[F4: Task HITL] Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime ✅"]
         F5["[F5: Task AFK] Tự động hóa Giám sát Chi phí & Token Telemetry vào CI/CD Gates ✅"]
+        F6["[F6: Task HITL] Tích hợp Giao diện Dashboard Trực Quan Hóa Swarm Telemetry ✅"]
     end
 
     subgraph Frontier ["Biên Giới Mới Sẵn Sàng Nhận Việc (Unblocked Execution Frontier)"]
-        F6["[F6: Task HITL] Tích hợp Giao diện Dashboard Trực Quan Hóa Swarm Telemetry"]
+        F7["[F7: Task HITL] Mở Rộng Hệ Thống Báo Cáo & Phân Tích Đa Dự Án (Cross-Spoke Analytics)"]
     end
 
     T3 -.->|Đã Giải mã Sương mù| F1
@@ -146,6 +147,7 @@ flowchart TD
     F3 -.->|Đã Giải mã Sương mù| F4
     F4 -.->|Đã Giải mã Sương mù| F5
     F5 -.->|Đã Giải mã Sương mù| F6
+    F6 -.->|Đã Giải mã Sương mù| F7
 ```
 
 ---
@@ -275,13 +277,26 @@ flowchart TD
 
 ---
 
+### Ticket F6: [Task/HITL] `[Tích hợp Giao diện Dashboard Trực Quan Hóa Swarm Telemetry]` ✅
+- **Mục tiêu**: Xây dựng module sinh giao diện Swarm Telemetry Dashboard dưới dạng standalone HTML tự thân (Zero-Server, Zero External CDN) tuân thủ CSP của Antigravity IDE (`generative_ui`), trực quan hóa Pure SVG Token Stacked Bars, SVG Gantt-style Timeline, Tool Invocations Latency Matrix, và Turn-by-Turn Trajectory Inspector, tích hợp đồng bộ vào CLI `ccba-harness telemetry dashboard` và `scripts/governance/subagent_telemetry.py dashboard`.
+- **Đầu ra thực tế**:
+  - Module [`packages/ccba-harness/src/ccba_harness/dashboard.py`](../../../../packages/ccba-harness/src/ccba_harness/dashboard.py) (`generate_swarm_dashboard_html`, `render_swarm_dashboard`, Pure SVG Charts).
+  - Tích hợp CLI subcommand `dashboard` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../../packages/ccba-harness/src/ccba_harness/cli.py) và [`scripts/governance/subagent_telemetry.py`](../../../../scripts/governance/subagent_telemetry.py).
+  - Xuất bản tệp giao diện thực tế cho phiên Swarm hiện tại (9 subagents, 14.9M tokens):
+    - Artifact: [`swarm_telemetry_dashboard.html`](file:///C:/Users/chuvu/.gemini/antigravity/brain/ea5a900e-41fd-4ae6-968a-e2e271e67e52/swarm_telemetry_dashboard.html)
+    - Mirror lưu trữ vĩnh viễn: [`.md/reports/swarm_telemetry_dashboard.html`](../../reports/swarm_telemetry_dashboard.html).
+  - Bộ kiểm thử độc lập [`tests/governance/test_telemetry_dashboard.py`](../../../../tests/governance/test_telemetry_dashboard.py) đạt 8/8 PASS.
+- **Phân loại**: `Task [HITL]` | **Ưu tiên**: P3.1 | **Trạng thái**: **Closed (Done) ✅**
+
+---
+
 ## 5. Sương mù Chiến trận / Chưa xác định rõ (Not yet specified - Fog of War)
 
-Khu vực lưu trữ các bài toán và hướng đi lớn đã được thu hẹp sương mù:
+Khu vực lưu trữ các bài toán và hướng đi lớn tiếp theo:
 
-1. **[F6] Tích Hợp Giao Diện Dashboard Trực Quan Hóa Swarm Telemetry**:
-   - *Phụ thuộc*: Nhu cầu hiển thị biểu đồ realtime token consumption & trace spans cho người dùng qua Web UI / Generative UI artifact.
-   - *Vấn đề mờ*: Làm sao stream live telemetry từ transcript log vào artifact tương tác mà không cần dev server nền?
+1. **[F7] Mở Rộng Hệ Thống Báo Cáo & Phân Tích Đa Dự Án (Cross-Spoke Analytics)**:
+   - *Phụ thuộc*: Nhu cầu tổng hợp chi phí token và telemetry qua nhiều Spoke Projects khác nhau về trung tâm Hub.
+   - *Vấn đề mờ*: Định dạng schema tổng hợp liên dự án và giao thức đồng bộ qua git submodule/spoke sync mà không vi phạm tính cô lập dữ liệu.
 
 ---
 
