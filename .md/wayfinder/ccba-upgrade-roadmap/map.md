@@ -64,6 +64,11 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
   - Phân loại: **17 files** đã là Thin Adapters; **35 files** chứa Core Logic cần di trú.
   - Thống nhất đề xuất thành lập package mới `packages/ccba-qc-core` cho mảng Thẩm tra Đa bộ môn (`ccba-ai-qc` & `ccba-ai-qc-pccc-audit`), đưa `eval_runner.py` về `packages/ccba-harness`, hợp nhất OOXML vào `packages/ccba-ooxml`, và mở rộng `packages/ccba-pdf-prep`.
   - Chi tiết tại Manifest: [scripts_migration_manifest.md](../../knowledge/scripts_migration_manifest.md).
+- **[Đã chốt - 2026-09-10] Triển khai Memory Compaction Engine & Nén session_learnings.md (Ticket 1)**:
+  - Xây dựng thành công CLI `scripts/governance/compact_session_learnings.py` hỗ trợ `--stats`, `--check`, `--compact`.
+  - Nén tệp `session_learnings.md` từ **38,033 bytes (37.14 KB) về 8,761 bytes (8.56 KB)**, đạt mức giảm **77.0%** (tiết kiệm ~7,300 tokens cho mọi phiên Agent khởi tạo).
+  - Bảo toàn 100% bản gốc lịch sử tại [`.md/knowledge/archive/session_learnings_history.md`](../../knowledge/archive/session_learnings_history.md).
+  - Bộ kiểm thử `tests/governance/test_compact_session_learnings.py` đạt 7/7 PASS (100% test suite monorepo đạt 81 passed).
 
 ---
 
@@ -74,11 +79,11 @@ Dưới đây là các ticket mở, độc lập, không bị chặn bởi bất
 ```mermaid
 flowchart TD
     subgraph Done ["Đã Hoàn thành (Closed) ✅"]
+        T1["[T1: Task AFK] Memory Compaction Engine cho session_learnings.md ✅"]
         T3["[T3: Research AFK] Ma trận Ánh xạ Di trú 52 Scripts ✅"]
     end
 
     subgraph Frontier ["Các Ticket ở Biên giới Sẵn sàng Nhận việc (Frontier Unblocked)"]
-        T1["[T1: Task AFK] Memory Compaction Engine cho session_learnings.md"]
         T2["[T2: Task AFK] Exit-Code Deterministic Verification Gate trong ccba-harness"]
         T4["[T4: Prototype HITL] Mẫu Giao thức Structured Diff Patch cho ccba-teamwork"]
         T5["[T5: Grilling HITL] Thiết kế Tích hợp Live State Artifacts & 11-Seat Charter"]
@@ -98,13 +103,14 @@ flowchart TD
 
 ---
 
-### Ticket 1: [Task/AFK] `[Xây dựng Cơ chế Nén Tri thức Tự động (Memory Compaction Engine) cho session_learnings.md]`
+### Ticket 1: [Task/AFK] `[Xây dựng Cơ chế Nén Tri thức Tự động (Memory Compaction Engine) cho session_learnings.md]` ✅
 - **Mục tiêu**: Xây dựng tiện ích CLI `scripts/governance/compact_session_learnings.py` (kèm unit test tại `tests/governance/test_compact_session_learnings.py`) có khả năng phân loại các quy tắc trong `session_learnings.md`, chắt lọc thành bảng tóm tắt $\le 10\text{ KB}$, và tự động lưu các ghi chú lịch sử chi tiết vào `.md/knowledge/archive/session_learnings_archive_<timestamp>.md`.
-- **Đầu ra kỳ vọng**:
-  - Script `scripts/governance/compact_session_learnings.py`.
-  - Bộ kiểm thử `tests/governance/test_compact_session_learnings.py` đạt 100% PASS.
-  - File `.md/knowledge/session_learnings.md` được nén về $< 10\text{ KB}$ (tiết kiệm ngay ~7,000 tokens cho mọi phiên agent tiếp theo).
-- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P0.1 | **Trạng thái**: **Ready to Claim**
+- **Đầu ra thực tế**:
+  - Script [`scripts/governance/compact_session_learnings.py`](../../../../scripts/governance/compact_session_learnings.py) đạt chuẩn strict mypy và ruff.
+  - Bộ kiểm thử [`tests/governance/test_compact_session_learnings.py`](../../../../tests/governance/test_compact_session_learnings.py) đạt 100% PASS.
+  - File [`.md/knowledge/session_learnings.md`](../../knowledge/session_learnings.md) giảm từ 38 KB về **8.56 KB** (tiết kiệm ~7,300 tokens mỗi phiên).
+  - Bản lưu trữ toàn văn 100% tại [`.md/knowledge/archive/session_learnings_history.md`](../../knowledge/archive/session_learnings_history.md).
+- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P0.1 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
 
