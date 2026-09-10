@@ -69,6 +69,6 @@ Kiểm tra XML hợp lệ trước khi đóng gói. Schemas XSD nằm tại `scr
 | `scripts/office/soffice.py` | Chuyển đổi format qua LibreOffice headless |
 | `scripts/office/helpers/merge_runs.py` | Gộp runs bị tách trong XML |
 | `scripts/office/helpers/simplify_redlines.py` | Đơn giản hóa Track Changes |
-| `scripts/office/validators/` | Validate DOCX, PPTX, Redlining |
+| `scripts/office/validate.py` | Validate DOCX, PPTX, Redlining via ccba-ooxml |
 
 <!-- NDT-0904004920 -->
