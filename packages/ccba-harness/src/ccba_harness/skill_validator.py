@@ -282,9 +282,7 @@ class SkillValidator:
         commands.update(GITLAB_QUICK_ACTIONS)
         return commands
 
-    def validate_markdown_links(
-        self, file_path: Path, content: str | None = None
-    ) -> list[str]:
+    def validate_markdown_links(self, file_path: Path, content: str | None = None) -> list[str]:
         """Validate that relative markdown links in a file resolve to valid on-disk files."""
         issues: list[str] = []
         if content is None:
@@ -320,19 +318,16 @@ class SkillValidator:
             for target in LINK_EXTRACT_RE.findall(line_no_code):
                 target = target.strip()
                 # Ignore external URL schemes, anchors, or variable/wildcard placeholders
-                if (
-                    target.startswith(
-                        (
-                            "http://",
-                            "https://",
-                            "mailto:",
-                            "conversation:",
-                            "file://",
-                            "#",
-                        )
+                if target.startswith(
+                    (
+                        "http://",
+                        "https://",
+                        "mailto:",
+                        "conversation:",
+                        "file://",
+                        "#",
                     )
-                    or any(char in target for char in ("<", ">", "{", "}", "*", "...", "["))
-                ):
+                ) or any(char in target for char in ("<", ">", "{", "}", "*", "...", "[")):
                     continue
 
                 # Strip anchor fragment
@@ -492,9 +487,7 @@ class SkillValidator:
                     )
 
             issues.extend(self.validate_markdown_links(md_file))
-            issues.extend(
-                self.audit_slash_commands(md_file, registered_commands=registered_cmds)
-            )
+            issues.extend(self.audit_slash_commands(md_file, registered_commands=registered_cmds))
 
         return issues
 

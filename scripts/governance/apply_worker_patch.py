@@ -60,7 +60,12 @@ def parse_patch_content(content: str, source_name: str = "") -> list[PatchBlock]
             items = json.loads(trimmed)
             if isinstance(items, list):
                 for item in items:
-                    if isinstance(item, dict) and "file" in item and "search" in item and "replace" in item:
+                    if (
+                        isinstance(item, dict)
+                        and "file" in item
+                        and "search" in item
+                        and "replace" in item
+                    ):
                         blocks.append(
                             PatchBlock(
                                 file_path=str(item["file"]).strip(),
@@ -141,7 +146,10 @@ def detect_collisions(patches: list[PatchBlock]) -> list[str]:
                     pb = file_patches[idx_b]
                     if pa.source_patch != pb.source_patch:
                         # Direct identical or substring search overlap
-                        if pa.search_content in pb.search_content or pb.search_content in pa.search_content:
+                        if (
+                            pa.search_content in pb.search_content
+                            or pb.search_content in pa.search_content
+                        ):
                             conflicts.append(
                                 f"Collision in '{file_path}': patch '{pa.source_patch}' overlaps with '{pb.source_patch}'"
                             )
@@ -158,7 +166,9 @@ def dry_run(patches: list[PatchBlock], base_dir: Path) -> tuple[bool, list[str]]
     for idx, p in enumerate(patches, 1):
         target = (base_dir / p.file_path).resolve()
         if not target.exists():
-            errors.append(f"Patch #{idx} ({p.source_patch}): Target file does not exist: {p.file_path}")
+            errors.append(
+                f"Patch #{idx} ({p.source_patch}): Target file does not exist: {p.file_path}"
+            )
             continue
 
         if p.file_path not in virtual_files:
@@ -176,7 +186,9 @@ def dry_run(patches: list[PatchBlock], base_dir: Path) -> tuple[bool, list[str]]
                 f"Patch #{idx} ({p.source_patch}): Ambiguous SEARCH block (found {count} matches) in '{p.file_path}'"
             )
         else:
-            virtual_files[p.file_path] = current_content.replace(p.search_content, p.replace_content, 1)
+            virtual_files[p.file_path] = current_content.replace(
+                p.search_content, p.replace_content, 1
+            )
 
     return (len(errors) == 0, errors)
 
@@ -443,12 +455,22 @@ def main() -> int:
         description="Single-Writer Atomic Patch Application Engine for CCBA Multi-Agent Workflows."
     )
     parser.add_argument("--patch", type=Path, default=None, help="Path to a single patch file")
-    parser.add_argument("--patch-dir", type=Path, default=None, help="Directory containing worker patches")
+    parser.add_argument(
+        "--patch-dir", type=Path, default=None, help="Directory containing worker patches"
+    )
     parser.add_argument("--base-dir", type=Path, default=HUB_ROOT, help="Monorepo root directory")
-    parser.add_argument("--check-conflicts", action="store_true", help="Check for collisions across patches")
-    parser.add_argument("--dry-run", action="store_true", help="Simulate patch application without modifying disk")
+    parser.add_argument(
+        "--check-conflicts", action="store_true", help="Check for collisions across patches"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Simulate patch application without modifying disk"
+    )
     parser.add_argument("--apply", action="store_true", help="Apply patches atomically to codebase")
-    parser.add_argument("--verify", action="store_true", help="Run verification gate after applying and auto-rollback on failure")
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="Run verification gate after applying and auto-rollback on failure",
+    )
     parser.add_argument(
         "-c",
         "--verify-cmd",
@@ -465,9 +487,15 @@ def main() -> int:
         help="Verification preset to use",
     )
     parser.add_argument("--target", type=Path, default=None, help="Target file for presets")
-    parser.add_argument("--timeout", type=float, default=60.0, help="Timeout in seconds for verification commands")
-    parser.add_argument("--benchmark", action="store_true", help="Print latency benchmark profiling")
-    parser.add_argument("--json", action="store_true", help="Output SwarmExecutionReport as JSON to stdout")
+    parser.add_argument(
+        "--timeout", type=float, default=60.0, help="Timeout in seconds for verification commands"
+    )
+    parser.add_argument(
+        "--benchmark", action="store_true", help="Print latency benchmark profiling"
+    )
+    parser.add_argument(
+        "--json", action="store_true", help="Output SwarmExecutionReport as JSON to stdout"
+    )
 
     args = parser.parse_args()
 
@@ -481,7 +509,9 @@ def main() -> int:
         if not args.patch.exists():
             print(f"ERROR: Patch file does not exist: {args.patch}", file=sys.stderr)
             return 1
-        patches.extend(parse_patch_content(args.patch.read_text(encoding="utf-8"), source_name=args.patch.name))
+        patches.extend(
+            parse_patch_content(args.patch.read_text(encoding="utf-8"), source_name=args.patch.name)
+        )
 
     if args.patch_dir:
         dir_patches = load_patches_from_directory(args.patch_dir)

@@ -73,9 +73,15 @@ def mock_subagent_transcript(tmp_path: Path) -> Path:
     return log_file
 
 
-def test_cli_inspect_markdown(mock_subagent_transcript: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cli_inspect_markdown(
+    mock_subagent_transcript: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Verify `inspect` prints markdown report with metrics."""
-    monkeypatch.setattr(sys, "argv", ["subagent_telemetry.py", "inspect", str(mock_subagent_transcript)])
+    monkeypatch.setattr(
+        sys, "argv", ["subagent_telemetry.py", "inspect", str(mock_subagent_transcript)]
+    )
     ret = cli_main()
     assert ret == 0
     captured = capsys.readouterr()
@@ -84,9 +90,15 @@ def test_cli_inspect_markdown(mock_subagent_transcript: Path, capsys: pytest.Cap
     assert "Tokens" in captured.out
 
 
-def test_cli_inspect_json(mock_subagent_transcript: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cli_inspect_json(
+    mock_subagent_transcript: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Verify `inspect --json` outputs structured JSON dictionary."""
-    monkeypatch.setattr(sys, "argv", ["subagent_telemetry.py", "inspect", str(mock_subagent_transcript), "--json"])
+    monkeypatch.setattr(
+        sys, "argv", ["subagent_telemetry.py", "inspect", str(mock_subagent_transcript), "--json"]
+    )
     ret = cli_main()
     assert ret == 0
     captured = capsys.readouterr()
@@ -108,7 +120,15 @@ def test_cli_budget_check_pass_and_fail(
     monkeypatch.setattr(
         sys,
         "argv",
-        ["subagent_telemetry.py", "budget-check", str(mock_subagent_transcript), "--max-tokens", "100000", "--max-duration", "60.0"],
+        [
+            "subagent_telemetry.py",
+            "budget-check",
+            str(mock_subagent_transcript),
+            "--max-tokens",
+            "100000",
+            "--max-duration",
+            "60.0",
+        ],
     )
     assert cli_main() == 0
     out_pass = capsys.readouterr().out
@@ -118,7 +138,13 @@ def test_cli_budget_check_pass_and_fail(
     monkeypatch.setattr(
         sys,
         "argv",
-        ["subagent_telemetry.py", "budget-check", str(mock_subagent_transcript), "--max-tokens", "50"],
+        [
+            "subagent_telemetry.py",
+            "budget-check",
+            str(mock_subagent_transcript),
+            "--max-tokens",
+            "50",
+        ],
     )
     assert cli_main() == 1
     err_token = capsys.readouterr().err
@@ -128,20 +154,34 @@ def test_cli_budget_check_pass_and_fail(
     monkeypatch.setattr(
         sys,
         "argv",
-        ["subagent_telemetry.py", "budget-check", str(mock_subagent_transcript), "--max-duration", "2.0"],
+        [
+            "subagent_telemetry.py",
+            "budget-check",
+            str(mock_subagent_transcript),
+            "--max-duration",
+            "2.0",
+        ],
     )
     assert cli_main() == 1
     err_dur = capsys.readouterr().err
     assert "[FAIL] Budget violation: Duration budget exceeded" in err_dur
 
 
-def test_cli_export_otel(mock_subagent_transcript: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cli_export_otel(
+    mock_subagent_transcript: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Verify `export-otel --out <file>` produces valid OpenTelemetry OTLP JSON."""
     otel_file = tmp_path / "otel_trace.json"
     monkeypatch.setattr(
         sys,
         "argv",
-        ["subagent_telemetry.py", "export-otel", str(mock_subagent_transcript), "--out", str(otel_file)],
+        [
+            "subagent_telemetry.py",
+            "export-otel",
+            str(mock_subagent_transcript),
+            "--out",
+            str(otel_file),
+        ],
     )
     assert cli_main() == 0
     assert otel_file.exists()

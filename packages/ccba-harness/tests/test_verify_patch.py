@@ -265,7 +265,10 @@ def test_verify_document_artifact_size_too_small(tmp_path: Path) -> None:
 def test_verify_document_artifact_missing_heading(tmp_path: Path) -> None:
     """Verify that missing a required heading fails validation."""
     doc = tmp_path / "report.md"
-    doc.write_text("# Overview\nContent goes here with sufficient bytes to exceed min bytes threshold easily.", encoding="utf-8")
+    doc.write_text(
+        "# Overview\nContent goes here with sufficient bytes to exceed min bytes threshold easily.",
+        encoding="utf-8",
+    )
     res = verify_document_artifact(
         target_path=doc,
         min_bytes=20,
@@ -283,7 +286,9 @@ def test_resolve_preset_commands() -> None:
     assert any("mypy" in c for c in code_cmds)
     assert any("pytest" in c for c in code_cmds)
 
-    doc_cmds = resolve_preset_commands("doc", "report.md", min_bytes=200, required_headings=["Section A"])
+    doc_cmds = resolve_preset_commands(
+        "doc", "report.md", min_bytes=200, required_headings=["Section A"]
+    )
     assert len(doc_cmds) == 1
     assert "verify-doc" in doc_cmds[0]
     assert "--min-bytes 200" in doc_cmds[0]
@@ -312,7 +317,9 @@ def test_resolve_preset_commands() -> None:
 def test_cli_verify_doc_subcommand(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """Verify standalone `verify-doc` subcommand via CLI and main()."""
     doc = tmp_path / "opinion.md"
-    doc.write_text("# Phiếu Ý Kiến Pháp Lý\nNội dung đầy đủ vượt quá ngưỡng tối thiểu.", encoding="utf-8")
+    doc.write_text(
+        "# Phiếu Ý Kiến Pháp Lý\nNội dung đầy đủ vượt quá ngưỡng tối thiểu.", encoding="utf-8"
+    )
 
     code = run_verify_doc_cli(["--target", str(doc), "--min-bytes", "30"])
     assert code == 0
@@ -324,13 +331,20 @@ def test_cli_verify_doc_subcommand(tmp_path: Path, capsys: pytest.CaptureFixture
 def test_cli_verify_patch_with_doc_preset(tmp_path: Path) -> None:
     """Verify `ccba-harness verify-patch --preset doc` integration."""
     doc = tmp_path / "valid.md"
-    doc.write_text("# Title\n## Scope\nDetailed content for testing verify-patch doc preset.", encoding="utf-8")
+    doc.write_text(
+        "# Title\n## Scope\nDetailed content for testing verify-patch doc preset.", encoding="utf-8"
+    )
 
-    code = run_verify_patch_cli([
-        "--preset", "doc",
-        "--target", str(doc),
-        "--min-bytes", "20",
-        "--required-headings", "Scope",
-    ])
+    code = run_verify_patch_cli(
+        [
+            "--preset",
+            "doc",
+            "--target",
+            str(doc),
+            "--min-bytes",
+            "20",
+            "--required-headings",
+            "Scope",
+        ]
+    )
     assert code == 0
-

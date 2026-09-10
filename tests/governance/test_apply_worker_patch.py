@@ -236,10 +236,14 @@ def test_load_patches_from_directory(tmp_path: Path) -> None:
     patch_dir.mkdir()
 
     p1_file = patch_dir / "patch1.diff"
-    p1_file.write_text("FILE: a.py\n<<<<<<< SEARCH\nold_a\n=======\nnew_a\n>>>>>>> REPLACE\n", encoding="utf-8")
+    p1_file.write_text(
+        "FILE: a.py\n<<<<<<< SEARCH\nold_a\n=======\nnew_a\n>>>>>>> REPLACE\n", encoding="utf-8"
+    )
 
     p2_file = patch_dir / "patch2.json"
-    p2_file.write_text(json.dumps([{"file": "b.py", "search": "old_b", "replace": "new_b"}]), encoding="utf-8")
+    p2_file.write_text(
+        json.dumps([{"file": "b.py", "search": "old_b", "replace": "new_b"}]), encoding="utf-8"
+    )
 
     loaded = load_patches_from_directory(patch_dir)
     assert len(loaded) == 2
@@ -406,4 +410,3 @@ def test_cli_custom_verify_commands_and_json(
     assert data["success"] is True
     assert data["patches_count"] == 1
     assert data["semantic_conflict"] is False
-

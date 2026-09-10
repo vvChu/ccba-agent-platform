@@ -79,7 +79,9 @@ def mock_swarm_workspace(tmp_path: Path) -> Path:
     return workspace
 
 
-def test_swarm_telemetry_script_cli(mock_swarm_workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_swarm_telemetry_script_cli(
+    mock_swarm_workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Verify `subagent_telemetry.py audit-swarm` CLI execution."""
     # 1. Test audit-swarm --json pass
     monkeypatch.setattr(

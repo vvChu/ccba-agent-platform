@@ -21,7 +21,9 @@ logger = logging.getLogger(__name__)
 class QCBatchOrchestrator:
     """Batch Orchestrator điều phối thẩm tra toàn bộ ma trận phối hợp (Coordination Matrix)."""
 
-    def __init__(self, project_dir: str | Path, matrix_csv: str | Path, out_dir: str | Path) -> None:
+    def __init__(
+        self, project_dir: str | Path, matrix_csv: str | Path, out_dir: str | Path
+    ) -> None:
         self.project_dir = Path(project_dir)
         self.matrix_csv = Path(matrix_csv)
         self.out_dir = Path(out_dir)
@@ -81,9 +83,7 @@ class QCBatchOrchestrator:
             logger.error("Error rendering %s page %d: %s", pdf_path, page_num, e)
             return self.blank_img
 
-    async def prepare_level(
-        self, row: dict[str, Any], hstk_dir: Path
-    ) -> tuple[str, list[Path]]:
+    async def prepare_level(self, row: dict[str, Any], hstk_dir: Path) -> tuple[str, list[Path]]:
         """Gather images for one level from standard discipline folders."""
         level = str(row.get("NormalizedLevel", "Unknown"))
         logger.info("[%s] Gathering discipline images...", level)

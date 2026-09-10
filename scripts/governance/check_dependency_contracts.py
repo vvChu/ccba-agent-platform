@@ -33,7 +33,13 @@ PACKAGE_MAP: dict[str, str] = {
 
 MONOREPO_ROOT_MODULES = set(PACKAGE_MAP.values())
 LEAF_FOUNDATION_PACKAGES = {"ccba_pdf_prep", "ccba_ooxml"}
-HIGHER_DOMAIN_PACKAGES = {"ccba_legal", "ccba_notebooklm", "ccba_ai", "ccba_harness", "ccba_qc_core"}
+HIGHER_DOMAIN_PACKAGES = {
+    "ccba_legal",
+    "ccba_notebooklm",
+    "ccba_ai",
+    "ccba_harness",
+    "ccba_qc_core",
+}
 
 
 @dataclass

@@ -783,7 +783,9 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
         rf_path = Path(args.report_file)
         rf_path.parent.mkdir(parents=True, exist_ok=True)
         if rf_path.suffix.lower() == ".json":
-            rf_path.write_text(json.dumps(report.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
+            rf_path.write_text(
+                json.dumps(report.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8"
+            )
         else:
             rf_path.write_text(report.to_markdown(), encoding="utf-8")
 
@@ -841,10 +843,16 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
     p_otel.add_argument("--out", type=str, default=None, help="Output file path")
 
     # Subcommand: audit-swarm
-    p_swarm = sub.add_parser("audit-swarm", help="Audit token consumption across a multi-agent swarm session")
+    p_swarm = sub.add_parser(
+        "audit-swarm", help="Audit token consumption across a multi-agent swarm session"
+    )
     p_swarm.add_argument("target", help="Parent conversation ID, transcript path, or directory")
-    p_swarm.add_argument("--max-swarm-tokens", type=int, default=None, help="Max total tokens for whole swarm")
-    p_swarm.add_argument("--max-subagent-tokens", type=int, default=None, help="Max tokens per subagent")
+    p_swarm.add_argument(
+        "--max-swarm-tokens", type=int, default=None, help="Max total tokens for whole swarm"
+    )
+    p_swarm.add_argument(
+        "--max-subagent-tokens", type=int, default=None, help="Max tokens per subagent"
+    )
     p_swarm.add_argument("--max-cost", type=float, default=None, help="Max total cost in USD")
     p_swarm.add_argument("--json", action="store_true", help="Output raw JSON")
     p_swarm.add_argument("--out", type=str, default=None, help="Save markdown/json report to file")
@@ -904,11 +912,16 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
         )
         if passed:
             print(f"[PASS] {msg}")
-            print(f"  Consumed: {metrics.total_tokens:,} tokens in {metrics.total_duration_sec:.1f}s")
+            print(
+                f"  Consumed: {metrics.total_tokens:,} tokens in {metrics.total_duration_sec:.1f}s"
+            )
             return 0
         else:
             print(f"[FAIL] Budget violation: {msg}", file=sys.stderr)
-            print(f"  Actual: {metrics.total_tokens:,} tokens in {metrics.total_duration_sec:.1f}s", file=sys.stderr)
+            print(
+                f"  Actual: {metrics.total_tokens:,} tokens in {metrics.total_duration_sec:.1f}s",
+                file=sys.stderr,
+            )
             return 1
 
     elif args.telemetry_cmd == "export-otel":

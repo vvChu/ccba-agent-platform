@@ -205,8 +205,13 @@ def test_scenario_3_semantic_conflict_auto_rollback(tmp_path: Path) -> None:
     assert any("TypeError" in err or "exit" in err for err in report.verification_errors)
 
     # Verify 100% restoration to clean states on disk
-    assert callee.read_text(encoding="utf-8") == "def multiply(a: int, b: int) -> int:\n    return a * b\n"
-    assert caller.read_text(encoding="utf-8") == "from calc import multiply\nprint(multiply(2, 3))\n"
+    assert (
+        callee.read_text(encoding="utf-8")
+        == "def multiply(a: int, b: int) -> int:\n    return a * b\n"
+    )
+    assert (
+        caller.read_text(encoding="utf-8") == "from calc import multiply\nprint(multiply(2, 3))\n"
+    )
 
 
 def test_scenario_4_stale_drift_patch_rejection(tmp_path: Path) -> None:
