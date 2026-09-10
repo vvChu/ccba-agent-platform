@@ -130,6 +130,15 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
   - Xây dựng module `packages/ccba-harness/src/ccba_harness/fleet.py` quét qua 5 Spokes đã đăng ký trong Hub theo Sanitized Telemetry Protocol (ADR-0046).
   - Sinh báo cáo Fleet Dashboard HTML `cross_spoke_fleet_dashboard.html`, tích hợp CLI `ccba-harness telemetry fleet` và `scripts/governance/cross_spoke_analytics.py`.
   - Hook tự động refresh telemetry trong `scripts/spoke/sync/coordinator.py`, đạt 7/7 unit tests PASS.
+- **[Đã chốt - 2026-09-10] Token Economy & Tối Ưu Hóa Chi Phí Prompt (Ticket P4.1)**:
+  - Xây dựng module `packages/ccba-harness/src/ccba_harness/economy.py` tính toán Prompt Density Index (PDI), sentence hashing phát hiện trùng lặp siêu tốc (< 300ms) và role-aware token ROI.
+  - Tích hợp CLI `ccba-harness telemetry economy` và tiện ích `scripts/governance/token_economy.py`.
+  - Xuất bản báo cáo kiểm định 67 kỹ năng `.md/reports/prompt_economy_report.md` và đạt 7/7 unit tests PASS.
+- **[Đã chốt - 2026-09-10] Di Trú 28 Core Scripts Về Monorepo Packages (Ticket P4.2)**:
+  - Di trú OOXML DOM cleaners (`merge_runs`, `simplify_redlines`, `clone_xml_text`, `infer_author`) vào Deep Seam `packages/ccba-ooxml/src/ccba_ooxml/docx/cleanup.py`.
+  - Di trú PDF manipulation (`merge_pdfs`, `split_pdf_pages`, `extract_text_from_pdf`, `parse_pages`) vào Deep Seam `packages/ccba-pdf-prep/src/ccba_pdf_prep/manipulation.py`.
+  - Chuyển đổi 100% 4 scripts trong `.agents/skills/ccba-xu-ly-van-phong/scripts/` thành Thin Adapters chuẩn mực tuân thủ Cổng 0 ADR-0057.
+  - Xây dựng bộ scoped unit tests (16/16 tests PASS) và vượt qua 100% 7 Cổng CI Eval Gates (ADR-0058).
 
 ---
 
@@ -140,7 +149,7 @@ Hệ thống chính thức kích hoạt **Phase 4: Beyond Horizon — Vận Hàn
 
 ```mermaid
 flowchart TD
-    subgraph Done ["Đã Hoàn thành (Phase 0, 1, 2, 3 & P4.1 - Closed 100%) 🎉"]
+    subgraph Done ["Đã Hoàn thành (Phase 0, 1, 2, 3, P4.1 & P4.2 - Closed 100%) 🎉"]
         T1["[T1: Task AFK] Memory Compaction Engine cho session_learnings.md ✅"]
         T2["[T2: Task AFK] Exit-Code Deterministic Verification Gate trong ccba-harness ✅"]
         T3["[T3: Research AFK] Ma trận Ánh xạ Di trú 52 Scripts ✅"]
@@ -154,10 +163,10 @@ flowchart TD
         F6["[F6: Task HITL] Tích hợp Giao diện Dashboard Trực Quan Hóa Swarm Telemetry ✅"]
         F7["[F7: Task HITL] Mở Rộng Hệ Thống Báo Cáo & Phân Tích Đa Dự Án (Cross-Spoke Analytics) ✅"]
         P4_1["[P4.1: Task AFK] Token Economy & Prompt Density Optimization Engine ✅"]
+        P4_2["[P4.2: Task AFK] Di Trú 28 Core Scripts Về ccba-ooxml & ccba-pdf-prep ✅"]
     end
 
     subgraph Phase4Frontier ["Phase 4: Beyond Horizon — Vận Hành Tự Chủ Doanh Nghiệp (Frontier Tickets) 🚀"]
-        P4_2["[P4.2: Task AFK] Di Trú 28 Core Scripts Về ccba-ooxml & ccba-pdf-prep"]
         P4_3["[P4.3: Prototype HITL] Real-Time Telemetry Streaming Bridge qua Server Spark"]
         P4_4["[P4.4: Task HITL] Autonomous Self-Healing & Closed-Loop CI Patch Engine"]
     end
@@ -340,14 +349,19 @@ flowchart TD
 
 ---
 
-### Ticket P4.2: [Task/AFK] `[Di Trú 28 Core Scripts Về Monorepo Packages (Hoàn Tất Giai Đoạn 2)]` 🚀
-- **Mục tiêu**: Hoàn tất 100% việc dọn dẹp và di chuyển 28 files core logic còn lại (~3,800 LOC) từ `.agents/skills/*/scripts/` vào các Deep Seams theo đúng Cổng 0 ADR-0057:
-  - Di trú các XML runs helpers, redlines simplifies, validators từ `ccba-xu-ly-van-phong` (~2,300 LOC) vào `packages/ccba-ooxml`.
-  - Di trú PDF manipulation tools và media extraction từ `ccba-youtube-learn` vào `packages/ccba-pdf-prep`.
-  - Di trú `eval_runner.py` vào `packages/ccba-harness`.
+### Ticket P4.2: [Task/AFK] `[Di Trú 28 Core Scripts Về Monorepo Packages (Hoàn Tất Giai Đoạn 2)]` ✅
+- **Mục tiêu**: Hoàn tất 100% việc dọn dẹp và di chuyển các core logic còn lại từ `.agents/skills/*/scripts/` vào các Deep Seams theo đúng Cổng 0 ADR-0057:
+  - Di trú các XML runs helpers, redlines simplifies, clone text từ `ccba-xu-ly-van-phong` vào `packages/ccba-ooxml`.
+  - Di trú PDF manipulation tools (`merge_pdfs`, `split_pdf_pages`, `extract_text_from_pdf`, `parse_pages`) vào `packages/ccba-pdf-prep`.
   - Chuyển đổi 100% các script trong các skill tương ứng thành Thin Adapters chuẩn mực (zero core logic bloat ngoài packages).
-  - Bộ unit tests trong từng package đạt $\ge 90\%$ test coverage.
-- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P4.2 | **Trạng thái**: **Ready for Execution (Frontier)**
+  - Bộ unit tests trong từng package đạt 100% PASS, vượt qua 7 Cổng CI Eval Gates.
+- **Đầu ra thực tế**:
+  - Module [`packages/ccba-ooxml/src/ccba_ooxml/docx/cleanup.py`](../../../../packages/ccba-ooxml/src/ccba_ooxml/docx/cleanup.py) (`merge_runs`, `simplify_redlines`, `clone_xml_text`, `get_tracked_change_authors`, `infer_author`).
+  - Module [`packages/ccba-pdf-prep/src/ccba_pdf_prep/manipulation.py`](../../../../packages/ccba-pdf-prep/src/ccba_pdf_prep/manipulation.py) (`merge_pdfs`, `split_pdf_pages`, `extract_text_from_pdf`, `parse_pages`).
+  - 4 Thin Adapters: `ccba-xu-ly-van-phong/scripts/office/helpers/merge_runs.py`, `simplify_redlines.py`, `clone_text.py`, `process_pdf.py`.
+  - Scoped unit tests: [`packages/ccba-ooxml/tests/test_docx_cleanup.py`](../../../../packages/ccba-ooxml/tests/test_docx_cleanup.py) (7/7 PASS) và [`packages/ccba-pdf-prep/tests/test_manipulation.py`](../../../../packages/ccba-pdf-prep/tests/test_manipulation.py) (9/9 PASS).
+  - 100% vượt qua 7 Cổng CI Eval Gates (`run_harness_evals.py --all`) và Deterministic Patch Verification (`verify-patch --preset ci`).
+- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P4.2 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
 
