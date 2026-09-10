@@ -715,7 +715,7 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--preset",
         type=str,
-        choices=["code", "doc", "skill", "adr"],
+        choices=["code", "doc", "skill", "adr", "telemetry", "ci"],
         default=None,
         help="Verification preset to automatically generate standard check commands",
     )
@@ -811,7 +811,12 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
             except Exception:
                 pass
 
-    from .telemetry import OtelSpanExporter, analyze_subagent_transcript, check_subagent_budget
+    from .telemetry import (
+        OtelSpanExporter,
+        analyze_subagent_transcript,
+        audit_swarm_session,
+        check_subagent_budget,
+    )
 
     parser = argparse.ArgumentParser(
         prog="ccba-harness telemetry",
@@ -835,9 +840,48 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
     p_otel.add_argument("target", help="Conversation ID or transcript.jsonl path")
     p_otel.add_argument("--out", type=str, default=None, help="Output file path")
 
+    # Subcommand: audit-swarm
+    p_swarm = sub.add_parser("audit-swarm", help="Audit token consumption across a multi-agent swarm session")
+    p_swarm.add_argument("target", help="Parent conversation ID, transcript path, or directory")
+    p_swarm.add_argument("--max-swarm-tokens", type=int, default=None, help="Max total tokens for whole swarm")
+    p_swarm.add_argument("--max-subagent-tokens", type=int, default=None, help="Max tokens per subagent")
+    p_swarm.add_argument("--max-cost", type=float, default=None, help="Max total cost in USD")
+    p_swarm.add_argument("--json", action="store_true", help="Output raw JSON")
+    p_swarm.add_argument("--out", type=str, default=None, help="Save markdown/json report to file")
+
     args = parser.parse_args(argv)
 
     import json
+
+    if args.telemetry_cmd == "audit-swarm":
+        try:
+            report, passed, msg = audit_swarm_session(
+                args.target,
+                max_swarm_tokens=args.max_swarm_tokens,
+                max_subagent_tokens=args.max_subagent_tokens,
+                max_total_cost_usd=args.max_cost,
+            )
+        except Exception as err:
+            print(f"[Error] Failed to audit swarm for '{args.target}': {err}", file=sys.stderr)
+            return 1
+
+        out_content = (
+            json.dumps(report.to_dict(), indent=2, ensure_ascii=False)
+            if args.json
+            else report.to_markdown()
+        )
+        if args.out:
+            out_p = Path(args.out)
+            out_p.parent.mkdir(parents=True, exist_ok=True)
+            out_p.write_text(out_content, encoding="utf-8")
+            print(f"[Success] Saved swarm report to {out_p}")
+        else:
+            print(out_content)
+
+        if not passed:
+            print(f"[FAIL] Swarm budget violation: {msg}", file=sys.stderr)
+            return 1
+        return 0
 
     try:
         metrics = analyze_subagent_transcript(args.target)

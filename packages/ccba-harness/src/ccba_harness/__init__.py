@@ -57,12 +57,15 @@ from .skill_validator import SkillAuditIssue, SkillValidator
 from .telemetry import (
     OtelSpanExporter,
     SubagentSessionMetrics,
+    SwarmSessionTelemetryReport,
     TokenEstimator,
     ToolCallRecord,
     TranscriptStep,
     TurnRecord,
     analyze_subagent_transcript,
+    audit_swarm_session,
     check_subagent_budget,
+    find_spawned_subagent_ids,
     resolve_transcript_path,
     stream_transcript_steps,
 )
@@ -120,9 +123,12 @@ __all__ = [
     "ToolCallRecord",
     "TurnRecord",
     "SubagentSessionMetrics",
+    "SwarmSessionTelemetryReport",
     "OtelSpanExporter",
     "stream_transcript_steps",
     "resolve_transcript_path",
+    "find_spawned_subagent_ids",
     "analyze_subagent_transcript",
     "check_subagent_budget",
+    "audit_swarm_session",
 ]

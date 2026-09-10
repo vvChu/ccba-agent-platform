@@ -531,3 +531,175 @@ class OtelSpanExporter:
                 }
             ]
         }
+
+
+@dataclass
+class SwarmSessionTelemetryReport:
+    """Aggregated telemetry report across multiple subagents in a swarm session."""
+
+    parent_conversation_id: str
+    subagents: list[SubagentSessionMetrics] = field(default_factory=list)
+    total_subagents: int = 0
+    total_swarm_tokens: int = 0
+    total_prompt_tokens: int = 0
+    total_completion_tokens: int = 0
+    total_duration_sec: float = 0.0
+    total_cost_usd: float = 0.0
+
+    def to_markdown(self) -> str:
+        """Format swarm telemetry report as a GitHub-flavored Markdown table."""
+        lines = [
+            f"# 🐝 Swarm Multi-Agent Telemetry Report: `{self.parent_conversation_id}`",
+            "",
+            "## 1. Swarm Aggregate Overview",
+            "",
+            f"- **Total Subagents Spawned:** {self.total_subagents}",
+            f"- **Total Swarm Duration:** {self.total_duration_sec:.2f}s",
+            f"- **Total Prompt Tokens (Context):** {self.total_prompt_tokens:,}",
+            f"- **Total Completion Tokens (Gen):** {self.total_completion_tokens:,}",
+            f"- **Total Swarm Tokens Consumed:** {self.total_swarm_tokens:,}",
+            f"- **Total Estimated Cost:** ${self.total_cost_usd:.4f} USD",
+            "",
+            "## 2. Subagent Fleet Breakdown",
+            "",
+            "| Subagent ID | Steps | Turns | Duration (s) | Tokens Consumed | Cost (USD) |",
+            "| :--- | :---: | :---: | :---: | :---: | :---: |",
+        ]
+        for sub in self.subagents:
+            cid_display = sub.conversation_id[:12] + "..." if len(sub.conversation_id) > 12 else sub.conversation_id
+            lines.append(
+                f"| `{cid_display}` | {sub.total_steps} | {sub.turns_count} | {sub.total_duration_sec:.1f}s | {sub.total_tokens:,} | ${sub.estimated_cost_usd:.4f} |"
+            )
+        return "\n".join(lines).strip() + "\n"
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert report to dictionary format for JSON export."""
+        return {
+            "parent_conversation_id": self.parent_conversation_id,
+            "total_subagents": self.total_subagents,
+            "total_swarm_tokens": self.total_swarm_tokens,
+            "total_prompt_tokens": self.total_prompt_tokens,
+            "total_completion_tokens": self.total_completion_tokens,
+            "total_duration_sec": self.total_duration_sec,
+            "total_cost_usd": round(self.total_cost_usd, 4),
+            "subagents": [sub.to_dict() for sub in self.subagents],
+        }
+
+
+def find_spawned_subagent_ids(parent_log_or_id: str | Path) -> list[str]:
+    """Scan a parent trajectory transcript to find all spawned subagent conversation IDs."""
+    log_path = resolve_transcript_path(parent_log_or_id)
+    if not log_path.exists():
+        return []
+
+    found_ids: list[str] = []
+    uuid_pattern = re.compile(
+        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.IGNORECASE
+    )
+
+    for step, _offset in stream_transcript_steps(log_path):
+        raw_str = json.dumps(step.raw_dict)
+        if "invoke_subagent" in raw_str or "conversationId" in raw_str or "conversation_id" in raw_str:
+            for match in uuid_pattern.findall(raw_str):
+                m_lower = match.lower()
+                if m_lower not in found_ids and m_lower not in str(log_path).lower():
+                    found_ids.append(m_lower)
+
+    return found_ids
+
+
+def audit_swarm_session(
+    target: str | Path,
+    max_swarm_tokens: int | None = None,
+    max_subagent_tokens: int | None = None,
+    max_total_cost_usd: float | None = None,
+) -> tuple[SwarmSessionTelemetryReport, bool, str]:
+    """Audit token consumption and budget limits across a multi-agent swarm session.
+
+    Args:
+        target: Parent conversation ID, transcript path, or directory containing subagents.
+        max_swarm_tokens: Maximum allowed aggregate tokens across all subagents.
+        max_subagent_tokens: Maximum allowed tokens for any individual subagent.
+        max_total_cost_usd: Maximum allowed dollar cost across the swarm.
+
+    Returns:
+        (report, passed, message)
+    """
+    target_path = Path(target)
+    subagents: list[SubagentSessionMetrics] = []
+    parent_id = "swarm-session"
+
+    # Case 1: Target is a directory containing subagent log files or subagent directories
+    if target_path.exists() and target_path.is_dir():
+        parent_id = target_path.name
+        for p in sorted(target_path.glob("**/transcript*.jsonl")):
+            if p.is_file():
+                try:
+                    metrics = analyze_subagent_transcript(p)
+                    subagents.append(metrics)
+                except Exception:
+                    continue
+
+    # Case 2: Target is a transcript file or conversation ID
+    else:
+        resolved = resolve_transcript_path(target)
+        if resolved.exists():
+            if resolved.parent.name == "logs" and resolved.parent.parent.name == ".system_generated":
+                parent_id = resolved.parent.parent.parent.name
+            else:
+                parent_id = resolved.stem
+
+            spawned_ids = find_spawned_subagent_ids(resolved)
+            for sid in spawned_ids:
+                try:
+                    s_metrics = analyze_subagent_transcript(sid)
+                    subagents.append(s_metrics)
+                except Exception:
+                    continue
+
+            if not subagents:
+                try:
+                    single_metrics = analyze_subagent_transcript(resolved)
+                    subagents.append(single_metrics)
+                except Exception:
+                    pass
+
+    total_swarm_tokens = sum(s.total_tokens for s in subagents)
+    total_prompt_tokens = sum(s.prompt_tokens for s in subagents)
+    total_completion_tokens = sum(s.completion_tokens for s in subagents)
+    total_duration_sec = sum(s.total_duration_sec for s in subagents)
+    total_cost_usd = sum(s.estimated_cost_usd for s in subagents)
+
+    report = SwarmSessionTelemetryReport(
+        parent_conversation_id=parent_id,
+        subagents=subagents,
+        total_subagents=len(subagents),
+        total_swarm_tokens=total_swarm_tokens,
+        total_prompt_tokens=total_prompt_tokens,
+        total_completion_tokens=total_completion_tokens,
+        total_duration_sec=total_duration_sec,
+        total_cost_usd=total_cost_usd,
+    )
+
+    violations: list[str] = []
+    if max_swarm_tokens is not None and total_swarm_tokens > max_swarm_tokens:
+        violations.append(
+            f"Swarm token budget exceeded: {total_swarm_tokens:,} tokens > limit {max_swarm_tokens:,}"
+        )
+
+    if max_subagent_tokens is not None:
+        for s in subagents:
+            if s.total_tokens > max_subagent_tokens:
+                violations.append(
+                    f"Subagent '{s.conversation_id}' exceeded token limit: {s.total_tokens:,} > {max_subagent_tokens:,}"
+                )
+
+    if max_total_cost_usd is not None and total_cost_usd > max_total_cost_usd:
+        violations.append(
+            f"Swarm cost exceeded: ${total_cost_usd:.4f} > limit ${max_total_cost_usd:.4f}"
+        )
+
+    if violations:
+        return report, False, "; ".join(violations)
+    return report, True, "Within swarm budget limits."
+
