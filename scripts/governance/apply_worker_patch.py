@@ -300,6 +300,7 @@ def execute_swarm_patches(
     preset: str | None = None,
     target: Path | None = None,
     timeout: float = 60.0,
+    self_heal: bool = False,
 ) -> SwarmExecutionReport:
     """Execute the complete Single-Writer multi-agent patch pipeline."""
     timings: dict[str, float] = {}
@@ -411,6 +412,32 @@ def execute_swarm_patches(
         timings["verification"] = time.perf_counter() - t_ver_start
 
         if not verification.all_passed:
+            if self_heal:
+                try:
+                    from ccba_harness.healing import SelfHealingEngine
+                except ImportError:
+                    sys.path.insert(0, str(HUB_ROOT / "packages" / "ccba-harness" / "src"))
+                    from ccba_harness.healing import SelfHealingEngine
+                engine = SelfHealingEngine(base_dir=base_dir)
+                healing_report = engine.attempt_closed_loop_healing(
+                    verify_commands=cmds,
+                    timeout=timeout,
+                    snapshot=snapshot,
+                )
+                if healing_report.success and healing_report.final_verification_passed:
+                    timings["total"] = time.perf_counter() - t_start
+                    return SwarmExecutionReport(
+                        success=True,
+                        patches_count=len(patches),
+                        collisions=[],
+                        dry_run_errors=[],
+                        applied_files=applied_files,
+                        semantic_conflict=False,
+                        verification_errors=[],
+                        timings=timings,
+                        rollback_performed=False,
+                    )
+
             rollback(snapshot)
             failed_cmds = [
                 f"{r.command} (exit {r.exit_code}): {r.error_message or r.stderr or r.stdout}".strip()
@@ -491,6 +518,11 @@ def main() -> int:
         "--timeout", type=float, default=60.0, help="Timeout in seconds for verification commands"
     )
     parser.add_argument(
+        "--self-heal",
+        action="store_true",
+        help="Enable autonomous self-healing if post-patch verification fails before rollback",
+    )
+    parser.add_argument(
         "--benchmark", action="store_true", help="Print latency benchmark profiling"
     )
     parser.add_argument(
@@ -545,6 +577,7 @@ def main() -> int:
         preset=args.preset,
         target=args.target,
         timeout=args.timeout,
+        self_heal=args.self_heal,
     )
 
     if args.json:

@@ -150,12 +150,11 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
 
 ## 4. Các Ticket ở Biên giới (Frontier Unblocked Tickets)
 
-Toàn bộ **11/11 Tickets (P0, P1, Phase 2 và Phase 3)** cùng **3 Frontier Tickets (P4.1, P4.2, P4.3)** trên Bản đồ Wayfinder đã **HOÀN THÀNH 100%**. 
-Frontier Ticket còn lại trên **Phase 4: Beyond Horizon**:
+Toàn bộ **15/15 Tickets (P0, P1, Phase 2, Phase 3 và Phase 4: Beyond Horizon)** trên Bản đồ Wayfinder đã **HOÀN THÀNH 100%**.
 
 ```mermaid
 flowchart TD
-    subgraph Done ["Đã Hoàn thành (Phase 0, 1, 2, 3, P4.1, P4.2 & P4.3 - Closed 100%) 🎉"]
+    subgraph Done ["Đã Hoàn thành (Phase 0, 1, 2, 3 & Phase 4: Beyond Horizon - Closed 100%) 🎉"]
         T1["[T1: Task AFK] Memory Compaction Engine cho session_learnings.md ✅"]
         T2["[T2: Task AFK] Exit-Code Deterministic Verification Gate trong ccba-harness ✅"]
         T3["[T3: Research AFK] Ma trận Ánh xạ Di trú 52 Scripts ✅"]
@@ -171,10 +170,7 @@ flowchart TD
         P4_1["[P4.1: Task AFK] Token Economy & Prompt Density Optimization Engine ✅"]
         P4_2["[P4.2: Task AFK] Di Trú 28 Core Scripts Về ccba-ooxml & ccba-pdf-prep ✅"]
         P4_3["[P4.3: Prototype HITL] Real-Time Telemetry Streaming Bridge qua Server Spark ✅"]
-    end
-
-    subgraph Phase4Frontier ["Phase 4: Beyond Horizon — Vận Hành Tự Chủ Doanh Nghiệp (Frontier Tickets) 🚀"]
-        P4_4["[P4.4: Task HITL] Autonomous Self-Healing & Closed-Loop CI Patch Engine"]
+        P4_4["[P4.4: Task HITL] Autonomous Self-Healing & Closed-Loop CI Patch Engine ✅"]
     end
 
     T3 -.->|Đã Giải mã Sương mù| F1
@@ -385,15 +381,18 @@ flowchart TD
 
 ---
 
-### Ticket P4.4: [Task/HITL] `[Autonomous Self-Healing & Closed-Loop CI Patch Engine]` 🚀
-- **Mục tiêu**: Xây dựng động cơ tự phục hồi mã nguồn (`SelfHealingEngine`) tích hợp vào `ccba-harness` và `apply_worker_patch.py`.
-- **Chức năng & Đầu ra dự kiến**:
-  - Khi chạy `run_harness_evals.py` hoặc `verify-patch` gặp thất bại (ví dụ: Ruff format error, broken markdown link, syntax mismatch, test assertion failure):
-  - Tự động trích xuất stack trace lỗi và ngữ cảnh tệp mã nguồn.
-  - Tạo patch sửa đổi trong sandbox ảo (virtual scratch patch).
-  - Chạy thẩm tra qua `verify-patch`. Nếu đạt Exit Code 0 $\rightarrow$ tự động áp dụng patch nguyên tử (Atomic Patch).
-  - Khóa an toàn: Max Iterations = 2, tự động hủy bỏ và rollback snapshot nếu không tự sửa được sau 2 lượt.
-- **Phân loại**: `Task [HITL]` | **Ưu tiên**: P4.4 | **Trạng thái**: **Ready for Execution (Frontier)**
+### Ticket P4.4: [Task/HITL] `[Autonomous Self-Healing & Closed-Loop CI Patch Engine]` ✅
+- **Mục tiêu**: Xây dựng động cơ tự phục hồi mã nguồn khép kín (`SelfHealingEngine`) tích hợp vào `ccba-harness` và `apply_worker_patch.py` nhằm chẩn đoán và khắc phục tự động các lỗi định dạng, linting, metadata drift và test assertion với trần lặp an toàn và cơ chế rollback nguyên tử.
+- **Đầu ra thực tế**:
+  - Động cơ cốt lõi [`packages/ccba-harness/src/ccba_harness/healing.py`](../../../../packages/ccba-harness/src/ccba_harness/healing.py) (`ErrorCategory`, `DiagnosticIssue`, `HealingAction`, `HealingReport`, `SelfHealingEngine`).
+  - Hỗ trợ chẩn đoán chính xác đa định dạng: Ruff format (`Would reformat`), Ruff check (cả concise format và multiline default format), Catalog drift (`compile_catalog.py`), ADR matrix drift (`sync_hub_adr_matrix.py`), và Pytest assertion failures.
+  - Khóa an toàn 2 vòng lặp (`max_iterations = 2`) với In-Memory Snapshot & Full Rollback bảo đảm không gây regression code khi gặp lỗi không thể tự sửa.
+  - Tích hợp cờ `--self-heal` và `--max-heal-iterations` vào CLI `ccba-harness verify-patch` ([`cli.py`](../../../../packages/ccba-harness/src/ccba_harness/cli.py)).
+  - Tích hợp cơ chế tự phục hồi trước khi rollback vào Single-Writer Engine [`scripts/governance/apply_worker_patch.py`](../../../../scripts/governance/apply_worker_patch.py).
+  - Cung cấp script tiện ích độc lập [`scripts/governance/self_healing.py`](../../../../scripts/governance/self_healing.py) hỗ trợ `--dry-run`, `--json`, `--preset`, `--report-file`.
+  - Bộ unit tests chuyên trách [`tests/governance/test_self_healing_engine.py`](../../../../tests/governance/test_self_healing_engine.py) đạt 13/13 PASS (100%).
+  - Vượt qua 100% 7 Cổng CI Eval Gates (`run_harness_evals.py --all`) và Deterministic Patch Verification (`verify-patch --preset ci`).
+- **Phân loại**: `Task [HITL]` | **Ưu tiên**: P4.4 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
 
