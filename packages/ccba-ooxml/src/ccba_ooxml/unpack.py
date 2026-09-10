@@ -36,18 +36,5 @@ def unpack_document(input_file: str | Path, output_dir: str | Path) -> None:
             # Fallback or log if some XML is malformed or binary
             print(f"Warning: Could not pretty print {xml_file}: {e}", file=sys.stderr)
 
+__all__ = ["unpack_document"]
 
-def main():
-    if len(sys.argv) != 3:
-        print("Usage: python unpack.py <office_file> <output_dir>", file=sys.stderr)
-        sys.exit(1)
-    input_file, output_dir = sys.argv[1], sys.argv[2]
-    try:
-        unpack_document(input_file, output_dir)
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()

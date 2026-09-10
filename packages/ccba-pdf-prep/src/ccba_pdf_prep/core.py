@@ -294,28 +294,11 @@ class PDFAnalyzer:
 def split_pdf(
     source: Path, page_ranges: Sequence[tuple[int, int]], output_temp_dir: Path
 ) -> list[Path]:
-    """Split PDF into chunks."""
-    if not source.exists():
-        raise FileNotFoundError(f"Source PDF not found: {source}")
-    output_temp_dir.mkdir(parents=True, exist_ok=True)
-    reader = PdfReader(source)
-    chunk_paths = []
+    """Split PDF into chunks (delegates to manipulation.split_pdf_chunks)."""
+    from .manipulation import split_pdf_chunks
 
-    for i, (start, end) in enumerate(page_ranges):
-        start = max(0, start)
-        end = min(len(reader.pages) - 1, end)
-        if start > end:
-            continue
+    return split_pdf_chunks(source, page_ranges, output_temp_dir)
 
-        writer = PdfWriter()
-        for page_num in range(start, end + 1):
-            writer.add_page(reader.pages[page_num])
-
-        chunk_path = output_temp_dir / f"{source.stem}_part{i + 1}.pdf"
-        with open(chunk_path, "wb") as f:
-            writer.write(f)
-        chunk_paths.append(chunk_path)
-    return chunk_paths
 
 
 def get_blind_chunks(total_pages: int, chunk_size: int = 20) -> list[tuple[int, int]]:

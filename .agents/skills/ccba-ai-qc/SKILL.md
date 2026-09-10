@@ -38,7 +38,7 @@ triggers:
 ---
 # Master Deep Skill: Kiểm Soát Chất Lượng Thiết Kế Đa Bộ Môn (`ccba-ai-qc`)
 
-Kỹ năng này là cổng điều phối thống nhất cho toàn bộ quy trình kiểm soát chất lượng (QC) và phát hiện xung đột bản vẽ thiết kế đa bộ môn (Kiến trúc, Kết cấu, MEP, PCCC) thông qua Deep Seam **`QCAuditPipeline`** ([`packages/ccba-ai`](../../../packages/ccba-ai)).
+Kỹ năng này là cổng điều phối thống nhất cho toàn bộ quy trình kiểm soát chất lượng (QC) và phát hiện xung đột bản vẽ thiết kế đa bộ môn (Kiến trúc, Kết cấu, MEP, PCCC) thông qua Deep Seam **`QCAuditPipeline`** ([`packages/ccba-qc-core`](../../../packages/ccba-qc-core)).
 
 ---
 
@@ -78,17 +78,16 @@ flowchart LR
 - **Tiêu chí hoàn thành:** Xác định duy nhất một thư mục dự án đích hợp lệ và kiểm tra thư mục này tồn tại cục bộ.
 
 ### Bước 2: Kích Hoạt Deep Seam `QCAuditPipeline`
-- Thực thi toàn trình qua Python API của package `ccba_ai`:
+- Thực thi toàn trình qua Python API của package `ccba_qc_core`:
   ```python
-  import asyncio
-  from ccba_ai import QCAuditPipeline
+  from ccba_qc_core import QCAuditPipeline
 
   pipeline = QCAuditPipeline()
-  summary = asyncio.run(pipeline.run_audit(
+  summary = pipeline.run_audit_sync(
       project_dir="[target_project]",
       output_dir="[target_project]/.md/extracts/audit_batch"
-  ))
-  print(f"Audit completed: {summary.total_findings} findings across {summary.total_levels} levels.")
+  )
+  print(f"Audit completed: {summary.total_findings} findings across {len(summary.levels_audited)} levels.")
   ```
 - Hoặc thực thi qua CLI:
   ```powershell

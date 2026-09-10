@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from pathlib import Path
 from typing import Any
@@ -10,8 +11,10 @@ import fitz
 import pandas as pd  # type: ignore[import-untyped]
 from PIL import Image
 
-from ccba_ai import AuditReport
+from ccba_ai import AuditReport, AuditReportSummary
 from ccba_pdf_prep import render_page_to_image
+from ccba_qc_core.discovery import DiscoveryEngine, ProjectBackbone
+from ccba_qc_core.pccc import PcccMapReduceEngine
 from ccba_qc_core.quadview import QuadViewAuditEngine
 from ccba_qc_core.reporter import ReporterEngine
 
@@ -137,3 +140,152 @@ class QCBatchOrchestrator:
         self.pdf_cache.clear()
 
         return results
+
+
+class QCAuditPipeline:
+    """Unified Orchestrator Deep Seam for Multi-Discipline QC Audits.
+
+    Orchestrates Discovery -> Quad-View Alignment -> Vision Audit -> Technical Reporter.
+    """
+
+    def __init__(
+        self,
+        discovery_engine: DiscoveryEngine | None = None,
+        audit_engine: QuadViewAuditEngine | None = None,
+        reporter_engine: ReporterEngine | None = None,
+        pccc_engine: PcccMapReduceEngine | None = None,
+        ai_model: str = "gemini-3.7-flash-high",
+    ) -> None:
+        self.discovery_engine = discovery_engine
+        self.audit_engine = audit_engine
+        self.reporter_engine = reporter_engine
+        self.pccc_engine = pccc_engine
+        self.ai_model = ai_model
+
+    async def run_audit(
+        self,
+        project_dir: Path | str,
+        output_dir: Path | str | None = None,
+        disciplines: list[str] | None = None,
+    ) -> AuditReportSummary:
+        """Run full end-to-end QC audit on a project directory.
+
+        Args:
+            project_dir: Path to directory containing PDF drawings.
+            output_dir: Path to store reports and intermediate renders.
+            disciplines: List of discipline names (defaults to Arch, Struct, MEP, PCCC).
+
+        Returns:
+            AuditReportSummary with consolidated statistics and reports.
+        """
+        p_dir = Path(project_dir)
+        out_dir = Path(output_dir) if output_dir else p_dir / "qc_reports"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        disc_list = disciplines or ["Architecture", "Structure", "MEP", "PCCC"]
+
+        # 1. Discover drawings
+        pdf_files = list(p_dir.glob("*.pdf"))
+        backbone: ProjectBackbone | None = None
+        disc_engine = self.discovery_engine or DiscoveryEngine(
+            project_name=p_dir.name, output_dir=out_dir / "discovery", ai_model=self.ai_model
+        )
+        if pdf_files:
+            try:
+                backbone = await disc_engine.discover(pdf_files, extract_titleblocks=False, run_ai=False)
+            except Exception as e:
+                logger.warning("Discovery warning: %s, continuing with file listing", e)
+
+        # 2. Audit levels
+        audit_engine = self.audit_engine or QuadViewAuditEngine(
+            output_dir=out_dir, ai_model=self.ai_model, tile_dpi=150
+        )
+        audit_reports: list[AuditReport] = []
+        level_map: dict[str, list[Path]] = {}
+        for pdf in pdf_files:
+            level_name = pdf.stem
+            level_map[level_name] = [pdf]
+
+        if level_map:
+            try:
+                audit_reports = await audit_engine.run_multi_level_audit(
+                    level_map, discipline_order=disc_list
+                )
+            except Exception as e:
+                logger.warning("Audit run warning: %s", e)
+
+        # 3. Synthesize report
+        report_file = out_dir / "qc_audit_report.md"
+        reporter = self.reporter_engine or ReporterEngine(
+            project_name=p_dir.name, author="CCBA QCAuditPipeline"
+        )
+        try:
+            reporter.synthesize(
+                backbone=backbone,
+                audit_results=audit_reports,
+                output_path=report_file,
+            )
+        except Exception as e:
+            logger.warning("Report synthesis warning: %s, writing fallback report", e)
+            lines = [
+                f"# Báo Cáo Thẩm Tra Chất Lượng Hồ Sơ: {p_dir.name}",
+                f"- **Số lượng cấp độ/tầng đã quét**: {len(audit_reports)}",
+                f"- **Tổng số lỗi phát hiện**: {sum(r.finding_count for r in audit_reports)}",
+                "",
+                "## Chi Tiết Các Tầng",
+            ]
+            for r in audit_reports:
+                lines.append(f"### Tầng {r.level} (Mô hình: {r.ai_model})")
+                for f in r.findings:
+                    lines.append(f"- **[{f.severity.upper()}]** {f.location}: {f.description}")
+            report_file.write_text("\n".join(lines), encoding="utf-8")
+
+        total_find = sum(r.finding_count for r in audit_reports)
+        high_sev = sum(r.high_severity_count for r in audit_reports)
+        levels = [r.level for r in audit_reports] or [p.stem for p in pdf_files]
+
+        return AuditReportSummary(
+            project_name=p_dir.name,
+            levels_audited=levels,
+            total_findings=total_find,
+            high_severity_count=high_sev,
+            reports=audit_reports,
+            report_file=report_file if report_file.exists() else None,
+        )
+
+    def run_audit_sync(
+        self,
+        project_dir: Path | str,
+        output_dir: Path | str | None = None,
+        disciplines: list[str] | None = None,
+    ) -> AuditReportSummary:
+        """Synchronously run full QC audit.
+
+        Raises RuntimeError if an asyncio event loop is already running.
+        """
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            raise RuntimeError(
+                "QCAuditPipeline.run_audit_sync() cannot be called from within a running event loop. "
+                "Please use 'await pipeline.run_audit(...)' directly."
+            )
+        return asyncio.run(self.run_audit(project_dir, output_dir, disciplines))
+
+    async def run_batch(
+        self,
+        matrix_csv: str | Path,
+        output_dir: str | Path,
+        project_dir: str | Path | None = None,
+    ) -> list[AuditReport]:
+        """Delegate batch matrix audit to QCBatchOrchestrator."""
+        p_dir = project_dir or Path(matrix_csv).parent
+        orchestrator = QCBatchOrchestrator(
+            project_dir=p_dir,
+            matrix_csv=matrix_csv,
+            out_dir=output_dir,
+        )
+        return await orchestrator.run_batch(ai_model=self.ai_model)
+
