@@ -74,6 +74,11 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
   - Bổ sung subcommand CLI `ccba-harness verify-patch` với các flags: `-c / --cmd / --commands`, `--file`, `--timeout`, `--cwd`, `--json`, `--report-file`, `--fail-fast`.
   - Bộ kiểm thử `packages/ccba-harness/tests/test_verify_patch.py` đạt 12/12 PASS (toàn bộ 141 tests trong `ccba-harness` đạt 100% PASS).
   - Thiết lập rào chắn kiểm thử xác định khách quan, chặn đứng hoàn toàn Premature Completion & Self-Certification.
+- **[Đã chốt - 2026-09-10] Thiết kế Giao thức Structured Diff Patch & Single-Writer Engine (Ticket 4)**:
+  - Ban hành tài liệu đặc tả kỹ thuật: [`.md/knowledge/specs/spec-structured-diff-protocol.md`](../../knowledge/specs/spec-structured-diff-protocol.md) chuẩn hóa format Search-Replace block, JSON manifest, Unified Diff, và quy tắc No Pre-mutation cho Worker Sub-agents.
+  - Xây dựng thành công Single-Writer Engine [`scripts/governance/apply_worker_patch.py`](../../../../scripts/governance/apply_worker_patch.py) hỗ trợ phát hiện xung đột (`--check-conflicts`), dry-run ảo hóa (`--dry-run`), áp dụng nguyên tử (`--apply`) kèm snapshot và auto-rollback khôi phục trạng thái gốc nếu verification gate thất bại.
+  - Bộ kiểm thử [`tests/governance/test_apply_worker_patch.py`](../../../../tests/governance/test_apply_worker_patch.py) đạt 10/10 PASS (full governance suite đạt 91 passed).
+  - Unblock Ticket F3 trong khu vực sương mù.
 
 ---
 
@@ -87,23 +92,23 @@ flowchart TD
         T1["[T1: Task AFK] Memory Compaction Engine cho session_learnings.md ✅"]
         T2["[T2: Task AFK] Exit-Code Deterministic Verification Gate trong ccba-harness ✅"]
         T3["[T3: Research AFK] Ma trận Ánh xạ Di trú 52 Scripts ✅"]
+        T4["[T4: Prototype HITL] Giao thức Structured Diff Patch & Single-Writer cho ccba-teamwork ✅"]
     end
 
     subgraph Frontier ["Các Ticket ở Biên giới Sẵn sàng Nhận việc (Frontier Unblocked)"]
-        T4["[T4: Prototype HITL] Mẫu Giao thức Structured Diff Patch cho ccba-teamwork"]
         T5["[T5: Grilling HITL] Thiết kế Tích hợp Live State Artifacts & 11-Seat Charter"]
     end
 
     subgraph Fog ["Sương mù Chiến trận (Blocked / Fog of War)"]
         F1["[F1] Di trú 35 Core Scripts theo Ma trận (Đã unblock từ T3)"]
         F2["[F2] Tích hợp Test Loop Tự động cho Toàn bộ 67 SKILL.md (Đã unblock từ T2)"]
-        F3["[F3] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine (Chờ T4)"]
+        F3["[F3] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine (Đã unblock từ T4)"]
         F4["[F4] Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime"]
     end
 
     T3 -.->|Đã Giải mã Sương mù| F1
     T2 -.->|Đã Giải mã Sương mù| F2
-    T4 -.->|Unblocks| F3
+    T4 -.->|Đã Giải mã Sương mù| F3
 ```
 
 ---
@@ -139,13 +144,13 @@ flowchart TD
 
 ---
 
-### Ticket 4: [Prototype/HITL] `[Thiết kế Mẫu Giao thức Structured Diff Patch & Single-Writer cho ccba-teamwork]`
+### Ticket 4: [Prototype/HITL] `[Thiết kế Mẫu Giao thức Structured Diff Patch & Single-Writer cho ccba-teamwork]` ✅
 - **Mục tiêu**: Xây dựng mẫu thử giao thức làm việc cho các Worker Sub-agents: cấm gọi các công cụ sửa file trực tiếp (`replace_file_content`, `write_to_file` trên source code). Thay vào đó, Worker chỉ xuất tệp Patch (`.diff` hoặc JSON Search-Replace) vào thư mục `.system_generated/scratch/`. Thiết kế một helper script `apply_worker_patches.py` để Lead Orchestrator áp dụng lần lượt các patch, kiểm tra xung đột cú pháp và revert nếu gặp lỗi.
-- **Đầu ra kỳ vọng**:
-  - Tài liệu quy chuẩn giao thức: `.md/knowledge/specs/spec-structured-diff-protocol.md`.
-  - Script nguyên mẫu: `scripts/governance/apply_worker_patch.py`.
-  - Trình diễn thực nghiệm trên một ca kiểm thử đơn giản.
-- **Phân loại**: `Prototype [HITL]` | **Ưu tiên**: P1.1 | **Trạng thái**: **Ready to Claim**
+- **Đầu ra thực tế**:
+  - Tài liệu quy chuẩn giao thức: [`.md/knowledge/specs/spec-structured-diff-protocol.md`](../../knowledge/specs/spec-structured-diff-protocol.md).
+  - Script nguyên mẫu: [`scripts/governance/apply_worker_patch.py`](../../../../scripts/governance/apply_worker_patch.py) hỗ trợ `--dry-run`, `--check-conflicts`, `--apply`, `--verify`.
+  - Bộ unit tests: [`tests/governance/test_apply_worker_patch.py`](../../../../tests/governance/test_apply_worker_patch.py) đạt 10/10 PASS.
+- **Phân loại**: `Prototype [HITL]` | **Ưu tiên**: P1.1 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
 
