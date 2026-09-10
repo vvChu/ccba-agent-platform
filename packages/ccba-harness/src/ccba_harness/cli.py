@@ -797,6 +797,91 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
     return 0 if report.all_passed else 1
 
 
+def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
+    """CLI entry point for subagent runtime telemetry (`ccba-harness telemetry`)."""
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            try:
+                sys.stdout.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+        if hasattr(sys.stderr, "reconfigure"):
+            try:
+                sys.stderr.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+
+    from .telemetry import OtelSpanExporter, analyze_subagent_transcript, check_subagent_budget
+
+    parser = argparse.ArgumentParser(
+        prog="ccba-harness telemetry",
+        description="Subagent runtime telemetry and token monitoring.",
+    )
+    sub = parser.add_subparsers(dest="telemetry_cmd", required=True)
+
+    # Subcommand: inspect
+    p_insp = sub.add_parser("inspect", help="Inspect subagent trajectory & tokens")
+    p_insp.add_argument("target", help="Conversation ID or transcript.jsonl path")
+    p_insp.add_argument("--json", action="store_true", help="Output raw JSON")
+
+    # Subcommand: budget-check
+    p_bud = sub.add_parser("budget-check", help="Enforce token/duration budget")
+    p_bud.add_argument("target", help="Conversation ID or transcript.jsonl path")
+    p_bud.add_argument("--max-tokens", type=int, default=None, help="Maximum allowed tokens")
+    p_bud.add_argument("--max-duration", type=float, default=None, help="Maximum allowed seconds")
+
+    # Subcommand: export-otel
+    p_otel = sub.add_parser("export-otel", help="Export OpenTelemetry GenAI OTLP JSON trace")
+    p_otel.add_argument("target", help="Conversation ID or transcript.jsonl path")
+    p_otel.add_argument("--out", type=str, default=None, help="Output file path")
+
+    args = parser.parse_args(argv)
+
+    import json
+
+    try:
+        metrics = analyze_subagent_transcript(args.target)
+    except Exception as err:
+        print(f"[Error] Failed to analyze transcript for '{args.target}': {err}", file=sys.stderr)
+        return 1
+
+    if args.telemetry_cmd == "inspect":
+        if args.json:
+            print(json.dumps(metrics.to_dict(), indent=2, ensure_ascii=False))
+        else:
+            print(metrics.to_markdown())
+        return 0
+
+    elif args.telemetry_cmd == "budget-check":
+        passed, msg = check_subagent_budget(
+            metrics,
+            max_tokens=args.max_tokens,
+            max_duration_sec=args.max_duration,
+        )
+        if passed:
+            print(f"[PASS] {msg}")
+            print(f"  Consumed: {metrics.total_tokens:,} tokens in {metrics.total_duration_sec:.1f}s")
+            return 0
+        else:
+            print(f"[FAIL] Budget violation: {msg}", file=sys.stderr)
+            print(f"  Actual: {metrics.total_tokens:,} tokens in {metrics.total_duration_sec:.1f}s", file=sys.stderr)
+            return 1
+
+    elif args.telemetry_cmd == "export-otel":
+        otlp = OtelSpanExporter.to_otlp_json(metrics)
+        payload = json.dumps(otlp, indent=2, ensure_ascii=False)
+        if args.out:
+            out_p = Path(args.out)
+            out_p.parent.mkdir(parents=True, exist_ok=True)
+            out_p.write_text(payload, encoding="utf-8")
+            print(f"[Success] Exported OTLP trace to {out_p}")
+        else:
+            print(payload)
+        return 0
+
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Main CLI entry point for ccba-harness."""
     if argv is None:
@@ -1007,6 +1092,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Base working directory to resolve relative paths",
     )
 
+    # Subcommand: telemetry
+    subparsers.add_parser(
+        "telemetry",
+        help="Subagent runtime telemetry and token monitoring.",
+    )
+
     if not argv:
         parser.print_help()
         return 0
@@ -1022,6 +1113,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_verify_patch_cli(argv[1:])
     if argv[0] == "verify-doc":
         return run_verify_doc_cli(argv[1:])
+    if argv[0] == "telemetry":
+        return run_telemetry_cli(argv[1:])
 
     # Fallback to general parsing
     parsed = parser.parse_args(argv)
@@ -1035,6 +1128,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_verify_patch_cli(argv[1:])
     if parsed.subcommand == "verify-doc":
         return run_verify_doc_cli(argv[1:])
+    if parsed.subcommand == "telemetry":
+        return run_telemetry_cli(argv[1:])
 
     parser.print_help()
     return 0

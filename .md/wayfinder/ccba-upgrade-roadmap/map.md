@@ -119,7 +119,7 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
 
 ## 4. Các Ticket ở Biên giới (Frontier Unblocked Tickets)
 
-Toàn bộ 8 Frontier Tickets (P0, P1 và Phase 2) đã **HOÀN THÀNH 100%**. Biên giới mới sẵn sàng mở rộng sang hệ thống giám sát subagents:
+Toàn bộ 9 Frontier Tickets (P0, P1 và Phase 2) đã **HOÀN THÀNH 100%**. Hệ thống OpenTelemetry và Token Monitoring cho subagents đã vận hành chính xác:
 
 ```mermaid
 flowchart TD
@@ -132,16 +132,18 @@ flowchart TD
         F1["[F1: Task AFK] Di trú 35 Core Scripts & Thành lập packages/ccba-qc-core ✅"]
         F2["[F2: Task AFK] Tích hợp verify-patch Loop Tự động cho 67 SKILL.md ✅"]
         F3["[F3: Task HITL] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine ✅"]
+        F4["[F4: Task HITL] Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime ✅"]
     end
 
     subgraph Frontier ["Biên Giới Mới Sẵn Sàng Nhận Việc (Unblocked Execution Frontier)"]
-        F4["[F4: Task HITL] Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime"]
+        F5["[F5: Task AFK] Tự động hóa Giám sát Chi phí & Token Telemetry vào CI/CD Gates"]
     end
 
     T3 -.->|Đã Giải mã Sương mù| F1
     T2 -.->|Đã Giải mã Sương mù| F2
     T4 -.->|Đã Giải mã Sương mù| F3
     F3 -.->|Đã Giải mã Sương mù| F4
+    F4 -.->|Đã Giải mã Sương mù| F5
 ```
 
 ---
@@ -244,13 +246,26 @@ flowchart TD
 
 ---
 
+### Ticket F4: [Task/HITL] `[Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime]` ✅
+- **Mục tiêu**: Xây dựng engine giám sát runtime chuyên sâu cho Subagents trong Antigravity IDE, hỗ trợ Zero-Overhead streaming parser cho `transcript.jsonl`, bộ ước lượng token song ngữ Việt - Anh (BPE-based), xuất chuẩn OpenTelemetry GenAI Semantic Conventions (v1.28.0+) OTLP Traces JSON (`resourceSpans`), và cơ chế cưỡng chế ngân sách Token/Duration Budget (ADR-0030) với Deterministic Hard Completion Lock (ADR-0058).
+- **Đầu ra thực tế**:
+  - Module [`packages/ccba-harness/src/ccba_harness/telemetry.py`](../../../../packages/ccba-harness/src/ccba_harness/telemetry.py) (`TokenEstimator`, `stream_transcript_steps`, `analyze_subagent_transcript`, `check_subagent_budget`, `OtelSpanExporter`).
+  - Tích hợp CLI `ccba-harness telemetry [inspect|budget-check|export-otel]` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../../packages/ccba-harness/src/ccba_harness/cli.py).
+  - Tiện ích CLI độc lập [`scripts/governance/subagent_telemetry.py`](../../../../scripts/governance/subagent_telemetry.py).
+  - Bộ unit test [`packages/ccba-harness/tests/test_telemetry.py`](../../../../packages/ccba-harness/tests/test_telemetry.py) đạt 6/6 PASS.
+  - Bộ test tích hợp governance [`tests/governance/test_subagent_telemetry.py`](../../../../tests/governance/test_subagent_telemetry.py) đạt 5/5 PASS.
+  - Kiểm thử thực tế trên subagent trajectory `bacf8218-9bfb-4f1a-a79d-1e1748fd9caf` (206 steps, 103 turns, 3,101,462 tokens, 206 OTLP spans, runtime 0.1s).
+- **Phân loại**: `Task [HITL]` | **Ưu tiên**: P2.2 | **Trạng thái**: **Closed (Done) ✅**
+
+---
+
 ## 5. Sương mù Chiến trận / Chưa xác định rõ (Not yet specified - Fog of War)
 
 Khu vực lưu trữ các bài toán và hướng đi lớn đã được thu hẹp sương mù:
 
-1. **[F4] Hệ Thống Giám Sát OpenTelemetry & Dynamic Token Budgeting**:
-   - *Phụ thuộc*: Sự ổn định của hạ tầng Subagents trên Antigravity IDE.
-   - *Vấn đề mờ*: Làm sao trích xuất chính xác token consumption của từng tool call từ transcript log JSONL mà không gây overhead I/O?
+1. **[F5] Tự Động Hóa Giám Sát Chi Phí & Token Telemetry Vào CI/CD Gates**:
+   - *Phụ thuộc*: Tích hợp telemetry vào hook kết thúc phiên làm việc của Antigravity hoặc GitHub Actions.
+   - *Vấn đề mờ*: Làm sao tự động xuất OTLP Traces và gửi cảnh báo budget violation vào Slack/Discord webhook mà không làm tăng thời gian chờ của Lead Agent?
 
 ---
 
