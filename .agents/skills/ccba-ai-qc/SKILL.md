@@ -23,6 +23,7 @@ keywords:
 metadata:
   author: CCBA
   version: 2.0.0
+package_path: packages/ccba-qc-core
 triggers:
 - qc
 - audit

@@ -20,6 +20,7 @@ triggers:
 - scan secret
 - leak
 - che giấu key
+package_path: packages/ccba-maskara
 ---
 # Maskara Privacy - Bảo mật thông tin nhạy cảm CCBA
 

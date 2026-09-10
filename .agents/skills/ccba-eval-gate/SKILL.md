@@ -20,6 +20,7 @@ triggers:
 - run gate
 - ccba-skills-eval
 - skills-eval
+package_path: packages/ccba-harness
 ---
 
 # 🛡️ Kỹ năng: eval-gate (Tự kiểm chứng & Sửa lỗi)

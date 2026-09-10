@@ -63,6 +63,24 @@ def test_base_utilities(tmp_path: Path):
     safe_remove(d1)
     assert not d1.exists()
 
+    # Test safe_remove with normal and read-only files
+    file_to_remove = tmp_path / "remove_me.txt"
+    file_to_remove.write_text("temporary content", encoding="utf-8")
+    assert file_to_remove.exists()
+    safe_remove(file_to_remove)
+    assert not file_to_remove.exists()
+
+    # Test safe_remove with readonly file
+    readonly_file = tmp_path / "readonly.txt"
+    readonly_file.write_text("readonly content", encoding="utf-8")
+    readonly_file.chmod(0o444)
+    safe_remove(readonly_file)
+    assert not readonly_file.exists()
+
+    # Test safe_remove with non-existent path
+    safe_remove(tmp_path / "non_existent.txt")
+
+
 
 def test_resolve_canonical_project_type():
     """Test resolve_canonical_project_type with exact, alias, and fuzzy matching."""

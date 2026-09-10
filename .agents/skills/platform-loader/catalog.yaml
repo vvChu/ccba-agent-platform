@@ -11,6 +11,7 @@ notebook_ids:
   _software: nb-mock-software
   _qc: nb-mock-qc
   _consulting: nb-mock-consulting
+  _bim: nb-mock-bim
 bundles:
   Phần mềm:
   - _core
@@ -29,6 +30,7 @@ bundles:
   - _consulting
   BIM:
   - _core
+  - _bim
   Tác vụ Admin:
   - _core
   - _consulting
@@ -185,6 +187,7 @@ skills:
   - bản vẽ
   - scan
   skill_path: .agents/skills/ccba-ai-pdf-preprocessor/SKILL.md
+  package_path: packages/ccba-pdf-prep
 - name: ccba-ai-qc
   bundle: _qc
   description: Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế
@@ -203,6 +206,7 @@ skills:
   - heat map report
   skill_path: .agents/skills/ccba-ai-qc/SKILL.md
   command: /ccba-ai-qc
+  package_path: packages/ccba-qc-core
   tier: orchestrator
 - name: ccba-ai-qc-pccc-audit
   bundle: _qc
@@ -450,6 +454,7 @@ skills:
   - skills-eval
   skill_path: .agents/skills/ccba-eval-gate/SKILL.md
   command: /ccba-eval-gate
+  package_path: packages/ccba-harness
 - name: ccba-excalidraw-diagram
   bundle: _core
   description: Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian
@@ -664,6 +669,7 @@ skills:
   - thuvienphapluat
   - TVPL
   skill_path: .agents/skills/ccba-legal-intel/SKILL.md
+  package_path: packages/ccba-legal-intel
 - name: ccba-llm-pipeline-patterns
   bundle: _core
   description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
@@ -688,6 +694,7 @@ skills:
   - document processing
   skill_path: .agents/skills/ccba-markdown-document-processing/SKILL.md
   command: /ccba-markdown-document-processing
+  package_path: packages/mdconverter
 - name: ccba-maskara
   bundle: _core
   description: Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords,
@@ -700,6 +707,7 @@ skills:
   - leak
   - che giấu key
   skill_path: .agents/skills/ccba-maskara/SKILL.md
+  package_path: packages/ccba-maskara
 - name: ccba-new-feature
   bundle: _core
   description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session
@@ -730,6 +738,7 @@ skills:
   - admin
   skill_path: .agents/skills/ccba-notebooklm-connector/SKILL.md
   command: /ccba-notebooklm-connector
+  package_path: packages/ccba-notebooklm
 - name: ccba-pptx
   bundle: _core
   description: Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao
@@ -1014,6 +1023,7 @@ skills:
   - docx
   skill_path: .agents/skills/ccba-xu-ly-van-phong/SKILL.md
   command: /ccba-xu-ly-van-phong
+  package_path: packages/ccba-ooxml
 - name: ccba-youtube-learn
   bundle: _core
   description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề
@@ -1052,7 +1062,7 @@ rules:
 knowledge:
 - name: session_learnings
   description: Patterns, anti-patterns, solutions tích lũy qua các phiên
-  knowledge_path: knowledge/session_learnings.md
+  knowledge_path: .md/knowledge/session_learnings.md
 - name: bigbim_method_kb
   description: BIGBIM Method Knowledge Base v1.0 — 36 articles, 266 chunks, 3-layer
     architecture

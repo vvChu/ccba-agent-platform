@@ -146,10 +146,14 @@ class SharedSdkInspector:
                         for p in declared:
                             if p and p not in packages:
                                 packages.append(p)
-                    # If knowledge_corpus archetype, check ccba-legal-intel
-                    if data.get("project", {}).get("archetype") == "knowledge_corpus":
+                    # Check archetype defaults
+                    arch = data.get("project", {}).get("archetype")
+                    if arch == "knowledge_corpus":
                         if "ccba-legal-intel" not in packages:
                             packages.append("ccba-legal-intel")
+                    elif arch in ("project_delivery", "enterprise_governance"):
+                        if "mdconverter" not in packages:
+                            packages.append("mdconverter")
                 except Exception:
                     pass
 

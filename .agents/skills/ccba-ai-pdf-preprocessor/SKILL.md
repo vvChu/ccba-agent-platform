@@ -19,6 +19,7 @@ triggers:
 - tiling
 - bản vẽ
 - scan
+package_path: packages/ccba-pdf-prep
 ---
 # CCBA AI PDF Preprocessor
 
