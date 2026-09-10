@@ -79,30 +79,37 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
   - Xây dựng thành công Single-Writer Engine [`scripts/governance/apply_worker_patch.py`](../../../../scripts/governance/apply_worker_patch.py) hỗ trợ phát hiện xung đột (`--check-conflicts`), dry-run ảo hóa (`--dry-run`), áp dụng nguyên tử (`--apply`) kèm snapshot và auto-rollback khôi phục trạng thái gốc nếu verification gate thất bại.
   - Bộ kiểm thử [`tests/governance/test_apply_worker_patch.py`](../../../../tests/governance/test_apply_worker_patch.py) đạt 10/10 PASS (full governance suite đạt 91 passed).
   - Unblock Ticket F3 trong khu vực sương mù.
+- **[Đã chốt - 2026-09-10] Phỏng vấn Socratic Grilling & Ban hành ADR-0058 Live Collaboration Artifacts (Ticket 5)**:
+  - Hoàn tất 4 vòng phỏng vấn chuyên sâu `/ccba-grilling` cùng Kỹ sư trưởng, lập biên bản tại [`.md/knowledge/grilling_live_artifacts_and_charter.md`](../../knowledge/grilling_live_artifacts_and_charter.md).
+  - Thể chế hóa chính thức bằng [**ADR-0058**](../../../docs/adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md):
+    1. Kiến trúc Transient Buffer trong `brain/` kết hợp Final Snapshot Mirroring vào `.\.md\reports/` hoặc `.\.md/knowledge/`.
+    2. Chuẩn mực Bộ ba Artifacts (Trio Core Artifacts): `implementation_plan.md`, `walkthrough.md`, `task_dashboard.md` (chỉ khi multi-agent swarm), tích hợp nội khối đề mục `## CCBA Charter Governance & QC Matrix`.
+    3. Phân quyền thích ứng 11 Ghế CCBA Charter: Khóa cứng trần QC Level 1 + Watermark `[CCBA SANDBOX DRAFT]` cho Spoke Cá nhân; kích hoạt đúng Ghế chịu trách nhiệm cho Spoke Dự án chính thức.
+    4. Bắt buộc nhúng Báo cáo Thẩm tra Khách quan từ `ccba-harness verify-patch` và Khóa hoàn thành cứng (Hard Completion Lock) nếu Exit Code $\ne 0$.
 
 ---
 
 ## 4. Các Ticket ở Biên giới (Frontier Unblocked Tickets)
 
-Dưới đây là các ticket mở, độc lập, không bị chặn bởi bất kỳ ticket nào khác, sẵn sàng được nhận (claim) và thực thi trong từng phiên độc lập:
+Toàn bộ 5 Frontier Tickets ban đầu (P0 & P1) đã **HOÀN THÀNH 100%**. Sương mù chiến trận (Fog of War) đã được giải phóng hoàn toàn thành các Frontier Tickets sẵn sàng triển khai tiếp:
 
 ```mermaid
 flowchart TD
-    subgraph Done ["Đã Hoàn thành (Closed) ✅"]
+    subgraph Done ["Đã Hoàn thành Toàn bộ Frontier Giai đoạn 1 (Closed 100%) 🎉"]
         T1["[T1: Task AFK] Memory Compaction Engine cho session_learnings.md ✅"]
         T2["[T2: Task AFK] Exit-Code Deterministic Verification Gate trong ccba-harness ✅"]
         T3["[T3: Research AFK] Ma trận Ánh xạ Di trú 52 Scripts ✅"]
         T4["[T4: Prototype HITL] Giao thức Structured Diff Patch & Single-Writer cho ccba-teamwork ✅"]
+        T5["[T5: Grilling HITL] Thiết kế Live State Artifacts & ADR-0058 Charter Alignment ✅"]
     end
 
-    subgraph Frontier ["Các Ticket ở Biên giới Sẵn sàng Nhận việc (Frontier Unblocked)"]
-        T5["[T5: Grilling HITL] Thiết kế Tích hợp Live State Artifacts & 11-Seat Charter"]
+    subgraph Frontier ["Biên Giới Mới Sẵn Sàng Nhận Việc (Unblocked Execution Frontier)"]
+        F1["[F1: Task AFK] Di trú 35 Core Scripts & Thành lập packages/ccba-qc-core"]
+        F2["[F2: Task AFK] Tích hợp verify-patch Loop Tự động cho 67 SKILL.md"]
+        F3["[F3: Task HITL] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine"]
     end
 
-    subgraph Fog ["Sương mù Chiến trận (Blocked / Fog of War)"]
-        F1["[F1] Di trú 35 Core Scripts theo Ma trận (Đã unblock từ T3)"]
-        F2["[F2] Tích hợp Test Loop Tự động cho Toàn bộ 67 SKILL.md (Đã unblock từ T2)"]
-        F3["[F3] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine (Đã unblock từ T4)"]
+    subgraph Fog ["Sương mù Chiến trận Còn lại"]
         F4["[F4] Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime"]
     end
 
@@ -154,12 +161,13 @@ flowchart TD
 
 ---
 
-### Ticket 5: [Grilling/HITL] `[Phỏng vấn Thiết kế Tích hợp Live State Artifacts & 11-Seat CCBA Charter Review]`
+### Ticket 5: [Grilling/HITL] `[Phỏng vấn Thiết kế Tích hợp Live State Artifacts & 11-Seat CCBA Charter Review]` ✅
 - **Mục tiêu**: Thực hiện một phiên đối thoại chuyên sâu (Socratic Grilling) cùng Kỹ sư trưởng để thống nhất cấu trúc của các Live State Artifacts (`prompt_draft.md`, `task_dashboard.md`), vị trí lưu trữ hợp chuẩn Rule 1 (`.\.md\scratch\`), và cách thức gắn kết quyết định của 11 Ghế Hội đồng Thẩm định CCBA (ADR-0046) vào giao diện phản hồi của Antigravity (`RequestFeedback: true`).
-- **Đầu ra kỳ vọng**:
-  - Biên bản phỏng vấn Grilling: `.md/knowledge/grilling_live_artifacts_and_charter.md`.
-  - Bản thảo quyết định kiến trúc ADR bổ sung về Live Collaboration Artifacts.
-- **Phân loại**: `Grilling [HITL]` | **Ưu tiên**: P1.2 | **Trạng thái**: **Ready to Claim**
+- **Đầu ra thực tế**:
+  - Biên bản phỏng vấn Grilling: [`.md/knowledge/grilling_live_artifacts_and_charter.md`](../../knowledge/grilling_live_artifacts_and_charter.md).
+  - Quyết định kiến trúc chính thức: [**ADR-0058**](../../../docs/adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md).
+  - Bộ kiểm thử ADR: `tests/governance/test_adr.py` và `test_sync_adr_matrix.py` đạt 13/13 PASS.
+- **Phân loại**: `Grilling [HITL]` | **Ưu tiên**: P1.2 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
 
