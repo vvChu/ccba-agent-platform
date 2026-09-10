@@ -25,6 +25,17 @@ from .dashboard import (
     generate_swarm_dashboard_html,
     render_swarm_dashboard,
 )
+from .economy import (
+    EconomyAuditReport,
+    SkillPromptMetrics,
+    TokenROIMetrics,
+    analyze_skill_prompt_density,
+    audit_token_economy,
+    calculate_role_aware_roi,
+    detect_sentence_duplicates,
+    generate_prompt_pruning_report,
+    scan_all_skills_economy,
+)
 from .evals import (
     AutoItemScorer,
     BaseScorer,
@@ -151,4 +162,13 @@ __all__ = [
     "aggregate_fleet_telemetry",
     "generate_fleet_dashboard_html",
     "render_fleet_dashboard",
+    "SkillPromptMetrics",
+    "TokenROIMetrics",
+    "EconomyAuditReport",
+    "analyze_skill_prompt_density",
+    "detect_sentence_duplicates",
+    "scan_all_skills_economy",
+    "calculate_role_aware_roi",
+    "audit_token_economy",
+    "generate_prompt_pruning_report",
 ]

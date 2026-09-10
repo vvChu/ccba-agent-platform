@@ -140,7 +140,7 @@ Hệ thống chính thức kích hoạt **Phase 4: Beyond Horizon — Vận Hàn
 
 ```mermaid
 flowchart TD
-    subgraph Done ["Đã Hoàn thành (Phase 0, 1, 2, 3 - Closed 100%) 🎉"]
+    subgraph Done ["Đã Hoàn thành (Phase 0, 1, 2, 3 & P4.1 - Closed 100%) 🎉"]
         T1["[T1: Task AFK] Memory Compaction Engine cho session_learnings.md ✅"]
         T2["[T2: Task AFK] Exit-Code Deterministic Verification Gate trong ccba-harness ✅"]
         T3["[T3: Research AFK] Ma trận Ánh xạ Di trú 52 Scripts ✅"]
@@ -153,10 +153,10 @@ flowchart TD
         F5["[F5: Task AFK] Tự động hóa Giám sát Chi phí & Token Telemetry vào CI/CD Gates ✅"]
         F6["[F6: Task HITL] Tích hợp Giao diện Dashboard Trực Quan Hóa Swarm Telemetry ✅"]
         F7["[F7: Task HITL] Mở Rộng Hệ Thống Báo Cáo & Phân Tích Đa Dự Án (Cross-Spoke Analytics) ✅"]
+        P4_1["[P4.1: Task AFK] Token Economy & Prompt Density Optimization Engine ✅"]
     end
 
     subgraph Phase4Frontier ["Phase 4: Beyond Horizon — Vận Hành Tự Chủ Doanh Nghiệp (Frontier Tickets) 🚀"]
-        P4_1["[P4.1: Task AFK] Token Economy & Prompt Density Optimization Engine"]
         P4_2["[P4.2: Task AFK] Di Trú 28 Core Scripts Về ccba-ooxml & ccba-pdf-prep"]
         P4_3["[P4.3: Prototype HITL] Real-Time Telemetry Streaming Bridge qua Server Spark"]
         P4_4["[P4.4: Task HITL] Autonomous Self-Healing & Closed-Loop CI Patch Engine"]
@@ -329,14 +329,14 @@ flowchart TD
 
 ---
 
-### Ticket P4.1: [Task/AFK] `[Token Economy & Prompt Density Optimization Engine]` 🚀
+### Ticket P4.1: [Task/AFK] `[Token Economy & Prompt Density Optimization Engine]` ✅
 - **Mục tiêu**: Xây dựng module `packages/ccba-harness/src/ccba_harness/economy.py` và subcommand CLI `ccba-harness telemetry economy` nhằm khai thác dữ liệu từ `FleetTelemetryReport` và `SwarmTelemetryReport`.
-- **Chức năng & Đầu ra dự kiến**:
-  - Tính toán chỉ số **Prompt Density Index (PDI)** và **Token ROI** (tỷ lệ token tiêu hao trên số lượng artifacts, diff changes và test assertions vượt qua thành công).
-  - Phân tích và phát hiện các đoạn văn bản rườm rà (prompt overhead) trong các `SKILL.md` và System Prompts.
-  - Tự động sinh báo cáo Prompt Pruning Diff tại `.md/reports/prompt_economy_report.md` kèm các khuyến nghị tối ưu hóa chi phí có kiểm soát.
-  - Bộ unit test `tests/governance/test_telemetry_economy.py` đạt 100% PASS.
-- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P4.1 | **Trạng thái**: **Ready for Execution (Frontier)**
+- **Đầu ra thực tế**:
+  - Module [`packages/ccba-harness/src/ccba_harness/economy.py`](../../../../packages/ccba-harness/src/ccba_harness/economy.py) (`SkillPromptMetrics`, `TokenROIMetrics`, `EconomyAuditReport`, `analyze_skill_prompt_density`, `detect_sentence_duplicates`, `calculate_role_aware_roi`, `generate_prompt_pruning_report`).
+  - Tiện ích CLI chuyên trách [`scripts/governance/token_economy.py`](../../../../scripts/governance/token_economy.py) (`scan`, `report`, `roi`) và subcommand `ccba-harness telemetry economy`.
+  - Báo cáo kiểm định thực tế toàn bộ 67 kỹ năng: [`.md/reports/prompt_economy_report.md`](../../reports/prompt_economy_report.md) (PDI trung bình 73.3/100, phát hiện 4 skills overhead cao, tiềm năng tiết kiệm ~12,134 tokens/lượt).
+  - Bộ kiểm thử độc lập [`tests/governance/test_telemetry_economy.py`](../../../../tests/governance/test_telemetry_economy.py) đạt 7/7 PASS (100%).
+- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P4.1 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
 

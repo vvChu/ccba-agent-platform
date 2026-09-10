@@ -884,9 +884,85 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
     )
     p_fleet.add_argument("--title", type=str, default=None, help="Custom fleet dashboard title")
 
+    # Subcommand: economy
+    p_eco = sub.add_parser("economy", help="Prompt density & token economy optimization")
+    p_eco.add_argument(
+        "--scan-skills",
+        action="store_true",
+        help="Scan and score Prompt Density Index (PDI) for all skills",
+    )
+    p_eco.add_argument(
+        "--session",
+        type=str,
+        default=None,
+        help="Evaluate role-aware Token ROI for a subagent session",
+    )
+    p_eco.add_argument(
+        "--role",
+        type=str,
+        default=None,
+        help="Override role for ROI evaluation (coder, investigator, reviewer, general)",
+    )
+    p_eco.add_argument(
+        "--prune-report", action="store_true", help="Generate actionable prompt pruning diff report"
+    )
+    p_eco.add_argument("--json", action="store_true", help="Output results as raw JSON")
+    p_eco.add_argument(
+        "--out",
+        type=str,
+        default=None,
+        help="Output file path (default for report: .md/reports/prompt_economy_report.md)",
+    )
+
     args = parser.parse_args(argv)
 
     import json
+
+    if args.telemetry_cmd == "economy":
+        from .economy import (
+            audit_token_economy,
+            calculate_role_aware_roi,
+            generate_prompt_pruning_report,
+        )
+
+        session_metrics = None
+        if args.session:
+            try:
+                session_metrics = analyze_subagent_transcript(args.session)
+            except Exception as err:
+                print(f"[Warning] Could not load session '{args.session}': {err}", file=sys.stderr)
+
+        report = audit_token_economy(session_metrics=session_metrics)
+        if args.session and session_metrics and args.role:
+            report.session_roi = calculate_role_aware_roi(session_metrics, role_override=args.role)
+
+        if args.prune_report:
+            out_file = Path(args.out) if args.out else Path(".md/reports/prompt_economy_report.md")
+            generate_prompt_pruning_report(report, output_path=out_file)
+            print(f"[Success] Generated Prompt Pruning Report at: {out_file.resolve()}")
+            print(f"  Total Skills: {report.total_skills}")
+            print(f"  Average PDI: {report.avg_pdi:.1f} / 100.0")
+            print(f"  Bloated Skills: {report.bloated_skills_count}")
+            print(f"  Estimated Token Savings: ~{report.estimated_token_savings:,} tokens")
+            return 0
+
+        if args.json:
+            payload = json.dumps(report.to_dict(), indent=2, ensure_ascii=False)
+            if args.out:
+                Path(args.out).write_text(payload, encoding="utf-8")
+                print(f"[Success] Saved JSON economy report to {args.out}")
+            else:
+                print(payload)
+            return 0
+
+        # Markdown output
+        md_text = report.to_markdown()
+        if args.out:
+            Path(args.out).write_text(md_text, encoding="utf-8")
+            print(f"[Success] Saved economy report to {args.out}")
+        else:
+            print(md_text)
+        return 0
 
     if args.telemetry_cmd == "fleet":
         from .fleet import aggregate_fleet_telemetry, render_fleet_dashboard
