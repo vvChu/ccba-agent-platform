@@ -86,6 +86,19 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
     2. Chuẩn mực Bộ ba Artifacts (Trio Core Artifacts): `implementation_plan.md`, `walkthrough.md`, `task_dashboard.md` (chỉ khi multi-agent swarm), tích hợp nội khối đề mục `## CCBA Charter Governance & QC Matrix`.
     3. Phân quyền thích ứng 11 Ghế CCBA Charter: Khóa cứng trần QC Level 1 + Watermark `[CCBA SANDBOX DRAFT]` cho Spoke Cá nhân; kích hoạt đúng Ghế chịu trách nhiệm cho Spoke Dự án chính thức.
     4. Bắt buộc nhúng Báo cáo Thẩm tra Khách quan từ `ccba-harness verify-patch` và Khóa hoàn thành cứng (Hard Completion Lock) nếu Exit Code $\ne 0$.
+- **[Đã chốt - 2026-09-10] Thành lập packages/ccba-qc-core & Di trú 35 QC Scripts (Ticket F1)**:
+  - Khởi tạo package chuyên trách mới `packages/ccba-qc-core` đạt chuẩn Deep Seam (ADR-0035, ADR-0057 Gate 0).
+  - Tách bạch và đóng gói toàn bộ logic cốt lõi thành 6 modules chuyên trách:
+    1. `discovery.py` (`DiscoveryEngine`, `SheetEntry`, `ProjectBackbone`, `_normalize_vn` chuẩn hóa NFD).
+    2. `quadview.py` (`QuadViewAuditEngine`, `_parse_audit_response`).
+    3. `semantic.py` (`SemanticAuditEngine`).
+    4. `reporter.py` (`ReporterEngine`).
+    5. `pccc.py` (`PcccMapReduceEngine`).
+    6. `pipeline.py` (`QCBatchOrchestrator`).
+    7. `cli.py` (Giao diện dòng lệnh Typer `ccba-qc` với các subcommands: `discover`, `audit`, `batch`, `pccc`).
+  - Chuyển đổi 6 loose scripts trong `.agents/skills/ccba-ai-qc/scripts/` và `ccba-ai-qc-pccc-audit/scripts/` thành Thin Adapters ủy nhiệm 100% logic vào `ccba-qc-core`.
+  - Bộ unit test `packages/ccba-qc-core/tests/test_qc_core.py` đạt 6/6 PASS, strict mypy 0 issues, ruff format 0 errors.
+  - Vượt qua kiểm định phụ thuộc kiến trúc `tests/governance/test_dependency_contracts.py` (6/6 PASS) và toàn bộ 4/4 rào chắn của `ccba-harness verify-patch`.
 
 ---
 
@@ -95,16 +108,16 @@ Toàn bộ 5 Frontier Tickets ban đầu (P0 & P1) đã **HOÀN THÀNH 100%**. S
 
 ```mermaid
 flowchart TD
-    subgraph Done ["Đã Hoàn thành Toàn bộ Frontier Giai đoạn 1 (Closed 100%) 🎉"]
+    subgraph Done ["Đã Hoàn thành (Closed 100%) 🎉"]
         T1["[T1: Task AFK] Memory Compaction Engine cho session_learnings.md ✅"]
         T2["[T2: Task AFK] Exit-Code Deterministic Verification Gate trong ccba-harness ✅"]
         T3["[T3: Research AFK] Ma trận Ánh xạ Di trú 52 Scripts ✅"]
         T4["[T4: Prototype HITL] Giao thức Structured Diff Patch & Single-Writer cho ccba-teamwork ✅"]
         T5["[T5: Grilling HITL] Thiết kế Live State Artifacts & ADR-0058 Charter Alignment ✅"]
+        F1["[F1: Task AFK] Di trú 35 Core Scripts & Thành lập packages/ccba-qc-core ✅"]
     end
 
     subgraph Frontier ["Biên Giới Mới Sẵn Sàng Nhận Việc (Unblocked Execution Frontier)"]
-        F1["[F1: Task AFK] Di trú 35 Core Scripts & Thành lập packages/ccba-qc-core"]
         F2["[F2: Task AFK] Tích hợp verify-patch Loop Tự động cho 67 SKILL.md"]
         F3["[F3: Task HITL] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine"]
     end
@@ -171,16 +184,34 @@ flowchart TD
 
 ---
 
+### Ticket F1: [Task/AFK] `[Thành lập packages/ccba-qc-core & Di trú 35 Core Scripts Thẩm định Đa bộ môn]` ✅
+- **Mục tiêu**: Khởi tạo package mới `packages/ccba-qc-core`, di trú 35 core scripts (1,788 LOC của `ccba-ai-qc` và `ccba-ai-qc-pccc-audit`) thành Deep Seam chuẩn mực, chuyển đổi các script trong skill thành Thin Adapters, và kiểm định qua `ccba-harness verify-patch`.
+- **Đầu ra thực tế**:
+  - Scaffolding & source code hoàn chỉnh tại [`packages/ccba-qc-core/`](../../../../packages/ccba-qc-core/):
+    - `src/ccba_qc_core/discovery.py` (`DiscoveryEngine`, `SheetEntry`, `ProjectBackbone`, `_normalize_vn`).
+    - `src/ccba_qc_core/quadview.py` (`QuadViewAuditEngine`, `_parse_audit_response`).
+    - `src/ccba_qc_core/semantic.py` (`SemanticAuditEngine`).
+    - `src/ccba_qc_core/reporter.py` (`ReporterEngine`).
+    - `src/ccba_qc_core/pccc.py` (`PcccMapReduceEngine`).
+    - `src/ccba_qc_core/pipeline.py` (`QCBatchOrchestrator`).
+    - `src/ccba_qc_core/cli.py` (CLI `ccba-qc`).
+  - Chuyển đổi 6 scripts thành Thin Adapters chuẩn mực (chỉ delegate call và CLI proxy):
+    - `.agents/skills/ccba-ai-qc/scripts/` (`discovery_engine.py`, `legacy_quadview_engine.py`, `semantic_audit_engine.py`, `reporter_engine.py`, `orchestrator.py`).
+    - `.agents/skills/ccba-ai-qc-pccc-audit/scripts/audit_engine.py`.
+  - Bộ unit tests [`packages/ccba-qc-core/tests/test_qc_core.py`](../../../../packages/ccba-qc-core/tests/test_qc_core.py) đạt 6/6 PASS trong 2.27s.
+  - Strict mypy đạt 0 issues in 8 source files.
+  - Bộ kiểm thử ranh giới phụ thuộc `tests/governance/test_dependency_contracts.py` đạt 6/6 PASS.
+  - Toàn bộ 4/4 rào chắn của `ccba-harness verify-patch` đều đạt Exit Code 0.
+- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P1.3 | **Trạng thái**: **Closed (Done) ✅**
+
+---
+
 ## 5. Sương mù Chiến trận / Chưa xác định rõ (Not yet specified - Fog of War)
 
 Khu vực lưu trữ các bài toán và hướng đi lớn đã được thu hẹp sương mù:
 
-1. **[F1] Di trú & Tái cấu trúc 35 Core Scripts thành Deep Seams**:
-   - *Trạng thái*: **Đã Unblock từ Ticket 3**. Đã có ma trận chi tiết tại `scripts_migration_manifest.md`.
-   - *Bước tiếp theo*: Chờ phê duyệt thành lập `packages/ccba-qc-core` từ Kỹ sư trưởng để tạo ticket thực thi (P0/P1).
-   - *Vấn đề mờ*: Các script có import chéo nhau giữa các skill không? Cần bao nhiêu mock tests cho các hàm xử lý PDF/CAD/DOCX phức tạp?
-2. **[F2] Tích hợp Test Loop Tự Động Vào Toàn Bộ 67 Kỹ Năng**:
-   - *Phụ thuộc*: Ticket 2 (Cần hoàn thành công cụ `ccba-harness verify-patch` trước).
+1. **[F2] Tích hợp Test Loop Tự Động Vào Toàn Bộ 67 Kỹ Năng**:
+   - *Phụ thuộc*: Ticket 2 (Cần hoàn thành công cụ `ccba-harness verify-patch` trước) & ADR-0058 Hard Completion Lock.
    - *Vấn đề mờ*: Các skill mang tính chất tư vấn định tính (như `ccba-legal-advisor`, `ccba-seminar-builder`) sẽ dùng assertion test nào để làm rào chắn Exit Code khách quan? (Có thể là bộ rubric validator hoặc schema assertion).
 3. **[F3] Thử nghiệm Swarm Multi-Agent Chạy Thực Tế với Single-Writer Engine**:
    - *Phụ thuộc*: Ticket 4 (Cần có prototype structured diff hoàn chỉnh).
