@@ -15,6 +15,7 @@ import argparse
 import json
 import re
 import sys
+import time
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -248,6 +249,189 @@ def load_patches_from_directory(dir_path: Path) -> list[PatchBlock]:
     return patches
 
 
+@dataclass
+class SwarmExecutionReport:
+    """Structured report of a Single-Writer swarm patch application run."""
+
+    success: bool
+    patches_count: int
+    collisions: list[str]
+    dry_run_errors: list[str]
+    applied_files: list[str]
+    semantic_conflict: bool
+    verification_errors: list[str]
+    timings: dict[str, float]
+    rollback_performed: bool
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert report to JSON-serializable dictionary."""
+        return {
+            "success": self.success,
+            "patches_count": self.patches_count,
+            "collisions": self.collisions,
+            "dry_run_errors": self.dry_run_errors,
+            "applied_files": self.applied_files,
+            "semantic_conflict": self.semantic_conflict,
+            "verification_errors": self.verification_errors,
+            "timings": {k: round(v, 4) for k, v in self.timings.items()},
+            "rollback_performed": self.rollback_performed,
+        }
+
+
+def execute_swarm_patches(
+    patches: list[PatchBlock],
+    base_dir: Path,
+    dry_run_only: bool = False,
+    apply: bool = True,
+    verify: bool = False,
+    verify_commands: list[str] | None = None,
+    preset: str | None = None,
+    target: Path | None = None,
+    timeout: float = 60.0,
+) -> SwarmExecutionReport:
+    """Execute the complete Single-Writer multi-agent patch pipeline."""
+    timings: dict[str, float] = {}
+    t_start = time.perf_counter()
+
+    # Step 1: Detect collisions
+    t_col_start = time.perf_counter()
+    collisions = detect_collisions(patches)
+    timings["collision_detection"] = time.perf_counter() - t_col_start
+
+    if collisions:
+        timings["total"] = time.perf_counter() - t_start
+        return SwarmExecutionReport(
+            success=False,
+            patches_count=len(patches),
+            collisions=collisions,
+            dry_run_errors=[],
+            applied_files=[],
+            semantic_conflict=False,
+            verification_errors=[],
+            timings=timings,
+            rollback_performed=False,
+        )
+
+    # Step 2: Dry run
+    t_dry_start = time.perf_counter()
+    is_valid, dry_errors = dry_run(patches, base_dir)
+    timings["dry_run"] = time.perf_counter() - t_dry_start
+
+    if not is_valid:
+        timings["total"] = time.perf_counter() - t_start
+        return SwarmExecutionReport(
+            success=False,
+            patches_count=len(patches),
+            collisions=[],
+            dry_run_errors=dry_errors,
+            applied_files=[],
+            semantic_conflict=False,
+            verification_errors=[],
+            timings=timings,
+            rollback_performed=False,
+        )
+
+    if dry_run_only or (not apply and not verify):
+        timings["total"] = time.perf_counter() - t_start
+        return SwarmExecutionReport(
+            success=True,
+            patches_count=len(patches),
+            collisions=[],
+            dry_run_errors=[],
+            applied_files=[],
+            semantic_conflict=False,
+            verification_errors=[],
+            timings=timings,
+            rollback_performed=False,
+        )
+
+    # Step 3: Apply atomically
+    t_apply_start = time.perf_counter()
+    apply_ok, snapshot, logs = apply_atomic(patches, base_dir)
+    timings["apply"] = time.perf_counter() - t_apply_start
+
+    applied_files = [p.file_path for p in patches]
+
+    if not apply_ok:
+        timings["total"] = time.perf_counter() - t_start
+        return SwarmExecutionReport(
+            success=False,
+            patches_count=len(patches),
+            collisions=[],
+            dry_run_errors=logs,
+            applied_files=[],
+            semantic_conflict=False,
+            verification_errors=[],
+            timings=timings,
+            rollback_performed=True,
+        )
+
+    # Step 4: Verification gate & Semantic Conflict detection
+    if verify:
+        t_ver_start = time.perf_counter()
+        cmds = list(verify_commands) if verify_commands else []
+        if preset:
+            try:
+                from ccba_harness.verifier import resolve_preset_commands
+            except ImportError:
+                sys.path.insert(0, str(HUB_ROOT / "packages" / "ccba-harness" / "src"))
+                from ccba_harness.verifier import resolve_preset_commands
+            preset_cmds = resolve_preset_commands(preset, target=target, base_dir=base_dir)
+            cmds.extend(preset_cmds)
+
+        if not cmds:
+            cmds = [
+                "python -m ruff check scripts/ tests/",
+                "python -m pytest tests/governance/ -q",
+            ]
+
+        try:
+            from ccba_harness.verifier import verify_patch_execution
+        except ImportError:
+            sys.path.insert(0, str(HUB_ROOT / "packages" / "ccba-harness" / "src"))
+            from ccba_harness.verifier import verify_patch_execution
+
+        verification = verify_patch_execution(
+            commands=cmds,
+            cwd=base_dir,
+            timeout=timeout,
+        )
+        timings["verification"] = time.perf_counter() - t_ver_start
+
+        if not verification.all_passed:
+            rollback(snapshot)
+            failed_cmds = [
+                f"{r.command} (exit {r.exit_code}): {r.error_message or r.stderr or r.stdout}".strip()
+                for r in verification.results
+                if r.exit_code != 0
+            ]
+            timings["total"] = time.perf_counter() - t_start
+            return SwarmExecutionReport(
+                success=False,
+                patches_count=len(patches),
+                collisions=[],
+                dry_run_errors=[],
+                applied_files=applied_files,
+                semantic_conflict=True,
+                verification_errors=failed_cmds,
+                timings=timings,
+                rollback_performed=True,
+            )
+
+    timings["total"] = time.perf_counter() - t_start
+    return SwarmExecutionReport(
+        success=True,
+        patches_count=len(patches),
+        collisions=[],
+        dry_run_errors=[],
+        applied_files=applied_files,
+        semantic_conflict=False,
+        verification_errors=[],
+        timings=timings,
+        rollback_performed=False,
+    )
+
+
 def main() -> int:
     """CLI Entrypoint for apply_worker_patch."""
     if hasattr(sys.stdout, "reconfigure"):
@@ -265,8 +449,31 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="Simulate patch application without modifying disk")
     parser.add_argument("--apply", action="store_true", help="Apply patches atomically to codebase")
     parser.add_argument("--verify", action="store_true", help="Run verification gate after applying and auto-rollback on failure")
+    parser.add_argument(
+        "-c",
+        "--verify-cmd",
+        "--verify-commands",
+        dest="verify_commands",
+        nargs="+",
+        default=None,
+        help="Custom verification commands to execute during verification gate",
+    )
+    parser.add_argument(
+        "--preset",
+        choices=["code", "doc", "skill", "adr"],
+        default=None,
+        help="Verification preset to use",
+    )
+    parser.add_argument("--target", type=Path, default=None, help="Target file for presets")
+    parser.add_argument("--timeout", type=float, default=60.0, help="Timeout in seconds for verification commands")
+    parser.add_argument("--benchmark", action="store_true", help="Print latency benchmark profiling")
+    parser.add_argument("--json", action="store_true", help="Output SwarmExecutionReport as JSON to stdout")
 
     args = parser.parse_args()
+
+    # If verification commands or preset is provided, imply --verify
+    if args.verify_commands or args.preset:
+        args.verify = True
 
     # Collect patches
     patches: list[PatchBlock] = []
@@ -284,65 +491,77 @@ def main() -> int:
         print("ERROR: No valid patches found or specified.", file=sys.stderr)
         return 1
 
-    print(f"[Info] Loaded {len(patches)} patch block(s).")
+    if not args.json:
+        print(f"[Info] Loaded {len(patches)} patch block(s).")
 
-    # Step 1: Check collisions
-    collisions = detect_collisions(patches)
-    if collisions:
-        print("[FAIL] Collision(s) detected across worker patches:", file=sys.stderr)
-        for c in collisions:
-            print(f"  - {c}", file=sys.stderr)
-        return 1
-
-    if args.check_conflicts:
+    # If only checking collisions
+    if args.check_conflicts and not (args.dry_run or args.apply or args.verify):
+        collisions = detect_collisions(patches)
+        if collisions:
+            print("[FAIL] Collision(s) detected across worker patches:", file=sys.stderr)
+            for c in collisions:
+                print(f"  - {c}", file=sys.stderr)
+            return 1
         print("[PASS] Zero collisions detected across all loaded patches.")
         return 0
 
-    # Step 2: Dry run
-    is_valid, errors = dry_run(patches, args.base_dir)
-    if not is_valid:
+    report = execute_swarm_patches(
+        patches=patches,
+        base_dir=args.base_dir,
+        dry_run_only=args.dry_run,
+        apply=args.apply or args.verify,
+        verify=args.verify,
+        verify_commands=args.verify_commands,
+        preset=args.preset,
+        target=args.target,
+        timeout=args.timeout,
+    )
+
+    if args.json:
+        print(json.dumps(report.to_dict(), indent=2))
+        return 0 if report.success else 1
+
+    # Text report
+    if report.collisions:
+        print("[FAIL] Collision(s) detected across worker patches:", file=sys.stderr)
+        for c in report.collisions:
+            print(f"  - {c}", file=sys.stderr)
+        return 1
+
+    if report.dry_run_errors:
         print("[FAIL] Dry-run validation failed:", file=sys.stderr)
-        for err in errors:
+        for err in report.dry_run_errors:
             print(f"  - {err}", file=sys.stderr)
         return 1
 
-    print("[PASS] Pre-flight dry-run succeeded for all patches.")
     if args.dry_run:
+        print("[PASS] Pre-flight dry-run succeeded for all patches.")
         return 0
 
-    # Step 3: Apply
-    if args.apply or args.verify:
-        success, snapshot, logs = apply_atomic(patches, args.base_dir)
-        if not success:
-            print(f"[FAIL] Failed to apply patches: {logs}", file=sys.stderr)
-            return 1
+    if report.semantic_conflict:
+        print(
+            "[FAIL] Post-patch verification failed (Semantic Conflict)! Triggering automatic rollback...",
+            file=sys.stderr,
+        )
+        for err in report.verification_errors:
+            print(f"  - {err}", file=sys.stderr)
+        print("[Rollback] Codebase restored to pre-patch snapshot.")
+        return 1
 
-        for msg in logs:
-            print(f"[Success] {msg}")
-
-        # Step 4: Verification gate if requested
+    if report.success:
+        print(f"[Success] Successfully patched {len(report.applied_files)} file(s).")
         if args.verify:
-            print("[Verification] Triggering ccba-harness verify-patch gate...")
-            from ccba_harness.verifier import verify_patch_execution
-
-            verification = verify_patch_execution(
-                commands=[
-                    "python -m ruff check scripts/ tests/",
-                    "python -m pytest tests/governance/ -q",
-                ],
-                cwd=args.base_dir,
-                timeout=60.0,
-            )
-
-            if not verification.all_passed:
-                print("[FAIL] Post-patch verification failed! Triggering automatic rollback...", file=sys.stderr)
-                rollback(snapshot)
-                print("[Rollback] Codebase restored to pre-patch snapshot.")
-                return 1
-
             print("[PASS] Post-patch verification passed! Codebase is healthy.")
 
-    return 0
+    if args.benchmark:
+        t = report.timings
+        print(
+            f"[Benchmark] Col: {t.get('collision_detection', 0.0):.4f}s | "
+            f"Dry: {t.get('dry_run', 0.0):.4f}s | Apply: {t.get('apply', 0.0):.4f}s | "
+            f"Ver: {t.get('verification', 0.0):.4f}s | Total: {t.get('total', 0.0):.4f}s"
+        )
+
+    return 0 if report.success else 1
 
 
 if __name__ == "__main__":

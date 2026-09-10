@@ -105,12 +105,21 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
   - Thể chế hóa vào Hiến pháp Nền tảng Layer 1 (`AGENTS.md` và `.agents/AGENTS.md`): Cập nhật điều khoản cốt lõi **Deterministic Hard Completion Lock (ADR-0058)** cấm Agent tự nhận hoàn thành nếu Exit Code $\ne 0$.
   - Cập nhật Cẩm nang Soạn thảo Kỹ năng (`skill_authoring_guide.md`, `skill_review_checklist.md`) và nâng cấp `packages/ccba-harness/tests/test_verify_patch.py` (19/19 tests PASS 100%).
   - Tích hợp mẫu Exit-Code Gate vào các Master Skills và Rituals trọng tâm: `ccba-implement`, `ccba-tdd`, `ccba-code-review`, `ccba-build-skill`, `ccba-legal-advisor`, `ccba-completion-checklist`.
+- **[Đã chốt - 2026-09-10] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine (Ticket F3)**:
+  - Nâng cấp [`scripts/governance/apply_worker_patch.py`](../../../../scripts/governance/apply_worker_patch.py) với `SwarmExecutionReport`, hỗ trợ cờ linh hoạt `--verify-cmd` (`-c`), `--preset`, `--benchmark`, `--json` và cơ chế phát hiện & báo cáo Semantic Conflict tự động rollback 100% snapshot.
+  - Xây dựng bộ kiểm thử E2E mô phỏng Swarm 5 kịch bản [`tests/governance/test_swarm_single_writer_e2e.py`](../../../../tests/governance/test_swarm_single_writer_e2e.py) đạt 5/5 PASS (toàn bộ 99 tests governance đạt 100% PASS):
+    1. Concurrent 5-Worker Swarm nộp độc lập 5 patches across 5 seams $\rightarrow$ Single-Writer merge thành công không va chạm dòng.
+    2. Syntactic Collision Rejection $\rightarrow$ Chặn đứng 2 workers sửa cùng khối code trước khi ghi đĩa.
+    3. Semantic Conflict & Auto-Rollback $\rightarrow$ Phát hiện lỗi logic qua verification gate, tự động phục hồi nguyên trạng đĩa từ snapshot.
+    4. Stale / Drift Patch Rejection $\rightarrow$ Từ chối an toàn search blocks không khớp trong dry-run.
+    5. High-Throughput Latency Benchmark $\rightarrow$ Đo lường phân tích va chạm 20 khối patch $< 50\text{ms}$.
+  - Chuẩn hóa kỹ năng [`.agents/skills/ccba-teamwork/SKILL.md`](../../../../.agents/skills/ccba-teamwork/SKILL.md) cưỡng chế nguyên tắc No Pre-mutation và quy trình nghiệm thu bằng `apply_worker_patch.py` kết hợp ADR-0058 Hard Completion Lock.
 
 ---
 
 ## 4. Các Ticket ở Biên giới (Frontier Unblocked Tickets)
 
-Toàn bộ 5 Frontier Tickets ban đầu (P0 & P1) đã **HOÀN THÀNH 100%**. Sương mù chiến trận (Fog of War) đã được giải phóng hoàn toàn thành các Frontier Tickets sẵn sàng triển khai tiếp:
+Toàn bộ 8 Frontier Tickets (P0, P1 và Phase 2) đã **HOÀN THÀNH 100%**. Biên giới mới sẵn sàng mở rộng sang hệ thống giám sát subagents:
 
 ```mermaid
 flowchart TD
@@ -122,19 +131,17 @@ flowchart TD
         T5["[T5: Grilling HITL] Thiết kế Live State Artifacts & ADR-0058 Charter Alignment ✅"]
         F1["[F1: Task AFK] Di trú 35 Core Scripts & Thành lập packages/ccba-qc-core ✅"]
         F2["[F2: Task AFK] Tích hợp verify-patch Loop Tự động cho 67 SKILL.md ✅"]
+        F3["[F3: Task HITL] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine ✅"]
     end
 
     subgraph Frontier ["Biên Giới Mới Sẵn Sàng Nhận Việc (Unblocked Execution Frontier)"]
-        F3["[F3: Task HITL] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine"]
-    end
-
-    subgraph Fog ["Sương mù Chiến trận Còn lại"]
-        F4["[F4] Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime"]
+        F4["[F4: Task HITL] Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime"]
     end
 
     T3 -.->|Đã Giải mã Sương mù| F1
     T2 -.->|Đã Giải mã Sương mù| F2
     T4 -.->|Đã Giải mã Sương mù| F3
+    F3 -.->|Đã Giải mã Sương mù| F4
 ```
 
 ---
@@ -226,14 +233,22 @@ flowchart TD
 
 ---
 
+### Ticket F3: [Task/HITL] `[Thử nghiệm Swarm Multi-Agent với Single-Writer Engine]` ✅
+- **Mục tiêu**: Nâng cấp `scripts/governance/apply_worker_patch.py` hỗ trợ `--verify-cmd`, `--preset`, và cấu trúc hóa `SwarmExecutionReport` kèm đo lường latency profiler và chẩn đoán Semantic Conflicts. Xây dựng bộ kiểm thử mô phỏng toàn diện `tests/governance/test_swarm_single_writer_e2e.py` bao phủ 5 kịch bản thực chiến (Concurrent 5-worker swarm, line collision rejection, semantic conflict with auto-rollback, stale drift patch rejection, sub-50ms benchmark), đồng thời chuẩn hóa kỹ năng `ccba-teamwork` tích hợp nguyên tắc No Pre-mutation và quy trình hợp nhất Single-Writer Engine theo ADR-0058 Hard Completion Lock.
+- **Đầu ra thực tế**:
+  - Module [`scripts/governance/apply_worker_patch.py`](../../../../scripts/governance/apply_worker_patch.py) với `SwarmExecutionReport`, hỗ trợ cờ linh hoạt `-c / --verify-cmd`, `--preset`, `--benchmark`, `--json` và cơ chế phát hiện & báo cáo Semantic Conflict tự động rollback 100% snapshot.
+  - Bộ kiểm thử E2E mô phỏng Swarm 5 kịch bản [`tests/governance/test_swarm_single_writer_e2e.py`](../../../../tests/governance/test_swarm_single_writer_e2e.py) đạt 5/5 PASS (toàn bộ 99 tests governance đạt 100% PASS).
+  - Bộ kiểm thử unit test [`tests/governance/test_apply_worker_patch.py`](../../../../tests/governance/test_apply_worker_patch.py) mở rộng đạt 13/13 PASS.
+  - Chuẩn hóa kỹ năng [`.agents/skills/ccba-teamwork/SKILL.md`](../../../../.agents/skills/ccba-teamwork/SKILL.md) cưỡng chế nguyên tắc No Pre-mutation và quy trình nghiệm thu bằng `apply_worker_patch.py` kết hợp ADR-0058 Hard Completion Lock.
+- **Phân loại**: `Task [HITL]` | **Ưu tiên**: P2.1 | **Trạng thái**: **Closed (Done) ✅**
+
+---
+
 ## 5. Sương mù Chiến trận / Chưa xác định rõ (Not yet specified - Fog of War)
 
 Khu vực lưu trữ các bài toán và hướng đi lớn đã được thu hẹp sương mù:
 
-1. **[F3] Thử nghiệm Swarm Multi-Agent Chạy Thực Tế với Single-Writer Engine**:
-   - *Phụ thuộc*: Ticket 4 (Cần có prototype structured diff hoàn chỉnh).
-   - *Vấn đề mờ*: Tốc độ xử lý của Orchestrator khi nhận đồng thời 5 diff patches từ 5 workers; giải quyết semantic conflict như thế nào nếu 2 worker cùng sửa logic nhưng không xung đột dòng text?
-4. **[F4] Hệ Thống Giám Sát OpenTelemetry & Dynamic Token Budgeting**:
+1. **[F4] Hệ Thống Giám Sát OpenTelemetry & Dynamic Token Budgeting**:
    - *Phụ thuộc*: Sự ổn định của hạ tầng Subagents trên Antigravity IDE.
    - *Vấn đề mờ*: Làm sao trích xuất chính xác token consumption của từng tool call từ transcript log JSONL mà không gây overhead I/O?
 
