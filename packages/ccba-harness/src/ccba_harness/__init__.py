@@ -77,6 +77,16 @@ from .gpi import (
 )
 from .orchestrator import EvalOrchestrator
 from .skill_validator import SkillAuditIssue, SkillValidator
+from .streamer import (
+    AsyncTranscriptFollower,
+    OfflineBufferManager,
+    StreamingConfig,
+    StreamingReport,
+    StreamingStatus,
+    TelemetryEvent,
+    TelemetryEventType,
+    TelemetryStreamingBridge,
+)
 from .telemetry import (
     OtelSpanExporter,
     SubagentSessionMetrics,
@@ -171,4 +181,13 @@ __all__ = [
     "calculate_role_aware_roi",
     "audit_token_economy",
     "generate_prompt_pruning_report",
+    # Real-Time Telemetry Streaming Bridge (Spark :8090)
+    "StreamingStatus",
+    "TelemetryEventType",
+    "TelemetryEvent",
+    "StreamingConfig",
+    "StreamingReport",
+    "OfflineBufferManager",
+    "AsyncTranscriptFollower",
+    "TelemetryStreamingBridge",
 ]

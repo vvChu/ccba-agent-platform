@@ -140,16 +140,22 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
   - Chuyển đổi 100% 4 scripts trong `.agents/skills/ccba-xu-ly-van-phong/scripts/` thành Thin Adapters chuẩn mực tuân thủ Cổng 0 ADR-0057.
   - Xây dựng bộ scoped unit tests (16/16 tests PASS) và vượt qua 100% 7 Cổng CI Eval Gates (ADR-0058).
 
+- **[Đã chốt - 2026-09-10] Real-Time Telemetry Streaming Bridge qua Server Spark (Ticket P4.3)**:
+  - Xây dựng module `packages/ccba-harness/src/ccba_harness/streamer.py` với cấu trúc `TelemetryEvent` chuẩn hóa, bộ đệm ngoại tuyến `OfflineBufferManager` và cầu nối `TelemetryStreamingBridge`.
+  - Thiết kế an toàn Offline-First & Graceful Degradation: Tự động chuyển sang `OFFLINE_BUFFERING` khi Server Spark (`100.83.192.30:8090`) hoặc VPN gián đoạn, tuyệt đối không làm gián đoạn Agent loop.
+  - Tích hợp subcommand `ccba-harness telemetry stream` và tiện ích độc lập `scripts/governance/telemetry_streamer.py` (`ping`, `stream`, `flush`, `status`).
+  - Bộ unit tests `tests/governance/test_telemetry_streamer.py` (7/7 PASS) và 100% vượt qua 7 Cổng CI Eval Gates.
+
 ---
 
 ## 4. Các Ticket ở Biên giới (Frontier Unblocked Tickets)
 
-Toàn bộ **11/11 Tickets (P0, P1, Phase 2 và Phase 3)** trên Bản đồ Wayfinder đã **HOÀN THÀNH 100%**. 
-Hệ thống chính thức kích hoạt **Phase 4: Beyond Horizon — Vận Hành Tự Chủ Doanh Nghiệp (Autonomous Enterprise Operations)** với 4 Frontier Tickets mới:
+Toàn bộ **11/11 Tickets (P0, P1, Phase 2 và Phase 3)** cùng **3 Frontier Tickets (P4.1, P4.2, P4.3)** trên Bản đồ Wayfinder đã **HOÀN THÀNH 100%**. 
+Frontier Ticket còn lại trên **Phase 4: Beyond Horizon**:
 
 ```mermaid
 flowchart TD
-    subgraph Done ["Đã Hoàn thành (Phase 0, 1, 2, 3, P4.1 & P4.2 - Closed 100%) 🎉"]
+    subgraph Done ["Đã Hoàn thành (Phase 0, 1, 2, 3, P4.1, P4.2 & P4.3 - Closed 100%) 🎉"]
         T1["[T1: Task AFK] Memory Compaction Engine cho session_learnings.md ✅"]
         T2["[T2: Task AFK] Exit-Code Deterministic Verification Gate trong ccba-harness ✅"]
         T3["[T3: Research AFK] Ma trận Ánh xạ Di trú 52 Scripts ✅"]
@@ -164,10 +170,10 @@ flowchart TD
         F7["[F7: Task HITL] Mở Rộng Hệ Thống Báo Cáo & Phân Tích Đa Dự Án (Cross-Spoke Analytics) ✅"]
         P4_1["[P4.1: Task AFK] Token Economy & Prompt Density Optimization Engine ✅"]
         P4_2["[P4.2: Task AFK] Di Trú 28 Core Scripts Về ccba-ooxml & ccba-pdf-prep ✅"]
+        P4_3["[P4.3: Prototype HITL] Real-Time Telemetry Streaming Bridge qua Server Spark ✅"]
     end
 
     subgraph Phase4Frontier ["Phase 4: Beyond Horizon — Vận Hành Tự Chủ Doanh Nghiệp (Frontier Tickets) 🚀"]
-        P4_3["[P4.3: Prototype HITL] Real-Time Telemetry Streaming Bridge qua Server Spark"]
         P4_4["[P4.4: Task HITL] Autonomous Self-Healing & Closed-Loop CI Patch Engine"]
     end
 
@@ -183,6 +189,7 @@ flowchart TD
     F7 --> P4_3
     P4_1 --> P4_4
     P4_2 --> P4_4
+    P4_3 --> P4_4
 ```
 
 ---
@@ -365,13 +372,16 @@ flowchart TD
 
 ---
 
-### Ticket P4.3: [Prototype/HITL] `[Real-Time Telemetry Streaming Bridge qua Server Spark]` 🚀
+### Ticket P4.3: [Prototype/HITL] `[Real-Time Telemetry Streaming Bridge qua Server Spark]` ✅
 - **Mục tiêu**: Xây dựng cầu nối truyền phát dữ liệu đo lường thời gian thực (Real-time Telemetry Bridge) từ Antigravity Worktrees về máy chủ Spark (`100.83.192.30:8090`) qua Tailscale VPN.
-- **Chức năng & Đầu ra dự kiến**:
-  - Module `packages/ccba-harness/src/ccba_harness/streamer.py` với WebSocket / SSE client bất đồng bộ (`asyncio`).
-  - Phát sự kiện thời gian thực khi Subagent bắt đầu, gọi tool, tiêu thụ tokens theo turn, hoặc gặp sự cố.
-  - Thiết kế an toàn Offline-First & Graceful Degradation: Tự động fallback về file logging cục bộ nếu mất kết nối mạng, đảm bảo không bao giờ làm gián đoạn tác vụ agent.
-- **Phân loại**: `Prototype [HITL]` | **Ưu tiên**: P4.3 | **Trạng thái**: **Ready for Execution (Frontier)**
+- **Đầu ra thực tế**:
+  - Module [`packages/ccba-harness/src/ccba_harness/streamer.py`](../../../../packages/ccba-harness/src/ccba_harness/streamer.py) (`TelemetryEvent`, `StreamingConfig`, `StreamingStatus`, `StreamingReport`, `OfflineBufferManager`, `AsyncTranscriptFollower`, `TelemetryStreamingBridge`).
+  - Tích hợp CLI subcommand `ccba-harness telemetry stream` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../../packages/ccba-harness/src/ccba_harness/cli.py) hỗ trợ `--endpoint`, `--buffer-file`, `--flush-buffer`, `--ping`, `--dry-run`, `--json`.
+  - Tiện ích quản trị chuyên trách [`scripts/governance/telemetry_streamer.py`](../../../../scripts/governance/telemetry_streamer.py) (`ping`, `stream`, `flush`, `status`).
+  - Thiết kế an toàn Offline-First & Graceful Degradation: Tự động ghi vào `.md/telemetry/offline_buffer.jsonl` khi endpoint Spark không khả dụng, không bao giờ ngắt quãng luồng agent.
+  - Bộ unit tests [`tests/governance/test_telemetry_streamer.py`](../../../../tests/governance/test_telemetry_streamer.py) đạt 7/7 PASS (100% pass trên 137 governance tests).
+  - 100% vượt qua 7 Cổng CI Eval Gates (`run_harness_evals.py --all`) và Deterministic Patch Verification (`verify-patch --preset ci`).
+- **Phân loại**: `Prototype [HITL]` | **Ưu tiên**: P4.3 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
 

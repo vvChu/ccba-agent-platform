@@ -914,9 +914,78 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
         help="Output file path (default for report: .md/reports/prompt_economy_report.md)",
     )
 
+    # Subcommand: stream
+    p_stream = sub.add_parser("stream", help="Real-time telemetry streaming bridge to Server Spark")
+    p_stream.add_argument(
+        "target", nargs="?", default=None, help="Conversation ID or transcript.jsonl path"
+    )
+    p_stream.add_argument(
+        "--endpoint", type=str, default=None, help="Server Spark telemetry endpoint URL"
+    )
+    p_stream.add_argument("--buffer-file", type=str, default=None, help="Offline buffer file path")
+    p_stream.add_argument(
+        "--flush-buffer", action="store_true", help="Flush offline buffer to Spark endpoint"
+    )
+    p_stream.add_argument(
+        "--ping", action="store_true", help="Test connectivity to Server Spark endpoint"
+    )
+    p_stream.add_argument(
+        "--dry-run", action="store_true", help="Simulate streaming without network calls"
+    )
+    p_stream.add_argument("--json", action="store_true", help="Output summary as raw JSON")
+
     args = parser.parse_args(argv)
 
     import json
+
+    if args.telemetry_cmd == "stream":
+        from .streamer import StreamingConfig, TelemetryStreamingBridge
+
+        cfg = StreamingConfig(dry_run=args.dry_run)
+        if args.endpoint:
+            cfg.endpoint_url = args.endpoint
+        if args.buffer_file:
+            cfg.buffer_path = Path(args.buffer_file)
+
+        bridge = TelemetryStreamingBridge(config=cfg)
+
+        if args.ping:
+            online = bridge.test_connection()
+            status_text = (
+                "ONLINE (Reachable)" if online else "OFFLINE (Unreachable - will buffer locally)"
+            )
+            print(f"Server Spark Telemetry Endpoint ({cfg.endpoint_url}): {status_text}")
+            return 0 if online else 1
+
+        if args.flush_buffer:
+            flushed = bridge.flush_buffer()
+            print(f"[Streaming Bridge] Flushed {flushed} buffered event(s) to Spark.")
+            return 0
+
+        if not args.target:
+            print(
+                "[Error] Must provide conversation ID or transcript path, or use --ping / --flush-buffer",
+                file=sys.stderr,
+            )
+            return 1
+
+        report = bridge.stream_transcript_file(args.target, dry_run=args.dry_run)
+        if args.json:
+            print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
+            return 0 if report.status != "FAILED" else 1
+
+        print("📡 Real-Time Telemetry Streaming Bridge:")
+        print(f"  Target: {args.target}")
+        print(f"  Endpoint: {report.endpoint}")
+        print(f"  Status: {report.status}")
+        print(f"  Events Emitted: {report.events_emitted}")
+        print(f"  Events Delivered: {report.events_delivered}")
+        print(f"  Events Buffered Offline: {report.events_buffered}")
+        if report.errors:
+            for err in report.errors:
+                print(f"  [Error] {err}", file=sys.stderr)
+            return 1
+        return 0
 
     if args.telemetry_cmd == "economy":
         from .economy import (
