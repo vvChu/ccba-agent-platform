@@ -86,13 +86,18 @@ Mọi câu trả lời cuối cùng bắt buộc phải được định dạng 
 - **Hồ sơ / Biểu mẫu cần chuẩn bị:** [Đính kèm biểu mẫu từ templates/]
 - **Rủi ro cần phòng tránh:** [Lưu ý về PCCC, điều khoản chuyển tiếp, chế tài phạt...]
 ```
-- **Tiêu chí hoàn thành:** Xuất văn bản Phiếu Giải Đáp Pháp Lý CCBA chuẩn form 4 phần với đầy đủ căn cứ pháp lý, link kiểm chứng và khuyến nghị.
+- **Tiêu chí hoàn thành:** Xuất văn bản Phiếu Giải Đáp Pháp Lý CCBA lưu vào `.\.md\reports/` và vượt qua cổng kiểm định máy tính:
+  ```bash
+  python -m ccba_harness verify-patch --preset doc --target <đường_dẫn_tệp_kết_xuất> --min-bytes 300 --required-headings "Tóm Tắt Bối Cảnh,Kết Luận Pháp Lý,Căn Cứ Pháp Lý,Khuyến Nghị Kỹ Thuật"
+  ```
+  Lệnh kiểm định trả về **Exit Code 0** (Overall Status: PASS). Theo quy tắc Khóa Cứng (ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn tất nếu tệp chưa được ghi ra đĩa hoặc thiếu các phân mục pháp lý cốt lõi.
 
 ---
 
-## 📋 Tiêu Chí Nghiệm Thu (Completion Criteria)
+## 📋 Tiêu Chí Nghiệm Thu & Cổng Khóa Cứng (Completion Criteria & Hard Gate)
 - [x] Phát hiện chính xác câu hỏi mơ hồ và kích hoạt phỏng vấn thích ứng hoặc Fast-track.
 - [x] Lồng ghép linh hoạt 4 Khung Mẫu Tương Tác Động theo đúng bối cảnh của người dùng.
 - [x] Định dạng đầu ra tuân thủ 100% Cấu trúc 4 phần của Phiếu Giải Đáp Pháp Lý CCBA.
 - [x] Trích dẫn đúng 100% Điều khoản, Phụ lục và Bảng số liệu từ kho tri thức OKF v2.4 kèm link file nguồn thực tế.
 - [x] Tuân thủ Mandatory Grounding Invariant, cấm hoàn toàn suy đoán từ bộ nhớ tham số mà không có công cụ đọc file.
+- [x] Vượt qua cổng `ccba-harness verify-patch --preset doc` với Exit Code 0 trước khi bàn giao cho người dùng.

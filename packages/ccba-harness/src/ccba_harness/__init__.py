@@ -54,9 +54,17 @@ from .gpi import (
 )
 from .orchestrator import EvalOrchestrator
 from .skill_validator import SkillAuditIssue, SkillValidator
-from .verifier import CommandResult, PatchVerificationReport, verify_patch_execution
+from .verifier import (
+    CommandResult,
+    PatchVerificationReport,
+    resolve_preset_commands,
+    verify_document_artifact,
+    verify_patch_execution,
+)
 
 __all__ = [
+    "verify_document_artifact",
+    "resolve_preset_commands",
     "HarnessEngine",
     "HarnessGuard",
     "HarnessLocal",

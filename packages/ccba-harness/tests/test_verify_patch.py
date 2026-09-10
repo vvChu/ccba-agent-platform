@@ -26,9 +26,11 @@ import pytest
 from ccba_harness import (
     CommandResult,
     PatchVerificationReport,
+    resolve_preset_commands,
+    verify_document_artifact,
     verify_patch_execution,
 )
-from ccba_harness.cli import main, run_verify_patch_cli
+from ccba_harness.cli import main, run_verify_doc_cli, run_verify_patch_cli
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
@@ -213,7 +215,7 @@ def test_cli_verify_patch_no_commands(capsys: pytest.CaptureFixture[str]) -> Non
     code = run_verify_patch_cli([])
     assert code == 1
     captured = capsys.readouterr()
-    assert "ERROR: No commands specified" in captured.err
+    assert "ERROR: No commands or preset specified" in captured.err
 
 
 def test_main_dispatch_verify_patch(capsys: pytest.CaptureFixture[str]) -> None:
@@ -223,3 +225,102 @@ def test_main_dispatch_verify_patch(capsys: pytest.CaptureFixture[str]) -> None:
     assert code == 0
     captured = capsys.readouterr()
     assert "ALL PASSED" in captured.out
+
+
+def test_verify_document_artifact_success(tmp_path: Path) -> None:
+    """Verify that a valid document artifact passes checks."""
+    doc = tmp_path / "test_report.md"
+    content = "# Legal Opinion Report\n\n## Căn cứ pháp lý\nTheo Luật Xây dựng...\n\n## Đánh giá rủi ro\nRủi ro thấp."
+    doc.write_text(content, encoding="utf-8")
+
+    res = verify_document_artifact(
+        target_path=doc,
+        min_bytes=50,
+        required_headings=["Căn cứ pháp lý", "Đánh giá rủi ro"],
+    )
+    assert res.passed is True
+    assert res.exit_code == 0
+    assert "Artifact verified:" in res.stdout
+
+
+def test_verify_document_artifact_missing_file(tmp_path: Path) -> None:
+    """Verify that a non-existent document returns exit code 1."""
+    doc = tmp_path / "non_existent.md"
+    res = verify_document_artifact(target_path=doc)
+    assert res.passed is False
+    assert res.exit_code == 1
+    assert "Artifact not found" in (res.error_message or "")
+
+
+def test_verify_document_artifact_size_too_small(tmp_path: Path) -> None:
+    """Verify that a document below min_bytes fails."""
+    doc = tmp_path / "small.md"
+    doc.write_text("# Short", encoding="utf-8")
+    res = verify_document_artifact(target_path=doc, min_bytes=500)
+    assert res.passed is False
+    assert res.exit_code == 1
+    assert "below minimum threshold" in (res.error_message or "")
+
+
+def test_verify_document_artifact_missing_heading(tmp_path: Path) -> None:
+    """Verify that missing a required heading fails validation."""
+    doc = tmp_path / "report.md"
+    doc.write_text("# Overview\nContent goes here with sufficient bytes to exceed min bytes threshold easily.", encoding="utf-8")
+    res = verify_document_artifact(
+        target_path=doc,
+        min_bytes=20,
+        required_headings=["Kết luận pháp lý"],
+    )
+    assert res.passed is False
+    assert res.exit_code == 1
+    assert "missing required heading" in (res.error_message or "").lower()
+
+
+def test_resolve_preset_commands() -> None:
+    """Verify preset command resolution for all supported types."""
+    code_cmds = resolve_preset_commands("code", "packages/ccba-qc-core")
+    assert any("ruff check" in c for c in code_cmds)
+    assert any("mypy" in c for c in code_cmds)
+    assert any("pytest" in c for c in code_cmds)
+
+    doc_cmds = resolve_preset_commands("doc", "report.md", min_bytes=200, required_headings=["Section A"])
+    assert len(doc_cmds) == 1
+    assert "verify-doc" in doc_cmds[0]
+    assert "--min-bytes 200" in doc_cmds[0]
+
+    skill_cmds = resolve_preset_commands("skill", ".agents/skills/ccba-implement")
+    assert any("validate_skills.py" in c for c in skill_cmds)
+    assert any("compile_catalog.py" in c for c in skill_cmds)
+
+    adr_cmds = resolve_preset_commands("adr")
+    assert any("test_adr.py" in c for c in adr_cmds)
+
+    with pytest.raises(ValueError, match="Unknown verification preset"):
+        resolve_preset_commands("unknown_preset")
+
+
+def test_cli_verify_doc_subcommand(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Verify standalone `verify-doc` subcommand via CLI and main()."""
+    doc = tmp_path / "opinion.md"
+    doc.write_text("# Phiếu Ý Kiến Pháp Lý\nNội dung đầy đủ vượt quá ngưỡng tối thiểu.", encoding="utf-8")
+
+    code = run_verify_doc_cli(["--target", str(doc), "--min-bytes", "30"])
+    assert code == 0
+
+    code_main = main(["verify-doc", "--target", str(doc), "--min-bytes", "30"])
+    assert code_main == 0
+
+
+def test_cli_verify_patch_with_doc_preset(tmp_path: Path) -> None:
+    """Verify `ccba-harness verify-patch --preset doc` integration."""
+    doc = tmp_path / "valid.md"
+    doc.write_text("# Title\n## Scope\nDetailed content for testing verify-patch doc preset.", encoding="utf-8")
+
+    code = run_verify_patch_cli([
+        "--preset", "doc",
+        "--target", str(doc),
+        "--min-bytes", "20",
+        "--required-headings", "Scope",
+    ])
+    assert code == 0
+

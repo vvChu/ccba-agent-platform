@@ -99,6 +99,12 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
   - Chuyển đổi 6 loose scripts trong `.agents/skills/ccba-ai-qc/scripts/` và `ccba-ai-qc-pccc-audit/scripts/` thành Thin Adapters ủy nhiệm 100% logic vào `ccba-qc-core`.
   - Bộ unit test `packages/ccba-qc-core/tests/test_qc_core.py` đạt 6/6 PASS, strict mypy 0 issues, ruff format 0 errors.
   - Vượt qua kiểm định phụ thuộc kiến trúc `tests/governance/test_dependency_contracts.py` (6/6 PASS) và toàn bộ 4/4 rào chắn của `ccba-harness verify-patch`.
+- **[Đã chốt - 2026-09-10] Tích hợp verify-patch Loop Tự động cho Toàn bộ Kỹ năng (Ticket F2)**:
+  - Nâng cấp `ccba-harness verifier.py` và CLI hỗ trợ các **Verification Presets** một chạm: `--preset code`, `--preset doc <target>`, `--preset skill <target>`, `--preset adr`, kèm subcommand mới `ccba-harness verify-doc`.
+  - Giải quyết triệt để bài toán kiểm thử cho kỹ năng định tính (Qualitative Skills như `ccba-legal-advisor`, `ccba-completion-checklist`) bằng cách đóng gói các bất biến xác định: kiểm tra sự tồn tại tệp vật lý, dung lượng tối thiểu $\ge \text{min\_bytes}$, kiểm tra cấu trúc headings bắt buộc và zero broken markdown links.
+  - Thể chế hóa vào Hiến pháp Nền tảng Layer 1 (`AGENTS.md` và `.agents/AGENTS.md`): Cập nhật điều khoản cốt lõi **Deterministic Hard Completion Lock (ADR-0058)** cấm Agent tự nhận hoàn thành nếu Exit Code $\ne 0$.
+  - Cập nhật Cẩm nang Soạn thảo Kỹ năng (`skill_authoring_guide.md`, `skill_review_checklist.md`) và nâng cấp `packages/ccba-harness/tests/test_verify_patch.py` (19/19 tests PASS 100%).
+  - Tích hợp mẫu Exit-Code Gate vào các Master Skills và Rituals trọng tâm: `ccba-implement`, `ccba-tdd`, `ccba-code-review`, `ccba-build-skill`, `ccba-legal-advisor`, `ccba-completion-checklist`.
 
 ---
 
@@ -115,10 +121,10 @@ flowchart TD
         T4["[T4: Prototype HITL] Giao thức Structured Diff Patch & Single-Writer cho ccba-teamwork ✅"]
         T5["[T5: Grilling HITL] Thiết kế Live State Artifacts & ADR-0058 Charter Alignment ✅"]
         F1["[F1: Task AFK] Di trú 35 Core Scripts & Thành lập packages/ccba-qc-core ✅"]
+        F2["[F2: Task AFK] Tích hợp verify-patch Loop Tự động cho 67 SKILL.md ✅"]
     end
 
     subgraph Frontier ["Biên Giới Mới Sẵn Sàng Nhận Việc (Unblocked Execution Frontier)"]
-        F2["[F2: Task AFK] Tích hợp verify-patch Loop Tự động cho 67 SKILL.md"]
         F3["[F3: Task HITL] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine"]
     end
 
@@ -206,14 +212,25 @@ flowchart TD
 
 ---
 
+### Ticket F2: [Task/AFK] `[Tích hợp verify-patch Loop Tự động cho 67 SKILL.md]` ✅
+- **Mục tiêu**: Nâng cấp `packages/ccba-harness` hỗ trợ Verification Presets một chạm (`--preset code`, `--preset doc`, `--preset skill`, `--preset adr`), bổ sung công cụ xác thực tài liệu định tính `ccba-harness verify-doc`, thể chế hóa vào Hiến pháp Layer 1 (`AGENTS.md`) và Cẩm nang Soạn thảo Kỹ năng (`skill_authoring_guide.md`, `skill_review_checklist.md`), đồng thời tích hợp mẫu Exit-Code Gate vào các Master Skills và Rituals trọng tâm.
+- **Đầu ra thực tế**:
+  - Module [`packages/ccba-harness/src/ccba_harness/verifier.py`](../../../../packages/ccba-harness/src/ccba_harness/verifier.py) (`verify_document_artifact`, `resolve_preset_commands`, `verify_patch_execution` with presets).
+  - CLI subcommand `ccba-harness verify-doc` và cờ `--preset` trong `ccba-harness verify-patch`.
+  - Bộ kiểm thử unit test [`packages/ccba-harness/tests/test_verify_patch.py`](../../../../packages/ccba-harness/tests/test_verify_patch.py) mở rộng đạt 19/19 PASS (100%).
+  - Cập nhật Hiến pháp Nòng cốt [`AGENTS.md`](../../../../AGENTS.md) và [`.agents/AGENTS.md`](../../../../.agents/AGENTS.md): Điều khoản **Deterministic Hard Completion Lock (ADR-0058)** cấm Agent tự nhận hoàn thành nếu Exit Code $\ne 0$.
+  - Cập nhật Cẩm nang Soạn thảo Kỹ năng: Bổ sung Chương 3.2 trong `skill_authoring_guide.md` và tiêu chí kiểm định trong `skill_review_checklist.md`.
+  - Tích hợp Exit-Code Gate vào các Master Skills: `ccba-implement`, `ccba-tdd`, `ccba-code-review`, `ccba-build-skill`, `ccba-legal-advisor`, `ccba-completion-checklist`.
+  - Toàn bộ 67 SKILL.md vượt qua `validate_skills.py --enforce-gpi` và catalog đồng bộ 100%.
+- **Phân loại**: `Task [AFK]` | **Ưu tiên**: P1.4 | **Trạng thái**: **Closed (Done) ✅**
+
+---
+
 ## 5. Sương mù Chiến trận / Chưa xác định rõ (Not yet specified - Fog of War)
 
 Khu vực lưu trữ các bài toán và hướng đi lớn đã được thu hẹp sương mù:
 
-1. **[F2] Tích hợp Test Loop Tự Động Vào Toàn Bộ 67 Kỹ Năng**:
-   - *Phụ thuộc*: Ticket 2 (Cần hoàn thành công cụ `ccba-harness verify-patch` trước) & ADR-0058 Hard Completion Lock.
-   - *Vấn đề mờ*: Các skill mang tính chất tư vấn định tính (như `ccba-legal-advisor`, `ccba-seminar-builder`) sẽ dùng assertion test nào để làm rào chắn Exit Code khách quan? (Có thể là bộ rubric validator hoặc schema assertion).
-3. **[F3] Thử nghiệm Swarm Multi-Agent Chạy Thực Tế với Single-Writer Engine**:
+1. **[F3] Thử nghiệm Swarm Multi-Agent Chạy Thực Tế với Single-Writer Engine**:
    - *Phụ thuộc*: Ticket 4 (Cần có prototype structured diff hoàn chỉnh).
    - *Vấn đề mờ*: Tốc độ xử lý của Orchestrator khi nhận đồng thời 5 diff patches từ 5 workers; giải quyết semantic conflict như thế nào nếu 2 worker cùng sửa logic nhưng không xung đột dòng text?
 4. **[F4] Hệ Thống Giám Sát OpenTelemetry & Dynamic Token Budgeting**:

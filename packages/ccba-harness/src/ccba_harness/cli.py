@@ -576,6 +576,75 @@ def _parse_commands_from_file(file_path: Path) -> list[str]:
     return commands
 
 
+def run_verify_doc_cli(args_list: Sequence[str] | None = None) -> int:
+    """CLI entry point for deterministic document artifact verification."""
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            try:
+                sys.stdout.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+        if hasattr(sys.stderr, "reconfigure"):
+            try:
+                sys.stderr.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+
+    parser = argparse.ArgumentParser(
+        prog="ccba-harness verify-doc",
+        description="Verify a document artifact's presence, size, and headings contract.",
+    )
+    parser.add_argument(
+        "--target",
+        type=str,
+        required=True,
+        help="Path to the document artifact (.md, .docx, .pptx, etc.)",
+    )
+    parser.add_argument(
+        "--min-bytes",
+        type=int,
+        default=100,
+        help="Minimum expected file size in bytes (default: 100)",
+    )
+    parser.add_argument(
+        "--required-headings",
+        type=str,
+        default=None,
+        help="Comma-separated list of heading titles required in markdown",
+    )
+    parser.add_argument(
+        "--cwd",
+        type=str,
+        default=None,
+        help="Base working directory to resolve relative paths",
+    )
+
+    args = parser.parse_args(args_list)
+
+    from .verifier import verify_document_artifact
+
+    headings = (
+        [h.strip() for h in args.required_headings.split(",") if h.strip()]
+        if args.required_headings
+        else None
+    )
+
+    result = verify_document_artifact(
+        target_path=args.target,
+        min_bytes=args.min_bytes,
+        required_headings=headings,
+        cwd=args.cwd,
+    )
+
+    if result.passed:
+        if result.stdout:
+            print(result.stdout)
+        return 0
+    else:
+        print(f"ERROR: {result.error_message}", file=sys.stderr)
+        return 1
+
+
 def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for deterministic patch verification (`ccba-harness verify-patch`)."""
     if sys.platform == "win32":
@@ -643,6 +712,31 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
         default=None,
         help="Write markdown or JSON verification report to path",
     )
+    parser.add_argument(
+        "--preset",
+        type=str,
+        choices=["code", "doc", "skill", "adr"],
+        default=None,
+        help="Verification preset to automatically generate standard check commands",
+    )
+    parser.add_argument(
+        "--target",
+        type=str,
+        default=None,
+        help="Target file or directory path for the preset",
+    )
+    parser.add_argument(
+        "--min-bytes",
+        type=int,
+        default=100,
+        help="Minimum expected bytes for 'doc' preset (default: 100)",
+    )
+    parser.add_argument(
+        "--required-headings",
+        type=str,
+        default=None,
+        help="Comma-separated required headings for 'doc' preset",
+    )
 
     args = parser.parse_args(args_list)
 
@@ -660,14 +754,24 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
         parsed_cmds = _parse_commands_from_file(f_path)
         commands_to_run.extend(parsed_cmds)
 
-    if not commands_to_run:
-        print("ERROR: No commands specified for verification.", file=sys.stderr)
+    if not commands_to_run and not args.preset:
+        print("ERROR: No commands or preset specified for verification.", file=sys.stderr)
         return 1
+
+    headings = (
+        [h.strip() for h in args.required_headings.split(",") if h.strip()]
+        if args.required_headings
+        else None
+    )
 
     from .verifier import verify_patch_execution
 
     report = verify_patch_execution(
         commands=commands_to_run,
+        preset=args.preset,
+        target=args.target,
+        min_bytes=args.min_bytes,
+        required_headings=headings,
         cwd=Path(args.cwd).resolve() if args.cwd else None,
         timeout=args.timeout,
         fail_fast=args.fail_fast,
@@ -873,6 +977,36 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Write markdown or JSON verification report to path",
     )
 
+    # Subcommand: verify-doc
+    doc_parser = subparsers.add_parser(
+        "verify-doc",
+        help="Verify a document artifact's presence, size, and headings contract.",
+    )
+    doc_parser.add_argument(
+        "--target",
+        type=str,
+        required=True,
+        help="Path to the document artifact (.md, .docx, .pptx, etc.)",
+    )
+    doc_parser.add_argument(
+        "--min-bytes",
+        type=int,
+        default=100,
+        help="Minimum expected file size in bytes (default: 100)",
+    )
+    doc_parser.add_argument(
+        "--required-headings",
+        type=str,
+        default=None,
+        help="Comma-separated list of heading titles required in markdown",
+    )
+    doc_parser.add_argument(
+        "--cwd",
+        type=str,
+        default=None,
+        help="Base working directory to resolve relative paths",
+    )
+
     if not argv:
         parser.print_help()
         return 0
@@ -886,6 +1020,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_eval_cli(argv[1:])
     if argv[0] == "verify-patch":
         return run_verify_patch_cli(argv[1:])
+    if argv[0] == "verify-doc":
+        return run_verify_doc_cli(argv[1:])
 
     # Fallback to general parsing
     parsed = parser.parse_args(argv)
@@ -897,6 +1033,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_eval_cli(argv[1:])
     if parsed.subcommand == "verify-patch":
         return run_verify_patch_cli(argv[1:])
+    if parsed.subcommand == "verify-doc":
+        return run_verify_doc_cli(argv[1:])
 
     parser.print_help()
     return 0

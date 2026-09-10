@@ -164,8 +164,175 @@ def _execute_single_command(
         )
 
 
+def verify_document_artifact(
+    target_path: Path | str,
+    min_bytes: int = 100,
+    required_headings: Sequence[str] | None = None,
+    cwd: Path | str | None = None,
+) -> CommandResult:
+    """Deterministically verify a document artifact's presence, size, and headings.
+
+    Args:
+        target_path: Path to the document (.md, .docx, .pdf, etc.).
+        min_bytes: Minimum expected file size in bytes (default 100).
+        required_headings: Optional list of heading strings that must appear.
+        cwd: Base directory to resolve relative paths against.
+
+    Returns:
+        CommandResult with exit_code 0 if valid, 1 otherwise.
+    """
+    start_time = time.perf_counter()
+    path_obj = Path(target_path)
+    if not path_obj.is_absolute() and cwd:
+        path_obj = (Path(cwd) / path_obj).resolve()
+    else:
+        path_obj = path_obj.resolve()
+
+    cmd_display = f"verify-doc --target {target_path} --min-bytes {min_bytes}"
+    if required_headings:
+        cmd_display += f" --required-headings '{','.join(required_headings)}'"
+
+    if not path_obj.exists():
+        duration_ms = (time.perf_counter() - start_time) * 1000.0
+        return CommandResult(
+            command=cmd_display,
+            exit_code=1,
+            passed=False,
+            duration_ms=round(duration_ms, 2),
+            error_message=f"Artifact not found: {path_obj}",
+        )
+
+    if not path_obj.is_file():
+        duration_ms = (time.perf_counter() - start_time) * 1000.0
+        return CommandResult(
+            command=cmd_display,
+            exit_code=1,
+            passed=False,
+            duration_ms=round(duration_ms, 2),
+            error_message=f"Artifact path is a directory, not a file: {path_obj}",
+        )
+
+    file_size = path_obj.stat().st_size
+    if file_size < min_bytes:
+        duration_ms = (time.perf_counter() - start_time) * 1000.0
+        return CommandResult(
+            command=cmd_display,
+            exit_code=1,
+            passed=False,
+            duration_ms=round(duration_ms, 2),
+            error_message=f"Artifact size ({file_size} bytes) is below minimum threshold of {min_bytes} bytes",
+        )
+
+    if required_headings and path_obj.suffix.lower() == ".md":
+        try:
+            content = path_obj.read_text(encoding="utf-8", errors="replace").lower()
+            missing_headings: list[str] = []
+            for h in required_headings:
+                h_clean = h.strip().lower()
+                if h_clean and h_clean not in content:
+                    missing_headings.append(h)
+            if missing_headings:
+                duration_ms = (time.perf_counter() - start_time) * 1000.0
+                return CommandResult(
+                    command=cmd_display,
+                    exit_code=1,
+                    passed=False,
+                    duration_ms=round(duration_ms, 2),
+                    error_message=f"Artifact is missing required heading(s): {', '.join(missing_headings)}",
+                )
+        except Exception as exc:
+            duration_ms = (time.perf_counter() - start_time) * 1000.0
+            return CommandResult(
+                command=cmd_display,
+                exit_code=1,
+                passed=False,
+                duration_ms=round(duration_ms, 2),
+                error_message=f"Failed to read artifact content: {exc}",
+            )
+
+    duration_ms = (time.perf_counter() - start_time) * 1000.0
+    return CommandResult(
+        command=cmd_display,
+        exit_code=0,
+        passed=True,
+        duration_ms=round(duration_ms, 2),
+        stdout=f"Artifact verified: {path_obj.name} ({file_size} bytes)",
+    )
+
+
+def resolve_preset_commands(
+    preset: str,
+    target: Path | str | None = None,
+    min_bytes: int = 100,
+    required_headings: Sequence[str] | None = None,
+    python_exec: str = "python",
+) -> list[str]:
+    """Resolve a verification preset into deterministic command strings.
+
+    Args:
+        preset: Preset identifier ('code', 'doc', 'skill', 'adr').
+        target: Target file or directory path.
+        min_bytes: Minimum bytes for 'doc' preset.
+        required_headings: List of headings required for 'doc' preset.
+        python_exec: Python executable name or path.
+
+    Returns:
+        List of executable command strings.
+    """
+    p = preset.strip().lower()
+    target_str = str(target).strip() if target else ""
+
+    if p == "code":
+        cmds: list[str] = []
+        if target_str:
+            t_path = Path(target_str)
+            src_str = (t_path / "src").as_posix() + "/" if (t_path / "src").exists() else t_path.as_posix()
+            tests_str = (t_path / "tests").as_posix() if (t_path / "tests").exists() else t_path.as_posix()
+            cmds.append(f"{python_exec} -m ruff check {t_path.as_posix()}")
+            cmds.append(f"{python_exec} -m mypy {src_str} --follow-imports=silent")
+            cmds.append(f"{python_exec} -m pytest {tests_str} -q")
+        else:
+            cmds.append(f"{python_exec} -m ruff check .")
+            cmds.append(f"{python_exec} -m pytest tests/ -q")
+        return cmds
+
+    if p == "doc":
+        if not target_str:
+            raise ValueError("Preset 'doc' requires a target file path (--target <file>).")
+        target_posix = Path(target_str).as_posix()
+        doc_cmd = f"{python_exec} -m ccba_harness verify-doc --target {target_posix} --min-bytes {min_bytes}"
+        if required_headings:
+            headings_arg = ",".join(required_headings)
+            doc_cmd += f' --required-headings "{headings_arg}"'
+        return [doc_cmd]
+
+    if p == "skill":
+        cmds = []
+        if target_str:
+            t_path = Path(target_str)
+            skill_file = (t_path / "SKILL.md").as_posix() if t_path.is_dir() else t_path.as_posix()
+            cmds.append(f"{python_exec} scripts/validate_skills.py --file {skill_file} --enforce-gpi")
+        else:
+            cmds.append(f"{python_exec} scripts/validate_skills.py --enforce-gpi")
+        cmds.append(f"{python_exec} scripts/governance/compile_catalog.py --check")
+        return cmds
+
+    if p == "adr":
+        return [
+            f"{python_exec} -m pytest tests/governance/test_adr.py tests/governance/test_sync_adr_matrix.py -q",
+        ]
+
+    raise ValueError(
+        f"Unknown verification preset: '{preset}'. Supported presets: 'code', 'doc', 'skill', 'adr'."
+    )
+
+
 def verify_patch_execution(
-    commands: Sequence[str],
+    commands: Sequence[str] | None = None,
+    preset: str | None = None,
+    target: Path | str | None = None,
+    min_bytes: int = 100,
+    required_headings: Sequence[str] | None = None,
     cwd: Path | str | None = None,
     timeout: float = 60.0,
     fail_fast: bool = False,
@@ -174,6 +341,10 @@ def verify_patch_execution(
 
     Args:
         commands: List of shell command strings to execute.
+        preset: Optional preset identifier ('code', 'doc', 'skill', 'adr').
+        target: Target path when using a preset.
+        min_bytes: Minimum bytes for 'doc' preset.
+        required_headings: Required headings for 'doc' preset.
         cwd: Working directory for command execution.
         timeout: Maximum execution timeout per command in seconds.
         fail_fast: If True, stop executing remaining commands upon first failure.
@@ -181,10 +352,24 @@ def verify_patch_execution(
     Returns:
         PatchVerificationReport containing all execution details and summary.
     """
+    all_commands: list[str] = []
+
+    if preset:
+        preset_cmds = resolve_preset_commands(
+            preset=preset,
+            target=target,
+            min_bytes=min_bytes,
+            required_headings=required_headings,
+        )
+        all_commands.extend(preset_cmds)
+
+    if commands:
+        all_commands.extend(commands)
+
     results: list[CommandResult] = []
     total_duration_ms = 0.0
 
-    for cmd in commands:
+    for cmd in all_commands:
         cleaned_cmd = cmd.strip()
         if not cleaned_cmd:
             continue
