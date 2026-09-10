@@ -868,9 +868,63 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
     )
     p_dash.add_argument("--title", type=str, default=None, help="Custom dashboard title")
 
+    # Subcommand: fleet
+    p_fleet = sub.add_parser("fleet", help="Cross-Spoke enterprise fleet telemetry & analytics")
+    p_fleet.add_argument(
+        "--json", action="store_true", help="Output fleet metrics as raw JSON dictionary"
+    )
+    p_fleet.add_argument(
+        "--dashboard", action="store_true", help="Generate standalone HTML fleet dashboard"
+    )
+    p_fleet.add_argument(
+        "--out",
+        type=str,
+        default=None,
+        help="File path to save the HTML dashboard or JSON report",
+    )
+    p_fleet.add_argument("--title", type=str, default=None, help="Custom fleet dashboard title")
+
     args = parser.parse_args(argv)
 
     import json
+
+    if args.telemetry_cmd == "fleet":
+        from .fleet import aggregate_fleet_telemetry, render_fleet_dashboard
+
+        if args.dashboard:
+            try:
+                out_path, report = render_fleet_dashboard(
+                    output_path=Path(args.out) if args.out else None,
+                    title=args.title,
+                )
+                print(f"[Success] Generated Cross-Spoke Fleet Dashboard at: {out_path.resolve()}")
+                print(f"  Fleet Hub: {report.hub_name}")
+                print(f"  Spokes: {report.total_spokes} ({report.online_spokes} Online)")
+                print(f"  Total Fleet Tokens: {report.total_fleet_tokens:,}")
+                print(f"  Total Fleet Cost: ${report.total_fleet_cost_usd:.4f} USD")
+                return 0
+            except Exception as err:
+                print(f"[Error] Failed to render fleet dashboard: {err}", file=sys.stderr)
+                return 1
+        else:
+            try:
+                report = aggregate_fleet_telemetry()
+                if args.json:
+                    out_content = json.dumps(report.to_dict(), indent=2, ensure_ascii=False)
+                else:
+                    out_content = report.to_markdown()
+
+                if args.out:
+                    out_p = Path(args.out)
+                    out_p.parent.mkdir(parents=True, exist_ok=True)
+                    out_p.write_text(out_content, encoding="utf-8")
+                    print(f"[Success] Saved fleet telemetry report to {out_p}")
+                else:
+                    print(out_content)
+                return 0
+            except Exception as err:
+                print(f"[Error] Failed to aggregate fleet telemetry: {err}", file=sys.stderr)
+                return 1
 
     if args.telemetry_cmd == "dashboard":
         from .dashboard import render_swarm_dashboard

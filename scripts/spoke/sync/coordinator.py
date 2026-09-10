@@ -810,7 +810,30 @@ class SpokeSynchronizer:
         # 4. Test guardrails
         TestGuardrailCopier(spoke_root, hub_root, project_type).copy_if_needed(dry_run=dry_run)
 
-        # 5. Spoke registration
+        # 5. Spoke telemetry refresh & registration (ADR-0046)
+        if not dry_run:
+            try:
+                import json
+
+                from ccba_harness.fleet import scan_spoke_telemetry
+
+                summary = scan_spoke_telemetry(
+                    {
+                        "name": project_name,
+                        "path": str(spoke_root.resolve()),
+                        "project_type": project_type,
+                        "is_sandbox": False,
+                    }
+                )
+                telemetry_file = spoke_root / ".md" / "data" / "telemetry_summary.json"
+                telemetry_file.parent.mkdir(parents=True, exist_ok=True)
+                telemetry_file.write_text(
+                    json.dumps(summary.to_dict(), indent=2, ensure_ascii=False),
+                    encoding="utf-8",
+                )
+            except Exception:
+                pass
+
         SpokeRegistrar().register(spoke_root, hub_root, project_name, project_type, dry_run=dry_run)
 
         # 6. Print Structured Output & Summary Table
