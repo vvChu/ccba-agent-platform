@@ -737,6 +737,17 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
         default=None,
         help="Comma-separated required headings for 'doc' preset",
     )
+    parser.add_argument(
+        "--self-heal",
+        action="store_true",
+        help="Enable autonomous self-healing for fixable format, lint, and metadata drift errors",
+    )
+    parser.add_argument(
+        "--max-heal-iterations",
+        type=int,
+        default=2,
+        help="Maximum self-healing loop iterations (default: 2)",
+    )
 
     args = parser.parse_args(args_list)
 
@@ -777,24 +788,44 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
         fail_fast=args.fail_fast,
     )
 
+    healing_report = None
+    if not report.all_passed and args.self_heal:
+        from .healing import SelfHealingEngine
+
+        target_base = Path(args.cwd).resolve() if args.cwd else Path.cwd()
+        engine = SelfHealingEngine(base_dir=target_base, max_iterations=args.max_heal_iterations)
+        cmds_to_heal = [r.command for r in report.results]
+        healing_report = engine.attempt_closed_loop_healing(
+            verify_commands=cmds_to_heal,
+            timeout=args.timeout,
+        )
+        if healing_report.final_verification_report:
+            report = healing_report.final_verification_report
+
     if args.report_file:
         import json
 
         rf_path = Path(args.report_file)
         rf_path.parent.mkdir(parents=True, exist_ok=True)
         if rf_path.suffix.lower() == ".json":
+            data_to_write = healing_report.to_dict() if healing_report else report.to_dict()
             rf_path.write_text(
-                json.dumps(report.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8"
+                json.dumps(data_to_write, indent=2, ensure_ascii=False), encoding="utf-8"
             )
         else:
-            rf_path.write_text(report.to_markdown(), encoding="utf-8")
+            text_to_write = healing_report.to_markdown() if healing_report else report.to_markdown()
+            rf_path.write_text(text_to_write, encoding="utf-8")
 
     if args.json:
         import json
 
-        print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
+        data_to_print = healing_report.to_dict() if healing_report else report.to_dict()
+        print(json.dumps(data_to_print, indent=2, ensure_ascii=False))
     else:
-        print(report.to_markdown())
+        if healing_report:
+            print(healing_report.to_markdown())
+        else:
+            print(report.to_markdown())
 
     return 0 if report.all_passed else 1
 

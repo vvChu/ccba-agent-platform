@@ -75,6 +75,13 @@ from .gpi import (
     calculate_gpi,
     evaluate_two_stage_decision,
 )
+from .healing import (
+    DiagnosticIssue,
+    ErrorCategory,
+    HealingAction,
+    HealingReport,
+    SelfHealingEngine,
+)
 from .orchestrator import EvalOrchestrator
 from .skill_validator import SkillAuditIssue, SkillValidator
 from .streamer import (
@@ -190,4 +197,10 @@ __all__ = [
     "OfflineBufferManager",
     "AsyncTranscriptFollower",
     "TelemetryStreamingBridge",
+    # Autonomous Self-Healing & Closed-Loop CI Patch Engine (P4.4)
+    "ErrorCategory",
+    "DiagnosticIssue",
+    "HealingAction",
+    "HealingReport",
+    "SelfHealingEngine",
 ]
