@@ -54,6 +54,18 @@ from .gpi import (
 )
 from .orchestrator import EvalOrchestrator
 from .skill_validator import SkillAuditIssue, SkillValidator
+from .telemetry import (
+    OtelSpanExporter,
+    SubagentSessionMetrics,
+    TokenEstimator,
+    ToolCallRecord,
+    TranscriptStep,
+    TurnRecord,
+    analyze_subagent_transcript,
+    check_subagent_budget,
+    resolve_transcript_path,
+    stream_transcript_steps,
+)
 from .verifier import (
     CommandResult,
     PatchVerificationReport,
@@ -103,4 +115,14 @@ __all__ = [
     "AutoItemScorer",
     "load_eval_dataset",
     "run_eval_pipeline",
+    "TokenEstimator",
+    "TranscriptStep",
+    "ToolCallRecord",
+    "TurnRecord",
+    "SubagentSessionMetrics",
+    "OtelSpanExporter",
+    "stream_transcript_steps",
+    "resolve_transcript_path",
+    "analyze_subagent_transcript",
+    "check_subagent_budget",
 ]
