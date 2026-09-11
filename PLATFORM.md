@@ -95,7 +95,7 @@ Là các thư viện bổ trợ, middleware, hoặc các cấu hình tự độn
 | `ccba-legal-intel` | Legal intelligence services, legislative consolidator, OKF v2.4 GoldStandard, Gate 4 & Federated RAG | `pip install -e "packages/ccba-legal-intel"` |
 | `ccba-maskara` | Secret detection, redaction and commit privacy engine | `pip install -e "packages/ccba-maskara"` |
 | `ccba-notebooklm` | Google NotebookLM API wrapper & mock client | `pip install -e "packages/ccba-notebooklm"` |
-| `ccba-ooxml` | OOXML document structure integrity validator | `pip install -e "packages/ccba-ooxml"` |
+| `ccba-ooxml` | OOXML document structure integrity & offline schema validator | `pip install -e "packages/ccba-ooxml"` |
 | `ccba-pdf-prep` | PDF Preprocessing pipeline (tiling, title-block, chunks) | `pip install -e "packages/ccba-pdf-prep"` |
 | `mdconverter` | Document-to-Markdown converter service | `pip install -e "packages/mdconverter"` |
 
