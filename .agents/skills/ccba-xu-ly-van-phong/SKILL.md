@@ -9,6 +9,7 @@ sub_skills:
 - ccba-markdown-document-processing
 disable-model-invocation: true
 bundle: _software
+tier: kernel
 user-invocable: true
 command: /ccba-xu-ly-van-phong
 gpi:

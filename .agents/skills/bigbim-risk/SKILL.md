@@ -7,6 +7,8 @@ applies_to:
 - BIM
 - Thẩm tra thiết kế
 bundle: _bim
+tier: kernel
+command: /bigbim-risk
 layer: _bim
 gpi:
   s: 4.0

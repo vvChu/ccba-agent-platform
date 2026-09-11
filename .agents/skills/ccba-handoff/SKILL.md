@@ -4,6 +4,7 @@ description: Đóng gói và tổng hợp phiên làm việc hiện tại thành
   mực để Agent tiếp theo tiếp quản liền mạch.
 argument-hint: Mục tiêu hoặc nhiệm vụ trọng tâm cho phiên làm việc tiếp theo?
 bundle: _core
+tier: kernel
 disable-model-invocation: true
 metadata:
   author: CCBA

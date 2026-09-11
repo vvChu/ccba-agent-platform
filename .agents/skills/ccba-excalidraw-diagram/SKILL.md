@@ -8,6 +8,7 @@ applies_to:
 - Thiết kế
 - Tác vụ Admin
 bundle: _core
+tier: kernel
 user-invocable: true
 command: /ccba-excalidraw-diagram
 gpi:

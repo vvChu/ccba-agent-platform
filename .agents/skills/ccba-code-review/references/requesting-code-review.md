@@ -31,7 +31,7 @@ Before dispatching code-reviewer, invoke /ck:scout to find:
 - Edge cases and boundary conditions
 - Potential side effects
 
-See: references/edge-case-scouting.md
+See: edge-case-scouting.md
 ```
 
 **1. Get git SHAs:**

@@ -8,6 +8,7 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _core
+tier: kernel
 command: /platform-loader
 user-invocable: true
 gpi:
@@ -69,4 +70,4 @@ Khi Agent đang hoạt động tại Spoke và phát hiện yêu cầu cần s�
   - Chuẩn hóa Markdown / PDF $\rightarrow$ Nạp Master Skill `ccba-markdown-document-processing`.
   - Soạn thảo hành chính / đề xuất thầu $\rightarrow$ Nạp Master Skill `ccba-copywriting`.
   - Viết bài báo khoa học $\rightarrow$ Nạp Master Skill `ccba-academic-writing`.
-- **Nạp Sub-Skill / Utility khi cần thiết**: Nạp trực tiếp sub-skills (`ccba-pptx`, `ccba-xu-ly-van-phong/references/docx_engine_guide.md`) khi cần xử lý thao tác vi mô. Đối với các tác vụ tái cấu trúc bảng, dọn dẹp template biểu mẫu, sửa liên kết tương đối, tham khảo tài liệu kỹ thuật Tier 2 trong `.agents/skills/ccba-markdown-document-processing/references/`.
+- **Nạp Sub-Skill / Utility khi cần thiết**: Nạp trực tiếp sub-skills (`ccba-pptx`, `../ccba-xu-ly-van-phong/references/docx_engine_guide.md`) khi cần xử lý thao tác vi mô. Đối với các tác vụ tái cấu trúc bảng, dọn dẹp template biểu mẫu, sửa liên kết tương đối, tham khảo tài liệu kỹ thuật Tier 2 trong `.agents/skills/ccba-markdown-document-processing/references/`.

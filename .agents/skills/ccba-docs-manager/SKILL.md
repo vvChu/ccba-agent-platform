@@ -4,6 +4,7 @@ description: Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA P
 applies_to:
 - Phần mềm
 bundle: _software
+tier: kernel
 disable-model-invocation: true
 user-invocable: true
 command: /ccba-docs-manager

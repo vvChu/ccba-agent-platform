@@ -6,6 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 command: /ccba-youtube-learn
 bundle: _core
+tier: kernel
 gpi:
   s: 3.0
   k: 2.0

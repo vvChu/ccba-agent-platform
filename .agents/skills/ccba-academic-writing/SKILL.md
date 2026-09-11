@@ -23,6 +23,7 @@ keywords:
 - Yale
 - thesis
 bundle: _core
+tier: kernel
 triggers:
 - ccba-long-form-writer
 - long-form-writer

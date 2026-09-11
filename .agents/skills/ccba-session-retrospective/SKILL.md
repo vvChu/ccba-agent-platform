@@ -23,6 +23,7 @@ metadata:
   author: CCBA
   version: 1.2.0
 bundle: _core
+tier: kernel
 triggers:
 - retrospective
 - session learnings

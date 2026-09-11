@@ -7,6 +7,9 @@ from __future__ import annotations
 
 import os
 import sys
+import threading
+import time
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -21,7 +24,10 @@ class CatalogMerger:
 
     def atomic_write(self, data: dict[str, Any]) -> bool:
         """Write YAML data atomically via temp file replace after safe validation."""
-        temp_file = self.target_path.parent / f".{self.target_path.name}.tmp"
+        unique_suffix = (
+            f"{os.getpid()}_{threading.get_ident()}_{time.time_ns()}_{uuid.uuid4().hex[:8]}"
+        )
+        temp_file = self.target_path.parent / f".{self.target_path.name}.{unique_suffix}.tmp"
         try:
             self.target_path.parent.mkdir(parents=True, exist_ok=True)
             with open(temp_file, "w", encoding="utf-8") as f:
@@ -33,8 +39,17 @@ class CatalogMerger:
                 if validated is None and data != {}:
                     raise ValueError("Validation produced empty structure for non-empty data")
 
-            # Atomic Replace
-            os.replace(temp_file, self.target_path)
+            # Atomic Replace with retry loop for Windows file-sharing collisions (WinError 32)
+            max_retries = 10
+            for attempt in range(max_retries):
+                try:
+                    os.replace(temp_file, self.target_path)
+                    return True
+                except PermissionError:
+                    if attempt < max_retries - 1:
+                        time.sleep(0.01 * (attempt + 1))
+                    else:
+                        raise
             return True
         except Exception as e:
             print(f"[CatalogMerger] Error during atomic write: {e}", file=sys.stderr)

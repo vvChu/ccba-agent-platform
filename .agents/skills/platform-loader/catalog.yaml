@@ -50,6 +50,7 @@ skills:
   - danh sách lệnh
   skill_path: .agents/skills/platform-loader/SKILL.md
   command: /platform-loader
+  tier: kernel
 - name: bigbim-classification
   bundle: _bim
   description: Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass
@@ -69,6 +70,8 @@ skills:
   - SL_table
   - En_table
   skill_path: .agents/skills/bigbim-classification/SKILL.md
+  command: /bigbim-classification
+  tier: kernel
 - name: bigbim-governance
   bundle: _bim
   description: Guardrails quản trị thông tin BIGBIM. Cưỡng chế tuân thủ Hiến pháp
@@ -88,6 +91,8 @@ skills:
   - RK_50_40_45
   - RK_50_60_28
   skill_path: .agents/skills/bigbim-governance/SKILL.md
+  command: /bigbim-governance
+  tier: kernel
 - name: bigbim-rase
   bundle: _bim
   description: Tự động phân tích RASE (Requirement, Applicability, Selection, Exception)
@@ -101,6 +106,8 @@ skills:
   - Qto_SpaceBaseQuantities
   - Qto_WallBaseQuantities
   skill_path: .agents/skills/bigbim-rase/SKILL.md
+  command: /bigbim-rase
+  tier: kernel
 - name: bigbim-risk
   bundle: _bim
   description: Phát hiện "Mâu thuẫn thông tin" (Information Conflict) phi hình học
@@ -117,6 +124,8 @@ skills:
   - không gian lắp đặt
   - không gian bảo trì
   skill_path: .agents/skills/bigbim-risk/SKILL.md
+  command: /bigbim-risk
+  tier: kernel
 - name: bigbim-vbpl-digest
   bundle: _bim
   description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024,
@@ -132,6 +141,8 @@ skills:
   - quy định nộp BIM
   - bắt buộc BIM
   skill_path: .agents/skills/bigbim-vbpl-digest/SKILL.md
+  command: /bigbim-vbpl-digest
+  tier: kernel
 - name: ccba-academic-writing
   bundle: _core
   description: Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa
@@ -141,6 +152,7 @@ skills:
   - long-form-writer
   skill_path: .agents/skills/ccba-academic-writing/SKILL.md
   command: /ccba-academic-writing
+  tier: kernel
 - name: ccba-adr-lifecycle
   bundle: _governance
   description: Autonomous lifecycle governance for Architecture Decision Records (ADRs)
@@ -157,6 +169,7 @@ skills:
   - architecture-sync
   skill_path: .agents/skills/ccba-adr-lifecycle/SKILL.md
   command: /ccba-adr-lifecycle
+  tier: kernel
 - name: ccba-ai-gateway-sdk
   bundle: _core
   description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud),
@@ -174,7 +187,9 @@ skills:
   - Claude
   - Gemini
   skill_path: .agents/skills/ccba-ai-gateway-sdk/SKILL.md
+  command: /ccba-ai-gateway-sdk
   package_path: packages/ccba-ai
+  tier: kernel
 - name: ccba-ai-pdf-preprocessor
   bundle: _qc
   description: 'Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking)
@@ -187,7 +202,9 @@ skills:
   - bản vẽ
   - scan
   skill_path: .agents/skills/ccba-ai-pdf-preprocessor/SKILL.md
+  command: /ccba-ai-pdf-preprocessor
   package_path: packages/ccba-pdf-prep
+  tier: kernel
 - name: ccba-ai-qc
   bundle: _qc
   description: Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế
@@ -226,6 +243,7 @@ skills:
   - pccc-thamdinh-cqxd
   skill_path: .agents/skills/ccba-ai-qc-pccc-audit/SKILL.md
   command: /ccba-ai-qc-pccc-audit
+  tier: kernel
 - name: ccba-api-circuit-breaker
   bundle: _core
   description: Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch
@@ -241,6 +259,8 @@ skills:
   - quota
   - retry
   skill_path: .agents/skills/ccba-api-circuit-breaker/SKILL.md
+  command: /ccba-api-circuit-breaker
+  tier: kernel
 - name: ccba-append-only-logger
   bundle: _core
   description: Thread-safe, append-only logging pattern cho Python pipeline multi-daemon.
@@ -255,6 +275,8 @@ skills:
   - pipeline log
   - append log
   skill_path: .agents/skills/ccba-append-only-logger/SKILL.md
+  command: /ccba-append-only-logger
+  tier: kernel
 - name: ccba-ask
   bundle: _core
   description: Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu
@@ -271,6 +293,7 @@ skills:
   - brainstorm
   skill_path: .agents/skills/ccba-ask/SKILL.md
   command: /ccba-ask
+  tier: kernel
 - name: ccba-autoresearch
   bundle: _core
   description: Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet
@@ -298,6 +321,7 @@ skills:
   - review-skill
   skill_path: .agents/skills/ccba-build-skill/SKILL.md
   command: /ccba-build-skill
+  tier: kernel
 - name: ccba-code-review
   bundle: _software
   description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells)
@@ -314,6 +338,7 @@ skills:
   - review pr
   skill_path: .agents/skills/ccba-code-review/SKILL.md
   command: /ccba-code-review
+  tier: kernel
 - name: ccba-codebase-design
   bundle: _core
   description: Shared vocabulary for designing deep modules (locality, depth, leverage,
@@ -334,6 +359,7 @@ skills:
   - improve-codebase-architecture
   skill_path: .agents/skills/ccba-codebase-design/SKILL.md
   command: /ccba-codebase-design
+  tier: kernel
 - name: ccba-completion-checklist
   bundle: _consulting
   description: Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện
@@ -347,6 +373,8 @@ skills:
   - nghiệm thu
   - hoàn công
   skill_path: .agents/skills/ccba-completion-checklist/SKILL.md
+  command: /ccba-completion-checklist
+  tier: kernel
 - name: ccba-contribute-to-hub
   bundle: _core
   description: Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng
@@ -366,6 +394,7 @@ skills:
   - review-proposal
   skill_path: .agents/skills/ccba-contribute-to-hub/SKILL.md
   command: /ccba-contribute-to-hub
+  tier: kernel
 - name: ccba-copywriting
   bundle: _software
   description: Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa
@@ -382,6 +411,7 @@ skills:
   - viet-chuyen-nghiep
   skill_path: .agents/skills/ccba-copywriting/SKILL.md
   command: /ccba-copywriting
+  tier: kernel
 - name: ccba-design
   bundle: _consulting
   description: Design brand identity, logos, banners, and visual assets. Use for brand
@@ -401,6 +431,7 @@ skills:
   - mockup
   skill_path: .agents/skills/ccba-design/SKILL.md
   command: /ccba-design
+  tier: kernel
 - name: ccba-diagnosing-bugs
   bundle: _software
   description: Diagnosis loop for hard bugs and performance regressions. Use when
@@ -415,6 +446,7 @@ skills:
   - mock-debugger
   skill_path: .agents/skills/ccba-diagnosing-bugs/SKILL.md
   command: /ccba-diagnosing-bugs
+  tier: kernel
 - name: ccba-docs-manager
   bundle: _software
   description: Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
@@ -427,6 +459,7 @@ skills:
   - docs-validator
   skill_path: .agents/skills/ccba-docs-manager/SKILL.md
   command: /ccba-docs-manager
+  tier: kernel
 - name: ccba-domain-modeling
   bundle: _software
   description: Build, refine, and maintain the project's domain model, ubiquitous
@@ -439,6 +472,7 @@ skills:
   - adr
   skill_path: .agents/skills/ccba-domain-modeling/SKILL.md
   command: /ccba-domain-modeling
+  tier: kernel
 - name: ccba-eval-gate
   bundle: _software
   description: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động
@@ -455,6 +489,7 @@ skills:
   skill_path: .agents/skills/ccba-eval-gate/SKILL.md
   command: /ccba-eval-gate
   package_path: packages/ccba-harness
+  tier: kernel
 - name: ccba-excalidraw-diagram
   bundle: _core
   description: Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian
@@ -464,6 +499,7 @@ skills:
   - show-me
   skill_path: .agents/skills/ccba-excalidraw-diagram/SKILL.md
   command: /ccba-excalidraw-diagram
+  tier: kernel
 - name: ccba-file-stability-guard
   bundle: _core
   description: Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước
@@ -477,6 +513,8 @@ skills:
   - onedrive sync
   - file incomplete
   skill_path: .agents/skills/ccba-file-stability-guard/SKILL.md
+  command: /ccba-file-stability-guard
+  tier: kernel
 - name: ccba-git-guardrails
   bundle: _software
   description: Guardrails to block or request explicit user permission before executing
@@ -491,6 +529,7 @@ skills:
   - resolving-merge-conflicts
   skill_path: .agents/skills/ccba-git-guardrails/SKILL.md
   command: /ccba-git-guardrails
+  tier: kernel
 - name: ccba-graduate-rd
   bundle: _core
   description: Quy trình cưỡng chế chuyển hóa mã nguồn R&D thành Deep Seam Production,
@@ -528,6 +567,7 @@ skills:
   - loop-me
   skill_path: .agents/skills/ccba-grilling/SKILL.md
   command: /ccba-grilling
+  tier: kernel
 - name: ccba-handoff
   bundle: _core
   description: Đóng gói và tổng hợp phiên làm việc hiện tại thành tài liệu Handoff
@@ -539,6 +579,7 @@ skills:
   - chuyển tiếp
   skill_path: .agents/skills/ccba-handoff/SKILL.md
   command: /ccba-handoff
+  tier: kernel
 - name: ccba-hybrid-rag-search
   bundle: _core
   description: Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) +
@@ -554,6 +595,8 @@ skills:
   - context search
   - document search
   skill_path: .agents/skills/ccba-hybrid-rag-search/SKILL.md
+  command: /ccba-hybrid-rag-search
+  tier: kernel
 - name: ccba-implement
   bundle: _core
   description: Implement a piece of work based on a spec or set of tickets.
@@ -581,6 +624,7 @@ skills:
   - server-deploy
   skill_path: .agents/skills/ccba-init-spoke/SKILL.md
   command: /ccba-init-spoke
+  tier: kernel
 - name: ccba-issue-to-hub
   bundle: _core
   description: Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ
@@ -596,6 +640,7 @@ skills:
   - triage
   skill_path: .agents/skills/ccba-issue-to-hub/SKILL.md
   command: /ccba-issue-to-hub
+  tier: kernel
 - name: ccba-knowledge-loop
   bundle: _core
   description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm
@@ -623,6 +668,8 @@ skills:
   - pccc
   - luat xay dung 2025
   skill_path: .agents/skills/ccba-legal-advisor/SKILL.md
+  command: /ccba-legal-advisor
+  tier: kernel
 - name: ccba-legal-document-tracker
   bundle: _consulting
   description: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine
@@ -640,6 +687,7 @@ skills:
   - update-legal-registry
   skill_path: .agents/skills/ccba-legal-document-tracker/SKILL.md
   command: /ccba-legal-document-tracker
+  tier: kernel
 - name: ccba-legal-ingest
   bundle: _consulting
   description: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation,
@@ -657,6 +705,8 @@ skills:
   - chuan hoa docx
   - docx sanitizer
   skill_path: .agents/skills/ccba-legal-ingest/SKILL.md
+  command: /ccba-legal-ingest
+  tier: kernel
 - name: ccba-legal-intel
   bundle: _consulting
   description: Autonomous legal intelligence agent to crawl, diff, and generate compliance
@@ -669,7 +719,9 @@ skills:
   - thuvienphapluat
   - TVPL
   skill_path: .agents/skills/ccba-legal-intel/SKILL.md
+  command: /ccba-legal-intel
   package_path: packages/ccba-legal-intel
+  tier: kernel
 - name: ccba-llm-pipeline-patterns
   bundle: _core
   description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
@@ -683,6 +735,8 @@ skills:
   - synthesis pipeline
   - self-correction
   skill_path: .agents/skills/ccba-llm-pipeline-patterns/SKILL.md
+  command: /ccba-llm-pipeline-patterns
+  tier: kernel
 - name: ccba-markdown-document-processing
   bundle: _core
   description: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua
@@ -695,6 +749,7 @@ skills:
   skill_path: .agents/skills/ccba-markdown-document-processing/SKILL.md
   command: /ccba-markdown-document-processing
   package_path: packages/mdconverter
+  tier: kernel
 - name: ccba-maskara
   bundle: _core
   description: Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords,
@@ -707,7 +762,9 @@ skills:
   - leak
   - che giấu key
   skill_path: .agents/skills/ccba-maskara/SKILL.md
+  command: /ccba-maskara
   package_path: packages/ccba-maskara
+  tier: kernel
 - name: ccba-new-feature
   bundle: _core
   description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session
@@ -739,6 +796,7 @@ skills:
   skill_path: .agents/skills/ccba-notebooklm-connector/SKILL.md
   command: /ccba-notebooklm-connector
   package_path: packages/ccba-notebooklm
+  tier: kernel
 - name: ccba-platform
   bundle: _core
   description: Cổng điều phối toàn cục (Global Router) và kiểm tra môi trường cho
@@ -769,6 +827,7 @@ skills:
   - slide layout
   skill_path: .agents/skills/ccba-pptx/SKILL.md
   command: /ccba-pptx
+  tier: kernel
 - name: ccba-promote-sandbox
   bundle: _core
   description: Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc
@@ -781,6 +840,7 @@ skills:
   - pgv handover
   skill_path: .agents/skills/ccba-promote-sandbox/SKILL.md
   command: /ccba-promote-sandbox
+  tier: kernel
 - name: ccba-release-feature
   bundle: _core
   description: Merge PR, cleanup branch, auto-close local issues và cập nhật walkthrough
@@ -808,6 +868,7 @@ skills:
   - sequential-thinking
   skill_path: .agents/skills/ccba-research/SKILL.md
   command: /ccba-research
+  tier: kernel
 - name: ccba-seminar-builder
   bundle: _consulting
   description: Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda,
@@ -823,6 +884,7 @@ skills:
   - teach
   skill_path: .agents/skills/ccba-seminar-builder/SKILL.md
   command: /ccba-seminar-builder
+  tier: kernel
 - name: ccba-session-retrospective
   bundle: _core
   description: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến
@@ -838,6 +900,7 @@ skills:
   - ccba-session-retrospective
   skill_path: .agents/skills/ccba-session-retrospective/SKILL.md
   command: /ccba-session-retrospective
+  tier: kernel
 - name: ccba-setup-skills
   bundle: _core
   description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu
@@ -856,6 +919,7 @@ skills:
   - setup-ts-deep-modules
   skill_path: .agents/skills/ccba-setup-skills/SKILL.md
   command: /ccba-setup-skills
+  tier: kernel
 - name: ccba-sharepoint-iac
   bundle: _software
   description: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code).
@@ -870,6 +934,7 @@ skills:
   - datamodel sharepoint
   skill_path: .agents/skills/ccba-sharepoint-iac/SKILL.md
   command: /ccba-sharepoint-iac
+  tier: kernel
 - name: ccba-skill-repair
   bundle: _core
   description: Phục hồi và sửa chữa kỹ năng AI theo thể chế ADR-0057 và bộ kiểm định
@@ -882,6 +947,7 @@ skills:
   - repair-skill
   skill_path: .agents/skills/ccba-skill-repair/SKILL.md
   command: /ccba-skill-repair
+  tier: kernel
 - name: ccba-spoke-adopter
   bundle: _core
   description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield
@@ -913,6 +979,7 @@ skills:
   - quality
   skill_path: .agents/skills/ccba-tdd/SKILL.md
   command: /ccba-tdd
+  tier: kernel
 - name: ccba-teamwork
   bundle: _core
   description: Điều phối đa tác nhân dài hạn (Teamwork Multi-Agent Framework) theo
@@ -944,6 +1011,7 @@ skills:
   - to-questionnaire
   skill_path: .agents/skills/ccba-to-spec/SKILL.md
   command: /ccba-to-spec
+  tier: kernel
 - name: ccba-tvpl-vip-crawler
   bundle: _software
   description: Kỹ năng tự động cào và đóng gói văn bản pháp luật VIP TVPL qua Deep
@@ -956,6 +1024,7 @@ skills:
   - vip crawler
   skill_path: .agents/skills/ccba-tvpl-vip-crawler/SKILL.md
   command: /ccba-tvpl-vip-crawler
+  tier: kernel
 - name: ccba-update-spoke
   bundle: _core
   description: Đồng bộ hóa các kỹ năng và cập nhật phiên bản giữa Hub và các Spoke
@@ -974,6 +1043,7 @@ skills:
   - sync-upstream
   skill_path: .agents/skills/ccba-update-spoke/SKILL.md
   command: /ccba-update-spoke
+  tier: kernel
 - name: ccba-wayfinder
   bundle: _core
   description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua
@@ -986,6 +1056,7 @@ skills:
   - chia nhỏ bài toán
   skill_path: .agents/skills/ccba-wayfinder/SKILL.md
   command: /ccba-wayfinder
+  tier: kernel
 - name: ccba-web-testing
   bundle: _software
   description: Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y
@@ -1004,6 +1075,7 @@ skills:
   - vitest
   skill_path: .agents/skills/ccba-web-testing/SKILL.md
   command: /ccba-web-testing
+  tier: kernel
 - name: ccba-xia
   bundle: _software
   description: Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository
@@ -1021,6 +1093,7 @@ skills:
   - adapt from
   skill_path: .agents/skills/ccba-xia/SKILL.md
   command: /ccba-xia
+  tier: kernel
 - name: ccba-xu-ly-van-phong
   bundle: _software
   description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo
@@ -1039,6 +1112,7 @@ skills:
   skill_path: .agents/skills/ccba-xu-ly-van-phong/SKILL.md
   command: /ccba-xu-ly-van-phong
   package_path: packages/ccba-ooxml
+  tier: kernel
 - name: ccba-youtube-learn
   bundle: _core
   description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề
@@ -1052,6 +1126,7 @@ skills:
   - belief archaeology
   skill_path: .agents/skills/ccba-youtube-learn/SKILL.md
   command: /ccba-youtube-learn
+  tier: kernel
 workflows: []
 rules:
 - name: identity

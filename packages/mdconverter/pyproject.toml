@@ -58,6 +58,7 @@ ccba-ai = { workspace = true }
 packages = ["src/mdconverter"]
 
 [tool.pytest.ini_options]
+pythonpath = ["src"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --cov=src/mdconverter --cov-report=term-missing"

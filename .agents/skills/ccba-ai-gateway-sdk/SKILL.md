@@ -8,6 +8,8 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _core
+tier: kernel
+command: /ccba-ai-gateway-sdk
 gpi:
   s: 3.0
   k: 3.0

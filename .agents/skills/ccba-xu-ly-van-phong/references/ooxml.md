@@ -265,7 +265,7 @@ When adding content, update these files:
 
 ## Document Library (Python)
 
-Use the Document class from `scripts/document.py` for all tracked changes and comments. It automatically handles infrastructure setup (people.xml, RSIDs, settings.xml, comment files, relationships, content types). Only use direct XML manipulation for complex scenarios not supported by the library.
+Use the Document class from `ccba_ooxml.docx` for all tracked changes and comments. It automatically handles infrastructure setup (people.xml, RSIDs, settings.xml, comment files, relationships, content types). Only use direct XML manipulation for complex scenarios not supported by the library.
 
 **Working with Unicode and Entities:**
 - **Searching**: Both entity notation and Unicode characters work - `contains="&#8220;Company"` and `contains="\u201cCompany"` find the same text
@@ -273,23 +273,9 @@ Use the Document class from `scripts/document.py` for all tracked changes and co
 
 ### Initialization
 
-**Find the docx skill root** (directory containing `scripts/` and `ooxml/`):
-```bash
-# Search for document.py to locate the skill root
-# Note: /mnt/skills is used here as an example; check your context for the actual location
-find /mnt/skills -name "document.py" -path "*/docx/scripts/*" 2>/dev/null | head -1
-# Example output: /mnt/skills/docx/scripts/document.py
-# Skill root is: /mnt/skills/docx
-```
-
-**Run your script with PYTHONPATH** set to the docx skill root:
-```bash
-PYTHONPATH=/mnt/skills/docx python your_script.py
-```
-
-**In your script**, import from the skill root:
+**In your script**, import directly from the installed package `ccba-ooxml`:
 ```python
-from scripts.document import Document, DocxXMLEditor
+from ccba_ooxml.docx import Document, DocxXMLEditor
 
 # Basic initialization (automatically creates temp copy and sets up infrastructure)
 doc = Document('unpacked')

@@ -20,6 +20,7 @@ keywords:
 - leverage
 - locality
 bundle: _core
+tier: kernel
 triggers:
 - ccba-codebase-design
 - deep-module

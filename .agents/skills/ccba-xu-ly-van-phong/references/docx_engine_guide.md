@@ -44,7 +44,7 @@ pandoc --track-changes=all path-to-file.docx -o output.md
 You need raw XML access for: comments, complex formatting, document structure, embedded media, and metadata. For any of these features, you'll need to unpack a document and read its raw XML contents.
 
 #### Unpacking a file
-`python ooxml/scripts/unpack.py <office_file> <output_directory>`
+`python -m ccba_ooxml unpack <office_file> <output_directory>`
 
 #### Key file structures
 * `word/document.xml` - Main document contents
@@ -71,11 +71,11 @@ When editing an existing Word document, use the **Document library** (a Python l
 ### Workflow
 1. **MANDATORY - READ ENTIRE FILE**: Read [`ooxml.md`](ooxml.md) (~600 lines) completely from start to finish. **NEVER set any range limits when reading this file.** Read the full file content for the Document library API and XML patterns for directly editing document files.
    **Completion Criterion:** Việc đọc toàn bộ file `ooxml.md` được ghi nhận rõ ràng trong nhật ký suy nghĩ (thought trace) của Agent.
-2. Unpack the document: `python ooxml/scripts/unpack.py <office_file> <output_directory>`
+2. Unpack the document: `python -m ccba_ooxml unpack <office_file> <output_directory>`
    **Completion Criterion:** Thư mục đầu ra `<output_directory>` được tạo và chứa đầy đủ các file XML đã giải nén (ví dụ `word/document.xml`).
 3. Create and run a Python script using the Document library (see "Document Library" section in ooxml.md)
    **Completion Criterion:** Script Python chạy thành công mà không phát sinh bất kỳ biệt lệ (Exception) nào.
-4. Pack the final document: `python ooxml/scripts/pack.py <input_directory> <office_file>`
+4. Pack the final document: `python -m ccba_ooxml pack <input_directory> <office_file>`
    **Completion Criterion:** Tệp `.docx` đích được đóng gói lại thành công, kích thước file hợp lý (>0 bytes).
 
 The Document library provides both high-level methods for common operations and direct DOM access for complex scenarios.
@@ -124,7 +124,7 @@ Example - Changing "30 days" to "60 days" in a sentence:
 
 3. **Read documentation and unpack**:
    - **MANDATORY - READ ENTIRE FILE**: Read [`ooxml.md`](ooxml.md) (~600 lines) completely from start to finish. **NEVER set any range limits when reading this file.** Pay special attention to the "Document Library" and "Tracked Change Patterns" sections.
-   - **Unpack the document**: `python ooxml/scripts/unpack.py <file.docx> <dir>`
+   - **Unpack the document**: `python -m ccba_ooxml unpack <file.docx> <dir>`
    - **Note the suggested RSID**: The unpack script will suggest an RSID to use for your tracked changes. Copy this RSID for use in step 4b.
    **Completion Criterion:** File được giải nén ra thư mục tạm thành công và RSID hợp lệ được xác định.
 
@@ -149,7 +149,7 @@ Example - Changing "30 days" to "60 days" in a sentence:
 
 5. **Pack the document**: After all batches are complete, convert the unpacked directory back to .docx:
    ```bash
-   python ooxml/scripts/pack.py unpacked reviewed-document.docx
+   python -m ccba_ooxml pack unpacked reviewed-document.docx
    ```
    **Completion Criterion:** File `reviewed-document.docx` được đóng gói lại thành công.
 

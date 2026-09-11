@@ -7,6 +7,8 @@ applies_to:
 - Thẩm tra thiết kế
 - Kiểm định
 bundle: _core
+tier: kernel
+command: /ccba-llm-pipeline-patterns
 gpi:
   s: 3.0
   k: 2.0

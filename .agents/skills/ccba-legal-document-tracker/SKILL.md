@@ -7,6 +7,7 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _consulting
+tier: kernel
 user-invocable: true
 command: /ccba-legal-document-tracker
 gpi:

@@ -13,6 +13,7 @@ metadata:
   version: 2.0.0
 disable-model-invocation: true
 bundle: _software
+tier: kernel
 gpi: {s: 4.0, k: 3.0, a: 1.0, p: 1.0}
 triggers:
 - port
