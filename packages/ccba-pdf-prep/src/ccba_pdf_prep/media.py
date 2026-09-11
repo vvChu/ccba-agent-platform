@@ -587,4 +587,3 @@ __all__ = [
     "download_grid_image",
     "extract_storyboard_frames",
 ]
-

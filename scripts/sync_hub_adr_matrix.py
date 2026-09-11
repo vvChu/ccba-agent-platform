@@ -178,12 +178,12 @@ def scan_skill_radar(
         # 1. Skills
         skills_dir = r / ".agents" / "skills"
         if skills_dir.exists():
-            target_paths.extend(skills_dir.glob("**/SKILL.md"))
+            target_paths.extend(sorted(skills_dir.glob("**/SKILL.md")))
 
         # 2. Workflows
         wf_dir = r / ".agents" / "workflows"
         if wf_dir.exists():
-            target_paths.extend(wf_dir.glob("*.md"))
+            target_paths.extend(sorted(wf_dir.glob("*.md")))
 
         # 3. Core markdown files
         for core_f in [
@@ -199,7 +199,7 @@ def scan_skill_radar(
         # 4. Monorepo packages AGENTS.md
         packages_dir = r / "packages"
         if packages_dir.exists():
-            target_paths.extend(packages_dir.glob("*/AGENTS.md"))
+            target_paths.extend(sorted(packages_dir.glob("*/AGENTS.md")))
 
     # Regex to match ADR references like: ADR-0010, ADR 0010, ADR0010, ADR 10
     ref_pattern = re.compile(r"\bADR[-\s]*0*([0-9]+)\b", re.IGNORECASE)

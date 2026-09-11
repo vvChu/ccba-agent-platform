@@ -290,4 +290,3 @@ def test_qc_audit_pipeline_orchestration(tmp_path: Path) -> None:
     assert len(summary.reports) == 1
     assert summary.report_file is not None
     assert summary.report_file.exists()
-

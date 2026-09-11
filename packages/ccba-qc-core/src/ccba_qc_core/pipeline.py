@@ -191,7 +191,9 @@ class QCAuditPipeline:
         )
         if pdf_files:
             try:
-                backbone = await disc_engine.discover(pdf_files, extract_titleblocks=False, run_ai=False)
+                backbone = await disc_engine.discover(
+                    pdf_files, extract_titleblocks=False, run_ai=False
+                )
             except Exception as e:
                 logger.warning("Discovery warning: %s, continuing with file listing", e)
 
@@ -288,4 +290,3 @@ class QCAuditPipeline:
             out_dir=output_dir,
         )
         return await orchestrator.run_batch(ai_model=self.ai_model)
-

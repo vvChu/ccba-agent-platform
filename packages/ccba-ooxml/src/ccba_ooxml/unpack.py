@@ -36,5 +36,5 @@ def unpack_document(input_file: str | Path, output_dir: str | Path) -> None:
             # Fallback or log if some XML is malformed or binary
             print(f"Warning: Could not pretty print {xml_file}: {e}", file=sys.stderr)
 
-__all__ = ["unpack_document"]
 
+__all__ = ["unpack_document"]

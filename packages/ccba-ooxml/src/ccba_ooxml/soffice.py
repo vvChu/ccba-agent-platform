@@ -275,4 +275,3 @@ def validate_document(doc_path: str | Path) -> bool:
 
 
 __all__ = ["find_soffice_bin", "get_soffice_env", "run_soffice", "validate_document"]
-
