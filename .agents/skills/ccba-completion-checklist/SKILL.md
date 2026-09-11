@@ -6,6 +6,11 @@ applies_to:
 - Thẩm tra thiết kế
 - Thiết kế
 bundle: _consulting
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 4.0
+  p: 1.0
 triggers:
 - hồ sơ hoàn thành
 - HSHT
@@ -48,7 +53,11 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 3. Đọc template `resources/checklist_by_project.md`
 4. Tạo checklist phù hợp, bỏ các mục không áp dụng (đánh dấu N/A)
 5. Xuất ra Markdown và Word (.docx)
-   - **Tiêu chí hoàn thành:** Đã tạo checklist đầy đủ theo thông tin dự án và xuất đủ 2 định dạng (.md và .docx).
+   - **Tiêu chí hoàn thành:** Đã tạo checklist đầy đủ theo thông tin dự án, xuất đủ 2 định dạng (.md và .docx) và vượt qua cổng kiểm định máy tính:
+     ```bash
+     python -m ccba_harness verify-patch --preset doc --target <tệp_markdown_checklist> --min-bytes 500
+     ```
+     Lệnh kiểm định trả về **Exit Code 0**. Theo quy tắc Khóa Cứng (ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn tất nếu tệp chưa được ghi ra đĩa hoặc rỗng.
 
 ### 2. Cập nhật khi VBPL thay đổi
 

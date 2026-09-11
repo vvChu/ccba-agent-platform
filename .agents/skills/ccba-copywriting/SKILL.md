@@ -13,6 +13,13 @@ metadata:
   version: 1.0.0
 disable-model-invocation: true
 bundle: _software
+user-invocable: true
+command: /ccba-copywriting
+gpi:
+  s: 3.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 triggers:
 - ccba-copywriting
 - viết thầu
@@ -36,7 +43,7 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 
 ## Luồng dữ liệu (Data Flow)
 
-`[Mẫu hiện trạng thô] -> [/ccba-extract-style] -> [/.agents/skills/ccba-xu-ly-van-phong/templates/] -> [copywriting (điền thông tin)] -> [Tài liệu hoàn thiện]`
+`[Mẫu hiện trạng thô] -> [/ccba-copywriting] -> [/.agents/skills/ccba-xu-ly-van-phong/templates/] -> [copywriting (điền thông tin)] -> [Tài liệu hoàn thiện]`
 
 ## Quy trình Sinh tài liệu (Process)
 

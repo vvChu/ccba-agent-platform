@@ -339,6 +339,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Automatically bootstrap Python packages and virtual environment after sync",
     )
+    sync_p.add_argument(
+        "--verify",
+        action="store_true",
+        help="Run deterministic ccba-harness verify-patch in Spoke post-sync (ADR-0058 Hard Completion Lock)",
+    )
 
     # bootstrap-spoke (ADR 0044)
     boot_p = subparsers.add_parser(
@@ -437,6 +442,7 @@ def main() -> int:
                 force=args.force,
                 include_sandboxes=args.include_sandboxes,
                 bootstrap=args.bootstrap,
+                verify=args.verify,
             )
         else:
             from scripts.spoke import sync_project
@@ -447,6 +453,7 @@ def main() -> int:
                 dry_run=dry_run,
                 force=args.force,
                 bootstrap=args.bootstrap,
+                verify=args.verify,
             )
 
     elif args.command == "bootstrap-spoke":

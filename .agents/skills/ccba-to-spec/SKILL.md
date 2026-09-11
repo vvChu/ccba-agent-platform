@@ -4,6 +4,13 @@ description: Turn the current conversation into a spec and publish it to the pro
   issue tracker — no interview, just synthesis of what you've already discussed.
 disable-model-invocation: true
 bundle: _core
+user-invocable: true
+command: /ccba-to-spec
+gpi:
+  s: 4.0
+  k: 2.0
+  a: 1.0
+  p: 1.0
 triggers:
 - ccba-to-spec
 - spec

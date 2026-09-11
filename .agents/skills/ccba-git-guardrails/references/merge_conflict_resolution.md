@@ -5,7 +5,7 @@
 
 ---
 
-# Quy Trình Xử Lý Xung Đột Git (/ccba-resolving-merge-conflicts)
+# Quy Trình Xử Lý Xung Đột Git (/ccba-git-guardrails)
 
 Quy trình chuẩn hóa xử lý xung đột phân nhánh (merge/rebase conflict) bảo toàn tính toàn vẹn của mã nguồn, tuân thủ nguyên tắc không làm mất mát dữ liệu và không tự ý thay đổi ý định thiết kế.
 

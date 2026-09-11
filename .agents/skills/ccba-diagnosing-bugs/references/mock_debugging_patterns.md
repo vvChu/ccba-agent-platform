@@ -5,7 +5,7 @@
 
 ---
 
-# Bộ Tự Động Gỡ Lỗi & Tự Phục Hồi Mã Nguồn (/ccba-mock-debugger)
+# Bộ Tự Động Gỡ Lỗi & Tự Phục Hồi Mã Nguồn (/ccba-diagnosing-bugs)
 
 Kích hoạt hệ thống phân tích vết traceback tự động, truy vết nguyên nhân gốc rễ (RCA) và đề xuất bản vá mã nguồn tối thiểu (Self-Healing Debugger) cho các script Python trên nền tảng CCBA.
 

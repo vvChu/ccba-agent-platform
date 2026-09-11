@@ -97,7 +97,7 @@ python "[hub_path]\scripts\adopt_spoke.py" --spoke . --archetype "knowledge_corp
 ## 3. Tích Hợp Hệ Thống
 * **Deep Seam Engine:** `scripts/spoke/spoke_adopter.py`
 * **CLI Command:** `python scripts/adopt_spoke.py`
-* **Slash Command:** `/ccba-spoke-adopter` (Alias: `/ccba-adopt-spoke`)
+* **Slash Command:** `/ccba-spoke-adopter`
 * **ADR Quy Chuẩn:** [`docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md`](../../../docs/adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md)
 
 ---

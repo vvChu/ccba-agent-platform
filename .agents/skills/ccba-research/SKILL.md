@@ -3,6 +3,13 @@ name: ccba-research
 description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với
   các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ trợ
   Dual-Agent Adversarial).
+user-invocable: true
+command: /ccba-research
+gpi:
+  s: 4.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 keywords:
 - research
 - nghiên cứu

@@ -39,7 +39,7 @@ Quét toàn bộ danh sách tệp tin nằm trong thư mục `input_documents/`:
 
 ### Bước 3: Chuyển đổi định dạng và Nạp Kỹ năng (Ingestion & Skill Activation)
 Sau khi chủ đề được xác nhận, Agent tiến hành:
-1. **Chuyển đổi tài liệu:** Chuyển đổi theo quy trình `/ccba-markdown-document-processing` — tham khảo kỹ năng [`ccba-markdown-document-processing`](../ccba-markdown-document-processing/SKILL.md) cho quy tắc routing theo `project.mode`.
+1. **Chuyển đổi tài liệu:** Chuyển đổi theo quy trình `/ccba-markdown-document-processing` — tham khảo kỹ năng [`ccba-markdown-document-processing`](../../ccba-markdown-document-processing/SKILL.md) cho quy tắc routing theo `project.mode`.
    * Đối với các tệp nhẹ `< 5MB` (`.docx`, `.txt`): Tự động chuyển đổi sang Markdown.
    * Đối với các tệp nặng `> 5MB` (PDF bản vẽ, Excel lớn): In cảnh báo, lập bảng tóm tắt metadata và chỉ convert chi tiết khi thảo luận đi sâu vào tệp đó.
 2. **Nạp Kỹ năng:** Nạp toàn bộ các kỹ năng nghiệp vụ được chỉ định trong thuộc tính `required_skills` của chủ đề được chọn.

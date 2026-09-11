@@ -9,6 +9,12 @@ applies_to:
 - Kiểm định
 bundle: _core
 command: /platform-loader
+user-invocable: true
+gpi:
+  s: 2.0
+  k: 3.0
+  a: 4.0
+  p: 1.0
 triggers:
 - platform
 - bootstrap
@@ -51,9 +57,9 @@ Khi Agent đang hoạt động tại Spoke và phát hiện yêu cầu cần s�
 1. Tra cứu `catalog.yaml` để tìm tên skill cần thiết.
 2. Xin phép người dùng cài đặt bổ sung: *"Tôi cần tải bổ sung kỹ năng [tên-skill] từ Hub về Spoke để xử lý, bạn có đồng ý không?"*
 3. Sau khi được đồng ý, xác định đường dẫn Hub (`hub_path`) từ `workspace_context.yaml` hoặc biến môi trường `CCBA_HUB_PATH` (mặc định sử dụng repository chung) và thực thi lệnh đồng bộ:
-   ```bash
-   python [hub_path]/scripts/sync_spoke.py --spoke . --sync-item <tên-skill>
-   ```
+    ```bash
+    python [hub_path]/scripts/sync_spoke.py --spoke . --sync-item <tên-skill> --apply
+    ```
 4. Sau khi đồng bộ thành công, Agent tự động nạp kỹ năng mới qua cơ chế Auto-Discovery và tiếp tục thực hiện công việc.
 
 ### 4. Quy tắc Định tuyến Xử lý Văn bản (Master vs Sub-Skill Routing)
@@ -63,4 +69,4 @@ Khi Agent đang hoạt động tại Spoke và phát hiện yêu cầu cần s�
   - Chuẩn hóa Markdown / PDF $\rightarrow$ Nạp Master Skill `ccba-markdown-document-processing`.
   - Soạn thảo hành chính / đề xuất thầu $\rightarrow$ Nạp Master Skill `ccba-copywriting`.
   - Viết bài báo khoa học $\rightarrow$ Nạp Master Skill `ccba-academic-writing`.
-- **Nạp Sub-Skill / Utility khi cần thiết**: Nạp trực tiếp sub-skills (`ccba-docx`, `ccba-pptx`) khi cần xử lý thao tác vi mô. Đối với các tác vụ tái cấu trúc bảng, dọn dẹp template biểu mẫu, sửa liên kết tương đối, tham khảo tài liệu kỹ thuật Tier 2 trong `.agents/skills/ccba-markdown-document-processing/references/`.
+- **Nạp Sub-Skill / Utility khi cần thiết**: Nạp trực tiếp sub-skills (`ccba-pptx`, `ccba-xu-ly-van-phong/references/docx_engine_guide.md`) khi cần xử lý thao tác vi mô. Đối với các tác vụ tái cấu trúc bảng, dọn dẹp template biểu mẫu, sửa liên kết tương đối, tham khảo tài liệu kỹ thuật Tier 2 trong `.agents/skills/ccba-markdown-document-processing/references/`.

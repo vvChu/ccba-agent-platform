@@ -67,20 +67,43 @@ def are_dirs_identical(dir1: Path, dir2: Path) -> bool:
 
 
 def safe_remove(path: Path) -> None:
-    """Safely remove a directory or file without crashing on permission errors."""
-    if not path.exists():
+    """Safely remove a directory, file, or symlink without crashing on permission/type errors."""
+    if not path.exists() and not path.is_symlink():
         return
     try:
-        shutil.rmtree(path)
-    except PermissionError:
-        for root, dirs, files in os.walk(path, topdown=False):
-            for name in files:
-                try:
-                    os.remove(os.path.join(root, name))
-                except PermissionError:
-                    pass
-            for name in dirs:
-                try:
-                    os.rmdir(os.path.join(root, name))
-                except PermissionError:
-                    pass
+        if path.is_file() or path.is_symlink():
+            try:
+                path.unlink()
+            except PermissionError:
+                path.chmod(0o777)
+                path.unlink()
+        else:
+            shutil.rmtree(path, ignore_errors=False)
+    except Exception:
+        # Fallback for locked directories or files
+        if path.is_file() or path.is_symlink():
+            try:
+                path.chmod(0o777)
+                path.unlink()
+            except Exception:
+                pass
+        elif path.is_dir():
+            for root, dirs, files in os.walk(path, topdown=False):
+                for name in files:
+                    file_path = os.path.join(root, name)
+                    try:
+                        os.chmod(file_path, 0o777)
+                        os.remove(file_path)
+                    except Exception:
+                        pass
+                for name in dirs:
+                    dir_path = os.path.join(root, name)
+                    try:
+                        os.chmod(dir_path, 0o777)
+                        os.rmdir(dir_path)
+                    except Exception:
+                        pass
+            try:
+                os.rmdir(path)
+            except Exception:
+                pass

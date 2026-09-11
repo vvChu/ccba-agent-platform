@@ -211,4 +211,67 @@ int close(int fd) {
 }
 """
 
-__all__ = ["find_soffice_bin", "get_soffice_env", "run_soffice"]
+
+def validate_document(doc_path: str | Path) -> bool:
+    """Validate document by converting to HTML with soffice.
+
+    Args:
+        doc_path: Path to .docx, .pptx, or .xlsx file.
+
+    Returns:
+        bool: True if validation succeeds or soffice is not found (graceful fallback).
+    """
+    import sys
+
+    doc_path = Path(doc_path)
+    if not doc_path.exists() or not doc_path.is_file():
+        print(f"Validation error: '{doc_path}' is not a valid file.", file=sys.stderr)
+        return False
+
+    # Determine the correct filter based on file extension
+    match doc_path.suffix.lower():
+        case ".docx":
+            filter_name = "html:HTML"
+        case ".pptx":
+            filter_name = "html:impress_html_Export"
+        case ".xlsx":
+            filter_name = "html:HTML (StarCalc)"
+        case _:
+            print(
+                f"Validation error: Unsupported file type '{doc_path.suffix}'. Supported: .docx, .pptx, .xlsx",
+                file=sys.stderr,
+            )
+            return False
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        try:
+            result = run_soffice(
+                [
+                    "--headless",
+                    "--convert-to",
+                    filter_name,
+                    "--outdir",
+                    temp_dir,
+                    str(doc_path),
+                ],
+                capture_output=True,
+                timeout=10,
+                text=True,
+            )
+            if not (Path(temp_dir) / f"{doc_path.stem}.html").exists():
+                error_msg = result.stderr.strip() or "Document validation failed"
+                print(f"Validation error: {error_msg}", file=sys.stderr)
+                return False
+            return True
+        except FileNotFoundError:
+            print("Warning: soffice not found. Skipping validation.", file=sys.stderr)
+            return True
+        except subprocess.TimeoutExpired:
+            print("Validation error: Timeout during conversion", file=sys.stderr)
+            return False
+        except Exception as e:
+            print(f"Validation error: {e}", file=sys.stderr)
+            return False
+
+
+__all__ = ["find_soffice_bin", "get_soffice_env", "run_soffice", "validate_document"]

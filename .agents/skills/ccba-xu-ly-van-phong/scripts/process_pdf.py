@@ -1,63 +1,42 @@
+#!/usr/bin/env python3
+"""Thin CLI Adapter: Local PDF manipulation tool supporting merge, split, and text extraction.
+
+Delegates execution to Layer 1 Deep Seam: ccba_pdf_prep.manipulation (ADR-0035, ADR-0057).
 """
-Local PDF manipulation tool supporting merge, split, and text extraction.
-"""
+
+from __future__ import annotations
 
 import argparse
 import sys
-from pathlib import Path
 
-from pypdf import PdfReader, PdfWriter
+from ccba_pdf_prep.manipulation import (
+    extract_text_from_pdf,
+    merge_pdfs,
+    parse_pages,
+    split_pdf_pages,
+)
 
-
-def parse_pages(pages_str: str) -> list[int]:
-    """Parse pages string like '1-3,5' into 0-indexed page numbers."""
-    pages = []
-    for part in pages_str.split(","):
-        part = part.strip()
-        if "-" in part:
-            start, end = part.split("-")
-            pages.extend(range(int(start) - 1, int(end)))
-        else:
-            pages.append(int(part) - 1)
-    return pages
-
-
-def merge_pdfs(inputs: list[str], output: str) -> None:
-    """Merge multiple PDFs into a single file."""
-    writer = PdfWriter()
-    for path in inputs:
-        writer.append(path)
-    with open(output, "wb") as f:
-        writer.write(f)
-    print(f"Successfully merged {len(inputs)} PDFs into {output}")
+__all__ = [
+    "parse_pages",
+    "merge_pdfs",
+    "split_pdf",
+    "extract_text",
+]
 
 
 def split_pdf(input_pdf: str, pages_str: str, output: str) -> None:
-    """Split pages from a PDF file."""
-    reader = PdfReader(input_pdf)
-    writer = PdfWriter()
-    pages = parse_pages(pages_str)
-    for p in pages:
-        if 0 <= p < len(reader.pages):
-            writer.add_page(reader.pages[p])
-    with open(output, "wb") as f:
-        writer.write(f)
+    """Backward compatible wrapper for splitting pages from a PDF file."""
+    split_pdf_pages(input_pdf, pages_str, output)
     print(f"Successfully split pages {pages_str} from {input_pdf} into {output}")
 
 
 def extract_text(input_pdf: str, output: str) -> None:
-    """Extract text from a PDF file."""
-    reader = PdfReader(input_pdf)
-    text = ""
-    for page in reader.pages:
-        t = page.extract_text()
-        if t:
-            text += t + "\n"
-    Path(output).write_text(text, encoding="utf-8")
+    """Backward compatible wrapper for extracting text from a PDF file."""
+    extract_text_from_pdf(input_pdf, output)
     print(f"Successfully extracted text from {input_pdf} into {output}")
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description="PDF manipulation tool")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -79,14 +58,16 @@ def main():
     try:
         if args.command == "merge":
             merge_pdfs(args.input, args.output)
+            print(f"Successfully merged {len(args.input)} PDFs into {args.output}")
         elif args.command == "split":
             split_pdf(args.input, args.pages, args.output)
         elif args.command == "extract":
             extract_text(args.input, args.output)
+        return 0
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

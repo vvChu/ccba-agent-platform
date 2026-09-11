@@ -29,6 +29,7 @@ HUB_PACKAGE_PREFIXES = (
     "ccba_harness",
     "ccba_ooxml",
     "ccba_pdf_prep",
+    "ccba_qc_core",
     "mdconverter",
     "ccba_notebooklm",
     "ccba_maskara",

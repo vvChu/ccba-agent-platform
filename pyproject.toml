@@ -83,7 +83,6 @@ docstring-code-format = false
 exclude = ["*.md"]
 
 [tool.mypy]
-python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_ignores = true
@@ -95,17 +94,21 @@ mypy_path = [
     "packages/ccba-harness/src",
     "packages/ccba-ooxml/src",
     "packages/ccba-pdf-prep/src",
+    "packages/ccba-qc-core/src",
 ]
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = [
+    "numpy.*",
+    "pandas.*",
     "llama_index.*",
     "google.generativeai.*",
     "tenacity.*",
     "yt_dlp.*",
     "ccba_ai.*",
     "ccba_pdf_prep.*",
+    "ccba_qc_core.*",
     "fitz.*",
     "ccba_ooxml.*",
     "pptx.*",
@@ -138,6 +141,7 @@ pythonpath = [
     "packages/ccba-notebooklm/src",
     "packages/ccba-ooxml/src",
     "packages/ccba-pdf-prep/src",
+    "packages/ccba-qc-core/src",
     "packages/mdconverter/src",
 ]
 testpaths = ["packages", "tests", "scripts/tests"]

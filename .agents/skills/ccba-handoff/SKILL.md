@@ -8,6 +8,13 @@ disable-model-invocation: true
 metadata:
   author: CCBA
   version: 2.0.0
+user-invocable: true
+command: /ccba-handoff
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 1.0
+  p: 1.0
 triggers:
 - ccba-handoff
 - đóng gói phiên

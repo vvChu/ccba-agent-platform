@@ -56,7 +56,7 @@ Dọn dẹp các branch cục bộ đã được tích hợp vào `main` (hỗ t
   - **Offline / Local Fallback:** Nếu mất mạng hoặc `gh` chưa đăng nhập, Agent tự động đọc tệp cục bộ `.md/knowledge/issues/issue-<issue_id>.md`.
   - **Nhận diện tự động:**
     - Tự động nhận diện loại công việc từ tiêu đề hoặc labels: `feat(...)` $\rightarrow$ `feat`, `fix(...)` $\rightarrow$ `fix`, `docs(...)` $\rightarrow$ `docs`, `refactor(...)` $\rightarrow$ `refactor`.
-    - Tự động trích xuất nội dung **Agent Brief** (nếu đã qua `/ccba-triage`) để chuyển thẳng sang Bước 6.
+    - Tự động trích xuất nội dung **Agent Brief** (nếu đã qua `/ccba-issue-to-hub`) để chuyển thẳng sang Bước 6.
     - Tự động đề xuất tên branch ở Bước 4 mà **không cần hỏi lại người dùng**.
 - **Trường hợp 2 (Không cung cấp mã Issue):**
   Hỏi người dùng lần lượt các thông tin:
@@ -85,7 +85,7 @@ git checkout -b [ten_branch_da_chot]
 ### Bước 6: Lập kế hoạch thiết kế (Planning Phase — Triage Fast-Path & Socrates Grill)
 Agent **bắt buộc** phải chuyển sang **Planning Mode**, tuyệt đối không được viết code ở bước này:
 - **Triage Fast-Path (Smart Skipping):**
-  - Nếu Issue đã có sẵn **Agent Brief** chuẩn từ `/ccba-triage`: Agent tự động nạp yêu cầu, bỏ qua các câu hỏi phỏng vấn cơ bản và chỉ chất vấn 1-2 câu kiến trúc cốt lõi nếu thực sự cần thiết.
+  - Nếu Issue đã có sẵn **Agent Brief** chuẩn từ `/ccba-issue-to-hub`: Agent tự động nạp yêu cầu, bỏ qua các câu hỏi phỏng vấn cơ bản và chỉ chất vấn 1-2 câu kiến trúc cốt lõi nếu thực sự cần thiết.
   - Nếu chưa có Agent Brief: Kích hoạt `/ccba-grilling` để phỏng vấn người dùng và stress-test các giả định.
 - **Soạn thảo Kế hoạch Triển khai (`implementation_plan.md`):**
   - Bắt buộc có mục `## Đánh giá khả năng tái sử dụng (Reuse Assessment)` tra cứu `catalog.yaml` (ADR 0047).
@@ -112,7 +112,7 @@ Coding Agent thực hiện nhiệm vụ:
   - `python scripts/spoke/check_hub_import_depth.py` & `check_spoke_cleanliness.py` (ADR 0044).
   - `python scripts/eval/run_harness_evals.py` (hoặc `/ccba-eval-gate`).
 - Nếu phát hiện linter hoặc type check báo lỗi, tự động kích hoạt **Self-Healing Loop** tối đa 3 lần.
-- Khi tất cả các Gates đều vượt qua thành công (PASS), bàn giao kết quả qua tệp `walkthrough.md` cho người dùng nghiệm thu trước khi tạo PR (`/ccba-create-pr`).
+- Khi tất cả các Gates đều vượt qua thành công (PASS), bàn giao kết quả qua tệp `walkthrough.md` cho người dùng nghiệm thu trước khi tạo PR (`/ccba-contribute-to-hub`).
 - **Tiêu chí hoàn thành:** Mã nguồn hoàn thiện vượt qua 100% các cổng kiểm định tự động và artifact walkthrough.md được bàn giao.
 
 ---

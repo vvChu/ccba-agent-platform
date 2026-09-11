@@ -48,7 +48,7 @@ Các lỗi (bugs) và yêu cầu tính năng (Specs) của dự án này đượ
 
 ## Quản lý Pull Requests (PRs) như một nguồn yêu cầu
 
-**Xem PR như yêu cầu tính năng: no.** _(Chuyển thành `yes` nếu dự án của bạn chấp nhận PR từ cộng tác viên ngoài gửi đến như một yêu cầu tính năng cần phân loại; công cụ `/ccba-triage` sẽ đọc cờ này).*
+**Xem PR như yêu cầu tính năng: no.** _(Chuyển thành `yes` nếu dự án của bạn chấp nhận PR từ cộng tác viên ngoài gửi đến như một yêu cầu tính năng cần phân loại; quy trình triage trong `/ccba-issue-to-hub` sẽ đọc cờ này).*
 
 Khi được đặt là `yes`, các PR ngoài dự án sẽ được đưa vào quy trình triage giống như Issue, sử dụng các câu lệnh `gh pr` tương ứng:
 - **Đọc PR**: `gh pr view <number> --comments` và `gh pr diff <number>`.

@@ -8,6 +8,11 @@ user-invocable: true
 command: /ccba-academic-writing
 when_to_use: Invoke when the user wants to brainstorm, draft, outline, or revise a
   scientific research paper, journal article, or seminar presentation.
+gpi:
+  s: 4.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 keywords:
 - academic writing
 - viết bài báo

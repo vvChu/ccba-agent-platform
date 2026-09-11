@@ -5,7 +5,7 @@
 
 ---
 
-# Workflow: Tự Động Triển Khai Nền Tảng Trên Server Spark (/ccba-server-deploy)
+# Workflow: Tự Động Triển Khai Nền Tảng Trên Server Spark (/ccba-init-spoke)
 
 Quy trình tự động hóa triển khai, cấu hình và giám sát sức khỏe nền tảng CCBA Agent Services Platform trên máy chủ tính toán Server Spark.
 
