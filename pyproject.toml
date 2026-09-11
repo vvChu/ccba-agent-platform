@@ -83,7 +83,6 @@ docstring-code-format = false
 exclude = ["*.md"]
 
 [tool.mypy]
-python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_ignores = true
@@ -101,6 +100,8 @@ plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = [
+    "numpy.*",
+    "pandas.*",
     "llama_index.*",
     "google.generativeai.*",
     "tenacity.*",
