@@ -239,4 +239,3 @@ def split_pdf(
 
 # Aliases for convenience & backward compatibility
 extract_text = extract_text_from_pdf
-

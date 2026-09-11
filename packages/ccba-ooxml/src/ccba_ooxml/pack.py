@@ -81,5 +81,5 @@ def condense_xml(xml_file: str | Path) -> None:
     with open(xml_file, "wb") as f:
         f.write(dom.toxml(encoding="UTF-8"))
 
-__all__ = ["condense_xml", "pack_document", "validate_document"]
 
+__all__ = ["condense_xml", "pack_document", "validate_document"]

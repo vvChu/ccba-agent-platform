@@ -206,4 +206,3 @@ def test_extract_storyboard_frames_tile_math():
                 assert f.exists()
                 with Image.open(f) as img:
                     assert img.size == (30, 30)
-

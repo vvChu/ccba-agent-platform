@@ -107,4 +107,3 @@ def safe_remove(path: Path) -> None:
                 os.rmdir(path)
             except Exception:
                 pass
-

@@ -81,7 +81,6 @@ def test_base_utilities(tmp_path: Path):
     safe_remove(tmp_path / "non_existent.txt")
 
 
-
 def test_resolve_canonical_project_type():
     """Test resolve_canonical_project_type with exact, alias, and fuzzy matching."""
     bundle_defs = {

@@ -299,7 +299,6 @@ def split_pdf(
     return split_pdf_chunks(source, page_ranges, output_temp_dir)
 
 
-
 def get_blind_chunks(total_pages: int, chunk_size: int = 20) -> list[tuple[int, int]]:
     """Generate equitable page ranges."""
     return [
