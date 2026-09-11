@@ -11,6 +11,7 @@ applies_to:
 - Tác vụ Admin
 - Pháp điển
 bundle: _core
+tier: kernel
 disable-model-invocation: true
 command: /ccba-update-spoke
 gpi:

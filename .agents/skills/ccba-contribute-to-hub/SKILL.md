@@ -8,6 +8,7 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _core
+tier: kernel
 disable-model-invocation: true
 command: /ccba-contribute-to-hub
 user-invocable: true

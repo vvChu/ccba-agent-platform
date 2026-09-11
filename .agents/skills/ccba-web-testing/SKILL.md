@@ -24,6 +24,7 @@ metadata:
   version: 3.0.0
 disable-model-invocation: true
 bundle: _software
+tier: kernel
 triggers:
 - Playwright
 - Vitest

@@ -20,6 +20,7 @@ keywords:
 - deep-investigation
 disable-model-invocation: true
 bundle: _software
+tier: kernel
 triggers:
 - research
 - nghiên cứu

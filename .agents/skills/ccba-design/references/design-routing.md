@@ -163,16 +163,10 @@ Application Code
 ## Quick Commands
 
 **Brand:**
-```bash
-node .claude/skills/brand/scripts/inject-brand-context.cjs
-node .claude/skills/brand/scripts/validate-asset.cjs <path>
-```
+Tra cứu đặc tả thương hiệu và kiểm tra asset theo `brand.md`.
 
 **Tokens:**
-```bash
-node .claude/skills/design-system/scripts/generate-tokens.cjs -c tokens.json
-node .claude/skills/design-system/scripts/validate-tokens.cjs -d src/
-```
+Sinh và kiểm tra design tokens theo tài liệu `design-system.md`.
 
 **Components:**
 ```bash

@@ -14,7 +14,7 @@ gpi:
   k: 3.0
   a: 4.0
   p: 1.0
-keywords:
+triggers:
 - notebooklm
 - rag
 - summary
@@ -32,6 +32,7 @@ metadata:
   author: CCBA
   version: 1.3.0
 bundle: _core
+tier: kernel
 layer: _core
 package_path: packages/ccba-notebooklm
 ---

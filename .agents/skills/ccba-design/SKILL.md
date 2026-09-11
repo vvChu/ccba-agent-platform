@@ -23,6 +23,7 @@ metadata:
   author: claudekit
   version: 2.1.0
 bundle: _consulting
+tier: kernel
 layer: _consulting
 disable-model-invocation: true
 triggers:
@@ -75,15 +76,15 @@ Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social phot
 ### Logo: Generate Design Brief
 
 ```bash
-python3 ~/.claude/skills/design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
+python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
 ```
 
 ### Logo: Search Styles/Colors/Industries
 
 ```bash
-python3 ~/.claude/skills/design/scripts/logo/search.py "minimalist clean" --domain style
-python3 ~/.claude/skills/design/scripts/logo/search.py "tech professional" --domain color
-python3 ~/.claude/skills/design/scripts/logo/search.py "healthcare medical" --domain industry
+python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "minimalist clean" --domain style
+python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "tech professional" --domain color
+python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "healthcare medical" --domain industry
 ```
 
 ### Logo: Generate with AI
@@ -91,8 +92,8 @@ python3 ~/.claude/skills/design/scripts/logo/search.py "healthcare medical" --do
 **ALWAYS** generate output logo images with white background.
 
 ```bash
-python3 ~/.claude/skills/design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
-python3 ~/.claude/skills/design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
+python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
+python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
 ```
 
 **IMPORTANT:** When scripts fail, try to fix them directly.
@@ -106,32 +107,32 @@ After generation, **ALWAYS** ask user about HTML preview via `AskUserQuestion`. 
 ### CIP: Generate Brief
 
 ```bash
-python3 ~/.claude/skills/design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
+python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
 ```
 
 ### CIP: Search Domains
 
 ```bash
-python3 ~/.claude/skills/design/scripts/cip/search.py "business card letterhead" --domain deliverable
-python3 ~/.claude/skills/design/scripts/cip/search.py "luxury premium elegant" --domain style
-python3 ~/.claude/skills/design/scripts/cip/search.py "hospitality hotel" --domain industry
-python3 ~/.claude/skills/design/scripts/cip/search.py "office reception" --domain mockup
+python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "business card letterhead" --domain deliverable
+python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "luxury premium elegant" --domain style
+python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "hospitality hotel" --domain industry
+python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "office reception" --domain mockup
 ```
 
 ### CIP: Generate Mockups
 
 ```bash
 # With logo (RECOMMENDED)
-python3 ~/.claude/skills/design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
+python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
 
 # Full CIP set
-python3 ~/.claude/skills/design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
+python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
 
 # Pro model (4K text)
-python3 ~/.claude/skills/design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
+python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
 
 # Without logo
-python3 ~/.claude/skills/design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
+python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
 ```
 
 Models: `flash` (default, `gemini-2.5-flash-image`), `pro` (`gemini-3-pro-image-preview`)
@@ -139,7 +140,7 @@ Models: `flash` (default, `gemini-2.5-flash-image`), `pro` (`gemini-3-pro-image-
 ### CIP: Render HTML Presentation
 
 ```bash
-python3 ~/.claude/skills/design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
+python [hub_path]/.agents/skills/ccba-design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
 ```
 
 **Tip:** If no logo exists, use Logo Design section above first.
@@ -219,21 +220,21 @@ Load `references/banner-sizes-and-styles.md` for complete sizes and styles refer
 ### Icon: Generate Single Icon
 
 ```bash
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "settings gear" --style outlined
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
-python3 ~/.claude/skills/design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "settings gear" --style outlined
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
 ```
 
 ### Icon: Generate Batch Variations
 
 ```bash
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
 ```
 
 ### Icon: Multi-size Export
 
 ```bash
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
 ```
 
 ### Icon: Top Styles

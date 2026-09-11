@@ -23,6 +23,7 @@ metadata:
   version: 2.0.0
 disable-model-invocation: true
 bundle: _software
+tier: kernel
 triggers:
 - review
 - quality

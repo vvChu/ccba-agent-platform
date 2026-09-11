@@ -18,13 +18,14 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import re
+import ast
 import sys
 from pathlib import Path
 
 # Hub package import prefixes to monitor
 HUB_PACKAGE_PREFIXES = (
     "ccba_legal",
+    "ccba_legal_intel",
     "ccba_ai",
     "ccba_harness",
     "ccba_ooxml",
@@ -35,36 +36,53 @@ HUB_PACKAGE_PREFIXES = (
     "ccba_maskara",
 )
 
-# Pattern: from ccba_xxx.submodule.deep_module import X  (depth >= 3)
-# Matches: from ccba_legal.crawler.chrome_cdp import ...
-# Matches: import ccba_legal.crawler.chrome_cdp
-DEEP_IMPORT_PATTERN = re.compile(
-    r"^\s*(?:from|import)\s+"
-    r"(" + "|".join(re.escape(p) for p in HUB_PACKAGE_PREFIXES) + r")"
-    r"\.\w+\.\w+"  # at least 2 dots = depth >= 3
-)
-
 
 def scan_file(filepath: Path) -> list[tuple[int, str]]:
-    """Scans a Python file for deep Hub package imports.
+    """Scans a Python file for deep Hub package imports using AST parsing.
 
     Returns list of (line_number, line_content) violations.
     """
     violations: list[tuple[int, str]] = []
     try:
         content = filepath.read_text(encoding="utf-8")
-    except (UnicodeDecodeError, OSError):
+        tree = ast.parse(content, filename=str(filepath))
+    except (UnicodeDecodeError, OSError, SyntaxError):
         return violations
 
-    for line_num, line in enumerate(content.splitlines(), start=1):
-        stripped = line.strip()
-        # Skip comments and empty lines
-        if not stripped or stripped.startswith("#"):
-            continue
-        if DEEP_IMPORT_PATTERN.match(stripped):
-            violations.append((line_num, stripped))
+    lines = content.splitlines()
 
-    return violations
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            if not node.module or node.level > 0:
+                continue
+            parts = node.module.split(".")
+            pkg = parts[0]
+            if pkg in HUB_PACKAGE_PREFIXES:
+                if len(parts) >= 3 or (len(parts) >= 2 and parts[1].startswith("_")):
+                    line_num = node.lineno
+                    line_content = (
+                        lines[line_num - 1].strip()
+                        if 0 < line_num <= len(lines)
+                        else f"from {node.module} import ..."
+                    )
+                    violations.append((line_num, line_content))
+
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                parts = alias.name.split(".")
+                pkg = parts[0]
+                if pkg in HUB_PACKAGE_PREFIXES:
+                    if len(parts) >= 3 or (len(parts) >= 2 and parts[1].startswith("_")):
+                        line_num = node.lineno
+                        line_content = (
+                            lines[line_num - 1].strip()
+                            if 0 < line_num <= len(lines)
+                            else f"import {alias.name}"
+                        )
+                        violations.append((line_num, line_content))
+
+    # Deduplicate by line number and sort
+    return sorted(set(violations), key=lambda x: x[0])
 
 
 def main() -> int:

@@ -269,10 +269,15 @@ def main() -> None:
         else:
             # Chạy các test suite ổn định và độc lập trên môi trường sandbox/CI
             test_args = [
-                "packages/mdconverter/tests",
                 "packages/ccba-ai/tests",
                 "packages/ccba-harness/tests",
+                "packages/ccba-legal-intel/tests",
+                "packages/ccba-maskara/tests",
+                "packages/ccba-notebooklm/tests",
+                "packages/ccba-ooxml/tests",
+                "packages/ccba-pdf-prep/tests",
                 "packages/ccba-qc-core/tests",
+                "packages/mdconverter/tests",
                 "tests/governance",
             ]
             if (project_root / "scripts/tests").exists():
@@ -283,13 +288,17 @@ def main() -> None:
             py_exe,
             "-m",
             "pytest",
+            "-c",
+            str(project_root / "pyproject.toml"),
             "--maxfail=1",
             "-m",
             "not slow",
         ] + test_args
 
+        # Allow sufficient execution budget for 1,300+ tests across 9 packages
+        timeout_test = 900 if (args.all and sys.platform == "win32") else (600 if args.all else 300)
         success_test, out_test = run_command(
-            pytest_cmd, project_root, "Pytest Suite", timeout_seconds=300
+            pytest_cmd, project_root, "Pytest Suite", timeout_seconds=timeout_test
         )
         gates_summary.append(("Gate 3: Pytest Unit Tests", success_test, out_test))
         all_success = all_success and success_test

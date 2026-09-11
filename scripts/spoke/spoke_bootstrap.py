@@ -50,6 +50,27 @@ ARCHETYPE_TIER1_DEFAULTS = {
     "enterprise_governance": ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"],
 }
 
+PROJECT_TYPE_TO_ARCHETYPE: dict[str, str] = {
+    "pháp điển": "knowledge_corpus",
+    "phap dien": "knowledge_corpus",
+    "tra cứu": "knowledge_corpus",
+    "tra cuu": "knowledge_corpus",
+    "lookup": "knowledge_corpus",
+    "legal knowledge": "knowledge_corpus",
+    "thẩm tra thiết kế": "project_delivery",
+    "tham tra thiet ke": "project_delivery",
+    "thẩm tra": "project_delivery",
+    "tham tra": "project_delivery",
+    "thiết kế": "project_delivery",
+    "thiet ke": "project_delivery",
+    "kiểm định": "project_delivery",
+    "kiem dinh": "project_delivery",
+    "tác vụ admin": "enterprise_governance",
+    "tac vu admin": "enterprise_governance",
+    "hành chính": "enterprise_governance",
+    "admin": "enterprise_governance",
+}
+
 
 class SpokeBootstrapper:
     """Orchestrates virtual environment detection, editable Hub package installs,
@@ -106,10 +127,12 @@ class SpokeBootstrapper:
         proj_type = proj.get("type", "")
         proj_mode = proj.get("mode", "")
         archetype = proj.get("archetype", "")
+        norm_type = str(proj_type).strip().lower()
         if (
-            proj_type in ("Phần mềm", "Pháp điển")
+            proj_type in ("Phần mềm", "Pháp điển", "Tra cứu")
             or proj_mode in ("software", "knowledge")
-            or archetype == "knowledge_corpus"
+            or archetype in ("knowledge_corpus", "project_delivery", "enterprise_governance")
+            or norm_type in PROJECT_TYPE_TO_ARCHETYPE
         ):
             return True
 
@@ -117,7 +140,12 @@ class SpokeBootstrapper:
             return True
         if (self.spoke_root / "requirements.txt").exists():
             return True
-        if (self.spoke_root / ".venv").exists() or (self.spoke_root / "venv").exists():
+        if (
+            (self.spoke_root / ".venv").exists()
+            or (self.spoke_root / "venv").exists()
+            or (self.spoke_root / "scripts" / ".venv").exists()
+            or (self.spoke_root / "scripts" / "venv").exists()
+        ):
             return True
 
         # Scan for .py files in root, scripts, src, tests
@@ -135,8 +163,14 @@ class SpokeBootstrapper:
 
     def find_venv(self) -> Path | None:
         """Locates the existing virtual environment directory in Spoke."""
-        for venv_name in [".venv", "venv", "env"]:
-            v_dir = self.spoke_root / venv_name
+        candidate_dirs = [
+            self.spoke_root / ".venv",
+            self.spoke_root / "venv",
+            self.spoke_root / "env",
+            self.spoke_root / "scripts" / ".venv",
+            self.spoke_root / "scripts" / "venv",
+        ]
+        for v_dir in candidate_dirs:
             if v_dir.exists():
                 # Check for python executable inside
                 win_py = v_dir / "Scripts" / "python.exe"
@@ -179,6 +213,9 @@ class SpokeBootstrapper:
         context = self.read_workspace_context()
         proj = context.get("project", {})
         archetype = proj.get("archetype", "")
+        if not archetype:
+            raw_type = str(proj.get("type", "")).strip().lower()
+            archetype = PROJECT_TYPE_TO_ARCHETYPE.get(raw_type, "")
 
         # Declared packages in workspace_context.yaml
         declared = context.get("hub_packages", [])

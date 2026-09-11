@@ -7,6 +7,8 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _qc
+tier: kernel
+command: /ccba-ai-pdf-preprocessor
 gpi:
   s: 3.0
   k: 3.0

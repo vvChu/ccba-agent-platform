@@ -4,6 +4,7 @@ description: Kỹ năng tự động cào và đóng gói văn bản pháp luậ
   TVPLCrawler (tự động CookieVault & Mutex).
 disable-model-invocation: true
 bundle: _software
+tier: kernel
 user-invocable: true
 command: /ccba-tvpl-vip-crawler
 gpi:

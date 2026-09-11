@@ -30,6 +30,7 @@ SPOKE_SPECIFIC_SCRIPTS = {
     "scripts/sync_notebooklm_knowledge.py",
     "scripts/check_spoke_cleanliness.py",
     "scripts/check_hub_import_depth.py",
+    "scripts/spoke_bootstrap.py",
 }
 
 
@@ -152,3 +153,54 @@ def test_workflow_and_skill_relative_links_resolve() -> None:
                 )
 
     assert not errors, "Detected broken relative links in skills/workflows:\n" + "\n".join(errors)
+
+
+def test_inline_script_and_reference_paths_exist() -> None:
+    """Verify inline and backtick script and document references in skills resolve on disk."""
+    script_pattern = re.compile(
+        r"(?:python\s+|[\s\"\'\`])((?:[a-zA-Z0-9_\-\.\/]+)?(?:scripts|references)[\\/][a-zA-Z0-9_\-\\\/\.]+\.(?:py|sh|md|yaml|json|js))"
+    )
+    target_files = get_target_documents()
+    errors: list[str] = []
+
+    for tf in target_files:
+        content = tf.read_text(encoding="utf-8")
+        for match in script_pattern.findall(content):
+            clean_rel = match.strip("`'\"").replace("\\", "/")
+            if clean_rel.startswith(("http://", "https://", "<", "{", "$")):
+                continue
+            if any(c in clean_rel for c in ("<", ">", "{", "}", "*", "...")):
+                continue
+            if clean_rel in SPOKE_SPECIFIC_SCRIPTS:
+                continue
+
+            actual_local = (tf.parent / clean_rel).resolve()
+            actual_hub = (HUB_ROOT / clean_rel).resolve()
+            if not actual_local.exists() and not actual_hub.exists():
+                errors.append(
+                    f"File '{tf.relative_to(HUB_ROOT)}' references missing script/reference: {clean_rel}"
+                )
+
+    assert not errors, "Detected broken inline script/reference paths:\n" + "\n".join(errors)
+
+
+def test_no_legacy_hardcoded_paths_in_skills() -> None:
+    """Verify skills contain zero legacy Claude Desktop or pre-monorepo paths (ADR-0056)."""
+    banned_patterns = [
+        ("~/.claude/", "Legacy ~/.claude path"),
+        ("/mnt/skills", "Legacy /mnt/skills path"),
+        ("ooxml/scripts/", "Legacy ooxml/scripts path (use python -m ccba_ooxml)"),
+        ("hitl-loop.template.sh", "Ghost HITL script reference"),
+        ("scripts/notebooklm_cli.py", "Ghost notebooklm_cli.py reference"),
+        (".claude/skills/design-system/", "Ghost design-system path"),
+    ]
+    target_files = get_target_documents()
+    errors: list[str] = []
+
+    for tf in target_files:
+        content = tf.read_text(encoding="utf-8")
+        for pattern, label in banned_patterns:
+            if pattern in content:
+                errors.append(f"File '{tf.relative_to(HUB_ROOT)}' contains {label}: '{pattern}'")
+
+    assert not errors, "Detected legacy/ghost path patterns in skills:\n" + "\n".join(errors)

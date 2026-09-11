@@ -8,6 +8,8 @@ applies_to:
 - Phần mềm
 - Kiểm định
 bundle: _core
+tier: kernel
+command: /ccba-api-circuit-breaker
 dependencies:
 - ccba-ai-gateway-sdk
 gpi:

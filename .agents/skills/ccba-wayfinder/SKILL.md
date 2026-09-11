@@ -3,6 +3,7 @@ name: ccba-wayfinder
 description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua
   danh sách các ticket công việc.
 bundle: _core
+tier: kernel
 disable-model-invocation: true
 user-invocable: true
 command: /ccba-wayfinder

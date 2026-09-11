@@ -21,6 +21,7 @@ keywords:
 - visual
 disable-model-invocation: true
 bundle: _software
+tier: kernel
 triggers:
 - grill
 - stress-test

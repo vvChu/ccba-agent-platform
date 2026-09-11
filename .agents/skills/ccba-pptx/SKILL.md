@@ -24,6 +24,7 @@ metadata:
   author: claudekit
   version: 1.0.0
 bundle: _core
+tier: kernel
 triggers:
 - ccba-pptx
 - powerpoint
@@ -54,9 +55,9 @@ python -m markitdown path-to-file.pptx
 You need raw XML access for: comments, speaker notes, slide layouts, animations, design elements, and complex formatting. For any of these features, you'll need to unpack a presentation and read its raw XML contents.
 
 #### Unpacking a file
-`python ooxml/scripts/unpack.py <office_file> <output_dir>`
+`python -m ccba_ooxml unpack <office_file> <output_dir>`
 
-**Note**: The unpack.py script is located at `skills/pptx/ooxml/scripts/unpack.py` relative to the project root. If the script doesn't exist at this path, use `find . -name "unpack.py"` to locate it.
+**Note**: Unpacking is provided by the `ccba-ooxml` package via `python -m ccba_ooxml unpack`.
 
 #### Key file structures
 * `ppt/presentation.xml` - Main presentation metadata and slide references
@@ -209,13 +210,13 @@ When edit slides in an existing PowerPoint presentation, you need to work with t
 ### Workflow
 1. **MANDATORY - READ ENTIRE FILE**: Read [`ooxml.md`](ooxml.md) (~500 lines) completely from start to finish.  **NEVER set any range limits when reading this file.**  Read the full file content for detailed guidance on OOXML structure and editing workflows before any presentation editing.
    **Completion Criterion:** Việc đọc toàn bộ file `ooxml.md` được ghi nhận rõ ràng trong nhật ký suy nghĩ (thought trace) của Agent.
-2. Unpack the presentation: `python ooxml/scripts/unpack.py <office_file> <output_dir>`
+2. Unpack the presentation: `python -m ccba_ooxml unpack <office_file> <output_dir>`
    **Completion Criterion:** Thư mục `<output_dir>` được tạo và chứa các tệp tin XML của slide (ví dụ `ppt/slides/slide1.xml`).
 3. Edit the XML files (primarily `ppt/slides/slide{N}.xml` and related files)
    **Completion Criterion:** Các sửa đổi XML được lưu lại thành công và đúng thẻ cú pháp OOXML.
-4. **CRITICAL**: Validate immediately after each edit and fix any validation errors before proceeding: `python ooxml/scripts/validate.py <dir> --original <file>`
+4. **CRITICAL**: Validate immediately after each edit and fix any validation errors before proceeding: `python -m ccba_ooxml validate <dir> --original <file>`
    **Completion Criterion:** Lệnh validate chạy thành công và không phát hiện lỗi cấu trúc XML.
-5. Pack the final presentation: `python ooxml/scripts/pack.py <input_directory> <office_file>`
+5. Pack the final presentation: `python -m ccba_ooxml pack <input_directory> <office_file>`
    **Completion Criterion:** File `.pptx` được đóng gói lại thành công từ thư mục tạm và không bị lỗi định dạng khi mở.
 
 ## Creating a new PowerPoint presentation **using a template**

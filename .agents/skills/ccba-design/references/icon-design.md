@@ -6,36 +6,36 @@ AI-powered SVG icon generation using Gemini 3.1 Pro Preview. 15 styles, 12 categ
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/icon/generate.py` | Generate SVG icons with Gemini 3.1 Pro Preview |
+| `../scripts/icon/generate.py` | Generate SVG icons with Gemini 3.1 Pro Preview |
 
 ## Commands
 
 ### Generate Single Icon
 
 ```bash
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "settings gear" --style outlined
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
-python3 ~/.claude/skills/design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "settings gear" --style outlined
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
 ```
 
 ### Generate Batch Variations
 
 ```bash
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "notification bell" --batch 6 --style outlined --output-dir ./icons
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "notification bell" --batch 6 --style outlined --output-dir ./icons
 ```
 
 ### Generate Multiple Sizes
 
 ```bash
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
 ```
 
 ### List Styles/Categories
 
 ```bash
-python3 ~/.claude/skills/design/scripts/icon/generate.py --list-styles
-python3 ~/.claude/skills/design/scripts/icon/generate.py --list-categories
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --list-styles
+python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --list-categories
 ```
 
 ## CLI Options

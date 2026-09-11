@@ -457,7 +457,7 @@ Image Editing Mode:
         if action == "generate":
             print("\n💡 To generate a logo, use the logo-design skill:")
             print(
-                f'   python ~/.claude/skills/design/scripts/logo/generate.py --brand "{args.brand}" --industry "{args.industry}"'
+                f'   python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --brand "{args.brand}" --industry "{args.industry}"'
             )
             print("\n   Then re-run this command with --logo <generated_logo.png>")
             sys.exit(0)

@@ -6,29 +6,29 @@ AI-powered logo design with 55+ styles, 30 color palettes, 25 industry guides. U
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/logo/search.py` | Search styles, colors, industries; generate design briefs |
-| `scripts/logo/generate.py` | Generate logos with Gemini Nano Banana |
-| `scripts/logo/core.py` | BM25 search engine for logo data |
+| `../scripts/logo/search.py` | Search styles, colors, industries; generate design briefs |
+| `../scripts/logo/generate.py` | Generate logos with Gemini Nano Banana |
+| `../scripts/logo/core.py` | BM25 search engine for logo data |
 
 ## Commands
 
 ### Design Brief (Start Here)
 
 ```bash
-python3 ~/.claude/skills/design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
+python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
 ```
 
 ### Search Domains
 
 ```bash
 # Styles
-python3 ~/.claude/skills/design/scripts/logo/search.py "minimalist clean" --domain style
+python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "minimalist clean" --domain style
 
 # Color palettes
-python3 ~/.claude/skills/design/scripts/logo/search.py "tech professional" --domain color
+python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "tech professional" --domain color
 
 # Industry guidelines
-python3 ~/.claude/skills/design/scripts/logo/search.py "healthcare medical" --domain industry
+python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "healthcare medical" --domain industry
 ```
 
 ### Generate Logo
@@ -36,8 +36,8 @@ python3 ~/.claude/skills/design/scripts/logo/search.py "healthcare medical" --do
 **ALWAYS** use white background for output logos.
 
 ```bash
-python3 ~/.claude/skills/design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
-python3 ~/.claude/skills/design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
+python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
+python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
 ```
 
 Options: `--style`, `--industry`, `--prompt`
@@ -73,16 +73,16 @@ Options: `--style`, `--industry`, `--prompt`
 
 ## Workflow
 
-1. Generate design brief → `scripts/logo/search.py --design-brief`
-2. Generate logo variations → `scripts/logo/generate.py --brand --style --industry`
+1. Generate design brief → `../scripts/logo/search.py --design-brief`
+2. Generate logo variations → `../scripts/logo/generate.py --brand --style --industry`
 3. Ask user about HTML preview → `AskUserQuestion` tool
 4. If yes, invoke `/ui-ux-pro-max` for HTML gallery
 
 ## Detailed References
 
-- `references/logo-style-guide.md` - Detailed style descriptions
-- `references/logo-color-psychology.md` - Color meanings and combinations
-- `references/logo-prompt-engineering.md` - AI generation prompts
+- `logo-style-guide.md` - Detailed style descriptions
+- `logo-color-psychology.md` - Color meanings and combinations
+- `logo-prompt-engineering.md` - AI generation prompts
 
 ## Setup
 

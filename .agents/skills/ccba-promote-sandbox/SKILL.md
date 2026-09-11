@@ -10,6 +10,7 @@ applies_to:
 - Kiểm định
 - Tác vụ Admin
 bundle: _core
+tier: kernel
 disable-model-invocation: true
 command: /ccba-promote-sandbox
 user-invocable: true

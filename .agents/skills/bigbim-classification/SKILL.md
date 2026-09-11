@@ -6,6 +6,8 @@ applies_to:
 - BIM
 - Thiết kế
 bundle: _bim
+tier: kernel
+command: /bigbim-classification
 layer: _bim
 gpi:
   s: 4.0
