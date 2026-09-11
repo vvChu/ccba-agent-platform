@@ -6,6 +6,7 @@ by dynamically resolving file paths relative to the project root.
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 from datetime import datetime
@@ -32,6 +33,160 @@ def resolve_project_root() -> Path:
         if (parent / ".git").exists() or (parent / "pyproject.toml").exists():
             return parent
     return Path.cwd()
+
+
+def discover_master_registry_path(custom_path: Path | str | None = None) -> Path:
+    """Discover the canonical Master Legal Registry path across Hub and Spoke environments (ADR 0050).
+
+    Resolution Order (Priority 1 to 6):
+    1. Explicit custom_path argument (if file or directory containing legal_registry.yaml).
+    2. Environment variables CCBA_LEGAL_REGISTRY_PATH or CCBA_LEGAL_KNOWLEDGE_PATH.
+    3. Local .md/workspace_context.yaml configuration (master_registry_path or knowledge_corpus).
+    4. Hub's .md/data/spoke_registry_decrypted.yaml or spoke_registry.yaml (ccba-legal-knowledge spoke).
+    5. Local candidate directories (e.g. D:/GitHubProjects/ccba-legal-knowledge).
+    6. Fallback to local project's .md/data/legal_registry.yaml.
+
+    Returns:
+        Path: Resolved absolute path to legal_registry.yaml.
+    """
+    # Tier 1: Explicit custom_path
+    if custom_path:
+        p = Path(custom_path)
+        if p.is_file():
+            return p.resolve()
+        if p.is_dir():
+            for name in ["legal_registry.yaml", ".md/data/legal_registry.yaml"]:
+                cand = p / name
+                if cand.is_file():
+                    return cand.resolve()
+
+    # Tier 2: Environment variables
+    env_reg = os.environ.get("CCBA_LEGAL_REGISTRY_PATH")
+    if env_reg:
+        p = Path(env_reg)
+        if p.is_file():
+            return p.resolve()
+        if p.is_dir():
+            for name in ["legal_registry.yaml", ".md/data/legal_registry.yaml"]:
+                cand = p / name
+                if cand.is_file():
+                    return cand.resolve()
+
+    env_know = os.environ.get("CCBA_LEGAL_KNOWLEDGE_PATH")
+    if env_know:
+        p = Path(env_know)
+        for name in ["legal_registry.yaml", ".md/data/legal_registry.yaml"]:
+            cand = p / name
+            if cand.is_file():
+                return cand.resolve()
+
+    project_root = resolve_project_root()
+
+    # Tier 3: Local workspace_context.yaml
+    local_ctx_path = project_root / ".md" / "workspace_context.yaml"
+    if local_ctx_path.is_file():
+        try:
+            with open(local_ctx_path, encoding="utf-8") as f:
+                ctx = yaml.safe_load(f) or {}
+            if isinstance(ctx, dict):
+                # Direct master registry setting
+                if ctx.get("master_registry_path"):
+                    cand = Path(ctx["master_registry_path"])
+                    if not cand.is_absolute():
+                        cand = project_root / cand
+                    if cand.is_file():
+                        return cand.resolve()
+                # Check if current workspace IS ccba-legal-knowledge
+                proj = ctx.get("project", {})
+                if isinstance(proj, dict) and (
+                    proj.get("name") == "ccba-legal-knowledge"
+                    or proj.get("archetype") == "knowledge_corpus"
+                ):
+                    for name in ["legal_registry.yaml", ".md/data/legal_registry.yaml"]:
+                        cand = project_root / name
+                        if cand.is_file():
+                            return cand.resolve()
+        except Exception:
+            pass
+
+    # Tier 4: Hub's spoke registry cache
+    hub_candidates = []
+    if local_ctx_path.is_file():
+        try:
+            with open(local_ctx_path, encoding="utf-8") as f:
+                ctx = yaml.safe_load(f) or {}
+            if isinstance(ctx, dict) and ctx.get("hub_path"):
+                cand_h = Path(ctx["hub_path"])
+                if not cand_h.is_absolute():
+                    cand_h = project_root / cand_h
+                hub_candidates.append(cand_h)
+        except Exception:
+            pass
+    hub_candidates.extend(
+        [
+            project_root,
+            project_root.parent / "ccba-agent-platform",
+            Path("D:/GitHubProjects/ccba-agent-platform"),
+            Path("C:/GitHubProjects/ccba-agent-platform"),
+        ]
+    )
+
+    for h_path in hub_candidates:
+        if not h_path.exists():
+            continue
+        for reg_name in ["spoke_registry_decrypted.yaml", "spoke_registry.yaml"]:
+            spoke_reg_file = h_path / ".md" / "data" / reg_name
+            if spoke_reg_file.is_file():
+                try:
+                    with open(spoke_reg_file, encoding="utf-8") as f:
+                        spoke_data = yaml.safe_load(f) or {}
+                    spokes = spoke_data.get("spokes", []) if isinstance(spoke_data, dict) else []
+                    for sp in spokes:
+                        if isinstance(sp, dict) and (
+                            sp.get("name") == "ccba-legal-knowledge"
+                            or "legal-knowledge" in str(sp.get("name", "")).lower()
+                            or sp.get("archetype") == "knowledge_corpus"
+                        ):
+                            sp_path_str = sp.get("path")
+                            if sp_path_str:
+                                sp_p = Path(sp_path_str)
+                                for name in ["legal_registry.yaml", ".md/data/legal_registry.yaml"]:
+                                    cand = sp_p / name
+                                    if cand.is_file():
+                                        return cand.resolve()
+                except Exception:
+                    pass
+
+    # Tier 5: Known local candidate paths
+    candidates = [
+        project_root.parent / "ccba-legal-knowledge",
+        project_root / ".." / "ccba-legal-knowledge",
+        Path("D:/GitHubProjects/ccba-legal-knowledge"),
+        Path("C:/GitHubProjects/ccba-legal-knowledge"),
+    ]
+    try:
+        candidates.extend(
+            [
+                Path.home() / "GitHubProjects" / "ccba-legal-knowledge",
+                Path.home() / "ccba-legal-knowledge",
+            ]
+        )
+    except Exception:
+        pass
+    for cand in candidates:
+        try:
+            resolved = cand.resolve()
+            if resolved.exists():
+                for name in ["legal_registry.yaml", ".md/data/legal_registry.yaml"]:
+                    cand_file = resolved / name
+                    if cand_file.is_file():
+                        return cand_file.resolve()
+        except Exception:
+            continue
+
+    # Tier 6: Fallback to local project legal_registry.yaml
+    fallback_path = project_root / ".md" / "data" / "legal_registry.yaml"
+    return fallback_path
 
 
 class LegalRegistryManager:
@@ -621,6 +776,8 @@ def query(
 ) -> list[dict[str, Any]]:
     """High-level query API searching legal registry with automatic lifecycle warnings (ADR 0050).
 
+    Delegates to LegalKnowledgeEngine for multi-tier master discovery and enriched search.
+
     Args:
         search_query: Search keywords or document number.
         registry_path: Optional custom path to legal_registry.yaml.
@@ -629,11 +786,15 @@ def query(
     Returns:
         List of enriched document dictionaries.
     """
-    return search_legal_registry(query=search_query, registry_path=registry_path, top_k=top_k)
+    from ccba_legal.engine import LegalKnowledgeEngine
+
+    engine = LegalKnowledgeEngine(registry_path=registry_path)
+    return engine.search(query=search_query, top_k=top_k)
 
 
 __all__ = [
     "LegalRegistryManager",
+    "discover_master_registry_path",
     "format_citation",
     "load_legal_registry",
     "search_legal_registry",

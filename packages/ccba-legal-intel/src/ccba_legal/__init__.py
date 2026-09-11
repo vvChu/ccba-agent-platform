@@ -1,6 +1,7 @@
 """ccba-legal-intel — Unified Legal Intelligence Platform.
 
 Public Deep Seams:
+    LegalKnowledgeEngine    — Universal legal knowledge engine, tier-aware AST clause & table extraction.
     LegalIntelPipeline      — Crawl, parse, package legal documents end-to-end.
     LegalProcessor          — Legal advisory, conflict analysis, dispatch drafts.
     LegalSyncEngine         — Cloud sync of legal registry to NotebookLM.
@@ -85,6 +86,11 @@ from .docx_converter import (
     process_vbpl_bundle_okf_v22,
     process_vbpl_bundle_okf_v24,
 )
+from .engine import (
+    LegalKnowledgeEngine,
+    canonicalize_clause_id,
+    csv_to_markdown,
+)
 from .federated_rag import FederatedLegalEngine, query_ground_truth
 from .figure_extractor import (
     extract_docx_figures,
@@ -147,6 +153,7 @@ from .provenance import (
 )
 from .registry import (
     LegalRegistryManager,
+    discover_master_registry_path,
     format_citation,
     get_lifecycle,
     load_legal_registry,
@@ -169,6 +176,7 @@ __all__ = [
     "TableMatrixBuilder",
     "MathEquationConverter",
     # === Core Deep Seams (Public Interface) ===
+    "LegalKnowledgeEngine",
     "LegalIntelPipeline",
     "LegalProcessor",
     "LegalProcessResult",
@@ -222,9 +230,12 @@ __all__ = [
     "format_grounded_response",
     "format_citation",
     "load_legal_registry",
+    "discover_master_registry_path",
     "search_legal_registry",
     "get_lifecycle",
     "query",
+    "canonicalize_clause_id",
+    "csv_to_markdown",
     "sync_legal_assets",
     "load_manifest",
     "roman_to_decimal",

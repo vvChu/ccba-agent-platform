@@ -145,7 +145,31 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
    Tự động kéo các OKF v2.4 bundles đạt chuẩn từ kho tri thức gốc `ccba-legal-knowledge` (hoặc Cloud Legal Vault) và thực hiện Non-Destructive Additive Merge cho `legal_registry.yaml` tại Spoke.
    * **Tiêu chí hoàn thành:** Toàn bộ gói văn bản OKF v2.4 chuẩn được sao chép về Spoke và `legal_registry.yaml` được cập nhật bảo toàn.
 
-6. **Kiểm Định Master CI Gates Spoke (1-Command Automation)**:
+6. **Tra Cứu & Trích Xuất Tri Thức Pháp Lý (LegalKnowledgeEngine CLI & API — ADR 0035, ADR 0050)**:
+   * **Tra cứu văn bản và cảnh báo vòng đời:**
+     ```bash
+     python -m ccba_legal query "Luật Xây dựng"
+     ```
+   * **Trích xuất nguyên vẹn Điều/Khoản với Tier-Aware Semantic Slicing & Alias Parser:**
+     ```bash
+     python -m ccba_legal get-clause --doc Luat-Xay-dung-2025-135-2025-QH15 --clause d1
+     python -m ccba_legal get-clause --doc Luat-Xay-dung-2025-135-2025-QH15 --clause d15k2
+     ```
+   * **Trích xuất bảng ma trận số liệu chuẩn Markdown/CSV:**
+     ```bash
+     python -m ccba_legal get-table --doc qcvn_06_2022_bxd --table bang_01 --format markdown
+     ```
+   * **Lập trình Python Facade qua `LegalKnowledgeEngine`:**
+     ```python
+     from ccba_legal import LegalKnowledgeEngine, query
+     engine = LegalKnowledgeEngine()
+     docs = engine.search("nghị định 105")
+     clause = engine.get_clause("Luat-Xay-dung-2025-135-2025-QH15", "d1")
+     table = engine.get_table("qcvn_06_2022_bxd", "bang_01", format="markdown")
+     ```
+   * **Tiêu chí hoàn thành:** Truy xuất thành công dữ liệu điều khoản/bảng biểu kèm cảnh báo pháp lý và bảo vệ hai tầng chống CWE-22 Path Traversal.
+
+7. **Kiểm Định Master CI Gates Spoke (1-Command Automation)**:
    ```powershell
    python scripts/validate_legal_spoke.py
    ```
