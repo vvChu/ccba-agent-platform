@@ -82,3 +82,29 @@ def test_detect_table_archetype():
         )
         == "BORDERLESS_LAYOUT"
     )
+
+
+def test_classify_and_extract_tables_with_oxml_table(tmp_path):
+    """Verify that classify_and_extract_tables extracts tables from docx without xpath TypeError."""
+    import docx
+
+    from ccba_legal.converters.table_extractor import classify_and_extract_tables
+
+    doc = docx.Document()
+    doc.add_paragraph("Bảng 1 — Thông số tính toán thiết kế")
+    table = doc.add_table(rows=2, cols=2)
+    table.cell(0, 0).text = "Chỉ tiêu"
+    table.cell(0, 1).text = "Giá trị"
+    table.cell(1, 0).text = "Độ bền kéo"
+    table.cell(1, 1).text = "400 MPa"
+
+    docx_path = tmp_path / "test.docx"
+    doc.save(docx_path)
+    bundle_dir = tmp_path / "bundle"
+    catalog = classify_and_extract_tables(docx_path, bundle_dir)
+
+    assert len(catalog) == 1
+    assert catalog[0]["table_id"] == "bang_01"
+    tables_dir = bundle_dir / "tables"
+    assert (tables_dir / "csv" / f"{catalog[0]['table_id']}.csv").exists()
+    assert (tables_dir / "json" / f"{catalog[0]['table_id']}.json").exists()
