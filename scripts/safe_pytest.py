@@ -14,11 +14,12 @@ if str(scripts_dir) not in sys.path:
     sys.path.insert(0, str(scripts_dir))
 
 try:
-    from scripts.eval.process_safety import DetachedExecutionEngine
+    from ccba_harness import DetachedExecutionEngine
 except ImportError:
-    from eval.process_safety import (
-        DetachedExecutionEngine,  # type: ignore[import-not-found,no-redef]
-    )
+    hub_harness_src = Path(__file__).resolve().parent.parent / "packages" / "ccba-harness" / "src"
+    if hub_harness_src.exists() and str(hub_harness_src) not in sys.path:
+        sys.path.insert(0, str(hub_harness_src))
+    from ccba_harness import DetachedExecutionEngine
 
 # Backward compatibility function alias
 find_modified_test_files = DetachedExecutionEngine.find_modified_test_files
