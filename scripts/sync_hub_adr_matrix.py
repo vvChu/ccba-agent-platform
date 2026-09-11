@@ -65,7 +65,7 @@ def parse_adr_file(adr_path: Path) -> dict[str, Any]:
 
     if adr_num == 0:
         h1_match = re.search(
-            r"^#\s*(?:HUB-ADR|ADR)?\s*0*([0-9]+)[:\s\.\-]+(.*)$",
+            r"^#\s*(?:HUB-ADR|HUB_ADR|ADR)?[-\s]*0*([0-9]+)[:\s\.\-]+(.*)$",
             body_content,
             re.MULTILINE | re.IGNORECASE,
         )
@@ -84,12 +84,12 @@ def parse_adr_file(adr_path: Path) -> dict[str, Any]:
         adr_title = str(fm_data["title"]).strip()
     else:
         h1_match = re.search(
-            r"^#\s*(?:HUB-ADR|ADR)?\s*0*([0-9]+)[:\s\.\-]+(.*)$",
+            r"^#\s*(?:HUB-ADR|HUB_ADR|ADR)?[-\s]*(?:0*[0-9]+[:\s\.\-]+|[:\s\.\-]+)?(.*)$",
             body_content,
             re.MULTILINE | re.IGNORECASE,
         )
-        if h1_match:
-            adr_title = h1_match.group(2).strip()
+        if h1_match and h1_match.group(1).strip():
+            adr_title = h1_match.group(1).strip()
         else:
             fname_match = re.match(
                 r"^(?:HUB-ADR-)?0*([0-9]+)-(.*)\.md$", adr_path.name, re.IGNORECASE
@@ -159,6 +159,7 @@ def scan_skill_radar(
     search_root: Path,
     extra_roots: list[Path] | None = None,
     is_hub: bool = True,
+    strict_hub_prefix: bool = False,
 ) -> dict[str, list[dict[str, str]]]:
     """Scan all SKILL.md, AGENTS.md, CONTEXT.md, and docs to detect ADR references.
 
@@ -167,6 +168,7 @@ def scan_skill_radar(
         search_root: Primary directory to search.
         extra_roots: Optional additional directories to search.
         is_hub: Whether scanning for Hub platform ADRs (True) or Spoke domain ADRs (False).
+        strict_hub_prefix: If True, only match HUB-ADR-XXXX / HUB_ADR-XXXX, ignoring bare ADR references (essential when scanning Spoke directories for Hub ADRs to avoid collision with Spoke domain ADRs).
 
     Returns:
         Mapping from ADR num_str to list of referencing files.
@@ -208,12 +210,15 @@ def scan_skill_radar(
             target_paths.extend(sorted(packages_dir.glob("*/AGENTS.md")))
 
     # Regex to match ADR references
-    if is_hub:
-        # Matches HUB-ADR-0010, HUB_ADR-0010, or legacy ADR-0010
-        ref_pattern = re.compile(r"\b(?:HUB-ADR|HUB_ADR|ADR)[-\s]*0*([0-9]+)\b", re.IGNORECASE)
-    else:
+    if not is_hub:
         # In Spoke mode scanning domain ADRs: strictly exclude HUB-ADR-XXXX
         ref_pattern = re.compile(r"(?<!HUB-)(?<!HUB_)\bADR[-\s]*0*([0-9]+)\b", re.IGNORECASE)
+    elif strict_hub_prefix:
+        # In Spoke context scanning Hub ADRs: strictly require HUB-ADR / HUB_ADR prefix to prevent collisions with bare ADRs
+        ref_pattern = re.compile(r"\b(?:HUB-ADR|HUB_ADR)[-\s]*0*([0-9]+)\b", re.IGNORECASE)
+    else:
+        # In Hub repository: matches HUB-ADR-0010, HUB_ADR-0010, or legacy ADR-0010 for backward compatibility
+        ref_pattern = re.compile(r"\b(?:HUB-ADR|HUB_ADR|ADR)[-\s]*0*([0-9]+)\b", re.IGNORECASE)
 
     for doc_path in target_paths:
         try:
@@ -677,7 +682,9 @@ def run_pipeline(
 
         # Radar scanning across Spoke and Hub
         spoke_radar = scan_skill_radar(spoke_adrs, spoke_dir, is_hub=False)
-        hub_radar = scan_skill_radar(hub_adrs, spoke_dir, extra_roots=[hub_dir], is_hub=True)
+        hub_radar = scan_skill_radar(
+            hub_adrs, spoke_dir, extra_roots=[hub_dir], is_hub=True, strict_hub_prefix=True
+        )
 
         new_matrix = compile_two_tier_adr_matrix(
             hub_adrs,

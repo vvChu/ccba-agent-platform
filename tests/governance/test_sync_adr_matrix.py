@@ -403,6 +403,33 @@ date: "2026-09-08"
         assert res2["num_str"] == "0042"
         assert "Scoped Decision" in res2["title"]
 
+        # 3. Markdown H1 with hyphenated headings (# ADR-0021: and # HUB-ADR-0058:)
+        f3 = tmp_path / "0021-dual-mode.md"
+        f3.write_text(
+            """# ADR-0021: Dual-Mode Workspace & BIGBIM Skills Retention
+
+## Status
+Accepted — 2026-07-19
+""",
+            encoding="utf-8",
+        )
+        res3 = parse_adr_file(f3)
+        assert res3["num"] == 21
+        assert res3["title"] == "Dual-Mode Workspace & BIGBIM Skills Retention"
+
+        f4 = tmp_path / "0058-hard-completion-lock.md"
+        f4.write_text(
+            """# HUB-ADR-0058: Hard Completion Lock Pattern
+
+## Status
+Accepted
+""",
+            encoding="utf-8",
+        )
+        res4 = parse_adr_file(f4)
+        assert res4["num"] == 58
+        assert res4["title"] == "Hard Completion Lock Pattern"
+
 
 def test_skill_radar_hub_prefix_isolation() -> None:
     """Verify that scan_skill_radar isolates HUB-ADR-XXXX from Spoke domain ADRs."""
@@ -431,6 +458,7 @@ References HUB-ADR-0033 for hygiene and ADR-0010 for domain logic.
         ]
         hub_adrs = [
             {"num": 33, "num_str": "0033", "filename": "0033-hub-hygiene.md", "title": "Hub 33"},
+            {"num": 10, "num_str": "0010", "filename": "0010-hub-rag.md", "title": "Hub 10"},
         ]
 
         # 1. Spoke mode (is_hub=False): MUST NOT match HUB-ADR-0033 to Spoke ADR 0033!
@@ -438,9 +466,19 @@ References HUB-ADR-0033 for hygiene and ADR-0010 for domain logic.
         assert spoke_matrix["0033"] == [], "Spoke ADR 0033 should NOT be matched to HUB-ADR-0033!"
         assert len(spoke_matrix["0010"]) == 1, "Spoke ADR 0010 should be matched to ADR-0010."
 
-        # 2. Hub mode (is_hub=True): MUST match HUB-ADR-0033
-        hub_matrix = scan_skill_radar(hub_adrs, root, is_hub=True)
-        assert len(hub_matrix["0033"]) == 1, "Hub ADR 0033 should be matched to HUB-ADR-0033."
+        # 2. Strict Hub mode (scanning Spoke files for Hub ADRs): MUST match HUB-ADR-0033, but MUST NOT match bare ADR-0010!
+        hub_matrix_strict = scan_skill_radar(hub_adrs, root, is_hub=True, strict_hub_prefix=True)
+        assert len(hub_matrix_strict["0033"]) == 1, (
+            "Hub ADR 0033 should be matched to HUB-ADR-0033."
+        )
+        assert hub_matrix_strict["0010"] == [], (
+            "Hub ADR 0010 should NOT match bare ADR-0010 in Spoke context!"
+        )
+
+        # 3. Legacy Hub mode (internal Hub repo): matches both HUB-ADR-0033 and legacy bare ADR-0010
+        hub_matrix_legacy = scan_skill_radar(hub_adrs, root, is_hub=True, strict_hub_prefix=False)
+        assert len(hub_matrix_legacy["0033"]) == 1
+        assert len(hub_matrix_legacy["0010"]) == 1
 
 
 def test_compiled_readme_and_matrix_use_hub_adr_labels() -> None:

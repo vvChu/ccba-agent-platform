@@ -24,8 +24,8 @@
 | [HUB-ADR 0018](0018-remove-idop-scaffolder-from-hub.md) | **Loại bỏ skill ccba-idop-scaffolder khỏi Central Hub** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
 | [HUB-ADR 0019](0019-port-matt-pocock-engineering-skills.md) | **Đồng bộ Quy trình Triển khai Kỹ nghệ từ Thượng nguồn & Dọn dẹp Thành phần Lỗi thời** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
 | [HUB-ADR 0020](0020-port-and-adapt-high-priority-upstream-skills.md) | **Quyết định Port và Địa hóa nhóm Skill Upstream Ưu tiên cao** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
-| [HUB-ADR 0021](0021-dual-mode-workspace-and-bigbim-retention.md) | **Dual Mode Workspace And Bigbim Retention** | ✅ ACCEPTED | `.agents/skills/ccba-legal-ingest/SKILL.md`<br>`.agents/skills/ccba-legal-intel/SKILL.md` |
-| [HUB-ADR 0022](0022-restrict-fast-flag-in-xia-challenge-gate.md) | **Restrict Fast Flag In Xia Challenge Gate** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
+| [HUB-ADR 0021](0021-dual-mode-workspace-and-bigbim-retention.md) | **Dual-Mode Workspace & BIGBIM Skills Retention** | ✅ ACCEPTED | `.agents/skills/ccba-legal-ingest/SKILL.md`<br>`.agents/skills/ccba-legal-intel/SKILL.md` |
+| [HUB-ADR 0022](0022-restrict-fast-flag-in-xia-challenge-gate.md) | **Restrict --fast from fully bypassing the Challenge Hard Gate in ccba-xia** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
 | [HUB-ADR 0023](0023-skill-auto-tuner-integration-via-skillopt.md) | **Tích hợp CCBA Skill Auto-Tuner dựa trên phương pháp Microsoft SkillOpt** | ✅ ACCEPTED | `.agents/skills/ccba-notebooklm-connector/SKILL.md` |
 | [HUB-ADR 0024](0024-deepen-tvpl-crawler-module-interface.md) | **Tái cấu trúc Sâu (Deep Module) cho Phân hệ TVPL VIP Crawler** | ✅ ACCEPTED | `.agents/skills/ccba-legal-advisor/SKILL.md` |
 | [HUB-ADR 0025](0025-ai-gateway-client-configuration-standardization.md) | **Standardizing AI Gateway Client Configuration and Model Aliases** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
