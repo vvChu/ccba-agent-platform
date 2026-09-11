@@ -152,12 +152,7 @@ def test_find_modified_test_files(mock_run, tmp_path):
     conftest_file = tmp_path / "conftest.py"
     conftest_file.write_text("# conftest", encoding="utf-8")
 
-    git_output = (
-        f" M {test_file_1}\n"
-        f"?? {test_file_2}\n"
-        f" M {conftest_file}\n"
-        " M docs/README.md\n"
-    )
+    git_output = f" M {test_file_1}\n?? {test_file_2}\n M {conftest_file}\n M docs/README.md\n"
     mock_run.return_value = MagicMock(stdout=git_output)
 
     results = DetachedExecutionEngine.find_modified_test_files()
