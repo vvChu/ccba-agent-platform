@@ -1,60 +1,55 @@
-# Walkthrough: Release PR #249 (Milestones 3 & 4 — Reference Harmonization & Composite Orchestrators)
+# Walkthrough: Release PR #259 (Issue #255 — Package DetachedExecutionEngine in ccba-harness and Isolate Spoke Logs)
 
 ## 1. Tổng Quan Release
-- **PR Number:** [#249](https://github.com/vvChu/ccba-agent-platform/pull/249)
-- **Branch:** `feat/skills-migration-phase3-orchestrators` $\rightarrow$ `main`
-- **Tiêu đề:** `feat(migration): finalize 3-tier architecture with reference harmonization and composite orchestrators (Milestones 3 & 4)`
-- **Bản thiết kế chuẩn:** [`BLUEPRINT-2026-SKILLS-001 v1.0`](.md/knowledge/blueprints/fleet_skills_3tier_migration_blueprint.md)
-- **Thể chế điều phối:** [ADR-0053](docs/adr/0053-teamwork-multi-agent-orchestration-framework.md), [ADR-0056](docs/adr/0056-migrate-legacy-workflows-to-skills-and-standardize-ccba-namespace.md), [ADR-0057](docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md)
+- **PR Number:** [#259](https://github.com/vvChu/ccba-agent-platform/pull/259)
+- **Branch:** `fix/issue-255-package-detached-execution-engine` $\rightarrow$ `main`
+- **Tiêu đề:** `fix(guardrails): package DetachedExecutionEngine in ccba-harness and isolate spoke test logs (#255)`
+- **Issue liên quan:** [Issue #255](https://github.com/vvChu/ccba-agent-platform/issues/255)
+- **Thể chế & Kiến trúc:** [ADR-0028](docs/adr/0028-deepen-detached-execution-engine.md), [ADR-0058](docs/adr/0058-automation-first-quality-framework-and-hard-completion-lock.md)
 - **Mục tiêu hoàn thành:**
-  - Hoàn tất toàn trình Bản Thiết Kế Di Trú Kiến Trúc 3 Tầng cho 100% hạm đội kỹ năng.
-  - Hợp nhất 34 micro-skills thành Progressive References (Tầng 2A) trong `references/*.md` của 24 Master Skills; tinh gọn từ 101 xuống 67 Standalone Skills (giảm 33.7%), giải phóng tải ngữ cảnh cho LLM.
-  - Thiết lập cơ chế Anti-Zombie Bloat tại Spoke qua `scripts/spoke/sync/coordinator.py`.
-  - Chuẩn hóa 9 Composite Orchestrators (Tầng 3) với metadata `tier: orchestrator`, `is-orchestrated: true` và tuân thủ chặt chẽ Single-Writer Protocol (ADR-0053).
-  - Nâng cấp `SkillValidator` hỗ trợ ngắt Cổng 1 (Short-Circuit Gate 1) và tự động kiểm toán quy tắc Single-Writer.
+  - Đóng gói `DetachedExecutionEngine` thành Public Deep Seam chuẩn trong `packages/ccba-harness` (`ccba_harness.execution`), re-export tại top-level `ccba_harness`.
+  - Chuẩn hóa `resolve_scratch_dir()` động tìm thư mục gốc dự án (`.git` / `pyproject.toml`) qua `Path.cwd()`, cách ly triệt để log test của Spoke về `<spoke>/.md/scratch/`, chấm dứt việc ghi đè hay phụ thuộc vào Hub.
+  - Tách rời (decouple) `scripts/safe_pytest.py` và `scripts/safe_runner.py` khỏi `scripts/eval/process_safety.py` nội bộ, biến `process_safety.py` thành backward-compatibility re-export shim.
+  - Bổ sung fallback `packages/ccba-harness/src` vào `sys.path` cho cả hai script CLI để hỗ trợ fresh checkout chưa cài editable install.
+  - Chuẩn hóa thông điệp hướng dẫn guardrail trong `conftest.py` thành repository-agnostic placeholder (`<path/to/test_file.py>`) và bổ sung type hints đầy đủ cho pytest hooks.
+  - Viết bộ unit tests toàn diện 13 test cases cho `DetachedExecutionEngine` với độ bao phủ 100%, thời gian thực thi SLA < 0.4s.
 
 ---
 
-## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #249)
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #259)
 
-Reviews: `5150646513` & `5150786586`
+Reviews: `PRR_kwDOQzfV088AAAABNInzTg`
 
 | ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
 |---|---|---|---|
-| `3965373388` | `README.md` | Dòng đánh dấu `SKILL_COUNT` cập nhật thành 67 nhưng mốc thời gian vẫn giữ `Last verified: 2026-08-15`, gây hiểu lầm. | **ĐÃ KHẮC PHỤC** trong commit `1b0a5119`: Cập nhật mốc kiểm định thành `<!-- Last verified: 2026-09-09 -->` và đồng bộ số lượng kỹ năng phụ trợ thành `59+`. |
-| `5150786586` | `.agents/skills/ccba-xu-ly-van-phong/references/LICENSE.txt` | File chứa điều khoản giấy phép độc quyền của bên thứ ba (Anthropic) với các điều khoản hạn chế sao chép/trích xuất. | **ĐÃ KHẮC PHỤC** trong commit `b87b78bd`: Đã dùng `git rm` xóa bỏ hoàn toàn tệp `LICENSE.txt`, loại trừ triệt để rủi ro bản quyền và pháp lý. |
-| `5150786586` | `.agents/skills/ccba-academic-writing/references/long_form_chunking.md` | Tài liệu hướng dẫn gọi script `scripts/generate.py` của micro-skill cũ `ccba-long-form-writer` vốn đã bị dọn sạch. | **ĐÃ KHẮC PHỤC** trong commit `b87b78bd`: Viết lại toàn văn tài liệu theo cơ chế chuẩn mực: kỹ thuật Outline Chunking và Chain of Continuation với rolling context qua AI Gateway (`from ccba_ai import ai`), hoàn toàn không còn đường dẫn stale. |
+| `3987231464` | `scripts/safe_pytest.py` | `safe_pytest` hard-depends on an installed `ccba_harness` package. Hub fresh checkouts might fail with ImportError. | **ĐÃ KHẮC PHỤC** trong commit `47b3a70f`: Bổ sung cơ chế `try...except ImportError` fallback tự động thêm `packages/ccba-harness/src` vào `sys.path` nếu chạy trực tiếp từ Hub repo. |
+| `3987231547` | `scripts/safe_runner.py` | `safe_runner` hard-depends on an installed `ccba_harness` package. Need fallback for fresh clone usage without editable install. | **ĐÃ KHẮC PHỤC** trong commit `47b3a70f`: Bổ sung cơ chế `try...except ImportError` fallback tự động thêm `packages/ccba-harness/src` vào `sys.path` nếu chạy trực tiếp từ Hub repo. |
+| `3987231595` | `conftest.py` | Guardrail guidance prints `tests/test_example.py` which doesn't exist in the repo and can mislead users. | **ĐÃ KHẮC PHỤC** trong commit `47b3a70f`: Cập nhật ví dụ thành placeholder repo-agnostic `<path/to/test_file.py>` và bổ sung type hints `pytest.Parser`, `pytest.Config`, `pytest.Item` cho các pytest hooks. |
 
 ---
 
 ## 3. Chi Tiết Các Hạng Mục Đã Hoàn Thành
 
-1. **Milestone 3 — Reference Harmonization (Tầng 2A)**:
-   - Chuyển đổi 34 micro-skills (GPI < 12.0) thành tài liệu tham chiếu trong thư mục `references/` của 24 Master Skills.
-   - Sửa toàn bộ 8 tệp chứa broken relative links phát hiện bởi CI validator.
-   - Cấu hình từ điển `SKILL_DEPRECATION_ALIASES_3TIER` trong `coordinator.py` để tự động dọn dẹp các thư mục mồ côi khi Spoke đồng bộ upstream.
-2. **Milestone 4 — Composite Orchestrators (Tầng 3)**:
-   - Gắn nhãn `tier: orchestrator` và `is-orchestrated: true` cho 9 kỹ năng điều phối: `ccba-teamwork`, `ccba-implement`, `ccba-ai-qc`, `ccba-knowledge-loop`, `ccba-graduate-rd`, `ccba-new-feature`, `ccba-release-feature`, `ccba-spoke-adopter`, `ccba-autoresearch`.
-   - Cưỡng chế Single-Writer Protocol (ADR-0053): Orchestrator là thực thể duy nhất ghi mã nguồn/logs; subagents hoạt động trong sandbox đọc độc lập.
-3. **Nâng cấp Harness & Linter Quản trị**:
-   - `SkillValidator`: Bổ sung kiểm tra Single-Writer Protocol và cho phép short-circuit Cổng 1 cho Tầng 3.
-   - `compile_catalog.py`: Trích xuất trường `tier` trực tiếp vào `catalog.yaml`.
+1. **Gói SDK Tier 0 (`ccba-harness`)**:
+   - Thêm `packages/ccba-harness/src/ccba_harness/execution.py` chứa class `DetachedExecutionEngine`.
+   - Re-export `DetachedExecutionEngine` trong `packages/ccba-harness/src/ccba_harness/__init__.py` và cập nhật `__all__`.
+   - Cập nhật tài liệu hợp đồng trong `packages/ccba-harness/AGENTS.md`.
+   - Viết 13 unit test cases tại `packages/ccba-harness/tests/test_execution.py`.
+2. **Cách Ly Log Cục Bộ Cho Spoke**:
+   - `resolve_scratch_dir()` quét ngược từ `Path.cwd()` tìm `.git` hoặc `pyproject.toml` để xác định project root.
+   - Thư mục log `.md/scratch/` được tạo cục bộ tại project hiện hành thay vì trỏ nhầm về Hub hoặc site-packages.
+3. **Decoupling CLI Scripts**:
+   - Chuyển `scripts/safe_pytest.py` và `scripts/safe_runner.py` sang dùng engine từ `ccba_harness` với fallback path.
+   - Chuyển `scripts/eval/process_safety.py` thành re-export shim để bảo toàn tương thích ngược cho mọi scripts cũ.
+4. **Cập Nhật Thể Chế & Chỉ Số Nền Tảng**:
+   - Cập nhật Evolution Note trong `docs/adr/0028-deepen-detached-execution-engine.md`.
+   - Đồng bộ chỉ số `SKILL_COUNT: 68` trong `PLATFORM.md` và `README.md` qua `scripts/update_arch_stats.py`.
 
 ---
 
 ## 4. Kết Quả Kiểm Thử Toàn Diện (Pre-release Gate)
 
-- `python scripts/eval/run_isolated_tests.py --all --stress`: **10/10 packages PASS** 100%:
-  - `ccba-ai`: PASS (26.79s)
-  - `ccba-harness`: PASS (26.93s)
-  - `ccba-legal-intel`: PASS (68.42s)
-  - `ccba-maskara`: PASS (2.07s)
-  - `ccba-notebooklm`: PASS (2.33s)
-  - `ccba-ooxml`: PASS (8.20s)
-  - `ccba-pdf-prep`: PASS (24.89s)
-  - `mdconverter`: PASS (11.25s)
-  - `scripts`: PASS (21.79s)
-  - `root-tests`: PASS (26.33s)
-- `python scripts/governance/check_dependency_contracts.py`: **345 files, 0 violations**.
-- `python scripts/governance/compile_catalog.py --check`: **100% in-sync (67 skills, 0 workflows, 9 orchestrators)**.
-- GitHub Actions CI (6/6 jobs): **PASS 100%** (`Lint Markdown`, `Test Python 3.10/3.11/3.12`, `Security Scan`, `validate`).
+- **Isolated Stress Tests (`run_isolated_tests.py --all --stress`)**: PASS 100% tất cả packages.
+- **Unit Tests `ccba-harness` (`tests/test_execution.py`)**: 13/13 passed (0.35s).
+- **Harness Evals (`run_harness_evals.py`)**: PASS 100% 5/5 gates (Typecheck, Formatter, Seam Contracts, Isolated Tests, Architecture Drift).
+- **GitHub Actions CI (PR #259)**: 6/6 checks PASS (Lint Markdown, Security Scan, Validate, Test Python 3.10/3.11/3.12).
