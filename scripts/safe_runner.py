@@ -13,7 +13,13 @@ scripts_dir = Path(__file__).resolve().parent
 if str(scripts_dir) not in sys.path:
     sys.path.insert(0, str(scripts_dir))
 
-from ccba_harness import DetachedExecutionEngine
+try:
+    from ccba_harness import DetachedExecutionEngine
+except ImportError:
+    hub_harness_src = Path(__file__).resolve().parent.parent / "packages" / "ccba-harness" / "src"
+    if hub_harness_src.exists() and str(hub_harness_src) not in sys.path:
+        sys.path.insert(0, str(hub_harness_src))
+    from ccba_harness import DetachedExecutionEngine
 
 # Backward compatibility module-level function aliases
 resolve_scratch_dir = DetachedExecutionEngine.resolve_scratch_dir

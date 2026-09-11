@@ -56,11 +56,9 @@ def pytest_cmdline_main(config: Any) -> int | None:
         )
         sys.stderr.write("💡 Hướng dẫn thực thi an toàn:\n")
         sys.stderr.write("  1. Chỉ định file test cụ thể:\n")
-        sys.stderr.write("     pytest tests/test_example.py\n")
+        sys.stderr.write("     pytest <path/to/test_file.py>\n")
         sys.stderr.write("  2. Hoặc sử dụng CLI Wrapper tự động:\n")
-        sys.stderr.write(
-            "     python scripts/safe_pytest.py -f tests/test_example.py\n"
-        )
+        sys.stderr.write("     python scripts/safe_pytest.py -f <path/to/test_file.py>\n")
         sys.stderr.write("  3. Để chạy toàn bộ test suite (chỉ ở bước nghiệm thu cuối):\n")
         sys.stderr.write("     pytest --allow-unscoped\n")
         sys.stderr.write("=" * 65 + "\n\n")
