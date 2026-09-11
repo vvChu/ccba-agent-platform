@@ -61,7 +61,7 @@ Nếu người dùng gọi `/ccba-platform` mà **không kèm nội dung gì th�
 - `1` · **init spoke** (`/ccba-init-spoke`) — Khởi tạo Spoke dự án MỚI TINH (Greenfield)
 - `2` · **adopt spoke** (`/ccba-spoke-adopter`) — Đánh giá hiện trạng & Tiếp nhận CODEBASE HIỆN HỮU an toàn (Brownfield / `adopt-spoke`)
 - `3` · **update & sync spoke** (`/ccba-update-spoke`) — Đồng bộ kỹ năng, kiểm tra trạng thái lệch phiên bản (`sync-spoke`, `spoke-status`)
-- `4` · **bootstrap spoke** (`bootstrap-spoke`) — Thiết lập liên kết Monorepo packages cho Spoke venv (ADR-0044)
+- `4` · **bootstrap spoke** (`bootstrap-spoke`) — Thiết lập liên kết Monorepo packages cho Spoke venv (HUB-ADR-0044)
 
 **Thẩm tra Thiết kế & An toàn Công trình (AI QC):**
 - `5` · **ai qc audit** (`/ccba-ai-qc`) — Thẩm tra chất lượng bản vẽ & mô hình đa bộ môn (Discovery, Quad-View, Heat Map)
@@ -69,7 +69,7 @@ Nếu người dùng gọi `/ccba-platform` mà **không kèm nội dung gì th�
 
 **Pháp lý Xây dựng & Thu nạp Tri thức (Legal):**
 - `7` · **legal advisor** (kỹ năng `ccba-legal-advisor`) — Phỏng vấn thích ứng & xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn OKF v2.4
-- `8` · **legal ingest** (kỹ năng `ccba-legal-ingest` / CLI: `ingest-legal`) — Thu nạp văn bản TVPL tự động vào Spoke tri thức (ADR-0039)
+- `8` · **legal ingest** (kỹ năng `ccba-legal-ingest` / CLI: `ingest-legal`) — Thu nạp văn bản TVPL tự động vào Spoke tri thức (HUB-ADR-0039)
 - `9` · **legal document tracker** (`/ccba-legal-document-tracker`) — Tra cứu hiệu lực, so sánh sửa đổi văn bản quy phạm pháp luật
 
 **Quản trị Thông tin BIGBIM:**
@@ -77,8 +77,8 @@ Nếu người dùng gọi `/ccba-platform` mà **không kèm nội dung gì th�
 - `11` · **bigbim governance** (kỹ năng `bigbim-governance`) — Hiến pháp Sợi Chỉ Vàng, rào chắn Sợi Chỉ Đỏ & Unique ID
 
 **Quản trị Phần mềm, CI/CD & Tài liệu:**
-- `12` · **adr lifecycle** (`/ccba-adr-lifecycle`) — Khởi tạo ADR, cascade status, ma trận truy vết và CI parity (ADR-0048)
-- `13` · **verify patch** (`/ccba-eval-gate`) — Chốt chặn hoàn thành tất định (ADR-0058 Hard Completion Lock)
+- `12` · **adr lifecycle** (`/ccba-adr-lifecycle`) — Khởi tạo ADR, cascade status, ma trận truy vết và CI parity (HUB-ADR-0048)
+- `13` · **verify patch** (`/ccba-eval-gate`) — Chốt chặn hoàn thành tất định (HUB-ADR-0058 Hard Completion Lock)
 - `14` · **doc & cross-ref audit** (`doc-audit`) — Kiểm toán tài liệu 5 trục & ma trận liên kết chéo (`ccba-platform doc-audit`)
 - `15` · **convert markdown** (`/ccba-markdown-document-processing`) — Chuyển đổi Word/PDF sang Markdown chuẩn hóa qua ConversionPipeline
 - `16` · **session retrospective** (`/ccba-session-retrospective`) — Tổng kết bài học và cập nhật tri thức cuối phiên làm việc

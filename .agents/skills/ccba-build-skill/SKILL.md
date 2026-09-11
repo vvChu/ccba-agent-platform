@@ -48,7 +48,7 @@ Agent tiếp nhận lệnh bắt buộc phải tự động thực thi chuỗi t
 
 ---
 
-## ⚖️ 3. Tiền Kiểm Tra Cổng Kiến Trúc & Định Lượng GPI (ADR-0057)
+## ⚖️ 3. Tiền Kiểm Tra Cổng Kiến Trúc & Định Lượng GPI (HUB-ADR-0057)
 Trước khi khởi tạo bất kỳ tệp tin nào, Agent bắt buộc chạy bộ kiểm định quyết định 2 giai đoạn:
 
 ### Phần 1: Hai Cổng Bất Biến (Structural Invariant Gates)
@@ -73,7 +73,7 @@ $$\mathbf{GPI} = (S \times 2.5) + (K \times 2.0) + (A \times 2.0) - (P \times 1.
 
 ---
 
-## 🧩 4. Khởi Tạo Cấu Trúc SKILL.md Đạt Chuẩn (ADR 0001, ADR 0040, ADR 0057)
+## 🧩 4. Khởi Tạo Cấu Trúc SKILL.md Đạt Chuẩn (HUB-ADR-0001, HUB-ADR-0040, HUB-ADR-0057)
 Nếu $GPI \ge 12.0$, tạo thư mục tại `.agents/skills/ccba-<tên_skill_dạng_kebab_case>/SKILL.md` theo đúng bộ khung chuẩn:
 
 ```markdown
@@ -82,13 +82,13 @@ name: ccba-<tên-skill-kebab-case>
 description: <Mô tả ngắn gọn súc tích <= 180 ký tự>
 user-invocable: true # Bắt buộc true nếu là slash command / ritual do người dùng gọi
 disable-model-invocation: true # true cho ritual/tool skills (0-token prompt), false nếu là master deep skill
-command: /ccba-<tên-skill-kebab-case> # Bắt buộc có dòng command khớp với /{name} theo ADR-0056
+command: /ccba-<tên-skill-kebab-case> # Bắt buộc có dòng command khớp với /{name} theo HUB-ADR-0056
 category: productivity # productivity | coding | testing | reasoning | documentation | governance
 bundle: _core # _core | _software | _qc | _consulting | _bim
 triggers:
 - <trigger_1>
 - <trigger_2>
-gpi: {s: 3.0, k: 2.0, a: 2.0, p: 1.0} # Bắt buộc khai báo đầy đủ s, k, a, p theo ADR-0057
+gpi: {s: 3.0, k: 2.0, a: 2.0, p: 1.0} # Bắt buộc khai báo đầy đủ s, k, a, p theo HUB-ADR-0057
 ---
 # <Tên Kỹ Năng In Hoa>
 
@@ -109,7 +109,7 @@ gpi: {s: 3.0, k: 2.0, a: 2.0, p: 1.0} # Bắt buộc khai báo đầy đủ s, k
 
 ---
 
-## ⚡ 5. Kích Hoạt Slash Command Native & Biên Dịch Catalog (ADR 0047, ADR 0056)
+## ⚡ 5. Kích Hoạt Slash Command Native & Biên Dịch Catalog (HUB-ADR-0047, HUB-ADR-0056)
 Mọi kỹ năng mang định danh `ccba-<tên-lệnh>` trong `name:` phục vụ người dùng gọi trực tiếp bắt buộc phải đăng ký đầy đủ Slash Command trong YAML frontmatter:
 - **Bắt buộc có `user-invocable: true`** và **`command: /ccba-<tên-lệnh>`** để IDE Antigravity hiển thị trên popup menu khi người dùng gõ `/`.
 - Khai báo `disable-model-invocation: true` nếu là lệnh điều phối/quy trình thủ tục (0-token system prompt).
@@ -129,7 +129,7 @@ python -m ccba_harness verify-patch --preset skill --target .agents/skills/ccba-
 python scripts/governance/drift_auditor.py
 ```
 *Cổng preset `skill` tự động chạy: (1) `validate_skills.py --enforce-gpi` và (2) `compile_catalog.py --check`.*
-- **Tiêu chí hoàn thành:** Lệnh `python -m ccba_harness verify-patch --preset skill --target .agents/skills/ccba-<tên-skill>` trả về **Exit Code 0** (Overall Status: PASS). Quy tắc Khóa Cứng (ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn tất kỹ năng nếu có bất kỳ lệnh kiểm tra nào thất bại.
+- **Tiêu chí hoàn thành:** Lệnh `python -m ccba_harness verify-patch --preset skill --target .agents/skills/ccba-<tên-skill>` trả về **Exit Code 0** (Overall Status: PASS). Quy tắc Khóa Cứng (HUB-ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn tất kỹ năng nếu có bất kỳ lệnh kiểm tra nào thất bại.
 
 ---
 

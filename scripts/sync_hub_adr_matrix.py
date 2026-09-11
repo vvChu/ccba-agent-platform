@@ -65,14 +65,16 @@ def parse_adr_file(adr_path: Path) -> dict[str, Any]:
 
     if adr_num == 0:
         h1_match = re.search(
-            r"^#\s*(?:ADR\s*)?0*([0-9]+)[:\s\.\-]+(.*)$",
+            r"^#\s*(?:HUB-ADR|HUB_ADR|ADR)?[-\s]*0*([0-9]+)[:\s\.\-]+(.*)$",
             body_content,
             re.MULTILINE | re.IGNORECASE,
         )
         if h1_match:
             adr_num = int(h1_match.group(1))
         else:
-            fname_match = re.match(r"^0*([0-9]+)-(.*)\.md$", adr_path.name)
+            fname_match = re.match(
+                r"^(?:HUB-ADR-)?0*([0-9]+)-(.*)\.md$", adr_path.name, re.IGNORECASE
+            )
             if fname_match:
                 adr_num = int(fname_match.group(1))
 
@@ -82,14 +84,16 @@ def parse_adr_file(adr_path: Path) -> dict[str, Any]:
         adr_title = str(fm_data["title"]).strip()
     else:
         h1_match = re.search(
-            r"^#\s*(?:ADR\s*)?0*([0-9]+)[:\s\.\-]+(.*)$",
+            r"^#\s*(?:HUB-ADR|HUB_ADR|ADR)?[-\s]*(?:0*[0-9]+[:\s\.\-]+|[:\s\.\-]+)?(.*)$",
             body_content,
             re.MULTILINE | re.IGNORECASE,
         )
-        if h1_match:
-            adr_title = h1_match.group(2).strip()
+        if h1_match and h1_match.group(1).strip():
+            adr_title = h1_match.group(1).strip()
         else:
-            fname_match = re.match(r"^0*([0-9]+)-(.*)\.md$", adr_path.name)
+            fname_match = re.match(
+                r"^(?:HUB-ADR-)?0*([0-9]+)-(.*)\.md$", adr_path.name, re.IGNORECASE
+            )
             if fname_match:
                 adr_title = fname_match.group(2).replace("-", " ").title()
             else:
@@ -154,6 +158,8 @@ def scan_skill_radar(
     adr_list: list[dict[str, Any]],
     search_root: Path,
     extra_roots: list[Path] | None = None,
+    is_hub: bool = True,
+    strict_hub_prefix: bool = False,
 ) -> dict[str, list[dict[str, str]]]:
     """Scan all SKILL.md, AGENTS.md, CONTEXT.md, and docs to detect ADR references.
 
@@ -161,6 +167,8 @@ def scan_skill_radar(
         adr_list: List of ADR dictionaries.
         search_root: Primary directory to search.
         extra_roots: Optional additional directories to search.
+        is_hub: Whether scanning for Hub platform ADRs (True) or Spoke domain ADRs (False).
+        strict_hub_prefix: If True, only match HUB-ADR-XXXX / HUB_ADR-XXXX, ignoring bare ADR references (essential when scanning Spoke directories for Hub ADRs to avoid collision with Spoke domain ADRs).
 
     Returns:
         Mapping from ADR num_str to list of referencing files.
@@ -201,8 +209,16 @@ def scan_skill_radar(
         if packages_dir.exists():
             target_paths.extend(sorted(packages_dir.glob("*/AGENTS.md")))
 
-    # Regex to match ADR references like: ADR-0010, ADR 0010, ADR0010, ADR 10
-    ref_pattern = re.compile(r"\bADR[-\s]*0*([0-9]+)\b", re.IGNORECASE)
+    # Regex to match ADR references
+    if not is_hub:
+        # In Spoke mode scanning domain ADRs: strictly exclude HUB-ADR-XXXX
+        ref_pattern = re.compile(r"(?<!HUB-)(?<!HUB_)\bADR[-\s]*0*([0-9]+)\b", re.IGNORECASE)
+    elif strict_hub_prefix:
+        # In Spoke context scanning Hub ADRs: strictly require HUB-ADR / HUB_ADR prefix to prevent collisions with bare ADRs
+        ref_pattern = re.compile(r"\b(?:HUB-ADR|HUB_ADR)[-\s]*0*([0-9]+)\b", re.IGNORECASE)
+    else:
+        # In Hub repository: matches HUB-ADR-0010, HUB_ADR-0010, or legacy ADR-0010 for backward compatibility
+        ref_pattern = re.compile(r"\b(?:HUB-ADR|HUB_ADR|ADR)[-\s]*0*([0-9]+)\b", re.IGNORECASE)
 
     for doc_path in target_paths:
         try:
@@ -307,7 +323,7 @@ def compile_hub_adr_readme(adr_list: list[dict[str, Any]], target_file: Path) ->
     for adr in adr_list:
         status_icon = "✅ ACCEPTED" if adr["status"] == "ACCEPTED" else f"⚠️ {adr['status']}"
         lines.append(
-            f"| [ADR {adr['num_str']}]({adr['filename']}) | {adr['title']} | {status_icon} |"
+            f"| [HUB-ADR {adr['num_str']}]({adr['filename']}) | {adr['title']} | {status_icon} |"
         )
 
     lines.append("")
@@ -359,7 +375,7 @@ def compile_hub_traceability_matrix(
             ref_links = "*Chưa có liên kết trực tiếp*"
 
         lines.append(
-            f"| [ADR {num_str}]({adr['filename']}) | **{adr['title']}** | {status_icon} | {ref_links} |"
+            f"| [HUB-ADR {num_str}]({adr['filename']}) | **{adr['title']}** | {status_icon} | {ref_links} |"
         )
 
     lines.append("")
@@ -431,7 +447,7 @@ def compile_two_tier_adr_matrix(
 
         hub_adr_url = f"{HUB_REPO_URL}/blob/main/docs/adr/{adr['filename']}"
         lines.append(
-            f"| [Platform ADR {num_str}]({hub_adr_url}) | **{adr['title']}** | {status_icon} | {ref_links} |"
+            f"| [HUB-ADR {num_str}]({hub_adr_url}) | **{adr['title']}** | {status_icon} | {ref_links} |"
         )
 
     lines.append("")
@@ -595,7 +611,7 @@ def run_pipeline(
         for adr in hub_adrs:
             status_icon = "✅ ACCEPTED" if adr["status"] == "ACCEPTED" else f"⚠️ {adr['status']}"
             readme_lines.append(
-                f"| [ADR {adr['num_str']}]({adr['filename']}) | {adr['title']} | {status_icon} |"
+                f"| [HUB-ADR {adr['num_str']}]({adr['filename']}) | {adr['title']} | {status_icon} |"
             )
         readme_lines.append("")
         new_readme = "\n".join(readme_lines).strip() + "\n"
@@ -624,7 +640,7 @@ def run_pipeline(
         existing_matrix = matrix_path.read_text(encoding="utf-8") if matrix_path.exists() else ""
         preserved = extract_preserved_sections(existing_matrix)
 
-        radar = scan_skill_radar(hub_adrs, hub_dir)
+        radar = scan_skill_radar(hub_adrs, hub_dir, is_hub=True)
         new_matrix = compile_hub_traceability_matrix(
             hub_adrs, radar, matrix_path if not (dry_run or check_mode) else Path(""), preserved
         )
@@ -665,8 +681,10 @@ def run_pipeline(
         preserved = extract_preserved_sections(existing_matrix)
 
         # Radar scanning across Spoke and Hub
-        spoke_radar = scan_skill_radar(spoke_adrs, spoke_dir)
-        hub_radar = scan_skill_radar(hub_adrs, spoke_dir, extra_roots=[hub_dir])
+        spoke_radar = scan_skill_radar(spoke_adrs, spoke_dir, is_hub=False)
+        hub_radar = scan_skill_radar(
+            hub_adrs, spoke_dir, extra_roots=[hub_dir], is_hub=True, strict_hub_prefix=True
+        )
 
         new_matrix = compile_two_tier_adr_matrix(
             hub_adrs,

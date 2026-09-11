@@ -22,7 +22,7 @@ def test_adr_generation() -> None:
         assert adr_file.exists()
 
         content = adr_file.read_text(encoding="utf-8")
-        assert "ADR: Test ADR Generation" in content
+        assert "HUB-ADR: Test ADR Generation" in content
         assert "Bối cảnh" in content
         assert "Quyết định" in content
         assert "Hệ quả & Đánh đổi" in content
