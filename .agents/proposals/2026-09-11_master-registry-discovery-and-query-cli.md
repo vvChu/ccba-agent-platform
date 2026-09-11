@@ -34,7 +34,7 @@ Qua quá trình triển khai thực tế giữa Hub (`ccba-agent-platform`) và 
      b) Biến môi trường `CCBA_LEGAL_REGISTRY_PATH` / `CCBA_LEGAL_KNOWLEDGE_PATH`.
      c) Cấu hình trong `.md/workspace_context.yaml`.
      d) Đọc Spoke Registry trên Hub (`.md/data/spoke_registry_decrypted.yaml` hoặc `spoke_registry.yaml`) tìm Spoke `archetype: "knowledge_corpus"` hoặc `ccba-legal-knowledge`.
-     e) Danh sách đường dẫn ứng viên cục bộ (`D:\GitHubProjects\ccba-legal-knowledge`, v.v.).
+     e) Danh sách đường dẫn ứng viên cục bộ (`~/GitHubProjects/ccba-legal-knowledge`, v.v.).
      f) Fallback an toàn về mock test registry để bảo vệ 100% các unit test nội bộ.
    - `LegalRegistryManager` giữ nguyên mặc định local để tránh nguy cơ Spoke ghi đè làm hỏng Master Registry SSOT.
 2. **Lớp Facade `LegalKnowledgeEngine` (ADR 0035)**:
