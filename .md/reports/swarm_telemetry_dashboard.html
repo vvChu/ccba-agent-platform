@@ -1,0 +1,3856 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swarm Telemetry Dashboard: ea5a900e-41fd-4ae6-968a-e2e271e67e52</title>
+  <!-- Allowlisted Antigravity Tailwind CSS (CSP Compliant) -->
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* Antigravity Theme Fallbacks */
+    :root {
+      --background: #0f172a;
+      --card: #1e293b;
+      --foreground: #f8fafc;
+      --muted-foreground: #94a3b8;
+      --border: #334155;
+      --primary: #6366f1;
+      --primary-foreground: #ffffff;
+      --accent: #06b6d4;
+    }
+    .light {
+      --background: #f8fafc;
+      --card: #ffffff;
+      --foreground: #0f172a;
+      --muted-foreground: #64748b;
+      --border: #e2e8f0;
+      --primary: #4f46e5;
+      --primary-foreground: #ffffff;
+      --accent: #0284c7;
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased min-h-full flex flex-col p-4 md:p-6 transition-colors duration-200">
+  <!-- Embedded Telemetry Data (Zero Dev Server) -->
+  <script id="telemetry-data" type="application/json">
+{
+  "parent_conversation_id": "ea5a900e-41fd-4ae6-968a-e2e271e67e52",
+  "total_subagents": 9,
+  "total_swarm_tokens": 14932447,
+  "total_prompt_tokens": 14828378,
+  "total_completion_tokens": 104069,
+  "total_duration_sec": 8460.0,
+  "total_cost_usd": 19.0558,
+  "subagents": [
+    {
+      "conversation_id": "eb99bacd-30fe-44b5-8c5f-7fe2aa28d581",
+      "log_file": "C:\\Users\\chuvu\\.gemini\\antigravity\\brain\\eb99bacd-30fe-44b5-8c5f-7fe2aa28d581\\.system_generated\\logs\\transcript.jsonl",
+      "total_steps": 24,
+      "turns_count": 8,
+      "prompt_tokens": 27311,
+      "completion_tokens": 2547,
+      "total_tokens": 29858,
+      "total_duration_sec": 1027.0,
+      "tool_counts": {
+        "invoke_subagent": 2,
+        "manage_subagents": 2,
+        "send_message": 1
+      },
+      "tool_durations_ms": {
+        "invoke_subagent": 26000.0,
+        "manage_subagents": 5000.0,
+        "send_message": 33000.0
+      },
+      "model_name": "gemini-pro",
+      "estimated_cost_usd": 0.04687,
+      "turns_summary": [
+        {
+          "turn": 1,
+          "prompt_tokens": 1881,
+          "completion_tokens": 544,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 2,
+          "prompt_tokens": 2572,
+          "completion_tokens": 73,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 3,
+          "prompt_tokens": 2763,
+          "completion_tokens": 17,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 4,
+          "prompt_tokens": 2780,
+          "completion_tokens": 994,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 5,
+          "prompt_tokens": 3921,
+          "completion_tokens": 92,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 6,
+          "prompt_tokens": 4188,
+          "completion_tokens": 21,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 7,
+          "prompt_tokens": 4209,
+          "completion_tokens": 755,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 8,
+          "prompt_tokens": 4997,
+          "completion_tokens": 51,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        }
+      ]
+    },
+    {
+      "conversation_id": "f2ed896e-d9d9-4e60-91ed-d1a3cd96b3a8",
+      "log_file": "C:\\Users\\chuvu\\.gemini\\antigravity\\brain\\f2ed896e-d9d9-4e60-91ed-d1a3cd96b3a8\\.system_generated\\logs\\transcript.jsonl",
+      "total_steps": 107,
+      "turns_count": 53,
+      "prompt_tokens": 1621232,
+      "completion_tokens": 20821,
+      "total_tokens": 1642053,
+      "total_duration_sec": 334.0,
+      "tool_counts": {
+        "view_file": 17,
+        "run_command": 27,
+        "find_by_name": 1,
+        "grep_search": 5,
+        "manage_task": 1,
+        "send_message": 1
+      },
+      "tool_durations_ms": {
+        "view_file": 65000.0,
+        "run_command": 157000.0,
+        "find_by_name": 2000.0,
+        "grep_search": 15000.0,
+        "manage_task": 2000.0,
+        "send_message": 32000.0
+      },
+      "model_name": "gemini-pro",
+      "estimated_cost_usd": 2.13064,
+      "turns_summary": [
+        {
+          "turn": 1,
+          "prompt_tokens": 1889,
+          "completion_tokens": 171,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 2,
+          "prompt_tokens": 3463,
+          "completion_tokens": 83,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 3,
+          "prompt_tokens": 4948,
+          "completion_tokens": 89,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 4,
+          "prompt_tokens": 6066,
+          "completion_tokens": 233,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 5,
+          "prompt_tokens": 6759,
+          "completion_tokens": 129,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 6,
+          "prompt_tokens": 7917,
+          "completion_tokens": 126,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 7,
+          "prompt_tokens": 8197,
+          "completion_tokens": 94,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 8,
+          "prompt_tokens": 9595,
+          "completion_tokens": 73,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 9,
+          "prompt_tokens": 9691,
+          "completion_tokens": 88,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 10,
+          "prompt_tokens": 10343,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 11,
+          "prompt_tokens": 11458,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 12,
+          "prompt_tokens": 12191,
+          "completion_tokens": 422,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 13,
+          "prompt_tokens": 13642,
+          "completion_tokens": 825,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 14,
+          "prompt_tokens": 15336,
+          "completion_tokens": 55,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 15,
+          "prompt_tokens": 15720,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 16,
+          "prompt_tokens": 17049,
+          "completion_tokens": 919,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 17,
+          "prompt_tokens": 18053,
+          "completion_tokens": 628,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 18,
+          "prompt_tokens": 18987,
+          "completion_tokens": 715,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 19,
+          "prompt_tokens": 20732,
+          "completion_tokens": 632,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 20,
+          "prompt_tokens": 22394,
+          "completion_tokens": 1030,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 21,
+          "prompt_tokens": 23463,
+          "completion_tokens": 631,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 22,
+          "prompt_tokens": 24462,
+          "completion_tokens": 737,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 23,
+          "prompt_tokens": 25377,
+          "completion_tokens": 636,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 24,
+          "prompt_tokens": 27398,
+          "completion_tokens": 631,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 25,
+          "prompt_tokens": 29418,
+          "completion_tokens": 632,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 26,
+          "prompt_tokens": 31419,
+          "completion_tokens": 83,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 27,
+          "prompt_tokens": 32045,
+          "completion_tokens": 98,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 28,
+          "prompt_tokens": 32166,
+          "completion_tokens": 225,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 29,
+          "prompt_tokens": 33699,
+          "completion_tokens": 173,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 30,
+          "prompt_tokens": 34156,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 31,
+          "prompt_tokens": 34363,
+          "completion_tokens": 89,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 32,
+          "prompt_tokens": 35727,
+          "completion_tokens": 644,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 33,
+          "prompt_tokens": 36898,
+          "completion_tokens": 181,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 34,
+          "prompt_tokens": 38010,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 35,
+          "prompt_tokens": 38736,
+          "completion_tokens": 94,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 36,
+          "prompt_tokens": 38853,
+          "completion_tokens": 87,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 37,
+          "prompt_tokens": 39159,
+          "completion_tokens": 91,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 38,
+          "prompt_tokens": 40063,
+          "completion_tokens": 432,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 39,
+          "prompt_tokens": 41525,
+          "completion_tokens": 850,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 40,
+          "prompt_tokens": 43739,
+          "completion_tokens": 1429,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 41,
+          "prompt_tokens": 46581,
+          "completion_tokens": 518,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 42,
+          "prompt_tokens": 47998,
+          "completion_tokens": 675,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 43,
+          "prompt_tokens": 49750,
+          "completion_tokens": 163,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 44,
+          "prompt_tokens": 50963,
+          "completion_tokens": 144,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 45,
+          "prompt_tokens": 52018,
+          "completion_tokens": 81,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 46,
+          "prompt_tokens": 53311,
+          "completion_tokens": 253,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 47,
+          "prompt_tokens": 54818,
+          "completion_tokens": 181,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 48,
+          "prompt_tokens": 56277,
+          "completion_tokens": 334,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 49,
+          "prompt_tokens": 56657,
+          "completion_tokens": 95,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 50,
+          "prompt_tokens": 56800,
+          "completion_tokens": 1227,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 51,
+          "prompt_tokens": 58422,
+          "completion_tokens": 721,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 52,
+          "prompt_tokens": 60539,
+          "completion_tokens": 1420,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 53,
+          "prompt_tokens": 61992,
+          "completion_tokens": 524,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        }
+      ]
+    },
+    {
+      "conversation_id": "5a10336e-5c3c-4648-809a-29272c87c168",
+      "log_file": "C:\\Users\\chuvu\\.gemini\\antigravity\\brain\\5a10336e-5c3c-4648-809a-29272c87c168\\.system_generated\\logs\\transcript.jsonl",
+      "total_steps": 238,
+      "turns_count": 119,
+      "prompt_tokens": 5735770,
+      "completion_tokens": 23429,
+      "total_tokens": 5759199,
+      "total_duration_sec": 633.0,
+      "tool_counts": {
+        "find_by_name": 5,
+        "view_file": 59,
+        "run_command": 44,
+        "grep_search": 9,
+        "send_message": 1
+      },
+      "tool_durations_ms": {
+        "find_by_name": 19000.0,
+        "view_file": 224000.0,
+        "run_command": 187000.0,
+        "grep_search": 28000.0,
+        "send_message": 64000.0
+      },
+      "model_name": "gemini-pro",
+      "estimated_cost_usd": 7.28686,
+      "turns_summary": [
+        {
+          "turn": 1,
+          "prompt_tokens": 2847,
+          "completion_tokens": 392,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 2,
+          "prompt_tokens": 3262,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 3,
+          "prompt_tokens": 3425,
+          "completion_tokens": 79,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 4,
+          "prompt_tokens": 4300,
+          "completion_tokens": 92,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 5,
+          "prompt_tokens": 4424,
+          "completion_tokens": 89,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 6,
+          "prompt_tokens": 4544,
+          "completion_tokens": 556,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 7,
+          "prompt_tokens": 5161,
+          "completion_tokens": 169,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 8,
+          "prompt_tokens": 5637,
+          "completion_tokens": 79,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 9,
+          "prompt_tokens": 6703,
+          "completion_tokens": 107,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 10,
+          "prompt_tokens": 7839,
+          "completion_tokens": 124,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 11,
+          "prompt_tokens": 7999,
+          "completion_tokens": 353,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 12,
+          "prompt_tokens": 9324,
+          "completion_tokens": 545,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 13,
+          "prompt_tokens": 9904,
+          "completion_tokens": 544,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 14,
+          "prompt_tokens": 10811,
+          "completion_tokens": 525,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 15,
+          "prompt_tokens": 11420,
+          "completion_tokens": 504,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 16,
+          "prompt_tokens": 12954,
+          "completion_tokens": 208,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 17,
+          "prompt_tokens": 13229,
+          "completion_tokens": 84,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 18,
+          "prompt_tokens": 14621,
+          "completion_tokens": 80,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 19,
+          "prompt_tokens": 16005,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 20,
+          "prompt_tokens": 16106,
+          "completion_tokens": 92,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 21,
+          "prompt_tokens": 16357,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 22,
+          "prompt_tokens": 17640,
+          "completion_tokens": 86,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 23,
+          "prompt_tokens": 19007,
+          "completion_tokens": 87,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 24,
+          "prompt_tokens": 19983,
+          "completion_tokens": 115,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 25,
+          "prompt_tokens": 20121,
+          "completion_tokens": 281,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 26,
+          "prompt_tokens": 20425,
+          "completion_tokens": 79,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 27,
+          "prompt_tokens": 21857,
+          "completion_tokens": 279,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 28,
+          "prompt_tokens": 23165,
+          "completion_tokens": 84,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 29,
+          "prompt_tokens": 23961,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 30,
+          "prompt_tokens": 24170,
+          "completion_tokens": 81,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 31,
+          "prompt_tokens": 25508,
+          "completion_tokens": 222,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 32,
+          "prompt_tokens": 25862,
+          "completion_tokens": 137,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 33,
+          "prompt_tokens": 26036,
+          "completion_tokens": 77,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 34,
+          "prompt_tokens": 27139,
+          "completion_tokens": 79,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 35,
+          "prompt_tokens": 27912,
+          "completion_tokens": 230,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 36,
+          "prompt_tokens": 28202,
+          "completion_tokens": 111,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 37,
+          "prompt_tokens": 28336,
+          "completion_tokens": 104,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 38,
+          "prompt_tokens": 28463,
+          "completion_tokens": 99,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 39,
+          "prompt_tokens": 28585,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 40,
+          "prompt_tokens": 29694,
+          "completion_tokens": 103,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 41,
+          "prompt_tokens": 30121,
+          "completion_tokens": 83,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 42,
+          "prompt_tokens": 30748,
+          "completion_tokens": 234,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 43,
+          "prompt_tokens": 31996,
+          "completion_tokens": 93,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 44,
+          "prompt_tokens": 32371,
+          "completion_tokens": 96,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 45,
+          "prompt_tokens": 32551,
+          "completion_tokens": 100,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 46,
+          "prompt_tokens": 33677,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 47,
+          "prompt_tokens": 34792,
+          "completion_tokens": 86,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 48,
+          "prompt_tokens": 36279,
+          "completion_tokens": 86,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 49,
+          "prompt_tokens": 37567,
+          "completion_tokens": 86,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 50,
+          "prompt_tokens": 38454,
+          "completion_tokens": 86,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 51,
+          "prompt_tokens": 38974,
+          "completion_tokens": 382,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 52,
+          "prompt_tokens": 39402,
+          "completion_tokens": 93,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 53,
+          "prompt_tokens": 39543,
+          "completion_tokens": 79,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 54,
+          "prompt_tokens": 39879,
+          "completion_tokens": 74,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 55,
+          "prompt_tokens": 40976,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 56,
+          "prompt_tokens": 42079,
+          "completion_tokens": 77,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 57,
+          "prompt_tokens": 42875,
+          "completion_tokens": 76,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 58,
+          "prompt_tokens": 44223,
+          "completion_tokens": 255,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 59,
+          "prompt_tokens": 45831,
+          "completion_tokens": 420,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 60,
+          "prompt_tokens": 46383,
+          "completion_tokens": 202,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 61,
+          "prompt_tokens": 46665,
+          "completion_tokens": 73,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 62,
+          "prompt_tokens": 47570,
+          "completion_tokens": 574,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 63,
+          "prompt_tokens": 48423,
+          "completion_tokens": 542,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 64,
+          "prompt_tokens": 49093,
+          "completion_tokens": 473,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 65,
+          "prompt_tokens": 50595,
+          "completion_tokens": 189,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 66,
+          "prompt_tokens": 51529,
+          "completion_tokens": 94,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 67,
+          "prompt_tokens": 52924,
+          "completion_tokens": 82,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 68,
+          "prompt_tokens": 54272,
+          "completion_tokens": 84,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 69,
+          "prompt_tokens": 55359,
+          "completion_tokens": 91,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 70,
+          "prompt_tokens": 56706,
+          "completion_tokens": 575,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 71,
+          "prompt_tokens": 57453,
+          "completion_tokens": 518,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 72,
+          "prompt_tokens": 58493,
+          "completion_tokens": 77,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 73,
+          "prompt_tokens": 59329,
+          "completion_tokens": 343,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 74,
+          "prompt_tokens": 59974,
+          "completion_tokens": 84,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 75,
+          "prompt_tokens": 60793,
+          "completion_tokens": 95,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 76,
+          "prompt_tokens": 61815,
+          "completion_tokens": 336,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 77,
+          "prompt_tokens": 62174,
+          "completion_tokens": 93,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 78,
+          "prompt_tokens": 62290,
+          "completion_tokens": 83,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 79,
+          "prompt_tokens": 63282,
+          "completion_tokens": 91,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 80,
+          "prompt_tokens": 64402,
+          "completion_tokens": 83,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 81,
+          "prompt_tokens": 64570,
+          "completion_tokens": 91,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 82,
+          "prompt_tokens": 65058,
+          "completion_tokens": 95,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 83,
+          "prompt_tokens": 65498,
+          "completion_tokens": 98,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 84,
+          "prompt_tokens": 66574,
+          "completion_tokens": 95,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 85,
+          "prompt_tokens": 66994,
+          "completion_tokens": 434,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 86,
+          "prompt_tokens": 67813,
+          "completion_tokens": 367,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 87,
+          "prompt_tokens": 68644,
+          "completion_tokens": 187,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 88,
+          "prompt_tokens": 69657,
+          "completion_tokens": 92,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 89,
+          "prompt_tokens": 70255,
+          "completion_tokens": 617,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 90,
+          "prompt_tokens": 71040,
+          "completion_tokens": 202,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 91,
+          "prompt_tokens": 71528,
+          "completion_tokens": 259,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 92,
+          "prompt_tokens": 71828,
+          "completion_tokens": 798,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 93,
+          "prompt_tokens": 72785,
+          "completion_tokens": 637,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 94,
+          "prompt_tokens": 74452,
+          "completion_tokens": 629,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 95,
+          "prompt_tokens": 75485,
+          "completion_tokens": 190,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 96,
+          "prompt_tokens": 76661,
+          "completion_tokens": 151,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 97,
+          "prompt_tokens": 78123,
+          "completion_tokens": 87,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 98,
+          "prompt_tokens": 79520,
+          "completion_tokens": 82,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 99,
+          "prompt_tokens": 80933,
+          "completion_tokens": 86,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 100,
+          "prompt_tokens": 81808,
+          "completion_tokens": 86,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 101,
+          "prompt_tokens": 83207,
+          "completion_tokens": 89,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 102,
+          "prompt_tokens": 84594,
+          "completion_tokens": 79,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 103,
+          "prompt_tokens": 85521,
+          "completion_tokens": 83,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 104,
+          "prompt_tokens": 86896,
+          "completion_tokens": 79,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 105,
+          "prompt_tokens": 88115,
+          "completion_tokens": 275,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 106,
+          "prompt_tokens": 88825,
+          "completion_tokens": 137,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 107,
+          "prompt_tokens": 89748,
+          "completion_tokens": 87,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 108,
+          "prompt_tokens": 91077,
+          "completion_tokens": 145,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 109,
+          "prompt_tokens": 92284,
+          "completion_tokens": 80,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 110,
+          "prompt_tokens": 93174,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 111,
+          "prompt_tokens": 94067,
+          "completion_tokens": 83,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 112,
+          "prompt_tokens": 94952,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 113,
+          "prompt_tokens": 95556,
+          "completion_tokens": 87,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 114,
+          "prompt_tokens": 96392,
+          "completion_tokens": 84,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 115,
+          "prompt_tokens": 97445,
+          "completion_tokens": 80,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 116,
+          "prompt_tokens": 98492,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 117,
+          "prompt_tokens": 99203,
+          "completion_tokens": 84,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 118,
+          "prompt_tokens": 100219,
+          "completion_tokens": 1725,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 119,
+          "prompt_tokens": 101977,
+          "completion_tokens": 46,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        }
+      ]
+    },
+    {
+      "conversation_id": "d4b39837-e822-4b10-a987-25b3478ee21b",
+      "log_file": "C:\\Users\\chuvu\\.gemini\\antigravity\\brain\\d4b39837-e822-4b10-a987-25b3478ee21b\\.system_generated\\logs\\transcript.jsonl",
+      "total_steps": 268,
+      "turns_count": 133,
+      "prompt_tokens": 4237749,
+      "completion_tokens": 30942,
+      "total_tokens": 4268691,
+      "total_duration_sec": 4473.0,
+      "tool_counts": {
+        "list_dir": 4,
+        "find_by_name": 2,
+        "write_to_file": 26,
+        "invoke_subagent": 2,
+        "schedule": 2,
+        "send_message": 18,
+        "view_file": 40,
+        "run_command": 17,
+        "manage_subagents": 2,
+        "manage_task": 2
+      },
+      "tool_durations_ms": {
+        "list_dir": 20000.0,
+        "find_by_name": 9000.0,
+        "write_to_file": 190000.0,
+        "invoke_subagent": 24000.0,
+        "schedule": 11000.0,
+        "send_message": 4156000.0,
+        "view_file": 243000.0,
+        "run_command": 123000.0,
+        "manage_subagents": 18000.0,
+        "manage_task": 19000.0
+      },
+      "model_name": "gemini-pro",
+      "estimated_cost_usd": 5.4519,
+      "turns_summary": [
+        {
+          "turn": 1,
+          "prompt_tokens": 2195,
+          "completion_tokens": 237,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 2,
+          "prompt_tokens": 2526,
+          "completion_tokens": 200,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 3,
+          "prompt_tokens": 2749,
+          "completion_tokens": 75,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 4,
+          "prompt_tokens": 2847,
+          "completion_tokens": 972,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 5,
+          "prompt_tokens": 3819,
+          "completion_tokens": 704,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 6,
+          "prompt_tokens": 4609,
+          "completion_tokens": 636,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 7,
+          "prompt_tokens": 5329,
+          "completion_tokens": 584,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 8,
+          "prompt_tokens": 6000,
+          "completion_tokens": 280,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 9,
+          "prompt_tokens": 6367,
+          "completion_tokens": 663,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 10,
+          "prompt_tokens": 7177,
+          "completion_tokens": 94,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 11,
+          "prompt_tokens": 7456,
+          "completion_tokens": 91,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 12,
+          "prompt_tokens": 7731,
+          "completion_tokens": 651,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 13,
+          "prompt_tokens": 8469,
+          "completion_tokens": 579,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 14,
+          "prompt_tokens": 9135,
+          "completion_tokens": 182,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 15,
+          "prompt_tokens": 9350,
+          "completion_tokens": 184,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 16,
+          "prompt_tokens": 9534,
+          "completion_tokens": 73,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 17,
+          "prompt_tokens": 9692,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 18,
+          "prompt_tokens": 10101,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 19,
+          "prompt_tokens": 11204,
+          "completion_tokens": 143,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 20,
+          "prompt_tokens": 11563,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 21,
+          "prompt_tokens": 12090,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 22,
+          "prompt_tokens": 12768,
+          "completion_tokens": 651,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 23,
+          "prompt_tokens": 13506,
+          "completion_tokens": 192,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 24,
+          "prompt_tokens": 13731,
+          "completion_tokens": 174,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 25,
+          "prompt_tokens": 13905,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 26,
+          "prompt_tokens": 14311,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 27,
+          "prompt_tokens": 14994,
+          "completion_tokens": 143,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 28,
+          "prompt_tokens": 15342,
+          "completion_tokens": 88,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 29,
+          "prompt_tokens": 15763,
+          "completion_tokens": 88,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 30,
+          "prompt_tokens": 16492,
+          "completion_tokens": 581,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 31,
+          "prompt_tokens": 17160,
+          "completion_tokens": 208,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 32,
+          "prompt_tokens": 17401,
+          "completion_tokens": 175,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 33,
+          "prompt_tokens": 17576,
+          "completion_tokens": 121,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 34,
+          "prompt_tokens": 17754,
+          "completion_tokens": 75,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 35,
+          "prompt_tokens": 18162,
+          "completion_tokens": 580,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 36,
+          "prompt_tokens": 18829,
+          "completion_tokens": 113,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 37,
+          "prompt_tokens": 18975,
+          "completion_tokens": 68,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 38,
+          "prompt_tokens": 19043,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 39,
+          "prompt_tokens": 19449,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 40,
+          "prompt_tokens": 20131,
+          "completion_tokens": 143,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 41,
+          "prompt_tokens": 20486,
+          "completion_tokens": 89,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 42,
+          "prompt_tokens": 20977,
+          "completion_tokens": 89,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 43,
+          "prompt_tokens": 21562,
+          "completion_tokens": 572,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 44,
+          "prompt_tokens": 22221,
+          "completion_tokens": 210,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 45,
+          "prompt_tokens": 22464,
+          "completion_tokens": 194,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 46,
+          "prompt_tokens": 22658,
+          "completion_tokens": 121,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 47,
+          "prompt_tokens": 22836,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 48,
+          "prompt_tokens": 23242,
+          "completion_tokens": 87,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 49,
+          "prompt_tokens": 23908,
+          "completion_tokens": 580,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 50,
+          "prompt_tokens": 24575,
+          "completion_tokens": 175,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 51,
+          "prompt_tokens": 24783,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 52,
+          "prompt_tokens": 24861,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 53,
+          "prompt_tokens": 25267,
+          "completion_tokens": 87,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 54,
+          "prompt_tokens": 26022,
+          "completion_tokens": 143,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 55,
+          "prompt_tokens": 26395,
+          "completion_tokens": 76,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 56,
+          "prompt_tokens": 27140,
+          "completion_tokens": 93,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 57,
+          "prompt_tokens": 28100,
+          "completion_tokens": 576,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 58,
+          "prompt_tokens": 28763,
+          "completion_tokens": 188,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 59,
+          "prompt_tokens": 28984,
+          "completion_tokens": 177,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 60,
+          "prompt_tokens": 29161,
+          "completion_tokens": 121,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 61,
+          "prompt_tokens": 29339,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 62,
+          "prompt_tokens": 29745,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 63,
+          "prompt_tokens": 30499,
+          "completion_tokens": 577,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 64,
+          "prompt_tokens": 31163,
+          "completion_tokens": 160,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 65,
+          "prompt_tokens": 31356,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 66,
+          "prompt_tokens": 31441,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 67,
+          "prompt_tokens": 31847,
+          "completion_tokens": 143,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 68,
+          "prompt_tokens": 32236,
+          "completion_tokens": 94,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 69,
+          "prompt_tokens": 32744,
+          "completion_tokens": 100,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 70,
+          "prompt_tokens": 33860,
+          "completion_tokens": 573,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 71,
+          "prompt_tokens": 34520,
+          "completion_tokens": 202,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 72,
+          "prompt_tokens": 34755,
+          "completion_tokens": 183,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 73,
+          "prompt_tokens": 34938,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 74,
+          "prompt_tokens": 35344,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 75,
+          "prompt_tokens": 36046,
+          "completion_tokens": 121,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 76,
+          "prompt_tokens": 36224,
+          "completion_tokens": 143,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 77,
+          "prompt_tokens": 36589,
+          "completion_tokens": 96,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 78,
+          "prompt_tokens": 37191,
+          "completion_tokens": 578,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 79,
+          "prompt_tokens": 37856,
+          "completion_tokens": 215,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 80,
+          "prompt_tokens": 38104,
+          "completion_tokens": 178,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 81,
+          "prompt_tokens": 38282,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 82,
+          "prompt_tokens": 38688,
+          "completion_tokens": 87,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 83,
+          "prompt_tokens": 39507,
+          "completion_tokens": 143,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 84,
+          "prompt_tokens": 39869,
+          "completion_tokens": 92,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 85,
+          "prompt_tokens": 40417,
+          "completion_tokens": 689,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 86,
+          "prompt_tokens": 41193,
+          "completion_tokens": 203,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 87,
+          "prompt_tokens": 41429,
+          "completion_tokens": 205,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 88,
+          "prompt_tokens": 41634,
+          "completion_tokens": 121,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 89,
+          "prompt_tokens": 41812,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 90,
+          "prompt_tokens": 42218,
+          "completion_tokens": 570,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 91,
+          "prompt_tokens": 42875,
+          "completion_tokens": 113,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 92,
+          "prompt_tokens": 43021,
+          "completion_tokens": 59,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 93,
+          "prompt_tokens": 43080,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 94,
+          "prompt_tokens": 43486,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 95,
+          "prompt_tokens": 44337,
+          "completion_tokens": 143,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 96,
+          "prompt_tokens": 44702,
+          "completion_tokens": 93,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 97,
+          "prompt_tokens": 45481,
+          "completion_tokens": 570,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 98,
+          "prompt_tokens": 46138,
+          "completion_tokens": 192,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 99,
+          "prompt_tokens": 46363,
+          "completion_tokens": 176,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 100,
+          "prompt_tokens": 46539,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 101,
+          "prompt_tokens": 46959,
+          "completion_tokens": 93,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 102,
+          "prompt_tokens": 47876,
+          "completion_tokens": 38,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 103,
+          "prompt_tokens": 48016,
+          "completion_tokens": 121,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 104,
+          "prompt_tokens": 48194,
+          "completion_tokens": 143,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 105,
+          "prompt_tokens": 48552,
+          "completion_tokens": 96,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 106,
+          "prompt_tokens": 48910,
+          "completion_tokens": 96,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 107,
+          "prompt_tokens": 49208,
+          "completion_tokens": 575,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 108,
+          "prompt_tokens": 49870,
+          "completion_tokens": 237,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 109,
+          "prompt_tokens": 50140,
+          "completion_tokens": 184,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 110,
+          "prompt_tokens": 50324,
+          "completion_tokens": 172,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 111,
+          "prompt_tokens": 50584,
+          "completion_tokens": 647,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 112,
+          "prompt_tokens": 51378,
+          "completion_tokens": 609,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 113,
+          "prompt_tokens": 52074,
+          "completion_tokens": 208,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 114,
+          "prompt_tokens": 52315,
+          "completion_tokens": 200,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 115,
+          "prompt_tokens": 52515,
+          "completion_tokens": 74,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 116,
+          "prompt_tokens": 52654,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 117,
+          "prompt_tokens": 53391,
+          "completion_tokens": 143,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 118,
+          "prompt_tokens": 53744,
+          "completion_tokens": 610,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 119,
+          "prompt_tokens": 54441,
+          "completion_tokens": 153,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 120,
+          "prompt_tokens": 54627,
+          "completion_tokens": 162,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 121,
+          "prompt_tokens": 54789,
+          "completion_tokens": 121,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 122,
+          "prompt_tokens": 54967,
+          "completion_tokens": 76,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 123,
+          "prompt_tokens": 55122,
+          "completion_tokens": 95,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 124,
+          "prompt_tokens": 55593,
+          "completion_tokens": 610,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 125,
+          "prompt_tokens": 56290,
+          "completion_tokens": 146,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 126,
+          "prompt_tokens": 56469,
+          "completion_tokens": 75,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 127,
+          "prompt_tokens": 56544,
+          "completion_tokens": 249,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 128,
+          "prompt_tokens": 56828,
+          "completion_tokens": 51,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 129,
+          "prompt_tokens": 56914,
+          "completion_tokens": 38,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 130,
+          "prompt_tokens": 56999,
+          "completion_tokens": 644,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 131,
+          "prompt_tokens": 57730,
+          "completion_tokens": 627,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 132,
+          "prompt_tokens": 58444,
+          "completion_tokens": 303,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 133,
+          "prompt_tokens": 58780,
+          "completion_tokens": 1316,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        }
+      ]
+    },
+    {
+      "conversation_id": "6b509a56-8b92-40fd-8fee-cce408ceabd5",
+      "log_file": "C:\\Users\\chuvu\\.gemini\\antigravity\\brain\\6b509a56-8b92-40fd-8fee-cce408ceabd5\\.system_generated\\logs\\transcript.jsonl",
+      "total_steps": 18,
+      "turns_count": 6,
+      "prompt_tokens": 24251,
+      "completion_tokens": 3538,
+      "total_tokens": 27789,
+      "total_duration_sec": 497.0,
+      "tool_counts": {
+        "invoke_subagent": 2,
+        "send_message": 1
+      },
+      "tool_durations_ms": {
+        "invoke_subagent": 28000.0,
+        "send_message": 18000.0
+      },
+      "model_name": "gemini-pro",
+      "estimated_cost_usd": 0.048,
+      "turns_summary": [
+        {
+          "turn": 1,
+          "prompt_tokens": 1999,
+          "completion_tokens": 1069,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 2,
+          "prompt_tokens": 3215,
+          "completion_tokens": 22,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 3,
+          "prompt_tokens": 3237,
+          "completion_tokens": 1590,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 4,
+          "prompt_tokens": 4974,
+          "completion_tokens": 28,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 5,
+          "prompt_tokens": 5002,
+          "completion_tokens": 789,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 6,
+          "prompt_tokens": 5824,
+          "completion_tokens": 40,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        }
+      ]
+    },
+    {
+      "conversation_id": "05213aa7-7083-4d08-a216-13e73cb5b467",
+      "log_file": "C:\\Users\\chuvu\\.gemini\\antigravity\\brain\\05213aa7-7083-4d08-a216-13e73cb5b467\\.system_generated\\logs\\transcript.jsonl",
+      "total_steps": 18,
+      "turns_count": 6,
+      "prompt_tokens": 26782,
+      "completion_tokens": 4039,
+      "total_tokens": 30821,
+      "total_duration_sec": 715.0,
+      "tool_counts": {
+        "invoke_subagent": 2,
+        "send_message": 1
+      },
+      "tool_durations_ms": {
+        "invoke_subagent": 20000.0,
+        "send_message": 9000.0
+      },
+      "model_name": "gemini-pro",
+      "estimated_cost_usd": 0.05367,
+      "turns_summary": [
+        {
+          "turn": 1,
+          "prompt_tokens": 2101,
+          "completion_tokens": 1434,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 2,
+          "prompt_tokens": 3682,
+          "completion_tokens": 14,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 3,
+          "prompt_tokens": 3696,
+          "completion_tokens": 1580,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 4,
+          "prompt_tokens": 5423,
+          "completion_tokens": 22,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 5,
+          "prompt_tokens": 5445,
+          "completion_tokens": 957,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 6,
+          "prompt_tokens": 6435,
+          "completion_tokens": 32,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        }
+      ]
+    },
+    {
+      "conversation_id": "d5a0502d-4dff-460e-8910-fd6b548ac11b",
+      "log_file": "C:\\Users\\chuvu\\.gemini\\antigravity\\brain\\d5a0502d-4dff-460e-8910-fd6b548ac11b\\.system_generated\\logs\\transcript.jsonl",
+      "total_steps": 18,
+      "turns_count": 6,
+      "prompt_tokens": 29476,
+      "completion_tokens": 4190,
+      "total_tokens": 33666,
+      "total_duration_sec": 417.0,
+      "tool_counts": {
+        "invoke_subagent": 2,
+        "send_message": 1
+      },
+      "tool_durations_ms": {
+        "invoke_subagent": 41000.0,
+        "send_message": 22000.0
+      },
+      "model_name": "gemini-pro",
+      "estimated_cost_usd": 0.05779,
+      "turns_summary": [
+        {
+          "turn": 1,
+          "prompt_tokens": 2402,
+          "completion_tokens": 1502,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 2,
+          "prompt_tokens": 4051,
+          "completion_tokens": 35,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 3,
+          "prompt_tokens": 4086,
+          "completion_tokens": 1783,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 4,
+          "prompt_tokens": 6016,
+          "completion_tokens": 35,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        },
+        {
+          "turn": 5,
+          "prompt_tokens": 6051,
+          "completion_tokens": 786,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 6,
+          "prompt_tokens": 6870,
+          "completion_tokens": 49,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        }
+      ]
+    },
+    {
+      "conversation_id": "e87182e1-eb7f-441b-81df-284c07b6f219",
+      "log_file": "C:\\Users\\chuvu\\.gemini\\antigravity\\brain\\e87182e1-eb7f-441b-81df-284c07b6f219\\.system_generated\\logs\\transcript.jsonl",
+      "total_steps": 18,
+      "turns_count": 6,
+      "prompt_tokens": 36336,
+      "completion_tokens": 2572,
+      "total_tokens": 38908,
+      "total_duration_sec": 122.0,
+      "tool_counts": {
+        "grep_search": 2,
+        "view_file": 2,
+        "send_message": 1
+      },
+      "tool_durations_ms": {
+        "grep_search": 5000.0,
+        "view_file": 2000.0,
+        "send_message": 52000.0
+      },
+      "model_name": "gemini-pro",
+      "estimated_cost_usd": 0.05828,
+      "turns_summary": [
+        {
+          "turn": 1,
+          "prompt_tokens": 2368,
+          "completion_tokens": 198,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 2,
+          "prompt_tokens": 3984,
+          "completion_tokens": 87,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 3,
+          "prompt_tokens": 5375,
+          "completion_tokens": 86,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 4,
+          "prompt_tokens": 6739,
+          "completion_tokens": 265,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 5,
+          "prompt_tokens": 8034,
+          "completion_tokens": 1769,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 6,
+          "prompt_tokens": 9836,
+          "completion_tokens": 167,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        }
+      ]
+    },
+    {
+      "conversation_id": "bacf8218-9bfb-4f1a-a79d-1e1748fd9caf",
+      "log_file": "C:\\Users\\chuvu\\.gemini\\antigravity\\brain\\bacf8218-9bfb-4f1a-a79d-1e1748fd9caf\\.system_generated\\logs\\transcript.jsonl",
+      "total_steps": 206,
+      "turns_count": 103,
+      "prompt_tokens": 3089471,
+      "completion_tokens": 11991,
+      "total_tokens": 3101462,
+      "total_duration_sec": 242.0,
+      "tool_counts": {
+        "list_dir": 33,
+        "grep_search": 13,
+        "view_file": 55,
+        "send_message": 1
+      },
+      "tool_durations_ms": {
+        "list_dir": 66000.0,
+        "grep_search": 34000.0,
+        "view_file": 96000.0,
+        "send_message": 39000.0
+      },
+      "model_name": "gemini-pro",
+      "estimated_cost_usd": 3.92179,
+      "turns_summary": [
+        {
+          "turn": 1,
+          "prompt_tokens": 1820,
+          "completion_tokens": 166,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 2,
+          "prompt_tokens": 2736,
+          "completion_tokens": 67,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 3,
+          "prompt_tokens": 2912,
+          "completion_tokens": 108,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 4,
+          "prompt_tokens": 3043,
+          "completion_tokens": 105,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 5,
+          "prompt_tokens": 4178,
+          "completion_tokens": 331,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 6,
+          "prompt_tokens": 5539,
+          "completion_tokens": 154,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 7,
+          "prompt_tokens": 5881,
+          "completion_tokens": 183,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 8,
+          "prompt_tokens": 7093,
+          "completion_tokens": 205,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 9,
+          "prompt_tokens": 7343,
+          "completion_tokens": 77,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 10,
+          "prompt_tokens": 7465,
+          "completion_tokens": 73,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 11,
+          "prompt_tokens": 7583,
+          "completion_tokens": 73,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 12,
+          "prompt_tokens": 7701,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 13,
+          "prompt_tokens": 7824,
+          "completion_tokens": 270,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 14,
+          "prompt_tokens": 8117,
+          "completion_tokens": 73,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 15,
+          "prompt_tokens": 8258,
+          "completion_tokens": 110,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 16,
+          "prompt_tokens": 8449,
+          "completion_tokens": 191,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 17,
+          "prompt_tokens": 9120,
+          "completion_tokens": 79,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 18,
+          "prompt_tokens": 9559,
+          "completion_tokens": 77,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 19,
+          "prompt_tokens": 9840,
+          "completion_tokens": 96,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 20,
+          "prompt_tokens": 10938,
+          "completion_tokens": 93,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 21,
+          "prompt_tokens": 12345,
+          "completion_tokens": 67,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 22,
+          "prompt_tokens": 12822,
+          "completion_tokens": 104,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 23,
+          "prompt_tokens": 13956,
+          "completion_tokens": 180,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 24,
+          "prompt_tokens": 14181,
+          "completion_tokens": 105,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 25,
+          "prompt_tokens": 15316,
+          "completion_tokens": 222,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 26,
+          "prompt_tokens": 15613,
+          "completion_tokens": 87,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 27,
+          "prompt_tokens": 16108,
+          "completion_tokens": 88,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 28,
+          "prompt_tokens": 16721,
+          "completion_tokens": 88,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 29,
+          "prompt_tokens": 17255,
+          "completion_tokens": 84,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 30,
+          "prompt_tokens": 17398,
+          "completion_tokens": 95,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 31,
+          "prompt_tokens": 18879,
+          "completion_tokens": 84,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 32,
+          "prompt_tokens": 19482,
+          "completion_tokens": 75,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 33,
+          "prompt_tokens": 19670,
+          "completion_tokens": 94,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 34,
+          "prompt_tokens": 20467,
+          "completion_tokens": 96,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 35,
+          "prompt_tokens": 21002,
+          "completion_tokens": 100,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 36,
+          "prompt_tokens": 21919,
+          "completion_tokens": 99,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 37,
+          "prompt_tokens": 22735,
+          "completion_tokens": 91,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 38,
+          "prompt_tokens": 23630,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 39,
+          "prompt_tokens": 24485,
+          "completion_tokens": 93,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 40,
+          "prompt_tokens": 25234,
+          "completion_tokens": 98,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 41,
+          "prompt_tokens": 26442,
+          "completion_tokens": 80,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 42,
+          "prompt_tokens": 26571,
+          "completion_tokens": 100,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 43,
+          "prompt_tokens": 27721,
+          "completion_tokens": 76,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 44,
+          "prompt_tokens": 27865,
+          "completion_tokens": 80,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 45,
+          "prompt_tokens": 28022,
+          "completion_tokens": 81,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 46,
+          "prompt_tokens": 28149,
+          "completion_tokens": 81,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 47,
+          "prompt_tokens": 28295,
+          "completion_tokens": 91,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 48,
+          "prompt_tokens": 29446,
+          "completion_tokens": 89,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 49,
+          "prompt_tokens": 30034,
+          "completion_tokens": 92,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 50,
+          "prompt_tokens": 30677,
+          "completion_tokens": 94,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 51,
+          "prompt_tokens": 31347,
+          "completion_tokens": 91,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 52,
+          "prompt_tokens": 31949,
+          "completion_tokens": 93,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 53,
+          "prompt_tokens": 32618,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 54,
+          "prompt_tokens": 33190,
+          "completion_tokens": 93,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 55,
+          "prompt_tokens": 33839,
+          "completion_tokens": 91,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 56,
+          "prompt_tokens": 34480,
+          "completion_tokens": 78,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 57,
+          "prompt_tokens": 34604,
+          "completion_tokens": 91,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 58,
+          "prompt_tokens": 35478,
+          "completion_tokens": 79,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 59,
+          "prompt_tokens": 35749,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 60,
+          "prompt_tokens": 35913,
+          "completion_tokens": 86,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 61,
+          "prompt_tokens": 36456,
+          "completion_tokens": 91,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 62,
+          "prompt_tokens": 36968,
+          "completion_tokens": 93,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 63,
+          "prompt_tokens": 37467,
+          "completion_tokens": 75,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 64,
+          "prompt_tokens": 37630,
+          "completion_tokens": 77,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 65,
+          "prompt_tokens": 38196,
+          "completion_tokens": 77,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 66,
+          "prompt_tokens": 38711,
+          "completion_tokens": 75,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 67,
+          "prompt_tokens": 39217,
+          "completion_tokens": 77,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 68,
+          "prompt_tokens": 39832,
+          "completion_tokens": 89,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 69,
+          "prompt_tokens": 40554,
+          "completion_tokens": 80,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 70,
+          "prompt_tokens": 40695,
+          "completion_tokens": 99,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 71,
+          "prompt_tokens": 41298,
+          "completion_tokens": 95,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 72,
+          "prompt_tokens": 41926,
+          "completion_tokens": 83,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 73,
+          "prompt_tokens": 42079,
+          "completion_tokens": 82,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 74,
+          "prompt_tokens": 42222,
+          "completion_tokens": 81,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 75,
+          "prompt_tokens": 42349,
+          "completion_tokens": 81,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 76,
+          "prompt_tokens": 42540,
+          "completion_tokens": 82,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 77,
+          "prompt_tokens": 42686,
+          "completion_tokens": 84,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 78,
+          "prompt_tokens": 42855,
+          "completion_tokens": 82,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 79,
+          "prompt_tokens": 43006,
+          "completion_tokens": 210,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 80,
+          "prompt_tokens": 43625,
+          "completion_tokens": 90,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 81,
+          "prompt_tokens": 44094,
+          "completion_tokens": 83,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 82,
+          "prompt_tokens": 44571,
+          "completion_tokens": 81,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 83,
+          "prompt_tokens": 45681,
+          "completion_tokens": 83,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 84,
+          "prompt_tokens": 46367,
+          "completion_tokens": 82,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 85,
+          "prompt_tokens": 47008,
+          "completion_tokens": 84,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 86,
+          "prompt_tokens": 47433,
+          "completion_tokens": 83,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 87,
+          "prompt_tokens": 48034,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 88,
+          "prompt_tokens": 48551,
+          "completion_tokens": 85,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 89,
+          "prompt_tokens": 48741,
+          "completion_tokens": 110,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 90,
+          "prompt_tokens": 48874,
+          "completion_tokens": 105,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 91,
+          "prompt_tokens": 49002,
+          "completion_tokens": 96,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 92,
+          "prompt_tokens": 49721,
+          "completion_tokens": 101,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 93,
+          "prompt_tokens": 50460,
+          "completion_tokens": 94,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 94,
+          "prompt_tokens": 50815,
+          "completion_tokens": 95,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 95,
+          "prompt_tokens": 51324,
+          "completion_tokens": 95,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 96,
+          "prompt_tokens": 51821,
+          "completion_tokens": 95,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 97,
+          "prompt_tokens": 52324,
+          "completion_tokens": 99,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 98,
+          "prompt_tokens": 52856,
+          "completion_tokens": 150,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 99,
+          "prompt_tokens": 53076,
+          "completion_tokens": 80,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 100,
+          "prompt_tokens": 53643,
+          "completion_tokens": 96,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 101,
+          "prompt_tokens": 54399,
+          "completion_tokens": 92,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 102,
+          "prompt_tokens": 55790,
+          "completion_tokens": 1745,
+          "duration_sec": 1.5,
+          "tool_calls": 1
+        },
+        {
+          "turn": 103,
+          "prompt_tokens": 57568,
+          "completion_tokens": 79,
+          "duration_sec": 1.5,
+          "tool_calls": 0
+        }
+      ]
+    }
+  ]
+}
+  </script>
+
+  <!-- Header Section -->
+  <header class="mb-6 pb-4 border-b border-[var(--border)] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          CCBA Agent Services Platform v2.0
+        </span>
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border bg-rose-500/10 text-rose-500 border-rose-500/20">
+          ADR-0030 Budget: Exceeded
+        </span>
+      </div>
+      <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[var(--foreground)]">
+        🐝 Swarm Telemetry & Token Runtime Dashboard
+      </h1>
+      <p class="text-xs md:text-sm text-[var(--muted-foreground)] font-mono mt-0.5">
+        Session: <span class="text-[var(--foreground)]">ea5a900e-41fd-4ae6-968a-e2e271e67e52</span> &bull; 9 Subagents Active
+      </p>
+    </div>
+
+    <!-- Action Toolbar -->
+    <div class="flex items-center gap-2">
+      <button onclick="downloadJson()" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] bg-[var(--card)] hover:border-[var(--primary)] transition-all flex items-center gap-1.5 shadow-sm">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Export JSON
+      </button>
+      <button onclick="copyRawJson()" id="btnCopy" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] bg-[var(--card)] hover:border-[var(--primary)] transition-all flex items-center gap-1.5 shadow-sm">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+        Copy Data
+      </button>
+      <button onclick="toggleTheme()" class="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] bg-[var(--card)] hover:border-[var(--primary)] transition-all" title="Toggle Dark/Light Mode">
+        🌓
+      </button>
+    </div>
+  </header>
+
+  <!-- KPI Cards Grid -->
+  <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-6">
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+      <div class="text-xs text-[var(--muted-foreground)] font-medium">Total Swarm Tokens</div>
+      <div class="text-lg md:text-xl font-bold mt-1 text-indigo-400">14,932,447</div>
+      <div class="text-[10px] text-[var(--muted-foreground)] mt-1 flex justify-between">
+        <span>Prompt: 14,828,378</span>
+      </div>
+    </div>
+
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+      <div class="text-xs text-[var(--muted-foreground)] font-medium">Estimated Cost (USD)</div>
+      <div class="text-lg md:text-xl font-bold mt-1 text-emerald-400">$19.0558</div>
+      <div class="text-[10px] text-[var(--muted-foreground)] mt-1">
+        Gemini Pro/Flash Rates
+      </div>
+    </div>
+
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+      <div class="text-xs text-[var(--muted-foreground)] font-medium">Active Subagents</div>
+      <div class="text-lg md:text-xl font-bold mt-1 text-cyan-400">9</div>
+      <div class="text-[10px] text-[var(--muted-foreground)] mt-1">
+        Isolated Trajectories
+      </div>
+    </div>
+
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+      <div class="text-xs text-[var(--muted-foreground)] font-medium">Total Execution Time</div>
+      <div class="text-lg md:text-xl font-bold mt-1 text-amber-400">8460.0s</div>
+      <div class="text-[10px] text-[var(--muted-foreground)] mt-1">
+        Aggregated Run Duration
+      </div>
+    </div>
+
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+      <div class="text-xs text-[var(--muted-foreground)] font-medium">Completion Ratio</div>
+      <div class="text-lg md:text-xl font-bold mt-1 text-purple-400">
+        0.7%
+      </div>
+      <div class="text-[10px] text-[var(--muted-foreground)] mt-1">
+        Gen vs Context Tokens
+      </div>
+    </div>
+
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+      <div class="text-xs text-[var(--muted-foreground)] font-medium">Budget Status</div>
+      <div class="text-lg md:text-xl font-bold mt-1 flex items-center gap-1.5">
+        <span class="inline-block w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+        <span class="text-sm md:text-base">Exceeded</span>
+      </div>
+      <div class="text-[10px] text-[var(--muted-foreground)] mt-1">
+        100.0% of 10M Limit
+      </div>
+    </div>
+  </section>
+
+  <!-- Charts Layout (2-Column Grid) -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Chart 1: Token Distribution -->
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold tracking-wide flex items-center gap-2 text-[var(--foreground)]">
+          <span class="text-indigo-400">📊</span> Token Breakdown by Subagent
+        </h2>
+        <span class="text-xs text-[var(--muted-foreground)]">Prompt vs Completion</span>
+      </div>
+      <div class="w-full">
+        <svg viewBox="0 0 680 382" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="promptGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+    <linearGradient id="compGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+  <!-- Legend -->
+  <g transform="translate(10, 16)" font-size="11" fill="currentColor">
+    <rect x="0" y="0" width="12" height="12" rx="2" fill="url(#promptGrad)" />
+    <text x="18" y="10" fill="currentColor" class="text-[var(--foreground)]">Prompt (Context)</text>
+    <rect x="130" y="0" width="12" height="12" rx="2" fill="url(#compGrad)" />
+    <text x="148" y="10" fill="currentColor" class="text-[var(--foreground)]">Completion (Gen)</text>
+  </g>
+  <!-- Row 0: 5a10336e-5c3c-4648-809a-29272c87c168 -->
+  <text x="120" y="56" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">5a10336e...c168</text>
+  <rect x="130" y="44" width="450" height="18" rx="4" fill="currentColor" opacity="0.08" />
+  <rect x="130" y="44" width="448.2" height="18" rx="4" fill="url(#promptGrad)"><title>5a10336e-5c3c-4648-809a-29272c87c168 - Prompt: 5,735,770 tokens</title></rect>
+  <rect x="578.169354800902" y="44" width="1.8" height="18" rx="4" fill="url(#compGrad)"><title>5a10336e-5c3c-4648-809a-29272c87c168 - Completion: 23,429 tokens</title></rect>
+  <text x="588" y="57" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">5,759,199</text>
+  <!-- Row 1: d4b39837-e822-4b10-a987-25b3478ee21b -->
+  <text x="120" y="94" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">d4b39837...e21b</text>
+  <rect x="130" y="82" width="450" height="18" rx="4" fill="currentColor" opacity="0.08" />
+  <rect x="130" y="82" width="331.1" height="18" rx="4" fill="url(#promptGrad)"><title>d4b39837-e822-4b10-a987-25b3478ee21b - Prompt: 4,237,749 tokens</title></rect>
+  <rect x="461.1201870260083" y="82" width="2.4" height="18" rx="4" fill="url(#compGrad)"><title>d4b39837-e822-4b10-a987-25b3478ee21b - Completion: 30,942 tokens</title></rect>
+  <text x="588" y="95" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">4,268,691</text>
+  <!-- Row 2: bacf8218-9bfb-4f1a-a79d-1e1748fd9caf -->
+  <text x="120" y="132" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">bacf8218...9caf</text>
+  <rect x="130" y="120" width="450" height="18" rx="4" fill="currentColor" opacity="0.08" />
+  <rect x="130" y="120" width="241.4" height="18" rx="4" fill="url(#promptGrad)"><title>bacf8218-9bfb-4f1a-a79d-1e1748fd9caf - Prompt: 3,089,471 tokens</title></rect>
+  <rect x="371.3984913527037" y="120" width="0.9" height="18" rx="4" fill="url(#compGrad)"><title>bacf8218-9bfb-4f1a-a79d-1e1748fd9caf - Completion: 11,991 tokens</title></rect>
+  <text x="588" y="133" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">3,101,462</text>
+  <!-- Row 3: f2ed896e-d9d9-4e60-91ed-d1a3cd96b3a8 -->
+  <text x="120" y="170" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">f2ed896e...b3a8</text>
+  <rect x="130" y="158" width="450" height="18" rx="4" fill="currentColor" opacity="0.08" />
+  <rect x="130" y="158" width="126.7" height="18" rx="4" fill="url(#promptGrad)"><title>f2ed896e-d9d9-4e60-91ed-d1a3cd96b3a8 - Prompt: 1,621,232 tokens</title></rect>
+  <rect x="256.6763659321374" y="158" width="1.6" height="18" rx="4" fill="url(#compGrad)"><title>f2ed896e-d9d9-4e60-91ed-d1a3cd96b3a8 - Completion: 20,821 tokens</title></rect>
+  <text x="588" y="171" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">1,642,053</text>
+  <!-- Row 4: e87182e1-eb7f-441b-81df-284c07b6f219 -->
+  <text x="120" y="208" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">e87182e1...f219</text>
+  <rect x="130" y="196" width="450" height="18" rx="4" fill="currentColor" opacity="0.08" />
+  <rect x="130" y="196" width="2.8" height="18" rx="4" fill="url(#promptGrad)"><title>e87182e1-eb7f-441b-81df-284c07b6f219 - Prompt: 36,336 tokens</title></rect>
+  <rect x="132.83914481857633" y="196" width="0.2" height="18" rx="4" fill="url(#compGrad)"><title>e87182e1-eb7f-441b-81df-284c07b6f219 - Completion: 2,572 tokens</title></rect>
+  <text x="588" y="209" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">38,908</text>
+  <!-- Row 5: d5a0502d-4dff-460e-8910-fd6b548ac11b -->
+  <text x="120" y="246" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">d5a0502d...c11b</text>
+  <rect x="130" y="234" width="450" height="18" rx="4" fill="currentColor" opacity="0.08" />
+  <rect x="130" y="234" width="2.3" height="18" rx="4" fill="url(#promptGrad)"><title>d5a0502d-4dff-460e-8910-fd6b548ac11b - Prompt: 29,476 tokens</title></rect>
+  <rect x="132.30313277940215" y="234" width="0.3" height="18" rx="4" fill="url(#compGrad)"><title>d5a0502d-4dff-460e-8910-fd6b548ac11b - Completion: 4,190 tokens</title></rect>
+  <text x="588" y="247" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">33,666</text>
+  <!-- Row 6: 05213aa7-7083-4d08-a216-13e73cb5b467 -->
+  <text x="120" y="284" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">05213aa7...b467</text>
+  <rect x="130" y="272" width="450" height="18" rx="4" fill="currentColor" opacity="0.08" />
+  <rect x="130" y="272" width="2.1" height="18" rx="4" fill="url(#promptGrad)"><title>05213aa7-7083-4d08-a216-13e73cb5b467 - Prompt: 26,782 tokens</title></rect>
+  <rect x="132.0926347570209" y="272" width="0.3" height="18" rx="4" fill="url(#compGrad)"><title>05213aa7-7083-4d08-a216-13e73cb5b467 - Completion: 4,039 tokens</title></rect>
+  <text x="588" y="285" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">30,821</text>
+  <!-- Row 7: eb99bacd-30fe-44b5-8c5f-7fe2aa28d581 -->
+  <text x="120" y="322" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">eb99bacd...d581</text>
+  <rect x="130" y="310" width="450" height="18" rx="4" fill="currentColor" opacity="0.08" />
+  <rect x="130" y="310" width="2.1" height="18" rx="4" fill="url(#promptGrad)"><title>eb99bacd-30fe-44b5-8c5f-7fe2aa28d581 - Prompt: 27,311 tokens</title></rect>
+  <rect x="132.13396863001262" y="310" width="0.2" height="18" rx="4" fill="url(#compGrad)"><title>eb99bacd-30fe-44b5-8c5f-7fe2aa28d581 - Completion: 2,547 tokens</title></rect>
+  <text x="588" y="323" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">29,858</text>
+  <!-- Row 8: 6b509a56-8b92-40fd-8fee-cce408ceabd5 -->
+  <text x="120" y="360" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">6b509a56...abd5</text>
+  <rect x="130" y="348" width="450" height="18" rx="4" fill="currentColor" opacity="0.08" />
+  <rect x="130" y="348" width="1.9" height="18" rx="4" fill="url(#promptGrad)"><title>6b509a56-8b92-40fd-8fee-cce408ceabd5 - Prompt: 24,251 tokens</title></rect>
+  <rect x="131.89487288075998" y="348" width="0.3" height="18" rx="4" fill="url(#compGrad)"><title>6b509a56-8b92-40fd-8fee-cce408ceabd5 - Completion: 3,538 tokens</title></rect>
+  <text x="588" y="361" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">27,789</text>
+</svg>
+      </div>
+    </div>
+
+    <!-- Chart 2: Gantt Timeline -->
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold tracking-wide flex items-center gap-2 text-[var(--foreground)]">
+          <span class="text-cyan-400">⏱️</span> Swarm Execution Timeline (Gantt)
+        </h2>
+        <span class="text-xs text-[var(--muted-foreground)]">Runtime Spans</span>
+      </div>
+      <div class="w-full">
+        <svg viewBox="0 0 680 428" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ganttGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+  </defs>
+  <!-- Time Axis Grid Lines -->
+  <line x1="130.0" y1="25" x2="130.0" y2="413" stroke="currentColor" stroke-dasharray="3 3" opacity="0.15" />
+  <text x="130.0" y="18" text-anchor="middle" font-size="10" fill="currentColor" class="text-[var(--muted-foreground)]">0.0s</text>
+  <line x1="252.5" y1="25" x2="252.5" y2="413" stroke="currentColor" stroke-dasharray="3 3" opacity="0.15" />
+  <text x="252.5" y="18" text-anchor="middle" font-size="10" fill="currentColor" class="text-[var(--muted-foreground)]">11292.8s</text>
+  <line x1="375.0" y1="25" x2="375.0" y2="413" stroke="currentColor" stroke-dasharray="3 3" opacity="0.15" />
+  <text x="375.0" y="18" text-anchor="middle" font-size="10" fill="currentColor" class="text-[var(--muted-foreground)]">22585.5s</text>
+  <line x1="497.5" y1="25" x2="497.5" y2="413" stroke="currentColor" stroke-dasharray="3 3" opacity="0.15" />
+  <text x="497.5" y="18" text-anchor="middle" font-size="10" fill="currentColor" class="text-[var(--muted-foreground)]">33878.2s</text>
+  <line x1="620.0" y1="25" x2="620.0" y2="413" stroke="currentColor" stroke-dasharray="3 3" opacity="0.15" />
+  <text x="620.0" y="18" text-anchor="middle" font-size="10" fill="currentColor" class="text-[var(--muted-foreground)]">45171.0s</text>
+  <!-- Gantt Row 0: eb99bacd-30fe-44b5-8c5f-7fe2aa28d581 -->
+  <text x="120" y="50" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">eb99bacd...d581</text>
+  <rect x="130.0" y="37" width="11.1" height="20" rx="6" fill="url(#ganttGrad)"><title>eb99bacd-30fe-44b5-8c5f-7fe2aa28d581 - Offset: 0.0s, Duration: 1027.0s, Turns: 8</title></rect>
+  <text x="147.1" y="51" text-anchor="start" font-size="10" font-weight="500" fill="currentColor" class="text-[var(--foreground)]">1027.0s</text>
+  <!-- Gantt Row 1: f2ed896e-d9d9-4e60-91ed-d1a3cd96b3a8 -->
+  <text x="120" y="92" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">f2ed896e...b3a8</text>
+  <rect x="130.1" y="79" width="4.0" height="20" rx="6" fill="url(#ganttGrad)"><title>f2ed896e-d9d9-4e60-91ed-d1a3cd96b3a8 - Offset: 6.0s, Duration: 334.0s, Turns: 53</title></rect>
+  <text x="140.1" y="93" text-anchor="start" font-size="10" font-weight="500" fill="currentColor" class="text-[var(--foreground)]">334.0s</text>
+  <!-- Gantt Row 2: 5a10336e-5c3c-4648-809a-29272c87c168 -->
+  <text x="120" y="134" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">5a10336e...c168</text>
+  <rect x="133.9" y="121" width="6.9" height="20" rx="6" fill="url(#ganttGrad)"><title>5a10336e-5c3c-4648-809a-29272c87c168 - Offset: 361.0s, Duration: 633.0s, Turns: 119</title></rect>
+  <text x="146.8" y="135" text-anchor="start" font-size="10" font-weight="500" fill="currentColor" class="text-[var(--foreground)]">633.0s</text>
+  <!-- Gantt Row 3: d4b39837-e822-4b10-a987-25b3478ee21b -->
+  <text x="120" y="176" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">d4b39837...e21b</text>
+  <rect x="149.4" y="163" width="48.5" height="20" rx="6" fill="url(#ganttGrad)"><title>d4b39837-e822-4b10-a987-25b3478ee21b - Offset: 1788.0s, Duration: 4473.0s, Turns: 133</title></rect>
+  <text x="173.7" y="177" text-anchor="middle" font-size="10" font-weight="600" fill="#ffffff">4473.0s</text>
+  <!-- Gantt Row 4: 6b509a56-8b92-40fd-8fee-cce408ceabd5 -->
+  <text x="120" y="218" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">6b509a56...abd5</text>
+  <rect x="280.0" y="205" width="5.4" height="20" rx="6" fill="url(#ganttGrad)"><title>6b509a56-8b92-40fd-8fee-cce408ceabd5 - Offset: 13825.0s, Duration: 497.0s, Turns: 6</title></rect>
+  <text x="291.4" y="219" text-anchor="start" font-size="10" font-weight="500" fill="currentColor" class="text-[var(--foreground)]">497.0s</text>
+  <!-- Gantt Row 5: 05213aa7-7083-4d08-a216-13e73cb5b467 -->
+  <text x="120" y="260" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">05213aa7...b467</text>
+  <rect x="289.5" y="247" width="7.8" height="20" rx="6" fill="url(#ganttGrad)"><title>05213aa7-7083-4d08-a216-13e73cb5b467 - Offset: 14704.0s, Duration: 715.0s, Turns: 6</title></rect>
+  <text x="303.3" y="261" text-anchor="start" font-size="10" font-weight="500" fill="currentColor" class="text-[var(--foreground)]">715.0s</text>
+  <!-- Gantt Row 6: d5a0502d-4dff-460e-8910-fd6b548ac11b -->
+  <text x="120" y="302" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">d5a0502d...c11b</text>
+  <rect x="577.5" y="289" width="4.5" height="20" rx="6" fill="url(#ganttGrad)"><title>d5a0502d-4dff-460e-8910-fd6b548ac11b - Offset: 41252.0s, Duration: 417.0s, Turns: 6</title></rect>
+  <text x="588.0" y="303" text-anchor="start" font-size="10" font-weight="500" fill="currentColor" class="text-[var(--foreground)]">417.0s</text>
+  <!-- Gantt Row 7: e87182e1-eb7f-441b-81df-284c07b6f219 -->
+  <text x="120" y="344" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">e87182e1...f219</text>
+  <rect x="612.9" y="331" width="4.0" height="20" rx="6" fill="url(#ganttGrad)"><title>e87182e1-eb7f-441b-81df-284c07b6f219 - Offset: 44520.0s, Duration: 122.0s, Turns: 6</title></rect>
+  <text x="622.9" y="345" text-anchor="start" font-size="10" font-weight="500" fill="currentColor" class="text-[var(--foreground)]">122.0s</text>
+  <!-- Gantt Row 8: bacf8218-9bfb-4f1a-a79d-1e1748fd9caf -->
+  <text x="120" y="386" text-anchor="end" font-size="11" font-family="monospace" fill="currentColor" class="text-[var(--muted-foreground)]">bacf8218...9caf</text>
+  <rect x="617.4" y="373" width="4.0" height="20" rx="6" fill="url(#ganttGrad)"><title>bacf8218-9bfb-4f1a-a79d-1e1748fd9caf - Offset: 44929.0s, Duration: 242.0s, Turns: 103</title></rect>
+  <text x="627.4" y="387" text-anchor="start" font-size="10" font-weight="500" fill="currentColor" class="text-[var(--foreground)]">242.0s</text>
+</svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tool Latency & Invocations Table -->
+  <section class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm mb-6">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm font-semibold tracking-wide flex items-center gap-2 text-[var(--foreground)]">
+        <span class="text-amber-400">🛠️</span> Tool Invocations & Latency Matrix
+      </h2>
+      <span class="text-xs text-[var(--muted-foreground)]">Aggregated Across Fleet</span>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="text-xs text-[var(--muted-foreground)] uppercase border-b border-[var(--border)]">
+          <tr>
+            <th class="py-2 px-3">Tool Name</th>
+            <th class="py-2 px-3 text-right">Invocations</th>
+            <th class="py-2 px-3 text-right">Share</th>
+            <th class="py-2 px-3 text-right">Total Latency</th>
+            <th class="py-2 px-3 text-right">Avg Latency</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+            <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-xs font-semibold text-[var(--primary)]">view_file</td>
+              <td class="py-2.5 px-3 text-right font-semibold text-xs">173</td>
+              <td class="py-2.5 px-3 text-right text-xs text-[var(--muted-foreground)]">42.6%</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono">630,000.0ms</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono text-[var(--muted-foreground)]">3,641.6ms</td>
+            </tr>
+            
+            <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-xs font-semibold text-[var(--primary)]">run_command</td>
+              <td class="py-2.5 px-3 text-right font-semibold text-xs">88</td>
+              <td class="py-2.5 px-3 text-right text-xs text-[var(--muted-foreground)]">21.7%</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono">467,000.0ms</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono text-[var(--muted-foreground)]">5,306.8ms</td>
+            </tr>
+            
+            <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-xs font-semibold text-[var(--primary)]">list_dir</td>
+              <td class="py-2.5 px-3 text-right font-semibold text-xs">37</td>
+              <td class="py-2.5 px-3 text-right text-xs text-[var(--muted-foreground)]">9.1%</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono">86,000.0ms</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono text-[var(--muted-foreground)]">2,324.3ms</td>
+            </tr>
+            
+            <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-xs font-semibold text-[var(--primary)]">grep_search</td>
+              <td class="py-2.5 px-3 text-right font-semibold text-xs">29</td>
+              <td class="py-2.5 px-3 text-right text-xs text-[var(--muted-foreground)]">7.1%</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono">82,000.0ms</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono text-[var(--muted-foreground)]">2,827.6ms</td>
+            </tr>
+            
+            <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-xs font-semibold text-[var(--primary)]">send_message</td>
+              <td class="py-2.5 px-3 text-right font-semibold text-xs">26</td>
+              <td class="py-2.5 px-3 text-right text-xs text-[var(--muted-foreground)]">6.4%</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono">4,425,000.0ms</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono text-[var(--muted-foreground)]">170,192.3ms</td>
+            </tr>
+            
+            <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-xs font-semibold text-[var(--primary)]">write_to_file</td>
+              <td class="py-2.5 px-3 text-right font-semibold text-xs">26</td>
+              <td class="py-2.5 px-3 text-right text-xs text-[var(--muted-foreground)]">6.4%</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono">190,000.0ms</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono text-[var(--muted-foreground)]">7,307.7ms</td>
+            </tr>
+            
+            <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-xs font-semibold text-[var(--primary)]">invoke_subagent</td>
+              <td class="py-2.5 px-3 text-right font-semibold text-xs">10</td>
+              <td class="py-2.5 px-3 text-right text-xs text-[var(--muted-foreground)]">2.5%</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono">139,000.0ms</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono text-[var(--muted-foreground)]">13,900.0ms</td>
+            </tr>
+            
+            <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-xs font-semibold text-[var(--primary)]">find_by_name</td>
+              <td class="py-2.5 px-3 text-right font-semibold text-xs">8</td>
+              <td class="py-2.5 px-3 text-right text-xs text-[var(--muted-foreground)]">2.0%</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono">30,000.0ms</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono text-[var(--muted-foreground)]">3,750.0ms</td>
+            </tr>
+            
+            <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-xs font-semibold text-[var(--primary)]">manage_subagents</td>
+              <td class="py-2.5 px-3 text-right font-semibold text-xs">4</td>
+              <td class="py-2.5 px-3 text-right text-xs text-[var(--muted-foreground)]">1.0%</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono">23,000.0ms</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono text-[var(--muted-foreground)]">5,750.0ms</td>
+            </tr>
+            
+            <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-xs font-semibold text-[var(--primary)]">manage_task</td>
+              <td class="py-2.5 px-3 text-right font-semibold text-xs">3</td>
+              <td class="py-2.5 px-3 text-right text-xs text-[var(--muted-foreground)]">0.7%</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono">21,000.0ms</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono text-[var(--muted-foreground)]">7,000.0ms</td>
+            </tr>
+            
+            <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-xs font-semibold text-[var(--primary)]">schedule</td>
+              <td class="py-2.5 px-3 text-right font-semibold text-xs">2</td>
+              <td class="py-2.5 px-3 text-right text-xs text-[var(--muted-foreground)]">0.5%</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono">11,000.0ms</td>
+              <td class="py-2.5 px-3 text-right text-xs font-mono text-[var(--muted-foreground)]">5,500.0ms</td>
+            </tr>
+            
+        </tbody>
+        <tfoot class="border-t border-[var(--border)] font-semibold text-xs">
+          <tr>
+            <td class="py-2.5 px-3">Total / Aggregate</td>
+            <td class="py-2.5 px-3 text-right">406</td>
+            <td class="py-2.5 px-3 text-right">100%</td>
+            <td class="py-2.5 px-3 text-right font-mono">6,104,000.0ms</td>
+            <td class="py-2.5 px-3 text-right font-mono">-</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    
+  </section>
+
+  <!-- Turn-by-Turn Trajectory Inspector -->
+  <section class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+      <div>
+        <h2 class="text-sm font-semibold tracking-wide flex items-center gap-2 text-[var(--foreground)]">
+          <span class="text-purple-400">🔍</span> Turn-by-Turn Trajectory Inspector
+        </h2>
+        <p class="text-xs text-[var(--muted-foreground)]">Examine prompt/generation tokens and tool calls per model turn</p>
+      </div>
+
+      <!-- Subagent Selector -->
+      <div class="flex items-center gap-2">
+        <label for="subagentSelect" class="text-xs text-[var(--muted-foreground)]">Subagent:</label>
+        <select id="subagentSelect" onchange="renderSelectedSubagentTurns()" class="bg-[var(--background)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] font-mono">
+          <option value="eb99bacd-30fe-44b5-8c5f-7fe2aa28d581">eb99bacd...d581 (29,858 tokens, 8 turns)</option>
+<option value="f2ed896e-d9d9-4e60-91ed-d1a3cd96b3a8">f2ed896e...b3a8 (1,642,053 tokens, 53 turns)</option>
+<option value="5a10336e-5c3c-4648-809a-29272c87c168">5a10336e...c168 (5,759,199 tokens, 119 turns)</option>
+<option value="d4b39837-e822-4b10-a987-25b3478ee21b">d4b39837...e21b (4,268,691 tokens, 133 turns)</option>
+<option value="6b509a56-8b92-40fd-8fee-cce408ceabd5">6b509a56...abd5 (27,789 tokens, 6 turns)</option>
+<option value="05213aa7-7083-4d08-a216-13e73cb5b467">05213aa7...b467 (30,821 tokens, 6 turns)</option>
+<option value="d5a0502d-4dff-460e-8910-fd6b548ac11b">d5a0502d...c11b (33,666 tokens, 6 turns)</option>
+<option value="e87182e1-eb7f-441b-81df-284c07b6f219">e87182e1...f219 (38,908 tokens, 6 turns)</option>
+<option value="bacf8218-9bfb-4f1a-a79d-1e1748fd9caf">bacf8218...9caf (3,101,462 tokens, 103 turns)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Inspector Dynamic Container -->
+    <div id="inspectorContainer" class="overflow-x-auto">
+      <p class="text-xs text-[var(--muted-foreground)] py-4 text-center">Select a subagent above to inspect turns.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="mt-auto pt-4 border-t border-[var(--border)] text-xs text-[var(--muted-foreground)] flex flex-col sm:flex-row justify-between items-center gap-2">
+    <div>
+      Generated autonomously by <span class="font-semibold text-[var(--foreground)]">ccba-harness v2.0</span> &bull; OpenTelemetry GenAI v1.28.0+
+    </div>
+    <div class="flex items-center gap-4">
+      <span>ADR-0030 Instruction Budget</span>
+      <span>ADR-0058 Hard Completion Lock</span>
+    </div>
+  </footer>
+
+  <!-- Client-side Interactive Logic -->
+  <script>
+    const telemetryData = JSON.parse(document.getElementById('telemetry-data').textContent);
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('light');
+    }
+
+    function downloadJson() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(telemetryData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `swarm_telemetry_${telemetryData.parent_conversation_id}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function copyRawJson() {
+      navigator.clipboard.writeText(JSON.stringify(telemetryData, null, 2)).then(() => {
+        const btn = document.getElementById('btnCopy');
+        const oldHtml = btn.innerHTML;
+        btn.innerHTML = '✅ Copied!';
+        setTimeout(() => { btn.innerHTML = oldHtml; }, 2000);
+      });
+    }
+
+    function renderSelectedSubagentTurns() {
+      const select = document.getElementById('subagentSelect');
+      if (!select) return;
+      const cid = select.value;
+      const container = document.getElementById('inspectorContainer');
+      if (!cid || !telemetryData.subagents) return;
+
+      const sub = telemetryData.subagents.find(s => s.conversation_id === cid);
+      if (!sub || !sub.turns_summary || sub.turns_summary.length === 0) {
+        container.innerHTML = '<p class="text-xs text-[var(--muted-foreground)] py-4 text-center">No turns recorded for this subagent.</p>';
+        return;
+      }
+
+      let rows = '';
+      sub.turns_summary.forEach(t => {
+        rows += `
+          <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 text-xs">
+            <td class="py-2 px-3 font-semibold text-indigo-400">Turn ${t.turn}</td>
+            <td class="py-2 px-3 text-right font-mono">${t.prompt_tokens.toLocaleString()}</td>
+            <td class="py-2 px-3 text-right font-mono text-emerald-400">${t.completion_tokens.toLocaleString()}</td>
+            <td class="py-2 px-3 text-right font-mono">${(t.prompt_tokens + t.completion_tokens).toLocaleString()}</td>
+            <td class="py-2 px-3 text-right text-[var(--muted-foreground)] font-mono">${t.duration_sec}s</td>
+            <td class="py-2 px-3 text-right font-semibold">${t.tool_calls} call(s)</td>
+          </tr>
+        `;
+      });
+
+      container.innerHTML = `
+        <table class="w-full text-left text-xs">
+          <thead class="text-xs text-[var(--muted-foreground)] uppercase border-b border-[var(--border)]">
+            <tr>
+              <th class="py-2 px-3">Turn #</th>
+              <th class="py-2 px-3 text-right">Prompt Tokens</th>
+              <th class="py-2 px-3 text-right">Completion Tokens</th>
+              <th class="py-2 px-3 text-right">Total Tokens</th>
+              <th class="py-2 px-3 text-right">Duration</th>
+              <th class="py-2 px-3 text-right">Tool Invocations</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSelectedSubagentTurns();
+    });
+  </script>
+</body>
+</html>

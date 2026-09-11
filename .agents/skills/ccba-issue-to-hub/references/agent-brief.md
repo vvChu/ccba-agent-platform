@@ -24,7 +24,7 @@ Agent Brief là tài liệu mô tả yêu cầu công việc được đăng t�
    - Đánh giá độ phức tạp kỹ thuật và quy mô thay đổi để khuyến nghị phương thức thực thi tối ưu cho kỹ sư hoặc Agent tiếp theo:
      - 🟢 **`/ccba-implement` (hoặc Solo mode)**: Dành cho bug/tính năng rõ ràng, gọn nhẹ trong 1–2 files hoặc thay đổi cục bộ.
      - 🟣 **`/boost`**: Dành cho các lỗi logic thuật toán phức tạp, sai số sâu, hoặc tác vụ điều tra root-cause đa tầng cần suy luận chuyên sâu.
-     - 🔵 **`/teamwork-preview` hoặc `/ccba-teamwork`**: Dành cho các Epic/Feature quy mô lớn, tái cấu trúc đa bộ môn/monorepo cần phân tách Seams độc lập và dispatch song song nhiều subagents.
+     - 🔵 **`/ccba-teamwork`**: Dành cho các Epic/Feature quy mô lớn, tái cấu trúc đa bộ môn/monorepo cần phân tách Seams độc lập và dispatch song song nhiều subagents.
 
 ---
 

@@ -141,4 +141,5 @@ secret_credential.*
 .md/governance_constitution/
 .md/system_blueprint/
 specs/modules/
+.md/telemetry/
 

@@ -7,6 +7,11 @@ command: /ccba-code-review
 when_to_use: Dùng khi người dùng muốn đánh giá chất lượng của một PR, một commit,
   hoặc các thay đổi chưa commit (--pending).
 category: utilities
+gpi:
+  s: 4.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 keywords:
 - review
 - quality
@@ -60,10 +65,14 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
   - **Spec Sub-agent Prompt:** Nhận Git Diff + nội dung Spec + chỉ dẫn cấm ủy thác. Yêu cầu chỉ ra các điểm thiếu hụt tính năng so với yêu cầu hoặc scope creep dư thừa.
 - **Tiêu chí hoàn thành:** Khởi chạy thành công 2 sub-agents chạy song song và nhận lại đầy đủ 2 báo cáo phân tích độc lập (Standards Report và Spec Report) mà không phát sinh đệ quy sub-agent.
 
-### 5. Tổng hợp báo cáo (Aggregate Findings)
-- Tổng hợp kết quả từ hai sub-agents dưới dạng báo cáo rõ ràng với hai tiêu đề `## Standards` and `## Spec`.
+### 5. Tổng hợp báo cáo (Aggregate Findings & Deterministic Gate)
+- Tổng hợp kết quả từ hai sub-agents dưới dạng báo cáo rõ ràng với hai tiêu đề `## Standards` và `## Spec`.
+- Chạy cổng kiểm tra máy tính khách quan đối với codebase hiện tại:
+  ```bash
+  python -m ccba_harness verify-patch --preset code --target <target_path>
+  ```
 - Tuyệt đối không tự ý gộp chung hoặc trộn lẫn phát hiện của hai trục để tránh che lấp lỗi của nhau.
-- **Tiêu chí hoàn thành:** Xuất báo cáo tổng hợp chi tiết trình lập trình viên đối soát, kèm tóm tắt 1 dòng về số lượng lỗi và lỗi nghiêm trọng nhất trên mỗi trục.
+- **Tiêu chí hoàn thành:** Xuất báo cáo tổng hợp chi tiết trình lập trình viên đối soát, đính kèm kết quả bảng báo cáo từ `ccba-harness verify-patch`, kèm tóm tắt 1 dòng về số lượng lỗi và lỗi nghiêm trọng nhất trên mỗi trục. Quy tắc Khóa Cứng (ADR-0058): Đánh dấu trạng thái Review là BLOCKED nếu exit-code gate $\ne 0$.
 
 ## Tích hợp hệ thống (System Integration)
 
@@ -73,7 +82,7 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
 ## Vị trí trong Luồng công việc (Workflow Position)
 
 - **Thường chạy sau:** `/ccba-tdd` (Rà soát sau khi code hướng kiểm thử).
-- **Thường chạy trước:** `/ccba-create-pr` (Push và tạo PR), `/ccba-release-feature` (Merge và đóng tính năng).
+- **Thường chạy trước:** `/ccba-contribute-to-hub` (Push và tạo PR), `/ccba-release-feature` (Merge và đóng tính năng).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

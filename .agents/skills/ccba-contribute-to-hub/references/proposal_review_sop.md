@@ -19,7 +19,7 @@ Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm đị
      git checkout main && git pull origin main
      ```
 2. **Xác định PR mục tiêu & Tùy chọn Chế độ Review:**
-   - Cú pháp chuẩn: `/ccba-review-proposal <PR_NUMBER> [--boost | --deep]`
+   - Cú pháp chuẩn: `/ccba-contribute-to-hub <PR_NUMBER> [--boost | --deep]`
    - Nếu không chỉ định PR: Tự động quét danh sách các PR đang mở:
      ```bash
      gh pr list --state open

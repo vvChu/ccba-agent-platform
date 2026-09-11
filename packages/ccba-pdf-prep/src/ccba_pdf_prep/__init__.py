@@ -36,17 +36,35 @@ from .core import (
 )
 from .detector import TitleBlockDetector as TitleBlockDetector
 from .detector import TitleBlockRegion as TitleBlockRegion
-from .document_skills.pdf_forms import (
+from .forms import (
     fill_pdf_fields as fill_pdf_fields,
 )
-from .document_skills.pdf_forms import (
+from .forms import (
     get_field_info as get_field_info,
+)
+from .manipulation import (
+    extract_text_from_pdf as extract_text_from_pdf,
+)
+from .manipulation import (
+    merge_pdfs as merge_pdfs,
+)
+from .manipulation import (
+    parse_pages as parse_pages,
+)
+from .manipulation import (
+    split_pdf_pages as split_pdf_pages,
 )
 from .media import (
     compute_frame_hash as compute_frame_hash,
 )
 from .media import (
     dedup_frames as dedup_frames,
+)
+from .media import (
+    download_grid_image as download_grid_image,
+)
+from .media import (
+    extract_storyboard_frames as extract_storyboard_frames,
 )
 from .media import (
     extract_video_frames as extract_video_frames,
@@ -65,6 +83,12 @@ from .media import (
 )
 from .media import (
     format_whisper_transcript as format_whisper_transcript,
+)
+from .media import (
+    get_heatmap_peaks as get_heatmap_peaks,
+)
+from .media import (
+    get_target_timestamps as get_target_timestamps,
 )
 from .media import (
     group_transcript_segments as group_transcript_segments,
@@ -98,6 +122,11 @@ __all__ = [
     # === DOCUMENT SKILLS (standalone utilities for PDF forms) ===
     "get_field_info",
     "fill_pdf_fields",
+    # === PDF MANIPULATION DEEP SEAMS (Merge, Split, Extract) ===
+    "merge_pdfs",
+    "split_pdf_pages",
+    "extract_text_from_pdf",
+    "parse_pages",
     # === MEDIA DEEP SEAMS (YouTube & Video extraction) ===
     "extract_youtube_video_id",
     "format_whisper_transcript",
@@ -108,6 +137,10 @@ __all__ = [
     "find_ffmpeg_bin",
     "extract_video_frames",
     "format_lesson_notes",
+    "get_heatmap_peaks",
+    "get_target_timestamps",
+    "download_grid_image",
+    "extract_storyboard_frames",
 ]
 
 # ---------------------------------------------------------------------------

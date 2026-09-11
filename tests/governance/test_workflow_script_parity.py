@@ -34,9 +34,9 @@ SPOKE_SPECIFIC_SCRIPTS = {
 
 
 def get_target_documents() -> list[Path]:
-    """Collect all active skill definitions and workflow markdown files."""
-    skills = list(SKILLS_DIR.glob("**/SKILL.md"))
-    workflows = list(WORKFLOWS_DIR.glob("*.md"))
+    """Collect all active skill definitions, reference documents, and workflow markdown files."""
+    skills = sorted(SKILLS_DIR.rglob("*.md"))
+    workflows = sorted(WORKFLOWS_DIR.glob("*.md")) if WORKFLOWS_DIR.exists() else []
     return skills + workflows
 
 
@@ -51,7 +51,7 @@ def test_all_skills_and_workflows_exist_and_are_readable() -> None:
 def test_hub_script_references_exist_on_disk() -> None:
     """Verify every script referenced with [hub_path] or at Hub root exists in Hub repo or skill."""
     hub_script_pattern = re.compile(
-        r"(?:\[hub_path\][\\/]|python\s+)(scripts[\\/][a-zA-Z0-9_\-\\\/\.]+\.py)"
+        r"(?:\[hub_path\][\\/]|python\s+)((?:scripts|\.agents[\\/]skills[\\/][a-zA-Z0-9_\-]+[\\/]scripts)[\\/][a-zA-Z0-9_\-\\\/\.]+\.py)"
     )
 
     target_files = get_target_documents()

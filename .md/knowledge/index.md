@@ -30,6 +30,7 @@
 
 ## 🏗️ 3. Quyết Định Kiến Trúc & Thiết Kế (Architecture & ADRs)
 
+- [grilling_live_artifacts_and_charter.md](grilling_live_artifacts_and_charter.md): **[MỚI]** Biên Bản Phỏng Vấn Socratic Grilling: Thiết Kế Live State Artifacts & Tích Hợp 11 Ghế CCBA Charter (ADR-0058).
 - [specs_and_roadmaps/Arch_Proposal_Hub_Spoke_Sync_Strategy.md](specs_and_roadmaps/Arch_Proposal_Hub_Spoke_Sync_Strategy.md): Chiến lược đồng bộ hóa Hub-and-Spoke giữa Platform và các dự án vệ tinh.
 - [specs_and_roadmaps/adr_0010_skills_integration.md](specs_and_roadmaps/adr_0010_skills_integration.md): ADR-0010 về tích hợp kỹ năng AI.
 - [specs_and_roadmaps/adr_0011_legal_intel_deep_module.md](specs_and_roadmaps/adr_0011_legal_intel_deep_module.md): ADR-0011 về Deep Module hóa gói `ccba-legal-intel`.
@@ -67,6 +68,8 @@
 ## 📋 5. Đặc Tả Kỹ Thuật & Lộ Trình Phát Triển (Specs & Roadmaps)
 
 - [blueprints/fleet_skills_3tier_migration_blueprint.md](blueprints/fleet_skills_3tier_migration_blueprint.md): **[MỚI]** Kế hoạch & Bản đồ Di trú Toàn diện 100 Agent Skills (BLUEPRINT-2026-SKILLS-001) theo Kiến trúc 3 Tầng và Khung Quyết Định Hai Giai Đoạn.
+- [scripts_migration_manifest.md](scripts_migration_manifest.md): **[MỚI]** Báo Cáo Khảo Sát & Ma Trận Ánh Xạ Di Trú 52 Scripts Monorepo (Ticket 3 Manifest).
+- [specs/spec-structured-diff-protocol.md](specs/spec-structured-diff-protocol.md): **[MỚI]** Đặc tả Giao thức Structured Diff Protocol & Cơ chế Kiểm soát Single-Writer Engine (Ticket 4).
 - [specs_and_roadmaps/agentic_programming_roadmap.md](specs_and_roadmaps/agentic_programming_roadmap.md): Lộ trình phát triển hệ sinh thái lập trình Agentic.
 - [specs_and_roadmaps/auto_dev_loop_spec.md](specs_and_roadmaps/auto_dev_loop_spec.md): Đặc tả vòng lặp phát triển phần mềm tự động (Auto-Dev Loop).
 - [specs_and_roadmaps/legal_sync_pipeline_spec.md](specs_and_roadmaps/legal_sync_pipeline_spec.md): Đặc tả pipeline đồng bộ văn bản pháp luật tự động.
@@ -85,6 +88,7 @@
 
 ## 📊 6. Báo Cáo Kiểm Định, Chất Lượng & Đánh Giá (Audits & Reports)
 
+- [../dogfood/BAO_CAO_THAM_TRA_PCCC_KIEN_TRUC.md](../dogfood/BAO_CAO_THAM_TRA_PCCC_KIEN_TRUC.md): **[MỚI]** Báo Cáo Thẩm Tra Kỹ Thuật PCCC & Kiến Trúc Dự Án Thực Tế (Mẫu PC13) — Đợt Thực Chiến Liên Hoàn Dogfooding Swarm Map-Reduce.
 - [shallow_modules_audit.md](shallow_modules_audit.md): Báo cáo rà soát và đánh giá các module nông (Shallow Modules) trong toàn bộ codebase.
 - [reports/ccba_docs_evaluation_report.md](reports/ccba_docs_evaluation_report.md): Báo cáo đánh giá chất lượng hệ thống tài liệu CCBA.
 - [reports/drawing_comprehension_report.md](reports/drawing_comprehension_report.md): Báo cáo năng lực hiểu bản vẽ kỹ thuật của AI Vision.

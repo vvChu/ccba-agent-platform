@@ -194,3 +194,155 @@ def test_all_skills_have_valid_bundle_field() -> None:
             )
 
     assert not errors, "\n".join(errors)
+
+
+def test_zero_unregistered_slash_commands_in_skills_and_readme() -> None:
+    """Verify scanning .agents/skills/ and README.md yields zero references to unregistered slash commands."""
+    from ccba_harness.skill_validator import SkillValidator
+
+    validator = SkillValidator(HUB_ROOT)
+    registered_commands = validator.get_registered_commands()
+
+    files_to_check = sorted(SKILLS_DIR.rglob("*.md"))
+    readme_path = HUB_ROOT / "README.md"
+    if readme_path.exists():
+        files_to_check.append(readme_path)
+
+    errors: list[str] = []
+    for md_file in files_to_check:
+        if not md_file.exists():
+            continue
+        issues = validator.audit_slash_commands(md_file, registered_commands=registered_commands)
+        for issue in issues:
+            rel_file = (
+                md_file.relative_to(HUB_ROOT) if md_file.is_relative_to(HUB_ROOT) else md_file
+            )
+            errors.append(f"{rel_file} -> {issue}")
+
+    assert not errors, (
+        f"Detected {len(errors)} unregistered slash command reference(s):\n" + "\n".join(errors)
+    )
+
+
+def test_standalone_skills_catalog_parity() -> None:
+    """Ensure all Standalone and Master skills in .agents/skills/ declaring user-invocable: true maintain 1:1 parity with catalog.yaml."""
+    assert CATALOG_PATH.exists(), f"catalog.yaml not found at {CATALOG_PATH}"
+    catalog_data = yaml.safe_load(CATALOG_PATH.read_text(encoding="utf-8")) or {}
+    registered_skills = {
+        s["name"]: s for s in catalog_data.get("skills", []) if isinstance(s, dict) and "name" in s
+    }
+
+    skill_files = sorted(SKILLS_DIR.glob("**/SKILL.md"))
+    assert len(skill_files) > 0, "No skill files found to test"
+
+    errors: list[str] = []
+    invocable_count = 0
+
+    for sf in skill_files:
+        content = sf.read_text(encoding="utf-8")
+        if not content.startswith("---"):
+            continue
+        parts = content.split("---", 2)
+        if len(parts) < 3:
+            continue
+
+        try:
+            fm: dict[str, Any] = yaml.safe_load(parts[1]) or {}
+        except Exception as e:
+            errors.append(f"{sf.relative_to(HUB_ROOT)}: Failed to parse frontmatter: {e}")
+            continue
+
+        name = fm.get("name") or sf.parent.name
+        user_invocable = fm.get("user-invocable", False)
+        if isinstance(user_invocable, str):
+            user_invocable = user_invocable.lower() in ("true", "1", "yes")
+        command = fm.get("command")
+
+        if user_invocable:
+            invocable_count += 1
+            if not command:
+                errors.append(
+                    f"Skill '{name}' has 'user-invocable: true' but is missing 'command: /{name}'"
+                )
+            elif name not in registered_skills:
+                errors.append(
+                    f"Skill '{name}' declares user-invocable command '{command}' but is missing from catalog.yaml"
+                )
+            else:
+                cat_entry = registered_skills[name]
+                cat_cmd = cat_entry.get("command")
+                if cat_cmd != command:
+                    errors.append(
+                        f"Command mismatch for '{name}': frontmatter '{command}' != catalog '{cat_cmd}'"
+                    )
+
+    assert invocable_count >= 20, (
+        f"Expected at least 20 user-invocable skills, found {invocable_count}"
+    )
+    assert not errors, (
+        f"Found {len(errors)} standalone skills catalog parity error(s):\n" + "\n".join(errors)
+    )
+
+
+def test_skill_validator_link_validation_unit(tmp_path: Path) -> None:
+    """Verify validate_markdown_links flags broken links and ignores external or valid links."""
+    from ccba_harness.skill_validator import SkillValidator
+
+    validator = SkillValidator(tmp_path)
+    target_file = tmp_path / "valid_target.md"
+    target_file.write_text("# Target\n", encoding="utf-8")
+
+    doc = tmp_path / "doc.md"
+    doc.write_text(
+        "# Doc\n"
+        "[Valid Link](valid_target.md)\n"
+        "[Broken Link](missing_target.md)\n"
+        "[External Link](https://example.com/docs)\n"
+        "[Anchor Link](#heading)\n"
+        "[Placeholder Link](<path-to-target>.md)\n",
+        encoding="utf-8",
+    )
+
+    issues = validator.validate_markdown_links(doc)
+    assert len(issues) == 1
+    assert "missing_target.md" in str(issues[0])
+
+
+def test_skill_validator_slash_command_audit_unit(tmp_path: Path) -> None:
+    """Verify audit_slash_commands detects unregistered commands and suppresses false positives."""
+    from ccba_harness.skill_validator import SkillValidator
+
+    validator = SkillValidator(tmp_path)
+    registered = {"/ccba-ask", "/platform-loader"}
+
+    doc = tmp_path / "doc.md"
+    doc.write_text(
+        "# Doc\n"
+        "Run `/ccba-ask` for inquiry.\n"
+        "Run `/boost` for host deep reasoning.\n"
+        "Run `/skill-repair` for host repair.\n"
+        "Do not run `/fake-unregistered-cmd`.\n"
+        "HTML tag: </div>\n"
+        "Path: look in /src or /tmp\n"
+        "Vietnamese word pair: thuật ngữ/khái niệm\n"
+        "Placeholder: `/<cmd>` or `/<name>`\n",
+        encoding="utf-8",
+    )
+
+    issues = validator.audit_slash_commands(doc, registered_commands=registered)
+    assert len(issues) == 1
+    assert "/fake-unregistered-cmd" in str(issues[0])
+
+
+def test_skill_validator_audit_skill_directory_unit(tmp_path: Path) -> None:
+    """Verify audit_skill_directory scans all markdown files in directory."""
+    from ccba_harness.skill_validator import SkillValidator
+
+    validator = SkillValidator(tmp_path)
+    sub = tmp_path / "references"
+    sub.mkdir(parents=True)
+    ref = sub / "ref.md"
+    ref.write_text("[Broken](nonexistent.md)\n", encoding="utf-8")
+
+    issues = validator.audit_skill_directory(tmp_path)
+    assert any("nonexistent.md" in str(i) for i in issues)

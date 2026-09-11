@@ -4,6 +4,13 @@ description: Tự động tổng hợp tri thức cuối phiên làm việc (Ret
   kỹ năng trực tiếp, kích hoạt Governance Gate và dọn dẹp workspace.
 disable-model-invocation: true
 category: workflow
+user-invocable: true
+command: /ccba-session-retrospective
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 1.0
+  p: 1.0
 keywords:
 - retrospective
 - session learnings

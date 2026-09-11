@@ -1,48 +1,31 @@
-# Walkthrough: Release PR #248 (Milestone 2 Phase 1 — Leaf Seams Migration)
+# Walkthrough: Release PR #253 (Beyond Horizon Phase 4 & Spoke Sync Hardening)
 
 ## 1. Tổng Quan Release
-- **PR Number:** [#248](https://github.com/vvChu/ccba-agent-platform/pull/248)
-- **Branch:** `feat/skills-migration-phase1-packages` $\rightarrow$ `main`
-- **Tiêu đề:** `feat(migration): extract deterministic logic to leaf packages and wire thin adapters (Milestone 2 Phase 1)`
-- **Copilot Review ID:** `PRR_kwDOQzfV088AAAABMtkd3A` (Đã giải trình và giải quyết 100% các khuyến nghị)
-- **Mục tiêu:** Bóc tách 5,000+ dòng mã logic xác định (vi phạm Cổng 0) từ thư mục `scripts/` của các kỹ năng xuống các Leaf Packages tương ứng dưới dạng **Deep Seams** có type hints, docstrings và unit tests đầy đủ.
-- **Mô hình kiến trúc:** Thu gọn 20+ script trong `.agents/skills/*/scripts/` thành **Thin CLI Adapters** (10–30 dòng).
+- **PR Number:** [#253](https://github.com/vvChu/ccba-agent-platform/pull/253)
+- **Branch:** `feat/beyond-horizon-phase4-and-spoke-sync-hardening` $\rightarrow$ `main`
+- **Tiêu đề:** `feat: Beyond Horizon Phase 4 and spoke sync hardening`
+- **Copilot Review ID:** `PRR_kwDOQzfV088AAAABNGQN2A` (5173939672 - Đã giải trình và giải quyết 100% các khuyến nghị)
+- **Mục tiêu:** Hoàn thiện Phase 4 Beyond Horizon, đóng gói leaf seam `ccba-qc-core`, siết chặt Spoke Sync với flag `--verify`, thực thi Deterministic Hard Completion Lock (ADR-0058), và hoàn tất chuẩn hóa 101 skills/workflows.
 
 ---
 
-## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #248)
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #253)
 
-Review ID: `PRR_kwDOQzfV088AAAABMtkd3A`
+Review ID: `PRR_kwDOQzfV088AAAABNGQN2A` (5173939672)
 
 | ID | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
 |---|---|---|---|
-| `3963176025` | `.agents/skills/ccba-long-form-writer/scripts/generate.py` | Hard-coded fallback value for `ANTIGRAVITY_ACCESS_TOKEN` looks like a real API key; risks leaking credentials. | **ĐÃ KHẮC PHỤC** trong commit `f1b2bd03`: Loại bỏ hoàn toàn fallback token hardcoded. Bổ sung hàm `get_client()` kiểm tra biến môi trường `ANTIGRAVITY_ACCESS_TOKEN` hoặc `OPENAI_API_KEY` và báo lỗi rõ ràng nếu thiếu. |
-| `3963176061` | `packages/mdconverter/src/mdconverter/writer.py` | `mdconverter.writer` imports `python-docx` (`from docx import Document`) at module import time; fails if `python-docx` not installed. | **ĐÃ KHẮC PHỤC** trong commit `f1b2bd03`: Trì hoãn (defer) import `Document` và `Pt` vào bên trong hàm `save_markdown_to_docx`, kèm khối `try...except ImportError` với thông điệp hướng dẫn cài đặt trực quan. |
-| `3963176097` | `packages/ccba-ooxml/src/ccba_ooxml/validation/base.py` | File-level `# mypy: ignore-errors` disables type checking for the entire module; should be removed or scoped. | **ĐÃ KHẮC PHỤC** trong commit `f1b2bd03`: Xóa bỏ dòng comment file-level `# mypy: ignore-errors`. Cấu hình override đã được quản trị tập trung tại `pyproject.toml` (`[tool.mypy.overrides] module = ["ccba_ooxml.validation.*"]`). |
+| `3984996889` | `scripts/spoke/check_hub_import_depth.py` | `check_hub_import_depth` adds `ccba_qc` as a monitored Hub import prefix, but the new package introduced in this PR is `ccba_qc_core`. Deep imports from `ccba_qc_core.*` won't be detected. | **ĐÃ KHẮC PHỤC** trong commit `06436961`: Đổi `"ccba_qc"` thành `"ccba_qc_core"` trong `HUB_PACKAGE_PREFIXES`, đảm bảo cơ chế kiểm soát import depth phát hiện đúng package monorepo mới. |
+| `3984996922` | `tests/governance/test_workflow_script_parity.py` | The newly-added entries in SPOKE_SPECIFIC_SCRIPTS whitelist `scripts/format/*`, `scripts/convert/*`, and `scripts/office/*`, but those paths don't exist in this repo and are currently referenced by docs under `.agents/skills/ccba-xu-ly-van-phong/resources/*`. Prefer fixing the docs to point at the real script locations and removing whitelist exceptions. | **ĐÃ KHẮC PHỤC** trong commit `06436961`: Đã cập nhật toàn bộ đường dẫn trong `convert.md`, `office-xml.md`, `pptx.md` trỏ chính xác về `.agents/skills/ccba-xu-ly-van-phong/scripts/...`. Xóa bỏ hoàn toàn 7 ngoại lệ whitelist trong `SPOKE_SPECIFIC_SCRIPTS` và mở rộng `hub_script_pattern` để kiểm tra đĩa thực tế cho cả skill scripts. |
+| `3984996962` | `.agents/skills/ccba-codebase-design/SKILL.md` | The Hard Stopping Rule lists `/ccba-codebase-design` as a driver skill to route to, but this is the same skill, so it reads like a self-loop. | **ĐÃ KHẮC PHỤC** trong commit `06436961`: Loại bỏ `/ccba-codebase-design` khỏi danh sách Driver Skills điều hướng của Hard Stopping Rule, tránh vòng lặp tự thân (self-loop). |
+| `3984996986` | `.agents/skills/ccba-to-spec/references/interactive_questionnaire.md` | The Workflow Hand-off section uses the same `/ccba-to-spec` bullet twice (spec + ticket breakdown). Since `/ccba-to-spec` is meant to cover both, this should be clarified to avoid duplicate bullets. | **ĐÃ KHẮC PHỤC** trong commit `06436961`: Gộp 2 bullet trùng lặp thành một phát biểu thống nhất và xúc tích: Kích hoạt kỹ năng `/ccba-to-spec` để chuyển hóa quyết định thành PRD / Đặc tả kỹ thuật và phân rã nhiệm vụ chi tiết. |
+| `3984997006` | `packages/ccba-qc-core/AGENTS.md` | There's a stray non-printing character in `Public Deep Seams` ("\f" before `rom`), which will render incorrectly in Markdown and may break doc tooling. Replace it with a normal `from` and wrap in backticks. | **ĐÃ KHẮC PHỤC** trong commit `06436961`: Xóa bỏ ký tự form feed `\f` thừa và bọc toàn bộ câu lệnh import `from ccba_qc_core import ...` trong cặp dấu backticks. |
 
 ---
 
-## 3. Chi Tiết Các Deep Seams Đã Xây Dựng & Tích Hợp
+## 3. Kết Quả Kiểm Thử Toàn Diện (Pre-release Gate)
 
-1. **`packages/ccba-ooxml`**:
-   - `format.py`: Formatting DOCX hành chính/pháp lý chuẩn NĐ 30/2020.
-   - `soffice.py`: Headless LibreOffice conversion runner đa nền tảng.
-   - `pptx/replace.py`: Token replacement đệ quy sâu qua Shape, Table, GroupShape.
-   - `pptx/inventory.py`, `rearrange.py`, `thumbnail.py`.
-   - `docx/comment_engine.py` & schemas/templates: Di chuyển và chuẩn hóa toàn bộ XML templates.
-2. **`packages/mdconverter`**:
-   - `academic.py`: Thẩm tra cấu trúc vi mô và scaffold bản thảo IMRaD.
-   - `tables.py`: Trích xuất bảng DOCX sang MD và chuẩn hóa bảng QCVN.
-   - `style.py`: Trích xuất và phân tích chỉ số phong cách hành văn.
-   - `writer.py`: Phân đoạn dàn ý và xuất bản tài liệu chuyên đề dài.
-3. **`packages/ccba-pdf-prep`**:
-   - `media.py`: Trích xuất transcript YouTube đa ngôn ngữ, tách audio và chụp slide bài giảng.
-
----
-
-## 4. Kết Quả Kiểm Thử Toàn Diện (Pre-release Gate)
-
-- `python scripts/eval/run_isolated_tests.py --all --stress`: **10/10 packages PASS** 100% (ccba-ai, ccba-harness, ccba-legal-intel, ccba-maskara, ccba-notebooklm, ccba-ooxml, ccba-pdf-prep, mdconverter, scripts, root-tests).
-- `python scripts/governance/check_dependency_contracts.py`: **344 files, 0 boundary violations**.
-- `python scripts/governance/compile_catalog.py --check`: **100% in-sync (101 skills)**.
-- GitHub Actions CI (6/6 jobs): **PASS 100%** (Lint Markdown, Test Python 3.10/3.11/3.12, Security Scan, Documentation Check).
+- `python -m ccba_harness verify-patch --preset ci`: **5/5 passed (Exit Code 0)**.
+- `python scripts/eval/run_harness_evals.py --all`: **8/8 gates PASS 100%**.
+- `python -m pytest tests/governance/test_workflow_script_parity.py`: **4/4 passed (100%)**.
+- GitHub Actions CI (6/6 jobs): **100% Green**.

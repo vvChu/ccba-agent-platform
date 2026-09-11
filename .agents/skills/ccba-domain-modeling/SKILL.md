@@ -4,6 +4,13 @@ description: Build, refine, and maintain the project's domain model, ubiquitous 
   and record architectural decisions (ADRs).
 disable-model-invocation: true
 bundle: _software
+user-invocable: true
+command: /ccba-domain-modeling
+gpi:
+  s: 4.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 triggers:
 - ccba-domain-modeling
 - domain model

@@ -6,6 +6,11 @@ applies_to:
 - Phần mềm
 - Kiểm định
 bundle: _core
+gpi:
+  s: 2.0
+  k: 3.0
+  a: 4.0
+  p: 1.0
 triggers:
 - file stability
 - cloud sync

@@ -7,6 +7,11 @@ applies_to:
 - Thẩm tra thiết kế
 - Kiểm định
 bundle: _core
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 4.0
+  p: 1.0
 triggers:
 - llm pipeline
 - pipeline patterns
