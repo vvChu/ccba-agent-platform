@@ -68,11 +68,20 @@ class FederatedLegalEngine:
 
             master_reg = discover_master_registry_path()
             if master_reg and master_reg.exists():
-                candidate_corpus = master_reg.parent / "legal_docs"
-                if candidate_corpus.is_dir():
-                    bundles = self._expand_bundle_dirs([candidate_corpus])
-                    if bundles:
-                        return bundles
+                candidates: list[Path] = []
+                reg_parent = master_reg.parent
+                candidates.append(reg_parent / "legal_docs")
+                candidates.append(reg_parent / ".md" / "legal_docs")
+                if reg_parent.name == "data" and reg_parent.parent.name == ".md":
+                    project_root = reg_parent.parent.parent
+                    candidates.append(project_root / "legal_docs")
+                    candidates.append(project_root / ".md" / "legal_docs")
+
+                for cand in candidates:
+                    if cand.is_dir():
+                        bundles = self._expand_bundle_dirs([cand])
+                        if bundles:
+                            return bundles
         except Exception:
             pass
 
