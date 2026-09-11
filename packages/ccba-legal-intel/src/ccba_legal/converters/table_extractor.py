@@ -261,20 +261,20 @@ def classify_and_extract_tables(
 
         # Virtual 2D Grid extraction with tblGrid & vMerge forward-fill (ADR 0041)
         tbl_element = table._element
-        grid_cols = tbl_element.xpath("./w:tblGrid/w:gridCol", namespaces={"w": W_NS})
+        grid_cols = tbl_element.xpath("./w:tblGrid/w:gridCol")
         num_grid_cols = len(grid_cols) if grid_cols else cols_cnt
 
         grid: list[list[str]] = []
         v_merge_col_values: dict[int, str] = {}
 
-        for tr in tbl_element.xpath("./w:tr", namespaces={"w": W_NS}):
+        for tr in tbl_element.xpath("./w:tr"):
             row_cells: list[str] = []
             c_idx = 0
-            for tc in tr.xpath("./w:tc", namespaces={"w": W_NS}):
-                span_nodes = tc.xpath("./w:tcPr/w:gridSpan/@w:val", namespaces={"w": W_NS})
+            for tc in tr.xpath("./w:tc"):
+                span_nodes = tc.xpath("./w:tcPr/w:gridSpan/@w:val")
                 grid_span = int(span_nodes[0]) if span_nodes and span_nodes[0].isdigit() else 1
 
-                vmerge_nodes = tc.xpath("./w:tcPr/w:vMerge", namespaces={"w": W_NS})
+                vmerge_nodes = tc.xpath("./w:tcPr/w:vMerge")
                 cell_text = "".join(tc.itertext()).strip().replace("\n", " ")
 
                 if vmerge_nodes:
