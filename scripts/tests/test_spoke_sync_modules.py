@@ -898,4 +898,3 @@ def test_sync_spoke_archetype_fallback(tmp_path: Path) -> None:
     sync = SpokeSynchronizer(spoke_dir, hub_root)
     code = sync.sync(dry_run=True, check_git=False, backup=False, verify=False)
     assert code == 0
-
