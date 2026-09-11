@@ -8,7 +8,11 @@ from pathlib import Path
 from typing import Any
 
 from ccba_ai.models import TeamTask
-from ccba_harness import FileMutexLock
+
+try:
+    from ccba_harness import FileMutexLock
+except ImportError:
+    from ccba_ai.services._lock_fallback import SimpleFileLock as FileMutexLock
 
 
 def _get_db_file(workspace_root: Path | None = None) -> Path:

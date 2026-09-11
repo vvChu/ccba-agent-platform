@@ -7,11 +7,15 @@ Kết nối AI Gateway trên Server Spark — **Đa mô hình (local GPU + cloud
 ## Cài đặt
 
 ```bash
-# Editable install (recommended — thay đổi code tự update)
+# 1. Cài đặt cơ bản cho Spoke (AI Gateway Client, chat, stream — không phụ thuộc ccba-harness)
 pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-ai"
 
-# Hoặc thiết lập PYTHONPATH
-set PYTHONPATH=D:\GitHubProjects\ccba-agent-platform\packages\ccba-ai\src;%PYTHONPATH%
+# 2. Cài đặt đầy đủ tính năng quản lý Plan/Team với FileMutexLock cấp cao
+pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-harness"
+pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-ai"
+
+# Hoặc thiết lập tự động hóa toàn bộ packages qua Spoke Bootstrap:
+python scripts/spoke/spoke_bootstrap.py
 ```
 
 ---
