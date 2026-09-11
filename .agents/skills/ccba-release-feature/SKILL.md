@@ -82,6 +82,7 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
      - `comments`: Quét inline comments trên các tệp thay đổi.
    - Nếu script trả về exit code 1 (`[FAIL] Changes recommended`), Agent **tuyệt đối không được merge**. Phải đánh giá và thực hiện chỉnh sửa mã nguồn cục bộ, commit & push cập nhật, và cập nhật `walkthrough.md` trước khi tiếp tục.
    - Nếu phát hiện các góp ý hợp lý (VALID) chưa sửa, hoặc các góp ý không hợp lý chưa được giải trình trong `walkthrough.md`, Agent phải giải trình hoặc sửa lỗi cục bộ và push cập nhật trước khi merge.
+   - *Lưu ý quan trọng (HUB-ADR-0058 Workspace Mirroring):* Script `audit_pr_comments.py` đọc tệp `walkthrough.md` tại thư mục gốc repository (`Path.cwd() / "walkthrough.md"`). Nếu Agent giải trình ý kiến review của Copilot, BẮT BUỘC phải ghi nhận trực tiếp vào `walkthrough.md` tại thư mục gốc repository kèm mã `review_id` (`PRR_...`) hoặc comment `id` thay vì chỉ lưu trong thư mục brain artifact.
 
 6. **Tiến hành Merge khi 100% điều kiện đạt chuẩn:**
    - Nếu `gh` đã đăng nhập, CI pass (100% xanh) và Copilot review đã xử lý xong: Thực hiện merge và xóa remote branch tự động (sử dụng Squash and Merge để giữ lịch sử nhánh main tinh gọn):
@@ -135,6 +136,17 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
 4. **Tự động đóng Issue Cục bộ (Offline Knowledge Base Mirror):**
    - Nếu PR giải quyết một issue cụ thể (ví dụ `#228`), kiểm tra tệp tin tương ứng tại `.md/knowledge/issues/issue-XXX.md`.
    - Cập nhật trường trạng thái trong metadata: `status: closed` (hoặc `state: closed`) kèm ghi chú liên kết PR đã merge.
+
+5. **Cập nhật Proposal Lifecycle & Compile Catalog (Post-Merge Governance):**
+   - Nếu PR xuất phát từ một Proposal trong `.agents/proposals/`, cập nhật frontmatter tệp proposal tương ứng: `status: "merged"`, `merged_pr: "#[PR_NUMBER]"`, `merged_commit: "[HASH]"`, `merged_date: "[YYYY-MM-DD]"`.
+   - Tái biên dịch Catalog SSoT:
+     ```bash
+     python scripts/governance/compile_catalog.py
+     ```
+   - Commit cập nhật `walkthrough.md` và proposal lên `main`:
+     ```bash
+     git add walkthrough.md .agents/proposals/ && git commit -m "docs(walkthrough): record release feature PR #[PR_NUMBER] completion and review matrix" && git push origin main
+     ```
 
 ---
 
