@@ -910,6 +910,7 @@ class SpokeSynchronizer:
         check_git: bool = True,
         only: str | None = None,
         bootstrap: bool = False,
+        verify: bool = False,
     ) -> int:
         """Main entrypoint for Spoke synchronization."""
         mode_str = " [DRY-RUN]" if dry_run else ""
@@ -1046,11 +1047,11 @@ class SpokeSynchronizer:
 
         target_item = sync_item or only
         if target_item:
-            return self._sync_single_item(
+            res_code = self._sync_single_item(
                 self.spoke_root, hub_root, catalog, target_item, dry_run=dry_run
             )
         else:
-            return self._sync_full_bundle(
+            res_code = self._sync_full_bundle(
                 self.spoke_root,
                 hub_root,
                 catalog,
@@ -1062,6 +1063,62 @@ class SpokeSynchronizer:
                 force=force,
             )
 
+        if res_code != 0:
+            return res_code
+
+        if not dry_run and verify:
+            verify_code = self.verify_spoke(hub_root=hub_root)
+            if verify_code != 0:
+                return verify_code
+
+        return 0
+
+    def verify_spoke(self, hub_root: Path | None = None) -> int:
+        """Run deterministic ADR-0058 verification on synced spoke."""
+        resolved_hub = hub_root or self.hub_root or Path(__file__).resolve().parents[3]
+        cleanliness_script = resolved_hub / "scripts" / "spoke" / "check_spoke_cleanliness.py"
+        import_depth_script = resolved_hub / "scripts" / "spoke" / "check_hub_import_depth.py"
+
+        print("\n" + "=" * 85)
+        print(" 🛡️  CCBA SPOKE DETERMINISTIC POST-SYNC VERIFICATION (ADR-0058)")
+        print(f" Target Spoke: {self.spoke_root}")
+        print("=" * 85)
+
+        cmds: list[str] = []
+        if cleanliness_script.exists():
+            cmds.append(
+                f"{sys.executable} {cleanliness_script.as_posix()} --path {self.spoke_root.as_posix()}"
+            )
+        if import_depth_script.exists():
+            cmds.append(
+                f"{sys.executable} {import_depth_script.as_posix()} --path {self.spoke_root.as_posix()}"
+            )
+
+        spoke_tests = self.spoke_root / "tests"
+        if spoke_tests.exists() and any(spoke_tests.glob("test_*.py")):
+            cmds.append(f"{sys.executable} -m pytest {spoke_tests.as_posix()} -q")
+
+        if not cmds:
+            print("[Verify] Không có lệnh kiểm tra nào cần thực thi.")
+            return 0
+
+        try:
+            from ccba_harness.verifier import verify_patch_execution
+
+            res = verify_patch_execution(commands=cmds, cwd=self.spoke_root, fail_fast=True)
+            if res.success:
+                print("✅ SUCCESS: Spoke post-sync verification passed 100% deterministically.")
+                return 0
+            else:
+                print(
+                    f"❌ FAILED: Spoke post-sync verification failed with exit code {res.exit_code}.",
+                    file=sys.stderr,
+                )
+                return res.exit_code
+        except Exception as e:
+            print(f"  ❌ Lỗi khi thực hiện post-sync verification: {e}", file=sys.stderr)
+            return 1
+
     def sync(
         self,
         sync_item: str | None = None,
@@ -1071,6 +1128,7 @@ class SpokeSynchronizer:
         check_git: bool = True,
         only: str | None = None,
         bootstrap: bool = False,
+        verify: bool = False,
     ) -> int:
         """Deep Seam entry point for syncing spoke bundle."""
         return self.sync_spoke_bundle(
@@ -1081,6 +1139,7 @@ class SpokeSynchronizer:
             check_git=check_git,
             only=only,
             bootstrap=bootstrap,
+            verify=verify,
         )
 
     def rollback(self, backup_path: Path | None = None) -> bool:
@@ -1114,6 +1173,7 @@ def sync_project(
     backup: bool = True,
     check_git: bool = True,
     bootstrap: bool = False,
+    verify: bool = False,
 ) -> int:
     """Helper procedural delegate for spoke synchronization."""
     engine = _get_synchronizer_cls()(str(spoke_path))
@@ -1124,6 +1184,7 @@ def sync_project(
         backup=backup,
         check_git=check_git,
         bootstrap=bootstrap,
+        verify=verify,
     )
 
 
@@ -1151,6 +1212,7 @@ def sync_all_spokes(
     check_git: bool = True,
     include_sandboxes: bool = False,
     bootstrap: bool = False,
+    verify: bool = False,
 ) -> int:
     """Batch synchronize all registered active Spokes found in Hub Registry."""
     root = hub_root or Path(__file__).resolve().parents[3]
@@ -1196,6 +1258,7 @@ def sync_all_spokes(
                 backup=backup,
                 check_git=check_git,
                 bootstrap=bootstrap,
+                verify=verify,
             )
             status = "SUCCESS" if res == 0 else "FAILED"
             results.append({"name": sp_name, "path": sp_path, "status": status, "code": res})

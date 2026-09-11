@@ -10,10 +10,10 @@ from pathlib import Path
 
 import yaml
 
+HUB_ROOT = Path(__file__).resolve().parents[2]
 SKILLS_DIRS = [
+    HUB_ROOT / ".agents" / "skills",
     Path(".agents/skills"),
-    Path("claudekit-engineer/claude/skills"),
-    Path(".agents/claudekit-marketing/claude/skills"),
 ]
 
 
@@ -46,7 +46,8 @@ def find_skills(query: str = ""):
                     meta = parse_frontmatter(skill_md)
                     name = meta.get("name", p.name)
                     desc = meta.get("description", "")
-                    keywords = meta.get("keywords", [])
+                    keywords = meta.get("keywords", []) or meta.get("triggers", [])
+                    cmd = meta.get("command", f"/{name}")
 
                     is_match = False
                     if not query:
@@ -55,20 +56,21 @@ def find_skills(query: str = ""):
                         if (
                             query_lower in name.lower()
                             or query_lower in desc.lower()
-                            or any(query_lower in kw.lower() for kw in keywords)
+                            or any(query_lower in str(kw).lower() for kw in keywords)
                         ):
                             is_match = True
 
                     if is_match:
-                        # Prevent duplicate names if both repos have the same skill
-                        if not any(m["folder"] == p.name for m in matches):
+                        # Prevent duplicate names
+                        if not any(m["name"] == name for m in matches):
                             matches.append(
                                 {
                                     "name": name,
                                     "folder": p.name,
+                                    "command": cmd,
                                     "description": desc,
-                                    "keywords": keywords,
-                                    "source": skills_dir.parent.parent.name,
+                                    "keywords": [str(k) for k in keywords],
+                                    "source": p.parent.name,
                                 }
                             )
 
@@ -78,30 +80,13 @@ def find_skills(query: str = ""):
 
     print(f"\n[Skill Finder] Found {len(matches)} matching skills:\n")
     for idx, m in enumerate(matches, 1):
-        print(f"{idx}. \x1b[32m/ccba-kit {m['folder']}\x1b[0m (Source: {m['source']})")
+        print(f"{idx}. \x1b[32m{m['command']}\x1b[0m (Skill: {m['name']})")
         desc_preview = (
             m["description"][:120] + "..." if len(m["description"]) > 120 else m["description"]
         )
         print(f"   Description: {desc_preview}")
         if m["keywords"]:
-            print(f"   Keywords: {', '.join(m['keywords'])}")
-        print()
-
-    # Print results
-    if not matches:
-        print(f"[Skill Finder] No skills found matching '{query}'.")
-        return
-
-    print(f"\n[Skill Finder] Found {len(matches)} matching skills:\n")
-    for idx, m in enumerate(matches, 1):
-        print(f"{idx}. \x1b[32m/ccba-kit {m['folder']}\x1b[0m (Skill name: {m['name']})")
-        # Trim description if too long
-        desc_preview = (
-            m["description"][:120] + "..." if len(m["description"]) > 120 else m["description"]
-        )
-        print(f"   Description: {desc_preview}")
-        if m["keywords"]:
-            print(f"   Keywords: {', '.join(m['keywords'])}")
+            print(f"   Keywords: {', '.join(m['keywords'][:8])}")
         print()
 
 

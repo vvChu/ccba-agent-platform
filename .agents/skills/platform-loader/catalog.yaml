@@ -739,6 +739,21 @@ skills:
   skill_path: .agents/skills/ccba-notebooklm-connector/SKILL.md
   command: /ccba-notebooklm-connector
   package_path: packages/ccba-notebooklm
+- name: ccba-platform
+  bundle: _core
+  description: Cổng điều phối toàn cục (Global Router) và kiểm tra môi trường cho
+    CCBA Agent Services Platform. Tự động kiểm tra VPN/Gateway, cấu trúc Spoke và
+    điều hướng đúng kỹ năng.
+  triggers:
+  - platform
+  - ccba
+  - ccba-platform
+  - hub
+  - spoke
+  - bootstrap
+  skill_path: .agents/skills/ccba-platform/SKILL.md
+  command: /ccba-platform
+  tier: orchestrator
 - name: ccba-pptx
   bundle: _core
   description: Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao
