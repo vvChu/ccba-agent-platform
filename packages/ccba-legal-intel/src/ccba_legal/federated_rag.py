@@ -52,7 +52,7 @@ class FederatedLegalEngine:
                 self._build_embedding_index()
 
     def _resolve_corpus_paths(self) -> list[Path]:
-        """Resolve corpus paths from environment or auto-discovery."""
+        """Resolve corpus paths from environment, master discovery, or auto-discovery."""
         env_paths = os.environ.get("CCBA_LEGAL_CORPUS_PATH")
         if env_paths:
             separator = ";" if os.name == "nt" else ":"
@@ -62,12 +62,29 @@ class FederatedLegalEngine:
         if self._corpus_paths:
             return self._expand_bundle_dirs(self._corpus_paths)
 
-        # Auto-discovery: scan upward for .md/legal_docs/
+        # 1. Master registry discovery
+        try:
+            from ccba_legal.registry import discover_master_registry_path
+
+            master_reg = discover_master_registry_path()
+            if master_reg and master_reg.exists():
+                candidate_corpus = master_reg.parent / "legal_docs"
+                if candidate_corpus.is_dir():
+                    bundles = self._expand_bundle_dirs([candidate_corpus])
+                    if bundles:
+                        return bundles
+        except Exception:
+            pass
+
+        # 2. Auto-discovery: scan upward for .md/legal_docs/ or legal_docs/
         current = Path(__file__).resolve()
         for parent in current.parents:
-            candidate = parent / ".md" / "legal_docs"
-            if candidate.is_dir():
-                return self._expand_bundle_dirs([candidate])
+            for cand_rel in [".md/legal_docs", "legal_docs"]:
+                candidate = parent / cand_rel
+                if candidate.is_dir():
+                    bundles = self._expand_bundle_dirs([candidate])
+                    if bundles:
+                        return bundles
         return []
 
     @staticmethod
@@ -75,12 +92,21 @@ class FederatedLegalEngine:
         """Expand parent directories into individual bundle subdirectories."""
         bundles: list[Path] = []
         for p in paths:
+            if not p.is_dir():
+                continue
             if (p / "metadata.yaml").exists():
                 bundles.append(p)
-            elif p.is_dir():
-                for child in sorted(p.iterdir()):
-                    if child.is_dir() and (child / "metadata.yaml").exists():
-                        bundles.append(child)
+                continue
+            for child in sorted(p.iterdir()):
+                if not child.is_dir():
+                    continue
+                if (child / "metadata.yaml").exists():
+                    bundles.append(child)
+                else:
+                    # Search category subdirectories (01_vbpl, 02_qcvn, etc.)
+                    for sub in sorted(child.iterdir()):
+                        if sub.is_dir() and (sub / "metadata.yaml").exists():
+                            bundles.append(sub)
         return bundles
 
     def _load_corpus(self) -> None:

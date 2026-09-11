@@ -21,6 +21,12 @@ from ccba_legal.crawler import TVPLCrawler, get_tvpl_credentials
 from ccba_legal.docx_converter import convert_docx_to_okf_bundle
 from ccba_legal.gold_standard import GoldStandardProcessor
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+
 
 def build_parser() -> argparse.ArgumentParser:
     """Build unified argument parser for ccba-legal CLI with logical lifecycle ordering."""
@@ -165,7 +171,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--output-dir",
         type=Path,
         default=None,
-        help="Target legal_docs output directory (default: legal_docs)",
+        help="Target legal_docs output directory (default: .md/legal_docs for consuming spokes, legal_docs for master spoke)",
     )
     sync_parser.add_argument(
         "--doc", type=str, default=None, help="Specific document ID or number to sync"
@@ -263,6 +269,89 @@ def build_parser() -> argparse.ArgumentParser:
         help="Permanently delete unreferenced orphan images (default: dry-run report)",
     )
 
+    # 11. Query Subcommand (Master Registry & Lifecycle Search)
+    query_parser = subparsers.add_parser(
+        "query",
+        help="Search legal registry and knowledge corpus with lifecycle status and replacement warnings",
+    )
+    query_parser.add_argument(
+        "search_query",
+        help="Search keyword or document number (e.g. 'Luật Xây dựng', '135/2025/QH15')",
+    )
+    query_parser.add_argument(
+        "-k", "--top-k", type=int, default=5, help="Number of results to return (default: 5)"
+    )
+    query_parser.add_argument(
+        "-r", "--registry", type=Path, default=None, help="Path to legal_registry.yaml"
+    )
+    query_parser.add_argument(
+        "-c", "--corpus", type=Path, default=None, help="Path to legal_docs corpus directory"
+    )
+    query_parser.add_argument(
+        "--json", action="store_true", help="Output results in raw JSON format"
+    )
+
+    # 12. Get-Clause Subcommand (Tier-Aware Clause Slicing)
+    clause_parser = subparsers.add_parser(
+        "get-clause",
+        help="Extract specific clause/article Markdown from OKF bundle using tier-aware semantic slicing",
+    )
+    clause_parser.add_argument(
+        "-d",
+        "--doc",
+        required=True,
+        help="Document ID or slug (e.g. 'Luat-Xay-dung-2025-135-2025-QH15')",
+    )
+    clause_parser.add_argument(
+        "-c",
+        "--clause",
+        required=True,
+        help="Clause ID or alias (e.g. 'd1', 'dieu-1', 'd15k2')",
+    )
+    clause_parser.add_argument(
+        "-r", "--registry", type=Path, default=None, help="Path to legal_registry.yaml"
+    )
+    clause_parser.add_argument(
+        "--corpus", type=Path, default=None, help="Path to legal_docs corpus directory"
+    )
+    clause_parser.add_argument(
+        "--json", action="store_true", help="Output clause in raw JSON format"
+    )
+
+    # 13. Get-Table Subcommand (Table Matrix Extractor)
+    table_parser = subparsers.add_parser(
+        "get-table",
+        help="Extract table matrix from OKF bundle in Markdown or CSV format",
+    )
+    table_parser.add_argument(
+        "-d",
+        "--doc",
+        required=True,
+        help="Document ID or slug (e.g. 'qcvn_06_2022_bxd')",
+    )
+    table_parser.add_argument(
+        "-t",
+        "--table",
+        required=True,
+        help="Table ID (e.g. 'bang_01')",
+    )
+    table_parser.add_argument(
+        "-f",
+        "--format",
+        choices=["markdown", "csv"],
+        default="markdown",
+        help="Output format: markdown (default) or csv",
+    )
+    table_parser.add_argument(
+        "-r", "--registry", type=Path, default=None, help="Path to legal_registry.yaml"
+    )
+    table_parser.add_argument(
+        "--corpus", type=Path, default=None, help="Path to legal_docs corpus directory"
+    )
+    table_parser.add_argument(
+        "--json", action="store_true", help="Output table in raw JSON format"
+    )
+
     return parser
 
 
@@ -343,6 +432,7 @@ def handle_consolidate(args: argparse.Namespace) -> int:
     if res.errors:
         print(f"Errors: {res.errors}")
         return 1
+    return 0
 
 
 def handle_batch_fetch(args: argparse.Namespace) -> int:
@@ -694,12 +784,124 @@ def handle_clean_images(args: argparse.Namespace) -> int:
     return 0
 
 
+def handle_query(args: argparse.Namespace) -> int:
+    """Handle query subcommand."""
+    from ccba_legal.engine import LegalKnowledgeEngine
+
+    corpus = getattr(args, "corpus", None)
+    engine = LegalKnowledgeEngine(registry_path=args.registry, corpus_dir=corpus)
+    results = engine.search(args.search_query, top_k=args.top_k)
+
+    if args.json:
+        print(json.dumps(results, indent=2, ensure_ascii=False))
+        return 0
+
+    print("=================================================================")
+    print("          CCBA LEGAL INTEL - KNOWLEDGE REGISTRY QUERY            ")
+    print("=================================================================")
+    print(f"🔍 Query   : '{args.search_query}' (Top {args.top_k})")
+    print(f"📁 Registry: {engine.registry_path}")
+    print("-----------------------------------------------------------------")
+
+    if not results:
+        print("ℹ️ Không tìm thấy văn bản phù hợp với từ khóa.")
+        return 0
+
+    for idx, doc in enumerate(results, start=1):
+        short_name = doc.get("short_name", "VBPL")
+        doc_num = doc.get("document_number", doc.get("id", ""))
+        title = doc.get("title", "")
+        status = str(doc.get("status", "unknown")).upper()
+        badge = "🟢 CURRENT" if status in {"ACTIVE", "CURRENT"} else f"🔴 {status}"
+
+        print(f"\n{idx}. [{badge}] {short_name} - {doc_num}")
+        if title:
+            print(f"   Tiêu đề: {title}")
+        if doc.get("lifecycle_warning"):
+            print(f"   {doc['lifecycle_warning']}")
+        if doc.get("suggested_replacement"):
+            rep = doc["suggested_replacement"]
+            print(f"   👉 Thay thế bởi: [{rep.get('short_name', '')} - {rep.get('document_number', '')}]")
+
+    print("\n=================================================================")
+    return 0
+
+
+def handle_get_clause(args: argparse.Namespace) -> int:
+    """Handle get-clause subcommand."""
+    from ccba_legal.engine import LegalKnowledgeEngine
+
+    corpus = getattr(args, "corpus", None)
+    engine = LegalKnowledgeEngine(registry_path=args.registry, corpus_dir=corpus)
+    try:
+        res = engine.get_clause(args.doc, args.clause)
+    except ValueError as e:
+        print(f"❌ Security Error: {e}", file=sys.stderr)
+        return 1
+
+    if not res:
+        print(
+            f"❌ Điều khoản '{args.clause}' không tìm thấy trong văn bản '{args.doc}'.",
+            file=sys.stderr,
+        )
+        return 1
+
+    if args.json:
+        print(json.dumps(res, indent=2, ensure_ascii=False))
+        return 0
+
+    print("=================================================================")
+    print("         CCBA LEGAL INTEL - TIER-AWARE CLAUSE EXTRACTOR          ")
+    print("=================================================================")
+    print(f"📄 Văn bản   : {res['doc_id']}")
+    print(f"🔖 Điều/Khoản: {res['clause_id']}")
+    if res.get("title") and res["title"] != res["clause_id"]:
+        print(f"📌 Tiêu đề   : {res['title']}")
+    print("-----------------------------------------------------------------\n")
+    print(res["content"])
+    print("\n=================================================================")
+    return 0
+
+
+def handle_get_table(args: argparse.Namespace) -> int:
+    """Handle get-table subcommand."""
+    from ccba_legal.engine import LegalKnowledgeEngine
+
+    corpus = getattr(args, "corpus", None)
+    engine = LegalKnowledgeEngine(registry_path=args.registry, corpus_dir=corpus)
+    try:
+        res = engine.get_table(args.doc, args.table, format=args.format)
+    except ValueError as e:
+        print(f"❌ Security Error: {e}", file=sys.stderr)
+        return 1
+
+    if res is None:
+        print(
+            f"❌ Bảng số liệu '{args.table}' không tìm thấy trong văn bản '{args.doc}'.",
+            file=sys.stderr,
+        )
+        return 1
+
+    if args.json:
+        out = {
+            "doc_id": args.doc,
+            "table_id": args.table,
+            "format": args.format,
+            "content": res,
+        }
+        print(json.dumps(out, indent=2, ensure_ascii=False))
+        return 0
+
+    print(res)
+    return 0
+
+
 def main() -> None:
     """Main CLI entrypoint."""
     if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
     if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
 
     parser = build_parser()
     if len(sys.argv) == 1:
@@ -728,6 +930,12 @@ def main() -> None:
         sys.exit(handle_ingest(args))
     elif args.command == "clean-images":
         sys.exit(handle_clean_images(args))
+    elif args.command == "query":
+        sys.exit(handle_query(args))
+    elif args.command == "get-clause":
+        sys.exit(handle_get_clause(args))
+    elif args.command == "get-table":
+        sys.exit(handle_get_table(args))
     else:
         parser.print_help()
         sys.exit(1)

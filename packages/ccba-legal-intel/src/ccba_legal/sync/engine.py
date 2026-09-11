@@ -8,6 +8,8 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from ccba_legal.registry import LegalRegistryManager, load_legal_registry
 from ccba_legal.sync.cdp_discovery import (
     download_via_cdp_or_client,
@@ -154,7 +156,7 @@ class LegalSyncEngine:
         """Pull and synchronize OKF v2.4 legal bundles into Spoke with Non-Destructive Registry Merge (ADR 0050).
 
         Args:
-            target_dir: Destination directory for OKF bundles (default: 'legal_docs' under project_root).
+            target_dir: Destination directory for OKF bundles (default: '.md/legal_docs' for consuming spokes, 'legal_docs' for master spoke).
             doc_ids: Optional list of specific document IDs/numbers to sync. If None, syncs all available.
             source_corpus_dir: Optional explicit path to ccba-legal-knowledge repository.
             update_registry: Whether to perform Non-Destructive Additive Merge on local legal_registry.yaml.
@@ -162,7 +164,25 @@ class LegalSyncEngine:
         Returns:
             Dictionary reporting sync status, tier used, synced bundle slugs, and registry merge counts.
         """
-        dest_root = Path(target_dir) if target_dir else (self.project_root / "legal_docs")
+        if target_dir:
+            dest_root = Path(target_dir)
+        else:
+            is_master = self.project_root.name == "ccba-legal-knowledge"
+            if not is_master:
+                ctx_path = self.project_root / ".md" / "workspace_context.yaml"
+                if ctx_path.is_file():
+                    try:
+                        with open(ctx_path, encoding="utf-8") as f:
+                            ctx = yaml.safe_load(f) or {}
+                        proj = ctx.get("project", {}) if isinstance(ctx, dict) else {}
+                        if isinstance(proj, dict) and (
+                            proj.get("name") == "ccba-legal-knowledge"
+                            or proj.get("archetype") == "knowledge_corpus"
+                        ):
+                            is_master = True
+                    except Exception:
+                        pass
+            dest_root = (self.project_root / "legal_docs") if is_master else (self.project_root / ".md" / "legal_docs")
         dest_root.mkdir(parents=True, exist_ok=True)
 
         explicit = Path(source_corpus_dir) if source_corpus_dir else None
@@ -175,7 +195,7 @@ class LegalSyncEngine:
             # Tier 1: Local Knowledge Corpus Sync (0s Offline Speed)
             source_legal_docs = corpus_path / "legal_docs"
             if source_legal_docs.exists():
-                categories = ["01_vbpl", "02_qcvn", "03_tcvn"]
+                categories = ["01_vbpl", "02_qcvn", "03_tcvn", "04_appendices"]
                 for cat in categories:
                     cat_dir = source_legal_docs / cat
                     if not cat_dir.exists():
