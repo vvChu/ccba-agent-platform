@@ -217,7 +217,7 @@ def test_compile_hub_adr_readme_and_matrix() -> None:
         # Compile README
         readme_content = compile_hub_adr_readme(hub_adrs, readme_file)
         assert "Danh Mục Quyết Định Kiến Trúc (0001 — 0002)" in readme_content
-        assert "[ADR 0001](0001-test.md)" in readme_content
+        assert "[HUB-ADR 0001](0001-test.md)" in readme_content
         assert "✅ ACCEPTED" in readme_content
         assert "⚠️ SUPERSEDED" in readme_content
 
@@ -303,7 +303,7 @@ def test_compile_two_tier_adr_matrix() -> None:
         )
 
         assert "## 🏛️ Tier 1 — Platform Constitution (Hub ADRs)" in compiled
-        assert "Platform ADR 0001" in compiled
+        assert "HUB-ADR 0001" in compiled
         assert "Hub Base ADR" in compiled
         assert "## 🌐 Tier 2 — Domain-Specific Architecture Decisions (Spoke ADRs)" in compiled
         assert "Domain ADR 0001" in compiled
@@ -358,3 +358,149 @@ def test_run_pipeline_hub_and_spoke() -> None:
         # 4. Check mode on Spoke (should pass)
         check_spoke = run_pipeline(hub_dir=hub_dir, spoke_dir=spoke_dir, check_mode=True)
         assert check_spoke is True
+
+
+def test_parse_adr_file_with_hub_adr_prefix() -> None:
+    """Verify parsing ADR with HUB-ADR frontmatter ID and H1 title."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_path = Path(tmp_dir)
+
+        # 1. Frontmatter with HUB-ADR-0058
+        f1 = tmp_path / "HUB-ADR-0058-charter-alignment.md"
+        f1.write_text(
+            """---
+id: "HUB-ADR-0058"
+title: "Charter Alignment and Live Mirroring"
+status: "ACCEPTED"
+date: "2026-09-08"
+---
+# HUB-ADR 0058: Charter Alignment and Live Mirroring
+
+## 1. Trạng Thái (Status)
+**ACCEPTED**
+""",
+            encoding="utf-8",
+        )
+        res1 = parse_adr_file(f1)
+        assert res1["num"] == 58
+        assert res1["num_str"] == "0058"
+        assert res1["title"] == "Charter Alignment and Live Mirroring"
+        assert res1["status"] == "ACCEPTED"
+        assert res1["date"] == "2026-09-08"
+
+        # 2. Markdown H1 with # HUB-ADR 0042:
+        f2 = tmp_path / "0042-test.md"
+        f2.write_text(
+            """# HUB-ADR 0042: Scoped Decision
+
+* **Status:** Accepted
+* **Date:** 2026-08-20
+""",
+            encoding="utf-8",
+        )
+        res2 = parse_adr_file(f2)
+        assert res2["num"] == 42
+        assert res2["num_str"] == "0042"
+        assert "Scoped Decision" in res2["title"]
+
+        # 3. Markdown H1 with hyphenated headings (# ADR-0021: and # HUB-ADR-0058:)
+        f3 = tmp_path / "0021-dual-mode.md"
+        f3.write_text(
+            """# ADR-0021: Dual-Mode Workspace & BIGBIM Skills Retention
+
+## Status
+Accepted — 2026-07-19
+""",
+            encoding="utf-8",
+        )
+        res3 = parse_adr_file(f3)
+        assert res3["num"] == 21
+        assert res3["title"] == "Dual-Mode Workspace & BIGBIM Skills Retention"
+
+        f4 = tmp_path / "0058-hard-completion-lock.md"
+        f4.write_text(
+            """# HUB-ADR-0058: Hard Completion Lock Pattern
+
+## Status
+Accepted
+""",
+            encoding="utf-8",
+        )
+        res4 = parse_adr_file(f4)
+        assert res4["num"] == 58
+        assert res4["title"] == "Hard Completion Lock Pattern"
+
+
+def test_skill_radar_hub_prefix_isolation() -> None:
+    """Verify that scan_skill_radar isolates HUB-ADR-XXXX from Spoke domain ADRs."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        root = Path(tmp_dir)
+        skills_dir = root / ".agents" / "skills" / "test-skill"
+        skills_dir.mkdir(parents=True, exist_ok=True)
+
+        # Skill referencing both HUB-ADR-0033 and domain ADR-0010
+        (skills_dir / "SKILL.md").write_text(
+            """---
+name: test-skill
+conforms_to:
+- HUB-ADR-0033
+- ADR-0010
+---
+# Test Skill
+References HUB-ADR-0033 for hygiene and ADR-0010 for domain logic.
+""",
+            encoding="utf-8",
+        )
+
+        spoke_adrs = [
+            {"num": 33, "num_str": "0033", "filename": "0033-spoke-domain.md", "title": "Spoke 33"},
+            {"num": 10, "num_str": "0010", "filename": "0010-spoke-domain.md", "title": "Spoke 10"},
+        ]
+        hub_adrs = [
+            {"num": 33, "num_str": "0033", "filename": "0033-hub-hygiene.md", "title": "Hub 33"},
+            {"num": 10, "num_str": "0010", "filename": "0010-hub-rag.md", "title": "Hub 10"},
+        ]
+
+        # 1. Spoke mode (is_hub=False): MUST NOT match HUB-ADR-0033 to Spoke ADR 0033!
+        spoke_matrix = scan_skill_radar(spoke_adrs, root, is_hub=False)
+        assert spoke_matrix["0033"] == [], "Spoke ADR 0033 should NOT be matched to HUB-ADR-0033!"
+        assert len(spoke_matrix["0010"]) == 1, "Spoke ADR 0010 should be matched to ADR-0010."
+
+        # 2. Strict Hub mode (scanning Spoke files for Hub ADRs): MUST match HUB-ADR-0033, but MUST NOT match bare ADR-0010!
+        hub_matrix_strict = scan_skill_radar(hub_adrs, root, is_hub=True, strict_hub_prefix=True)
+        assert len(hub_matrix_strict["0033"]) == 1, (
+            "Hub ADR 0033 should be matched to HUB-ADR-0033."
+        )
+        assert hub_matrix_strict["0010"] == [], (
+            "Hub ADR 0010 should NOT match bare ADR-0010 in Spoke context!"
+        )
+
+        # 3. Legacy Hub mode (internal Hub repo): matches both HUB-ADR-0033 and legacy bare ADR-0010
+        hub_matrix_legacy = scan_skill_radar(hub_adrs, root, is_hub=True, strict_hub_prefix=False)
+        assert len(hub_matrix_legacy["0033"]) == 1
+        assert len(hub_matrix_legacy["0010"]) == 1
+
+
+def test_compiled_readme_and_matrix_use_hub_adr_labels() -> None:
+    """Verify that generated Hub README and TRACEABILITY_MATRIX use HUB-ADR prefix."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_path = Path(tmp_dir)
+        adr_list = [
+            {
+                "num": 58,
+                "num_str": "0058",
+                "filename": "0058-live-collab.md",
+                "title": "Live Collaboration",
+                "status": "ACCEPTED",
+            }
+        ]
+        matrix = {"0058": [{"file": "AGENTS.md"}]}
+
+        readme_file = tmp_path / "README.md"
+        matrix_file = tmp_path / "TRACEABILITY_MATRIX.md"
+
+        readme_content = compile_hub_adr_readme(adr_list, readme_file)
+        assert "[HUB-ADR 0058]" in readme_content
+
+        matrix_content = compile_hub_traceability_matrix(adr_list, matrix, matrix_file)
+        assert "[HUB-ADR 0058]" in matrix_content

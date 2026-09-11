@@ -23,12 +23,12 @@ triggers:
 - ccba-architecture-sync
 - architecture-sync
 conforms_to:
-- ADR-0032
-- ADR-0037
-- ADR-0047
-- ADR-0051
+- HUB-ADR-0032
+- HUB-ADR-0037
+- HUB-ADR-0047
+- HUB-ADR-0051
 metadata:
-  version: 1.1.0
+  version: 1.2.0
 ---
 
 # Skill: Quản Trị Vòng Đời Quyết Định Kiến Trúc (`ccba-adr-lifecycle`)
@@ -52,14 +52,14 @@ Khi người dùng hoặc Agent đề xuất một quyết định kiến trúc 
 
 ```markdown
 ---
-id: "ADR-00XX"
+id: "HUB-ADR-00XX"
 title: "Tiêu Đề Quyết Định Kiến Trúc"
 status: "ACCEPTED"               # ACCEPTED | SUPERSEDED | DEPRECATED
 date: "YYYY-MM-DD"
 pillar: "Trụ Cột Liên Quan"     # Trụ cột 1, 2 hoặc 3
-supersedes: []                  # Danh sách ADR cũ bị thay thế (ví dụ: ["ADR-0010"])
+supersedes: []                  # Danh sách ADR cũ bị thay thế (ví dụ: ["HUB-ADR-0010"])
 ---
-# ADR 00XX: Tiêu Đề Quyết Định Kiến Trúc
+# HUB-ADR 00XX: Tiêu Đề Quyết Định Kiến Trúc
 
 ## 1. Trạng Thái (Status)
 **ACCEPTED & ADOPTED** (YYYY-MM-DD)
@@ -80,12 +80,12 @@ Mô tả chi tiết giải pháp kỹ thuật, cấu trúc mô-đun, và các qu
 ---
 
 ### Bước 2: Lan Truyền Trạng Thái Thay Thế (Status Cascading)
-* Nếu ADR mới có trường `supersedes: ["ADR-00YY"]`:
+* Nếu ADR mới có trường `supersedes: ["HUB-ADR-00YY"]`:
   1. Mở file `docs/adr/00YY-*.md`.
   2. Cập nhật trạng thái thành:
      ```markdown
      ## 1. Trạng Thái (Status)
-     **SUPERSEDED by `[ADR 00XX](<00XX-slug>.md)`** (YYYY-MM-DD)
+     **SUPERSEDED by `[HUB-ADR 00XX](<00XX-slug>.md)`** (YYYY-MM-DD)
      ```
 
 **Tiêu chí hoàn thành:** Tất cả ADRs bị thay thế được cập nhật trạng thái `SUPERSEDED` chính xác.
@@ -93,7 +93,7 @@ Mô tả chi tiết giải pháp kỹ thuật, cấu trúc mô-đun, và các qu
 ---
 
 ### Bước 3: Tái Biên Dịch Mục Lục & Ma Trận Truy Xuất (Two-Tier Traceability Sync)
-Chạy script đồng bộ tự động theo cơ chế **Hai Tầng (Two-Tier Architecture Matrix — ADR 0037, ADR 0051)**:
+Chạy script đồng bộ tự động theo cơ chế **Hai Tầng (Two-Tier Architecture Matrix — HUB-ADR-0037, HUB-ADR-0051)**:
 * **Tại Hub (Platform Mode):**
   ```powershell
   python scripts/sync_hub_adr_matrix.py

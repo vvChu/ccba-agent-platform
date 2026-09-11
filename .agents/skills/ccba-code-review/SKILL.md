@@ -73,7 +73,7 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
   python -m ccba_harness verify-patch --preset code --target <target_path>
   ```
 - Tuyệt đối không tự ý gộp chung hoặc trộn lẫn phát hiện của hai trục để tránh che lấp lỗi của nhau.
-- **Tiêu chí hoàn thành:** Xuất báo cáo tổng hợp chi tiết trình lập trình viên đối soát, đính kèm kết quả bảng báo cáo từ `ccba-harness verify-patch`, kèm tóm tắt 1 dòng về số lượng lỗi và lỗi nghiêm trọng nhất trên mỗi trục. Quy tắc Khóa Cứng (ADR-0058): Đánh dấu trạng thái Review là BLOCKED nếu exit-code gate $\ne 0$.
+- **Tiêu chí hoàn thành:** Xuất báo cáo tổng hợp chi tiết trình lập trình viên đối soát, đính kèm kết quả bảng báo cáo từ `ccba-harness verify-patch`, kèm tóm tắt 1 dòng về số lượng lỗi và lỗi nghiêm trọng nhất trên mỗi trục. Quy tắc Khóa Cứng (HUB-ADR-0058): Đánh dấu trạng thái Review là BLOCKED nếu exit-code gate $\ne 0$.
 
 ## Tích hợp hệ thống (System Integration)
 
