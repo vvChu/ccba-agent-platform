@@ -17,7 +17,10 @@ Quick Start:
     models = ai.models()
 """
 
-from ccba_ai import services
+from __future__ import annotations
+
+from typing import Any
+
 from ccba_ai.antigravity_provider import AntigravityCLIProvider
 from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError, CircuitState
 from ccba_ai.client import AIClient, AsyncAIClient
@@ -134,3 +137,17 @@ __all__ = [
     "format_error_json",
 ]
 __version__ = "1.2.0"
+
+
+def __getattr__(name: str) -> Any:
+    """Lazy import module-level attributes per PEP 562."""
+    if name == "services":
+        import ccba_ai.services as services_mod
+
+        return services_mod
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
+
+def __dir__() -> list[str]:
+    """Expose dynamic attributes to introspection and language servers per PEP 562."""
+    return sorted(list(globals().keys()) + ["services"])
