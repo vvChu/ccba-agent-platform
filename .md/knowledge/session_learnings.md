@@ -27,6 +27,8 @@
   - Telemetry Spoke $\rightarrow$ Hub: Chỉ trích xuất số liệu phi định danh (`tokens`, `cost`, `tool_counts`, `status`). Cấm thu thập prompt text/dữ liệu khách hàng.
 - **RULE-1.8 [ADR 0058 — Self-Healing Engine & Discrete Diagnostic Commands]**:
   - Lệnh nạp `SelfHealingEngine` (`verify-patch --self-heal`) BẮT BUỘC là mảng lệnh độc lập (`["cmd1", "cmd2"]`), CẤM ghép chuỗi `&&` để regex chẩn đoán đúng và tự phục hồi (< 500ms).
+- **RULE-1.9 [Multi-Tier Corpus Discovery & Layout Normalization]**:
+  - Khi định vị corpus từ registry file trong `.md/data/`: `reg_parent / "legal_docs"` trỏ sai `.md/data/legal_docs`. BẮT BUỘC suy luận `project_root` (3 cấp lùi nếu ở `.md/data`) và quét 4 ứng viên: `reg_parent/{, .md/}legal_docs` và `project_root/{, .md/}legal_docs`.
 
 ---
 
@@ -75,13 +77,16 @@
   - Tài liệu `references/*.md` (Tier 2A) CẤM dùng tiền tố `/` (gọi Master Skill kèm reference).
 - **RULE-4.3 [Tiêu Chí Hoàn Thành Đa Nhánh & DRY Reference]**:
   - Tiêu chí hoàn thành phải có nhánh kiểm chứng cho từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`). Quy tắc kết hợp cờ chỉ tuyên bố tại `Kết hợp không hợp lệ` trong `MODES.md`.
-- **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating]**:
+- **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating & Workspace Walkthrough Mirroring]**:
   - Quét `author.login` thay vì `user.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và review `body` của Copilot kể cả khi là `COMMENTED`. Cấm merge nếu chưa sửa hoặc giải trình.
+  - `audit_pr_comments.py` chỉ đọc `Path.cwd() / "walkthrough.md"` (HUB-ADR-0058): BẮT BUỘC ghi nhận `review_id` (`PRR_...`) và inline comment `id` trực tiếp vào `walkthrough.md` tại gốc repo để vượt qua chốt chặn audit.
 - **RULE-4.5 [AI Gateway Spark Auth & Fast-Inference Gating]**:
   - LiteLLM Server Spark (`100.83.192.30:8090`): Header `Authorization: Bearer sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` cho Swarm map-reduce (< 1s), chỉ route `qwen-local-primary` sau khi GPU hoàn tất warmup.
 - **RULE-4.6 [Tier 3 Orchestrator & Deterministic Verification Gating — ADR-0057 / ADR-0058]**:
   - Router/Orchestrator (`/ccba-platform`) bắt buộc có bản ghi SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`, `bundle: _core`, `is-orchestrated: true`) và tuân thủ Single-Writer Protocol.
   - Đồng bộ Spoke (`sync_spoke.py`), cờ `--verify` kích hoạt kiểm toán tất định qua `ccba-harness verify-patch` ngay sau khi ghi đĩa hoàn tất, khóa cứng nếu có lỗi.
+- **RULE-4.7 [ArtifactMetadata Workspace Invariant]**:
+  - `ArtifactMetadata` CHỈ hợp lệ cho tệp artifact trong thư mục brain (`<appDataDir>\brain\<id>/`). Thao tác ghi tệp mã nguồn/tài liệu trong workspace repository BẮT BUỘC bỏ qua trường này để tránh lỗi schema rejection.
 
 ---
 
