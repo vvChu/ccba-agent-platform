@@ -39,7 +39,7 @@ triggers:
 # Codebase Design
 
 > **Loại Kỹ Năng:** **Reference Skill (Kỹ Năng Tham Chiếu & Từ Điển Chuẩn Mực)**  
-> **Quy Tắc Dừng Cứng (Hard Stopping Rule):** Kỹ năng này không phải là Driver Workflow tự hành. Khi được gọi độc lập mà không chỉ định rõ module mục tiêu, Agent chỉ hiển thị bộ từ vựng và dừng lại để định hướng sang Driver Skills phù hợp (`/ccba-codebase-design`, `/ccba-implement`, `/ccba-grilling`).
+> **Quy Tắc Dừng Cứng (Hard Stopping Rule):** Kỹ năng này không phải là Driver Workflow tự hành. Khi được gọi độc lập mà không chỉ định rõ module mục tiêu, Agent chỉ hiển thị bộ từ vựng và dừng lại để định hướng sang Driver Skills phù hợp (`/ccba-implement`, `/ccba-grilling`).
 
 Design **deep modules**: a lot of behaviour behind a small interface, placed at a clean seam, testable through that interface. Use this language and these principles wherever code is being designed or restructured. The aim is leverage for callers, locality for maintainers, and testability for everyone.
 
