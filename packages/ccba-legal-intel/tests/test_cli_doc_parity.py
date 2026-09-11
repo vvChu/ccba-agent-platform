@@ -59,7 +59,16 @@ def test_cli_subcommands_documented_in_skill_md() -> None:
     skill_text = skill_file.read_text(encoding="utf-8")
 
     # Verify each core command is mentioned in SKILL.md
-    for cmd in ["login", "fetch", "convert", "consolidate", "sync"]:
+    for cmd in [
+        "login",
+        "fetch",
+        "convert",
+        "consolidate",
+        "sync",
+        "query",
+        "get-clause",
+        "get-table",
+    ]:
         assert f"python -m ccba_legal {cmd}" in skill_text or f"`{cmd}`" in skill_text, (
             f"Command '{cmd}' is registered in cli.py but missing from SKILL.md ({skill_file})!"
         )
