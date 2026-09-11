@@ -1,55 +1,51 @@
-# Walkthrough: Release PR #259 (Issue #255 — Package DetachedExecutionEngine in ccba-harness and Isolate Spoke Logs)
+# Walkthrough: Release PR #261 (Issue #260 — Ensure Offline XML Schema Validation in ccba-ooxml)
 
 ## 1. Tổng Quan Release
-- **PR Number:** [#259](https://github.com/vvChu/ccba-agent-platform/pull/259)
-- **Branch:** `fix/issue-255-package-detached-execution-engine` $\rightarrow$ `main`
-- **Tiêu đề:** `fix(guardrails): package DetachedExecutionEngine in ccba-harness and isolate spoke test logs (#255)`
-- **Issue liên quan:** [Issue #255](https://github.com/vvChu/ccba-agent-platform/issues/255)
-- **Thể chế & Kiến trúc:** [ADR-0028](docs/adr/0028-deepen-detached-execution-engine.md), [ADR-0058](docs/adr/0058-automation-first-quality-framework-and-hard-completion-lock.md)
+- **PR Number:** [#261](https://github.com/vvChu/ccba-agent-platform/pull/261)
+- **Branch:** `fix/issue-260-ooxml-offline-schema-validation` $\rightarrow$ `main`
+- **Tiêu đề:** `fix(ooxml): ensure offline XML schema validation with local Dublin Core schemas (#260)`
+- **Issue liên quan:** [Issue #260](https://github.com/vvChu/ccba-agent-platform/issues/260)
+- **Thể chế & Kiến trúc:** [ADR-0058](docs/adr/0058-automation-first-quality-framework-and-hard-completion-lock.md)
 - **Mục tiêu hoàn thành:**
-  - Đóng gói `DetachedExecutionEngine` thành Public Deep Seam chuẩn trong `packages/ccba-harness` (`ccba_harness.execution`), re-export tại top-level `ccba_harness`.
-  - Chuẩn hóa `resolve_scratch_dir()` động tìm thư mục gốc dự án (`.git` / `pyproject.toml`) qua `Path.cwd()`, cách ly triệt để log test của Spoke về `<spoke>/.md/scratch/`, chấm dứt việc ghi đè hay phụ thuộc vào Hub.
-  - Tách rời (decouple) `scripts/safe_pytest.py` và `scripts/safe_runner.py` khỏi `scripts/eval/process_safety.py` nội bộ, biến `process_safety.py` thành backward-compatibility re-export shim.
-  - Bổ sung fallback `packages/ccba-harness/src` vào `sys.path` cho cả hai script CLI để hỗ trợ fresh checkout chưa cài editable install.
-  - Chuẩn hóa thông điệp hướng dẫn guardrail trong `conftest.py` thành repository-agnostic placeholder (`<path/to/test_file.py>`) và bổ sung type hints đầy đủ cho pytest hooks.
-  - Viết bộ unit tests toàn diện 13 test cases cho `DetachedExecutionEngine` với độ bao phủ 100%, thời gian thực thi SLA < 0.4s.
+  - Khắc phục triệt để lỗi kiểm định schema chập chờn (flaky test) khi parse `docProps/core.xml` do `opc-coreProperties.xsd` tải Dublin Core schemas từ URL internet `http://dublincore.org/...`.
+  - Tải và lưu trữ 3 lược đồ chuẩn Dublin Core (`dc.xsd`, `dcterms.xsd`, `dcmitype.xsd`) cục bộ tại `packages/ccba-ooxml/src/ccba_ooxml/schemas/dublincore/` (~17 KB).
+  - Triển khai `OfflineSchemaResolver(lxml.etree.Resolver)` trong `base.py` chặn đứng toàn bộ URL internet và định tuyến về các file schema offline nội bộ.
+  - Cưỡng chế chế độ offline tuyệt đối với `lxml.etree.XMLParser(no_network=True, resolve_entities=False)` cho cả schema compilation và instance XML parsing.
+  - Bổ sung bộ nhớ đệm `_COMPILED_SCHEMA_CACHE` cấp lớp để tái sử dụng schema đã biên dịch, giảm thời gian thực thi kiểm thử từ 11.48s xuống 6.95s.
+  - Viết bộ 4 unit tests chuyên biệt trong `packages/ccba-ooxml/tests/test_offline_validation.py`.
 
 ---
 
-## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #259)
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #261)
 
-Reviews: `PRR_kwDOQzfV088AAAABNInzTg`
+Reviews: `PRR_kwDOQzfV088AAAABNJK2rw`
 
 | ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
 |---|---|---|---|
-| `3987231464` | `scripts/safe_pytest.py` | `safe_pytest` hard-depends on an installed `ccba_harness` package. Hub fresh checkouts might fail with ImportError. | **ĐÃ KHẮC PHỤC** trong commit `47b3a70f`: Bổ sung cơ chế `try...except ImportError` fallback tự động thêm `packages/ccba-harness/src` vào `sys.path` nếu chạy trực tiếp từ Hub repo. |
-| `3987231547` | `scripts/safe_runner.py` | `safe_runner` hard-depends on an installed `ccba_harness` package. Need fallback for fresh clone usage without editable install. | **ĐÃ KHẮC PHỤC** trong commit `47b3a70f`: Bổ sung cơ chế `try...except ImportError` fallback tự động thêm `packages/ccba-harness/src` vào `sys.path` nếu chạy trực tiếp từ Hub repo. |
-| `3987231595` | `conftest.py` | Guardrail guidance prints `tests/test_example.py` which doesn't exist in the repo and can mislead users. | **ĐÃ KHẮC PHỤC** trong commit `47b3a70f`: Cập nhật ví dụ thành placeholder repo-agnostic `<path/to/test_file.py>` và bổ sung type hints `pytest.Parser`, `pytest.Config`, `pytest.Item` cho các pytest hooks. |
+| `3987705134` | `packages/ccba-ooxml/src/ccba_ooxml/validation/base.py` | `_validate_single_file_xsd` now parses untrusted OOXML XML files with default parser. That can allow network fetches via external DTDs/entities. Use XMLParser with `no_network=True` and disable DTD/entity resolution. | **ĐÃ KHẮC PHỤC**: Sử dụng `instance_parser = lxml.etree.XMLParser(no_network=True, resolve_entities=False)` khi phân tích cú pháp tệp XML đối tượng trong `_validate_single_file_xsd`. |
 
 ---
 
 ## 3. Chi Tiết Các Hạng Mục Đã Hoàn Thành
 
-1. **Gói SDK Tier 0 (`ccba-harness`)**:
-   - Thêm `packages/ccba-harness/src/ccba_harness/execution.py` chứa class `DetachedExecutionEngine`.
-   - Re-export `DetachedExecutionEngine` trong `packages/ccba-harness/src/ccba_harness/__init__.py` và cập nhật `__all__`.
-   - Cập nhật tài liệu hợp đồng trong `packages/ccba-harness/AGENTS.md`.
-   - Viết 13 unit test cases tại `packages/ccba-harness/tests/test_execution.py`.
-2. **Cách Ly Log Cục Bộ Cho Spoke**:
-   - `resolve_scratch_dir()` quét ngược từ `Path.cwd()` tìm `.git` hoặc `pyproject.toml` để xác định project root.
-   - Thư mục log `.md/scratch/` được tạo cục bộ tại project hiện hành thay vì trỏ nhầm về Hub hoặc site-packages.
-3. **Decoupling CLI Scripts**:
-   - Chuyển `scripts/safe_pytest.py` và `scripts/safe_runner.py` sang dùng engine từ `ccba_harness` với fallback path.
-   - Chuyển `scripts/eval/process_safety.py` thành re-export shim để bảo toàn tương thích ngược cho mọi scripts cũ.
-4. **Cập Nhật Thể Chế & Chỉ Số Nền Tảng**:
-   - Cập nhật Evolution Note trong `docs/adr/0028-deepen-detached-execution-engine.md`.
-   - Đồng bộ chỉ số `SKILL_COUNT: 68` trong `PLATFORM.md` và `README.md` qua `scripts/update_arch_stats.py`.
+1. **Local Schemas Dublin Core**:
+   - `packages/ccba-ooxml/src/ccba_ooxml/schemas/dublincore/dc.xsd`: Schema Dublin Core Elements 1.1 offline.
+   - `packages/ccba-ooxml/src/ccba_ooxml/schemas/dublincore/dcterms.xsd`: Schema Dublin Core Terms offline (định nghĩa `created`, `modified`, `W3CDTF`).
+   - `packages/ccba-ooxml/src/ccba_ooxml/schemas/dublincore/dcmitype.xsd`: Schema DCMI Type Vocabulary offline.
+2. **OfflineSchemaResolver & Hardened XML Parsing**:
+   - `OfflineSchemaResolver` chặn và định tuyến các URL `dublincore.org`, `dc.xsd`, `dcterms.xsd`, `dcmitype.xsd`, `xml.xsd`.
+   - `BaseSchemaValidator.get_compiled_schema` cache schema theo đường dẫn file đã chuẩn hóa.
+   - Cưỡng chế `no_network=True` và `resolve_entities=False` trên cả schema và instance XML document.
+3. **Bộ Kiểm Thử Toàn Diện**:
+   - `test_offline_validation.py` kiểm định 4 kịch bản: URL resolver, schema cache, core properties offline valid, invalid properties flagging.
+   - Toàn bộ 60 tests trong `packages/ccba-ooxml/tests` đạt PASS 100%.
 
 ---
 
 ## 4. Kết Quả Kiểm Thử Toàn Diện (Pre-release Gate)
 
-- **Isolated Stress Tests (`run_isolated_tests.py --all --stress`)**: PASS 100% tất cả packages.
-- **Unit Tests `ccba-harness` (`tests/test_execution.py`)**: 13/13 passed (0.35s).
-- **Harness Evals (`run_harness_evals.py`)**: PASS 100% 5/5 gates (Typecheck, Formatter, Seam Contracts, Isolated Tests, Architecture Drift).
-- **GitHub Actions CI (PR #259)**: 6/6 checks PASS (Lint Markdown, Security Scan, Validate, Test Python 3.10/3.11/3.12).
+- **Unit Tests `ccba-ooxml`**: 60/60 passed (10.66s).
+- **Stress Test `ccba-ooxml` (`run_isolated_tests.py --package ccba-ooxml --stress`)**: 60/60 passed (6.95s).
+- **Harness CI Gates (`run_harness_evals.py`)**: 8/8 gates PASS 100%.
+- **Deterministic Hard Completion Lock (ADR-0058)**: 5/5 commands passed.
+- **GitHub Actions CI (PR #261)**: 6/6 jobs PASS (`Lint Markdown`, `Security Scan`, `Validate`, `Test Python 3.10/3.11/3.12`).
