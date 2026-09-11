@@ -47,6 +47,9 @@
 - **RULE-2.5 [Windows Subprocess UTF-8 Encoding Standard]**:
   - Trên Windows, `subprocess.run(..., text=True)` mặc định mã hóa theo code page `cp1252`. BẮT BUỘC truyền `encoding="utf-8", errors="replace"` chống lỗi `UnicodeDecodeError` khi đọc stdout có tiếng Việt, emoji, hoặc SVG box-drawing.
 
+- **RULE-2.7 [Safe-Remove, Read-Only & Symlink Cleanup Invariant]**:
+  - Khi xóa đệ quy hoặc xóa dọn dẹp các thư mục/tệp tin (`safe_remove`), trên Windows tệp tin hoặc symlink có thể ném `NotADirectoryError` nếu dùng `shutil.rmtree()` trực tiếp. Phải kiểm tra `path.is_symlink() or path.is_file()` trước, unbind read-only attributes bằng `chmod(0o666)` (hoặc onerror callback), sau đó mới gọi `rmtree()`.
+
 ---
 
 ## Miền 3. 📜 Chuẩn Mực Pháp Lý & Dữ Liệu Hiện Hành (Legal & Data Standards)
@@ -78,6 +81,9 @@
   - Quét `author.login` thay vì `user.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và review `body` của Copilot kể cả khi trạng thái là `COMMENTED`. Cấm merge nếu chưa sửa hoặc giải trình.
 - **RULE-4.5 [AI Gateway Spark Auth & Fast-Inference Gating]**:
   - LiteLLM Server Spark (`100.83.192.30:8090`): Header bắt buộc `Authorization: Bearer sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` cho Swarm map-reduce latency cực thấp (< 1s), chỉ route `qwen-local-primary` sau khi GPU hoàn tất warmup.
+- **RULE-4.6 [Tier 3 Orchestrator & Deterministic Verification Gating — ADR-0057 / ADR-0058]**:
+  - Kỹ năng Global Router / Orchestrator (`/ccba-platform`) bắt buộc phải có bản ghi SSOT trong Hub repo (`.agents/skills/ccba-platform/SKILL.md`) có `tier: orchestrator`, `bundle: _core`, `is-orchestrated: true` và tuân thủ **Single-Writer Protocol** (Orchestrator là writer duy nhất, worker ở chế độ read-only).
+  - Khi đồng bộ Spoke (`sync_spoke.py`), cờ `--verify` kích hoạt kiểm toán tất định (cleanliness, depth import, tests) qua `ccba-harness verify-patch` ngay sau khi ghi đĩa hoàn tất, khóa cứng việc hoàn thành tác vụ nếu có lỗi.
 
 ---
 
