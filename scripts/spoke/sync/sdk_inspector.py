@@ -133,7 +133,7 @@ class SharedSdkInspector:
 
     def resolve_packages_to_check(self) -> list[str]:
         """Resolves the list of Hub packages to inspect for the Spoke."""
-        packages = ["ccba-harness", "ccba-ai", "ccba-ooxml"]
+        packages = ["ccba-harness", "ccba-ai", "ccba-ooxml", "ccba-pdf-prep", "ccba-qc-core"]
 
         # Read workspace_context.yaml if available
         for ctx_dir in [self.spoke_root / ".agents", self.spoke_root / ".md"]:
@@ -146,10 +146,14 @@ class SharedSdkInspector:
                         for p in declared:
                             if p and p not in packages:
                                 packages.append(p)
-                    # If knowledge_corpus archetype, check ccba-legal-intel
-                    if data.get("project", {}).get("archetype") == "knowledge_corpus":
+                    # Check archetype defaults
+                    arch = data.get("project", {}).get("archetype")
+                    if arch == "knowledge_corpus":
                         if "ccba-legal-intel" not in packages:
                             packages.append("ccba-legal-intel")
+                    elif arch in ("project_delivery", "enterprise_governance"):
+                        if "mdconverter" not in packages:
+                            packages.append("mdconverter")
                 except Exception:
                     pass
 

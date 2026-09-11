@@ -10,6 +10,12 @@ applies_to:
 bundle: _core
 disable-model-invocation: true
 command: /ccba-contribute-to-hub
+user-invocable: true
+gpi:
+  s: 3.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 triggers:
 - contribute
 - contribute to hub
@@ -27,7 +33,7 @@ triggers:
 
 # Workflow: Contribute to Hub (Đóng Góp Mã Nguồn Ngược Lên Hub Chuẩn OKF v2.0)
 
-Quy trình chuẩn hóa để đóng gói mã nguồn, tests, proposal và mở GitHub Pull Request (PR) kèm hoàn tất thẩm định tự động từ Spoke lên Platform Hub (`ccba-agent-platform`). *(Alias: `/ccba-propose-to-hub`)*
+Quy trình chuẩn hóa để đóng gói mã nguồn, tests, proposal và mở GitHub Pull Request (PR) kèm hoàn tất thẩm định tự động từ Spoke lên Platform Hub (`ccba-agent-platform`). *(Lệnh: `/ccba-contribute-to-hub`)*
 
 ---
 
@@ -127,8 +133,8 @@ Thực thi tại thư mục Hub (`hub_path`):
 ---
 
 ## ✅ Bước 6: Báo Cáo Hoàn Tất & Sẵn Sàng Merge
-Tổng hợp báo cáo: Link PR, kết quả CI, tóm tắt góp ý đã sửa, và thông báo Maintainer kích hoạt `/ccba-review-proposal [PR_NUMBER]`.
-- **Tiêu chí hoàn thành:** Báo cáo hoàn tất tổng hợp link PR và kích hoạt `/ccba-review-proposal`.
+Tổng hợp báo cáo: Link PR, kết quả CI, tóm tắt góp ý đã sửa, và thông báo Maintainer kích hoạt `/ccba-contribute-to-hub [PR_NUMBER]`.
+- **Tiêu chí hoàn thành:** Báo cáo hoàn tất tổng hợp link PR và kích hoạt `/ccba-contribute-to-hub`.
 
 ---
 

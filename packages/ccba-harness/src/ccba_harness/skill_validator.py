@@ -86,6 +86,62 @@ DEFAULT_VALID_BUNDLES: set[str] = {
 SHALLOW_SKILL_MIN_LINES = 35
 MAX_MODEL_INVOKED_PER_BUNDLE = 10
 
+COMMON_PATH_SEGMENTS: set[str] = {
+    "bin",
+    "usr",
+    "etc",
+    "dev",
+    "tmp",
+    "var",
+    "proc",
+    "sys",
+    "mnt",
+    "opt",
+    "src",
+    "packages",
+    "scripts",
+    "tests",
+    "docs",
+    "references",
+    "templates",
+    "standards",
+    "examples",
+    "appendices",
+    "output",
+    "scratch",
+    "legal_docs",
+    "sources",
+    "lib",
+    "build",
+    "dist",
+    "node_modules",
+    "artifacts",
+}
+
+ALLOWED_HOST_COMMANDS: set[str] = {
+    "/boost",
+    "/skill-repair",
+    "/clear",
+    "/compact",
+    "/init",
+    "/ui-ux-pro-max",
+    "/ship",
+}
+
+GITLAB_QUICK_ACTIONS: set[str] = {
+    "/blocked_by",
+    "/close",
+    "/reopen",
+    "/assign",
+    "/milestone",
+    "/label",
+    "/cc",
+}
+
+
+LINK_EXTRACT_RE = re.compile(r"\[.*?\]\(([^)]+)\)")
+SLASH_CMD_RE = re.compile(r"(?<![a-zA-Z0-9_./\\<])(/([a-z][a-z0-9_\-]*))(?![a-zA-Z0-9_./\\-])")
+
 
 def is_exclusion_header(header_text: str) -> bool:
     """Check if header is an exclusion header, ignoring step execution headers."""
@@ -106,6 +162,42 @@ class SkillAuditIssue(NamedTuple):
     message: str
     category: str = ""
     file_path: str = ""
+
+
+class AuditIssueString(str):
+    """String subclass representing an audit issue with structured metadata."""
+
+    line_number: int
+    subject: str
+    message: str
+    category: str
+    file_path: str
+
+    def __new__(
+        cls,
+        message: str,
+        line_number: int = 1,
+        subject: str = "",
+        category: str = "",
+        file_path: str = "",
+    ) -> AuditIssueString:
+        obj = super().__new__(cls, message)
+        obj.line_number = line_number
+        obj.subject = subject
+        obj.message = message
+        obj.category = category
+        obj.file_path = file_path
+        return obj
+
+    def to_audit_issue(self) -> SkillAuditIssue:
+        """Convert to SkillAuditIssue NamedTuple."""
+        return SkillAuditIssue(
+            line_number=self.line_number,
+            subject=self.subject,
+            message=self.message,
+            category=self.category,
+            file_path=self.file_path,
+        )
 
 
 class SkillValidator:
@@ -158,6 +250,246 @@ class SkillValidator:
 
         self._cached_valid_bundles = valid
         return self._cached_valid_bundles
+
+    def get_registered_commands(self) -> set[str]:
+        """Retrieve all canonical registered slash commands from catalog.yaml, including aliases and host commands."""
+        catalog_candidates = [
+            self.project_root / ".agents" / "skills" / "platform-loader" / "catalog.yaml",
+            self.project_root / "catalog.yaml",
+            self.project_root / ".agents" / "catalog.yaml",
+        ]
+        commands: set[str] = set()
+        for cat_path in catalog_candidates:
+            if cat_path.exists() and yaml is not None:
+                try:
+                    data = yaml.safe_load(cat_path.read_text(encoding="utf-8")) or {}
+                    for item in data.get("skills", []):
+                        if isinstance(item, dict) and item.get("command"):
+                            cmd = str(item["command"]).strip()
+                            commands.add(cmd)
+                            if cmd.startswith("/ccba-"):
+                                commands.add("/" + cmd[6:])
+                            elif cmd.startswith("/bigbim-"):
+                                commands.add("/" + cmd[8:])
+                    for item in data.get("workflows", []):
+                        if isinstance(item, dict) and item.get("command"):
+                            commands.add(str(item["command"]).strip())
+                    break
+                except Exception:
+                    pass
+
+        commands.update(ALLOWED_HOST_COMMANDS)
+        commands.update(GITLAB_QUICK_ACTIONS)
+        return commands
+
+    def validate_markdown_links(self, file_path: Path, content: str | None = None) -> list[str]:
+        """Validate that relative markdown links in a file resolve to valid on-disk files."""
+        issues: list[str] = []
+        if content is None:
+            if not file_path.exists():
+                return issues
+            try:
+                content = file_path.read_text(encoding="utf-8", errors="ignore")
+            except Exception as e:
+                return [
+                    AuditIssueString(
+                        f"{file_path}:1: Failed to read file: {e}",
+                        line_number=1,
+                        subject=str(file_path),
+                        category="READ_ERROR",
+                        file_path=str(file_path),
+                    )
+                ]
+
+        lines = content.splitlines()
+        in_code_block = False
+
+        for idx, line in enumerate(lines, 1):
+            stripped = line.strip()
+            if stripped.startswith("```"):
+                in_code_block = not in_code_block
+                continue
+            if in_code_block:
+                continue
+
+            # Strip inline code spans
+            line_no_code = re.sub(r"`[^`]+`", "", line)
+
+            for target in LINK_EXTRACT_RE.findall(line_no_code):
+                target = target.strip()
+                # Ignore external URL schemes, anchors, or variable/wildcard placeholders
+                if target.startswith(
+                    (
+                        "http://",
+                        "https://",
+                        "mailto:",
+                        "conversation:",
+                        "file://",
+                        "#",
+                    )
+                ) or any(char in target for char in ("<", ">", "{", "}", "*", "...", "[")):
+                    continue
+
+                # Strip anchor fragment
+                clean_target = target.split("#")[0].strip()
+                if not clean_target:
+                    continue
+
+                resolved_path = (file_path.parent / clean_target).resolve()
+                if not resolved_path.exists():
+                    msg = (
+                        f"{file_path}:{idx}: Broken relative link '{target}' "
+                        f"(resolved to '{resolved_path}' which does not exist)."
+                    )
+                    issues.append(
+                        AuditIssueString(
+                            msg,
+                            line_number=idx,
+                            subject=target,
+                            category="BROKEN_MARKDOWN_LINK",
+                            file_path=str(file_path),
+                        )
+                    )
+
+        return issues
+
+    def audit_slash_commands(
+        self,
+        file_path: Path,
+        content: str | None = None,
+        registered_commands: set[str] | None = None,
+    ) -> list[str]:
+        """Audit markdown content for unregistered slash command references."""
+        issues: list[str] = []
+        if registered_commands is None:
+            allowed_cmds = self.get_registered_commands()
+        else:
+            allowed_cmds = set(registered_commands)
+            allowed_cmds.update(ALLOWED_HOST_COMMANDS)
+        if not allowed_cmds:
+            return issues
+
+        if content is None:
+            if not file_path.exists():
+                return issues
+            try:
+                content = file_path.read_text(encoding="utf-8", errors="ignore")
+            except Exception:
+                return issues
+
+        lines = content.splitlines()
+        in_code_block = False
+
+        for idx, line in enumerate(lines, 1):
+            stripped = line.strip()
+            if stripped.startswith("```"):
+                in_code_block = not in_code_block
+                continue
+            if in_code_block:
+                continue
+
+            # Strip full URLs
+            clean_line = re.sub(r"https?://[^\s)]+", "", line)
+            # Strip HTML/XML closing tags
+            clean_line = re.sub(r"</[a-zA-Z0-9_\-:]+>", "", clean_line)
+            # Strip markdown link targets [text](target)
+            clean_line = re.sub(r"\[([^\]]*)\]\([^)]+\)", r"\1", clean_line)
+            # Strip colon commands like /ck:ship, /ckm:brand
+            clean_line = re.sub(r"/[a-z0-9_\-]+:[a-z0-9_\-]+", "", clean_line)
+            # Strip generic placeholders like /<cmd>, /<name>, /{cmd}
+            clean_line = re.sub(r"/[<{][^>}]*[>}]", "", clean_line)
+            clean_line = re.sub(r"/ccba-[<{][^>}]*[>}]", "", clean_line)
+
+            for m in SLASH_CMD_RE.finditer(clean_line):
+                full_cmd = m.group(1)
+                base = m.group(2)
+                start = m.start(1)
+
+                # Vietnamese compound word separated by slash (e.g. ngữ/khái, chuẩn/quy)
+                if start > 0 and clean_line[start - 1].isalpha():
+                    continue
+                # Common filesystem directory names or single-letter flags
+                if base in COMMON_PATH_SEGMENTS or len(base) <= 1:
+                    continue
+                # Part of filename with extension or path (e.g. /research-[slug].md, /main.py)
+                remainder = clean_line[m.start(1) + 1 :].split()[0]
+                if any(
+                    ext in remainder
+                    for ext in (
+                        ".md",
+                        ".py",
+                        ".json",
+                        ".yaml",
+                        ".yml",
+                        ".txt",
+                        ".docx",
+                        ".pdf",
+                        ".png",
+                        ".jpg",
+                        ".ts",
+                        ".js",
+                    )
+                ):
+                    continue
+                # Generic placeholders
+                if full_cmd in {
+                    "/<cmd>",
+                    "/<name>",
+                    "/<command>",
+                    "/<skill-name>",
+                    "/<canonical-name>",
+                    "/ccba-",
+                }:
+                    continue
+
+                if full_cmd not in allowed_cmds:
+                    msg = (
+                        f"{file_path}:{idx}: Unregistered slash command '{full_cmd}' referenced in document. "
+                        f"Must be a registered command in catalog.yaml (or replace with canonical command)."
+                    )
+                    issues.append(
+                        AuditIssueString(
+                            msg,
+                            line_number=idx,
+                            subject=full_cmd,
+                            category="UNREGISTERED_SLASH_COMMAND",
+                            file_path=str(file_path),
+                        )
+                    )
+
+        return issues
+
+    def audit_skill_directory(self, skill_dir: Path) -> list[str]:
+        """Audit all markdown files in a skill directory for links, slash commands, and compliance."""
+        issues: list[str] = []
+        if skill_dir.is_file():
+            skill_dir = skill_dir.parent
+
+        if not skill_dir.exists():
+            return issues
+
+        registered_cmds = self.get_registered_commands()
+        md_files = sorted(skill_dir.rglob("*.md"))
+
+        for md_file in md_files:
+            if md_file.name == "SKILL.md":
+                skill_issues = self.audit_skill(md_file)
+                for si in skill_issues:
+                    msg = f"{md_file}:{si.line_number}: [{si.category}] {si.message}"
+                    issues.append(
+                        AuditIssueString(
+                            msg,
+                            line_number=si.line_number,
+                            subject=si.subject,
+                            category=si.category,
+                            file_path=si.file_path,
+                        )
+                    )
+
+            issues.extend(self.validate_markdown_links(md_file))
+            issues.extend(self.audit_slash_commands(md_file, registered_commands=registered_cmds))
+
+        return issues
 
     def check_shallow_skill(
         self, file_path: Path, content: str | None = None
@@ -1099,6 +1431,42 @@ class SkillValidator:
                         file_path=str(skills_dir),
                     )
                 )
+
+        # 3. Relative Link Integrity Gate across all skill markdown files
+        all_md_files = sorted(skills_dir.rglob("*.md"))
+        for md_file in all_md_files:
+            for link_issue in self.validate_markdown_links(md_file):
+                if hasattr(link_issue, "to_audit_issue"):
+                    issues.append(link_issue.to_audit_issue())
+                else:
+                    issues.append(
+                        SkillAuditIssue(
+                            1,
+                            str(md_file),
+                            str(link_issue),
+                            category="BROKEN_MARKDOWN_LINK",
+                            file_path=str(md_file),
+                        )
+                    )
+
+        # 4. Slash Command Registry Parity Gate across all skill markdown files
+        registered_cmds = self.get_registered_commands()
+        for md_file in all_md_files:
+            for cmd_issue in self.audit_slash_commands(
+                md_file, registered_commands=registered_cmds
+            ):
+                if hasattr(cmd_issue, "to_audit_issue"):
+                    issues.append(cmd_issue.to_audit_issue())
+                else:
+                    issues.append(
+                        SkillAuditIssue(
+                            1,
+                            str(md_file),
+                            str(cmd_issue),
+                            category="UNREGISTERED_SLASH_COMMAND",
+                            file_path=str(md_file),
+                        )
+                    )
 
         return issues
 

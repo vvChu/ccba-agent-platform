@@ -25,7 +25,7 @@ triggers:
 ---
 # 👥 Kỹ năng: ccba-teamwork (Điều Phối Đa Tác Nhân Dài Hạn)
 
-Kỹ năng này hướng dẫn Agent đóng vai trò **Project Orchestrator** để điều phối các tác vụ kỹ thuật và dự án quy mô lớn (Monorepo refactoring, thẩm tra thiết kế 4 bộ môn, nạp kho pháp điển hàng loạt) theo **Teamwork Multi-Agent Framework** (lấy cảm hứng từ Antigravity `/teamwork-preview` và ADR 0053).
+Kỹ năng này hướng dẫn Agent đóng vai trò **Project Orchestrator** để điều phối các tác vụ kỹ thuật và dự án quy mô lớn (Monorepo refactoring, thẩm tra thiết kế 4 bộ môn, nạp kho pháp điển hàng loạt) theo **Teamwork Multi-Agent Framework** (lấy cảm hứng từ `/ccba-teamwork` và ADR 0053).
 
 Khung làm việc này đảm bảo loại bỏ triệt để hiện tượng xung đột mã nguồn (merge conflicts), bảo vệ ngân sách ngữ cảnh (context budget) và duy trì sự phân tách rõ ràng giữa thẩm quyền con người (Accountability) và năng lực AI (Worker Assignments).
 
@@ -55,11 +55,10 @@ graph TB
    - Phỏng vấn người dùng, xác định mục tiêu và ranh giới Non-Goals.
    - Biên soạn `team_sheet.md` và thực hiện File-path Pre-Check.
    - Điều phối workers theo batch (tối đa 3 workers/batch).
-   - **Duy nhất Orchestrator** có quyền đọc kết quả scratch, tổng hợp, ghi file chính thức và commit Git.
+   - **Giao thức Tác tử Ghi Duy nhất (Single-Writer Protocol — ADR-0053):** Duy nhất Orchestrator có quyền nạp các patch files từ sandbox của workers, thẩm định va chạm dòng (`--check-conflicts`), chạy dry-run mô phỏng, ghi đĩa nguyên tử kèm snapshot và tự động rollback nếu kiểm định thất bại bằng `scripts/governance/apply_worker_patch.py`.
 2. **⚙️ Workers (Tác Nhân Thực Thi — Subagents):**
    - Thực thi độc lập và song song dưới nền.
-   - **Tuân thủ Two-Layer Guardrail (ADR 0035):** Chỉ có quyền đọc (`view_file`, `grep_search`, `read_resource`) và chạy scoped test cô lập; tuyệt đối không ghi đè codebase.
-   - Xuất toàn bộ code draft, báo cáo phân tích vào thư mục sandbox cô lập: `.system_generated/scratch/worker_{N}/`.
+   - **Nguyên tắc Không Can Thiệp Trước (No Pre-mutation Principle — SPEC-2026-TEAMWORK-DIFF-001):** Tuyệt đối không gọi các công cụ sửa file trực tiếp trên cây mã nguồn chính. Mọi đề xuất thay đổi bắt buộc đóng gói thành tệp patch định dạng **Search-Replace Block** hoặc **JSON Manifest** xuất vào sandbox: `.system_generated/scratch/teamwork/{project}/worker_{N}/patch_{seam}.txt`.
 3. **🔍 Success Auditor (Kiểm Định Nghiệm Thu):**
    - Độc lập chạy scoped test suite (runtime < 2.0s).
    - Quét rò rỉ secrets và Spoke artifacts bằng Maskara.
@@ -72,12 +71,13 @@ graph TB
 Kỹ năng hoàn thành khi:
 1. Đã phỏng vấn và tạo tệp `.agents/teams/[project]_team_sheet.md` đầy đủ 2 lớp: **Accountability Mapping** (11 Ghế CCBA Charter 2026) và **Worker Assignments** (AI Subagents).
 2. Toàn bộ Workers được dispatch tuân thủ **Worker Cap** (tối đa 3 workers đồng thời) và **Exclusive Seam Ownership** (chỉ đọc files trong scope).
-3. Các tệp trung gian của Workers được lưu gọn trong `.system_generated/scratch/worker_{N}/`, không vứt rải rác ngoài root.
-4. Orchestrator hoàn thành việc tổng hợp, ghi file chính thức và vượt qua **Success Auditor Gate**:
+3. Các tệp trung gian của Workers được lưu gọn trong `.system_generated/scratch/teamwork/{project}/worker_{N}/`, không vứt rải rác ngoài root.
+4. Orchestrator hoàn thành việc ghép patch nguyên tử bằng Single-Writer Engine, ghi file chính thức và vượt qua **Success Auditor Gate**:
    - 100% Scoped Unit Tests pass.
    - Spoke Leakage Guard & Maskara exit code 0.
    - Post-Merge Diff Audit xác nhận không có file ngoài phạm vi seam bị can thiệp.
    - Catalog SSOT được biên dịch lại đồng bộ (`compile_catalog.py`).
+5. **Deterministic Hard Completion Lock (ADR-0058):** Mọi lệnh kiểm thử và hợp nhất patch bắt buộc trả về Exit Code 0. Cấm Orchestrator tự nhận hoàn thành hoặc yêu cầu người dùng nghiệm thu nếu Exit Code $\ne 0$.
 
 ---
 
@@ -116,29 +116,41 @@ Orchestrator làm rõ yêu cầu với kỹ sư:
    - Khởi chạy các Worker subagents (tối đa 3 workers/batch) qua `invoke_subagent` hoặc công cụ điều phối nền tảng.
    - Prompt của từng Worker **bắt buộc** chứa:
      - Danh sách file được phép đọc (Exclusive File Scope).
-     - Chỉ thị ghi kết quả nháp vào `.system_generated/scratch/worker_{N}/output.md`.
+     - **Chỉ thị No Pre-mutation:** Worker tuyệt đối không ghi file trực tiếp. Bắt buộc xuất bản vá định dạng Search-Replace vào `.system_generated/scratch/teamwork/{project}/worker_{N}/patch_{seam}.txt`:
+       ```text
+       FILE: <relative_path>
+       <<<<<<< SEARCH
+       <old_code>
+       =======
+       <new_code>
+       >>>>>>> REPLACE
+       ```
      - Tiêu chí nghiệm thu cụ thể (Acceptance Criteria).
 2. **Worker Timeout & Fallback (10 Phút):**
    - Nếu Worker không hoàn thành sau 10 phút hoặc cạn ngân sách token:
      - Đánh dấu milestone là `INCOMPLETE`.
      - Trích xuất log trung gian từ scratch.
      - Quyết định: Dispatch Worker mới với prompt hẹp hơn HOẶC nếu lỗi logic sâu $\rightarrow$ đóng gói Deep Problem Brief và kích hoạt `/boost` (Escalation UP).
-3. **Tổng Hợp Bởi Orchestrator:**
-   - Sau khi các workers trong batch hoàn tất, Orchestrator đọc các tệp output từ `.system_generated/scratch/worker_{N}/`.
-   - Orchestrator thực hiện ghi mã nguồn chính thức vào codebase.
-   - Thực hiện commit Git theo từng logical unit: `feat(scope): ...` hoặc `refactor(scope): ...`.
+3. **Hợp Nhất Nguyên Tử Bởi Orchestrator (Single-Writer Engine):**
+   - Sau khi các workers trong batch hoàn tất xuất patch, Orchestrator nạp và áp dụng nguyên tử:
+     ```powershell
+     python scripts/governance/apply_worker_patch.py --patch-dir .system_generated/scratch/teamwork/{project}/ --check-conflicts --apply --verify -c "python -m pytest [target_tests] -q" "python -m ruff check [target_paths]"
+     ```
+   - Nếu phát hiện **Line Collision**: Orchestrator từ chối batch, yêu cầu worker nộp lại patch sau khi rebase.
+   - Nếu phát hiện **Semantic Conflict** (verification thất bại): Engine tự động rollback 100% snapshot, Orchestrator điều chỉnh logic xung đột.
+   - Khi hoàn tất thành công, thực hiện commit Git theo từng logical unit: `feat(scope): ...` hoặc `refactor(scope): ...`.
 
 ---
 
-**Tiêu chí hoàn thành:** Các worker hoàn thành nhiệm vụ song song và orchestrator tổng hợp code.
+**Tiêu chí hoàn thành:** Các worker hoàn thành nhiệm vụ song song và orchestrator tổng hợp code nguyên tử không xung đột.
 
 ---
 
 ### Giai Đoạn 4: Cổng Kiểm Định Nghiệm Thu (Success Auditor Gate)
 Auditor hoặc Orchestrator thực hiện chuỗi kiểm định tự động:
-1. **Kiểm tra Unit Tests:**
+1. **Kiểm tra Verification Gate & Code Health:**
    ```powershell
-   python -m pytest [target_tests]
+   python -m ccba_harness verify-patch --preset code
    ```
 2. **Kiểm tra An toàn Maskara & Rò rỉ Spoke:**
    ```powershell
@@ -155,7 +167,10 @@ Auditor hoặc Orchestrator thực hiện chuỗi kiểm định tự động:
    ```
 5. **Cập nhật trạng thái:** Cập nhật `team_sheet.md` sang `COMPLETED` và tóm tắt nghiệm thu cho người dùng.
 
-**Tiêu chí hoàn thành:** Cả 3 bước kiểm định (tests, maskara, diff audit) đều vượt qua thành công.
+> [!CAUTION]
+> **Deterministic Hard Completion Lock (ADR-0058)**: Cấm Orchestrator tự nhận hoàn thành nếu bất kỳ bước kiểm định nào ở trên có Exit Code $\ne 0$.
+
+**Tiêu chí hoàn thành:** Cả 4 bước kiểm định (verify-patch, maskara, diff audit, catalog) đều vượt qua thành công với Exit Code 0.
 
 ---
 

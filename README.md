@@ -237,7 +237,7 @@ python scripts/sync_spoke.py --spoke "D:/GitHubProjects/my-bim-audit-spoke" --sy
 ### 4. Đóng Góp Tính Năng Ngược Lên Hub (`/ccba-issue-to-hub` & `/ccba-contribute-to-hub`)
 Hệ thống chuẩn hóa chu trình đóng góp 2 chiều:
 - **Đề xuất Ý tưởng / RFC:** Kích hoạt `/ccba-issue-to-hub` để tự động tổng hợp bối cảnh, soạn RFC và tạo GitHub Issue lên Hub repo.
-- **Đóng góp Mã nguồn & Tests:** Kích hoạt `/ccba-contribute-to-hub` (hoặc `/ccba-propose-to-hub`) để đóng gói code, package, tests và mở Pull Request lên Hub kèm Self-Healing CI Gate.
+- **Đóng góp Mã nguồn & Tests:** Kích hoạt `/ccba-contribute-to-hub` để đóng gói code, package, tests và mở Pull Request lên Hub kèm Self-Healing CI Gate.
 
 ---
 
@@ -250,13 +250,13 @@ Hệ thống chuẩn hóa chu trình đóng góp 2 chiều:
 | **`/ccba-issue-to-hub`** | Soạn thảo RFC và tạo GitHub Issue đề xuất ý tưởng/tính năng mới lên Hub. |
 | **`/ccba-contribute-to-hub`** | Đóng gói mã nguồn, tests và mở Pull Request lên Hub kèm Self-Healing CI. |
 | **`/ccba-ai-qc-pccc-audit`** | Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) qua Semantic Map-Reduce. |
-| **`/ccba-markdown-document-processing`** (Alias: `/ccba-convert-markdown`) | Chuyển đổi PDF/Word sang Markdown cấu trúc cao bằng `mdconverter`. |
-| **`/ccba-improve-codebase-architecture`** | Quét module nông, sinh sơ đồ Mermaid trực quan và thực hiện Grilling loop làm sâu module. |
-| **`/ccba-legal-intel`** | Tư vấn, tra cứu và so sánh đối chiếu văn bản pháp luật xây dựng Việt Nam. |
-| **`/ccba-notebooklm-connector`** (Alias: `/ccba-notebooklm`) | Kết nối Google NotebookLM để thực hiện RAG query và tạo Audio Overview podcast. |
+| **`/ccba-markdown-document-processing`** | Chuyển đổi PDF/Word sang Markdown cấu trúc cao bằng `mdconverter`. |
+| **`/ccba-codebase-design`** | Quét module nông, sinh sơ đồ Mermaid trực quan và làm sâu module. |
+| **`/ccba-legal-document-tracker`** | Theo dõi, so sánh và phân tích các văn bản pháp luật xây dựng Việt Nam với VBHNEngine. |
+| **`/ccba-notebooklm-connector`** | Kết nối Google NotebookLM để thực hiện RAG query và tạo Audio Overview podcast. |
 | **`/ccba-session-retrospective`** | Tổng kết tri thức cuối phiên làm việc, tiến hóa kỹ năng và kích hoạt Governance Gate. |
 | **`/ccba-implement`** | Triển khai lập trình khép kín: TDD $\rightarrow$ Eval Gate $\rightarrow$ Code Review $\rightarrow$ Commit. |
-| **`/ccba-create-pr`** | Chạy kiểm định CI nội bộ và tạo Pull Request tự động lên GitHub. |
+| **`/ccba-to-spec`** | Soạn thảo Đặc tả Kỹ thuật Spec và phân rã tác vụ độc lập từ ý tưởng ban đầu. |
 
 ---
 

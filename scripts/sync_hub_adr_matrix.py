@@ -178,12 +178,12 @@ def scan_skill_radar(
         # 1. Skills
         skills_dir = r / ".agents" / "skills"
         if skills_dir.exists():
-            target_paths.extend(skills_dir.glob("**/SKILL.md"))
+            target_paths.extend(sorted(skills_dir.glob("**/SKILL.md")))
 
         # 2. Workflows
         wf_dir = r / ".agents" / "workflows"
         if wf_dir.exists():
-            target_paths.extend(wf_dir.glob("*.md"))
+            target_paths.extend(sorted(wf_dir.glob("*.md")))
 
         # 3. Core markdown files
         for core_f in [
@@ -199,7 +199,7 @@ def scan_skill_radar(
         # 4. Monorepo packages AGENTS.md
         packages_dir = r / "packages"
         if packages_dir.exists():
-            target_paths.extend(packages_dir.glob("*/AGENTS.md"))
+            target_paths.extend(sorted(packages_dir.glob("*/AGENTS.md")))
 
     # Regex to match ADR references like: ADR-0010, ADR 0010, ADR0010, ADR 10
     ref_pattern = re.compile(r"\bADR[-\s]*0*([0-9]+)\b", re.IGNORECASE)
@@ -483,19 +483,7 @@ def detect_environment(root_dir: Path) -> tuple[str, Path, Path | None]:
     Returns:
         Tuple of (mode: "hub" | "spoke", hub_path: Path, spoke_path: Path | None)
     """
-    # 1. Check workspace_context.yaml
-    ws_context = root_dir / ".md" / "workspace_context.yaml"
-    if ws_context.exists():
-        try:
-            cfg = yaml.safe_load(ws_context.read_text(encoding="utf-8"))
-            if isinstance(cfg, dict) and "hub_path" in cfg:
-                hub_val = Path(cfg["hub_path"])
-                if hub_val.resolve() != root_dir.resolve() and hub_val.exists():
-                    return "spoke", hub_val.resolve(), root_dir
-        except Exception:
-            pass
-
-    # 2. Check git remote
+    # 1. Primary Invariant (AGENTS.md): Identify via git remote get-url origin
     try:
         res = subprocess.run(
             ["git", "remote", "get-url", "origin"],
@@ -508,6 +496,21 @@ def detect_environment(root_dir: Path) -> tuple[str, Path, Path | None]:
             return "hub", root_dir, None
     except Exception:
         pass
+
+    # 2. Check workspace_context.yaml
+    ws_context = root_dir / ".md" / "workspace_context.yaml"
+    if ws_context.exists():
+        try:
+            cfg = yaml.safe_load(ws_context.read_text(encoding="utf-8"))
+            if isinstance(cfg, dict):
+                if cfg.get("project", {}).get("name") == "ccba-agent-platform":
+                    return "hub", root_dir, None
+                if "hub_path" in cfg:
+                    hub_val = Path(cfg["hub_path"])
+                    if hub_val.resolve() != root_dir.resolve() and hub_val.exists():
+                        return "spoke", hub_val.resolve(), root_dir
+        except Exception:
+            pass
 
     # 3. Check for core hub markers
     if (root_dir / "packages" / "ccba-ai").exists() and (

@@ -7,7 +7,7 @@
 
 # Kỹ năng: Radar Thượng Nguồn & Cầu Nối Porting (Upstream Radar & Handshake)
 
-Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho chứa thượng nguồn (được cấu hình linh hoạt tại [`.md/knowledge/upstream_sources.yaml`](../../../.md/knowledge/upstream_sources.yaml)), kiểm tra bản quyền, thẩm tra tính năng mới theo **Thể chế ADR-0057 & RES-2026-ARCH-001 v1.2 (Khung Quyết Định Phân Rã Hai Giai Đoạn)** qua AI Gateway và tự động sinh lệnh **1-Click Porting** với `/ccba-xia`.
+Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho chứa thượng nguồn (được cấu hình linh hoạt tại [`.md/knowledge/upstream_sources.yaml`](../../../../.md/knowledge/upstream_sources.yaml)), kiểm tra bản quyền, thẩm tra tính năng mới theo **Thể chế ADR-0057 & RES-2026-ARCH-001 v1.2 (Khung Quyết Định Phân Rã Hai Giai Đoạn)** qua AI Gateway và tự động sinh lệnh **1-Click Porting** với `/ccba-xia`.
 
 ---
 

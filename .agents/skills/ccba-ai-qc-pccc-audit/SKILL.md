@@ -6,6 +6,13 @@ applies_to:
 - Thẩm tra thiết kế
 - Thiết kế
 bundle: _qc
+user-invocable: true
+command: /ccba-ai-qc-pccc-audit
+gpi:
+  s: 2.0
+  k: 2.0
+  a: 4.0
+  p: 1.0
 triggers:
 - pccc audit
 - semantic map-reduce

@@ -70,7 +70,7 @@ The process where Project Spokes synchronize and update their local .agents/skil
 Mẫu hình chia sẻ tri thức giữa Hub và Spoke thông qua khai báo đường dẫn phân giải động trong `catalog.yaml` thay vì sao chép nội dung tệp tin, duy trì nguyên tắc Một Nguồn Sự Thật Duy Nhất (Single Source of Truth) và loại bỏ hoàn toàn nguy cơ trùng lặp dữ liệu.
 
 **Brownfield Spoke Adoption (Tiếp Nhận Spoke Hiện Hữu)**:
-Quy trình kỹ thuật và công cụ (`/ccba-adopt-spoke`) cho phép kết nạp an toàn một repository/codebase đã có sẵn vào mạng lưới CCBA Platform mà không phá hủy cấu trúc dữ liệu, Hiến pháp riêng hoặc mã nguồn hiện hữu.
+Quy trình kỹ thuật và công cụ (`/ccba-spoke-adopter`) cho phép kết nạp an toàn một repository/codebase đã có sẵn vào mạng lưới CCBA Platform mà không phá hủy cấu trúc dữ liệu, Hiến pháp riêng hoặc mã nguồn hiện hữu.
 
 **Non-Destructive Schema Merging (Hợp Nhất Cấu Hình Bảo Toàn)**:
 Giao thức hợp nhất tệp `workspace_context.yaml` theo nguyên tắc Additive (chỉ thêm các trường bắt buộc của Hub, bảo tồn 100% các nhóm tài liệu và milestone tùy biến cũ của Spoke) kèm sao lưu tự động.
@@ -254,7 +254,7 @@ The parsing algorithm in `validate_skills.py` that tracks Markdown heading level
 A set of common static headings (such as "Lưu ý", "Tham chiếu") that temporarily disable step-validation checking to prevent false positives.
 
 **Boost Escalation Gate (Cổng Leo Thang Boost)**:
-Quy chuẩn chuyển giao và leo thang bài toán kỹ thuật từ vòng lặp TDD bế tắc ($\ge 3$ vòng fail liên tiếp) hoặc các ca bẫy đa tiến trình/đa package sang chu trình suy luận đa tác nhân (`/boost`), ngăn chặn triệt để hành vi đoán mò và tiêu hao ngữ cảnh vô ích.
+Quy chuẩn chuyển giao và leo thang bài toán kỹ thuật từ vòng lặp TDD bế tắc ($\ge 3$ vòng fail liên tiếp) hoặc các ca bẫy đa tiến trình/đa package sang chu trình suy luận đa tác nhân (lệnh native `/boost` của Antigravity), ngăn chặn triệt để hành vi đoán mò và tiêu hao ngữ cảnh vô ích.
 
 **Deep Problem Brief (Hồ Sơ Vấn Đề Chuyên Sâu)**:
 Bản đóng gói thông tin kỹ thuật tiêu chuẩn hóa (Failure Manifest, Tested Hypotheses, Code Seams, Error Logs, Actionable Recommendations) do Agent tự động biên soạn khi kích hoạt Boost Escalation Gate để cung cấp ngữ cảnh cô đọng cho quy trình suy luận sâu.
@@ -272,7 +272,7 @@ Nguyên tắc phân định ranh giới trong Teamwork: Mỗi Worker Subagent ch
 Cơ chế kiểm định độc lập do Success Auditor hoặc Orchestrator thực thi sau mỗi milestone bằng cách so khớp danh sách tệp thay đổi thực tế (`git diff --name-only`) với danh sách file scope đã phân quyền trong `team_sheet.md`, chủ động chặn đứng nguy cơ rò rỉ ranh giới module (Seam Boundary Leakage).
 
 **Teamwork Session (Phiên Điều Phối Đa Tác Nhân)**:
-Quy trình điều phối đa tác nhân dài hạn (/ccba-teamwork) chia làm 4 giai đoạn (Interview $\rightarrow$ Team Sheet $\rightarrow$ Parallel Milestone Execution $\rightarrow$ Success Audit) phục vụ xử lý các dự án quy mô lớn phân rã đa luồng công việc song song, phân biệt với quy trình /boost (suy luận sâu ngắn hạn tập trung giải quyết bế tắc kỹ thuật).
+Quy trình điều phối đa tác nhân dài hạn (/ccba-teamwork) chia làm 4 giai đoạn (Interview $\rightarrow$ Team Sheet $\rightarrow$ Parallel Milestone Execution $\rightarrow$ Success Audit) phục vụ xử lý các dự án quy mô lớn phân rã đa luồng công việc song song, phân biệt với quy trình native `/boost` của Antigravity (suy luận sâu ngắn hạn tập trung giải quyết bế tắc kỹ thuật).
 
 **Antigravity Lifecycle Hooks (Móc Vòng Đời Antigravity)**:
 Cơ chế `hooks.json` của Antigravity Platform cho phép chạy các lệnh shell tại các sự kiện vòng đời (PreToolUse, PostToolUse, PreInvocation, Stop) để kiểm soát, chặn hoặc tiêm ngữ cảnh vào Agent. Giao tiếp qua stdin/stdout JSON camelCase.

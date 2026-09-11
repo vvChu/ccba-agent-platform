@@ -10,6 +10,13 @@ bundle: _consulting
 metadata:
   author: CCBA
   version: 1.1.0
+user-invocable: true
+command: /ccba-seminar-builder
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 4.0
+  p: 1.0
 triggers:
 - seminar
 - đào tạo

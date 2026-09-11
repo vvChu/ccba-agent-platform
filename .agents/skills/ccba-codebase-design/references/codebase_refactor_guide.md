@@ -101,7 +101,7 @@ Quy trình này được định hướng bởi domain model của dự án và 
   * Nếu làm sắc nét thêm một thuật ngữ mập mờ $\rightarrow$ Cập nhật định nghĩa trực tiếp vào `CONTEXT.md`.
   * Nếu người dùng từ chối đề xuất vì một lý do kỹ thuật nền tảng quan trọng $\rightarrow$ Đề xuất ghi nhận thành tài liệu ADR trong thư mục `.md/knowledge/` để tránh các đợt quét sau đề xuất lại trùng lặp.
   * Nếu muốn so sánh các thiết kế interface khác nhau cho module sâu $\rightarrow$ Kích hoạt kỹ năng `/ccba-codebase-design` và chạy cơ chế parallel sub-agent (thiết kế hai phương án độc lập để đối chiếu).
-  * **Đề xuất dựng mẫu thử nhanh (ADR 0010):** Sau khi thống nhất phương án triển khai, nếu việc refactor ảnh hưởng trực tiếp đến **Core Platform (Hub)** (ví dụ: sửa đổi core services, metadata registry, database schema chung), Agent bắt buộc phải đề xuất hoặc kích hoạt `/ccba-prototype` (nhánh Logic/UI) để dựng nhanh mô phỏng hoạt động trước khi code thật. Đối với các Spoke apps hoặc hàm nghiệp vụ độc lập, Agent đề xuất viết code trực tiếp và chạy suite kiểm thử để tối ưu thời gian.
+  * **Đề xuất dựng mẫu thử nhanh (ADR 0010):** Sau khi thống nhất phương án triển khai, nếu việc refactor ảnh hưởng trực tiếp đến **Core Platform (Hub)** (ví dụ: sửa đổi core services, metadata registry, database schema chung), Agent bắt buộc phải đề xuất hoặc kích hoạt `/ccba-implement` (nhánh Logic/UI) để dựng nhanh mô phỏng hoạt động trước khi code thật. Đối với các Spoke apps hoặc hàm nghiệp vụ độc lập, Agent đề xuất viết code trực tiếp và chạy suite kiểm thử để tối ưu thời gian.
 - **Tiêu chí hoàn thành:** Phiên chất vấn grilling kết thúc, thống nhất được phương án triển khai cụ thể, và các tài liệu tri thức (`CONTEXT.md`, ADRs) được cập nhật đồng bộ.
 
 ---

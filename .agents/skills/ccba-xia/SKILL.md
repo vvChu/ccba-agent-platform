@@ -6,12 +6,6 @@ user-invocable: true
 command: /ccba-xia
 when_to_use: Dùng khi cần port tính năng giữa các repository.
 category: dev-tools
-keywords:
-- port
-- extract
-- compare
-- feature
-- repo
 argument-hint: <github-url-or-owner/repo|local-path> [feature] [--compare|--copy-raw|--improve|--port]
   [--auto|--fast]
 metadata:
@@ -19,7 +13,7 @@ metadata:
   version: 2.0.0
 disable-model-invocation: true
 bundle: _software
-gpi: {s: 4.0, k: 3.0, a: 2.0, p: 1.0}
+gpi: {s: 4.0, k: 3.0, a: 1.0, p: 1.0}
 triggers:
 - port
 - extract
@@ -42,7 +36,7 @@ Tham khảo cú pháp, các chế độ chạy (`--compare`, `--port`, v.v.) và
 
 ## Phạm vi trách nhiệm (Scope)
 
-Skill này **chỉ thực hiện phân tích, phản biện và lập kế hoạch**. Đầu ra cuối cùng là file `implementation_plan.md` chứa kế hoạch triển khai chi tiết. Việc triển khai mã nguồn thực tế thuộc trách nhiệm của `/ccba-implement` hoặc `/ccba-tdd`.
+Skill này **chỉ thực hiện phân tích, phản biện và lập kế hoạch**. Đầu ra cuối cùng là file `implementation_plan.md` chứa kế hoạch triển khai chi tiết (hoặc báo cáo so sánh kiến trúc ở chế độ `--compare`). Việc triển khai mã nguồn thực tế thuộc trách nhiệm của `/ccba-implement` hoặc `/ccba-tdd`.
 
 ---
 
@@ -113,7 +107,8 @@ Hiểu rõ lý do tại sao mã nguồn chạy như vậy, chứ không chỉ l�
 
 **Tiêu chí hoàn thành:**
 *   [x] Phải mô tả được ít nhất một luồng dữ liệu end-to-end hoàn chỉnh của tính năng.
-*   [x] Phải liệt kê đầy đủ danh sách các biến cấu hình (`.env`) bắt buộc của tính năng nguồn.
+*   [x] Phải liệt kê đầy đủ danh sách các biến cấu hình (`.env`) bắt buộc của tính năng nguồn (có thể ghi rõ "None required / Không yêu cầu" nếu là thuật toán thuần túy).
+*   [x] Phải thực hiện và ghi nhận phân tích chuyên sâu tương ứng với chế độ chạy từ [MODES.md](MODES.md) (ví dụ: architectural diff cho `--compare`, phạm vi refactoring cho `--improve`/`--port`, hoặc đánh dấu ranh giới cho `--copy-raw`).
 
 ---
 
@@ -186,11 +181,11 @@ Bàn giao kết quả phân tích và kế hoạch triển khai cho người dù
 
 **Các bước thực hiện:**
 1. **Auto-cleanup:** Xóa bỏ hoàn toàn thư mục tạm `.md/scratch/xia_sources/` trước khi thông báo hoàn tất.
-2. In ra thông báo bàn giao kế hoạch triển khai.
-3. Cung cấp đường dẫn file `implementation_plan.md` cho người dùng.
-4. **Next Step Recommendation:** In ra hướng dẫn bước tiếp theo cụ thể: *"Để bắt đầu triển khai, hãy chạy `/ccba-implement` với kế hoạch này."*
+2. In ra thông báo bàn giao kế hoạch triển khai (hoặc báo cáo so sánh kiến trúc ở chế độ `--compare`).
+3. Cung cấp đường dẫn file `implementation_plan.md` (hoặc file báo cáo so sánh ở chế độ `--compare`) cho người dùng.
+4. **Next Step Recommendation:** In ra hướng dẫn bước tiếp theo cụ thể phù hợp với chế độ chạy: khuyến nghị chạy `/ccba-implement` với kế hoạch này khi ở các chế độ port/improve/copy-raw; hoặc khuyến nghị các bước đánh giá, theo dõi kiến trúc tiếp theo (architectural evaluation follow-up) khi ở chế độ `--compare`.
 
 **Tiêu chí hoàn thành:**
 *   [x] Bàn giao thành công báo cáo so sánh (chế độ `--compare`) hoặc kế hoạch triển khai (chế độ khác) bằng liên kết file click được.
 *   [x] Thư mục tạm `.md/scratch/xia_sources/` đã được xóa sạch.
-*   [x] Đã in Next Step Recommendation hướng dẫn người dùng chạy `/ccba-implement`.
+*   [x] Đã in Next Step Recommendation phù hợp theo chế độ: khuyến nghị chạy `/ccba-implement` khi ở các chế độ port/improve/copy-raw, hoặc khuyến nghị đánh giá kiến trúc tiếp theo khi ở chế độ `--compare`.

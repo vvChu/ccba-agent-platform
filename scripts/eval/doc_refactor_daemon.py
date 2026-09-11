@@ -236,8 +236,8 @@ class PillarBalanceAuditor:
         """Audits Markdown content for bloated pillars."""
         results: list[PillarBloatInfo] = []
 
-        # Split content by Level 2 headings (## Trụ Cột X or ## X. Title)
-        pillar_sections = re.split(r"\n##\s+(\d+)\.\s+", content)
+        # Split content by Level 2 headings (## Trụ Cột X, ## Miền X, or ## X. Title)
+        pillar_sections = re.split(r"\n##\s+(?:(?:Miền|Trụ Cột)\s+)?(\d+)\.\s+", content)
         if len(pillar_sections) < 2:
             return results
 
@@ -248,7 +248,7 @@ class PillarBalanceAuditor:
             title_match = re.match(r"([^\n]+)", section_body)
             title = title_match.group(1).strip() if title_match else f"Pillar {pillar_num}"
 
-            patterns = re.findall(r"####\s+P\d+\.\d+", section_body)
+            patterns = re.findall(r"(?:####\s+P\d+\.\d+|- \*\*RULE-\d+\.\d+)", section_body)
             pattern_count = len(patterns)
 
             is_bloated = pattern_count >= max_patterns

@@ -7,6 +7,11 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _qc
+gpi:
+  s: 3.0
+  k: 3.0
+  a: 4.0
+  p: 1.0
 triggers:
 - pdf
 - preprocessor
@@ -14,6 +19,7 @@ triggers:
 - tiling
 - bản vẽ
 - scan
+package_path: packages/ccba-pdf-prep
 ---
 # CCBA AI PDF Preprocessor
 

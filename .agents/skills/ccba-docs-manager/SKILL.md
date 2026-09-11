@@ -5,6 +5,13 @@ applies_to:
 - Phần mềm
 bundle: _software
 disable-model-invocation: true
+user-invocable: true
+command: /ccba-docs-manager
+gpi:
+  s: 3.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 triggers:
 - ccba-docs-manager
 - quản lý tài liệu

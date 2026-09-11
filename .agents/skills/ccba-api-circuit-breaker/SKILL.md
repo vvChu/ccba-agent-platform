@@ -10,6 +10,11 @@ applies_to:
 bundle: _core
 dependencies:
 - ccba-ai-gateway-sdk
+gpi:
+  s: 3.0
+  k: 3.0
+  a: 4.0
+  p: 1.0
 triggers:
 - circuit breaker
 - rate limit

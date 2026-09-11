@@ -5,7 +5,7 @@
 
 ---
 
-# Lệnh /ccba-skills-eval
+# Lệnh /ccba-eval-gate
 
 Khi nhận được lệnh này từ người dùng, Agent sẽ tự động nạp và thực thi công cụ kiểm định chất lượng (Evaluations) cho các kỹ năng AI.
 
@@ -15,8 +15,8 @@ Khi nhận được lệnh này từ người dùng, Agent sẽ tự động n�
 
 ### Bước 1: Xác định phạm vi kiểm thử
 Agent phân tích yêu cầu của người dùng để xác định tham số:
-- **Kiểm thử một kỹ năng cụ thể:** Nếu người dùng yêu cầu kiểm tra một kỹ năng (ví dụ: `/ccba-skills-eval ccba-copywriting` hoặc viết gọn `copywriting`), xác lập tham số `--skill ccba-copywriting`.
-- **Kiểm thử toàn bộ:** Nếu người dùng chỉ gõ lệnh chung `/ccba-skills-eval`, mặc định chạy cho tất cả kỹ năng bằng cách bỏ trống `--skill` hoặc đặt `--skill all`.
+- **Kiểm thử một kỹ năng cụ thể:** Nếu người dùng yêu cầu kiểm tra một kỹ năng (ví dụ: `/ccba-eval-gate ccba-copywriting` hoặc viết gọn `copywriting`), xác lập tham số `--skill ccba-copywriting`.
+- **Kiểm thử toàn bộ:** Nếu người dùng chỉ gõ lệnh chung `/ccba-eval-gate`, mặc định chạy cho tất cả kỹ năng bằng cách bỏ trống `--skill` hoặc đặt `--skill all`.
 - **Số lần chạy thử:** Mặc định chạy 3 lần thử (`--trials 3`) để đo độ tin cậy. Nếu người dùng cần chạy nhanh để kiểm tra lỗi cú pháp, có thể đặt `--trials 1`.
 
 **Tiêu chí hoàn thành:** Xác định rõ kỹ năng mục tiêu và số lượt thử nghiệm.
@@ -40,7 +40,7 @@ python -m ccba_harness.cli eval --trials 3
 **Tiêu chí hoàn thành:** Lệnh ccba-harness eval được khởi chạy với đầy đủ tham số.
 
 ### Bước 3: Đánh giá Đa chiều theo Barem Rubrics & Rào chắn Điểm Liệt
-- **Bộ Tiêu chí Định lượng & Rubrics:** Đối chiếu kết quả với Quy chuẩn tại [`.md/knowledge/guidelines/domain_success_criteria_rubrics.md`](../../../.md/knowledge/guidelines/domain_success_criteria_rubrics.md):
+- **Bộ Tiêu chí Định lượng & Rubrics:** Đối chiếu kết quả với Quy chuẩn tại [`.md/knowledge/guidelines/domain_success_criteria_rubrics.md`](../../../../.md/knowledge/guidelines/domain_success_criteria_rubrics.md):
   * **Code-Based Assertions (< 1ms):** ExactMatch, RegexMatch, JsonSchemaMatch, LengthBounds.
   * **Model-Based Rubrics (Likert 1–5):** Anthropic Prompt Structure (`<rubric>`, `<answer>`, `<thinking>`, `<score>`).
   * **Rào chắn Điểm Liệt (Hard Floor):** Nếu vi phạm tiêu chí cốt lõi (False Negative PCCC, sai hiệu lực văn bản luật, bịa trích dẫn), bài thi bị đánh rớt ngay lập tức (Score = 0.0%) bất kể các tiêu chí phụ.

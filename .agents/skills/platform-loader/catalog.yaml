@@ -11,6 +11,7 @@ notebook_ids:
   _software: nb-mock-software
   _qc: nb-mock-qc
   _consulting: nb-mock-consulting
+  _bim: nb-mock-bim
 bundles:
   Phần mềm:
   - _core
@@ -29,6 +30,7 @@ bundles:
   - _consulting
   BIM:
   - _core
+  - _bim
   Tác vụ Admin:
   - _core
   - _consulting
@@ -154,6 +156,7 @@ skills:
   - ccba-architecture-sync
   - architecture-sync
   skill_path: .agents/skills/ccba-adr-lifecycle/SKILL.md
+  command: /ccba-adr-lifecycle
 - name: ccba-ai-gateway-sdk
   bundle: _core
   description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud),
@@ -184,6 +187,7 @@ skills:
   - bản vẽ
   - scan
   skill_path: .agents/skills/ccba-ai-pdf-preprocessor/SKILL.md
+  package_path: packages/ccba-pdf-prep
 - name: ccba-ai-qc
   bundle: _qc
   description: Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế
@@ -201,6 +205,8 @@ skills:
   - multi-discipline audit
   - heat map report
   skill_path: .agents/skills/ccba-ai-qc/SKILL.md
+  command: /ccba-ai-qc
+  package_path: packages/ccba-qc-core
   tier: orchestrator
 - name: ccba-ai-qc-pccc-audit
   bundle: _qc
@@ -219,6 +225,7 @@ skills:
   - ccba-pccc-thamdinh-cqxd
   - pccc-thamdinh-cqxd
   skill_path: .agents/skills/ccba-ai-qc-pccc-audit/SKILL.md
+  command: /ccba-ai-qc-pccc-audit
 - name: ccba-api-circuit-breaker
   bundle: _core
   description: Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch
@@ -263,6 +270,7 @@ skills:
   - ccba-brainstorm
   - brainstorm
   skill_path: .agents/skills/ccba-ask/SKILL.md
+  command: /ccba-ask
 - name: ccba-autoresearch
   bundle: _core
   description: Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet
@@ -325,6 +333,7 @@ skills:
   - ccba-improve-codebase-architecture
   - improve-codebase-architecture
   skill_path: .agents/skills/ccba-codebase-design/SKILL.md
+  command: /ccba-codebase-design
 - name: ccba-completion-checklist
   bundle: _consulting
   description: Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện
@@ -372,6 +381,7 @@ skills:
   - ccba-viet-chuyen-nghiep
   - viet-chuyen-nghiep
   skill_path: .agents/skills/ccba-copywriting/SKILL.md
+  command: /ccba-copywriting
 - name: ccba-design
   bundle: _consulting
   description: Design brand identity, logos, banners, and visual assets. Use for brand
@@ -404,6 +414,7 @@ skills:
   - ccba-mock-debugger
   - mock-debugger
   skill_path: .agents/skills/ccba-diagnosing-bugs/SKILL.md
+  command: /ccba-diagnosing-bugs
 - name: ccba-docs-manager
   bundle: _software
   description: Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
@@ -415,6 +426,7 @@ skills:
   - ccba-docs-validator
   - docs-validator
   skill_path: .agents/skills/ccba-docs-manager/SKILL.md
+  command: /ccba-docs-manager
 - name: ccba-domain-modeling
   bundle: _software
   description: Build, refine, and maintain the project's domain model, ubiquitous
@@ -426,6 +438,7 @@ skills:
   - ubiquitous language
   - adr
   skill_path: .agents/skills/ccba-domain-modeling/SKILL.md
+  command: /ccba-domain-modeling
 - name: ccba-eval-gate
   bundle: _software
   description: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động
@@ -440,6 +453,8 @@ skills:
   - ccba-skills-eval
   - skills-eval
   skill_path: .agents/skills/ccba-eval-gate/SKILL.md
+  command: /ccba-eval-gate
+  package_path: packages/ccba-harness
 - name: ccba-excalidraw-diagram
   bundle: _core
   description: Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian
@@ -448,6 +463,7 @@ skills:
   - ccba-show-me
   - show-me
   skill_path: .agents/skills/ccba-excalidraw-diagram/SKILL.md
+  command: /ccba-excalidraw-diagram
 - name: ccba-file-stability-guard
   bundle: _core
   description: Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước
@@ -474,6 +490,7 @@ skills:
   - ccba-resolving-merge-conflicts
   - resolving-merge-conflicts
   skill_path: .agents/skills/ccba-git-guardrails/SKILL.md
+  command: /ccba-git-guardrails
 - name: ccba-graduate-rd
   bundle: _core
   description: Quy trình cưỡng chế chuyển hóa mã nguồn R&D thành Deep Seam Production,
@@ -521,6 +538,7 @@ skills:
   - transfer context
   - chuyển tiếp
   skill_path: .agents/skills/ccba-handoff/SKILL.md
+  command: /ccba-handoff
 - name: ccba-hybrid-rag-search
   bundle: _core
   description: Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) +
@@ -621,6 +639,7 @@ skills:
   - ccba-update-legal-registry
   - update-legal-registry
   skill_path: .agents/skills/ccba-legal-document-tracker/SKILL.md
+  command: /ccba-legal-document-tracker
 - name: ccba-legal-ingest
   bundle: _consulting
   description: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation,
@@ -650,6 +669,7 @@ skills:
   - thuvienphapluat
   - TVPL
   skill_path: .agents/skills/ccba-legal-intel/SKILL.md
+  package_path: packages/ccba-legal-intel
 - name: ccba-llm-pipeline-patterns
   bundle: _core
   description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
@@ -673,6 +693,8 @@ skills:
   - chuẩn hóa markdown
   - document processing
   skill_path: .agents/skills/ccba-markdown-document-processing/SKILL.md
+  command: /ccba-markdown-document-processing
+  package_path: packages/mdconverter
 - name: ccba-maskara
   bundle: _core
   description: Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords,
@@ -685,6 +707,7 @@ skills:
   - leak
   - che giấu key
   skill_path: .agents/skills/ccba-maskara/SKILL.md
+  package_path: packages/ccba-maskara
 - name: ccba-new-feature
   bundle: _core
   description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session
@@ -715,6 +738,22 @@ skills:
   - admin
   skill_path: .agents/skills/ccba-notebooklm-connector/SKILL.md
   command: /ccba-notebooklm-connector
+  package_path: packages/ccba-notebooklm
+- name: ccba-platform
+  bundle: _core
+  description: Cổng điều phối toàn cục (Global Router) và kiểm tra môi trường cho
+    CCBA Agent Services Platform. Tự động kiểm tra VPN/Gateway, cấu trúc Spoke và
+    điều hướng đúng kỹ năng.
+  triggers:
+  - platform
+  - ccba
+  - ccba-platform
+  - hub
+  - spoke
+  - bootstrap
+  skill_path: .agents/skills/ccba-platform/SKILL.md
+  command: /ccba-platform
+  tier: orchestrator
 - name: ccba-pptx
   bundle: _core
   description: Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao
@@ -768,6 +807,7 @@ skills:
   - ccba-sequential-thinking
   - sequential-thinking
   skill_path: .agents/skills/ccba-research/SKILL.md
+  command: /ccba-research
 - name: ccba-seminar-builder
   bundle: _consulting
   description: Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda,
@@ -782,6 +822,7 @@ skills:
   - ccba-teach
   - teach
   skill_path: .agents/skills/ccba-seminar-builder/SKILL.md
+  command: /ccba-seminar-builder
 - name: ccba-session-retrospective
   bundle: _core
   description: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến
@@ -796,6 +837,7 @@ skills:
   - kiểm định quản trị
   - ccba-session-retrospective
   skill_path: .agents/skills/ccba-session-retrospective/SKILL.md
+  command: /ccba-session-retrospective
 - name: ccba-setup-skills
   bundle: _core
   description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu
@@ -813,6 +855,7 @@ skills:
   - ccba-setup-ts-deep-modules
   - setup-ts-deep-modules
   skill_path: .agents/skills/ccba-setup-skills/SKILL.md
+  command: /ccba-setup-skills
 - name: ccba-sharepoint-iac
   bundle: _software
   description: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code).
@@ -826,6 +869,7 @@ skills:
   - m365 iac
   - datamodel sharepoint
   skill_path: .agents/skills/ccba-sharepoint-iac/SKILL.md
+  command: /ccba-sharepoint-iac
 - name: ccba-skill-repair
   bundle: _core
   description: Phục hồi và sửa chữa kỹ năng AI theo thể chế ADR-0057 và bộ kiểm định
@@ -899,6 +943,7 @@ skills:
   - ccba-to-questionnaire
   - to-questionnaire
   skill_path: .agents/skills/ccba-to-spec/SKILL.md
+  command: /ccba-to-spec
 - name: ccba-tvpl-vip-crawler
   bundle: _software
   description: Kỹ năng tự động cào và đóng gói văn bản pháp luật VIP TVPL qua Deep
@@ -910,6 +955,7 @@ skills:
   - tvpl vip
   - vip crawler
   skill_path: .agents/skills/ccba-tvpl-vip-crawler/SKILL.md
+  command: /ccba-tvpl-vip-crawler
 - name: ccba-update-spoke
   bundle: _core
   description: Đồng bộ hóa các kỹ năng và cập nhật phiên bản giữa Hub và các Spoke
@@ -939,6 +985,7 @@ skills:
   - foggy
   - chia nhỏ bài toán
   skill_path: .agents/skills/ccba-wayfinder/SKILL.md
+  command: /ccba-wayfinder
 - name: ccba-web-testing
   bundle: _software
   description: Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y
@@ -990,6 +1037,8 @@ skills:
   - ccba-docx
   - docx
   skill_path: .agents/skills/ccba-xu-ly-van-phong/SKILL.md
+  command: /ccba-xu-ly-van-phong
+  package_path: packages/ccba-ooxml
 - name: ccba-youtube-learn
   bundle: _core
   description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề
@@ -1028,7 +1077,7 @@ rules:
 knowledge:
 - name: session_learnings
   description: Patterns, anti-patterns, solutions tích lũy qua các phiên
-  knowledge_path: knowledge/session_learnings.md
+  knowledge_path: .md/knowledge/session_learnings.md
 - name: bigbim_method_kb
   description: BIGBIM Method Knowledge Base v1.0 — 36 articles, 266 chunks, 3-layer
     architecture

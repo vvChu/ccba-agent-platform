@@ -9,6 +9,11 @@ when_to_use: Dùng khi cần trích xuất tóm tắt, truy vấn RAG, hoặc si
   cấu trúc (Podcast, Quiz, Slides, Mind Map, Infographic, Video, v.v.) từ các tài
   liệu lớn, cũng như quản trị Notebooks và Sources trên Cloud.
 category: dev-tools
+gpi:
+  s: 3.0
+  k: 3.0
+  a: 4.0
+  p: 1.0
 keywords:
 - notebooklm
 - rag
@@ -28,6 +33,7 @@ metadata:
   version: 1.3.0
 bundle: _core
 layer: _core
+package_path: packages/ccba-notebooklm
 ---
 # NotebookLM Connector
 

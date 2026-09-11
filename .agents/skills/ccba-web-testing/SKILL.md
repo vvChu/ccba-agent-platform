@@ -6,6 +6,11 @@ user-invocable: true
 command: /ccba-web-testing
 when_to_use: Invoke for browser, visual, load, or accessibility tests.
 category: dev-tools
+gpi:
+  s: 4.0
+  k: 3.0
+  a: 1.0
+  p: 1.0
 keywords:
 - Playwright
 - Vitest

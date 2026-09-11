@@ -7,6 +7,11 @@ applies_to:
 - Tác vụ Admin
 bundle: _bim
 layer: _bim
+gpi:
+  s: 4.0
+  k: 3.0
+  a: 4.0
+  p: 1.0
 triggers:
 - sợi chỉ vàng
 - sợi chỉ đỏ

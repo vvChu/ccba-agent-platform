@@ -21,6 +21,21 @@ from ._engine import HarnessEngine
 from ._guard import HarnessGuard
 from ._mutex import FileMutexLock
 from ._state import HarnessLocal, HarnessState
+from .dashboard import (
+    generate_swarm_dashboard_html,
+    render_swarm_dashboard,
+)
+from .economy import (
+    EconomyAuditReport,
+    SkillPromptMetrics,
+    TokenROIMetrics,
+    analyze_skill_prompt_density,
+    audit_token_economy,
+    calculate_role_aware_roi,
+    detect_sentence_duplicates,
+    generate_prompt_pruning_report,
+    scan_all_skills_economy,
+)
 from .evals import (
     AutoItemScorer,
     BaseScorer,
@@ -37,6 +52,14 @@ from .evals import (
     load_eval_dataset,
     run_eval_pipeline,
 )
+from .fleet import (
+    FleetTelemetryReport,
+    SpokeTelemetrySummary,
+    aggregate_fleet_telemetry,
+    generate_fleet_dashboard_html,
+    render_fleet_dashboard,
+    scan_spoke_telemetry,
+)
 from .gpi import (
     GPI_STANDALONE_THRESHOLD,
     MAX_METRIC_SCORE,
@@ -52,10 +75,51 @@ from .gpi import (
     calculate_gpi,
     evaluate_two_stage_decision,
 )
+from .healing import (
+    DiagnosticIssue,
+    ErrorCategory,
+    HealingAction,
+    HealingReport,
+    SelfHealingEngine,
+)
 from .orchestrator import EvalOrchestrator
 from .skill_validator import SkillAuditIssue, SkillValidator
+from .streamer import (
+    AsyncTranscriptFollower,
+    OfflineBufferManager,
+    StreamingConfig,
+    StreamingReport,
+    StreamingStatus,
+    TelemetryEvent,
+    TelemetryEventType,
+    TelemetryStreamingBridge,
+)
+from .telemetry import (
+    OtelSpanExporter,
+    SubagentSessionMetrics,
+    SwarmSessionTelemetryReport,
+    TokenEstimator,
+    ToolCallRecord,
+    TranscriptStep,
+    TurnRecord,
+    analyze_subagent_transcript,
+    audit_swarm_session,
+    check_subagent_budget,
+    find_spawned_subagent_ids,
+    resolve_transcript_path,
+    stream_transcript_steps,
+)
+from .verifier import (
+    CommandResult,
+    PatchVerificationReport,
+    resolve_preset_commands,
+    verify_document_artifact,
+    verify_patch_execution,
+)
 
 __all__ = [
+    "verify_document_artifact",
+    "resolve_preset_commands",
     "HarnessEngine",
     "HarnessGuard",
     "HarnessLocal",
@@ -64,6 +128,9 @@ __all__ = [
     "EvalOrchestrator",
     "SkillValidator",
     "SkillAuditIssue",
+    "CommandResult",
+    "PatchVerificationReport",
+    "verify_patch_execution",
     "ArchitectureTier",
     "GPIMetrics",
     "DecisionRequest",
@@ -91,4 +158,49 @@ __all__ = [
     "AutoItemScorer",
     "load_eval_dataset",
     "run_eval_pipeline",
+    "TokenEstimator",
+    "TranscriptStep",
+    "ToolCallRecord",
+    "TurnRecord",
+    "SubagentSessionMetrics",
+    "SwarmSessionTelemetryReport",
+    "OtelSpanExporter",
+    "stream_transcript_steps",
+    "resolve_transcript_path",
+    "find_spawned_subagent_ids",
+    "analyze_subagent_transcript",
+    "check_subagent_budget",
+    "audit_swarm_session",
+    "generate_swarm_dashboard_html",
+    "render_swarm_dashboard",
+    "SpokeTelemetrySummary",
+    "FleetTelemetryReport",
+    "scan_spoke_telemetry",
+    "aggregate_fleet_telemetry",
+    "generate_fleet_dashboard_html",
+    "render_fleet_dashboard",
+    "SkillPromptMetrics",
+    "TokenROIMetrics",
+    "EconomyAuditReport",
+    "analyze_skill_prompt_density",
+    "detect_sentence_duplicates",
+    "scan_all_skills_economy",
+    "calculate_role_aware_roi",
+    "audit_token_economy",
+    "generate_prompt_pruning_report",
+    # Real-Time Telemetry Streaming Bridge (Spark :8090)
+    "StreamingStatus",
+    "TelemetryEventType",
+    "TelemetryEvent",
+    "StreamingConfig",
+    "StreamingReport",
+    "OfflineBufferManager",
+    "AsyncTranscriptFollower",
+    "TelemetryStreamingBridge",
+    # Autonomous Self-Healing & Closed-Loop CI Patch Engine (P4.4)
+    "ErrorCategory",
+    "DiagnosticIssue",
+    "HealingAction",
+    "HealingReport",
+    "SelfHealingEngine",
 ]

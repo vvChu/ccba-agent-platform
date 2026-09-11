@@ -4,6 +4,13 @@ description: Guardrails to block or request explicit user permission before exec
   dangerous git operations (force push, hard reset, clean, etc.) via terminal.
 disable-model-invocation: true
 bundle: _software
+user-invocable: true
+command: /ccba-git-guardrails
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 1.0
+  p: 1.0
 triggers:
 - ccba-git-guardrails
 - git guardrails

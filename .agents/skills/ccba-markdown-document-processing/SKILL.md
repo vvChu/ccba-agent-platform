@@ -8,11 +8,19 @@ bundle: _core
 version: 1.1.0
 invocation: model_invoked
 deep_seam: ConversionPipeline
+package_path: packages/mdconverter
 applies_to:
 - Phần mềm
 - Thẩm tra thiết kế
 - Thiết kế
 - Kiểm định
+user-invocable: true
+command: /ccba-markdown-document-processing
+gpi:
+  s: 2.0
+  k: 2.0
+  a: 4.0
+  p: 1.0
 triggers:
 - markdown
 - xử lý markdown

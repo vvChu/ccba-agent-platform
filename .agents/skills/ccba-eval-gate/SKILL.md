@@ -9,6 +9,8 @@ gpi:
   k: 2.0
   a: 2.0
   p: 1.0
+user-invocable: true
+command: /ccba-eval-gate
 triggers:
 - eval gate
 - kiểm chứng
@@ -18,6 +20,7 @@ triggers:
 - run gate
 - ccba-skills-eval
 - skills-eval
+package_path: packages/ccba-harness
 ---
 
 # 🛡️ Kỹ năng: eval-gate (Tự kiểm chứng & Sửa lỗi)

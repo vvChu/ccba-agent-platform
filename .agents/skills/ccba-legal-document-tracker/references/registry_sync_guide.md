@@ -5,7 +5,7 @@
 
 ---
 
-# Lệnh Slash Command `/ccba-update-legal-registry`
+# Lệnh Slash Command `/ccba-legal-document-tracker`
 
 Đồng bộ hóa tự động tri thức pháp luật xây dựng (VBPL) từ máy cục bộ lên Google NotebookLM Cloud RAG.
 

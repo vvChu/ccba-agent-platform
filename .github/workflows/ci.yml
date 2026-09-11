@@ -13,6 +13,7 @@ jobs:
     name: Test - Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
 
@@ -32,17 +33,24 @@ jobs:
         run: |
           uv pip install ruff mypy pytest pytest-cov pyyaml requests pydantic pydantic-settings --system
           uv pip install -e "packages/ccba-harness" --system
+          uv pip install -e "packages/ccba-pdf-prep[dev]" --system
           uv pip install -e "packages/ccba-ai[dev]" --system
+          uv pip install -e "packages/ccba-qc-core" --system
           uv pip install -e "packages/ccba-legal-intel[dev]" --system
           uv pip install -e "packages/ccba-notebooklm[dev]" --system
           uv pip install -e "packages/ccba-ooxml[dev]" --system
-          uv pip install -e "packages/ccba-pdf-prep[dev]" --system
+          uv pip install -e "packages/ccba-maskara[dev]" --system
           uv pip install -e "packages/mdconverter[dev]" --system
 
       - name: Run CCBA Harness CI Gates
         env:
           PYTHONPATH: .
         run: python scripts/eval/run_harness_evals.py --all
+
+      - name: Deterministic Hard Completion Lock (ADR-0058)
+        env:
+          PYTHONPATH: .
+        run: python -m ccba_harness verify-patch --preset ci
 
 
       - name: Upload coverage

@@ -5,6 +5,7 @@ notebook_ids:
   _software: nb-mock-software
   _qc: nb-mock-qc
   _consulting: nb-mock-consulting
+  _bim: nb-mock-bim
 bundles:
   Phần mềm:
   - _core
@@ -23,6 +24,7 @@ bundles:
   - _consulting
   BIM:
   - _core
+  - _bim
   Tác vụ Admin:
   - _core
   - _consulting
@@ -54,7 +56,7 @@ rules:
 knowledge:
 - name: session_learnings
   description: Patterns, anti-patterns, solutions tích lũy qua các phiên
-  knowledge_path: knowledge/session_learnings.md
+  knowledge_path: .md/knowledge/session_learnings.md
 - name: bigbim_method_kb
   description: BIGBIM Method Knowledge Base v1.0 — 36 articles, 266 chunks, 3-layer architecture
   knowledge_path: '[bigbim_method_path]/.md/knowledge/INDEX.md'

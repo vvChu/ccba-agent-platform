@@ -7,6 +7,11 @@ command: /ccba-tdd
 when_to_use: Dùng khi người dùng yêu cầu phát triển tính năng mới hoặc sửa lỗi bằng
   phương pháp viết test trước (test-first).
 category: utilities
+gpi:
+  s: 3.0
+  k: 2.0
+  a: 1.0
+  p: 1.0
 keywords:
 - ccba-tdd
 - test
@@ -37,10 +42,14 @@ Khi khám phá codebase, đọc `CONTEXT.md` (nếu có) để tên test và t�
 - Chạy lệnh test và xác nhận test thành công (Green).
 - **Tiêu chí hoàn thành:** Bộ test chạy thành công 100% với 0 lỗi thất bại.
 
-### 3. Tái cấu trúc mã nguồn (Refactor Phase)
+### 3. Tái cấu trúc mã nguồn (Refactor Phase & Deterministic Gate)
 - Tối ưu hóa cấu trúc code, loại bỏ trùng lặp và làm sạch mã nguồn mà không làm thay đổi hành vi bên ngoài của seam.
-- Chạy lại toàn bộ kiểm thử để đảm bảo refactor không làm vỡ các tính năng cũ.
-- **Tiêu chí hoàn thành:** Mã nguồn sau refactor sạch sẽ, tuân thủ các coding standards và bộ test vẫn pass 100%.
+- Chạy cổng kiểm định máy tính một chạm:
+  ```bash
+  python -m ccba_harness verify-patch --preset code --target <package_or_dir>
+  ```
+  *(Tự động kiểm tra ruff linting, mypy typing và pytest hồi quy).*
+- **Tiêu chí hoàn thành:** Mã nguồn sau refactor sạch sẽ, vượt qua lệnh kiểm định khách quan `python -m ccba_harness verify-patch --preset code --target <package_or_dir>` với **Exit Code 0** (100% ruff, mypy, pytest passed). Quy tắc Khóa Cứng (ADR-0058): Cấm tuyệt đối Agent kết thúc chu kỳ TDD nếu kiểm định máy tính chưa đạt mã thoát 0.
 
 ## Seams — Nơi đặt các Test
 

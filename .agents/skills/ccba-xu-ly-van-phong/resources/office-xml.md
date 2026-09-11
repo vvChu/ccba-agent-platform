@@ -17,7 +17,7 @@ Kỹ thuật bóc tách file Office thành XML để sửa sâu cấu trúc mà 
 ### 1. Unpack (giải nén thành XML)
 
 ```bash
-python scripts/office/unpack.py path/to/file.docx unpacked_dir/
+python .agents/skills/ccba-xu-ly-van-phong/scripts/office/unpack.py path/to/file.docx unpacked_dir/
 ```
 
 Kết quả: `unpacked_dir/word/document.xml` (Word) hoặc `unpacked_dir/ppt/slides/slide1.xml` (Slide).
@@ -31,7 +31,7 @@ Cấu trúc XML của Word:
 **Auto-Clone Script:**
 
 ```bash
-python scripts/office/clone_text.py "unpacked_dir/word/document.xml" --map "mapping.json"
+python .agents/skills/ccba-xu-ly-van-phong/scripts/office/clone_text.py "unpacked_dir/word/document.xml" --map "mapping.json"
 ```
 
 Trong đó `mapping.json` = `{ "Chữ Cũ": "Chữ Mới" }`.
@@ -39,7 +39,7 @@ Trong đó `mapping.json` = `{ "Chữ Cũ": "Chữ Mới" }`.
 ### 3. Pack (đóng gói lại)
 
 ```bash
-python scripts/office/pack.py unpacked_dir/ output.docx
+python .agents/skills/ccba-xu-ly-van-phong/scripts/office/pack.py unpacked_dir/ output.docx
 ```
 
 ---
@@ -47,10 +47,10 @@ python scripts/office/pack.py unpacked_dir/ output.docx
 ## Validation
 
 ```bash
-python scripts/office/validate.py output.docx
+python .agents/skills/ccba-xu-ly-van-phong/scripts/office/validate.py output.docx
 ```
 
-Kiểm tra XML hợp lệ trước khi đóng gói. Schemas XSD nằm tại `scripts/office/schemas/`.
+Kiểm tra XML hợp lệ trước khi đóng gói qua ccba-ooxml.
 
 ---
 
@@ -66,9 +66,9 @@ Kiểm tra XML hợp lệ trước khi đóng gói. Schemas XSD nằm tại `scr
 
 | Script | Mục đích |
 |---|---|
-| `scripts/office/soffice.py` | Chuyển đổi format qua LibreOffice headless |
-| `scripts/office/helpers/merge_runs.py` | Gộp runs bị tách trong XML |
-| `scripts/office/helpers/simplify_redlines.py` | Đơn giản hóa Track Changes |
-| `scripts/office/validators/` | Validate DOCX, PPTX, Redlining |
+| `.agents/skills/ccba-xu-ly-van-phong/scripts/office/soffice.py` | Chuyển đổi format qua LibreOffice headless |
+| `.agents/skills/ccba-xu-ly-van-phong/scripts/office/helpers/merge_runs.py` | Gộp runs bị tách trong XML |
+| `.agents/skills/ccba-xu-ly-van-phong/scripts/office/helpers/simplify_redlines.py` | Đơn giản hóa Track Changes |
+| `.agents/skills/ccba-xu-ly-van-phong/scripts/office/validate.py` | Validate DOCX, PPTX, Redlining via ccba-ooxml |
 
 <!-- NDT-0904004920 -->

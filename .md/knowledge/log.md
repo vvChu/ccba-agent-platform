@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-10] [synthesize] | Phát Hành Release v2.0-beyond-horizon, Đồng Bộ 5 Spokes & Dogfooding Thẩm Tra Đa Bộ Môn PC13 (15 Tickets)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /boost, /teamwork-preview & /ccba-session-retrospective)
+- **Affected Files**: `.agents/skills/`, `packages/ccba-harness/`, `scripts/governance/`, `scripts/sync_spoke.py`, `scripts/sync_hub_adr_matrix.py`, `docs/adr/`, `.md/dogfood/`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`
+- **Summary**: Hoàn tất đại nâng cấp hệ thống qua 15 Tickets từ Phase 0 đến Phase 4 và thực nghiệm kiểm chứng Dogfooding: (1) Chính thức phát hành Release `v2.0-beyond-horizon` (commit `a0ac250e`) và đồng bộ hóa thành công 5 Spokes (`sync_spoke.py --all --apply`) với 100% zero-drift và bảo toàn hiến pháp Non-Destructive Section Merge; (2) Chuẩn hóa Single Source of Truth cho toàn bộ 24 Standalone User Rituals và Master Skills (`user-invocable: true`, `command: /...`), dọn dẹp phantom commands và khử trùng lặp frontmatter; (3) Sửa chữa dứt điểm lỗi Hoàn thành non (Premature Completion) trong `ccba-xia` và chuẩn hóa điểm GPI; (4) Triển khai thực chiến liên hoàn Dogfooding Chủ đề 1: Thẩm tra Đa bộ môn PCCC & Kiến trúc trên hồ sơ mẫu *CCBA Horizon Tower* bám sát Luật Xây dựng 2025, NĐ 207/2026/NĐ-CP, NĐ 217/2026/NĐ-CP và NĐ 105/2025/NĐ-CP; (5) Vận hành 3 Swarm Workers song song qua AI Gateway Spark Server (`gemini-3.7-flash`), hợp nhất nguyên tử qua Single-Writer Engine (`execute_swarm_patches`) trong 3.6ms (0 collision); (6) Kiểm chứng Self-Healing Engine (ADR-0058) tự động phục hồi Exit Code 0 trong 414.4ms; (7) Xuất bản Báo cáo Thẩm tra Kỹ thuật Mẫu PC13 hoàn chỉnh; (8) Vượt qua 100% 7 Cổng CI Eval Gates (`run_harness_evals.py --all`) và bộ kiểm định `verify-patch --preset ci`.
+
+---
+
 ## [2026-09-08] [adr] | Ban Hành ADR 0057: Two-Stage Granularity Decision Framework & Chỉ Số GPI (PR #244)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /boost, /teamwork-preview & /ccba-session-retrospective)
 - **Affected Files**: `docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md`, `docs/adr/README.md`, `docs/adr/TRACEABILITY_MATRIX.md`, `packages/ccba-harness/`, `.github/pull_request_template.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/blueprints/fleet_skills_3tier_migration_blueprint.md`, `.md/knowledge/research_and_studies/research-agent-architecture-packages-skills-orchestrators.md`

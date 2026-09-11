@@ -7,6 +7,11 @@ applies_to:
 - Thẩm tra thiết kế
 bundle: _bim
 layer: _bim
+gpi:
+  s: 4.0
+  k: 4.0
+  a: 4.0
+  p: 1.0
 triggers:
 - rase
 - phân tích rase

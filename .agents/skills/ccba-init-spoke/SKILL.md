@@ -12,6 +12,12 @@ applies_to:
 bundle: _core
 disable-model-invocation: true
 command: /ccba-init-spoke
+user-invocable: true
+gpi:
+  s: 4.0
+  k: 2.0
+  a: 1.0
+  p: 1.0
 triggers:
 - init spoke
 - setup project

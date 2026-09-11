@@ -1,6 +1,6 @@
 # Thư viện Kỹ thuật Brainstorm
 
-> Tài liệu tham chiếu cho workflow `/ccba-brainstorm`. Agent nạp file này khi cần gợi ý kỹ thuật phù hợp với chủ đề.
+> Tài liệu tham chiếu cho `/ccba-ask`. Agent nạp file này khi cần gợi ý kỹ thuật phù hợp với chủ đề.
 
 ---
 

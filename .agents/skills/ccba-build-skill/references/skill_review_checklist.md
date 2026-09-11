@@ -36,18 +36,21 @@ Kỹ năng này thực hiện quy trình đánh giá thể chế kiến trúc (A
     - **Kiểm tra Linter & Quy chuẩn:**
       * Kiểm tra độ dài mô tả `description` trong frontmatter (đối với kỹ năng model-invoked, bắt buộc dưới **180 ký tự**).
       * Kiểm tra xem mọi bước hướng dẫn trong các phần quy trình (dưới tiêu đề `Process` hoặc `Quy trình`) có chứa dòng `Tiêu chí hoàn thành:` hoặc `Completion Criterion:` hay chưa. Khi skill có nhiều nhánh (branches), kiểm tra Completion Criterion cho từng nhánh chứa steps.
+      * Kiểm tra điểm tự chủ $a$ trong khối `gpi:`: Nếu skill khai báo `disable-model-invocation: true` (User Ritual thuần túy), bắt buộc $a = 1.0$ theo barem định lượng chuẩn.
+      * Kiểm tra kỹ năng đa chế độ (Multi-mode Check): Nếu skill hỗ trợ nhiều chế độ chạy qua file sibling (`MODES.md`), kiểm tra xem `Tiêu chí hoàn thành:` ở các pha phân tích và bàn giao đã bao quát hành vi riêng biệt của từng mode hay chưa.
+      * Kiểm tra cổng kiểm thử xác thực máy tính (Deterministic Verification Gate per ADR-0058): Kiểm tra xem pha nghiệm thu / hoàn tất có chỉ định lệnh kiểm thử xác định khách quan (`ccba-harness verify-patch` hoặc `verify-doc`) hay chưa. Cảnh báo lỗi nếu pha hoàn tất chỉ có tiêu chí định tính mơ hồ dẫn tới Premature Completion.
       * Kiểm tra tính hợp lệ của các liên kết tương đối (relative links), phát hiện các đường dẫn tuyệt đối hoặc link hỏng.
       * Kiểm tra định danh skill trong frontmatter: thuộc tính `name:` phải tuân thủ chuẩn namespace tổ chức bắt đầu bằng tiền tố `ccba-` (hoặc `bigbim-` đối với kỹ năng BIM). Không tạo file wrapper tại `.agents/workflows/` do Antigravity hỗ trợ Slash Command Native trực tiếp từ `SKILL.md`.
       * Kiểm tra skill hoặc nhánh thích ứng từ nguồn bên ngoài phải có blockquote attribution (tên nguồn, tác giả, loại giấy phép).
     - **Tiêu chí hoàn thành:** Xác nhận vượt qua Cổng 0, Cổng 1, $GPI \ge 12.0$, không chứa script > 100 LOC và lập danh sách chi tiết các vi phạm linter tĩnh kèm vị trí dòng.
 
 3.  **Rà soát chất lượng ngữ nghĩa (Semantic Audit Check):**
-    - **Premature completion:** Rà soát xem các tiêu chí hoàn thành đã đủ rõ ràng, kiểm chứng được chưa.
-    - **Duplication:** Tìm kiếm các đoạn trùng lặp ý hoặc cấu trúc viết lại.
+    - **Premature completion:** Rà soát xem các tiêu chí hoàn thành đã đủ rõ ràng, kiểm chứng được chưa, đặc biệt kiểm tra việc phân nhánh tiêu chí đối với các cờ rẽ nhánh (flags/modes).
+    - **Duplication:** Tìm kiếm các đoạn trùng lặp ý hoặc cấu trúc viết lại, đặc biệt là lỗi lặp lại nhiều lần cùng một quy tắc cấm trong các tệp sibling (`MODES.md`).
     - **Sprawl:** Đánh giá xem tài liệu có quá phình to không; nếu có, chỉ rõ phần tham chiếu cần tách ra tệp sibling (áp dụng Progressive Disclosure).
     - **No-op:** Phát hiện các câu hướng dẫn sáo rỗng hoặc vô nghĩa mà mô hình mặc định đã biết làm.
     - **Negation:** Phát hiện các câu chỉ dẫn sử dụng cấm đoán mà thiếu hướng dẫn tích cực thay thế.
-    - **Sediment:** Phát hiện nội dung cũ, lỗi thời không còn phản ánh đúng hành vi hiện tại của skill.
+    - **Sediment:** Phát hiện nội dung cũ, lỗi thời không còn phản ánh đúng hành vi hiện tại của skill (bao gồm các file sao lưu rác như `.bak`).
     - **Tiêu chí hoàn thành:** Đưa ra đánh giá chi tiết cho từng lỗi ngữ nghĩa được phát hiện kèm theo lý do cụ thể. Phải quét đủ 6 failure modes.
 
 4.  **Đề xuất bản vá tối ưu hóa (Optimization Patch):**

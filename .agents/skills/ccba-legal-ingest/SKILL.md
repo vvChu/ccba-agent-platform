@@ -4,6 +4,11 @@ description: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN co
 bundle: _consulting
 layer: _consulting
 version: 1.2.0
+gpi:
+  s: 4.0
+  k: 4.0
+  a: 4.0
+  p: 1.0
 triggers:
 - ccba-legal-ingest
 - nap van ban

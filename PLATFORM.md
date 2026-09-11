@@ -70,9 +70,9 @@ Hệ thống kỹ năng (<!-- SKILL_COUNT_START -->67<!-- SKILL_COUNT_END --> sk
 
 ### 1. Kỹ năng kích hoạt bởi User (User-Invocable Skills)
 Là các kỹ năng nhận lệnh trực tiếp từ người dùng thông qua Slash Commands (`/ccba-*` hoặc `/bigbim-*`):
-*   **Quản lý Tài liệu & Quy trình:** `ccba-docs-manager` (qua `/ccba-docs-manager`), `ccba-handoff` (qua `/ccba-handoff`), `ccba-sync-upstream` (qua `/ccba-sync-upstream`).
-*   **Soạn thảo & Đóng gói:** `ccba-copywriting` (qua `/ccba-copywriting`), `ccba-design` (thiết kế slides/brief), `ccba-wizard` (sinh setup scripts).
-*   **Nghiệp vụ Xây dựng & Tư vấn:** `ccba-legal-document-tracker` (qua `/ccba-update-legal-registry`), `ccba-completion-checklist` (quản lý HSHT), `ccba-seminar-builder` (qua `/ccba-seminar-builder`).
+*   **Quản lý Tài liệu & Quy trình:** `ccba-docs-manager` (qua `/ccba-docs-manager`), `ccba-handoff` (qua `/ccba-handoff`), `ccba-update-spoke` (qua `/ccba-update-spoke`).
+*   **Soạn thảo & Đóng gói:** `ccba-copywriting` (qua `/ccba-copywriting`), `ccba-design` (thiết kế slides/brief), `ccba-init-spoke` (khởi tạo Spoke).
+*   **Nghiệp vụ Xây dựng & Tư vấn:** `ccba-legal-document-tracker` (qua `/ccba-legal-document-tracker`), `ccba-completion-checklist` (quản lý HSHT), `ccba-seminar-builder` (qua `/ccba-seminar-builder`).
 *   **Kỹ thuật Phần mềm & Kiểm thử:** `ccba-code-review` (rà soát code), `ccba-xia` (port/clone tính năng qua `/ccba-xia`).
 *   **Điều phối & Thẩm định:** `ccba-ai-qc` (qua `/ccba-ai-qc`), `ccba-grilling` (hỏi xoáy để test thiết kế), `ccba-wayfinder` (vạch bản đồ giải quyết bài toán mù mờ).
 

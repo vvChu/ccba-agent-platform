@@ -121,14 +121,14 @@ python scripts/governance/compile_catalog.py
 
 ---
 
-## ✅ 6. Kiểm Định Chất Lượng Tự Động (CI Hard Gates & GPI Enforcement)
-Chạy toàn bộ bộ công cụ kiểm định để xác nhận đạt chuẩn 100% trước khi bàn giao:
+## ✅ 6. Kiểm Định Chất Lượng Tự Động (Deterministic Gate & GPI Enforcement)
+Chạy cổng kiểm định máy tính một chạm để xác nhận đạt chuẩn 100% trước khi bàn giao:
 ```bash
-python scripts/validate_skills.py --file .agents/skills/ccba-<tên-skill>/SKILL.md --enforce-gpi
-python -m ccba_harness.cli evaluate-gpi --file .agents/skills/ccba-<tên-skill>/SKILL.md
+python -m ccba_harness verify-patch --preset skill --target .agents/skills/ccba-<tên-skill>
 python scripts/governance/drift_auditor.py
 ```
-- **Tiêu chí hoàn thành:** Tất cả các lệnh kiểm tra CI thoát với mã 0, không có lỗi hoặc cảnh báo tồn đọng.
+*Cổng preset `skill` tự động chạy: (1) `validate_skills.py --enforce-gpi` và (2) `compile_catalog.py --check`.*
+- **Tiêu chí hoàn thành:** Lệnh `python -m ccba_harness verify-patch --preset skill --target .agents/skills/ccba-<tên-skill>` trả về **Exit Code 0** (Overall Status: PASS). Quy tắc Khóa Cứng (ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn tất kỹ năng nếu có bất kỳ lệnh kiểm tra nào thất bại.
 
 ---
 

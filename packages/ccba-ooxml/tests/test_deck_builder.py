@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -316,7 +317,12 @@ author: "CLI Agent"
         "16:9",
     ]
 
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    env = os.environ.copy()
+    src_dir = Path(__file__).resolve().parent.parent / "src"
+    existing_pp = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = f"{src_dir}{os.pathsep}{existing_pp}" if existing_pp else str(src_dir)
+
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True, env=env)
     assert "SUCCESS" in result.stdout
     assert out_pptx.exists()
     assert out_pptx.stat().st_size > 0

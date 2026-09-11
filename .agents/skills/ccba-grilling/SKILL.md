@@ -4,6 +4,11 @@ description: Phỏng vấn dồn dập người dùng về thiết kế (Stress-
   chuẩn (Grill with Docs), hoặc hội tụ UI qua prototype trực quan.
 user-invocable: true
 command: /ccba-grilling
+gpi:
+  s: 4.0
+  k: 2.0
+  a: 1.0
+  p: 1.0
 keywords:
 - grill
 - stress-test
