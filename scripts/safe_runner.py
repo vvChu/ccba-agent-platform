@@ -13,7 +13,7 @@ scripts_dir = Path(__file__).resolve().parent
 if str(scripts_dir) not in sys.path:
     sys.path.insert(0, str(scripts_dir))
 
-from eval.process_safety import DetachedExecutionEngine
+from ccba_harness import DetachedExecutionEngine
 
 # Backward compatibility module-level function aliases
 resolve_scratch_dir = DetachedExecutionEngine.resolve_scratch_dir

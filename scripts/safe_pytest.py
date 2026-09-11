@@ -13,12 +13,7 @@ scripts_dir = Path(__file__).resolve().parent
 if str(scripts_dir) not in sys.path:
     sys.path.insert(0, str(scripts_dir))
 
-try:
-    from scripts.eval.process_safety import DetachedExecutionEngine
-except ImportError:
-    from eval.process_safety import (
-        DetachedExecutionEngine,  # type: ignore[import-not-found,no-redef]
-    )
+from ccba_harness import DetachedExecutionEngine
 
 # Backward compatibility function alias
 find_modified_test_files = DetachedExecutionEngine.find_modified_test_files
