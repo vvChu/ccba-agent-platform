@@ -2,6 +2,8 @@
 name: ccba-legal-ingest
 description: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation, and 15-Gate CI verification workflow.
 bundle: _consulting
+tier: kernel
+command: /ccba-legal-ingest
 layer: _consulting
 version: 1.2.0
 gpi:

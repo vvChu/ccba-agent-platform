@@ -3,9 +3,11 @@ name: ccba-legal-advisor
 description: "Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.4."
 argument-hint: "Nội dung câu hỏi pháp lý hoặc tình huống dự án cần tư vấn?"
 bundle: _consulting
+tier: kernel
+command: /ccba-legal-advisor
 disable-model-invocation: false
 category: legal
-keywords: [tu van phap ly, giai dap phap luat, quy chuan xay dung, hoi dap quy pham, legal opinion, tham dinh du an, ho so cap phep, nghiem thu cong trinh, pccc, luat xay dung 2025]
+triggers: [tu van phap ly, giai dap phap luat, quy chuan xay dung, hoi dap quy pham, legal opinion, tham dinh du an, ho so cap phep, nghiem thu cong trinh, pccc, luat xay dung 2025]
 gpi: {s: 4.0, k: 3.0, a: 4.0, p: 1.0}
 metadata:
   author: CCBA

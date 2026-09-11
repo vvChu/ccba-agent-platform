@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 command: /ccba-skill-repair
 bundle: _core
+tier: kernel
 gpi: {s: 3.0, k: 2.0, a: 1.0, p: 1.0}
 triggers:
 - skill-repair

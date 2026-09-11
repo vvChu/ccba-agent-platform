@@ -118,6 +118,8 @@ def test_resolve_canonical_project_type():
         ("BIM Consulting", "BIM"),
         ("Admin", "Tác vụ Admin"),
         ("Tác vụ Hành chính", "Tác vụ Admin"),
+        ("Tra cứu", "Pháp điển"),
+        ("lookup", "Pháp điển"),
     ]
     for raw, expected in aliases_to_test:
         can, n = resolve_canonical_project_type(raw, bundle_defs)
@@ -528,3 +530,356 @@ def test_sync_spoke_delegate_parity() -> None:
     assert "--bootstrap" in res.stdout
     assert "--dry-run" in res.stdout
     assert "--apply" in res.stdout
+
+
+def test_scripts_venv_discovery(tmp_path: Path):
+    """Test venv discovery under scripts/.venv and scripts/venv for bootstrapper and sdk inspector."""
+    from scripts.spoke.spoke_bootstrap import SpokeBootstrapper
+
+    # 1. scripts/.venv on Windows
+    spoke_1 = tmp_path / "spoke_scripts_dot_venv"
+    spoke_1.mkdir()
+    dot_venv_scripts = spoke_1 / "scripts" / ".venv" / "Scripts"
+    dot_venv_scripts.mkdir(parents=True)
+    (dot_venv_scripts / "python.exe").write_bytes(b"")
+
+    b1 = SpokeBootstrapper(spoke_1)
+    assert b1.is_python_project() is True
+    found_venv_1 = b1.find_venv()
+    assert found_venv_1 == spoke_1 / "scripts" / ".venv"
+
+    # 2. scripts/venv on POSIX style
+    spoke_2 = tmp_path / "spoke_scripts_venv"
+    spoke_2.mkdir()
+    venv_bin = spoke_2 / "scripts" / "venv" / "bin"
+    venv_bin.mkdir(parents=True)
+    (venv_bin / "python").write_bytes(b"")
+
+    b2 = SpokeBootstrapper(spoke_2)
+    assert b2.is_python_project() is True
+    found_venv_2 = b2.find_venv()
+    assert found_venv_2 == spoke_2 / "scripts" / "venv"
+
+    # 3. SharedSdkInspector find_site_packages in scripts/.venv and scripts/venv
+    spoke_3 = tmp_path / "spoke_inspector_venvs"
+    spoke_3.mkdir()
+    sp1 = spoke_3 / "scripts" / ".venv" / "Lib" / "site-packages"
+    sp1.mkdir(parents=True)
+    sp2 = spoke_3 / "scripts" / "venv" / "lib" / "python3.11" / "site-packages"
+    sp2.mkdir(parents=True)
+
+    inspector = SharedSdkInspector(spoke_3, tmp_path, "Phần mềm")
+    site_packages = inspector.find_site_packages()
+    assert sp1 in site_packages
+    assert sp2 in site_packages
+
+
+def test_tra_cuu_archetype_resolution_and_defaults(tmp_path: Path):
+    """Test Tra cứu archetype alias resolution across coordinator, sdk_inspector, and spoke_bootstrap."""
+    from scripts.spoke.spoke_bootstrap import SpokeBootstrapper
+    from scripts.spoke.sync.sdk_inspector import LegalKnowledgeSyncOrchestrator
+
+    bundle_defs = {
+        "Pháp điển": ["_core", "_software"],
+        "Thẩm tra thiết kế": ["_core", "_qc", "_consulting"],
+    }
+
+    # 1. Alias in coordinator
+    for alias in ["Tra cứu", "tra cứu", "tra cuu", "lookup"]:
+        can, _ = resolve_canonical_project_type(alias, bundle_defs)
+        assert can == "Pháp điển"
+
+    # 2. In LegalKnowledgeSyncOrchestrator
+    assert "Tra cứu" in LegalKnowledgeSyncOrchestrator.LEGAL_PROJECT_TYPES
+
+    # 3. In spoke_bootstrap: fallback mapping from project.type to archetype
+    # 3a. Tra cứu -> knowledge_corpus -> ccba-legal-intel
+    spoke_tra_cuu = tmp_path / "spoke_tra_cuu"
+    spoke_tra_cuu.mkdir()
+    agents_dir = spoke_tra_cuu / ".agents"
+    agents_dir.mkdir()
+    (agents_dir / "workspace_context.yaml").write_text(
+        "project:\n  name: TestLookup\n  type: 'Tra cứu'\n", encoding="utf-8"
+    )
+
+    b_tra_cuu = SpokeBootstrapper(spoke_tra_cuu)
+    assert b_tra_cuu.is_python_project() is True
+    pkgs_tra_cuu = b_tra_cuu.resolve_target_packages()
+    assert "ccba-harness" in pkgs_tra_cuu
+    assert "ccba-ai" in pkgs_tra_cuu
+    assert "ccba-legal-intel" in pkgs_tra_cuu
+
+    # 3b. Thẩm tra thiết kế -> project_delivery -> ccba-qc-core, ccba-ooxml, ccba-pdf-prep, mdconverter
+    spoke_qc = tmp_path / "spoke_qc"
+    spoke_qc.mkdir()
+    (spoke_qc / ".agents").mkdir()
+    (spoke_qc / ".agents" / "workspace_context.yaml").write_text(
+        "project:\n  name: TestQC\n  type: 'Thẩm tra thiết kế'\n", encoding="utf-8"
+    )
+
+    b_qc = SpokeBootstrapper(spoke_qc)
+    assert b_qc.is_python_project() is True
+    pkgs_qc = b_qc.resolve_target_packages()
+    assert "ccba-qc-core" in pkgs_qc
+    assert "ccba-ooxml" in pkgs_qc
+    assert "ccba-pdf-prep" in pkgs_qc
+    assert "mdconverter" in pkgs_qc
+
+
+def test_check_hub_import_depth_package_parity_and_tightened_rules(tmp_path: Path):
+    """Test check_hub_import_depth monitors all packages in packages/ and detects private submodule imports."""
+    from scripts.spoke.check_hub_import_depth import HUB_PACKAGE_PREFIXES, scan_file
+
+    # 1. Parity assertion: all directories in packages/ are monitored
+    packages_root = Path(__file__).resolve().parents[2] / "packages"
+    assert packages_root.is_dir()
+    pkg_dirs = [
+        p for p in packages_root.iterdir() if p.is_dir() and (p / "pyproject.toml").exists()
+    ]
+    assert len(pkg_dirs) >= 9
+
+    for p in pkg_dirs:
+        norm_name = p.name.replace("-", "_")
+        assert norm_name in HUB_PACKAGE_PREFIXES or (
+            norm_name == "ccba_legal_intel" and "ccba_legal" in HUB_PACKAGE_PREFIXES
+        ), f"Package {p.name} ({norm_name}) not found in HUB_PACKAGE_PREFIXES"
+
+    # Specifically assert ccba_qc_core is in HUB_PACKAGE_PREFIXES
+    assert "ccba_qc_core" in HUB_PACKAGE_PREFIXES
+
+    # 2. Test tightened depth and private internal submodule import detection
+    # Private internal submodule import (1 dot: ccba_ai._client)
+    f1 = tmp_path / "f1.py"
+    f1.write_text("from ccba_ai._client import Client\n", encoding="utf-8")
+    assert len(scan_file(f1)) == 1
+
+    # Private internal submodule import (1 dot: ccba_qc_core._private)
+    f2 = tmp_path / "f2.py"
+    f2.write_text("import ccba_qc_core._private\n", encoding="utf-8")
+    assert len(scan_file(f2)) == 1
+
+    # Deep import (2 dots: ccba_qc_core.rules.engine)
+    f3 = tmp_path / "f3.py"
+    f3.write_text("from ccba_qc_core.rules.engine import check\n", encoding="utf-8")
+    assert len(scan_file(f3)) == 1
+
+    # Compliant top-level imports
+    f4 = tmp_path / "f4.py"
+    f4.write_text(
+        "from ccba_qc_core import QCAuditPipeline\nfrom ccba_ai import ai\n", encoding="utf-8"
+    )
+    assert len(scan_file(f4)) == 0
+
+
+def test_spoke_backup_manager_retention_pruning(tmp_path: Path):
+    """Test SpokeBackupManager prunes oldest backups exceeding MAX_SNAPSHOTS = 5."""
+    spoke_root = tmp_path / "spoke_backup_retention"
+    agents_dir = spoke_root / ".agents"
+    agents_dir.mkdir(parents=True)
+    (agents_dir / "AGENTS.md").write_text("# Initial", encoding="utf-8")
+
+    mgr = SpokeBackupManager(spoke_root)
+    assert mgr.MAX_SNAPSHOTS == 5
+
+    # Create 8 backup snapshots
+    created_backups: list[Path] = []
+    for i in range(8):
+        (agents_dir / "AGENTS.md").write_text(f"# State {i}", encoding="utf-8")
+        b = mgr.create_backup()
+        assert b is not None
+        created_backups.append(b)
+
+    # list_backups must only retain at most MAX_SNAPSHOTS = 5
+    current_backups = mgr.list_backups()
+    assert len(current_backups) == 5
+
+    # The latest backup created must exist
+    assert created_backups[-1].exists()
+    # The oldest backup created must have been pruned
+    assert not created_backups[0].exists()
+
+
+def test_coordinator_git_pull_index_lock_guard(tmp_path: Path, capsys):
+    """Test SpokeSynchronizer safely skips git pull when .git/index.lock exists or pull_hub=False."""
+    hub_root = tmp_path / "hub"
+    git_dir = hub_root / ".git"
+    git_dir.mkdir(parents=True)
+    (git_dir / "index.lock").write_text("locked", encoding="utf-8")
+
+    # Minimal catalog.yaml in hub
+    cat_dir = hub_root / ".agents" / "skills" / "platform-loader"
+    cat_dir.mkdir(parents=True)
+    (cat_dir / "catalog.yaml").write_text(
+        "bundles:\n  Phần mềm:\n    packages: []\n", encoding="utf-8"
+    )
+
+    spoke_root = tmp_path / "spoke"
+    spoke_agents = spoke_root / ".agents"
+    spoke_agents.mkdir(parents=True)
+    (spoke_agents / "workspace_context.yaml").write_text(
+        f"project_name: TestLock\nproject_type: 'Phần mềm'\nhub_path: '{hub_root.as_posix()}'\n",
+        encoding="utf-8",
+    )
+
+    sync_engine = SpokeSynchronizer(spoke_root, hub_root)
+    res = sync_engine.sync_spoke_bundle(dry_run=False, check_git=False, backup=False, pull_hub=True)
+    captured = capsys.readouterr()
+
+    assert "Hub git lock (.git/index.lock) detected" in captured.err
+    assert "Skipping git pull" in captured.err
+    assert res == 0
+
+
+def test_catalog_merger_unique_temp_file(tmp_path: Path):
+    """Test CatalogMerger uses unique PID, thread ID, timestamp, and UUID for temp file naming."""
+    import os
+    import threading
+
+    catalog_file = tmp_path / "catalog.yaml"
+    merger = CatalogMerger(catalog_file)
+
+    orig_replace = os.replace
+    used_temp_files: list[str] = []
+
+    def custom_replace(src, dst):
+        used_temp_files.append(Path(src).name)
+        return orig_replace(src, dst)
+
+    with patch("os.replace", side_effect=custom_replace):
+        success = merger.atomic_write({"name": "test_concurrent"})
+        assert success is True
+
+    assert len(used_temp_files) == 1
+    temp_name = used_temp_files[0]
+    assert temp_name.startswith(f".catalog.yaml.{os.getpid()}_{threading.get_ident()}_")
+    assert temp_name.endswith(".tmp")
+
+
+def test_catalog_merger_concurrent_atomic_writes(tmp_path: Path):
+    """Test CatalogMerger concurrent writes across threads without collision or WinError 32."""
+    import concurrent.futures
+    import os
+    import time
+
+    catalog_file = tmp_path / "catalog.yaml"
+    merger = CatalogMerger(catalog_file)
+
+    temp_files_seen: list[str] = []
+    orig_replace = os.replace
+
+    def tracked_replace(src, dst):
+        temp_files_seen.append(str(src))
+        return orig_replace(src, dst)
+
+    def worker_write(idx: int) -> bool:
+        data = {
+            "worker_id": idx,
+            "bundles": {f"Bundle_{idx}": ["_core", f"_sub_{idx}"]},
+            "timestamp": time.time_ns(),
+        }
+        return merger.atomic_write(data)
+
+    with patch("os.replace", side_effect=tracked_replace):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [executor.submit(worker_write, i) for i in range(12)]
+            results = [f.result() for f in futures]
+
+    assert all(results) is True
+    assert len(temp_files_seen) >= 12
+    assert len(set(temp_files_seen)) == 12, "Temp file collision detected across concurrent writes!"
+
+    stray_temps = list(tmp_path.glob("*.tmp"))
+    assert len(stray_temps) == 0, f"Found stray temp files: {stray_temps}"
+
+    assert catalog_file.exists()
+    final_data = yaml.safe_load(catalog_file.read_text(encoding="utf-8"))
+    assert isinstance(final_data, dict)
+    assert "worker_id" in final_data
+
+
+def test_catalog_merger_permission_error_retry(tmp_path: Path):
+    """Test CatalogMerger retries on Windows PermissionError before succeeding."""
+    import os
+
+    catalog_file = tmp_path / "catalog.yaml"
+    merger = CatalogMerger(catalog_file)
+
+    call_count = 0
+    orig_replace = os.replace
+
+    def flaking_replace(src, dst):
+        nonlocal call_count
+        call_count += 1
+        if call_count < 3:
+            raise PermissionError("[WinError 32] The process cannot access the file")
+        return orig_replace(src, dst)
+
+    with patch("os.replace", side_effect=flaking_replace):
+        success = merger.atomic_write({"retry": "success"})
+        assert success is True
+
+    assert call_count == 3
+    assert catalog_file.exists()
+    loaded = yaml.safe_load(catalog_file.read_text(encoding="utf-8"))
+    assert loaded == {"retry": "success"}
+
+
+def test_catalog_merger_permission_error_exceeds_max_retries(tmp_path: Path):
+    """Test CatalogMerger fails gracefully when PermissionError persists beyond max retries."""
+    catalog_file = tmp_path / "catalog.yaml"
+    merger = CatalogMerger(catalog_file)
+
+    with patch("os.replace", side_effect=PermissionError("[WinError 32] Locked")):
+        success = merger.atomic_write({"retry": "fail"})
+        assert success is False
+
+    stray_temps = list(tmp_path.glob("*.tmp"))
+    assert len(stray_temps) == 0
+
+
+def test_session_cleanup_safe_remove(tmp_path: Path):
+    """Test clean_subagent_artifacts safely removes stray artifacts using safe_remove without crashes."""
+    from scripts.spoke.session_cleanup import clean_subagent_artifacts
+
+    mock_project = tmp_path / "mock_project"
+    agents_dir = mock_project / ".agents"
+    agents_dir.mkdir(parents=True)
+
+    # Canonical items that must NOT be removed
+    (agents_dir / "skills").mkdir()
+    (agents_dir / "AGENTS.md").write_text("# Master", encoding="utf-8")
+
+    # Stray artifacts that MUST be removed
+    stray_dir = agents_dir / "temp_subagent_worker_1"
+    stray_dir.mkdir()
+    (stray_dir / "output.txt").write_text("ephemeral", encoding="utf-8")
+    stray_file = agents_dir / "stray_scratchpad.tmp"
+    stray_file.write_text("scratch", encoding="utf-8")
+
+    # Run cleanup
+    clean_subagent_artifacts(mock_project, dry_run=False)
+
+    assert (agents_dir / "skills").exists()
+    assert (agents_dir / "AGENTS.md").exists()
+    assert not stray_dir.exists()
+    assert not stray_file.exists()
+
+
+def test_sync_all_spokes_dry_run_pull_hub_execution(tmp_path: Path) -> None:
+    """Verify sync_all_spokes passes pull_hub correctly without TypeError."""
+    from scripts.spoke.sync.coordinator import sync_all_spokes
+
+    spoke_dir = tmp_path / "test_spoke"
+    spoke_dir.mkdir()
+    (spoke_dir / ".agents").mkdir()
+    (spoke_dir / ".agents" / "workspace_context.yaml").write_text(
+        "project_name: TestSpoke\nproject_type: Phần mềm\n", encoding="utf-8"
+    )
+
+    mock_spokes = [{"name": "test_spoke", "path": str(spoke_dir), "project_type": "Phần mềm"}]
+
+    with patch(
+        "scripts.spoke.decrypt_spoke_registry.get_registered_spokes", return_value=mock_spokes
+    ):
+        code = sync_all_spokes(dry_run=True, check_git=False, backup=False)
+        assert code == 0

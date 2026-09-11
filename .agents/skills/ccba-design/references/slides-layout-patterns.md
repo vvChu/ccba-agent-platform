@@ -109,16 +109,11 @@
 | `contrast-pair` | Before/after |
 | `logo-grayscale` | Client logos |
 
-## Search Commands
+## Layout Selection Guide
 
-```bash
-# Find layout for specific use
-python .claude/skills/design-system/scripts/search-slides.py "metrics dashboard" -d layout
-
-# Contextual recommendation
-python .claude/skills/design-system/scripts/search-slides.py "traction slide" \
-  --context --position 4 --total 10
-```
+Tra cứu trực tiếp pattern từ bảng Layout Classification phía trên theo mục tiêu trình bày:
+- **Metrics/Dashboard:** Dùng `grid-3-col` hoặc `split-40-60` kết hợp Chart.js.
+- **Traction/Growth:** Dùng `hero-stat` hoặc `timeline` tại các slide 3-5 trong deck.
 
 ## Layout Decision Flow
 

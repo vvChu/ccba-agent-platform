@@ -12,7 +12,7 @@ gpi:
   k: 2.0
   a: 1.0
   p: 1.0
-keywords:
+triggers:
 - ccba-tdd
 - test
 - refactor
@@ -22,6 +22,7 @@ metadata:
   version: 1.1.0
 disable-model-invocation: true
 bundle: _software
+tier: kernel
 ---
 # Quy trình Phát triển Hướng Kiểm thử (Test-Driven Development)
 

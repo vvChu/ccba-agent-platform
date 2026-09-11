@@ -201,6 +201,10 @@ PROJECT_TYPE_ALIASES: dict[str, str] = {
     "legal": "Pháp điển",
     "pháp điển": "Pháp điển",
     "phap dien": "Pháp điển",
+    "tra cứu": "Pháp điển",
+    "tra cuu": "Pháp điển",
+    "lookup": "Pháp điển",
+    "Tra cứu": "Pháp điển",
     # Phần mềm
     "software": "Phần mềm",
     "phần mềm": "Phần mềm",
@@ -911,6 +915,7 @@ class SpokeSynchronizer:
         only: str | None = None,
         bootstrap: bool = False,
         verify: bool = False,
+        pull_hub: bool = True,
     ) -> int:
         """Main entrypoint for Spoke synchronization."""
         mode_str = " [DRY-RUN]" if dry_run else ""
@@ -1013,30 +1018,49 @@ class SpokeSynchronizer:
                     rel_backup = snapshot_dir
                 print(f"[Sync] 🛡️  Đã tạo snapshot sao lưu an toàn: {rel_backup}")
 
-        # Auto git pull Hub if git repo (only when not dry_run)
-        if (hub_root / ".git").exists() and not dry_run:
-            print(
-                "[Sync] Hub is a Git repository. Attempting to pull latest changes from GitHub..."
-            )
-            try:
-                result = subprocess.run(
-                    ["git", "pull"], cwd=str(hub_root), capture_output=True, text=True, timeout=30
+        # Auto git pull Hub if git repo (only when not dry_run and pull_hub enabled)
+        git_dir = hub_root / ".git"
+        index_lock = git_dir / "index.lock" if git_dir.is_dir() else None
+        skip_pull = (
+            not pull_hub
+            or os.environ.get("CCBA_SKIP_GIT_PULL") == "1"
+            or (index_lock is not None and index_lock.exists())
+        )
+
+        if git_dir.exists() and not dry_run:
+            if index_lock is not None and index_lock.exists():
+                print(
+                    "[Sync] Notice: Hub git lock (.git/index.lock) detected. "
+                    "Skipping git pull to prevent contention and continuing with local cache...",
+                    file=sys.stderr,
                 )
-                if result.returncode == 0:
-                    print("[Sync] Git pull completed successfully.")
-                    if result.stdout.strip():
-                        print(f"  {result.stdout.strip()}")
-                else:
-                    print(
-                        f"[Sync] Warning: Git pull failed with code {result.returncode}.",
-                        file=sys.stderr,
+            elif not skip_pull:
+                print(
+                    "[Sync] Hub is a Git repository. Attempting to pull latest changes from GitHub..."
+                )
+                try:
+                    result = subprocess.run(
+                        ["git", "pull"],
+                        cwd=str(hub_root),
+                        capture_output=True,
+                        text=True,
+                        timeout=30,
                     )
-                    if result.stderr.strip():
-                        print(f"  {result.stderr.strip()}", file=sys.stderr)
+                    if result.returncode == 0:
+                        print("[Sync] Git pull completed successfully.")
+                        if result.stdout.strip():
+                            print(f"  {result.stdout.strip()}")
+                    else:
+                        print(
+                            f"[Sync] Warning: Git pull failed with code {result.returncode}.",
+                            file=sys.stderr,
+                        )
+                        if result.stderr.strip():
+                            print(f"  {result.stderr.strip()}", file=sys.stderr)
+                        print("[Sync] Continuing with local offline cache...", file=sys.stderr)
+                except Exception as e:
+                    print(f"[Sync] Warning: Could not execute git pull: {e}", file=sys.stderr)
                     print("[Sync] Continuing with local offline cache...", file=sys.stderr)
-            except Exception as e:
-                print(f"[Sync] Warning: Could not execute git pull: {e}", file=sys.stderr)
-                print("[Sync] Continuing with local offline cache...", file=sys.stderr)
 
         catalog_file = hub_root / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
         if not catalog_file.exists():
@@ -1106,15 +1130,17 @@ class SpokeSynchronizer:
             from ccba_harness.verifier import verify_patch_execution
 
             res = verify_patch_execution(commands=cmds, cwd=self.spoke_root, fail_fast=True)
-            if res.success:
+            if res.all_passed:
                 print("✅ SUCCESS: Spoke post-sync verification passed 100% deterministically.")
                 return 0
             else:
+                first_failed = next((r for r in res.results if not r.passed), None)
+                exit_code: int = first_failed.exit_code if first_failed else 1
                 print(
-                    f"❌ FAILED: Spoke post-sync verification failed with exit code {res.exit_code}.",
+                    f"❌ FAILED: Spoke post-sync verification failed with exit code {exit_code}.",
                     file=sys.stderr,
                 )
-                return res.exit_code
+                return exit_code
         except Exception as e:
             print(f"  ❌ Lỗi khi thực hiện post-sync verification: {e}", file=sys.stderr)
             return 1
@@ -1129,6 +1155,7 @@ class SpokeSynchronizer:
         only: str | None = None,
         bootstrap: bool = False,
         verify: bool = False,
+        pull_hub: bool = True,
     ) -> int:
         """Deep Seam entry point for syncing spoke bundle."""
         return self.sync_spoke_bundle(
@@ -1140,6 +1167,7 @@ class SpokeSynchronizer:
             only=only,
             bootstrap=bootstrap,
             verify=verify,
+            pull_hub=pull_hub,
         )
 
     def rollback(self, backup_path: Path | None = None) -> bool:
@@ -1174,6 +1202,7 @@ def sync_project(
     check_git: bool = True,
     bootstrap: bool = False,
     verify: bool = False,
+    pull_hub: bool = True,
 ) -> int:
     """Helper procedural delegate for spoke synchronization."""
     engine = _get_synchronizer_cls()(str(spoke_path))
@@ -1185,6 +1214,7 @@ def sync_project(
         check_git=check_git,
         bootstrap=bootstrap,
         verify=verify,
+        pull_hub=pull_hub,
     )
 
 
@@ -1259,6 +1289,7 @@ def sync_all_spokes(
                 check_git=check_git,
                 bootstrap=bootstrap,
                 verify=verify,
+                pull_hub=(idx == 1),
             )
             status = "SUCCESS" if res == 0 else "FAILED"
             results.append({"name": sp_name, "path": sp_path, "status": status, "code": res})

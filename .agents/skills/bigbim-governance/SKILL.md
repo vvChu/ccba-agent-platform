@@ -6,6 +6,8 @@ applies_to:
 - BIM
 - Tác vụ Admin
 bundle: _bim
+tier: kernel
+command: /bigbim-governance
 layer: _bim
 gpi:
   s: 4.0

@@ -5,11 +5,13 @@ Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from .base import safe_remove
 
@@ -58,6 +60,8 @@ class GitWorkingTreeGuard:
 class SpokeBackupManager:
     """Snapshot Backup & Rollback Engine for Spoke .agents workspace."""
 
+    MAX_SNAPSHOTS: int = 5
+
     def __init__(self, spoke_root: Path) -> None:
         self.spoke_root = spoke_root
         self.backup_root = self._resolve_backup_dir()
@@ -68,6 +72,26 @@ class SpokeBackupManager:
         if md_dir.exists():
             return md_dir / "backups"
         return self.spoke_root / ".md" / "backups"
+
+    def prune_backups(self, max_snapshots: int = MAX_SNAPSHOTS) -> list[Path]:
+        """Prunes oldest backup snapshots exceeding max_snapshots retention policy.
+
+        Returns:
+            List of removed backup paths.
+        """
+        backups = self.list_backups()
+        removed: list[Path] = []
+        if len(backups) > max_snapshots:
+            for old_backup in backups[max_snapshots:]:
+                try:
+                    safe_remove(old_backup)
+                    removed.append(old_backup)
+                except Exception as e:
+                    print(
+                        f"[SpokeBackupManager] Warning: failed to prune old backup {old_backup}: {e}",
+                        file=sys.stderr,
+                    )
+        return removed
 
     def create_backup(self) -> Path | None:
         """Create a timestamped snapshot backup of .agents/ directory.
@@ -81,15 +105,36 @@ class SpokeBackupManager:
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.backup_root.mkdir(parents=True, exist_ok=True)
-        backup_dest = self.backup_root / f"agents_backup_{timestamp}"
-
-        counter = 1
-        while backup_dest.exists():
-            backup_dest = self.backup_root / f"agents_backup_{timestamp}_{counter}"
-            counter += 1
+        prefix = f"agents_backup_{timestamp}"
+        existing_matches = list(self.backup_root.glob(f"{prefix}*"))
+        if existing_matches:
+            counters: list[int] = []
+            pattern = re.compile(rf"^{re.escape(prefix)}_(\d+)$")
+            for b in existing_matches:
+                m = pattern.match(b.name)
+                if m:
+                    counters.append(int(m.group(1)))
+            next_counter = (max(counters) + 1) if counters else 1
+            backup_dest = self.backup_root / f"{prefix}_{next_counter}"
+        else:
+            backup_dest = self.backup_root / prefix
 
         shutil.copytree(agents_dir, backup_dest, dirs_exist_ok=True)
+        self.prune_backups()
         return backup_dest
+
+    @staticmethod
+    def _backup_sort_key(p: Path) -> tuple[Any, ...]:
+        """Extract sort key giving strict chronological ordering (newest first)."""
+        m = re.search(r"(\d{8})_(\d{6})(?:_(\d+))?", p.name)
+        if m:
+            date_str, time_str, counter_str = m.groups()
+            counter = int(counter_str) if counter_str else 0
+            return (date_str, time_str, counter)
+        try:
+            return ("", "", int(p.stat().st_mtime))
+        except Exception:
+            return ("", "", 0)
 
     def list_backups(self) -> list[Path]:
         """List all available backup snapshots ordered by newest first."""
@@ -101,7 +146,7 @@ class SpokeBackupManager:
             if p.is_dir()
             and (p.name.startswith("agents_backup_") or p.name.startswith(".agents.bak"))
         ]
-        return sorted(backups, key=lambda p: p.stat().st_mtime, reverse=True)
+        return sorted(backups, key=self._backup_sort_key, reverse=True)
 
     def restore_backup(self, backup_path: Path | None = None) -> bool:
         """Restore .agents/ directory from a specific backup or latest snapshot.

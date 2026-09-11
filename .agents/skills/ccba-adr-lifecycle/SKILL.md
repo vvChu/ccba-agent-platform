@@ -4,6 +4,7 @@ description: Autonomous lifecycle governance for Architecture Decision Records (
   - Scaffolding, status cascading, Living Traceability Matrix compilation, and CI
   parity validation.
 bundle: _governance
+tier: kernel
 layer: _governance
 user-invocable: true
 command: /ccba-adr-lifecycle

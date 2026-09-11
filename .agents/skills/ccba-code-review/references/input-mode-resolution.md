@@ -108,8 +108,8 @@ For PR/commit options, follow up with second `AskUserQuestion` to get the number
 ### Codebase Mode
 
 Codebase modes bypass diff resolution — they scan the full codebase instead.
-- `codebase` → hand off to `references/codebase-scan-workflow.md`
-- `codebase parallel` → hand off to `references/parallel-review-workflow.md`
+- `codebase` → hand off to `codebase-scan-workflow.md`
+- `codebase parallel` → hand off to `parallel-review-workflow.md`
 
 Both workflows include code quality review and final verification.
 

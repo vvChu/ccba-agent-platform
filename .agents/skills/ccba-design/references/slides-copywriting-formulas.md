@@ -62,15 +62,12 @@
 - "Join [notable company] and [notable company]"
 - "As seen in [publication]"
 
-## Search Commands
+## Selection Guide
 
-```bash
-# Find formula for slide type
-python .claude/skills/design-system/scripts/search-slides.py "problem agitation" -d copy
-
-# Get emotion-appropriate formula
-python .claude/skills/design-system/scripts/search-slides.py "urgency cta" -d copy
-```
+Tra cứu trực tiếp công thức phù hợp từ bảng Quick Reference bên dưới:
+- **Tạo cấp bách (urgency):** Chọn Cost of Inaction hoặc Scarcity.
+- **Xây dựng niềm tin:** Chọn Social Proof hoặc Testimonial.
+- **Thúc đẩy hành động (CTA):** Chọn AIDA hoặc direct CTA pattern.
 
 ## Quick Reference
 

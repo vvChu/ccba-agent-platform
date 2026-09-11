@@ -8,6 +8,8 @@ applies_to:
 - Thẩm tra thiết kế
 - Kiểm định
 bundle: _core
+tier: kernel
+command: /ccba-hybrid-rag-search
 gpi:
   s: 3.0
   k: 3.0

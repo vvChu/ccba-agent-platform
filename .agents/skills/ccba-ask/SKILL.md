@@ -4,6 +4,7 @@ description: Tư vấn và định hướng lựa chọn kỹ năng hoặc workf
   phát triển.
 disable-model-invocation: true
 bundle: _core
+tier: kernel
 user-invocable: true
 command: /ccba-ask
 gpi:

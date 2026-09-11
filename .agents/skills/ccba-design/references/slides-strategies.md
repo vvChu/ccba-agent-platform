@@ -72,15 +72,11 @@ What Is → What Could Be → What Is → What Could Be → New Bliss
 
 Pattern breaks at 1/3 and 2/3 positions create engagement peaks.
 
-## Search Commands
+## Strategy Selection Guide
 
-```bash
-# Find strategy by goal
-python .claude/skills/design-system/scripts/search-slides.py "investor pitch" -d strategy
-
-# Get emotion arc
-python .claude/skills/design-system/scripts/search-slides.py "series a funding" -d strategy --json
-```
+Tra cứu trực tiếp chiến lược từ bảng Matching Strategy to Context bên dưới:
+- **Gọi vốn (Raising money):** YC Seed, Series A, Guy Kawasaki.
+- **Bán hàng (Selling product):** Sales Pitch, Product Demo.
 
 ## Matching Strategy to Context
 

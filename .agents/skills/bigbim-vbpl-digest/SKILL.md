@@ -7,6 +7,8 @@ applies_to:
 - Pháp điển
 - Thẩm tra thiết kế
 bundle: _bim
+tier: kernel
+command: /bigbim-vbpl-digest
 layer: _bim
 gpi:
   s: 3.0
