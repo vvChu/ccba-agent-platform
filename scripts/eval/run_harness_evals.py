@@ -214,10 +214,12 @@ def main() -> None:
         ]
     if mypy_paths:
         # Mypy check
+        py_ver = f"{sys.version_info.major}.{sys.version_info.minor}"
         mypy_cmd = [
             py_exe,
             "-m",
             "mypy",
+            f"--python-version={py_ver}",
             "--exclude",
             r"[\\/]tests[\\/]",
             "--ignore-missing-imports",
