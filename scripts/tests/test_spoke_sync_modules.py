@@ -334,6 +334,40 @@ def test_spoke_sync_bootstrap_flag(tmp_path: Path):
     assert code == 0
 
 
+def test_spoke_sync_verify_flag(tmp_path: Path):
+    """Test SpokeSynchronizer integration with verify parameter."""
+    spoke_root = tmp_path / "test_spoke"
+    spoke_root.mkdir()
+    (spoke_root / ".agents").mkdir()
+    (spoke_root / ".agents" / "workspace_context.yaml").write_text(
+        "project:\n  name: TestVerify\n  type: Phần mềm\n", encoding="utf-8"
+    )
+
+    hub_root = tmp_path / "mock_hub"
+    cat_dir = hub_root / ".agents" / "skills" / "platform-loader"
+    cat_dir.mkdir(parents=True)
+    (cat_dir / "catalog.yaml").write_text(
+        "bundles:\n  Phần mềm: [_core]\nskills: []\nworkflows: []\n", encoding="utf-8"
+    )
+
+    engine = SpokeSynchronizer(spoke_root=spoke_root, hub_root=hub_root)
+    # Test dry-run with verify=True
+    code = engine.sync(dry_run=True, check_git=False, verify=True)
+    assert code == 0
+
+    # Test execution with mock verify_spoke returning success
+    with patch.object(engine, "verify_spoke", return_value=0) as mock_v:
+        code = engine.sync(dry_run=False, check_git=False, backup=False, verify=True)
+        assert code == 0
+        mock_v.assert_called_once()
+
+    # Test execution with mock verify_spoke returning failure
+    with patch.object(engine, "verify_spoke", return_value=42) as mock_v:
+        code = engine.sync(dry_run=False, check_git=False, backup=False, verify=True)
+        assert code == 42
+        mock_v.assert_called_once()
+
+
 def test_check_hub_import_depth_excludes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """Test check_hub_import_depth exclusions (.agents, .md, .venv) in single file and directory scan."""
     from scripts.spoke.check_hub_import_depth import main, scan_file
@@ -389,6 +423,24 @@ def test_run_spoke_sync_cli_with_bootstrap(tmp_path: Path):
             force=False,
             backup=True,
             bootstrap=True,
+            verify=False,
+        )
+
+
+def test_run_spoke_sync_cli_with_verify(tmp_path: Path):
+    """Test run_spoke_sync_cli accepts --verify and passes it to sync_project."""
+    with patch("scripts.spoke.sync.cli.sync_project") as mock_sync:
+        mock_sync.return_value = 0
+        code = run_spoke_sync_cli(["--spoke", str(tmp_path), "--apply", "--verify"])
+        assert code == 0
+        mock_sync.assert_called_once_with(
+            str(tmp_path),
+            None,
+            dry_run=False,
+            force=False,
+            backup=True,
+            bootstrap=False,
+            verify=True,
         )
 
 
@@ -408,12 +460,14 @@ def test_ccba_platform_cli_arguments():
             "sync-spoke",
             "--apply",
             "--bootstrap",
+            "--verify",
             "--force",
             "--include-sandboxes",
         ]
     )
     assert sync_args.apply is True
     assert sync_args.bootstrap is True
+    assert sync_args.verify is True
     assert sync_args.force is True
     assert sync_args.include_sandboxes is True
 
