@@ -6,9 +6,10 @@ context và gây ra lỗi ngắt phiên "User cancelled agent execution".
 
 import sys
 from pathlib import Path
+from typing import Any
 
 
-def pytest_addoption(parser) -> None:
+def pytest_addoption(parser: Any) -> None:
     """Đăng ký tùy chọn cho phép chạy unscoped khi thực sự cần thiết (ví dụ: CI)."""
     parser.addoption(
         "--allow-unscoped",
@@ -18,7 +19,7 @@ def pytest_addoption(parser) -> None:
     )
 
 
-def pytest_cmdline_main(config) -> int | None:
+def pytest_cmdline_main(config: Any) -> int | None:
     """Hook kiểm tra các tham số đầu vào trước khi tiến hành chạy pytest."""
     import os
 
@@ -55,13 +56,11 @@ def pytest_cmdline_main(config) -> int | None:
         )
         sys.stderr.write("💡 Hướng dẫn thực thi an toàn:\n")
         sys.stderr.write("  1. Chỉ định file test cụ thể:\n")
-        sys.stderr.write("     .venv\\Scripts\\pytest.exe packages/ccba-ai/tests/test_client.py\n")
+        sys.stderr.write("     pytest <path/to/test_file.py>\n")
         sys.stderr.write("  2. Hoặc sử dụng CLI Wrapper tự động:\n")
-        sys.stderr.write(
-            "     python scripts/safe_pytest.py -f scripts/tests/test_doc_auditor.py\n"
-        )
+        sys.stderr.write("     python scripts/safe_pytest.py -f <path/to/test_file.py>\n")
         sys.stderr.write("  3. Để chạy toàn bộ test suite (chỉ ở bước nghiệm thu cuối):\n")
-        sys.stderr.write("     .venv\\Scripts\\pytest.exe --allow-unscoped\n")
+        sys.stderr.write("     pytest --allow-unscoped\n")
         sys.stderr.write("=" * 65 + "\n\n")
         return 1
 

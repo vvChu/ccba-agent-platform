@@ -29,3 +29,10 @@ Chosen Option: Option A.
 * Reduces `safe_runner.py` from 208 LOC to ~25 LOC and `safe_pytest.py` from 118 LOC to ~30 LOC.
 * Eliminates inter-script Python subprocess overhead when triggering `safe_pytest`.
 * All 5 CI Eval Gates pass 100%.
+
+### Evolution Note (Issue #255 — 2026-09-11)
+
+* **Promotion to Tier 0 SDK (`ccba-harness`)**: As mandated by Issue #255 and ADR 0044 Spoke Autonomy, `DetachedExecutionEngine` has been packaged directly into `packages/ccba-harness/src/ccba_harness/execution.py` and exported at top level via `from ccba_harness import DetachedExecutionEngine`.
+* **Repository-Local Log Isolation**: `resolve_scratch_dir()` has been updated to dynamically detect the project root (`.git` / `pyproject.toml`) relative to `Path.cwd()` instead of `Path(__file__)`, ensuring Spoke test execution logs are stored strictly inside the Spoke's local `.md/scratch/` directory.
+* **Backward Compatibility**: `scripts/eval/process_safety.py` remains as a transparent re-export shim to maintain 100% compatibility for any existing scripts.
+
