@@ -5,7 +5,7 @@
 - **Branch:** `refactor/issue-256-scope-hub-adr-namespace` $\rightarrow$ `main`
 - **Tiêu đề:** `refactor(adr): scope Hub architecture decisions to HUB-ADR-XXXX (#256)`
 - **Issue liên quan:** [Issue #256](https://github.com/vvChu/ccba-agent-platform/issues/256)
-- **Thể chế & Kiến trúc:** [HUB-ADR-0058](docs/adr/0058-automation-first-quality-framework-and-hard-completion-lock.md)
+- **Thể chế & Kiến trúc:** [HUB-ADR-0058](docs/adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md)
 - **Mục tiêu hoàn thành:**
   - Phân định không gian tên riêng `HUB-ADR-XXXX` cho các Quyết định Kiến trúc của CCBA Platform nhằm cách ly triệt để với dải số ADR của các dự án Spoke (tránh đụng độ số ADR từ 0001–0058).
   - Cập nhật công cụ tổng hợp ma trận `scripts/sync_hub_adr_matrix.py` để xuất nhãn `[HUB-ADR XXXX]` trong `README.md` và `TRACEABILITY_MATRIX.md`.
