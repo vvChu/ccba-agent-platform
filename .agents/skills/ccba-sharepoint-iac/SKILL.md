@@ -8,6 +8,7 @@ metadata:
   version: v1.0
   publisher: CCBA
 bundle: _software
+tier: kernel
 user-invocable: true
 command: /ccba-sharepoint-iac
 gpi:

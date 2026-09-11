@@ -26,6 +26,25 @@ from ._rules import REGEX_PATTERNS, SAFE_STRINGS
 
 MAX_FILE_SIZE = 25 * 1024 * 1024  # 25 MB
 
+DEFAULT_IGNORE_DIRS: frozenset[str] = frozenset(
+    {
+        ".git",
+        "node_modules",
+        ".venv",
+        "venv",
+        "target",
+        "dist",
+        "build",
+        ".next",
+        "__pycache__",
+        ".md",
+        ".mypy_cache",
+        ".ruff_cache",
+        ".pytest_cache",
+        ".import_linter_cache",
+    }
+)
+
 
 class MaskaraScanner:
     """Deep module hiding secret regex matching, file scanning, redaction, and reporting.
@@ -242,18 +261,7 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
         scanned_count = 0
         skipped_count = 0
 
-        ignore_dirs = {
-            ".git",
-            "node_modules",
-            ".venv",
-            "venv",
-            "target",
-            "dist",
-            "build",
-            ".next",
-            "__pycache__",
-            ".md",
-        }
+        ignore_dirs = set(DEFAULT_IGNORE_DIRS)
 
         for target in targets:
             root = Path(target["root"])
@@ -439,9 +447,9 @@ exit 0
                 ]
 
             for plan in plans:
-                path = Path(plan["path"])
-                action = plan["action"]
-                content = plan["content"]
+                path = Path(str(plan["path"]))
+                action = str(plan["action"])
+                content = str(plan["content"])
                 backup_path = ""
                 if not dry_run:
                     path.parent.mkdir(parents=True, exist_ok=True)

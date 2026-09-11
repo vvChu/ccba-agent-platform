@@ -5,6 +5,7 @@ description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ 
   Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
 disable-model-invocation: true
 bundle: _core
+tier: kernel
 gpi:
   s: 3.5
   k: 2.0

@@ -6,6 +6,8 @@ applies_to:
 - Phần mềm
 - Kiểm định
 bundle: _core
+tier: kernel
+command: /ccba-file-stability-guard
 gpi:
   s: 2.0
   k: 3.0

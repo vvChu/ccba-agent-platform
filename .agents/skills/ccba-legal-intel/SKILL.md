@@ -3,6 +3,8 @@ name: ccba-legal-intel
 description: Autonomous legal intelligence agent to crawl, diff, and generate compliance
   checklists from Vietnamese legal documents.
 bundle: _consulting
+tier: kernel
+command: /ccba-legal-intel
 layer: _consulting
 package_path: packages/ccba-legal-intel
 gpi:

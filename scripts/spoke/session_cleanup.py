@@ -16,6 +16,55 @@ import sys
 import time
 from pathlib import Path
 
+try:
+    from scripts.spoke.sync.base import safe_remove
+except ImportError:
+    try:
+        from .sync.base import safe_remove
+    except (ImportError, ValueError):
+
+        def safe_remove(path: Path) -> None:
+            """Safely remove a directory, file, or symlink without crashing on permission errors."""
+            if not path.exists() and not path.is_symlink():
+                return
+            try:
+                if path.is_file() or path.is_symlink():
+                    try:
+                        path.unlink()
+                    except PermissionError:
+                        path.chmod(0o777)
+                        path.unlink()
+                else:
+                    shutil.rmtree(path, ignore_errors=False)
+            except Exception:
+                if path.is_file() or path.is_symlink():
+                    try:
+                        path.chmod(0o777)
+                        path.unlink()
+                    except Exception:
+                        pass
+                elif path.is_dir():
+                    for root, dirs, files in os.walk(path, topdown=False):
+                        for name in files:
+                            file_path = os.path.join(root, name)
+                            try:
+                                os.chmod(file_path, 0o777)
+                                os.remove(file_path)
+                            except Exception:
+                                pass
+                        for name in dirs:
+                            dir_path = os.path.join(root, name)
+                            try:
+                                os.chmod(dir_path, 0o777)
+                                os.rmdir(dir_path)
+                            except Exception:
+                                pass
+                    try:
+                        os.rmdir(path)
+                    except Exception:
+                        pass
+
+
 # Core branches that must NEVER be deleted
 CORE_BRANCHES = {"main", "master", "develop"}
 
@@ -360,10 +409,7 @@ def clean_subagent_artifacts(root_dir: Path, dry_run: bool) -> None:
         else:
             print(f"  [DELETE] Removing: .agents/{item.name}")
             try:
-                if item.is_dir():
-                    shutil.rmtree(item)
-                else:
-                    item.unlink()
+                safe_remove(item)
             except Exception as e:
                 print(f"  [WARNING] Could not remove .agents/{item.name}: {e}")
 

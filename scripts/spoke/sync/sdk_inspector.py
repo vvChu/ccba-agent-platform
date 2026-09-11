@@ -114,8 +114,15 @@ class SharedSdkInspector:
     def find_site_packages(self) -> list[Path]:
         """Locate site-packages directories across standard virtual environment folders."""
         site_packages_dirs: list[Path] = []
-        for venv_name in [".venv", "venv", "env", ".env"]:
-            venv_path = self.spoke_root / venv_name
+        candidate_venvs = [
+            self.spoke_root / ".venv",
+            self.spoke_root / "venv",
+            self.spoke_root / "env",
+            self.spoke_root / ".env",
+            self.spoke_root / "scripts" / ".venv",
+            self.spoke_root / "scripts" / "venv",
+        ]
+        for venv_path in candidate_venvs:
             if not venv_path.exists():
                 continue
             # Windows: .venv/Lib/site-packages
@@ -219,6 +226,7 @@ class LegalKnowledgeSyncOrchestrator:
         "Kiểm định",
         "Tư vấn pháp lý",
         "PCCC",
+        "Tra cứu",
     }
 
     def __init__(self, spoke_root: Path, hub_root: Path, project_type: str) -> None:

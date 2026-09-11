@@ -6,6 +6,8 @@ applies_to:
 - Thẩm tra thiết kế
 - Thiết kế
 bundle: _consulting
+tier: kernel
+command: /ccba-completion-checklist
 gpi:
   s: 3.0
   k: 2.0

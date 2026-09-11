@@ -6,6 +6,7 @@ applies_to:
 - Thẩm tra thiết kế
 - Thiết kế
 bundle: _qc
+tier: kernel
 user-invocable: true
 command: /ccba-ai-qc-pccc-audit
 gpi:

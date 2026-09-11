@@ -13,6 +13,7 @@ metadata:
   version: 1.0.0
 disable-model-invocation: true
 bundle: _software
+tier: kernel
 user-invocable: true
 command: /ccba-copywriting
 gpi:
@@ -57,7 +58,7 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
    - Phân tích và điền đầy đủ các placeholders `{{placeholder}}` bằng thông tin dự án mới.
    - **QUY TẮC ĐỊNH DẠNG NGHIÊM NGẶT:** Tuyệt đối không sử dụng hoặc để lại bất kỳ dấu ngoặc vuông nào (ví dụ: `[...]`) trong toàn bộ văn bản hoàn thiện cuối cùng, dù là placeholder trống hay dùng để đánh dấu tiêu đề, phân loại phương án. Không để lại dấu chấm lửng `...`. 
    - Nếu thông tin đầu vào thiếu (như số hiệu, ngày tháng, tên người ký), Agent bắt buộc phải tự giả định (mock) các thông tin thực tế phù hợp để điền đầy đủ và làm sạch văn bản.
-   - Áp dụng các công thức viết thuyết phục (xem tại `/references/copy-formulas.md`) để phát triển nội dung chi tiết.
+   - Áp dụng các công thức viết thuyết phục (xem tại `references/copy-formulas.md`) để phát triển nội dung chi tiết.
    - **Tiêu chí hoàn thành:** Tất cả các placeholders (kể cả dấu chấm lửng `...`) được thay thế bằng dữ liệu cụ thể và chính xác. Không tồn tại bất kỳ ký tự ngoặc vuông `[` hoặc `]` nào trong kết quả trả về. Giữ nguyên cấu trúc khung pháp lý/hành chính của biểu mẫu gốc.
 
 3. **Lựa chọn Định dạng tối ưu (Format Selection)**:
@@ -74,7 +75,7 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 ## Tiêu chuẩn Thực thi (Best Practices)
 
 - **Tuân thủ khung mẫu:** Tuyệt đối giữ nguyên Quốc hiệu, tiêu ngữ, căn lề cấu trúc của template chuẩn.
-- **Kế thừa văn phong:** Sử dụng đặc tả văn phong tại `/references/writing-styles.md`.
+- **Kế thừa văn phong:** Sử dụng đặc tả văn phong tại `references/writing-styles.md`.
 - **Đa dạng biến thể:** Đề xuất tối thiểu 2 phương án viết cho các phân đoạn thuyết phục quan trọng để người dùng lựa chọn. **Lưu ý:** Khi trình bày các phương án, chỉ sử dụng chữ in đậm thông thường, tuyệt đối không bọc tên phương án trong dấu ngoặc vuông. 
   - *Sai:* `[PHƯƠNG ÁN 1 - Viết theo công thức PAS]`
   - *Đúng:* **PHƯƠNG ÁN 1 - Viết theo công thức PAS:**

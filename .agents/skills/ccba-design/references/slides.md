@@ -10,11 +10,11 @@ Activate the `design` skill and specify slides task, e.g. "create a pitch deck".
 
 | Topic | File | Purpose |
 |-------|------|---------|
-| Creation Guide | `references/slides-create.md` | Step-by-step slide creation workflow |
-| Layout Patterns | `references/slides-layout-patterns.md` | Slide layout templates and grid systems |
-| HTML Template | `references/slides-html-template.md` | Base HTML structure for presentations |
-| Copywriting | `references/slides-copywriting-formulas.md` | AIDA, PAS, FAB for slide content |
-| Strategies | `references/slides-strategies.md` | Contextual strategies by presentation type |
+| Creation Guide | `slides-create.md` | Step-by-step slide creation workflow |
+| Layout Patterns | `slides-layout-patterns.md` | Slide layout templates and grid systems |
+| HTML Template | `slides-html-template.md` | Base HTML structure for presentations |
+| Copywriting | `slides-copywriting-formulas.md` | AIDA, PAS, FAB for slide content |
+| Strategies | `slides-strategies.md` | Contextual strategies by presentation type |
 
 ## When to Use
 
@@ -35,8 +35,8 @@ Activate the `design` skill and specify slides task, e.g. "create a pitch deck".
 ## Workflow
 
 1. Parse presentation type from user request
-2. Load `references/slides-create.md` for creation guide
-3. Select layout patterns from `references/slides-layout-patterns.md`
-4. Apply copywriting formulas from `references/slides-copywriting-formulas.md`
-5. Use HTML template from `references/slides-html-template.md`
-6. Apply strategy from `references/slides-strategies.md`
+2. Load `slides-create.md` for creation guide
+3. Select layout patterns from `slides-layout-patterns.md`
+4. Apply copywriting formulas from `slides-copywriting-formulas.md`
+5. Use HTML template from `slides-html-template.md`
+6. Apply strategy from `slides-strategies.md`

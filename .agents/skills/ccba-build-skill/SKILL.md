@@ -10,6 +10,7 @@ keywords:
 - notebooklm
 disable-model-invocation: true
 bundle: _core
+tier: kernel
 command: /ccba-build-skill
 gpi:
   s: 3.0
@@ -35,7 +36,7 @@ Agent tiếp nhận lệnh bắt buộc phải tự động thực thi chuỗi t
 ## 🛡️ 1. Quét Bảo Mật & Nạp Nguồn
 - Đọc danh sách nguồn tài liệu được cung cấp (tệp tin cục bộ, URL hoặc video).
 - Chạy quét bảo mật qua `scripts/maskara.py` đối với các tệp tin cục bộ để tránh lộ khóa API.
-- Nạp nguồn vào Google NotebookLM thông qua CLI helper (`scripts/notebooklm_cli.py`).
+- Nạp nguồn vào Google NotebookLM thông qua CLI helper (`python -m ccba_notebooklm`).
 - **Tiêu chí hoàn thành:** Toàn bộ nguồn được quét sạch bí mật và nạp thành công vào NotebookLM.
 
 ---
