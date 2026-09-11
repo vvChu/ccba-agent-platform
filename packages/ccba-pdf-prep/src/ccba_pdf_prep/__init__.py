@@ -38,6 +38,8 @@ from .detector import TitleBlockDetector as TitleBlockDetector
 from .detector import TitleBlockRegion as TitleBlockRegion
 from .forms import (
     fill_pdf_fields as fill_pdf_fields,
+)
+from .forms import (
     get_field_info as get_field_info,
 )
 from .manipulation import (
@@ -60,15 +62,35 @@ from .media import (
 )
 from .media import (
     download_grid_image as download_grid_image,
+)
+from .media import (
     extract_storyboard_frames as extract_storyboard_frames,
+)
+from .media import (
     extract_video_frames as extract_video_frames,
+)
+from .media import (
     extract_youtube_video_id as extract_youtube_video_id,
+)
+from .media import (
     fetch_youtube_transcript as fetch_youtube_transcript,
+)
+from .media import (
     find_ffmpeg_bin as find_ffmpeg_bin,
+)
+from .media import (
     format_lesson_notes as format_lesson_notes,
+)
+from .media import (
     format_whisper_transcript as format_whisper_transcript,
+)
+from .media import (
     get_heatmap_peaks as get_heatmap_peaks,
+)
+from .media import (
     get_target_timestamps as get_target_timestamps,
+)
+from .media import (
     group_transcript_segments as group_transcript_segments,
 )
 from .pipeline import (

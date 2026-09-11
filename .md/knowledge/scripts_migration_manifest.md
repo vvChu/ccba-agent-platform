@@ -1,7 +1,7 @@
 # 📦 Báo Cáo Khảo Sát & Ma Trận Ánh Xạ Di Trú Scripts (Ticket 3 Manifest)
 
 > **Cơ chế thực hiện**: Double-Pass Adversarial Review (Rule 8) — Đo lường thực tế trên mã nguồn Monorepo.  
-> **Tham chiếu**: [Wayfinder Upgrade Map](../wayfinder/ccba-upgrade-roadmap/map.md) | [ADR-0057: Two-Stage Granularity Framework](../knowledge/adr/adr-0057.md)
+> **Tham chiếu**: [Wayfinder Upgrade Map](../wayfinder/ccba-upgrade-roadmap/map.md) | [ADR-0057: Two-Stage Granularity Framework](../../docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md)
 
 ---
 

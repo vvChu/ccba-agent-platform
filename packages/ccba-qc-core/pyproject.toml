@@ -31,3 +31,7 @@ ccba-qc = "ccba_qc_core.cli:app"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["ccba_qc_core*"]
+
+[tool.uv.sources]
+ccba-ai = { workspace = true }
+ccba-pdf-prep = { workspace = true }

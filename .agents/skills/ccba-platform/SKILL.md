@@ -128,5 +128,4 @@ Sau khi người dùng lựa chọn (bằng số hoặc keyword), Agent nạp v�
 
 ## Catalog đầy đủ
 
-Danh sách tất cả các kỹ năng được quản lý tự động tại:
-[catalog.yaml](file:///[hub_path]/.agents/skills/platform-loader/catalog.yaml)
+[catalog.yaml](../platform-loader/catalog.yaml)
