@@ -1,11 +1,11 @@
 # 🗺️ Bản đồ Định hướng Wayfinder: Lộ Trình Nâng Cấp Toàn Diện Hệ Sinh Thái Kỹ Năng ccba-*
 
 > **Tài liệu tham chiếu & Nền tảng**:
-> - [ADR-0030: Instruction Token Budget & Token Budget Governance](../../knowledge/adr/adr-0030.md)
-> - [ADR-0035: Deep Modules & Thin Seams Hierarchy](../../knowledge/adr/adr-0035.md)
-> - [ADR-0053: Teamwork Multi-Agent Protocol & Single-Writer Coordination](../../knowledge/adr/adr-0053.md)
-> - [ADR-0057: Two-Stage Decision Framework for Skill Granularity & Governance](../../knowledge/adr/adr-0057.md)
-> - [Skill Authoring Guide: Multi-Mode Standard & Reference Deduplication](../../knowledge/guides/skill_authoring_guide.md)
+> - [ADR-0030: Instruction Token Budget & Token Budget Governance](../../../docs/adr/0030-progressive-disclosure-and-instruction-budget-optimization.md)
+> - [ADR-0035: Deep Modules & Thin Seams Hierarchy](../../../docs/adr/0035-polyglot-deep-modules-and-subagent-guardrails.md)
+> - [ADR-0053: Teamwork Multi-Agent Protocol & Single-Writer Coordination](../../../docs/adr/0053-teamwork-multi-agent-orchestration-framework.md)
+> - [ADR-0057: Two-Stage Decision Framework for Skill Granularity & Governance](../../../docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md)
+> - **Skill Authoring Guide**: Multi-Mode Standard & Reference Deduplication (theo [ADR-0057](../../../docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md))
 > - [Latent Space: The /wayfinder Skill: Navigating the “Fog of War” of Planning (Matt Pocock)](https://www.latent.space/p/wayfinder-skill)
 > - **Industry Benchmarks**: Claude Code Verification Loops, SWE-bench Evaluator Harness, Letta/MemGPT Memory Compaction, Devin/Cursor Single-Writer Structured Patches.
 
@@ -50,7 +50,7 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
 
 - **[Đã chốt - 2026-09-09] Thẩm tra & Kiểm định Thực chứng 5 Trụ cột Nâng cấp qua `/boost`**:
   - Đã quét thực tế toàn bộ Monorepo: xác nhận 105 loose scripts (35,680 dòng code) trong 14 skills đang vi phạm Cổng 0 ADR-0057; xác nhận `session_learnings.md` đạt 38 KB (9.5K tokens) gây lãng phí ~10% ngữ cảnh mỗi lượt prompt; xác nhận race condition khi nhiều Worker ghi đồng thời vào file mã nguồn.
-  - Chi tiết tại Artifact: [learning_proposal.md](file:///C:/Users/chuvu/.gemini/antigravity/brain/ea5a900e-41fd-4ae6-968a-e2e271e67e52/learning_proposal.md).
+  - Chi tiết tại Artifact: `learning_proposal.md` (phiên khảo sát ban đầu).
 - **[Đã chốt - 2026-09-09] Đối sánh Chuẩn Công nghiệp & Best Practices qua `/browser`**:
   - Khảo sát Anthropic Claude Code, OpenAI SWE-bench, Devin, Cursor, Aider và Letta/MemGPT.
   - Chốt áp dụng mô hình **Dual-Verification Gate**: Lớp 1 dùng Deterministic CLI Exit Code (nhanh, 0 token, 100% tin cậy); Lớp 2 chỉ spawn Critic/Auditor Agent khi bài toán có độ mơ hồ ngữ nghĩa hoặc thẩm định thiết kế UI/Architecture.
@@ -78,8 +78,8 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
   - Thiết lập rào chắn kiểm thử xác định khách quan, chặn đứng hoàn toàn Premature Completion & Self-Certification.
 - **[Đã chốt - 2026-09-10] Thiết kế Giao thức Structured Diff Patch & Single-Writer Engine (Ticket 4)**:
   - Ban hành tài liệu đặc tả kỹ thuật: [`.md/knowledge/specs/spec-structured-diff-protocol.md`](../../knowledge/specs/spec-structured-diff-protocol.md) chuẩn hóa format Search-Replace block, JSON manifest, Unified Diff, và quy tắc No Pre-mutation cho Worker Sub-agents.
-  - Xây dựng thành công Single-Writer Engine [`scripts/governance/apply_worker_patch.py`](../../../../scripts/governance/apply_worker_patch.py) hỗ trợ phát hiện xung đột (`--check-conflicts`), dry-run ảo hóa (`--dry-run`), áp dụng nguyên tử (`--apply`) kèm snapshot và auto-rollback khôi phục trạng thái gốc nếu verification gate thất bại.
-  - Bộ kiểm thử [`tests/governance/test_apply_worker_patch.py`](../../../../tests/governance/test_apply_worker_patch.py) đạt 10/10 PASS (full governance suite đạt 91 passed).
+  - Xây dựng thành công Single-Writer Engine [`scripts/governance/apply_worker_patch.py`](../../../scripts/governance/apply_worker_patch.py) hỗ trợ phát hiện xung đột (`--check-conflicts`), dry-run ảo hóa (`--dry-run`), áp dụng nguyên tử (`--apply`) kèm snapshot và auto-rollback khôi phục trạng thái gốc nếu verification gate thất bại.
+  - Bộ kiểm thử [`tests/governance/test_apply_worker_patch.py`](../../../tests/governance/test_apply_worker_patch.py) đạt 10/10 PASS (full governance suite đạt 91 passed).
   - Unblock Ticket F3 trong khu vực sương mù.
 - **[Đã chốt - 2026-09-10] Phỏng vấn Socratic Grilling & Ban hành ADR-0058 Live Collaboration Artifacts (Ticket 5)**:
   - Hoàn tất 4 vòng phỏng vấn chuyên sâu `/ccba-grilling` cùng Kỹ sư trưởng, lập biên bản tại [`.md/knowledge/grilling_live_artifacts_and_charter.md`](../../knowledge/grilling_live_artifacts_and_charter.md).
@@ -108,14 +108,14 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
   - Cập nhật Cẩm nang Soạn thảo Kỹ năng (`skill_authoring_guide.md`, `skill_review_checklist.md`) và nâng cấp `packages/ccba-harness/tests/test_verify_patch.py` (19/19 tests PASS 100%).
   - Tích hợp mẫu Exit-Code Gate vào các Master Skills và Rituals trọng tâm: `ccba-implement`, `ccba-tdd`, `ccba-code-review`, `ccba-build-skill`, `ccba-legal-advisor`, `ccba-completion-checklist`.
 - **[Đã chốt - 2026-09-10] Thử nghiệm Swarm Multi-Agent với Single-Writer Engine (Ticket F3)**:
-  - Nâng cấp [`scripts/governance/apply_worker_patch.py`](../../../../scripts/governance/apply_worker_patch.py) với `SwarmExecutionReport`, hỗ trợ cờ linh hoạt `--verify-cmd` (`-c`), `--preset`, `--benchmark`, `--json` và cơ chế phát hiện & báo cáo Semantic Conflict tự động rollback 100% snapshot.
-  - Xây dựng bộ kiểm thử E2E mô phỏng Swarm 5 kịch bản [`tests/governance/test_swarm_single_writer_e2e.py`](../../../../tests/governance/test_swarm_single_writer_e2e.py) đạt 5/5 PASS (toàn bộ 99 tests governance đạt 100% PASS):
+  - Nâng cấp [`scripts/governance/apply_worker_patch.py`](../../../scripts/governance/apply_worker_patch.py) với `SwarmExecutionReport`, hỗ trợ cờ linh hoạt `--verify-cmd` (`-c`), `--preset`, `--benchmark`, `--json` và cơ chế phát hiện & báo cáo Semantic Conflict tự động rollback 100% snapshot.
+  - Xây dựng bộ kiểm thử E2E mô phỏng Swarm 5 kịch bản [`tests/governance/test_swarm_single_writer_e2e.py`](../../../tests/governance/test_swarm_single_writer_e2e.py) đạt 5/5 PASS (toàn bộ 99 tests governance đạt 100% PASS):
     1. Concurrent 5-Worker Swarm nộp độc lập 5 patches across 5 seams $\rightarrow$ Single-Writer merge thành công không va chạm dòng.
     2. Syntactic Collision Rejection $\rightarrow$ Chặn đứng 2 workers sửa cùng khối code trước khi ghi đĩa.
     3. Semantic Conflict & Auto-Rollback $\rightarrow$ Phát hiện lỗi logic qua verification gate, tự động phục hồi nguyên trạng đĩa từ snapshot.
     4. Stale / Drift Patch Rejection $\rightarrow$ Từ chối an toàn search blocks không khớp trong dry-run.
     5. High-Throughput Latency Benchmark $\rightarrow$ Đo lường phân tích va chạm 20 khối patch $< 50\text{ms}$.
-  - Chuẩn hóa kỹ năng [`.agents/skills/ccba-teamwork/SKILL.md`](../../../../.agents/skills/ccba-teamwork/SKILL.md) cưỡng chế nguyên tắc No Pre-mutation và quy trình nghiệm thu bằng `apply_worker_patch.py` kết hợp ADR-0058 Hard Completion Lock.
+  - Chuẩn hóa kỹ năng [`.agents/skills/ccba-teamwork/SKILL.md`](../../../.agents/skills/ccba-teamwork/SKILL.md) cưỡng chế nguyên tắc No Pre-mutation và quy trình nghiệm thu bằng `apply_worker_patch.py` kết hợp ADR-0058 Hard Completion Lock.
 - **[Đã chốt - 2026-09-10] Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime (Ticket F4)**:
   - Xây dựng module `packages/ccba-harness/src/ccba_harness/telemetry.py` thu thập, phân tích và chuẩn hóa mức tiêu thụ token/chi phí theo thời gian thực từ Antigravity transcript logs.
   - Tích hợp CLI `ccba-harness telemetry scan / subagents` và script `scripts/governance/subagent_telemetry.py`.
@@ -193,8 +193,8 @@ flowchart TD
 ### Ticket 1: [Task/AFK] `[Xây dựng Cơ chế Nén Tri thức Tự động (Memory Compaction Engine) cho session_learnings.md]` ✅
 - **Mục tiêu**: Xây dựng tiện ích CLI `scripts/governance/compact_session_learnings.py` (kèm unit test tại `tests/governance/test_compact_session_learnings.py`) có khả năng phân loại các quy tắc trong `session_learnings.md`, chắt lọc thành bảng tóm tắt $\le 10\text{ KB}$, và tự động lưu các ghi chú lịch sử chi tiết vào `.md/knowledge/archive/session_learnings_archive_<timestamp>.md`.
 - **Đầu ra thực tế**:
-  - Script [`scripts/governance/compact_session_learnings.py`](../../../../scripts/governance/compact_session_learnings.py) đạt chuẩn strict mypy và ruff.
-  - Bộ kiểm thử [`tests/governance/test_compact_session_learnings.py`](../../../../tests/governance/test_compact_session_learnings.py) đạt 100% PASS.
+  - Script [`scripts/governance/compact_session_learnings.py`](../../../scripts/governance/compact_session_learnings.py) đạt chuẩn strict mypy và ruff.
+  - Bộ kiểm thử [`tests/governance/test_compact_session_learnings.py`](../../../tests/governance/test_compact_session_learnings.py) đạt 100% PASS.
   - File [`.md/knowledge/session_learnings.md`](../../knowledge/session_learnings.md) giảm từ 38 KB về **8.56 KB** (tiết kiệm ~7,300 tokens mỗi phiên).
   - Bản lưu trữ toàn văn 100% tại [`.md/knowledge/archive/session_learnings_history.md`](../../knowledge/archive/session_learnings_history.md).
 - **Phân loại**: `Task [AFK]` | **Ưu tiên**: P0.1 | **Trạng thái**: **Closed (Done) ✅**
@@ -204,9 +204,9 @@ flowchart TD
 ### Ticket 2: [Task/AFK] `[Nâng cấp ccba-harness verify-patch với Exit-Code Deterministic Verification Gate]` ✅
 - **Mục tiêu**: Bổ sung hàm thực thi kiểm định xác định `verify_patch_execution()` vào `packages/ccba-harness/src/ccba_harness/verifier.py` và command CLI `ccba-harness verify-patch`. Công cụ này cho phép truyền vào danh sách lệnh (`pytest ...`, `ruff check ...`, `mypy ...`), tự động chạy trong subprocess cô lập, bắt exit code và trả về kết quả JSON/Markdown chuẩn hóa kèm thông báo lỗi ngắn gọn nếu exit code $\ne 0$.
 - **Đầu ra thực tế**:
-  - Module [`packages/ccba-harness/src/ccba_harness/verifier.py`](../../../../packages/ccba-harness/src/ccba_harness/verifier.py) (`CommandResult`, `PatchVerificationReport`, `verify_patch_execution()`).
+  - Module [`packages/ccba-harness/src/ccba_harness/verifier.py`](../../../packages/ccba-harness/src/ccba_harness/verifier.py) (`CommandResult`, `PatchVerificationReport`, `verify_patch_execution()`).
   - Subcommand `ccba-harness verify-patch` với các flags: `-c / --cmd / --commands`, `--file`, `--timeout`, `--cwd`, `--json`, `--report-file`, `--fail-fast`.
-  - Bộ kiểm thử [`packages/ccba-harness/tests/test_verify_patch.py`](../../../../packages/ccba-harness/tests/test_verify_patch.py) đạt 12/12 PASS (100% pass trên toàn suite 141 tests).
+  - Bộ kiểm thử [`packages/ccba-harness/tests/test_verify_patch.py`](../../../packages/ccba-harness/tests/test_verify_patch.py) đạt 12/12 PASS (100% pass trên toàn suite 141 tests).
 - **Phân loại**: `Task [AFK]` | **Ưu tiên**: P0.2 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
@@ -225,8 +225,8 @@ flowchart TD
 - **Mục tiêu**: Xây dựng mẫu thử giao thức làm việc cho các Worker Sub-agents: cấm gọi các công cụ sửa file trực tiếp (`replace_file_content`, `write_to_file` trên source code). Thay vào đó, Worker chỉ xuất tệp Patch (`.diff` hoặc JSON Search-Replace) vào thư mục `.system_generated/scratch/`. Thiết kế một helper script `apply_worker_patches.py` để Lead Orchestrator áp dụng lần lượt các patch, kiểm tra xung đột cú pháp và revert nếu gặp lỗi.
 - **Đầu ra thực tế**:
   - Tài liệu quy chuẩn giao thức: [`.md/knowledge/specs/spec-structured-diff-protocol.md`](../../knowledge/specs/spec-structured-diff-protocol.md).
-  - Script nguyên mẫu: [`scripts/governance/apply_worker_patch.py`](../../../../scripts/governance/apply_worker_patch.py) hỗ trợ `--dry-run`, `--check-conflicts`, `--apply`, `--verify`.
-  - Bộ unit tests: [`tests/governance/test_apply_worker_patch.py`](../../../../tests/governance/test_apply_worker_patch.py) đạt 10/10 PASS.
+  - Script nguyên mẫu: [`scripts/governance/apply_worker_patch.py`](../../../scripts/governance/apply_worker_patch.py) hỗ trợ `--dry-run`, `--check-conflicts`, `--apply`, `--verify`.
+  - Bộ unit tests: [`tests/governance/test_apply_worker_patch.py`](../../../tests/governance/test_apply_worker_patch.py) đạt 10/10 PASS.
 - **Phân loại**: `Prototype [HITL]` | **Ưu tiên**: P1.1 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
@@ -244,7 +244,7 @@ flowchart TD
 ### Ticket F1: [Task/AFK] `[Thành lập packages/ccba-qc-core & Di trú 35 Core Scripts Thẩm định Đa bộ môn]` ✅
 - **Mục tiêu**: Khởi tạo package mới `packages/ccba-qc-core`, di trú 35 core scripts (1,788 LOC của `ccba-ai-qc` và `ccba-ai-qc-pccc-audit`) thành Deep Seam chuẩn mực, chuyển đổi các script trong skill thành Thin Adapters, và kiểm định qua `ccba-harness verify-patch`.
 - **Đầu ra thực tế**:
-  - Scaffolding & source code hoàn chỉnh tại [`packages/ccba-qc-core/`](../../../../packages/ccba-qc-core/):
+  - Scaffolding & source code hoàn chỉnh tại [`packages/ccba-qc-core/`](../../../packages/ccba-qc-core/):
     - `src/ccba_qc_core/discovery.py` (`DiscoveryEngine`, `SheetEntry`, `ProjectBackbone`, `_normalize_vn`).
     - `src/ccba_qc_core/quadview.py` (`QuadViewAuditEngine`, `_parse_audit_response`).
     - `src/ccba_qc_core/semantic.py` (`SemanticAuditEngine`).
@@ -255,7 +255,7 @@ flowchart TD
   - Chuyển đổi 6 scripts thành Thin Adapters chuẩn mực (chỉ delegate call và CLI proxy):
     - `.agents/skills/ccba-ai-qc/scripts/` (`discovery_engine.py`, `legacy_quadview_engine.py`, `semantic_audit_engine.py`, `reporter_engine.py`, `orchestrator.py`).
     - `.agents/skills/ccba-ai-qc-pccc-audit/scripts/audit_engine.py`.
-  - Bộ unit tests [`packages/ccba-qc-core/tests/test_qc_core.py`](../../../../packages/ccba-qc-core/tests/test_qc_core.py) đạt 6/6 PASS trong 2.27s.
+  - Bộ unit tests [`packages/ccba-qc-core/tests/test_qc_core.py`](../../../packages/ccba-qc-core/tests/test_qc_core.py) đạt 6/6 PASS trong 2.27s.
   - Strict mypy đạt 0 issues in 8 source files.
   - Bộ kiểm thử ranh giới phụ thuộc `tests/governance/test_dependency_contracts.py` đạt 6/6 PASS.
   - Toàn bộ 4/4 rào chắn của `ccba-harness verify-patch` đều đạt Exit Code 0.
@@ -266,10 +266,10 @@ flowchart TD
 ### Ticket F2: [Task/AFK] `[Tích hợp verify-patch Loop Tự động cho 67 SKILL.md]` ✅
 - **Mục tiêu**: Nâng cấp `packages/ccba-harness` hỗ trợ Verification Presets một chạm (`--preset code`, `--preset doc`, `--preset skill`, `--preset adr`), bổ sung công cụ xác thực tài liệu định tính `ccba-harness verify-doc`, thể chế hóa vào Hiến pháp Layer 1 (`AGENTS.md`) và Cẩm nang Soạn thảo Kỹ năng (`skill_authoring_guide.md`, `skill_review_checklist.md`), đồng thời tích hợp mẫu Exit-Code Gate vào các Master Skills và Rituals trọng tâm.
 - **Đầu ra thực tế**:
-  - Module [`packages/ccba-harness/src/ccba_harness/verifier.py`](../../../../packages/ccba-harness/src/ccba_harness/verifier.py) (`verify_document_artifact`, `resolve_preset_commands`, `verify_patch_execution` with presets).
+  - Module [`packages/ccba-harness/src/ccba_harness/verifier.py`](../../../packages/ccba-harness/src/ccba_harness/verifier.py) (`verify_document_artifact`, `resolve_preset_commands`, `verify_patch_execution` with presets).
   - CLI subcommand `ccba-harness verify-doc` và cờ `--preset` trong `ccba-harness verify-patch`.
-  - Bộ kiểm thử unit test [`packages/ccba-harness/tests/test_verify_patch.py`](../../../../packages/ccba-harness/tests/test_verify_patch.py) mở rộng đạt 19/19 PASS (100%).
-  - Cập nhật Hiến pháp Nòng cốt [`AGENTS.md`](../../../../AGENTS.md) và [`.agents/AGENTS.md`](../../../../.agents/AGENTS.md): Điều khoản **Deterministic Hard Completion Lock (ADR-0058)** cấm Agent tự nhận hoàn thành nếu Exit Code $\ne 0$.
+  - Bộ kiểm thử unit test [`packages/ccba-harness/tests/test_verify_patch.py`](../../../packages/ccba-harness/tests/test_verify_patch.py) mở rộng đạt 19/19 PASS (100%).
+  - Cập nhật Hiến pháp Nòng cốt [`AGENTS.md`](../../../AGENTS.md) và [`.agents/AGENTS.md`](../../../.agents/AGENTS.md): Điều khoản **Deterministic Hard Completion Lock (ADR-0058)** cấm Agent tự nhận hoàn thành nếu Exit Code $\ne 0$.
   - Cập nhật Cẩm nang Soạn thảo Kỹ năng: Bổ sung Chương 3.2 trong `skill_authoring_guide.md` và tiêu chí kiểm định trong `skill_review_checklist.md`.
   - Tích hợp Exit-Code Gate vào các Master Skills: `ccba-implement`, `ccba-tdd`, `ccba-code-review`, `ccba-build-skill`, `ccba-legal-advisor`, `ccba-completion-checklist`.
   - Toàn bộ 67 SKILL.md vượt qua `validate_skills.py --enforce-gpi` và catalog đồng bộ 100%.
@@ -280,10 +280,10 @@ flowchart TD
 ### Ticket F3: [Task/HITL] `[Thử nghiệm Swarm Multi-Agent với Single-Writer Engine]` ✅
 - **Mục tiêu**: Nâng cấp `scripts/governance/apply_worker_patch.py` hỗ trợ `--verify-cmd`, `--preset`, và cấu trúc hóa `SwarmExecutionReport` kèm đo lường latency profiler và chẩn đoán Semantic Conflicts. Xây dựng bộ kiểm thử mô phỏng toàn diện `tests/governance/test_swarm_single_writer_e2e.py` bao phủ 5 kịch bản thực chiến (Concurrent 5-worker swarm, line collision rejection, semantic conflict with auto-rollback, stale drift patch rejection, sub-50ms benchmark), đồng thời chuẩn hóa kỹ năng `ccba-teamwork` tích hợp nguyên tắc No Pre-mutation và quy trình hợp nhất Single-Writer Engine theo ADR-0058 Hard Completion Lock.
 - **Đầu ra thực tế**:
-  - Module [`scripts/governance/apply_worker_patch.py`](../../../../scripts/governance/apply_worker_patch.py) với `SwarmExecutionReport`, hỗ trợ cờ linh hoạt `-c / --verify-cmd`, `--preset`, `--benchmark`, `--json` và cơ chế phát hiện & báo cáo Semantic Conflict tự động rollback 100% snapshot.
-  - Bộ kiểm thử E2E mô phỏng Swarm 5 kịch bản [`tests/governance/test_swarm_single_writer_e2e.py`](../../../../tests/governance/test_swarm_single_writer_e2e.py) đạt 5/5 PASS (toàn bộ 99 tests governance đạt 100% PASS).
-  - Bộ kiểm thử unit test [`tests/governance/test_apply_worker_patch.py`](../../../../tests/governance/test_apply_worker_patch.py) mở rộng đạt 13/13 PASS.
-  - Chuẩn hóa kỹ năng [`.agents/skills/ccba-teamwork/SKILL.md`](../../../../.agents/skills/ccba-teamwork/SKILL.md) cưỡng chế nguyên tắc No Pre-mutation và quy trình nghiệm thu bằng `apply_worker_patch.py` kết hợp ADR-0058 Hard Completion Lock.
+  - Module [`scripts/governance/apply_worker_patch.py`](../../../scripts/governance/apply_worker_patch.py) với `SwarmExecutionReport`, hỗ trợ cờ linh hoạt `-c / --verify-cmd`, `--preset`, `--benchmark`, `--json` và cơ chế phát hiện & báo cáo Semantic Conflict tự động rollback 100% snapshot.
+  - Bộ kiểm thử E2E mô phỏng Swarm 5 kịch bản [`tests/governance/test_swarm_single_writer_e2e.py`](../../../tests/governance/test_swarm_single_writer_e2e.py) đạt 5/5 PASS (toàn bộ 99 tests governance đạt 100% PASS).
+  - Bộ kiểm thử unit test [`tests/governance/test_apply_worker_patch.py`](../../../tests/governance/test_apply_worker_patch.py) mở rộng đạt 13/13 PASS.
+  - Chuẩn hóa kỹ năng [`.agents/skills/ccba-teamwork/SKILL.md`](../../../.agents/skills/ccba-teamwork/SKILL.md) cưỡng chế nguyên tắc No Pre-mutation và quy trình nghiệm thu bằng `apply_worker_patch.py` kết hợp ADR-0058 Hard Completion Lock.
 - **Phân loại**: `Task [HITL]` | **Ưu tiên**: P2.1 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
@@ -291,11 +291,11 @@ flowchart TD
 ### Ticket F4: [Task/HITL] `[Hệ thống Giám sát Token & OpenTelemetry Subagent Runtime]` ✅
 - **Mục tiêu**: Xây dựng engine giám sát runtime chuyên sâu cho Subagents trong Antigravity IDE, hỗ trợ Zero-Overhead streaming parser cho `transcript.jsonl`, bộ ước lượng token song ngữ Việt - Anh (BPE-based), xuất chuẩn OpenTelemetry GenAI Semantic Conventions (v1.28.0+) OTLP Traces JSON (`resourceSpans`), và cơ chế cưỡng chế ngân sách Token/Duration Budget (ADR-0030) với Deterministic Hard Completion Lock (ADR-0058).
 - **Đầu ra thực tế**:
-  - Module [`packages/ccba-harness/src/ccba_harness/telemetry.py`](../../../../packages/ccba-harness/src/ccba_harness/telemetry.py) (`TokenEstimator`, `stream_transcript_steps`, `analyze_subagent_transcript`, `check_subagent_budget`, `OtelSpanExporter`).
-  - Tích hợp CLI `ccba-harness telemetry [inspect|budget-check|export-otel]` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../../packages/ccba-harness/src/ccba_harness/cli.py).
-  - Tiện ích CLI độc lập [`scripts/governance/subagent_telemetry.py`](../../../../scripts/governance/subagent_telemetry.py).
-  - Bộ unit test [`packages/ccba-harness/tests/test_telemetry.py`](../../../../packages/ccba-harness/tests/test_telemetry.py) đạt 6/6 PASS.
-  - Bộ test tích hợp governance [`tests/governance/test_subagent_telemetry.py`](../../../../tests/governance/test_subagent_telemetry.py) đạt 5/5 PASS.
+  - Module [`packages/ccba-harness/src/ccba_harness/telemetry.py`](../../../packages/ccba-harness/src/ccba_harness/telemetry.py) (`TokenEstimator`, `stream_transcript_steps`, `analyze_subagent_transcript`, `check_subagent_budget`, `OtelSpanExporter`).
+  - Tích hợp CLI `ccba-harness telemetry [inspect|budget-check|export-otel]` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../packages/ccba-harness/src/ccba_harness/cli.py).
+  - Tiện ích CLI độc lập [`scripts/governance/subagent_telemetry.py`](../../../scripts/governance/subagent_telemetry.py).
+  - Bộ unit test [`packages/ccba-harness/tests/test_telemetry.py`](../../../packages/ccba-harness/tests/test_telemetry.py) đạt 6/6 PASS.
+  - Bộ test tích hợp governance [`tests/governance/test_subagent_telemetry.py`](../../../tests/governance/test_subagent_telemetry.py) đạt 5/5 PASS.
   - Kiểm thử thực tế trên subagent trajectory `bacf8218-9bfb-4f1a-a79d-1e1748fd9caf` (206 steps, 103 turns, 3,101,462 tokens, 206 OTLP spans, runtime 0.1s).
 - **Phân loại**: `Task [HITL]` | **Ưu tiên**: P2.2 | **Trạng thái**: **Closed (Done) ✅**
 
@@ -304,12 +304,12 @@ flowchart TD
 ### Ticket F5: [Task/AFK] `[Tự động hóa Giám sát Chi phí & Token Telemetry vào CI/CD Gates]` ✅
 - **Mục tiêu**: Tự động hóa việc giám sát runtime telemetry cho toàn bộ bầy tác tử (Swarm Multi-Agent Session) theo ADR-0030, mở rộng các verification presets `--preset telemetry` và `--preset ci` trong `ccba-harness verify-patch` (ADR-0058), đồng thời tích hợp toàn diện 7 cổng kiểm định (Linter, Formatter, Mypy, Pytest Suites, Docs, Skills Governance, ADR Traceability, Telemetry Budget) vào `scripts/eval/run_harness_evals.py` và `.github/workflows/ci.yml`.
 - **Đầu ra thực tế**:
-  - Module [`packages/ccba-harness/src/ccba_harness/telemetry.py`](../../../../packages/ccba-harness/src/ccba_harness/telemetry.py) (`SwarmSessionTelemetryReport`, `find_spawned_subagent_ids`, `audit_swarm_session`).
-  - Nâng cấp CLI [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../../packages/ccba-harness/src/ccba_harness/cli.py) và [`scripts/governance/subagent_telemetry.py`](../../../../scripts/governance/subagent_telemetry.py) với lệnh `audit-swarm`.
-  - Mở rộng [`packages/ccba-harness/src/ccba_harness/verifier.py`](../../../../packages/ccba-harness/src/ccba_harness/verifier.py) với presets `--preset telemetry` và `--preset ci`.
-  - Tích hợp 7 CI Gates vào [`scripts/eval/run_harness_evals.py`](../../../../scripts/eval/run_harness_evals.py) và cập nhật workflow [`.github/workflows/ci.yml`](../../../../.github/workflows/ci.yml).
-  - Bộ unit test [`packages/ccba-harness/tests/test_verify_patch.py`](../../../../packages/ccba-harness/tests/test_verify_patch.py) và [`packages/ccba-harness/tests/test_telemetry.py`](../../../../packages/ccba-harness/tests/test_telemetry.py) đạt 26/26 PASS.
-  - Bộ test tích hợp governance [`tests/governance/test_ci_telemetry_gate.py`](../../../../tests/governance/test_ci_telemetry_gate.py) đạt 4/4 PASS.
+  - Module [`packages/ccba-harness/src/ccba_harness/telemetry.py`](../../../packages/ccba-harness/src/ccba_harness/telemetry.py) (`SwarmSessionTelemetryReport`, `find_spawned_subagent_ids`, `audit_swarm_session`).
+  - Nâng cấp CLI [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../packages/ccba-harness/src/ccba_harness/cli.py) và [`scripts/governance/subagent_telemetry.py`](../../../scripts/governance/subagent_telemetry.py) với lệnh `audit-swarm`.
+  - Mở rộng [`packages/ccba-harness/src/ccba_harness/verifier.py`](../../../packages/ccba-harness/src/ccba_harness/verifier.py) với presets `--preset telemetry` và `--preset ci`.
+  - Tích hợp 7 CI Gates vào [`scripts/eval/run_harness_evals.py`](../../../scripts/eval/run_harness_evals.py) và cập nhật workflow [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml).
+  - Bộ unit test [`packages/ccba-harness/tests/test_verify_patch.py`](../../../packages/ccba-harness/tests/test_verify_patch.py) và [`packages/ccba-harness/tests/test_telemetry.py`](../../../packages/ccba-harness/tests/test_telemetry.py) đạt 26/26 PASS.
+  - Bộ test tích hợp governance [`tests/governance/test_ci_telemetry_gate.py`](../../../tests/governance/test_ci_telemetry_gate.py) đạt 4/4 PASS.
   - Toàn bộ 5/5 rào chắn của `ccba-harness verify-patch --preset ci` đều đạt Exit Code 0.
 - **Phân loại**: `Task [AFK]` | **Ưu tiên**: P2.3 | **Trạng thái**: **Closed (Done) ✅**
 
@@ -318,25 +318,25 @@ flowchart TD
 ### Ticket F6: [Task/HITL] `[Tích hợp Giao diện Dashboard Trực Quan Hóa Swarm Telemetry]` ✅
 - **Mục tiêu**: Xây dựng module sinh giao diện Swarm Telemetry Dashboard dưới dạng standalone HTML tự thân (Zero-Server, Zero External CDN) tuân thủ CSP của Antigravity IDE (`generative_ui`), trực quan hóa Pure SVG Token Stacked Bars, SVG Gantt-style Timeline, Tool Invocations Latency Matrix, và Turn-by-Turn Trajectory Inspector, tích hợp đồng bộ vào CLI `ccba-harness telemetry dashboard` và `scripts/governance/subagent_telemetry.py dashboard`.
 - **Đầu ra thực tế**:
-  - Module [`packages/ccba-harness/src/ccba_harness/dashboard.py`](../../../../packages/ccba-harness/src/ccba_harness/dashboard.py) (`generate_swarm_dashboard_html`, `render_swarm_dashboard`, Pure SVG Charts).
-  - Tích hợp CLI subcommand `dashboard` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../../packages/ccba-harness/src/ccba_harness/cli.py) và [`scripts/governance/subagent_telemetry.py`](../../../../scripts/governance/subagent_telemetry.py).
+  - Module [`packages/ccba-harness/src/ccba_harness/dashboard.py`](../../../packages/ccba-harness/src/ccba_harness/dashboard.py) (`generate_swarm_dashboard_html`, `render_swarm_dashboard`, Pure SVG Charts).
+  - Tích hợp CLI subcommand `dashboard` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../packages/ccba-harness/src/ccba_harness/cli.py) và [`scripts/governance/subagent_telemetry.py`](../../../scripts/governance/subagent_telemetry.py).
   - Xuất bản tệp giao diện thực tế cho phiên Swarm hiện tại (9 subagents, 14.9M tokens):
-    - Artifact: [`swarm_telemetry_dashboard.html`](file:///C:/Users/chuvu/.gemini/antigravity/brain/ea5a900e-41fd-4ae6-968a-e2e271e67e52/swarm_telemetry_dashboard.html)
+    - Artifact: `swarm_telemetry_dashboard.html`
     - Mirror lưu trữ vĩnh viễn: [`.md/reports/swarm_telemetry_dashboard.html`](../../reports/swarm_telemetry_dashboard.html).
-  - Bộ kiểm thử độc lập [`tests/governance/test_telemetry_dashboard.py`](../../../../tests/governance/test_telemetry_dashboard.py) đạt 8/8 PASS.
+  - Bộ kiểm thử độc lập [`tests/governance/test_telemetry_dashboard.py`](../../../tests/governance/test_telemetry_dashboard.py) đạt 8/8 PASS.
 - **Phân loại**: `Task [HITL]` | **Ưu tiên**: P3.1 | **Trạng thái**: **Closed (Done) ✅**
 
 ### Ticket F7: [Task/HITL] `[Mở Rộng Hệ Thống Báo Cáo & Phân Tích Đa Dự Án (Cross-Spoke Analytics)]` ✅
 - **Mục tiêu**: Xây dựng engine tổng hợp telemetry liên dự án (`CrossSpokeAnalyticsEngine`) quét qua toàn bộ 5 Spokes đã đăng ký trong Hub (`2026-04 DH Viet Nhat`, `IDOP-CCBA-WAY`, `ccba-legal-knowledge`, `Zalo_Bot_Free`, `VvC Second Brain`), tuyệt đối tuân thủ Sanitized Telemetry Protocol (ADR-0046), xây dựng giao diện Standalone HTML Fleet Dashboard (`cross_spoke_fleet_dashboard.html`) với Pure SVG Charts (so sánh Spoke tokens, phân bổ miền dự án, tần suất tools), zero-server, tích hợp CLI `cross_spoke_analytics.py` và `ccba-harness telemetry fleet`, tự động refresh qua `spoke_synchronizer.py sync`.
 - **Đầu ra thực tế**:
-  - Module [`packages/ccba-harness/src/ccba_harness/fleet.py`](../../../../packages/ccba-harness/src/ccba_harness/fleet.py) (`SpokeTelemetrySummary`, `FleetTelemetryReport`, `scan_spoke_telemetry`, `aggregate_fleet_telemetry`, `generate_fleet_dashboard_html`, `render_fleet_dashboard`).
-  - Tích hợp CLI subcommand `fleet` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../../packages/ccba-harness/src/ccba_harness/cli.py) (`ccba-harness telemetry fleet [--json] [--dashboard] [--out] [--title]`).
-  - Tiện ích CLI chuyên trách [`scripts/governance/cross_spoke_analytics.py`](../../../../scripts/governance/cross_spoke_analytics.py) (`scan`, `dashboard`, `export-spoke-summary`).
-  - Hook tự động refresh telemetry trong [`scripts/spoke/sync/coordinator.py`](../../../../scripts/spoke/sync/coordinator.py) khi chạy sync Spoke.
-  - Xuất bản tệp Fleet Dashboard thực tế cho 5 Spokes (15.5M tokens, \$2.41):
-    - Artifact: [`cross_spoke_fleet_dashboard.html`](file:///C:/Users/chuvu/.gemini/antigravity/brain/ea5a900e-41fd-4ae6-968a-e2e271e67e52/cross_spoke_fleet_dashboard.html)
+  - Module [`packages/ccba-harness/src/ccba_harness/fleet.py`](../../../packages/ccba-harness/src/ccba_harness/fleet.py) (`SpokeTelemetrySummary`, `FleetTelemetryReport`, `scan_spoke_telemetry`, `aggregate_fleet_telemetry`, `generate_fleet_dashboard_html`, `render_fleet_dashboard`).
+  - Tích hợp CLI subcommand `fleet` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../packages/ccba-harness/src/ccba_harness/cli.py) (`ccba-harness telemetry fleet [--json] [--dashboard] [--out] [--title]`).
+  - Tiện ích CLI chuyên trách [`scripts/governance/cross_spoke_analytics.py`](../../../scripts/governance/cross_spoke_analytics.py) (`scan`, `dashboard`, `export-spoke-summary`).
+  - Hook tự động refresh telemetry trong [`scripts/spoke/sync/coordinator.py`](../../../scripts/spoke/sync/coordinator.py) khi chạy sync Spoke.
+  - Xuất bản tệp Fleet Dashboard thực tế cho 5 Spokes (15.5M tokens, $2.41):
+    - Artifact: `cross_spoke_fleet_dashboard.html`
     - Mirror lưu trữ vĩnh viễn: [`.md/reports/cross_spoke_fleet_dashboard.html`](../../reports/cross_spoke_fleet_dashboard.html).
-  - Bộ kiểm thử độc lập [`tests/governance/test_cross_spoke_analytics.py`](../../../../tests/governance/test_cross_spoke_analytics.py) đạt 7/7 PASS (100%).
+  - Bộ kiểm thử độc lập [`tests/governance/test_cross_spoke_analytics.py`](../../../tests/governance/test_cross_spoke_analytics.py) đạt 7/7 PASS (100%).
 - **Phân loại**: `Task [HITL]` | **Ưu tiên**: P3.2 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
@@ -344,10 +344,10 @@ flowchart TD
 ### Ticket P4.1: [Task/AFK] `[Token Economy & Prompt Density Optimization Engine]` ✅
 - **Mục tiêu**: Xây dựng module `packages/ccba-harness/src/ccba_harness/economy.py` và subcommand CLI `ccba-harness telemetry economy` nhằm khai thác dữ liệu từ `FleetTelemetryReport` và `SwarmTelemetryReport`.
 - **Đầu ra thực tế**:
-  - Module [`packages/ccba-harness/src/ccba_harness/economy.py`](../../../../packages/ccba-harness/src/ccba_harness/economy.py) (`SkillPromptMetrics`, `TokenROIMetrics`, `EconomyAuditReport`, `analyze_skill_prompt_density`, `detect_sentence_duplicates`, `calculate_role_aware_roi`, `generate_prompt_pruning_report`).
-  - Tiện ích CLI chuyên trách [`scripts/governance/token_economy.py`](../../../../scripts/governance/token_economy.py) (`scan`, `report`, `roi`) và subcommand `ccba-harness telemetry economy`.
+  - Module [`packages/ccba-harness/src/ccba_harness/economy.py`](../../../packages/ccba-harness/src/ccba_harness/economy.py) (`SkillPromptMetrics`, `TokenROIMetrics`, `EconomyAuditReport`, `analyze_skill_prompt_density`, `detect_sentence_duplicates`, `calculate_role_aware_roi`, `generate_prompt_pruning_report`).
+  - Tiện ích CLI chuyên trách [`scripts/governance/token_economy.py`](../../../scripts/governance/token_economy.py) (`scan`, `report`, `roi`) và subcommand `ccba-harness telemetry economy`.
   - Báo cáo kiểm định thực tế toàn bộ 67 kỹ năng: [`.md/reports/prompt_economy_report.md`](../../reports/prompt_economy_report.md) (PDI trung bình 73.3/100, phát hiện 4 skills overhead cao, tiềm năng tiết kiệm ~12,134 tokens/lượt).
-  - Bộ kiểm thử độc lập [`tests/governance/test_telemetry_economy.py`](../../../../tests/governance/test_telemetry_economy.py) đạt 7/7 PASS (100%).
+  - Bộ kiểm thử độc lập [`tests/governance/test_telemetry_economy.py`](../../../tests/governance/test_telemetry_economy.py) đạt 7/7 PASS (100%).
 - **Phân loại**: `Task [AFK]` | **Ưu tiên**: P4.1 | **Trạng thái**: **Closed (Done) ✅**
 
 ---
@@ -359,10 +359,10 @@ flowchart TD
   - Chuyển đổi 100% các script trong các skill tương ứng thành Thin Adapters chuẩn mực (zero core logic bloat ngoài packages).
   - Bộ unit tests trong từng package đạt 100% PASS, vượt qua 7 Cổng CI Eval Gates.
 - **Đầu ra thực tế**:
-  - Module [`packages/ccba-ooxml/src/ccba_ooxml/docx/cleanup.py`](../../../../packages/ccba-ooxml/src/ccba_ooxml/docx/cleanup.py) (`merge_runs`, `simplify_redlines`, `clone_xml_text`, `get_tracked_change_authors`, `infer_author`).
-  - Module [`packages/ccba-pdf-prep/src/ccba_pdf_prep/manipulation.py`](../../../../packages/ccba-pdf-prep/src/ccba_pdf_prep/manipulation.py) (`merge_pdfs`, `split_pdf_pages`, `extract_text_from_pdf`, `parse_pages`).
+  - Module [`packages/ccba-ooxml/src/ccba_ooxml/docx/cleanup.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/docx/cleanup.py) (`merge_runs`, `simplify_redlines`, `clone_xml_text`, `get_tracked_change_authors`, `infer_author`).
+  - Module [`packages/ccba-pdf-prep/src/ccba_pdf_prep/manipulation.py`](../../../packages/ccba-pdf-prep/src/ccba_pdf_prep/manipulation.py) (`merge_pdfs`, `split_pdf_pages`, `extract_text_from_pdf`, `parse_pages`).
   - 4 Thin Adapters: `ccba-xu-ly-van-phong/scripts/office/helpers/merge_runs.py`, `simplify_redlines.py`, `clone_text.py`, `process_pdf.py`.
-  - Scoped unit tests: [`packages/ccba-ooxml/tests/test_docx_cleanup.py`](../../../../packages/ccba-ooxml/tests/test_docx_cleanup.py) (7/7 PASS) và [`packages/ccba-pdf-prep/tests/test_manipulation.py`](../../../../packages/ccba-pdf-prep/tests/test_manipulation.py) (9/9 PASS).
+  - Scoped unit tests: [`packages/ccba-ooxml/tests/test_docx_cleanup.py`](../../../packages/ccba-ooxml/tests/test_docx_cleanup.py) (7/7 PASS) và [`packages/ccba-pdf-prep/tests/test_manipulation.py`](../../../packages/ccba-pdf-prep/tests/test_manipulation.py) (9/9 PASS).
   - 100% vượt qua 7 Cổng CI Eval Gates (`run_harness_evals.py --all`) và Deterministic Patch Verification (`verify-patch --preset ci`).
 - **Phân loại**: `Task [AFK]` | **Ưu tiên**: P4.2 | **Trạng thái**: **Closed (Done) ✅**
 
@@ -371,11 +371,11 @@ flowchart TD
 ### Ticket P4.3: [Prototype/HITL] `[Real-Time Telemetry Streaming Bridge qua Server Spark]` ✅
 - **Mục tiêu**: Xây dựng cầu nối truyền phát dữ liệu đo lường thời gian thực (Real-time Telemetry Bridge) từ Antigravity Worktrees về máy chủ Spark (`100.83.192.30:8090`) qua Tailscale VPN.
 - **Đầu ra thực tế**:
-  - Module [`packages/ccba-harness/src/ccba_harness/streamer.py`](../../../../packages/ccba-harness/src/ccba_harness/streamer.py) (`TelemetryEvent`, `StreamingConfig`, `StreamingStatus`, `StreamingReport`, `OfflineBufferManager`, `AsyncTranscriptFollower`, `TelemetryStreamingBridge`).
-  - Tích hợp CLI subcommand `ccba-harness telemetry stream` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../../packages/ccba-harness/src/ccba_harness/cli.py) hỗ trợ `--endpoint`, `--buffer-file`, `--flush-buffer`, `--ping`, `--dry-run`, `--json`.
-  - Tiện ích quản trị chuyên trách [`scripts/governance/telemetry_streamer.py`](../../../../scripts/governance/telemetry_streamer.py) (`ping`, `stream`, `flush`, `status`).
+  - Module [`packages/ccba-harness/src/ccba_harness/streamer.py`](../../../packages/ccba-harness/src/ccba_harness/streamer.py) (`TelemetryEvent`, `StreamingConfig`, `StreamingStatus`, `StreamingReport`, `OfflineBufferManager`, `AsyncTranscriptFollower`, `TelemetryStreamingBridge`).
+  - Tích hợp CLI subcommand `ccba-harness telemetry stream` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../packages/ccba-harness/src/ccba_harness/cli.py) hỗ trợ `--endpoint`, `--buffer-file`, `--flush-buffer`, `--ping`, `--dry-run`, `--json`.
+  - Tiện ích quản trị chuyên trách [`scripts/governance/telemetry_streamer.py`](../../../scripts/governance/telemetry_streamer.py) (`ping`, `stream`, `flush`, `status`).
   - Thiết kế an toàn Offline-First & Graceful Degradation: Tự động ghi vào `.md/telemetry/offline_buffer.jsonl` khi endpoint Spark không khả dụng, không bao giờ ngắt quãng luồng agent.
-  - Bộ unit tests [`tests/governance/test_telemetry_streamer.py`](../../../../tests/governance/test_telemetry_streamer.py) đạt 7/7 PASS (100% pass trên 137 governance tests).
+  - Bộ unit tests [`tests/governance/test_telemetry_streamer.py`](../../../tests/governance/test_telemetry_streamer.py) đạt 7/7 PASS (100% pass trên 137 governance tests).
   - 100% vượt qua 7 Cổng CI Eval Gates (`run_harness_evals.py --all`) và Deterministic Patch Verification (`verify-patch --preset ci`).
 - **Phân loại**: `Prototype [HITL]` | **Ưu tiên**: P4.3 | **Trạng thái**: **Closed (Done) ✅**
 
@@ -384,13 +384,13 @@ flowchart TD
 ### Ticket P4.4: [Task/HITL] `[Autonomous Self-Healing & Closed-Loop CI Patch Engine]` ✅
 - **Mục tiêu**: Xây dựng động cơ tự phục hồi mã nguồn khép kín (`SelfHealingEngine`) tích hợp vào `ccba-harness` và `apply_worker_patch.py` nhằm chẩn đoán và khắc phục tự động các lỗi định dạng, linting, metadata drift và test assertion với trần lặp an toàn và cơ chế rollback nguyên tử.
 - **Đầu ra thực tế**:
-  - Động cơ cốt lõi [`packages/ccba-harness/src/ccba_harness/healing.py`](../../../../packages/ccba-harness/src/ccba_harness/healing.py) (`ErrorCategory`, `DiagnosticIssue`, `HealingAction`, `HealingReport`, `SelfHealingEngine`).
+  - Động cơ cốt lõi [`packages/ccba-harness/src/ccba_harness/healing.py`](../../../packages/ccba-harness/src/ccba_harness/healing.py) (`ErrorCategory`, `DiagnosticIssue`, `HealingAction`, `HealingReport`, `SelfHealingEngine`).
   - Hỗ trợ chẩn đoán chính xác đa định dạng: Ruff format (`Would reformat`), Ruff check (cả concise format và multiline default format), Catalog drift (`compile_catalog.py`), ADR matrix drift (`sync_hub_adr_matrix.py`), và Pytest assertion failures.
   - Khóa an toàn 2 vòng lặp (`max_iterations = 2`) với In-Memory Snapshot & Full Rollback bảo đảm không gây regression code khi gặp lỗi không thể tự sửa.
-  - Tích hợp cờ `--self-heal` và `--max-heal-iterations` vào CLI `ccba-harness verify-patch` ([`cli.py`](../../../../packages/ccba-harness/src/ccba_harness/cli.py)).
-  - Tích hợp cơ chế tự phục hồi trước khi rollback vào Single-Writer Engine [`scripts/governance/apply_worker_patch.py`](../../../../scripts/governance/apply_worker_patch.py).
-  - Cung cấp script tiện ích độc lập [`scripts/governance/self_healing.py`](../../../../scripts/governance/self_healing.py) hỗ trợ `--dry-run`, `--json`, `--preset`, `--report-file`.
-  - Bộ unit tests chuyên trách [`tests/governance/test_self_healing_engine.py`](../../../../tests/governance/test_self_healing_engine.py) đạt 13/13 PASS (100%).
+  - Tích hợp cờ `--self-heal` và `--max-heal-iterations` vào CLI `ccba-harness verify-patch` ([`cli.py`](../../../packages/ccba-harness/src/ccba_harness/cli.py)).
+  - Tích hợp cơ chế tự phục hồi trước khi rollback vào Single-Writer Engine [`scripts/governance/apply_worker_patch.py`](../../../scripts/governance/apply_worker_patch.py).
+  - Cung cấp script tiện ích độc lập [`scripts/governance/self_healing.py`](../../../scripts/governance/self_healing.py) hỗ trợ `--dry-run`, `--json`, `--preset`, `--report-file`.
+  - Bộ unit tests chuyên trách [`tests/governance/test_self_healing_engine.py`](../../../tests/governance/test_self_healing_engine.py) đạt 13/13 PASS (100%).
   - Vượt qua 100% 7 Cổng CI Eval Gates (`run_harness_evals.py --all`) và Deterministic Patch Verification (`verify-patch --preset ci`).
 - **Phân loại**: `Task [HITL]` | **Ưu tiên**: P4.4 | **Trạng thái**: **Closed (Done) ✅**
 

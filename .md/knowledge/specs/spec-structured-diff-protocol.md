@@ -2,7 +2,7 @@
 
 > **Mã định danh**: `SPEC-2026-TEAMWORK-DIFF-001`  
 > **Trạng thái**: Standard / Active  
-> **Tham chiếu nền tảng**: [ADR-0035 (Deep Modules)](../adr/adr-0035.md) | [ADR-0053 (Teamwork Framework)](../../docs/adr/0053-teamwork-multi-agent-orchestration-framework.md) | [ADR-0057 (Two-Stage Decision)](../adr/adr-0057.md)
+> **Tham chiếu nền tảng**: [ADR-0035 (Deep Modules)](../../../docs/adr/0035-polyglot-deep-modules-and-subagent-guardrails.md) | [ADR-0053 (Teamwork Framework)](../../../docs/adr/0053-teamwork-multi-agent-orchestration-framework.md) | [ADR-0057 (Two-Stage Decision)](../../../docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md)
 
 ---
 

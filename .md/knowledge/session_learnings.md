@@ -2,42 +2,42 @@
 
 > **Phạm vi áp dụng:** Hub (`ccba-agent-platform`) & Spokes (`ccba-legal-knowledge`, etc.)  
 > **Tiêu chuẩn:** OKF v2.2, ADR 0016, 0021, 0030, 0031, 0033, 0035, 0037, 0046, 0051, 0053, 0056, 0057, 0058.  
-> **Tra cứu Chi tiết Lịch sử & Bug Post-Mortems:** [session_learnings_history.md](archive/session_learnings_history.md) | Ngưỡng: $\le 10\text{ KB}$
+> **Tra cứu Chi tiết Lịch sử & Bug Post-Mortems:** [session_learnings_history.md](archive/session_learnings_history.md) | Ngưỡng bộ nhớ: $\le 10\text{ KB}$
 
 ---
 
 ## Miền 1. 🏛️ Kiến Trúc, Phân Tầng Kỹ Năng & Quản Trị Seams (Architecture & Governance)
 
 - **RULE-1.1 [ADR 0057 — Khung 2 Giai Đoạn & Chỉ Số GPI]**:
-  - *Cổng 0 (Determinism)*: Giải thuật/I/O $\rightarrow$ Monorepo Package Deep Seams (`packages/*/src/`). `SKILL.md` tuyệt đối không chứa code logic nghiệp vụ trần.
-  - *Cổng 1 (Orchestration)*: Tác vụ đa luồng/StateGraph/HITL $\rightarrow$ Tier 3 Composite Orchestrator (short-circuit Cổng 1, không tính GPI).
-  - *Công thức GPI*: $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. Nếu $\text{GPI} < 12.0 \rightarrow$ Tier 2A (`references/*.md`); Nếu $\text{GPI} \ge 12.0 \rightarrow$ Tier 2B (`.agents/skills/ccba-<name>/`). User Rituals (`disable-model-invocation: true`) bắt buộc $A = 1.0$.
+  - *Cổng 0 (Determinism)*: Giải thuật/I/O $\rightarrow$ Deep Seams (`packages/*/src/`). `SKILL.md` tuyệt đối không chứa code logic nghiệp vụ trần.
+  - *Cổng 1 (Orchestration)*: Tác vụ đa luồng/StateGraph/HITL $\rightarrow$ Tier 3 Composite Orchestrator (không tính GPI).
+  - *Công thức GPI*: $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $\text{GPI} < 12.0 \rightarrow$ Tier 2A (`references/*.md`); $\text{GPI} \ge 12.0 \rightarrow$ Tier 2B (`.agents/skills/ccba-<name>/`). User Rituals (`disable-model-invocation: true`) bắt buộc $A = 1.0$.
 - **RULE-1.2 [ADR 0053 — Single-Writer Protocol Cho Orchestrators]**:
-  - Mọi quy trình điều phối đa tác tử (`ccba-teamwork`, swarms) bắt buộc tuân thủ Single-Writer: Lead Orchestrator là thực thể duy nhất ghi codebase và logs. Subagents phân tán chỉ xuất Structured Search-Replace PatchBlocks vào sandbox. Hợp nhất nguyên tử qua `execute_swarm_patches` (3.6ms, 0 collision).
+  - Điều phối đa tác tử (`ccba-teamwork`, swarms) bắt buộc Single-Writer: Lead Orchestrator là thực thể duy nhất ghi codebase/logs. Subagents phân tán chỉ xuất PatchBlocks vào sandbox. Hợp nhất nguyên tử qua `execute_swarm_patches` (3.6ms, 0 collision).
 - **RULE-1.3 [ADR 0035 — Deep Modules, Seams & Zero-Exemption AST]**:
-  - Thin Seam: Module/package chỉ bộc lộ `__all__` hoặc `__init__.py`. Tuyệt đối không import private submodule `_*`.
-  - Zero-Exemption: Gỡ bỏ toàn bộ bypass hardcoded theo tên file trong `check_dependency_contracts.py`. Tệp thử nghiệm lịch sử chuyển vào `archive/`.
+  - Thin Seam: Module/package chỉ bộc lộ `__all__` hoặc `__init__.py`. Không import private submodule `_*`.
+  - Zero-Exemption: Gỡ bỏ bypass hardcoded trong `check_dependency_contracts.py`. Tệp thử nghiệm lịch sử chuyển vào `archive/`.
 - **RULE-1.4 [ADR 0033 & ADR 0056 — Spoke Directory Hygiene & Zombie Prevention]**:
   - Cấu trúc `.\.md\`: Gốc chỉ chứa cấu hình (`workspace_context.yaml`); dữ liệu nạp vào `extracted_docs/`; tri thức vào `knowledge/`; nháp vào `archive/`.
-  - Spoke Synchronizer (`coordinator.py`): Đổi tên workflows cũ thành `.md.bak` (nhãn `DEPRECATED_MIGRATED_TO_SKILL`), xóa thư mục cũ theo `SKILL_DEPRECATION_ALIASES`.
+  - Spoke Synchronizer (`coordinator.py`): Đổi workflows cũ thành `.md.bak` (`DEPRECATED_MIGRATED_TO_SKILL`), xóa thư mục cũ theo `SKILL_DEPRECATION_ALIASES`.
 - **RULE-1.5 [ADR 0037 & ADR 0051 — Two-Tier Traceability Matrix & Status Regex]**:
-  - Tier 1: Platform Constitution (55 Hub ADRs). Tier 2: Spoke Domain Decisions (`docs/adr/`). Bảo toàn bảng tùy chỉnh qua thẻ `<!-- CUSTOM_SECTIONS_START -->` ... `<!-- CUSTOM_SECTIONS_END -->`.
+  - Tier 1: Platform Constitution (55 Hub ADRs). Tier 2: Spoke Domain Decisions (`docs/adr/`). Bảo toàn bảng qua thẻ `<!-- CUSTOM_SECTIONS_START -->` ... `<!-- CUSTOM_SECTIONS_END -->`.
   - Regex bắt trạng thái ADR: `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ file non-ADR (`notes.md`, `template.md`).
 - **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]**:
-  - Tier 0 import Tier 1 dùng `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton cấp module; Cache Embedding `.npy` bắt buộc kiểm tra SHA-256 qua `.sha256` sidecar.
+  - Tier 0 import Tier 1 dùng `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton cấp module; Cache Embedding `.npy` kiểm tra SHA-256 qua `.sha256`.
 - **RULE-1.7 [ADR 0046 — Sanitized Fleet Telemetry Protocol]**:
-  - Khi tổng hợp telemetry từ Spokes về Hub, tuyệt đối chỉ trích xuất dữ liệu đo lường phi định danh (`tokens`, `cost`, `tool_counts`, `status`). Cấm thu thập prompt text, câu hỏi người dùng, hoặc dữ liệu khách hàng từ Spoke.
+  - Tổng hợp telemetry Spoke về Hub: chỉ trích xuất số liệu phi định danh (`tokens`, `cost`, `tool_counts`, `status`). Cấm thu thập prompt text hay dữ liệu khách hàng từ Spoke.
 - **RULE-1.8 [ADR 0058 — Self-Healing Engine & Discrete Diagnostic Commands]**:
-  - Lệnh kiểm thử nạp vào `SelfHealingEngine` (`verify-patch --self-heal`) BẮT BUỘC là mảng các lệnh độc lập (ví dụ `["ruff check ...", "ruff format ..."]`), CẤM ghép chuỗi shell `&&` để parser regex trích xuất đúng chẩn đoán lỗi và tự trị phục hồi Exit Code 0 (< 500ms).
+  - Lệnh nạp `SelfHealingEngine` (`verify-patch --self-heal`) BẮT BUỘC là mảng các lệnh độc lập (ví dụ `["ruff check ...", "ruff format ..."]`), CẤM ghép chuỗi `&&` để parser regex chẩn đoán đúng và tự phục hồi Exit Code 0 (< 500ms).
 
 ---
 
 ## Miền 2. 🔒 Chất Lượng Mã Nguồn & Rào Chắn CI (Code Quality & Strict Testing)
 
 - **RULE-2.1 [Strict Mypy Type-Safety — Chống Anti-Pattern AP9.1]**:
-  - CẤM DÙNG `[[tool.mypy.overrides]] ignore_errors = true` trong `pyproject.toml`. Ép kiểu tường minh cho binary I/O, fonts, dicts. Chỉ dùng `ignore_missing_imports = true` cho third-party thiếu stubs.
+  - CẤM DÙNG `[[tool.mypy.overrides]] ignore_errors = true`. Ép kiểu tường minh cho binary I/O, fonts, dicts. Chỉ dùng `ignore_missing_imports = true` cho third-party thiếu stubs.
 - **RULE-2.2 [Spoke CI Gates Verification Pipeline]**:
-  - 5 Cổng Zero-Tolerance bắt buộc: (1) `lint_visual_parity.py`, (2) `validate_legal_spoke.py`, (3) `test_converter_regression.py`, (4) `verify_all_docs_against_pdf.py` (SHA-256 Valid), (5) `verify_cross_links.py`.
+  - 5 Cổng bắt buộc: (1) `lint_visual_parity.py`, (2) `validate_legal_spoke.py`, (3) `test_converter_regression.py`, (4) `verify_all_docs_against_pdf.py` (SHA-256), (5) `verify_cross_links.py`.
 - **RULE-2.3 [Fast Feedback Loops (< 2s) & Parity Contract Tests]**:
   - Unit tests nòng cốt phải đạt SLA $< 2\text{s}$ (`pytest -m fast`). `test_cli_doc_parity.py`: Khớp nối 100% giữa CLI và `SKILL.md`. `drift_auditor.py`: Miễn trừ `not filepath.startswith("scripts/tests/")` chống cảnh báo giả.
 - **RULE-2.4 [Relative Link Resolution Depth]**:
@@ -45,19 +45,17 @@
   - Tệp trong `references/<ref>.md` trỏ về root monorepo dùng 4 cấp lùi: `../../../../`.
   - CẤM TUYỆT ĐỐI commit đường dẫn `file:///` hoặc URI `conversation://` vào kho Git.
 - **RULE-2.5 [Windows Subprocess UTF-8 Encoding Standard]**:
-  - Trên Windows, `subprocess.run(..., text=True)` mặc định mã hóa theo code page `cp1252`. BẮT BUỘC truyền `encoding="utf-8", errors="replace"` chống lỗi `UnicodeDecodeError` khi đọc stdout có tiếng Việt, emoji, hoặc SVG box-drawing.
-
+  - Trên Windows, `subprocess.run(..., text=True)` mặc định mã hóa code page `cp1252`. BẮT BUỘC truyền `encoding="utf-8", errors="replace"` chống lỗi `UnicodeDecodeError` khi đọc stdout có tiếng Việt hay box-drawing.
 - **RULE-2.7 [Safe-Remove, Read-Only & Symlink Cleanup Invariant]**:
-  - Khi xóa đệ quy hoặc xóa dọn dẹp các thư mục/tệp tin (`safe_remove`), trên Windows tệp tin hoặc symlink có thể ném `NotADirectoryError` nếu dùng `shutil.rmtree()` trực tiếp. Phải kiểm tra `path.is_symlink() or path.is_file()` trước, unbind read-only attributes bằng `chmod(0o666)` (hoặc onerror callback), sau đó mới gọi `rmtree()`.
+  - Xóa dọn dẹp thư mục/tệp (`safe_remove`): Trên Windows symlink có thể ném `NotADirectoryError` nếu dùng `shutil.rmtree()`. Kiểm tra `is_symlink() or is_file()` trước, unbind read-only bằng `chmod(0o666)`, rồi mới gọi `rmtree()`.
 
 ---
 
 ## Miền 3. 📜 Chuẩn Mực Pháp Lý & Dữ Liệu Hiện Hành (Legal & Data Standards)
 
 - **RULE-3.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
-  - MỌI văn bản pháp luật viện dẫn BẮT BUỘC ĐANG CÓ HIỆU LỰC (CURRENT). Chặn đứng LLM Legacy Bias (quán tính tiền 2026) bằng bộ lọc pre-check trước khi xuất báo cáo kỹ thuật.
-  - VĂN BẢN HIỆN HÀNH: **Luật Xây dựng 2025** (`135/2025/QH15`), **Nghị định 217/2026/NĐ-CP** (thay thế NĐ 175/2024 & NĐ 15/2021), **Nghị định 207/2026/NĐ-CP** (thay thế NĐ 06/2021), **Nghị định 105/2025/NĐ-CP**, **QCVN 06:2022/BXD & SĐ 1:2023**.
-  - TUYỆT ĐỐI CẤM dùng NĐ 175/2024, NĐ 15/2021, NĐ 35/2023, NĐ 06/2021 làm căn cứ pháp lý hiện hành.
+  - MỌI văn bản pháp luật viện dẫn BẮT BUỘC ĐANG CÓ HIỆU LỰC (CURRENT). Chặn đứng LLM Legacy Bias bằng bộ lọc pre-check trước khi xuất báo cáo kỹ thuật.
+  - VĂN BẢN HIỆN HÀNH: **Luật Xây dựng 2025** (`135/2025/QH15`), **Nghị định 217/2026/NĐ-CP** (thay NĐ 175/2024 & NĐ 15/2021), **Nghị định 207/2026/NĐ-CP** (thay NĐ 06/2021), **Nghị định 105/2025/NĐ-CP**, **QCVN 06:2022/BXD & SĐ 1:2023**. CẤM dùng NĐ 175/2024, NĐ 15/2021, NĐ 35/2023, NĐ 06/2021.
 - **RULE-3.2 [TVPL VIP 3-Tier Download Priority — ADR 0031]**:
   - Tier 1 (`part=-100`): VIP Digital Vector PDF (Mỏ neo Pháp lý Tối thượng).
   - Tier 2 (`part=-1&docx=1`): VIP OpenXML Word Document (Nguồn dữ liệu gốc vàng nạp `docx_converter.py`).
@@ -82,19 +80,16 @@
 - **RULE-4.5 [AI Gateway Spark Auth & Fast-Inference Gating]**:
   - LiteLLM Server Spark (`100.83.192.30:8090`): Header bắt buộc `Authorization: Bearer sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` cho Swarm map-reduce latency cực thấp (< 1s), chỉ route `qwen-local-primary` sau khi GPU hoàn tất warmup.
 - **RULE-4.6 [Tier 3 Orchestrator & Deterministic Verification Gating — ADR-0057 / ADR-0058]**:
-  - Kỹ năng Global Router / Orchestrator (`/ccba-platform`) bắt buộc phải có bản ghi SSOT trong Hub repo (`.agents/skills/ccba-platform/SKILL.md`) có `tier: orchestrator`, `bundle: _core`, `is-orchestrated: true` và tuân thủ **Single-Writer Protocol** (Orchestrator là writer duy nhất, worker ở chế độ read-only).
-  - Khi đồng bộ Spoke (`sync_spoke.py`), cờ `--verify` kích hoạt kiểm toán tất định (cleanliness, depth import, tests) qua `ccba-harness verify-patch` ngay sau khi ghi đĩa hoàn tất, khóa cứng việc hoàn thành tác vụ nếu có lỗi.
+  - Router/Orchestrator (`/ccba-platform`) bắt buộc có bản ghi SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`, `bundle: _core`, `is-orchestrated: true`) và tuân thủ Single-Writer Protocol.
+  - Đồng bộ Spoke (`sync_spoke.py`), cờ `--verify` kích hoạt kiểm toán tất định qua `ccba-harness verify-patch` ngay sau khi ghi đĩa hoàn tất, khóa cứng việc hoàn thành tác vụ nếu có lỗi.
 
 ---
 
 ## Miền 5. 💻 Hạ Tầng & Môi Trường Máy Trạm (Windows, Chrome CDP & Tooling)
 
 - **RULE-5.1 [Chromium VIP Session Engine & CDP Browser Target]**:
-  - Profile độc lập: `~/.gemini/antigravity/chrome_vip` trên cổng `9222`. Lệnh `Browser.setDownloadBehavior` BẮT BUỘC gọi qua Browser Target WebSocket (`http://127.0.0.1:{port}/json/version`).
-  - DOM Selectors đăng nhập kế thừa tập trung từ `TVPLSelectors` trong `selectors.py`.
+  - Profile độc lập: `~/.gemini/antigravity/chrome_vip` trên cổng `9222`. Lệnh `Browser.setDownloadBehavior` BẮT BUỘC gọi qua Browser Target WebSocket (`http://127.0.0.1:{port}/json/version`). DOM Selectors kế thừa tập trung từ `TVPLSelectors` trong `selectors.py`.
 - **RULE-5.2 [Windows Path Quotes & Hook Protection]**:
-  - Khi IDE tự bọc `hooks.json` trong dấu ngoặc kép `"C:\..."`, vô hiệu hóa bằng `{}` và khóa `IsReadOnly = $true` trên PowerShell chống lỗi `Cannot find module`.
-  - Thiết lập timeout $\ge 60\text{s}$ cho integration tests có scan metadata trên Windows.
+  - Khi IDE tự bọc `hooks.json` trong dấu ngoặc kép `"C:\..."`, vô hiệu hóa bằng `{}` và khóa `IsReadOnly = $true` trên PowerShell chống lỗi `Cannot find module`. Thiết lập timeout $\ge 60\text{s}$ cho integration tests trên Windows.
 - **RULE-5.3 [Query Sanitization & Turnstile Bypass]**:
   - Query TVPL có dấu `/`, `:`, `-` phải thay bằng dấu cách (`quote_plus`) chống lỗi IIS mã hóa `%2F`.
-

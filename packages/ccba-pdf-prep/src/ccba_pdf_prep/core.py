@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any
 
 import fitz  # PyMuPDF
-from pypdf import PdfReader, PdfWriter
 
 logger = logging.getLogger(__name__)
 

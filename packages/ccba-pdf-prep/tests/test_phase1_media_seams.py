@@ -12,7 +12,6 @@ from PIL import Image
 from ccba_pdf_prep import (
     compute_frame_hash,
     dedup_frames,
-    download_grid_image,
     extract_storyboard_frames,
     extract_youtube_video_id,
     find_ffmpeg_bin,
