@@ -126,6 +126,8 @@ graph TD
 
 ```bash
 pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-ai"
+# Tùy chọn: cài đặt thêm ccba-harness nếu cần FileMutexLock cấp cao cho Plan/Team:
+# pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-harness"
 ```
 
 ```python

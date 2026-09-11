@@ -16,11 +16,11 @@ dependencies = [
     "cryptography>=41.0.0",
     "pyyaml>=6.0.0",
     "pydantic>=2.0.0",
-    "ccba-harness",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest", "pytest-asyncio", "ruff"]
+harness = ["ccba-harness"]
 
 [project.scripts]
 ccba-mcp = "ccba_ai.mcp_server:main"

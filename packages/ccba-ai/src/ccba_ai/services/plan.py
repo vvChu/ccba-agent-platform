@@ -16,7 +16,11 @@ from ccba_ai.models import (
     PlanPhaseData,
     PlanStatusResult,
 )
-from ccba_harness import FileMutexLock
+
+try:
+    from ccba_harness import FileMutexLock
+except ImportError:
+    from ccba_ai.services._lock_fallback import SimpleFileLock as FileMutexLock
 
 PLAN_TEMPLATE = """# Plan: {title}
 

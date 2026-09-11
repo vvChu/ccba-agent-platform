@@ -6,12 +6,12 @@ from tempfile import TemporaryDirectory
 import pytest
 
 from ccba_ai.services.plan import (
+    FileMutexLock,
     Phase,
     create_plan,
     get_plan_status,
     update_phase_status,
 )
-from ccba_harness import FileMutexLock
 
 
 def test_file_lock_basic():
