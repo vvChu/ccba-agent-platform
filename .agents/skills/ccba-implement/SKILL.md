@@ -58,7 +58,7 @@ Quy trình chuẩn hóa triển khai mã nguồn dựa trên đặc tả kỹ th
    *Lệnh này tự động thực thi chuỗi: `ruff check`, `mypy --follow-imports=silent`, và `pytest -q`.*
 2. Chạy kiểm thử hồi quy cho các module lân cận nếu có ảnh hưởng liên vùng.
 3. Nếu phát hiện lỗi (Exit Code $\ne 0$), kích hoạt vòng lặp Fix Loop để giải quyết triệt để lỗi kiểu và linter.
-- **Tiêu chí hoàn thành:** Lệnh `python -m ccba_harness verify-patch --preset code --target <package_or_dir>` trả về **Exit Code 0** (Overall Status: PASS). Theo quy tắc Khóa Cứng (ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn thành hoặc chuyển sang Bước 5 nếu có bất kỳ lệnh nào fail.
+- **Tiêu chí hoàn thành:** Lệnh `python -m ccba_harness verify-patch --preset code --target <package_or_dir>` trả về **Exit Code 0** (Overall Status: PASS). Theo quy tắc Khóa Cứng (HUB-ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn thành hoặc chuyển sang Bước 5 nếu có bất kỳ lệnh nào fail.
 
 ### Bước 5: Kiểm toán kiến trúc và đóng gói (Architecture Audit & Handover)
 1. Kiểm tra xem có thay đổi cấu trúc monorepo hay không (thêm/xóa/đổi tên thư mục, packages, scripts).
