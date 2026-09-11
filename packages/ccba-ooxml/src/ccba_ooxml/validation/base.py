@@ -842,9 +842,10 @@ class BaseSchemaValidator:
             # Load schema via cached offline loader
             schema = self.get_compiled_schema(schema_path, self.schemas_dir)
 
-            # Load and preprocess XML
+            # Load and preprocess XML with hardened offline parser
+            instance_parser = lxml.etree.XMLParser(no_network=True, resolve_entities=False)
             with open(xml_file, "rb") as f:
-                xml_doc = lxml.etree.parse(f)
+                xml_doc = lxml.etree.parse(f, parser=instance_parser)
 
             xml_doc, _ = self._remove_template_tags_from_text_nodes(xml_doc)
             xml_doc = self._preprocess_for_mc_ignorable(xml_doc)
