@@ -136,7 +136,9 @@ Nội dung quy định bổ sung của luật sửa đổi.
         # Mock QCVN bundle: 02_qcvn/qcvn_06_2022_bxd
         qcvn_bundle = corpus_dir / "02_qcvn" / "qcvn_06_2022_bxd"
         qcvn_bundle.mkdir(parents=True)
-        (qcvn_bundle / "metadata.yaml").write_text("id: qcvn_06_2022_bxd\ndoc_id: qcvn_06_2022_bxd\nstatus: active\n", encoding="utf-8")
+        (qcvn_bundle / "metadata.yaml").write_text(
+            "id: qcvn_06_2022_bxd\ndoc_id: qcvn_06_2022_bxd\nstatus: active\n", encoding="utf-8"
+        )
         qcvn_md = """---
 okf_version: '2.4'
 id: qcvn_06_2022_bxd
@@ -162,7 +164,10 @@ Nội dung tài liệu viện dẫn.
         # Mock QCVN Amendment bundle: 02_qcvn/qcvn_06_2022_bxd_sd1_2023
         qcvn_amend = corpus_dir / "02_qcvn" / "qcvn_06_2022_bxd_sd1_2023"
         qcvn_amend.mkdir(parents=True)
-        (qcvn_amend / "metadata.yaml").write_text("id: qcvn_06_2022_bxd_sd1_2023\ndoc_id: qcvn_06_2022_bxd_sd1_2023\nstatus: active\n", encoding="utf-8")
+        (qcvn_amend / "metadata.yaml").write_text(
+            "id: qcvn_06_2022_bxd_sd1_2023\ndoc_id: qcvn_06_2022_bxd_sd1_2023\nstatus: active\n",
+            encoding="utf-8",
+        )
 
         yield {
             "root": root,
@@ -253,9 +258,9 @@ def test_engine_get_clause_tier_aware_slicing(temp_knowledge_setup):
 
     # CRITICAL: Slicing Article 2 must NOT cut off at Khoản 1 or Khoản 2!
     assert "Điều 2. Giải thích từ ngữ" in content
-    assert "<a id=\"dieu-2-khoan-1\"></a>" in content
+    assert '<a id="dieu-2-khoan-1"></a>' in content
     assert "1. Hoạt động đầu tư xây dựng là quá trình" in content
-    assert "<a id=\"dieu-2-khoan-2\"></a>" in content
+    assert '<a id="dieu-2-khoan-2"></a>' in content
     assert "2. Công trình xây dựng là sản phẩm" in content
 
     # Slicing Article 2 MUST stop before Article 3

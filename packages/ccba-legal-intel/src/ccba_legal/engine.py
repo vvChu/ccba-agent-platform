@@ -202,7 +202,9 @@ class LegalKnowledgeEngine:
             root.parent / "ccba-legal-knowledge" / "legal_docs",
         ]
         try:
-            candidates.append(Path.home() / "GitHubProjects" / "ccba-legal-knowledge" / "legal_docs")
+            candidates.append(
+                Path.home() / "GitHubProjects" / "ccba-legal-knowledge" / "legal_docs"
+            )
         except Exception:
             pass
         for cand in candidates:
@@ -243,7 +245,9 @@ class LegalKnowledgeEngine:
                     if not isinstance(d, dict):
                         continue
                     d_id = re.sub(r"[\s\-_/.]+", "_", str(d.get("id", "")).lower()).strip("_")
-                    d_num = re.sub(r"[\s\-_/.]+", "_", str(d.get("document_number", "")).lower()).strip("_")
+                    d_num = re.sub(
+                        r"[\s\-_/.]+", "_", str(d.get("document_number", "")).lower()
+                    ).strip("_")
                     if d_id == norm_id or d_num == norm_id:
                         doc = d
                         break
@@ -336,9 +340,15 @@ class LegalKnowledgeEngine:
                         meta = yaml.safe_load(f) or {}
                     m_id = str(meta.get("id") or meta.get("doc_id") or "")
                     m_num = str(meta.get("document_number") or "")
-                    if m_id.lower() == doc_id.lower() or re.sub(r"[\s\-_/.]+", "_", m_id.lower()).strip("_") == norm_slug:
+                    if (
+                        m_id.lower() == doc_id.lower()
+                        or re.sub(r"[\s\-_/.]+", "_", m_id.lower()).strip("_") == norm_slug
+                    ):
                         return _verify_and_resolve(b, s_dir)
-                    if m_num and (m_num.lower() == doc_id.lower() or re.sub(r"[\s\-_/.]+", "_", m_num.lower()).strip("_") == norm_slug):
+                    if m_num and (
+                        m_num.lower() == doc_id.lower()
+                        or re.sub(r"[\s\-_/.]+", "_", m_num.lower()).strip("_") == norm_slug
+                    ):
                         return _verify_and_resolve(b, s_dir)
                 except Exception:
                     pass
@@ -495,7 +505,11 @@ class LegalKnowledgeEngine:
                     + r"(?:[-_]khoan|[-_]diem|_|\b))[^\"']*[\"']",
                     re.IGNORECASE,
                 ),
-                re.compile(r"(?m)^#{1,3}\s+(?:Điều\s+(?!0*" + re.escape(art_num) + r"\b)|Chương|Mục|Phần|PHỤ LỤC|Phụ lục)"),
+                re.compile(
+                    r"(?m)^#{1,3}\s+(?:Điều\s+(?!0*"
+                    + re.escape(art_num)
+                    + r"\b)|Chương|Mục|Phần|PHỤ LỤC|Phụ lục)"
+                ),
             ]
             first_stop = len(search_region)
             for spat in stop_patterns:
@@ -566,7 +580,11 @@ class LegalKnowledgeEngine:
                     + r"(?:[-_]khoan|[-_]diem|_|\b))[^\"']*[\"']",
                     re.IGNORECASE,
                 ),
-                re.compile(r"(?m)^#{1,3}\s+(?:Điều\s+(?!0*" + re.escape(art_num) + r"\b)|Chương|Mục|Phần|PHỤ LỤC|Phụ lục)"),
+                re.compile(
+                    r"(?m)^#{1,3}\s+(?:Điều\s+(?!0*"
+                    + re.escape(art_num)
+                    + r"\b)|Chương|Mục|Phần|PHỤ LỤC|Phụ lục)"
+                ),
             ]
             first_k_stop = len(k_region)
             for spat in k_stops:
@@ -587,7 +605,9 @@ class LegalKnowledgeEngine:
                 return None
             k_content = clause_dict["content"]
 
-            d_start = self._find_anchor_pos(k_content, f"dieu-{art_num}-khoan-{khoan_num}-diem-{diem_id}")
+            d_start = self._find_anchor_pos(
+                k_content, f"dieu-{art_num}-khoan-{khoan_num}-diem-{diem_id}"
+            )
             if d_start == -1:
                 d_start = self._find_anchor_pos(k_content, f"diem-{diem_id}")
             if d_start == -1:
@@ -603,7 +623,12 @@ class LegalKnowledgeEngine:
             min_offset = first_line_end + 1 if first_line_end > 0 else 5
 
             d_stops = [
-                re.compile(r"<a\s+(?:id|name)=[\"'][^\"']*diem[-_](?!0*" + re.escape(diem_id) + r"\b)[^\"']*[\"']", re.IGNORECASE),
+                re.compile(
+                    r"<a\s+(?:id|name)=[\"'][^\"']*diem[-_](?!0*"
+                    + re.escape(diem_id)
+                    + r"\b)[^\"']*[\"']",
+                    re.IGNORECASE,
+                ),
                 re.compile(r"(?m)^\s*(?!0*" + re.escape(diem_id) + r"\b)[a-z0-9]\)\s+"),
             ]
             first_d_stop = len(d_region)

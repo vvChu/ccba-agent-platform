@@ -27,7 +27,6 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 
-
 def build_parser() -> argparse.ArgumentParser:
     """Build unified argument parser for ccba-legal CLI with logical lifecycle ordering."""
     parser = argparse.ArgumentParser(
@@ -348,9 +347,7 @@ def build_parser() -> argparse.ArgumentParser:
     table_parser.add_argument(
         "--corpus", type=Path, default=None, help="Path to legal_docs corpus directory"
     )
-    table_parser.add_argument(
-        "--json", action="store_true", help="Output table in raw JSON format"
-    )
+    table_parser.add_argument("--json", action="store_true", help="Output table in raw JSON format")
 
     return parser
 
@@ -821,7 +818,9 @@ def handle_query(args: argparse.Namespace) -> int:
             print(f"   {doc['lifecycle_warning']}")
         if doc.get("suggested_replacement"):
             rep = doc["suggested_replacement"]
-            print(f"   👉 Thay thế bởi: [{rep.get('short_name', '')} - {rep.get('document_number', '')}]")
+            print(
+                f"   👉 Thay thế bởi: [{rep.get('short_name', '')} - {rep.get('document_number', '')}]"
+            )
 
     print("\n=================================================================")
     return 0

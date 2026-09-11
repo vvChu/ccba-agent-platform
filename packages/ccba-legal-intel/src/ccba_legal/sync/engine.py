@@ -182,7 +182,11 @@ class LegalSyncEngine:
                             is_master = True
                     except Exception:
                         pass
-            dest_root = (self.project_root / "legal_docs") if is_master else (self.project_root / ".md" / "legal_docs")
+            dest_root = (
+                (self.project_root / "legal_docs")
+                if is_master
+                else (self.project_root / ".md" / "legal_docs")
+            )
         dest_root.mkdir(parents=True, exist_ok=True)
 
         explicit = Path(source_corpus_dir) if source_corpus_dir else None
