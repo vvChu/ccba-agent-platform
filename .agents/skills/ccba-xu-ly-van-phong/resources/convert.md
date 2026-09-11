@@ -1,4 +1,4 @@
-﻿# Chuyển đổi Tài liệu (Convert)
+# Chuyển đổi Tài liệu (Convert)
 
 Pipeline chuyển đổi giữa các định dạng.
 
@@ -15,7 +15,7 @@ pandoc input.md -o output.docx --markdown-headings=atx -f markdown+raw_attribute
 ### Bước 2: Python-docx format (nếu cần)
 
 ```powershell
-python scripts/format/format_docx.py output.docx
+python .agents/skills/ccba-xu-ly-van-phong/scripts/format/format_docx.py output.docx
 ```
 
 Script áp dụng: font, margin, heading colors, bullet override, code block styling.
@@ -30,7 +30,7 @@ $merged | Out-File "_merged.md" -Encoding UTF8
 
 # Convert
 pandoc _merged.md -o output.docx
-python scripts/format/format_docx.py output.docx
+python .agents/skills/ccba-xu-ly-van-phong/scripts/format/format_docx.py output.docx
 ```
 
 ---
@@ -40,7 +40,7 @@ python scripts/format/format_docx.py output.docx
 ### PDF digital (text-based)
 
 ```powershell
-python scripts/convert/convert_pdf_to_docx.py input.pdf output.docx
+python .agents/skills/ccba-xu-ly-van-phong/scripts/convert/convert_pdf_to_docx.py input.pdf output.docx
 ```
 
 Dùng thư viện `pdf2docx`. Giữ layout gốc.
@@ -54,7 +54,7 @@ Không dùng script. Dùng AI Vision để phân tích cấu trúc + màu sắc,
 ## DOCX → PDF
 
 ```powershell
-python scripts/office/soffice.py --headless --convert-to pdf input.docx
+python .agents/skills/ccba-xu-ly-van-phong/scripts/office/soffice.py --headless --convert-to pdf input.docx
 ```
 
 ---

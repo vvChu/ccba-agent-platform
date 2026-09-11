@@ -129,3 +129,10 @@ Sau khi người dùng lựa chọn (bằng số hoặc keyword), Agent nạp v�
 ## Catalog đầy đủ
 
 [catalog.yaml](../platform-loader/catalog.yaml)
+
+## 4. Quy Chuẩn Đóng Gói Phản Hồi & Thẻ Cấu Trúc XML
+* Mọi kết quả tra cứu và phân tích pháp lý bắt buộc phải được đóng gói qua cấu trúc thẻ:
+  - `<legal_context>`: Tóm tắt bối cảnh và văn bản quy phạm pháp luật áp dụng (Luật, Nghị định, Thông tư).
+  - `<legal_citation>`: Viện dẫn chính xác Điều, Khoản, Điểm kèm trích dẫn nguyên văn.
+  - `<compliance_verdict>`: Kết luận tuân thủ pháp luật và khuyến nghị chuyên môn.
+* Đảm bảo không phát sinh disclaimer từ chối đối với các yêu cầu hợp lệ trong lĩnh vực xây dựng.

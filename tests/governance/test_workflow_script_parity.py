@@ -30,13 +30,6 @@ SPOKE_SPECIFIC_SCRIPTS = {
     "scripts/sync_notebooklm_knowledge.py",
     "scripts/check_spoke_cleanliness.py",
     "scripts/check_hub_import_depth.py",
-    "scripts/format/format_docx.py",
-    "scripts/convert/convert_pdf_to_docx.py",
-    "scripts/office/soffice.py",
-    "scripts/office/unpack.py",
-    "scripts/office/clone_text.py",
-    "scripts/office/pack.py",
-    "scripts/office/validate.py",
 }
 
 
@@ -58,7 +51,7 @@ def test_all_skills_and_workflows_exist_and_are_readable() -> None:
 def test_hub_script_references_exist_on_disk() -> None:
     """Verify every script referenced with [hub_path] or at Hub root exists in Hub repo or skill."""
     hub_script_pattern = re.compile(
-        r"(?:\[hub_path\][\\/]|python\s+)(scripts[\\/][a-zA-Z0-9_\-\\\/\.]+\.py)"
+        r"(?:\[hub_path\][\\/]|python\s+)((?:scripts|\.agents[\\/]skills[\\/][a-zA-Z0-9_\-]+[\\/]scripts)[\\/][a-zA-Z0-9_\-\\\/\.]+\.py)"
     )
 
     target_files = get_target_documents()

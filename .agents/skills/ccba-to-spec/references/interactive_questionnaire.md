@@ -88,8 +88,7 @@ python scripts/questionnaire_engine.py <file.md> --reply "1A, 2B, 3C" --resolved
 2. **Cập nhật Metadata:** Chuyển trạng thái sang `status: "RESOLVED"`.
 3. **Ghi nhận Quyết định (Decision Log):** Bổ sung mục `## Nhật ký Quyết định (Decision Log)` ở cuối file Markdown làm căn cứ pháp lý truy vết.
 4. **Bàn giao quy trình tiếp theo (Workflow Hand-off):**
-   - Kích hoạt kỹ năng [`/ccba-to-spec`](../SKILL.md) để chuyển hóa quyết định thành PRD / Đặc tả kỹ thuật.
-   - Kích hoạt [`/ccba-to-spec`](../SKILL.md) để phân rã nhiệm vụ phát triển.
+   - Kích hoạt kỹ năng [`/ccba-to-spec`](../SKILL.md) để chuyển hóa quyết định thành PRD / Đặc tả kỹ thuật và phân rã nhiệm vụ chi tiết.
 
 ---
 

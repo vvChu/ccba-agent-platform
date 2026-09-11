@@ -8,7 +8,7 @@ Hướng dẫn đọc, tạo và kiểm tra slide.
 
 ```bash
 python -m markitdown presentation.pptx     # Text extraction
-python scripts/office/unpack.py presentation.pptx unpacked/  # Raw XML
+python .agents/skills/ccba-xu-ly-van-phong/scripts/office/unpack.py presentation.pptx unpacked/  # Raw XML
 ```
 
 ---
@@ -59,7 +59,7 @@ python scripts/office/unpack.py presentation.pptx unpacked/  # Raw XML
 python -m markitdown output.pptx
 
 # Visual check - convert to images
-python scripts/office/soffice.py --headless --convert-to pdf output.pptx
+python .agents/skills/ccba-xu-ly-van-phong/scripts/office/soffice.py --headless --convert-to pdf output.pptx
 pdftoppm -jpeg -r 150 output.pdf slide
 ```
 
