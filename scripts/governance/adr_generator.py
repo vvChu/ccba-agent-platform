@@ -83,7 +83,7 @@ class ADRGenerator:
         filename = f"adr_{timestamp}_{safe_title}.md"
         adr_file = self.adr_dir / filename
 
-        adr_content = f"""# ADR: {title}
+        adr_content = f"""# HUB-ADR: {title}
 
 - **Ngày tạo**: {now.strftime("%Y-%m-%d %H:%M:%S")}
 - **Trạng thái**: Accepted
