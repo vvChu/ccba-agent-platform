@@ -4,12 +4,65 @@ Base validator with common validation logic for document files.
 
 import re
 from pathlib import Path
+from typing import Any
 
 import lxml.etree
 
 
+class OfflineSchemaResolver(lxml.etree.Resolver):
+    """Custom XML resolver to intercept external schema URLs and route to local files.
+
+    Prevents any network access during XML schema validation (e.g., Dublin Core, xml.xsd).
+    """
+
+    def __init__(self, schemas_dir: Path):
+        super().__init__()
+        self.schemas_dir = schemas_dir
+        self.dublincore_dir = schemas_dir / "dublincore"
+        self.xml_xsd_path = schemas_dir / "ISO-IEC29500-4_2016" / "xml.xsd"
+
+    def resolve(self, url: str, pubid: str | None, context: Any) -> Any:
+        url_lower = url.lower()
+        if "dcterms.xsd" in url_lower:
+            target = self.dublincore_dir / "dcterms.xsd"
+            if target.exists():
+                return self.resolve_filename(str(target), context)
+        elif "dcmitype.xsd" in url_lower:
+            target = self.dublincore_dir / "dcmitype.xsd"
+            if target.exists():
+                return self.resolve_filename(str(target), context)
+        elif "dc.xsd" in url_lower:
+            target = self.dublincore_dir / "dc.xsd"
+            if target.exists():
+                return self.resolve_filename(str(target), context)
+        elif "xml.xsd" in url_lower:
+            if self.xml_xsd_path.exists():
+                return self.resolve_filename(str(self.xml_xsd_path), context)
+        return None
+
+
 class BaseSchemaValidator:
     """Base validator with common validation logic for document files."""
+
+    # Cache for compiled XMLSchema objects to avoid recompiling heavy schemas per file
+    _COMPILED_SCHEMA_CACHE: dict[Path, lxml.etree.XMLSchema] = {}
+
+    @classmethod
+    def get_compiled_schema(cls, schema_path: Path, schemas_dir: Path) -> lxml.etree.XMLSchema:
+        """Loads and compiles an XMLSchema with offline resolution and caching."""
+        resolved_path = schema_path.resolve()
+        if resolved_path in cls._COMPILED_SCHEMA_CACHE:
+            return cls._COMPILED_SCHEMA_CACHE[resolved_path]
+
+        parser = lxml.etree.XMLParser(no_network=True)
+        parser.resolvers.add(OfflineSchemaResolver(schemas_dir))
+
+        with open(resolved_path, "rb") as xsd_file:
+            xsd_doc = lxml.etree.parse(xsd_file, parser=parser, base_url=str(resolved_path))
+            schema = lxml.etree.XMLSchema(xsd_doc)
+
+        cls._COMPILED_SCHEMA_CACHE[resolved_path] = schema
+        return schema
 
     # Elements whose 'id' attributes must be unique within their file
     # Format: element_name -> (attribute_name, scope)
@@ -786,15 +839,13 @@ class BaseSchemaValidator:
             return None, None  # Skip file
 
         try:
-            # Load schema
-            with open(schema_path, "rb") as xsd_file:
-                parser = lxml.etree.XMLParser()
-                xsd_doc = lxml.etree.parse(xsd_file, parser=parser, base_url=str(schema_path))
-                schema = lxml.etree.XMLSchema(xsd_doc)
+            # Load schema via cached offline loader
+            schema = self.get_compiled_schema(schema_path, self.schemas_dir)
 
-            # Load and preprocess XML
-            with open(xml_file) as f:
-                xml_doc = lxml.etree.parse(f)
+            # Load and preprocess XML with hardened offline parser
+            instance_parser = lxml.etree.XMLParser(no_network=True, resolve_entities=False)
+            with open(xml_file, "rb") as f:
+                xml_doc = lxml.etree.parse(f, parser=instance_parser)
 
             xml_doc, _ = self._remove_template_tags_from_text_nodes(xml_doc)
             xml_doc = self._preprocess_for_mc_ignorable(xml_doc)
