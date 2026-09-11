@@ -52,6 +52,7 @@ from .evals import (
     load_eval_dataset,
     run_eval_pipeline,
 )
+from .execution import DetachedExecutionEngine
 from .fleet import (
     FleetTelemetryReport,
     SpokeTelemetrySummary,
@@ -203,4 +204,6 @@ __all__ = [
     "HealingAction",
     "HealingReport",
     "SelfHealingEngine",
+    # Detached Process Execution Engine (ADR 0028 & Issue #255)
+    "DetachedExecutionEngine",
 ]
