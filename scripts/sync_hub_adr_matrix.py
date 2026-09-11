@@ -72,7 +72,9 @@ def parse_adr_file(adr_path: Path) -> dict[str, Any]:
         if h1_match:
             adr_num = int(h1_match.group(1))
         else:
-            fname_match = re.match(r"^(?:HUB-ADR-)?0*([0-9]+)-(.*)\.md$", adr_path.name, re.IGNORECASE)
+            fname_match = re.match(
+                r"^(?:HUB-ADR-)?0*([0-9]+)-(.*)\.md$", adr_path.name, re.IGNORECASE
+            )
             if fname_match:
                 adr_num = int(fname_match.group(1))
 
@@ -89,7 +91,9 @@ def parse_adr_file(adr_path: Path) -> dict[str, Any]:
         if h1_match:
             adr_title = h1_match.group(2).strip()
         else:
-            fname_match = re.match(r"^(?:HUB-ADR-)?0*([0-9]+)-(.*)\.md$", adr_path.name, re.IGNORECASE)
+            fname_match = re.match(
+                r"^(?:HUB-ADR-)?0*([0-9]+)-(.*)\.md$", adr_path.name, re.IGNORECASE
+            )
             if fname_match:
                 adr_title = fname_match.group(2).replace("-", " ").title()
             else:

@@ -435,18 +435,12 @@ References HUB-ADR-0033 for hygiene and ADR-0010 for domain logic.
 
         # 1. Spoke mode (is_hub=False): MUST NOT match HUB-ADR-0033 to Spoke ADR 0033!
         spoke_matrix = scan_skill_radar(spoke_adrs, root, is_hub=False)
-        assert spoke_matrix["0033"] == [], (
-            "Spoke ADR 0033 should NOT be matched to HUB-ADR-0033!"
-        )
-        assert len(spoke_matrix["0010"]) == 1, (
-            "Spoke ADR 0010 should be matched to ADR-0010."
-        )
+        assert spoke_matrix["0033"] == [], "Spoke ADR 0033 should NOT be matched to HUB-ADR-0033!"
+        assert len(spoke_matrix["0010"]) == 1, "Spoke ADR 0010 should be matched to ADR-0010."
 
         # 2. Hub mode (is_hub=True): MUST match HUB-ADR-0033
         hub_matrix = scan_skill_radar(hub_adrs, root, is_hub=True)
-        assert len(hub_matrix["0033"]) == 1, (
-            "Hub ADR 0033 should be matched to HUB-ADR-0033."
-        )
+        assert len(hub_matrix["0033"]) == 1, "Hub ADR 0033 should be matched to HUB-ADR-0033."
 
 
 def test_compiled_readme_and_matrix_use_hub_adr_labels() -> None:
@@ -472,4 +466,3 @@ def test_compiled_readme_and_matrix_use_hub_adr_labels() -> None:
 
         matrix_content = compile_hub_traceability_matrix(adr_list, matrix, matrix_file)
         assert "[HUB-ADR 0058]" in matrix_content
-
