@@ -972,11 +972,11 @@ class SpokeSynchronizer:
         else:
             project_name = str(project_name_val).strip()
 
-        project_type_val = context.get("project_type")
+        project_type_val = context.get("project_type") or context.get("archetype")
         if not project_type_val:
             proj_dict = context.get("project")
             if isinstance(proj_dict, dict):
-                project_type_val = proj_dict.get("type")
+                project_type_val = proj_dict.get("type") or proj_dict.get("archetype")
         if not project_type_val:
             project_type = ""
         else:

@@ -883,3 +883,19 @@ def test_sync_all_spokes_dry_run_pull_hub_execution(tmp_path: Path) -> None:
     ):
         code = sync_all_spokes(dry_run=True, check_git=False, backup=False)
         assert code == 0
+
+
+def test_sync_spoke_archetype_fallback(tmp_path: Path) -> None:
+    """Verify SpokeSynchronizer falls back to project.archetype when project_type is missing (Issue #250)."""
+    spoke_dir = tmp_path / "second_brain_spoke"
+    spoke_dir.mkdir()
+    (spoke_dir / ".agents").mkdir()
+    (spoke_dir / ".agents" / "workspace_context.yaml").write_text(
+        "project:\n  name: VvC Second Brain\n  archetype: knowledge_corpus\n", encoding="utf-8"
+    )
+
+    hub_root = Path(__file__).resolve().parent.parent.parent
+    sync = SpokeSynchronizer(spoke_dir, hub_root)
+    code = sync.sync(dry_run=True, check_git=False, backup=False, verify=False)
+    assert code == 0
+

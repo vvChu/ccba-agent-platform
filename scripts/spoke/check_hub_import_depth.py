@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import argparse
 import ast
-import re
 import sys
 from pathlib import Path
 
@@ -35,17 +34,6 @@ HUB_PACKAGE_PREFIXES = (
     "mdconverter",
     "ccba_notebooklm",
     "ccba_maskara",
-)
-
-# Pattern: from ccba_xxx.submodule.deep_module import X  (depth >= 3)
-# Or direct private internal submodule imports (e.g. from ccba_xxx._internal import X)
-# Matches: from ccba_legal.crawler.chrome_cdp import ...
-# Matches: import ccba_legal.crawler.chrome_cdp
-# Matches: from ccba_ai._private import ...
-DEEP_IMPORT_PATTERN = re.compile(
-    r"^\s*(?:from|import)\s+"
-    r"(" + "|".join(re.escape(p) for p in HUB_PACKAGE_PREFIXES) + r")"
-    r"(?:\.\w+\.\w+|\._\w+)"
 )
 
 
