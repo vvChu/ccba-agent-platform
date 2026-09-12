@@ -778,6 +778,19 @@ skills:
   command: /ccba-maskara
   package_path: packages/ccba-maskara
   tier: kernel
+- name: ccba-mermaid-diagram
+  bundle: _core
+  description: Tạo sơ đồ Mermaid đạt chuẩn học thuật Academic Grayscale, an toàn cú
+    pháp (subgraph style, escaped labels, non-flowcharts) cho tài liệu và xuất bản.
+  triggers:
+  - mermaid
+  - vẽ mermaid
+  - flowchart
+  - sequence diagram
+  - sơ đồ mermaid
+  skill_path: .agents/skills/ccba-mermaid-diagram/SKILL.md
+  command: /ccba-mermaid-diagram
+  tier: kernel
 - name: ccba-new-feature
   bundle: _core
   description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session

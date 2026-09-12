@@ -1,6 +1,6 @@
 # CCBA Agent Platform Skills
 
-> Curated registry of 70 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
+> Curated registry of 71 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
 
 ## Navigation Portals
 
@@ -12,11 +12,11 @@
 
 ## Core Endpoints & Documentation
 
-- [Skills Index](skills/INDEX.md): Markdown catalog index for all 70 skills.
+- [Skills Index](skills/INDEX.md): Markdown catalog index for all 71 skills.
 - [Skills FAQ](skills/FAQ.md): Frequently asked questions on Hub-Spoke, invocation, and troubleshooting.
-- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 70 skills.
+- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 71 skills.
 
-## All Active Skills (70 Skills)
+## All Active Skills (71 Skills)
 
 - [platform-loader](skills/platform-loader.md): /platform-loader — Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn bộ skills và rules.
 - [bigbim-classification](skills/bigbim-classification.md): /bigbim-classification — Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass 200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
@@ -64,6 +64,7 @@
 - [ccba-llm-pipeline-patterns](skills/ccba-llm-pipeline-patterns.md): /ccba-llm-pipeline-patterns — Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đúc rút từ VvC LLM OS (v5.1→v8.7, 2026).
 - [ccba-markdown-document-processing](skills/ccba-markdown-document-processing.md): /ccba-markdown-document-processing — Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep Seam ConversionPipeline.
 - [ccba-maskara](skills/ccba-maskara.md): /ccba-maskara — Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords, private keys) trong files/logs và cài đặt guardrails bảo mật.
+- [ccba-mermaid-diagram](skills/ccba-mermaid-diagram.md): /ccba-mermaid-diagram — Tạo sơ đồ Mermaid đạt chuẩn học thuật Academic Grayscale, an toàn cú pháp (subgraph style, escaped labels, non-flowcharts) cho tài liệu và xuất bản.
 - [ccba-new-feature](skills/ccba-new-feature.md): /ccba-new-feature — Tạo feature branch mới với quy trình lập kế hoạch và phân tách session sạch (Factory Model)
 - [ccba-notebooklm-connector](skills/ccba-notebooklm-connector.md): /ccba-notebooklm-connector — Interact with Google NotebookLM to import YouTube, URLs, PDFs, and Drive docs, perform RAG query, generate Audio Overview, and handle auth, polling, and retry loops.
 - [ccba-platform](skills/ccba-platform.md): /ccba-platform — Cổng điều phối toàn cục (Global Router) và kiểm tra môi trường cho CCBA Agent Services Platform. Tự động kiểm tra Hub/Spoke, Gateway/VPN, cấu trúc Spoke và điều hướng đúng kỹ năng.

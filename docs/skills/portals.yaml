@@ -33,6 +33,7 @@ portals:
       - ccba-design
       - ccba-domain-modeling
       - ccba-excalidraw-diagram
+      - ccba-mermaid-diagram
       - ccba-new-feature
       - ccba-create-pr
       - ccba-release-feature

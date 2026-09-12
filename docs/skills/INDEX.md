@@ -1,6 +1,6 @@
 # CCBA Agent Platform — Danh Mục Kỹ Năng (Skills Catalog Index)
 
-> **Tổng hợp**: 70 Kỹ năng Hoạt động được phân loại vào 5 Cổng Điều Hướng theo chuẩn ADR-0047, ADR-0057 và ADR-0058.
+> **Tổng hợp**: 71 Kỹ năng Hoạt động được phân loại vào 5 Cổng Điều Hướng theo chuẩn ADR-0047, ADR-0057 và ADR-0058.
 
 Trang tài liệu này phục vụ tra cứu nhanh cho kỹ sư và AI Coding Agents trong Terminal hoặc IDE.
 Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm tắt chuẩn máy đọc tại [docs/llms.txt](../llms.txt).
@@ -10,7 +10,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 ## Mục Lục Các Cổng Điều Hướng
 
 - [🚀 Khởi tạo, Điều hướng & Đồng bộ](#init_navigation) (8 skills)
-- [⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân](#core_engineering) (19 skills)
+- [⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân](#core_engineering) (20 skills)
 - [📐 BIGBIM & Thẩm tra AI-QC](#bim_aiqc) (7 skills)
 - [⚖️ Pháp lý Xây dựng & Tự động hóa Văn phòng](#legal_compliance) (10 skills)
 - [🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu](#governance_upkeep) (26 skills)
@@ -36,7 +36,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 ---
 
 <a id="core_engineering"></a>
-## ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân (19 Kỹ Năng)
+## ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân (20 Kỹ Năng)
 
 *Kỹ nghệ phần mềm chuẩn mực từ mài giũa ý tưởng, đặc tả kỹ thuật, phát triển dẫn dắt bởi kiểm thử (TDD), review mã nguồn, gỡ lỗi đa tác nhân đến xuất xưởng.*
 
@@ -54,6 +54,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-git-guardrails](ccba-git-guardrails.md) | `/ccba-git-guardrails` | `kernel` | `User` | Guardrails to block or request explicit user permission before executing dang... |
 | [ccba-grilling](ccba-grilling.md) | `/ccba-grilling` | `kernel` | `User` | Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy chuẩn (... |
 | [ccba-implement](ccba-implement.md) | `/ccba-implement` | `orchestrator` | `User` | Implement a piece of work based on a spec or set of tickets. |
+| [ccba-mermaid-diagram](ccba-mermaid-diagram.md) | `/ccba-mermaid-diagram` | `kernel` | `User` | Tạo sơ đồ Mermaid đạt chuẩn học thuật Academic Grayscale, an toàn cú pháp (su... |
 | [ccba-new-feature](ccba-new-feature.md) | `/ccba-new-feature` | `orchestrator` | `User` | Tạo feature branch mới với quy trình lập kế hoạch và phân tách session sạch (... |
 | [ccba-release-feature](ccba-release-feature.md) | `/ccba-release-feature` | `orchestrator` | `User` | Merge PR, cleanup branch, auto-close local issues và cập nhật walkthrough |
 | [ccba-session-retrospective](ccba-session-retrospective.md) | `/ccba-session-retrospective` | `kernel` | `User` | Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa kỹ nă... |
