@@ -31,6 +31,10 @@
   - Quét corpus từ registry trong `.md/data/`: suy luận `project_root` (3 cấp lùi) và quét 4 ứng viên: `reg_parent/{, .md/}legal_docs`, `project_root/{, .md/}legal_docs`.
 - **RULE-1.10 [ADR 0057 — Standalone Skill Promotion Triad]**:
   - Thăng hạng Tier 2A $\rightarrow$ Tier 2B: (1) Xóa triggers trùng ở nguồn; (2) Sửa `SKILL_DEPRECATION_ALIASES` trong `coordinator.py` trỏ alias ngắn về skill mới; (3) Phân định ranh giới Hub $\rightarrow$ Spoke vs Upstream $\rightarrow$ Hub trong `SKILL.md` và `catalog.yaml`.
+- **RULE-1.11 [Diagramming & Technical Visuals Hygiene]**:
+  - Excalidraw 2.x Wrapper: `# Excalidraw Data` $\rightarrow$ `## Text Elements` $\rightarrow$ `%% ## Drawing ... %%`. Cấm H1 `# Drawing`.
+  - Mermaid: Subgraph BẮT BUỘC dùng `style <sg_id>`, cấm `classDef` hay `class <id>`. Non-flowcharts (`pie`, `timeline`, `mindmap`, `sequenceDiagram`) cấm tiêm `classDef`, cấu hình qua `%%{init}%%`. Nhãn bọc `["..."]`, ngắt dòng `<br/>`, escape `#quot;`, `#124;`, `#40;`, `#41;`.
+  - D2 & Kroki: Vector architecture SVG biên dịch qua local CLI hoặc Kroki REST API (`https://kroki.io/d2/svg`, 0 dependency), lưu song song `.svg` và `.d2`.
 
 ---
 
