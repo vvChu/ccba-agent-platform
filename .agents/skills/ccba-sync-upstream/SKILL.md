@@ -2,6 +2,9 @@
 name: ccba-sync-upstream
 description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0057 Radar)
   kết hợp kích hoạt 1-Click Port qua /ccba-xia.
+metadata:
+  version: "1.1.0"
+  author: "CCBA Hub"
 disable-model-invocation: true
 bundle: _core
 tier: kernel
