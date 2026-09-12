@@ -74,20 +74,21 @@
 - **RULE-4.1 [Entry Point Duy Nhất Khi Có Issue ID: `/ccba-new-feature`]**:
   - Khi có Issue ID, LUÔN đề xuất `/ccba-new-feature #<id>` (8 bước Factory Model). CẤM nhảy thẳng implement.
 - **RULE-4.2 [Slash Command Parity & Active Commands SSOT]**:
-  - BẮT BUỘC đối chiếu `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn tiền tố `/`.
-  - Tài liệu `references/*.md` (Tier 2A) CẤM dùng `/` (gọi Master Skill kèm reference).
-- **RULE-4.3 [Tiêu Chí Hoành Thành Đa Nhánh & DRY Reference]**:
-  - Tiêu chí hoàn thành phải có nhánh kiểm chứng cho từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`). Cấm lặp lại quy tắc kết hợp ngoài `MODES.md`.
+  - BẮT BUỘC đối chiếu `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn tiền tố `/`. Tài liệu `references/*.md` CẤM dùng `/`.
+- **RULE-4.3 [Tiêu Chí Hoàn Thành Đa Nhánh & DRY Reference]**:
+  - Tiêu chí hoàn thành phải có nhánh kiểm chứng cho từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`).
 - **RULE-4.4 [GitHub Copilot Review Gating & Walkthrough Mirroring]**:
-  - Quét `author.login` thay vì `user.login`. Bắt buộc xét `### 🟡 Changes recommended` và `body` Copilot kể cả khi `COMMENTED`. Cấm merge nếu chưa giải trình.
-  - `audit_pr_comments.py` đọc `walkthrough.md` (HUB-ADR-0058): Ghi `review_id` (`PRR_...`) và inline comment `id` vào `walkthrough.md` gốc để vượt audit.
+  - Quét `author.login`. Bắt buộc xét `### 🟡 Changes recommended` và `body` Copilot dù `COMMENTED`. Cấm merge nếu chưa giải trình.
+  - `audit_pr_comments.py`: Ghi `review_id` (`PRR_...`) và inline comment `id` vào `walkthrough.md` để vượt audit.
 - **RULE-4.5 [AI Gateway Spark Auth & Fast-Inference Gating]**:
-  - LiteLLM Spark (100.83.192.30:8090): Header `Authorization: Bearer sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` (< 1s), route `qwen-local-primary` sau GPU warmup.
+  - LiteLLM Spark (100.83.192.30:8090): Bearer `sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` (< 1s), route `qwen-local-primary` sau GPU warmup.
 - **RULE-4.6 [Tier 3 Orchestrator & Deterministic Verification Gating — ADR-0057 / ADR-0058]**:
   - Router/Orchestrator: SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`), tuân thủ Single-Writer Protocol.
   - Đồng bộ Spoke (`sync_spoke.py`): cờ `--verify` kích hoạt `ccba-harness verify-patch`, khóa cứng nếu lỗi.
 - **RULE-4.7 [ArtifactMetadata Workspace Invariant]**:
   - `ArtifactMetadata` CHỈ dùng cho tệp trong brain (`<appDataDir>\brain\<id>/`). Bỏ qua khi ghi workspace chống schema rejection.
+- **RULE-4.8 [Zero-Polling & Reactive Wakeup Hard Invariant]**:
+  - CẤM TUYỆT ĐỐI polling loop `manage_task(status)` khi lệnh chạy nền. BẮT BUỘC dừng gọi tool để runtime tự đánh thức qua Reactive Wakeup hoặc làm việc song song. Ưu tiên scoped test (<10s).
 
 ---
 
