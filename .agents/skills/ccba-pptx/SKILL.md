@@ -21,8 +21,8 @@ keywords:
 - office
 license: Proprietary. LICENSE.txt has complete terms
 metadata:
-  author: claudekit
-  version: 1.0.0
+  author: CCBA
+  version: 1.1.0
 bundle: _core
 tier: kernel
 triggers:
@@ -179,7 +179,7 @@ When creating a new PowerPoint presentation from scratch, use the **html2pptx** 
 - **NEVER vertically stack**: Do not place charts/tables below text in a single column - this causes poor readability and layout issues
 
 ### Workflow
-1. **MANDATORY - READ ENTIRE FILE**: Read [`html2pptx.md`](html2pptx.md) completely from start to finish. **NEVER set any range limits when reading this file.** Read the full file content for detailed syntax, critical formatting rules, and best practices before proceeding with presentation creation.
+1. **MANDATORY - READ ENTIRE FILE**: Read [`html2pptx.md`](references/html2pptx.md) completely from start to finish. **NEVER set any range limits when reading this file.** Read the full file content for detailed syntax, critical formatting rules, and best practices before proceeding with presentation creation.
    **Completion Criterion:** Việc đọc toàn bộ file `html2pptx.md` được ghi nhận rõ ràng trong nhật ký suy nghĩ (thought trace) của Agent.
 2. Create an HTML file for each slide with proper dimensions (e.g., 720pt × 405pt for 16:9)
    - Use `<p>`, `<h1>`-`<h6>`, `<ul>`, `<ol>` for all text content
@@ -208,7 +208,7 @@ When creating a new PowerPoint presentation from scratch, use the **html2pptx** 
 When edit slides in an existing PowerPoint presentation, you need to work with the raw Office Open XML (OOXML) format. This involves unpacking the .pptx file, editing the XML content, and repacking it.
 
 ### Workflow
-1. **MANDATORY - READ ENTIRE FILE**: Read [`ooxml.md`](ooxml.md) (~500 lines) completely from start to finish.  **NEVER set any range limits when reading this file.**  Read the full file content for detailed guidance on OOXML structure and editing workflows before any presentation editing.
+1. **MANDATORY - READ ENTIRE FILE**: Read [`ooxml.md`](references/ooxml.md) (~500 lines) completely from start to finish.  **NEVER set any range limits when reading this file.**  Read the full file content for detailed guidance on OOXML structure and editing workflows before any presentation editing.
    **Completion Criterion:** Việc đọc toàn bộ file `ooxml.md` được ghi nhận rõ ràng trong nhật ký suy nghĩ (thought trace) của Agent.
 2. Unpack the presentation: `python -m ccba_ooxml unpack <office_file> <output_dir>`
    **Completion Criterion:** Thư mục `<output_dir>` được tạo và chứa các tệp tin XML của slide (ví dụ `ppt/slides/slide1.xml`).
@@ -529,3 +529,15 @@ Required dependencies (should already be installed):
 - **LibreOffice**: `sudo apt-get install libreoffice` (for PDF conversion)
 - **Poppler**: `sudo apt-get install poppler-utils` (for pdftoppm to convert PDF to images)
 - **defusedxml**: `pip install defusedxml` (for secure XML parsing)
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ xử lý bài thuyết trình PowerPoint nâng cao, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/html2pptx.md` | Quy trình chuyển đổi HTML/CSS sang PPTX qua pptxgenjs và playwright |
+| `references/ooxml.md` | Cấu trúc định dạng OpenXML (.pptx) và chỉnh sửa trực tiếp XML của slide |
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
