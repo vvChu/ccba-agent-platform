@@ -14,6 +14,7 @@
 
 | ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
 |---|---|---|---|
+| `3994619505` | `packages/ccba-legal-intel/src/ccba_legal/sync/engine.py` | `pull_latest_okf_bundles()` kiểm tra `project.name` phân biệt hoa/thường (case-sensitive) so với thư mục đã chuẩn hóa `.lower()`. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa so sánh không phân biệt hoa/thường: `str(proj.get("name", "")).lower() == "ccba-legal-knowledge"`. |
 | `3994619519` | `scripts/spoke/sync/sdk_inspector.py` | `copy_if_needed()` coi sự hiện diện của thư mục `scripts/` là Python Spoke, có thể copy nhầm guardrail scripts sang Spoke không phải Python. | **ĐÃ KHẮC PHỤC**: Bỏ nhánh `or (self.spoke_root / "scripts").exists()`, chỉ sử dụng `is_python_spoke(self.spoke_root, self.project_type)` vốn đã kiểm tra đầy đủ chỉ dấu Python. |
 | `3994619531` | `scripts/spoke/sync/sdk_inspector.py` | So sánh `project.name` phân biệt hoa/thường (case-sensitive) trong khi các phần khác dùng `.lower()`. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa so sánh không phân biệt hoa/thường: `str(proj.get("name", "")).lower() == "ccba-legal-knowledge"` trong cả `sdk_inspector.py` và `engine.py`. |
 | `3994619543` | `.md/knowledge/session_learnings.md` | Dấu backticks inline-code không cân bằng tại dòng RULE-4.5. | **ĐÃ KHẮC PHỤC**: Bỏ backticks quanh địa chỉ IP `100.83.192.30:8090` để đóng mở inline-code span chuẩn xác. |
