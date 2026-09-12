@@ -12,9 +12,9 @@
   - Cổng 1 (Orchestration): Đa luồng/StateGraph/HITL $\rightarrow$ Tier 3 Composite Orchestrator (không tính GPI).
   - $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $\text{GPI} < 12.0 \rightarrow$ Tier 2A (`references/`); $\ge 12.0 \rightarrow$ Tier 2B (`.agents/skills/ccba-<name>/`). Rituals (`disable-model-invocation: true`) ép $A = 1.0$.
 - **RULE-1.2 [ADR 0053 — Single-Writer Protocol Cho Orchestrators]**:
-  - Đa tác tử (`ccba-teamwork`, swarms) bắt buộc Single-Writer: Lead Orchestrator duy nhất ghi codebase/logs; subagents chỉ xuất PatchBlocks vào sandbox. Hợp nhất qua `execute_swarm_patches` (3.6ms, 0 collision).
+  - Đa tác tử (`ccba-teamwork`, swarms) bắt buộc Single-Writer: Lead duy nhất ghi codebase/logs; subagents chỉ xuất PatchBlocks vào sandbox. Hợp nhất qua `execute_swarm_patches`.
 - **RULE-1.3 [ADR 0035 — Deep Modules, Seams & Zero-Exemption AST]**:
-  - Thin Seam: Package chỉ bộc lộ `__all__`/`__init__.py`, cấm import private `_*`. Zero-Exemption: Gỡ bypass hardcoded trong `check_dependency_contracts.py`. Tệp thử nghiệm chuyển vào `archive/`.
+  - Thin Seam: Package chỉ bộc lộ `__all__`/`__init__.py`, cấm import private `_*`. Gỡ bypass hardcoded trong `check_dependency_contracts.py`. Tệp thử nghiệm vào `archive/`.
 - **RULE-1.4 [ADR 0033 & ADR 0056 — Spoke Directory Hygiene & Zombie Prevention]**:
   - Cấu trúc `.\.md\`: Gốc chỉ chứa cấu hình (`workspace_context.yaml`); `extracted_docs/`; `knowledge/`; `archive/`.
   - Spoke Synchronizer (`coordinator.py`): Đổi workflows cũ thành `.md.bak` (`DEPRECATED_MIGRATED_TO_SKILL`), xóa thư mục theo `SKILL_DEPRECATION_ALIASES`.
@@ -28,7 +28,7 @@
 - **RULE-1.8 [ADR 0058 — Self-Healing Engine & Discrete Diagnostic Commands]**:
   - Lệnh nạp `SelfHealingEngine` (`verify-patch --self-heal`) BẮT BUỘC là mảng lệnh độc lập (`["cmd1", "cmd2"]`), CẤM ghép chuỗi `&&` để regex chẩn đoán đúng và tự phục hồi (< 500ms).
 - **RULE-1.9 [Multi-Tier Corpus Discovery & Layout Normalization]**:
-  - Khi định vị corpus từ registry file trong `.md/data/`: `reg_parent / "legal_docs"` trỏ sai `.md/data/legal_docs`. BẮT BUỘC suy luận `project_root` (3 cấp lùi nếu ở `.md/data`) và quét 4 ứng viên: `reg_parent/{, .md/}legal_docs` và `project_root/{, .md/}legal_docs`.
+  - Quét corpus từ registry trong `.md/data/`: suy luận `project_root` (3 cấp lùi nếu ở `.md/data`) và quét 4 ứng viên: `reg_parent/{, .md/}legal_docs`, `project_root/{, .md/}legal_docs`.
 
 ---
 
@@ -47,12 +47,9 @@
 - **RULE-2.7 [Safe-Remove, Read-Only & Symlink Cleanup Invariant]**:
   - `safe_remove`: Trên Windows symlink ném `NotADirectoryError` nếu dùng `shutil.rmtree()`. Kiểm tra `is_symlink() or is_file()` trước, gỡ read-only bằng `chmod(0o666)`, rồi mới gọi `rmtree()`.
 - **RULE-2.8 [Hardened Offline XML/XSD Validation & Schema Caching]**:
-  - Kiểm định XML/OOXML (`lxml`): CẤM tải `schemaLocation` qua HTTP $\rightarrow$ BẮT BUỘC nhúng schema offline cục bộ và dùng `lxml.etree.Resolver` định tuyến.
-  - Khởi tạo `XMLParser(no_network=True, resolve_entities=False)` cho compilation và parsing (chống DTD/XXE leaks).
-  - Cache đối tượng `XMLSchema` đã compile (`_COMPILED_SCHEMA_CACHE`) theo đường dẫn tránh re-compile gây nghẽn CPU.
+  - XML/OOXML (`lxml`): CẤM tải `schemaLocation` qua HTTP $\rightarrow$ nhúng schema offline và dùng `lxml.etree.Resolver`. `XMLParser(no_network=True, resolve_entities=False)` chống DTD/XXE leaks. Cache `XMLSchema` (`_COMPILED_SCHEMA_CACHE`) theo đường dẫn tránh nghẽn CPU.
 - **RULE-2.9 [Flaky Test Root-Cause Transparency & No-False-Pass Lock]**:
-  - Khi test bị FAIL rồi PASS ở lần chạy lại (retry) mà chưa sửa mã: CẤM TUYỆT ĐỐI kết luận "đã sửa xong".
-  - Bắt buộc tìm cội nguồn kỹ thuật (network jitter, race condition, thiếu offline fallback) và giải trình minh bạch trước khi release.
+  - Test FAIL rồi PASS khi retry chưa sửa mã: CẤM kết luận đã sửa xong. Bắt buộc tìm cội nguồn kỹ thuật và giải trình minh bạch trước release.
 
 ---
 
@@ -60,7 +57,7 @@
 
 - **RULE-3.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
   - MỌI văn bản pháp luật viện dẫn BẮT BUỘC ĐANG CÓ HIỆU LỰC (CURRENT). Chặn đứng LLM Legacy Bias bằng bộ lọc pre-check trước khi xuất báo cáo kỹ thuật.
-  - VĂN BẢN HIỆN HÀNH: **Luật Xây dựng 2025** (`135/2025/QH15`), **Nghị định 217/2026/NĐ-CP** (thay NĐ 175/2024 & NĐ 15/2021), **Nghị định 207/2026/NĐ-CP** (thay NĐ 06/2021), **Nghị định 105/2025/NĐ-CP**, **QCVN 06:2022/BXD & SĐ 1:2023**. CẤM dùng NĐ 175/2024, NĐ 15/2021, NĐ 35/2023, NĐ 06/2021.
+  - VĂN BẢN HIỆN HÀNH: **Luật Xây dựng 2025** (`135/2025/QH15`), **Nghị định 217/2026/NĐ-CP** (thay NĐ 175/2024 & NĐ 15/2021), **Nghị định 207/2026/NĐ-CP** (thay NĐ 06/2021). CẤM dùng văn bản hết hiệu lực.
 - **RULE-3.2 [TVPL VIP 3-Tier Download Priority — ADR 0031]**:
   - Tier 1 (`part=-100`): VIP Digital Vector PDF (Mỏ neo Pháp lý). Tier 2 (`part=-1&docx=1`): VIP OpenXML Word Document (cho `docx_converter.py`). Tier 3 (`part=0`): Gazette Scan PDF.
 - **RULE-3.3 [Làm Sạch Bảng Biểu & Chú Thích Pháp Lý]**:
@@ -71,7 +68,7 @@
 ## Miền 4. 🛠️ Điều Phối & Quy Trình Agent (Workflows, Commands & Review)
 
 - **RULE-4.1 [Entry Point Duy Nhất Khi Có Issue ID: `/ccba-new-feature`]**:
-  - Khi có Issue ID, LUÔN đề xuất `/ccba-new-feature #<id>` làm bước tiếp theo (8 bước Factory Model). CẤM nhảy thẳng `/ccba-implement`, `/ccba-to-spec`.
+  - Khi có Issue ID, LUÔN đề xuất `/ccba-new-feature #<id>` làm bước tiếp theo (8 bước Factory Model). CẤM nhảy thẳng implement.
 - **RULE-4.2 [Slash Command Parity & Active Commands SSOT]**:
   - BẮT BUỘC đối chiếu `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn tiền tố `/`.
   - Tài liệu `references/*.md` (Tier 2A) CẤM dùng tiền tố `/` (gọi Master Skill kèm reference).
@@ -81,20 +78,20 @@
   - Quét `author.login` thay vì `user.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và review `body` của Copilot kể cả khi là `COMMENTED`. Cấm merge nếu chưa sửa hoặc giải trình.
   - `audit_pr_comments.py` chỉ đọc `Path.cwd() / "walkthrough.md"` (HUB-ADR-0058): BẮT BUỘC ghi nhận `review_id` (`PRR_...`) và inline comment `id` trực tiếp vào `walkthrough.md` tại gốc repo để vượt qua chốt chặn audit.
 - **RULE-4.5 [AI Gateway Spark Auth & Fast-Inference Gating]**:
-  - LiteLLM Server Spark (`100.83.192.30:8090`): Header `Authorization: Bearer sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` cho Swarm map-reduce (< 1s), chỉ route `qwen-local-primary` sau khi GPU hoàn tất warmup.
+  - LiteLLM Server Spark (100.83.192.30:8090): Header `Authorization: Bearer sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` (< 1s), route `qwen-local-primary` sau GPU warmup.
 - **RULE-4.6 [Tier 3 Orchestrator & Deterministic Verification Gating — ADR-0057 / ADR-0058]**:
-  - Router/Orchestrator (`/ccba-platform`) bắt buộc có bản ghi SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`, `bundle: _core`, `is-orchestrated: true`) và tuân thủ Single-Writer Protocol.
-  - Đồng bộ Spoke (`sync_spoke.py`), cờ `--verify` kích hoạt kiểm toán tất định qua `ccba-harness verify-patch` ngay sau khi ghi đĩa hoàn tất, khóa cứng nếu có lỗi.
+  - Router/Orchestrator (`/ccba-platform`): bản ghi SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`, `bundle: _core`, `is-orchestrated: true`), tuân thủ Single-Writer Protocol.
+  - Đồng bộ Spoke (`sync_spoke.py`): cờ `--verify` kích hoạt `ccba-harness verify-patch` sau ghi đĩa, khóa cứng nếu lỗi.
 - **RULE-4.7 [ArtifactMetadata Workspace Invariant]**:
-  - `ArtifactMetadata` CHỈ hợp lệ cho tệp artifact trong thư mục brain (`<appDataDir>\brain\<id>/`). Thao tác ghi tệp mã nguồn/tài liệu trong workspace repository BẮT BUỘC bỏ qua trường này để tránh lỗi schema rejection.
+  - `ArtifactMetadata` CHỈ hợp lệ cho tệp artifact trong thư mục brain (`<appDataDir>\brain\<id>/`). Bỏ qua trường này khi ghi code/docs trong workspace chống schema rejection.
 
 ---
 
 ## Miền 5. 💻 Hạ Tầng & Môi Trường Máy Trạm (Windows, Chrome CDP & Tooling)
 
 - **RULE-5.1 [Chromium VIP Session Engine & CDP Browser Target]**:
-  - Profile độc lập: `~/.gemini/antigravity/chrome_vip` cổng `9222`. `Browser.setDownloadBehavior` BẮT BUỘC gọi qua Browser Target WebSocket (`http://127.0.0.1:{port}/json/version`). Selectors kế thừa từ `TVPLSelectors` trong `selectors.py`.
+  - Chromium VIP: Profile `~/.gemini/antigravity/chrome_vip` cổng `9222`. `Browser.setDownloadBehavior` gọi qua WebSocket (`http://127.0.0.1:{port}/json/version`). Selectors tập trung trong `selectors.py`.
 - **RULE-5.2 [Windows Path Quotes & Hook Protection]**:
-  - Khi IDE tự bọc `hooks.json` trong `"C:\..."`, vô hiệu bằng `{}` và khóa `IsReadOnly = $true` trên PowerShell chống lỗi `Cannot find module`. Timeout $\ge 60\text{s}$ cho integration tests trên Windows.
+  - Windows: IDE tự bọc `hooks.json` trong `"C:\..."` $\rightarrow$ vô hiệu bằng `{}` và khóa `IsReadOnly = $true` trên PowerShell. Timeout $\ge 60\text{s}$ cho tests trên Windows.
 - **RULE-5.3 [Query Sanitization & Turnstile Bypass]**:
   - Query TVPL có dấu `/`, `:`, `-` phải thay bằng dấu cách (`quote_plus`) chống lỗi IIS mã hóa `%2F`.
