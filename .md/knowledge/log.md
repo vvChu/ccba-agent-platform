@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-12] [synthesize] | Đại Chuẩn Hóa 71 Skills ADR-0057, Thăng Cấp Auditor, Ban Hành /ccba-create-pr & Khóa Cứng Zero-Polling (#266, PR #267)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-contribute-to-hub, /ccba-release-feature, /learn & /ccba-session-retrospective)
+- **Affected Files**: `.agents/skills/`, `docs/skills/`, `docs/rules/execution_guardrails.md`, `scripts/governance/audit_skills_hygiene.py`, `scripts/governance/compile_skills_docs.py`, `.md/knowledge/session_learnings.md`, `.md/knowledge/reports/walkthrough.md`
+- **Summary**: Hoàn tất đại chuẩn hóa toàn diện 71 active skills và chu trình kiểm chuẩn phát hành PR #267 giải quyết Issue #266: (1) Chuẩn hóa 100% cấu trúc thư mục kỹ năng theo ADR-0057, dọn sạch dead wood ClaudeKit, quy hoạch tài nguyên non-.md vào `resources/` và `scripts/`, trang bị router index đa tầng `viet_chuyen_nghiep/INDEX.md` (27 submodules); (2) Chính thức thăng cấp công cụ quản trị `scripts/governance/audit_skills_hygiene.py` và tích hợp vào `scripts/validate_skills.py` kèm 40 unit tests tự động; (3) Mở và hoàn tất release PR #267, vượt qua 6/6 checks GitHub Actions CI và đối soát sạch 4/4 comments Copilot Review; (4) Khắc phục triệt để anti-pattern active polling theo phản ánh người dùng qua lệnh `/learn`, xóa bỏ ngoại lệ 2 lần kiểm tra, thiết lập Zero-Tolerance Polling Policy trong `execution_guardrails.md` và bổ sung RULE-4.8 vào `session_learnings.md`; (5) Thăng cấp quy trình tạo Pull Request thành Standalone Kernel Skill độc lập `/ccba-create-pr` (GPI = 14.0 >= 12.0), hoàn thiện Bộ Ba Bất Biến Git Lifecycle (`new-feature` -> `create-pr` -> `release-feature`) và refactor `ccba-contribute-to-hub` kế thừa trực tiếp; (6) Đồng bộ kỹ năng `ccba-mermaid-diagram` vào PIPELINE_MAP và cập nhật chỉ số nền tảng (71 active skills, 0 yellow, 0 red); (7) Đạt 100% Hard Completion Lock (ADR-0058) và đồng bộ Living ADR Matrix.
+
+---
+
 ## [2026-09-10] [synthesize] | Phát Hành Release v2.0-beyond-horizon, Đồng Bộ 5 Spokes & Dogfooding Thẩm Tra Đa Bộ Môn PC13 (15 Tickets)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /boost, /teamwork-preview & /ccba-session-retrospective)
 - **Affected Files**: `.agents/skills/`, `packages/ccba-harness/`, `scripts/governance/`, `scripts/sync_spoke.py`, `scripts/sync_hub_adr_matrix.py`, `docs/adr/`, `.md/dogfood/`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`
