@@ -87,7 +87,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/clarification_patterns.md` | Mẫu câu và kỹ thuật phỏng vấn làm rõ ngữ cảnh khi gặp yêu cầu mơ hồ |
 | `references/brainstorm_templates.md` | Khung mẫu câu hỏi định hướng tư duy và giải pháp sáng tạo |
 | `references/brainstorm_techniques.md` | Các phương pháp tư duy động não (Crazy 8s, SCAMPER, 6 thinking hats) |
-| `references/brainstorm_topics.yaml` | Danh mục chủ đề và góc nhìn gợi mở định hướng nhiệm vụ |
+| `resources/brainstorm_topics.yaml` | Danh mục chủ đề và góc nhìn gợi mở định hướng nhiệm vụ |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

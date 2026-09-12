@@ -64,5 +64,5 @@ Thought 7/9 [VERIFICATION]: [Kết quả kiểm thử thực tế]
 
 - `sequential_core-patterns.md` - Các mẫu rẽ nhánh và sửa đổi suy nghĩ chi tiết.
 - `sequential_advanced-techniques.md` - Kỹ thuật suy nghĩ xoắn ốc (spiral refinement) và hội tụ giả thuyết.
-- `sequential_scripts/process-thought.js` - Script Node.js để lưu vết và validate lịch sử suy nghĩ.
-- `sequential_scripts/format-thought.js` - Script Node.js để định dạng hiển thị hộp suy nghĩ trực quan.
+- `../scripts/process-thought.js` - Script Node.js để lưu vết và validate lịch sử suy nghĩ.
+- `../scripts/format-thought.js` - Script Node.js để định dạng hiển thị hộp suy nghĩ trực quan.
