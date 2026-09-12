@@ -316,6 +316,11 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
         action="store_true",
         help="Enforce mandatory 'gpi' metrics block in skill frontmatter (ADR-0057)",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Run in check mode, verifying skill definitions, catalog sync, and docs sync",
+    )
     args = parser.parse_args(args_list)
 
     skills_files: list[Path] = []

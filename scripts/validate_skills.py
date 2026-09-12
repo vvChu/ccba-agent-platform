@@ -15,6 +15,7 @@ if str(_ROOT) not in sys.path:
 
 from scripts.doc_auditor import DocumentAuditor
 from scripts.governance.compile_catalog import check_catalog_in_sync
+from scripts.governance.compile_skills_docs import check_skills_docs_in_sync
 
 
 def main() -> None:
@@ -34,6 +35,20 @@ def main() -> None:
         print(f"  {msg}", file=sys.stderr)
         print(
             "\n[INFO] Run 'python scripts/governance/compile_catalog.py' to regenerate catalog.yaml.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    # Automated Skills Documentation & Web Assets Sync Check (ADR-0058)
+    docs_in_sync, docs_msg = check_skills_docs_in_sync(project_root)
+    if not docs_in_sync:
+        print(
+            "\n[ERROR] [Skills Docs Compiler] Documentation/Web assets are OUT OF SYNC with SKILL.md:",
+            file=sys.stderr,
+        )
+        print(f"  {docs_msg}", file=sys.stderr)
+        print(
+            "\n[INFO] Run 'python scripts/governance/compile_skills_docs.py --write' to regenerate.",
             file=sys.stderr,
         )
         sys.exit(1)
