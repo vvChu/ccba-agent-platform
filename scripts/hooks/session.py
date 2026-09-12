@@ -59,7 +59,8 @@ class SessionInitHook(BaseHook):
             print("[session-init] Warning: Not inside a Git repository.")
 
         # 2. Create .md directory if missing (Global Rule 1)
-        kb_dir = cwd / ".md"
+        root_dir = Path(git_root) if git_root else cwd
+        kb_dir = root_dir / ".md"
         if not kb_dir.exists():
             try:
                 kb_dir.mkdir(exist_ok=True)
@@ -72,11 +73,38 @@ class SessionInitHook(BaseHook):
         checker_script = (
             Path(__file__).resolve().parents[1] / "spoke" / "check_claudekit_updates.py"
         )
-        if checker_script.exists():
+        scratch_dir = root_dir / ".md" / "scratch"
+        lock_file = scratch_dir / "upstream_sync.lock"
+        lock_timeout_seconds = 300  # 5 minutes KISS timeout
+
+        is_locked = False
+        if lock_file.exists():
             try:
-                subprocess.Popen([sys.executable, str(checker_script)])
-            except Exception:
-                pass
+                import time
+
+                lock_age = time.time() - lock_file.stat().st_mtime
+                if lock_age < lock_timeout_seconds:
+                    is_locked = True
+                    print(
+                        f"[session-init] Upstream sync lock active ({int(lock_age)}s old). Skipping."
+                    )
+                else:
+                    print(
+                        f"[session-init] Stale upstream sync lock detected ({int(lock_age)}s old). Clearing."
+                    )
+                    lock_file.unlink(missing_ok=True)
+            except Exception as e:
+                print(f"[session-init] Warning checking lock file: {e}")
+
+        if not is_locked and checker_script.exists():
+            try:
+                scratch_dir.mkdir(parents=True, exist_ok=True)
+                subprocess.Popen(
+                    [sys.executable, str(checker_script), "--check-only"],
+                    cwd=str(root_dir),
+                )
+            except Exception as e:
+                print(f"[session-init] Warning triggering update checker: {e}")
 
         return HookResult(
             name=self.name,

@@ -18,11 +18,16 @@ from unittest.mock import patch
 import pytest
 import yaml
 from scripts.spoke.upstream_evaluator import (
+    UpstreamEvaluator,
     append_recommendation,
     call_ai_evaluation,
+    check_is_duplicate,
     check_repo_license,
     generate_xia_command,
+    load_eval_cache,
     load_upstream_sources,
+    resolve_upstream_resources,
+    save_eval_cache,
 )
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
@@ -332,3 +337,333 @@ def test_call_ai_evaluation_robust_json_parsing_with_preamble() -> None:
             assert res["should_port"] is True
             assert "Tier 2B: Standalone Kernel Skill" in res["recommended_tier"]
             assert res["decision_result"]["gpi_score"] == 12.5
+
+
+def test_ensure_local_repo_stale_index_lock_cleanup(tmp_path: Path) -> None:
+    """Verify ensure_local_repo detects and cleans up stale .git/index.lock before git operations."""
+    repo_dir = tmp_path / "mock_repo"
+    git_dir = repo_dir / ".git"
+    git_dir.mkdir(parents=True)
+    index_lock = git_dir / "index.lock"
+    index_lock.write_text("lock", encoding="utf-8")
+
+    config = {
+        "name": "mock_repo",
+        "type": "mock",
+        "local_path": repo_dir,
+        "remote_url": "https://github.com/mock/repo",
+        "branch": "main",
+        "sha_file": tmp_path / "mock_sha.txt",
+    }
+
+    evaluator = UpstreamEvaluator()
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value.returncode = 0
+        success = evaluator.ensure_local_repo(config)
+        assert success is True
+        assert not index_lock.exists()
+
+
+def test_ensure_local_repo_clean_clone_fallback(tmp_path: Path) -> None:
+    """Verify ensure_local_repo cleans up corrupted repo and triggers clean clone fallback."""
+    repo_dir = tmp_path / "broken_repo"
+    repo_dir.mkdir()
+    (repo_dir / "corrupted_file.txt").write_text("broken", encoding="utf-8")
+
+    config = {
+        "name": "broken_repo",
+        "type": "broken",
+        "local_path": repo_dir,
+        "remote_url": "https://github.com/broken/repo",
+        "branch": "main",
+        "sha_file": tmp_path / "broken_sha.txt",
+    }
+
+    evaluator = UpstreamEvaluator()
+    calls = []
+
+    def mock_subprocess_run(cmd, **kwargs):
+        calls.append(cmd)
+        if "fetch" in cmd:
+            import subprocess
+
+            raise subprocess.SubprocessError("Corrupted packfile")
+        from unittest.mock import MagicMock
+
+        res = MagicMock()
+        res.returncode = 0
+        return res
+
+    with patch("subprocess.run", side_effect=mock_subprocess_run):
+        success = evaluator.ensure_local_repo(config)
+        assert success is True
+        # Verify clone command was executed as fallback
+        assert any("clone" in c for c in calls)
+
+
+def test_resolve_upstream_resources(tmp_path: Path) -> None:
+    """Verify resolve_upstream_resources resolves nested skills, workflows, and governance rules."""
+    # 1. Nested skill
+    nested_skill_dir = tmp_path / "claude" / "skills" / "document-skills" / "docx"
+    nested_skill_dir.mkdir(parents=True)
+    (nested_skill_dir / "SKILL.md").write_text("# Docx Skill", encoding="utf-8")
+
+    # 2. Standard skill
+    standard_skill_dir = tmp_path / "claude" / "skills" / "banner-design"
+    standard_skill_dir.mkdir(parents=True)
+    (standard_skill_dir / "SKILL.md").write_text("# Banner Skill", encoding="utf-8")
+
+    # 3. Domain workflow
+    wf_dir = tmp_path / "claude" / "workflows"
+    wf_dir.mkdir(parents=True)
+    (wf_dir / "campaign-workflow.md").write_text("# Campaign Workflow", encoding="utf-8")
+
+    # 4. Governance rule
+    (wf_dir / "development-rules.md").write_text("# Dev Rules", encoding="utf-8")
+
+    resources = resolve_upstream_resources(tmp_path)
+    res_map = {r["name"]: r for r in resources}
+
+    assert "document-skills/docx" in res_map
+    assert res_map["document-skills/docx"]["type"] == "skill"
+
+    assert "banner-design" in res_map
+    assert res_map["banner-design"]["type"] == "skill"
+
+    assert "campaign-workflow" in res_map
+    assert res_map["campaign-workflow"]["type"] == "workflow"
+
+    assert "development-rules" in res_map
+    assert res_map["development-rules"]["type"] == "governance_rule"
+
+
+def test_check_is_duplicate_fuzzy_and_aliases() -> None:
+    """Verify fuzzy deduplication detects prefixes (ck-, ccba-), aliases, and nested leaves."""
+    existing_skills = ["ccba-git-guardrails", "ccba-xu-ly-van-phong", "ccba-ask"]
+    existing_workflows = ["ccba-run-qc-pipeline"]
+
+    # ck-git -> git -> alias ccba-git-guardrails
+    is_dup, match = check_is_duplicate("ck-git", existing_skills, existing_workflows)
+    assert is_dup is True
+    assert match == "ccba-git-guardrails"
+
+    # nested skill docx -> alias ccba-xu-ly-van-phong
+    is_dup, match = check_is_duplicate(
+        "document-skills/docx", existing_skills, existing_workflows
+    )
+    assert is_dup is True
+    assert match == "ccba-xu-ly-van-phong"
+
+    # leaf pptx with no existing skill
+    is_dup, match = check_is_duplicate("document-skills/pptx", existing_skills, existing_workflows)
+    assert is_dup is False
+
+    # completely new skill
+    is_dup, match = check_is_duplicate("brand-new-evaluator", existing_skills, existing_workflows)
+    assert is_dup is False
+
+
+def test_eval_cache_load_save_and_hit(tmp_path: Path) -> None:
+    """Verify evaluation cache loads, saves, and avoids re-evaluation on cache hit."""
+    cache_file = tmp_path / "upstream_eval_cache.json"
+
+    with patch("scripts.spoke.upstream_evaluator.CACHE_FILE", cache_file):
+        test_cache = {
+            "mock:my-cached-skill:abc1234567890123": {
+                "should_port": True,
+                "score": 95,
+                "recommended_tier": "Tier 2B",
+                "reason": "Cached result",
+            }
+        }
+        save_eval_cache(test_cache)
+        loaded = load_eval_cache()
+        assert "mock:my-cached-skill:abc1234567890123" in loaded
+
+        with patch("scripts.spoke.upstream_evaluator.get_existing_elements", return_value=([], [])):
+            with patch("hashlib.sha256") as mock_hash:
+                mock_hash.return_value.hexdigest.return_value = "abc1234567890123"
+                res = call_ai_evaluation(
+                    repo_type="mock",
+                    skill_name="my-cached-skill",
+                    content="content",
+                    local_path=".md/scratch/repos/mock",
+                    use_cache=True,
+                )
+                assert res["reason"] == "Cached result"
+                assert "/ccba-xia .md/scratch/repos/mock my-cached-skill --port" in res["xia_command"]
+
+
+def test_1click_xia_command_local_path() -> None:
+    """Verify 1-click porting command targets local repo path."""
+    cmd = generate_xia_command(".md/scratch/repos/claudekit-marketing", "document-skills/docx", "--port")
+    assert cmd == "/ccba-xia .md/scratch/repos/claudekit-marketing document-skills/docx --port"
+
+
+def test_upstream_sync_mutex_lock(tmp_path: Path) -> None:
+    """Verify mutex lock upstream_sync.lock prevents concurrent synchronization runs."""
+    lock_file = tmp_path / "upstream_sync.lock"
+
+    with patch("scripts.spoke.upstream_evaluator.LOCK_FILE", lock_file):
+        # 1. Active lock prevents execution
+        lock_file.write_text("pid: 99999", encoding="utf-8")
+        evaluator = UpstreamEvaluator(configs=[])
+        evaluator.sync_and_evaluate()
+        # Still has content, wasn't unlinked by another run
+        assert lock_file.exists()
+
+        # 2. Stale lock (> 300s) is cleared
+        import os
+        import time
+
+        old_time = time.time() - 400
+        os.utime(lock_file, (old_time, old_time))
+        evaluator.sync_and_evaluate()
+        # After execution completes, lock file should be unlinked
+        assert not lock_file.exists()
+
+
+def test_zero_scan_init_trap_resolution(tmp_path: Path) -> None:
+    """Verify missing local_sha triggers initial full scan rather than returning early."""
+    repo_dir = tmp_path / "init_repo"
+    repo_dir.mkdir()
+    skill_dir = repo_dir / "claude" / "skills" / "init-skill"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("# Init Skill", encoding="utf-8")
+
+    sha_file = tmp_path / "init_sha.txt"
+    config = {
+        "name": "init_repo",
+        "type": "init",
+        "local_path": repo_dir,
+        "remote_url": "https://github.com/init/repo",
+        "branch": "main",
+        "sha_file": sha_file,
+    }
+
+    evaluator = UpstreamEvaluator(configs=[config])
+    with patch.object(evaluator, "get_remote_sha", return_value="deadbeef12345678"):
+        with patch.object(evaluator, "ensure_local_repo", return_value=True):
+            with patch.object(evaluator, "scan_and_evaluate_repo") as mock_scan:
+                evaluator.check_and_evaluate_single(config, check_only=True)
+                mock_scan.assert_called_once_with(
+                    config, "deadbeef12345678", check_only=True, limit=None, fast=False
+                )
+
+
+def test_zero_scan_init_trap_with_existing_git_repo(tmp_path: Path) -> None:
+    """Verify missing sha_file triggers initial scan even when local clone already has .git folder."""
+    repo_dir = tmp_path / "cloned_repo"
+    repo_dir.mkdir()
+    (repo_dir / ".git").mkdir()
+
+    sha_file = tmp_path / "cloned_sha.txt"
+    config = {
+        "name": "cloned_repo",
+        "type": "cloned",
+        "local_path": repo_dir,
+        "remote_url": "https://github.com/cloned/repo",
+        "branch": "main",
+        "sha_file": sha_file,
+    }
+
+    evaluator = UpstreamEvaluator(configs=[config])
+    assert evaluator.get_local_sha(config) == ""
+
+    with patch.object(evaluator, "get_remote_sha", return_value="aabbccddeeff1122"):
+        with patch.object(evaluator, "ensure_local_repo", return_value=True):
+            with patch.object(evaluator, "scan_and_evaluate_repo") as mock_scan:
+                evaluator.check_and_evaluate_single(config, check_only=False)
+                mock_scan.assert_called_once_with(
+                    config, "aabbccddeeff1122", check_only=False, limit=None, fast=False
+                )
+                assert sha_file.exists()
+                assert sha_file.read_text(encoding="utf-8").strip() == "aabbccddeeff1122"
+
+
+def test_check_is_duplicate_claudekit_prefixes_and_colons() -> None:
+    """Verify fuzzy deduplication detects ckm-, ckm:, cke-, ck: prefixes."""
+    existing_skills = ["ccba-xu-ly-van-phong", "ccba-ask", "ccba-code-review"]
+    existing_workflows = ["ccba-run-qc-pipeline"]
+
+    is_dup, match = check_is_duplicate("ckm:docx", existing_skills, existing_workflows)
+    assert is_dup is True
+    assert match == "ccba-xu-ly-van-phong"
+
+    is_dup, match = check_is_duplicate("ckm-ask", existing_skills, existing_workflows)
+    assert is_dup is True
+    assert match == "ccba-ask"
+
+    is_dup, match = check_is_duplicate("cke:review", existing_skills, existing_workflows)
+    assert is_dup is True
+    assert match == "ccba-code-review"
+
+
+def test_append_recommendation_updates_existing_skill_in_place(tmp_path: Path) -> None:
+    """Verify append_recommendation updates existing skill entry in-place instead of ignoring it."""
+    recs_file = tmp_path / "port_recommendations.md"
+    with patch("scripts.spoke.upstream_evaluator.RECOMMENDATIONS_FILE", recs_file):
+        initial_result = {
+            "should_port": False,
+            "score": 30,
+            "recommended_tier": "Reject",
+            "target_bundle": "_core",
+            "disable_model_invocation": True,
+            "reason": "Old evaluation: reject",
+            "actionable_steps": ["Ignore"],
+            "xia_command": "/ccba-xia .md/scratch/repos/mock test-skill --compare",
+        }
+        append_recommendation("mock", "test-skill", initial_result)
+        content_1 = recs_file.read_text(encoding="utf-8")
+        assert "Old evaluation: reject" in content_1
+
+        updated_result = {
+            "should_port": True,
+            "score": 90,
+            "recommended_tier": "Tier 2B: Standalone Kernel Skill",
+            "target_bundle": "_software",
+            "disable_model_invocation": False,
+            "reason": "New evaluation: approved",
+            "actionable_steps": ["Run port"],
+            "xia_command": "/ccba-xia .md/scratch/repos/mock test-skill --port",
+        }
+        append_recommendation("mock", "test-skill", updated_result)
+        content_2 = recs_file.read_text(encoding="utf-8")
+        assert "New evaluation: approved" in content_2
+        assert "Old evaluation: reject" not in content_2
+        # Ensure it didn't duplicate the entry
+        assert content_2.count("`test-skill`") == 1
+
+
+def test_evaluate_repo_diff_handles_deleted_file_gracefully(tmp_path: Path) -> None:
+    """Verify evaluate_repo_diff skips deleted files without raising FileNotFoundError."""
+    repo_dir = tmp_path / "diff_repo"
+    repo_dir.mkdir()
+
+    evaluator = UpstreamEvaluator()
+
+    def mock_subprocess_run(cmd, **kwargs):
+        from unittest.mock import MagicMock
+
+        res = MagicMock()
+        if "diff" in cmd:
+            res.returncode = 0
+            res.stdout = "claude/skills/deleted-skill/SKILL.md\n"
+            return res
+        elif "show" in cmd:
+            res.returncode = 128
+            res.stdout = ""
+            return res
+        res.returncode = 0
+        return res
+
+    with patch("subprocess.run", side_effect=mock_subprocess_run):
+        # Deleted file does not exist on disk, should skip gracefully and not raise
+        evaluator.evaluate_repo_diff(
+            repo_path=repo_dir,
+            base_sha="11111111",
+            head_sha="22222222",
+            repo_type="diff_repo",
+            remote_url="https://github.com/diff/repo",
+        )
+
