@@ -1,6 +1,6 @@
 # ccba-session-retrospective
 
-> **Mô tả ngắn**: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa kỹ năng trực tiếp, kích hoạt Governance Gate và dọn dẹp workspace.
+> **Mô tả ngắn**: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa kỹ năng trực tiếp, đồng bộ ADR Matrix, tái biên dịch tài liệu, kích hoạt Governance Gate và dọn dẹp workspace.
 
 ---
 
@@ -30,7 +30,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-session-retrospective
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa kỹ năng trực tiếp, kích hoạt Governance Gate và dọn dẹp workspace.
+Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa kỹ năng trực tiếp, đồng bộ ADR Matrix, tái biên dịch tài liệu, kích hoạt Governance Gate và dọn dẹp workspace.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 

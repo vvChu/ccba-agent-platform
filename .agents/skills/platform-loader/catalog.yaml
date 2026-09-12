@@ -888,7 +888,8 @@ skills:
 - name: ccba-session-retrospective
   bundle: _core
   description: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến
-    hóa kỹ năng trực tiếp, kích hoạt Governance Gate và dọn dẹp workspace.
+    hóa kỹ năng trực tiếp, đồng bộ ADR Matrix, tái biên dịch tài liệu, kích hoạt Governance
+    Gate và dọn dẹp workspace.
   triggers:
   - retrospective
   - session learnings
