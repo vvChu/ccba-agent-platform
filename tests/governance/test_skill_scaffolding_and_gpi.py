@@ -687,7 +687,7 @@ def test_ccba_xia_phase3_spec_contract() -> None:
 
     # Pha 3: Analyze
     assert "None required / Không yêu cầu" in body
-    assert "MODES.md" in body
+    assert "modes.md" in body
 
     # Pha 4: Challenge questions
     assert "Chức năng này có phải là 100% thuật toán thuần túy cần đưa vào packages/ không?" in body
@@ -712,8 +712,8 @@ def test_ccba_xia_phase3_spec_contract() -> None:
 
 
 def test_ccba_xia_modes_spec_contract() -> None:
-    """Verify ccba-xia MODES.md has no duplicate invalid combination warnings."""
-    modes_file = PROJECT_ROOT / ".agents" / "skills" / "ccba-xia" / "MODES.md"
+    """Verify ccba-xia modes.md has no duplicate invalid combination warnings."""
+    modes_file = PROJECT_ROOT / ".agents" / "skills" / "ccba-xia" / "references" / "modes.md"
     assert modes_file.exists()
     content = modes_file.read_text(encoding="utf-8")
 
