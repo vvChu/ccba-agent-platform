@@ -1,6 +1,6 @@
 # CCBA Agent Platform Skills
 
-> Curated registry of 69 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
+> Curated registry of 70 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
 
 ## Navigation Portals
 
@@ -12,11 +12,11 @@
 
 ## Core Endpoints & Documentation
 
-- [Skills Index](skills/INDEX.md): Markdown catalog index for all 69 skills.
+- [Skills Index](skills/INDEX.md): Markdown catalog index for all 70 skills.
 - [Skills FAQ](skills/FAQ.md): Frequently asked questions on Hub-Spoke, invocation, and troubleshooting.
-- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 69 skills.
+- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 70 skills.
 
-## All Active Skills (69 Skills)
+## All Active Skills (70 Skills)
 
 - [platform-loader](skills/platform-loader.md): /platform-loader — Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn bộ skills và rules.
 - [bigbim-classification](skills/bigbim-classification.md): /bigbim-classification — Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass 200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
@@ -40,6 +40,7 @@
 - [ccba-completion-checklist](skills/ccba-completion-checklist.md): /ccba-completion-checklist — Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện hành. Hỗ trợ xuất Markdown và Word (.docx).
 - [ccba-contribute-to-hub](skills/ccba-contribute-to-hub.md): /ccba-contribute-to-hub — Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
 - [ccba-copywriting](skills/ccba-copywriting.md): /ccba-copywriting — Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa và áp dụng các công thức viết thuyết phục (AIDA, PAS).
+- [ccba-create-pr](skills/ccba-create-pr.md): /ccba-create-pr — Kiểm tra chất lượng code (Shift-Left), Main Branch Guard, đẩy code và mở GitHub Pull Request kèm rào chắn Dual-Gate CI & Copilot Review
 - [ccba-design](skills/ccba-design.md): /ccba-design — Design brand identity, logos, banners, and visual assets. Use for brand systems, design tokens, corporate identity programs. Not for UI code patterns.
 - [ccba-diagnosing-bugs](skills/ccba-diagnosing-bugs.md): /ccba-diagnosing-bugs — Diagnosis loop for hard bugs and performance regressions. Use when the user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
 - [ccba-docs-manager](skills/ccba-docs-manager.md): /ccba-docs-manager — Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
