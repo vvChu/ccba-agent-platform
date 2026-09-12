@@ -69,19 +69,12 @@ def test_real_codebase_skills_hygiene_100_percent_compliant() -> None:
     red_skills = [r for r in results if r.status == "RED"]
     yellow_skills = [r for r in results if r.status == "YELLOW"]
 
-    assert len(red_skills) == 0, (
-        f"Detected {len(red_skills)} RED skills:\n"
-        + "\n".join(
-            f"  * {r.name}: {[i.detail for i in r.issues if i.severity == 'RED']}"
-            for r in red_skills
-        )
+    assert len(red_skills) == 0, f"Detected {len(red_skills)} RED skills:\n" + "\n".join(
+        f"  * {r.name}: {[i.detail for i in r.issues if i.severity == 'RED']}" for r in red_skills
     )
-    assert len(yellow_skills) == 0, (
-        f"Detected {len(yellow_skills)} YELLOW skills:\n"
-        + "\n".join(
-            f"  * {r.name}: {[i.detail for i in r.issues if i.severity == 'YELLOW']}"
-            for r in yellow_skills
-        )
+    assert len(yellow_skills) == 0, f"Detected {len(yellow_skills)} YELLOW skills:\n" + "\n".join(
+        f"  * {r.name}: {[i.detail for i in r.issues if i.severity == 'YELLOW']}"
+        for r in yellow_skills
     )
 
     clean, msg = check_skills_hygiene(PROJECT_ROOT)
@@ -419,21 +412,21 @@ def test_cli_single_skill_fail(tmp_path: Path) -> None:
     assert exit_code == 1
 
 
-def test_cli_json_and_report_output(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_cli_json_and_report_output(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """Verify CLI --json outputs valid JSON and --report writes report file."""
     skill_dir = tmp_path / "cli-json-skill"
     skill_md = _create_minimal_valid_skill(skill_dir, "cli-json-skill")
     report_file = tmp_path / "out_report.md"
 
-    exit_code = main([
-        "--file",
-        str(skill_md),
-        "--json",
-        "--report",
-        str(report_file),
-    ])
+    exit_code = main(
+        [
+            "--file",
+            str(skill_md),
+            "--json",
+            "--report",
+            str(report_file),
+        ]
+    )
     assert exit_code == 0
     assert report_file.exists()
     assert report_file.read_text(encoding="utf-8").startswith("# 📊")
@@ -612,4 +605,3 @@ def test_cli_no_check_returns_zero_on_violations(tmp_path: Path) -> None:
 
     exit_code = main(["--file", str(skill_md), "--no-check"])
     assert exit_code == 0
-

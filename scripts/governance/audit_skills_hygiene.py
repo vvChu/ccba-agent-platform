@@ -40,9 +40,7 @@ RE_DEAD_WOOD: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bgit-manager\b"), "ClaudeKit Tool (git-manager)"),
     (re.compile(r"</?tasks\b[^>]*>"), "Claude Tasks XML tag (<tasks>)"),
     (
-        re.compile(
-            r"\b(TaskCreate|TaskUpdate|TaskList|TaskGet|TaskComplete|TaskDelete)\b"
-        ),
+        re.compile(r"\b(TaskCreate|TaskUpdate|TaskList|TaskGet|TaskComplete|TaskDelete)\b"),
         "Claude Native Tasks (TaskCreate/Update/List)",
     ),
     (re.compile(r"\bAskUserQuestion\b"), "Claude Tool (AskUserQuestion)"),
@@ -176,9 +174,7 @@ def resolve_uncovered_references(
                         if rf.name == "INDEX.md":
                             covered_routers.add(rf)
 
-    return sorted(
-        rf.relative_to(ref_dir).as_posix() for rf in ref_files if rf not in covered_files
-    )
+    return sorted(rf.relative_to(ref_dir).as_posix() for rf in ref_files if rf not in covered_files)
 
 
 # ---------------------------------------------------------------------------
@@ -602,13 +598,15 @@ def generate_report(
             f"| **{pname}** (`{pid}`) | {p_total} | {p_green} | {p_yellow} | {p_red} | {priority} |"
         )
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 3. Danh Sách Chi Tiết Các Kỹ Năng Nhóm Đỏ (🔴 Cần Nâng Cấp)",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 3. Danh Sách Chi Tiết Các Kỹ Năng Nhóm Đỏ (🔴 Cần Nâng Cấp)",
+            "",
+        ]
+    )
 
     if not red_skills:
         lines.append("🎉 *Không có kỹ năng nào thuộc Nhóm Đỏ!*")
@@ -626,13 +624,15 @@ def generate_report(
                 )
             lines.append("")
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 4. Danh Sách Chi Tiết Các Kỹ Năng Nhóm Vàng (🟡 Cần Hoàn Thiện)",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 4. Danh Sách Chi Tiết Các Kỹ Năng Nhóm Vàng (🟡 Cần Hoàn Thiện)",
+            "",
+        ]
+    )
 
     if not yellow_skills:
         lines.append("🎉 *Không có kỹ năng nào thuộc Nhóm Vàng!*")
@@ -647,15 +647,17 @@ def generate_report(
                 f"| `{r.name}` | {r.portal_name} | v{r.version} | {r.num_references} | {issues_str} |"
             )
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 5. Danh Sách Các Kỹ Năng Đạt Chuẩn Hoàn Toàn (🟢 Nhóm Xanh)",
-        "",
-        "| Tên Kỹ Năng | Cổng Điều Hướng | Phiên Bản | Tier / Bundle | References | Level 3 Index |",
-        "| :--- | :--- | :---: | :---: | :---: | :---: |",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 5. Danh Sách Các Kỹ Năng Đạt Chuẩn Hoàn Toàn (🟢 Nhóm Xanh)",
+            "",
+            "| Tên Kỹ Năng | Cổng Điều Hướng | Phiên Bản | Tier / Bundle | References | Level 3 Index |",
+            "| :--- | :--- | :---: | :---: | :---: | :---: |",
+        ]
+    )
 
     for r in green_skills:
         l3_str = "✅ Đã có" if r.has_level3_index or r.num_references == 0 else "N/A"
@@ -663,20 +665,22 @@ def generate_report(
             f"| `{r.name}` | {r.portal_name} | v{r.version} | `{r.tier}` / `{r.bundle}` | {r.num_references} | {l3_str} |"
         )
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 6. Lộ Trình Nâng Cấp Khuyến Nghị (Batch Refactoring Plan)",
-        "",
-        "Thay vì cập nhật toàn bộ cùng lúc gây vi phạm `simplify_gate` và race condition:",
-        "1. **Đợt 1 — Xử lý Nhóm Đỏ (Cụm Kỹ Nghệ & Quản trị):** Xử lý dứt điểm các tàn dư ClaudeKit, bashisms và file root sai vị trí.",
-        "2. **Đợt 2 — Bổ sung Level 3 Reference Index cho Nhóm Vàng:** Chèn bảng chỉ mục tham chiếu chi tiết và chuẩn hóa metadata.",
-        "3. **Mỗi đợt tuân thủ nghiêm ngặt:** Chạy Recompilation Gate (`compile_catalog.py`, `compile_skills_docs.py --write`), đạt `verify-patch --preset skill` và commit riêng rẽ.",
-        "",
-        "---",
-        "*Báo cáo được tạo tự động bởi CCBA Platform Quality Auditor*",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 6. Lộ Trình Nâng Cấp Khuyến Nghị (Batch Refactoring Plan)",
+            "",
+            "Thay vì cập nhật toàn bộ cùng lúc gây vi phạm `simplify_gate` và race condition:",
+            "1. **Đợt 1 — Xử lý Nhóm Đỏ (Cụm Kỹ Nghệ & Quản trị):** Xử lý dứt điểm các tàn dư ClaudeKit, bashisms và file root sai vị trí.",
+            "2. **Đợt 2 — Bổ sung Level 3 Reference Index cho Nhóm Vàng:** Chèn bảng chỉ mục tham chiếu chi tiết và chuẩn hóa metadata.",
+            "3. **Mỗi đợt tuân thủ nghiêm ngặt:** Chạy Recompilation Gate (`compile_catalog.py`, `compile_skills_docs.py --write`), đạt `verify-patch --preset skill` và commit riêng rẽ.",
+            "",
+            "---",
+            "*Báo cáo được tạo tự động bởi CCBA Platform Quality Auditor*",
+        ]
+    )
 
     return "\n".join(lines)
 
@@ -732,8 +736,7 @@ def check_skills_hygiene(
         ]
         return (
             False,
-            f"Skill '{result.name}' failed hygiene audit ({result.status}):\n"
-            + "\n".join(details),
+            f"Skill '{result.name}' failed hygiene audit ({result.status}):\n" + "\n".join(details),
         )
 
     # Workspace-wide audit

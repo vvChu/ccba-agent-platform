@@ -448,9 +448,7 @@ def test_check_is_duplicate_fuzzy_and_aliases() -> None:
     assert match == "ccba-git-guardrails"
 
     # nested skill docx -> alias ccba-xu-ly-van-phong
-    is_dup, match = check_is_duplicate(
-        "document-skills/docx", existing_skills, existing_workflows
-    )
+    is_dup, match = check_is_duplicate("document-skills/docx", existing_skills, existing_workflows)
     assert is_dup is True
     assert match == "ccba-xu-ly-van-phong"
 
@@ -491,12 +489,16 @@ def test_eval_cache_load_save_and_hit(tmp_path: Path) -> None:
                     use_cache=True,
                 )
                 assert res["reason"] == "Cached result"
-                assert "/ccba-xia .md/scratch/repos/mock my-cached-skill --port" in res["xia_command"]
+                assert (
+                    "/ccba-xia .md/scratch/repos/mock my-cached-skill --port" in res["xia_command"]
+                )
 
 
 def test_1click_xia_command_local_path() -> None:
     """Verify 1-click porting command targets local repo path."""
-    cmd = generate_xia_command(".md/scratch/repos/claudekit-marketing", "document-skills/docx", "--port")
+    cmd = generate_xia_command(
+        ".md/scratch/repos/claudekit-marketing", "document-skills/docx", "--port"
+    )
     assert cmd == "/ccba-xia .md/scratch/repos/claudekit-marketing document-skills/docx --port"
 
 
@@ -666,4 +668,3 @@ def test_evaluate_repo_diff_handles_deleted_file_gracefully(tmp_path: Path) -> N
             repo_type="diff_repo",
             remote_url="https://github.com/diff/repo",
         )
-

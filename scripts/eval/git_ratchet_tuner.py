@@ -729,7 +729,17 @@ class GitRatchetTuner:
             ]
         elif any(
             k in self.config.skill_name.lower()
-            for k in ["legal", "tvpl", "vbpl", "law", "advisor", "ingest", "tracker", "digest", "qc"]
+            for k in [
+                "legal",
+                "tvpl",
+                "vbpl",
+                "law",
+                "advisor",
+                "ingest",
+                "tracker",
+                "digest",
+                "qc",
+            ]
         ):
             strategies = [
                 (

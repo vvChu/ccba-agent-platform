@@ -1096,7 +1096,9 @@ class UpstreamEvaluator:
                     ):
                         actual_type = "governance_rule"
 
-                    print(f"[Evaluator] Found new/modified {actual_type}: '{raw_name}' in {repo_type}")
+                    print(
+                        f"[Evaluator] Found new/modified {actual_type}: '{raw_name}' in {repo_type}"
+                    )
 
                     show_res = subprocess.run(
                         ["git", "show", f"{head_sha}:{f}"],
@@ -1209,7 +1211,9 @@ class UpstreamEvaluator:
 
         if fast:
             if not local_path.exists():
-                print(f"[Upstream Check] Fast mode: local repo '{repo_type}' does not exist. Skipping.")
+                print(
+                    f"[Upstream Check] Fast mode: local repo '{repo_type}' does not exist. Skipping."
+                )
                 return
             remote_sha = self.get_local_sha(config)
             if not remote_sha:

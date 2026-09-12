@@ -72,7 +72,9 @@ def test_portals_yaml_has_five_standard_portals(portal_skill_names) -> None:
     assert portal_ids == expected_ids, f"Portals mismatch: {portal_ids ^ expected_ids}"
 
 
-def test_all_active_skills_in_portals_yaml_exactly_match(active_skill_names, portal_skill_names) -> None:
+def test_all_active_skills_in_portals_yaml_exactly_match(
+    active_skill_names, portal_skill_names
+) -> None:
     """Ensure 100% 1-to-1 match between active skills and portals.yaml."""
     _, portal_skills = portal_skill_names
     missing_in_portals = active_skill_names - portal_skills
@@ -80,7 +82,9 @@ def test_all_active_skills_in_portals_yaml_exactly_match(active_skill_names, por
 
     assert not missing_in_portals, f"Active skills missing from portals.yaml: {missing_in_portals}"
     assert not orphans_in_portals, f"Skills in portals.yaml not found on disk: {orphans_in_portals}"
-    assert len(active_skill_names) == 69, f"Expected exactly 69 active skills, found {len(active_skill_names)}"
+    assert len(active_skill_names) == 69, (
+        f"Expected exactly 69 active skills, found {len(active_skill_names)}"
+    )
 
 
 def test_zero_duplicate_skills_across_portals(portal_skill_names) -> None:
@@ -124,7 +128,9 @@ def test_docs_artifacts_integrity() -> None:
     for art in artifacts:
         assert art.exists(), f"Artifact missing: {art}"
         content = art.read_text(encoding="utf-8")
-        assert len(content.strip()) > 200, f"Artifact suspiciously small ({len(content)} bytes): {art}"
+        assert len(content.strip()) > 200, (
+            f"Artifact suspiciously small ({len(content)} bytes): {art}"
+        )
 
 
 def test_all_active_skills_have_pipeline_trail_mapping(active_skill_names) -> None:
@@ -139,5 +145,6 @@ def test_validate_skills_cli_check_flag() -> None:
 
     auditor = DocumentAuditor()
     exit_code = auditor.run_skills_validation_cli(["--check"])
-    assert exit_code == 0, f"run_skills_validation_cli(['--check']) failed with exit code {exit_code}"
-
+    assert exit_code == 0, (
+        f"run_skills_validation_cli(['--check']) failed with exit code {exit_code}"
+    )

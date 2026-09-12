@@ -80,7 +80,6 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "downstream": "Kỹ năng lập trình hoặc thẩm tra",
         "role": "Định vị nhanh các Deep Seams và tệp mã nguồn liên quan.",
     },
-
     # 2. core_engineering (18 skills)
     "ccba-grilling": {
         "upstream": "Ý tưởng sơ khai / Yêu cầu người dùng (Idea Phase)",
@@ -172,7 +171,6 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "downstream": "Phân tích nhật ký / Giám sát lỗi",
         "role": "Ghi log an toàn luồng (Thread-safe), chống hỏng mã hóa và race condition.",
     },
-
     # 3. bim_aiqc (7 skills)
     "bigbim-classification": {
         "upstream": "Mô hình BIM sơ bộ / Hồ sơ thiết kế",
@@ -209,7 +207,6 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "downstream": "ccba-ai-qc / Báo cáo thẩm tra PCCC",
         "role": "Thẩm tra lỗi thiết kế PCCC theo cơ chế Semantic Map-Reduce và QCVN 06.",
     },
-
     # 4. legal_compliance (10 skills)
     "ccba-legal-advisor": {
         "upstream": "Tình huống pháp lý xây dựng cần làm rõ",
@@ -261,7 +258,6 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "downstream": "Bài viết hoàn thiện chuẩn văn phong",
         "role": "Biên tập bài viết kỹ thuật và tài liệu truyền thông chuẩn văn phong CCBA.",
     },
-
     # 5. governance_upkeep (25 skills)
     "ccba-adr-lifecycle": {
         "upstream": "Quyết định kiến trúc quan trọng nảy sinh",
@@ -400,6 +396,7 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
 # Core Data Models & Parsing Helpers
 # ---------------------------------------------------------------------------
 
+
 def extract_frontmatter_and_body(file_path: Path) -> tuple[dict[str, Any], str]:
     """Parse YAML frontmatter and body from a markdown file."""
     try:
@@ -518,25 +515,27 @@ def get_all_skills_data(hub_root: Path = HUB_ROOT) -> list[dict[str, Any]]:
             total = sum([s, k, a, p])
             gpi_str = f"S={s} | K={k} | A={a} | P={p} (Tổng: {total:.1f})"
 
-        skills.append({
-            "name": name,
-            "description": description,
-            "bundle": bundle,
-            "tier": tier_raw,
-            "tier_display": tier_display,
-            "tier_badge": tier_badge,
-            "command": command,
-            "user_invocable": user_invocable,
-            "disable_model_invocation": disable_model_inv,
-            "invocable_display": invocable_display,
-            "invocable_badge": invocable_badge,
-            "triggers": triggers,
-            "portal": portal_info,
-            "pipeline": pipeline_info,
-            "gpi_str": gpi_str,
-            "body": body,
-            "skill_path": str(sf.relative_to(hub_root)).replace("\\", "/"),
-        })
+        skills.append(
+            {
+                "name": name,
+                "description": description,
+                "bundle": bundle,
+                "tier": tier_raw,
+                "tier_display": tier_display,
+                "tier_badge": tier_badge,
+                "command": command,
+                "user_invocable": user_invocable,
+                "disable_model_invocation": disable_model_inv,
+                "invocable_display": invocable_display,
+                "invocable_badge": invocable_badge,
+                "triggers": triggers,
+                "portal": portal_info,
+                "pipeline": pipeline_info,
+                "gpi_str": gpi_str,
+                "body": body,
+                "skill_path": str(sf.relative_to(hub_root)).replace("\\", "/"),
+            }
+        )
 
     # Sort with platform-loader first, then alphabetically
     skills.sort(key=lambda s: (0 if s["name"] == "platform-loader" else 1, s["name"]))
@@ -546,6 +545,7 @@ def get_all_skills_data(hub_root: Path = HUB_ROOT) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Generator 1: Standardized 5-Section Markdown Documentation
 # ---------------------------------------------------------------------------
+
 
 def generate_skill_markdown(skill: dict[str, Any]) -> str:
     """Generate standardized 5-section Markdown doc for a single skill."""
@@ -561,7 +561,11 @@ def generate_skill_markdown(skill: dict[str, Any]) -> str:
     triggers = skill["triggers"]
     gpi_str = skill["gpi_str"]
 
-    triggers_list = "\n".join([f"- `{t}`" for t in triggers]) if triggers else "- Không khai báo triggers cụ thể"
+    triggers_list = (
+        "\n".join([f"- `{t}`" for t in triggers])
+        if triggers
+        else "- Không khai báo triggers cụ thể"
+    )
 
     gpi_row = f"| **Điểm Đánh Giá GPI (ADR-0057)** | `{gpi_str}` |\n" if gpi_str else ""
 
@@ -614,8 +618,8 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 {triggers_list}
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
-- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: {pipeline['role']}
-- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **{pipeline['upstream']}**
+- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: {pipeline["role"]}
+- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **{pipeline["upstream"]}**
 
 ### Khi Nào KHÔNG Nên Dùng (Anti-patterns)
 - Không dùng nếu cần tư vấn định hướng ban đầu: hãy gọi `/ccba-ask`.
@@ -628,18 +632,18 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 Kỹ năng `{name}` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
 
 ```text
-[ {pipeline['upstream']} ]
+[ {pipeline["upstream"]} ]
           │
           ▼
-    >>> [ {name} ] <<<  ({pipeline['role']})
+    >>> [ {name} ] <<<  ({pipeline["role"]})
           │
           ▼
-[ {pipeline['downstream']} ]
+[ {pipeline["downstream"]} ]
 ```
 
-- **Đầu vào (Upstream)**: Nhận bối cảnh từ `{pipeline['upstream']}`.
+- **Đầu vào (Upstream)**: Nhận bối cảnh từ `{pipeline["upstream"]}`.
 - **Thực thi (In-flight)**: Áp dụng các quy tắc kỹ thuật và công cụ tự động hóa để sản sinh kết quả chuẩn mực.
-- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `{pipeline['downstream']}`.
+- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `{pipeline["downstream"]}`.
 
 ---
 
@@ -664,6 +668,7 @@ python scripts/validate_skills.py --file .agents/skills/{name}/SKILL.md --enforc
 # ---------------------------------------------------------------------------
 # Generator 2: INDEX.md Central Directory
 # ---------------------------------------------------------------------------
+
 
 def generate_index_markdown(portals: list[dict[str, Any]], skills: list[dict[str, Any]]) -> str:
     """Generate docs/skills/INDEX.md as a readable table of contents for terminals & IDEs."""
@@ -691,7 +696,9 @@ def generate_index_markdown(portals: list[dict[str, Any]], skills: list[dict[str
     ]
 
     for p in portals:
-        lines.append(f"- [{p['icon']} {p['name']}](#{p['id']}) ({len(skills_by_portal.get(p['id'], []))} skills)")
+        lines.append(
+            f"- [{p['icon']} {p['name']}](#{p['id']}) ({len(skills_by_portal.get(p['id'], []))} skills)"
+        )
 
     lines.extend(["", "---", ""])
 
@@ -702,21 +709,27 @@ def generate_index_markdown(portals: list[dict[str, Any]], skills: list[dict[str
         p_desc = p["description"]
         p_skills = skills_by_portal.get(p_id, [])
 
-        lines.extend([
-            f"<a id=\"{p_id}\"></a>",
-            f"## {p_icon} {p_name} ({len(p_skills)} Kỹ Năng)",
-            "",
-            f"*{p_desc}*",
-            "",
-            "| Kỹ Năng | Slash Command | Phân Tầng | Triệu Hồi | Tóm Tắt Nhiệm Vụ |",
-            "| :--- | :--- | :--- | :--- | :--- |",
-        ])
+        lines.extend(
+            [
+                f'<a id="{p_id}"></a>',
+                f"## {p_icon} {p_name} ({len(p_skills)} Kỹ Năng)",
+                "",
+                f"*{p_desc}*",
+                "",
+                "| Kỹ Năng | Slash Command | Phân Tầng | Triệu Hồi | Tóm Tắt Nhiệm Vụ |",
+                "| :--- | :--- | :--- | :--- | :--- |",
+            ]
+        )
 
         for s in p_skills:
             name = s["name"]
             cmd = s["command"]
             tier = s["tier_badge"]
-            inv = "User" if s["invocable_badge"] == "user" else ("Model" if s["invocable_badge"] == "model" else "Both")
+            inv = (
+                "User"
+                if s["invocable_badge"] == "user"
+                else ("Model" if s["invocable_badge"] == "model" else "Both")
+            )
             desc = s["description"].replace("\n", " ")
             if len(desc) > 80:
                 desc = desc[:77] + "..."
@@ -724,16 +737,18 @@ def generate_index_markdown(portals: list[dict[str, Any]], skills: list[dict[str
 
         lines.extend(["", "---", ""])
 
-    lines.extend([
-        "## Tài Liệu Bổ Trợ & Quy Chuẩn",
-        "",
-        "- [Hỏi Đáp Thường Gặp (FAQ)](FAQ.md) — Hướng dẫn Hub vs Spoke, xử lý lỗi và đồng bộ.",
-        "- [llms.txt](../llms.txt) — Endpoint mô tả nền tảng theo chuẩn mở cho AI Agents.",
-        "- [llms-full.txt](../llms-full.txt) — Nội dung hợp nhất chi tiết của toàn bộ kỹ năng.",
-        "",
-        "---",
-        "*CCBA Agent Services Platform — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*",
-    ])
+    lines.extend(
+        [
+            "## Tài Liệu Bổ Trợ & Quy Chuẩn",
+            "",
+            "- [Hỏi Đáp Thường Gặp (FAQ)](FAQ.md) — Hướng dẫn Hub vs Spoke, xử lý lỗi và đồng bộ.",
+            "- [llms.txt](../llms.txt) — Endpoint mô tả nền tảng theo chuẩn mở cho AI Agents.",
+            "- [llms-full.txt](../llms-full.txt) — Nội dung hợp nhất chi tiết của toàn bộ kỹ năng.",
+            "",
+            "---",
+            "*CCBA Agent Services Platform — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*",
+        ]
+    )
 
     return "\n".join(lines).strip() + "\n"
 
@@ -741,6 +756,7 @@ def generate_index_markdown(portals: list[dict[str, Any]], skills: list[dict[str
 # ---------------------------------------------------------------------------
 # Generator 3: Machine-Readable Agent Endpoints (llms.txt & llms-full.txt)
 # ---------------------------------------------------------------------------
+
 
 def generate_llms_txt(portals: list[dict[str, Any]], skills: list[dict[str, Any]]) -> str:
     """Generate docs/llms.txt following the llms.txt standard."""
@@ -757,9 +773,15 @@ def generate_llms_txt(portals: list[dict[str, Any]], skills: list[dict[str, Any]
         lines.append(f"- [{p['name']}](skills/INDEX.md#{p['id']}): {p['description']}")
 
     lines.extend(["", "## Core Endpoints & Documentation", ""])
-    lines.append(f"- [Skills Index](skills/INDEX.md): Markdown catalog index for all {len(skills)} skills.")
-    lines.append("- [Skills FAQ](skills/FAQ.md): Frequently asked questions on Hub-Spoke, invocation, and troubleshooting.")
-    lines.append(f"- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all {len(skills)} skills.")
+    lines.append(
+        f"- [Skills Index](skills/INDEX.md): Markdown catalog index for all {len(skills)} skills."
+    )
+    lines.append(
+        "- [Skills FAQ](skills/FAQ.md): Frequently asked questions on Hub-Spoke, invocation, and troubleshooting."
+    )
+    lines.append(
+        f"- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all {len(skills)} skills."
+    )
 
     lines.extend(["", f"## All Active Skills ({len(skills)} Skills)", ""])
 
@@ -797,43 +819,50 @@ def generate_llms_full_txt(skills: list[dict[str, Any]]) -> str:
 # Generator 4: Offline-First Single-Page Web Portal (docs/index.html)
 # ---------------------------------------------------------------------------
 
+
 def generate_index_html(portals: list[dict[str, Any]], skills: list[dict[str, Any]]) -> str:
     """Generate single-page static HTML web portal with embedded JSON data."""
     # Prepare embedded JSON data for offline-first instant search and drawer display
     skills_json_data = []
     for s in skills:
-        skills_json_data.append({
-            "name": s["name"],
-            "command": s["command"],
-            "desc": s["description"],
-            "bundle": s["bundle"],
-            "tier": s["tier_badge"],
-            "tier_display": s["tier_display"],
-            "inv": s["invocable_badge"],
-            "inv_display": s["invocable_display"],
-            "portal_id": s["portal"]["id"],
-            "portal_name": s["portal"]["name"],
-            "portal_icon": s["portal"]["icon"],
-            "triggers": s["triggers"],
-            "gpi": s["gpi_str"],
-            "upstream": s["pipeline"]["upstream"],
-            "downstream": s["pipeline"]["downstream"],
-            "role": s["pipeline"]["role"],
-        })
+        skills_json_data.append(
+            {
+                "name": s["name"],
+                "command": s["command"],
+                "desc": s["description"],
+                "bundle": s["bundle"],
+                "tier": s["tier_badge"],
+                "tier_display": s["tier_display"],
+                "inv": s["invocable_badge"],
+                "inv_display": s["invocable_display"],
+                "portal_id": s["portal"]["id"],
+                "portal_name": s["portal"]["name"],
+                "portal_icon": s["portal"]["icon"],
+                "triggers": s["triggers"],
+                "gpi": s["gpi_str"],
+                "upstream": s["pipeline"]["upstream"],
+                "downstream": s["pipeline"]["downstream"],
+                "role": s["pipeline"]["role"],
+            }
+        )
 
     portals_json_data = []
     for p in portals:
         count = sum(1 for s in skills if s["portal"]["id"] == p["id"])
-        portals_json_data.append({
-            "id": p["id"],
-            "name": p["name"],
-            "icon": p["icon"],
-            "desc": p["description"],
-            "count": count,
-        })
+        portals_json_data.append(
+            {
+                "id": p["id"],
+                "name": p["name"],
+                "icon": p["icon"],
+                "desc": p["description"],
+                "count": count,
+            }
+        )
 
     embedded_skills_json = json.dumps(skills_json_data, ensure_ascii=False).replace("<", "\\u003c")
-    embedded_portals_json = json.dumps(portals_json_data, ensure_ascii=False).replace("<", "\\u003c")
+    embedded_portals_json = json.dumps(portals_json_data, ensure_ascii=False).replace(
+        "<", "\\u003c"
+    )
 
     html = f"""<!DOCTYPE html>
 <html lang="vi" data-theme="dark">
@@ -1559,6 +1588,7 @@ def generate_index_html(portals: list[dict[str, Any]], skills: list[dict[str, An
 # Synchronization Check & Compiler CLI Logic
 # ---------------------------------------------------------------------------
 
+
 def check_skills_docs_in_sync(hub_root: Path = HUB_ROOT) -> tuple[bool, str]:
     """Check if docs on disk match what compile_skills_docs would generate."""
     skills = get_all_skills_data(hub_root)
@@ -1580,7 +1610,9 @@ def check_skills_docs_in_sync(hub_root: Path = HUB_ROOT) -> tuple[bool, str]:
     # Check for orphaned doc files
     expected_skill_files = {f"{s['name']}.md" for s in skills}
     if skills_docs_dir.exists():
-        actual_files = {f.name for f in skills_docs_dir.glob("*.md") if f.name not in ["INDEX.md", "FAQ.md"]}
+        actual_files = {
+            f.name for f in skills_docs_dir.glob("*.md") if f.name not in ["INDEX.md", "FAQ.md"]
+        }
         orphaned = actual_files - expected_skill_files
         if orphaned:
             diffs.append(f"Orphaned skill documentation files: {sorted(orphaned)}")
@@ -1655,12 +1687,16 @@ def compile_and_write(hub_root: Path = HUB_ROOT) -> None:
     html_content = generate_index_html(portals, skills)
     (hub_root / "docs" / "index.html").write_text(html_content, encoding="utf-8")
 
-    print(f"[OK] Compiled {len(skills)} skills docs, INDEX.md, llms.txt, llms-full.txt, and index.html successfully.")
+    print(
+        f"[OK] Compiled {len(skills)} skills docs, INDEX.md, llms.txt, llms-full.txt, and index.html successfully."
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint for docs compiler."""
-    parser = argparse.ArgumentParser(description="CCBA Skills Documentation & Static Portal Compiler (ADR-0058)")
+    parser = argparse.ArgumentParser(
+        description="CCBA Skills Documentation & Static Portal Compiler (ADR-0058)"
+    )
     parser.add_argument(
         "--check",
         action="store_true",
@@ -1682,12 +1718,17 @@ def main(argv: list[str] | None = None) -> int:
     if args.check:
         in_sync, msg = check_skills_docs_in_sync(HUB_ROOT)
         if in_sync:
-            print("[OK] [Skills Docs Compiler] All skills documentation and web assets are 100% in sync.")
+            print(
+                "[OK] [Skills Docs Compiler] All skills documentation and web assets are 100% in sync."
+            )
             return 0
         else:
             print("[ERROR] [Skills Docs Compiler] Documentation is OUT OF SYNC:", file=sys.stderr)
             print(f"  {msg}", file=sys.stderr)
-            print("\n[INFO] Run 'python scripts/governance/compile_skills_docs.py --write' to regenerate.", file=sys.stderr)
+            print(
+                "\n[INFO] Run 'python scripts/governance/compile_skills_docs.py --write' to regenerate.",
+                file=sys.stderr,
+            )
             return 1
 
     if args.stdout:
