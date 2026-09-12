@@ -454,3 +454,162 @@ def test_check_skills_hygiene_handles_workflow_file(tmp_path: Path) -> None:
     clean, msg = check_skills_hygiene(PROJECT_ROOT, target_path=wf_file)
     assert clean is True
     assert "workflow" in msg.lower()
+
+
+# ---------------------------------------------------------------------------
+# 9. Advanced Adversarial & Edge Case Tests
+# ---------------------------------------------------------------------------
+
+
+def test_audit_permits_ripgrep_in_markdown(tmp_path: Path) -> None:
+    """Verify that ripgrep -i does not trigger false positive bashism."""
+    skill_dir = tmp_path / "skill-ripgrep"
+    _create_minimal_valid_skill(skill_dir, "skill-ripgrep")
+
+    with open(skill_dir / "SKILL.md", "a", encoding="utf-8") as f:
+        f.write("\nUse ripgrep -i to search for patterns rapidly.\n")
+
+    res = audit_skill(skill_dir)
+    assert res.status == "GREEN"
+    assert len(res.issues) == 0
+
+
+def test_audit_catches_export_with_numbers_and_lowercase(tmp_path: Path) -> None:
+    """Verify export VAR_1= and export apiKey= are caught as bashisms."""
+    skill_dir = tmp_path / "skill-export-vars"
+    _create_minimal_valid_skill(skill_dir, "skill-export-vars")
+
+    with open(skill_dir / "SKILL.md", "a", encoding="utf-8") as f:
+        f.write("\nexport S3_BUCKET_1=prod\nexport api_key='secret'\n")
+
+    res = audit_skill(skill_dir)
+    assert res.status == "RED"
+    bashism_issues = [i for i in res.issues if i.category == "Windows Bashism"]
+    assert len(bashism_issues) == 2
+
+
+def test_audit_catches_command_substitution_with_quotes_and_flags(tmp_path: Path) -> None:
+    """Verify $(git log -1 --format="%h") is caught as command substitution."""
+    skill_dir = tmp_path / "skill-subst"
+    _create_minimal_valid_skill(skill_dir, "skill-subst")
+
+    with open(skill_dir / "SKILL.md", "a", encoding="utf-8") as f:
+        f.write('\nCOMMIT=$(git log -1 --format="%h")\n')
+
+    res = audit_skill(skill_dir)
+    assert res.status == "RED"
+    assert any("Bashism command substitution" in i.detail for i in res.issues)
+
+
+def test_audit_catches_unprotected_start_process_among_safe_blocks(tmp_path: Path) -> None:
+    """Verify an unprotected Start-Process is flagged even if preceded by a safe try/catch block."""
+    skill_dir = tmp_path / "skill-mixed-headless"
+    _create_minimal_valid_skill(skill_dir, "skill-mixed-headless")
+
+    content = """
+try {
+    Start-Process 'https://example.com'
+} catch {
+    Write-Host "fallback"
+}
+
+# Unprotected call
+Start-Process 'https://unprotected.com'
+"""
+    with open(skill_dir / "SKILL.md", "a", encoding="utf-8") as f:
+        f.write(content)
+
+    res = audit_skill(skill_dir)
+    assert res.status == "RED"
+    headless_issues = [i for i in res.issues if i.category == "Safe Headless Process"]
+    assert len(headless_issues) == 1
+    # Line number should point to the unprotected Start-Process (around line 23)
+    assert headless_issues[0].line_no > 18
+
+
+def test_audit_level3_multi_level_transitive_router_resolution(tmp_path: Path) -> None:
+    """Verify 3+ tier nested routers transitively resolve coverage without loop or failure."""
+    skill_dir = tmp_path / "skill-transitive"
+    _create_minimal_valid_skill(skill_dir, "skill-transitive")
+
+    # infra/INDEX.md -> cloud/INDEX.md -> aws.md
+    cloud_dir = skill_dir / "references" / "infra" / "cloud"
+    cloud_dir.mkdir(parents=True)
+    (skill_dir / "references" / "infra" / "INDEX.md").write_text(
+        "# Infra\n- [cloud](cloud/INDEX.md)\n", encoding="utf-8"
+    )
+    (cloud_dir / "INDEX.md").write_text("# Cloud\n- [aws](aws.md)\n", encoding="utf-8")
+    (cloud_dir / "aws.md").write_text("# AWS Docs\n", encoding="utf-8")
+
+    l3_table = """
+## Progressive Disclosure
+
+| Tài liệu | Vai trò |
+| :--- | :--- |
+| `references/infra/INDEX.md` | Bộ điều hướng hạ tầng |
+"""
+    with open(skill_dir / "SKILL.md", "a", encoding="utf-8") as f:
+        f.write(l3_table)
+
+    res = audit_skill(skill_dir)
+    assert res.status == "GREEN", f"Unexpected issues: {[i.detail for i in res.issues]}"
+
+
+def test_audit_level3_master_references_index_resolution(tmp_path: Path) -> None:
+    """Verify references/INDEX.md routes reference files directly under references/."""
+    skill_dir = tmp_path / "skill-master-idx"
+    _create_minimal_valid_skill(skill_dir, "skill-master-idx")
+
+    ref_dir = skill_dir / "references"
+    ref_dir.mkdir(parents=True)
+    (ref_dir / "INDEX.md").write_text("# Master\n- [guide](guide.md)\n", encoding="utf-8")
+    (ref_dir / "guide.md").write_text("# Guide\n", encoding="utf-8")
+
+    l3_table = """
+## Progressive Disclosure
+
+| Tài liệu | Vai trò |
+| :--- | :--- |
+| `references/INDEX.md` | Master Reference Router |
+"""
+    with open(skill_dir / "SKILL.md", "a", encoding="utf-8") as f:
+        f.write(l3_table)
+
+    res = audit_skill(skill_dir)
+    assert res.status == "GREEN", f"Unexpected issues: {[i.detail for i in res.issues]}"
+
+
+def test_audit_level3_directory_reference_in_table(tmp_path: Path) -> None:
+    """Verify referring to a directory like `references/sub/` covers its INDEX.md and sub-files."""
+    skill_dir = tmp_path / "skill-dir-ref"
+    _create_minimal_valid_skill(skill_dir, "skill-dir-ref")
+
+    sub_dir = skill_dir / "references" / "sub"
+    sub_dir.mkdir(parents=True)
+    (sub_dir / "INDEX.md").write_text("# Sub\n- [module](module.md)\n", encoding="utf-8")
+    (sub_dir / "module.md").write_text("# Module\n", encoding="utf-8")
+
+    l3_table = """
+## Progressive Disclosure
+
+| Thư mục | Vai trò |
+| :--- | :--- |
+| `references/sub/` | Sub Router Folder |
+"""
+    with open(skill_dir / "SKILL.md", "a", encoding="utf-8") as f:
+        f.write(l3_table)
+
+    res = audit_skill(skill_dir)
+    assert res.status == "GREEN", f"Unexpected issues: {[i.detail for i in res.issues]}"
+
+
+def test_cli_no_check_returns_zero_on_violations(tmp_path: Path) -> None:
+    """Verify CLI with --no-check returns exit code 0 even if skill has violations."""
+    skill_dir = tmp_path / "cli-no-check"
+    skill_md = _create_minimal_valid_skill(skill_dir, "cli-no-check")
+    with open(skill_md, "a", encoding="utf-8") as f:
+        f.write("\nexport BAD_VAR=1\n")
+
+    exit_code = main(["--file", str(skill_md), "--no-check"])
+    assert exit_code == 0
+

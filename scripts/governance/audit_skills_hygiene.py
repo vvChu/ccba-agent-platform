@@ -38,9 +38,11 @@ RE_DEAD_WOOD: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"/ck:[a-zA-Z0-9_\-]+"), "ClaudeKit Command (/ck:*)"),
     (re.compile(r"/ultrathink\b"), "ClaudeKit Command (/ultrathink)"),
     (re.compile(r"\bgit-manager\b"), "ClaudeKit Tool (git-manager)"),
-    (re.compile(r"<tasks>[\s\S]*?</tasks>|<tasks>|</tasks>"), "Claude Tasks XML tag (<tasks>)"),
+    (re.compile(r"</?tasks\b[^>]*>"), "Claude Tasks XML tag (<tasks>)"),
     (
-        re.compile(r"\b(TaskCreate|TaskUpdate|TaskList)\b"),
+        re.compile(
+            r"\b(TaskCreate|TaskUpdate|TaskList|TaskGet|TaskComplete|TaskDelete)\b"
+        ),
         "Claude Native Tasks (TaskCreate/Update/List)",
     ),
     (re.compile(r"\bAskUserQuestion\b"), "Claude Tool (AskUserQuestion)"),
@@ -49,9 +51,12 @@ RE_DEAD_WOOD: list[tuple[re.Pattern[str], str]] = [
 ]
 
 RE_BASHISMS: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"\bexport\s+[A-Z_]+="), "Bashism environment export (export VAR=...)"),
+    (
+        re.compile(r"\bexport\s+[A-Za-z_][A-Za-z0-9_]*="),
+        "Bashism environment export (export VAR=...)",
+    ),
     (re.compile(r"\bsudo\s+apt(?:-get)?\b"), "Linux package manager invocation (sudo apt/apt-get)"),
-    (re.compile(r"(?<!git\s)(?<!git-)(?<!--)grep\s+-[a-zA-Z]"), "Bashism grep flag (grep -*)"),
+    (re.compile(r"(?<!git\s)(?<!git-)(?<!--)\bgrep\s+-[a-zA-Z]"), "Bashism grep flag (grep -*)"),
     (
         re.compile(
             r"(?<!git\s)(?<!git-)(?<!--)(?:\|\s*grep\b|(?<!\w)grep\s+(?:-[a-zA-Z0-9]+\s+)*[\"']?[a-zA-Z0-9_\-*+^$]+)"
@@ -62,11 +67,10 @@ RE_BASHISMS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bhead\s+-[0-9n]"), "Bashism head command"),
     (re.compile(r"2>/dev/null"), "Bashism error redirection (2>/dev/null)"),
     (re.compile(r"\bxargs\b"), "Bashism xargs invocation (xargs)"),
-    (re.compile(r"\$\([a-zA-Z0-9_\-\s|/.]+\)"), "Bashism command substitution $(...)"),
+    (re.compile(r"\$\([^)\r\n]+\)"), "Bashism command substitution $(...)"),
 ]
 
 RE_START_PROCESS = re.compile(r"\bStart-Process\b")
-RE_TRY_CATCH = re.compile(r"\btry\s*\{[\s\S]*?Start-Process[\s\S]*?\}\s*catch\b")
 
 RE_BROKEN_SKILL_LINK = re.compile(r"\[([^\]]+)\]\((SKILL\.md)\)")
 RE_LEVEL3_HEADER = re.compile(
@@ -80,6 +84,8 @@ BENIGN_GREP_PATTERNS = (
     "grep_search",
     "semgrep",
     "Semgrep",
+    "ripgrep",
+    "Ripgrep",
     "(Select-String / grep)",
     "single grep",
     "`grep` the prefix",
@@ -89,6 +95,90 @@ BENIGN_GREP_PATTERNS = (
     "grep for",
     "grep +",
 )
+
+
+def is_start_process_protected(text: str, match_start: int, match_end: int) -> bool:
+    """Check if a Start-Process invocation is wrapped inside a safe try { ... } catch block."""
+    before = text[:match_start]
+    try_matches = list(re.finditer(r"\btry\s*\{", before))
+    if not try_matches:
+        return False
+    last_try = try_matches[-1]
+    between_try = text[last_try.end() : match_start]
+    if between_try.count("{") < between_try.count("}"):
+        return False
+
+    after = text[match_end:]
+    catch_match = re.search(r"\}\s*catch\b", after)
+    if not catch_match:
+        return False
+    between_catch = after[: catch_match.start()]
+    net_open = between_try.count("{") - between_try.count("}")
+    net_close = between_catch.count("}") - between_catch.count("{")
+    return net_open == net_close
+
+
+def resolve_uncovered_references(
+    skill_content: str,
+    ref_dir: Path,
+    ref_files: list[Path],
+) -> list[str]:
+    """Resolve full coverage of reference files via Level 3 index and deep router INDEX.md files.
+
+    Returns:
+        list of relative paths (to ref_dir) for any reference files not covered.
+    """
+    l3_match = RE_LEVEL3_HEADER.search(skill_content)
+    l3_text = skill_content[l3_match.start() :] if l3_match is not None else skill_content
+
+    covered_files: set[Path] = set()
+    covered_routers: set[Path] = set()
+
+    for rf in ref_files:
+        rel_to_ref = rf.relative_to(ref_dir).as_posix()
+        is_direct = (rel_to_ref in l3_text) or (f"references/{rel_to_ref}" in l3_text)
+        if not is_direct and rf.name == "INDEX.md":
+            parent_rel = rf.parent.relative_to(ref_dir).as_posix()
+            if parent_rel != ".":
+                if (
+                    parent_rel in l3_text
+                    or f"{parent_rel}/" in l3_text
+                    or f"references/{parent_rel}" in l3_text
+                    or f"references/{parent_rel}/" in l3_text
+                ):
+                    is_direct = True
+            elif "references/" in l3_text or "references/INDEX.md" in l3_text:
+                is_direct = True
+
+        if is_direct:
+            covered_files.add(rf)
+            if rf.name == "INDEX.md":
+                covered_routers.add(rf)
+
+    changed = True
+    while changed:
+        changed = False
+        for router in list(covered_routers):
+            try:
+                router_text = router.read_text(encoding="utf-8", errors="replace")
+            except Exception:
+                continue
+            router_dir = router.parent
+            for rf in ref_files:
+                if rf not in covered_files and rf != router:
+                    try:
+                        rf_rel = rf.relative_to(router_dir).as_posix()
+                    except ValueError:
+                        continue
+                    if rf_rel in router_text or rf.name in router_text:
+                        covered_files.add(rf)
+                        changed = True
+                        if rf.name == "INDEX.md":
+                            covered_routers.add(rf)
+
+    return sorted(
+        rf.relative_to(ref_dir).as_posix() for rf in ref_files if rf not in covered_files
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -319,38 +409,7 @@ def audit_skill(
                 )
             )
         else:
-            uncovered: list[str] = []
-            l3_match = RE_LEVEL3_HEADER.search(skill_content)
-            l3_text = (
-                skill_content[l3_match.start() :] if l3_match is not None else skill_content
-            )
-
-            for rf in ref_files:
-                rel_to_ref = rf.relative_to(ref_dir).as_posix()
-                covered = (rel_to_ref in l3_text) or (f"references/{rel_to_ref}" in l3_text)
-                if not covered:
-                    # Check if routed through a parent router INDEX.md
-                    for parent in rf.parents:
-                        if parent != ref_dir and parent != skill_dir:
-                            router_index = parent / "INDEX.md"
-                            if router_index.exists():
-                                parent_rel = parent.relative_to(ref_dir).as_posix()
-                                router_rel = f"{parent_rel}/INDEX.md"
-                                if (
-                                    router_rel in l3_text
-                                    or f"references/{router_rel}" in l3_text
-                                    or parent_rel in l3_text
-                                ):
-                                    router_text = router_index.read_text(
-                                        encoding="utf-8", errors="replace"
-                                    )
-                                    rf_rel_to_router = rf.relative_to(parent).as_posix()
-                                    if rf_rel_to_router in router_text or rf.name in router_text:
-                                        covered = True
-                                        break
-                if not covered:
-                    uncovered.append(rel_to_ref)
-
+            uncovered = resolve_uncovered_references(skill_content, ref_dir, ref_files)
             if uncovered:
                 result.issues.append(
                     Issue(
@@ -439,20 +498,18 @@ def audit_skill(
                     )
 
         # Check 7: Headless Start-Process without try/catch
-        if RE_START_PROCESS.search(text):
-            if not RE_TRY_CATCH.search(text):
-                for idx, line in enumerate(lines, start=1):
-                    if "Start-Process" in line:
-                        result.issues.append(
-                            Issue(
-                                severity="RED",
-                                category="Safe Headless Process",
-                                file_rel=rel_path,
-                                line_no=idx,
-                                detail="Start-Process without try/catch fallback block. May fail in headless/CI environment.",
-                            )
-                        )
-                        break
+        for match in RE_START_PROCESS.finditer(text):
+            if not is_start_process_protected(text, match.start(), match.end()):
+                line_no = text[: match.start()].count("\n") + 1
+                result.issues.append(
+                    Issue(
+                        severity="RED",
+                        category="Safe Headless Process",
+                        file_rel=rel_path,
+                        line_no=line_no,
+                        detail="Start-Process without try/catch fallback block. May fail in headless/CI environment.",
+                    )
+                )
 
     return result
 
@@ -730,9 +787,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--check",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         default=True,
-        help="Run audit and return exit code 0 if 100% GREEN, 1 if any RED or YELLOW issues (default).",
+        help="Run audit and return exit code 0 if 100% GREEN, 1 if any RED or YELLOW issues (default: True).",
     )
     parser.add_argument(
         "--file",
@@ -836,7 +893,9 @@ def main(argv: list[str] | None = None) -> int:
                             f"  {sev_icon} [{issue.category}] {issue.file_rel}:{issue.line_no} -> {issue.detail}"
                         )
 
-    return 0 if summary_data["status"] == "PASS" else 1
+    if args.check:
+        return 0 if summary_data["status"] == "PASS" else 1
+    return 0
 
 
 if __name__ == "__main__":
