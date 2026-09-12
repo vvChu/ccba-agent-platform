@@ -7,6 +7,9 @@ tier: kernel
 disable-model-invocation: true
 user-invocable: true
 command: /ccba-wayfinder
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 4.0
   k: 2.0

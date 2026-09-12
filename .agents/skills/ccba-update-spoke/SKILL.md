@@ -14,6 +14,9 @@ bundle: _core
 tier: kernel
 disable-model-invocation: true
 command: /ccba-update-spoke
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 3.0
   k: 2.0
