@@ -167,21 +167,23 @@ class LegalSyncEngine:
         if target_dir:
             dest_root = Path(target_dir)
         else:
-            is_master = self.project_root.name == "ccba-legal-knowledge"
+            is_master = self.project_root.name.lower() == "ccba-legal-knowledge"
             if not is_master:
-                ctx_path = self.project_root / ".md" / "workspace_context.yaml"
-                if ctx_path.is_file():
-                    try:
-                        with open(ctx_path, encoding="utf-8") as f:
-                            ctx = yaml.safe_load(f) or {}
-                        proj = ctx.get("project", {}) if isinstance(ctx, dict) else {}
-                        if isinstance(proj, dict) and (
-                            proj.get("name") == "ccba-legal-knowledge"
-                            or proj.get("archetype") == "knowledge_corpus"
-                        ):
-                            is_master = True
-                    except Exception:
-                        pass
+                for ctx_dir in [self.project_root / ".agents", self.project_root / ".md"]:
+                    ctx_path = ctx_dir / "workspace_context.yaml"
+                    if ctx_path.is_file():
+                        try:
+                            with open(ctx_path, encoding="utf-8") as f:
+                                ctx = yaml.safe_load(f) or {}
+                            proj = ctx.get("project", {}) if isinstance(ctx, dict) else {}
+                            if isinstance(proj, dict) and (
+                                str(proj.get("name", "")).lower() == "ccba-legal-knowledge"
+                                or proj.get("is_master") is True
+                            ):
+                                is_master = True
+                                break
+                        except Exception:
+                            pass
             dest_root = (
                 (self.project_root / "legal_docs")
                 if is_master

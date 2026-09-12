@@ -1,81 +1,71 @@
-# Walkthrough: Release PR #263 (Issue #258 — Master Registry Discovery, Query CLI Commands & Unify Spoke Knowledge Path)
+# Walkthrough: Issue #264 — Eliminate Cleanliness Gate Contradiction, Fix Legal Corpus Misidentification, & Auto-Sync Guardrail Scripts
 
-## 1. Tổng Quan Release
-- **PR Number:** [#263](https://github.com/vvChu/ccba-agent-platform/pull/263)
-- **Branch:** `proposal/issue-258-master-registry-discovery-and-query-cli` $\rightarrow$ `main`
-- **Tiêu đề:** `feat(legal-intel): enhance master registry discovery, add query CLI commands and unify spoke knowledge path (#258)`
-- **Issue liên quan:** [Issue #258](https://github.com/vvChu/ccba-agent-platform/issues/258)
-- **Thể chế & Kiến trúc:** ADR 0026, ADR 0033, ADR 0035, ADR 0036, ADR 0045, ADR 0058
-- **Mục tiêu hoàn thành:**
-  1. **Master Registry Discovery Tự Động (Read-Only)**: Spoke cài đặt qua `pip install -e` tự động định vị Master Registry 42 văn bản tại `ccba-legal-knowledge` qua thuật toán discovery đa tầng. `LegalRegistryManager` giữ nguyên mặc định local, bảo vệ tuyệt đối unit test cô lập.
-  2. **Bộ 3 CLI Subcommands Tra Cứu**: Bổ sung `query`, `get-clause`, `get-table` hỗ trợ đầu ra màu sắc, JSON, Markdown và căn chỉnh cột bảng 2D.
-  3. **Chuẩn Hóa Đường Dẫn Tri Thức Spoke (ADR 0033 & ADR 0036)**: `ccba_legal sync` tự động phân loại: Spoke tiêu thụ lưu tại `.\.md\legal_docs\`; riêng Master Spoke `ccba-legal-knowledge` lưu tại `legal_docs/`.
-  4. **Facade Class `LegalKnowledgeEngine`**: Entrypoint thống nhất cho tìm kiếm, bóc tách AST điều khoản (Tier-Aware Semantic Slicing), alias parsing (`d1` $\rightarrow$ `dieu-1`), và bảo mật hai tầng chống CWE-22 (Two-Tier Containment).
+## 1. Tổng Quan Issue #264
+- **Branch:** `fix/issue-264-spoke-sync-guardrails` $\rightarrow$ `main`
+- **Tiêu đề:** `fix(spoke-sync): eliminate cleanliness gate contradiction, fix legal corpus misidentification, and auto-sync guardrail scripts (#264)`
+- **Issue liên quan:** [Issue #264](https://github.com/vvChu/ccba-agent-platform/issues/264)
+- **Thể chế & Kiến trúc:** ADR 0041, ADR 0044, ADR 0050, ADR 0057, ADR 0058
 
 ---
 
-## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #263)
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #265)
 
-- **Review ID:** `PRR_kwDOQzfV088AAAABNLg5Dg`
+- **Review ID:** `PRR_kwDOQzfV088AAAABNQeOiA`
 
 | ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
 |---|---|---|---|
-| `3989832503` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | `_resolve_corpus_paths()` derives `candidate_corpus` as `master_reg.parent / "legal_docs"`. When the discovered registry is the common `.md/data/legal_registry.yaml` layout, this points to `.md/data/legal_docs` (non-existent), so master discovery will never return bundles and will fall back to scanning upward from the installed package path (which won’t find the spoke corpus in editable installs). Derive the corpus root from the project root when the registry is inside `.md/data`, and check both `legal_docs/` and `.md/legal_docs/`. | **ĐÃ KHẮC PHỤC TRIỆT ĐỂ** (trong commit `7fe530a0`): Cập nhật hàm `FederatedLegalEngine._resolve_corpus_paths()` để nạp danh sách ứng viên đa tầng (`candidates`): (1) `reg_parent / "legal_docs"`, (2) `reg_parent / ".md" / "legal_docs"`. Đặc biệt, kiểm tra nếu `reg_parent.name == "data"` và `reg_parent.parent.name == ".md"`, tự động suy luận `project_root = reg_parent.parent.parent` và bổ sung thêm `project_root / "legal_docs"` cùng `project_root / ".md" / "legal_docs"`. Thuật toán duyệt qua từng ứng viên và nạp toàn bộ bundle hợp lệ. Đã xác nhận hoạt động chuẩn xác và reply trên PR. |
+| `3994619505` | `packages/ccba-legal-intel/src/ccba_legal/sync/engine.py` | `pull_latest_okf_bundles()` kiểm tra `project.name` phân biệt hoa/thường (case-sensitive) so với thư mục đã chuẩn hóa `.lower()`. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa so sánh không phân biệt hoa/thường: `str(proj.get("name", "")).lower() == "ccba-legal-knowledge"`. |
+| `3994619519` | `scripts/spoke/sync/sdk_inspector.py` | `copy_if_needed()` coi sự hiện diện của thư mục `scripts/` là Python Spoke, có thể copy nhầm guardrail scripts sang Spoke không phải Python. | **ĐÃ KHẮC PHỤC**: Bỏ nhánh `or (self.spoke_root / "scripts").exists()`, chỉ sử dụng `is_python_spoke(self.spoke_root, self.project_type)` vốn đã kiểm tra đầy đủ chỉ dấu Python. |
+| `3994619531` | `scripts/spoke/sync/sdk_inspector.py` | So sánh `project.name` phân biệt hoa/thường (case-sensitive) trong khi các phần khác dùng `.lower()`. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa so sánh không phân biệt hoa/thường: `str(proj.get("name", "")).lower() == "ccba-legal-knowledge"` trong cả `sdk_inspector.py` và `engine.py`. |
+| `3994619543` | `.md/knowledge/session_learnings.md` | Dấu backticks inline-code không cân bằng tại dòng RULE-4.5. | **ĐÃ KHẮC PHỤC**: Bỏ backticks quanh địa chỉ IP `100.83.192.30:8090` để đóng mở inline-code span chuẩn xác. |
 
 ---
 
-## 3. Chi Tiết Các Hạng Mục Kỹ Thuật Đã Hoàn Thành
+## 3. Các Thay Đổi Cốt Lõi
 
-1. **Facade Engine & Security (`packages/ccba-legal-intel/src/ccba_legal/engine.py`)**:
-   - `LegalKnowledgeEngine`: Quản lý in-memory cache, tìm kiếm keyword/status, bóc tách điều khoản theo thuật toán Tier-Aware Semantic Slicing.
-   - `canonicalize_clause_id`: Phân giải alias thông minh (`d1` $\rightarrow$ `dieu-1`, `d15k2` $\rightarrow$ `dieu-15-khoan-2`).
-   - `csv_to_markdown`: Căn chỉnh cột Markdown tự động và escape ký tự pipe `\|`.
-   - **Bảo mật CWE-22 (Two-Tier Containment)**: Kết hợp Regex Whitelist `^[a-zA-Z0-9_\-]+$` và `path.resolve().is_relative_to()`.
+### 2.1 Loại Bỏ Contradiction Giữa `safe_pytest.py` / `safe_runner.py` và `check_spoke_cleanliness.py`
+- **Vấn đề:** Khối fallback `sys.path.insert(0, str(hub_harness_src))` trong `safe_pytest.py` và `safe_runner.py` vi phạm kiểm tra regex `SYS_PATH_HACK_PATTERN` của `check_spoke_cleanliness.py`. Đồng thời `safe_runner.py` chưa nằm trong `ALLOWLIST_SCRIPTS`.
+- **Giải pháp:**
+  - Gỡ bỏ hoàn toàn `sys.path.insert` trong `scripts/safe_pytest.py` và `scripts/safe_runner.py`, thay bằng `ImportError` tường minh chỉ dẫn cài đặt `pip install -e <hub_path>/packages/ccba-harness` hoặc chạy `python scripts/spoke_bootstrap.py`.
+  - Thêm `"safe_runner.py"` vào `ALLOWLIST_SCRIPTS` trong `scripts/spoke/check_spoke_cleanliness.py`.
 
-2. **Registry & Discovery (`packages/ccba-legal-intel/src/ccba_legal/registry.py`)**:
-   - Hàm `discover_master_registry_path()` ưu tiên 6 tầng (registry_path $\rightarrow$ env vars $\rightarrow$ workspace_context.yaml $\rightarrow$ spoke registry $\rightarrow$ local candidates $\rightarrow$ fallback).
-   - Giữ nguyên mặc định local của `LegalRegistryManager`.
-   - Hàm `query()` ủy quyền sang `LegalKnowledgeEngine.search()`.
+### 2.2 Sửa Lỗi Nhận Diện Nhầm Master Legal Corpus
+- **Vấn đề:** Trong `scripts/spoke/sync/sdk_inspector.py` và `packages/ccba-legal-intel/src/ccba_legal/sync/engine.py`, việc kiểm tra `archetype == "knowledge_corpus"` hoặc `mode == "knowledge"` đã đánh đồng mọi kho tri thức cá nhân (như VvC Second Brain) thành Master Legal Corpus (`ccba-legal-knowledge`). Hậu quả là phân loại nhầm project type thành "Pháp điển" trên Dashboard và kích hoạt `master_corpus_preserved` (bỏ qua đồng bộ pháp lý).
+- **Giải pháp:**
+  - Chuẩn hóa: Chỉ coi là Master Legal Corpus khi repository name là `ccba-legal-knowledge` hoặc `workspace_context.yaml` chỉ định rõ `is_master: true` (hoặc `project.name == "ccba-legal-knowledge"`).
+  - Tái ánh xạ `PROJECT_TYPE_ALIASES` trong `scripts/spoke/sync/coordinator.py`: Ánh xạ `knowledge_corpus`, `knowledge-base`, `knowledge_base`, `second-brain`, `second_brain` thành `"Tác vụ Admin"`.
+  - Trong `SharedSdkInspector.resolve_packages_to_check()`, chỉ tự động gợi ý `ccba-legal-intel` cho `knowledge_corpus` nếu `project_type == "Pháp điển"` hoặc tên repo là `ccba-legal-knowledge`.
 
-3. **CLI Subcommands (`packages/ccba-legal-intel/src/ccba_legal/cli.py`)**:
-   - Cấu hình `sys.stdout.reconfigure(encoding="utf-8")` theo RULE-2.5 chống lỗi `cp1252` trên Windows PowerShell.
-   - Bổ sung 3 subcommands: `query`, `get-clause`, `get-table` (hỗ trợ cờ `--json`, `--format`, `--corpus`).
-
-4. **Đồng Bộ & Federated RAG (`sync/engine.py`, `federated_rag.py`)**:
-   - `pull_latest_okf_bundles`: Phân loại đích lưu trữ theo loại Spoke. Mở rộng quét `04_appendices`.
-   - `FederatedLegalEngine`: Nạp toàn diện 42 bundles thuộc `01_vbpl`, `02_qcvn`, `03_tcvn`, `04_appendices` qua Master Discovery đa tầng.
-
-5. **Bộ Kiểm Thử Toàn Diện & Documentation Parity**:
-   - `test_legal_knowledge_engine.py`: 12 tests kiểm thử toàn diện slicing, alias, CSV/Markdown formatting, và traversal protection.
-   - `test_registry_discovery.py`: 7 tests kiểm thử các tầng ưu tiên discovery.
-   - `test_cli_doc_parity.py`: Mở rộng kiểm tra parity 3 lệnh CLI mới với `.agents/skills/ccba-legal-intel/SKILL.md`.
-
----
-
-## 4. Kết Quả Kiểm Thử Toàn Diện (Pre-release Gate)
-
-- **Unit Tests Scoped**: 31/31 passed in 14.36s (Exit code 0).
-- **Linter & Code Format (Ruff)**: 100% clean, all checks passed.
-- **Isolated Tests Stress Suite (`run_isolated_tests.py -p ccba-legal-intel --stress`)**: 261/261 passed (Exit code 0).
-- **Deterministic Hard Completion Lock (ADR-0058)**: `python -m ccba_harness verify-patch` ALL PASSED (2/2 commands executed, duration: 20.1s).
-- **GitHub Actions CI (PR #263)**: 6/6 jobs PASS 100%:
-  - `Lint Markdown`: Pass
-  - `Test - Python 3.10`: Pass
-  - `Test - Python 3.11`: Pass
-  - `Test - Python 3.12`: Pass
-  - `scan`: Pass
-  - `validate`: Pass
-- **Copilot PR Review Audit (`audit_pr_comments.py`)**: Đã giải trình và nghiệm thu toàn bộ Copilot Review `PRR_kwDOQzfV088AAAABNLg5Dg` và Comment `3989832503`.
+### 2.3 Tự Động Đồng Bộ Guardrail Scripts Khi Chạy `sync_spoke.py --apply`
+- **Vấn đề:** Trước đây, kỹ năng `ccba-update-spoke` phải yêu cầu chạy lệnh PowerShell thủ công để copy `check_hub_import_depth.py` và `check_spoke_cleanliness.py` vào Spoke.
+- **Giải pháp:**
+  - Nâng cấp `TestGuardrailCopier`: Tự động đồng bộ idempotent 4 tệp guardrails:
+    1. `conftest.py` (tại spoke root)
+    2. `scripts/safe_pytest.py`
+    3. `scripts/check_hub_import_depth.py`
+    4. `scripts/check_spoke_cleanliness.py`
+  - So sánh hash file thông qua `are_files_identical()` và trả về danh sách chi tiết các hành động (`status: NEW | UPDATED | UNCHANGED`).
+  - Tích hợp `TestGuardrailCopier.copy_if_needed(dry_run)` vào `_sync_full_bundle` trong `coordinator.py` để ghi nhận các mục này vào bảng tổng kết kết quả đồng bộ.
+  - Cập nhật `.agents/skills/ccba-update-spoke/SKILL.md` chuyển bước copy thủ công thành hành động tự động 100%.
 
 ---
 
-## 5. Báo Cáo An Ninh Bảo Mật (Security Verification Report)
+## 3. Kết Quả Kiểm Thử & Kiểm Toán Tất Định
 
-1. **CWE-22 (Path Traversal)**:
-   - Hai tầng bảo vệ độc lập: Regex Whitelist loại bỏ toàn bộ chuỗi nguy hiểm (`..`, `/`, `\`); giải quyết đường dẫn tuyệt đối với `is_relative_to(corpus_dir)`.
-2. **CWE-78 (OS Command Injection)**:
-   - Toàn bộ subcommands CLI thực thi trong không gian bộ nhớ tiến trình Python, không dùng `subprocess` hay shell commands ngoài luồng.
-3. **CWE-20 (Improper Input Validation)**:
-   - Chuẩn hóa đầu vào người dùng, alias mapping và document slug an toàn.
-4. **RULE-2.5 (Windows Encoding Standard)**:
-   - Đảm bảo tương thích hoàn toàn UTF-8 trên Windows PowerShell.
+### 3.1 Unit & Integration Tests (100% Pass)
+| Test Suite | Lệnh | Kết Quả |
+| :--- | :--- | :---: |
+| Spoke Sync Modules | `python scripts/safe_pytest.py -f scripts/tests/test_spoke_sync_modules.py` | ✅ 30/30 PASSED |
+| Spoke Synchronizer | `python scripts/safe_pytest.py -f scripts/tests/test_spoke_synchronizer.py` | ✅ 8/8 PASSED |
+| Taxonomy Integrity | `python scripts/safe_pytest.py -f tests/governance/test_taxonomy_integrity.py` | ✅ 11 PASSED (1 skipped) |
+| Legal Intel Sync | `python scripts/safe_pytest.py -f packages/ccba-legal-intel/tests/test_sync.py packages/ccba-legal-intel/tests/test_sync_spoke.py` | ✅ 8/8 PASSED |
+| Session Learnings Compaction | `python scripts/safe_pytest.py -f tests/governance/test_compact_session_learnings.py` | ✅ 7/7 PASSED |
+
+### 3.2 ADR-0058 Deterministic Hard Completion Lock
+Đã vượt qua cổng kiểm toán tất định của nền tảng:
+```text
+# 🛡️ Deterministic Patch Verification Report: ✅ ALL PASSED
+- Overall Status: PASS
+- Commands Executed: 2/2 passed (python -m ruff check ., python -m pytest tests/ -q)
+- Total Duration: 30120.7 ms
+```
