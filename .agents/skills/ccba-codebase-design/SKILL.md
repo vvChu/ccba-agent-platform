@@ -19,6 +19,9 @@ keywords:
 - adapter
 - leverage
 - locality
+metadata:
+  author: CCBA
+  version: 1.2.0
 bundle: _core
 tier: kernel
 triggers:
@@ -108,7 +111,7 @@ Good interfaces make testing natural:
 1. **Accept dependencies, don't create them.**
 
    ```typescript
-   // Testable
+   // Testable (TypeScript)
    function processOrder(order, paymentGateway) {}
 
    // Hard to test
@@ -120,7 +123,7 @@ Good interfaces make testing natural:
 2. **Return results, don't produce side effects.**
 
    ```typescript
-   // Testable
+   // Testable (TypeScript)
    function calculateDiscount(cart): Discount {}
 
    // Hard to test
@@ -130,6 +133,53 @@ Good interfaces make testing natural:
    ```
 
 3. **Small surface area.** Fewer methods = fewer tests needed. Fewer params = simpler test setup.
+
+## Deep Seams Pattern in Python (Protocol, DI & ADR-0035 Boundaries)
+
+Trong hệ sinh thái Python Monorepo, việc thiết kế Deep Seams tuân thủ nghiêm ngặt nguyên tắc **Accept dependencies**, trừu tượng hóa bằng `typing.Protocol`, và ranh giới module rõ ràng:
+
+```python
+from __future__ import annotations
+
+from typing import Protocol, runtime_checkable
+
+# 1. Seam Definition (Protocol): Bề mặt giao diện tối giản tại Seam
+@runtime_checkable
+class AuditStorage(Protocol):
+    """Deep Seam: Interface trừu tượng cho tầng lưu trữ audit."""
+    def save_audit(self, payload: dict[str, object]) -> str: ...
+
+# 2. Deep Module: Logic nghiệp vụ phức tạp ẩn sau một giao diện gọn gàng
+class QCAuditService:
+    """Deep Module: Đóng gói toàn bộ validation, checksum, và format.
+    
+    Nhận dependency qua __init__ thay vì tự khởi tạo (Dependency Injection).
+    """
+    def __init__(self, storage: AuditStorage) -> None:
+        self._storage = storage  # Injected adapter
+
+    def audit_document(self, doc_path: str) -> dict[str, object]:
+        # Phức tạp nội bộ (phân tích, OCR, kiểm tra quy chuẩn) được che giấu
+        report = {"path": doc_path, "status": "VERIFIED"}
+        audit_id = self._storage.save_audit(report)
+        report["audit_id"] = audit_id
+        return report
+
+# 3. Ranh giới Gói (Package Boundary - ADR-0035 & PEP 328):
+# packages/my_package/__init__.py chỉ export public seam:
+# __all__ = ["QCAuditService", "AuditStorage"]
+# Chi tiết nội bộ (_internal.py hoặc sqlite_adapter.py) được giữ kín
+```
+
+**So sánh với Anti-pattern (Shallow Module & Hard to test):**
+```python
+# Shallow & Bypassing Seam (KHÔNG NÊN DÙNG):
+class ShallowAuditService:
+    def __init__(self) -> None:
+        # Tự tạo kết nối cứng tới implementation, bypass private module
+        from my_package._internal import ConcreteDatabase
+        self.db = ConcreteDatabase()  # Rất khó mock/test độc lập
+```
 
 ## Relationships
 
@@ -147,9 +197,8 @@ Good interfaces make testing natural:
 
 ## Going deeper
 
-- **Deepening a cluster given its dependencies** — see [DEEPENING.md](DEEPENING.md): dependency categories, seam discipline, and replace-don't-layer testing.
-- **Exploring alternative interfaces** — see [DESIGN-IT-TWICE.md](DESIGN-IT-TWICE.md): spin up parallel sub-agents to design the interface several radically different ways, then compare on depth, locality, and seam placement.
-
+- **Deepening a cluster given its dependencies** — see [deepening.md](references/deepening.md): dependency categories, seam discipline, and replace-don't-layer testing.
+- **Exploring alternative interfaces** — see [design_it_twice.md](references/design_it_twice.md): spin up parallel sub-agents (max 3) to design the interface several radically different ways, then compare on depth, locality, and seam placement.
 
 ## Progressive Disclosure & Reference Index (Level 3)
 
@@ -157,5 +206,12 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
-| `references/codebase_refactor_guide.md` | Cẩm nang rà soát module sâu và tái cấu trúc kiến trúc mã nguồn |
+| `references/codebase_refactor_guide.md` | Cẩm nang rà soát module sâu và 5 Cổng phản biện kiến trúc mã nguồn |
+| `references/deepening.md` | Phân loại dependency và kỷ luật làm sâu module |
+| `references/design_it_twice.md` | Thiết kế 2-3 phương án giao diện đối chiếu (max 3 subagents) |
+| `references/html_report_template.md` | Mẫu HTML báo cáo trực quan với Tailwind & Mermaid |
 
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*

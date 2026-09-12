@@ -63,41 +63,36 @@ npx lighthouse https://example.com     # Performance
 
 → `./references/testing-pyramid-strategy.md`
 
-## Reference Documentation
+## Progressive Disclosure & Reference Index (Level 3)
 
-### Core Testing
-- `./references/unit-integration-testing.md` - Vitest, browser mode, AAA
-- `./references/e2e-testing-playwright.md` - Fixtures, sharding, selectors
-- `./references/playwright-component-testing.md` - CT patterns (production-ready)
-- `./references/component-testing.md` - React/Vue/Angular patterns
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
 
-### Test Infrastructure
-- `./references/test-data-management.md` - Factories, fixtures, seeding
-- `./references/database-testing.md` - Testcontainers, transactions
-- `./references/ci-cd-testing-workflows.md` - GitHub Actions, sharding
-- `./references/contract-testing.md` - Pact, MSW patterns
-
-### Cross-Browser & Mobile
-- `./references/cross-browser-checklist.md` - Browser/device matrix
-- `./references/mobile-gesture-testing.md` - Touch, swipe, orientation
-
-### Performance & Quality
-- `./references/performance-core-web-vitals.md` - LCP/CLS/INP, Lighthouse CI
-- `./references/visual-regression.md` - Screenshot comparison
-- `./references/test-flakiness-mitigation.md` - Stability strategies
-
-### Accessibility & Security
-- `./references/accessibility-testing.md` - WCAG, axe-core
-- `./references/security-testing-overview.md` - OWASP Top 10
-- `./references/security-checklists.md` - Auth, API, headers
-
-### API & Load
-- `./references/api-testing.md` - Supertest, GraphQL
-- `./references/load-testing-k6.md` - k6 patterns
-
-### Checklists
-- `./references/pre-release-checklist.md` - Complete release checklist
-- `./references/functional-testing-checklist.md` - Feature testing
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/testing-pyramid-strategy.md` | Chiến lược phân bổ tỷ trọng kiểm thử: Kim tự tháp, Trophy, Honeycomb |
+| `references/unit-integration-testing.md` | Kiểm thử đơn vị và tích hợp với Vitest, mock data và AAA pattern |
+| `references/e2e-testing-playwright.md` | Kiểm thử E2E toàn diện với Playwright: fixtures, sharding, selectors |
+| `references/playwright-component-testing.md` | Mô hình kiểm thử component trực tiếp bằng Playwright Component Testing |
+| `references/component-testing.md` | Kiểm thử component cho các framework React, Vue, Angular |
+| `references/test-data-management.md` | Quản lý dữ liệu kiểm thử: Factories, fixtures, synthetic data seeding |
+| `references/database-testing.md` | Kiểm thử cơ sở dữ liệu với Testcontainers và transaction rollback |
+| `references/ci-cd-testing-workflows.md` | Tích hợp kiểm thử vào pipeline CI/CD GitHub Actions và sharding song song |
+| `references/contract-testing.md` | Kiểm thử giao ước (Contract Testing) với Pact và MSW mocks |
+| `references/cross-browser-checklist.md` | Ma trận và checklist kiểm thử tương thích đa trình duyệt và thiết bị |
+| `references/mobile-gesture-testing.md` | Kiểm thử thao tác cảm ứng di động: touch, swipe, pinch, orientation |
+| `references/interactive-testing-patterns.md` | Mẫu kiểm thử tương tác người dùng phức tạp (drag-and-drop, canvas, modal) |
+| `references/shadow-dom-testing.md` | Kỹ thuật kiểm thử các Web Components có Shadow DOM và slot elements |
+| `references/performance-core-web-vitals.md` | Đo lường và tối ưu Core Web Vitals (LCP, CLS, INP) qua Lighthouse CI |
+| `references/visual-regression.md` | Kiểm thử hồi quy giao diện qua so sánh ảnh chụp màn hình (pixel diffing) |
+| `references/test-flakiness-mitigation.md` | Chiến lược phát hiện, cô lập và giảm thiểu test chập chờn (flaky tests) |
+| `references/accessibility-testing.md` | Hướng dẫn kiểm thử khả năng truy cập (a11y) theo chuẩn WCAG và axe-core |
+| `references/security-testing-overview.md` | Tổng quan kiểm thử bảo mật ứng dụng web theo chuẩn OWASP Top 10 |
+| `references/security-checklists.md` | Danh mục kiểm tra an toàn web: Auth, headers, CSRF, input validation |
+| `references/vulnerability-payloads.md` | Tập mẫu dữ liệu payload kiểm tra lỗ hổng XSS, SQLi, SSRF, Command Injection |
+| `references/api-testing.md` | Kiểm thử API REST và GraphQL bằng Supertest và HTTP assertions |
+| `references/load-testing-k6.md` | Kiểm thử tải và stress testing với k6 scenarios và metrics |
+| `references/functional-testing-checklist.md` | Danh mục kiểm thử chức năng chi tiết cho web application |
+| `references/pre-release-checklist.md` | Danh mục kiểm định toàn diện trước khi phát hành sản phẩm (Pre-Release Gate) |
 
 ## Scripts
 

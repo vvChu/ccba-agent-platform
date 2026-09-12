@@ -71,5 +71,5 @@ npm run test                                    # All tests
 npx playwright test --project=chromium,firefox  # Cross-browser
 npx @axe-core/cli https://staging.example.com   # Accessibility
 npx lighthouse https://staging.example.com       # Performance
-curl -I https://staging.example.com | grep -i security  # Headers
+curl.exe -I https://staging.example.com | Select-String -Pattern "security"  # Headers
 ```

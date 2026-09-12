@@ -10,6 +10,9 @@ is-orchestrated: true
 user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 triggers:
 - release
 - merge PR

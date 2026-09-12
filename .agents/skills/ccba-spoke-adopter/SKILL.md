@@ -10,6 +10,9 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-spoke-adopter
 category: management
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 keywords:
 - spoke
 - adopt

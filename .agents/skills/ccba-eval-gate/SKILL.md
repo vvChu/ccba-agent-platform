@@ -21,6 +21,9 @@ triggers:
 - run gate
 - ccba-skills-eval
 - skills-eval
+metadata:
+  author: CCBA
+  version: 1.1.0
 package_path: packages/ccba-harness
 ---
 
@@ -64,10 +67,6 @@ Nếu phát hiện Gate bị thất bại:
 5.  **Giới hạn (Retry Cap):** Chỉ lặp lại tối đa **3 lần**. Nếu sau 3 lần vẫn không thể tự sửa thành công, hãy dừng lại, tóm tắt các lỗi gặp phải và xin chỉ thị từ người dùng.
 - **Tiêu chí hoàn thành:** Lỗi được khắc phục và kiểm định chạy lại thành công (hoặc dừng lại báo cáo sau tối đa 3 lần thử).
 
----
-*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-
-
 ## Progressive Disclosure & Reference Index (Level 3)
 
 Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
@@ -75,4 +74,8 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/evaluations_guide.md` | Hướng dẫn thiết lập bộ kiểm thử benchmark và đánh giá độ chính xác của kỹ năng |
+| `references/program_template.md` | Khung mẫu đặc tả chương trình tối ưu hóa tự động theo cơ chế Git-Ratchet Loop |
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 

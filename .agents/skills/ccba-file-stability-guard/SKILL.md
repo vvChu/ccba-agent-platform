@@ -8,6 +8,9 @@ applies_to:
 bundle: _core
 tier: kernel
 command: /ccba-file-stability-guard
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 2.0
   k: 3.0

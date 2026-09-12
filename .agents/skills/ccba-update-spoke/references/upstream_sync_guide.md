@@ -11,6 +11,40 @@ Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho 
 
 ---
 
+## 🚀 Các Cờ CLI Hỗ Trợ (Command Line Flags)
+
+Hệ thống cung cấp các cờ dòng lệnh linh hoạt phục vụ cả tự động hóa lẫn trinh sát thủ công:
+
+| Cờ CLI | Ý nghĩa & Hành vi |
+| :--- | :--- |
+| `--check-only` | Chỉ kiểm tra SHA, tải repo và liệt kê tài nguyên/tệp thay đổi mà không gọi AI Gateway đánh giá |
+| `--scan-all` | Quét toàn bộ tài nguyên trong kho nguồn (bỏ qua điều kiện trùng SHA commit) |
+| `--repo <name>` | Chỉ định kho nguồn cụ thể cần kiểm tra (ví dụ: `--repo claudekit-marketing`, `claudekit-engineer`, `mattpocock-skills`) |
+| `--fast` / `--offline` | Chế độ ngoại tuyến: sử dụng clone cục bộ sẵn có, không gọi mạng `fetch`/`clone`, tận dụng cache đánh giá |
+| `--limit <N>` | Giới hạn tối đa $N$ tài nguyên được đánh giá trong mỗi kho (tránh cạn quota API) |
+
+Ví dụ kích hoạt:
+```powershell
+# Trinh sát nhanh không đánh giá
+python scripts/spoke/check_claudekit_updates.py --check-only
+
+# Quét toàn bộ kỹ năng của một repo ở chế độ offline
+python scripts/spoke/check_claudekit_updates.py --scan-all --repo claudekit-marketing --fast --limit 10
+```
+
+---
+
+## 🛡️ Cơ Chế Vận Hành & Tự Chữa Lành (Self-Healing & Safety)
+
+1. **Khóa Mutex `upstream_sync.lock`:** Tự động tạo tệp khóa tại `.md/scratch/upstream_sync.lock` ngăn chặn xung đột tiến trình nền khi nhiều phiên làm việc cùng khởi động. Khóa áp dụng timeout 300s (KISS) tự động dọn dẹp khóa chết (stale lock).
+2. **Tự chữa lành Git `index.lock`:** Tự động phát hiện và xóa tệp `.git/index.lock` tồn đọng sau sự cố crash/mất điện hoặc server restart đột ngột.
+3. **Clean Clone Fallback:** Khi kho lưu trữ cục bộ bị hỏng chỉ mục (corrupted repository) khiến `git fetch` hoặc `git reset` thất bại, hệ thống tự động dọn dẹp an toàn với `stat.S_IWRITE` (vượt qua rào cản Read-Only trên Windows) và clone lại từ đầu.
+4. **Khử Bẫy Khởi Tạo "Zero-Scan Init Trap":** Khi kho mới clone lần đầu chưa có `local_sha`, hệ thống tự động chuyển sang quét khởi tạo toàn diện thay vì kết thúc sớm.
+5. **Bộ Phân Giải Đa Năng (Multi-Resource Resolver):** Tự động phát hiện kỹ năng phân cấp lồng nhau (nested skills như `document-skills/docx`, `document-skills/pptx`), đồng thời phân biệt rạch ròi giữa **Domain Workflows** (Tier 3 Composite Orchestrator) và **Governance Rules** (Tier 2A Progressive Reference).
+6. **Khử Trùng Lặp Mờ & Bộ Nhớ Đệm Cache:** Tự động loại trừ prefix (`ck-`, `ccba-`), tra cứu `UPSTREAM_ALIAS_MAP` và lưu kết quả đánh giá tại `.md/scratch/upstream_eval_cache.json` để tối ưu tốc độ phản hồi và tiết kiệm token.
+
+---
+
 ## Quy trình 3 Nhịp (Process)
 
 ### Nhịp 1: Trinh sát & Radar Cập nhật (Recon & Diff Radar)
@@ -23,7 +57,7 @@ Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho 
 - **Cơ chế tự chữa lành (Self-Healing):** Nếu gặp lỗi Git index corruption hoặc đứt kết nối mạng, Agent xóa sạch thư mục `.md/scratch/repos/<repo-name>` và tiến hành Clean Clone lại.
 
 ### Nhịp 2: Thẩm tra Thể chế ADR-0057 & RES-2026-ARCH-001 v1.2 (Constitutional Evaluation)
-- Hỏi ý kiến người dùng trước khi quét sâu bằng AI: *"Tôi tìm thấy N file mới. Bạn có muốn kích hoạt AI Gateway thẩm tra theo thể chế ADR-0057 (Khung Quyết Định Hai Giai Đoạn & Radar GPI) để cập nhật báo cáo khuyến nghị không?"*
+- Hỏi ý kiến người dùng trước khi quét sâu bằng AI: *"Tôi tìm thấy N file mới. Bạn có muốn kích hoạt AI Gateway thẩm tra theo thể chế ADR-0057 (Khung Quyết Định Phân Rã Hai Giai Đoạn & Radar GPI) để cập nhật báo cáo khuyến nghị không?"*
 - Nếu người dùng đồng ý, chạy script thẩm tra toàn diện:
   ```powershell
   python scripts/spoke/check_claudekit_updates.py
@@ -41,7 +75,7 @@ Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho 
 - Đọc nội dung cập nhật tại `port_recommendations.md` và trình bày tóm tắt cho người dùng.
 - Hiển thị cú pháp gọi lệnh `/ccba-xia` tương ứng với từng kỹ năng được khuyến nghị, ví dụ:
   ```text
-  /ccba-xia https://github.com/mattpocock/skills <skill-name> --compare
+  /ccba-xia .md/scratch/repos/claudekit-marketing document-skills/docx --port
   ```
 - Kỹ sư kích hoạt lệnh `/ccba-xia` để khởi chạy quy trình 6 Pha (đặc biệt là Hard Gate Pha 4 chống hallucination).
 - **Tiêu chí hoàn thành:** Người dùng nhận được bảng khuyến nghị kèm liên kết lệnh 1-Click Porting rõ ràng.

@@ -12,6 +12,9 @@ disable-model-invocation: true
 bundle: _core
 tier: kernel
 command: /ccba-build-skill
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 3.0
   k: 2.0
@@ -144,4 +147,5 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | :--- | :--- |
 | `references/skill_authoring_guide.md` | Cẩm nang hướng dẫn kỹ sư biên soạn tệp chỉ dẫn SKILL.md chuẩn mực |
 | `references/skill_review_checklist.md` | Bảng kiểm định chất lượng và tuân thủ thể chế ADR-0057 cho kỹ năng |
+| `references/skill_glossary.md` | Bảng thuật ngữ và quy ước định danh kỹ năng chuẩn mực CCBA |
 

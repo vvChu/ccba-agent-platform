@@ -3,6 +3,17 @@
 Unified Deep Facade exporting Sub-Auditors, Common Regexes, and Constitution Cross-Reference Validator.
 """
 
+from .audit_skills_hygiene import (
+    SkillAuditResult,
+    audit_all_skills,
+    check_skills_hygiene,
+)
+from .audit_skills_hygiene import (
+    audit_skill as audit_skill_hygiene,
+)
+from .audit_skills_hygiene import (
+    generate_report as generate_hygiene_report,
+)
 from .base import (
     CODE_REF_RE,
     ENV_VAR_RE,
@@ -59,6 +70,11 @@ __all__ = [
     "RegistryAuditor",
     "SandboxAuditor",
     "SkillAuditor",
+    "SkillAuditResult",
+    "audit_all_skills",
+    "audit_skill_hygiene",
+    "check_skills_hygiene",
+    "generate_hygiene_report",
     "WikiHealthLinter",
     "run_docs_validation_cli",
     "run_skills_validation_cli",

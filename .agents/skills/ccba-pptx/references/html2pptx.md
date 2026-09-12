@@ -315,7 +315,7 @@ After converting HTML to slides with `html2pptx`, you'll use PptxGenJS to add dy
 Always calculate aspect ratios from actual image dimensions:
 
 ```javascript
-// Get image dimensions: identify image.png | grep -o '[0-9]* x [0-9]*'
+// Get image dimensions via Pillow / image probe: python -c "from PIL import Image; print(Image.open('image.png').size)"
 const imgWidth = 1860, imgHeight = 1519;  // From actual file
 const aspectRatio = imgWidth / imgHeight;
 

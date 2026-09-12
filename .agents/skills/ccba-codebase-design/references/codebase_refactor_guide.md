@@ -1,4 +1,4 @@
-# ccba-improve-codebase-architecture — Reference Guide
+# ccba-codebase-design — Codebase Architecture Refactoring Guide
 
 > **Mục đích & Ngữ cảnh sử dụng:** Cẩm nang rà soát module sâu và tái cấu trúc kiến trúc mã nguồn
 > **Mô tả gốc:** Quét codebase tìm kiếm cơ hội làm sâu module, xuất báo cáo trực quan dưới dạng HTML, và thực hiện grilling để chốt phương án cải tiến.
@@ -66,10 +66,15 @@ Quy trình này được định hướng bởi domain model của dự án và 
 - **Tiêu chí hoàn thành:** Toàn bộ $\le 3$ ứng viên đưa vào HTML đều có bảng 5 Cổng đính kèm dẫn chứng `file:line` và số liệu đo thực tế. Phần **"Ứng viên đã loại"** trong HTML **không được để trống** — nếu không có ứng viên nào bị loại, ghi rõ "Không có ứng viên bị loại trong đợt quét này".
 
 ### Bước 3: Trình bày Báo cáo dưới dạng HTML (Present candidates as an HTML report)
+- Cấu trúc trang HTML tuân thủ mẫu chuẩn tại [html_report_template.md](html_report_template.md).
 - Viết một file HTML đơn lẻ (single-file) vào thư mục tạm của dự án: `.md/scratch/architecture-review/architecture-review-<timestamp>.html` (tự động tạo thư mục nếu chưa tồn tại).
-- Kích hoạt mở tệp tin báo cáo bằng trình duyệt mặc định trên hệ thống Windows của kỹ sư thông qua lệnh:
+- Kích hoạt mở tệp tin báo cáo bằng trình duyệt mặc định trên hệ thống Windows của kỹ sư, kèm cơ chế xử lý lỗi an toàn cho môi trường headless:
   ```powershell
-  Start-Process "<absolute-path-to-file>"
+  try {
+      Start-Process "<absolute-path-to-file>"
+  } catch {
+      Write-Warning "Headless environment detected or browser unavailable. Please open manually: file:///<absolute-path-to-file>"
+  }
   ```
 - Trình bày đường dẫn tuyệt đối của tệp tin vừa tạo cho người dùng trên chat.
 - **Đặc trưng thiết kế báo cáo:**
@@ -103,6 +108,18 @@ Quy trình này được định hướng bởi domain model của dự án và 
   * Nếu muốn so sánh các thiết kế interface khác nhau cho module sâu $\rightarrow$ Kích hoạt kỹ năng `/ccba-codebase-design` và chạy cơ chế parallel sub-agent (thiết kế hai phương án độc lập để đối chiếu).
   * **Đề xuất dựng mẫu thử nhanh (ADR 0010):** Sau khi thống nhất phương án triển khai, nếu việc refactor ảnh hưởng trực tiếp đến **Core Platform (Hub)** (ví dụ: sửa đổi core services, metadata registry, database schema chung), Agent bắt buộc phải đề xuất hoặc kích hoạt `/ccba-implement` (nhánh Logic/UI) để dựng nhanh mô phỏng hoạt động trước khi code thật. Đối với các Spoke apps hoặc hàm nghiệp vụ độc lập, Agent đề xuất viết code trực tiếp và chạy suite kiểm thử để tối ưu thời gian.
 - **Tiêu chí hoàn thành:** Phiên chất vấn grilling kết thúc, thống nhất được phương án triển khai cụ thể, và các tài liệu tri thức (`CONTEXT.md`, ADRs) được cập nhật đồng bộ.
+
+### Bước 5: Khóa Cứng Nghiệm Thu Khách Quan (Deterministic Verification Gate - ADR-0058)
+- Trước khi tuyên bố hoàn thành tái cấu trúc hoặc đề xuất merge, bắt buộc chạy kiểm định máy tính khách quan cho package mục tiêu:
+  ```bash
+  python -m ccba_harness verify-patch --preset code --target <package_path>
+  ```
+- Nếu tái cấu trúc trải rộng nhiều package hoặc chạm vào core governance, chạy kiểm định toàn diện CI:
+  ```bash
+  python -m ccba_harness verify-patch --preset ci
+  ```
+- **Quy tắc Khóa Cứng (HUB-ADR-0058):** Nghiêm cấm tuyên bố hoàn tất nếu lệnh verify trả về exit code $\ne 0$.
+- **Tiêu chí hoàn thành:** Báo cáo xác thực từ `verify-patch` đạt trạng thái `✅ ALL PASSED` (exit code 0), 100% tests và linters liên quan đều pass.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

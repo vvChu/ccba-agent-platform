@@ -6,6 +6,9 @@ description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ 
 disable-model-invocation: true
 bundle: _core
 tier: kernel
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 3.5
   k: 2.0

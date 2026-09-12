@@ -10,7 +10,7 @@ argument-hint: <github-url-or-owner/repo|local-path> [feature] [--compare|--copy
   [--auto|--fast]
 metadata:
   author: CCBA
-  version: 2.0.0
+  version: 2.1.0
 disable-model-invocation: true
 bundle: _software
 tier: kernel
@@ -33,7 +33,7 @@ Trích xuất, phân tích và port (chuyển dịch) các tính năng từ bấ
 
 Triết lý cốt lõi: hiểu rõ trước khi sao chép | phản biện trước khi triển khai | thích ứng chứ không cấy ghép
 
-Tham khảo cú pháp, các chế độ chạy (`--compare`, `--port`, v.v.) và cách nhận diện ý định tại [MODES.md](MODES.md).
+Tham khảo cú pháp, các chế độ chạy (`--compare`, `--port`, v.v.) và cách nhận diện ý định tại [references/modes.md](references/modes.md).
 
 ## Phạm vi trách nhiệm (Scope)
 
@@ -104,12 +104,12 @@ Hiểu rõ lý do tại sao mã nguồn chạy như vậy, chứ không chỉ l�
 **Các bước thực hiện:**
 1. Theo dõi luồng thực thi dữ liệu từ điểm đầu vào đến các hiệu ứng phụ (side effects).
 2. Ánh xạ các biến môi trường, cờ cấu hình và công tắc runtime cần thiết để tính năng hoạt động.
-3. Phân tích thích ứng chuyên sâu theo chế độ chạy được chọn (xem chi tiết tại [MODES.md](MODES.md)).
+3. Phân tích thích ứng chuyên sâu theo chế độ chạy được chọn (xem chi tiết tại [references/modes.md](references/modes.md)).
 
 **Tiêu chí hoàn thành:**
 *   [x] Phải mô tả được ít nhất một luồng dữ liệu end-to-end hoàn chỉnh của tính năng.
 *   [x] Phải liệt kê đầy đủ danh sách các biến cấu hình (`.env`) bắt buộc của tính năng nguồn (có thể ghi rõ "None required / Không yêu cầu" nếu là thuật toán thuần túy).
-*   [x] Phải thực hiện và ghi nhận phân tích chuyên sâu tương ứng với chế độ chạy từ [MODES.md](MODES.md) (ví dụ: architectural diff cho `--compare`, phạm vi refactoring cho `--improve`/`--port`, hoặc đánh dấu ranh giới cho `--copy-raw`).
+*   [x] Phải thực hiện và ghi nhận phân tích chuyên sâu tương ứng với chế độ chạy từ [references/modes.md](references/modes.md) (ví dụ: architectural diff cho `--compare`, phạm vi refactoring cho `--improve`/`--port`, hoặc đánh dấu ranh giới cho `--copy-raw`).
 
 ---
 
@@ -190,3 +190,14 @@ Bàn giao kết quả phân tích và kế hoạch triển khai cho người dù
 *   [x] Bàn giao thành công báo cáo so sánh (chế độ `--compare`) hoặc kế hoạch triển khai (chế độ khác) bằng liên kết file click được.
 *   [x] Thư mục tạm `.md/scratch/xia_sources/` đã được xóa sạch.
 *   [x] Đã in Next Step Recommendation phù hợp theo chế độ: khuyến nghị chạy `/ccba-implement` khi ở các chế độ port/improve/copy-raw, hoặc khuyến nghị đánh giá kiến trúc tiếp theo khi ở chế độ `--compare`.
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ trích xuất và chuyển dịch tính năng chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/modes.md` | Bảng tra cứu chi tiết các chế độ chạy (`--compare`, `--copy-raw`, `--improve`, `--port`) và tham số điều khiển |
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

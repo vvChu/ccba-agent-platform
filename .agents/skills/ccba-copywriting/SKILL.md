@@ -92,5 +92,15 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
+| `references/copy-formulas.md` | Các công thức viết thuyết phục kinh điển (AIDA, PAS, BAB, FAB, 4P...) |
+| `references/writing-styles.md` | Định hình phong cách viết, thanh âm (tone & voice) và chuẩn văn phong |
+| `references/headline-templates.md` | Mẫu tiêu đề thu hút sự chú ý và tối ưu tỷ lệ chuyển đổi |
+| `references/email-copy.md` | Kỹ thuật viết email hành chính, email truyền thông và chuỗi nuôi dưỡng |
+| `references/landing-page-copy.md` | Cấu trúc và kỹ thuật viết nội dung trang đích (landing page) chuyển đổi cao |
+| `references/cta-patterns.md` | Các mẫu hình lời kêu gọi hành động (CTA) kích thích tương tác |
+| `references/power-words.md` | Từ điển từ ngữ mạnh mẽ, tạo sức nặng cảm xúc và lập luận thuyết phục |
+| `references/social-media-copy.md` | Chiến lược và định dạng viết bài truyền thông mạng xã hội |
 | `references/viet_chuyen_nghiep_rules.md` | Cẩm nang quy tắc ngữ pháp, văn phong chuyên nghiệp và kiểm tra chất lượng bài viết |
+| `references/viet_chuyen_nghiep/INDEX.md` | Bảng điều hướng Router Index cho 27 submodules chuyên sâu của hệ thống viết chuyên nghiệp |
+
 

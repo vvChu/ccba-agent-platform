@@ -11,6 +11,9 @@ bundle: _core
 tier: kernel
 user-invocable: true
 command: /ccba-excalidraw-diagram
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 3.0
   k: 4.0

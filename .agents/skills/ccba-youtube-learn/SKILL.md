@@ -2,6 +2,9 @@
 name: ccba-youtube-learn
 description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề và
   hình ảnh slide học thuật từ các video YouTube/bài giảng.
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 disable-model-invocation: true
 user-invocable: true
 command: /ccba-youtube-learn
@@ -80,3 +83,13 @@ Sử dụng LLM để phân tích toàn bộ Transcript và danh sách hình ả
 
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi triển khai bóc tách chuyên sâu hoặc chuẩn hóa mẫu hồ sơ diễn giả và thế giới quan, Agent tham khảo các tệp sau:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/speaker_profile_template.md` | Mẫu cấu trúc hồ sơ diễn giả (Speaker Profile) chuẩn mực |
+| `references/worldview_template.md` | Mẫu cấu trúc phân tích thế giới quan và giả định ẩn (Worldview Archaeology) |
+

@@ -8,6 +8,9 @@ user-invocable: true
 disable-model-invocation: true
 bundle: _core
 command: /ccba-knowledge-loop
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 triggers:
 - knowledge-loop
 - vòng lặp tri thức

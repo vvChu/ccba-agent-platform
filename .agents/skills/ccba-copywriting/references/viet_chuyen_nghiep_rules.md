@@ -2,6 +2,7 @@
 
 > **Mục đích & Ngữ cảnh sử dụng:** Cẩm nang quy tắc ngữ pháp, văn phong chuyên nghiệp và kiểm tra chất lượng bài viết
 > **Mô tả gốc:** Viết tiếng Việt chuyên nghiệp — nhà xuất bản AI. Hỗ trợ soạn thảo, review, biên tập, và xuất bản nội dung chuẩn phong cách.
+> **Router Index (Level 3):** Tra cứu chi tiết 27 submodules tại [viet_chuyen_nghiep/INDEX.md](./viet_chuyen_nghiep/INDEX.md).
 
 ---
 

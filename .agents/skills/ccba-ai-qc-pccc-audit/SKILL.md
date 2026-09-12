@@ -9,6 +9,9 @@ bundle: _qc
 tier: kernel
 user-invocable: true
 command: /ccba-ai-qc-pccc-audit
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 2.0
   k: 2.0

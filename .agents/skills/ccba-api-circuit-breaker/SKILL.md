@@ -3,13 +3,15 @@ name: ccba-api-circuit-breaker
 description: Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch
   pipelines. Tránh quota exhaustion, cascade failures, và infinite retry loops khi
   gọi AI Gateway hàng loạt.
-version: 1.2.0
 applies_to:
 - Phần mềm
 - Kiểm định
 bundle: _core
 tier: kernel
 command: /ccba-api-circuit-breaker
+metadata:
+  version: "1.2.0"
+  author: "CCBA Hub"
 dependencies:
 - ccba-ai-gateway-sdk
 gpi:

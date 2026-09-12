@@ -10,6 +10,9 @@ is-orchestrated: true
 user-invocable: true
 disable-model-invocation: true
 command: /ccba-new-feature
+metadata:
+  version: "1.1.0"
+  author: "CCBA Hub"
 triggers:
 - new feature
 - feature mới
@@ -38,12 +41,12 @@ Dọn dẹp các branch cục bộ đã được tích hợp vào `main` (hỗ t
 - **Windows PowerShell:**
   ```powershell
   git fetch -p
-  git branch --merged main | Where-Object { $_ -notmatch 'main' -and $_ -notmatch '^\*' } | ForEach-Object { git branch -d $_.Trim() }
+  git branch --merged main --format='%(refname:short)' | Where-Object { $_ -ne 'main' } | ForEach-Object { git branch -d $_ }
   ```
 - **Bash (Linux / macOS / Git Bash):**
   ```bash
   git fetch -p
-  git branch --merged main | grep -vE '^\*|main$' | xargs -r git branch -d
+  git branch --merged main --format='%(refname:short)' | while read -r b; do [ "$b" != "main" ] && git branch -d "$b"; done
   ```
 - **Tiêu chí hoàn thành:** Toàn bộ branch cục bộ đã merge vào `main` được dọn dẹp sạch sẽ.
 

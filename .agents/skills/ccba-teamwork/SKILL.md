@@ -15,6 +15,9 @@ user-invocable: true
 command: /ccba-teamwork
 disable-model-invocation: true
 bundle: _core
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 triggers:
 - teamwork
 - ccba-teamwork

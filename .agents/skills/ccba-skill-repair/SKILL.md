@@ -1,6 +1,9 @@
 ---
 name: ccba-skill-repair
 description: Phục hồi và sửa chữa kỹ năng AI theo thể chế ADR-0057 và bộ kiểm định ccba-harness.
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 disable-model-invocation: true
 user-invocable: true
 command: /ccba-skill-repair

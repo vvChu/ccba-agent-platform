@@ -45,7 +45,9 @@ Tài liệu tham chiếu chi tiết: [server_spark_agent_instructions.md](../../
 1. Kiểm tra tệp thực thi `run_nightly_tuner.sh` và cấp quyền thực thi: `chmod +x run_nightly_tuner.sh`.
 2. Đăng ký tiến trình chạy nền tự động hàng đêm vào `crontab` với biểu thức `0 0 * * *`:
    ```bash
-   (crontab -l 2>/dev/null; echo "0 0 * * * /bin/bash ~/ccba/ccba-agent-platform/scripts/eval/run_nightly_tuner.sh >> ~/ccba/logs/cron.log 2>&1") | crontab -
+   crontab -l > /tmp/crontab.tmp || true
+   echo "0 0 * * * /bin/bash ~/ccba/ccba-agent-platform/scripts/eval/run_nightly_tuner.sh >> ~/ccba/logs/cron.log 2>&1" >> /tmp/crontab.tmp
+   crontab /tmp/crontab.tmp && rm /tmp/crontab.tmp
    ```
 3. Khởi tạo thư mục nhật ký `~/ccba/logs/` nếu chưa tồn tại.
 - **Tiêu chí hoàn thành:** Cron job đăng ký chính xác trong crontab hệ thống và ghi nhận log đường dẫn.

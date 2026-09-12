@@ -7,6 +7,9 @@ tier: kernel
 command: /ccba-legal-intel
 layer: _consulting
 package_path: packages/ccba-legal-intel
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 4.0
   k: 4.0

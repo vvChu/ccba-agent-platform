@@ -19,7 +19,7 @@ triggers:
 - quality
 metadata:
   author: CCBA
-  version: 1.1.0
+  version: 1.2.0
 disable-model-invocation: true
 bundle: _software
 tier: kernel
@@ -75,9 +75,14 @@ Hỏi người dùng: *"Giao diện công khai là gì, và chúng ta nên kiể
 - **Refactoring là một phần bắt buộc:** Phải được thực hiện ngay sau khi test pass (Green) để giữ cho codebase luôn sạch sẽ trước khi chuyển sang chu kỳ tiếp theo.
 - **Ngân sách Vòng lặp (Loop Budget):** Tối đa **5 vòng** Red→Green→Refactor cho cùng một seam hoặc test file. Sử dụng `python scripts/safe_pytest.py -f <test_file>` để chạy test an toàn dưới dạng detached process. Nếu sau 5 vòng test vẫn thất bại, Agent phải dừng lại, commit Work-In-Progress (WIP), ghi nhận rõ các blockers chưa giải quyết được, và chuyển sang seam tiếp theo hoặc xin chỉ thị từ người dùng. Quy tắc này ngăn chặn việc đốt cháy context budget qua vòng lặp vô hạn (xem `issue-wayfinder-cancelled-execution`).
 
-## Tài liệu tham khảo
-- Xem [tests.md](tests.md) để biết các ví dụ thực tế.
-- Xem [mocking.md](mocking.md) để biết hướng dẫn mock chuẩn.
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ kiểm thử và thiết kế seams chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/tests.md` | Bộ đối chiếu kiểm thử tốt vs xấu (Integration-style vs Implementation-detail tests) |
+| `references/mocking.md` | Hướng dẫn kỹ thuật mock tại ranh giới hệ thống (system boundaries, DI, SDK-style) |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

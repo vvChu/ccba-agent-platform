@@ -22,6 +22,9 @@ keywords:
 disable-model-invocation: true
 bundle: _software
 tier: kernel
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 triggers:
 - grill
 - stress-test

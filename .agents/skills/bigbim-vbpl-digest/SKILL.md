@@ -10,6 +10,9 @@ bundle: _bim
 tier: kernel
 command: /bigbim-vbpl-digest
 layer: _bim
+metadata:
+  version: "1.0.0"
+  author: "BIGBIM"
 gpi:
   s: 3.0
   k: 2.0

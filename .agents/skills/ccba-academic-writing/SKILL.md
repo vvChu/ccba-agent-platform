@@ -6,6 +6,9 @@ role: master_skill
 disable-model-invocation: true
 user-invocable: true
 command: /ccba-academic-writing
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 when_to_use: Invoke when the user wants to brainstorm, draft, outline, or revise a
   scientific research paper, journal article, or seminar presentation.
 gpi:
@@ -121,4 +124,6 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/long_form_chunking.md` | Kỹ thuật phân chia chương mục và viết bài học thuật dung lượng lớn |
+| `references/academic_phrasebank.md` | Ngân hàng cụm từ tiếng Anh học thuật chuẩn mực theo từng phần của bài báo |
+| `references/audit_report_format.md` | Mẫu báo cáo kiểm duyệt vi mô cấu trúc câu, trích dẫn và văn phong học thuật |
 

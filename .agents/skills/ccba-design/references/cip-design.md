@@ -115,7 +115,7 @@ python [hub_path]/.agents/skills/ccba-design/scripts/cip/render-html.py --brand 
 
 ## Setup
 
-```bash
-export GEMINI_API_KEY="your-key"
+```powershell
+$env:GEMINI_API_KEY="your-key"
 pip install google-genai pillow
 ```

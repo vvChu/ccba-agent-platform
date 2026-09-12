@@ -1,11 +1,11 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements - dispatches code-reviewer subagent to review implementation against plan or requirements before proceeding
+description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements - dispatches review subagents to review implementation against plan or requirements before proceeding
 ---
 
 # Requesting Code Review
 
-Dispatch code-reviewer subagent to catch issues before they cascade.
+Dispatch review subagents (Standards Worker & Spec Worker) to catch issues before they cascade.
 
 **Core principle:** Scout first, review often.
 
@@ -23,9 +23,9 @@ Dispatch code-reviewer subagent to catch issues before they cascade.
 
 ## How to Request
 
-**0. Scout edge cases first (NEW):**
+**0. Scout edge cases first:**
 ```
-Before dispatching code-reviewer, invoke /ck:scout to find:
+Before dispatching review subagents, scout edge cases to find:
 - Files affected by changes (not just modified files)
 - Data flow paths that could break
 - Edge cases and boundary conditions
@@ -35,14 +35,14 @@ See: edge-case-scouting.md
 ```
 
 **1. Get git SHAs:**
-```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+```powershell
+$BASE_SHA = git rev-parse HEAD~1  # or origin/main
+$HEAD_SHA = git rev-parse HEAD
 ```
 
-**2. Dispatch code-reviewer subagent:**
+**2. Dispatch review subagents:**
 
-Use Task tool with `code-reviewer` type, fill template at `code-reviewer.md`
+Dispatch review subagents (Standards Worker & Spec Worker) with read-only tools and Two-Layer Sub-Agent Guardrail.
 
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built
@@ -50,6 +50,19 @@ Use Task tool with `code-reviewer` type, fill template at `code-reviewer.md`
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 - `{DESCRIPTION}` - Brief summary
+
+**PR Review & Copilot Gating:**
+When reviewing a Pull Request before merge:
+```bash
+# Audit Copilot review comments and unaddressed suggestions
+python scripts/validation/audit_pr_comments.py --pr <pr_number>
+```
+If Copilot has pending feedback, address each finding before proceeding.
+
+**Simplify Gate & Diff Complexity Threshold (RULE-2.10):**
+Inspect diff size against complexity thresholds (`scripts/hooks/simplify.py`):
+- Thresholds: Max 400 LOC total / Max 8 files / Max 200 LOC per file.
+- If diff exceeds thresholds without approval, break into smaller commits or provide explicit rationale: `# APPROVED: <reason>`.
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -63,18 +76,19 @@ Use Task tool with `code-reviewer` type, fill template at `code-reviewer.md`
 [Just completed Task 2: Add verification function]
 
 You: Let me request code review before proceeding.
+```powershell
+$BASE_SHA = git log --grep="Task 1" -n 1 --format="%H"
+$HEAD_SHA = git rev-parse HEAD
+```
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
-
-[Dispatch code-reviewer subagent]
+[Dispatch review subagents]
   WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
   PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
 
-[Subagent returns]:
+[Subagents return]:
   Strengths: Clean architecture, real tests
   Issues:
     Important: Missing progress indicators
@@ -112,5 +126,3 @@ You: [Fix progress indicators]
 - Push back with technical reasoning
 - Show code/tests that prove it works
 - Request clarification
-
-See template at: requesting-code-review/code-reviewer.md
