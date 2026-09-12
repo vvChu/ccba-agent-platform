@@ -456,6 +456,21 @@ def run_skills_validation_cli(auditor: DocumentAuditor, args_list: list[str] | N
                 print(f"  [{g_issue.category}] {g_issue.message}")
                 total_errors += 1
 
+    # Check mode: verify catalog and docs synchronization (ADR-0047 & ADR-0058)
+    if getattr(args, "check", False) and not has_explicit_targets:
+        from scripts.governance.compile_catalog import check_catalog_in_sync
+        from scripts.governance.compile_skills_docs import check_skills_docs_in_sync
+
+        cat_ok, cat_err = check_catalog_in_sync(auditor.project_root)
+        if not cat_ok:
+            print(f"\n\x1b[31m[CATALOG SYNC ERROR]\x1b[0m {cat_err}")
+            total_errors += 1
+
+        docs_ok, docs_err = check_skills_docs_in_sync(auditor.project_root)
+        if not docs_ok:
+            print(f"\n\x1b[31m[SKILLS DOCS SYNC ERROR]\x1b[0m {docs_err}")
+            total_errors += 1
+
     if total_errors > 0:
         warn_note = f" (and {total_warnings} warning(s))" if total_warnings else ""
         print(f"\nValidation failed with {total_errors} error(s){warn_note}.")

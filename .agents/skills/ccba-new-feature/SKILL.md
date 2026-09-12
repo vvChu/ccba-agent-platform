@@ -41,12 +41,12 @@ Dọn dẹp các branch cục bộ đã được tích hợp vào `main` (hỗ t
 - **Windows PowerShell:**
   ```powershell
   git fetch -p
-  git branch --merged main | Where-Object { $_ -notmatch 'main' -and $_ -notmatch '^\*' } | ForEach-Object { git branch -d $_.Trim() }
+  git branch --merged main --format='%(refname:short)' | Where-Object { $_ -ne 'main' } | ForEach-Object { git branch -d $_ }
   ```
 - **Bash (Linux / macOS / Git Bash):**
   ```bash
   git fetch -p
-  git branch --merged main | while read -r b; do [[ "$b" != *"main"* && "$b" != "*"* ]] && git branch -d "$b"; done
+  git branch --merged main --format='%(refname:short)' | while read -r b; do [ "$b" != "main" ] && git branch -d "$b"; done
   ```
 - **Tiêu chí hoàn thành:** Toàn bộ branch cục bộ đã merge vào `main` được dọn dẹp sạch sẽ.
 

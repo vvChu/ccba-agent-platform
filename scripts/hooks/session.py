@@ -58,16 +58,16 @@ class SessionInitHook(BaseHook):
         else:
             print("[session-init] Warning: Not inside a Git repository.")
 
-        # 2. Create .md directory if missing (Global Rule 1)
+        # 2. Create .md directory and extracted_docs if missing (Global Rule 1)
         root_dir = Path(git_root) if git_root else cwd
         kb_dir = root_dir / ".md"
-        if not kb_dir.exists():
-            try:
+        try:
+            if not kb_dir.exists():
                 kb_dir.mkdir(exist_ok=True)
-                (kb_dir / "extracted_docs").mkdir(exist_ok=True)
                 print(f"[session-init] Created central Knowledge Base folder: {kb_dir}")
-            except Exception as e:
-                print(f"[session-init] Error creating .md directory: {e}")
+            (kb_dir / "extracted_docs").mkdir(exist_ok=True)
+        except Exception as e:
+            print(f"[session-init] Error creating .md directory: {e}")
 
         # 3. Trigger ClaudeKit update checker if available
         checker_script = (
