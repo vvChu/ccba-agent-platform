@@ -37,3 +37,27 @@ Khi triển khai mã nguồn dựa trên đặc tả (Spec):
   2. `python scripts/governance/compile_skills_docs.py --write` (Đồng bộ Web Docs Portal, Markdown docs, và llms.txt).
   3. `python scripts/sync_hub_adr_matrix.py` (Đồng bộ Living Traceability Matrix nếu kỹ năng có viện dẫn hoặc điều chỉnh phạm vi ADR).
 
+---
+
+## 5. Clean Upstream Porting & Foreign Framework Pruning (KISS)
+- **Tẩy uế tàn dư ngoại lai (Clean Dead Wood):** Khi chuyển đổi (port) hoặc nâng cấp bất kỳ kỹ năng nào từ nguồn thượng nguồn (ClaudeKit, external plugins), Agent **BẮT BUỘC** phải loại bỏ hoàn toàn:
+  1. Các thẻ XML điều phối ngoại lai (ví dụ: `<tasks>`, `<task>`, `<action>`).
+  2. Các hướng dẫn/tệp tin mô tả hệ thống quản lý tác vụ không tương thích (như Claude Native Tasks: `TaskCreate`, `TaskUpdate`, `TaskList`).
+  3. Các lệnh giả định hoặc công cụ không tồn tại trong nền tảng CCBA (ví dụ: `/ck:*`, `/ultrathink`, `git-manager`, `AskUserQuestion`).
+- **Nguyên tắc Tối Giản (KISS):** Mọi quy trình điều phối đa tác tử (Parallel Review, Codebase Scan) phải tinh gọn tối đa $\le 2$ subagents chuyên biệt (ví dụ: `Standards Worker` & `Spec Worker`), tuân thủ Single-Writer Protocol và chỉ xuất nháp vào sandbox `.system_generated/scratch/`.
+
+---
+
+## 6. Safe Headless External Process Fallback
+- Khi viết kịch bản, hướng dẫn hoặc quy trình có thao tác mở tệp/giao diện ngoại vi trên máy trạm lập trình viên (ví dụ: mở tệp HTML báo cáo, tài liệu Word/PDF):
+- Agent **BẮT BUỘC** phải bọc lệnh mở tiến trình trong khối xử lý lỗi an toàn đa nền tảng:
+  ```powershell
+  try {
+      Start-Process "<absolute-path-to-file>"
+  } catch {
+      Write-Warning "Headless environment detected or browser unavailable. Please open manually: file:///<absolute-path-to-file>"
+  }
+  ```
+- Tuyệt đối không để lệnh mở file trần không có xử lý ngoại lệ gây crash hoặc đứt gãy luồng thực thi tự động trong môi trường headless, CI runner, hoặc SSH sessions.
+
+
