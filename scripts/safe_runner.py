@@ -15,11 +15,12 @@ if str(scripts_dir) not in sys.path:
 
 try:
     from ccba_harness import DetachedExecutionEngine
-except ImportError:
-    hub_harness_src = Path(__file__).resolve().parent.parent / "packages" / "ccba-harness" / "src"
-    if hub_harness_src.exists() and str(hub_harness_src) not in sys.path:
-        sys.path.insert(0, str(hub_harness_src))
-    from ccba_harness import DetachedExecutionEngine
+except ImportError as exc:
+    raise ImportError(
+        "ccba-harness package is required by safe_runner.py. "
+        "Please install it in your environment: pip install -e <hub_path>/packages/ccba-harness "
+        "or run 'python scripts/spoke_bootstrap.py'"
+    ) from exc
 
 # Backward compatibility module-level function aliases
 resolve_scratch_dir = DetachedExecutionEngine.resolve_scratch_dir

@@ -109,11 +109,12 @@ python [hub_path]\scripts\sync_spoke.py --spoke . --rollback
 ## 📋 Báo Cáo Kết Quả & Dọn Dẹp:
 1. **Báo cáo đồng bộ:** Báo cáo chi tiết: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
 2. **Tổng kết tri thức pháp lý (ADR 0050):** Hiển thị số lượng gói OKF v2.4 đã đồng bộ.
-3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (ADR 0044 §7):**
-   ```powershell
-   Copy-Item "$hub\scripts\spoke\check_hub_import_depth.py" -Destination ".\scripts\check_hub_import_depth.py" -Force
-   Copy-Item "$hub\scripts\spoke\check_spoke_cleanliness.py" -Destination ".\scripts\check_spoke_cleanliness.py" -Force
-   ```
+3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (Tự động hóa 100% qua `--apply` — ADR 0044 §7):**
+   * Lệnh `sync_spoke.py --apply` tự động đồng bộ và cập nhật các kịch bản kiểm định guardrails vào thư mục `scripts/` tại Spoke:
+     - `scripts/safe_pytest.py` (Test runner an toàn)
+     - `scripts/check_hub_import_depth.py` (Kiểm soát độ sâu import)
+     - `scripts/check_spoke_cleanliness.py` (Rào chắn cleanliness & script budget)
+   * *(Không yêu cầu sao chép thủ công bằng PowerShell).*
 4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python .\scripts\check_spoke_cleanliness.py`.
 5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "[hub_path]\packages\[pkg]"` và chạy test cục bộ (ví dụ: `pytest` hoặc `python scripts\validate_legal_spoke.py` đối với Spoke Pháp điển).
 6. **Kiểm tra sức khỏe tổng thể:** Chạy `ccba-spoke status` (hoặc `python "[hub_path]\scripts\ccba_platform_cli.py" spoke-status`) xác nhận trạng thái xanh.

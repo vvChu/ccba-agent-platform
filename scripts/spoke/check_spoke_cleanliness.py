@@ -24,6 +24,7 @@ ALLOWLIST_SCRIPTS = {
     "__init__.py",
     "conftest.py",
     "safe_pytest.py",
+    "safe_runner.py",
     "check_hub_import_depth.py",
     "check_spoke_cleanliness.py",
     "check_claudekit_updates.py",

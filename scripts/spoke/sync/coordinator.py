@@ -194,10 +194,6 @@ PROJECT_TYPE_ALIASES: dict[str, str] = {
     "tri thức pháp lý": "Pháp điển",
     "tri thuc phap ly": "Pháp điển",
     "legal knowledge": "Pháp điển",
-    "knowledge_corpus": "Pháp điển",
-    "knowledge-base": "Pháp điển",
-    "knowledge_base": "Pháp điển",
-    "second-brain": "Pháp điển",
     "legal": "Pháp điển",
     "pháp điển": "Pháp điển",
     "phap dien": "Pháp điển",
@@ -244,7 +240,7 @@ PROJECT_TYPE_ALIASES: dict[str, str] = {
     "bim consulting": "BIM",
     "tư vấn bim": "BIM",
     "tu van bim": "BIM",
-    # Tác vụ Admin
+    # Tác vụ Admin (General Knowledge Bases & Second Brain)
     "admin": "Tác vụ Admin",
     "tác vụ admin": "Tác vụ Admin",
     "tac vu admin": "Tác vụ Admin",
@@ -253,6 +249,11 @@ PROJECT_TYPE_ALIASES: dict[str, str] = {
     "hành chính": "Tác vụ Admin",
     "hanh chinh": "Tác vụ Admin",
     "enterprise_governance": "Tác vụ Admin",
+    "knowledge_corpus": "Tác vụ Admin",
+    "knowledge-base": "Tác vụ Admin",
+    "knowledge_base": "Tác vụ Admin",
+    "second-brain": "Tác vụ Admin",
+    "second_brain": "Tác vụ Admin",
 }
 
 
@@ -810,7 +811,10 @@ class SpokeSynchronizer:
                 spoke_agents_md.write_text(merged_content, encoding="utf-8")
 
         # 4. Test guardrails
-        TestGuardrailCopier(spoke_root, hub_root, project_type).copy_if_needed(dry_run=dry_run)
+        guardrail_actions = TestGuardrailCopier(spoke_root, hub_root, project_type).copy_if_needed(
+            dry_run=dry_run
+        )
+        actions.extend(guardrail_actions)
 
         # 5. Spoke telemetry refresh & registration (ADR-0046)
         if not dry_run:
