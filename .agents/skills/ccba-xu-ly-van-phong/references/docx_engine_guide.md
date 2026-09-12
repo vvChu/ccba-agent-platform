@@ -140,11 +140,11 @@ Example - Changing "30 days" to "60 days" in a sentence:
 
    For each batch of related changes:
 
-   **a. Map text to XML**: Grep for text in `word/document.xml` to verify how text is split across `<w:r>` elements.
+   **a. Map text to XML**: Search (Select-String / grep) for text in `word/document.xml` to verify how text is split across `<w:r>` elements.
 
    **b. Create and run script**: Use `get_node` to find nodes, implement changes, then `doc.save()`. See **"Document Library"** section in ooxml.md for patterns.
 
-   **Note**: Always grep `word/document.xml` immediately before writing a script to get current line numbers and verify text content. Line numbers change after each script run.
+   **Note**: Always inspect (Select-String / grep) `word/document.xml` immediately before writing a script to get current line numbers and verify text content. Line numbers change after each script run.
    **Completion Criterion:** Toàn bộ các batch thay đổi được áp dụng thành công mà không phát sinh lỗi XML parsing hoặc script exceptions.
 
 5. **Pack the document**: After all batches are complete, convert the unpacked directory back to .docx:
@@ -159,12 +159,12 @@ Example - Changing "30 days" to "60 days" in a sentence:
      pandoc --track-changes=all reviewed-document.docx -o verification.md
      ```
    - Verify ALL changes were applied correctly:
-     ```bash
-     grep "original phrase" verification.md  # Should NOT find it
-     grep "replacement phrase" verification.md  # Should find it
-     ```
-   - Check that no unintended changes were introduced
-   **Completion Criterion:** Kết quả đối soát (grep) chứng minh toàn bộ các thay đổi mong muốn đã nằm trong file và không phát sinh lỗi cấu trúc.
+      ```powershell
+      Select-String "original phrase" verification.md  # Should NOT find it
+      Select-String "replacement phrase" verification.md  # Should find it
+      ```
+    - Check that no unintended changes were introduced
+    **Completion Criterion:** Kết quả đối soát (Select-String) chứng minh toàn bộ các thay đổi mong muốn đã nằm trong file và không phát sinh lỗi cấu trúc.
 
 
 ## Converting Documents to Images
@@ -204,8 +204,8 @@ pdftoppm -jpeg -r 150 -f 2 -l 5 document.pdf page  # Converts only pages 2-5
 
 Required dependencies (install if not available):
 
-- **pandoc**: `sudo apt-get install pandoc` (for text extraction)
+- **pandoc**: Windows WinGet: `winget install --id JohnMacFarlane.Pandoc` (for text extraction)
 - **docx**: `npm install -g docx` (for creating new documents)
-- **LibreOffice**: `sudo apt-get install libreoffice` (for PDF conversion)
-- **Poppler**: `sudo apt-get install poppler-utils` (for pdftoppm to convert PDF to images)
+- **LibreOffice**: Windows WinGet: `winget install --id TheDocumentFoundation.LibreOffice` (for PDF conversion)
+- **Poppler**: Windows Choco: `choco install poppler` (for pdftoppm to convert PDF to images)
 - **defusedxml**: `pip install defusedxml` (for secure XML parsing)

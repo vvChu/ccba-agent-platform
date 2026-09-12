@@ -20,8 +20,8 @@ keywords:
 argument-hint: '[design-type] [context]'
 license: MIT
 metadata:
-  author: claudekit
-  version: 2.1.0
+  author: CCBA
+  version: 2.2.0
 bundle: _consulting
 tier: kernel
 layer: _consulting
@@ -37,7 +37,6 @@ triggers:
 - slide design
 - banner design
 - cip mockup
-- ckm:design
 - mockup
 ---
 # Design
@@ -98,7 +97,7 @@ python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --prompt "
 
 **IMPORTANT:** When scripts fail, try to fix them directly.
 
-After generation, **ALWAYS** ask user about HTML preview via `AskUserQuestion`. If yes, invoke `/ui-ux-pro-max` for gallery.
+After generation, **ALWAYS** ask user about HTML preview via `ask_question`. If yes, generate an interactive HTML preview gallery.
 
 ## CIP Design (Built-in)
 
@@ -169,13 +168,13 @@ Load `references/banner-sizes-and-styles.md` for complete sizes and styles refer
 
 ### Banner: Workflow
 
-1. **Gather requirements** via `AskUserQuestion` — purpose, platform, content, brand, style, quantity
+1. **Gather requirements** via `ask_question` — purpose, platform, content, brand, style, quantity
    **Completion Criterion:** Requirements document populated with specific width, height, style preferences, and copy.
-2. **Research** — Activate `ui-ux-pro-max`, browse Pinterest for references
-   **Completion Criterion:** At least 3 reference URLs or style inspirations documented.
-3. **Design** — Create HTML/CSS banner with `frontend-design`, generate visuals with `ai-artist`/`ai-multimodal`
+2. **Research** — Browse reference styles, layouts, and visual patterns
+   **Completion Criterion:** At least 3 reference styles or design inspirations documented.
+3. **Design** — Create HTML/CSS banner layout and generate visual assets
    **Completion Criterion:** Valid HTML/CSS files representing the banner layout generated.
-4. **Export** — Screenshot to PNG at exact dimensions via `ck:agent-browser`, Chrome headless, or Playwright
+4. **Export** — Screenshot to PNG at exact dimensions via Chrome headless or Playwright
    **Completion Criterion:** High-resolution PNG banner files exported at targeted dimensions with correct naming.
 5. **Present** — Show all options side-by-side, iterate on feedback
    **Completion Criterion:** Presentation output containing links to generated banners displayed to the user.
@@ -253,27 +252,27 @@ python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "
 
 ## Social Photos (Built-in)
 
-Multi-platform social image design: HTML/CSS → screenshot export. Uses `ui-ux-pro-max`, `brand`, `design-system`, and browser capture tools.
+Multi-platform social image design: HTML/CSS → screenshot export. Uses structured design tokens, clean typography, and headless browser capture tools.
 
 Load `references/social-photos-design.md` for sizes, templates, best practices.
 
 ### Social Photos: Workflow
 
-1. **Orchestrate** — `project-management` skill for TODO tasks; parallel subagents for independent work
-   **Completion Criterion:** Task checklist initialized in `task.md` with assigned subagent roles.
+1. **Orchestrate** — Define task checklist and organize design workflow
+   **Completion Criterion:** Task checklist initialized with output targets.
 2. **Analyze** — Parse prompt: subject, platforms, style, brand context, content elements
    **Completion Criterion:** Clear analysis of output sizes and key visual requirements documented.
-3. **Ideate** — 3-5 concepts, present via `AskUserQuestion`
+3. **Ideate** — 3-5 concepts, present via `ask_question`
    **Completion Criterion:** Concepts presented to user and a final design direction approved.
-4. **Design** — `/ckm:brand` → `/ckm:design-system` → randomly invoke `/ck:ui-ux-pro-max` OR `/ck:frontend-design`; HTML per idea × size
+4. **Design** — Extract brand colors/tokens, structure HTML/CSS layouts per idea × size
    **Completion Criterion:** Design HTML files generated utilizing proper CSS/JS and matching approved concept.
-5. **Export** — `ck:agent-browser`, Chrome headless, or Playwright screenshot at exact px (2x deviceScaleFactor)
+5. **Export** — Chrome headless or Playwright screenshot at exact px (2x deviceScaleFactor)
    **Completion Criterion:** Image files (PNG/JPG) exported at designated device scale factor.
-6. **Verify** — Use Chrome MCP / `chrome-devtools-mcp`, `ck:agent-browser`, `ck:chrome-profile`, or Playwright to visually inspect exported designs; fix layout/styling issues and re-export
+6. **Verify** — Visually inspect exported designs via Chrome DevTools or Playwright; fix layout/styling issues and re-export
    **Completion Criterion:** Browser screenshot validation logs confirm no visual overflow or text layout issues.
-7. **Report** — Summary to `plans/reports/` with design decisions
-   **Completion Criterion:** Report file created under `plans/reports/` summarizing style decisions.
-8. **Organize** — Invoke `assets-organizing` skill to sort output files and reports
+7. **Report** — Summary with design decisions and asset paths
+   **Completion Criterion:** Report file created summarizing style decisions.
+8. **Organize** — Structure output files and reports in dedicated subdirectories
    **Completion Criterion:** Output assets structured neatly in dedicated subdirectories.
 
 ### Social Photos: Key Sizes
@@ -342,12 +341,40 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 
 ## Setup
 
-```bash
-export GEMINI_API_KEY="your-key"  # https://aistudio.google.com/apikey
+```powershell
+$env:GEMINI_API_KEY="your-key"  # https://aistudio.google.com/apikey
 pip install google-genai pillow
 ```
 
-## Integration
+## Tích hợp hệ thống & Vị trí trong Luồng công việc (Workflow Position)
 
-**External sub-skills:** brand, design-system, ui-styling
-**Related Skills:** frontend-design, ui-ux-pro-max, ai-multimodal, agent-browser, chrome-profile
+- **Thường chạy sau:** `/ccba-domain-modeling`, `/ccba-to-spec` (Khi đã xác định rõ domain và định hướng thương hiệu).
+- **Thường chạy trước:** `/ccba-implement`, `/ccba-seminar-builder` (Cung cấp tài sản hình ảnh, icon, slide cho implementation và seminar).
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ thiết kế chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/logo-design.md` | Quy trình tạo logo, brief nhận diện và bộ biến thể thương hiệu |
+| `references/logo-style-guide.md` | Cẩm nang phong cách thiết kế logo theo từng nhóm ngành nghề |
+| `references/logo-color-psychology.md` | Tâm lý học màu sắc và bảng phối màu tương thích theo cảm xúc |
+| `references/logo-prompt-engineering.md` | Kỹ thuật prompt AI sinh hình ảnh logo vector và biểu trưng |
+| `references/cip-design.md` | Thiết kế bộ nhận diện thương hiệu doanh nghiệp (CIP) toàn diện |
+| `references/cip-deliverable-guide.md` | Danh mục 50+ ấn phẩm bàn giao CIP (namecard, phong bì, đồng phục) |
+| `references/cip-style-guide.md` | Tiêu chuẩn thẩm mỹ, typography và khoảng cách an toàn cho CIP |
+| `references/cip-prompt-engineering.md` | Kỹ thuật prompt sinh phối cảnh mockups thực tế cho ấn phẩm CIP |
+| `references/banner-sizes-and-styles.md` | Thông số kích thước chuẩn và 22 phong cách thiết kế banner |
+| `references/social-photos-design.md` | Thiết kế hình ảnh mạng xã hội (Facebook, Instagram, LinkedIn, X) |
+| `references/icon-design.md` | Thiết kế icon SVG, biểu tượng giao diện và bộ icons đồng nhất |
+| `references/slides.md` | Tổng quan quy trình thiết kế slide thuyết trình chuyên nghiệp |
+| `references/slides-create.md` | Khởi tạo cấu trúc slide bài trình bày theo mục tiêu truyền thông |
+| `references/slides-strategies.md` | Chiến lược cấu trúc câu chuyện và tâm lý khán giả khi trình bày |
+| `references/slides-layout-patterns.md` | Bố cục layout slide (so sánh, timeline, card, số liệu nổi bật) |
+| `references/slides-copywriting-formulas.md` | Công thức viết lời tựa, tiêu đề và tóm lược thông điệp cốt lõi |
+| `references/slides-html-template.md` | Mẫu khung mã nguồn HTML/CSS/JS slide trình diễn tương tác |
+| `references/design-routing.md` | Ma trận định tuyến nghiệp vụ thiết kế đa bộ môn và phân loại tài sản |
+
+---
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

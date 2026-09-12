@@ -3,6 +3,9 @@ name: ccba-research
 description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với
   các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ trợ
   Dual-Agent Adversarial).
+metadata:
+  version: "1.2.0"
+  author: "CCBA Hub"
 user-invocable: true
 command: /ccba-research
 gpi:
@@ -131,4 +134,6 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/sequential_thinking_method.md` | Phương pháp tư duy suy luận tuần tự nhiều bước (Sequential Thinking) |
+| `references/sequential_core-patterns.md` | Các mẫu hình cốt lõi và khung giải thuật tư duy logic |
+| `references/sequential_advanced-techniques.md` | Kỹ thuật suy luận phản biện nâng cao và phân nhánh giả thuyết |
 

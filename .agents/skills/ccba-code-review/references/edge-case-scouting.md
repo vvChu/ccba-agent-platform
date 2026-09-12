@@ -27,9 +27,9 @@ Code reviews catch obvious issues but miss subtle side effects. Scout detects:
 git diff --name-only HEAD~1
 ```
 
-### 2. Invoke Scout
+### 2. Scout Risk Areas
 ```
-/ck:scout edge cases for recent changes.
+Scout edge cases for recent changes.
 
 Changed: {files from git diff}
 
@@ -111,7 +111,7 @@ Find: importers, behavior diffs, removed functionality
    - AdminPanel loops getUser() (memory risk)
    - No cache clear on updateUser()
 5. Fix: Add invalidation, maxSize
-6. Document for code-reviewer
+6. Document for review subagents
 ```
 
 ## Bottom Line

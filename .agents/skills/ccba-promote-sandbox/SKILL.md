@@ -3,6 +3,9 @@ name: ccba-promote-sandbox
 
 description: Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc
   Hub (ADR 0046)
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 applies_to:
 - Phần mềm
 - Thẩm tra thiết kế

@@ -12,6 +12,9 @@ is-orchestrated: true
 user-invocable: true
 disable-model-invocation: true
 command: /ccba-graduate-rd
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 triggers:
 - graduate
 - tốt nghiệp

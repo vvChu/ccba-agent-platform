@@ -7,6 +7,9 @@ user-invocable: true
 command: /ccba-implement
 disable-model-invocation: true
 bundle: _core
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 triggers:
 - ccba-implement
 - ccba-implement spec
@@ -76,4 +79,6 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | :--- | :--- |
 | `references/discard_feature_sop.md` | Quy trình chuẩn thao tác Git hủy bỏ tính năng an toàn |
 | `references/prototyping_patterns.md` | Mẫu hình tạo spike / prototype nhanh để kiểm chứng giải pháp kỹ thuật |
+| `references/prototype_logic.md` | Hướng dẫn tạo prototype logic dòng lệnh và thuật toán kiểm chứng nhanh |
+| `references/prototype_ui.md` | Hướng dẫn tạo prototype giao diện người dùng tương tác trực quan |
 

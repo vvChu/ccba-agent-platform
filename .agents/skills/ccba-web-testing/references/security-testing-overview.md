@@ -54,7 +54,7 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable \
 nuclei -u https://example.com -t cves/
 
 # Check security headers
-curl -I https://example.com | grep -i "security\|content-security\|x-"
+curl.exe -I https://example.com | Select-String -Pattern "security|content-security|x-"
 ```
 
 ## Penetration Testing Phases
@@ -87,6 +87,6 @@ curl -I https://example.com | grep -i "security\|content-security\|x-"
 
 - name: DAST Scan
   run: |
-    docker run -v $(pwd):/zap/wrk:rw ghcr.io/zaproxy/zaproxy:stable \
+    docker run -v "${PWD}:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
       zap-api-scan.py -t http://localhost:3000/openapi.json -f openapi
 ```

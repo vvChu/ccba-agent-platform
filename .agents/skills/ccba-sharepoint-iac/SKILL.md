@@ -6,7 +6,7 @@ description: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồ
 disable-model-invocation: true
 metadata:
   version: v1.0
-  publisher: CCBA
+  author: "CCBA Hub"
 bundle: _software
 tier: kernel
 user-invocable: true

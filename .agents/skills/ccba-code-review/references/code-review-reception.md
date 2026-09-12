@@ -59,7 +59,7 @@ IF conflicts with partner's decisions: Stop, discuss first
 
 ```
 IF reviewer suggests "implementing properly":
-  grep codebase for actual usage
+  search codebase for actual usage
   IF unused: "This isn't called. Remove it (YAGNI)?"
   IF used: Implement properly
 ```

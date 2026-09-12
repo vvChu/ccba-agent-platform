@@ -2,6 +2,9 @@
 name: ccba-maskara
 description: Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords,
   private keys) trong files/logs và cài đặt guardrails bảo mật.
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 applies_to:
 - Phần mềm
 - Thẩm tra thiết kế

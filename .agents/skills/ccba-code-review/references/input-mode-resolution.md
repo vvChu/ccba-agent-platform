@@ -5,7 +5,7 @@ description: How to parse code-review arguments and resolve PR number, commit ha
 
 # Input Mode Resolution
 
-Resolve `/ck:code-review` arguments into a diff for the review pipeline.
+Resolve `/ccba-code-review` arguments into a diff for the review pipeline.
 
 ## Auto-Detection Rules
 
@@ -19,15 +19,15 @@ Parse arguments left-to-right. First match wins.
 | `--pending` | Pending | explicit flag |
 | `codebase` | Codebase | existing mode |
 | *(none + context)* | Default | recent changes |
-| *(none + no context)* | Prompt | ask user via `AskUserQuestion` |
+| *(none + no context)* | Prompt | ask user via `ask_question` |
 
 ## Resolution Commands
 
 ### PR Mode
 
 ```bash
-# Extract PR number from argument
-PR_NUM=$(echo "$ARG" | grep -oE '[0-9]+$')
+# Extract PR number from argument using GitHub CLI
+gh pr view $ARG --json number -q .number
 
 # Fetch PR metadata
 gh pr view "$PR_NUM" --json title,body,files,additions,deletions,baseRefName,headRefName
@@ -98,12 +98,12 @@ Use recent changes already in conversation context. If no changes apparent, fall
 
 ### Prompt Mode
 
-When no arguments and no recent context, use `AskUserQuestion`:
+When no arguments and no recent context, use `ask_question`:
 - Header: "Review Target"
 - Question: "What would you like to review?"
 - Options: Pending changes, Enter PR number, Enter commit hash, Full codebase scan, Parallel codebase audit
 
-For PR/commit options, follow up with second `AskUserQuestion` to get the number/hash.
+For PR/commit options, follow up with second `ask_question` to get the number/hash.
 
 ### Codebase Mode
 

@@ -305,6 +305,45 @@ Báo cáo tự động đánh giá các tính năng mới từ thượng nguồn
     *   Cập nhật README của bundle _core để làm rõ sự khác biệt giữa 'retro' (phân tích quy trình) và 'session_retrospective' (tổng kết nội dung).
     *   Thiết lập cơ chế kiểm tra (sanity check) để đảm bảo không xung đột với các chỉ dẫn trong AGENTS.md hiện tại.
 > ⚡ **Lệnh kích hoạt Port 1-Click:** `/ccba-xia https://github.com/mattpocock/skills retro --port`
+
+---
+
+### 🟢 [RECOMMEND PORT] Skill: `ab-test-setup` (Score: 80/100) — Tier 3: Composite Orchestrator
+*   **Kho chứa nguồn**: `marketing` (https://github.com/claudekit/claudekit-marketing)
+*   **Bản quyền**: `Bản quyền đóng (Không được sao chép)`
+*   **Phân tầng đề xuất (ADR-0057)**: `Tier 3: Composite Orchestrator` (Bundle: `_software`, `disable-model-invocation: true`)
+*   **Đánh giá tương thích Python**: Cần địa hóa sang môi trường Python / Ruff / PyTest.
+*   **Lý do**: Kỹ năng mới chưa có trên catalog (PROPRIETARY). Định tuyến: Cổng 1 (Orchestration Gate): Tác vụ có điều phối nhiều tác tử song song, chuyển trạng thái StateGraph checkpoints hoặc cần con người phê duyệt (HITL). Bắt buộc triển khai tại Tầng 3 (Composite Orchestrator).
+*   **Các bước triển khai**:
+    *   Chạy lệnh `/ccba-xia .md/scratch/repos/claudekit-marketing ab-test-setup --compare` để trinh sát
+    *   Định tuyến tới Tầng 3: Composite Orchestrator (.agents/workflows/) theo ADR-0057
+> ⚡ **Lệnh kích hoạt Port 1-Click:** `/ccba-xia .md/scratch/repos/claudekit-marketing ab-test-setup --port`
+
+---
+
+### 🟢 [RECOMMEND PORT] Skill: `ai-artist` (Score: 80/100) — Tier 2A: Progressive Reference (GPI: 5.00)
+*   **Kho chứa nguồn**: `marketing` (https://github.com/claudekit/claudekit-marketing)
+*   **Bản quyền**: `Bản quyền đóng (Không được sao chép)`
+*   **Phân tầng đề xuất (ADR-0057)**: `Tier 2A: Progressive Reference` (Bundle: `_software`, `disable-model-invocation: true`)
+*   **Đánh giá tương thích Python**: Cần địa hóa sang môi trường Python / Ruff / PyTest.
+*   **Lý do**: Kỹ năng mới chưa có trên catalog (PROPRIETARY). Định tuyến: Chỉ số GPI (5.00) < 12.0. Phân loại: Tier 2A (Progressive Reference). Cần lưu trữ dưới dạng tài liệu tham chiếu trong references/*.md của Master Skill 'codebase-design'; cảnh báo/từ chối tạo thư mục Skill độc lập.
+*   **Các bước triển khai**:
+    *   Chạy lệnh `/ccba-xia .md/scratch/repos/claudekit-marketing ai-artist --compare` để trinh sát
+    *   Định tuyến tới references/ai-artist.md (của Master Skill 'codebase-design') theo ADR-0057
+> ⚡ **Lệnh kích hoạt Port 1-Click:** `/ccba-xia .md/scratch/repos/claudekit-marketing ai-artist --port`
+
+---
+
+### 🟢 [RECOMMEND PORT] Skill: `competitor-alternatives` (Score: 80/100) — Tier 2A: Progressive Reference (GPI: 5.00)
+*   **Kho chứa nguồn**: `marketing` (https://github.com/claudekit/claudekit-marketing)
+*   **Bản quyền**: `Bản quyền đóng (Không được sao chép)`
+*   **Phân tầng đề xuất (ADR-0057)**: `Tier 2A: Progressive Reference` (Bundle: `_software`, `disable-model-invocation: true`)
+*   **Đánh giá tương thích Python**: Cần địa hóa sang môi trường Python / Ruff / PyTest.
+*   **Lý do**: Kỹ năng mới chưa có trên catalog (PROPRIETARY). Định tuyến: Chỉ số GPI (5.00) < 12.0. Phân loại: Tier 2A (Progressive Reference). Cần lưu trữ dưới dạng tài liệu tham chiếu trong references/*.md của Master Skill 'codebase-design'; cảnh báo/từ chối tạo thư mục Skill độc lập.
+*   **Các bước triển khai**:
+    *   Chạy lệnh `/ccba-xia .md/scratch/repos/claudekit-marketing competitor-alternatives --compare` để trinh sát
+    *   Định tuyến tới references/competitor-alternatives.md (của Master Skill 'codebase-design') theo ADR-0057
+> ⚡ **Lệnh kích hoạt Port 1-Click:** `/ccba-xia .md/scratch/repos/claudekit-marketing competitor-alternatives --port`
 <!-- AUTO-GENERATED-END -->
 
 <!-- DEVELOPER-NOTES-START -->

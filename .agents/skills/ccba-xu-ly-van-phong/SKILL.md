@@ -28,6 +28,9 @@ triggers:
 - office
 - ccba-docx
 - docx
+metadata:
+  author: CCBA
+  version: 2.0.0
 ---
 
 # Xử lý Văn phòng
@@ -168,5 +171,9 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
+| `references/office_standards_overview.md` | Bộ tiêu chuẩn xử lý văn bản, tài liệu, bảng biểu & báo cáo doanh nghiệp |
 | `references/docx_engine_guide.md` | Hướng dẫn chi tiết chèn nhận xét (comments) và theo dõi thay đổi (tracked changes) trong tài liệu Word |
+| `references/docx-js.md` | Hướng dẫn tạo lập, định dạng và xuất bản tài liệu docx bằng thư viện docx (JavaScript) |
+| `references/ooxml.md` | Hướng dẫn phân giải, thao tác trực tiếp với cấu trúc Office Open XML (OOXML) |
+
 

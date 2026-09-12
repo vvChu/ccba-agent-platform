@@ -427,7 +427,6 @@ skills:
   - slide design
   - banner design
   - cip mockup
-  - ckm:design
   - mockup
   skill_path: .agents/skills/ccba-design/SKILL.md
   command: /ccba-design
@@ -800,8 +799,8 @@ skills:
 - name: ccba-platform
   bundle: _core
   description: Cổng điều phối toàn cục (Global Router) và kiểm tra môi trường cho
-    CCBA Agent Services Platform. Tự động kiểm tra VPN/Gateway, cấu trúc Spoke và
-    điều hướng đúng kỹ năng.
+    CCBA Agent Services Platform. Tự động kiểm tra Hub/Spoke, Gateway/VPN, cấu trúc
+    Spoke và điều hướng đúng kỹ năng.
   triggers:
   - platform
   - ccba
@@ -888,7 +887,8 @@ skills:
 - name: ccba-session-retrospective
   bundle: _core
   description: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến
-    hóa kỹ năng trực tiếp, kích hoạt Governance Gate và dọn dẹp workspace.
+    hóa kỹ năng trực tiếp, đồng bộ ADR Matrix, tái biên dịch tài liệu, kích hoạt Governance
+    Gate và dọn dẹp workspace.
   triggers:
   - retrospective
   - session learnings
@@ -968,6 +968,21 @@ skills:
   skill_path: .agents/skills/ccba-spoke-adopter/SKILL.md
   command: /ccba-spoke-adopter
   tier: orchestrator
+- name: ccba-sync-upstream
+  bundle: _core
+  description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0057 Radar)
+    kết hợp kích hoạt 1-Click Port qua /ccba-xia.
+  triggers:
+  - sync-upstream
+  - ccba-sync-upstream
+  - sync upstream
+  - đồng bộ tri thức
+  - claudekit
+  - mattpocock
+  - check update
+  skill_path: .agents/skills/ccba-sync-upstream/SKILL.md
+  command: /ccba-sync-upstream
+  tier: kernel
 - name: ccba-tdd
   bundle: _software
   description: Phát triển hướng kiểm thử (Red-Green-Refactor) giúp tạo mã nguồn ổn
@@ -1039,8 +1054,6 @@ skills:
   - đồng bộ toàn bộ spoke
   - spoke status
   - kiểm tra spoke
-  - ccba-sync-upstream
-  - sync-upstream
   skill_path: .agents/skills/ccba-update-spoke/SKILL.md
   command: /ccba-update-spoke
   tier: kernel

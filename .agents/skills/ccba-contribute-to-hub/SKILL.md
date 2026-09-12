@@ -12,6 +12,9 @@ tier: kernel
 disable-model-invocation: true
 command: /ccba-contribute-to-hub
 user-invocable: true
+metadata:
+  version: "1.1.0"
+  author: "CCBA Hub"
 gpi:
   s: 3.0
   k: 3.0
@@ -68,9 +71,8 @@ Trước khi tạo mới, Agent **bắt buộc** kiểm tra hệ sinh thái Hub:
 Thực thi tại thư mục Hub (`hub_path`):
 1. **Đồng bộ nhánh & Khóa bảo vệ nhánh (Pre-Commit Branch Assertion):**
    ```bash
-   BRANCH_NAME="proposal/${ISSUE_ID:+issue-${ISSUE_ID}-}${PROPOSAL_NAME}"
-   git checkout main && git pull origin main && git checkout -b "$BRANCH_NAME"
-   [ "$(git branch --show-current)" = "main" ] && { echo "❌ Lỗi: Đang ở main!"; exit 1; }
+   git checkout main && git pull origin main
+   git checkout -b "proposal/<tên-đề-xuất>"
    ```
 2. **Đóng gói Mã nguồn & Tests vào Package tương ứng:**
    - Code: `packages/[pkg]/src/[submodule]/`, Public Deep Seam: `packages/[pkg]/src/__init__.py`, Tests: `packages/[pkg]/tests/`.

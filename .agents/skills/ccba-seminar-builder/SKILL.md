@@ -122,4 +122,9 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/interactive_teaching.md` | Mẫu hình giảng dạy tương tác trong các buổi seminar và đào tạo nội bộ |
+| `references/teach_glossary-format.md` | Định dạng chuẩn GLOSSARY.md cho thuật ngữ chuyên môn trong đào tạo và workshop |
+| `references/teach_learning-record-format.md` | Định dạng nhật ký học tập LEARNING_RECORD.md ghi nhận tiến trình học viên |
+| `references/teach_mission-format.md` | Định dạng thiết kế nhiệm vụ và bài tập thực hành MISSION.md |
+| `references/teach_resources-format.md` | Định dạng quản lý nguồn học liệu và tài nguyên tham khảo RESOURCES.md |
+
 

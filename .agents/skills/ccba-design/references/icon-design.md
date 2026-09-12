@@ -116,7 +116,7 @@ python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --list-cat
 
 ## Setup
 
-```bash
-export GEMINI_API_KEY="your-key"
+```powershell
+$env:GEMINI_API_KEY="your-key"
 pip install google-genai
 ```

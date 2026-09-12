@@ -15,7 +15,7 @@ Workflow này giúp khởi chạy một phiên thảo luận ý tưởng, tự �
 
 ### Bước 1: Đọc cấu hình và Xử lý tham số (Config & Routing)
 Agent bắt buộc phải đọc và gộp cấu hình các chủ đề từ hai nguồn:
-1. **Mặc định từ Hub:** Đọc cấu hình mặc định tại [brainstorm_topics.yaml](./brainstorm_topics.yaml).
+1. **Mặc định từ Hub:** Đọc cấu hình mặc định tại [brainstorm_topics.yaml](../resources/brainstorm_topics.yaml).
 2. **Cục bộ từ Spoke:** Kiểm tra sự tồn tại của tệp cấu hình cục bộ tại `.md/knowledge/brainstorm_topics.yaml`. Nếu có, đọc và gộp (merge) với cấu hình mặc định (tập tin cục bộ được phép ghi đè các chủ đề trùng `topic_id` hoặc khai báo thêm chủ đề mới).
 
 **Xử lý tham số Bypass:** Agent phân tích câu lệnh kích hoạt để phát hiện tham số truyền sau ký tự `--`:

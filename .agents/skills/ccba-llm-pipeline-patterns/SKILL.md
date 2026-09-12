@@ -9,6 +9,9 @@ applies_to:
 bundle: _core
 tier: kernel
 command: /ccba-llm-pipeline-patterns
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 3.0
   k: 2.0

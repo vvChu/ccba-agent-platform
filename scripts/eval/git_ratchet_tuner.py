@@ -714,7 +714,33 @@ class GitRatchetTuner:
                     "* **Định danh Tuyến Hạ tầng IFC Alignment & ISO 19650:** Định danh cấu trúc không gian Spatial Structure và Trí Nhớ Số dọc tim tuyến (KM).",
                 ),
             ]
-        else:
+        elif any(
+            k in self.config.skill_name.lower()
+            for k in ["platform", "router", "orchestrator", "core", "docs", "adr", "eval", "review"]
+        ):
+            strategies = [
+                (
+                    "Deterministic Routing & Boundary Invariants",
+                    "\n\n## 5. Bất Biến Ranh Giới Điều Phối & Xác Minh Tất Định\n"
+                    "* **Single-Writer & Sandbox Isolation:** Duy nhất Lead Orchestrator có quyền ghi mã nguồn chính; subagents chỉ xuất dữ liệu vào sandbox scratch.\n"
+                    "* **Virtual Hub Fallback:** Kiểm tra tài nguyên kỹ năng tại Spoke trước, fallback về Hub nếu thiếu.\n"
+                    "* **Hard Completion Lock:** Bắt buộc chạy `python -m ccba_harness verify-patch` trước khi hoàn tất.",
+                ),
+            ]
+        elif any(
+            k in self.config.skill_name.lower()
+            for k in [
+                "legal",
+                "tvpl",
+                "vbpl",
+                "law",
+                "advisor",
+                "ingest",
+                "tracker",
+                "digest",
+                "qc",
+            ]
+        ):
             strategies = [
                 (
                     "XML Envelopes & Strict Output Schema",
@@ -757,6 +783,15 @@ class GitRatchetTuner:
                     "  - Bước 1: Kiểm tra xem có trích dẫn đúng số hiệu văn bản đang còn hiệu lực không.\n"
                     "  - Bước 2: Kiểm tra xem các câu hỏi về thủ tục/thẩm định có viện dẫn đầy đủ căn cứ không.\n"
                     "  - Bước 3: Đảm bảo độ sâu phân tích đạt yêu cầu và không bỏ sót các điều khoản loại trừ/ngoại lệ.",
+                ),
+            ]
+        else:
+            strategies = [
+                (
+                    "Operational Clarity & Deterministic Completion",
+                    "\n\n## 5. Bất Biến Vận Hành & Khóa Cứng Hoàn Tất\n"
+                    "* **Tiêu chí hoàn thành tường minh:** Mọi bước thực thi đều phải có tiêu chí kiểm chứng khách quan.\n"
+                    "* **Hard Completion Lock:** Bắt buộc xác minh qua `python -m ccba_harness verify-patch` trước khi báo cáo hoàn thành.",
                 ),
             ]
 
