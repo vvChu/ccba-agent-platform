@@ -1,5 +1,5 @@
 # CCBA Agent Platform — Skills Navigation Portals Taxonomy
-# Source of Truth for Portal categorization across 69 active skills (ADR-0047, ADR-0057)
+# Source of Truth for Portal categorization across 70 active skills (ADR-0047, ADR-0057)
 
 portals:
   - id: "init_navigation"
@@ -34,6 +34,7 @@ portals:
       - ccba-domain-modeling
       - ccba-excalidraw-diagram
       - ccba-new-feature
+      - ccba-create-pr
       - ccba-release-feature
       - ccba-session-retrospective
       - ccba-git-guardrails
