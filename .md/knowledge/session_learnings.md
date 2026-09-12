@@ -22,19 +22,18 @@
   - Tier 1: Hub Constitution (55 ADRs). Tier 2: Spoke Domain (`docs/adr/`). Giữ qua `<!-- CUSTOM_SECTIONS_START -->`...`<!-- CUSTOM_SECTIONS_END -->`.
   - Regex trạng thái ADR: `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ file non-ADR (`notes.md`, `template.md`).
 - **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]**:
-  - Tier 0 import Tier 1: `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton; Cache Embedding `.npy` đối chiếu sidecar `.sha256`.
+  - Dynamic import: `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton; Embedding `.npy` kèm `.sha256`.
 - **RULE-1.7 [ADR 0046 — Sanitized Fleet Telemetry]**:
-  - Telemetry Spoke $\rightarrow$ Hub: Chỉ trích xuất số liệu phi định danh (`tokens`, `cost`, `tool_counts`). Cấm thu thập prompt text/dữ liệu khách hàng.
+  - Telemetry: Chỉ trích xuất số liệu phi định danh (`tokens`, `cost`, `tool_counts`). Cấm thu thập prompt text/dữ liệu khách hàng.
 - **RULE-1.8 [ADR 0058 — Discrete Diagnostic Commands]**:
-  - `SelfHealingEngine` (`verify-patch --self-heal`): mảng lệnh độc lập (`["cmd1", "cmd2"]`), CẤM ghép chuỗi `&&` để regex chẩn đoán đúng và tự phục hồi (< 500ms).
+  - `SelfHealingEngine`: mảng lệnh độc lập (`["cmd1", "cmd2"]`), CẤM ghép `&&` để regex chẩn đoán đúng và tự phục hồi (< 500ms).
 - **RULE-1.9 [Multi-Tier Corpus Discovery & Layout Normalization]**:
-  - Quét corpus từ registry trong `.md/data/`: suy luận `project_root` (3 cấp lùi) và quét 4 ứng viên: `reg_parent/{, .md/}legal_docs`, `project_root/{, .md/}legal_docs`.
+  - Quét corpus: suy luận `project_root` và quét `reg_parent/{, .md/}legal_docs`, `project_root/{, .md/}legal_docs`.
 - **RULE-1.10 [ADR 0057 — Standalone Skill Promotion Triad]**:
-  - Thăng hạng Tier 2A $\rightarrow$ Tier 2B: (1) Xóa triggers trùng ở nguồn; (2) Sửa `SKILL_DEPRECATION_ALIASES` trong `coordinator.py` trỏ alias ngắn về skill mới; (3) Phân định ranh giới Hub $\rightarrow$ Spoke vs Upstream $\rightarrow$ Hub trong `SKILL.md` và `catalog.yaml`.
-- **RULE-1.11 [Diagramming & Technical Visuals Hygiene]**:
-  - Excalidraw 2.x Wrapper: `# Excalidraw Data` $\rightarrow$ `## Text Elements` $\rightarrow$ `%% ## Drawing ... %%`. Cấm H1 `# Drawing`.
-  - Mermaid: Subgraph BẮT BUỘC dùng `style <sg_id>`, cấm `classDef` hay `class <id>`. Non-flowcharts (`pie`, `timeline`, `mindmap`, `sequenceDiagram`) cấm tiêm `classDef`, cấu hình qua `%%{init}%%`. Nhãn bọc `["..."]`, ngắt dòng `<br/>`, escape `#quot;`, `#124;`, `#40;`, `#41;`.
-  - D2 & Kroki: Vector architecture SVG biên dịch qua local CLI hoặc Kroki REST API (`https://kroki.io/d2/svg`, 0 dependency), lưu song song `.svg` và `.d2`.
+  - Thăng hạng Tier 2A $\rightarrow$ Tier 2B: (1) Xóa triggers trùng; (2) Trỏ alias ngắn về skill mới; (3) Phân định ranh giới Hub vs Spoke.
+- **RULE-1.11 [Diagramming & Visuals Hygiene — diagramming_hygiene.md]**:
+  - Excalidraw: `# Excalidraw Data` $\rightarrow$ `## Text Elements` $\rightarrow$ `%% ## Drawing ... %%`.
+  - Mermaid: Subgraph dùng `style <sg_id>`, cấm `classDef`/`class`. Nhãn bọc `["..."]`, ngắt dòng `<br/>`, escape ký tự đặc biệt. D2/Kroki: SVG qua CLI hoặc Kroki API (`kroki.io/d2/svg`).
 
 ---
 
@@ -45,19 +44,19 @@
 - **RULE-2.2 [Spoke CI Gates Verification Pipeline]**:
   - 5 Cổng: (1) `lint_visual_parity.py`, (2) `validate_legal_spoke.py`, (3) `test_converter_regression.py`, (4) `verify_all_docs_against_pdf.py` (SHA-256), (5) `verify_cross_links.py`.
 - **RULE-2.3 [Fast Feedback Loops (< 2s) & Parity Contract Tests]**:
-  - Tests nòng cốt $< 2\text{s}$ (`pytest -m fast`). `test_cli_doc_parity.py`: Khớp 100% CLI và `SKILL.md`. `drift_auditor.py`: Miễn trừ `scripts/tests/` chống cảnh báo giả.
+  - Tests nòng cốt $< 2\text{s}$ (`pytest -m fast`). `test_cli_doc_parity.py`: Khớp 100% CLI và `SKILL.md`.
 - **RULE-2.4 [Relative Link Resolution Depth]**:
   - `SKILL.md` trỏ package dùng 3 cấp `../../../packages/<pkg>`; `references/` trỏ root dùng 4 cấp `../../../../`. CẤM commit URI `file:///` hoặc `conversation://`.
 - **RULE-2.5 [Windows Subprocess UTF-8 Encoding Standard]**:
-  - `subprocess.run(..., text=True)` trên Windows mặc định `cp1252`. BẮT BUỘC `encoding="utf-8", errors="replace"` chống `UnicodeDecodeError`.
+  - `subprocess.run(..., text=True)` trên Windows: BẮT BUỘC `encoding="utf-8", errors="replace"` chống `UnicodeDecodeError`.
 - **RULE-2.7 [Safe-Remove, Read-Only & Symlink Cleanup Invariant]**:
-  - `safe_remove`: Windows symlink ném `NotADirectoryError` nếu dùng `rmtree()`. Kiểm tra `is_symlink() or is_file()`, gỡ read-only bằng `chmod(0o666)` rồi mới gọi `rmtree()`.
+  - `safe_remove`: Symlink ném `NotADirectoryError` nếu dùng `rmtree()`. Kiểm tra `is_symlink() or is_file()`, gỡ read-only bằng `chmod(0o666)` rồi mới gọi `rmtree()`.
 - **RULE-2.8 [Offline XML/XSD Validation & Schema Cache]**:
-  - XML/OOXML (`lxml`): CẤM tải schema qua HTTP $\rightarrow$ nhúng offline, dùng `Resolver`. `XMLParser(no_network=True, resolve_entities=False)` chống XXE. Cache `XMLSchema` (`_COMPILED_SCHEMA_CACHE`).
+  - XML/OOXML (`lxml`): CẤM tải schema qua HTTP; nhúng offline, dùng `Resolver`, `XMLParser(no_network=True, resolve_entities=False)`. Cache `XMLSchema`.
 - **RULE-2.9 [Flaky Test Root-Cause Transparency & No-False-Pass Lock]**:
-  - Test FAIL rồi PASS khi retry chưa sửa mã: CẤM kết luận đã sửa xong. Bắt buộc tìm cội nguồn kỹ thuật và giải trình minh bạch trước release.
+  - Test FAIL rồi PASS khi retry chưa sửa mã: CẤM kết luận đã sửa xong. Bắt buộc tìm cội nguồn và giải trình minh bạch.
 - **RULE-2.10 [Git Simplify Gate Bypass Protocol]**:
-  - `simplify_gate` (`scripts/hooks/simplify.py`) chặn diff $> 400$ LOC, $> 8$ files khi gặp hard verbs (`deploy`, `ship`, `merge`...). Với commit tài sản lớn/sinh tự động (Web Portal, `docs/`), chèn `# APPROVED: <lý_do>` vào câu lệnh để kích hoạt `context.is_approved` vượt cổng an toàn.
+  - `simplify_gate` chặn diff $> 400$ LOC, $> 8$ files khi gặp hard verbs. Với commit tài sản lớn/sinh tự động (Web Portal, `docs/`), chèn `# APPROVED: <lý_do>` để vượt cổng.
 
 ---
 
