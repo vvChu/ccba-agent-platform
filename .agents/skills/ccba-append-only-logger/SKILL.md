@@ -3,13 +3,15 @@ name: ccba-append-only-logger
 description: Thread-safe, append-only logging pattern cho Python pipeline multi-daemon.
   Tránh race condition và encoding corruption khi nhiều process ghi cùng lúc vào shared
   log file.
-version: 1.1.0
 applies_to:
 - Phần mềm
 - Kiểm định
 bundle: _core
 tier: kernel
 command: /ccba-append-only-logger
+metadata:
+  version: "1.1.0"
+  author: "CCBA Hub"
 dependencies:
 - ccba-ai-gateway-sdk
 gpi:
