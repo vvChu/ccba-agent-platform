@@ -427,7 +427,6 @@ skills:
   - slide design
   - banner design
   - cip mockup
-  - ckm:design
   - mockup
   skill_path: .agents/skills/ccba-design/SKILL.md
   command: /ccba-design

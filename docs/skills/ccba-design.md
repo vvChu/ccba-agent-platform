@@ -55,7 +55,6 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `slide design`
 - `banner design`
 - `cip mockup`
-- `ckm:design`
 - `mockup`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi

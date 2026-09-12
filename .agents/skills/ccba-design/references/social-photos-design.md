@@ -1,6 +1,6 @@
 # Social Photos Design Guide
 
-Design social media images via HTML/CSS rendering + screenshot export. Orchestrates `ui-ux-pro-max`, `brand`, `design-system`, and browser capture tools.
+Design social media images via HTML/CSS rendering + screenshot export. Uses structured brand tokens, clean typography, and headless browser capture.
 
 ## Platform Sizes
 
@@ -51,15 +51,15 @@ Create 3-5 concept ideas that:
 - Vary in composition, color, typography approach
 - Align with brand guidelines if available
 
-Present ideas to user via `AskUserQuestion` for approval before designing.
+Present ideas to user via `ask_question` for approval before designing.
 
 ### Step 4: Design HTML Files
 
-Activate these skills in sequence:
+Establish visual system and layout:
 
-1. **`/ckm:brand`** — Extract brand colors, fonts, voice from user's project
-2. **`/ckm:design-system`** — Get design tokens (spacing, typography scale, color palette)
-3. **Randomly invoke ONE of:** `/ck:ui-ux-pro-max` OR `/ck:frontend-design` — for layout, hierarchy, visual balance. Pick one at random each run for design variety.
+1. **Brand Identity** — Extract brand colors, typography, voice from user's project
+2. **Design Tokens** — Define design tokens (spacing, typography scale, color palette)
+3. **Layout & Composition** — Structure HTML/CSS with proper visual hierarchy, balance, and platform safe zones.
 
 For each approved idea + each target size, create an HTML file:
 
@@ -119,25 +119,15 @@ output/social-photos/
 
 ### Step 5: Screenshot Export
 
-Use Chrome headless, `ck:agent-browser`, or Playwright/Puppeteer to capture exact-size screenshots.
+Use Chrome headless or Playwright to capture exact-size screenshots.
 
 **IMPORTANT:** Always add a delay (3-5s) after page load for fonts/images to fully render before capture.
 
 #### Option A: Chrome Headless CLI (Recommended — zero dependencies)
 
 ```bash
-CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-DELAY=5  # seconds for fonts/images to load
-
-"$CHROME" \
-  --headless \
-  --disable-gpu \
-  --no-sandbox \
-  --hide-scrollbars \
-  --window-size="${WIDTH},${HEIGHT}" \
-  --virtual-time-budget=$((DELAY * 1000)) \
-  --screenshot="output.png" \
-  "file:///path/to/file.html"
+# Windows / Cross-platform Chrome invocation:
+chrome --headless --disable-gpu --no-sandbox --hide-scrollbars --window-size="${WIDTH},${HEIGHT}" --virtual-time-budget=5000 --screenshot="output.png" "file:///path/to/file.html"
 ```
 
 Key flags:
@@ -145,16 +135,7 @@ Key flags:
 - `--hide-scrollbars` — prevents scrollbar artifacts in screenshots
 - `--window-size=WxH` — sets exact pixel dimensions
 
-#### Option B: agent-browser
-
-Invoke `/ck:agent-browser` with instructions to:
-1. Open each HTML file in browser
-2. Set viewport to exact target dimensions
-3. Wait 3-5s for fonts/images to fully load
-4. Screenshot full page to PNG
-5. Save to `output/social-photos/exports/`
-
-#### Option C: Playwright script
+#### Option B: Playwright script
 
 ```javascript
 const { chromium } = require('playwright');
@@ -210,7 +191,7 @@ async function captureScreenshots(htmlFiles) {
 
 ### Step 6: Verify & Fix Designs
 
-Use Chrome MCP / `chrome-devtools-mcp`, `ck:agent-browser`, `ck:chrome-profile`, or Playwright to visually inspect each exported PNG:
+Use Chrome DevTools, Playwright, or Image Inspection tools to visually inspect each exported PNG:
 
 1. Open exported screenshots and check for layout/styling issues
 2. Verify: fonts rendered correctly, colors match brand, text readable at thumbnail size

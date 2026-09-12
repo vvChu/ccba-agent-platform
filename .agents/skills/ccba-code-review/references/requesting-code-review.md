@@ -35,9 +35,9 @@ See: edge-case-scouting.md
 ```
 
 **1. Get git SHAs:**
-```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
+```powershell
+$BASE_SHA = git rev-parse HEAD~1  # or origin/main
+$HEAD_SHA = git rev-parse HEAD
 ```
 
 **2. Dispatch review subagents:**
@@ -76,9 +76,10 @@ Inspect diff size against complexity thresholds (`scripts/hooks/simplify.py`):
 [Just completed Task 2: Add verification function]
 
 You: Let me request code review before proceeding.
-
-BASE_SHA=$(git log --grep="Task 1" -n 1 --format="%H")
-HEAD_SHA=$(git rev-parse HEAD)
+```powershell
+$BASE_SHA = git log --grep="Task 1" -n 1 --format="%H"
+$HEAD_SHA = git rev-parse HEAD
+```
 
 [Dispatch review subagents]
   WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index

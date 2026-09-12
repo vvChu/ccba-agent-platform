@@ -35,8 +35,8 @@ Cross-platform shell equivalent:
 # Check for Python stack
 [ -f "pyproject.toml" ] && echo "python"
 
-# Check for web app frameworks
-if [ -f "package.json" ] && grep -qE '"(react|vue|svelte|next|nuxt|angular)"' package.json; then
+# Check for web app frameworks (Cross-platform git grep)
+if [ -f "package.json" ] && git grep -qiE '"(react|vue|svelte|next|nuxt|angular)"' -- package.json; then
     echo "web-app"
 fi
 
