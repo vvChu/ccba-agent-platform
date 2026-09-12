@@ -78,7 +78,7 @@
   - Quét `author.login` thay vì `user.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và review `body` của Copilot kể cả khi là `COMMENTED`. Cấm merge nếu chưa sửa hoặc giải trình.
   - `audit_pr_comments.py` chỉ đọc `Path.cwd() / "walkthrough.md"` (HUB-ADR-0058): BẮT BUỘC ghi nhận `review_id` (`PRR_...`) và inline comment `id` trực tiếp vào `walkthrough.md` tại gốc repo để vượt qua chốt chặn audit.
 - **RULE-4.5 [AI Gateway Spark Auth & Fast-Inference Gating]**:
-  - LiteLLM Server Spark (`100.83.192.30:8090`): Header `Authorization: Bearer sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` (< 1s), route `qwen-local-primary` sau GPU warmup.
+  - LiteLLM Server Spark (100.83.192.30:8090): Header `Authorization: Bearer sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` (< 1s), route `qwen-local-primary` sau GPU warmup.
 - **RULE-4.6 [Tier 3 Orchestrator & Deterministic Verification Gating — ADR-0057 / ADR-0058]**:
   - Router/Orchestrator (`/ccba-platform`): bản ghi SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`, `bundle: _core`, `is-orchestrated: true`), tuân thủ Single-Writer Protocol.
   - Đồng bộ Spoke (`sync_spoke.py`): cờ `--verify` kích hoạt `ccba-harness verify-patch` sau ghi đĩa, khóa cứng nếu lỗi.

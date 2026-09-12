@@ -8,7 +8,19 @@
 
 ---
 
-## 2. Các Thay Đổi Cốt Lõi
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #265)
+
+- **Review ID:** `PRR_kwDOQzfV088AAAABNQeOiA`
+
+| ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
+|---|---|---|---|
+| `3994619519` | `scripts/spoke/sync/sdk_inspector.py` | `copy_if_needed()` coi sự hiện diện của thư mục `scripts/` là Python Spoke, có thể copy nhầm guardrail scripts sang Spoke không phải Python. | **ĐÃ KHẮC PHỤC**: Bỏ nhánh `or (self.spoke_root / "scripts").exists()`, chỉ sử dụng `is_python_spoke(self.spoke_root, self.project_type)` vốn đã kiểm tra đầy đủ chỉ dấu Python. |
+| `3994619531` | `scripts/spoke/sync/sdk_inspector.py` | So sánh `project.name` phân biệt hoa/thường (case-sensitive) trong khi các phần khác dùng `.lower()`. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa so sánh không phân biệt hoa/thường: `str(proj.get("name", "")).lower() == "ccba-legal-knowledge"` trong cả `sdk_inspector.py` và `engine.py`. |
+| `3994619543` | `.md/knowledge/session_learnings.md` | Dấu backticks inline-code không cân bằng tại dòng RULE-4.5. | **ĐÃ KHẮC PHỤC**: Bỏ backticks quanh địa chỉ IP `100.83.192.30:8090` để đóng mở inline-code span chuẩn xác. |
+
+---
+
+## 3. Các Thay Đổi Cốt Lõi
 
 ### 2.1 Loại Bỏ Contradiction Giữa `safe_pytest.py` / `safe_runner.py` và `check_spoke_cleanliness.py`
 - **Vấn đề:** Khối fallback `sys.path.insert(0, str(hub_harness_src))` trong `safe_pytest.py` và `safe_runner.py` vi phạm kiểm tra regex `SYS_PATH_HACK_PATTERN` của `check_spoke_cleanliness.py`. Đồng thời `safe_runner.py` chưa nằm trong `ALLOWLIST_SCRIPTS`.
