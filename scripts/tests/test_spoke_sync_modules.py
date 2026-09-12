@@ -110,7 +110,9 @@ def test_resolve_canonical_project_type():
         ("Kho Tri thức Pháp lý", "Pháp điển"),
         ("Pháp lý & Quy chuẩn", "Pháp điển"),
         ("Legal Knowledge", "Pháp điển"),
-        ("knowledge_corpus", "Pháp điển"),
+        ("knowledge_corpus", "Tác vụ Admin"),
+        ("knowledge-base", "Tác vụ Admin"),
+        ("second-brain", "Tác vụ Admin"),
         ("Software", "Phần mềm"),
         ("Tư vấn & Thẩm tra", "Thẩm tra thiết kế"),
         ("Thẩm tra", "Thẩm tra thiết kế"),
@@ -199,8 +201,16 @@ def test_sdk_inspector_and_guardrail_copier(tmp_path: Path):
     conftest = hub_root / "conftest.py"
     conftest.write_text("# pytest root conftest", encoding="utf-8")
     copier = TestGuardrailCopier(spoke_root, hub_root, "Phần mềm")
-    copier.copy_if_needed(dry_run=False)
+    actions = copier.copy_if_needed(dry_run=False)
     assert (spoke_root / "conftest.py").exists()
+    assert len(actions) == 1
+    assert actions[0]["name"] == "conftest.py"
+    assert actions[0]["status"] == "NEW"
+
+    # Subsequent run without changes should be UNCHANGED
+    actions_idempotent = copier.copy_if_needed(dry_run=False)
+    assert len(actions_idempotent) == 1
+    assert actions_idempotent[0]["status"] == "UNCHANGED"
 
     # SDK Inspector
     inspector = SharedSdkInspector(spoke_root, hub_root, "Phần mềm")
@@ -302,15 +312,25 @@ def test_legal_knowledge_sync_orchestrator(tmp_path: Path):
     assert res_master["status"] == "master_corpus_preserved"
     assert not (master_spoke / ".md" / "legal_docs").exists()
 
-    # 5. Master Legal Corpus identified via workspace_context.yaml archetype
+    # 5. General knowledge_corpus is NOT Master Legal Corpus unless explicitly named or configured (Issue #264)
     archetype_spoke = tmp_path / "archetype_corpus"
     archetype_spoke.mkdir()
     (archetype_spoke / ".md").mkdir()
     (archetype_spoke / ".md" / "workspace_context.yaml").write_text(
         "project:\n  archetype: knowledge_corpus\n", encoding="utf-8"
     )
-    orch_archetype = LegalKnowledgeSyncOrchestrator(archetype_spoke, tmp_path, "Pháp điển")
-    assert orch_archetype.is_master_legal_corpus() is True
+    orch_archetype = LegalKnowledgeSyncOrchestrator(archetype_spoke, tmp_path, "Tác vụ Admin")
+    assert orch_archetype.is_master_legal_corpus() is False
+
+    # 6. Master Legal Corpus identified via explicit workspace_context.yaml
+    explicit_master_spoke = tmp_path / "custom_master_dir"
+    explicit_master_spoke.mkdir()
+    (explicit_master_spoke / ".md").mkdir()
+    (explicit_master_spoke / ".md" / "workspace_context.yaml").write_text(
+        "project:\n  name: ccba-legal-knowledge\n  is_master: true\n", encoding="utf-8"
+    )
+    orch_explicit = LegalKnowledgeSyncOrchestrator(explicit_master_spoke, tmp_path, "Pháp điển")
+    assert orch_explicit.is_master_legal_corpus() is True
 
 
 def test_spoke_sync_bootstrap_flag(tmp_path: Path):

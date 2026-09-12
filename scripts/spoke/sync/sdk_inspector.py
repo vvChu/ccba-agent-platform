@@ -11,6 +11,27 @@ from typing import Any
 
 import yaml
 
+from .base import are_files_identical
+
+
+def is_python_spoke(spoke_root: Path, project_type: str = "") -> bool:
+    """Check if Spoke is a Python project by configuration, file presence, or scripts."""
+    if (
+        project_type in ("Phần mềm", "Pháp điển")
+        or (spoke_root / "pyproject.toml").exists()
+        or (spoke_root / "requirements.txt").exists()
+        or (spoke_root / ".venv").exists()
+        or (spoke_root / "venv").exists()
+    ):
+        return True
+
+    # Check for any .py file in spoke root, scripts, or src
+    for d in [spoke_root, spoke_root / "scripts", spoke_root / "src"]:
+        if d.exists() and any(d.glob("*.py")):
+            return True
+
+    return False
+
 
 class TestGuardrailCopier:
     """Distributor of test guardrails (conftest.py, safe_pytest.py) for software Spokes."""
@@ -22,67 +43,78 @@ class TestGuardrailCopier:
         self.hub_root = hub_root
         self.project_type = project_type
 
-    def copy_if_needed(self, dry_run: bool = False) -> None:
-        """Copy conftest.py, safe_pytest.py, and pre-commit guardrails if Spoke is a Python project."""
-        is_python = (
-            self.project_type in ("Phần mềm", "Pháp điển")
-            or (self.spoke_root / "pyproject.toml").exists()
-            or (self.spoke_root / "requirements.txt").exists()
-            or (self.spoke_root / ".venv").exists()
-        )
+    def copy_if_needed(self, dry_run: bool = False) -> list[dict[str, Any]]:
+        """Copy conftest.py, safe_pytest.py, and pre-commit guardrails if Spoke is a Python project.
 
-        if is_python:
-            spoke_scripts_dir = self.spoke_root / "scripts"
+        Returns:
+            List of action records with format:
+            {"type": "Guardrail", "name": str, "status": "NEW" | "UPDATED" | "UNCHANGED", "path": str}
+        """
+        actions: list[dict[str, Any]] = []
+        is_python = is_python_spoke(self.spoke_root, self.project_type)
 
-            # 1. conftest.py
-            hub_conftest = self.hub_root / "conftest.py"
-            dest_conftest = self.spoke_root / "conftest.py"
-            if hub_conftest.exists() and hub_conftest.resolve() != dest_conftest.resolve():
-                if dry_run:
-                    print("  - [DRY-RUN] Would copy test guardrail: conftest.py")
-                else:
-                    shutil.copy2(hub_conftest, dest_conftest)
-                    print("  - Copied test guardrail: conftest.py")
+        if not is_python:
+            return actions
 
-            # 2. safe_pytest.py
-            hub_safe_pytest = self.hub_root / "scripts" / "safe_pytest.py"
-            if hub_safe_pytest.exists():
-                dest_safe_pytest = spoke_scripts_dir / "safe_pytest.py"
-                if hub_safe_pytest.resolve() != dest_safe_pytest.resolve():
-                    if dry_run:
-                        print("  - [DRY-RUN] Would copy test wrapper CLI: scripts/safe_pytest.py")
-                    else:
-                        spoke_scripts_dir.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(hub_safe_pytest, dest_safe_pytest)
-                        print("  - Copied test wrapper CLI: scripts/safe_pytest.py")
+        spoke_scripts_dir = self.spoke_root / "scripts"
 
-            # 3. check_hub_import_depth.py (ADR 0044 §7)
-            hub_import_depth = self.hub_root / "scripts" / "spoke" / "check_hub_import_depth.py"
-            if hub_import_depth.exists():
-                dest_import_depth = spoke_scripts_dir / "check_hub_import_depth.py"
-                if hub_import_depth.resolve() != dest_import_depth.resolve():
-                    if dry_run:
-                        print(
-                            "  - [DRY-RUN] Would copy guardrail: scripts/check_hub_import_depth.py"
-                        )
-                    else:
-                        spoke_scripts_dir.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(hub_import_depth, dest_import_depth)
-                        print("  - Copied guardrail: scripts/check_hub_import_depth.py")
+        items_to_copy = [
+            (
+                self.hub_root / "conftest.py",
+                self.spoke_root / "conftest.py",
+                "conftest.py",
+                "conftest.py",
+            ),
+            (
+                self.hub_root / "scripts" / "safe_pytest.py",
+                spoke_scripts_dir / "safe_pytest.py",
+                "safe_pytest.py",
+                "scripts/safe_pytest.py",
+            ),
+            (
+                self.hub_root / "scripts" / "spoke" / "check_hub_import_depth.py",
+                spoke_scripts_dir / "check_hub_import_depth.py",
+                "check_hub_import_depth.py",
+                "scripts/check_hub_import_depth.py",
+            ),
+            (
+                self.hub_root / "scripts" / "spoke" / "check_spoke_cleanliness.py",
+                spoke_scripts_dir / "check_spoke_cleanliness.py",
+                "check_spoke_cleanliness.py",
+                "scripts/check_spoke_cleanliness.py",
+            ),
+        ]
 
-            # 4. check_spoke_cleanliness.py (ADR 0044 / Issue #215)
-            hub_cleanliness = self.hub_root / "scripts" / "spoke" / "check_spoke_cleanliness.py"
-            if hub_cleanliness.exists():
-                dest_cleanliness = spoke_scripts_dir / "check_spoke_cleanliness.py"
-                if hub_cleanliness.resolve() != dest_cleanliness.resolve():
-                    if dry_run:
-                        print(
-                            "  - [DRY-RUN] Would copy guardrail: scripts/check_spoke_cleanliness.py"
-                        )
-                    else:
-                        spoke_scripts_dir.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(hub_cleanliness, dest_cleanliness)
-                        print("  - Copied guardrail: scripts/check_spoke_cleanliness.py")
+        for src, dest, name, rel_path in items_to_copy:
+            if not src.exists() or src.resolve() == dest.resolve():
+                continue
+
+            if not dest.exists():
+                status = "NEW"
+            elif are_files_identical(src, dest):
+                status = "UNCHANGED"
+            else:
+                status = "UPDATED"
+
+            actions.append(
+                {
+                    "type": "Guardrail",
+                    "name": name,
+                    "status": status,
+                    "path": rel_path,
+                }
+            )
+
+            if not dry_run and status in ("NEW", "UPDATED"):
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dest)
+                action_text = "Copied" if status == "NEW" else "Updated"
+                print(f"  - {action_text} guardrail: {rel_path}")
+            elif dry_run and status in ("NEW", "UPDATED"):
+                action_text = "Would copy" if status == "NEW" else "Would update"
+                print(f"  - [DRY-RUN] {action_text} guardrail: {rel_path}")
+
+        return actions
 
 
 class SharedSdkInspector:
@@ -95,21 +127,7 @@ class SharedSdkInspector:
 
     def is_python_project(self) -> bool:
         """Check if Spoke is a Python project by configuration, file presence, or scripts."""
-        if (
-            self.project_type == "Phần mềm"
-            or (self.spoke_root / "pyproject.toml").exists()
-            or (self.spoke_root / "requirements.txt").exists()
-            or (self.spoke_root / ".venv").exists()
-            or (self.spoke_root / "venv").exists()
-        ):
-            return True
-
-        # Check for any .py file in spoke
-        for d in [self.spoke_root, self.spoke_root / "scripts", self.spoke_root / "src"]:
-            if d.exists() and any(d.glob("*.py")):
-                return True
-
-        return False
+        return is_python_spoke(self.spoke_root, self.project_type)
 
     def find_site_packages(self) -> list[Path]:
         """Locate site-packages directories across standard virtual environment folders."""
@@ -155,7 +173,10 @@ class SharedSdkInspector:
                                 packages.append(p)
                     # Check archetype defaults
                     arch = data.get("project", {}).get("archetype")
-                    if arch == "knowledge_corpus":
+                    if arch == "knowledge_corpus" and (
+                        self.project_type == "Pháp điển"
+                        or self.spoke_root.name.lower() == "ccba-legal-knowledge"
+                    ):
                         if "ccba-legal-intel" not in packages:
                             packages.append("ccba-legal-intel")
                     elif arch in ("project_delivery", "enterprise_governance"):
@@ -248,9 +269,8 @@ class LegalKnowledgeSyncOrchestrator:
                     proj = data.get("project", {})
                     if isinstance(proj, dict):
                         if (
-                            proj.get("archetype") == "knowledge_corpus"
-                            or proj.get("mode") == "knowledge"
-                            or proj.get("name") == "ccba-legal-knowledge"
+                            str(proj.get("name", "")).lower() == "ccba-legal-knowledge"
+                            or proj.get("is_master") is True
                         ):
                             return True
                 except Exception:
