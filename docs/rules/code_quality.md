@@ -31,3 +31,9 @@ Khi triển khai mã nguồn dựa trên đặc tả (Spec):
 - Mọi Agent Skill thuộc hệ sinh thái CCBA phải tuân thủ Khung Quyết Định Hai Giai Đoạn (ADR-0057).
 - Kỹ năng có nhiều chế độ hoạt động (multi-mode) bắt buộc phải xây dựng Tiêu chí hoàn thành động kiểm chứng đầy đủ từng mode, không để xảy ra tình trạng thiên lệch luồng mặc định gây hoàn thành non.
 - Tuân thủ nguyên tắc Single Source of Truth trong các tài liệu tham chiếu vệ tinh (`references/*.md`, `MODES.md`), tuyệt đối không nhân bản các cảnh báo ràng buộc cờ.
+- **Recompilation & Asset Synchronization Gate (HUB-ADR-0047, HUB-ADR-0058):**
+  Khi tạo mới, chỉnh sửa nội dung hoặc bump version bất kỳ tệp `SKILL.md` nào, Agent **BẮT BUỘC** phải kích hoạt chuỗi 3 lệnh tái biên dịch và đồng bộ hóa tài sản nền tảng:
+  1. `python scripts/governance/compile_catalog.py` (Cập nhật catalog SSOT `catalog.yaml`).
+  2. `python scripts/governance/compile_skills_docs.py --write` (Đồng bộ Web Docs Portal, Markdown docs, và llms.txt).
+  3. `python scripts/sync_hub_adr_matrix.py` (Đồng bộ Living Traceability Matrix nếu kỹ năng có viện dẫn hoặc điều chỉnh phạm vi ADR).
+
