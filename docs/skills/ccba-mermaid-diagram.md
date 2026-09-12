@@ -52,8 +52,8 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `sơ đồ mermaid`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
-- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Tạo sơ đồ Mermaid đạt chuẩn học thuật Academic Grayscale, an toàn cú pháp (subgraph style, escaped labels, non-flowcharts) cho tài liệu và xuất bản.
-- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Quy trình tác nghiệp dự án**
+- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Sinh biểu đồ Mermaid tiêu chuẩn, tối ưu cú pháp và kiểm soát độ phức tạp.
+- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Thiết kế luồng quy trình, kiến trúc hoặc tuần tự**
 
 ### Khi Nào KHÔNG Nên Dùng (Anti-patterns)
 - Không dùng nếu cần tư vấn định hướng ban đầu: hãy gọi `/ccba-ask`.
@@ -66,18 +66,18 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 Kỹ năng `ccba-mermaid-diagram` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
 
 ```text
-[ Quy trình tác nghiệp dự án ]
+[ Thiết kế luồng quy trình, kiến trúc hoặc tuần tự ]
           │
           ▼
-    >>> [ ccba-mermaid-diagram ] <<<  (Tạo sơ đồ Mermaid đạt chuẩn học thuật Academic Grayscale, an toàn cú pháp (subgraph style, escaped labels, non-flowcharts) cho tài liệu và xuất bản.)
+    >>> [ ccba-mermaid-diagram ] <<<  (Sinh biểu đồ Mermaid tiêu chuẩn, tối ưu cú pháp và kiểm soát độ phức tạp.)
           │
           ▼
-[ Bàn giao kết quả phiên làm việc ]
+[ Tài liệu kỹ thuật / Markdown specs / Walkthroughs ]
 ```
 
-- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Quy trình tác nghiệp dự án`.
+- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Thiết kế luồng quy trình, kiến trúc hoặc tuần tự`.
 - **Thực thi (In-flight)**: Áp dụng các quy tắc kỹ thuật và công cụ tự động hóa để sản sinh kết quả chuẩn mực.
-- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Bàn giao kết quả phiên làm việc`.
+- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Tài liệu kỹ thuật / Markdown specs / Walkthroughs`.
 
 ---
 

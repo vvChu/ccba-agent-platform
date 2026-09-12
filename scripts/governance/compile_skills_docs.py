@@ -141,6 +141,11 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "downstream": "Tài liệu kỹ thuật / Trình bày phương án",
         "role": "Sinh sơ đồ kiến trúc Excalidraw trực quan từ văn bản mô tả.",
     },
+    "ccba-mermaid-diagram": {
+        "upstream": "Thiết kế luồng quy trình, kiến trúc hoặc tuần tự",
+        "downstream": "Tài liệu kỹ thuật / Markdown specs / Walkthroughs",
+        "role": "Sinh biểu đồ Mermaid tiêu chuẩn, tối ưu cú pháp và kiểm soát độ phức tạp.",
+    },
     "ccba-new-feature": {
         "upstream": "Kế hoạch bổ sung tính năng mới",
         "downstream": "ccba-implement / ccba-tdd",
