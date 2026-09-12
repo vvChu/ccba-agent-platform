@@ -84,20 +84,20 @@
 - **RULE-4.5 [AI Gateway Spark Auth & Fast-Inference Gating]**:
   - LiteLLM Spark (100.83.192.30:8090): Header `Authorization: Bearer sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` (< 1s), route `qwen-local-primary` sau GPU warmup.
 - **RULE-4.6 [Tier 3 Orchestrator & Deterministic Verification Gating — ADR-0057 / ADR-0058]**:
-  - Router/Orchestrator (`/ccba-platform`): SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`, `bundle: _core`), tuân thủ Single-Writer Protocol.
-  - Đồng bộ Spoke (`sync_spoke.py`): cờ `--verify` kích hoạt `ccba-harness verify-patch` sau ghi đĩa, khóa cứng nếu lỗi.
+  - Router/Orchestrator: SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`), tuân thủ Single-Writer Protocol.
+  - Đồng bộ Spoke (`sync_spoke.py`): cờ `--verify` kích hoạt `ccba-harness verify-patch`, khóa cứng nếu lỗi.
 - **RULE-4.7 [ArtifactMetadata Workspace Invariant]**:
-  - `ArtifactMetadata` CHỈ hợp lệ cho tệp trong thư mục brain (`<appDataDir>\brain\<id>/`). Bỏ qua trường này khi ghi code/docs trong workspace chống schema rejection.
+  - `ArtifactMetadata` CHỈ dùng cho tệp trong brain (`<appDataDir>\brain\<id>/`). Bỏ qua khi ghi workspace chống schema rejection.
 
 ---
 
 ## Miền 5. 💻 Hạ Tầng & Môi Trường Máy Trạm (Windows & Tooling)
 
 - **RULE-5.1 [Chromium VIP Session Engine & CDP Browser Target]**:
-  - Chromium VIP: Profile `~/.gemini/antigravity/chrome_vip` cổng `9222`. `Browser.setDownloadBehavior` gọi qua WebSocket (`http://127.0.0.1:{port}/json/version`). Selectors trong `selectors.py`.
+  - Chromium VIP: Profile `~/.gemini/antigravity/chrome_vip` cổng `9222`. `Browser.setDownloadBehavior` gọi qua WebSocket (`http://127.0.0.1:{port}/json/version`).
 - **RULE-5.2 [Windows Path Quotes & Hook Protection]**:
   - Windows: IDE tự bọc `hooks.json` trong `"C:\..."` $\rightarrow$ vô hiệu bằng `{}` và khóa `IsReadOnly = $true` trên PowerShell. Timeout $\ge 60\text{s}$ cho tests.
 - **RULE-5.3 [Query Sanitization & Turnstile Bypass]**:
   - Query TVPL có dấu `/`, `:`, `-` phải thay bằng dấu cách (`quote_plus`) chống lỗi IIS mã hóa `%2F`.
 - **RULE-5.4 [Upstream Git Engine Windows Safety]**:
-  - Git đa tiến trình trên Windows (`upstream_evaluator.py`): (1) Mutex lock `.md/scratch/upstream_sync.lock` (timeout 300s); (2) Tự chữa lành stale `index.lock`; (3) `safe_rmtree` dùng `os.chmod(p, stat.S_IWRITE)` chống `[WinError 5]`; (4) Khử bẫy Zero-Scan: repo mới chưa có SHA cache phải kích hoạt initial audit scan.
+  - Git Windows (`upstream_evaluator.py`): (1) Mutex lock `.md/scratch/upstream_sync.lock`; (2) Tự chữa lành stale `index.lock`; (3) `safe_rmtree` dùng `os.chmod(p, stat.S_IWRITE)`; (4) Khử bẫy Zero-Scan: repo mới phải quét initial audit.
