@@ -9,6 +9,9 @@ user-invocable: true
 disable-model-invocation: true
 bundle: _core
 command: /ccba-autoresearch
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 triggers:
 - autoresearch
 - auto-research
