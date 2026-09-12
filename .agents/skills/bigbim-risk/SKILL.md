@@ -10,6 +10,9 @@ bundle: _bim
 tier: kernel
 command: /bigbim-risk
 layer: _bim
+metadata:
+  version: "1.0.0"
+  author: "BIGBIM"
 gpi:
   s: 4.0
   k: 3.0

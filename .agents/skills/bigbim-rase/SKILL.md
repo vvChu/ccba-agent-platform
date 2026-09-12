@@ -9,6 +9,9 @@ bundle: _bim
 tier: kernel
 command: /bigbim-rase
 layer: _bim
+metadata:
+  version: "1.0.0"
+  author: "BIGBIM"
 gpi:
   s: 4.0
   k: 4.0
