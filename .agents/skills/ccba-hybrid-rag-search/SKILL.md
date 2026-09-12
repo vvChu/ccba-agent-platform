@@ -10,6 +10,9 @@ applies_to:
 bundle: _core
 tier: kernel
 command: /ccba-hybrid-rag-search
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 3.0
   k: 3.0
