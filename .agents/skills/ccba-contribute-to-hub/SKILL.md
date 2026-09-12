@@ -13,7 +13,7 @@ disable-model-invocation: true
 command: /ccba-contribute-to-hub
 user-invocable: true
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -107,7 +107,8 @@ Thực thi tại thư mục Hub (`hub_path`):
 
 ---
 
-## 🚀 Bước 4: Mở GitHub Pull Request (PR Flow Tự Đóng Issue)
+## 🚀 Bước 4: Mở GitHub Pull Request (Kế thừa chuẩn /ccba-create-pr)
+Kế thừa tiêu chuẩn khởi tạo PR từ kỹ năng [`/ccba-create-pr`](../ccba-create-pr/SKILL.md) kèm nội dung chuyên biệt cho đề xuất Spoke $\rightarrow$ Hub:
 - **Tự động qua GitHub CLI (Tự động gắn mã Closes #[ISSUE_ID]):**
   ```bash
   PR_BODY="Automated proposal submission from Spoke [tên-spoke].${ISSUE_ID:+ Closes #${ISSUE_ID}}"
@@ -160,6 +161,5 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/propose_to_hub.md` | Quy trình đề xuất kỹ năng/tính năng mới từ Spoke lên Hub trung tâm |
-| `references/pull_request_guide.md` | Hướng dẫn kiểm tra chất lượng và tạo Pull Request chuẩn mực |
 | `references/proposal_review_sop.md` | Quy trình chuẩn SOP thẩm định các đề xuất Pull Request từ Spoke gửi lên Hub |
 

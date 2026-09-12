@@ -412,6 +412,20 @@ skills:
   skill_path: .agents/skills/ccba-copywriting/SKILL.md
   command: /ccba-copywriting
   tier: kernel
+- name: ccba-create-pr
+  bundle: _core
+  description: Kiểm tra chất lượng code (Shift-Left), Main Branch Guard, đẩy code
+    và mở GitHub Pull Request kèm rào chắn Dual-Gate CI & Copilot Review
+  triggers:
+  - create pr
+  - create-pr
+  - tạo pr
+  - mở pr
+  - ccba-create-pr
+  - pull request
+  skill_path: .agents/skills/ccba-create-pr/SKILL.md
+  command: /ccba-create-pr
+  tier: kernel
 - name: ccba-design
   bundle: _consulting
   description: Design brand identity, logos, banners, and visual assets. Use for brand
