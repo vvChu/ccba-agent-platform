@@ -86,7 +86,7 @@ Options: `--style`, `--industry`, `--prompt`
 
 ## Setup
 
-```bash
-export GEMINI_API_KEY="your-key"
+```powershell
+$env:GEMINI_API_KEY="your-key"
 pip install google-genai
 ```

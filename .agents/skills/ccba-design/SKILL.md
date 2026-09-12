@@ -341,8 +341,8 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 
 ## Setup
 
-```bash
-export GEMINI_API_KEY="your-key"  # https://aistudio.google.com/apikey
+```powershell
+$env:GEMINI_API_KEY="your-key"  # https://aistudio.google.com/apikey
 pip install google-genai pillow
 ```
 

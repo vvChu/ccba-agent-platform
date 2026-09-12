@@ -54,7 +54,7 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable \
 nuclei -u https://example.com -t cves/
 
 # Check security headers
-curl -I https://example.com | grep -i "security\|content-security\|x-"
+curl.exe -I https://example.com | Select-String -Pattern "security|content-security|x-"
 ```
 
 ## Penetration Testing Phases

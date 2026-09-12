@@ -73,7 +73,7 @@ You need raw XML access for: comments, speaker notes, slide layouts, animations,
 **When given an example design to emulate**: Always analyze the presentation's typography and colors first using the methods below:
 1. **Read theme file**: Check `ppt/theme/theme1.xml` for colors (`<a:clrScheme>`) and fonts (`<a:fontScheme>`)
 2. **Sample slide content**: Examine `ppt/slides/slide1.xml` for actual font usage (`<a:rPr>`) and colors
-3. **Search for patterns**: Use grep to find color (`<a:solidFill>`, `<a:srgbClr>`) and font references across all XML files
+3. **Search for patterns**: Use Select-String (PowerShell) or git grep to find color (`<a:solidFill>`, `<a:srgbClr>`) and font references across all XML files
 
 ## Creating a new PowerPoint presentation **without a template**
 
@@ -526,8 +526,8 @@ Required dependencies (should already be installed):
 - **playwright**: `npm install -g playwright` (for HTML rendering in html2pptx)
 - **react-icons**: `npm install -g react-icons react react-dom` (for icons)
 - **sharp**: `npm install -g sharp` (for SVG rasterization and image processing)
-- **LibreOffice**: `sudo apt-get install libreoffice` (for PDF conversion)
-- **Poppler**: `sudo apt-get install poppler-utils` (for pdftoppm to convert PDF to images)
+- **LibreOffice**: Windows WinGet: `winget install --id TheDocumentFoundation.LibreOffice` (for PDF conversion)
+- **Poppler**: Windows Choco: `choco install poppler` (for pdftoppm to convert PDF to images)
 - **defusedxml**: `pip install defusedxml` (for secure XML parsing)
 
 ## Progressive Disclosure & Reference Index (Level 3)
