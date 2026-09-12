@@ -1,0 +1,102 @@
+# CCBA Agent Platform — Skills Navigation Portals Taxonomy
+# Source of Truth for Portal categorization across 69 active skills (ADR-0047, ADR-0057)
+
+portals:
+  - id: "init_navigation"
+    name: "Khởi tạo, Điều hướng & Đồng bộ"
+    icon: "🚀"
+    description: "Khởi tạo phân vùng Spoke, cập nhật đồng bộ kỹ năng từ Hub, điều hướng bản đồ nhiệm vụ và bàn giao phiên làm việc sạch sẽ."
+    skills:
+      - platform-loader
+      - ccba-ask
+      - ccba-init-spoke
+      - ccba-spoke-adopter
+      - ccba-update-spoke
+      - ccba-setup-skills
+      - ccba-handoff
+      - ccba-wayfinder
+
+  - id: "core_engineering"
+    name: "Kỹ nghệ Phần mềm & Đa Tác nhân"
+    icon: "⚙️"
+    description: "Kỹ nghệ phần mềm chuẩn mực từ mài giũa ý tưởng, đặc tả kỹ thuật, phát triển dẫn dắt bởi kiểm thử (TDD), review mã nguồn, gỡ lỗi đa tác nhân đến xuất xưởng."
+    skills:
+      - ccba-grilling
+      - ccba-to-spec
+      - ccba-implement
+      - ccba-tdd
+      - ccba-teamwork
+      - ccba-code-review
+      - ccba-codebase-design
+      - ccba-diagnosing-bugs
+      - ccba-web-testing
+      - ccba-design
+      - ccba-domain-modeling
+      - ccba-excalidraw-diagram
+      - ccba-new-feature
+      - ccba-release-feature
+      - ccba-session-retrospective
+      - ccba-git-guardrails
+      - ccba-api-circuit-breaker
+      - ccba-append-only-logger
+
+  - id: "bim_aiqc"
+    name: "BIGBIM & Thẩm tra AI-QC"
+    icon: "📐"
+    description: "Hệ thống quản trị mô hình BIM Sợi Chỉ Vàng, phân loại bảng Uniclass, kiểm soát mâu thuẫn thông tin V2 và thẩm tra tự động thiết kế đa bộ môn (Kiến trúc, Kết cấu, MEP, PCCC)."
+    skills:
+      - bigbim-classification
+      - bigbim-governance
+      - bigbim-rase
+      - bigbim-risk
+      - bigbim-vbpl-digest
+      - ccba-ai-qc
+      - ccba-ai-qc-pccc-audit
+
+  - id: "legal_compliance"
+    name: "Pháp lý Xây dựng & Tự động hóa Văn phòng"
+    icon: "⚖️"
+    description: "Tư vấn & giải đáp pháp lý xây dựng OKF v2.4, theo dõi văn bản quy phạm pháp luật (VBPL, VBHN), bóc tách phụ lục và tự động hóa hồ sơ hoàn thành công trình."
+    skills:
+      - ccba-legal-advisor
+      - ccba-legal-intel
+      - ccba-legal-document-tracker
+      - ccba-legal-ingest
+      - ccba-tvpl-vip-crawler
+      - ccba-completion-checklist
+      - ccba-xu-ly-van-phong
+      - ccba-markdown-document-processing
+      - ccba-pptx
+      - ccba-copywriting
+
+  - id: "governance_upkeep"
+    name: "Quản trị Nền tảng, AI Gateway & Nghiên cứu"
+    icon: "🛡️"
+    description: "Quản trị vòng đời quyết định kiến trúc ADR, cổng đánh giá chất lượng kỹ năng (GPI), AI Gateway SDK, tìm kiếm kết hợp Hybrid RAG và chu trình tự nghiên cứu học tập."
+    skills:
+      - ccba-adr-lifecycle
+      - ccba-eval-gate
+      - ccba-maskara
+      - ccba-platform
+      - ccba-build-skill
+      - ccba-skill-repair
+      - ccba-autoresearch
+      - ccba-graduate-rd
+      - ccba-knowledge-loop
+      - ccba-ai-gateway-sdk
+      - ccba-ai-pdf-preprocessor
+      - ccba-hybrid-rag-search
+      - ccba-llm-pipeline-patterns
+      - ccba-file-stability-guard
+      - ccba-notebooklm-connector
+      - ccba-academic-writing
+      - ccba-research
+      - ccba-seminar-builder
+      - ccba-youtube-learn
+      - ccba-contribute-to-hub
+      - ccba-issue-to-hub
+      - ccba-promote-sandbox
+      - ccba-sharepoint-iac
+      - ccba-xia
+      - ccba-docs-manager
+      - ccba-sync-upstream

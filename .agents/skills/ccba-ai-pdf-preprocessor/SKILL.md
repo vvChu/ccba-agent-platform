@@ -9,6 +9,9 @@ applies_to:
 bundle: _qc
 tier: kernel
 command: /ccba-ai-pdf-preprocessor
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 3.0
   k: 3.0

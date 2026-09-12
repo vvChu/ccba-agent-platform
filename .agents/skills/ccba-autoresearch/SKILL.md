@@ -9,6 +9,9 @@ user-invocable: true
 disable-model-invocation: true
 bundle: _core
 command: /ccba-autoresearch
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 triggers:
 - autoresearch
 - auto-research
@@ -29,7 +32,7 @@ Khi nhận được lệnh này từ người dùng, Agent sẽ tự động n�
 
 ### Bước 1: Kiểm tra hoặc Tạo tệp `program.md`
 Agent kiểm tra xem thư mục gốc đã có tệp `program.md` chưa:
-- Nếu chưa có, copy mẫu từ [`.agents/skills/ccba-eval-gate/program_template.md`](../ccba-eval-gate/program_template.md) vào `program.md` và điều chỉnh `Target File` theo yêu cầu của người dùng.
+- Nếu chưa có, copy mẫu từ [`.agents/skills/ccba-eval-gate/references/program_template.md`](../ccba-eval-gate/references/program_template.md) vào `program.md` và điều chỉnh `Target File` theo yêu cầu của người dùng.
 - **Tiêu chí hoàn thành:** Tệp `program.md` sẵn sàng tại thư mục gốc với target file và tiêu chí đánh giá chuẩn xác.
 
 ### Bước 2: Kích hoạt Git-Ratchet Auto-Tuner

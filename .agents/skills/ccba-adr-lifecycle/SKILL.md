@@ -29,6 +29,7 @@ conforms_to:
 - HUB-ADR-0051
 metadata:
   version: 1.2.0
+  author: "CCBA Hub"
 ---
 
 # Skill: Quản Trị Vòng Đời Quyết Định Kiến Trúc (`ccba-adr-lifecycle`)

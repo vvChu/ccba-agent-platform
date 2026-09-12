@@ -4,25 +4,49 @@ How to apply structured review checklists during code review.
 
 ## When to Use
 
-- Pre-landing review (from `/ck:ship` pipeline)
+- Pre-landing review (from shipping / release pipeline)
 - Explicit request for checklist review
 - Security audit before release
-- Code-reviewer agent when reviewing significant changes (10+ files or security-sensitive)
+- Review subagents when evaluating significant changes (10+ files or security-sensitive)
 
 ## Workflow
 
 ### 1. Auto-Detect Project Type
 
-```bash
+Check repository markers using cross-platform / PowerShell commands:
+
+```powershell
+# Check for Python monorepo stack
+if (Test-Path "pyproject.toml") { "python" }
+
 # Check for web app frameworks
-if grep -qE '"(react|vue|svelte|next|nuxt|angular)"' package.json 2>/dev/null; then
-  echo "web-app"
+if (Test-Path "package.json") {
+    $pkg = Get-Content "package.json" -Raw -Encoding UTF8
+    if ($pkg -match '"(react|vue|svelte|next|nuxt|angular)"') { "web-app" }
+}
+
 # Check for API patterns
-elif ls src/routes/ src/api/ src/controllers/ app/controllers/ 2>/dev/null | head -1; then
-  echo "api"
-else
-  echo "base-only"
+$apiDirs = @("src/routes", "src/api", "src/controllers", "app/controllers")
+if ($apiDirs | Where-Object { Test-Path $_ }) { "api" }
+```
+
+Cross-platform shell equivalent:
+```bash
+# Check for Python stack
+[ -f "pyproject.toml" ] && echo "python"
+
+# Check for web app frameworks (Cross-platform git grep)
+if [ -f "package.json" ] && git grep -qiE '"(react|vue|svelte|next|nuxt|angular)"' -- package.json; then
+    echo "web-app"
 fi
+
+# Check for API patterns
+for d in src/routes src/api src/controllers app/controllers; do
+    if [ -d "$d" ]; then
+        echo "api"
+        break
+    fi
+done
 ```
 
 ### 2. Load Checklists
@@ -30,9 +54,10 @@ fi
 Always load: `checklists/base.md`
 
 Overlay based on detection:
+- `python` → also load `checklists/python.md` (ADR-0035, mypy strict, Windows utf-8 encoding, KISS)
 - `web-app` → also load `checklists/web-app.md`
 - `api` → also load `checklists/api.md`
-- Both detected → load both overlays
+- Multiple detected → load all matching overlays
 
 ### 3. Get the Diff
 
@@ -48,7 +73,7 @@ git diff origin/main
 **Pass 1 (CRITICAL) — Run first:**
 - Scan diff against ALL critical categories (base + overlays)
 - Each finding must include: `[file:line]`, problem, fix
-- These block `/ship` pipeline
+- These block the landing/release pipeline
 
 **Pass 2 (INFORMATIONAL) — Run second:**
 - Scan diff against ALL informational categories (base + overlays)
@@ -71,17 +96,17 @@ Key suppressions:
 Pre-Landing Review: N issues (X critical, Y informational)
 
 **CRITICAL** (blocking):
-- [src/auth/login.ts:42] User input is interpolated directly into a query
-  Fix: Use the project's parameterized query helper before passing user input
+- [packages/ccba-core/src/service.py:42] Direct private import from `ccba_pkg._internal` violates ADR-0035
+  Fix: Import public seam through `ccba_pkg` or export symbol via `__all__`
 
 **Issues** (non-blocking):
-- [src/api/users.ts:88] Magic number 30 for pagination limit
-  Fix: Extract to constant `DEFAULT_PAGE_SIZE = 30`
+- [packages/ccba-core/src/utils.py:88] Missing Google-style docstring on public function
+  Fix: Add function docstring describing parameters and return type
 ```
 
 ### 7. Critical Issue Resolution
 
-For each critical issue, use `AskUserQuestion`:
+For each critical issue, use `ask_question`:
 - Problem with `file:line`
 - Recommended fix
 - Options:
@@ -91,10 +116,10 @@ For each critical issue, use `AskUserQuestion`:
 
 If user chose A (fix): apply fixes, commit, then re-run tests before continuing.
 
-## Integration with /ck:ship
+## Integration with Shipping Pipeline
 
-The ship pipeline calls this workflow at Step 4. Critical findings block the pipeline. Informational findings are included in the PR body.
+The release pipeline calls this workflow before landing changes. Critical findings block the pipeline. Informational findings are included in the PR body.
 
-## Integration with /ck:code-review
+## Integration with /ccba-code-review
 
-When invoked as part of standard code review, the checklist augments (not replaces) the existing scout → review → fix → verify pipeline. Checklist findings are merged with code-reviewer's own findings.
+When invoked as part of standard code review, the checklist augments (not replaces) the existing scout → review → fix → verify pipeline. Checklist findings are merged with the review subagents' findings.

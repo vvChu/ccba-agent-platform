@@ -12,6 +12,9 @@ tier: kernel
 disable-model-invocation: true
 command: /ccba-issue-to-hub
 user-invocable: true
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 3.0
   k: 3.0
@@ -125,4 +128,6 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/issue_triage_flow.md` | Quy trình phân loại, gắn nhãn và sàng lọc sự cố kỹ thuật (issues) |
+| `references/agent-brief.md` | Mẫu chỉ dẫn tóm tắt nhiệm vụ và phạm vi kỹ thuật (Agent Brief) cho Issue |
+| `references/out-of-scope.md` | Hướng dẫn nhận diện và cách ly các yêu cầu nằm ngoài phạm vi giải quyết (Out of Scope) |
 

@@ -1,0 +1,89 @@
+# CCBA Agent Platform Skills
+
+> Curated registry of 69 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
+
+## Navigation Portals
+
+- [Khởi tạo, Điều hướng & Đồng bộ](skills/INDEX.md#init_navigation): Khởi tạo phân vùng Spoke, cập nhật đồng bộ kỹ năng từ Hub, điều hướng bản đồ nhiệm vụ và bàn giao phiên làm việc sạch sẽ.
+- [Kỹ nghệ Phần mềm & Đa Tác nhân](skills/INDEX.md#core_engineering): Kỹ nghệ phần mềm chuẩn mực từ mài giũa ý tưởng, đặc tả kỹ thuật, phát triển dẫn dắt bởi kiểm thử (TDD), review mã nguồn, gỡ lỗi đa tác nhân đến xuất xưởng.
+- [BIGBIM & Thẩm tra AI-QC](skills/INDEX.md#bim_aiqc): Hệ thống quản trị mô hình BIM Sợi Chỉ Vàng, phân loại bảng Uniclass, kiểm soát mâu thuẫn thông tin V2 và thẩm tra tự động thiết kế đa bộ môn (Kiến trúc, Kết cấu, MEP, PCCC).
+- [Pháp lý Xây dựng & Tự động hóa Văn phòng](skills/INDEX.md#legal_compliance): Tư vấn & giải đáp pháp lý xây dựng OKF v2.4, theo dõi văn bản quy phạm pháp luật (VBPL, VBHN), bóc tách phụ lục và tự động hóa hồ sơ hoàn thành công trình.
+- [Quản trị Nền tảng, AI Gateway & Nghiên cứu](skills/INDEX.md#governance_upkeep): Quản trị vòng đời quyết định kiến trúc ADR, cổng đánh giá chất lượng kỹ năng (GPI), AI Gateway SDK, tìm kiếm kết hợp Hybrid RAG và chu trình tự nghiên cứu học tập.
+
+## Core Endpoints & Documentation
+
+- [Skills Index](skills/INDEX.md): Markdown catalog index for all 69 skills.
+- [Skills FAQ](skills/FAQ.md): Frequently asked questions on Hub-Spoke, invocation, and troubleshooting.
+- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 69 skills.
+
+## All Active Skills (69 Skills)
+
+- [platform-loader](skills/platform-loader.md): /platform-loader — Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn bộ skills và rules.
+- [bigbim-classification](skills/bigbim-classification.md): /bigbim-classification — Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass 200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
+- [bigbim-governance](skills/bigbim-governance.md): /bigbim-governance — Guardrails quản trị thông tin BIGBIM. Cưỡng chế tuân thủ Hiến pháp Sợi Chỉ Vàng, rào chắn Sợi Chỉ Đỏ và quy chuẩn định danh Unique ID từ giai đoạn A0.
+- [bigbim-rase](skills/bigbim-rase.md): /bigbim-rase — Tự động phân tích RASE (Requirement, Applicability, Selection, Exception) cho dự án BIM dựa trên sơ đồ dữ liệu IFC4X3 và bộ Quantity Take-Off (Qto_xxx).
+- [bigbim-risk](skills/bigbim-risk.md): /bigbim-risk — Phát hiện "Mâu thuẫn thông tin" (Information Conflict) phi hình học tại bước phối hợp thông tin V2 - Coordination, vượt ngoài giới hạn Clash Detection truyền thống.
+- [bigbim-vbpl-digest](skills/bigbim-vbpl-digest.md): /bigbim-vbpl-digest — Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024, ISO 19650-1/2/3/5, QCVN liên quan.
+- [ccba-academic-writing](skills/ccba-academic-writing.md): /ccba-academic-writing — Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa học theo chuẩn quốc tế (IMRAD, CARS model).
+- [ccba-adr-lifecycle](skills/ccba-adr-lifecycle.md): /ccba-adr-lifecycle — Autonomous lifecycle governance for Architecture Decision Records (ADRs) - Scaffolding, status cascading, Living Traceability Matrix compilation, and CI parity validation.
+- [ccba-ai-gateway-sdk](skills/ccba-ai-gateway-sdk.md): /ccba-ai-gateway-sdk — Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endpoint. Bao gồm Python package ccba-ai.
+- [ccba-ai-pdf-preprocessor](skills/ccba-ai-pdf-preprocessor.md): /ccba-ai-pdf-preprocessor — Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking) và Tiling cho AI Vision.
+- [ccba-ai-qc](skills/ccba-ai-qc.md): /ccba-ai-qc — Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View Vision, Heat Map Report) qua Deep Seam QCAuditPipeline.
+- [ccba-ai-qc-pccc-audit](skills/ccba-ai-qc-pccc-audit.md): /ccba-ai-qc-pccc-audit — Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ chế Semantic Map-Reduce.
+- [ccba-api-circuit-breaker](skills/ccba-api-circuit-breaker.md): /ccba-api-circuit-breaker — Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch pipelines. Tránh quota exhaustion, cascade failures, và infinite retry loops khi gọi AI Gateway hàng loạt.
+- [ccba-append-only-logger](skills/ccba-append-only-logger.md): /ccba-append-only-logger — Thread-safe, append-only logging pattern cho Python pipeline multi-daemon. Tránh race condition và encoding corruption khi nhiều process ghi cùng lúc vào shared log file.
+- [ccba-ask](skills/ccba-ask.md): /ccba-ask — Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu cầu phát triển.
+- [ccba-autoresearch](skills/ccba-autoresearch.md): /ccba-autoresearch — Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet Auto-Tuner) lấy cảm hứng từ karpathy/autoresearch.
+- [ccba-build-skill](skills/ccba-build-skill.md): /ccba-build-skill — Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói sinh Skill mới đạt chuẩn CCBA.
+- [ccba-code-review](skills/ccba-code-review.md): /ccba-code-review — Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells) và Spec (Spec/Requirements).
+- [ccba-codebase-design](skills/ccba-codebase-design.md): /ccba-codebase-design — Shared vocabulary for designing deep modules (locality, depth, leverage, seams) to improve testability and code quality. Reference skill.
+- [ccba-completion-checklist](skills/ccba-completion-checklist.md): /ccba-completion-checklist — Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện hành. Hỗ trợ xuất Markdown và Word (.docx).
+- [ccba-contribute-to-hub](skills/ccba-contribute-to-hub.md): /ccba-contribute-to-hub — Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
+- [ccba-copywriting](skills/ccba-copywriting.md): /ccba-copywriting — Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa và áp dụng các công thức viết thuyết phục (AIDA, PAS).
+- [ccba-design](skills/ccba-design.md): /ccba-design — Design brand identity, logos, banners, and visual assets. Use for brand systems, design tokens, corporate identity programs. Not for UI code patterns.
+- [ccba-diagnosing-bugs](skills/ccba-diagnosing-bugs.md): /ccba-diagnosing-bugs — Diagnosis loop for hard bugs and performance regressions. Use when the user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
+- [ccba-docs-manager](skills/ccba-docs-manager.md): /ccba-docs-manager — Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
+- [ccba-domain-modeling](skills/ccba-domain-modeling.md): /ccba-domain-modeling — Build, refine, and maintain the project's domain model, ubiquitous language, and record architectural decisions (ADRs).
+- [ccba-eval-gate](skills/ccba-eval-gate.md): /ccba-eval-gate — Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động sửa lỗi (Self-Healing Loop).
+- [ccba-excalidraw-diagram](skills/ccba-excalidraw-diagram.md): /ccba-excalidraw-diagram — Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian và excalidraw.com.
+- [ccba-file-stability-guard](skills/ccba-file-stability-guard.md): /ccba-file-stability-guard — Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước thực tế thay vì time.sleep() — dành cho Google Drive, OneDrive, SharePoint.
+- [ccba-git-guardrails](skills/ccba-git-guardrails.md): /ccba-git-guardrails — Guardrails to block or request explicit user permission before executing dangerous git operations (force push, hard reset, clean, etc.) via terminal.
+- [ccba-graduate-rd](skills/ccba-graduate-rd.md): /ccba-graduate-rd — Quy trình cưỡng chế chuyển hóa mã nguồn R&D thành Deep Seam Production, tích hợp /boost, /teamwork và mở PR tự động.
+- [ccba-grilling](skills/ccba-grilling.md): /ccba-grilling — Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy chuẩn (Grill with Docs), hoặc hội tụ UI qua prototype trực quan.
+- [ccba-handoff](skills/ccba-handoff.md): /ccba-handoff — Đóng gói và tổng hợp phiên làm việc hiện tại thành tài liệu Handoff chuẩn mực để Agent tiếp theo tiếp quản liền mạch.
+- [ccba-hybrid-rag-search](skills/ccba-hybrid-rag-search.md): /ccba-hybrid-rag-search — Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) + RRF Fusion. Đúc rút từ VvC Ground Truth pipeline — độ chính xác cao hơn pure BM25 đơn thuần 20x.
+- [ccba-implement](skills/ccba-implement.md): /ccba-implement — Implement a piece of work based on a spec or set of tickets.
+- [ccba-init-spoke](skills/ccba-init-spoke.md): /ccba-init-spoke — Khởi tạo một dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform
+- [ccba-issue-to-hub](skills/ccba-issue-to-hub.md): /ccba-issue-to-hub — Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ Spoke lên Hub dưới dạng GitHub Issue
+- [ccba-knowledge-loop](skills/ccba-knowledge-loop.md): /ccba-knowledge-loop — Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm → Wayfinder → Exec)
+- [ccba-legal-advisor](skills/ccba-legal-advisor.md): /ccba-legal-advisor — Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.4.
+- [ccba-legal-document-tracker](skills/ccba-legal-document-tracker.md): /ccba-legal-document-tracker — Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine và Registry.
+- [ccba-legal-ingest](skills/ccba-legal-ingest.md): /ccba-legal-ingest — Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation, and 15-Gate CI verification workflow.
+- [ccba-legal-intel](skills/ccba-legal-intel.md): /ccba-legal-intel — Autonomous legal intelligence agent to crawl, diff, and generate compliance checklists from Vietnamese legal documents.
+- [ccba-llm-pipeline-patterns](skills/ccba-llm-pipeline-patterns.md): /ccba-llm-pipeline-patterns — Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đúc rút từ VvC LLM OS (v5.1→v8.7, 2026).
+- [ccba-markdown-document-processing](skills/ccba-markdown-document-processing.md): /ccba-markdown-document-processing — Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep Seam ConversionPipeline.
+- [ccba-maskara](skills/ccba-maskara.md): /ccba-maskara — Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords, private keys) trong files/logs và cài đặt guardrails bảo mật.
+- [ccba-new-feature](skills/ccba-new-feature.md): /ccba-new-feature — Tạo feature branch mới với quy trình lập kế hoạch và phân tách session sạch (Factory Model)
+- [ccba-notebooklm-connector](skills/ccba-notebooklm-connector.md): /ccba-notebooklm-connector — Interact with Google NotebookLM to import YouTube, URLs, PDFs, and Drive docs, perform RAG query, generate Audio Overview, and handle auth, polling, and retry loops.
+- [ccba-platform](skills/ccba-platform.md): /ccba-platform — Cổng điều phối toàn cục (Global Router) và kiểm tra môi trường cho CCBA Agent Services Platform. Tự động kiểm tra Hub/Spoke, Gateway/VPN, cấu trúc Spoke và điều hướng đúng kỹ năng.
+- [ccba-pptx](skills/ccba-pptx.md): /ccba-pptx — Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao bằng HTML conversion hoặc OOXML.
+- [ccba-promote-sandbox](skills/ccba-promote-sandbox.md): /ccba-promote-sandbox — Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc Hub (ADR 0046)
+- [ccba-release-feature](skills/ccba-release-feature.md): /ccba-release-feature — Merge PR, cleanup branch, auto-close local issues và cập nhật walkthrough
+- [ccba-research](skills/ccba-research.md): /ccba-research — Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ trợ Dual-Agent Adversarial).
+- [ccba-seminar-builder](skills/ccba-seminar-builder.md): /ccba-seminar-builder — Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda, outline, và archive nội dung các buổi thảo luận.
+- [ccba-session-retrospective](skills/ccba-session-retrospective.md): /ccba-session-retrospective — Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa kỹ năng trực tiếp, đồng bộ ADR Matrix, tái biên dịch tài liệu, kích hoạt Governance Gate và dọn dẹp workspace.
+- [ccba-setup-skills](skills/ccba-setup-skills.md): /ccba-setup-skills — Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu hình issue tracker, nhãn phân loại (triage), và bố cục tài liệu tri thức (Domain Docs). Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
+- [ccba-sharepoint-iac](skills/ccba-sharepoint-iac.md): /ccba-sharepoint-iac — Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code). Hướng dẫn thiết kế JSON schema, kiểm định Lookups/Taxonomy và triển khai bằng PnP PowerShell.
+- [ccba-skill-repair](skills/ccba-skill-repair.md): /ccba-skill-repair — Phục hồi và sửa chữa kỹ năng AI theo thể chế ADR-0057 và bộ kiểm định ccba-harness.
+- [ccba-spoke-adopter](skills/ccba-spoke-adopter.md): /ccba-spoke-adopter — Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield Spokes) vào CCBA Platform mà không phá hủy cấu trúc dữ liệu cũ.
+- [ccba-sync-upstream](skills/ccba-sync-upstream.md): /ccba-sync-upstream — Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0057 Radar) kết hợp kích hoạt 1-Click Port qua /ccba-xia.
+- [ccba-tdd](skills/ccba-tdd.md): /ccba-tdd — Phát triển hướng kiểm thử (Red-Green-Refactor) giúp tạo mã nguồn ổn định, tin cậy thông qua các giao diện công khai (seams).
+- [ccba-teamwork](skills/ccba-teamwork.md): /ccba-teamwork — Điều phối đa tác nhân dài hạn (Teamwork Multi-Agent Framework) theo 4 giai đoạn và 3 vai trò tối giản (Orchestrator, Workers, Auditor), cưỡng chế Workers Read-Only Sandbox và kiểm toán phân vùng tệp hậu hợp nhất.
+- [ccba-to-spec](skills/ccba-to-spec.md): /ccba-to-spec — Turn the current conversation into a spec and publish it to the project issue tracker — no interview, just synthesis of what you've already discussed.
+- [ccba-tvpl-vip-crawler](skills/ccba-tvpl-vip-crawler.md): /ccba-tvpl-vip-crawler — Kỹ năng tự động cào và đóng gói văn bản pháp luật VIP TVPL qua Deep Seam TVPLCrawler (tự động CookieVault & Mutex).
+- [ccba-update-spoke](skills/ccba-update-spoke.md): /ccba-update-spoke — Đồng bộ hóa các kỹ năng và cập nhật phiên bản giữa Hub và các Spoke (đơn lẻ hoặc hàng loạt)
+- [ccba-wayfinder](skills/ccba-wayfinder.md): /ccba-wayfinder — Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua danh sách các ticket công việc.
+- [ccba-web-testing](skills/ccba-web-testing.md): /ccba-web-testing — Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y testing. Use for test automation, flakiness, Core Web Vitals, and cross-browser.
+- [ccba-xia](skills/ccba-xia.md): /ccba-xia — Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại.
+- [ccba-xu-ly-van-phong](skills/ccba-xu-ly-van-phong.md): /ccba-xu-ly-van-phong — Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo tiêu chuẩn cấu trúc & phối màu chuyên nghiệp hoặc Nghị định 30.
+- [ccba-youtube-learn](skills/ccba-youtube-learn.md): /ccba-youtube-learn — Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề và hình ảnh slide học thuật từ các video YouTube/bài giảng.
