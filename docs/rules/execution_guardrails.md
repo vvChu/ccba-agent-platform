@@ -13,10 +13,15 @@
 
 ## 2. Bounded Async Task, Zero-Polling & Reactive Wakeup Invariant
 - Khi một lệnh chạy dưới dạng tác vụ ngầm (Background Task) như `run_harness_evals.py`, `pytest`, hoặc `gh pr checks`:
-  - **Nguyên lý Reactive Wakeup (Thức dậy theo sự kiện):** Hệ thống tự động đánh thức và gửi thông báo cho Agent ngay khi tác vụ hoàn thành. Agent **NGHIÊM CẤM** tự tạo vòng lặp kín để thăm dò (`polling loop`) bằng `manage_task status`.
-  - **Quy tắc kiểm tra tiến độ:**
-    - Agent chỉ được gọi `manage_task status` tối đa **2 lần** để kiểm tra các tác vụ ngắn hạn (< 5 giây).
-    - Nếu tác vụ vẫn ở trạng thái **RUNNING** sau 2 lần kiểm tra, Agent **BẮT BUỘC** dừng gọi tool (kết thúc lượt - End Turn) hoặc chuyển sang làm việc độc lập khác. Tuyệt đối không lặp polling liên tiếp làm ô nhiễm giao diện (UI noise), phình to context window và lãng phí token.
+  - **Nguyên lý Reactive Wakeup (Thức dậy theo sự kiện - Bắt buộc):** Hệ thống Antigravity tự động đánh thức và gửi thông điệp `<SYSTEM_MESSAGE>` cho Agent ngay khi tác vụ nền hoàn thành.
+  - **Chính sách Không Polling Tuyệt Đối (Zero-Tolerance Polling Policy):**
+    - Nghiêm cấm Agent tự tạo vòng lặp kín để thăm dò trạng thái (`manage_task status`) nhiều lần liên tiếp trong lúc chờ tiến trình nền.
+    - **Hành động bắt buộc ngay sau khi lệnh chuyển sang Background Task:**
+      1. **Dừng gọi công cụ (Stop Calling Tools / End Turn):** Thông báo ngắn gọn cho người dùng (nếu cần) và kết thúc lượt ngay lập tức để runtime tự động đánh thức khi tác vụ hoàn thành.
+      2. **Hoặc Triển khai công việc song song có ích (Parallel Work):** Soạn thảo tài liệu, cập nhật artifact, phân tích mã nguồn độc lập khác trong lúc chờ — tuyệt đối không chèn các lệnh kiểm tra trạng thái vô nghĩa.
+  - **Nguyên tắc Scoped Execution First:**
+    - Với các lệnh kiểm tra cục bộ, **luôn chỉ định phạm vi hẹp (Scoped Target)** kết hợp cấu hình `WaitMsBeforeAsync=10000` (10s) để lệnh hoàn tất đồng bộ ngay trong lượt gọi đầu tiên, tránh đẩy vô cớ xuống Background Task.
+    - Nghiêm cấm chạy full test suite unscoped chỉ để kiểm tra 1 thay đổi cục bộ.
   - **Rào chắn lệnh theo dõi CI (`gh pr checks`):** Nghiêm cấm chạy `gh pr checks --watch` kết hợp lặp `manage_task status`. Thay vào đó, chạy `gh pr checks` đơn lẻ hoặc khởi chạy `--watch` rồi lập tức dừng lượt để hệ thống tự động trả về kết quả khi CI hoàn tất.
   - **Rào chắn Review Requests của Copilot (Chống Race Condition):** Nghiêm cấm kích hoạt `gh pr merge` khi `gh pr view --json reviewRequests` vẫn còn chứa bot reviewer (`copilot-pull-request-reviewer`). Phải đợi bot hoàn thành nộp bài review và đối soát toàn bộ comments trước khi merge.
 
