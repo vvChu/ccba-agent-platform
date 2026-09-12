@@ -16,7 +16,7 @@ triggers:
   - bootstrap
 metadata:
   version: v4.1
-  publisher: CCBA
+  author: "CCBA Hub"
 ---
 
 # CCBA Platform — Global Entry Point & Orchestrator
