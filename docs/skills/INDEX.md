@@ -1,6 +1,6 @@
 # CCBA Agent Platform — Danh Mục Kỹ Năng (Skills Catalog Index)
 
-> **Tổng hợp**: 69 Kỹ năng Hoạt động được phân loại vào 5 Cổng Điều Hướng theo chuẩn ADR-0047, ADR-0057 và ADR-0058.
+> **Tổng hợp**: 70 Kỹ năng Hoạt động được phân loại vào 5 Cổng Điều Hướng theo chuẩn ADR-0047, ADR-0057 và ADR-0058.
 
 Trang tài liệu này phục vụ tra cứu nhanh cho kỹ sư và AI Coding Agents trong Terminal hoặc IDE.
 Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm tắt chuẩn máy đọc tại [docs/llms.txt](../llms.txt).
@@ -10,7 +10,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 ## Mục Lục Các Cổng Điều Hướng
 
 - [🚀 Khởi tạo, Điều hướng & Đồng bộ](#init_navigation) (8 skills)
-- [⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân](#core_engineering) (18 skills)
+- [⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân](#core_engineering) (19 skills)
 - [📐 BIGBIM & Thẩm tra AI-QC](#bim_aiqc) (7 skills)
 - [⚖️ Pháp lý Xây dựng & Tự động hóa Văn phòng](#legal_compliance) (10 skills)
 - [🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu](#governance_upkeep) (26 skills)
@@ -36,7 +36,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 ---
 
 <a id="core_engineering"></a>
-## ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân (18 Kỹ Năng)
+## ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân (19 Kỹ Năng)
 
 *Kỹ nghệ phần mềm chuẩn mực từ mài giũa ý tưởng, đặc tả kỹ thuật, phát triển dẫn dắt bởi kiểm thử (TDD), review mã nguồn, gỡ lỗi đa tác nhân đến xuất xưởng.*
 
@@ -46,6 +46,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-append-only-logger](ccba-append-only-logger.md) | `/ccba-append-only-logger` | `kernel` | `Model` | Thread-safe, append-only logging pattern cho Python pipeline multi-daemon. Tr... |
 | [ccba-code-review](ccba-code-review.md) | `/ccba-code-review` | `kernel` | `User` | Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smell... |
 | [ccba-codebase-design](ccba-codebase-design.md) | `/ccba-codebase-design` | `kernel` | `User` | Shared vocabulary for designing deep modules (locality, depth, leverage, seam... |
+| [ccba-create-pr](ccba-create-pr.md) | `/ccba-create-pr` | `kernel` | `User` | Kiểm tra chất lượng code (Shift-Left), Main Branch Guard, đẩy code và mở GitH... |
 | [ccba-design](ccba-design.md) | `/ccba-design` | `kernel` | `User` | Design brand identity, logos, banners, and visual assets. Use for brand syste... |
 | [ccba-diagnosing-bugs](ccba-diagnosing-bugs.md) | `/ccba-diagnosing-bugs` | `kernel` | `User` | Diagnosis loop for hard bugs and performance regressions. Use when the user s... |
 | [ccba-domain-modeling](ccba-domain-modeling.md) | `/ccba-domain-modeling` | `kernel` | `User` | Build, refine, and maintain the project's domain model, ubiquitous language, ... |
