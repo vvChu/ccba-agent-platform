@@ -146,6 +146,11 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "downstream": "ccba-implement / ccba-tdd",
         "role": "Scaffolding khung tính năng mới dọc theo toàn bộ các tầng mã nguồn.",
     },
+    "ccba-create-pr": {
+        "upstream": "Tính năng đã hoàn thành kiểm thử cục bộ (ccba-implement / ccba-tdd)",
+        "downstream": "ccba-release-feature / GitHub Actions CI & Copilot Review",
+        "role": "Kiểm định Shift-Left, bảo vệ nhánh main, mở Pull Request và đồng hành CI.",
+    },
     "ccba-release-feature": {
         "upstream": "Tính năng đã vượt qua toàn bộ CI Gates",
         "downstream": "Bàn giao / Đóng gói phiên bản",
