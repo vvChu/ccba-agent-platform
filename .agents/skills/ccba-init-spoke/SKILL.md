@@ -14,6 +14,9 @@ tier: kernel
 disable-model-invocation: true
 command: /ccba-init-spoke
 user-invocable: true
+metadata:
+  version: "1.1.0"
+  author: "CCBA Hub"
 gpi:
   s: 4.0
   k: 2.0
