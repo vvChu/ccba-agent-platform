@@ -8,6 +8,9 @@ applies_to:
 bundle: _consulting
 tier: kernel
 command: /ccba-completion-checklist
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 3.0
   k: 2.0

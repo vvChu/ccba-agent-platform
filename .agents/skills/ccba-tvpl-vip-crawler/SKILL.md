@@ -7,6 +7,9 @@ bundle: _software
 tier: kernel
 user-invocable: true
 command: /ccba-tvpl-vip-crawler
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 3.0
   k: 2.0

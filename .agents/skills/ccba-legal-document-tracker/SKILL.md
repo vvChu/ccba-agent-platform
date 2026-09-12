@@ -10,6 +10,9 @@ bundle: _consulting
 tier: kernel
 user-invocable: true
 command: /ccba-legal-document-tracker
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 gpi:
   s: 4.0
   k: 3.0

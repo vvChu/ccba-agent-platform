@@ -6,7 +6,9 @@ role: master_skill
 layer: _core
 bundle: _core
 tier: kernel
-version: 1.1.0
+metadata:
+  version: "1.1.0"
+  author: "CCBA Hub"
 invocation: model_invoked
 deep_seam: ConversionPipeline
 package_path: packages/mdconverter
@@ -118,3 +120,14 @@ Khi xử lý văn bản có phụ lục kỹ thuật (như QCVN, TCVN):
 
 - **Không tự phân mảnh quy trình**: Tránh việc gọi lần lượt từng script phụ nếu đã có thể xử lý trọn gói bằng `ConversionPipeline`.
 - **Tuyệt đối không sử dụng dấu chấm lửng (`...`)**: Trong tất cả câu trả lời, ví dụ minh họa hoặc tài liệu Markdown xuất ra, không bao giờ dùng ba dấu chấm lửng `...` để viết tắt hoặc làm ví dụ. Hãy tự viết đầy đủ chi tiết hoặc tự sinh văn bản mẫu cụ thể.
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/form_cleaner.md` | Hướng dẫn làm sạch biểu mẫu và chuẩn hóa layout form trong văn bản Markdown |
+| `references/link_patcher.md` | Hướng dẫn vá liên kết văn bản pháp lý hai chiều giữa thân văn bản và phụ lục |
+| `references/table_reconstruction.md` | Kỹ thuật tái cấu trúc và chuẩn hóa bảng biểu phức tạp trong Markdown |
+
