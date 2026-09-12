@@ -177,7 +177,7 @@ class LegalSyncEngine:
                                 ctx = yaml.safe_load(f) or {}
                             proj = ctx.get("project", {}) if isinstance(ctx, dict) else {}
                             if isinstance(proj, dict) and (
-                                proj.get("name") == "ccba-legal-knowledge"
+                                str(proj.get("name", "")).lower() == "ccba-legal-knowledge"
                                 or proj.get("is_master") is True
                             ):
                                 is_master = True

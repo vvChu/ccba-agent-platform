@@ -44,17 +44,14 @@ class TestGuardrailCopier:
         self.project_type = project_type
 
     def copy_if_needed(self, dry_run: bool = False) -> list[dict[str, Any]]:
-        """Copy conftest.py, safe_pytest.py, and pre-commit guardrails if Spoke is a Python project or has scripts/.
+        """Copy conftest.py, safe_pytest.py, and pre-commit guardrails if Spoke is a Python project.
 
         Returns:
             List of action records with format:
             {"type": "Guardrail", "name": str, "status": "NEW" | "UPDATED" | "UNCHANGED", "path": str}
         """
         actions: list[dict[str, Any]] = []
-        is_python = (
-            is_python_spoke(self.spoke_root, self.project_type)
-            or (self.spoke_root / "scripts").exists()
-        )
+        is_python = is_python_spoke(self.spoke_root, self.project_type)
 
         if not is_python:
             return actions
@@ -272,7 +269,7 @@ class LegalKnowledgeSyncOrchestrator:
                     proj = data.get("project", {})
                     if isinstance(proj, dict):
                         if (
-                            proj.get("name") == "ccba-legal-knowledge"
+                            str(proj.get("name", "")).lower() == "ccba-legal-knowledge"
                             or proj.get("is_master") is True
                         ):
                             return True
