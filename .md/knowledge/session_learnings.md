@@ -92,6 +92,10 @@
   - `ArtifactMetadata` CHỈ dùng cho tệp trong brain (`<appDataDir>\brain\<id>/`). Bỏ qua khi ghi workspace chống schema rejection.
 - **RULE-4.8 [Zero-Polling & Reactive Wakeup Hard Invariant]**:
   - CẤM TUYỆT ĐỐI polling loop `manage_task(status)` khi lệnh chạy nền. BẮT BUỘC dừng gọi tool để runtime tự đánh thức qua Reactive Wakeup hoặc làm việc song song. Ưu tiên scoped test (<10s).
+- **RULE-4.9 [RSA-OAEP Plaintext Length & Decoupled Telemetry Heartbeat — ADR-0046]**:
+  - RSA-2048 OAEP (SHA-256) giới hạn plaintext tối đa $190$ bytes ($256 - 2 \times 32 - 2$). Không bao giờ mã hóa trực tiếp timestamp thay đổi liên tục hoặc payload đường dẫn dài. BẮT BUỘC tách metadata tĩnh (SHA-256 `static_hash`) khỏi dynamic heartbeats (`.md/telemetry/spoke_heartbeats.yaml` gitignored) để giữ sạch Git working tree của Hub và loại trừ lỗi mã hóa.
+- **RULE-4.10 [ADR-0045 Spoke Leakage Guard & Report Mirroring Location]**:
+  - Thư mục gốc `.md/` chỉ được chứa duy nhất tệp `workspace_context.yaml`. Mọi báo cáo nghiệm thu/walkthrough BẮT BUỘC đặt tại `.md/knowledge/reports/walkthrough.md`, tuyệt đối không lưu tại `.md/walkthrough.md` để tránh vi phạm Spoke Leakage Guard (ADR-0045). `audit_pr_comments.py` tự động nhận diện đường dẫn này.
 
 ---
 
