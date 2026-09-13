@@ -1031,8 +1031,9 @@ def test_verify_spoke_multi_dir_and_venv(tmp_path: Path) -> None:
         )
 
     # Patch subprocess.run so python --version check returns 0
-    with patch("subprocess.run") as mock_sub, patch(
-        "ccba_harness.verifier.verify_patch_execution", side_effect=mock_verify_execution
+    with (
+        patch("subprocess.run") as mock_sub,
+        patch("ccba_harness.verifier.verify_patch_execution", side_effect=mock_verify_execution),
     ):
         mock_sub.return_value.returncode = 0
         code = sync.verify_spoke(hub_root=hub_root)
@@ -1078,7 +1079,9 @@ def test_registry_static_hash_and_heartbeat_decoupling(tmp_path: Path) -> None:
 
         registrar = SpokeRegistrar()
         # 1. First registration
-        registrar.register(spoke_dir, hub_root, "SpokeA", "Tác vụ Admin", archetype="knowledge_corpus")
+        registrar.register(
+            spoke_dir, hub_root, "SpokeA", "Tác vụ Admin", archetype="knowledge_corpus"
+        )
 
         registry_file = hub_root / ".md" / "data" / "spoke_registry.yaml"
         assert registry_file.exists()
@@ -1091,11 +1094,13 @@ def test_registry_static_hash_and_heartbeat_decoupling(tmp_path: Path) -> None:
         assert len(heartbeats_1) == 1
 
         # 2. Second registration: static hash unchanged -> registry file untouched
-        registrar.register(spoke_dir, hub_root, "SpokeA", "Tác vụ Admin", archetype="knowledge_corpus")
+        registrar.register(
+            spoke_dir, hub_root, "SpokeA", "Tác vụ Admin", archetype="knowledge_corpus"
+        )
         second_yaml = registry_file.read_text(encoding="utf-8")
-        assert (
-            first_yaml == second_yaml
-        ), "Registry file must NOT be rewritten if static metadata is unchanged!"
+        assert first_yaml == second_yaml, (
+            "Registry file must NOT be rewritten if static metadata is unchanged!"
+        )
 
         # 3. Decryption check with decrypted cache fallback
         import hashlib

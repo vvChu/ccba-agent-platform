@@ -1146,9 +1146,7 @@ class SpokeSynchronizer:
 
         bootstrapper = SpokeBootstrapper(self.spoke_root, resolved_hub)
         venv_dir = bootstrapper.find_venv()
-        spoke_python = (
-            bootstrapper.get_python_exec(venv_dir) if venv_dir else Path(sys.executable)
-        )
+        spoke_python = bootstrapper.get_python_exec(venv_dir) if venv_dir else Path(sys.executable)
 
         # Verify pytest is available in target python, fallback to sys.executable if not
         test_runtime = spoke_python
