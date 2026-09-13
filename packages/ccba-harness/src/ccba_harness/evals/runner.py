@@ -400,14 +400,14 @@ def load_eval_dataset(
 
             if not matching_files:
                 for k in candidate_keys:
-                    for f in sorted(default_dir.glob(f"eval_{k}*.json")):
-                        if f not in matching_files:
-                            matching_files.append(f)
+                    for matched_p in sorted(default_dir.glob(f"eval_{k}*.json")):
+                        if matched_p not in matching_files:
+                            matching_files.append(matched_p)
             if not matching_files:
                 for k in candidate_keys:
-                    for f in sorted(default_dir.glob(f"*{k}*.json")):
-                        if f not in matching_files:
-                            matching_files.append(f)
+                    for matched_p in sorted(default_dir.glob(f"*{k}*.json")):
+                        if matched_p not in matching_files:
+                            matching_files.append(matched_p)
 
             if matching_files:
                 for mf in sorted(matching_files):
