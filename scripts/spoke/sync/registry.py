@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -32,6 +33,7 @@ class SpokeRegistrar:
         hub_root: Path,
         project_name: str,
         project_type: str,
+        archetype: str = "",
     ) -> dict[str, Any]:
         """Build standardized spoke metadata dict for registration."""
         context_file = spoke_root / ".md" / "workspace_context.yaml"
@@ -40,6 +42,7 @@ class SpokeRegistrar:
 
         is_sandbox = False
         owner_email = ""
+        resolved_archetype = archetype
 
         if context_file.exists():
             try:
@@ -52,14 +55,23 @@ class SpokeRegistrar:
                         is_sandbox = True
                     identity = ctx.get("organizational_identity", {})
                     owner_email = identity.get("owner_email", "")
+                    if not resolved_archetype:
+                        resolved_archetype = proj.get("archetype", "") or ctx.get("archetype", "")
             except Exception:
                 pass
+
+        if not resolved_archetype and project_type:
+            from scripts.spoke.spoke_bootstrap import PROJECT_TYPE_TO_ARCHETYPE
+
+            resolved_archetype = PROJECT_TYPE_TO_ARCHETYPE.get(
+                str(project_type).strip().lower(), ""
+            )
 
         info: dict[str, Any] = {
             "name": project_name,
             "path": str(spoke_root.resolve()),
             "project_type": project_type,
-            "last_sync": datetime.now().isoformat(),
+            "archetype": resolved_archetype or "",
             "is_sandbox": is_sandbox,
         }
         if owner_email:
@@ -72,9 +84,10 @@ class SpokeRegistrar:
         hub_root: Path,
         project_name: str,
         project_type: str,
+        archetype: str = "",
         dry_run: bool = False,
     ) -> None:
-        """Register Spoke to Hub encrypted spoke_registry.yaml."""
+        """Register Spoke to Hub encrypted spoke_registry.yaml and record heartbeat."""
         if not HAS_CRYPTOGRAPHY:
             print(
                 "[Registry] Warning: cryptography package not installed. Skipping Spoke registration.",
@@ -104,18 +117,13 @@ class SpokeRegistrar:
                 print("[Registry] Warning: Public key is not RSA key.", file=sys.stderr)
                 return
 
-            spoke_info = self.build_spoke_info(spoke_root, hub_root, project_name, project_type)
-            spoke_yaml = yaml.dump(spoke_info, allow_unicode=True)
-
-            encrypted_bytes = public_key.encrypt(
-                spoke_yaml.encode("utf-8"),
-                padding.OAEP(
-                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                    algorithm=hashes.SHA256(),
-                    label=None,
-                ),
+            spoke_id = hashlib.sha256(str(spoke_root.resolve()).encode("utf-8")).hexdigest()
+            spoke_info = self.build_spoke_info(
+                spoke_root, hub_root, project_name, project_type, archetype=archetype
             )
-            encrypted_b64 = base64.b64encode(encrypted_bytes).decode("utf-8")
+            static_hash = hashlib.sha256(
+                json.dumps(spoke_info, sort_keys=True, ensure_ascii=False).encode("utf-8")
+            ).hexdigest()
 
             registry_file = hub_root / ".md" / "data" / "spoke_registry.yaml"
             registry_file.parent.mkdir(parents=True, exist_ok=True)
@@ -128,22 +136,70 @@ class SpokeRegistrar:
                 except Exception:
                     pass
 
-            spoke_id = hashlib.sha256(str(spoke_root.resolve()).encode("utf-8")).hexdigest()
-
             spokes = registry_data.get("spokes", [])
-            updated = False
-            for s in spokes:
-                if s.get("spoke_id") == spoke_id:
-                    s["encrypted_data"] = encrypted_b64
-                    updated = True
-                    break
-            if not updated:
-                spokes.append({"spoke_id": spoke_id, "encrypted_data": encrypted_b64})
-            registry_data["spokes"] = spokes
+            existing_entry = next((s for s in spokes if s.get("spoke_id") == spoke_id), None)
 
-            CatalogMerger(registry_file).atomic_write(registry_data)
-            print(
-                f"[Registry] Successfully registered Spoke '{project_name}' to Hub Spoke Registry (Encrypted)."
-            )
+            need_registry_write = True
+            if (
+                existing_entry
+                and existing_entry.get("static_hash") == static_hash
+                and existing_entry.get("encrypted_data")
+            ):
+                need_registry_write = False
+
+            if need_registry_write:
+                spoke_yaml = yaml.dump(spoke_info, allow_unicode=True)
+                encrypted_bytes = public_key.encrypt(
+                    spoke_yaml.encode("utf-8"),
+                    padding.OAEP(
+                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                        algorithm=hashes.SHA256(),
+                        label=None,
+                    ),
+                )
+                encrypted_b64 = base64.b64encode(encrypted_bytes).decode("utf-8")
+
+                if existing_entry:
+                    existing_entry["encrypted_data"] = encrypted_b64
+                    existing_entry["static_hash"] = static_hash
+                else:
+                    spokes.append(
+                        {
+                            "spoke_id": spoke_id,
+                            "static_hash": static_hash,
+                            "encrypted_data": encrypted_b64,
+                        }
+                    )
+                registry_data["spokes"] = spokes
+
+                CatalogMerger(registry_file).atomic_write(registry_data)
+                print(
+                    f"[Registry] Successfully registered Spoke '{project_name}' to Hub Spoke Registry (Encrypted)."
+                )
+            else:
+                print(
+                    f"[Registry] Spoke '{project_name}' metadata unchanged. Skipped registry re-encryption."
+                )
+
+            # Record dynamic heartbeat to .md/telemetry/spoke_heartbeats.yaml (gitignored)
+            heartbeat_file = hub_root / ".md" / "telemetry" / "spoke_heartbeats.yaml"
+            heartbeat_data: dict[str, Any] = {"heartbeats": {}}
+            if heartbeat_file.exists():
+                try:
+                    with open(heartbeat_file, encoding="utf-8") as f:
+                        heartbeat_data = yaml.safe_load(f) or {"heartbeats": {}}
+                except Exception:
+                    pass
+
+            heartbeats = heartbeat_data.get("heartbeats", {})
+            if not isinstance(heartbeats, dict):
+                heartbeats = {}
+            heartbeats[spoke_id] = {
+                "name": project_name,
+                "path": str(spoke_root.resolve()),
+                "last_sync": datetime.now().isoformat(),
+            }
+            heartbeat_data["heartbeats"] = heartbeats
+            CatalogMerger(heartbeat_file).atomic_write(heartbeat_data)
         except Exception as e:
             print(f"[Registry] Warning: Failed to register Spoke to Hub: {e}", file=sys.stderr)
