@@ -12,7 +12,7 @@ disable-model-invocation: true
 command: /ccba-create-pr
 user-invocable: true
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -153,9 +153,9 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
      ```
    - Chờ Copilot hoàn tất review (không merge khi reviewRequests vẫn còn chứa bot reviewer).
 4. **Tự chữa lành (Self-Healing Loop):**
-   - Nếu CI thất bại: Đọc log qua `gh run view <RUN_ID> --log-failed` $\rightarrow$ Vá lỗi $\rightarrow$ Commit & push.
-   - Nếu Copilot góp ý: Refactor code, giải trình vào báo cáo nghiệm thu (`walkthrough.md`) $\rightarrow$ Commit & push.
-   - Lặp lại đến khi 100% checks xanh và `audit_pr_comments.py` trả về exit code 0.
+    - Nếu CI thất bại: Đọc log qua `gh run view <RUN_ID> --log-failed` $\rightarrow$ Vá lỗi $\rightarrow$ Commit & push.
+    - Nếu Copilot góp ý: Refactor code, giải trình vào báo cáo nghiệm thu tại `.md/knowledge/reports/walkthrough.md` (kèm review_id `PRR_...` hoặc inline comment `id` theo RULE-4.10; tuyệt đối không lưu tại `.md/walkthrough.md` trần) $\rightarrow$ Commit & push.
+    - Lặp lại đến khi 100% checks xanh và `audit_pr_comments.py` trả về exit code 0.
 
 - **Tiêu chí hoàn thành:** 100% CI Checks tích xanh và toàn bộ review của Copilot được giải quyết triệt để.
 
