@@ -252,7 +252,7 @@ def display_spoke_health_dashboard(hub_root: Path | None = None) -> int:
     now = datetime.now()
     for sp in spokes:
         sp_name = sp.get("name", "Unknown")
-        sp_type = sp.get("project_type", "Unknown")
+        sp_type = sp.get("archetype") or sp.get("project_type", "Unknown")
         sp_path = sp.get("path", "")
         last_sync_str = sp.get("last_sync", "")
 
