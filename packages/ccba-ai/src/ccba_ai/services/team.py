@@ -4,6 +4,7 @@ Provides structured API for both CLI wrapper and MCP server.
 """
 
 import json
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -12,7 +13,9 @@ from ccba_ai.models import TeamTask
 try:
     from ccba_harness import FileMutexLock
 except ImportError:
-    from ccba_ai.services._lock_fallback import SimpleFileLock as FileMutexLock
+    from ccba_ai.services._lock_fallback import SimpleFileLock
+
+    FileMutexLock = SimpleFileLock  # type: ignore[misc,assignment]
 
 
 def _get_db_file(workspace_root: Path | None = None) -> Path:
@@ -43,7 +46,7 @@ def load_tasks(workspace_root: Path | None = None) -> list[TeamTask]:
         return []
 
 
-def save_tasks(tasks: list[TeamTask | dict[str, Any]], workspace_root: Path | None = None) -> None:
+def save_tasks(tasks: Sequence[TeamTask | dict[str, Any]], workspace_root: Path | None = None) -> None:
     """Save tasks to the shared JSON database.
 
     Args:
