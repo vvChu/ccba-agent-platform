@@ -10,7 +10,7 @@
 - **RULE-1.1 [ADR 0057 — Khung 2 Giai Đoạn & Chỉ Số GPI]**:
   - Cổng 0: Giải thuật/IO $\rightarrow$ Deep Seams (`packages/*/src/`). `SKILL.md` cấm code logic trần.
   - Cổng 1: Đa luồng/StateGraph/HITL $\rightarrow$ Tier 3 Composite Orchestrator (không tính GPI).
-  - $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $\text{GPI} < 12.0 \rightarrow$ Tier 2A (`references/`); $\ge 12.0 \rightarrow$ Tier 2B (`.agents/skills/ccba-<name>/`). Rituals (`disable-model-invocation: true`) ép $A = 1.0$.
+  - $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $\text{GPI} < 12.0 \rightarrow$ Tier 2A (`references/`); $\ge 12.0 \rightarrow$ Tier 2B (`.agents/skills/ccba-<name>/`). Rituals ép $A = 1.0$.
 - **RULE-1.2 [ADR 0053 — Single-Writer Protocol]**:
   - Đa tác tử (`ccba-teamwork`, swarms): Lead duy nhất ghi codebase/logs; subagents chỉ xuất PatchBlocks vào sandbox, cấm sửa trực tiếp. Hợp nhất qua `execute_swarm_patches`.
 - **RULE-1.3 [ADR 0035 — Deep Modules, Seams & Zero-Exemption AST]**:
@@ -26,21 +26,21 @@
 - **RULE-1.7 [ADR 0046 — Sanitized Fleet Telemetry]**:
   - Telemetry: Chỉ trích xuất số liệu phi định danh (`tokens`, `cost`, `tool_counts`). Cấm thu thập prompt text/dữ liệu khách hàng.
 - **RULE-1.8 [ADR 0058 — Discrete Diagnostic Commands]**:
-  - `SelfHealingEngine`: mảng lệnh độc lập (`["cmd1", "cmd2"]`), CẤM ghép `&&` để regex chẩn đoán đúng và tự phục hồi (< 500ms).
+  - `SelfHealingEngine`: mảng lệnh độc lập (`["cmd1", "cmd2"]`), CẤM ghép `&&` để tự phục hồi (< 500ms).
 - **RULE-1.9 [Multi-Tier Corpus Discovery & Layout Normalization]**:
   - Quét corpus: suy luận `project_root` và quét `reg_parent/{, .md/}legal_docs`, `project_root/{, .md/}legal_docs`.
 - **RULE-1.10 [ADR 0057 — Standalone Skill Promotion Triad]**:
   - Thăng hạng Tier 2A $\rightarrow$ Tier 2B: (1) Xóa triggers trùng; (2) Trỏ alias ngắn về skill mới; (3) Phân định ranh giới Hub vs Spoke.
 - **RULE-1.11 [Diagramming & Visuals Hygiene — diagramming_hygiene.md]**:
   - Excalidraw: `# Excalidraw Data` $\rightarrow$ `## Text Elements` $\rightarrow$ `%% ## Drawing ... %%`.
-  - Mermaid: Subgraph dùng `style <sg_id>`, cấm `classDef`/`class`. Nhãn bọc `["..."]`, ngắt dòng `<br/>`, escape ký tự đặc biệt. D2/Kroki: SVG qua CLI hoặc Kroki API (`kroki.io/d2/svg`).
+  - Mermaid: Subgraph dùng `style <sg_id>`, cấm `classDef`. Nhãn `["..."]`, ngắt `<br/>`. D2/Kroki: SVG qua CLI/Kroki API.
 
 ---
 
 ## Miền 2. 🔒 Chất Lượng Mã Nguồn & Rào Chắn CI (Code Quality & Testing)
 
 - **RULE-2.1 [Strict Mypy Type-Safety — Chống AP9.1]**:
-  - CẤM `ignore_errors = true`. Ép kiểu tường minh cho binary I/O, fonts, dicts. Chỉ dùng `ignore_missing_imports = true` cho 3rd-party thiếu stubs.
+  - CẤM `ignore_errors = true`. Ép kiểu tường minh cho binary I/O, fonts, dicts. Chỉ dùng `ignore_missing_imports = true` khi thiếu stubs.
 - **RULE-2.2 [Spoke CI Gates Verification Pipeline]**:
   - 5 Cổng: (1) `lint_visual_parity.py`, (2) `validate_legal_spoke.py`, (3) `test_converter_regression.py`, (4) `verify_all_docs_against_pdf.py` (SHA-256), (5) `verify_cross_links.py`.
 - **RULE-2.3 [Fast Feedback Loops (< 2s) & Parity Contract Tests]**:
@@ -56,17 +56,17 @@
 - **RULE-2.9 [Flaky Test Root-Cause Transparency & No-False-Pass Lock]**:
   - Test FAIL rồi PASS khi retry chưa sửa mã: CẤM kết luận đã sửa xong. Bắt buộc tìm cội nguồn và giải trình minh bạch.
 - **RULE-2.10 [Git Simplify Gate Bypass Protocol]**:
-  - `simplify_gate` chặn diff $> 400$ LOC, $> 8$ files khi gặp hard verbs. Với commit tài sản lớn/sinh tự động (Web Portal, `docs/`), chèn `# APPROVED: <lý_do>` để vượt cổng.
+  - `simplify_gate` chặn diff $> 400$ LOC, $> 8$ files. Commit sinh tự động (Web Portal, `docs/`), chèn `# APPROVED: <lý_do>` để vượt cổng.
 
 ---
 
 ## Miền 3. 📜 Chuẩn Mực Pháp Lý & Dữ Liệu (Legal & Data Standards)
 
 - **RULE-3.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
-  - MỌI văn bản viện dẫn BẮT BUỘC ĐANG CÓ HIỆU LỰC (CURRENT). Chặn đứng LLM Legacy Bias bằng pre-check trước khi xuất báo cáo.
+  - MỌI văn bản viện dẫn BẮT BUỘC ĐANG CÓ HIỆU LỰC (CURRENT). Chặn đứng LLM Legacy Bias bằng pre-check.
   - VĂN BẢN HIỆN HÀNH: **Luật Xây dựng 2025** (`135/2025/QH15`), **Nghị định 217/2026/NĐ-CP** (thay NĐ 175/2024 & NĐ 15/2021), **Nghị định 207/2026/NĐ-CP** (thay NĐ 06/2021). CẤM dùng văn bản hết hiệu lực.
 - **RULE-3.2 [TVPL VIP 3-Tier Download Priority — ADR 0031]**:
-  - Tier 1 (`part=-100`): VIP Digital Vector PDF (Mỏ neo Pháp lý). Tier 2 (`part=-1&docx=1`): VIP OpenXML Word Document (cho `docx_converter.py`). Tier 3 (`part=0`): Gazette Scan PDF.
+  - Tier 1 (`part=-100`): VIP Digital Vector PDF (Mỏ neo Pháp lý). Tier 2 (`part=-1&docx=1`): VIP OpenXML Word Document (`docx_converter.py`). Tier 3 (`part=0`): Gazette Scan PDF.
 - **RULE-3.3 [Làm Sạch Bảng Biểu & Chú Thích Pháp Lý]**:
   - Footnote: Khử lặp số: `re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()`. Bảng Markdown nhận diện qua tiêu đề và `| :--- |`.
 
@@ -81,21 +81,19 @@
 - **RULE-4.3 [Tiêu Chí Hoàn Thành Đa Nhánh & DRY Reference]**:
   - Tiêu chí hoàn thành phải có nhánh kiểm chứng cho từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`).
 - **RULE-4.4 [GitHub Copilot Review Gating & Walkthrough Mirroring]**:
-  - Quét `author.login`. Bắt buộc xét `### 🟡 Changes recommended` và `body` Copilot dù `COMMENTED`. Cấm merge nếu chưa giải trình.
-  - `audit_pr_comments.py`: Ghi `review_id` (`PRR_...`) và inline comment `id` vào `walkthrough.md` để vượt audit.
+  - Quét `author.login`. Bắt buộc xét `### 🟡 Changes recommended` và `body` dù `COMMENTED`. Cấm merge nếu chưa giải trình. Ghi `review_id`/`id` vào `walkthrough.md` để vượt audit.
 - **RULE-4.5 [AI Gateway Spark Auth & Fast-Inference Gating]**:
   - LiteLLM Spark (100.83.192.30:8090): Bearer `sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` (< 1s), route `qwen-local-primary` sau GPU warmup.
 - **RULE-4.6 [Tier 3 Orchestrator & Deterministic Verification Gating — ADR-0057 / ADR-0058]**:
-  - Router/Orchestrator: SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`), tuân thủ Single-Writer Protocol.
-  - Đồng bộ Spoke (`sync_spoke.py`): cờ `--verify` kích hoạt `ccba-harness verify-patch`, khóa cứng nếu lỗi.
+  - Router/Orchestrator: SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`), tuân thủ Single-Writer Protocol. Spoke sync (`sync_spoke.py --verify`) kích hoạt `ccba-harness verify-patch`.
 - **RULE-4.7 [ArtifactMetadata Workspace Invariant]**:
-  - `ArtifactMetadata` CHỈ dùng cho tệp trong brain (`<appDataDir>\brain\<id>/`). Bỏ qua khi ghi workspace chống schema rejection.
+  - `ArtifactMetadata` CHỈ dùng cho brain (`<appDataDir>\brain\<id>/`). Bỏ qua khi ghi workspace chống schema rejection.
 - **RULE-4.8 [Zero-Polling & Reactive Wakeup Hard Invariant]**:
-  - CẤM TUYỆT ĐỐI polling loop `manage_task(status)` khi lệnh chạy nền. BẮT BUỘC dừng gọi tool để runtime tự đánh thức qua Reactive Wakeup hoặc làm việc song song. Ưu tiên scoped test (<10s).
+  - CẤM polling loop `manage_task(status)` khi lệnh chạy nền. Dừng tool để runtime tự đánh thức qua Reactive Wakeup hoặc làm việc song song. Ưu tiên scoped test (<10s).
 - **RULE-4.9 [RSA-OAEP Plaintext Length & Decoupled Telemetry Heartbeat — ADR-0046]**:
-  - RSA-2048 OAEP (SHA-256) giới hạn plaintext tối đa $190$ bytes ($256 - 2 \times 32 - 2$). Không bao giờ mã hóa trực tiếp timestamp thay đổi liên tục hoặc payload đường dẫn dài. BẮT BUỘC tách metadata tĩnh (SHA-256 `static_hash`) khỏi dynamic heartbeats (`.md/telemetry/spoke_heartbeats.yaml` gitignored) để giữ sạch Git working tree của Hub và loại trừ lỗi mã hóa.
+  - RSA-2048 OAEP (SHA-256) giới hạn plaintext $\le 190$ bytes ($256 - 2 \times 32 - 2$). CẤM mã hóa timestamp/đường dẫn dài. BẮT BUỘC tách metadata tĩnh (`static_hash`) khỏi telemetry động (`.md/telemetry/spoke_heartbeats.yaml` gitignored).
 - **RULE-4.10 [ADR-0045 Spoke Leakage Guard & Report Mirroring Location]**:
-  - Thư mục gốc `.md/` chỉ được chứa duy nhất tệp `workspace_context.yaml`. Mọi báo cáo nghiệm thu/walkthrough BẮT BUỘC đặt tại `.md/knowledge/reports/walkthrough.md`, tuyệt đối không lưu tại `.md/walkthrough.md` để tránh vi phạm Spoke Leakage Guard (ADR-0045). `audit_pr_comments.py` tự động nhận diện đường dẫn này.
+  - Gốc `.md/` CHỈ chứa `workspace_context.yaml`. Báo cáo nghiệm thu BẮT BUỘC đặt tại `.md/knowledge/reports/walkthrough.md` (CẤM lưu tại `.md/walkthrough.md`). `audit_pr_comments.py` tự động đối soát đường dẫn này.
 
 ---
 
@@ -108,4 +106,4 @@
 - **RULE-5.3 [Query Sanitization & Turnstile Bypass]**:
   - Query TVPL có dấu `/`, `:`, `-` phải thay bằng dấu cách (`quote_plus`) chống lỗi IIS mã hóa `%2F`.
 - **RULE-5.4 [Upstream Git Engine Windows Safety]**:
-  - Git Windows (`upstream_evaluator.py`): (1) Mutex lock `.md/scratch/upstream_sync.lock`; (2) Tự chữa lành stale `index.lock`; (3) `safe_rmtree` dùng `os.chmod(p, stat.S_IWRITE)`; (4) Khử bẫy Zero-Scan: repo mới phải quét initial audit.
+  - Git Windows (`upstream_evaluator.py`): Mutex `.md/scratch/upstream_sync.lock`; Tự chữa stale `index.lock`; `safe_rmtree` với `os.chmod(p, stat.S_IWRITE)`; Khử Zero-Scan: repo mới phải initial audit.

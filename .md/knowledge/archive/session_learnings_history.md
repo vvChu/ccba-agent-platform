@@ -299,8 +299,20 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
 - **Core Pattern P18.4 — AI Gateway Spark Server Auth & Fast-Inference Model Gating:**
   - **Vấn đề:** Khi chạy Swarm Map-Reduce với nhiều workers song song, việc gọi trực tiếp các mô hình cục bộ nặng có thể dẫn đến thời gian chờ warmup lâu (60-120s), gây nghẽn hàng đợi kiểm định.
   - **Giải pháp:** Kết nối tới LiteLLM Gateway trên Server Spark (`100.83.192.30:8090`) với header xác thực `Authorization: Bearer sk-spark-secure-key-2026`. Định tuyến linh hoạt: sử dụng `gemini-3.7-flash` làm mô hình phản hồi nhanh (< 1s cho các bước map-reduce trinh sát tài liệu) và dùng `qwen-local-primary` sau khi đã hoàn tất warmup GPU.
+---
 
+## 19. Spoke Synchronization Hardening, Decoupled Telemetry Heartbeat & Spoke Leakage Guard (Issue #268, PR #269)
 
+- **Core Pattern P19.1 — RSA-OAEP Plaintext Bound & Decoupled Telemetry Heartbeat (ADR-0046):**
+  - **Vấn đề:** Trong `registry.py` và `spoke_bootstrap.py`, việc mã hóa khóa công khai RSA-2048 với padding OAEP (SHA-256) có giới hạn toán học chặt chẽ $256 - 2 \times 32 - 2 = 190$ bytes. Khi nối chuỗi metadata chứa đường dẫn thư mục dài kèm trường `last_sync` biến động theo từng giây, payload vượt quá 190 bytes dẫn đến ngoại lệ nghiêm trọng `ValueError: Plaintext is too long`. Đồng thời, việc cập nhật `last_sync` liên tục vào registry gây nhiễu git working tree tại Hub sau mỗi lần đồng bộ.
+  - **Giải pháp:** Tách bạch hoàn toàn dữ liệu tĩnh và động:
+    1. Chỉ mã hóa chuỗi đại diện định danh tĩnh tính bằng SHA-256 hash (`static_hash = sha256(path + archetype)[:16]`), luôn có kích thước cố định $< 100$ bytes, tuyệt đối an toàn dưới trần 190 bytes.
+    2. Tuyến telemetry biến động (`last_sync`, trạng thái phiên) được định tuyến lưu vào tệp `.md/telemetry/spoke_heartbeats.yaml` (được đưa vào `.gitignore`), bảo vệ Git tree của Hub sạch sẽ.
 
+- **Core Pattern P19.2 — ADR-0045 Spoke Leakage Guard & Report Mirroring Location:**
+  - **Vấn đề:** Quy tắc cấu trúc thư mục kiến trúc quy định thư mục gốc `.md/` chỉ được phép chứa tệp `workspace_context.yaml`. Nếu Agent tạo báo cáo nghiệm thu tại `.md/walkthrough.md`, script kiểm định rò rỉ `scripts/governance/check_spoke_leakage.py` sẽ báo lỗi và chặn quy trình kiểm chuẩn.
+  - **Giải pháp:** Chuẩn hóa vị trí báo cáo nghiệm thu và walkthrough tại `.md/knowledge/reports/walkthrough.md`. Nâng cấp bộ công cụ `scripts/validation/audit_pr_comments.py` để hỗ trợ tự động tìm kiếm và đối soát theo thứ tự ưu tiên: `walkthrough.md` $\rightarrow$ `.md/knowledge/reports/walkthrough.md`.
 
-
+- **Core Pattern P19.3 — Archetype vs Project Type Decoupling & Test Verification Seam Hardening:**
+  - **Vấn đề:** Cơ chế ánh xạ archetype cũ trong `sdk_inspector.py` tự động ghi đè hoặc phụ thuộc vào timestamp của registry, dẫn đến cảnh báo khuyến nghị SDK package sai lệch (thiếu nhận diện packages đã cài trong môi trường ảo qua `importlib.metadata`). Ngoài ra, lệnh `sync_spoke.py` thiếu tham số `--dry-run` an toàn cho các tác vụ kiểm thử tự động.
+  - **Giải pháp:** Bổ sung hàm `archetype_to_project_type()` độc lập, tra cứu metadata packages hệ thống linh hoạt, trang bị cờ `--dry-run` cho `coordinator.py` và bổ sung 34/34 bài unit test hồi quy toàn diện trong `scripts/tests/test_spoke_sync_modules.py`.
