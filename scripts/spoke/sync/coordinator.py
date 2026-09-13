@@ -989,15 +989,26 @@ class SpokeSynchronizer:
                 raw_archetype = proj_dict.get("archetype")
         spoke_archetype = str(raw_archetype).strip() if raw_archetype else ""
 
-        project_type_val = context.get("project_type") or context.get("archetype")
+        project_type_val = context.get("project_type")
         if not project_type_val:
             proj_dict = context.get("project")
             if isinstance(proj_dict, dict):
-                project_type_val = proj_dict.get("type") or proj_dict.get("archetype")
+                project_type_val = proj_dict.get("type") or proj_dict.get("project_type")
         if not project_type_val:
             project_type = ""
         else:
             project_type = str(project_type_val).strip()
+
+        # If project_type is missing, map from archetype to default catalog project type
+        if not project_type and spoke_archetype:
+            archetype_to_project_type = {
+                "knowledge_corpus": "Tác vụ Admin",
+                "enterprise_governance": "Tác vụ Admin",
+                "project_delivery": "Thẩm tra thiết kế",
+                "specialized_extension": "Phần mềm",
+                "platform_hub": "Phần mềm",
+            }
+            project_type = archetype_to_project_type.get(spoke_archetype, "")
 
         if not spoke_archetype and project_type:
             from scripts.spoke.spoke_bootstrap import PROJECT_TYPE_TO_ARCHETYPE

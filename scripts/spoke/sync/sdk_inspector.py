@@ -202,9 +202,11 @@ class SharedSdkInspector:
                     data = yaml.safe_load(ctx_file.read_text(encoding="utf-8")) or {}
                     raw_declared = data.get("hub_packages", [])
                     if isinstance(raw_declared, list):
-                        declared.extend([p for p in raw_declared if isinstance(p, str) and p])
-                    elif isinstance(raw_declared, str) and raw_declared:
-                        declared.append(raw_declared)
+                        declared.extend(
+                            [p.strip() for p in raw_declared if isinstance(p, str) and p.strip()]
+                        )
+                    elif isinstance(raw_declared, str) and raw_declared.strip():
+                        declared.append(raw_declared.strip())
                     if not arch:
                         arch = data.get("project", {}).get("archetype") or data.get("archetype")
                 except Exception:
