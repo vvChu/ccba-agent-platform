@@ -117,13 +117,43 @@ class TestGuardrailCopier:
         return actions
 
 
+LEGAL_PROJECT_TYPES = {
+    "Pháp điển",
+    "Thẩm tra thiết kế",
+    "Kiểm định",
+    "Tư vấn pháp lý",
+    "PCCC",
+    "Tra cứu",
+}
+
+
+def is_legal_related_spoke(spoke_root: Path, project_type: str = "") -> bool:
+    """Determines if the target Spoke requires legal knowledge bundle synchronization."""
+    if project_type in LEGAL_PROJECT_TYPES:
+        return True
+    if (spoke_root / "legal_registry.yaml").exists():
+        return True
+    if (spoke_root / ".md" / "data" / "legal_registry.yaml").exists():
+        return True
+    if (spoke_root / "legal_docs").exists():
+        return True
+    return False
+
+
 class SharedSdkInspector:
     """Zero-latency static file inspector for Hub shared packages in Spoke virtual environments (ADR 0044)."""
 
-    def __init__(self, spoke_root: Path, hub_root: Path, project_type: str) -> None:
+    def __init__(
+        self,
+        spoke_root: Path,
+        hub_root: Path,
+        project_type: str = "",
+        archetype: str = "",
+    ) -> None:
         self.spoke_root = spoke_root
         self.hub_root = hub_root
         self.project_type = project_type
+        self.archetype = archetype
 
     def is_python_project(self) -> bool:
         """Check if Spoke is a Python project by configuration, file presence, or scripts."""
@@ -157,8 +187,12 @@ class SharedSdkInspector:
         return site_packages_dirs
 
     def resolve_packages_to_check(self) -> list[str]:
-        """Resolves the list of Hub packages to inspect for the Spoke."""
-        packages = ["ccba-harness", "ccba-ai", "ccba-ooxml", "ccba-pdf-prep", "ccba-qc-core"]
+        """Resolves the list of Hub packages to inspect for the Spoke according to ADR-0044 tiers."""
+        # Tier 0: Core mandatory packages
+        packages = ["ccba-harness", "ccba-ai"]
+
+        arch = self.archetype
+        declared: list[str] = []
 
         # Read workspace_context.yaml if available
         for ctx_dir in [self.spoke_root / ".agents", self.spoke_root / ".md"]:
@@ -166,24 +200,54 @@ class SharedSdkInspector:
             if ctx_file.exists():
                 try:
                     data = yaml.safe_load(ctx_file.read_text(encoding="utf-8")) or {}
-                    declared = data.get("hub_packages", [])
-                    if isinstance(declared, list):
-                        for p in declared:
-                            if p and p not in packages:
-                                packages.append(p)
-                    # Check archetype defaults
-                    arch = data.get("project", {}).get("archetype")
-                    if arch == "knowledge_corpus" and (
-                        self.project_type == "Pháp điển"
-                        or self.spoke_root.name.lower() == "ccba-legal-knowledge"
-                    ):
-                        if "ccba-legal-intel" not in packages:
-                            packages.append("ccba-legal-intel")
-                    elif arch in ("project_delivery", "enterprise_governance"):
-                        if "mdconverter" not in packages:
-                            packages.append("mdconverter")
+                    raw_declared = data.get("hub_packages", [])
+                    if isinstance(raw_declared, list):
+                        declared.extend([p for p in raw_declared if isinstance(p, str) and p])
+                    elif isinstance(raw_declared, str) and raw_declared:
+                        declared.append(raw_declared)
+                    if not arch:
+                        arch = data.get("project", {}).get("archetype") or data.get("archetype")
                 except Exception:
                     pass
+
+        # Fallback to infer archetype from project_type if still empty
+        if not arch and self.project_type:
+            from scripts.spoke.spoke_bootstrap import PROJECT_TYPE_TO_ARCHETYPE
+
+            raw_type = str(self.project_type).strip().lower()
+            arch = PROJECT_TYPE_TO_ARCHETYPE.get(raw_type)
+
+        # Tier 1: Archetype Defaults
+        if arch == "knowledge_corpus":
+            if (
+                is_legal_related_spoke(self.spoke_root, self.project_type)
+                or self.spoke_root.name.lower() == "ccba-legal-knowledge"
+            ):
+                if "ccba-legal-intel" not in packages:
+                    packages.append("ccba-legal-intel")
+        elif arch in ("project_delivery", "enterprise_governance"):
+            for p in ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"]:
+                if p not in packages:
+                    packages.append(p)
+            if arch == "project_delivery" and "ccba-qc-core" not in packages:
+                packages.append("ccba-qc-core")
+        else:
+            # Fallback for unspecified archetypes (e.g. standalone python apps)
+            if self.project_type in ("Phần mềm", "Thiết kế", "Thẩm tra thiết kế", "Kiểm định"):
+                for p in ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"]:
+                    if p not in packages:
+                        packages.append(p)
+                if self.project_type != "Phần mềm" and "ccba-qc-core" not in packages:
+                    packages.append("ccba-qc-core")
+            elif self.project_type in ("Tác vụ Admin", "Hành chính"):
+                for p in ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"]:
+                    if p not in packages:
+                        packages.append(p)
+
+        # Tier 2: Declared packages in workspace_context.yaml
+        for p in declared:
+            if p and p not in packages:
+                packages.append(p)
 
         return packages
 
@@ -222,38 +286,72 @@ class SharedSdkInspector:
 
         return installed_status
 
-    def get_recommendations(self) -> list[str]:
-        """Returns actionable pip install commands for unlinked shared packages."""
+    def get_categorized_recommendations(self) -> dict[str, list[str]]:
+        """Returns actionable pip install commands categorized by SDK domain."""
         status = self.inspect()
         if not status:
-            return []
+            return {}
         missing = [pkg for pkg, installed in status.items() if not installed]
         if not missing:
-            return []
-        commands: list[str] = []
+            return {}
+
+        categories: dict[str, list[str]] = {
+            "AI Gateway SDKs": ["ccba-harness", "ccba-ai"],
+            "Engineering QC SDKs": ["ccba-qc-core"],
+            "Office & Document Processing SDKs": ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"],
+            "Legal Intelligence SDKs": ["ccba-legal-intel"],
+            "Extension SDKs": ["ccba-notebooklm", "ccba-maskara"],
+        }
+
+        categorized_recs: dict[str, list[str]] = {}
+        for cat_name, cat_pkgs in categories.items():
+            cat_cmds: list[str] = []
+            for pkg in cat_pkgs:
+                if pkg in missing:
+                    pkg_path = self.hub_root / "packages" / pkg
+                    if pkg_path.exists():
+                        cat_cmds.append(f'pip install -e "{pkg_path}"')
+            if cat_cmds:
+                categorized_recs[cat_name] = cat_cmds
+
+        # Any extra packages not in predefined categories
+        known_pkgs = {p for pkgs in categories.values() for p in pkgs}
+        extra_cmds = []
         for pkg in missing:
-            pkg_path = self.hub_root / "packages" / pkg
-            if pkg_path.exists():
-                commands.append(f'pip install -e "{pkg_path}"')
-        return commands
+            if pkg not in known_pkgs:
+                pkg_path = self.hub_root / "packages" / pkg
+                if pkg_path.exists():
+                    extra_cmds.append(f'pip install -e "{pkg_path}"')
+        if extra_cmds:
+            categorized_recs["Other Shared SDKs"] = extra_cmds
+
+        return categorized_recs
+
+    def get_recommendations(self) -> list[str]:
+        """Returns actionable pip install commands for unlinked shared packages."""
+        cat_recs = self.get_categorized_recommendations()
+        flat: list[str] = []
+        for cmds in cat_recs.values():
+            flat.extend(cmds)
+        return flat
 
 
 class LegalKnowledgeSyncOrchestrator:
     """Orchestrates automatic legal data synchronization for legal-related Spokes (ADR 0050)."""
 
-    LEGAL_PROJECT_TYPES = {
-        "Pháp điển",
-        "Thẩm tra thiết kế",
-        "Kiểm định",
-        "Tư vấn pháp lý",
-        "PCCC",
-        "Tra cứu",
-    }
+    LEGAL_PROJECT_TYPES = LEGAL_PROJECT_TYPES
 
-    def __init__(self, spoke_root: Path, hub_root: Path, project_type: str) -> None:
+    def __init__(
+        self,
+        spoke_root: Path,
+        hub_root: Path,
+        project_type: str = "",
+        archetype: str = "",
+    ) -> None:
         self.spoke_root = spoke_root
         self.hub_root = hub_root
         self.project_type = project_type
+        self.archetype = archetype
 
     def is_master_legal_corpus(self) -> bool:
         """Determines if the target Spoke is the Master Legal Corpus itself (ADR 0036/0050)."""
@@ -362,9 +460,10 @@ class LegalKnowledgeSyncOrchestrator:
                 print("   Khuyến nghị chạy: python -m ccba_legal sync --pull-latest")
                 return {"is_legal": True, "dry_run": False, "error": str(e)}
         else:
+            display_type = self.archetype or self.project_type or "Chung"
             print("\n💡 [Khuyến nghị Tri thức Pháp lý (Zero-Bloat)]:")
             print(
-                f"   Spoke hiện tại thuộc phân hệ '{self.project_type or 'Chung'}', không bắt buộc tải trước toàn bộ kho văn bản OKF v2.4 (tiết kiệm dung lượng đĩa)."
+                f"   Spoke hiện tại thuộc phân hệ '{display_type}', không bắt buộc tải trước toàn bộ kho văn bản OKF v2.4 (tiết kiệm dung lượng đĩa)."
             )
             print(
                 "   Khi cần tra cứu văn bản cụ thể, hãy dùng lệnh On-Demand: 'python -m ccba_legal sync --doc <doc_id>' hoặc tra cứu RAG qua AI Gateway."

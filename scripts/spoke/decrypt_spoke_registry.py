@@ -18,19 +18,36 @@ except ImportError:
 # Cấu hình đường dẫn mặc định
 REGISTRY_REL_PATH = ".md/data/spoke_registry.yaml"
 DECRYPTED_REL_PATH = ".md/data/spoke_registry_decrypted.yaml"
+HEARTBEATS_REL_PATH = ".md/telemetry/spoke_heartbeats.yaml"
 PRIVATE_KEY_DIR = os.path.expanduser(r"~\.gemini\antigravity\keys")
 PRIVATE_KEY_PATH = os.path.join(PRIVATE_KEY_DIR, "registry_private_key.pem")
+
+
+def load_spoke_heartbeats(hub_root: Path | None = None) -> dict[str, Any]:
+    """Loads dynamic last_sync heartbeats from .md/telemetry/spoke_heartbeats.yaml."""
+    root = hub_root or Path(__file__).resolve().parents[2]
+    hb_file = root / HEARTBEATS_REL_PATH
+    if not hb_file.exists():
+        return {}
+    try:
+        with open(hb_file, encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+            heartbeats = data.get("heartbeats", {})
+            return heartbeats if isinstance(heartbeats, dict) else {}
+    except Exception:
+        return {}
 
 
 def get_registered_spokes(hub_root: Path | None = None) -> list[dict[str, Any]]:
     """Retrieve all decrypted active registered spokes from registry or local cache.
 
     Returns:
-        list[dict]: List of spoke dicts with 'name', 'path', 'project_type', 'last_sync', 'spoke_id', 'exists'.
+        list[dict]: List of spoke dicts with 'name', 'path', 'project_type', 'archetype', 'last_sync', 'spoke_id', 'exists'.
     """
     root = hub_root or Path(__file__).resolve().parents[2]
     registry_file = root / REGISTRY_REL_PATH
     decrypted_file = root / DECRYPTED_REL_PATH
+    heartbeats = load_spoke_heartbeats(root)
 
     decrypted_spokes: list[dict[str, Any]] = []
 
@@ -77,6 +94,17 @@ def get_registered_spokes(hub_root: Path | None = None) -> list[dict[str, Any]]:
         except Exception:
             pass
 
+    # Attach dynamic heartbeats and ensure archetype exists
+    for sp in decrypted_spokes:
+        s_id = sp.get("spoke_id")
+        hb = heartbeats.get(s_id, {})
+        if isinstance(hb, dict) and hb.get("last_sync"):
+            sp["last_sync"] = hb["last_sync"]
+        elif "last_sync" not in sp:
+            sp["last_sync"] = ""
+        if "archetype" not in sp:
+            sp["archetype"] = ""
+
     return decrypted_spokes
 
 
@@ -91,6 +119,7 @@ def decrypt_registry(hub_root: Path | None = None) -> None:
     root = hub_root or Path(__file__).resolve().parents[2]
     registry_file = root / REGISTRY_REL_PATH
     decrypted_file = root / DECRYPTED_REL_PATH
+    heartbeats = load_spoke_heartbeats(root)
 
     if not os.path.exists(PRIVATE_KEY_PATH):
         print(f"❌ Lỗi: Không tìm thấy Khóa bí mật tại {PRIVATE_KEY_PATH}")
@@ -139,9 +168,19 @@ def decrypt_registry(hub_root: Path | None = None) -> None:
                 ),
             )
             spoke_info = yaml.safe_load(decrypted_bytes.decode("utf-8"))
+            hb = heartbeats.get(spoke_id, {})
+            last_sync_val = (
+                hb.get("last_sync")
+                if isinstance(hb, dict) and hb.get("last_sync")
+                else spoke_info.get("last_sync", "Chưa rõ")
+            )
+            spoke_info["last_sync"] = last_sync_val
+            if "archetype" not in spoke_info:
+                spoke_info["archetype"] = ""
 
+            display_type = spoke_info.get("archetype") or spoke_info.get("project_type", "")
             print(
-                f"{spoke_info['name']:<20} | {spoke_info['project_type']:<15} | {spoke_info['last_sync']:<20} | {spoke_info['path']:<35}"
+                f"{spoke_info.get('name', 'Unknown'):<20} | {display_type:<15} | {last_sync_val:<20} | {spoke_info.get('path', ''):<35}"
             )
 
             decrypted_spokes.append({"spoke_id": spoke_id, **spoke_info})

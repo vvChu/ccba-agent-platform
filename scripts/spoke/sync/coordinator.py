@@ -504,6 +504,7 @@ class SpokeSynchronizer:
         additional_bundles: list[str] | None = None,
         bootstrap: bool = False,
         force: bool = False,
+        archetype: str = "",
     ) -> int:
         """Full synchronization with Non-Destructive Selective Merge."""
         if not project_type:
@@ -839,7 +840,9 @@ class SpokeSynchronizer:
             except Exception:
                 pass
 
-        SpokeRegistrar().register(spoke_root, hub_root, project_name, project_type, dry_run=dry_run)
+        SpokeRegistrar().register(
+            spoke_root, hub_root, project_name, project_type, archetype=archetype, dry_run=dry_run
+        )
 
         # 6. Print Structured Output & Summary Table
         new_count = sum(1 for a in actions if a["status"] == "NEW")
@@ -886,21 +889,24 @@ class SpokeSynchronizer:
                 if not dry_run:
                     return 1
         else:
-            sdk_inspector = SharedSdkInspector(spoke_root, hub_root, project_type)
-            sdk_recs = sdk_inspector.get_recommendations()
-            if sdk_recs:
-                print("\n💡 Gợi ý Shared SDKs cho Spoke Python:")
-                print("   Để sử dụng AI Gateway hoặc Office Processing dùng chung từ Hub:")
-                for cmd in sdk_recs:
-                    print(f"   -> {cmd}")
+            sdk_inspector = SharedSdkInspector(
+                spoke_root, hub_root, project_type, archetype=archetype
+            )
+            cat_recs = sdk_inspector.get_categorized_recommendations()
+            if cat_recs:
+                print("\n💡 Gợi ý Shared SDKs cho Spoke Python (ADR 0044):")
+                for cat_title, cmds in cat_recs.items():
+                    print(f"   [{cat_title}]:")
+                    for cmd in cmds:
+                        print(f"   -> {cmd}")
                 print(
                     "   💡 Mẹo: Chạy 'python scripts/sync_spoke.py --bootstrap' để tự động cài đặt 1-chạm."
                 )
 
         # 8. Automatic Legal Knowledge Sync & Zero-Bloat Advisory (ADR 0050)
-        LegalKnowledgeSyncOrchestrator(spoke_root, hub_root, project_type).sync_or_advise(
-            dry_run=dry_run
-        )
+        LegalKnowledgeSyncOrchestrator(
+            spoke_root, hub_root, project_type, archetype=archetype
+        ).sync_or_advise(dry_run=dry_run)
 
         if dry_run:
             print("\n[DRY-RUN] Quá trình mô phỏng hoàn tất. 0 tệp tin nào bị sửa đổi trên đĩa.")
@@ -975,6 +981,14 @@ class SpokeSynchronizer:
         else:
             project_name = str(project_name_val).strip()
 
+        # Extract project archetype (ADR-0041)
+        raw_archetype = context.get("archetype")
+        if not raw_archetype:
+            proj_dict = context.get("project")
+            if isinstance(proj_dict, dict):
+                raw_archetype = proj_dict.get("archetype")
+        spoke_archetype = str(raw_archetype).strip() if raw_archetype else ""
+
         project_type_val = context.get("project_type") or context.get("archetype")
         if not project_type_val:
             proj_dict = context.get("project")
@@ -984,6 +998,11 @@ class SpokeSynchronizer:
             project_type = ""
         else:
             project_type = str(project_type_val).strip()
+
+        if not spoke_archetype and project_type:
+            from scripts.spoke.spoke_bootstrap import PROJECT_TYPE_TO_ARCHETYPE
+
+            spoke_archetype = PROJECT_TYPE_TO_ARCHETYPE.get(project_type.lower(), "")
 
         # Extract additional_bundles
         raw_add_bundles = context.get("additional_bundles")
@@ -1088,6 +1107,7 @@ class SpokeSynchronizer:
                 additional_bundles=additional_bundles,
                 bootstrap=bootstrap,
                 force=force,
+                archetype=spoke_archetype,
             )
 
         if res_code != 0:
@@ -1114,16 +1134,70 @@ class SpokeSynchronizer:
         cmds: list[str] = []
         if cleanliness_script.exists():
             cmds.append(
-                f"{sys.executable} {cleanliness_script.as_posix()} --path {self.spoke_root.as_posix()}"
+                f'"{sys.executable}" "{cleanliness_script.as_posix()}" --path "{self.spoke_root.as_posix()}"'
             )
         if import_depth_script.exists():
             cmds.append(
-                f"{sys.executable} {import_depth_script.as_posix()} --path {self.spoke_root.as_posix()}"
+                f'"{sys.executable}" "{import_depth_script.as_posix()}" --path "{self.spoke_root.as_posix()}"'
             )
 
-        spoke_tests = self.spoke_root / "tests"
-        if spoke_tests.exists() and any(spoke_tests.glob("test_*.py")):
-            cmds.append(f"{sys.executable} -m pytest {spoke_tests.as_posix()} -q")
+        # Resolve Spoke Python interpreter (venv or fallback)
+        from scripts.spoke.spoke_bootstrap import SpokeBootstrapper
+
+        bootstrapper = SpokeBootstrapper(self.spoke_root, resolved_hub)
+        venv_dir = bootstrapper.find_venv()
+        spoke_python = (
+            bootstrapper.get_python_exec(venv_dir) if venv_dir else Path(sys.executable)
+        )
+
+        # Verify pytest is available in target python, fallback to sys.executable if not
+        test_runtime = spoke_python
+        try:
+            check_res = subprocess.run(
+                [str(spoke_python), "-m", "pytest", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if check_res.returncode != 0:
+                test_runtime = Path(sys.executable)
+        except Exception:
+            test_runtime = Path(sys.executable)
+
+        # Discover tests
+        target_test_dirs: list[Path] = []
+
+        # 1. Custom test_path from workspace_context.yaml
+        ctx_file = self.spoke_root / ".agents" / "workspace_context.yaml"
+        if not ctx_file.exists():
+            ctx_file = self.spoke_root / ".md" / "workspace_context.yaml"
+        ctx = load_yaml(ctx_file) if ctx_file.exists() else {}
+        custom_test_paths = (
+            ctx.get("verification", {}).get("test_path") if isinstance(ctx, dict) else None
+        )
+        if custom_test_paths:
+            if isinstance(custom_test_paths, str):
+                custom_test_paths = [custom_test_paths]
+            for p in custom_test_paths:
+                resolved_p = self.spoke_root / p
+                if resolved_p.exists() and resolved_p not in target_test_dirs:
+                    target_test_dirs.append(resolved_p)
+
+        # 2. Standard test directories if no custom test path provided or in addition
+        if not target_test_dirs:
+            candidate_dirs = [
+                self.spoke_root / "tests",
+                self.spoke_root / "scripts" / "tests",
+                self.spoke_root / "src" / "tests",
+            ]
+            for c_dir in candidate_dirs:
+                if c_dir.exists() and any(c_dir.rglob("test_*.py")):
+                    if c_dir not in target_test_dirs:
+                        target_test_dirs.append(c_dir)
+
+        if target_test_dirs:
+            dirs_str = " ".join(f'"{d.as_posix()}"' for d in target_test_dirs)
+            cmds.append(f'"{test_runtime.as_posix()}" -m pytest {dirs_str} -q')
 
         if not cmds:
             print("[Verify] Không có lệnh kiểm tra nào cần thực thi.")

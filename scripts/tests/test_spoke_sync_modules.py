@@ -918,3 +918,203 @@ def test_sync_spoke_archetype_fallback(tmp_path: Path) -> None:
     sync = SpokeSynchronizer(spoke_dir, hub_root)
     code = sync.sync(dry_run=True, check_git=False, backup=False, verify=False)
     assert code == 0
+
+
+def test_sdk_inspector_tier_resolution_knowledge_corpus(tmp_path: Path) -> None:
+    """Verify SharedSdkInspector does not recommend QC or Office packages for knowledge_corpus (Issue #268)."""
+    hub_root = tmp_path / "hub"
+    hub_root.mkdir()
+    for pkg in ["ccba-harness", "ccba-ai", "ccba-qc-core", "ccba-ooxml", "ccba-pdf-prep"]:
+        (hub_root / "packages" / pkg).mkdir(parents=True, exist_ok=True)
+
+    spoke_dir = tmp_path / "second_brain"
+    spoke_dir.mkdir()
+    (spoke_dir / ".agents").mkdir()
+    (spoke_dir / ".agents" / "workspace_context.yaml").write_text(
+        "project:\n  name: VvC Second Brain\n  archetype: knowledge_corpus\n", encoding="utf-8"
+    )
+
+    inspector = SharedSdkInspector(
+        spoke_dir, hub_root, project_type="Tác vụ Admin", archetype="knowledge_corpus"
+    )
+    packages = inspector.resolve_packages_to_check()
+
+    assert "ccba-harness" in packages
+    assert "ccba-ai" in packages
+    assert "ccba-qc-core" not in packages
+    assert "ccba-ooxml" not in packages
+    assert "ccba-pdf-prep" not in packages
+    assert "ccba-legal-intel" not in packages
+
+    # Explicitly declared in hub_packages should be respected
+    (spoke_dir / ".agents" / "workspace_context.yaml").write_text(
+        "project:\n  name: VvC Second Brain\n  archetype: knowledge_corpus\nhub_packages:\n  - ccba-ooxml\n",
+        encoding="utf-8",
+    )
+    declared_packages = inspector.resolve_packages_to_check()
+    assert "ccba-ooxml" in declared_packages
+    assert "ccba-qc-core" not in declared_packages
+
+
+def test_sdk_inspector_categorized_recommendations(tmp_path: Path) -> None:
+    """Verify get_categorized_recommendations groups packages properly (Issue #268)."""
+    hub_root = tmp_path / "hub"
+    hub_root.mkdir()
+    for pkg in ["ccba-harness", "ccba-ai", "ccba-qc-core", "ccba-ooxml"]:
+        (hub_root / "packages" / pkg).mkdir(parents=True, exist_ok=True)
+
+    spoke_dir = tmp_path / "delivery_spoke"
+    spoke_dir.mkdir()
+    (spoke_dir / "pyproject.toml").write_text("[project]\nname='delivery'", encoding="utf-8")
+
+    inspector = SharedSdkInspector(
+        spoke_dir, hub_root, project_type="Thẩm tra thiết kế", archetype="project_delivery"
+    )
+    cat_recs = inspector.get_categorized_recommendations()
+
+    assert "AI Gateway SDKs" in cat_recs
+    assert any("ccba-harness" in cmd for cmd in cat_recs["AI Gateway SDKs"])
+    assert any("ccba-ai" in cmd for cmd in cat_recs["AI Gateway SDKs"])
+    assert "Engineering QC SDKs" in cat_recs
+    assert any("ccba-qc-core" in cmd for cmd in cat_recs["Engineering QC SDKs"])
+    assert "Office & Document Processing SDKs" in cat_recs
+    assert any("ccba-ooxml" in cmd for cmd in cat_recs["Office & Document Processing SDKs"])
+
+    # Verify get_recommendations flat list matches
+    flat = inspector.get_recommendations()
+    assert len(flat) == 4
+
+
+def test_verify_spoke_multi_dir_and_venv(tmp_path: Path) -> None:
+    """Verify verify_spoke discovers tests in scripts/tests and resolves spoke venv python (Issue #268)."""
+    hub_root = tmp_path / "hub"
+    hub_root.mkdir()
+    spoke_dir = tmp_path / "spoke_with_scripts_tests"
+    spoke_dir.mkdir()
+
+    # Create scripts/tests directory with test file
+    scripts_tests = spoke_dir / "scripts" / "tests"
+    scripts_tests.mkdir(parents=True)
+    (scripts_tests / "test_smoke.py").write_text("def test_ok(): pass\n", encoding="utf-8")
+
+    # Create mock venv
+    venv_dir = spoke_dir / ".venv"
+    win_scripts = venv_dir / "Scripts"
+    win_scripts.mkdir(parents=True)
+    mock_py = win_scripts / "python.exe"
+    mock_py.write_text("", encoding="utf-8")
+
+    sync = SpokeSynchronizer(spoke_dir, hub_root)
+
+    captured_cmds: list[str] = []
+
+    def mock_verify_execution(commands, cwd, fail_fast=True):
+        nonlocal captured_cmds
+        captured_cmds.extend(commands)
+        from ccba_harness.verifier import CommandResult, PatchVerificationReport
+
+        return PatchVerificationReport(
+            all_passed=True,
+            total_commands=len(commands),
+            passed_count=len(commands),
+            failed_count=0,
+            total_duration_ms=100.0,
+            results=[
+                CommandResult(
+                    command=c,
+                    exit_code=0,
+                    passed=True,
+                    duration_ms=10.0,
+                )
+                for c in commands
+            ],
+        )
+
+    # Patch subprocess.run so python --version check returns 0
+    with patch("subprocess.run") as mock_sub, patch(
+        "ccba_harness.verifier.verify_patch_execution", side_effect=mock_verify_execution
+    ):
+        mock_sub.return_value.returncode = 0
+        code = sync.verify_spoke(hub_root=hub_root)
+        assert code == 0
+
+    assert len(captured_cmds) > 0
+    pytest_cmd = next(c for c in captured_cmds if "-m pytest" in c)
+    assert mock_py.as_posix() in pytest_cmd or "python" in pytest_cmd
+    assert scripts_tests.as_posix() in pytest_cmd
+
+
+def test_registry_static_hash_and_heartbeat_decoupling(tmp_path: Path) -> None:
+    """Verify SpokeRegistrar decouples static registry from telemetry heartbeats (Issue #268)."""
+    import os
+    import shutil
+    import tempfile
+
+    from scripts.spoke.decrypt_spoke_registry import get_registered_spokes, load_spoke_heartbeats
+
+    hub_root = tmp_path / "mock_hub"
+    hub_root.mkdir()
+    res_dir = hub_root / ".agents" / "resources"
+    res_dir.mkdir(parents=True)
+
+    # Copy real public key
+    real_pub = (
+        Path(__file__).resolve().parents[2] / ".agents" / "resources" / "registry_public_key.pem"
+    )
+    (res_dir / "registry_public_key.pem").write_bytes(real_pub.read_bytes())
+
+    # Use short path to avoid exceeding RSA-2048 OAEP plaintext limit (190 bytes)
+    short_temp = Path(tempfile.gettempdir()) / f"spk_{os.getpid()}"
+    if short_temp.exists():
+        shutil.rmtree(short_temp, ignore_errors=True)
+    short_temp.mkdir(parents=True)
+
+    try:
+        spoke_dir = short_temp
+        (spoke_dir / ".agents").mkdir()
+        (spoke_dir / ".agents" / "workspace_context.yaml").write_text(
+            "project:\n  name: SpokeA\n  archetype: knowledge_corpus\n", encoding="utf-8"
+        )
+
+        registrar = SpokeRegistrar()
+        # 1. First registration
+        registrar.register(spoke_dir, hub_root, "SpokeA", "Tác vụ Admin", archetype="knowledge_corpus")
+
+        registry_file = hub_root / ".md" / "data" / "spoke_registry.yaml"
+        assert registry_file.exists()
+        first_yaml = registry_file.read_text(encoding="utf-8")
+        assert "static_hash" in first_yaml
+
+        heartbeat_file = hub_root / ".md" / "telemetry" / "spoke_heartbeats.yaml"
+        assert heartbeat_file.exists()
+        heartbeats_1 = load_spoke_heartbeats(hub_root)
+        assert len(heartbeats_1) == 1
+
+        # 2. Second registration: static hash unchanged -> registry file untouched
+        registrar.register(spoke_dir, hub_root, "SpokeA", "Tác vụ Admin", archetype="knowledge_corpus")
+        second_yaml = registry_file.read_text(encoding="utf-8")
+        assert (
+            first_yaml == second_yaml
+        ), "Registry file must NOT be rewritten if static metadata is unchanged!"
+
+        # 3. Decryption check with decrypted cache fallback
+        mock_decrypted = {
+            "spokes": [
+                {
+                    "name": "SpokeA",
+                    "path": str(spoke_dir),
+                    "project_type": "Tác vụ Admin",
+                    "archetype": "knowledge_corpus",
+                }
+            ]
+        }
+        dec_cache = hub_root / ".md" / "data" / "spoke_registry_decrypted.yaml"
+        dec_cache.parent.mkdir(parents=True, exist_ok=True)
+        dec_cache.write_text(yaml.safe_dump(mock_decrypted), encoding="utf-8")
+
+        spokes = get_registered_spokes(hub_root)
+        assert len(spokes) == 1
+        assert spokes[0]["archetype"] == "knowledge_corpus"
+        assert spokes[0]["last_sync"] != "", "last_sync must be merged from heartbeats!"
+    finally:
+        shutil.rmtree(short_temp, ignore_errors=True)
