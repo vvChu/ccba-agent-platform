@@ -153,6 +153,24 @@ def test_load_eval_dataset_discovery_from_eval_gate(tmp_path: Path) -> None:
     assert len(items_prefix) == 1
     assert items_prefix[0].id == "copywriting_01"
 
+    # Check alias resolution (e.g. ccba-ai-qc-pccc-audit -> eval_pccc_audit.json)
+    (test_cases_dir / "eval_pccc_audit.json").write_text(
+        json.dumps([{"id": "pccc_01", "input_prompt": "Audit fire rating"}]),
+        encoding="utf-8",
+    )
+    items_pccc = load_eval_dataset(skill_name="ccba-ai-qc-pccc-audit", project_root=tmp_path)
+    assert len(items_pccc) == 1
+    assert items_pccc[0].id == "pccc_01"
+
+    # Check alias resolution (e.g. ccba-legal-advisor -> eval_legal_intel.json)
+    (test_cases_dir / "eval_legal_intel.json").write_text(
+        json.dumps([{"id": "legal_01", "input_prompt": "Legal consultation"}]),
+        encoding="utf-8",
+    )
+    items_legal = load_eval_dataset(skill_name="ccba-legal-advisor", project_root=tmp_path)
+    assert len(items_legal) == 1
+    assert items_legal[0].id == "legal_01"
+
 
 def test_main_dispatch_eval(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """Verify main() directly routes first argument 'eval' to run_eval_cli."""
@@ -241,3 +259,51 @@ def test_eval_cli_empty_dataset_returns_failure(
     assert code == 1
     captured = capsys.readouterr()
     assert "No evaluation test cases found" in captured.err
+
+
+def test_eval_cli_difficulty_and_limit_flags(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Verify eval CLI respects --difficulty and --limit flags."""
+    dataset_file = tmp_path / "test_diff_cases.json"
+    dataset_data = [
+        {"id": "case_easy_1", "input_prompt": "P1", "golden_answer": "A1", "metadata": {"difficulty": "easy"}},
+        {"id": "case_easy_2", "input_prompt": "P2", "golden_answer": "A2", "metadata": {"difficulty": "easy"}},
+        {"id": "case_hard_1", "input_prompt": "P3", "golden_answer": "A3", "metadata": {"difficulty": "hard"}},
+        {"id": "case_hard_2", "input_prompt": "P4", "golden_answer": "A4", "metadata": {"difficulty": "hard"}},
+    ]
+    dataset_file.write_text(json.dumps(dataset_data), encoding="utf-8")
+
+    async def mock_task(item: EvalItem) -> str:
+        return str(item.golden_answer)
+
+    with patch("ccba_harness.evals.runner._create_default_eval_task", return_value=mock_task):
+        code = run_eval_cli(
+            [
+                "--dataset", str(dataset_file),
+                "--difficulty", "hard",
+                "--limit", "1",
+                "--json",
+            ]
+        )
+        assert code == 0
+        captured = capsys.readouterr()
+        res = json.loads(captured.out)
+        assert res["total_items"] == 1
+        assert res["passed"] is True
+        assert res["metadata"]["difficulty"] == "hard"
+        assert res["metadata"]["limit"] == 1
+
+
+def test_eval_cli_invalid_limit_flag(capsys: pytest.CaptureFixture[str]) -> None:
+    """Verify eval CLI rejects limit <= 0 with clear error message."""
+    code_zero = run_eval_cli(["--limit", "0"])
+    assert code_zero == 1
+    err_zero = capsys.readouterr().err
+    assert "ERROR: --limit must be a positive integer" in err_zero
+
+    code_neg = run_eval_cli(["--limit", "-2"])
+    assert code_neg == 1
+    err_neg = capsys.readouterr().err
+    assert "ERROR: --limit must be a positive integer" in err_neg
+

@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from pydantic import BaseModel
 
@@ -101,7 +101,11 @@ class LLMOutputParser:
                 if isinstance(schema, type) and issubclass(schema, BaseModel):
                     return schema.model_validate(data)
                 elif callable(schema):
-                    return schema(data) if not isinstance(data, dict) else schema(**data)
+                    return (
+                        cast(Any, schema)(data)
+                        if not isinstance(data, dict)
+                        else cast(Any, schema)(**data)
+                    )
             except Exception as err:
                 if strict:
                     raise LLMParseError(f"Schema validation failed: {err}", raw_output=raw) from err

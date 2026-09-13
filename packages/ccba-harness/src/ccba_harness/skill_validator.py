@@ -979,6 +979,8 @@ class SkillValidator:
         override_orchestrated: bool | None = None,
         override_metrics: GPIMetrics | None = None,
         override_parent: str | None = None,
+        override_existing_tier: ArchitectureTier | str | None = None,
+        override_force_tier_flip: bool = False,
     ) -> DecisionResult:
         """Evaluate an existing SKILL.md file directly through the Two-Stage Decision Framework.
 
@@ -988,6 +990,8 @@ class SkillValidator:
             override_orchestrated: Optional override for Gate 1.
             override_metrics: Optional fallback/override GPIMetrics if not in frontmatter.
             override_parent: Optional fallback/override parent skill name.
+            override_existing_tier: Optional override for prior architecture tier (Hysteresis).
+            override_force_tier_flip: Force tier transition within hysteresis deadband.
 
         Returns:
             DecisionResult: Architectural tier, target location, and rationale.
@@ -1041,7 +1045,10 @@ class SkillValidator:
         if override_orchestrated is not None:
             is_orchestrated = override_orchestrated
 
-        parent_skill = override_parent or meta.get("parent-skill", meta.get("parent_skill"))
+        parent_skill = override_parent or meta.get(
+            "parent-skill", meta.get("parent_skill")
+        )
+
         gpi_data = meta.get("gpi") or meta.get("GPI")
         metrics: GPIMetrics | None = None
         if gpi_data and isinstance(gpi_data, dict):
@@ -1056,12 +1063,20 @@ class SkillValidator:
         if metrics is None and override_metrics is not None:
             metrics = override_metrics
 
+        existing_tier = (
+            override_existing_tier
+            or meta.get("existing-tier")
+            or meta.get("existing_tier")
+        )
+
         request = DecisionRequest(
             name=skill_name,
             is_deterministic=bool(is_deterministic),
             is_orchestrated=bool(is_orchestrated),
             gpi_metrics=metrics,
             parent_skill=parent_skill,
+            existing_tier=existing_tier,
+            force_tier_flip=override_force_tier_flip,
             metadata={"file_path": str(file_path)},
         )
         return evaluate_two_stage_decision(request)

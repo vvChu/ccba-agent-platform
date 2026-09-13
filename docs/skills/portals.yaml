@@ -96,6 +96,7 @@ portals:
       - ccba-seminar-builder
       - ccba-youtube-learn
       - ccba-contribute-to-hub
+      - ccba-review-proposal
       - ccba-issue-to-hub
       - ccba-promote-sandbox
       - ccba-sharepoint-iac

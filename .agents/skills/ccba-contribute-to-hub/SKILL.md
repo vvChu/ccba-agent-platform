@@ -31,8 +31,6 @@ triggers:
 - propose-to-hub
 - ccba-create-pr
 - create-pr
-- ccba-review-proposal
-- review-proposal
 ---
 
 # Workflow: Contribute to Hub (Đóng Góp Mã Nguồn Ngược Lên Hub Chuẩn OKF v2.0)
@@ -137,8 +135,8 @@ Kế thừa tiêu chuẩn khởi tạo PR từ kỹ năng [`/ccba-create-pr`](..
 ---
 
 ## ✅ Bước 6: Báo Cáo Hoàn Tất & Sẵn Sàng Merge
-Tổng hợp báo cáo: Link PR, kết quả CI, tóm tắt góp ý đã sửa, và thông báo Maintainer kích hoạt `/ccba-contribute-to-hub [PR_NUMBER]`.
-- **Tiêu chí hoàn thành:** Báo cáo hoàn tất tổng hợp link PR và kích hoạt `/ccba-contribute-to-hub`.
+Tổng hợp báo cáo: Link PR, kết quả CI, tóm tắt góp ý đã sửa, và thông báo Maintainer kích hoạt `/ccba-review-proposal [PR_NUMBER]`.
+- **Tiêu chí hoàn thành:** Báo cáo hoàn tất tổng hợp link PR và sẵn sàng cho Maintainer kích hoạt `/ccba-review-proposal`.
 
 ---
 
