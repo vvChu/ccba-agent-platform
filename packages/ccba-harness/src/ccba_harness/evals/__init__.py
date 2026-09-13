@@ -15,6 +15,15 @@ from .scorers import (
     LLMRubricScorer,
     RegexScorer,
 )
+from .tuner import (
+    GitRatchetOptimizer,
+    GitRatchetTuner,
+    RatchetConfig,
+    RatchetReport,
+    RatchetTrialResult,
+    get_default_domain_scorers,
+    preserve_yaml_frontmatter,
+)
 
 __all__ = [
     "EvalItem",
@@ -31,4 +40,11 @@ __all__ = [
     "AutoItemScorer",
     "load_eval_dataset",
     "run_eval_pipeline",
+    "RatchetConfig",
+    "RatchetTrialResult",
+    "RatchetReport",
+    "preserve_yaml_frontmatter",
+    "get_default_domain_scorers",
+    "GitRatchetOptimizer",
+    "GitRatchetTuner",
 ]

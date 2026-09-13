@@ -258,6 +258,8 @@ skills:
   - api protection
   - quota
   - retry
+  - auto downgrade
+  - soft cooldown
   skill_path: .agents/skills/ccba-api-circuit-breaker/SKILL.md
   command: /ccba-api-circuit-breaker
   tier: kernel
@@ -390,8 +392,6 @@ skills:
   - propose-to-hub
   - ccba-create-pr
   - create-pr
-  - ccba-review-proposal
-  - review-proposal
   skill_path: .agents/skills/ccba-contribute-to-hub/SKILL.md
   command: /ccba-contribute-to-hub
   tier: kernel
@@ -738,7 +738,7 @@ skills:
 - name: ccba-llm-pipeline-patterns
   bundle: _core
   description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
-    Đúc rút từ VvC LLM OS (v5.1→v8.7, 2026).
+    Đúc rút từ VvC LLM OS (v5.1→v8.15, 2026).
   triggers:
   - llm pipeline
   - pipeline patterns
@@ -747,6 +747,8 @@ skills:
   - rag pipeline
   - synthesis pipeline
   - self-correction
+  - map reduce
+  - multi turn memory
   skill_path: .agents/skills/ccba-llm-pipeline-patterns/SKILL.md
   command: /ccba-llm-pipeline-patterns
   tier: kernel
@@ -894,6 +896,20 @@ skills:
   - sequential-thinking
   skill_path: .agents/skills/ccba-research/SKILL.md
   command: /ccba-research
+  tier: kernel
+- name: ccba-review-proposal
+  bundle: _governance
+  description: Thẩm định toàn trình PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered
+    Review (Fast/Boost), Spoke Leakage Guard, Copilot Guard và Đồng bộ Catalog Hậu
+    Merge (ADR 0045, ADR 0047)
+  triggers:
+  - ccba-review-proposal
+  - review-proposal
+  - review proposal
+  - thẩm định proposal
+  - duyệt proposal
+  skill_path: .agents/skills/ccba-review-proposal/SKILL.md
+  command: /ccba-review-proposal
   tier: kernel
 - name: ccba-seminar-builder
   bundle: _consulting

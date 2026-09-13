@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -33,7 +34,7 @@ class PrivacyGuardHook:
                 # Silent fail to avoid disrupting client
                 pass
 
-    def check_content(self, content: any) -> None:
+    def check_content(self, content: Any) -> None:
         """Scan content against blocked patterns. Raises ValueError if a match is found.
 
         Supports string, list, and dict (recursively scanning string values).

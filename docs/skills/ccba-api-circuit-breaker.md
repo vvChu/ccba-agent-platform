@@ -53,6 +53,8 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `api protection`
 - `quota`
 - `retry`
+- `auto downgrade`
+- `soft cooldown`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Kiểm soát tốc độ gọi API, ngắt mạch khi lỗi và tránh cạn kiệt hạn mức.

@@ -17,6 +17,9 @@ from unittest.mock import patch
 import pytest
 
 from ccba_harness import (
+    CANONICAL_ANCHORS,
+    GPI_DEADBAND_LOWER,
+    GPI_DEADBAND_UPPER,
     GPI_STANDALONE_THRESHOLD,
     MAX_METRIC_SCORE,
     MIN_METRIC_SCORE,
@@ -25,6 +28,7 @@ from ccba_harness import (
     WEIGHT_PARENT_COUPLING_P,
     WEIGHT_REASONING_STEPS_S,
     ArchitectureTier,
+    CanonicalAnchor,
     DecisionRequest,
     GPIMetrics,
     SkillValidator,
@@ -77,6 +81,8 @@ def test_gpi_constants() -> None:
     assert WEIGHT_AUTONOMOUS_INVOCATION_A == 2.0
     assert WEIGHT_PARENT_COUPLING_P == 1.5
     assert GPI_STANDALONE_THRESHOLD == 12.0
+    assert GPI_DEADBAND_LOWER == 11.5
+    assert GPI_DEADBAND_UPPER == 12.5
     assert MIN_METRIC_SCORE == 1.0
     assert MAX_METRIC_SCORE == 5.0
 
@@ -865,3 +871,313 @@ def test_cli_evaluate_gpi_file_with_metric_overrides() -> None:
         assert code == 0
         assert "Tier 2B: Standalone Kernel Skill" in stdout_text.getvalue()
         assert "GPI Score       : 22.50" in stdout_text.getvalue()
+
+
+# =====================================================================
+# 8. 30 Canonical GPI Benchmark Anchors & Deadband Hysteresis Tests
+# =====================================================================
+
+
+def test_30_canonical_anchors_invariants() -> None:
+    """Verify 30 canonical anchors: 10 Tier 1, 10 Tier 2A, 10 Tier 2B."""
+    assert len(CANONICAL_ANCHORS) == 30
+    assert all(isinstance(a, CanonicalAnchor) for a in CANONICAL_ANCHORS)
+
+    tier1_anchors = [a for a in CANONICAL_ANCHORS if a.expected_tier == ArchitectureTier.TIER_1_PACKAGE]
+    tier2a_anchors = [a for a in CANONICAL_ANCHORS if a.expected_tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE]
+    tier2b_anchors = [a for a in CANONICAL_ANCHORS if a.expected_tier == ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL]
+
+    assert len(tier1_anchors) == 10
+    assert len(tier2a_anchors) == 10
+    assert len(tier2b_anchors) == 10
+
+    # Verify each anchor evaluates to its exact expected tier
+    for anchor in CANONICAL_ANCHORS:
+        if anchor.is_deterministic:
+            req = DecisionRequest(
+                name=anchor.name,
+                is_deterministic=True,
+                is_orchestrated=False,
+            )
+            res = evaluate_two_stage_decision(req)
+            assert res.tier == ArchitectureTier.TIER_1_PACKAGE
+            assert res.allow_standalone_skill is False
+            assert res.passed_gate_0 is False
+        else:
+            assert anchor.s is not None
+            assert anchor.k is not None
+            assert anchor.a is not None
+            assert anchor.p is not None
+            metrics = GPIMetrics(s=anchor.s, k=anchor.k, a=anchor.a, p=anchor.p)
+            req = DecisionRequest(
+                name=anchor.name,
+                is_deterministic=False,
+                is_orchestrated=False,
+                gpi_metrics=metrics,
+            )
+            res = evaluate_two_stage_decision(req)
+            assert res.tier == anchor.expected_tier
+            if anchor.expected_tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE:
+                assert res.gpi_score is not None and res.gpi_score < 12.0
+                assert res.allow_standalone_skill is False
+            elif anchor.expected_tier == ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL:
+                assert res.gpi_score is not None and res.gpi_score >= 12.0
+                assert res.allow_standalone_skill is True
+
+
+def test_deadband_hysteresis_preserves_existing_tier() -> None:
+    """Verify deadband hysteresis preserves prior tier within [11.5, 12.5) without flip flag."""
+    # Sub-test 1: Score 11.5 (normally Tier 2A) preserves existing Tier 2B
+    # S=2, K=2, A=2, P=1 -> 5.0 + 4.0 + 4.0 - 1.5 = 11.5
+    metrics_11_5 = GPIMetrics(s=2, k=2, a=2, p=1)
+    assert metrics_11_5.calculate() == 11.5
+
+    # Without existing_tier: routes to Tier 2A
+    req_fresh = DecisionRequest(name="ccba-border-skill", gpi_metrics=metrics_11_5)
+    res_fresh = evaluate_two_stage_decision(req_fresh)
+    assert res_fresh.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
+    assert res_fresh.breakdown is not None
+    assert res_fresh.breakdown["deadband_active"] == 1.0
+    assert res_fresh.breakdown["preserved_by_hysteresis"] == 0.0
+
+    # With existing Tier 2B: preserved as Tier 2B
+    req_preserved_2b = DecisionRequest(
+        name="ccba-border-skill",
+        gpi_metrics=metrics_11_5,
+        existing_tier=ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL,
+    )
+    res_preserved_2b = evaluate_two_stage_decision(req_preserved_2b)
+    assert res_preserved_2b.tier == ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL
+    assert res_preserved_2b.allow_standalone_skill is True
+    assert res_preserved_2b.breakdown is not None
+    assert res_preserved_2b.breakdown["deadband_active"] == 1.0
+    assert res_preserved_2b.breakdown["preserved_by_hysteresis"] == 1.0
+    assert "BẢO LƯU do cơ chế Hysteresis" in res_preserved_2b.rationale
+
+    # Sub-test 2: Score 12.0 (normally Tier 2B) preserves existing Tier 2A
+    # S=2, K=2, A=3, P=2 -> 5.0 + 4.0 + 6.0 - 3.0 = 12.0
+    metrics_12_0 = GPIMetrics(s=2, k=2, a=3, p=2)
+    assert metrics_12_0.calculate() == 12.0
+
+    # Without existing_tier: routes to Tier 2B
+    req_fresh_2 = DecisionRequest(name="ref-border-doc", gpi_metrics=metrics_12_0)
+    res_fresh_2 = evaluate_two_stage_decision(req_fresh_2)
+    assert res_fresh_2.tier == ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL
+    assert res_fresh_2.breakdown is not None
+    assert res_fresh_2.breakdown["deadband_active"] == 1.0
+    assert res_fresh_2.breakdown["preserved_by_hysteresis"] == 0.0
+
+    # With existing Tier 2A: preserved as Tier 2A
+    req_preserved_2a = DecisionRequest(
+        name="ref-border-doc",
+        gpi_metrics=metrics_12_0,
+        existing_tier=ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE,
+    )
+    res_preserved_2a = evaluate_two_stage_decision(req_preserved_2a)
+    assert res_preserved_2a.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
+    assert res_preserved_2a.allow_standalone_skill is False
+    assert res_preserved_2a.breakdown is not None
+    assert res_preserved_2a.breakdown["deadband_active"] == 1.0
+    assert res_preserved_2a.breakdown["preserved_by_hysteresis"] == 1.0
+    assert "BẢO LƯU do cơ chế Hysteresis" in res_preserved_2a.rationale
+
+
+def test_deadband_hysteresis_force_tier_flip() -> None:
+    """Verify --force-tier-flip overrides deadband hysteresis within [11.5, 12.5)."""
+    # Score 11.5 with existing Tier 2B and force_tier_flip=True -> flips to Tier 2A
+    metrics_11_5 = GPIMetrics(s=2, k=2, a=2, p=1)
+    req_flip_2a = DecisionRequest(
+        name="ccba-border-skill",
+        gpi_metrics=metrics_11_5,
+        existing_tier=ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL,
+        force_tier_flip=True,
+    )
+    res_flip_2a = evaluate_two_stage_decision(req_flip_2a)
+    assert res_flip_2a.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
+    assert res_flip_2a.allow_standalone_skill is False
+    assert res_flip_2a.breakdown is not None
+    assert res_flip_2a.breakdown["deadband_active"] == 1.0
+    assert res_flip_2a.breakdown["preserved_by_hysteresis"] == 0.0
+    assert "force_tier_flip=True" in res_flip_2a.rationale
+
+    # Score 12.0 with existing Tier 2A and force_tier_flip=True -> flips to Tier 2B
+    metrics_12_0 = GPIMetrics(s=2, k=2, a=3, p=2)
+    req_flip_2b = DecisionRequest(
+        name="ref-border-doc",
+        gpi_metrics=metrics_12_0,
+        existing_tier=ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE,
+        force_tier_flip=True,
+    )
+    res_flip_2b = evaluate_two_stage_decision(req_flip_2b)
+    assert res_flip_2b.tier == ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL
+    assert res_flip_2b.allow_standalone_skill is True
+    assert res_flip_2b.breakdown is not None
+    assert res_flip_2b.breakdown["deadband_active"] == 1.0
+    assert res_flip_2b.breakdown["preserved_by_hysteresis"] == 0.0
+    assert "force_tier_flip=True" in res_flip_2b.rationale
+
+
+def test_deadband_hysteresis_outside_deadband_flips_normally() -> None:
+    """Verify scores strictly outside [11.5, 12.5) transition tiers normally without hysteresis."""
+    # Score 10.0 (< 11.5): S=2, K=2, A=2, P=2 -> 5.0 + 4.0 + 4.0 - 3.0 = 10.0
+    metrics_10_0 = GPIMetrics(s=2, k=2, a=2, p=2)
+    assert metrics_10_0.calculate() == 10.0
+
+    req_low = DecisionRequest(
+        name="ccba-dropped-skill",
+        gpi_metrics=metrics_10_0,
+        existing_tier=ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL,
+    )
+    res_low = evaluate_two_stage_decision(req_low)
+    assert res_low.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
+    assert res_low.breakdown is not None
+    assert res_low.breakdown["deadband_active"] == 0.0
+    assert res_low.breakdown["preserved_by_hysteresis"] == 0.0
+
+    # Score 13.5 (>= 12.5): S=2, K=2, A=3, P=1 -> 5.0 + 4.0 + 6.0 - 1.5 = 13.5
+    metrics_13_5 = GPIMetrics(s=2, k=2, a=3, p=1)
+    assert metrics_13_5.calculate() == 13.5
+
+    req_high = DecisionRequest(
+        name="ref-promoted-doc",
+        gpi_metrics=metrics_13_5,
+        existing_tier=ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE,
+    )
+    res_high = evaluate_two_stage_decision(req_high)
+    assert res_high.tier == ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL
+    assert res_high.breakdown is not None
+    assert res_high.breakdown["deadband_active"] == 0.0
+    assert res_high.breakdown["preserved_by_hysteresis"] == 0.0
+
+
+def test_decision_request_existing_tier_normalization() -> None:
+    """Verify existing_tier string normalization and error handling."""
+    req1 = DecisionRequest(name="test", is_deterministic=True, existing_tier="tier-2b")
+    assert req1.existing_tier == ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL
+
+    req2 = DecisionRequest(name="test", is_deterministic=True, existing_tier="tier-2a")
+    assert req2.existing_tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
+
+    req3 = DecisionRequest(name="test", is_deterministic=True, existing_tier="tier-1")
+    assert req3.existing_tier == ArchitectureTier.TIER_1_PACKAGE
+
+    req4 = DecisionRequest(name="test", is_deterministic=True, existing_tier="tier-3")
+    assert req4.existing_tier == ArchitectureTier.TIER_3_ORCHESTRATOR
+
+    with pytest.raises(ValueError, match="Unknown existing_tier"):
+        DecisionRequest(name="test", is_deterministic=True, existing_tier="tier-invalid")
+
+    with pytest.raises(TypeError, match="existing_tier must be an ArchitectureTier or str"):
+        DecisionRequest(name="test", is_deterministic=True, existing_tier=123)  # type: ignore[arg-type]
+
+
+def test_cli_evaluate_gpi_deadband_and_force_flip() -> None:
+    """Verify CLI evaluate-gpi with --existing-tier and --force-tier-flip."""
+    # Test preservation via CLI text mode
+    stdout_pres = io.StringIO()
+    with patch("sys.stdout", stdout_pres):
+        code_pres = run_evaluate_gpi_cli(
+            [
+                "--name",
+                "border-skill",
+                "--s",
+                "2",
+                "--k",
+                "2",
+                "--a",
+                "2",
+                "--p",
+                "1",
+                "--existing-tier",
+                "tier-2b",
+            ]
+        )
+    assert code_pres == 0
+    val_pres = stdout_pres.getvalue()
+    assert "Tier 2B: Standalone Kernel Skill" in val_pres
+    assert "Hysteresis      : PRESERVED" in val_pres
+
+    # Test forced flip via CLI text mode
+    stdout_flip = io.StringIO()
+    with patch("sys.stdout", stdout_flip):
+        code_flip = run_evaluate_gpi_cli(
+            [
+                "--name",
+                "border-skill",
+                "--s",
+                "2",
+                "--k",
+                "2",
+                "--a",
+                "2",
+                "--p",
+                "1",
+                "--existing-tier",
+                "tier-2b",
+                "--force-tier-flip",
+            ]
+        )
+    assert code_flip == 0
+    val_flip = stdout_flip.getvalue()
+    assert "Tier 2A: Progressive Reference" in val_flip
+
+    # Test preservation via JSON mode
+    stdout_json = io.StringIO()
+    with patch("sys.stdout", stdout_json):
+        code_json = run_evaluate_gpi_cli(
+            [
+                "--name",
+                "border-skill",
+                "--s",
+                "2",
+                "--k",
+                "2",
+                "--a",
+                "2",
+                "--p",
+                "1",
+                "--existing-tier",
+                "tier-2b",
+                "--json",
+            ]
+        )
+    assert code_json == 0
+    data = json.loads(stdout_json.getvalue())
+    assert data["tier"] == "Tier 2B: Standalone Kernel Skill"
+    assert data["breakdown"]["deadband_active"] == 1.0
+    assert data["breakdown"]["preserved_by_hysteresis"] == 1.0
+
+
+def test_skill_validator_evaluate_skill_file_with_hysteresis() -> None:
+    """Verify SkillValidator evaluate_skill_file handles existing_tier and hysteresis overrides."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill_file = Path(tmpdir) / "SKILL.md"
+        # GPI: S=2, K=2, A=2, P=1 -> 11.5
+        skill_file.write_text(
+            "---\nname: ccba-border\ndescription: Desc.\nbundle: _core\ngpi:\n  s: 2\n  k: 2\n  a: 2\n  p: 1\n---\n# Title\n",
+            encoding="utf-8",
+        )
+        validator = SkillValidator(project_root=Path(tmpdir))
+
+        # Without override: routes to Tier 2A
+        res1 = validator.evaluate_skill_file(skill_file)
+        assert res1.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
+
+        # With override_existing_tier="tier-2b": stays Tier 2B
+        res2 = validator.evaluate_skill_file(
+            skill_file, override_existing_tier="tier-2b"
+        )
+        assert res2.tier == ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL
+        assert res2.allow_standalone_skill is True
+        assert res2.breakdown is not None
+        assert res2.breakdown["preserved_by_hysteresis"] == 1.0
+
+        # With override_force_tier_flip=True: flips to Tier 2A
+        res3 = validator.evaluate_skill_file(
+            skill_file,
+            override_existing_tier="tier-2b",
+            override_force_tier_flip=True,
+        )
+        assert res3.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
+        assert res3.allow_standalone_skill is False
+

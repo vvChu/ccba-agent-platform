@@ -107,6 +107,7 @@ module = [
     "tenacity.*",
     "yt_dlp.*",
     "ccba_ai.*",
+    "ccba_legal.*",
     "ccba_pdf_prep.*",
     "ccba_qc_core.*",
     "fitz.*",
@@ -115,6 +116,7 @@ module = [
     "docx.*",
     "PIL.*",
     "defusedxml.*",
+    "mcp.*",
 ]
 ignore_missing_imports = true
 disallow_untyped_calls = false
@@ -123,11 +125,21 @@ disallow_untyped_calls = false
 module = [
     "ccba_ooxml.validation.*",
     "ccba_ooxml.pptx.*",
+    "ccba_harness._engine",
+    "ccba_harness._file_monitor",
+    "ccba_harness._guard",
+    "ccba_harness._mutex",
+    "ccba_harness._process_monitor",
+    "ccba_harness._sql_monitor",
+    "ccba_harness._state",
 ]
 ignore_errors = true
 
 [[tool.mypy.overrides]]
-module = ["mdconverter.providers.gemini"]
+module = [
+    "mdconverter.providers.gemini",
+    "ccba_ai.mcp_server",
+]
 disallow_untyped_decorators = false
 
 

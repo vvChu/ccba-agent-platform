@@ -1,6 +1,6 @@
-# ccba-contribute-to-hub
+# ccba-review-proposal
 
-> **Mô tả ngắn**: Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
+> **Mô tả ngắn**: Thẩm định toàn trình PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered Review (Fast/Boost), Spoke Leakage Guard, Copilot Guard và Đồng bộ Catalog Hậu Merge (ADR 0045, ADR 0047)
 
 ---
 
@@ -8,12 +8,12 @@
 
 ### Cú pháp Lệnh (Slash Command)
 ```bash
-/ccba-contribute-to-hub
+/ccba-review-proposal
 ```
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-contribute-to-hub
+python scripts/spoke/sync_spoke.py --skills ccba-review-proposal
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -21,16 +21,16 @@ python scripts/spoke/sync_spoke.py --skills ccba-contribute-to-hub
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=1.0 | P=1.0 (Tổng: 10.0)` |
 
 ---
 
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
+Thẩm định toàn trình PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered Review (Fast/Boost), Spoke Leakage Guard, Copilot Guard và Đồng bộ Catalog Hậu Merge (ADR 0045, ADR 0047)
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -45,20 +45,15 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `contribute`
-- `contribute to hub`
-- `đóng góp mã nguồn`
-- `tạo pr lên hub`
-- `mở proposal`
-- `ccba-contribute-to-hub`
-- `ccba-propose-to-hub`
-- `propose-to-hub`
-- `ccba-create-pr`
-- `create-pr`
+- `ccba-review-proposal`
+- `review-proposal`
+- `review proposal`
+- `thẩm định proposal`
+- `duyệt proposal`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
-- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Quy trình đóng gói và gửi đóng góp từ dự án vệ tinh về kho trung tâm Hub.
-- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Cải tiến hoặc kỹ năng mới phát triển tại Spoke**
+- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Thẩm định toàn trình PR từ Spoke, quét Spoke Leakage, CI và đồng bộ Catalog.
+- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Pull Request đề xuất đóng góp từ Spoke gửi lên Hub**
 
 ### Khi Nào KHÔNG Nên Dùng (Anti-patterns)
 - Không dùng nếu cần tư vấn định hướng ban đầu: hãy gọi `/ccba-ask`.
@@ -68,21 +63,21 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 
 ## 4. Vị Trí Trong Chuỗi Giá Trị (The Pipeline Trail)
 
-Kỹ năng `ccba-contribute-to-hub` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
+Kỹ năng `ccba-review-proposal` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
 
 ```text
-[ Cải tiến hoặc kỹ năng mới phát triển tại Spoke ]
+[ Pull Request đề xuất đóng góp từ Spoke gửi lên Hub ]
           │
           ▼
-    >>> [ ccba-contribute-to-hub ] <<<  (Quy trình đóng gói và gửi đóng góp từ dự án vệ tinh về kho trung tâm Hub.)
+    >>> [ ccba-review-proposal ] <<<  (Thẩm định toàn trình PR từ Spoke, quét Spoke Leakage, CI và đồng bộ Catalog.)
           │
           ▼
-[ Pull Request đóng góp ngược về Hub ]
+[ Mã nguồn được thẩm định và squash merge vào Hub Monorepo ]
 ```
 
-- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Cải tiến hoặc kỹ năng mới phát triển tại Spoke`.
+- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Pull Request đề xuất đóng góp từ Spoke gửi lên Hub`.
 - **Thực thi (In-flight)**: Áp dụng các quy tắc kỹ thuật và công cụ tự động hóa để sản sinh kết quả chuẩn mực.
-- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Pull Request đóng góp ngược về Hub`.
+- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Mã nguồn được thẩm định và squash merge vào Hub Monorepo`.
 
 ---
 
@@ -92,7 +87,7 @@ Kỹ năng `ccba-contribute-to-hub` giữ vị trí then chốt trong chuỗi gi
 Mọi thay đổi liên quan đến kỹ năng này bắt buộc phải vượt qua toàn bộ các kiểm thử tự động sau:
 ```bash
 python -m ccba_harness verify-patch --preset skill
-python scripts/validate_skills.py --file .agents/skills/ccba-contribute-to-hub/SKILL.md --enforce-gpi
+python scripts/validate_skills.py --file .agents/skills/ccba-review-proposal/SKILL.md --enforce-gpi
 ```
 
 ### Danh Mục Kiểm Thức Hoàn Thành (Definition of Done - DoD)

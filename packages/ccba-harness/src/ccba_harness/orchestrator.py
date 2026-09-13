@@ -37,7 +37,7 @@ class EvalOrchestrator:
         """Revoke duplicate instances of evaluation runner processes."""
         current_pid = os.getpid()
         try:
-            import psutil
+            import psutil  # type: ignore[import-untyped]
 
             for proc in psutil.process_iter(["pid", "name", "cmdline"]):
                 try:

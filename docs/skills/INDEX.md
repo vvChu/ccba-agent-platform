@@ -1,6 +1,6 @@
 # CCBA Agent Platform — Danh Mục Kỹ Năng (Skills Catalog Index)
 
-> **Tổng hợp**: 71 Kỹ năng Hoạt động được phân loại vào 5 Cổng Điều Hướng theo chuẩn ADR-0047, ADR-0057 và ADR-0058.
+> **Tổng hợp**: 72 Kỹ năng Hoạt động được phân loại vào 5 Cổng Điều Hướng theo chuẩn ADR-0047, ADR-0057 và ADR-0058.
 
 Trang tài liệu này phục vụ tra cứu nhanh cho kỹ sư và AI Coding Agents trong Terminal hoặc IDE.
 Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm tắt chuẩn máy đọc tại [docs/llms.txt](../llms.txt).
@@ -13,7 +13,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 - [⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân](#core_engineering) (20 skills)
 - [📐 BIGBIM & Thẩm tra AI-QC](#bim_aiqc) (7 skills)
 - [⚖️ Pháp lý Xây dựng & Tự động hóa Văn phòng](#legal_compliance) (10 skills)
-- [🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu](#governance_upkeep) (26 skills)
+- [🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu](#governance_upkeep) (27 skills)
 
 ---
 
@@ -103,7 +103,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 ---
 
 <a id="governance_upkeep"></a>
-## 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu (26 Kỹ Năng)
+## 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu (27 Kỹ Năng)
 
 *Quản trị vòng đời quyết định kiến trúc ADR, cổng đánh giá chất lượng kỹ năng (GPI), AI Gateway SDK, tìm kiếm kết hợp Hybrid RAG và chu trình tự nghiên cứu học tập.*
 
@@ -129,6 +129,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-platform](ccba-platform.md) | `/ccba-platform` | `orchestrator` | `User` | Cổng điều phối toàn cục (Global Router) và kiểm tra môi trường cho CCBA Agent... |
 | [ccba-promote-sandbox](ccba-promote-sandbox.md) | `/ccba-promote-sandbox` | `kernel` | `User` | Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc Hub (AD... |
 | [ccba-research](ccba-research.md) | `/ccba-research` | `kernel` | `User` | Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với các nguồ... |
+| [ccba-review-proposal](ccba-review-proposal.md) | `/ccba-review-proposal` | `kernel` | `User` | Thẩm định toàn trình PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered Review (... |
 | [ccba-seminar-builder](ccba-seminar-builder.md) | `/ccba-seminar-builder` | `kernel` | `Both` | Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda, outline, v... |
 | [ccba-sharepoint-iac](ccba-sharepoint-iac.md) | `/ccba-sharepoint-iac` | `kernel` | `User` | Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Co... |
 | [ccba-skill-repair](ccba-skill-repair.md) | `/ccba-skill-repair` | `kernel` | `User` | Phục hồi và sửa chữa kỹ năng AI theo thể chế ADR-0057 và bộ kiểm định ccba-ha... |

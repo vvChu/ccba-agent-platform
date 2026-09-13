@@ -369,6 +369,11 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "downstream": "Pull Request đóng góp ngược về Hub",
         "role": "Quy trình đóng gói và gửi đóng góp từ dự án vệ tinh về kho trung tâm Hub.",
     },
+    "ccba-review-proposal": {
+        "upstream": "Pull Request đề xuất đóng góp từ Spoke gửi lên Hub",
+        "downstream": "Mã nguồn được thẩm định và squash merge vào Hub Monorepo",
+        "role": "Thẩm định toàn trình PR từ Spoke, quét Spoke Leakage, CI và đồng bộ Catalog.",
+    },
     "ccba-issue-to-hub": {
         "upstream": "Sự cố hoặc yêu cầu phát sinh từ Spoke",
         "downstream": "GitHub Issue đã được phân loại trên Hub",
