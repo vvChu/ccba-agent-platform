@@ -15,8 +15,11 @@ import logging
 import os
 import re
 import sys
+import unicodedata
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -79,6 +82,132 @@ IGNORABLE_CONTROL_COMMANDS = {
     "continue",
     "/proceed",
     "/approve",
+}
+
+# Catalog SSOT Constants & Domain Mapping
+DEFAULT_CATALOG_RELATIVE_PATH = Path(".agents/skills/platform-loader/catalog.yaml")
+
+# Fire safety domain keywords required strictly to prevent false positive classification
+FIRE_SAFETY_KEYWORDS = {
+    "pccc",
+    "phòng cháy",
+    "chữa cháy",
+    "thoát nạn",
+    "qcvn 06",
+    "chịu lửa",
+    "bậc chịu lửa",
+    "giới hạn chịu lửa",
+    "khói",
+    "chống cháy",
+    "báo cháy",
+    "ngăn cháy",
+    "sprinkler",
+}
+
+# Domain keyword extensions for skills with specialized vocabulary
+SKILL_DOMAIN_EXTENSIONS: dict[str, list[str]] = {
+    "ccba-ai-qc-pccc-audit": [
+        "pccc",
+        "phòng cháy",
+        "chữa cháy",
+        "thoát nạn",
+        "qcvn 06",
+        "chịu lửa",
+        "bậc chịu lửa",
+        "giới hạn chịu lửa",
+        "kiểm soát khói",
+        "chống cháy",
+        "báo cháy",
+        "ngăn cháy",
+        "sprinkler",
+    ],
+    "ccba-ai-qc": [
+        "thẩm tra thiết kế",
+        "thẩm tra chất lượng thiết kế",
+        "kiểm tra chất lượng thiết kế",
+        "thẩm tra đa bộ môn",
+        "kiểm tra đa bộ môn",
+        "chất lượng thiết kế",
+        "heat map report",
+        "quad-view",
+        "qc audit",
+        "qcauditpipeline",
+    ],
+    "ccba-academic-writing": [
+        "bài báo khoa học",
+        "bài báo",
+        "imrad",
+        "nghiên cứu khoa học",
+        "học thuật",
+        "academic writing",
+        "cars model",
+    ],
+    "ccba-copywriting": [
+        "soạn thảo hợp đồng",
+        "hợp đồng",
+        "công văn",
+        "tờ trình",
+        "văn bản hành chính",
+        "biên bản",
+        "soạn thảo",
+        "copywriting",
+    ],
+    "ccba-legal-intel": [
+        "pháp điển",
+        "nghiên cứu văn bản",
+        "nghị định 105",
+        "nghị định 136",
+        "thư viện pháp luật",
+        "tra cứu luật",
+        "luật xây dựng",
+        "vbpl",
+        "vbhn",
+    ],
+    "ccba-teamwork": [
+        "teamwork_preview_",
+        "forensic auditor",
+        "team sheet",
+        "orchestrator",
+        "multi-agent",
+    ],
+}
+
+CANONICAL_TO_LEGACY_MAP: dict[str, str] = {
+    "ccba-ai-qc-pccc-audit": "pccc_audit",
+    "ccba-legal-intel": "legal_intel",
+    "bigbim-classification": "bigbim_classification",
+    "ccba-academic-writing": "academic_writing",
+    "ccba-copywriting": "copywriting",
+    "ccba-teamwork": "agent_orchestration",
+    "general_domain": "general_domain",
+    "general-domain": "general_domain",
+}
+
+LEGACY_TO_CANONICAL_MAP: dict[str, str] = {
+    "pccc_audit": "ccba-ai-qc-pccc-audit",
+    "legal_intel": "ccba-legal-intel",
+    "bigbim_classification": "bigbim-classification",
+    "academic_writing": "ccba-academic-writing",
+    "copywriting": "ccba-copywriting",
+    "agent_orchestration": "ccba-teamwork",
+    "general_domain": "general_domain",
+}
+
+LEGACY_SKILL_FILE_MAP: dict[str, str] = {
+    "ccba-ai-qc-pccc-audit": "eval_pccc_audit.json",
+    "pccc_audit": "eval_pccc_audit.json",
+    "ccba-legal-intel": "eval_legal_intel.json",
+    "legal_intel": "eval_legal_intel.json",
+    "bigbim-classification": "eval_bigbim_classification.json",
+    "bigbim_classification": "eval_bigbim_classification.json",
+    "ccba-academic-writing": "eval_academic_writing.json",
+    "academic_writing": "eval_academic_writing.json",
+    "ccba-copywriting": "eval_copywriting.json",
+    "copywriting": "eval_copywriting.json",
+    "ccba-teamwork": "eval_agent_orchestration.json",
+    "agent_orchestration": "eval_agent_orchestration.json",
+    "general_domain": "eval_general_domain.json",
+    "general-domain": "eval_general_domain.json",
 }
 
 
@@ -152,50 +281,285 @@ def find_transcript_files(log_dir: Path) -> list[Path]:
     return log_files
 
 
-def classify_target_skill(user_prompt: str) -> str:
-    """Classifies user prompt to appropriate skill domain based on keywords."""
-    prompt_lower = user_prompt.lower()
+def to_canonical_skill_name(skill_name: str) -> str:
+    """Converts a legacy shorthand skill name to its canonical name (e.g. 'pccc_audit' -> 'ccba-ai-qc-pccc-audit')."""
+    if not skill_name or not isinstance(skill_name, str):
+        return ""
+    if skill_name in LEGACY_TO_CANONICAL_MAP:
+        return LEGACY_TO_CANONICAL_MAP[skill_name]
+    if skill_name.startswith("ccba-") or skill_name.startswith("bigbim-"):
+        return skill_name
 
-    if prompt_lower.startswith("you are teamwork_preview_") or prompt_lower.startswith(
-        "you are forensic auditor"
-    ):
-        return "agent_orchestration"
+    candidate_ccba = f"ccba-{skill_name.replace('_', '-')}"
+    candidate_bigbim = f"bigbim-{skill_name.replace('_', '-')}"
+    skills = load_catalog()
+    skill_names = {s.get("name") for s in skills}
+    if candidate_ccba in skill_names:
+        return candidate_ccba
+    if candidate_bigbim in skill_names:
+        return candidate_bigbim
+    return skill_name
 
-    if any(
-        k in prompt_lower
-        for k in ["pccc", "thẩm tra", "mep", "qcvn 06", "chịu lửa", "bản vẽ", "dwg", "cad", "khói"]
-    ):
-        return "pccc_audit"
 
-    if any(
-        k in prompt_lower
-        for k in [
-            "luật",
-            "nghị định",
-            "thông tư",
-            "vbpl",
-            "pháp lý",
-            "pháp điển",
-            "vbhn",
-            "tvpl",
-            "nghị định 105",
-            "nghị định 136",
-        ]
-    ):
-        return "legal_intel"
-    if any(
-        k in prompt_lower
-        for k in ["bài báo", "khoa học", "imrad", "nghiên cứu", "học thuật", "trích dẫn"]
-    ):
-        return "academic_writing"
-    if any(
-        k in prompt_lower
-        for k in ["công văn", "tờ trình", "hợp đồng", "biên bản", "soạn thảo", "copywriting"]
-    ):
-        return "copywriting"
-    if any(k in prompt_lower for k in ["bim", "ifc", "uniclass", "rase", "revit"]):
-        return "bigbim_classification"
-    return "general_domain"
+def to_legacy_skill_name(skill_name: str) -> str:
+    """Converts a canonical skill name to its legacy shorthand (e.g. 'ccba-ai-qc-pccc-audit' -> 'pccc_audit')."""
+    if not skill_name or not isinstance(skill_name, str):
+        return ""
+    if skill_name in CANONICAL_TO_LEGACY_MAP:
+        return CANONICAL_TO_LEGACY_MAP[skill_name]
+    clean = (
+        skill_name.replace("ccba-", "")
+        .replace("bigbim-", "")
+        .replace("-", "_")
+    )
+    return clean
+
+
+def strip_accents(text: str) -> str:
+    """Strips Vietnamese diacritics for accent-insensitive trigger matching."""
+    if not text:
+        return ""
+    normalized = unicodedata.normalize("NFD", text)
+    stripped = "".join(c for c in normalized if unicodedata.category(c) != "Mn")
+    return stripped.replace("đ", "d").replace("Đ", "D")
+
+
+def resolve_catalog_path(configured_path: Path | str | None = None) -> Path:
+    """Resolves path to catalog.yaml, checking configured path, cwd, and repository root."""
+    if configured_path:
+        return Path(configured_path)
+
+    # Check relative to current working directory
+    local_cat = DEFAULT_CATALOG_RELATIVE_PATH
+    if local_cat.exists():
+        return local_cat
+
+    # Check relative to script location
+    script_cat = (
+        Path(__file__).resolve().parents[2]
+        / ".agents"
+        / "skills"
+        / "platform-loader"
+        / "catalog.yaml"
+    )
+    if script_cat.exists():
+        return script_cat
+
+    return local_cat
+
+
+_CATALOG_CACHE: dict[str, list[dict[str, Any]]] = {}
+
+
+def clear_catalog_cache() -> None:
+    """Clears the in-memory catalog cache."""
+    global _CATALOG_CACHE
+    _CATALOG_CACHE.clear()
+
+
+def load_catalog(
+    catalog_path: Path | str | None = None, reload: bool = False
+) -> list[dict[str, Any]]:
+    """Loads all skills and triggers from catalog.yaml as the Single Source of Truth (SSOT)."""
+    target_path = resolve_catalog_path(catalog_path)
+    cache_key = str(target_path.resolve()) if target_path.exists() else str(target_path)
+
+    if not reload and cache_key in _CATALOG_CACHE:
+        return _CATALOG_CACHE[cache_key]
+
+    if not target_path.exists():
+        logger.warning(f"⚠️ Không tìm thấy catalog.yaml tại '{target_path}'.")
+        return []
+
+    try:
+        with open(target_path, encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+        skills = data.get("skills", [])
+        if isinstance(skills, list):
+            _CATALOG_CACHE[cache_key] = skills
+            return skills
+        return []
+    except Exception as e:
+        logger.error(f"❌ Lỗi nạp catalog.yaml: {e}")
+        return []
+
+
+def score_skill_match(
+    skill: dict[str, Any], user_prompt: str, prompt_stripped: str | None = None
+) -> float:
+    """Computes a match score for a skill against a user prompt based on triggers and specificity."""
+    if not user_prompt or not isinstance(user_prompt, str):
+        return 0.0
+
+    name = skill.get("name", "")
+    score = 0.0
+
+    if prompt_stripped is None:
+        prompt_stripped = strip_accents(user_prompt)
+
+    # 1. Exact command match (/ccba-...)
+    cmd = skill.get("command")
+    if cmd:
+        cmd_clean = cmd.strip()
+        if re.search(r"(?<!\w)" + re.escape(cmd_clean) + r"(?!\w)", user_prompt, re.IGNORECASE):
+            score += 50.0
+
+    # 2. Canonical name exact match & natural spaced variants
+    if name:
+        if re.search(r"(?<!\w)" + re.escape(name) + r"(?!\w)", user_prompt, re.IGNORECASE):
+            score += 40.0
+        clean_name = name.replace("ccba-", "").replace("bigbim-", "")
+        if clean_name and len(clean_name) > 4:
+            if re.search(r"(?<!\w)" + re.escape(clean_name) + r"(?!\w)", user_prompt, re.IGNORECASE):
+                score += 20.0
+            clean_spaced = clean_name.replace("-", " ")
+            if clean_spaced != clean_name:
+                pattern_spaced = r"(?<!\w)" + re.escape(clean_spaced) + r"(?!\w)"
+                if re.search(pattern_spaced, user_prompt, re.IGNORECASE):
+                    score += 20.0
+                elif clean_spaced != strip_accents(clean_spaced) or len(clean_spaced.split()) >= 2:
+                    pattern_spaced_strip = r"(?<!\w)" + re.escape(strip_accents(clean_spaced)) + r"(?!\w)"
+                    if re.search(pattern_spaced_strip, prompt_stripped, re.IGNORECASE):
+                        score += 20.0
+
+    # 3. Triggers & domain extensions
+    triggers = list(skill.get("triggers") or [])
+    if name in SKILL_DOMAIN_EXTENSIONS:
+        triggers.extend(SKILL_DOMAIN_EXTENSIONS[name])
+
+    seen_triggers: set[str] = set()
+    for t in triggers:
+        t_str = str(t).strip()
+        t_lower = t_str.lower()
+        if not t_str or t_lower in seen_triggers:
+            continue
+        seen_triggers.add(t_lower)
+
+        pattern = r"(?<!\w)" + re.escape(t_str) + r"(?!\w)"
+        matched = bool(re.search(pattern, user_prompt, re.IGNORECASE))
+        if not matched:
+            t_strip = strip_accents(t_str)
+            # Only match against unaccented prompt if the trigger itself had diacritics
+            # OR if the trigger is a multi-word phrase (to avoid single-word ASCII collisions
+            # like English 'chat' matching Vietnamese 'chất/chặt', or 'can' matching 'cần/cán')
+            if t_str != t_strip or len(t_str.split()) >= 2:
+                pattern_strip = r"(?<!\w)" + re.escape(t_strip) + r"(?!\w)"
+                matched = bool(re.search(pattern_strip, prompt_stripped, re.IGNORECASE))
+
+        if matched:
+            words = t_str.split()
+            num_words = len(words)
+            char_len = len(t_str)
+
+            if char_len <= 2:
+                w = 1.0
+            elif char_len == 3:
+                w = 2.0
+            elif num_words == 1:
+                w = 4.0 + min(char_len * 0.2, 3.0)
+            else:
+                w = 6.0 + num_words * 4.0 + min(char_len * 0.2, 5.0)
+
+            score += w
+
+    # 4. Multi-agent orchestration cues
+    if name == "ccba-teamwork":
+        p_lower = user_prompt.lower()
+        if (
+            p_lower.startswith("you are teamwork_preview_")
+            or p_lower.startswith("you are forensic auditor")
+            or "teamwork_preview_" in p_lower
+        ):
+            score += 30.0
+
+    # 5. Requirement 2: Strict domain-specific keyword gate for fire safety
+    if name == "ccba-ai-qc-pccc-audit":
+        has_fire_safety_kw = any(
+            re.search(r"(?<!\w)" + re.escape(kw) + r"(?!\w)", user_prompt, re.IGNORECASE)
+            or re.search(r"(?<!\w)" + re.escape(strip_accents(kw)) + r"(?!\w)", prompt_stripped, re.IGNORECASE)
+            for kw in FIRE_SAFETY_KEYWORDS
+        )
+        if not has_fire_safety_kw:
+            score = 0.0
+
+    return score
+
+
+def classify_target_skill(
+    user_prompt: str,
+    catalog_path: Path | str | None = None,
+    canonical: bool = True,
+) -> str:
+    """Classifies user prompt to appropriate skill domain based on catalog.yaml SSOT and triggers.
+
+    Args:
+        user_prompt: Clean user prompt text to classify.
+        catalog_path: Optional path to custom catalog.yaml.
+        canonical: If True (default), returns canonical skill name (e.g. 'ccba-ai-qc-pccc-audit').
+            If False, returns legacy shorthand (e.g. 'pccc_audit') for backward compatibility.
+    """
+    if not user_prompt or not isinstance(user_prompt, str) or not user_prompt.strip():
+        return "general_domain"
+
+    skills = load_catalog(catalog_path)
+    if not skills:
+        return "general_domain"
+
+    best_skill = "general_domain"
+    best_score = 0.0
+    prompt_stripped = strip_accents(user_prompt)
+
+    for s in skills:
+        sc = score_skill_match(s, user_prompt, prompt_stripped=prompt_stripped)
+        if sc > best_score:
+            best_score = sc
+            best_skill = s.get("name", "general_domain")
+
+    if best_score <= 0.0 or best_skill == "general_domain":
+        return "general_domain"
+
+    if not canonical:
+        return to_legacy_skill_name(best_skill)
+
+    return best_skill
+
+
+def resolve_output_test_file(output_dir: Path, target_skill: str) -> Path:
+    """Standardizes output test suite file resolution preserving backward compatibility."""
+    if not target_skill or not isinstance(target_skill, str):
+        return output_dir / "eval_general_domain.json"
+
+    # 1. If mapped legacy file exists on disk, use it
+    if target_skill in LEGACY_SKILL_FILE_MAP:
+        mapped_target = output_dir / LEGACY_SKILL_FILE_MAP[target_skill]
+        if mapped_target.exists():
+            return mapped_target
+
+    # 2. Check candidate variants on disk
+    clean = (
+        target_skill.replace("ccba-", "")
+        .replace("ccba_", "")
+        .replace("bigbim-", "")
+        .replace("-", "_")
+    )
+    clean_no_qc = clean.replace("ai_qc_", "")
+    normalized = target_skill.replace("-", "_")
+    candidates = [
+        output_dir / f"eval_{target_skill}.json",
+        output_dir / f"eval_{normalized}.json",
+        output_dir / f"eval_{clean}.json",
+        output_dir / f"eval_{clean_no_qc}.json",
+    ]
+    for cand in candidates:
+        if cand.exists():
+            return cand
+
+    # 3. If file does not exist yet, prioritize mapped filename
+    if target_skill in LEGACY_SKILL_FILE_MAP:
+        return output_dir / LEGACY_SKILL_FILE_MAP[target_skill]
+
+    # 4. Standard canonical snake_case filename default
+    return output_dir / f"eval_{normalized}.json"
 
 
 def parse_transcript_logs(log_dir: Path) -> list[dict[str, Any]]:
@@ -340,6 +704,9 @@ def generate_eval_spec_item(
     reason = failure_case.get("reason", "")
 
     if format_type == "legacy":
+        legacy_name = to_legacy_skill_name(skill_name)
+        cid = f"test_{legacy_name}_mined_{case_index:02d}"
+        pattern_opts = f"{skill_name}|{legacy_name}|xử lý|hướng dẫn|thực hiện|quy định"
         return {
             "id": cid,
             "prompt": prompt,
@@ -347,7 +714,7 @@ def generate_eval_spec_item(
             "assertions": [
                 {
                     "type": "regex",
-                    "pattern": f"({skill_name}|xử lý|hướng dẫn|thực hiện|quy định)",
+                    "pattern": f"({pattern_opts})",
                 }
             ],
         }
@@ -381,6 +748,7 @@ def mine_logs_and_export(
     taxonomy: str | None = None,
     format_type: str = "harness",
     auto_inject: bool = False,
+    catalog_path: Path | str | None = None,
 ) -> int:
     """Main execution pipeline to mine logs, redact data, and export EvalItem test cases."""
     interactions = parse_transcript_logs(log_dir)
@@ -396,11 +764,13 @@ def mine_logs_and_export(
     # Group failures by skill
     grouped_failures: dict[str, list[dict[str, Any]]] = {}
     for fcase in failures:
-        skill = skill_filter or classify_target_skill(fcase["user_prompt"])
+        skill = skill_filter or classify_target_skill(
+            fcase["user_prompt"], catalog_path=catalog_path
+        )
         grouped_failures.setdefault(skill, []).append(fcase)
 
     for target_skill, skill_cases in grouped_failures.items():
-        target_json = output_dir / f"eval_{target_skill}.json"
+        target_json = resolve_output_test_file(output_dir, target_skill)
 
         existing_cases: list[dict[str, Any]] = []
         if target_json.exists():
@@ -459,6 +829,11 @@ def main() -> int:
         default=".agents/skills/ccba-eval-gate/test_cases",
         help="Thư mục xuất test_cases JSON",
     )
+    parser.add_argument(
+        "--catalog-path",
+        default=None,
+        help="Đường dẫn tùy chỉnh tới catalog.yaml SSOT",
+    )
     parser.add_argument("--skill", help="Tên skill cụ thể cần nạp test cases mined")
     parser.add_argument(
         "--taxonomy",
@@ -488,6 +863,7 @@ def main() -> int:
         taxonomy=args.taxonomy,
         format_type=args.format,
         auto_inject=args.auto_inject,
+        catalog_path=args.catalog_path,
     )
     print(f"Mining hoàn tất: {count} cases được cập nhật.")
     return 0
