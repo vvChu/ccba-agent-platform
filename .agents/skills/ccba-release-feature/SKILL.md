@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 triggers:
 - release
@@ -85,7 +85,7 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
      - `comments`: Quét inline comments trên các tệp thay đổi.
    - Nếu script trả về exit code 1 (`[FAIL] Changes recommended`), Agent **tuyệt đối không được merge**. Phải đánh giá và thực hiện chỉnh sửa mã nguồn cục bộ, commit & push cập nhật, và cập nhật `walkthrough.md` trước khi tiếp tục.
    - Nếu phát hiện các góp ý hợp lý (VALID) chưa sửa, hoặc các góp ý không hợp lý chưa được giải trình trong `walkthrough.md`, Agent phải giải trình hoặc sửa lỗi cục bộ và push cập nhật trước khi merge.
-   - *Lưu ý quan trọng (HUB-ADR-0058 Workspace Mirroring):* Script `audit_pr_comments.py` đọc tệp `walkthrough.md` tại thư mục gốc repository (`Path.cwd() / "walkthrough.md"`). Nếu Agent giải trình ý kiến review của Copilot, BẮT BUỘC phải ghi nhận trực tiếp vào `walkthrough.md` tại thư mục gốc repository kèm mã `review_id` (`PRR_...`) hoặc comment `id` thay vì chỉ lưu trong thư mục brain artifact.
+   - *Lưu ý quan trọng (ADR-0045 Spoke Leakage Guard & RULE-4.10):* Script `audit_pr_comments.py` tự động tìm kiếm đối soát theo thứ tự ưu tiên: `.md/knowledge/reports/walkthrough.md` (hoặc `walkthrough.md` tại gốc repo). Tuyệt đối KHÔNG lưu tại `.md/walkthrough.md` để tránh vi phạm rào chắn cấu trúc thư mục. BẮT BUỘC phải ghi nhận trực tiếp vào `.md/knowledge/reports/walkthrough.md` kèm mã `review_id` (`PRR_...`) hoặc comment `id` thay vì chỉ lưu trong thư mục brain artifact.
 
 6. **Tiến hành Merge khi 100% điều kiện đạt chuẩn:**
    - Nếu `gh` đã đăng nhập, CI pass (100% xanh) và Copilot review đã xử lý xong: Thực hiện merge và xóa remote branch tự động (sử dụng Squash and Merge để giữ lịch sử nhánh main tinh gọn):
