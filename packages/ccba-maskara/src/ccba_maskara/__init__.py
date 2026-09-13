@@ -22,6 +22,7 @@ from ._redactor import (
 from ._redactor import (
     redact_findings as apply_redact_findings,
 )
+from ._rules import REGEX_PATTERNS
 from ._scanner import MaskaraScanner
 
 __version__ = "1.0.0"
@@ -56,5 +57,6 @@ __all__ = [
     "apply_redact_findings",
     "backup_and_write",
     "is_binary",
+    "REGEX_PATTERNS",
     "__version__",
 ]

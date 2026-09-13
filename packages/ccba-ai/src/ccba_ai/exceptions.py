@@ -24,7 +24,7 @@ class CCBAErrorCode(str, Enum):
 
 
 def format_error_json(
-    code: CCBAErrorCode, message: str, suggestion: str, extra: dict[str, Any] = None
+    code: CCBAErrorCode, message: str, suggestion: str, extra: dict[str, Any] | None = None
 ) -> str:
     """Định dạng phản hồi lỗi thành chuỗi JSON có cấu trúc chuẩn cho LLM Agents.
 
@@ -37,7 +37,7 @@ def format_error_json(
     Returns:
         Chuỗi JSON được format đẹp.
     """
-    error_data = {
+    error_data: dict[str, Any] = {
         "status": "error",
         "error_code": code.value,
         "message": message,
@@ -53,8 +53,8 @@ class CCBABaseException(Exception):
     """Exception cơ sở của CCBA Platform, tự động định dạng thông báo lỗi thành JSON."""
 
     def __init__(
-        self, code: CCBAErrorCode, message: str, suggestion: str, extra: dict[str, Any] = None
-    ):
+        self, code: CCBAErrorCode, message: str, suggestion: str, extra: dict[str, Any] | None = None
+    ) -> None:
         self.code = code
         self.message = message
         self.suggestion = suggestion

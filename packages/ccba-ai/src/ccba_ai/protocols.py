@@ -63,7 +63,7 @@ class QCReporterEngine(Protocol):
     def synthesize(
         self,
         backbone: Any | None = None,
-        audit_results: list[AuditReport | dict] | None = None,
+        audit_results: list[AuditReport | dict[str, Any]] | None = None,
         output_path: Path = Path("report.md"),
     ) -> Path:
         """Synthesize technical markdown report.

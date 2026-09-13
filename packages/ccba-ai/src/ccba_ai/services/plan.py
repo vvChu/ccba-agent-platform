@@ -7,6 +7,7 @@ import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -20,7 +21,9 @@ from ccba_ai.models import (
 try:
     from ccba_harness import FileMutexLock
 except ImportError:
-    from ccba_ai.services._lock_fallback import SimpleFileLock as FileMutexLock
+    from ccba_ai.services._lock_fallback import SimpleFileLock
+
+    FileMutexLock = SimpleFileLock  # type: ignore[misc,assignment]
 
 PLAN_TEMPLATE = """# Plan: {title}
 
@@ -84,7 +87,7 @@ class Phase:
 
         full_content = path.read_text(encoding="utf-8")
 
-        meta = {}
+        meta: dict[str, Any] = {}
         body = full_content
         if full_content.startswith("---"):
             fm_match = re.match(r"^---\s*\r?\n(.*?)\r?\n---\s*\r?\n", full_content, re.DOTALL)

@@ -55,6 +55,11 @@ def main() -> int:
         "--json", action="store_true", help="Output fleet metrics as raw JSON dictionary"
     )
     scan_parser.add_argument(
+        "--innovations-only",
+        action="store_true",
+        help="Filter output strictly to Top Spoke Innovations and Hub Ingestion Candidates",
+    )
+    scan_parser.add_argument(
         "--out",
         type=Path,
         default=None,
@@ -105,11 +110,18 @@ def main() -> int:
                 title=args.title,
                 hub_root=HUB_ROOT,
             )
+            innovations = report.get_top_spoke_innovations()
+            candidates = [
+                i for i in innovations if i.get("promotion_status") == "Candidate for Hub Ingestion"
+            ]
             print(f"[Success] Generated Cross-Spoke Fleet Dashboard at: {out_file.resolve()}")
             print(f"  Fleet Hub: {report.hub_name}")
             print(f"  Spokes: {report.total_spokes} ({report.online_spokes} Online)")
             print(f"  Total Fleet Tokens: {report.total_fleet_tokens:,}")
             print(f"  Total Fleet Cost: ${report.total_fleet_cost_usd:.4f} USD")
+            print(
+                f"  Top Spoke Innovations: {len(innovations)} detected ({len(candidates)} Candidate(s) for Hub Ingestion)"
+            )
             return 0
         except Exception as err:
             print(f"[Error] Failed to render fleet dashboard: {err}", file=sys.stderr)
@@ -118,11 +130,31 @@ def main() -> int:
     elif args.command == "scan":
         try:
             report = aggregate_fleet_telemetry(hub_root=HUB_ROOT)
-            out_content = (
-                json.dumps(report.to_dict(), indent=2, ensure_ascii=False)
-                if args.json
-                else report.to_markdown()
-            )
+            if args.innovations_only:
+                innovations = report.get_top_spoke_innovations()
+                if args.json:
+                    out_content = json.dumps(innovations, indent=2, ensure_ascii=False)
+                else:
+                    lines = [
+                        "# 🚀 Top Spoke Innovations & Candidates for Hub Ingestion (ADR-0045)",
+                        "",
+                        "| Tool / Skill | Invocations | Source Spokes | Status | Recommendation |",
+                        "| :--- | :---: | :--- | :---: | :--- |",
+                    ]
+                    for item in innovations:
+                        spokes_str = ", ".join(item["source_spokes"])
+                        lines.append(
+                            f"| `{item['tool_or_skill']}` | {item['total_calls']} | {spokes_str} | "
+                            f"{item['promotion_status']} | {item['recommendation']} |"
+                        )
+                    out_content = "\n".join(lines) + "\n"
+            else:
+                out_content = (
+                    json.dumps(report.to_dict(), indent=2, ensure_ascii=False)
+                    if args.json
+                    else report.to_markdown()
+                )
+
             if args.out:
                 args.out.parent.mkdir(parents=True, exist_ok=True)
                 args.out.write_text(out_content, encoding="utf-8")

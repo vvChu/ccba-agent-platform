@@ -1,13 +1,14 @@
 ---
 id: 232
 title: "feat(rag): federated cross-spoke legal ground-truth query engine & mcp endpoint"
-state: "ready-for-agent"
+state: "closed"
 labels:
   - "enhancement"
-  - "ready-for-agent"
-assignee: "none"
+  - "completed"
+assignee: "Antigravity AI Agent"
 created_at: "2026-09-02T06:28:00Z"
-updated_at: "2026-09-02T06:40:00Z"
+updated_at: "2026-09-13T12:45:00Z"
+closed_at: "2026-09-13T12:45:00Z"
 ---
 
 # 📖 Mô tả (Description)
@@ -27,10 +28,11 @@ Xây dựng Federated Legal Query Engine kết hợp giữa `ccba-ai` và `ccba-
 ---
 
 ### 3. Tiêu chí nghiệm thu (Acceptance Criteria):
-- [ ] Bổ sung tool tra cứu pháp lý `query_legal_ground_truth` trong Hub MCP Server và Python SDK.
-- [ ] Bất kỳ Spoke nào có cài đặt `ccba-ai` đều có thể gọi hàm tra cứu pháp lý trực tiếp.
-- [ ] Kết quả tra cứu đảm bảo độ trễ thấp (< 1s với cache cục bộ / LiteLLM server Spark) và chính xác 100% theo OKF v2.4.
-- [ ] Bổ sung test integration và kịch bản demo trong `tests/test_federated_rag.py`.
+- [x] Bổ sung tool tra cứu pháp lý `query_legal_ground_truth` trong Hub MCP Server và Python SDK.
+- [x] Bất kỳ Spoke nào có cài đặt `ccba-ai` đều có thể gọi hàm tra cứu pháp lý trực tiếp.
+- [x] Kết quả tra cứu đảm bảo độ trễ thấp (< 1s với cache cục bộ / LiteLLM server Spark) và chính xác 100% theo OKF v2.4.
+- [x] Bổ sung test integration và kịch bản demo trong `tests/test_federated_rag.py`.
+- [x] Thay thế chuỗi hardcode trong `search_vietnamese_laws` tại `packages/ccba-ai/src/ccba_ai/mcp_server.py` bằng `LegalKnowledgeEngine` (ADR 0035, ADR 0050, RULE-3.1).
 
 ---
 *Được đề xuất tự động từ Spoke `ccba-legal-knowledge` qua workflow `/ccba-issue-to-hub`.*
@@ -65,9 +67,10 @@ Xây dựng Federated Legal Query Engine kết hợp giữa `ccba-ai` và `ccba-
 - `packages/ccba-ai/src/ccba_ai/legal_knowledge.py`: Client-side query wrapper
 
 ### Tiêu chuẩn nghiệm thu (Acceptance criteria)
-- [ ] Tool `query_legal_ground_truth` phản hồi truy vấn dưới 1.5s đối với các câu hỏi pháp lý phổ biến (PCCC, cấp phép xây dựng, nghiệm thu).
-- [ ] Định dạng trích dẫn chuẩn xác theo điều khoản OKF v2.4.
-- [ ] Test integration `test_federated_rag.py` pass 100%.
+- [x] Tool `query_legal_ground_truth` phản hồi truy vấn dưới 1.5s đối với các câu hỏi pháp lý phổ biến (PCCC, cấp phép xây dựng, nghiệm thu).
+- [x] Định dạng trích dẫn chuẩn xác theo điều khoản OKF v2.4.
+- [x] Test integration `test_federated_rag.py` pass 100%.
+- [x] Triệt tiêu hoàn toàn chuỗi hardcode và vi phạm RULE-3.1 trong `search_vietnamese_laws` qua `LegalKnowledgeEngine`.
 
 ### Phạm vi loại trừ (Out of scope)
 - Không lưu trữ cache persistent vượt quá 100MB tại Spoke cục bộ.
@@ -78,3 +81,11 @@ Xây dựng Federated Legal Query Engine kết hợp giữa `ccba-ai` và `ccba-
   - `[x]` 🟢 **Standard** (`/ccba-implement`): Triển khai tuần tự, scoped tests.
   - `[ ]` 🟣 **Deep Reasoning** (`/boost`): Điều tra chuyên sâu root-cause / phản biện đa vòng.
   - `[ ]` 🔵 **Multi-Agent Orchestration** (`/ccba-teamwork` hoặc `/teamwork-preview`): Phân rã Seams và chạy đa tác nhân song song.
+
+---
+
+> **@Antigravity AI Agent (Resolution)** (2026-09-13T12:45:00Z):
+> - Đã hoàn thành triển khai `query_legal_ground_truth` FastMCP tool trong `packages/ccba-ai/src/ccba_ai/mcp_server.py`.
+> - Đã thay thế chuỗi hardcode trong `search_vietnamese_laws` bằng `LegalKnowledgeEngine` (ADR 0035, ADR 0050, RULE-3.1), loại bỏ trích dẫn văn bản hết hiệu lực (NĐ 175/2024, Luật XD 50/2014) và chuyển sang Master Registry hiện hành (Luật XD 2025 số 135/2025/QH15, NĐ 217/2026/NĐ-CP).
+> - Bộ test suite `tests/test_federated_rag.py` và `packages/ccba-ai/tests/test_mcp_legal_search.py` pass 100%. Đóng vé Issue #232.
+

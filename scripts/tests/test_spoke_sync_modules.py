@@ -648,9 +648,15 @@ def test_tra_cuu_archetype_resolution_and_defaults(tmp_path: Path):
 
 def test_check_hub_import_depth_package_parity_and_tightened_rules(tmp_path: Path):
     """Test check_hub_import_depth monitors all packages in packages/ and detects private submodule imports."""
-    from scripts.spoke.check_hub_import_depth import HUB_PACKAGE_PREFIXES, scan_file
+    from scripts.spoke.check_hub_import_depth import (
+        FALLBACK_HUB_PACKAGES,
+        HUB_PACKAGE_PREFIXES,
+        HUB_PACKAGES,
+        discover_hub_packages,
+        scan_file,
+    )
 
-    # 1. Parity assertion: all directories in packages/ are monitored
+    # 1. Parity assertion: all directories in packages/ are monitored via canonical import names
     packages_root = Path(__file__).resolve().parents[2] / "packages"
     assert packages_root.is_dir()
     pkg_dirs = [
@@ -658,16 +664,71 @@ def test_check_hub_import_depth_package_parity_and_tightened_rules(tmp_path: Pat
     ]
     assert len(pkg_dirs) >= 9
 
+    # Verify dynamic discovery against actual packages directory
+    discovered = discover_hub_packages(packages_root.parent)
+    assert "ccba_legal" in discovered
+    assert "ccba_legal_intel" not in discovered
+    assert "ccba_qc_core" in discovered
+    assert "ccba_ai" in discovered
+    assert "ccba_harness" in discovered
+    assert "mdconverter" in discovered
+
+    # Verify discovery from a subpath/subdirectory within the Hub
+    subpath_discovered = discover_hub_packages(hub_root=packages_root.parent / "scripts")
+    assert "ccba_legal" in subpath_discovered
+    assert "ccba_qc_core" in subpath_discovered
+
     for p in pkg_dirs:
-        norm_name = p.name.replace("-", "_")
-        assert norm_name in HUB_PACKAGE_PREFIXES or (
-            norm_name == "ccba_legal_intel" and "ccba_legal" in HUB_PACKAGE_PREFIXES
-        ), f"Package {p.name} ({norm_name}) not found in HUB_PACKAGE_PREFIXES"
+        src_dir = p / "src"
+        if src_dir.is_dir():
+            for child in src_dir.iterdir():
+                if (
+                    child.is_dir()
+                    and not child.name.startswith((".", "_"))
+                    and not child.name.endswith(".egg-info")
+                ):
+                    assert child.name in HUB_PACKAGES, f"Package {child.name} ({p.name}) not in HUB_PACKAGES"
 
-    # Specifically assert ccba_qc_core is in HUB_PACKAGE_PREFIXES
-    assert "ccba_qc_core" in HUB_PACKAGE_PREFIXES
+    # Canonical fix: ccba_legal is present, legacy ccba_legal_intel is absent
+    assert "ccba_legal" in HUB_PACKAGES
+    assert "ccba_legal_intel" not in HUB_PACKAGES
+    assert HUB_PACKAGES == HUB_PACKAGE_PREFIXES
 
-    # 2. Test tightened depth and private internal submodule import detection
+    # 2. Test fallback when packages/ does not exist (Spoke environment)
+    empty_root = tmp_path / "empty_spoke"
+    empty_root.mkdir()
+    fallback_result = discover_hub_packages(hub_root=empty_root)
+    assert fallback_result == FALLBACK_HUB_PACKAGES
+    assert "ccba_legal" in fallback_result
+    assert "ccba_core" in fallback_result
+    assert "ccba_legal_intel" not in fallback_result
+
+    # 3. Test dynamic discovery on custom/mock monorepo packages directory (src layout + flat layout)
+    mock_hub = tmp_path / "mock_hub"
+    mock_pkg_src = mock_hub / "packages" / "ccba-mock-pkg" / "src" / "ccba_mock_pkg"
+    mock_pkg_src.mkdir(parents=True)
+    (mock_pkg_src / "__init__.py").write_text("", encoding="utf-8")
+
+    mock_pkg_flat = mock_hub / "packages" / "ccba-flat-pkg" / "ccba_flat_pkg"
+    mock_pkg_flat.mkdir(parents=True)
+    (mock_pkg_flat / "__init__.py").write_text("", encoding="utf-8")
+
+    mock_discovered = discover_hub_packages(hub_root=mock_hub)
+    assert "ccba_mock_pkg" in mock_discovered
+    assert "ccba_flat_pkg" in mock_discovered
+
+    # Test spoke referencing mock_hub via relative hub_path in workspace_context.yaml
+    mock_spoke = tmp_path / "mock_spoke_repo"
+    mock_spoke_agents = mock_spoke / ".agents"
+    mock_spoke_agents.mkdir(parents=True)
+    (mock_spoke_agents / "workspace_context.yaml").write_text(
+        'hub_path: "../mock_hub" # relative path to hub\n',
+        encoding="utf-8",
+    )
+    spoke_discovered = discover_hub_packages(hub_root=mock_spoke)
+    assert "ccba_mock_pkg" in spoke_discovered
+
+    # 4. Test tightened depth and private internal submodule import detection
     # Private internal submodule import (1 dot: ccba_ai._client)
     f1 = tmp_path / "f1.py"
     f1.write_text("from ccba_ai._client import Client\n", encoding="utf-8")
@@ -689,6 +750,49 @@ def test_check_hub_import_depth_package_parity_and_tightened_rules(tmp_path: Pat
         "from ccba_qc_core import QCAuditPipeline\nfrom ccba_ai import ai\n", encoding="utf-8"
     )
     assert len(scan_file(f4)) == 0
+
+    # Test ccba_legal specific imports: compliant vs deep vs private
+    f5 = tmp_path / "f5.py"
+    f5.write_text("from ccba_legal import ChromeCDP\nimport ccba_legal\n", encoding="utf-8")
+    assert len(scan_file(f5)) == 0
+
+    f6 = tmp_path / "f6.py"
+    f6.write_text("from ccba_legal.crawler.chrome_cdp import something\n", encoding="utf-8")
+    assert len(scan_file(f6)) == 1
+
+    f7 = tmp_path / "f7.py"
+    f7.write_text("from ccba_legal._crawler import something\n", encoding="utf-8")
+    assert len(scan_file(f7)) == 1
+
+    f8 = tmp_path / "f8.py"
+    f8.write_text("import ccba_legal._crawler\n", encoding="utf-8")
+    assert len(scan_file(f8)) == 1
+
+    f9 = tmp_path / "f9.py"
+    f9.write_text("import ccba_legal.crawler.chrome_cdp\n", encoding="utf-8")
+    assert len(scan_file(f9)) == 1
+
+    # Direct private member/submodule import from top-level package
+    f10 = tmp_path / "f10.py"
+    f10.write_text("from ccba_harness import _engine\n", encoding="utf-8")
+    assert len(scan_file(f10)) == 1
+
+    f11 = tmp_path / "f11.py"
+    f11.write_text("from ccba_legal import _crawler\n", encoding="utf-8")
+    assert len(scan_file(f11)) == 1
+
+    f12 = tmp_path / "f12.py"
+    f12.write_text("from ccba_legal.crawler import _internal_helper\n", encoding="utf-8")
+    assert len(scan_file(f12)) == 1
+
+    # Dunder and local alias imports (compliant)
+    f13 = tmp_path / "f13.py"
+    f13.write_text("from ccba_legal import __version__\n", encoding="utf-8")
+    assert len(scan_file(f13)) == 0
+
+    f14 = tmp_path / "f14.py"
+    f14.write_text("from ccba_ai import ai as _local_ai\n", encoding="utf-8")
+    assert len(scan_file(f14)) == 0
 
 
 def test_spoke_backup_manager_retention_pruning(tmp_path: Path):

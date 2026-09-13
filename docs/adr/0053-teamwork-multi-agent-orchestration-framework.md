@@ -47,6 +47,17 @@ Tệp `.agents/teams/[project]_team_sheet.md` phân định rõ:
 - **`/boost` (Escalation UP):** Suy luận sâu ngắn hạn trong 1 session để bẻ khóa bài toán bế tắc kỹ thuật đơn lẻ.
 - **`/ccba-teamwork` (Coordination OUT):** Điều phối dài hạn nhiều workstreams độc lập song song qua nhiều milestones.
 
+### H. Phân Định Ranh Giới 2 Nhóm Orchestrators (Multi-Agent Swarms vs User Rituals)
+Hệ thống phân tầng Tầng 3 (Composite Orchestrator) chia thành 2 nhóm bản chất riêng biệt:
+1. **Nhóm 1 — Autonomous Multi-Agent Swarms (`ccba-ai-qc`, `ccba-teamwork`):**
+   - Có worker subagents chạy song song trong nền.
+   - Bắt buộc tuân thủ Single-Writer Protocol (ADR-0053) và Exclusive Scratch Sandboxing (`.system_generated/scratch/worker_{N}/`).
+   - Được bảo vệ liên tục bằng bộ kiểm thử áp lực CI tự động (`tests/governance/test_swarm_dogfood_ci.py`).
+2. **Nhóm 2 — Human-Interactive User Rituals (`ccba-implement`, `ccba-new-feature`, `ccba-autoresearch`, `ccba-graduate-rd`, `ccba-knowledge-loop`, `ccba-release-feature`, `ccba-spoke-adopter`):**
+   - Đóng vai trò là các nghi thức tương tác trực tiếp với người dùng (User-Invocable Commands).
+   - Thiết lập `disable-model-invocation: true` (tiêu thụ 0 background tokens).
+   - Không sinh workers chạy ngầm, không thuộc phạm vi áp dụng Swarm Stress Benchmark.
+
 ## 4. Hệ Quả (Consequences)
 - **Triệt Tiêu Xung Đột Mã Nguồn:** Duy nhất Orchestrator ghi codebase, loại bỏ hoàn toàn race condition.
 - **Bảo Vệ Ngân Sách Ngữ Cảnh:** Workers chạy cô lập trên scratch sandbox, không làm phình context của phiên chính.

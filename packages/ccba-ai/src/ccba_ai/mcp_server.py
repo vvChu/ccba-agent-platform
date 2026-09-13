@@ -9,8 +9,10 @@ import inspect
 import json
 import os
 import sys
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
+from typing import Any, TypeVar, cast
 
 # Attempt import of FastMCP
 try:
@@ -25,6 +27,8 @@ import importlib.util
 
 from ccba_ai import services
 from ccba_ai.hooks import PrivacyGuardHook
+
+F = TypeVar("F", bound=Callable[..., Any])
 
 idop_scaffolder = None
 cwd_scripts = Path.cwd() / "scripts" / "idop_scaffolder.py"
@@ -45,7 +49,7 @@ LOG_DIR = Path(".md")
 LOG_FILE = LOG_DIR / "mcp_server.log"
 
 
-def log(msg: str):
+def log(msg: str) -> None:
     """Write timestamped message to .md/mcp_server.log."""
     try:
         if not LOG_DIR.exists():
@@ -57,7 +61,7 @@ def log(msg: str):
         pass
 
 
-def _scan_output(result, guard):
+def _scan_output(result: Any, guard: PrivacyGuardHook) -> None:
     """Recursively scan output content for API keys."""
     if isinstance(result, str):
         guard.check_content(result)
@@ -68,11 +72,11 @@ def _scan_output(result, guard):
             pass
 
 
-def privacy_protected(func):
+def privacy_protected(func: F) -> F:
     """Decorator to scan all inputs and outputs for sensitive API keys."""
 
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         guard = PrivacyGuardHook()
         # Scan inputs
         for arg in args:
@@ -84,7 +88,7 @@ def privacy_protected(func):
 
         if inspect.iscoroutinefunction(func):
 
-            async def async_wrapper():
+            async def async_wrapper() -> Any:
                 result = await func(*args, **kwargs)
                 _scan_output(result, guard)
                 return result
@@ -95,7 +99,7 @@ def privacy_protected(func):
             _scan_output(result, guard)
             return result
 
-    return wrapper
+    return cast(F, wrapper)
 
 
 # ==========================================
@@ -106,27 +110,43 @@ def privacy_protected(func):
 @mcp.tool()
 @privacy_protected
 def search_vietnamese_laws(query: str) -> str:
-    """Tra cứu văn bản pháp luật xây dựng Việt Nam.
+    """Tra cứu văn bản pháp luật xây dựng Việt Nam qua LegalKnowledgeEngine (ADR 0035, ADR 0050, RULE-3.1).
 
     Args:
-        query: Từ khóa hoặc số hiệu văn bản (ví dụ: Nghị định 175, Luật Xây dựng)
+        query: Từ khóa hoặc số hiệu văn bản (ví dụ: Nghị định 217, Luật Xây dựng 2025, QCVN 06:2022)
     """
     log(f"Tool search_vietnamese_laws called with query='{query}'")
-    query_lower = query.lower()
-    if "175" in query_lower or "nghị định 175" in query_lower:
-        return (
-            "Nghị định 175/2024/NĐ-CP hướng dẫn Luật Nhà ở về cải tạo, xây dựng lại nhà chung cư.\n"
-            "Điều 5: Nguyên tắc cải tạo, xây dựng lại nhà chung cư.\n"
-            "Điều 12: Đăng ký lựa chọn chủ đầu tư dự án cải tạo xây dựng lại."
-        )
-    elif "luật xây dựng" in query_lower or "lxd" in query_lower:
-        return (
-            "Luật Xây dựng số 50/2014/QH13 và Luật sửa đổi bổ sung số 62/2020/QH14.\n"
-            "Điều 54: Phân loại, phân cấp công trình xây dựng.\n"
-            "Điều 82: Phê duyệt thiết kế kỹ thuật, thiết kế bản vẽ thi công."
-        )
-    else:
-        return f"Không tìm thấy văn bản cụ thể cho từ khóa '{query}'. Vui lòng tra cứu tại CSDL Luật Việt Nam hoặc Thư viện Pháp luật."
+    if not query or not query.strip():
+        return "Vui lòng nhập từ khóa hoặc số hiệu văn bản pháp luật cần tra cứu."
+    try:
+        from ccba_legal import LegalKnowledgeEngine
+
+        engine = LegalKnowledgeEngine()
+        results = engine.search(query, top_k=5)
+        if not results:
+            return f"Không tìm thấy văn bản pháp luật phù hợp với từ khóa '{query}' trong CSDL Master Registry."
+
+        lines = [f"Kết quả tra cứu pháp luật cho từ khóa '{query}':"]
+        for idx, doc in enumerate(results, 1):
+            doc_id = doc.get("id") or doc.get("document_number", "")
+            title = doc.get("title", "")
+            status = doc.get("status", "ACTIVE")
+            is_superseded = doc.get("is_superseded", False)
+            lines.append(f"{idx}. [{status}] {doc_id}: {title}")
+            if is_superseded:
+                replacement = doc.get("suggested_replacement", "N/A")
+                lines.append(
+                    f"   ⚠️ CẢNH BÁO RULE-3.1: Văn bản đã hết hiệu lực. Thay thế bởi: {replacement}"
+                )
+            if doc.get("lifecycle_warning"):
+                lines.append(f"   ⚠️ Lưu ý: {doc.get('lifecycle_warning')}")
+            if doc.get("notes"):
+                lines.append(f"   Ghi chú: {doc.get('notes')}")
+        return "\n".join(lines)
+    except ImportError:
+        return "Lỗi: Thư viện ccba-legal-intel chưa được cài đặt để tra cứu văn bản pháp luật."
+    except Exception as e:
+        return f"Lỗi khi tra cứu văn bản pháp luật: {e}"
 
 
 @mcp.tool()
@@ -151,7 +171,7 @@ def get_gateway_status() -> str:
 
 @mcp.tool()
 @privacy_protected
-def create_plan(title: str, phases: list[str]) -> dict:
+def create_plan(title: str, phases: list[str]) -> dict[str, Any]:
     """Khởi tạo một kế hoạch triển khai (plan) mới với các phase cụ thể.
 
     Args:
@@ -160,14 +180,14 @@ def create_plan(title: str, phases: list[str]) -> dict:
     """
     log(f"Tool create_plan called with title='{title}'")
     try:
-        return services.create_plan(title, phases)
+        return cast(dict[str, Any], services.create_plan(title, phases))
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 
 @mcp.tool()
 @privacy_protected
-def update_phase_status(plan_file: str, phase_id: str, status: str) -> dict:
+def update_phase_status(plan_file: str, phase_id: str, status: str) -> dict[str, Any]:
     """Cập nhật trạng thái của một phase trong kế hoạch triển khai.
 
     Args:
@@ -177,14 +197,14 @@ def update_phase_status(plan_file: str, phase_id: str, status: str) -> dict:
     """
     log(f"Tool update_phase_status called for {plan_file} (Phase {phase_id} -> {status})")
     try:
-        return services.update_phase_status(plan_file, phase_id, status)
+        return cast(dict[str, Any], services.update_phase_status(plan_file, phase_id, status))
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 
 @mcp.tool()
 @privacy_protected
-def get_plan_status(plan_file: str) -> dict:
+def get_plan_status(plan_file: str) -> dict[str, Any]:
     """Truy xuất thông tin chi tiết và tiến độ của kế hoạch triển khai.
 
     Args:
@@ -192,7 +212,7 @@ def get_plan_status(plan_file: str) -> dict:
     """
     log(f"Tool get_plan_status called for {plan_file}")
     try:
-        return services.get_plan_status(plan_file)
+        return cast(dict[str, Any], services.get_plan_status(plan_file))
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -204,18 +224,18 @@ def get_plan_status(plan_file: str) -> dict:
 
 @mcp.tool()
 @privacy_protected
-def list_tasks() -> list[dict]:
+def list_tasks() -> list[dict[str, Any]]:
     """Lấy danh sách toàn bộ công việc (tasks) trong database điều phối multi-agent."""
     log("Tool list_tasks called")
     try:
-        return services.load_tasks()
+        return cast(list[dict[str, Any]], services.load_tasks())
     except Exception as e:
         return [{"status": "error", "message": str(e)}]
 
 
 @mcp.tool()
 @privacy_protected
-def add_task(name: str, owner: str | None = None) -> dict:
+def add_task(name: str, owner: str | None = None) -> dict[str, Any]:
     """Thêm một công việc mới vào cơ sở dữ liệu điều phối multi-agent.
 
     Args:
@@ -224,14 +244,14 @@ def add_task(name: str, owner: str | None = None) -> dict:
     """
     log(f"Tool add_task called with name='{name}', owner='{owner}'")
     try:
-        return services.add_task(name, owner)
+        return cast(dict[str, Any], services.add_task(name, owner))
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 
 @mcp.tool()
 @privacy_protected
-def claim_task(name: str, owner: str) -> dict:
+def claim_task(name: str, owner: str) -> dict[str, Any]:
     """Đăng ký nhận một công việc để thực thi.
 
     Args:
@@ -240,14 +260,14 @@ def claim_task(name: str, owner: str) -> dict:
     """
     log(f"Tool claim_task called: {owner} claims '{name}'")
     try:
-        return services.claim_task(name, owner)
+        return cast(dict[str, Any], services.claim_task(name, owner))
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 
 @mcp.tool()
 @privacy_protected
-def complete_task(name: str) -> dict:
+def complete_task(name: str) -> dict[str, Any]:
     """Đánh dấu hoàn thành một công việc trong database điều phối.
 
     Args:
@@ -255,7 +275,7 @@ def complete_task(name: str) -> dict:
     """
     log(f"Tool complete_task called for '{name}'")
     try:
-        return services.complete_task(name)
+        return cast(dict[str, Any], services.complete_task(name))
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -267,7 +287,7 @@ def complete_task(name: str) -> dict:
 
 @mcp.tool()
 @privacy_protected
-def run_seo_audit(file_path: str) -> dict:
+def run_seo_audit(file_path: str) -> dict[str, Any]:
     """Chạy phân tích kỹ thuật SEO cho tệp Markdown hoặc HTML.
 
     Args:
@@ -275,7 +295,7 @@ def run_seo_audit(file_path: str) -> dict:
     """
     log(f"Tool run_seo_audit called for {file_path}")
     try:
-        return services.audit_file(file_path)
+        return cast(dict[str, Any], services.audit_file(file_path))
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -352,7 +372,7 @@ def scaffold_idop_project(
 
 @mcp.tool()
 @privacy_protected
-async def convert_document(file_path: str, output_dir: str | None = None) -> dict:
+async def convert_document(file_path: str, output_dir: str | None = None) -> dict[str, Any]:
     """Chuyển đổi tài liệu (PDF, DOCX) sang Markdown bằng bộ pipeline mdconverter.
 
     Args:

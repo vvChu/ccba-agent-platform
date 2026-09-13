@@ -310,6 +310,15 @@ def test_resolve_preset_commands() -> None:
     assert any("compile_catalog.py" in c for c in ci_cmds)
     assert any("sync_hub_adr_matrix.py" in c for c in ci_cmds)
 
+    eval_cmds = resolve_preset_commands("eval")
+    assert any("test_evals_engine.py" in c for c in eval_cmds)
+
+    eval_skill_cmds = resolve_preset_commands("eval", "copywriting")
+    assert any("eval --skill copywriting" in c for c in eval_skill_cmds)
+
+    eval_ds_cmds = resolve_preset_commands("eval", "test_cases.json")
+    assert any("eval --dataset test_cases.json" in c for c in eval_ds_cmds)
+
     with pytest.raises(ValueError, match="Unknown verification preset"):
         resolve_preset_commands("unknown_preset")
 
@@ -348,3 +357,10 @@ def test_cli_verify_patch_with_doc_preset(tmp_path: Path) -> None:
         ]
     )
     assert code == 0
+
+
+def test_cli_verify_patch_with_eval_preset() -> None:
+    """Verify `ccba-harness verify-patch --preset eval` integration."""
+    code = run_verify_patch_cli(["--preset", "eval"])
+    assert code == 0
+

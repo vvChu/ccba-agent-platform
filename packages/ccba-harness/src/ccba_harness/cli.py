@@ -256,6 +256,8 @@ def _print_gpi_result(result: Any, as_json: bool = False) -> None:
     print(f"Assigned Tier   : {result.tier.value}")
     if result.gpi_score is not None:
         print(f"GPI Score       : {result.gpi_score:.2f} (Threshold: 12.0)")
+    if result.breakdown and result.breakdown.get("preserved_by_hysteresis", 0.0) > 0.0:
+        print("Hysteresis      : PRESERVED (Score within deadband [11.5, 12.5))")
     print(f"Standalone Skill: {'ALLOWED' if result.allow_standalone_skill else 'NOT PERMITTED'}")
     print(f"Target Location : {result.target_location}")
     print(f"Rationale       : {result.rationale}")
@@ -311,6 +313,18 @@ def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument("--a", type=float, default=None, help="Autonomous Model Invocation (1-5)")
     parser.add_argument("--p", type=float, default=None, help="Parent Domain Coupling (1-5)")
     parser.add_argument("--parent", type=str, default=None, help="Parent/Master skill name")
+    parser.add_argument(
+        "--existing-tier",
+        type=str,
+        default=None,
+        choices=["tier-1", "tier-2a", "tier-2b", "tier-3"],
+        help="Existing architectural tier for hysteresis deadband evaluation",
+    )
+    parser.add_argument(
+        "--force-tier-flip",
+        action="store_true",
+        help="Force architectural tier flip when GPI score is within deadband [11.5, 12.5)",
+    )
     parser.add_argument("--json", action="store_true", help="Output result in JSON format")
 
     args = parser.parse_args(args_list)
@@ -338,6 +352,8 @@ def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
                 override_orchestrated=True if args.orchestrated else None,
                 override_metrics=override_metrics,
                 override_parent=args.parent,
+                override_existing_tier=args.existing_tier,
+                override_force_tier_flip=args.force_tier_flip,
             )
         except Exception as err:
             print(f"ERROR: Failed to evaluate skill file: {err}", file=sys.stderr)
@@ -373,6 +389,8 @@ def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
             is_orchestrated=args.orchestrated,
             gpi_metrics=gpi_metrics,
             parent_skill=args.parent,
+            existing_tier=args.existing_tier,
+            force_tier_flip=args.force_tier_flip,
         )
         result = evaluate_two_stage_decision(request)
     except Exception as err:
@@ -419,6 +437,16 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
         help="Enable automatic prompt optimization via SkillOpt loop",
     )
     parser.add_argument(
+        "--dry-run-git",
+        action="store_true",
+        help="Run prompt auto-tuning without actual git commits",
+    )
+    parser.add_argument(
+        "--full-sweep",
+        action="store_true",
+        help="Run all auto-tuning trials without early exit when target score is reached",
+    )
+    parser.add_argument(
         "--dataset",
         type=str,
         default=None,
@@ -441,6 +469,18 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
         default=85.0,
         help="Passing score threshold percentage (default: 85.0)",
     )
+    parser.add_argument(
+        "--difficulty",
+        type=str,
+        default=None,
+        help="Filter evaluation test cases by difficulty level (e.g. easy, medium, hard)",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Limit maximum number of evaluation items to run",
+    )
 
     args = parser.parse_args(args_list)
 
@@ -453,6 +493,10 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
             if (p / ".agents").exists() or (p / "pyproject.toml").exists():
                 root_path = p
                 break
+
+    if args.limit is not None and args.limit < 1:
+        print(f"ERROR: --limit must be a positive integer (>= 1), got {args.limit}", file=sys.stderr)
+        return 1
 
     from .evals.runner import run_eval_pipeline
 
@@ -474,6 +518,10 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
             dataset=dataset_target,
             project_root=root_path,
             pass_threshold=args.threshold,
+            difficulty=args.difficulty,
+            limit=args.limit,
+            dry_run_git=getattr(args, "dry_run_git", False),
+            full_sweep=getattr(args, "full_sweep", False),
         )
     except Exception as err:
         print(f"ERROR: Evaluation pipeline failed: {err}", file=sys.stderr)
@@ -547,6 +595,14 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
             print("Scorer Breakdown :")
             for sc_name, sc_val in report.summary_by_scorer.items():
                 print(f"  - {sc_name}: {sc_val:.2f}%")
+        ratchet_rep = report.metadata.get("ratchet_report")
+        if ratchet_rep and isinstance(ratchet_rep, dict):
+            print("\nAuto-Tune Git-Ratchet Summary:")
+            print(f"  - Target File    : {ratchet_rep.get('target_file')}")
+            print(f"  - Baseline Score : {ratchet_rep.get('initial_score', 0.0):.2f}%")
+            print(f"  - Final Score    : {ratchet_rep.get('final_score', 0.0):.2f}%")
+            print(f"  - Commits Kept   : {ratchet_rep.get('kept_commits', 0)}")
+            print(f"  - Trials Reverted: {ratchet_rep.get('reverted_trials', 0)}")
         print("=" * 60)
 
     if not passed_all:
@@ -687,8 +743,8 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--timeout",
         type=float,
-        default=60.0,
-        help="Per-command execution timeout in seconds (default: 60.0)",
+        default=180.0,
+        help="Per-command execution timeout in seconds (default: 180.0)",
     )
     parser.add_argument(
         "--cwd",
@@ -715,7 +771,7 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--preset",
         type=str,
-        choices=["code", "doc", "skill", "adr", "telemetry", "ci"],
+        choices=["code", "doc", "skill", "adr", "telemetry", "ci", "eval"],
         default=None,
         help="Verification preset to automatically generate standard check commands",
     )
@@ -1000,20 +1056,20 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
             )
             return 1
 
-        report = bridge.stream_transcript_file(args.target, dry_run=args.dry_run)
+        stream_report = bridge.stream_transcript_file(args.target, dry_run=args.dry_run)
         if args.json:
-            print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
-            return 0 if report.status != "FAILED" else 1
+            print(json.dumps(stream_report.to_dict(), indent=2, ensure_ascii=False))
+            return 0 if stream_report.status != "FAILED" else 1
 
         print("📡 Real-Time Telemetry Streaming Bridge:")
         print(f"  Target: {args.target}")
-        print(f"  Endpoint: {report.endpoint}")
-        print(f"  Status: {report.status}")
-        print(f"  Events Emitted: {report.events_emitted}")
-        print(f"  Events Delivered: {report.events_delivered}")
-        print(f"  Events Buffered Offline: {report.events_buffered}")
-        if report.errors:
-            for err in report.errors:
+        print(f"  Endpoint: {stream_report.endpoint}")
+        print(f"  Status: {stream_report.status}")
+        print(f"  Events Emitted: {stream_report.events_emitted}")
+        print(f"  Events Delivered: {stream_report.events_delivered}")
+        print(f"  Events Buffered Offline: {stream_report.events_buffered}")
+        if stream_report.errors:
+            for err in stream_report.errors:
                 print(f"  [Error] {err}", file=sys.stderr)
             return 1
         return 0
@@ -1032,22 +1088,22 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
             except Exception as err:
                 print(f"[Warning] Could not load session '{args.session}': {err}", file=sys.stderr)
 
-        report = audit_token_economy(session_metrics=session_metrics)
+        economy_report = audit_token_economy(session_metrics=session_metrics)
         if args.session and session_metrics and args.role:
-            report.session_roi = calculate_role_aware_roi(session_metrics, role_override=args.role)
+            economy_report.session_roi = calculate_role_aware_roi(session_metrics, role_override=args.role)
 
         if args.prune_report:
             out_file = Path(args.out) if args.out else Path(".md/reports/prompt_economy_report.md")
-            generate_prompt_pruning_report(report, output_path=out_file)
+            generate_prompt_pruning_report(economy_report, output_path=out_file)
             print(f"[Success] Generated Prompt Pruning Report at: {out_file.resolve()}")
-            print(f"  Total Skills: {report.total_skills}")
-            print(f"  Average PDI: {report.avg_pdi:.1f} / 100.0")
-            print(f"  Bloated Skills: {report.bloated_skills_count}")
-            print(f"  Estimated Token Savings: ~{report.estimated_token_savings:,} tokens")
+            print(f"  Total Skills: {economy_report.total_skills}")
+            print(f"  Average PDI: {economy_report.avg_pdi:.1f} / 100.0")
+            print(f"  Bloated Skills: {economy_report.bloated_skills_count}")
+            print(f"  Estimated Token Savings: ~{economy_report.estimated_token_savings:,} tokens")
             return 0
 
         if args.json:
-            payload = json.dumps(report.to_dict(), indent=2, ensure_ascii=False)
+            payload = json.dumps(economy_report.to_dict(), indent=2, ensure_ascii=False)
             if args.out:
                 Path(args.out).write_text(payload, encoding="utf-8")
                 print(f"[Success] Saved JSON economy report to {args.out}")
@@ -1056,7 +1112,7 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
             return 0
 
         # Markdown output
-        md_text = report.to_markdown()
+        md_text = economy_report.to_markdown()
         if args.out:
             Path(args.out).write_text(md_text, encoding="utf-8")
             print(f"[Success] Saved economy report to {args.out}")
@@ -1069,26 +1125,26 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
 
         if args.dashboard:
             try:
-                out_path, report = render_fleet_dashboard(
+                out_path, fleet_report = render_fleet_dashboard(
                     output_path=Path(args.out) if args.out else None,
                     title=args.title,
                 )
                 print(f"[Success] Generated Cross-Spoke Fleet Dashboard at: {out_path.resolve()}")
-                print(f"  Fleet Hub: {report.hub_name}")
-                print(f"  Spokes: {report.total_spokes} ({report.online_spokes} Online)")
-                print(f"  Total Fleet Tokens: {report.total_fleet_tokens:,}")
-                print(f"  Total Fleet Cost: ${report.total_fleet_cost_usd:.4f} USD")
+                print(f"  Fleet Hub: {fleet_report.hub_name}")
+                print(f"  Spokes: {fleet_report.total_spokes} ({fleet_report.online_spokes} Online)")
+                print(f"  Total Fleet Tokens: {fleet_report.total_fleet_tokens:,}")
+                print(f"  Total Fleet Cost: ${fleet_report.total_fleet_cost_usd:.4f} USD")
                 return 0
             except Exception as err:
                 print(f"[Error] Failed to render fleet dashboard: {err}", file=sys.stderr)
                 return 1
         else:
             try:
-                report = aggregate_fleet_telemetry()
+                fleet_report = aggregate_fleet_telemetry()
                 if args.json:
-                    out_content = json.dumps(report.to_dict(), indent=2, ensure_ascii=False)
+                    out_content = json.dumps(fleet_report.to_dict(), indent=2, ensure_ascii=False)
                 else:
-                    out_content = report.to_markdown()
+                    out_content = fleet_report.to_markdown()
 
                 if args.out:
                     out_p = Path(args.out)
@@ -1106,16 +1162,16 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
         from .dashboard import render_swarm_dashboard
 
         try:
-            out_path, report = render_swarm_dashboard(
+            out_path, swarm_dash_report = render_swarm_dashboard(
                 args.target,
                 output_path=args.out,
                 title=args.title,
             )
             print(f"[Success] Generated Swarm Telemetry Dashboard at: {out_path.resolve()}")
-            print(f"  Parent Session: {report.parent_conversation_id}")
-            print(f"  Subagents: {report.total_subagents}")
-            print(f"  Total Tokens: {report.total_swarm_tokens:,}")
-            print(f"  Estimated Cost: ${report.total_cost_usd:.4f} USD")
+            print(f"  Parent Session: {swarm_dash_report.parent_conversation_id}")
+            print(f"  Subagents: {swarm_dash_report.total_subagents}")
+            print(f"  Total Tokens: {swarm_dash_report.total_swarm_tokens:,}")
+            print(f"  Estimated Cost: ${swarm_dash_report.total_cost_usd:.4f} USD")
             return 0
         except Exception as err:
             print(
@@ -1126,7 +1182,7 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
 
     if args.telemetry_cmd == "audit-swarm":
         try:
-            report, passed, msg = audit_swarm_session(
+            swarm_audit_report, passed, msg = audit_swarm_session(
                 args.target,
                 max_swarm_tokens=args.max_swarm_tokens,
                 max_subagent_tokens=args.max_subagent_tokens,
@@ -1137,9 +1193,9 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
             return 1
 
         out_content = (
-            json.dumps(report.to_dict(), indent=2, ensure_ascii=False)
+            json.dumps(swarm_audit_report.to_dict(), indent=2, ensure_ascii=False)
             if args.json
-            else report.to_markdown()
+            else swarm_audit_report.to_markdown()
         )
         if args.out:
             out_p = Path(args.out)
@@ -1279,6 +1335,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     gpi_parser.add_argument("--a", type=float, default=None, help="Autonomous Invocation (1-5)")
     gpi_parser.add_argument("--p", type=float, default=None, help="Parent Coupling (1-5)")
     gpi_parser.add_argument("--parent", type=str, default=None, help="Parent/Master skill name")
+    gpi_parser.add_argument(
+        "--existing-tier",
+        type=str,
+        default=None,
+        choices=["tier-1", "tier-2a", "tier-2b", "tier-3"],
+        help="Existing architectural tier for hysteresis deadband evaluation",
+    )
+    gpi_parser.add_argument(
+        "--force-tier-flip",
+        action="store_true",
+        help="Force architectural tier flip when GPI score is within deadband [11.5, 12.5)",
+    )
     gpi_parser.add_argument("--json", action="store_true", help="Output result in JSON format")
 
     # Subcommand: eval
@@ -1304,6 +1372,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Enable automatic prompt optimization via SkillOpt loop",
     )
     eval_parser.add_argument(
+        "--dry-run-git",
+        action="store_true",
+        help="Run prompt auto-tuning without actual git commits",
+    )
+    eval_parser.add_argument(
+        "--full-sweep",
+        action="store_true",
+        help="Run all auto-tuning trials without early exit when target score is reached",
+    )
+    eval_parser.add_argument(
         "--dataset",
         type=str,
         default=None,
@@ -1325,6 +1403,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         type=float,
         default=85.0,
         help="Passing score threshold percentage (default: 85.0)",
+    )
+    eval_parser.add_argument(
+        "--difficulty",
+        type=str,
+        default=None,
+        help="Filter evaluation test cases by difficulty level (e.g. easy, medium, hard)",
+    )
+    eval_parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Limit maximum number of evaluation items to run",
     )
 
     # Subcommand: verify-patch
@@ -1354,10 +1444,35 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Path to a text or JSON file containing commands",
     )
     patch_parser.add_argument(
+        "--preset",
+        type=str,
+        choices=["code", "doc", "skill", "adr", "telemetry", "ci", "eval"],
+        default=None,
+        help="Verification preset to automatically generate standard check commands",
+    )
+    patch_parser.add_argument(
+        "--target",
+        type=str,
+        default=None,
+        help="Target file or directory path for the preset",
+    )
+    patch_parser.add_argument(
+        "--min-bytes",
+        type=int,
+        default=100,
+        help="Minimum expected bytes for 'doc' preset (default: 100)",
+    )
+    patch_parser.add_argument(
+        "--required-headings",
+        type=str,
+        default=None,
+        help="Comma-separated required headings for 'doc' preset",
+    )
+    patch_parser.add_argument(
         "--timeout",
         type=float,
-        default=60.0,
-        help="Per-command execution timeout in seconds (default: 60.0)",
+        default=180.0,
+        help="Per-command execution timeout in seconds (default: 180.0)",
     )
     patch_parser.add_argument(
         "--cwd",
