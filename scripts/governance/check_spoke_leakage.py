@@ -151,6 +151,52 @@ class SpokeLeakageAuditor:
             except Exception as e:
                 self.warnings.append(f"COULD_NOT_READ [{normalized}]: {e}")
 
+    def audit_proposal_file(self, p_file: Path) -> bool:
+        """Audit a single proposal markdown file for schema validity and leakage."""
+        initial_errors = len(self.errors)
+        resolved_file = p_file.resolve()
+        try:
+            rel_p = resolved_file.relative_to(self.root_dir).as_posix()
+        except ValueError:
+            rel_p = resolved_file.as_posix()
+
+        try:
+            text = resolved_file.read_text(encoding="utf-8")
+            if not text.startswith("---"):
+                self.errors.append(
+                    f"INVALID_PROPOSAL_FRONTMATTER [{rel_p}]: File must start with YAML frontmatter '---'"
+                )
+                return False
+
+            parts = text.split("---", 2)
+            if len(parts) < 3:
+                self.errors.append(
+                    f"INVALID_PROPOSAL_FRONTMATTER [{rel_p}]: Incomplete YAML frontmatter delimiter"
+                )
+                return False
+
+            meta = yaml.safe_load(parts[1])
+            if not isinstance(meta, dict):
+                self.errors.append(
+                    f"INVALID_PROPOSAL_FRONTMATTER [{rel_p}]: Frontmatter must be a YAML dictionary"
+                )
+                return False
+
+            missing_fields = REQUIRED_PROPOSAL_FIELDS - set(meta.keys())
+            if missing_fields:
+                self.errors.append(
+                    f"MISSING_PROPOSAL_METADATA [{rel_p}]: Missing required fields {sorted(missing_fields)}"
+                )
+                return False
+
+            # Check content for hardcoded paths
+            self.check_hardcoded_paths_in_content([rel_p])
+        except Exception as ex:
+            self.errors.append(f"PROPOSAL_PARSE_ERROR [{rel_p}]: {ex}")
+            return False
+
+        return len(self.errors) == initial_errors
+
     def check_proposal_metadata(self) -> None:
         """Verify all proposals in .agents/proposals/ have valid frontmatter."""
         proposals_dir = self.root_dir / ".agents" / "proposals"
@@ -158,36 +204,7 @@ class SpokeLeakageAuditor:
             return
 
         for p_file in proposals_dir.glob("*.md"):
-            rel_p = p_file.relative_to(self.root_dir).as_posix()
-            try:
-                text = p_file.read_text(encoding="utf-8")
-                if not text.startswith("---"):
-                    self.errors.append(
-                        f"INVALID_PROPOSAL_FRONTMATTER [{rel_p}]: File must start with YAML frontmatter '---'"
-                    )
-                    continue
-
-                parts = text.split("---", 2)
-                if len(parts) < 3:
-                    self.errors.append(
-                        f"INVALID_PROPOSAL_FRONTMATTER [{rel_p}]: Incomplete YAML frontmatter delimiter"
-                    )
-                    continue
-
-                meta = yaml.safe_load(parts[1])
-                if not isinstance(meta, dict):
-                    self.errors.append(
-                        f"INVALID_PROPOSAL_FRONTMATTER [{rel_p}]: Frontmatter must be a YAML dictionary"
-                    )
-                    continue
-
-                missing_fields = REQUIRED_PROPOSAL_FIELDS - set(meta.keys())
-                if missing_fields:
-                    self.errors.append(
-                        f"MISSING_PROPOSAL_METADATA [{rel_p}]: Missing required fields {sorted(missing_fields)}"
-                    )
-            except Exception as ex:
-                self.errors.append(f"PROPOSAL_PARSE_ERROR [{rel_p}]: {ex}")
+            self.audit_proposal_file(p_file)
 
     def check_md_root_hygiene(self) -> None:
         """Verify that .md/ root is clean and conforms to Global Rule 1 & Rule 3."""

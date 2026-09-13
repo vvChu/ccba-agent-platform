@@ -18,6 +18,34 @@ from typing import Any
 # Default token budget heuristics per Spoke (e.g., 5M tokens per monthly cycle)
 DEFAULT_SPOKE_BUDGET_TOKENS = 5_000_000
 
+# Standard agent built-ins and platform utilities excluded from Spoke domain innovations
+STANDARD_BUILTIN_TOOLS: frozenset[str] = frozenset(
+    {
+        "run_command",
+        "view_file",
+        "write_to_file",
+        "replace_file_content",
+        "grep_search",
+        "find_by_name",
+        "list_dir",
+        "manage_task",
+        "send_message",
+        "schedule",
+        "invoke_subagent",
+        "define_subagent",
+        "manage_subagents",
+        "generate_image",
+        "read_url_content",
+        "search_web",
+        "ask_question",
+        "call_mcp_tool",
+        "list_resources",
+        "read_resource",
+        "gemini_search_docs",
+        "gemini_get_doc",
+    }
+)
+
 
 def _format_number(n: int | float) -> str:
     """Format numbers with comma separators."""
@@ -81,6 +109,70 @@ class FleetTelemetryReport:
     total_fleet_cost_usd: float = 0.0
     spokes_by_type: dict[str, int] = field(default_factory=dict)
     fleet_tool_counts: dict[str, int] = field(default_factory=dict)
+    top_spoke_innovations: list[dict[str, Any]] = field(default_factory=list)
+
+    def get_top_spoke_innovations(self, candidate_threshold: int = 5) -> list[dict[str, Any]]:
+        """Extract, rank, and classify cross-spoke tools and local innovations (ADR-0045, ADR-0046).
+
+        Identifies tools/skills developed or frequently invoked across Spokes,
+        distinguishing standard agent built-ins from genuine domain innovations.
+        Recommends candidates for upstream Hub Monorepo ingestion via ADR-0045 proposals.
+        """
+        tool_spokes_map: dict[str, list[str]] = {}
+        tool_total_calls: dict[str, int] = {}
+
+        # 1. Aggregate invocations and source spokes
+        for s in self.spokes:
+            spoke_label = s.project_name or s.spoke_id or "Unknown Spoke"
+            for tool_name, count in s.tool_counts.items():
+                if tool_name in STANDARD_BUILTIN_TOOLS:
+                    continue
+                if tool_name not in tool_spokes_map:
+                    tool_spokes_map[tool_name] = []
+                    tool_total_calls[tool_name] = 0
+                if spoke_label not in tool_spokes_map[tool_name]:
+                    tool_spokes_map[tool_name].append(spoke_label)
+                tool_total_calls[tool_name] += count
+
+        # Fallback to fleet_tool_counts if spokes data was pre-aggregated
+        for tool_name, count in self.fleet_tool_counts.items():
+            if tool_name in STANDARD_BUILTIN_TOOLS:
+                continue
+            if tool_name not in tool_total_calls:
+                tool_total_calls[tool_name] = count
+                tool_spokes_map[tool_name] = ["Fleet Aggregate"]
+
+        # 2. Rank and classify candidates
+        innovations: list[dict[str, Any]] = []
+        for tool_name, total_calls in tool_total_calls.items():
+            spoke_sources = tool_spokes_map.get(tool_name, [])
+            category = "Domain Innovation"
+
+            # Candidate threshold: >= 5 total calls or active across >= 2 different Spokes
+            if total_calls >= candidate_threshold or len(spoke_sources) >= 2:
+                promotion_status = "Candidate for Hub Ingestion"
+                recommendation = (
+                    "Recommend promoting to Hub Monorepo via ADR-0045 / ADR-0046 proposal "
+                    "(.agents/proposals/TEMPLATE.md)"
+                )
+            else:
+                promotion_status = "Spoke Local Innovation"
+                recommendation = "Retain as Spoke local innovation until cross-project demand emerges"
+
+            innovations.append(
+                {
+                    "tool_or_skill": tool_name,
+                    "total_calls": total_calls,
+                    "source_spokes": spoke_sources,
+                    "category": category,
+                    "promotion_status": promotion_status,
+                    "recommendation": recommendation,
+                }
+            )
+
+        # Sort by total calls descending, then tool name alphabetically
+        innovations.sort(key=lambda x: (-x["total_calls"], x["tool_or_skill"]))
+        return innovations
 
     def to_dict(self) -> dict[str, Any]:
         """Convert fleet report to serializable dictionary."""
@@ -94,6 +186,7 @@ class FleetTelemetryReport:
             "total_fleet_cost_usd": round(self.total_fleet_cost_usd, 4),
             "spokes_by_type": self.spokes_by_type,
             "fleet_tool_counts": self.fleet_tool_counts,
+            "top_spoke_innovations": self.get_top_spoke_innovations(),
             "spokes": [s.to_dict() for s in self.spokes],
         }
 
@@ -132,6 +225,30 @@ class FleetTelemetryReport:
                 f"| `{s.project_name}` | {s.project_type} | {status_badge} | {s.total_sessions} | "
                 f"{s.total_tokens:,} | ${s.total_cost_usd:.4f} | {s.budget_status} |"
             )
+
+        # 4. Top Spoke Innovations & Candidates for Hub Ingestion (ADR-0045, ADR-0046)
+        lines.extend(
+            [
+                "",
+                "## 4. Top Spoke Innovations & Candidates for Hub Ingestion (ADR-0045, ADR-0046)",
+                "",
+                "| Tool / Custom Skill | Invocations | Source Spokes | Status | Recommendation |",
+                "| :--- | :---: | :--- | :---: | :--- |",
+            ]
+        )
+
+        innovations = self.get_top_spoke_innovations()
+        if not innovations:
+            lines.append(
+                "| _None_ | 0 | _No Spoke-local domain innovations detected_ | Compliant | Retain standard catalog |"
+            )
+        else:
+            for item in innovations:
+                spokes_str = ", ".join(item["source_spokes"])
+                lines.append(
+                    f"| `{item['tool_or_skill']}` | {item['total_calls']} | {spokes_str} | "
+                    f"{item['promotion_status']} | {item['recommendation']} |"
+                )
 
         return "\n".join(lines).strip() + "\n"
 
@@ -316,7 +433,7 @@ def aggregate_fleet_telemetry(
     total_cost = sum(s.total_cost_usd for s in summaries)
     online_count = sum(1 for s in summaries if s.is_online)
 
-    return FleetTelemetryReport(
+    report = FleetTelemetryReport(
         hub_name=hub_name,
         spokes=summaries,
         total_spokes=len(summaries),
@@ -328,6 +445,8 @@ def aggregate_fleet_telemetry(
         spokes_by_type=spokes_by_type,
         fleet_tool_counts=fleet_tools,
     )
+    report.top_spoke_innovations = report.get_top_spoke_innovations()
+    return report
 
 
 def _generate_fleet_comparison_chart_svg(
@@ -557,6 +676,40 @@ def generate_fleet_dashboard_html(
         )
     spoke_rows_html = "\n".join(spoke_rows)
 
+    # Top Spoke Innovations Rows (ADR-0045, ADR-0046)
+    innovations = report.get_top_spoke_innovations()
+    innov_rows = []
+    for inn in innovations:
+        status_color = (
+            "bg-purple-500/10 text-purple-400 border-purple-500/20"
+            if inn["promotion_status"] == "Candidate for Hub Ingestion"
+            else "bg-slate-500/10 text-slate-400 border-slate-500/20"
+        )
+        spokes_badges = " ".join(
+            f'<span class="inline-block px-1.5 py-0.5 rounded text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20">{html.escape(spk)}</span>'
+            for spk in inn["source_spokes"]
+        )
+        innov_rows.append(
+            f"""
+            <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 text-xs transition-colors">
+              <td class="py-2.5 px-3 font-mono font-semibold text-purple-400">{html.escape(inn['tool_or_skill'])}</td>
+              <td class="py-2.5 px-3">{spokes_badges}</td>
+              <td class="py-2.5 px-3 text-right font-mono font-semibold">{inn['total_calls']:,}</td>
+              <td class="py-2.5 px-3 text-center">
+                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold border {status_color}">
+                  {inn['promotion_status']}
+                </span>
+              </td>
+              <td class="py-2.5 px-3 text-[var(--muted-foreground)]">{html.escape(inn['recommendation'])}</td>
+            </tr>
+            """
+        )
+    innov_rows_html = (
+        "".join(innov_rows)
+        if innov_rows
+        else '<tr><td colspan="5" class="py-3 text-center text-xs text-[var(--muted-foreground)]">No unique Spoke-local domain innovations detected in current fleet telemetry cycle.</td></tr>'
+    )
+
     return f"""<!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
@@ -740,6 +893,43 @@ def generate_fleet_dashboard_html(
         </thead>
         <tbody id="spokeTableBody">
           {spoke_rows_html}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Top Spoke Innovations & Candidates for Hub Ingestion Section (ADR-0045, ADR-0046) -->
+  <section class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm mb-6">
+    <div class="mb-4">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+          Knowledge Diffusion
+        </span>
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+          ADR-0045 Upstream Loop
+        </span>
+      </div>
+      <h2 class="text-sm font-semibold tracking-wide flex items-center gap-2 text-[var(--foreground)]">
+        <span class="text-purple-400">🚀</span> Top Spoke Innovations & Candidates for Hub Ingestion
+      </h2>
+      <p class="text-xs text-[var(--muted-foreground)] mt-0.5">
+        Autonomous cross-spoke knowledge diffusion: highlights domain tools developed locally across Spokes. Tools with &ge;5 invocations or active across &ge;2 Spokes qualify as candidates for Hub Monorepo ingestion via <code class="font-mono text-[11px] text-[var(--primary)]">.agents/proposals/TEMPLATE.md</code>.
+      </p>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="text-[11px] text-[var(--muted-foreground)] uppercase border-b border-[var(--border)]">
+          <tr>
+            <th class="py-2.5 px-3">Tool / Innovation Name</th>
+            <th class="py-2.5 px-3">Source Spokes</th>
+            <th class="py-2.5 px-3 text-right">Invocations</th>
+            <th class="py-2.5 px-3 text-center">Promotion Status</th>
+            <th class="py-2.5 px-3">Recommendation / Next Step</th>
+          </tr>
+        </thead>
+        <tbody>
+          {innov_rows_html}
         </tbody>
       </table>
     </div>

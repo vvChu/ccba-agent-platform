@@ -176,16 +176,32 @@
 
 ---
 
-### 🟢 [BIÊN GIỚI / UNBLOCKED] [Ticket 5: Nâng Cấp Dashboard Khuyếch Tán Tri Thức Spoke-Hub & Mẫu Biểu Đề Bạt](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/cross_spoke_analytics.py)
-* **Loại công việc:** `Prototype [HITL] / Research`
-* **Người nhận việc (Assignee):** *Chưa gán (Unassigned)*
-* **Trạng thái:** **MỞ / UNBLOCKED (Sẵn sàng triển khai - Chặn bởi Ticket 2 đã được giải phóng)**
-* **Mục tiêu cần giải quyết:**
-  Hỗ trợ khuyếch tán tri thức từ Spoke về Hub thông qua Dashboard quan sát trực quan và mẫu biểu đề xuất chuẩn tắc, tuân thủ Hiến pháp 11 Ghế CCBA Charter 2026 ([ADR-0045](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0046](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md)).
-* **Phạm vi tác động:**
-  - Nâng cấp [`scripts/governance/cross_spoke_analytics.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/cross_spoke_analytics.py): bổ sung phân mục **"Top Spoke Innovations & Candidates for Hub Ingestion"** (gợi ý các module/script tại Spoke có tần suất sử dụng cao để kỹ sư xem xét).
-  - Chuẩn hóa tài liệu hướng dẫn và mẫu biểu đề bạt `/ccba-propose-to-hub`, nhấn mạnh yêu cầu: Cổng Cứng (`check_spoke_leakage.py` pass 100%) và Cổng Mềm (Maintainer QC Level 5 phê chuẩn qua `/ccba-review-proposal`).
-  - Ghi nhận nguyên tắc bất biến: cấm thuật toán tự ý khai tử các kỹ năng nghiệp vụ chu kỳ dài.
-* **Tiêu chí hoàn thành (Definition of Done):**
-  - `python scripts/governance/cross_spoke_analytics.py --render-markdown` xuất báo cáo trực quan đầy đủ.
-  - Bản thảo hướng dẫn đề bạt tuân thủ 100% ADR-0045 và ADR-0046.
+### 🟣 [ĐÃ HOÀN THÀNH / CLOSED] [Ticket 5: Nâng Cấp Dashboard Khuyếch Tán Tri Thức Spoke-Hub & Mẫu Biểu Đề Bạt](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/cross_spoke_analytics.py)
+* **Loại công việc:** `Prototype [HITL] / Feature`
+* **Người nhận việc (Assignee):** `Lead Orchestrator & DeepCoder`
+* **Trạng thái:** **ĐÃ HOÀN THÀNH / CLOSED (2026-09-13)**
+* **Mục tiêu đã giải quyết:**
+  Nâng cấp toàn diện cơ chế khuyếch tán tri thức từ Spoke về Hub thông qua Dashboard quan sát trực quan, bảng phân tích Top Spoke Innovations và mẫu biểu đề xuất chuẩn tắc, tuân thủ nghiêm ngặt Hiến pháp 11 Ghế CCBA Charter 2026 ([ADR-0045](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0046](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md)).
+* **Phạm vi tác động đã hoàn tất:**
+  - **[packages/ccba-harness/src/ccba_harness/fleet.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/fleet.py):**
+    - Bổ sung hằng số `STANDARD_BUILTIN_TOOLS`: loại trừ 22 công cụ built-in / platform standard khỏi danh sách innovations.
+    - Bổ sung thuộc tính `top_spoke_innovations` và phương thức `get_top_spoke_innovations(candidate_threshold=5)` vào `FleetTelemetryReport`: gom nhóm, xếp hạng tần suất, phân loại `Candidate for Hub Ingestion` (gọi $\ge 5$ lần hoặc xuất hiện trên $\ge 2$ Spokes) vs `Spoke Local Innovation`, kèm khuyến nghị chuẩn theo ADR-0045.
+    - Cập nhật phương thức `to_markdown()`: bổ sung phân mục **"## 4. Top Spoke Innovations & Candidates for Hub Ingestion (ADR-0045, ADR-0046)"** dạng bảng trực quan.
+    - Cập nhật hàm `generate_fleet_dashboard_html()`: tích hợp khối bảng giao diện Tailwind CSS hiển thị danh sách công cụ nghiệp vụ nổi trội, source spokes, lượt gọi và trạng thái đề cử.
+  - **[scripts/governance/cross_spoke_analytics.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/cross_spoke_analytics.py):**
+    - Bổ sung cờ `--innovations-only` cho lệnh `scan`: xuất danh sách ứng viên đề bạt dạng JSON hoặc Markdown.
+    - Cập nhật lệnh `dashboard`: hiển thị tóm tắt số lượng Innovations và Candidates được phát hiện trực tiếp trên màn hình console.
+  - **[.agents/proposals/TEMPLATE.md](file:///d:/GitHubProjects/ccba-agent-platform/.agents/proposals/TEMPLATE.md):**
+    - Ban hành mẫu biểu đề bạt chuẩn hóa với 10 trường metadata frontmatter (`proposal_id`, `type`, `name`, `status`, `priority`, `proposed_by_project`, `proposed_by_archetype`, `proposed_date`, `applies_to`), 5 phân mục nội dung cốt lõi và Cam kết Bất biến về Bảo tồn Nghiệp vụ (cấm auto-deprecate kỹ năng chu kỳ dài).
+  - **[docs/governance/spoke_to_hub_proposal_guide.md](file:///d:/GitHubProjects/ccba-agent-platform/docs/governance/spoke_to_hub_proposal_guide.md):**
+    - Ban hành tài liệu hướng dẫn quy trình chuyển giao sáng kiến 3 bước từ Spoke lên Hub: Ươm tạo cục bộ $\rightarrow$ Soạn thảo Proposal $\rightarrow$ Vượt 2 Cổng Thẩm định (Cổng Cứng `check_spoke_leakage.py` & Cổng Mềm QC Level 5 qua `/ccba-review-proposal`).
+  - **[scripts/governance/check_spoke_leakage.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/check_spoke_leakage.py):**
+    - Bổ sung phương thức `audit_proposal_file(p_file: Path) -> bool` vào lớp `SpokeLeakageAuditor`, cho phép kiểm toán độc lập từng tệp proposal đơn lẻ.
+  - **[tests/governance/test_cross_spoke_analytics.py](file:///d:/GitHubProjects/ccba-agent-platform/tests/governance/test_cross_spoke_analytics.py):**
+    - Bổ sung 4 bài test TDD: trích xuất/phân loại Top Spoke Innovations, sinh bảng markdown section 4, sinh bảng trên HTML dashboard, và kiểm toán rò rỉ mẫu biểu `TEMPLATE.md`.
+* **Kết quả kiểm chứng:**
+  - `python -m pytest tests/governance/test_cross_spoke_analytics.py -v` đạt **11/11 passed trong 2.63s**.
+  - `python -m ruff check packages/ccba-harness/ scripts/governance/ tests/governance/` đạt **All checks passed!**.
+  - `python scripts/governance/check_spoke_leakage.py --all` quét 3,113 tệp đạt **0 Critical Violations, 0 Warnings (PASSED)**.
+  - Khóa hoàn thành cứng: `python -m ccba_harness verify-patch --preset ci` đạt **Exit Code 0** (5/5 commands passed).
+  - **KẾT QUẢ TỔNG THỂ LỘ TRÌNH:** Hoàn tất 5/5 Tickets của Bản đồ Tái định hình Tầng 3 (Pragmatic Strategic Scaling). Khép lại toàn bộ phân kỳ Tầng 3 trong trạng thái hoàn toàn tất định!
