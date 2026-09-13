@@ -73,8 +73,7 @@
 │   [Ticket 2: 30 GPI Anchors & Deadband] ──► [Ticket 5: Dashboard Spoke Tri Thức]      │
 │                     (DONE)                                (Unblocked)                  │
 │                                                                                        │
-│   [Ticket 3: Dogfood Swarm vào CI]                                                     │
-│                (Unblocked)                                                             │
+│   [Ticket 3: Dogfood Swarm vào CI] (DONE)                                              │
 │                                                                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -128,16 +127,24 @@
 
 ---
 
-### 🟢 [BIÊN GIỚI / UNBLOCKED] [Ticket 3: Tích Hợp Kịch Bản Kiểm Thử Áp Lực 3 Workers Swarm Vào CI](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/run_qc_swarm_dogfood.py)
+### 🟣 [ĐÃ HOÀN THÀNH / CLOSED] [Ticket 3: Tích Hợp Kịch Bản Kiểm Thử Áp Lực 3 Workers Swarm Vào CI](file:///d:/GitHubProjects/ccba-agent-platform/tests/governance/test_swarm_dogfood_ci.py)
 * **Loại công việc:** `Task [AFK]`
-* **Người nhận việc (Assignee):** *Chưa gán (Unassigned)*
-* **Trạng thái:** **MỞ / UNBLOCKED (Nằm tại Biên giới)**
-* **Mục tiêu cần giải quyết:**
+* **Người nhận việc (Assignee):** `DeepCoder`
+* **Trạng thái:** **ĐÃ HOÀN THÀNH / CLOSED (2026-09-13)**
+* **Mục tiêu đã giải quyết:**
   Đưa kịch bản dogfood đa tác tử thực tế vào bộ kiểm thử CI để bảo vệ Single-Writer Protocol ([ADR-0053](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0053-teamwork-multi-agent-orchestration-framework.md)) cho 2 hệ thống Swarm thực thụ (`ccba-teamwork` và `ccba-ai-qc`).
-* **Phạm vi tác động:**
-  - Tái sử dụng logic từ [`scripts/governance/run_qc_swarm_dogfood.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/run_qc_swarm_dogfood.py) (602 dòng).
-  - Đóng gói một bài test xác định trong `tests/governance/test_swarm_dogfood_ci.py`: giả lập 3 Workers xuất bản vá đồng thời ra `.system_generated/scratch/worker_{N}/`, kích hoạt [`apply_worker_patch.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/apply_worker_patch.py), kiểm tra khả năng phát hiện va chạm dòng (collision detection) và cơ chế atomic snapshot rollback.
-  - Cập nhật tài liệu kiến trúc làm rõ: 8/10 Orchestrators còn lại là User Rituals tương tác (0 token nền), không áp dụng swarm benchmark cho nhóm này.
+* **Phạm vi tác động đã hoàn tất:**
+  - Đóng gói tệp kiểm thử chuyên sâu [`tests/governance/test_swarm_dogfood_ci.py`](file:///d:/GitHubProjects/ccba-agent-platform/tests/governance/test_swarm_dogfood_ci.py):
+    - `test_3_worker_swarm_concurrent_clean_merge`: Mô phỏng 3 workers (Legal, MEP, Arch) ghi patch đồng thời vào `.system_generated/scratch/worker_{1,2,3}/`, Single-Writer nạp và gộp nguyên tử vào `report_registry.md`, xác minh zero-collision, dry-run passed, và verification passed trong $< 1.0$s.
+    - `test_3_worker_swarm_syntactic_collision_rejection`: Phát hiện và từ chối va chạm dòng khi Worker 1 và Worker 2 cùng sửa đổi một vị trí mã nguồn, bảo vệ nguyên trạng đĩa.
+    - `test_3_worker_swarm_semantic_conflict_atomic_rollback`: Bắt lỗi ngữ nghĩa khi kiểm tra verification thất bại và thực hiện phục hồi snapshot 100% trên toàn bộ các tệp đã sửa.
+    - `test_load_patches_from_multi_worker_scratch`: Quét đệ quy toàn bộ thư mục scratch đa workers.
+  - Cập nhật tài liệu kiến trúc [`docs/adr/0053-teamwork-multi-agent-orchestration-framework.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0053-teamwork-multi-agent-orchestration-framework.md) (Mục 3.H) phân định ranh giới 2 nhóm Orchestrators: Multi-Agent Swarms (`ccba-ai-qc`, `ccba-teamwork`) vs 7 User Rituals tương tác (`disable-model-invocation: true`, 0 background tokens).
+* **Kết quả kiểm chứng:**
+  - `python -m pytest tests/governance/test_swarm_dogfood_ci.py -v` đạt **4/4 passed trong 0.82s** (đáp ứng tiêu chí $< 5.0$s).
+  - `python -m ruff check tests/governance/test_swarm_dogfood_ci.py` đạt **All checks passed!**.
+  - `python scripts/sync_hub_adr_matrix.py --check` đạt **PASS** (100% in sync).
+  - `python -m ccba_harness verify-patch --preset ci` đạt **Exit Code 0** (5/5 commands passed).
 * **Tiêu chí hoàn thành (Definition of Done):**
   - `python -m pytest tests/governance/test_swarm_dogfood_ci.py -v` pass trong $< 5.0$ giây.
   - Khóa hoàn thành cứng: `python -m ccba_harness verify-patch --preset ci` đạt Exit Code 0.
