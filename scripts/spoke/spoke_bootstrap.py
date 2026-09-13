@@ -228,7 +228,13 @@ class SpokeBootstrapper:
 
         # Archetype Tier 1 defaults if not explicitly disabled
         if not declared and archetype in ARCHETYPE_TIER1_DEFAULTS:
+            raw_proj_type = str(proj.get("type", "") or context.get("project_type", "")).strip()
             for default_pkg in ARCHETYPE_TIER1_DEFAULTS[archetype]:
+                if default_pkg == "ccba-legal-intel":
+                    from scripts.spoke.sync.sdk_inspector import is_legal_related_spoke
+
+                    if not is_legal_related_spoke(self.spoke_root, raw_proj_type):
+                        continue
                 target_set.add(default_pkg)
 
         # Sort according to topology order

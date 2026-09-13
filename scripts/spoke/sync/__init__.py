@@ -43,6 +43,7 @@ from .sdk_inspector import (
     LegalKnowledgeSyncOrchestrator,
     SharedSdkInspector,
     TestGuardrailCopier,
+    is_legal_related_spoke,
 )
 
 __all__ = [
@@ -54,6 +55,7 @@ __all__ = [
     "TestGuardrailCopier",
     "SharedSdkInspector",
     "LegalKnowledgeSyncOrchestrator",
+    "is_legal_related_spoke",
     "GitWorkingTreeGuard",
     "SpokeBackupManager",
     "HubNotFoundError",
