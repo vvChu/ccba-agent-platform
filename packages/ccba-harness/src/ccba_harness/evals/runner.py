@@ -415,14 +415,20 @@ def load_eval_dataset(
     return items
 
 
-def _create_default_eval_task(
-    skill_name: str | None,
-    project_root: Path,
-) -> Callable[[EvalItem], Awaitable[Any]]:
-    """Creates a default evaluation task that executes against the target skill prompt."""
-    system_prompt = ""
-    if skill_name:
-        clean = skill_name.strip()
+def resolve_target_skill_file(
+    skill: str | None, project_root: Path
+) -> Path | None:
+    """Resolves target SKILL.md file from skill name, path, or workspace.
+
+    Args:
+        skill: Skill name, directory path, or SKILL.md file path.
+        project_root: Workspace root directory.
+
+    Returns:
+        Resolved Path to SKILL.md, or None if not found.
+    """
+    if skill:
+        clean = skill.strip()
         p_cand = Path(clean)
         candidates: list[Path] = []
         if p_cand.is_absolute():
@@ -440,18 +446,48 @@ def _create_default_eval_task(
             [
                 project_root / ".agents" / "skills" / c_name / "SKILL.md",
                 project_root / ".agents" / "skills" / f"ccba-{c_name}" / "SKILL.md",
+                project_root / ".agents" / "skills" / f"bigbim-{c_name}" / "SKILL.md",
                 project_root / ".agents" / "skills" / c_name.removeprefix("ccba-") / "SKILL.md",
+                project_root / ".agents" / "skills" / c_name.removeprefix("bigbim-") / "SKILL.md",
+                project_root / "skills" / c_name / "SKILL.md",
+                project_root / "skills" / f"ccba-{c_name}" / "SKILL.md",
+                project_root / "skills" / f"bigbim-{c_name}" / "SKILL.md",
             ]
         )
         for cand in candidates:
-            if cand.exists() and cand.is_file() and cand.name == "SKILL.md":
-                try:
-                    system_prompt = cand.read_text(encoding="utf-8")
-                    break
-                except Exception:
-                    pass
+            if cand.exists() and cand.is_file() and cand.name.lower() == "skill.md":
+                return cand.resolve()
+
+    # Fallback to program.md if available
+    prog = project_root / "program.md"
+    if prog.exists() and prog.is_file():
+        try:
+            from .tuner import RatchetConfig
+
+            cfg = RatchetConfig.from_markdown_program(prog, root=project_root)
+            if cfg.target_file.exists():
+                return cfg.target_file.resolve()
+        except Exception:
+            pass
+
+    return None
+
+
+def _create_default_eval_task(
+    skill_name: str | None,
+    project_root: Path,
+) -> Callable[[EvalItem], Awaitable[Any]]:
+    """Creates a default evaluation task that executes against the target skill prompt."""
+    cand = resolve_target_skill_file(skill_name, project_root)
 
     async def _task(item: EvalItem) -> Any:
+        current_system_prompt = ""
+        if cand and cand.exists() and cand.is_file():
+            try:
+                current_system_prompt = cand.read_text(encoding="utf-8")
+            except Exception:
+                pass
+
         prompt_str = (
             item.input_prompt
             if isinstance(item.input_prompt, str)
@@ -462,8 +498,8 @@ def _create_default_eval_task(
 
             if hasattr(async_ai, "chat") and callable(async_ai.chat):
                 if asyncio.iscoroutinefunction(async_ai.chat):
-                    return await async_ai.chat(prompt_str, system=system_prompt)
-                return async_ai.chat(prompt_str, system=system_prompt)
+                    return await async_ai.chat(prompt_str, system=current_system_prompt)
+                return async_ai.chat(prompt_str, system=current_system_prompt)
         except Exception:
             pass
 
@@ -471,7 +507,7 @@ def _create_default_eval_task(
             from ccba_ai import ai
 
             if hasattr(ai, "chat") and callable(ai.chat):
-                return ai.chat(prompt_str, system=system_prompt)
+                return ai.chat(prompt_str, system=current_system_prompt)
         except Exception:
             pass
 
@@ -495,6 +531,8 @@ def run_eval_pipeline(
     max_concurrency: int = 5,
     difficulty: str | None = None,
     limit: int | None = None,
+    dry_run_git: bool = False,
+    full_sweep: bool = False,
 ) -> EvalReport:
     """Executes evaluation pipeline across dataset test cases with multi-trial support."""
     if project_root is None:
@@ -526,6 +564,7 @@ def run_eval_pipeline(
                 "skill": skill,
                 "trials": trials,
                 "auto_tune": auto_tune,
+                "full_sweep": full_sweep,
                 "difficulty": difficulty,
                 "limit": limit,
             },
@@ -533,6 +572,51 @@ def run_eval_pipeline(
 
     active_scorers = scorers or [AutoItemScorer()]
     active_task = task or _create_default_eval_task(skill, project_root)
+
+    # If auto_tune is requested and target skill file is found, execute GitRatchetOptimizer
+    if auto_tune:
+        target_file = resolve_target_skill_file(skill, project_root)
+        if target_file is None or not target_file.exists():
+            raise FileNotFoundError(
+                f"Target skill file could not be resolved for auto-tuning (skill={skill!r})"
+            )
+
+        from .tuner import GitRatchetOptimizer, RatchetConfig
+
+        tuner_config = RatchetConfig(
+            target_file=target_file,
+            eval_dataset_file=Path(dataset) if dataset and Path(dataset).is_file() else None,
+            target_score=pass_threshold,
+            max_iterations=trials,
+            skill_name=skill or target_file.parent.name,
+            full_sweep=full_sweep,
+        )
+        tuner = GitRatchetOptimizer(
+            config=tuner_config,
+            scorers=active_scorers,
+            dry_run_git=dry_run_git,
+            project_root=project_root,
+            task=active_task,
+            dataset=items,
+        )
+        ratchet_report = tuner.run()
+
+        # Final evaluation on the optimized content
+        best_content = target_file.read_text(encoding="utf-8")
+        final_report = tuner.evaluate_content(best_content)
+        final_report.metadata.update(
+            {
+                "skill": skill,
+                "trials": trials,
+                "auto_tune": auto_tune,
+                "full_sweep": full_sweep,
+                "difficulty": difficulty,
+                "limit": limit,
+                "auto_tune_status": "optimized" if ratchet_report.kept_commits > 0 else "clean",
+                "ratchet_report": ratchet_report.to_dict(),
+            }
+        )
+        return final_report
 
     runner = EvalRunner(default_pass_threshold=pass_threshold, max_concurrency=max_concurrency)
     num_trials = max(1, trials)
@@ -584,11 +668,6 @@ def run_eval_pipeline(
                 "limit": limit,
                 "trial_scores": [r.overall_score for r in trial_reports],
             },
-        )
-
-    if auto_tune:
-        final_report.metadata["auto_tune_status"] = (
-            "optimized" if final_report.failed_items > 0 else "clean"
         )
 
     return final_report

@@ -419,6 +419,16 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
         help="Enable automatic prompt optimization via SkillOpt loop",
     )
     parser.add_argument(
+        "--dry-run-git",
+        action="store_true",
+        help="Run prompt auto-tuning without actual git commits",
+    )
+    parser.add_argument(
+        "--full-sweep",
+        action="store_true",
+        help="Run all auto-tuning trials without early exit when target score is reached",
+    )
+    parser.add_argument(
         "--dataset",
         type=str,
         default=None,
@@ -492,6 +502,8 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
             pass_threshold=args.threshold,
             difficulty=args.difficulty,
             limit=args.limit,
+            dry_run_git=getattr(args, "dry_run_git", False),
+            full_sweep=getattr(args, "full_sweep", False),
         )
     except Exception as err:
         print(f"ERROR: Evaluation pipeline failed: {err}", file=sys.stderr)
@@ -565,6 +577,14 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
             print("Scorer Breakdown :")
             for sc_name, sc_val in report.summary_by_scorer.items():
                 print(f"  - {sc_name}: {sc_val:.2f}%")
+        ratchet_rep = report.metadata.get("ratchet_report")
+        if ratchet_rep and isinstance(ratchet_rep, dict):
+            print("\nAuto-Tune Git-Ratchet Summary:")
+            print(f"  - Target File    : {ratchet_rep.get('target_file')}")
+            print(f"  - Baseline Score : {ratchet_rep.get('initial_score', 0.0):.2f}%")
+            print(f"  - Final Score    : {ratchet_rep.get('final_score', 0.0):.2f}%")
+            print(f"  - Commits Kept   : {ratchet_rep.get('kept_commits', 0)}")
+            print(f"  - Trials Reverted: {ratchet_rep.get('reverted_trials', 0)}")
         print("=" * 60)
 
     if not passed_all:
@@ -1320,6 +1340,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--auto-tune",
         action="store_true",
         help="Enable automatic prompt optimization via SkillOpt loop",
+    )
+    eval_parser.add_argument(
+        "--dry-run-git",
+        action="store_true",
+        help="Run prompt auto-tuning without actual git commits",
+    )
+    eval_parser.add_argument(
+        "--full-sweep",
+        action="store_true",
+        help="Run all auto-tuning trials without early exit when target score is reached",
     )
     eval_parser.add_argument(
         "--dataset",

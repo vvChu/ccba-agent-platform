@@ -361,7 +361,7 @@ def resolve_preset_commands(
 
     if p == "eval":
         cmds = [
-            f"{python_exec} -m pytest packages/ccba-harness/tests/test_evals_engine.py -q",
+            f"{python_exec} -m pytest packages/ccba-harness/tests/test_evals_engine.py packages/ccba-harness/tests/test_tuner.py -q",
         ]
         if target_str:
             if target_str.endswith(".json") or Path(target_str).is_file():
