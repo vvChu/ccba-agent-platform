@@ -392,8 +392,6 @@ skills:
   - propose-to-hub
   - ccba-create-pr
   - create-pr
-  - ccba-review-proposal
-  - review-proposal
   skill_path: .agents/skills/ccba-contribute-to-hub/SKILL.md
   command: /ccba-contribute-to-hub
   tier: kernel
@@ -898,6 +896,20 @@ skills:
   - sequential-thinking
   skill_path: .agents/skills/ccba-research/SKILL.md
   command: /ccba-research
+  tier: kernel
+- name: ccba-review-proposal
+  bundle: _governance
+  description: Thẩm định toàn trình PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered
+    Review (Fast/Boost), Spoke Leakage Guard, Copilot Guard và Đồng bộ Catalog Hậu
+    Merge (ADR 0045, ADR 0047)
+  triggers:
+  - ccba-review-proposal
+  - review-proposal
+  - review proposal
+  - thẩm định proposal
+  - duyệt proposal
+  skill_path: .agents/skills/ccba-review-proposal/SKILL.md
+  command: /ccba-review-proposal
   tier: kernel
 - name: ccba-seminar-builder
   bundle: _consulting

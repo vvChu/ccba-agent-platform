@@ -1,6 +1,6 @@
 # CCBA Agent Platform Skills
 
-> Curated registry of 71 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
+> Curated registry of 72 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
 
 ## Navigation Portals
 
@@ -12,11 +12,11 @@
 
 ## Core Endpoints & Documentation
 
-- [Skills Index](skills/INDEX.md): Markdown catalog index for all 71 skills.
+- [Skills Index](skills/INDEX.md): Markdown catalog index for all 72 skills.
 - [Skills FAQ](skills/FAQ.md): Frequently asked questions on Hub-Spoke, invocation, and troubleshooting.
-- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 71 skills.
+- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 72 skills.
 
-## All Active Skills (71 Skills)
+## All Active Skills (72 Skills)
 
 - [platform-loader](skills/platform-loader.md): /platform-loader — Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn bộ skills và rules.
 - [bigbim-classification](skills/bigbim-classification.md): /bigbim-classification — Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass 200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
@@ -72,6 +72,7 @@
 - [ccba-promote-sandbox](skills/ccba-promote-sandbox.md): /ccba-promote-sandbox — Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc Hub (ADR 0046)
 - [ccba-release-feature](skills/ccba-release-feature.md): /ccba-release-feature — Merge PR, cleanup branch, auto-close local issues và cập nhật walkthrough
 - [ccba-research](skills/ccba-research.md): /ccba-research — Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ trợ Dual-Agent Adversarial).
+- [ccba-review-proposal](skills/ccba-review-proposal.md): /ccba-review-proposal — Thẩm định toàn trình PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered Review (Fast/Boost), Spoke Leakage Guard, Copilot Guard và Đồng bộ Catalog Hậu Merge (ADR 0045, ADR 0047)
 - [ccba-seminar-builder](skills/ccba-seminar-builder.md): /ccba-seminar-builder — Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda, outline, và archive nội dung các buổi thảo luận.
 - [ccba-session-retrospective](skills/ccba-session-retrospective.md): /ccba-session-retrospective — Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa kỹ năng trực tiếp, đồng bộ ADR Matrix, tái biên dịch tài liệu, kích hoạt Governance Gate và dọn dẹp workspace.
 - [ccba-setup-skills](skills/ccba-setup-skills.md): /ccba-setup-skills — Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu hình issue tracker, nhãn phân loại (triage), và bố cục tài liệu tri thức (Domain Docs). Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
