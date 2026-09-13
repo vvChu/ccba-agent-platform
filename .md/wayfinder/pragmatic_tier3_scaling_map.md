@@ -71,7 +71,7 @@
 │                                                   (Unblocked)                          │
 │                                                                                        │
 │   [Ticket 2: 30 GPI Anchors & Deadband] ──► [Ticket 5: Dashboard Spoke Tri Thức]      │
-│                (Unblocked)                                (Blocked by T2)              │
+│                     (DONE)                                (Unblocked)                  │
 │                                                                                        │
 │   [Ticket 3: Dogfood Swarm vào CI]                                                     │
 │                (Unblocked)                                                             │
@@ -97,24 +97,34 @@
 
 ---
 
-### 🟢 [BIÊN GIỚI / UNBLOCKED] [Ticket 2: Đóng Gói 30 Canonical GPI Anchors & Deadband Hysteresis Engine](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/gpi.py)
+### 🟣 [ĐÃ HOÀN THÀNH / CLOSED] [Ticket 2: Đóng Gói 30 Canonical GPI Anchors & Deadband Hysteresis Engine](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/gpi.py)
 * **Loại công việc:** `Task [AFK]`
-* **Người nhận việc (Assignee):** *Chưa gán (Unassigned)*
-* **Trạng thái:** **MỞ / UNBLOCKED (Nằm tại Biên giới)**
-* **Mục tiêu cần giải quyết:**
+* **Người nhận việc (Assignee):** `DeepCoder`
+* **Trạng thái:** **ĐÃ HOÀN THÀNH / CLOSED (2026-09-13)**
+* **Mục tiêu đã giải quyết:**
   Tạo chốt chặn hồi quy kiến trúc bất biến cho chỉ số GPI ([ADR-0057](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md)), bảo đảm cấu trúc 71 kỹ năng không bị trôi dạt khi mở rộng.
-* **Phạm vi tác động:**
+* **Phạm vi tác động đã hoàn tất:**
   - **[packages/ccba-harness/src/ccba_harness/gpi.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/gpi.py):**
-    - Bổ sung cơ chế `Deadband Hysteresis`: Nếu kỹ năng đã tồn tại và điểm số mới rơi vào vùng $[11.5, 12.5)$, bảo lưu phân tầng cũ và yêu cầu cờ `--force-tier-flip` để tránh lật tier ngoài ý muốn.
+    - Bổ sung hằng số `GPI_DEADBAND_LOWER = 11.5` và `GPI_DEADBAND_UPPER = 12.5`.
+    - Cập nhật `DecisionRequest` hỗ trợ `existing_tier` (chuẩn hóa enum/chuỗi) và `force_tier_flip`.
+    - Bổ sung cơ chế `Deadband Hysteresis Engine` trong `evaluate_two_stage_decision`: Khi điểm số rơi vào vùng đệm trễ $[11.5, 12.5)$ và có `existing_tier` (Tier 2A hoặc Tier 2B), bảo lưu phân tầng cũ để triệt tiêu Architectural Churn. Chỉ lật tier khi có cờ `--force-tier-flip`.
+    - Đóng gói cấu trúc `CANONICAL_ANCHORS` gồm 30 mỏ neo tiêu biểu bất biến (10 Tier 1 Deep Seams, 10 Tier 2A Progressive References, 10 Tier 2B Standalone Kernel Skills).
+  - **[packages/ccba-harness/src/ccba_harness/cli.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/cli.py):**
+    - Bổ sung cờ `--existing-tier` và `--force-tier-flip` cho `ccba-harness evaluate-gpi`.
+    - Hiển thị trạng thái bảo lưu Hysteresis trên terminal và trong JSON output.
+  - **[packages/ccba-harness/src/ccba_harness/skill_validator.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/skill_validator.py):**
+    - Chuyển tiếp các tham số override cho Hysteresis trong `evaluate_skill_file`.
   - **[packages/ccba-harness/tests/test_gpi_decision_framework.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/tests/test_gpi_decision_framework.py):**
-    - Bổ sung fixture danh sách **30 Ca Kiểm Chuẩn Tiêu Biểu (Canonical Anchors)** gắn liền với tên thực tế:
-      - 10 Tier 1 Anchors: `ccba_ooxml.format`, `ccba_pdf_prep.chunker`, `ccba_legal.crawler`, v.v.
-      - 10 Tier 2A Anchors: `qto_table_mapping.md`, `meeting_minutes_guide.md`, `pccc_standards_ref.md`, v.v.
-      - 10 Tier 2B Anchors: `ccba-ai-qc-pccc-audit`, `ccba-legal-intel`, `bigbim-classification`, v.v.
-    - Tạo test function `test_30_canonical_anchors_invariants()` xác minh 100% các anchors phân tầng chính xác.
-* **Tiêu chí hoàn thành (Definition of Done):**
-  - `python -m pytest packages/ccba-harness/tests/test_gpi_decision_framework.py -v` pass 100%.
-  - `python -m ccba_harness verify-patch --preset code --target packages/ccba-harness` đạt Exit Code 0.
+    - `test_30_canonical_anchors_invariants()`: Xác minh 100% 30 mỏ neo phân tầng chính xác.
+    - `test_deadband_hysteresis_preserves_existing_tier()`: Kiểm tra điểm 11.5 bảo lưu Tier 2B; điểm 12.0 bảo lưu Tier 2A.
+    - `test_deadband_hysteresis_force_tier_flip()`: Kiểm tra cờ lật tầng cưỡng chế hoạt động chính xác trong vùng đệm.
+    - `test_deadband_hysteresis_outside_deadband_flips_normally()`: Kiểm tra ngoài vùng đệm phân tầng bình thường.
+    - `test_cli_evaluate_gpi_deadband_and_force_flip()` & `test_skill_validator_evaluate_skill_file_with_hysteresis()`.
+* **Kết quả kiểm chứng:**
+  - 45/45 tests passed trong `test_gpi_decision_framework.py`.
+  - 218/218 tests passed trong `packages/ccba-harness/tests/`.
+  - `verify-patch --preset code --target packages/ccba-harness` đạt Exit Code 0 (Ruff + Mypy + Pytest).
+  - `verify-patch --preset ci` đạt Exit Code 0 (5/5 commands passed).
 
 ---
 
@@ -151,10 +161,10 @@
 
 ---
 
-### 🟡 [BỊ CHẶN] [Ticket 5: Nâng Cấp Dashboard Khuyếch Tán Tri Thức Spoke-Hub & Mẫu Biểu Đề Bạt](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/cross_spoke_analytics.py)
+### 🟢 [BIÊN GIỚI / UNBLOCKED] [Ticket 5: Nâng Cấp Dashboard Khuyếch Tán Tri Thức Spoke-Hub & Mẫu Biểu Đề Bạt](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/cross_spoke_analytics.py)
 * **Loại công việc:** `Prototype [HITL] / Research`
 * **Người nhận việc (Assignee):** *Chưa gán (Unassigned)*
-* **Trạng thái:** **BỊ CHẶN (Bởi Ticket 2)**
+* **Trạng thái:** **MỞ / UNBLOCKED (Sẵn sàng triển khai - Chặn bởi Ticket 2 đã được giải phóng)**
 * **Mục tiêu cần giải quyết:**
   Hỗ trợ khuyếch tán tri thức từ Spoke về Hub thông qua Dashboard quan sát trực quan và mẫu biểu đề xuất chuẩn tắc, tuân thủ Hiến pháp 11 Ghế CCBA Charter 2026 ([ADR-0045](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0046](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md)).
 * **Phạm vi tác động:**

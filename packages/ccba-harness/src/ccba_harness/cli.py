@@ -256,6 +256,8 @@ def _print_gpi_result(result: Any, as_json: bool = False) -> None:
     print(f"Assigned Tier   : {result.tier.value}")
     if result.gpi_score is not None:
         print(f"GPI Score       : {result.gpi_score:.2f} (Threshold: 12.0)")
+    if result.breakdown and result.breakdown.get("preserved_by_hysteresis", 0.0) > 0.0:
+        print("Hysteresis      : PRESERVED (Score within deadband [11.5, 12.5))")
     print(f"Standalone Skill: {'ALLOWED' if result.allow_standalone_skill else 'NOT PERMITTED'}")
     print(f"Target Location : {result.target_location}")
     print(f"Rationale       : {result.rationale}")
@@ -311,6 +313,18 @@ def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument("--a", type=float, default=None, help="Autonomous Model Invocation (1-5)")
     parser.add_argument("--p", type=float, default=None, help="Parent Domain Coupling (1-5)")
     parser.add_argument("--parent", type=str, default=None, help="Parent/Master skill name")
+    parser.add_argument(
+        "--existing-tier",
+        type=str,
+        default=None,
+        choices=["tier-1", "tier-2a", "tier-2b", "tier-3"],
+        help="Existing architectural tier for hysteresis deadband evaluation",
+    )
+    parser.add_argument(
+        "--force-tier-flip",
+        action="store_true",
+        help="Force architectural tier flip when GPI score is within deadband [11.5, 12.5)",
+    )
     parser.add_argument("--json", action="store_true", help="Output result in JSON format")
 
     args = parser.parse_args(args_list)
@@ -338,6 +352,8 @@ def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
                 override_orchestrated=True if args.orchestrated else None,
                 override_metrics=override_metrics,
                 override_parent=args.parent,
+                override_existing_tier=args.existing_tier,
+                override_force_tier_flip=args.force_tier_flip,
             )
         except Exception as err:
             print(f"ERROR: Failed to evaluate skill file: {err}", file=sys.stderr)
@@ -373,6 +389,8 @@ def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
             is_orchestrated=args.orchestrated,
             gpi_metrics=gpi_metrics,
             parent_skill=args.parent,
+            existing_tier=args.existing_tier,
+            force_tier_flip=args.force_tier_flip,
         )
         result = evaluate_two_stage_decision(request)
     except Exception as err:
@@ -1317,6 +1335,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     gpi_parser.add_argument("--a", type=float, default=None, help="Autonomous Invocation (1-5)")
     gpi_parser.add_argument("--p", type=float, default=None, help="Parent Coupling (1-5)")
     gpi_parser.add_argument("--parent", type=str, default=None, help="Parent/Master skill name")
+    gpi_parser.add_argument(
+        "--existing-tier",
+        type=str,
+        default=None,
+        choices=["tier-1", "tier-2a", "tier-2b", "tier-3"],
+        help="Existing architectural tier for hysteresis deadband evaluation",
+    )
+    gpi_parser.add_argument(
+        "--force-tier-flip",
+        action="store_true",
+        help="Force architectural tier flip when GPI score is within deadband [11.5, 12.5)",
+    )
     gpi_parser.add_argument("--json", action="store_true", help="Output result in JSON format")
 
     # Subcommand: eval
