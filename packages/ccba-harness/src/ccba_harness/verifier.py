@@ -382,7 +382,7 @@ def verify_patch_execution(
     min_bytes: int = 100,
     required_headings: Sequence[str] | None = None,
     cwd: Path | str | None = None,
-    timeout: float = 120.0,
+    timeout: float = 180.0,
     fail_fast: bool = False,
 ) -> PatchVerificationReport:
     """Execute a sequence of verification commands and aggregate into a report.

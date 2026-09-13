@@ -725,8 +725,8 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--timeout",
         type=float,
-        default=120.0,
-        help="Per-command execution timeout in seconds (default: 120.0)",
+        default=180.0,
+        help="Per-command execution timeout in seconds (default: 180.0)",
     )
     parser.add_argument(
         "--cwd",
@@ -1441,8 +1441,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     patch_parser.add_argument(
         "--timeout",
         type=float,
-        default=120.0,
-        help="Per-command execution timeout in seconds (default: 120.0)",
+        default=180.0,
+        help="Per-command execution timeout in seconds (default: 180.0)",
     )
     patch_parser.add_argument(
         "--cwd",
