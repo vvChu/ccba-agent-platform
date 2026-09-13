@@ -68,7 +68,7 @@
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                        │
 │   [Ticket 1: Làm Sạch Evals] (DONE) ────► [Ticket 4: Tái Cấu Trúc Miner Cục Bộ]        │
-│                                                   (Unblocked)                          │
+│                                                   (DONE)                               │
 │                                                                                        │
 │   [Ticket 2: 30 GPI Anchors & Deadband] ──► [Ticket 5: Dashboard Spoke Tri Thức]      │
 │                     (DONE)                                (Unblocked)                  │
@@ -151,20 +151,28 @@
 
 ---
 
-### 🟢 [BIÊN GIỚI / UNBLOCKED] [Ticket 4: Tái Cấu Trúc log_eval_miner Đọc Cấu Trúc Log Cục Bộ & Tích Hợp ccba-maskara](file:///d:/GitHubProjects/ccba-agent-platform/scripts/eval/log_eval_miner.py)
+### 🟣 [ĐÃ HOÀN THÀNH / CLOSED] [Ticket 4: Tái Cấu Trúc log_eval_miner Đọc Cấu Trúc Log Cục Bộ & Tích Hợp ccba-maskara](file:///d:/GitHubProjects/ccba-agent-platform/scripts/eval/log_eval_miner.py)
 * **Loại công việc:** `Task [AFK]`
-* **Người nhận việc (Assignee):** *Chưa gán (Unassigned)*
-* **Trạng thái:** **MỞ / UNBLOCKED (Sẵn sàng triển khai - Chặn bởi Ticket 1 đã được giải phóng)**
-* **Mục tiêu cần giải quyết:**
-  Khắc phục ảo giác về file log trong `log_eval_miner.py`, đọc đúng cấu trúc nhật ký cục bộ và sử dụng 11 rules của `ccba-maskara` thay cho 4 regex đơn sơ.
-* **Phạm vi tác động:**
-  - Thay đổi hàm `find_transcript_files` để đọc từ thư mục chat sessions cục bộ thực tế (`~/.gemini/tmp/<workspace>/chats/session-*.jsonl` hoặc các file test transcript do chính harness sinh ra), loại bỏ việc quét mù qua 614 thư mục `brain/`.
-  - Thay thế các regex che giấu thông tin tại dòng 29–40 bằng việc import trực tiếp [`packages/ccba-maskara/src/ccba_maskara/_rules.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-maskara/src/ccba_maskara/_rules.py).
-  - Điều chỉnh hàm `identify_failures`: nếu người dùng đưa prompt nằm ngoài phạm vi (`out_of_scope`), việc Agent đưa ra Disclaimer từ chối lịch sự phải được coi là **Hành vi Đúng (Success)**, không được gắn nhãn là lỗi thất bại.
-  - Khóa cứng script ở chế độ chạy cục bộ (`--dry-run`), xuất kết quả ra `.md/scratch/eval_runs/`, tuyệt đối cấm tạo lệnh tự động push lên Git.
-* **Tiêu chí hoàn thành (Definition of Done):**
-  - `python -m pytest scripts/tests/test_log_eval_miner.py -v` pass 100% (22+ tests).
-  - Chạy thử nghiệm trên một workspace cục bộ không bị treo I/O và trích xuất đúng các ca thất bại thực tế.
+* **Người nhận việc (Assignee):** `DeepCoder`
+* **Trạng thái:** **ĐÃ HOÀN THÀNH / CLOSED (2026-09-13)**
+* **Mục tiêu đã giải quyết:**
+  Khắc phục ảo giác về file log trong `log_eval_miner.py`, đọc đúng cấu trúc nhật ký cục bộ, quét nông siêu tốc và sử dụng 11 rules của `ccba-maskara` thay cho 4 regex đơn sơ.
+* **Phạm vi tác động đã hoàn tất:**
+  - **[packages/ccba-maskara/src/ccba_maskara/__init__.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-maskara/src/ccba_maskara/__init__.py):**
+    - Xuất khẩu `REGEX_PATTERNS` vào Public Deep Seam của `ccba_maskara`, bảo đảm tuân thủ hợp đồng kiến trúc cấm import private submodule `_rules.py` từ bên ngoài ([ADR-0030](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0030-progressive-disclosure-and-instruction-budget-optimization.md)).
+  - **[scripts/eval/log_eval_miner.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/eval/log_eval_miner.py):**
+    - Tích hợp 11 quy tắc bảo mật chuẩn Maskara (Anthropic, OpenAI, GitHub, AWS, Google, Slack, Stripe, JWT, Database URLs, Private Keys, Env Secrets) kết hợp quy tắc PII (Email, Phone, IP nội bộ) trong `redact_sensitive_info`.
+    - Thay thế `os.walk` đệ quy toàn bộ thư mục bằng cơ chế tìm kiếm nông 1 cấp (`find_transcript_files` và `resolve_log_dir`): quét trực tiếp `<conv_id>/.system_generated/logs/transcript.jsonl` và `chats/session-*.json`, định vị 619 file logs chỉ trong 0.56 giây (loại bỏ hoàn toàn hiện tượng nghẽn I/O trên Windows NTFS).
+    - Hỗ trợ xử lý phòng thủ cho cả định dạng JSON Lines (`.jsonl`) và JSON cấu trúc đối tượng (`session-*.json`).
+    - Cập nhật `identify_failures`: Disclaimer từ chối lịch sự trên prompt ngoài phạm vi (`general_domain`) được xác định là **Hành Vi Đúng (Success)**, chỉ ghi nhận lỗi `ROUTER_DISCLAIMER` khi prompt thuộc phạm vi kỹ năng CCBA hợp lệ.
+    - Bổ sung cờ an toàn `--dry-run`: xuất toàn bộ test cases vào `.md/scratch/eval_runs/` thay vì ghi đè vào test suite production, bảo vệ 100% tệp gốc.
+  - **[scripts/tests/test_log_eval_miner.py](file:///d:/GitHubProjects/ccba-agent-platform/scripts/tests/test_log_eval_miner.py):**
+    - Bổ sung 5 bài unit test mới bao phủ: Khử trùng 11 rules Maskara, xử lý Disclaimer out-of-scope, phát hiện Disclaimer in-scope, quét nông siêu tốc, và chế độ export an toàn `--dry-run`.
+* **Kết quả kiểm chứng:**
+  - `python -m pytest scripts/tests/test_log_eval_miner.py -v` đạt **27/27 passed trong 8.19s**.
+  - `python -m ruff check scripts/eval/log_eval_miner.py scripts/tests/test_log_eval_miner.py` đạt **All checks passed!**.
+  - Chạy thực nghiệm `python scripts/eval/log_eval_miner.py --dry-run` trực tiếp trên 619 log files máy trạm: bóc tách 2,603 tương tác, phát hiện 309 ca lỗi và xuất an toàn 162 mined cases vào `.md/scratch/eval_runs/` mà không gây biến động nào cho git repo.
+  - Khóa hoàn thành cứng: `python -m ccba_harness verify-patch --preset ci` đạt **Exit Code 0** (5/5 commands passed).
 
 ---
 

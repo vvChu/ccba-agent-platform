@@ -486,3 +486,149 @@ def test_custom_catalog_path_in_miner(tmp_path: Path):
     target_json = out_dir / "eval_ccba_custom_tester.json"
     assert target_json.exists()
 
+
+def test_maskara_11_rules_redaction():
+    """Test redaction covering all 11 Maskara secret rules and PII."""
+    sample_text = (
+        "Config details:\n"
+        "Anthropic: sk-ant-api03-abcdef12345678901234567890\n"
+        "OpenAI: sk-proj-123456789012345678901234567890\n"
+        "GitHub: ghp_123456789012345678901234567890123456\n"
+        "AWS: AKIAIOSFODNN7EXAMPLE\n"
+        "Google: AIzaSyD12345678901234567890123456789012\n"
+        "Slack: xoxb-123456789012-1234567890123-abcdef123456\n"
+        "Stripe: sk_live_1234567890123456789012\n"
+        "JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abcdef1234567890\n"
+        "DB: postgresql://admin:secret123@localhost:5432/ccba_db\n"
+        "PrivateKey: -----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA0\n-----END RSA PRIVATE KEY-----\n"
+        "Env: api_key='super_secret_token_value_xyz'\n"
+        "PII: contact admin@ccba.vn, phone 0987654321, ip 192.168.1.100"
+    )
+    redacted = redact_sensitive_info(sample_text)
+
+    # All credentials and secrets must be redacted
+    assert "sk-ant-api03" not in redacted
+    assert "sk-proj-1234567890" not in redacted
+    assert "ghp_1234567890" not in redacted
+    assert "AKIAIOSFODNN7EXAMPLE" not in redacted
+    assert "AIzaSyD1234567890" not in redacted
+    assert "xoxb-123456789012" not in redacted
+    assert "sk_live_1234567890" not in redacted
+    assert "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" not in redacted
+    assert "postgresql://admin:secret123" not in redacted
+    assert "-----BEGIN RSA PRIVATE KEY-----" not in redacted
+    assert "super_secret_token_value_xyz" not in redacted
+
+    # PII must be redacted
+    assert "admin@ccba.vn" not in redacted
+    assert "0987654321" not in redacted
+    assert "192.168.1.100" not in redacted
+
+    # Redaction placeholders present
+    assert "[EMAIL_REDACTED]" in redacted
+    assert "[PHONE_REDACTED]" in redacted
+    assert "[IP_REDACTED]" in redacted
+    assert (
+        "[API_KEY_REDACTED]" in redacted
+        or "[MASKARA_REDACTED" in redacted
+        or "[SECRET_REDACTED]" in redacted
+    )
+
+
+def test_identify_failures_out_of_scope_disclaimer_is_success():
+    """Test that agent disclaimer on out-of-scope prompt is treated as success, not failure."""
+    interaction = {
+        "conversation_id": "conv-test-oos",
+        "step_index": 1,
+        "user_prompt": "Thời tiết hôm nay ở Hà Nội thế nào, chiều có mưa không?",
+        "planner_response": "Tôi là trợ lý CCBA chuyên về tư vấn xây dựng. Yêu cầu này không thuộc phạm vi hỗ trợ.",
+        "is_error": False,
+        "source_file": "transcript.jsonl",
+    }
+    failures = identify_failures([interaction])
+    assert len(failures) == 0
+
+
+def test_identify_failures_in_scope_disclaimer_is_failure():
+    """Test that agent disclaimer on genuine CCBA domain prompt is flagged as ROUTER_DISCLAIMER."""
+    interaction = {
+        "conversation_id": "conv-test-in-scope",
+        "step_index": 1,
+        "user_prompt": "Kiểm tra giới hạn chịu lửa của tường ngăn cháy và giải pháp thoát nạn theo QCVN 06:2022",
+        "planner_response": "Tôi không có khả năng thực hiện, không thuộc phạm vi của tôi.",
+        "is_error": False,
+        "source_file": "transcript.jsonl",
+    }
+    failures = identify_failures([interaction])
+    assert len(failures) == 1
+    assert failures[0]["failure_type"] == "ROUTER_DISCLAIMER"
+    assert "ccba-ai-qc-pccc-audit" in failures[0]["reason"] or "domain prompt" in failures[0]["reason"]
+
+
+def test_find_transcript_files_shallow_and_fast(tmp_path: Path):
+    """Test shallow scan of brain conversation directories and session logs."""
+    # Create mock brain directory with conv_1, conv_2, and deep junk folder
+    brain_dir = tmp_path / "brain"
+    conv1 = brain_dir / "conv_1" / ".system_generated" / "logs"
+    conv1.mkdir(parents=True)
+    (conv1 / "transcript.jsonl").write_text("{}", encoding="utf-8")
+    (conv1 / "transcript_full.jsonl").write_text("{}", encoding="utf-8")
+
+    # conv2 with chats session
+    chats_dir = brain_dir / "conv_2" / "chats"
+    chats_dir.mkdir(parents=True)
+    (chats_dir / "session-1.json").write_text("{}", encoding="utf-8")
+
+    # Junk deep directory that should not be walked infinitely
+    junk_dir = brain_dir / "junk" / "deep1" / "deep2" / "deep3" / "deep4"
+    junk_dir.mkdir(parents=True)
+    (junk_dir / "random.txt").write_text("ignored", encoding="utf-8")
+
+    files = find_transcript_files(brain_dir)
+    file_names = {f.name for f in files}
+    assert "transcript.jsonl" in file_names or "session-1.json" in file_names
+    assert "transcript_full.jsonl" not in file_names
+
+
+def test_dry_run_mode_exports_to_scratch(tmp_path: Path):
+    """Test that dry_run mode routes output to scratch directory without modifying prod test cases."""
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+    log_file = log_dir / "transcript.jsonl"
+    lines = [
+        json.dumps(
+            {
+                "type": "USER_INPUT",
+                "content": "Thẩm tra giải pháp phòng cháy chữa cháy PCCC theo QCVN 06:2022",
+            }
+        )
+        + "\n",
+        json.dumps(
+            {
+                "type": "PLANNER_RESPONSE",
+                "step_index": 1,
+                "content": "Nghị định 136/2020/NĐ-CP đang áp dụng cho công trình này.",
+            }
+        )
+        + "\n",
+    ]
+    log_file.write_text("".join(lines), encoding="utf-8")
+
+    prod_out_dir = tmp_path / "prod_test_cases"
+    scratch_out_dir = tmp_path / "scratch_eval_runs"
+
+    count = mine_logs_and_export(
+        log_dir=log_dir,
+        output_dir=prod_out_dir,
+        scratch_dir=scratch_out_dir,
+        dry_run=True,
+    )
+    assert count == 1
+    # Prod dir must NOT have been written to
+    assert not prod_out_dir.exists() or len(list(prod_out_dir.glob("*.json"))) == 0
+    # Scratch dir must contain the exported mined case
+    assert scratch_out_dir.exists()
+    scratch_files = list(scratch_out_dir.glob("*.json"))
+    assert len(scratch_files) >= 1
+
+

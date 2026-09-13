@@ -12,7 +12,6 @@ import argparse
 import datetime
 import json
 import logging
-import os
 import re
 import sys
 import unicodedata
@@ -21,11 +20,54 @@ from typing import Any
 
 import yaml
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-logger = logging.getLogger("ccba.eval.miner")
+# Sensitive Data Redaction Patterns (Maskara Privacy Standard & PII)
+try:
+    from ccba_maskara import REGEX_PATTERNS as MASKARA_REGEX_PATTERNS
+except ImportError:
+    MASKARA_REGEX_PATTERNS = {
+        "anthropic-api-key": {"pattern": re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b")},
+        "openai-api-key": {"pattern": re.compile(r"\bsk-(?!ant-)(?:proj-)?[A-Za-z0-9_-]{20,}\b")},
+        "github-token": {
+            "pattern": re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9_]{36,}|github_pat_[A-Za-z0-9_]{20,})\b")
+        },
+        "aws-access-key": {"pattern": re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b")},
+        "google-api-key": {"pattern": re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b")},
+        "slack-token": {"pattern": re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{20,}\b")},
+        "stripe-live-key": {"pattern": re.compile(r"\b(?:sk|rk)_live_[A-Za-z0-9]{16,}\b")},
+        "jwt": {
+            "pattern": re.compile(
+                r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b"
+            )
+        },
+        "database-url": {
+            "pattern": re.compile(
+                r"(?i)\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis)://[^\s\"'<>`]+"
+            )
+        },
+        "private-key": {
+            "pattern": re.compile(
+                r"(?s)-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----"
+            )
+        },
+        "env-secret": {
+            "pattern": re.compile(
+                r"(?i)\b(?:api[_-]?key|secret|token|password|passwd|pwd|private[_-]?key|client[_-]?secret)\b\s*[:=]\s*[\"']?([^\s\"',`]{8,})"
+            )
+        },
+    }
 
-# Sensitive Data Redaction Patterns (Maskara Privacy Standard)
+PII_PATTERNS = [
+    (re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"), "[EMAIL_REDACTED]"),
+    (re.compile(r"\b(?:0\d{9,10}|\+84\d{9,10})\b"), "[PHONE_REDACTED]"),
+    (
+        re.compile(
+            r"\b(?:100\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3})\b"
+        ),
+        "[IP_REDACTED]",
+    ),
+]
+
+# Legacy alias kept for backward compatibility if imported externally
 SENSITIVE_PATTERNS = [
     (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL_REDACTED]"),
     (r"\b(?:0\d{9,10}|\+84\d{9,10})\b", "[PHONE_REDACTED]"),
@@ -38,6 +80,10 @@ SENSITIVE_PATTERNS = [
         "[IP_REDACTED]",
     ),
 ]
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logger = logging.getLogger("ccba.eval.miner")
 
 # Failure Taxonomy Detection Patterns
 DISCLAIMER_KEYWORDS = [
@@ -212,12 +258,42 @@ LEGACY_SKILL_FILE_MAP: dict[str, str] = {
 
 
 def redact_sensitive_info(text: str) -> str:
-    """Redacts sensitive user data (emails, phone numbers, API keys, IPs) using Maskara patterns."""
+    """Redacts sensitive user credentials and PII using Maskara _rules.py standard."""
     if not text:
         return ""
     cleaned = text
-    for pattern, replacement in SENSITIVE_PATTERNS:
-        cleaned = re.sub(pattern, replacement, cleaned)
+
+    # 1. Apply Maskara 11 secret rules
+    for rule_id, rule_spec in MASKARA_REGEX_PATTERNS.items():
+        pattern = rule_spec["pattern"]
+        if rule_id == "env-secret":
+            cleaned = pattern.sub(
+                lambda m: m.group(0)[: m.start(1) - m.start(0)] + "[SECRET_REDACTED]",
+                cleaned,
+            )
+        elif rule_id in (
+            "openai-api-key",
+            "anthropic-api-key",
+            "google-api-key",
+            "github-token",
+            "aws-access-key",
+            "slack-token",
+            "stripe-live-key",
+        ):
+            cleaned = pattern.sub("[API_KEY_REDACTED]", cleaned)
+        elif rule_id == "database-url":
+            cleaned = pattern.sub("[DB_URL_REDACTED]", cleaned)
+        elif rule_id == "private-key":
+            cleaned = pattern.sub("[PRIVATE_KEY_REDACTED]", cleaned)
+        elif rule_id == "jwt":
+            cleaned = pattern.sub("[JWT_REDACTED]", cleaned)
+        else:
+            cleaned = pattern.sub(f"[{rule_id.upper().replace('-', '_')}_REDACTED]", cleaned)
+
+    # 2. Apply PII patterns
+    for p, r in PII_PATTERNS:
+        cleaned = p.sub(r, cleaned)
+
     return cleaned.strip()
 
 
@@ -240,7 +316,7 @@ def extract_clean_user_prompt(raw_text: str) -> str:
 
 
 def resolve_log_dir(configured_dir: Path | str | None) -> Path:
-    """Resolves log directory with fallback to ~/.gemini/antigravity/brain."""
+    """Resolves log directory, checking configured dir, local logs, workspace chats, and brain."""
     if configured_dir:
         p = Path(configured_dir)
         if p.exists():
@@ -251,34 +327,96 @@ def resolve_log_dir(configured_dir: Path | str | None) -> Path:
     if local_logs.exists():
         return local_logs
 
-    # Fallback 2: ~/.gemini/antigravity/brain
+    # Fallback 2: ~/.gemini/antigravity/brain (Antigravity transcript logs)
     brain_dir = Path.home() / ".gemini" / "antigravity" / "brain"
     if brain_dir.exists():
         return brain_dir
+
+    # Fallback 3: ~/.gemini/tmp (Local session chat files)
+    gemini_tmp = Path.home() / ".gemini" / "tmp"
+    if gemini_tmp.exists():
+        return gemini_tmp
 
     return Path(configured_dir or ".system_generated/logs")
 
 
 def find_transcript_files(log_dir: Path) -> list[Path]:
-    """Safely traverses directory tree to find all transcript.jsonl files, skipping broken symlinks/junctions."""
+    """Finds all transcript.jsonl and session-*.json/jsonl files using targeted shallow scanning."""
     if not log_dir.exists():
         return []
-    if log_dir.is_file() and log_dir.name.endswith(".jsonl"):
-        return [log_dir]
+    if log_dir.is_file():
+        if (
+            log_dir.name.endswith(".jsonl") or log_dir.name.endswith(".json")
+        ) and not log_dir.name.endswith("_full.jsonl"):
+            return [log_dir]
+        return []
 
     log_files: list[Path] = []
-    for dirpath, _dirnames, filenames in os.walk(log_dir, followlinks=False):
-        if "transcript.jsonl" in filenames:
-            log_files.append(Path(dirpath) / "transcript.jsonl")
-        elif any(f.startswith("transcript") and f.endswith(".jsonl") for f in filenames):
-            for f in filenames:
-                if (
-                    f.startswith("transcript")
-                    and f.endswith(".jsonl")
-                    and not f.endswith("_full.jsonl")
-                ):
-                    log_files.append(Path(dirpath) / f)
-    return log_files
+
+    try:
+        entries = list(log_dir.iterdir())
+    except (OSError, PermissionError):
+        return []
+
+    # 1. Check direct directory first
+    for f in entries:
+        if f.is_file():
+            if f.name == "transcript.jsonl":
+                log_files.append(f)
+            elif (
+                f.name.startswith("transcript")
+                and f.name.endswith(".jsonl")
+                and not f.name.endswith("_full.jsonl")
+            ):
+                log_files.append(f)
+            elif f.name.startswith("session-") and (
+                f.name.endswith(".json") or f.name.endswith(".jsonl")
+            ):
+                log_files.append(f)
+
+    # 2. Shallow scan 1 level of subdirectories (e.g. brain/<conv_id> or workspace/chats)
+    for sub in entries:
+        if not sub.is_dir():
+            continue
+
+        # Pattern A: <conv_id>/.system_generated/logs/transcript.jsonl
+        sys_logs = sub / ".system_generated" / "logs"
+        if sys_logs.is_dir():
+            t_file = sys_logs / "transcript.jsonl"
+            if t_file.is_file():
+                log_files.append(t_file)
+
+        # Pattern B: chats/session-*.json(l) or sub/session-*.json(l)
+        chats_dir = sub / "chats" if (sub / "chats").is_dir() else (sub if sub.name == "chats" else None)
+        if chats_dir and chats_dir.is_dir():
+            try:
+                for cf in chats_dir.iterdir():
+                    if cf.is_file() and cf.name.startswith("session-") and (
+                        cf.name.endswith(".json") or cf.name.endswith(".jsonl")
+                    ):
+                        log_files.append(cf)
+            except (OSError, PermissionError):
+                pass
+        else:
+            try:
+                for sf in sub.iterdir():
+                    if sf.is_file():
+                        if sf.name == "transcript.jsonl":
+                            log_files.append(sf)
+                        elif (
+                            sf.name.startswith("transcript")
+                            and sf.name.endswith(".jsonl")
+                            and not sf.name.endswith("_full.jsonl")
+                        ):
+                            log_files.append(sf)
+                        elif sf.name.startswith("session-") and (
+                            sf.name.endswith(".json") or sf.name.endswith(".jsonl")
+                        ):
+                            log_files.append(sf)
+            except (OSError, PermissionError):
+                pass
+
+    return sorted(set(log_files))
 
 
 def to_canonical_skill_name(skill_name: str) -> str:
@@ -576,14 +714,71 @@ def parse_transcript_logs(log_dir: Path) -> list[dict[str, Any]]:
     for log_file in log_files:
         try:
             with open(log_file, encoding="utf-8", errors="ignore") as f:
-                lines = f.readlines()
+                content_text = f.read()
         except Exception as e:
             logger.error(f"❌ Lỗi đọc file {log_file.name}: {e}")
             continue
 
-        last_user_prompt = None
-        conv_id = log_file.parents[2].name if len(log_file.parents) >= 3 else log_file.parent.name
+        if not content_text.strip():
+            continue
 
+        conv_id = log_file.parents[2].name if len(log_file.parents) >= 3 else log_file.parent.name
+        last_user_prompt = None
+
+        # Case 1: Standard JSON document (e.g. Gemini CLI session-*.json)
+        if log_file.suffix.lower() == ".json":
+            try:
+                doc = json.loads(content_text)
+            except Exception:
+                continue
+
+            if isinstance(doc, dict) and "messages" in doc and isinstance(doc["messages"], list):
+                session_id = doc.get("sessionId", conv_id)
+                for msg in doc["messages"]:
+                    if not isinstance(msg, dict):
+                        continue
+                    mtype = str(msg.get("type", "")).lower()
+                    mcontent = msg.get("content", "")
+
+                    if mtype in ("user", "human"):
+                        user_text = ""
+                        if isinstance(mcontent, list):
+                            for part in mcontent:
+                                if isinstance(part, dict) and "text" in part:
+                                    user_text += part["text"] + "\n"
+                        elif isinstance(mcontent, str):
+                            user_text = mcontent
+                        clean_p = extract_clean_user_prompt(user_text)
+                        if len(clean_p) >= 5 and clean_p.lower() not in IGNORABLE_CONTROL_COMMANDS:
+                            last_user_prompt = clean_p
+                    elif last_user_prompt:
+                        resp_text = ""
+                        if isinstance(mcontent, list):
+                            for part in mcontent:
+                                if isinstance(part, dict) and "text" in part:
+                                    resp_text += part["text"] + "\n"
+                        elif isinstance(mcontent, str):
+                            resp_text = mcontent
+                        else:
+                            resp_text = str(mcontent)
+
+                        is_err = mtype == "error" or "error" in resp_text.lower()
+                        interactions.append(
+                            {
+                                "conversation_id": session_id,
+                                "source_file": log_file.name,
+                                "step_index": 0,
+                                "user_prompt": last_user_prompt,
+                                "planner_response": resp_text,
+                                "is_error": is_err,
+                            }
+                        )
+                        if mtype in ("bot", "model", "assistant"):
+                            last_user_prompt = None
+            continue
+
+        # Case 2: JSON Lines format (e.g. transcript.jsonl)
+        lines = content_text.splitlines()
         for line in lines:
             if not line.strip():
                 continue
@@ -592,29 +787,33 @@ def parse_transcript_logs(log_dir: Path) -> list[dict[str, Any]]:
             except Exception:
                 continue
 
+            if not isinstance(data, dict):
+                continue
+
             stype = data.get("type", "")
             content = data.get("content", "")
             status = data.get("status", "")
 
             if stype == "USER_INPUT":
-                clean_p = extract_clean_user_prompt(content)
+                clean_p = extract_clean_user_prompt(str(content))
                 if len(clean_p) >= 5 and clean_p.lower() not in IGNORABLE_CONTROL_COMMANDS:
                     last_user_prompt = clean_p
             elif last_user_prompt:
                 has_error = False
                 response_snippet = ""
+                content_str = str(content)
 
                 if stype == "PLANNER_RESPONSE" and content:
-                    response_snippet = content
+                    response_snippet = content_str
                 elif stype in ("TOOL_EXECUTION", "RUN_COMMAND") and (
-                    status == "ERROR" or "Traceback" in content
+                    status == "ERROR" or "Traceback" in content_str
                 ):
-                    response_snippet = content
+                    response_snippet = content_str
                     has_error = True
                 elif stype == "SYSTEM_MESSAGE" and (
-                    "Traceback" in content or "error" in content.lower()
+                    "Traceback" in content_str or "error" in content_str.lower()
                 ):
-                    response_snippet = content
+                    response_snippet = content_str
                     has_error = True
 
                 if response_snippet:
@@ -636,9 +835,14 @@ def parse_transcript_logs(log_dir: Path) -> list[dict[str, Any]]:
 
 
 def identify_failures(
-    interactions: list[dict[str, Any]], taxonomy_filter: str | None = None
+    interactions: list[dict[str, Any]],
+    taxonomy_filter: str | None = None,
+    catalog_path: Path | str | None = None,
 ) -> list[dict[str, Any]]:
-    """Identifies and classifies interaction failures into a 3-category taxonomy."""
+    """Identifies and classifies interaction failures into a 3-category taxonomy.
+
+    Treats agent disclaimers on out-of-scope prompts as expected success, not failure.
+    """
     flagged_cases: list[dict[str, Any]] = []
 
     for item in interactions:
@@ -662,8 +866,17 @@ def identify_failures(
         # 2. Check Router Disclaimer
         if not detected_type:
             if any(kw in response_lower for kw in DISCLAIMER_KEYWORDS):
-                detected_type = "ROUTER_DISCLAIMER"
-                reason = "Agent issued a refusal disclaimer on potentially valid domain prompt."
+                target_skill = classify_target_skill(user_prompt, catalog_path=catalog_path)
+                if target_skill != "general_domain":
+                    detected_type = "ROUTER_DISCLAIMER"
+                    reason = (
+                        f"Agent issued a refusal disclaimer on potentially valid domain prompt "
+                        f"(target skill: {target_skill})."
+                    )
+                else:
+                    logger.debug(
+                        f"Disclaimer on out-of-scope prompt treated as expected success: {user_prompt[:50]}"
+                    )
 
         # 3. Check Tool Exception / Crash
         if not detected_type:
@@ -741,6 +954,9 @@ def generate_eval_spec_item(
     }
 
 
+DEFAULT_SCRATCH_DIR = Path(".md/scratch/eval_runs")
+
+
 def mine_logs_and_export(
     log_dir: Path,
     output_dir: Path,
@@ -749,17 +965,40 @@ def mine_logs_and_export(
     format_type: str = "harness",
     auto_inject: bool = False,
     catalog_path: Path | str | None = None,
+    dry_run: bool = False,
+    scratch_dir: Path | None = None,
 ) -> int:
-    """Main execution pipeline to mine logs, redact data, and export EvalItem test cases."""
+    """Main execution pipeline to mine logs, redact data, and export EvalItem test cases.
+
+    Args:
+        log_dir: Directory containing transcript logs.
+        output_dir: Production output directory for test cases.
+        skill_filter: Optional specific skill filter.
+        taxonomy: Optional failure type filter.
+        format_type: Output format ('harness' or 'legacy').
+        auto_inject: If True, writes even if 0 new cases or forces overwrite.
+        catalog_path: Optional custom catalog.yaml path.
+        dry_run: If True, exports to scratch_dir and leaves output_dir untouched.
+        scratch_dir: Optional scratch directory for dry-run export (default: .md/scratch/eval_runs).
+    """
+    effective_output_dir = output_dir
+    if dry_run:
+        effective_output_dir = scratch_dir or DEFAULT_SCRATCH_DIR
+        logger.info(
+            f"🛡️ DRY-RUN KÍCH HOẠT: Xuất test cases an toàn vào '{effective_output_dir}' (không sửa đổi production)"
+        )
+
     interactions = parse_transcript_logs(log_dir)
-    failures = identify_failures(interactions, taxonomy_filter=taxonomy)
+    failures = identify_failures(
+        interactions, taxonomy_filter=taxonomy, catalog_path=catalog_path
+    )
 
     if not failures:
         logger.info("🎉 Không phát hiện failures nào cần auto-tune.")
         return 0
 
     exported_count = 0
-    output_dir.mkdir(parents=True, exist_ok=True)
+    effective_output_dir.mkdir(parents=True, exist_ok=True)
 
     # Group failures by skill
     grouped_failures: dict[str, list[dict[str, Any]]] = {}
@@ -770,7 +1009,7 @@ def mine_logs_and_export(
         grouped_failures.setdefault(skill, []).append(fcase)
 
     for target_skill, skill_cases in grouped_failures.items():
-        target_json = resolve_output_test_file(output_dir, target_skill)
+        target_json = resolve_output_test_file(effective_output_dir, target_skill)
 
         existing_cases: list[dict[str, Any]] = []
         if target_json.exists():
@@ -801,11 +1040,12 @@ def mine_logs_and_export(
             skill_exported += 1
             exported_count += 1
 
-        if skill_exported > 0 or auto_inject:
+        if skill_exported > 0 or auto_inject or dry_run:
             with open(target_json, "w", encoding="utf-8") as f:
                 json.dump(existing_cases, f, ensure_ascii=False, indent=2)
+            dest_desc = "[DRY-RUN SCRATCH]" if dry_run else "[PRODUCTION]"
             logger.info(
-                f"✅ Đã xuất {skill_exported} test cases thực chiến mới vào {target_json.name}"
+                f"✅ {dest_desc} Đã xuất {skill_exported} test cases thực chiến mới vào {target_json.name}"
             )
 
     return exported_count
@@ -851,10 +1091,21 @@ def main() -> int:
         action="store_true",
         help="Tự động ghi đè/bổ sung vào file eval test cases của skill",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Chạy mô phỏng, xuất kết quả vào .md/scratch/eval_runs/ và không ghi đè vào test suite production",
+    )
+    parser.add_argument(
+        "--scratch-dir",
+        default=".md/scratch/eval_runs",
+        help="Thư mục scratch để lưu kết quả dry-run (mặc định .md/scratch/eval_runs)",
+    )
 
     args = parser.parse_args()
     log_dir = Path(args.log_dir) if args.log_dir else resolve_log_dir(None)
     output_dir = Path(args.output_dir)
+    scratch_dir = Path(args.scratch_dir) if args.scratch_dir else None
 
     count = mine_logs_and_export(
         log_dir=log_dir,
@@ -864,8 +1115,11 @@ def main() -> int:
         format_type=args.format,
         auto_inject=args.auto_inject,
         catalog_path=args.catalog_path,
+        dry_run=args.dry_run,
+        scratch_dir=scratch_dir,
     )
-    print(f"Mining hoàn tất: {count} cases được cập nhật.")
+    mode_desc = "[DRY-RUN] " if args.dry_run else ""
+    print(f"{mode_desc}Mining hoàn tất: {count} cases được cập nhật.")
     return 0
 
 
