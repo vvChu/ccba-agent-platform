@@ -1,0 +1,166 @@
+# 🗺️ Bản Đồ Định Hướng Wayfinder: Lộ Trình Tái Định Hình Tầng 3 (Pragmatic Strategic Scaling)
+
+> **Mã định danh:** `WAYFINDER-MAP-TIER3-SCALING-2026`  
+> **Căn cứ pháp lý & kỹ nghệ:** [ADR-0023](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0023-prompt-optimization-loop-and-regression-governance.md), [ADR-0030](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0030-progressive-disclosure-and-instruction-budget-optimization.md), [ADR-0044](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0044-spoke-hub-package-bootstrap-standard.md), [ADR-0045](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0046](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md), [ADR-0053](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0053-teamwork-multi-agent-orchestration-framework.md), [ADR-0057](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md), [ADR-0058](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md), [RULE-1.7 & RULE-3.1](file:///d:/GitHubProjects/ccba-agent-platform/.md/knowledge/session_learnings.md).  
+> **Phương pháp luận:** Wayfinding under "Fog of War" (Matt Pocock / Latent Space), Double-Pass Adversarial Review, KISS & Automation-First Quality.
+
+---
+
+## 1. Điểm Đích (Destination)
+
+Đưa vào vận hành toàn diện hệ thống **Mở Rộng Tự Trị Thực Dụng (Pragmatic Strategic Scaling — Tầng 3)** cho CCBA Agent Platform, đạt được trạng thái hoàn thành tất định:
+1. **Bộ Dữ Liệu Benchmark Chuẩn Khiết**: Thanh lọc 100% các prompt rác của lập trình viên / subagents (sửa Mypy, scan git secrets, phục hồi catalog) ra khỏi các tệp benchmark chuyên ngành ([`eval_pccc_audit.json`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-eval-gate/test_cases/eval_pccc_audit.json), [`eval_legal_intel.json`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-eval-gate/test_cases/eval_legal_intel.json)), thiết lập bộ đề thi chuyên môn sâu (QCVN 06:2022, Luật Xây dựng 2025, NĐ 105/2025/NĐ-CP).
+2. **Chốt Chặn 30 Canonical Anchors & Deadband Hysteresis (ADR-0057)**: Thiết lập 30 tọa độ mỏ neo kiểm thử bất biến cho 3 phân tầng kiến trúc (Tier 1, Tier 2A, Tier 2B), kết hợp vùng đệm trễ $[11.5, 12.5]$ trong [`gpi.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/gpi.py) để ngăn chặn hiện tượng trôi dạt kiến trúc (Architectural Churn) khi mở rộng lên hàng trăm kỹ năng.
+3. **Kiểm Thử Áp Lực Đa Tác Tử Trong CI (ADR-0053)**: Đóng gói kịch bản dogfood 3 Workers song song ([`run_qc_swarm_dogfood.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/run_qc_swarm_dogfood.py)) thành bài kiểm thử định kỳ trong `ccba-harness`, phân định rõ ràng 8/10 Orchestrators là User Rituals tương tác (0 token nền) và bảo vệ Single-Writer Protocol.
+4. **Công Cụ Đào Lỗi Cục Bộ Chống Rò Rỉ Dữ Liệu**: Tái cấu trúc cơ chế đọc log của [`log_eval_miner.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/eval/log_eval_miner.py) đúng cấu trúc thực tế, tích hợp 11 quy tắc lọc sâu của [`ccba-maskara`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-maskara/src/ccba_maskara/_rules.py), hoạt động độc lập ở chế độ ngoại tuyến cục bộ và cấm tự ý đẩy lên Hub.
+5. **Dashboard Khuyếch Tán Tri Thức Spoke-Hub Bảo Vệ Hiến Pháp 11 Ghế (ADR-0045, ADR-0046)**: Nâng cấp [`cross_spoke_analytics.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/cross_spoke_analytics.py) trực quan hóa công cụ tiềm năng từ các Spoke dự án, duy trì quy trình phê chuẩn có con người ký duyệt (QC Level 5) và cấm tuyệt đối auto-deprecate các kỹ năng nghiệp vụ chu kỳ dài.
+
+---
+
+## 2. Ghi Chú & Tri Thức Nền Tảng (Notes)
+
+- **Nguyên tắc Hoạch định (Plan, don't do):** Bản đồ này dùng để chốt các câu hỏi thiết kế và cấu trúc kỹ nghệ của Tầng 3. Mọi công việc triển khai mã nguồn cụ thể chỉ bắt đầu sau khi ticket tại Biên giới (Frontier) được kích hoạt và gán assignee.
+- **Ranh giới Hiến pháp (Constitutional Boundaries):**
+  - **ADR-0045 & ADR-0046:** Tiếp nhận mã nguồn từ Spoke về Hub bắt buộc phải qua Cổng Cứng (`check_spoke_leakage.py`) và Cổng Mềm (`/ccba-review-proposal` do QC Level 5 phê chuẩn). Tuyệt đối không tự động hóa việc thăng hạng hoặc xóa kỹ năng.
+  - **ADR-0058:** Khóa hoàn thành cứng yêu cầu mọi thay đổi phải đạt Exit Code = 0 từ kiểm chứng tất định máy tính (`pytest`, `mypy`, `ruff`). Không sử dụng các bài test synthetic do LLM tự sinh có tính ngẫu nhiên thống kê làm rào chắn CI.
+  - **RULE-1.7 & Bảo mật Hợp đồng:** Tuyệt đối không lưu trữ hay tự động đẩy log hội thoại chứa bí mật dự toán, giải pháp kết cấu hoặc dữ liệu cá nhân của kỹ sư từ máy trạm lên Git Hub.
+
+---
+
+## 3. Quyết Định Đã Chốt (Decisions so far)
+
+- **[Chốt qua Phản biện Đối kháng - 2026-09-13] Bác bỏ cơ chế Daemon tự động đẩy log máy trạm lên Hub (AS-1)**:
+  - *Lý do:* Thư mục `~/.gemini/antigravity/brain` không chứa tệp `transcript.jsonl` mà chỉ chứa các bước text rời rạc. Dữ liệu của kỹ sư tư vấn chứa bí mật công trình dạng văn xuôi mà regex của Maskara không thể lọc triệt để. Tự động push lên Hub tạo ra rủi ro pháp lý vi phạm bảo mật nghiêm trọng.
+- **[Chốt qua Phản biện Đối kháng - 2026-09-13] Bác bỏ Hồi quy Logistic trên 30 mẫu GPI; Giữ lại 30 Canonical Anchors (AS-2)**:
+  - *Lý do:* Phân tầng kỹ năng (Tier 1/2A/2B) là công ước kiến trúc nhằm tối ưu ngân sách ngữ cảnh (ADR-0030). Áp dụng mô hình học máy trên 30 mẫu chủ quan sẽ gây bất ổn định (Architectural Churn). 100% (71/71) kỹ năng hiện tại đã vượt qua `--enforce-gpi`. Giải pháp chuẩn xác là khóa cứng 30 Ca Kiểm Chuẩn Tiêu Biểu (Anchors) trong Unit Test và bổ sung Vùng Đệm Trễ Deadband $[11.5, 12.5]$.
+- **[Chốt qua Phản biện Đối kháng - 2026-09-13] Bác bỏ Nhà máy Benchmark Tự động của LLM (AS-3)**:
+  - *Lý do:* Bài toán xây dựng/pháp lý đòi hỏi số liệu chính xác tuyệt đối. Dùng LLM tự sinh 320 bài test không có golden answer rồi tự chấm sẽ tạo ra bẫy ảo giác "tự khen nhau", tiêu tốn hơn 130 triệu tokens/tháng và vi phạm nguyên tắc kiểm chứng tất định của ADR-0058.
+- **[Chốt qua Phản biện Đối kháng - 2026-09-13] Tái định vị 8/10 Orchestrators là User Rituals (AS-4)**:
+  - *Lý do:* 8 Orchestrators có cờ `disable-model-invocation: true` là các hướng dẫn nghi thức tương tác giữa người và máy (0 token nền), không phải AI Swarms. Chỉ có 2 hệ thống Swarm thực thụ (`ccba-teamwork`, `ccba-ai-qc`).
+- **[Chốt qua Phản biện Đối kháng - 2026-09-13] Bác bỏ tự động thăng hạng / khai tử kỹ năng Spoke-Hub (AS-5)**:
+  - *Lý do:* Vi phạm Hiến pháp 11 Ghế CCBA Charter 2026 (ADR-0046). Các kỹ năng chu kỳ dài (nghiệm thu công trình 6–12 tháng/lần) sẽ bị xóa oan nếu áp dụng quy tắc 0-usage.
+
+---
+
+## 4. Ngoài Phạm Vi (Out of Scope)
+
+1. **AI Synthetic Test Case Generator cho 64 kỹ năng ngoại vi**: Không xây dựng pipeline dùng LLM sinh hàng loạt bài test giả định; thay vào đó chỉ xây dựng bằng tay các bộ test có assertion xác định (Regex/Schema) cho Top 5 kỹ năng nòng cốt.
+2. **Hồi quy Logistic / Tối ưu hóa số học tự động cho công thức GPI**: Giữ nguyên các hệ số chuẩn của ADR-0057, không đưa thuật toán ML vào tầng linter kiến trúc.
+3. **Daemon tự động đồng bộ log qua Git/Network lên Server Spark**: Giữ nguyên tắc Single-Workstation Privacy: log cá nhân của kỹ sư chỉ được phân tích tại chỗ trên máy trạm khi có yêu cầu tường minh.
+4. **Cơ chế tự động merge PR từ Spoke lên Hub và tự động gỡ bỏ kỹ năng (Auto-deprecate)**: Giữ nguyên quy trình kiểm duyệt có chữ ký con người (Human Approval Gate).
+
+---
+
+## 5. Sương Mù Chiến Trận / Chưa Xác Định Rõ (Not yet specified)
+
+- **[Vùng mờ 1: Cơ chế Runtime Event Hook cho Antigravity IDE]**:
+  - *Câu hỏi còn nằm trong sương mù:* Thay vì quét hậu kiểm (post-mortem mining) qua các thư mục log tạm sau khi kết thúc phiên, liệu có thể đăng ký một Lifecycle Hook tầng IDE (thông qua `scripts/hooks/` hoặc Antigravity Sidecar) để bắt trực tiếp sự kiện `TOOL_EXCEPTION` ngay tại thời điểm xảy ra và ghi vào file `.md/scratch/live_failures.jsonl`?
+- **[Vùng mờ 2: Đo lường mức độ tương tác thực tế của User Rituals]**:
+  - *Câu hỏi còn nằm trong sương mù:* Làm thế nào để thu thập dữ liệu định lượng về tần suất kỹ sư sử dụng 8 Lệnh Nghi thức (`/ccba-implement`, `/ccba-new-feature`, v.v.) khi cờ `disable-model-invocation: true` khiến chúng không phát sinh telemetry tool calls thông thường?
+
+---
+
+## 6. Danh Sách Tickets Định Hướng Chi Tiết (The Tickets)
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        WAYFINDER DEPENDENCY GRAPH (TIER 3)                             │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                        │
+│   [Ticket 1: Làm Sạch Evals] (DONE) ────► [Ticket 4: Tái Cấu Trúc Miner Cục Bộ]        │
+│                                                   (Unblocked)                          │
+│                                                                                        │
+│   [Ticket 2: 30 GPI Anchors & Deadband] ──► [Ticket 5: Dashboard Spoke Tri Thức]      │
+│                (Unblocked)                                (Blocked by T2)              │
+│                                                                                        │
+│   [Ticket 3: Dogfood Swarm vào CI]                                                     │
+│                (Unblocked)                                                             │
+│                                                                                        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🟣 [ĐÃ HOÀN THÀNH / CLOSED] [Ticket 1: Làm Sạch Ô Nhiễm Bộ Dữ Liệu Benchmark Evals Hiện Hữu](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-eval-gate/test_cases/eval_pccc_audit.json)
+* **Loại công việc:** `Task [AFK]`
+* **Người nhận việc (Assignee):** `DeepCoder`
+* **Trạng thái:** **ĐÃ HOÀN THÀNH / CLOSED (2026-09-13)**
+* **Mục tiêu đã giải quyết:**
+  - Thanh lọc 100% các prompt rác của lập trình viên / subagents (sửa Mypy, scan git secrets, phục hồi catalog) ra khỏi hai tệp benchmark chuyên ngành [`eval_pccc_audit.json`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-eval-gate/test_cases/eval_pccc_audit.json) và [`eval_legal_intel.json`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-eval-gate/test_cases/eval_legal_intel.json).
+  - Bổ sung 6 ca kiểm chuẩn PCCC chuyên sâu: Bậc chịu lửa nhà xưởng F5 Bảng H.3, hút khói hành lang Phụ lục D, khoảng cách thoát nạn hành lang cụt Bảng G.1/G.2, van ngăn cháy REI 150 Điều 4.14, buồng thang không nhiễm khói N1/N2 Điều 3.4.12, và khoảng cách đầu phun Sprinkler TCVN 3890:2023.
+  - Bổ sung 6 ca kiểm chuẩn Pháp lý & Pháp điển chuẩn tắc: Thẩm quyền thẩm định dự án nhóm B Luật Xây dựng 2025 (Luật 135/2025/QH15), bãi bỏ cấp mới chứng chỉ QLDA & Định giá Điều 55 NĐ 212/2026/NĐ-CP, miễn chứng chỉ hành nghề, trình tự kiểm tra nghiệm thu NĐ 105/2025/NĐ-CP, quy định chuyển tiếp NĐ 217/2026/NĐ-CP, và giấy phép hoạt động nhà thầu nước ngoài.
+  - Tích hợp từ điển ánh xạ bí danh kỹ năng `SKILL_DATASET_ALIASES` trong `ccba_harness.evals.runner` giúp các lệnh CLI (`--skill ccba-ai-qc-pccc-audit`, `--skill ccba-legal-advisor`, `--skill pccc_audit`) tự động định vị đúng tệp benchmark tương ứng mà không làm xáo trộn các bộ test redteam.
+* **Kết quả kiểm chứng:**
+  - 100% assertions xác định và độ dài hợp lệ.
+  - `python -m ccba_harness verify-patch --preset eval` đạt PASSED (53/53 passed).
+  - `python -m ccba_harness verify-patch --preset ci` đạt PASSED (5/5 commands, Exit Code 0).
+
+---
+
+### 🟢 [BIÊN GIỚI / UNBLOCKED] [Ticket 2: Đóng Gói 30 Canonical GPI Anchors & Deadband Hysteresis Engine](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/gpi.py)
+* **Loại công việc:** `Task [AFK]`
+* **Người nhận việc (Assignee):** *Chưa gán (Unassigned)*
+* **Trạng thái:** **MỞ / UNBLOCKED (Nằm tại Biên giới)**
+* **Mục tiêu cần giải quyết:**
+  Tạo chốt chặn hồi quy kiến trúc bất biến cho chỉ số GPI ([ADR-0057](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md)), bảo đảm cấu trúc 71 kỹ năng không bị trôi dạt khi mở rộng.
+* **Phạm vi tác động:**
+  - **[packages/ccba-harness/src/ccba_harness/gpi.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/gpi.py):**
+    - Bổ sung cơ chế `Deadband Hysteresis`: Nếu kỹ năng đã tồn tại và điểm số mới rơi vào vùng $[11.5, 12.5)$, bảo lưu phân tầng cũ và yêu cầu cờ `--force-tier-flip` để tránh lật tier ngoài ý muốn.
+  - **[packages/ccba-harness/tests/test_gpi_decision_framework.py](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/tests/test_gpi_decision_framework.py):**
+    - Bổ sung fixture danh sách **30 Ca Kiểm Chuẩn Tiêu Biểu (Canonical Anchors)** gắn liền với tên thực tế:
+      - 10 Tier 1 Anchors: `ccba_ooxml.format`, `ccba_pdf_prep.chunker`, `ccba_legal.crawler`, v.v.
+      - 10 Tier 2A Anchors: `qto_table_mapping.md`, `meeting_minutes_guide.md`, `pccc_standards_ref.md`, v.v.
+      - 10 Tier 2B Anchors: `ccba-ai-qc-pccc-audit`, `ccba-legal-intel`, `bigbim-classification`, v.v.
+    - Tạo test function `test_30_canonical_anchors_invariants()` xác minh 100% các anchors phân tầng chính xác.
+* **Tiêu chí hoàn thành (Definition of Done):**
+  - `python -m pytest packages/ccba-harness/tests/test_gpi_decision_framework.py -v` pass 100%.
+  - `python -m ccba_harness verify-patch --preset code --target packages/ccba-harness` đạt Exit Code 0.
+
+---
+
+### 🟢 [BIÊN GIỚI / UNBLOCKED] [Ticket 3: Tích Hợp Kịch Bản Kiểm Thử Áp Lực 3 Workers Swarm Vào CI](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/run_qc_swarm_dogfood.py)
+* **Loại công việc:** `Task [AFK]`
+* **Người nhận việc (Assignee):** *Chưa gán (Unassigned)*
+* **Trạng thái:** **MỞ / UNBLOCKED (Nằm tại Biên giới)**
+* **Mục tiêu cần giải quyết:**
+  Đưa kịch bản dogfood đa tác tử thực tế vào bộ kiểm thử CI để bảo vệ Single-Writer Protocol ([ADR-0053](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0053-teamwork-multi-agent-orchestration-framework.md)) cho 2 hệ thống Swarm thực thụ (`ccba-teamwork` và `ccba-ai-qc`).
+* **Phạm vi tác động:**
+  - Tái sử dụng logic từ [`scripts/governance/run_qc_swarm_dogfood.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/run_qc_swarm_dogfood.py) (602 dòng).
+  - Đóng gói một bài test xác định trong `tests/governance/test_swarm_dogfood_ci.py`: giả lập 3 Workers xuất bản vá đồng thời ra `.system_generated/scratch/worker_{N}/`, kích hoạt [`apply_worker_patch.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/apply_worker_patch.py), kiểm tra khả năng phát hiện va chạm dòng (collision detection) và cơ chế atomic snapshot rollback.
+  - Cập nhật tài liệu kiến trúc làm rõ: 8/10 Orchestrators còn lại là User Rituals tương tác (0 token nền), không áp dụng swarm benchmark cho nhóm này.
+* **Tiêu chí hoàn thành (Definition of Done):**
+  - `python -m pytest tests/governance/test_swarm_dogfood_ci.py -v` pass trong $< 5.0$ giây.
+  - Khóa hoàn thành cứng: `python -m ccba_harness verify-patch --preset ci` đạt Exit Code 0.
+
+---
+
+### 🟢 [BIÊN GIỚI / UNBLOCKED] [Ticket 4: Tái Cấu Trúc log_eval_miner Đọc Cấu Trúc Log Cục Bộ & Tích Hợp ccba-maskara](file:///d:/GitHubProjects/ccba-agent-platform/scripts/eval/log_eval_miner.py)
+* **Loại công việc:** `Task [AFK]`
+* **Người nhận việc (Assignee):** *Chưa gán (Unassigned)*
+* **Trạng thái:** **MỞ / UNBLOCKED (Sẵn sàng triển khai - Chặn bởi Ticket 1 đã được giải phóng)**
+* **Mục tiêu cần giải quyết:**
+  Khắc phục ảo giác về file log trong `log_eval_miner.py`, đọc đúng cấu trúc nhật ký cục bộ và sử dụng 11 rules của `ccba-maskara` thay cho 4 regex đơn sơ.
+* **Phạm vi tác động:**
+  - Thay đổi hàm `find_transcript_files` để đọc từ thư mục chat sessions cục bộ thực tế (`~/.gemini/tmp/<workspace>/chats/session-*.jsonl` hoặc các file test transcript do chính harness sinh ra), loại bỏ việc quét mù qua 614 thư mục `brain/`.
+  - Thay thế các regex che giấu thông tin tại dòng 29–40 bằng việc import trực tiếp [`packages/ccba-maskara/src/ccba_maskara/_rules.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-maskara/src/ccba_maskara/_rules.py).
+  - Điều chỉnh hàm `identify_failures`: nếu người dùng đưa prompt nằm ngoài phạm vi (`out_of_scope`), việc Agent đưa ra Disclaimer từ chối lịch sự phải được coi là **Hành vi Đúng (Success)**, không được gắn nhãn là lỗi thất bại.
+  - Khóa cứng script ở chế độ chạy cục bộ (`--dry-run`), xuất kết quả ra `.md/scratch/eval_runs/`, tuyệt đối cấm tạo lệnh tự động push lên Git.
+* **Tiêu chí hoàn thành (Definition of Done):**
+  - `python -m pytest scripts/tests/test_log_eval_miner.py -v` pass 100% (22+ tests).
+  - Chạy thử nghiệm trên một workspace cục bộ không bị treo I/O và trích xuất đúng các ca thất bại thực tế.
+
+---
+
+### 🟡 [BỊ CHẶN] [Ticket 5: Nâng Cấp Dashboard Khuyếch Tán Tri Thức Spoke-Hub & Mẫu Biểu Đề Bạt](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/cross_spoke_analytics.py)
+* **Loại công việc:** `Prototype [HITL] / Research`
+* **Người nhận việc (Assignee):** *Chưa gán (Unassigned)*
+* **Trạng thái:** **BỊ CHẶN (Bởi Ticket 2)**
+* **Mục tiêu cần giải quyết:**
+  Hỗ trợ khuyếch tán tri thức từ Spoke về Hub thông qua Dashboard quan sát trực quan và mẫu biểu đề xuất chuẩn tắc, tuân thủ Hiến pháp 11 Ghế CCBA Charter 2026 ([ADR-0045](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0046](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md)).
+* **Phạm vi tác động:**
+  - Nâng cấp [`scripts/governance/cross_spoke_analytics.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/governance/cross_spoke_analytics.py): bổ sung phân mục **"Top Spoke Innovations & Candidates for Hub Ingestion"** (gợi ý các module/script tại Spoke có tần suất sử dụng cao để kỹ sư xem xét).
+  - Chuẩn hóa tài liệu hướng dẫn và mẫu biểu đề bạt `/ccba-propose-to-hub`, nhấn mạnh yêu cầu: Cổng Cứng (`check_spoke_leakage.py` pass 100%) và Cổng Mềm (Maintainer QC Level 5 phê chuẩn qua `/ccba-review-proposal`).
+  - Ghi nhận nguyên tắc bất biến: cấm thuật toán tự ý khai tử các kỹ năng nghiệp vụ chu kỳ dài.
+* **Tiêu chí hoàn thành (Definition of Done):**
+  - `python scripts/governance/cross_spoke_analytics.py --render-markdown` xuất báo cáo trực quan đầy đủ.
+  - Bản thảo hướng dẫn đề bạt tuân thủ 100% ADR-0045 và ADR-0046.

@@ -302,6 +302,20 @@ def _parse_raw_eval_items(raw: Any) -> list[EvalItem]:
     return items
 
 
+SKILL_DATASET_ALIASES: dict[str, list[str]] = {
+    "ccba-ai-qc-pccc-audit": ["pccc_audit", "ai_qc_pccc_audit"],
+    "ai_qc_pccc_audit": ["pccc_audit", "ai_qc_pccc_audit"],
+    "pccc_audit": ["pccc_audit", "ai_qc_pccc_audit"],
+    "ccba-legal-advisor": ["legal_intel", "legal_advisor"],
+    "legal_advisor": ["legal_intel", "legal_advisor"],
+    "ccba-legal-intel": ["legal_intel", "legal_advisor"],
+    "legal_intel": ["legal_intel", "legal_advisor"],
+    "ccba-teamwork": ["agent_orchestration", "teamwork"],
+    "agent_orchestration": ["agent_orchestration", "teamwork"],
+    "ccba-ai-qc": ["ai_qc", "pccc_audit"],
+}
+
+
 def load_eval_dataset(
     dataset_path: Path | str | None = None,
     skill_name: str | None = None,
@@ -370,9 +384,30 @@ def load_eval_dataset(
                     continue
         else:
             clean = canonical_skill.removeprefix("ccba-").replace("-", "_").lower()
-            matching_files = list(default_dir.glob(f"eval_{clean}*.json"))
+            candidate_keys = [clean]
+            for alias in SKILL_DATASET_ALIASES.get(canonical_skill.lower(), []):
+                if alias not in candidate_keys:
+                    candidate_keys.append(alias)
+            for alias in SKILL_DATASET_ALIASES.get(clean, []):
+                if alias not in candidate_keys:
+                    candidate_keys.append(alias)
+
+            matching_files: list[Path] = []
+            for k in candidate_keys:
+                exact_f = default_dir / f"eval_{k}.json"
+                if exact_f.exists() and exact_f not in matching_files:
+                    matching_files.append(exact_f)
+
             if not matching_files:
-                matching_files = list(default_dir.glob(f"*{clean}*.json"))
+                for k in candidate_keys:
+                    for f in sorted(default_dir.glob(f"eval_{k}*.json")):
+                        if f not in matching_files:
+                            matching_files.append(f)
+            if not matching_files:
+                for k in candidate_keys:
+                    for f in sorted(default_dir.glob(f"*{k}*.json")):
+                        if f not in matching_files:
+                            matching_files.append(f)
 
             if matching_files:
                 for mf in sorted(matching_files):
@@ -395,7 +430,11 @@ def load_eval_dataset(
                                     .replace("-", "_")
                                     .lower()
                                 )
-                                if tgt == clean or tgt == canonical_skill.lower():
+                                if (
+                                    tgt in candidate_keys
+                                    or tgt == clean
+                                    or tgt == canonical_skill.lower()
+                                ):
                                     raw_items.append(it)
                     except Exception:
                         continue

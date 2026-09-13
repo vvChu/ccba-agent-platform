@@ -153,6 +153,24 @@ def test_load_eval_dataset_discovery_from_eval_gate(tmp_path: Path) -> None:
     assert len(items_prefix) == 1
     assert items_prefix[0].id == "copywriting_01"
 
+    # Check alias resolution (e.g. ccba-ai-qc-pccc-audit -> eval_pccc_audit.json)
+    (test_cases_dir / "eval_pccc_audit.json").write_text(
+        json.dumps([{"id": "pccc_01", "input_prompt": "Audit fire rating"}]),
+        encoding="utf-8",
+    )
+    items_pccc = load_eval_dataset(skill_name="ccba-ai-qc-pccc-audit", project_root=tmp_path)
+    assert len(items_pccc) == 1
+    assert items_pccc[0].id == "pccc_01"
+
+    # Check alias resolution (e.g. ccba-legal-advisor -> eval_legal_intel.json)
+    (test_cases_dir / "eval_legal_intel.json").write_text(
+        json.dumps([{"id": "legal_01", "input_prompt": "Legal consultation"}]),
+        encoding="utf-8",
+    )
+    items_legal = load_eval_dataset(skill_name="ccba-legal-advisor", project_root=tmp_path)
+    assert len(items_legal) == 1
+    assert items_legal[0].id == "legal_01"
+
 
 def test_main_dispatch_eval(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """Verify main() directly routes first argument 'eval' to run_eval_cli."""
