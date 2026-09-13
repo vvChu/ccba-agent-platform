@@ -97,6 +97,11 @@ def get_registered_spokes(hub_root: Path | None = None) -> list[dict[str, Any]]:
     # Attach dynamic heartbeats and ensure archetype exists
     for sp in decrypted_spokes:
         s_id = sp.get("spoke_id")
+        if not s_id and sp.get("path"):
+            import hashlib
+
+            s_id = hashlib.sha256(str(Path(sp["path"]).resolve()).encode("utf-8")).hexdigest()
+            sp["spoke_id"] = s_id
         hb = heartbeats.get(s_id, {})
         if isinstance(hb, dict) and hb.get("last_sync"):
             sp["last_sync"] = hb["last_sync"]

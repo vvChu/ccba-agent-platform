@@ -1098,6 +1098,9 @@ def test_registry_static_hash_and_heartbeat_decoupling(tmp_path: Path) -> None:
         ), "Registry file must NOT be rewritten if static metadata is unchanged!"
 
         # 3. Decryption check with decrypted cache fallback
+        import hashlib
+
+        sp_id = hashlib.sha256(str(spoke_dir.resolve()).encode("utf-8")).hexdigest()
         mock_decrypted = {
             "spokes": [
                 {
@@ -1105,6 +1108,7 @@ def test_registry_static_hash_and_heartbeat_decoupling(tmp_path: Path) -> None:
                     "path": str(spoke_dir),
                     "project_type": "Tác vụ Admin",
                     "archetype": "knowledge_corpus",
+                    "spoke_id": sp_id,
                 }
             ]
         }
