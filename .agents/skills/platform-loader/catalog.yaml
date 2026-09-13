@@ -258,6 +258,8 @@ skills:
   - api protection
   - quota
   - retry
+  - auto downgrade
+  - soft cooldown
   skill_path: .agents/skills/ccba-api-circuit-breaker/SKILL.md
   command: /ccba-api-circuit-breaker
   tier: kernel
@@ -738,7 +740,7 @@ skills:
 - name: ccba-llm-pipeline-patterns
   bundle: _core
   description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
-    Đúc rút từ VvC LLM OS (v5.1→v8.7, 2026).
+    Đúc rút từ VvC LLM OS (v5.1→v8.15, 2026).
   triggers:
   - llm pipeline
   - pipeline patterns
@@ -747,6 +749,8 @@ skills:
   - rag pipeline
   - synthesis pipeline
   - self-correction
+  - map reduce
+  - multi turn memory
   skill_path: .agents/skills/ccba-llm-pipeline-patterns/SKILL.md
   command: /ccba-llm-pipeline-patterns
   tier: kernel

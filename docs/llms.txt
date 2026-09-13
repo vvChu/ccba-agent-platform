@@ -61,7 +61,7 @@
 - [ccba-legal-document-tracker](skills/ccba-legal-document-tracker.md): /ccba-legal-document-tracker — Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine và Registry.
 - [ccba-legal-ingest](skills/ccba-legal-ingest.md): /ccba-legal-ingest — Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation, and 15-Gate CI verification workflow.
 - [ccba-legal-intel](skills/ccba-legal-intel.md): /ccba-legal-intel — Autonomous legal intelligence agent to crawl, diff, and generate compliance checklists from Vietnamese legal documents.
-- [ccba-llm-pipeline-patterns](skills/ccba-llm-pipeline-patterns.md): /ccba-llm-pipeline-patterns — Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đúc rút từ VvC LLM OS (v5.1→v8.7, 2026).
+- [ccba-llm-pipeline-patterns](skills/ccba-llm-pipeline-patterns.md): /ccba-llm-pipeline-patterns — Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đúc rút từ VvC LLM OS (v5.1→v8.15, 2026).
 - [ccba-markdown-document-processing](skills/ccba-markdown-document-processing.md): /ccba-markdown-document-processing — Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep Seam ConversionPipeline.
 - [ccba-maskara](skills/ccba-maskara.md): /ccba-maskara — Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords, private keys) trong files/logs và cài đặt guardrails bảo mật.
 - [ccba-mermaid-diagram](skills/ccba-mermaid-diagram.md): /ccba-mermaid-diagram — Tạo sơ đồ Mermaid đạt chuẩn học thuật Academic Grayscale, an toàn cú pháp (subgraph style, escaped labels, non-flowcharts) cho tài liệu và xuất bản.
