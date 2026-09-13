@@ -396,7 +396,16 @@ def clean_subagent_artifacts(root_dir: Path, dry_run: bool) -> None:
     if not agents_dir.exists():
         return
 
-    canonical = {"skills", "workflows", "proposals", "rules", "templates", "AGENTS.md", ".gitkeep"}
+    canonical = {
+        "skills",
+        "workflows",
+        "proposals",
+        "rules",
+        "templates",
+        "resources",
+        "AGENTS.md",
+        ".gitkeep",
+    }
     stray_items = [p for p in agents_dir.iterdir() if p.name not in canonical]
 
     if not stray_items:

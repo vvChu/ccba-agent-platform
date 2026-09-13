@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-13] [synthesize] | Phát Hành Release PR #269 / Issue #268 (Gia Cố Spoke Sync, Decouple Archetype & RSA-OAEP Bounds)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /boost, /ccba-create-pr, /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `scripts/spoke/sync/`, `scripts/spoke/spoke_bootstrap.py`, `scripts/spoke/decrypt_spoke_registry.py`, `scripts/ccba_platform_cli.py`, `scripts/tests/test_spoke_sync_modules.py`, `.md/knowledge/reports/walkthrough.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`
+- **Summary**: Hoàn tất giải quyết triệt để Issue #268 và chu trình phát hành PR #269: (1) Củng cố khuyến nghị SDK packages trong `sdk_inspector.py` tự động nhận diện cả packages monorepo nội bộ và packages đã cài trong môi trường ảo qua `importlib.metadata`, loại bỏ cảnh báo giả; (2) Tách bạch hoàn toàn cơ chế fallback Archetype (`archetype_to_project_type`) khỏi Registry Timestamp, ngăn ngừa ghi đè ngoài ý muốn; (3) Khắc phục giới hạn kích thước bản rõ RSA-2048 OAEP SHA-256 (190 bytes) trong `registry.py` bằng cách bóc tách telemetry heartbeat biến động ra `.md/telemetry/spoke_heartbeats.yaml` (gitignored) và chỉ lưu `static_hash` SHA-256 trong payload mã hóa, loại bỏ hoàn toàn ngoại lệ `ValueError: Plaintext is too long` và bảo vệ Git tree của Hub sạch sẽ; (4) Gia cố seams kiểm thử verification trong `coordinator.py` với tùy chọn `--dry-run` an toàn; (5) Bổ sung 34/34 unit test hồi quy toàn diện trong `scripts/tests/test_spoke_sync_modules.py`; (6) Mở và hoàn tất release PR #269, vượt qua 100% Dual-Gate CI, tiếp thu phản biện Copilot Review và squash merge vào `main` tại commit `43a3d970`; (7) Bổ sung RULE-4.9 và RULE-4.10 vào `session_learnings.md` và lưu trữ đầy đủ trong `session_learnings_history.md`.
+
+---
+
 ## [2026-09-12] [synthesize] | Đại Chuẩn Hóa 71 Skills ADR-0057, Thăng Cấp Auditor, Ban Hành /ccba-create-pr & Khóa Cứng Zero-Polling (#266, PR #267)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-contribute-to-hub, /ccba-release-feature, /learn & /ccba-session-retrospective)
 - **Affected Files**: `.agents/skills/`, `docs/skills/`, `docs/rules/execution_guardrails.md`, `scripts/governance/audit_skills_hygiene.py`, `scripts/governance/compile_skills_docs.py`, `.md/knowledge/session_learnings.md`, `.md/knowledge/reports/walkthrough.md`
