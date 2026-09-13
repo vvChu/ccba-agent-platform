@@ -285,6 +285,9 @@ def _parse_raw_eval_items(raw: Any) -> list[EvalItem]:
         golden = entry.get("golden_answer")
         rubric = entry.get("rubric")
         metadata = dict(entry.get("metadata", {}))
+        diff_val = entry.get("difficulty") or metadata.get("difficulty") or metadata.get("Difficulty")
+        if diff_val is not None:
+            metadata["difficulty"] = str(diff_val).strip().lower()
         if "assertions" in entry and "assertions" not in metadata:
             metadata["assertions"] = entry["assertions"]
         items.append(
@@ -303,6 +306,8 @@ def load_eval_dataset(
     dataset_path: Path | str | None = None,
     skill_name: str | None = None,
     project_root: Path | None = None,
+    difficulty: str | None = None,
+    limit: int | None = None,
 ) -> list[EvalItem]:
     """Load evaluation dataset from explicit path or default test cases directory."""
     if project_root is None:
@@ -313,6 +318,8 @@ def load_eval_dataset(
                 break
         if project_root is None:
             project_root = cur
+
+    raw_items: list[EvalItem] = []
 
     if dataset_path:
         target = Path(dataset_path)
@@ -325,79 +332,86 @@ def load_eval_dataset(
         if target.is_file():
             try:
                 with open(target, encoding="utf-8") as f:
-                    return _parse_raw_eval_items(json.load(f))
+                    raw_items = _parse_raw_eval_items(json.load(f))
             except Exception:
                 return []
 
-        if target.is_dir():
-            items: list[EvalItem] = []
+        elif target.is_dir():
             for jf in sorted(target.glob("*.json")):
                 try:
                     with open(jf, encoding="utf-8") as f:
-                        items.extend(_parse_raw_eval_items(json.load(f)))
+                        raw_items.extend(_parse_raw_eval_items(json.load(f)))
                 except Exception:
                     continue
-            return items
 
-    # Default fallback: .agents/skills/ccba-eval-gate/test_cases/
-    default_dir = project_root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
-    if not default_dir.exists():
-        return []
-
-    if not skill_name:
-        canonical_skill = ""
     else:
-        canonical_skill = skill_name.strip()
-        if "/" in canonical_skill or "\\" in canonical_skill or canonical_skill.endswith(".md"):
-            p_cand = Path(canonical_skill)
-            if p_cand.name.lower() == "skill.md" or p_cand.suffix == ".md":
-                canonical_skill = p_cand.parent.name
+        # Default fallback: .agents/skills/ccba-eval-gate/test_cases/
+        default_dir = project_root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
+        if not default_dir.exists():
+            return []
+
+        if not skill_name:
+            canonical_skill = ""
+        else:
+            canonical_skill = skill_name.strip()
+            if "/" in canonical_skill or "\\" in canonical_skill or canonical_skill.endswith(".md"):
+                p_cand = Path(canonical_skill)
+                if p_cand.name.lower() == "skill.md" or p_cand.suffix == ".md":
+                    canonical_skill = p_cand.parent.name
+                else:
+                    canonical_skill = p_cand.name
+
+        if not canonical_skill or canonical_skill.lower() in ("all", "*"):
+            for jf in sorted(default_dir.glob("*.json")):
+                try:
+                    with open(jf, encoding="utf-8") as f:
+                        raw_items.extend(_parse_raw_eval_items(json.load(f)))
+                except Exception:
+                    continue
+        else:
+            clean = canonical_skill.removeprefix("ccba-").replace("-", "_").lower()
+            matching_files = list(default_dir.glob(f"eval_{clean}*.json"))
+            if not matching_files:
+                matching_files = list(default_dir.glob(f"*{clean}*.json"))
+
+            if matching_files:
+                for mf in sorted(matching_files):
+                    try:
+                        with open(mf, encoding="utf-8") as f:
+                            raw_items.extend(_parse_raw_eval_items(json.load(f)))
+                    except Exception:
+                        continue
             else:
-                canonical_skill = p_cand.name
+                # Fallback to scanning metadata target_skill
+                for jf in sorted(default_dir.glob("*.json")):
+                    try:
+                        with open(jf, encoding="utf-8") as f:
+                            parsed = _parse_raw_eval_items(json.load(f))
+                            for it in parsed:
+                                tgt = (
+                                    str(it.metadata.get("target_skill", ""))
+                                    .strip()
+                                    .removeprefix("ccba-")
+                                    .replace("-", "_")
+                                    .lower()
+                                )
+                                if tgt == clean or tgt == canonical_skill.lower():
+                                    raw_items.append(it)
+                    except Exception:
+                        continue
 
-    if not canonical_skill or canonical_skill.lower() in ("all", "*"):
-        all_items: list[EvalItem] = []
-        for jf in sorted(default_dir.glob("*.json")):
-            try:
-                with open(jf, encoding="utf-8") as f:
-                    all_items.extend(_parse_raw_eval_items(json.load(f)))
-            except Exception:
-                continue
-        return all_items
+    items = raw_items
+    if difficulty:
+        d_clean = difficulty.strip().lower()
+        items = [
+            it
+            for it in items
+            if str(it.metadata.get("difficulty", "")).strip().lower() == d_clean
+        ]
 
-    clean = canonical_skill.removeprefix("ccba-").replace("-", "_").lower()
-    matching_files = list(default_dir.glob(f"eval_{clean}*.json"))
-    if not matching_files:
-        matching_files = list(default_dir.glob(f"*{clean}*.json"))
+    if limit is not None:
+        items = items[: max(0, limit)]
 
-    if matching_files:
-        items = []
-        for mf in sorted(matching_files):
-            try:
-                with open(mf, encoding="utf-8") as f:
-                    items.extend(_parse_raw_eval_items(json.load(f)))
-            except Exception:
-                continue
-        return items
-
-    # Fallback to scanning metadata target_skill
-    items = []
-    for jf in sorted(default_dir.glob("*.json")):
-        try:
-            with open(jf, encoding="utf-8") as f:
-                parsed = _parse_raw_eval_items(json.load(f))
-                for it in parsed:
-                    tgt = (
-                        str(it.metadata.get("target_skill", ""))
-                        .strip()
-                        .removeprefix("ccba-")
-                        .replace("-", "_")
-                        .lower()
-                    )
-                    if tgt == clean or tgt == canonical_skill.lower():
-                        items.append(it)
-        except Exception:
-            continue
     return items
 
 
@@ -479,6 +493,8 @@ def run_eval_pipeline(
     scorers: list[BaseScorer] | None = None,
     pass_threshold: float = 85.0,
     max_concurrency: int = 5,
+    difficulty: str | None = None,
+    limit: int | None = None,
 ) -> EvalReport:
     """Executes evaluation pipeline across dataset test cases with multi-trial support."""
     if project_root is None:
@@ -490,7 +506,13 @@ def run_eval_pipeline(
         if project_root is None:
             project_root = cur
 
-    items = load_eval_dataset(dataset_path=dataset, skill_name=skill, project_root=project_root)
+    items = load_eval_dataset(
+        dataset_path=dataset,
+        skill_name=skill,
+        project_root=project_root,
+        difficulty=difficulty,
+        limit=limit,
+    )
     if not items:
         return EvalReport(
             total_items=0,
@@ -500,7 +522,13 @@ def run_eval_pipeline(
             pass_rate=0.0,
             item_results=[],
             summary_by_scorer={},
-            metadata={"skill": skill, "trials": trials, "auto_tune": auto_tune},
+            metadata={
+                "skill": skill,
+                "trials": trials,
+                "auto_tune": auto_tune,
+                "difficulty": difficulty,
+                "limit": limit,
+            },
         )
 
     active_scorers = scorers or [AutoItemScorer()]
@@ -522,7 +550,15 @@ def run_eval_pipeline(
 
     if len(trial_reports) == 1:
         final_report = trial_reports[0]
-        final_report.metadata.update({"skill": skill, "trials": trials, "auto_tune": auto_tune})
+        final_report.metadata.update(
+            {
+                "skill": skill,
+                "trials": trials,
+                "auto_tune": auto_tune,
+                "difficulty": difficulty,
+                "limit": limit,
+            }
+        )
     else:
         avg_score = round(sum(r.overall_score for r in trial_reports) / len(trial_reports), 2)
         avg_pass_rate = round(sum(r.pass_rate for r in trial_reports) / len(trial_reports), 2)
@@ -544,6 +580,8 @@ def run_eval_pipeline(
                 "skill": skill,
                 "trials": trials,
                 "auto_tune": auto_tune,
+                "difficulty": difficulty,
+                "limit": limit,
                 "trial_scores": [r.overall_score for r in trial_reports],
             },
         )

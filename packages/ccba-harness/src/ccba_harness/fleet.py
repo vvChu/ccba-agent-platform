@@ -223,10 +223,10 @@ def scan_spoke_telemetry(spoke_dict: dict[str, Any]) -> SpokeTelemetrySummary:
                 cost = float(parsed.get("total_cost_usd", 0.0))
                 sessions = max(1, int(parsed.get("total_subagents", 1)))
 
-                tools: dict[str, int] = {}
+                swarm_tools: dict[str, int] = {}
                 for sub in parsed.get("subagents", []):
                     for t_name, count in sub.get("tool_counts", {}).items():
-                        tools[t_name] = tools.get(t_name, 0) + count
+                        swarm_tools[t_name] = swarm_tools.get(t_name, 0) + count
 
                 b_limit = DEFAULT_SPOKE_BUDGET_TOKENS
                 status = "Compliant"
@@ -248,7 +248,7 @@ def scan_spoke_telemetry(spoke_dict: dict[str, Any]) -> SpokeTelemetrySummary:
                     prompt_tokens=p_tok,
                     completion_tokens=c_tok,
                     total_cost_usd=cost,
-                    tool_counts=tools,
+                    tool_counts=swarm_tools,
                     budget_limit_tokens=b_limit,
                     budget_status=status,
                 )

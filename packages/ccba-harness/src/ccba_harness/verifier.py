@@ -280,7 +280,7 @@ def resolve_preset_commands(
     """Resolve a verification preset into deterministic command strings.
 
     Args:
-        preset: Preset identifier ('code', 'doc', 'skill', 'adr').
+        preset: Preset identifier ('code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval').
         target: Target file or directory path.
         min_bytes: Minimum bytes for 'doc' preset.
         required_headings: List of headings required for 'doc' preset.
@@ -359,8 +359,19 @@ def resolve_preset_commands(
             f"{python_exec} scripts/sync_hub_adr_matrix.py --check",
         ]
 
+    if p == "eval":
+        cmds = [
+            f"{python_exec} -m pytest packages/ccba-harness/tests/test_evals_engine.py -q",
+        ]
+        if target_str:
+            if target_str.endswith(".json") or Path(target_str).is_file():
+                cmds.append(f"{python_exec} -m ccba_harness eval --dataset {target_str}")
+            else:
+                cmds.append(f"{python_exec} -m ccba_harness eval --skill {target_str}")
+        return cmds
+
     raise ValueError(
-        f"Unknown verification preset: '{preset}'. Supported presets: 'code', 'doc', 'skill', 'adr', 'telemetry', 'ci'."
+        f"Unknown verification preset: '{preset}'. Supported presets: 'code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval'."
     )
 
 
@@ -371,14 +382,14 @@ def verify_patch_execution(
     min_bytes: int = 100,
     required_headings: Sequence[str] | None = None,
     cwd: Path | str | None = None,
-    timeout: float = 60.0,
+    timeout: float = 120.0,
     fail_fast: bool = False,
 ) -> PatchVerificationReport:
     """Execute a sequence of verification commands and aggregate into a report.
 
     Args:
         commands: List of shell command strings to execute.
-        preset: Optional preset identifier ('code', 'doc', 'skill', 'adr').
+        preset: Optional preset identifier ('code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval').
         target: Target path when using a preset.
         min_bytes: Minimum bytes for 'doc' preset.
         required_headings: Required headings for 'doc' preset.
