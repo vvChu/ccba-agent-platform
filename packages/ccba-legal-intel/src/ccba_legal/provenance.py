@@ -237,8 +237,9 @@ def compute_docx_to_markdown_parity(
         text = re.sub(r"&nbsp;", " ", text)
         text = re.sub(r"&#\d+;|&[a-zA-Z]+;", " ", text)
         text = re.sub(r"</?[a-zA-Z][^>]*>", " ", text)
-        text = re.sub(r"[_\{\}\$]", "", text)
+        text = re.sub(r"[_\{\}\$\^]", "", text)
         text = re.sub(r"(\d+)\s*([a-zα-ω]+)", r"\1 \2", text)
+        text = re.sub(r"([a-zα-ω]+)\s*(\d+)", r"\1 \2", text)
         text = re.sub(r"[^\w\d\s]", " ", text, flags=re.UNICODE)
         return re.sub(r"\s+", " ", text).strip()
 
@@ -308,17 +309,29 @@ def verify_bundle_docx_vs_markdown(bundle_dir: Path) -> dict[str, Any]:
 
     docx_paras: list[str] = []
     in_toc = False
-    for p_text in docx_paras_raw[start_idx:]:
-        if p_text.strip().upper() in ["MỤC LỤC", "TABLE OF CONTENTS"]:
+    for p_idx, p_text in enumerate(docx_paras_raw[start_idx:], start=start_idx):
+        p_strip = p_text.strip()
+        p_upper = p_strip.upper()
+        if p_upper in ["MỤC LỤC", "TABLE OF CONTENTS"]:
             in_toc = True
             continue
-        if in_toc and (
-            p_text.strip().lower().startswith("lời nói đầu")
-            or re.match(
-                r"^1[\.\s]+(?:QUY ĐỊNH CHUNG|PHẠM VI ÁP DỤNG)\b", p_text.strip(), re.IGNORECASE
-            )
-        ):
-            in_toc = False
+        if in_toc:
+            is_end = False
+            if p_strip.lower().startswith("lời nói đầu"):
+                for nxt_idx in range(p_idx + 1, min(p_idx + 5, len(docx_paras_raw))):
+                    nxt_t = docx_paras_raw[nxt_idx].strip()
+                    if nxt_t:
+                        if not re.match(
+                            r"^(?:Lời giới thiệu|\d+[\.\s]|Phụ lục|Thư mục)",
+                            nxt_t,
+                            re.IGNORECASE,
+                        ):
+                            is_end = True
+                        break
+            elif p_upper in ("TIÊU CHUẨN QUỐC GIA", "QUY CHUẨN KỸ THUẬT QUỐC GIA"):
+                is_end = True
+            if is_end:
+                in_toc = False
         if not in_toc:
             docx_paras.append(p_text)
 

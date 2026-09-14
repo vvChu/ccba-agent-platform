@@ -319,7 +319,9 @@ def test_normalize_tabs_into_spaces():
 
 def test_unwrap_multi_row_signature_table_in_boundary_zone():
     """Verify that a 5-row borderless signature table in the boundary zone is unwrapped (ADR 0042 Extension)."""
-    dummy_paras = "".join(f"<w:p><w:r><w:t>Đoạn văn quy chuẩn {i}</w:t></w:r></w:p>" for i in range(15))
+    dummy_paras = "".join(
+        f"<w:p><w:r><w:t>Đoạn văn quy chuẩn {i}</w:t></w:r></w:p>" for i in range(15)
+    )
     sig_table = (
         "<w:tbl>"
         "  <w:tblPr>"

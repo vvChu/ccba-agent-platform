@@ -45,9 +45,7 @@ NORMATIVE_KEYWORDS = [
 ]
 
 
-def _is_admin_layout_table(
-    text: str, rows: int, cols: int, num_density: float = 0.0
-) -> bool:
+def _is_admin_layout_table(text: str, rows: int, cols: int, num_density: float = 0.0) -> bool:
     """Detect whether a small table is administrative header or signature block (Multi-Factor Scoring Engine)."""
     # 1. Zero-Loss Guard: Numeric & Engineering unit density >= 30% -> ALWAYS a data table!
     if num_density >= 0.30:
@@ -268,9 +266,7 @@ def classify_and_extract_tables(
 
         if _is_admin_layout_table(
             table_text, rows_cnt, cols_cnt, num_density
-        ) or _is_formula_frame_table(
-            table, rows_cnt, cols_cnt
-        ):
+        ) or _is_formula_frame_table(table, rows_cnt, cols_cnt):
             continue
 
         caption_num, caption_title = _find_preceding_caption(blocks, block_idx)

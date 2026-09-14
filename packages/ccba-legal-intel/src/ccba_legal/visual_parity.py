@@ -130,7 +130,10 @@ def lint_document(md_path: Path) -> list[str]:
     # 10. Check monotonic footnote numbering sequence (ADR 0030)
     is_amendment = "sua_doi" in md_path.stem.lower() or "sources" in md_path.parts
     if not is_amendment:
-        chunks = re.split(r"(?=\n#{1,4}\s+|\n<a id=)", text)
+        chunks = re.split(
+            r"(?=\n#{1,4}\s+(?!(?:Bảng|Hình)\s+)|\n<a id=[\"'](?:dieu|khoan|muc|chuong|phan)[-_])",
+            text,
+        )
         for chunk in chunks:
             # Match plain, italic (_CHÚ THÍCH:_), bold (**CHÚ THÍCH:**) markers
             labels = [

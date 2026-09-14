@@ -40,6 +40,8 @@ conforms_to:
 - "ADR-0040"
 - "ADR-0041"
 - "ADR-0042"
+- "ADR-0043"
+- "ADR-0044"
 ---
 # Skill: CCBA Legal Ingest Workflow (`ccba-legal-ingest`)
 
@@ -74,6 +76,11 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
   ```powershell
   python -m ccba_legal fetch "<tvpl_url>" -o "legal_docs/<category>/<doc_slug>/sources"
   ```
+
+* **Kịch bản 4 — Lưu trữ kép khi PDF TVPL scan mờ / lỗi phông chữ (Dual-PDF Archive & Provenance Protocol - ADR 0043):**
+  Đối với các tiêu chuẩn cũ (như TCVN 4474:1987, TCVN 4513:1988, TCVN 9362:2012, TCVN 10304:2014) mà tệp PDF từ TVPL là bản photocopy scan mờ hoặc lỗi phông mã hóa chữ TCVN3/VNI:
+  - Lưu giữ nguyên vẹn bản scan gốc dưới tên `sources/<doc_slug>_raw_scan.pdf` để bảo toàn vết truy xuất nguồn gốc pháp lý.
+  - Sử dụng Word COM (`docx2pdf` / `win32com`) xuất Vector PDF độ nét tuyệt đối (zero-OCR) từ tệp DOCX chính quy, lưu làm `sources/<doc_slug>.pdf` và khai báo cờ `pdf_origin: docx_vector_rendered` trong `metadata.yaml`. Cả 2 tệp đều được đồng bộ lên Google Drive Vault.
 - **Tiêu chí hoàn thành:** Thu thập đầy đủ tệp DOCX gốc và PDF công báo số hóa vào thư mục `sources/`.
 
 ---
@@ -87,6 +94,11 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
 * **Quy chuẩn bất biến (Core Invariants):**
   - **Pha 1 (In-Memory Canonical DOM Sanitization - ADR 0042):** `DocxCanonicalSanitizer` tự động gọt bỏ thuộc tính `w:rsid*`, thẻ `<w:proofErr>`, gộp các run `<w:r>` phân mảnh (Unicode NFC), tiêm `xml:space="preserve"`, thăng cấp heading và unwrap các bảng bố cục dàn trang (Borderless Layout Tables) thành văn xuôi phẳng.
   - **Pha 2 (Multimodal Verbatim AST Extraction - ADR 0037):** Thân văn bản Markdown trích xuất xác định $1:1$ từ DOCX (cấm LLM rewrite).
+  - **Pha 3 (Smart Fallbacks & Multi-Part Disambiguation - ADR 0044):**
+    * *Clause-Referenced Uncaptioned Tables:* Khi bảng số liệu không có heading `Bảng X` mà được dẫn chiếu trong câu trước (`blocks[i-1]` chứa `"theo bảng X"`), converter tự động gán nhãn bảng và xuất 2D CSV/JSON đầy đủ.
+    * *Single-Annex Normalization:* Nhận diện phụ lục đơn lẻ mang tên trần `Phụ lục` (không kèm chữ cái/số) với định danh `"1"`, tránh dồn phụ lục vào thân chính.
+    * *Multi-Part Table Disambiguation:* Đối với quy chuẩn đa phần (như QCVN 07:2023), tự động gắn tiền tố phần cho bảng (`bang_p01_01.csv`...) và đăng ký trường `part_id` trong `tables_catalog.json`.
+    * *KaTeX Multiline Tag Hierarchy:* Cho phép `\tag{X}` trong khối toán đơn dòng; cưỡng chế dùng `\qquad (X)` ở cuối dòng trong các môi trường đa dòng (`aligned`, `cases`, `gather`) để triệt tiêu lỗi bôi đỏ.
   - Phân tách rạch ròi 4 ngăn kéo: `tables/`, `figures/`, `annexes/`, `templates/`.
   - Toàn bộ file gốc DOCX + PDF nằm trong `sources/`.
   - Tự động sinh cây điều khoản AST `clauses.json` và bộ câu hỏi `qa_benchmark.json`.
@@ -146,9 +158,9 @@ Trước khi chuyển sang bước kiểm định hoặc kết luận hoàn thà
    | :--- | :--- | :--- |
    | Gate 1 | Registry Schema & Path Existence | `legal_registry.yaml` hợp lệ, bundle path tồn tại |
    | Gate 2 | OKF Bundle Structure & Compartments | Đủ `index.md`, `metadata.yaml`, 4 ngăn kéo + `sources/` |
-   | Gate 3 | Attachment Integrity (tables/) | CSV/JSON khớp 100% `tables_catalog.json` |
+   | Gate 3 | Attachment Integrity (tables/) | CSV/JSON khớp 100% `tables_catalog.json` (Sub-Gate 3.2: Table Reference & Multi-Part Disambiguation) |
    | Gate 4 | Anchor Link Integrity | Không gãy liên kết anchor `#dieu-X`, `#khoan-Y` |
-   | Gate 5 | AST Jurisdiction & PDF Metadata | `clauses.json` đầy đủ cây điều khoản và SHA-256 PDF |
+   | Gate 5 | AST Jurisdiction & PDF Metadata | `clauses.json` đầy đủ cây điều khoản, SHA-256 (Sub-Gate 5.2: Dual-PDF Archive Invariant) |
    | Gate 6 | Pure Normative Body & Noise Eradication | Loại sạch văn bản rác, căn lề hành chính |
    | Gate 7 | Spoke Cleanliness & Script Count | Thư mục sạch, không để script rác tại root |
    | Gate 8 | Atomic Form Templates Integrity | `templates/` nguyên tử, không rỗng, đúng cấu trúc |
@@ -157,7 +169,7 @@ Trước khi chuyển sang bước kiểm định hoặc kết luận hoàn thà
    | Gate 11 | DOCX-to-Markdown Verbatim Parity | Tỷ lệ khớp nguyên văn quy phạm $\ge 98.0\%$ |
    | Gate 12 | Multimodal Decoupled Asset & SVG/Cards | Zero stray WMF/EMF, đủ SVG/PNG $\ge 300\text{ DPI}$ và cards |
    | Gate 13 | Table Knowledge Extraction & 2D Regularity | Zero ragged rows, phẳng hóa đa tầng, tách chú thích CSV |
-   | Gate 14 | KaTeX Math Syntax & Rendering Integrity | Công thức chuẩn KaTeX, không lỗi bôi đỏ, không tag multiline |
+   | Gate 14 | KaTeX Math Syntax & Rendering Integrity | Công thức chuẩn KaTeX, không lỗi bôi đỏ (Sub-Gate 14.2: Multiline Tag Hierarchy) |
    | Gate 15 | OKF Provenance & Version Attestation | Cấp tem bảo chứng OKF v2.4 Universal chuẩn phân tầng |
 
 - **Tiêu chí hoàn thành:** Đăng ký sổ bộ thành công và toàn bộ 15 Cổng Master Spoke CI Validator đạt trạng thái PASSED (0 Errors, 0 Warnings).

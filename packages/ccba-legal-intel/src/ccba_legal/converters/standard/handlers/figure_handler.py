@@ -39,8 +39,12 @@ def handle_figure_card(
 
     # 2. Main Figure Card
     m_fig = re.match(
-        r"^(?:Hình|HÌNH)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\s*[\.\-–—:]\s*(.+)$", text
+        r"^(?:Hình|HÌNH)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\s*[\-–—:]\s*(.+)$", text
     )
+    if not m_fig:
+        m_fig = re.match(
+            r"^(?:Hình|HÌNH)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\.\s+([A-ZÀ-Ỹ0-9].+)$", text
+        )
     if m_fig:
         fig_num = m_fig.group(1)
         fig_title = normalize_katex_in_title(m_fig.group(2).strip())

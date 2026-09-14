@@ -331,7 +331,9 @@ class DocxCanonicalSanitizer:
             except ValueError:
                 tbl_idx_in_body = 0
 
-            if not self._is_layout_table(tbl, tbl_index=tbl_idx_in_body, total_elements=total_elements):
+            if not self._is_layout_table(
+                tbl, tbl_index=tbl_idx_in_body, total_elements=total_elements
+            ):
                 continue
 
             parent = tbl.getparent()
