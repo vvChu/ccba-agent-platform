@@ -99,6 +99,25 @@ NORMATIVE_KEYWORDS = [
 ]
 
 
+def _calculate_numeric_density(tbl: etree._Element) -> float:
+    """Calculate ratio of cells containing numbers, mathematical formulas, or technical units."""
+    cells = tbl.xpath(".//w:tc", namespaces=NAMESPACES)
+    if not cells:
+        return 0.0
+    numeric_cells = 0
+    numeric_pattern = re.compile(
+        r"(?:^\s*[\+\-]?\d+(?:[\.,]\d+)?\s*$)|"
+        r"(?:\d+\s*(?:%|m|cm|mm|km|kg|tấn|kN|MPa|daN|ha|°C|s|h|W|kW|kVA|V|A|dB)\b)|"
+        r"(?:[\=\<\>\±\×\÷\≤\≥])"
+    )
+    for c in cells:
+        text = "".join(c.itertext()).strip()
+        has_math = bool(c.xpath(".//m:oMath | .//w:object", namespaces=NAMESPACES))
+        if has_math or numeric_pattern.search(text):
+            numeric_cells += 1
+    return numeric_cells / len(cells)
+
+
 def _is_simple_text_run(r: etree._Element) -> bool:
     """Check whether a run contains only rPr, t, or tab elements (no drawings, OLE objects, or math)."""
     for child in r:
@@ -299,10 +318,20 @@ class DocxCanonicalSanitizer:
                     last_t.set(QN_XML_SPACE, "preserve")
 
     def _unwrap_borderless_layout_tables(self, root: etree._Element) -> None:
-        """Pass 2: Detect borderless layout tables and unwrap into sequential paragraphs."""
+        """Pass 2: Detect borderless layout tables and unwrap into sequential paragraphs (Multi-Factor Scoring Engine)."""
+        body = root.find(f".//{{{W_NS}}}body")
+        body_children = list(body) if body is not None else list(root)
+        total_elements = len(body_children)
+
         tables = root.xpath(".//w:tbl", namespaces=NAMESPACES)
         for tbl in tables:
-            if not self._is_layout_table(tbl):
+            tbl_idx_in_body = 0
+            try:
+                tbl_idx_in_body = body_children.index(tbl)
+            except ValueError:
+                tbl_idx_in_body = 0
+
+            if not self._is_layout_table(tbl, tbl_index=tbl_idx_in_body, total_elements=total_elements):
                 continue
 
             parent = tbl.getparent()
@@ -316,47 +345,70 @@ class DocxCanonicalSanitizer:
                 tbl_idx += 1
             parent.remove(tbl)
 
-    def _is_layout_table(self, tbl: etree._Element) -> bool:
-        """Determine whether a table is an administrative layout or signature table."""
+    def _is_layout_table(
+        self, tbl: etree._Element, tbl_index: int = 0, total_elements: int = 1
+    ) -> bool:
+        """Determine whether a table is an administrative layout or signature table (Multi-Factor Scoring Engine)."""
         rows = tbl.findall(f".//{QN_W_TR}")
-        if len(rows) > 3 or len(rows) == 0:
+        if not rows:
             return False
 
         max_cols = 0
         for r in rows:
             cells = r.findall(f"./{QN_W_TC}")
             max_cols = max(max_cols, len(cells))
-        if max_cols > 2:
+        if max_cols > 3:
             return False
 
         tbl_text = "".join(tbl.itertext()).lower().strip()
         if not tbl_text:
             return True
 
-        has_layout_kw = any(k in tbl_text for k in LAYOUT_KEYWORDS)
         has_norm_kw = any(k in tbl_text for k in NORMATIVE_KEYWORDS)
+        if has_norm_kw:
+            return False
 
-        if has_layout_kw and not has_norm_kw:
-            return True
-
-        # Check if table borders are explicitly set to none
+        # 1. Borderless check
         borders = tbl.xpath(".//w:tblBorders", namespaces=NAMESPACES)
+        is_borderless = False
         if borders:
             border_children = list(borders[0])
             if border_children and all(
                 b.get(QN_W_VAL) in ("none", "nil", "0") for b in border_children
             ):
-                if not has_norm_kw:
-                    return True
+                is_borderless = True
 
-        # Formula frame tables (e.g. 1-2 rows, 2 columns with formula tag like (1) or (B.1))
-        if len(rows) <= 2 and max_cols == 2:
+        # 2. Formula frame tables: borderless 1-2 rows, max 2 cols, with formula tag (e.g. '(1)', '(B.1)')
+        if is_borderless and len(rows) <= 2 and max_cols == 2:
             cell_texts = [
                 "".join(c.itertext()).strip() for r in rows for c in r.findall(f"./{QN_W_TC}")
             ]
             has_tag = any(re.match(r"^\(\d+[a-z]?\)$|^\([A-Z]\.\d+\)$", t) for t in cell_texts)
-            if has_tag and not has_norm_kw:
+            if has_tag:
                 return True
+
+        # 3. Zero-Loss Guard: Numeric & Engineering unit density >= 30% -> ALWAYS a data table!
+        num_density = _calculate_numeric_density(tbl)
+        if num_density >= 0.30:
+            return False
+
+        # 4. Document Boundary Topology: Header (first 12%) or Signature (last 12%) allows rows <= 8
+        relative_pos = tbl_index / max(1, total_elements)
+        is_boundary_zone = (relative_pos <= 0.12) or (relative_pos >= 0.88)
+        max_allowed_rows = 8 if is_boundary_zone else 3
+
+        if len(rows) > max_allowed_rows:
+            return False
+
+        has_layout_kw = any(k in tbl_text for k in LAYOUT_KEYWORDS)
+
+        # Administrative layout keyword in table
+        if has_layout_kw:
+            return True
+
+        # Borderless in boundary zone with low numeric density (< 10%)
+        if is_borderless and is_boundary_zone and num_density < 0.10:
+            return True
 
         return False
 

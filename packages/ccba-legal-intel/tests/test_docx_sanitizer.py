@@ -315,3 +315,65 @@ def test_normalize_tabs_into_spaces():
     assert len(t_nodes) == 1
     assert t_nodes[0].text == "    - Nội dung quy định"
     assert t_nodes[0].attrib.get(f"{{{NAMESPACES['xml']}}}space") == "preserve"
+
+
+def test_unwrap_multi_row_signature_table_in_boundary_zone():
+    """Verify that a 5-row borderless signature table in the boundary zone is unwrapped (ADR 0042 Extension)."""
+    dummy_paras = "".join(f"<w:p><w:r><w:t>Đoạn văn quy chuẩn {i}</w:t></w:r></w:p>" for i in range(15))
+    sig_table = (
+        "<w:tbl>"
+        "  <w:tblPr>"
+        "    <w:tblBorders>"
+        '      <w:top w:val="none"/>'
+        '      <w:left w:val="none"/>'
+        '      <w:bottom w:val="none"/>'
+        '      <w:right w:val="none"/>'
+        "    </w:tblBorders>"
+        "  </w:tblPr>"
+        "  <w:tr><w:tc><w:p><w:r><w:t>Nơi nhận:</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>TM. CHÍNH PHỦ</w:t></w:r></w:p></w:tc></w:tr>"
+        "  <w:tr><w:tc><w:p><w:r><w:t>- Như Điều 3;</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>THỦ TƯỚNG</w:t></w:r></w:p></w:tc></w:tr>"
+        "  <w:tr><w:tc><w:p><w:r><w:t>- Ban Bí thư;</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>(Đã ký)</w:t></w:r></w:p></w:tc></w:tr>"
+        "  <w:tr><w:tc><w:p><w:r><w:t>- Văn phòng TW;</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Ký, ghi rõ họ tên</w:t></w:r></w:p></w:tc></w:tr>"
+        "  <w:tr><w:tc><w:p><w:r><w:t>Lưu: VT</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Phạm Minh Chính</w:t></w:r></w:p></w:tc></w:tr>"
+        "</w:tbl>"
+    )
+    docx_bytes = make_docx_bytes(dummy_paras + sig_table)
+    sanitizer = DocxCanonicalSanitizer()
+    xml_out = get_sanitized_xml(sanitizer, docx_bytes)
+
+    root = etree.fromstring(xml_out.encode("utf-8"))
+    assert len(root.xpath(".//w:tbl", namespaces=NAMESPACES)) == 0
+    paras = root.xpath(".//w:p", namespaces=NAMESPACES)
+    texts = ["".join(p.itertext()).strip() for p in paras]
+    assert "TM. CHÍNH PHỦ" in texts
+    assert "Lưu: VT" in texts
+
+
+def test_preserve_minimal_numeric_normative_table():
+    """Verify that a 2-row borderless table with numeric density >= 30% is preserved (Zero-Loss Invariant)."""
+    table = (
+        "<w:tbl>"
+        "  <w:tblPr>"
+        "    <w:tblBorders>"
+        '      <w:top w:val="none"/>'
+        '      <w:left w:val="none"/>'
+        '      <w:bottom w:val="none"/>'
+        '      <w:right w:val="none"/>'
+        "    </w:tblBorders>"
+        "  </w:tblPr>"
+        "  <w:tr>"
+        "    <w:tc><w:p><w:r><w:t>Cấp công trình</w:t></w:r></w:p></w:tc>"
+        "    <w:tc><w:p><w:r><w:t>Áp lực tiêu chuẩn (kN/m2)</w:t></w:r></w:p></w:tc>"
+        "  </w:tr>"
+        "  <w:tr>"
+        "    <w:tc><w:p><w:r><w:t>Cấp I</w:t></w:r></w:p></w:tc>"
+        "    <w:tc><w:p><w:r><w:t>1.25 kN/m2</w:t></w:r></w:p></w:tc>"
+        "  </w:tr>"
+        "</w:tbl>"
+    )
+    docx_bytes = make_docx_bytes(table)
+    sanitizer = DocxCanonicalSanitizer()
+    xml_out = get_sanitized_xml(sanitizer, docx_bytes)
+
+    root = etree.fromstring(xml_out.encode("utf-8"))
+    assert len(root.xpath(".//w:tbl", namespaces=NAMESPACES)) == 1
