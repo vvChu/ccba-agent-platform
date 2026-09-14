@@ -2,7 +2,9 @@
 proposal_id: "2026-09-14_harden-spoke-sync-and-guardrails"
 type: "packages"
 name: "harden-spoke-sync-and-guardrails"
-status: "proposed"
+status: "merged"
+merged_commit: "176f8127"
+merged_date: "2026-09-14"
 priority: "Cao"
 proposed_by_project: "ccba-legal-knowledge"
 proposed_by_archetype: "knowledge_corpus"
@@ -16,7 +18,7 @@ applies_to:
 
 - **Tác giả đề xuất:** Lead Maintainer & Spoke `ccba-legal-knowledge` (qua workflow `/ccba-issue-to-hub`)
 - **Ngày lập:** 2026-09-14
-- **Trạng thái:** Proposed
+- **Trạng thái:** Đã hợp nhất (Merged — Commit: `176f8127`)
 - **Mã Issue:** [#274](https://github.com/vvChu/ccba-agent-platform/issues/274)
 - **Căn cứ pháp lý & kỹ thuật:** ADR-0044, ADR-0045, ADR-0057, ADR-0058, RULE-2.5.
 
