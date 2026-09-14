@@ -317,7 +317,9 @@ if active == "1":
         for file_path in py_files:
             if os.path.exists(file_path):
                 cmd_ruff = [sys.executable, "-m", "ruff", "check", file_path]
-                res_ruff = subprocess.run(cmd_ruff, capture_output=True, text=True)
+                res_ruff = subprocess.run(
+                    cmd_ruff, capture_output=True, text=True, encoding="utf-8", errors="replace"
+                )
                 if res_ruff.returncode != 0:
                     raise RuntimeError(
                         f"ruff check failed for {file_path} (exit code {res_ruff.returncode}).\n"
@@ -330,7 +332,9 @@ if active == "1":
         package_dir = os.path.dirname(os.path.dirname(current_file_dir))
 
         cmd_pytest = [sys.executable, "-m", "pytest", package_dir]
-        res_pytest = subprocess.run(cmd_pytest, capture_output=True, text=True)
+        res_pytest = subprocess.run(
+            cmd_pytest, capture_output=True, text=True, encoding="utf-8", errors="replace"
+        )
         if res_pytest.returncode != 0:
             raise RuntimeError(
                 f"pytest failed for package {package_dir} (exit code {res_pytest.returncode}).\n"

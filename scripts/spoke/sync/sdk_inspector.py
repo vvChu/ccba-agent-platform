@@ -72,6 +72,12 @@ class TestGuardrailCopier:
                 "scripts/safe_pytest.py",
             ),
             (
+                self.hub_root / "scripts" / "safe_runner.py",
+                spoke_scripts_dir / "safe_runner.py",
+                "safe_runner.py",
+                "scripts/safe_runner.py",
+            ),
+            (
                 self.hub_root / "scripts" / "spoke" / "check_hub_import_depth.py",
                 spoke_scripts_dir / "check_hub_import_depth.py",
                 "check_hub_import_depth.py",

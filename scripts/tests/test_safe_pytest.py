@@ -42,3 +42,17 @@ def test_dry_run_mode(capsys):
         captured = capsys.readouterr()
         assert "[SafePytest DRY-RUN] Planned execution:" in captured.out
         assert "tests/test_demo.py" in captured.out
+
+
+def test_dry_run_mode_multiple_files(capsys):
+    """Test -f option with multiple test files."""
+    with patch(
+        "sys.argv",
+        ["safe_pytest.py", "-f", "tests/test_demo1.py", "tests/test_demo2.py", "--dry-run"],
+    ):
+        code = main()
+        assert code == 0
+        captured = capsys.readouterr()
+        assert "[SafePytest DRY-RUN] Planned execution:" in captured.out
+        assert "tests/test_demo1.py" in captured.out
+        assert "tests/test_demo2.py" in captured.out

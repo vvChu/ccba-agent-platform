@@ -29,7 +29,9 @@ find_modified_test_files = DetachedExecutionEngine.find_modified_test_files
 def main() -> int:
     """Main CLI entry point for safe_pytest."""
     parser = argparse.ArgumentParser(description="Safe Pytest Runner Wrapper for CCBA Platform")
-    parser.add_argument("-f", "--file", type=str, help="Specific test file or pattern to run")
+    parser.add_argument(
+        "-f", "--file", nargs="+", help="Specific test file(s) or pattern(s) to run"
+    )
     parser.add_argument("-p", "--package", type=str, help="Specific package name to run tests for")
     parser.add_argument(
         "-F",
