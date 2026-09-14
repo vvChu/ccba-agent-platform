@@ -822,6 +822,10 @@ class SpokeSynchronizer:
                 import json
 
                 from ccba_harness.fleet import scan_spoke_telemetry
+                from scripts.spoke.spoke_bootstrap import SpokeBootstrapper
+
+                # Ensure gitignore ignores telemetry_summary.json before writing to prevent dirty working tree
+                SpokeBootstrapper(spoke_root, hub_root).ensure_gitignore_rule(dry_run=dry_run)
 
                 summary = scan_spoke_telemetry(
                     {
@@ -1077,6 +1081,8 @@ class SpokeSynchronizer:
                         cwd=str(hub_root),
                         capture_output=True,
                         text=True,
+                        encoding="utf-8",
+                        errors="replace",
                         timeout=30,
                     )
                     if result.returncode == 0:
@@ -1166,6 +1172,8 @@ class SpokeSynchronizer:
                 [str(spoke_python), "-m", "pytest", "--version"],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=10,
             )
             if check_res.returncode != 0:

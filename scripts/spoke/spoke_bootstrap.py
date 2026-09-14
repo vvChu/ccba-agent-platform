@@ -255,6 +255,8 @@ class SpokeBootstrapper:
             "requirements-hub.txt",
             ".md/teach/",
             ".md/scratch/",
+            ".md/data/telemetry_summary.json",
+            ".md/data/*.json",
             ".tmp/",
             ".out-of-scope/",
         ]
@@ -288,6 +290,8 @@ class SpokeBootstrapper:
                 cwd=str(self.hub_root),
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             if res.returncode == 0:
                 return res.stdout.strip()[:12]
@@ -303,6 +307,8 @@ class SpokeBootstrapper:
                 cwd=str(self.hub_root),
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             if res.returncode == 0:
                 return res.stdout.strip()
@@ -358,6 +364,9 @@ class SpokeBootstrapper:
                     file=sys.stderr,
                 )
                 return 1
+
+        # Update .gitignore first to ensure Spoke Leakage Guard & hygiene apply to all spokes
+        self.ensure_gitignore_rule(dry_run=dry_run)
 
         if not self.is_python_project():
             print(
@@ -424,7 +433,13 @@ class SpokeBootstrapper:
             cmd = [str(pip_bin), "install", "-e", str(pkg_path)]
             print(f"  -> pip install -e {pkg_path.name}")
             if not dry_run:
-                res = subprocess.run(cmd, capture_output=True, text=True)
+                res = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                )
                 if res.returncode == 0:
                     install_results[pkg] = "✅ Installed"
                 else:
@@ -457,6 +472,8 @@ class SpokeBootstrapper:
                     [str(python_bin), "-c", code],
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                 )
                 if v_res.returncode == 0:
                     verify_results[pkg] = "✅ Import OK"
