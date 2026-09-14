@@ -1,81 +1,78 @@
-# 🛡️ Walkthrough: Issue #268 — Harden Spoke Sync & Decouple Archetype from Registry Timestamp
+# 🏆 Walkthrough: Gia Cố Spoke Sync Hygiene, Guardrails Distributor & Safe Pytest Scope Lock (Issue #274)
 
-## 1. Executive Summary
-
-Issue #268 resolves 4 foundational architectural and ergonomic bottlenecks in the CCBA Hub-Spoke synchronization subsystem:
-1. **SDK Inspector Domain Decoupling (ADR-0044 & ADR-0050)**: Prevents inappropriate package recommendations (`ccba-qc-core`, `ccba-ooxml`, `ccba-pdf-prep`) for `knowledge_corpus` spokes and categorizes recommendations by functional domain rather than a misleading generic label.
-2. **Post-Sync Verification Seam (ADR-0058)**: Discovers test suites across candidate directories (`tests`, `scripts/tests`, `src/tests`, or `verification.test_path` in `workspace_context.yaml`) and executes tests within the Spoke's virtual environment (`.venv/Scripts/python.exe`) rather than the Hub's Python interpreter.
-3. **Archetype Taxonomy Preservation (ADR-0041 §3)**: Stops collapsing `knowledge_corpus` spokes into `"Tác vụ Admin"`. Propagates `archetype` across `workspace_context.yaml`, `SpokeRegistrar`, `LegalKnowledgeSyncOrchestrator`, and `scripts/ccba_platform_cli.py`.
-4. **Static Registry & Dynamic Heartbeat Decoupling (ADR-0046)**: Computes a `static_hash` of spoke metadata. If unchanged, skips RSA re-encryption on `--apply`, eliminating perpetual Git working-tree churn in `.md/data/spoke_registry.yaml`. Records `last_sync` timestamps to gitignored `.md/telemetry/spoke_heartbeats.yaml`.
+> **Mã Issue:** [#274](https://github.com/vvChu/ccba-agent-platform/issues/274)  
+> **Nhánh thực thi:** `fix/issue-274-harden-spoke-sync-and-guardrails`  
+> **Trạng thái:** ✅ **HOÀN THÀNH — VƯỢT QUA 100% CỔNG KIỂM ĐỊNH TẤT ĐỊNH (ADR-0058)**  
+> **Proposal File:** [`.agents/proposals/2026-09-14_harden-spoke-sync-and-guardrails.md`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/proposals/2026-09-14_harden-spoke-sync-and-guardrails.md)
 
 ---
 
-## 2. Changes Made by Component
+## 1. Tóm Tắt Các Thay Đổi Đã Thực Hiện
 
-| Component / File | Changes & Rationale |
-| :--- | :--- |
-| [`scripts/spoke/sync/sdk_inspector.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/sync/sdk_inspector.py) | - Extracted `is_legal_related_spoke()` helper.<br/>- Implemented tiered resolution in `resolve_packages_to_check()` (Tier 0: `ccba-harness`, `ccba-ai`; Tier 1: archetype defaults; Tier 2: `hub_packages`).<br/>- Added `get_categorized_recommendations()` for domain grouping while keeping `get_recommendations()` for backward compatibility.<br/>- Updated `LegalKnowledgeSyncOrchestrator` to prioritize `archetype or project_type`.<br/>- Applied whitespace trimming on `hub_packages` entries. |
-| [`scripts/spoke/sync/__init__.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/sync/__init__.py) | - Exported `is_legal_related_spoke`. |
-| [`scripts/spoke/spoke_bootstrap.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/spoke_bootstrap.py) | - Updated `resolve_target_packages()` to only inject `ccba-legal-intel` for `knowledge_corpus` if `is_legal_related_spoke` is True. |
-| [`scripts/spoke/sync/coordinator.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/sync/coordinator.py) | - Propagated `spoke_archetype` from `workspace_context.yaml` down to `_sync_full_bundle`, `SpokeRegistrar().register()`, and `LegalKnowledgeSyncOrchestrator`.<br/>- Displayed categorized recommendations with domain headers in terminal output.<br/>- Updated `verify_spoke` to discover Spoke venv Python (`SpokeBootstrapper`) and verify `pytest` execution.<br/>- Extended test discovery across candidate directories (`tests`, `scripts/tests`, `src/tests`) or custom `verification.test_path`.<br/>- Safe-checked `workspace_context.yaml` existence before calling `load_yaml`.<br/>- Decoupled `project_type` extraction from `archetype` fallback, using explicit `archetype_to_project_type` mapping only when `project_type` is omitted. |
-| [`scripts/spoke/sync/registry.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/sync/registry.py) | - Updated `build_spoke_info()` and `register()` to accept `archetype: str = ""` and persist `"archetype"`.<br/>- Decoupled `last_sync` from static `spoke_info` to eliminate unnecessary re-encryption.<br/>- Implemented `static_hash` computation with SHA-256; skips RSA encryption if static hash is unchanged.<br/>- Recorded dynamic `last_sync` to `.md/telemetry/spoke_heartbeats.yaml`. |
-| [`scripts/spoke/decrypt_spoke_registry.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/decrypt_spoke_registry.py) | - Added `load_spoke_heartbeats(hub_root)` helper.<br/>- Injected `last_sync` from heartbeats into decrypted spokes and preserved `archetype` with backward fallback.<br/>- Dynamically derived `spoke_id` from `path` when absent in decrypted cache for headless CI environments. |
-| [`scripts/ccba_platform_cli.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/ccba_platform_cli.py) | - Updated Spoke Health Dashboard to prioritize `archetype` over generic `project_type`. |
-| [`scripts/tests/test_spoke_sync_modules.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/tests/test_spoke_sync_modules.py) | - Added 5 comprehensive test cases covering tier resolution, categorized recommendations, multi-directory test discovery in venv, static hash registry decoupling, and dynamic telemetry heartbeats. |
+### 🛡️ 1.1 Khóa Scope Chặt Chẽ Cho `safe_pytest` & Xử Lý Git Rename
+- **Tệp sửa đổi:** [`packages/ccba-harness/src/ccba_harness/execution.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/execution.py)
+  - Thêm `encoding="utf-8", errors="replace"` cho lệnh `git status --porcelain`.
+  - Xử lý chuỗi file khi bị đổi tên trong git status (`R old -> new`) qua `filepath.split(" -> ")[-1].strip()`.
+  - Nâng cấp `run_safe_pytest()`: cho phép `target_file` nhận cả dạng đơn `str` hoặc danh sách `list[str]`.
+  - Phân tách chính xác giữa option flags của Pytest (như `--tb short`, `-k test_foo`) và đường dẫn tệp thực tế (`Path(arg).exists()`).
+  - **Khóa cứng Scope:** Khi `not targets` và `not allow_unscoped`: in thông báo chỉ dẫn và `return 0` ngay lập tức, ngăn ngừa hoàn toàn việc chạy unscoped 400+ tests (~105.9s).
+  - Tự động phát hiện động `default_paths` khi bật `--allow-unscoped` cho toàn bộ các packages trong Monorepo.
 
----
+### 🚀 1.2 Nâng Cấp Wrapper CLI `safe_pytest.py`
+- **Tệp sửa đổi:** [`scripts/safe_pytest.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/safe_pytest.py)
+  - Cập nhật cờ `-f / --file` thành `nargs="+"`, cho phép truyền danh sách nhiều tệp kiểm thử cùng lúc:
+    ```bash
+    python scripts/safe_pytest.py -f file1.py file2.py file3.py
+    ```
 
-## 3. Verification Results
+### 🧹 1.3 Gia Cố Spoke Git Hygiene (Chống Dirty Working Tree)
+- **Tệp sửa đổi:**
+  - [`scripts/spoke/spoke_bootstrap.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/spoke_bootstrap.py):
+    - Bổ sung `.md/data/telemetry_summary.json` và `.md/data/*.json` vào rules của `ensure_gitignore_rule()`.
+    - Di chuyển lời gọi `ensure_gitignore_rule()` lên trước rào chắn `is_python_project()`, bảo đảm tất cả Spoke (kể cả phi-Python) đều được bảo vệ sạch git.
+  - [`scripts/spoke/sync/coordinator.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/sync/coordinator.py):
+    - Tự động gọi `SpokeBootstrapper(spoke_root, hub_root).ensure_gitignore_rule()` ngay trước khi ghi tệp `.md/data/telemetry_summary.json`.
 
-### 3.1 Scoped Unit & Integration Tests
-Ran `scripts/tests/test_spoke_sync_modules.py` and all related spoke suites:
-- **`scripts/tests/test_spoke_sync_modules.py`**: **34/34 PASSED** (including `test_verify_spoke_multi_dir_and_venv` and `test_registry_static_hash_and_heartbeat_decoupling`).
-- **Spoke Suite Total**: **100/100 PASSED** across:
-  - `tests/test_spoke_sdk_detector.py`
-  - `tests/test_sandbox_registry_ttl.py`
-  - `tests/test_delivery_spoke_setup.py`
-  - `tests/test_spoke_batch_sync.py`
-  - `tests/test_archetype_lifecycle_matrix.py`
-  - `tests/test_sandbox_auditor.py`
-  - `tests/test_sandbox_promoter.py`
-  - `tests/test_spoke_cli.py`
+### 📦 1.4 Phân Phối Guardrail `safe_runner.py`
+- **Tệp sửa đổi:** [`scripts/spoke/sync/sdk_inspector.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/sync/sdk_inspector.py)
+  - Bổ sung `safe_runner.py` vào danh sách phân phối `items_to_copy` của `TestGuardrailCopier`.
 
-### 3.2 Ruff & Linting Parity
-```powershell
-python -m ruff check scripts/spoke/sync/ scripts/spoke/spoke_bootstrap.py scripts/spoke/decrypt_spoke_registry.py scripts/ccba_platform_cli.py scripts/tests/test_spoke_sync_modules.py
-# Result: All checks passed!
-```
-
-### 3.3 ADR-0058 Hard Completion Lock
-Executed via `ccba-harness verify-patch`:
-```text
-# 🛡️ Deterministic Patch Verification Report: ✅ ALL PASSED
-
-- Overall Status: PASS
-- Commands Executed: 2/2 passed
-- Total Duration: 10850.0 ms
-
-| Status | Exit Code | Duration | Command |
-| :---: | :---: | :---: | :--- |
-| PASS | 0 | 162.4ms | `python -m ruff check ...` |
-| PASS | 0 | 10687.6ms | `python -m pytest scripts/tests/test_spoke_sync_modules.py ... -q` |
-```
-
-### 3.4 GitHub Actions Dual-Gate CI Status
-- **Run ID**: `34727974436` (CI), `34727974441` (Documentation), `34727974440` (Security & Privacy)
-- **Status**: 100% GREEN (Python 3.10, 3.11, 3.12, Markdown Lint, CodeQL, Skills & Catalog Gate all passed).
+### 🔤 1.5 Chuẩn Hóa Windows Subprocess UTF-8 (RULE-2.5)
+- Thêm `encoding="utf-8", errors="replace"` cho toàn bộ 14 vị trí subprocess `text=True` trong:
+  - [`packages/ccba-harness/src/ccba_harness/_guard.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/_guard.py)
+  - [`packages/ccba-harness/src/ccba_harness/orchestrator.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/orchestrator.py)
+  - [`packages/ccba-harness/src/ccba_harness/evals/tuner.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/evals/tuner.py)
+  - [`scripts/spoke/sync/backup.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/sync/backup.py)
+  - [`scripts/spoke/sync/coordinator.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/sync/coordinator.py)
+  - [`scripts/spoke/spoke_bootstrap.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/spoke_bootstrap.py)
+  - [`scripts/spoke/upstream_evaluator.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/spoke/upstream_evaluator.py)
 
 ---
 
-## 4. Copilot Review Auditing & Remediation (Dual-Gate CI Cổng 2)
+## 2. Kết Quả Kiểm Thử & Nghiệm Thu (Verification Results)
 
-### Review `PRR_kwDOQzfV088AAAABNUV-mQ`
-- **Góp ý từ Copilot**: `sync_spoke_bundle()` still falls back to using `archetype` as `project_type`, which can re-couple bundle selection to archetype and contradicts the intended decoupling in this PR.
-- **Xử lý & Khắc phục** (Commit `4fe6d3d0`):
-  - Loại bỏ việc gán trực tiếp chuỗi `archetype` vào biến `project_type` trong `scripts/spoke/sync/coordinator.py`.
-  - Thiết lập bảng ánh xạ rõ ràng `archetype_to_project_type` (`knowledge_corpus` -> `"Tác vụ Admin"`, `project_delivery` -> `"Thẩm tra thiết kế"`...), đảm bảo `project_type` luôn là loại hình hợp lệ trong `catalog.yaml` mà không làm nhập nhằng với taxonomy archetype.
+### 2.1 Bộ Scoped Tests & Unit Tests Mới
+| Module Kiểm Thử | Lệnh Thực Thi | Kết Quả |
+| :--- | :--- | :---: |
+| **Execution Engine** (Rename, Multi-files, Scope Lock) | `python -m pytest packages/ccba-harness/tests/test_execution.py -v` | ✅ **17/17 PASSED (0.47s)** |
+| **Safe Pytest Wrapper** (Multi-file -f) | `python -m pytest scripts/tests/test_safe_pytest.py -v` | ✅ **3/3 PASSED (0.05s)** |
+| **Spoke Synchronizer** (Guardrails Copier) | `python -m pytest scripts/tests/test_spoke_synchronizer.py -v` | ✅ **8/8 PASSED (0.22s)** |
+| **Spoke Sync Modules** (Full Suite) | `python -m pytest scripts/tests/test_spoke_sync_modules.py -v` | ✅ **34/34 PASSED (2.95s)** |
+| **Spoke SDK Detector & Gitignore** | `python -m pytest tests/test_spoke_sdk_detector.py -v` | ✅ **7/7 PASSED (0.56s)** |
 
-### Inline Issue `3998103472`
-- **Góp ý từ Copilot**: `hub_packages` values from `workspace_context.yaml` are appended without trimming whitespace. A value like `" ccba-ooxml "` will never match `hub_root / "packages" / pkg`.
-- **Xử lý & Khắc phục** (Commit `4fe6d3d0`):
-  - Áp dụng `.strip()` cho tất cả các phần tử trong `hub_packages` tại `scripts/spoke/sync/sdk_inspector.py` để loại bỏ khoảng trắng thừa, đảm bảo tính nhất quán với `SpokeBootstrapper`.
+### 2.2 Khóa Hoàn Tất Tất Định (ADR-0058 Hard Completion Lock)
+Chạy lệnh: `python -m ccba_harness verify-patch --preset ci`
+- **Ruff Check:** ✅ PASS (166.2ms)
+- **Harness & Governance Tests:** ✅ PASS (32439.5ms)
+- **Skills Validation & GPI Enforcement:** ✅ PASS (2899.1ms)
+- **Compile Catalog:** ✅ PASS (460.3ms)
+- **Sync Hub ADR Matrix:** ✅ PASS (336.9ms)
+- **Tổng kết:** **5/5 Gates PASSED, exit code 0.**
+
+---
+
+## 3. Hướng Dẫn Kỹ Thuật Đồng Bộ Cho Spoke (`ccba-legal-knowledge`)
+
+Khi hợp nhất nhánh lên `main`, Spoke `ccba-legal-knowledge` sẽ:
+1. Chạy `/ccba-update-spoke` để tự động nhận `scripts/safe_runner.py` và cập nhật `.gitignore`.
+2. Đối với Gate 10 của Spoke (`validate_legal_spoke.py`): Điều chỉnh để chạy chế độ non-mutating `--check` trong pre-commit hook (chỉ so khớp diff của 3 tệp: `README.md`, `TRACEABILITY_MATRIX.md`, `expansion_roadmap.md`), chỉ cập nhật đĩa khi gọi với cờ `--fix`.

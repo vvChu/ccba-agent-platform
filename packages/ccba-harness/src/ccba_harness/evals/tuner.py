@@ -973,6 +973,8 @@ class GitRatchetOptimizer:
                 check=True,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             msg = f"ratchet(opt): {self.target_file.name} {score_diff}"
             subprocess.run(
@@ -981,6 +983,8 @@ class GitRatchetOptimizer:
                 check=True,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             logger.info(f"✅ Git Commit thành công: '{msg}'")
             return True
@@ -993,6 +997,8 @@ class GitRatchetOptimizer:
                     check=False,
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                 )
             except Exception:
                 pass
@@ -1020,6 +1026,8 @@ class GitRatchetOptimizer:
                     check=False,
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                 )
             except Exception:
                 pass
@@ -1036,6 +1044,8 @@ class GitRatchetOptimizer:
                 check=True,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             logger.info(f"⏪ Đã khôi phục file qua 'git checkout -- {rel_path_str}'")
         except Exception:
