@@ -215,6 +215,8 @@ class DetachedExecutionEngine:
                 ["git", "status", "--porcelain"],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 check=True,
             )
             test_files: list[str] = []
@@ -225,6 +227,8 @@ class DetachedExecutionEngine:
                 if len(parts) < 2:
                     continue
                 filepath = parts[1].strip()
+                if " -> " in filepath:
+                    filepath = filepath.split(" -> ")[-1].strip()
                 path_obj = Path(filepath)
                 if (
                     path_obj.suffix == ".py"
@@ -241,7 +245,7 @@ class DetachedExecutionEngine:
     @classmethod
     def run_safe_pytest(
         cls,
-        target_file: str | None = None,
+        target_file: str | list[str] | None = None,
         package: str | None = None,
         fast: bool = False,
         dry_run: bool = False,
@@ -254,7 +258,10 @@ class DetachedExecutionEngine:
         targets: list[str] = []
 
         if target_file:
-            targets.append(target_file)
+            if isinstance(target_file, list):
+                targets.extend(target_file)
+            else:
+                targets.append(target_file)
         elif package:
             pkg_path = Path("packages") / package / "tests"
             if not pkg_path.exists():
@@ -264,23 +271,38 @@ class DetachedExecutionEngine:
             else:
                 print(f"[SafePytest Error] Package tests directory not found: {package}")
                 return 1
-        elif extra_args and any(not a.startswith("-") for a in extra_args):
-            pass
-        elif not allow_unscoped:
-            git_targets = cls.find_modified_test_files()
-            if git_targets:
-                targets.extend(git_targets)
-                print(f"[SafePytest] Auto-detected modified test files: {', '.join(targets)}")
-        else:
-            # Unscoped run across default test paths if no targets specified
-            default_paths = [
-                "tests",
-                "packages/ccba-ai/tests",
-                "scripts/tests",
-            ]
-            for dp in default_paths:
-                if Path(dp).exists():
-                    targets.append(dp)
+
+        # Extract path targets from extra_args (e.g. positional file/dir arguments)
+        if extra_args:
+            for arg in extra_args:
+                if not arg.startswith("-"):
+                    try:
+                        p = Path(arg)
+                        if p.exists() and str(p) not in targets:
+                            targets.append(str(p))
+                    except Exception:
+                        pass
+
+        if not targets:
+            if not allow_unscoped:
+                git_targets = cls.find_modified_test_files()
+                if git_targets:
+                    targets.extend(git_targets)
+                    print(f"[SafePytest] Auto-detected modified test files: {', '.join(targets)}")
+                else:
+                    print("[SafePytest] ℹ️ Không phát hiện file test nào bị sửa đổi qua git status.")
+                    print(
+                        "[SafePytest] 💡 Sử dụng '-f <file>', truyền tên package, hoặc '--allow-unscoped' để chạy toàn diện."
+                    )
+                    return 0
+            else:
+                # Unscoped run across default test paths if no targets specified
+                default_paths = ["tests", "scripts/tests"] + [
+                    p.as_posix() for p in Path("packages").glob("*/tests") if p.is_dir()
+                ]
+                for dp in default_paths:
+                    if Path(dp).exists() and dp not in targets:
+                        targets.append(dp)
 
         python_exec = sys.executable
         cmd_parts = [python_exec, "-m", "pytest", "--maxfail=1"]
@@ -294,11 +316,20 @@ class DetachedExecutionEngine:
             for t in targets:
                 try:
                     p = Path(t)
-                    if p.exists() and (
+                    if p.is_file() and (
                         "pytest.mark.slow" in p.read_text(encoding="utf-8", errors="ignore")
                     ):
                         target_has_slow = True
                         break
+                    elif p.is_dir():
+                        for py_file in p.glob("**/*.py"):
+                            if "pytest.mark.slow" in py_file.read_text(
+                                encoding="utf-8", errors="ignore"
+                            ):
+                                target_has_slow = True
+                                break
+                        if target_has_slow:
+                            break
                 except Exception:
                     pass
             if not target_has_slow:

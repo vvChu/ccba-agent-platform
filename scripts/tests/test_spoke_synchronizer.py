@@ -75,11 +75,12 @@ class TestSpokeSynchronizer(unittest.TestCase):
         self.assertFalse((self.test_root / ".catalog.yaml.tmp").exists())
 
     def test_test_guardrail_copier(self):
-        """Test TestGuardrailCopier copies conftest.py and safe_pytest.py for software spokes."""
+        """Test TestGuardrailCopier copies conftest.py, safe_pytest.py, and safe_runner.py for software spokes."""
         hub_dir = self.test_root / "hub"
         (hub_dir / "scripts").mkdir(parents=True, exist_ok=True)
         (hub_dir / "conftest.py").write_text("# mock conftest", encoding="utf-8")
         (hub_dir / "scripts" / "safe_pytest.py").write_text("# mock safe_pytest", encoding="utf-8")
+        (hub_dir / "scripts" / "safe_runner.py").write_text("# mock safe_runner", encoding="utf-8")
 
         spoke_dir = self.test_root / "spoke_software"
         spoke_dir.mkdir(parents=True, exist_ok=True)
@@ -90,6 +91,7 @@ class TestSpokeSynchronizer(unittest.TestCase):
 
         self.assertTrue((spoke_dir / "conftest.py").exists())
         self.assertTrue((spoke_dir / "scripts" / "safe_pytest.py").exists())
+        self.assertTrue((spoke_dir / "scripts" / "safe_runner.py").exists())
 
     def test_git_working_tree_guard_non_git(self):
         """Test GitWorkingTreeGuard returns clean on non-git directory."""

@@ -66,6 +66,8 @@ class EvalOrchestrator:
                         ],
                         capture_output=True,
                         text=True,
+                        encoding="utf-8",
+                        errors="replace",
                     )
                     for line in res.stdout.splitlines():
                         if script_keyword in line:

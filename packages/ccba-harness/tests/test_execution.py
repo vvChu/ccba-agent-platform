@@ -199,3 +199,56 @@ def test_run_safe_pytest_execution(mock_run_detached):
     assert "tests/test_sample.py" in called_cmd
     assert "-v" in called_cmd
     assert "--capture=no" in called_cmd
+
+
+@patch("subprocess.run")
+def test_find_modified_test_files_with_rename(mock_run, tmp_path):
+    renamed_test = tmp_path / "tests" / "test_renamed.py"
+    renamed_test.parent.mkdir(parents=True, exist_ok=True)
+    renamed_test.write_text("# test renamed", encoding="utf-8")
+
+    git_output = f"R  tests/old_test.py -> {renamed_test}\n"
+    mock_run.return_value = MagicMock(stdout=git_output)
+
+    results = DetachedExecutionEngine.find_modified_test_files()
+    assert str(renamed_test) in results
+
+
+def test_run_safe_pytest_multiple_target_files(capsys):
+    ret = DetachedExecutionEngine.run_safe_pytest(
+        target_file=["tests/test_1.py", "tests/test_2.py"],
+        dry_run=True,
+    )
+    captured = capsys.readouterr()
+
+    assert ret == 0
+    assert "[SafePytest DRY-RUN]" in captured.out
+    assert "tests/test_1.py" in captured.out
+    assert "tests/test_2.py" in captured.out
+
+
+@patch.object(DetachedExecutionEngine, "find_modified_test_files", return_value=[])
+def test_run_safe_pytest_clean_tree_exits_zero(mock_find, capsys):
+    ret = DetachedExecutionEngine.run_safe_pytest(
+        dry_run=True,
+        allow_unscoped=False,
+    )
+    captured = capsys.readouterr()
+
+    assert ret == 0
+    assert "Không phát hiện file test nào bị sửa đổi" in captured.out
+    assert "Planned execution" not in captured.out
+
+
+@patch.object(DetachedExecutionEngine, "find_modified_test_files", return_value=[])
+def test_run_safe_pytest_extra_args_with_options_not_treated_as_targets(mock_find, capsys):
+    ret = DetachedExecutionEngine.run_safe_pytest(
+        extra_args=["--tb", "short", "-k", "sample_test_name"],
+        dry_run=True,
+        allow_unscoped=False,
+    )
+    captured = capsys.readouterr()
+
+    assert ret == 0
+    assert "Không phát hiện file test nào bị sửa đổi" in captured.out
+    assert "Planned execution" not in captured.out

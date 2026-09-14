@@ -142,7 +142,30 @@ def test_spoke_bootstrapper_resolves_packages_and_generates_lockfile(
     bootstrapper.ensure_gitignore_rule()
     gitignore = spoke_dir / ".gitignore"
     assert gitignore.exists()
-    assert "requirements-hub.txt" in gitignore.read_text(encoding="utf-8")
+    gi_content = gitignore.read_text(encoding="utf-8")
+    assert "requirements-hub.txt" in gi_content
+    assert ".md/data/telemetry_summary.json" in gi_content
+    assert ".md/data/*.json" in gi_content
+
+
+def test_spoke_bootstrapper_non_python_project_ensures_gitignore(tmp_path: Path):
+    """Verify SpokeBootstrapper.bootstrap updates .gitignore even for non-Python spokes."""
+    from scripts.spoke.spoke_bootstrap import SpokeBootstrapper
+
+    spoke_dir = tmp_path / "non-python-spoke"
+    spoke_dir.mkdir()
+    hub_dir = tmp_path / "hub"
+    hub_dir.mkdir()
+
+    bootstrapper = SpokeBootstrapper(spoke_path=spoke_dir, hub_path=hub_dir)
+    ret = bootstrapper.bootstrap(dry_run=False)
+    assert ret == 0
+
+    gitignore = spoke_dir / ".gitignore"
+    assert gitignore.exists()
+    gi_content = gitignore.read_text(encoding="utf-8")
+    assert ".md/data/telemetry_summary.json" in gi_content
+    assert ".md/data/*.json" in gi_content
 
 
 def test_sys_path_migration_cleans_boilerplate(tmp_path: Path):

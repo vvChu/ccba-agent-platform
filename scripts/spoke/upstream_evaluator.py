@@ -962,6 +962,8 @@ class UpstreamEvaluator:
                         cwd=str(local_path),
                         capture_output=True,
                         text=True,
+                        encoding="utf-8",
+                        errors="replace",
                     )
                     target_branch = (
                         res.stdout.strip().split("/")[-1] if res.returncode == 0 else "main"
@@ -1015,6 +1017,8 @@ class UpstreamEvaluator:
                     ["git", "ls-remote", remote_url, ref],
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     check=True,
                 )
                 output = res.stdout.strip()
@@ -1047,6 +1051,8 @@ class UpstreamEvaluator:
                 cwd=str(repo_path),
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 check=True,
             )
             files = res.stdout.strip().splitlines()
@@ -1105,6 +1111,8 @@ class UpstreamEvaluator:
                         cwd=str(repo_path),
                         capture_output=True,
                         text=True,
+                        encoding="utf-8",
+                        errors="replace",
                     )
                     try:
                         if show_res.returncode == 0:
@@ -1223,6 +1231,8 @@ class UpstreamEvaluator:
                         cwd=str(local_path),
                         capture_output=True,
                         text=True,
+                        encoding="utf-8",
+                        errors="replace",
                         check=True,
                     )
                     remote_sha = res.stdout.strip()
@@ -1275,6 +1285,8 @@ class UpstreamEvaluator:
                     cwd=str(local_path),
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     check=True,
                 )
                 changed_files = diff_res.stdout.strip().splitlines()
