@@ -103,8 +103,30 @@ def enforce_monotonic_footnotes(markdown_text: str) -> str:
     return final_text
 
 
+def sanitize_raw_table_superscripts(markdown_text: str) -> str:
+    """Format raw footnote superscripts within markdown tables to <sup>X)</sup>."""
+    lines = markdown_text.splitlines()
+    output_lines: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("|") and stripped.endswith("|"):
+            line = re.sub(
+                r"\b([A-Z]{1,4}\s*\d+|\d+)\s+([1-9]\))(?!<|/sup)",
+                r"\1 <sup>\2</sup>",
+                line,
+            )
+            line = re.sub(
+                r"(?<=\||,)\s*(\+{1,3})\s*(\([1-9]\))(?=\s*(?:\||,|\s|$))",
+                r"\1 <sup>\2</sup>",
+                line,
+            )
+        output_lines.append(line)
+    return "\n".join(output_lines)
+
+
 def clean_markdown_tables_and_notes(markdown_text: str) -> str:
     """Unified master cleaner for Markdown tables and footnotes."""
     text = flatten_table_headers(markdown_text)
+    text = sanitize_raw_table_superscripts(text)
     text = enforce_monotonic_footnotes(text)
     return text

@@ -102,8 +102,12 @@ def extract_docx_figures(
         if m_annex:
             current_annex = m_annex.group(1).upper()
         m = re.match(
-            r"^(?:Hình|HÌNH)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\s*[\.\-–—:]\s*(.+)$", text
+            r"^(?:Hình|HÌNH)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\s*[\-–—:]\s*(.+)$", text
         )
+        if not m:
+            m = re.match(
+                r"^(?:Hình|HÌNH)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\.\s+([A-ZÀ-Ỹ0-9].+)$", text
+            )
         if m:
             fig_tag = m.group(1).strip()
             fig_title = m.group(2).strip()
@@ -181,10 +185,10 @@ def extract_docx_figures(
                         if i > 0 and fig_items[i - 1]["p_idx"] >= 0
                         else max(0, b_f_idx - 35)
                     )
-                    search_start_b = max(prev_b_idx + 1, b_f_idx - 30)
+                    search_start_b = min(b_f_idx, max(prev_b_idx, b_f_idx - 30))
 
                     # Check if there is a (kết thúc) continuation paragraph after f_idx
-                    search_end_b = b_f_idx
+                    search_end_b = b_f_idx + 1
                     for next_idx in range(f_idx + 1, min(f_idx + 6, len(doc.paragraphs))):
                         nxt_p = doc.paragraphs[next_idx].text.strip()
                         if re.match(

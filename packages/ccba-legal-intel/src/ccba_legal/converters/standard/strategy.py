@@ -141,28 +141,54 @@ def _find_standard_header_start_index(blocks: list[tuple[str, Any]]) -> int:
 
 
 def _find_normative_start_index(blocks: list[tuple[str, Any]], start_from: int = 0) -> int:
-    """Locate the exact start index of the normative body (Section 1)."""
+    """Locate the exact start index of the normative body (Section 1), skipping any leading Table of Contents."""
     in_toc = False
     for idx in range(start_from, len(blocks)):
         b_type, obj = blocks[idx]
         if b_type == "p":
-            txt = obj.text.strip().upper()
-            if txt in ("MỤC LỤC", "## MỤC LỤC"):
+            txt = obj.text.strip()
+            txt_u = txt.upper()
+            if txt_u in ("MỤC LỤC", "## MỤC LỤC", "TABLE OF CONTENTS") or txt_u.startswith(
+                "MỤC LỤC"
+            ):
                 in_toc = True
                 continue
-            if in_toc and txt.startswith("LỜI NÓI ĐẦU"):
-                in_toc = False
             if in_toc:
-                continue
-            if re.match(r"^1[\.\s]+(?:QUY ĐỊNH CHUNG|PHẠM VI ÁP DỤNG)\b", txt):
-                return idx
+                is_end = False
+                if txt.lower().startswith(("lời nói đầu", "lời giới thiệu")):
+                    for nxt_idx in range(idx + 1, min(idx + 5, len(blocks))):
+                        if blocks[nxt_idx][0] == "p" and blocks[nxt_idx][1].text.strip():
+                            nxt_t = blocks[nxt_idx][1].text.strip()
+                            if not re.match(
+                                r"^(?:Lời giới thiệu|\d+[\.\s]|Phụ lục|Thư mục)",
+                                nxt_t,
+                                re.IGNORECASE,
+                            ):
+                                is_end = True
+                            break
+                elif txt_u in ("TIÊU CHUẨN QUỐC GIA", "QUY CHUẨN KỸ THUẬT QUỐC GIA"):
+                    is_end = True
+                if is_end:
+                    in_toc = False
 
-    for idx in range(start_from, len(blocks)):
-        b_type, obj = blocks[idx]
-        if b_type == "p":
-            txt = obj.text.strip().upper()
-            if re.match(r"^1[\.\s]+(?:QUY ĐỊNH CHUNG|PHẠM VI ÁP DỤNG)\b", txt):
-                return idx
+            if not in_toc:
+                if re.match(
+                    r"^1[\.\s]+(?:QUY ĐỊNH CHUNG|PHẠM VI ÁP DỤNG|YÊU CẦU CHUNG|[A-ZÀ-Ỹ])\b",
+                    txt,
+                    re.IGNORECASE,
+                ):
+                    has_substantive = False
+                    for nxt_idx in range(idx + 1, min(idx + 15, len(blocks))):
+                        if blocks[nxt_idx][0] == "p" and blocks[nxt_idx][1].text.strip():
+                            nxt_t = blocks[nxt_idx][1].text.strip()
+                            if (
+                                re.match(r"^(?:\(\d+\)|\d+\)|[\-\+•]|(?:[a-z]\)))", nxt_t)
+                                or len(nxt_t.split()) > 15
+                            ):
+                                has_substantive = True
+                                break
+                    if has_substantive:
+                        return idx
     return start_from
 
 
@@ -263,9 +289,11 @@ def _process_paragraph_block(
     return handle_list_and_paragraph(ctx, blocks, i, text, rendered_p, obj)
 
 
-def _process_table_block(ctx: StandardConversionContext, table_obj: Any, i: int) -> None:
+def _process_table_block(
+    ctx: StandardConversionContext, table_obj: Any, i: int, blocks: list[Any] | None = None
+) -> None:
     """Extract and render tabular data into 2D Markdown, CSV, and JSON."""
-    handle_table_block(ctx, table_obj, i)
+    handle_table_block(ctx, table_obj, i, blocks=blocks)
 
 
 def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str, Any]:
@@ -503,11 +531,36 @@ def process_technical_standard_strategy(
 
     if start_idx > std_start_idx:
         preamble_parts: list[str] = []
+        in_preamble_toc = False
         for p_idx in range(std_start_idx, start_idx):
             b_type, obj = blocks[p_idx]
             if b_type == "p":
                 t = obj.text.strip()
                 if t:
+                    t_u = t.upper()
+                    if t_u in ("MỤC LỤC", "## MỤC LỤC", "TABLE OF CONTENTS"):
+                        in_preamble_toc = True
+                        continue
+                    if in_preamble_toc:
+                        is_end = False
+                        if t.lower().startswith("lời nói đầu"):
+                            for nxt_idx in range(p_idx + 1, min(p_idx + 5, len(blocks))):
+                                if blocks[nxt_idx][0] == "p" and blocks[nxt_idx][1].text.strip():
+                                    nxt_t = blocks[nxt_idx][1].text.strip()
+                                    if not re.match(
+                                        r"^(?:Lời giới thiệu|\d+[\.\s]|Phụ lục|Thư mục)",
+                                        nxt_t,
+                                        re.IGNORECASE,
+                                    ):
+                                        is_end = True
+                                    break
+                        elif t_u in ("TIÊU CHUẨN QUỐC GIA", "QUY CHUẨN KỸ THUẬT QUỐC GIA"):
+                            is_end = True
+                        if is_end:
+                            in_preamble_toc = False
+                        else:
+                            continue
+
                     rendered_t = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
                     if t.upper() in ("TIÊU CHUẨN QUỐC GIA", "QUY CHUẨN KỸ THUẬT QUỐC GIA"):
                         preamble_parts.append(f"# {rendered_t}\n\n")
@@ -529,7 +582,7 @@ def process_technical_standard_strategy(
         if b_type == "p":
             i = _process_paragraph_block(ctx, blocks, i)
         elif b_type == "tbl":
-            _process_table_block(ctx, obj, i)
+            _process_table_block(ctx, obj, i, blocks=blocks)
             i += 1
 
     # 4. Export modular bundle
