@@ -9,6 +9,17 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from docx.table import Table
+from docx.text.paragraph import Paragraph
+
+NUMERIC_CELL_PATTERN = re.compile(
+    r"(?:^\s*[\+\-]?\d+(?:[\.,]\d+)?\s*$)|"
+    r"(?:\d+\s*(?:[\-–—~÷]|đến)\s*\d+)|"
+    r"(?:\d+\s*%(?!\w))|"
+    r"(?:\d+\s*(?:m[23²³]|mm[2²]|cm[23²³]|m/s|km/h|l/s|m3/h|m3/s|kg/m3|g/cm3|N/mm2|kN/m2|kN/m|daN/m2|m|cm|mm|km|kg|tấn|kN|MPa|kPa|Pa|bar|daN|ha|°C|s|h|W|kW|kVA|V|A|dB|lux)\b)|"
+    r"(?:[\=\<\>\±\×\÷\≤\≥])"
+)
+
 LAYOUT_KEYWORDS = [
     "cộng hòa xã hội chủ nghĩa",
     "độc lập - tự do",
@@ -45,9 +56,12 @@ NORMATIVE_KEYWORDS = [
 ]
 
 
-def _is_admin_layout_table(text: str, rows: int, cols: int) -> bool:
-    """Detect whether a small table is administrative header or signature block."""
-    if rows <= 3 and cols <= 2:
+def _is_admin_layout_table(text: str, rows: int, cols: int, num_density: float = 0.0) -> bool:
+    """Detect whether a small table is administrative header or signature block (Multi-Factor Scoring Engine)."""
+    # 1. Zero-Loss Guard: Numeric & Engineering unit density >= 30% -> ALWAYS a data table!
+    if num_density >= 0.30:
+        return False
+    if rows <= 8 and cols <= 3:
         if any(k in text for k in LAYOUT_KEYWORDS) and not any(
             k in text for k in NORMATIVE_KEYWORDS
         ):
@@ -59,7 +73,7 @@ def _is_formula_frame_table(table: Any, rows: int, cols: int) -> bool:
     """Detect 2-column formula frames with formula tags (e.g. '(1)', '(B.1)')."""
     if rows <= 2 and cols == 2:
         cell_texts = [c.text.strip() for row in table.rows for c in row.cells]
-        has_tag = any(re.match(r"^\(\d+[a-z]?\)$", t) for t in cell_texts)
+        has_tag = any(re.match(r"^\(\d+[a-z]?\)$|^\([A-Z]\.\d+\)$", t) for t in cell_texts)
         has_empty = any(t == "" for t in cell_texts)
         if has_tag and (has_empty or len(cell_texts) <= 2):
             return True
@@ -233,9 +247,9 @@ def classify_and_extract_tables(
     blocks: list[tuple[str, Any]] = []
     for child in doc.element.body.iterchildren():
         if isinstance(child, docx.oxml.text.paragraph.CT_P):
-            blocks.append(("p", docx.text.paragraph.Paragraph(child, doc)))
+            blocks.append(("p", Paragraph(child, doc)))
         elif isinstance(child, docx.oxml.table.CT_Tbl):
-            blocks.append(("tbl", docx.table.Table(child, doc)))
+            blocks.append(("tbl", Table(child, doc)))
 
     extracted_tables: list[dict[str, Any]] = []
     table_counter = 0
@@ -248,11 +262,17 @@ def classify_and_extract_tables(
         table = obj
         table_counter += 1
         rows_cnt, cols_cnt = len(table.rows), len(table.columns)
-        table_text = " ".join(c.text.lower() for row in table.rows for c in row.cells)
+        cells = [c for row in table.rows for c in row.cells]
+        num_density = 0.0
+        if cells:
+            num_cells = sum(1 for c in cells if NUMERIC_CELL_PATTERN.search(c.text.strip()))
+            num_density = num_cells / len(cells)
 
-        if _is_admin_layout_table(table_text, rows_cnt, cols_cnt) or _is_formula_frame_table(
-            table, rows_cnt, cols_cnt
-        ):
+        table_text = " ".join(c.text.lower() for c in cells)
+
+        if _is_admin_layout_table(
+            table_text, rows_cnt, cols_cnt, num_density
+        ) or _is_formula_frame_table(table, rows_cnt, cols_cnt):
             continue
 
         caption_num, caption_title = _find_preceding_caption(blocks, block_idx)

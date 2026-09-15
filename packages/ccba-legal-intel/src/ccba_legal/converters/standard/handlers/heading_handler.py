@@ -34,27 +34,37 @@ def handle_structural_heading(
 
     # 1. Table Caption
     m_tbl = re.match(
-        r"^(?:Bảng|BẢNG)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\s*[\.\-–—:]\s*(.+)$", text
+        r"^(?:Bảng|BẢNG)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\s*(?:[\.\-–—:]\s*(.+))?$", text
     )
     if m_tbl:
         ctx.last_table_caption_num = m_tbl.group(1)
         cap_rendered = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
         clean_cap = re.sub(
-            r"^(?:Bảng|BẢNG)\s+[0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*\s*[\.\-–—:]\s*", "", cap_rendered
+            r"^(?:Bảng|BẢNG)\s+[0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*\s*[\.\-–—:]*\s*",
+            "",
+            cap_rendered,
         ).strip()
-        ctx.last_table_caption = f"Bảng {ctx.last_table_caption_num} - {clean_cap}"
+        if clean_cap:
+            ctx.last_table_caption = f"Bảng {ctx.last_table_caption_num} - {clean_cap}"
+        else:
+            ctx.last_table_caption = f"Bảng {ctx.last_table_caption_num}"
         ctx.state_mgr.reset()
+        return i + 1
+
+    # Ignore continuation markers like "Phụ lục 3 - (kết thúc)"
+    if re.search(r"\(kết\s+thúc\)", text, re.IGNORECASE):
         return i + 1
 
     # 2. Annex Heading (strip leading markdown symbols/whitespace)
     clean_annex_candidate = re.sub(r"^[#*_>\s\-]+", "", text).strip()
     m_annex = re.match(
-        r"^(?:Phụ\s+lục|PHỤ\s+LỤC)\s+([A-Za-z0-9Đđ]+|[IVXLCDM]+)(?:\s*[\.\-–—:])?(?:\s*\(([^)]+)\))?(?:\s*[\.\-–—:])?\s*(.*)$",
+        r"^(?:Phụ\s+lục|PHỤ\s+LỤC)(?:\s+([A-ZĐ]|[IVXLCDM]+|[0-9]+))?\b(?:\s*[\.\-–—:])?(?:\s*\(([^)]+)\))?(?:\s*[\.\-–—:])?\s*(.*)$",
         clean_annex_candidate,
         re.IGNORECASE,
     )
     if m_annex:
-        a_letter = m_annex.group(1).upper()
+        raw_num = m_annex.group(1)
+        a_letter = raw_num.upper() if raw_num else "1"
         a_type = (m_annex.group(2) or "").strip()
         a_title = (m_annex.group(3) or "").strip()
         m_trailing_type = re.search(
@@ -78,6 +88,11 @@ def handle_structural_heading(
                 a_title = ntxt2
                 i += 1
 
+        # Prevent duplicate annex headings (e.g. trailing Table of Contents) from wiping existing populated buffer
+        if a_letter in ctx.annex_buffers and len(ctx.annex_buffers[a_letter].get("parts", [])) > 1:
+            ctx.current_target = "main"
+            return i + 1
+
         # Standardize subscripts and KaTeX in annex title
         clean_title = a_title
         clean_title = re.sub(r"\bR0\b", "$R_0$", clean_title)
@@ -97,7 +112,8 @@ def handle_structural_heading(
         ctx.current_target = a_letter
         anchor = f"phu-luc-{letter_slug}"
         hdr = (
-            f"## PHỤ LỤC {a_letter}"
+            "## PHỤ LỤC"
+            + (f" {a_letter}" if raw_num else "")
             + (f" ({a_type})" if a_type else "")
             + (f" — {clean_title}" if clean_title else "")
         )
@@ -118,17 +134,45 @@ def handle_structural_heading(
         return i + 1
 
     # 4. Section Heading (1 to 99)
-    m_sec = re.match(r"^([1-9][0-9]?)\s+([^\n]+)", text)
+    m_sec = re.match(r"^([1-9][0-9]?)\.?\s+([A-ZÀ-ỸĐ][^\n]*)", text)
     if (
         m_sec
         and not m_sec.group(2).startswith(("-", "–", "—", ":", "$^", "^"))
         and not re.match(r"^(?:TCVN|QCVN|ISO)\b", m_sec.group(2).strip())
-        and len(m_sec.group(2)) < 120
-        and not m_sec.group(2).lower().startswith(("đối với", "khi", "lấy", "tính", "theo", "như"))
+        and len(m_sec.group(2).split()) < 20
+        and not m_sec.group(2)
+        .lower()
+        .startswith(
+            (
+                "đối với",
+                "khi",
+                "lấy",
+                "tính",
+                "theo",
+                "như",
+                "nếu",
+                "ở",
+                "trong",
+                "trường hợp",
+                "thời gian",
+                "tiêu chuẩn nước",
+                "lưu lượng nước",
+                "nước làm nguội",
+                "trên đường",
+                "các van",
+                "máy bơm",
+                "bán kính",
+                "áp lực",
+                "không được",
+                "cho phép",
+                "mặt ngoài",
+                "tủ chữa cháy",
+            )
+        )
     ):
         sec_num = m_sec.group(1)
         sec_rendered = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
-        sec_title = re.sub(rf"^{re.escape(sec_num)}\s+", "", sec_rendered).strip()
+        sec_title = re.sub(rf"^{re.escape(sec_num)}\.?\s+", "", sec_rendered).strip().rstrip(".")
         anchor_id = (
             f"phu-luc-{ctx.current_target.lower()}-muc-{sec_num}"
             if ctx.current_target != "main"
@@ -139,11 +183,15 @@ def handle_structural_heading(
         return i + 1
 
     # 4. Clause Heading (e.g. 1.1, 10.2.1, F.1, G.2.1)
-    m_clause = re.match(r"^([A-Z]|[1-9][0-9]?)\.([0-9]+(?:\.[0-9]+)*)\s+([^\n]+)", text)
+    m_clause = re.match(r"^([A-Z]|[1-9][0-9]?)\.([0-9]+(?:\.[0-9]+)*)\.?\s+([^\n]+)", text)
     if m_clause:
         cl_num = f"{m_clause.group(1)}.{m_clause.group(2)}"
         cl_rendered = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
-        cl_title = re.sub(rf"^{re.escape(cl_num)}\s+", "", cl_rendered).strip()
+        cl_title = re.sub(
+            rf"^{re.escape(m_clause.group(1))}\.{re.escape(m_clause.group(2))}\.?\s+",
+            "",
+            cl_rendered,
+        ).strip()
         anchor = f"muc-{cl_num.lower().replace('.', '-')}"
         ctx.emit(f'\n<a id="{anchor}"></a>\n### {cl_num}  {cl_title}\n\n')
         ctx.state_mgr.reset()
