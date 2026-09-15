@@ -2,7 +2,9 @@
 proposal_id: "2026-09-15_multi-factor-layout-scoring-and-okf-v24-converters"
 type: "tool"
 name: "multi-factor-layout-scoring-and-okf-v24-converters"
-status: "open"
+status: "merged"
+merged_commit: "62bbbbbc"
+merged_date: "2026-09-15"
 priority: "Cao"
 related_issue: "#277"
 proposed_by_project: "ccba-legal-knowledge"
@@ -18,7 +20,7 @@ applies_to:
 
 - **Tác giả đề xuất:** Lead Maintainer & Spoke `ccba-legal-knowledge` (qua workflow `/ccba-contribute-to-hub`)
 - **Ngày lập:** 2026-09-15
-- **Trạng thái:** Đang đề xuất (Open)
+- **Trạng thái:** Đã hợp nhất (Merged — Commit: `62bbbbbc`)
 - **Mã Issue:** [#277](https://github.com/vvChu/ccba-agent-platform/issues/277)
 - **Căn cứ pháp lý & kỹ thuật:** ADR-0038, ADR-0039, ADR-0040, ADR-0041, ADR-0042, ADR-0043, ADR-0044, ADR-0045, ADR-0057, ADR-0058.
 
