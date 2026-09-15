@@ -107,13 +107,32 @@ def _read_cache(cache_dir: Path, sha256: str) -> str | None:
     cache_file = cache_dir / f"{sha256}.json"
     if cache_file.exists():
         try:
-            return json.loads(cache_file.read_text(encoding="utf-8")).get("katex")
+            data = json.loads(cache_file.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                val = data.get("katex")
+                if isinstance(val, str):
+                    if any(
+                        bad in val
+                        for bad in ("Gemini", "no longer available", "Please switch", "error", "Exception")
+                    ):
+                        try:
+                            cache_file.unlink()
+                        except Exception:
+                            pass
+                        return None
+                    return val
+            return None
         except Exception:
             return None
     return None
 
 
 def _write_cache(cache_dir: Path, sha256: str, katex: str) -> None:
+    if any(
+        bad in katex
+        for bad in ("Gemini", "no longer available", "Please switch", "error", "Exception")
+    ):
+        return
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_file = cache_dir / f"{sha256}.json"
     cache_file.write_text(
@@ -149,6 +168,24 @@ def _validate_katex(result: str) -> bool:
     s = result.strip()
     if not (s.startswith("$$") and s.endswith("$$") and len(s) > 4):
         return False
+    # Reject conversational reasoning leaks and system errors
+    if any(
+        w in s.lower()
+        for w in [
+            "let's",
+            "the prompt",
+            "wait,",
+            "looking closely",
+            "delimiters",
+            "final check",
+            "so the code is",
+            "final output",
+            "image shows",
+            "gemini",
+            "no longer available",
+        ]
+    ):
+        return False
     # 1. Bat buoc can bang dau ngoac nhon {...}
     if s.count("{") != s.count("}"):
         return False
@@ -160,29 +197,86 @@ def _validate_katex(result: str) -> bool:
     return True
 
 
+def _postprocess_formula(content: str) -> str:
+    """Normalize formula syntax (e.g. replace \\tag with \\qquad inside multiline environments per ADR 0038, ADR 0044)."""
+    clean = content.strip().strip("$").strip()
+
+    def replace_tag_in_multiline(match: re.Match[str]) -> str:
+        env_content = match.group(0)
+
+        def _clean_tag(m: re.Match[str]) -> str:
+            raw_tag = m.group(1).strip()
+            if raw_tag.startswith("(") and raw_tag.endswith(")"):
+                raw_tag = raw_tag[1:-1].strip()
+            return rf"\qquad ({raw_tag})"
+
+        return re.sub(r"\\tag\*?\{([^}]+)\}", _clean_tag, env_content)
+
+    env_pattern = re.compile(
+        r"\\begin\{(aligned\*?|cases\*?|gather\*?|split\*?)\}(?:[\s\S]*?)\\end\{\1\}"
+    )
+    prev = None
+    while prev != clean:
+        prev = clean
+        clean = env_pattern.sub(replace_tag_in_multiline, clean)
+
+    return f"$${clean}$$"
+
+
 def _clean_and_extract_katex(raw: str) -> str:
     """Lam sach va trích xuất duy nhất khối $$...$$ từ chuỗi raw model trả về."""
-    # 1. Tim block $$...$$ dau tien
-    m = re.search(r"\$\$(.*?)\$\$", raw, re.DOTALL)
-    if m:
-        content = m.group(1).strip()
-        return f"$${content}$$"
+    # Check all $$...$$ blocks and prefer the real math one
+    blocks = re.findall(r"\$\$(.*?)\$\$", raw, re.DOTALL)
+    if blocks:
+        for b in reversed(blocks):
+            b_str = b.strip()
+            if any(
+                w in b_str.lower()
+                for w in [
+                    "the prompt",
+                    "let's",
+                    "wait,",
+                    "looking closely",
+                    "delimiters",
+                    "final check",
+                    "so the code is",
+                    "image shows",
+                ]
+            ):
+                continue
+            if b_str:
+                return _postprocess_formula(b_str)
+        return _postprocess_formula(blocks[-1].strip())
 
-    # 2. Fallback: markdown code block ```latex ... ```
+    # Fallback: markdown code block ```latex ... ```
     m_code = re.search(r"```(?:latex|katex|math)?\s*(.*?)\s*```", raw, re.DOTALL)
     if m_code:
         content = m_code.group(1).strip().strip("$")
-        return f"$${content}$$"
+        return _postprocess_formula(content)
 
-    # 3. Fallback: inline $...$
-    m_inline = re.search(r"\$([^$]+)\$", raw)
+    # Fallback: inline $...$
+    m_inline = re.findall(r"\$([^$]+)\$", raw)
     if m_inline:
-        content = m_inline.group(1).strip()
-        return f"$${content}$$"
+        for b in reversed(m_inline):
+            b_str = b.strip()
+            if any(
+                w in b_str.lower()
+                for w in [
+                    "the prompt",
+                    "let's",
+                    "wait,",
+                    "looking closely",
+                    "delimiters",
+                    "final check",
+                ]
+            ):
+                continue
+            if b_str:
+                return _postprocess_formula(b_str)
 
-    # 4. Fallback: toàn bộ chuỗi (sau khi strip)
+    # Fallback: toan bo chuoi sau khi strip
     clean = raw.strip().strip("`$").strip()
-    return f"$${clean}$$"
+    return _postprocess_formula(clean)
 
 
 def _call_vision_model(img_bytes: bytes, prompt: str) -> str:
@@ -203,12 +297,11 @@ def _call_vision_model(img_bytes: bytes, prompt: str) -> str:
     from ccba_ai import ModelArchetype, ai
 
     try:
-        pil_img = Image.open(io.BytesIO(img_bytes))
-        if pil_img.mode != "RGB":
-            pil_img = pil_img.convert("RGB")
-        buf = io.BytesIO()
-        pil_img.save(buf, format="PNG", optimize=True)
-        b64_img = base64.b64encode(buf.getvalue()).decode("utf-8")
+        with Image.open(io.BytesIO(img_bytes)) as loaded_img:
+            pil_img: Image.Image = loaded_img.convert("RGB") if loaded_img.mode != "RGB" else loaded_img
+            buf = io.BytesIO()
+            pil_img.save(buf, format="PNG", optimize=True)
+            b64_img = base64.b64encode(buf.getvalue()).decode("utf-8")
     except Exception:
         b64_img = base64.b64encode(img_bytes).decode("utf-8")
 
@@ -224,7 +317,7 @@ def _call_vision_model(img_bytes: bytes, prompt: str) -> str:
 
     return ai.chat_multi(
         messages,
-        model=ModelArchetype.STANDARD,
+        model=ModelArchetype.OCR,
         max_tokens=1024,
         temperature=0.0,
         timeout=60.0,
@@ -461,7 +554,7 @@ def harvest_docx_formula_images(
                             ole_bytes = z.read(ole_path)
                             mtef_latex = decode_ole_mathtype(ole_bytes)
                             if mtef_latex:
-                                rid_to_katex[rid] = f"$${mtef_latex}$$"
+                                rid_to_katex[rid] = _postprocess_formula(mtef_latex)
                                 logger.info(
                                     "Decoded formula for rid=%s via Tier 1 MTEF parser: %s",
                                     rid,

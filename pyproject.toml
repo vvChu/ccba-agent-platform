@@ -95,6 +95,7 @@ mypy_path = [
     "packages/ccba-ooxml/src",
     "packages/ccba-pdf-prep/src",
     "packages/ccba-qc-core/src",
+    "packages/ccba-legal-intel/src",
 ]
 plugins = ["pydantic.mypy"]
 
@@ -117,6 +118,7 @@ module = [
     "PIL.*",
     "defusedxml.*",
     "mcp.*",
+    "lxml.*",
 ]
 ignore_missing_imports = true
 disallow_untyped_calls = false

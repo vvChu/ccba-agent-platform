@@ -37,7 +37,8 @@ def build_composite_headers(header_rows: list[list[str]]) -> list[str]:
     for c in range(cols_count):
         tokens: list[str] = []
         for r in range(len(header_rows)):
-            val = re.sub(r"<[^>]+>", "", header_rows[r][c]).strip()
+            val = re.sub(r"<[^>]+>", " ", header_rows[r][c]).strip()
+            val = re.sub(r"\s+", " ", val).strip()
             if not val or val in ("—", "-"):
                 continue
             if not tokens or tokens[-1] != val:
@@ -57,6 +58,13 @@ def resolve_hierarchical_headers(grid: list[list[str]]) -> list[list[str]]:
     for r_idx in range(1, max_h):
         prev_row = grid[r_idx - 1]
         curr_row = grid[r_idx]
+
+        # Stop if Col 0 is an enumerated data item like (a), (b), (1), etc.
+        if (
+            re.match(r"^\(?[a-zđ0-9]+\)?$", curr_row[0].strip(), re.IGNORECASE)
+            and curr_row[0].strip() != prev_row[0].strip()
+        ):
+            break
 
         # Check if Col 0 is a continuation of the header stub label
         c0_same = bool(curr_row[0].strip() and curr_row[0].strip() == prev_row[0].strip())
@@ -152,14 +160,35 @@ def render_table_markdown(
             clean_cell = "<br>".join(cell_p_rendered)
             clean_cell = re.sub(r"[\r\n]+", "<br>", clean_cell).strip()
             clean_cell = escape_table_pipes(clean_cell)
+            clean_cell = re.sub(r"(?<!\$)\$\$(?!\$)", "$ $", clean_cell)
             row_rendered.append(clean_cell)
 
         if not row_rendered or not any(row_rendered):
             continue
 
+        # Extract squashed footnotes from any cell in this row (ADR 0030 / ADR 0041)
+        for c_idx, cell_str in enumerate(row_rendered):
+            if re.search(r"<br>\s*(?:\*\*)?(?:CHÚ\s+THÍCH|CHÚ\s+DẪN)", cell_str, re.IGNORECASE):
+                parts = re.split(
+                    r"<br>\s*(?=(?:\*\*)?(?:CHÚ\s+THÍCH|CHÚ\s+DẪN))", cell_str, flags=re.IGNORECASE
+                )
+                row_rendered[c_idx] = parts[0].strip()
+                for note_p in parts[1:]:
+                    note_clean = re.sub(r"^<br\s*/?>", "", note_p).strip()
+                    note_lines = [
+                        line_part.strip()
+                        for line_part in re.split(r"<br\s*/?>", note_clean)
+                        if line_part.strip()
+                    ]
+                    for nl in note_lines:
+                        footnotes.append(nl)
+
         first_cell = row_rendered[0].strip()
+        first_cell_clean = re.sub(r"^(?:<!--.*?-->|<[^>]+>|\s)+", "", first_cell)
         if re.match(
-            r"^(?:<br>)*\s*(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)", first_cell, re.IGNORECASE
+            r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích|CHÚ\s+DẪN|Chú\s+dẫn)",
+            first_cell_clean,
+            re.IGNORECASE,
         ):
             # Deduplicate identical merged cells across columns (gridSpan)
             unique_cells: list[str] = []
@@ -173,7 +202,7 @@ def render_table_markdown(
             seen_clean: set[str] = set()
             for p in raw_parts:
                 p_clean = re.sub(
-                    r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*",
+                    r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích|CHÚ\s+DẪN|Chú\s+dẫn)\s*([0-9]+)?\s*[\.:–-]\s*(?:\*\*)?\s*",
                     "",
                     p,
                     flags=re.IGNORECASE,
@@ -200,7 +229,11 @@ def render_table_markdown(
                     seen_clean.add(p_clean)
                     fn_parts.append(p_clean)
             has_explicit_numbered = any(
-                re.search(r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*[1-9]", p, re.IGNORECASE)
+                re.search(
+                    r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích|CHÚ\s+DẪN|Chú\s+dẫn)\s*[1-9]",
+                    p,
+                    re.IGNORECASE,
+                )
                 or re.match(r"^[0-9]+[)\.]\s+", p)
                 for p in fn_parts
             )
@@ -210,7 +243,7 @@ def render_table_markdown(
                 numbered_lines: list[str] = []
                 for _idx, fn_p in enumerate(fn_parts):
                     fn_clean = re.sub(
-                        r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*(?:\*\*)?\s*",
+                        r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích|CHÚ\s+DẪN|Chú\s+dẫn)\s*([0-9]+)?\s*[\.:–-]\s*(?:\*\*)?\s*",
                         "",
                         fn_p,
                         flags=re.IGNORECASE,
@@ -220,7 +253,7 @@ def render_table_markdown(
                         continue
 
                     m_num = re.search(
-                        r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)",
+                        r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích|CHÚ\s+DẪN|Chú\s+dẫn)\s*([0-9]+)",
                         fn_p,
                         flags=re.IGNORECASE,
                     )
@@ -418,7 +451,7 @@ def clean_formula_latex(raw_f: str) -> str:
     return re.sub(r"\s+", " ", f).strip()
 
 
-def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
+def handle_table_block(ctx: Any, tbl: Any, i: int, blocks: list[Any] | None = None) -> None:
     """Parse a docx table block, checking for formula frames and exporting tables to CSV/JSON."""
     # 1. Formula Frame Check
     all_row_formulas: list[tuple[str, Any]] = []
@@ -508,11 +541,99 @@ def handle_table_block(ctx: Any, tbl: Any, i: int) -> None:
         )
         tbl_anchor = f"bang-{t_slug.replace('_', '-')}"
         ctx.emit(f'\n<a id="{tbl_anchor}"></a>\n### {t_cap}\n\n')
+    elif not is_captioned and blocks and i > 0 and blocks[i - 1][0] == "p":
+        prev_p_text = blocks[i - 1][1].text.strip()
+        m_tbl_ref = re.search(
+            r"(?:theo|ở|tại)\s+(?:bảng|Bảng|BẢNG)\s+([0-9A-Za-zĐđ]+(?:\.[0-9A-Za-zĐđ]+)*)\b",
+            prev_p_text,
+        )
+        if m_tbl_ref:
+            t_num = m_tbl_ref.group(1)
+            t_cap = f"Bảng {t_num}"
+            is_captioned = True
+            t_slug = (
+                f"bang_{int(t_num):02d}"
+                if t_num.isdigit()
+                else f"bang_{t_num.lower().replace('.', '_').replace('-', '_')}"
+            )
+            tbl_anchor = f"bang-{t_slug.replace('_', '-')}"
+            ctx.emit(f'\n<a id="{tbl_anchor}"></a>\n### {t_cap}\n\n')
+        elif ctx.current_target != "main":
+            annex_tbl_count = getattr(ctx, "_annex_tbl_count", {})
+            count = annex_tbl_count.get(ctx.current_target, 0) + 1
+            annex_tbl_count[ctx.current_target] = count
+            ctx._annex_tbl_count = annex_tbl_count
+            suffix = f"_{count}" if count > 1 else ""
+            t_num = f"PL{ctx.current_target}{suffix}"
+            t_cap = f"Bảng Phụ lục {ctx.current_target}" + (f" (Phần {count})" if count > 1 else "")
+            t_slug = f"bang_phu_luc_{ctx.current_target.lower()}{suffix}"
+            tbl_anchor = f"bang-{t_slug.replace('_', '-')}"
+            ctx.emit(f'\n<a id="{tbl_anchor}"></a>\n### {t_cap}\n\n')
+            is_captioned = True
+        else:
+            t_num, t_cap = "", ""
+            t_slug = f"layout_tbl_{i:03d}"
+    elif ctx.current_target != "main":
+        annex_tbl_count = getattr(ctx, "_annex_tbl_count", {})
+        count = annex_tbl_count.get(ctx.current_target, 0) + 1
+        annex_tbl_count[ctx.current_target] = count
+        ctx._annex_tbl_count = annex_tbl_count
+        suffix = f"_{count}" if count > 1 else ""
+        t_num = f"PL{ctx.current_target}{suffix}"
+        t_cap = f"Bảng Phụ lục {ctx.current_target}" + (f" (Phần {count})" if count > 1 else "")
+        t_slug = f"bang_phu_luc_{ctx.current_target.lower()}{suffix}"
+        tbl_anchor = f"bang-{t_slug.replace('_', '-')}"
+        ctx.emit(f'\n<a id="{tbl_anchor}"></a>\n### {t_cap}\n\n')
+        is_captioned = True
     else:
         t_num, t_cap = "", ""
         t_slug = f"layout_tbl_{i:03d}"
 
     md_tbl_str, tbl_footnotes, raw_grid = render_table_markdown(tbl, rid_to_katex=ctx.rid_to_katex)
+
+    if not is_captioned and len(raw_grid[0] if raw_grid else []) <= 1:
+        seen_cell_ids: set[int] = set()
+        for row in tbl.rows:
+            for cell in row.cells:
+                cell_id = id(cell._tc)
+                if cell_id in seen_cell_ids:
+                    continue
+                seen_cell_ids.add(cell_id)
+                for p in cell.paragraphs:
+                    p_r = render_paragraph_with_runs(p, rid_to_katex=ctx.rid_to_katex)
+                    if p_r:
+                        if p_r.startswith(("- ", "– ", "— ", "• ")):
+                            p_r = "&nbsp;&nbsp;\\- " + p_r.lstrip("-–—• ")
+                        elif p_r.startswith(("+ ", "+")):
+                            p_r = "&nbsp;&nbsp;&nbsp;&nbsp;\\+ " + p_r.lstrip("+ ")
+                        elif re.match(
+                            r"^(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*",
+                            p_r,
+                            re.IGNORECASE,
+                        ):
+                            p_r = re.sub(
+                                r"^(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*",
+                                lambda m: f"**CHÚ THÍCH {m.group(1)}:** "
+                                if m.group(1)
+                                else "**CHÚ THÍCH:** ",
+                                p_r,
+                                flags=re.IGNORECASE,
+                            )
+                        elif re.match(
+                            r"^(?:CHÚ\s+DẪN|Chú\s+dẫn)\s*([0-9]+)?\s*[:–-]\s*", p_r, re.IGNORECASE
+                        ):
+                            p_r = re.sub(
+                                r"^(?:CHÚ\s+DẪN|Chú\s+dẫn)\s*([0-9]+)?\s*[:–-]\s*",
+                                lambda m: f"**CHÚ DẪN {m.group(1)}:** "
+                                if m.group(1)
+                                else "**CHÚ DẪN:** ",
+                                p_r,
+                                flags=re.IGNORECASE,
+                            )
+                        ctx.emit(f"{p_r}\n\n")
+        ctx.state_mgr.reset()
+        return
+
     ctx.emit(md_tbl_str)
     if tbl_footnotes:
         bq_blocks: list[str] = []
