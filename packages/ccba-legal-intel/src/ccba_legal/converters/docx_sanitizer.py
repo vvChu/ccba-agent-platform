@@ -99,21 +99,25 @@ NORMATIVE_KEYWORDS = [
 ]
 
 
+NUMERIC_CELL_PATTERN = re.compile(
+    r"(?:^\s*[\+\-]?\d+(?:[\.,]\d+)?\s*$)|"
+    r"(?:\d+\s*(?:[\-–—~÷]|đến)\s*\d+)|"
+    r"(?:\d+\s*%(?!\w))|"
+    r"(?:\d+\s*(?:m[23²³]|mm[2²]|cm[23²³]|m/s|km/h|l/s|m3/h|m3/s|kg/m3|g/cm3|N/mm2|kN/m2|kN/m|daN/m2|m|cm|mm|km|kg|tấn|kN|MPa|kPa|Pa|bar|daN|ha|°C|s|h|W|kW|kVA|V|A|dB|lux)\b)|"
+    r"(?:[\=\<\>\±\×\÷\≤\≥])"
+)
+
+
 def _calculate_numeric_density(tbl: etree._Element) -> float:
     """Calculate ratio of cells containing numbers, mathematical formulas, or technical units."""
     cells = tbl.xpath(".//w:tc", namespaces=NAMESPACES)
     if not cells:
         return 0.0
     numeric_cells = 0
-    numeric_pattern = re.compile(
-        r"(?:^\s*[\+\-]?\d+(?:[\.,]\d+)?\s*$)|"
-        r"(?:\d+\s*(?:%|m|cm|mm|km|kg|tấn|kN|MPa|daN|ha|°C|s|h|W|kW|kVA|V|A|dB)\b)|"
-        r"(?:[\=\<\>\±\×\÷\≤\≥])"
-    )
     for c in cells:
         text = "".join(c.itertext()).strip()
         has_math = bool(c.xpath(".//m:oMath | .//w:object", namespaces=NAMESPACES))
-        if has_math or numeric_pattern.search(text):
+        if has_math or NUMERIC_CELL_PATTERN.search(text):
             numeric_cells += 1
     return numeric_cells / len(cells)
 
@@ -325,11 +329,11 @@ class DocxCanonicalSanitizer:
 
         tables = root.xpath(".//w:tbl", namespaces=NAMESPACES)
         for tbl in tables:
-            tbl_idx_in_body = 0
+            tbl_idx_in_body = total_elements // 2
             try:
                 tbl_idx_in_body = body_children.index(tbl)
             except ValueError:
-                tbl_idx_in_body = 0
+                tbl_idx_in_body = total_elements // 2
 
             if not self._is_layout_table(
                 tbl, tbl_index=tbl_idx_in_body, total_elements=total_elements
@@ -366,11 +370,18 @@ class DocxCanonicalSanitizer:
         if not tbl_text:
             return True
 
-        has_norm_kw = any(k in tbl_text for k in NORMATIVE_KEYWORDS)
-        if has_norm_kw:
-            return False
+        relative_pos = tbl_index / max(1, total_elements)
+        is_boundary_zone = (relative_pos <= 0.12) or (relative_pos >= 0.88)
+        has_layout_kw = any(k in tbl_text for k in LAYOUT_KEYWORDS)
 
-        # 1. Borderless check
+        norm_keywords = [k for k in NORMATIVE_KEYWORDS if k in tbl_text]
+        if norm_keywords:
+            if is_boundary_zone and has_layout_kw and norm_keywords == ["đơn vị"]:
+                pass
+            else:
+                return False
+
+        # 1. Borderless check (including explicit borderless and TableNormal default style)
         borders = tbl.xpath(".//w:tblBorders", namespaces=NAMESPACES)
         is_borderless = False
         if borders:
@@ -378,6 +389,14 @@ class DocxCanonicalSanitizer:
             if border_children and all(
                 b.get(QN_W_VAL) in ("none", "nil", "0") for b in border_children
             ):
+                is_borderless = True
+        else:
+            tbl_style = tbl.xpath(".//w:tblStyle", namespaces=NAMESPACES)
+            if tbl_style:
+                style_val = tbl_style[0].get(QN_W_VAL, "")
+                if style_val in ("TableNormal", "NormalTable", "TableGridLight"):
+                    is_borderless = True
+            else:
                 is_borderless = True
 
         # 2. Formula frame tables: borderless 1-2 rows, max 2 cols, with formula tag (e.g. '(1)', '(B.1)')
@@ -395,21 +414,17 @@ class DocxCanonicalSanitizer:
             return False
 
         # 4. Document Boundary Topology: Header (first 12%) or Signature (last 12%) allows rows <= 8
-        relative_pos = tbl_index / max(1, total_elements)
-        is_boundary_zone = (relative_pos <= 0.12) or (relative_pos >= 0.88)
         max_allowed_rows = 8 if is_boundary_zone else 3
 
         if len(rows) > max_allowed_rows:
             return False
 
-        has_layout_kw = any(k in tbl_text for k in LAYOUT_KEYWORDS)
-
         # Administrative layout keyword in table
         if has_layout_kw:
             return True
 
-        # Borderless in boundary zone with low numeric density (< 10%)
-        if is_borderless and is_boundary_zone and num_density < 0.10:
+        # Borderless in boundary zone with low numeric density (< 10%) and layout keyword
+        if is_borderless and is_boundary_zone and has_layout_kw and num_density < 0.10:
             return True
 
         return False

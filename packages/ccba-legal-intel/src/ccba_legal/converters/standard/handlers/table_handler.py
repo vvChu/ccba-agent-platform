@@ -592,8 +592,13 @@ def handle_table_block(ctx: Any, tbl: Any, i: int, blocks: list[Any] | None = No
     md_tbl_str, tbl_footnotes, raw_grid = render_table_markdown(tbl, rid_to_katex=ctx.rid_to_katex)
 
     if not is_captioned and len(raw_grid[0] if raw_grid else []) <= 1:
+        seen_cell_ids: set[int] = set()
         for row in tbl.rows:
             for cell in row.cells:
+                cell_id = id(cell._tc)
+                if cell_id in seen_cell_ids:
+                    continue
+                seen_cell_ids.add(cell_id)
                 for p in cell.paragraphs:
                     p_r = render_paragraph_with_runs(p, rid_to_katex=ctx.rid_to_katex)
                     if p_r:

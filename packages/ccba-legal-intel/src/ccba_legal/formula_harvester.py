@@ -107,17 +107,21 @@ def _read_cache(cache_dir: Path, sha256: str) -> str | None:
     cache_file = cache_dir / f"{sha256}.json"
     if cache_file.exists():
         try:
-            val = json.loads(cache_file.read_text(encoding="utf-8")).get("katex")
-            if val and any(
-                bad in val
-                for bad in ("Gemini", "no longer available", "Please switch", "error", "Exception")
-            ):
-                try:
-                    cache_file.unlink()
-                except Exception:
-                    pass
-                return None
-            return val
+            data = json.loads(cache_file.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                val = data.get("katex")
+                if isinstance(val, str):
+                    if any(
+                        bad in val
+                        for bad in ("Gemini", "no longer available", "Please switch", "error", "Exception")
+                    ):
+                        try:
+                            cache_file.unlink()
+                        except Exception:
+                            pass
+                        return None
+                    return val
+            return None
         except Exception:
             return None
     return None
@@ -194,19 +198,29 @@ def _validate_katex(result: str) -> bool:
 
 
 def _postprocess_formula(content: str) -> str:
-    """Normalize formula syntax (e.g. replace \\tag with \\qquad inside aligned/cases per ADR 0038)."""
+    """Normalize formula syntax (e.g. replace \\tag with \\qquad inside multiline environments per ADR 0038, ADR 0044)."""
+    clean = content.strip().strip("$").strip()
 
-    def replace_tag_in_multiline(match: re.Match) -> str:
+    def replace_tag_in_multiline(match: re.Match[str]) -> str:
         env_content = match.group(0)
-        return re.sub(r"\\tag\{([^}]+)\}", r"\\qquad (\1)", env_content)
 
-    content = re.sub(
-        r"\\begin\{(?:aligned|cases|gather)\}.*?\\end\{(?:aligned|cases|gather)\}",
-        replace_tag_in_multiline,
-        content,
-        flags=re.DOTALL,
+        def _clean_tag(m: re.Match[str]) -> str:
+            raw_tag = m.group(1).strip()
+            if raw_tag.startswith("(") and raw_tag.endswith(")"):
+                raw_tag = raw_tag[1:-1].strip()
+            return rf"\qquad ({raw_tag})"
+
+        return re.sub(r"\\tag\*?\{([^}]+)\}", _clean_tag, env_content)
+
+    env_pattern = re.compile(
+        r"\\begin\{(aligned\*?|cases\*?|gather\*?|split\*?)\}(?:[\s\S]*?)\\end\{\1\}"
     )
-    return f"$${content}$$"
+    prev = None
+    while prev != clean:
+        prev = clean
+        clean = env_pattern.sub(replace_tag_in_multiline, clean)
+
+    return f"$${clean}$$"
 
 
 def _clean_and_extract_katex(raw: str) -> str:
@@ -283,12 +297,11 @@ def _call_vision_model(img_bytes: bytes, prompt: str) -> str:
     from ccba_ai import ModelArchetype, ai
 
     try:
-        pil_img = Image.open(io.BytesIO(img_bytes))
-        if pil_img.mode != "RGB":
-            pil_img = pil_img.convert("RGB")
-        buf = io.BytesIO()
-        pil_img.save(buf, format="PNG", optimize=True)
-        b64_img = base64.b64encode(buf.getvalue()).decode("utf-8")
+        with Image.open(io.BytesIO(img_bytes)) as loaded_img:
+            pil_img: Image.Image = loaded_img.convert("RGB") if loaded_img.mode != "RGB" else loaded_img
+            buf = io.BytesIO()
+            pil_img.save(buf, format="PNG", optimize=True)
+            b64_img = base64.b64encode(buf.getvalue()).decode("utf-8")
     except Exception:
         b64_img = base64.b64encode(img_bytes).decode("utf-8")
 

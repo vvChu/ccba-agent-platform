@@ -276,7 +276,7 @@ def verify_bundle_docx_vs_markdown(bundle_dir: Path) -> dict[str, Any]:
         return {"status": "skipped", "message": "No DOCX asset found in sources/"}
 
     try:
-        doc = Document(docx_files[0])
+        doc = Document(str(docx_files[0]))
     except Exception as e:
         return {"status": "error", "error": f"Failed to parse DOCX: {e}"}
 

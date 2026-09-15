@@ -9,6 +9,17 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from docx.table import Table
+from docx.text.paragraph import Paragraph
+
+NUMERIC_CELL_PATTERN = re.compile(
+    r"(?:^\s*[\+\-]?\d+(?:[\.,]\d+)?\s*$)|"
+    r"(?:\d+\s*(?:[\-–—~÷]|đến)\s*\d+)|"
+    r"(?:\d+\s*%(?!\w))|"
+    r"(?:\d+\s*(?:m[23²³]|mm[2²]|cm[23²³]|m/s|km/h|l/s|m3/h|m3/s|kg/m3|g/cm3|N/mm2|kN/m2|kN/m|daN/m2|m|cm|mm|km|kg|tấn|kN|MPa|kPa|Pa|bar|daN|ha|°C|s|h|W|kW|kVA|V|A|dB|lux)\b)|"
+    r"(?:[\=\<\>\±\×\÷\≤\≥])"
+)
+
 LAYOUT_KEYWORDS = [
     "cộng hòa xã hội chủ nghĩa",
     "độc lập - tự do",
@@ -62,7 +73,7 @@ def _is_formula_frame_table(table: Any, rows: int, cols: int) -> bool:
     """Detect 2-column formula frames with formula tags (e.g. '(1)', '(B.1)')."""
     if rows <= 2 and cols == 2:
         cell_texts = [c.text.strip() for row in table.rows for c in row.cells]
-        has_tag = any(re.match(r"^\(\d+[a-z]?\)$", t) for t in cell_texts)
+        has_tag = any(re.match(r"^\(\d+[a-z]?\)$|^\([A-Z]\.\d+\)$", t) for t in cell_texts)
         has_empty = any(t == "" for t in cell_texts)
         if has_tag and (has_empty or len(cell_texts) <= 2):
             return True
@@ -236,9 +247,9 @@ def classify_and_extract_tables(
     blocks: list[tuple[str, Any]] = []
     for child in doc.element.body.iterchildren():
         if isinstance(child, docx.oxml.text.paragraph.CT_P):
-            blocks.append(("p", docx.text.paragraph.Paragraph(child, doc)))
+            blocks.append(("p", Paragraph(child, doc)))
         elif isinstance(child, docx.oxml.table.CT_Tbl):
-            blocks.append(("tbl", docx.table.Table(child, doc)))
+            blocks.append(("tbl", Table(child, doc)))
 
     extracted_tables: list[dict[str, Any]] = []
     table_counter = 0
@@ -254,12 +265,7 @@ def classify_and_extract_tables(
         cells = [c for row in table.rows for c in row.cells]
         num_density = 0.0
         if cells:
-            num_pattern = re.compile(
-                r"(?:^\s*[\+\-]?\d+(?:[\.,]\d+)?\s*$)|"
-                r"(?:\d+\s*(?:%|m|cm|mm|km|kg|tấn|kN|MPa|daN|ha|°C|s|h|W|kW|kVA|V|A|dB)\b)|"
-                r"(?:[\=\<\>\±\×\÷\≤\≥])"
-            )
-            num_cells = sum(1 for c in cells if num_pattern.search(c.text.strip()))
+            num_cells = sum(1 for c in cells if NUMERIC_CELL_PATTERN.search(c.text.strip()))
             num_density = num_cells / len(cells)
 
         table_text = " ".join(c.text.lower() for c in cells)
