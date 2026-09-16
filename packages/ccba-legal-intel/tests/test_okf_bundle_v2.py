@@ -264,3 +264,72 @@ def test_okf_v2_package_bundle_full_pipeline() -> None:
         md_text = (bundle_dir / "nghi_dinh_217_2026_nd_cp.md").read_text(encoding="utf-8")
         assert not md_text.startswith("---")
         assert "# Nghị định 217/2026/NĐ-CP" in md_text
+
+
+def test_okf_v24_universal_local_bundle_metadata() -> None:
+    """Test OKF v2.4 Universal metadata preservation for local jurisdictions (ADR 0041, ADR 0049)."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root_dir = Path(tmpdir)
+        packager = OKFBundlePackager(root_dir)
+
+        metadata = {
+            "title": "Quyết định phân cấp quản lý quy hoạch xây dựng",
+            "type": "Decision",
+            "document_number": "38/2026/QĐ-UBND",
+            "issued_by": "Ủy ban nhân dân Thành phố Hà Nội",
+            "territory": "VN-HN",
+            "jurisdiction": "VN-HN",
+            "hierarchy_level": "provincial",
+            "authority_type": "delegation",
+            "source_assets": {
+                "docx_present": True,
+                "pdf_present": False,
+            },
+            "delegation_context": {
+                "delegating_body": "UBND Thành phố Hà Nội",
+                "delegatee": "Sở Xây dựng TP. Hà Nội",
+            },
+        }
+
+        bundle_dir = packager.package_bundle_v2(
+            doc_id="vn_hn_qd_38_2026_qd_ubnd",
+            content="# Quyết định 38\n\nNội dung phân cấp...",
+            metadata=metadata,
+        )
+
+        meta_file = bundle_dir / "metadata.yaml"
+        assert meta_file.exists()
+        meta = yaml.safe_load(meta_file.read_text(encoding="utf-8"))
+
+        assert meta["territory"] == "VN-HN"
+        assert meta["jurisdiction"] == "VN-HN"
+        assert meta["hierarchy_level"] == "provincial"
+        assert meta["authority_type"] == "delegation"
+        assert meta["source_assets"]["docx_present"] is True
+        assert meta["delegation_context"]["delegatee"] == "Sở Xây dựng TP. Hà Nội"
+
+
+def test_bundle_provenance_validation(tmp_path: Path) -> None:
+    """Verify validate_bundle_provenance verifies source_assets provenance stamping."""
+    from ccba_legal.packager import validate_bundle_provenance
+
+    # Test valid bundle
+    valid_bundle = tmp_path / "valid_bundle"
+    valid_bundle.mkdir()
+    (valid_bundle / "metadata.yaml").write_text(
+        "doc_id: 'test'\nsource_assets:\n  pdf_present: true\n  source_file: 'test.pdf'\n",
+        encoding="utf-8",
+    )
+    ok, msg = validate_bundle_provenance(valid_bundle)
+    assert ok is True
+
+    # Test missing source_assets
+    invalid_bundle = tmp_path / "invalid_bundle"
+    invalid_bundle.mkdir()
+    (invalid_bundle / "metadata.yaml").write_text("doc_id: 'test'\n", encoding="utf-8")
+    ok, msg = validate_bundle_provenance(invalid_bundle)
+    assert ok is False
+    assert "Thiếu thuộc tính source_assets" in msg
+
+
+

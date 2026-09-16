@@ -1,0 +1,31 @@
+doc_id: "vn_hn_qd_38_2026_qd_ubnd"
+title: "Quyết định số 38/2026/QĐ-UBND ngày 31/03/2026 của UBND thành phố Hà Nội ban hành Quy định quản lý quy hoạch đô thị, nông thôn và kiến trúc trên địa bàn Thành phố Hà Nội"
+type: "Decision"
+doc_number: "38/2026/QĐ-UBND"
+category: "decisions"
+issuer: "Ủy ban nhân dân Thành phố Hà Nội"
+issued_date: "2026-03-31"
+effective_date: "2026-04-10"
+replaces: "38/2023/QĐ-UBND"
+status: "effective"
+territory: "VN-HN"
+jurisdiction: "VN-HN"
+hierarchy_level: "provincial"
+authority_type: "delegation"
+topics:
+  - "quy hoạch"
+  - "kiến trúc"
+  - "phân cấp"
+  - "điều chỉnh cục bộ"
+  - "delegation"
+  - "planning"
+okf_spec: "2.4.0"
+converter_version: "2.4.0"
+source_assets:
+  docx_present: false
+  pdf_present: true
+  source_file: "702686.pdf"
+  pdf_sha256: "d826eaf192b238acd1b465854babc8a884d8e12e2d330ecc4c262ed64eb8767b"
+  provenance_verified: true
+  acquisition_method: "official_gazette_pdf"
+

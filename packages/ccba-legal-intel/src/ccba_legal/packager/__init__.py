@@ -5,6 +5,7 @@ from __future__ import annotations
 from .bundle_writer import (
     package_bundle,
     package_bundle_v2,
+    validate_bundle_provenance,
     write_concept,
     write_logs_and_index,
     write_logs_and_index_v2,
@@ -26,9 +27,11 @@ __all__ = [
     "write_logs_and_index_v2",
     "package_bundle",
     "package_bundle_v2",
+    "validate_bundle_provenance",
     "standardize_bundle_links",
     "organize_bundle_structure",
     "integrate_tables",
     "generate_clauses_json",
     "write_qa_benchmark",
 ]
+

@@ -1,0 +1,509 @@
+schema_version: "2.0.0"
+description: "CCBA Temporal Administrative & Authority Graph for Construction Consulting (ADR 0035, ADR 0050)"
+
+# =============================================================================
+# 1. BẢNG TRA CỨU MÃ CHUẨN ĐỊA GIỚI (ISO 3166-2:VN & ALIASES)
+# =============================================================================
+territories:
+  VN:
+    name: "Cộng hòa Xã hội Chủ nghĩa Việt Nam"
+    type: "national"
+    aliases:
+      - "Việt Nam"
+      - "Toàn quốc"
+      - "TW"
+      - "Trung ương"
+      - "national"
+      - "VN"
+
+  VN-HN:
+    name: "Thành phố Hà Nội"
+    type: "municipality"
+    governance_model: "mega_centralized"
+    aliases:
+      - "Hà Nội"
+      - "TP Hà Nội"
+      - "Thành phố Hà Nội"
+      - "Thủ đô Hà Nội"
+      - "HN"
+      - "Ha Noi"
+      - "VN-HN"
+
+  VN-HCM:
+    name: "Thành phố Hồ Chí Minh"
+    type: "municipality"
+    governance_model: "mega_polycentric"
+    aliases:
+      - "TP.HCM"
+      - "TP Hồ Chí Minh"
+      - "Thành phố Hồ Chí Minh"
+      - "Hồ Chí Minh"
+      - "Sài Gòn"
+      - "VN-SG"
+      - "SG"
+      - "HCM"
+      - "VN-HCM"
+
+  VN-DN:
+    name: "Thành phố Đà Nẵng"
+    type: "municipality"
+    governance_model: "mega_polycentric"
+    aliases:
+      - "Đà Nẵng"
+      - "TP Đà Nẵng"
+      - "Thành phố Đà Nẵng"
+      - "DN"
+      - "VN-DN"
+
+  VN-HP:
+    name: "Thành phố Hải Phòng"
+    type: "municipality"
+    governance_model: "industrial_sez"
+    aliases:
+      - "Hải Phòng"
+      - "TP Hải Phòng"
+      - "Thành phố Hải Phòng"
+      - "HP"
+      - "VN-HP"
+
+  VN-TH:
+    name: "Tỉnh Thanh Hóa"
+    type: "province"
+    governance_model: "industrial_sez"
+    aliases:
+      - "Thanh Hóa"
+      - "Tỉnh Thanh Hóa"
+      - "Thanh Hoa"
+      - "TH"
+      - "VN-TH"
+
+  # Các đơn vị hành chính lịch sử
+  VN-HT:
+    name: "Tỉnh Hà Tây"
+    type: "historical_province"
+    status: "historical"
+    valid_to: "2008-08-01"
+    successor: "VN-HN"
+    aliases:
+      - "Hà Tây"
+      - "Tỉnh Hà Tây"
+      - "Ha Tay"
+      - "VN-HT"
+
+  HNN:
+    name: "Tỉnh Hà Nam Ninh"
+    type: "historical_province"
+    status: "historical"
+    valid_to: "1991-12-26"
+    successors: ["NAM_HA", "VN-37"]
+    aliases:
+      - "Hà Nam Ninh"
+      - "Tỉnh Hà Nam Ninh"
+
+  NAM_HA:
+    name: "Tỉnh Nam Hà"
+    type: "historical_province"
+    status: "historical"
+    valid_to: "1996-11-06"
+    successors: ["VN-35", "VN-36"]
+    aliases:
+      - "Nam Hà"
+      - "Tỉnh Nam Hà"
+
+  VN-35:
+    name: "Tỉnh Hà Nam"
+    type: "province"
+    aliases: ["Hà Nam", "Tỉnh Hà Nam", "VN-35"]
+
+  VN-36:
+    name: "Tỉnh Nam Định"
+    type: "province"
+    aliases: ["Nam Định", "Tỉnh Nam Định", "VN-36"]
+
+  VN-37:
+    name: "Tỉnh Ninh Bình"
+    type: "province"
+    aliases: ["Ninh Bình", "Tỉnh Ninh Bình", "VN-37"]
+
+  VN-BTT:
+    name: "Tỉnh Bình Trị Thiên"
+    type: "historical_province"
+    status: "historical"
+    valid_to: "1989-06-30"
+    successors: ["VN-QB", "VN-QT", "VN-TTH"]
+    aliases: ["Bình Trị Thiên", "Tỉnh Bình Trị Thiên"]
+
+  VN-VP:
+    name: "Tỉnh Vĩnh Phú"
+    type: "historical_province"
+    status: "historical"
+    valid_to: "1996-11-06"
+    successors: ["VN-70", "VN-PT"]
+    aliases: ["Vĩnh Phú", "Tỉnh Vĩnh Phú"]
+
+  VN-HB:
+    name: "Tỉnh Hà Bắc"
+    type: "historical_province"
+    status: "historical"
+    valid_to: "1996-11-06"
+    successors: ["VN-BG", "VN-BN"]
+    aliases: ["Hà Bắc", "Tỉnh Hà Bắc"]
+
+  VN-SB:
+    name: "Tỉnh Sông Bé"
+    type: "historical_province"
+    status: "historical"
+    valid_to: "1996-11-06"
+    successors: ["VN-BD", "VN-BP"]
+    aliases: ["Sông Bé", "Tỉnh Sông Bé"]
+
+  VN-MH:
+    name: "Tỉnh Minh Hải"
+    type: "historical_province"
+    status: "historical"
+    valid_to: "1996-11-06"
+    successors: ["VN-CM", "VN-BL"]
+    aliases: ["Minh Hải", "Tỉnh Minh Hải"]
+
+# =============================================================================
+# 2. ĐỒ THỊ BIẾN ĐỘNG ĐỊA GIỚI LỊCH SỬ (TEMPORAL TERRITORY TRANSITIONS)
+# =============================================================================
+territory_events:
+  - event_id: "MERGE_HA_TAY_ME_LINH_2008"
+    event_type: "merge"
+    effective_date: "2008-08-01"
+    legal_basis: "Nghị quyết số 15/2008/QH12 ngày 29/05/2008"
+    predecessors:
+      - code: "VN-HT"
+        name: "Tỉnh Hà Tây"
+        inherited_districts:
+          - "Hà Đông"
+          - "Sơn Tây"
+          - "Ba Vì"
+          - "Đan Phượng"
+          - "Hoài Đức"
+          - "Thạch Thất"
+          - "Quốc Oai"
+          - "Chương Mỹ"
+          - "Thanh Oai"
+          - "Thường Tín"
+          - "Phú Xuyên"
+          - "Ứng Hòa"
+          - "Mỹ Đức"
+      - code: "ME_LINH_VP"
+        name: "Huyện Mê Linh (thuộc Tỉnh Vĩnh Phúc)"
+      - code: "LUONG_SON_4_COMMUNES"
+        name: "4 xã huyện Lương Sơn (Hòa Bình)"
+    successors:
+      - code: "VN-HN"
+        name: "Thành phố Hà Nội"
+
+  - event_id: "SPLIT_HA_NAM_NINH_1991"
+    event_type: "split"
+    effective_date: "1991-12-26"
+    legal_basis: "Nghị quyết Quốc hội khóa VIII kỳ họp thứ 10"
+    predecessors:
+      - code: "HNN"
+        name: "Tỉnh Hà Nam Ninh"
+    successors:
+      - code: "NAM_HA"
+        name: "Tỉnh Nam Hà"
+      - code: "VN-37"
+        name: "Tỉnh Ninh Bình"
+
+  - event_id: "SPLIT_NAM_HA_1996"
+    event_type: "split"
+    effective_date: "1996-11-06"
+    legal_basis: "Nghị quyết Quốc hội khóa IX kỳ họp thứ 10"
+    predecessors:
+      - code: "NAM_HA"
+        name: "Tỉnh Nam Hà"
+    successors:
+      - code: "VN-35"
+        name: "Tỉnh Hà Nam"
+      - code: "VN-36"
+        name: "Tỉnh Nam Định"
+
+  - event_id: "SPLIT_BINH_TRI_THIEN_1989"
+    event_type: "split"
+    effective_date: "1989-06-30"
+    legal_basis: "Nghị quyết Quốc hội khóa VIII kỳ họp thứ 5"
+    predecessors:
+      - code: "VN-BTT"
+        name: "Tỉnh Bình Trị Thiên"
+    successors:
+      - code: "VN-QB"
+        name: "Tỉnh Quảng Bình"
+      - code: "VN-QT"
+        name: "Tỉnh Quảng Trị"
+      - code: "VN-TTH"
+        name: "Tỉnh Thừa Thiên Huế"
+
+  - event_id: "SPLIT_VINH_PHU_1996"
+    event_type: "split"
+    effective_date: "1996-11-06"
+    legal_basis: "Nghị quyết Quốc hội khóa IX kỳ họp thứ 10"
+    predecessors:
+      - code: "VN-VP"
+        name: "Tỉnh Vĩnh Phú"
+    successors:
+      - code: "VN-70"
+        name: "Tỉnh Vĩnh Phúc"
+      - code: "VN-PT"
+        name: "Tỉnh Phú Thọ"
+
+  - event_id: "SPLIT_HA_BAC_1996"
+    event_type: "split"
+    effective_date: "1996-11-06"
+    legal_basis: "Nghị quyết Quốc hội khóa IX kỳ họp thứ 10"
+    predecessors:
+      - code: "VN-HB"
+        name: "Tỉnh Hà Bắc"
+    successors:
+      - code: "VN-BG"
+        name: "Tỉnh Bắc Giang"
+      - code: "VN-BN"
+        name: "Tỉnh Bắc Ninh"
+
+  - event_id: "SPLIT_SONG_BE_1996"
+    event_type: "split"
+    effective_date: "1996-11-06"
+    legal_basis: "Nghị quyết Quốc hội khóa IX kỳ họp thứ 10"
+    predecessors:
+      - code: "VN-SB"
+        name: "Tỉnh Sông Bé"
+    successors:
+      - code: "VN-BD"
+        name: "Tỉnh Bình Dương"
+      - code: "VN-BP"
+        name: "Tỉnh Bình Phước"
+
+  - event_id: "SPLIT_MINH_HAI_1996"
+    event_type: "split"
+    effective_date: "1996-11-06"
+    legal_basis: "Nghị quyết Quốc hội khóa IX kỳ họp thứ 10"
+    predecessors:
+      - code: "VN-MH"
+        name: "Tỉnh Minh Hải"
+    successors:
+      - code: "VN-CM"
+        name: "Tỉnh Cà Mau"
+      - code: "VN-BL"
+        name: "Tỉnh Bạc Liêu"
+
+# =============================================================================
+# 3. KẾ THỪA THẨM QUYỀN SỞ NGÀNH & RÀO CHẮN DANH XƯNG (AUTHORITY SUCCESSION)
+# =============================================================================
+authorities:
+  VN-HN:
+    - current_name: "Sở Xây dựng TP. Hà Nội"
+      status: "active"
+      is_single_window: true
+      valid_from: "2026-08-10"
+      governance_notes: "Cơ quan đầu mối Một Cửa thẩm định TMB 1/500, TKCS, GPXD và nghiệm thu đa ngành"
+      functions:
+        - "planning_and_architecture"
+        - "construction_management"
+        - "building_permits"
+        - "transport_infrastructure"
+        - "quality_inspection"
+      building_grade_routing:
+        major_projects: ["cap_1", "cap_2", "deep_underground", "major_urban_axes"]
+      predecessors:
+        - name: "Sở Quy hoạch - Kiến trúc TP. Hà Nội"
+          aliases:
+            - "Sở Quy hoạch - Kiến trúc"
+            - "Sở Quy hoạch - Kiến trúc TP. Hà Nội"
+            - "Sở Quy hoạch - Kiến trúc Hà Nội"
+            - "Sở QHKT"
+            - "Sở Quy hoạch Kiến trúc"
+            - "SQHKT"
+          valid_to: "2026-08-09"
+          dissolved_date: "2026-08-10"
+          legal_basis: "Nghị quyết Kỳ họp thứ 6 HĐND TP. Hà Nội khóa XVII (10/08/2026)"
+          transferred_functions: ["planning_and_architecture"]
+          warning: "Sở Quy hoạch - Kiến trúc đã sáp nhập/giải thể từ 10/08/2026. Toàn bộ chức năng quy hoạch - kiến trúc đã chuyển giao trọn vẹn về Sở Xây dựng TP. Hà Nội."
+
+        - name: "Sở Giao thông vận tải TP. Hà Nội"
+          aliases:
+            - "Sở Giao thông vận tải"
+            - "Sở Giao thông vận tải TP. Hà Nội"
+            - "Sở Giao thông vận tải Hà Nội"
+            - "Sở GTVT"
+            - "Sở Giao thông Vận tải"
+            - "SGTVT"
+          valid_to: "2025-02-28"
+          dissolved_date: "2025-03-01"
+          legal_basis: "Đề án sắp xếp cơ quan chuyên môn theo Luật Thủ đô 2024 & NQ HĐND TP Hà Nội"
+          transferred_functions: ["transport_infrastructure"]
+          warning: "Sở Giao thông vận tải đã hợp nhất vào Sở Xây dựng từ 03/2025 đối với lĩnh vực hạ tầng giao thông và thỏa thuận đấu nối."
+
+    - current_name: "Sở Tài chính TP. Hà Nội"
+      status: "active"
+      predecessors:
+        - name: "Sở Kế hoạch và Đầu tư TP. Hà Nội"
+          aliases:
+            - "Sở Kế hoạch và Đầu tư"
+            - "Sở Kế hoạch và Đầu tư TP. Hà Nội"
+            - "Sở KH&ĐT"
+            - "Sở KHĐT"
+          valid_to: "2025-02-28"
+          dissolved_date: "2025-03-01"
+          warning: "Sở Kế hoạch và Đầu tư đã hợp nhất vào Sở Tài chính từ 03/2025."
+
+    - current_name: "Sở Nông nghiệp và Môi trường TP. Hà Nội"
+      status: "active"
+      predecessors:
+        - name: "Sở Tài nguyên và Môi trường TP. Hà Nội"
+          aliases:
+            - "Sở Tài nguyên và Môi trường"
+            - "Sở Tài nguyên và Môi trường TP. Hà Nội"
+            - "Sở TN&MT"
+            - "Sở TNMT"
+          valid_to: "2025-02-28"
+          dissolved_date: "2025-03-01"
+          warning: "Sở Tài nguyên và Môi trường đã hợp nhất vào Sở Nông nghiệp và Môi trường từ 03/2025."
+
+  VN-HCM:
+    - current_name: "Sở Xây dựng TP. Hồ Chí Minh"
+      status: "active"
+      functions:
+        - "construction_management"
+        - "building_permits"
+        - "quality_inspection"
+      governance_notes: "Cơ quan chuyên môn quản lý xây dựng cấp tỉnh"
+
+    - current_name: "Sở Quy hoạch - Kiến trúc TP. Hồ Chí Minh"
+      status: "active"
+      functions:
+        - "planning_and_architecture"
+      governance_notes: "Duy trì độc lập theo mô hình đô thị đa trung tâm đặc thù của TP.HCM"
+
+    - current_name: "Phòng Cảnh sát PCCC và CNCH (PC07) - Công an TP. Hồ Chí Minh"
+      status: "active"
+      agency_system: "vertical_central"
+      functions:
+        - "fire_prevention_audit"
+        - "fire_safety_approval"
+      governance_notes: "Hệ thống ngành dọc Trung ương trực thuộc Bộ Công an, thẩm duyệt thiết kế PCCC"
+
+    - current_name: "Ban Quản lý các Khu chế xuất và công nghiệp TP.HCM (HEPZA)"
+      status: "active"
+      functions:
+        - "industrial_zone_management"
+        - "building_permits_delegated"
+      governance_notes: "Thực hiện thẩm quyền quản lý xây dựng được ủy quyền trong ranh giới các KCN/KCX"
+
+    - current_name: "Ban Quản lý Khu Công nghệ cao TP.HCM (SHTP)"
+      status: "active"
+      functions:
+        - "hightech_zone_management"
+        - "building_permits_delegated"
+
+    - current_name: "Ban Quản lý Khu đô thị mới Thủ Thiêm"
+      status: "active"
+      functions:
+        - "urban_development_management"
+
+    - current_name: "UBND Thành phố Thủ Đức"
+      status: "active"
+      governance_type: "city_within_city"
+      functions:
+        - "sub_provincial_delegation"
+      governance_notes: "Chính quyền đô thị đặc thù cấp thành phố thuộc thành phố trực thuộc Trung ương"
+
+  VN-TH:
+    - current_name: "Sở Xây dựng tỉnh Thanh Hóa"
+      status: "active"
+      functions:
+        - "construction_management"
+        - "planning_and_architecture"
+        - "building_permits"
+
+    - current_name: "Ban Quản lý Khu kinh tế Nghi Sơn và các Khu công nghiệp tỉnh Thanh Hóa"
+      status: "active"
+      functions:
+        - "industrial_zone_management"
+        - "building_permits_delegated"
+      governance_notes: "Quản lý quy hoạch và cấp phép xây dựng trong ranh giới KKT Nghi Sơn và các KCN"
+
+# =============================================================================
+# 4. QUY CHUẨN THỂ CHẾ BẤT BIẾN TOÀN QUỐC (NATIONAL INSTITUTIONAL INVARIANTS)
+# =============================================================================
+national_invariants:
+  district_level:
+    status: "dissolved"
+    dissolved_date: "2025-07-01"
+    legal_basis: "Nghị quyết số 203/2025/QH15 sửa đổi Điều 110 Hiến pháp 2013 và Luật Tổ chức chính quyền địa phương 2025 (Luật số 72/2025/QH15)"
+    notes: "Chính quyền cấp huyện (quận/huyện/thị xã) kết thúc hoạt động từ 01/07/2025 trên toàn quốc. Cơ cấu chính quyền địa phương chuyển sang mô hình 2 cấp: cấp Tỉnh và cấp Cơ sở (Xã/Phường/Thị trấn)."
+    entities:
+      - "UBND Quận"
+      - "UBND Huyện"
+      - "UBND Thị xã"
+      - "Phòng Quản lý đô thị"
+      - "Phòng Kinh tế và Hạ tầng"
+
+# =============================================================================
+# 5. CẤU TRÚC PHÂN CẤP ĐỊA PHƯƠNG (LOCAL AUTHORITY TIERS)
+# =============================================================================
+authority_tiers:
+  VN-HN:
+    governance_model: "mega_centralized"
+    provincial_level:
+      entities:
+        - "UBND Thành phố Hà Nội"
+        - "Sở Xây dựng TP. Hà Nội"
+        - "Chi cục Giám định xây dựng"
+      delegation_metadata:
+        issuing_authority: "UBND cấp tỉnh"
+        agency_type: "provincial_department"
+    commune_level:
+      entities:
+        - "UBND Xã"
+        - "UBND Phường"
+        - "UBND Thị trấn"
+      delegation_metadata:
+        issuing_authority: "UBND cấp xã"
+        agency_type: "communal_government"
+
+  VN-HCM:
+    governance_model: "mega_polycentric"
+    provincial_level:
+      entities:
+        - "UBND Thành phố Hồ Chí Minh"
+        - "Sở Xây dựng TP. Hồ Chí Minh"
+        - "Sở Quy hoạch - Kiến trúc TP. Hồ Chí Minh"
+        - "Ban Quản lý các Khu chế xuất và công nghiệp TP.HCM (HEPZA)"
+        - "Ban Quản lý Khu Công nghệ cao TP.HCM (SHTP)"
+        - "Ban Quản lý Khu đô thị mới Thủ Thiêm"
+        - "UBND Thành phố Thủ Đức"
+      delegation_metadata:
+        issuing_authority: "UBND cấp tỉnh"
+        agency_type: "provincial_department"
+    commune_level:
+      entities:
+        - "UBND Xã"
+        - "UBND Phường"
+        - "UBND Thị trấn"
+      delegation_metadata:
+        issuing_authority: "UBND cấp xã"
+        agency_type: "communal_government"
+
+  VN-TH:
+    governance_model: "industrial_sez"
+    provincial_level:
+      entities:
+        - "UBND Tỉnh Thanh Hóa"
+        - "Sở Xây dựng tỉnh Thanh Hóa"
+        - "Ban Quản lý Khu kinh tế Nghi Sơn và các Khu công nghiệp tỉnh Thanh Hóa"
+      delegation_metadata:
+        issuing_authority: "UBND cấp tỉnh"
+        agency_type: "provincial_department"
+    commune_level:
+      entities:
+        - "UBND Xã"
+        - "UBND Phường"
+        - "UBND Thị trấn"
+      delegation_metadata:
+        issuing_authority: "UBND cấp xã"
+        agency_type: "communal_government"

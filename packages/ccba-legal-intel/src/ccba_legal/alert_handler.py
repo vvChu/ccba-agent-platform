@@ -53,7 +53,7 @@ class TelegramAlertHandler:
                 url, data=payload, headers={"Content-Type": "application/json"}
             )
             with urllib.request.urlopen(req, timeout=10) as resp:
-                return resp.status == 200
+                return bool(resp.status == 200)
         except Exception as e:
             print(f"[TelegramAlert] Error sending alert: {e}")
             return False

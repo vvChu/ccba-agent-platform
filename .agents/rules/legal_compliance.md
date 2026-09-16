@@ -16,6 +16,12 @@
 - Đối với các văn bản pháp luật, Nghị định hoặc Thông tư mới được bổ sung/cập nhật trong tương lai: Thông tin hiệu lực sẽ được cập nhật động vào `legal_registry.yaml` và lưu trữ tệp gốc vào `.md/legal_docs/` (thông qua workflow `/ccba-legal-intel`).
 - Đối với các dự án xây dựng cụ thể: Đối chiếu ngày quyết định đầu tư của dự án với ngày hiệu lực của văn bản trong Registry để áp dụng điều khoản chuyển tiếp phù hợp (ví dụ: kế thừa quy định cũ theo Điều 53 Nghị định 207/2026/NĐ-CP nếu dự án được duyệt trước 01/07/2026).
 
+## 4. Cưỡng chế Nguyên văn & Chống Bịa đặt Điều khoản (Grounding Invariant)
+> [!CAUTION]
+> Tuyệt đối cấm Agent tự sáng tác, phỏng đoán, hoặc tạo mock data giả định cho các điều khoản văn bản quy phạm pháp luật. Chi tiết tuân thủ quy định tại [legal_verbatim_grounding_guardrail.md](legal_verbatim_grounding_guardrail.md).
+> Nếu trong kho tri thức chưa có file tài liệu gốc, Agent **BẮT BUỘC** phải kích hoạt `TVPLCrawler` để tải văn bản chính thống về hoặc dừng lại yêu cầu người dùng cung cấp file gốc (PDF/DOCX).
+
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+

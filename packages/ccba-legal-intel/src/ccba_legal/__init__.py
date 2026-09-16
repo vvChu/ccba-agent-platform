@@ -122,9 +122,21 @@ from .gold_standard import (
 )
 from .grounding import (
     LEGAL_DISCLAIMER,
+    NATIONAL_FALLBACK_DISCLAIMER,
     LegalGroundingGate,
     format_grounded_response,
     verify_legal_grounding,
+)
+from .jurisdiction import (
+    AuthorityResolutionResult,
+    expand_jurisdiction_queries,
+    generate_jurisdiction_guardrail_card,
+    get_default_ontology_path,
+    load_administrative_ontology,
+    normalize_jurisdiction,
+    resolve_authority,
+    validate_authority_naming,
+    validate_tier_authority,
 )
 from .models import (
     ASTNode,
@@ -155,6 +167,7 @@ from .registry import (
     LegalRegistryManager,
     discover_master_registry_path,
     format_citation,
+    get_active_delegation_document,
     get_lifecycle,
     load_legal_registry,
     query,
@@ -233,6 +246,7 @@ __all__ = [
     "discover_master_registry_path",
     "search_legal_registry",
     "get_lifecycle",
+    "get_active_delegation_document",
     "query",
     "canonicalize_clause_id",
     "csv_to_markdown",
@@ -242,6 +256,7 @@ __all__ = [
     "TVPLSessionMutex",
     "CookieVault",
     "LEGAL_DISCLAIMER",
+    "NATIONAL_FALLBACK_DISCLAIMER",
     "download_three_tier",
     "get_crawled_doc_data",
     "trigger_download",
@@ -306,4 +321,14 @@ __all__ = [
     "check_structure_alignment",
     "compute_text_parity",
     "normalize_text",
+    # === Administrative Succession & Jurisdiction (Issue #276) ===
+    "AuthorityResolutionResult",
+    "expand_jurisdiction_queries",
+    "get_default_ontology_path",
+    "load_administrative_ontology",
+    "normalize_jurisdiction",
+    "resolve_authority",
+    "validate_authority_naming",
+    "validate_tier_authority",
+    "generate_jurisdiction_guardrail_card",
 ]
