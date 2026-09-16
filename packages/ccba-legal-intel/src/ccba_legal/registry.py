@@ -206,7 +206,14 @@ class LegalRegistryManager:
             print(
                 f"[Registry] Warning: Registry file {self.registry_path} not found. Starting with empty registry."
             )
-            return {"metadata": {}, "laws": [], "decrees": [], "circulars": []}
+            return {
+                "metadata": {},
+                "laws": [],
+                "decrees": [],
+                "circulars": [],
+                "decisions": [],
+                "resolutions": [],
+            }
 
         with open(self.registry_path, encoding="utf-8") as f:
             try:
@@ -214,7 +221,14 @@ class LegalRegistryManager:
                 return loaded if isinstance(loaded, dict) else {}
             except Exception as e:
                 print(f"[Registry] Error loading YAML: {e}")
-                return {"metadata": {}, "laws": [], "decrees": [], "circulars": []}
+                return {
+                    "metadata": {},
+                    "laws": [],
+                    "decrees": [],
+                    "circulars": [],
+                    "decisions": [],
+                    "resolutions": [],
+                }
 
     def save(self, data: dict[str, Any]) -> None:
         """Save the updated registry to YAML."""
@@ -231,6 +245,10 @@ class LegalRegistryManager:
             category = "decrees"
         elif "thông tư" in doc_type or "circular" in doc_type:
             category = "circulars"
+        elif "quyết định" in doc_type or "decision" in doc_type:
+            category = "decisions"
+        elif "nghị quyết" in doc_type or "resolution" in doc_type:
+            category = "resolutions"
         self.add_or_update_doc(category, doc_id, doc_data)
 
     def add_or_update_doc(self, category: str, doc_id: str, doc_data: dict[str, Any]) -> None:
@@ -452,6 +470,13 @@ class LegalRegistryManager:
         elif status_enum == LegalDocStatus.DRAFT:
             warning = f"📝 [DỰ THẢO]: Văn bản [{short_name}] là bản DỰ THẢO đang lấy ý kiến, chưa có giá trị pháp lý thi hành."
 
+        territory = str(doc.get("territory", "VN"))
+        hierarchy_level = str(
+            doc.get("hierarchy_level", "national" if territory == "VN" else "provincial")
+        )
+        temporal_context = doc.get("temporal_context")
+        successor_entity = doc.get("successor_entity")
+
         info = LegalLifecycleInfo(
             doc_id=doc_id,
             document_number=doc_num,
@@ -464,6 +489,10 @@ class LegalRegistryManager:
             superseded_by=superseded_by,
             amended_by=amended_by,
             guiding_docs=guiding_docs,
+            territory=territory,
+            hierarchy_level=hierarchy_level,
+            temporal_context=temporal_context,
+            successor_entity=successor_entity,
             warning=warning,
             suggested_replacement=suggested_replacement,
         )
@@ -505,12 +534,15 @@ class LegalRegistryManager:
                     return p
         return None
 
-    def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
+    def search(
+        self, query: str, top_k: int = 5, territory: str | None = None
+    ) -> list[dict[str, Any]]:
         """Search legal registry documents matching query terms across titles, topics, and notes (ADR 0050).
 
         Args:
             query: Space-separated search query terms.
             top_k: Maximum number of top matching documents to return.
+            territory: Optional ISO 3166-2:VN territory code (e.g. 'VN-HN') for geofencing.
 
         Returns:
             List of matching document dictionaries sorted descending by relevance score,
@@ -518,11 +550,24 @@ class LegalRegistryManager:
         """
         data = self.load()
         query_terms = [t.lower() for t in query.split() if len(t) > 1]
-        if not query_terms:
-            return []
+        is_empty_query = len(query_terms) == 0
 
         matched_docs: list[tuple[int, dict[str, Any]]] = []
-        categories = ["decrees", "laws", "circulars", "standards", "seminars"]
+        categories = [
+            "decrees",
+            "laws",
+            "circulars",
+            "standards",
+            "seminars",
+            "decisions",
+            "resolutions",
+        ]
+
+        target_territory: str | None = None
+        if territory:
+            from ccba_legal.jurisdiction import normalize_jurisdiction
+
+            target_territory = normalize_jurisdiction(territory)
 
         for category in categories:
             docs = data.get(category, [])
@@ -530,25 +575,32 @@ class LegalRegistryManager:
                 if not isinstance(doc, dict):
                     continue
 
-                score = 0
-                title = str(doc.get("title", "")).lower()
-                short_name = str(doc.get("short_name", "")).lower()
-                topics = [str(t).lower() for t in doc.get("topics", [])]
-                notes = str(doc.get("notes", "")).lower()
-                doc_num = str(doc.get("document_number", "")).lower()
-                doc_id = str(doc.get("id", "")).lower()
+                doc_territory = str(doc.get("territory", "VN"))
+                if target_territory and doc_territory not in {"VN", target_territory}:
+                    continue
 
-                combined_text = (
-                    f"{title} {short_name} {doc_num} {doc_id} {' '.join(topics)} {notes}"
-                )
+                if is_empty_query:
+                    score = 1
+                else:
+                    score = 0
+                    title = str(doc.get("title", "")).lower()
+                    short_name = str(doc.get("short_name", "")).lower()
+                    topics = [str(t).lower() for t in doc.get("topics", [])]
+                    notes = str(doc.get("notes", "")).lower()
+                    doc_num = str(doc.get("document_number", "")).lower()
+                    doc_id = str(doc.get("id", "")).lower()
 
-                for term in query_terms:
-                    if term in combined_text:
-                        score += 1
-                    if term in title or term in short_name:
-                        score += 2
-                    if any(term in t for t in topics):
-                        score += 3
+                    combined_text = (
+                        f"{title} {short_name} {doc_num} {doc_id} {' '.join(topics)} {notes}"
+                    )
+
+                    for term in query_terms:
+                        if term in combined_text:
+                            score += 1
+                        if term in title or term in short_name:
+                            score += 2
+                        if any(term in t for t in topics):
+                            score += 3
                     if term in doc_num or term in doc_id:
                         score += 4
 
@@ -559,6 +611,11 @@ class LegalRegistryManager:
                     doc_copy["status"] = lifecycle.get("status", LegalDocStatus.ACTIVE.value)
                     doc_copy["is_superseded"] = (
                         lifecycle.get("status") == LegalDocStatus.SUPERSEDED.value
+                    )
+                    doc_copy["territory"] = lifecycle.get("territory", doc_territory)
+                    doc_copy["hierarchy_level"] = lifecycle.get(
+                        "hierarchy_level",
+                        "national" if doc_territory == "VN" else "provincial",
                     )
                     if lifecycle.get("warning"):
                         doc_copy["lifecycle_warning"] = lifecycle["warning"]
@@ -592,7 +649,15 @@ class LegalRegistryManager:
             print(f"[Registry] Created local backup at: {bak_path}")
 
         counts = {"updated": 0, "added": 0, "preserved": 0}
-        categories = ["laws", "decrees", "circulars", "standards", "seminars"]
+        categories = [
+            "laws",
+            "decrees",
+            "circulars",
+            "standards",
+            "seminars",
+            "decisions",
+            "resolutions",
+        ]
 
         # Preserve metadata header
         if "metadata" not in local_data:
@@ -741,7 +806,10 @@ def load_legal_registry(registry_path: Path | str | None = None) -> dict[str, An
 
 
 def search_legal_registry(
-    query: str, registry_path: Path | str | None = None, top_k: int = 5
+    query: str,
+    registry_path: Path | str | None = None,
+    top_k: int = 5,
+    territory: str | None = None,
 ) -> list[dict[str, Any]]:
     """Search legal registry documents matching query terms across titles, topics, and notes.
 
@@ -749,12 +817,13 @@ def search_legal_registry(
         query: Space-separated search query terms.
         registry_path: Optional path to legal_registry.yaml.
         top_k: Maximum number of top matching documents to return.
+        territory: Optional ISO 3166-2:VN territory code (e.g. 'VN-HN') for geofencing.
 
     Returns:
         List of matching document dictionaries sorted descending by relevance score.
     """
     mgr = LegalRegistryManager(registry_path=Path(registry_path) if registry_path else None)
-    return mgr.search(query=query, top_k=top_k)
+    return mgr.search(query=query, top_k=top_k, territory=territory)
 
 
 def get_lifecycle(identifier: str, registry_path: Path | str | None = None) -> dict[str, Any]:
@@ -792,6 +861,87 @@ def query(
     return engine.search(query=search_query, top_k=top_k)
 
 
+def get_active_delegation_document(
+    territory: str,
+    domain: str = "construction",
+    as_of_date: str | None = None,
+    registry_path: Path | str | None = None,
+) -> dict[str, Any] | None:
+    """Discover the active delegation document for a given territory and domain from the registry.
+
+    Args:
+        territory: ISO 3166-2:VN territory code (e.g. 'VN-HN', 'VN-HCM').
+        domain: Domain of delegation (default: 'construction').
+        as_of_date: Evaluation date in YYYY-MM-DD format (defaults to current date).
+        registry_path: Optional custom path to legal_registry.yaml.
+
+    Returns:
+        Document dict representing the active delegation document, or None if not found.
+    """
+    from ccba_legal.jurisdiction import normalize_jurisdiction
+
+    norm_jur = normalize_jurisdiction(territory)
+    if norm_jur == "VN":
+        return None
+
+    mgr = LegalRegistryManager(registry_path=Path(registry_path) if registry_path else None)
+    data = mgr.load()
+
+    target_date = as_of_date or datetime.now().strftime("%Y-%m-%d")
+    candidates: list[dict[str, Any]] = []
+
+    for _category, docs in data.items():
+        if not isinstance(docs, list):
+            continue
+        for doc in docs:
+            if not isinstance(doc, dict):
+                continue
+            doc_territory = str(doc.get("territory", "")).strip().upper()
+            if doc_territory != norm_jur:
+                continue
+
+            status = normalize_doc_status(doc.get("status")).value
+            if status != LegalDocStatus.ACTIVE.value:
+                continue
+
+            topics = [str(t).lower() for t in doc.get("topics", [])]
+            title = str(doc.get("title", "")).lower()
+
+            is_delegation = (
+                "phân cấp" in title
+                or "ủy quyền" in title
+                or "delegation" in topics
+                or "phân cấp" in topics
+                or "ủy quyền" in topics
+                or doc.get("authority_type") == "delegation"
+                or doc.get("is_delegation") is True
+            )
+
+            is_domain_match = (
+                domain == "all"
+                or domain in topics
+                or "xây dựng" in title
+                or "quy hoạch" in title
+                or "construction" in topics
+                or "planning" in topics
+            )
+
+            if is_delegation or is_domain_match:
+                eff_date = str(doc.get("effective_date", ""))
+                if eff_date and eff_date > target_date:
+                    continue
+                exp_date = str(doc.get("expiration_date", ""))
+                if exp_date and exp_date < target_date:
+                    continue
+                candidates.append(doc)
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda d: str(d.get("effective_date", "")), reverse=True)
+    return candidates[0]
+
+
 __all__ = [
     "LegalRegistryManager",
     "discover_master_registry_path",
@@ -799,6 +949,7 @@ __all__ = [
     "load_legal_registry",
     "search_legal_registry",
     "get_lifecycle",
+    "get_active_delegation_document",
     "query",
     "load_relation_synonyms",
     "resolve_project_root",

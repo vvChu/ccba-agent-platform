@@ -217,6 +217,13 @@ def package_bundle_v2(
     title = metadata.get("title", f"Legal Document {doc_id}")
     doc_type = metadata.get("type", "Law")
 
+    territory = metadata.get("territory", metadata.get("jurisdiction", "VN"))
+    jurisdiction_code = metadata.get("jurisdiction", territory)
+    hierarchy_level = metadata.get(
+        "hierarchy_level", "national" if territory == "VN" else "provincial"
+    )
+    authority_type = metadata.get("authority_type", "statutory")
+
     meta_dict = {
         "doc_id": doc_id,
         "title": title,
@@ -227,6 +234,10 @@ def package_bundle_v2(
         "issued_date": metadata.get("issued_date", ""),
         "effective_date": metadata.get("effective_date", ""),
         "status": metadata.get("status", "effective"),
+        "territory": territory,
+        "jurisdiction": jurisdiction_code,
+        "hierarchy_level": hierarchy_level,
+        "authority_type": authority_type,
         "source_url": metadata.get("source_url", ""),
         "sha256": metadata.get("sha256", ""),
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -235,6 +246,11 @@ def package_bundle_v2(
         "schema_uri": CURRENT_OKF_SCHEMA_URI,
         "extracted_at": datetime.now(timezone.utc).isoformat(),
     }
+    if "delegation_context" in metadata:
+        meta_dict["delegation_context"] = metadata["delegation_context"]
+    if "source_assets" in metadata:
+        meta_dict["source_assets"] = metadata["source_assets"]
+
     (bundle_dir / "metadata.yaml").write_text(
         yaml.safe_dump(meta_dict, allow_unicode=True, sort_keys=False), encoding="utf-8"
     )
@@ -254,3 +270,28 @@ def package_bundle_v2(
 
     write_logs_and_index_v2(bundle_dir, bundle_slug, metadata)
     return bundle_dir
+
+
+def validate_bundle_provenance(bundle_dir: Path | str) -> tuple[bool, str]:
+    """Validate that a legal bundle adheres to ADR-0059 Provenance Stamping.
+
+    Verifies that metadata.yaml exists and contains valid source_assets provenance.
+    """
+    b_path = Path(bundle_dir)
+    meta_path = b_path / "metadata.yaml"
+    if not meta_path.exists():
+        return False, "Thiếu tệp metadata.yaml trong bundle"
+    try:
+        meta = yaml.safe_load(meta_path.read_text(encoding="utf-8")) or {}
+    except Exception as e:
+        return False, f"Lỗi đọc metadata.yaml: {e}"
+
+    source_assets = meta.get("source_assets")
+    if not isinstance(source_assets, dict):
+        return False, "Thiếu thuộc tính source_assets trong metadata.yaml"
+
+    if not (source_assets.get("docx_present") or source_assets.get("pdf_present")):
+        return False, "source_assets phải có ít nhất docx_present hoặc pdf_present là True"
+
+    return True, "Provenance valid"
+

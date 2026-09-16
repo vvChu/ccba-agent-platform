@@ -11,13 +11,13 @@ class DocProfile:
     """Document processing profile defining regex patterns for anchor injection & QA generation."""
 
     name: str
-    dieu_pattern: re.Pattern = field(
+    dieu_pattern: re.Pattern[str] = field(
         default_factory=lambda: re.compile(r"^#*\s*(Điều\s+(\d+)\.?[^\n]*)", re.IGNORECASE)
     )
-    khoan_pattern: re.Pattern = field(
+    khoan_pattern: re.Pattern[str] = field(
         default_factory=lambda: re.compile(r"^(?:\*\*(\d+)\.\*\*|(\d+)\.)\s+([^\n]+)")
     )
-    sec_pattern: re.Pattern = field(
+    sec_pattern: re.Pattern[str] = field(
         default_factory=lambda: re.compile(
             r"^#*\s*(?:<a[^>]+></a>\s*)?(((?:[A-Z]\.)?\d+(?:\.\d+)*|[A-Z]\.\d+)\s+([^\n]+))"
         )

@@ -1,11 +1,13 @@
 """TDD Unit & Integration Tests for Multi-Spoke Batch Sync and Health Dashboard."""
 
+import datetime
 from pathlib import Path
 
 import pytest
 import yaml
 from scripts.ccba_platform_cli import display_spoke_health_dashboard
 from scripts.spoke.spoke_synchronizer import sync_all_spokes
+
 
 
 @pytest.fixture
@@ -83,20 +85,21 @@ def mock_hub_with_spokes(tmp_path: Path) -> tuple[Path, list[Path]]:
     # Setup decrypted registry cache on Hub
     hub_md_data = hub_dir / ".md" / "data"
     hub_md_data.mkdir(parents=True, exist_ok=True)
+    now = datetime.datetime.now()
     registry_cache = {
         "spokes": [
             {
                 "name": "mock-spoke-1",
                 "path": str(spoke1),
                 "project_type": "Phần mềm",
-                "last_sync": "2026-08-15T12:00:00.000000",
+                "last_sync": (now - datetime.timedelta(days=2)).isoformat(),
                 "spoke_id": "id-1",
             },
             {
                 "name": "mock-spoke-2",
                 "path": str(spoke2),
                 "project_type": "Thiết kế",
-                "last_sync": "2026-07-01T10:00:00.000000",
+                "last_sync": (now - datetime.timedelta(days=60)).isoformat(),
                 "spoke_id": "id-2",
             },
         ]

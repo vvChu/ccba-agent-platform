@@ -106,17 +106,19 @@ class FederatedLegalEngine:
             if (p / "metadata.yaml").exists():
                 bundles.append(p)
                 continue
-            for child in sorted(p.iterdir()):
-                if not child.is_dir():
-                    continue
-                if (child / "metadata.yaml").exists():
-                    bundles.append(child)
-                else:
-                    # Search category subdirectories (01_vbpl, 02_qcvn, etc.)
-                    for sub in sorted(child.iterdir()):
-                        if sub.is_dir() and (sub / "metadata.yaml").exists():
-                            bundles.append(sub)
-        return bundles
+            # Recursive scan for any bundle folder containing metadata.yaml
+            for meta_file in sorted(p.rglob("metadata.yaml")):
+                bundles.append(meta_file.parent)
+
+        # Remove duplicates while preserving order
+        seen: set[Path] = set()
+        unique_bundles: list[Path] = []
+        for b in bundles:
+            resolved = b.resolve()
+            if resolved not in seen:
+                seen.add(resolved)
+                unique_bundles.append(b)
+        return unique_bundles
 
     def _load_corpus(self) -> None:
         """Load corpus chunks from bundles."""
@@ -152,6 +154,13 @@ class FederatedLegalEngine:
                 doc_id = meta.get("doc_id", bundle_dir.name)
                 citation_url = meta.get("source_url", "")
                 doc_status = meta.get("status", "unknown")
+                raw_territory = meta.get("territory") or meta.get("territorial_jurisdiction")
+                if not raw_territory:
+                    raw_territory = "VN-HN" if str(doc_id).startswith("vn_hn_") else "VN"
+                territory = str(raw_territory)
+                hierarchy_level = str(
+                    meta.get("hierarchy_level", "provincial" if territory != "VN" else "national")
+                )
 
                 for clause in clauses:
                     line_start = clause.get("line_start", 1) - 1
@@ -170,6 +179,8 @@ class FederatedLegalEngine:
                             "citation_url": citation_url,
                             "status": doc_status,
                             "domain": meta.get("category", ""),
+                            "territory": territory,
+                            "hierarchy_level": hierarchy_level,
                         }
                     )
                     all_text += text
@@ -270,41 +281,116 @@ class FederatedLegalEngine:
         fused = list(rrf_scores.items())
         return sorted(fused, key=lambda x: x[1], reverse=True)
 
+    def _format_chunk_result(self, chunk: dict[str, Any], score: float) -> dict[str, Any]:
+        raw_level = str(chunk.get("hierarchy_level", "national")).upper()
+        return {
+            "clause_id": chunk.get("clause_id", ""),
+            "document_id": chunk.get("document_id", ""),
+            "article_num": chunk.get("title", ""),
+            "title": chunk.get("title", ""),
+            "text": chunk.get("text", ""),
+            "text_snippet": chunk.get("text", "")[:500],
+            "confidence_score": round(score, 4),
+            "citation_url": chunk.get("citation_url", ""),
+            "status": chunk.get("status", "unknown"),
+            "territory": chunk.get("territory", "VN"),
+            "hierarchy_level": raw_level,
+        }
+
     def query(
-        self, query_text: str, domain: str | None = None, top_k: int = 5
+        self,
+        query_text: str,
+        domain: str | None = None,
+        jurisdiction: str | None = None,
+        as_of_date: str | None = None,
+        top_k: int = 5,
+        k_local_min: int | None = None,
+        **kwargs: Any,
     ) -> list[dict[str, Any]]:
-        """Query the ground-truth engine."""
+        """Query the ground-truth engine with Dual-Pool Partitioned Retrieval and Geofencing (ADR 0050)."""
         if not self._chunks:
             return []
 
-        bm25_results = self._search_bm25(query_text, top_k * 2)
-        emb_results = self._search_embedding(query_text, top_k * 2)
+        if "k" in kwargs and kwargs["k"] is not None:
+            top_k = int(kwargs["k"])
+
+        from ccba_legal.jurisdiction import expand_jurisdiction_queries, normalize_jurisdiction
+
+        is_wildcard = jurisdiction in ("*", "ALL", "all")
+        target_territories: set[str] = set()
+        if not is_wildcard and jurisdiction:
+            if isinstance(jurisdiction, list):
+                target_territories = {normalize_jurisdiction(j) for j in jurisdiction}
+            else:
+                target_territories = {normalize_jurisdiction(jurisdiction)}
+
+        primary_jur = next(iter(target_territories)) if target_territories else None
+        expanded_queries = expand_jurisdiction_queries(
+            query_text, jurisdiction=primary_jur, as_of_date=as_of_date
+        )
+        effective_query = " ".join(expanded_queries[:2])
+
+        candidate_multiplier = max(top_k * 4, 20)
+        bm25_results = self._search_bm25(effective_query, candidate_multiplier)
+        emb_results = self._search_embedding(effective_query, candidate_multiplier)
 
         fused = self._rrf_fusion(bm25_results, emb_results)
 
-        results = []
+        if is_wildcard:
+            # Unconstrained search across all territories
+            results: list[dict[str, Any]] = []
+            for doc_id, score in fused:
+                chunk = self._chunks[doc_id]
+                if domain and chunk.get("domain") != domain:
+                    continue
+                results.append(self._format_chunk_result(chunk, score))
+                if len(results) >= top_k:
+                    break
+            return results
+
+        local_targets = {t for t in target_territories if t != "VN"}
+        if not local_targets:
+            # Strict National Isolation: Only return national documents
+            results = []
+            for doc_id, score in fused:
+                chunk = self._chunks[doc_id]
+                if domain and chunk.get("domain") != domain:
+                    continue
+                c_territory = str(chunk.get("territory", "VN"))
+                if c_territory in {"VN", "national", ""}:
+                    results.append(self._format_chunk_result(chunk, score))
+                    if len(results) >= top_k:
+                        break
+            return results
+
+        # 2. Dual-Pool Partitioned Retrieval (Local Pool vs National Pool)
+        local_pool: list[dict[str, Any]] = []
+        national_pool: list[dict[str, Any]] = []
+
         for doc_id, score in fused:
             chunk = self._chunks[doc_id]
             if domain and chunk.get("domain") != domain:
                 continue
 
-            results.append(
-                {
-                    "clause_id": chunk.get("clause_id", ""),
-                    "document_id": chunk.get("document_id", ""),
-                    "article_num": chunk.get("title", ""),
-                    "title": chunk.get("title", ""),
-                    "text_snippet": chunk.get("text", "")[:500],
-                    "confidence_score": round(score, 4),
-                    "citation_url": chunk.get("citation_url", ""),
-                    "status": chunk.get("status", "unknown"),
-                }
-            )
+            c_territory = str(chunk.get("territory", "VN"))
+            if c_territory in local_targets:
+                local_pool.append(self._format_chunk_result(chunk, score))
+            elif c_territory in {"VN", "national", ""}:
+                national_pool.append(self._format_chunk_result(chunk, score))
 
-            if len(results) >= top_k:
-                break
+        # Partition allocation: prioritize local results if available
+        local_min = k_local_min if k_local_min is not None else max(1, top_k // 2)
+        target_local_k = min(len(local_pool), local_min)
+        final_results: list[dict[str, Any]] = local_pool[:target_local_k]
+        needed_national = top_k - len(final_results)
+        final_results.extend(national_pool[:needed_national])
 
-        return results
+        # If still short of top_k, fill with remaining local results
+        if len(final_results) < top_k and len(local_pool) > target_local_k:
+            remaining_slots = top_k - len(final_results)
+            final_results.extend(local_pool[target_local_k : target_local_k + remaining_slots])
+
+        return final_results
 
 
 _cached_engine: FederatedLegalEngine | None = None
@@ -313,6 +399,8 @@ _cached_engine: FederatedLegalEngine | None = None
 def query_ground_truth(
     query: str,
     domain: str | None = None,
+    jurisdiction: str | None = None,
+    as_of_date: str | None = None,
     top_k: int = 5,
 ) -> list[dict[str, Any]]:
     """High-level API for federated legal ground-truth search.
@@ -323,6 +411,8 @@ def query_ground_truth(
     Args:
         query: Query text.
         domain: Optional domain filter.
+        jurisdiction: Optional territory code for Geofencing.
+        as_of_date: Optional historical evaluation date.
         top_k: Max number of results.
 
     Returns:
@@ -331,7 +421,9 @@ def query_ground_truth(
     global _cached_engine  # noqa: PLW0603
     if _cached_engine is None:
         _cached_engine = FederatedLegalEngine(embedding_enabled=False)
-    return _cached_engine.query(query, domain=domain, top_k=top_k)
+    return _cached_engine.query(
+        query, domain=domain, jurisdiction=jurisdiction, as_of_date=as_of_date, top_k=top_k
+    )
 
 
 __all__ = ["FederatedLegalEngine", "query_ground_truth"]
