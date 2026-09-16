@@ -1,65 +1,97 @@
-# Walkthrough: Phát hành Tính năng Issue #276 qua PR #279 (/ccba-release-feature)
+# Walkthrough: Hoàn Tất Chính Thức Hóa ADR-0059 & Nạp Bundle Địa Phương Vào Spoke `ccba-legal-knowledge`
 
-## 1. Tổng quan Phát hành (Release Summary)
+## 1. Tổng Quan Nhiệm Vụ Hoàn Thành
 
-Toàn bộ quy trình phát hành `/ccba-release-feature` cho **Issue #276** và chuẩn mực **ADR-0059** đã hoàn tất:
-- **Pull Request:** [PR #279 (Merged)](https://github.com/vvChu/ccba-agent-platform/pull/279)
-- **Issue liên kết:** [Issue #276 (Closed)](https://github.com/vvChu/ccba-agent-platform/issues/276)
-- **Phương thức hợp nhất:** `Squash and merge` vào nhánh `main` (commit SHA: `eb15428e`)
-- **Nhánh feature:** `feat/issue-276-local-jurisdictions-and-temporal-graph` (đã xóa remote & local)
-
----
-
-## 2. Kết quả Pre-release Gate & Kiểm định Độc lập
-
-Trước khi phát hành, toàn bộ 11 monorepo packages, root tests và scripts đã vượt qua kiểm định độc lập với chế độ stress (`python scripts/eval/run_isolated_tests.py --all --stress`):
-
-| Monorepo Package / Test Target | Trạng Thái | Thời Gian | Ghi Chú |
-| :--- | :---: | :---: | :--- |
-| `ccba-ai` | ✅ PASS | 37.17s | SDK & AI Gateway |
-| `ccba-harness` | ✅ PASS | 24.67s | Test harness & verify-patch |
-| `ccba-legal-intel` | ✅ PASS | 71.50s | Jurisdiction, RAG, DAG & OKF v2.4 |
-| `ccba-maskara` | ✅ PASS | 1.67s | Secret redact & security |
-| `ccba-notebooklm` | ✅ PASS | 2.08s | NotebookLM integration |
-| `ccba-ooxml` | ✅ PASS | 8.68s | Word/DOCX converter |
-| `ccba-pdf-prep` | ✅ PASS | 35.72s | PDF tiling & preprocessing |
-| `ccba-qc-core` | ✅ PASS | 5.05s | Quad-View QC pipeline |
-| `mdconverter` | ✅ PASS | 11.80s | Markdown conversion |
-| `scripts` | ✅ PASS | 48.89s | Governance & sync scripts |
-| `root-tests` | ✅ PASS | 78.16s | 367 unit/integration tests passed |
-
-> [!NOTE]
-> - `tests/test_spoke_batch_sync.py`: Đã chuẩn hóa ngày động (`now - timedelta(days=2)` / `days=60`) để chống test flakiness theo thời gian.
-> - `.md/knowledge/session_learnings.md`: Đã nén đạt ngân sách 9.78 KB ($\le 10.0\text{ KB}$), bảo toàn đầy đủ 14 invariants bắt buộc và con trỏ tới kho lưu trữ lịch sử `archive/session_learnings_history.md`.
+Đã thực hiện trọn vẹn 2 nhiệm vụ tiếp theo theo phê duyệt của người dùng:
+1. **Chính thức hóa HUB-ADR-0059 trên Hub (`ccba-agent-platform`):**
+   - Soạn thảo tài liệu kiến trúc chính thức [`docs/adr/0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md).
+   - Tái biên dịch mục lục [`docs/adr/README.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/README.md) và quét radar cập nhật ma trận truy vết [`docs/adr/TRACEABILITY_MATRIX.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/TRACEABILITY_MATRIX.md) (53 ADRs, đạt 100% parity `[PASS]`).
+2. **Đồng bộ Hub sang Spoke & Nạp Bundle Thực Tế vào `ccba-legal-knowledge`:**
+   - Đồng bộ Hiến pháp Layer 1, rules, và ADR matrix sang Spoke [`ccba-legal-knowledge`](file:///D:/GitHubProjects/ccba-legal-knowledge).
+   - Nạp bundle thực tế **Quyết định 38/2026/QĐ-UBND của UBND TP. Hà Nội** (về phân cấp quản lý quy hoạch đô thị, nông thôn và kiến trúc) vào `legal_docs/01_vbpl/vn_hn_qd_38_2026_qd_ubnd/`.
+   - Vượt qua kiểm định **15 Gates** của Spoke với kết quả tuyệt đối: **0 Errors | 0 Warnings**.
 
 ---
 
-## 3. Đối soát Review & Copilot Audit
+## 2. Chi Tiết Thực Hiện Trên Hub (`ccba-agent-platform`)
 
-- **Copilot PR Review:** `python scripts/validation/audit_pr_comments.py` xác nhận:
+### A. Quyết định kiến trúc HUB-ADR-0059
+- **Tiêu đề:** *Legal Verbatim Grounding, Zero-Hallucination Invariant, and Cryptographic Provenance Stamping*
+- **Trạng thái:** `ACCEPTED & ADOPTED` (2026-09-16)
+- **Nội dung cốt lõi:**
+  1. **Zero-Hallucination Invariant:** Cấm tuyệt đối sáng tác câu chữ, điều khoản giả định cho VBPL. Mọi nội dung trích dẫn phải nguyên văn 100% từ văn bản chính thức.
+  2. **Mandatory Acquisition First Policy:** Bắt buộc thu thập tệp gốc (PDF/DOCX) qua `TVPLCrawler` hoặc yêu cầu người dùng cung cấp tài liệu nguồn chính thức trước khi tạo bundle.
+  3. **Cryptographic Provenance Stamping:** Đóng dấu mã băm SHA-256 (`pdf_sha256`) và tự động kiểm định nguồn gốc xuất xứ qua `validate_bundle_provenance()`.
+  4. **Temporal Local Jurisdictions:** Phân định lãnh thổ theo chuẩn ISO 3166-2:VN (`VN-HN`, `VN-HCM`...), mô hình hóa đồ thị kế thừa cơ quan pháp lý theo trục thời gian và kích hoạt RAG Geofencing.
+
+### B. Kiểm chuẩn Parity Gate
+```powershell
+python scripts/sync_hub_adr_matrix.py --check
+```
+- **Kết quả:**
   ```
-  [OK] All Copilot reviews and comments on PR #279 are clean or resolved.
+  [sync_hub_adr_matrix] Running in HUB mode (53 ADRs found)
+  [PASS] D:\GitHubProjects\ccba-agent-platform\docs\adr\README.md is in sync.
+  [PASS] D:\GitHubProjects\ccba-agent-platform\docs\adr\TRACEABILITY_MATRIX.md is in sync.
   ```
-- Không có bất kỳ unresolved blocker hoặc review comment nào còn tồn đọng.
 
 ---
 
-## 4. Các Thành phẩm Cốt lõi Đã Tích hợp vào `main`
+## 3. Chi Tiết Thực Hiện Trên Spoke (`ccba-legal-knowledge`)
 
-1. **Temporal Administrative Graph & Dynamic DAG:**
-   - [`administrative_ontology.yaml`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/src/ccba_legal/resources/administrative_ontology.yaml): Phân cấp hành chính ISO 3166-2:VN, sáp nhập tỉnh (Hà Tây $\rightarrow$ Hà Nội 2008), bãi bỏ cấp huyện từ 01/07/2025.
-2. **Dual-Pass Geo-Entity Resolution & Geofenced RAG:**
-   - [`jurisdiction.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/src/ccba_legal/jurisdiction.py) & [`federated_rag.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/src/ccba_legal/federated_rag.py): Forward Resolution, Backward Expansion, và Geofence Filter chống ô nhiễm tri thức chéo.
-3. **Hiến pháp & Rào chắn Chống Bịa đặt Dữ liệu Pháp lý (ADR-0059):**
-   - [`legal_verbatim_grounding_guardrail.md`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/rules/legal_verbatim_grounding_guardrail.md): Zero-Hallucination Invariant, Mandatory Acquisition First (`TVPLCrawler`), Cryptographic SHA-256 Provenance Stamping.
-   - Bổ sung vào Layer 1 Constitution [`AGENTS.md`](file:///d:/GitHubProjects/ccba-agent-platform/AGENTS.md) và Global Memory.
-4. **Mock Bundle Nguyên văn từ Văn bản Gốc (QĐ 38/2026/QĐ-UBND):**
-   - [`vn_hn_qd_38_2026_qd_ubnd.md`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-legal-intel/tests/fixtures/mock_local_bundles/vn_hn_qd_38_2026_qd_ubnd/vn_hn_qd_38_2026_qd_ubnd.md): Trích xuất 100% nguyên văn từ bản scan có dấu đỏ `702686.pdf` (SHA-256: `d826eaf192b238acd1b465854babc8a884d8e12e2d330ecc4c262ed64eb8767b`).
+### A. Đồng bộ cấu trúc & Two-Tier ADR Matrix
+- Đồng bộ các quy tắc mới nhất:
+  - `.agents/rules/legal_verbatim_grounding_guardrail.md`
+  - `.agents/rules/administrative_succession_guardrail.md`
+  - `AGENTS.md` (Hiến pháp Layer 1)
+- Tái đồng bộ ma trận truy vết Two-Tier tại Spoke (53 Hub ADRs + 42 Spoke Domain ADRs).
+
+### B. Đăng ký & Nạp Bundle QĐ 38/2026/QĐ-UBND Hà Nội
+- **Đăng ký SSoT:** Cập nhật [`legal_registry.yaml`](file:///D:/GitHubProjects/ccba-legal-knowledge/legal_registry.yaml) với mục `vn_hn_qd_38_2026_qd_ubnd`, nâng tổng số VBPL lên **25** (tổng tài liệu: **53**).
+- **Thư mục bundle:** [`legal_docs/01_vbpl/vn_hn_qd_38_2026_qd_ubnd/`](file:///D:/GitHubProjects/ccba-legal-knowledge/legal_docs/01_vbpl/vn_hn_qd_38_2026_qd_ubnd)
+  - `sources/702686.pdf`: Tệp scan gốc 14 trang có dấu đỏ (4.67 MB, SHA-256: `d826eaf192b238acd1b465854babc8a884d8e12e2d330ecc4c262ed64eb8767b`).
+  - `metadata.yaml`: Cấu hình chuẩn OKF v2.4 Universal, khai báo đầy đủ `source_assets`, `jurisdiction: VN-HN`, `administrative_tier: PROVINCIAL`.
+  - `clauses.json`: Cấu trúc AST phân đoạn 20 Điều theo chuẩn máy đọc.
+  - `vn_hn_qd_38_2026_qd_ubnd.md`: Toàn văn 100% nguyên văn, đã chuẩn hóa theo chuẩn **Pure Normative Body** (loại bỏ nhiễu tiêu ngữ hành chính và chữ ký nơi nhận, giữ nguyên văn toàn bộ 4 Chương, 20 Điều).
+
+### C. Kiểm định 15 Gates Chất Lượng Pháp Điển
+Chạy kiểm định toàn diện trên Spoke:
+```powershell
+python D:\GitHubProjects\ccba-legal-knowledge\scripts\validate_legal_spoke.py
+```
+- **Kết quả:**
+  ```
+  -> Gate 1: Registry Check completed.
+  -> Gate 2: OKF Bundles Structure Check completed.
+  -> Gate 3: Table Attachments Check completed.
+  -> Gate 4: Fake Data Gate Check completed.
+  -> Gate 5: PDF Metadata & AST Jurisdiction Gate Check completed.
+  -> Gate 6: Pure Normative Body & Scoped Noise Gate Check completed.
+  -> Gate 7: Spoke Cleanliness & Zero-Wrapper Gate completed.
+  -> Gate 8: Template & Table Structural Integrity Gate completed.
+  -> Gate 9: Visual Parity & Formatting Clutter Gate completed.
+  -> Gate 10: ADR Living Traceability & Self-Healing Sync completed.
+  -> Gate 11: DOCX-to-Markdown Verbatim Normative Parity Gate completed.
+  -> Gate 12: Multimodal Decoupled Asset & SVG/Cards Integrity Gate (ADR 0040) completed.
+  -> Gate 13: Table Knowledge Extraction & 2D Matrix Regularity Gate (ADR 0041) completed.
+  -> Gate 14: KaTeX Math Syntax & Rendering Integrity Gate (ADR 0038) completed.
+  -> Gate 15: OKF Provenance & Algorithm Version Attestation Gate completed.
+
+  -----------------------------------------------------------------
+  SUMMARY REPORT: Errors: 0 | Warnings: 0
+  -----------------------------------------------------------------
+
+  ✅ PASSED: All legal knowledge gates validated successfully!
+  ```
 
 ---
 
-## 5. Dọn dẹp Môi trường & Hoàn tất Quy trình
+## 4. Trạng Thái Git Kho Chứa
 
-- Nhánh cục bộ `main` đã được đồng bộ với `origin/main` mới nhất.
-- Nhánh `feat/issue-276-local-jurisdictions-and-temporal-graph` đã xóa sạch.
-- Đã tái biên dịch SSoT Catalog qua `compile_catalog.py` (72 skills sẵn sàng).
+- **Hub (`ccba-agent-platform`):**
+  - Commit `50b59f7b`: `docs(adr): formalize HUB-ADR-0059 and update traceability matrix`
+  - Commit `bf2a6a69`: `chore(sync): update spoke registry heartbeat for ccba-legal-knowledge`
+  - Nhánh `main` đồng bộ với `origin/main`, working tree sạch 100%.
+- **Spoke (`ccba-legal-knowledge`):**
+  - Commit `17cdddc`: `feat(legal): ingest QĐ 38/2026/QĐ-UBND Hà Nội bundle and sync Hub ADR-0059`
+  - Đã vượt qua pre-commit hook 15 Gates, working tree sạch 100%.
