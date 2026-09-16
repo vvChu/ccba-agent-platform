@@ -13,6 +13,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -252,6 +253,140 @@ def parse_ndjson_response(raw_output: str) -> tuple[str, AgyUsage]:
 
 
 # ---------------------------------------------------------------------------
+# Dynamic Model Discovery & Heuristic Succession Resolution
+# ---------------------------------------------------------------------------
+
+
+def is_unrecognized_model_error(stderr: str) -> bool:
+    """Check if agy error output indicates an invalid or unsupported model selection."""
+    lower = stderr.lower()
+    return (
+        "is not recognized as a known model" in lower
+        or "invalid model selection" in lower
+        or "unknown model" in lower
+    )
+
+
+def canonicalize_model_name(name: str) -> str:
+    """Normalize human-readable model name to canonical CLI model slug.
+
+    Examples:
+        'Gemini 3.8 Flash (High)' -> 'gemini-3.8-flash-high'
+        'Gemini 3.7 Flash (Medium)' -> 'gemini-3.7-flash-medium'
+        'gemini-3.7-flash-medium' -> 'gemini-3.7-flash-medium'
+    """
+    raw = name.strip()
+    if not raw:
+        return ""
+    # Strip parens
+    cleaned = raw.replace("(", "").replace(")", "").strip()
+    # Replace spaces and underscores with dashes
+    slug = re.sub(r"[\s_]+", "-", cleaned).lower()
+    return slug
+
+
+def extract_available_models_from_stderr(stderr: str) -> list[str]:
+    """Extract and normalize model names from agy stderr output.
+
+    When agy fails with 'model ... is not recognized', it prints:
+        Available models:
+          Gemini 3.8 Flash (High)
+          Gemini 3.8 Flash (Medium)
+          ...
+    """
+    lines = stderr.splitlines()
+    found_marker = False
+    models: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if "Available models:" in line:
+            found_marker = True
+            continue
+        if found_marker:
+            # Model names are indented lines after the marker
+            if line.startswith("  ") or line.startswith("\t"):
+                canonical = canonicalize_model_name(stripped)
+                if canonical and canonical not in models:
+                    models.append(canonical)
+            else:
+                break
+    return models
+
+
+def resolve_latest_compatible_model(
+    requested_model: str, available_models: list[str]
+) -> str:
+    """Resolve the best compatible successor model if requested_model is not available.
+
+    Preserves:
+    1. Provider / Family (e.g. gemini)
+    2. Tier (e.g. flash vs pro)
+    3. Effort / Variant (e.g. medium vs high vs low)
+    And selects the highest version available.
+    """
+    if not available_models:
+        return requested_model
+    if requested_model in available_models:
+        return requested_model
+
+    req_slug = canonicalize_model_name(requested_model)
+    if req_slug in available_models:
+        return req_slug
+
+    # Parse requested model: e.g. gemini-3.7-flash-medium
+    # match (family)-(version)-(variant)
+    match = re.match(r"^([a-zA-Z]+)-([\d\.]+)-(.*)$", req_slug)
+    if not match:
+        return available_models[0]
+
+    family, version_str, variant = match.groups()
+
+    def parse_version(model_name: str) -> tuple[int, ...]:
+        v_match = re.search(r"-(\d+(?:\.\d+)*)-", model_name)
+        if v_match:
+            try:
+                return tuple(int(p) for p in v_match.group(1).split("."))
+            except ValueError:
+                return (0,)
+        return (0,)
+
+    # 1. Exact variant match (same family & same variant, e.g. flash-medium)
+    exact_variant_candidates = [
+        m
+        for m in available_models
+        if m.startswith(f"{family}-") and m.endswith(f"-{variant}")
+    ]
+    if exact_variant_candidates:
+        exact_variant_candidates.sort(key=parse_version, reverse=True)
+        return exact_variant_candidates[0]
+
+    # 2. Same tier match (e.g. flash)
+    tier = variant.split("-")[0] if "-" in variant else variant
+    same_tier_candidates = [
+        m for m in available_models if m.startswith(f"{family}-") and f"-{tier}-" in m
+    ]
+    if same_tier_candidates:
+        # Prefer medium effort if original was medium, else highest version
+        same_tier_candidates.sort(
+            key=lambda m: (parse_version(m), "medium" in m),
+            reverse=True,
+        )
+        return same_tier_candidates[0]
+
+    # 3. Same family match
+    same_family_candidates = [
+        m for m in available_models if m.startswith(f"{family}-")
+    ]
+    if same_family_candidates:
+        same_family_candidates.sort(key=parse_version, reverse=True)
+        return same_family_candidates[0]
+
+    return available_models[0]
+
+
+# ---------------------------------------------------------------------------
 # Main Provider
 # ---------------------------------------------------------------------------
 
@@ -339,6 +474,34 @@ class AntigravityCLIProvider:
             raise
 
         if result.returncode != 0:
+            resolved_model = self._resolve_fallback_model_on_error(
+                effective_model, result.stderr
+            )
+            if resolved_model:
+                logger.warning(
+                    f"[ccba-ai] Model '{effective_model}' not recognized by agy. "
+                    f"Auto-redirecting to '{resolved_model}' (retry 1/1)..."
+                )
+                retry_cmd = self._build_command(prompt, resolved_model)
+                try:
+                    retry_res = subprocess.run(
+                        retry_cmd,
+                        capture_output=True,
+                        text=True,
+                        timeout=effective_timeout,
+                        encoding="utf-8",
+                    )
+                    if retry_res.returncode == 0:
+                        return parse_ndjson_response(retry_res.stdout)
+                    logger.warning(
+                        f"[ccba-ai] Retry with '{resolved_model}' failed (exit {retry_res.returncode}): "
+                        f"{retry_res.stderr[:200]}"
+                    )
+                except Exception as retry_exc:
+                    logger.warning(
+                        f"[ccba-ai] Retry with '{resolved_model}' failed: {retry_exc}"
+                    )
+
             logger.warning(
                 f"[ccba-ai] Antigravity CLI exited with code {result.returncode}: "
                 f"{result.stderr[:500]}"
@@ -403,9 +566,87 @@ class AntigravityCLIProvider:
         stderr = stderr_bytes.decode("utf-8", errors="replace")
 
         if proc.returncode != 0:
+            resolved_model = self._resolve_fallback_model_on_error(
+                effective_model, stderr
+            )
+            if resolved_model:
+                logger.warning(
+                    f"[ccba-ai] Model '{effective_model}' not recognized by agy. "
+                    f"Auto-redirecting to '{resolved_model}' (async retry 1/1)..."
+                )
+                retry_cmd = self._build_command(prompt, resolved_model)
+                try:
+                    retry_proc = await asyncio.create_subprocess_exec(
+                        *retry_cmd,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                        **kwargs,
+                    )
+                    retry_stdout_bytes, retry_stderr_bytes = await asyncio.wait_for(
+                        retry_proc.communicate(), timeout=effective_timeout
+                    )
+                    if retry_proc.returncode == 0:
+                        retry_stdout = retry_stdout_bytes.decode(
+                            "utf-8", errors="replace"
+                        )
+                        return parse_ndjson_response(retry_stdout)
+                    retry_stderr = retry_stderr_bytes.decode(
+                        "utf-8", errors="replace"
+                    )
+                    logger.warning(
+                        f"[ccba-ai] Async retry with '{resolved_model}' failed (exit {retry_proc.returncode}): "
+                        f"{retry_stderr[:200]}"
+                    )
+                except Exception as retry_exc:
+                    logger.warning(
+                        f"[ccba-ai] Async retry with '{resolved_model}' failed: {retry_exc}"
+                    )
+
             raise RuntimeError(f"Antigravity CLI failed (exit {proc.returncode}): {stderr[:200]}")
 
         return parse_ndjson_response(stdout)
+
+    def _resolve_fallback_model_on_error(
+        self, requested_model: str, stderr: str
+    ) -> str | None:
+        """Attempt to extract available models from error and resolve successor."""
+        if not is_unrecognized_model_error(stderr):
+            return None
+
+        available = extract_available_models_from_stderr(stderr)
+        if not available:
+            available = self.list_available_models()
+
+        resolved = resolve_latest_compatible_model(requested_model, available)
+        if resolved and resolved != requested_model:
+            return resolved
+        return None
+
+    def list_available_models(self, timeout: float = 10.0) -> list[str]:
+        """Query available models from ``agy models`` CLI command."""
+        try:
+            res = subprocess.run(
+                [self._binary_path, "models"],
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                encoding="utf-8",
+            )
+            if res.returncode == 0:
+                models: list[str] = []
+                for line in res.stdout.splitlines():
+                    line = line.strip()
+                    if not line or line.startswith("Fetching"):
+                        continue
+                    parts = line.split()
+                    if parts:
+                        slug = canonicalize_model_name(parts[0])
+                        if slug and slug not in models:
+                            models.append(slug)
+                return models
+        except Exception as e:
+            logger.debug(f"[ccba-ai] Failed to query agy models: {e}")
+        return []
 
     def _build_command(self, prompt: str, model: str) -> list[str]:
         """Build agy CLI command with optimal flags for automation.

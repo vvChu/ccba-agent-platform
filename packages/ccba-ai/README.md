@@ -25,12 +25,12 @@ python scripts/spoke/spoke_bootstrap.py
 `ccba-ai` được trang bị sẵn cơ chế chuyển vùng dự phòng tự động (Automated Failover Cascade) khi gặp lỗi kết nối hoặc Circuit Breaker mở:
 
 ```
-Tier 1 (Server Spark :8090) ──► Tier 2 (Cloud Direct API) ──► Tier 3 (Antigravity CLI) ──► Tier 4 (Local Ollama :11434) ──► Tier 5 (Deterministic Mock)
+Tier 1 (Server Spark :8090) ──► Tier 2 (Cloud Direct API) ──► Tier 3 (Dual-CLI: Copilot & Antigravity) ──► Tier 4 (Local Ollama :11434) ──► Tier 5 (Deterministic Mock)
 ```
 
 1. **Tier 1 (Default):** LiteLLM Server Spark (`http://100.83.192.30:8090/v1`).
 2. **Tier 2 (Cloud Direct Fallback):** Tự động phát hiện các biến môi trường `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENAI_API_KEY` để gọi trực tiếp tới Cloud Provider khi Server Spark bảo trì.
-3. **Tier 3 (Antigravity CLI Bridge):** Zero-config fallback qua `agy -p` subprocess — tự phát hiện binary trên PATH, hỗ trợ multi-model (Gemini, Claude, GPT). **WARNING: ~30-40s latency/call** [đo thực tế]. Chỉ dùng cho interactive fallback, không dùng cho batch pipeline.
+3. **Tier 3 (Dual-CLI Provider Matrix & Persistent Daemon Bridge):** Zero-config fallback qua GitHub Copilot CLI (`copilot.exe` — GPT-5.4 / GPT-5.4-mini / Claude) và Antigravity CLI (`agy.exe` — Gemini 3.7 Flash). Tự động điều phối theo Model-Family Affinity, hỗ trợ Cross-CLI Failover, và tích hợp Persistent Stdio Daemon Bridge giúp giảm độ trễ từ ~41s xuống ~2.6s/call [đo thực tế].
 4. **Tier 4 (Local Offline LLM):** Tự động kết nối tới Ollama cục bộ (`http://127.0.0.1:11434/v1`) với model nhẹ (`qwen2.5-coder:7b`, `phi-4-mini`) khi làm việc ngoại tuyến (Air-gapped).
 5. **Tier 5 (Deterministic Mock Provider):** Giả lập in-memory hoàn toàn không qua mạng, phục vụ Unit Test và No-Network CI khi đặt `CCBA_AI_MOCK=1`.
 
