@@ -24,16 +24,15 @@
 - **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]**:
   - Dynamic import: `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton; Embedding `.npy` kèm `.sha256`.
 - **RULE-1.7 [ADR 0046 — Sanitized Fleet Telemetry]**:
-  - Telemetry: Chỉ trích xuất số liệu phi định danh (`tokens`, `cost`, `tool_counts`). Cấm thu thập prompt text/dữ liệu khách hàng.
+  - Chỉ trích xuất số liệu phi định danh (`tokens`, `cost`). Cấm log prompt/dữ liệu khách hàng.
 - **RULE-1.8 [ADR 0058 — Discrete Diagnostic Commands]**:
-  - `SelfHealingEngine`: mảng lệnh độc lập (`["cmd1", "cmd2"]`), CẤM ghép `&&` để tự phục hồi (< 500ms).
-- **RULE-1.9 [Multi-Tier Corpus Discovery & Layout Normalization]**:
-  - Quét corpus: suy luận `project_root` và quét `reg_parent/{, .md/}legal_docs`, `project_root/{, .md/}legal_docs`.
-- **RULE-1.10 [ADR 0057 — Standalone Skill Promotion Triad]**:
-  - Thăng hạng Tier 2A $\rightarrow$ Tier 2B: (1) Xóa triggers trùng; (2) Trỏ alias ngắn về skill mới; (3) Phân định ranh giới Hub vs Spoke.
-- **RULE-1.11 [Diagramming & Visuals Hygiene — diagramming_hygiene.md]**:
-  - Excalidraw: `# Excalidraw Data` $\rightarrow$ `## Text Elements` $\rightarrow$ `%% ## Drawing ... %%`.
-  - Mermaid: Subgraph dùng `style <sg_id>`, cấm `classDef`. Nhãn `["..."]`, ngắt `<br/>`. D2/Kroki: SVG qua CLI/Kroki API.
+  - `SelfHealingEngine`: mảng lệnh độc lập (`["c1", "c2"]`), CẤM ghép `&&` để tự phục hồi (< 500ms).
+- **RULE-1.9 [Corpus Discovery]**:
+  - Quét `project_root` qua `reg_parent/{, .md/}legal_docs`, `project_root/{, .md/}legal_docs`.
+- **RULE-1.10 [ADR 0057 — Skill Promotion Triad]**:
+  - Tier 2A $\rightarrow$ Tier 2B: (1) Xóa triggers trùng; (2) Trỏ alias ngắn; (3) Tách Hub vs Spoke.
+- **RULE-1.11 [Diagramming Hygiene]**:
+  - Mermaid: Subgraph dùng `style <id>`, cấm `classDef`. Nhãn `["..."]`, ngắt `<br/>`. D2/Kroki: SVG.
 
 ---
 
@@ -48,15 +47,15 @@
 - **RULE-2.4 [Relative Link Resolution Depth]**:
   - `SKILL.md` trỏ package dùng 3 cấp `../../../packages/<pkg>`; `references/` trỏ root dùng 4 cấp `../../../../`. CẤM commit URI `file:///` hoặc `conversation://`.
 - **RULE-2.5 [Windows Subprocess UTF-8 Encoding Standard]**:
-  - `subprocess.run(..., text=True)` trên Windows: BẮT BUỘC `encoding="utf-8", errors="replace"` chống `UnicodeDecodeError`.
-- **RULE-2.7 [Safe-Remove, Read-Only & Symlink Cleanup Invariant]**:
-  - `safe_remove`: Symlink ném `NotADirectoryError` nếu dùng `rmtree()`. Kiểm tra `is_symlink() or is_file()`, gỡ read-only bằng `chmod(0o666)` rồi mới gọi `rmtree()`.
-- **RULE-2.8 [Offline XML/XSD Validation & Schema Cache]**:
-  - XML/OOXML (`lxml`): CẤM tải schema qua HTTP; nhúng offline, dùng `Resolver`, `XMLParser(no_network=True, resolve_entities=False)`. Cache `XMLSchema`.
-- **RULE-2.9 [Flaky Test Root-Cause Transparency & No-False-Pass Lock]**:
-  - Test FAIL rồi PASS khi retry chưa sửa mã: CẤM kết luận đã sửa xong. Bắt buộc tìm cội nguồn và giải trình minh bạch.
-- **RULE-2.10 [Git Simplify Gate Bypass Protocol]**:
-  - `simplify_gate` chặn diff $> 400$ LOC, $> 8$ files. Commit sinh tự động (Web Portal, `docs/`), chèn `# APPROVED: <lý_do>` để vượt cổng.
+  - `subprocess.run(..., text=True)` trên Windows: BẮT BUỘC `encoding="utf-8", errors="replace"`.
+- **RULE-2.7 [Safe-Remove & Read-Only Cleanup]**:
+  - `safe_remove`: Symlink ném `NotADirectoryError` nếu dùng `rmtree()`. Kiểm tra `is_symlink() or is_file()`, `chmod(0o666)` trước khi xóa.
+- **RULE-2.8 [Offline XML/OOXML Validation]**:
+  - `lxml`: CẤM tải schema qua HTTP; nhúng offline, dùng `XMLParser(no_network=True, resolve_entities=False)`.
+- **RULE-2.9 [Flaky Test Root-Cause Transparency]**:
+  - Test FAIL rồi PASS khi retry chưa sửa mã: CẤM kết luận đã sửa xong. Phải tìm cội nguồn minh bạch.
+- **RULE-2.10 [Git Simplify Gate Bypass]**:
+  - `simplify_gate` chặn diff $> 400$ LOC, $> 8$ files. Commit tự động thêm `# APPROVED: <lý_do>`.
 
 ---
 
@@ -69,6 +68,9 @@
   - Tier 1 (`part=-100`): VIP Digital Vector PDF (Mỏ neo Pháp lý). Tier 2 (`part=-1&docx=1`): VIP OpenXML Word Document (`docx_converter.py`). Tier 3 (`part=0`): Gazette Scan PDF.
 - **RULE-3.3 [Làm Sạch Bảng Biểu & Chú Thích Pháp Lý]**:
   - Footnote: Khử lặp số: `re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()`. Bảng Markdown nhận diện qua tiêu đề và `| :--- |`.
+- **RULE-3.4 [ADR 0059 — Cưỡng Chế Nguyên Văn & Chống Bịa Đặt Dữ Liệu Pháp Lý]**:
+  - CẤM TUYỆT ĐỐI tự suy diễn/bịa đặt câu chữ, điều khoản VBPL trong code/mock fixtures. Mọi trích dẫn phải nguyên văn 100% từ văn bản chính thức.
+  - Mandatory Acquisition First: Thiếu tệp gốc bắt buộc dùng `TVPLCrawler` tải bản PDF/DOCX từ TVPL/Cổng TTĐT, hoặc dừng lại xin file gốc; cấm tự bịa mock. Đóng dấu mật mã SHA-256 (`pdf_sha256`) và kiểm định bằng `validate_bundle_provenance()`.
 
 ---
 
@@ -85,13 +87,13 @@
 - **RULE-4.5 [AI Gateway Spark Auth & Fast-Inference Gating]**:
   - LiteLLM Spark (100.83.192.30:8090): Bearer `sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` (< 1s), route `qwen-local-primary` sau GPU warmup.
 - **RULE-4.6 [Tier 3 Orchestrator & Deterministic Verification Gating — ADR-0057 / ADR-0058]**:
-  - Router/Orchestrator: SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`), tuân thủ Single-Writer Protocol. Spoke sync (`sync_spoke.py --verify`) kích hoạt `ccba-harness verify-patch`.
+  - Router/Orchestrator: SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`), Single-Writer Protocol. Spoke sync (`sync_spoke.py --verify`) kích hoạt `ccba-harness verify-patch`.
 - **RULE-4.7 [ArtifactMetadata Workspace Invariant]**:
-  - `ArtifactMetadata` CHỈ dùng cho brain (`<appDataDir>\brain\<id>/`). Bỏ qua khi ghi workspace chống schema rejection.
+  - `ArtifactMetadata` CHỈ dùng cho brain (`<appDataDir>\brain\<id>/`). Bỏ qua khi ghi workspace.
 - **RULE-4.8 [Zero-Polling & Reactive Wakeup Hard Invariant]**:
-  - CẤM polling loop `manage_task(status)` khi lệnh chạy nền. Dừng tool để runtime tự đánh thức qua Reactive Wakeup hoặc làm việc song song. Ưu tiên scoped test (<10s).
-- **RULE-4.9 [RSA-OAEP Plaintext Length & Decoupled Telemetry Heartbeat — ADR-0046]**:
-  - RSA-2048 OAEP (SHA-256) giới hạn plaintext $\le 190$ bytes ($256 - 2 \times 32 - 2$). CẤM mã hóa timestamp/đường dẫn dài. BẮT BUỘC tách metadata tĩnh (`static_hash`) khỏi telemetry động (`.md/telemetry/spoke_heartbeats.yaml` gitignored).
+  - CẤM polling loop `manage_task(status)`. Dừng tool để runtime tự đánh thức qua Reactive Wakeup.
+- **RULE-4.9 [RSA-OAEP Length & Decoupled Telemetry Heartbeat — ADR-0046]**:
+  - RSA-2048 OAEP giới hạn plaintext $\le 190$ bytes. Tách metadata tĩnh (`static_hash`) khỏi telemetry động (`.md/telemetry/spoke_heartbeats.yaml` gitignored).
 - **RULE-4.10 [ADR-0045 Spoke Leakage Guard & Report Mirroring Location]**:
   - Gốc `.md/` CHỈ chứa `workspace_context.yaml`. Báo cáo nghiệm thu BẮT BUỘC đặt tại `.md/knowledge/reports/walkthrough.md` (CẤM lưu tại `.md/walkthrough.md`). `audit_pr_comments.py` tự động đối soát đường dẫn này.
 
@@ -106,4 +108,4 @@
 - **RULE-5.3 [Query Sanitization & Turnstile Bypass]**:
   - Query TVPL có dấu `/`, `:`, `-` phải thay bằng dấu cách (`quote_plus`) chống lỗi IIS mã hóa `%2F`.
 - **RULE-5.4 [Upstream Git Engine Windows Safety]**:
-  - Git Windows (`upstream_evaluator.py`): Mutex `.md/scratch/upstream_sync.lock`; Tự chữa stale `index.lock`; `safe_rmtree` với `os.chmod(p, stat.S_IWRITE)`; Khử Zero-Scan: repo mới phải initial audit.
+  - Git Windows (`upstream_evaluator.py`): Mutex `.md/scratch/upstream_sync.lock`; Tự chữa stale `index.lock`; `safe_rmtree` với `chmod(0o666)`; Khử Zero-Scan: repo mới phải initial audit.

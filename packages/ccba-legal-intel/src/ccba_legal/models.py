@@ -58,6 +58,10 @@ class LegalLifecycleInfo:
     superseded_by: str | None = None
     amended_by: list[str] = field(default_factory=list)
     guiding_docs: list[str] = field(default_factory=list)
+    territory: str = "VN"
+    hierarchy_level: str = "national"
+    temporal_context: dict[str, Any] | None = None
+    successor_entity: str | None = None
     warning: str | None = None
     suggested_replacement: dict[str, Any] | None = None
 
@@ -69,6 +73,8 @@ class LegalLifecycleInfo:
             "title": self.title,
             "short_name": self.short_name,
             "status": self.status.value,
+            "territory": self.territory,
+            "hierarchy_level": self.hierarchy_level,
         }
         if self.effective_date:
             res["effective_date"] = self.effective_date
@@ -82,6 +88,10 @@ class LegalLifecycleInfo:
             res["amended_by"] = self.amended_by
         if self.guiding_docs:
             res["guiding_docs"] = self.guiding_docs
+        if self.temporal_context:
+            res["temporal_context"] = self.temporal_context
+        if self.successor_entity:
+            res["successor_entity"] = self.successor_entity
         res["warning"] = self.warning
         res["suggested_replacement"] = self.suggested_replacement
         return res

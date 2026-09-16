@@ -11,6 +11,8 @@ The CCBA Agent Services Platform is a framework to develop and coordinate AI age
 - **Virtual Hub Fallback**: In Spoke mode, if a referenced skill is not physically present in `.\.agents\skills\`, the Agent MUST transparently read the skill definition directly from `[hub_path]\.agents\skills\<skill_name>\SKILL.md`.
 - **Constitution Preservation**: Synchronization engines (`sync_spoke.py`) MUST perform Non-Destructive Section Merge, preserving all custom sections (e.g. `## Agent skills`, Issue Tracker, Domain Docs) in Spoke `AGENTS.md`.
 - **Skills Governance & Two-Stage Decision Framework**: Mọi kỹ năng mới hoặc sửa đổi thuộc namespace ccba-* / bigbim-* phải tuân thủ Khung Quyết Định Hai Giai Đoạn (ADR-0057), vượt qua Cổng 0 (Determinism) và Cổng 1 (Orchestration), đạt điểm GPI >= 12.0 mới được tạo Standalone Kernel Skill (Tier 2B), và phải vượt qua `python scripts/validate_skills.py --file <path> --enforce-gpi` trước khi hoàn tất (áp dụng bắt buộc cho cả các tác vụ sửa chữa kỹ năng như /skill-repair).
+- **Legal Verbatim Grounding & Mandatory Acquisition Invariant (ADR-0059)**: All legal knowledge bundles, fixtures, and citation claims MUST strictly mirror verbatim text from official gazette sources (PDF/DOCX) with cryptographic SHA-256 provenance stamping. AI Agents are strictly prohibited from generating hypothetical or synthetic mock clauses for statutory documents. When a source document is missing, the Agent MUST acquire it via `TVPLCrawler` or immediately request the source file from the user before proceeding.
+
 
 ## Progressive Disclosure
 

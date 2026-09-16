@@ -2,7 +2,8 @@
 
 from pathlib import Path
 
-from .ast_parser import ASTNode, ASTParser, DeltaPatch, PatchAction
+from .ast_parser import ASTParser, DeltaPatch
+from .models import ASTNode, PatchAction
 
 
 class VBHNMerger:
