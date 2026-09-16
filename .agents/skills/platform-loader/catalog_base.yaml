@@ -45,6 +45,10 @@ rules:
   description: Tuân thủ pháp luật xây dựng Việt Nam
   when: Output liên quan đến pháp luật/VBPL hoặc các văn bản pháp lý
   rule_path: .agents/rules/legal_compliance.md
+- name: legal_verbatim_grounding
+  description: Cưỡng chế trích xuất nguyên văn 100% từ văn bản gốc (TVPL/PDF) và cấm tuyệt đối tự bịa đặt điều khoản pháp luật
+  when: Xử lý văn bản pháp luật, tạo mock data, fixtures, RAG bundles hoặc tham vấn pháp lý
+  rule_path: .agents/rules/legal_verbatim_grounding_guardrail.md
 - name: release_gate
   description: Quy trình kiểm soát PR Release và Copilot Audit
   when: Khi chuẩn bị merge PR hoặc hoàn tất bàn giao
@@ -53,6 +57,10 @@ rules:
   description: Quy tắc đọc logs và chẩn đoán lỗi runtime
   when: Khi người dùng báo lỗi runtime hoặc ứng dụng crash
   rule_path: .agents/rules/debugging.md
+- name: administrative_succession
+  description: Rào chắn kế thừa hành chính và phòng chống ảo giác danh xưng cơ quan đã giải thể/sáp nhập
+  when: Văn bản tham vấn, tờ trình viện dẫn cơ quan quản lý nhà nước hoặc biến động địa giới
+  rule_path: .agents/rules/administrative_succession_guardrail.md
 knowledge:
 - name: session_learnings
   description: Patterns, anti-patterns, solutions tích lũy qua các phiên

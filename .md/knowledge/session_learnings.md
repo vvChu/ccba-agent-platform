@@ -69,8 +69,12 @@
   - Tier 1 (`part=-100`): VIP Digital Vector PDF (Mỏ neo Pháp lý). Tier 2 (`part=-1&docx=1`): VIP OpenXML Word Document (`docx_converter.py`). Tier 3 (`part=0`): Gazette Scan PDF.
 - **RULE-3.3 [Làm Sạch Bảng Biểu & Chú Thích Pháp Lý]**:
   - Footnote: Khử lặp số: `re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()`. Bảng Markdown nhận diện qua tiêu đề và `| :--- |`.
+- **RULE-3.4 [ADR 0059 — Cưỡng Chế Nguyên Văn & Chống Bịa Đặt Dữ Liệu Pháp Lý]**:
+  - CẤM TUYỆT ĐỐI tự suy diễn/bịa đặt câu chữ, điều khoản VBPL trong code/mock fixtures. Mọi trích dẫn phải nguyên văn 100% từ văn bản chính thức.
+  - Mandatory Acquisition First: Thiếu tệp gốc bắt buộc dùng `TVPLCrawler` tải bản PDF/DOCX từ TVPL/Cổng TTĐT, hoặc dừng lại xin file gốc; cấm tự bịa mock. Đóng dấu mật mã SHA-256 (`pdf_sha256`) và kiểm định bằng `validate_bundle_provenance()`.
 
 ---
+
 
 ## Miền 4. 🛠️ Điều Phối & Quy Trình Agent (Workflows & Review)
 
