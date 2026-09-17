@@ -23,7 +23,7 @@ python scripts/spoke/sync_spoke.py --skills bigbim-classification
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_bim` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 

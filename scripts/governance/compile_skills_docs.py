@@ -528,12 +528,12 @@ def get_all_skills_data(hub_root: Path = HUB_ROOT) -> list[dict[str, Any]]:
         gpi_info = fm.get("gpi")
         gpi_str = ""
         if isinstance(gpi_info, dict):
-            s = gpi_info.get("s", 0)
-            k = gpi_info.get("k", 0)
-            a = gpi_info.get("a", 0)
-            p = gpi_info.get("p", 0)
-            total = sum([s, k, a, p])
-            gpi_str = f"S={s} | K={k} | A={a} | P={p} (Tổng: {total:.1f})"
+            s = float(gpi_info.get("s", 0))
+            k = float(gpi_info.get("k", 0))
+            a = float(gpi_info.get("a", 0))
+            p = float(gpi_info.get("p", 0))
+            gpi_score = (s * 2.5) + (k * 2.0) + (a * 2.0) - (p * 1.5)
+            gpi_str = f"S={s:.1f} | K={k:.1f} | A={a:.1f} | P={p:.1f} (GPI: {gpi_score:.2f})"
 
         skills.append(
             {
