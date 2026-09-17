@@ -56,7 +56,12 @@ def kill_process_tree(pid: int | None) -> None:
         if pid in ancestor_pids:
             return
 
-        target = psutil.Process(pid)
+        try:
+            target = psutil.Process(pid)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            # Process does not exist or already terminated
+            return
+
         for child in target.children(recursive=True):
             if child.pid not in ancestor_pids:
                 try:
@@ -72,7 +77,7 @@ def kill_process_tree(pid: int | None) -> None:
     except ImportError:
         pass
     except Exception:
-        pass
+        return
 
     # 4. Strategy B: Native OS Fallback (strictly without os.killpg)
     if sys.platform == "win32":
@@ -91,7 +96,7 @@ def kill_process_tree(pid: int | None) -> None:
                 capture_output=True,
                 check=False,
             )
-        except (FileNotFoundError, OSError):
+        except Exception:
             pass
 
         try:

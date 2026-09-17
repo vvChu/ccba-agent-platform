@@ -74,6 +74,7 @@ class TestPersistentStdioDaemon:
         mock_proc.poll.return_value = None
         mock_proc.stdin = MagicMock()
         mock_proc.stdin.write.side_effect = BrokenPipeError("Pipe closed")
+        mock_proc.communicate.return_value = ("", "")
 
         with patch("subprocess.Popen", return_value=mock_proc):
             oneshot_called = False
