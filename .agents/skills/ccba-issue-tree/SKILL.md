@@ -32,7 +32,7 @@ triggers:
 
 # Kỹ Năng Phân Rã Bài Toán Bằng Cây Vấn Đề (McKinsey MECE Issue Tree)
 
-Kỹ năng master điều phối phân rã các bài toán phức tạp, sự cố kỹ thuật hoặc thách thức chiến lược theo phương pháp luận Cây Vấn Đề (Issue Tree) chuẩn **MECE (Mutually Exclusive, Collectively Exhaustive)** của McKinsey, tích hợp tầng vận hành **Governed Lifecycle** nhằm quản trị vòng đời kiểm chứng giả thuyết và gắn kết với 11 Ghế trách nhiệm Hiến chương CCBA.
+Kỹ năng master điều phối phân rã các bài toán phức tạp, sự cố kỹ thuật hoặc thách thức chiến lược theo phương pháp luận Cây Vấn Đề (Issue Tree) chuẩn **MECE (Mutually Exclusive, Collectively Exhaustive)** của McKinsey, tích hợp tầng vận hành **Governed Lifecycle** nhằm quản trị vòng đời kiểm chứng giả thuyết và gắn kết với các Ghế trách nhiệm Hiến chương CCBA.
 
 ---
 
@@ -108,7 +108,7 @@ Chuyển hóa cây phân rã tĩnh thành hệ thống điều hành động:
    - Chốt cam kết triển khai `COMMITTED` khi cấp thẩm quyền phê duyệt.
 2. **Áp Dụng Thang Đo Bằng Chứng (ADR-0059 Grounding):**
    - Mỗi giả thuyết `VERIFIED_FACT` phải ghi nhận cấp độ bằng chứng: `FACT_LOG`, `STATUTE_VERBATIM`, `MEASURED_METRIC`, hoặc `INFERRED_HYPOTHESIS`.
-3. **Phân Định Trách Nhiệm Theo 11 Ghế CCBA Charter:**
+3. **Phân Định Trách Nhiệm Theo Các Ghế Trách Nhiệm CCBA Charter:**
    - Phân công rõ ràng ghế phụ trách điều tra (`Investigator`), ghế kiểm chứng phản biện (`Verifier`), và ghế chốt quyết định (`Approver`).
 - **Tiêu chí hoàn thành:** Toàn bộ các nhánh lá đều được gán trạng thái vòng đời, cấp độ bằng chứng và ghế chịu trách nhiệm cụ thể.
 
