@@ -29,11 +29,7 @@ applies_to:
    - Khi chạy quy trình tại các Spoke sử dụng nhánh `master` (như dự án `dgx-spark-toolkit`) hoặc bất kỳ nhánh chính nào khác, lệnh kiểm tra Main Branch Guard (Bước 0) và lệnh mở PR (Bước 3) gặp lỗi không tìm thấy `origin/main` hoặc mở PR trỏ sai base branch.
 2. **Quá trình ươm tạo & kiểm chứng tại Spoke:**
    - Đã triển khai và kiểm chứng thực tế tại Spoke `dgx-spark-toolkit` trong phiên làm việc giải phóng Issue #51 (PR #52).
-   - Tích hợp cơ chế phát hiện tự động nhánh chính remote:
-     ```bash
-     DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
-     [ -z "$DEFAULT_BRANCH" ] && DEFAULT_BRANCH=$(git rev-parse --verify origin/main >/dev/null 2>&1 && echo "main" || echo "master")
-     ```
+   - Tích hợp cơ chế phát hiện tự động nhánh chính remote qua `git symbolic-ref --short refs/remotes/origin/HEAD` hoặc fallback kiểm tra `origin/main` / `origin/master`.
 3. **Giá trị khi phổ biến lên Hub:**
    - Nâng cao tính tổng quát và độ bền bỉ của Kernel Skill `ccba-create-pr`.
    - Giúp toàn bộ Spokes trong hệ sinh thái CCBA (bất kể dùng `main` hay `master`) vận hành trơn tru mà không cần can thiệp thủ công.
@@ -55,5 +51,5 @@ applies_to:
 
 - **Tệp sửa đổi:** `.agents/skills/ccba-create-pr/SKILL.md` (bump version `1.1.0` $\rightarrow$ `1.2.0`).
 - **Nội dung thay đổi:**
-  - **Bước 0:** Khai báo `$DEFAULT_BRANCH` và dùng `$DEFAULT_BRANCH` cho các lệnh kiểm tra commit chưa push và reset nhánh chính.
-  - **Bước 3:** Sử dụng `--base "$DEFAULT_BRANCH"` cho lệnh `gh pr create`, tự động sinh URL so sánh chính xác theo nhánh chính remote.
+  - **Bước 0:** Xác định nhánh chính `<default_branch>` (qua `git symbolic-ref --short refs/remotes/origin/HEAD`) và dùng `<default_branch>` cho các lệnh kiểm tra commit chưa push và reset nhánh chính.
+  - **Bước 3:** Sử dụng `--base <default_branch>` cho lệnh `gh pr create`, tự động sinh URL so sánh chính xác theo nhánh chính remote.

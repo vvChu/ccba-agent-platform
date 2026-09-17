@@ -39,8 +39,9 @@ Quy trình tự động hóa kiểm định chất lượng mã nguồn tại ch
 1. **Lấy tên branch hiện hành & xác định nhánh chính (Default Branch):**
    ```bash
    git branch --show-current
+   git symbolic-ref --short refs/remotes/origin/HEAD
    ```
-   *Agent xác định nhánh hiện tại (`<current_branch>`) và nhánh chính mặc định của repository (`<default_branch>`, ví dụ: `main` hoặc `master`).*
+   *Agent xác định nhánh hiện tại (`<current_branch>`) và nhánh chính mặc định của repository (`<default_branch>`, ví dụ: `main` hoặc `master`, trích xuất từ `origin/HEAD` hoặc fallback kiểm tra `origin/main` / `origin/master`).*
 2. **Nếu đang ở nhánh chính (`<default_branch>`)**: Kiểm tra xem có commit nào chưa được push lên remote không:
    ```bash
    git log origin/<default_branch>..<default_branch> --oneline
