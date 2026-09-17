@@ -25,6 +25,7 @@ class TestPersistentStdioDaemon:
     def test_send_turn_sync_success(self) -> None:
         """Daemon should spawn process and send turn through stdin/stdout."""
         mock_proc = MagicMock()
+        mock_proc.pid = 99999
         mock_proc.poll.return_value = None
         mock_proc.stdin = io.StringIO()
         mock_proc.stdout = io.StringIO('{"type":"result","text":"daemon response"}\n')
@@ -69,9 +70,11 @@ class TestPersistentStdioDaemon:
         daemon = PersistentStdioDaemon(build_command=lambda: ["mock-cli"])
 
         mock_proc = MagicMock()
+        mock_proc.pid = 99999
         mock_proc.poll.return_value = None
         mock_proc.stdin = MagicMock()
         mock_proc.stdin.write.side_effect = BrokenPipeError("Pipe closed")
+        mock_proc.communicate.return_value = ("", "")
 
         with patch("subprocess.Popen", return_value=mock_proc):
             oneshot_called = False
@@ -115,6 +118,7 @@ class TestPersistentStdioDaemon:
     async def test_send_turn_async_success(self) -> None:
         """Async daemon turn should write to stdin and read from stdout."""
         mock_proc = MagicMock()
+        mock_proc.pid = 99999
         mock_proc.returncode = None
         mock_proc.stdin = MagicMock()
         mock_proc.stdin.drain = AsyncMock()
@@ -123,7 +127,9 @@ class TestPersistentStdioDaemon:
 
         daemon = PersistentStdioDaemon(build_command=lambda: ["mock-cli"])
 
-        with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_proc):
+        with patch(
+            "asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_proc
+        ):
             text, _ = await daemon.send_turn_async(
                 prompt="Async prompt",
                 parse_response_fn=lambda raw: (raw.strip(), None),
@@ -132,3 +138,31 @@ class TestPersistentStdioDaemon:
             assert text == '{"type":"msg"}'
 
         daemon.stop()
+
+    def test_kill_process_tree_magic_mock_safe(self) -> None:
+        """kill_process_tree(MagicMock()) should return silently without raising or killing."""
+        mock_pid = MagicMock()
+        kill_process_tree(mock_pid)  # type: ignore[arg-type]
+
+    def test_kill_process_tree_system_pids_protected(self) -> None:
+        """kill_process_tree must reject system PIDs (<= 1), booleans, and non-ints."""
+        kill_process_tree(None)
+        kill_process_tree(True)  # type: ignore[arg-type]
+        kill_process_tree(False)  # type: ignore[arg-type]
+        kill_process_tree("99999")  # type: ignore[arg-type]
+        kill_process_tree(3.14)  # type: ignore[arg-type]
+        kill_process_tree(1)
+        kill_process_tree(0)
+        kill_process_tree(-1)
+        kill_process_tree(-99)
+
+    def test_kill_process_tree_self_and_ancestors_protected(self) -> None:
+        """kill_process_tree must never attempt to kill the current process or its parent."""
+        import os
+
+        curr_pid = os.getpid()
+        kill_process_tree(curr_pid)
+
+        if hasattr(os, "getppid"):
+            parent_pid = os.getppid()
+            kill_process_tree(parent_pid)

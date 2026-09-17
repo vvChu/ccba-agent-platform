@@ -1,97 +1,92 @@
-# Walkthrough: Hoàn Tất Chính Thức Hóa ADR-0059 & Nạp Bundle Địa Phương Vào Spoke `ccba-legal-knowledge`
+# Báo cáo Nghiệm thu Kỹ thuật (Walkthrough) — Issue #280
 
-## 1. Tổng Quan Nhiệm Vụ Hoàn Thành
-
-Đã thực hiện trọn vẹn 2 nhiệm vụ tiếp theo theo phê duyệt của người dùng:
-1. **Chính thức hóa HUB-ADR-0059 trên Hub (`ccba-agent-platform`):**
-   - Soạn thảo tài liệu kiến trúc chính thức [`docs/adr/0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md).
-   - Tái biên dịch mục lục [`docs/adr/README.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/README.md) và quét radar cập nhật ma trận truy vết [`docs/adr/TRACEABILITY_MATRIX.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/TRACEABILITY_MATRIX.md) (53 ADRs, đạt 100% parity `[PASS]`).
-2. **Đồng bộ Hub sang Spoke & Nạp Bundle Thực Tế vào `ccba-legal-knowledge`:**
-   - Đồng bộ Hiến pháp Layer 1, rules, và ADR matrix sang Spoke [`ccba-legal-knowledge`](file:///D:/GitHubProjects/ccba-legal-knowledge).
-   - Nạp bundle thực tế **Quyết định 38/2026/QĐ-UBND của UBND TP. Hà Nội** (về phân cấp quản lý quy hoạch đô thị, nông thôn và kiến trúc) vào `legal_docs/01_vbpl/vn_hn_qd_38_2026_qd_ubnd/`.
-   - Vượt qua kiểm định **15 Gates** của Spoke với kết quả tuyệt đối: **0 Errors | 0 Warnings**.
+**Mã Issue:** [#280](https://github.com/vvChu/ccba-agent-platform/issues/280)  
+**Tiêu đề:** `fix(ccba-ai): resolve embedding HTTP 400, streaming token truncation, and add timeout scaling for large completions`  
+**Nhánh:** `fix/issue-280-embedding-streaming-timeout`
 
 ---
 
-## 2. Chi Tiết Thực Hiện Trên Hub (`ccba-agent-platform`)
+## 1. Tóm tắt Thay đổi (Changes Made)
 
-### A. Quyết định kiến trúc HUB-ADR-0059
-- **Tiêu đề:** *Legal Verbatim Grounding, Zero-Hallucination Invariant, and Cryptographic Provenance Stamping*
-- **Trạng thái:** `ACCEPTED & ADOPTED` (2026-09-16)
-- **Nội dung cốt lõi:**
-  1. **Zero-Hallucination Invariant:** Cấm tuyệt đối sáng tác câu chữ, điều khoản giả định cho VBPL. Mọi nội dung trích dẫn phải nguyên văn 100% từ văn bản chính thức.
-  2. **Mandatory Acquisition First Policy:** Bắt buộc thu thập tệp gốc (PDF/DOCX) qua `TVPLCrawler` hoặc yêu cầu người dùng cung cấp tài liệu nguồn chính thức trước khi tạo bundle.
-  3. **Cryptographic Provenance Stamping:** Đóng dấu mã băm SHA-256 (`pdf_sha256`) và tự động kiểm định nguồn gốc xuất xứ qua `validate_bundle_provenance()`.
-  4. **Temporal Local Jurisdictions:** Phân định lãnh thổ theo chuẩn ISO 3166-2:VN (`VN-HN`, `VN-HCM`...), mô hình hóa đồ thị kế thừa cơ quan pháp lý theo trục thời gian và kích hoạt RAG Geofencing.
+### Gói `ccba-ai` v1.2.0
 
-### B. Kiểm chuẩn Parity Gate
-```powershell
-python scripts/sync_hub_adr_matrix.py --check
-```
-- **Kết quả:**
-  ```
-  [sync_hub_adr_matrix] Running in HUB mode (53 ADRs found)
-  [PASS] D:\GitHubProjects\ccba-agent-platform\docs\adr\README.md is in sync.
-  [PASS] D:\GitHubProjects\ccba-agent-platform\docs\adr\TRACEABILITY_MATRIX.md is in sync.
-  ```
+1. **Khắc phục HTTP 400 cho Embedding (`ai.embed()` & `async_ai.embed()`):**
+   - Đổi model mặc định từ `text-embedding-3-small` sang `gemini-embedding-2`.
+   - Đính kèm `extra_body={"drop_params": True}` khi gọi `embeddings.create()` qua OpenAI SDK để LiteLLM tự động drop tham số `encoding_format: "base64"` trước khi forward tới Gemini API.
+   - Bổ sung phương thức `AsyncAIClient.embed()` hỗ trợ native coroutine.
+   - Cập nhật mock mode trả về vector 3072 chiều tương thích chuẩn `gemini-embedding-2`.
+   - Bổ sung `MockEmbeddingsResource` cho `MockOpenAIClient` và `AsyncMockOpenAIClient`.
 
----
+2. **Khắc phục Cắt cụt Luồng Streaming Tokens (`stream()` & `async stream()`):**
+   - Áp dụng `resolve_max_tokens(target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384)` trước khi khởi tạo streaming request.
+   - Với các reasoning models (như `gemini-3.7-flash-high`, `-thinking`), `max_tokens` tự động nâng trần lên 16,384 tokens nếu caller để mặc định 1024, ngăn chặn việc suy luận làm cạn token stream.
 
-## 3. Chi Tiết Thực Hiện Trên Spoke (`ccba-legal-knowledge`)
+3. **Bổ sung Tham số `timeout` & Cơ chế Auto-Timeout Scaling:**
+   - Thêm `timeout: float | None = None` vào `chat()`, `chat_with_metadata()` (sync & async).
+   - Áp dụng công thức Auto-Timeout Scaling đồng bộ cho cả `chat()`, `chat_with_metadata()` và `chat_multi()`:
+     ```python
+     if timeout is not None:
+         effective_timeout = float(timeout)
+     elif effective_max_tokens > 16384:
+         effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
+     else:
+         effective_timeout = self.timeout
+     ```
+   - Truyền `timeout=effective_timeout` vào request body lẫn fallback router.
 
-### A. Đồng bộ cấu trúc & Two-Tier ADR Matrix
-- Đồng bộ các quy tắc mới nhất:
-  - `.agents/rules/legal_verbatim_grounding_guardrail.md`
-  - `.agents/rules/administrative_succession_guardrail.md`
-  - `AGENTS.md` (Hiến pháp Layer 1)
-- Tái đồng bộ ma trận truy vết Two-Tier tại Spoke (53 Hub ADRs + 42 Spoke Domain ADRs).
+4. **Bóc tách Độc lập `ChatResult.thinking` phục vụ Audit Trail:**
+   - Thêm trường `thinking: str = ""` vào `ChatResult` (trong `models.py`).
+   - Bổ sung `extract_thinking` và `extract_thinking_and_content` vào `LLMOutputParser` (sử dụng depth-tracking parser xử lý mượt mà cả thẻ lồng nhau, nhiều thẻ, lẫn unclosed tags).
+   - Trong `chat_with_metadata()`, ưu tiên nhận `reasoning_content` từ OpenAI API spec hoặc trích xuất từ `<think>...</think>`. Khi `strip_thinking=True`, `content` sạch 100% trong khi `thinking` lưu giữ toàn bộ chuỗi tư duy độc lập.
 
-### B. Đăng ký & Nạp Bundle QĐ 38/2026/QĐ-UBND Hà Nội
-- **Đăng ký SSoT:** Cập nhật [`legal_registry.yaml`](file:///D:/GitHubProjects/ccba-legal-knowledge/legal_registry.yaml) với mục `vn_hn_qd_38_2026_qd_ubnd`, nâng tổng số VBPL lên **25** (tổng tài liệu: **53**).
-- **Thư mục bundle:** [`legal_docs/01_vbpl/vn_hn_qd_38_2026_qd_ubnd/`](file:///D:/GitHubProjects/ccba-legal-knowledge/legal_docs/01_vbpl/vn_hn_qd_38_2026_qd_ubnd)
-  - `sources/702686.pdf`: Tệp scan gốc 14 trang có dấu đỏ (4.67 MB, SHA-256: `d826eaf192b238acd1b465854babc8a884d8e12e2d330ecc4c262ed64eb8767b`).
-  - `metadata.yaml`: Cấu hình chuẩn OKF v2.4 Universal, khai báo đầy đủ `source_assets`, `jurisdiction: VN-HN`, `administrative_tier: PROVINCIAL`.
-  - `clauses.json`: Cấu trúc AST phân đoạn 20 Điều theo chuẩn máy đọc.
-  - `vn_hn_qd_38_2026_qd_ubnd.md`: Toàn văn 100% nguyên văn, đã chuẩn hóa theo chuẩn **Pure Normative Body** (loại bỏ nhiễu tiêu ngữ hành chính và chữ ký nơi nhận, giữ nguyên văn toàn bộ 4 Chương, 20 Điều).
-
-### C. Kiểm định 15 Gates Chất Lượng Pháp Điển
-Chạy kiểm định toàn diện trên Spoke:
-```powershell
-python D:\GitHubProjects\ccba-legal-knowledge\scripts\validate_legal_spoke.py
-```
-- **Kết quả:**
-  ```
-  -> Gate 1: Registry Check completed.
-  -> Gate 2: OKF Bundles Structure Check completed.
-  -> Gate 3: Table Attachments Check completed.
-  -> Gate 4: Fake Data Gate Check completed.
-  -> Gate 5: PDF Metadata & AST Jurisdiction Gate Check completed.
-  -> Gate 6: Pure Normative Body & Scoped Noise Gate Check completed.
-  -> Gate 7: Spoke Cleanliness & Zero-Wrapper Gate completed.
-  -> Gate 8: Template & Table Structural Integrity Gate completed.
-  -> Gate 9: Visual Parity & Formatting Clutter Gate completed.
-  -> Gate 10: ADR Living Traceability & Self-Healing Sync completed.
-  -> Gate 11: DOCX-to-Markdown Verbatim Normative Parity Gate completed.
-  -> Gate 12: Multimodal Decoupled Asset & SVG/Cards Integrity Gate (ADR 0040) completed.
-  -> Gate 13: Table Knowledge Extraction & 2D Matrix Regularity Gate (ADR 0041) completed.
-  -> Gate 14: KaTeX Math Syntax & Rendering Integrity Gate (ADR 0038) completed.
-  -> Gate 15: OKF Provenance & Algorithm Version Attestation Gate completed.
-
-  -----------------------------------------------------------------
-  SUMMARY REPORT: Errors: 0 | Warnings: 0
-  -----------------------------------------------------------------
-
-  ✅ PASSED: All legal knowledge gates validated successfully!
-  ```
+5. **Đồng bộ Phiên bản & Triệt tiêu Pytest Warnings:**
+   - Cập nhật `version = "1.2.0"` trong `pyproject.toml`.
+   - Đăng ký markers `fast` và `unit` trong `pyproject.toml`, loại bỏ hoàn toàn 12 cảnh báo pytest unknown mark.
+   - Cập nhật `ModelArchetype` bổ sung `ModelArchetype.GEMINI_38_FLASH`, `ModelArchetype.GEMINI_31_PRO_HIGH`, `ModelArchetype.CLAUDE_OPUS_46`, `ModelArchetype.EMBEDDING = "gemini-embedding-2"`.
 
 ---
 
-## 4. Trạng Thái Git Kho Chứa
+## 2. Kết quả Kiểm định Tự động (Automated Verification)
 
-- **Hub (`ccba-agent-platform`):**
-  - Commit `50b59f7b`: `docs(adr): formalize HUB-ADR-0059 and update traceability matrix`
-  - Commit `bf2a6a69`: `chore(sync): update spoke registry heartbeat for ccba-legal-knowledge`
-  - Nhánh `main` đồng bộ với `origin/main`, working tree sạch 100%.
-- **Spoke (`ccba-legal-knowledge`):**
-  - Commit `17cdddc`: `feat(legal): ingest QĐ 38/2026/QĐ-UBND Hà Nội bundle and sync Hub ADR-0059`
-  - Đã vượt qua pre-commit hook 15 Gates, working tree sạch 100%.
+### 2.1. Scoped Tests & Full Test Suite
+- Chạy 100% bộ kiểm thử:
+  ```powershell
+  python -m pytest packages/ccba-ai/tests -q
+  ```
+  **Kết quả:** `173 passed, 0 warnings in 225.41s` (100% PASS, 0 warning).
+
+### 2.2. Linter & Type Safety
+- **Ruff Check:**
+  ```powershell
+  python -m ruff check packages/ccba-ai/
+  ```
+  **Kết quả:** `All checks passed!` (0 errors).
+- **Mypy Type-Check:**
+  ```powershell
+  python -m mypy packages/ccba-ai/src/ccba_ai/
+  ```
+  **Kết quả:** `Success: no issues found in 25 source files` (Strict type safety).
+
+### 2.3. Live Smoke Test trên Gateway Spark (100.83.192.30:8090)
+- Kiểm tra trực tiếp cuộc gọi `embed()` và `async embed()` với LiteLLM proxy:
+  ```powershell
+  python -c "..."
+  ```
+  **Kết quả:**
+  ```
+  Sync embed SUCCESS! Length: 1 Dim: 3072
+  Async embed SUCCESS! Length: 1 Dim: 3072
+  ```
+  Không còn bất kỳ lỗi HTTP 400 nào.
+
+---
+
+## 3. Đối chiếu Tiêu chí Nghiệm thu (Acceptance Criteria)
+
+| Tiêu chí Nghiệm thu (Issue #280) | Trạng thái | Ghi chú kiểm chứng |
+| :--- | :---: | :--- |
+| `ai.embed()` & `async_ai.embed()` gọi thành công với `gemini-embedding-2` trên Gateway không vấp HTTP 400 | **PASS** | Đã xác thực cả unit test mock lẫn live smoke test trên Server Spark (dim=3072). |
+| `stream()` & `async stream()` tự động nâng trần 16,384 tokens khi stream với reasoning models | **PASS** | `test_streaming_tokens.py` xác thực `create()` nhận `max_tokens=16384`. |
+| `ai.chat(..., max_tokens=32768, timeout=180.0)` hoạt động hợp lệ không văng ngoại lệ TypeError | **PASS** | `test_timeout_scaling.py` xác thực thành công. |
+| `ChatResult.thinking` lưu trữ chuỗi tư duy độc lập với `ChatResult.content` | **PASS** | `test_thinking_audit.py` kiểm tra trích xuất thinking cả từ `<think>` lẫn `reasoning_content`. |
+| Bộ kiểm thử `packages/ccba-ai/tests` vượt qua 100% tests với 0 warnings | **PASS** | Đạt 173/173 passed, 0 warnings. |

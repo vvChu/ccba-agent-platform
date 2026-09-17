@@ -14,12 +14,33 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, TypeVar, cast
 
+F = TypeVar("F", bound=Callable[..., Any])
+
 # Attempt import of FastMCP
 try:
     from mcp.server.fastmcp import FastMCP
 except ImportError:
-    print("[Error] Anthropic 'mcp' package is not installed. Run 'uv sync' first.", file=sys.stderr)
-    sys.exit(1)
+
+    class _DummyFastMCP:
+        """Fallback mock when 'mcp' optional package is not installed."""
+
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+        def tool(self, *args: Any, **kwargs: Any) -> Callable[[F], F]:
+            def decorator(func: F) -> F:
+                return func
+
+            return decorator
+
+        def run(self, *args: Any, **kwargs: Any) -> None:
+            print(
+                "[Error] Anthropic 'mcp' package is not installed. Run 'uv sync' or 'pip install mcp' first.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+    FastMCP = _DummyFastMCP  # type: ignore[misc,assignment]
 
 # Import services from ccba_ai
 # Expose scripts folder for idop_scaffolder import
@@ -27,8 +48,6 @@ import importlib.util
 
 from ccba_ai import services
 from ccba_ai.hooks import PrivacyGuardHook
-
-F = TypeVar("F", bound=Callable[..., Any])
 
 idop_scaffolder = None
 cwd_scripts = Path.cwd() / "scripts" / "idop_scaffolder.py"

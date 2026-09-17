@@ -26,6 +26,7 @@ class MockMessage:
     """Mock message object inside completion choice."""
 
     content: str | None = None
+    reasoning_content: str | None = None
     role: str = "assistant"
 
 
@@ -229,6 +230,43 @@ class MockAudioResource:
         self.transcriptions = MockAudioTranscriptions()
 
 
+@dataclass
+class MockEmbeddingData:
+    """Mock embedding data object."""
+
+    embedding: list[float] = field(default_factory=lambda: [0.1] * 3072)
+    index: int = 0
+    object: str = "embedding"
+
+
+@dataclass
+class MockEmbeddingResponse:
+    """Mock embedding response object."""
+
+    data: list[MockEmbeddingData] = field(default_factory=lambda: [MockEmbeddingData()])
+    model: str = "mock-embedding-model"
+    usage: MockUsage = field(default_factory=MockUsage)
+    object: str = "list"
+
+
+class MockEmbeddingsResource:
+    """Mock client.embeddings namespace."""
+
+    def create(self, **kwargs: Any) -> MockEmbeddingResponse:
+        """Create a mock embedding (sync)."""
+        model = str(kwargs.get("model", "mock-embedding-model"))
+        return MockEmbeddingResponse(model=model)
+
+
+class AsyncMockEmbeddingsResource:
+    """Async mock client.embeddings namespace."""
+
+    async def create(self, **kwargs: Any) -> MockEmbeddingResponse:
+        """Create a mock embedding (async)."""
+        model = str(kwargs.get("model", "mock-embedding-model"))
+        return MockEmbeddingResponse(model=model)
+
+
 class MockOpenAIClient:
     """Mock OpenAI sync client duck-typed for AIClient."""
 
@@ -238,6 +276,7 @@ class MockOpenAIClient:
         self.chat = MockChatResource(provider)
         self.models = MockModelsResource(provider)
         self.audio = MockAudioResource()
+        self.embeddings = MockEmbeddingsResource()
 
     def close(self) -> None:
         """No-op close for mock client."""
@@ -253,6 +292,7 @@ class AsyncMockOpenAIClient:
         self.chat = AsyncMockChatResource(provider)
         self.models = AsyncMockModelsResource(provider)
         self.audio = MockAudioResource()
+        self.embeddings = AsyncMockEmbeddingsResource()
 
     async def close(self) -> None:
         """No-op close for async mock client."""

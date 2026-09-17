@@ -10,14 +10,13 @@
 - **RULE-1.1 [ADR 0057 — Khung 2 Giai Đoạn & Chỉ Số GPI]**:
   - Cổng 0: Giải thuật/IO $\rightarrow$ Deep Seams (`packages/*/src/`). `SKILL.md` cấm code logic trần.
   - Cổng 1: Đa luồng/StateGraph/HITL $\rightarrow$ Tier 3 Composite Orchestrator (không tính GPI).
-  - $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $\text{GPI} < 12.0 \rightarrow$ Tier 2A (`references/`); $\ge 12.0 \rightarrow$ Tier 2B (`.agents/skills/ccba-<name>/`). Rituals ép $A = 1.0$.
+  - $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $< 12.0 \rightarrow$ Tier 2A; $\ge 12.0 \rightarrow$ Tier 2B. Rituals ép $A = 1.0$.
 - **RULE-1.2 [ADR 0053 — Single-Writer Protocol]**:
   - Đa tác tử: Lead duy nhất ghi codebase/logs; subagents chỉ xuất PatchBlocks vào sandbox. Hợp nhất qua `execute_swarm_patches`.
 - **RULE-1.3 [ADR 0035 — Deep Modules, Seams & Zero-Exemption AST]**:
   - Thin Seam: Package chỉ bộc lộ `__all__`/`__init__.py`, cấm import `_*`. Gỡ bypass trong `check_dependency_contracts.py`. Test cũ vào `archive/`.
 - **RULE-1.4 [ADR 0033 & ADR 0056 — Directory Hygiene]**:
   - `.\.md\`: Gốc chỉ chứa `workspace_context.yaml`; `extracted_docs/`; `knowledge/`; `archive/`.
-  - Spoke Sync: Workflows cũ thành `.md.bak`, xóa theo `SKILL_DEPRECATION_ALIASES`.
 - **RULE-1.5 [ADR 0037 & ADR 0051 — Traceability Matrix]**:
   - Giữ qua `<!-- CUSTOM_SECTIONS_START -->`...`<!-- CUSTOM_SECTIONS_END -->`. Regex status: `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ non-ADR.
 - **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]**:

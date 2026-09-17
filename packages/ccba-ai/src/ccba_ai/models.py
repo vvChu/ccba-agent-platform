@@ -15,6 +15,7 @@ class ChatResult(BaseModel):
     """Structured LLM completion result including content and execution telemetry."""
 
     content: str = ""
+    thinking: str = ""
     model: str = ""
     usage: ChatUsage = Field(default_factory=ChatUsage)
     latency_ms: float = 0.0
