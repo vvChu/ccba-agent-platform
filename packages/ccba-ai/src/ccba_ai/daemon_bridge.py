@@ -24,16 +24,80 @@ DEFAULT_IDLE_TIMEOUT = 900.0
 
 
 def kill_process_tree(pid: int | None) -> None:
-    """Kill process tree on Windows or Unix cleanly."""
-    if pid is None:
+    """Kill process tree on Windows or Unix cleanly and safely.
+
+    Guards against invalid PIDs, system PIDs (<= 1), self, and ancestor processes.
+    Uses psutil if available, otherwise gracefully falls back to OS-native commands.
+    Never uses os.killpg to prevent collateral damage to the calling process group.
+    """
+    # 1. Type & range guard: strictly int, strictly > 1 (excludes bool, mock, 0, 1, negatives)
+    if type(pid) is not int or pid <= 1:
         return
+
+    # 2. Self and parent immunity guard
+    current_pid = os.getpid()
+    parent_pid = os.getppid() if hasattr(os, "getppid") else None
+    if pid == current_pid or (parent_pid is not None and pid == parent_pid):
+        return
+
+    # 3. Strategy A: psutil (preferred: clean recursive tree termination)
+    try:
+        import psutil  # type: ignore[import-untyped]
+
+        ancestor_pids: set[int] = {current_pid}
+        if parent_pid is not None:
+            ancestor_pids.add(parent_pid)
+        try:
+            curr_proc = psutil.Process(current_pid)
+            ancestor_pids.update(p.pid for p in curr_proc.parents())
+        except Exception:
+            pass
+
+        if pid in ancestor_pids:
+            return
+
+        target = psutil.Process(pid)
+        for child in target.children(recursive=True):
+            if child.pid not in ancestor_pids:
+                try:
+                    child.kill()
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+        target.kill()
+        try:
+            target.wait(timeout=1.0)
+        except (psutil.NoSuchProcess, psutil.TimeoutExpired):
+            pass
+        return
+    except ImportError:
+        pass
+    except Exception:
+        pass
+
+    # 4. Strategy B: Native OS Fallback (strictly without os.killpg)
     if sys.platform == "win32":
-        os.system(f"taskkill /F /T /PID {pid} >nul 2>&1")  # noqa: S605
+        try:
+            subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(pid)],
+                capture_output=True,
+                check=False,
+            )
+        except Exception:
+            pass
     else:
+        try:
+            subprocess.run(
+                ["pkill", "-KILL", "-P", str(pid)],
+                capture_output=True,
+                check=False,
+            )
+        except (FileNotFoundError, OSError):
+            pass
+
         try:
             import signal
 
-            os.killpg(os.getpgid(pid), signal.SIGKILL)
+            os.kill(pid, signal.SIGKILL)
         except (ProcessLookupError, OSError):
             pass
 
@@ -303,9 +367,15 @@ class PersistentStdioDaemon:
                 if self._proc.stdin:
                     self._proc.stdin.close()
                 self._proc.terminate()
+                self._proc.poll()
             except Exception:
                 pass
             kill_process_tree(pid)
+            if sys.platform != "win32" and type(pid) is int and pid > 1:
+                try:
+                    os.waitpid(pid, os.WNOHANG)
+                except (ChildProcessError, OSError):
+                    pass
             self._proc = None
 
         if self._async_proc is not None:
