@@ -127,7 +127,7 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
      ```
 3. **Khởi tạo Pull Request bằng GitHub CLI:**
    ```bash
-   gh pr create --title "<Title>" --body "<Body>\n\nCloses #<id>" --base <default_branch> --head <current_branch>
+   gh pr create --title "<Title>" --body "$PR_BODY" --base <default_branch> --head <current_branch>
    ```
 4. **Fallback thủ công (nếu `gh` chưa cài hoặc chưa đăng nhập):**
    - Trích xuất URL tạo PR từ `git remote get-url origin`: `https://github.com/<owner>/<repo>/compare/<default_branch>...<current_branch>`.
