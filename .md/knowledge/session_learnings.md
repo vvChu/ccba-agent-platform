@@ -17,9 +17,8 @@
   - Thin Seam: Package chỉ bộc lộ `__all__`/`__init__.py`, cấm import `_*`. Gỡ bypass trong `check_dependency_contracts.py`. Test cũ vào `archive/`.
 - **RULE-1.4 [ADR 0033 & ADR 0056 — Directory Hygiene]**:
   - `.\.md\`: Gốc chỉ chứa `workspace_context.yaml`; `extracted_docs/`; `knowledge/`; `archive/`.
-  - Spoke Sync: Workflows cũ thành `.md.bak`, xóa theo `SKILL_DEPRECATION_ALIASES`.
 - **RULE-1.5 [ADR 0037 & ADR 0051 — Traceability Matrix]**:
-  - Giữ qua `<!-- CUSTOM_SECTIONS_START -->`...`<!-- CUSTOM_SECTIONS_END -->`. Regex status: `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`.
+  - Giữ qua `<!-- CUSTOM_SECTIONS_START -->`...`<!-- CUSTOM_SECTIONS_END -->`. Regex status: `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ non-ADR.
 - **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]**:
   - Dynamic import: `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton, `.npy` kèm `.sha256`.
 - **RULE-1.7 [ADR 0046 — Sanitized Fleet Telemetry]**:
@@ -80,13 +79,13 @@
 - **RULE-4.1 [Entry Point Duy Nhất Khi Có Issue ID: `/ccba-new-feature`]**:
   - Khi có Issue ID, LUÔN đề xuất `/ccba-new-feature #<id>` (8 bước Factory Model). CẤM nhảy thẳng implement.
 - **RULE-4.2 [Slash Command Parity & Active Commands SSOT]**:
-  - BẮT BUỘC đối chiếu `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn tiền tố `/`. Tài liệu `references/*.md` CẤM dùng `/`.
+  - Đối chiếu `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn tiền tố `/`. Tài liệu `references/*.md` CẤM dùng `/`.
 - **RULE-4.3 [Tiêu Chí Hoàn Thành Đa Nhánh & DRY Reference]**:
   - Tiêu chí hoàn thành phải có nhánh kiểm chứng cho từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`).
 - **RULE-4.4 [GitHub Copilot Review Gating & Walkthrough Mirroring]**:
   - Quét `author.login`. Bắt buộc xét `### 🟡 Changes recommended` và `body` dù `COMMENTED`. Cấm merge nếu chưa giải trình. Ghi `review_id`/`id` vào `walkthrough.md` để vượt audit.
 - **RULE-4.5 [AI Gateway Spark Auth & Fast-Inference Gating]**:
-  - LiteLLM Spark (100.83.192.30:8090): Bearer `sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` (< 1s), route `qwen-local-primary` sau GPU warmup.
+  - LiteLLM Spark: Bearer `sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` (< 1s), route `qwen-local-primary` sau GPU warmup.
 - **RULE-4.6 [Tier 3 Orchestrator & Deterministic Verification Gating — ADR-0057 / ADR-0058]**:
   - Router/Orchestrator: SSOT tại `.agents/skills/ccba-platform/SKILL.md` (`tier: orchestrator`), Single-Writer Protocol. Spoke sync (`sync_spoke.py --verify`) kích hoạt `ccba-harness verify-patch`.
 - **RULE-4.7 [ArtifactMetadata Workspace Invariant]**:

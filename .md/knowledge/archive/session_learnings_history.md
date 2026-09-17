@@ -368,4 +368,3 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
 - **Core Pattern P21.4 — Test Isolation Side-Effect Cleanup Before Release:**
   - **Vấn đề:** Lệnh kiểm thử tiền phát hành `run_isolated_tests.py --all --stress` có thể sinh ra các side-effects trong working tree (ví dụ như tạo embedding cache files hoặc cập nhật metadata). Nếu không dọn sạch trước khi gọi `gh pr merge`, git checkout/merge sẽ bị xung đột hoặc thất bại.
   - **Giải pháp:** Luôn kiểm tra `git status --porcelain`, thực hiện `git restore` và `git clean -fd` đối với các artifacts sinh ra trong quá trình test trước khi thực hiện các thao tác chuyển nhánh hoặc merge.
-
