@@ -52,8 +52,8 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
 > Tuyệt đối **KHÔNG ĐƯỢC** xuất kết luận pháp lý chỉ dựa trên bộ nhớ mô hình (LLM parametric memory).
 > Agent **BẮT BUỘC** phải thực thi lệnh gọi công cụ kiểm chứng (`grep_search`, `find_by_name` hoặc `view_file`)
 > theo thứ tự phân giải đường dẫn 3 tầng:
-> 1. **Tầng 1 (Cục bộ Spoke):** Quét thư mục `.\.md\legal_docs\` tại Spoke hiện tại.
-> 2. **Tầng 2 (Spoke Tri Thức Gốc):** Tự động quét thư mục lân cận `<ccba-legal-knowledge>/legal_docs/` (Virtual Hub Fallback).
+> 1. **Tầng 1 (Cục bộ Spoke):** Quét thư mục `.\.md\legal_docs\` tại Spoke hiện tại (được đồng bộ từ Spoke pháp điển qua lệnh `python -m ccba_legal sync --pull-latest` theo ADR-0050).
+> 2. **Tầng 2 (Spoke Tri Thức Gốc):** Đọc con trỏ cấu hình `legal_knowledge_path` trong `.md/workspace_context.yaml` (mặc định fallback tới `D:\GitHubProjects\ccba-legal-knowledge\legal_docs\` hoặc Virtual Hub Fallback trên cùng máy trạm).
 > 3. **Tầng 3 (Danh mục SSOT):** Kiểm tra `legal_registry.yaml` và `metadata.yaml` của từng gói để xác nhận trường `relations.replaces` nhằm loại bỏ triệt để văn bản/quy chuẩn đã hết hiệu lực.
 
 * Truy xuất cây điều khoản AST `clauses.json` và văn bản thuần khiết `<slug>.md` của các gói văn bản.
