@@ -49,7 +49,10 @@ applies_to:
 
 ### 3. Thiết Kế Chi Tiết & Thay Đổi Kỹ Thuật
 
-- **Tệp sửa đổi:** `.agents/skills/ccba-create-pr/SKILL.md` (bump version `1.1.0` $\rightarrow$ `1.2.0`).
-- **Nội dung thay đổi:**
+- **Tệp sửa đổi trọng tâm:** `.agents/skills/ccba-create-pr/SKILL.md` (bump version `1.1.0` $\rightarrow$ `1.2.0`).
   - **Bước 0:** Xác định nhánh chính `<default_branch>` (qua `git symbolic-ref --short refs/remotes/origin/HEAD`) và dùng `<default_branch>` cho các lệnh kiểm tra commit chưa push và reset nhánh chính.
-  - **Bước 3:** Sử dụng `--base <default_branch>` cho lệnh `gh pr create`, tự động sinh URL so sánh chính xác theo nhánh chính remote.
+  - **Bước 3:** Sử dụng `--base <default_branch>` cho lệnh `gh pr create --body "$PR_BODY"`, tự động sinh URL so sánh chính xác theo nhánh chính remote.
+- **Các thay đổi phụ trợ & đồng bộ hệ thống (Supporting Changes):**
+  - Cập nhật rào chắn liên kết trong `tests/governance/test_global_skills_integrity.py` bỏ qua placeholder `<...>`.
+  - Đồng bộ trừ thư mục `tests/` và `scripts/tests/` khỏi kiến trúc structural drift trong `scripts/governance/drift_auditor.py`.
+  - Tăng cường khả năng chịu lỗi import trong `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` (`rank_bm25`) và cách ly mock tại `packages/ccba-harness/tests/test_tuner.py`.

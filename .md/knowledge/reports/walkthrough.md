@@ -70,6 +70,8 @@
 | `4034010442` | `.agents/skills/ccba-create-pr/SKILL.md` | PR thay đổi nhiều package và config ngoài phạm vi ban đầu. | **ĐÃ KHẮC PHỤC**: Đã merge đồng bộ với `main`, hoàn nguyên các file ngoài phạm vi, chỉ tập trung vào skill và proposal. |
 | `4034040496` | `scripts/governance/drift_auditor.py` | Bộ lọc `"/tests/" not in filepath` không loại trừ `tests/...` ở repo root. | **ĐÃ KHẮC PHỤC**: Đã đồng bộ với `main` mới nhất, toàn bộ test suite pass 100%. |
 | `4034040536` | `.agents/proposals/2026-09-17_dynamic-base-branch-for-create-pr.md` | Section 3 mô tả `$DEFAULT_BRANCH` trong khi Hub skill dùng `<default_branch>`. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa toàn bộ Section 1 và Section 3 đồng bộ với placeholder `<default_branch>`. |
+| `4036350143` | `.agents/proposals/2026-09-17_dynamic-base-branch-for-create-pr.md` | Section 3 RFC chỉ liệt kê tệp skill trong khi PR có các tệp phụ trợ. | **ĐÃ KHẮC PHỤC**: Cập nhật Section 3 của RFC phân tách rõ tệp trọng tâm và các thay đổi phụ trợ đồng bộ hệ thống. |
+| `PRR_kwDOQzfV088AAAABOAhoxg` | `.agents/skills/ccba-create-pr/SKILL.md`, `scripts/governance/drift_auditor.py` | Thêm loại trừ root-level `tests/...` vào drift auditor, dùng biến `$PR_BODY` thay vì literal escape sequence `\n`. | **ĐÃ KHẮC PHỤC**: Đã bổ sung `not filepath.startswith("tests/")` trong drift auditor và dùng `--body "$PR_BODY"` chuẩn xác trong lệnh `gh pr create`. |
 
 ---
 
