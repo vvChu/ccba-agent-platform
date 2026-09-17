@@ -10,7 +10,7 @@
 
 ## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #282)
 
-- **Review ID:** `PRR_kwDOQzfV088AAAABN9gBSg`
+- **Review IDs:** `PRR_kwDOQzfV088AAAABN9gBSg`, `PRR_kwDOQzfV088AAAABN9jCQw`
 
 | ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
 |---|---|---|---|
@@ -23,6 +23,7 @@
 | `4033728795` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | `CCBA_EMBED_TIMEOUT` parse `float(env_val)` không có rào chắn, dễ crash nếu biến môi trường không phải số. | **ĐÃ KHẮC PHỤC**: Bao bọc `try...except (ValueError, TypeError)` với giá trị fallback mặc định an toàn 10.0s. |
 | `4033728854` | `.agents/skills/ccba-issue-tree/SKILL.md` | Bảng tham chiếu Level 3 hardcode đếm ("máy trạng thái 5 bước", "RACI 11 Ghế") không khớp thực tế. | **ĐÃ KHẮC PHỤC**: Loại bỏ các con số hardcode, thay bằng mô tả khái quát: "máy trạng thái vòng đời nhánh" và "ma trận RACI Hiến chương CCBA". |
 | `4033728889` | `.agents/skills/ccba-issue-tree/references/governed_lifecycle_guide.md` | Tiêu đề mục ghi "11 Ghế" nhưng bảng bên dưới liệt kê 12 vai trò, gây mâu thuẫn nội bộ. | **ĐÃ KHẮC PHỤC**: Cập nhật tiêu đề thành "Ma Trận RACI Ánh Xạ Các Ghế Trách Nhiệm Hiến Chương CCBA". |
+| `4033766353` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | Parsing CCBA_EMBED_TIMEOUT via float(env_val) can raise ValueError and crash engine initialization if non-numeric. | **ĐÃ KHẮC PHỤC**: Đã bắt ngoại lệ `(ValueError, TypeError)` và ghi log cảnh báo khi giá trị env không hợp lệ, fallback về 10.0s. |
 
 ---
 
