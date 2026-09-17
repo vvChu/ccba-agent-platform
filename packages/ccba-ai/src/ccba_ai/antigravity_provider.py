@@ -20,6 +20,8 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any
 
+from ccba_ai.daemon_bridge import kill_process_tree
+
 logger = logging.getLogger("ccba_ai.antigravity")
 
 # Default model for Antigravity CLI
@@ -654,26 +656,6 @@ class AntigravityCLIProvider:
 
     @staticmethod
     async def _kill_process_tree(proc: asyncio.subprocess.Process) -> None:
-        """Kill process tree on all platforms.
-
-        On Windows, ``proc.kill()`` only kills the parent process, leaving
-        child processes (agy.exe workers) running as zombies. Must use
-        ``taskkill /F /T /PID`` for full tree cleanup.
-        """
-        pid = proc.pid
-        if pid is None:
-            return
-
-        if sys.platform == "win32":
-            # taskkill /F (force) /T (tree) kills all child processes
-            os.system(f"taskkill /F /T /PID {pid} >nul 2>&1")  # noqa: S605
-        else:
-            try:
-                import signal
-
-                os.killpg(os.getpgid(pid), signal.SIGKILL)
-            except (ProcessLookupError, OSError):
-                try:
-                    proc.kill()
-                except ProcessLookupError:
-                    pass
+        """Kill process tree on all platforms using unified safe kill_process_tree."""
+        pid = getattr(proc, "pid", None)
+        kill_process_tree(pid)
