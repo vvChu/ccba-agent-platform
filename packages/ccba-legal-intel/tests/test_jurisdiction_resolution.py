@@ -139,7 +139,12 @@ def test_expand_jurisdiction_queries():
 def test_grounding_integration_blocks_hallucinations():
     """Test that verify_legal_grounding blocks authority naming and commune tier violations."""
     retrieved = [
-        {"short_name": "QĐ 38/2026/QĐ-UBND", "document_number": "38/2026/QĐ-UBND", "id": "QD-38-2026", "territory": "VN-HN"}
+        {
+            "short_name": "QĐ 38/2026/QĐ-UBND",
+            "document_number": "38/2026/QĐ-UBND",
+            "id": "QD-38-2026",
+            "territory": "VN-HN",
+        }
     ]
 
     # 1. Có citation hợp lệ nhưng vi phạm danh xưng sở ngành giải thể -> Bị chặn
@@ -153,9 +158,7 @@ def test_grounding_integration_blocks_hallucinations():
     assert "Cảnh báo danh xưng cơ quan" in res1["warning_reason"]
 
     # 2. Có citation hợp lệ nhưng vi phạm thẩm quyền cấp phường -> Bị chặn
-    response_with_commune_violation = (
-        "Theo [QĐ 38/2026/QĐ-UBND], UBND Phường có thẩm quyền phê duyệt quy hoạch tổng mặt bằng 1/500."
-    )
+    response_with_commune_violation = "Theo [QĐ 38/2026/QĐ-UBND], UBND Phường có thẩm quyền phê duyệt quy hoạch tổng mặt bằng 1/500."
     res2 = verify_legal_grounding(response_with_commune_violation, retrieved, jurisdiction="VN-HN")
     assert res2["is_grounded"] is False
     assert len(res2["tier_violations"]) > 0
@@ -213,9 +216,7 @@ def test_national_fallback_and_disclaimer():
 
 def test_post_2025_district_abolition_guardrail():
     """Test detection of dissolved district-level authorities post-01/07/2025."""
-    text_violation = (
-        "Chủ đầu tư nộp hồ sơ xin cấp phép xây dựng công trình tại UBND Quận Cầu Giấy để được xem xét."
-    )
+    text_violation = "Chủ đầu tư nộp hồ sơ xin cấp phép xây dựng công trình tại UBND Quận Cầu Giấy để được xem xét."
     # Sau 01/07/2025: Vi phạm do cấp huyện đã giải thể
     violations_post = validate_authority_naming(
         text_violation, jurisdiction="VN-HN", as_of_date="2025-08-01"
@@ -257,4 +258,3 @@ def test_generate_jurisdiction_guardrail_card():
     # Thẻ Quốc gia (VN)
     card_vn = generate_jurisdiction_guardrail_card(jurisdiction="VN", as_of_date="2026-09-01")
     assert "VN" in card_vn
-

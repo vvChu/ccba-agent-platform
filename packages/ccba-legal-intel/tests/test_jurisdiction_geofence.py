@@ -108,7 +108,9 @@ def mock_legal_corpus(tmp_path: Path) -> Path:
             "line_end": 2,
         }
     ]
-    (b_hcm / "clauses.json").write_text(json.dumps(clauses_hcm, ensure_ascii=False), encoding="utf-8")
+    (b_hcm / "clauses.json").write_text(
+        json.dumps(clauses_hcm, ensure_ascii=False), encoding="utf-8"
+    )
     (b_hcm / "vn_hcm_qd_56_2025.md").write_text(
         "Sở Xây dựng TP. Hồ Chí Minh cấp phép xây dựng cho công trình cấp I và cấp II.\n"
         "UBND TP. Thủ Đức và các quận huyện cấp giấy phép xây dựng công trình còn lại.\n",
@@ -131,7 +133,9 @@ def test_geofenced_retrieval_isolation(mock_legal_corpus: Path):
     assert len(hits_hn) > 0
     # Kết quả được phép chứa VN (quốc gia) và VN-HN (Hà Nội)
     for hit in hits_hn:
-        assert hit["territory"] in ("VN", "VN-HN"), f"Leakage detected! Got territory: {hit['territory']}"
+        assert hit["territory"] in ("VN", "VN-HN"), (
+            f"Leakage detected! Got territory: {hit['territory']}"
+        )
         assert hit["territory"] != "VN-HCM"
 
     # Kiểm tra xem có trúng hit của Hà Nội không
@@ -147,7 +151,9 @@ def test_geofenced_retrieval_isolation(mock_legal_corpus: Path):
     assert len(hits_hcm) > 0
     # Kết quả được phép chứa VN và VN-HCM
     for hit in hits_hcm:
-        assert hit["territory"] in ("VN", "VN-HCM"), f"Leakage detected! Got territory: {hit['territory']}"
+        assert hit["territory"] in ("VN", "VN-HCM"), (
+            f"Leakage detected! Got territory: {hit['territory']}"
+        )
         assert hit["territory"] != "VN-HN"
 
     has_hcm = any(hit["territory"] == "VN-HCM" for hit in hits_hcm)
@@ -265,7 +271,9 @@ def test_strict_national_isolation_zero_leakage(mock_legal_corpus: Path):
     )
     assert len(hits_vn) > 0
     for hit in hits_vn:
-        assert hit["territory"] == "VN", f"Provincial leakage into national query: {hit['territory']}"
+        assert hit["territory"] == "VN", (
+            f"Provincial leakage into national query: {hit['territory']}"
+        )
 
     # 2. Tra cứu với jurisdiction=None (Mặc định toàn quốc)
     hits_none = engine.query(
@@ -297,6 +305,3 @@ def test_mock_local_bundle_discovery_and_indexing():
     assert len(results) > 0
     assert results[0]["territory"] == "VN-HN"
     assert "quy hoạch" in results[0]["text"].lower()
-
-
-

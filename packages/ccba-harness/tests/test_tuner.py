@@ -570,12 +570,16 @@ def test_run_eval_pipeline_auto_tune_integration(tmp_path: Path):
 
     dataset_file = tmp_path / "cases.json"
     dataset_file.write_text(
-        json.dumps([{"id": "c1", "input_prompt": "Soạn thảo văn bản hành chính theo Nghị định 30"}]),
+        json.dumps(
+            [{"id": "c1", "input_prompt": "Soạn thảo văn bản hành chính theo Nghị định 30"}]
+        ),
         encoding="utf-8",
     )
 
     async def mock_task(item: EvalItem) -> str:
-        return "Căn cứ Nghị định 30/2020/NĐ-CP Điều 8 và Điều 10 quy định thể thức văn bản hành chính."
+        return (
+            "Căn cứ Nghị định 30/2020/NĐ-CP Điều 8 và Điều 10 quy định thể thức văn bản hành chính."
+        )
 
     rep = run_eval_pipeline(
         skill="copywriting",
@@ -794,4 +798,3 @@ def test_preserve_yaml_frontmatter_crlf():
     merged = preserve_yaml_frontmatter(orig, edited)
     assert "\r\n" in merged
     assert merged.startswith("---\r\nname: crlf-skill\r\n---")
-

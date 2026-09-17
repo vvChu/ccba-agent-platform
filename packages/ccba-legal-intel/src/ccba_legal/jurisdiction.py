@@ -141,7 +141,12 @@ def normalize_jurisdiction(code_or_name: str | None) -> str:
     # Fallback common heuristics
     if "hà nội" in s_lower or "ha noi" in s_lower or upper_s == "HN":
         return "VN-HN"
-    if "hồ chí minh" in s_lower or "ho chi minh" in s_lower or "sài gòn" in s_lower or upper_s in {"HCM", "TPHCM", "SG"}:
+    if (
+        "hồ chí minh" in s_lower
+        or "ho chi minh" in s_lower
+        or "sài gòn" in s_lower
+        or upper_s in {"HCM", "TPHCM", "SG"}
+    ):
         return "VN-HCM"
     if "đà nẵng" in s_lower or "da nang" in s_lower or upper_s == "DN":
         return "VN-DN"
@@ -291,7 +296,9 @@ def expand_jurisdiction_queries(
         for pred in auth.get("predecessors", []):
             pred_name = pred.get("name", "")
             aliases = pred.get("aliases", [])
-            if pred_name.lower() in query_lower or any(str(a).lower() in query_lower for a in aliases):
+            if pred_name.lower() in query_lower or any(
+                str(a).lower() in query_lower for a in aliases
+            ):
                 if current_name.lower() not in query_lower:
                     expanded_terms.append(f"{query} {current_name}")
 
@@ -337,23 +344,41 @@ def validate_authority_naming(
     if eval_date >= district_dissolved_date:
         district_entities = district_info.get(
             "entities",
-            ["UBND Quận", "UBND Huyện", "UBND Thị xã", "Phòng Quản lý đô thị", "Phòng Kinh tế và Hạ tầng"],
+            [
+                "UBND Quận",
+                "UBND Huyện",
+                "UBND Thị xã",
+                "Phòng Quản lý đô thị",
+                "Phòng Kinh tế và Hạ tầng",
+            ],
         )
         for dist_entity in district_entities:
             escaped = re.escape(dist_entity.strip())
-            regex = re.compile(rf"(?<![a-zA-Z0-9_\u00C0-\u1EF9]){escaped}(?![a-zA-Z0-9_\u00C0-\u1EF9])", re.IGNORECASE)
+            regex = re.compile(
+                rf"(?<![a-zA-Z0-9_\u00C0-\u1EF9]){escaped}(?![a-zA-Z0-9_\u00C0-\u1EF9])",
+                re.IGNORECASE,
+            )
             match = regex.search(text)
             if match:
-                snippet_window = text[max(0, match.start() - 30):min(len(text), match.end() + 30)].lower()
-                if any(neg in snippet_window for neg in ["đã giải thể", "đã kết thúc", "không còn", "bãi bỏ", "sáp nhập"]):
+                snippet_window = text[
+                    max(0, match.start() - 30) : min(len(text), match.end() + 30)
+                ].lower()
+                if any(
+                    neg in snippet_window
+                    for neg in ["đã giải thể", "đã kết thúc", "không còn", "bãi bỏ", "sáp nhập"]
+                ):
                     continue
-                violations.append({
-                    "found_entity": match.group(0),
-                    "replacement": "Sở Xây dựng (cấp tỉnh) hoặc UBND Xã/Phường (cấp cơ sở)",
-                    "warning": f"Chính quyền cấp huyện ('{match.group(0)}') đã kết thúc hoạt động từ {district_dissolved_date} theo NQ 203/2025/QH15.",
-                    "legal_basis": district_info.get("legal_basis", "Nghị quyết số 203/2025/QH15 sửa đổi Điều 110 Hiến pháp"),
-                    "jurisdiction": "VN",
-                })
+                violations.append(
+                    {
+                        "found_entity": match.group(0),
+                        "replacement": "Sở Xây dựng (cấp tỉnh) hoặc UBND Xã/Phường (cấp cơ sở)",
+                        "warning": f"Chính quyền cấp huyện ('{match.group(0)}') đã kết thúc hoạt động từ {district_dissolved_date} theo NQ 203/2025/QH15.",
+                        "legal_basis": district_info.get(
+                            "legal_basis", "Nghị quyết số 203/2025/QH15 sửa đổi Điều 110 Hiến pháp"
+                        ),
+                        "jurisdiction": "VN",
+                    }
+                )
                 break
 
     # 2. Local Authority Predecessors
@@ -381,16 +406,26 @@ def validate_authority_naming(
                 if not pattern or len(pattern.strip()) < 3:
                     continue
                 escaped = re.escape(pattern.strip())
-                regex = re.compile(rf"(?<![a-zA-Z0-9_\u00C0-\u1EF9]){escaped}(?![a-zA-Z0-9_\u00C0-\u1EF9])", re.IGNORECASE)
+                regex = re.compile(
+                    rf"(?<![a-zA-Z0-9_\u00C0-\u1EF9]){escaped}(?![a-zA-Z0-9_\u00C0-\u1EF9])",
+                    re.IGNORECASE,
+                )
                 match = regex.search(text)
                 if match:
-                    violations.append({
-                        "found_entity": match.group(0),
-                        "replacement": current_name,
-                        "warning": pred.get("warning", f"Cơ quan '{pattern}' đã được sáp nhập vào '{current_name}'."),
-                        "legal_basis": pred.get("legal_basis", "Đề án sắp xếp cơ quan chuyên môn."),
-                        "jurisdiction": norm_jur,
-                    })
+                    violations.append(
+                        {
+                            "found_entity": match.group(0),
+                            "replacement": current_name,
+                            "warning": pred.get(
+                                "warning",
+                                f"Cơ quan '{pattern}' đã được sáp nhập vào '{current_name}'.",
+                            ),
+                            "legal_basis": pred.get(
+                                "legal_basis", "Đề án sắp xếp cơ quan chuyên môn."
+                            ),
+                            "jurisdiction": norm_jur,
+                        }
+                    )
                     break
 
     return violations
@@ -431,35 +466,40 @@ def validate_tier_authority(
     legal_basis = "Quy định phân cấp quản lý của UBND cấp tỉnh và Luật Xây dựng hiện hành"
     try:
         from ccba_legal.registry import get_active_delegation_document
+
         delegation_doc = get_active_delegation_document(
             territory=norm_jur,
             as_of_date=as_of_date,
             registry_path=registry_path,
         )
         if delegation_doc:
-            doc_num = delegation_doc.get("document_number") or delegation_doc.get("short_name") or delegation_doc.get("id")
+            doc_num = (
+                delegation_doc.get("document_number")
+                or delegation_doc.get("short_name")
+                or delegation_doc.get("id")
+            )
             legal_basis = f"{doc_num} của UBND cấp tỉnh ({norm_jur})"
         elif norm_jur == "VN-HN":
             legal_basis = "Quyết định phân cấp của UBND TP. Hà Nội và Luật Thủ đô 2024"
     except Exception:
         pass
 
-    violation_warning = (
-        "UBND Phường/Xã không có thẩm quyền thẩm định hay phê duyệt quy hoạch tổng mặt bằng 1/500, TKCS nếu không có văn bản phân cấp hợp lệ."
-    )
+    violation_warning = "UBND Phường/Xã không có thẩm quyền thẩm định hay phê duyệt quy hoạch tổng mặt bằng 1/500, TKCS nếu không có văn bản phân cấp hợp lệ."
 
     for match in prohibited_regex.finditer(text):
         snippet = match.group(0)
         if "không" in snippet.lower() or "chưa" in snippet.lower():
             continue
 
-        violations.append({
-            "violation_type": "COMMUNE_AUTHORITY_EXCEEDED",
-            "snippet": snippet,
-            "warning": violation_warning,
-            "legal_basis": legal_basis,
-            "jurisdiction": norm_jur,
-        })
+        violations.append(
+            {
+                "violation_type": "COMMUNE_AUTHORITY_EXCEEDED",
+                "snippet": snippet,
+                "warning": violation_warning,
+                "legal_basis": legal_basis,
+                "jurisdiction": norm_jur,
+            }
+        )
 
     return violations
 
@@ -514,17 +554,24 @@ def generate_jurisdiction_guardrail_card(
                 dep_warnings.append(f"{pred.get('name')} ➔ sáp nhập vào {curr_name} (từ {d_date})")
 
     if dep_warnings:
-        lines.append(f"- **Cơ quan đã sáp nhập/chuyển giao**: {'; '.join(dep_warnings)}. Không hướng dẫn liên hệ cơ quan cũ.")
+        lines.append(
+            f"- **Cơ quan đã sáp nhập/chuyển giao**: {'; '.join(dep_warnings)}. Không hướng dẫn liên hệ cơ quan cũ."
+        )
 
     try:
         from ccba_legal.registry import get_active_delegation_document
+
         delegation_doc = get_active_delegation_document(
             territory=norm_jur,
             as_of_date=eval_date,
             registry_path=registry_path,
         )
         if delegation_doc:
-            doc_id = delegation_doc.get("document_number") or delegation_doc.get("short_name") or delegation_doc.get("id")
+            doc_id = (
+                delegation_doc.get("document_number")
+                or delegation_doc.get("short_name")
+                or delegation_doc.get("id")
+            )
             doc_title = delegation_doc.get("title", doc_id)
             lines.append(
                 f"- **Văn bản phân cấp chủ đạo**: [{doc_id}] {doc_title}. "
