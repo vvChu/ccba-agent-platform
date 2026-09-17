@@ -2,7 +2,9 @@
 proposal_id: "2026-09-17_dynamic-base-branch-for-create-pr"
 type: "skills"
 name: "dynamic-base-branch-for-create-pr"
-status: "proposed"
+status: "merged"
+merged_commit: "c84fe74433444b592c17b491e5588db16226dfb2"
+merged_date: "2026-09-17"
 priority: "Cao"
 proposed_by_project: "dgx-spark-toolkit"
 proposed_by_archetype: "specialized_extension"
@@ -17,7 +19,7 @@ applies_to:
 
 - **Tác giả đề xuất:** Kỹ sư / Agent đại diện Spoke (`dgx-spark-toolkit`)
 - **Ngày lập:** 2026-09-17
-- **Trạng thái:** Đang đề xuất (Proposed)
+- **Trạng thái:** Đã hợp nhất (Merged) — Commit `c84fe744`
 - **Căn cứ pháp lý nền tảng:** ADR-0045, ADR-0046, ADR-0056, ADR-0058
 
 ---
