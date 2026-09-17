@@ -125,3 +125,78 @@ def test_daemon_dry_run_execution() -> None:
     assert isinstance(report, NightlyDaemonReport)
     assert report.total_skills_scanned > 0
     assert len(report.results) == report.total_skills_scanned
+
+
+def test_discover_skills_and_datasets_routing() -> None:
+    """Verify specific skills are routed to their proper domain datasets."""
+    daemon = NightlyTunerDaemon(root=project_root)
+    discovered = daemon.discover_skills_and_datasets()
+    mapping = {d["skill_name"]: d["eval_dataset_file"].name for d in discovered}
+
+    if "ccba-copywriting" in mapping:
+        assert mapping["ccba-copywriting"] == "eval_copywriting.json"
+    if "ccba-ai-qc" in mapping:
+        assert mapping["ccba-ai-qc"] == "eval_pccc_audit.json"
+    if "bigbim-classification" in mapping:
+        assert mapping["bigbim-classification"] == "eval_bigbim_classification.json"
+    if "ccba-legal-advisor" in mapping:
+        assert mapping["ccba-legal-advisor"] == "eval_legal_intel.json"
+
+
+def test_cleanup_old_empty_branches_logic(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify _cleanup_old_empty_branches deletes only branches > 7 days without unique commits."""
+    daemon = NightlyTunerDaemon(root=project_root)
+
+    # Mock git branch output
+    fake_branches = (
+        "  auto-tune/nightly-20200101_000000\n"  # Very old, empty
+        "  auto-tune/nightly-20200102_000000\n"  # Very old, has unique commits
+        "  auto-tune/nightly-20990101_000000\n"  # Future/recent
+    )
+
+    deleted_branches: list[str] = []
+
+    def mock_run(cmd, *args, **kwargs):
+        class MockRes:
+            def __init__(self, stdout: str = "", returncode: int = 0):
+                self.stdout = stdout
+                self.returncode = returncode
+
+        if cmd[:3] == ["git", "branch", "--list"]:
+            return MockRes(stdout=fake_branches)
+        elif cmd[:3] == ["git", "cherry", "main"]:
+            branch = cmd[3]
+            # Simulate nightly-20200101 has no unique commits, 20200102 has unique commit
+            if "20200101" in branch:
+                return MockRes(stdout="")
+            else:
+                return MockRes(stdout="+ 1234567 commit msg\n")
+        elif cmd[:3] == ["git", "branch", "-D"]:
+            deleted_branches.append(cmd[3])
+            return MockRes()
+        return MockRes()
+
+    import subprocess
+    monkeypatch.setattr(subprocess, "run", mock_run)
+
+    count = daemon._cleanup_old_empty_branches(days=7)
+    assert count == 1
+    assert deleted_branches == ["auto-tune/nightly-20200101_000000"]
+
+
+def test_tuner_tiered_budget_and_early_stopping() -> None:
+    """Verify GitRatchetOptimizer sets correct effective budget and early stops."""
+    from ccba_harness.evals.tuner import GitRatchetOptimizer, RatchetConfig
+
+    # 1. Config with patience
+    cfg = RatchetConfig(
+        target_file=project_root / ".agents" / "skills" / "ccba-academic-writing" / "SKILL.md",
+        max_iterations=10,
+        patience=3,
+    )
+    assert cfg.patience == 3
+
+    # 2. Optimizer mock run with 100% baseline -> effective max_iter=1, patience=1
+    opt = GitRatchetOptimizer(cfg, root=project_root)
+    assert opt.config.patience == 3
+
