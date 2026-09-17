@@ -495,7 +495,9 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
                 break
 
     if args.limit is not None and args.limit < 1:
-        print(f"ERROR: --limit must be a positive integer (>= 1), got {args.limit}", file=sys.stderr)
+        print(
+            f"ERROR: --limit must be a positive integer (>= 1), got {args.limit}", file=sys.stderr
+        )
         return 1
 
     from .evals.runner import run_eval_pipeline
@@ -1090,7 +1092,9 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
 
         economy_report = audit_token_economy(session_metrics=session_metrics)
         if args.session and session_metrics and args.role:
-            economy_report.session_roi = calculate_role_aware_roi(session_metrics, role_override=args.role)
+            economy_report.session_roi = calculate_role_aware_roi(
+                session_metrics, role_override=args.role
+            )
 
         if args.prune_report:
             out_file = Path(args.out) if args.out else Path(".md/reports/prompt_economy_report.md")
@@ -1131,7 +1135,9 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
                 )
                 print(f"[Success] Generated Cross-Spoke Fleet Dashboard at: {out_path.resolve()}")
                 print(f"  Fleet Hub: {fleet_report.hub_name}")
-                print(f"  Spokes: {fleet_report.total_spokes} ({fleet_report.online_spokes} Online)")
+                print(
+                    f"  Spokes: {fleet_report.total_spokes} ({fleet_report.online_spokes} Online)"
+                )
                 print(f"  Total Fleet Tokens: {fleet_report.total_fleet_tokens:,}")
                 print(f"  Total Fleet Cost: ${fleet_report.total_fleet_cost_usd:.4f} USD")
                 return 0

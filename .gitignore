@@ -39,6 +39,8 @@ coverage.xml
 htmlcov/
 .pytest_cache/
 .mypy_cache/
+*.npy
+*.sha256
 
 # Environment
 .env
