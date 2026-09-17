@@ -197,10 +197,14 @@ class FederatedLegalEngine:
 
     def _build_bm25_index(self) -> None:
         """Build the BM25 index."""
-        from rank_bm25 import BM25Okapi
+        try:
+            from rank_bm25 import BM25Okapi
 
-        tokenized_corpus = [self._tokenize(c["text"]) for c in self._chunks]
-        self._bm25_index = BM25Okapi(tokenized_corpus)
+            tokenized_corpus = [self._tokenize(c["text"]) for c in self._chunks]
+            self._bm25_index = BM25Okapi(tokenized_corpus)
+        except ImportError:
+            logger.warning("rank_bm25 is not installed. BM25 search will be disabled.")
+            self._bm25_index = None
 
     def _build_embedding_index(self) -> None:
         """Build or load the embedding index."""
