@@ -71,7 +71,17 @@ class FederatedLegalEngine:
         if self._corpus_paths:
             return self._expand_bundle_dirs(self._corpus_paths)
 
-        # 1. Master registry discovery
+        # 1. Local Spoke discovery: scan upward from current working directory
+        cwd = Path.cwd().resolve()
+        for parent in [cwd] + list(cwd.parents):
+            for cand_rel in [".md/legal_docs", "legal_docs"]:
+                candidate = parent / cand_rel
+                if candidate.is_dir():
+                    bundles = self._expand_bundle_dirs([candidate])
+                    if bundles:
+                        return bundles
+
+        # 2. Master registry discovery (Spoke Tri thức gốc)
         try:
             from ccba_legal.registry import discover_master_registry_path
 
@@ -94,9 +104,9 @@ class FederatedLegalEngine:
         except Exception:
             pass
 
-        # 2. Auto-discovery: scan upward for .md/legal_docs/ or legal_docs/
-        current = Path(__file__).resolve()
-        for parent in current.parents:
+        # 3. Fallback: scan upward from library file location
+        lib_root = Path(__file__).resolve()
+        for parent in lib_root.parents:
             for cand_rel in [".md/legal_docs", "legal_docs"]:
                 candidate = parent / cand_rel
                 if candidate.is_dir():
