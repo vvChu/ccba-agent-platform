@@ -45,13 +45,11 @@ jobs:
       - name: Run CCBA Harness CI Gates
         env:
           PYTHONPATH: .
-          CCBA_AI_MOCK: "1"
         run: python scripts/eval/run_harness_evals.py --all
 
       - name: Deterministic Hard Completion Lock (ADR-0058)
         env:
           PYTHONPATH: .
-          CCBA_AI_MOCK: "1"
         run: python -m ccba_harness verify-patch --preset ci
 
 
