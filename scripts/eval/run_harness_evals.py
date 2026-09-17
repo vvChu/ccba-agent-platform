@@ -104,6 +104,10 @@ def run_command(
                     proc.wait(timeout=5)
                 except subprocess.TimeoutExpired:
                     proc.kill()
+                    try:
+                        proc.wait(timeout=1)
+                    except Exception:
+                        pass
                 f.seek(0)
                 output = f.read()
                 return (

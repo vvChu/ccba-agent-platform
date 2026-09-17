@@ -35,7 +35,9 @@ class EvalOrchestrator:
 
     def ensure_single_instance(self, script_keyword: str = "run_safe_eval_wrapper.py") -> None:
         """Revoke duplicate instances of evaluation runner processes."""
-        if os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
+        ci_env = os.environ.get("CI", "").strip().lower()
+        gh_env = os.environ.get("GITHUB_ACTIONS", "").strip().lower()
+        if ci_env in ("true", "1", "yes") or gh_env in ("true", "1", "yes"):
             return
 
         current_pid = os.getpid()

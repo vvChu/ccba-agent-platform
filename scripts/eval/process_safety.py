@@ -20,7 +20,9 @@ def ensure_single_instance(script_keyword: str) -> None:
     và toàn bộ cây tiến trình tổ tiên (parents/ancestors/Agent host/CI Runner) để không làm sập Runner.
     Trên môi trường CI/GitHub Actions, luôn bỏ qua vì mỗi job chạy trong container/VM cô lập.
     """
-    if os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
+    ci_env = os.environ.get("CI", "").strip().lower()
+    gh_env = os.environ.get("GITHUB_ACTIONS", "").strip().lower()
+    if ci_env in ("true", "1", "yes") or gh_env in ("true", "1", "yes"):
         return
 
     if hasattr(sys.stdout, "reconfigure"):

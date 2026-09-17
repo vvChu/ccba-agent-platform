@@ -82,3 +82,47 @@ def test_chat_result_thinking_from_reasoning_content():
         res = client.chat_with_metadata("Audit this")
         assert res.thinking == "Native reasoning audit trail"
         assert res.content == "All clear!"
+
+
+@pytest.mark.fast
+@pytest.mark.unit
+def test_chat_result_thinking_privacy_guard_blocks_reasoning_content_leak():
+    from unittest.mock import MagicMock, patch
+
+    from ccba_ai import AIClient
+
+    client = AIClient(base_url="http://fake:1/v1", api_key="fake", mock_mode=False)
+    mock_resp = MagicMock()
+    mock_choice = MagicMock()
+    mock_choice.message.content = "Normal output without keys."
+    mock_choice.message.reasoning_content = "Leaking key: AIzaSyDummyGeminiKey_1234567890abcdef in reasoning"
+    mock_resp.choices = [mock_choice]
+    mock_resp.model = "gemini-3.7-flash-high"
+    mock_resp.usage = None
+
+    with patch.object(client._client.chat.completions, "create", return_value=mock_resp):
+        with pytest.raises(ValueError, match="Security Violation: Detected sensitive API Key leak"):
+            client.chat_with_metadata("Audit this")
+
+
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_async_chat_result_thinking_privacy_guard_blocks_reasoning_content_leak():
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from ccba_ai import AsyncAIClient
+
+    client = AsyncAIClient(base_url="http://fake:1/v1", api_key="fake", mock_mode=False)
+    mock_resp = MagicMock()
+    mock_choice = MagicMock()
+    mock_choice.message.content = "Normal output without keys."
+    mock_choice.message.reasoning_content = "Leaking key: AIzaSyDummyGeminiKey_1234567890abcdef in async reasoning"
+    mock_resp.choices = [mock_choice]
+    mock_resp.model = "gemini-3.7-flash-high"
+    mock_resp.usage = None
+
+    with patch.object(client._client.chat.completions, "create", new_callable=AsyncMock, return_value=mock_resp):
+        with pytest.raises(ValueError, match="Security Violation: Detected sensitive API Key leak"):
+            await client.chat_with_metadata("Audit this")
+

@@ -319,6 +319,9 @@ class AIClient:
         if not thinking:
             thinking = extracted_thinking
 
+        if thinking:
+            self.privacy_guard.check_content(thinking)
+
         if strip_thinking:
             response_text = content
 
@@ -862,6 +865,9 @@ class AsyncAIClient:
         extracted_thinking, content = LLMOutputParser.extract_thinking_and_content(response_text)
         if not thinking:
             thinking = extracted_thinking
+
+        if thinking:
+            self.privacy_guard.check_content(thinking)
 
         if strip_thinking:
             response_text = content
