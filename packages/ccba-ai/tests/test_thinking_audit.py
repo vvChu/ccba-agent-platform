@@ -95,7 +95,9 @@ def test_chat_result_thinking_privacy_guard_blocks_reasoning_content_leak():
     mock_resp = MagicMock()
     mock_choice = MagicMock()
     mock_choice.message.content = "Normal output without keys."
-    mock_choice.message.reasoning_content = "Leaking key: AIzaSyDummyGeminiKey_1234567890abcdef in reasoning"
+    mock_choice.message.reasoning_content = (
+        "Leaking key: AIzaSyDummyGeminiKey_1234567890abcdef in reasoning"
+    )
     mock_resp.choices = [mock_choice]
     mock_resp.model = "gemini-3.7-flash-high"
     mock_resp.usage = None
@@ -117,12 +119,15 @@ async def test_async_chat_result_thinking_privacy_guard_blocks_reasoning_content
     mock_resp = MagicMock()
     mock_choice = MagicMock()
     mock_choice.message.content = "Normal output without keys."
-    mock_choice.message.reasoning_content = "Leaking key: AIzaSyDummyGeminiKey_1234567890abcdef in async reasoning"
+    mock_choice.message.reasoning_content = (
+        "Leaking key: AIzaSyDummyGeminiKey_1234567890abcdef in async reasoning"
+    )
     mock_resp.choices = [mock_choice]
     mock_resp.model = "gemini-3.7-flash-high"
     mock_resp.usage = None
 
-    with patch.object(client._client.chat.completions, "create", new_callable=AsyncMock, return_value=mock_resp):
+    with patch.object(
+        client._client.chat.completions, "create", new_callable=AsyncMock, return_value=mock_resp
+    ):
         with pytest.raises(ValueError, match="Security Violation: Detected sensitive API Key leak"):
             await client.chat_with_metadata("Audit this")
-
