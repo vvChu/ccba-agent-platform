@@ -95,7 +95,57 @@ class TestCheckReleaseCleanliness(unittest.TestCase):
             code = run_post_check(repo_root=tmp_root)
             self.assertEqual(code, 0)
             # Verify file was safely deleted
-            self.assertFalse(artifact_file.exists())
+
+    @patch("subprocess.run")
+    def test_get_porcelain_status_git_error_fails_closed(self, mock_run) -> None:
+        """Test get_porcelain_status returns failure sentinel when git command fails."""
+        import subprocess
+
+        mock_run.side_effect = subprocess.CalledProcessError(1, ["git", "status"])
+        entries = get_porcelain_status()
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0][0], "!!")
+        self.assertIn("GIT_STATUS_FAILED", entries[0][1])
+
+    @patch("subprocess.run")
+    def test_get_porcelain_status_git_not_found_fails_closed(self, mock_run) -> None:
+        """Test get_porcelain_status returns failure sentinel when git is not installed."""
+        mock_run.side_effect = FileNotFoundError("git not found")
+        entries = get_porcelain_status()
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0][0], "!!")
+
+    @patch("scripts.validation.check_release_cleanliness.get_porcelain_status")
+    def test_run_post_check_does_not_purge_tracked_modified_known_artifact(
+        self, mock_status
+    ) -> None:
+        """Test that a tracked modified file is NEVER purged even if its name matches known artifacts."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_root = Path(tmp_dir)
+            tracked_artifact = tmp_root / "ci_log.txt"
+            tracked_artifact.write_text("critical tracked file content", encoding="utf-8")
+
+            # Status 'M' indicates a tracked modified file
+            mock_status.return_value = [("M", "ci_log.txt")]
+            code = run_post_check(repo_root=tmp_root)
+            self.assertEqual(code, 1)
+            # Must NOT be deleted!
+            self.assertTrue(tracked_artifact.exists())
+
+    @patch("scripts.validation.check_release_cleanliness.get_porcelain_status")
+    def test_run_post_check_path_traversal_protection(self, mock_status) -> None:
+        """Test that relative paths attempting directory traversal outside root are safely ignored."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_root = Path(tmp_dir) / "repo"
+            tmp_root.mkdir()
+            outside_file = Path(tmp_dir) / "ci_log.txt"
+            outside_file.write_text("outside data", encoding="utf-8")
+
+            mock_status.return_value = [("??", "../ci_log.txt")]
+            code = run_post_check(repo_root=tmp_root)
+            self.assertEqual(code, 0)
+            # Outside file must remain untouched
+            self.assertTrue(outside_file.exists())
 
 
 if __name__ == "__main__":

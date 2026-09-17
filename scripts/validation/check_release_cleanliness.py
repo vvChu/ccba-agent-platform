@@ -15,12 +15,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Đảm bảo UTF-8 encoding trên Windows khi import module hoặc gọi CLI
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-if hasattr(sys.stderr, "reconfigure"):
-    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-
 # Danh mục các mẫu tệp tạm/cache được phép thu hồi an toàn sau bài kiểm thử
 KNOWN_TEST_ARTIFACTS: list[str] = [
     "*mock_local_bundles*embeddings.npy",
@@ -54,8 +48,8 @@ def get_porcelain_status(repo_root: Path | None = None) -> list[tuple[str, str]]
             cwd=cwd,
         )
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        print(f"⚠️ [WARNING] Không thể chạy git status: {e}", file=sys.stderr)
-        return []
+        print(f"❌ [ERROR] Không thể chạy git status: {e}", file=sys.stderr)
+        return [("!!", f"GIT_STATUS_FAILED: {e}")]
 
     raw_bytes = res.stdout
     entries: list[tuple[str, str]] = []
@@ -148,14 +142,10 @@ def run_post_check(repo_root: Path | None = None) -> int:
     unknown_or_source_files: list[tuple[str, str]] = []
 
     for code, path in entries:
-        # Nếu tệp mã nguồn bị chỉnh sửa (M) hoặc xóa (D) -> Rất nghiêm trọng
-        if any(c in code for c in ("M", "D", "A", "R", "C", "U")):
-            # Kiểm tra xem tệp modified này có phải là known artifact hay không
-            if is_known_artifact(path):
-                leaked_files.append(path)
-            else:
-                unknown_or_source_files.append((code, path))
-        elif is_known_artifact(path):
+        # Nếu tệp tracked bị chỉnh sửa (M/D/A/R/C/U) hoặc lỗi hệ thống (!!) -> Luôn là vi phạm nghiêm trọng
+        if any(c in code for c in ("M", "D", "A", "R", "C", "U")) or code == "!!":
+            unknown_or_source_files.append((code, path))
+        elif code == "??" and is_known_artifact(path):
             leaked_files.append(path)
         else:
             unknown_or_source_files.append((code, path))
@@ -174,23 +164,42 @@ def run_post_check(repo_root: Path | None = None) -> int:
         print("  - Hoàn tác hoặc kiểm tra lại các thay đổi trước khi tiếp tục release.")
         return 1
 
-    # Dọn dẹp an toàn các test artifacts đã biết
+    # Dọn dẹp an toàn các test artifacts đã biết (chỉ xóa tệp untracked)
     print(
         f"⚠️ [HERMETIC WARNING] Phát hiện {len(leaked_files)} tệp cache kiểm thử rò rỉ sau bài test:"
     )
     for rel_path in leaked_files:
-        abs_path = root / rel_path
+        try:
+            abs_path = (root / rel_path).resolve()
+            # Ràng buộc chống path traversal: bắt buộc abs_path phải nằm trong root
+            abs_path.relative_to(root.resolve())
+        except (ValueError, Exception) as ex:
+            print(
+                f"  ⚠️ Cảnh báo an ninh: Bỏ qua đường dẫn ngoài repository: {rel_path} ({ex})",
+                file=sys.stderr,
+            )
+            continue
+
         if abs_path.is_file() or abs_path.is_symlink():
             try:
                 os.chmod(abs_path, 0o666)  # Gỡ read-only trên Windows
                 abs_path.unlink(missing_ok=True)
-                print(f"  🧹 Đã thu hồi tệp tạm an toàn: {rel_path}")
+                if not abs_path.exists():
+                    print(f"  🧹 Đã thu hồi tệp tạm an toàn: {rel_path}")
+                else:
+                    print(f"  ⚠️ Không thể xóa {rel_path}: tệp vẫn tồn tại", file=sys.stderr)
             except Exception as ex:
                 print(f"  ⚠️ Không thể xóa {rel_path}: {ex}", file=sys.stderr)
         elif abs_path.is_dir():
             try:
-                shutil.rmtree(abs_path, ignore_errors=True)
-                print(f"  🧹 Đã thu hồi thư mục tạm an toàn: {rel_path}")
+                shutil.rmtree(abs_path)
+                if not abs_path.exists():
+                    print(f"  🧹 Đã thu hồi thư mục tạm an toàn: {rel_path}")
+                else:
+                    print(
+                        f"  ⚠️ Không thể xóa thư mục {rel_path}: thư mục vẫn tồn tại",
+                        file=sys.stderr,
+                    )
             except Exception as ex:
                 print(f"  ⚠️ Không thể xóa thư mục {rel_path}: {ex}", file=sys.stderr)
 
