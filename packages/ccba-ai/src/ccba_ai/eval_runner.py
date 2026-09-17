@@ -28,10 +28,7 @@ from ccba_ai.routing import ModelArchetype
 logger = logging.getLogger("ccba_ai.eval")
 
 DEFAULT_FIXTURE_PATH = (
-    Path(__file__).resolve().parent.parent.parent
-    / "tests"
-    / "fixtures"
-    / "eval_benchmarks.json"
+    Path(__file__).resolve().parent.parent.parent / "tests" / "fixtures" / "eval_benchmarks.json"
 )
 
 
@@ -151,7 +148,7 @@ def setup_mock_benchmark_responses(provider: Any) -> None:
     )
     provider.register_pattern(
         "calculate_gross_floor_area",
-        "```python\ndef calculate_gross_floor_area(floor_areas: list[float]) -> float:\n    \"\"\"Calculate gross floor area.\"\"\"\n    for a in floor_areas:\n        if a < 0:\n            raise ValueError('Area must be non-negative')\n    return float(sum(floor_areas))\n```",
+        '```python\ndef calculate_gross_floor_area(floor_areas: list[float]) -> float:\n    """Calculate gross floor area."""\n    for a in floor_areas:\n        if a < 0:\n            raise ValueError(\'Area must be non-negative\')\n    return float(sum(floor_areas))\n```',
     )
     provider.register_pattern(
         "tổng mặt bằng 1/500",
@@ -276,7 +273,9 @@ def generate_markdown_report(
     )
     lines.append(f"| **Latency (Avg / P95)** | {target_lat} | {base_lat} | [MEASURED] |")
     base_tokens = f"{baseline_summary.total_tokens:,}" if baseline_summary else "N/A"
-    lines.append(f"| **Total Tokens** | {target_summary.total_tokens:,} | {base_tokens} | [MEASURED] |")
+    lines.append(
+        f"| **Total Tokens** | {target_summary.total_tokens:,} | {base_tokens} | [MEASURED] |"
+    )
     lines.append("")
 
     # Detail breakdown
@@ -288,7 +287,9 @@ def generate_markdown_report(
         status_icon = "[Pass]" if r.passed else "[Fail]"
         tok_info = f"{r.prompt_tokens} in / {r.completion_tokens} out"
         detail = r.error_message if not r.passed else "Valid response"
-        lines.append(f"| `{r.case_id}` | {r.category} | {status_icon} | {r.latency_s:.2f}s | {tok_info} | {detail} |")
+        lines.append(
+            f"| `{r.case_id}` | {r.category} | {status_icon} | {r.latency_s:.2f}s | {tok_info} | {detail} |"
+        )
     lines.append("")
 
     # Upgrade Recommendation

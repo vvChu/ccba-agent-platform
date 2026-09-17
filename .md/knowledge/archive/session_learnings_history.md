@@ -316,3 +316,55 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
 - **Core Pattern P19.3 — Archetype vs Project Type Decoupling & Test Verification Seam Hardening:**
   - **Vấn đề:** Cơ chế ánh xạ archetype cũ trong `sdk_inspector.py` tự động ghi đè hoặc phụ thuộc vào timestamp của registry, dẫn đến cảnh báo khuyến nghị SDK package sai lệch (thiếu nhận diện packages đã cài trong môi trường ảo qua `importlib.metadata`). Ngoài ra, lệnh `sync_spoke.py` thiếu tham số `--dry-run` an toàn cho các tác vụ kiểm thử tự động.
   - **Giải pháp:** Bổ sung hàm `archetype_to_project_type()` độc lập, tra cứu metadata packages hệ thống linh hoạt, trang bị cờ `--dry-run` cho `coordinator.py` và bổ sung 34/34 bài unit test hồi quy toàn diện trong `scripts/tests/test_spoke_sync_modules.py`.
+
+---
+
+## 20. AI Client Hardening: Embedding HTTP 400 Drop Params, Reasoning Streaming Tokens & Auto-Timeout Scaling (Issue #280, PR #281)
+
+- **Core Pattern P20.1 — OpenAI SDK Embedding Compatibility & Gateway Drop Params Invariant:**
+  - **Vấn đề:** Khi gọi `ai.embed()` với model Gemini (`gemini-embedding-2`) thông qua LiteLLM proxy, OpenAI Python SDK tự động chèn các tham số mặc định (như `encoding_format: "base64"`). Google Gemini API từ chối các tham số này và trả về lỗi HTTP 400 `UnsupportedParamsError`.
+  - **Giải pháp:**
+    1. Tại client SDK (`packages/ccba-ai/src/ccba_ai/client.py`), truyền `extra_body={"drop_params": True}` khi gọi `embeddings.create()`.
+    2. Đổi default embedding model sang `gemini-embedding-2` (vector 3072 chiều).
+    3. Tại tầng AI Gateway (RFC Issue #51 trên `dgx-spark-toolkit`), cấu hình `drop_params: true` toàn cục trên proxy để tự động gọt bỏ tham số không tương thích cho toàn bộ downstream clients.
+
+- **Core Pattern P20.2 — Reasoning Model Streaming Token Floor & Auto-Timeout Scaling:**
+  - **Vấn đề:** Với các reasoning models (`gemini-3.7-flash-high`, `-thinking`), giai đoạn suy luận tư duy ngốn nhiều token trước khi bắt đầu sinh câu trả lời. Nếu caller sử dụng mức trần mặc định thấp (ví dụ `max_tokens=1024`), luồng streaming bị cắt cụt giữa chừng ngay khi vừa xong phần thinking hoặc chưa kịp xuất nội dung. Đồng thời, các tác vụ sinh nội dung lớn (> 16,384 tokens) thường mất từ 60s đến 300s, khiến client timeout mặc định (30s) làm rớt kết nối.
+  - **Giải pháp:**
+    1. Trong `stream()` và `async stream()`, áp dụng `resolve_max_tokens(target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384)` để tự động cấp sàn 16,384 tokens cho reasoning models.
+    2. Bổ sung tham số `timeout: float | None` per-request và cơ chế Auto-Timeout Scaling cho `chat()`, `chat_with_metadata()` và `chat_multi()`: `effective_timeout = max(self.timeout, effective_max_tokens / 50.0)`.
+
+- **Core Pattern P20.3 — Depth-Aware Thinking Tag Separation & Reasoning Content Audit:**
+  - **Vấn đề:** Thẻ tư duy `<think>...</think>` có thể xuất hiện nhiều lần, lồng nhau, hoặc không có thẻ đóng (unclosed) do streaming bị ngắt. Regex đơn giản `r"<think>(.*?)</think>"` dễ bị nuốt mất nội dung hoặc văng lỗi.
+  - **Giải pháp:** Xây dựng parser dò độ sâu ký tự (depth-tracking character scanner) trong `LLMOutputParser.extract_thinking_and_content()`. Bóc tách sạch sẽ trường `ChatResult.thinking` độc lập với `ChatResult.content`, ưu tiên nhận `reasoning_content` trực tiếp từ OpenAI/LiteLLM API nếu có.
+
+- **Core Pattern P20.4 — Async Generator Pytest Mocking Invariant:**
+  - **Vấn đề:** Trong `AsyncOpenAI`, `chat.completions.create(stream=True)` là một coroutine bất đồng bộ (`async def`) trả về một async generator. Việc mock bằng `return_value=async_gen()` sẽ gây lỗi `TypeError: object async_generator can't be used in 'await' expression`.
+  - **Giải pháp:** Bắt buộc mock bằng `side_effect=mock_async_func` trong đó `mock_async_func` là một `async def` trả về `async_gen`.
+
+---
+
+## 21. Governed Issue Tree Methodology, Cross-Skill Referrals & Copilot Review Invariants (Issue #276, PR #282)
+
+- **Core Pattern P21.1 — Standalone Kernel Skill & Model-Invocation Budgeting (ADR-0040, ADR-0057):**
+  - **Vấn đề:** Khi bổ sung kỹ năng tư duy đa ngành `ccba-issue-tree` (McKinsey MECE Issue Tree & Governed Lifecycle), việc gán vào `bundle: _core` có nguy cơ phá vỡ giới hạn trần cứng 10 model-invoked skills (`MAX_MODEL_INVOKED_PER_BUNDLE = 10` tại `skill_validator.py:87`), gây lỗi `CONTEXT_BUDGET_CEILING_EXCEEDED`. Mặt khác, nếu ép kỹ năng này vào `bundle: _software` thì sẽ làm méo mó bản chất đa miền của một phương pháp luận giải quyết vấn đề (vốn dùng cho cả pháp lý, thẩm tra QC, BIM, và tranh chấp hợp đồng).
+  - **Giải pháp:** Thiết lập `disable-model-invocation: true` trong frontmatter của `.agents/skills/ccba-issue-tree/SKILL.md`. Điều này cho phép kỹ năng nằm trọn vẹn trong `bundle: _core` (Tier 2B Standalone Kernel Skill, GPI = 14.50), kích hoạt trực tiếp qua lệnh `/ccba-issue-tree` hoặc qua phân phối của Orchestrator mà không tiêu tốn ngân sách system prompt tokens của các tác tử.
+
+- **Core Pattern P21.2 — Progressive Cross-Skill Referral Hooks vs Knowledge Bloat:**
+  - **Vấn đề:** Thay vì sao chép các chỉ dẫn phân tích cây vấn đề vào hàng chục kỹ năng hiện hữu (gây phình to kích thước file và trùng lặp logic), làm thế nào để các kỹ năng chuyên biệt tự động tận dụng được sức mạnh phân rã MECE khi gặp bài toán phức tạp?
+  - **Giải pháp:** Thiết lập mạng lưới 7 điểm điều hướng (Cross-Skill Referral Hooks) có chọn lọc (Tier 1 High-Impact) tại đúng các nút rẽ nhánh quyết định:
+    1. `ccba-diagnosing-bugs`: Pha 3 (Hypothesise cho lỗi đa dịch vụ phi tất định $\rightarrow$ Diagnostic Why-Tree).
+    2. `ccba-ai-qc`: Pha 3 (Xung đột kỹ thuật đa bộ môn/PCCC $\rightarrow$ Why-Tree + How-Tree).
+    3. `ccba-legal-advisor`: Bước 1/2 (Tranh chấp hợp đồng Cấp độ 3 $\rightarrow$ Why-Tree chuỗi trách nhiệm + How-Tree hòa giải/VIAC).
+    4. `ccba-ask`: Bước 1 (Tiếp nhận bài toán mở đa chiều $\rightarrow$ Issue Tree).
+    5. `ccba-grilling`: Nhánh A & Phòng thủ (Xung đột kiến trúc $\ge 2$ phương án $\rightarrow$ How-Tree).
+    6. `bigbim-risk`: Bước 4 (Xung đột thông tin V2 & drift Unique ID $\rightarrow$ Why-Tree + How-Tree).
+    7. `ccba-to-spec`: Bước 3 (Bóc tách Epic lớn $\rightarrow$ What-Tree 4 nhãn MECE: ANALYSIS, DECISION, COMMITMENT, SYNTHESIS).
+
+- **Core Pattern P21.3 — Concept-Level Invariants vs Brittle Numeric Assertions:**
+  - **Vấn đề:** Trong quá trình review PR #282, Copilot liên tục phát hiện và chặn merge (Changes recommended) do các số cứng bị lệch pha giữa các tệp: ví dụ câu chữ ghi "11 Ghế CCBA Charter" nhưng bảng RACI liệt kê 12 vai trò; hoặc ghi "máy trạng thái 5 bước" nhưng sơ đồ mô tả 6 trạng thái.
+  - **Giải pháp:** Loại bỏ toàn bộ các số lượng đếm cơ học trong đề mục và lời văn mô tả. Quy chuẩn sang các định danh khái niệm bền vững: "các Ghế trách nhiệm Hiến chương CCBA", "ma trận RACI Hiến chương CCBA", và "ma trận vòng đời nhánh".
+
+- **Core Pattern P21.4 — Test Isolation Side-Effect Cleanup Before Release:**
+  - **Vấn đề:** Lệnh kiểm thử tiền phát hành `run_isolated_tests.py --all --stress` có thể sinh ra các side-effects trong working tree (ví dụ như tạo embedding cache files hoặc cập nhật metadata). Nếu không dọn sạch trước khi gọi `gh pr merge`, git checkout/merge sẽ bị xung đột hoặc thất bại.
+  - **Giải pháp:** Luôn kiểm tra `git status --porcelain`, thực hiện `git restore` và `git clean -fd` đối với các artifacts sinh ra trong quá trình test trước khi thực hiện các thao tác chuyển nhánh hoặc merge.
