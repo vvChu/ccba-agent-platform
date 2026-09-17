@@ -157,7 +157,9 @@ class FleetTelemetryReport:
                 )
             else:
                 promotion_status = "Spoke Local Innovation"
-                recommendation = "Retain as Spoke local innovation until cross-project demand emerges"
+                recommendation = (
+                    "Retain as Spoke local innovation until cross-project demand emerges"
+                )
 
             innovations.append(
                 {
@@ -692,15 +694,15 @@ def generate_fleet_dashboard_html(
         innov_rows.append(
             f"""
             <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 text-xs transition-colors">
-              <td class="py-2.5 px-3 font-mono font-semibold text-purple-400">{html.escape(inn['tool_or_skill'])}</td>
+              <td class="py-2.5 px-3 font-mono font-semibold text-purple-400">{html.escape(inn["tool_or_skill"])}</td>
               <td class="py-2.5 px-3">{spokes_badges}</td>
-              <td class="py-2.5 px-3 text-right font-mono font-semibold">{inn['total_calls']:,}</td>
+              <td class="py-2.5 px-3 text-right font-mono font-semibold">{inn["total_calls"]:,}</td>
               <td class="py-2.5 px-3 text-center">
                 <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold border {status_color}">
-                  {inn['promotion_status']}
+                  {inn["promotion_status"]}
                 </span>
               </td>
-              <td class="py-2.5 px-3 text-[var(--muted-foreground)]">{html.escape(inn['recommendation'])}</td>
+              <td class="py-2.5 px-3 text-[var(--muted-foreground)]">{html.escape(inn["recommendation"])}</td>
             </tr>
             """
         )

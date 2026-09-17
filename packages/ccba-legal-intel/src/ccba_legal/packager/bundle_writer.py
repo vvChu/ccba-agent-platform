@@ -294,4 +294,3 @@ def validate_bundle_provenance(bundle_dir: Path | str) -> tuple[bool, str]:
         return False, "source_assets phải có ít nhất docx_present hoặc pdf_present là True"
 
     return True, "Provenance valid"
-

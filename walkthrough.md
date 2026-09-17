@@ -1,71 +1,65 @@
-# Walkthrough: Issue #264 — Eliminate Cleanliness Gate Contradiction, Fix Legal Corpus Misidentification, & Auto-Sync Guardrail Scripts
+# Walkthrough: PR #282 — Kernel Skill ccba-issue-tree & Cross-Skill Referral Hooks
 
-## 1. Tổng Quan Issue #264
-- **Branch:** `fix/issue-264-spoke-sync-guardrails` $\rightarrow$ `main`
-- **Tiêu đề:** `fix(spoke-sync): eliminate cleanliness gate contradiction, fix legal corpus misidentification, and auto-sync guardrail scripts (#264)`
-- **Issue liên quan:** [Issue #264](https://github.com/vvChu/ccba-agent-platform/issues/264)
-- **Thể chế & Kiến trúc:** ADR 0041, ADR 0044, ADR 0050, ADR 0057, ADR 0058
+## 1. Tổng Quan PR #282
+- **Branch:** `feat/ccba-issue-tree-and-cross-referrals` $\rightarrow$ `main`
+- **Tiêu đề:** `feat(skills): add ccba-issue-tree kernel skill and cross-skill referral hooks (#282)`
+- **PR liên quan:** [PR #282](https://github.com/vvChu/ccba-agent-platform/pull/282)
+- **Thể chế & Kiến trúc:** ADR-0035, ADR-0040, ADR-0047, ADR-0050, ADR-0057, ADR-0058, ADR-0059
 
 ---
 
-## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #265)
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #282)
 
-- **Review ID:** `PRR_kwDOQzfV088AAAABNQeOiA`
+- **Review IDs:** `PRR_kwDOQzfV088AAAABN9gBSg`, `PRR_kwDOQzfV088AAAABN9jCQw`, `PRR_kwDOQzfV088AAAABN9lC4w`
 
 | ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
 |---|---|---|---|
-| `3994619505` | `packages/ccba-legal-intel/src/ccba_legal/sync/engine.py` | `pull_latest_okf_bundles()` kiểm tra `project.name` phân biệt hoa/thường (case-sensitive) so với thư mục đã chuẩn hóa `.lower()`. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa so sánh không phân biệt hoa/thường: `str(proj.get("name", "")).lower() == "ccba-legal-knowledge"`. |
-| `3994619519` | `scripts/spoke/sync/sdk_inspector.py` | `copy_if_needed()` coi sự hiện diện của thư mục `scripts/` là Python Spoke, có thể copy nhầm guardrail scripts sang Spoke không phải Python. | **ĐÃ KHẮC PHỤC**: Bỏ nhánh `or (self.spoke_root / "scripts").exists()`, chỉ sử dụng `is_python_spoke(self.spoke_root, self.project_type)` vốn đã kiểm tra đầy đủ chỉ dấu Python. |
-| `3994619531` | `scripts/spoke/sync/sdk_inspector.py` | So sánh `project.name` phân biệt hoa/thường (case-sensitive) trong khi các phần khác dùng `.lower()`. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa so sánh không phân biệt hoa/thường: `str(proj.get("name", "")).lower() == "ccba-legal-knowledge"` trong cả `sdk_inspector.py` và `engine.py`. |
-| `3994619543` | `.md/knowledge/session_learnings.md` | Dấu backticks inline-code không cân bằng tại dòng RULE-4.5. | **ĐÃ KHẮC PHỤC**: Bỏ backticks quanh địa chỉ IP `100.83.192.30:8090` để đóng mở inline-code span chuẩn xác. |
+| `4033172362` | `.agents/skills/ccba-issue-tree/SKILL.md` | PR description states GPI = 14.50, but frontmatter shows raw sum S=4, K=2, A=1, P=1 (Total 8.0). Cần đồng bộ giá trị tính theo công thức trọng số ADR-0057. | **ĐÃ KHẮC PHỤC**: Đồng bộ toàn hệ thống. Đã cập nhật generator `compile_skills_docs.py` để tính điểm GPI có trọng số chuẩn xác: $S \times 2.5 + K \times 2.0 + A \times 2.0 - P \times 1.5 = 14.50$. |
+| `4033172414` | `.agents/skills/ccba-issue-tree/references/governed_lifecycle_guide.md` | Tiêu đề ghi 5-State lifecycle machine nhưng bảng và sơ đồ định nghĩa 6 trạng thái (`UNVERIFIED`, `IN_INVESTIGATION`, `VERIFIED_FACT`, `FALSIFIED`, `DECISION_READY`, `COMMITTED`). | **ĐÃ KHẮC PHỤC**: Cập nhật tiêu đề và nội dung thành "6-State Lifecycle Machine" (Ma Trận Vòng Đời 6 Trạng Thái) đồng bộ trong cả `governed_lifecycle_guide.md` và `SKILL.md`. |
+| `4033239718` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | `rank-bm25` là dependency bắt buộc trong `pyproject.toml`, việc nuốt `ImportError` che giấu lỗi cấu hình môi trường. | **ĐÃ KHẮC PHỤC**: Bỏ `try...except ImportError`, import trực tiếp `from rank_bm25 import BM25Okapi` để fail-fast rõ ràng. |
+| `4033501875` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | Hardcode `timeout=2.0` có thể gây timeout trong môi trường thực tế khi gọi API embedding. | **ĐÃ KHẮC PHỤC**: Tham số hóa `embed_timeout: float | None = None` với giá trị mặc định an toàn 10.0s, đồng thời hỗ trợ biến môi trường cấu hình `CCBA_EMBED_TIMEOUT`. |
+| `4033528975` | `scripts/governance/drift_auditor.py` | Fallback sang `git log -n 20` có thể lấy nhầm commit lịch sử không liên quan, che giấu drift thực tế. | **ĐÃ KHẮC PHỤC**: Loại bỏ fallback `-n 20`, chuyển sang kiểm tra tuần tự các ref so sánh nhánh hợp lệ (`origin/main..HEAD`, `origin/master..HEAD`, `main..HEAD`, `master..HEAD`). |
+| `4033575070` | `docs/skills/ccba-issue-tree.md` | Điểm đánh giá GPI hiển thị `Tổng: 8.0` (tổng số học) thay vì điểm trọng số ADR-0057 (GPI = 14.50). | **ĐÃ KHẮC PHỤC**: Nâng cấp `compile_skills_docs.py` để tính điểm trọng số chuẩn ADR-0057, tái biên dịch toàn bộ 73 tài liệu kỹ năng, `INDEX.md`, `llms.txt`, `llms-full.txt`, và `index.html`. |
+| `4033728795` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | `CCBA_EMBED_TIMEOUT` parse `float(env_val)` không có rào chắn, dễ crash nếu biến môi trường không phải số. | **ĐÃ KHẮC PHỤC**: Bao bọc `try...except (ValueError, TypeError)` với giá trị fallback mặc định an toàn 10.0s. |
+| `4033728854` | `.agents/skills/ccba-issue-tree/SKILL.md` | Bảng tham chiếu Level 3 hardcode đếm ("máy trạng thái 5 bước", "RACI 11 Ghế") không khớp thực tế. | **ĐÃ KHẮC PHỤC**: Loại bỏ các con số hardcode, thay bằng mô tả khái quát: "máy trạng thái vòng đời nhánh" và "ma trận RACI Hiến chương CCBA". |
+| `4033728889` | `.agents/skills/ccba-issue-tree/references/governed_lifecycle_guide.md` | Tiêu đề mục ghi "11 Ghế" nhưng bảng bên dưới liệt kê 12 vai trò, gây mâu thuẫn nội bộ. | **ĐÃ KHẮC PHỤC**: Cập nhật tiêu đề thành "Ma Trận RACI Ánh Xạ Các Ghế Trách Nhiệm Hiến Chương CCBA". |
+| `4033766353` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | Parsing CCBA_EMBED_TIMEOUT via float(env_val) can raise ValueError and crash engine initialization if non-numeric. | **ĐÃ KHẮC PHỤC**: Đã bắt ngoại lệ `(ValueError, TypeError)` và ghi log cảnh báo khi giá trị env không hợp lệ, fallback về 10.0s. |
+| `4033796466` | `.agents/skills/ccba-issue-tree/SKILL.md` | Dòng 35 và 111 còn ghi "11 Ghế" không khớp bảng 12 vai trò; `walkthrough.md` dòng 33 cũng còn ghi RACI 11 Ghế. | **ĐÃ KHẮC PHỤC**: Đã loại bỏ số cứng "11 Ghế", quy chuẩn thành "các Ghế trách nhiệm Hiến chương CCBA" / "ma trận RACI Hiến chương CCBA". |
 
 ---
 
 ## 3. Các Thay Đổi Cốt Lõi
 
-### 2.1 Loại Bỏ Contradiction Giữa `safe_pytest.py` / `safe_runner.py` và `check_spoke_cleanliness.py`
-- **Vấn đề:** Khối fallback `sys.path.insert(0, str(hub_harness_src))` trong `safe_pytest.py` và `safe_runner.py` vi phạm kiểm tra regex `SYS_PATH_HACK_PATTERN` của `check_spoke_cleanliness.py`. Đồng thời `safe_runner.py` chưa nằm trong `ALLOWLIST_SCRIPTS`.
-- **Giải pháp:**
-  - Gỡ bỏ hoàn toàn `sys.path.insert` trong `scripts/safe_pytest.py` và `scripts/safe_runner.py`, thay bằng `ImportError` tường minh chỉ dẫn cài đặt `pip install -e <hub_path>/packages/ccba-harness` hoặc chạy `python scripts/spoke_bootstrap.py`.
-  - Thêm `"safe_runner.py"` vào `ALLOWLIST_SCRIPTS` trong `scripts/spoke/check_spoke_cleanliness.py`.
+### 3.1 Đóng Gói Kỹ Năng Hạt Nhân `ccba-issue-tree` (Tier 2B Standalone Kernel Skill)
+- **Phương pháp luận:** McKinsey MECE Issue Tree (Diagnostic Why-Tree, Solution How-Tree, Workplan What-Tree) tích hợp tầng vận hành Governed Lifecycle & ma trận RACI Hiến chương CCBA.
+- **Rào chắn:** ADR-0059 Verbatim Evidence Grounding, ADR-0058 Hard Completion Lock, ADR-0030 Context Budget Protection.
+- **Cấu trúc tài liệu bộc lộ dần:**
+  - `.agents/skills/ccba-issue-tree/SKILL.md`: Master skill definition.
+  - `references/tree_templates.md`: Mẫu cây và sơ đồ Mermaid chi tiết.
+  - `references/governed_lifecycle_guide.md`: Hướng dẫn vận hành 6 trạng thái vòng đời và ma trận bằng chứng.
 
-### 2.2 Sửa Lỗi Nhận Diện Nhầm Master Legal Corpus
-- **Vấn đề:** Trong `scripts/spoke/sync/sdk_inspector.py` và `packages/ccba-legal-intel/src/ccba_legal/sync/engine.py`, việc kiểm tra `archetype == "knowledge_corpus"` hoặc `mode == "knowledge"` đã đánh đồng mọi kho tri thức cá nhân (như VvC Second Brain) thành Master Legal Corpus (`ccba-legal-knowledge`). Hậu quả là phân loại nhầm project type thành "Pháp điển" trên Dashboard và kích hoạt `master_corpus_preserved` (bỏ qua đồng bộ pháp lý).
-- **Giải pháp:**
-  - Chuẩn hóa: Chỉ coi là Master Legal Corpus khi repository name là `ccba-legal-knowledge` hoặc `workspace_context.yaml` chỉ định rõ `is_master: true` (hoặc `project.name == "ccba-legal-knowledge"`).
-  - Tái ánh xạ `PROJECT_TYPE_ALIASES` trong `scripts/spoke/sync/coordinator.py`: Ánh xạ `knowledge_corpus`, `knowledge-base`, `knowledge_base`, `second-brain`, `second_brain` thành `"Tác vụ Admin"`.
-  - Trong `SharedSdkInspector.resolve_packages_to_check()`, chỉ tự động gợi ý `ccba-legal-intel` cho `knowledge_corpus` nếu `project_type == "Pháp điển"` hoặc tên repo là `ccba-legal-knowledge`.
-
-### 2.3 Tự Động Đồng Bộ Guardrail Scripts Khi Chạy `sync_spoke.py --apply`
-- **Vấn đề:** Trước đây, kỹ năng `ccba-update-spoke` phải yêu cầu chạy lệnh PowerShell thủ công để copy `check_hub_import_depth.py` và `check_spoke_cleanliness.py` vào Spoke.
-- **Giải pháp:**
-  - Nâng cấp `TestGuardrailCopier`: Tự động đồng bộ idempotent 4 tệp guardrails:
-    1. `conftest.py` (tại spoke root)
-    2. `scripts/safe_pytest.py`
-    3. `scripts/check_hub_import_depth.py`
-    4. `scripts/check_spoke_cleanliness.py`
-  - So sánh hash file thông qua `are_files_identical()` và trả về danh sách chi tiết các hành động (`status: NEW | UPDATED | UNCHANGED`).
-  - Tích hợp `TestGuardrailCopier.copy_if_needed(dry_run)` vào `_sync_full_bundle` trong `coordinator.py` để ghi nhận các mục này vào bảng tổng kết kết quả đồng bộ.
-  - Cập nhật `.agents/skills/ccba-update-spoke/SKILL.md` chuyển bước copy thủ công thành hành động tự động 100%.
+### 3.2 Mạng Lưới 7 Cross-Skill Referral Hooks
+Tích hợp móc nối điều hướng sang `/ccba-issue-tree` tại các điểm nút tư duy trọng yếu:
+1. `ccba-diagnosing-bugs`: Pha 3 (Chẩn đoán lỗi phức tạp đa dịch vụ $\rightarrow$ Why-Tree).
+2. `ccba-ai-qc`: Pha 3 (Xung đột kỹ thuật liên bộ môn & PCCC $\rightarrow$ Why-Tree + How-Tree).
+3. `ccba-legal-advisor`: Bước 1/2 (Tranh chấp hợp đồng Cấp độ 3 $\rightarrow$ Why-Tree chuỗi trách nhiệm + How-Tree giải pháp hòa giải/VIAC).
+4. `ccba-ask`: Bước 1 (Đầu mối tiếp nhận bài toán mở đa chiều $\rightarrow$ Issue Tree).
+5. `ccba-grilling`: Nhánh A & Biên giới phòng thủ (Xung đột kiến trúc $\ge 2$ lựa chọn $\rightarrow$ How-Tree).
+6. `bigbim-risk`: Bước 4 (Xung đột thông tin V2 & drift Unique ID $\rightarrow$ Why-Tree + How-Tree).
+7. `ccba-to-spec`: Bước 3 (Bóc tách công việc Epic lớn $\rightarrow$ What-Tree 4 nhãn MECE: ANALYSIS, DECISION, COMMITMENT, SYNTHESIS).
 
 ---
 
-## 3. Kết Quả Kiểm Thử & Kiểm Toán Tất Định
+## 4. Kết Quả Kiểm Thử & Kiểm Toán Tất Định (ADR-0058)
 
-### 3.1 Unit & Integration Tests (100% Pass)
-| Test Suite | Lệnh | Kết Quả |
-| :--- | :--- | :---: |
-| Spoke Sync Modules | `python scripts/safe_pytest.py -f scripts/tests/test_spoke_sync_modules.py` | ✅ 30/30 PASSED |
-| Spoke Synchronizer | `python scripts/safe_pytest.py -f scripts/tests/test_spoke_synchronizer.py` | ✅ 8/8 PASSED |
-| Taxonomy Integrity | `python scripts/safe_pytest.py -f tests/governance/test_taxonomy_integrity.py` | ✅ 11 PASSED (1 skipped) |
-| Legal Intel Sync | `python scripts/safe_pytest.py -f packages/ccba-legal-intel/tests/test_sync.py packages/ccba-legal-intel/tests/test_sync_spoke.py` | ✅ 8/8 PASSED |
-| Session Learnings Compaction | `python scripts/safe_pytest.py -f tests/governance/test_compact_session_learnings.py` | ✅ 7/7 PASSED |
+- **Local Verification:** `python -m ccba_harness verify-patch --preset ci` $\rightarrow$ ✅ 5/5 PASS (Exit Code 0).
+- **Harness CI Gates:** `python scripts/eval/run_harness_evals.py --all` $\rightarrow$ ✅ 7/7 GATES PASS (Exit Code 0).
+- **GitHub Actions CI (PR #282):**
+  - `Lint Markdown`: ✅ PASS
+  - `scan` (Security & Privacy): ✅ PASS
+  - `validate` (Documentation Check): ✅ PASS
+  - `Test - Python 3.10`: ✅ PASS (3m37s)
+  - `Test - Python 3.11`: ✅ PASS (3m17s)
+  - `Test - Python 3.12`: ✅ PASS (3m33s)
+- **Copilot PR Review Audit:** ✅ PASS (100% các ý kiến được giải trình và giải quyết triệt để).
 
-### 3.2 ADR-0058 Deterministic Hard Completion Lock
-Đã vượt qua cổng kiểm toán tất định của nền tảng:
-```text
-# 🛡️ Deterministic Patch Verification Report: ✅ ALL PASSED
-- Overall Status: PASS
-- Commands Executed: 2/2 passed (python -m ruff check ., python -m pytest tests/ -q)
-- Total Duration: 30120.7 ms
-```

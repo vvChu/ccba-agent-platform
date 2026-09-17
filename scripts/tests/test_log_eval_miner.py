@@ -92,9 +92,7 @@ def test_load_catalog(tmp_path: Path):
     # 2. Custom catalog loading
     custom_cat = tmp_path / "custom_catalog.yaml"
     custom_cat.write_text(
-        "skills:\n"
-        "  - name: custom-skill\n"
-        "    triggers: ['tùy biến', 'custom']\n",
+        "skills:\n  - name: custom-skill\n    triggers: ['tùy biến', 'custom']\n",
         encoding="utf-8",
     )
     custom_skills = load_catalog(custom_cat, reload=True)
@@ -113,7 +111,10 @@ def test_load_catalog(tmp_path: Path):
 def test_classify_target_skill_canonical():
     """Test automatic classification of user prompts into canonical target skills."""
     assert classify_target_skill("Soạn thảo hợp đồng và công văn gửi đối tác") == "ccba-copywriting"
-    assert classify_target_skill("Kiểm tra bậc chịu lửa PCCC và kiểm soát khói") == "ccba-ai-qc-pccc-audit"
+    assert (
+        classify_target_skill("Kiểm tra bậc chịu lửa PCCC và kiểm soát khói")
+        == "ccba-ai-qc-pccc-audit"
+    )
     assert (
         classify_target_skill("Nghiên cứu văn bản pháp điển Nghị định 105/2025/NĐ-CP")
         == "ccba-legal-intel"
@@ -162,7 +163,9 @@ def test_regression_no_false_positive_tham_tra():
     ]
     for prompt in generic_prompts:
         canonical_result = classify_target_skill(prompt, canonical=True)
-        assert canonical_result != "ccba-ai-qc-pccc-audit", f"False positive PCCC audit on: '{prompt}'"
+        assert canonical_result != "ccba-ai-qc-pccc-audit", (
+            f"False positive PCCC audit on: '{prompt}'"
+        )
         legacy_result = classify_target_skill(prompt, canonical=False)
         assert legacy_result != "pccc_audit", f"False positive PCCC audit on: '{prompt}'"
 
@@ -181,7 +184,10 @@ def test_regression_no_false_positive_tham_tra():
 def test_classify_trigger_matching_and_specificity():
     """Test exact command triggers, multi-word specificity weighting, and word boundary matching."""
     # 1. Exact command trigger (/ccba-...)
-    assert classify_target_skill("Vui lòng chạy /ccba-mermaid-diagram cho kiến trúc") == "ccba-mermaid-diagram"
+    assert (
+        classify_target_skill("Vui lòng chạy /ccba-mermaid-diagram cho kiến trúc")
+        == "ccba-mermaid-diagram"
+    )
 
     # 2. Canonical skill name in text
     assert (
@@ -200,23 +206,16 @@ def test_classify_trigger_matching_and_specificity():
 def test_classify_disambiguation():
     """Test disambiguation between competing skills (orchestration vs domain, advisor vs tracker)."""
     # Agent orchestration cues
-    assert (
-        classify_target_skill("You are Forensic Auditor 1 for Milestone 1")
-        == "ccba-teamwork"
-    )
+    assert classify_target_skill("You are Forensic Auditor 1 for Milestone 1") == "ccba-teamwork"
     assert (
         classify_target_skill("You are Forensic Auditor 1 for Milestone 1", canonical=False)
         == "agent_orchestration"
     )
-    assert (
-        classify_target_skill("You are teamwork_preview_explorer_m1_1")
-        == "ccba-teamwork"
-    )
+    assert classify_target_skill("You are teamwork_preview_explorer_m1_1") == "ccba-teamwork"
 
     # Legal advisor vs legal document tracker
     assert (
-        classify_target_skill("Tư vấn pháp lý về hồ sơ cấp phép xây dựng")
-        == "ccba-legal-advisor"
+        classify_target_skill("Tư vấn pháp lý về hồ sơ cấp phép xây dựng") == "ccba-legal-advisor"
     )
     assert (
         classify_target_skill("Tra cứu cập nhật thông tư và nghị định trong registry VBPL")
@@ -230,11 +229,21 @@ def test_resolve_output_test_file(tmp_path: Path):
     out_dir.mkdir()
 
     # Mapped skills resolve to legacy filename even if not on disk yet
-    assert resolve_output_test_file(out_dir, "ccba-ai-qc-pccc-audit") == out_dir / "eval_pccc_audit.json"
+    assert (
+        resolve_output_test_file(out_dir, "ccba-ai-qc-pccc-audit")
+        == out_dir / "eval_pccc_audit.json"
+    )
     assert resolve_output_test_file(out_dir, "pccc_audit") == out_dir / "eval_pccc_audit.json"
-    assert resolve_output_test_file(out_dir, "ccba-legal-intel") == out_dir / "eval_legal_intel.json"
-    assert resolve_output_test_file(out_dir, "bigbim-classification") == out_dir / "eval_bigbim_classification.json"
-    assert resolve_output_test_file(out_dir, "general_domain") == out_dir / "eval_general_domain.json"
+    assert (
+        resolve_output_test_file(out_dir, "ccba-legal-intel") == out_dir / "eval_legal_intel.json"
+    )
+    assert (
+        resolve_output_test_file(out_dir, "bigbim-classification")
+        == out_dir / "eval_bigbim_classification.json"
+    )
+    assert (
+        resolve_output_test_file(out_dir, "general_domain") == out_dir / "eval_general_domain.json"
+    )
 
     # Unmapped canonical skill creates standardized snake_case file
     assert resolve_output_test_file(out_dir, "ccba-maskara") == out_dir / "eval_ccba_maskara.json"
@@ -423,18 +432,12 @@ def test_regression_diacritic_chat_collision():
 
 def test_classify_spaced_canonical_skill_names():
     """Test classification when user mentions natural space-separated skill names."""
-    assert (
-        classify_target_skill("Thực hiện code review cho pull request này")
-        == "ccba-code-review"
-    )
+    assert classify_target_skill("Thực hiện code review cho pull request này") == "ccba-code-review"
     assert (
         classify_target_skill("Thiết lập api circuit breaker để chống nghẽn")
         == "ccba-api-circuit-breaker"
     )
-    assert (
-        classify_target_skill("Thiết lập git guardrails bảo vệ commit")
-        == "ccba-git-guardrails"
-    )
+    assert classify_target_skill("Thiết lập git guardrails bảo vệ commit") == "ccba-git-guardrails"
     assert (
         classify_target_skill("Tạo danh mục completion checklist cho dự án")
         == "ccba-completion-checklist"
@@ -453,9 +456,7 @@ def test_custom_catalog_path_in_miner(tmp_path: Path):
     """Test mine_logs_and_export with custom catalog_path."""
     custom_cat = tmp_path / "custom_catalog.yaml"
     custom_cat.write_text(
-        "skills:\n"
-        "  - name: ccba-custom-tester\n"
-        "    triggers: ['thử nghiệm đặc biệt']\n",
+        "skills:\n  - name: ccba-custom-tester\n    triggers: ['thử nghiệm đặc biệt']\n",
         encoding="utf-8",
     )
 
@@ -562,7 +563,9 @@ def test_identify_failures_in_scope_disclaimer_is_failure():
     failures = identify_failures([interaction])
     assert len(failures) == 1
     assert failures[0]["failure_type"] == "ROUTER_DISCLAIMER"
-    assert "ccba-ai-qc-pccc-audit" in failures[0]["reason"] or "domain prompt" in failures[0]["reason"]
+    assert (
+        "ccba-ai-qc-pccc-audit" in failures[0]["reason"] or "domain prompt" in failures[0]["reason"]
+    )
 
 
 def test_find_transcript_files_shallow_and_fast(tmp_path: Path):
@@ -630,5 +633,3 @@ def test_dry_run_mode_exports_to_scratch(tmp_path: Path):
     assert scratch_out_dir.exists()
     scratch_files = list(scratch_out_dir.glob("*.json"))
     assert len(scratch_files) >= 1
-
-

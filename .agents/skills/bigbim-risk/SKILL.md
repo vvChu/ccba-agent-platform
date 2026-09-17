@@ -105,6 +105,7 @@ Khi nhận hồ sơ phối hợp thiết kế (AEC Coordination Matrix) hoặc m
 ### Bước 4: Đánh giá tác động và Đề xuất giải pháp
 *   Phân tích hậu quả nếu không xử lý mâu thuẫn (chậm tiến độ, tăng chi phí sửa chữa, hay gián đoạn vận hành).
 *   Đề xuất giải pháp cụ thể (Ví dụ: dịch chuyển cao độ ống gió, điều chỉnh kích thước lỗ mở rầm, hoặc chuẩn hóa lại mã sản phẩm mua sắm).
+*   **Leo thang phân rã đa chiều (Escalation):** Đối với khoảng hở không gian đa bộ môn phức tạp (Level 2 Space Gap) hoặc trôi dạt định danh nghiêm trọng (`BBP Unique ID drift`), khuyến nghị triệu hồi [`/ccba-issue-tree`](../ccba-issue-tree/SKILL.md): dùng Why-Tree để tìm gốc rễ trôi dạt dữ liệu, hoặc How-Tree để xếp hạng phương án phối hợp không gian dưới quyền **Chủ trì Bộ môn** (giữ nguyên JSON schema, đưa phân tích cây vào báo cáo Markdown).
 - **Tiêu chí hoàn thành:** Báo cáo đánh giá tác động kèm đề xuất phương án xử lý mâu thuẫn cụ thể cho từng vị trí.
 
 ---

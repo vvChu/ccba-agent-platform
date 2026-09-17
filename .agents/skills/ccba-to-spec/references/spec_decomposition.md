@@ -50,6 +50,8 @@ Khi cần thực hiện một thay đổi cơ học nhưng có tầm ảnh hư�
 2. **Di chuyển (Migrate)**: Tạo các ticket nhỏ hơn theo từng directory/package để chuyển dần các call sites sang dùng code mới.
 3. **Thu hẹp (Contract)**: Sau khi không còn call site nào dùng code cũ, tạo ticket xóa bỏ hoàn toàn code cũ. Chiến lược này giúp giữ cho CI luôn xanh từ đầu đến cuối quy trình.
 
+**Phân rã Epic quy mô lớn (Monorepo Features):** Đối với các Epic lớn hoặc tính năng đa package monorepo, khuyến nghị triệu hồi [`/ccba-issue-tree`](../../ccba-issue-tree/SKILL.md) (Workplan What-Tree) để phân loại toàn bộ đầu việc vào 4 thẻ chuẩn mực MECE: `[ANALYSIS]`, `[DECISION]`, `[COMMITMENT]`, và `[SYNTHESIS]`, đảm bảo bao phủ 100% không gian công việc (Collectively Exhaustive) không bỏ sót rủi ro tích hợp.
+
 **Tiêu chí hoàn thành:** Danh sách lát cắt dọc được phác thảo với quan hệ chặn đầy đủ.
 
 ### Bước 4: Hỏi ý kiến người dùng (Quiz the user)

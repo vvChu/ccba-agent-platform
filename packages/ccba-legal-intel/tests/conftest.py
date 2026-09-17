@@ -14,9 +14,16 @@ def clean_env() -> Generator[None, None, None]:
         if val is not None:
             popped[var] = val
 
+    orig_mock = os.environ.get("CCBA_AI_MOCK")
+    os.environ["CCBA_AI_MOCK"] = "1"
+
     yield
 
-    # Restore them after the session
+    if orig_mock is not None:
+        os.environ["CCBA_AI_MOCK"] = orig_mock
+    else:
+        os.environ.pop("CCBA_AI_MOCK", None)
+
     for var, val in popped.items():
         os.environ[var] = val
 
