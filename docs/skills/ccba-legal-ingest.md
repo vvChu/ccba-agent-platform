@@ -23,7 +23,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-legal-ingest
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (Tổng: 13.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (GPI: 24.50)` |
 
 ---
 

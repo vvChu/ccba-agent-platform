@@ -23,7 +23,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-ai-gateway-sdk
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 

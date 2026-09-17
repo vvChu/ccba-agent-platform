@@ -41,7 +41,7 @@ Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nh
 
 Đây là lộ trình chuẩn nhất của mọi yêu cầu phát triển tính năng mới trong Platform:
 
-1. **Làm sắc nét ý tưởng:** Gọi `/ccba-grilling` để phỏng vấn sâu rộng và ghi nhận tri thức dự án vào `CONTEXT.md` và các bản ghi quyết định kiến trúc (ADRs).
+1. **Làm sắc nét ý tưởng:** Gọi `/ccba-grilling` để phỏng vấn sâu rộng và ghi nhận tri thức dự án vào `CONTEXT.md` và các bản ghi quyết định kiến trúc (ADRs). Với bài toán đa chiều phức tạp, chẩn đoán nguyên nhân gốc rễ hoặc so sánh chiến lược MECE: Triệu hồi [`/ccba-issue-tree`](../ccba-issue-tree/SKILL.md) trước khi chốt phương án.
 2. **Rẽ nhánh — prototype hay spec:**
    - Nếu cần kiểm chứng giao diện/hành vi trực quan: Chạy `/ccba-handoff` ➔ mở phiên `/ccba-implement` (chế độ prototyping) ➔ `/ccba-handoff` kết quả trở lại.
    - Nếu là build nhiều phiên: Chạy `/ccba-to-spec` để tổng hợp thành Đặc tả Kỹ thuật.
@@ -57,6 +57,7 @@ Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nh
 
 ## Các luồng bổ trợ (On-ramps & Upkeep)
 
+*   **Phân rã bài toán phức tạp / Chẩn đoán gốc rễ:** Chạy [`/ccba-issue-tree`](../ccba-issue-tree/SKILL.md) để phân rã vấn đề theo chuẩn MECE (Why-tree chẩn đoán sự cố, How-tree tìm kiếm giải pháp, What-tree lập kế hoạch hành động).
 *   **Tiếp nhận yêu cầu thô / Báo lỗi từ bên ngoài:** Chạy `/ccba-issue-to-hub` để phân loại trạng thái qua triage workflow, lọc trùng lặp với `.out-of-scope/` và soạn thảo Agent Brief.
 *   **Xử lý lỗi hóc búa / Regression:** Sử dụng kỹ năng `ccba-diagnosing-bugs` để xây dựng vòng phản hồi nhanh và viết test hồi quy trước khi vá lỗi.
 *   **Upkeep kiến trúc hệ thống:** Chạy `/ccba-codebase-design` để phát hiện các module nông và deepening cấu trúc code.

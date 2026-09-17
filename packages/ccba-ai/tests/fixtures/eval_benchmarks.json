@@ -1,0 +1,42 @@
+[
+  {
+    "id": "json_structured",
+    "category": "schema",
+    "title": "JSON Structured Output Extraction",
+    "prompt": "Trích xuất thông tin sau đây thành một đối tượng JSON hợp lệ (không kèm giải thích, không bọc markdown): Dự án Tòa nhà hỗn hợp CCBA Tower, địa điểm tại Số 1 Hoàng Đạo Thúy, Cầu Giấy, Hà Nội, diện tích xây dựng 1200 m2, chiều cao 45m gồm 15 tầng nổi và 2 tầng hầm. Cấu trúc JSON bắt buộc có các khóa: project_name, location, building_area_m2, height_m, floors_above, basements.",
+    "expected_keys": ["project_name", "location", "building_area_m2", "height_m", "floors_above", "basements"],
+    "validation_type": "json_keys"
+  },
+  {
+    "id": "legal_grounding",
+    "category": "legal",
+    "title": "Legal Verbatim Grounding (ADR-0059)",
+    "prompt": "Theo Quyết định số 38/2026/QĐ-UBND của UBND TP. Hà Nội về phân cấp quản lý KT-XH, phạm vi điều chỉnh tại Điều 1 áp dụng đối với các cơ quan, đơn vị nào? Trích dẫn chính xác nguyên văn các thực thể được quy định tại Khoản 2 Điều 1.",
+    "expected_keywords": ["Ủy ban nhân dân", "Sở", "Ủy ban nhân dân cấp xã"],
+    "validation_type": "verbatim_keywords"
+  },
+  {
+    "id": "code_completion",
+    "category": "coding",
+    "title": "Python Construction Metric Function",
+    "prompt": "Viết một hàm Python duy nhất `calculate_gross_floor_area(floor_areas: list[float]) -> float` để tính tổng diện tích sàn xây dựng, có type hints, docstring ngắn và kiểm tra nếu có diện tích sàn âm thì ném ValueError.",
+    "expected_keywords": ["def calculate_gross_floor_area", "ValueError", "float", "return"],
+    "validation_type": "code_ast"
+  },
+  {
+    "id": "reasoning_audit",
+    "category": "reasoning",
+    "title": "Decentralization Conflict Audit",
+    "prompt": "Một chủ đầu tư nộp hồ sơ xin thẩm định Tổng mặt bằng 1/500 và phương án kiến trúc cho dự án văn phòng 7 tầng tại UBND phường X, TP. Hà Nội vào tháng 5/2026. Phân tích xem UBND cấp xã/phường có thẩm quyền phê duyệt quy hoạch tổng mặt bằng này không? Kết luận Hợp lệ hay Không hợp lệ?",
+    "expected_keywords": ["Không hợp lệ", "không có thẩm quyền"],
+    "validation_type": "decision_match"
+  },
+  {
+    "id": "latency_probe",
+    "category": "performance",
+    "title": "Latency Probe & Token Overhead Probe",
+    "prompt": "Phản hồi đúng 1 từ duy nhất: 'OK'",
+    "expected_keywords": ["OK"],
+    "validation_type": "exact_or_prefix"
+  }
+]

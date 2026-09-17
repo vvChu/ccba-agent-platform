@@ -67,6 +67,7 @@ flowchart LR
 
 3. **Pha 3 — Biên tập Báo cáo Kỹ thuật & Heat Map Rủi ro (Reporter):**  
    Tổng hợp kết quả cào lỗi thành báo cáo Markdown/Docx hoàn chỉnh kèm biểu đồ Heat Map rủi ro (High/Medium/Low).  
+   - *Chiến lược giải quyết xung đột liên bộ môn:* Khi đụng độ kỹ thuật hoặc vi phạm PCCC đòi hỏi chiến lược xử lý hệ thống, tận dụng [`/ccba-issue-tree`](../ccba-issue-tree/SKILL.md) (Why-Tree chẩn đoán nguyên nhân gốc đụng độ xuyên bộ môn, tiếp nối bởi How-Tree xếp hạng các phương án can thiệp vật lý/kiến trúc và phân công **Chủ trì Bộ môn** phê duyệt).  
    👉 Xem chi tiết tại [references/reporter.md](references/reporter.md).
 
 ---
@@ -122,4 +123,4 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/discovery.md` | Pha 1: Khảo sát tự động bản vẽ, danh mục tầng và hồ sơ thiết kế công trình |
 | `references/integrated_audit.md` | Pha 2: Thẩm tra tích hợp đa bộ môn và phân tích Quad-View Vision |
 | `references/reporter.md` | Pha 3: Tổng hợp báo cáo Heat Map ma trận phối hợp và rủi ro kỹ thuật |
-| `references/batch_orchestrator.md` | Điều phối chạy hàng loạt dự án và tối ưu hóa tài nguyên batch pipeline |
+| `references/batch_orchestrator.md` | Điều phối chạy hàng loạt dự án và tối ưu hóa tài nguyên batch pipeline |

@@ -21,9 +21,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from ccba_ai.antigravity_provider import AntigravityCLIProvider
+from ccba_ai.antigravity_provider import (
+    AntigravityCLIProvider,
+    canonicalize_model_name,
+    extract_available_models_from_stderr,
+    is_unrecognized_model_error,
+    resolve_latest_compatible_model,
+)
 from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError, CircuitState
 from ccba_ai.client import AIClient, AsyncAIClient
+from ccba_ai.copilot_provider import CopilotCLIProvider
+from ccba_ai.daemon_bridge import PersistentStdioDaemon
 from ccba_ai.exceptions import CCBABaseException, CCBAErrorCode, format_error_json
 from ccba_ai.fallback import (
     TieredFallbackRouter,
@@ -98,6 +106,12 @@ __all__ = [
     "is_mock_mode_enabled",
     "MockProvider",
     "AntigravityCLIProvider",
+    "CopilotCLIProvider",
+    "PersistentStdioDaemon",
+    "canonicalize_model_name",
+    "extract_available_models_from_stderr",
+    "is_unrecognized_model_error",
+    "resolve_latest_compatible_model",
     # Utilities & Prompting
     "strip_think_tags",
     "parse_llm_json",
