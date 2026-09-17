@@ -30,7 +30,7 @@ triggers:
 
 # Kỹ năng: Tạo Pull Request Chuẩn CCBA Platform (CCBA Pull Request Flow)
 
-Quy trình tự động hóa kiểm định chất lượng mã nguồn tại chỗ (Shift-Left Gate), bảo vệ nhánh chính (`main` / `master`), đẩy mã nguồn và khởi tạo GitHub Pull Request kèm vòng lặp theo dõi CI tích xanh và đối soát góp ý từ Copilot Review. *(Lệnh: `/ccba-create-pr`)*
+Quy trình tự động hóa kiểm định chất lượng mã nguồn tại chỗ (Shift-Left Gate), bảo vệ nhánh chính (`<default_branch>`), đẩy mã nguồn và khởi tạo GitHub Pull Request kèm vòng lặp theo dõi CI tích xanh và đối soát góp ý từ Copilot Review. *(Lệnh: `/ccba-create-pr`)*
 
 ---
 
@@ -40,8 +40,8 @@ Quy trình tự động hóa kiểm định chất lượng mã nguồn tại ch
    ```bash
    git branch --show-current
    ```
-   *Agent xác định nhánh hiện tại (`<current_branch>`) và nhánh chính mặc định của repository (`<default_branch>`, thường là `main` hoặc `master`).*
-2. **Nếu đang ở nhánh chính (`main` hoặc `master`)**: Kiểm tra xem có commit nào chưa được push lên remote không:
+   *Agent xác định nhánh hiện tại (`<current_branch>`) và nhánh chính mặc định của repository (`<default_branch>`, ví dụ: `main` hoặc `master`).*
+2. **Nếu đang ở nhánh chính (`<default_branch>`)**: Kiểm tra xem có commit nào chưa được push lên remote không:
    ```bash
    git log origin/<default_branch>..<default_branch> --oneline
    ```
@@ -61,7 +61,7 @@ Quy trình tự động hóa kiểm định chất lượng mã nguồn tại ch
    - Dừng lại và nhắc nhở: *"Không có thay đổi nào trên `<default_branch>` để tạo PR. Hãy dùng `/ccba-new-feature` để tạo feature branch trước khi lập trình."*
 5. **Nếu đã ở nhánh tính năng (`feat/*`, `fix/*`, `proposal/*`)**: Tiếp tục Bước 1.
 
-- **Tiêu chí hoàn thành:** Đảm bảo toàn bộ commit nằm trên đúng nhánh tính năng, nhánh chính (`main`/`master`) được bảo vệ tuyệt đối.
+- **Tiêu chí hoàn thành:** Đảm bảo toàn bộ commit nằm trên đúng nhánh tính năng, nhánh chính (`<default_branch>`) được bảo vệ tuyệt đối.
 
 ---
 
@@ -126,13 +126,13 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
      ```
 3. **Khởi tạo Pull Request bằng GitHub CLI:**
    ```bash
-   gh pr create --title "<Title>" --body "<Body>`n`nCloses #<id>" --base <default_branch> --head <current_branch>
+   gh pr create --title "<Title>" --body "<Body>\n\nCloses #<id>" --base <default_branch> --head <current_branch>
    ```
 4. **Fallback thủ công (nếu `gh` chưa cài hoặc chưa đăng nhập):**
    - Trích xuất URL tạo PR từ `git remote get-url origin`: `https://github.com/<owner>/<repo>/compare/<default_branch>...<current_branch>`.
    - In đường dẫn kèm mẫu tiêu đề và mô tả để người dùng mở trên trình duyệt.
 
-- **Tiêu chí hoàn thành:** Pull Request được mở thành công trên GitHub trỏ đúng base branch (`main` hoặc `master`) kèm link PR và mã số PR.
+- **Tiêu chí hoàn thành:** Pull Request được mở thành công trên GitHub trỏ đúng base branch (`<default_branch>`) kèm link PR và mã số PR.
 
 ---
 

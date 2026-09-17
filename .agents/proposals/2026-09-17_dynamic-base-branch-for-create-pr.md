@@ -25,7 +25,7 @@ applies_to:
 ### 1. Bối cảnh & Động lực Thực tế tại Spoke (Context & Real-world Motivation)
 
 1. **Nỗi đau thực tế (Pain point):**
-   - Kỹ năng [`ccba-create-pr`](file:///home/vvc/ccba/ccba-agent-platform/.agents/skills/ccba-create-pr/SKILL.md) (v1.1.0) hiện tại trên Hub giả định ngầm toàn bộ repository đều sử dụng nhánh chính là `main` (`gh pr create --base main`, `git log origin/main..HEAD`).
+   - Kỹ năng [`ccba-create-pr`](../skills/ccba-create-pr/SKILL.md) (v1.1.0) hiện tại trên Hub giả định ngầm toàn bộ repository đều sử dụng nhánh chính là `main` (`gh pr create --base main`, `git log origin/main..HEAD`).
    - Khi chạy quy trình tại các Spoke sử dụng nhánh `master` (như dự án `dgx-spark-toolkit`) hoặc bất kỳ nhánh chính nào khác, lệnh kiểm tra Main Branch Guard (Bước 0) và lệnh mở PR (Bước 3) gặp lỗi không tìm thấy `origin/main` hoặc mở PR trỏ sai base branch.
 2. **Quá trình ươm tạo & kiểm chứng tại Spoke:**
    - Đã triển khai và kiểm chứng thực tế tại Spoke `dgx-spark-toolkit` trong phiên làm việc giải phóng Issue #51 (PR #52).
