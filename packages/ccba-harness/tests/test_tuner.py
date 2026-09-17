@@ -747,7 +747,10 @@ def test_run_eval_pipeline_full_sweep_forwarding(tmp_path: Path):
         encoding="utf-8",
     )
 
-    with patch("ccba_harness.evals.tuner.GitRatchetOptimizer.run") as mock_tuner_run:
+    with (
+        patch("ccba_harness.evals.tuner.GitRatchetOptimizer.run") as mock_tuner_run,
+        patch("ccba_harness.evals.tuner.GitRatchetOptimizer.evaluate_content") as mock_eval,
+    ):
         mock_tuner_run.return_value = RatchetReport(
             target_file=str(skill_file),
             initial_score=100.0,
@@ -755,6 +758,16 @@ def test_run_eval_pipeline_full_sweep_forwarding(tmp_path: Path):
             total_iterations=2,
             kept_commits=0,
             reverted_trials=2,
+        )
+        mock_eval.return_value = EvalReport(
+            total_items=1,
+            passed_items=1,
+            failed_items=0,
+            overall_score=100.0,
+            pass_rate=1.0,
+            item_results=[],
+            summary_by_scorer={},
+            metadata={},
         )
         rep = run_eval_pipeline(
             skill="copywriting",
@@ -766,6 +779,7 @@ def test_run_eval_pipeline_full_sweep_forwarding(tmp_path: Path):
             dry_run_git=True,
         )
         assert rep.metadata["full_sweep"] is True
+
 
 
 def test_resolve_target_skill_file_bigbim(tmp_path: Path):
