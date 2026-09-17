@@ -114,6 +114,14 @@ def kill_process_tree(pid: int) -> None:
                 )
             except Exception:
                 pass
+        else:
+            try:
+                import signal
+
+                subprocess.run(["pkill", "-KILL", "-P", str(pid)], capture_output=True)
+                os.kill(pid, signal.SIGKILL)
+            except Exception:
+                pass
 
 
 def get_venv_python(project_root: Path) -> str:
