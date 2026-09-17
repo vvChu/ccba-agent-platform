@@ -1,17 +1,18 @@
 # Danh Mục Hồ Sơ Hoàn Thành Công Trình - Master Checklist
-# Căn cứ: NĐ 06/2021/NĐ-CP (Phụ lục VIb), NĐ 35/2023/NĐ-CP
-# Cập nhật: 2026-03-28
+# Căn cứ: Nghị định 207/2026/NĐ-CP (Phụ lục Danh mục hồ sơ hoàn thành công trình)
+# Văn bản thay thế: Chính thức thay thế NĐ 06/2021/NĐ-CP từ ngày 01/07/2026
+# Cập nhật: 2026-09-17
 # Quản lý: CCBA - BIM RD
 
 metadata:
-  version: "1.0"
+  version: "2.0"
   legal_basis:
-    primary: "Nghị định 06/2021/NĐ-CP - Phụ lục VIb"
-    amendments:
-      - "Nghị định 35/2023/NĐ-CP"
-    pending:
-      - "Dự thảo NĐ QLCL 2026 (chưa áp dụng)"
-  last_updated: "2026-03-28"
+    primary: "Nghị định 207/2026/NĐ-CP - Danh mục hồ sơ hoàn thành công trình"
+    enabling_statute: "Luật Xây dựng 2025 (135/2025/QH15)"
+    transition_basis:
+      - "Nghị định 06/2021/NĐ-CP (Phụ lục VIb) - Áp dụng chuyển tiếp cho công trình hoàn thành trước 01/07/2026"
+      - "Văn bản hợp nhất 19/VBHN-BXD ngày 25/03/2026"
+  last_updated: "2026-09-17"
   maintained_by: "CCBA"
   applies_to:
     - "Công trình dân dụng"
@@ -425,6 +426,11 @@ categories:
 # CHANGELOG
 # ==============================================================================
 changelog:
+  - date: "2026-09-17"
+    version: "2.0"
+    changes: "Cập nhật căn cứ pháp lý hiện hành sang Nghị định 207/2026/NĐ-CP (thay thế NĐ 06/2021 từ 01/07/2026) và Luật Xây dựng 2025"
+    author: "CCBA Engineering Agent"
+    review_status: "Đã rà soát theo mốc hiệu lực 01/07/2026"
   - date: "2026-03-28"
     version: "1.0"
     changes: "Tạo master checklist dựa trên NĐ 06/2021 Phụ lục VIb"
