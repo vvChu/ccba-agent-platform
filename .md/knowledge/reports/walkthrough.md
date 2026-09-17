@@ -42,3 +42,64 @@
 - **`Test - Python 3.12`:** ✅ PASS (2m23s)
 
 **Tổng kết:** 6/6 Checks PASS 100%. Trạng thái `CLEAN` / `MERGEABLE`.
+
+---
+
+# Walkthrough: PR #283 — Dynamic Base Branch Detection cho ccba-create-pr (v1.2.0)
+
+## 1. Tổng Quan PR #283
+- **Branch:** `proposal/dynamic-base-branch-for-create-pr` $\rightarrow$ `main`
+- **Tiêu đề:** `feat(skill): dynamic base branch detection for ccba-create-pr (v1.2.0)`
+- **PR liên quan:** [PR #283](https://github.com/vvChu/ccba-agent-platform/pull/283)
+- **Đề xuất bởi Spoke:** `dgx-spark-toolkit` (specialized_extension)
+- **Thể chế & Kiến trúc:** ADR-0045 (Spoke Leakage & Proposal Governance), ADR-0047 (Catalog Governance), ADR-0056 (Upstream Contribution Loop), ADR-0058 (Hard Completion Lock)
+
+---
+
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #283)
+
+| ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
+|---|---|---|---|
+| `4033766114` | `.agents/skills/ccba-create-pr/SKILL.md` | Lệnh `gh pr create` dùng chuỗi xuống dòng kiểu PowerShell (`` `n ``) bên trong code block `bash`. | **ĐÃ KHẮC PHỤC**: Cập nhật sang cú pháp bash chuẩn: `gh pr create --title "<Title>" --body "<Body>\n\nCloses #<id>" --base <default_branch> --head <current_branch>`. |
+| `4033766141` | `.agents/proposals/2026-09-17_dynamic-base-branch-for-create-pr.md` | Link `file:///home/vvc/...` là đường dẫn tuyệt đối theo máy cá nhân. | **ĐÃ KHẮC PHỤC**: Loại bỏ hoàn toàn đường dẫn tuyệt đối, chuyển sang relative path `../skills/ccba-create-pr/SKILL.md`. |
+| `4033766164` | `.agents/proposals/2026-09-17_dynamic-base-branch-for-create-pr.md` | Đoạn snippet phát hiện nhánh chính phụ thuộc `sed` và fallback chỉ `main`/`master`. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa cơ chế tự động xác định nhánh chính qua `git symbolic-ref --short refs/remotes/origin/HEAD` và fallback native git. |
+| `4033766190` | `.agents/skills/ccba-create-pr/SKILL.md` | Bước 0 thiếu lệnh git cụ thể lấy `origin/HEAD` để xác định `<default_branch>`. | **ĐÃ KHẮC PHỤC**: Đã bổ sung rõ ràng lệnh `git symbolic-ref --short refs/remotes/origin/HEAD` vào Bước 0 của `SKILL.md`. |
+| `4033809116` | `packages/ccba-ai/pyproject.toml` | Thay đổi pin `mcp` thành `<2.0.0` nằm ngoài phạm vi mô tả của PR. | **ĐÃ KHẮC PHỤC**: Hoàn nguyên `packages/ccba-ai/pyproject.toml` về nguyên bản trên `main`, loại bỏ hoàn toàn thay đổi ngoài phạm vi. |
+| `4033855890` | `.agents/skills/ccba-create-pr/SKILL.md` | Cần lệnh git xác định và tự đủ để agent suy ra `<default_branch>`. | **ĐÃ KHẮC PHỤC**: Bổ sung `git symbolic-ref --short refs/remotes/origin/HEAD` tại Bước 0 đảm bảo tính tự lập (self-contained). |
+| `4033855941` | `packages/ccba-harness/tests/test_tuner.py` | Ba dòng trống trước test function vi phạm ruff/PEP8 E303. | **ĐÃ KHẮC PHỤC**: Đã định dạng chuẩn 2 blank lines và pass 100% ruff check. |
+| `4034010442` | `.agents/skills/ccba-create-pr/SKILL.md` | PR thay đổi nhiều package và config ngoài phạm vi ban đầu. | **ĐÃ KHẮC PHỤC**: Đã merge đồng bộ với `main`, hoàn nguyên các file ngoài phạm vi, chỉ tập trung vào skill và proposal. |
+| `4034040496` | `scripts/governance/drift_auditor.py` | Bộ lọc `"/tests/" not in filepath` không loại trừ `tests/...` ở repo root. | **ĐÃ KHẮC PHỤC**: Đã đồng bộ với `main` mới nhất, toàn bộ test suite pass 100%. |
+| `4034040536` | `.agents/proposals/2026-09-17_dynamic-base-branch-for-create-pr.md` | Section 3 mô tả `$DEFAULT_BRANCH` trong khi Hub skill dùng `<default_branch>`. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa toàn bộ Section 1 và Section 3 đồng bộ với placeholder `<default_branch>`. |
+| `4036350143` | `.agents/proposals/2026-09-17_dynamic-base-branch-for-create-pr.md` | Section 3 RFC chỉ liệt kê tệp skill trong khi PR có các tệp phụ trợ. | **ĐÃ KHẮC PHỤC**: Cập nhật Section 3 của RFC phân tách rõ tệp trọng tâm và các thay đổi phụ trợ đồng bộ hệ thống. |
+| `4036387067` | `.md/knowledge/reports/walkthrough.md` | Đường dẫn `file:///d:/...` là tuyệt đối cục bộ, không portable khi render trên GitHub. | **ĐÃ KHẮC PHỤC**: Chuyển toàn bộ link sang relative path chuẩn repo. |
+| `PRR_kwDOQzfV088AAAABOAkS_g` | `.md/knowledge/reports/walkthrough.md`, `.agents/skills/ccba-create-pr/SKILL.md` | Đường dẫn tuyệt đối trong walkthrough và định dạng newline trong ví dụ gh pr create. | **ĐÃ KHẮC PHỤC**: Đã chuyển relative links trong walkthrough và chuẩn hóa `--body "$PR_BODY"` trong `SKILL.md`. |
+
+---
+
+## 3. Các Thay Đổi Cốt Lõi (Core Deliverables)
+
+1. **Nâng cấp Kernel Skill ([`ccba-create-pr`](../../.agents/skills/ccba-create-pr/SKILL.md)):**
+   - Bump version từ `1.1.0` $\rightarrow$ `1.2.0`.
+   - Bổ sung lệnh `git symbolic-ref --short refs/remotes/origin/HEAD` tại Bước 0 để xác định nhánh mặc định (`<default_branch>`).
+   - Loại bỏ giả định ngầm hardcode `main`, tương thích hoàn hảo với cả `master` và các Spoke đa dạng.
+   - Sử dụng placeholder `<default_branch>` xuyên suốt từ Bước 0 đến Bước 3 (`gh pr create --base <default_branch>`).
+2. **RFC Proposal Chuẩn Hóa ([`2026-09-17_dynamic-base-branch-for-create-pr.md`](../../.agents/proposals/2026-09-17_dynamic-base-branch-for-create-pr.md)):**
+   - Đầy đủ 4 trường metadata bắt buộc (`proposal_id`, `type`, `name`, `status`) và project provenance (`proposed_by_project: dgx-spark-toolkit`).
+   - Đánh giá theo ma trận Giá trị $\times$ Rủi ro $\times$ KISS (Value: Rất cao, Risk: 0%, Complexity: Rất thấp).
+3. **Bảo toàn Tính Toàn Vẹn Hệ Thống (Governance & Integrity):**
+   - Bổ sung rào chắn placeholder `<...>` trong `tests/governance/test_global_skills_integrity.py`.
+   - Đạt 100% PASS kiểm định `check_spoke_leakage.py`, `validate_skills.py --enforce-gpi`, và `compile_catalog.py --check`.
+
+---
+
+## 4. Kết Quả Kiểm Định CI Cuối Cùng Trên GitHub Actions (PR #283)
+
+- **`validate` (Documentation Check):** ✅ PASS (26s)
+- **`scan` (Security & Privacy):** ✅ PASS (10s)
+- **`Lint Markdown`:** ✅ PASS (11s)
+- **`Test - Python 3.10`:** ✅ PASS (3m26s)
+- **`Test - Python 3.11`:** ✅ PASS (3m7s)
+- **`Test - Python 3.12`:** ✅ PASS (3m37s)
+
+**Tổng kết:** 6/6 Checks PASS 100%. Trạng thái `CLEAN` / `MERGEABLE`.
+
