@@ -22,11 +22,18 @@ triggers:
 
 Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot Review, tự động đóng issue và dọn dẹp môi trường.
 
-## Bước 0: Thực thi Kiểm thử Toàn diện Slow Integration Tests (Pre-release Gate)
+## Bước 0: Kiểm soát Buồng kín & Kiểm thử Toàn diện (Hermetic Pre-release Gate)
 
-*Quy tắc bắt buộc:* Trước khi thực hiện merge PR, Agent **bắt buộc phải chạy kiểm thử toàn bộ tập test `slow` và `stress`** để đảm bảo các bài test cào mạng/tích hợp không bị hỏng ngầm (test decay):
+*Quy tắc bắt buộc:* Trước khi thực hiện merge PR, Agent **bắt buộc phải tuân thủ Giao thức TRIHT (Tiered Release Integrity & Hermetic Teardown)** gồm 3 giai đoạn để ngăn chặn hoàn toàn nguy cơ mất mã nguồn và chống gián đoạn chuyển nhánh:
 
-1. **Kiểm tra môi trường hiện tại (Hub vs Spoke):**
+1. **Cổng 0.1 — Khóa Sạch Sẽ Tiền Kiểm Tra (Pre-Flight Cleanliness Lock):**
+   - *Bắt buộc kiểm tra:* Repository phải ở trạng thái sạch sẽ 100% (không có tệp modified hoặc untracked chưa commit). Tuyệt đối cấm release khi mã nguồn cục bộ chưa được commit vào PR:
+     ```bash
+     python scripts/validation/check_release_cleanliness.py --phase pre
+     ```
+   - Nếu phát hiện tệp chưa commit, Agent **phải dừng quy trình ngay lập tức** để commit hoặc stash có chủ đích trước khi tiếp tục.
+
+2. **Cổng 0.2 — Thực thi Kiểm thử Toàn diện Slow Integration Tests:**
    - **Tại Hub Platform (`ccba-agent-platform`):**
      ```bash
      python scripts/eval/run_isolated_tests.py --all --stress
@@ -38,11 +45,18 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
      # hoặc chạy toàn bộ test cô lập cục bộ:
      python scripts/eval/run_isolated_tests.py --all
      ```
-2. Nếu có bài test nào thất bại, Agent **phải dừng quy trình release ngay lập tức** để tiến hành sửa lỗi trước khi tiếp tục.
+   - Nếu có bài test nào thất bại, Agent **phải dừng quy trình release ngay lập tức** để sửa lỗi.
+
+3. **Cổng 0.3 — Hàng rào Thu hồi Tệp tạm Sau Kiểm thử (Post-Test Scoped Teardown Gate):**
+   - *Bắt buộc kiểm tra:* Sau khi bài test chạy xong, đối soát delta trạng thái working tree. Tự động thu hồi an toàn các cache kiểm thử đã biết (`embeddings.npy`, `ci_log.txt`, `tmp_*.json`) và chặn đứng nếu có test suite sửa đổi mã nguồn:
+     ```bash
+     python scripts/validation/check_release_cleanliness.py --phase post
+     ```
+   - Nếu lệnh trả về exit code 1 (phát hiện mã nguồn bị sửa đổi hoặc tệp lạ), Agent **dừng khẩn cấp** để điều tra bài test vi phạm.
 
 ---
 
-**Tiêu chí hoàn thành:** 100% bài kiểm thử slow và stress đều vượt qua thành công.
+**Tiêu chí hoàn thành:** Cổng 0.1 sạch 100%, 100% bài kiểm thử Cổng 0.2 pass, và Cổng 0.3 dọn dẹp buồng kín thành công.
 
 ---
 
@@ -126,9 +140,10 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
    ```
    *Lưu ý:* Nếu có thay đổi chưa commit, hãy commit hoặc stash trước khi chuyển nhánh.
 
-2. Quay về branch `main` và kéo code mới nhất:
+2. Thu hồi tiến trình kiểm thử mồ côi và quay về branch `main` an toàn (chống treo Pager):
    ```bash
-   git checkout main && git pull origin main
+   python -c "from scripts.eval.process_safety import ensure_single_instance; ensure_single_instance('pytest')"
+   git checkout --no-pager main && git pull origin main
    ```
 
 3. Xóa branch feature cục bộ an toàn:
