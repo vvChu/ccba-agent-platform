@@ -161,4 +161,38 @@ graph TD
 ```
 
 ---
+
+## 4. Mẫu Cây Có Nhánh Cắt Tỉa (Cascading Pruned Tree Template)
+
+Khi một nhánh giả thuyết bị chứng minh là sai (`FALSIFIED`), toàn bộ các nhánh con phụ thuộc bị cắt tỉa (`FALSIFIED_BY_CASCADE`), được trực quan hóa bằng nét đứt và màu xám mờ trong Mermaid:
+
+```mermaid
+graph TD
+    classDef verified fill:#d4edda,stroke:#28a745,stroke-width:2px;
+    classDef falsified fill:#f8d7da,stroke:#dc3545,stroke-width:2px;
+    classDef pruned fill:#f9f9f9,stroke:#bbb,stroke-dasharray: 5 5,color:#888;
+    classDef active fill:#fff3cd,stroke:#ffc107,stroke-width:2px;
+
+    Root["Sự Cố Runner Deadlock"] --> H1["1. Network Blackhole (Thiếu Mock)"]:::verified
+    Root --> H2["2. Process Group Suicide"]:::verified
+    Root --> H3["3. Resource Starvation (RAM/CPU)"]:::falsified
+
+    H3 --> H3_1["3.1. Rò rỉ RAM test runner"]:::pruned
+    H3 --> H3_2["3.2. Vòng lặp CPU vô hạn"]:::pruned
+
+    H1 --> H1_1["1.1. Bật cờ CCBA_AI_MOCK: 1"]:::active
+    H2 --> H2_1["1.2. Thêm cờ setsid cô lập process group"]:::active
+```
+
+### Mẫu Text Cắt Tỉa:
+```text
+[GỐC] Sự Cố Runner Deadlock
+├── 1. [NHÁNH] [VERIFIED_FACT] Network Blackhole (Commit 863187d1 gỡ bỏ CCBA_AI_MOCK)
+├── 2. [NHÁNH] [VERIFIED_FACT] Process Group Suicide (kill_process_tree giết runner worker)
+└── 3. [NHÁNH] [FALSIFIED] Resource Starvation
+    ├── 3.1. [FALSIFIED_BY_CASCADE] [DỪNG ĐIỀU TRA] Rò rỉ RAM test runner
+    └── 3.2. [FALSIFIED_BY_CASCADE] [DỪNG ĐIỀU TRA] Vòng lặp CPU vô hạn
+```
+
+---
 *Tài liệu mẫu tham chiếu chuẩn hóa thuộc kỹ năng ccba-issue-tree.*

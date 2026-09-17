@@ -1,0 +1,64 @@
+[
+  {
+    "id": "eval_it_001_ci_deadlock",
+    "category": "infrastructure",
+    "title": "Chẩn đoán lỗi treo CI Actions Runner (PR #281)",
+    "scenario": "GitHub Actions Runner bị mất kết nối và treo 45 phút không thoát",
+    "prompt": "/ccba-issue-tree nghiên cứu lỗi GitHub Actions Runner bị treo với thông báo 'The hosted runner lost communication with the server'",
+    "expected_tree_type": "diagnostic_why_tree",
+    "expected_branches": [
+      "Process Suicide / Process Group Signal",
+      "Network Blackhole / Missing Mock Environment",
+      "Resource Starvation",
+      "Execution Deadlock"
+    ],
+    "required_labels": ["UNVERIFIED", "IN_INVESTIGATION", "VERIFIED_FACT"],
+    "forbidden_patterns": ["date +%s", "[ -n"]
+  },
+  {
+    "id": "eval_it_002_dirty_working_tree",
+    "category": "git_workflow",
+    "title": "Dọn dẹp Working Tree sau Test Runner (Step 4003)",
+    "scenario": "Test runner sinh mock embeddings làm bẩn git working tree gây cản trở git checkout",
+    "prompt": "/ccba-issue-tree nghiên cứu giải pháp bảo vệ working tree khi chạy test runner tự động",
+    "expected_tree_type": "solution_how_tree",
+    "expected_branches": [
+      "Hermetic Stash & Scoped Restore",
+      "Isolated Test Runner Environment",
+      "Pre-commit Clean Guard"
+    ],
+    "required_labels": ["[ANALYSIS]", "[DECISION]", "[COMMITMENT]", "[SYNTHESIS]"],
+    "forbidden_patterns": ["date +%s", "[ -n"]
+  },
+  {
+    "id": "eval_it_003_legal_contract_dispute",
+    "category": "legal_consulting",
+    "title": "Tranh chấp chậm thanh toán hợp đồng xây dựng",
+    "scenario": "Chủ đầu tư chậm giải ngân tạm ứng khối lượng hoàn thành quá 45 ngày",
+    "prompt": "/ccba-issue-tree phân rã căn cứ pháp lý và phương án xử lý khi chủ đầu tư chậm thanh toán hợp đồng EC theo Nghị định 37/2015/NĐ-CP",
+    "expected_tree_type": "chained_why_how_tree",
+    "expected_branches": [
+      "Căn cứ pháp lý vi phạm nghĩa vụ thanh toán",
+      "Quyền dừng thi công và tính lãi chậm trả",
+      "Phương án hòa giải và khiếu nại"
+    ],
+    "required_labels": ["STATUTE_VERBATIM", "DECISION_READY"],
+    "forbidden_patterns": []
+  },
+  {
+    "id": "eval_it_004_bim_v2_conflict",
+    "category": "bim_coordination",
+    "title": "Xung đột thông tin phi hình học V2 và Unique ID drift",
+    "scenario": "Sai lệch mã Room Naming giữa mô hình Revit kiến trúc và bảng thống kê MEP IFC4X3",
+    "prompt": "/ccba-issue-tree lập kế hoạch bóc tách công việc chuẩn hóa Unique ID theo ISO 19650",
+    "expected_tree_type": "workplan_what_tree",
+    "expected_branches": [
+      "Khảo sát danh mục Room Naming kiến trúc",
+      "Đối soát thuộc tính IFC4X3 Qto_xxx",
+      "Chốt quy tắc mapping Uniclass 200",
+      "Biên dịch hồ sơ nghiệm thu thông tin V2"
+    ],
+    "required_labels": ["[ANALYSIS]", "[DECISION]", "[COMMITMENT]", "[SYNTHESIS]"],
+    "forbidden_patterns": []
+  }
+]

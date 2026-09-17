@@ -83,4 +83,38 @@ Khi xuất hiện hai hay nhiều giả thuyết cạnh tranh cùng giải thíc
    - Nhánh thua cuộc chuyển sang `FALSIFIED` kèm lý do cụ thể trong Decision Log.
 
 ---
+
+## 5. Cơ Chế Cắt Tỉa Nhánh Tự Động & Phép Thử Nhị Phân (Cascading Branch Pruning)
+
+Để tránh lãng phí nguồn lực điều tra và phân tích lan man, hệ thống cưỡng chế 2 quy tắc tối ưu hóa không gian tìm kiếm:
+
+### 5.1. Cắt Tỉa Tự Động Theo Tầng (Cascading Falsification Engine)
+- Khi một nút cha hoặc giả thuyết tiền đề bị chứng minh là sai (`FALSIFIED`), **toàn bộ các nút con phụ thuộc trực tiếp và gián tiếp lập tức bị gán nhãn `FALSIFIED_BY_CASCADE`**.
+- **Quy tắc dừng ngay lập tức:** Dừng 100% mọi hoạt động đo đạc, khảo sát hiện trường hoặc điều tra log đối với các nhánh bị cắt tỉa này.
+- **Biểu diễn trực quan:** Trong sơ đồ Mermaid, các nhánh bị cắt tỉa được chuyển sang nét đứt và màu xám mờ (`classDef pruned fill:#f9f9f9,stroke:#bbb,stroke-dasharray: 5 5`).
+
+### 5.2. Ma Trận Phép Thử Nhị Phân Phân Định (Discriminative Binary Test Matrix)
+- Thay vì kiểm tra tuần tự từng nhánh lá riêng lẻ, Agent chủ trì phải thiết kế **1 phép thử mang tính chất nhị phân ($0$ hoặc $1$)** dựa trên mốc thời gian hoặc tính chất vật lý của sự cố.
+- **Nguyên lý Binary Search trên RCA:** Phép thử nhị phân phải được thiết kế sao cho kết quả kiểm chứng nhị phân lập tức loại trừ ít nhất $50\%$ số nhánh giả thuyết còn lại, giúp giảm thời gian khoanh vùng sự cố từ hàng giờ xuống vài phút.
+
+---
+
+## 6. Neo Giữ Mã Băm Chứng Cứ Bất Biến Cryptographic SHA-256 (ADR-0059 Hardening)
+
+Tuân thủ nghiêm ngặt Hiến pháp Layer 1 (`AGENTS.md`) và Nguyên tắc Bất biến ADR-0059, mọi nút lá chuyển sang trạng thái `VERIFIED_FACT` bắt buộc phải kèm metadata chứng cứ mật mã:
+
+```markdown
+### [WHY-01.2] Lỗi rò rỉ tiến trình con không kế thừa Session Leader
+- **Trạng thái:** `VERIFIED_FACT`
+- **Cấp độ bằng chứng:** `FACT_LOG`
+- **Nguồn chứng cứ:** file:///C:/ccba_runtime/logs/runner_deadlock_trace.log#L340-L385
+- **Mã băm SHA-256:** `a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0`
+- **Thời điểm xác nhận:** 2026-09-17T20:55:00+07:00
+- **Ghế thẩm duyệt:** CHU_TRI_BO_MON
+```
+
+> [!CAUTION]
+> **Khóa Toàn Vẹn Chứng Cứ (Integrity Tamper Lock):** Khi thực thi lệnh kiểm chứng hệ thống (`python -m ccba_harness verify-patch`), nếu tệp nguồn chứng cứ bị thay đổi nội dung làm sai lệch mã băm SHA-256, trạng thái nút lá lập tức bị giáng cấp tự động về `INTEGRITY_VIOLATED` $\rightarrow$ `IN_INVESTIGATION` và khóa quyền phê duyệt `DECISION_READY`.
+
+---
 *Hướng dẫn quản trị tầng vận hành chuẩn hóa thuộc kỹ năng ccba-issue-tree.*
