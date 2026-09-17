@@ -368,3 +368,35 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
 - **Core Pattern P21.4 — Test Isolation Side-Effect Cleanup Before Release:**
   - **Vấn đề:** Lệnh kiểm thử tiền phát hành `run_isolated_tests.py --all --stress` có thể sinh ra các side-effects trong working tree (ví dụ như tạo embedding cache files hoặc cập nhật metadata). Nếu không dọn sạch trước khi gọi `gh pr merge`, git checkout/merge sẽ bị xung đột hoặc thất bại.
   - **Giải pháp:** Luôn kiểm tra `git status --porcelain`, thực hiện `git restore` và `git clean -fd` đối với các artifacts sinh ra trong quá trình test trước khi thực hiện các thao tác chuyển nhánh hoặc merge.
+
+---
+
+## 22. Dynamic Default Branch Detection, CI Mock Isolation & Cross-Shell PR Body Standards (PR #283)
+
+- **Core Pattern P22.1 — Cross-Platform Remote Default Branch Discovery (ADR-0045, ADR-0056):**
+  - **Vấn đề:** Kỹ năng `ccba-create-pr` (v1.1.0) giả định ngầm toàn bộ repository đều sử dụng nhánh chính là `main`. Khi các dự án Spoke (như `dgx-spark-toolkit`) sử dụng nhánh `master` hoặc branch chính tùy biến, các lệnh Main Branch Guard (`git log origin/main..main`, `git reset --hard origin/main`) và lệnh tạo PR (`gh pr create --base main`) đều thất bại, gây đứt gãy quy trình đóng góp ngược lên Hub.
+  - **Giải pháp:** Sử dụng lệnh Git chuẩn tắc, tất định và phi phụ thuộc tool ngoài:
+    ```bash
+    git symbolic-ref --short refs/remotes/origin/HEAD
+    ```
+    Trích xuất ra dạng `origin/main` hoặc `origin/master`, từ đó suy ra `<default_branch>`. Cung cấp cơ chế fallback native `git rev-parse --verify origin/main` / `origin/master`. Dùng placeholder `<default_branch>` xuyên suốt toàn bộ vòng đời tạo PR.
+
+- **Core Pattern P22.2 — CI Mock Isolation Invariant vs GitHub Runner Communication Loss:**
+  - **Vấn đề:** Trong quá trình sửa lỗi test trên branch PR, commit `863187d1` đã vô tình gỡ bỏ `CCBA_AI_MOCK: "1"` khỏi `.github/workflows/ci.yml`. Khi không có cờ mock, `python scripts/eval/run_harness_evals.py --all` cố gắng gửi HTTP request ra các endpoint LLM bên ngoài trong môi trường runner cô lập không có kết nối internet/VPN, dẫn đến treo vô hạn suốt 45 phút cho đến khi runner tự ngắt kết nối (`The hosted runner lost communication with the server`).
+  - **Giải pháp:** Ràng buộc bất biến: Runner CI của GitHub Actions BẮT BUỘC duy trì `CCBA_AI_MOCK: "1"` cho mọi bước kiểm định harness và test. Tuyệt đối không tắt mock ở cấp độ workflow. Mọi unit test cần kiểm tra hành vi không mock phải chỉ định `mock_mode=False` hoặc override mock provider ở cấp độ test fixture cục bộ.
+
+- **Core Pattern P22.3 — Cross-Shell PR Body Variable Formatting vs Literal Escape Sequences:**
+  - **Vấn đề:** Lệnh `gh pr create --body "<Body>\n\nCloses #<id>"` truyền literal ký tự `\n` trong POSIX bash (do không expand escapes), khiến phần mô tả PR trên GitHub bị in ra chữ `\n\n` trần. Ngược lại, nếu dùng cú pháp PowerShell `` `n `` trong bash blocks sẽ gây lỗi cú pháp.
+  - **Giải pháp:** Chuẩn hóa việc truyền nội dung qua biến môi trường hoặc pre-formatted string:
+    ```bash
+    gh pr create --title "<Title>" --body "$PR_BODY" --base <default_branch> --head <current_branch>
+    ```
+
+- **Core Pattern P22.4 — Drift Auditor Test-Path Normalization:**
+  - **Vấn đề:** Trong `scripts/governance/drift_auditor.py`, bộ lọc loại trừ thay đổi cấu trúc (`structural_change`) chỉ kiểm tra `"/tests/" not in filepath`. Các tệp kiểm thử ở repo root (như `tests/test_spoke_batch_sync.py`) không chứa dấu gạch chéo đầu, do đó vẫn bị tính là structural change và kích hoạt cảnh báo Architectural Drift sai lệch.
+  - **Giải pháp:** Chuẩn hóa bộ lọc bao quát cả root-level tests:
+    ```python
+    and not filepath.startswith("tests/")
+    and "/tests/" not in filepath
+    ```
+
