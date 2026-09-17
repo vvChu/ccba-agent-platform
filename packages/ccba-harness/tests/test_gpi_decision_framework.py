@@ -883,9 +883,19 @@ def test_30_canonical_anchors_invariants() -> None:
     assert len(CANONICAL_ANCHORS) == 30
     assert all(isinstance(a, CanonicalAnchor) for a in CANONICAL_ANCHORS)
 
-    tier1_anchors = [a for a in CANONICAL_ANCHORS if a.expected_tier == ArchitectureTier.TIER_1_PACKAGE]
-    tier2a_anchors = [a for a in CANONICAL_ANCHORS if a.expected_tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE]
-    tier2b_anchors = [a for a in CANONICAL_ANCHORS if a.expected_tier == ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL]
+    tier1_anchors = [
+        a for a in CANONICAL_ANCHORS if a.expected_tier == ArchitectureTier.TIER_1_PACKAGE
+    ]
+    tier2a_anchors = [
+        a
+        for a in CANONICAL_ANCHORS
+        if a.expected_tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
+    ]
+    tier2b_anchors = [
+        a
+        for a in CANONICAL_ANCHORS
+        if a.expected_tier == ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL
+    ]
 
     assert len(tier1_anchors) == 10
     assert len(tier2a_anchors) == 10
@@ -1164,9 +1174,7 @@ def test_skill_validator_evaluate_skill_file_with_hysteresis() -> None:
         assert res1.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
 
         # With override_existing_tier="tier-2b": stays Tier 2B
-        res2 = validator.evaluate_skill_file(
-            skill_file, override_existing_tier="tier-2b"
-        )
+        res2 = validator.evaluate_skill_file(skill_file, override_existing_tier="tier-2b")
         assert res2.tier == ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL
         assert res2.allow_standalone_skill is True
         assert res2.breakdown is not None
@@ -1180,4 +1188,3 @@ def test_skill_validator_evaluate_skill_file_with_hysteresis() -> None:
         )
         assert res3.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
         assert res3.allow_standalone_skill is False
-

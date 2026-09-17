@@ -63,7 +63,10 @@ def test_search_vietnamese_laws_superseded_warning() -> None:
 
         res = search_vietnamese_laws("175/2024")
         assert "[SUPERSEDED] nghi_dinh_175_2024_nd_cp" in res
-        assert "⚠️ CẢNH BÁO RULE-3.1: Văn bản đã hết hiệu lực. Thay thế bởi: Nghị định 217/2026/NĐ-CP" in res
+        assert (
+            "⚠️ CẢNH BÁO RULE-3.1: Văn bản đã hết hiệu lực. Thay thế bởi: Nghị định 217/2026/NĐ-CP"
+            in res
+        )
         assert "⚠️ Lưu ý: Đã bị bãi bỏ toàn bộ" in res
 
 
