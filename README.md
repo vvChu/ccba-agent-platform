@@ -78,6 +78,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   ├── hooks/                         ←   Git hooks & guards (privacy, naming, simplify)
 │   ├── shell/                         ←   Developer PowerShell & Bash productivity aliases
 │   ├── tests/                         ←   Unit test suites cho Hub tools
+│   ├── validation/                    ←   Release cleanliness & hermetic verification CLI
 │   ├── adopt_spoke.py                 ←   Brownfield Spoke Adoption CLI Delegate
 │   ├── validate_cross_references.py   ←   Constitution Cross-Reference Matrix Validator
 │   ├── session_cleanup.py             ←   Workspace & Session Cleanup CLI Delegate

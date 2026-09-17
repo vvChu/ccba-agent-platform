@@ -39,6 +39,9 @@ coverage.xml
 htmlcov/
 .pytest_cache/
 .mypy_cache/
+**/mock_local_bundles/**/embeddings.npy
+**/mock_local_bundles/**/embeddings.sha256
+ci_log.txt
 
 # Environment
 .env
