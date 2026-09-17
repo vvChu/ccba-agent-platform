@@ -41,8 +41,8 @@
 
 5. **Đồng bộ Phiên bản & Triệt tiêu Pytest Warnings:**
    - Cập nhật `version = "1.2.0"` trong `pyproject.toml`.
-   - Đăng ký markers `fast` và `unit` trong `pyproject.toml`, loại bỏ hoàn toàn 12 cảnh báo `PytestUnknownMarkWarning`.
-   - Cập nhật `ModelArchetype` bổ sung `GEMINI_38_FLASH`, `GEMINI_31_PRO_HIGH`, `CLAUDE_OPUS_46`, `EMBEDDING = "gemini-embedding-2"`.
+   - Đăng ký markers `fast` và `unit` trong `pyproject.toml`, loại bỏ hoàn toàn 12 cảnh báo pytest unknown mark.
+   - Cập nhật `ModelArchetype` bổ sung `ModelArchetype.GEMINI_38_FLASH`, `ModelArchetype.GEMINI_31_PRO_HIGH`, `ModelArchetype.CLAUDE_OPUS_46`, `ModelArchetype.EMBEDDING = "gemini-embedding-2"`.
 
 ---
 
@@ -87,6 +87,6 @@
 | :--- | :---: | :--- |
 | `ai.embed()` & `async_ai.embed()` gọi thành công với `gemini-embedding-2` trên Gateway không vấp HTTP 400 | **PASS** | Đã xác thực cả unit test mock lẫn live smoke test trên Server Spark (dim=3072). |
 | `stream()` & `async stream()` tự động nâng trần 16,384 tokens khi stream với reasoning models | **PASS** | `test_streaming_tokens.py` xác thực `create()` nhận `max_tokens=16384`. |
-| `ai.chat(..., max_tokens=32768, timeout=180.0)` hoạt động hợp lệ không văng `TypeError` | **PASS** | `test_timeout_scaling.py` xác thực thành công. |
+| `ai.chat(..., max_tokens=32768, timeout=180.0)` hoạt động hợp lệ không văng ngoại lệ TypeError | **PASS** | `test_timeout_scaling.py` xác thực thành công. |
 | `ChatResult.thinking` lưu trữ chuỗi tư duy độc lập với `ChatResult.content` | **PASS** | `test_thinking_audit.py` kiểm tra trích xuất thinking cả từ `<think>` lẫn `reasoning_content`. |
 | Bộ kiểm thử `packages/ccba-ai/tests` vượt qua 100% tests với 0 warnings | **PASS** | Đạt 173/173 passed, 0 warnings. |

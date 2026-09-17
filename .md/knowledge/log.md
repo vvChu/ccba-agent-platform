@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-17] [synthesize] | Nâng Cấp ccba-ai v1.2.0 (Drop Params Embedding, Streaming Ceiling, Auto-Timeout Scaling) (#280, PR #281)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /boost, /ccba-issue-to-hub & /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-ai/`, `packages/ccba-ai/pyproject.toml`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/reports/walkthrough.md`
+- **Summary**: Hoàn tất xử lý Issue #280 và đề xuất RFC Gateway Issue #51 (`dgx-spark-toolkit`): (1) Khắc phục triệt để lỗi HTTP 400 trong `ai.embed()` và `async_ai.embed()` khi kết nối LiteLLM proxy tới Gemini API bằng cách truyền `extra_body={"drop_params": True}` và đổi model mặc định sang `gemini-embedding-2` (vector 3072 chiều); (2) Bổ sung phương thức native coroutine `AsyncAIClient.embed()`; (3) Khắc phục cắt cụt token khi stream với reasoning models (`gemini-3.7-flash-high`, `-thinking`) bằng cách tự động cấp sàn `max_tokens=16384` qua `resolve_max_tokens`; (4) Bổ sung tham số `timeout` per-request và cơ chế Auto-Timeout Scaling (`max(timeout, max_tokens / 50.0)`) cho `chat()`, `chat_with_metadata()` và `chat_multi()`; (5) Bóc tách chuỗi tư duy độc lập vào `ChatResult.thinking` qua depth-aware scanner trong `LLMOutputParser`, ưu tiên nhận `reasoning_content`; (6) Đồng bộ `version = "1.2.0"` và đăng ký markers `fast`, `unit` trong `pyproject.toml`, triệt tiêu 12 cảnh báo `PytestUnknownMarkWarning`; (7) Tạo RFC Issue #51 trên repo `dgx-spark-toolkit` đề xuất global `drop_params: true` và cân chỉnh timeout server-side; (8) Vượt qua 100% 173/173 tests, 0 warnings, Ruff clean, Mypy clean, live smoke test thành công trên Spark Server (:8090).
+
+---
+
 ## [2026-09-13] [synthesize] | Phát Hành Release PR #269 / Issue #268 (Gia Cố Spoke Sync, Decouple Archetype & RSA-OAEP Bounds)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /boost, /ccba-create-pr, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `scripts/spoke/sync/`, `scripts/spoke/spoke_bootstrap.py`, `scripts/spoke/decrypt_spoke_registry.py`, `scripts/ccba_platform_cli.py`, `scripts/tests/test_spoke_sync_modules.py`, `.md/knowledge/reports/walkthrough.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`

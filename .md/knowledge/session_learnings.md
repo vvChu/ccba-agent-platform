@@ -10,17 +10,16 @@
 - **RULE-1.1 [ADR 0057 — Khung 2 Giai Đoạn & Chỉ Số GPI]**:
   - Cổng 0: Giải thuật/IO $\rightarrow$ Deep Seams (`packages/*/src/`). `SKILL.md` cấm code logic trần.
   - Cổng 1: Đa luồng/StateGraph/HITL $\rightarrow$ Tier 3 Composite Orchestrator (không tính GPI).
-  - $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $\text{GPI} < 12.0 \rightarrow$ Tier 2A (`references/`); $\ge 12.0 \rightarrow$ Tier 2B (`.agents/skills/ccba-<name>/`). Rituals ép $A = 1.0$.
+  - $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $< 12.0 \rightarrow$ Tier 2A; $\ge 12.0 \rightarrow$ Tier 2B. Rituals ép $A = 1.0$.
 - **RULE-1.2 [ADR 0053 — Single-Writer Protocol]**:
   - Đa tác tử (`ccba-teamwork`, swarms): Lead duy nhất ghi codebase/logs; subagents chỉ xuất PatchBlocks vào sandbox, cấm sửa trực tiếp. Hợp nhất qua `execute_swarm_patches`.
 - **RULE-1.3 [ADR 0035 — Deep Modules, Seams & Zero-Exemption AST]**:
   - Thin Seam: Package chỉ bộc lộ `__all__`/`__init__.py`, cấm import private `_*`. Gỡ bypass hardcoded trong `check_dependency_contracts.py`. Test lịch sử vào `archive/`.
 - **RULE-1.4 [ADR 0033 & ADR 0056 — Directory Hygiene]**:
   - `.\.md\`: Gốc chỉ chứa cấu hình (`workspace_context.yaml`); `extracted_docs/`; `knowledge/`; `archive/`.
-  - Spoke Synchronizer (`coordinator.py`): Đổi workflows cũ thành `.md.bak` (`DEPRECATED_MIGRATED_TO_SKILL`), xóa thư mục theo `SKILL_DEPRECATION_ALIASES`.
+  - Spoke Sync: Workflows cũ thành `.md.bak`, xóa thư mục theo `SKILL_DEPRECATION_ALIASES`.
 - **RULE-1.5 [ADR 0037 & ADR 0051 — Traceability Matrix]**:
-  - Tier 1: Hub Constitution (55 ADRs). Tier 2: Spoke Domain (`docs/adr/`). Giữ qua `<!-- CUSTOM_SECTIONS_START -->`...`<!-- CUSTOM_SECTIONS_END -->`.
-  - Regex trạng thái ADR: `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ file non-ADR (`notes.md`, `template.md`).
+  - Matrix: Giữ qua `<!-- CUSTOM_SECTIONS_START -->`...`<!-- CUSTOM_SECTIONS_END -->`. Regex status: `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ non-ADR.
 - **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]**:
   - Dynamic import: `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton; Embedding `.npy` kèm `.sha256`.
 - **RULE-1.7 [ADR 0046 — Sanitized Fleet Telemetry]**:
@@ -45,11 +44,11 @@
 - **RULE-2.3 [Fast Feedback Loops (< 2s) & Parity Contract Tests]**:
   - Tests nòng cốt $< 2\text{s}$ (`pytest -m fast`). `test_cli_doc_parity.py`: Khớp 100% CLI và `SKILL.md`.
 - **RULE-2.4 [Relative Link Resolution Depth]**:
-  - `SKILL.md` trỏ package dùng 3 cấp `../../../packages/<pkg>`; `references/` trỏ root dùng 4 cấp `../../../../`. CẤM commit URI `file:///` hoặc `conversation://`.
+  - Relative links: `SKILL.md` trỏ package 3 cấp `../../../packages/`; `references/` trỏ root 4 cấp. CẤM commit URI `file:///` hoặc `conversation://`.
 - **RULE-2.5 [Windows Subprocess UTF-8 Encoding Standard]**:
   - `subprocess.run(..., text=True)` trên Windows: BẮT BUỘC `encoding="utf-8", errors="replace"`.
 - **RULE-2.7 [Safe-Remove & Read-Only Cleanup]**:
-  - `safe_remove`: Symlink ném `NotADirectoryError` nếu dùng `rmtree()`. Kiểm tra `is_symlink() or is_file()`, `chmod(0o666)` trước khi xóa.
+  - `safe_remove`: Check `is_symlink() or is_file()`, `chmod(0o666)` trước khi xóa; tránh `NotADirectoryError`.
 - **RULE-2.8 [Offline XML/OOXML Validation]**:
   - `lxml`: CẤM tải schema qua HTTP; nhúng offline, dùng `XMLParser(no_network=True, resolve_entities=False)`.
 - **RULE-2.9 [Flaky Test Root-Cause Transparency]**:
@@ -63,14 +62,14 @@
 
 - **RULE-3.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
   - MỌI văn bản viện dẫn BẮT BUỘC ĐANG CÓ HIỆU LỰC (CURRENT). Chặn đứng LLM Legacy Bias bằng pre-check.
-  - VĂN BẢN HIỆN HÀNH: **Luật Xây dựng 2025** (`135/2025/QH15`), **Nghị định 217/2026/NĐ-CP** (thay NĐ 175/2024 & NĐ 15/2021), **Nghị định 207/2026/NĐ-CP** (thay NĐ 06/2021). CẤM dùng văn bản hết hiệu lực.
+  - VĂN BẢN HIỆN HÀNH: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP** (thay NĐ 175 & NĐ 15), **NĐ 207/2026/NĐ-CP** (thay NĐ 06). CẤM dùng VB hết hiệu lực.
 - **RULE-3.2 [TVPL VIP 3-Tier Download Priority — ADR 0031]**:
   - Tier 1 (`part=-100`): VIP Digital Vector PDF (Mỏ neo Pháp lý). Tier 2 (`part=-1&docx=1`): VIP OpenXML Word Document (`docx_converter.py`). Tier 3 (`part=0`): Gazette Scan PDF.
 - **RULE-3.3 [Làm Sạch Bảng Biểu & Chú Thích Pháp Lý]**:
   - Footnote: Khử lặp số: `re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()`. Bảng Markdown nhận diện qua tiêu đề và `| :--- |`.
 - **RULE-3.4 [ADR 0059 — Cưỡng Chế Nguyên Văn & Chống Bịa Đặt Dữ Liệu Pháp Lý]**:
-  - CẤM TUYỆT ĐỐI tự suy diễn/bịa đặt câu chữ, điều khoản VBPL trong code/mock fixtures. Mọi trích dẫn phải nguyên văn 100% từ văn bản chính thức.
-  - Mandatory Acquisition First: Thiếu tệp gốc bắt buộc dùng `TVPLCrawler` tải bản PDF/DOCX từ TVPL/Cổng TTĐT, hoặc dừng lại xin file gốc; cấm tự bịa mock. Đóng dấu mật mã SHA-256 (`pdf_sha256`) và kiểm định bằng `validate_bundle_provenance()`.
+  - CẤM TUYỆT ĐỐI tự suy diễn/bịa đặt câu chữ, điều khoản VBPL trong code/mock fixtures. Trích dẫn nguyên văn 100%.
+  - Mandatory Acquisition First: Thiếu tệp gốc bắt buộc dùng `TVPLCrawler` tải PDF/DOCX chính thức, hoặc dừng lại xin file gốc; cấm bịa mock. Đóng dấu SHA-256 (`pdf_sha256`), kiểm định bằng `validate_bundle_provenance()`.
 
 ---
 
@@ -96,6 +95,9 @@
   - RSA-2048 OAEP giới hạn plaintext $\le 190$ bytes. Tách metadata tĩnh (`static_hash`) khỏi telemetry động (`.md/telemetry/spoke_heartbeats.yaml` gitignored).
 - **RULE-4.10 [ADR-0045 Spoke Leakage Guard & Report Mirroring Location]**:
   - Gốc `.md/` CHỈ chứa `workspace_context.yaml`. Báo cáo nghiệm thu BẮT BUỘC đặt tại `.md/knowledge/reports/walkthrough.md` (CẤM lưu tại `.md/walkthrough.md`). `audit_pr_comments.py` tự động đối soát đường dẫn này.
+- **RULE-4.11 [OpenAI SDK Embedding Invariant & Reasoning Timeout Scaling]**:
+  - `embed()` sang Gemini: BẮT BUỘC `extra_body={"drop_params": True}` chống HTTP 400. Model: `gemini-embedding-2` (3072 dims).
+  - Reasoning streaming: Sàn `max_tokens` $\ge 16,384$. Auto-Timeout: `effective_timeout = max(timeout, max_tokens / 50.0)`. Thẻ `<think>` bóc tách bằng depth scanner vào `ChatResult.thinking`.
 
 ---
 
