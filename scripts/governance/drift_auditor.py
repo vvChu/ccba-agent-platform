@@ -113,6 +113,14 @@ class DriftAuditor(BaseAuditor):
                 capture_output=True,
                 text=True,
             )
+            if res_log.returncode != 0:
+                res_log = subprocess.run(
+                    ["git", "log", "-n", "20", "--name-only"],
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True,
+                )
+
             if res_log.returncode == 0:
                 for line in res_log.stdout.splitlines():
                     if line.strip() in arch_docs:
