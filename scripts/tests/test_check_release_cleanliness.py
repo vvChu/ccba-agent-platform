@@ -24,7 +24,11 @@ class TestCheckReleaseCleanliness(unittest.TestCase):
 
     def test_is_known_artifact(self) -> None:
         """Test recognition of known test artifacts and caches."""
-        self.assertTrue(is_known_artifact("packages/ccba-legal-intel/tests/fixtures/mock_local_bundles/vn_hn/embeddings.npy"))
+        self.assertTrue(
+            is_known_artifact(
+                "packages/ccba-legal-intel/tests/fixtures/mock_local_bundles/vn_hn/embeddings.npy"
+            )
+        )
         self.assertTrue(is_known_artifact("mock_local_bundles/embeddings.sha256"))
         self.assertTrue(is_known_artifact("ci_log.txt"))
         self.assertTrue(is_known_artifact(".pytest_cache/v/cache/nodeids"))

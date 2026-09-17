@@ -114,12 +114,16 @@ def run_pre_check(repo_root: Path | None = None) -> int:
         print("✅ [PRE-FLIGHT GATE] Working tree sạch sẽ 100%. Sẵn sàng chạy kiểm thử release.")
         return 0
 
-    print("❌ [PRE-FLIGHT GATE BLOCKED] Phát hiện thay đổi chưa commit trong working tree trước khi phát hành!")
+    print(
+        "❌ [PRE-FLIGHT GATE BLOCKED] Phát hiện thay đổi chưa commit trong working tree trước khi phát hành!"
+    )
     print("Danh sách tệp phát hiện:")
     for code, path in entries:
         print(f"  - [{code}] {path}")
     print("\n💡 HÀNH ĐỘNG CẦN THỰC HIỆN:")
-    print("  1. Hãy commit các thay đổi hợp lệ vào PR (git add ... && git commit -m ... && git push).")
+    print(
+        "  1. Hãy commit các thay đổi hợp lệ vào PR (git add ... && git commit -m ... && git push)."
+    )
     print("  2. Hoặc stash có chủ đích nếu muốn giữ lại (git stash push -u -m 'my-wip-work').")
     print("  3. Tuyệt đối không chạy merge khi mã nguồn cục bộ chưa được đồng bộ lên remote PR!")
     return 1
@@ -157,17 +161,23 @@ def run_post_check(repo_root: Path | None = None) -> int:
             unknown_or_source_files.append((code, path))
 
     if unknown_or_source_files:
-        print("❌ [POST-TEST GATE BLOCKED] Kiểm thử làm thay đổi mã nguồn hoặc sinh tệp lạ ngoài danh mục cache!")
+        print(
+            "❌ [POST-TEST GATE BLOCKED] Kiểm thử làm thay đổi mã nguồn hoặc sinh tệp lạ ngoài danh mục cache!"
+        )
         print("Danh sách tệp vi phạm:")
         for code, path in unknown_or_source_files:
             print(f"  - [{code}] {path}")
         print("\n💡 HÀNH ĐỘNG CẦN THỰC HIỆN:")
-        print("  - Rà soát lại bài test vừa chạy: Có test nào đang sửa đổi trực tiếp source code hoặc sinh file lạ?")
+        print(
+            "  - Rà soát lại bài test vừa chạy: Có test nào đang sửa đổi trực tiếp source code hoặc sinh file lạ?"
+        )
         print("  - Hoàn tác hoặc kiểm tra lại các thay đổi trước khi tiếp tục release.")
         return 1
 
     # Dọn dẹp an toàn các test artifacts đã biết
-    print(f"⚠️ [HERMETIC WARNING] Phát hiện {len(leaked_files)} tệp cache kiểm thử rò rỉ sau bài test:")
+    print(
+        f"⚠️ [HERMETIC WARNING] Phát hiện {len(leaked_files)} tệp cache kiểm thử rò rỉ sau bài test:"
+    )
     for rel_path in leaked_files:
         abs_path = root / rel_path
         if abs_path.is_file() or abs_path.is_symlink():
@@ -184,7 +194,9 @@ def run_post_check(repo_root: Path | None = None) -> int:
             except Exception as ex:
                 print(f"  ⚠️ Không thể xóa thư mục {rel_path}: {ex}", file=sys.stderr)
 
-    print("💡 Khuyến nghị: Hãy thêm các tệp này vào .gitignore hoặc refactor test fixture dùng tmp_path.")
+    print(
+        "💡 Khuyến nghị: Hãy thêm các tệp này vào .gitignore hoặc refactor test fixture dùng tmp_path."
+    )
     print("✅ Đã dọn sạch tệp tạm kiểm thử. Cho phép tiếp tục quy trình phát hành.")
     return 0
 
@@ -213,7 +225,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    exit_code = run_pre_check(args.repo_root) if args.phase == "pre" else run_post_check(args.repo_root)
+    exit_code = (
+        run_pre_check(args.repo_root) if args.phase == "pre" else run_post_check(args.repo_root)
+    )
     sys.exit(exit_code)
 
 
