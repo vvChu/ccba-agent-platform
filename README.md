@@ -123,7 +123,7 @@ Dành cho Kỹ sư khi clone `ccba-agent-platform` về máy cá nhân để s�
 
 ---
 
-### 2. Cài Đặt Môi Trường Ảo & Toàn Bộ 8 Packages
+### 2. Cài Đặt Môi Trường Ảo & Toàn Bộ 9 Packages
 
 Mở terminal tại thư mục gốc dự án và thực hiện tuần tự:
 
@@ -137,7 +137,7 @@ python -m venv .venv
 # Trên Linux / macOS:
 source .venv/bin/activate
 
-# 3. Cài đặt toàn bộ 8 internal packages ở chế độ Editable (-e)
+# 3. Cài đặt toàn bộ 9 internal packages ở chế độ Editable (-e)
 pip install -e "packages/ccba-harness" \
             -e "packages/ccba-ai" \
             -e "packages/ccba-maskara" \
@@ -145,6 +145,7 @@ pip install -e "packages/ccba-harness" \
             -e "packages/ccba-pdf-prep" \
             -e "packages/ccba-notebooklm" \
             -e "packages/ccba-legal-intel" \
+            -e "packages/ccba-qc-core" \
             -e "packages/mdconverter[dev,llm]"
 ```
 
@@ -182,7 +183,7 @@ python -c "from ccba_ai import ai; print('✅ AI Gateway Models:', len(ai.models
 # 2. Chạy toàn bộ Fast Test Suite (< 2.0s per test, loại trừ test mạng nặng)
 pytest -m "not slow"
 
-# 3. Chạy Governance Gate (Kiểm định 83 Skills & Toàn bộ Tài liệu Markdown)
+# 3. Chạy Governance Gate (Kiểm định 73 Skills & Toàn bộ Tài liệu Markdown)
 python scripts/validate_skills.py
 python scripts/validate_docs.py
 
@@ -251,7 +252,10 @@ Hệ thống chuẩn hóa chu trình đóng góp 2 chiều:
 | **`/ccba-init-spoke`** | Khởi tạo dự án Spoke mới đạt chuẩn kiến trúc CCBA Hub-and-Spoke. |
 | **`/ccba-update-spoke`** | Cập nhật các kỹ năng và test guardrails mới nhất từ Hub về Spoke. |
 | **`/ccba-issue-to-hub`** | Soạn thảo RFC và tạo GitHub Issue đề xuất ý tưởng/tính năng mới lên Hub. |
+| **`/ccba-create-pr`** | Tự động phân giải base branch, đóng gói kiểm thử và mở Pull Request đa Spoke. |
 | **`/ccba-contribute-to-hub`** | Đóng gói mã nguồn, tests và mở Pull Request lên Hub kèm Self-Healing CI. |
+| **`/ccba-issue-tree`** | Phân rã bài toán phức tạp theo cây vấn đề McKinsey MECE (Why, What, How) và quản trị vòng đời. |
+| **`/ccba-legal-advisor`** | Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng và xuất Phiếu Ý kiến Pháp lý. |
 | **`/ccba-ai-qc-pccc-audit`** | Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) qua Semantic Map-Reduce. |
 | **`/ccba-markdown-document-processing`** | Chuyển đổi PDF/Word sang Markdown cấu trúc cao bằng `mdconverter`. |
 | **`/ccba-codebase-design`** | Quét module nông, sinh sơ đồ Mermaid trực quan và làm sâu module. |
