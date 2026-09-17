@@ -39,6 +39,7 @@ class RatchetConfig:
     prohibited_files: list[str] = field(default_factory=list)
     skill_name: str = ""
     full_sweep: bool = False
+    patience: int = 3
 
     def __post_init__(self) -> None:
         if isinstance(self.target_file, str):
@@ -249,7 +250,7 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
         ]
 
-    if any(k in sname for k in ["academic", "writing", "khoahoc"]):
+    if any(k in sname for k in ["academic", "khoahoc"]) or "academic-writing" in sname:
         return [
             RegexScorer(
                 name="academic_structure",
@@ -263,6 +264,16 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
                 is_critical=True,
             ),
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
+        ]
+
+    if any(k in sname for k in ["copywriting", "vietbai", "truyenthong"]):
+        return [
+            RegexScorer(
+                name="copywriting_action",
+                pattern=r"(xử lý|hướng dẫn|thực hiện|quy định|nội dung|thông điệp)",
+                weight=0.7,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.3),
         ]
 
     if any(k in sname for k in ["bim", "uniclass", "classification", "ifc"]):
@@ -298,6 +309,7 @@ class GitRatchetOptimizer:
         scorers: list[BaseScorer] | None = None,
         dry_run_git: bool = False,
         project_root: Path | None = None,
+        root: Path | None = None,
         task: Callable[[EvalItem], Any] | None = None,
         dataset: list[EvalItem] | None = None,
     ) -> None:
@@ -306,8 +318,9 @@ class GitRatchetOptimizer:
         self.dry_run_git = dry_run_git
         self.custom_task = task
 
-        if project_root is not None:
-            self.project_root = Path(project_root).resolve()
+        effective_root = project_root if project_root is not None else root
+        if effective_root is not None:
+            self.project_root = Path(effective_root).resolve()
         else:
             cur = self.target_file.parent
             detected = None
@@ -463,7 +476,7 @@ class GitRatchetOptimizer:
             # PCCC Trap 1: 65m height & Bậc II
             if "65m" in prompt and "Bậc II" in prompt:
                 if has_pccc_guardrail:
-                    parts.append(
+                    return (
                         "Từ chối chấp thuận đề xuất Bậc II. Căn cứ QCVN 06:2022/BXD Bảng H.1, nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I. Yêu cầu chủ đầu tư và tư vấn điều chỉnh giải pháp kết cấu."
                     )
                 else:
@@ -474,7 +487,7 @@ class GitRatchetOptimizer:
             # PCCC Trap 2: Smoke control corridor 25m
             elif "25m" in prompt and "hút khói" in prompt:
                 if has_pccc_guardrail:
-                    parts.append(
+                    return (
                         "Vi phạm quy chuẩn kiểm soát khói. Căn cứ QCVN 06:2022/BXD Phụ lục D (Mục D.1, D.2), hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố. Yêu cầu bổ sung quạt hút khói và van khói."
                     )
                 else:
@@ -483,7 +496,7 @@ class GitRatchetOptimizer:
             # PCCC Trap 3: Evacuation distance 45m dead-end corridor
             elif "45m" in prompt and "hành lang cụt" in prompt:
                 if has_pccc_guardrail:
-                    parts.append(
+                    return (
                         "Kết luận không đạt quy chuẩn. Căn cứ Bảng G.1/G.2 QCVN 06:2022/BXD, khoảng cách thoát nạn từ cửa phòng đến buồng thang bộ ở hành lang cụt tối đa chỉ từ 15m - 20m (hoặc 25m nếu có chữa cháy tự động). Khoảng cách 45m vi phạm nghiêm trọng giới hạn an toàn."
                     )
                 else:
@@ -492,7 +505,7 @@ class GitRatchetOptimizer:
             # PCCC Trap 4: Unprotected steel structure
             elif "kết cấu vì kèo thép" in prompt and "để trần" in prompt:
                 if has_pccc_guardrail:
-                    parts.append(
+                    return (
                         "Từ chối phê duyệt. Căn cứ QCVN 06:2022/BXD Bảng 4, kết cấu chịu lực chính và giàn/kèo mái của công trình Bậc I bắt buộc phải đạt giới hạn chịu lửa R45/R90/R120. Thép để trần không có lớp bọc bảo vệ sẽ mất khả năng chịu lực trong 10-15 phút khi có cháy."
                     )
                 else:
@@ -501,7 +514,7 @@ class GitRatchetOptimizer:
             # PCCC Trap 5: Smokeproof staircase N1/N2 for building > 28m
             elif "cao 45m" in prompt and "thang bộ loại 1" in prompt:
                 if has_pccc_guardrail:
-                    parts.append(
+                    return (
                         "Đánh giá vi phạm nghiêm trọng an toàn sinh mạng. Căn cứ QCVN 06:2022/BXD Điều 3.4.12, nhà có chiều cao PCCC > 28m bắt buộc phải sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp, nghiêm cấm dùng thang bộ thông thường loại 1."
                     )
                 else:
@@ -510,7 +523,7 @@ class GitRatchetOptimizer:
             # PCCC Trap 6: Fire damper and EI duct for fire compartments
             elif "tường ngăn cháy" in prompt and "không lắp van ngăn cháy" in prompt:
                 if has_pccc_guardrail:
-                    parts.append(
+                    return (
                         "Kết luận không hợp lệ và từ chối xác nhận. Căn cứ QCVN 06:2022/BXD Điều 2.5 và Phụ lục D, ống gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và đoạn ống xuyên phải được bọc cách nhiệt đạt giới hạn chịu lửa EI tương ứng."
                     )
                 else:
@@ -835,7 +848,7 @@ class GitRatchetOptimizer:
                     "* **Hard Completion Lock:** Bắt buộc chạy `python -m ccba_harness verify-patch` trước khi hoàn tất.",
                 ),
             ]
-        elif any(k in sname for k in ["pccc", "fire", "phongchay"]):
+        elif any(k in sname for k in ["pccc", "fire", "phongchay", "qc", "audit", "thamdinh"]):
             strategies = [
                 (
                     "QCVN 06:2022/BXD & Map 1 Invariants",
@@ -868,7 +881,6 @@ class GitRatchetOptimizer:
                 "ingest",
                 "tracker",
                 "digest",
-                "qc",
             ]
         ):
             strategies = [
@@ -935,17 +947,26 @@ class GitRatchetOptimizer:
         else:
             body = current_content
 
+        # Surgical Section Patching (Frontier 3)
         section_header = enhancement.strip().split("\n")[0]
+        header_pattern = re.escape(section_header)
+        section_regex = re.compile(rf"({header_pattern}.*?)(?=\n## |\Z)", re.DOTALL)
+
         if enhancement.strip() in body:
             mutated_body = (
                 body.strip()
                 + f"\n\n<!-- Ratchet Optimization Refinement {iteration} -->\n- Cập nhật quy chuẩn rà soát vòng {iteration}."
             )
-        elif section_header in body:
-            parts = body.split(section_header, 1)
-            mutated_body = parts[0].rstrip() + enhancement
+        elif section_regex.search(body):
+            mutated_body = section_regex.sub(enhancement.strip() + "\n", body)
         else:
-            mutated_body = body.strip() + enhancement
+            mutated_body = body.strip() + "\n\n" + enhancement.strip()
+
+        # Compaction guard: prevent prompt bloat beyond ~300 lines
+        lines = mutated_body.splitlines()
+        if len(lines) > 300:
+            cleaned_lines = [line for line in lines if not line.startswith("<!-- Ratchet Optimization Refinement")]
+            mutated_body = "\n".join(cleaned_lines)
 
         return self.preserve_yaml_frontmatter(current_content, mutated_body)
 
@@ -1061,21 +1082,33 @@ class GitRatchetOptimizer:
         baseline_report = self.evaluate_content(initial_content)
         baseline_score = baseline_report.overall_score
 
+        # Tiered budget & patience based on baseline score (ADR-0023 / Grilling Frontier 2)
+        if baseline_score >= 100.0:
+            effective_max_iter = 1
+            effective_patience = 1
+        elif baseline_score >= 90.0:
+            effective_max_iter = min(self.config.max_iterations, 5)
+            effective_patience = min(self.config.patience, 2)
+        else:
+            effective_max_iter = min(self.config.max_iterations, 10)
+            effective_patience = min(self.config.patience, 3)
+
         best_score = baseline_score
         best_content = initial_content
         has_committed = False
         kept_count = 0
         reverted_count = 0
+        stagnant_trials = 0
         history: list[RatchetTrialResult] = []
 
         logger.info(f"🏁 Bắt đầu Git-Ratchet Loop cho {self.target_file.name}")
         logger.info(
-            f"📊 Điểm chuẩn ban đầu (Baseline Score): {baseline_score:.2f}% | Mục tiêu: {self.config.target_score}%"
+            f"📊 Điểm chuẩn ban đầu (Baseline Score): {baseline_score:.2f}% | Mục tiêu: {self.config.target_score}% | Budget: {effective_max_iter} vòng (Patience={effective_patience})"
         )
 
         try:
-            for i in range(1, self.config.max_iterations + 1):
-                logger.info(f"🔄 --- Iteration {i}/{self.config.max_iterations} ---")
+            for i in range(1, effective_max_iter + 1):
+                logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
                 try:
                     mutated_content = self.propose_mutation(best_content, i)
 
@@ -1096,11 +1129,13 @@ class GitRatchetOptimizer:
                         best_score = current_score
                         best_content = mutated_content
                         kept_count += 1
+                        stagnant_trials = 0
                         decision = "KEEP"
                         summary = f"Cải thiện điểm số thành công: {diff_str}"
                     else:
                         self.git_rollback_target(best_content, has_committed=has_committed)
                         reverted_count += 1
+                        stagnant_trials += 1
                         decision = "REVERT"
                         summary = f"Không cải thiện (Score {current_score:.1f}% vs Best {best_score:.1f}%) hoặc dính {crit_fails} Điểm Liệt."
 
@@ -1118,6 +1153,13 @@ class GitRatchetOptimizer:
                     if best_score >= self.config.target_score and not self.config.full_sweep:
                         logger.info(
                             f"🎉 Đã đạt điểm mục tiêu {self.config.target_score}% tại iteration {i}!"
+                        )
+                        break
+
+                    # Adaptive Early Stopping (Grilling Frontier 2)
+                    if effective_patience > 0 and stagnant_trials >= effective_patience:
+                        logger.info(
+                            f"🛑 [Adaptive Early Stopping] Dừng sớm sau {stagnant_trials} vòng liên tiếp không cải thiện điểm số (Patience={effective_patience})."
                         )
                         break
                 except Exception as iter_err:
