@@ -1045,9 +1045,7 @@ class SkillValidator:
         if override_orchestrated is not None:
             is_orchestrated = override_orchestrated
 
-        parent_skill = override_parent or meta.get(
-            "parent-skill", meta.get("parent_skill")
-        )
+        parent_skill = override_parent or meta.get("parent-skill", meta.get("parent_skill"))
 
         gpi_data = meta.get("gpi") or meta.get("GPI")
         metrics: GPIMetrics | None = None
@@ -1064,9 +1062,7 @@ class SkillValidator:
             metrics = override_metrics
 
         existing_tier = (
-            override_existing_tier
-            or meta.get("existing-tier")
-            or meta.get("existing_tier")
+            override_existing_tier or meta.get("existing-tier") or meta.get("existing_tier")
         )
 
         request = DecisionRequest(

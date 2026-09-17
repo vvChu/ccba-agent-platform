@@ -34,4 +34,3 @@ __all__ = [
     "generate_clauses_json",
     "write_qa_benchmark",
 ]
-

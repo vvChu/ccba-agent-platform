@@ -267,10 +267,30 @@ def test_eval_cli_difficulty_and_limit_flags(
     """Verify eval CLI respects --difficulty and --limit flags."""
     dataset_file = tmp_path / "test_diff_cases.json"
     dataset_data = [
-        {"id": "case_easy_1", "input_prompt": "P1", "golden_answer": "A1", "metadata": {"difficulty": "easy"}},
-        {"id": "case_easy_2", "input_prompt": "P2", "golden_answer": "A2", "metadata": {"difficulty": "easy"}},
-        {"id": "case_hard_1", "input_prompt": "P3", "golden_answer": "A3", "metadata": {"difficulty": "hard"}},
-        {"id": "case_hard_2", "input_prompt": "P4", "golden_answer": "A4", "metadata": {"difficulty": "hard"}},
+        {
+            "id": "case_easy_1",
+            "input_prompt": "P1",
+            "golden_answer": "A1",
+            "metadata": {"difficulty": "easy"},
+        },
+        {
+            "id": "case_easy_2",
+            "input_prompt": "P2",
+            "golden_answer": "A2",
+            "metadata": {"difficulty": "easy"},
+        },
+        {
+            "id": "case_hard_1",
+            "input_prompt": "P3",
+            "golden_answer": "A3",
+            "metadata": {"difficulty": "hard"},
+        },
+        {
+            "id": "case_hard_2",
+            "input_prompt": "P4",
+            "golden_answer": "A4",
+            "metadata": {"difficulty": "hard"},
+        },
     ]
     dataset_file.write_text(json.dumps(dataset_data), encoding="utf-8")
 
@@ -280,9 +300,12 @@ def test_eval_cli_difficulty_and_limit_flags(
     with patch("ccba_harness.evals.runner._create_default_eval_task", return_value=mock_task):
         code = run_eval_cli(
             [
-                "--dataset", str(dataset_file),
-                "--difficulty", "hard",
-                "--limit", "1",
+                "--dataset",
+                str(dataset_file),
+                "--difficulty",
+                "hard",
+                "--limit",
+                "1",
                 "--json",
             ]
         )
@@ -306,4 +329,3 @@ def test_eval_cli_invalid_limit_flag(capsys: pytest.CaptureFixture[str]) -> None
     assert code_neg == 1
     err_neg = capsys.readouterr().err
     assert "ERROR: --limit must be a positive integer" in err_neg
-
