@@ -10,6 +10,8 @@
 
 ## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #282)
 
+- **Review ID:** `PRR_kwDOQzfV088AAAABN9gBSg`
+
 | ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
 |---|---|---|---|
 | `4033172362` | `.agents/skills/ccba-issue-tree/SKILL.md` | PR description states GPI = 14.50, but frontmatter shows raw sum S=4, K=2, A=1, P=1 (Total 8.0). Cần đồng bộ giá trị tính theo công thức trọng số ADR-0057. | **ĐÃ KHẮC PHỤC**: Đồng bộ toàn hệ thống. Đã cập nhật generator `compile_skills_docs.py` để tính điểm GPI có trọng số chuẩn xác: $S \times 2.5 + K \times 2.0 + A \times 2.0 - P \times 1.5 = 14.50$. |
@@ -18,6 +20,9 @@
 | `4033501875` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | Hardcode `timeout=2.0` có thể gây timeout trong môi trường thực tế khi gọi API embedding. | **ĐÃ KHẮC PHỤC**: Tham số hóa `embed_timeout: float | None = None` với giá trị mặc định an toàn 10.0s, đồng thời hỗ trợ biến môi trường cấu hình `CCBA_EMBED_TIMEOUT`. |
 | `4033528975` | `scripts/governance/drift_auditor.py` | Fallback sang `git log -n 20` có thể lấy nhầm commit lịch sử không liên quan, che giấu drift thực tế. | **ĐÃ KHẮC PHỤC**: Loại bỏ fallback `-n 20`, chuyển sang kiểm tra tuần tự các ref so sánh nhánh hợp lệ (`origin/main..HEAD`, `origin/master..HEAD`, `main..HEAD`, `master..HEAD`). |
 | `4033575070` | `docs/skills/ccba-issue-tree.md` | Điểm đánh giá GPI hiển thị `Tổng: 8.0` (tổng số học) thay vì điểm trọng số ADR-0057 (GPI = 14.50). | **ĐÃ KHẮC PHỤC**: Nâng cấp `compile_skills_docs.py` để tính điểm trọng số chuẩn ADR-0057, tái biên dịch toàn bộ 73 tài liệu kỹ năng, `INDEX.md`, `llms.txt`, `llms-full.txt`, và `index.html`. |
+| `4033728795` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | `CCBA_EMBED_TIMEOUT` parse `float(env_val)` không có rào chắn, dễ crash nếu biến môi trường không phải số. | **ĐÃ KHẮC PHỤC**: Bao bọc `try...except (ValueError, TypeError)` với giá trị fallback mặc định an toàn 10.0s. |
+| `4033728854` | `.agents/skills/ccba-issue-tree/SKILL.md` | Bảng tham chiếu Level 3 hardcode đếm ("máy trạng thái 5 bước", "RACI 11 Ghế") không khớp thực tế. | **ĐÃ KHẮC PHỤC**: Loại bỏ các con số hardcode, thay bằng mô tả khái quát: "máy trạng thái vòng đời nhánh" và "ma trận RACI Hiến chương CCBA". |
+| `4033728889` | `.agents/skills/ccba-issue-tree/references/governed_lifecycle_guide.md` | Tiêu đề mục ghi "11 Ghế" nhưng bảng bên dưới liệt kê 12 vai trò, gây mâu thuẫn nội bộ. | **ĐÃ KHẮC PHỤC**: Cập nhật tiêu đề thành "Ma Trận RACI Ánh Xạ Các Ghế Trách Nhiệm Hiến Chương CCBA". |
 
 ---
 

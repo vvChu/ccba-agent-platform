@@ -48,7 +48,7 @@ Tuyệt đối cấm Agent tự nâng trạng thái lên `VERIFIED_FACT` dựa t
 
 ---
 
-## 3. Ma Trận RACI Ánh Xạ 11 Ghế Hiến Chương CCBA
+## 3. Ma Trận RACI Ánh Xạ Các Ghế Trách Nhiệm Hiến Chương CCBA
 
 Tầng vận hành gắn kết trách nhiệm giải trình trực tiếp vào các Ghế trách nhiệm của CCBA Charter 2026 (Phụ lục 01 Quy chế CCBA 2026 & ADR-0046):
 
