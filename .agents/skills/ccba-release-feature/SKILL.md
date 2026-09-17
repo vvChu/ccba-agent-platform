@@ -143,7 +143,7 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
 2. Thu hồi tiến trình kiểm thử mồ côi và quay về branch `main` an toàn (chống treo Pager):
    ```bash
    python -c "from scripts.eval.process_safety import ensure_single_instance; ensure_single_instance('pytest')"
-   git checkout --no-pager main && git pull origin main
+   git --no-pager checkout main && git pull origin main
    ```
 
 3. Xóa branch feature cục bộ an toàn:
