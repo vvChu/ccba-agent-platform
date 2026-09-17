@@ -227,7 +227,7 @@ class FederatedLegalEngine:
                     self._embedding_matrix = matrix
                     return
 
-            client = AIClient()
+            client = AIClient(timeout=2.0)
             embeddings = client.embed(texts)
             self._embedding_matrix = np.array(embeddings)
 
@@ -259,7 +259,7 @@ class FederatedLegalEngine:
 
             from ccba_ai import AIClient
 
-            query_emb = np.array(AIClient().embed([query])[0])
+            query_emb = np.array(AIClient(timeout=2.0).embed([query])[0])
             norms = np.linalg.norm(self._embedding_matrix, axis=1) * np.linalg.norm(query_emb)
             norms[norms == 0] = 1e-10
             scores = np.dot(self._embedding_matrix, query_emb) / norms
