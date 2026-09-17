@@ -287,7 +287,9 @@ class TieredFallbackRouter:
             is_openai_affinity = any(
                 k in (model or "").lower() for k in ("gpt", "o1", "o3", "codex", "copilot")
             )
-            cli_order = ["copilot", "antigravity"] if is_openai_affinity else ["antigravity", "copilot"]
+            cli_order = (
+                ["copilot", "antigravity"] if is_openai_affinity else ["antigravity", "copilot"]
+            )
 
             for cli_name in cli_order:
                 if cli_name == "copilot":
@@ -301,7 +303,9 @@ class TieredFallbackRouter:
                             res = fallback_fn_builder(copilot.sync_client, mapped_model)
                             return res
                         except Exception as t3_copilot_exc:
-                            logger.warning(f"[ccba-ai] Tier 3 (Copilot CLI) failed: {t3_copilot_exc}")
+                            logger.warning(
+                                f"[ccba-ai] Tier 3 (Copilot CLI) failed: {t3_copilot_exc}"
+                            )
                 elif cli_name == "antigravity":
                     agy = self._get_agy_provider()
                     if agy and agy.is_available() and fallback_fn_builder:
@@ -314,7 +318,9 @@ class TieredFallbackRouter:
                             res = fallback_fn_builder(agy.sync_client, mapped_model)
                             return res
                         except Exception as t3_agy_exc:
-                            logger.warning(f"[ccba-ai] Tier 3 (Antigravity CLI) failed: {t3_agy_exc}")
+                            logger.warning(
+                                f"[ccba-ai] Tier 3 (Antigravity CLI) failed: {t3_agy_exc}"
+                            )
 
             # --- Try Tier 4 (Local Ollama) ---
             tier4_cfg = self.get_tier4_ollama_config()
@@ -391,7 +397,9 @@ class TieredFallbackRouter:
             is_openai_affinity = any(
                 k in (model or "").lower() for k in ("gpt", "o1", "o3", "codex", "copilot")
             )
-            cli_order = ["copilot", "antigravity"] if is_openai_affinity else ["antigravity", "copilot"]
+            cli_order = (
+                ["copilot", "antigravity"] if is_openai_affinity else ["antigravity", "copilot"]
+            )
 
             for cli_name in cli_order:
                 if cli_name == "copilot":
