@@ -21,6 +21,7 @@ dependencies = [
     "pytest-timeout",
     "beautifulsoup4",
     "mammoth",
+    "rank-bm25",
 ]
 
 [project.scripts]
