@@ -71,18 +71,19 @@
 | `4034040496` | `scripts/governance/drift_auditor.py` | Bộ lọc `"/tests/" not in filepath` không loại trừ `tests/...` ở repo root. | **ĐÃ KHẮC PHỤC**: Đã đồng bộ với `main` mới nhất, toàn bộ test suite pass 100%. |
 | `4034040536` | `.agents/proposals/2026-09-17_dynamic-base-branch-for-create-pr.md` | Section 3 mô tả `$DEFAULT_BRANCH` trong khi Hub skill dùng `<default_branch>`. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa toàn bộ Section 1 và Section 3 đồng bộ với placeholder `<default_branch>`. |
 | `4036350143` | `.agents/proposals/2026-09-17_dynamic-base-branch-for-create-pr.md` | Section 3 RFC chỉ liệt kê tệp skill trong khi PR có các tệp phụ trợ. | **ĐÃ KHẮC PHỤC**: Cập nhật Section 3 của RFC phân tách rõ tệp trọng tâm và các thay đổi phụ trợ đồng bộ hệ thống. |
-| `PRR_kwDOQzfV088AAAABOAhoxg` | `.agents/skills/ccba-create-pr/SKILL.md`, `scripts/governance/drift_auditor.py` | Thêm loại trừ root-level `tests/...` vào drift auditor, dùng biến `$PR_BODY` thay vì literal escape sequence `\n`. | **ĐÃ KHẮC PHỤC**: Đã bổ sung `not filepath.startswith("tests/")` trong drift auditor và dùng `--body "$PR_BODY"` chuẩn xác trong lệnh `gh pr create`. |
+| `4036387067` | `.md/knowledge/reports/walkthrough.md` | Đường dẫn `file:///d:/...` là tuyệt đối cục bộ, không portable khi render trên GitHub. | **ĐÃ KHẮC PHỤC**: Chuyển toàn bộ link sang relative path chuẩn repo. |
+| `PRR_kwDOQzfV088AAAABOAkS_g` | `.md/knowledge/reports/walkthrough.md`, `.agents/skills/ccba-create-pr/SKILL.md` | Đường dẫn tuyệt đối trong walkthrough và định dạng newline trong ví dụ gh pr create. | **ĐÃ KHẮC PHỤC**: Đã chuyển relative links trong walkthrough và chuẩn hóa `--body "$PR_BODY"` trong `SKILL.md`. |
 
 ---
 
 ## 3. Các Thay Đổi Cốt Lõi (Core Deliverables)
 
-1. **Nâng cấp Kernel Skill ([`ccba-create-pr`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-create-pr/SKILL.md)):**
+1. **Nâng cấp Kernel Skill ([`ccba-create-pr`](../../.agents/skills/ccba-create-pr/SKILL.md)):**
    - Bump version từ `1.1.0` $\rightarrow$ `1.2.0`.
    - Bổ sung lệnh `git symbolic-ref --short refs/remotes/origin/HEAD` tại Bước 0 để xác định nhánh mặc định (`<default_branch>`).
    - Loại bỏ giả định ngầm hardcode `main`, tương thích hoàn hảo với cả `master` và các Spoke đa dạng.
    - Sử dụng placeholder `<default_branch>` xuyên suốt từ Bước 0 đến Bước 3 (`gh pr create --base <default_branch>`).
-2. **RFC Proposal Chuẩn Hóa ([`2026-09-17_dynamic-base-branch-for-create-pr.md`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/proposals/2026-09-17_dynamic-base-branch-for-create-pr.md)):**
+2. **RFC Proposal Chuẩn Hóa ([`2026-09-17_dynamic-base-branch-for-create-pr.md`](../../.agents/proposals/2026-09-17_dynamic-base-branch-for-create-pr.md)):**
    - Đầy đủ 4 trường metadata bắt buộc (`proposal_id`, `type`, `name`, `status`) và project provenance (`proposed_by_project: dgx-spark-toolkit`).
    - Đánh giá theo ma trận Giá trị $\times$ Rủi ro $\times$ KISS (Value: Rất cao, Risk: 0%, Complexity: Rất thấp).
 3. **Bảo toàn Tính Toàn Vẹn Hệ Thống (Governance & Integrity):**
