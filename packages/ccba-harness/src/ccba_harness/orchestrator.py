@@ -35,14 +35,28 @@ class EvalOrchestrator:
 
     def ensure_single_instance(self, script_keyword: str = "run_safe_eval_wrapper.py") -> None:
         """Revoke duplicate instances of evaluation runner processes."""
+        if os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
+            return
+
         current_pid = os.getpid()
+        ancestor_pids = {current_pid}
+        parent_pid = getattr(os, "getppid", lambda: None)()
+        if parent_pid:
+            ancestor_pids.add(parent_pid)
+
         try:
             import psutil  # type: ignore[import-untyped]
+
+            try:
+                cur_proc = psutil.Process(current_pid)
+                ancestor_pids.update(p.pid for p in cur_proc.parents())
+            except Exception:
+                pass
 
             for proc in psutil.process_iter(["pid", "name", "cmdline"]):
                 try:
                     pid = proc.info["pid"]
-                    if pid == current_pid:
+                    if pid in ancestor_pids:
                         continue
                     cmdline = " ".join(proc.info["cmdline"] or [])
                     if script_keyword in cmdline:

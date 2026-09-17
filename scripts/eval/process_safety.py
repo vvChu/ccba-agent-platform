@@ -17,8 +17,12 @@ def ensure_single_instance(script_keyword: str) -> None:
     """Tự động kiểm tra và triệt hạ các tiến trình chạy ngầm bị trùng lặp/treo từ trước.
 
     CRITICAL INVARIANT: Bắt buộc loại trừ cả os.getpid() (tiến trình hiện tại)
-    và os.getppid() (tiến trình cha/Agent host) để không làm sập Agent Server.
+    và toàn bộ cây tiến trình tổ tiên (parents/ancestors/Agent host/CI Runner) để không làm sập Runner.
+    Trên môi trường CI/GitHub Actions, luôn bỏ qua vì mỗi job chạy trong container/VM cô lập.
     """
+    if os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
+        return
+
     if hasattr(sys.stdout, "reconfigure"):
         try:
             sys.stdout.reconfigure(line_buffering=True)
@@ -31,15 +35,24 @@ def ensure_single_instance(script_keyword: str) -> None:
             pass
 
     current_pid = os.getpid()
+    ancestor_pids = {current_pid}
     parent_pid = getattr(os, "getppid", lambda: None)()
+    if parent_pid:
+        ancestor_pids.add(parent_pid)
 
     try:
         import psutil  # type: ignore[import-untyped]
 
+        try:
+            cur_proc = psutil.Process(current_pid)
+            ancestor_pids.update(p.pid for p in cur_proc.parents())
+        except Exception:
+            pass
+
         for proc in psutil.process_iter(["pid", "name", "cmdline"]):
             try:
                 pid = proc.info["pid"]
-                if pid == current_pid or (parent_pid and pid == parent_pid):
+                if pid in ancestor_pids:
                     continue
                 cmdline = " ".join(proc.info["cmdline"] or [])
                 if script_keyword in cmdline:
