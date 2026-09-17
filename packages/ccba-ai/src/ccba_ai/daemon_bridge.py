@@ -177,7 +177,9 @@ class PersistentStdioDaemon:
             # 2. Acquire lock for pipe access
             acquired = self._sync_lock.acquire(timeout=timeout)
             if not acquired:
-                logger.warning("[ccba-ai-daemon] Lock acquire timed out. Spilling over to One-Shot.")
+                logger.warning(
+                    "[ccba-ai-daemon] Lock acquire timed out. Spilling over to One-Shot."
+                )
                 return fallback_oneshot_fn(prompt)
 
             try:
@@ -210,7 +212,9 @@ class PersistentStdioDaemon:
                 if raw_text.strip():
                     return parse_response_fn(raw_text)
 
-                logger.warning("[ccba-ai-daemon] No output from persistent daemon. Falling back to One-Shot.")
+                logger.warning(
+                    "[ccba-ai-daemon] No output from persistent daemon. Falling back to One-Shot."
+                )
                 return fallback_oneshot_fn(prompt)
 
             except Exception as exc:
@@ -260,7 +264,9 @@ class PersistentStdioDaemon:
                     collected_lines: list[str] = []
                     while True:
                         try:
-                            line_bytes = await asyncio.wait_for(proc.stdout.readline(), timeout=timeout)
+                            line_bytes = await asyncio.wait_for(
+                                proc.stdout.readline(), timeout=timeout
+                            )
                         except asyncio.TimeoutError:
                             break
 

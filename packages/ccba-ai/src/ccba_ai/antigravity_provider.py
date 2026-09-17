@@ -315,9 +315,7 @@ def extract_available_models_from_stderr(stderr: str) -> list[str]:
     return models
 
 
-def resolve_latest_compatible_model(
-    requested_model: str, available_models: list[str]
-) -> str:
+def resolve_latest_compatible_model(requested_model: str, available_models: list[str]) -> str:
     """Resolve the best compatible successor model if requested_model is not available.
 
     Preserves:
@@ -354,9 +352,7 @@ def resolve_latest_compatible_model(
 
     # 1. Exact variant match (same family & same variant, e.g. flash-medium)
     exact_variant_candidates = [
-        m
-        for m in available_models
-        if m.startswith(f"{family}-") and m.endswith(f"-{variant}")
+        m for m in available_models if m.startswith(f"{family}-") and m.endswith(f"-{variant}")
     ]
     if exact_variant_candidates:
         exact_variant_candidates.sort(key=parse_version, reverse=True)
@@ -376,9 +372,7 @@ def resolve_latest_compatible_model(
         return same_tier_candidates[0]
 
     # 3. Same family match
-    same_family_candidates = [
-        m for m in available_models if m.startswith(f"{family}-")
-    ]
+    same_family_candidates = [m for m in available_models if m.startswith(f"{family}-")]
     if same_family_candidates:
         same_family_candidates.sort(key=parse_version, reverse=True)
         return same_family_candidates[0]
@@ -474,9 +468,7 @@ class AntigravityCLIProvider:
             raise
 
         if result.returncode != 0:
-            resolved_model = self._resolve_fallback_model_on_error(
-                effective_model, result.stderr
-            )
+            resolved_model = self._resolve_fallback_model_on_error(effective_model, result.stderr)
             if resolved_model:
                 logger.warning(
                     f"[ccba-ai] Model '{effective_model}' not recognized by agy. "
@@ -498,9 +490,7 @@ class AntigravityCLIProvider:
                         f"{retry_res.stderr[:200]}"
                     )
                 except Exception as retry_exc:
-                    logger.warning(
-                        f"[ccba-ai] Retry with '{resolved_model}' failed: {retry_exc}"
-                    )
+                    logger.warning(f"[ccba-ai] Retry with '{resolved_model}' failed: {retry_exc}")
 
             logger.warning(
                 f"[ccba-ai] Antigravity CLI exited with code {result.returncode}: "
@@ -566,9 +556,7 @@ class AntigravityCLIProvider:
         stderr = stderr_bytes.decode("utf-8", errors="replace")
 
         if proc.returncode != 0:
-            resolved_model = self._resolve_fallback_model_on_error(
-                effective_model, stderr
-            )
+            resolved_model = self._resolve_fallback_model_on_error(effective_model, stderr)
             if resolved_model:
                 logger.warning(
                     f"[ccba-ai] Model '{effective_model}' not recognized by agy. "
@@ -586,13 +574,9 @@ class AntigravityCLIProvider:
                         retry_proc.communicate(), timeout=effective_timeout
                     )
                     if retry_proc.returncode == 0:
-                        retry_stdout = retry_stdout_bytes.decode(
-                            "utf-8", errors="replace"
-                        )
+                        retry_stdout = retry_stdout_bytes.decode("utf-8", errors="replace")
                         return parse_ndjson_response(retry_stdout)
-                    retry_stderr = retry_stderr_bytes.decode(
-                        "utf-8", errors="replace"
-                    )
+                    retry_stderr = retry_stderr_bytes.decode("utf-8", errors="replace")
                     logger.warning(
                         f"[ccba-ai] Async retry with '{resolved_model}' failed (exit {retry_proc.returncode}): "
                         f"{retry_stderr[:200]}"
@@ -606,9 +590,7 @@ class AntigravityCLIProvider:
 
         return parse_ndjson_response(stdout)
 
-    def _resolve_fallback_model_on_error(
-        self, requested_model: str, stderr: str
-    ) -> str | None:
+    def _resolve_fallback_model_on_error(self, requested_model: str, stderr: str) -> str | None:
         """Attempt to extract available models from error and resolve successor."""
         if not is_unrecognized_model_error(stderr):
             return None

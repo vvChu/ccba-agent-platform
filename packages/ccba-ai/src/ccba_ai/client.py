@@ -227,7 +227,6 @@ class AIClient:
             _primary_call,
             model=target_model,
             timeout=effective_timeout,
-
             circuit_breaker=self.circuit_breaker,
             fallback_fn_builder=_call,
         )
@@ -302,7 +301,6 @@ class AIClient:
             _primary_call,
             model=target_model,
             timeout=effective_timeout,
-
             circuit_breaker=self.circuit_breaker,
             fallback_fn_builder=_call,
         )
@@ -313,6 +311,7 @@ class AIClient:
         self.privacy_guard.check_content(response_text)
 
         from ccba_ai.llm_utils import LLMOutputParser
+
         thinking = getattr(msg, "reasoning_content", None)
         if not isinstance(thinking, str):
             thinking = None
@@ -772,7 +771,6 @@ class AsyncAIClient:
             _primary_call,
             model=target_model,
             timeout=effective_timeout,
-
             circuit_breaker=self.circuit_breaker,
             fallback_coro_builder=_call,
         )
@@ -847,7 +845,6 @@ class AsyncAIClient:
             _primary_call,
             model=target_model,
             timeout=effective_timeout,
-
             circuit_breaker=self.circuit_breaker,
             fallback_coro_builder=_call,
         )
@@ -858,6 +855,7 @@ class AsyncAIClient:
         self.privacy_guard.check_content(response_text)
 
         from ccba_ai.llm_utils import LLMOutputParser
+
         thinking = getattr(msg, "reasoning_content", None)
         if not isinstance(thinking, str):
             thinking = None

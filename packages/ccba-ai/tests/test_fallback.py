@@ -50,8 +50,14 @@ def test_map_model_for_tier():
     assert map_model_for_tier("o1-preview", TierType.TIER3_COPILOT) == "gpt-5.4"
 
     # Tier 3 CLI (Antigravity)
-    assert map_model_for_tier("gemini-3.7-flash", TierType.TIER3_ANTIGRAVITY) == "gemini-3.7-flash-medium"
-    assert map_model_for_tier("gemini-3.7-flash-high", TierType.TIER3_ANTIGRAVITY) == "gemini-3.7-flash-high"
+    assert (
+        map_model_for_tier("gemini-3.7-flash", TierType.TIER3_ANTIGRAVITY)
+        == "gemini-3.7-flash-medium"
+    )
+    assert (
+        map_model_for_tier("gemini-3.7-flash-high", TierType.TIER3_ANTIGRAVITY)
+        == "gemini-3.7-flash-high"
+    )
 
 
 def test_fallback_to_tier2_cloud_sync():
@@ -293,7 +299,9 @@ def test_tier3_cross_cli_failover():
     # Copilot CLI fails
     mock_copilot = MagicMock()
     mock_copilot.is_available.return_value = True
-    mock_copilot.sync_client.chat.completions.create.side_effect = RuntimeError("Copilot quota exceeded")
+    mock_copilot.sync_client.chat.completions.create.side_effect = RuntimeError(
+        "Copilot quota exceeded"
+    )
 
     # Antigravity CLI succeeds
     mock_agy = MagicMock()
