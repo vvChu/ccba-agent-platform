@@ -205,6 +205,7 @@ def test_eval_runner_sync_execution():
 
 def test_llm_rubric_scorer_sqlite_cache(tmp_path):
     """Verify that LLMRubricScorer uses SQLite cache to avoid duplicate LLM calls."""
+
     class CountingMockAIClient:
         def __init__(self):
             self.call_count = 0
@@ -297,6 +298,7 @@ def test_load_eval_dataset_zero_and_negative_limit(tmp_path):
 
 def test_llm_rubric_scorer_critical_fail_cache_independence(tmp_path):
     """Verify is_critical_fail is dynamically evaluated per scorer instance, not blindly loaded from cache row."""
+
     class FailingMockAIClient:
         async def chat(self, prompt: str, model: str = "") -> str:
             return "<thinking>Total fail</thinking>\n<score>1</score>\n<correctness>incorrect</correctness>"
@@ -331,6 +333,7 @@ def test_llm_rubric_scorer_critical_fail_cache_independence(tmp_path):
 
 def test_llm_rubric_scorer_corrupted_db_fallback(tmp_path):
     """Verify corrupted database gracefully disables cache and falls back to direct LLM call."""
+
     class MockAIClient:
         def __init__(self):
             self.calls = 0
@@ -354,5 +357,3 @@ def test_llm_rubric_scorer_corrupted_db_fallback(tmp_path):
     assert res.score == 1.0
     assert client.calls == 1
     assert scorer.enable_cache is False
-
-

@@ -1,7 +1,7 @@
 """Automated CI Gate: Skills Documentation & Public Catalog Portal Integrity (ADR-0058).
 
 Verifies that:
-1. All 71 active skills are classified into docs/skills/portals.yaml with zero duplicates or orphans.
+1. All 73 active skills are classified into docs/skills/portals.yaml with zero duplicates or orphans.
 2. docs/skills/*.md files conform strictly to the 5-section standardized structure.
 3. Central index (docs/skills/INDEX.md), FAQ, llms.txt, llms-full.txt, and docs/index.html exist and are 100% in sync.
 4. check_skills_docs_in_sync passes without error.
@@ -82,8 +82,8 @@ def test_all_active_skills_in_portals_yaml_exactly_match(
 
     assert not missing_in_portals, f"Active skills missing from portals.yaml: {missing_in_portals}"
     assert not orphans_in_portals, f"Skills in portals.yaml not found on disk: {orphans_in_portals}"
-    assert len(active_skill_names) == 72, (
-        f"Expected exactly 72 active skills, found {len(active_skill_names)}"
+    assert len(active_skill_names) == 73, (
+        f"Expected exactly 73 active skills, found {len(active_skill_names)}"
     )
 
 

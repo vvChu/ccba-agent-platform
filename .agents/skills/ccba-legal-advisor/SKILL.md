@@ -27,6 +27,7 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
 * **Cấp độ 1 (Câu hỏi tra cứu trực diện / Khái niệm chung):** Đã đủ thông tin hoặc chỉ hỏi định nghĩa $\rightarrow$ Chuyển thẳng sang Bước 3 (Fast-track, không hỏi lại).
 * **Cấp độ 2 (Câu hỏi dự án đơn mục tiêu nhưng thiếu 1–2 tham số cốt lõi):** Ví dụ thiếu chiều cao, diện tích, hoặc cấp công trình $\rightarrow$ Kích hoạt phỏng vấn ngắn 1 lượt.
 * **Cấp độ 3 (Dự án tổ hợp phức tạp / Vướng mắc tranh chấp / Điều khoản chuyển tiếp):** Kích hoạt cơ chế Phỏng vấn Thích ứng Nhiều Nấc (Adaptive Diagnostic Depth).
+  - *Tranh chấp đa bên & Khiếu nại hợp đồng:* Triệu hồi [`/ccba-issue-tree`](../ccba-issue-tree/SKILL.md) để dựng Diagnostic Why-Tree (bóc tách chuỗi trách nhiệm giữa Chủ đầu tư, Nhà thầu, Tư vấn giám sát) và Solution How-Tree (đánh giá phương án hòa giải vs trọng tài VIAC) trước khi xuất Phiếu Ý kiến Pháp lý chính thức.
 - **Tiêu chí hoàn thành:** Phân loại chính xác cấp độ phức tạp của câu hỏi để định tuyến xử lý phù hợp.
 
 ---

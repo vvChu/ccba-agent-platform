@@ -285,7 +285,9 @@ def _parse_raw_eval_items(raw: Any) -> list[EvalItem]:
         golden = entry.get("golden_answer")
         rubric = entry.get("rubric")
         metadata = dict(entry.get("metadata", {}))
-        diff_val = entry.get("difficulty") or metadata.get("difficulty") or metadata.get("Difficulty")
+        diff_val = (
+            entry.get("difficulty") or metadata.get("difficulty") or metadata.get("Difficulty")
+        )
         if diff_val is not None:
             metadata["difficulty"] = str(diff_val).strip().lower()
         if "assertions" in entry and "assertions" not in metadata:
@@ -443,9 +445,7 @@ def load_eval_dataset(
     if difficulty:
         d_clean = difficulty.strip().lower()
         items = [
-            it
-            for it in items
-            if str(it.metadata.get("difficulty", "")).strip().lower() == d_clean
+            it for it in items if str(it.metadata.get("difficulty", "")).strip().lower() == d_clean
         ]
 
     if limit is not None:
@@ -454,9 +454,7 @@ def load_eval_dataset(
     return items
 
 
-def resolve_target_skill_file(
-    skill: str | None, project_root: Path
-) -> Path | None:
+def resolve_target_skill_file(skill: str | None, project_root: Path) -> Path | None:
     """Resolves target SKILL.md file from skill name, path, or workspace.
 
     Args:

@@ -613,9 +613,11 @@ def handle_table_block(ctx: Any, tbl: Any, i: int, blocks: list[Any] | None = No
                         ):
                             p_r = re.sub(
                                 r"^(?:CHÚ\s+THÍCH|Chú\s+thích)\s*([0-9]+)?\s*[:–-]\s*",
-                                lambda m: f"**CHÚ THÍCH {m.group(1)}:** "
-                                if m.group(1)
-                                else "**CHÚ THÍCH:** ",
+                                lambda m: (
+                                    f"**CHÚ THÍCH {m.group(1)}:** "
+                                    if m.group(1)
+                                    else "**CHÚ THÍCH:** "
+                                ),
                                 p_r,
                                 flags=re.IGNORECASE,
                             )
@@ -624,9 +626,9 @@ def handle_table_block(ctx: Any, tbl: Any, i: int, blocks: list[Any] | None = No
                         ):
                             p_r = re.sub(
                                 r"^(?:CHÚ\s+DẪN|Chú\s+dẫn)\s*([0-9]+)?\s*[:–-]\s*",
-                                lambda m: f"**CHÚ DẪN {m.group(1)}:** "
-                                if m.group(1)
-                                else "**CHÚ DẪN:** ",
+                                lambda m: (
+                                    f"**CHÚ DẪN {m.group(1)}:** " if m.group(1) else "**CHÚ DẪN:** "
+                                ),
                                 p_r,
                                 flags=re.IGNORECASE,
                             )

@@ -363,4 +363,3 @@ def test_cli_verify_patch_with_eval_preset() -> None:
     """Verify `ccba-harness verify-patch --preset eval` integration."""
     code = run_verify_patch_cli(["--preset", "eval"])
     assert code == 0
-
