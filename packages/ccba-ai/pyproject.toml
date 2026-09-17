@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ccba-ai"
-version = "1.0.0"
+version = "1.2.0"
 description = "CCBA AI Gateway Client — Kết nối đa mô hình (local GPU + cloud) qua 1 endpoint"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -12,7 +12,7 @@ license = "MIT"
 dependencies = [
     "openai>=2.31.0,<4.0.0",
     "python-dotenv>=1.0.0",
-    "mcp>=0.1.0,<2.0.0",
+    "mcp>=0.1.0,<2",
     "cryptography>=41.0.0",
     "pyyaml>=6.0.0",
     "pydantic>=2.0.0",
@@ -30,7 +30,10 @@ packages = ["src/ccba_ai"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+markers = [
+    "fast: mark test as fast-running (< 2s)",
+    "unit: mark test as unit test",
+]
 
 [tool.uv.sources]
 ccba-harness = { workspace = true }
-

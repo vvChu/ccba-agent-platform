@@ -80,7 +80,9 @@ class TestCopilotCLIProvider:
                 '{"type":"result","usage":{"totalApiDurationMs":1500.0}}',
             ]
         )
-        mock_res = subprocess.CompletedProcess(args=["copilot"], returncode=0, stdout=mock_stdout, stderr="")
+        mock_res = subprocess.CompletedProcess(
+            args=["copilot"], returncode=0, stdout=mock_stdout, stderr=""
+        )
 
         with patch("subprocess.run", return_value=mock_res) as mock_run:
             text, usage = provider.chat("What is the answer?", model="gpt-5.4-mini")
@@ -95,13 +97,17 @@ class TestCopilotCLIProvider:
 
     def test_sync_chat_timeout(self) -> None:
         provider = CopilotCLIProvider(binary_path="copilot", enable_daemon=False)
-        with patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="copilot", timeout=10)):
+        with patch(
+            "subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="copilot", timeout=10)
+        ):
             with pytest.raises(subprocess.TimeoutExpired):
                 provider.chat("Test prompt", timeout=10)
 
     def test_sync_chat_nonzero_exit_raises(self) -> None:
         provider = CopilotCLIProvider(binary_path="copilot", enable_daemon=False)
-        mock_res = subprocess.CompletedProcess(args=["copilot"], returncode=1, stdout="", stderr="Authorization error")
+        mock_res = subprocess.CompletedProcess(
+            args=["copilot"], returncode=1, stdout="", stderr="Authorization error"
+        )
         with patch("subprocess.run", return_value=mock_res):
             with pytest.raises(RuntimeError, match="Copilot CLI failed"):
                 provider.chat("Test prompt")
@@ -109,7 +115,11 @@ class TestCopilotCLIProvider:
     def test_duck_typed_sync_client(self) -> None:
         """Verify provider.sync_client mimics openai.chat.completions.create."""
         provider = CopilotCLIProvider(binary_path="copilot", enable_daemon=False)
-        with patch.object(provider, "chat", return_value=("Mock answer", CopilotUsage(prompt_tokens=10, completion_tokens=2))):
+        with patch.object(
+            provider,
+            "chat",
+            return_value=("Mock answer", CopilotUsage(prompt_tokens=10, completion_tokens=2)),
+        ):
             resp = provider.sync_client.chat.completions.create(
                 model="gpt-5.4-mini",
                 messages=[{"role": "user", "content": "Hello"}],

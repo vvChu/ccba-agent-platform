@@ -1,97 +1,44 @@
-# Walkthrough: Hoàn Tất Chính Thức Hóa ADR-0059 & Nạp Bundle Địa Phương Vào Spoke `ccba-legal-knowledge`
+# Walkthrough: PR #284 — Giao Thức TRIHT (Release Cleanliness & Hermetic Teardown Gate)
 
-## 1. Tổng Quan Nhiệm Vụ Hoàn Thành
-
-Đã thực hiện trọn vẹn 2 nhiệm vụ tiếp theo theo phê duyệt của người dùng:
-1. **Chính thức hóa HUB-ADR-0059 trên Hub (`ccba-agent-platform`):**
-   - Soạn thảo tài liệu kiến trúc chính thức [`docs/adr/0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md).
-   - Tái biên dịch mục lục [`docs/adr/README.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/README.md) và quét radar cập nhật ma trận truy vết [`docs/adr/TRACEABILITY_MATRIX.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/TRACEABILITY_MATRIX.md) (53 ADRs, đạt 100% parity `[PASS]`).
-2. **Đồng bộ Hub sang Spoke & Nạp Bundle Thực Tế vào `ccba-legal-knowledge`:**
-   - Đồng bộ Hiến pháp Layer 1, rules, và ADR matrix sang Spoke [`ccba-legal-knowledge`](file:///D:/GitHubProjects/ccba-legal-knowledge).
-   - Nạp bundle thực tế **Quyết định 38/2026/QĐ-UBND của UBND TP. Hà Nội** (về phân cấp quản lý quy hoạch đô thị, nông thôn và kiến trúc) vào `legal_docs/01_vbpl/vn_hn_qd_38_2026_qd_ubnd/`.
-   - Vượt qua kiểm định **15 Gates** của Spoke với kết quả tuyệt đối: **0 Errors | 0 Warnings**.
+## 1. Tổng Quan PR #284
+- **Branch:** `feat/release-hermetic-cleanliness-gate` $\rightarrow$ `main`
+- **Tiêu đề:** `feat(release): implement TRIHT protocol cleanliness gate and hermetic scoped teardown`
+- **PR liên quan:** [PR #284](https://github.com/vvChu/ccba-agent-platform/pull/284)
+- **Thể chế & Kiến trúc:** ADR-0058 (Hard Completion Lock), ADR-0057 (Two-Stage Governance), TRIHT Protocol
 
 ---
 
-## 2. Chi Tiết Thực Hiện Trên Hub (`ccba-agent-platform`)
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #284)
 
-### A. Quyết định kiến trúc HUB-ADR-0059
-- **Tiêu đề:** *Legal Verbatim Grounding, Zero-Hallucination Invariant, and Cryptographic Provenance Stamping*
-- **Trạng thái:** `ACCEPTED & ADOPTED` (2026-09-16)
-- **Nội dung cốt lõi:**
-  1. **Zero-Hallucination Invariant:** Cấm tuyệt đối sáng tác câu chữ, điều khoản giả định cho VBPL. Mọi nội dung trích dẫn phải nguyên văn 100% từ văn bản chính thức.
-  2. **Mandatory Acquisition First Policy:** Bắt buộc thu thập tệp gốc (PDF/DOCX) qua `TVPLCrawler` hoặc yêu cầu người dùng cung cấp tài liệu nguồn chính thức trước khi tạo bundle.
-  3. **Cryptographic Provenance Stamping:** Đóng dấu mã băm SHA-256 (`pdf_sha256`) và tự động kiểm định nguồn gốc xuất xứ qua `validate_bundle_provenance()`.
-  4. **Temporal Local Jurisdictions:** Phân định lãnh thổ theo chuẩn ISO 3166-2:VN (`VN-HN`, `VN-HCM`...), mô hình hóa đồ thị kế thừa cơ quan pháp lý theo trục thời gian và kích hoạt RAG Geofencing.
-
-### B. Kiểm chuẩn Parity Gate
-```powershell
-python scripts/sync_hub_adr_matrix.py --check
-```
-- **Kết quả:**
-  ```
-  [sync_hub_adr_matrix] Running in HUB mode (53 ADRs found)
-  [PASS] D:\GitHubProjects\ccba-agent-platform\docs\adr\README.md is in sync.
-  [PASS] D:\GitHubProjects\ccba-agent-platform\docs\adr\TRACEABILITY_MATRIX.md is in sync.
-  ```
+| ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
+|---|---|---|---|
+| `4035452784` | `.agents/skills/ccba-release-feature/SKILL.md` | Lệnh `git checkout --no-pager main` không đúng cú pháp: `--no-pager` là global option của `git` và phải đứng sau `git` (`git --no-pager checkout main`). | **ĐÃ KHẮC PHỤC**: Đã cập nhật cú pháp chuẩn: `git --no-pager checkout main && git pull origin main` tại dòng 146 của `SKILL.md`. |
+| `4035452828` | `scripts/validation/check_release_cleanliness.py` | Nếu `git status` thất bại hàm đang `return []` (fail-open), khiến release gate hiểu nhầm repo sạch. | **ĐÃ KHẮC PHỤC**: Chuyển sang cơ chế "Fail-Closed" tuyệt đối: khi gặp `CalledProcessError` hoặc `FileNotFoundError`, trả về sentinel `[("!!", f"GIT_STATUS_FAILED: {e}")]` chặn đứng tiến trình release. |
+| `4035452859` | `scripts/validation/check_release_cleanliness.py` | Khối teardown ghép path mà không ràng buộc nằm trong `repo_root` (nguy cơ path traversal), và ignore_errors nuốt lỗi xóa. | **ĐÃ KHẮC PHỤC**: Thêm rào chắn an ninh `abs_path.resolve().relative_to(root.resolve())` chống path traversal, kiểm tra `not abs_path.exists()` sau xóa và cảnh báo lỗi nếu tệp vẫn tồn tại. |
+| `4035452897` | `scripts/tests/test_check_release_cleanliness.py` | Chưa có test bao phủ trường hợp `git status` thất bại (CalledProcessError / FileNotFoundError) kiểm chứng fail-closed. | **ĐÃ KHẮC PHỤC**: Bổ sung 2 unit tests `test_get_porcelain_status_git_error_fails_closed` và `test_get_porcelain_status_git_not_found_fails_closed` (11/11 tests pass). |
+| `4035869238` | `scripts/validation/check_release_cleanliness.py` | `run_post_check` tự động xóa tệp tracked nếu tên khớp `KNOWN_TEST_ARTIFACTS`. | **ĐÃ KHẮC PHỤC**: Đảm bảo tệp tracked bị `M/D/A/R/C/U` luôn luôn bị chặn (BLOCK) và không bao giờ bị xóa tự động. Chỉ tệp untracked (`??`) khớp danh mục cache mới được thu hồi an toàn. Đã bổ sung test `test_run_post_check_does_not_purge_tracked_modified_known_artifact`. |
+| `4035905024` | `scripts/validation/check_release_cleanliness.py` | Gọi `sys.stdout/sys.stderr.reconfigure()` ở module level vi phạm repo guidance và phá vỡ pytest I/O capture trên Windows. | **ĐÃ KHẮC PHỤC**: Di dời toàn bộ stream reconfiguration vào bên trong CLI entrypoint `main()`. |
 
 ---
 
-## 3. Chi Tiết Thực Hiện Trên Spoke (`ccba-legal-knowledge`)
+## 3. Các Thay Đổi Cốt Lõi (Core Deliverables)
 
-### A. Đồng bộ cấu trúc & Two-Tier ADR Matrix
-- Đồng bộ các quy tắc mới nhất:
-  - `.agents/rules/legal_verbatim_grounding_guardrail.md`
-  - `.agents/rules/administrative_succession_guardrail.md`
-  - `AGENTS.md` (Hiến pháp Layer 1)
-- Tái đồng bộ ma trận truy vết Two-Tier tại Spoke (53 Hub ADRs + 42 Spoke Domain ADRs).
-
-### B. Đăng ký & Nạp Bundle QĐ 38/2026/QĐ-UBND Hà Nội
-- **Đăng ký SSoT:** Cập nhật [`legal_registry.yaml`](file:///D:/GitHubProjects/ccba-legal-knowledge/legal_registry.yaml) với mục `vn_hn_qd_38_2026_qd_ubnd`, nâng tổng số VBPL lên **25** (tổng tài liệu: **53**).
-- **Thư mục bundle:** [`legal_docs/01_vbpl/vn_hn_qd_38_2026_qd_ubnd/`](file:///D:/GitHubProjects/ccba-legal-knowledge/legal_docs/01_vbpl/vn_hn_qd_38_2026_qd_ubnd)
-  - `sources/702686.pdf`: Tệp scan gốc 14 trang có dấu đỏ (4.67 MB, SHA-256: `d826eaf192b238acd1b465854babc8a884d8e12e2d330ecc4c262ed64eb8767b`).
-  - `metadata.yaml`: Cấu hình chuẩn OKF v2.4 Universal, khai báo đầy đủ `source_assets`, `jurisdiction: VN-HN`, `administrative_tier: PROVINCIAL`.
-  - `clauses.json`: Cấu trúc AST phân đoạn 20 Điều theo chuẩn máy đọc.
-  - `vn_hn_qd_38_2026_qd_ubnd.md`: Toàn văn 100% nguyên văn, đã chuẩn hóa theo chuẩn **Pure Normative Body** (loại bỏ nhiễu tiêu ngữ hành chính và chữ ký nơi nhận, giữ nguyên văn toàn bộ 4 Chương, 20 Điều).
-
-### C. Kiểm định 15 Gates Chất Lượng Pháp Điển
-Chạy kiểm định toàn diện trên Spoke:
-```powershell
-python D:\GitHubProjects\ccba-legal-knowledge\scripts\validate_legal_spoke.py
-```
-- **Kết quả:**
-  ```
-  -> Gate 1: Registry Check completed.
-  -> Gate 2: OKF Bundles Structure Check completed.
-  -> Gate 3: Table Attachments Check completed.
-  -> Gate 4: Fake Data Gate Check completed.
-  -> Gate 5: PDF Metadata & AST Jurisdiction Gate Check completed.
-  -> Gate 6: Pure Normative Body & Scoped Noise Gate Check completed.
-  -> Gate 7: Spoke Cleanliness & Zero-Wrapper Gate completed.
-  -> Gate 8: Template & Table Structural Integrity Gate completed.
-  -> Gate 9: Visual Parity & Formatting Clutter Gate completed.
-  -> Gate 10: ADR Living Traceability & Self-Healing Sync completed.
-  -> Gate 11: DOCX-to-Markdown Verbatim Normative Parity Gate completed.
-  -> Gate 12: Multimodal Decoupled Asset & SVG/Cards Integrity Gate (ADR 0040) completed.
-  -> Gate 13: Table Knowledge Extraction & 2D Matrix Regularity Gate (ADR 0041) completed.
-  -> Gate 14: KaTeX Math Syntax & Rendering Integrity Gate (ADR 0038) completed.
-  -> Gate 15: OKF Provenance & Algorithm Version Attestation Gate completed.
-
-  -----------------------------------------------------------------
-  SUMMARY REPORT: Errors: 0 | Warnings: 0
-  -----------------------------------------------------------------
-
-  ✅ PASSED: All legal knowledge gates validated successfully!
-  ```
+1. **Cổng 0.1 (Pre-Flight Cleanliness Lock):** Chặn đứng quy trình trước khi chạy test nếu phát hiện tệp chưa commit, bảo toàn 100% mã nguồn của kỹ sư.
+2. **Cổng 0.3 (Post-Test Hermetic Scoped Teardown):** Đối soát trạng thái sau khi chạy integration tests, tự động thu hồi an toàn các cache kiểm thử đã biết (`embeddings.npy`, `ci_log.txt`, `tmp_*.json`) kèm cảnh báo vàng; chặn đứng nếu có bài test làm thay đổi mã nguồn hoặc tệp lạ.
+3. **Tiện ích CLI Chuyên Trách ([`check_release_cleanliness.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/validation/check_release_cleanliness.py)):** Xây dựng công cụ kiểm tra độc lập hỗ trợ `--phase pre` và `--phase post`, tương thích tuyệt đối Windows UTF-8 (`sys.stdout.reconfigure`), xử lý tệp qua `git status --porcelain -z` (null-terminated), fail-closed khi lỗi, và chống path traversal.
+4. **Nâng Cấp Kỹ Năng ([`ccba-release-feature`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-release-feature/SKILL.md)):** Tích hợp Cổng 0.1 và Cổng 0.3 vào Bước 0; bổ sung dọn dẹp tiến trình mồ côi (`ensure_single_instance('pytest')`) và `git --no-pager checkout main` cho Bước 3.2 chuyển nhánh an toàn.
+5. **Bộ Kiểm Thử Tự Động ([`test_check_release_cleanliness.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/tests/test_check_release_cleanliness.py)):** 11 unit tests kiểm tra toàn diện cả 2 phase pre/post, fail-closed, cách ly path traversal và bảo vệ tệp tracked (100% pass).
+6. **Giải Quyết Sự Cố CI Runner Treo & Architecture Drift:** Kế thừa bản vá process safety (`ancestor_pids` guard, CI bypass) từ PR #281 và đăng ký `scripts/validation/` vào `README.md`.
 
 ---
 
-## 4. Trạng Thái Git Kho Chứa
+## 4. Kết Quả Kiểm Định CI Cuối Cùng Trên GitHub Actions (PR #284)
 
-- **Hub (`ccba-agent-platform`):**
-  - Commit `50b59f7b`: `docs(adr): formalize HUB-ADR-0059 and update traceability matrix`
-  - Commit `bf2a6a69`: `chore(sync): update spoke registry heartbeat for ccba-legal-knowledge`
-  - Nhánh `main` đồng bộ với `origin/main`, working tree sạch 100%.
-- **Spoke (`ccba-legal-knowledge`):**
-  - Commit `17cdddc`: `feat(legal): ingest QĐ 38/2026/QĐ-UBND Hà Nội bundle and sync Hub ADR-0059`
-  - Đã vượt qua pre-commit hook 15 Gates, working tree sạch 100%.
+- **`validate` (Documentation Check):** ✅ PASS (24s)
+- **`scan` (Security & Privacy):** ✅ PASS (12s)
+- **`Lint Markdown`:** ✅ PASS (10s)
+- **`Test - Python 3.10`:** ✅ PASS (3m25s)
+- **`Test - Python 3.11`:** ✅ PASS (3m5s)
+- **`Test - Python 3.12`:** ✅ PASS (2m23s)
+
+**Tổng kết:** 6/6 Checks PASS 100%. Trạng thái `CLEAN` / `MERGEABLE`.
