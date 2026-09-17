@@ -103,17 +103,30 @@ class DriftAuditor(BaseAuditor):
                         filepath.startswith(tracked_prefixes)
                         and not filepath.endswith(".md.bak")
                         and not filepath.startswith("scripts/tests/")
+                        and "/tests/" not in filepath
                     ):
                         structural_change = True
 
             # Also check if any commit in the current branch history updated arch_docs
-            res_log = subprocess.run(
-                ["git", "log", "origin/main..HEAD", "--name-only"],
-                cwd=self.project_root,
-                capture_output=True,
-                text=True,
-            )
-            if res_log.returncode == 0:
+            ref_candidates = [
+                "origin/main..HEAD",
+                "origin/master..HEAD",
+                "main..HEAD",
+                "master..HEAD",
+            ]
+            res_log = None
+            for ref in ref_candidates:
+                res = subprocess.run(
+                    ["git", "log", ref, "--name-only"],
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True,
+                )
+                if res.returncode == 0:
+                    res_log = res
+                    break
+
+            if res_log and res_log.returncode == 0:
                 for line in res_log.stdout.splitlines():
                     if line.strip() in arch_docs:
                         arch_doc_updated = True

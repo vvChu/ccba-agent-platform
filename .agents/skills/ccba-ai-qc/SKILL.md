@@ -122,4 +122,4 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/discovery.md` | Pha 1: Khảo sát tự động bản vẽ, danh mục tầng và hồ sơ thiết kế công trình |
 | `references/integrated_audit.md` | Pha 2: Thẩm tra tích hợp đa bộ môn và phân tích Quad-View Vision |
 | `references/reporter.md` | Pha 3: Tổng hợp báo cáo Heat Map ma trận phối hợp và rủi ro kỹ thuật |
-| `references/batch_orchestrator.md` | Điều phối chạy hàng loạt dự án và tối ưu hóa tài nguyên batch pipeline |
+| `references/batch_orchestrator.md` | Điều phối chạy hàng loạt dự án và tối ưu hóa tài nguyên batch pipeline |

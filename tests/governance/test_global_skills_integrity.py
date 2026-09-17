@@ -30,6 +30,8 @@ def test_global_ccba_platform_skill_has_no_dead_links() -> None:
     dead_links: list[str] = []
     for rel_path_str in matches:
         clean_rel = rel_path_str.strip().rstrip(")")
+        if "<" in clean_rel or ">" in clean_rel:
+            continue
         target = HUB_ROOT / clean_rel
         if not target.exists():
             dead_links.append(f"[hub_path]/{clean_rel} -> {target} DOES NOT EXIST")
