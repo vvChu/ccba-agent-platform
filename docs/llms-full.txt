@@ -31,7 +31,7 @@ python scripts/spoke/sync_spoke.py --skills platform-loader
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 17.50)` |
 
 ---
 
@@ -132,7 +132,7 @@ python scripts/spoke/sync_spoke.py --skills bigbim-classification
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_bim` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 
@@ -242,7 +242,7 @@ python scripts/spoke/sync_spoke.py --skills bigbim-governance
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_bim` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 
@@ -351,7 +351,7 @@ python scripts/spoke/sync_spoke.py --skills bigbim-rase
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_bim` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (Tổng: 13.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (GPI: 24.50)` |
 
 ---
 
@@ -455,7 +455,7 @@ python scripts/spoke/sync_spoke.py --skills bigbim-risk
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_bim` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 
@@ -561,7 +561,7 @@ python scripts/spoke/sync_spoke.py --skills bigbim-vbpl-digest
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_bim` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 18.00)` |
 
 ---
 
@@ -667,7 +667,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-academic-writing
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -766,7 +766,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-adr-lifecycle
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 
@@ -871,7 +871,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-ai-gateway-sdk
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 
@@ -979,7 +979,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-ai-pdf-preprocessor
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_qc` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 
@@ -1189,7 +1189,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-ai-qc-pccc-audit
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_qc` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 15.50)` |
 
 ---
 
@@ -1297,7 +1297,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-api-circuit-breaker
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 
@@ -1404,7 +1404,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-append-only-logger
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 17.50)` |
 
 ---
 
@@ -1508,7 +1508,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-ask
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -1718,7 +1718,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-build-skill
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -1819,7 +1819,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-code-review
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -1925,7 +1925,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-codebase-design
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -2035,7 +2035,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-completion-checklist
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 18.00)` |
 
 ---
 
@@ -2139,7 +2139,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-contribute-to-hub
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -2246,7 +2246,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-copywriting
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -2352,7 +2352,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-create-pr
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -2455,7 +2455,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-design
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -2563,7 +2563,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-diagnosing-bugs
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
 ---
 
@@ -2667,7 +2667,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-docs-manager
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -2770,7 +2770,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-domain-modeling
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -2872,7 +2872,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-eval-gate
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -2977,7 +2977,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-excalidraw-diagram
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=4.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=4.0 | A=1.0 | P=1.0 (GPI: 16.00)` |
 
 ---
 
@@ -3076,7 +3076,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-file-stability-guard
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 17.50)` |
 
 ---
 
@@ -3180,7 +3180,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-git-guardrails
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -3387,7 +3387,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-grilling
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
 ---
 
@@ -3499,7 +3499,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-handoff
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -3600,7 +3600,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-hybrid-rag-search
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 
@@ -3808,7 +3808,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-init-spoke
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
 ---
 
@@ -3912,7 +3912,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-issue-to-hub
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -4017,7 +4017,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-issue-tree
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
 ---
 
@@ -4225,7 +4225,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-legal-advisor
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 
@@ -4332,7 +4332,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-legal-document-tracker
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 
@@ -4439,7 +4439,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-legal-ingest
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (Tổng: 13.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (GPI: 24.50)` |
 
 ---
 
@@ -4547,7 +4547,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-legal-intel
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (Tổng: 13.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (GPI: 24.50)` |
 
 ---
 
@@ -4650,7 +4650,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-llm-pipeline-patterns
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 18.00)` |
 
 ---
 
@@ -4756,7 +4756,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-markdown-document-processing
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 15.50)` |
 
 ---
 
@@ -4857,7 +4857,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-maskara
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 
@@ -4960,7 +4960,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-mermaid-diagram
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=4.0 | A=2.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=4.0 | A=2.0 | P=1.0 (GPI: 18.00)` |
 
 ---
 
@@ -5161,7 +5161,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-notebooklm-connector
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 
@@ -5371,7 +5371,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-pptx
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -5476,7 +5476,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-promote-sandbox
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -5677,7 +5677,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-research
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -5783,7 +5783,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-review-proposal
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=1.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=1.0 | P=1.0 (GPI: 18.50)` |
 
 ---
 
@@ -5885,7 +5885,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-seminar-builder
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 18.00)` |
 
 ---
 
@@ -5990,7 +5990,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-session-retrospective
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -6095,7 +6095,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-setup-skills
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.5 | K=2.0 | A=2.0 | P=1.0 (Tổng: 8.5)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.5 | K=2.0 | A=2.0 | P=1.0 (GPI: 15.25)` |
 
 ---
 
@@ -6202,7 +6202,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-sharepoint-iac
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -6305,7 +6305,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-skill-repair
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -6515,7 +6515,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-sync-upstream
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=3.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=3.0 | P=1.0 (GPI: 20.50)` |
 
 ---
 
@@ -6619,7 +6619,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-tdd
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -6822,7 +6822,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-to-spec
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
 ---
 
@@ -6928,7 +6928,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-tvpl-vip-crawler
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -7030,7 +7030,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-update-spoke
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -7136,7 +7136,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-wayfinder
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
 ---
 
@@ -7238,7 +7238,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-web-testing
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -7346,7 +7346,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-xia
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -7453,7 +7453,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-xu-ly-van-phong
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -7560,7 +7560,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-youtube-learn
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 

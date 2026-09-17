@@ -28,11 +28,17 @@ class FederatedLegalEngine:
         corpus_paths: list[Path] | None = None,
         registry_path: Path | None = None,
         embedding_enabled: bool = True,
+        embed_timeout: float | None = None,
     ) -> None:
         """Initialize the engine."""
         self._corpus_paths: list[Path] = corpus_paths or []
         self._registry_path: Path | None = registry_path
         self._embedding_enabled: bool = embedding_enabled
+        if embed_timeout is not None:
+            self._embed_timeout = embed_timeout
+        else:
+            env_val = os.getenv("CCBA_EMBED_TIMEOUT")
+            self._embed_timeout = float(env_val) if env_val else 10.0
         self._chunks: list[dict[str, Any]] = []
         self._bm25_index: Any | None = None
         self._embedding_matrix: Any | None = None
@@ -197,13 +203,10 @@ class FederatedLegalEngine:
 
     def _build_bm25_index(self) -> None:
         """Build the BM25 index."""
-        try:
-            from rank_bm25 import BM25Okapi
+        from rank_bm25 import BM25Okapi
 
-            tokenized_corpus = [self._tokenize(c["text"]) for c in self._chunks]
-            self._bm25_index = BM25Okapi(tokenized_corpus)
-        except ImportError:
-            self._bm25_index = None
+        tokenized_corpus = [self._tokenize(c["text"]) for c in self._chunks]
+        self._bm25_index = BM25Okapi(tokenized_corpus)
 
     def _build_embedding_index(self) -> None:
         """Build or load the embedding index."""
@@ -227,7 +230,7 @@ class FederatedLegalEngine:
                     self._embedding_matrix = matrix
                     return
 
-            client = AIClient(timeout=2.0)
+            client = AIClient(timeout=self._embed_timeout)
             embeddings = client.embed(texts)
             self._embedding_matrix = np.array(embeddings)
 
@@ -259,7 +262,7 @@ class FederatedLegalEngine:
 
             from ccba_ai import AIClient
 
-            query_emb = np.array(AIClient(timeout=2.0).embed([query])[0])
+            query_emb = np.array(AIClient(timeout=self._embed_timeout).embed([query])[0])
             norms = np.linalg.norm(self._embedding_matrix, axis=1) * np.linalg.norm(query_emb)
             norms[norms == 0] = 1e-10
             scores = np.dot(self._embedding_matrix, query_emb) / norms

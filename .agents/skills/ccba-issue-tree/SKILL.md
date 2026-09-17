@@ -44,7 +44,7 @@ Kỹ năng master điều phối phân rã các bài toán phức tạp, sự c�
 2. **Quy Tắc Nhất Quán Loại Cây (No Mixed Branches):**
    - Tuyệt đối không pha trộn các loại câu hỏi (Tại sao? Cái gì? Làm thế nào?) trong cùng một tầng phân rã. Mỗi cây chỉ phụng sự một mục đích nhận thức duy nhất.
 3. **Tầng Vận Hành Có Quản Trị (Governed Lifecycle):**
-   - Cây vấn đề không phải là sơ đồ tĩnh để chiêm ngưỡng. Mỗi nút lá là một đối tượng sống chuyển dịch qua 5 trạng thái vòng đời xác định.
+   - Cây vấn đề không phải là sơ đồ tĩnh để chiêm ngưỡng. Mỗi nút lá là một đối tượng sống chuyển dịch qua 6 trạng thái vòng đời xác định (`UNVERIFIED`, `IN_INVESTIGATION`, `VERIFIED_FACT`, `FALSIFIED`, `DECISION_READY`, `COMMITTED`).
 4. **Verbatim Evidence Grounding (ADR-0059):**
    - Mọi giả thuyết chuyển sang `VERIFIED_FACT` phải có bằng chứng thực nghiệm (log máy tính, số liệu đo đạc) hoặc trích dẫn pháp lý nguyên văn 100% từ văn bản chính thống kèm mã băm SHA-256.
 

@@ -6,9 +6,9 @@ Tài liệu này đặc tả tầng vận hành (**Operating Layer**) theo phả
 
 ---
 
-## 1. Máy Trạng Thái Vòng Đời Nhánh (5-State Lifecycle Machine)
+## 1. Máy Trạng Thái Vòng Đời Nhánh (6-State Lifecycle Machine)
 
-Mỗi nút lá trên cây (dù là Giả thuyết trong Why-Tree hay Phương án trong How-Tree) bắt buộc phải tồn tại trong một trạng thái xác định thuộc máy trạng thái 5 bước dưới đây:
+Mỗi nút lá trên cây (dù là Giả thuyết trong Why-Tree hay Phương án trong How-Tree) bắt buộc phải tồn tại trong một trạng thái xác định thuộc máy trạng thái 6 trạng thái dưới đây:
 
 ```mermaid
 stateDiagram-v2
