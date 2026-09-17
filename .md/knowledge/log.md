@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-17] [synthesize] | Đóng Gói Kỹ Năng Hạt Nhân ccba-issue-tree & Mạng Lưới Cross-Skill Referral Hooks (#276, PR #282)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /boost, /ccba-grilling, /ccba-create-pr, /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `.agents/skills/ccba-issue-tree/`, `.agents/skills/ccba-diagnosing-bugs/`, `.agents/skills/ccba-ai-qc/`, `.agents/skills/ccba-legal-advisor/`, `.agents/skills/ccba-ask/`, `.agents/skills/ccba-grilling/`, `.agents/skills/bigbim-risk/`, `.agents/skills/ccba-to-spec/`, `docs/skills/`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `walkthrough.md`
+- **Summary**: Hoàn tất chu trình phát triển, tích hợp và phát hành Pull Request #282: (1) Đóng gói kỹ năng hạt nhân độc lập `ccba-issue-tree` (Tier 2B Standalone Kernel Skill, GPI = 14.50 >= 12.0) tích hợp phương pháp luận cây vấn đề MECE của McKinsey (Diagnostic Why-Tree, Solution How-Tree, Workplan What-Tree) với tầng vận hành Governed Lifecycle (6 trạng thái vòng đời nhánh), ma trận bằng chứng ADR-0059 Verbatim Grounding và ma trận RACI Hiến chương CCBA; (2) Giải quyết bài toán trần cứng ngân sách triệu hồi (ADR-0040) bằng cấu hình `disable-model-invocation: true`, kích hoạt qua `/ccba-issue-tree` hoặc referral mà không tốn system tokens; (3) Tích hợp mạng lưới 7 điểm điều hướng tư duy (Tier 1 Cross-Skill Referral Hooks) vào các kỹ năng chuyên biệt; (4) Khắc phục triệt để 11/11 ý kiến phản biện từ GitHub Copilot Review, chuẩn hóa các định danh khái niệm bền vững chống drift số cứng; (5) Vượt qua 100% 11/11 test suites tiền phát hành, 6/6 GitHub Actions CI checks và squash merge vào `main` tại commit `1fe2f2a7`.
+
+---
+
 ## [2026-09-13] [synthesize] | Phát Hành Release PR #269 / Issue #268 (Gia Cố Spoke Sync, Decouple Archetype & RSA-OAEP Bounds)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /boost, /ccba-create-pr, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `scripts/spoke/sync/`, `scripts/spoke/spoke_bootstrap.py`, `scripts/spoke/decrypt_spoke_registry.py`, `scripts/ccba_platform_cli.py`, `scripts/tests/test_spoke_sync_modules.py`, `.md/knowledge/reports/walkthrough.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`
