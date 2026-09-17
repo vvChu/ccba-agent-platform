@@ -44,6 +44,61 @@ class LLMOutputParser:
         return current_text.strip()
 
     @classmethod
+    def extract_thinking_and_content(cls, text: str) -> tuple[str, str]:
+        """Extract thinking and content from text, handling closed, nested, and unclosed <think> tags."""
+        if not text:
+            return "", ""
+
+        lower_text = text.lower()
+        idx = 0
+        depth = 0
+        last_content_end = 0
+        last_think_start = 0
+        content_parts = []
+        thinking_parts = []
+
+        while idx < len(text):
+            next_think = lower_text.find("<think>", idx)
+            next_endthink = lower_text.find("</think>", idx)
+
+            if next_think != -1 and (next_endthink == -1 or next_think < next_endthink):
+                if depth == 0:
+                    content_parts.append(text[last_content_end:next_think])
+                    last_think_start = next_think + 7
+                depth += 1
+                idx = next_think + 7
+            elif next_endthink != -1:
+                if depth > 0:
+                    depth -= 1
+                    if depth == 0:
+                        thinking_parts.append(text[last_think_start:next_endthink].strip())
+                        last_content_end = next_endthink + 8
+                else:
+                    content_parts.append(text[last_content_end:next_endthink])
+                    last_content_end = next_endthink + 8
+                idx = next_endthink + 8
+            else:
+                break
+
+        if depth > 0:
+            thinking_parts.append(text[last_think_start:].strip())
+        else:
+            content_parts.append(text[last_content_end:])
+
+        thinking = "\n\n".join(part for part in thinking_parts if part).strip()
+        content = "".join(content_parts)
+
+        # Clean up any orphaned </think> in the content.
+        content = re.sub(r"</think>\n*", "", content, flags=re.IGNORECASE).strip()
+
+        return thinking, content
+
+    @classmethod
+    def extract_thinking(cls, text: str) -> str:
+        """Extract only the thinking part from text."""
+        return cls.extract_thinking_and_content(text)[0]
+
+    @classmethod
     def extract_json(
         cls,
         raw: str,
@@ -136,6 +191,16 @@ def strip_think_tags(text: str) -> str:
     return LLMOutputParser.strip_think_tags(text)
 
 
+def extract_thinking_and_content(text: str) -> tuple[str, str]:
+    """Helper function to extract thinking and content from text."""
+    return LLMOutputParser.extract_thinking_and_content(text)
+
+
+def extract_thinking(text: str) -> str:
+    """Helper function to extract only thinking from text."""
+    return LLMOutputParser.extract_thinking(text)
+
+
 def parse_llm_json(
     raw: str,
     schema: type[T] | None = None,
@@ -143,3 +208,13 @@ def parse_llm_json(
 ) -> Any:
     """Helper function to extract and parse JSON from raw LLM output text."""
     return LLMOutputParser.extract_json(raw, schema=schema, strict=strict)
+
+__all__ = [
+    "LLMParseError",
+    "LLMOutputParser",
+    "Cleaners",
+    "strip_think_tags",
+    "extract_thinking_and_content",
+    "extract_thinking",
+    "parse_llm_json",
+]

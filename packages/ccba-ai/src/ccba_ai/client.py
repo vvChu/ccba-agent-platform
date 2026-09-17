@@ -172,6 +172,7 @@ class AIClient:
         max_tokens: int = 1024,
         temperature: float = 0.7,
         strip_thinking: bool = True,
+        timeout: float | None = None,
     ) -> str:
         """Send a chat message and get a text response.
 
@@ -197,13 +198,22 @@ class AIClient:
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
 
+        if timeout is not None:
+            effective_timeout = float(timeout)
+        elif effective_max_tokens > 16384:
+            effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
+        else:
+            effective_timeout = self.timeout
+
         def _call(client_inst: Any, m: str) -> Any:
-            return client_inst.chat.completions.create(
-                model=m,
-                messages=messages,
-                max_tokens=effective_max_tokens,
-                temperature=temperature,
-            )
+            kwargs: dict[str, Any] = {
+                "model": m,
+                "messages": messages,
+                "max_tokens": effective_max_tokens,
+                "temperature": temperature,
+                "timeout": effective_timeout,
+            }
+            return client_inst.chat.completions.create(**kwargs)
 
         def _primary_call() -> Any:
             return _retry_sync(
@@ -216,7 +226,8 @@ class AIClient:
         response = self.fallback_router.execute_sync(
             _primary_call,
             model=target_model,
-            timeout=self.timeout,
+            timeout=effective_timeout,
+
             circuit_breaker=self.circuit_breaker,
             fallback_fn_builder=_call,
         )
@@ -235,6 +246,7 @@ class AIClient:
         max_tokens: int = 1024,
         temperature: float = 0.7,
         strip_thinking: bool = True,
+        timeout: float | None = None,
     ) -> ChatResult:
         """Send a chat message and receive structured result with latency and token usage.
 
@@ -260,13 +272,22 @@ class AIClient:
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
 
+        if timeout is not None:
+            effective_timeout = float(timeout)
+        elif effective_max_tokens > 16384:
+            effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
+        else:
+            effective_timeout = self.timeout
+
         def _call(client_inst: Any, m: str) -> Any:
-            return client_inst.chat.completions.create(
-                model=m,
-                messages=messages,
-                max_tokens=effective_max_tokens,
-                temperature=temperature,
-            )
+            kwargs: dict[str, Any] = {
+                "model": m,
+                "messages": messages,
+                "max_tokens": effective_max_tokens,
+                "temperature": temperature,
+                "timeout": effective_timeout,
+            }
+            return client_inst.chat.completions.create(**kwargs)
 
         def _primary_call() -> Any:
             return _retry_sync(
@@ -280,16 +301,27 @@ class AIClient:
         response = self.fallback_router.execute_sync(
             _primary_call,
             model=target_model,
-            timeout=self.timeout,
+            timeout=effective_timeout,
+
             circuit_breaker=self.circuit_breaker,
             fallback_fn_builder=_call,
         )
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
-        response_text = response.choices[0].message.content or ""
+        msg = response.choices[0].message
+        response_text = msg.content or ""
         self.privacy_guard.check_content(response_text)
+
+        from ccba_ai.llm_utils import LLMOutputParser
+        thinking = getattr(msg, "reasoning_content", None)
+        if not isinstance(thinking, str):
+            thinking = None
+        extracted_thinking, content = LLMOutputParser.extract_thinking_and_content(response_text)
+        if not thinking:
+            thinking = extracted_thinking
+
         if strip_thinking:
-            response_text = strip_think_tags(response_text)
+            response_text = content
 
         usage = ChatUsage()
         if hasattr(response, "usage") and response.usage:
@@ -303,6 +335,7 @@ class AIClient:
 
         return ChatResult(
             content=response_text,
+            thinking=thinking or "",
             model=resolved_model,
             usage=usage,
             latency_ms=latency_ms,
@@ -337,12 +370,15 @@ class AIClient:
         messages.append({"role": "user", "content": message})
 
         target_model = model or self.default_model
+        effective_max_tokens = resolve_max_tokens(
+            target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
+        )
 
         def _call(client_inst: Any, m: str) -> Any:
             return client_inst.chat.completions.create(
                 model=m,
                 messages=messages,
-                max_tokens=max_tokens,
+                max_tokens=effective_max_tokens,
                 temperature=temperature,
                 stream=True,
             )
@@ -404,8 +440,15 @@ class AIClient:
             "max_tokens": effective_max_tokens,
             "temperature": temperature,
         }
+
         if timeout is not None:
-            create_kwargs["timeout"] = timeout
+            effective_timeout = float(timeout)
+        elif effective_max_tokens > 16384:
+            effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
+        else:
+            effective_timeout = self.timeout
+
+        create_kwargs["timeout"] = effective_timeout
 
         def _call(client_inst: Any, m: str) -> Any:
             kwargs = dict(create_kwargs)
@@ -423,7 +466,7 @@ class AIClient:
         response = self.fallback_router.execute_sync(
             _primary_call,
             model=target_model,
-            timeout=timeout or self.timeout,
+            timeout=effective_timeout,
             circuit_breaker=self.circuit_breaker,
             fallback_fn_builder=_call,
         )
@@ -511,7 +554,7 @@ class AIClient:
         return str(response).strip()
 
     def embed(
-        self, texts: str | list[str], *, model: str = "text-embedding-3-small"
+        self, texts: str | list[str], *, model: str = "gemini-embedding-2"
     ) -> list[list[float]]:
         """Embed a text or list of texts via the AI Gateway.
 
@@ -525,10 +568,12 @@ class AIClient:
         text_list = [texts] if isinstance(texts, str) else texts
 
         if self.mock_mode:
-            return [[0.0] * 384 for _ in text_list]
+            return [[0.1] * 3072 for _ in text_list]
 
         def _call(client_inst: Any, m: str) -> Any:
-            return client_inst.embeddings.create(model=m, input=text_list)
+            return client_inst.embeddings.create(
+                model=m, input=text_list, extra_body={"drop_params": True}
+            )
 
         def _primary_call() -> Any:
             return _retry_sync(
@@ -672,6 +717,7 @@ class AsyncAIClient:
         max_tokens: int = 1024,
         temperature: float = 0.7,
         strip_thinking: bool = True,
+        timeout: float | None = None,
     ) -> str:
         """Send an async chat message and get a text response.
 
@@ -697,13 +743,22 @@ class AsyncAIClient:
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
 
+        if timeout is not None:
+            effective_timeout = float(timeout)
+        elif effective_max_tokens > 16384:
+            effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
+        else:
+            effective_timeout = self.timeout
+
         async def _call(client_inst: Any, m: str) -> Any:
-            return await client_inst.chat.completions.create(
-                model=m,
-                messages=messages,
-                max_tokens=effective_max_tokens,
-                temperature=temperature,
-            )
+            kwargs: dict[str, Any] = {
+                "model": m,
+                "messages": messages,
+                "max_tokens": effective_max_tokens,
+                "temperature": temperature,
+                "timeout": effective_timeout,
+            }
+            return await client_inst.chat.completions.create(**kwargs)
 
         async def _primary_call() -> Any:
             return await _retry_async(
@@ -716,7 +771,8 @@ class AsyncAIClient:
         response = await self.fallback_router.execute_async(
             _primary_call,
             model=target_model,
-            timeout=self.timeout,
+            timeout=effective_timeout,
+
             circuit_breaker=self.circuit_breaker,
             fallback_coro_builder=_call,
         )
@@ -735,6 +791,7 @@ class AsyncAIClient:
         max_tokens: int = 1024,
         temperature: float = 0.7,
         strip_thinking: bool = True,
+        timeout: float | None = None,
     ) -> ChatResult:
         """Send an async chat message and receive structured result with latency and token usage.
 
@@ -760,13 +817,22 @@ class AsyncAIClient:
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
 
+        if timeout is not None:
+            effective_timeout = float(timeout)
+        elif effective_max_tokens > 16384:
+            effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
+        else:
+            effective_timeout = self.timeout
+
         async def _call(client_inst: Any, m: str) -> Any:
-            return await client_inst.chat.completions.create(
-                model=m,
-                messages=messages,
-                max_tokens=effective_max_tokens,
-                temperature=temperature,
-            )
+            kwargs: dict[str, Any] = {
+                "model": m,
+                "messages": messages,
+                "max_tokens": effective_max_tokens,
+                "temperature": temperature,
+                "timeout": effective_timeout,
+            }
+            return await client_inst.chat.completions.create(**kwargs)
 
         async def _primary_call() -> Any:
             return await _retry_async(
@@ -780,16 +846,27 @@ class AsyncAIClient:
         response = await self.fallback_router.execute_async(
             _primary_call,
             model=target_model,
-            timeout=self.timeout,
+            timeout=effective_timeout,
+
             circuit_breaker=self.circuit_breaker,
             fallback_coro_builder=_call,
         )
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
-        response_text = response.choices[0].message.content or ""
+        msg = response.choices[0].message
+        response_text = msg.content or ""
         self.privacy_guard.check_content(response_text)
+
+        from ccba_ai.llm_utils import LLMOutputParser
+        thinking = getattr(msg, "reasoning_content", None)
+        if not isinstance(thinking, str):
+            thinking = None
+        extracted_thinking, content = LLMOutputParser.extract_thinking_and_content(response_text)
+        if not thinking:
+            thinking = extracted_thinking
+
         if strip_thinking:
-            response_text = strip_think_tags(response_text)
+            response_text = content
 
         usage = ChatUsage()
         if hasattr(response, "usage") and response.usage:
@@ -803,6 +880,7 @@ class AsyncAIClient:
 
         return ChatResult(
             content=response_text,
+            thinking=thinking or "",
             model=resolved_model,
             usage=usage,
             latency_ms=latency_ms,
@@ -837,12 +915,15 @@ class AsyncAIClient:
         messages.append({"role": "user", "content": message})
 
         target_model = model or self.default_model
+        effective_max_tokens = resolve_max_tokens(
+            target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
+        )
 
         async def _call(client_inst: Any, m: str) -> Any:
             return await client_inst.chat.completions.create(
                 model=m,
                 messages=messages,
-                max_tokens=max_tokens,
+                max_tokens=effective_max_tokens,
                 temperature=temperature,
                 stream=True,
             )
@@ -892,8 +973,15 @@ class AsyncAIClient:
             "max_tokens": effective_max_tokens,
             "temperature": temperature,
         }
+
         if timeout is not None:
-            create_kwargs["timeout"] = timeout
+            effective_timeout = float(timeout)
+        elif effective_max_tokens > 16384:
+            effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
+        else:
+            effective_timeout = self.timeout
+
+        create_kwargs["timeout"] = effective_timeout
 
         async def _call(client_inst: Any, m: str) -> Any:
             kwargs = dict(create_kwargs)
@@ -911,7 +999,7 @@ class AsyncAIClient:
         response = await self.fallback_router.execute_async(
             _primary_call,
             model=target_model,
-            timeout=timeout or self.timeout,
+            timeout=effective_timeout,
             circuit_breaker=self.circuit_breaker,
             fallback_coro_builder=_call,
         )
@@ -947,6 +1035,45 @@ class AsyncAIClient:
             fallback_coro_builder=_call,
         )
         return sorted({m.id for m in result.data})
+
+    async def embed(
+        self, texts: str | list[str], *, model: str = "gemini-embedding-2"
+    ) -> list[list[float]]:
+        """Embed a text or list of texts via the AI Gateway (async).
+
+        Args:
+            texts: A string or list of strings to embed.
+            model: Embedding model to use on the gateway.
+
+        Returns:
+            A list of embedding vectors (one for each input string).
+        """
+        text_list = [texts] if isinstance(texts, str) else texts
+
+        if self.mock_mode:
+            return [[0.1] * 3072 for _ in text_list]
+
+        async def _call(client_inst: Any, m: str) -> Any:
+            return await client_inst.embeddings.create(
+                model=m, input=text_list, extra_body={"drop_params": True}
+            )
+
+        async def _primary_call() -> Any:
+            return await _retry_async(
+                lambda: _call(self._client, model),
+                max_retries=self.max_retries,
+                initial_delay=self.retry_delay,
+                circuit_breaker=self.circuit_breaker,
+            )
+
+        response = await self.fallback_router.execute_async(
+            _primary_call,
+            model=model,
+            timeout=self.timeout,
+            circuit_breaker=self.circuit_breaker,
+            fallback_coro_builder=_call,
+        )
+        return [item.embedding for item in response.data]
 
     async def aclose(self) -> None:
         """Close the underlying AsyncOpenAI client session."""
