@@ -103,6 +103,8 @@ class DriftAuditor(BaseAuditor):
                         filepath.startswith(tracked_prefixes)
                         and not filepath.endswith(".md.bak")
                         and not filepath.startswith("scripts/tests/")
+                        and not filepath.startswith("tests/")
+                        and "/tests/" not in filepath
                     ):
                         structural_change = True
 

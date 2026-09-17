@@ -9,7 +9,6 @@ from scripts.ccba_platform_cli import display_spoke_health_dashboard
 from scripts.spoke.spoke_synchronizer import sync_all_spokes
 
 
-
 @pytest.fixture
 def mock_hub_with_spokes(tmp_path: Path) -> tuple[Path, list[Path]]:
     """Fixture creating a mock Hub with multiple registered Spokes in decrypted cache."""

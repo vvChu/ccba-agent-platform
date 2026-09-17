@@ -24,6 +24,7 @@ def clean_env() -> Generator[None, None, None]:
     else:
         os.environ.pop("CCBA_AI_MOCK", None)
 
+    # Restore them after the session
     for var, val in popped.items():
         os.environ[var] = val
 
