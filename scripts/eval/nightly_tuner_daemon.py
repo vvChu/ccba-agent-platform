@@ -13,6 +13,7 @@ import argparse
 import datetime
 import logging
 import os
+import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -114,22 +115,53 @@ class NightlyTunerDaemon:
         self.test_cases_dir = self.root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
         self.skills_dir = self.root / ".agents" / "skills"
 
+    def _resolve_dataset_file(self, skill_name: str) -> str:
+        """Dynamically matches a skill to its optimal Domain Archetype evaluation dataset."""
+        sname = skill_name.lower()
+
+        if any(k in sname for k in ["legal", "luat", "tvpl", "vbpl", "ingest", "advisor"]):
+            return "eval_legal_intel.json"
+        if any(k in sname for k in ["bim", "uniclass", "classification", "rase", "governance", "risk"]):
+            return "eval_bigbim_classification.json"
+        if any(k in sname for k in ["pccc", "qc", "audit", "preprocessor"]):
+            return "eval_pccc_audit.json"
+        if any(k in sname for k in ["academic", "khoahoc", "writing"]):
+            return "eval_academic_writing.json"
+        if any(k in sname for k in ["copywriting", "vietbai", "truyenthong"]):
+            return "eval_copywriting.json"
+        if any(k in sname for k in ["teamwork", "orchestrat", "platform-loader", "handoff", "issue-tree"]):
+            return "eval_agent_orchestration.json"
+
+        return "eval_general_domain.json"
+
     def discover_skills_and_datasets(self) -> list[dict[str, Any]]:
         """Maps discovered skills to their optimal evaluation datasets."""
         skill_dataset_map = {
             "ccba-academic-writing": "eval_academic_writing.json",
+            "ccba-copywriting": "eval_copywriting.json",
             "ccba-legal-intel": "eval_legal_intel_redteam.json",
             "ccba-ai-qc-pccc-audit": "eval_pccc_audit_redteam.json",
             "bigbim-classification": "eval_bigbim_classification.json",
+            "bigbim-governance": "eval_bigbim_classification.json",
+            "bigbim-risk": "eval_bigbim_classification.json",
+            "bigbim-rase": "eval_bigbim_classification.json",
             "ccba-completion-checklist": "eval_general_domain.json",
             "ccba-legal-document-tracker": "eval_legal_intel.json",
+            "ccba-legal-advisor": "eval_legal_intel.json",
+            "ccba-legal-ingest": "eval_legal_intel.json",
+            "bigbim-vbpl-digest": "eval_legal_intel.json",
+            "ccba-tvpl-vip-crawler": "eval_legal_intel.json",
             "ccba-ai-qc": "eval_pccc_audit.json",
         }
 
         discovered: list[dict[str, Any]] = []
         for skill_path in self.skills_dir.glob("*/SKILL.md"):
             skill_name = skill_path.parent.name
-            dataset_file = skill_dataset_map.get(skill_name, "eval_general_domain.json")
+            if skill_name in skill_dataset_map:
+                dataset_file = skill_dataset_map[skill_name]
+            else:
+                dataset_file = self._resolve_dataset_file(skill_name)
+
             full_dataset_path = self.test_cases_dir / dataset_file
 
             if not full_dataset_path.exists():
@@ -140,6 +172,7 @@ class NightlyTunerDaemon:
                     "skill_name": skill_name,
                     "target_file": skill_path,
                     "dataset_file": full_dataset_path,
+                    "eval_dataset_file": full_dataset_path,
                 }
             )
 
@@ -152,8 +185,9 @@ class NightlyTunerDaemon:
 
         logger.info(f"🚀 Khởi chạy Nightly Auto-Tuner Daemon: {branch_name}")
 
-        # 1. Tạo nhánh Git mới nếu không chạy dry_run
+        # 1. Dọn dẹp các nhánh rác cũ và tạo nhánh Git mới nếu không chạy dry_run
         if not dry_run:
+            self._cleanup_old_empty_branches(days=7)
             self._create_git_branch(branch_name)
 
         # 2. Khám phá và chấm điểm sơ bộ để xếp hàng đợi ưu tiên
@@ -312,6 +346,50 @@ class NightlyTunerDaemon:
             mock_fallback=True,
         )
 
+    def _cleanup_old_empty_branches(self, days: int = 7) -> int:
+        """Cleans up local auto-tune branches older than `days` that have no unique commits."""
+        try:
+            res = subprocess.run(
+                ["git", "branch", "--list", "auto-tune/nightly-*"],
+                cwd=str(self.root),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            branches = [b.strip().lstrip("* ") for b in res.stdout.splitlines() if b.strip()]
+            deleted_count = 0
+            cutoff = datetime.datetime.now() - datetime.timedelta(days=days)
+
+            for b in branches:
+                match = re.search(r"nightly-(\d{8})_\d{6}", b)
+                if match:
+                    date_str = match.group(1)
+                    try:
+                        b_date = datetime.datetime.strptime(date_str, "%Y%m%d")
+                        if b_date < cutoff:
+                            # Check if branch has unique commits not on main
+                            diff_res = subprocess.run(
+                                ["git", "cherry", "main", b],
+                                cwd=str(self.root),
+                                capture_output=True,
+                                text=True,
+                            )
+                            if not diff_res.stdout.strip():
+                                subprocess.run(
+                                    ["git", "branch", "-D", b],
+                                    cwd=str(self.root),
+                                    capture_output=True,
+                                    check=False,
+                                )
+                                logger.info(f"🧹 Đã dọn dẹp nhánh rác cũ: {b}")
+                                deleted_count += 1
+                    except Exception as e:
+                        logger.debug(f"Bỏ qua nhánh {b}: {e}")
+            return deleted_count
+        except Exception as e:
+            logger.warning(f"⚠️ Lỗi dọn dẹp nhánh cũ: {e}")
+            return 0
+
     def _create_git_branch(self, branch_name: str) -> None:
         """Creates and checks out a new feature branch for the nightly run."""
         try:
@@ -322,6 +400,26 @@ class NightlyTunerDaemon:
 
     def _create_pull_request(self, branch_name: str, report_body: str) -> str | None:
         """Pushes branch and creates a GitHub Pull Request using GitHub CLI (gh) if available."""
+        # 1. ADR-0058 Hard Completion Lock: Verify branch before pushing
+        try:
+            logger.info("🛡️ [ADR-0058] Đang thực thi Hard Completion Lock (verify-patch)...")
+            verify_res = subprocess.run(
+                [sys.executable, "-m", "ccba_harness", "verify-patch", "--preset", "skill"],
+                cwd=str(self.root),
+                capture_output=True,
+                text=True,
+            )
+            if verify_res.returncode != 0:
+                logger.error(
+                    f"❌ verify-patch thất bại (exit code {verify_res.returncode}), hủy tạo PR."
+                )
+                return None
+            logger.info("✅ verify-patch thành công! Tiến hành push nhánh và mở PR.")
+        except Exception as e:
+            logger.warning(f"⚠️ Kiểm định verify-patch gặp lỗi: {e}")
+            return None
+
+        # 2. Push & Create PR
         try:
             subprocess.run(
                 ["git", "push", "-u", "origin", branch_name], check=True, capture_output=True

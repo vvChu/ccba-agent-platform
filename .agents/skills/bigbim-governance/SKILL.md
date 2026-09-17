@@ -31,6 +31,7 @@ triggers:
 - RK_50_40_45
 - RK_50_60_28
 ---
+
 # BIGBIM Governance Core Guardrails Skill
 
 > **Vai trò**: Vệ binh Quản trị Thông tin (Guardian of Zettelkasten & AIM) tối cao của BIGBIM.
@@ -135,3 +136,8 @@ Khi thực hiện Audit hồ sơ, Agent phải xuất báo cáo theo mẫu dư�
 #### 4. KẾT LUẬN CHUNG
 *   **Trạng thái phê duyệt:** [PHÊ DUYỆT / TỪ CHỐI / PHÊ DUYỆT CÓ ĐIỀU KIỆN]
 *   **Lý do chính:** [Tóm tắt ngắn gọn 1-2 câu]
+
+## 4. Quy Tắc Phân Tầng Uniclass & Chuẩn ISO Nền Tảng
+* **Bảng phân loại Uniclass 200:** Co (Complexes) -> En (Entities) -> SL (Spaces) -> EF (Elements) -> Ss (Systems) -> Pr (Products) -> PM (Project Management).
+* **Tuân thủ ISO 12006-2:2015 & ISO 22274:** Phân tách rõ ràng giữa Resources, Processes, Results, Properties.
+* **Quy ước đặt tên ISO 19650 & IFC Alignment:** Đảm bảo tính nhất quán định danh Container cho mọi BIM Object.
