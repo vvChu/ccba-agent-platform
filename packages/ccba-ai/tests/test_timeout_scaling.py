@@ -38,7 +38,9 @@ def test_timeout_scaling_kwargs():
     mock_choice.message.content = "OK"
     mock_resp.choices = [mock_choice]
 
-    with patch.object(client._client.chat.completions, "create", return_value=mock_resp) as mock_create:
+    with patch.object(
+        client._client.chat.completions, "create", return_value=mock_resp
+    ) as mock_create:
         # Caller did not supply timeout, but max_tokens=25000 -> 25000 / 50.0 = 500.0s
         client.chat("test", max_tokens=25000)
         mock_create.assert_called_once()

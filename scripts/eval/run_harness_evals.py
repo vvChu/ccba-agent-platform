@@ -80,7 +80,7 @@ def run_command(
     cmd: list[str], cwd: Path, name: str, timeout_seconds: int = 60
 ) -> tuple[bool, str]:
     """Chạy một lệnh hệ thống và trả về trạng thái cùng stdout/stderr với rào chắn timeout an toàn."""
-    print(f"🚀 Chạy {name}...")
+    print(f"🚀 Chạy {name}...", flush=True)
     log_dir = cwd / ".md" / "scratch"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / f"eval_gate_{uuid.uuid4().hex[:8]}.log"
@@ -100,7 +100,10 @@ def run_command(
                 retcode = proc.wait(timeout=timeout_seconds)
             except subprocess.TimeoutExpired:
                 kill_process_tree(proc.pid)
-                proc.wait()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
                 f.seek(0)
                 output = f.read()
                 return (
@@ -284,6 +287,7 @@ def main() -> None:
                 test_args.append("scripts/tests")
 
         # Gate 3: Pytest Unit Tests
+        marker_expr = "not slow" if args.stress else "not slow and not stress"
         pytest_cmd = [
             py_exe,
             "-m",
@@ -292,7 +296,7 @@ def main() -> None:
             str(project_root / "pyproject.toml"),
             "--maxfail=1",
             "-m",
-            "not slow",
+            marker_expr,
         ] + test_args
 
         # Allow sufficient execution budget for 1,300+ tests across 9 packages

@@ -11,6 +11,7 @@ def test_embedding_sync():
     assert len(embeddings) == 1
     assert len(embeddings[0]) == 3072
 
+
 @pytest.mark.fast
 @pytest.mark.unit
 def test_embedding_list_sync():
@@ -19,6 +20,7 @@ def test_embedding_list_sync():
     assert len(embeddings) == 2
     assert len(embeddings[0]) == 3072
     assert len(embeddings[1]) == 3072
+
 
 @pytest.mark.fast
 @pytest.mark.unit
@@ -50,4 +52,3 @@ def test_embedding_arguments_sync():
         mock_create.assert_called_once()
         assert mock_create.call_args.kwargs["model"] == "gemini-embedding-2"
         assert mock_create.call_args.kwargs["extra_body"] == {"drop_params": True}
-

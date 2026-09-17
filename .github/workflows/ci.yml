@@ -34,7 +34,7 @@ jobs:
 
       - name: Install packages and dev tools
         run: |
-          uv pip install ruff mypy pytest pytest-cov pyyaml requests pydantic pydantic-settings psutil --system
+          uv pip install ruff mypy pytest pytest-cov pytest-timeout pyyaml requests pydantic pydantic-settings psutil --system
           uv pip install -e "packages/ccba-harness" --system
           uv pip install -e "packages/ccba-pdf-prep[dev]" --system
           uv pip install -e "packages/ccba-ai[dev]" --system
@@ -48,11 +48,13 @@ jobs:
       - name: Run CCBA Harness CI Gates
         env:
           PYTHONPATH: .
+          CCBA_AI_MOCK: "1"
         run: python scripts/eval/run_harness_evals.py --all
 
       - name: Deterministic Hard Completion Lock (ADR-0058)
         env:
           PYTHONPATH: .
+          CCBA_AI_MOCK: "1"
         run: python -m ccba_harness verify-patch --preset ci
 
 

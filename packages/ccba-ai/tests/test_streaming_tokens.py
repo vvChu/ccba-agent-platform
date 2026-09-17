@@ -30,7 +30,9 @@ def test_stream_reasoning_tokens_allocation():
     mock_chunk.choices = [MagicMock()]
     mock_chunk.choices[0].delta.content = "stream chunk"
 
-    with patch.object(client._client.chat.completions, "create", return_value=[mock_chunk]) as mock_create:
+    with patch.object(
+        client._client.chat.completions, "create", return_value=[mock_chunk]
+    ) as mock_create:
         chunks = list(client.stream("hello", model="gemini-3.7-flash-high"))
         assert chunks == ["stream chunk"]
         mock_create.assert_called_once()
@@ -52,11 +54,10 @@ async def test_async_stream_reasoning_tokens_allocation():
     async def mock_create_fn(**kwargs):
         return mock_generator()
 
-    with patch.object(client._client.chat.completions, "create", side_effect=mock_create_fn) as mock_create:
+    with patch.object(
+        client._client.chat.completions, "create", side_effect=mock_create_fn
+    ) as mock_create:
         chunks = [c async for c in client.stream("hello", model="gemini-3.7-flash-high")]
         assert chunks == ["async chunk"]
         mock_create.assert_called_once()
         assert mock_create.call_args.kwargs["max_tokens"] == 16384
-
-
-

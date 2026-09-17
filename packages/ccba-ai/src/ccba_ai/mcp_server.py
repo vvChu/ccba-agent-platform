@@ -20,6 +20,7 @@ F = TypeVar("F", bound=Callable[..., Any])
 try:
     from mcp.server.fastmcp import FastMCP
 except ImportError:
+
     class _DummyFastMCP:
         """Fallback mock when 'mcp' optional package is not installed."""
 

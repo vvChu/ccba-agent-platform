@@ -82,4 +82,3 @@ def test_chat_result_thinking_from_reasoning_content():
         res = client.chat_with_metadata("Audit this")
         assert res.thinking == "Native reasoning audit trail"
         assert res.content == "All clear!"
-

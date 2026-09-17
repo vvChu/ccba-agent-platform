@@ -123,7 +123,9 @@ class TestPersistentStdioDaemon:
 
         daemon = PersistentStdioDaemon(build_command=lambda: ["mock-cli"])
 
-        with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_proc):
+        with patch(
+            "asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_proc
+        ):
             text, _ = await daemon.send_turn_async(
                 prompt="Async prompt",
                 parse_response_fn=lambda raw: (raw.strip(), None),
