@@ -46,7 +46,9 @@ def load_tasks(workspace_root: Path | None = None) -> list[TeamTask]:
         return []
 
 
-def save_tasks(tasks: Sequence[TeamTask | dict[str, Any]], workspace_root: Path | None = None) -> None:
+def save_tasks(
+    tasks: Sequence[TeamTask | dict[str, Any]], workspace_root: Path | None = None
+) -> None:
     """Save tasks to the shared JSON database.
 
     Args:

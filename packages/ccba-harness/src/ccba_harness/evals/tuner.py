@@ -51,9 +51,7 @@ class RatchetConfig:
                 self.skill_name = tf.parent.name if tf.name.lower() == "skill.md" else tf.name
 
     @classmethod
-    def from_markdown_program(
-        cls, program_path: Path, root: Path | None = None
-    ) -> RatchetConfig:
+    def from_markdown_program(cls, program_path: Path, root: Path | None = None) -> RatchetConfig:
         """Parses a program.md specification file.
 
         Args:
