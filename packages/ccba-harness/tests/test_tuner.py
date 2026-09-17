@@ -780,6 +780,7 @@ def test_run_eval_pipeline_full_sweep_forwarding(tmp_path: Path):
             full_sweep=True,
             dataset=dataset_file,
             project_root=tmp_path,
+            task=lambda item: "OK",
             dry_run_git=True,
         )
         assert rep.metadata["full_sweep"] is True

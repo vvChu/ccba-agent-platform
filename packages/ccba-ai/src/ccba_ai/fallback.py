@@ -20,6 +20,7 @@ from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpe
 
 from ccba_ai.antigravity_provider import AntigravityCLIProvider
 from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
+from ccba_ai.copilot_provider import CopilotCLIProvider
 from ccba_ai.mock_provider import MockProvider
 
 logger = logging.getLogger("ccba_ai.fallback")
@@ -32,7 +33,9 @@ class TierType(str, Enum):
 
     TIER1_GATEWAY = "tier1_gateway"
     TIER2_CLOUD = "tier2_cloud"
+    TIER3_CLI = "tier3_cli"
     TIER3_ANTIGRAVITY = "tier3_antigravity"
+    TIER3_COPILOT = "tier3_copilot"
     TIER4_OLLAMA = "tier4_ollama"
     TIER5_MOCK = "tier5_mock"
 
@@ -60,12 +63,26 @@ def map_model_for_tier(requested_model: str, tier: TierType, provider_type: str 
     if tier == TierType.TIER4_OLLAMA:
         return os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:7b")
 
-    if tier == TierType.TIER3_ANTIGRAVITY:
+    if tier in (TierType.TIER3_COPILOT, TierType.TIER3_CLI) and any(
+        k in (requested_model or "").lower() for k in ("gpt", "o1", "o3", "codex", "copilot")
+    ):
+        req = (requested_model or "").lower().strip()
+        if any(k in req for k in ("high", "reasoning", "pro", "o1", "o3")):
+            return "gpt-5.4"
+        return "gpt-5.4-mini"
+
+    if tier in (TierType.TIER3_ANTIGRAVITY, TierType.TIER3_CLI):
         # Map to agy model names; pass through if already an agy model name
         req = (requested_model or "").lower().strip()
         if any(k in req for k in ("high", "reasoning", "pro", "o1", "o3")):
             return "gemini-3.7-flash-high"
         return "gemini-3.7-flash-medium"
+
+    if tier == TierType.TIER3_COPILOT:
+        req = (requested_model or "").lower().strip()
+        if any(k in req for k in ("high", "reasoning", "pro", "o1", "o3")):
+            return "gpt-5.4"
+        return "gpt-5.4-mini"
 
     if tier == TierType.TIER2_CLOUD:
         req = (requested_model or "").lower().strip()
@@ -92,12 +109,14 @@ class TieredFallbackRouter:
         self,
         mock_provider: MockProvider | None = None,
         agy_provider: AntigravityCLIProvider | None = None,
+        copilot_provider: CopilotCLIProvider | None = None,
         enable_fallback: bool = True,
         enable_mock_fallback: bool = False,
         mock_mode: bool | None = None,
     ) -> None:
         self.mock_provider = mock_provider or MockProvider()
         self.agy_provider = agy_provider
+        self.copilot_provider = copilot_provider
         self.enable_fallback = enable_fallback
         self.mock_mode = mock_mode
         self.enable_mock_fallback = enable_mock_fallback or (
@@ -152,6 +171,15 @@ class TieredFallbackRouter:
         if self.agy_provider is None:
             self.agy_provider = AntigravityCLIProvider()
         return self.agy_provider
+
+    def _get_copilot_provider(self) -> CopilotCLIProvider | None:
+        """Get or lazily create CopilotCLIProvider.
+
+        Returns None if explicitly disabled.
+        """
+        if self.copilot_provider is None:
+            self.copilot_provider = CopilotCLIProvider()
+        return self.copilot_provider
 
     def get_tier4_ollama_config(self) -> dict[str, str] | None:
         """Discover Local Ollama daemon configuration."""
@@ -255,19 +283,38 @@ class TieredFallbackRouter:
                 except Exception as t2_exc:
                     logger.warning(f"[ccba-ai] Tier 2 ({tier2_cfg['provider']}) failed: {t2_exc}")
 
-            # --- Try Tier 3 (Antigravity CLI Bridge) ---
-            agy = self._get_agy_provider()
-            if agy and agy.is_available() and fallback_fn_builder:
-                try:
-                    mapped_model = map_model_for_tier(model, TierType.TIER3_ANTIGRAVITY)
-                    logger.info(
-                        f"[ccba-ai] Failing over to Tier 3 (Antigravity CLI: {mapped_model})... "
-                        "WARNING: ~30-40s latency expected."
-                    )
-                    res = fallback_fn_builder(agy.sync_client, mapped_model)
-                    return res
-                except Exception as t3_exc:
-                    logger.warning(f"[ccba-ai] Tier 3 (Antigravity CLI) failed: {t3_exc}")
+            # --- Try Tier 3 (Dual-CLI Provider Matrix: Copilot & Antigravity) ---
+            is_openai_affinity = any(
+                k in (model or "").lower() for k in ("gpt", "o1", "o3", "codex", "copilot")
+            )
+            cli_order = ["copilot", "antigravity"] if is_openai_affinity else ["antigravity", "copilot"]
+
+            for cli_name in cli_order:
+                if cli_name == "copilot":
+                    copilot = self._get_copilot_provider()
+                    if copilot and copilot.is_available() and fallback_fn_builder:
+                        try:
+                            mapped_model = map_model_for_tier(model, TierType.TIER3_COPILOT)
+                            logger.info(
+                                f"[ccba-ai] Failing over to Tier 3 (Copilot CLI: {mapped_model})..."
+                            )
+                            res = fallback_fn_builder(copilot.sync_client, mapped_model)
+                            return res
+                        except Exception as t3_copilot_exc:
+                            logger.warning(f"[ccba-ai] Tier 3 (Copilot CLI) failed: {t3_copilot_exc}")
+                elif cli_name == "antigravity":
+                    agy = self._get_agy_provider()
+                    if agy and agy.is_available() and fallback_fn_builder:
+                        try:
+                            mapped_model = map_model_for_tier(model, TierType.TIER3_ANTIGRAVITY)
+                            logger.info(
+                                f"[ccba-ai] Failing over to Tier 3 (Antigravity CLI: {mapped_model})... "
+                                "WARNING: ~30-40s latency expected if daemon not active."
+                            )
+                            res = fallback_fn_builder(agy.sync_client, mapped_model)
+                            return res
+                        except Exception as t3_agy_exc:
+                            logger.warning(f"[ccba-ai] Tier 3 (Antigravity CLI) failed: {t3_agy_exc}")
 
             # --- Try Tier 4 (Local Ollama) ---
             tier4_cfg = self.get_tier4_ollama_config()
@@ -340,19 +387,42 @@ class TieredFallbackRouter:
                         f"[ccba-ai] Tier 2 ({tier2_cfg['provider']}) async failed: {t2_exc}"
                     )
 
-            # --- Try Tier 3 (Antigravity CLI Bridge) ---
-            agy = self._get_agy_provider()
-            if agy and agy.is_available() and fallback_coro_builder:
-                try:
-                    mapped_model = map_model_for_tier(model, TierType.TIER3_ANTIGRAVITY)
-                    logger.info(
-                        f"[ccba-ai] Failing over to Tier 3 (Antigravity CLI: {mapped_model})... "
-                        "WARNING: ~30-40s latency expected."
-                    )
-                    res = await fallback_coro_builder(agy.async_client, mapped_model)
-                    return res
-                except Exception as t3_exc:
-                    logger.warning(f"[ccba-ai] Tier 3 (Antigravity CLI) async failed: {t3_exc}")
+            # --- Try Tier 3 (Dual-CLI Provider Matrix: Copilot & Antigravity) ---
+            is_openai_affinity = any(
+                k in (model or "").lower() for k in ("gpt", "o1", "o3", "codex", "copilot")
+            )
+            cli_order = ["copilot", "antigravity"] if is_openai_affinity else ["antigravity", "copilot"]
+
+            for cli_name in cli_order:
+                if cli_name == "copilot":
+                    copilot = self._get_copilot_provider()
+                    if copilot and copilot.is_available() and fallback_coro_builder:
+                        try:
+                            mapped_model = map_model_for_tier(model, TierType.TIER3_COPILOT)
+                            logger.info(
+                                f"[ccba-ai] Failing over to Tier 3 (Copilot CLI: {mapped_model})..."
+                            )
+                            res = await fallback_coro_builder(copilot.async_client, mapped_model)
+                            return res
+                        except Exception as t3_copilot_exc:
+                            logger.warning(
+                                f"[ccba-ai] Tier 3 (Copilot CLI) async failed: {t3_copilot_exc}"
+                            )
+                elif cli_name == "antigravity":
+                    agy = self._get_agy_provider()
+                    if agy and agy.is_available() and fallback_coro_builder:
+                        try:
+                            mapped_model = map_model_for_tier(model, TierType.TIER3_ANTIGRAVITY)
+                            logger.info(
+                                f"[ccba-ai] Failing over to Tier 3 (Antigravity CLI: {mapped_model})... "
+                                "WARNING: ~30-40s latency expected if daemon not active."
+                            )
+                            res = await fallback_coro_builder(agy.async_client, mapped_model)
+                            return res
+                        except Exception as t3_agy_exc:
+                            logger.warning(
+                                f"[ccba-ai] Tier 3 (Antigravity CLI) async failed: {t3_agy_exc}"
+                            )
 
             # --- Try Tier 4 (Local Ollama) ---
             tier4_cfg = self.get_tier4_ollama_config()
