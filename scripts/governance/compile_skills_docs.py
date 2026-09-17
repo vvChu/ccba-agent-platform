@@ -80,7 +80,7 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "downstream": "Kỹ năng lập trình hoặc thẩm tra",
         "role": "Định vị nhanh các Deep Seams và tệp mã nguồn liên quan.",
     },
-    # 2. core_engineering (18 skills)
+    # 2. core_engineering (21 skills)
     "ccba-grilling": {
         "upstream": "Ý tưởng sơ khai / Yêu cầu người dùng (Idea Phase)",
         "downstream": "ccba-to-spec / ccba-adr-lifecycle",
@@ -180,6 +180,11 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "upstream": "Hệ thống đa tiến trình / Daemons chạy song song",
         "downstream": "Phân tích nhật ký / Giám sát lỗi",
         "role": "Ghi log an toàn luồng (Thread-safe), chống hỏng mã hóa và race condition.",
+    },
+    "ccba-issue-tree": {
+        "upstream": "Vấn đề phức tạp / Sự cố chưa rõ nguyên nhân / Yêu cầu đa chiều",
+        "downstream": "ccba-grilling / ccba-to-spec / Kỹ năng chuyên biệt các bộ môn",
+        "role": "Phân rã bài toán đa chiều theo cấu trúc cây MECE và quản trị kiểm chứng giả thuyết.",
     },
     # 3. bim_aiqc (7 skills)
     "bigbim-classification": {
@@ -523,12 +528,12 @@ def get_all_skills_data(hub_root: Path = HUB_ROOT) -> list[dict[str, Any]]:
         gpi_info = fm.get("gpi")
         gpi_str = ""
         if isinstance(gpi_info, dict):
-            s = gpi_info.get("s", 0)
-            k = gpi_info.get("k", 0)
-            a = gpi_info.get("a", 0)
-            p = gpi_info.get("p", 0)
-            total = sum([s, k, a, p])
-            gpi_str = f"S={s} | K={k} | A={a} | P={p} (Tổng: {total:.1f})"
+            s = float(gpi_info.get("s", 0))
+            k = float(gpi_info.get("k", 0))
+            a = float(gpi_info.get("a", 0))
+            p = float(gpi_info.get("p", 0))
+            gpi_score = (s * 2.5) + (k * 2.0) + (a * 2.0) - (p * 1.5)
+            gpi_str = f"S={s:.1f} | K={k:.1f} | A={a:.1f} | P={p:.1f} (GPI: {gpi_score:.2f})"
 
         skills.append(
             {

@@ -53,7 +53,11 @@ class CCBABaseException(Exception):
     """Exception cơ sở của CCBA Platform, tự động định dạng thông báo lỗi thành JSON."""
 
     def __init__(
-        self, code: CCBAErrorCode, message: str, suggestion: str, extra: dict[str, Any] | None = None
+        self,
+        code: CCBAErrorCode,
+        message: str,
+        suggestion: str,
+        extra: dict[str, Any] | None = None,
     ) -> None:
         self.code = code
         self.message = message

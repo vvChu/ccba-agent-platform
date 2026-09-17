@@ -28,7 +28,9 @@ except ImportError:
         "anthropic-api-key": {"pattern": re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b")},
         "openai-api-key": {"pattern": re.compile(r"\bsk-(?!ant-)(?:proj-)?[A-Za-z0-9_-]{20,}\b")},
         "github-token": {
-            "pattern": re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9_]{36,}|github_pat_[A-Za-z0-9_]{20,})\b")
+            "pattern": re.compile(
+                r"\b(?:gh[pousr]_[A-Za-z0-9_]{36,}|github_pat_[A-Za-z0-9_]{20,})\b"
+            )
         },
         "aws-access-key": {"pattern": re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b")},
         "google-api-key": {"pattern": re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b")},
@@ -387,12 +389,16 @@ def find_transcript_files(log_dir: Path) -> list[Path]:
                 log_files.append(t_file)
 
         # Pattern B: chats/session-*.json(l) or sub/session-*.json(l)
-        chats_dir = sub / "chats" if (sub / "chats").is_dir() else (sub if sub.name == "chats" else None)
+        chats_dir = (
+            sub / "chats" if (sub / "chats").is_dir() else (sub if sub.name == "chats" else None)
+        )
         if chats_dir and chats_dir.is_dir():
             try:
                 for cf in chats_dir.iterdir():
-                    if cf.is_file() and cf.name.startswith("session-") and (
-                        cf.name.endswith(".json") or cf.name.endswith(".jsonl")
+                    if (
+                        cf.is_file()
+                        and cf.name.startswith("session-")
+                        and (cf.name.endswith(".json") or cf.name.endswith(".jsonl"))
                     ):
                         log_files.append(cf)
             except (OSError, PermissionError):
@@ -445,11 +451,7 @@ def to_legacy_skill_name(skill_name: str) -> str:
         return ""
     if skill_name in CANONICAL_TO_LEGACY_MAP:
         return CANONICAL_TO_LEGACY_MAP[skill_name]
-    clean = (
-        skill_name.replace("ccba-", "")
-        .replace("bigbim-", "")
-        .replace("-", "_")
-    )
+    clean = skill_name.replace("ccba-", "").replace("bigbim-", "").replace("-", "_")
     return clean
 
 
@@ -548,7 +550,9 @@ def score_skill_match(
             score += 40.0
         clean_name = name.replace("ccba-", "").replace("bigbim-", "")
         if clean_name and len(clean_name) > 4:
-            if re.search(r"(?<!\w)" + re.escape(clean_name) + r"(?!\w)", user_prompt, re.IGNORECASE):
+            if re.search(
+                r"(?<!\w)" + re.escape(clean_name) + r"(?!\w)", user_prompt, re.IGNORECASE
+            ):
                 score += 20.0
             clean_spaced = clean_name.replace("-", " ")
             if clean_spaced != clean_name:
@@ -556,7 +560,9 @@ def score_skill_match(
                 if re.search(pattern_spaced, user_prompt, re.IGNORECASE):
                     score += 20.0
                 elif clean_spaced != strip_accents(clean_spaced) or len(clean_spaced.split()) >= 2:
-                    pattern_spaced_strip = r"(?<!\w)" + re.escape(strip_accents(clean_spaced)) + r"(?!\w)"
+                    pattern_spaced_strip = (
+                        r"(?<!\w)" + re.escape(strip_accents(clean_spaced)) + r"(?!\w)"
+                    )
                     if re.search(pattern_spaced_strip, prompt_stripped, re.IGNORECASE):
                         score += 20.0
 
@@ -614,7 +620,11 @@ def score_skill_match(
     if name == "ccba-ai-qc-pccc-audit":
         has_fire_safety_kw = any(
             re.search(r"(?<!\w)" + re.escape(kw) + r"(?!\w)", user_prompt, re.IGNORECASE)
-            or re.search(r"(?<!\w)" + re.escape(strip_accents(kw)) + r"(?!\w)", prompt_stripped, re.IGNORECASE)
+            or re.search(
+                r"(?<!\w)" + re.escape(strip_accents(kw)) + r"(?!\w)",
+                prompt_stripped,
+                re.IGNORECASE,
+            )
             for kw in FIRE_SAFETY_KEYWORDS
         )
         if not has_fire_safety_kw:
@@ -989,9 +999,7 @@ def mine_logs_and_export(
         )
 
     interactions = parse_transcript_logs(log_dir)
-    failures = identify_failures(
-        interactions, taxonomy_filter=taxonomy, catalog_path=catalog_path
-    )
+    failures = identify_failures(interactions, taxonomy_filter=taxonomy, catalog_path=catalog_path)
 
     if not failures:
         logger.info("🎉 Không phát hiện failures nào cần auto-tune.")
