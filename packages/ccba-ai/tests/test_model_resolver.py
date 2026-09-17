@@ -113,9 +113,7 @@ class TestAntigravitySelfHealingRetry:
 
     @patch("shutil.which", return_value="/usr/bin/agy")
     @patch("subprocess.run")
-    def test_chat_self_healing_retry(
-        self, mock_run: MagicMock, mock_which: MagicMock
-    ) -> None:
+    def test_chat_self_healing_retry(self, mock_run: MagicMock, mock_which: MagicMock) -> None:
         provider = AntigravityCLIProvider(default_model="gemini-3.7-flash-medium")
 
         # 1st call fails with unrecognized model

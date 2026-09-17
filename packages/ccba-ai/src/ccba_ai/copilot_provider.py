@@ -286,15 +286,15 @@ class CopilotCLIProvider:
             return self._daemon.send_turn_sync(
                 prompt=prompt,
                 parse_response_fn=parse_copilot_json_response,
-                fallback_oneshot_fn=lambda p: self._chat_oneshot(p, effective_model, effective_timeout),
+                fallback_oneshot_fn=lambda p: self._chat_oneshot(
+                    p, effective_model, effective_timeout
+                ),
                 timeout=effective_timeout,
             )
 
         return self._chat_oneshot(prompt, effective_model, effective_timeout)
 
-    def _chat_oneshot(
-        self, prompt: str, model: str, timeout: float
-    ) -> tuple[str, CopilotUsage]:
+    def _chat_oneshot(self, prompt: str, model: str, timeout: float) -> tuple[str, CopilotUsage]:
         """Run single prompt as an isolated one-shot subprocess."""
         cmd = self._build_command(prompt, model)
         logger.info(f"[ccba-ai] Copilot CLI one-shot call: model={model}, timeout={timeout}s")
@@ -315,7 +315,9 @@ class CopilotCLIProvider:
             logger.warning(
                 f"[ccba-ai] Copilot CLI exited with code {result.returncode}: {result.stderr[:400]}"
             )
-            raise RuntimeError(f"Copilot CLI failed (exit {result.returncode}): {result.stderr[:200]}")
+            raise RuntimeError(
+                f"Copilot CLI failed (exit {result.returncode}): {result.stderr[:200]}"
+            )
 
         return parse_copilot_json_response(result.stdout)
 
@@ -334,7 +336,9 @@ class CopilotCLIProvider:
             return await self._daemon.send_turn_async(
                 prompt=prompt,
                 parse_response_fn=parse_copilot_json_response,
-                fallback_oneshot_fn=lambda p: self._chat_oneshot_async(p, effective_model, effective_timeout),
+                fallback_oneshot_fn=lambda p: self._chat_oneshot_async(
+                    p, effective_model, effective_timeout
+                ),
                 timeout=effective_timeout,
             )
 
@@ -361,9 +365,7 @@ class CopilotCLIProvider:
         )
 
         try:
-            stdout_bytes, stderr_bytes = await asyncio.wait_for(
-                proc.communicate(), timeout=timeout
-            )
+            stdout_bytes, stderr_bytes = await asyncio.wait_for(proc.communicate(), timeout=timeout)
         except asyncio.TimeoutError:
             try:
                 proc.kill()

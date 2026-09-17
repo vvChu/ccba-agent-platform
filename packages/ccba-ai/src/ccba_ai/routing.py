@@ -19,15 +19,21 @@ class ModelArchetype:
     STANDARD = "gemini-3.7-flash"
     STANDARD_MEDIUM = "gemini-3.7-flash-medium"
     STANDARD_TEXT_GEMMA = "text-gemma"
+    GEMINI_38_FLASH = "gemini-3.8-flash"
 
     # Archetype 3: Deep Reasoning / Complex Audit (Google API + Centralized Proxy)
     REASONING = "gemini-3.7-flash-high"
     REASONING_ALT = "claude-sonnet-4-6-thinking"
     REASONING_GEMMA = "reasoning-gemma"
+    GEMINI_31_PRO_HIGH = "gemini-3.1-pro-high"
+    CLAUDE_OPUS_46 = "claude-opus-4-6"
 
     # Archetype 4: Local Private / Zero-Cost (vLLM Qwen 35B Local GPU DGX)
     LOCAL = "qwen-local-primary"
     RAG = "rag-core"
+
+    # Archetype 5: Embeddings
+    EMBEDDING = "gemini-embedding-2"
 
 
 def choose_model(task_type: str) -> str:
@@ -35,7 +41,7 @@ def choose_model(task_type: str) -> str:
 
     Args:
         task_type: Descriptive task string (e.g. 'ocr', 'coding', 'reasoning',
-            'research', 'fast', 'private', 'vietnamese').
+            'research', 'fast', 'private', 'vietnamese', 'embedding').
 
     Returns:
         The target model name alias on AI Gateway.
@@ -54,6 +60,7 @@ def choose_model(task_type: str) -> str:
         "local": ModelArchetype.LOCAL,
         "rag": ModelArchetype.RAG,
         "vietnamese": ModelArchetype.LOCAL,
+        "embedding": ModelArchetype.EMBEDDING,
     }
     return routing.get(task_type.lower().strip(), ModelArchetype.STANDARD)
 
