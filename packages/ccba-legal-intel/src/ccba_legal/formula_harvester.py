@@ -113,7 +113,13 @@ def _read_cache(cache_dir: Path, sha256: str) -> str | None:
                 if isinstance(val, str):
                     if any(
                         bad in val
-                        for bad in ("Gemini", "no longer available", "Please switch", "error", "Exception")
+                        for bad in (
+                            "Gemini",
+                            "no longer available",
+                            "Please switch",
+                            "error",
+                            "Exception",
+                        )
                     ):
                         try:
                             cache_file.unlink()
@@ -298,7 +304,9 @@ def _call_vision_model(img_bytes: bytes, prompt: str) -> str:
 
     try:
         with Image.open(io.BytesIO(img_bytes)) as loaded_img:
-            pil_img: Image.Image = loaded_img.convert("RGB") if loaded_img.mode != "RGB" else loaded_img
+            pil_img: Image.Image = (
+                loaded_img.convert("RGB") if loaded_img.mode != "RGB" else loaded_img
+            )
             buf = io.BytesIO()
             pil_img.save(buf, format="PNG", optimize=True)
             b64_img = base64.b64encode(buf.getvalue()).decode("utf-8")

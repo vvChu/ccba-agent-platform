@@ -1,6 +1,6 @@
-# ccba-file-stability-guard
+# ccba-issue-tree
 
-> **Mô tả ngắn**: Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước thực tế thay vì time.sleep() — dành cho Google Drive, OneDrive, SharePoint.
+> **Mô tả ngắn**: Phân rã bài toán phức tạp theo cây vấn đề McKinsey MECE (Why, What, How) và quản trị vòng đời kiểm chứng giả thuyết.
 
 ---
 
@@ -8,29 +8,29 @@
 
 ### Cú pháp Lệnh (Slash Command)
 ```bash
-/ccba-file-stability-guard
+/ccba-issue-tree
 ```
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-file-stability-guard
+python scripts/spoke/sync_spoke.py --skills ccba-issue-tree
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
 | Thuộc tính | Chi tiết |
 | :--- | :--- |
-| **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
+| **Cổng Điều Hướng (Portal)** | ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
-| **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 17.50)` |
+| **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
 ---
 
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước thực tế thay vì time.sleep() — dành cho Google Drive, OneDrive, SharePoint.
+Phân rã bài toán phức tạp theo cây vấn đề McKinsey MECE (Why, What, How) và quản trị vòng đời kiểm chứng giả thuyết.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -45,17 +45,22 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `file stability`
-- `cloud sync`
-- `watchdog`
-- `race condition`
-- `google drive sync`
-- `onedrive sync`
-- `file incomplete`
+- `issue tree`
+- `mece`
+- `cây vấn đề`
+- `why tree`
+- `what tree`
+- `how tree`
+- `root cause analysis`
+- `rca`
+- `phân tích nguyên nhân`
+- `phân rã vấn đề`
+- `giải quyết vấn đề`
+- `hypothesis testing`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
-- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Kiểm tra kích thước thực tế đảm bảo file đã tải xong hoàn toàn.
-- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Xử lý file đồng bộ từ đám mây (OneDrive/GDrive)**
+- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Phân rã bài toán đa chiều theo cấu trúc cây MECE và quản trị kiểm chứng giả thuyết.
+- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Vấn đề phức tạp / Sự cố chưa rõ nguyên nhân / Yêu cầu đa chiều**
 
 ### Khi Nào KHÔNG Nên Dùng (Anti-patterns)
 - Không dùng nếu cần tư vấn định hướng ban đầu: hãy gọi `/ccba-ask`.
@@ -65,21 +70,21 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 
 ## 4. Vị Trí Trong Chuỗi Giá Trị (The Pipeline Trail)
 
-Kỹ năng `ccba-file-stability-guard` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
+Kỹ năng `ccba-issue-tree` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
 
 ```text
-[ Xử lý file đồng bộ từ đám mây (OneDrive/GDrive) ]
+[ Vấn đề phức tạp / Sự cố chưa rõ nguyên nhân / Yêu cầu đa chiều ]
           │
           ▼
-    >>> [ ccba-file-stability-guard ] <<<  (Kiểm tra kích thước thực tế đảm bảo file đã tải xong hoàn toàn.)
+    >>> [ ccba-issue-tree ] <<<  (Phân rã bài toán đa chiều theo cấu trúc cây MECE và quản trị kiểm chứng giả thuyết.)
           │
           ▼
-[ Pipeline xử lý file an toàn ]
+[ ccba-grilling / ccba-to-spec / Kỹ năng chuyên biệt các bộ môn ]
 ```
 
-- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Xử lý file đồng bộ từ đám mây (OneDrive/GDrive)`.
+- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Vấn đề phức tạp / Sự cố chưa rõ nguyên nhân / Yêu cầu đa chiều`.
 - **Thực thi (In-flight)**: Áp dụng các quy tắc kỹ thuật và công cụ tự động hóa để sản sinh kết quả chuẩn mực.
-- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Pipeline xử lý file an toàn`.
+- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `ccba-grilling / ccba-to-spec / Kỹ năng chuyên biệt các bộ môn`.
 
 ---
 
@@ -89,7 +94,7 @@ Kỹ năng `ccba-file-stability-guard` giữ vị trí then chốt trong chuỗi
 Mọi thay đổi liên quan đến kỹ năng này bắt buộc phải vượt qua toàn bộ các kiểm thử tự động sau:
 ```bash
 python -m ccba_harness verify-patch --preset skill
-python scripts/validate_skills.py --file .agents/skills/ccba-file-stability-guard/SKILL.md --enforce-gpi
+python scripts/validate_skills.py --file .agents/skills/ccba-issue-tree/SKILL.md --enforce-gpi
 ```
 
 ### Danh Mục Kiểm Thức Hoàn Thành (Definition of Done - DoD)

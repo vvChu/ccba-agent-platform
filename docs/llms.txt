@@ -1,6 +1,6 @@
 # CCBA Agent Platform Skills
 
-> Curated registry of 72 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
+> Curated registry of 73 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
 
 ## Navigation Portals
 
@@ -12,11 +12,11 @@
 
 ## Core Endpoints & Documentation
 
-- [Skills Index](skills/INDEX.md): Markdown catalog index for all 72 skills.
+- [Skills Index](skills/INDEX.md): Markdown catalog index for all 73 skills.
 - [Skills FAQ](skills/FAQ.md): Frequently asked questions on Hub-Spoke, invocation, and troubleshooting.
-- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 72 skills.
+- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 73 skills.
 
-## All Active Skills (72 Skills)
+## All Active Skills (73 Skills)
 
 - [platform-loader](skills/platform-loader.md): /platform-loader — Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn bộ skills và rules.
 - [bigbim-classification](skills/bigbim-classification.md): /bigbim-classification — Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass 200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
@@ -56,6 +56,7 @@
 - [ccba-implement](skills/ccba-implement.md): /ccba-implement — Implement a piece of work based on a spec or set of tickets.
 - [ccba-init-spoke](skills/ccba-init-spoke.md): /ccba-init-spoke — Khởi tạo một dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform
 - [ccba-issue-to-hub](skills/ccba-issue-to-hub.md): /ccba-issue-to-hub — Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ Spoke lên Hub dưới dạng GitHub Issue
+- [ccba-issue-tree](skills/ccba-issue-tree.md): /ccba-issue-tree — Phân rã bài toán phức tạp theo cây vấn đề McKinsey MECE (Why, What, How) và quản trị vòng đời kiểm chứng giả thuyết.
 - [ccba-knowledge-loop](skills/ccba-knowledge-loop.md): /ccba-knowledge-loop — Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm → Wayfinder → Exec)
 - [ccba-legal-advisor](skills/ccba-legal-advisor.md): /ccba-legal-advisor — Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.4.
 - [ccba-legal-document-tracker](skills/ccba-legal-document-tracker.md): /ccba-legal-document-tracker — Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine và Registry.

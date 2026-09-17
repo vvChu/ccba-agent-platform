@@ -271,9 +271,8 @@ def scan_file(
                 parts = alias.name.split(".")
                 pkg = parts[0]
                 if pkg in hub_packages:
-                    is_violation = (
-                        len(parts) >= 3
-                        or (len(parts) >= 2 and any(p.startswith("_") for p in parts[1:]))
+                    is_violation = len(parts) >= 3 or (
+                        len(parts) >= 2 and any(p.startswith("_") for p in parts[1:])
                     )
                     if is_violation:
                         line_num = node.lineno
