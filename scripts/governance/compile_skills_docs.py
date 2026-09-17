@@ -80,7 +80,7 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "downstream": "Kỹ năng lập trình hoặc thẩm tra",
         "role": "Định vị nhanh các Deep Seams và tệp mã nguồn liên quan.",
     },
-    # 2. core_engineering (18 skills)
+    # 2. core_engineering (21 skills)
     "ccba-grilling": {
         "upstream": "Ý tưởng sơ khai / Yêu cầu người dùng (Idea Phase)",
         "downstream": "ccba-to-spec / ccba-adr-lifecycle",
@@ -180,6 +180,11 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "upstream": "Hệ thống đa tiến trình / Daemons chạy song song",
         "downstream": "Phân tích nhật ký / Giám sát lỗi",
         "role": "Ghi log an toàn luồng (Thread-safe), chống hỏng mã hóa và race condition.",
+    },
+    "ccba-issue-tree": {
+        "upstream": "Vấn đề phức tạp / Sự cố chưa rõ nguyên nhân / Yêu cầu đa chiều",
+        "downstream": "ccba-grilling / ccba-to-spec / Kỹ năng chuyên biệt các bộ môn",
+        "role": "Phân rã bài toán đa chiều theo cấu trúc cây MECE và quản trị kiểm chứng giả thuyết.",
     },
     # 3. bim_aiqc (7 skills)
     "bigbim-classification": {

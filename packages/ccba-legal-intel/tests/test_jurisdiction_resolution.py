@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from ccba_legal import (
-    NATIONAL_FALLBACK_DISCLAIMER,
     expand_jurisdiction_queries,
     format_grounded_response,
     generate_jurisdiction_guardrail_card,
