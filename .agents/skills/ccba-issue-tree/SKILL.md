@@ -137,7 +137,7 @@ Khi thực thi các tác vụ phân tích cây vấn đề chuyên sâu, Agent s
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/tree_templates.md` | Bộ mẫu biểu đồ Mermaid và Text Tree chuẩn hóa cho Diagnostic Why-Tree, Solution How-Tree và Workplan What-Tree |
-| `references/governed_lifecycle_guide.md` | Hướng dẫn tầng vận hành (Operating Layer), máy trạng thái 5 bước, thang đo bằng chứng ADR-0059 và ma trận RACI 11 Ghế CCBA |
+| `references/governed_lifecycle_guide.md` | Hướng dẫn tầng vận hành (Operating Layer), máy trạng thái vòng đời nhánh, thang đo bằng chứng ADR-0059 và ma trận RACI Hiến chương CCBA |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

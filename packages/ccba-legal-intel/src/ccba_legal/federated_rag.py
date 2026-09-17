@@ -38,7 +38,10 @@ class FederatedLegalEngine:
             self._embed_timeout = embed_timeout
         else:
             env_val = os.getenv("CCBA_EMBED_TIMEOUT")
-            self._embed_timeout = float(env_val) if env_val else 10.0
+            try:
+                self._embed_timeout = float(env_val) if env_val else 10.0
+            except (ValueError, TypeError):
+                self._embed_timeout = 10.0
         self._chunks: list[dict[str, Any]] = []
         self._bm25_index: Any | None = None
         self._embedding_matrix: Any | None = None
