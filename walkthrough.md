@@ -1,65 +1,44 @@
-# Walkthrough: PR #282 — Kernel Skill ccba-issue-tree & Cross-Skill Referral Hooks
+# Walkthrough: PR #284 — Giao Thức TRIHT (Release Cleanliness & Hermetic Teardown Gate)
 
-## 1. Tổng Quan PR #282
-- **Branch:** `feat/ccba-issue-tree-and-cross-referrals` $\rightarrow$ `main`
-- **Tiêu đề:** `feat(skills): add ccba-issue-tree kernel skill and cross-skill referral hooks (#282)`
-- **PR liên quan:** [PR #282](https://github.com/vvChu/ccba-agent-platform/pull/282)
-- **Thể chế & Kiến trúc:** ADR-0035, ADR-0040, ADR-0047, ADR-0050, ADR-0057, ADR-0058, ADR-0059
+## 1. Tổng Quan PR #284
+- **Branch:** `feat/release-hermetic-cleanliness-gate` $\rightarrow$ `main`
+- **Tiêu đề:** `feat(release): implement TRIHT protocol cleanliness gate and hermetic scoped teardown`
+- **PR liên quan:** [PR #284](https://github.com/vvChu/ccba-agent-platform/pull/284)
+- **Thể chế & Kiến trúc:** ADR-0058 (Hard Completion Lock), ADR-0057 (Two-Stage Governance), TRIHT Protocol
 
 ---
 
-## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #282)
-
-- **Review IDs:** `PRR_kwDOQzfV088AAAABN9gBSg`, `PRR_kwDOQzfV088AAAABN9jCQw`, `PRR_kwDOQzfV088AAAABN9lC4w`
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #284)
 
 | ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
 |---|---|---|---|
-| `4033172362` | `.agents/skills/ccba-issue-tree/SKILL.md` | PR description states GPI = 14.50, but frontmatter shows raw sum S=4, K=2, A=1, P=1 (Total 8.0). Cần đồng bộ giá trị tính theo công thức trọng số ADR-0057. | **ĐÃ KHẮC PHỤC**: Đồng bộ toàn hệ thống. Đã cập nhật generator `compile_skills_docs.py` để tính điểm GPI có trọng số chuẩn xác: $S \times 2.5 + K \times 2.0 + A \times 2.0 - P \times 1.5 = 14.50$. |
-| `4033172414` | `.agents/skills/ccba-issue-tree/references/governed_lifecycle_guide.md` | Tiêu đề ghi 5-State lifecycle machine nhưng bảng và sơ đồ định nghĩa 6 trạng thái (`UNVERIFIED`, `IN_INVESTIGATION`, `VERIFIED_FACT`, `FALSIFIED`, `DECISION_READY`, `COMMITTED`). | **ĐÃ KHẮC PHỤC**: Cập nhật tiêu đề và nội dung thành "6-State Lifecycle Machine" (Ma Trận Vòng Đời 6 Trạng Thái) đồng bộ trong cả `governed_lifecycle_guide.md` và `SKILL.md`. |
-| `4033239718` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | `rank-bm25` là dependency bắt buộc trong `pyproject.toml`, việc nuốt `ImportError` che giấu lỗi cấu hình môi trường. | **ĐÃ KHẮC PHỤC**: Bỏ `try...except ImportError`, import trực tiếp `from rank_bm25 import BM25Okapi` để fail-fast rõ ràng. |
-| `4033501875` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | Hardcode `timeout=2.0` có thể gây timeout trong môi trường thực tế khi gọi API embedding. | **ĐÃ KHẮC PHỤC**: Tham số hóa `embed_timeout: float | None = None` với giá trị mặc định an toàn 10.0s, đồng thời hỗ trợ biến môi trường cấu hình `CCBA_EMBED_TIMEOUT`. |
-| `4033528975` | `scripts/governance/drift_auditor.py` | Fallback sang `git log -n 20` có thể lấy nhầm commit lịch sử không liên quan, che giấu drift thực tế. | **ĐÃ KHẮC PHỤC**: Loại bỏ fallback `-n 20`, chuyển sang kiểm tra tuần tự các ref so sánh nhánh hợp lệ (`origin/main..HEAD`, `origin/master..HEAD`, `main..HEAD`, `master..HEAD`). |
-| `4033575070` | `docs/skills/ccba-issue-tree.md` | Điểm đánh giá GPI hiển thị `Tổng: 8.0` (tổng số học) thay vì điểm trọng số ADR-0057 (GPI = 14.50). | **ĐÃ KHẮC PHỤC**: Nâng cấp `compile_skills_docs.py` để tính điểm trọng số chuẩn ADR-0057, tái biên dịch toàn bộ 73 tài liệu kỹ năng, `INDEX.md`, `llms.txt`, `llms-full.txt`, và `index.html`. |
-| `4033728795` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | `CCBA_EMBED_TIMEOUT` parse `float(env_val)` không có rào chắn, dễ crash nếu biến môi trường không phải số. | **ĐÃ KHẮC PHỤC**: Bao bọc `try...except (ValueError, TypeError)` với giá trị fallback mặc định an toàn 10.0s. |
-| `4033728854` | `.agents/skills/ccba-issue-tree/SKILL.md` | Bảng tham chiếu Level 3 hardcode đếm ("máy trạng thái 5 bước", "RACI 11 Ghế") không khớp thực tế. | **ĐÃ KHẮC PHỤC**: Loại bỏ các con số hardcode, thay bằng mô tả khái quát: "máy trạng thái vòng đời nhánh" và "ma trận RACI Hiến chương CCBA". |
-| `4033728889` | `.agents/skills/ccba-issue-tree/references/governed_lifecycle_guide.md` | Tiêu đề mục ghi "11 Ghế" nhưng bảng bên dưới liệt kê 12 vai trò, gây mâu thuẫn nội bộ. | **ĐÃ KHẮC PHỤC**: Cập nhật tiêu đề thành "Ma Trận RACI Ánh Xạ Các Ghế Trách Nhiệm Hiến Chương CCBA". |
-| `4033766353` | `packages/ccba-legal-intel/src/ccba_legal/federated_rag.py` | Parsing CCBA_EMBED_TIMEOUT via float(env_val) can raise ValueError and crash engine initialization if non-numeric. | **ĐÃ KHẮC PHỤC**: Đã bắt ngoại lệ `(ValueError, TypeError)` và ghi log cảnh báo khi giá trị env không hợp lệ, fallback về 10.0s. |
-| `4033796466` | `.agents/skills/ccba-issue-tree/SKILL.md` | Dòng 35 và 111 còn ghi "11 Ghế" không khớp bảng 12 vai trò; `walkthrough.md` dòng 33 cũng còn ghi RACI 11 Ghế. | **ĐÃ KHẮC PHỤC**: Đã loại bỏ số cứng "11 Ghế", quy chuẩn thành "các Ghế trách nhiệm Hiến chương CCBA" / "ma trận RACI Hiến chương CCBA". |
+| `4035452784` | `.agents/skills/ccba-release-feature/SKILL.md` | Lệnh `git checkout --no-pager main` không đúng cú pháp: `--no-pager` là global option của `git` và phải đứng sau `git` (`git --no-pager checkout main`). | **ĐÃ KHẮC PHỤC**: Đã cập nhật cú pháp chuẩn: `git --no-pager checkout main && git pull origin main` tại dòng 146 của `SKILL.md`. |
+| `4035452828` | `scripts/validation/check_release_cleanliness.py` | Nếu `git status` thất bại hàm đang `return []` (fail-open), khiến release gate hiểu nhầm repo sạch. | **ĐÃ KHẮC PHỤC**: Chuyển sang cơ chế "Fail-Closed" tuyệt đối: khi gặp `CalledProcessError` hoặc `FileNotFoundError`, trả về sentinel `[("!!", f"GIT_STATUS_FAILED: {e}")]` chặn đứng tiến trình release. |
+| `4035452859` | `scripts/validation/check_release_cleanliness.py` | Khối teardown ghép path mà không ràng buộc nằm trong `repo_root` (nguy cơ path traversal), và ignore_errors nuốt lỗi xóa. | **ĐÃ KHẮC PHỤC**: Thêm rào chắn an ninh `abs_path.resolve().relative_to(root.resolve())` chống path traversal, kiểm tra `not abs_path.exists()` sau xóa và cảnh báo lỗi nếu tệp vẫn tồn tại. |
+| `4035452897` | `scripts/tests/test_check_release_cleanliness.py` | Chưa có test bao phủ trường hợp `git status` thất bại (CalledProcessError / FileNotFoundError) kiểm chứng fail-closed. | **ĐÃ KHẮC PHỤC**: Bổ sung 2 unit tests `test_get_porcelain_status_git_error_fails_closed` và `test_get_porcelain_status_git_not_found_fails_closed` (11/11 tests pass). |
+| `4035869238` | `scripts/validation/check_release_cleanliness.py` | `run_post_check` tự động xóa tệp tracked nếu tên khớp `KNOWN_TEST_ARTIFACTS`. | **ĐÃ KHẮC PHỤC**: Đảm bảo tệp tracked bị `M/D/A/R/C/U` luôn luôn bị chặn (BLOCK) và không bao giờ bị xóa tự động. Chỉ tệp untracked (`??`) khớp danh mục cache mới được thu hồi an toàn. Đã bổ sung test `test_run_post_check_does_not_purge_tracked_modified_known_artifact`. |
+| `4035905024` | `scripts/validation/check_release_cleanliness.py` | Gọi `sys.stdout/sys.stderr.reconfigure()` ở module level vi phạm repo guidance và phá vỡ pytest I/O capture trên Windows. | **ĐÃ KHẮC PHỤC**: Di dời toàn bộ stream reconfiguration vào bên trong CLI entrypoint `main()`. |
 
 ---
 
-## 3. Các Thay Đổi Cốt Lõi
+## 3. Các Thay Đổi Cốt Lõi (Core Deliverables)
 
-### 3.1 Đóng Gói Kỹ Năng Hạt Nhân `ccba-issue-tree` (Tier 2B Standalone Kernel Skill)
-- **Phương pháp luận:** McKinsey MECE Issue Tree (Diagnostic Why-Tree, Solution How-Tree, Workplan What-Tree) tích hợp tầng vận hành Governed Lifecycle & ma trận RACI Hiến chương CCBA.
-- **Rào chắn:** ADR-0059 Verbatim Evidence Grounding, ADR-0058 Hard Completion Lock, ADR-0030 Context Budget Protection.
-- **Cấu trúc tài liệu bộc lộ dần:**
-  - `.agents/skills/ccba-issue-tree/SKILL.md`: Master skill definition.
-  - `references/tree_templates.md`: Mẫu cây và sơ đồ Mermaid chi tiết.
-  - `references/governed_lifecycle_guide.md`: Hướng dẫn vận hành 6 trạng thái vòng đời và ma trận bằng chứng.
-
-### 3.2 Mạng Lưới 7 Cross-Skill Referral Hooks
-Tích hợp móc nối điều hướng sang `/ccba-issue-tree` tại các điểm nút tư duy trọng yếu:
-1. `ccba-diagnosing-bugs`: Pha 3 (Chẩn đoán lỗi phức tạp đa dịch vụ $\rightarrow$ Why-Tree).
-2. `ccba-ai-qc`: Pha 3 (Xung đột kỹ thuật liên bộ môn & PCCC $\rightarrow$ Why-Tree + How-Tree).
-3. `ccba-legal-advisor`: Bước 1/2 (Tranh chấp hợp đồng Cấp độ 3 $\rightarrow$ Why-Tree chuỗi trách nhiệm + How-Tree giải pháp hòa giải/VIAC).
-4. `ccba-ask`: Bước 1 (Đầu mối tiếp nhận bài toán mở đa chiều $\rightarrow$ Issue Tree).
-5. `ccba-grilling`: Nhánh A & Biên giới phòng thủ (Xung đột kiến trúc $\ge 2$ lựa chọn $\rightarrow$ How-Tree).
-6. `bigbim-risk`: Bước 4 (Xung đột thông tin V2 & drift Unique ID $\rightarrow$ Why-Tree + How-Tree).
-7. `ccba-to-spec`: Bước 3 (Bóc tách công việc Epic lớn $\rightarrow$ What-Tree 4 nhãn MECE: ANALYSIS, DECISION, COMMITMENT, SYNTHESIS).
+1. **Cổng 0.1 (Pre-Flight Cleanliness Lock):** Chặn đứng quy trình trước khi chạy test nếu phát hiện tệp chưa commit, bảo toàn 100% mã nguồn của kỹ sư.
+2. **Cổng 0.3 (Post-Test Hermetic Scoped Teardown):** Đối soát trạng thái sau khi chạy integration tests, tự động thu hồi an toàn các cache kiểm thử đã biết (`embeddings.npy`, `ci_log.txt`, `tmp_*.json`) kèm cảnh báo vàng; chặn đứng nếu có bài test làm thay đổi mã nguồn hoặc tệp lạ.
+3. **Tiện ích CLI Chuyên Trách ([`check_release_cleanliness.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/validation/check_release_cleanliness.py)):** Xây dựng công cụ kiểm tra độc lập hỗ trợ `--phase pre` và `--phase post`, tương thích tuyệt đối Windows UTF-8 (`sys.stdout.reconfigure`), xử lý tệp qua `git status --porcelain -z` (null-terminated), fail-closed khi lỗi, và chống path traversal.
+4. **Nâng Cấp Kỹ Năng ([`ccba-release-feature`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-release-feature/SKILL.md)):** Tích hợp Cổng 0.1 và Cổng 0.3 vào Bước 0; bổ sung dọn dẹp tiến trình mồ côi (`ensure_single_instance('pytest')`) và `git --no-pager checkout main` cho Bước 3.2 chuyển nhánh an toàn.
+5. **Bộ Kiểm Thử Tự Động ([`test_check_release_cleanliness.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/tests/test_check_release_cleanliness.py)):** 11 unit tests kiểm tra toàn diện cả 2 phase pre/post, fail-closed, cách ly path traversal và bảo vệ tệp tracked (100% pass).
+6. **Giải Quyết Sự Cố CI Runner Treo & Architecture Drift:** Kế thừa bản vá process safety (`ancestor_pids` guard, CI bypass) từ PR #281 và đăng ký `scripts/validation/` vào `README.md`.
 
 ---
 
-## 4. Kết Quả Kiểm Thử & Kiểm Toán Tất Định (ADR-0058)
+## 4. Kết Quả Kiểm Định CI Cuối Cùng Trên GitHub Actions (PR #284)
 
-- **Local Verification:** `python -m ccba_harness verify-patch --preset ci` $\rightarrow$ ✅ 5/5 PASS (Exit Code 0).
-- **Harness CI Gates:** `python scripts/eval/run_harness_evals.py --all` $\rightarrow$ ✅ 7/7 GATES PASS (Exit Code 0).
-- **GitHub Actions CI (PR #282):**
-  - `Lint Markdown`: ✅ PASS
-  - `scan` (Security & Privacy): ✅ PASS
-  - `validate` (Documentation Check): ✅ PASS
-  - `Test - Python 3.10`: ✅ PASS (3m37s)
-  - `Test - Python 3.11`: ✅ PASS (3m17s)
-  - `Test - Python 3.12`: ✅ PASS (3m33s)
-- **Copilot PR Review Audit:** ✅ PASS (100% các ý kiến được giải trình và giải quyết triệt để).
+- **`validate` (Documentation Check):** ✅ PASS (24s)
+- **`scan` (Security & Privacy):** ✅ PASS (12s)
+- **`Lint Markdown`:** ✅ PASS (10s)
+- **`Test - Python 3.10`:** ✅ PASS (3m25s)
+- **`Test - Python 3.11`:** ✅ PASS (3m5s)
+- **`Test - Python 3.12`:** ✅ PASS (2m23s)
 
+**Tổng kết:** 6/6 Checks PASS 100%. Trạng thái `CLEAN` / `MERGEABLE`.
