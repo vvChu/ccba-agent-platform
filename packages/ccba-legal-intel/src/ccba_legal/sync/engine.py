@@ -114,11 +114,53 @@ class LegalSyncEngine:
         if explicit_path and explicit_path.exists():
             return explicit_path.resolve()
 
-        env_path = os.environ.get("CCBA_LEGAL_KNOWLEDGE_PATH")
+        env_path = os.environ.get("CCBA_LEGAL_KNOWLEDGE_PATH") or os.environ.get("CCBA_LEGAL_CORPUS_PATH")
         if env_path:
             p = Path(env_path)
             if p.exists():
+                if (p / "legal_docs").exists():
+                    return p.resolve()
+                elif p.name == "legal_docs":
+                    return p.parent.resolve()
                 return p.resolve()
+
+        # Hub-mediated discovery via workspace_context.yaml (KISS - Zero Extra Config)
+        for ctx_name in [".md/workspace_context.yaml", ".agents/workspace_context.yaml"]:
+            local_ctx = self.project_root / ctx_name
+            if local_ctx.is_file():
+                try:
+                    with open(local_ctx, encoding="utf-8") as f:
+                        ctx_data = yaml.safe_load(f) or {}
+                    proj_data = ctx_data.get("project", {}) if isinstance(ctx_data, dict) else {}
+                    hub_path_str = (
+                        ctx_data.get("hub_path")
+                        or (proj_data.get("hub_path") if isinstance(proj_data, dict) else None)
+                    )
+                    if hub_path_str:
+                        hub_p = Path(hub_path_str)
+                        if not hub_p.is_absolute():
+                            hub_p = (self.project_root / hub_p).resolve()
+                        for reg_name in ["spoke_registry_decrypted.yaml", "spoke_registry.yaml"]:
+                            spoke_reg = hub_p / ".md" / "data" / reg_name
+                            if spoke_reg.is_file():
+                                with open(spoke_reg, encoding="utf-8") as rf:
+                                    reg_content = yaml.safe_load(rf) or {}
+                                for sp in reg_content.get("spokes", []):
+                                    if isinstance(sp, dict) and (
+                                        sp.get("name") == "ccba-legal-knowledge"
+                                        or "legal-knowledge" in str(sp.get("name", "")).lower()
+                                        or sp.get("archetype") == "knowledge_corpus"
+                                    ):
+                                        p_str = sp.get("path")
+                                        if p_str:
+                                            cand = Path(p_str)
+                                            if cand.exists() and (
+                                                (cand / "legal_docs").exists()
+                                                or (cand / ".md" / "data" / "legal_registry.yaml").exists()
+                                            ):
+                                                return cand.resolve()
+                except Exception:
+                    pass
 
         candidates = [
             self.project_root.parent / "ccba-legal-knowledge",

@@ -28,10 +28,14 @@ def calculate_sha256(file_path: Path) -> str:
     return hash_sha.hexdigest()
 
 
-def is_port_open(port: int) -> bool:
+def is_port_open(port: int, timeout: float = 1.0) -> bool:
     """Check if TCP port is active."""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(("127.0.0.1", port)) == 0
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(timeout)
+            return s.connect_ex(("127.0.0.1", port)) == 0
+    except Exception:
+        return False
 
 
 def ensure_chrome_debug_port() -> bool:
