@@ -62,6 +62,7 @@
 - [research_and_studies/port_recommendations.md](research_and_studies/port_recommendations.md): Danh mục chi tiết đề xuất porting.
 - [research_and_studies/ai_gateway_quota_matrix_and_routing_architecture.md](research_and_studies/ai_gateway_quota_matrix_and_routing_architecture.md): Ma trận Quota và Kiến trúc Định tuyến AI Gateway Server Spark.
 - [research_and_studies/research-issue-232-federated-rag-adversarial.md](research_and_studies/research-issue-232-federated-rag-adversarial.md): Báo cáo Phản biện Kép (Dual-Agent Adversarial) cho Issue #232 — Federated Cross-Spoke Legal RAG Engine.
+- [research_and_studies/research-ccba-ai-module-architecture.md](research_and_studies/research-ccba-ai-module-architecture.md): Báo cáo Nghiên cứu Kiến trúc & Phân tích Đối kháng Module `ccba-ai` (ADR-0035, ADR-0055).
 
 ---
 
