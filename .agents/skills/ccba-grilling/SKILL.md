@@ -57,6 +57,7 @@ Sử dụng khi người dùng muốn rà quét điểm mù logic thiết kế, 
     3. Đặt từng câu hỏi một (one-by-one), chờ người dùng trả lời xong mới chuyển sang câu tiếp theo. **Tuyệt đối không in ra danh sách nhiều câu hỏi cùng lúc.**
     4. Đối với mỗi câu hỏi, Agent phải đưa ra phương án đề xuất của mình trước (recommended answer) làm cơ sở tham chiếu.
     5. **Nguyên tắc tra cứu:** Nếu một dữ kiện thực tế (*fact*) có thể tìm thấy bằng cách khám phá codebase, Agent phải tự tra cứu thay vì hỏi người dùng. Tuy nhiên, các quyết định thiết kế (*decisions*) là của người dùng — hãy đặt từng câu hỏi quyết định cho người dùng và chờ phản hồi.
+    6. **Điểm dừng leo thang (Escalation Checkpoint):** Khi phát hiện $\ge 2$ phương án kiến trúc mâu thuẫn hoặc sự đánh đổi lớn (major trade-offs), đề xuất triệu hồi [`/ccba-issue-tree`](../ccba-issue-tree/SKILL.md) (Solution How-Tree) để lượng hóa và xếp hạng các phương án qua ma trận Giá trị × Độ phức tạp × Rủi ro × KISS trước khi tiếp tục.
 
 ### Nhánh B: Rule Compliance Stress-Test (Grill with Docs)
 Sử dụng khi người dùng cung cấp các tài liệu quy chuẩn (rules, specifications, standards, e.g., `AGENTS.md`, `legal_registry.yaml`, các spec nghiệp vụ trong `.md/knowledge/`) và yêu cầu đối soát.
@@ -99,6 +100,7 @@ Sử dụng khi người dùng muốn hội tụ về một thiết kế giao di
 4. **Tự động tra cứu dữ kiện (Facts vs. Decisions):**
    - **Facts (Dữ kiện thực tế):** Tra cứu từ codebase, logs, tệp tin hoặc khởi chạy sub-agent (`research`) tìm kiếm dưới nền. **Tuyệt đối không hỏi người dùng bất kỳ dữ kiện nào có thể tự tra cứu.**
    - **Decisions (Quyết định):** Dành riêng cho người dùng lựa chọn và duyệt.
+5. **Escalation khi xung đột phương án:** Khi Frontier xuất hiện $\ge 2$ phương án kiến trúc cạnh tranh gay gắt hoặc sự đánh đổi lớn, đề xuất triệu hồi [`/ccba-issue-tree`](../ccba-issue-tree/SKILL.md) (Solution How-Tree) để chấm điểm và xếp hạng giải pháp qua ma trận Giá trị × Độ phức tạp × Rủi ro × KISS trước khi tiếp tục.
 
 ---
 

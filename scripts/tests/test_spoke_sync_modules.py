@@ -687,7 +687,9 @@ def test_check_hub_import_depth_package_parity_and_tightened_rules(tmp_path: Pat
                     and not child.name.startswith((".", "_"))
                     and not child.name.endswith(".egg-info")
                 ):
-                    assert child.name in HUB_PACKAGES, f"Package {child.name} ({p.name}) not in HUB_PACKAGES"
+                    assert child.name in HUB_PACKAGES, (
+                        f"Package {child.name} ({p.name}) not in HUB_PACKAGES"
+                    )
 
     # Canonical fix: ccba_legal is present, legacy ccba_legal_intel is absent
     assert "ccba_legal" in HUB_PACKAGES

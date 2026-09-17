@@ -23,7 +23,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-sync-upstream
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=3.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=3.0 | P=1.0 (GPI: 20.50)` |
 
 ---
 

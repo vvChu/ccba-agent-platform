@@ -23,7 +23,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-ai-qc-pccc-audit
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_qc` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 15.50)` |
 
 ---
 
