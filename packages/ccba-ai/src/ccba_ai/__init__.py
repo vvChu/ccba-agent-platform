@@ -40,7 +40,13 @@ from ccba_ai.fallback import (
     map_model_for_tier,
 )
 from ccba_ai.hooks.privacy_guard import PrivacyGuardHook
-from ccba_ai.llm_utils import LLMParseError, parse_llm_json, strip_think_tags
+from ccba_ai.llm_utils import (
+    LLMParseError,
+    extract_thinking,
+    extract_thinking_and_content,
+    parse_llm_json,
+    strip_think_tags,
+)
 from ccba_ai.mock_provider import MockProvider
 from ccba_ai.models import (
     AuditFinding,
@@ -78,6 +84,7 @@ chat_multi = ai.chat_multi
 models = ai.models
 transcribe = ai.transcribe
 encode_image = ai.encode_image
+embed = ai.embed
 
 
 __all__ = [
@@ -95,6 +102,7 @@ __all__ = [
     "models",
     "transcribe",
     "encode_image",
+    "embed",
     # Routing & Archetypes & Fallback
     "ModelArchetype",
     "choose_model",
@@ -114,6 +122,8 @@ __all__ = [
     "resolve_latest_compatible_model",
     # Utilities & Prompting
     "strip_think_tags",
+    "extract_thinking",
+    "extract_thinking_and_content",
     "parse_llm_json",
     "LLMParseError",
     "xml_envelope",
