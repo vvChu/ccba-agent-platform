@@ -330,6 +330,3 @@ def test_bundle_provenance_validation(tmp_path: Path) -> None:
     ok, msg = validate_bundle_provenance(invalid_bundle)
     assert ok is False
     assert "Thiếu thuộc tính source_assets" in msg
-
-
-

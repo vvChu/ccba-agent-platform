@@ -654,6 +654,26 @@ skills:
   skill_path: .agents/skills/ccba-issue-to-hub/SKILL.md
   command: /ccba-issue-to-hub
   tier: kernel
+- name: ccba-issue-tree
+  bundle: _core
+  description: Phân rã bài toán phức tạp theo cây vấn đề McKinsey MECE (Why, What,
+    How) và quản trị vòng đời kiểm chứng giả thuyết.
+  triggers:
+  - issue tree
+  - mece
+  - cây vấn đề
+  - why tree
+  - what tree
+  - how tree
+  - root cause analysis
+  - rca
+  - phân tích nguyên nhân
+  - phân rã vấn đề
+  - giải quyết vấn đề
+  - hypothesis testing
+  skill_path: .agents/skills/ccba-issue-tree/SKILL.md
+  command: /ccba-issue-tree
+  tier: kernel
 - name: ccba-knowledge-loop
   bundle: _core
   description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm

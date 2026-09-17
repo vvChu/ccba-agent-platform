@@ -1,11 +1,11 @@
 # CCBA Agent Platform — Full Consolidated Skills Specification
 
-> Complete documentation of all 72 active skills on the CCBA Agent Services Platform.
+> Complete documentation of all 73 active skills on the CCBA Agent Services Platform.
 > Generated for single-pass ingestion by AI coding agents and RAG indexers.
 
 ================================================================================
 
-<!-- SKILL 1/72: platform-loader -->
+<!-- SKILL 1/73: platform-loader -->
 # platform-loader
 
 > **Mô tả ngắn**: Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn bộ skills và rules.
@@ -31,7 +31,7 @@ python scripts/spoke/sync_spoke.py --skills platform-loader
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 17.50)` |
 
 ---
 
@@ -106,7 +106,7 @@ python scripts/validate_skills.py --file .agents/skills/platform-loader/SKILL.md
 
 ================================================================================
 
-<!-- SKILL 2/72: bigbim-classification -->
+<!-- SKILL 2/73: bigbim-classification -->
 # bigbim-classification
 
 > **Mô tả ngắn**: Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass 200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
@@ -132,7 +132,7 @@ python scripts/spoke/sync_spoke.py --skills bigbim-classification
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_bim` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 
@@ -216,7 +216,7 @@ python scripts/validate_skills.py --file .agents/skills/bigbim-classification/SK
 
 ================================================================================
 
-<!-- SKILL 3/72: bigbim-governance -->
+<!-- SKILL 3/73: bigbim-governance -->
 # bigbim-governance
 
 > **Mô tả ngắn**: Guardrails quản trị thông tin BIGBIM. Cưỡng chế tuân thủ Hiến pháp Sợi Chỉ Vàng, rào chắn Sợi Chỉ Đỏ và quy chuẩn định danh Unique ID từ giai đoạn A0.
@@ -242,7 +242,7 @@ python scripts/spoke/sync_spoke.py --skills bigbim-governance
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_bim` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 
@@ -325,7 +325,7 @@ python scripts/validate_skills.py --file .agents/skills/bigbim-governance/SKILL.
 
 ================================================================================
 
-<!-- SKILL 4/72: bigbim-rase -->
+<!-- SKILL 4/73: bigbim-rase -->
 # bigbim-rase
 
 > **Mô tả ngắn**: Tự động phân tích RASE (Requirement, Applicability, Selection, Exception) cho dự án BIM dựa trên sơ đồ dữ liệu IFC4X3 và bộ Quantity Take-Off (Qto_xxx).
@@ -351,7 +351,7 @@ python scripts/spoke/sync_spoke.py --skills bigbim-rase
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_bim` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (Tổng: 13.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (GPI: 24.50)` |
 
 ---
 
@@ -429,7 +429,7 @@ python scripts/validate_skills.py --file .agents/skills/bigbim-rase/SKILL.md --e
 
 ================================================================================
 
-<!-- SKILL 5/72: bigbim-risk -->
+<!-- SKILL 5/73: bigbim-risk -->
 # bigbim-risk
 
 > **Mô tả ngắn**: Phát hiện "Mâu thuẫn thông tin" (Information Conflict) phi hình học tại bước phối hợp thông tin V2 - Coordination, vượt ngoài giới hạn Clash Detection truyền thống.
@@ -455,7 +455,7 @@ python scripts/spoke/sync_spoke.py --skills bigbim-risk
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_bim` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 
@@ -535,7 +535,7 @@ python scripts/validate_skills.py --file .agents/skills/bigbim-risk/SKILL.md --e
 
 ================================================================================
 
-<!-- SKILL 6/72: bigbim-vbpl-digest -->
+<!-- SKILL 6/73: bigbim-vbpl-digest -->
 # bigbim-vbpl-digest
 
 > **Mô tả ngắn**: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024, ISO 19650-1/2/3/5, QCVN liên quan.
@@ -561,7 +561,7 @@ python scripts/spoke/sync_spoke.py --skills bigbim-vbpl-digest
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_bim` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 18.00)` |
 
 ---
 
@@ -641,7 +641,7 @@ python scripts/validate_skills.py --file .agents/skills/bigbim-vbpl-digest/SKILL
 
 ================================================================================
 
-<!-- SKILL 7/72: ccba-academic-writing -->
+<!-- SKILL 7/73: ccba-academic-writing -->
 # ccba-academic-writing
 
 > **Mô tả ngắn**: Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa học theo chuẩn quốc tế (IMRAD, CARS model).
@@ -667,7 +667,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-academic-writing
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -740,7 +740,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-academic-writing/SK
 
 ================================================================================
 
-<!-- SKILL 8/72: ccba-adr-lifecycle -->
+<!-- SKILL 8/73: ccba-adr-lifecycle -->
 # ccba-adr-lifecycle
 
 > **Mô tả ngắn**: Autonomous lifecycle governance for Architecture Decision Records (ADRs) - Scaffolding, status cascading, Living Traceability Matrix compilation, and CI parity validation.
@@ -766,7 +766,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-adr-lifecycle
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 
@@ -845,7 +845,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-adr-lifecycle/SKILL
 
 ================================================================================
 
-<!-- SKILL 9/72: ccba-ai-gateway-sdk -->
+<!-- SKILL 9/73: ccba-ai-gateway-sdk -->
 # ccba-ai-gateway-sdk
 
 > **Mô tả ngắn**: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endpoint. Bao gồm Python package ccba-ai.
@@ -871,7 +871,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-ai-gateway-sdk
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 
@@ -953,7 +953,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ai-gateway-sdk/SKIL
 
 ================================================================================
 
-<!-- SKILL 10/72: ccba-ai-pdf-preprocessor -->
+<!-- SKILL 10/73: ccba-ai-pdf-preprocessor -->
 # ccba-ai-pdf-preprocessor
 
 > **Mô tả ngắn**: Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking) và Tiling cho AI Vision.
@@ -979,7 +979,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-ai-pdf-preprocessor
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_qc` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 
@@ -1056,7 +1056,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ai-pdf-preprocessor
 
 ================================================================================
 
-<!-- SKILL 11/72: ccba-ai-qc -->
+<!-- SKILL 11/73: ccba-ai-qc -->
 # ccba-ai-qc
 
 > **Mô tả ngắn**: Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View Vision, Heat Map Report) qua Deep Seam QCAuditPipeline.
@@ -1163,7 +1163,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ai-qc/SKILL.md --en
 
 ================================================================================
 
-<!-- SKILL 12/72: ccba-ai-qc-pccc-audit -->
+<!-- SKILL 12/73: ccba-ai-qc-pccc-audit -->
 # ccba-ai-qc-pccc-audit
 
 > **Mô tả ngắn**: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ chế Semantic Map-Reduce.
@@ -1189,7 +1189,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-ai-qc-pccc-audit
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_qc` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 15.50)` |
 
 ---
 
@@ -1271,7 +1271,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ai-qc-pccc-audit/SK
 
 ================================================================================
 
-<!-- SKILL 13/72: ccba-api-circuit-breaker -->
+<!-- SKILL 13/73: ccba-api-circuit-breaker -->
 # ccba-api-circuit-breaker
 
 > **Mô tả ngắn**: Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch pipelines. Tránh quota exhaustion, cascade failures, và infinite retry loops khi gọi AI Gateway hàng loạt.
@@ -1297,7 +1297,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-api-circuit-breaker
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 
@@ -1378,7 +1378,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-api-circuit-breaker
 
 ================================================================================
 
-<!-- SKILL 14/72: ccba-append-only-logger -->
+<!-- SKILL 14/73: ccba-append-only-logger -->
 # ccba-append-only-logger
 
 > **Mô tả ngắn**: Thread-safe, append-only logging pattern cho Python pipeline multi-daemon. Tránh race condition và encoding corruption khi nhiều process ghi cùng lúc vào shared log file.
@@ -1404,7 +1404,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-append-only-logger
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 17.50)` |
 
 ---
 
@@ -1482,7 +1482,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-append-only-logger/
 
 ================================================================================
 
-<!-- SKILL 15/72: ccba-ask -->
+<!-- SKILL 15/73: ccba-ask -->
 # ccba-ask
 
 > **Mô tả ngắn**: Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu cầu phát triển.
@@ -1508,7 +1508,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-ask
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -1588,7 +1588,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ask/SKILL.md --enfo
 
 ================================================================================
 
-<!-- SKILL 16/72: ccba-autoresearch -->
+<!-- SKILL 16/73: ccba-autoresearch -->
 # ccba-autoresearch
 
 > **Mô tả ngắn**: Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet Auto-Tuner) lấy cảm hứng từ karpathy/autoresearch.
@@ -1692,7 +1692,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-autoresearch/SKILL.
 
 ================================================================================
 
-<!-- SKILL 17/72: ccba-build-skill -->
+<!-- SKILL 17/73: ccba-build-skill -->
 # ccba-build-skill
 
 > **Mô tả ngắn**: Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói sinh Skill mới đạt chuẩn CCBA.
@@ -1718,7 +1718,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-build-skill
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -1793,7 +1793,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-build-skill/SKILL.m
 
 ================================================================================
 
-<!-- SKILL 18/72: ccba-code-review -->
+<!-- SKILL 18/73: ccba-code-review -->
 # ccba-code-review
 
 > **Mô tả ngắn**: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells) và Spec (Spec/Requirements).
@@ -1819,7 +1819,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-code-review
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -1899,7 +1899,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-code-review/SKILL.m
 
 ================================================================================
 
-<!-- SKILL 19/72: ccba-codebase-design -->
+<!-- SKILL 19/73: ccba-codebase-design -->
 # ccba-codebase-design
 
 > **Mô tả ngắn**: Shared vocabulary for designing deep modules (locality, depth, leverage, seams) to improve testability and code quality. Reference skill.
@@ -1925,7 +1925,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-codebase-design
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -2009,7 +2009,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-codebase-design/SKI
 
 ================================================================================
 
-<!-- SKILL 20/72: ccba-completion-checklist -->
+<!-- SKILL 20/73: ccba-completion-checklist -->
 # ccba-completion-checklist
 
 > **Mô tả ngắn**: Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện hành. Hỗ trợ xuất Markdown và Word (.docx).
@@ -2035,7 +2035,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-completion-checklist
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 18.00)` |
 
 ---
 
@@ -2113,7 +2113,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-completion-checklis
 
 ================================================================================
 
-<!-- SKILL 21/72: ccba-contribute-to-hub -->
+<!-- SKILL 21/73: ccba-contribute-to-hub -->
 # ccba-contribute-to-hub
 
 > **Mô tả ngắn**: Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
@@ -2139,7 +2139,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-contribute-to-hub
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -2220,7 +2220,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-contribute-to-hub/S
 
 ================================================================================
 
-<!-- SKILL 22/72: ccba-copywriting -->
+<!-- SKILL 22/73: ccba-copywriting -->
 # ccba-copywriting
 
 > **Mô tả ngắn**: Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa và áp dụng các công thức viết thuyết phục (AIDA, PAS).
@@ -2246,7 +2246,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-copywriting
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -2326,7 +2326,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-copywriting/SKILL.m
 
 ================================================================================
 
-<!-- SKILL 23/72: ccba-create-pr -->
+<!-- SKILL 23/73: ccba-create-pr -->
 # ccba-create-pr
 
 > **Mô tả ngắn**: Kiểm tra chất lượng code (Shift-Left), Main Branch Guard, đẩy code và mở GitHub Pull Request kèm rào chắn Dual-Gate CI & Copilot Review
@@ -2352,7 +2352,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-create-pr
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -2429,7 +2429,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-create-pr/SKILL.md 
 
 ================================================================================
 
-<!-- SKILL 24/72: ccba-design -->
+<!-- SKILL 24/73: ccba-design -->
 # ccba-design
 
 > **Mô tả ngắn**: Design brand identity, logos, banners, and visual assets. Use for brand systems, design tokens, corporate identity programs. Not for UI code patterns.
@@ -2455,7 +2455,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-design
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -2537,7 +2537,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-design/SKILL.md --e
 
 ================================================================================
 
-<!-- SKILL 25/72: ccba-diagnosing-bugs -->
+<!-- SKILL 25/73: ccba-diagnosing-bugs -->
 # ccba-diagnosing-bugs
 
 > **Mô tả ngắn**: Diagnosis loop for hard bugs and performance regressions. Use when the user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
@@ -2563,7 +2563,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-diagnosing-bugs
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
 ---
 
@@ -2641,7 +2641,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-diagnosing-bugs/SKI
 
 ================================================================================
 
-<!-- SKILL 26/72: ccba-docs-manager -->
+<!-- SKILL 26/73: ccba-docs-manager -->
 # ccba-docs-manager
 
 > **Mô tả ngắn**: Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
@@ -2667,7 +2667,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-docs-manager
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -2744,7 +2744,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-docs-manager/SKILL.
 
 ================================================================================
 
-<!-- SKILL 27/72: ccba-domain-modeling -->
+<!-- SKILL 27/73: ccba-domain-modeling -->
 # ccba-domain-modeling
 
 > **Mô tả ngắn**: Build, refine, and maintain the project's domain model, ubiquitous language, and record architectural decisions (ADRs).
@@ -2770,7 +2770,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-domain-modeling
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -2846,7 +2846,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-domain-modeling/SKI
 
 ================================================================================
 
-<!-- SKILL 28/72: ccba-eval-gate -->
+<!-- SKILL 28/73: ccba-eval-gate -->
 # ccba-eval-gate
 
 > **Mô tả ngắn**: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động sửa lỗi (Self-Healing Loop).
@@ -2872,7 +2872,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-eval-gate
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -2951,7 +2951,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-eval-gate/SKILL.md 
 
 ================================================================================
 
-<!-- SKILL 29/72: ccba-excalidraw-diagram -->
+<!-- SKILL 29/73: ccba-excalidraw-diagram -->
 # ccba-excalidraw-diagram
 
 > **Mô tả ngắn**: Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian và excalidraw.com.
@@ -2977,7 +2977,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-excalidraw-diagram
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=4.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=4.0 | A=1.0 | P=1.0 (GPI: 16.00)` |
 
 ---
 
@@ -3050,7 +3050,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-excalidraw-diagram/
 
 ================================================================================
 
-<!-- SKILL 30/72: ccba-file-stability-guard -->
+<!-- SKILL 30/73: ccba-file-stability-guard -->
 # ccba-file-stability-guard
 
 > **Mô tả ngắn**: Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước thực tế thay vì time.sleep() — dành cho Google Drive, OneDrive, SharePoint.
@@ -3076,7 +3076,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-file-stability-guard
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 17.50)` |
 
 ---
 
@@ -3154,7 +3154,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-file-stability-guar
 
 ================================================================================
 
-<!-- SKILL 31/72: ccba-git-guardrails -->
+<!-- SKILL 31/73: ccba-git-guardrails -->
 # ccba-git-guardrails
 
 > **Mô tả ngắn**: Guardrails to block or request explicit user permission before executing dangerous git operations (force push, hard reset, clean, etc.) via terminal.
@@ -3180,7 +3180,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-git-guardrails
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -3258,7 +3258,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-git-guardrails/SKIL
 
 ================================================================================
 
-<!-- SKILL 32/72: ccba-graduate-rd -->
+<!-- SKILL 32/73: ccba-graduate-rd -->
 # ccba-graduate-rd
 
 > **Mô tả ngắn**: Quy trình cưỡng chế chuyển hóa mã nguồn R&D thành Deep Seam Production, tích hợp /boost, /teamwork và mở PR tự động.
@@ -3361,7 +3361,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-graduate-rd/SKILL.m
 
 ================================================================================
 
-<!-- SKILL 33/72: ccba-grilling -->
+<!-- SKILL 33/73: ccba-grilling -->
 # ccba-grilling
 
 > **Mô tả ngắn**: Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy chuẩn (Grill with Docs), hoặc hội tụ UI qua prototype trực quan.
@@ -3387,7 +3387,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-grilling
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
 ---
 
@@ -3473,7 +3473,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-grilling/SKILL.md -
 
 ================================================================================
 
-<!-- SKILL 34/72: ccba-handoff -->
+<!-- SKILL 34/73: ccba-handoff -->
 # ccba-handoff
 
 > **Mô tả ngắn**: Đóng gói và tổng hợp phiên làm việc hiện tại thành tài liệu Handoff chuẩn mực để Agent tiếp theo tiếp quản liền mạch.
@@ -3499,7 +3499,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-handoff
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -3574,7 +3574,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-handoff/SKILL.md --
 
 ================================================================================
 
-<!-- SKILL 35/72: ccba-hybrid-rag-search -->
+<!-- SKILL 35/73: ccba-hybrid-rag-search -->
 # ccba-hybrid-rag-search
 
 > **Mô tả ngắn**: Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) + RRF Fusion. Đúc rút từ VvC Ground Truth pipeline — độ chính xác cao hơn pure BM25 đơn thuần 20x.
@@ -3600,7 +3600,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-hybrid-rag-search
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 
@@ -3679,7 +3679,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-hybrid-rag-search/S
 
 ================================================================================
 
-<!-- SKILL 36/72: ccba-implement -->
+<!-- SKILL 36/73: ccba-implement -->
 # ccba-implement
 
 > **Mô tả ngắn**: Implement a piece of work based on a spec or set of tickets.
@@ -3782,7 +3782,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-implement/SKILL.md 
 
 ================================================================================
 
-<!-- SKILL 37/72: ccba-init-spoke -->
+<!-- SKILL 37/73: ccba-init-spoke -->
 # ccba-init-spoke
 
 > **Mô tả ngắn**: Khởi tạo một dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform
@@ -3808,7 +3808,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-init-spoke
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
 ---
 
@@ -3886,7 +3886,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-init-spoke/SKILL.md
 
 ================================================================================
 
-<!-- SKILL 38/72: ccba-issue-to-hub -->
+<!-- SKILL 38/73: ccba-issue-to-hub -->
 # ccba-issue-to-hub
 
 > **Mô tả ngắn**: Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ Spoke lên Hub dưới dạng GitHub Issue
@@ -3912,7 +3912,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-issue-to-hub
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -3991,7 +3991,116 @@ python scripts/validate_skills.py --file .agents/skills/ccba-issue-to-hub/SKILL.
 
 ================================================================================
 
-<!-- SKILL 39/72: ccba-knowledge-loop -->
+<!-- SKILL 39/73: ccba-issue-tree -->
+# ccba-issue-tree
+
+> **Mô tả ngắn**: Phân rã bài toán phức tạp theo cây vấn đề McKinsey MECE (Why, What, How) và quản trị vòng đời kiểm chứng giả thuyết.
+
+---
+
+## 1. Action Header & Kích Hoạt Nhanh
+
+### Cú pháp Lệnh (Slash Command)
+```bash
+/ccba-issue-tree
+```
+
+### Đồng bộ sang Phân vùng Spoke
+```bash
+python scripts/spoke/sync_spoke.py --skills ccba-issue-tree
+```
+
+### Thông Số & Huy Hiệu Kỹ Năng
+| Thuộc tính | Chi tiết |
+| :--- | :--- |
+| **Cổng Điều Hướng (Portal)** | ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân |
+| **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
+| **Gói Bundle** | `_core` |
+| **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
+
+---
+
+## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
+
+### Mục Đích Hoạt Động
+Phân rã bài toán phức tạp theo cây vấn đề McKinsey MECE (Why, What, How) và quản trị vòng đời kiểm chứng giả thuyết.
+
+Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
+
+### Rào Chắn Bất Biến (Platform Invariants)
+1. **Bảo Vệ Ngân Sách Ngữ Cảnh (ADR-0030)**: Tệp `SKILL.md` của kỹ năng chỉ chứa hướng dẫn tác nghiệp cốt lõi, không chứa văn xuôi tiếp thị hay nội dung dư thừa gây tràn Context Window.
+2. **Khóa Cứng Kỷ Luật Hoàn Thành (ADR-0058)**: Agent tuyệt đối không được báo cáo hoàn thành nhiệm vụ nếu bất kỳ lệnh kiểm thử tự động nào trả về mã lỗi khác 0 (`exit code != 0`).
+3. **Cô Lập Vùng Ghi (Artifact Scope)**: Mọi tệp thành phẩm sinh ra phải nằm trong thư mục quy định của dự án, không làm ô nhiễm thư mục gốc (Project Root).
+4. **Bảo Mật Bí Mật (Zero Secret Leaks)**: Tuyệt đối không hardcode API Keys, mật khẩu hoặc khóa chứng thực vào bất kỳ tệp tài liệu hay mã nguồn nào.
+
+---
+
+## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
+
+### Từ Khóa Kích Hoạt (Triggers)
+- `issue tree`
+- `mece`
+- `cây vấn đề`
+- `why tree`
+- `what tree`
+- `how tree`
+- `root cause analysis`
+- `rca`
+- `phân tích nguyên nhân`
+- `phân rã vấn đề`
+- `giải quyết vấn đề`
+- `hypothesis testing`
+
+### Ngữ Cảnh Khuyến Nghị Triệu Hồi
+- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Phân rã bài toán đa chiều theo cấu trúc cây MECE và quản trị kiểm chứng giả thuyết.
+- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Vấn đề phức tạp / Sự cố chưa rõ nguyên nhân / Yêu cầu đa chiều**
+
+### Khi Nào KHÔNG Nên Dùng (Anti-patterns)
+- Không dùng nếu cần tư vấn định hướng ban đầu: hãy gọi `/ccba-ask`.
+- Không tự ý sửa đổi thủ công định nghĩa kỹ năng nếu gặp lỗi: hãy dùng `/ccba-skill-repair`.
+
+---
+
+## 4. Vị Trí Trong Chuỗi Giá Trị (The Pipeline Trail)
+
+Kỹ năng `ccba-issue-tree` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
+
+```text
+[ Vấn đề phức tạp / Sự cố chưa rõ nguyên nhân / Yêu cầu đa chiều ]
+          │
+          ▼
+    >>> [ ccba-issue-tree ] <<<  (Phân rã bài toán đa chiều theo cấu trúc cây MECE và quản trị kiểm chứng giả thuyết.)
+          │
+          ▼
+[ ccba-grilling / ccba-to-spec / Kỹ năng chuyên biệt các bộ môn ]
+```
+
+- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Vấn đề phức tạp / Sự cố chưa rõ nguyên nhân / Yêu cầu đa chiều`.
+- **Thực thi (In-flight)**: Áp dụng các quy tắc kỹ thuật và công cụ tự động hóa để sản sinh kết quả chuẩn mực.
+- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `ccba-grilling / ccba-to-spec / Kỹ năng chuyên biệt các bộ môn`.
+
+---
+
+## 5. Khóa Cứng Kỷ Luật & Tiêu Chí Hoàn Thành (ADR-0058)
+
+### Lệnh Kiểm Thử Tự Động Bắt Buộc
+Mọi thay đổi liên quan đến kỹ năng này bắt buộc phải vượt qua toàn bộ các kiểm thử tự động sau:
+```bash
+python -m ccba_harness verify-patch --preset skill
+python scripts/validate_skills.py --file .agents/skills/ccba-issue-tree/SKILL.md --enforce-gpi
+```
+
+### Danh Mục Kiểm Thức Hoàn Thành (Definition of Done - DoD)
+- [ ] Lệnh kiểm chứng `verify-patch` trả về mã thoát `exit code 0`.
+- [ ] Toàn bộ thuộc tính frontmatter trong `SKILL.md` đồng bộ 100% với `catalog.yaml`.
+- [ ] Không có liên kết nội bộ bị đứt gãy hoặc tham chiếu file không tồn tại.
+- [ ] Thành phẩm sinh ra nằm gọn trong thư mục đích, tuân thủ nguyên tắc KISS.
+
+
+================================================================================
+
+<!-- SKILL 40/73: ccba-knowledge-loop -->
 # ccba-knowledge-loop
 
 > **Mô tả ngắn**: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm → Wayfinder → Exec)
@@ -4090,7 +4199,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-knowledge-loop/SKIL
 
 ================================================================================
 
-<!-- SKILL 40/72: ccba-legal-advisor -->
+<!-- SKILL 41/73: ccba-legal-advisor -->
 # ccba-legal-advisor
 
 > **Mô tả ngắn**: Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.4.
@@ -4116,7 +4225,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-legal-advisor
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 
@@ -4197,7 +4306,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-legal-advisor/SKILL
 
 ================================================================================
 
-<!-- SKILL 41/72: ccba-legal-document-tracker -->
+<!-- SKILL 42/73: ccba-legal-document-tracker -->
 # ccba-legal-document-tracker
 
 > **Mô tả ngắn**: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine và Registry.
@@ -4223,7 +4332,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-legal-document-tracker
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 12.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 22.50)` |
 
 ---
 
@@ -4304,7 +4413,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-legal-document-trac
 
 ================================================================================
 
-<!-- SKILL 42/72: ccba-legal-ingest -->
+<!-- SKILL 43/73: ccba-legal-ingest -->
 # ccba-legal-ingest
 
 > **Mô tả ngắn**: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation, and 15-Gate CI verification workflow.
@@ -4330,7 +4439,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-legal-ingest
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (Tổng: 13.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (GPI: 24.50)` |
 
 ---
 
@@ -4412,7 +4521,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-legal-ingest/SKILL.
 
 ================================================================================
 
-<!-- SKILL 43/72: ccba-legal-intel -->
+<!-- SKILL 44/73: ccba-legal-intel -->
 # ccba-legal-intel
 
 > **Mô tả ngắn**: Autonomous legal intelligence agent to crawl, diff, and generate compliance checklists from Vietnamese legal documents.
@@ -4438,7 +4547,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-legal-intel
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (Tổng: 13.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=4.0 | P=1.0 (GPI: 24.50)` |
 
 ---
 
@@ -4515,7 +4624,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-legal-intel/SKILL.m
 
 ================================================================================
 
-<!-- SKILL 44/72: ccba-llm-pipeline-patterns -->
+<!-- SKILL 45/73: ccba-llm-pipeline-patterns -->
 # ccba-llm-pipeline-patterns
 
 > **Mô tả ngắn**: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đúc rút từ VvC LLM OS (v5.1→v8.15, 2026).
@@ -4541,7 +4650,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-llm-pipeline-patterns
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 18.00)` |
 
 ---
 
@@ -4621,7 +4730,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-llm-pipeline-patter
 
 ================================================================================
 
-<!-- SKILL 45/72: ccba-markdown-document-processing -->
+<!-- SKILL 46/73: ccba-markdown-document-processing -->
 # ccba-markdown-document-processing
 
 > **Mô tả ngắn**: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep Seam ConversionPipeline.
@@ -4647,7 +4756,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-markdown-document-processing
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 15.50)` |
 
 ---
 
@@ -4722,7 +4831,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-markdown-document-p
 
 ================================================================================
 
-<!-- SKILL 46/72: ccba-maskara -->
+<!-- SKILL 47/73: ccba-maskara -->
 # ccba-maskara
 
 > **Mô tả ngắn**: Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords, private keys) trong files/logs và cài đặt guardrails bảo mật.
@@ -4748,7 +4857,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-maskara
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 
@@ -4825,7 +4934,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-maskara/SKILL.md --
 
 ================================================================================
 
-<!-- SKILL 47/72: ccba-mermaid-diagram -->
+<!-- SKILL 48/73: ccba-mermaid-diagram -->
 # ccba-mermaid-diagram
 
 > **Mô tả ngắn**: Tạo sơ đồ Mermaid đạt chuẩn học thuật Academic Grayscale, an toàn cú pháp (subgraph style, escaped labels, non-flowcharts) cho tài liệu và xuất bản.
@@ -4851,7 +4960,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-mermaid-diagram
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=4.0 | A=2.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=4.0 | A=2.0 | P=1.0 (GPI: 18.00)` |
 
 ---
 
@@ -4927,7 +5036,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-mermaid-diagram/SKI
 
 ================================================================================
 
-<!-- SKILL 48/72: ccba-new-feature -->
+<!-- SKILL 49/73: ccba-new-feature -->
 # ccba-new-feature
 
 > **Mô tả ngắn**: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session sạch (Factory Model)
@@ -5026,7 +5135,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-new-feature/SKILL.m
 
 ================================================================================
 
-<!-- SKILL 49/72: ccba-notebooklm-connector -->
+<!-- SKILL 50/73: ccba-notebooklm-connector -->
 # ccba-notebooklm-connector
 
 > **Mô tả ngắn**: Interact with Google NotebookLM to import YouTube, URLs, PDFs, and Drive docs, perform RAG query, generate Audio Overview, and handle auth, polling, and retry loops.
@@ -5052,7 +5161,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-notebooklm-connector
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
 ---
 
@@ -5134,7 +5243,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-notebooklm-connecto
 
 ================================================================================
 
-<!-- SKILL 50/72: ccba-platform -->
+<!-- SKILL 51/73: ccba-platform -->
 # ccba-platform
 
 > **Mô tả ngắn**: Cổng điều phối toàn cục (Global Router) và kiểm tra môi trường cho CCBA Agent Services Platform. Tự động kiểm tra Hub/Spoke, Gateway/VPN, cấu trúc Spoke và điều hướng đúng kỹ năng.
@@ -5236,7 +5345,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-platform/SKILL.md -
 
 ================================================================================
 
-<!-- SKILL 51/72: ccba-pptx -->
+<!-- SKILL 52/73: ccba-pptx -->
 # ccba-pptx
 
 > **Mô tả ngắn**: Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao bằng HTML conversion hoặc OOXML.
@@ -5262,7 +5371,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-pptx
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -5341,7 +5450,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-pptx/SKILL.md --enf
 
 ================================================================================
 
-<!-- SKILL 52/72: ccba-promote-sandbox -->
+<!-- SKILL 53/73: ccba-promote-sandbox -->
 # ccba-promote-sandbox
 
 > **Mô tả ngắn**: Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc Hub (ADR 0046)
@@ -5367,7 +5476,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-promote-sandbox
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -5443,7 +5552,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-promote-sandbox/SKI
 
 ================================================================================
 
-<!-- SKILL 53/72: ccba-release-feature -->
+<!-- SKILL 54/73: ccba-release-feature -->
 # ccba-release-feature
 
 > **Mô tả ngắn**: Merge PR, cleanup branch, auto-close local issues và cập nhật walkthrough
@@ -5542,7 +5651,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-release-feature/SKI
 
 ================================================================================
 
-<!-- SKILL 54/72: ccba-research -->
+<!-- SKILL 55/73: ccba-research -->
 # ccba-research
 
 > **Mô tả ngắn**: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ trợ Dual-Agent Adversarial).
@@ -5568,7 +5677,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-research
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -5648,7 +5757,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-research/SKILL.md -
 
 ================================================================================
 
-<!-- SKILL 55/72: ccba-review-proposal -->
+<!-- SKILL 56/73: ccba-review-proposal -->
 # ccba-review-proposal
 
 > **Mô tả ngắn**: Thẩm định toàn trình PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered Review (Fast/Boost), Spoke Leakage Guard, Copilot Guard và Đồng bộ Catalog Hậu Merge (ADR 0045, ADR 0047)
@@ -5674,7 +5783,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-review-proposal
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=1.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=1.0 | P=1.0 (GPI: 18.50)` |
 
 ---
 
@@ -5750,7 +5859,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-review-proposal/SKI
 
 ================================================================================
 
-<!-- SKILL 56/72: ccba-seminar-builder -->
+<!-- SKILL 57/73: ccba-seminar-builder -->
 # ccba-seminar-builder
 
 > **Mô tả ngắn**: Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda, outline, và archive nội dung các buổi thảo luận.
@@ -5776,7 +5885,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-seminar-builder
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | Song song (Slash Command & Model Trigger) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (Tổng: 10.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 18.00)` |
 
 ---
 
@@ -5855,7 +5964,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-seminar-builder/SKI
 
 ================================================================================
 
-<!-- SKILL 57/72: ccba-session-retrospective -->
+<!-- SKILL 58/73: ccba-session-retrospective -->
 # ccba-session-retrospective
 
 > **Mô tả ngắn**: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa kỹ năng trực tiếp, đồng bộ ADR Matrix, tái biên dịch tài liệu, kích hoạt Governance Gate và dọn dẹp workspace.
@@ -5881,7 +5990,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-session-retrospective
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -5960,7 +6069,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-session-retrospecti
 
 ================================================================================
 
-<!-- SKILL 58/72: ccba-setup-skills -->
+<!-- SKILL 59/73: ccba-setup-skills -->
 # ccba-setup-skills
 
 > **Mô tả ngắn**: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu hình issue tracker, nhãn phân loại (triage), và bố cục tài liệu tri thức (Domain Docs). Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
@@ -5986,7 +6095,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-setup-skills
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.5 | K=2.0 | A=2.0 | P=1.0 (Tổng: 8.5)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.5 | K=2.0 | A=2.0 | P=1.0 (GPI: 15.25)` |
 
 ---
 
@@ -6067,7 +6176,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-setup-skills/SKILL.
 
 ================================================================================
 
-<!-- SKILL 59/72: ccba-sharepoint-iac -->
+<!-- SKILL 60/73: ccba-sharepoint-iac -->
 # ccba-sharepoint-iac
 
 > **Mô tả ngắn**: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code). Hướng dẫn thiết kế JSON schema, kiểm định Lookups/Taxonomy và triển khai bằng PnP PowerShell.
@@ -6093,7 +6202,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-sharepoint-iac
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -6170,7 +6279,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-sharepoint-iac/SKIL
 
 ================================================================================
 
-<!-- SKILL 60/72: ccba-skill-repair -->
+<!-- SKILL 61/73: ccba-skill-repair -->
 # ccba-skill-repair
 
 > **Mô tả ngắn**: Phục hồi và sửa chữa kỹ năng AI theo thể chế ADR-0057 và bộ kiểm định ccba-harness.
@@ -6196,7 +6305,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-skill-repair
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -6272,7 +6381,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-skill-repair/SKILL.
 
 ================================================================================
 
-<!-- SKILL 61/72: ccba-spoke-adopter -->
+<!-- SKILL 62/73: ccba-spoke-adopter -->
 # ccba-spoke-adopter
 
 > **Mô tả ngắn**: Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield Spokes) vào CCBA Platform mà không phá hủy cấu trúc dữ liệu cũ.
@@ -6380,7 +6489,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-spoke-adopter/SKILL
 
 ================================================================================
 
-<!-- SKILL 62/72: ccba-sync-upstream -->
+<!-- SKILL 63/73: ccba-sync-upstream -->
 # ccba-sync-upstream
 
 > **Mô tả ngắn**: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0057 Radar) kết hợp kích hoạt 1-Click Port qua /ccba-xia.
@@ -6406,7 +6515,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-sync-upstream
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=3.0 | P=1.0 (Tổng: 11.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=3.0 | P=1.0 (GPI: 20.50)` |
 
 ---
 
@@ -6484,7 +6593,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-sync-upstream/SKILL
 
 ================================================================================
 
-<!-- SKILL 63/72: ccba-tdd -->
+<!-- SKILL 64/73: ccba-tdd -->
 # ccba-tdd
 
 > **Mô tả ngắn**: Phát triển hướng kiểm thử (Red-Green-Refactor) giúp tạo mã nguồn ổn định, tin cậy thông qua các giao diện công khai (seams).
@@ -6510,7 +6619,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-tdd
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -6585,7 +6694,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-tdd/SKILL.md --enfo
 
 ================================================================================
 
-<!-- SKILL 64/72: ccba-teamwork -->
+<!-- SKILL 65/73: ccba-teamwork -->
 # ccba-teamwork
 
 > **Mô tả ngắn**: Điều phối đa tác nhân dài hạn (Teamwork Multi-Agent Framework) theo 4 giai đoạn và 3 vai trò tối giản (Orchestrator, Workers, Auditor), cưỡng chế Workers Read-Only Sandbox và kiểm toán phân vùng tệp hậu hợp nhất.
@@ -6687,7 +6796,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-teamwork/SKILL.md -
 
 ================================================================================
 
-<!-- SKILL 65/72: ccba-to-spec -->
+<!-- SKILL 66/73: ccba-to-spec -->
 # ccba-to-spec
 
 > **Mô tả ngắn**: Turn the current conversation into a spec and publish it to the project issue tracker — no interview, just synthesis of what you've already discussed.
@@ -6713,7 +6822,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-to-spec
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
 ---
 
@@ -6793,7 +6902,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-to-spec/SKILL.md --
 
 ================================================================================
 
-<!-- SKILL 66/72: ccba-tvpl-vip-crawler -->
+<!-- SKILL 67/73: ccba-tvpl-vip-crawler -->
 # ccba-tvpl-vip-crawler
 
 > **Mô tả ngắn**: Kỹ năng tự động cào và đóng gói văn bản pháp luật VIP TVPL qua Deep Seam TVPLCrawler (tự động CookieVault & Mutex).
@@ -6819,7 +6928,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-tvpl-vip-crawler
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
@@ -6895,7 +7004,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-tvpl-vip-crawler/SK
 
 ================================================================================
 
-<!-- SKILL 67/72: ccba-update-spoke -->
+<!-- SKILL 68/73: ccba-update-spoke -->
 # ccba-update-spoke
 
 > **Mô tả ngắn**: Đồng bộ hóa các kỹ năng và cập nhật phiên bản giữa Hub và các Spoke (đơn lẻ hoặc hàng loạt)
@@ -6921,7 +7030,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-update-spoke
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -7001,7 +7110,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-update-spoke/SKILL.
 
 ================================================================================
 
-<!-- SKILL 68/72: ccba-wayfinder -->
+<!-- SKILL 69/73: ccba-wayfinder -->
 # ccba-wayfinder
 
 > **Mô tả ngắn**: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua danh sách các ticket công việc.
@@ -7027,7 +7136,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-wayfinder
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
 ---
 
@@ -7103,7 +7212,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-wayfinder/SKILL.md 
 
 ================================================================================
 
-<!-- SKILL 69/72: ccba-web-testing -->
+<!-- SKILL 70/73: ccba-web-testing -->
 # ccba-web-testing
 
 > **Mô tả ngắn**: Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y testing. Use for test automation, flakiness, Core Web Vitals, and cross-browser.
@@ -7129,7 +7238,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-web-testing
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -7211,7 +7320,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-web-testing/SKILL.m
 
 ================================================================================
 
-<!-- SKILL 70/72: ccba-xia -->
+<!-- SKILL 71/73: ccba-xia -->
 # ccba-xia
 
 > **Mô tả ngắn**: Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại.
@@ -7237,7 +7346,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-xia
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 9.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
 ---
 
@@ -7318,7 +7427,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-xia/SKILL.md --enfo
 
 ================================================================================
 
-<!-- SKILL 71/72: ccba-xu-ly-van-phong -->
+<!-- SKILL 72/73: ccba-xu-ly-van-phong -->
 # ccba-xu-ly-van-phong
 
 > **Mô tả ngắn**: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo tiêu chuẩn cấu trúc & phối màu chuyên nghiệp hoặc Nghị định 30.
@@ -7344,7 +7453,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-xu-ly-van-phong
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (Tổng: 8.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 14.00)` |
 
 ---
 
@@ -7425,7 +7534,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-xu-ly-van-phong/SKI
 
 ================================================================================
 
-<!-- SKILL 72/72: ccba-youtube-learn -->
+<!-- SKILL 73/73: ccba-youtube-learn -->
 # ccba-youtube-learn
 
 > **Mô tả ngắn**: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề và hình ảnh slide học thuật từ các video YouTube/bài giảng.
@@ -7451,7 +7560,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-youtube-learn
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (Tổng: 7.0)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 
 ---
 
