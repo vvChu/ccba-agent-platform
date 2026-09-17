@@ -342,3 +342,30 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
   - **Vấn đề:** Trong `AsyncOpenAI`, `chat.completions.create(stream=True)` là một coroutine bất đồng bộ (`async def`) trả về một async generator. Việc mock bằng `return_value=async_gen()` sẽ gây lỗi `TypeError: object async_generator can't be used in 'await' expression`.
   - **Giải pháp:** Bắt buộc mock bằng `side_effect=mock_async_func` trong đó `mock_async_func` là một `async def` trả về `async_gen`.
 
+---
+
+## 21. Governed Issue Tree Methodology, Cross-Skill Referrals & Copilot Review Invariants (Issue #276, PR #282)
+
+- **Core Pattern P21.1 — Standalone Kernel Skill & Model-Invocation Budgeting (ADR-0040, ADR-0057):**
+  - **Vấn đề:** Khi bổ sung kỹ năng tư duy đa ngành `ccba-issue-tree` (McKinsey MECE Issue Tree & Governed Lifecycle), việc gán vào `bundle: _core` có nguy cơ phá vỡ giới hạn trần cứng 10 model-invoked skills (`MAX_MODEL_INVOKED_PER_BUNDLE = 10` tại `skill_validator.py:87`), gây lỗi `CONTEXT_BUDGET_CEILING_EXCEEDED`. Mặt khác, nếu ép kỹ năng này vào `bundle: _software` thì sẽ làm méo mó bản chất đa miền của một phương pháp luận giải quyết vấn đề (vốn dùng cho cả pháp lý, thẩm tra QC, BIM, và tranh chấp hợp đồng).
+  - **Giải pháp:** Thiết lập `disable-model-invocation: true` trong frontmatter của `.agents/skills/ccba-issue-tree/SKILL.md`. Điều này cho phép kỹ năng nằm trọn vẹn trong `bundle: _core` (Tier 2B Standalone Kernel Skill, GPI = 14.50), kích hoạt trực tiếp qua lệnh `/ccba-issue-tree` hoặc qua phân phối của Orchestrator mà không tiêu tốn ngân sách system prompt tokens của các tác tử.
+
+- **Core Pattern P21.2 — Progressive Cross-Skill Referral Hooks vs Knowledge Bloat:**
+  - **Vấn đề:** Thay vì sao chép các chỉ dẫn phân tích cây vấn đề vào hàng chục kỹ năng hiện hữu (gây phình to kích thước file và trùng lặp logic), làm thế nào để các kỹ năng chuyên biệt tự động tận dụng được sức mạnh phân rã MECE khi gặp bài toán phức tạp?
+  - **Giải pháp:** Thiết lập mạng lưới 7 điểm điều hướng (Cross-Skill Referral Hooks) có chọn lọc (Tier 1 High-Impact) tại đúng các nút rẽ nhánh quyết định:
+    1. `ccba-diagnosing-bugs`: Pha 3 (Hypothesise cho lỗi đa dịch vụ phi tất định $\rightarrow$ Diagnostic Why-Tree).
+    2. `ccba-ai-qc`: Pha 3 (Xung đột kỹ thuật đa bộ môn/PCCC $\rightarrow$ Why-Tree + How-Tree).
+    3. `ccba-legal-advisor`: Bước 1/2 (Tranh chấp hợp đồng Cấp độ 3 $\rightarrow$ Why-Tree chuỗi trách nhiệm + How-Tree hòa giải/VIAC).
+    4. `ccba-ask`: Bước 1 (Tiếp nhận bài toán mở đa chiều $\rightarrow$ Issue Tree).
+    5. `ccba-grilling`: Nhánh A & Phòng thủ (Xung đột kiến trúc $\ge 2$ phương án $\rightarrow$ How-Tree).
+    6. `bigbim-risk`: Bước 4 (Xung đột thông tin V2 & drift Unique ID $\rightarrow$ Why-Tree + How-Tree).
+    7. `ccba-to-spec`: Bước 3 (Bóc tách Epic lớn $\rightarrow$ What-Tree 4 nhãn MECE: ANALYSIS, DECISION, COMMITMENT, SYNTHESIS).
+
+- **Core Pattern P21.3 — Concept-Level Invariants vs Brittle Numeric Assertions:**
+  - **Vấn đề:** Trong quá trình review PR #282, Copilot liên tục phát hiện và chặn merge (Changes recommended) do các số cứng bị lệch pha giữa các tệp: ví dụ câu chữ ghi "11 Ghế CCBA Charter" nhưng bảng RACI liệt kê 12 vai trò; hoặc ghi "máy trạng thái 5 bước" nhưng sơ đồ mô tả 6 trạng thái.
+  - **Giải pháp:** Loại bỏ toàn bộ các số lượng đếm cơ học trong đề mục và lời văn mô tả. Quy chuẩn sang các định danh khái niệm bền vững: "các Ghế trách nhiệm Hiến chương CCBA", "ma trận RACI Hiến chương CCBA", và "ma trận vòng đời nhánh".
+
+- **Core Pattern P21.4 — Test Isolation Side-Effect Cleanup Before Release:**
+  - **Vấn đề:** Lệnh kiểm thử tiền phát hành `run_isolated_tests.py --all --stress` có thể sinh ra các side-effects trong working tree (ví dụ như tạo embedding cache files hoặc cập nhật metadata). Nếu không dọn sạch trước khi gọi `gh pr merge`, git checkout/merge sẽ bị xung đột hoặc thất bại.
+  - **Giải pháp:** Luôn kiểm tra `git status --porcelain`, thực hiện `git restore` và `git clean -fd` đối với các artifacts sinh ra trong quá trình test trước khi thực hiện các thao tác chuyển nhánh hoặc merge.
+
