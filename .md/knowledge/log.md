@@ -1,5 +1,7 @@
 # 📜 CCBA Knowledge Base Mutation Log (Append-Only Log)
 
+> **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
+
 ## [2026-09-18] [synthesize] | Thẩm Định & Hợp Nhất Đề Xuất PR #286: Modernize Nightly Auto-Tuner Daemon, Real LLM Adapter & Merge Danger Governance
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-review-proposal, /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-harness/`, `scripts/cron/run_nightly_tuner.sh`, `scripts/eval/`, `.agents/skills/ccba-code-review/`, `.agents/skills/ccba-release-feature/`, `.github/`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`
