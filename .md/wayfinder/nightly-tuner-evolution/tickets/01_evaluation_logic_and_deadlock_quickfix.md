@@ -55,6 +55,6 @@ Khắc phục triệt để hiện tượng fallthrough luồng điều khiển,
 - **Thời gian hoàn thành:** 18/09/2026 11:40 GMT+7
 - **Báo cáo thực thi:** `.md/knowledge/reports/nightly_tuner_report_20260918_113953.md`
 - **Các tệp đã sửa đổi:**
-  1. [`packages/ccba-harness/src/ccba_harness/evals/tuner.py`](file:///home/vvc/ccba/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/evals/tuner.py)
-  2. [`scripts/eval/nightly_tuner_daemon.py`](file:///home/vvc/ccba/ccba-agent-platform/scripts/eval/nightly_tuner_daemon.py)
-  3. [`scripts/tests/test_nightly_tuner_daemon.py`](file:///home/vvc/ccba/ccba-agent-platform/scripts/tests/test_nightly_tuner_daemon.py)
+  1. [`packages/ccba-harness/src/ccba_harness/evals/tuner.py`](../../../../packages/ccba-harness/src/ccba_harness/evals/tuner.py)
+  2. [`scripts/eval/nightly_tuner_daemon.py`](../../../../scripts/eval/nightly_tuner_daemon.py)
+  3. [`scripts/tests/test_nightly_tuner_daemon.py`](../../../../scripts/tests/test_nightly_tuner_daemon.py)

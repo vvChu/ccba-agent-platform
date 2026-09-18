@@ -140,13 +140,13 @@ graph TD
    git checkout main
    git pull origin main
    ```
-2. Thêm Error Trap vào [scripts/cron/run_nightly_tuner.sh](file:///home/vvc/ccba/ccba-agent-platform/scripts/cron/run_nightly_tuner.sh):
+2. Thêm Error Trap vào [scripts/cron/run_nightly_tuner.sh](../../../../scripts/cron/run_nightly_tuner.sh):
    ```bash
    trap 'python3 -c "from scripts.eval.telegram_alert import send_telegram_alert; send_telegram_alert(\"🚨 [CCBA Cron Failure] Nightly Tuner gặp lỗi tại dòng \$LINENO\", mock_fallback=True)"' ERR
    ```
 
 ### 5.2. Giải pháp Căn Cơ Dài Hạn (Architectural Fix - Git Worktree Runner)
-Trong [scripts/cron/run_nightly_tuner.sh](file:///home/vvc/ccba/ccba-agent-platform/scripts/cron/run_nightly_tuner.sh), thay vì chuyển nhánh trực tiếp trên thư mục đang làm việc của người dùng:
+Trong [scripts/cron/run_nightly_tuner.sh](../../../../scripts/cron/run_nightly_tuner.sh), thay vì chuyển nhánh trực tiếp trên thư mục đang làm việc của người dùng:
 ```bash
 # Thiết lập Worktree độc lập
 WORKTREE_DIR="$PROJECT_ROOT/.worktrees/nightly"
