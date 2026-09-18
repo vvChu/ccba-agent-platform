@@ -187,7 +187,7 @@ def safe_remove(
                     os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
                 except Exception:
                     pass
-                if p.is_dir() and _is_link_or_junction(p):
+                if os.name == "nt" and p.is_dir() and not p.is_symlink():
                     os.rmdir(p)
                 else:
                     p.unlink()

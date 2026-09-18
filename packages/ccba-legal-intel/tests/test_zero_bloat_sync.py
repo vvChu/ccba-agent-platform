@@ -254,7 +254,13 @@ def test_safe_remove_windows_junction(tmp_path: Path) -> None:
     if sys.platform != "win32":
         pytest.skip("Windows NTFS directory junction test requires win32")
 
-    import _winapi
+    try:
+        import _winapi
+
+        if not hasattr(_winapi, "CreateJunction"):
+            pytest.skip("_winapi.CreateJunction not available on this platform")
+    except ImportError:
+        pytest.skip("_winapi not available on this platform")
 
     target_dir = tmp_path / "junction_target"
     target_dir.mkdir(parents=True, exist_ok=True)
