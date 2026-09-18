@@ -148,4 +148,3 @@ def sanitize_prompt_for_query(prompt: str) -> str:
         print(f"[Warn] Lỗi khi làm sạch prompt qua Maskara Gate: {e}", file=sys.stderr)
 
     return prompt
-

@@ -114,7 +114,9 @@ class LegalSyncEngine:
         if explicit_path and explicit_path.exists():
             return explicit_path.resolve()
 
-        env_path = os.environ.get("CCBA_LEGAL_KNOWLEDGE_PATH") or os.environ.get("CCBA_LEGAL_CORPUS_PATH")
+        env_path = os.environ.get("CCBA_LEGAL_KNOWLEDGE_PATH") or os.environ.get(
+            "CCBA_LEGAL_CORPUS_PATH"
+        )
         if env_path:
             p = Path(env_path)
             if p.exists():
@@ -132,9 +134,8 @@ class LegalSyncEngine:
                     with open(local_ctx, encoding="utf-8") as f:
                         ctx_data = yaml.safe_load(f) or {}
                     proj_data = ctx_data.get("project", {}) if isinstance(ctx_data, dict) else {}
-                    hub_path_str = (
-                        ctx_data.get("hub_path")
-                        or (proj_data.get("hub_path") if isinstance(proj_data, dict) else None)
+                    hub_path_str = ctx_data.get("hub_path") or (
+                        proj_data.get("hub_path") if isinstance(proj_data, dict) else None
                     )
                     if hub_path_str:
                         hub_p = Path(hub_path_str)
@@ -156,7 +157,9 @@ class LegalSyncEngine:
                                             cand = Path(p_str)
                                             if cand.exists() and (
                                                 (cand / "legal_docs").exists()
-                                                or (cand / ".md" / "data" / "legal_registry.yaml").exists()
+                                                or (
+                                                    cand / ".md" / "data" / "legal_registry.yaml"
+                                                ).exists()
                                             ):
                                                 return cand.resolve()
                 except Exception:
