@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "CCBA Hub"
 triggers:
 - release
@@ -65,8 +65,13 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
 1. **Lấy thông tin PR và Branch hiện hành (Platform-Agnostic):**
    ```bash
    git branch --show-current
-   gh pr view --json number,title,state,headRefName
+   gh pr view --json number,title,state,headRefName,body
    ```
+
+   - **Sàng lọc Mức độ Nguy hiểm (Merge Danger Triage):**
+     * Đọc trường `## Merge Danger Assessment` từ mô tả PR:
+       - Nếu **Two-way door** và bán kính **Localized**: Áp dụng *Fast-path review* (kiểm tra nhanh CI và Copilot comments để merge).
+       - Nếu **One-way door** hoặc bán kính **Monorepo-wide / Spoke-affecting**: Bắt buộc tiến hành *Deep review*, kiểm tra kỹ lưỡng các ảnh hưởng gãy vỡ hợp đồng giao diện, tính tương thích ngược với Spoke downstream trước khi quyết định merge.
 
 2. **Kiểm tra xác thực GitHub CLI (`gh`):**
    ```bash
