@@ -136,7 +136,7 @@ def test_discover_skills_and_datasets_routing() -> None:
     if "ccba-copywriting" in mapping:
         assert mapping["ccba-copywriting"] == "eval_copywriting.json"
     if "ccba-ai-qc" in mapping:
-        assert mapping["ccba-ai-qc"] == "eval_pccc_audit.json"
+        assert mapping["ccba-ai-qc"] == "eval_pccc_audit_redteam.json"
     if "bigbim-classification" in mapping:
         assert mapping["bigbim-classification"] == "eval_bigbim_classification.json"
     if "ccba-legal-advisor" in mapping:
