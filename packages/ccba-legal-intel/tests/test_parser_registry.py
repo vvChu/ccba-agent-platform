@@ -82,9 +82,16 @@ def test_legal_registry_manager_temp():
         assert new_data["decrees"][0]["title"] == "Nghị định 06/2021/NĐ-CP"
 
 
-def test_registry_manager_path_resolution():
+def test_registry_manager_path_resolution(tmp_path: Path):
     from ccba_legal.registry import discover_master_registry_path
 
+    # Deterministic test with explicit custom path
+    custom_reg = tmp_path / "custom_registry.yaml"
+    custom_reg.write_text("metadata: {}", encoding="utf-8")
+    custom_manager = LegalRegistryManager(registry_path=custom_reg)
+    assert custom_manager.registry_path.resolve() == custom_reg.resolve()
+
+    # Default discovery path test
     manager = LegalRegistryManager()
     cwd_cand = Path.cwd() / ".md" / "data" / "legal_registry.yaml"
     expected_path = cwd_cand.resolve() if cwd_cand.is_file() else discover_master_registry_path()

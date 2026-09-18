@@ -14,7 +14,7 @@ OBSOLETE_LEGAL_PATTERNS: list[dict[str, Any]] = [
         "id": "15/2021/NĐ-CP",
         "name": "Nghị định 15/2021/NĐ-CP",
         "pattern": re.compile(
-            r"(?:\b(?:Nghị\s*định|NĐ)\s*(?:số\s*)?)?15/2021/NĐ-CP\b|\b(?:Nghị\s*định|NĐ)\s*(?:số\s*)?15/2021\b",
+            r"(?:\b(?:Nghị\s*định|NĐ|ND)\s*(?:số\s*)?)?15/2021/(?:NĐ-CP|ND-CP)\b|\b(?:Nghị\s*định|NĐ|ND)\s*(?:số\s*)?15/2021\b",
             re.IGNORECASE,
         ),
         "replacement": "Nghị định 217/2026/NĐ-CP (Quản lý dự án đầu tư xây dựng)",
@@ -24,7 +24,7 @@ OBSOLETE_LEGAL_PATTERNS: list[dict[str, Any]] = [
         "id": "35/2023/NĐ-CP",
         "name": "Nghị định 35/2023/NĐ-CP",
         "pattern": re.compile(
-            r"(?:\b(?:Nghị\s*định|NĐ)\s*(?:số\s*)?)?35/2023/NĐ-CP\b|\b(?:Nghị\s*định|NĐ)\s*(?:số\s*)?35/2023\b",
+            r"(?:\b(?:Nghị\s*định|NĐ|ND)\s*(?:số\s*)?)?35/2023/(?:NĐ-CP|ND-CP)\b|\b(?:Nghị\s*định|NĐ|ND)\s*(?:số\s*)?35/2023\b",
             re.IGNORECASE,
         ),
         "replacement": "Nghị định 217/2026/NĐ-CP",
@@ -54,7 +54,7 @@ OBSOLETE_LEGAL_PATTERNS: list[dict[str, Any]] = [
         "id": "06/2021/NĐ-CP",
         "name": "Nghị định 06/2021/NĐ-CP",
         "pattern": re.compile(
-            r"(?:\b(?:Nghị\s*định|NĐ)\s*(?:số\s*)?)?0?6/2021/NĐ-CP\b|\b(?:Nghị\s*định|NĐ)\s*(?:số\s*)?0?6/2021\b",
+            r"(?:\b(?:Nghị\s*định|NĐ|ND)\s*(?:số\s*)?)?0?6/2021/(?:NĐ-CP|ND-CP)\b|\b(?:Nghị\s*định|NĐ|ND)\s*(?:số\s*)?0?6/2021\b",
             re.IGNORECASE,
         ),
         "replacement": "Nghị định 207/2026/NĐ-CP (Quản lý chất lượng & thi công xây dựng)",
@@ -64,7 +64,7 @@ OBSOLETE_LEGAL_PATTERNS: list[dict[str, Any]] = [
         "id": "46/2015/NĐ-CP",
         "name": "Nghị định 46/2015/NĐ-CP",
         "pattern": re.compile(
-            r"(?:\b(?:Nghị\s*định|NĐ)\s*(?:số\s*)?)?46/2015/NĐ-CP\b|\b(?:Nghị\s*định|NĐ)\s*(?:số\s*)?46/2015\b",
+            r"(?:\b(?:Nghị\s*định|NĐ|ND)\s*(?:số\s*)?)?46/2015/(?:NĐ-CP|ND-CP)\b|\b(?:Nghị\s*định|NĐ|ND)\s*(?:số\s*)?46/2015\b",
             re.IGNORECASE,
         ),
         "replacement": "Nghị định 207/2026/NĐ-CP",
@@ -124,7 +124,7 @@ OBSOLETE_LEGAL_PATTERNS: list[dict[str, Any]] = [
         "id": "136/2020/NĐ-CP",
         "name": "Nghị định 136/2020/NĐ-CP",
         "pattern": re.compile(
-            r"(?:\b(?:Nghị\s*định|NĐ)\s*(?:số\s*)?)?136/2020/NĐ-CP\b|\b(?:Nghị\s*định|NĐ)\s*(?:số\s*)?136/2020\b",
+            r"(?:\b(?:Nghị\s*định|NĐ|ND)\s*(?:số\s*)?)?136/2020/(?:NĐ-CP|ND-CP)\b|\b(?:Nghị\s*định|NĐ|ND)\s*(?:số\s*)?136/2020\b",
             re.IGNORECASE,
         ),
         "replacement": "Nghị định 105/2025/NĐ-CP (Quy định chi tiết Luật PCCC & CNCH)",
@@ -175,7 +175,7 @@ KNOWN_ACTIVE_STATUTES: set[str] = {
 
 # Regex to detect statutory references for two-tier unverified audit
 GENERIC_STATUTE_REGEX = re.compile(
-    r"\b(\d{1,4}/\d{4}/(?:NĐ-CP|TT-BXD|QH\d{2}))\b",
+    r"\b(\d{1,4}/\d{4}/(?:NĐ-CP|ND-CP|TT-BXD|QH\d{2}))\b",
     re.IGNORECASE,
 )
 
@@ -207,7 +207,7 @@ def is_ignored_path(path: Path) -> bool:
     for part in path.parts:
         if part in IGNORED_SCAN_DIRS:
             return True
-        if part.startswith(".") and part not in {".md", "."}:
+        if part.startswith(".") and part not in {".md", ".agents", "."}:
             return True
     posix_path = path.as_posix().lower()
     if "/legal_docs" in posix_path or posix_path.endswith("/legal_docs"):
@@ -338,7 +338,10 @@ def lint_file_currency(
             reg_data = reg_mgr.load()
             for cat in ["laws", "decrees", "circulars", "decisions"]:
                 for d in reg_data.get(cat, []):
-                    if isinstance(d, dict) and d.get("status") in {"active", "current"}:
+                    if isinstance(d, dict) and str(d.get("status", "")).lower() in {
+                        "active",
+                        "current",
+                    }:
                         if d.get("document_number"):
                             active_docs.add(d["document_number"].upper())
         except Exception:
