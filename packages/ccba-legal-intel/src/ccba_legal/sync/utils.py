@@ -105,6 +105,18 @@ def _is_link_or_junction(path: Path) -> bool:
     return path.is_symlink()
 
 
+def _make_writable(p: Path) -> None:
+    """Ensure path has write permissions while preserving existing mode bits (e.g. directory execute bit)."""
+    try:
+        st = p.stat()
+        os.chmod(p, st.st_mode | stat.S_IWUSR)
+    except Exception:
+        try:
+            os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
+        except Exception:
+            pass
+
+
 def safe_copy2(
     src: str | Path,
     dst: str | Path,
@@ -131,41 +143,33 @@ def safe_copy2(
 
     # Ensure destination parent directory exists
     actual_dst_p.parent.mkdir(parents=True, exist_ok=True)
+    target_dst = str(actual_dst_p) if isinstance(dst, str) else actual_dst_p
 
     for attempt in range(max_retries):
         try:
             if _is_link_or_junction(actual_dst_p):
-                copied = shutil.copyfile(src, dst)
+                copied = shutil.copyfile(src, target_dst)
             else:
                 if actual_dst_p.exists():
-                    try:
-                        os.chmod(actual_dst_p, stat.S_IWRITE | stat.S_IREAD)
-                    except Exception:
-                        pass
-                copied = shutil.copy2(src, dst, follow_symlinks=follow_symlinks)
+                    _make_writable(actual_dst_p)
+                copied = shutil.copy2(src, target_dst, follow_symlinks=follow_symlinks)
             return copied
         except (PermissionError, OSError):
             try:
                 if actual_dst_p.exists() and not _is_link_or_junction(actual_dst_p):
-                    os.chmod(actual_dst_p, stat.S_IWRITE | stat.S_IREAD)
+                    _make_writable(actual_dst_p)
             except Exception:
                 pass
             if attempt == max_retries - 1:
                 raise
             time.sleep(retry_delay)
-    return str(actual_dst_p) if isinstance(dst, str) else actual_dst_p
+    return target_dst
 
 
 def _safe_remove_leaf(p: Path) -> None:
     """Safely remove a leaf item (file, symlink, or NTFS junction) without mutating target permissions."""
     if not p.is_symlink():
-        try:
-            if p.is_dir():
-                os.chmod(p, stat.S_IRWXU)
-            else:
-                os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
-        except Exception:
-            pass
+        _make_writable(p)
     try:
         if os.name == "nt" and p.is_dir() and not p.is_symlink():
             os.rmdir(p)
@@ -174,10 +178,13 @@ def _safe_remove_leaf(p: Path) -> None:
     except PermissionError:
         # On POSIX, removing an item requires write+exec on its parent directory
         try:
-            os.chmod(p.parent, stat.S_IRWXU)
+            _make_writable(p.parent)
             if not p.is_symlink():
-                os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
-            p.unlink()
+                _make_writable(p)
+            if os.name == "nt" and p.is_dir() and not p.is_symlink():
+                os.rmdir(p)
+            else:
+                p.unlink()
         except Exception:
             raise
     except FileNotFoundError:
@@ -185,11 +192,8 @@ def _safe_remove_leaf(p: Path) -> None:
 
 
 def _safe_remove_dir(p: Path) -> None:
-    """Safely remove an empty directory after clearing read-only attributes."""
-    try:
-        os.chmod(p, stat.S_IRWXU)
-    except Exception:
-        pass
+    """Safely remove an empty directory after ensuring write permissions."""
+    _make_writable(p)
     try:
         os.rmdir(p)
     except FileNotFoundError:
@@ -200,10 +204,7 @@ def _safe_rmtree_tree(p: Path) -> None:
     """Recursively remove directory contents, treating symlinks and NTFS junctions as non-traversed leaves."""
     if not p.exists() and not _is_link_or_junction(p):
         return
-    try:
-        os.chmod(p, stat.S_IRWXU)
-    except Exception:
-        pass
+    _make_writable(p)
     try:
         with os.scandir(p) as it:
             for entry in it:
