@@ -134,12 +134,15 @@ def safe_copy2(
 
     for attempt in range(max_retries):
         try:
-            if actual_dst_p.exists() and not _is_link_or_junction(actual_dst_p):
-                try:
-                    os.chmod(actual_dst_p, stat.S_IWRITE | stat.S_IREAD)
-                except Exception:
-                    pass
-            copied = shutil.copy2(src, dst, follow_symlinks=follow_symlinks)
+            if _is_link_or_junction(actual_dst_p):
+                copied = shutil.copyfile(src, dst)
+            else:
+                if actual_dst_p.exists():
+                    try:
+                        os.chmod(actual_dst_p, stat.S_IWRITE | stat.S_IREAD)
+                    except Exception:
+                        pass
+                copied = shutil.copy2(src, dst, follow_symlinks=follow_symlinks)
             return copied
         except (PermissionError, OSError):
             try:
