@@ -12,7 +12,9 @@ Supports:
 
 from __future__ import annotations
 
+import shutil
 import subprocess
+import sys
 import time
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
@@ -291,6 +293,9 @@ def resolve_preset_commands(
     """
     p = preset.strip().lower()
     target_str = str(target).strip() if target else ""
+
+    if (not python_exec or python_exec == "python") and shutil.which("python") is None:
+        python_exec = sys.executable
 
     if p == "code":
         cmds: list[str] = []

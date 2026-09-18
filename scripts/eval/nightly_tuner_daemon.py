@@ -13,6 +13,7 @@ import argparse
 import datetime
 import logging
 import os
+import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -58,6 +59,10 @@ class SkillEvolutionSummary:
     commits_kept: int
     rollbacks: int
     status: str = "UNCHANGED"
+    total_tokens: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    halt_reason: str | None = None
 
     @property
     def score_delta(self) -> float:
@@ -76,6 +81,10 @@ class NightlyDaemonReport:
     results: list[SkillEvolutionSummary] = field(default_factory=list)
     pr_url: str | None = None
     telegram_notified: bool = False
+    total_tokens: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    engine: str = "MOCK"
 
 
 class WeightedPriorityQueue:
@@ -106,30 +115,69 @@ class NightlyTunerDaemon:
         max_iterations_low: int = 30,
         max_iterations_perfect: int = 1,
         early_stopping_patience: int = 5,
+        use_real_llm: bool = False,
+        token_budget: int = 5_000_000,
+        model: str = "",
     ) -> None:
         self.root = root
         self.max_iterations_low = max_iterations_low
         self.max_iterations_perfect = max_iterations_perfect
         self.early_stopping_patience = early_stopping_patience
+        self.use_real_llm = use_real_llm
+        self.token_budget = token_budget
+        self.model = model
         self.test_cases_dir = self.root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
         self.skills_dir = self.root / ".agents" / "skills"
+
+    def _resolve_dataset_file(self, skill_name: str) -> str:
+        """Dynamically matches a skill to its optimal Domain Archetype evaluation dataset."""
+        sname = skill_name.lower()
+
+        if "risk" in sname or "conflict" in sname:
+            return "eval_bigbim_risk.json"
+        if any(k in sname for k in ["legal", "luat", "tvpl", "vbpl", "ingest", "advisor"]):
+            return "eval_legal_intel.json"
+        if any(k in sname for k in ["bim", "uniclass", "classification", "rase", "governance"]):
+            return "eval_bigbim_classification.json"
+        if any(k in sname for k in ["pccc", "qc", "audit"]):
+            return "eval_pccc_audit.json"
+        if any(k in sname for k in ["academic", "khoahoc", "writing"]):
+            return "eval_academic_writing.json"
+        if any(k in sname for k in ["copywriting", "vietbai", "truyenthong"]):
+            return "eval_copywriting.json"
+        if any(k in sname for k in ["teamwork", "orchestrat", "platform", "handoff", "issue-tree"]):
+            return "eval_agent_orchestration.json"
+
+        return "eval_general_domain.json"
 
     def discover_skills_and_datasets(self) -> list[dict[str, Any]]:
         """Maps discovered skills to their optimal evaluation datasets."""
         skill_dataset_map = {
             "ccba-academic-writing": "eval_academic_writing.json",
+            "ccba-copywriting": "eval_copywriting.json",
             "ccba-legal-intel": "eval_legal_intel_redteam.json",
             "ccba-ai-qc-pccc-audit": "eval_pccc_audit_redteam.json",
             "bigbim-classification": "eval_bigbim_classification.json",
+            "bigbim-governance": "eval_bigbim_classification.json",
+            "bigbim-risk": "eval_bigbim_risk.json",
+            "bigbim-rase": "eval_bigbim_classification.json",
             "ccba-completion-checklist": "eval_general_domain.json",
             "ccba-legal-document-tracker": "eval_legal_intel.json",
-            "ccba-ai-qc": "eval_pccc_audit.json",
+            "ccba-legal-advisor": "eval_legal_intel.json",
+            "ccba-legal-ingest": "eval_legal_intel.json",
+            "bigbim-vbpl-digest": "eval_legal_intel.json",
+            "ccba-tvpl-vip-crawler": "eval_legal_intel.json",
+            "ccba-ai-qc": "eval_pccc_audit_redteam.json",
         }
 
         discovered: list[dict[str, Any]] = []
         for skill_path in self.skills_dir.glob("*/SKILL.md"):
             skill_name = skill_path.parent.name
-            dataset_file = skill_dataset_map.get(skill_name, "eval_general_domain.json")
+            if skill_name in skill_dataset_map:
+                dataset_file = skill_dataset_map[skill_name]
+            else:
+                dataset_file = self._resolve_dataset_file(skill_name)
+
             full_dataset_path = self.test_cases_dir / dataset_file
 
             if not full_dataset_path.exists():
@@ -140,6 +188,7 @@ class NightlyTunerDaemon:
                     "skill_name": skill_name,
                     "target_file": skill_path,
                     "dataset_file": full_dataset_path,
+                    "eval_dataset_file": full_dataset_path,
                 }
             )
 
@@ -152,8 +201,9 @@ class NightlyTunerDaemon:
 
         logger.info(f"🚀 Khởi chạy Nightly Auto-Tuner Daemon: {branch_name}")
 
-        # 1. Tạo nhánh Git mới nếu không chạy dry_run
+        # 1. Dọn dẹp các nhánh rác cũ và tạo nhánh Git mới nếu không chạy dry_run
         if not dry_run:
+            self._cleanup_old_empty_branches(days=7)
             self._create_git_branch(branch_name)
 
         # 2. Khám phá và chấm điểm sơ bộ để xếp hàng đợi ưu tiên
@@ -165,6 +215,10 @@ class NightlyTunerDaemon:
 
         summaries: list[SkillEvolutionSummary] = []
         total_commits = 0
+        total_tokens = 0
+        total_prompt_tokens = 0
+        total_completion_tokens = 0
+        remaining_budget = self.token_budget
 
         # 3. Chạy tối ưu từng kỹ năng theo hàng đợi
         for item in ranked_skills:
@@ -182,6 +236,10 @@ class NightlyTunerDaemon:
                 max_iterations=self.max_iterations_low,
                 skill_name=skill_name,
                 full_sweep=False,
+                patience=self.early_stopping_patience,
+                use_real_llm=self.use_real_llm,
+                llm_model=self.model,
+                token_budget=remaining_budget,
             )
 
             try:
@@ -191,6 +249,13 @@ class NightlyTunerDaemon:
                 status = "IMPROVED" if result.final_score > result.initial_score else "UNCHANGED"
                 if result.final_score == 100.0 and result.initial_score == 100.0:
                     status = "PERFECT_VERIFIED"
+                if result.halt_reason:
+                    status = f"HALT_{result.halt_reason}"
+
+                total_tokens += result.total_tokens
+                total_prompt_tokens += result.prompt_tokens
+                total_completion_tokens += result.completion_tokens
+                remaining_budget = max(0, remaining_budget - result.total_tokens)
 
                 summary = SkillEvolutionSummary(
                     skill_name=skill_name,
@@ -200,9 +265,19 @@ class NightlyTunerDaemon:
                     commits_kept=result.kept_commits,
                     rollbacks=result.reverted_trials,
                     status=status,
+                    total_tokens=result.total_tokens,
+                    prompt_tokens=result.prompt_tokens,
+                    completion_tokens=result.completion_tokens,
+                    halt_reason=result.halt_reason,
                 )
                 summaries.append(summary)
                 total_commits += result.kept_commits
+
+                if result.halt_reason in ("TOKEN_BUDGET_EXCEEDED", "CIRCUIT_BREAKER_OPEN"):
+                    logger.warning(
+                        f"🛑 [Nightly Tuner Early Halt] Dừng quét toàn bộ hàng đợi kỹ năng do: {result.halt_reason}"
+                    )
+                    break
 
             except Exception as e:
                 logger.error(f"❌ Lỗi trong quá trình tối ưu {skill_name}: {e}")
@@ -227,6 +302,10 @@ class NightlyTunerDaemon:
             skills_optimized=skills_improved,
             total_commits=total_commits,
             results=summaries,
+            total_tokens=total_tokens,
+            prompt_tokens=total_prompt_tokens,
+            completion_tokens=total_completion_tokens,
+            engine="REAL_LLM" if self.use_real_llm else "MOCK",
         )
 
         report_md = self.generate_evolution_report_markdown(report)
@@ -252,16 +331,24 @@ class NightlyTunerDaemon:
         """Renders an evolution summary report in Markdown format."""
         lines = [
             "# 🌙 CCBA Nightly Auto-Tuner Evolution Report",
-            f"> **Thời gian thực thi:** `{report.timestamp}`  ",
+            f"> **Thời gian thực thi:** `{report.timestamp}` | **Engine:** `{report.engine}`  ",
             f"> **Nhánh Git:** `{report.branch_name}`  ",
             f"> **Tổng kỹ năng quét:** `{report.total_skills_scanned}` | **Kỹ năng cải thiện:** `{report.skills_optimized}` | **Số Commits:** `{report.total_commits}`",
-            "",
-            "---",
-            "",
-            "### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)",
-            "| Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Trạng Thái |",
-            "| :--- | :---: | :---: | :---: | :---: | :---: |",
         ]
+        if report.total_tokens > 0:
+            lines.append(
+                f"> **Tổng Token Tiêu Thụ:** `{report.total_tokens:,}` (Prompt: `{report.prompt_tokens:,}` | Completion: `{report.completion_tokens:,}`)"
+            )
+        lines.extend(
+            [
+                "",
+                "---",
+                "",
+                "### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)",
+                "| Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Tokens | Trạng Thái |",
+                "| :--- | :---: | :---: | :---: | :---: | :---: | :---: |",
+            ]
+        )
 
         for s in report.results:
             delta_str = f"+{s.score_delta:.1f}%" if s.score_delta > 0 else f"{s.score_delta:.1f}%"
@@ -270,8 +357,11 @@ class NightlyTunerDaemon:
                 if s.score_delta > 0
                 else ("⭐ 100% PERFECT" if s.final_score == 100.0 else "⚪ UNCHANGED")
             )
+            if s.halt_reason:
+                badge = f"⚠️ {s.status}"
+            token_str = f"{s.total_tokens:,}" if s.total_tokens > 0 else "-"
             lines.append(
-                f"| `{s.skill_name}` | {s.baseline_score:.1f}% | **{s.final_score:.1f}%** | `{delta_str}` | {s.commits_kept} | {badge} |"
+                f"| `{s.skill_name}` | {s.baseline_score:.1f}% | **{s.final_score:.1f}%** | `{delta_str}` | {s.commits_kept} | `{token_str}` | {badge} |"
             )
 
         lines.extend(
@@ -293,11 +383,13 @@ class NightlyTunerDaemon:
         """Dispatches an alert to Telegram channel via Bot API."""
         message = (
             f"🌙 *CCBA NIGHTLY AUTO-TUNER REPORT* 🌙\n"
-            f"📅 Thời gian: `{report.timestamp}`\n"
+            f"📅 Thời gian: `{report.timestamp}` (Engine: `{report.engine}`)\n"
             f"🌿 Nhánh Git: `{report.branch_name}`\n"
             f"📈 Kỹ năng nâng cấp: *{report.skills_optimized}/{report.total_skills_scanned}*\n"
             f"💾 Số Git Commits: *{report.total_commits}*\n"
         )
+        if report.total_tokens > 0:
+            message += f"🪙 Tổng Token: *{report.total_tokens:,}*\n"
         if report.pr_url:
             message += f"🔗 Pull Request: {report.pr_url}\n"
 
@@ -312,6 +404,76 @@ class NightlyTunerDaemon:
             mock_fallback=True,
         )
 
+    def _cleanup_old_empty_branches(self, days: int = 7) -> int:
+        """Cleans up local and remote auto-tune and doc-refactor branches older than `days` with no unique commits."""
+        try:
+            res = subprocess.run(
+                ["git", "branch", "--list", "auto-tune/nightly-*", "docs/auto-refactor-*"],
+                cwd=str(self.root),
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=False,
+            )
+            branches = [b.strip().lstrip("* ") for b in res.stdout.splitlines() if b.strip()]
+            deleted_count = 0
+            cutoff = datetime.datetime.now() - datetime.timedelta(days=days)
+
+            # Determine base ref for comparison (prefer origin/main, fallback to main)
+            base_ref = "origin/main"
+            check_ref = subprocess.run(
+                ["git", "rev-parse", "--verify", "origin/main"],
+                cwd=str(self.root),
+                capture_output=True,
+                check=False,
+            )
+            if check_ref.returncode != 0:
+                base_ref = "main"
+
+            for b in branches:
+                match = re.search(r"(?:nightly|auto-refactor)-(\d{8})", b)
+                if match:
+                    date_str = match.group(1)
+                    try:
+                        b_date = datetime.datetime.strptime(date_str, "%Y%m%d")
+                        if b_date < cutoff:
+                            # Check if branch has unique commits not on base_ref
+                            diff_res = subprocess.run(
+                                ["git", "cherry", base_ref, b],
+                                cwd=str(self.root),
+                                capture_output=True,
+                                text=True,
+                                encoding="utf-8",
+                                errors="replace",
+                            )
+                            if diff_res.returncode == 0 and not diff_res.stdout.strip():
+                                subprocess.run(
+                                    ["git", "branch", "-D", b],
+                                    cwd=str(self.root),
+                                    capture_output=True,
+                                    check=False,
+                                )
+                                logger.info(f"🧹 Đã dọn dẹp nhánh rác cục bộ: {b}")
+                                # Best-effort deletion of remote branch if present
+                                try:
+                                    subprocess.run(
+                                        ["git", "push", "origin", "--delete", b],
+                                        cwd=str(self.root),
+                                        capture_output=True,
+                                        check=False,
+                                        timeout=10,
+                                    )
+                                except Exception:
+                                    pass
+                                deleted_count += 1
+                    except Exception as e:
+                        logger.debug(f"Bỏ qua nhánh {b}: {e}")
+            return deleted_count
+        except Exception as e:
+            logger.warning(f"⚠️ Lỗi dọn dẹp nhánh cũ: {e}")
+            return 0
+
     def _create_git_branch(self, branch_name: str) -> None:
         """Creates and checks out a new feature branch for the nightly run."""
         try:
@@ -322,6 +484,26 @@ class NightlyTunerDaemon:
 
     def _create_pull_request(self, branch_name: str, report_body: str) -> str | None:
         """Pushes branch and creates a GitHub Pull Request using GitHub CLI (gh) if available."""
+        # 1. ADR-0058 Hard Completion Lock: Verify branch before pushing
+        try:
+            logger.info("🛡️ [ADR-0058] Đang thực thi Hard Completion Lock (verify-patch)...")
+            verify_res = subprocess.run(
+                [sys.executable, "-m", "ccba_harness", "verify-patch", "--preset", "skill"],
+                cwd=str(self.root),
+                capture_output=True,
+                text=True,
+            )
+            if verify_res.returncode != 0:
+                logger.error(
+                    f"❌ verify-patch thất bại (exit code {verify_res.returncode}), hủy tạo PR."
+                )
+                return None
+            logger.info("✅ verify-patch thành công! Tiến hành push nhánh và mở PR.")
+        except Exception as e:
+            logger.warning(f"⚠️ Kiểm định verify-patch gặp lỗi: {e}")
+            return None
+
+        # 2. Push & Create PR
         try:
             subprocess.run(
                 ["git", "push", "-u", "origin", branch_name], check=True, capture_output=True
@@ -358,9 +540,21 @@ def main() -> None:
         "--dry-run", action="store_true", help="Run without creating git branches or PRs"
     )
     parser.add_argument("--max-iter", type=int, default=10, help="Max iterations for weak skills")
+    parser.add_argument(
+        "--use-real-llm", action="store_true", help="Use real LLM inference instead of mock task"
+    )
+    parser.add_argument(
+        "--token-budget", type=int, default=5000000, help="Total session token budget ceiling"
+    )
+    parser.add_argument("--model", type=str, default="", help="Model alias for real LLM evaluation")
     args = parser.parse_args()
 
-    daemon = NightlyTunerDaemon(max_iterations_low=args.max_iter)
+    daemon = NightlyTunerDaemon(
+        max_iterations_low=args.max_iter,
+        use_real_llm=args.use_real_llm,
+        token_budget=args.token_budget,
+        model=args.model,
+    )
     daemon.run_nightly_batch(dry_run=args.dry_run)
 
 
