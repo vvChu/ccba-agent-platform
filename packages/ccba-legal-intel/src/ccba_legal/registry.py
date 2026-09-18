@@ -244,9 +244,13 @@ class LegalRegistryManager:
             try:
                 if self.registry_path.exists():
                     try:
-                        os.chmod(self.registry_path, stat.S_IWRITE | stat.S_IREAD)
+                        st = self.registry_path.stat()
+                        os.chmod(self.registry_path, st.st_mode | stat.S_IWUSR)
                     except Exception:
-                        pass
+                        try:
+                            os.chmod(self.registry_path, stat.S_IWRITE | stat.S_IREAD)
+                        except Exception:
+                            pass
                 with open(self.registry_path, "w", encoding="utf-8") as f:
                     yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
                 print(f"[Registry] Successfully saved registry to {self.registry_path}")

@@ -234,5 +234,9 @@
 | `PRR_kwDOQzfV088AAAABOSEnRQ` | `packages/ccba-legal-intel/src/ccba_legal/sync/__init__.py:29` | `_is_link_or_junction` là private helper nhưng lại được export trong `__all__`. | **ĐÃ KHẮC PHỤC**: Loại bỏ `_is_link_or_junction` khỏi `__all__` tuân thủ RULE-1.3 (Thin Seams). |
 | `PRR_kwDOQzfV088AAAABOSGGlA` | Toàn bộ PR #290 | Copilot Review tổng quan về rủi ro duyệt NTFS junctions và chmod symlinks. | **ĐÃ KHẮC PHỤC HOÀN TOÀN**: 100% đã được giải quyết qua `_safe_rmtree_tree`, `_make_writable`, và test coverage mở rộng. |
 | `PRR_kwDOQzfV088AAAABOSJ8LA` | Toàn bộ PR #290 | Copilot Review tổng quan về `safe_copy2` destination path và `_safe_remove_leaf`. | **ĐÃ KHẮC PHỤC HOÀN TOÀN**: Đã xử lý với `target_dst` và `_make_writable`. |
+| `4051492631` | `packages/ccba-legal-intel/src/ccba_legal/sync/utils.py:102` | Trên Python 3.10-3.11 Windows, `st_reparse_tag` có thể không khả dụng khiến `_is_link_or_junction` bỏ sót NTFS directory junctions. | **ĐÃ KHẮC PHỤC**: Khi phát hiện cờ `FILE_ATTRIBUTE_REPARSE_POINT`, nếu `st_reparse_tag` không tồn tại hoặc bằng 0 thì nhận diện ngay là junction/mount point. |
+| `4051505389` | `packages/ccba-legal-intel/src/ccba_legal/sync/utils.py:172` | `_safe_remove_leaf()` chỉ bỏ qua chmod khi `p.is_symlink()`, nhưng junctions không phải symlink nên vẫn bị gọi `_make_writable` làm biến đổi quyền target. | **ĐÃ KHẮC PHỤC**: Đổi điều kiện kiểm tra thành `if not _is_link_or_junction(p):` ở cả 2 vị trí, đảm bảo tuyệt đối không chmod target của junction. |
+| `PRR_kwDOQzfV088AAAABOSMPeQ` | Toàn bộ PR #290 | Copilot Review tổng quan về quyền file `registry.py` và junction permission mutation. | **ĐÃ KHẮC PHỤC HOÀN TOÀN**: Đã cập nhật `_is_link_or_junction`, `_safe_remove_leaf`, và `LegalRegistryManager.save` bảo toàn các bit mode hiện có. |
+
 
 
