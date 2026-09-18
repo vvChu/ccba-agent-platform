@@ -510,8 +510,15 @@ class DocAutoEvolutionEngine:
         except Exception as e:
             logger.warning(f"⚠️ Lỗi trong quá trình tạo Git branch/PR: {e}")
             try:
-                subprocess.run(["git", "checkout", "-"], cwd=str(self.root), capture_output=True, check=False)
-                subprocess.run(["git", "branch", "-D", branch_name], cwd=str(self.root), capture_output=True, check=False)
+                subprocess.run(
+                    ["git", "checkout", "-"], cwd=str(self.root), capture_output=True, check=False
+                )
+                subprocess.run(
+                    ["git", "branch", "-D", branch_name],
+                    cwd=str(self.root),
+                    capture_output=True,
+                    check=False,
+                )
             except Exception:
                 pass
 

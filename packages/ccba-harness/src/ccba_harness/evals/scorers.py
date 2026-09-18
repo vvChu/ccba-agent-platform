@@ -613,4 +613,3 @@ def get_orchestration_scorers() -> list[BaseScorer]:
         ProgressiveDisclosureScorer(weight=0.35),
         HandoffProtocolScorer(weight=0.30),
     ]
-

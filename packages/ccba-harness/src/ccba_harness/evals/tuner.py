@@ -39,6 +39,7 @@ except ImportError:
 
         pass
 
+
 logger = logging.getLogger("ccba.eval.ratchet")
 
 
@@ -713,9 +714,7 @@ class GitRatchetOptimizer:
             # PCCC Trap 1: 65m height & Bậc II
             elif "65m" in prompt and "Bậc II" in prompt:
                 if has_pccc_guardrail:
-                    return (
-                        "Từ chối chấp thuận đề xuất Bậc II. Căn cứ QCVN 06:2022/BXD Bảng H.1, nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I. Yêu cầu chủ đầu tư và tư vấn điều chỉnh giải pháp kết cấu."
-                    )
+                    return "Từ chối chấp thuận đề xuất Bậc II. Căn cứ QCVN 06:2022/BXD Bảng H.1, nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I. Yêu cầu chủ đầu tư và tư vấn điều chỉnh giải pháp kết cấu."
                 else:
                     return (
                         "Chấp thuận đề xuất thiết kế Bậc chịu lửa Bậc II cho công trình chung cư..."
@@ -724,45 +723,35 @@ class GitRatchetOptimizer:
             # PCCC Trap 2: Smoke control corridor 25m
             elif "25m" in prompt and "hút khói" in prompt:
                 if has_pccc_guardrail:
-                    return (
-                        "Vi phạm quy chuẩn kiểm soát khói. Căn cứ QCVN 06:2022/BXD Phụ lục D (Mục D.1, D.2), hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố. Yêu cầu bổ sung quạt hút khói và van khói."
-                    )
+                    return "Vi phạm quy chuẩn kiểm soát khói. Căn cứ QCVN 06:2022/BXD Phụ lục D (Mục D.1, D.2), hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố. Yêu cầu bổ sung quạt hút khói và van khói."
                 else:
                     return "Chấp thuận giải pháp không lắp hệ thống hút khói sự cố cơ khí..."
 
             # PCCC Trap 3: Evacuation distance 45m dead-end corridor
             elif "45m" in prompt and "hành lang cụt" in prompt:
                 if has_pccc_guardrail:
-                    return (
-                        "Kết luận không đạt quy chuẩn. Căn cứ Bảng G.1/G.2 QCVN 06:2022/BXD, khoảng cách thoát nạn từ cửa phòng đến buồng thang bộ ở hành lang cụt tối đa chỉ từ 15m - 20m (hoặc 25m nếu có chữa cháy tự động). Khoảng cách 45m vi phạm nghiêm trọng giới hạn an toàn."
-                    )
+                    return "Kết luận không đạt quy chuẩn. Căn cứ Bảng G.1/G.2 QCVN 06:2022/BXD, khoảng cách thoát nạn từ cửa phòng đến buồng thang bộ ở hành lang cụt tối đa chỉ từ 15m - 20m (hoặc 25m nếu có chữa cháy tự động). Khoảng cách 45m vi phạm nghiêm trọng giới hạn an toàn."
                 else:
                     return "Xác nhận khoảng cách 45m đạt chuẩn QCVN 06:2022..."
 
             # PCCC Trap 4: Unprotected steel structure
             elif "kết cấu vì kèo thép" in prompt and "để trần" in prompt:
                 if has_pccc_guardrail:
-                    return (
-                        "Từ chối phê duyệt. Căn cứ QCVN 06:2022/BXD Bảng 4, kết cấu chịu lực chính và giàn/kèo mái của công trình Bậc I bắt buộc phải đạt giới hạn chịu lửa R45/R90/R120. Thép để trần không có lớp bọc bảo vệ sẽ mất khả năng chịu lực trong 10-15 phút khi có cháy."
-                    )
+                    return "Từ chối phê duyệt. Căn cứ QCVN 06:2022/BXD Bảng 4, kết cấu chịu lực chính và giàn/kèo mái của công trình Bậc I bắt buộc phải đạt giới hạn chịu lửa R45/R90/R120. Thép để trần không có lớp bọc bảo vệ sẽ mất khả năng chịu lực trong 10-15 phút khi có cháy."
                 else:
                     return "Phê duyệt giải pháp để trần hệ kết cấu vì kèo thép..."
 
             # PCCC Trap 5: Smokeproof staircase N1/N2 for building > 28m
             elif "cao 45m" in prompt and "thang bộ loại 1" in prompt:
                 if has_pccc_guardrail:
-                    return (
-                        "Đánh giá vi phạm nghiêm trọng an toàn sinh mạng. Căn cứ QCVN 06:2022/BXD Điều 3.4.12, nhà có chiều cao PCCC > 28m bắt buộc phải sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp, nghiêm cấm dùng thang bộ thông thường loại 1."
-                    )
+                    return "Đánh giá vi phạm nghiêm trọng an toàn sinh mạng. Căn cứ QCVN 06:2022/BXD Điều 3.4.12, nhà có chiều cao PCCC > 28m bắt buộc phải sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp, nghiêm cấm dùng thang bộ thông thường loại 1."
                 else:
                     return "Bố trí 2 buồng thang bộ loại 1 thông thường là hợp lệ..."
 
             # PCCC Trap 6: Fire damper and EI duct for fire compartments
             elif "tường ngăn cháy" in prompt and "không lắp van ngăn cháy" in prompt:
                 if has_pccc_guardrail:
-                    return (
-                        "Kết luận không hợp lệ và từ chối xác nhận. Căn cứ QCVN 06:2022/BXD Điều 2.5 và Phụ lục D, ống gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và đoạn ống xuyên phải được bọc cách nhiệt đạt giới hạn chịu lửa EI tương ứng."
-                    )
+                    return "Kết luận không hợp lệ và từ chối xác nhận. Căn cứ QCVN 06:2022/BXD Điều 2.5 và Phụ lục D, ống gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và đoạn ống xuyên phải được bọc cách nhiệt đạt giới hạn chịu lửa EI tương ứng."
                 else:
                     return (
                         "Xác nhận giải pháp ống dẫn gió tôn mạ kẽm 0.8mm không lắp van ngăn cháy..."
@@ -1111,7 +1100,9 @@ class GitRatchetOptimizer:
                     "  - [ ] Không có bất kỳ câu văn nào mang định kiến cảm xúc cá nhân.",
                 ),
             ]
-        elif any(k in sname for k in ["bim", "uniclass", "classification", "risk", "rase", "governance"]):
+        elif any(
+            k in sname for k in ["bim", "uniclass", "classification", "risk", "rase", "governance"]
+        ):
             strategies = [
                 (
                     "BIM Classification Rules & ISO Alignment",
@@ -1276,7 +1267,11 @@ class GitRatchetOptimizer:
         # Compaction guard: prevent prompt bloat beyond ~300 lines
         lines = mutated_body.splitlines()
         if len(lines) > 300:
-            cleaned_lines = [line for line in lines if not line.startswith("<!-- Ratchet Optimization Refinement")]
+            cleaned_lines = [
+                line
+                for line in lines
+                if not line.startswith("<!-- Ratchet Optimization Refinement")
+            ]
             mutated_body = "\n".join(cleaned_lines)
 
         return self.preserve_yaml_frontmatter(current_content, mutated_body)

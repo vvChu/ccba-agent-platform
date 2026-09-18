@@ -393,7 +393,9 @@ def test_orchestration_scorers():
     )
     assert res_pd_pass.score == 1.0
 
-    res_pd_fail = asyncio.run(pd_scorer.score("Plain flat text without any links or references.", item))
+    res_pd_fail = asyncio.run(
+        pd_scorer.score("Plain flat text without any links or references.", item)
+    )
     assert res_pd_fail.score == 0.0
 
     # 3. HandoffProtocolScorer
@@ -415,4 +417,3 @@ def test_orchestration_scorers():
     assert any(s.name == "single_writer_invariant" for s in suite)
     assert any(s.name == "progressive_disclosure_links" for s in suite)
     assert any(s.name == "handoff_protocol" for s in suite)
-

@@ -138,11 +138,7 @@ def test_3_worker_swarm_syntactic_collision_rejection(tmp_path: Path) -> None:
     - Zero files on disk are modified.
     """
     code_file = tmp_path / "qc_pipeline.py"
-    initial_code = (
-        "def audit_fire_rating():\n"
-        "    rating = 'REI 60'\n"
-        "    return rating\n"
-    )
+    initial_code = "def audit_fire_rating():\n    rating = 'REI 60'\n    return rating\n"
     code_file.write_text(initial_code, encoding="utf-8")
 
     doc_file = tmp_path / "notes.md"
@@ -243,7 +239,10 @@ def test_3_worker_swarm_semantic_conflict_atomic_rollback(tmp_path: Path) -> Non
     assert report.semantic_conflict is True
     assert report.rollback_performed is True
     assert len(report.verification_errors) >= 1
-    assert any("RuntimeError" in err or "PCCC Pipeline Assertion Failed" in err or "exit" in err for err in report.verification_errors)
+    assert any(
+        "RuntimeError" in err or "PCCC Pipeline Assertion Failed" in err or "exit" in err
+        for err in report.verification_errors
+    )
 
     # Verify 100% restoration to initial contents
     assert f_config.read_text(encoding="utf-8") == "MAX_RETRIES = 3\n"

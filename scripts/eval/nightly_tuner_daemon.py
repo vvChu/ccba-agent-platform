@@ -541,9 +541,7 @@ def main() -> None:
     parser.add_argument(
         "--token-budget", type=int, default=5000000, help="Total session token budget ceiling"
     )
-    parser.add_argument(
-        "--model", type=str, default="", help="Model alias for real LLM evaluation"
-    )
+    parser.add_argument("--model", type=str, default="", help="Model alias for real LLM evaluation")
     args = parser.parse_args()
 
     daemon = NightlyTunerDaemon(
