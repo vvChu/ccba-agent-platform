@@ -95,11 +95,10 @@ def _is_link_or_junction(path: Path) -> bool:
         if sys.platform == "win32":
             reparse_attr = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
             mount_point_tag = getattr(stat, "IO_REPARSE_TAG_MOUNT_POINT", 0xA0000003)
-            if (
-                getattr(st, "st_file_attributes", 0) & reparse_attr
-                and getattr(st, "st_reparse_tag", 0) == mount_point_tag
-            ):
-                return True
+            if getattr(st, "st_file_attributes", 0) & reparse_attr:
+                tag = getattr(st, "st_reparse_tag", None)
+                if tag is None or tag == mount_point_tag or stat.S_ISDIR(st.st_mode):
+                    return True
     except OSError:
         pass
     return path.is_symlink()
@@ -168,7 +167,7 @@ def safe_copy2(
 
 def _safe_remove_leaf(p: Path) -> None:
     """Safely remove a leaf item (file, symlink, or NTFS junction) without mutating target permissions."""
-    if not p.is_symlink():
+    if not _is_link_or_junction(p) and not p.is_symlink():
         _make_writable(p)
     try:
         if os.name == "nt" and p.is_dir() and not p.is_symlink():
@@ -179,7 +178,7 @@ def _safe_remove_leaf(p: Path) -> None:
         # On POSIX, removing an item requires write+exec on its parent directory
         try:
             _make_writable(p.parent)
-            if not p.is_symlink():
+            if not _is_link_or_junction(p) and not p.is_symlink():
                 _make_writable(p)
             if os.name == "nt" and p.is_dir() and not p.is_symlink():
                 os.rmdir(p)
