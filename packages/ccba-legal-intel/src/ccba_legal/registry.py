@@ -189,21 +189,77 @@ def discover_master_registry_path(custom_path: Path | str | None = None) -> Path
     return fallback_path
 
 
-KNOWN_STATUTORY_REPLACEMENTS: dict[str, str] = {
-    "15/2021/NĐ-CP": "ND-217-2026",
-    "15/2021/ND-CP": "ND-217-2026",
-    "06/2021/TT-BXD": "TT-34-2026-BXD",
-    "06/2021/NĐ-CP": "ND-207-2026",
-    "06/2021/ND-CP": "ND-207-2026",
-    "12/2021/TT-BXD": "TT-38-2026-BXD",
-    "50/2014/QH13": "LXD-2025",
-    "62/2020/QH14": "LXD-2025",
-    "27/2001/QH10": "LPCCC-2024",
-    "136/2020/NĐ-CP": "ND-105-2025",
-    "136/2020/ND-CP": "ND-105-2025",
-    "TCVN 2737:1995": "TCVN 2737:2023",
-    "TCVN 5575:2012": "TCVN 5575:2024",
-    "TCVN 9386:2012": "TCVN 9386:2025",
+KNOWN_STATUTORY_REPLACEMENTS: dict[str, dict[str, str]] = {
+    "15/2021/NĐ-CP": {
+        "id": "ND-217-2026",
+        "document_number": "217/2026/NĐ-CP",
+        "title": "Nghị định 217/2026/NĐ-CP (Quản lý dự án đầu tư xây dựng)",
+    },
+    "15/2021/ND-CP": {
+        "id": "ND-217-2026",
+        "document_number": "217/2026/NĐ-CP",
+        "title": "Nghị định 217/2026/NĐ-CP (Quản lý dự án đầu tư xây dựng)",
+    },
+    "06/2021/TT-BXD": {
+        "id": "TT-34-2026-BXD",
+        "document_number": "34/2026/TT-BXD",
+        "title": "Thông tư 34/2026/TT-BXD (Phân cấp công trình xây dựng)",
+    },
+    "06/2021/NĐ-CP": {
+        "id": "ND-207-2026",
+        "document_number": "207/2026/NĐ-CP",
+        "title": "Nghị định 207/2026/NĐ-CP (Quản lý chất lượng & thi công xây dựng)",
+    },
+    "06/2021/ND-CP": {
+        "id": "ND-207-2026",
+        "document_number": "207/2026/NĐ-CP",
+        "title": "Nghị định 207/2026/NĐ-CP (Quản lý chất lượng & thi công xây dựng)",
+    },
+    "12/2021/TT-BXD": {
+        "id": "TT-38-2026-BXD",
+        "document_number": "38/2026/TT-BXD",
+        "title": "Thông tư 38/2026/TT-BXD (Định mức xây dựng và quản lý chi phí)",
+    },
+    "50/2014/QH13": {
+        "id": "LXD-2025",
+        "document_number": "135/2025/QH15",
+        "title": "Luật Xây dựng 2025 (135/2025/QH15)",
+    },
+    "62/2020/QH14": {
+        "id": "LXD-2025",
+        "document_number": "135/2025/QH15",
+        "title": "Luật Xây dựng 2025 (135/2025/QH15)",
+    },
+    "27/2001/QH10": {
+        "id": "LPCCC-2024",
+        "document_number": "55/2024/QH15",
+        "title": "Luật PCCC & CNCH 2024 (55/2024/QH15)",
+    },
+    "136/2020/NĐ-CP": {
+        "id": "ND-105-2025",
+        "document_number": "105/2025/NĐ-CP",
+        "title": "Nghị định 105/2025/NĐ-CP (Quy định chi tiết Luật PCCC & CNCH)",
+    },
+    "136/2020/ND-CP": {
+        "id": "ND-105-2025",
+        "document_number": "105/2025/NĐ-CP",
+        "title": "Nghị định 105/2025/NĐ-CP (Quy định chi tiết Luật PCCC & CNCH)",
+    },
+    "TCVN 2737:1995": {
+        "id": "TCVN 2737:2023",
+        "document_number": "TCVN 2737:2023",
+        "title": "TCVN 2737:2023 (Tải trọng và tác động)",
+    },
+    "TCVN 5575:2012": {
+        "id": "TCVN 5575:2024",
+        "document_number": "TCVN 5575:2024",
+        "title": "TCVN 5575:2024 (Kết cấu thép - Tiêu chuẩn thiết kế)",
+    },
+    "TCVN 9386:2012": {
+        "id": "TCVN 9386:2025",
+        "document_number": "TCVN 9386:2025",
+        "title": "TCVN 9386:2025 (Thiết kế công trình chịu động đất)",
+    },
 }
 
 
@@ -255,12 +311,13 @@ class LegalRegistryManager:
 
         # Build inverted replacements index
         self._inverted_replacements = {}
-        for old_ref, new_ref in KNOWN_STATUTORY_REPLACEMENTS.items():
+        for old_ref, rep_meta in KNOWN_STATUTORY_REPLACEMENTS.items():
             norm_old = re.sub(r"[\s\-_/.,]+", "", old_ref.lower())
             self._inverted_replacements[norm_old] = {
-                "id": new_ref,
-                "document_number": new_ref,
-                "title": f"Văn bản thay thế [{new_ref}]",
+                "id": rep_meta["id"],
+                "document_number": rep_meta["document_number"],
+                "title": rep_meta["title"],
+                "short_name": rep_meta["document_number"],
                 "status": "active",
             }
 

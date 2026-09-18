@@ -231,6 +231,11 @@ def safe_parse_xml(xml_bytes: bytes) -> ET.Element:
 
         return DefusedET.fromstring(xml_bytes)
     except ImportError:
+        # Strictly forbid external DTD and entity declarations in stdlib fallback to prevent security downgrade
+        if b"<!DOCTYPE" in xml_bytes or b"<!ENTITY" in xml_bytes:
+            raise ValueError(
+                "Insecure XML with DTD or external entity detected, and defusedxml is not installed."
+            ) from None
         parser = ET.XMLParser()
         return ET.fromstring(xml_bytes, parser=parser)
 
