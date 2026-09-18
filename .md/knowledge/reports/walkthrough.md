@@ -181,3 +181,41 @@
 
 **Tổng kết:** 6/6 Checks PASS 100%. Trạng thái `CLEAN` / `MERGEABLE`.
 
+---
+
+# Walkthrough: Issue #285 — Kiến Trúc Tham Chiếu Zero-Bloat & Gia Cố Phân Quyền Windows/OneDrive
+
+## 1. Tổng Quan Issue #285
+- **Branch:** `refactor/issue-285-zero-bloat-legal-sync-onedrive-hardening`
+- **Tiêu đề:** `refactor(legal-sync): adopt Zero-Bloat reference architecture for Spokes and harden Windows/OneDrive permissions`
+- **Issue liên quan:** [#285](https://github.com/vvChu/ccba-agent-platform/issues/285)
+- **Thể chế & Kiến trúc:** ADR-0050 (Spoke Knowledge Sync), ADR-0051 (Virtual Hub Fallback & Zero-Bloat), ADR-0058 (Hard Completion Lock), RULE-2.7 (Safe Remove)
+
+---
+
+## 2. Các Thay Đổi Cốt Lõi (Core Deliverables)
+
+1. **Triệt tiêu nhân bản vật lý (Zero-Bloat Reference Mode - ADR-0051):**
+   - Mặc định khi chạy `sync_spoke.py` hoặc `LegalKnowledgeSyncOrchestrator`, hệ thống kích hoạt chế độ **Reference-Only**, chỉ cập nhật siêu dữ liệu `legal_registry.yaml` mà không tự động sao chép hàng trăm MB tài liệu PDF/DOCX sang Spoke.
+   - Cung cấp cờ tường minh `--pull-assets` khi cần tải trọn bộ tài liệu về Spoke để làm việc offline biệt lập.
+2. **Gia cố an toàn tệp tin trên Windows / OneDrive:**
+   - Loại bỏ hoàn toàn `shutil.rmtree(dest_subdir)` gây lỗi crash `PermissionError: [WinError 5] Access is denied`.
+   - Thay thế bằng `shutil.copytree(item, dest_subdir, dirs_exist_ok=True, copy_function=safe_copy2)`.
+   - `safe_copy2` tự động nhận diện và gỡ cờ Read-Only (`stat.S_IWRITE | stat.S_IREAD`) trên tệp đích trước khi ghi đè.
+   - `safe_remove` (RULE-2.7) nhận diện NTFS Directory Junctions / Mount Points trên Windows, xử lý an toàn với `onexc`/`onerror` hook và retry loop xử lý khóa tệp `WinError 32`.
+   - Gia cố `LegalRegistryManager.save()` gỡ cờ Read-Only trước khi ghi đè và hỗ trợ retry backoff chống xung đột lock với OneDrive daemon.
+3. **Rào chắn Self-Copy trên Master Legal Corpus:**
+   - Ngăn chặn triệt để nguy cơ `shutil.SameFileError` và hủy hoại SSOT khi chạy sync ngay tại repo `ccba-legal-knowledge`.
+4. **Bảo tồn Hard Completion Lock (ADR-0058):**
+   - Bổ sung cờ `--reference-only` vào CLI `ccba-legal sync` và `--pull-assets` vào `sync_spoke.py`/`ccba_platform_cli.py`.
+
+---
+
+## 3. Kết Quả Kiểm Định Tự Động (Deterministic Hard Completion Verification)
+
+- **`verify-patch` (ccba_harness):** ✅ **ALL 4/4 COMMANDS PASSED (Exit Code 0)**
+  - `pytest packages/ccba-legal-intel/tests/test_zero_bloat_sync.py ...`: 24/24 passed (100%)
+  - `pytest scripts/tests/test_spoke_sync_modules.py -v`: 35/35 passed (100%)
+  - `ruff check packages/ccba-legal-intel/ scripts/spoke/ scripts/ccba_platform_cli.py`: PASS (0 errors)
+  - `mypy packages/ccba-legal-intel/src/ccba_legal/sync/ scripts/spoke/sync/ --ignore-missing-imports`: PASS (0 errors)
+
