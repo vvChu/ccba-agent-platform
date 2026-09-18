@@ -5,11 +5,8 @@ from __future__ import annotations
 import zipfile
 from pathlib import Path
 
-import pytest
-
 from ccba_legal.linter import (
     extract_file_lines,
-    is_transitional_context,
     lint_file_currency,
     lint_target_path,
 )
